@@ -2890,6 +2890,9 @@ msgid ""
 "party backup solutions may fail to capture a consistent state."
 msgstr ""
 
+msgid "A replacement (first matching rule wins)"
+msgstr ""
+
 #, fuzzy
 msgid "A report cannot reference itself"
 msgstr "Un informe no puede referirse a sí mismo"
@@ -3185,6 +3188,10 @@ msgstr ""
 #, fuzzy
 msgid "AI"
 msgstr "AIX"
+
+#, fuzzy
+msgid "AI Assistant"
+msgstr "Instancia"
 
 #, fuzzy
 msgid "AI assistance"
@@ -4906,6 +4913,10 @@ msgstr "Añadir trabajo"
 msgid "Add key"
 msgstr "Añadir clave"
 
+#, fuzzy
+msgid "Add label source"
+msgstr "Fuente"
+
 msgid "Add limits"
 msgstr "Añadir límites"
 
@@ -6195,6 +6206,10 @@ msgstr "Plugins del agente: Expresión regular para excluir plugins"
 msgid "Agent plug-ins: versions"
 msgstr "Plugins del agente: versiones"
 
+#, fuzzy
+msgid "Agent protection groups"
+msgstr "Grupos de agregación"
+
 msgid "Agent registration"
 msgstr "Registro de agentes"
 
@@ -7046,6 +7061,10 @@ msgid "All resource groups that belong to this node run on this node (local)"
 msgstr ""
 "Todos los grupos de recursos que pertenecen a este nodo se ejecutan en este "
 "nodo (local)"
+
+#, fuzzy
+msgid "All rows"
+msgstr "Todos los flujos"
 
 #, python-format
 msgid ""
@@ -8147,6 +8166,11 @@ msgstr "Resumen de aplicaciones"
 msgid "Applications, processes & services"
 msgstr "Aplicaciones, procesos y servicios"
 
+msgid ""
+"Applied after matching, to the label name and value; the prefix is kept as "
+"entered."
+msgstr ""
+
 #, fuzzy
 msgid "Applied to"
 msgstr "Solicitar a"
@@ -8647,10 +8671,6 @@ msgstr ""
 
 #, fuzzy
 msgid "At least one contact group must be selected"
-msgstr "Estado cuando falta el archivo"
-
-#, fuzzy
-msgid "At least one custom query is required."
 msgstr "Estado cuando falta el archivo"
 
 #, fuzzy
@@ -10796,12 +10816,24 @@ msgstr ""
 msgid "Backup job"
 msgstr "Trabajo de respaldo"
 
+#, fuzzy
+msgid "Backup jobs"
+msgstr "Trabajo de respaldo"
+
 msgid "Backup modes"
 msgstr "Modos de copia de seguridad"
 
 #, fuzzy
 msgid "Backup object name"
 msgstr "Tiempo de respaldo"
+
+#, fuzzy
+msgid "Backup proxies"
+msgstr "Modos de copia de seguridad"
+
+#, fuzzy
+msgid "Backup repositories"
+msgstr "Copia de seguridad y restauración"
 
 #, fuzzy
 msgid "Backup server"
@@ -10824,6 +10856,9 @@ msgstr "Copia de seguridad-ID"
 
 msgid "Backups"
 msgstr "Copias de seguridad"
+
+msgid "Backups (per protected machine)"
+msgstr ""
 
 #, fuzzy
 msgid "Backups CRITICAL"
@@ -11844,7 +11879,9 @@ msgid ""
 "but some devices are offering their information in different SNMPv3 "
 "contexts. This rule can be used to configure, based on hosts and SNMP "
 "sections, which SNMPv3 contexts Checkmk should ask for when getting "
-"information via SNMPv3."
+"information via SNMPv3. The default context is only queried if it is "
+"selected here. If several contexts return the same OIDs, only the data of "
+"the first context is used."
 msgstr ""
 "Por defecto, Checkmk no utiliza un contexto específico durante las consultas "
 "SNMPv3, pero algunos dispositivos ofrecen su información en diferentes "
@@ -13321,6 +13358,14 @@ msgstr "No se puede eliminar el trabajo. No se puede detener el trabajo."
 #, fuzzy
 msgid "Cannot delete rules that are managed by Quick Setup."
 msgstr "No puede eliminar los roles que aún están en uso (%s)!"
+
+#, fuzzy, python-format
+msgid ""
+"Cannot delete this customer because the following objects are still assigned "
+"to it: %(references)s."
+msgstr ""
+"No se puede eliminar este cliente porque los sitios %(sites)s todavía están "
+"asignados a él."
 
 #, python-format
 msgid ""
@@ -16195,8 +16240,16 @@ msgstr "Columna"
 msgid "Column headers"
 msgstr "Encabezados de columna"
 
+#, fuzzy
+msgid "Column of the value"
+msgstr "Identificación del valor"
+
 msgid "Column title"
 msgstr "Título de la columna"
+
+#, fuzzy
+msgid "Column to match"
+msgstr "Columnas a juego"
 
 msgid "Columns"
 msgstr "Columnas"
@@ -16625,6 +16678,10 @@ msgstr "Configuración"
 #, fuzzy
 msgid "Configuration activation"
 msgstr "Conexión de la configuración"
+
+#, fuzzy
+msgid "Configuration backup"
+msgstr "Paquetes de configuración de BI"
 
 #, fuzzy
 msgid "Configuration bundle ID"
@@ -18576,6 +18633,10 @@ msgstr ""
 "Es posible que su usuario de ntopng no tenga suficientes derechos para "
 "consultar esta información."
 
+#, fuzzy
+msgid "Could not read the certificate."
+msgstr "Añadir configuración de estado"
+
 #, fuzzy, python-format
 msgid "Could not reload DCD: %(e)s. See web.log for further information."
 msgstr "No se ha podido recargar el DCD: %s. Ver web.log para más información."
@@ -19906,6 +19967,10 @@ msgstr "Consulta de búsqueda personalizada"
 msgid "Custom sender (\"From\")"
 msgstr ""
 
+#, fuzzy
+msgid "Custom service (telemetry metrics)"
+msgstr "Atributos de servicio personalizados"
+
 msgid "Custom service attributes"
 msgstr "Atributos de servicio personalizados"
 
@@ -21070,6 +21135,10 @@ msgstr "Color por defecto"
 
 msgid "Default configuration"
 msgstr "Configuración por defecto"
+
+#, fuzzy
+msgid "Default context"
+msgstr "Color por defecto"
 
 msgid "Default credentials"
 msgstr "Credenciales por defecto"
@@ -25231,6 +25300,10 @@ msgstr "Editar credencial"
 msgid "Edit custom graph"
 msgstr "Editar gráfico personalizado"
 
+#, fuzzy
+msgid "Edit custom service"
+msgstr "Servicio personalizado de Jira"
+
 #, python-format
 msgid "Edit customer %(customer_id)s"
 msgstr "Editar cliente %(customer_id)s"
@@ -25458,6 +25531,10 @@ msgstr "Editar esta conexión"
 msgid "Edit this credential"
 msgstr "Editar esta credencial"
 
+#, fuzzy
+msgid "Edit this custom service"
+msgstr "Editar este cliente"
+
 msgid "Edit this customer"
 msgstr "Editar este cliente"
 
@@ -25563,10 +25640,6 @@ msgstr "Editado el %(name)s '%(ident)s'"
 #, fuzzy, python-format
 msgid "Edited user profile for user %(user_id)s"
 msgstr "Editado el perfil del usuario %s"
-
-#, fuzzy
-msgid "Editing a custom service is not available yet"
-msgstr "Instancias de Oracle"
 
 msgid "Edition"
 msgstr "Edición"
@@ -27584,6 +27657,10 @@ msgstr "Ejecutivo"
 
 #, fuzzy
 msgid "Execute as another user"
+msgstr "Activar los cambios de otros usuarios"
+
+#, fuzzy
+msgid "Execute as the agent's user"
 msgstr "Activar los cambios de otros usuarios"
 
 #, fuzzy, python-format
@@ -31675,6 +31752,10 @@ msgid "HW/SW inventory history"
 msgstr "Historial de inventario del host"
 
 #, fuzzy
+msgid "HW/SW inventory label picker"
+msgstr "reglas de inventario de HW/SW"
+
+#, fuzzy
 msgid "HW/SW inventory rules"
 msgstr "reglas de inventario de HW/SW"
 
@@ -34609,6 +34690,9 @@ msgstr "Etiqueta del host"
 msgid "Host labels"
 msgstr "Etiquetas de host"
 
+msgid "Host labels picked from the HW/SW inventory"
+msgstr ""
+
 #, fuzzy, python-format
 msgid ""
 "Host labels: %(total)d total (%(added)d added, %(changed)d changed, "
@@ -36526,6 +36610,11 @@ msgid ""
 msgstr ""
 "Si se establece, el plugin puede ser llamado repetidamente - hasta este "
 "número de veces o hasta que termine con éxito."
+
+msgid ""
+"If several entries yield the same label name, the first one wins; single "
+"values come before table columns."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -40038,6 +40127,10 @@ msgstr "Expresión regular inválida: %(exception)s"
 msgid "Invalid regular expression: %(value)s"
 msgstr "Expresión regular inválida: %(e)s"
 
+#, fuzzy, python-format
+msgid "Invalid replacement: %(error)s"
+msgstr "Expresión regular inválida: %s"
+
 msgid "Invalid report"
 msgstr "Informe no válido"
 
@@ -40247,6 +40340,10 @@ msgstr "Inventario"
 msgid "Inventory attribute: %(long_title)s"
 msgstr "Atributo de inventario"
 
+#, fuzzy
+msgid "Inventory categories"
+msgstr "Historial de inventarios"
+
 msgid "Inventory changes"
 msgstr "Cambios en el inventario"
 
@@ -40284,6 +40381,10 @@ msgstr "Inventario de todos los plugins de agente desplegados y sus versiones"
 #, fuzzy
 msgid "Inventory of host"
 msgstr "Inventario del host"
+
+#, fuzzy
+msgid "Inventory source"
+msgstr "Historial de inventarios"
 
 #, fuzzy, python-format
 msgid "Inventory table: %(long_title)s"
@@ -40979,6 +41080,10 @@ msgstr "Kaspersky Anti-Virus (Linux)"
 msgid "Kaspersky Anti-Virus time settings"
 msgstr "Configuración de tiempo de Kaspersky Anti-Virus"
 
+#, fuzzy
+msgid "Keep"
+msgstr "Keepalive"
+
 msgid ""
 "Keep <tt>cmk-signed-push-cert</tt>, the agent's persistent certificate "
 "Secret."
@@ -41054,6 +41159,10 @@ msgstr "Clave"
 
 msgid "Key ID"
 msgstr "Clave ID"
+
+#, fuzzy
+msgid "Key of the value"
+msgstr "Tipo de valor"
 
 msgid "Key pair will be generated when you save."
 msgstr "El par de claves se generará al guardar."
@@ -41421,6 +41530,25 @@ msgid "Label"
 msgstr "Etiqueta"
 
 #, fuzzy
+msgid "Label name"
+msgstr "Nombre del modelo"
+
+msgid "Label name prefix (empty for none)"
+msgstr ""
+
+#, fuzzy
+msgid "Label naming"
+msgstr "Renombramiento masivo"
+
+#, fuzzy
+msgid "Label sources"
+msgstr "Fuentes"
+
+#, fuzzy
+msgid "Label value"
+msgstr "Valor de la etiqueta"
+
+#, fuzzy
 msgid "Labelling options"
 msgstr "Opciones de etiquetado"
 
@@ -41440,6 +41568,13 @@ msgstr ""
 "en cadenas de reglas.<br><b>Formato de etiqueta:</b> "
 "clave:valor<br><br>Checkmk no realiza ninguna validación en las etiquetas "
 "que utilice."
+
+#, fuzzy
+msgid "Labels from single values"
+msgstr "Restringir los valores individuales"
+
+msgid "Labels from table columns (first row with a value wins)"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -42013,6 +42148,10 @@ msgid "Let through notifications counting upto this number"
 msgstr "Dejemos que las notificaciones cuenten hasta este número"
 
 msgid "Letter"
+msgstr "Carta"
+
+#, fuzzy
+msgid "Letter case"
 msgstr "Carta"
 
 msgid "Level"
@@ -42756,6 +42895,10 @@ msgstr "Hosts licenciables"
 
 msgid "Licensable services"
 msgstr "Servicios sujetos a licencia"
+
+#, fuzzy
+msgid "License"
+msgstr "Licencia"
 
 msgid "License Feature"
 msgstr "Característica de la licencia"
@@ -44532,6 +44675,10 @@ msgstr ""
 msgid "Lower voltage levels"
 msgstr "Niveles de salud más bajos"
 
+#, fuzzy
+msgid "Lowercase"
+msgstr "Baja"
+
 msgid "Lowest: No notification, update badge number"
 msgstr "Lo más bajo: No se notifica, se actualiza el número de placa"
 
@@ -45290,6 +45437,10 @@ msgstr ""
 #, fuzzy
 msgid "Managed robots"
 msgstr "Objetos gestionados"
+
+#, fuzzy
+msgid "Managed servers"
+msgstr "Gestionar servicios"
 
 msgid "Management board"
 msgstr "Consejo de Administración"
@@ -47840,10 +47991,11 @@ msgstr ""
 msgid ""
 "Monitor a Veeam Backup & Replication server through its REST API. Nothing is "
 "installed on the backup server, so this also works for the Veeam software "
-"appliance, where the Checkmk agent cannot run. The built-in <tt>Veeam Backup "
-"Viewer</tt> role is sufficient. Do not configure an administrator account: "
-"it could also delete backups, trigger restores and read stored encryption "
-"passwords."
+"appliance, where the Checkmk agent cannot run. Use a dedicated account whose "
+"role can read the data you want to monitor; some services require a more "
+"privileged role, and the agent stops when it cannot read a service. Do not "
+"configure an administrator account: it could also delete backups, trigger "
+"restores and read stored encryption passwords."
 msgstr ""
 
 msgid "Monitor all files in folder"
@@ -50073,6 +50225,10 @@ msgstr "Sin problemas de conectividad"
 msgid "No contact groups assigned."
 msgstr "No se han asignado grupos de contacto."
 
+#, fuzzy
+msgid "No context names"
+msgstr "IDs de Contexto SNMP"
+
 msgid "No custom attributes are defined yet."
 msgstr "Todavía no se han definido atributos personalizados."
 
@@ -50115,6 +50271,10 @@ msgstr "No hay datos."
 
 msgid "No databases configured explicitly; see 'Instance discovery'"
 msgstr ""
+
+#, fuzzy
+msgid "No default context"
+msgstr "Es por defecto"
 
 #, fuzzy
 msgid "No default values can be set for condition choices."
@@ -53283,6 +53443,10 @@ msgstr "Modo abierto"
 msgid "Open network sockets"
 msgstr "Abrir tomas de red"
 
+#, fuzzy
+msgid "Open or close the AI assistant"
+msgstr "Habilitar este sitio"
+
 msgid "Open output count"
 msgstr "Recuento de salidas abiertas"
 
@@ -56198,6 +56362,11 @@ msgid ""
 "monitor excludes that monitor entirely; its tree is then not queried at all."
 msgstr ""
 
+msgid ""
+"Paths, keys and columns are matched exactly and case-sensitively, not as "
+"regular expressions."
+msgstr ""
+
 msgid "Pattern"
 msgstr "Patrón"
 
@@ -56976,6 +57145,19 @@ msgid ""
 "fields stay untouched. Read-only demo maps are skipped automatically."
 msgstr ""
 
+msgid ""
+"Picks host labels from the HW/SW inventory tree of a host. The <i>Check_MK "
+"HW/SW Inventory</i> service picks them on each successful run and reports "
+"new, vanished and changed labels until the service discovery accepts them. A "
+"periodic service discovery that updates host labels accepts them "
+"automatically. A label of a discovery plug-in with the same name takes "
+"precedence. To look up paths, keys and columns, open the HW/SW inventory "
+"page of a host and enable <tt>Modify display options > Show internal tree "
+"paths</tt>. They are then shown in brackets behind the titles (a trailing "
+"<tt>*</tt> only marks key columns), and the raw value is shown in brackets "
+"behind each value."
+msgstr ""
+
 msgid "Piggyback"
 msgstr "Piggyback"
 
@@ -57691,6 +57873,10 @@ msgid "Please select some hosts before doing bulk actions on hosts."
 msgstr ""
 "Por favor, seleccione algunos hosts antes de realizar operaciones masivas en "
 "hosts."
+
+#, fuzzy
+msgid "Please select the default context or enter at least one context name."
+msgstr "Elija un informe para programar"
 
 msgid "Please select the destination folder"
 msgstr "Seleccione la carpeta de destino"
@@ -59457,8 +59643,8 @@ msgid "Query telemetry metrics from custom graph editor"
 msgstr "Instancias de Oracle"
 
 #, fuzzy
-msgid "Query the data backend"
-msgstr "Añadir configuración de estado"
+msgid "Query the default context (no context name)"
+msgstr "Utilice el color por defecto del tema."
 
 msgid "Query the instance name from the database"
 msgstr ""
@@ -60894,6 +61080,14 @@ msgstr ""
 msgid "Regular expression: "
 msgstr "Expresión regular: "
 
+msgid ""
+"Regular expressions are searched anywhere in the raw value converted to a "
+"string, e.g. <tt>True</tt> or <tt>1073741824</tt>. Anchor them with <tt>^</"
+"tt> and <tt>$</tt>, and prefix them with <tt>(?i)</tt> to ignore the case. A "
+"replacement replaces the whole value; <tt>\\1</tt>, <tt>\\2</tt>, ... refer "
+"to the groups. A missing, empty or non-matching value picks no label."
+msgstr ""
+
 msgid "Regular expressions for message classification"
 msgstr "Expresiones regulares para la clasificación de mensajes"
 
@@ -61720,6 +61914,10 @@ msgstr "Sustituir por guiones bajos"
 msgid "Replacement"
 msgstr "Sustitución"
 
+#, fuzzy
+msgid "Replacement rules"
+msgstr "Sustitución"
+
 msgid "Replay this notification, send it again!"
 msgstr "Reproduzca esta notificación, envíela de nuevo!"
 
@@ -61747,6 +61945,10 @@ msgstr "Estado de la réplica"
 
 msgid "Replica update state"
 msgstr "Estado de actualización de la réplica"
+
+#, fuzzy
+msgid "Replicas"
+msgstr "Réplica del retraso"
 
 msgid "Replicate Event Console config"
 msgstr "Replicar la configuración de la consola de eventos"
@@ -62405,6 +62607,10 @@ msgstr "Restaurar desde este objetivo de copia de seguridad"
 msgid "Restore job"
 msgstr "Restaurar el trabajo"
 
+#, fuzzy
+msgid "Restore points"
+msgstr "Restaurar el trabajo"
+
 msgid "Restrict access to IP addresses"
 msgstr "Restringir el acceso a las direcciones IP"
 
@@ -63032,6 +63238,10 @@ msgstr "Mostrar en la tabla de usuarios"
 
 msgid "Rows"
 msgstr "Filas"
+
+#, fuzzy
+msgid "Rows where a column matches"
+msgstr "Omitir las filas en las que todas las columnas son idénticas"
 
 msgid "Ruckus Spot"
 msgstr "Ruckus Spot"
@@ -63931,6 +64141,10 @@ msgstr "Comunidad SNMP para la trampa SNMP"
 msgid "SNMP context names"
 msgstr "IDs de Contexto SNMP"
 
+#, fuzzy
+msgid "SNMP contexts"
+msgstr "IDs de Contexto SNMP"
+
 msgid "SNMP credentials"
 msgstr "Credenciales SNMP"
 
@@ -64275,6 +64489,10 @@ msgstr ""
 
 msgid "Scale to width of page"
 msgstr "Escala al ancho de la página"
+
+#, fuzzy
+msgid "Scale-out repositories"
+msgstr "Nombre de seguridad"
 
 #, fuzzy
 msgid "Scale-out repository name"
@@ -65299,6 +65517,13 @@ msgid ""
 "specific aspects of your Hyper-V infrastructure."
 msgstr ""
 
+msgid ""
+"Select which data the special agent fetches from the backup server. Deselect "
+"services you do not need, for example ones your monitoring account has no "
+"permission for. A service that is selected but cannot be fetched makes the "
+"agent fail, so that you can correct the selection or the permissions."
+msgstr ""
+
 msgid "Selected"
 msgstr "Seleccionado"
 
@@ -65604,6 +65829,10 @@ msgstr "Validez del certificado del sitio"
 
 msgid "Server connections"
 msgstr "Conexiones al servidor"
+
+#, fuzzy
+msgid "Server information (HW/SW inventory)"
+msgstr "Inventario de HW/SW"
 
 msgid "Server latency"
 msgstr "Latencia del servidor"
@@ -66357,6 +66586,10 @@ msgid ""
 msgstr ""
 "Servicios que no han sido comprobados durante demasiado tiempo según sus "
 "intervalos de comprobación configurados."
+
+#, fuzzy
+msgid "Services to fetch"
+msgstr "Servicios de host"
 
 #, fuzzy, python-format
 msgid ""
@@ -70830,6 +71063,9 @@ msgstr "Estado de un host"
 msgid "State of a service"
 msgstr "Estado de un servicio"
 
+msgid "State of accepted labels no longer picked"
+msgstr ""
+
 msgid "State of event changed by user"
 msgstr "Estado del evento cambiado por el usuario"
 
@@ -70870,6 +71106,13 @@ msgid "State of incident if downtime is set (predefined)"
 msgstr ""
 "Estado de la incidencia si se establece un tiempo de inactividad "
 "(predefinido)"
+
+msgid "State of picked labels not accepted yet"
+msgstr ""
+
+#, fuzzy
+msgid "State of picked labels with a changed value"
+msgstr "Estado del evento cambiado por el usuario"
 
 msgid "State of remaining services"
 msgstr "Estado de los servicios restantes"
@@ -72979,10 +73222,6 @@ msgstr ""
 #, fuzzy
 msgid "Telemetry metrics"
 msgstr "Añadir configuración de estado"
-
-#, fuzzy
-msgid "Telemetry metrics (custom query)"
-msgstr "Instancias de Oracle"
 
 #, fuzzy
 msgid ""
@@ -77789,6 +78028,10 @@ msgstr ""
 msgid "The provided token is not valid for dashboard access."
 msgstr "El archivo no parece un archivo de claves válido."
 
+#, fuzzy
+msgid "The provider customer cannot be deleted."
+msgstr "El cliente ha sido eliminado."
+
 msgid "The queried ESX system (vCenter / Host)"
 msgstr "El sistema ESX consultado (vCenter / Host)"
 
@@ -79126,6 +79369,10 @@ msgstr "El nombre de usuario utilizado para conectarse a la base de datos"
 msgid "The username used to connect to the database"
 msgstr "El nombre de usuario utilizado para conectarse a la base de datos"
 
+#, fuzzy
+msgid "The value"
+msgstr "Valor de la etiqueta"
+
 #, python-format
 msgid ""
 "The value \"%(operator)s\" of HTTP variable \"%(ident)s\" is not a valid "
@@ -79225,6 +79472,10 @@ msgstr ""
 
 msgid "The value of this rule is not valid. "
 msgstr "El valor de esta regla no es válido. "
+
+#, fuzzy
+msgid "The value, if it matches"
+msgstr "La regla no coincide con"
 
 #, fuzzy, python-format
 msgid ""
@@ -80553,6 +80804,10 @@ msgstr ""
 
 msgid "This crash report"
 msgstr "Este informe de accidente"
+
+#, fuzzy
+msgid "This custom service cannot be read, so it cannot be edited"
+msgstr "El cluster no puede ser un nodo propio"
 
 #, fuzzy
 msgid ""
@@ -90048,6 +90303,10 @@ msgid "Unknown aggregation"
 msgstr "Agregación desconocida"
 
 #, fuzzy
+msgid "Unknown certificate."
+msgstr "Usuario desconocido"
+
+#, fuzzy
 msgid "Unknown check parameter rule sets"
 msgstr "Mostrar parámetros de comprobación"
 
@@ -91392,6 +91651,10 @@ msgstr ""
 "Niveles de tensión para dispositivos como SAIs o PDUs. Pueden abordarse "
 "varias fases de forma independiente."
 
+#, fuzzy
+msgid "Uppercase"
+msgstr "OK"
+
 msgid "Uptime"
 msgstr "Tiempo de funcionamiento"
 
@@ -91883,6 +92146,11 @@ msgstr ""
 
 msgid "Use only lower case letters, digits, and underscores here."
 msgstr "Utilice aquí sólo letras minúsculas, dígitos y guiones bajos."
+
+msgid ""
+"Use only the rows whose column matches, e.g. match on <tt>name</tt> and use "
+"the value of <tt>version</tt>."
+msgstr ""
 
 msgid ""
 "Use only with cache disabled in the Meraki special agent settings. The "
@@ -94534,6 +94802,10 @@ msgstr "W&T WebIO"
 
 msgid "WA"
 msgstr "WA"
+
+#, fuzzy
+msgid "WAN accelerators"
+msgstr "Estadísticas del acelerador HTTP"
 
 msgid "WAN access type"
 msgstr "Tipo de acceso WAN"
@@ -100121,6 +100393,10 @@ msgstr "conexión/seg"
 msgid "connections"
 msgstr "conexiones"
 
+#, fuzzy
+msgid "contact groups"
+msgstr "grupos de contacto: "
+
 msgid "contact groups: "
 msgstr "grupos de contacto: "
 
@@ -100607,6 +100883,10 @@ msgstr[1] "hosts"
 #, fuzzy, python-format
 msgid "host \"%(host_name)s\""
 msgstr "Nombre de host: %s"
+
+#, fuzzy
+msgid "host groups"
+msgstr "Grupos de acogida"
 
 msgid "host in total"
 msgstr "anfitrión en total"
@@ -101773,6 +102053,10 @@ msgid "service"
 msgid_plural "services"
 msgstr[0] "servicio"
 msgstr[1] "servicios"
+
+#, fuzzy
+msgid "service groups"
+msgstr "Grupos de servicios"
 
 #, fuzzy, python-format
 msgid "service in %(state)s state"
@@ -105851,7 +106135,15 @@ msgid "every"
 msgstr "(nunca)"
 
 #, fuzzy
+msgid "Live refresh every"
+msgstr "Actualizar"
+
+#, fuzzy
 msgid "Refresh off"
+msgstr "Actualizar"
+
+#, fuzzy
+msgid "Resume live refresh"
 msgstr "Actualizar"
 
 #, fuzzy
@@ -108717,16 +109009,28 @@ msgid "Failed to create the custom service."
 msgstr "Nombre del servicio personalizado"
 
 #, fuzzy
+msgid "Failed to load the custom service."
+msgstr "Nombre del servicio personalizado"
+
+#, fuzzy
+msgid "Save & activate changes"
+msgstr "No activar los cambios"
+
+#, fuzzy
+msgid "Create & activate changes"
+msgstr "No activar los cambios"
+
+#, fuzzy
+msgid "Failed to save the custom service."
+msgstr "Nombre del servicio personalizado"
+
+#, fuzzy
 msgid "Define metric"
 msgstr "Métrica única"
 
 #, fuzzy
 msgid "Assign to host"
 msgstr "Asignar al grupo"
-
-#, fuzzy
-msgid "Create & activate changes"
-msgstr "No activar los cambios"
 
 #, fuzzy
 msgid "No metric selected."
@@ -112292,6 +112596,16 @@ msgid "Resend code"
 msgstr "Regenerar los códigos de seguridad"
 
 #, fuzzy
+msgid "Internal error. Please try again or contact Checkmk support."
+msgstr ""
+"La verificación de su licencia no ha tenido éxito: %s, Checkmk ahora no "
+"tiene licencia.<br> Para seguir utilizando Checkmk, póngase en contacto con "
+"el servicio de asistencia de Checkmk."
+
+msgid "Unable to reach Checkmk site. Please check that it is started."
+msgstr ""
+
+#, fuzzy
 msgid "Code"
 msgstr "Código Tamaño"
 
@@ -113319,6 +113633,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "At least one custom query is required."
+#~ msgstr "Estado cuando falta el archivo"
+
+#, fuzzy
+#~ msgid "Editing a custom service is not available yet"
+#~ msgstr "Instancias de Oracle"
+
+#, fuzzy
+#~ msgid "Query the data backend"
+#~ msgstr "Añadir configuración de estado"
+
+#, fuzzy
+#~ msgid "Telemetry metrics (custom query)"
+#~ msgstr "Instancias de Oracle"
 
 #, fuzzy
 #~ msgid "Filter by host name"

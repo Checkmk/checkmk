@@ -2873,6 +2873,9 @@ msgid ""
 "party backup solutions may fail to capture a consistent state."
 msgstr ""
 
+msgid "A replacement (first matching rule wins)"
+msgstr ""
+
 #, fuzzy
 msgid "A report cannot reference itself"
 msgstr "Een rapport kan niet naar zichzelf verwijzen"
@@ -3162,6 +3165,10 @@ msgstr ""
 #, fuzzy
 msgid "AI"
 msgstr "AIX"
+
+#, fuzzy
+msgid "AI Assistant"
+msgstr "Instantie"
 
 #, fuzzy
 msgid "AI assistance"
@@ -4868,6 +4875,10 @@ msgstr "Baan toevoegen"
 msgid "Add key"
 msgstr "Sleutel toevoegen"
 
+#, fuzzy
+msgid "Add label source"
+msgstr "Bron"
+
 msgid "Add limits"
 msgstr "Grenzen toevoegen"
 
@@ -6151,6 +6162,10 @@ msgstr "Agent plugins: Reguliere uitdrukking om plugins uit te sluiten"
 msgid "Agent plug-ins: versions"
 msgstr "Agent plugins: versies"
 
+#, fuzzy
+msgid "Agent protection groups"
+msgstr "Aggregatiegroepen"
+
 msgid "Agent registration"
 msgstr "Agent registratie"
 
@@ -6976,6 +6991,10 @@ msgid "All resource groups that belong to this node run on this node (local)"
 msgstr ""
 "Alle resource groepen die bij dit knooppunt horen draaien op dit knooppunt "
 "(lokaal)"
+
+#, fuzzy
+msgid "All rows"
+msgstr "Alle stromen"
 
 #, python-format
 msgid ""
@@ -8079,6 +8098,11 @@ msgstr "Overzicht toepassingen"
 msgid "Applications, processes & services"
 msgstr "Toepassingen, processen en diensten"
 
+msgid ""
+"Applied after matching, to the label name and value; the prefix is kept as "
+"entered."
+msgstr ""
+
 #, fuzzy
 msgid "Applied to"
 msgstr "Solliciteer naar"
@@ -8575,10 +8599,6 @@ msgstr ""
 
 #, fuzzy
 msgid "At least one contact group must be selected"
-msgstr "Staat wanneer bestand ontbreekt"
-
-#, fuzzy
-msgid "At least one custom query is required."
 msgstr "Staat wanneer bestand ontbreekt"
 
 #, fuzzy
@@ -10713,12 +10733,24 @@ msgstr ""
 msgid "Backup job"
 msgstr "Back-up opdracht"
 
+#, fuzzy
+msgid "Backup jobs"
+msgstr "Back-up opdracht"
+
 msgid "Backup modes"
 msgstr "Back-up modi"
 
 #, fuzzy
 msgid "Backup object name"
 msgstr "Back-up tijd"
+
+#, fuzzy
+msgid "Backup proxies"
+msgstr "Back-up codes"
+
+#, fuzzy
+msgid "Backup repositories"
+msgstr "Back-up en herstel"
 
 #, fuzzy
 msgid "Backup server"
@@ -10741,6 +10773,9 @@ msgstr "Backup-ID"
 
 msgid "Backups"
 msgstr "Back-ups"
+
+msgid "Backups (per protected machine)"
+msgstr ""
 
 #, fuzzy
 msgid "Backups CRITICAL"
@@ -11760,7 +11795,9 @@ msgid ""
 "but some devices are offering their information in different SNMPv3 "
 "contexts. This rule can be used to configure, based on hosts and SNMP "
 "sections, which SNMPv3 contexts Checkmk should ask for when getting "
-"information via SNMPv3."
+"information via SNMPv3. The default context is only queried if it is "
+"selected here. If several contexts return the same OIDs, only the data of "
+"the first context is used."
 msgstr ""
 "Standaard gebruikt Checkmk geen specifieke context tijdens SNMPv3 queries, "
 "maar sommige apparaten bieden hun informatie aan in verschillende SNMPv3 "
@@ -13235,6 +13272,14 @@ msgstr "Kan taak niet verwijderen. Taak kan niet worden gestopt."
 #, fuzzy
 msgid "Cannot delete rules that are managed by Quick Setup."
 msgstr "U kunt geen rollen verwijderen, die nog in gebruik zijn (%s)!"
+
+#, fuzzy, python-format
+msgid ""
+"Cannot delete this customer because the following objects are still assigned "
+"to it: %(references)s."
+msgstr ""
+"Kan deze klant niet verwijderen omdat de sites %(sites)s nog steeds aan hem "
+"zijn toegewezen."
 
 #, python-format
 msgid ""
@@ -16079,8 +16124,16 @@ msgstr "Kolom"
 msgid "Column headers"
 msgstr "Kolom kopteksten"
 
+#, fuzzy
+msgid "Column of the value"
+msgstr "Identificatie van de waarde"
+
 msgid "Column title"
 msgstr "Kolom titel"
+
+#, fuzzy
+msgid "Column to match"
+msgstr "Bijpassende kolommen"
 
 msgid "Columns"
 msgstr "Kolommen"
@@ -16505,6 +16558,10 @@ msgstr "Configuratie"
 #, fuzzy
 msgid "Configuration activation"
 msgstr "Configuratie aansluiting"
+
+#, fuzzy
+msgid "Configuration backup"
+msgstr "BI Configuratie Pakketten"
 
 #, fuzzy
 msgid "Configuration bundle ID"
@@ -18451,6 +18508,10 @@ msgstr ""
 "Kon ifid niet opvragen voor host_adres '%(ip_address)s'. Uw ntopng gebruiker "
 "heeft misschien niet voldoende rechten om deze informatie op te vragen."
 
+#, fuzzy
+msgid "Could not read the certificate."
+msgstr "Configuratie toestand toevoegen"
+
 #, fuzzy, python-format
 msgid "Could not reload DCD: %(e)s. See web.log for further information."
 msgstr "Kon DCD niet herladen: %s. Zie web.log voor meer informatie."
@@ -19773,6 +19834,10 @@ msgstr "Aangepaste zoekopdracht"
 msgid "Custom sender (\"From\")"
 msgstr ""
 
+#, fuzzy
+msgid "Custom service (telemetry metrics)"
+msgstr "Aangepaste dienstkenmerken"
+
 msgid "Custom service attributes"
 msgstr "Aangepaste dienstkenmerken"
 
@@ -20929,6 +20994,10 @@ msgstr "Standaard kleur"
 
 msgid "Default configuration"
 msgstr "Standaard configuratie"
+
+#, fuzzy
+msgid "Default context"
+msgstr "Standaard kleur"
 
 msgid "Default credentials"
 msgstr "Standaard inloggegevens"
@@ -25055,6 +25124,10 @@ msgstr "Bewerk referentie"
 msgid "Edit custom graph"
 msgstr "Bewerk aangepaste grafiek"
 
+#, fuzzy
+msgid "Edit custom service"
+msgstr "Jira aangepaste dienst"
+
 #, python-format
 msgid "Edit customer %(customer_id)s"
 msgstr "Klant %(customer_id)s bewerken"
@@ -25279,6 +25352,10 @@ msgstr "Bewerk deze verbinding"
 msgid "Edit this credential"
 msgstr "Bewerk deze referentie"
 
+#, fuzzy
+msgid "Edit this custom service"
+msgstr "Deze klant bewerken"
+
 msgid "Edit this customer"
 msgstr "Deze klant bewerken"
 
@@ -25384,10 +25461,6 @@ msgstr "Bewerkte de %(name)s '%(ident)s'"
 #, fuzzy, python-format
 msgid "Edited user profile for user %(user_id)s"
 msgstr "Bewerkt gebruikersprofiel voor gebruiker %s"
-
-#, fuzzy
-msgid "Editing a custom service is not available yet"
-msgstr "Oracle gevallen"
 
 msgid "Edition"
 msgstr "Editie"
@@ -27381,6 +27454,10 @@ msgstr "Executive"
 
 #, fuzzy
 msgid "Execute as another user"
+msgstr "Activeer wijzigingen van andere gebruikers"
+
+#, fuzzy
+msgid "Execute as the agent's user"
 msgstr "Activeer wijzigingen van andere gebruikers"
 
 #, fuzzy, python-format
@@ -31443,6 +31520,10 @@ msgid "HW/SW inventory history"
 msgstr "Inventarisatie geschiedenis van host"
 
 #, fuzzy
+msgid "HW/SW inventory label picker"
+msgstr "HW/SW-inventarisatieregels"
+
+#, fuzzy
 msgid "HW/SW inventory rules"
 msgstr "HW/SW-inventarisatieregels"
 
@@ -34364,6 +34445,9 @@ msgstr "Host label"
 msgid "Host labels"
 msgstr "Gastheer-etiketten"
 
+msgid "Host labels picked from the HW/SW inventory"
+msgstr ""
+
 #, fuzzy, python-format
 msgid ""
 "Host labels: %(total)d total (%(added)d added, %(changed)d changed, "
@@ -36267,6 +36351,11 @@ msgid ""
 msgstr ""
 "Indien ingesteld, kan de plugin herhaaldelijk worden aangeroepen - tot dit "
 "aantal keren of tot het succesvol eindigt."
+
+msgid ""
+"If several entries yield the same label name, the first one wins; single "
+"values come before table columns."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -39752,6 +39841,10 @@ msgstr "Ongeldige reguliere expressie: %(exception)s"
 msgid "Invalid regular expression: %(value)s"
 msgstr "Ongeldige reguliere expressie: %(e)s"
 
+#, fuzzy, python-format
+msgid "Invalid replacement: %(error)s"
+msgstr "Ongeldige reguliere expressie: %s"
+
 msgid "Invalid report"
 msgstr "Ongeldig rapport"
 
@@ -39958,6 +40051,10 @@ msgstr "Inventaris"
 msgid "Inventory attribute: %(long_title)s"
 msgstr "Inventariskenmerk"
 
+#, fuzzy
+msgid "Inventory categories"
+msgstr "Inventaris Historie"
+
 msgid "Inventory changes"
 msgstr "Inventariswijzigingen"
 
@@ -39995,6 +40092,10 @@ msgstr "Inventaris van alle ingezette agent plugins en hun versies"
 #, fuzzy
 msgid "Inventory of host"
 msgstr "Inventaris van de gastheer"
+
+#, fuzzy
+msgid "Inventory source"
+msgstr "Inventaris Historie"
 
 #, fuzzy, python-format
 msgid "Inventory table: %(long_title)s"
@@ -40694,6 +40795,10 @@ msgstr "Kaspersky Anti-Virus (Linux)"
 msgid "Kaspersky Anti-Virus time settings"
 msgstr "Kaspersky Anti-Virus Tijd Instellingen"
 
+#, fuzzy
+msgid "Keep"
+msgstr "Keepalive"
+
 msgid ""
 "Keep <tt>cmk-signed-push-cert</tt>, the agent's persistent certificate "
 "Secret."
@@ -40769,6 +40874,10 @@ msgstr "Key"
 
 msgid "Key ID"
 msgstr ""
+
+#, fuzzy
+msgid "Key of the value"
+msgstr "Type van de waarde"
 
 msgid "Key pair will be generated when you save."
 msgstr "Het sleutelpaar wordt gegenereerd wanneer u opslaat."
@@ -41138,6 +41247,25 @@ msgid "Label"
 msgstr "Etiket"
 
 #, fuzzy
+msgid "Label name"
+msgstr "Modelnaam"
+
+msgid "Label name prefix (empty for none)"
+msgstr ""
+
+#, fuzzy
+msgid "Label naming"
+msgstr "Bulk hernoemen"
+
+#, fuzzy
+msgid "Label sources"
+msgstr "Bronnen"
+
+#, fuzzy
+msgid "Label value"
+msgstr "Tag waarde"
+
+#, fuzzy
 msgid "Labelling options"
 msgstr "Etiketteringsopties"
 
@@ -41156,6 +41284,13 @@ msgstr ""
 "in Checkmk naar te verwijzen, bv. in regelketens.<br><b>Label formaat:</b> "
 "key:value<br><br>Checkmk voert geen validatie uit op de labels die u "
 "gebruikt."
+
+#, fuzzy
+msgid "Labels from single values"
+msgstr "Enkele waarden beperken"
+
+msgid "Labels from table columns (first row with a value wins)"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -41728,6 +41863,10 @@ msgid "Let through notifications counting upto this number"
 msgstr "Laat door kennisgevingen tellen tot dit nummer"
 
 msgid "Letter"
+msgstr "Brief"
+
+#, fuzzy
+msgid "Letter case"
 msgstr "Brief"
 
 msgid "Level"
@@ -42461,6 +42600,10 @@ msgstr "Licentieerbare hosts"
 
 msgid "Licensable services"
 msgstr "Licentieerbare diensten"
+
+#, fuzzy
+msgid "License"
+msgstr "Erkende"
 
 msgid "License Feature"
 msgstr "Licentie Eigenschap"
@@ -44221,6 +44364,10 @@ msgstr ""
 msgid "Lower voltage levels"
 msgstr "Lagere gezondheidsniveaus"
 
+#, fuzzy
+msgid "Lowercase"
+msgstr "Lager"
+
 msgid "Lowest: No notification, update badge number"
 msgstr "Laagste: Geen kennisgeving, update badge nummer"
 
@@ -44965,6 +45112,10 @@ msgstr ""
 #, fuzzy
 msgid "Managed robots"
 msgstr "Beheerde objecten"
+
+#, fuzzy
+msgid "Managed servers"
+msgstr "Diensten beheren"
 
 msgid "Management board"
 msgstr "Raad van bestuur"
@@ -47496,10 +47647,11 @@ msgstr ""
 msgid ""
 "Monitor a Veeam Backup & Replication server through its REST API. Nothing is "
 "installed on the backup server, so this also works for the Veeam software "
-"appliance, where the Checkmk agent cannot run. The built-in <tt>Veeam Backup "
-"Viewer</tt> role is sufficient. Do not configure an administrator account: "
-"it could also delete backups, trigger restores and read stored encryption "
-"passwords."
+"appliance, where the Checkmk agent cannot run. Use a dedicated account whose "
+"role can read the data you want to monitor; some services require a more "
+"privileged role, and the agent stops when it cannot read a service. Do not "
+"configure an administrator account: it could also delete backups, trigger "
+"restores and read stored encryption passwords."
 msgstr ""
 
 msgid "Monitor all files in folder"
@@ -49715,6 +49867,10 @@ msgstr "Geen connectiviteitsproblemen"
 msgid "No contact groups assigned."
 msgstr "Geen contactgroepen toegewezen."
 
+#, fuzzy
+msgid "No context names"
+msgstr "SNMP Context ID's"
+
 msgid "No custom attributes are defined yet."
 msgstr "Er zijn nog geen aangepaste attributen gedefinieerd."
 
@@ -49757,6 +49913,10 @@ msgstr "Geen gegevens."
 
 msgid "No databases configured explicitly; see 'Instance discovery'"
 msgstr ""
+
+#, fuzzy
+msgid "No default context"
+msgstr "Is standaard"
 
 #, fuzzy
 msgid "No default values can be set for condition choices."
@@ -52895,6 +53055,10 @@ msgstr "Open mode"
 msgid "Open network sockets"
 msgstr "Open netwerk sockets"
 
+#, fuzzy
+msgid "Open or close the AI assistant"
+msgstr "Deze site inschakelen"
+
 msgid "Open output count"
 msgstr "Open uitgang tellen"
 
@@ -55797,6 +55961,11 @@ msgid ""
 "monitor excludes that monitor entirely; its tree is then not queried at all."
 msgstr ""
 
+msgid ""
+"Paths, keys and columns are matched exactly and case-sensitively, not as "
+"regular expressions."
+msgstr ""
+
 msgid "Pattern"
 msgstr "Patroon"
 
@@ -56573,6 +56742,19 @@ msgid ""
 "fields stay untouched. Read-only demo maps are skipped automatically."
 msgstr ""
 
+msgid ""
+"Picks host labels from the HW/SW inventory tree of a host. The <i>Check_MK "
+"HW/SW Inventory</i> service picks them on each successful run and reports "
+"new, vanished and changed labels until the service discovery accepts them. A "
+"periodic service discovery that updates host labels accepts them "
+"automatically. A label of a discovery plug-in with the same name takes "
+"precedence. To look up paths, keys and columns, open the HW/SW inventory "
+"page of a host and enable <tt>Modify display options > Show internal tree "
+"paths</tt>. They are then shown in brackets behind the titles (a trailing "
+"<tt>*</tt> only marks key columns), and the raw value is shown in brackets "
+"behind each value."
+msgstr ""
+
 msgid "Piggyback"
 msgstr "Piggyback"
 
@@ -57273,6 +57455,10 @@ msgstr "Kies een rapport om te plannen"
 #, fuzzy
 msgid "Please select some hosts before doing bulk actions on hosts."
 msgstr "Selecteer enkele hosts voordat u bulkoperaties op hosts uitvoert."
+
+#, fuzzy
+msgid "Please select the default context or enter at least one context name."
+msgstr "Kies een rapport om te plannen"
 
 msgid "Please select the destination folder"
 msgstr "Selecteer de doelmap"
@@ -59017,8 +59203,8 @@ msgid "Query telemetry metrics from custom graph editor"
 msgstr "Oracle gevallen"
 
 #, fuzzy
-msgid "Query the data backend"
-msgstr "Configuratie toestand toevoegen"
+msgid "Query the default context (no context name)"
+msgstr "Gebruik de standaard kleur van het thema."
 
 msgid "Query the instance name from the database"
 msgstr ""
@@ -60451,6 +60637,14 @@ msgstr ""
 msgid "Regular expression: "
 msgstr "Reguliere uitdrukking: "
 
+msgid ""
+"Regular expressions are searched anywhere in the raw value converted to a "
+"string, e.g. <tt>True</tt> or <tt>1073741824</tt>. Anchor them with <tt>^</"
+"tt> and <tt>$</tt>, and prefix them with <tt>(?i)</tt> to ignore the case. A "
+"replacement replaces the whole value; <tt>\\1</tt>, <tt>\\2</tt>, ... refer "
+"to the groups. A missing, empty or non-matching value picks no label."
+msgstr ""
+
 msgid "Regular expressions for message classification"
 msgstr "Reguliere uitdrukkingen voor berichtclassificatie"
 
@@ -61265,6 +61459,10 @@ msgstr "Vervangen door underscores"
 msgid "Replacement"
 msgstr "Vervanging"
 
+#, fuzzy
+msgid "Replacement rules"
+msgstr "Vervanging"
+
 msgid "Replay this notification, send it again!"
 msgstr "Herhaal deze melding, verstuur het opnieuw!"
 
@@ -61292,6 +61490,10 @@ msgstr "Replica klaar staat"
 
 msgid "Replica update state"
 msgstr "Replica bijwerken staat"
+
+#, fuzzy
+msgid "Replicas"
+msgstr "Replica Lag"
 
 msgid "Replicate Event Console config"
 msgstr "De configuratie van de gebeurtenissenconsole repliceren"
@@ -61929,6 +62131,10 @@ msgstr "Herstellen vanaf dit back-updoel"
 msgid "Restore job"
 msgstr "Herstel opdracht"
 
+#, fuzzy
+msgid "Restore points"
+msgstr "Herstel opdracht"
+
 msgid "Restrict access to IP addresses"
 msgstr "Toegang tot IP-adressen beperken"
 
@@ -62544,6 +62750,10 @@ msgstr "Toon in gebruikerstabel"
 
 msgid "Rows"
 msgstr "Rijen"
+
+#, fuzzy
+msgid "Rows where a column matches"
+msgstr "Laat rijen weg waar alle kolommen identiek zijn"
 
 msgid "Ruckus Spot"
 msgstr "Ruckus Spot"
@@ -63430,6 +63640,10 @@ msgstr "SNMP Community voor de SNMP trap"
 msgid "SNMP context names"
 msgstr "SNMP Context ID's"
 
+#, fuzzy
+msgid "SNMP contexts"
+msgstr "SNMP Context ID's"
+
 msgid "SNMP credentials"
 msgstr "SNMP geloofsbrieven"
 
@@ -63773,6 +63987,10 @@ msgstr ""
 
 msgid "Scale to width of page"
 msgstr "Schaal naar breedte van pagina"
+
+#, fuzzy
+msgid "Scale-out repositories"
+msgstr "Veiligheidsnaam"
 
 #, fuzzy
 msgid "Scale-out repository name"
@@ -64792,6 +65010,13 @@ msgid ""
 "specific aspects of your Hyper-V infrastructure."
 msgstr ""
 
+msgid ""
+"Select which data the special agent fetches from the backup server. Deselect "
+"services you do not need, for example ones your monitoring account has no "
+"permission for. A service that is selected but cannot be fetched makes the "
+"agent fail, so that you can correct the selection or the permissions."
+msgstr ""
+
 msgid "Selected"
 msgstr "Geselecteerd"
 
@@ -65097,6 +65322,10 @@ msgstr "Geldigheid van het site-certificaat"
 
 msgid "Server connections"
 msgstr "Serververbindingen"
+
+#, fuzzy
+msgid "Server information (HW/SW inventory)"
+msgstr "HW/SW-inventaris"
 
 msgid "Server latency"
 msgstr "Serververtraging"
@@ -65845,6 +66074,10 @@ msgid ""
 msgstr ""
 "Diensten die te lang niet zijn gecontroleerd volgens de geconfigureerde "
 "controle-intervallen."
+
+#, fuzzy
+msgid "Services to fetch"
+msgstr "Diensten van gastheer"
 
 #, fuzzy, python-format
 msgid ""
@@ -70251,6 +70484,9 @@ msgstr "Staat van een host"
 msgid "State of a service"
 msgstr "Staat van een dienst"
 
+msgid "State of accepted labels no longer picked"
+msgstr ""
+
 msgid "State of event changed by user"
 msgstr "Toestand van gebeurtenis gewijzigd door gebruiker"
 
@@ -70289,6 +70525,13 @@ msgstr "Staat van het incident indien downtime is ingesteld (als geheel getal)"
 
 msgid "State of incident if downtime is set (predefined)"
 msgstr "Staat van incident indien downtime is ingesteld (voorgedefinieerd)"
+
+msgid "State of picked labels not accepted yet"
+msgstr ""
+
+#, fuzzy
+msgid "State of picked labels with a changed value"
+msgstr "Toestand van gebeurtenis gewijzigd door gebruiker"
 
 msgid "State of remaining services"
 msgstr "Staat van resterende diensten"
@@ -72388,10 +72631,6 @@ msgstr ""
 #, fuzzy
 msgid "Telemetry metrics"
 msgstr "Configuratie toestand toevoegen"
-
-#, fuzzy
-msgid "Telemetry metrics (custom query)"
-msgstr "Oracle gevallen"
 
 #, fuzzy
 msgid ""
@@ -77183,6 +77422,10 @@ msgstr ""
 msgid "The provided token is not valid for dashboard access."
 msgstr "Het bestand ziet er niet uit als een geldig sleutelbestand."
 
+#, fuzzy
+msgid "The provider customer cannot be deleted."
+msgstr "De Klant is verwijderd."
+
 msgid "The queried ESX system (vCenter / Host)"
 msgstr "Het opgevraagde ESX systeem (vCenter / Host)"
 
@@ -78520,6 +78763,10 @@ msgid "The username used to connect to the database"
 msgstr ""
 "De gebruikersnaam die wordt gebruikt om verbinding te maken met de database"
 
+#, fuzzy
+msgid "The value"
+msgstr "Tag waarde"
+
 #, python-format
 msgid ""
 "The value \"%(operator)s\" of HTTP variable \"%(ident)s\" is not a valid "
@@ -78623,6 +78870,10 @@ msgstr ""
 
 msgid "The value of this rule is not valid. "
 msgstr "De waarde van deze regel is niet geldig. "
+
+#, fuzzy
+msgid "The value, if it matches"
+msgstr "De regel komt niet overeen met"
 
 #, fuzzy, python-format
 msgid ""
@@ -79938,6 +80189,10 @@ msgstr ""
 
 msgid "This crash report"
 msgstr "Dit crash rapport"
+
+#, fuzzy
+msgid "This custom service cannot be read, so it cannot be edited"
+msgstr "Het cluster kan geen eigen knooppunt zijn"
 
 #, fuzzy
 msgid ""
@@ -89384,6 +89639,10 @@ msgid "Unknown aggregation"
 msgstr "Onbekende aggregatie"
 
 #, fuzzy
+msgid "Unknown certificate."
+msgstr "Onbekende gebruiker"
+
+#, fuzzy
 msgid "Unknown check parameter rule sets"
 msgstr "Toon controleparameters"
 
@@ -90706,6 +90965,10 @@ msgstr ""
 "Spanningsniveaus voor apparaten zoals UPS of PDUs. Verschillende fasen "
 "kunnen onafhankelijk worden aangesproken."
 
+#, fuzzy
+msgid "Uppercase"
+msgstr "Boven"
+
 msgid "Uptime"
 msgstr "Uptime"
 
@@ -91193,6 +91456,11 @@ msgstr ""
 
 msgid "Use only lower case letters, digits, and underscores here."
 msgstr "Gebruik hier alleen kleine letters, cijfers en underscores."
+
+msgid ""
+"Use only the rows whose column matches, e.g. match on <tt>name</tt> and use "
+"the value of <tt>version</tt>."
+msgstr ""
 
 msgid ""
 "Use only with cache disabled in the Meraki special agent settings. The "
@@ -93818,6 +94086,10 @@ msgstr "W&T WebIO"
 
 msgid "WA"
 msgstr "WA"
+
+#, fuzzy
+msgid "WAN accelerators"
+msgstr "HTTP-versneller statistieken"
 
 msgid "WAN access type"
 msgstr "Type WAN-toegang"
@@ -99382,6 +99654,10 @@ msgstr "verbinding/sec"
 msgid "connections"
 msgstr "verbindingen"
 
+#, fuzzy
+msgid "contact groups"
+msgstr "contactgroepen: "
+
 msgid "contact groups: "
 msgstr "contactgroepen: "
 
@@ -99868,6 +100144,10 @@ msgstr[1] "hosts"
 #, fuzzy, python-format
 msgid "host \"%(host_name)s\""
 msgstr "Hostnaam: %s"
+
+#, fuzzy
+msgid "host groups"
+msgstr "Hostgroep"
 
 msgid "host in total"
 msgstr "host in totaal"
@@ -101025,6 +101305,10 @@ msgid "service"
 msgid_plural "services"
 msgstr[0] "service"
 msgstr[1] "services"
+
+#, fuzzy
+msgid "service groups"
+msgstr "Dienstengroep"
 
 #, fuzzy, python-format
 msgid "service in %(state)s state"
@@ -105090,7 +105374,15 @@ msgid "every"
 msgstr "(nooit)"
 
 #, fuzzy
+msgid "Live refresh every"
+msgstr "Vernieuwen"
+
+#, fuzzy
 msgid "Refresh off"
+msgstr "Vernieuwen"
+
+#, fuzzy
+msgid "Resume live refresh"
 msgstr "Vernieuwen"
 
 #, fuzzy
@@ -107956,16 +108248,28 @@ msgid "Failed to create the custom service."
 msgstr "Naam van de aangepaste dienst"
 
 #, fuzzy
+msgid "Failed to load the custom service."
+msgstr "Naam van de aangepaste dienst"
+
+#, fuzzy
+msgid "Save & activate changes"
+msgstr "Veranderingen niet activeren"
+
+#, fuzzy
+msgid "Create & activate changes"
+msgstr "Veranderingen niet activeren"
+
+#, fuzzy
+msgid "Failed to save the custom service."
+msgstr "Naam van de aangepaste dienst"
+
+#, fuzzy
 msgid "Define metric"
 msgstr "Enkel metrisch"
 
 #, fuzzy
 msgid "Assign to host"
 msgstr "Toewijzen aan groep"
-
-#, fuzzy
-msgid "Create & activate changes"
-msgstr "Veranderingen niet activeren"
 
 #, fuzzy
 msgid "No metric selected."
@@ -111514,6 +111818,16 @@ msgid "Resend code"
 msgstr "Back-upcodes opnieuw genereren"
 
 #, fuzzy
+msgid "Internal error. Please try again or contact Checkmk support."
+msgstr ""
+"De verificatie van uw licentie was niet succesvol: %s, Checkmk is nu zonder "
+"licentie.<br> Om Checkmk te blijven gebruiken, neem contact op met uw "
+"Checkmk support."
+
+msgid "Unable to reach Checkmk site. Please check that it is started."
+msgstr ""
+
+#, fuzzy
 msgid "Code"
 msgstr "Code Grootte"
 
@@ -112540,6 +112854,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "At least one custom query is required."
+#~ msgstr "Staat wanneer bestand ontbreekt"
+
+#, fuzzy
+#~ msgid "Editing a custom service is not available yet"
+#~ msgstr "Oracle gevallen"
+
+#, fuzzy
+#~ msgid "Query the data backend"
+#~ msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+#~ msgid "Telemetry metrics (custom query)"
+#~ msgstr "Oracle gevallen"
 
 #, fuzzy
 #~ msgid "Filter by host name"

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-10-05 13:31+0000\n"
+"PO-Revision-Date: 2026-10-06 09:12+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -2024,10 +2024,10 @@ msgid ""
 "disable the MKP sync or check whether or not you need all the extensions.</p>"
 msgstr ""
 "<p>分散設定のセットアップでは、拡張機能(<tt>~/local/</tt>内のMKPとファイル)を"
-"リモートサイトに同期することができます。これらのファイルは、すべての"
-"レプリケーションでリモートサイトと同期され、ファイルが大きい場合は同期が遅く"
-"なる可能性があります。MKP同期を無効にするか、すべての拡張機能が必要かどうかを"
-"確認することができます。</p>"
+"リモートサイトに同期することができます。これらのファイルは、すべてのレプリ"
+"ケーションでリモートサイトと同期され、ファイルが大きい場合は同期が遅くなる可"
+"能性があります。MKP同期を無効にするか、すべての拡張機能が必要かどうかを確認す"
+"ることができます。</p>"
 
 msgid ""
 "<p>In distributed setups, Livestatus is used to transport the status "
@@ -2831,6 +2831,9 @@ msgstr ""
 "保証されないため十分ではありません。<br>同様に、サードパーティのバックアップ"
 "ソリューションでは、一貫性のある状態をキャプチャできない場合があります。"
 
+msgid "A replacement (first matching rule wins)"
+msgstr ""
+
 msgid "A report cannot reference itself"
 msgstr "レポートは自身を参照できません"
 
@@ -3099,6 +3102,9 @@ msgstr "AES-256-C (Cisco)"
 
 msgid "AI"
 msgstr "AI"
+
+msgid "AI Assistant"
+msgstr "AIアシスタント"
 
 msgid "AI assistance"
 msgstr "AIアシスタンス"
@@ -4401,10 +4407,10 @@ msgid ""
 "such as Pod or DaemonSet. Use these services for separate thresholds, graphs "
 "and notifications. Rediscover services after changing this choice."
 msgstr ""
-"監視対象の Kubernetes リソース種別（Pod や DaemonSet など）ごとに、"
-"クラスターホストにサービスを追加します。これらのサービスを、それぞれ個別のし"
-"きい値、グラフ、通知に使用します。この設定を変更した場合は、サービスを再検出"
-"してください。"
+"監視対象の Kubernetes リソース種別（Pod や DaemonSet など）ごとに、クラスター"
+"ホストにサービスを追加します。これらのサービスを、それぞれ個別のしきい値、グ"
+"ラフ、通知に使用します。この設定を変更した場合は、サービスを再検出してくださ"
+"い。"
 
 msgid "Add additional folder"
 msgstr "フォルダを追加します"
@@ -4629,6 +4635,9 @@ msgstr "ジョブを追加する"
 
 msgid "Add key"
 msgstr "キーを追加"
+
+msgid "Add label source"
+msgstr "ラベルソースの追加"
 
 msgid "Add limits"
 msgstr "制限を追加する"
@@ -5483,8 +5492,8 @@ msgid ""
 "connection has recovered. Inspect the cluster-aggregator logs to investigate "
 "the underlying Kubernetes API error."
 msgstr ""
-"Kubernetes オブジェクトの更新受信時にエラーが発生した場合、指定した期間は"
-"アラートを継続します。新たにエラーが発生するたびに、この期間はリセットされま"
+"Kubernetes オブジェクトの更新受信時にエラーが発生した場合、指定した期間はア"
+"ラートを継続します。新たにエラーが発生するたびに、この期間はリセットされま"
 "す。期間が終了するとアラートは終了しますが、接続が復旧したことを意味するもの"
 "ではありません。根本的な Kubernetes API エラーを調査するには、cluster-"
 "aggregator のログを確認してください。"
@@ -5818,6 +5827,9 @@ msgstr "エージェントプラグイン: プラグイン除外のための正�
 
 msgid "Agent plug-ins: versions"
 msgstr "エージェントプラグイン: バージョン"
+
+msgid "Agent protection groups"
+msgstr "エージェント保護グループ"
 
 msgid "Agent registration"
 msgstr "エージェント登録"
@@ -6588,6 +6600,9 @@ msgstr ""
 "このノードに属するすべてのリソースグループは、このノードで実行されます(ローカ"
 "ル)"
 
+msgid "All rows"
+msgstr "すべての行"
+
 #, python-format
 msgid ""
 "All rows in the CSV file must have the same number of columns. The following "
@@ -6857,10 +6872,10 @@ msgid ""
 "missing payload state. It is recommended to match levels here with your "
 "collection interval and cache retention set for the in-cluster agent."
 msgstr ""
-"ノードのスクレイパーからクラスタアグリゲータへのチェックイン頻度に基づいて"
-"アラートを発行できます。アグリゲータのキャッシュからペイロードが期限切れにな"
-"ると、そのペイロードは欠落しているとみなされ、指定された「ペイロード欠落」状"
-"態が報告されます。ここでは、クラスタ内エージェントに設定された収集間隔および"
+"ノードのスクレイパーからクラスタアグリゲータへのチェックイン頻度に基づいてア"
+"ラートを発行できます。アグリゲータのキャッシュからペイロードが期限切れになる"
+"と、そのペイロードは欠落しているとみなされ、指定された「ペイロード欠落」状態"
+"が報告されます。ここでは、クラスタ内エージェントに設定された収集間隔および"
 "キャッシュ保持期間に合わせてレベルを設定することを推奨します。"
 
 msgid ""
@@ -6987,9 +7002,9 @@ msgid ""
 "the user, and the data its tools read with the permissions of the user, to "
 "the configured AI provider."
 msgstr ""
-"CheckmkのAIアシスタントを使用できるようになります。このアシスタントは、"
-"ユーザーからの質問や、ユーザーの権限に基づきツールが読み取ったデータを、設定"
-"されたAIプロバイダーに送信します。"
+"CheckmkのAIアシスタントを使用できるようになります。このアシスタントは、ユー"
+"ザーからの質問や、ユーザーの権限に基づきツールが読み取ったデータを、設定され"
+"たAIプロバイダーに送信します。"
 
 msgid "Allows to use the 'Explain with AI' button."
 msgstr "「AIで説明」ボタンを使用できるようにします。"
@@ -7632,6 +7647,11 @@ msgstr "アプリケーションの概要"
 msgid "Applications, processes & services"
 msgstr "アプリケーション、プロセスとサービス"
 
+msgid ""
+"Applied after matching, to the label name and value; the prefix is kept as "
+"entered."
+msgstr ""
+
 msgid "Applied to"
 msgstr "適用対象"
 
@@ -8106,9 +8126,6 @@ msgstr ""
 
 msgid "At least one contact group must be selected"
 msgstr "少なくとも1つの連絡先グループを選択する必要があります"
-
-msgid "At least one custom query is required."
-msgstr "少なくとも1つのカスタムクエリが必要です。"
 
 msgid "At least one host event must be selected."
 msgstr "少なくとも1つのホストイベントを選択する必要があります。"
@@ -9896,11 +9913,20 @@ msgstr ""
 msgid "Backup job"
 msgstr "バックアップジョブ"
 
+msgid "Backup jobs"
+msgstr "バックアップジョブ"
+
 msgid "Backup modes"
 msgstr "バックアップモード"
 
 msgid "Backup object name"
 msgstr "バックアップオブジェクト名"
+
+msgid "Backup proxies"
+msgstr "バックアッププロキシ"
+
+msgid "Backup repositories"
+msgstr "バックアップリポジトリ"
 
 msgid "Backup server"
 msgstr "バックアップサーバー"
@@ -9922,6 +9948,9 @@ msgstr "バックアップID"
 
 msgid "Backups"
 msgstr "バックアップ"
+
+msgid "Backups (per protected machine)"
+msgstr ""
 
 msgid "Backups CRITICAL"
 msgstr "バックアップ CRITICAL"
@@ -10826,12 +10855,17 @@ msgid ""
 "but some devices are offering their information in different SNMPv3 "
 "contexts. This rule can be used to configure, based on hosts and SNMP "
 "sections, which SNMPv3 contexts Checkmk should ask for when getting "
-"information via SNMPv3."
+"information via SNMPv3. The default context is only queried if it is "
+"selected here. If several contexts return the same OIDs, only the data of "
+"the first context is used."
 msgstr ""
 "デフォルトでは、Checkmk は SNMPv3 クエリ中に特定のコンテキストを使用しません"
 "が、一部のデバイスは異なる SNMPv3 コンテキストで情報を提供します。このルール"
 "を使用して、ホストと SNMP セクションに基づいて、SNMPv3 経由で情報を取得すると"
-"きに Checkmk が問い合わせる SNMPv3 コンテキストを設定できます。"
+"きに Checkmk が問い合わせる SNMPv3 コンテキストを設定できます。ここで選択され"
+"た場合のみ、デフォルトのコンテキストがクエリの対象となります。複数の"
+"コンテキストが同じOIDを返す場合、最初のコンテキストのデータのみが使用されます"
+"。"
 
 #, python-brace-format
 msgid ""
@@ -12257,6 +12291,14 @@ msgstr "ジョブを削除できません。ジョブを停止することはで
 
 msgid "Cannot delete rules that are managed by Quick Setup."
 msgstr "クイックセットアップで管理されているルールは削除できません。"
+
+#, python-format
+msgid ""
+"Cannot delete this customer because the following objects are still assigned "
+"to it: %(references)s."
+msgstr ""
+"以下のオブジェクトがまだこの顧客に割り当てられているため、この顧客を削除でき"
+"ません：%(references)s。"
 
 #, python-format
 msgid ""
@@ -13965,9 +14007,9 @@ msgid ""
 "setting has no effect when 'Recent watch errors' is set to 'Do not alert'. "
 "Error details remain available in reflector services."
 msgstr ""
-"直近の watch エラーに関するアラートが有効な間に使用する状態を選択します。「"
-"Recent watch errors」が「Do not alert」に設定されている場合、この設定は適用さ"
-"れません。エラーの詳細は reflector サービスで引き続き確認できます。"
+"直近の watch エラーに関するアラートが有効な間に使用する状態を選択します。"
+"「Recent watch errors」が「Do not alert」に設定されている場合、この設定は適用"
+"されません。エラーの詳細は reflector サービスで引き続き確認できます。"
 
 msgid ""
 "Choose the state when a data type has never arrived or has expired from the "
@@ -13991,8 +14033,8 @@ msgid ""
 "Choose the state when the agent reports no Kubernetes API reflectors. Check "
 "the cluster-aggregator deployment and its logs."
 msgstr ""
-"エージェントが Kubernetes API リフレクターを報告しない状態を選択します。"
-"クラスタ-アグリゲーター のデプロイメントとそのログを確認してください。"
+"エージェントが Kubernetes API リフレクターを報告しない状態を選択します。クラ"
+"スタ-アグリゲーター のデプロイメントとそのログを確認してください。"
 
 msgid ""
 "Choose the state when the agent reports no nodes with node scrapers. Check "
@@ -14868,8 +14910,14 @@ msgstr "列"
 msgid "Column headers"
 msgstr "列ヘッダー"
 
+msgid "Column of the value"
+msgstr "値の列"
+
 msgid "Column title"
 msgstr "列のタイトル"
+
+msgid "Column to match"
+msgstr "一致する列"
 
 msgid "Columns"
 msgstr "列"
@@ -15267,6 +15315,9 @@ msgstr "コンフィギュレーション"
 
 msgid "Configuration activation"
 msgstr "設定の有効化"
+
+msgid "Configuration backup"
+msgstr "設定のバックアップ"
 
 msgid "Configuration bundle ID"
 msgstr "設定バンドルID"
@@ -17063,6 +17114,9 @@ msgstr ""
 "host_address '%(ip_address)s'のifidを照会できませんでした。ntopngユーザーに"
 "は、この情報を照会するための十分な権限がない可能性があります。"
 
+msgid "Could not read the certificate."
+msgstr "証明書を読み取ることができませんでした。"
+
 #, python-format
 msgid "Could not reload DCD: %(e)s. See web.log for further information."
 msgstr ""
@@ -18302,6 +18356,9 @@ msgstr "カスタム検索クエリ"
 msgid "Custom sender (\"From\")"
 msgstr "送信者をカスタム(\"From\")"
 
+msgid "Custom service (telemetry metrics)"
+msgstr "カスタムサービス（Telemetryメトリック）"
+
 msgid "Custom service attributes"
 msgstr "カスタムサービス属性"
 
@@ -19384,6 +19441,9 @@ msgstr "デフォルトの色"
 
 msgid "Default configuration"
 msgstr "デフォルト設定"
+
+msgid "Default context"
+msgstr "デフォルトのコンテキスト"
 
 msgid "Default credentials"
 msgstr "デフォルトの資格情報"
@@ -23249,6 +23309,9 @@ msgstr "資格情報を編集する"
 msgid "Edit custom graph"
 msgstr "カスタムグラフを編集する"
 
+msgid "Edit custom service"
+msgstr "カスタムサービスの編集"
+
 #, python-format
 msgid "Edit customer %(customer_id)s"
 msgstr "顧客%(customer_id)sを編集する"
@@ -23463,6 +23526,9 @@ msgstr "この接続を編集する"
 msgid "Edit this credential"
 msgstr "資格情報を編集する"
 
+msgid "Edit this custom service"
+msgstr "このカスタムサービスを編集する"
+
 msgid "Edit this customer"
 msgstr "顧客を編集する"
 
@@ -23565,9 +23631,6 @@ msgstr "%(name)s '%(ident)s' を編集しました"
 #, python-format
 msgid "Edited user profile for user %(user_id)s"
 msgstr "ユーザ %(user_id)s のプロファイルを編集しました"
-
-msgid "Editing a custom service is not available yet"
-msgstr "カスタムサービスの編集機能はまだ利用できません"
 
 msgid "Edition"
 msgstr "版"
@@ -25464,6 +25527,9 @@ msgstr "MQMとして実行する"
 msgid "Execute as another user"
 msgstr "他のユーザーとして実行する"
 
+msgid "Execute as the agent's user"
+msgstr "エージェントのユーザーとして実行"
+
 #, python-format
 msgid "Execute custom action '%(action)s'?"
 msgstr "カスタムアクション \"%(action)s\"を実行しますか?"
@@ -26356,8 +26422,8 @@ msgid ""
 "check the web and ui-job-scheduler logs for details."
 msgstr ""
 "リモートサイト {site} に対して、機能 {feature} のプロビジョニングに失敗しまし"
-"た。詳細については、web および ui-job-scheduler のログをチェックしてください"
-"。"
+"た。詳細については、web および ui-job-scheduler のログをチェックしてくださ"
+"い。"
 
 #, python-format
 msgid ""
@@ -29230,6 +29296,9 @@ msgstr "HW/SWインベントリ表示のヒント"
 msgid "HW/SW inventory history"
 msgstr "HW/SWインベントリ履歴"
 
+msgid "HW/SW inventory label picker"
+msgstr "HW/SWインベントリラベルピッカー"
+
 msgid "HW/SW inventory rules"
 msgstr "HW/SWインベントリルール"
 
@@ -31708,6 +31777,9 @@ msgstr "ホストラベル"
 msgid "Host labels"
 msgstr "ホストラベル"
 
+msgid "Host labels picked from the HW/SW inventory"
+msgstr ""
+
 #, python-format
 msgid ""
 "Host labels: %(total)d total (%(added)d added, %(changed)d changed, "
@@ -33486,6 +33558,11 @@ msgstr ""
 "の回数まで、または正常に完了するまで。"
 
 msgid ""
+"If several entries yield the same label name, the first one wins; single "
+"values come before table columns."
+msgstr ""
+
+msgid ""
 "If sounds are enabled, then the user will be alarmed by problems shown in a "
 "graphical user interface (GUI) status view if that view has been configured "
 "for sounds. From the views shipped with the GUI all problem views have "
@@ -33901,10 +33978,10 @@ msgid ""
 "authentication."
 msgstr ""
 "この設定が無効から有効に変更された場合、このロールを持つすべてのユーザーは二"
-"要素認証の使用が義務付けられ、二要素認証を有効にしていない場合は、現在の"
-"セッションからログアウトされます。グローバル設定の「二要素認証を強制する」が"
-"、この設定よりも優先されます。オートメーションユーザーは二要素認証を使用でき"
-"ないため、この対象外となります。"
+"要素認証の使用が義務付けられ、二要素認証を有効にしていない場合は、現在のセッ"
+"ションからログアウトされます。グローバル設定の「二要素認証を強制する」が、こ"
+"の設定よりも優先されます。オートメーションユーザーは二要素認証を使用できない"
+"ため、この対象外となります。"
 
 msgid ""
 "If too many metrics are produced by a service, they will be aggregated. "
@@ -33979,9 +34056,9 @@ msgid ""
 "be deployed. You can configure multiple instances or auto-detect running "
 "instances."
 msgstr ""
-"このオプションを有効にすると、エージェントプラグイン <tt>mk_redis</tt> が"
-"デプロイされます。複数のインスタンスを設定したり、実行中のインスタンスを自動"
-"検出したりすることができます。"
+"このオプションを有効にすると、エージェントプラグイン <tt>mk_redis</tt> がデプ"
+"ロイされます。複数のインスタンスを設定したり、実行中のインスタンスを自動検出"
+"したりすることができます。"
 
 msgid ""
 "If you activate this option, then the agent plug-in <tt>nginx_status</tt> "
@@ -34022,15 +34099,14 @@ msgid ""
 "monitoring by the 'Check_MK' service."
 msgstr ""
 "エージェントベーカリーを使用している場合、ベイク処理されたエージェントへの"
-"ネットワークアクセスを制限するために設定が使用されます。Linuxでは、systemd"
-"インストール>= systemd235またはxinetdインストールが必要です。Linuxホストがこ"
-"れらの前提条件を満たしていない場合、つまりエージェントパッケージの"
-"インストール時にIP制限を認識できないサービスのアクティブ化が防止される場合、"
-"エージェントにアクセスできないことにご注意ください。\"Checkmk"
-"エージェントネットワークサービス(Linux)\"のルールを参照してください。"
-"ベーカリーを使用しない場合でも、ホストの設定済みIPアドレス制限は、"
-"エージェントによって報告される許可されたIPアドレスに対して検証されます。これ"
-"は、'Check_MK'サービスによる監視で行われます。"
+"ネットワークアクセスを制限するために設定が使用されます。Linuxでは、systemdイ"
+"ンストール>= systemd235またはxinetdインストールが必要です。Linuxホストがこれ"
+"らの前提条件を満たしていない場合、つまりエージェントパッケージのインストール"
+"時にIP制限を認識できないサービスのアクティブ化が防止される場合、エージェント"
+"にアクセスできないことにご注意ください。\"Checkmkエージェントネットワークサー"
+"ビス(Linux)\"のルールを参照してください。ベーカリーを使用しない場合でも、ホス"
+"トの設定済みIPアドレス制限は、エージェントによって報告される許可されたIPアド"
+"レスに対して検証されます。これは、'Check_MK'サービスによる監視で行われます。"
 
 msgid ""
 "If you cannot use the Agent Controllers encrypted TLS connections, you can "
@@ -34041,9 +34117,9 @@ msgid ""
 msgstr ""
 "エージェントコントローラの暗号化されたTLS接続を使用できない場合、古いOpenSSH"
 "ベースの対称暗号化（ホストシステムがサポートしている場合）に頼ることができま"
-"す。TLS暗号化と一緒にこの暗号化を使用すると、役に立たないだけでなく、"
-"コントローラが転送用にデータを圧縮するのを妨げてしまう可能性があることに注意"
-"してください。"
+"す。TLS暗号化と一緒にこの暗号化を使用すると、役に立たないだけでなく、コント"
+"ローラが転送用にデータを圧縮するのを妨げてしまう可能性があることに注意してく"
+"ださい。"
 
 msgid ""
 "If you change this paths away from its default then the package will <b>not</"
@@ -34226,10 +34302,10 @@ msgid ""
 "if it matches the configured filters. You must also enable the data backend "
 "under Global Settings > Site Management."
 msgstr ""
-"OpenTelemetryデータを有効化すると、OpenTelemetryコレクターまたはPrometheus"
-"スクレイパーから収集されたデータのうち、リソース属性キーと一致する場合にこの"
-"ホストで使用されます。また、グローバル設定＞サイト管理で"
-"メトリックバックエンドを有効化する必要があります。"
+"OpenTelemetryデータを有効化すると、OpenTelemetryコレクターまたはPrometheusス"
+"クレイパーから収集されたデータのうち、リソース属性キーと一致する場合にこのホ"
+"ストで使用されます。また、グローバル設定＞サイト管理でメトリックバックエンド"
+"を有効化する必要があります。"
 
 msgid ""
 "If you enable the replication of MKPs then during each <i>Activate changes</"
@@ -34238,9 +34314,9 @@ msgid ""
 "Note: <b>all other MKPs and files below <tt>~/local/</tt> on the remote site "
 "will be removed</b>."
 msgstr ""
-"MKPsのレプリケーションを有効にすると、<i>変更の有効化</i>のたびに、セントラル"
-"・サイトにインストールされているMKPと<tt>~/local/</tt>ディレクトリ以下のその"
-"他すべてのファイルがリモート・サイトにも転送されま。注意:<b>リモートサイト"
+"MKPsのレプリケーションを有効にすると、<i>変更の有効化</i>のたびに、セントラ"
+"ル・サイトにインストールされているMKPと<tt>~/local/</tt>ディレクトリ以下のそ"
+"の他すべてのファイルがリモート・サイトにも転送されま。注意:<b>リモートサイト"
 "の<tt>~/local/</tt>以下の他のすべてのMKPとファイルは削除されます</b>。"
 
 msgid ""
@@ -34469,7 +34545,8 @@ msgstr ""
 #, python-format
 msgid ""
 "If you purchased your license through a %(seller_link)s, please contact them."
-msgstr "%(seller_link)sを通じてライセンスを購入された場合は、彼らに連絡してください。"
+msgstr ""
+"%(seller_link)sを通じてライセンスを購入された場合は、彼らに連絡してください。"
 
 msgid ""
 "If you select a contact group here, all notifications of hosts and services "
@@ -34664,8 +34741,8 @@ msgid ""
 "If you want to continue to use Checkmk and keep your data, please contact "
 "the Checkmk sales team at %(sales_link)s."
 msgstr ""
-"Checkmkを引き続き利用し、データを保持したい場合は、Checkmk営業チーム（%"
-"(sales_link)s）まで連絡してください。"
+"Checkmkを引き続き利用し、データを保持したい場合は、Checkmk営業チーム"
+"（%(sales_link)s）まで連絡してください。"
 
 #, python-format
 msgid ""
@@ -34673,19 +34750,19 @@ msgid ""
 "the Checkmk sales team at %(sales_link)s and renew your license. If you "
 "purchased your license through a %(seller_link)s, please contact them."
 msgstr ""
-"引き続き制限なくCheckmkをご利用になりたい場合は、Checkmk営業チーム（%"
-"(sales_link)s）までご連絡の上、ライセンスを更新してください。%(seller_link)s"
-"を通じてライセンスをご購入された場合は、当該パートナーまでお問い合わせくださ"
-"い。"
+"引き続き制限なくCheckmkをご利用になりたい場合は、Checkmk営業チーム"
+"（%(sales_link)s）までご連絡の上、ライセンスを更新してください。"
+"%(seller_link)sを通じてライセンスをご購入された場合は、当該パートナーまでお問"
+"い合わせください。"
 
 #, python-format
 msgid ""
 "If you want to continue using Checkmk, please purchase a license supporting "
 "%(installed_edition)s or contact the Checkmk sales team at %(sales_link)s."
 msgstr ""
-"Checkmkを引き続きご利用になる場合は、%(installed_edition)sに対応した"
-"ライセンスをご購入いただくか、Checkmk営業チーム（%(sales_link)s）まで連絡して"
-"ください。"
+"Checkmkを引き続きご利用になる場合は、%(installed_edition)sに対応したライセン"
+"スをご購入いただくか、Checkmk営業チーム（%(sales_link)s）まで連絡してくださ"
+"い。"
 
 msgid ""
 "If you want to run your own custom agent plug-ins on Windows, simply put "
@@ -34702,13 +34779,13 @@ msgstr ""
 "Windowsで独自のカスタムエージェントプラグインを実行する場合は、エージェントの"
 "インストールディレクトリのサブディレクトリ<tt> plugins </tt>にプラグインを配"
 "置するだけです。<i>ローカルチェック</i>はまったく同じように機能しますが、<tt>"
-"ローカル</tt>にインストールされます。エージェントベーカリーで展開される"
-"プラグインは、MSIインストーラーによって同じディレクトリにインストールされます"
-"。このルールセットは、エージェントが実行するファイル拡張子を制限します。これ"
-"により、たとえば、拡張子が<tt> .txt </tt>のファイルが見つかったときにメモ帳を"
-"起動する必要がなくなります。<b>注意:</b>デフォルトの拡張機能の一部を削除して"
-"も、出荷されたエージェントプラグインのすべてが引き続き機能するわけではありま"
-"せん!<br> <br>拡張機能を小文字で、先頭にドットを付けずに指定してください。"
+"ローカル</tt>にインストールされます。エージェントベーカリーで展開されるプラグ"
+"インは、MSIインストーラーによって同じディレクトリにインストールされます。この"
+"ルールセットは、エージェントが実行するファイル拡張子を制限します。これによ"
+"り、たとえば、拡張子が<tt> .txt </tt>のファイルが見つかったときにメモ帳を起動"
+"する必要がなくなります。<b>注意:</b>デフォルトの拡張機能の一部を削除しても、"
+"出荷されたエージェントプラグインのすべてが引き続き機能するわけではありません!"
+"<br> <br>拡張機能を小文字で、先頭にドットを付けずに指定してください。"
 
 msgid ""
 "If you want to test service notifications, please provide a service to test "
@@ -34721,8 +34798,8 @@ msgid ""
 "If you want to use Checkmk with all configured services, please enter the "
 "%(licensing_details_link)s or %(purchase_link)s."
 msgstr ""
-"すべてのサービスが設定済みの状態でCheckmkをご利用になりたい場合は、%"
-"(licensing_details_link)s または %(purchase_link)s にアクセスしてください。"
+"すべてのサービスが設定済みの状態でCheckmkをご利用になりたい場合は、"
+"%(licensing_details_link)s または %(purchase_link)s にアクセスしてください。"
 
 msgid ""
 "If you want to use Checkmk without restrictions, please contact your Checkmk "
@@ -35042,10 +35119,10 @@ msgid ""
 "Console via TCP. Please make sure that this is activated in the global "
 "settings of the Event Console. The default port number is 6558."
 msgstr ""
-"イベントコンソールがホストと同じサイトで実行されていない分散セットアップでは"
-"、TCPを介してリモートイベントコンソールにアクセスする必要があります。"
-"イベントコンソールのグローバル設定で有効になっていることを確認してください。"
-"デフォルトのポート番号は6558です。"
+"イベントコンソールがホストと同じサイトで実行されていない分散セットアップで"
+"は、TCPを介してリモートイベントコンソールにアクセスする必要があります。イベン"
+"トコンソールのグローバル設定で有効になっていることを確認してください。デフォ"
+"ルトのポート番号は6558です。"
 
 msgid ""
 "In addition to setting the generic \"Missing monitoring data\" state above "
@@ -35106,9 +35183,9 @@ msgstr ""
 "れます。これにより、その場合、少なくとも<i>誰か</i>に通知が届きます。さらに、"
 "この連絡先は、監視者が知らないホストまたはサービスへの通知に使用されます。こ"
 "れは、イベントコンソールから通知を転送するときに発生する可能性があります。 "
-"<br><br>通知フォールバックは、グローバル設定 <a "
-"href=\"global_settings.py?varname=notification_fallback_email\">通知の"
-"フォールバックメールアドレス</a>で設定できます。"
+"<br><br>通知フォールバックは、グローバル設定 <a href=\"global_settings.py?"
+"varname=notification_fallback_email\">通知のフォールバックメールアドレス</a>"
+"で設定できます。"
 
 msgid ""
 "In case of <i>Manual registration and fallback</i>, the agent updater will "
@@ -36146,10 +36223,9 @@ msgstr "インスタンス"
 msgid "Instances CRITICAL"
 msgstr "インスタンス CRITICAL"
 
-#, fuzzy
 msgid "Instances matching one of these patterns are not monitored."
 msgstr ""
-"これらのパターンのいずれかに一致するサービスは、検出対象から除外されます。"
+"これらのパターンのいずれかに一致するインスタンスは、監視対象外となります。"
 
 msgid "Instances settings"
 msgstr "インスタンス設定"
@@ -36157,7 +36233,6 @@ msgstr "インスタンス設定"
 msgid "Instances to monitor"
 msgstr "監視するインスタンス"
 
-#, fuzzy
 msgid "Instant reports - PDF export"
 msgstr "インスタントレポート - PDF出力"
 
@@ -36209,7 +36284,6 @@ msgstr ""
 msgid "Insufficient permissions to view exception details."
 msgstr "例外の詳細を表示するための権限が不足しています。"
 
-#, fuzzy
 msgid "Integer field can not be empty"
 msgstr "整数フィールドは空にできません"
 
@@ -36257,21 +36331,18 @@ msgstr "VM、クラウド、またはコンテナプラットフォームと統�
 msgid "Integrating Prometheus"
 msgstr "Prometheus統合"
 
-#, fuzzy
 msgid "Integration API key"
-msgstr "統合キー"
+msgstr "統合APIキー"
 
 msgid "Integration team"
 msgstr "統合チーム"
 
-#, fuzzy
 msgid "Interactive"
-msgstr "インタラクティブGUI"
+msgstr "相互作用"
 
 msgid "Interactive GUI"
 msgstr "インタラクティブGUI"
 
-#, fuzzy
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
 "services, host and service groups).<br>You can use the following filters: "
@@ -36281,10 +36352,11 @@ msgid ""
 "<i>sl:</i> Service label"
 msgstr ""
 "監視インスタンス（ホスト、サービス、ホスト及びサービスグループ）に直接アクセ"
-"スするための対話型検索フィールド。<br>次のフィルターを使用できます: <i>h:</"
-"i> ホスト、<br> <i>s:</i> サービス、 <i>hg:</i> ホストグループ、 <i>sg:</i> "
-"サービスグループ、<br><i>ad:</i> アドレス、 <i>al:</i> エイリアス、 <i>tg:</"
-"i> ホストタグ、 <i>hl:</i> ホストラベル、 <i>sl:</i> サービスラベル"
+"スするための相互検索フィールド。<br>次のフィルターを使用できます:<i>h:</i> ホ"
+"スト,<br> <i>s:</i> サービス, <i>hg:</i> ホストグループ, <i>sg:</i> サービス"
+"グループ,<br><i>ad:</i> アドレス, <i>al:</i> エイリアス, <i>tg:</i> ホストタ"
+"グ, <i>hf:</i> ホストフォルダ, <i>sf:</i> サービスフォルダ, <i>hl:</i> ホスト"
+"ラベル, <i>sl:</i> サービスラベル"
 
 msgid ""
 "Interactively change the automatic browser reload of a view being displayed "
@@ -36375,7 +36447,6 @@ msgstr "内部ユーザー"
 msgid "Interpretation of VM tools states"
 msgstr "VMツールステータスの解釈"
 
-#, fuzzy
 msgid "Interpretation of config sync status"
 msgstr "コンフィグ同期ステータスの解釈"
 
@@ -36385,7 +36456,6 @@ msgstr "フェイルオーバークラスターの状態の解釈"
 msgid "Interpretation of pod status"
 msgstr "Podステータスの解釈"
 
-#, fuzzy
 msgid "Interpretation of registration states"
 msgstr "登録状態の解釈"
 
@@ -36437,9 +36507,9 @@ msgstr "無効"
 msgid "Invalid (not loaded)"
 msgstr "無効(ロードされていません)"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid AI provider configuration: %(error)s"
-msgstr "構成変数の名前を非表示にする"
+msgstr "無効なAIプロバイダー設定：%(error)s"
 
 msgid "Invalid API key"
 msgstr "無効なAPIキー"
@@ -36451,9 +36521,9 @@ msgstr "無効なCRC"
 msgid "Invalid CSRF token (%(csrf_token)r)"
 msgstr "無効な CSRF トークン (%(csrf_token)r)"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid DCD command: %(command)r"
-msgstr "無効なDCDコマンド: %r"
+msgstr "無効な DCD コマンド: %(command)r"
 
 msgid "Invalid IP address"
 msgstr "無効なIPアドレス"
@@ -36532,9 +36602,9 @@ msgstr "無効な証明書"
 msgid "Invalid certificate file: %(e)s"
 msgstr "無効な証明書ファイル: %(e)s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid certificate: %(e)s"
-msgstr "無効な証明書ファイル: %(e)s"
+msgstr "無効な証明書: %(e)s"
 
 msgid "Invalid check parameter"
 msgstr "チェックパラメータが無効です"
@@ -36542,9 +36612,9 @@ msgstr "チェックパラメータが無効です"
 msgid "Invalid check type"
 msgstr "チェックタイプが無効です"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid choice %(invalid_value)r"
-msgstr "無垢なトピック%r"
+msgstr "無効な選択 %(invalid_value)r"
 
 msgid "Invalid choice, falling back to False"
 msgstr "無効な選択、Falseに戻る"
@@ -36618,11 +36688,12 @@ msgstr ""
 msgid "Invalid expected callable for %(hint)s at idx %(idx)d: %(arg)r"
 msgstr "%(hint)s の期待される呼び出し（idx %(idx)d） が無効です: %(arg)r"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid extension type, supported types are: %(extension_types)s"
-msgstr "無効な拡張子タイプです：%s"
+msgstr ""
+"無効な拡張子です。サポートされている拡張子は以下の通りです："
+"%(extension_types)s"
 
-#, fuzzy
 msgid ""
 "Invalid field name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
@@ -36644,7 +36715,6 @@ msgstr "無効なファイルタイプが予想される '%(expected)s'が'%(rec
 msgid "Invalid file type."
 msgstr "無効なファイルタイプです。"
 
-#, fuzzy
 msgid "Invalid filename."
 msgstr "無効なファイル名です。"
 
@@ -36706,13 +36776,15 @@ msgstr "ログイン資格情報が無効です。"
 msgid "Invalid manual page: Failed to get the title"
 msgstr "無効なマニュアルページ: タイトルの取得に失敗しました"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid map name: %(name)s"
-msgstr "無効なホスト名: %(hostname)s"
+msgstr "無効なマップ名: %(name)s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid mime type, supported types are: %(mime_types)s"
-msgstr "無効な MIME タイプです。サポートされているタイプは:%s"
+msgstr ""
+"無効なMIMEタイプです。サポートされているタイプは次のとおりです："
+"%(mime_types)s"
 
 #, python-format
 msgid "Invalid mode '%(mode)s'."
@@ -36724,9 +36796,9 @@ msgstr "無効な数字"
 msgid "Invalid number of tuple elements"
 msgstr "無効なタプル要素数"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid package name configuration: %(value)r"
-msgstr "構成変数の名前を非表示にする"
+msgstr "無効なパッケージ名の設定: %(value)r"
 
 msgid "Invalid package part"
 msgstr "パッケージパーツが無効です"
@@ -36744,9 +36816,8 @@ msgstr "無効なパスフレーズ"
 msgid "Invalid private key"
 msgstr "無効なプライベートキー"
 
-#, fuzzy
 msgid "Invalid profile ID"
-msgstr "無効なファイル名"
+msgstr "無効なプロファイルID"
 
 msgid ""
 "Invalid proxy given: missing network_location in proxy format 'scheme://"
@@ -36765,14 +36836,15 @@ msgstr ""
 msgid "Invalid proxy given: not an allowed URL"
 msgstr "無効なプロキシ：許可されていないURL"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid proxy scheme given. Must be one of: %(schemes)s"
 msgstr ""
-"無効なプロキシスキームが指定されました。次のいずれかである必要があります：%s"
+"無効なプロキシスキームが指定されました。次のいずれかである必要があります："
+"%(schemes)s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid regex pattern. Expected: %(pattern)s"
-msgstr "正規表現のパターンが無効です。期待される形式：%s"
+msgstr "無効な正規表現パターンです。期待される形式：%(pattern)s"
 
 #, python-format
 msgid "Invalid regex pattern: %(error)s"
@@ -36793,9 +36865,13 @@ msgstr "無効な正規表現: %(e)s"
 msgid "Invalid regular expression: %(exception)s"
 msgstr "無効な正規表現: %(exception)s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid regular expression: %(value)s"
-msgstr "無効な正規表現: %(e)s"
+msgstr "無効な正規表現: %(value)s"
+
+#, python-format
+msgid "Invalid replacement: %(error)s"
+msgstr "無効な置換：%(error)s"
 
 msgid "Invalid report"
 msgstr "無効なレポート"
@@ -36932,9 +37008,8 @@ msgstr "無効なユーザー接続: %(connection_id)s"
 msgid "Invalid user input"
 msgstr "無効なユーザー入力"
 
-#, fuzzy
 msgid "Invalid value"
-msgstr "無効なID"
+msgstr "無効な値"
 
 msgid "Invalid value for 'owned_by'."
 msgstr "「owned_by」の値が無効です。"
@@ -36981,6 +37056,9 @@ msgstr "インベントリ"
 msgid "Inventory attribute: %(long_title)s"
 msgstr "インベントリ属性：%(long_title)s"
 
+msgid "Inventory categories"
+msgstr "インベントリカテゴリ"
+
 msgid "Inventory changes"
 msgstr "インベントリーの変更"
 
@@ -37013,6 +37091,9 @@ msgstr ""
 
 msgid "Inventory of host"
 msgstr "ホストのインベントリ"
+
+msgid "Inventory source"
+msgstr "インベントリソース"
 
 #, python-format
 msgid "Inventory table: %(long_title)s"
@@ -37108,9 +37189,8 @@ msgstr "Is-Home状態(Netappのみ)"
 msgid "Issue type ID"
 msgstr "発行タイプID"
 
-#, fuzzy
 msgid "Issued"
-msgstr "発行者"
+msgstr "発行"
 
 msgid "Issued by"
 msgstr "が発行"
@@ -37260,13 +37340,11 @@ msgstr "イテレータ時間"
 msgid "Its generated rule cannot be read: %(reason)s"
 msgstr "生成されたルールは読み取れません：%(reason)s"
 
-#, fuzzy
 msgid "Its generated rule is deleted as well."
-msgstr "このグループは存在しません。"
+msgstr "生成されたルールも同様に削除されます。"
 
-#, fuzzy
 msgid "Its generated rule no longer exists."
-msgstr "このグループは存在しません。"
+msgstr "生成されたルールはもはや存在しません。"
 
 msgid "Its host assignment cannot be read."
 msgstr "そのホストの割り当て情報は読み取ることができません。"
@@ -37287,9 +37365,8 @@ msgstr "Jolokiaを使用したJava JVMのJMX監視 (Linux, Windows)"
 msgid "JQL query: "
 msgstr "JQLクエリ: "
 
-#, fuzzy
 msgid "JSM Operations parameters"
-msgstr "オプションのパラメータ"
+msgstr "JSM 運用パラメータ"
 
 msgid "JSON credentials are required but not specified."
 msgstr "JSONクレデンシャルは必須ですが、特に指定はありません。"
@@ -37501,7 +37578,6 @@ msgstr "Jira統計"
 msgid "Jira workflow"
 msgstr "Jiraワークフロー"
 
-#, fuzzy
 msgid "Jitter"
 msgstr "ジッター"
 
@@ -37630,9 +37706,8 @@ msgstr "KPI"
 msgid "KPI runtime"
 msgstr "KPIランタイム"
 
-#, fuzzy
 msgid "KPI stat card"
-msgstr "API ステータス"
+msgstr "KPI 統計カード"
 
 msgid ""
 "K_g BMC key to use when authenticating with the remote host for IPMI 2.0"
@@ -37642,9 +37717,11 @@ msgid "Kaspersky Anti-Virus (Linux)"
 msgstr "カスペルスキーアンチウイルス(Linux)"
 
 #. weblate-flags: read-only, vendor-name
-#, fuzzy
 msgid "Kaspersky Anti-Virus time settings"
 msgstr "カスペルスキーアンチウイルス時間設定"
+
+msgid "Keep"
+msgstr "Keep"
 
 msgid ""
 "Keep <tt>cmk-signed-push-cert</tt>, the agent's persistent certificate "
@@ -37723,6 +37800,9 @@ msgstr "キー"
 msgid "Key ID"
 msgstr "キーID"
 
+msgid "Key of the value"
+msgstr "値のキー"
+
 msgid "Key pair will be generated when you save."
 msgstr "保存するとキーペアが生成されます。"
 
@@ -37761,9 +37841,8 @@ msgstr "キーワード"
 msgid "KiB"
 msgstr "KiB"
 
-#, fuzzy
 msgid "Kubelet health: scrape duration"
-msgstr "Prometheusスクレイパーの設定"
+msgstr "Kubelet のヘルス状態：スクレイピング時間"
 
 msgid "Kubelet health: time since receipt"
 msgstr "Kubeletのヘルス状態：受信からの経過時間"
@@ -37771,9 +37850,8 @@ msgstr "Kubeletのヘルス状態：受信からの経過時間"
 msgid "Kubelet statistics: scrape duration"
 msgstr "Kubeletの統計情報：スクレイプ所要時間"
 
-#, fuzzy
 msgid "Kubelet statistics: time since receipt"
-msgstr "アラート統計：リカバリ件数"
+msgstr "Kubeletの統計：受信からの経過時間"
 
 msgid "Kubelet version"
 msgstr "Kubelet バージョン"
@@ -37781,9 +37859,8 @@ msgstr "Kubelet バージョン"
 msgid "Kubernetes"
 msgstr "Kubernetes"
 
-#, fuzzy
 msgid "Kubernetes API reflectors"
-msgstr "Kubernetesレプリカ"
+msgstr "Kubernetes API リフレクター"
 
 msgid "Kubernetes CPU resource utilization"
 msgstr "Kubernetes CPU使用率"
@@ -37809,21 +37886,17 @@ msgstr "Kubernetesステートフルセット"
 msgid "Kubernetes StatefulSets"
 msgstr "Kubernetesステートフルセット"
 
-#, fuzzy
 msgid "Kubernetes agent health"
-msgstr "Kubernetesデーモンセット"
+msgstr "Kubernetesエージェントのヘルス状態"
 
-#, fuzzy
 msgid "Kubernetes agent health service discovery"
-msgstr "サービスディスカバリ実行"
+msgstr "Kubernetesエージェントのヘルスサービスディスカバリー"
 
-#, fuzzy
 msgid "Kubernetes agent node health"
-msgstr "Kubernetesノード"
+msgstr "Kubernetes エージェントノードヘルス"
 
-#, fuzzy
 msgid "Kubernetes agent reflector health"
-msgstr "Kubernetesステートフルセット"
+msgstr "Kubernetes エージェントリフレクターヘルス"
 
 msgid "Kubernetes cluster"
 msgstr "Kubernetesクラスタ"
@@ -37846,9 +37919,8 @@ msgstr "Kubernetes デプロイ条件"
 msgid "Kubernetes deployments"
 msgstr "Kubernetesデプロイメント"
 
-#, fuzzy
 msgid "Kubernetes kinds to monitor"
-msgstr "Kubernetesノードコンテナー"
+msgstr "監視する Kubernetesの種類"
 
 msgid "Kubernetes memory resource utilization"
 msgstr "Kubernetesメモリー使用率"
@@ -37886,9 +37958,8 @@ msgstr "Kubernetes Podステータス"
 msgid "Kubernetes replicas"
 msgstr "Kubernetesレプリカ"
 
-#, fuzzy
 msgid "Kubernetes resource kind"
-msgstr "Kubernetes Podリソース"
+msgstr "Kubernetes リソースの種類"
 
 msgid "Kubernetes resource quota CPU utilization"
 msgstr "Kubernetesリソースクオータ cpu使用率"
@@ -37938,23 +38009,25 @@ msgid "LDAP [%(connection_id)s]: Modified user %(user_id)s (%(modifications)s)"
 msgstr ""
 "LDAP [%(connection_id)s]: 変更されたユーザー %(user_id)s (%(modifications)s)"
 
-#, fuzzy, python-format
+#, python-format
 msgid "LDAP [%(connection_id)s]: Quarantined user %(user_id)s"
-msgstr "LDAP [%s]:作成されたユーザー%s"
+msgstr "LDAP [%(connection_id)s]: 隔離されたユーザー %(user_id)s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "LDAP [%(connection_id)s]: Reactivated quarantined user %(user_id)s"
-msgstr "LDAP [%s]:作成されたユーザー%s"
+msgstr "LDAP [%(connection_id)s]: 隔離されていたユーザーを再有効化 %(user_id)s"
 
 #, python-format
 msgid "LDAP [%(connection_id)s]: Removed user %(user_id)s"
 msgstr "LDAP [%(connection_id)s]:ユーザー%(user_id)sを削除しました"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "LDAP [%(connection_id)s]: Took over user %(user_id)s (was owned by "
 "%(previous_connector)s)"
-msgstr "LDAP [%s]: 変更されたユーザー %s (%s)"
+msgstr ""
+"LDAP [%(connection_id)s]: ユーザー %(user_id)s を引き継ぎ（以前は "
+"%(previous_connector)s が所有）"
 
 msgid "LDAP attribute to be used as indicator"
 msgstr "インジケーターとして使用されるLDAP属性"
@@ -37968,7 +38041,6 @@ msgstr "同期するLDAP属性"
 msgid "LDAP base, e.g. ou=Development, o=Checkmk GmbH, c=de"
 msgstr "LDAPベース、例:ou = Development、o = Checkmk GmbH、c = de"
 
-#, fuzzy
 msgid "LDAP connection"
 msgstr "LDAP接続"
 
@@ -38026,9 +38098,8 @@ msgstr "LSI MegaRAID: 論理ディスク"
 msgid "LSI MegaRAID: Physical Disks"
 msgstr "LSI MegaRAID: 物理ディスク"
 
-#, fuzzy
 msgid "LSI MegaRAID: battery backup unit"
-msgstr "LSI MegaRAID:バッテリーバックアップユニット"
+msgstr "LSI MegaRAID：バッテリーバックアップユニット"
 
 msgid "LSI RAID logical disks"
 msgstr "LSI RAID論理ディスク"
@@ -38066,6 +38137,21 @@ msgstr "LVM、論理ボリュームグループ(Linux)"
 msgid "Label"
 msgstr "ラベル"
 
+msgid "Label name"
+msgstr "ラベル名"
+
+msgid "Label name prefix (empty for none)"
+msgstr ""
+
+msgid "Label naming"
+msgstr "ラベル名"
+
+msgid "Label sources"
+msgstr "ラベルのソース"
+
+msgid "Label value"
+msgstr "ラベル値"
+
 msgid "Labelling options"
 msgstr "ラベル付けオプション"
 
@@ -38085,6 +38171,12 @@ msgstr ""
 "には「:」を使用できます。 (例 <tt>net:ip:v4</tt>) Checkmkは、使用するラベルに"
 "対してその他の検証は行いません。"
 
+msgid "Labels from single values"
+msgstr "単一の値からのラベル"
+
+msgid "Labels from table columns (first row with a value wins)"
+msgstr ""
+
 msgid ""
 "Labels need to be in the format \"[KEY]:[VALUE]\". For example "
 "\"os:windows\" or \"net:ip:v4\"."
@@ -38099,9 +38191,8 @@ msgstr ""
 "ラベルは <tt>[KEY]:[VALUE]</tt>の形式である必要があります。例 <tt>cmk/"
 "os_family:linux</tt> or <tt>net:ip:v4</tt>。"
 
-#, fuzzy
 msgid "Labels: Inventorize the labels"
-msgstr "ラベルをインベントライズする"
+msgstr "ラベル：ラベルの一覧表示"
 
 msgid "Lambda"
 msgstr "Lambda"
@@ -38158,9 +38249,8 @@ msgstr "過去3か月"
 msgid "Last 35 days"
 msgstr "過去35日間"
 
-#, fuzzy
 msgid "Last 5 minutes error rate"
-msgstr "直前のエラー率"
+msgstr "過去5分間のエラー率"
 
 msgid "Last 5 minutes latency (avg)"
 msgstr "過去5分間のレイテンシー（平均）"
@@ -38177,17 +38267,14 @@ msgstr "過去5分間のレイテンシー（p99）"
 msgid "Last 5 minutes request rate"
 msgstr "過去5分間のリクエストレート"
 
-#, fuzzy
 msgid "Last 5 minutes requests"
-msgstr "直前のリクエスト"
+msgstr "過去5分間のリクエスト"
 
-#, fuzzy
 msgid "Last 5 minutes total errors"
-msgstr "直前のトータルエラー"
+msgstr "過去5分間のエラー総数"
 
-#, fuzzy
 msgid "Last 5 minutes total requests"
-msgstr "直前のトータルリクエスト"
+msgstr "過去5分間のリクエスト総数"
 
 msgid "Last 6 months"
 msgstr "過去6か月"
@@ -38234,9 +38321,8 @@ msgstr "最終変更"
 msgid "Last completed duration"
 msgstr "最後に完了した期間"
 
-#, fuzzy
 msgid "Last completed list duration"
-msgstr "最後に完了した期間"
+msgstr "最後に完了したリストの期間"
 
 msgid "Last contact of agent updater"
 msgstr "エージェントアップデータの最終コンタクト"
@@ -38352,9 +38438,8 @@ msgstr "最後の期間"
 msgid "Last reported"
 msgstr "最終報告"
 
-#, fuzzy
 msgid "Last restore point age"
-msgstr "データストア名"
+msgstr "最後のリストアポイントからの経過時間"
 
 msgid "Last result"
 msgstr "最終結果"
@@ -38514,24 +38599,22 @@ msgstr ""
 "レースホルダーが使用されます。例：「Service {{service}} on {{host}}」は、"
 "「Service HTTP on web-srv-01」として表示されます。"
 
-#, fuzzy
 msgid ""
 "Leave unchecked to inherit the global Hover template (Settings → Object "
 "defaults). When enabled, overrides the global default for this map only. "
 "Placeholders: {{name}}, {{state}}, {{output}}, {{host}}, {{service}}. "
 "Example: '{{name}}: {{state}}' renders as 'db-prod-01: CRIT'."
 msgstr ""
-"チェックを外すと、グローバルなホバーテンプレートが継承されます（[設定] → [オ"
-"ブジェクトのデフォルト]）。 有効にすると、このマップのみについてグローバルな"
-"デフォルト設定を上書きします。プレースホルダー：{{name}}、{{state}}、"
+"チェックを外すと、グローバルなホバーテンプレートが継承されます（セットアップ "
+"→ オブジェクトのデフォルト）。 有効にすると、このマップのみについてグローバル"
+"なデフォルト設定を上書きします。プレースホルダー：{{name}}、{{state}}、"
 "{{output}}、{{host}}、{{service}}。例：「{{name}}: {{state}}」は「db-"
 "prod-01: CRIT」として表示されます。"
 
-#, fuzzy
 msgid "Leave unset on installations where over-voltage is not a concern."
 msgstr ""
-"UPSやPDUなどのデバイスの上位電圧レベル。過電圧が問題にならないインストールで"
-"は、設定しないままにしておいてください。"
+"過電圧が懸念されない環境でのインストールでは、この設定は未設定のままにしてお"
+"いてください。"
 
 msgid ""
 "Leave unset to use the default endpoint of the provider's client library."
@@ -38576,9 +38659,8 @@ msgstr ""
 msgid "Legacy agent management"
 msgstr "レガシーエージェント管理"
 
-#, fuzzy
 msgid "Legacy agent management (Windows)"
-msgstr "レガシーエージェント管理"
+msgstr "レガシーエージェントの管理（Windows）"
 
 msgid "Legacy check plug-ins (outdated, ignored)"
 msgstr "レガシーチェックプラグイン（廃止、無視）"
@@ -38630,6 +38712,9 @@ msgstr "この数までカウントする通知を通過させます"
 
 msgid "Letter"
 msgstr "文字"
+
+msgid "Letter case"
+msgstr "大文字と小文字の区別"
 
 msgid "Level"
 msgstr "レベル"
@@ -38734,25 +38819,20 @@ msgstr "Gude PDU デバイスのレベル"
 msgid "Levels for Hold Queue length"
 msgstr "保留キューの長さのレベル"
 
-#, fuzzy
 msgid "Levels for I/O latency."
-msgstr "IO待ち時間のレベル。"
+msgstr "I/O レイテンシー レベル。"
 
-#, fuzzy
 msgid "Levels for I/O operations per second."
-msgstr "1秒あたりのIO操作のレベル。"
+msgstr "1秒あたりのI/O操作のレベル。"
 
-#, fuzzy
 msgid "Levels for I/O stats bytes"
-msgstr "IO統計バイトのレベル"
+msgstr "I/O 統計のバイト単位のレベル"
 
-#, fuzzy
 msgid "Levels for I/O stats requests"
-msgstr "IO統計リクエストのレベル"
+msgstr "I/O 統計リクエストのレベル"
 
-#, fuzzy
 msgid "Levels for I/O traffic per second."
-msgstr "1秒あたりのIOトラフィックのレベル。"
+msgstr "1秒あたりのI/Oトラフィックのレベル。"
 
 msgid "Levels for Inodes"
 msgstr "Iノードのレベル"
@@ -38953,7 +39033,6 @@ msgstr "表領域サイズのレベル"
 msgid "Levels for the Tablespace usage"
 msgstr "表領域の使用レベル"
 
-#, fuzzy
 msgid "Levels for the duration of the backup job"
 msgstr "バックアップジョブの期間のレベル"
 
@@ -39095,9 +39174,9 @@ msgstr "現在のジョブレベル"
 msgid "Levels of folders to create"
 msgstr "作成するフォルダーのレベル"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Levels on %(extr)s single-request consumption"
-msgstr "%s シングルリクエスト消費のレベル"
+msgstr "%(extr)sシングルリクエスト消費のレベル"
 
 msgid "Levels on CPU load: 1 minute average"
 msgstr "CPU loadのレベル： 1分平均"
@@ -39108,16 +39187,14 @@ msgstr "CPU loadのレベル： 15分平均"
 msgid "Levels on CPU load: 5 minutes average"
 msgstr "CPU loadのレベル： 5分平均"
 
-#, fuzzy
 msgid "Levels on CPU usage"
-msgstr "RAM使用量のレベル"
+msgstr "CPU使用状況のレベル"
 
 msgid "Levels on CPU utilization of a single process"
 msgstr "単一プロセスのCPU使用率のレベル"
 
-#, fuzzy
 msgid "Levels on I/O wait (Unix only)"
-msgstr "IO待ち時間のレベル(UNIXのみ)"
+msgstr "I/O待ち時間のレベル(UNIXのみ)"
 
 msgid "Levels on Web ACL requests"
 msgstr "WebACL要求のレベル"
@@ -39134,9 +39211,8 @@ msgstr "可用性のレベル(パーセント)"
 msgid "Levels on average usage"
 msgstr "平均使用量のレベル"
 
-#, fuzzy
 msgid "Levels on decreasing trends in MiB per time range"
-msgstr "時間範囲ごとのMBの減少傾向に関するレベル"
+msgstr "時間範囲ごとのMiBの減少傾向に関するレベル"
 
 msgid "Levels on egress data"
 msgstr "出力データのレベル"
@@ -39165,7 +39241,6 @@ msgstr "インスタンスのレベル"
 msgid "Levels on latency"
 msgstr "遅延のレベル"
 
-#, fuzzy
 msgid "Levels on memory usage"
 msgstr "メモリ使用量のレベル"
 
@@ -39175,9 +39250,8 @@ msgstr "ネットワークのレベル"
 msgid "Levels on network traffic"
 msgstr "ネットワークトラフィックのレベル"
 
-#, fuzzy
 msgid "Levels on page file usage"
-msgstr "平均使用量のレベル"
+msgstr "ページファイルの使用状況に関するレベル"
 
 msgid "Levels on performance"
 msgstr "パフォーマンスのレベル"
@@ -39212,9 +39286,8 @@ msgstr "期間ごとの温度低下のレベル"
 msgid "Levels on temperature increase per period"
 msgstr "期間ごとの温度上昇のレベル"
 
-#, fuzzy
 msgid "Levels on the read latency"
-msgstr "サーバーレイテンシのレベル"
+msgstr "読み取りレイテンシーのレベル"
 
 msgid ""
 "Levels on the time left until a critical temperature (upper or lower) is "
@@ -39232,9 +39305,8 @@ msgid ""
 "bandwidth."
 msgstr "合計帯域幅のレベルは、入力/出力帯域幅の場合と同じように機能します。"
 
-#, fuzzy
 msgid "Levels on the write latency"
-msgstr "サーバーレイテンシのレベル"
+msgstr "書き込みレイテンシーのレベル"
 
 msgid "Levels on time offset"
 msgstr "時間オフセットのレベル"
@@ -39299,9 +39371,8 @@ msgstr "リベルビジネスシャドウ"
 msgid "Libraries"
 msgstr "ライブラリ"
 
-#, fuzzy
 msgid "Library cache hit ratio"
-msgstr "Oracleライブラリキャッシュヒット率"
+msgstr "ライブラリキャッシュヒット率"
 
 msgid "Licence state"
 msgstr "ライセンスの状態"
@@ -39315,6 +39386,9 @@ msgstr "ライセンス対象ホスト"
 msgid "Licensable services"
 msgstr "ライセンス対象サービス"
 
+msgid "License"
+msgstr "ライセンス"
+
 msgid "License Feature"
 msgstr "ライセンス機能"
 
@@ -39324,9 +39398,8 @@ msgstr "ライセンスの使用法"
 msgid "License and support expiry"
 msgstr "ライセンスおよびサポートの有効期限"
 
-#, fuzzy
 msgid "License consumption"
-msgstr "平均消費量"
+msgstr "ライセンスの使用状況"
 
 msgid "License details"
 msgstr "ライセンス詳細"
@@ -39345,9 +39418,8 @@ msgstr ""
 "ライセンスの有効期限切れ：サイトの削除を避けるために、今すぐライセンスを更新"
 "してください。"
 
-#, fuzzy
 msgid "License expiry"
-msgstr "ライセンス終了"
+msgstr "ライセンスの有効期限"
 
 msgid "License key list"
 msgstr "ライセンスキーリスト"
@@ -39373,13 +39445,13 @@ msgstr "ライセンスの一時停止：今すぐCheckmk営業チームに連�
 msgid "License suspended: Contact Checkmk sales team now."
 msgstr "ライセンスの一時停止：今すぐCheckmk営業チームに連絡してください。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "License terminated. Your license expires in %(days)d days. Renew license now "
 "to avoid site deletion."
 msgstr ""
-"ライセンスが終了しました。ライセンスはあと%d日で期限切れとなります。サイト削"
-"除を避けるため、今すぐライセンスを更新してください。"
+"ライセンスが失効しました。ライセンスの有効期限まであと%(days)d日です。サイト"
+"の削除を防ぐため、今すぐライセンスを更新してください。"
 
 msgid "License usage"
 msgstr "ライセンスの使用法"
@@ -39661,11 +39733,9 @@ msgstr "リンクはでリセットされます"
 msgid "Link resets out"
 msgstr "リンクがリセットされます"
 
-#, fuzzy
 msgid "Link target"
-msgstr "リンクタイプ"
+msgstr "リンク先"
 
-#, fuzzy
 msgid ""
 "Link this host to other monitored hosts. Type and direction say what this "
 "host is to the selected one - the management board of that host, for "
@@ -39673,12 +39743,12 @@ msgid ""
 "is stored on both: it appears here right away when someone records it on the "
 "other host, and adding or removing one here changes that host too."
 msgstr ""
-"このホストを、監視対象の他のホストに関連付けます。関係タイプは、このホストが"
-"選択したホストに対してどのような関係にあるかを示します。例えば、そのホストの"
-"管理ボードである場合や、そのホストによって管理されているOSホストである場合な"
-"どです。関係は両方のホストに関わるため、両方に保存されます。つまり、一方のホ"
-"ストで誰かが関係を登録すると、すぐにこちらにも表示され、こちらで関係を追加ま"
-"たは削除すると、もう一方のホストも同様に変更されます。"
+"このホストを、他の監視対象ホストに関連付けます。「タイプ」と「方向」は、この"
+"ホストが選択したホストに対してどのような関係にあるかを示します。例えば、その"
+"ホストの管理ボードである場合や、そのホストによって管理されているOSホストであ"
+"る場合などです。関係は両方のホストに関わるため、両方に保存されます。つまり、"
+"一方のホストで誰かが関係を登録すると、すぐにこちらにも表示され、こちらで関係"
+"を追加または削除すると、もう一方のホストも同様に変更されます。"
 
 msgid "Link to dashboard"
 msgstr "ダッシュボードにリンクする"
@@ -39689,21 +39759,17 @@ msgstr "表示するためのリンク"
 msgid "Link type"
 msgstr "リンクタイプ"
 
-#, fuzzy
 msgid "Link view showing all DOWN hosts of one customer\n"
-msgstr "ある顧客の全ホストを表示するリンクビュー\n"
+msgstr "ある顧客の全DOWN ホストを表示するリンクビュー\n"
 
-#, fuzzy
 msgid "Link view showing all PENDING hosts of one customer\n"
-msgstr "ある顧客の全ホストを表示するリンクビュー\n"
+msgstr "ある顧客の全PENDING ホストを表示するリンクビュー\n"
 
-#, fuzzy
 msgid "Link view showing all UNREACHABLE hosts of one customer\n"
-msgstr "ある顧客の全ホストを表示するリンクビュー\n"
+msgstr "ある顧客の全UNREACHABLE なホストを表示するリンクビュー\n"
 
-#, fuzzy
 msgid "Link view showing all UP hosts of one customer\n"
-msgstr "ある顧客の全ホストを表示するリンクビュー\n"
+msgstr "ある顧客の全UP ホストを表示するリンクビュー\n"
 
 msgid "Link view showing all hosts of one customer\n"
 msgstr "ある顧客の全ホストを表示するリンクビュー\n"
@@ -39750,9 +39816,8 @@ msgstr "Linuxインターフェース"
 msgid "Linux quota check"
 msgstr "Linuxクォータチェック"
 
-#, fuzzy
 msgid "Linux user"
-msgstr "Linux-ユーザー:"
+msgstr "Linuxユーザー"
 
 msgid "Linux user to run handlers"
 msgstr "ハンドラーを実行するLinuxユーザー"
@@ -39826,11 +39891,9 @@ msgstr "経由で着信メッセージを聞く"
 msgid "Listen for spans on this local IP address"
 msgstr "このローカルIPアドレスでスパンを監視してください"
 
-#, fuzzy
 msgid "Listen port"
-msgstr "リスナー"
+msgstr "リスニングポート"
 
-#, fuzzy
 msgid "Listener"
 msgstr "リスナー"
 
@@ -39885,9 +39948,8 @@ msgstr ""
 "さまざまな状態のサービスの数とともに、ホストグループのメンバーを一覧表示しま"
 "す。"
 
-#, fuzzy
 msgid "Live infrastructure overview"
-msgstr "ITインフラの効率化"
+msgstr "インフラストラクチャのリアルタイム概要"
 
 msgid "Live monitor of the overall performance of all monitoring servers"
 msgstr "全監視サーバーの全体パフォーマンスをライブで監視"
@@ -39903,7 +39965,6 @@ msgstr ""
 msgid "Live search active"
 msgstr "ライブサーチアクティブ"
 
-#, fuzzy
 msgid "Liveproxy daemon"
 msgstr "Liveproxyデーモン"
 
@@ -39916,11 +39977,9 @@ msgstr "Livestatus"
 msgid "Livestatus (CMC core) — no credentials needed"
 msgstr "Livestatus (CMCコア) — 認証情報は不要"
 
-#, fuzzy
 msgid "Livestatus (Checkmk / Nagios)"
-msgstr "Livestatus 接続"
+msgstr "ライブステータス(Checkmk / Nagios)"
 
-#, fuzzy
 msgid "Livestatus connection"
 msgstr "Livestatus 接続"
 
@@ -40100,9 +40159,9 @@ msgstr "ローカルチェック: バージョン"
 msgid "Local count requests"
 msgstr "ローカルカウントリクエスト"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Local data backend (site %(site)s)"
-msgstr "サイト %(site_id)s のデータバックエンドは無効化されています"
+msgstr "ローカルデータバックエンド（サイト %(site)s）"
 
 msgid "Local destination"
 msgstr "ローカルの宛先"
@@ -40113,23 +40172,20 @@ msgstr "ローカルディレクトリ"
 msgid "Local file"
 msgstr "ローカルファイル"
 
-#, fuzzy
 msgid "Local files & extensions"
-msgstr "エクステンションのサイズ"
+msgstr "ローカルファイルと拡張子"
 
 msgid "Local group name"
 msgstr "ローカルグループ名"
 
-#, fuzzy
 msgid "Local instances"
-msgstr "Oracleインスタンス"
+msgstr "ローカルインスタンス"
 
 msgid "Local integrated authentication (Windows)"
 msgstr "ローカル統合認証（Windows）"
 
-#, fuzzy
 msgid "Local networks"
-msgstr "Dockerネットワーク"
+msgstr "ローカルネットワーク"
 
 msgid "Local path"
 msgstr "ローカルパス"
@@ -40206,14 +40262,12 @@ msgstr "ロックタイムアウト/秒"
 msgid "Lock Waits / sec"
 msgstr "ロック待ち時間 / 秒"
 
-#, fuzzy
 msgid "Lock duration levels"
-msgstr "ロックの持続時間レベル"
+msgstr "ロック期間のレベル"
 
 msgid "Lock user accounts after N logon failures"
 msgstr "N回のログオン失敗後にユーザーアカウントをロックする"
 
-#, fuzzy
 msgid "Lock voltage for PLLs"
 msgstr "PLLのロック電圧"
 
@@ -40259,11 +40313,9 @@ msgstr "すべてのメッセージをSyslogのようなログファイルに記
 msgid "Log backup"
 msgstr "ログバックアップ"
 
-#, fuzzy
 msgid "Log entries"
 msgstr "ログエントリ"
 
-#, fuzzy
 msgid "Log entry"
 msgstr "ログエントリ"
 
@@ -40300,11 +40352,12 @@ msgstr "ログファイル%(item)s(ホスト%(hostname)s上の)ログファイ�
 msgid "Log files"
 msgstr "ログファイル"
 
-#, fuzzy
 msgid ""
 "Log files ('*.log' or '*.state') below var/log that are classified as "
 "insensitive"
-msgstr "var/logからのログファイル('*.log'または'*.state'): %(files)s"
+msgstr ""
+"var/log ディレクトリ以下にある、機密性のないものと分類されたログファイル"
+"（「*.log」または「*.state」）"
 
 msgid ""
 "Log files ('*.log' or '*.state') below var/log that may include highly "
@@ -40394,9 +40447,8 @@ msgstr "ログルールのヒット"
 msgid "Log search query"
 msgstr "ログ検索クエリ"
 
-#, fuzzy
 msgid "Log switches (last hour)"
-msgstr "ログスイッチ/時間"
+msgstr "ログスイッチ（過去1時間）"
 
 msgid "Log switches in the last 60 minutes"
 msgstr "過去60分間のログスイッチ"
@@ -40595,7 +40647,6 @@ msgstr "ログアウト"
 msgid "Logs"
 msgstr "ログ"
 
-#, fuzzy
 msgid "Logs refused by the Event Console"
 msgstr "イベントコンソールによって拒否されたログ"
 
@@ -40611,7 +40662,6 @@ msgstr "ログを正常に受信しました（GRPCレシーバー）"
 msgid "Logs successfully received (HTTP receiver)"
 msgstr "ログを正常に受信しました（HTTPレシーバー）"
 
-#, fuzzy
 msgid "Logs successfully sent to Event Console"
 msgstr "ログがイベントコンソールに正常に送信されました"
 
@@ -40687,11 +40737,9 @@ msgstr "Lotus Dominoメールキュー"
 msgid "Lotus Domino task discovery"
 msgstr "LotusDominoタスクの検出"
 
-#, fuzzy
 msgid "Lotus Domino transactions"
 msgstr "LotusDominoトランザクション"
 
-#, fuzzy
 msgid "Lotus Domino users"
 msgstr "Lotus Domino ユーザー"
 
@@ -40701,13 +40749,11 @@ msgstr "低"
 msgid "Low (without escalation"
 msgstr "低(エスカレーションなし"
 
-#, fuzzy
 msgid "Low and medium sensitivity"
-msgstr "大文字小文字の区別"
+msgstr "低機密および中機密"
 
-#, fuzzy
 msgid "Low sensitivity only"
-msgstr "低感度ファイルのみをパックする"
+msgstr "低機密のみ"
 
 msgid "Low watermark"
 msgstr "低基準値"
@@ -40757,9 +40803,8 @@ msgstr "公開メッセージレートの下位レベル"
 msgid "Lower level for rate of memory reclaimed by GC"
 msgstr "GCによって回収されたメモリレートの下位レベル"
 
-#, fuzzy
 msgid "Lower level for request rate over last 5 minutes"
-msgstr "直前のリクエスト率の下限値"
+msgstr "直近5分間のリクエスト率の下位レベル"
 
 msgid "Lower level for request rate over last day"
 msgstr "過去24時間のリクエスト率の下位レベル"
@@ -40803,9 +40848,8 @@ msgstr "準備完了メッセージ総数の下位レベル"
 msgid "Lower level for total number of unacknowledged messages"
 msgstr "未承認メッセージ総数の下位レベル"
 
-#, fuzzy
 msgid "Lower level for total requests over last 5 minutes"
-msgstr "直前の総リクエスト数の下位レベル"
+msgstr "直近5分間の総リクエスト数の下位レベル"
 
 msgid "Lower level for total requests over last day"
 msgstr "過去24時間の総リクエスト数の下位レベル"
@@ -40874,13 +40918,11 @@ msgstr "ヒット比率の下位レベル"
 msgid "Lower levels for incoming requests to a JVM application server"
 msgstr "JVMアプリケーションサーバーへの着信リクエストの下位レベル"
 
-#, fuzzy
 msgid "Lower levels for laser input"
-msgstr "レーザー入力のレベル"
+msgstr "レーザー入力の下位レベル"
 
-#, fuzzy
 msgid "Lower levels for laser output"
-msgstr "レーザー出力のレベル"
+msgstr "レーザー出力の下位レベル"
 
 msgid "Lower levels for network effectiveness"
 msgstr "ネットワークの有効性の下位レベル"
@@ -40891,9 +40933,8 @@ msgstr "通知配信率の下限レベル"
 msgid "Lower levels for number of requests"
 msgstr "リクエスト数の下位レベル"
 
-#, fuzzy
 msgid "Lower levels for online canisters"
-msgstr "電圧の下位レベル"
+msgstr "オンラインキャニスターの下位レベル"
 
 msgid "Lower levels for remaining API reads"
 msgstr "残りのAPI読み取りの下位レベル"
@@ -40931,16 +40972,14 @@ msgstr "電圧の下位レベル"
 msgid "Lower levels in percentage of limit"
 msgstr "制限のパーセンテージのより下位レベル"
 
-#, fuzzy
 msgid "Lower levels on custom metrics within the last 20 minutes"
-msgstr "総エラーレートの下位レベル"
+msgstr "過去20分間のカスタムメトリックの下位レベル"
 
 msgid "Lower levels on number of Point-to-site connections"
 msgstr "Point-to-site接続の数の下位レベル"
 
-#, fuzzy
 msgid "Lower levels on point-to-site bandwidth in bytes per second"
-msgstr "ポイントツーサイト帯域幅の下位レベル(バイト/秒)"
+msgstr "point-to-siteの帯域幅（バイト/秒）の下位レベル"
 
 msgid "Lower levels on quality"
 msgstr "クオリティの下位レベル"
@@ -40948,9 +40987,8 @@ msgstr "クオリティの下位レベル"
 msgid "Lower levels on remaining API reads"
 msgstr "残りのAPI読み取りの下位レベル"
 
-#, fuzzy
 msgid "Lower levels on site-to-site bandwidth in bytes per second"
-msgstr "1秒あたりのバイト数で表したサイト間帯域幅の下位レベル"
+msgstr "site-to-siteの帯域幅（バイト/秒）の下位レベル"
 
 msgid "Lower levels on the biggest input buffer"
 msgstr "最大入力バッファの下位レベル"
@@ -40984,6 +41022,9 @@ msgstr "メール転送スレッドの下限値"
 msgid "Lower voltage levels"
 msgstr "低電圧レベル"
 
+msgid "Lowercase"
+msgstr "小文字"
+
 msgid "Lowest: No notification, update badge number"
 msgstr "最低: 通知なし、バッジ番号を更新"
 
@@ -41005,9 +41046,8 @@ msgstr "MBean"
 msgid "MByte/s"
 msgstr "メガバイト/秒"
 
-#, fuzzy
 msgid "MCP"
-msgstr "CPU"
+msgstr "MCP"
 
 msgid "MD5 (MD5-96)"
 msgstr "MD5(MD5-96)"
@@ -41048,22 +41088,20 @@ msgstr "Checkmkに同梱されているMIB"
 msgid "MISSING '%(phrase)s'"
 msgstr "%(phrase)s' がありません"
 
-#, fuzzy
 msgid "MK SQL plug-in uses different methods to detect MSSQL instances"
 msgstr ""
 "MK-SQLプラグインは、MSSQLインスタンスを検出するためにさまざまな方法を使用しま"
 "す"
 
-#, fuzzy
 msgid ""
 "MK-SQL plug-in may use different monitoring backends. In some cases you may "
 "want to use ODBC backend: typical use cases are firewall problems, "
 "misconfigured network and for testing purposes"
 msgstr ""
-"MK SQLプラグインは、さまざまな監視バックエンドを使用する場合があります。場合"
-"によっては、ODBCバックエンドを使用したいこともあるでしょう。代表的な使用例と"
-"しては、ファイアウォールの問題、ネットワーク設定の誤り、およびテスト目的など"
-"が挙げられます"
+"MK-SQLプラグインは、さまざまな監視バックエンドを使用できます。場合によって"
+"は、ODBCバックエンドを使用したいこともあるでしょう。典型的な使用例としては、"
+"ファイアウォールの問題、ネットワーク設定の誤り、およびテスト目的などが挙げら"
+"れます"
 
 msgid "MKEvent status"
 msgstr "MKEvent ステータス"
@@ -41139,7 +41177,6 @@ msgstr "MSGAGE: キューにある最も古いメッセージの経過時間(秒
 msgid "MSSQL"
 msgstr "MSSQL"
 
-#, fuzzy
 msgid "MSSQL SQL stats"
 msgstr "MSSQL SQL統計"
 
@@ -41155,7 +41192,6 @@ msgstr "MSSQLバックアップの概要"
 msgid "MSSQL blocked sessions"
 msgstr "MSSQLブロックセッション"
 
-#, fuzzy
 msgid "MSSQL cache hits"
 msgstr "MSSQLキャッシュヒット"
 
@@ -41165,14 +41201,12 @@ msgstr "MySQL接続"
 msgid "MSSQL counter discovery"
 msgstr "MSSQLカウンターの検出"
 
-#, fuzzy
 msgid "MSSQL database"
 msgstr "MSSQLデータベース"
 
 msgid "MSSQL databases properties"
 msgstr "MSSQLデータベースのプロパティ"
 
-#, fuzzy
 msgid "MSSQL datafile"
 msgstr "MSSQLデータファイル"
 
@@ -41182,7 +41216,6 @@ msgstr "MSSQLデータファイルとトランザクションログの検出"
 msgid "MSSQL datafile sizes"
 msgstr "MSSQLデータファイルサイズ"
 
-#, fuzzy
 msgid "MSSQL file sizes"
 msgstr "MSSQLデータファイルサイズ"
 
@@ -41195,7 +41228,6 @@ msgstr "MSSQLジョブ"
 msgid "MSSQL locks"
 msgstr "MSSQLロック"
 
-#, fuzzy
 msgid "MSSQL locks per batch"
 msgstr "バッチごとのMSSQLロック"
 
@@ -41217,22 +41249,18 @@ msgstr "テーブルスペースのMSSQLサイズ"
 msgid "MSSQL statistics"
 msgstr "MSSQL統計"
 
-#, fuzzy
 msgid "MSSQL tablespace"
 msgstr "MSSQLテーブルスペース"
 
-#, fuzzy
 msgid "MSSQL transaction log"
 msgstr "MSSQL トランザクションログ"
 
 msgid "MSSQL transaction log sizes"
 msgstr "MSSQLトランザクションログのサイズ"
 
-#, fuzzy
 msgid "MSSQL transactions"
 msgstr "MSSQLトランザクション"
 
-#, fuzzy
 msgid "MSSQL version"
 msgstr "MSSQLバージョン"
 
@@ -41300,9 +41328,8 @@ msgstr "メール送信"
 msgid "Mail transfer threads"
 msgstr "メール転送スレッド"
 
-#, fuzzy
 msgid "Mailman mailing lists (Linux)"
-msgstr "Mailmanメーリングリストキュー(Linux)"
+msgstr "Mailman メーリングリスト (Linux)"
 
 msgid "Mailqueue"
 msgstr "メールキュー"
@@ -41355,9 +41382,8 @@ msgstr "メインダッシュボード"
 msgid "Main folder"
 msgstr "メインフォルダ"
 
-#, fuzzy
 msgid "Main instance"
-msgstr "アクティブ インスタンス"
+msgstr "メインインスタンス"
 
 msgid "Main memory usage (Unix / other devices)"
 msgstr "メインメモリ使用量(Unix /その他のデバイス)"
@@ -41572,9 +41598,8 @@ msgstr "OAuth2接続の管理"
 msgid "Manage OpenTelemetry configurations"
 msgstr "OpenTelemetryの設定を管理する"
 
-#, fuzzy
 msgid "Manage OpenTelemetry custom services"
-msgstr "OpenTelemetryの設定を管理する"
+msgstr "OpenTelemetry カスタムサービスの管理"
 
 msgid "Manage Own Scheduled Reports"
 msgstr "スケジュールされたレポートの管理"
@@ -41587,9 +41612,8 @@ msgstr ""
 "ネットからアクセスできないネットワーク上に存在するSNMP対応デバイスを監視でき"
 "るようになります。"
 
-#, fuzzy
 msgid "Manage alerts"
-msgstr "エンゲージドアラート"
+msgstr "アラートの管理"
 
 msgid "Manage alerts on your Telemetry data."
 msgstr "Telemetryデータに関するアラートを管理します。"
@@ -41655,7 +41679,6 @@ msgstr "タグ管理"
 msgid "Manage the controllers auto-registration"
 msgstr "コントローラーの自動登録の管理"
 
-#, fuzzy
 msgid "Manage the dynamic configuration connections"
 msgstr "動的な構成接続を管理する"
 
@@ -41687,6 +41710,9 @@ msgstr "管理対象のロボットが削除を試行中に見つかりません
 msgid "Managed robots"
 msgstr "管理robot"
 
+msgid "Managed servers"
+msgstr "管理対象サーバー"
+
 msgid "Management board"
 msgstr "管理ボード"
 
@@ -41711,9 +41737,8 @@ msgstr "手動チェック"
 msgid "Manual configuration"
 msgstr "主導構成"
 
-#, fuzzy
 msgid "Manual entry"
-msgstr "手動チェック"
+msgstr "手動入力"
 
 msgid "Manual page for this check type"
 msgstr "このチェックタイプのマニュアルページ"
@@ -41724,7 +41749,6 @@ msgstr "プロキシの手動設定"
 msgid "Manual registration and fallback"
 msgstr "手動登録とフォールバック"
 
-#, fuzzy
 msgid "Manual robot"
 msgstr "マニュアルロボット"
 
@@ -41734,9 +41758,9 @@ msgstr "手動スナップショット"
 msgid "Manually added"
 msgstr "手動追加"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Manually execute this %(name)s"
-msgstr "この %s を手動で実行する"
+msgstr "この %(name)sを手動で実行する"
 
 msgid ""
 "Manually let the core send a notification to a host or service in order to "
@@ -41770,9 +41794,8 @@ msgstr ""
 "このオプションで経過時間を監視することができます。ドキュメントが設定されたし"
 "きい値より古い場合、WARNが表示されます。"
 
-#, fuzzy
 msgid "Map"
-msgstr "May"
+msgstr "マップ"
 
 msgid "Map Database States"
 msgstr "データベースの状態をマップする"
@@ -41801,17 +41824,14 @@ msgstr "マップ管理状態(64ビットカウンターのみのSNMP)"
 msgid "Map attribute 'Frozen'"
 msgstr "マップ属性「Frozen」"
 
-#, fuzzy
 msgid "Map attribute 'State'"
 msgstr "マップ属性 '状態'"
 
-#, fuzzy
 msgid "Map auto-close status"
-msgstr "自動クローズステータスをマップ"
+msgstr "マップの自動クローズステータス"
 
-#, fuzzy
 msgid "Map auto-shrink status"
-msgstr "自動縮小ステータスをマップします"
+msgstr "マップの自動縮小ステータス"
 
 msgid "Map channel state to service state"
 msgstr "チャネル状態をサービス状態にマップします"
@@ -41849,9 +41869,8 @@ msgstr "特定のホストにマップデータを割り当てる（ピギーバ
 msgid "Map data to the VM itself"
 msgstr "データをVM自体にマップします"
 
-#, fuzzy
 msgid "Map defaults"
-msgstr "デフォルト設定なし"
+msgstr "マップのデフォルト設定"
 
 msgid "Map device state"
 msgstr "デバイスの状態をマップします"
@@ -41874,9 +41893,8 @@ msgstr "監視状態をCheckmkの監視状態にマッピングする"
 msgid "Map mount point names"
 msgstr "マウントポイント名をマップします"
 
-#, fuzzy
 msgid "Map of Application Pool States to Service States"
-msgstr "チャネル状態をサービス状態にマップします"
+msgstr "アプリケーションプールの状態とサービス状態のマップ"
 
 msgid "Map operational and admin state independently"
 msgstr "運用状態と管理状態を独立してマッピングする"
@@ -41893,9 +41911,8 @@ msgstr "マッププロビジョニングと電源の状態"
 msgid "Map roles"
 msgstr "マップの役割"
 
-#, fuzzy
 msgid "Map settings"
-msgstr "プラン設定"
+msgstr "マップ設定"
 
 msgid "Map severity levels to alarm states"
 msgstr "最大レベルをアラーム状態にマップする"
@@ -41927,9 +41944,8 @@ msgstr ""
 msgid "Map to contact groups"
 msgstr "連絡先グループにマッピングする"
 
-#, fuzzy
 msgid "Map type"
-msgstr "マッチタイプ"
+msgstr "マップの種類"
 
 msgid "Map uplink status to monitoring state"
 msgstr "アップリンクの状態を監視状態にマッピングする"
@@ -41973,13 +41989,11 @@ msgstr "運用・管理状態を監視状態のマッピング"
 msgid "Maps"
 msgstr "マップ"
 
-#, fuzzy
 msgid "Maps (default)"
-msgstr "デフォルトです"
+msgstr "マップ（デフォルト）"
 
-#, fuzzy
 msgid "Maps connections"
-msgstr "接続"
+msgstr "マップ接続"
 
 msgid ""
 "Maps renders objects centered on their coordinates with the modern glass "
@@ -41992,17 +42006,14 @@ msgstr ""
 "キストボックスを描画します。レガシーなNagVis .cfgマップをインポートする際、"
 "1:1で再現するために自動で選択されます。"
 
-#, fuzzy
 msgid "Maps settings"
-msgstr "プラン設定"
+msgstr "マップの設定"
 
-#, fuzzy
 msgid "Maps: Connections & daemon"
-msgstr "1秒あたりの最大接続数"
+msgstr "マップ：接続とデーモン"
 
-#, fuzzy
 msgid "Maps: Map and object defaults"
-msgstr "デフォルトでない場合の状態"
+msgstr "マップ：マップおよびオブジェクトのデフォルト設定"
 
 msgid "March"
 msgstr "行進"
@@ -42094,7 +42105,6 @@ msgstr "ホストグループと一致する"
 msgid "Match host labels"
 msgstr "ホストラベルに一致"
 
-#, fuzzy
 msgid "Match host name"
 msgstr "ホスト名に一致"
 
@@ -42238,9 +42248,8 @@ msgstr "マトリックスレイアウト"
 msgid "Matrix of metrics"
 msgstr "指標マトリックス"
 
-#, fuzzy
 msgid "Max"
-msgstr "May"
+msgstr "Max"
 
 msgid "Max Cache Age"
 msgstr "最大キャッシュ経過時間"
@@ -42390,9 +42399,8 @@ msgstr "最大"
 msgid "Maximum %(count)s instances of duration greater than %(duration)s"
 msgstr "最大 %(count)s インスタンス 期間が %(duration)s を超える"
 
-#, fuzzy
 msgid "Maximum HTTP requests per second"
-msgstr "1秒あたりのHTTPリクエスト"
+msgstr "1秒あたりの最大HTTPリクエスト数"
 
 msgid "Maximum KPI runtime"
 msgstr "最大KPIランタイム"
@@ -42403,7 +42411,6 @@ msgstr "最大Livestatus応答サイズ"
 msgid "Maximum PGA allocated"
 msgstr "割り当てられた最大PGA"
 
-#, fuzzy
 msgid "Maximum PGA used for auto-workareas"
 msgstr "自動ワークエリアに使用される最大PGA"
 
@@ -42443,9 +42450,8 @@ msgstr "最新のタイムマシンバックアップの最大経過時間"
 msgid "Maximum age of passwords"
 msgstr "パスワードの最大有効期間"
 
-#, fuzzy
 msgid "Maximum age of stored profiles"
-msgstr "パスワードの最大有効期間"
+msgstr "保存されたプロファイルの最大保存期間"
 
 msgid "Maximum allowed age"
 msgstr "最大許容経過日数"
@@ -42515,9 +42521,8 @@ msgstr "最大同時Livestatus接続"
 msgid "Maximum concurrent active checks"
 msgstr "最大同時アクティブチェック"
 
-#, fuzzy
 msgid "Maximum concurrent active-check helpers"
-msgstr "最大同時アクティブチェック"
+msgstr "アクティブチェックヘルパーの最大同時実行数"
 
 msgid "Maximum concurrent executions"
 msgstr "最大同時実行"
@@ -42624,9 +42629,8 @@ msgstr "保存間隔あたりの最大メッセージ数"
 msgid "Maximum number of RPC requests per second"
 msgstr "1秒あたりのRPCリクエストの最大数"
 
-#, fuzzy
 msgid "Maximum number of SSL connections"
-msgstr "最大 SSL接続の数"
+msgstr "SSL接続の最大数"
 
 msgid "Maximum number of access points"
 msgstr "最大アクセスポイント数"
@@ -42664,9 +42668,8 @@ msgstr "1秒あたりのクライアントタイプリクエストの最大数"
 msgid "Maximum number of clients"
 msgstr "最大クライアント数"
 
-#, fuzzy
 msgid "Maximum number of connections"
-msgstr "接続の最小数"
+msgstr "接続の最大数"
 
 msgid "Maximum number of connections or listeners"
 msgstr "接続またはリスナーの最大数"
@@ -42686,9 +42689,8 @@ msgstr "最大実行回数"
 msgid "Maximum number of firewall connections"
 msgstr "ファイアウォール接続の最大数"
 
-#, fuzzy
 msgid "Maximum number of hosts"
-msgstr "最大クライアント数"
+msgstr "ホストの最大数"
 
 msgid "Maximum number of messages"
 msgstr "メッセージの最大数"
@@ -42700,9 +42702,8 @@ msgstr "ノードの最大数が %(total_nodes)d/%(max_nodes)dを超えました
 msgid "Maximum number of open file descriptors"
 msgstr "開いているファイル記述子の最大数"
 
-#, fuzzy
 msgid "Maximum number of parallel server instances"
-msgstr "サービス停止の最大数"
+msgstr "並行実行可能なサーバーインスタンスの最大数"
 
 msgid "Maximum number of parsed lines per log file"
 msgstr "ログファイルごとに解析される最大行数"
@@ -42719,9 +42720,8 @@ msgstr "Ready ワーカーノードの最大数"
 msgid "Maximum number of service outages"
 msgstr "サービス停止の最大数"
 
-#, fuzzy
 msgid "Maximum number of stored profiles"
-msgstr "スレッドの最大数"
+msgstr "保存可能なプロファイルの最大数"
 
 msgid ""
 "Maximum number of streams that can be processed concurrently. If the number "
@@ -42745,20 +42745,17 @@ msgstr "最大%(title)s"
 msgid "Maximum parallel connections"
 msgstr "最大並列接続"
 
-#, fuzzy
 msgid "Maximum parallel connections per source IP address"
-msgstr "最大並列接続"
+msgstr "ソースIPアドレスあたりの最大同時接続数"
 
 msgid "Maximum rate for total number of packets"
 msgstr "パケット総数の最大レート"
 
-#, fuzzy
 msgid "Maximum rate of ESP decrypted packets"
 msgstr "ESP復号化パケットの最大レート"
 
-#, fuzzy
 msgid "Maximum rate of ESP encrypted packets"
-msgstr "ESP暗号化パケットの最大レート"
+msgstr "ESP復号化パケットの最大レート"
 
 msgid "Maximum rate of accepted packets"
 msgstr "受け入れられたパケットの最大レート"
@@ -42775,7 +42772,6 @@ msgstr "拒否されたバイトの最大レート"
 msgid "Maximum rate of dropped packets"
 msgstr "ドロップされたパケットの最大レート"
 
-#, fuzzy
 msgid "Maximum rate of logged packets"
 msgstr "ログに記録されたパケットの最大レート"
 
@@ -42903,35 +42899,28 @@ msgstr "McAfee アンチウイルスの時刻設定"
 msgid "McAfee email gateway bridge"
 msgstr "McAfeeメールゲートウェイブリッジ"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Mean %(title)s"
-msgstr "%(title)s"
+msgstr "平均%(title)s"
 
-#, fuzzy
 msgid "Measure the CPU and memory efficiency of your Linux servers\n"
 msgstr "LinuxサーバーのCPUとメモリーの効率測定\n"
 
-#, fuzzy
 msgid "Measure the CPU and memory efficiency of your Nutanix servers\n"
 msgstr "NutanixサーバのCPUとメモリの効率測定\n"
 
-#, fuzzy
 msgid "Measure the CPU and memory efficiency of your VMware ESXi servers\n"
 msgstr "VMware ESXiサーバーのCPUとメモリーの効率測定\n"
 
-#, fuzzy
 msgid "Measure the CPU and memory efficiency of your Windows servers\n"
 msgstr "WindowsサーバーのCPUとメモリの効率測定\n"
 
-#, fuzzy
 msgid "Measure the file system efficiency of your Linux servers.\n"
 msgstr "Linuxサーバーのファイルシステムの効率測定\n"
 
-#, fuzzy
 msgid "Measure the file system efficiency of your VMware ESXi servers\n"
 msgstr "VMware ESXiサーバーのファイルシステムの効率測定\n"
 
-#, fuzzy
 msgid "Measure the file system efficiency of your Windows servers\n"
 msgstr "Windowsサーバーのファイルシステムの効率測定\n"
 
@@ -42947,9 +42936,9 @@ msgstr "メディアとデータの整合性エラー"
 msgid "Media connectivity check failure"
 msgstr "メディア接続の確認に失敗しました"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Median %(title)s"
-msgstr "%(title)sを編集する"
+msgstr "中央値%(title)s"
 
 msgid ""
 "Mediation server - Failed calls caused by unexpected interaction of gateway"
@@ -43046,7 +43035,6 @@ msgstr "より複雑なOSを実行していない単純なデバイスのメモ�
 msgid "Memory limit"
 msgstr "メモリ制限"
 
-#, fuzzy
 msgid "Memory modules"
 msgstr "メモリモジュール"
 
@@ -43300,9 +43288,8 @@ msgstr "メタデータ"
 msgid "Metadata endpoint"
 msgstr "メタデータエンドポイント"
 
-#, fuzzy
 msgid "Metadata endpoint URL"
-msgstr "メタデータエンドポイント"
+msgstr "メタデータエンドポイントURL"
 
 msgid ""
 "Metadata information is exchanged between Checkmk and your identity "
@@ -43335,7 +43322,6 @@ msgstr "プロービングの方法"
 msgid "Metric"
 msgstr "メトリック"
 
-#, fuzzy
 msgid "Metric configuration"
 msgstr "メトリック設定"
 
@@ -43345,9 +43331,8 @@ msgstr "メトリック予測"
 msgid "Metric history"
 msgstr "メトリックヒストリー"
 
-#, fuzzy
 msgid "Metric history source"
-msgstr "メトリックヒストリー"
+msgstr "メトリックヒストリーソース"
 
 msgid "Metric label"
 msgstr "メトリックのラベル"
@@ -43361,12 +43346,13 @@ msgstr "メトリック名"
 msgid "Metric name (exact match)"
 msgstr "メトリック名(完全一致)"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Metric names can only be defined once. Found the following keys multiple "
 "times: %(keys)s"
 msgstr ""
-"メトリック名は一度だけ定義できます。以下のキーが複数回見つかりました：%s"
+"メトリック名は一度しか定義できません。以下のキーが複数回見つかりました："
+"%(keys)s"
 
 msgid ""
 "Metric names must only consist of letters, digits and underscores and they "
@@ -43497,11 +43483,9 @@ msgstr ""
 msgid "Migrating"
 msgstr "移行する"
 
-#, fuzzy
 msgid "Min"
-msgstr "メイン"
+msgstr "Min"
 
-#, fuzzy
 msgid "Min bytes"
 msgstr "処理されたバイト"
 
@@ -43644,9 +43628,8 @@ msgstr "単一リクエストの最小消費量"
 msgid "Minimum time between runs"
 msgstr "実行間の最小時間"
 
-#, fuzzy
 msgid "Minimum traffic"
-msgstr "入力トラフィック"
+msgstr "最小限のトラフィック"
 
 msgid "Minimum write wait time"
 msgstr "最小書き込み待機時間"
@@ -43696,9 +43679,10 @@ msgstr "ミススケジュールされた期間（DaemonSetのみ）"
 msgid "Misscheduled replicas"
 msgstr "間違ってスケジュールされたレプリカ"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Missing config file for agent %(platform_prefix)s%(aghash)s"
-msgstr "エージェント %s%s の構成ファイルがありません"
+msgstr ""
+"エージェント用の設定ファイルが見つかりません %(platform_prefix)s%(aghash)s"
 
 #, python-format
 msgid "Missing connection parameter: %(parameter)s"
@@ -43719,13 +43703,12 @@ msgstr ""
 msgid "Missing host name"
 msgstr "ホスト名がありません"
 
-#, fuzzy
 msgid ""
 "Missing host name template. Please configure a template (e.g., "
 "$RESOURCE_ATTR.service.name$) so the system can determine the host name."
 msgstr ""
-"ホスト名属性が不足しています。システムがホスト名を判別できるよう、リソース属"
-"性（例: host.name）を設定してください。"
+"ホスト名テンプレートが見つかりません。システムがホスト名を判別できるよう、テ"
+"ンプレート（例：$RESOURCE_ATTR.サービス名$）を設定してください。"
 
 msgid "Missing identity provider information in metadata"
 msgstr "メタデータにIDプロバイダ情報がありません"
@@ -43746,11 +43729,13 @@ msgstr "必要な %(needed_par)s パラメータがありません。"
 msgid "Missing needed host parameter."
 msgstr "必要なホストパラメータがありません。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Missing one or more of the labels: %(required_labels)s (has the labels "
 "%(labels)s)"
-msgstr "以下のラベルのいずれかが欠落しています：%s（%sというラベルがあります）"
+msgstr ""
+"1つ以上のラベルが欠落しています：%(required_labels)s（%(labels)sというラベル"
+"があります）"
 
 #, python-format
 msgid "Missing or invalid '%(key)s'."
@@ -43823,19 +43808,16 @@ msgid "Mobile: Table"
 msgstr "モバイル:テーブル"
 
 #. weblate-flags: read-only, vendor-name
-#, fuzzy
 msgid "MobileIron compliance"
-msgstr "Mobileiron コンプライアンス"
+msgstr "モバイルアイアン　コンプライアンス"
 
 #. weblate-flags: read-only, vendor-name
-#, fuzzy
 msgid "MobileIron statistics"
 msgstr "Mobileiron 統計"
 
 #. weblate-flags: read-only, vendor-name
-#, fuzzy
 msgid "MobileIron versions"
-msgstr "Mobileiron バージョン"
+msgstr "モバイルアイアン バージョン"
 
 msgid "Mobileiron"
 msgstr "Mobileiron"
@@ -44051,7 +44033,6 @@ msgstr "レーンの監視とグラフ化"
 msgid "Monitor (min. 1)"
 msgstr "監視（最小1）"
 
-#, fuzzy
 msgid "Monitor Acropolis state"
 msgstr "アクロポリス州の監視含めて"
 
@@ -44064,7 +44045,6 @@ msgstr "CloudFront WAFを監視する"
 msgid "Monitor Route53"
 msgstr "モニターRoute53"
 
-#, fuzzy
 msgid ""
 "Monitor a Kubernetes cluster using the in-cluster agent via pull mode. "
 "Checkmk connects to an agent that runs inside the cluster, which gathers the "
@@ -44073,26 +44053,29 @@ msgid ""
 "configured in the cluster itself via the agent's Helm chart. Thus, there are "
 "no Kubernetes-specific settings here."
 msgstr ""
-"Kubernetes クラスタをプルモードで監視します。Checkmk はクラスタ内で実行されて"
-"いるエージェントに接続し、エージェントがデータを収集して、要求に応じて返しま"
-"す。このルールでは、そのエージェントへの接続方法のみを設定します。監視対象の"
-"設定はクラスタ自体で行われるため、ここには Kubernetes 固有の設定はありませ"
-"ん。"
+"プルモードを使用して、クラスタ内のエージェントを介して Kubernetes クラスタを"
+"監視します。Checkmk はクラスタ内で実行されているエージェントに接続し、エー"
+"ジェントはデータを収集して、要求に応じてそれを返します。このルールでは、その"
+"エージェントへの接続方法を設定します。エージェントから何が返されるか（つま"
+"り、何が監視されるか）は、エージェントのヘルムチャートを介してクラスタ自体で"
+"設定されます。したがって、ここには Kubernetes 固有の設定はありません。"
 
 msgid ""
 "Monitor a Veeam Backup & Replication server through its REST API. Nothing is "
 "installed on the backup server, so this also works for the Veeam software "
-"appliance, where the Checkmk agent cannot run. The built-in <tt>Veeam Backup "
-"Viewer</tt> role is sufficient. Do not configure an administrator account: "
-"it could also delete backups, trigger restores and read stored encryption "
-"passwords."
+"appliance, where the Checkmk agent cannot run. Use a dedicated account whose "
+"role can read the data you want to monitor; some services require a more "
+"privileged role, and the agent stops when it cannot read a service. Do not "
+"configure an administrator account: it could also delete backups, trigger "
+"restores and read stored encryption passwords."
 msgstr ""
-"REST APIを通じて Veeam Backup & Replication サーバーを監視します。バックアッ"
-"プサーバーには何もインストールされないため、Checkmkエージェントを実行できな"
-"い Veeam ソフトウェアアプライアンスでも機能します。ビルトインの <tt>Veeam "
-"Backup Viewer</tt>ロールで十分です。管理者アカウントを設定しないでください。"
-"バックアップの削除、リストアの実行、保存された暗号化パスワードの読み取りが可"
-"能になってしまう恐れがあります。"
+"Veeam Backup & Replication サーバーは、その REST API を通じて監視できます。"
+"バックアップサーバーには何もインストールされないため、Checkmkエージェントを実"
+"行できない Veeam ソフトウェアアプライアンスでも機能します。監視したいデータを"
+"読み取れる権限を持つ専用アカウントを使用してください。一部のサービスではより"
+"高い権限が必要であり、エージェントはサービスを読み取れない場合、停止します。"
+"管理者アカウントを設定しないでください。バックアップの削除、リストアの実行、"
+"保存された暗号化パスワードの読み取りなどが行われる可能性があります。"
 
 msgid "Monitor all files in folder"
 msgstr "フォルダ内のすべてのファイルを監視します"
@@ -44179,9 +44162,8 @@ msgstr "名前空間を監視する"
 msgid "Monitor namespaces matching"
 msgstr "一致するネームスペースを監視する"
 
-#, fuzzy
 msgid "Monitor only the databases listed below"
-msgstr "このデータベースを監視ホストにマップする必要があります"
+msgstr "以下のデータベースのリストのみを監視する"
 
 msgid "Monitor other than Android or iOS devices"
 msgstr "Android、iOS端末以外のモニター"
@@ -44304,13 +44286,11 @@ msgstr ""
 msgid "Monitoring core"
 msgstr "モニタリングコア"
 
-#, fuzzy
 msgid "Monitoring core & daemons"
-msgstr "モニタリングコア"
+msgstr "監視コアとデーモン"
 
-#, fuzzy
 msgid "Monitoring folders"
-msgstr "モニタリングコア"
+msgstr "監視フォルダ"
 
 msgid "Monitoring history entries (events and availability)"
 msgstr "履歴エントリの監視(イベントと可用性)"
@@ -44333,9 +44313,8 @@ msgstr "コンテナおよびコンテナオーケストレーションソフト
 msgid "Monitoring of forwarded log files"
 msgstr "転送されたログファイルの監視"
 
-#, fuzzy
 msgid "Monitoring options"
-msgstr "Windows監視"
+msgstr "監視オプション"
 
 msgid "Monitoring server address"
 msgstr "監視サーバーのアドレス"
@@ -44364,9 +44343,9 @@ msgstr "デバイス状態 \"オンライン \"の監視状態"
 msgid "Monitoring state if API is not enabled"
 msgstr "APIが有効になっていない場合の監視状態"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Monitoring state if HAProxy server is '%(state)s'"
-msgstr "HAProxy サーバが %s である場合の状態監視"
+msgstr "HAProxy サーバが「%(state)s」である場合の状態監視"
 
 #, python-format
 msgid "Monitoring state if LED color is %(color)s"
@@ -44442,9 +44421,8 @@ msgstr "速度が変更された場合の監視状態"
 msgid "Monitoring state if task is not enabled"
 msgstr "タスクが有効になっていない場合の状態の監視"
 
-#, fuzzy
 msgid "Monitoring state if the Cluster Collector reports no machine metrics"
-msgstr "クラスタコレクターがマシンメトリクスを報告しない場合の監視状態"
+msgstr "クラスターコレクターがマシンのメトリクスを報告しない場合の監視状態"
 
 msgid "Monitoring state if the VPN peer is not reachable"
 msgstr "VPNピアに到達できない場合の監視状態"
@@ -44467,9 +44445,9 @@ msgstr "スワップエラー時の状態監視"
 msgid "Monitoring state in case of version parsing failure"
 msgstr "バージョン解析に失敗した場合の監視状態"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Monitoring state of HAProxy frontend is %(state)s"
-msgstr "HAProxy フロントエンドが %s である場合の状態監視"
+msgstr "HAProxy サーバが「%(state)s」である場合の状態監視"
 
 msgid "Monitoring state requirement"
 msgstr "状態要件の監視"
@@ -44852,11 +44830,9 @@ msgstr "ネットワーク運用"
 msgid "NFS"
 msgstr "enter"
 
-#, fuzzy
 msgid "NFS I/O statistics"
-msgstr "NFS IO統計"
+msgstr "NFS I/O 統計"
 
-#, fuzzy
 msgid "NFS I/O stats (Linux)"
 msgstr "NFS IO統計(Linux)"
 
@@ -45037,9 +45013,8 @@ msgstr "NTPディスカバリー"
 msgid "NTP or timesyncd time synchronization"
 msgstr "NTPまたはtimesyncdによる時刻同期"
 
-#, fuzzy
 msgid "NTP time offset"
-msgstr "タイムオフセット"
+msgstr "NTP タイムオフセット"
 
 msgid "NTP time synchronization"
 msgstr "NTP時刻同期"
@@ -45056,9 +45031,8 @@ msgstr "NagVisマップ"
 msgid "NagVis maps"
 msgstr "NagVisマップ"
 
-#, fuzzy
 msgid "NagVis-classic"
-msgstr "NagVisマップ"
+msgstr "NagVis-classic"
 
 msgid "NagVis: AJAX: Bytes"
 msgstr "NagVis: AJAX: Bytes"
@@ -45214,9 +45188,8 @@ msgstr ""
 msgid "Name of the VM"
 msgstr "VMの名前"
 
-#, fuzzy
 msgid "Name of the VM/host system"
-msgstr "VM/HostSystemの名前"
+msgstr "VM/ホストシステムの名前"
 
 msgid ""
 "Name of the application to be tested here. The application name, the variant "
@@ -45341,9 +45314,9 @@ msgid ""
 "monitor"
 msgstr "ホスト名を指定し、パスを定義し、監視したい地域を選択してください"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Name: %(managed_robot_name)s"
-msgstr "名前: %(name)s"
+msgstr "名前：%(managed_robot_name)s"
 
 #, python-format
 msgid "Name: %(name)s"
@@ -45413,7 +45386,6 @@ msgstr "ネイティブ クラスターモード"
 msgid "Native protocol SSL/TLS port (ingress)"
 msgstr "ネイティブプロトコルSSL/TLS ポート（受信）"
 
-#, fuzzy
 msgid ""
 "Native: Use the cluster check function implemented by the check plug-in. If "
 "it is available, it is probably the best choice, as it implements logic "
@@ -45530,16 +45502,14 @@ msgstr "ネットデータトラフィック"
 msgid "NetApp LUNs"
 msgstr "NetApp LUN"
 
-#, fuzzy
 msgid "NetApp NTP time offset"
-msgstr "NetAppシステム時刻のオフセット"
+msgstr "NetApp NTP タイムオフセット"
 
 msgid "NetApp Qtree discovery"
 msgstr "NetApp Qtreeの検出"
 
-#, fuzzy
 msgid "NetApp SVM traffic"
-msgstr "ネットデータトラフィック"
+msgstr "NetApp SVM トラフィック"
 
 msgid "NetApp Snapshot Reserve"
 msgstr "NetAppスナップショットリザーブ"
@@ -45553,15 +45523,13 @@ msgstr "NetApp Snapvaults / Snapmirrorのラグタイム"
 msgid "NetApp Volumes"
 msgstr "NetAppボリューム"
 
-#, fuzzy
 msgid "NetApp filers: used space in file system using 32-bit counters"
 msgstr ""
 "NetApp ファイラー：32 ビットカウンターを使用したファイルシステム内の使用済み"
 "領域"
 
-#, fuzzy
 msgid "NetApp filers: used space in file systems"
-msgstr "NetAppファイラー:ファイルシステムの使用済みスペース"
+msgstr "NetApp ファイラー：ファイルシステム内の使用済み領域"
 
 msgid "NetApp snapvault discovery"
 msgstr "NetApp snapvaultディスカバリー"
@@ -45572,13 +45540,11 @@ msgstr "Ontap REST API経由のNetApp"
 msgid "NetBIOS name of the server"
 msgstr "サーバーのNetBIOS名"
 
-#, fuzzy
 msgid "NetScaler VServer states"
-msgstr "Netscaler VServerの状態"
+msgstr "NetScaler VServerの状態"
 
-#, fuzzy
 msgid "NetScaler memory usage"
-msgstr "Netscalerのメモリ使用量"
+msgstr "NetScalerのメモリ使用状況"
 
 msgid "Netapp FC Port throughput"
 msgstr "Netapp FCポートのスループット"
@@ -45598,9 +45564,8 @@ msgstr "ネットマスク"
 msgid "Network"
 msgstr "ネットワーク"
 
-#, fuzzy
 msgid "Network I/O (deprecated)"
-msgstr "Network IO（非推奨）"
+msgstr "ネットワーク I/O（非推奨）"
 
 msgid "Network ID"
 msgstr "ネットワークID"
@@ -45629,7 +45594,6 @@ msgstr "ネットワークアドレス"
 msgid "Network address:"
 msgstr "ネットワークアドレス:"
 
-#, fuzzy
 msgid "Network cards"
 msgstr "ネットワークカード"
 
@@ -45645,32 +45609,26 @@ msgstr "ネットワーク有効性比率"
 msgid "Network file system - overall status and usage (e.g. NFS)"
 msgstr "ネットワークファイルシステム - 全体的なステータスと使用状況（例：NFS）"
 
-#, fuzzy
 msgid "Network flow"
-msgstr "ネットワーク out"
+msgstr "ネットワークフロー"
 
-#, fuzzy
 msgid "Network flow monitoring"
-msgstr "ネットワーク監視"
+msgstr "ネットワークフローの監視"
 
-#, fuzzy
 msgid "Network flow monitoring configuration"
-msgstr "監視構成に追加"
+msgstr "ネットワークフロー監視の設定"
 
 msgid "Network flow monitoring is disabled in the global settings"
 msgstr "グローバル設定では、ネットワークフローの監視が無効になっています"
 
-#, fuzzy
 msgid "Network flow monitoring is not enabled"
-msgstr "ネットワーク監視"
+msgstr "ネットワークフローの監視は有効になっていません"
 
-#, fuzzy
 msgid "Network flow overview"
-msgstr "ネットワーク監視"
+msgstr "ネットワークフローの概要"
 
-#, fuzzy
 msgid "Network flows"
-msgstr "すべてのフロー"
+msgstr "ネットワークフロー"
 
 msgid "Network in"
 msgstr "ネットワーク in"
@@ -45687,11 +45645,9 @@ msgstr "ネットワークインターフェイスグループ"
 msgid "Network interfaces"
 msgstr "ネットワークインターフェース"
 
-#, fuzzy
 msgid "Network interfaces 1"
 msgstr "ネットワークインターフェース1"
 
-#, fuzzy
 msgid "Network interfaces 2"
 msgstr "ネットワークインターフェース2"
 
@@ -45735,7 +45691,6 @@ msgstr "ネットワーク out"
 msgid "Network outbound"
 msgstr "ネットワークアウトバウンド"
 
-#, fuzzy
 msgid "Network ports"
 msgstr "ネットワークポート"
 
@@ -45758,13 +45713,11 @@ msgstr "ネットワークスループット"
 msgid "Network topology"
 msgstr "ネットワークトポロジー"
 
-#, fuzzy
 msgid "Network: Inventorize containers' network configuration"
-msgstr "コンテナのネットワーク構成をインベントライズする"
+msgstr "ネットワーク：コンテナのネットワーク設定のインベントリ作成"
 
-#, fuzzy
 msgid "Network: Inventorize network configuration information"
-msgstr "ネットワーク構成情報をインベントリする"
+msgstr "ネットワーク：ネットワーク構成情報のインベントリ化"
 
 msgid "Networking"
 msgstr "ネットワーキング"
@@ -45880,9 +45833,8 @@ msgstr "新しいパスワードが一致しません。"
 msgid "New state: %(state)s"
 msgstr "新しい状態: %(state)s"
 
-#, fuzzy
 msgid "New tab"
-msgstr "テーブル表示"
+msgstr "新しいタブ"
 
 #, python-format
 msgid "New: %(added_parameters)r"
@@ -45915,9 +45867,8 @@ msgstr "次の実行"
 msgid "Next check"
 msgstr "次のチェック"
 
-#, fuzzy
 msgid "Next cycle"
-msgstr "翌年"
+msgstr "次のサイクル"
 
 msgid "Next notification"
 msgstr "次の通知"
@@ -45952,9 +45903,8 @@ msgstr "Nginxステータス"
 msgid "Nice"
 msgstr "ニース"
 
-#, fuzzy
 msgid "Nimble I/O levels"
-msgstr "軽快なIOレベル"
+msgstr "Nimble I/O レベル"
 
 msgid "No"
 msgstr "No"
@@ -45998,9 +45948,8 @@ msgstr "IP範囲が構成されていません"
 msgid "No Levels"
 msgstr "レベルなし"
 
-#, fuzzy
 msgid "No OTel configuration found for this bundle."
-msgstr "このメソッドには追加の設定オプションはありません。"
+msgstr "このバンドルに対応するOTel設定が見つかりませんでした。"
 
 msgid "No OpenTelemetry configuration yet"
 msgstr "OpenTelemetryの設定はまだありません"
@@ -46014,11 +45963,9 @@ msgstr "このバンドルに対応するPrometheusの設定が見つかりま�
 msgid "No Prometheus configuration yet"
 msgstr "Prometheusの設定はまだ行われていません"
 
-#, fuzzy
 msgid "No Proxmox VE services found."
-msgstr "GCPサービスが見つかりません。"
+msgstr "Proxmox VE サービスが見つかりませんでした。"
 
-#, fuzzy
 msgid "No Relay"
 msgstr "リレーなし"
 
@@ -46059,9 +46006,8 @@ msgstr "このメソッドには追加の設定オプションはありません
 msgid "No agent labels present."
 msgstr "エージェントラベルはありません。"
 
-#, fuzzy
 msgid "No alerts yet"
-msgstr "Ntop: アラート"
+msgstr "まだアラートはありません"
 
 msgid "No appropriate request ID"
 msgstr "適切なリクエストIDがない"
@@ -46101,13 +46047,11 @@ msgstr "条件なし"
 msgid "No configuration Quick Setup for %(name)s available"
 msgstr "%(name)sの構成クイック・セットアップを使用できません"
 
-#, fuzzy
 msgid "No connection available"
-msgstr "利用可能なオプションはありません"
+msgstr "利用可能な接続はありません"
 
-#, fuzzy
 msgid "No connections configured yet."
-msgstr "まだリレーが設定されていません。"
+msgstr "まだ接続は設定されていません。"
 
 msgid ""
 "No connections configured yet. Open Administration → Connections and add one "
@@ -46126,12 +46070,14 @@ msgstr "接続の問題はありません"
 msgid "No contact groups assigned."
 msgstr "連絡先グループは割り当てられていません。"
 
+msgid "No context names"
+msgstr "SNMPコンテキスト名"
+
 msgid "No custom attributes are defined yet."
 msgstr "カスタム属性はまだ定義されていません。"
 
-#, fuzzy
 msgid "No custom services yet"
-msgstr "カスタムサービスノート"
+msgstr "カスタムサービスはまだありません"
 
 msgid "No dashboard name provided."
 msgstr "ダッシュボード名が指定されていません。"
@@ -46165,6 +46111,9 @@ msgid "No databases configured explicitly; see 'Instance discovery'"
 msgstr ""
 "明示的に設定されたデータベースはありません。「インスタンスの検出」を参照して"
 "ください"
+
+msgid "No default context"
+msgstr "デフォルトのコンテキストなし"
 
 msgid "No default values can be set for condition choices."
 msgstr "条件の選択肢にデフォルト値を設定することはできません。"
@@ -46255,7 +46204,6 @@ msgstr ""
 msgid "No groups are defined yet."
 msgstr "グループはまだ定義されていません。"
 
-#, fuzzy
 msgid "No health check"
 msgstr "ヘルスチェックなし"
 
@@ -46362,25 +46310,22 @@ msgstr "パスワードが選択されていません"
 msgid "No pending changes."
 msgstr "保留中の変更はありません。"
 
-#, fuzzy, python-format
+#, python-format
 msgid "No permission to edit the host \"%(host)s\"."
-msgstr "この%(name)sを編集する権限がありません。"
+msgstr "ホスト「%(host)s」に編集の許可がありません。"
 
-#, fuzzy, python-format
+#, python-format
 msgid "No permission to edit the hosts in the folder \"%(folder)s\"."
-msgstr ""
-"申し訳ありませんが、フォルダ %(folder)s 内のホストはロックされています。"
+msgstr "「%(folder)s」フォルダ内のホストを編集する許可がありません。"
 
-#, fuzzy
 msgid "No plug-ins using an outdated API"
-msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+msgstr "古いAPIを使用するプラグインはありません"
 
 msgid "No previous cycle available"
 msgstr "以前のサイクルは利用できません"
 
-#, fuzzy
 msgid "No provider configured"
-msgstr "IP範囲が構成されていません"
+msgstr "プロバイダーが設定されていません"
 
 msgid "No proxy"
 msgstr "プロキシなし"
@@ -46395,9 +46340,8 @@ msgstr "「%(kind)s」との関連性は確認できませんでした。"
 msgid "No relation was accepted, nothing to do."
 msgstr "関連性は認められず、処理するものはありません。"
 
-#, fuzzy
 msgid "No relations"
-msgstr "ログレプリケーションイベント"
+msgstr "関連なし"
 
 msgid "No replication with this site"
 msgstr "このサイトとの複製はありません"
@@ -46611,13 +46555,11 @@ msgstr "ノードまたはバケット名"
 msgid "Node processor"
 msgstr "ノードプロセッサー"
 
-#, fuzzy
 msgid "Node scrapers"
-msgstr "ノードの状態"
+msgstr "ノードスクレイパー"
 
-#, fuzzy
 msgid "Node sections to skip"
-msgstr "送信するセクション"
+msgstr "スキップするノードセクション"
 
 msgid "Node state"
 msgstr "ノードの状態"
@@ -46634,17 +46576,14 @@ msgstr "ノードシステム"
 msgid "Node utilization"
 msgstr "ノードの使用率"
 
-#, fuzzy
 msgid "Node-scraper coverage"
-msgstr "クラスターごとのノード"
+msgstr "ノードスクレイパーのカバレッジ"
 
-#, fuzzy
 msgid "Node-scraper nodes"
-msgstr "Dockerノード"
+msgstr "ノードスクレイパーのノード"
 
-#, fuzzy
 msgid "NodePort"
-msgstr "ノード"
+msgstr "ノードポート"
 
 msgid "Nodes"
 msgstr "ノード"
@@ -46715,11 +46654,13 @@ msgstr "なし（EC2インスタンスのみ）"
 msgid "None (silent)"
 msgstr "なし(サイレント)"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "None of the groups of this host (%(host_groups)s) is listed in the selected "
 "groups (%(selected_groups)s)"
-msgstr "このホストのグループ(%s)は、選択したグループ(%s)にリストされていません"
+msgstr ""
+"このホスト（%(host_groups)s）のグループは、選択されたグループ"
+"（%(selected_groups)s）に一つも含まれていません"
 
 msgid "None of the rules in this pack matches"
 msgstr "このパックのどのルールも一致しません"
@@ -46766,7 +46707,6 @@ msgstr "正規化されたRU消費量の下位レベル"
 msgid "Normalized RU consumption upper levels"
 msgstr "正規化されたRU消費量の上位レベル"
 
-#, fuzzy
 msgid ""
 "Normally, a user can log in to the GUI from an unlimited number of clients "
 "at the same time. If you want to enforce your users to be able to log in "
@@ -46775,14 +46715,13 @@ msgid ""
 "of time, the session is invalidated automatically and the user has to log in "
 "again from the current or another device."
 msgstr ""
-"通常、ユーザーは無制限の数のクライアントから同時にGUIにログインできます。ユー"
-"ザーが(デバイスとブラウザーを意味する1つのクライアントから)一度だけログインで"
-"きるようにする場合は、このオプションを有効にできます。ユーザーがログアウトす"
-"るか、設定された時間非アクティブになると、セッションは自動的に無効になり、"
-"ユーザーは現在のデバイスまたは別のデバイスから再度ログインする必要がありま"
-"す。"
+"通常、ユーザーは任意の数のクライアントから同時にGUIにログインできます。ユー"
+"ザーが1回のみ（1つのクライアント、つまり1つのデバイスとブラウザから）ログイン"
+"できるように制限したい場合は、このオプションを有効にします。ユーザーがログア"
+"ウトするか、設定された時間以上操作がない場合、セッションは自動的に無効化さ"
+"れ、ユーザーは現在のデバイスまたは別のデバイスから再度ログインする必要があり"
+"ます。"
 
-#, fuzzy
 msgid ""
 "Normally, a user login session is valid until the password is changed, the "
 "browser is closed or the user is locked. By enabling this option, you can "
@@ -46800,7 +46739,6 @@ msgstr ""
 "面にリダイレクトされます。この設定は、ユーザーのプロファイルでユーザーごとに"
 "個別に上書きできます。"
 
-#, fuzzy
 msgid ""
 "Normally, the downtime has a fixed time range starting from the \"start "
 "time\" and ending after the expired duration (start time + duration). You "
@@ -46825,7 +46763,6 @@ msgstr ""
 "らのサービスは、すべてのグループメンバーで合計された総トラフィック量を報告し"
 "ます。"
 
-#, fuzzy
 msgid ""
 "Normally, the interface checks create a single service for interface. By "
 "defining if-group patterns multiple interfaces can be combined together. A "
@@ -46842,7 +46779,6 @@ msgstr ""
 "ます。グループ化されたインターフェイスは、iftypeと単一のインターフェイスのア"
 "イテム名で制限できます。"
 
-#, fuzzy
 msgid ""
 "Normally, the resolution of the daemon log file is in seconds. This option "
 "enables micro-second precision."
@@ -46859,7 +46795,6 @@ msgstr ""
 "合にのみ表示されます。このオプションを設定すると、チェックは常にこの情報を報"
 "告します"
 
-#, fuzzy
 msgid ""
 "Normally, this value is <tt>1</tt>, which means that the best state of all "
 "child nodes is used as the overall state. If you set it for example to "
@@ -46873,7 +46808,6 @@ msgstr ""
 "す。子ノードの状態がそれぞれ CRIT、WARN、OK であった場合、全体の状態は WARN "
 "となります。"
 
-#, fuzzy
 msgid ""
 "Normally, this value is <tt>1</tt>, which means that the worst state of all "
 "child nodes is being used as the total state. If you set it, for example, to "
@@ -46885,17 +46819,16 @@ msgid ""
 msgstr ""
 "通常、この値は<tt>1</tt>です。これは、すべての子ノードで最も悪い状態が、全体"
 "の状態として使用されていることを意味します。たとえば、<tt>3</tt>に設定する"
-"と、代わりに3番目に悪い状態のノードが考慮されます。例:状態がCRIT CRIT WARN "
-"OK OKの5つのノードの場合、結果の状態はWARNになります。または、最も悪い2つの"
-"ノードが最初に削除され、残りのノードの中で最も悪いノードが状態を定義すると言"
-"うことができます。 "
+"と、代わりに3番目に悪い状態のノードが考慮されます。例:状態が CRIT, CRIT, "
+"WARN, OK, OKの5つのノードがあった場合、結果の状態はWARNになります。または、最"
+"も悪い2つのノードが最初に削除され、残りのノードの中で最も悪いノードが状態を定"
+"義すると言うことができます。 "
 
 msgid "Not"
 msgstr "ない"
 
-#, fuzzy
 msgid "Not a NagVis URL"
-msgstr "備考URL"
+msgstr "NagVisのURLではありません"
 
 msgid "Not a list"
 msgstr "リストがありません"
@@ -46958,9 +46891,8 @@ msgstr "明示的に選択されたサイトのいずれかによって監視さ
 msgid "Not permitted to change the password. Change cannot be enforced."
 msgstr "パスワードの変更は許可されていません。変更を強制することはできません。"
 
-#, fuzzy
 msgid "Not present"
-msgstr "現在ではない"
+msgstr "存在しない"
 
 msgid "Not ready duration"
 msgstr "準備期間"
@@ -47018,7 +46950,6 @@ msgstr ""
 "い。新しいバージョンではこの設定変数を使用したり報告したりすることはありませ"
 "ん。"
 
-#, fuzzy
 msgid ""
 "Note that specifically for the check <tt>df</tt>, the pattern matches either "
 "the mount point or the combination of volume and mount point, depending on "
@@ -47026,10 +46957,11 @@ msgid ""
 "mode=edit_ruleset&varname=discovery_parameters%3Ainventory_df_rules'>File "
 "system discovery</a>."
 msgstr ""
-"なお、 <tt>df</tt>,というチェックに関しては、 <a href='wato.py?"
-"mode=edit_ruleset&varname=inventory_df_rules'>ファイルシステム検出</a>.の設定"
-"に応じて、パターンがマウントポイントのみ、またはボリュームとマウントポイント"
-"の組み合わせのいずれかに一致することに注意してください。"
+"なお、 <tt>df</tt>というチェックに関しては、 <a href='wato.py?"
+"mode=edit_ruleset&varname=discovery_parameters%3Ainventory_df_rules'>ファイル"
+"システム検出</a>の設定に応じて、パターンがマウントポイントのみ、またはボ"
+"リュームとマウントポイントの組み合わせのいずれかに一致することに注意してくだ"
+"さい。"
 
 msgid "Note that:"
 msgstr "注意事項："
@@ -47290,14 +47222,12 @@ msgstr "通知スクリプト"
 msgid "Notification sort order for bulk notifications"
 msgstr "一括通知の通知の並べ替え順序"
 
-#, fuzzy
 msgid "Notification spooler"
 msgstr "通知スプーラー"
 
 msgid "Notification spooler configuration"
 msgstr "通知スプーラーの構成"
 
-#, fuzzy
 msgid "Notification spooler connection"
 msgstr "通知スプーラ接続"
 
@@ -47317,13 +47247,11 @@ msgstr "通知は無効になっています"
 msgid "Notifications are disabled for this %(what)s"
 msgstr "この %(what)s の通知は無効になっています"
 
-#, fuzzy
 msgid "Notifications are disabled for this host"
-msgstr "この %(what)s の通知は無効になっています"
+msgstr "この ホスト の通知は無効になっています"
 
-#, fuzzy
 msgid "Notifications are disabled for this service"
-msgstr "この %(what)s の通知は無効になっています"
+msgstr "このサービスの通知は無効になっています"
 
 msgid "Notifications are disabled, but is configured to be periodic"
 msgstr "通知は無効になっていますが、定期的に設定されています"
@@ -47419,7 +47347,6 @@ msgstr "番号"
 msgid "Nr. of items"
 msgstr "番号 アイテムの"
 
-#, fuzzy
 msgid "Nullmailer: mail queue"
 msgstr "Nullmailer: メールキュー"
 
@@ -47462,7 +47389,6 @@ msgstr "ICMPソケットの数"
 msgid "Number of IP sets"
 msgstr "IPセットの数"
 
-#, fuzzy
 msgid "Number of Lotus Domino users"
 msgstr "LotusDominoユーザーの数"
 
@@ -47533,9 +47459,9 @@ msgstr "アクティブなトンネルの数"
 msgid "Number of active users"
 msgstr "アクティブユーザー数"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Number of agents that have registered for updates: %(count)d"
-msgstr "更新に登録したエージェントの数: %d"
+msgstr "更新を登録したエージェントの数：%(count)d"
 
 msgid "Number of alerts in defined time span lower level"
 msgstr "定義された期間のアラート数の下位レベル"
@@ -47804,11 +47730,9 @@ msgstr ""
 "ログローテーション時にバックアップとして使用するログファイルの数。この数を超"
 "えると、最も古いログファイルが削除されます。"
 
-#, fuzzy
 msgid "Number of logged-in users"
-msgstr "Loggedinユーザーの数"
+msgstr "ログインユーザー数"
 
-#, fuzzy
 msgid "Number of logged-in users (Linux)"
 msgstr "ログインユーザー数(Linux)"
 
@@ -48124,7 +48048,6 @@ msgstr "合計と実行中のセッション数"
 msgid "Number of tracked transactions per second."
 msgstr "1秒あたりの追跡トランザクション数。"
 
-#, fuzzy
 msgid "Number of transactions per minute on a Lotus Domino server"
 msgstr "Lotus Dominoサーバーの1分あたりのトランザクション数"
 
@@ -48197,9 +48120,8 @@ msgstr "VHMの数値ID、例: 102"
 msgid "Nutanix Cluster CPU utilization"
 msgstr "NutanixクラスタのCPU使用率"
 
-#, fuzzy
 msgid "Nutanix Cluster I/O utilization"
-msgstr "NutanixクラスタのIO利用率"
+msgstr "Nutanix クラスタの I/O 利用率"
 
 msgid "Nutanix Cluster memory usage"
 msgstr "Nutanixクラスタのメモリ使用量"
@@ -48288,9 +48210,8 @@ msgstr "OAUTH 2.0"
 msgid "OAUth authentication"
 msgstr "OAUth認証"
 
-#, fuzzy
 msgid "OAuth access tokens"
-msgstr "APIアクセストークン"
+msgstr "OAuthアクセストークン"
 
 msgid "OAuth token"
 msgstr "OAuth トークン"
@@ -48304,12 +48225,13 @@ msgstr "OAuth2（クライアントID/テナントID）"
 msgid "OAuth2 connection"
 msgstr "OAuth2接続"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "OAuth2 connection '%(title)s' is still being used by this rule: %(rules)s"
 msgid_plural ""
 "OAuth2 connection '%(title)s' is still being used by these rules: %(rules)s"
-msgstr[0] "OAuth2接続 「%s」 は、次のルールによってまだ使用中です: %s"
+msgstr[0] ""
+"OAuth2接続 「%(title)s」 は、次のルールによってまだ使用中です: %(rules)s"
 
 msgid "OAuth2 connection ID"
 msgstr "OAuth2接続ID"
@@ -48400,9 +48322,8 @@ msgstr ""
 msgid "OPTIONS"
 msgstr "OPTIONS"
 
-#, fuzzy
 msgid "OS host"
-msgstr "1 ホスト"
+msgstr "OSホスト"
 
 msgid "OS image"
 msgstr "OSイメージ"
@@ -48423,7 +48344,6 @@ msgstr "OSDレイテンシ"
 msgid "OSDs epoch levels and average"
 msgstr "OSDのエポックレベルと平均"
 
-#, fuzzy
 msgid "OSN laser attenuation"
 msgstr "OSNレーザー減衰"
 
@@ -48439,9 +48359,8 @@ msgstr "OVSボンディング"
 msgid "Object"
 msgstr "オブジェクト"
 
-#, fuzzy
 msgid "Object defaults"
-msgstr "デフォルトを編集する"
+msgstr "オブジェクトのデフォルト設定"
 
 msgid "Object type"
 msgstr "オブジェクトタイプ"
@@ -48526,9 +48445,8 @@ msgstr ""
 msgid "Older events"
 msgstr "古いイベント"
 
-#, fuzzy
 msgid "Oldest RMAN backups"
-msgstr "Oracle RMANバックアップ"
+msgstr "最も古いRMANバックアップ"
 
 msgid "Oldest age"
 msgstr "最古の経過時間"
@@ -48582,7 +48500,6 @@ msgstr "すべてのサービスにおいて"
 msgid "On all sites"
 msgstr "すべてのサイトで"
 
-#, fuzzy
 msgid "On every Agent Controller registration"
 msgstr "すべてのエージェントコントローラーの登録時"
 
@@ -48604,9 +48521,8 @@ msgstr "選択したMIBで"
 msgid "On selected aggregations"
 msgstr "選択した集計について"
 
-#, fuzzy
 msgid "On selected clients"
-msgstr "選択したルールについて"
+msgstr "選択したクライアントにおいて"
 
 msgid "On selected hosts"
 msgstr "選択したホスト上"
@@ -48623,9 +48539,8 @@ msgstr "選択したサイトにおいて"
 msgid "On selected sites"
 msgstr "選択したサイト"
 
-#, fuzzy
 msgid "On selected tokens"
-msgstr "選択したサイト"
+msgstr "選択されたトークンにおいて"
 
 msgid "On selected users"
 msgstr "選択したユーザーについて"
@@ -48658,9 +48573,8 @@ msgstr ""
 "たログファイルパターンをテストすることができます。このダイアログを使用して、"
 "ログファイルパターンのセット全体を分析およびデバッグすることが可能です。"
 
-#, fuzzy
 msgid "On-call schedule"
-msgstr "Oracleスケジューラジョブ"
+msgstr "オンコールスケジュール"
 
 msgid "Once enabled, your site's MCP server will be reachable at "
 msgstr ""
@@ -48745,9 +48659,8 @@ msgstr "一方向の非マルチキャスト/非ブロードキャスト"
 msgid "One-time password (OTP / TOTP)"
 msgstr "ワンタイムパスワード(OTP / TOTP)"
 
-#, fuzzy
 msgid "Ongoing list duration"
-msgstr "初期所要時間"
+msgstr "リストの有効期間"
 
 msgid "Ongoing shard info requests"
 msgstr "進行中のシャード情報リクエスト"
@@ -48778,9 +48691,8 @@ msgstr "オンライン認証に失敗しました"
 msgid "Online verification procedure was successful"
 msgstr "オンライン認証成功"
 
-#, fuzzy
 msgid "Only .cfg files are accepted."
-msgstr "数値のみが入力可能です。"
+msgstr ".cfg ファイルのみが受け入れ可能です。"
 
 msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr "A-Z、a-z、0-9およびマイナス(-)のみが許可されます。"
@@ -48879,9 +48791,8 @@ msgstr "最初の20のソートされた結果のみ"
 msgid "Only for hosts: Set child hosts in downtime"
 msgstr "ホストのみ：子ホストをダウンタイムに設定する"
 
-#, fuzzy
 msgid "Only hosts of the same customer can be related."
-msgstr "未使用のパラメーターのみ削除可能です。"
+msgstr "関連付けられるのは、同一の顧客に属するホストのみです。"
 
 msgid "Only if the status is non-OK"
 msgstr "ステータスがOKでない場合のみ"
@@ -48902,13 +48813,12 @@ msgstr "以前の検出で失敗したホストのみを含める"
 msgid "Only include hosts with a failed discovery check"
 msgstr "検出チェックに失敗したホストのみを含める"
 
-#, fuzzy
 msgid ""
 "Only instances matching one of these patterns are monitored. If no pattern "
 "is defined, all of them are."
 msgstr ""
-"これらのパターンのいずれかに一致するサービスのみが検出されます。パターンが定"
-"義されていない場合、すべてのサービスが含まれます。"
+"これらのパターンのいずれかに一致するインスタンスのみが監視対象となります。パ"
+"ターンが定義されていない場合は、すべてのインスタンスが監視対象となります。"
 
 msgid "Only interface with these item names are put into this group."
 msgstr ""
@@ -48942,9 +48852,10 @@ msgstr ""
 msgid "Only needed if you have multiple MySQL instances on one server"
 msgstr "1つのサーバーに複数のMySQLインスタンスがある場合にのみ必要"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Only one %(config_name)s per site is supported currently."
-msgstr "現在、１サイトにつき１つの%sのみがサポートされています。"
+msgstr ""
+"現在、1つのサイトにつき1つの%(config_name)sのみがサポートされています。"
 
 msgid "Only one tag may be empty."
 msgstr "空にすることができるタグは1つだけです。"
@@ -49105,6 +49016,10 @@ msgstr "オープンモード"
 msgid "Open network sockets"
 msgstr "ネットワークソケットを開く"
 
+#, fuzzy
+msgid "Open or close the AI assistant"
+msgstr "AIアシスタントを有効にする"
+
 msgid "Open output count"
 msgstr "オープン出力カウント"
 
@@ -49142,9 +49057,8 @@ msgstr "Open vSwitch (ovs) ボンディング インターフェースの状態"
 msgid "Open/close this element"
 msgstr "この要素を開く/閉じる"
 
-#, fuzzy
 msgid "OpenAI"
-msgstr "開いた"
+msgstr "OpenAI"
 
 msgid "OpenHardwareMonitor (Windows)"
 msgstr "OpenHardwareMonitor(Windows)"
@@ -49158,14 +49072,12 @@ msgstr "OpenLDAP"
 msgid "OpenTelemetry"
 msgstr "OpenTelemetry"
 
-#, fuzzy
 msgid "OpenTelemetry Azure"
-msgstr "OpenTelemetry"
+msgstr "OpenTelemetry Azure"
 
 msgid "OpenTelemetry Collector"
 msgstr "OpenTelemetryコレクター"
 
-#, fuzzy
 msgid "OpenTelemetry Collector configuration"
 msgstr "Open Telemetryコレクターの設定"
 
@@ -49184,36 +49096,31 @@ msgstr "OpenTelemetryクイックセットアップ"
 msgid "OpenTelemetry RED Errors"
 msgstr "OpenTelemetry RED エラー"
 
-#, fuzzy
 msgid "OpenTelemetry RED Latency"
 msgstr "OpenTelemetry RED レイテンシー"
 
 msgid "OpenTelemetry RED Requests"
 msgstr "OpenTelemetry RED リクエスト"
 
-#, fuzzy
 msgid ""
 "OpenTelemetry configuration bundles are managed via the OpenTelemetry or "
 "Prometheus Quick Setup pages."
 msgstr ""
-"統合 OpenTelemetry コレクタのPrometheusスクレイピングに関連するすべての関連構"
-"成。"
+"OpenTelemetryの設定バンドルは、OpenTelemetryまたはPrometheusのクイックセット"
+"アップページから管理されます。"
 
 msgid "OpenTelemetry data"
 msgstr "OpenTelemetryデータ"
 
-#, fuzzy
 msgid "OpenTelemetry data routing via identity labels"
-msgstr "OpenTelemetryメトリック名"
+msgstr "IDラベルによるOpenTelemetryデータのルーティング"
 
-#, fuzzy
 msgid "OpenTelemetry hosts creation options"
 msgstr "Open telemetryホスト作成オプション"
 
 msgid "OpenTelemetry metric name"
 msgstr "OpenTelemetryメトリック名"
 
-#, fuzzy
 msgid "OpenTelemetry metrics"
 msgstr "OpenTelemetryメトリック名"
 
@@ -49238,9 +49145,8 @@ msgstr "動作速度"
 msgid "Operating system"
 msgstr "オペレーティングシステム"
 
-#, fuzzy
 msgid "Operating system & hardware"
-msgstr "オペレーティングシステム"
+msgstr "オペレーティングシステムとハードウェア"
 
 msgid "Operating system control group information"
 msgstr "オペレーティングシステムの制御グループ情報"
@@ -49251,9 +49157,8 @@ msgstr "オペレーティングシステム"
 msgid "Operation"
 msgstr "操作"
 
-#, fuzzy
 msgid "Operation errors"
-msgstr "操作エラー"
+msgstr "オペレーターの操作ミス"
 
 msgid "Operational port states to discover"
 msgstr "発見する運用ポートの状態"
@@ -49273,7 +49178,6 @@ msgstr "オペレーション"
 msgid "Operations per second"
 msgstr "1秒あたりの操作数"
 
-#, fuzzy
 msgid "Operations states"
 msgstr "運用状態"
 
@@ -49283,9 +49187,8 @@ msgstr "オペレーター"
 msgid "Opsgenie parameters"
 msgstr "Opsgenie パラメータ"
 
-#, fuzzy
 msgid "Opt in to automatic crash report upload"
-msgstr "自動エージェント更新のアクティブ化"
+msgstr "クラッシュレポートの自動送信を有効にする"
 
 msgid "Optical Signal Power"
 msgstr "光信号パワー"
@@ -49466,7 +49369,6 @@ msgstr ""
 "られます。<br><br>テンプレートで参照されている属性が欠落しているデータポイン"
 "トはスキップされます。これらはどのホストにも関連付けられません。"
 
-#, fuzzy
 msgid ""
 "Optional. The agent updater will try to auto-detect the protocol, first "
 "trying HTTPS and then HTTP. You can use this setting to force one of the two "
@@ -49525,7 +49427,6 @@ msgstr ""
 msgid "Optionally forward output to host"
 msgstr "オプションで出力をホストに転送"
 
-#, fuzzy
 msgid ""
 "Optionally provide protocol, server and site for agent registration and/or "
 "updates. If not entered here, you can provide it on registration."
@@ -49618,25 +49519,20 @@ msgstr "Oracle DB 時間"
 msgid "Oracle DB time statistics"
 msgstr "Oracle DBの時間統計"
 
-#, fuzzy
 msgid "Oracle DB time – fleet total"
-msgstr "Oracle DBの時間統計"
+msgstr "Oracle DB 時間 – フリート合計"
 
-#, fuzzy
 msgid "Oracle Data Guard statistics"
-msgstr "Oracle dataguardの統計"
+msgstr "Oracle Data Guard の統計情報"
 
-#, fuzzy
 msgid "Oracle Data Guard stats"
-msgstr "Oracle Data-Guard Stats"
+msgstr "Oracle Data Guard の統計情報"
 
-#, fuzzy
 msgid "Oracle IOSTAT I/O reads"
-msgstr "Oracle IOSTAT IOs読み取り"
+msgstr "Oracle IOSTAT IO読み取り"
 
-#, fuzzy
 msgid "Oracle IOSTAT I/O writes"
-msgstr "Oracle IOSTAT IOs書き込み"
+msgstr "Oracle IOSTAT I/O書き込み"
 
 msgid "Oracle IOSTAT IO"
 msgstr "Oracle IOSTAT IOs"
@@ -49647,13 +49543,11 @@ msgstr "Oracle IOSTATバイト"
 msgid "Oracle IOSTAT read bytes"
 msgstr "Oracle IOSTAT読み込みバイト"
 
-#, fuzzy
 msgid "Oracle IOSTAT total I/O reads"
 msgstr "Oracle IOSTAT 合計IO読み込み"
 
-#, fuzzy
 msgid "Oracle IOSTAT total I/O writes"
-msgstr "Oracle IOSTAT 合計IO書き込み"
+msgstr "Oracle IOSTAT 合計I/O書き込み"
 
 msgid "Oracle IOSTAT total IOs"
 msgstr "Oracle IOSTAT 合計IOs"
@@ -49706,13 +49600,11 @@ msgstr "リモートデータベースのOracle SID"
 msgid "Oracle Wait Class (FG lines are downside)"
 msgstr "Oracle待機クラス(FGラインはダウンサイド)"
 
-#, fuzzy
 msgid "Oracle active sessions (single metric)"
-msgstr "Oracleの長期アクティブセッション"
+msgstr "Oracle アクティブセッション（単一メトリック）"
 
-#, fuzzy
 msgid "Oracle active undo blocks (single metric)"
-msgstr "Oracle アーカイブログ バックアップの大規模書き込み"
+msgstr "アクティブなundo ブロック数（単一メトリック）"
 
 msgid "Oracle administrative wait class"
 msgstr "Oracle管理待機クラス"
@@ -49774,9 +49666,8 @@ msgstr "Oracle アーカイブログ 小規模書き込みバイト数"
 msgid "Oracle archive log small writes"
 msgstr "Oracle アーカイブログ 小規模書き込み"
 
-#, fuzzy
 msgid "Oracle binaries permissions check"
-msgstr "Oracle バイナリのパーミッション・チェック %(WINDOWS_ONLY)s"
+msgstr "Oracle バイナリの権限チェック"
 
 #, python-format
 msgid "Oracle binaries permissions check %(WINDOWS_ONLY)s"
@@ -49797,16 +49688,14 @@ msgstr "racle バッファキャッシュのサイズ"
 msgid "Oracle buffer hit ratio"
 msgstr "Oracle バッファヒット率"
 
-#, fuzzy
 msgid "Oracle buffer hit ratio (gauge)"
-msgstr "Oracle バッファヒット率"
+msgstr "Oracleバッファヒット率（ゲージ）"
 
 msgid "Oracle buffer pool statistics"
 msgstr "Oracleバッファプールの統計"
 
-#, fuzzy
 msgid "Oracle client options"
-msgstr "Oracle Instant Clientのオプション"
+msgstr "Oracle clientのオプション"
 
 msgid "Oracle cluster wait class"
 msgstr "Oracleクラスタ待機クラス"
@@ -49889,20 +49778,17 @@ msgstr "Oracle データポンプ ダンプ ファイルの小規模書き込み
 msgid "Oracle data pump dump file small writes"
 msgstr "Oracle データポンプ ダンプ ファイルの小規模書き込み"
 
-#, fuzzy
 msgid "Oracle database identification"
 msgstr "Oracleデータベースの識別"
 
-#, fuzzy
 msgid "Oracle databases"
-msgstr "Azureデータベース"
+msgstr "Oracleデータベース"
 
 msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
 msgstr "Oracleデータベース(Linux、Solaris、AIX、Windows)"
 
-#, fuzzy
 msgid "Oracle databases (Linux, Solaris, AIX, Windows) (Experimental)"
-msgstr "Oracleデータベース(Linux、Solaris、AIX、Windows)"
+msgstr "Oracleデータベース（Linux、Solaris、AIX、Windows）（実験的）"
 
 msgid "Oracle datafile backup large read bytes"
 msgstr "Oracleデータファイルバックアップの大規模読み取りバイト"
@@ -50075,14 +49961,12 @@ msgstr "Oracle 大規模プールサイズ"
 msgid "Oracle library cache hit ratio"
 msgstr "Oracleライブラリキャッシュヒット率"
 
-#, fuzzy
 msgid "Oracle library cache hit ratio (gauge)"
-msgstr "Oracleライブラリキャッシュヒット率"
+msgstr "Oracle ライブラリキャッシュのキャッシュヒット率 (ゲージ)"
 
 msgid "Oracle library cache statistics"
 msgstr "Oracleライブラリのキャッシュ統計"
 
-#, fuzzy
 msgid "Oracle local registry path"
 msgstr "Oracle Local Registryのパス"
 
@@ -50113,9 +49997,8 @@ msgstr "Oracle ログファイルの小規模書き込み"
 msgid "Oracle long active sessions"
 msgstr "Oracleの長期アクティブセッション"
 
-#, fuzzy
 msgid "Oracle long active sessions (single metric)"
-msgstr "Oracleの長期アクティブセッション"
+msgstr "Oracleの長時間アクティブセッション（単一メトリック）"
 
 msgid "Oracle maximum SGA size"
 msgstr "Oracle 最大SGAサイズ"
@@ -50168,11 +50051,9 @@ msgstr "Oracleパフォーマンス"
 msgid "Oracle performance discovery"
 msgstr "Oracleのパフォーマンスの検出"
 
-#, fuzzy
 msgid "Oracle physical I/O"
-msgstr "Oracle物理IO"
+msgstr "Oracle 物理I/O"
 
-#, fuzzy
 msgid "Oracle physical I/O reads"
 msgstr "Oracle 物理IO読み取り"
 
@@ -50215,23 +50096,20 @@ msgstr "Oracle スケジューラ待機クラス"
 msgid "Oracle scheduler wait class (FG)"
 msgstr "Oracle スケジューラ待機クラス(FG)"
 
-#, fuzzy
 msgid "Oracle service name"
 msgstr "Oracle サービス名"
 
 msgid "Oracle sessions"
 msgstr "Oracleセッション"
 
-#, fuzzy
 msgid "Oracle shared I/O pool size"
-msgstr "Oracle 共有IOプールサイズ"
+msgstr "Oracleの共有I/Oプールサイズ"
 
 msgid "Oracle shared pool size"
 msgstr "Oracle 共有プールサイズ"
 
-#, fuzzy
 msgid "Oracle single database"
-msgstr "Oracle アイドル待機クラス"
+msgstr "Oracle 単一データベース"
 
 msgid "Oracle streams pool size"
 msgstr "Oracle ストリームプールサイズ"
@@ -50326,9 +50204,8 @@ msgstr "Oracleユーザー I/O待機クラス(FG)"
 msgid "Oracle wait class"
 msgstr "Oracle 待機クラス"
 
-#, fuzzy
 msgid "Oracle wallet"
-msgstr "Oracle Wallet"
+msgstr "Oracleウォレット"
 
 msgid "Order"
 msgstr "注文"
@@ -50435,7 +50312,6 @@ msgstr "その他：リクエスト"
 msgid "Other: Secs"
 msgstr "その他：秒"
 
-#, fuzzy
 msgid "Others"
 msgstr "その他"
 
@@ -50453,16 +50329,17 @@ msgstr ""
 "さもないと、Checkmkライセンスの有効期限が切れた後、「変更を有効にする」ことが"
 "できません。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Otherwise, your system will be automatically converted to the license state "
 "'Free' after the trial period ends. In this license state, you have to "
 "reduce your number of services from %(num_services)s to %(service_limit)s to "
 "meet the maximum service limit of Checkmk in license state 'Free'."
 msgstr ""
-"そうしないと、試用期間終了後自動的にライセンス状態「Free」に変換されます。今"
-"のライセンス状態では、ライセンス状態「Free」のCheckmkの最大サービス数を超える"
-"ため、サービス数を%sから%sに減らす必要があります。"
+"これを行わない場合、試用期間終了後自動的にライセンス状態「Free」に変換されま"
+"す。今のライセンス状態では、ライセンス状態「Free」のCheckmkの最大サービス数を"
+"超えるため、サービス数を%(num_services)sから%(service_limit)sに減らす必要があ"
+"ります。"
 
 msgid ""
 "Our system will recognize breaks in the trend and set them automatically,\n"
@@ -50539,9 +50416,9 @@ msgstr "アウトバウンドスループットの上位レベル（/秒）"
 msgid "Outcome & Action"
 msgstr "結果と行動"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Outdated plug-in API: %(api_name)s"
-msgstr "非推奨のプラグイン: %(ident)s"
+msgstr "旧式のプラグインAPI：%(api_name)s"
 
 msgid "Outgoing packets maximum"
 msgstr "送信パケットの最大値"
@@ -50799,9 +50676,8 @@ msgstr "PARTIAL"
 msgid "PASSIVE"
 msgstr "受動的"
 
-#, fuzzy
 msgid "PCI Express I/O utilization"
-msgstr "PCI ExpressIOの使用率"
+msgstr "PCI Express I/O 利用率"
 
 msgid "PCIe flash module"
 msgstr "PCIeフラッシュモジュール"
@@ -50815,9 +50691,8 @@ msgstr "PDUプラグの状態"
 msgid "PDisk EID:Slot-Device"
 msgstr "PDisk EID:スロットデバイス"
 
-#, fuzzy
 msgid "PEM file content"
-msgstr "でのファイル数"
+msgstr "PEMファイルの内容"
 
 msgid ""
 "PEM-encoded root certificate used for validating server certificates when "
@@ -51066,7 +50941,6 @@ msgstr ""
 "してマークされており、今後のCheckmkバージョンでは無視されます（公式に非推奨と"
 "するスケジュールは未決定です）。"
 
-#, fuzzy
 msgid ""
 "PNP4Nagios needs meta information about hosts and services. This information "
 "is stored in XML files. Updating these files for each new check results "
@@ -51078,9 +50952,8 @@ msgstr ""
 "ファイルに保存されます。新しいチェック結果ごとにこれらのファイルを更新する"
 "と、大量のI/Oが生成されます。更新を最大1時間遅らせると、このI/Oが節約されま"
 "す。価格は、構成の変更後、グラフに表示されるWARN /CRITレベルがしばらくの間更"
-"新されない可能性があることです。遅延なしの場合は<tt>0</tt>を選択します。"
+"新されない可能性があることです。遅延なしの場合は0を選択します。"
 
-#, fuzzy
 msgid ""
 "PNP4Nagios needs meta information about hosts and services. This information "
 "sis stored in XML files. Updating these files on restart or reload of the "
@@ -51770,6 +51643,11 @@ msgstr ""
 "する必要があります。「モニターセット／モニター」のパスに一致するパターンは、"
 "そのモニターを完全に除外します。その場合、そのモニターのツリーは一切クエリの"
 "対象外となります。"
+
+msgid ""
+"Paths, keys and columns are matched exactly and case-sensitively, not as "
+"regular expressions."
+msgstr ""
 
 msgid "Pattern"
 msgstr "パターン"
@@ -52499,6 +52377,19 @@ msgstr ""
 "いないフィールドは変更されません。読み取り専用のデモマップは自動的にスキップ"
 "されます。"
 
+msgid ""
+"Picks host labels from the HW/SW inventory tree of a host. The <i>Check_MK "
+"HW/SW Inventory</i> service picks them on each successful run and reports "
+"new, vanished and changed labels until the service discovery accepts them. A "
+"periodic service discovery that updates host labels accepts them "
+"automatically. A label of a discovery plug-in with the same name takes "
+"precedence. To look up paths, keys and columns, open the HW/SW inventory "
+"page of a host and enable <tt>Modify display options > Show internal tree "
+"paths</tt>. They are then shown in brackets behind the titles (a trailing "
+"<tt>*</tt> only marks key columns), and the raw value is shown in brackets "
+"behind each value."
+msgstr ""
+
 msgid "Piggyback"
 msgstr "ピギーバック"
 
@@ -53139,6 +53030,10 @@ msgstr "少なくとも1つ以上の地域を選択してください。"
 
 msgid "Please select some hosts before doing bulk actions on hosts."
 msgstr "ホストに対して一括操作を行う前に、いくつかのホストを選択してください。"
+
+#, fuzzy
+msgid "Please select the default context or enter at least one context name."
+msgstr "少なくとも1つ以上の地域を選択してください。"
 
 msgid "Please select the destination folder"
 msgstr "宛先フォルダを選択してください"
@@ -54783,8 +54678,8 @@ msgid "Query telemetry metrics from custom graph editor"
 msgstr "カスタムグラフエディタからのメトリックバックエンドへのクエリ"
 
 #, fuzzy
-msgid "Query the data backend"
-msgstr "メトリックバックエンドへのクエリ"
+msgid "Query the default context (no context name)"
+msgstr "テーマのデフォルトの色を使用します。"
 
 msgid "Query the instance name from the database"
 msgstr "データベースからインスタンス名を取得する"
@@ -56117,6 +56012,14 @@ msgstr ""
 msgid "Regular expression: "
 msgstr "正規表現: "
 
+msgid ""
+"Regular expressions are searched anywhere in the raw value converted to a "
+"string, e.g. <tt>True</tt> or <tt>1073741824</tt>. Anchor them with <tt>^</"
+"tt> and <tt>$</tt>, and prefix them with <tt>(?i)</tt> to ignore the case. A "
+"replacement replaces the whole value; <tt>\\1</tt>, <tt>\\2</tt>, ... refer "
+"to the groups. A missing, empty or non-matching value picks no label."
+msgstr ""
+
 msgid "Regular expressions for message classification"
 msgstr "メッセージ分類の正規表現"
 
@@ -56893,6 +56796,10 @@ msgstr "アンダースコアに置き換えます"
 msgid "Replacement"
 msgstr "置換"
 
+#, fuzzy
+msgid "Replacement rules"
+msgstr "置換"
+
 msgid "Replay this notification, send it again!"
 msgstr "この通知をリプレイして、もう一度送信してください！"
 
@@ -56917,6 +56824,10 @@ msgstr "レプリカの終了状態"
 
 msgid "Replica update state"
 msgstr "レプリカ更新状態"
+
+#, fuzzy
+msgid "Replicas"
+msgstr "レプリカラグ"
 
 msgid "Replicate Event Console config"
 msgstr "イベントコンソール設定の複製"
@@ -57532,6 +57443,10 @@ msgstr "このバックアップターゲットから復元する"
 msgid "Restore job"
 msgstr "ジョブを復元する"
 
+#, fuzzy
+msgid "Restore points"
+msgstr "Veeam：リストアポイント"
+
 msgid "Restrict access to IP addresses"
 msgstr "IPアドレスへのアクセスを制限する"
 
@@ -58127,6 +58042,10 @@ msgstr "ユーザーテーブルに表示"
 
 msgid "Rows"
 msgstr "行"
+
+#, fuzzy
+msgid "Rows where a column matches"
+msgstr "すべての列が同一である行を省略します"
 
 msgid "Ruckus Spot"
 msgstr "Ruckus Spot"
@@ -58941,6 +58860,10 @@ msgstr "SNMPトラップのSNMPコミュニティ"
 msgid "SNMP context names"
 msgstr "SNMPコンテキスト名"
 
+#, fuzzy
+msgid "SNMP contexts"
+msgstr "SNMPコンテキスト名"
+
 msgid "SNMP credentials"
 msgstr "SNMP資格情報"
 
@@ -59271,6 +59194,10 @@ msgstr "結果を保存中..."
 
 msgid "Scale to width of page"
 msgstr "ページの幅に合わせて拡大縮小"
+
+#, fuzzy
+msgid "Scale-out repositories"
+msgstr "セキュリティ名"
 
 #, fuzzy
 msgid "Scale-out repository name"
@@ -60071,8 +59998,8 @@ msgid ""
 "types as in the collector configuration."
 msgstr ""
 "OpenTelemetryコレクターがメトリックを配信するAzureリソースタイプを選択してく"
-"ださい。Checkmkではこれらを自動的に検出できないため、コレクターの設定と同じ"
-"リソースタイプを選択してください。"
+"ださい。Checkmkではこれらを自動的に検出できないため、コレクターの設定と同じリ"
+"ソースタイプを選択してください。"
 
 msgid ""
 "Select the Kubernetes objects you would like to monitor. Pods controlled by "
@@ -60297,6 +60224,13 @@ msgid ""
 msgstr ""
 "デプロイするHyper-Vプラグインを選択します。各プラグインはHyper-Vインフラスト"
 "ラクチャの特定の側面を監視します。"
+
+msgid ""
+"Select which data the special agent fetches from the backup server. Deselect "
+"services you do not need, for example ones your monitoring account has no "
+"permission for. A service that is selected but cannot be fetched makes the "
+"agent fail, so that you can correct the selection or the permissions."
+msgstr ""
 
 msgid "Selected"
 msgstr "選択済み"
@@ -60579,6 +60513,10 @@ msgstr "サーバ証明書ポリシー"
 
 msgid "Server connections"
 msgstr "サーバー接続"
+
+#, fuzzy
+msgid "Server information (HW/SW inventory)"
+msgstr "デバイスアップリンク(HW/SWインベントリのみ)"
 
 msgid "Server latency"
 msgstr "サーバーの待ち時間"
@@ -61272,6 +61210,10 @@ msgid ""
 msgstr ""
 "構成されたチェック間隔に従って、あまりにも長い間チェックされていないサービ"
 "ス。"
+
+#, fuzzy
+msgid "Services to fetch"
+msgstr "ホストのサービス"
 
 #, python-format
 msgid ""
@@ -65526,6 +65468,9 @@ msgstr "ホストの状態"
 msgid "State of a service"
 msgstr "サービスの状態"
 
+msgid "State of accepted labels no longer picked"
+msgstr ""
+
 msgid "State of event changed by user"
 msgstr "ユーザーによって変更されたイベントの状態"
 
@@ -65561,6 +65506,13 @@ msgstr "ダウンタイムが設定されている場合のインシデントの
 
 msgid "State of incident if downtime is set (predefined)"
 msgstr "ダウンタイムが設定されている場合(事前定義)のインシデントの状態"
+
+msgid "State of picked labels not accepted yet"
+msgstr ""
+
+#, fuzzy
+msgid "State of picked labels with a changed value"
+msgstr "ユーザーによって変更されたイベントの状態"
 
 msgid "State of remaining services"
 msgstr "残りのサービスの状態"
@@ -65781,7 +65733,8 @@ msgid "State when no reflectors are reported"
 msgstr "削除が保留中の状態"
 
 msgid "State when node-scraper and cluster-aggregator versions differ"
-msgstr "ノード-スクレイパーとクラスタ-アグリゲーターのバージョンが異なる場合の状態"
+msgstr ""
+"ノード-スクレイパーとクラスタ-アグリゲーターのバージョンが異なる場合の状態"
 
 msgid "State when normal updates are pending"
 msgstr "通常の更新が保留中の状態"
@@ -67525,10 +67478,6 @@ msgstr ""
 msgid "Telemetry metrics"
 msgstr "OpenTelemetryメトリック名"
 
-#, fuzzy
-msgid "Telemetry metrics (custom query)"
-msgstr "Oracleインスタンス"
-
 msgid ""
 "Tell the Jolokia plug-in to stop waiting for a response from each configured "
 "instance after the provided number of seconds have passed. This time limit "
@@ -68985,12 +68934,12 @@ msgid ""
 "host, set this state to <i>OK</i>. The mismatch is then only shown in the "
 "service details."
 msgstr ""
-"エージェントアップデータ―は、1つのサイト上で1つのホスト名に対して登録されます"
-"。この状態は、そのホスト名がCheckmk上のホスト名と異なる場合に使用されます。複"
-"数のサイトで監視されているホストは、サイトごとに異なる名前を持つ場合がありま"
-"す。そのようなホストのエージェント更新を担当しないサイトでは、このステータス"
-"を「<i>OK</i>」に設定してください。これにより、不一致はサービスの詳細画面での"
-"み表示されるようになります。"
+"エージェントアップデータ―は、1つのサイト上で1つのホスト名に対して登録されま"
+"す。この状態は、そのホスト名がCheckmk上のホスト名と異なる場合に使用されます。"
+"複数のサイトで監視されているホストは、サイトごとに異なる名前を持つ場合があり"
+"ます。そのようなホストのエージェント更新を担当しないサイトでは、このステータ"
+"スを「<i>OK</i>」に設定してください。これにより、不一致はサービスの詳細画面で"
+"のみ表示されるようになります。"
 
 #, python-brace-format
 msgid ""
@@ -71036,10 +70985,10 @@ msgid ""
 "blocked. Something is wrong on this site: please contact Checkmk support. As "
 "a temporary fix, run 'cmk-update-license-usage --force' as site user."
 msgstr ""
-"ライセンスの使用状況が60日以上前のもののため、変更をアクティブにすることが"
-"ブロックされています。このサイトで何らかの問題が発生しています。Checkmk"
-"サポートまでご連絡ください。一時的な対処法として、サイトユーザーとして「cmk-"
-"update-license-usage --force」を実行してください。"
+"ライセンスの使用状況が60日以上前のもののため、変更をアクティブにすることがブ"
+"ロックされています。このサイトで何らかの問題が発生しています。Checkmkサポート"
+"までご連絡ください。一時的な対処法として、サイトユーザーとして「cmk-update-"
+"license-usage --force」を実行してください。"
 
 msgid ""
 "The license usage history is older than three days, and activating changes "
@@ -71048,8 +70997,8 @@ msgid ""
 "license-usage --force' as site user."
 msgstr ""
 "ライセンス使用履歴が3日以上経過しており、60日を超えると変更をアクティブにする"
-"ことがブロックされます。このサイトで何らかの問題が発生しています。Checkmk"
-"サポートまでご連絡ください。一時的な対処法として、サイトユーザーとして「cmk-"
+"ことがブロックされます。このサイトで何らかの問題が発生しています。Checkmkサ"
+"ポートまでご連絡ください。一時的な対処法として、サイトユーザーとして「cmk-"
 "update-license-usage --force」を実行してください。"
 
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
@@ -72346,6 +72295,10 @@ msgstr ""
 msgid "The provided token is not valid for dashboard access."
 msgstr "提供されたトークンはダッシュボードへのアクセスには使用できません。"
 
+#, fuzzy
+msgid "The provider customer cannot be deleted."
+msgstr "カスタマーが削除されました。"
+
 msgid "The queried ESX system (vCenter / Host)"
 msgstr "照会されたESXシステム(vCenter /ホスト)"
 
@@ -72457,9 +72410,9 @@ msgid ""
 "The remote site {site} stores data here, but this data backend is not opened "
 "to remote sites. Set the address they reach it at to let them connect."
 msgstr ""
-"リモートサイト {site} はここにデータを保存していますが、この"
-"データバックエンドはリモートサイトには公開されていません。リモートサイトが接"
-"続するためのアドレスを設定してください。"
+"リモートサイト {site} はここにデータを保存していますが、このデータバックエン"
+"ドはリモートサイトには公開されていません。リモートサイトが接続するためのアド"
+"レスを設定してください。"
 
 msgid ""
 "The renaming of hosts is a complex operation since a host's name is being "
@@ -72883,7 +72836,7 @@ msgstr ""
 msgid ""
 "The sensitivity threshold selects what is included:<ul>%(plugin_list)s</ul>"
 msgstr ""
-"感度閾値によって、対象となる項目が選択されます：<ul> %(plugin_list)s </ul>"
+"機密性閾値によって、対象となる項目が選択されます：<ul> %(plugin_list)s </ul>"
 
 msgid "The sensor name"
 msgstr "センサー名"
@@ -73691,6 +73644,10 @@ msgstr "Bazel キャッシュへの接続に使用するユーザ名"
 msgid "The username used to connect to the database"
 msgstr "データベースへの接続に使用されるユーザー名"
 
+#, fuzzy
+msgid "The value"
+msgstr "タグ値"
+
 #, python-format
 msgid ""
 "The value \"%(operator)s\" of HTTP variable \"%(ident)s\" is not a valid "
@@ -73790,6 +73747,10 @@ msgstr ""
 
 msgid "The value of this rule is not valid. "
 msgstr "このルールの値は無効です。 "
+
+#, fuzzy
+msgid "The value, if it matches"
+msgstr "ルールが一致しません"
 
 #, python-format
 msgid ""
@@ -74006,8 +73967,8 @@ msgstr "「%(metric)s」という名前の登録済みメトリックは存在�
 #, python-format
 msgid "There is no report element for '%(add_type)s', so it cannot be added."
 msgstr ""
-"「%(add_type)s」に対応するレポートエレメントは存在しないため、追加できません"
-"。"
+"「%(add_type)s」に対応するレポートエレメントは存在しないため、追加できませ"
+"ん。"
 
 msgid "There is only one active user connector available"
 msgstr "利用可能なアクティブユーザーコネクターは1つだけです"
@@ -75095,6 +75056,10 @@ msgstr ""
 
 msgid "This crash report"
 msgstr "このクラッシュレポート"
+
+#, fuzzy
+msgid "This custom service cannot be read, so it cannot be edited"
+msgstr "クラスターを独自のノードにすることはできません"
 
 msgid ""
 "This customer does not exist anymore. This object cannot be used nor edited "
@@ -76410,8 +76375,8 @@ msgid ""
 "This permission is needed for the modules <b>Users</b>, <b>Roles</b>, "
 "<b>Contact groups</b> and <b>OAuth access tokens</b>"
 msgstr ""
-"この権限は、<b>ユーザー</b>, <b>ロール</b>, <b>連絡先グループ</b> および <b>"
-"OAuthアクセストークン</b>のモジュールで必要となります"
+"この権限は、<b>ユーザー</b>, <b>ロール</b>, <b>連絡先グループ</b> および "
+"<b>OAuthアクセストークン</b>のモジュールで必要となります"
 
 msgid ""
 "This permission is needed for the new rule based notification configuration "
@@ -83482,8 +83447,8 @@ msgid ""
 "Unable to verify trial. Please try again later or use a different email "
 "address."
 msgstr ""
-"トライアルを確認できませんでした。しばらくしてからもう一度試すか、別の"
-"メールアドレスをご利用ください。"
+"トライアルを確認できませんでした。しばらくしてからもう一度試すか、別のメール"
+"アドレスをご利用ください。"
 
 msgid "Unaccounted turbo cycles"
 msgstr "考慮されていないターボサイクル"
@@ -83709,6 +83674,10 @@ msgstr "不明なエージェント構成"
 
 msgid "Unknown aggregation"
 msgstr "不明なアグリゲーション"
+
+#, fuzzy
+msgid "Unknown certificate."
+msgstr "不明なサービス"
 
 msgid "Unknown check parameter rule sets"
 msgstr "不明なチェックパラメータールールセット"
@@ -84955,6 +84924,10 @@ msgstr ""
 "UPSやPDUなどのデバイスの上位電圧レベル。過電圧が問題にならないインストールで"
 "は、設定しないままにしておいてください。"
 
+#, fuzzy
+msgid "Uppercase"
+msgstr "アッパー"
+
 msgid "Uptime"
 msgstr "稼働時間"
 
@@ -85422,6 +85395,11 @@ msgstr ""
 
 msgid "Use only lower case letters, digits, and underscores here."
 msgstr "ここでは、小文字、数字、およびアンダースコアのみを使用してください。"
+
+msgid ""
+"Use only the rows whose column matches, e.g. match on <tt>name</tt> and use "
+"the value of <tt>version</tt>."
+msgstr ""
 
 msgid ""
 "Use only with cache disabled in the Meraki special agent settings. The "
@@ -86051,8 +86029,8 @@ msgstr ""
 msgid ""
 "Used for every monitored database unless the database overrides it below."
 msgstr ""
-"以下でデータベースごとに個別に上書きされない限り、監視対象のすべての"
-"データベースに対して使用されます。"
+"以下でデータベースごとに個別に上書きされない限り、監視対象のすべてのデータ"
+"ベースに対して使用されます。"
 
 msgid "Used host tags"
 msgstr "使用されたホストタグ"
@@ -87800,6 +87778,10 @@ msgstr "W&T WebIO"
 msgid "WA"
 msgstr "WA"
 
+#, fuzzy
+msgid "WAN accelerators"
+msgstr "HTTPアクセラレータ統計"
+
 msgid "WAN access type"
 msgstr "WANアクセスタイプ"
 
@@ -88426,16 +88408,16 @@ msgid ""
 "What the two hosts are to each other. Management board is the only relation "
 "type so far."
 msgstr ""
-"2つのホスト間の関係について。現在利用できる関係タイプは 管理ボード（"
-"Management Board）のみです。"
+"2つのホスト間の関係について。現在利用できる関係タイプは 管理ボード"
+"（Management Board）のみです。"
 
 msgid ""
 "What this host is to the selected one: its management board, or an OS host "
 "managed by it."
 msgstr ""
-"このホストと選択したホストとの関係。このホストが 管理ボード（Management Board"
-"） であるか、Management Board によって管理されている OS ホストであるかを示し"
-"ます。"
+"このホストと選択したホストとの関係。このホストが 管理ボード（Management "
+"Board） であるか、Management Board によって管理されている OS ホストであるかを"
+"示します。"
 
 msgid ""
 "When a new profile is saved and this count is exceeded, the oldest profiles "
@@ -89579,10 +89561,9 @@ msgid ""
 "which they reach it. Opening this binds the service beyond the loopback "
 "interface."
 msgstr ""
-"リモートサイトがこのデータバックエンドに書き込みできるかどうか、および"
-"リモートサイトが接続する際に使用するアドレスを設定します。これを有効にすると"
-"、サービスはループバックインターフェース以外からもアクセスできるようになりま"
-"す。"
+"リモートサイトがこのデータバックエンドに書き込みできるかどうか、およびリモー"
+"トサイトが接続する際に使用するアドレスを設定します。これを有効にすると、サー"
+"ビスはループバックインターフェース以外からもアクセスできるようになります。"
 
 #, fuzzy
 msgid ""
@@ -89632,11 +89613,10 @@ msgid ""
 msgstr ""
 "収集するデータと収集頻度を指定します。チェックされていないセクションは一切取"
 "得されません。「async」とマークされたセクションは、エージェントの実行ごとにで"
-"はなく、上記で設定されたキャッシュ有効期間に応じて実行される別の"
-"エージェントプラグインによって収集されます。インスタンスのステータスは、"
-"エージェントの実行ごとに常に収集されるため、リストには表示されません。古い"
-"データによって、停止したばかりのインスタンスが検出されなくなることを防ぐため"
-"です。"
+"はなく、上記で設定されたキャッシュ有効期間に応じて実行される別のエージェント"
+"プラグインによって収集されます。インスタンスのステータスは、エージェントの実"
+"行ごとに常に収集されるため、リストには表示されません。古いデータによって、停"
+"止したばかりのインスタンスが検出されなくなることを防ぐためです。"
 
 msgid ""
 "Which slice of the host graph this Flow map renders, and how many service "
@@ -92824,8 +92804,8 @@ msgstr ""
 msgid ""
 "Your verification code has expired. Please request a new verification code."
 msgstr ""
-"認証コードの有効期限が切れています。新しい認証コードをリクエストしてください"
-"。"
+"認証コードの有効期限が切れています。新しい認証コードをリクエストしてくださ"
+"い。"
 
 msgid "ZFS file system usage"
 msgstr "ZFSファイルシステムの使用量"
@@ -93202,6 +93182,10 @@ msgstr "接続/秒"
 
 msgid "connections"
 msgstr "接続"
+
+#, fuzzy
+msgid "contact groups"
+msgstr "連絡先グループ: "
 
 msgid "contact groups: "
 msgstr "連絡先グループ: "
@@ -93663,6 +93647,10 @@ msgstr[0] "ホスト"
 #, fuzzy, python-format
 msgid "host \"%(host_name)s\""
 msgstr "ホスト名: %s"
+
+#, fuzzy
+msgid "host groups"
+msgstr "ホストグループ"
 
 msgid "host in total"
 msgstr "ホスト合計"
@@ -94739,6 +94727,10 @@ msgstr "シリアルナンバー"
 msgid "service"
 msgid_plural "services"
 msgstr[0] "サービス"
+
+#, fuzzy
+msgid "service groups"
+msgstr "サービスグループ"
 
 #, fuzzy, python-format
 msgid "service in %(state)s state"
@@ -98578,7 +98570,15 @@ msgid "every"
 msgstr "決して"
 
 #, fuzzy
+msgid "Live refresh every"
+msgstr "リフレッシュ"
+
+#, fuzzy
 msgid "Refresh off"
+msgstr "リフレッシュ"
+
+#, fuzzy
+msgid "Resume live refresh"
 msgstr "リフレッシュ"
 
 #, fuzzy
@@ -101475,16 +101475,28 @@ msgid "Failed to create the custom service."
 msgstr "カスタムサービスの作成に失敗しました。"
 
 #, fuzzy
+msgid "Failed to load the custom service."
+msgstr "カスタムサービスの作成に失敗しました。"
+
+#, fuzzy
+msgid "Save & activate changes"
+msgstr "変更をアクティブにしないでください"
+
+#, fuzzy
+msgid "Create & activate changes"
+msgstr "変更をアクティブにしないでください"
+
+#, fuzzy
+msgid "Failed to save the custom service."
+msgstr "カスタムサービスの作成に失敗しました。"
+
+#, fuzzy
 msgid "Define metric"
 msgstr "単一のメトリック"
 
 #, fuzzy
 msgid "Assign to host"
 msgstr "ホストに割り当てる"
-
-#, fuzzy
-msgid "Create & activate changes"
-msgstr "変更をアクティブにしないでください"
 
 msgid "No metric selected."
 msgstr "メトリックが選択されていません。"
@@ -101524,7 +101536,8 @@ msgid "The conflicts could not be read."
 msgstr "グループベースDNが見つかりませんでした。"
 
 msgid "Your hosts say different things about %{first} and %{second}:"
-msgstr "ホストごとに、%{first}と%{second}について異なる情報が表示されています："
+msgstr ""
+"ホストごとに、%{first}と%{second}について異なる情報が表示されています："
 
 msgid "Neither - store nothing for these two"
 msgstr "どちらでもない - これら2つについては何も保存しない"
@@ -101600,7 +101613,8 @@ msgid_plural "in %{count} of %{total} groups"
 msgstr[0] "%{selected} 件中 %{total} 件を選択しました"
 
 msgid "Enter one whole part of a host name - without \"-\", \"_\" or \".\"."
-msgstr "ホスト名の一部分を入力してください。「-」、「_」、「.」は含めないでください。"
+msgstr ""
+"ホスト名の一部分を入力してください。「-」、「_」、「.」は含めないでください。"
 
 msgid ""
 "Checkmk found no hosts that obviously belong together - neither one named "
@@ -101608,20 +101622,20 @@ msgid ""
 "hosts sharing a value such as a serial number. If your hosts are named "
 "another way, enter the word or the label below."
 msgstr ""
-"Checkmkは、明らかに同一グループに属するホストを検出できませんでした。たとえば"
-"、「srv-01」とその次の「srv-01-ilo」といったように、一方のホスト名に単語を追"
-"加した形式のホストも、シシリアル番号のような共通値を持つホストも見つかりませ"
-"んでした。ホストの命名規則がこれと異なる場合は、下に単語またはラベルを張入力"
-"してください。"
+"Checkmkは、明らかに同一グループに属するホストを検出できませんでした。たとえ"
+"ば、「srv-01」とその次の「srv-01-ilo」といったように、一方のホスト名に単語を"
+"追加した形式のホストも、シシリアル番号のような共通値を持つホストも見つかりま"
+"せんでした。ホストの命名規則がこれと異なる場合は、下に単語またはラベルを張入"
+"力してください。"
 
 msgid ""
 "Checkmk found no host named like another plus a word - \"srv-01-ilo\" next "
 "to \"srv-01\", for example. If your hosts are named another way, enter the "
 "word below."
 msgstr ""
-"Checkmk は、一方のホスト名に単語を追加した形式のホストを検出できませんでした"
-"。例えば、「srv-01-ilo」と「srv-01」のようなホストです。ホストが別の命名規則"
-"になっている場合は、下に単語を入力してください。"
+"Checkmk は、一方のホスト名に単語を追加した形式のホストを検出できませんでし"
+"た。例えば、「srv-01-ilo」と「srv-01」のようなホストです。ホストが別の命名規"
+"則になっている場合は、下に単語を入力してください。"
 
 msgid ""
 "Checkmk found no label or attribute whose values each sit on a handful of "
@@ -101654,8 +101668,8 @@ msgid ""
 "Tick a label or attribute if the hosts sharing one of its values are a %"
 "{noun} and its %{other}."
 msgstr ""
-"共有している値が %{noun} とその %{other} を示しているラベルまたは属性に"
-"チェックを入れてください。"
+"共有している値が %{noun} とその %{other} を示しているラベルまたは属性にチェッ"
+"クを入れてください。"
 
 msgid "The %{noun} is the one with \"%{words}\" in its name, %{coverage}."
 msgstr "%{noun}とは、名前に「%{words}」を含むものです。%{coverage}。"
@@ -101770,8 +101784,8 @@ msgid_plural ""
 "For %{count} groups of hosts nothing says which one is the %{noun}. Pick it "
 "for each:"
 msgstr[0] ""
-"%{count}のホストグループについて、どのホストが %{noun} なのかを判断できません"
-"。それぞれ選択してください："
+"%{count}のホストグループについて、どのホストが %{noun} なのかを判断できませ"
+"ん。それぞれ選択してください："
 
 msgid ""
 "Rather than answering %{count} questions, go back and say how to recognise "
@@ -101798,8 +101812,8 @@ msgstr "どれが %{noun} か"
 msgid "1 host of this group cannot be written and is left out."
 msgid_plural "%{count} hosts of this group cannot be written and are left out."
 msgstr[0] ""
-"このグループの %{count} 台のホストは書き込み対象にできないため、除外されます"
-"。"
+"このグループの %{count} 台のホストは書き込み対象にできないため、除外されま"
+"す。"
 
 msgid ""
 "\"srv-01-%{word}\" next to \"srv-01\", for example. Checkmk knows the usual "
@@ -101944,7 +101958,8 @@ msgstr ""
 "できない状態です。"
 
 msgid "To continue, choose at least one relation to store."
-msgstr "続行するには、保存する関係を1つ以上選択してください。回答がが必要です。"
+msgstr ""
+"続行するには、保存する関係を1つ以上選択してください。回答がが必要です。"
 
 #, fuzzy
 msgid "Findings"
@@ -104227,8 +104242,8 @@ msgid ""
 "Press [Enter] on a column's filter button to filter for that column, "
 "[ArrowDown]/[ArrowUp] to move between the rows, [Escape] to close"
 msgstr ""
-"列のフィルターボタン上で [Enter] キーを押すと、その列でフィルターできます"
-"。[ArrowDown]/[ArrowUp] キーで行を移動し、[Escape] キーで閉じます"
+"列のフィルターボタン上で [Enter] キーを押すと、その列でフィルターできます。"
+"[ArrowDown]/[ArrowUp] キーで行を移動し、[Escape] キーで閉じます"
 
 msgid "Press [Space] on a quick filter chip to filter for unhandled problems"
 msgstr ""
@@ -104249,8 +104264,8 @@ msgid ""
 msgstr ""
 "メニューやウィジェットがこれらのキーを使用していない場合、[上矢印]/[下矢印]/"
 "[左矢印]/[右矢印] キーを押すと、フォーカスを最も近いクリック可能な要素に移動"
-"できます。フォーカスされている要素がない場合、[上矢印]/[下矢印] キーで"
-"テーブルをスクロールします"
+"できます。フォーカスされている要素がない場合、[上矢印]/[下矢印] キーでテーブ"
+"ルをスクロールします"
 
 msgid "Press [Escape] to let go of the focus"
 msgstr "[Escape] キーを押すと、フォーカスを解除します"
@@ -104275,8 +104290,8 @@ msgid ""
 "clear"
 msgstr ""
 "文字を入力すると、その文字を含む最初のクリック可能なテキストにフォーカスしま"
-"す。[ArrowDown]/[ArrowUp] キーで次/前の候補に移動し、[Enter] キーで選択"
-"、[Escape] キーで解除します"
+"す。[ArrowDown]/[ArrowUp] キーで次/前の候補に移動し、[Enter] キーで選択、"
+"[Escape] キーで解除します"
 
 #, fuzzy
 msgid "Focus search"
@@ -105177,6 +105192,13 @@ msgid "Resend code"
 msgstr "コードの再生成"
 
 #, fuzzy
+msgid "Internal error. Please try again or contact Checkmk support."
+msgstr "このエラーが続く場合は、Checkmkサポートチームまでご連絡ください。"
+
+msgid "Unable to reach Checkmk site. Please check that it is started."
+msgstr ""
+
+#, fuzzy
 msgid "Code"
 msgstr "コード 2xx"
 
@@ -105273,10 +105295,9 @@ msgid ""
 "firewall or proxy rule is the most common cause — if this site has no "
 "internet access at all, continue as an offline trial instead."
 msgstr ""
-"Eメール認証には、そのドメインへのHTTPSによる送信接続が必要です。"
-"ファイアウォールやプロキシのルールが最も一般的な原因です。このサイトが"
-"インターネットにまったく接続できない場合は、代わりにオフライン試用として続け"
-"てください。"
+"Eメール認証には、そのドメインへのHTTPSによる送信接続が必要です。ファイア"
+"ウォールやプロキシのルールが最も一般的な原因です。このサイトがインターネット"
+"にまったく接続できない場合は、代わりにオフライン試用として続けてください。"
 
 #, fuzzy
 msgid "Allow outbound access to"
@@ -105290,8 +105311,8 @@ msgid ""
 "endpoint is used for product analytics, so allowlisting it once covers both."
 msgstr ""
 "ファイアウォールまたはプロキシの許可リストにこのドメインを追加してから、もう"
-"一度試してください。同じエンドポイントが製品の利用状況分析にも使用されるため"
-"、一度許可リストに追加すれば両方に適用されます。"
+"一度試してください。同じエンドポイントが製品の利用状況分析にも使用されるた"
+"め、一度許可リストに追加すれば両方に適用されます。"
 
 #, fuzzy
 msgid "Continue as offline trial"
@@ -105327,8 +105348,8 @@ msgid ""
 msgstr ""
 "ライセンス確認が延期されました。サイト作成から %{days} 日間はすべての機能を利"
 "用できます。それまでにライセンスを確認してください。確認しない場合、サイトは"
-"機能が制限された無料版（%{services} サービス）に移行します。7日ごとに"
-"リマインダーが表示されます。"
+"機能が制限された無料版（%{services} サービス）に移行します。7日ごとにリマイン"
+"ダーが表示されます。"
 
 #, fuzzy
 msgid "Verify your license"
@@ -106342,6 +106363,20 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#~ msgid "At least one custom query is required."
+#~ msgstr "少なくとも1つのカスタムクエリが必要です。"
+
+#~ msgid "Editing a custom service is not available yet"
+#~ msgstr "カスタムサービスの編集機能はまだ利用できません"
+
+#, fuzzy
+#~ msgid "Query the data backend"
+#~ msgstr "メトリックバックエンドへのクエリ"
+
+#, fuzzy
+#~ msgid "Telemetry metrics (custom query)"
+#~ msgstr "Oracleインスタンス"
 
 #~ msgid "Filter by host name"
 #~ msgstr "ホスト名でフィルタリング"

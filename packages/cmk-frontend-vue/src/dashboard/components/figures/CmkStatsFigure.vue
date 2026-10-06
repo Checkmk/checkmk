@@ -173,13 +173,8 @@ const tableOrigin = computed(() => ({
 
 .db-cmk-stats-figure__legend-box {
   fill: var(--box-color);
-  stroke: color-mix(in srgb, var(--box-color) 70%, black);
+  stroke: color-mix(in srgb, var(--box-color) var(--border-shade-mix), black);
   stroke-width: 1px;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-[data-theme='modern-dark'] .db-cmk-stats-figure__legend-box {
-  stroke: var(--box-color);
 }
 
 a:hover .db-cmk-stats-figure__legend-text {

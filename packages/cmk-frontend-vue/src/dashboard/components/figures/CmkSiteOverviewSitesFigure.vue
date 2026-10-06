@@ -230,18 +230,11 @@ const tooltip = computed<FigureTooltipContent | null>(() => {
 
 <style scoped>
 .db-cmk-site-overview-sites-figure {
-  --db-cmk-site-overview-sites-figure-headline: var(--ux-theme-4);
-
   display: block;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-[data-theme='modern-dark'] .db-cmk-site-overview-sites-figure {
-  --db-cmk-site-overview-sites-figure-headline: var(--ux-theme-3);
-}
-
 .db-cmk-site-overview-sites-figure__offline {
-  fill: var(--db-cmk-site-overview-sites-figure-headline);
+  fill: var(--background-muted);
   stroke: rgb(68 68 68);
   stroke-dasharray: 3, 3;
 }

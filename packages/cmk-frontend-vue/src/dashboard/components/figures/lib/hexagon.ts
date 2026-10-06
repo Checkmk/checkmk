@@ -41,13 +41,13 @@ interface Area {
 export const STATE_HEXAGON_STYLE: Record<StatsPart['category'], HexagonStyle> = {
   up: { color: 'var(--success)', fillOpacity: 0.06, strokeOpacity: 0.9 },
   ok: { color: 'var(--success)', fillOpacity: 0.06, strokeOpacity: 0.9 },
-  downtime: { color: 'var(--color-light-blue-50)', fillOpacity: 0.6, strokeOpacity: 1 },
-  unreachable: { color: 'var(--color-orange-50)', fillOpacity: 0.8, strokeOpacity: 1 },
-  down: { color: 'var(--color-dark-red-50)', fillOpacity: 0.8, strokeOpacity: 1 },
-  host_down: { color: 'var(--color-dark-blue-50)', fillOpacity: 0.5, strokeOpacity: 1 },
-  warning: { color: 'var(--color-yellow-50)', fillOpacity: 0.6, strokeOpacity: 1 },
-  unknown: { color: 'var(--color-orange-50)', fillOpacity: 0.8, strokeOpacity: 1 },
-  critical: { color: 'var(--color-dark-red-50)', fillOpacity: 0.8, strokeOpacity: 1 }
+  downtime: { color: 'var(--status-color-downtime)', fillOpacity: 0.6, strokeOpacity: 1 },
+  unreachable: { color: 'var(--color-state-unreachable)', fillOpacity: 0.8, strokeOpacity: 1 },
+  down: { color: 'var(--status-color-critical)', fillOpacity: 0.8, strokeOpacity: 1 },
+  host_down: { color: 'var(--status-color-host-down)', fillOpacity: 0.5, strokeOpacity: 1 },
+  warning: { color: 'var(--color-state-warning)', fillOpacity: 0.6, strokeOpacity: 1 },
+  unknown: { color: 'var(--color-state-unknown)', fillOpacity: 0.8, strokeOpacity: 1 },
+  critical: { color: 'var(--status-color-critical)', fillOpacity: 0.8, strokeOpacity: 1 }
 }
 
 /** The largest box of a hexagon grid, by the hexagon size that a widget configures. */

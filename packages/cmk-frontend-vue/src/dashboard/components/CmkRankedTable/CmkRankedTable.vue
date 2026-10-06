@@ -16,11 +16,7 @@ import type {
   RankedTableRow
 } from './types'
 
-const {
-  columns,
-  rows,
-  barColor = 'var(--color-light-blue-50)'
-} = defineProps<CmkRankedTableProps>()
+const { columns, rows, barColor = 'var(--status-color-info)' } = defineProps<CmkRankedTableProps>()
 
 const emit = defineEmits<{
   /** A cell in a column marked `clickable` was activated. */
@@ -239,7 +235,7 @@ const gridTemplateColumns = computed(() =>
   padding: var(--dimension-3) var(--dimension-4);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
-  color: var(--color-mid-grey-50);
+  color: var(--font-color-muted);
   text-align: left;
   letter-spacing: 0.04em;
   white-space: nowrap;

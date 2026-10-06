@@ -256,13 +256,6 @@ const enterMissingRuntimeFiltersAction = useInjectMissingRuntimeFiltersAction()
   position: relative;
 
   --column-z-index: 1;
-  --db-rg-resizer-bg-color: var(--color-daylight-grey-60);
-  --db-rg-resizer-bg-hover-color: var(--color-white-50);
-}
-
-body[data-theme='modern-dark'] .db-responsive-grid__container {
-  --db-rg-resizer-bg-color: var(--color-midnight-grey-60);
-  --db-rg-resizer-bg-hover-color: var(--color-white-10);
 }
 
 .db-responsive-grid__missing-filters-dialog {
@@ -295,11 +288,7 @@ body[data-theme='modern-dark'] .db-responsive-grid__container {
 
 .db-responsive-grid__edit-column {
   flex-grow: 1;
-  background-color: var(--color-daylight-grey-30);
-}
-
-body[data-theme='modern-dark'] .db-responsive-grid__edit-column {
-  background-color: var(--color-conference-grey-100);
+  background-color: var(--background-guide);
 }
 
 /* NOTE: third party CSS selector (grid-layout-plus) */
@@ -307,15 +296,15 @@ body[data-theme='modern-dark'] .db-responsive-grid__edit-column {
 :deep(.vgl-item:hover .db-responsive-grid-widget__frame--edit) {
   /* We define the hover effect here, since hovering over the resizer would not count as hovering
    * over the item itself. */
-  border-color: var(--color-corporate-green-50);
+  border-color: var(--interactive-accent);
 }
 
 /* NOTE: third party CSS selector (grid-layout-plus) */
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .vgl-layout {
-  --vgl-placeholder-bg: var(--color-corporate-green-50);
+  --vgl-placeholder-bg: var(--interactive-accent);
   --vgl-placeholder-opacity: 30%;
-  --vgl-resizer-border-color: var(--color-corporate-green-80);
+  --vgl-resizer-border-color: var(--interactive-accent-strongest);
 }
 
 /* NOTE: third party CSS selector (grid-layout-plus), we have to use :deep for this */
@@ -335,18 +324,18 @@ body[data-theme='modern-dark'] .db-responsive-grid__edit-column {
   width: var(--dimension-8);
   height: var(--dimension-8);
   z-index: calc(var(--column-z-index) + 4);
-  background-color: var(--db-rg-resizer-bg-color);
+  background-color: var(--background-control);
   border-bottom-right-radius: var(--border-radius);
 
   &:hover {
-    --vgl-resizer-border-color: var(--color-corporate-green-50);
+    --vgl-resizer-border-color: var(--interactive-accent);
 
     /* Overlay the transparent hover color
      * This works by using two background layers, the first one is on top and has the hover color.
      * We use linear-gradient since they are treated as images and can thus be layered. */
     background:
-      linear-gradient(var(--db-rg-resizer-bg-hover-color), var(--db-rg-resizer-bg-hover-color)),
-      linear-gradient(var(--db-rg-resizer-bg-color), var(--db-rg-resizer-bg-color));
+      linear-gradient(var(--background-hover-overlay), var(--background-hover-overlay)),
+      linear-gradient(var(--background-control), var(--background-control));
   }
 }
 

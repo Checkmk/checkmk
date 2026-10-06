@@ -87,7 +87,7 @@ defineEmits<
 
   /* show border, reduce margin to keep size the same */
   margin: -1px;
-  border: 1px solid var(--color-corporate-green-80);
+  border: 1px solid var(--interactive-accent-strongest);
 
   /* NOTE: the hover effect is defined in ResponsiveGrid.vue */
   transition: border-color 200ms ease;
@@ -105,11 +105,7 @@ defineEmits<
 .db-responsive-grid-widget__edit-controls {
   /* this must be above the content and placeholder, but below the resizer */
   z-index: var(--z-index-edit-controls);
-  background-color: color-mix(in srgb, var(--color-daylight-grey-50) 50%, transparent);
-}
-
-body[data-theme='modern-dark'] .db-responsive-grid-widget__edit-controls {
-  background-color: color-mix(in srgb, var(--color-midnight-grey-90) 50%, transparent);
+  background-color: var(--background-scrim);
 }
 
 .db-responsive-grid-widget__edit-controls-buttons {

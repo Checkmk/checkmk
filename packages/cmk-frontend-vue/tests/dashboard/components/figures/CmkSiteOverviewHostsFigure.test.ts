@@ -96,7 +96,7 @@ describe('CmkSiteOverviewHostsFigure', () => {
     })
 
     const fills = [...container.querySelectorAll('path')].map((path) => path.style.fill)
-    expect(fills.at(-1)).toBe('var(--db-cmk-site-overview-hosts-figure-headline)')
+    expect(fills.at(-1)).toBe('var(--background-muted)')
   })
 
   it('sizes its root SVG and view box from its props', () => {

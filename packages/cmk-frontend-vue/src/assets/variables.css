@@ -94,6 +94,11 @@
     --background-highlight: var(--color-light-blue-0);
     --background-neutral: var(--color-mid-grey-50);
     --background-accent-subtle: var(--color-purple-10);
+    --background-control: var(--color-daylight-grey-60);
+    --background-hover-overlay: var(--color-white-50);
+    --background-guide: var(--color-daylight-grey-30);
+    --background-scrim: color-mix(in srgb, var(--color-daylight-grey-50) 50%, transparent);
+    --background-muted: var(--ux-theme-4);
 
     /* Text */
     --font-color: var(--color-conference-grey-100);
@@ -102,6 +107,8 @@
     --font-color-disabled: var(--color-conference-grey-70);
     --font-underline-color: var(--color-conference-grey-60);
     --font-color-strong: var(--color-mid-grey-100);
+    --font-color-muted: var(--color-mid-grey-50);
+    --font-color-graphic: rgb(131 131 131);
 
     /* Border */
     --border-color-subtle: var(--color-mid-grey-10);
@@ -112,6 +119,7 @@
     --dashed-border-color: var(--color-mid-grey-20);
     --border-color-separator: var(--color-mid-grey-10);
     --border-color-emphasis: var(--color-mid-grey-90);
+    --border-shade-mix: 70%;
 
     /* Status */
     --color-warning: rgb(255 208 0);
@@ -129,11 +137,28 @@
     --status-background-warning: var(--color-yellow-0);
     --status-border-color-success-strong: var(--color-corporate-green-70);
     --status-border-color-warning-strong: var(--color-yellow-70);
+    --status-color-critical: var(--color-dark-red-50);
+    --status-color-info: var(--color-light-blue-50);
+    --status-color-downtime: var(--color-light-blue-50);
+    --status-color-host-down: var(--color-dark-blue-50);
+    --status-color-pending: var(--color-midnight-grey-50);
+    --status-color-ok-muted: rgb(189 189 189);
+
+    /* Merge into --status-border-color-* if UX agrees to the shift in one theme */
+    --status-outline-color-success: var(--color-corporate-green-70);
+    --status-outline-color-warning: var(--color-yellow-70);
+    --status-outline-color-error: var(--color-dark-red-40);
 
     /* Interactive */
     --default-select-hover-color: var(--success);
     --default-select-focus-color: var(--success-dimmed);
+    --interactive-accent: var(--color-corporate-green-50);
     --interactive-accent-strong: var(--color-corporate-green-70);
+    --interactive-accent-stronger: var(--color-corporate-green-80);
+    --interactive-accent-strongest: var(--color-corporate-green-80);
+    --interactive-neutral: var(--color-mid-grey-50);
+    --icon-filter-monochrome: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(7500%)
+      hue-rotate(93deg) brightness(0%) contrast(105%);
 
     /* Component-named variables, to be renamed onto the roles above */
     --color-popup-backdrop: rgb(0 0 0 /50%);
@@ -269,6 +294,11 @@
     --background-highlight: var(--color-dark-blue-90);
     --background-neutral: var(--color-mid-grey-50);
     --background-accent-subtle: var(--color-purple-90);
+    --background-control: var(--color-midnight-grey-60);
+    --background-hover-overlay: var(--color-white-10);
+    --background-guide: var(--color-conference-grey-100);
+    --background-scrim: color-mix(in srgb, var(--color-midnight-grey-90) 50%, transparent);
+    --background-muted: var(--ux-theme-3);
 
     /* Text */
     --font-color: var(--color-white-100);
@@ -277,6 +307,8 @@
     --font-color-disabled: var(--color-white-50);
     --font-underline-color: var(--color-white-60);
     --font-color-strong: var(--color-mid-grey-0);
+    --font-color-muted: var(--color-mid-grey-50);
+    --font-color-graphic: var(--font-color);
 
     /* Border */
     --border-color-subtle: var(--color-mid-grey-90);
@@ -287,6 +319,7 @@
     --dashed-border-color: var(--color-mid-grey-80);
     --border-color-separator: var(--color-mid-grey-100);
     --border-color-emphasis: var(--color-mid-grey-90);
+    --border-shade-mix: 100%;
 
     /* Status */
     --color-warning: var(--color-yellow-50);
@@ -304,11 +337,28 @@
     --status-background-warning: var(--color-yellow-100);
     --status-border-color-success-strong: var(--color-corporate-green-50);
     --status-border-color-warning-strong: var(--color-yellow-50);
+    --status-color-critical: var(--color-dark-red-50);
+    --status-color-info: var(--color-light-blue-50);
+    --status-color-downtime: var(--color-light-blue-50);
+    --status-color-host-down: var(--color-dark-blue-50);
+    --status-color-pending: var(--color-midnight-grey-50);
+    --status-color-ok-muted: rgb(58 69 80);
+
+    /* Merge into --status-border-color-* if UX agrees to the shift in one theme */
+    --status-outline-color-success: var(--color-corporate-green-70);
+    --status-outline-color-warning: var(--color-yellow-70);
+    --status-outline-color-error: var(--color-dark-red-40);
 
     /* Interactive */
     --default-select-hover-color: var(--success);
     --default-select-focus-color: var(--success-dimmed);
+    --interactive-accent: var(--color-corporate-green-50);
     --interactive-accent-strong: var(--color-corporate-green-50);
+    --interactive-accent-stronger: var(--color-corporate-green-50);
+    --interactive-accent-strongest: var(--color-corporate-green-80);
+    --interactive-neutral: var(--color-mid-grey-60);
+    --icon-filter-monochrome: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(7500%)
+      hue-rotate(93deg) brightness(105%) contrast(105%);
 
     /* Component-named variables, to be renamed onto the roles above */
     --color-popup-backdrop: rgb(0 0 0 /50%);

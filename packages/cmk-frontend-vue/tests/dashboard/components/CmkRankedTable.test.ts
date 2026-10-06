@@ -143,7 +143,7 @@ test('falls back to the default bar color when none is given', () => {
   const { container } = render(CmkRankedTable, { props: { columns: COLUMNS, rows: ROWS } })
 
   const fill = container.querySelector<HTMLElement>('.db-cmk-ranked-table__bar-fill')
-  expect(fill!.style.backgroundColor).toBe('var(--color-light-blue-50)')
+  expect(fill!.style.backgroundColor).toBe('var(--status-color-info)')
 })
 
 test('formats byte columns as human-readable SI values', () => {

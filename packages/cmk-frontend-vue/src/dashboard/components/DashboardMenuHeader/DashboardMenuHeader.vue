@@ -182,7 +182,7 @@ const copyInternalDashboardLink = async (): Promise<void> => {
         />
 
         <DropdownMenu
-          :icon="{ name: 'share', primaryColor: '--db-dashboard-menu-header-share-icon-color' }"
+          :icon="{ name: 'share', primaryColor: '--interactive-accent-strong' }"
           :label="_t('Share')"
           :disabled="isInteractionDisabled"
           :options="[
@@ -320,14 +320,6 @@ const copyInternalDashboardLink = async (): Promise<void> => {
   padding-top: var(--dimension-8);
   gap: var(--dimension-3);
   flex: 0 0 auto;
-
-  body[data-theme='modern-dark'] & {
-    --db-dashboard-menu-header-share-icon-color: var(--color-corporate-green-50);
-  }
-
-  body[data-theme='facelift'] & {
-    --db-dashboard-menu-header-share-icon-color: var(--color-corporate-green-70);
-  }
 }
 
 .db-menu-header__time-picker {

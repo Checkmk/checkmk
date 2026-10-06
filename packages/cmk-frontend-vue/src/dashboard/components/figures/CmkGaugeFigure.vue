@@ -305,12 +305,7 @@ function hover(bin: Bin, event: PointerEvent): void {
 }
 
 .db-cmk-gauge-figure__value-arc {
-  fill: rgb(131 131 131);
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-[data-theme='modern-dark'] .db-cmk-gauge-figure__value-arc {
-  fill: var(--font-color);
+  fill: var(--font-color-graphic);
 }
 
 .db-cmk-gauge-figure__range-label {

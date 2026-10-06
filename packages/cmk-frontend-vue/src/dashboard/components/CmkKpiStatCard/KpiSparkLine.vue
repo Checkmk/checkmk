@@ -15,7 +15,7 @@ const props = withDefaults(
   defineProps<{
     /** Data points to plot, oldest first. Needs at least two non-null values to render a path. */
     series: TimestampedSample[]
-    /** Stroke / fill color, e.g. "var(--color-corporate-green-50)". */
+    /** Stroke / fill color, e.g. "var(--success)". */
     color: string
     /** Fades the area fill towards the floor instead of the default flat fill. */
     fadeToFloor?: boolean

@@ -162,7 +162,7 @@ const STATE_CSS_COLOR: Record<KpiStateSeverity, string> = {
   warn: 'var(--color-warning)',
   crit: 'var(--color-danger)',
   unknown: 'var(--color-unknown)',
-  pending: 'var(--color-midnight-grey-50)'
+  pending: 'var(--status-color-pending)'
 }
 
 const stateLabel = computed<TranslatedString | undefined>(() => {
@@ -733,7 +733,7 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
   overflow-x: clip;
   font-size: clamp(10px, 16cqh, 22px);
   font-weight: var(--font-weight-bold);
-  color: var(--color-mid-grey-50);
+  color: var(--font-color-muted);
   text-overflow: ellipsis;
   white-space: nowrap;
 }

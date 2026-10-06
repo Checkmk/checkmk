@@ -37,16 +37,16 @@ function opaque(color: string): HexagonStyle {
 }
 
 const HOST_HEXAGON: Record<HostHexagonState, { style: HexagonStyle; text: string }> = {
-  DOWN: { style: opaque('var(--color-dark-red-50)'), text: _t('down') },
-  UNREACHABLE: { style: opaque('var(--color-orange-50)'), text: _t('unreachable') },
-  DOWNTIME: { style: opaque('var(--color-light-blue-50)'), text: _t('in downtime') },
-  CRITICAL: { style: opaque('var(--color-dark-red-50)'), text: _t('critical') },
-  UNKNOWN: { style: opaque('var(--color-orange-50)'), text: _t('unknown') },
-  WARNING: { style: opaque('var(--color-yellow-50)'), text: _t('warning') },
-  OK: { style: opaque('var(--db-cmk-site-overview-hosts-figure-ok)'), text: _t('OK') }
+  DOWN: { style: opaque('var(--status-color-critical)'), text: _t('down') },
+  UNREACHABLE: { style: opaque('var(--color-state-unreachable)'), text: _t('unreachable') },
+  DOWNTIME: { style: opaque('var(--status-color-downtime)'), text: _t('in downtime') },
+  CRITICAL: { style: opaque('var(--status-color-critical)'), text: _t('critical') },
+  UNKNOWN: { style: opaque('var(--color-state-unknown)'), text: _t('unknown') },
+  WARNING: { style: opaque('var(--color-state-warning)'), text: _t('warning') },
+  OK: { style: opaque('var(--status-color-ok-muted)'), text: _t('OK') }
 }
 
-const INNER_STYLE = opaque('var(--db-cmk-site-overview-hosts-figure-headline)')
+const INNER_STYLE = opaque('var(--background-muted)')
 
 const HOST_STATE_TEXT: Record<HostState, string> = {
   UP: _t('Host is up'),
@@ -164,16 +164,3 @@ function tooltip(index: number): FigureTooltipContent {
     </HexagonGridFigure>
   </div>
 </template>
-
-<style scoped>
-.db-cmk-site-overview-hosts-figure {
-  --db-cmk-site-overview-hosts-figure-ok: rgb(189 189 189);
-  --db-cmk-site-overview-hosts-figure-headline: var(--ux-theme-4);
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-[data-theme='modern-dark'] .db-cmk-site-overview-hosts-figure {
-  --db-cmk-site-overview-hosts-figure-ok: rgb(58 69 80);
-  --db-cmk-site-overview-hosts-figure-headline: var(--ux-theme-3);
-}
-</style>

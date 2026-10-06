@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.4.33",
+  "version": "0.4.34",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"
@@ -510,7 +510,7 @@
         "cmk.devServer.openBrowserOnStart": {
           "type": "boolean",
           "default": true,
-          "description": "When a dev-server command (e.g. CMK ▸ Cmd: Run UI Component Library) is started, open its URL once the server responds."
+          "description": "When a dev-server command (e.g. CMK ▸ Cmd: Run UI Component Library) is started, open its URL right away, before the server comes up."
         },
         "cmk.devServer.browser": {
           "type": "string",

@@ -13,7 +13,12 @@ from cmk.schema_manager._mechanism import (
     ensure_schema,
     ensure_schemas_on_update,
 )
-from cmk.schema_manager.backend.sqlite import ensure_sqlite_up_to_date, REVISION_TABLE, Sqlite
+from cmk.schema_manager.backend.sqlite import (
+    ensure_sqlite_created,
+    ensure_sqlite_up_to_date,
+    REVISION_TABLE,
+    Sqlite,
+)
 from cmk.schema_manager.managed_database import ManagedDatabase
 from cmk.schema_manager.revision import RevisionChain
 from cmk.testlib.schema_manager import FakeRevision
@@ -118,6 +123,14 @@ def test_ensure_schemas_on_update_tries_every_database_before_failing() -> None:
 @pytest.mark.usefixtures("omd_root", "registered_fixture_databases")
 def test_ensure_sqlite_up_to_date_handles_the_discovered_update_databases() -> None:
     ensure_sqlite_up_to_date(_LOGGER)
+
+    assert _applied_revisions("create_and_update") == ["0001"]
+    assert not Sqlite().exists("update_only")
+
+
+@pytest.mark.usefixtures("omd_root", "registered_fixture_databases")
+def test_ensure_sqlite_created_creates_only_the_databases_opted_into_create() -> None:
+    ensure_sqlite_created(_LOGGER)
 
     assert _applied_revisions("create_and_update") == ["0001"]
     assert not Sqlite().exists("update_only")

@@ -2243,6 +2243,9 @@ allows = ["@ccc"]
 [file_dependencies."omd/packages/check_mk/post-create/01_create-sample-config.py"]
 allows = ["@ccc", "cmk.gui", "cmk.utils.log", "cmk.utils.paths"]
 
+[file_dependencies."omd/packages/check_mk/post-create/03_cmk-schema-manager.py"]
+allows = ["cmk.schema_manager"]
+
 [file_dependencies."omd/packages/Python/sitecustomize.py"]
 allows = ["cmk.licensing.basics"]
 

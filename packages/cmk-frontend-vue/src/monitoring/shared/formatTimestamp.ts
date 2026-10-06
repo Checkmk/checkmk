@@ -3,23 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { renderDate, renderTimeOfDay } from 'cmk-ui-library/lib/renderTime'
+
 import type { DateFormatId, DisplayOptions } from '@/monitoring/shared/types'
 
-/** Renders a unix timestamp as `YYYY-MM-DD HH:MM:SS` in the viewer's local time. */
-export function formatTimestamp(unixSeconds: number): string {
-  const date = new Date(unixSeconds * 1000)
-  const pad = (value: number): string => String(value).padStart(2, '0')
-  return (
-    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
-    `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
-  )
-}
-
-function formatDate(date: Date, format: DateFormatId): string {
-  const pad = (value: number): string => String(value).padStart(2, '0')
-  const year = date.getFullYear()
-  const month = pad(date.getMonth() + 1)
-  const day = pad(date.getDate())
+function formatDate(unixSeconds: number, format: DateFormatId): string {
+  const [year, month, day] = renderDate(unixSeconds).split('-')
   switch (format) {
     case '%d.%m.%Y':
       return `${day}.${month}.${year}`
@@ -35,10 +24,7 @@ function formatDate(date: Date, format: DateFormatId): string {
 }
 
 function formatAbsolute(unixSeconds: number, dateFormat: DateFormatId): string {
-  const date = new Date(unixSeconds * 1000)
-  const pad = (value: number): string => String(value).padStart(2, '0')
-  const time = `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
-  return `${formatDate(date, dateFormat)} ${time}`
+  return `${formatDate(unixSeconds, dateFormat)} ${renderTimeOfDay(unixSeconds)}`
 }
 
 /**

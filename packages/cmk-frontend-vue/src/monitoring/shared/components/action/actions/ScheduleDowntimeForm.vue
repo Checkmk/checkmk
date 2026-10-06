@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type ZonedDateTime, getLocalTimeZone, now } from '@internationalized/date'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time/types'
+import { renderDate } from 'cmk-ui-library/lib/renderTime'
 
 import type { DowntimeRecur } from '@/monitoring/shared/api/actions/downtime'
 
@@ -298,11 +299,7 @@ const untilEndDate = computed(() => {
   if (until === undefined || typeof until === 'number') {
     return null
   }
-  return untilPresetEnd(until, now(timeZone)).toDate().toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  })
+  return renderDate(untilPresetEnd(until, now(timeZone)).toDate(), timeZone)
 })
 
 watch(model, (values) => emit('update:valid', isScheduleDowntimeValid(values, props.presets)), {

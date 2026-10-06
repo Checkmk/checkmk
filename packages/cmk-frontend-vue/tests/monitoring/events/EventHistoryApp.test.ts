@@ -4,12 +4,12 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen } from '@testing-library/vue'
+import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { afterAll, beforeAll, expect, test } from 'vitest'
 import { nextTick } from 'vue'
 
 import EventHistoryApp from '@/monitoring/events/EventHistoryApp.vue'
 import type { EventEntry, EventsResponse } from '@/monitoring/events/api'
-import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 
 // MonitoringTable virtualizes off its own wrapper, which jsdom measures as zero-sized;
 // without a height no row would be rendered at all.
@@ -97,7 +97,7 @@ test('the event icon is read-only: it links nowhere', async () => {
 })
 
 test('the time column carries the date, so a flat list needs no per-day grouping', async () => {
-  // Asserted as a shape rather than a literal: `formatTimestamp` renders local time and
+  // Asserted as a shape rather than a literal: `renderDateAndTime` renders local time and
   // the test suite pins no timezone.
   mountTab({ events: [makeEvent({ time: 1752405510 })] })
   await flushVirtualizer()
@@ -240,7 +240,7 @@ test('the header states the window and its start, next to the legacy history lin
     }
   })
 
-  // Asserted as a shape rather than a literal: `formatTimestamp` renders local time and
+  // Asserted as a shape rather than a literal: `renderDateAndTime` renders local time and
   // the test suite pins no timezone.
   expect(
     screen.getByText(
@@ -285,7 +285,7 @@ test('a truncated list shows its since as its oldest shown event, not the full r
 
   expect(
     screen.getByText(
-      `Events of the last 8 days for this host (since ${formatTimestamp(oldestShownTime)})`
+      `Events of the last 8 days for this host (since ${renderDateAndTime(oldestShownTime)})`
     )
   ).toBeInTheDocument()
 })

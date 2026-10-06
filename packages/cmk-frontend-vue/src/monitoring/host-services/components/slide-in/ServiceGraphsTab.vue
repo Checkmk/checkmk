@@ -54,11 +54,11 @@ import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { computed, onMounted, ref } from 'vue'
 
 import { GraphGroup } from '@/graphing'
-import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 
 const props = defineProps<{ data: ServiceGraphs }>()
 
@@ -93,7 +93,7 @@ const timeRange = computed(() => {
 const windowInfo = computed(() =>
   _t('Initially showing the last %{days} days (since %{since})', {
     days: DAYS_SHOWN,
-    since: formatTimestamp(timeRange.value.start)
+    since: renderDateAndTime(timeRange.value.start)
   })
 )
 

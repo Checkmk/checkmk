@@ -7,14 +7,14 @@ import type { Row } from '@tanstack/vue-table'
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { defineComponent, h } from 'vue'
 
 import HostServicesRow from '@/monitoring/host-services/components/HostServicesRow.vue'
 import type { HostServiceEntry } from '@/monitoring/shared/api/types'
-import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
-// 'abs' keeps assertions comparable to plain `formatTimestamp`, independent of how old
+// 'abs' keeps assertions comparable to plain `renderDateAndTime`, independent of how old
 // a fixture's timestamp happens to be relative to the real clock the test runs under.
 const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
 
@@ -91,10 +91,10 @@ test('renders last state change before last check, matching the legacy view', ()
 
   const tds = Array.from(container.querySelectorAll('td'))
   const lastStateChangeIndex = tds.findIndex(
-    (td) => td.querySelector(`[title="${formatTimestamp(service.last_state_change)}"]`) !== null
+    (td) => td.querySelector(`[title="${renderDateAndTime(service.last_state_change)}"]`) !== null
   )
   const lastCheckIndex = tds.findIndex(
-    (td) => td.querySelector(`[title="${formatTimestamp(service.last_check!)}"]`) !== null
+    (td) => td.querySelector(`[title="${renderDateAndTime(service.last_check!)}"]`) !== null
   )
 
   expect(lastStateChangeIndex).toBeGreaterThanOrEqual(0)

@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { computed } from 'vue'
 
 import type { MonitoringIcon } from '@/monitoring/shared/api/types'
@@ -14,7 +15,6 @@ import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import type { CellLink } from '@/monitoring/shared/components/cell/BaseCell.vue'
 import IconCell from '@/monitoring/shared/components/cell/IconCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
-import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 
 import type { EventEntry, EventsResponse } from './api'
 import { type HistorySubject, buildHistoryColumns } from './historyColumns'
@@ -70,20 +70,20 @@ const windowInfo = computed(() =>
         'Events of the last 1 day for this host (since %{since})',
         'Events of the last %{days} days for this host (since %{since})',
         props.data.meta.time_window_days,
-        { days: props.data.meta.time_window_days, since: formatTimestamp(displayedSince.value) }
+        { days: props.data.meta.time_window_days, since: renderDateAndTime(displayedSince.value) }
       )
     : _tn(
         'Events of the last 1 day for this service (since %{since})',
         'Events of the last %{days} days for this service (since %{since})',
         props.data.meta.time_window_days,
-        { days: props.data.meta.time_window_days, since: formatTimestamp(displayedSince.value) }
+        { days: props.data.meta.time_window_days, since: renderDateAndTime(displayedSince.value) }
       )
 )
 
 // The time column carries the date, which is what lets the list stay flat instead of
 // grouping its rows per day the way the legacy history views do.
 function timeOf(event: EventEntry): string {
-  return formatTimestamp(event.time)
+  return renderDateAndTime(event.time)
 }
 
 // The event icon links nowhere: the History tab is read-only, and IconCell renders a

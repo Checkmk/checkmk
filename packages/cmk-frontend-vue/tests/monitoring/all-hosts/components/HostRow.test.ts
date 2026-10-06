@@ -5,17 +5,17 @@
  */
 import type { Row } from '@tanstack/vue-table'
 import { fireEvent, render, screen } from '@testing-library/vue'
+import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { defineComponent, h } from 'vue'
 
 import { buildHostColumns } from '@/monitoring/all-hosts/columns'
 import HostRow from '@/monitoring/all-hosts/components/HostRow.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
-import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
-// 'abs' keeps assertions comparable to plain `formatTimestamp`, independent of how old
+// 'abs' keeps assertions comparable to plain `renderDateAndTime`, independent of how old
 // a fixture's timestamp happens to be relative to the real clock the test runs under.
 const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
 
@@ -105,8 +105,8 @@ test('renders alias, folder and formatted timestamps in their cells', () => {
 
   expect(screen.getByTitle('web server 1')).toBeInTheDocument()
   expect(screen.getByTitle('Netzwerk / Rechenzentrum 1')).toBeInTheDocument()
-  expect(screen.getByTitle(formatTimestamp(host.last_check!))).toBeInTheDocument()
-  expect(screen.getByTitle(formatTimestamp(host.last_state_change!))).toBeInTheDocument()
+  expect(screen.getByTitle(renderDateAndTime(host.last_check!))).toBeInTheDocument()
+  expect(screen.getByTitle(renderDateAndTime(host.last_state_change!))).toBeInTheDocument()
 })
 
 test('emits open with the host when the name cell button is clicked', async () => {
@@ -241,7 +241,7 @@ test('renders the host detail columns before the service count columns', () => {
 
   const tds = Array.from(container.querySelectorAll('td'))
   const lastCheckIndex = tds.findIndex(
-    (td) => td.querySelector(`[title="${formatTimestamp(host.last_check!)}"]`) !== null
+    (td) => td.querySelector(`[title="${renderDateAndTime(host.last_check!)}"]`) !== null
   )
   const numServicesIndex = tds.findIndex((td) => td.textContent?.trim() === '6')
 

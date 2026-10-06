@@ -3,9 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
-import { formatDisplayTimestamp, formatTimestamp } from '@/monitoring/shared/formatTimestamp'
+import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 // Built from local components, so the expectation holds regardless of the
@@ -20,14 +21,6 @@ function unixAt(
 ): number {
   return new Date(year, month, day, hours, minutes, seconds).getTime() / 1000
 }
-
-test('formats a timestamp as YYYY-MM-DD HH:MM:SS in the local timezone', () => {
-  expect(formatTimestamp(unixAt(2026, 0, 5, 9, 3, 7))).toBe('2026-01-05 09:03:07')
-})
-
-test('pads single-digit date and time components', () => {
-  expect(formatTimestamp(unixAt(2026, 8, 1, 0, 0, 5))).toBe('2026-09-01 00:00:05')
-})
 
 describe('formatDisplayTimestamp', () => {
   const NOW = unixAt(2026, 8, 22, 12, 0, 0)
@@ -89,7 +82,7 @@ describe('formatDisplayTimestamp', () => {
     const options: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'mixed' }
     const twoDaysAgo = NOW - 48 * 3600
 
-    expect(formatDisplayTimestamp(twoDaysAgo, options)).toBe(formatTimestamp(twoDaysAgo))
+    expect(formatDisplayTimestamp(twoDaysAgo, options)).toBe(renderDateAndTime(twoDaysAgo))
   })
 
   test('both joins the absolute date and the relative age', () => {
@@ -97,7 +90,7 @@ describe('formatDisplayTimestamp', () => {
     const sevenHoursAgo = NOW - 7 * 3600
 
     expect(formatDisplayTimestamp(sevenHoursAgo, options)).toBe(
-      `${formatTimestamp(sevenHoursAgo)} - 7 h`
+      `${renderDateAndTime(sevenHoursAgo)} - 7 h`
     )
   })
 })

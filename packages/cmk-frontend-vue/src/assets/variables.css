@@ -82,6 +82,7 @@
     /* Fonts */
     --font-color: var(--color-conference-grey-100);
     --font-color-dimmed: var(--grey-4-dimmed);
+    --font-color-secondary: var(--color-conference-grey-70);
     --font-color-light-bg: var(--font-color);
     --font-perfometer-color: var(--color-conference-grey-100);
 
@@ -172,6 +173,9 @@
     --font-color-breadcrumb-inactive: var(--color-conference-grey-70);
     --font-color-breadcrumb-interactive: var(--color-conference-grey-100);
     --font-color-breadcrumb-hover: var(--color-corporate-green-70);
+
+    /* Interactive */
+    --row-hover-bg-color: var(--color-conference-grey-10);
   }
 
   body[data-theme='modern-dark'] {
@@ -205,6 +209,7 @@
     /* Fonts */
     --font-color: var(--color-white-100);
     --font-color-dimmed: var(--white-dimmed);
+    --font-color-secondary: var(--color-white-70);
     --font-color-light-bg: var(--color-mist-grey-100);
     --font-perfometer-color: var(--color-mid-grey-60);
 
@@ -293,6 +298,9 @@
     --font-color-breadcrumb-inactive: var(--color-white-70);
     --font-color-breadcrumb-interactive: var(--color-white-100);
     --font-color-breadcrumb-hover: var(--color-corporate-green-50);
+
+    /* Interactive */
+    --row-hover-bg-color: var(--color-white-10);
   }
 }
 

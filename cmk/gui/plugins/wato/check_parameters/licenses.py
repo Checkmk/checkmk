@@ -120,24 +120,6 @@ rulespec_registry.register(
 )
 
 
-def _item_spec_ibmsvc_licenses() -> TextInput:
-    return TextInput(
-        title=_("ID of the license, e.g. <tt>virtualization</tt>"),
-        allow_empty=False,
-    )
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="ibmsvc_licenses",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_ibmsvc_licenses,
-        parameter_valuespec=_vs_license,
-        title=lambda: _("IBM SVC licenses"),
-    )
-)
-
-
 def _item_spec_rds_licenses() -> TextInput:
     return TextInput(
         title=_("ID of the license, e.g. <tt>Windows Server 2008 R2</tt>"),

@@ -51,12 +51,6 @@ metric_active = metrics.Metric(
     unit=UNIT_COUNTER,
     color=metrics.Color.PURPLE,
 )
-metric_apply_lag = metrics.Metric(
-    name="apply_lag",
-    title=Title("Apply lag"),
-    unit=UNIT_TIME,
-    color=metrics.Color.YELLOW,
-)
 metric_hops = metrics.Metric(
     name="hops",
     title=Title("Number of hops"),

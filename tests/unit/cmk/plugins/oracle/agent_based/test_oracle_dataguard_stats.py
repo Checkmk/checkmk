@@ -94,7 +94,7 @@ def test_discover_oracle_dataguard_stats(
                 Result(state=State.OK, summary="Apply finish time: 17 seconds"),
                 Metric("apply_finish_time", 17.0),
                 Result(state=State.OK, summary="Apply lag: 28 minutes 57 seconds"),
-                Metric("apply_lag", 1737.0),
+                Metric("database_apply_lag", 1737.0),
                 Result(state=State.OK, summary="Transport lag: 0 seconds"),
                 Metric("transport_lag", 0.0),
             ],

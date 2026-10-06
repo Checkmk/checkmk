@@ -256,7 +256,7 @@ def _check_dataguard_stats(params: Mapping[str, Any], dgdata: Mapping[str, Any])
             seconds,
             levels_lower=_modernize_levels(levels_lower),
             levels_upper=_modernize_levels(levels_upper),
-            metric_name=pkey,
+            metric_name="database_apply_lag" if pkey == "apply_lag" else pkey,
             render_func=render.time_offset,
             label=label,
         )

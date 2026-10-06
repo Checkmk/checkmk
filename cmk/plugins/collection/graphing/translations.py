@@ -1304,6 +1304,8 @@ translation_openvpn_clients = translations.Translation(
     },
 )
 
+# Since Checkmk 3.0.0 the check plug-in emits database_apply_lag itself. This translation only
+# keeps the RRD history recorded under apply_lag in the graphs and can be removed in a few years.
 translation_oracle_dataguard_stats = translations.Translation(
     name="oracle_dataguard_stats",
     check_commands=[translations.PassiveCheck("oracle_dataguard_stats")],

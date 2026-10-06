@@ -2604,6 +2604,25 @@ def test_set_relations_about_does_not_write_the_hosts_mk(tree: FolderTree) -> No
     assert (Path(root.filesystem_path()) / "hosts.mk").read_text() == stored
 
 
+def test_edit_refuses_to_mirror_onto_relations_that_cannot_be_read(tree: FolderTree) -> None:
+    """Read as no relations, the value would be replaced by the one mirrored link."""
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    _create_host(root, "board")
+    os1.attributes["relations"] = cast("Sequence[RelationLink]", "not-a-list")
+    root.save_hosts(pprint_value=False, acting_user=_SUPERUSER)
+    tree.invalidate_caches()
+    stored = (Path(root.filesystem_path()) / "hosts.mk").read_text()
+
+    with pytest.raises(MKUserError, match="The relations of 'os1' are malformed"):
+        _edit_relations(
+            tree.load_host(HostName("board")),
+            [{"kind": "management", "direction": "parent", "host": HostName("os1")}],
+        )
+
+    assert (Path(root.filesystem_path()) / "hosts.mk").read_text() == stored
+
+
 def test_set_relations_about_needs_write_permission_on_the_counterpart(tree: FolderTree) -> None:
     root = tree.root_folder()
     _create_host(root, "os1")

@@ -7,6 +7,7 @@ import os
 import shutil
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import replace
+from pathlib import Path
 from typing import cast, override
 
 import pytest
@@ -1018,6 +1019,53 @@ def test_a_pair_the_edition_refuses_is_reported_instead_of_offered(tree: FolderT
 
     assert _outcomes(found.entries) == [("srv-01-ilo", "srv-01", LinkOutcome.NOT_WRITABLE)]
     assert found.entries[0].detail == "Only hosts of the same customer can be related."
+
+
+def _with_unreadable_relations(folder: Folder, name: str) -> None:
+    host = _create_host(folder, name)
+    host.attributes["relations"] = cast("Sequence[RelationLink]", "not-a-list")
+    folder.save_hosts(pprint_value=False, acting_user=_SUPERUSER)
+    folder.tree.invalidate_caches()
+
+
+def test_a_host_whose_relations_cannot_be_read_is_reported_instead_of_offered(
+    tree: FolderTree,
+) -> None:
+    """Storing the pair would replace the value with this one link, losing every other one."""
+    root = tree.root_folder()
+    _create_host(root, "srv-01-ilo")
+    _with_unreadable_relations(root, "srv-01")
+
+    found = detect_relations(tree, evidence=_evidence(), acting_user=_SUPERUSER)
+
+    assert _outcomes(found.entries) == [("srv-01-ilo", "srv-01", LinkOutcome.NOT_WRITABLE)]
+    assert found.entries[0].detail.startswith("The relations of 'srv-01' are malformed")
+
+
+def test_the_run_leaves_relations_that_cannot_be_read_alone(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "srv-01-ilo")
+    _with_unreadable_relations(root, "srv-01")
+    stored = (Path(root.filesystem_path()) / "hosts.mk").read_text()
+
+    done = link_relations(
+        [
+            HostPair(
+                source=HostName("srv-01-ilo"),
+                target=HostName("srv-01"),
+                kind_id="management",
+                source_direction="parent",
+            )
+        ],
+        tree,
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+        progress=lambda _entry: None,
+    )
+
+    assert _outcomes(done) == [("srv-01-ilo", "srv-01", LinkOutcome.NOT_WRITABLE)]
+    assert (Path(root.filesystem_path()) / "hosts.mk").read_text() == stored
 
 
 def test_a_member_the_user_may_not_edit_cannot_be_named(tree: FolderTree) -> None:

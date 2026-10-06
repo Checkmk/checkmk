@@ -50,7 +50,6 @@ from cmk.gui.utils.host_relations import (
 )
 from cmk.gui.watolib.config_domain_name import CORE as CORE_DOMAIN
 from cmk.gui.watolib.config_domain_name import generate_hosts_to_update_settings
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.host_relations import relation_choice_name
 from cmk.gui.watolib.hosts_and_folders import (
@@ -1392,8 +1391,8 @@ def _state_of(
     if (otherwise := _stored_otherwise(source, target)) is not None:
         return LinkOutcome.STORED_OTHERWISE, otherwise
 
-    if (locked := _locked_by_quick_setup(source, target)) is not None:
-        return LinkOutcome.NOT_WRITABLE, locked
+    if (unwritable := _unwritable(source, target)) is not None:
+        return LinkOutcome.NOT_WRITABLE, unwritable
 
     if (refused := refusal(source, target)) is not None:
         return LinkOutcome.NOT_WRITABLE, refused
@@ -1460,8 +1459,8 @@ def _refusal_for_member(
 
     Asked against all its partners, because naming it is naming every pair it would produce.
     """
-    if (locked := _locked_by_quick_setup(host)) is not None:
-        return locked
+    if (unwritable := _unwritable(host)) is not None:
+        return unwritable
     for other in proposal.partners(host.name()):
         if (refused := refusal(host, all_hosts[other])) is not None:
             return refused
@@ -1492,15 +1491,17 @@ def _member_at_end(proposal: GroupProposal, all_hosts: Mapping[HostName, Host]) 
     return None
 
 
-def _locked_by_quick_setup(*hosts: Host) -> str | None:
-    """Why one of these hosts may not be edited at all - asked per host, not per folder.
+def _unwritable(*hosts: Host) -> str | None:
+    """Why no relation can be stored on one of these hosts - asked per host, not per folder.
 
     ``Host.set_relations_about()`` refuses such a host as well, so this is what keeps the
     proposal honest rather than what keeps the write safe.
     """
     for host in hosts:
-        if is_locked_by_config_bundle(host.locked_by()):
-            return _("'%(host)s' is locked by Quick setup.") % {"host": host.name()}
+        try:
+            host.writable_relations()
+        except MKUserError as exc:
+            return str(exc)
     return None
 
 

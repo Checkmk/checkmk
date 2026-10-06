@@ -89,6 +89,7 @@ from cmk.gui.utils.host_relations import (
     RelationDirection,
     RelationLink,
     relations_or_empty,
+    RelationsValue,
     reverse_direction,
 )
 from cmk.gui.utils.transaction_manager import transactions
@@ -1509,6 +1510,7 @@ def _need_relation_mirror(
         if counterpart.stores_relations_about(host_name, links):
             continue
         with _refusal_of(counterpart.name(), host_name, dropping=not links, visible=visible):
+            counterpart.writable_relations()
             need_writable_folders([counterpart.folder()], acting_user=acting_user)
             pending.append(_MirrorWrite(counterpart, links, visible))
     return pending
@@ -4821,6 +4823,24 @@ class Host:
         self.folder().save_hosts(pprint_value=pprint_value, acting_user=acting_user)
         return True
 
+    def writable_relations(self) -> RelationsValue:
+        """This host's links, refusing if no relation may be written onto it.
+
+        A value that cannot be read is refused too: read as no links at all, it would be
+        replaced by the one link written, and every other counterpart of this host would keep a
+        half this host no longer stores.
+        """
+        if is_locked_by_config_bundle(self.locked_by()):
+            raise MKUserError(
+                None,
+                _(
+                    "'%(host)s' is locked by Quick setup, so the other half of the relation "
+                    "cannot be stored on it."
+                )
+                % {"host": self.name()},
+            )
+        return relations_or_user_error(self.attributes.get("relations", []), owner=self.name())
+
     def stores_relations_about(self, other: HostName, links: Sequence[RelationLink]) -> bool:
         """Whether this host already says exactly ``links`` about ``other``.
 
@@ -4853,20 +4873,10 @@ class Host:
         if self.stores_relations_about(other, links):
             return None
 
-        stored = relations_or_empty(self.attributes.get("relations", []))
-        wanted = [*(link for link in stored if link["host"] != other), *links]
-
         # Only a write is refused: a save that re-states a pair this host already agrees with
         # must not become impossible because the host was taken over by Quick setup afterwards.
-        if is_locked_by_config_bundle(self.locked_by()):
-            raise MKUserError(
-                None,
-                _(
-                    "'%(host)s' is locked by Quick setup, so the other half of the relation "
-                    "cannot be stored on it."
-                )
-                % {"host": self.name()},
-            )
+        stored = self.writable_relations()
+        wanted = [*(link for link in stored if link["host"] != other), *links]
 
         attributes = self.attributes.copy()
         attributes["relations"] = wanted

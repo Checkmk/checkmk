@@ -380,14 +380,21 @@ def relation_conflicts(
     return conflicts
 
 
-def relations_or_user_error(raw: object) -> RelationsValue:
-    """The links of a stored ``relations`` value, as a user error if it cannot be read at all."""
+def relations_or_user_error(raw: object, *, owner: HostName | None = None) -> RelationsValue:
+    """The links of a stored ``relations`` value, as a user error if it cannot be read at all.
+
+    ``owner`` names the host in the error, for a value that is not the one of the host being saved.
+    """
     try:
         return parse_relations_value(raw)
     except ValueError as exc:
-        raise MKUserError(
-            None, _("The relations of this host are malformed: %(error)s") % {"error": exc}
-        ) from exc
+        message = (
+            _("The relations of this host are malformed: %(error)s") % {"error": exc}
+            if owner is None
+            else _("The relations of '%(host)s' are malformed: %(error)s")
+            % {"host": owner, "error": exc}
+        )
+        raise MKUserError(None, message) from exc
 
 
 def resolve_all_relations(all_hosts: Mapping[HostName, RelatedHost]) -> ResolvedRelations:

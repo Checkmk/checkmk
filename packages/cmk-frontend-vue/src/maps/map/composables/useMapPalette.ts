@@ -30,7 +30,7 @@ import {
 
 import { stateColorProperty } from '@/maps/utils/stateColors'
 
-/** How many ``--maps-map-view-series-N`` properties the map view declares. */
+/** How many ``--series-color-N`` tokens the map cycles through as fallback series colours. */
 const SERIES_SLOTS = 8
 
 export interface MapPalette {
@@ -61,7 +61,7 @@ function readPalette(element: HTMLElement | null): MapPalette {
   const read = (property: string): string => style.getPropertyValue(property).trim()
   return {
     series: Array.from({ length: SERIES_SLOTS }, (_unused, slot) =>
-      read(`--maps-map-view-series-${slot + 1}`)
+      read(`--series-color-${slot + 1}`)
     ).filter((color) => color !== ''),
     state: (state) => read(stateColorProperty(state)) || INHERIT,
     gaugeTrack: read('--maps-map-view-gauge-track') || INHERIT

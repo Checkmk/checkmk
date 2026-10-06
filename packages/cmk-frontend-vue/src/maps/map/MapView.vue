@@ -1038,17 +1038,6 @@ function closeBulkAckModal(sent: boolean): void {
   --maps-map-view-badge-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 4px -2px rgb(0 0 0 / 10%);
   --maps-map-view-grid: color-mix(in srgb, var(--interactive-accent) 60%, transparent);
 
-  /* Graph series the metric registry has no colour for. Distinct hues from the
-     shared palette, so a chart's curves stay tellable apart. */
-  --maps-map-view-series-1: var(--color-dark-blue-50);
-  --maps-map-view-series-2: var(--color-corporate-green-50);
-  --maps-map-view-series-3: var(--color-orange-50);
-  --maps-map-view-series-4: var(--color-light-red-50);
-  --maps-map-view-series-5: var(--color-purple-50);
-  --maps-map-view-series-6: var(--color-cyan-50);
-  --maps-map-view-series-7: var(--color-brown-50);
-  --maps-map-view-series-8: var(--color-pink-50);
-
   /* Gadgets keep a dark "instrument" look in either theme: their value text is
      always light, and has to stay legible even sitting directly on a light map
      background — hence the outline below and a neutral track above. */

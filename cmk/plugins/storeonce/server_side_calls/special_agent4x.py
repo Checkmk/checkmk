@@ -8,8 +8,7 @@ from collections.abc import Iterable
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAgentConfig
-from cmk.server_side_calls.v1._utils import Secret
+from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
 
 
 class Params(BaseModel):

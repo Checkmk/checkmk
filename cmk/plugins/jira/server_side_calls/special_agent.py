@@ -7,8 +7,7 @@ from collections.abc import Iterable, Mapping, Sequence
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAgentConfig
-from cmk.server_side_calls.v1._utils import Secret
+from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
 
 JQLResult = tuple[str, str | Mapping[str, str | int]]
 

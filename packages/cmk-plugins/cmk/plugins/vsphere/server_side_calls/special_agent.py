@@ -9,8 +9,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from cmk.plugins.vsphere.lib.special_agent import InfoSelection, QueryType
-from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAgentConfig
-from cmk.server_side_calls.v1._utils import Secret
+from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
 
 
 class Params(BaseModel):

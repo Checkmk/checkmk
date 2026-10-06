@@ -31,24 +31,15 @@ def _condition_to_value(
     name: str, condition: ConditionTypeDisk
 ) -> shared_type_defs.ConditionChoicesValue:
     match condition:
-        # All following assignments and assertions shouldn't be necessary, mypy just doesn't
-        # understand narrowing on unions in match statements yet as other tooling like pyright does.
-        # Remove once https://github.com/python/mypy/issues/16286 is implemented.
-        case {"$or": list()}:
-            or_condition = condition["$or"]  # type: ignore[index]
-            assert isinstance(or_condition, list)
+        case {"$or": [*_] as or_condition}:
             return shared_type_defs.ConditionChoicesValue(
                 group_name=name, value=shared_type_defs.Or(oper_or=or_condition)
             )
-        case {"$nor": list()}:
-            nor_condition = condition["$nor"]  # type: ignore[index]
-            assert isinstance(nor_condition, list)  # Same as above
+        case {"$nor": [*_] as nor_condition}:
             return shared_type_defs.ConditionChoicesValue(
                 group_name=name, value=shared_type_defs.Nor(oper_nor=nor_condition)
             )
-        case {"$ne": str()}:
-            ne_condition = condition["$ne"]  # type: ignore[index]
-            assert isinstance(ne_condition, str)  # Same as above
+        case {"$ne": str() as ne_condition}:
             return shared_type_defs.ConditionChoicesValue(
                 group_name=name, value=shared_type_defs.Ne(oper_ne=ne_condition)
             )
@@ -57,7 +48,7 @@ def _condition_to_value(
                 group_name=name, value=shared_type_defs.Eq(oper_eq=condition)
             )
         case other:
-            assert not isinstance(other, dict)  # Remove this as well
+            assert not isinstance(other, dict)
             # I would like to use:
             # assert_never(condition)
             # but https://github.com/python/mypy/issues/19081#issuecomment-2920053885

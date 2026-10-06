@@ -1211,10 +1211,8 @@ translation_netapp_ontap_volumes = translations.Translation(
     name="netapp_ontap_volumes",
     check_commands=[translations.PassiveCheck("netapp_ontap_volumes")],
     translations={
-        "cifs_other_latency": translations.ScaleBy(0.001),
         "cifs_read_latency": translations.ScaleBy(0.001),
         "cifs_write_latency": translations.ScaleBy(0.001),
-        "fcp_other_latency": translations.ScaleBy(0.001),
         # single_volume_metrics() emits the latency of the SAN protocols unconverted: in
         # milliseconds for the 7-Mode API, in microseconds for the ONTAP REST API. The
         # difference is corrected here rather than in the check plugin on purpose. A
@@ -1230,16 +1228,12 @@ translation_netapp_ontap_volumes = translations.Translation(
             "fs_growth",
             1048576,
         ),
-        "iscsi_other_latency": translations.ScaleBy(0.001),
         # microseconds, see the fcp latencies above
         "iscsi_read_latency": translations.ScaleBy(1e-06),
         "iscsi_write_latency": translations.ScaleBy(1e-06),
-        "nfs_other_latency": translations.ScaleBy(0.001),
         "nfs_read_latency": translations.ScaleBy(0.001),
         "nfs_write_latency": translations.ScaleBy(0.001),
-        "other_latency": translations.ScaleBy(0.001),
         "read_latency": translations.ScaleBy(0.001),
-        "san_other_latency": translations.ScaleBy(0.001),
         "san_read_latency": translations.ScaleBy(0.001),
         "san_write_latency": translations.ScaleBy(0.001),
         "trend": translations.RenameToAndScaleBy(

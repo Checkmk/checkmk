@@ -689,6 +689,36 @@ def test_process_job_stats(
                 Metric("job_age", 60.0, boundaries=(0.0, None)),
             ],
         ),
+        pytest.param(
+            # A job that steps the system clock back (e.g. "chronyc makestep")
+            # finishes before it started, as far as the wall clock is concerned.
+            "clock-step",
+            {"age": (0, 0)},
+            {
+                "clock-step": {
+                    "running": False,
+                    "exit_code": 0,
+                    "start_time": TIME - 60,
+                    "metrics": {"real_time": -1.99},
+                }
+            },
+            [
+                Result(state=State.OK, summary="Latest exit code: 0"),
+                Result(
+                    state=State.UNKNOWN,
+                    summary="Real time: got negative value -1.99 (expected zero or more)",
+                ),
+                Result(state=State.OK, notice="Latest job started at 2020-07-09 15:16:00"),
+                Result(state=State.OK, summary="Job age: 1 minute 0 seconds"),
+                Metric("job_age", 60.0, boundaries=(0.0, None)),
+            ],
+            id="negative real time",
+            marks=pytest.mark.xfail(
+                strict=True,
+                raises=ValueError,
+                reason="Crash report 07421678-9c5c-11f1-aa5e-6c3c8c8757ed: ValueError",
+            ),
+        ),
     ],
 )
 def test_check_job(

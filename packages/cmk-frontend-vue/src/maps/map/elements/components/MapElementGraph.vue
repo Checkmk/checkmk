@@ -124,7 +124,7 @@ const waitingMessage = computed(() =>
   border-radius: var(--dimension-4);
   box-shadow:
     0 0 0 1px var(--ux-theme-1),
-    0 0 0 3px var(--color-corporate-green-50);
+    0 0 0 3px var(--interactive-accent);
   pointer-events: none;
 }
 </style>

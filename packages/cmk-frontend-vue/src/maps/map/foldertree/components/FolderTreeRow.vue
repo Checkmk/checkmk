@@ -255,7 +255,7 @@ function onContextMenu(event: MouseEvent): void {
 }
 
 .maps-folder-tree-row:focus-visible {
-  outline: 2px solid var(--color-corporate-green-50);
+  outline: 2px solid var(--interactive-accent);
   outline-offset: -2px;
 }
 

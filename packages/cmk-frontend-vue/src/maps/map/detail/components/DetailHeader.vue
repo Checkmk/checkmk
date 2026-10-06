@@ -156,7 +156,7 @@ const statePillStyle = computed(() => {
 
 .maps-detail-header__name--link:hover,
 .maps-detail-header__name--link:focus-visible {
-  color: var(--color-corporate-green-50);
+  color: var(--interactive-accent);
   text-decoration: underline;
 }
 

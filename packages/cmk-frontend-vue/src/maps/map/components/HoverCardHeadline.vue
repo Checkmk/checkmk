@@ -62,7 +62,7 @@ const dotClass = computed(
 }
 
 .maps-hover-card-headline__dot--ok {
-  background: var(--color-corporate-green-50);
+  background: var(--color-state-ok);
 }
 
 .maps-hover-card-headline__dot--down {

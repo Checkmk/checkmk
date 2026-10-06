@@ -63,6 +63,6 @@ defineProps<{
 }
 
 .maps-presentation-tool-button--active {
-  background: color-mix(in srgb, var(--color-corporate-green-50) 18%, transparent);
+  background: color-mix(in srgb, var(--interactive-accent) 18%, transparent);
 }
 </style>

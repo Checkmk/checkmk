@@ -52,6 +52,6 @@ defineEmits<{ reset: [] }>()
 }
 
 .maps-map-zoom-reset-pill:hover {
-  border-color: var(--color-corporate-green-50);
+  border-color: var(--interactive-accent);
 }
 </style>

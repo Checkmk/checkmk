@@ -113,7 +113,7 @@ const DASH_PATTERN = '8 6'
 
 /** Glow on a selected line, so it reads over tiles of any colour. */
 const SELECTED_GLOW =
-  'drop-shadow(0 0 4px var(--color-corporate-green-50)) drop-shadow(0 0 2px var(--color-corporate-green-50))'
+  'drop-shadow(0 0 4px var(--interactive-accent)) drop-shadow(0 0 2px var(--interactive-accent))'
 
 const NO_DECORATIONS: LineDecorations = { handles: [], arrows: [], labels: [] }
 

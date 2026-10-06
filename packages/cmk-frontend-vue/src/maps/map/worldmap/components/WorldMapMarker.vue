@@ -115,7 +115,7 @@ function onResizeStart(event: PointerEvent): void {
 
 <style scoped>
 .maps-world-map-marker:focus-visible {
-  outline: 2px solid var(--color-corporate-green-50);
+  outline: 2px solid var(--interactive-accent);
   outline-offset: 2px;
 }
 
@@ -124,7 +124,7 @@ function onResizeStart(event: PointerEvent): void {
    green as the dashes, and sits on map tiles of any colour. */
 .maps-world-map-marker--selected {
   border-radius: 9px;
-  outline: 3px dashed var(--color-corporate-green-50);
+  outline: 3px dashed var(--interactive-accent);
   outline-offset: 5px;
   box-shadow:
     0 0 0 4px var(--white),

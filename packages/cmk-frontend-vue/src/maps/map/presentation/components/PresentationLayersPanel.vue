@@ -166,7 +166,7 @@ function onRowClick(id: string, e: MouseEvent): void {
 }
 
 .maps-presentation-layers-panel__row--selected {
-  background: color-mix(in srgb, var(--color-corporate-green-50) 15%, transparent);
+  background: color-mix(in srgb, var(--interactive-accent) 15%, transparent);
 }
 
 .maps-presentation-layers-panel__name {
@@ -186,7 +186,7 @@ function onRowClick(id: string, e: MouseEvent): void {
   width: 9px;
   height: 9px;
   flex-shrink: 0;
-  border: 1.5px dashed var(--color-corporate-green-50);
+  border: 1.5px dashed var(--interactive-accent);
   border-radius: 9999px;
 }
 
@@ -215,7 +215,7 @@ function onRowClick(id: string, e: MouseEvent): void {
 }
 
 .maps-presentation-layers-panel__toggle--on {
-  color: var(--color-corporate-green-50);
+  color: var(--interactive-accent);
 }
 
 .maps-presentation-layers-panel__foot {

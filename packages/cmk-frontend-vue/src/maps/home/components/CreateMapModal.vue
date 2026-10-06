@@ -313,14 +313,14 @@ async function submit() {
 }
 
 .maps-create-map-modal__type-card:hover {
-  border-color: var(--color-corporate-green-50);
+  border-color: var(--interactive-accent);
 }
 
 .maps-create-map-modal__type-card--selected {
-  border-color: var(--color-corporate-green-50);
+  border-color: var(--interactive-accent);
   background: color-mix(
     in srgb,
-    var(--color-corporate-green-50) 10%,
+    var(--interactive-accent) 10%,
     var(--default-form-element-bg-color)
   );
 }

@@ -134,8 +134,8 @@ const tiles = computed(() =>
 
 /* A monochrome SVG loaded as <img> loses currentColor; inverting turns its
    black strokes white where the theme is dark. */
-body[data-theme='modern-dark'] .maps-image-grid__image--monochrome {
-  filter: invert(1);
+.maps-image-grid__image--monochrome {
+  filter: var(--icon-filter-invert);
 }
 
 .maps-image-grid__name {

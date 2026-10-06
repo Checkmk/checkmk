@@ -181,8 +181,8 @@ function setOpacity(e: Event): void {
 }
 
 .maps-inspector-layout-section__aspect--on {
-  color: var(--color-corporate-green-50);
-  border-color: var(--color-corporate-green-50);
+  color: var(--interactive-accent);
+  border-color: var(--interactive-accent);
 }
 
 .maps-inspector-layout-section__aspect svg {

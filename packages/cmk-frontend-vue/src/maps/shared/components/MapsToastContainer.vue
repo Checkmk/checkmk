@@ -70,9 +70,9 @@ const { toasts } = useToast()
 }
 
 .maps-toast-container__toast--success {
-  color: var(--color-corporate-green-50);
+  color: var(--success);
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--color-corporate-green-50) 30%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--success) 30%, transparent),
     0 20px 25px -5px rgb(0 0 0 / 40%),
     0 8px 10px -6px rgb(0 0 0 / 40%);
 }

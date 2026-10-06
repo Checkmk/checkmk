@@ -150,6 +150,6 @@ const imageStyle = computed(() => ({
 }
 
 .maps-map-element-icon__image--selected {
-  filter: var(--maps-map-view-icon-halo) drop-shadow(0 0 6px var(--color-corporate-green-50));
+  filter: var(--maps-map-view-icon-halo) drop-shadow(0 0 6px var(--interactive-accent));
 }
 </style>

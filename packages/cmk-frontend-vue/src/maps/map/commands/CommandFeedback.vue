@@ -36,7 +36,7 @@ defineProps<{
 
 .maps-command-feedback__success {
   font-size: var(--font-size-normal);
-  color: var(--color-corporate-green-50);
+  color: var(--success);
   margin-top: var(--dimension-4);
 }
 </style>

@@ -69,7 +69,7 @@ const configuredStyle = computed(() => {
   font-weight: var(--font-weight-bold);
   white-space: nowrap;
   background: var(--maps-map-view-label-bg);
-  outline: 1px solid var(--maps-map-view-hairline);
+  outline: 1px solid var(--border-color-hairline);
   border-radius: var(--border-radius);
   backdrop-filter: blur(4px);
   text-shadow: var(--maps-map-view-text-halo);
@@ -79,6 +79,6 @@ const configuredStyle = computed(() => {
 .maps-map-element-text-pill__body--selected {
   box-shadow:
     0 0 0 2px var(--ux-theme-1),
-    0 0 0 4px var(--color-corporate-green-50);
+    0 0 0 4px var(--interactive-accent);
 }
 </style>

@@ -223,7 +223,7 @@ const segments = computed<Segment[]>(() => {
 }
 
 .maps-presentation-connector__halo {
-  stroke: color-mix(in srgb, var(--color-corporate-green-50) 55%, transparent);
+  stroke: color-mix(in srgb, var(--interactive-accent) 55%, transparent);
   pointer-events: none;
 }
 
@@ -251,7 +251,7 @@ const segments = computed<Segment[]>(() => {
 
 .maps-presentation-connector__dot {
   fill: var(--white);
-  stroke: var(--color-corporate-green-50);
+  stroke: var(--interactive-accent);
   pointer-events: auto;
   cursor: grab;
 }

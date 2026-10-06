@@ -1024,7 +1024,6 @@ function closeBulkAckModal(sent: boolean): void {
      plate sits on the operator's own background image. */
   --maps-map-view-label-bg: rgb(0 0 0 / 65%);
   --maps-map-view-label-ink: var(--white);
-  --maps-map-view-hairline: rgb(255 255 255 / 12%);
   --maps-map-view-text-halo: 0 1px 3px rgb(0 0 0 / 90%);
 
   /* NagVis rendered on white, so an imported map's own text is black. */
@@ -1037,7 +1036,7 @@ function closeBulkAckModal(sent: boolean): void {
   /* An object monitoring does not know: a dimmed disc behind its dashed edge. */
   --maps-map-view-missing-fill: rgb(63 63 70 / 40%);
   --maps-map-view-badge-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 4px -2px rgb(0 0 0 / 10%);
-  --maps-map-view-grid: color-mix(in srgb, var(--color-corporate-green-50) 60%, transparent);
+  --maps-map-view-grid: color-mix(in srgb, var(--interactive-accent) 60%, transparent);
 
   /* Graph series the metric registry has no colour for. Distinct hues from the
      shared palette, so a chart's curves stay tellable apart. */
@@ -1065,12 +1064,6 @@ function closeBulkAckModal(sent: boolean): void {
   /* Checkmk has no semantic token for the two state modifiers. */
   --maps-map-view-acknowledged: var(--color-yellow-50);
   --maps-map-view-downtime: var(--color-light-blue-50);
-}
-
-body[data-theme='facelift'] .maps-map-view {
-  /* The light theme's own page colour is what a floating control has to sit
-     on, and a hairline has to be dark to be seen on it. */
-  --maps-map-view-hairline: rgb(0 0 0 / 12%);
 }
 
 .maps-map-view__shell {

@@ -105,7 +105,7 @@ const configuredStyle = computed(() => {
 .maps-map-element-label--boxed {
   color: var(--maps-map-view-label-ink);
   background: var(--maps-map-view-label-bg);
-  outline: 1px solid var(--maps-map-view-hairline);
+  outline: 1px solid var(--border-color-hairline);
   backdrop-filter: blur(4px);
   text-shadow: var(--maps-map-view-text-halo);
 }

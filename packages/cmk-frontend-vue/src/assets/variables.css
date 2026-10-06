@@ -121,6 +121,7 @@
     --border-color-separator: var(--color-mid-grey-10);
     --border-color-emphasis: var(--color-mid-grey-90);
     --border-shade-mix: 70%;
+    --border-color-hairline: rgb(0 0 0 / 12%);
 
     /* Status */
     --color-warning: rgb(255 208 0);
@@ -175,6 +176,9 @@
     --interactive-icon-color: var(--color-light-blue-20);
     --interactive-icon-color-secondary: var(--color-corporate-green-70);
     --interactive-icon-color-inactive: var(--color-mist-grey-60);
+    --interactive-accent-subtle: var(--color-corporate-green-40);
+    --interactive-guide: var(--color-pink-40);
+    --icon-filter-invert: none;
 
     /* Component-named variables, to be renamed onto the roles above */
     --color-popup-backdrop: rgb(0 0 0 /50%);
@@ -337,6 +341,7 @@
     --border-color-separator: var(--color-mid-grey-100);
     --border-color-emphasis: var(--color-mid-grey-90);
     --border-shade-mix: 100%;
+    --border-color-hairline: rgb(255 255 255 / 12%);
 
     /* Status */
     --color-warning: var(--color-yellow-50);
@@ -391,6 +396,9 @@
     --interactive-icon-color: var(--color-light-blue-20);
     --interactive-icon-color-secondary: var(--color-corporate-green-70);
     --interactive-icon-color-inactive: var(--color-mist-grey-60);
+    --interactive-accent-subtle: var(--color-corporate-green-40);
+    --interactive-guide: var(--color-pink-40);
+    --icon-filter-invert: invert(100%);
 
     /* Component-named variables, to be renamed onto the roles above */
     --color-popup-backdrop: rgb(0 0 0 /50%);

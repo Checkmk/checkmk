@@ -89,7 +89,7 @@ defineProps<{
 
 .maps-detail-meta-list__link:hover,
 .maps-detail-meta-list__link:focus-visible {
-  color: var(--color-corporate-green-50);
+  color: var(--interactive-accent);
   text-decoration: underline;
 }
 </style>

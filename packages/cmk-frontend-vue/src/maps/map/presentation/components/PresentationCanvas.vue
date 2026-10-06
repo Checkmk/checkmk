@@ -757,7 +757,7 @@ function patchCurrentSlot(patch: Record<string, unknown>): void {
 }
 
 .maps-presentation-canvas__el--link:focus-visible {
-  outline: 2px solid var(--color-corporate-green-50);
+  outline: 2px solid var(--interactive-accent);
   outline-offset: 2px;
 }
 
@@ -778,7 +778,7 @@ function patchCurrentSlot(patch: Record<string, unknown>): void {
   inset: 0;
   pointer-events: none;
   overflow: visible;
-  stroke: var(--color-pink-40);
+  stroke: var(--interactive-guide);
 }
 
 /* Connector layer sits above the background but below the element boxes. The
@@ -803,8 +803,8 @@ function patchCurrentSlot(patch: Record<string, unknown>): void {
 }
 
 .maps-presentation-canvas__dock-target {
-  fill: color-mix(in srgb, var(--color-corporate-green-50) 14%, transparent);
-  stroke: var(--color-corporate-green-50);
+  fill: color-mix(in srgb, var(--interactive-accent) 14%, transparent);
+  stroke: var(--interactive-accent);
   pointer-events: none;
 }
 
@@ -813,14 +813,14 @@ function patchCurrentSlot(patch: Record<string, unknown>): void {
 .maps-presentation-canvas__sel {
   position: absolute;
   z-index: 1000;
-  outline: solid var(--color-corporate-green-50);
+  outline: solid var(--interactive-accent);
   pointer-events: none;
 }
 
 .maps-presentation-canvas__handle {
   position: absolute;
   background: rgb(255 255 255);
-  border: solid var(--color-corporate-green-50);
+  border: solid var(--interactive-accent);
   border-radius: var(--border-radius-half);
   box-shadow: 0 0 0 1px rgb(0 0 0 / 25%);
   pointer-events: auto;
@@ -849,7 +849,7 @@ function patchCurrentSlot(patch: Record<string, unknown>): void {
 .maps-presentation-canvas__rotate {
   position: absolute;
   background: rgb(255 255 255);
-  border: solid var(--color-corporate-green-50);
+  border: solid var(--interactive-accent);
   border-radius: 9999px;
   box-shadow: 0 0 0 1px rgb(0 0 0 / 25%);
   cursor: grab;

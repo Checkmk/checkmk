@@ -171,7 +171,7 @@ const buttons = computed<ActionButton[]>(() => {
 }
 
 .maps-map-object-action-bar__button--edit:hover {
-  background: color-mix(in srgb, var(--color-corporate-green-50) 10%, transparent);
+  background: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
 }
 
 .maps-map-object-action-bar__button--danger:hover {

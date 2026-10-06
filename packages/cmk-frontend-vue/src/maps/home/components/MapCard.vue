@@ -133,7 +133,7 @@ const title = computed(() => props.map.alias || props.map.name)
 
 .maps-map-card:hover {
   background: var(--input-hover-bg-color);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-corporate-green-50) 40%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--interactive-accent) 40%, transparent);
   transform: translateY(-2px);
 }
 

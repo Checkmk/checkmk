@@ -162,7 +162,7 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
 }
 
 .maps-presentation-template-gallery__item:hover {
-  border-color: var(--color-corporate-green-50);
+  border-color: var(--interactive-accent);
   transform: translateY(-2px);
 }
 

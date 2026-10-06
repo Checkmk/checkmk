@@ -107,7 +107,7 @@ defineEmits<{ 'zoom-in': []; 'zoom-out': []; fit: [] }>()
 }
 
 .maps-map-zoom-controls__button:hover {
-  color: var(--color-corporate-green-50);
+  color: var(--interactive-accent);
 }
 
 .maps-map-zoom-controls__icon {

@@ -135,10 +135,10 @@ function pick(layout: ServiceLayout): void {
 }
 
 .maps-flow-service-layout-picker__button--on {
-  color: var(--color-corporate-green-40);
-  background: color-mix(in srgb, var(--color-corporate-green-50) 15%, transparent);
+  color: var(--interactive-accent-subtle);
+  background: color-mix(in srgb, var(--interactive-accent) 15%, transparent);
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--color-corporate-green-50) 40%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--interactive-accent) 40%, transparent),
     0 10px 15px -3px rgb(0 0 0 / 30%),
     0 4px 6px -4px rgb(0 0 0 / 30%);
 }
@@ -203,8 +203,8 @@ function pick(layout: ServiceLayout): void {
 
 .maps-flow-service-layout-picker__item--active,
 .maps-flow-service-layout-picker__item--active:hover {
-  color: var(--color-corporate-green-40);
-  background: color-mix(in srgb, var(--color-corporate-green-50) 10%, transparent);
+  color: var(--interactive-accent-subtle);
+  background: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
 }
 
 .maps-flow-service-layout-picker__menu-enter-from,

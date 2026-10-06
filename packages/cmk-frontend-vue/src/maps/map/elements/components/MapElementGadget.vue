@@ -102,6 +102,6 @@ const metricUnits = useMetricUnits({
   border-radius: var(--dimension-5);
   box-shadow:
     0 0 0 2px var(--ux-theme-1),
-    0 0 0 4px var(--color-corporate-green-50);
+    0 0 0 4px var(--interactive-accent);
 }
 </style>

@@ -520,7 +520,7 @@ const slidePresets = SLIDE_PRESETS
 
 .maps-presentation-inspector-panel__name:focus {
   outline: none;
-  border-color: var(--color-corporate-green-50);
+  border-color: var(--interactive-accent);
   background: var(--default-form-element-bg-color);
 }
 
@@ -610,8 +610,8 @@ const slidePresets = SLIDE_PRESETS
 }
 
 .maps-presentation-inspector-panel__preset--on {
-  border-color: var(--color-corporate-green-50);
-  background: color-mix(in srgb, var(--color-corporate-green-50) 18%, transparent);
+  border-color: var(--interactive-accent);
+  background: color-mix(in srgb, var(--interactive-accent) 18%, transparent);
 }
 
 .maps-presentation-inspector-panel__hint {

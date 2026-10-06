@@ -61,7 +61,7 @@ defineEmits<{ exit: [] }>()
 }
 
 .maps-map-kiosk-exit:hover {
-  border-color: var(--color-corporate-green-50);
+  border-color: var(--interactive-accent);
 }
 
 .maps-map-kiosk-exit__icon {

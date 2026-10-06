@@ -119,19 +119,19 @@ function onKeydown(event: KeyboardEvent): void {
 }
 
 .maps-map-canvas-object:focus-visible {
-  outline: 2px solid var(--color-corporate-green-50);
+  outline: 2px solid var(--interactive-accent);
   outline-offset: 2px;
 }
 
 /* The object a line being dragged would bind to on release. */
 .maps-map-canvas-object--bind-target {
-  outline: 3px solid var(--color-corporate-green-50);
+  outline: 3px solid var(--interactive-accent);
   outline-offset: 3px;
   border-radius: var(--dimension-4);
 }
 
 .maps-map-canvas-object--selected {
-  outline: 2px dashed var(--color-corporate-green-50);
+  outline: 2px dashed var(--interactive-accent);
   outline-offset: 4px;
   border-radius: 6px;
 }

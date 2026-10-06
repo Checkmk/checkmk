@@ -36,8 +36,8 @@ defineProps<{
 <style scoped>
 .maps-map-marquee-box {
   position: absolute;
-  background: color-mix(in srgb, var(--color-corporate-green-50) 12%, transparent);
-  border: 1px solid var(--color-corporate-green-50);
+  background: color-mix(in srgb, var(--interactive-accent) 12%, transparent);
+  border: 1px solid var(--interactive-accent);
   pointer-events: none;
 }
 </style>

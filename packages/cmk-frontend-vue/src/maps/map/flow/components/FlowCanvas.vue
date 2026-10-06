@@ -541,7 +541,7 @@ defineExpose({
 /* stylelint-disable selector-pseudo-class-no-unknown -- ``deep`` is Vue's own,
    and these elements are d3's rather than Vue's. */
 :deep(.maps-flow-canvas__node:focus-visible) {
-  outline: 2px solid var(--color-corporate-green-50);
+  outline: 2px solid var(--interactive-accent);
   outline-offset: 2px;
 }
 
@@ -559,7 +559,7 @@ defineExpose({
 
 /* Last of the three, so it wins at equal specificity. */
 :deep(.maps-flow-canvas__node--selected > circle) {
-  stroke: var(--color-corporate-green-50);
+  stroke: var(--interactive-accent);
   stroke-width: 3;
 }
 

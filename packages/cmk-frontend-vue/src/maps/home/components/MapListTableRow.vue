@@ -120,17 +120,13 @@ const showConnection = useShowConnection()
 /* Same hover as the monitoring views' rows: the zebra already owns the greys,
    so the row under the pointer has to leave them. */
 .maps-map-list-table-row:hover {
-  background-color: var(--color-dark-blue-90);
-}
-
-body[data-theme='facelift'] .maps-map-list-table-row:hover {
-  background-color: var(--color-dark-blue-10);
+  background-color: var(--background-row-hover-highlight);
 }
 
 .maps-map-list-table-row--selected,
 .maps-map-list-table-row--selected:nth-child(odd),
 .maps-map-list-table-row--selected:nth-child(even) {
-  background-color: color-mix(in srgb, var(--color-corporate-green-50) 12%, transparent);
+  background-color: color-mix(in srgb, var(--interactive-accent) 12%, transparent);
 }
 
 .maps-map-list-table-row__select,

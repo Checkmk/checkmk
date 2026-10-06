@@ -270,7 +270,7 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
 }
 
 .maps-map-edit-tools__button--primary {
-  background: var(--color-corporate-green-50);
+  background: var(--interactive-accent);
   box-shadow:
     0 10px 15px -3px rgb(0 0 0 / 30%),
     0 4px 6px -4px rgb(0 0 0 / 30%);

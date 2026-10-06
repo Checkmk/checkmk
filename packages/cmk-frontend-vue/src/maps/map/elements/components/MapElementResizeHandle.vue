@@ -45,14 +45,14 @@ defineEmits<{ start: [event: PointerEvent] }>()
   justify-content: center;
   width: var(--dimension-7);
   height: var(--dimension-7);
-  background: color-mix(in srgb, var(--color-corporate-green-50) 70%, transparent);
+  background: color-mix(in srgb, var(--interactive-accent) 70%, transparent);
   border-top-left-radius: var(--border-radius);
   cursor: se-resize;
   transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .maps-map-element-resize-handle:hover {
-  background: var(--color-corporate-green-50);
+  background: var(--interactive-accent);
 }
 
 .maps-map-element-resize-handle__icon {

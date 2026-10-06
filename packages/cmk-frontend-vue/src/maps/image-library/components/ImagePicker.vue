@@ -163,7 +163,7 @@ function select(name: string) {
   padding: var(--dimension-4) var(--dimension-5);
   background: var(--default-form-element-bg-color);
   border-radius: var(--border-radius);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-corporate-green-50) 50%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--interactive-accent) 50%, transparent);
 }
 
 .maps-image-picker__selected-name {
@@ -251,8 +251,8 @@ function select(name: string) {
 }
 
 .maps-image-picker__tile--selected {
-  background: color-mix(in srgb, var(--color-corporate-green-50) 10%, transparent);
-  box-shadow: 0 0 0 1px var(--color-corporate-green-50);
+  background: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
+  box-shadow: 0 0 0 1px var(--interactive-accent);
 }
 
 .maps-image-picker__image {
@@ -264,8 +264,8 @@ function select(name: string) {
 
 /* A monochrome SVG loaded as <img> loses currentColor; inverting turns its
    black strokes light without touching coloured artwork. */
-body[data-theme='modern-dark'] .maps-image-picker__image--monochrome {
-  filter: invert(100%);
+.maps-image-picker__image--monochrome {
+  filter: var(--icon-filter-invert);
 }
 
 .maps-image-picker__tile-name {

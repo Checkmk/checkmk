@@ -433,10 +433,10 @@ function onDragStart(e: DragEvent, payload: BindingDropPayload): void {
 .maps-presentation-data-panel__chip {
   flex-shrink: 0;
   padding: 1px 6px;
-  border: 1px solid var(--color-corporate-green-50);
+  border: 1px solid var(--interactive-accent);
   border-radius: 9999px;
   font-size: var(--font-size-small);
-  color: var(--color-corporate-green-50);
+  color: var(--interactive-accent);
 }
 
 .maps-presentation-data-panel__empty {

@@ -227,7 +227,7 @@ const alignLines: Record<string, [number, number][]> = {
 }
 
 .maps-inspector-typography-section__toggle--on {
-  background: color-mix(in srgb, var(--color-corporate-green-50) 20%, transparent);
-  border-color: var(--color-corporate-green-50);
+  background: color-mix(in srgb, var(--interactive-accent) 20%, transparent);
+  border-color: var(--interactive-accent);
 }
 </style>

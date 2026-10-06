@@ -138,7 +138,7 @@ function removeOrCancel() {
   padding: var(--dimension-4) var(--dimension-5);
   background: var(--default-form-element-bg-color);
   border-radius: var(--dimension-4);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-corporate-green-50) 50%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--interactive-accent) 50%, transparent);
 }
 
 .maps-background-image-upload__thumb {
@@ -231,10 +231,10 @@ function removeOrCancel() {
 
 .maps-background-image-upload__upload:hover {
   color: var(--font-color);
-  box-shadow: 0 0 0 1px var(--color-corporate-green-50);
+  box-shadow: 0 0 0 1px var(--interactive-accent);
 }
 
 .maps-background-image-upload__upload:focus-within {
-  box-shadow: 0 0 0 1px var(--color-corporate-green-50);
+  box-shadow: 0 0 0 1px var(--interactive-accent);
 }
 </style>

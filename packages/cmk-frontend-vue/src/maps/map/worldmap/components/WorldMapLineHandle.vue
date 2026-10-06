@@ -38,6 +38,6 @@ defineProps<{
 }
 
 .maps-world-map-line-handle--bound {
-  background: var(--color-corporate-green-50);
+  background: var(--interactive-accent);
 }
 </style>

@@ -142,7 +142,7 @@ const rootStyle = computed(() => ({
 .maps-map-element-state-icon--selected {
   box-shadow:
     0 0 0 2px var(--ux-theme-1),
-    0 0 0 4px var(--color-corporate-green-50);
+    0 0 0 4px var(--interactive-accent);
 }
 
 .maps-map-element-state-icon__disc {

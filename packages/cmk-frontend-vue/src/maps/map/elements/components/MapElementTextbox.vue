@@ -135,6 +135,6 @@ const configuredStyle = computed(() => {
 }
 
 .maps-map-element-textbox--ring-selected {
-  box-shadow: 0 0 0 1px var(--color-corporate-green-50);
+  box-shadow: 0 0 0 1px var(--interactive-accent);
 }
 </style>

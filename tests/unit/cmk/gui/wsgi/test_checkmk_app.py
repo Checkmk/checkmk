@@ -5,6 +5,7 @@
 
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
+import logging
 from collections.abc import Callable, Iterator
 from http import HTTPStatus
 
@@ -16,6 +17,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import (
     ContentDispositionType,
     LEGACY_CONTENT_SECURITY_POLICY,
+    Request,
     Response,
     response,
     STRICT_CONTENT_SECURITY_POLICY,
@@ -25,54 +27,22 @@ from cmk.web.utils.html import HTML
 from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 OS_ERROR_PAGE = "test_oserror_page"
-OS_ERROR_WSGI_PAGE = "test_oserror_wsgi_page"
-
-
-def _oserror_wsgi_handler(ctx: PageContext) -> None:
-    raise OSError("Apache/mod_wsgi request data read error: Input is already in error state.")
 
 
 def _oserror_handler(ctx: PageContext) -> None:
     raise OSError("Random OS Error")
 
 
-@pytest.fixture(name="oserror_pages")
-def _oserror_pages() -> Iterator[None]:
+@pytest.fixture(name="oserror_page")
+def _oserror_page() -> Iterator[None]:
     page_registry.register(PageEndpoint(OS_ERROR_PAGE, _oserror_handler))
-    page_registry.register(PageEndpoint(OS_ERROR_WSGI_PAGE, _oserror_wsgi_handler))
     try:
         yield
     finally:
         page_registry.unregister(OS_ERROR_PAGE)
-        page_registry.unregister(OS_ERROR_WSGI_PAGE)
 
 
-@pytest.mark.usefixtures("oserror_pages")
-def test_oserror_wsgi_from_page_handler_returns_400(
-    wsgi_app: WebTestAppForCMK, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Touching request.values in a broken request body state raises OSError.
-
-    In production the OSError originates from Werkzeug's lazy form parsing, not
-    from the page handler itself.  Simulating a genuinely broken wsgi.input
-    stream through Flask's test client is not feasible, so we raise the OSError
-    directly from the handler as a pragmatic approximation.
-    """
-
-    # We can't use the noauth: registration path because _noauth() has a broad
-    # "except Exception" that would swallow the OSError before it reaches
-    # _process_request's except chain — which is what we're testing here.
-    def _no_auth(handler: PageHandler) -> Callable[[PageContext], Response]:
-        """Bypass authentication for this test."""
-        return handler  # type: ignore[return-value]
-
-    monkeypatch.setattr(checkmk_app, "ensure_authentication", _no_auth)
-
-    resp = wsgi_app.get(f"/NO_SITE/check_mk/{OS_ERROR_WSGI_PAGE}.py", status=HTTPStatus.BAD_REQUEST)
-    assert resp.status_code == HTTPStatus.BAD_REQUEST
-
-
-@pytest.mark.usefixtures("oserror_pages")
+@pytest.mark.usefixtures("oserror_page")
 def test_non_wsgi_oserror_from_page_handler_propagates(
     wsgi_app: WebTestAppForCMK, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -281,3 +251,97 @@ def test_mkhttpexception_status_propagates_in_plain_render_branch(
         f"/NO_SITE/check_mk/{page_name}.py?output_format=csv_export", status=expected_status
     )
     assert resp.status_code == expected_status
+
+
+FORM_PAGE = "test_form_page"
+NOAUTH_FORM_PAGE = "test_noauth_form_page"
+FORM_URLS = [
+    pytest.param(f"/NO_SITE/check_mk/{FORM_PAGE}.py", id="page"),
+    pytest.param(f"/NO_SITE/check_mk/{NOAUTH_FORM_PAGE}.py", id="noauth page"),
+    pytest.param("/NO_SITE/check_mk/invalid/path", id="invalid path"),
+]
+# Small stand-ins for the real limits of cmk.gui.http.Request to keep the payloads
+# cheap. Keep the field size limit well above the ~1 KiB "too many parts" body, so
+# that case really hits max_form_parts and not max_form_memory_size.
+MAX_FORM_MEMORY_SIZE = 1024 * 1024
+MAX_FORM_PARTS = 10
+
+
+@pytest.fixture(name="small_form_limits")
+def _small_form_limits(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(Request, "max_form_memory_size", MAX_FORM_MEMORY_SIZE)
+    monkeypatch.setattr(Request, "max_form_parts", MAX_FORM_PARTS)
+
+
+def _form_page(ctx: PageContext) -> None:
+    html.write_text_permissive(ctx.request.get_str_input_mandatory("field", ""))
+
+
+@pytest.fixture(name="form_pages")
+def _form_pages_fixture() -> Iterator[None]:
+    page_registry.register(PageEndpoint(FORM_PAGE, _form_page))
+    page_registry.register(PageEndpoint(f"noauth:{NOAUTH_FORM_PAGE}", _form_page))
+    try:
+        yield
+    finally:
+        page_registry.unregister(FORM_PAGE)
+        page_registry.unregister(f"noauth:{NOAUTH_FORM_PAGE}")
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param({"field": "a" * (MAX_FORM_MEMORY_SIZE + 1)}, id="text field too large"),
+        pytest.param({f"field{i}": "" for i in range(MAX_FORM_PARTS + 1)}, id="too many parts"),
+    ],
+)
+@pytest.mark.parametrize("url", FORM_URLS)
+@pytest.mark.usefixtures("small_form_limits", "form_pages")
+def test_too_large_form_returns_413(
+    logged_in_wsgi_app: WebTestAppForCMK, url: str, data: dict[str, str]
+) -> None:
+    logged_in_wsgi_app.post(
+        url,
+        data=data,
+        content_type="multipart/form-data",
+        status=HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+    )
+
+
+@pytest.mark.usefixtures("small_form_limits")
+def test_too_large_form_warning_escapes_path(
+    logged_in_wsgi_app: WebTestAppForCMK, caplog: pytest.LogCaptureFixture
+) -> None:
+    with caplog.at_level(logging.WARNING, logger="cmk.web"):
+        logged_in_wsgi_app.post(
+            # ESC [2K erases the current line when the log is viewed in a terminal.
+            "/NO_SITE/check_mk/x%1B%5B2Kforged.py",
+            data={f"field{i}": "" for i in range(MAX_FORM_PARTS + 1)},
+            content_type="multipart/form-data",
+            status=HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+        )
+
+    assert "Request too large for '/NO_SITE/check_mk/x\\x1b[2Kforged.py'" in caplog.text
+
+
+class _BrokenRequestBody:
+    """wsgi.input of mod_wsgi after the client disconnected in the middle of an upload"""
+
+    def read(self, _size: int = -1) -> bytes:
+        raise OSError("Apache/mod_wsgi request data read error: Input is already in error state.")
+
+
+@pytest.mark.parametrize("url", FORM_URLS)
+@pytest.mark.usefixtures("form_pages")
+def test_mod_wsgi_read_error_returns_400(logged_in_wsgi_app: WebTestAppForCMK, url: str) -> None:
+    logged_in_wsgi_app.post(
+        url,
+        data={"field": "value"},
+        environ_overrides={
+            "wsgi.input": _BrokenRequestBody(),
+            # Like mod_wsgi does. Otherwise werkzeug would wrap the stream into a
+            # LimitedStream, which turns the OSError into a ClientDisconnected.
+            "wsgi.input_terminated": True,
+        },
+        status=HTTPStatus.BAD_REQUEST,
+    )

@@ -247,6 +247,13 @@ def _process_request(
 ) -> WSGIResponse:
     resp: Response
     try:
+        # Parse the form before the code below accesses it. Otherwise a too large form
+        # could first be parsed in a page handler swallowing all exceptions (like
+        # _noauth) or in one of the except clauses below (like _page_not_found), so
+        # the RequestEntityTooLarge clause below would never see it. Don't assign the
+        # result to "_": That would shadow the i18n function _() in this whole function.
+        ctx.request.form
+
         try:
             file_name = requested_file_name(ctx.request, on_error="raise")
         except WebMKNotFound as exc:
@@ -318,7 +325,19 @@ def _process_request(
         )
 
     except RequestEntityTooLarge as e:
-        resp = _render_exception(ctx, e, title=_("Request too large"))
+        # Parsing the form failed after consuming parts of the request body, so
+        # request.values is broken. Like for the mod_wsgi OSError below, we must NOT
+        # call _render_exception() or anything else accessing form data: werkzeug
+        # would either raise again outside of this handler or parse the rest of the
+        # body into a bogus form.
+        logger.warning(
+            "Request too large for %(path)r: %(error)s", {"path": ctx.request.path, "error": e}
+        )
+        resp = Response(
+            response=[f"{_('Request too large')}: {e.description}\n"],
+            mimetype="text/plain",
+            status=HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+        )
 
     except Exception as e:
         if isinstance(e, OSError) and "mod_wsgi" in str(e):

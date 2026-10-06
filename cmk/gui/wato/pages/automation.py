@@ -303,7 +303,7 @@ class PageAutomation(AjaxPage):
 
         our_id = omd_site()
 
-        if our_id is not None and our_id != site_id:  # type: ignore[redundant-expr]
+        if our_id != site_id:
             raise MKGeneralException(
                 _(
                     "Site ID mismatch. Our ID is '%(our_id)s', but you are saying we are '%(site_id)s'."

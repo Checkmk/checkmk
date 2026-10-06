@@ -284,7 +284,7 @@ def render_tree_folder(tree_id: str, folder: FolderEntry, js_func: str) -> None:
     # Suppress indentation for non-emtpy root folder
     if folder[".path"] == "" and is_leaf:
         html.open_ul()  # empty root folder
-    elif folder and folder[".path"] != "":  # type: ignore[redundant-expr]
+    elif folder[".path"] != "":
         html.open_ul(style="padding-left:0px;")
 
     title = HTMLWriter.render_a(

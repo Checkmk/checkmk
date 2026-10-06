@@ -376,9 +376,7 @@ class ModeObjectParameters(WatoMode):
     ) -> None:
         checkgroup = serviceinfo["checkgroup"]
         rulespec = rulespec_registry.get("static_checks:" + checkgroup)
-        if rulespec is None or (
-            rulespec_allow_list is not None and not rulespec_allow_list.is_visible(rulespec.name)  # type: ignore[redundant-expr]
-        ):
+        if rulespec is None or not rulespec_allow_list.is_visible(rulespec.name):
             html.write_text_permissive(_("This check is not configurable via Setup"))
             return
 

@@ -126,7 +126,7 @@ def _paint_download_host_info(
     ty: Literal["agent", "walk"],
 ) -> tuple[StaticIcon | DynamicIcon, str, str] | None:
     if (
-        (what == "host" or (what == "service" and row["service_description"] == "Check_MK"))  # type: ignore[redundant-expr]
+        (what == "host" or row["service_description"] == "Check_MK")
         and user.may("wato.download_agent_output")
         and row["host_check_type"] != 2
     ):  # Not for shadow hosts

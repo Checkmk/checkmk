@@ -4660,9 +4660,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
         return self._back_mode()
 
     def _validate_form_spec(self, data: RawDiskData | RawFrontendData) -> bool:
-        return isinstance(data, RawFrontendData) or (
-            isinstance(data, RawDiskData) and not self._new  # type: ignore[redundant-expr]
-        )
+        return isinstance(data, RawFrontendData) or not self._new
 
     @override
     def page(self, config: Config) -> None:

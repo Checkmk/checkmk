@@ -668,9 +668,6 @@ class ModeTagUsage(ABCTagMode):
         self._show_tag_group_icons(tag_group)
 
         table.cell(_("Tag group"), _u(tag_group.choice_title))
-        # TODO: This check shouldn't be necessary if we get our types right.
-        if tag.title is None or tag_group.id is None:  # type: ignore[redundant-expr]
-            raise Exception("uninitialized tag/tag group")
         table.cell(_("Tag"), _u(tag.title))
 
         operation = OperationReplaceGroupedTags(

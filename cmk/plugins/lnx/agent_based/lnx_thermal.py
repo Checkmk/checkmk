@@ -156,7 +156,7 @@ def _get_levels(data: Thermal) -> tuple[float, float] | None:
         return None if crit is None else (crit, crit)
 
     if crit is None:
-        return None if warn is None else (warn, warn)  # type: ignore[redundant-expr]
+        return (warn, warn)
 
     return (warn, crit)
 

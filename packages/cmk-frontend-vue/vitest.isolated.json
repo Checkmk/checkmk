@@ -41,6 +41,7 @@
   "tests/graphing/designer/components/MetricsTable.test.ts",
   "tests/graphing/designer/components/RrdMetricForm.test.ts",
   "tests/lib/keyboard-cheat-sheet/cheatSheetKey.test.ts",
+  "tests/lib/keyboard-cheat-sheet/mountKeyboardCheatSheet.test.ts",
   "tests/main-menu/MainMenuApp.test.ts",
   "tests/main-menu/components/NavToggleItem.test.ts",
   "tests/maps/map/commands/useObjectActions.test.ts",

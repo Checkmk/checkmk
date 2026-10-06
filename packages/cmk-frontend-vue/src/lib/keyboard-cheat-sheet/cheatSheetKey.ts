@@ -9,6 +9,8 @@
  * can be fetched lazily; the pin is kept in localStorage so it survives page changes.
  * Every change is also announced to the top window, where the main menu's key hints follow
  * the sheet of whichever frame has the keyboard.
+ * Only the top window and the content frame show a sheet. A frame nested deeper, like a legacy
+ * view widget of a dashboard, hands the Alt+K it sees to its parent frame instead.
  */
 import { storageHandler } from 'cmk-ui-library/lib/utils'
 import { type Ref, onBeforeUnmount, ref } from 'vue'
@@ -17,6 +19,7 @@ type Subscriber = (state: boolean) => void
 
 const PINNED_STORAGE_KEY = 'keyboard-cheat-sheet-pinned'
 const VISIBLE_EVENT = 'cmk-keyboard-cheat-sheet-visible'
+const HELD_MESSAGE = 'cmk-keyboard-cheat-sheet-held'
 
 const visibleSubscribers = new Set<Subscriber>()
 const pinSubscribers = new Set<Subscriber>()
@@ -24,6 +27,10 @@ let tracking = false
 let altDown = false
 /** K presses during the current Alt hold. */
 let presses = 0
+/** Alt+K is held down in a frame nested below this one. */
+let heldBelow = false
+/** What this frame last told its parent, if it is nested. */
+let heldReported = false
 let pinned = readPinned()
 let visible = pinned
 
@@ -51,8 +58,29 @@ function setPinned(next: boolean): void {
   publish()
 }
 
+/**
+ * The top window and the content frame show the sheet. Frames nested deeper are parts of that
+ * page; the widget pages are also nested when they sit right below the top window, as in a
+ * dashboard shown without the main frame.
+ */
+export function isNestedFrame(): boolean {
+  return window.parent !== window.top || !!document.body?.classList.contains('dashlet')
+}
+
+function reportHeld(held: boolean): void {
+  if (held === heldReported) {
+    return
+  }
+  heldReported = held
+  window.parent.postMessage({ source: HELD_MESSAGE, held }, window.location.origin)
+}
+
 function publish(): void {
-  const next = (altDown && presses > 0) || pinned
+  const held = (altDown && presses > 0) || heldBelow
+  if (isNestedFrame()) {
+    reportHeld(held)
+  }
+  const next = held || pinned
   if (next === visible) {
     return
   }
@@ -64,6 +92,10 @@ function publish(): void {
 }
 
 function announce(): void {
+  // The frame that shows the sheet announces it.
+  if (isNestedFrame()) {
+    return
+  }
   try {
     window.top?.dispatchEvent(new CustomEvent<boolean>(VISIBLE_EVENT, { detail: visible }))
   } catch {
@@ -110,6 +142,22 @@ function onStorage(event: StorageEvent): void {
   }
 }
 
+/** Alt+K of a frame nested below this one. */
+function onMessage(event: MessageEvent): void {
+  const data: unknown = event.data
+  if (
+    event.origin !== window.location.origin ||
+    event.source === window ||
+    typeof data !== 'object' ||
+    data === null ||
+    (data as { source?: unknown }).source !== HELD_MESSAGE
+  ) {
+    return
+  }
+  heldBelow = (data as { held?: unknown }).held === true
+  publish()
+}
+
 /** No keyup arrives once the focus is gone. */
 function onBlur(): void {
   altDown = false
@@ -126,6 +174,9 @@ function startTracking(): void {
   window.addEventListener('keyup', onKeyUp)
   window.addEventListener('blur', onBlur)
   window.addEventListener('storage', onStorage)
+  window.addEventListener('message', onMessage)
+  // A navigating frame sends no keyup either.
+  window.addEventListener('pagehide', onBlur)
 }
 
 export function isCheatSheetVisible(): boolean {

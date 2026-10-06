@@ -8,7 +8,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { type KeyboardHelpKind, registerKeyboardHelp } from 'cmk-ui-library/lib/keyboardHelp'
 import { createApp } from 'vue'
 
-import { isCheatSheetVisible, subscribeCheatSheetVisible } from './cheatSheetKey'
+import { isCheatSheetVisible, isNestedFrame, subscribeCheatSheetVisible } from './cheatSheetKey'
 
 /** Drop `'widget'` to hide the keys of the focused widgets. */
 const KINDS: readonly KeyboardHelpKind[] = ['shortcut', 'widget', 'hint']
@@ -16,6 +16,9 @@ const KINDS: readonly KeyboardHelpKind[] = ['shortcut', 'widget', 'hint']
 let requested = false
 
 async function mount(): Promise<void> {
+  if (isNestedFrame()) {
+    return
+  }
   const { _t } = usei18n()
   registerKeyboardHelp([
     {

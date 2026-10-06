@@ -18,6 +18,7 @@ const PINNED_STORAGE_KEY = 'keyboard-cheat-sheet-pinned'
 
 /** The tracker is a page-lifetime singleton. */
 afterEach(() => {
+  vi.restoreAllMocks()
   releaseAlt()
   pressEscape()
   localStorage.clear()
@@ -145,4 +146,72 @@ test('a pin set by another frame holds here too', () => {
 
   expect(isCheatSheetPinned()).toBe(true)
   expect(isCheatSheetVisible()).toBe(true)
+})
+
+const HELD_MESSAGE = 'cmk-keyboard-cheat-sheet-held'
+
+function tellHeldFromChildFrame(held: boolean): void {
+  const frame = document.createElement('iframe')
+  document.body.appendChild(frame)
+  window.dispatchEvent(
+    new MessageEvent('message', {
+      data: { source: HELD_MESSAGE, held },
+      origin: window.location.origin,
+      source: frame.contentWindow
+    })
+  )
+  frame.remove()
+}
+
+test('Alt+K held in a nested frame shows the sheet here, without a pin', () => {
+  const seen: boolean[] = []
+  const unsubscribe = subscribeAnyCheatSheetVisible((visible) => seen.push(visible))
+
+  tellHeldFromChildFrame(true)
+  expect(isCheatSheetVisible()).toBe(true)
+  expect(isCheatSheetPinned()).toBe(false)
+  tellHeldFromChildFrame(false)
+  expect(isCheatSheetVisible()).toBe(false)
+
+  expect(seen).toEqual([true, false])
+  unsubscribe()
+})
+
+test('messages from another origin or of another kind are ignored', () => {
+  const frame = document.createElement('iframe')
+  document.body.appendChild(frame)
+  window.dispatchEvent(
+    new MessageEvent('message', {
+      data: { source: HELD_MESSAGE, held: true },
+      origin: 'https://other.example',
+      source: frame.contentWindow
+    })
+  )
+  window.dispatchEvent(
+    new MessageEvent('message', {
+      data: { source: 'something-else', held: true },
+      origin: window.location.origin,
+      source: frame.contentWindow
+    })
+  )
+  frame.remove()
+
+  expect(isCheatSheetVisible()).toBe(false)
+})
+
+test('a nested frame hands Alt+K to its parent instead of announcing it to the top window', () => {
+  const postMessage = vi.fn()
+  vi.spyOn(window, 'parent', 'get').mockReturnValue({ postMessage } as unknown as Window)
+  const seen: boolean[] = []
+  const unsubscribe = subscribeAnyCheatSheetVisible((visible) => seen.push(visible))
+
+  pressAltK()
+  releaseAlt()
+
+  expect(postMessage.mock.calls).toEqual([
+    [{ source: HELD_MESSAGE, held: true }, window.location.origin],
+    [{ source: HELD_MESSAGE, held: false }, window.location.origin]
+  ])
+  expect(seen).toEqual([])
+  unsubscribe()
 })

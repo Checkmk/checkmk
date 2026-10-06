@@ -1487,6 +1487,21 @@ def _fs_keyed_by_first_tuple_element(
     )
 
 
+def _user_localizations_from_disk(value: object) -> list[dict[str, object]]:
+    if not isinstance(value, dict):
+        raise ValueError(f"Expected a mapping, got {value!r}")
+    return [
+        {"original": original, "translation": translation}
+        for original, translation in sorted(value.items())
+    ]
+
+
+def _user_localizations_to_disk(value: object) -> dict[object, object]:
+    if not isinstance(value, list):
+        raise ValueError(f"Expected a list, got {value!r}")
+    return {entry["original"]: entry["translation"] for entry in value}
+
+
 def _drop_unavailable_localizations(value: object) -> Mapping[str, object]:
     # user_localizations is based on the currently installed languages.
     # if a language gets removed, an unknown dictionary key will remain
@@ -1502,27 +1517,35 @@ ConfigVariableUserLocalizations = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="user_localizations",
-    form_spec=lambda context: _fs_keyed_by_first_tuple_element(  # noqa: ARG005
-        fs.List[tuple[object, ...]](
-            element_template=FSTuple(
-                elements=[
-                    fs.String(title=Title("Original Text")),
-                    # DictionaryExtended because language codes are not
-                    # guaranteed to be valid Python identifiers.
-                    DictionaryExtended(
-                        title=Title("Translations"),
-                        elements={
-                            language: fs.DictElement(
-                                parameter_form=fs.String(
-                                    # astrein: disable=localization-checker
-                                    title=Title(alias),
-                                ),
-                            )
-                            for language, alias in get_languages()
-                        },
-                        migrate=_drop_unavailable_localizations,
+    form_spec=lambda context: TransformDataForLegacyFormatOrRecomposeFunction(  # noqa: ARG005
+        from_disk=_user_localizations_from_disk,
+        to_disk=_user_localizations_to_disk,
+        wrapped_form_spec=fs.List[Mapping[str, object]](
+            element_template=fs.Dictionary(
+                elements={
+                    "original": fs.DictElement(
+                        required=True,
+                        parameter_form=fs.String(title=Title("Original Text")),
                     ),
-                ],
+                    "translation": fs.DictElement(
+                        required=True,
+                        # DictionaryExtended because language codes are not
+                        # guaranteed to be valid Python identifiers.
+                        parameter_form=DictionaryExtended(
+                            title=Title("Translations"),
+                            elements={
+                                language: fs.DictElement(
+                                    parameter_form=fs.String(
+                                        # astrein: disable=localization-checker
+                                        title=Title(alias),
+                                    ),
+                                )
+                                for language, alias in get_languages()
+                            },
+                            migrate=_drop_unavailable_localizations,
+                        ),
+                    ),
+                },
             ),
             title=Title("Custom localizations"),
             editable_order=False,

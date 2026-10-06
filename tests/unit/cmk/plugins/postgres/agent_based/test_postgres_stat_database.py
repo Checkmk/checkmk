@@ -7,8 +7,9 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, State, StringTable
+from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State, StringTable
 from cmk.plugins.postgres.agent_based.postgres_stat_database import (
+    check_postgres_stat_database,
     check_postgres_stat_database_size,
     parse_postgres_stat_database,
 )
@@ -106,3 +107,18 @@ def test_check_postgres_stat_database_size(
         )
         == expected_result
     )
+
+
+def test_empty_string_table_parses_to_empty_section() -> None:
+    assert parse_postgres_stat_database([]) == {}
+
+
+def test_statistics_of_unknown_database_are_unknown() -> None:
+    assert list(check_postgres_stat_database("gone", {}, {})) == [
+        Result(state=State.UNKNOWN, summary="Database not found"),
+    ]
+
+
+def test_size_of_unknown_database_is_ignored() -> None:
+    with pytest.raises(IgnoreResultsError):
+        list(check_postgres_stat_database_size("gone", {}, {}))

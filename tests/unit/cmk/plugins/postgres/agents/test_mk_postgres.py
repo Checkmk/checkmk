@@ -15,6 +15,13 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from cmk.plugins.postgres.agents import mk_postgres
 
+if sys.version_info >= (3, 12):  # noqa: UP036
+    from typing import override
+else:
+
+    def override(func):
+        return func
+
 #   .--defines-------------------------------------------------------------.
 #   |                      _       __ _                                    |
 #   |                   __| | ___ / _(_)_ __   ___  ___                    |
@@ -676,3 +683,145 @@ def test_parse_env_file_parser(tmp_path):
         None,
         "",
     )
+
+
+_HEALTHY_SERVER_ANSWERS = {
+    "SELECT datname FROM pg_database": "postgres\nshop",
+    "SHOW server_version": "15.2 (Debian 15.2-1.pgdg110+1)",
+    "SELECT version()": "PostgreSQL 15.2 on x86_64-pc-linux-gnu",
+    "count(*) FROM pg_stat_activity": "f 1",
+}
+
+
+class _ScriptedPostgresLinux(mk_postgres.PostgresLinux):
+    """Replaces the calls to psql and ps with canned answers and records the queries sent"""
+
+    def __init__(self, answers):
+        # type: (dict[str, str]) -> None
+        self.answers = answers
+        self.queries = []  # type: list[str]
+        super().__init__(
+            "postgres",
+            "/usr/lib/postgresql/15/bin/psql",
+            {
+                "name": "main",
+                "pg_user": "postgres",
+                "pg_port": "5432",
+                "pg_host": "",
+                "pg_database": "postgres",
+                "pg_version": "15",
+            },
+            [],
+        )
+
+    @override
+    def run_sql_as_db_user(self, sql_cmd, *_args, **_kwargs):
+        # type: (str, object, object) -> str
+        self.queries.append(sql_cmd)
+        for query_part, answer in self.answers.items():
+            if query_part in sql_cmd:
+                return answer
+        return ""
+
+    @override
+    def get_instances(self):
+        # type: () -> str
+        return "1234 /usr/lib/postgresql/15/bin/postgres -D /var/lib/postgresql/15/main"
+
+
+def _section_headers(output):
+    # type: (str) -> list[str]
+    return [line for line in output.splitlines() if line.startswith("<<<")]
+
+
+def test_all_sections_are_written_for_reachable_server(capsys):
+    # type: (pytest.CaptureFixture[str]) -> None
+    _ScriptedPostgresLinux(_HEALTHY_SERVER_ANSWERS).execute_all_queries()
+
+    assert _section_headers(capsys.readouterr().out) == [
+        "<<<postgres_instances>>>",
+        "<<<postgres_sessions>>>",
+        "<<<postgres_stat_database:sep(59)>>>",
+        "<<<postgres_locks:sep(59)>>>",
+        "<<<postgres_query_duration:sep(59)>>>",
+        "<<<postgres_connections:sep(59)>>>",
+        "<<<postgres_stats:sep(59)>>>",
+        "<<<postgres_version:sep(1)>>>",
+        "<<<postgres_conn_time>>>",
+        "<<<postgres_bloat:sep(59)>>>",
+    ]
+
+
+def test_database_dependent_sections_are_skipped_without_server_version(capsys):
+    # type: (pytest.CaptureFixture[str]) -> None
+    answers = dict(_HEALTHY_SERVER_ANSWERS)
+    del answers["SHOW server_version"]
+
+    _ScriptedPostgresLinux(answers).execute_all_queries()
+
+    assert _section_headers(capsys.readouterr().out) == [
+        "<<<postgres_instances>>>",
+        "<<<postgres_stat_database:sep(59)>>>",
+        "<<<postgres_version:sep(1)>>>",
+        "<<<postgres_conn_time>>>",
+    ]
+
+
+def test_database_list_is_written_into_instance_sections(capsys):
+    # type: (pytest.CaptureFixture[str]) -> None
+    _ScriptedPostgresLinux(_HEALTHY_SERVER_ANSWERS).execute_all_queries()
+
+    assert "[[[main]]]\n[databases_start]\npostgres\nshop\n[databases_end]\n" in (
+        capsys.readouterr().out
+    )
+
+
+@pytest.mark.parametrize("query_part", ["pg_stat_get_last_vacuum_time", "totalwastedbytes"])
+def test_per_database_queries_connect_to_every_database(query_part: str) -> None:
+    postgres = _ScriptedPostgresLinux(_HEALTHY_SERVER_ANSWERS)
+
+    postgres.execute_all_queries()
+
+    (query,) = [q for q in postgres.queries if query_part in q]
+    assert "\\c postgres\n" in query
+    assert "\\c shop\n" in query
+
+
+def test_missing_idle_sessions_line_is_reported_as_zero() -> None:
+    postgres = _ScriptedPostgresLinux(_HEALTHY_SERVER_ANSWERS)
+
+    assert postgres.get_sessions("state", "'idle'") == "f 1\nt 0"
+
+
+def test_server_version_is_reduced_to_major_and_minor() -> None:
+    postgres = _ScriptedPostgresLinux({"SHOW server_version": "12.6.4"})
+
+    assert postgres.get_server_version() == 12.6
+
+
+def test_empty_server_version_is_an_error() -> None:
+    postgres = _ScriptedPostgresLinux({})
+
+    with pytest.raises(mk_postgres.PostgresPsqlError):
+        postgres.get_server_version()
+
+
+@pytest.mark.parametrize(
+    "version, expected",
+    [
+        pytest.param(9.3, ("state", "'idle'"), id="current"),
+        pytest.param(9.2, ("current_query", "'<IDLE>'"), id="legacy"),
+    ],
+)
+def test_idle_condition_depends_on_server_version(version, expected):
+    # type: (float, tuple[str, str]) -> None
+    assert _ScriptedPostgresLinux({}).get_condition_vars(version) == expected
+
+
+def test_connection_time_is_taken_from_the_version_query() -> None:
+    postgres = _ScriptedPostgresLinux(_HEALTHY_SERVER_ANSWERS)
+
+    postgres.get_version()
+    postgres.get_connection_time()
+
+    assert len([q for q in postgres.queries if "SELECT version()" in q]) == 1

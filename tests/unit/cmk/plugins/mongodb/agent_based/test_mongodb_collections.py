@@ -11,8 +11,10 @@ import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.mongodb.agent_based.mongodb_collections import (
+    check_mongodb_collections,
     check_plugin_mongodb_collections,
     parse_mongodb_collections,
+    Section,
 )
 
 _STRING_TABLE = [
@@ -66,3 +68,89 @@ def test_check_mongodb_collections() -> None:
                 ),
             ),
         ]
+
+
+def _collection_section(stats: dict[str, object]) -> Section:
+    return {"shop": {"collstats": {"orders": stats}}}
+
+
+def test_empty_string_table_parses_to_empty_section() -> None:
+    assert parse_mongodb_collections([]) == {}
+
+
+def test_size_levels_are_given_in_mib_and_index_levels_in_kib() -> None:
+    section = _collection_section(
+        {"size": 3 * 1024**2, "storageSize": 1024**2, "totalIndexSize": 3 * 1024}
+    )
+
+    results = list(
+        check_mongodb_collections(
+            "shop.orders", {"levels_size": (2, 4), "levels_totalIndexSize": (1, 2)}, section
+        )
+    )
+
+    assert [r for r in results if isinstance(r, Result) and r.state is not State.OK] == [
+        Result(
+            state=State.WARN,
+            summary="Uncompressed size in memory: 3.00 MiB (warn/crit at 2.00 MiB/4.00 MiB)",
+        ),
+        Result(
+            state=State.CRIT,
+            summary="Total size of indexes: 3.00 KiB (warn/crit at 1.00 KiB/2.00 KiB)",
+        ),
+    ]
+
+
+def test_missing_size_key_stops_the_check() -> None:
+    section = _collection_section({"size": 100, "totalIndexSize": 10})
+
+    assert list(check_mongodb_collections("shop.orders", {}, section)) == [
+        Result(state=State.OK, summary="Uncompressed size in memory: 100 B"),
+        Metric("mongodb_collection_size", 100),
+    ]
+
+
+def test_non_numeric_sizes_are_skipped() -> None:
+    section = _collection_section({"size": "n/a", "storageSize": "n/a", "totalIndexSize": "n/a"})
+
+    results = list(check_mongodb_collections("shop.orders", {}, section))
+
+    assert not [r for r in results if isinstance(r, Metric)]
+
+
+def test_details_of_sharded_collection_show_distribution_and_unknown_values() -> None:
+    section = _collection_section(
+        {
+            "size": 100,
+            "storageSize": 200,
+            "totalIndexSize": 10,
+            "sharded": True,
+            "shardsCount": 3,
+            "avgObjSize": "garbage",
+        }
+    )
+
+    (details,) = [
+        r
+        for r in check_mongodb_collections("shop.orders", {}, section)
+        if isinstance(r, Result) and not r.summary
+    ]
+
+    assert details.details.splitlines() == [
+        "Collection",
+        "- Sharded: True (Data distributed in cluster)",
+        "- Shards: 3 (Number of shards)",
+        "- Chunks: n/a (Total number of chunks)",
+        "- Document Count: n/a (Number of documents in collection)",
+        "- Object Size: n/a (Average object size)",
+        "- Collection Size: 100 B (Uncompressed size in memory)",
+        "- Storage Size: 200 B (Allocated for document storage)",
+        "",
+        "Indexes:",
+        "- Total Index Size: 10 B (Total size of all indexes)",
+        "- Number of Indexes: n/a",
+    ]
+
+
+def test_item_without_collection_name_yields_nothing() -> None:
+    assert not list(check_mongodb_collections("shop", {}, _collection_section({"size": 1})))

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import Service
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.couchbase.agent_based import couchbase_buckets_operations as cbo
 
 
@@ -59,3 +59,48 @@ def test_discover_total_yields_only_aggregate() -> None:
     # customer-visible crash.
     discovered = list(cbo.discover_couchbase_buckets_operations_total(_section()))
     assert discovered == [Service()]
+
+
+_PARSED = cbo.parse_couchbase_buckets_operations(
+    [
+        [
+            (
+                '{"name": "beer-sample", "ops": 10.5, "cmd_get": 5.0, "cmd_set": 2.0,'
+                ' "ep_ops_create": 1.0, "ep_ops_update": 2.0, "ep_num_ops_del_meta": 0.5}'
+            )
+        ],
+        ['{"name": "travel-sample", "ops": 20.0}'],
+    ]
+)
+
+
+def test_parsed_bucket_operations_are_checked_against_upper_levels() -> None:
+    assert list(
+        cbo.check_couchbase_buckets_operations("beer-sample", {"ops": (10.0, 20.0)}, _PARSED)
+    ) == [
+        Result(
+            state=State.WARN, summary="Total (per server): 10.50/s (warn/crit at 10.00/s/20.00/s)"
+        ),
+        Metric("op_s", 10.5, levels=(10.0, 20.0)),
+        Result(state=State.OK, summary="Gets: 5.00/s"),
+        Result(state=State.OK, summary="Sets: 2.00/s"),
+        Result(state=State.OK, summary="Creates: 1.00/s"),
+        Result(state=State.OK, summary="Updates: 2.00/s"),
+        Result(state=State.OK, summary="Deletes: 0.50/s"),
+    ]
+
+
+def test_total_operations_are_checked_like_a_bucket() -> None:
+    assert list(cbo.check_couchbase_buckets_operations_total({}, _section())) == [
+        Result(state=State.OK, summary="Total (per server): 30.00/s"),
+        Metric("op_s", 30.0),
+        Result(state=State.OK, summary="Gets: 13.00/s"),
+        Result(state=State.OK, summary="Sets: 6.00/s"),
+        Result(state=State.OK, summary="Creates: 3.00/s"),
+        Result(state=State.OK, summary="Updates: 8.00/s"),
+        Result(state=State.OK, summary="Deletes: 0.00/s"),
+    ]
+
+
+def test_unknown_bucket_yields_nothing() -> None:
+    assert not list(cbo.check_couchbase_buckets_operations("vanished", {}, _PARSED))

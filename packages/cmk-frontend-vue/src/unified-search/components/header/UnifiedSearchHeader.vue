@@ -253,7 +253,7 @@ const getSearchInputPlaceholder = computed(() => {
 .unified-search-header__input-tag {
   display: inline-flex;
   align-items: center;
-  background: var(--color-yellow-80);
+  background: var(--interactive-highlight);
   border-radius: var(--border-radius);
   height: 20px;
   padding: 0 var(--spacing-half);
@@ -272,7 +272,7 @@ const getSearchInputPlaceholder = computed(() => {
     font-size: var(--font-size-small);
 
     &:hover {
-      background: var(--color-yellow-60);
+      background: var(--interactive-highlight-hover);
     }
 
     .unified-search-header__input-tag-dismiss-icon {

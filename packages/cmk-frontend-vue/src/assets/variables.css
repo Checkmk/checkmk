@@ -126,6 +126,7 @@
     --border-color-emphasis: var(--color-mid-grey-90);
     --border-shade-mix: 70%;
     --border-color-hairline: rgb(0 0 0 / 12%);
+    --border-color-placeholder: var(--color-white-80);
 
     /* Status */
     --color-warning: rgb(255 208 0);
@@ -179,6 +180,7 @@
     --status-color-acknowledged: var(--color-yellow-50);
     --status-color-flapping: var(--color-purple-50);
     --status-color-missing: var(--color-brown-50);
+    --status-color-success-subtle: var(--color-corporate-green-30);
 
     /* Merge into --status-border-color-* if UX agrees to the shift in one theme */
     --status-outline-color-success: var(--color-corporate-green-70);
@@ -201,6 +203,9 @@
     --interactive-inactive: var(--color-mid-grey-30);
     --interactive-focus: var(--color-dark-blue-50);
     --interactive-selected: var(--color-mid-grey-20);
+    --interactive-press-tint: var(--color-conference-grey-10);
+    --interactive-highlight: var(--color-yellow-80);
+    --interactive-highlight-hover: var(--color-yellow-60);
     --interactive-accent-subtle: var(--color-corporate-green-40);
     --interactive-guide: var(--color-pink-40);
     --icon-filter-invert: none;
@@ -387,6 +392,7 @@
     --border-color-emphasis: var(--color-mid-grey-90);
     --border-shade-mix: 100%;
     --border-color-hairline: rgb(255 255 255 / 12%);
+    --border-color-placeholder: var(--color-white-80);
 
     /* Status */
     --color-warning: var(--color-yellow-50);
@@ -440,6 +446,7 @@
     --status-color-acknowledged: var(--color-yellow-50);
     --status-color-flapping: var(--color-purple-50);
     --status-color-missing: var(--color-brown-50);
+    --status-color-success-subtle: var(--color-corporate-green-30);
 
     /* Merge into --status-border-color-* if UX agrees to the shift in one theme */
     --status-outline-color-success: var(--color-corporate-green-70);
@@ -462,6 +469,9 @@
     --interactive-inactive: var(--color-mid-grey-30);
     --interactive-focus: var(--color-dark-blue-50);
     --interactive-selected: var(--color-mid-grey-20);
+    --interactive-press-tint: var(--color-conference-grey-10);
+    --interactive-highlight: var(--color-yellow-80);
+    --interactive-highlight-hover: var(--color-yellow-60);
     --interactive-accent-subtle: var(--color-corporate-green-40);
     --interactive-guide: var(--color-pink-40);
     --icon-filter-invert: invert(100%);

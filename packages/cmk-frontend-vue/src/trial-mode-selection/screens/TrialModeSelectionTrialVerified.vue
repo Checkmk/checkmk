@@ -81,7 +81,7 @@ const summary = computed(() =>
   height: 48px;
   margin: var(--dimension-6) 0 var(--dimension-5);
   border-radius: 50%;
-  background: var(--color-corporate-green-30);
+  background: var(--status-color-success-subtle);
 }
 
 .trial-mode-selection-trial-verified__summary {

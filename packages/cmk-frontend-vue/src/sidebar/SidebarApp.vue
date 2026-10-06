@@ -140,7 +140,7 @@ function dragEnd(_e: DragEvent, index: number) {
     margin: 0 var(--dimension-4);
     box-sizing: border-box;
     background: var(--ux-theme-4);
-    border: 1px solid var(--color-white-80);
+    border: 1px solid var(--border-color-placeholder);
     position: absolute;
     border-radius: var(--border-radius);
   }

@@ -71,11 +71,6 @@ def test_discovery_prism_remote_support(
                 Result(state=State.OK, summary="Remote Tunnel is disabled"),
             ],
             id="The tunnel state is also read from a plain flag.",
-            marks=pytest.mark.xfail(
-                strict=True,
-                raises=AttributeError,
-                reason="Crash report ddb0f0b2-5f2b-11f1-8481-a27beee48cfe: AttributeError",
-            ),
         ),
     ],
 )

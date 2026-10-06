@@ -44,7 +44,8 @@ _TUNNEL_STATE: dict[bool, str] = {
 
 def check_prism_remote_support(params: Mapping[str, Any], section: Section) -> CheckResult:
     target_state = params.get("tunnel_state")
-    active_state = section.get("enable", {"enabled": False}).get("enabled", False)
+    enable = section.get("enable", {"enabled": False})
+    active_state = enable if isinstance(enable, bool) else enable.get("enabled", False)
     message = _TUNNEL_STATE.get(active_state, "No matching Tunnel state found")
 
     if target_state != active_state:

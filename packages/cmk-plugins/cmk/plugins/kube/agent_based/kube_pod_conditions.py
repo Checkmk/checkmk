@@ -59,6 +59,15 @@ def _check_condition(
         # and UNKNOWN (rare in practice; core Kubernetes only emits Unknown for node
         # conditions, but custom controllers/operators may emit it for pods).
         summary_prefix = condition_detailed_description(name, cond.status, cond.reason, cond.detail)
+        if time_diff < 0:
+            yield Result(
+                state=State.UNKNOWN,
+                summary=(
+                    f"{summary_prefix}, but the last transition is {render.timespan(-time_diff)}"
+                    " in the future (check the system time)"
+                ),
+            )
+            return
         for result in check_levels_v1(
             time_diff, levels_upper=levels_upper, render_func=render.timespan
         ):

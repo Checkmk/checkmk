@@ -16,6 +16,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
+from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
 from cmk.gui.plugins.wato.utils import TimeperiodValuespec
 from cmk.gui.search.matchers import MatchItem, MatchItemConfig
 from cmk.gui.utils.roles import UserPermissions
@@ -23,10 +24,12 @@ from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.rule_match_item_generator import MatchItemGeneratorRules
 from cmk.gui.watolib.rulespecs import (
+    CheckParameterRulespecWithoutItem,
     FormSpecDefinition,
     get_rulegroup,
     HostRulespec,
     main_module_from_rulespec_group_name,
+    ManualCheckParameterRulespec,
     rulespec_group_registry,
     RulespecGroup,
     RulespecGroupRegistry,
@@ -34,7 +37,7 @@ from cmk.gui.watolib.rulespecs import (
     RulespecSubGroup,
 )
 from cmk.rulesets.v1 import Help, Title
-from cmk.rulesets.v1.form_specs import Integer
+from cmk.rulesets.v1.form_specs import FormSpec, Integer
 
 
 def test_rulespec_sub_group() -> None:
@@ -371,3 +374,83 @@ def test_match_item_generator_rules_follows_a_language_switch(monkeypatch: Monke
     assert titles() == ["Title en"]
     language = "de"
     assert titles() == ["Title de"]
+
+
+class _CheckParametersGroup(RulespecGroup):
+    @property
+    @override
+    def name(self) -> str:
+        return "check_parameters_group"
+
+    @property
+    @override
+    def title(self) -> str:
+        return "Check parameters group"
+
+    @property
+    @override
+    def help(self) -> str:
+        return ""
+
+
+class _RecordingFormSpecFactory:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def __call__(self) -> FormSpec[int]:
+        self.calls += 1
+        return Integer(title=Title("Parameters"))
+
+
+def test_check_parameter_rulespec_does_not_build_form_spec_on_creation() -> None:
+    factory = _RecordingFormSpecFactory()
+
+    CheckParameterRulespecWithoutItem(
+        check_group_name="some_check_group",
+        group=_CheckParametersGroup,
+        parameter_valuespec=TextInput,
+        create_manual_check=False,
+        form_spec_definition=FormSpecDefinition(factory, None),
+    )
+
+    assert factory.calls == 0
+
+
+def test_check_parameter_rulespec_form_spec_is_time_specific() -> None:
+    rulespec = CheckParameterRulespecWithoutItem(
+        check_group_name="some_check_group",
+        group=_CheckParametersGroup,
+        parameter_valuespec=TextInput,
+        create_manual_check=False,
+        form_spec_definition=FormSpecDefinition(_RecordingFormSpecFactory(), None),
+    )
+
+    form_spec = rulespec.form_spec
+
+    assert isinstance(form_spec, TimeSpecific)
+    assert form_spec.parameter_form == Integer(title=Title("Parameters"))
+
+
+def test_check_parameter_rulespec_does_not_wrap_time_specific_form_spec_again() -> None:
+    time_specific = TimeSpecific(parameter_form=Integer(title=Title("Parameters")))
+    rulespec = CheckParameterRulespecWithoutItem(
+        check_group_name="some_check_group",
+        group=_CheckParametersGroup,
+        parameter_valuespec=TextInput,
+        create_manual_check=False,
+        form_spec_definition=FormSpecDefinition(lambda: time_specific, None),
+    )
+
+    assert rulespec.form_spec is time_specific
+
+
+def test_manual_check_parameter_rulespec_does_not_build_form_spec_on_creation() -> None:
+    factory = _RecordingFormSpecFactory()
+
+    ManualCheckParameterRulespec(
+        group=_CheckParametersGroup,
+        check_group_name="some_check_group",
+        form_spec_definition=FormSpecDefinition(factory, None),
+    )
+
+    assert factory.calls == 0

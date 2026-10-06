@@ -1065,12 +1065,16 @@ def _wrap_form_spec_in_timespecific[ModelT](
     The given form_spec will be transformed to a list of form specs,
     whereas each element can be set to a specific timeperiod.
     """
-    form_spec = form_spec_callable()
-    if isinstance(form_spec, TimeSpecific):
-        # Legacy check parameters registered through register_check_parameters() already
-        # have their form_spec wrapped in TimeSpecific.
-        return form_spec_callable
-    return lambda: TimeSpecific(parameter_form=form_spec)
+
+    def wrapped() -> FormSpec:
+        form_spec = form_spec_callable()
+        if isinstance(form_spec, TimeSpecific):
+            # Legacy check parameters registered through register_check_parameters() already
+            # have their form_spec wrapped in TimeSpecific.
+            return form_spec
+        return TimeSpecific(parameter_form=form_spec)
+
+    return wrapped
 
 
 class ManualCheckParameterRulespec(HostRulespec):
@@ -1189,10 +1193,9 @@ class ManualCheckParameterRulespec(HostRulespec):
         if form_spec_definition is None:
             return None
 
-        parameter_fs = form_spec_definition.value()
-
-        return FormSpecDefinition(
-            lambda: FSTuple(
+        def wrapped() -> FormSpec:
+            parameter_fs = form_spec_definition.value()
+            return FSTuple(
                 title=parameter_fs.title,
                 elements=[
                     _get_check_type_group_choice(
@@ -1204,9 +1207,9 @@ class ManualCheckParameterRulespec(HostRulespec):
                     self._compute_item_form_spec(form_spec_definition.item),
                     parameter_fs,
                 ],
-            ),
-            form_spec_definition.item,
-        )
+            )
+
+        return FormSpecDefinition(wrapped, form_spec_definition.item)
 
     def _compute_item_form_spec(self, form_spec: Callable[[], FormSpec] | None) -> FormSpec:
         """Not used as condition, only for the rule value valuespec"""

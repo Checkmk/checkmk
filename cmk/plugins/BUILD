@@ -155,7 +155,6 @@ sh_library(
         "hivemanager_ng/libexec/agent_hivemanager_ng",
         "hp_msa/libexec/agent_hp_msa",
         "hpe_3par/libexec/agent_three_par",
-        "ibmsvc/libexec/agent_ibmsvc",
         "innovaphone/libexec/agent_innovaphone",
         "jira/libexec/agent_jira",
         "jolokia/libexec/agent_jolokia",

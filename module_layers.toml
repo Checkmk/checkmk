@@ -111,7 +111,7 @@ clean = [
   "hivemanager_ng",
   "hp_msa",
   "hpe_3par",
-  "ibmsvc",
+  "ibm_svc",
   "innovaphone",
   "jenkins",
   "jira",

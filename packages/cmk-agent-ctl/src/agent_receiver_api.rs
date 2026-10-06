@@ -86,6 +86,68 @@ struct ErrorResponse {
     pub detail: String,
 }
 
+/// What the host tells the site about its agent. The site keeps no state about
+/// the host beyond this, so every field is reported on every check.
+///
+/// Borrows its fields: the body is a view of the updater's artifacts, assembled
+/// for one request.
+#[derive(Serialize)]
+pub struct UpdateStatusBody<'a> {
+    /// Target platform of the installed package, for example "linux_deb".
+    pub platform: &'a str,
+
+    /// Hash of the installed agent package.
+    pub installed_aghash: &'a types::AgentHash,
+
+    /// Error of the last update attempt, which the site quotes back in its
+    /// deployment views.
+    pub last_error: Option<&'a str>,
+}
+
+/// One signature of the offered agent package.
+#[derive(Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct AgentSignature {
+    /// PEM-encoded certificate of the signing key.
+    pub certificate: String,
+
+    /// Base64-encoded signature of the package.
+    pub signature: String,
+}
+
+/// The agent package the site has for this host.
+#[derive(Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct TargetAgent {
+    /// Hash of the package the site would deliver.
+    pub aghash: types::AgentHash,
+
+    /// Signatures to verify a downloaded package against. A site that signs
+    /// nothing may leave the field out altogether.
+    #[serde(default)]
+    pub signatures: Vec<AgentSignature>,
+}
+
+/// What the site answers a status request with.
+#[derive(Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct UpdateStatusResponse {
+    /// The package offered to this host, absent if the site has none. Carrying
+    /// the hash and its signatures together keeps a package without a hash,
+    /// or a hash without the signatures that belong to it, unrepresentable.
+    pub target_agent: Option<TargetAgent>,
+}
+
+pub trait AgentUpdate {
+    /// Report what is installed and learn which package the site would deliver.
+    ///
+    /// The client certificate of `connection` authenticates the host; the site
+    /// resolves its UUID to a host name. There is no further credential.
+    fn update_status(
+        &self,
+        base_url: &reqwest::Url,
+        connection: &config::TrustedConnection,
+        body: &UpdateStatusBody<'_>,
+    ) -> AnyhowResult<UpdateStatusResponse>;
+}
+
 pub trait Registration {
     fn register_existing(
         &self,
@@ -407,6 +469,29 @@ impl RegistrationStatusV2 for Api {
     }
 }
 
+impl AgentUpdate for Api {
+    fn update_status(
+        &self,
+        base_url: &reqwest::Url,
+        connection: &config::TrustedConnection,
+        body: &UpdateStatusBody<'_>,
+    ) -> AnyhowResult<UpdateStatusResponse> {
+        Self::deserialize_json_response(
+            certs::client(
+                Some(connection.tls_handshake_credentials()?),
+                self.use_proxy,
+            )?
+            .post(Self::endpoint_url(
+                base_url,
+                &["agent_update", "status", &connection.uuid.to_string()],
+            )?)
+            .json(body)
+            .send()?,
+            |body| serde_json::from_str::<UpdateStatusResponse>(body),
+        )
+    }
+}
+
 #[cfg(test)]
 mod test_api {
     use super::*;
@@ -422,6 +507,69 @@ mod test_api {
             .to_string(),
             "https://my_server:7766/site2/agent-receiver/some/endpoint"
         );
+    }
+
+    const AGENT_HASH: &str = "0123456789abcdef";
+
+    #[test]
+    fn test_update_status_body_serialization() {
+        assert_eq!(
+            serde_json::to_string(&UpdateStatusBody {
+                platform: "linux_deb",
+                installed_aghash: &AGENT_HASH.parse().unwrap(),
+                last_error: Some("boom"),
+            })
+            .unwrap(),
+            r#"{"platform":"linux_deb","installed_aghash":"0123456789abcdef","last_error":"boom"}"#
+        );
+    }
+
+    #[test]
+    fn test_update_status_response_deserialization() {
+        let response = serde_json::from_str::<UpdateStatusResponse>(
+            r#"{"target_agent": {"aghash": "0123456789abcdef",
+                "signatures": [{"certificate": "CERT", "signature": "c2ln"}]}}"#,
+        )
+        .unwrap();
+
+        let target_agent = response.target_agent.unwrap();
+        assert_eq!(target_agent.aghash.as_str(), AGENT_HASH);
+        assert_eq!(
+            target_agent.signatures,
+            [AgentSignature {
+                certificate: String::from("CERT"),
+                signature: String::from("c2ln"),
+            }]
+        );
+    }
+
+    /// A site that signs nothing may leave the signatures out entirely.
+    #[test]
+    fn test_update_status_response_of_an_unsigned_package() {
+        let response = serde_json::from_str::<UpdateStatusResponse>(
+            r#"{"target_agent": {"aghash": "0123456789abcdef"}}"#,
+        )
+        .unwrap();
+
+        assert!(response.target_agent.unwrap().signatures.is_empty());
+    }
+
+    /// A site with nothing to offer leaves the target agent out entirely.
+    #[test]
+    fn test_update_status_response_without_a_package() {
+        let response = serde_json::from_str::<UpdateStatusResponse>(r#"{}"#).unwrap();
+
+        assert!(response.target_agent.is_none());
+    }
+
+    /// The target hash becomes the name of a file handed to a privileged
+    /// process, so a response carrying something else is not a status at all.
+    #[test]
+    fn test_update_status_response_rejects_a_target_hash_that_is_not_one() {
+        assert!(serde_json::from_str::<UpdateStatusResponse>(
+            r#"{"target_agent": {"aghash": "../../etc/passwd"}}"#,
+        )
+        .is_err());
     }
 
     #[test]

@@ -8,10 +8,12 @@
 //! See [`crate::updater`] for what the three artifacts are and how they relate.
 
 use super::connection;
+use crate::agent_receiver_api;
 use crate::config::{
     tmp_path_for_atomical_save, JSONLoader, JSONLoaderMissingSafe, Registry, TOMLLoader,
 };
 use crate::environment::PathResolver;
+use crate::site_spec;
 use crate::types::AgentHash;
 use anyhow::{Context, Error, Result as AnyhowResult};
 use log::{log, Level};
@@ -34,6 +36,10 @@ const DEFAULT_INTERVAL: u64 = 3600;
 /// The state carries the last error, which quotes paths and the site address.
 #[cfg(unix)]
 const STATE_FILE_MODE: u32 = 0o600;
+
+/// Longest last error reported to the site, in characters. The state file may
+/// hold a longer one - the site only quotes it back in its deployment views.
+const LAST_ERROR_MAX_LEN: usize = 512;
 
 fn default_activated() -> bool {
     true
@@ -324,6 +330,55 @@ impl Updater {
         true
     }
 
+    /// Ask the site behind `selected` which agent package it has for this host.
+    ///
+    /// The request carries the hash of the installed package and the error of
+    /// the last update attempt: the site keeps no state about the host beyond
+    /// what the host reports. It is authenticated by the client certificate of
+    /// the connection alone - see [`super::connection`].
+    ///
+    /// # Errors
+    ///
+    /// If nothing is known about the installed agent, if the site address
+    /// cannot be assembled, or if the site does not answer with a status this
+    /// controller can parse.
+    pub fn request_update_status(
+        &self,
+        api: &impl agent_receiver_api::AgentUpdate,
+        selected: &connection::UpdateConnection<'_>,
+    ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse> {
+        let agent_info = self
+            .agent_info
+            .as_ref()
+            .context("Cannot ask for an agent update without the info of the installed agent")?;
+        let url = site_spec::make_site_url(selected.site_id, &selected.connection.receiver_port)?;
+        api.update_status(
+            &url,
+            &selected.connection.trust,
+            &agent_receiver_api::UpdateStatusBody {
+                platform: &agent_info.platform,
+                installed_aghash: &agent_info.hash,
+                last_error: self.reported_last_error(),
+            },
+        )
+        .context(format!(
+            "Agent update status request to {} failed",
+            selected.site_id
+        ))
+    }
+
+    /// The last error in the form the site gets it.
+    fn reported_last_error(&self) -> Option<&str> {
+        let error = self.state.last_error.as_deref()?;
+        // By character, not by byte: slicing in the middle of a multi-byte
+        // character would panic.
+        let end = error
+            .char_indices()
+            .nth(LAST_ERROR_MAX_LEN)
+            .map_or(error.len(), |(index, _)| index);
+        Some(&error[..end])
+    }
+
     pub fn signature_keys(&self) -> &[String] {
         self.config
             .as_ref()
@@ -372,11 +427,14 @@ fn write_restricted(path: &Path, contents: &str) -> io::Result<()> {
 mod tests {
     use super::*;
     use crate::config::test_helpers::TestRegistry;
-    use crate::config::ConnectionMode;
+    use crate::config::{ConnectionMode, TrustedConnection};
     use crate::environment::SetupMode;
+    use std::cell::RefCell;
     use std::path::PathBuf;
 
     const INSTALLED_HASH: &str = "0123456789abcdef";
+    const TARGET_HASH: &str = "fedcba9876543210";
+    const CONNECTION_UUID: &str = "2da62f8f-9e4a-4b1b-8b3a-1c1a0b0f1a01";
 
     const UPDATER_CONFIG_TOML: &str = "\
 activated = false
@@ -875,11 +933,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
     /// A registry holding the one connection that could serve agent updates.
     fn registry_with_one_connection() -> TestRegistry {
-        TestRegistry::new().add_connection(
-            &ConnectionMode::Pull,
-            "server/site",
-            "2da62f8f-9e4a-4b1b-8b3a-1c1a0b0f1a01",
-        )
+        TestRegistry::new().add_connection(&ConnectionMode::Pull, "server/site", CONNECTION_UUID)
     }
 
     #[test]
@@ -912,5 +966,202 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         };
 
         assert!(!updater(Some(config), some_agent_info()).handle_update_cycle(&registry.registry));
+    }
+
+    /// The parts of a status request a test looks at, owned: the body borrows
+    /// the updater's artifacts and does not outlive the call.
+    struct RecordedRequest {
+        url: String,
+        uuid: String,
+        platform: String,
+        installed_aghash: String,
+        last_error: Option<String>,
+    }
+
+    /// A site that answers with a canned status and remembers what it was asked.
+    struct TestApi {
+        response: agent_receiver_api::UpdateStatusResponse,
+        request: RefCell<Option<RecordedRequest>>,
+    }
+
+    impl TestApi {
+        fn new(target: Option<&str>) -> Self {
+            Self {
+                response: agent_receiver_api::UpdateStatusResponse {
+                    target_agent: target.map(|hash| agent_receiver_api::TargetAgent {
+                        aghash: hash.parse().unwrap(),
+                        signatures: vec![],
+                    }),
+                },
+                request: RefCell::new(None),
+            }
+        }
+
+        /// The request of the one call made, consumed by the assertions.
+        fn request(&self) -> RecordedRequest {
+            self.request
+                .borrow_mut()
+                .take()
+                .expect("no request was made")
+        }
+    }
+
+    impl agent_receiver_api::AgentUpdate for TestApi {
+        fn update_status(
+            &self,
+            base_url: &reqwest::Url,
+            connection: &TrustedConnection,
+            body: &agent_receiver_api::UpdateStatusBody<'_>,
+        ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse> {
+            *self.request.borrow_mut() = Some(RecordedRequest {
+                url: base_url.to_string(),
+                uuid: connection.uuid.to_string(),
+                platform: String::from(body.platform),
+                installed_aghash: String::from(body.installed_aghash.as_str()),
+                last_error: body.last_error.map(String::from),
+            });
+            Ok(self.response.clone())
+        }
+    }
+
+    /// A site that cannot be reached.
+    struct UnreachableApi;
+
+    impl agent_receiver_api::AgentUpdate for UnreachableApi {
+        fn update_status(
+            &self,
+            _base_url: &reqwest::Url,
+            _connection: &TrustedConnection,
+            _body: &agent_receiver_api::UpdateStatusBody<'_>,
+        ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse> {
+            Err(Error::msg("connection refused"))
+        }
+    }
+
+    /// An updater whose last update attempt ended in `last_error`.
+    fn updater_after(last_error: Option<&str>) -> Updater {
+        Updater {
+            state: UpdateState {
+                last_error: last_error.map(String::from),
+                ..Default::default()
+            },
+            ..updater(some_config(), some_agent_info())
+        }
+    }
+
+    #[test]
+    fn test_request_update_status_reports_the_installed_hash_and_the_last_error() {
+        let registry = registry_with_one_connection();
+        let selected = connection::select(&registry.registry).unwrap();
+        let api = TestApi::new(Some(TARGET_HASH));
+
+        updater_after(Some("boom"))
+            .request_update_status(&api, &selected)
+            .unwrap();
+
+        let request = api.request();
+        assert_eq!(request.url, "https://server:8000/site");
+        assert_eq!(request.uuid, CONNECTION_UUID);
+        assert_eq!(request.platform, "linux_deb");
+        assert_eq!(request.installed_aghash, INSTALLED_HASH);
+        assert_eq!(request.last_error.unwrap(), "boom");
+    }
+
+    #[test]
+    fn test_request_update_status_after_a_successful_cycle_reports_no_error() {
+        let registry = registry_with_one_connection();
+        let selected = connection::select(&registry.registry).unwrap();
+        let api = TestApi::new(None);
+
+        updater_after(None)
+            .request_update_status(&api, &selected)
+            .unwrap();
+
+        assert!(api.request().last_error.is_none());
+    }
+
+    /// The state file may hold an arbitrarily long error; the site gets a
+    /// bounded one.
+    #[test]
+    fn test_request_update_status_truncates_a_long_last_error() {
+        let registry = registry_with_one_connection();
+        let selected = connection::select(&registry.registry).unwrap();
+        let api = TestApi::new(None);
+        // Two bytes per character: truncating by byte would split one.
+        let last_error = "ä".repeat(LAST_ERROR_MAX_LEN + 10);
+
+        updater_after(Some(&last_error))
+            .request_update_status(&api, &selected)
+            .unwrap();
+
+        assert_eq!(
+            api.request().last_error.unwrap().chars().count(),
+            LAST_ERROR_MAX_LEN
+        );
+    }
+
+    #[test]
+    fn test_request_update_status_keeps_a_short_last_error_whole() {
+        let registry = registry_with_one_connection();
+        let selected = connection::select(&registry.registry).unwrap();
+        let api = TestApi::new(None);
+        let last_error = "e".repeat(LAST_ERROR_MAX_LEN);
+
+        updater_after(Some(&last_error))
+            .request_update_status(&api, &selected)
+            .unwrap();
+
+        assert_eq!(api.request().last_error.unwrap(), last_error);
+    }
+
+    #[test]
+    fn test_request_update_status_parses_the_offered_package() {
+        let registry = registry_with_one_connection();
+        let selected = connection::select(&registry.registry).unwrap();
+
+        let status = updater_after(None)
+            .request_update_status(&TestApi::new(Some(TARGET_HASH)), &selected)
+            .unwrap();
+
+        assert_eq!(status.target_agent.unwrap().aghash.as_str(), TARGET_HASH);
+    }
+
+    #[test]
+    fn test_request_update_status_parses_a_site_without_a_package() {
+        let registry = registry_with_one_connection();
+        let selected = connection::select(&registry.registry).unwrap();
+
+        let status = updater_after(None)
+            .request_update_status(&TestApi::new(None), &selected)
+            .unwrap();
+
+        assert!(status.target_agent.is_none());
+    }
+
+    #[test]
+    fn test_request_update_status_without_agent_info() {
+        let registry = registry_with_one_connection();
+        let selected = connection::select(&registry.registry).unwrap();
+
+        let error = updater(some_config(), None)
+            .request_update_status(&TestApi::new(None), &selected)
+            .unwrap_err();
+
+        assert!(error.to_string().contains("info of the installed agent"));
+    }
+
+    #[test]
+    fn test_request_update_status_names_the_site_that_did_not_answer() {
+        let registry = registry_with_one_connection();
+        let selected = connection::select(&registry.registry).unwrap();
+
+        let error = updater_after(None)
+            .request_update_status(&UnreachableApi, &selected)
+            .unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "Agent update status request to server/site failed"
+        );
     }
 }

@@ -8,7 +8,9 @@
 # mypy: disable-error-code="type-arg"
 
 
+import io
 import json
+import sys
 import typing
 import urllib.parse
 from base64 import b64encode
@@ -136,22 +138,37 @@ class WebTestAppForCMK(FlaskClient):
         kw["data"] = kw.pop("data", params)
         kw["query_string"] = kw.pop("json_data", query_string)
 
-        with _update_environ_base(extra_environ) if extra_environ else nullcontext():
-            resp = getattr(super(), method.lower())(
-                url, headers=headers, follow_redirects=follow_redirects, **kw
-            )
+        errors_stream = io.StringIO()
+        try:
+            with _update_environ_base(extra_environ) if extra_environ else nullcontext():
+                resp = getattr(super(), method.lower())(
+                    url,
+                    headers=headers,
+                    follow_redirects=follow_redirects,
+                    errors_stream=errors_stream,
+                    **kw,
+                )
+            # The app runs unbuffered, so exhaust the response body to catch what is
+            # written to wsgi.errors while the rest of a streamed body is produced.
+            resp.get_data()
+        finally:
+            # Pass the errors on to stderr like werkzeug does by default, so that they
+            # show up in pytest's output even when they are expected, a check below
+            # fails or the request raises.
+            sys.stderr.write(errors_stream.getvalue())
+        errors = errors_stream.getvalue()
 
         if status and resp.status_code != status:
             raise AssertionError(
                 f"Expected response code: {status}, got {resp.status_code}!\nResponse:\n{resp.text}"
             )
 
-        if not expect_errors and not (errors := resp.request.environ.get("wsgi.errors", [])):
+        if not expect_errors and errors:
             raise AssertionError(
                 "Found `wsgi.errors` arising from the request!\n"
                 f"Status code:\n{resp.status_code}\n"
                 f"Response:\n{str(resp)}\n"
-                f"Errors:\n {'\n'.join(errors)}"
+                f"Errors:\n{errors}"
             )
         return resp
 
@@ -241,9 +258,12 @@ def _reset_cache_for_folders_and_hosts_setup() -> None:
     NOTE: further investigation to be performed as documented in CMK-14175.
     `request_context` should be made specific to the Rest API calls.
     """
+    from flask.ctx import has_app_context
     from flask.globals import g
 
-    if hasattr(g, "folder_tree"):
+    # Without an application context, e.g. for a plain Flask app, accessing g raises a
+    # RuntimeError, which hasattr() doesn't catch.
+    if has_app_context() and hasattr(g, "folder_tree"):
         g.folder_tree.invalidate_caches()
         g.folder_tree.reset_cache()
         # The folder tree snapshots the relevant config at creation time. Refresh it

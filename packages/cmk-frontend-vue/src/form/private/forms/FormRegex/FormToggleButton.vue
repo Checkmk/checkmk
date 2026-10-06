@@ -39,7 +39,7 @@ const toggleOptions = [
   display: inline-flex;
   align-items: center;
   background-color: var(--ux-theme-0);
-  border: 1px solid var(--color-mid-grey-60);
+  border: 1px solid var(--default-form-element-border-color);
   gap: 2px;
   padding: 0 3px;
   border-top-left-radius: 12px;
@@ -62,7 +62,7 @@ const toggleOptions = [
 }
 
 .form-toggle-button .form-toggle-button--active {
-  background-color: var(--color-mid-grey-20);
-  color: var(--color-conference-grey-100);
+  background-color: var(--interactive-selected);
+  color: var(--font-color-on-light);
 }
 </style>

@@ -164,7 +164,7 @@ function onKeyEnter(e: KeyboardEvent) {
 }
 
 .form-regex__input {
-  border: 1px solid var(--color-mid-grey-60);
+  border: 1px solid var(--default-form-element-border-color);
   padding: 0 12px 0 3px;
   height: 20px;
   border-left: 0;
@@ -177,7 +177,7 @@ function onKeyEnter(e: KeyboardEvent) {
 }
 
 .form-regex__input:focus {
-  border-color: var(--color-mid-grey-60);
+  border-color: var(--default-form-element-border-color);
   background-color: var(--ux-theme-5);
 }
 

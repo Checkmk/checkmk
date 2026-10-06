@@ -320,7 +320,7 @@ defineExpose({
 </template>
 <style scoped>
 .form-suggestions-list__highlight {
-  color: var(--color-white-100);
+  color: var(--white);
   font-weight: var(--font-weight-bold);
 }
 
@@ -346,12 +346,12 @@ defineExpose({
 
     /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     &.selected {
-      color: var(--color-white-100);
-      background-color: var(--color-white-10);
+      color: var(--white);
+      background-color: var(--background-selected-overlay);
     }
 
     &:hover {
-      color: var(--color-white-100);
+      color: var(--white);
     }
   }
 }

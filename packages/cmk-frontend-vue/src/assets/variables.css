@@ -100,6 +100,7 @@
     --background-guide: var(--color-daylight-grey-30);
     --background-scrim: color-mix(in srgb, var(--color-daylight-grey-50) 50%, transparent);
     --background-muted: var(--ux-theme-4);
+    --background-selected-overlay: var(--color-white-10);
     --background-row-hover-highlight: var(--color-dark-blue-10);
 
     /* Text */
@@ -112,6 +113,7 @@
     --font-color-muted: var(--color-mid-grey-50);
     --font-color-graphic: rgb(131 131 131);
     --font-color-on-status: var(--color-midnight-grey-100);
+    --font-color-on-light: var(--color-conference-grey-100);
 
     /* Border */
     --border-color-subtle: var(--color-mid-grey-10);
@@ -198,6 +200,7 @@
     --interactive-icon-color-inactive: var(--color-mist-grey-60);
     --interactive-inactive: var(--color-mid-grey-30);
     --interactive-focus: var(--color-dark-blue-50);
+    --interactive-selected: var(--color-mid-grey-20);
     --interactive-accent-subtle: var(--color-corporate-green-40);
     --interactive-guide: var(--color-pink-40);
     --icon-filter-invert: none;
@@ -270,7 +273,7 @@
     --tag-ruleset-color: var(--color-pink-70);
     --tag-label-color: var(--color-cyan-80);
     --tag-font-color-light: var(--color-white-100);
-    --tag-font-color-dark: var(--color-conference-grey-100);
+    --tag-font-color-dark: var(--font-color-on-light);
 
     /* Cmk Button Variants */
     --default-button-primary-color: var(--color-corporate-green-50);
@@ -358,6 +361,7 @@
     --background-guide: var(--color-conference-grey-100);
     --background-scrim: color-mix(in srgb, var(--color-midnight-grey-90) 50%, transparent);
     --background-muted: var(--ux-theme-3);
+    --background-selected-overlay: var(--color-white-10);
     --background-row-hover-highlight: var(--color-dark-blue-90);
 
     /* Text */
@@ -370,6 +374,7 @@
     --font-color-muted: var(--color-mid-grey-50);
     --font-color-graphic: var(--font-color);
     --font-color-on-status: var(--color-midnight-grey-100);
+    --font-color-on-light: var(--color-conference-grey-100);
 
     /* Border */
     --border-color-subtle: var(--color-mid-grey-90);
@@ -456,6 +461,7 @@
     --interactive-icon-color-inactive: var(--color-mist-grey-60);
     --interactive-inactive: var(--color-mid-grey-30);
     --interactive-focus: var(--color-dark-blue-50);
+    --interactive-selected: var(--color-mid-grey-20);
     --interactive-accent-subtle: var(--color-corporate-green-40);
     --interactive-guide: var(--color-pink-40);
     --icon-filter-invert: invert(100%);
@@ -528,7 +534,7 @@
     --tag-ruleset-color: var(--color-pink-70);
     --tag-label-color: var(--color-cyan-80);
     --tag-font-color-light: var(--color-white-100);
-    --tag-font-color-dark: var(--color-conference-grey-100);
+    --tag-font-color-dark: var(--font-color-on-light);
 
     /* Cmk Button Variants */
     --default-button-primary-color: var(--color-corporate-green-50);

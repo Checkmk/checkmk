@@ -8,7 +8,6 @@
 import io
 import time
 from collections.abc import Iterator
-from contextlib import nullcontext
 from email.utils import formatdate
 
 import pytest
@@ -21,14 +20,17 @@ from cmk.gui import http
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.wsgi.app import application_and_request_context
-from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 global_request = request
-# The form size limit enforced by cmk.gui.http.Request.max_form_memory_size.
+# The limit enforced by cmk.gui.http.Request.max_form_memory_size. It applies to
+# each text field of a multipart form, not to the form as a whole.
 MAX_FORM_SIZE = 200 * 1024 * 1024  # 200 MiB
-# A small stand-in limit used to exercise the boundary logic without allocating
-# hundreds of MiB (let alone GiB) of payload. The real limit is monkeypatched
-# down to this value in the size-limit test.
+# A stand-in limit used to exercise the boundary logic without allocating hundreds
+# of MiB of payload. The real limit is monkeypatched down to this value by the
+# small_form_size_limit fixture. Keep it well above werkzeug's 64 KiB multipart
+# read chunk: when the whole body fits into a single chunk, werkzeug counts the
+# part headers and the boundary against the limit, too, so a field of exactly the
+# limit would be rejected.
 TEST_FORM_SIZE = 1024 * 1024  # 1 MiB
 
 RequestContextFixture = Iterator[None]
@@ -384,41 +386,42 @@ def test_response_del_cookie(monkeypatch: MonkeyPatch) -> None:
     )
 
 
-@pytest.mark.parametrize(
-    ["size", "error"],
-    [
-        pytest.param(TEST_FORM_SIZE - 4096, False, id="under_limit"),
-        pytest.param(TEST_FORM_SIZE, True, id="at_limit"),
-        pytest.param(TEST_FORM_SIZE + 1, True, id="just_over_limit"),
-    ],
-)
-@pytest.mark.usefixtures("patch_theme")
-def test_response_413_form_size_limit(
-    wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch, size: int, error: bool
-) -> None:
-    """Validate that form data exceeding the limit is rejected with 413.
-
-    The real limit (200 MiB) is monkeypatched down to a small stand-in value so
-    the boundary logic is exercised with KiB/MiB-sized payloads. Previously the
-    ``over_limit`` case built a ~2 GiB string and could OOM the test runner.
-
-    Args:
-        wsgi_app (WebTestAppForCMK): wsgi client of the flask application.
-        patch_theme (None): patch frontend configuration for unit testing.
-        monkeypatch (MonkeyPatch): used to shrink the enforced form size limit.
-        size (int): size in bytes of the data added to the form.
-        error (bool): whether an error is raised or not.
-    """
+@pytest.fixture()
+def small_form_size_limit(monkeypatch: MonkeyPatch) -> None:
+    """Shrink the real limit (200 MiB) so that the boundary can be exercised with
+    MiB-sized payloads instead of allocating hundreds of MiB."""
     # Guard the assumed default so this stays in sync with the production limit.
     assert http.Request.max_form_memory_size == MAX_FORM_SIZE
     monkeypatch.setattr(http.Request, "max_form_memory_size", TEST_FORM_SIZE)
 
-    content = "a" * size
-    with pytest.raises(RequestEntityTooLarge) if error else nullcontext():
-        wsgi_app.post(
-            "/NO_SITE/check_mk/login.py",
-            data={"_username": content},
+
+# The following tests deliberately pin werkzeug's semantics of the limit, acting
+# as a canary for library upgrades changing them. werkzeug 3.1.9 was such an
+# upgrade: since then, application/x-www-form-urlencoded bodies are not checked
+# at all, only the text fields of multipart forms are.
+def _multipart_request(field_value: str) -> http.Request:
+    return http.Request(
+        create_environ(
+            method="POST", data={"field": field_value}, content_type="multipart/form-data"
         )
+    )
+
+
+@pytest.mark.usefixtures("small_form_size_limit")
+def test_multipart_text_field_at_form_size_limit_is_accepted() -> None:
+    req = _multipart_request("a" * TEST_FORM_SIZE)
+
+    field = req.var("field")
+
+    assert field is not None and len(field) == TEST_FORM_SIZE
+
+
+@pytest.mark.usefixtures("small_form_size_limit")
+def test_multipart_text_field_over_form_size_limit_is_rejected() -> None:
+    req = _multipart_request("a" * (TEST_FORM_SIZE + 1))
+
+    with pytest.raises(RequestEntityTooLarge):
+        req.var("field")
 
 
 # User IDs in Checkmk may contain non ascii characters. When they need to be encoded,

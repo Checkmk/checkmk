@@ -6,7 +6,7 @@
 """The two forms a host relation takes, and the codecs for both.
 
 A relation is *stored* on a host as a :class:`RelationLink` in its ``relations`` attribute, and
-*materialized* into the monitoring core as a :class:`ResolvedRelation` in the ``_RELATIONS``
+*materialized* into the monitoring core as a :class:`ResolvedRelation` in the ``_CMK_RELATIONS``
 custom host variable. Setup writes both; the monitoring reads only the second, from whatever a
 site's core reports - possibly a site whose configuration was written by another Checkmk version.
 
@@ -175,7 +175,7 @@ def relation_key(link: RelationLink) -> tuple[str, RelationDirection, HostName]:
 
 
 #: The custom host variable Setup writes, via a generated ``explicit_host_conf`` file.
-RELATIONS_MACRO = "_RELATIONS"
+RELATIONS_MACRO = "_CMK_RELATIONS"
 
 #: The same variable as Livestatus reports it: it strips the leading underscore of a custom
 #: variable's name, so a reader of ``custom_variables`` has to ask for it without one.

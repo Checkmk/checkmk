@@ -919,7 +919,7 @@ class TestMonitorHostsFields:
             [
                 "GET hosts",
                 "Columns: name",
-                "Filter: custom_variable_names >= RELATIONS",
+                "Filter: custom_variable_names >= CMK_RELATIONS",
             ]
         )
         mock_livestatus.expect_query(
@@ -1151,7 +1151,7 @@ class TestMonitorHostOverview:
                 {
                     **_OVERVIEW_HOST,
                     "custom_variables": {
-                        "RELATIONS": json.dumps(
+                        "CMK_RELATIONS": json.dumps(
                             [
                                 # The card names the end the related host sits at in return.
                                 {
@@ -1169,7 +1169,7 @@ class TestMonitorHostOverview:
                             ]
                         )
                     },
-                    "custom_variable_names": ["RELATIONS"],
+                    "custom_variable_names": ["CMK_RELATIONS"],
                 },
                 {
                     **_OVERVIEW_HOST,
@@ -1180,7 +1180,7 @@ class TestMonitorHostOverview:
                     "num_services_crit": 1,
                     "last_check": 1783942680,
                     "custom_variables": {
-                        "RELATIONS": json.dumps(
+                        "CMK_RELATIONS": json.dumps(
                             [
                                 {
                                     "kind": "management",
@@ -1191,7 +1191,7 @@ class TestMonitorHostOverview:
                             ]
                         )
                     },
-                    "custom_variable_names": ["RELATIONS"],
+                    "custom_variable_names": ["CMK_RELATIONS"],
                 },
             ],
         )
@@ -1208,7 +1208,7 @@ class TestMonitorHostOverview:
             [
                 "GET hosts",
                 "Columns: name",
-                "Filter: custom_variable_names >= RELATIONS",
+                "Filter: custom_variable_names >= CMK_RELATIONS",
             ]
         )
         mock_livestatus.expect_query(
@@ -1221,7 +1221,7 @@ class TestMonitorHostOverview:
                 ),
                 "Filter: name = mgmt-heute",
                 # Both ends carry the macro, so a host that does not is not the counterpart.
-                "Filter: custom_variable_names >= RELATIONS",
+                "Filter: custom_variable_names >= CMK_RELATIONS",
                 "And: 2",
             ],
             # The export resolved where the related hosts live, so only their site is asked.
@@ -1481,7 +1481,7 @@ _HOSTS_WITH_RELATIONS = [
     {
         **_HOSTS[0],
         "custom_variables": {
-            "RELATIONS": json.dumps(
+            "CMK_RELATIONS": json.dumps(
                 [
                     {
                         "kind": "management",
@@ -1493,16 +1493,16 @@ _HOSTS_WITH_RELATIONS = [
                 ]
             )
         },
-        "custom_variable_names": ["RELATIONS"],
+        "custom_variable_names": ["CMK_RELATIONS"],
     },
     {
         **_HOSTS[1],
         "custom_variables": {
-            "RELATIONS": json.dumps(
+            "CMK_RELATIONS": json.dumps(
                 [{"kind": "management", "direction": "parent", "host": "heute", "site": _SITE_ID}]
             )
         },
-        "custom_variable_names": ["RELATIONS"],
+        "custom_variable_names": ["CMK_RELATIONS"],
     },
     {**_HOSTS[2], "custom_variable_names": []},
 ]

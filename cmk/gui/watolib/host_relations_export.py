@@ -9,7 +9,7 @@ Host relations (see :mod:`cmk.gui.watolib.host_relations`) are a Setup-only feat
 live in the ``relations`` host attribute.
 
 To make the relations available for monitoring (Livestatus, views) they are resolved *once*,
-centrally, at activation time and written as the ``_RELATIONS`` custom host variable via a
+centrally, at activation time and written as the ``_CMK_RELATIONS`` custom host variable via a
 generated ``explicit_host_conf`` file. This runs on the central site before the configuration
 snapshots are built, so the file is replicated to all sites. The central config knows every host
 of every site, so cross-site links resolve correctly here; each site's core only emits the macro
@@ -81,7 +81,10 @@ def _write_export_file(path: Path, macro_values: dict[str, str]) -> bool:
 
 
 def write_host_relations(path: Path, resolved: ResolvedRelations) -> bool:
-    """Write ``resolved`` as the ``_RELATIONS`` variable of its hosts. Returns whether it was written."""
+    """Write ``resolved`` as the ``_CMK_RELATIONS`` variable of its hosts.
+
+    Returns whether it was written.
+    """
     return _write_export_file(
         path,
         {str(host): dump_resolved_relations(relations) for host, relations in resolved.items()},
@@ -101,7 +104,7 @@ def read_host_relations(path: Path) -> ResolvedRelations:
 def export_host_relations(
     all_hosts: Mapping[HostName, RelatedHost], export_file_path: Path
 ) -> None:
-    """Resolve the relations of ``all_hosts`` and persist them as the ``_RELATIONS`` variable.
+    """Resolve the relations of ``all_hosts`` and persist them as the ``_CMK_RELATIONS`` variable.
 
     Called once per activation on the central site, immediately before the sync snapshots are
     built; the links come from the ``relations`` attribute of every host of the folder tree.

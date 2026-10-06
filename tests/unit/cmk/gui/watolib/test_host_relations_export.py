@@ -27,7 +27,7 @@ from tests.unit.cmk.gui.watolib.host_relations_fakes import fake_hosts
 
 
 def _exported_macro(export_file: Path) -> dict[str, str]:
-    """The ``_RELATIONS`` variable the way the core reads the generated file back."""
+    """The ``_CMK_RELATIONS`` variable the way the core reads the generated file back."""
     namespace: dict[str, dict[str, dict[str, str]]] = {"explicit_host_conf": {}}
     exec(export_file.read_text(), namespace)  # this is exactly how the core loads it
     return namespace["explicit_host_conf"][RELATIONS_MACRO]

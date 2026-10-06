@@ -630,8 +630,8 @@ def _build_query_filter(
 
 
 # The Livestatus column a sort column orders by, or ``None`` when no site's core has one - "site"
-# is merged client-side, "num_relations" counted from the ``_RELATIONS`` variable, and "folder" is
-# a file rather than the title Setup shows. For those the ``OrderBy`` header merely bounds which
+# is merged client-side, "num_relations" counted from the ``_CMK_RELATIONS`` variable, and "folder"
+# is a file rather than the title Setup shows. For those the ``OrderBy`` header merely bounds which
 # rows a ``Limit:`` keeps; the order the user sees is the one ``host_sorter()`` applies afterwards.
 _LIVESTATUS_SORT_COLUMNS: Mapping[HostSortColumn, str | None] = {
     HostSortColumn.NAME: "name",

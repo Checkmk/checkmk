@@ -424,9 +424,9 @@ def test_count_relations(
 def test_has_any_relations_asks_the_core_for_one_host_carrying_the_macro() -> None:
     """A list column compares by "contains", which is what ``>=`` means here."""
     with expect_single_query(
-        "GET hosts\nColumns: name\nFilter: custom_variable_names >= RELATIONS\nLimit: 1",
+        "GET hosts\nColumns: name\nFilter: custom_variable_names >= CMK_RELATIONS\nLimit: 1",
         match_type="strict",
-        tables={"hosts": [{"name": "some-host", "custom_variable_names": ["RELATIONS"]}]},
+        tables={"hosts": [{"name": "some-host", "custom_variable_names": ["CMK_RELATIONS"]}]},
     ) as live:
         assert LiveStatusHostRepository(connection=live).has_any_relations() is True
 
@@ -439,7 +439,7 @@ def test_has_any_relations_false_when_no_host_carries_the_macro() -> None:
 _VISIBLE_RELATION_HOSTS_QUERY = [
     "GET hosts",
     "Columns: name",
-    "Filter: custom_variable_names >= RELATIONS",
+    "Filter: custom_variable_names >= CMK_RELATIONS",
 ]
 
 _RELATION_LISTING_QUERY = [
@@ -484,8 +484,8 @@ def _related_host_row(name: str, related_to: str | None) -> dict[str, object]:
     )
     return _host_row(
         name,
-        custom_variables={"RELATIONS": json.dumps(relations)} if relations else {},
-        custom_variable_names=["RELATIONS"] if relations else [],
+        custom_variables={"CMK_RELATIONS": json.dumps(relations)} if relations else {},
+        custom_variable_names=["CMK_RELATIONS"] if relations else [],
     )
 
 
@@ -522,8 +522,8 @@ def _overview_row(name: str, relations: Sequence[Mapping[str, str]]) -> dict[str
         "labels": {},
         "label_sources": {},
         "filename": "",
-        "custom_variables": {"RELATIONS": json.dumps(relations)} if relations else {},
-        "custom_variable_names": ["RELATIONS"] if relations else [],
+        "custom_variables": {"CMK_RELATIONS": json.dumps(relations)} if relations else {},
+        "custom_variable_names": ["CMK_RELATIONS"] if relations else [],
     }
 
 

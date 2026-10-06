@@ -26,8 +26,8 @@ from cmk.gui.utils.host_relations import (
 
 
 def test_livestatus_reports_the_macro_without_its_underscore() -> None:
-    assert RELATIONS_MACRO == "_RELATIONS"
-    assert RELATIONS_CUSTOM_VARIABLE == "RELATIONS"
+    assert RELATIONS_MACRO == "_CMK_RELATIONS"
+    assert RELATIONS_CUSTOM_VARIABLE == "CMK_RELATIONS"
 
 
 def test_what_is_written_is_what_is_read() -> None:

@@ -3,14 +3,16 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
+
 /**
- * Format `ts` (Unix seconds) as locale string, or '' if missing.
+ * Format `ts` (Unix seconds) as `YYYY-MM-DD HH:MM:SS`, or '' if missing.
  */
 export function formatTimestamp(ts: number | null | undefined): string {
   if (!ts) {
     return ''
   }
-  return new Date(ts * 1000).toLocaleString()
+  return renderDateAndTime(ts)
 }
 
 /**

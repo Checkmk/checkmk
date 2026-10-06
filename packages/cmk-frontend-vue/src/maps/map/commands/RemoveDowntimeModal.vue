@@ -9,6 +9,7 @@ import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
+import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { ref } from 'vue'
 
 import { useMapsApis } from '@/maps/services/context'
@@ -30,13 +31,7 @@ const removingId = ref<string | null>(null)
 const error = ref('')
 
 function formatTime(iso: string): string {
-  return new Date(iso).toLocaleString(undefined, {
-    day: '2-digit',
-    month: '2-digit',
-    year: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+  return renderDateAndTime(new Date(iso))
 }
 
 async function remove(dt: DowntimeEntry) {

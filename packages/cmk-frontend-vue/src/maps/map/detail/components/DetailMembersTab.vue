@@ -14,6 +14,7 @@ widens it again. Each row opens that member in this same drawer.
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { computed } from 'vue'
 
 import type { GroupMember } from '@/maps/types/api'
@@ -58,7 +59,7 @@ function formatAge(seconds: number | null | undefined): string {
 }
 
 function formatExact(seconds: number | null | undefined): string {
-  return seconds ? new Date(seconds * 1000).toLocaleString() : ''
+  return seconds ? renderDateAndTime(seconds) : ''
 }
 </script>
 

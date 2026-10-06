@@ -10,6 +10,8 @@
  * Both are relative to "now", so the caller passes the tick that drives the
  * drawer's ageing labels rather than each row reading the clock itself.
  */
+import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
+
 import type { ObjectDetails } from '@/maps/types/api'
 import type { TranslateFn } from '@/maps/utils/dropdownOptions'
 import { formatRelativeDuration, formatRelativeFuture } from '@/maps/utils/time'
@@ -53,21 +55,12 @@ export interface DowntimeRow {
   fixed: boolean
 }
 
-function formatDateTime(seconds: number): string {
-  return new Date(seconds * 1000).toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
 export function downtimeRows(details: ObjectDetails | null): DowntimeRow[] {
   return (details?.downtimes ?? []).map((downtime) => ({
     id: downtime.id,
     author: downtime.author || '?',
     comment: downtime.comment,
-    timeRange: `${formatDateTime(downtime.start_time)} → ${formatDateTime(downtime.end_time)}`,
+    timeRange: `${renderDateAndTime(downtime.start_time)} → ${renderDateAndTime(downtime.end_time)}`,
     fixed: downtime.fixed
   }))
 }

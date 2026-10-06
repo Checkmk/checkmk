@@ -12,6 +12,7 @@ nothing. The classic branch mirrors NagVis' ``.box`` so an imported map keeps
 the text sitting where it sat there.
 -->
 <script setup lang="ts">
+import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { computed } from 'vue'
 
 import { useStates } from '@/maps/services/context'
@@ -45,7 +46,7 @@ const text = computed(() => {
     return raw
   }
   const at = states.lastUpdate.value
-  const stamp = at ? new Date(at * 1000).toLocaleString('sv-SE').replace('T', ' ') : '—'
+  const stamp = at ? renderDateAndTime(at) : '—'
   return raw.replaceAll(LAST_RUN_MACRO, stamp)
 })
 

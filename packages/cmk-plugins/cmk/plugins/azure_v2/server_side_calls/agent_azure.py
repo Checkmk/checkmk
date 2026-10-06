@@ -73,7 +73,7 @@ def _tag_based_args(tag_based: list[TagBased], is_subscription: bool = False) ->
                 "--subscriptions-require-tag" if is_subscription else "--require-tag",
                 tag_config.tag,
             ]
-        if isinstance(tag_config.condition, tuple) and tag_config.condition[0] == "equals":  # type: ignore[redundant-expr]
+        if tag_config.condition[0] == "equals":
             args += [
                 "--subscriptions-require-tag-value" if is_subscription else "--require-tag-value",
                 tag_config.tag,

@@ -342,10 +342,7 @@ def check_resource_metrics(
                 label=metric_data.sustained_label,
             )
 
-        if (
-            metric_data.average_mins_param is not None  # type: ignore[redundant-expr]
-            and (average_mins := params.get(metric_data.average_mins_param)) is not None
-        ):
+        if (average_mins := params.get(metric_data.average_mins_param)) is not None:
             # Even if we alert on the average, we still emit the instantaneous value as a metric.
             yield Metric(metric_data.metric_name, metric.value)
             metric_name = f"{metric_data.metric_name}_average"

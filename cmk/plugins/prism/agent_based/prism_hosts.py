@@ -59,18 +59,21 @@ def check_prism_hosts(item: str, params: CheckParamsPrimsHosts, section: Section
     wanted_state = params["system_state"]
     state = 0
     state_text = data["state"]
-    num_vms = data["num_vms"]
-    memory = render.bytes(data["memory_capacity_in_bytes"])
-    boottime = data["boot_time_in_usecs"] / 1000000.0
 
     message = f"has state {state_text}"
     if state_text != wanted_state:
         state = 1
         message += f"(!) expected state {wanted_state}"
     yield Result(state=State(state), summary=message)
-    yield Result(state=State.OK, summary=f"Number of VMs {num_vms}")
-    yield Result(state=State.OK, summary=f"Memory {memory}")
-    yield Result(state=State.OK, summary=f"Boottime {render.datetime(boottime)}")
+    for label, value, render_value in (
+        ("Number of VMs", data["num_vms"], str),
+        ("Memory", data["memory_capacity_in_bytes"], render.bytes),
+        ("Boottime", data["boot_time_in_usecs"], lambda usecs: render.datetime(usecs / 1000000.0)),
+    ):
+        if value is None:
+            yield Result(state=State.UNKNOWN, summary=f"{label}: got no value")
+        else:
+            yield Result(state=State.OK, summary=f"{label} {render_value(value)}")
     acropolis_state = data.get("acropolis_connection_state", "")
     yield Result(
         state=(

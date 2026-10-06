@@ -182,11 +182,6 @@ def test_discovery_prism_hosts(
                 Result(state=State.OK, summary="Acropolis state is kConnected"),
             ],
             id="Values missing from the host data are reported as UNKNOWN.",
-            marks=pytest.mark.xfail(
-                strict=True,
-                raises=TypeError,
-                reason="Crash report 20233162-e7e0-11f0-9418-506b8da1179e: TypeError",
-            ),
         ),
     ],
 )

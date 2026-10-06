@@ -23,6 +23,7 @@ import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import { Api } from 'cmk-ui-library/lib/api-client'
 import { CmkFetchError } from 'cmk-ui-library/lib/cmkFetch'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { useDismissDialog } from 'cmk-ui-library/lib/useDismissDialog'
 import { computed, onMounted, ref } from 'vue'
 
@@ -239,7 +240,7 @@ async function fetchPendingChangesAjax(activationId?: string): Promise<void> {
         .sort((a, b) => b.time - a.time)
         .map((change: PendingChange) => ({
           ...change,
-          timestring: new Date(change.time * 1000).toLocaleString()
+          timestring: renderDateAndTime(change.time)
         }))
     }
 

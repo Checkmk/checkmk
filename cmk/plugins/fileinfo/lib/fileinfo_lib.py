@@ -510,7 +510,7 @@ def _fileinfo_check_conjunctions(
         matches = 0
         for title, key, value, readable_f in check_definition:
             level = levels.get(key)
-            if level is not None and value and value is not None and value >= level:  # type: ignore[redundant-expr]
+            if level is not None and value and value >= level:
                 match_texts.append(f"{title.lower()} at {readable_f(level)}")
                 matches += 1
 

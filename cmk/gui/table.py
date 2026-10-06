@@ -269,7 +269,7 @@ class Table:
                 self.options["collect_headers"] = True
             elif self.options["collect_headers"] is True:
                 self.options["collect_headers"] = "finished"
-        elif not collect_headers and self.options["collect_headers"] is True:  # type: ignore[redundant-expr]
+        elif self.options["collect_headers"] is True:
             self.options["collect_headers"] = False
 
         self.limit_reached = False if self.limit is None else len(self.rows) > self.limit
@@ -738,7 +738,7 @@ def _filter_rows(rows: TableRows, search_term: str) -> TableRows:
 
         for cell in row.cells:
             # Filter out buttons
-            if cell.css is not None and any("buttons" in css.split() for css in cell.css):  # type: ignore[redundant-expr]
+            if any("buttons" in css.split() for css in cell.css):
                 continue
 
             cell_string = str(cell.content)

@@ -130,7 +130,7 @@ def check_veeam_backups(item: str, params: CheckParameters, section: Section) ->
 
     size_info = []
     if task.total_size is not None:
-        yield Metric("totalsize", task.total_size)
+        yield Metric("backup_size", task.total_size)
         size_info.append(f"total: {render.bytes(task.total_size)}")
     if task.read_size is not None:
         yield Metric("readsize", task.read_size)
@@ -148,7 +148,7 @@ def check_veeam_backups(item: str, params: CheckParameters, section: Section) ->
         if (rate_bps := _parse_processing_rate_bps(task.processing_rate)) is not None:
             yield from check_levels(
                 rate_bps,
-                metric_name="avgspeed",
+                metric_name="backup_avgspeed",
                 render_func=render.iobandwidth,
                 label="Average speed",
             )
@@ -166,7 +166,7 @@ def check_veeam_backups(item: str, params: CheckParameters, section: Section) ->
             if (duration_seconds := parse_dotnet_timespan_seconds(task.duration)) is not None:
                 yield from check_levels(
                     duration_seconds,
-                    metric_name="duration",
+                    metric_name="backup_duration",
                     render_func=render.timespan,
                     label="Duration",
                 )

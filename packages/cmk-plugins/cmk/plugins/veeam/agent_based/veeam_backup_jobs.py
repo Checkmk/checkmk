@@ -96,7 +96,7 @@ def check_veeam_backup_jobs(item: str, section: Section) -> CheckResult:
 
     if job.duration is not None:
         yield Result(state=State.OK, summary=f"Duration: {render.timespan(job.duration)}")
-        yield Metric("duration", job.duration)
+        yield Metric("backup_duration", job.duration)
 
     if job.next_run is not None:
         yield Result(state=State.OK, summary=f"Next run: {render.datetime(job.next_run)}")

@@ -89,7 +89,7 @@ def test_check_veeam_backup_jobs_success() -> None:
         Result(state=State.OK, summary="Status: Inactive, Result: Success"),
         Result(state=State.OK, summary=f"Last run: {last_run}"),
         Result(state=State.OK, summary="Duration: 18 minutes 50 seconds"),
-        Metric("duration", 1130.0),
+        Metric("backup_duration", 1130.0),
         Result(state=State.OK, summary=f"Next run: {next_run}"),
         Result(state=State.OK, summary="Target repository: Default Backup Repository"),
         Result(state=State.OK, summary="Objects: 4"),

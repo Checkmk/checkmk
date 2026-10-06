@@ -79,11 +79,11 @@ def test_check_veeam_backups_success() -> None:
     section = parse_veeam_backups(STRING_TABLE)
     results = list(check_veeam_backups("Daily_VM_Backup", PARAMS, section))
     assert results[0] == Result(state=State.OK, summary="Status: Success")
-    assert Metric("totalsize", 107374182400) in results
+    assert Metric("backup_size", 107374182400) in results
     assert Metric("readsize", 53687091200) in results
     assert Metric("transferredsize", 21474836480) in results
-    assert Metric("avgspeed", 41943040.0) in results
-    assert Metric("duration", 1130.0) in results
+    assert Metric("backup_avgspeed", 41943040.0) in results
+    assert Metric("backup_duration", 1130.0) in results
     assert any(
         r.summary.startswith("Time since last backup:") for r in results if isinstance(r, Result)
     )
@@ -199,7 +199,7 @@ def test_check_veeam_backups_unparsable_processing_rate_is_shown_without_metric(
     section = parse_veeam_backups([[_task("odd_rate", progress={"processingRate": "40 MB/s"})]])
     results = list(check_veeam_backups("odd_rate", PARAMS, section))
     assert Result(state=State.OK, summary="FAILED TO PARSE -> Average speed: (40 MB/s)") in results
-    assert not any(isinstance(r, Metric) and r.name == "avgspeed" for r in results)
+    assert not any(isinstance(r, Metric) and r.name == "backup_avgspeed" for r in results)
 
 
 def test_parse_veeam_backups() -> None:

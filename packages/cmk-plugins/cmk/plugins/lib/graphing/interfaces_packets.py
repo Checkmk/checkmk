@@ -46,10 +46,10 @@ metric_if_out_non_unicast = metrics.Metric(
 
 graph_packets_1 = graphs.Bidirectional(
     name="packets_1",
-    title=Title("Packets"),
+    title=Title("Unicast and non-unicast packets"),
     lower=graphs.Graph(
         name="packets_1_out",
-        title=Title("Packets"),
+        title=Title("Unicast and non-unicast packets"),
         simple_lines=[
             "if_out_unicast",
             "if_out_non_unicast",
@@ -57,7 +57,7 @@ graph_packets_1 = graphs.Bidirectional(
     ),
     upper=graphs.Graph(
         name="packets_1_in",
-        title=Title("Packets"),
+        title=Title("Unicast and non-unicast packets"),
         simple_lines=[
             "if_in_unicast",
             "if_in_non_unicast",
@@ -66,10 +66,10 @@ graph_packets_1 = graphs.Bidirectional(
 )
 graph_packets_2 = graphs.Bidirectional(
     name="packets_2",
-    title=Title("Packets"),
+    title=Title("Total input and split output packets"),
     lower=graphs.Graph(
         name="packets_2_out",
-        title=Title("Packets"),
+        title=Title("Total input and split output packets"),
         compound_lines=[
             "if_out_non_unicast",
             "if_out_unicast",
@@ -77,7 +77,7 @@ graph_packets_2 = graphs.Bidirectional(
     ),
     upper=graphs.Graph(
         name="packets_2_in",
-        title=Title("Packets"),
+        title=Title("Total input and split output packets"),
         compound_lines=["if_in_pkts"],
     ),
 )

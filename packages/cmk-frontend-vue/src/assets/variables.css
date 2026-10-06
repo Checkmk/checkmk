@@ -227,6 +227,9 @@
     /* Keep in sync with $scrollbar-color in the legacy theme
        (packages/cmk-frontend, facelift _variables.scss) */
     --scrollbar-color: var(--color-mid-grey-60);
+
+    /* Interactive */
+    --row-hover-bg-color: var(--color-conference-grey-10);
   }
 
   body[data-theme='modern-dark'] {
@@ -386,5 +389,8 @@
     /* Keep in sync with $scrollbar-color in the legacy theme
        (packages/cmk-frontend, modern-dark _variables.scss) */
     --scrollbar-color: var(--color-mid-grey-90);
+
+    /* Interactive */
+    --row-hover-bg-color: var(--color-white-10);
   }
 }

@@ -1,5 +1,5 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
-load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
 load("@bazel_env.bzl", "bazel_env")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@cmk_requirements//:requirements.bzl", "requirement")
@@ -116,4 +116,22 @@ py_binary(
     srcs = ["extract_os_packages.py"],
     main = "extract_os_packages.py",
     visibility = ["//visibility:public"],
+)
+
+py_pytest_main(
+    name = "__test__",
+    deps = [requirement("pytest")],
+)
+
+py_test(
+    name = "unit",
+    size = "small",
+    srcs = glob(["tests/*.py"]) + [":__test__.py"],
+    imports = ["."],
+    main = "__test__.py",
+    deps = [
+        ":__test__",
+        ":dump_fastapi_openapi_spec",
+        requirement("pytest"),
+    ],
 )

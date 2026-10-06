@@ -4,7 +4,10 @@ load("@aspect_rules_py//py:defs.bzl", "py_binary_rule")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 
 def fastapi_openapi_spec(name, app, deps, visibility = None):
-    """Writes the schema of `app` to `<name>.json`, with sorted keys so the bytes are stable.
+    """Writes the OpenAPI document openapi-typescript reads for `app` to `<name>.json`.
+
+    Streamed items are described as the response schema, since openapi-typescript does not
+    read `itemSchema`. Keys are sorted so the bytes are stable.
 
     The dump runs as a build action without an OMD site, so `app` has to be a pure
     factory: building the app must not configure logging, tracing or read site state.

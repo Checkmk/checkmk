@@ -57,12 +57,6 @@ from cmk.web.utils.html import HTML
 from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import HTTPVariable, makeuri
 
-from ..v1.painter_lib import (
-    experimental_painter_registry,
-    Formatters,
-    PainterConfiguration,
-)
-from ..v1.painter_lib import Painter as V1Painter
 from .helpers import RenderLink
 
 ExportCellContent = str | dict[str, Any]
@@ -103,50 +97,6 @@ class Painter(abc.ABC):
         self.theme = theme
         self.url_renderer = url_renderer
         self._user_permissions = user_permissions
-
-    def to_v1_painter(self) -> V1Painter[object]:
-        """Convert an instance of an old painter to a v1 Painter."""
-
-        def get_row(rows: Rows, config: PainterConfiguration) -> Sequence[Any]:  # noqa: ARG001
-            return rows
-
-        # Needed because of old calling conventions. Doesn't have any effect.
-        empty_cell = EmptyCell()
-
-        def format_html(
-            row: Row, _painter_configuration: PainterConfiguration, user: LoggedInUser
-        ) -> CellSpec:
-            return self.render(row, empty_cell, user)
-
-        def format_json(
-            row: Row, _painter_configuration: PainterConfiguration, user: LoggedInUser
-        ) -> object:
-            return self.export_for_json(row, empty_cell, user)
-
-        def format_csv(
-            row: Row, _painter_configuration: PainterConfiguration, user: LoggedInUser
-        ) -> str:
-            result = self.export_for_csv(row, empty_cell, user)
-            if isinstance(result, HTML):
-                # ??? Typing doesn't fit.
-                return str(result)
-            return result
-
-        return V1Painter[Any](
-            ident=self.ident,
-            computer=get_row,
-            formatters=Formatters[Any](
-                html=format_html,
-                json=format_json,
-                csv=format_csv,
-            ),
-            title=self.title(empty_cell),
-            short_title=self.short_title(empty_cell),
-            columns=self.columns,
-            list_title=self.list_title(empty_cell),
-            painter_options=self.painter_options,
-            title_classes=self.title_classes(),
-        )
 
     @staticmethod
     def uuid_col(cell: Cell) -> str:  # noqa: ARG004
@@ -425,27 +375,15 @@ class Cell:
             return None
 
     def painter(self) -> Painter:
-        painter_options_inst = PainterOptions.get_instance()
-        try:
-            return PainterAdapter(
-                experimental_painter_registry[self.painter_name()],
-                config=active_config,
-                request=request,
-                painter_options=painter_options_inst,
-                theme=theme,
-                url_renderer=RenderLink(request, response, display_options),
-                user_permissions=self._user_permissions,
-            )
-        except KeyError:
-            assert self._registered_painters is not None
-            return self._registered_painters[self.painter_name()](
-                config=active_config,
-                request=request,
-                painter_options=painter_options_inst,
-                theme=theme,
-                url_renderer=RenderLink(request, response, display_options),
-                user_permissions=self._user_permissions,
-            )
+        assert self._registered_painters is not None
+        return self._registered_painters[self.painter_name()](
+            config=active_config,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+            theme=theme,
+            url_renderer=RenderLink(request, response, display_options),
+            user_permissions=self._user_permissions,
+        )
 
     def painter_name(self) -> PainterName:
         assert self._painter_name is not None
@@ -795,84 +733,3 @@ class EmptyCell(Cell):
         colspan: int | None = None,
     ) -> bool:
         return False
-
-
-class PainterAdapter(Painter):
-    """Adapt a "new" Painter to work in code expecting an "old" one.
-
-    "new" means Painters deriving from cmk.gui.painter.v1.painter_lib.Painter
-    "old" means Painters deriving from cmk.gui.painter.v0.base.Painter
-
-    Args:
-        painter: a "new" Painter instance
-
-    """
-
-    def __init__(
-        self,
-        painter: V1Painter,
-        *,
-        config: Config,
-        request: Request,
-        painter_options: PainterOptions,
-        theme: Theme,
-        url_renderer: RenderLink,
-        user_permissions: UserPermissions,
-    ):
-        super().__init__(
-            config=config,
-            request=request,
-            painter_options=painter_options,
-            theme=theme,
-            url_renderer=url_renderer,
-            user_permissions=user_permissions,
-        )
-        self._painter = painter
-
-    @property
-    @override
-    def ident(self) -> str:
-        return self._painter.ident
-
-    @override
-    def title(self, cell: Cell) -> str:
-        return str(self._painter.title)
-
-    @override
-    def short_title(self, cell: Cell) -> str:
-        return str(self._painter.short_title)
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return self._painter.columns
-
-    @override
-    def dynamic_columns(self, cell: Cell) -> list[ColumnName]:
-        # TODO: the dynamic columns/derive functionality is added, once we migrate painters using it
-        if self._painter.dynamic_columns is None or (params := cell.painter_parameters()) is None:
-            return []
-        return list(self._painter.dynamic_columns(params))
-
-    @property
-    @override
-    def painter_options(self) -> list[str]:
-        """Returns a list of painter option names that affect this painter"""
-        return self._painter.painter_options or []
-
-    @override
-    def title_classes(self) -> list[str]:
-        return self._painter.title_classes or []
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        config = PainterConfiguration(
-            parameters=cell.painter_parameters(),
-            columns=self._painter.columns,
-            staleness_threshold=self.config.staleness_threshold,
-        )
-        return self._painter.formatters.html(
-            list(self._painter.computer([row], config))[0],
-            config,
-            user,
-        )

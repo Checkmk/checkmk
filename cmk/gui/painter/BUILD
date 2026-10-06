@@ -4,8 +4,6 @@ py_library(
     name = "v1",
     srcs = [
         "v1/helpers.py",
-        "v1/painter_lib.py",
-        "v1/painters.py",
     ],
     imports = ["../../.."],
     visibility = [
@@ -13,12 +11,8 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:auth_core",
         "//cmk/gui:core_toolkit",
         "//cmk/gui:page_toolkit",
-        "//cmk/gui:painter_options",
-        "//packages/cmk-ccc:plugin-registry",
-        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 
@@ -38,7 +32,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        ":v1",
         "//cmk/gui:auth_core",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",

@@ -89,19 +89,6 @@ Server-side HTML generation with inline JavaScript is hard to type check, test a
 New UI is built as Vue components against a shared typed contract.
 Current focus areas are FormSpec rendering and the new monitoring pages ("mon-pages").
 
-View painters: v0 to v1
-=======================
-
-:Phase: stale
-:Owner: Component "UI Monitoring"
-:Old: ``cmk.gui.painter.v0`` painters (``abc.ABC`` subclasses that emit HTML directly)
-:New: ``cmk.gui.painter.v1`` painters (frozen, generic dataclasses with separate HTML/CSV/JSON formatters)
-:References: ``cmk/gui/painter/v1/painter_lib.py`` and the ``PainterAdapter`` bridge in ``cmk/gui/painter/v0/base.py``
-
-The v0 painter base class couples data lookup and HTML rendering and is untyped over the row data it formats.
-The v1 painters are declarative dataclasses parametrized over their data type, with dedicated formatters per output format, so the same painter can render HTML, CSV and JSON without ad-hoc string handling.
-v1 painters are wrapped by ``PainterAdapter`` in ``cmk/gui/painter/v0/base.py`` so they run in code that still expects the v0 interface.
-
 GUI: global proxies to explicit dependencies
 ============================================
 

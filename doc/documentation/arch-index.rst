@@ -38,7 +38,6 @@ Components
    arch-comp-gui-vue.rst
    arch-comp-gui-metrics.rst
    arch-comp-host-relations.rst
-   arch-comp-painters-v1.rst
    arch-comp-apache.rst
    arch-comp-checkengine.rst
    arch-comp-checkengine-keepalive.rst

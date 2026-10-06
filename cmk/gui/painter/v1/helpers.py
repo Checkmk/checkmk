@@ -5,16 +5,9 @@
 
 # mypy: disable-error-code="no-any-return"
 
-from collections.abc import Sequence
-from typing import NamedTuple, TypeVar
 
-from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.type_defs import Row, Rows
+from cmk.gui.type_defs import Row
 from cmk.gui.view_utils import CellContent, CellSpec
-
-from .painter_lib import PainterConfiguration
-
-T = TypeVar("T")
 
 
 def get_perfdata_nth_value(row: Row, n: int, remove_unit: bool = False) -> str:
@@ -45,33 +38,3 @@ def paint_stalified(row: Row, text: CellContent, staleness_threshold: float) -> 
     if is_stale(row, staleness_threshold):
         return "stale", text
     return "", text
-
-
-class StrWithStaleness(NamedTuple):
-    value: str
-    is_stale: bool
-
-
-def render_str_with_staleness(
-    painter_data: StrWithStaleness,
-    painter_configuration: PainterConfiguration,  # noqa: ARG001
-    user: LoggedInUser,  # noqa: ARG001
-) -> CellSpec:
-    if painter_data.is_stale:
-        return "stale", painter_data.value
-    return "", painter_data.value
-
-
-def get_single_str_column(rows: Rows, config: PainterConfiguration) -> Sequence[str]:
-    column_name = config.columns[0]
-    return [row[column_name] for row in rows]
-
-
-def get_single_int_column(rows: Rows, config: PainterConfiguration) -> Sequence[int]:
-    column_name = config.columns[0]
-    return [row[column_name] for row in rows]
-
-
-def get_single_float_column(rows: Rows, config: PainterConfiguration) -> Sequence[float]:
-    column_name = config.columns[0]
-    return [row[column_name] for row in rows]

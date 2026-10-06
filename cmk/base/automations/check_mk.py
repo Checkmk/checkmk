@@ -3004,13 +3004,7 @@ def _automation_diag_cmk_agent(
 
     state, output = 0, ""
     raw_data = PlainFetcherTrigger(omd_root=omd_root).get_raw_data(
-        file_cache=NoCache(
-            path_template="/dev/null",
-            max_age=MaxAge(checking=0.0, discovery=0.0, inventory=0.0),
-            simulation=False,
-            use_only_cache=False,
-            file_cache_mode=0,
-        ),
+        file_cache=NoCache(),
         fetcher=TCPFetcher(
             family=socket.AddressFamily.AF_INET,
             address=(ipaddress, int(diag_cmk_agent_input.agent_port)),

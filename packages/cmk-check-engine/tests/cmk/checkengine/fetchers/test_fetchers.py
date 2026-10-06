@@ -1116,5 +1116,5 @@ class TestFetcherTimeout:
 
     with pytest.raises(MKTimeout):
         PlainFetcherTrigger(Path("/")).get_raw_data(
-            NoCache[T](HostName("")), TimeoutFetcher(), Mode.CHECKING, ActivatedSecrets()
+            NoCache[T](), TimeoutFetcher(), Mode.CHECKING, ActivatedSecrets()
         )

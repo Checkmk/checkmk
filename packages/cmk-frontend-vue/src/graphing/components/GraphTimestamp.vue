@@ -4,10 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { fromAbsolute, getLocalTimeZone } from '@internationalized/date'
+import { getLocalTimeZone } from '@internationalized/date'
+import { renderDate } from 'cmk-ui-library/lib/renderTime'
 import { computed } from 'vue'
 
-import { isoDate, shortWeekday, stepLabel } from '../utils/timeFormat'
+import { shortWeekday, stepLabel } from '../utils/timeFormat'
 import type { TimeRange } from './TimeSeriesGraph'
 
 const props = defineProps<{ timeRange: TimeRange }>()
@@ -15,8 +16,8 @@ const props = defineProps<{ timeRange: TimeRange }>()
 const label = computed(() => {
   const { start, end, step } = props.timeRange
   const tz = getLocalTimeZone()
-  const startDate = isoDate(fromAbsolute(start * 1000, tz))
-  const endDate = isoDate(fromAbsolute(end * 1000, tz))
+  const startDate = renderDate(start, tz)
+  const endDate = renderDate(end, tz)
   const stepStr = `@ ${stepLabel(step)}`
   if (startDate === endDate) {
     return `${shortWeekday(start, tz)}, ${startDate} ${stepStr}`

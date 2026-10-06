@@ -13,8 +13,9 @@ import {
   startOfMonth,
   startOfWeek
 } from '@internationalized/date'
+import { renderDate } from 'cmk-ui-library/lib/renderTime'
 
-import { isoDate, pad2, shortWeekday } from '@/graphing/utils/timeFormat'
+import { pad2, shortWeekday } from '@/graphing/utils/timeFormat'
 
 import type { TimeRange } from '../types'
 
@@ -106,7 +107,7 @@ function formatLabel(format: string, zdt: ZonedDateTime): string {
     case '%m-%d':
       return `${pad2(zdt.month)}-${pad2(zdt.day)}`
     default:
-      return isoDate(zdt)
+      return renderDate(zdt.toDate(), zdt.timeZone)
   }
 }
 

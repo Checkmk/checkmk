@@ -5,15 +5,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { fromAbsolute, getLocalTimeZone } from '@internationalized/date'
+import { getLocalTimeZone } from '@internationalized/date'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkLabeledSwitch from 'cmk-ui-library/components/CmkLabeledSwitch.vue'
 import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { renderDate } from 'cmk-ui-library/lib/renderTime'
 import { computed, ref } from 'vue'
 
 import type { BurgerMenuCallable, BurgerMenuGroup, TimeRange } from '../../types.ts'
-import { isoDate, shortWeekday, stepLabel } from '../../utils/timeFormat'
+import { shortWeekday, stepLabel } from '../../utils/timeFormat'
 import GraphBurgerMenu from '../GraphBurgerMenu.vue'
 import type { ZoomMode } from '../TimeSeriesGraph'
 import {
@@ -85,8 +86,8 @@ const dateLabel = computed(() => {
     return null
   }
   const timeZone = getLocalTimeZone()
-  const startDate = isoDate(fromAbsolute(props.timeRange.start * 1000, timeZone))
-  const endDate = isoDate(fromAbsolute(props.timeRange.end * 1000, timeZone))
+  const startDate = renderDate(props.timeRange.start, timeZone)
+  const endDate = renderDate(props.timeRange.end, timeZone)
   return startDate === endDate
     ? `${shortWeekday(props.timeRange.start, timeZone)}, ${startDate}`
     : `${startDate} — ${endDate}`

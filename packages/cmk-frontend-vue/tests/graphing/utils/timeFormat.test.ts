@@ -3,9 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fromAbsolute } from '@internationalized/date'
-
-import { isoDate, isoTime, pad2, shortWeekday, stepLabel } from '@/graphing/utils/timeFormat'
+import { pad2, shortWeekday, stepLabel } from '@/graphing/utils/timeFormat'
 
 // 2026-06-15 00:00:00 UTC
 const JUNE_15_MIDNIGHT_UTC = 1781481600
@@ -21,37 +19,6 @@ describe('pad2', () => {
 
   test('pads zero to two digits', () => {
     expect(pad2(0)).toBe('00')
-  })
-})
-
-describe('isoDate', () => {
-  test('formats a ZonedDateTime as YYYY-MM-DD', () => {
-    expect(isoDate(fromAbsolute(JUNE_15_MIDNIGHT_UTC * 1000, 'UTC'))).toBe('2026-06-15')
-  })
-
-  test('pads single-digit months and days', () => {
-    // 2026-01-05 00:00:00 UTC
-    expect(isoDate(fromAbsolute(1767571200 * 1000, 'UTC'))).toBe('2026-01-05')
-  })
-
-  test('is timezone-aware: same instant gives a different date across midnight', () => {
-    // 2026-06-14 23:00:00 UTC is still Jun 14 in UTC
-    // but already Jun 15 in Europe/Berlin (CEST = UTC+2)
-    const unix = (JUNE_15_MIDNIGHT_UTC - 3600) * 1000
-    expect(isoDate(fromAbsolute(unix, 'UTC'))).toBe('2026-06-14')
-    expect(isoDate(fromAbsolute(unix, 'Europe/Berlin'))).toBe('2026-06-15')
-  })
-})
-
-describe('isoTime', () => {
-  test('formats a ZonedDateTime as HH:MM:SS on a 24h clock', () => {
-    const unix = JUNE_15_MIDNIGHT_UTC + 12 * 3600 + 34 * 60 + 56
-    expect(isoTime(fromAbsolute(unix * 1000, 'UTC'))).toBe('12:34:56')
-  })
-
-  test('pads single-digit hours, minutes and seconds', () => {
-    const unix = JUNE_15_MIDNIGHT_UTC + 1 * 3600 + 2 * 60 + 3
-    expect(isoTime(fromAbsolute(unix * 1000, 'UTC'))).toBe('01:02:03')
   })
 })
 

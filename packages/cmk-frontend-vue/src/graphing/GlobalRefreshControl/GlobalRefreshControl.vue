@@ -10,10 +10,10 @@ import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { renderTimeOfDay } from 'cmk-ui-library/lib/renderTime'
 import { computed, nextTick, ref, watch } from 'vue'
 
 import { useGlobalRefresh } from '../GlobalTimePicker/globalTimeState'
-import { pad2 } from '../utils/timeFormat'
 
 const { lastRefreshPosition, intervalChoicesSeconds } = defineProps<{
   lastRefreshPosition: 'top' | 'left'
@@ -81,7 +81,7 @@ const lastRefreshLabel = computed(() => {
   if (time === null) {
     return null
   }
-  return `${pad2(time.getHours())}:${pad2(time.getMinutes())}:${pad2(time.getSeconds())}`
+  return renderTimeOfDay(time)
 })
 </script>
 

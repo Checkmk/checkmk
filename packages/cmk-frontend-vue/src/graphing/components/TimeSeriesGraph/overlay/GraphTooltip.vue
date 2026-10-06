@@ -5,11 +5,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { fromAbsolute, getLocalTimeZone } from '@internationalized/date'
+import { getLocalTimeZone } from '@internationalized/date'
 import CmkPointerTooltip from 'cmk-ui-library/components/CmkPointerTooltip.vue'
+import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { computed } from 'vue'
 
-import { isoDate, isoTime, shortWeekday } from '../../../utils/timeFormat'
+import { shortWeekday } from '../../../utils/timeFormat'
 import MetricAttributeGroups from '../../MetricAttributeGroups.vue'
 import type { HoverState } from '../interaction/hover'
 
@@ -27,8 +28,8 @@ const formattedTime = computed(() => {
     return ''
   }
   const timeZone = getLocalTimeZone()
-  const zonedTime = fromAbsolute(props.hoverState.snapTime * 1000, timeZone)
-  return `${shortWeekday(props.hoverState.snapTime, timeZone)}, ${isoDate(zonedTime)}  ${isoTime(zonedTime)}`
+  const time = props.hoverState.snapTime
+  return `${shortWeekday(time, timeZone)}, ${renderDateAndTime(time, timeZone)}`
 })
 </script>
 

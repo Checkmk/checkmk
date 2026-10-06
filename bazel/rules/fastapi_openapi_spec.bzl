@@ -14,7 +14,8 @@ def fastapi_openapi_spec(name, app, deps, visibility = None):
 
     Args:
       name: name of the target producing `<name>.json`
-      app: the app factory as `<module>:<factory>`, called without arguments
+      app: the app factory as `<module>:<factory>`, called without arguments, of an app
+        writing valid OpenAPI 3.2
       deps: py targets that provide the factory's module
       visibility: visibility of the generated schema target
     """

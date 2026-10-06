@@ -639,7 +639,7 @@ class IMAP(_Connection):
         ['Gelöscht', 'INBOX', 'OUTBOX']
         """
         pattern = re.compile(r'\((.*?)\) "(.*)" (.*)')
-        mb_list = [_mutf_7_decode(e) for e in folder_list if isinstance(e, bytes)]  # type: ignore[redundant-expr]
+        mb_list = [_mutf_7_decode(e) for e in folder_list]
         return [
             match.group(3).strip('"')
             for mb in mb_list

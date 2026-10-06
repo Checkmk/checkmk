@@ -156,7 +156,7 @@ def subject_and_received_timestamp_from_msg(
 
 
 def check_mails(
-    warning: int,
+    warning: int | None,
     critical: int,
     expected_mails: MailDict,
     fetched_mails: MailDict,
@@ -177,9 +177,9 @@ def check_mails(
             duration = recv_ts - send_ts
             durations.append(duration)
 
-            if critical is not None and duration >= critical:  # type: ignore[redundant-expr]
+            if duration >= critical:
                 state = 2
-            elif warning is not None and duration >= warning:  # type: ignore[redundant-expr]
+            elif warning is not None and duration >= warning:
                 state = max(state, 1)
 
             if state:

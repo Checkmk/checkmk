@@ -633,9 +633,10 @@ cli_command_discover = CLICommand(
         "-II does the same as -I but deletes all existing checks of the specified types and hosts.",
         (
             "Exits with 1 if the discovery failed for at least one host, or if one of "
-            "a host's data sources could not be contacted -- the services of such a "
-            "source are missing from the result. The discovery of the remaining hosts "
-            "is carried out regardless."
+            "a host's data sources could not be contacted. For such a host, -II "
+            "behaves like -I: it adds what the other data sources found, but neither "
+            "removes nor changes existing services and host labels. The discovery of "
+            "the remaining hosts is carried out regardless."
         ),
     ],
 )

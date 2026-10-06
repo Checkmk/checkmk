@@ -72,10 +72,12 @@ def commandline_discovery(
     If it is empty then we use all hosts and switch to using cache files.
 
     Returns whether the discovery succeeded.  A discovery that aborted counts
-    as failure, and so does one where a data source could not be contacted:
-    its services are missing from the result, which the user must be able to
-    tell from the exit code.  Neither aborts the discovery of the remaining
-    hosts, but the caller needs to know to set a meaningful exit code.
+    as failure, and so does one where a data source could not be contacted.
+    A failed source says nothing about its services, so they must not be taken
+    for vanished: for such a host '-II' falls back to '-I', adding what the
+    other sources found and removing or changing nothing.  Neither aborts the
+    discovery of the remaining hosts, but the caller needs to know to set a
+    meaningful exit code.
     """
     section.section_begin(host_name)
     failed_sources: list[str] = []
@@ -90,6 +92,14 @@ def commandline_discovery(
             ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok())
         )
         store_piggybacked_sections(host_sections_by_host, cmk.utils.paths.omd_root)
+        only_new = arg_only_new or bool(failed_sources)
+        if only_new and not arg_only_new:
+            console.warning(
+                tty.format_warning(
+                    f"{host_name}: Some data sources failed,"
+                    " only adding new services and host labels"
+                )
+            )
         providers = make_providers(
             host_sections_by_host,
             section_plugins,
@@ -104,8 +114,9 @@ def commandline_discovery(
             run_plugin_names=run_plugin_names,
             autochecks_config=autochecks_config,
             enforced_services=enforced_services,
-            only_new=arg_only_new,
-            load_labels=arg_only_new,
+            only_new=only_new,
+            load_labels=only_new,
+            keep_vanished_host_labels=bool(failed_sources),
             only_host_labels=only_host_labels,
             on_error=on_error,
             autochecks_dir=autochecks_dir,
@@ -136,6 +147,7 @@ def _commandline_discovery_on_host(
     enforced_services: Container[ServiceID],
     only_new: bool,
     load_labels: bool,
+    keep_vanished_host_labels: bool,
     only_host_labels: bool,
     on_error: OnError,
     autochecks_dir: Path,
@@ -161,7 +173,12 @@ def _commandline_discovery_on_host(
         ),
     )
 
-    DiscoveredHostLabelsStore(real_host_name, discovered_host_labels_dir).save(host_labels.present)
+    DiscoveredHostLabelsStore(real_host_name, discovered_host_labels_dir).save(
+        # A label may have vanished only because its data source failed.
+        [*host_labels.present, *host_labels.vanished]
+        if keep_vanished_host_labels
+        else host_labels.present
+    )
     if host_labels.new or host_labels.vanished:  # add 'changed' once it exists.
         # Rulesets for service discovery can match based on the hosts labels.
         # The ruleset matcher does not properly handle the case where the host labels

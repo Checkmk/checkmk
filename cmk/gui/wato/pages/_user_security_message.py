@@ -17,9 +17,9 @@ from cmk.gui import config, userdb
 from cmk.gui.i18n import _
 from cmk.gui.message import create_message, MessageText, send_message
 from cmk.utils.mail import (
-    Attachment,
     default_from_address,
     get_template_html,
+    InlineImageAttachment,
     MailString,
     multipart_mail,
     send_mail_sendmail,
@@ -323,7 +323,7 @@ def _send_mail(email_address: str, event: SecurityNotificationEvent, event_time:
             event_time=e_time,
         ),
         content_html=template_html.render(event_time=e_time),
-        attach=attachments,
+        inline_image_attachments=attachments,
     )
 
     send_mail_sendmail(
@@ -333,12 +333,10 @@ def _send_mail(email_address: str, event: SecurityNotificationEvent, event_time:
     )
 
 
-def _get_attachments() -> list[Attachment]:
-    attachments: list[Attachment] = []
+def _get_attachments() -> list[InlineImageAttachment]:
+    attachments: list[InlineImageAttachment] = []
     with open(web_dir / "htdocs/images/icons/checkmk_logo.png", "rb") as file:
-        attachments.append(
-            Attachment(what="img", name="checkmk_logo.png", contents=file.read(), how="inline")
-        )
+        attachments.append(InlineImageAttachment(name="checkmk_logo.png", contents=file.read()))
     return attachments
 
 

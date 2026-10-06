@@ -24,7 +24,7 @@ from pytest_mock import MockerFixture
 
 from cmk.notification_plugins import mail
 from cmk.testlib.notification_plugins import exit_code, explicit_password
-from cmk.utils.mail import Attachment
+from cmk.utils.mail import InlineImageAttachment
 
 TEMPLATE_DIR = Path(__file__).parent.parent / "templates" / "mail"
 
@@ -660,7 +660,7 @@ def test_rendered_graphs_are_embedded_inline(graph_url: re.Pattern[str]) -> None
 
     content = mail.SingleEmailContent(lambda: _host_context(PARAMETER_ELEMENTSS="graph"))
 
-    assert Attachment("img", "heute-_HOST_-0.png", b"a", "inline") in content.attachments
+    assert InlineImageAttachment(name="heute-_HOST_-0.png", contents=b"a") in content.attachments
     assert 'src="cid:heute-_HOST_-0.png"' in content.content_html
 
 

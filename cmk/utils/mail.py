@@ -9,14 +9,13 @@ import re
 import socket
 import subprocess
 from collections.abc import Sequence
+from dataclasses import dataclass
 from email.message import Message
-from email.mime.application import MIMEApplication
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate, parseaddr
 from pathlib import Path
-from typing import Literal, NamedTuple
 
 from cmk.ccc import version as cmk_version
 from cmk.ccc.store import load_text_from_file
@@ -174,11 +173,10 @@ def set_mail_headers[EmailType: Message](
     return mail
 
 
-class Attachment(NamedTuple):
-    what: Literal["img"]
+@dataclass(frozen=True, kw_only=True)
+class InlineImageAttachment:
     name: str
-    contents: bytes | str
-    how: str
+    contents: bytes
 
 
 # TODO: Just use a single EmailContent parameter.
@@ -189,11 +187,8 @@ def multipart_mail(
     reply_to: str,
     content_txt: str,
     content_html: str,
-    attach: Sequence[Attachment] | None = None,
+    inline_image_attachments: Sequence[InlineImageAttachment] = [],
 ) -> MIMEMultipart:
-    if attach is None:
-        attach = []
-
     m = MIMEMultipart("related", _charset="utf-8")
 
     alt = MIMEMultipart("alternative")
@@ -209,15 +204,11 @@ def multipart_mail(
     m.attach(alt)
 
     # Add all attachments
-    for what, name, contents, how in attach:
-        part = (
-            MIMEImage(contents, name=name)
-            if what == "img"  # type: ignore[redundant-expr]
-            else MIMEApplication(contents, name=name)
-        )
-        part.add_header("Content-ID", "<%s>" % name)
+    for inline_image_attachment in inline_image_attachments:
+        part = MIMEImage(inline_image_attachment.contents, name=inline_image_attachment.name)
+        part.add_header("Content-ID", "<%s>" % inline_image_attachment.name)
         # how must be inline or attachment
-        part.add_header("Content-Disposition", how, filename=name)
+        part.add_header("Content-Disposition", "inline", filename=inline_image_attachment.name)
         m.attach(part)
 
     return set_mail_headers(

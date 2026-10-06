@@ -250,12 +250,6 @@ metric_backup_duration = metrics.Metric(
     unit=UNIT_TIME,
     color=metrics.Color.CYAN,
 )
-metric_backup_age_differential_partial = metrics.Metric(
-    name="backup_age_differential_partial",
-    title=Title("Age of last differential partial backup"),
-    unit=UNIT_TIME,
-    color=metrics.Color.BLUE,
-)
 metric_storage_percent = metrics.Metric(
     name="storage_percent",
     title=Title("Storage space used percentage"),

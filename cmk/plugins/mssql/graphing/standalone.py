@@ -57,3 +57,9 @@ metric_backup_age_partial = metrics.Metric(
     unit=UNIT_TIME,
     color=metrics.Color.CYAN,
 )
+metric_backup_age_partial_diff = metrics.Metric(
+    name="backup_age_partial_diff",
+    title=Title("Age of last differential partial backup"),
+    unit=UNIT_TIME,
+    color=metrics.Color.BLUE,
+)

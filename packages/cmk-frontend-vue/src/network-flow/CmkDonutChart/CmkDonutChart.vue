@@ -311,10 +311,6 @@ const legendRows = computed<DonutLegendRow[]>(() => {
   </div>
 </template>
 
-<style>
-@import url('../variables.css');
-</style>
-
 <style scoped>
 .network-flow-cmk-donut-chart {
   /* Past this the ring stops reading as a ring. */
@@ -432,7 +428,7 @@ const legendRows = computed<DonutLegendRow[]>(() => {
 
 .network-flow-cmk-donut-chart__segment:hover,
 .network-flow-cmk-donut-chart__segment:focus-visible {
-  filter: drop-shadow(0 2px 5px var(--nf-donut-lift-shadow));
+  filter: drop-shadow(0 2px 5px var(--ring-shading-color-lift));
 }
 
 .network-flow-cmk-donut-chart__segment--dimmed {
@@ -454,13 +450,13 @@ const legendRows = computed<DonutLegendRow[]>(() => {
 }
 
 .network-flow-cmk-donut-chart__shading-stop--inner {
-  stop-color: var(--nf-donut-shading-inner-color);
-  stop-opacity: var(--nf-donut-shading-inner-opacity);
+  stop-color: var(--ring-shading-color-inner);
+  stop-opacity: var(--ring-shading-opacity-inner);
 }
 
 .network-flow-cmk-donut-chart__shading-stop--outer {
-  stop-color: var(--nf-donut-shading-outer-color);
-  stop-opacity: var(--nf-donut-shading-outer-opacity);
+  stop-color: var(--ring-shading-color-outer);
+  stop-opacity: var(--ring-shading-opacity-outer);
 }
 
 .network-flow-cmk-donut-chart__empty-track {

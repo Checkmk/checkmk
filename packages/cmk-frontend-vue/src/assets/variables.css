@@ -228,6 +228,13 @@
     --cmk-alert-box-loading-bg-color: var(--color-daylight-grey-40);
     --cmk-alert-box-text-color: var(--font-color-strong);
 
+    /* Ring depth shading: a ring deepens towards its outer edge. */
+    --ring-shading-color-lift: color-mix(in srgb, var(--black) 28%, transparent);
+    --ring-shading-color-inner: var(--black);
+    --ring-shading-opacity-inner: 0;
+    --ring-shading-color-outer: var(--black);
+    --ring-shading-opacity-outer: 0.13;
+
     /* Keep in sync with $scrollbar-color in the legacy theme
        (packages/cmk-frontend, facelift _variables.scss) */
     --scrollbar-color: var(--color-mid-grey-60);
@@ -395,6 +402,13 @@
     --cmk-alert-box-info-bg-color: var(--color-dark-blue-80);
     --cmk-alert-box-loading-bg-color: var(--color-midnight-grey-60);
     --cmk-alert-box-text-color: var(--font-color-strong);
+
+    /* Ring depth shading: a light ring on a dark surface catches the light along its inner edge. */
+    --ring-shading-color-lift: color-mix(in srgb, var(--black) 45%, transparent);
+    --ring-shading-color-inner: var(--white);
+    --ring-shading-opacity-inner: 0.09;
+    --ring-shading-color-outer: var(--black);
+    --ring-shading-opacity-outer: 0.1;
 
     /* Keep in sync with $scrollbar-color in the legacy theme
        (packages/cmk-frontend, modern-dark _variables.scss) */

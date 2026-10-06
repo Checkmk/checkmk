@@ -11,7 +11,9 @@ import { afterAll, afterEach, beforeAll, expect, test } from 'vitest'
 
 import AlertWizardApp from '@/mode-alerts/AlertWizardApp.vue'
 
-const ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/service/collections/all`
+const API_BASE = `${location.protocol}//${location.host}/api/internal`
+const ENDPOINT = `${API_BASE}/domain-types/service/collections/all`
+const CREATE_ENDPOINT = `${API_BASE}/domain-types/telemetry_alert/collections/all`
 
 const server = setupServer(
   http.post(ENDPOINT, () =>
@@ -46,9 +48,7 @@ test('the threshold step is offered alongside it', () => {
   expect(screen.getByRole('heading', { name: 'Define threshold' })).toBeVisible()
 })
 
-test('a completed first step advances to the threshold step', async () => {
-  renderApp()
-
+async function completeFirstStep() {
   await userEvent.type(screen.getByRole('textbox', { name: /Alert name/ }), 'Latency too high')
 
   const serviceName = screen.getByRole('combobox', { name: 'Service name' })
@@ -61,11 +61,56 @@ test('a completed first step advances to the threshold step', async () => {
   })
 
   await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+}
+
+test('a completed first step advances to the threshold step', async () => {
+  renderApp()
+
+  await completeFirstStep()
 
   await waitFor(() => {
-    expect(
-      screen.getByText('Defining the threshold and saving the alert will become available here.')
-    ).toBeVisible()
+    expect(screen.getByText('Defining the threshold will become available here.')).toBeVisible()
   })
-  expect(screen.getByRole('button', { name: 'Create alert' })).toBeDisabled()
+})
+
+test('creating the alert sends its name and service match', async () => {
+  let sentBody: unknown = null
+  server.use(
+    http.post(CREATE_ENDPOINT, async ({ request }) => {
+      sentBody = await request.json()
+      return HttpResponse.json({})
+    })
+  )
+  renderApp()
+  await completeFirstStep()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Create alert' }))
+
+  expect(await screen.findByText('The alert was created.')).toBeVisible()
+  expect(sentBody).toEqual({
+    configuration_name: 'latency_too_high',
+    alert_name: 'Latency too high',
+    service_match: { mode: 'exact', pattern: 'HTTP request duration' }
+  })
+})
+
+test('a rejected alert shows the reason', async () => {
+  server.use(
+    http.post(CREATE_ENDPOINT, () =>
+      HttpResponse.json(
+        {
+          title: 'Configuration name already in use',
+          detail: 'A configuration named "latency_too_high" already exists.',
+          status: 409
+        },
+        { status: 409 }
+      )
+    )
+  )
+  renderApp()
+  await completeFirstStep()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Create alert' }))
+
+  expect(await screen.findByText(/already exists/)).toBeVisible()
 })

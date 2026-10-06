@@ -37,6 +37,7 @@ from cmk.shared_typing.cmk_time_series_graph import UnitFormat
 
 from ._drawn_curves import drawn_curves
 from ._graph_display_config import GraphDisplayConfigImage
+from ._graph_png_size import ex_to_inches, legend_height_ex, MM_PER_INCH
 from ._time_axis import compute_time_axis
 from ._unit_format import unit_from_curves
 from ._user_specific_unit import formatter_from_unit_format
@@ -56,7 +57,6 @@ LEGEND_MARKER_RADIUS_PX = 2
 TITLE_Y_OFFSET_PX = 10
 REGION_FILL_ALPHA = 0.15
 _PT_PER_PX = 72 / DPI
-_MM_PER_INCH = 25.4
 
 
 def _all_curves_with_sign(graph: EvaluatedGraph) -> list[tuple[EvaluatedCurve, float]]:
@@ -645,51 +645,10 @@ def _plot_legend_table(
         add_marker(marker_x, marker_y(row), region.attributes.color)
 
 
-def _ex_to_inches(size_ex: float, font_size_pt: float) -> float:
-    # one "ex" is half the font size in points, and 1 point = 1/72 inch
-    return size_ex * font_size_pt / 72
-
-
-def mm_per_ex(font_size_pt: float) -> SizeMM:
-    """The physical size (in mm) this module's GraphDisplayConfigImage.size grows by for each
-    additional "ex", i.e. the exact inverse of the ex->inches->mm conversion render_png_ex/
-    render_png_graphs use internally.
-
-    A caller translating a target physical width/height into `size` (ex) before calling
-    render_png*() must use this - not cmk.gui.graphing._graph_display_config.get_mm_per_ex(), a
-    differently-calibrated ex convention used to estimate a graph's step from its width -
-    or the resulting image will come out a few percent off the intended physical size.
-    """
-    return _ex_to_inches(1.0, font_size_pt) * _MM_PER_INCH
-
-
 def _derived_y_axis_unit(graph: EvaluatedGraph) -> UnitFormat | None:
     """derive_y_axis_unit (_frontend.py) works on the pre-evaluation Graph; this one works on the
     EvaluatedGraph, which carries the same CurveAttributes.unit on its curves."""
     return unit_from_curves(curve.attributes.unit for curve, _sign in _all_curves_with_sign(graph))
-
-
-def _legend_height_ex(graph: EvaluatedGraph, config: GraphDisplayConfigImage) -> float:
-    """The "ex" height render_png_ex() reserves below the plot for the scalar/rule legend table,
-    e.g. 0.0 if there is nothing to show. Depends only on the graph's own scalar/rule counts and
-    config.show_legend - never on config.size - so it's safe to call before an actual render."""
-    scalars = _graph_scalars(graph)
-    n_legend_rows = len(scalars) + len(graph.rules) + len(graph.regions)
-    return 2.0 * (n_legend_rows + 1) if config.show_legend and n_legend_rows else 0.0
-
-
-def compute_png_size_mm(
-    graph: EvaluatedGraph, config: GraphDisplayConfigImage
-) -> tuple[SizeMM, SizeMM]:
-    """The (width_mm, height_mm) render_png_ex() would return for this graph/config, without
-    paying for an actual matplotlib render.
-
-    Useful for layout/pagination planning that only needs the size a graph will occupy, not its
-    pixels yet - e.g. deciding how many graphs fit on a report page before rendering any of them.
-    """
-    width_in = _ex_to_inches(config.size[0], config.font_size)
-    height_in = _ex_to_inches(config.size[1] + _legend_height_ex(graph, config), config.font_size)
-    return width_in * _MM_PER_INCH, height_in * _MM_PER_INCH
 
 
 def render_png_ex(
@@ -721,10 +680,10 @@ def render_png_ex(
     in_range_rules = _rules_in_range(graph.rules, lower, upper)
     formatter = _notation_formatter(y_axis_unit)
     show_legend_table = config.show_legend and bool(scalars or graph.rules or graph.regions)
-    table_height_ex = _legend_height_ex(graph, config)
+    table_height_ex = legend_height_ex(graph, config)
 
-    width_in = _ex_to_inches(config.size[0], config.font_size)
-    height_in = _ex_to_inches(config.size[1] + table_height_ex, config.font_size)
+    width_in = ex_to_inches(config.size[0], config.font_size)
+    height_in = ex_to_inches(config.size[1] + table_height_ex, config.font_size)
 
     fig = Figure(figsize=(width_in, height_in), dpi=DPI, facecolor=BACKGROUND_COLOR)
 
@@ -755,7 +714,7 @@ def render_png_ex(
     buf = io.BytesIO()
     fig.savefig(buf, format="png")
     buf.seek(0)
-    return (buf.read(), width_in * _MM_PER_INCH, height_in * _MM_PER_INCH)
+    return (buf.read(), width_in * MM_PER_INCH, height_in * MM_PER_INCH)
 
 
 def render_png(
@@ -780,11 +739,11 @@ def render_png_graphs(
 
     Pure function - no registries, no Livestatus, no global state.
     """
-    width_in = _ex_to_inches(config.size[0], config.font_size)
+    width_in = ex_to_inches(config.size[0], config.font_size)
 
     if not graphs:
         fig = Figure(
-            figsize=(width_in, _ex_to_inches(config.size[1], config.font_size)),
+            figsize=(width_in, ex_to_inches(config.size[1], config.font_size)),
             dpi=DPI,
             facecolor=BACKGROUND_COLOR,
         )
@@ -794,7 +753,7 @@ def render_png_graphs(
         return buf.read()
 
     fig = Figure(
-        figsize=(width_in, _ex_to_inches(config.size[1] * len(graphs), config.font_size)),
+        figsize=(width_in, ex_to_inches(config.size[1] * len(graphs), config.font_size)),
         dpi=DPI,
         facecolor=BACKGROUND_COLOR,
     )

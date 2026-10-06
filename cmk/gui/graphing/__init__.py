@@ -66,7 +66,8 @@ from ._graph_display_config import (
     HTML_SIZE_PER_EX,
     resolve_size,
 )
-from ._graph_png import compute_png_size_mm, mm_per_ex, render_png, render_png_ex
+from ._graph_png import render_png, render_png_ex
+from ._graph_png_size import compute_png_size_mm, mm_per_ex
 from ._graph_ranges import compute_graph_ranges_for_width, GraphRanges
 from ._graph_specification import (
     AnnotatedHostName,

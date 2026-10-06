@@ -6,12 +6,23 @@
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
+import type { AgentPackageType } from './agentAvailability'
+
+/** The baked agent package a download command fetches from the Agent Bakery. */
+export interface BakedPackage {
+  osType: AgentPackageType
+  /** Where the user bakes the agents when none is available yet. */
+  bakeryUrl: string
+}
+
 /** One command block: a caption, the command, and a warning shown above it. */
 export interface CommandBlock {
   /** Omitted for a single unlabelled command. */
   title?: TranslatedString
   command: string
   warning?: TranslatedString
+  /** Set when the command downloads a package that has to be baked first. */
+  bakedPackage?: BakedPackage
 }
 
 /** One selectable set of commands: a shell, or a package format. */

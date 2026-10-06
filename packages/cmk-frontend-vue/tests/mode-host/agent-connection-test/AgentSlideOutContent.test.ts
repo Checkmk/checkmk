@@ -556,4 +556,128 @@ describe('AgentSlideOutContent', () => {
 
     expect(codeTexts().join('\n')).toContain(`push.registrationToken=0:${TOKEN}`)
   })
+
+  describe('with the Agent Bakery', () => {
+    const bakeryUrl = 'wato.py?mode=agents'
+
+    function mockAgentAvailability(available: boolean) {
+      const fetch = vi.fn().mockImplementation(
+        async () =>
+          new Response(JSON.stringify({ available }), {
+            headers: { 'Content-Type': 'application/json' }
+          })
+      )
+      vi.stubGlobal('fetch', fetch)
+      return fetch
+    }
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    test('asks whether the selected package is baked for this host', async () => {
+      const fetch = mockAgentAvailability(true)
+      renderContent({ bakeryUrl })
+
+      await within(panel()).findByRole('button', { name: /generate one-time token/i })
+
+      const url = new URL((fetch.mock.calls[0]![0] as Request).url)
+      expect(url.pathname).toMatch(/domain-types\/agent\/actions\/availability\/invoke$/)
+      expect(url.searchParams.get('host_name')).toBe(contentProps.hostName)
+      expect(url.searchParams.get('os_type')).toBe('windows_msi')
+    })
+
+    test('points to the Agent Bakery instead of a failing download command', async () => {
+      mockAgentAvailability(false)
+      renderContent({ bakeryUrl })
+
+      const link = await within(panel()).findByRole('link', { name: 'Open Agent Bakery' })
+
+      expect(link).toHaveAttribute('href', bakeryUrl)
+      expect(link).toHaveAttribute('target', '_blank')
+      expect(
+        within(panel()).queryByRole('button', { name: /generate one-time token/i })
+      ).not.toBeInTheDocument()
+      expect(activeStepHeading()).toBe('Download and install')
+    })
+
+    test('hides a resolved download command once the agent is not baked', async () => {
+      mockTokenGeneration('download_token')
+      mockAgentAvailability(true)
+      renderContent({ bakeryUrl })
+      await selectTab('Windows')
+      await within(panel()).findByRole('button', { name: /generate one-time token/i })
+      await generateToken()
+      expect(codeTexts().join('\n')).toContain('ps-download')
+
+      mockAgentAvailability(false)
+      await toggle('Command Prompt')
+      await within(panel()).findByRole('link', { name: 'Open Agent Bakery' })
+
+      expect(codeTexts().join('\n')).not.toContain('cmd-download')
+    })
+
+    test('lets the user go on to registration without a baked agent', async () => {
+      mockAgentAvailability(false)
+      renderContent({ bakeryUrl })
+      await within(panel()).findByRole('link', { name: 'Open Agent Bakery' })
+
+      expect(
+        within(step('Download and install')).getByRole('button', { name: /next step/i })
+      ).toBeEnabled()
+    })
+
+    test('does not ask for a host that is not saved yet', async () => {
+      const fetch = mockAgentAvailability(false)
+      renderContent({ bakeryUrl, hostExists: false })
+
+      expect(
+        await within(panel()).findByRole('button', { name: /generate one-time token/i })
+      ).toBeInTheDocument()
+      expect(fetch).not.toHaveBeenCalled()
+    })
+
+    test('shows the download command once the agent was baked', async () => {
+      mockAgentAvailability(false)
+      renderContent({ bakeryUrl })
+      const checkAgain = await within(panel()).findByRole('button', { name: 'Check again' })
+
+      mockAgentAvailability(true)
+      await userEvent.click(checkAgain)
+
+      expect(
+        await within(panel()).findByRole('button', { name: /generate one-time token/i })
+      ).toBeInTheDocument()
+    })
+
+    test('tells that the agent is still not baked after checking again', async () => {
+      mockAgentAvailability(false)
+      renderContent({ bakeryUrl })
+
+      await userEvent.click(await within(panel()).findByRole('button', { name: 'Check again' }))
+
+      expect(
+        await within(panel()).findByText('Still no agent baked for this host.')
+      ).toBeInTheDocument()
+    })
+
+    test('keeps pointing to the Agent Bakery when checking again fails', async () => {
+      mockAgentAvailability(false)
+      renderContent({ bakeryUrl })
+      const checkAgain = await within(panel()).findByRole('button', { name: 'Check again' })
+
+      const fetch = vi.fn().mockRejectedValue(new Error('network down'))
+      vi.stubGlobal('fetch', fetch)
+      await userEvent.click(checkAgain)
+
+      expect(
+        await within(panel()).findByText('The check failed. Please try again.')
+      ).toBeInTheDocument()
+      expect(fetch).toHaveBeenCalled()
+      expect(within(panel()).getByRole('button', { name: 'Check again' })).toBeInTheDocument()
+      expect(
+        within(panel()).queryByRole('button', { name: /generate one-time token/i })
+      ).not.toBeInTheDocument()
+    })
+  })
 })

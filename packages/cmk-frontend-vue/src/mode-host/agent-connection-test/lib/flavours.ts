@@ -12,7 +12,8 @@ import type {
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
-import type { AgentFlavour, CommandBlock, InstallSpec } from './types'
+import type { AgentPackageType } from './agentAvailability'
+import type { AgentFlavour, BakedPackage, CommandBlock, InstallSpec } from './types'
 
 /**
  * The backend payload this module turns into flavours. It still names one flat
@@ -33,6 +34,8 @@ export interface AgentSlideoutPayload {
   statusCmds: AgentStatusCmds
   legacyAgentUrl: string | undefined
   unbakedFallback: UnbakedFallback | null
+  /** Set when the download commands fetch baked agents, which may not exist yet. */
+  bakeryUrl: string | undefined
   /** Null when the host cannot receive pushed data, so Kubernetes is not offered. */
   kubernetes: KubernetesPayload | null
 }
@@ -46,6 +49,10 @@ export function buildFlavours(payload: AgentSlideoutPayload): AgentFlavour[] {
   )
   const downloadTitle = _t('Download the agent')
   const installTitle = _t('Install the agent')
+
+  function baked(osType: AgentPackageType): { bakedPackage?: BakedPackage } {
+    return payload.bakeryUrl ? { bakedPackage: { osType, bakeryUrl: payload.bakeryUrl } } : {}
+  }
 
   /**
    * Falls back to the legacy-agent documentation when the site has no agent to
@@ -84,7 +91,8 @@ export function buildFlavours(payload: AgentSlideoutPayload): AgentFlavour[] {
           blocks: [
             {
               title: downloadTitle,
-              command: payload.installCmds.windows_download_powershell ?? ''
+              command: payload.installCmds.windows_download_powershell ?? '',
+              ...baked('windows_msi')
             },
             { title: installTitle, command: payload.installCmds.windows_powershell ?? '' }
           ]
@@ -93,7 +101,11 @@ export function buildFlavours(payload: AgentSlideoutPayload): AgentFlavour[] {
           id: 'cmd',
           label: 'Command Prompt',
           blocks: [
-            { title: downloadTitle, command: payload.installCmds.windows_download },
+            {
+              title: downloadTitle,
+              command: payload.installCmds.windows_download,
+              ...baked('windows_msi')
+            },
             { title: installTitle, command: payload.installCmds.windows }
           ]
         }
@@ -142,7 +154,7 @@ export function buildFlavours(payload: AgentSlideoutPayload): AgentFlavour[] {
           id: 'deb',
           label: 'DEB',
           intro: packageIntro,
-          blocks: [{ command: payload.installCmds.linux_deb }]
+          blocks: [{ command: payload.installCmds.linux_deb, ...baked('linux_deb') }]
         }
       : null,
     payload.installCmds.linux_rpm
@@ -150,7 +162,7 @@ export function buildFlavours(payload: AgentSlideoutPayload): AgentFlavour[] {
           id: 'rpm',
           label: 'RPM',
           intro: packageIntro,
-          blocks: [{ command: payload.installCmds.linux_rpm }]
+          blocks: [{ command: payload.installCmds.linux_rpm, ...baked('linux_rpm') }]
         }
       : null,
     payload.installCmds.linux_tgz_download
@@ -161,7 +173,11 @@ export function buildFlavours(payload: AgentSlideoutPayload): AgentFlavour[] {
             'Run these commands on your Linux host to download and install the Checkmk agent.'
           ),
           blocks: [
-            { title: downloadTitle, command: payload.installCmds.linux_tgz_download },
+            {
+              title: downloadTitle,
+              command: payload.installCmds.linux_tgz_download,
+              ...baked('linux_tgz')
+            },
             {
               title: installTitle,
               command: payload.installCmds.linux_tgz_extract ?? '',
@@ -210,7 +226,7 @@ export function buildFlavours(payload: AgentSlideoutPayload): AgentFlavour[] {
         ? {
             kind: 'commands',
             intro: _t('Run this command on your Solaris host to download the Checkmk agent.'),
-            blocks: [{ command: payload.installCmds.solaris }]
+            blocks: [{ command: payload.installCmds.solaris, ...baked('solaris_pkg') }]
           }
         : null,
       _t(
@@ -228,7 +244,7 @@ export function buildFlavours(payload: AgentSlideoutPayload): AgentFlavour[] {
   }
 
   const aixBlocks: CommandBlock[] = [
-    { title: downloadTitle, command: payload.installCmds.aix_download ?? '' },
+    { title: downloadTitle, command: payload.installCmds.aix_download ?? '', ...baked('aix_tgz') },
     {
       title: installTitle,
       command: payload.installCmds.aix_extract ?? '',

@@ -13,6 +13,7 @@
     "host_name": { "type": "string" },
     "all_agents_url": { "type": "string" },
     "user_settings_url": { "type": "string" },
+    "bakery_url": { "type": "string" },
     "legacy_agent_url": { "type": "string" },
     "kubernetes_helm_command": { "type": "string" },
     "kubernetes_values": { "type": "string" },

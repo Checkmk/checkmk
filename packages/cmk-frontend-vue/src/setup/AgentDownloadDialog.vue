@@ -121,6 +121,7 @@ const triggerRescan = () => {
       :agent-installed="isNotRegistered"
       :is-push-mode="isPushMode"
       :unbaked-fallback="agentSlideout.unbaked_fallback ?? null"
+      :bakery-url="agentSlideout.bakery_url"
       @close="((slideInOpen = false), (tooltipHidden = true), triggerRescan())"
     />
   </CmkSlideInDialog>

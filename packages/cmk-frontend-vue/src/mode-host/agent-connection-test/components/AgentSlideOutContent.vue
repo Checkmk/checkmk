@@ -41,6 +41,7 @@ const props = defineProps<{
   agentInstalled: boolean
   isPushMode: boolean
   unbakedFallback: UnbakedFallback | null
+  bakeryUrl?: string | undefined
 }>()
 
 const { _t } = usei18n()
@@ -79,6 +80,7 @@ const flavours = computed(() =>
     statusCmds: props.agentStatusCmds,
     legacyAgentUrl: props.legacyAgentUrl,
     unbakedFallback: props.unbakedFallback,
+    bakeryUrl: props.hostExists ? props.bakeryUrl : undefined,
     // The Kubernetes agent can only push, so a pull-mode host gets no such flavour.
     kubernetes: props.isPushMode
       ? {

@@ -694,6 +694,7 @@ const showSettings = ref(false)
         :is-push-mode="isPushMode"
         :user-settings-url="agentSlideout.user_settings_url"
         :unbaked-fallback="agentSlideout.unbaked_fallback ?? null"
+        :bakery-url="agentSlideout.bakery_url"
         @close="onClose"
       />
     </CmkSlideInDialog>

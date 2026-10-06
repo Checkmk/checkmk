@@ -24,6 +24,7 @@ const payload: AgentSlideoutPayload = {
   statusCmds,
   legacyAgentUrl: undefined,
   unbakedFallback: null,
+  bakeryUrl: undefined,
   kubernetes: null
 }
 

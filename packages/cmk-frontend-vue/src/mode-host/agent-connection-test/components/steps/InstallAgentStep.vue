@@ -5,14 +5,17 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
+import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkLinkCard from 'cmk-ui-library/components/CmkLinkCard'
 import { CmkWizardButton } from 'cmk-ui-library/components/CmkWizard'
 import CmkWizardStep from 'cmk-ui-library/components/CmkWizard/CmkWizardStep.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref, watch } from 'vue'
 
+import { isAgentBaked } from '../../lib/agentAvailability'
 import {
   type HostMacros,
   type TokenValue,
@@ -100,6 +103,64 @@ watch(packageId, () => {
 
 /** True when every command on screen can be shown as it stands. */
 const cmdsResolved = computed(() => isResolved(rendered.value.tokenState))
+
+const bakedPackage = computed(
+  () => blocks.value.find((block) => block.bakedPackage)?.bakedPackage ?? null
+)
+
+/** False once the bakery confirmed it has no package; unknown stays null. */
+const agentBaked = ref<boolean | null>(null)
+const checking = ref(false)
+/** Tells why a manual check left the warning in place. */
+const recheckNote = ref<TranslatedString | null>(null)
+/** Only the latest request may answer, so a slow older one cannot win. */
+let latestCheck = 0
+
+async function checkAgentBaked(): Promise<boolean | null> {
+  const check = ++latestCheck
+  const pkg = bakedPackage.value
+  if (pkg === null || !props.isActive) {
+    return null
+  }
+  checking.value = true
+  try {
+    const baked = await isAgentBaked(props.macros.hostName, pkg.osType)
+    if (check === latestCheck) {
+      agentBaked.value = baked
+    }
+    return baked
+  } catch {
+    // Without an answer the download command may still work, so it stays visible.
+    return null
+  } finally {
+    if (check === latestCheck) {
+      checking.value = false
+    }
+  }
+}
+
+async function checkAgain() {
+  recheckNote.value = null
+  const check = latestCheck + 1
+  const baked = await checkAgentBaked()
+  if (check !== latestCheck || baked === true) {
+    return
+  }
+  recheckNote.value =
+    baked === false
+      ? _t('Still no agent baked for this host.')
+      : _t('The check failed. Please try again.')
+}
+
+watch(
+  [bakedPackage, () => props.isActive],
+  () => {
+    agentBaked.value = null
+    recheckNote.value = null
+    void checkAgentBaked()
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
@@ -120,6 +181,28 @@ const cmdsResolved = computed(() => isResolved(rendered.value.tokenState))
         </div>
         <template v-else>
           <CmkAlert v-if="spec.kind === 'unbaked-fallback'" variant="warning" :text="spec.intro" />
+          <template v-else-if="agentBaked === false">
+            <CmkAlert
+              variant="warning"
+              :heading="_t('No agent baked for this host yet')"
+              :text="
+                _t(
+                  'The download command would fail because the Agent Bakery has no package of this type for the host. Bake the agents, then check again.'
+                )
+              "
+            />
+            <div class="mh-install-agent-step__bakery-actions">
+              <CmkButton variant="secondary" :href="bakedPackage?.bakeryUrl" target="_blank">
+                {{ _t('Open Agent Bakery') }}
+              </CmkButton>
+              <CmkButton variant="optional" :running="checking" @click="checkAgain">
+                {{ _t('Check again') }}
+              </CmkButton>
+            </div>
+            <CmkParagraph v-if="recheckNote" class="mh-install-agent-step__recheck-note">
+              {{ recheckNote }}
+            </CmkParagraph>
+          </template>
           <div v-else class="download_install__token">
             <CmkParagraph>{{ intro }}</CmkParagraph>
             <GenerateToken
@@ -141,14 +224,14 @@ const cmdsResolved = computed(() => isResolved(rendered.value.tokenState))
             v-model="shellId"
             :choices="spec.variants"
           />
-          <CommandBlockList v-if="cmdsResolved" :blocks="rendered.blocks" />
+          <CommandBlockList v-if="cmdsResolved && agentBaked !== false" :blocks="rendered.blocks" />
         </template>
       </div>
     </template>
     <template v-if="isActive" #actions>
       <CmkWizardButton
         type="next"
-        :disabled="!downloadFailed && !cmdsResolved"
+        :disabled="!downloadFailed && !cmdsResolved && agentBaked !== false"
         :override-label="_t('Next step: Register agent')"
       />
       <CmkWizardButton type="previous" />
@@ -157,6 +240,16 @@ const cmdsResolved = computed(() => isResolved(rendered.value.tokenState))
 </template>
 
 <style scoped>
+.mh-install-agent-step__bakery-actions {
+  display: flex;
+  gap: var(--dimension-4);
+  margin: var(--dimension-4) 0 var(--dimension-6);
+}
+
+.mh-install-agent-step__recheck-note {
+  margin-bottom: var(--dimension-6);
+}
+
 /* stylelint-disable checkmk/vue-bem-naming-convention */
 .install_url__div {
   margin-bottom: var(--spacing);

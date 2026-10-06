@@ -255,6 +255,7 @@ class AgentCommands:
     registration_cmds: Callable[[], AgentRegistrationCmds]
     status_cmds: Callable[[], AgentStatusCmds]
     legacy_agent_url: Callable[[], str | None] = lambda: None
+    bakery_url: Callable[[], str | None] = lambda: None
     unbaked_fallback: Callable[[bool, str], UnbakedFallback | None] = lambda _available, _version: (
         None
     )
@@ -385,4 +386,5 @@ def get_agent_slideout(
         save_host=save_host,
         host_exists=host_exists,
         unbaked_fallback=None if fallback is None else unbaked_fallback_cls(**asdict(fallback)),
+        bakery_url=commands.bakery_url() if baked_agents_available else None,
     )

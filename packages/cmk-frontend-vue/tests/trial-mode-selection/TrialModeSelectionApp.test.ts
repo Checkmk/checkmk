@@ -419,7 +419,6 @@ describe('TrialModeSelectionApp', () => {
       ).toBeInTheDocument()
     })
 
-    // The page sends `offline: null` until CMK-37828.
     it('asks for an email address when the page does not say the site is offline', async () => {
       // The props type has no null, so the whole object is cast.
       renderApp({ offline: null } as unknown as Partial<TrialModeSelectionProps>)

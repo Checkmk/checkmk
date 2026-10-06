@@ -10799,7 +10799,9 @@ msgid ""
 "but some devices are offering their information in different SNMPv3 "
 "contexts. This rule can be used to configure, based on hosts and SNMP "
 "sections, which SNMPv3 contexts Checkmk should ask for when getting "
-"information via SNMPv3."
+"information via SNMPv3. The default context is only queried if it is "
+"selected here. If several contexts return the same OIDs, only the data of "
+"the first context is used."
 msgstr ""
 "Standardmäßig benutzt Checkmk keinen spezifischen Kontext für SNMPv3-"
 "Anfragen, aber manche Geräte stellen ihre Informationen unter "
@@ -12339,6 +12341,14 @@ msgstr "Kann Prozess nicht löschen. Der Prozess kann nicht gestoppt werden."
 msgid "Cannot delete rules that are managed by Quick Setup."
 msgstr ""
 "Regeln, die durch Quick Setup verwaltet werden, können nicht gelöscht werden."
+
+#, fuzzy, python-format
+msgid ""
+"Cannot delete this customer because the following objects are still assigned "
+"to it: %(references)s."
+msgstr ""
+"Kann den Kunden nicht löschen, da die Instanzen %s noch dem Kunden "
+"zugeordnet sind."
 
 #, python-format
 msgid ""
@@ -19439,6 +19449,10 @@ msgstr "Standardfarbe"
 
 msgid "Default configuration"
 msgstr "Standardkonfiguration"
+
+#, fuzzy
+msgid "Default context"
+msgstr "Standardfarbe"
 
 msgid "Default credentials"
 msgstr "Standard-Zugangsdaten"
@@ -46095,6 +46109,10 @@ msgstr "Keine Verbindungsprobleme"
 msgid "No contact groups assigned."
 msgstr "Keine Kontakt-Gruppen zugewiesen."
 
+#, fuzzy
+msgid "No context names"
+msgstr "SNMP Kontextname"
+
 msgid "No custom attributes are defined yet."
 msgstr "Es wurden noch keine benutzerdefinierten Attribute definiert."
 
@@ -46127,6 +46145,10 @@ msgstr ""
 
 msgid "No data."
 msgstr "Keine Daten."
+
+#, fuzzy
+msgid "No default context"
+msgstr "Keine Standards"
 
 msgid "No default values can be set for condition choices."
 msgstr ""
@@ -53042,6 +53064,11 @@ msgid "Please select some hosts before doing bulk actions on hosts."
 msgstr ""
 "Bitte ein paar Hosts auswählen bevor Sie Bulk-Aufgaben auf Hosts ausführen."
 
+#, fuzzy
+msgid "Please select the default context or enter at least one context name."
+msgstr ""
+"Bitte wählen Sie mindestens eine oder mehrere Regionen aus, um fortzufahren."
+
 msgid "Please select the destination folder"
 msgstr "Bitte Ziel-Ordner angeben"
 
@@ -54566,6 +54593,10 @@ msgstr "Metrik-Backend aus dem Editor für benutzerdefinierte Graphen abfragen"
 
 msgid "Query or SQL statement"
 msgstr "Query oder SQL-Anfrage"
+
+#, fuzzy
+msgid "Query the default context (no context name)"
+msgstr "Standardfarbe des Themas verwenden."
 
 msgid "Query the metric backend"
 msgstr "Das Metrik-Backend abfragen"
@@ -58522,6 +58553,10 @@ msgid "SNMP community for the SNMP trap"
 msgstr "SNMP-Community für die SNMP-Trap"
 
 msgid "SNMP context names"
+msgstr "SNMP Kontextname"
+
+#, fuzzy
+msgid "SNMP contexts"
 msgstr "SNMP Kontextname"
 
 msgid "SNMP credentials"
@@ -70267,22 +70302,17 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The license usage history is older than five days. In order to have a "
-"reliable average of the number of services the license usage report must "
-"contain a significant number of license usage samples. Please execute the "
-"following command as site user 'cmk-update-license-usage --force' in order "
-"to solve this situation."
+"The license usage history is older than 60 days, so activating changes is "
+"blocked. Something is wrong on this site: please contact Checkmk support. As "
+"a temporary fix, run 'cmk-update-license-usage --force' as site user."
 msgstr ""
-"Die Historie der Lizenznutzung ist älter als fünf Tage. Um einen "
-"zuverlässigen Durchschnittswert für die Anzahl der Services zu erhalten, "
-"muss der Lizenznutzungsbericht eine erhebliche Anzahl von Beispielen für die "
-"Lizenznutzung enthalten. Bitte führen Sie den folgenden Befehl als "
-"Instanzbenutzer aus 'cmk-update-license-usage --force', um diese Situation "
-"zu lösen."
 
-msgid "The license usage history was updated at least three days ago."
+msgid ""
+"The license usage history is older than three days, and activating changes "
+"will be blocked once it is older than 60 days. Something is wrong on this "
+"site: please contact Checkmk support. As a temporary fix, run 'cmk-update-"
+"license-usage --force' as site user."
 msgstr ""
-"Die Historie der Lizenznutzung wurde vor mindestens drei Tagen aktualisiert."
 
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "Die Grenze für das Transport-Lag in <tt>v$dataguard_stats</tt>"
@@ -71581,6 +71611,10 @@ msgstr ""
 
 msgid "The provided token is not valid for dashboard access."
 msgstr "Der bereitgestellte Token ist für den Dashboard-Zugang nicht gültig."
+
+#, fuzzy
+msgid "The provider customer cannot be deleted."
+msgstr "Der Kunde wurde gelöscht."
 
 msgid "The queried ESX system (vCenter / Host)"
 msgstr "Das abzufragende ESX-System (vCenter / Host)"
@@ -92300,6 +92334,10 @@ msgstr "Verbindungen/Sek"
 msgid "connections"
 msgstr "Verbindungen"
 
+#, fuzzy
+msgid "contact groups"
+msgstr "Kontakt-Gruppen: "
+
 msgid "contact groups: "
 msgstr "Kontakt-Gruppen: "
 
@@ -92757,6 +92795,10 @@ msgstr[1] "Hosts"
 #, python-format
 msgid "host \"%s\""
 msgstr "Host \"%s\""
+
+#, fuzzy
+msgid "host groups"
+msgstr "Host-Gruppen"
 
 msgid "host in total"
 msgstr "Host gesamt"
@@ -93841,6 +93883,10 @@ msgid "service"
 msgid_plural "services"
 msgstr[0] "Service"
 msgstr[1] "Services"
+
+#, fuzzy
+msgid "service groups"
+msgstr "Service-Gruppen"
 
 #, python-format
 msgid "service in %s state"
@@ -99100,6 +99146,25 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid ""
+#~ "The license usage history is older than five days. In order to have a "
+#~ "reliable average of the number of services the license usage report must "
+#~ "contain a significant number of license usage samples. Please execute the "
+#~ "following command as site user 'cmk-update-license-usage --force' in "
+#~ "order to solve this situation."
+#~ msgstr ""
+#~ "Die Historie der Lizenznutzung ist älter als fünf Tage. Um einen "
+#~ "zuverlässigen Durchschnittswert für die Anzahl der Services zu erhalten, "
+#~ "muss der Lizenznutzungsbericht eine erhebliche Anzahl von Beispielen für "
+#~ "die Lizenznutzung enthalten. Bitte führen Sie den folgenden Befehl als "
+#~ "Instanzbenutzer aus 'cmk-update-license-usage --force', um diese "
+#~ "Situation zu lösen."
+
+#~ msgid "The license usage history was updated at least three days ago."
+#~ msgstr ""
+#~ "Die Historie der Lizenznutzung wurde vor mindestens drei Tagen "
+#~ "aktualisiert."
 
 #, fuzzy
 #~ msgid "Custom metrics cache age"

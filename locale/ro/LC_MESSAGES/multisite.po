@@ -11224,7 +11224,9 @@ msgid ""
 "but some devices are offering their information in different SNMPv3 "
 "contexts. This rule can be used to configure, based on hosts and SNMP "
 "sections, which SNMPv3 contexts Checkmk should ask for when getting "
-"information via SNMPv3."
+"information via SNMPv3. The default context is only queried if it is "
+"selected here. If several contexts return the same OIDs, only the data of "
+"the first context is used."
 msgstr ""
 "În mod implicit, Checkmk nu utilizează un context specific în timpul "
 "interogărilor SNMPv3, dar unele dispozitive își oferă informațiile în "
@@ -12791,6 +12793,14 @@ msgstr "Nu se poate șterge sarcina. Lucrarea nu poate fi oprită."
 #, fuzzy
 msgid "Cannot delete rules that are managed by Quick Setup."
 msgstr "Nu puteți șterge rolurile care sunt încă în uz (%s)!"
+
+#, fuzzy, python-format
+msgid ""
+"Cannot delete this customer because the following objects are still assigned "
+"to it: %(references)s."
+msgstr ""
+"Nu se poate șterge acest client deoarece site-urile %s îi sunt încă "
+"atribuite."
 
 #, python-format
 msgid ""
@@ -20073,6 +20083,10 @@ msgstr "Culoare implicită"
 
 msgid "Default configuration"
 msgstr "Configurație implicită"
+
+#, fuzzy
+msgid "Default context"
+msgstr "Culoare implicită"
 
 msgid "Default credentials"
 msgstr "Acreditări implicite"
@@ -48139,6 +48153,10 @@ msgstr "Fără probleme de conectivitate"
 msgid "No contact groups assigned."
 msgstr "Nu sunt alocate grupuri de contact."
 
+#, fuzzy
+msgid "No context names"
+msgstr "ID-uri de context SNMP"
+
 msgid "No custom attributes are defined yet."
 msgstr "Nu sunt definite încă atribute personalizate."
 
@@ -48174,6 +48192,10 @@ msgstr ""
 
 msgid "No data."
 msgstr "Nu există date."
+
+#, fuzzy
+msgid "No default context"
+msgstr "Este implicit"
 
 #, fuzzy
 msgid "No default values can be set for condition choices."
@@ -55502,6 +55524,10 @@ msgstr ""
 "Vă rugăm să selectați câteva gazde înainte de a efectua operațiuni în masă "
 "pe gazde."
 
+#, fuzzy
+msgid "Please select the default context or enter at least one context name."
+msgstr "Vă rugăm să selectați cel puțin o metodă de mesagerie."
+
 msgid "Please select the destination folder"
 msgstr "Vă rugăm să selectați dosarul de destinație"
 
@@ -57125,6 +57151,10 @@ msgstr ""
 
 msgid "Query or SQL statement"
 msgstr "Interogare sau instrucțiune SQL"
+
+#, fuzzy
+msgid "Query the default context (no context name)"
+msgstr "Utilizați culoarea implicită a temei."
 
 #, fuzzy
 msgid "Query the metric backend"
@@ -61337,6 +61367,10 @@ msgstr "Comunitatea SNMP pentru capcana SNMP"
 
 #, fuzzy
 msgid "SNMP context names"
+msgstr "ID-uri de context SNMP"
+
+#, fuzzy
+msgid "SNMP contexts"
 msgstr "ID-uri de context SNMP"
 
 msgid "SNMP credentials"
@@ -73288,16 +73322,17 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The license usage history is older than five days. In order to have a "
-"reliable average of the number of services the license usage report must "
-"contain a significant number of license usage samples. Please execute the "
-"following command as site user 'cmk-update-license-usage --force' in order "
-"to solve this situation."
+"The license usage history is older than 60 days, so activating changes is "
+"blocked. Something is wrong on this site: please contact Checkmk support. As "
+"a temporary fix, run 'cmk-update-license-usage --force' as site user."
 msgstr ""
 
-#, fuzzy
-msgid "The license usage history was updated at least three days ago."
-msgstr "Istoricul de utilizare a licenței este mai vechi de cinci zile."
+msgid ""
+"The license usage history is older than three days, and activating changes "
+"will be blocked once it is older than 60 days. Something is wrong on this "
+"site: please contact Checkmk support. As a temporary fix, run 'cmk-update-"
+"license-usage --force' as site user."
+msgstr ""
 
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "Limita pentru decalajul de transport în <tt>v$dataguard_stats</tt>."
@@ -74542,6 +74577,10 @@ msgstr ""
 #, fuzzy
 msgid "The provided token is not valid for dashboard access."
 msgstr "Fișierul nu pare a fi un fișier cheie valid."
+
+#, fuzzy
+msgid "The provider customer cannot be deleted."
+msgstr "Clientul a fost șters."
 
 msgid "The queried ESX system (vCenter / Host)"
 msgstr "Sistemul ESX interogat (vCenter / Host)"
@@ -95918,6 +95957,10 @@ msgstr "conexiune/sec"
 msgid "connections"
 msgstr "conexiuni"
 
+#, fuzzy
+msgid "contact groups"
+msgstr "grupuri de contact: "
+
 msgid "contact groups: "
 msgstr "grupuri de contact: "
 
@@ -96395,6 +96438,10 @@ msgstr[2] ""
 #, fuzzy, python-format
 msgid "host \"%s\""
 msgstr "pe gazda %s"
+
+#, fuzzy
+msgid "host groups"
+msgstr "Grupuri gazdă"
 
 msgid "host in total"
 msgstr "gazdă în total"
@@ -97540,6 +97587,11 @@ msgid_plural "services"
 msgstr[0] "serviciu"
 msgstr[1] ""
 msgstr[2] ""
+
+# georgem ##############
+#, fuzzy
+msgid "service groups"
+msgstr "Grupuri de servicii"
 
 #, python-format
 msgid "service in %s state"
@@ -103077,6 +103129,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "The license usage history was updated at least three days ago."
+#~ msgstr "Istoricul de utilizare a licenței este mai vechi de cinci zile."
 
 #, fuzzy
 #~ msgid "Custom metrics cache age"

@@ -11292,7 +11292,9 @@ msgid ""
 "but some devices are offering their information in different SNMPv3 "
 "contexts. This rule can be used to configure, based on hosts and SNMP "
 "sections, which SNMPv3 contexts Checkmk should ask for when getting "
-"information via SNMPv3."
+"information via SNMPv3. The default context is only queried if it is "
+"selected here. If several contexts return the same OIDs, only the data of "
+"the first context is used."
 msgstr ""
 "Por defecto, Checkmk no utiliza un contexto específico durante las consultas "
 "SNMPv3, pero algunos dispositivos ofrecen su información en diferentes "
@@ -12791,6 +12793,14 @@ msgstr "No se puede eliminar el trabajo. No se puede detener el trabajo."
 #, fuzzy
 msgid "Cannot delete rules that are managed by Quick Setup."
 msgstr "No puede eliminar los roles que aún están en uso (%s)!"
+
+#, fuzzy, python-format
+msgid ""
+"Cannot delete this customer because the following objects are still assigned "
+"to it: %(references)s."
+msgstr ""
+"No se puede eliminar este cliente porque los sitios %s todavía están "
+"asignados a él."
 
 #, python-format
 msgid ""
@@ -20129,6 +20139,10 @@ msgstr "Color por defecto"
 
 msgid "Default configuration"
 msgstr "Configuración por defecto"
+
+#, fuzzy
+msgid "Default context"
+msgstr "Color por defecto"
 
 msgid "Default credentials"
 msgstr "Credenciales por defecto"
@@ -48323,6 +48337,10 @@ msgstr "Sin problemas de conectividad"
 msgid "No contact groups assigned."
 msgstr "No se han asignado grupos de contacto."
 
+#, fuzzy
+msgid "No context names"
+msgstr "IDs de Contexto SNMP"
+
 msgid "No custom attributes are defined yet."
 msgstr "Todavía no se han definido atributos personalizados."
 
@@ -48358,6 +48376,10 @@ msgstr ""
 
 msgid "No data."
 msgstr "No hay datos."
+
+#, fuzzy
+msgid "No default context"
+msgstr "Es por defecto"
 
 #, fuzzy
 msgid "No default values can be set for condition choices."
@@ -55742,6 +55764,10 @@ msgstr ""
 "Por favor, seleccione algunos hosts antes de realizar operaciones masivas en "
 "hosts."
 
+#, fuzzy
+msgid "Please select the default context or enter at least one context name."
+msgstr "Por favor, seleccione al menos un método de mensajería."
+
 msgid "Please select the destination folder"
 msgstr "Seleccione la carpeta de destino"
 
@@ -57376,6 +57402,10 @@ msgstr ""
 
 msgid "Query or SQL statement"
 msgstr "Consulta o sentencia SQL"
+
+#, fuzzy
+msgid "Query the default context (no context name)"
+msgstr "Utilice el color por defecto del tema."
 
 #, fuzzy
 msgid "Query the metric backend"
@@ -61637,6 +61667,10 @@ msgstr "Comunidad SNMP para la trampa SNMP"
 
 #, fuzzy
 msgid "SNMP context names"
+msgstr "IDs de Contexto SNMP"
+
+#, fuzzy
+msgid "SNMP contexts"
 msgstr "IDs de Contexto SNMP"
 
 msgid "SNMP credentials"
@@ -73586,16 +73620,17 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The license usage history is older than five days. In order to have a "
-"reliable average of the number of services the license usage report must "
-"contain a significant number of license usage samples. Please execute the "
-"following command as site user 'cmk-update-license-usage --force' in order "
-"to solve this situation."
+"The license usage history is older than 60 days, so activating changes is "
+"blocked. Something is wrong on this site: please contact Checkmk support. As "
+"a temporary fix, run 'cmk-update-license-usage --force' as site user."
 msgstr ""
 
-#, fuzzy
-msgid "The license usage history was updated at least three days ago."
-msgstr "El historial de uso de la licencia tiene más de cinco días."
+msgid ""
+"The license usage history is older than three days, and activating changes "
+"will be blocked once it is older than 60 days. Something is wrong on this "
+"site: please contact Checkmk support. As a temporary fix, run 'cmk-update-"
+"license-usage --force' as site user."
+msgstr ""
 
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "El límite para el retraso de transporte en <tt>v$dataguard_stats</tt>"
@@ -74832,6 +74867,10 @@ msgstr ""
 #, fuzzy
 msgid "The provided token is not valid for dashboard access."
 msgstr "El archivo no parece un archivo de claves válido."
+
+#, fuzzy
+msgid "The provider customer cannot be deleted."
+msgstr "El cliente ha sido eliminado."
 
 msgid "The queried ESX system (vCenter / Host)"
 msgstr "El sistema ESX consultado (vCenter / Host)"
@@ -96281,6 +96320,10 @@ msgstr "conexión/seg"
 msgid "connections"
 msgstr "conexiones"
 
+#, fuzzy
+msgid "contact groups"
+msgstr "grupos de contacto: "
+
 msgid "contact groups: "
 msgstr "grupos de contacto: "
 
@@ -96759,6 +96802,10 @@ msgstr[1] "hosts"
 #, fuzzy, python-format
 msgid "host \"%s\""
 msgstr "en el host %s"
+
+#, fuzzy
+msgid "host groups"
+msgstr "Grupos de host"
 
 msgid "host in total"
 msgstr "anfitrión en total"
@@ -97909,6 +97956,10 @@ msgid "service"
 msgid_plural "services"
 msgstr[0] "servicio"
 msgstr[1] "servicios"
+
+#, fuzzy
+msgid "service groups"
+msgstr "Grupos de servicios"
 
 #, python-format
 msgid "service in %s state"
@@ -103421,6 +103472,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "The license usage history was updated at least three days ago."
+#~ msgstr "El historial de uso de la licencia tiene más de cinco días."
 
 #, fuzzy
 #~ msgid "Custom metrics cache age"

@@ -3175,7 +3175,9 @@ matplotlib==3.11.2 \
 mcp==2.2.0 \
     --hash=sha256:2dc37ecb1974becdcebdbf7561e7c15a07dbbf20ba21ba16c3593b3038b3afbd \
     --hash=sha256:bde982589473a060ae145e3406e9a5333fe538c97229ba841f5a7f92be004f81
-    # via -r non-free/packages/cmk-mcp/requirements.in
+    # via
+    #   -r non-free/packages/cmk-ai-control-plane/requirements.in
+    #   -r non-free/packages/cmk-mcp/requirements.in
 mcp-types==2.2.0 \
     --hash=sha256:d3ed53703ddd10d9c6399f29d322bb66f3f67ab41348ac8556ba23e07fedefad \
     --hash=sha256:ea476b73ee86709ab5abc9452385ed36cc05907e582355622e294595c9a04f13

@@ -36,6 +36,7 @@ Components
 
    arch-comp-gui.rst
    arch-comp-gui-vue.rst
+   arch-comp-gui-views.rst
    arch-comp-gui-metrics.rst
    arch-comp-host-relations.rst
    arch-comp-apache.rst

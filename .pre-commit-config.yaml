@@ -26,7 +26,8 @@ repos:
       rev: v4.6.0
       hooks:
           - id: trailing-whitespace
-            exclude: ^.*\.patch$
+            # Test inputs for the Groovy formatter keep their whitespace
+            exclude: ^(.*\.patch|bazel/tools/format/tests/component/groovy/.*)$
           - id: check-merge-conflict
             types: [file]
           - id: check-yaml # pre-commit cannot parse utf-16 files

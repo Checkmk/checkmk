@@ -154,7 +154,7 @@ void main() {
                     bazel run \
                         --cmk_edition=${edition} \
                         --cmk_version=${setup_values.cmk_version} \
-                    //omd/non-free/relay:image_docker
+                        //omd/non-free/relay:image_docker
                     docker tag check-mk-relay:latest ${relay_image_tag}
                 """);
             }

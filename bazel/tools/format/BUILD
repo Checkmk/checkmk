@@ -1,6 +1,7 @@
 load("@npm//bazel/tools:npm-groovy-lint/package_json.bzl", groovy_bin = "bin")
 load("@npm//bazel/tools:prettier/package_json.bzl", prettier_bin = "bin")
 load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
 load(":format_dispatch.bzl", "format_dispatch")
 
@@ -73,6 +74,14 @@ groovy_bin.npm_groovy_lint_binary(
         "@remotejdk17_linux//:bin/java",
         "@remotejdk17_linux//:jdk",
     ],
+)
+
+py_cmk_test(
+    name = "component",
+    size = "small",
+    srcs = ["tests/component/test_groovy_format.py"],
+    data = [":groovy-format"] + glob(["tests/component/groovy/*.groovy"]),
+    env = {"GROOVY_FORMAT": "$(rootpath :groovy-format)"},
 )
 
 py_console_script_binary(

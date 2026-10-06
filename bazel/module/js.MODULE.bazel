@@ -23,6 +23,20 @@ npm.npm_translate_lock(
         "//packages/cmk-werk:package.json",
     ],
     npmrc = "//:.npmrc",
+    # Patches are keyed by version: rules_js rejects a key that matches no
+    # package, so an upgrade fails until the patches have been revisited.
+    # patch_args only apply to packages with patches. They are git style, and
+    # without fuzz a patch which does not apply exactly fails, too.
+    patch_args = {"*": [
+        "-p1",
+        "--fuzz=0",
+    ]},
+    patches = {
+        "npm-groovy-lint@18.0.0": [
+            # Carried locally — no upstream PR yet.
+            "//bazel/patches:npm-groovy-lint-multiline-strings.patch",
+        ],
+    },
     pnpm_lock = ":pnpm-lock.yaml",
     verify_node_modules_ignored = "//:.bazelignore",
 )

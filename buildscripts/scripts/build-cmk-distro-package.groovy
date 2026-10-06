@@ -166,9 +166,9 @@ void main() {
                                 --cmk_edition=${edition} \
                                 ${license_flag} \
                                 --execution_log_json_file="${checkout_dir}/deps_install.json" \
-                        //omd:${package_type} \
-                        //omd/dependency_management:generate_bom_csv \
-                        //omd/dependency_management:bill_of_materials_renamed
+                                //omd:${package_type} \
+                                //omd/dependency_management:generate_bom_csv \
+                                //omd/dependency_management:bill_of_materials_renamed
                         """);
                     }
                     sh("cp --no-preserve=mode ${checkout_dir}/bazel-bin/omd/check-mk*.${package_type} ${checkout_dir}");
@@ -199,7 +199,7 @@ void main() {
                                 --cmk_version=${cmk_version} \
                                 --cmk_edition=${edition} \
                                 ${license_flag} \
-                        //omd:validate_${package_type}
+                                //omd:validate_${package_type}
                         """);
                     } finally {
                         sh("cp --no-preserve=mode ${log_src} ${checkout_dir}/package_validator.log");

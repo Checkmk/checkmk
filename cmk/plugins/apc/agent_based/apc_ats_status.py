@@ -36,7 +36,7 @@ def parse_apc_ats_status(info: StringTable) -> Status | None:
 
 
 def discover_apc_ats_status(section: Status) -> DiscoveryResult:
-    if section and section.selected_source:  # type: ignore[redundant-expr]
+    if section.selected_source:
         yield Service(parameters={"power_source": section.selected_source.value})
 
 

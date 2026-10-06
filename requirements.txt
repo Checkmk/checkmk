@@ -5021,6 +5021,7 @@ pytest==9.1.1 \
     #   -r packages/cmk-profiling/dev-requirements.in
     #   -r packages/cmk-relay-protocols/dev-requirements.in
     #   -r packages/cmk-ruleset-matcher/dev-requirements.in
+    #   -r packages/cmk-schema-manager/dev-requirements.in
     #   -r packages/cmk-trace/dev-requirements.in
     #   -r packages/cmk-web/dev-requirements.in
     #   -r packages/cmk-werks/dev-requirements.in

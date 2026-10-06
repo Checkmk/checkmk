@@ -1498,6 +1498,9 @@ allows = ["@ccc", "@trace"]
 [components."cmk.rulesets"]
 allows = []
 
+[components."cmk.schema_manager"]
+allows = []
+
 [components."cmk.server_side_calls"]
 allows = []
 
@@ -1890,6 +1893,9 @@ allows = [
   "cmk.crash",
   "cmk.relay",
 ]
+
+[components."cmk.testlib.schema_manager"]
+allows = ["cmk.schema_manager"]
 
 [components."cmk.rrd"]
 allows = ["@ccc", "cmk.crash", "cmk.utils"]

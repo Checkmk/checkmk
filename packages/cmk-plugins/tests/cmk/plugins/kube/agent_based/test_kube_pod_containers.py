@@ -178,6 +178,25 @@ def test_check_result_summary_start_time(timespan: float, check_result: CheckRes
     assert result.summary == f"Status: Running for {expected_timespan}"
 
 
+# The clock of the cluster may run ahead of the clock of the Checkmk server,
+# so the container appears to have been started in the future.
+@pytest.mark.xfail(
+    strict=True,
+    raises=ValueError,
+    reason="Crash report f41dddf2-6ed9-11f1-bc58-bc241139f626: ValueError",
+)
+@pytest.mark.parametrize("timespan", [-2 * MINUTE])
+def test_check_result_start_time_in_the_future(check_result: CheckResult) -> None:
+    result, _, _ = check_result
+    assert result == Result(
+        state=State.UNKNOWN,
+        summary=(
+            "Status: Running, but the start time is 2 minutes 0 seconds in the future"
+            " (check the system time)"
+        ),
+    )
+
+
 @pytest.mark.parametrize("container_state", ["waiting"])
 def test_check_result_waiting(check_result: CheckResult) -> None:
     result, _, _ = check_result

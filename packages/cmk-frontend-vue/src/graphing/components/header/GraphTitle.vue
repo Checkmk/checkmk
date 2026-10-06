@@ -43,7 +43,7 @@ function fitTitle(): void {
   probe.style.width = `${width}px`
   const fits = (text: string): boolean => {
     probe.textContent = text
-    return probe.scrollHeight <= maxHeight
+    return probe.scrollHeight <= maxHeight && probe.scrollWidth <= width
   }
 
   displayTitle.value = middleTruncate(props.title, fits)

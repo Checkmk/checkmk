@@ -193,6 +193,13 @@ describe('PublicAccessSettings', () => {
       expect(dateInput.value).toBe('2030-06-15')
     })
 
+    it('stores a picked date as that local calendar day', async () => {
+      const { validUntil } = renderPublicSettings({ hasValidity: true, validUntil: null })
+      const dateInput = document.querySelector('input[type="date"]') as HTMLInputElement
+      await fireEvent.update(dateInput, '2030-06-15')
+      expect(validUntil.value).toEqual(new Date(2030, 5, 15))
+    })
+
     it('updates the comment ref when the user types in the comment field', async () => {
       const { comment } = renderPublicSettings({ comment: '' })
       const commentInput = screen.getByPlaceholderText('Internal comment, not visible to viewers')

@@ -25,7 +25,7 @@ describe('SharedDashboardMenuHeader', () => {
       const timeEl = document.querySelector('.db-shared-dashboard-menu-header__utc-time-only')
       expect(dateEl).not.toBeNull()
       await waitFor(() => {
-        expect(dateEl!.textContent).toMatch(/^\d{2}-\d{2}-\d{4}$/)
+        expect(dateEl!.textContent).toMatch(/^\d{4}-\d{2}-\d{2}$/)
       })
       expect(timeEl).not.toBeNull()
       expect(timeEl!.textContent).toContain('UTC')

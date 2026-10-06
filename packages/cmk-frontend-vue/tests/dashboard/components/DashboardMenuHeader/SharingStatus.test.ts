@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen } from '@testing-library/vue'
+import { renderDate } from 'cmk-ui-library/lib/renderTime'
 import { describe, expect, it } from 'vitest'
 
 import SharingStatus from '@/dashboard/components/DashboardMenuHeader/SharingStatus.vue'
@@ -73,7 +74,7 @@ describe('SharingStatus', () => {
       const pastDate = daysFromNow(-5)
       renderSharingStatus({ sharingState: 'active', sharedUntil: pastDate })
       expect(screen.getByText('Sharing expired on')).toBeInTheDocument()
-      expect(screen.getByText(pastDate.toISOString().split('T')[0]!)).toBeInTheDocument()
+      expect(screen.getByText(renderDate(pastDate))).toBeInTheDocument()
     })
   })
 

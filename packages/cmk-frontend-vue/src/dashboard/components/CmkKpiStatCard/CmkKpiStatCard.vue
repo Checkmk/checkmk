@@ -10,6 +10,7 @@ import StateTag, { type StateTone } from 'cmk-ui-library/components/StateTag.vue
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
+import { renderDateAndTime, renderTimeOfDay } from 'cmk-ui-library/lib/renderTime'
 import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -208,9 +209,7 @@ const lastSampleTimeLabel = computed<string | undefined>(() => {
   if (!sample) {
     return undefined
   }
-  return new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(
-    sample.timestamp * 1000
-  )
+  return renderTimeOfDay(sample.timestamp)
 })
 
 // Below this, a plotted curve is too cramped to read - the card falls back to
@@ -282,12 +281,7 @@ const hoveredTimeLabel = computed<string | undefined>(() => {
   if (!sample) {
     return undefined
   }
-  return new Intl.DateTimeFormat(undefined, {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(sample.timestamp * 1000)
+  return renderDateAndTime(sample.timestamp)
 })
 
 const realSampleCount = computed(

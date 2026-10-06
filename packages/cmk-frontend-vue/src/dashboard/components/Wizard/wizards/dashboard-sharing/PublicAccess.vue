@@ -11,6 +11,7 @@ import CmkCode from 'cmk-ui-library/components/CmkCode.vue'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { renderDate } from 'cmk-ui-library/lib/renderTime'
 import { type Reactive, computed, reactive, ref, toRef, watch } from 'vue'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
@@ -86,7 +87,7 @@ const handleEnableAccess = async () => {
   dialogData.message = [_t('Anyone with the link can view this dashboard.')]
 
   if (handler.validUntil.value) {
-    const expiryDateStr = handler.validUntil.value.toISOString().split('T')[0]!
+    const expiryDateStr = renderDate(handler.validUntil.value)
     dialogData.message.push(
       _t('Access will automatically expire on %{date}.', { date: expiryDateStr })
     )

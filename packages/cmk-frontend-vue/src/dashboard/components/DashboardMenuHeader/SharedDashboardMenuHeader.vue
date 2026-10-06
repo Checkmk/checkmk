@@ -8,6 +8,7 @@ import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import { renderDate, renderTimeOfDay } from 'cmk-ui-library/lib/renderTime'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { onMounted, onUnmounted, ref } from 'vue'
 
@@ -31,14 +32,8 @@ const menuShown = ref(false)
 
 const updateUtcTime = () => {
   const now = new Date()
-  const day = now.getUTCDate().toString().padStart(2, '0')
-  const month = (now.getUTCMonth() + 1).toString().padStart(2, '0')
-  const year = now.getUTCFullYear()
-  currentUtcDate.value = `${day}-${month}-${year}`
-
-  const hours = now.getUTCHours().toString().padStart(2, '0')
-  const minutes = now.getUTCMinutes().toString().padStart(2, '0')
-  currentUtcTime.value = `${hours}:${minutes}`
+  currentUtcDate.value = renderDate(now, 'UTC')
+  currentUtcTime.value = renderTimeOfDay(now, 'UTC')
 }
 
 const toggleDateTime = () => {

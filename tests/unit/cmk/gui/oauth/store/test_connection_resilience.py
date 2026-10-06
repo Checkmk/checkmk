@@ -15,9 +15,10 @@ from http import HTTPStatus
 
 from cmk.ccc.user import UserId
 from cmk.gui.oauth.store.client_store import get_client_store
-from cmk.gui.oauth.token.backend import oauth_db_path
 from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.scopes import DEFAULT_SCOPE
+from cmk.schema_manager.backend.sqlite import Sqlite
+from cmk.schema_migrations.oauth import schema_manager_oauth
 from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 
@@ -42,7 +43,9 @@ def test_a_damaged_database_does_not_authenticate_anyone(
             client_id=registration.ok.client_id,
         )
     assert token.is_ok()
-    with oauth_db_path().open("r+b") as database:
+    backend = schema_manager_oauth.backend
+    assert isinstance(backend, Sqlite)
+    with backend.path(schema_manager_oauth.name).open("r+b") as database:
         # Overwrite the first page, as an interrupted copy would leave it.
         database.seek(100)
         database.write(b"\x00" * 4096)

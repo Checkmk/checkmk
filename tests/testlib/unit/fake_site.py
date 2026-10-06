@@ -31,6 +31,8 @@ import cmk.utils.caching
 import cmk.utils.paths
 from cmk.ccc.site import omd_site, SiteId
 from cmk.crash import make_crash_report_base_path
+from cmk.schema_manager import discover_db_migrations, ensure_schema
+from cmk.schema_manager.backend.sqlite import Sqlite
 from cmk.utils import redis
 from tests.testlib.common.repo import is_non_free_repo, repo_path
 
@@ -278,6 +280,10 @@ sites.update(%r)
         """
         % livestatus.SiteConfigurations({SiteId("NO_SITE"): no_site_configuration()}),
     )
+
+    # Mirror what the post-create hook does on a real site.
+    for database in discover_db_migrations(backend_type=Sqlite, event="create").values():
+        ensure_schema(database, logger)
 
     yield
     omd_site.cache_clear()

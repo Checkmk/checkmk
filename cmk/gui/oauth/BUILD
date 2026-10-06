@@ -20,9 +20,9 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui:scopes",
         "//cmk/gui/userdb",
-        "//cmk/utils:paths",
         "//packages/cmk-ccc:resulttype",
         "//packages/cmk-ccc:user",
+        "//packages/cmk-schema-manager",
     ],
 )
 

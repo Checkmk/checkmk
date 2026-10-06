@@ -47,6 +47,7 @@ py_library(
         "//cmk/product_usage",
         "//cmk/product_usage:product_usage_cli",
         "//cmk/rrd",
+        "//cmk/schema_migrations:oauth",
         "//cmk/server_side_calls_backend",
         "//cmk/special_agents",
         "//cmk/update_config",

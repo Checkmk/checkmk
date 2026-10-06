@@ -1119,6 +1119,7 @@ allows = [
   "cmk.gui.verify_requirements",
   "cmk.gui.wato",
   "cmk.gui.watolib",
+  "cmk.schema_manager",
   "cmk.utils.paths",
   "cmk.utils.redis",
   "cmk.utils.render",
@@ -1500,6 +1501,9 @@ allows = []
 
 [components."cmk.schema_manager"]
 allows = ["cmk.discover_plugins"]
+
+[components."cmk.schema_migrations"]
+allows = ["cmk.schema_manager"]
 
 [components."cmk.server_side_calls"]
 allows = []

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sqlite3
+from collections.abc import Iterator
 from datetime import datetime, timedelta, UTC
 
 import pytest
@@ -11,30 +11,26 @@ import time_machine
 
 from cmk.ccc.resulttype import Error
 from cmk.ccc.user import UserId
-from cmk.gui.oauth.token.backend import create_schema
 from cmk.gui.oauth.token.token_store import _token_hash, TokenRecord, TokenStore, UnknownClient
 from cmk.gui.scopes import DEFAULT_SCOPE, ScopeId
+from cmk.schema_migrations.oauth import schema_manager_oauth
+from cmk.testlib.schema_manager import migrated_connection
 
 _USER = UserId("cmkadmin")
 _CLIENT = "test-client"
 
 
 @pytest.fixture
-def store() -> TokenStore:
-    connection = sqlite3.connect(":memory:", isolation_level=None)
-    connection.row_factory = sqlite3.Row
-    # Production connections enforce foreign keys (see open_connection); the
-    # tokens.client_id constraint only exists with the pragma set.
-    connection.execute("PRAGMA foreign_keys=ON")
-    create_schema(connection)
-    connection.execute(
-        """
-        INSERT INTO clients (client_id, redirect_uris, client_name, registered_at)
-        VALUES (?, '["https://client.example/callback"]', NULL, 0)
-        """,
-        (_CLIENT,),
-    )
-    return TokenStore(connection)
+def store() -> Iterator[TokenStore]:
+    with migrated_connection(schema_manager_oauth) as connection:
+        connection.execute(
+            """
+            INSERT INTO clients (client_id, redirect_uris, client_name, registered_at)
+            VALUES (?, '["https://client.example/callback"]', NULL, 0)
+            """,
+            (_CLIENT,),
+        )
+        yield TokenStore(connection)
 
 
 def _future(minutes: int) -> datetime:

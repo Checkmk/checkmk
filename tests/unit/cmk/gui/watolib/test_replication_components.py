@@ -6,15 +6,32 @@
 import pytest
 
 from cmk.ccc.site import SiteId
-from cmk.gui.watolib import activate_changes
-from cmk.gui.watolib.config_sync import replication_path_registry
+from cmk.gui.watolib.activate_changes import get_replication_components
+from cmk.gui.watolib.config_sync import ReplicationPath, ReplicationPathType
 from cmk.livestatus_client import SiteConfiguration
 
-_EC_IDENTS = {"mkeventd", "mkeventd_mkp"}
-_MKP_IDENTS = {"local", "mkps", "mkps_avail", "mkps_disabled"}
+_REPLICATION_PATHS = [
+    ReplicationPath.make(ty=ReplicationPathType.DIR, ident="check_mk", site_path="etc/a"),
+    ReplicationPath.make(ty=ReplicationPathType.DIR, ident="mkeventd", site_path="etc/b"),
+    ReplicationPath.make(ty=ReplicationPathType.DIR, ident="mkeventd_mkp", site_path="etc/c"),
+    ReplicationPath.make(ty=ReplicationPathType.DIR, ident="local", site_path="local/d"),
+    ReplicationPath.make(ty=ReplicationPathType.DIR, ident="mkps", site_path="var/e"),
+    ReplicationPath.make(ty=ReplicationPathType.DIR, ident="mkps_avail", site_path="var/f"),
+    ReplicationPath.make(ty=ReplicationPathType.DIR, ident="mkps_disabled", site_path="var/g"),
+]
+
+_ALL_IDENTS = {
+    "check_mk",
+    "mkeventd",
+    "mkeventd_mkp",
+    "local",
+    "mkps",
+    "mkps_avail",
+    "mkps_disabled",
+}
 
 
-def _default_site_config() -> SiteConfiguration:
+def _site_config(*, replicate_ec: bool, replicate_mkps: bool) -> SiteConfiguration:
     return SiteConfiguration(
         id=SiteId("mysite"),
         alias="Site mysite",
@@ -25,8 +42,8 @@ def _default_site_config() -> SiteConfiguration:
         url_prefix="/mysite/",
         multisiteurl="",
         persist=False,
-        replicate_ec=False,
-        replicate_mkps=False,
+        replicate_ec=replicate_ec,
+        replicate_mkps=replicate_mkps,
         replication="slave",
         timeout=5,
         user_login=True,
@@ -38,23 +55,33 @@ def _default_site_config() -> SiteConfiguration:
     )
 
 
-@pytest.mark.parametrize("replicate_ec", [None, True, False])
-@pytest.mark.parametrize("replicate_mkps", [None, True, False])
-@pytest.mark.usefixtures("request_context")
-def test_get_replication_components(replicate_ec: bool | None, replicate_mkps: bool | None) -> None:
-    site_config = _default_site_config()
+@pytest.mark.parametrize(
+    "replicate_ec, expected",
+    [
+        (True, _ALL_IDENTS),
+        (False, {"check_mk", "local", "mkps", "mkps_avail", "mkps_disabled"}),
+    ],
+)
+def test_ec_paths_are_replicated_only_if_requested(replicate_ec: bool, expected: set[str]) -> None:
+    site_config = _site_config(replicate_ec=replicate_ec, replicate_mkps=True)
 
-    if replicate_ec is not None:
-        site_config["replicate_ec"] = replicate_ec
-    if replicate_mkps is not None:
-        site_config["replicate_mkps"] = replicate_mkps
+    components = get_replication_components(site_config, _REPLICATION_PATHS)
 
-    # otherwise the filtering below would pass vacuously
-    assert set(replication_path_registry.keys()) >= _EC_IDENTS | _MKP_IDENTS
+    assert {c.ident for c in components} == expected
 
-    excluded = (set() if replicate_ec else _EC_IDENTS) | (set() if replicate_mkps else _MKP_IDENTS)
 
-    assert {
-        p.ident
-        for p in activate_changes._get_replication_components(site_config)  # noqa: SLF001
-    } == set(replication_path_registry.keys()) - excluded
+@pytest.mark.parametrize(
+    "replicate_mkps, expected",
+    [
+        (True, _ALL_IDENTS),
+        (False, {"check_mk", "mkeventd", "mkeventd_mkp"}),
+    ],
+)
+def test_mkp_paths_are_replicated_only_if_requested(
+    replicate_mkps: bool, expected: set[str]
+) -> None:
+    site_config = _site_config(replicate_ec=True, replicate_mkps=replicate_mkps)
+
+    components = get_replication_components(site_config, _REPLICATION_PATHS)
+
+    assert {c.ident for c in components} == expected

@@ -2207,7 +2207,9 @@ class ActivateChangesManager:
 
             work_dir = cmk.utils.paths.site_config_dir / activation_id / site_id
 
-            snapshot_components = _get_replication_components(site_config)
+            snapshot_components = get_replication_components(
+                site_config, replication_path_registry.values()
+            )
 
             # Generate a quick reference_by_name for each component
             component_names = {c.ident for c in snapshot_components}
@@ -3497,8 +3499,10 @@ def verify_remote_site_config(sites: Mapping[SiteId, SiteConfiguration], site_id
         raise MKGeneralException(message)
 
 
-def _get_replication_components(site_config: SiteConfiguration) -> list[ReplicationPath]:
-    """Gives a list of ReplicationPath instances.
+def get_replication_components(
+    site_config: SiteConfiguration, replication_paths: Iterable[ReplicationPath]
+) -> list[ReplicationPath]:
+    """Gives the subset of `replication_paths` to be sent to a site.
 
     These represent the folders which need to be sent to remote sites. Whether a specific subset
     of paths need to be sent is being determined by the site-specific `site_config`.
@@ -3513,12 +3517,15 @@ def _get_replication_components(site_config: SiteConfiguration) -> list[Replicat
                  - `replicate_ec`:
                  - `replicate_mkps`
 
+        replication_paths:
+            All replication paths known to this site.
+
     Returns:
         A list of ReplicationPath instances, specifying which paths shall be packaged for this
         particular site.
 
     """
-    repl_paths = list(replication_path_registry.values())
+    repl_paths = list(replication_paths)
 
     # Remove Event Console settings, if this site does not want it (might
     # be removed in some future day)

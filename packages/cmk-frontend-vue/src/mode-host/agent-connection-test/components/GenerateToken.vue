@@ -12,6 +12,7 @@ import { Api } from 'cmk-ui-library/lib/api-client'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { computed, ref, watch } from 'vue'
 
 export interface IAgentTokenGenerationResponseExtensions {
@@ -86,7 +87,7 @@ const successText = computed<TranslatedString>(() =>
   props.showValidityText && validityText.value
     ? validityText.value
     : untranslated(
-        `${_t('Successfully generated one-time token')} ${_t(`(Expires: ${ottExpiry.value?.toLocaleString() || 'never'})`)}`
+        `${_t('Successfully generated one-time token')} ${_t('(Expires: %{date})', { date: ottExpiry.value ? renderDateAndTime(ottExpiry.value) : _t('never') })}`
       )
 )
 

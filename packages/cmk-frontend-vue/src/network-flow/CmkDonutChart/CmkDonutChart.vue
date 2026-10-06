@@ -522,7 +522,7 @@ const legendRows = computed<DonutLegendRow[]>(() => {
   max-width: 100%;
   overflow: hidden;
   font-size: 0.85em;
-  color: var(--color-mid-grey-50);
+  color: var(--font-color-muted);
   text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
@@ -533,6 +533,6 @@ const legendRows = computed<DonutLegendRow[]>(() => {
 .network-flow-cmk-donut-chart__center-share {
   min-height: 1em;
   font-size: 0.85em;
-  color: var(--color-mid-grey-50);
+  color: var(--font-color-muted);
 }
 </style>

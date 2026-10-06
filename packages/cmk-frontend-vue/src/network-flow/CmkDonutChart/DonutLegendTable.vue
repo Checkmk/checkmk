@@ -218,7 +218,7 @@ function deltaDirection(row: DonutLegendRow): 'up' | 'down' | null {
   padding: 0.45em 0.55em;
   font-size: 0.85em;
   font-weight: var(--font-weight-bold);
-  color: var(--color-mid-grey-50);
+  color: var(--font-color-muted);
   text-align: left;
   letter-spacing: 0.04em;
 
@@ -325,7 +325,7 @@ function deltaDirection(row: DonutLegendRow): 'up' | 'down' | null {
 }
 
 .network-flow-donut-legend-table__row--hidden .network-flow-donut-legend-table__swatch {
-  background-color: var(--color-mid-grey-30);
+  background-color: var(--interactive-inactive);
 }
 
 .network-flow-donut-legend-table__label {

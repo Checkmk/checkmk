@@ -162,7 +162,7 @@ const truncated = computed(() => rows.value.length < breakdown.value.category_co
 
 .network-flow-donut-other-breakdown-overview__metrics dt {
   font-size: 0.85em;
-  color: var(--color-mid-grey-50);
+  color: var(--font-color-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }

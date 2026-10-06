@@ -160,7 +160,7 @@ const peerRows = computed<RankedTableRow[]>(() =>
 }
 
 .network-flow-host-slide-in-overview__subtitle {
-  color: var(--color-mid-grey-50);
+  color: var(--font-color-muted);
 }
 
 .network-flow-host-slide-in-overview__host-link {
@@ -183,7 +183,7 @@ const peerRows = computed<RankedTableRow[]>(() =>
 
 .network-flow-host-slide-in-overview__metrics dt {
   font-size: 0.85em;
-  color: var(--color-mid-grey-50);
+  color: var(--font-color-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }

@@ -196,6 +196,7 @@
     --interactive-icon-color: var(--color-light-blue-20);
     --interactive-icon-color-secondary: var(--color-corporate-green-70);
     --interactive-icon-color-inactive: var(--color-mist-grey-60);
+    --interactive-inactive: var(--color-mid-grey-30);
     --interactive-accent-subtle: var(--color-corporate-green-40);
     --interactive-guide: var(--color-pink-40);
     --icon-filter-invert: none;
@@ -209,6 +210,9 @@
     --series-color-6: var(--color-cyan-50);
     --series-color-7: var(--color-brown-50);
     --series-color-8: var(--color-pink-50);
+    --series-color-9: var(--color-light-blue-50);
+    --series-color-10: var(--color-yellow-50);
+    --series-color-11: var(--color-mid-grey-50);
 
     /* Component-named variables, to be renamed onto the roles above */
     --color-popup-backdrop: rgb(0 0 0 /50%);
@@ -446,6 +450,7 @@
     --interactive-icon-color: var(--color-light-blue-20);
     --interactive-icon-color-secondary: var(--color-corporate-green-70);
     --interactive-icon-color-inactive: var(--color-mist-grey-60);
+    --interactive-inactive: var(--color-mid-grey-30);
     --interactive-accent-subtle: var(--color-corporate-green-40);
     --interactive-guide: var(--color-pink-40);
     --icon-filter-invert: invert(100%);
@@ -459,6 +464,9 @@
     --series-color-6: var(--color-cyan-50);
     --series-color-7: var(--color-brown-50);
     --series-color-8: var(--color-pink-50);
+    --series-color-9: var(--color-light-blue-50);
+    --series-color-10: var(--color-yellow-50);
+    --series-color-11: var(--color-mid-grey-50);
 
     /* Component-named variables, to be renamed onto the roles above */
     --color-popup-backdrop: rgb(0 0 0 /50%);

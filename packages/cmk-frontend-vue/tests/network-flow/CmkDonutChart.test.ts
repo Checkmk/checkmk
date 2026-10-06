@@ -307,8 +307,8 @@ test('colors each arc segment with its slice color', () => {
   const fills = [
     ...container.querySelectorAll<SVGPathElement>('.network-flow-cmk-donut-chart__slice')
   ].map((el) => el.getAttribute('fill'))
-  // The named colors resolve to their theme palette CSS variables.
-  expect(fills).toEqual(['var(--color-light-blue-50)', 'var(--color-mid-grey-50)'])
+  // The named colors resolve to their series colour tokens.
+  expect(fills).toEqual(['var(--series-color-9)', 'var(--series-color-11)'])
 })
 
 test('draws a lone slice as a closed ring', () => {

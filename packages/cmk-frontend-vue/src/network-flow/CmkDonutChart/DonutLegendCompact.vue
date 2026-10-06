@@ -145,7 +145,7 @@ defineEmits<{
 }
 
 .network-flow-donut-legend-compact__chip--hidden .network-flow-donut-legend-compact__swatch {
-  background-color: var(--color-mid-grey-30);
+  background-color: var(--interactive-inactive);
 }
 
 /* The button sizes itself for a form; in a chip it has to be the chip's own

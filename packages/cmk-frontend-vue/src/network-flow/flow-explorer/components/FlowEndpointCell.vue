@@ -107,7 +107,7 @@ const asnTitle = computed(() =>
   cursor: pointer;
 
   &:hover {
-    color: var(--color-corporate-green-50);
+    color: var(--interactive-accent);
   }
 
   &:focus-visible {

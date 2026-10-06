@@ -17,16 +17,16 @@ export type ChartColor =
   | 'yellow'
 
 export const CHART_COLOR_CSS: Record<ChartColor, string> = {
-  blue: 'var(--color-light-blue-50)',
-  brown: 'var(--color-brown-50)',
-  cyan: 'var(--color-cyan-50)',
-  green: 'var(--color-corporate-green-50)',
-  grey: 'var(--color-mid-grey-50)',
-  magenta: 'var(--color-pink-50)',
-  orange: 'var(--color-orange-50)',
-  purple: 'var(--color-purple-50)',
-  red: 'var(--color-light-red-50)',
-  yellow: 'var(--color-yellow-50)'
+  blue: 'var(--series-color-9)',
+  brown: 'var(--series-color-7)',
+  cyan: 'var(--series-color-6)',
+  green: 'var(--series-color-2)',
+  grey: 'var(--series-color-11)',
+  magenta: 'var(--series-color-8)',
+  orange: 'var(--series-color-3)',
+  purple: 'var(--series-color-5)',
+  red: 'var(--series-color-4)',
+  yellow: 'var(--series-color-10)'
 }
 
 // The literal hex behind every CHART_COLOR_CSS entry, for canvas renderers.

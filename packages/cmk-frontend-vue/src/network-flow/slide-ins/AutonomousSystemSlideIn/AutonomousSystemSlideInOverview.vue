@@ -128,7 +128,7 @@ const localHostRows = computed<RankedTableRow[]>(() =>
 .network-flow-autonomous-system-slide-in-overview__metrics dt,
 .network-flow-autonomous-system-slide-in-overview__seen dt {
   font-size: 0.85em;
-  color: var(--color-mid-grey-50);
+  color: var(--font-color-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }

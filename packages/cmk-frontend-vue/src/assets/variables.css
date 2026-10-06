@@ -42,6 +42,92 @@
   --color-state-down: var(--color-state-critical);
   --color-state-unreachable: var(--color-state-unknown);
 
+  /* Background */
+  --background-neutral: var(--color-mid-grey-50);
+  --background-accent: var(--color-purple-60);
+  --background-selected-overlay: var(--color-white-10);
+
+  /* Text */
+  --font-color-muted: var(--color-mid-grey-50);
+  --font-color-on-status: var(--color-midnight-grey-100);
+  --font-color-on-light: var(--color-conference-grey-100);
+
+  /* Border */
+  --border-color-default: var(--color-mid-grey-50);
+  --default-border-color-green: var(--color-corporate-green-50);
+  --border-color-emphasis: var(--color-mid-grey-90);
+  --border-color-placeholder: var(--color-white-80);
+
+  /* Status */
+  --status-border-color-info: var(--color-dark-blue-50);
+  --status-border-color-success: var(--color-corporate-green-50);
+  --status-border-color-warning: var(--color-yellow-50);
+  --status-text-color-error-pale: var(--color-light-red-40);
+  --status-color-critical: var(--color-dark-red-50);
+  --status-color-info: var(--color-light-blue-50);
+  --status-color-downtime: var(--color-light-blue-50);
+  --status-color-host-down: var(--color-dark-blue-50);
+  --status-color-pending: var(--color-midnight-grey-50);
+  --status-color-neutral: var(--color-mid-grey-30);
+  --status-color-success: var(--color-corporate-green-80);
+  --status-color-warning: var(--color-yellow-60);
+  --status-color-error: var(--color-dark-red-60);
+  --status-color-unknown: var(--color-orange-70);
+  --status-color-pending-subtle: var(--color-mist-grey-80);
+  --status-color-error-bright: var(--color-light-red-50);
+  --status-color-unknown-bright: var(--color-orange-40);
+  --status-color-acknowledged: var(--color-yellow-50);
+  --status-color-flapping: var(--color-purple-50);
+  --status-color-missing: var(--color-brown-50);
+  --status-color-success-subtle: var(--color-corporate-green-30);
+
+  /* Merge into --status-border-color-* if UX agrees to the shift in one theme */
+  --status-outline-color-success: var(--color-corporate-green-70);
+  --status-outline-color-warning: var(--color-yellow-70);
+  --status-outline-color-error: var(--color-dark-red-40);
+
+  /* Interactive */
+  --default-select-hover-color: var(--success);
+  --default-select-focus-color: var(--success-dimmed);
+  --interactive-accent: var(--color-corporate-green-50);
+  --interactive-accent-strongest: var(--color-corporate-green-80);
+  --interactive-icon-color: var(--color-light-blue-20);
+  --interactive-icon-color-secondary: var(--color-corporate-green-70);
+  --interactive-icon-color-inactive: var(--color-mist-grey-60);
+  --interactive-inactive: var(--color-mid-grey-30);
+  --interactive-focus: var(--color-dark-blue-50);
+  --interactive-selected: var(--color-mid-grey-20);
+  --interactive-press-tint: var(--color-conference-grey-10);
+  --interactive-highlight: var(--color-yellow-80);
+  --interactive-highlight-hover: var(--color-yellow-60);
+  --interactive-accent-subtle: var(--color-corporate-green-40);
+  --interactive-guide: var(--color-pink-40);
+
+  /* Series */
+  --series-color-1: var(--color-dark-blue-50);
+  --series-color-2: var(--color-corporate-green-50);
+  --series-color-3: var(--color-orange-50);
+  --series-color-4: var(--color-light-red-50);
+  --series-color-5: var(--color-purple-50);
+  --series-color-6: var(--color-cyan-50);
+  --series-color-7: var(--color-brown-50);
+  --series-color-8: var(--color-pink-50);
+  --series-color-9: var(--color-light-blue-50);
+  --series-color-10: var(--color-yellow-50);
+  --series-color-11: var(--color-mid-grey-50);
+  --heat-scale-color-low: var(--color-yellow-60);
+  --heat-scale-color-medium: var(--color-orange-60);
+  --heat-scale-color-high: var(--color-light-red-60);
+
+  /* Form Labels Colors */
+  --tag-color: var(--color-cyan-80);
+  --tag-explicit-color: var(--color-purple-70);
+  --tag-discovered-color: var(--color-orange-30);
+  --tag-ruleset-color: var(--color-pink-70);
+  --tag-label-color: var(--color-cyan-80);
+  --tag-font-color-light: var(--color-white-100);
+  --tag-font-color-dark: var(--font-color-on-light);
+
   /* Fonts */
   --font-size-xxlarge: 18px;
   --font-size-xlarge: 16px;
@@ -92,15 +178,12 @@
     --background-row-hover: var(--ux-theme-4);
     --background-row-hover-strong: var(--ux-theme-5);
     --background-highlight: var(--color-light-blue-0);
-    --background-neutral: var(--color-mid-grey-50);
     --background-accent-subtle: var(--color-purple-10);
-    --background-accent: var(--color-purple-60);
     --background-control: var(--color-daylight-grey-60);
     --background-hover-overlay: var(--color-white-50);
     --background-guide: var(--color-daylight-grey-30);
     --background-scrim: color-mix(in srgb, var(--color-daylight-grey-50) 50%, transparent);
     --background-muted: var(--ux-theme-4);
-    --background-selected-overlay: var(--color-white-10);
     --background-row-hover-highlight: var(--color-dark-blue-10);
 
     /* Text */
@@ -110,30 +193,20 @@
     --font-color-disabled: var(--color-conference-grey-70);
     --font-underline-color: var(--color-conference-grey-60);
     --font-color-strong: var(--color-mid-grey-100);
-    --font-color-muted: var(--color-mid-grey-50);
     --font-color-graphic: rgb(131 131 131);
-    --font-color-on-status: var(--color-midnight-grey-100);
-    --font-color-on-light: var(--color-conference-grey-100);
 
     /* Border */
     --border-color-subtle: var(--color-mid-grey-10);
-    --border-color-default: var(--color-mid-grey-50);
     --border-color-strong: var(--color-mid-grey-50);
     --default-border-color: rgb(234 234 234);
-    --default-border-color-green: var(--color-corporate-green-50);
     --dashed-border-color: var(--color-mid-grey-20);
     --border-color-separator: var(--color-mid-grey-10);
-    --border-color-emphasis: var(--color-mid-grey-90);
     --border-shade-mix: 70%;
     --border-color-hairline: rgb(0 0 0 / 12%);
-    --border-color-placeholder: var(--color-white-80);
 
     /* Status */
     --color-warning: rgb(255 208 0);
     --color-danger: rgb(229 63 63);
-    --status-border-color-info: var(--color-dark-blue-50);
-    --status-border-color-success: var(--color-corporate-green-50);
-    --status-border-color-warning: var(--color-yellow-50);
     --status-border-color-error: var(--color-dark-red-50);
     --status-border-color-success-strong: var(--color-corporate-green-70);
     --status-border-color-warning-strong: var(--color-yellow-70);
@@ -151,7 +224,6 @@
     --status-text-color-error-on-tint: var(--color-light-red-70);
     --status-text-color-unknown-on-tint: var(--color-orange-70);
     --status-text-color-downtime: var(--color-light-blue-70);
-    --status-text-color-error-pale: var(--color-light-red-40);
     --status-text-color-warning-strong: var(--color-yellow-70);
     --status-text-color-error-soft: var(--color-dark-red-50);
     --status-icon-color-info: var(--color-dark-blue-80);
@@ -163,68 +235,15 @@
     --status-background-error: var(--color-dark-red-20);
     --status-tint-mix: 20%;
     --status-tint-border-mix: 40%;
-    --status-color-critical: var(--color-dark-red-50);
-    --status-color-info: var(--color-light-blue-50);
-    --status-color-downtime: var(--color-light-blue-50);
-    --status-color-host-down: var(--color-dark-blue-50);
-    --status-color-pending: var(--color-midnight-grey-50);
     --status-color-ok-muted: rgb(189 189 189);
-    --status-color-neutral: var(--color-mid-grey-30);
-    --status-color-success: var(--color-corporate-green-80);
-    --status-color-warning: var(--color-yellow-60);
-    --status-color-error: var(--color-dark-red-60);
-    --status-color-unknown: var(--color-orange-70);
-    --status-color-pending-subtle: var(--color-mist-grey-80);
-    --status-color-error-bright: var(--color-light-red-50);
-    --status-color-unknown-bright: var(--color-orange-40);
-    --status-color-acknowledged: var(--color-yellow-50);
-    --status-color-flapping: var(--color-purple-50);
-    --status-color-missing: var(--color-brown-50);
-    --status-color-success-subtle: var(--color-corporate-green-30);
-
-    /* Merge into --status-border-color-* if UX agrees to the shift in one theme */
-    --status-outline-color-success: var(--color-corporate-green-70);
-    --status-outline-color-warning: var(--color-yellow-70);
-    --status-outline-color-error: var(--color-dark-red-40);
 
     /* Interactive */
-    --default-select-hover-color: var(--success);
-    --default-select-focus-color: var(--success-dimmed);
-    --interactive-accent: var(--color-corporate-green-50);
     --interactive-accent-strong: var(--color-corporate-green-70);
     --interactive-accent-stronger: var(--color-corporate-green-80);
-    --interactive-accent-strongest: var(--color-corporate-green-80);
     --interactive-neutral: var(--color-mid-grey-50);
     --icon-filter-monochrome: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(7500%)
       hue-rotate(93deg) brightness(0%) contrast(105%);
-    --interactive-icon-color: var(--color-light-blue-20);
-    --interactive-icon-color-secondary: var(--color-corporate-green-70);
-    --interactive-icon-color-inactive: var(--color-mist-grey-60);
-    --interactive-inactive: var(--color-mid-grey-30);
-    --interactive-focus: var(--color-dark-blue-50);
-    --interactive-selected: var(--color-mid-grey-20);
-    --interactive-press-tint: var(--color-conference-grey-10);
-    --interactive-highlight: var(--color-yellow-80);
-    --interactive-highlight-hover: var(--color-yellow-60);
-    --interactive-accent-subtle: var(--color-corporate-green-40);
-    --interactive-guide: var(--color-pink-40);
     --icon-filter-invert: none;
-
-    /* Series */
-    --series-color-1: var(--color-dark-blue-50);
-    --series-color-2: var(--color-corporate-green-50);
-    --series-color-3: var(--color-orange-50);
-    --series-color-4: var(--color-light-red-50);
-    --series-color-5: var(--color-purple-50);
-    --series-color-6: var(--color-cyan-50);
-    --series-color-7: var(--color-brown-50);
-    --series-color-8: var(--color-pink-50);
-    --series-color-9: var(--color-light-blue-50);
-    --series-color-10: var(--color-yellow-50);
-    --series-color-11: var(--color-mid-grey-50);
-    --heat-scale-color-low: var(--color-yellow-60);
-    --heat-scale-color-medium: var(--color-orange-60);
-    --heat-scale-color-high: var(--color-light-red-60);
 
     /* Component-named variables, to be renamed onto the roles above */
     --color-popup-backdrop: rgb(0 0 0 /50%);
@@ -270,15 +289,6 @@
     --sticky-header-border-color: var(--border-color-separator);
     --shared-dashboard-indicator-background: var(--color-daylight-grey-30);
     --ai-purple: var(--color-purple-60);
-
-    /* Form Labels Colors */
-    --tag-color: var(--color-cyan-80);
-    --tag-explicit-color: var(--color-purple-70);
-    --tag-discovered-color: var(--color-orange-30);
-    --tag-ruleset-color: var(--color-pink-70);
-    --tag-label-color: var(--color-cyan-80);
-    --tag-font-color-light: var(--color-white-100);
-    --tag-font-color-dark: var(--font-color-on-light);
 
     /* Cmk Button Variants */
     --default-button-primary-color: var(--color-corporate-green-50);
@@ -358,15 +368,12 @@
     --background-row-hover: var(--color-white-10);
     --background-row-hover-strong: var(--color-white-10);
     --background-highlight: var(--color-dark-blue-90);
-    --background-neutral: var(--color-mid-grey-50);
     --background-accent-subtle: var(--color-purple-90);
-    --background-accent: var(--color-purple-60);
     --background-control: var(--color-midnight-grey-60);
     --background-hover-overlay: var(--color-white-10);
     --background-guide: var(--color-conference-grey-100);
     --background-scrim: color-mix(in srgb, var(--color-midnight-grey-90) 50%, transparent);
     --background-muted: var(--ux-theme-3);
-    --background-selected-overlay: var(--color-white-10);
     --background-row-hover-highlight: var(--color-dark-blue-90);
 
     /* Text */
@@ -376,30 +383,20 @@
     --font-color-disabled: var(--color-white-50);
     --font-underline-color: var(--color-white-60);
     --font-color-strong: var(--color-mid-grey-0);
-    --font-color-muted: var(--color-mid-grey-50);
     --font-color-graphic: var(--font-color);
-    --font-color-on-status: var(--color-midnight-grey-100);
-    --font-color-on-light: var(--color-conference-grey-100);
 
     /* Border */
     --border-color-subtle: var(--color-mid-grey-90);
-    --border-color-default: var(--color-mid-grey-50);
     --border-color-strong: var(--color-mid-grey-70);
     --default-border-color: rgb(38 45 52);
-    --default-border-color-green: var(--color-corporate-green-50);
     --dashed-border-color: var(--color-mid-grey-80);
     --border-color-separator: var(--color-mid-grey-100);
-    --border-color-emphasis: var(--color-mid-grey-90);
     --border-shade-mix: 100%;
     --border-color-hairline: rgb(255 255 255 / 12%);
-    --border-color-placeholder: var(--color-white-80);
 
     /* Status */
     --color-warning: var(--color-yellow-50);
     --color-danger: rgb(180 45 45);
-    --status-border-color-info: var(--color-dark-blue-50);
-    --status-border-color-success: var(--color-corporate-green-50);
-    --status-border-color-warning: var(--color-yellow-50);
     --status-border-color-error: var(--color-dark-red-40);
     --status-border-color-success-strong: var(--color-corporate-green-50);
     --status-border-color-warning-strong: var(--color-yellow-50);
@@ -417,7 +414,6 @@
     --status-text-color-error-on-tint: var(--color-light-red-40);
     --status-text-color-unknown-on-tint: var(--color-orange-40);
     --status-text-color-downtime: var(--color-light-blue-50);
-    --status-text-color-error-pale: var(--color-light-red-40);
     --status-text-color-warning-strong: var(--color-yellow-50);
     --status-text-color-error-soft: var(--color-dark-red-40);
     --status-icon-color-info: var(--color-dark-blue-20);
@@ -429,68 +425,15 @@
     --status-background-error: var(--color-dark-red-100);
     --status-tint-mix: 15%;
     --status-tint-border-mix: 25%;
-    --status-color-critical: var(--color-dark-red-50);
-    --status-color-info: var(--color-light-blue-50);
-    --status-color-downtime: var(--color-light-blue-50);
-    --status-color-host-down: var(--color-dark-blue-50);
-    --status-color-pending: var(--color-midnight-grey-50);
     --status-color-ok-muted: rgb(58 69 80);
-    --status-color-neutral: var(--color-mid-grey-30);
-    --status-color-success: var(--color-corporate-green-80);
-    --status-color-warning: var(--color-yellow-60);
-    --status-color-error: var(--color-dark-red-60);
-    --status-color-unknown: var(--color-orange-70);
-    --status-color-pending-subtle: var(--color-mist-grey-80);
-    --status-color-error-bright: var(--color-light-red-50);
-    --status-color-unknown-bright: var(--color-orange-40);
-    --status-color-acknowledged: var(--color-yellow-50);
-    --status-color-flapping: var(--color-purple-50);
-    --status-color-missing: var(--color-brown-50);
-    --status-color-success-subtle: var(--color-corporate-green-30);
-
-    /* Merge into --status-border-color-* if UX agrees to the shift in one theme */
-    --status-outline-color-success: var(--color-corporate-green-70);
-    --status-outline-color-warning: var(--color-yellow-70);
-    --status-outline-color-error: var(--color-dark-red-40);
 
     /* Interactive */
-    --default-select-hover-color: var(--success);
-    --default-select-focus-color: var(--success-dimmed);
-    --interactive-accent: var(--color-corporate-green-50);
     --interactive-accent-strong: var(--color-corporate-green-50);
     --interactive-accent-stronger: var(--color-corporate-green-50);
-    --interactive-accent-strongest: var(--color-corporate-green-80);
     --interactive-neutral: var(--color-mid-grey-60);
     --icon-filter-monochrome: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(7500%)
       hue-rotate(93deg) brightness(105%) contrast(105%);
-    --interactive-icon-color: var(--color-light-blue-20);
-    --interactive-icon-color-secondary: var(--color-corporate-green-70);
-    --interactive-icon-color-inactive: var(--color-mist-grey-60);
-    --interactive-inactive: var(--color-mid-grey-30);
-    --interactive-focus: var(--color-dark-blue-50);
-    --interactive-selected: var(--color-mid-grey-20);
-    --interactive-press-tint: var(--color-conference-grey-10);
-    --interactive-highlight: var(--color-yellow-80);
-    --interactive-highlight-hover: var(--color-yellow-60);
-    --interactive-accent-subtle: var(--color-corporate-green-40);
-    --interactive-guide: var(--color-pink-40);
     --icon-filter-invert: invert(100%);
-
-    /* Series */
-    --series-color-1: var(--color-dark-blue-50);
-    --series-color-2: var(--color-corporate-green-50);
-    --series-color-3: var(--color-orange-50);
-    --series-color-4: var(--color-light-red-50);
-    --series-color-5: var(--color-purple-50);
-    --series-color-6: var(--color-cyan-50);
-    --series-color-7: var(--color-brown-50);
-    --series-color-8: var(--color-pink-50);
-    --series-color-9: var(--color-light-blue-50);
-    --series-color-10: var(--color-yellow-50);
-    --series-color-11: var(--color-mid-grey-50);
-    --heat-scale-color-low: var(--color-yellow-60);
-    --heat-scale-color-medium: var(--color-orange-60);
-    --heat-scale-color-high: var(--color-light-red-60);
 
     /* Component-named variables, to be renamed onto the roles above */
     --color-popup-backdrop: rgb(0 0 0 /50%);
@@ -536,15 +479,6 @@
     --sticky-header-border-color: var(--border-color-separator);
     --shared-dashboard-indicator-background: var(--color-midnight-grey-100);
     --ai-purple: var(--color-purple-50);
-
-    /* Form Labels Colors */
-    --tag-color: var(--color-cyan-80);
-    --tag-explicit-color: var(--color-purple-70);
-    --tag-discovered-color: var(--color-orange-30);
-    --tag-ruleset-color: var(--color-pink-70);
-    --tag-label-color: var(--color-cyan-80);
-    --tag-font-color-light: var(--color-white-100);
-    --tag-font-color-dark: var(--font-color-on-light);
 
     /* Cmk Button Variants */
     --default-button-primary-color: var(--color-corporate-green-50);

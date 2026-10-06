@@ -187,6 +187,16 @@ impl JSONLoader for AgentInfo {}
 #[cfg(windows)]
 const AGENT_HASH_KEY: &str = "hash";
 
+/// An agent package as the site delivered it, not verified yet.
+#[derive(Debug)]
+pub struct UpdatePackage {
+    /// Hash the site named it by, and the name it is spooled under later.
+    pub hash: AgentHash,
+
+    /// The package itself.
+    pub bytes: Vec<u8>,
+}
+
 /// The three updater artifacts of this host, loaded together.
 ///
 /// Fields are private: what is missing or broken is only observable through
@@ -367,6 +377,64 @@ impl Updater {
         ))
     }
 
+    /// Fetch the package `status` offers, unless it is the installed one.
+    ///
+    /// The package is not verified here: it is held in memory until its
+    /// signature has been checked, and only then written anywhere.
+    ///
+    /// # Returns
+    ///
+    /// `None` when the site offers no package, or offers the installed one -
+    /// the two ways a check ends without an update.
+    ///
+    /// # Errors
+    ///
+    /// If nothing is known about the installed agent, if the site address
+    /// cannot be assembled, or if the site does not deliver the package.
+    pub fn download_update(
+        &self,
+        api: &impl agent_receiver_api::AgentUpdate,
+        selected: &connection::UpdateConnection<'_>,
+        status: &agent_receiver_api::UpdateStatusResponse,
+    ) -> AnyhowResult<Option<UpdatePackage>> {
+        let agent_info = self
+            .agent_info
+            .as_ref()
+            .context("Cannot download an agent update without the info of the installed agent")?;
+        let Some(target) = status.target_agent.as_ref().map(|offered| &offered.aghash) else {
+            log::info!("No agent package available for this host");
+            return Ok(None);
+        };
+        if *target == agent_info.hash {
+            log::info!("The installed agent {target} is the one the site offers");
+            return Ok(None);
+        }
+        let url = site_spec::make_site_url(selected.site_id, &selected.connection.receiver_port)?;
+        let bytes = api
+            .download_agent(
+                &url,
+                &selected.connection.trust,
+                &agent_receiver_api::AgentDownloadBody {
+                    platform: &agent_info.platform,
+                    aghash: target,
+                },
+            )
+            .context(format!(
+                "Agent update download of {target} from {} failed",
+                selected.site_id
+            ))?;
+        log::info!(
+            "Downloaded the agent package {target} ({} bytes) from {}, installed is {}",
+            bytes.len(),
+            selected.site_id,
+            agent_info.hash
+        );
+        Ok(Some(UpdatePackage {
+            hash: target.clone(),
+            bytes,
+        }))
+    }
+
     /// The last error in the form the site gets it.
     fn reported_last_error(&self) -> Option<&str> {
         let error = self.state.last_error.as_deref()?;
@@ -432,9 +500,12 @@ mod tests {
     use std::cell::RefCell;
     use std::path::PathBuf;
 
+    use crate::agent_receiver_api::{TargetAgent, UpdateStatusResponse};
+
     const INSTALLED_HASH: &str = "0123456789abcdef";
     const TARGET_HASH: &str = "fedcba9876543210";
     const CONNECTION_UUID: &str = "2da62f8f-9e4a-4b1b-8b3a-1c1a0b0f1a01";
+    const PACKAGE: &[u8] = b"an agent package";
 
     const UPDATER_CONFIG_TOML: &str = "\
 activated = false
@@ -978,22 +1049,27 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         last_error: Option<String>,
     }
 
-    /// A site that answers with a canned status and remembers what it was asked.
+    /// The parts of a download request a test looks at.
+    struct RecordedDownload {
+        url: String,
+        uuid: String,
+        platform: String,
+        aghash: String,
+    }
+
+    /// Fake Site with a canned status and package, and remembers what it was asked.
     struct TestApi {
         response: agent_receiver_api::UpdateStatusResponse,
-        request: RefCell<Option<RecordedRequest>>,
+        request: RefCell<Option<RecordedRequest>>, // internally mutable
+        download: RefCell<Option<RecordedDownload>>, // internally mutable
     }
 
     impl TestApi {
         fn new(target: Option<&str>) -> Self {
             Self {
-                response: agent_receiver_api::UpdateStatusResponse {
-                    target_agent: target.map(|hash| agent_receiver_api::TargetAgent {
-                        aghash: hash.parse().unwrap(),
-                        signatures: vec![],
-                    }),
-                },
+                response: offered(target),
                 request: RefCell::new(None),
+                download: RefCell::new(None),
             }
         }
 
@@ -1003,6 +1079,11 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
                 .borrow_mut()
                 .take()
                 .expect("no request was made")
+        }
+
+        /// The download of the one call made, if the updater made one at all.
+        fn download(&self) -> Option<RecordedDownload> {
+            self.download.borrow_mut().take()
         }
     }
 
@@ -1022,6 +1103,21 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             });
             Ok(self.response.clone())
         }
+
+        fn download_agent(
+            &self,
+            base_url: &reqwest::Url,
+            connection: &TrustedConnection,
+            body: &agent_receiver_api::AgentDownloadBody<'_>,
+        ) -> AnyhowResult<Vec<u8>> {
+            *self.download.borrow_mut() = Some(RecordedDownload {
+                url: base_url.to_string(),
+                uuid: connection.uuid.to_string(),
+                platform: String::from(body.platform),
+                aghash: String::from(body.aghash.as_str()),
+            });
+            Ok(PACKAGE.to_vec())
+        }
     }
 
     /// A site that cannot be reached.
@@ -1035,6 +1131,25 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             _body: &agent_receiver_api::UpdateStatusBody<'_>,
         ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse> {
             Err(Error::msg("connection refused"))
+        }
+
+        fn download_agent(
+            &self,
+            _base_url: &reqwest::Url,
+            _connection: &TrustedConnection,
+            _body: &agent_receiver_api::AgentDownloadBody<'_>,
+        ) -> AnyhowResult<Vec<u8>> {
+            Err(Error::msg("connection refused"))
+        }
+    }
+
+    /// The status of a site that has `target` for this host.
+    fn offered(target: Option<&str>) -> UpdateStatusResponse {
+        UpdateStatusResponse {
+            target_agent: target.map(|hash| TargetAgent {
+                aghash: hash.parse().unwrap(),
+                signatures: vec![],
+            }),
         }
     }
 
@@ -1162,6 +1277,79 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert_eq!(
             error.to_string(),
             "Agent update status request to server/site failed"
+        );
+    }
+
+    #[test]
+    fn test_download_update_fetches_a_package_that_is_not_installed() {
+        let registry = registry_with_one_connection();
+        let selected = connection::select(&registry.registry).unwrap();
+        let api = TestApi::new(None);
+
+        let package = updater_after(None)
+            .download_update(&api, &selected, &offered(Some(TARGET_HASH)))
+            .unwrap()
+            .unwrap();
+
+        assert_eq!(package.hash.as_str(), TARGET_HASH);
+        assert_eq!(package.bytes, PACKAGE);
+        let download = api.download().unwrap();
+        assert_eq!(download.url, "https://server:8000/site");
+        assert_eq!(download.uuid, CONNECTION_UUID);
+        assert_eq!(download.platform, "linux_deb");
+        assert_eq!(download.aghash, TARGET_HASH);
+    }
+
+    #[test]
+    fn test_download_update_when_the_offered_package_is_the_installed_one() {
+        let registry = registry_with_one_connection();
+        let selected = connection::select(&registry.registry).unwrap();
+        let api = TestApi::new(None);
+
+        assert!(updater_after(None)
+            .download_update(&api, &selected, &offered(Some(INSTALLED_HASH)))
+            .unwrap()
+            .is_none());
+        assert!(api.download().is_none());
+    }
+
+    #[test]
+    fn test_download_update_without_an_offered_package() {
+        let registry = registry_with_one_connection();
+        let selected = connection::select(&registry.registry).unwrap();
+        let api = TestApi::new(None);
+
+        assert!(updater_after(None)
+            .download_update(&api, &selected, &offered(None))
+            .unwrap()
+            .is_none());
+        assert!(api.download().is_none());
+    }
+
+    #[test]
+    fn test_download_update_without_agent_info() {
+        let registry = registry_with_one_connection();
+        let selected = connection::select(&registry.registry).unwrap();
+
+        let error = updater(some_config(), None)
+            .download_update(&TestApi::new(None), &selected, &offered(Some(TARGET_HASH)))
+            .unwrap_err();
+
+        assert!(error.to_string().contains("info of the installed agent"));
+    }
+
+    #[test]
+    fn test_download_update_names_the_package_and_the_site_that_failed() {
+        let registry = registry_with_one_connection();
+        let selected = connection::select(&registry.registry).unwrap();
+
+        let error = updater_after(None)
+            .download_update(&UnreachableApi, &selected, &offered(Some(TARGET_HASH)))
+            .unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "Agent update download of fedcba9876543210 from server/site failed"
         );
     }
 }

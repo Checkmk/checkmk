@@ -13,7 +13,8 @@ description:
  This check is {OK} if the result of the last run is Success. It is
  {WARN} if the result is Warning. It is {CRIT} if the result is Failed.
  A job with no result yet, either because it has never run or because a
- run is currently in progress, is {OK}.
+ run is currently in progress, is {OK}. A disabled job is always {OK};
+ its last result is shown for information only.
 
  A job that disappears from the API output makes the service {UNKNOWN}.
 

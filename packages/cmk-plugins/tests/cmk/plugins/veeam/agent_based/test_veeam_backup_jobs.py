@@ -122,6 +122,25 @@ def test_check_veeam_backup_jobs_failed() -> None:
     assert results[0] == Result(state=State.CRIT, summary="Status: Inactive, Result: Failed")
 
 
+def test_check_veeam_backup_jobs_disabled_and_failed_is_ok() -> None:
+    section = parse_veeam_backup_jobs([[_job("disabled", status="Disabled", lastResult="Failed")]])
+    last_run_epoch = parse_iso8601_epoch("2019-01-21T00:10:22.473+03:00")
+    assert last_run_epoch is not None
+    results = list(check_veeam_backup_jobs("disabled", section))
+    assert results[:2] == [
+        Result(state=State.OK, summary="Job is disabled, Last result: Failed"),
+        Result(state=State.OK, summary=f"Last run: {render.datetime(last_run_epoch)}"),
+    ]
+
+
+def test_check_veeam_backup_jobs_disabled_never_run() -> None:
+    section = parse_veeam_backup_jobs(
+        [[_job("disabled", status="Disabled", lastRun=None, lastResult="None")]]
+    )
+    results = list(check_veeam_backup_jobs("disabled", section))
+    assert results[0] == Result(state=State.OK, summary="Job is disabled, Last result: None")
+
+
 def test_check_veeam_backup_jobs_never_run() -> None:
     section = parse_veeam_backup_jobs(STRING_TABLE)
     results = list(check_veeam_backup_jobs("never_run", section))

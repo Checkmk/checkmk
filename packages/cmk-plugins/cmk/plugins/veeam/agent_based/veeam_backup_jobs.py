@@ -85,13 +85,17 @@ def check_veeam_backup_jobs(item: str, section: Section) -> CheckResult:
     if (job := section.get(item)) is None:
         return
 
-    if job.last_run is None:
+    if job.status == "Disabled":
+        yield Result(state=State.OK, summary=f"Job is disabled, Last result: {job.last_result}")
+    elif job.last_run is None:
         yield Result(state=State.OK, summary="No run has happened yet")
     else:
         yield Result(
             state=monitoring_state(job.last_result),
             summary=f"Status: {job.status}, Result: {job.last_result}",
         )
+
+    if job.last_run is not None:
         yield Result(state=State.OK, summary=f"Last run: {render.datetime(job.last_run)}")
 
     if job.duration is not None:

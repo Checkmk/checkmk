@@ -13,13 +13,17 @@ import cmk.ccc.plugin_registry
 from cmk.gui.exceptions import MKMethodNotAllowed, MKNotFound, MKUnauthenticatedException
 from cmk.gui.http import Request, Response, response
 from cmk.gui.pages import PageContext, PageResult
-from cmk.gui.token_auth._exceptions import MKTokenExpiredOrRevokedException
+from cmk.gui.token_auth._exceptions import (
+    MKTokenExpiredOrRevokedException,
+    MKUnknownTokenException,
+)
 from cmk.gui.token_auth._store import (
     AuthToken,
     get_token_store,
     InvalidToken,
     TokenExpired,
     TokenRevoked,
+    UnknownToken,
 )
 from cmk.gui.utils.security_log_events import AuthenticationFailureEvent
 from cmk.utils.security_event import log_security_event
@@ -65,6 +69,8 @@ def parse_token_and_validate(
                 remote_ip=remote_addr,
             )
         )
+        if isinstance(e, UnknownToken):
+            raise MKUnknownTokenException("Token invalid") from e
         raise MKUnauthenticatedException("Token invalid") from e
 
     except (TokenExpired, TokenRevoked) as e:

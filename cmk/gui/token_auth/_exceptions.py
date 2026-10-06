@@ -11,3 +11,7 @@ class MKTokenExpiredOrRevokedException(MKUnauthenticatedException):
     def __init__(self, *args: object, token_type: TokenType) -> None:
         super().__init__(*args)
         self.token_type: TokenType = token_type
+
+
+class MKUnknownTokenException(MKUnauthenticatedException):
+    pass

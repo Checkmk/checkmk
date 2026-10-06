@@ -206,3 +206,7 @@ class VersionedEndpoint:
     """If an endpoint should be accessible via token authentication, the allowed token types
     need to be specified here. If empty, token authentication is not allowed for this
     endpoint."""
+
+    token_failure_detail: str | None = None
+    """The problem detail sent when a token is unknown, expired or revoked. If None, the
+    generic authentication failure is sent."""

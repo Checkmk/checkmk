@@ -41,7 +41,12 @@ from cmk.crash import (
 from cmk.crypto import MKCryptoException
 from cmk.gui import session
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
+from cmk.gui.exceptions import (
+    MKAuthException,
+    MKHTTPException,
+    MKUnauthenticatedException,
+    MKUserError,
+)
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, user
 from cmk.gui.openapi.framework import ApiContext, RawRequestData
@@ -68,7 +73,12 @@ from cmk.gui.openapi.utils import (
 )
 from cmk.gui.openapi.versioned_endpoint_map import discover_endpoints
 from cmk.gui.site_config import enabled_sites
-from cmk.gui.token_auth import AuthToken, parse_token_and_validate
+from cmk.gui.token_auth import (
+    AuthToken,
+    MKTokenExpiredOrRevokedException,
+    MKUnknownTokenException,
+    parse_token_and_validate,
+)
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
 from cmk.gui.wsgi.applications.utils import AbstractWSGIApp
@@ -569,17 +579,22 @@ type RulesByVersion = dict[APIVersion, list[Rule]]
 type MapByVersion = dict[APIVersion, Map]
 
 
-def _get_cmk_token(environ: WSGIEnvironment) -> AuthToken | None:
+def _get_cmk_token(environ: WSGIEnvironment, token_failure_detail: str | None) -> AuthToken | None:
     if not (
         (auth_header := environ.get("HTTP_AUTHORIZATION", ""))
         and auth_header.startswith("CMK-TOKEN ")
     ):
         return None
-    return parse_token_and_validate(
-        auth_header.removeprefix("CMK-TOKEN ").strip(),
-        request.remote_addr,
-        datetime.now(tz=UTC),
-    )
+    try:
+        return parse_token_and_validate(
+            auth_header.removeprefix("CMK-TOKEN ").strip(),
+            request.remote_addr,
+            datetime.now(tz=UTC),
+        )
+    except (MKUnknownTokenException, MKTokenExpiredOrRevokedException) as exc:
+        if token_failure_detail is None:
+            raise
+        raise MKUnauthenticatedException(token_failure_detail) from exc
 
 
 class CheckmkRESTAPI(AbstractWSGIApp):
@@ -761,8 +776,13 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             # function at setup-time.
             environ[ARGS_KEY] = path_args
 
+            token_failure_detail = (
+                wsgi_endpoint.endpoint.token_failure_detail
+                if isinstance(wsgi_endpoint, VersionedEndpointAdapter)
+                else None
+            )
             if (
-                (token := _get_cmk_token(environ))
+                (token := _get_cmk_token(environ, token_failure_detail))
                 and isinstance(wsgi_endpoint, VersionedEndpointAdapter)
                 and token.details.type_ in wsgi_endpoint.endpoint.allowed_tokens
             ):

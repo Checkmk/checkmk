@@ -24,6 +24,7 @@ from cmk.gui.openapi.shared_endpoint_families.agent import AGENTS_FAMILY
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.token_auth import AgentDownloadToken, get_token_store
 
+from ._token import AgentPackageUnavailable, DOWNLOAD_TOKEN_FAILURE_DETAIL, OneTimeDownloadToken
 from ._utils import (
     packed_agent_path_linux_deb,
     packed_agent_path_linux_rpm,
@@ -109,8 +110,11 @@ def download_agent_by_token(
             detail="Incorrect token provided. Please provide an agent download token.",
         )
 
-    get_token_store().delete(api_context.token.token_id)
+    with OneTimeDownloadToken(api_context.token.token_id, get_token_store()):
+        return _agent_package_response(os_type)
 
+
+def _agent_package_response(os_type: Literal["linux_deb", "linux_rpm", "windows_msi"]) -> Response:
     response = Response()
     if os_type == "windows_msi":
         agent_path = packed_agent_path_windows_msi()
@@ -125,8 +129,14 @@ def download_agent_by_token(
         raise AssertionError(f"Agent: os_type '{os_type}' not known in this edition.")
 
     response.set_content_disposition(ContentDispositionType.ATTACHMENT, agent_path.name)
-    with open(agent_path, mode="rb") as f:
-        response.data = f.read()
+    try:
+        response.data = agent_path.read_bytes()
+    except FileNotFoundError:
+        raise AgentPackageUnavailable(
+            status=HTTPStatus.NOT_FOUND,
+            title="Agent package not found",
+            detail=f"The agent package {agent_path.name} is not available on this site.",
+        ) from None
     response.status_code = HTTPStatus.OK
     return response
 
@@ -140,6 +150,11 @@ ENDPOINT_DOWNLOAD_BY_TOKEN = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(),
     doc=EndpointDoc(family=AGENTS_FAMILY.name, group="Checkmk Internal"),
-    versions={APIVersion.INTERNAL: EndpointHandler(handler=download_agent_by_token)},
+    versions={
+        APIVersion.INTERNAL: EndpointHandler(
+            handler=download_agent_by_token, additional_status_codes=[HTTPStatus.NOT_FOUND]
+        )
+    },
     allowed_tokens={"agent_download"},
+    token_failure_detail=DOWNLOAD_TOKEN_FAILURE_DETAIL,
 )

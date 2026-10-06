@@ -28,6 +28,10 @@ class InvalidToken(ValueError):
     """Raised if we cannot properly parse something"""
 
 
+class UnknownToken(InvalidToken):
+    """The token is well-formed but not in the store"""
+
+
 class TokenTypeError(ValueError):
     """Token is expired or revoked but has valid type"""
 
@@ -168,7 +172,7 @@ class TokenStore:
             raise InvalidToken(f"Invalid token version {version!r}")
 
         if (token := self._read().get(TokenId(token_id))) is None:
-            raise InvalidToken(f"Could not find token {token_id!r}")
+            raise UnknownToken(f"Could not find token {token_id!r}")
 
         if token.valid_until is not None and token.valid_until < now:
             raise TokenExpired(
@@ -210,7 +214,7 @@ class TokenStore:
         """
         with self.read_locked() as data:
             if (token := data.get(token_id)) is None:
-                raise InvalidToken(f"Could not find token {token_id!r}")
+                raise UnknownToken(f"Could not find token {token_id!r}")
             details = token.details
             if not isinstance(details, AgentRegistrationToken):
                 raise TokenTypeError(
@@ -245,6 +249,19 @@ class TokenStore:
     def delete(self, token_id: TokenId) -> None:
         with self.read_locked() as data:
             data.delete(token_id)
+
+    def take(self, token_id: TokenId) -> AuthToken:
+        """Remove the token from the store and return it, so it can be restored later"""
+        with self.read_locked() as data:
+            if (token := data.get(token_id)) is None:
+                raise UnknownToken(f"Could not find token {token_id!r}")
+            data.delete(token_id)
+            return token
+
+    def restore(self, token: AuthToken) -> None:
+        """Put back a token removed by take, in the state it was taken in"""
+        with self.read_locked() as data:
+            data.add(token)
 
     def issue(
         self,

@@ -148,6 +148,37 @@ def test_delete_token(tmp_path: Path) -> None:
         store.verify(f"0:{token.token_id}", now=some_time)
 
 
+def _issue_dashboard_token(store: TokenStore) -> AuthToken:
+    return store.issue(
+        token_details=DashboardToken(
+            owner=UserId("owner"),
+            dashboard_name="unit-dashboard",
+            synced_at=some_time,
+        ),
+        issuer=UserId("issuer"),
+        now=some_time,
+        valid_for=relativedelta(days=1),
+    )
+
+
+def test_take_token_twice(tmp_path: Path) -> None:
+    store = TokenStore(tmp_path / "store.json")
+    token = _issue_dashboard_token(store)
+    store.take(token.token_id)
+
+    with pytest.raises(InvalidToken, match=f"Could not find token '{token.token_id}'"):
+        store.take(token.token_id)
+
+
+def test_restore_taken_token(tmp_path: Path) -> None:
+    store = TokenStore(tmp_path / "store.json")
+    token = _issue_dashboard_token(store)
+
+    store.restore(store.take(token.token_id))
+
+    assert store.verify(f"0:{token.token_id}", now=some_time).token_id == token.token_id
+
+
 def test_last_successful_verification(tmp_path: Path) -> None:
     store = TokenStore(tmp_path / "store.json")
     token = store.issue(

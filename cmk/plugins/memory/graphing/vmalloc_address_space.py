@@ -38,7 +38,7 @@ graph_vmalloc_address_space_1 = graphs.Graph(
 # TODO: Why without 'mem_lnx_vmalloc_total'? Should not happen...
 graph_vmalloc_address_space_2 = graphs.Graph(
     name="vmalloc_address_space_2",
-    title=Title("VMalloc address space"),
+    title=Title("VMalloc usage and largest free chunk"),
     compound_lines=[
         "mem_lnx_vmalloc_used",
         "mem_lnx_vmalloc_chunk",

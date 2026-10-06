@@ -155,6 +155,7 @@ SPECIAL_AGENTS = [
     SpecialAgent("agent_appdynamics"),
     SpecialAgent("agent_aws"),
     SpecialAgent("agent_aws_status"),
+    SpecialAgent("agent_aws_v2"),
     SpecialAgent("agent_azure"),
     SpecialAgent("agent_azure_status"),
     SpecialAgent("agent_azure_v2"),

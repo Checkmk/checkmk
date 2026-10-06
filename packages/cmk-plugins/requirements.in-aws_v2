@@ -1,0 +1,4 @@
+boto3
+botocore
+mypy_boto3_logs
+pydantic

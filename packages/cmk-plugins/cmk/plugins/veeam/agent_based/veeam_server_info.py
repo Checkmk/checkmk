@@ -22,7 +22,7 @@ from cmk.plugins.veeam.lib import parse_iso8601_epoch
 
 @dataclass(frozen=True, kw_only=True)
 class BackupServer:
-    """Mirrors the VBR REST API's ServerInfoModel (GET /api/v1/serverInfo, 1.3-rev0)."""
+    """Mirrors the VBR REST API's ServerInfoModel (GET /api/v1/serverInfo, 1.3-rev1)."""
 
     name: str
     build_version: str

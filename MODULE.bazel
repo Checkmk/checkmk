@@ -150,6 +150,9 @@ single_version_override(
     patches = [
         # https://github.com/aspect-build/rules_js/issues/3039
         "//bazel/patches:rules_js-devserver_sync_by_rename.patch",
+        # Carried locally — no upstream PR yet. Without it, changes to the
+        # patches of npm packages, see js.MODULE.bazel, never take effect.
+        "//bazel/patches:rules_js-watch_npm_import_patches.patch",
     ],
 )
 

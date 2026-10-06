@@ -1,0 +1,14 @@
+--- a/npm/private/npm_import.bzl
++++ b/npm/private/npm_import.bzl
+@@ -608,6 +608,11 @@
+         if rctx.attr.integrity:
+             reproducible = True
+ 
++    # The patches are applied by an external tool, so Bazel would not refetch the
++    # package (or would take it from the repo contents cache) after a patch changed
++    for patch_file in rctx.attr.patches:
++        rctx.watch(patch_file)
++
+     # apply patches to the extracted package before reading the package.json incase
+     # the patch targets the package.json itself
+     patch(

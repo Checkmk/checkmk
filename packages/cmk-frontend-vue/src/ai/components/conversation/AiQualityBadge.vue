@@ -209,28 +209,14 @@ const qualityTooltipOpen = ref<boolean>(false)
 }
 
 .ai-quality-badge--high {
-  --ai-quality-color: var(--success);
+  --ai-quality-color: var(--status-text-color-success-on-tint);
 }
 
 .ai-quality-badge--medium {
-  --ai-quality-color: var(--color-warning);
+  --ai-quality-color: var(--status-text-color-warning-strong);
 }
 
 .ai-quality-badge--low {
-  --ai-quality-color: var(--color-dark-red-40);
-}
-
-body[data-theme='facelift'] {
-  .ai-quality-badge--high {
-    --ai-quality-color: var(--color-corporate-green-70);
-  }
-
-  .ai-quality-badge--medium {
-    --ai-quality-color: var(--color-yellow-70);
-  }
-
-  .ai-quality-badge--low {
-    --ai-quality-color: var(--color-dark-red-50);
-  }
+  --ai-quality-color: var(--status-text-color-error-soft);
 }
 </style>

@@ -94,6 +94,7 @@
     --background-highlight: var(--color-light-blue-0);
     --background-neutral: var(--color-mid-grey-50);
     --background-accent-subtle: var(--color-purple-10);
+    --background-accent: var(--color-purple-60);
     --background-control: var(--color-daylight-grey-60);
     --background-hover-overlay: var(--color-white-50);
     --background-guide: var(--color-daylight-grey-30);
@@ -148,6 +149,8 @@
     --status-text-color-unknown-on-tint: var(--color-orange-70);
     --status-text-color-downtime: var(--color-light-blue-70);
     --status-text-color-error-pale: var(--color-light-red-40);
+    --status-text-color-warning-strong: var(--color-yellow-70);
+    --status-text-color-error-soft: var(--color-dark-red-50);
     --status-icon-color-info: var(--color-dark-blue-80);
     --status-icon-color-success: var(--color-corporate-green-80);
     --status-icon-color-warning: var(--color-yellow-80);
@@ -341,6 +344,7 @@
     --background-highlight: var(--color-dark-blue-90);
     --background-neutral: var(--color-mid-grey-50);
     --background-accent-subtle: var(--color-purple-90);
+    --background-accent: var(--color-purple-60);
     --background-control: var(--color-midnight-grey-60);
     --background-hover-overlay: var(--color-white-10);
     --background-guide: var(--color-conference-grey-100);
@@ -395,6 +399,8 @@
     --status-text-color-unknown-on-tint: var(--color-orange-40);
     --status-text-color-downtime: var(--color-light-blue-50);
     --status-text-color-error-pale: var(--color-light-red-40);
+    --status-text-color-warning-strong: var(--color-yellow-50);
+    --status-text-color-error-soft: var(--color-dark-red-40);
     --status-icon-color-info: var(--color-dark-blue-20);
     --status-icon-color-success: var(--color-corporate-green-20);
     --status-icon-color-warning: var(--color-yellow-20);

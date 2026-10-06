@@ -132,14 +132,14 @@ document.addEventListener('cmk-ai-explain-button', (event: Event) => {
   padding: 4px 8px 4px 12px;
   border: none;
   border-radius: 25px 0 0 25px;
-  background-color: var(--color-purple-60);
+  background-color: var(--background-accent);
   font-size: 12px;
-  color: var(--color-white-100);
+  color: var(--white);
 
   &::before {
     display: inline-block;
     padding: 3px;
-    border: solid var(--color-white-100);
+    border: solid var(--white);
     border-width: 0 3px 3px 0;
     border-radius: 0 0 2px;
     transform: rotate(135deg);

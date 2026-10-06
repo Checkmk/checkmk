@@ -199,20 +199,20 @@ watch(
 }
 
 .ai-markdown-content :deep(.ai-markdown-content__badge--ok) {
-  background-color: var(--color-corporate-green-50);
+  background-color: var(--color-state-ok);
 }
 
 .ai-markdown-content :deep(.ai-markdown-content__badge--warn) {
-  background-color: var(--color-yellow-50);
+  background-color: var(--color-state-warning);
 }
 
 .ai-markdown-content :deep(.ai-markdown-content__badge--crit) {
-  background-color: var(--color-light-red-50);
+  background-color: var(--status-color-error-bright);
   color: var(--white);
 }
 
 .ai-markdown-content :deep(.ai-markdown-content__badge--unknown) {
-  background-color: var(--color-orange-50);
+  background-color: var(--color-state-unknown);
 }
 /* stylelint-enable selector-pseudo-class-no-unknown */
 </style>

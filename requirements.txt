@@ -4298,6 +4298,7 @@ pytest==8.3.5 \
     #   -r packages/cmk-mkp-tool/dev-requirements.in
     #   -r packages/cmk-plugin-apis/dev-requirements.in
     #   -r packages/cmk-relay-protocols/dev-requirements.in
+    #   -r packages/cmk-schema-manager/dev-requirements.in
     #   -r packages/cmk-trace/dev-requirements.in
     #   -r packages/cmk-werks/dev-requirements.in
     #   -r tests/dev-requirements.in

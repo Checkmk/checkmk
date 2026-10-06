@@ -329,7 +329,7 @@ class RulesetMatcher:
             service_cache_id = (
                 (
                     match_text,
-                    hash(None if service_labels is None else frozenset(service_labels.items())),  # type: ignore[redundant-expr]
+                    hash(frozenset(service_labels.items())),
                 ),
                 service_description_condition,
                 service_label_groups_cache_id,

@@ -93,6 +93,7 @@
     --background-row-hover-strong: var(--ux-theme-5);
     --background-highlight: var(--color-light-blue-0);
     --background-neutral: var(--color-mid-grey-50);
+    --background-accent-subtle: var(--color-purple-10);
 
     /* Text */
     --font-color: var(--color-conference-grey-100);
@@ -260,6 +261,7 @@
     --background-row-hover-strong: var(--color-white-10);
     --background-highlight: var(--color-dark-blue-90);
     --background-neutral: var(--color-mid-grey-50);
+    --background-accent-subtle: var(--color-purple-90);
 
     /* Text */
     --font-color: var(--color-white-100);

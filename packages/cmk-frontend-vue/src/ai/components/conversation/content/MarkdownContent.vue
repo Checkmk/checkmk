@@ -179,7 +179,7 @@ watch(
   justify-content: center;
   width: var(--dimension-8);
   height: var(--dimension-8);
-  background-color: var(--ai-action-badge-bg);
+  background-color: var(--background-accent-subtle);
   border: 1px solid var(--border-color-purple);
   border-radius: 50%;
   font-weight: var(--font-weight-bold);

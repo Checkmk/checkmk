@@ -47,9 +47,8 @@ def _get_section_single_instance(section: Section) -> netapp_api.SectionSingleIn
 def parse_netapp_ontap_fan(string_table: StringTable) -> Section:
     return {
         fan.item_name(): fan
-        for line in string_table
-        if (fan := models.ShelfFanModel.model_validate_json(line[0])) is not None  # type: ignore[redundant-expr]
-        and fan.consider_installed()
+        for fan in (models.ShelfFanModel.model_validate_json(line[0]) for line in string_table)
+        if fan.consider_installed()
     }
 
 

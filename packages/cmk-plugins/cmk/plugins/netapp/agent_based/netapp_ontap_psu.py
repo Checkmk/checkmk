@@ -30,9 +30,8 @@ def _get_section_single_instance(section: Section) -> netapp_api.SectionSingleIn
 def parse_netapp_ontap_psu(string_table: StringTable) -> Section:
     return {
         psu.item_name(): psu
-        for line in string_table
-        if (psu := models.ShelfPsuModel.model_validate_json(line[0])) is not None  # type: ignore[redundant-expr]
-        and psu.consider_installed()
+        for psu in (models.ShelfPsuModel.model_validate_json(line[0]) for line in string_table)
+        if psu.consider_installed()
     }
 
 

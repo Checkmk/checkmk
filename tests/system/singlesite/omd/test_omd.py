@@ -276,6 +276,7 @@ def test_run_omd_backup_and_omd_restore_empty() -> None:
     site_factory = SiteFactory(package=package, prefix="")
     restored_site_name = "restored_site"
     backup_path = Path(tempfile.gettempdir()) / "backup.tar.gz"
+    restored_site: Site | None = None
     try:
         # run the backup
         _ensure_cloud_initial_config()
@@ -300,7 +301,7 @@ def test_run_omd_backup_and_omd_restore_empty() -> None:
     finally:
         if backup_path.exists():
             run(["rm", str(backup_path)], sudo=True)
-        if restored_site is not None and restored_site.exists():  # type: ignore[redundant-expr]
+        if restored_site is not None and restored_site.exists():
             restored_site.rm()
 
 
@@ -312,13 +313,14 @@ def test_run_omd_create_welcome_message() -> None:
     """
     package = CMKPackageInfo(version_from_env(), edition_from_env())
     site_factory = SiteFactory(package=package, prefix="")
+    site: Site | None = None
     try:
         _ensure_cloud_initial_config()
         site = site_factory.get_site("test_create_site", create=False)
         assert not site.exists()
         site.create()
     finally:
-        if site is not None and site.exists():  # type: ignore[redundant-expr]
+        if site is not None and site.exists():
             if site.is_running():
                 site.stop()
             site.rm()

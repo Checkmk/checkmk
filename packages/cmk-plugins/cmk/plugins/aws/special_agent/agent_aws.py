@@ -60,11 +60,9 @@ from cmk.plugins.aws.constants import (
     AWS_ELASTICACHE_QUOTA_DEFAULTS,
     AWS_REGIONS,
 )
-from cmk.server_side_programs.v1 import report_agent_crashes, Storage, vcrtrace
+from cmk.server_side_programs.v1 import configure_logging, report_agent_crashes, Storage, vcrtrace
 
 from ._data_cache import DataCache
-
-LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from mypy_boto3_logs.client import (  # type: ignore[attr-defined]
@@ -77,6 +75,38 @@ if TYPE_CHECKING:
 __version__ = "3.0.0b1"
 
 AGENT = "aws"
+
+LOGGER = logging.getLogger(f"agent_{AGENT}")
+
+AWS_DOC_URL = "https://docs.checkmk.com/latest/en/monitoring_aws.html"
+
+
+class AwsAccessError(Exception):
+    pass
+
+
+def describe_credential_failure(error: Exception) -> str:
+    """Turn a botocore error into a message the user can act on.
+
+    Most of those messages already name the provider or the setting that failed, so they
+    only need the documentation link. NoCredentialsError is the exception: it says no
+    more than "Unable to locate credentials", so it gets the chain spelled out.
+    """
+    if isinstance(error, botocore.exceptions.NoCredentialsError):
+        return (
+            "No AWS credentials found. Tried, in this order: environment variables,"
+            " a role assumed via the shared config file, a web identity token, AWS SSO,"
+            " the shared credentials file, an external credential_process,"
+            " the shared config file, the container credentials endpoint,"
+            " and the EC2 instance metadata service."
+            f" See {AWS_DOC_URL}"
+        )
+    if isinstance(error, botocore.exceptions.BotoCoreError):
+        # A client-side failure: credentials, configuration or transport.
+        return f"{error} See {AWS_DOC_URL}"
+    # An error AWS itself returned. The docs on setting up access do not help here.
+    return str(error)
+
 
 ACCESS_KEY_SECRET_OPTION = "secret"
 
@@ -155,25 +185,6 @@ class TagsImportPatternOption(Enum):
 
 TagsOption = str | Literal[TagsImportPatternOption.ignore_all, TagsImportPatternOption.import_all]
 
-
-# TODO
-# Rewrite API calls from low-level client to high-level resource:
-# Boto3 has two distinct levels of APIs. Client (or "low-level") APIs provide
-# one-to-one mappings to the underlying HTTP API operations. Resource APIs hide
-# explicit network calls but instead provide resource objects and collections to
-# access attributes and perform actions.
-
-# Note that in this case you do not have to make a second API call to get the
-# objects; they're available to you as a collection on the bucket. These
-# collections of subresources are lazily-loaded.
-
-# TODO limits
-# - per account (S3)
-# - per region (EC2, EBS, ELB, RDS)
-
-# TODO network load balancers
-# - gather the metrics HealthyHostCount and UnHealthyHostCount using the correct dimensions (load
-#   balancer and target group)
 
 #   .--overview------------------------------------------------------------.
 #   |                                        _                             |
@@ -7037,6 +7048,12 @@ class AWSSections(abc.ABC):
                 {"client_key": client_key, "error": e},
             )
             raise
+        except botocore.exceptions.BotoCoreError as e:
+            # Credentials are resolved here, not in the session constructor, so a broken
+            # credential chain surfaces at this call. The clause above already took the
+            # errors that mean a bug in Checkmk rather than a problem reaching AWS, so
+            # what is left is a genuine access failure.
+            raise AwsAccessError(describe_credential_failure(e))
 
     def run(self, use_cache: bool = True) -> None:
         exceptions: list[AssertionError | Exception] = []
@@ -7738,8 +7755,10 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     parser.add_argument("--debug", action="store_true", help="Raise Python exceptions.")
     parser.add_argument(
         "--verbose",
-        action="store_true",
-        help="Log messages from AWS library 'boto3' and 'botocore'.",
+        "-v",
+        action="count",
+        default=0,
+        help="Increase log verbosity. Use -vv for debug output of 'boto3' and 'botocore'.",
     )
     parser.add_argument(
         "--vcrtrace",
@@ -7904,41 +7923,36 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _setup_logging(opt_debug: bool, opt_verbose: bool) -> None:
-    logger = logging.getLogger()
-    logger.disabled = True
-    fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s"
-    lvl = logging.INFO
-    if opt_verbose:
-        logger.disabled = False
-        lvl = logging.DEBUG
-    elif opt_debug:
-        logger.disabled = False
-    logging.basicConfig(level=lvl, format=fmt)
+def _setup_logging(opt_debug: bool, opt_verbose: int) -> None:
+    logging.getLogger().disabled = not (opt_debug or opt_verbose)
+    configure_logging(logging.DEBUG if opt_verbose > 1 else logging.INFO)
 
 
 def _create_anonymous_session(
     region: str,
     config: botocore.config.Config | None,  # noqa: ARG001
 ) -> boto3.session.Session:
-    try:
-        # According to the documentation of AWS botocore this could snippet should be necessary for anonymous sessions.
-        # However this does not work and has to be left out (a reported bug on github).
-        # Leave it here for potential future bugfix of the AWS botocore.
-        # https://github.com/boto/botocore/issues/1395
-        # https://github.com/boto/botocore/issues/2442
-        # When necessary return -> tuple[boto3.session.Session, botocore.config.Config | None]:
-        # ---------------------------------
-        # if config is None:
-        #     config = botocore.config.Config(signature_version=botocore.UNSIGNED)
-        # else:
-        #     config.signature_version = botocore.UNSIGNED  # type: ignore[attr-defined]
+    # According to the documentation of AWS botocore this could snippet should be necessary for anonymous sessions.
+    # However this does not work and has to be left out (a reported bug on github).
+    # Leave it here for potential future bugfix of the AWS botocore.
+    # https://github.com/boto/botocore/issues/1395
+    # https://github.com/boto/botocore/issues/2442
+    # When necessary return -> tuple[boto3.session.Session, botocore.config.Config | None]:
+    # ---------------------------------
+    # if config is None:
+    #     config = botocore.config.Config(signature_version=botocore.UNSIGNED)
+    # else:
+    #     config.signature_version = botocore.UNSIGNED  # type: ignore[attr-defined]
 
-        return boto3.session.Session(
-            region_name=region,
-        )
-    except Exception as e:
-        raise AwsAccessError(e)
+    # No try/except here, but not because this cannot fail. The constructor does not
+    # resolve credentials, so it raises nothing about them, yet it does read the shared
+    # config: a missing AWS_PROFILE gives ProfileNotFound and an unparsable file gives
+    # ConfigParseError. Both are BotoCoreError, and every caller builds the session
+    # inside its own try, so they are reported there together with the errors from
+    # session.client(...).
+    return boto3.session.Session(
+        region_name=region,
+    )
 
 
 def _create_session(
@@ -7950,14 +7964,13 @@ def _create_session(
     if access_key_id is None or secret_access_key is None:
         return _create_anonymous_session(region=region, config=config)
 
-    try:
-        return boto3.session.Session(
-            aws_access_key_id=access_key_id,
-            aws_secret_access_key=secret_access_key,
-            region_name=region,
-        )
-    except Exception as e:
-        raise AwsAccessError(e)
+    # See _create_anonymous_session on why there is no try/except here, and on what
+    # this constructor can still raise.
+    return boto3.session.Session(
+        aws_access_key_id=access_key_id,
+        aws_secret_access_key=secret_access_key,
+        region_name=region,
+    )
 
 
 def _sts_assume_role(
@@ -8000,7 +8013,7 @@ def _sts_assume_role(
             region_name=region,
         )
     except Exception as e:
-        raise AwsAccessError(e)
+        raise AwsAccessError(describe_credential_failure(e))
 
 
 def _sanitize_aws_services_params(
@@ -8058,19 +8071,21 @@ def _proxy_address(
     return f"{authentication}{address}"
 
 
+def _resolve_optional_secret(args: argparse.Namespace, option_name: str) -> str | None:
+    if getattr(args, option_name) is None and getattr(args, f"{option_name}_id") is None:
+        return None
+    return resolve_secret_option(args, option_name).reveal()
+
+
 def _get_proxy(args: argparse.Namespace) -> botocore.config.Config | None:
     if args.proxy_host:
-        try:
-            proxy_password = resolve_secret_option(args, PROXY_SECRET_OPTION).reveal()
-        except TypeError:
-            proxy_password = None
         return botocore.config.Config(
             proxies={
                 "https": _proxy_address(
                     args.proxy_host,
                     args.proxy_port,
                     args.proxy_user,
-                    proxy_password,
+                    _resolve_optional_secret(args, PROXY_SECRET_OPTION),
                 )
             }
         )
@@ -8156,10 +8171,7 @@ def _configure_aws(args: argparse.Namespace) -> AWSConfig:
 def _create_session_from_args(
     args: argparse.Namespace, region: str, config: botocore.config.Config | None
 ) -> boto3.session.Session:
-    try:
-        secret_access_key = resolve_secret_option(args, ACCESS_KEY_SECRET_OPTION).reveal()
-    except TypeError:
-        secret_access_key = None
+    secret_access_key = _resolve_optional_secret(args, ACCESS_KEY_SECRET_OPTION)
 
     if args.assume_role:
         return _sts_assume_role(
@@ -8175,15 +8187,11 @@ def _create_session_from_args(
 
 
 def _get_account_id(args: argparse.Namespace, config: botocore.config.Config | None) -> str:
-    session = _create_session_from_args(args, args.global_service_region, config)
     try:
+        session = _create_session_from_args(args, args.global_service_region, config)
         account_id = session.client("sts", config=config).get_caller_identity()["Account"]
-    except (
-        botocore.exceptions.ClientError,
-        botocore.exceptions.NoCredentialsError,
-        botocore.exceptions.ProxyConnectionError,
-    ) as e:
-        raise AwsAccessError(e)
+    except (botocore.exceptions.BotoCoreError, botocore.exceptions.ClientError) as e:
+        raise AwsAccessError(describe_credential_failure(e))
     return account_id
 
 
@@ -8264,10 +8272,6 @@ def agent_aws_main(args: argparse.Namespace) -> int:
                     raise
 
     return 1 if has_exceptions else 0
-
-
-class AwsAccessError(Exception):
-    pass
 
 
 @report_agent_crashes(AGENT, __version__)

@@ -39,15 +39,22 @@ const FRAME_WITH_ID = 'id: 7\nevent: text\ndata: {"type":"text"}'
 describe('fields', () => {
   test('yields one frame without an id per well-formed data frame', async () => {
     expect(await collect(streamOf('data: {"a":1}\n\ndata: {"a":2}\n\n'))).toEqual([
-      { id: undefined, data: { a: 1 } },
-      { id: undefined, data: { a: 2 } }
+      { id: undefined, event: 'message', data: { a: 1 } },
+      { id: undefined, event: 'message', data: { a: 2 } }
     ])
   })
 
-  test('keeps the id of a frame and ignores its event', async () => {
+  test('keeps the id and event of a frame', async () => {
     expect(await collect(streamOf(`${FRAME_WITH_ID}\n\n`))).toEqual([
-      { id: '7', data: { type: 'text' } }
+      { id: '7', event: 'text', data: { type: 'text' } }
     ])
+  })
+
+  test.each([
+    { case: 'no event field', frame: 'data: {"a":1}\n\n' },
+    { case: 'an empty event field', frame: 'event:\ndata: {"a":1}\n\n' }
+  ])('names a frame with $case a message', async ({ frame }) => {
+    expect((await collect(streamOf(frame))).map((it) => it.event)).toEqual(['message'])
   })
 
   test('parses a data field without a space after the colon', async () => {
@@ -64,7 +71,7 @@ describe('fields', () => {
 
   test('does not carry an id over to the next frame', async () => {
     expect(await collect(streamOf('id: 7\n\ndata: {"a":1}\n\n'))).toEqual([
-      { id: undefined, data: { a: 1 } }
+      { id: undefined, event: 'message', data: { a: 1 } }
     ])
   })
 })
@@ -72,8 +79,8 @@ describe('fields', () => {
 describe('line ends', () => {
   test('splits frames on CRLF', async () => {
     expect(await collect(streamOf('id: 7\r\ndata: {"a":1}\r\n\r\ndata: {"a":2}\r\n\r\n'))).toEqual([
-      { id: '7', data: { a: 1 } },
-      { id: undefined, data: { a: 2 } }
+      { id: '7', event: 'message', data: { a: 1 } },
+      { id: undefined, event: 'message', data: { a: 2 } }
     ])
   })
 
@@ -86,7 +93,7 @@ describe('line ends', () => {
 
   test('reads a CRLF split across reads as one line end', async () => {
     expect(await collect(streamOf('id: 7\r', '\ndata: {"a":1}\r\n\r\n'))).toEqual([
-      { id: '7', data: { a: 1 } }
+      { id: '7', event: 'message', data: { a: 1 } }
     ])
   })
 })
@@ -94,7 +101,7 @@ describe('line ends', () => {
 describe('framing', () => {
   test('reassembles a frame with several fields split across reads', async () => {
     expect(await collect(streamOf('id: 7\nevent: text\nda', 'ta: {"type":"text"}\n\n'))).toEqual([
-      { id: '7', data: { type: 'text' } }
+      { id: '7', event: 'text', data: { type: 'text' } }
     ])
   })
 
@@ -126,7 +133,9 @@ describe('framing', () => {
 
 describe('stream end', () => {
   test('emits a trailing frame that never got its blank line', async () => {
-    expect(await collect(streamOf(FRAME_WITH_ID))).toEqual([{ id: '7', data: { type: 'text' } }])
+    expect(await collect(streamOf(FRAME_WITH_ID))).toEqual([
+      { id: '7', event: 'text', data: { type: 'text' } }
+    ])
   })
 
   test('emits a trailing frame without the data: prefix too', async () => {
@@ -135,6 +144,58 @@ describe('stream end', () => {
 
   test('emits nothing when only whitespace is left over', async () => {
     expect(await payloads(streamOf('data: {"a":1}\n\n   \n'))).toEqual([{ a: 1 }])
+  })
+})
+
+describe('early exit', () => {
+  test('breaking out of the frames cancels the stream', async () => {
+    let cancelled = false
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode('data: {"a":1}\n\n'))
+      },
+      cancel() {
+        cancelled = true
+      }
+    })
+
+    for await (const _ of readSseFrames(stream)) {
+      break
+    }
+
+    expect(cancelled).toBe(true)
+  })
+
+  test('breaking out of the frames after the stream errored ends the loop', async () => {
+    let fail: (error: Error) => void = () => undefined
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        fail = (error) => controller.error(error)
+        controller.enqueue(new TextEncoder().encode('data: {"a":1}\n\n'))
+      }
+    })
+
+    for await (const _ of readSseFrames(stream)) {
+      fail(new Error('connection lost'))
+      break
+    }
+
+    expect(stream.locked).toBe(false)
+  })
+})
+
+describe('stream error', () => {
+  test('releases a stream that errors', async () => {
+    const error = new Error('connection lost')
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.error(error)
+      }
+    })
+
+    await expect(collect(stream)).rejects.toBe(error)
+
+    expect(stream.locked).toBe(false)
   })
 })
 
@@ -243,8 +304,8 @@ describe('read timeout', () => {
       controller.close()
 
       expect(await frames).toEqual([
-        { id: undefined, data: { a: 1 } },
-        { id: undefined, data: { a: 2 } }
+        { id: undefined, event: 'message', data: { a: 1 } },
+        { id: undefined, event: 'message', data: { a: 2 } }
       ])
     })
   })

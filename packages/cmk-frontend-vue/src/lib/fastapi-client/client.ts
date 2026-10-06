@@ -7,10 +7,13 @@ import createClientImpl, {
   type Client,
   type ClientPathsWithMethod,
   type FetchResponse,
-  type MaybeOptionalInit
+  type HeadersOptions,
+  type MaybeOptionalInit,
+  mergeHeaders
 } from 'openapi-fetch'
 
 import { CmkApiError } from '@/lib/error'
+import { readSseFrames } from '@/lib/sse/sseFrames'
 
 /**
  * Supplies the credentials a request carries.
@@ -32,14 +35,9 @@ export interface FastApiClientOptions {
 type Media = 'application/json'
 type Method = 'get' | 'put' | 'post' | 'patch' | 'delete'
 
-// Equivalent to openapi-typescript-helpers' RequiredKeysOf and openapi-fetch's unexported InitParam.
-type RequiredKeysOf<T> = Exclude<
-  { [K in keyof T]: Record<never, never> extends Pick<T, K> ? never : K }[keyof T],
-  undefined
->
-
+// Equivalent to openapi-fetch's unexported InitParam.
 type InitParam<Init> =
-  RequiredKeysOf<Init> extends never
+  Partial<Init> extends Init
     ? [(Init & { [key: string]: unknown })?]
     : [Init & { [key: string]: unknown }]
 
@@ -58,12 +56,43 @@ type FastApiMethod<Paths extends object, M extends Method> = <
   ...init: InitParam<Init>
 ) => Promise<Payload<FetchResponse<Operation<Paths[Path], M>, Init, Media>>>
 
+interface SseEvent {
+  event: string
+  data: unknown
+  id?: string
+}
+
+type StreamedEvent<Op> = Op extends {
+  responses: { 200: { content: { 'text/event-stream': infer Event extends SseEvent } } }
+}
+  ? Event
+  : never
+
+/** The events a GET of `Path` streams, as its OpenAPI item schema declares them. */
+export type FastApiEvent<Paths extends object, Path extends keyof Paths> = StreamedEvent<
+  Operation<Paths[Path], 'get'>
+>
+
+type EventPath<Paths extends object> = {
+  [Path in keyof Paths]: [FastApiEvent<Paths, Path>] extends [never] ? never : Path
+}[keyof Paths]
+
+type FastApiEvents<Paths extends object> = <
+  Path extends EventPath<Paths>,
+  Init extends MaybeOptionalInit<Paths[Path], 'get' & keyof Paths[Path]>
+>(
+  url: Path,
+  ...init: InitParam<Init>
+) => AsyncIterable<FastApiEvent<Paths, Path>>
+
 export interface FastApiClient<Paths extends object> {
   GET: FastApiMethod<Paths, 'get'>
   PUT: FastApiMethod<Paths, 'put'>
   POST: FastApiMethod<Paths, 'post'>
   PATCH: FastApiMethod<Paths, 'patch'>
   DELETE: FastApiMethod<Paths, 'delete'>
+  /** Reads the events of a GET, until the stream ends or the `signal` of `init` aborts. */
+  events: FastApiEvents<Paths>
 }
 
 type UntypedPaths = Record<string, Record<Method, object>>
@@ -103,7 +132,26 @@ export function createFastApiClient<Paths extends object>({
     PATCH: async (url: string, init?: Record<string, unknown>) =>
       settle(await client.PATCH(url, init)),
     DELETE: async (url: string, init?: Record<string, unknown>) =>
-      settle(await client.DELETE(url, init))
+      settle(await client.DELETE(url, init)),
+    events: async function* (
+      url: string,
+      init?: { headers?: HeadersOptions; signal?: AbortSignal }
+    ): AsyncIterable<SseEvent> {
+      const stream = settle(
+        await client.GET(url, {
+          ...init,
+          headers: mergeHeaders(init?.headers, { Accept: 'text/event-stream' }),
+          parseAs: 'stream'
+        })
+      )
+      if (!(stream instanceof ReadableStream)) {
+        throw new Error(`${url} returned no event stream`)
+      }
+      for await (const { id, event, data } of readSseFrames(stream)) {
+        init?.signal?.throwIfAborted()
+        yield id === undefined ? { event, data } : { event, data, id }
+      }
+    }
   } as FastApiClient<Paths>
 }
 

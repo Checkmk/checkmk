@@ -470,7 +470,7 @@ onUnmounted(() => {
 }
 
 .profiling-profiles-list-app__upload--dragover {
-  border-color: var(--color-dark-blue-50);
+  border-color: var(--interactive-focus);
   border-style: solid;
   background: var(--ux-theme-3);
 }
@@ -569,7 +569,7 @@ onUnmounted(() => {
 }
 
 .profiling-profiles-list-app__upload-compact--dragover {
-  border-color: var(--color-dark-blue-50);
+  border-color: var(--interactive-focus);
   border-style: solid;
   background: var(--ux-theme-3);
 }
@@ -668,7 +668,7 @@ onUnmounted(() => {
 }
 
 .profiling-profiles-list-app__sort-btn:focus-visible {
-  outline: var(--border-width-1) solid var(--color-dark-blue-50);
+  outline: var(--border-width-1) solid var(--interactive-focus);
   outline-offset: var(--spacing-half);
 }
 

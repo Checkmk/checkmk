@@ -72,7 +72,7 @@ interface ThemeTokens {
 
 // Canvas 2D can't resolve CSS var() references, so pull the tokens from the
 // container and cache the resolved values. The hard-coded fallback matches the
-// corporate-green used by --color-corporate-green-50 in both themes — it
+// corporate-green used by --interactive-accent in both themes — it
 // keeps the highlight outline visible even if the var is unset (e.g. styles
 // not yet applied on first paint).
 const HIGHLIGHT_STROKE_FALLBACK = '#2e8540'
@@ -81,7 +81,7 @@ function readThemeTokens(el: HTMLElement): ThemeTokens {
   const style = getComputedStyle(el)
   return {
     highlightStroke:
-      style.getPropertyValue('--color-corporate-green-50').trim() || HIGHLIGHT_STROKE_FALLBACK,
+      style.getPropertyValue('--interactive-accent').trim() || HIGHLIGHT_STROKE_FALLBACK,
     fontNormal: `${style.getPropertyValue('--font-size-normal').trim()} sans-serif`,
     fontSmall: `${style.getPropertyValue('--font-size-small').trim()} sans-serif`
   }

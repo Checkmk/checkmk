@@ -29,12 +29,12 @@ export const THIN_BORDER_WIDTH = 0.5
  */
 export function heatColor(pct: number): string {
   if (pct > 20) {
-    return 'var(--color-light-red-60)'
+    return 'var(--heat-scale-color-high)'
   }
   if (pct > 5) {
-    return 'var(--color-orange-60)'
+    return 'var(--heat-scale-color-medium)'
   }
-  return 'var(--color-yellow-60)'
+  return 'var(--heat-scale-color-low)'
 }
 
 const nameColorCache = new Map<string, string>()

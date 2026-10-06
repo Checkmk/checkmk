@@ -486,7 +486,7 @@ const virtualHotspots = computed(() =>
 }
 
 .profiling-hotspots-table__sort-btn:focus-visible {
-  outline: var(--border-width-1) solid var(--color-dark-blue-50);
+  outline: var(--border-width-1) solid var(--interactive-focus);
   outline-offset: var(--spacing-half);
 }
 
@@ -525,7 +525,7 @@ const virtualHotspots = computed(() =>
 }
 
 .profiling-hotspots-table__row:focus-visible {
-  outline: var(--border-width-1) solid var(--color-dark-blue-50);
+  outline: var(--border-width-1) solid var(--interactive-focus);
   outline-offset: calc(-1 * var(--border-width-1));
 }
 
@@ -679,7 +679,7 @@ const virtualHotspots = computed(() =>
 }
 
 .profiling-hotspots-table__edge-item--clickable:focus-visible {
-  outline: var(--border-width-1) solid var(--color-dark-blue-50);
+  outline: var(--border-width-1) solid var(--interactive-focus);
   outline-offset: calc(-1 * var(--border-width-1));
 }
 

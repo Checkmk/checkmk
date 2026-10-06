@@ -11,20 +11,19 @@ from typing import Protocol
 
 import pytest
 
-from cmk.plugins.aws.special_agent.config import (
+from cmk.plugins.aws.special_agent.agent_aws import (
     AWSConfig,
+    AWSRegionLimit,
     NamingConvention,
     OverallTags,
-    TagsImportPatternOption,
-    TagsOption,
-)
-from cmk.plugins.aws.special_agent.sections.core import AWSRegionLimit, ResultDistributor
-from cmk.plugins.aws.special_agent.sections.sns import (
+    ResultDistributor,
     SNS,
     SNSLimits,
     SNSSMS,
     SNSSummary,
     SNSTopicsFetcher,
+    TagsImportPatternOption,
+    TagsOption,
 )
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, SNSListSubscriptionsIB, SNSListTopicsIB

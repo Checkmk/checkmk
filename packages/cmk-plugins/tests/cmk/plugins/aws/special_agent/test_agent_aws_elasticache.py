@@ -12,23 +12,19 @@ from typing import Final, Protocol
 import pytest
 from dateutil.tz import tzutc
 
-from cmk.plugins.aws.special_agent.config import (
+from cmk.plugins.aws.special_agent.agent_aws import (
     AWSConfig,
-    NamingConvention,
-    OverallTags,
-    TagsImportPatternOption,
-    TagsOption,
-)
-from cmk.plugins.aws.special_agent.sections.core import (
     AWSRegionLimit,
     AWSSectionResult,
     AWSSectionResults,
-    ResultDistributor,
-)
-from cmk.plugins.aws.special_agent.sections.elasticache import (
     ElastiCache,
     ElastiCacheLimits,
     ElastiCacheSummary,
+    NamingConvention,
+    OverallTags,
+    ResultDistributor,
+    TagsImportPatternOption,
+    TagsOption,
 )
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, FakeServiceQuotasClient

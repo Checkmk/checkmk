@@ -12,8 +12,12 @@ from unittest import mock
 
 import pytest
 
-from cmk.plugins.aws.special_agent.runner import AWSSectionsGeneric, Results
-from cmk.plugins.aws.special_agent.sections.core import AWSSectionResult, get_seconds_since_midnight
+from cmk.plugins.aws.special_agent.agent_aws import (
+    AWSSectionResult,
+    AWSSectionsGeneric,
+    get_seconds_since_midnight,
+    Results,
+)
 
 
 @pytest.mark.parametrize(

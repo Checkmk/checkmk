@@ -10,20 +10,18 @@ from typing import Protocol
 
 import pytest
 
-from cmk.plugins.aws.special_agent.config import (
+from cmk.plugins.aws.special_agent.agent_aws import (
     AWSConfig,
-    NamingConvention,
-    OverallTags,
-    TagsImportPatternOption,
-    TagsOption,
-)
-from cmk.plugins.aws.special_agent.sections.core import ResultDistributor
-from cmk.plugins.aws.special_agent.sections.elb import (
     ELB,
     ELBHealth,
     ELBLabelsGeneric,
     ELBLimits,
     ELBSummaryGeneric,
+    NamingConvention,
+    OverallTags,
+    ResultDistributor,
+    TagsImportPatternOption,
+    TagsOption,
 )
 
 from .agent_aws_fake_clients import (

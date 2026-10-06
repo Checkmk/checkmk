@@ -12,15 +12,16 @@ from typing import Literal, Protocol
 import pytest
 from dateutil.tz import tzutc
 
-from cmk.plugins.aws.special_agent.config import (
+from cmk.plugins.aws.special_agent.agent_aws import (
     AWSConfig,
+    CloudFront,
+    CloudFrontSummary,
     NamingConvention,
     OverallTags,
+    ResultDistributor,
     TagsImportPatternOption,
     TagsOption,
 )
-from cmk.plugins.aws.special_agent.sections.cloudfront import CloudFront, CloudFrontSummary
-from cmk.plugins.aws.special_agent.sections.core import ResultDistributor
 
 from .agent_aws_fake_clients import FakeCloudwatchClient
 

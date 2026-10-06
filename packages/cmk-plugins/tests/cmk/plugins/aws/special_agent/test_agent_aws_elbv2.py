@@ -10,22 +10,21 @@ from typing import NamedTuple, Protocol, TypedDict
 
 import pytest
 
-from cmk.plugins.aws.special_agent.config import (
+from cmk.plugins.aws.special_agent.agent_aws import (
     AWSConfig,
-    NamingConvention,
-    OverallTags,
-    TagsImportPatternOption,
-    TagsOption,
-)
-from cmk.plugins.aws.special_agent.sections.core import ResultDistributor
-from cmk.plugins.aws.special_agent.sections.elb import ELBLabelsGeneric, ELBSummaryGeneric
-from cmk.plugins.aws.special_agent.sections.elbv2 import (
+    ELBLabelsGeneric,
+    ELBSummaryGeneric,
     ELBv2Application,
     ELBv2ApplicationTargetGroupsHTTP,
     ELBv2ApplicationTargetGroupsLambda,
     ELBv2Limits,
     ELBv2Network,
     ELBv2TargetGroups,
+    NamingConvention,
+    OverallTags,
+    ResultDistributor,
+    TagsImportPatternOption,
+    TagsOption,
 )
 
 from .agent_aws_fake_clients import (

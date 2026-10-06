@@ -10,20 +10,21 @@ from typing import Final, Protocol
 
 import pytest
 
-from cmk.plugins.aws.special_agent.config import (
+from cmk.plugins.aws.special_agent.agent_aws import (
     AWSConfig,
-    NamingConvention,
-    OverallTags,
-    TagsImportPatternOption,
-    TagsOption,
-)
-from cmk.plugins.aws.special_agent.sections.core import (
     AWSRegionLimit,
     AWSSectionResult,
     AWSSectionResults,
+    ECS,
+    ECSLimits,
+    ECSSummary,
+    NamingConvention,
+    OverallTags,
     ResultDistributor,
+    StatusEnum,
+    TagsImportPatternOption,
+    TagsOption,
 )
-from cmk.plugins.aws.special_agent.sections.ecs import ECS, ECSLimits, ECSSummary, StatusEnum
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, FakeServiceQuotasClient
 
@@ -295,8 +296,9 @@ def test_agent_aws_ecs_limits(
     assert result.content == LIMITS
 
 
-@pytest.mark.usefixtures("get_ecs_sections")
-def test_agent_aws_ecs_limits_without_quota_client() -> None:
+def test_agent_aws_ecs_limits_without_quota_client(
+    get_ecs_sections: ECSSections,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+) -> None:
     region = "region"
     config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
     fake_ecs_client = FakeECSClient(CLUSTERS_CLIENT_RESPONSE2)

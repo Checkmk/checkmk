@@ -96,7 +96,6 @@ class ContentTypeValidator:
             and has_schema
             and content_type_ == "application/json"
             and "charset" in options
-            and options["charset"] is not None  # type: ignore[redundant-expr]
             and options["charset"].lower() != "utf-8"
         ):
             # but there are options.

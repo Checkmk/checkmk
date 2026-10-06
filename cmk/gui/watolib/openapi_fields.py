@@ -458,10 +458,10 @@ class IPNetworkCIDR(String):
     Traceback (most recent call last):
     ...
     marshmallow.exceptions.ValidationError: {'blah': ["Expected an IP network in CIDR notation like '192.168.0.0/24'"]}
-    >>> schema.dump({"blah": "broken"})
+    >>> schema.dump({"blah": "10"})
     Traceback (most recent call last):
     ...
-    marshmallow.exceptions.ValidationError: Error handling 'broken', expected a tuple of IPv4 address and network size e.g. ('192.168.0.0', 24)
+    marshmallow.exceptions.ValidationError: Error handling '10', expected a tuple of IPv4 address and network size e.g. ('192.168.0.0', 24)
     """
 
     @override
@@ -477,12 +477,12 @@ class IPNetworkCIDR(String):
     @override
     def _serialize(
         self,
-        value: tuple[str, int] | list[str | int],
+        value: object,
         attr: str | None,
         obj: object,
         **kwargs: object,
     ) -> str:
-        if isinstance(value, list | tuple) and len(value) == 2:  # type: ignore[redundant-expr]
+        if isinstance(value, list | tuple) and len(value) == 2:
             return f"{value[0]}/{value[1]}"
         raise ValidationError(
             f"Error handling {value!r}, expected a tuple of IPv4 address and network size e.g. ('192.168.0.0', 24)"

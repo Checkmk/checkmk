@@ -1,4 +1,5 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_env.bzl", "bazel_env")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@cmk_requirements//:requirements.bzl", "requirement")
@@ -6,6 +7,11 @@ load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//bazel/tools:npm-groovy-lint/package_json.bzl", groovy_bin = "bin")
 load("@rules_mypy//mypy:mypy.bzl", "mypy_cli")
 load("@rules_python//python:defs.bzl", "py_binary")
+
+exports_files(
+    ["dump_fastapi_openapi_spec.py"],
+    visibility = ["//visibility:public"],
+)
 
 npm_link_all_packages(name = "node_modules")
 
@@ -97,6 +103,12 @@ bazel_env(
         "uv": "@multitool//tools/uv",
         "genhtml": "@lcov//:genhtml",
     },
+)
+
+py_library(
+    name = "dump_fastapi_openapi_spec",
+    srcs = ["dump_fastapi_openapi_spec.py"],
+    visibility = ["//visibility:public"],
 )
 
 py_binary(

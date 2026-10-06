@@ -161,6 +161,39 @@ def test_discovery_prism_hosts(
             ],
             id="Turn off alerting.",
         ),
+        pytest.param(
+            # A host in maintenance mode, as reported by Prism: no VM count,
+            # memory capacity or boot time.
+            "SRV-AHV-03",
+            {
+                "system_state": "NORMAL",
+                "acropolis_connection_state": True,
+            },
+            {
+                "SRV-AHV-03": {
+                    "acropolis_connection_state": "kConnected",
+                    "boot_time_in_usecs": None,
+                    "host_maintenance_mode_reason": "ncli_manual",
+                    "memory_capacity_in_bytes": None,
+                    "name": "SRV-AHV-03",
+                    "num_vms": None,
+                    "state": "NORMAL",
+                },
+            },
+            [
+                Result(state=State.OK, summary="has state NORMAL"),
+                Result(state=State.UNKNOWN, summary="Number of VMs: got no value"),
+                Result(state=State.UNKNOWN, summary="Memory: got no value"),
+                Result(state=State.UNKNOWN, summary="Boottime: got no value"),
+                Result(state=State.OK, summary="Acropolis state is kConnected"),
+            ],
+            id="Values missing from the host data are reported as UNKNOWN.",
+            marks=pytest.mark.xfail(
+                strict=True,
+                raises=TypeError,
+                reason="Crash report 20233162-e7e0-11f0-9418-506b8da1179e: TypeError",
+            ),
+        ),
     ],
 )
 def test_check_prism_hosts(

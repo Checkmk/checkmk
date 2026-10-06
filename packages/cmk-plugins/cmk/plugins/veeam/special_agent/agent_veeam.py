@@ -15,6 +15,7 @@ import json
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
 from datetime import datetime, UTC
 from http import HTTPStatus
 from typing import override
@@ -589,65 +590,179 @@ def _task_creation_epoch(task: Mapping[str, object]) -> float:
     return float("-inf")
 
 
+@dataclass(frozen=True, kw_only=True)
+class _JobObjects:
+    names: list[str]
+    job_name: str
+    session: Mapping[str, object]
+    """The job's current session (GET /api/v1/sessions/{id}); used for the
+    single-object fallback in `fetch_backups`."""
+
+
+def _is_skippable(exc: TerminateAgent) -> bool:
+    """A failed per-job lookup that should just skip that job, not abort the agent."""
+    return isinstance(exc.__cause__, VeeamApiError) and exc.__cause__.status in (
+        HTTPStatus.BAD_REQUEST,
+        HTTPStatus.NOT_FOUND,
+    )
+
+
+def _resolve_job_object_names(
+    client: VeeamClient, session_to_job: Mapping[str, tuple[str, str]]
+) -> dict[str, _JobObjects]:
+    """Maps job ID -> its current session's object name(s), via
+    GET /api/v1/sessions/{sessionId} -> resourceId -> GET /api/v1/backups/{id}/objects.
+
+    Iterates `session_to_job` (built by `_job_sessions_and_window`) rather than the
+    raw job list, so disabled/malformed jobs are filtered in one place only.
+
+    Same identity as /api/v1/restorePoints and the old plug-in (e.g.
+    "ip-172-31-26-65"), unlike taskSessions' own `name` (e.g. the raw IP for the
+    same object) — and resolvable even for jobs taskSessions never has a task for
+    at all (Agent Backup).
+
+    /api/v1/backups/{id}/objects 400s under rev0 for File Backup jobs; rev1 fixes
+    it, and the negotiated version already prefers rev1 when available. A job
+    whose session/objects lookup 404s/400s is left out.
+    """
+    objects_by_job: dict[str, _JobObjects] = {}
+    for session_id, (job_id, job_name) in session_to_job.items():
+        try:
+            session = client.get(f"/api/v1/sessions/{session_id}")
+        except TerminateAgent as exc:
+            if _is_skippable(exc):
+                continue
+            raise
+        if not isinstance(session, dict) or not isinstance(
+            resource_id := session.get("resourceId"), str
+        ):
+            continue
+        try:
+            objects = _get_all(client, f"/api/v1/backups/{resource_id}/objects")
+        except TerminateAgent as exc:
+            if _is_skippable(exc):
+                continue
+            raise
+        names = [
+            object_name
+            for obj in objects
+            if isinstance(obj, dict) and isinstance(object_name := obj.get("name"), str)
+        ]
+        if names:
+            objects_by_job[job_id] = _JobObjects(names=names, job_name=job_name, session=session)
+    return objects_by_job
+
+
+def _format_dotnet_timespan(seconds: float) -> str:
+    total_seconds = int(seconds)
+    days, remainder = divmod(total_seconds, 86400)
+    hours, remainder = divmod(remainder, 3600)
+    minutes, secs = divmod(remainder, 60)
+    return (
+        f"{days}.{hours:02d}:{minutes:02d}:{secs:02d}"
+        if days
+        else f"{hours:02d}:{minutes:02d}:{secs:02d}"
+    )
+
+
+def _session_fallback_task(session: Mapping[str, object], job_name: str) -> Mapping[str, object]:
+    """Builds a taskSessions-shaped record from a job's own session, for a
+    single-object job taskSessions has no task for. A session has no per-task
+    progress breakdown (size, read, transferred, rate), so those are left out."""
+    created, end_time = session.get("creationTime"), session.get("endTime")
+    duration = None
+    if (
+        isinstance(created, str)
+        and isinstance(end_time, str)
+        and (created_epoch := parse_iso8601_epoch(created)) is not None
+        and (end_epoch := parse_iso8601_epoch(end_time)) is not None
+    ):
+        duration = _format_dotnet_timespan(end_epoch - created_epoch)
+    return {
+        "state": session.get("state"),
+        "result": session.get("result"),
+        "progress": {"duration": duration} if duration is not None else {},
+        "endTime": end_time,
+        "jobName": job_name,
+    }
+
+
 def fetch_backups(client: VeeamClient, name: str) -> str:
-    """One record per (job, backup object) pair: the newest task session for that
-    pairing, labelled with the job's name.
+    """One record per (job, object) pair: the newest task for that pairing,
+    labelled with the job's name.
 
-    Task sessions carry no job name of their own, only a `sessionId` pointing to a
-    session (GET /api/v1/sessions), whose `jobId` in turn names the job. Each job's
-    own record (GET /api/v1/jobs/states, which is also fetched for the
-    `veeam_backup_jobs` section, independently of whether that section is enabled)
-    already carries the ID of its own current session, so a task's job is resolved
-    by matching its `sessionId` directly against that, without a third endpoint.
+    Piggyback identity comes from `_resolve_job_object_names`, not a task's own
+    `name` (the two disagree for some platforms, e.g. Agent Backup). A
+    single-object job takes all its tasks unconditionally; a multi-object job
+    matches by name instead, which only works where the two sides agree
+    (confirmed for File Backup). A single-object job left with no task falls
+    back to its own session (`_session_fallback_task`); a multi-object job in
+    that case is just left without data.
 
-    A task whose `sessionId` does not match any job's *current* session (e.g. an
-    object that was not part of a job's most recent run) cannot be attributed to a
-    job this way and is dropped; its piggyback host then simply stops receiving
-    fresh data for this section and keeps showing its last known state, aging, via
-    Checkmk's normal piggyback/staleness handling, rather than anything this agent
-    does explicitly.
+    A task's job is resolved by matching its `sessionId` against each job's
+    current session (from /api/v1/jobs/states), not via a third endpoint. A task
+    whose session isn't any job's current one is dropped; its piggyback host just
+    keeps showing its last known state via normal staleness handling.
 
-    /api/v1/taskSessions holds the server's entire backup history; fetching all of
-    it every run would be both wasteful and, per the v13 reference, risky under
-    rate limiting. The request is narrowed with `createdAfterFilter`, computed from
-    the earliest `lastRun` across all jobs (see `_job_sessions_and_window`), so it
-    only reaches as far back as the least recently run job actually requires.
+    /api/v1/taskSessions is windowed with `createdAfterFilter` (earliest job
+    `lastRun`) rather than fetched in full, to avoid pulling the server's entire
+    history every run.
 
-    `sessionTypeFilter=BackupJob` is not used here: on VBR 13.0.3.63 it is accepted
-    as a valid value but silently matches nothing, even for task sessions whose own
-    `sessionType` field is "BackupJob". `sessionType` is filtered client-side instead.
+    `sessionTypeFilter=BackupJob` isn't used: on VBR 13.0.3.63 it silently
+    matches nothing even for matching records, so `sessionType` is filtered
+    client-side instead.
     """
     jobs = _get_all(client, "/api/v1/jobs/states")
     session_to_job, created_after = _job_sessions_and_window(jobs)
-    if created_after is None:
-        return ""
-
-    tasks = _get_all(
-        client,
-        "/api/v1/taskSessions",
-        extra_params=f"&typeFilter=Backup&createdAfterFilter={quote(created_after)}",
-    )
-
-    newest: dict[tuple[str, str], Mapping[str, object]] = {}
-    for task in tasks:
-        if not isinstance(task, dict) or not isinstance(object_name := task.get("name"), str):
-            continue
-        if task.get("sessionType") != "BackupJob":
-            continue
-        session_id = task.get("sessionId")
-        if not isinstance(session_id, str) or (job := session_to_job.get(session_id)) is None:
-            continue
-        key = (object_name, job[0])
-        current = newest.get(key)
-        # TODO: ties (identical creationTime) are broken arbitrarily, by whichever
-        # task is encountered last. A real tiebreak would compare `usn` (an
-        # increasing update sequence number) instead, e.g.:
-        #     task.get("usn", -1) >= current.get("usn", -1)
-        # left out for now since such collisions are assumed to be rare.
-        if current is None or _task_creation_epoch(task) >= _task_creation_epoch(current):
-            newest[key] = {**task, "jobName": job[1]}
+    job_objects = _resolve_job_object_names(client, session_to_job)
 
     groups: dict[str, list[Mapping[str, object]]] = {}
+
+    newest: dict[tuple[str, str], Mapping[str, object]] = {}
+
+    if created_after is not None:
+        tasks = _get_all(
+            client,
+            "/api/v1/taskSessions",
+            extra_params=f"&typeFilter=Backup&createdAfterFilter={quote(created_after)}",
+        )
+
+        for task in tasks:
+            if not isinstance(task, dict) or not isinstance(task_name := task.get("name"), str):
+                continue
+            if task.get("sessionType") != "BackupJob":
+                continue
+            session_id = task.get("sessionId")
+            if not isinstance(session_id, str) or (job := session_to_job.get(session_id)) is None:
+                continue
+            job_id, job_name = job
+            resolved_names = job_objects[job_id].names if job_id in job_objects else []
+            if len(resolved_names) == 1:
+                object_name = resolved_names[0]
+            elif task_name in resolved_names:
+                object_name = task_name
+            else:
+                continue
+            key = (object_name, job_id)
+            current = newest.get(key)
+            # TODO: ties (identical creationTime) are broken arbitrarily, by whichever
+            # task is encountered last. A real tiebreak would compare `usn` (an
+            # increasing update sequence number) instead, e.g.:
+            #     task.get("usn", -1) >= current.get("usn", -1)
+            # left out for now since such collisions are assumed to be rare.
+            if current is None or _task_creation_epoch(task) >= _task_creation_epoch(current):
+                newest[key] = {**task, "jobName": job_name}
+
+    # Single-object jobs that /api/v1/taskSessions has no task for at all (e.g. the
+    # Linux/Windows Agent Backup gap) fall back to the job's own session: with only
+    # one object, the job's result already *is* that object's result.
+    for job_id, job_obj in job_objects.items():
+        if len(job_obj.names) != 1:
+            continue
+        key = (job_obj.names[0], job_id)
+        if key not in newest:
+            newest[key] = _session_fallback_task(job_obj.session, job_obj.job_name)
+
     for (object_name, _job_id), task in newest.items():
         groups.setdefault(object_name, []).append(task)
 

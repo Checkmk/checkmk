@@ -72,7 +72,7 @@ def parse_chrony(string_table: StringTable) -> dict[str, Any] | None:
 
 
 def is_error_message(info: StringTable) -> bool:
-    return len(info) == 1 and isinstance(info[0], list) and ":" not in info[0][0]  # type: ignore[redundant-expr]
+    return len(info) == 1 and ":" not in info[0][0]
 
 
 agent_section_chrony = AgentSection(

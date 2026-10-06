@@ -295,7 +295,7 @@ def check_timesyncd(
         )
 
     # server is configured and can be resolved, but e.g. NTP blocked by firewall
-    if server is not None and all(item is None for item in [offset, stratum, jitter]):  # type: ignore[redundant-expr]
+    if all(item is None for item in [offset, stratum, jitter]):
         yield Result(state=State.CRIT, summary="Found no time server")
         return
 

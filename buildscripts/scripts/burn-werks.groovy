@@ -27,7 +27,9 @@ void main() {
         raise("CUSTOM_GIT_REF '${version_tag}' is not a final Checkmk release tag, e.g. 'v2.4.0p12'");
         }
     def commit_message = "Burn werk version after release of ${version}";
-    def push_options = ["hashtag=burn-werks", "r=${reviewer}"];
+    // TODO: Remove benedikt.seidl again as soon as the process is stable
+    def reviewers = [reviewer, "benedikt.seidl"].unique();
+    def push_options = ["hashtag=burn-werks"] + reviewers.collect { "r=${it}" };
 
     print(
         """

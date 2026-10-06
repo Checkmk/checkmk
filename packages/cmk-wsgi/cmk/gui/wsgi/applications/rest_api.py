@@ -537,7 +537,7 @@ class ServeSwaggerUI(AbstractWSGIApp):
 
 def _ensure_authenticated() -> None:
     session.session.persistent = False
-    if session.session.user is None or isinstance(session.session.user, LoggedInNobody):  # type: ignore[redundant-expr]
+    if isinstance(session.session.user, LoggedInNobody):
         # As a user we want the most specific error messages. Due to the errors being
         # generated at the start of the request, where it isn't clear if Checkmk or RESTAPI
         # will take the request, we need to store them and emit them to the user afterwards.

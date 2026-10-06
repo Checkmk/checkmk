@@ -27,6 +27,8 @@ void main() {
         raise("CUSTOM_GIT_REF '${version_tag}' is not a final Checkmk release tag, e.g. 'v2.4.0p12'");
         }
     def commit_message = "Burn werk version after release of ${version}";
+    // GERRIT_URL is a global Jenkins variable, e.g. https://review.lan.tribe29.com
+    def gerrit_host = env.GERRIT_URL.replaceFirst("^https?://", "");
     // TODO: Remove benedikt.seidl again as soon as the process is stable
     def reviewers = [reviewer, "benedikt.seidl"].unique();
     def push_options = ["hashtag=burn-werks"] + reviewers.collect { "r=${it}" };
@@ -72,6 +74,8 @@ void main() {
                 return;
             }
 
+            def target_branches = burn_target_branches(branch_version, version_without_meta_data);
+
             withGerritSshKey {
                 withEnv([
                     'GIT_SSH_COMMAND=ssh -o "StrictHostKeyChecking no" -i $GERRIT_SSH_KEY -l $GERRIT_USER',
@@ -83,7 +87,7 @@ void main() {
                     stage("Create commit") {
                         sh("""
                             HOOK=\$(git rev-parse --git-path hooks)/commit-msg
-                            HOOK_SRC=\$GERRIT_USER@review.lan.tribe29.com:hooks/commit-msg
+                            HOOK_SRC=\$GERRIT_USER@${gerrit_host}:hooks/commit-msg
                             scp -O -p -o StrictHostKeyChecking=no -i \$GERRIT_SSH_KEY -P 29418 \$HOOK_SRC \$HOOK
 
                             git add --update .werks
@@ -93,27 +97,122 @@ void main() {
                     }
 
                     smart_stage(name: "Push to review", condition: !dry_run) {
-                        def burn_commit = sh(script: "git rev-parse HEAD", returnStdout: true).trim();
+                        def burn_commit = cmd_output("git rev-parse HEAD");
 
-                        sh("""
-                            git fetch --no-tags --depth=1 origin '${branch_version}'
-                            git checkout --detach FETCH_HEAD
-                        """);
+                        // cherry-pick onto all target branches first, only push if none of them conflicts
+                        def picked_commits = [];
+                        for (target_branch in target_branches) {
+                            sh("""
+                                git fetch --no-tags --depth=1 origin '${target_branch}'
+                                git checkout --detach FETCH_HEAD
+                            """);
 
-                        if (sh(script: "git cherry-pick ${burn_commit}", returnStatus: true) != 0) {
-                            sh("git status; git cherry-pick --abort");
-                            raise("Cherry-picking '${commit_message}' onto ${branch_version} failed due to merge conflicts");
+                            if (sh(script: "git cherry-pick ${burn_commit}", returnStatus: true) != 0) {
+                                sh("git status; git cherry-pick --abort");
+                                raise("Cherry-picking '${commit_message}' onto ${target_branch} failed due to merge conflicts");
+                            }
+
+                            sh("git show --format=fuller --stat");
+                            picked_commits.add(cmd_output("git rev-parse HEAD"));
                         }
 
-                        sh("""
-                            git show --format=fuller --stat
-                            git push origin 'HEAD:refs/for/${branch_version}%${push_options.join(",")}'
-                        """);
+                        sh("git push origin '${picked_commits[0]}:refs/for/${target_branches[0]}%${push_options.join(",")}'");
+
+                        // Further branches (master) are cherry-picked by Gerrit instead of a second `git push`:
+                        // Gerrit advertises the open change pushed above as `.have`, so git would omit the objects
+                        // both picks share, which Gerrit then rejects ("Missing tree" / "Missing blob").
+                        def change_id = sh(
+                            script: "git log -1 --format='%(trailers:key=Change-Id,valueonly)' ${picked_commits[0]}",
+                            returnStdout: true,
+                        ).trim();
+                        for (int i = 1; i < target_branches.size(); i++) {
+                            withGerritHttpCredentials {
+                                def auth_header = "Basic " + "${GERRIT_USER}:${GERRIT_PASSWORD}".bytes.encodeBase64().toString();
+                                def change_number = gerrit_cherry_pick(
+                                    env.GERRIT_URL,
+                                    auth_header,
+                                    "check_mk~${target_branches[0]}~${change_id}",
+                                    picked_commits[0],
+                                    target_branches[i],
+                                    "burn-werks",
+                                );
+                                print("Cherry-picked onto ${target_branches[i]}: ${env.GERRIT_URL}/c/check_mk/+/${change_number}");
+                            }
+                        }
                     }
                 }
             }
         }
     }
+}
+
+/// Returns the branches to burn the werks on: the version branch and for the first release of a new version
+/// branch (e.g. v2.6.0b1) also master, as master contains the same werks. It is the first release if there is
+/// no other release tag of this version yet. Release candidates and the +security duplicates don't count.
+List<String> burn_target_branches(String branch_version, String version_without_meta_data) {
+    def release_tags = [];
+    withGerritHttpCredentials {
+        def auth_header = "Basic " + "${GERRIT_USER}:${GERRIT_PASSWORD}".bytes.encodeBase64().toString();
+        // Gitiles occasionally answers 502 behind the reverse proxy
+        retry(3) {
+            release_tags = gitiles_release_tags(env.GERRIT_URL, branch_version, auth_header);
+        }
+    }
+    def first_release_of_branch = (release_tags == ["v${version_without_meta_data}".toString()]);
+    def target_branches = [branch_version] + (first_release_of_branch ? ["master"] : []);
+    print("Release tags of ${branch_version}: ${release_tags}");
+    print("First release of ${branch_version}: ${first_release_of_branch}, burning the werks on: ${target_branches}");
+    return target_branches;
+}
+
+// @NonCPS: runs outside Jenkins CPS so HttpURLConnection (non-Serializable) is safe to hold.
+@NonCPS
+List<String> gitiles_release_tags(String gerrit_url, String branch_version, String auth_header) {
+    // Gitiles can't filter tags by a prefix, so all of them are fetched (~1000)
+    def connection = new URL("${gerrit_url}/a/plugins/gitiles/check_mk/+refs/tags/?format=JSON").openConnection();
+    connection.setRequestProperty("Authorization", auth_header);
+    // a hanging request would block the CPS thread, which `retry` and `timeout` can't interrupt reliably
+    connection.setConnectTimeout(10000);
+    connection.setReadTimeout(30000);
+    // Strip Gitiles XSS protection prefix (5 bytes) before parsing
+    def refs = new groovy.json.JsonSlurper().parseText(connection.inputStream.text.drop(5)).keySet();
+    return refs.collect { it.replaceFirst("refs/tags/", "").replaceFirst(/\+security$/, "") }
+        .findAll { it.startsWith("v${branch_version}") && !it.contains("-rc") }
+        .unique()
+        .sort();
+}
+
+// @NonCPS: runs outside Jenkins CPS so HttpURLConnection (non-Serializable) is safe to hold.
+// Cherry-picks a revision onto another branch via Gerrit REST API, keeping the reviewers, and adds a hashtag.
+// Returns the number of the new change.
+@NonCPS
+int gerrit_cherry_pick(
+    String gerrit_url, String auth_header, String change, String revision, String destination, String hashtag
+) {
+    def post = { String path, Map payload ->
+        def connection = new URL("${gerrit_url}/a/changes/${path}").openConnection();
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Authorization", auth_header);
+        connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+        connection.setConnectTimeout(10000);
+        connection.setReadTimeout(60000);
+        connection.setDoOutput(true);
+        connection.outputStream.withWriter("UTF-8") { it << groovy.json.JsonOutput.toJson(payload) };
+        def status = connection.responseCode;
+        if (status < 200 || status >= 300) {
+            throw new IOException("Gerrit ${path} failed (HTTP ${status}): ${connection.errorStream?.text}");
+        }
+        // Strip Gerrit XSS protection prefix (5 bytes) before parsing
+        return new groovy.json.JsonSlurperClassic().parseText(connection.inputStream.text.drop(5));
+    };
+    // encode the parts of the "project~branch~Change-Id" triplet only, an encoded "~" is not found
+    def change_path = change.split("~").collect { URLEncoder.encode(it, "UTF-8") }.join("~");
+    def new_change = post(
+        "${change_path}/revisions/${revision}/cherrypick",
+        [destination: destination, keep_reviewers: true],
+    );
+    post("${new_change._number}/hashtags", [add: [hashtag]]);
+    return new_change._number as int;
 }
 
 return this;

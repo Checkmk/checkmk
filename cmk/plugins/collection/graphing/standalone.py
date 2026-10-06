@@ -8,7 +8,6 @@ from cmk.graphing.v1 import metrics, Title
 UNIT_DECIBEL_MILLIWATTS = metrics.Unit(metrics.DecimalNotation("dBm"))
 UNIT_BYTES_PER_SECOND = metrics.Unit(metrics.IECNotation("B/s"))
 UNIT_EURO = metrics.Unit(metrics.DecimalNotation("€"), metrics.StrictPrecision(2))
-UNIT_DEGREE_CELSIUS = metrics.Unit(metrics.DecimalNotation("°C"))
 UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
 UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("/s"))
 UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
@@ -17,12 +16,6 @@ UNIT_HERTZ = metrics.Unit(metrics.DecimalNotation("Hz"))
 UNIT_TIME = metrics.Unit(metrics.TimeNotation())
 UNIT_REVOLUTIONS_PER_MINUTE = metrics.Unit(metrics.DecimalNotation("rpm"), metrics.AutoPrecision(4))
 
-metric_time_in_GC = metrics.Metric(
-    name="time_in_GC",
-    title=Title("Time spent in GC"),
-    unit=UNIT_PERCENTAGE,
-    color=metrics.Color.ORANGE,
-)
 metric_service_costs_eur = metrics.Metric(
     name="service_costs_eur",
     title=Title("Service Costs per Day"),
@@ -47,27 +40,9 @@ metric_accepted = metrics.Metric(
     unit=UNIT_COUNTER,
     color=metrics.Color.PURPLE,
 )
-metric_accepted_per_sec = metrics.Metric(
-    name="accepted_per_sec",
-    title=Title("Accepted connections per second"),
-    unit=UNIT_PER_SECOND,
-    color=metrics.Color.ORANGE,
-)
-metric_handled_per_sec = metrics.Metric(
-    name="handled_per_sec",
-    title=Title("Handled connections per second"),
-    unit=UNIT_PER_SECOND,
-    color=metrics.Color.GREEN,
-)
 metric_failed_requests = metrics.Metric(
     name="failed_requests",
     title=Title("Failed requests"),
-    unit=UNIT_COUNTER,
-    color=metrics.Color.CYAN,
-)
-metric_requests_per_conn = metrics.Metric(
-    name="requests_per_conn",
-    title=Title("Requests per connection"),
     unit=UNIT_COUNTER,
     color=metrics.Color.CYAN,
 )
@@ -88,12 +63,6 @@ metric_hops = metrics.Metric(
     title=Title("Number of hops"),
     unit=UNIT_COUNTER,
     color=metrics.Color.DARK_GRAY,
-)
-metric_time_difference = metrics.Metric(
-    name="time_difference",
-    title=Title("Time difference"),
-    unit=UNIT_TIME,
-    color=metrics.Color.DARK_YELLOW,
 )
 # TODO: Metric names with preceeding numbers seems not to be capable
 # of adding scalars with graph_info (e.g. for horizontal warning levels)
@@ -163,24 +132,6 @@ metric_error_rate = metrics.Metric(
     unit=UNIT_PER_SECOND,
     color=metrics.Color.ORANGE,
 )
-metric_page_lookups_sec = metrics.Metric(
-    name="page_lookups_sec",
-    title=Title("Page lookups"),
-    unit=UNIT_PER_SECOND,
-    color=metrics.Color.DARK_BLUE,
-)
-metric_inside_macs = metrics.Metric(
-    name="inside_macs",
-    title=Title("Number of unique inside MAC addresses"),
-    unit=UNIT_COUNTER,
-    color=metrics.Color.CYAN,
-)
-metric_outside_macs = metrics.Metric(
-    name="outside_macs",
-    title=Title("Number of unique outside MAC addresses"),
-    unit=UNIT_COUNTER,
-    color=metrics.Color.CYAN,
-)
 metric_avg_response_time = metrics.Metric(
     name="avg_response_time",
     title=Title("Average response time"),
@@ -222,12 +173,6 @@ metric_frequency = metrics.Metric(
     title=Title("Frequency"),
     unit=UNIT_HERTZ,
     color=metrics.Color.PURPLE,
-)
-metric_battery_temp = metrics.Metric(
-    name="battery_temp",
-    title=Title("Battery temperature"),
-    unit=UNIT_DEGREE_CELSIUS,
-    color=metrics.Color.LIGHT_ORANGE,
 )
 metric_port_temp_0 = metrics.Metric(
     name="port_temp_0",
@@ -343,12 +288,6 @@ metric_mem_lnx_total_used = metrics.Metric(
     unit=UNIT_BYTES,
     color=metrics.Color.GREEN,
 )
-metric_pagefile_total = metrics.Metric(
-    name="pagefile_total",
-    title=Title("Pagefile installed"),
-    unit=UNIT_BYTES,
-    color=metrics.Color.LIGHT_GRAY,
-)
 metric_mem_fragmentation = metrics.Metric(
     name="mem_fragmentation",
     title=Title("Memory fragmentation"),
@@ -396,12 +335,6 @@ metric_storage_percent = metrics.Metric(
     title=Title("Storage space used percentage"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.BLUE,
-)
-metric_available_file_descriptors = metrics.Metric(
-    name="available_file_descriptors",
-    title=Title("Number of available file descriptors"),
-    unit=UNIT_COUNTER,
-    color=metrics.Color.YELLOW,
 )
 metric_memory_used = metrics.Metric(
     name="memory_used",

@@ -1119,7 +1119,6 @@ translation_mem_win = translations.Translation(
             "pagefile_used_avg",
             1048576,
         ),
-        "pagefile_total": translations.ScaleBy(1048576),
     },
 )
 

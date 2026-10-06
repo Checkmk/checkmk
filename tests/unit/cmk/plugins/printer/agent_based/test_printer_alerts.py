@@ -65,7 +65,7 @@ from cmk.plugins.printer.agent_based.printer_alerts import (
         "Critical Error": State.CRIT,
     },
 )
-def test_check_printer_alerts(info: Sequence[StringTable], expected_result: CheckResult) -> None:  # type: ignore[misc]
+def test_check_printer_alerts(info: Sequence[StringTable], expected_result: CheckResult) -> None:
     data = parse_printer_alerts(info)
     result = check_printer_alerts(data)
     assert list(result) == expected_result

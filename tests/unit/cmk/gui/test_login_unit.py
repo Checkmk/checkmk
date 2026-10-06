@@ -497,7 +497,7 @@ def test_web_server_auth_session(flask_app: flask.Flask, user_id: UserId) -> Non
                 assert user.id == user_id
                 assert session.user.id == user.id  # type: ignore[unreachable]
 
-        with flask_app.request_context(create_environ()):  # type: ignore[unreachable]
+        with flask_app.request_context(create_environ()):
             flask_app.preprocess_request()
             assert user.id is None
 

@@ -3,30 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.ccc.site import SiteId
-from cmk.events.log_to_history import (
-    notification_result_message,
-)
+from cmk.events.log_to_history import notification_result_message
 from cmk.events.notification_result import (
     NotificationContext,
     NotificationPluginName,
     NotificationResultCode,
 )
-
-
-class FakeLocalConnection:
-    sent_command = None
-    timeout = None
-
-    def command(
-        self,
-        command: str,
-        site: SiteId | None = None,  # noqa: ARG002
-    ) -> None:
-        self.__class__.sent_command = command
-
-    def set_timeout(self, timeout: int) -> None:
-        self.__class__.timeout = timeout
 
 
 def test_notification_result_message() -> None:

@@ -191,7 +191,7 @@ class TestValueStoreManager:
 
             assert vsm.active_service_interface["key"] == "outer"
 
-        assert vsm.active_service_interface is None  # type: ignore[unreachable]
+        assert vsm.active_service_interface is None
 
         vsm.save()
 

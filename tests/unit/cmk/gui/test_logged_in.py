@@ -86,7 +86,7 @@ def test_user_context_nested(with_user: tuple[UserId, str], with_admin: tuple[Us
 
         assert global_user.id == first_user_id
 
-    assert global_user.id is None  # type: ignore[unreachable]
+    assert global_user.id is None
 
 
 def test_user_context_explicit_permissions(with_user: tuple[UserId, str]) -> None:

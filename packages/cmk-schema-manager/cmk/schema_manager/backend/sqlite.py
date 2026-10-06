@@ -24,6 +24,8 @@ from sqlite3 import Connection
 from typing import override
 from urllib.parse import quote
 
+from cmk.schema_manager._discovery import discover_db_migrations
+from cmk.schema_manager._mechanism import ensure_schemas_on_update
 from cmk.schema_manager._paths import db_path
 from cmk.schema_manager.backend.base import Backend
 from cmk.schema_manager.errors import (
@@ -225,3 +227,11 @@ def _check_no_new_foreign_key_violations(
     # off, must not fail every later revision.
     if introduced := _foreign_key_violations(connection) - before:
         raise ForeignKeyViolationError(revision_id, sorted(introduced))
+
+
+def ensure_sqlite_up_to_date(logger: Logger) -> None:
+    """The `omd update` hook: apply pending revisions to every SQLite
+    database opted into "update"."""
+    ensure_schemas_on_update(
+        discover_db_migrations(backend_type=Sqlite, event="update").values(), logger
+    )

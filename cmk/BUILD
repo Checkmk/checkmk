@@ -241,6 +241,7 @@ CMK_PACKAGES = [
     "//packages/cmk-plugin-apis:password_store",
     "//packages/cmk-plugin-apis:server_side_calls",
     "//packages/cmk-plugin-apis:server_side_programs",
+    "//packages/cmk-schema-manager",
     "//packages/cmk-trace",
     "//packages/cmk-werks",
 ] + select({

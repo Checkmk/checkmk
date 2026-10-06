@@ -1025,6 +1025,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.mkp_tool",
         "cmk.otel_collector",
         "cmk.plugins",
+        "cmk.schema_manager",
         "cmk.utils",
         "cmk.validate_config",
     ),

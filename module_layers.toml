@@ -408,6 +408,8 @@ allows = [
   "cmk.ai_control_plane.protocols",
   "cmk.fastapi",
   "cmk.password_store.v1",
+  "cmk.schema_manager",
+  "cmk.schema_migrations.ai_control_plane",
 ]
 
 [components."cmk.ai_control_plane.protocols"]
@@ -1866,7 +1868,12 @@ allows = [
 allows = []
 
 [components."cmk.testlib.ai_control_plane"]
-allows = ["@ccc", "cmk.ai_control_plane", "cmk.password_store.v1"]
+allows = [
+  "@ccc",
+  "cmk.ai_control_plane",
+  "cmk.password_store.v1",
+  "cmk.schema_migrations.ai_control_plane",
+]
 
 [components."cmk.testlib.ai_control_plane.fake_provider"]
 allows = []

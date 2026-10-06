@@ -323,12 +323,6 @@ metric_backup_age_differential_partial = metrics.Metric(
     unit=UNIT_TIME,
     color=metrics.Color.BLUE,
 )
-metric_harddrive_uncorrectable_erros = metrics.Metric(
-    name="harddrive_uncorrectable_erros",
-    title=Title("Uncorrectable harddrive errors"),
-    unit=UNIT_COUNTER,
-    color=metrics.Color.DARK_BLUE,
-)
 metric_storage_percent = metrics.Metric(
     name="storage_percent",
     title=Title("Storage space used percentage"),

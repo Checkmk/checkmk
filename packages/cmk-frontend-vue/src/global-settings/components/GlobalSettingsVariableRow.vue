@@ -13,6 +13,7 @@ import { computed } from 'vue'
 import FormReadonly from '@/form/FormReadonly.vue'
 
 import { isModified } from '../lib/values'
+import GlobalSettingsCollapsibleValue from './GlobalSettingsCollapsibleValue.vue'
 import GlobalSettingsHighlightedText from './GlobalSettingsHighlightedText.vue'
 import GlobalSettingsInlineToggle from './GlobalSettingsInlineToggle.vue'
 import GlobalSettingsRow from './GlobalSettingsRow.vue'
@@ -54,7 +55,9 @@ const value = computed(() => props.variable.current.value)
       </template>
       <template #default>
         <GlobalSettingsInlineToggle v-if="isBooleanChoice" :variable="variable" />
-        <FormReadonly v-else :spec="variable.spec" :data="value" :backend-validation="[]" />
+        <GlobalSettingsCollapsibleValue v-else>
+          <FormReadonly :spec="variable.spec" :data="value" :backend-validation="[]" />
+        </GlobalSettingsCollapsibleValue>
       </template>
     </GlobalSettingsRow>
   </div>
@@ -63,6 +66,7 @@ const value = computed(() => props.variable.current.value)
 <style scoped>
 .global-settings-variable-row {
   --global-settings-row-label-width: 400px;
+  --global-settings-collapsible-value-bg-color: var(--ux-theme-3);
 
   display: flex;
   min-width: min-content;
@@ -74,7 +78,9 @@ const value = computed(() => props.variable.current.value)
   cursor: pointer;
 
   &:hover,
-  &:focus-within {
+  &:has(:focus-visible) {
+    --global-settings-collapsible-value-bg-color: var(--global-settings-row-hover-bg-color);
+
     background: var(--global-settings-row-hover-bg-color);
   }
 }
@@ -89,7 +95,7 @@ const value = computed(() => props.variable.current.value)
   opacity: 0;
 
   .global-settings-variable-row:hover &,
-  .global-settings-variable-row:focus-within & {
+  .global-settings-variable-row:has(:focus-visible) & {
     opacity: 1;
   }
 }

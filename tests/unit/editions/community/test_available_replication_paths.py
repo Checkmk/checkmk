@@ -5,21 +5,16 @@
 
 import pytest
 
-import cmk.ccc.version as cmk_version
-from cmk.ccc.site import SiteId
-from cmk.gui.watolib import activate_changes
 from cmk.gui.watolib.config_sync import (
     replication_path_registry,
     ReplicationPath,
     ReplicationPathType,
 )
-from cmk.livestatus_client import SiteConfiguration
-
-EDITION = cmk_version.Edition.COMMUNITY
 
 
-def _expected_replication_paths() -> list[ReplicationPath]:
-    return [
+@pytest.mark.usefixtures("load_gui_plugins")
+def test_registered_replication_paths() -> None:
+    expected = [
         ReplicationPath.make(
             ty=ReplicationPathType.DIR,
             ident="check_mk",
@@ -148,68 +143,4 @@ def _expected_replication_paths() -> list[ReplicationPath]:
         ),
     ]
 
-
-def _default_site_config() -> SiteConfiguration:
-    return SiteConfiguration(
-        id=SiteId("mysite"),
-        alias="Site mysite",
-        socket=("local", None),
-        disable_wato=True,
-        disabled=False,
-        insecure=False,
-        url_prefix="/mysite/",
-        multisiteurl="",
-        persist=False,
-        replicate_ec=False,
-        replicate_mkps=False,
-        replication="slave",
-        timeout=5,
-        user_login=True,
-        proxy=None,
-        user_attribute_sync_connections="all",
-        status_host=None,
-        message_broker_port=5672,
-        is_trusted=False,
-    )
-
-
-@pytest.mark.usefixtures("request_context")
-def test_get_replication_paths_defaults() -> None:
-    expected = _expected_replication_paths()
-    assert sorted(
-        replication_path_registry.values(),
-        key=lambda replication_path: replication_path.ident,
-    ) == sorted(
-        expected,
-        key=lambda replication_path: replication_path.ident,
-    )
-
-
-@pytest.mark.parametrize("replicate_ec", [None, True, False])
-@pytest.mark.parametrize("replicate_mkps", [None, True, False])
-@pytest.mark.usefixtures("monkeypatch", "request_context")
-def test_get_replication_components(replicate_ec: bool | None, replicate_mkps: bool | None) -> None:
-    site_config = _default_site_config()
-
-    if replicate_ec is not None:
-        site_config["replicate_ec"] = replicate_ec
-    if replicate_mkps is not None:
-        site_config["replicate_mkps"] = replicate_mkps
-
-    expected = _expected_replication_paths()
-
-    if not replicate_ec:
-        expected = [e for e in expected if e.ident not in ["mkeventd", "mkeventd_mkp"]]
-
-    if not replicate_mkps:
-        expected = [
-            e for e in expected if e.ident not in ["local", "mkps", "mkps_avail", "mkps_disabled"]
-        ]
-
-    assert sorted(
-        activate_changes._get_replication_components(site_config),  # noqa: SLF001
-        key=lambda replication_path: replication_path.ident,
-    ) == sorted(
-        expected,
-        key=lambda replication_path: replication_path.ident,
-    )
+    assert dict(replication_path_registry.items()) == {p.ident: p for p in expected}

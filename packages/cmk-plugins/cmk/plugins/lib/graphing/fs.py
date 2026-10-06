@@ -94,7 +94,7 @@ graph_capacity_usage = graphs.Graph(
 )
 graph_capacity_usage_2 = graphs.Graph(
     name="capacity_usage_2",
-    title=Title("Capacity usage"),
+    title=Title("Capacity and virtual space"),
     simple_lines=[
         "fs_size",
         "unique_size",

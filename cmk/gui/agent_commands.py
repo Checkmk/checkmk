@@ -71,19 +71,44 @@ WINDOWS_AGENT_INSTALL_CMD = "msiexec /i check-mk-agent_{version}.msi /quiet /nor
 
 WINDOWS_AGENT_INSTALL_CMD_POWERSHELL = 'Start-Process msiexec.exe -ArgumentList "/i `"$PWD\\check-mk-agent_{version}.msi`" /quiet /norestart" -Wait'
 
-LINUX_DEBIAN_AGENT_INSTALL_CMD = """curl -o check-mk-agent_{version}-1_all.deb -fJG \\
-    '{{{{SERVER}}}}/{{{{SITE}}}}/check_mk/api/internal/domain-types/agent/actions/download_by_token/invoke' \\
-    --header 'Accept: application/octet-stream' \\
-    --header 'Authorization: CMK-TOKEN 0:[AGENT_DOWNLOAD_OTT]' \\
-    --data-urlencode 'os_type=linux_deb' && \\
-sudo dpkg -i check-mk-agent_{version}-1_all.deb"""
 
-LINUX_RPM_AGENT_INSTALL_CMD = """curl -o check-mk-agent_{version}-1.noarch.rpm -fJG  \\
-    '{{{{SERVER}}}}/{{{{SITE}}}}/check_mk/api/internal/domain-types/agent/actions/download_by_token/invoke' \\
+def unix_agent_download_cmd(file_name: str, curl_args: str) -> str:
+    """Template of a curl download that prints the response body and fails unless it got HTTP 200.
+
+    Avoids $(...) for the Bourne shell of Solaris 10, and --fail-with-body for curl < 7.76.
+    """
+    return (
+        f"HTTP_CODE=`curl -o {file_name} -JG \\\n"
+        "    --write-out '%{{http_code}}' \\\n"
+        f"{curl_args}` && \\\n"
+        '[ "$HTTP_CODE" = 200 ] || \\\n'
+        f'{{{{ [ "$HTTP_CODE" = 200 ] || cat {file_name} 2>/dev/null; echo; rm -f {file_name}; false; }}}}'
+    )
+
+
+LINUX_DEBIAN_AGENT_INSTALL_CMD = (
+    unix_agent_download_cmd(
+        "check-mk-agent_{version}-1_all.deb",
+        """    '{{{{SERVER}}}}/{{{{SITE}}}}/check_mk/api/internal/domain-types/agent/actions/download_by_token/invoke' \\
     --header 'Accept: application/octet-stream' \\
     --header 'Authorization: CMK-TOKEN 0:[AGENT_DOWNLOAD_OTT]' \\
-    --data-urlencode 'os_type=linux_rpm' && \\
+    --data-urlencode 'os_type=linux_deb'""",
+    )
+    + """ && \\
+sudo dpkg -i check-mk-agent_{version}-1_all.deb"""
+)
+
+LINUX_RPM_AGENT_INSTALL_CMD = (
+    unix_agent_download_cmd(
+        "check-mk-agent_{version}-1.noarch.rpm",
+        """    '{{{{SERVER}}}}/{{{{SITE}}}}/check_mk/api/internal/domain-types/agent/actions/download_by_token/invoke' \\
+    --header 'Accept: application/octet-stream' \\
+    --header 'Authorization: CMK-TOKEN 0:[AGENT_DOWNLOAD_OTT]' \\
+    --data-urlencode 'os_type=linux_rpm'""",
+    )
+    + """ && \\
 sudo rpm -Uvh check-mk-agent_{version}-1.noarch.rpm"""
+)
 
 
 def build_agent_install_cmds(

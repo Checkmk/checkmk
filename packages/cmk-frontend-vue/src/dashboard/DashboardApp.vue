@@ -655,7 +655,10 @@ const reviewFilters = () => {
   openDashboardFilterSettings.value = true
 }
 
-const { range, refreshTick, updateTimeRange } = useDashboardTimeControl(props.global_time_picker)
+const { range, refreshTick, updateTimeRange } = useDashboardTimeControl(
+  props.global_time_picker,
+  true
+)
 </script>
 
 <template>

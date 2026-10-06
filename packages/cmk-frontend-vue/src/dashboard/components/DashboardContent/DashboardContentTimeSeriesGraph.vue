@@ -21,9 +21,16 @@ import type {
   CustomGraphContent,
   PerformanceGraphContent,
   ProblemGraphContent,
-  SingleTimeseriesContent
+  SingleTimeseriesContent,
+  WidgetEmitTimeRange
 } from '@/dashboard/types/widget.ts'
-import { GraphFigure, type GraphFigureSource } from '@/graphing'
+import {
+  GraphFigure,
+  type GraphFigureSource,
+  type RequestedTimeRange,
+  toDateTimeRange,
+  toRequestedTimeRange
+} from '@/graphing'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
 import { createSharedGraphFetcher } from './sharedGraphFetcher.ts'
@@ -43,6 +50,13 @@ const props =
       | CustomGraphContent
     >
   >()
+const emit = defineEmits<WidgetEmitTimeRange>()
+
+const dashboardTimeRange = computed(() => toRequestedTimeRange(props.range))
+
+function onCommitTimeRange(range: RequestedTimeRange): void {
+  emit('updateTimeRange', toDateTimeRange(range, props.range.from.timeZone))
+}
 
 const shell = ref<DiscoveredGraph | null>(null)
 const errorMessage = ref<string | null>(null)
@@ -363,6 +377,7 @@ onMounted(() => {
         :source="figureSource"
         :y-axis="shell.y_axis"
         :timerange="timerange"
+        :requested-time-range="dashboardTimeRange"
         :combination-mode="combinationMode"
         :show-legend="showLegend"
         :show-timestamp="showTimestamp"
@@ -373,6 +388,7 @@ onMounted(() => {
         :min-value-axis-width="valueAxisWidth"
         :show-burger-menu="showBurgerMenu"
         :add-to="addTo"
+        @commit-time-range="onCommitTimeRange"
       />
     </div>
   </DashboardContentContainer>

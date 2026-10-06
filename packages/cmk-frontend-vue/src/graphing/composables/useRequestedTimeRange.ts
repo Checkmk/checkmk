@@ -11,7 +11,7 @@ import { useGlobalTimeRange } from '../GlobalTimePicker/globalTimeState'
 import type { PanelKey, RangeChange, RangeChangeSource, RequestedTimeRange } from '../types'
 import { sameRequestedTimeRange } from '../utils/timeRange'
 
-function toRequestedTimeRange(range: DateTimeRange): RequestedTimeRange {
+export function toRequestedTimeRange(range: DateTimeRange): RequestedTimeRange {
   return {
     start: Math.floor(range.from.toDate().getTime() / 1000),
     end: Math.floor(range.to.toDate().getTime() / 1000)
@@ -21,7 +21,7 @@ function toRequestedTimeRange(range: DateTimeRange): RequestedTimeRange {
 // The reverse of toRequestedTimeRange. A RequestedTimeRange has no timezone of its own
 // (it's plain unix seconds), so the currently active range's zone is reused for round-
 // tripping; falls back to the browser zone if the picker hasn't published one yet.
-function toDateTimeRange(range: RequestedTimeRange, timeZone: string): DateTimeRange {
+export function toDateTimeRange(range: RequestedTimeRange, timeZone: string): DateTimeRange {
   return {
     from: fromDate(new Date(range.start * 1000), timeZone),
     to: fromDate(new Date(range.end * 1000), timeZone)

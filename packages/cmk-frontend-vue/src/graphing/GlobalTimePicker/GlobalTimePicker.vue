@@ -13,12 +13,12 @@ import {
   type DateTimeRange
 } from 'cmk-ui-library/components/date-time'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 
 import DynamicPresets from './private/DynamicPresets.vue'
 import TimeRangeChip from './private/TimeRangeChip.vue'
 import { firstDayOfWeekAsWeekday } from './private/firstDayOfWeek.ts'
-import { useCustomPresets } from './private/useCustomPresets.ts'
+import { type CustomPreset, useCustomPresets } from './private/useCustomPresets.ts'
 import { useStaticPresets } from './private/useStaticPresets.ts'
 
 const props = withDefaults(
@@ -56,11 +56,18 @@ const isExtendedVariant = computed(() => props.variant === 'extended')
 
 const isFlyoutOpen = ref(false)
 
-watch(activePresetId, (value) => {
-  if (props.variant === 'condensed' && value === null) {
-    isFlyoutOpen.value = true
+// The condensed dropdown's "Custom range" entry has no window of its own: it opens the flyout to
+// pick one, leaving the current range until that is applied.
+function onApplyPreset(preset: CustomPreset): void {
+  if (props.disabled) {
+    return
   }
-})
+  if (preset.id === null) {
+    isFlyoutOpen.value = true
+    return
+  }
+  applyPreset(preset)
+}
 </script>
 
 <template>
@@ -127,7 +134,7 @@ watch(activePresetId, (value) => {
         :active-preset-id="activePresetId"
         :variant="variant"
         :include-custom-entry="!isExtendedVariant"
-        @apply="(preset) => !props.disabled && applyPreset(preset)"
+        @apply="onApplyPreset"
       >
         <template v-if="$slots.trailing" #trailing>
           <slot name="trailing" />

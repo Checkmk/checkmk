@@ -200,7 +200,7 @@ def aws_arguments(
         args.extend(_get_tag_options(params.overall_tags, "overall"))
     if (import_tags := params.import_tags) is None:
         args.append("--ignore-all-tags")
-    elif isinstance(import_tags, tuple) and import_tags[0] == "filter_tags":  # type: ignore[redundant-expr]
+    elif import_tags[0] == "filter_tags":
         if not isinstance(import_tags[1], str):
             raise ValueError(f"Invalid value for tag filtering pattern: {import_tags[1]}")
         args.extend(("--import-matching-tags-as-labels", import_tags[1]))

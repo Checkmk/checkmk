@@ -155,7 +155,6 @@ def check_aws_limits(
         warn, crit = (None, None)
         if (
             isinstance(parameter, tuple)
-            and len(parameter) == 2  # type: ignore[redundant-expr]
             and parameter[0] == "set_levels"
             and isinstance(parameter[1], dict)
         ):

@@ -603,35 +603,19 @@ function fmtMetricValue(m: PerfMetric): string {
 }
 
 .maps-hover-menu__state--ok {
-  color: var(--color-corporate-green-60);
-}
-
-body[data-theme='modern-dark'] .maps-hover-menu__state--ok {
-  color: var(--color-corporate-green-50);
+  color: var(--status-text-color-success-bright);
 }
 
 .maps-hover-menu__state--down {
-  color: var(--color-light-red-60);
-}
-
-body[data-theme='modern-dark'] .maps-hover-menu__state--down {
-  color: var(--color-light-red-40);
+  color: var(--status-text-color-error-bright);
 }
 
 .maps-hover-menu__state--unknown {
-  color: var(--color-orange-60);
-}
-
-body[data-theme='modern-dark'] .maps-hover-menu__state--unknown {
-  color: var(--color-orange-40);
+  color: var(--status-text-color-unknown-bright);
 }
 
 .maps-hover-menu__state--warn {
-  color: var(--color-yellow-60);
-}
-
-body[data-theme='modern-dark'] .maps-hover-menu__state--warn {
-  color: var(--color-warning);
+  color: var(--status-text-color-warning-bright);
 }
 
 .maps-hover-menu__state--pending {
@@ -652,11 +636,7 @@ body[data-theme='modern-dark'] .maps-hover-menu__state--warn {
 
 .maps-hover-menu__attempts--soft {
   font-weight: var(--font-weight-bold);
-  color: var(--color-yellow-60);
-}
-
-body[data-theme='modern-dark'] .maps-hover-menu__attempts--soft {
-  color: var(--color-yellow-50);
+  color: var(--status-text-color-warning-bright);
 }
 
 .maps-hover-menu__badges {
@@ -677,27 +657,17 @@ body[data-theme='modern-dark'] .maps-hover-menu__attempts--soft {
 }
 
 .maps-hover-menu__badge--warn {
-  color: var(--color-yellow-60);
-  background: color-mix(in srgb, var(--color-warning) 20%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-warning) 40%, transparent);
-}
-
-body[data-theme='modern-dark'] .maps-hover-menu__badge--warn {
-  color: var(--color-yellow-50);
-  background: color-mix(in srgb, var(--color-warning) 15%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-warning) 25%, transparent);
+  color: var(--status-text-color-warning-bright);
+  background: color-mix(in srgb, var(--color-warning) var(--status-tint-mix), transparent);
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--color-warning) var(--status-tint-border-mix), transparent);
 }
 
 .maps-hover-menu__badge--downtime {
-  color: var(--color-light-blue-70);
-  background: color-mix(in srgb, var(--color-light-blue-50) 20%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-light-blue-50) 40%, transparent);
-}
-
-body[data-theme='modern-dark'] .maps-hover-menu__badge--downtime {
-  color: var(--color-light-blue-50);
-  background: color-mix(in srgb, var(--color-light-blue-50) 15%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-light-blue-50) 25%, transparent);
+  color: var(--status-text-color-downtime);
+  background: color-mix(in srgb, var(--status-color-downtime) var(--status-tint-mix), transparent);
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--status-color-downtime) var(--status-tint-border-mix), transparent);
 }
 
 .maps-hover-menu__badge--stale {
@@ -801,10 +771,6 @@ body[data-theme='modern-dark'] .maps-hover-menu__badge--downtime {
 }
 
 .maps-hover-menu__next-check--overdue {
-  color: var(--color-yellow-60);
-}
-
-body[data-theme='modern-dark'] .maps-hover-menu__next-check--overdue {
-  color: var(--color-yellow-50);
+  color: var(--status-text-color-warning-bright);
 }
 </style>

@@ -209,7 +209,7 @@ function removeOrCancel() {
 }
 
 .maps-background-image-upload__remove:hover {
-  color: var(--color-light-red-40);
+  color: var(--status-text-color-error-pale);
 }
 
 .maps-background-image-upload__upload {

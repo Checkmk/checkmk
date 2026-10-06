@@ -1030,8 +1030,8 @@ function closeBulkAckModal(sent: boolean): void {
   --maps-map-view-classic-ink: rgb(0 0 0);
 
   /* An object whose image the site does not have. */
-  --maps-map-view-missing-ink: var(--color-brown-50);
-  --maps-map-view-missing-bg: color-mix(in srgb, var(--color-yellow-50) 25%, transparent);
+  --maps-map-view-missing-ink: var(--status-color-missing);
+  --maps-map-view-missing-bg: color-mix(in srgb, var(--color-state-warning) 25%, transparent);
 
   /* An object monitoring does not know: a dimmed disc behind its dashed edge. */
   --maps-map-view-missing-fill: rgb(63 63 70 / 40%);
@@ -1060,10 +1060,6 @@ function closeBulkAckModal(sent: boolean): void {
   --maps-map-view-text-outline:
     1px 1px 0 rgb(0 0 0 / 90%), -1px 1px 0 rgb(0 0 0 / 90%), 1px -1px 0 rgb(0 0 0 / 90%),
     -1px -1px 0 rgb(0 0 0 / 90%), 0 0 3px rgb(0 0 0 / 70%);
-
-  /* Checkmk has no semantic token for the two state modifiers. */
-  --maps-map-view-acknowledged: var(--color-yellow-50);
-  --maps-map-view-downtime: var(--color-light-blue-50);
 }
 
 .maps-map-view__shell {

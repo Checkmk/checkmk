@@ -175,6 +175,6 @@ const buttons = computed<ActionButton[]>(() => {
 }
 
 .maps-map-object-action-bar__button--danger:hover {
-  background: color-mix(in srgb, var(--color-light-red-50) 10%, transparent);
+  background: color-mix(in srgb, var(--status-color-error-bright) 10%, transparent);
 }
 </style>

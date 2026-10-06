@@ -79,7 +79,7 @@ defineProps<{
 }
 
 .maps-detail-meta-list__value--warn {
-  color: var(--maps-map-view-acknowledged);
+  color: var(--status-color-acknowledged);
 }
 
 .maps-detail-meta-list__link {

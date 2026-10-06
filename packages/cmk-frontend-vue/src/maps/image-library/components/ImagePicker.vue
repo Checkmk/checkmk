@@ -297,6 +297,6 @@ function select(name: string) {
   margin: 0;
   padding: 0 var(--dimension-4) var(--dimension-4);
   font-size: var(--font-size-normal);
-  color: var(--color-light-red-40);
+  color: var(--status-text-color-error-pale);
 }
 </style>

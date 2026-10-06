@@ -86,10 +86,10 @@ defineProps<{
 
 .maps-menu-item--danger,
 .maps-menu-item--danger:hover {
-  color: var(--color-light-red-40);
+  color: var(--status-text-color-error-pale);
 }
 
 .maps-menu-item--danger:hover {
-  background: color-mix(in srgb, var(--color-light-red-50) 8%, transparent);
+  background: color-mix(in srgb, var(--status-color-error-bright) 8%, transparent);
 }
 </style>

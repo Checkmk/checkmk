@@ -290,13 +290,13 @@ function formatExact(seconds: number | null | undefined): string {
 /* The same two modifier colours the map view names, so a member row and a
    marker on the map agree on what "acknowledged" looks like. */
 .maps-detail-members-tab__flag--ack {
-  color: var(--maps-map-view-acknowledged);
-  background: color-mix(in srgb, var(--maps-map-view-acknowledged) 20%, transparent);
+  color: var(--status-color-acknowledged);
+  background: color-mix(in srgb, var(--status-color-acknowledged) 20%, transparent);
 }
 
 .maps-detail-members-tab__flag--downtime {
-  color: var(--maps-map-view-downtime);
-  background: color-mix(in srgb, var(--maps-map-view-downtime) 20%, transparent);
+  color: var(--status-color-downtime);
+  background: color-mix(in srgb, var(--status-color-downtime) 20%, transparent);
 }
 
 .maps-detail-members-tab__flag--muted {

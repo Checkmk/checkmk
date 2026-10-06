@@ -87,33 +87,21 @@ defineProps<{
 }
 
 .maps-hover-pill-row__pill--crit {
-  color: var(--color-light-red-70);
-  background: color-mix(in srgb, var(--color-light-red-50) 15%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-light-red-50) 30%, transparent);
-}
-
-body[data-theme='modern-dark'] .maps-hover-pill-row__pill--crit {
-  color: var(--color-light-red-40);
+  color: var(--status-text-color-error-on-tint);
+  background: color-mix(in srgb, var(--status-color-error-bright) 15%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--status-color-error-bright) 30%, transparent);
 }
 
 .maps-hover-pill-row__pill--unknown {
-  color: var(--color-orange-70);
-  background: color-mix(in srgb, var(--color-orange-50) 15%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-orange-50) 30%, transparent);
-}
-
-body[data-theme='modern-dark'] .maps-hover-pill-row__pill--unknown {
-  color: var(--color-orange-40);
+  color: var(--status-text-color-unknown-on-tint);
+  background: color-mix(in srgb, var(--color-state-unknown) 15%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-state-unknown) 30%, transparent);
 }
 
 .maps-hover-pill-row__pill--warn {
-  color: var(--color-yellow-60);
+  color: var(--status-text-color-warning-bright);
   background: color-mix(in srgb, var(--color-warning) 15%, transparent);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-warning) 30%, transparent);
-}
-
-body[data-theme='modern-dark'] .maps-hover-pill-row__pill--warn {
-  color: var(--color-yellow-50);
 }
 
 .maps-hover-pill-row__pill--pending {
@@ -123,13 +111,9 @@ body[data-theme='modern-dark'] .maps-hover-pill-row__pill--warn {
 }
 
 .maps-hover-pill-row__pill--ok {
-  color: var(--color-corporate-green-70);
-  background: color-mix(in srgb, var(--color-corporate-green-50) 15%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-corporate-green-50) 30%, transparent);
-}
-
-body[data-theme='modern-dark'] .maps-hover-pill-row__pill--ok {
-  color: var(--color-corporate-green-50);
+  color: var(--status-text-color-success-on-tint);
+  background: color-mix(in srgb, var(--color-state-ok) 15%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-state-ok) 30%, transparent);
 }
 
 .maps-hover-pill-row__pill-dot {
@@ -139,11 +123,11 @@ body[data-theme='modern-dark'] .maps-hover-pill-row__pill--ok {
 }
 
 .maps-hover-pill-row__pill-dot--crit {
-  background: var(--color-light-red-50);
+  background: var(--status-color-error-bright);
 }
 
 .maps-hover-pill-row__pill-dot--unknown {
-  background: var(--color-orange-40);
+  background: var(--status-color-unknown-bright);
 }
 
 .maps-hover-pill-row__pill-dot--warn {
@@ -155,6 +139,6 @@ body[data-theme='modern-dark'] .maps-hover-pill-row__pill--ok {
 }
 
 .maps-hover-pill-row__pill-dot--ok {
-  background: var(--color-corporate-green-50);
+  background: var(--color-state-ok);
 }
 </style>

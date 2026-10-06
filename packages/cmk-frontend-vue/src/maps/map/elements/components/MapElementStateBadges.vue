@@ -88,15 +88,15 @@ defineProps<{ state: ObjectState | undefined }>()
 .maps-map-element-state-badges__badge--ack {
   top: -6px;
   right: -6px;
-  color: var(--color-midnight-grey-100);
-  background: var(--maps-map-view-acknowledged);
+  color: var(--font-color-on-status);
+  background: var(--status-color-acknowledged);
 }
 
 .maps-map-element-state-badges__badge--downtime {
   top: -6px;
   left: -6px;
   color: var(--white);
-  background: var(--maps-map-view-downtime);
+  background: var(--status-color-downtime);
 }
 
 .maps-map-element-state-badges__icon {

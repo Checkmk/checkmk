@@ -170,7 +170,7 @@ defineExpose({
 }
 
 .maps-map-bulk-edit-slide-in__error {
-  color: var(--color-light-red-40);
+  color: var(--status-text-color-error-pale);
 }
 
 .maps-map-bulk-edit-slide-in__footer {

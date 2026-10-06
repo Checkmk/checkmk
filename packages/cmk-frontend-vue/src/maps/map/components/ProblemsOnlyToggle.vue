@@ -52,7 +52,7 @@ const { _t } = usei18n()
 }
 
 .maps-problems-only-toggle--active {
-  border-color: var(--color-yellow-50, #fbbf24);
+  border-color: var(--color-state-warning);
   background: rgb(251 191 36 / 12%);
 }
 </style>

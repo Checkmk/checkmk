@@ -67,13 +67,13 @@ const props = defineProps<{ problems: ProblemCounts }>()
 }
 
 .maps-map-problems-pill--critical {
-  color: var(--color-light-red-40);
-  background: color-mix(in srgb, var(--color-light-red-50) 10%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-light-red-50) 30%, transparent);
+  color: var(--status-text-color-error-pale);
+  background: color-mix(in srgb, var(--status-color-error-bright) 10%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--status-color-error-bright) 30%, transparent);
 }
 
 .maps-map-problems-pill--warning {
-  color: var(--color-yellow-50);
+  color: var(--color-state-warning);
   background: color-mix(in srgb, var(--color-warning) 10%, transparent);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-warning) 30%, transparent);
 }

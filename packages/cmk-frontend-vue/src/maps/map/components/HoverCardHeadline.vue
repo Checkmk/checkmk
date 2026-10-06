@@ -66,11 +66,11 @@ const dotClass = computed(
 }
 
 .maps-hover-card-headline__dot--down {
-  background: var(--color-light-red-50);
+  background: var(--status-color-error-bright);
 }
 
 .maps-hover-card-headline__dot--unknown {
-  background: var(--color-orange-40);
+  background: var(--status-color-unknown-bright);
 }
 
 .maps-hover-card-headline__dot--warn {

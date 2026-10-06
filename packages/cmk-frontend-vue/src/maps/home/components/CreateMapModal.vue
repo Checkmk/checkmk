@@ -270,12 +270,12 @@ async function submit() {
 
 .maps-create-map-modal__error {
   font-size: var(--font-size-normal);
-  color: var(--color-light-red-40);
+  color: var(--status-text-color-error-pale);
 }
 
 .maps-create-map-modal__warning {
   font-size: var(--font-size-normal);
-  color: var(--color-yellow-50);
+  color: var(--color-state-warning);
 }
 
 .maps-create-map-modal__hint {
@@ -286,7 +286,7 @@ async function submit() {
 .maps-create-map-modal__link {
   display: block;
   margin-top: var(--dimension-3);
-  color: var(--color-yellow-50);
+  color: var(--color-state-warning);
   font-weight: var(--font-weight-bold);
   text-decoration: underline;
 }

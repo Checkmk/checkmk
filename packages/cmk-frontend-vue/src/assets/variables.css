@@ -110,6 +110,7 @@
     --font-color-strong: var(--color-mid-grey-100);
     --font-color-muted: var(--color-mid-grey-50);
     --font-color-graphic: rgb(131 131 131);
+    --font-color-on-status: var(--color-midnight-grey-100);
 
     /* Border */
     --border-color-subtle: var(--color-mid-grey-10);
@@ -138,6 +139,15 @@
     --status-text-color-error-strong: var(--color-dark-red-70);
     --status-text-color-unknown: var(--color-orange-80);
     --status-text-color-pending: var(--color-mist-grey-70);
+    --status-text-color-success-bright: var(--color-corporate-green-60);
+    --status-text-color-error-bright: var(--color-light-red-60);
+    --status-text-color-unknown-bright: var(--color-orange-60);
+    --status-text-color-warning-bright: var(--color-yellow-60);
+    --status-text-color-success-on-tint: var(--color-corporate-green-70);
+    --status-text-color-error-on-tint: var(--color-light-red-70);
+    --status-text-color-unknown-on-tint: var(--color-orange-70);
+    --status-text-color-downtime: var(--color-light-blue-70);
+    --status-text-color-error-pale: var(--color-light-red-40);
     --status-icon-color-info: var(--color-dark-blue-80);
     --status-icon-color-success: var(--color-corporate-green-80);
     --status-icon-color-warning: var(--color-yellow-80);
@@ -145,6 +155,8 @@
     --status-background-success: var(--color-corporate-green-0);
     --status-background-warning: var(--color-yellow-0);
     --status-background-error: var(--color-dark-red-20);
+    --status-tint-mix: 20%;
+    --status-tint-border-mix: 40%;
     --status-color-critical: var(--color-dark-red-50);
     --status-color-info: var(--color-light-blue-50);
     --status-color-downtime: var(--color-light-blue-50);
@@ -157,6 +169,11 @@
     --status-color-error: var(--color-dark-red-60);
     --status-color-unknown: var(--color-orange-70);
     --status-color-pending-subtle: var(--color-mist-grey-80);
+    --status-color-error-bright: var(--color-light-red-50);
+    --status-color-unknown-bright: var(--color-orange-40);
+    --status-color-acknowledged: var(--color-yellow-50);
+    --status-color-flapping: var(--color-purple-50);
+    --status-color-missing: var(--color-brown-50);
 
     /* Merge into --status-border-color-* if UX agrees to the shift in one theme */
     --status-outline-color-success: var(--color-corporate-green-70);
@@ -330,6 +347,7 @@
     --font-color-strong: var(--color-mid-grey-0);
     --font-color-muted: var(--color-mid-grey-50);
     --font-color-graphic: var(--font-color);
+    --font-color-on-status: var(--color-midnight-grey-100);
 
     /* Border */
     --border-color-subtle: var(--color-mid-grey-90);
@@ -358,6 +376,15 @@
     --status-text-color-error-strong: var(--color-dark-red-30);
     --status-text-color-unknown: var(--color-orange-60);
     --status-text-color-pending: var(--color-mist-grey-40);
+    --status-text-color-success-bright: var(--color-corporate-green-50);
+    --status-text-color-error-bright: var(--color-light-red-40);
+    --status-text-color-unknown-bright: var(--color-orange-40);
+    --status-text-color-warning-bright: var(--color-yellow-50);
+    --status-text-color-success-on-tint: var(--color-corporate-green-50);
+    --status-text-color-error-on-tint: var(--color-light-red-40);
+    --status-text-color-unknown-on-tint: var(--color-orange-40);
+    --status-text-color-downtime: var(--color-light-blue-50);
+    --status-text-color-error-pale: var(--color-light-red-40);
     --status-icon-color-info: var(--color-dark-blue-20);
     --status-icon-color-success: var(--color-corporate-green-20);
     --status-icon-color-warning: var(--color-yellow-20);
@@ -365,6 +392,8 @@
     --status-background-success: var(--color-corporate-green-100);
     --status-background-warning: var(--color-yellow-100);
     --status-background-error: var(--color-dark-red-100);
+    --status-tint-mix: 15%;
+    --status-tint-border-mix: 25%;
     --status-color-critical: var(--color-dark-red-50);
     --status-color-info: var(--color-light-blue-50);
     --status-color-downtime: var(--color-light-blue-50);
@@ -377,6 +406,11 @@
     --status-color-error: var(--color-dark-red-60);
     --status-color-unknown: var(--color-orange-70);
     --status-color-pending-subtle: var(--color-mist-grey-80);
+    --status-color-error-bright: var(--color-light-red-50);
+    --status-color-unknown-bright: var(--color-orange-40);
+    --status-color-acknowledged: var(--color-yellow-50);
+    --status-color-flapping: var(--color-purple-50);
+    --status-color-missing: var(--color-brown-50);
 
     /* Merge into --status-border-color-* if UX agrees to the shift in one theme */
     --status-outline-color-success: var(--color-corporate-green-70);

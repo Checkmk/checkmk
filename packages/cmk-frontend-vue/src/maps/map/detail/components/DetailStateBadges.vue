@@ -47,15 +47,15 @@ defineProps<{ modifiers: StateModifier[] }>()
 /* The two state modifiers the map view names, so a badge here and a marker on
    the map agree on what "acknowledged" looks like. */
 .maps-detail-state-badges__badge--ack {
-  color: var(--maps-map-view-acknowledged);
-  background: color-mix(in srgb, var(--maps-map-view-acknowledged) 15%, transparent);
-  border-color: color-mix(in srgb, var(--maps-map-view-acknowledged) 40%, transparent);
+  color: var(--status-color-acknowledged);
+  background: color-mix(in srgb, var(--status-color-acknowledged) 15%, transparent);
+  border-color: color-mix(in srgb, var(--status-color-acknowledged) 40%, transparent);
 }
 
 .maps-detail-state-badges__badge--downtime {
-  color: var(--maps-map-view-downtime);
-  background: color-mix(in srgb, var(--maps-map-view-downtime) 15%, transparent);
-  border-color: color-mix(in srgb, var(--maps-map-view-downtime) 40%, transparent);
+  color: var(--status-color-downtime);
+  background: color-mix(in srgb, var(--status-color-downtime) 15%, transparent);
+  border-color: color-mix(in srgb, var(--status-color-downtime) 40%, transparent);
 }
 
 /* Stale and muted say "do not trust what you see" rather than naming a state,
@@ -68,8 +68,8 @@ defineProps<{ modifiers: StateModifier[] }>()
 }
 
 .maps-detail-state-badges__badge--flapping {
-  color: var(--color-purple-50);
-  background: color-mix(in srgb, var(--color-purple-50) 15%, transparent);
-  border-color: color-mix(in srgb, var(--color-purple-50) 40%, transparent);
+  color: var(--status-color-flapping);
+  background: color-mix(in srgb, var(--status-color-flapping) 15%, transparent);
+  border-color: color-mix(in srgb, var(--status-color-flapping) 40%, transparent);
 }
 </style>

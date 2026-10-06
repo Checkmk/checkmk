@@ -167,7 +167,7 @@ function onSubmit(): void {
 /* A bulk command deserves a word of warning before it is sent. */
 .maps-ack-modal__group-hint {
   font-size: var(--font-size-normal);
-  color: var(--color-yellow-50);
+  color: var(--color-state-warning);
   margin: calc(-1 * var(--dimension-4)) 0 0;
 }
 

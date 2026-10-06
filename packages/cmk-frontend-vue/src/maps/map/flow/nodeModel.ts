@@ -100,7 +100,7 @@ export function createFlowNodeModel(options: FlowNodeModelOptions) {
       out.push({
         key: 'dt',
         glyph: '‖',
-        fill: 'var(--color-light-blue-50)',
+        fill: 'var(--status-color-downtime)',
         fg: '#ffffff',
         title: _t('In downtime'),
         corner: 'tl'

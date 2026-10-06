@@ -111,8 +111,8 @@ const comments = computed(() => commentRows(props.details, props.nowMs, _t))
 }
 
 .maps-detail-activity-tab__row--downtime {
-  border-color: color-mix(in srgb, var(--maps-map-view-downtime) 35%, transparent);
-  background: color-mix(in srgb, var(--maps-map-view-downtime) 6%, transparent);
+  border-color: color-mix(in srgb, var(--status-color-downtime) 35%, transparent);
+  background: color-mix(in srgb, var(--status-color-downtime) 6%, transparent);
 }
 
 .maps-detail-activity-tab__meta {
@@ -131,9 +131,9 @@ const comments = computed(() => commentRows(props.details, props.nowMs, _t))
 }
 
 .maps-detail-activity-tab__tag {
-  color: var(--maps-map-view-downtime);
-  background: color-mix(in srgb, var(--maps-map-view-downtime) 18%, transparent);
-  border: 1px solid color-mix(in srgb, var(--maps-map-view-downtime) 40%, transparent);
+  color: var(--status-color-downtime);
+  background: color-mix(in srgb, var(--status-color-downtime) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--status-color-downtime) 40%, transparent);
   border-radius: 999px;
   padding: 0 6px;
   font-weight: var(--font-weight-bold);

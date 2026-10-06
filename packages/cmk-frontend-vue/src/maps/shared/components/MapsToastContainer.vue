@@ -78,9 +78,9 @@ const { toasts } = useToast()
 }
 
 .maps-toast-container__toast--error {
-  color: var(--color-light-red-40);
+  color: var(--status-text-color-error-pale);
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--color-light-red-50) 30%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--status-color-error-bright) 30%, transparent),
     0 20px 25px -5px rgb(0 0 0 / 40%),
     0 8px 10px -6px rgb(0 0 0 / 40%);
 }

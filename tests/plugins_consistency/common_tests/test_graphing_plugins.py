@@ -379,7 +379,6 @@ _ALLOWED_DUPLICATE_GRAPH_TITLES = {
     "Access point statistics": {"access_point_statistics2", "access_point_statistics"},
     "Active sessions": {"active_sessions", "active_sessions_with_peak_value"},
     "Huge pages": {"huge_pages_2", "huge_pages"},
-    "Traffic": {"traffic", "read_write_data"},
     "VMalloc address space": {"vmalloc_address_space_2", "vmalloc_address_space_1"},
 }
 

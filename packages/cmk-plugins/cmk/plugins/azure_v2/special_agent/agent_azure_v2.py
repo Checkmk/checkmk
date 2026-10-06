@@ -1805,6 +1805,56 @@ class CacheMetricsGroupDefinition:
     region: str
 
 
+def _get_available_metrics_from_exception(
+    desired_names: str, api_error: ApiError, resource_type: str
+) -> str | None:
+    match = re.match(
+        r"Failed to find metric configuration for provider.*Valid metrics: ([\w,]*)",
+        api_error.args[0],
+    )
+    if not match:
+        raise api_error
+
+    available_names = match.groups()[0]
+    retry_names = set(desired_names.split(",")) & set(available_names.split(","))
+    if not retry_names:
+        LOGGER.debug(
+            "None of the expected metrics are available for %(resource_type)s",
+            {"resource_type": resource_type},
+        )
+        return None
+
+    return ",".join(sorted(retry_names))
+
+
+async def _get_metrics_batch(
+    api_client: BaseAsyncApiClient,
+    region: str,
+    resource_ids: Sequence[str],
+    params: Mapping[str, str],
+) -> Sequence[Mapping[str, Any]]:
+    regional_url = api_client.build_regional_url(region, "/metrics:getBatch")
+
+    async def _query_metrics(specific_params: Mapping[str, str]) -> Sequence[Mapping[str, Any]]:
+        return await api_client.request_async(
+            "POST",
+            full_uri=regional_url,
+            body={"resourceids": resource_ids},
+            params=specific_params,
+            key="values",
+        )
+
+    query = {**params, "api-version": "2023-10-01"}
+    try:
+        return await _query_metrics(query)
+    except ApiError as exc:
+        if retry_names := _get_available_metrics_from_exception(
+            query["metricnames"], exc, query["metricnamespace"]
+        ):
+            return await _query_metrics({**query, "metricnames": retry_names})
+        return []
+
+
 class MetricCache(AzureAsyncCache):
     @override
     def get_validity_from_args(self, *args: Any) -> bool:
@@ -1870,51 +1920,6 @@ class MetricCache(AzureAsyncCache):
     def cache_interval(self) -> int:
         return self.timedelta.seconds
 
-    @staticmethod
-    def _get_available_metrics_from_exception(
-        desired_names: str, api_error: ApiError, resource_type: str
-    ) -> str | None:
-        match = re.match(
-            r"Failed to find metric configuration for provider.*Valid metrics: ([\w,]*)",
-            api_error.args[0],
-        )
-        if not match:
-            raise api_error
-
-        available_names = match.groups()[0]
-        retry_names = set(desired_names.split(",")) & set(available_names.split(","))
-        if not retry_names:
-            LOGGER.debug(
-                "None of the expected metrics are available for %(resource_type)s",
-                {"resource_type": resource_type},
-            )
-            return None
-
-        return ",".join(sorted(retry_names))
-
-    async def _get_metrics(self, api_client, region, resource_ids, params):
-        regional_url = api_client.build_regional_url(region, "/metrics:getBatch")
-
-        async def _query_metrics(specific_params):
-            return await api_client.request_async(
-                "POST",
-                full_uri=regional_url,
-                body={"resourceids": resource_ids},
-                params=specific_params,
-                key="values",
-            )
-
-        params["api-version"] = "2023-10-01"
-        try:
-            return await _query_metrics(params)
-        except ApiError as exc:
-            if retry_names := self._get_available_metrics_from_exception(
-                params["metricnames"], exc, params["metricnamespace"]
-            ):
-                params["metricnames"] = retry_names
-                return await _query_metrics(params)
-            return []
-
     @override
     async def get_live_data(self, *args: Any) -> Any:
         mgmt_client: BaseAsyncApiClient = args[0]
@@ -1942,9 +1947,9 @@ class MetricCache(AzureAsyncCache):
             params["top"] = str(DIMENSION_TIME_SERIES_LIMIT)
             params["orderby"] = f"{self.group_metrics_definitions.aggregation} desc"
 
-        raw_metrics = []
+        raw_metrics: list[Mapping[str, Any]] = []
         for chunk in _chunks(resource_ids):
-            raw_metrics += await self._get_metrics(mgmt_client, region, chunk, params)
+            raw_metrics += await _get_metrics_batch(mgmt_client, region, chunk, params)
 
         metrics: defaultdict[str, list] = defaultdict(list)
 
@@ -2165,6 +2170,81 @@ def get_otel_identity_labels_section(resource: AzureResource) -> _Section:
         )
     )
     return section
+
+
+_METRICS_REPORT_WINDOW = datetime.timedelta(days=1)
+_METRIC_NAMES_PER_QUERY = 20
+
+
+def _has_metric_values(resource_metrics: Mapping[str, Any]) -> bool:
+    return any(
+        value is not None
+        for metric in resource_metrics.get("value", [])
+        for timeseries in metric.get("timeseries", [])
+        for data_point in timeseries.get("data", [])
+        for key, value in data_point.items()
+        if key != "timeStamp"
+    )
+
+
+async def _get_metric_names(api_client: BaseAsyncApiClient, resource_id: str) -> list[str]:
+    _empty, _subscriptions, _subscription_id, resource_path = resource_id.split("/", 3)
+    definitions = await api_client.request_async(
+        "GET",
+        uri_end=f"{resource_path}/providers/Microsoft.Insights/metricDefinitions",
+        params={"api-version": "2023-10-01"},
+        key="value",
+    )
+    return [definition["name"]["value"] for definition in definitions]
+
+
+async def _get_resources_reporting_metrics(
+    api_client: BaseAsyncApiClient,
+    region: str,
+    resource_type: str,
+    resource_ids: Sequence[str],
+    now: datetime.datetime,
+) -> Mapping[str, bool]:
+    """Tell which resources reported metric values in the last 24 hours
+
+    The callers must make sure that:
+      - all resource IDs are of one type, in one region and in one subscription,
+        because getBatch is a regional call for one subscription
+      - there is at least one resource ID
+      - now is in UTC, because it is formatted with a literal "Z"
+
+    The keys of the result are the resource IDs in lower case:
+      - True: Azure sent values for the resource
+      - False: Azure answered for the resource, but sent no values
+      - no key: Azure did not answer for the resource, so it is unknown
+    """
+    metric_names = await _get_metric_names(api_client, resource_ids[0])
+    if not metric_names:
+        raise ApiErrorMissingData(f"No metric definitions for {resource_type}")
+
+    params = {
+        "starttime": (now - _METRICS_REPORT_WINDOW).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "endtime": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "interval": "PT1H",
+        # A metric has values only in the aggregations it supports, so ask for all of them.
+        "aggregation": "average,total,count,maximum,minimum",
+        "metricnamespace": resource_type,
+    }
+    reported: dict[str, bool] = {}
+    for names in _chunks(metric_names, _METRIC_NAMES_PER_QUERY):
+        # A resource with values in earlier metric names is not asked again.
+        if not (to_ask := [r for r in resource_ids if not reported.get(r.lower())]):
+            break
+        for ids in _chunks(to_ask):
+            values = await _get_metrics_batch(
+                api_client, region, ids, {**params, "metricnames": ",".join(names)}
+            )
+            for resource_metrics in values:
+                if not resource_metrics.get("value"):
+                    continue
+                resource_id = resource_metrics["resourceid"].lower()
+                reported[resource_id] = _has_metric_values(resource_metrics)
+    return reported
 
 
 def write_resource_groups_sections(resource_groups: Mapping[str, AzureResourceGroup]) -> None:

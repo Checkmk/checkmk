@@ -5,6 +5,7 @@ py_library(
     name = "common_tests",
     testonly = True,
     srcs = glob(["**/*.py"]),
+    imports = ["../../.."],
     visibility = ["//tests/plugins_consistency:__subpackages__"],
     deps = [
         "//cmk/gui/dashboard",

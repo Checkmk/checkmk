@@ -7,9 +7,7 @@ py_library(
     srcs = ["conftest.py"],
     visibility = [":__subpackages__"],
     deps = [
-        "//packages/cmk-ccc:debug",  # hidden in a local import
-        "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",  # hidden in a local import
-        "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//tests/plugins_consistency/common_tests",
         requirement("pytest"),
     ],
 )

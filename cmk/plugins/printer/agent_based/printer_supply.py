@@ -180,7 +180,7 @@ def parse_printer_supply(string_table: Sequence[StringTable]) -> Section:
         if name.startswith(("Toner Cartridge", "Image Drum Unit")):
             if raw_color:
                 colors += [raw_color]
-            elif raw_color == "" and colors:  # type: ignore[redundant-expr]
+            elif colors:
                 raw_color = colors[index - len(colors)]
             if raw_color:
                 name = f"{raw_color.title()} {name}"

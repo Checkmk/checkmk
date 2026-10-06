@@ -115,13 +115,24 @@ function rightInsetWithin(descendant: HTMLElement, ancestor: HTMLElement): numbe
     element = element.parentElement
   ) {
     const style = getComputedStyle(element)
-    inset += pixels(style.paddingRight) + pixels(style.borderRightWidth) + pixels(style.marginRight)
+
+    // Ignore elements that do not actually render insets
+    if (style.display === 'contents') {
+      continue
+    }
+    const collapsedTable = style.display === 'table' && style.borderCollapse === 'collapse'
+
+    inset +=
+      (collapsedTable ? 0 : pixels(style.paddingRight)) +
+      pixels(style.borderRightWidth) +
+      pixels(style.marginRight)
   }
   return inset
 }
 
 // Without figure_width the graphs fill the page, so the width comes from #main_page_content or
-// the document element as a fallback for view widget rendering (iframe, no #main_page_content)
+// #dashlet_content_wrapper as a fallback for view widget rendering (iframe, no #main_page_content)
+// or the document element as last fallback.
 if (props.figure_width === undefined) {
   const containerEl = ref<HTMLElement | null>(null)
 
@@ -144,7 +155,10 @@ if (props.figure_width === undefined) {
   observe(containerEl)
 
   onMounted(() => {
-    containerEl.value = document.getElementById('main_page_content') ?? document.documentElement
+    containerEl.value =
+      document.getElementById('main_page_content') ??
+      document.getElementById('dashlet_content_wrapper') ?? // within view widgets
+      document.documentElement
     recomputeAvailableWidth()
   })
 }

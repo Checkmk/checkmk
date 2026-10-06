@@ -178,6 +178,8 @@ const REQUESTS_PER_PANEL = 2
 // zero-sized rects, so we mock rect sizes here to enable the fetch guard (so GraphPanel elements
 // render at all) and to assert proper calculation of the graphs' effective width.
 const MAIN_PAGE_CONTENT_ID = 'main_page_content'
+// Inside a view widget's iframe there is no #main_page_content; the group sizes to this instead.
+const DASHLET_CONTENT_WRAPPER_ID = 'dashlet_content_wrapper'
 const PANEL_PADDING_STYLE_ID = 'panel-padding'
 let containerRight = 1_000
 let groupLeft = 0
@@ -212,7 +214,7 @@ beforeEach(() => {
   vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (
     this: Element
   ): DOMRect {
-    if (this.id === MAIN_PAGE_CONTENT_ID) {
+    if (this.id === MAIN_PAGE_CONTENT_ID || this.id === DASHLET_CONTENT_WRAPPER_ID) {
       return domRect(0, containerRight)
     }
     if (this.classList.contains('graphing-graph-group')) {
@@ -838,6 +840,68 @@ test('clamps the derived width to zero rather than going negative when the conta
   await nextTick()
   expect(postSpy).not.toHaveBeenCalled()
   expect(screen.queryByTestId('graph-panel')).not.toBeInTheDocument()
+})
+
+describe('GraphGroup - inside a view widget', () => {
+  let wrapper: HTMLElement
+
+  // Mounts the group at the end of `chain`, an ancestor path below #dashlet_content_wrapper
+  function renderInWidget(chain: Array<{ tag: string; style?: string }>) {
+    wrapper = document.createElement('div')
+    wrapper.id = DASHLET_CONTENT_WRAPPER_ID
+    document.body.appendChild(wrapper)
+    const mountPoint = chain.reduce<HTMLElement>((parent, { tag, style }) => {
+      const element = document.createElement(tag)
+      if (style !== undefined) {
+        element.setAttribute('style', style)
+      }
+      return parent.appendChild(element)
+    }, wrapper)
+    return render(GraphGroup, {
+      container: mountPoint,
+      props: {
+        initial_time_range_start: RANGE_START,
+        initial_time_range_end: RANGE_END,
+        graphs: [makeGraphDefinition('CPU utilization')]
+      }
+    })
+  }
+
+  beforeEach(() => {
+    document.getElementById(MAIN_PAGE_CONTENT_ID)?.remove()
+  })
+
+  afterEach(() => {
+    wrapper.remove()
+  })
+
+  test('derives the effective width from #dashlet_content_wrapper', async () => {
+    containerRight = 800
+    groupLeft = 50
+    renderInWidget([{ tag: 'div' }])
+
+    const panel = await screen.findByTestId('graph-panel')
+    expect(panel.getAttribute('data-figure-width')).toBe(`${containerRight - groupLeft}`)
+  })
+
+  test('subtracts rendered right insets but not those of boxless elements or collapsed tables', async () => {
+    containerRight = 800
+    groupLeft = 50
+    const tdPaddingRight = 8
+    renderInWidget([
+      { tag: 'div', style: 'display: contents; padding-right: 8px' },
+      { tag: 'table', style: 'display: table; border-collapse: collapse; padding: 0 8px' },
+      { tag: 'tbody' },
+      { tag: 'tr' },
+      { tag: 'td', style: `padding-right: ${tdPaddingRight}px` }
+    ])
+
+    const panel = await screen.findByTestId('graph-panel')
+    // only the td's padding counts
+    expect(panel.getAttribute('data-figure-width')).toBe(
+      `${containerRight - groupLeft - tdPaddingRight}`
+    )
+  })
 })
 
 test('uses the supplied figure_width and never measures the page', async () => {

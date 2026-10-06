@@ -78,6 +78,15 @@ def check_running(
 ) -> CheckResult:
     start_time_timestamp = state.start_time
     time_delta = now - start_time_timestamp
+    if time_delta < 0:
+        yield Result(
+            state=State.UNKNOWN,
+            summary=(
+                f"Status: Running, but the start time is {render.timespan(-time_delta)}"
+                " in the future (check the system time)"
+            ),
+        )
+        return
     summary = f"Status: Running for {render.timespan(time_delta)}"
     yield Result(state=State.OK, summary=summary)
 

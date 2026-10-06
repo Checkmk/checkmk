@@ -56,8 +56,6 @@ def command_function(params: _Params, host_config: HostConfig) -> Iterable[Speci
                 _ipmitool_args(options)
                 if isinstance(options, _IPMIToolParams)
                 else _freeipmi_args(options)
-                if isinstance(options, _FreeIPMIParams)  # type: ignore[redundant-expr]
-                else ()
             ),
         ]
     )

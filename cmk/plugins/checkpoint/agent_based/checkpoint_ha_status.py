@@ -52,7 +52,7 @@ def check_checkpoint_ha_status(section: StringTable) -> CheckResult:
             (state, "Status", ["active", "standby"], None),
             (block_state, "Blocking", ["ok"], ["initializing"]),
         ]:
-            if ok_vals is None or val.lower() in ok_vals:  # type: ignore[redundant-expr]
+            if val.lower() in ok_vals:
                 status = State.OK
             elif warn_vals is not None and val.lower() in warn_vals:
                 status = State.WARN

@@ -2292,7 +2292,6 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
             for varname, value in request.itervars()
             if varname.startswith(list_prefix)
             and varname[len(list_prefix) :].isdigit()
-            and value is not None  # type: ignore[redundant-expr]
             and value.strip()
         ]
 
@@ -5618,16 +5617,16 @@ class Timerange(CascadingDropdown):
             if rangespec[0] == "age":
                 title = _("The last ") + str(Age().value_to_html(rangespec[1]))
                 return ComputedTimerange((int(now - rangespec[1]), int(now)), title)
-            if isinstance(rangespec, tuple) and rangespec[0] == "next":  # type: ignore[redundant-expr]
+            if rangespec[0] == "next":
                 title = _("The next ") + str(Age().value_to_html(rangespec[1]))
                 return ComputedTimerange((int(now), int(now + rangespec[1])), title)
-            if isinstance(rangespec, tuple) and rangespec[0] == "until":  # type: ignore[redundant-expr]
+            if rangespec[0] == "until":
                 return ComputedTimerange(
                     (int(now), int(rangespec[1])),
                     str(AbsoluteDate().value_to_html(rangespec[1])),
                 )
             # NOTE: can't use `in` here, because mypy doesn't understand it
-            if isinstance(rangespec, tuple) and (rangespec[0] == "date" or rangespec[0] == "time"):  # type: ignore[redundant-expr]
+            if rangespec[0] == "date" or rangespec[0] == "time":
                 return _fixed_dates(rangespec)
 
             raise NotImplementedError
@@ -6399,7 +6398,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
         param: str,
         vs: ValueSpec,
     ) -> None:
-        if not self._horizontal or self._horizontal and nr == 0:  # type: ignore[redundant-expr]
+        if not self._horizontal or nr == 0:
             html.open_tr(class_="show_more_mode" if param in self._show_more_keys else None)
 
         self._render_td(

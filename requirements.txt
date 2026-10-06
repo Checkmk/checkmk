@@ -4505,6 +4505,7 @@ pydantic-core==2.46.5 \
     --hash=sha256:ff218293c9c806138dca139765e3b067621be52bcd93cdc14c7711be7ddc90a9
     # via
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
     #   pydantic

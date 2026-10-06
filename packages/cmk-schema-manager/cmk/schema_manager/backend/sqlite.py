@@ -25,7 +25,7 @@ from typing import override
 from urllib.parse import quote
 
 from cmk.schema_manager._discovery import discover_db_migrations
-from cmk.schema_manager._mechanism import ensure_schemas_on_update
+from cmk.schema_manager._mechanism import ensure_schema, ensure_schemas_on_update
 from cmk.schema_manager._paths import db_path
 from cmk.schema_manager.backend.base import Backend
 from cmk.schema_manager.errors import (
@@ -235,3 +235,10 @@ def ensure_sqlite_up_to_date(logger: Logger) -> None:
     ensure_schemas_on_update(
         discover_db_migrations(backend_type=Sqlite, event="update").values(), logger
     )
+
+
+def ensure_sqlite_created(logger: Logger) -> None:
+    """The `omd create` hook: create every SQLite database opted into
+    "create" and apply its pending revisions."""
+    for database in discover_db_migrations(backend_type=Sqlite, event="create").values():
+        ensure_schema(database, logger)

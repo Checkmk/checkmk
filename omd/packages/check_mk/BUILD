@@ -31,6 +31,7 @@ pkg_files(
     srcs = [
         "post-create/01_create-sample-config.py",
         "post-create/02_message-broker-certs",
+        "post-create/03_cmk-schema-manager.py",
     ],
     attributes = pkg_attributes(
         mode = "0755",

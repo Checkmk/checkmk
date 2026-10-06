@@ -1502,6 +1502,9 @@ _EXPLICIT_FILE_TO_DEPENDENCIES = {
     ModulePath("buildscripts/scripts/unpublish-container-image.py"): _allow(*PACKAGE_CCC),
     ModulePath("buildscripts/scripts/lib/registry.py"): _allow(*PACKAGE_CCC),
     ModulePath("omd/packages/check_mk/post-create/01_create-sample-config.py"): _allow(),
+    ModulePath("omd/packages/check_mk/post-create/03_cmk-schema-manager.py"): _allow(
+        "cmk.schema_manager"
+    ),
     ModulePath("omd/non-free/packages/licensing/cmk-license-email-notification.py"): _allow(
         "cmk.utils.nonfree.pro.licensing"
     ),

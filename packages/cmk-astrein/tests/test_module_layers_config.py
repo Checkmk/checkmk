@@ -397,7 +397,7 @@ def test_real_config_has_expected_core_components_smoke_test(
 def test_real_config_has_plugin_families_smoke_test(real_config: ModuleLayersConfig) -> None:
     comp_names = {str(c) for c in real_config.components}
     # Some known clean families
-    assert "cmk.plugins.aws" in comp_names
+    assert "cmk.plugins.aws_deprecated" in comp_names
     assert "cmk.plugins.azure" in comp_names
     # Some known violation families
     assert "cmk.plugins.datadog" in comp_names

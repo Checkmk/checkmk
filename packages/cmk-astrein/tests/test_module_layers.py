@@ -231,7 +231,7 @@ def test_clean_plugin_allowed_imports(make_checker: _MakeChecker) -> None:
     source_code = """from cmk.agent_based.v2 import AgentSection
 from cmk.rulesets.v1 import form_specs
 """
-    checker = make_checker("cmk/plugins/aws/agent_based/test_check.py", source_code)
+    checker = make_checker("cmk/plugins/aws_deprecated/agent_based/test_check.py", source_code)
     tree = ast.parse(source_code)
     errors = checker.check(tree)
 
@@ -240,7 +240,7 @@ from cmk.rulesets.v1 import form_specs
 
 def test_clean_plugin_disallowed_import_from_utils(make_checker: _MakeChecker) -> None:
     source_code = "from cmk.utils.paths import omd_root"
-    checker = make_checker("cmk/plugins/aws/agent_based/test_check.py", source_code)
+    checker = make_checker("cmk/plugins/aws_deprecated/agent_based/test_check.py", source_code)
     tree = ast.parse(source_code)
     errors = checker.check(tree)
 

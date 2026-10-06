@@ -23,7 +23,7 @@ py_library(
     }),
     imports = ["../../.."],
     deps = [
-        "//packages/cmk-plugins/cmk/plugins/aws",
+        "//packages/cmk-plugins/cmk/plugins/aws_deprecated",
         "//packages/cmk-plugins/cmk/plugins/azure_v2",
         "//packages/cmk-plugins/cmk/plugins/gcp",
         requirement("playwright"),

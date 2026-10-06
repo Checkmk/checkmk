@@ -16,7 +16,7 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
     Tuple,
 )
 from cmk.gui.form_specs.unstable.legacy_converter.generators import TupleLevels
-from cmk.plugins.aws.constants import (  # astrein: disable=cmk-module-layer-violation
+from cmk.plugins.aws_deprecated.constants import (  # astrein: disable=cmk-module-layer-violation
     AWS_EC2_INST_FAMILIES,
     AWS_EC2_INST_TYPES,
     AWS_EC2_LIMITS_DEFAULT,

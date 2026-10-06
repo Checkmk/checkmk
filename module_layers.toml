@@ -97,7 +97,7 @@ clean = [
   "alertmanager",
   "allnet_ip_sensoric",
   "appdynamics",
-  "aws",
+  "aws_deprecated",
   "aws_v2",
   "azure",
   "azure_status",

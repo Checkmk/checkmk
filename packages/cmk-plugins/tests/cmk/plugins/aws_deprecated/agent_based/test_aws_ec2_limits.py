@@ -1,0 +1,336 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-any"
+
+from collections.abc import Mapping, Sequence
+from typing import Any
+
+import pytest
+
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.plugins.aws_deprecated.agent_based.aws_ec2_limits import (
+    check_aws_ec2_limits,
+    discover_aws_ec2_limits,
+)
+from cmk.plugins.aws_deprecated.lib import parse_aws_limits_generic
+
+
+@pytest.mark.parametrize(
+    "info, expected_discoveries",
+    [
+        (
+            [['[["vpc_elastic_ip_addresses",', '"TITLE",', "10,", "1,", '"REGION"]]']],
+            [Service(item="REGION")],
+        ),
+    ],
+)
+def test_discover_aws_ec2_limits(
+    info: StringTable, expected_discoveries: Sequence[Service]
+) -> None:
+    """Test discovery function for aws_ec2_limits check."""
+
+    parsed_section = parse_aws_limits_generic(info)
+    assert list(discover_aws_ec2_limits(parsed_section)) == list(expected_discoveries)
+
+
+@pytest.mark.parametrize(
+    "item, params, info, expected_results",
+    [
+        (
+            "REGION",
+            {
+                "vpc_elastic_ip_addresses": (None, 80.0, 90.0),
+                "if_vpc_sec_group": (None, 80.0, 90.0),
+                "running_ondemand_instances": [
+                    ("a1.2xlarge", (None, 80.0, 90.0)),
+                    ("a1.4xlarge", (None, 80.0, 90.0)),
+                    ("a1.large", (None, 80.0, 90.0)),
+                    ("a1.medium", (None, 80.0, 90.0)),
+                    ("a1.xlarge", (None, 80.0, 90.0)),
+                    ("t2.nano", (None, 80.0, 90.0)),
+                    ("t2.micro", (None, 80.0, 90.0)),
+                    ("t2.small", (None, 80.0, 90.0)),
+                    ("t2.medium", (None, 80.0, 90.0)),
+                    ("t2.large", (None, 80.0, 90.0)),
+                    ("t2.xlarge", (None, 80.0, 90.0)),
+                    ("t2.2xlarge", (None, 80.0, 90.0)),
+                    ("t3.nano", (None, 80.0, 90.0)),
+                    ("t3.micro", (None, 80.0, 90.0)),
+                    ("t3.small", (None, 80.0, 90.0)),
+                    ("t3.medium", (None, 80.0, 90.0)),
+                    ("t3.large", (None, 80.0, 90.0)),
+                    ("t3.xlarge", (None, 80.0, 90.0)),
+                    ("t3.2xlarge", (None, 80.0, 90.0)),
+                    ("m3.medium", (None, 80.0, 90.0)),
+                    ("m3.large", (None, 80.0, 90.0)),
+                    ("m3.xlarge", (None, 80.0, 90.0)),
+                    ("m3.2xlarge", (None, 80.0, 90.0)),
+                    ("m4.large", (None, 80.0, 90.0)),
+                    ("m4.xlarge", (None, 80.0, 90.0)),
+                    ("m4.2xlarge", (None, 80.0, 90.0)),
+                    ("m4.4xlarge", (None, 80.0, 90.0)),
+                    ("m4.10xlarge", (None, 80.0, 90.0)),
+                    ("m4.16xlarge", (None, 80.0, 90.0)),
+                    ("m5.12xlarge", (None, 80.0, 90.0)),
+                    ("m5.24xlarge", (None, 80.0, 90.0)),
+                    ("m5.2xlarge", (None, 80.0, 90.0)),
+                    ("m5.4xlarge", (None, 80.0, 90.0)),
+                    ("m5.large", (None, 80.0, 90.0)),
+                    ("m5.xlarge", (None, 80.0, 90.0)),
+                    ("m5d.12xlarge", (None, 80.0, 90.0)),
+                    ("m5d.24xlarge", (None, 80.0, 90.0)),
+                    ("m5d.2xlarge", (None, 80.0, 90.0)),
+                    ("m5d.4xlarge", (None, 80.0, 90.0)),
+                    ("m5d.large", (None, 80.0, 90.0)),
+                    ("m5d.xlarge", (None, 80.0, 90.0)),
+                    ("m5a.12xlarge", (None, 80.0, 90.0)),
+                    ("m5a.24xlarge", (None, 80.0, 90.0)),
+                    ("m5a.2xlarge", (None, 80.0, 90.0)),
+                    ("m5a.4xlarge", (None, 80.0, 90.0)),
+                    ("m5a.large", (None, 80.0, 90.0)),
+                    ("m5a.xlarge", (None, 80.0, 90.0)),
+                    ("t1.micro", (None, 80.0, 90.0)),
+                    ("m1.small", (None, 80.0, 90.0)),
+                    ("m1.medium", (None, 80.0, 90.0)),
+                    ("m1.large", (None, 80.0, 90.0)),
+                    ("m1.xlarge", (None, 80.0, 90.0)),
+                    ("r3.2xlarge", (None, 80.0, 90.0)),
+                    ("r3.4xlarge", (None, 80.0, 90.0)),
+                    ("r3.8xlarge", (None, 80.0, 90.0)),
+                    ("r3.large", (None, 80.0, 90.0)),
+                    ("r3.xlarge", (None, 80.0, 90.0)),
+                    ("r4.2xlarge", (None, 80.0, 90.0)),
+                    ("r4.4xlarge", (None, 80.0, 90.0)),
+                    ("r4.8xlarge", (None, 80.0, 90.0)),
+                    ("r4.16xlarge", (None, 80.0, 90.0)),
+                    ("r4.large", (None, 80.0, 90.0)),
+                    ("r4.xlarge", (None, 80.0, 90.0)),
+                    ("r5.2xlarge", (None, 80.0, 90.0)),
+                    ("r5.4xlarge", (None, 80.0, 90.0)),
+                    ("r5.8xlarge", (None, 80.0, 90.0)),
+                    ("r5.12xlarge", (None, 80.0, 90.0)),
+                    ("r5.16xlarge", (None, 80.0, 90.0)),
+                    ("r5.24xlarge", (None, 80.0, 90.0)),
+                    ("r5.large", (None, 80.0, 90.0)),
+                    ("r5.metal", (None, 80.0, 90.0)),
+                    ("r5.xlarge", (None, 80.0, 90.0)),
+                    ("r5a.12xlarge", (None, 80.0, 90.0)),
+                    ("r5a.24xlarge", (None, 80.0, 90.0)),
+                    ("r5a.2xlarge", (None, 80.0, 90.0)),
+                    ("r5a.4xlarge", (None, 80.0, 90.0)),
+                    ("r5a.large", (None, 80.0, 90.0)),
+                    ("r5a.xlarge", (None, 80.0, 90.0)),
+                    ("r5d.2xlarge", (None, 80.0, 90.0)),
+                    ("r5d.4xlarge", (None, 80.0, 90.0)),
+                    ("r5d.8xlarge", (None, 80.0, 90.0)),
+                    ("r5d.12xlarge", (None, 80.0, 90.0)),
+                    ("r5d.16xlarge", (None, 80.0, 90.0)),
+                    ("r5d.24xlarge", (None, 80.0, 90.0)),
+                    ("r5d.large", (None, 80.0, 90.0)),
+                    ("r5d.metal", (None, 80.0, 90.0)),
+                    ("r5d.xlarge", (None, 80.0, 90.0)),
+                    ("x1.16xlarge", (None, 80.0, 90.0)),
+                    ("x1.32xlarge", (None, 80.0, 90.0)),
+                    ("x1e.2xlarge", (None, 80.0, 90.0)),
+                    ("x1e.4xlarge", (None, 80.0, 90.0)),
+                    ("x1e.8xlarge", (None, 80.0, 90.0)),
+                    ("x1e.16xlarge", (None, 80.0, 90.0)),
+                    ("x1e.32xlarge", (None, 80.0, 90.0)),
+                    ("x1e.xlarge", (None, 80.0, 90.0)),
+                    ("z1d.2xlarge", (None, 80.0, 90.0)),
+                    ("z1d.3xlarge", (None, 80.0, 90.0)),
+                    ("z1d.6xlarge", (None, 80.0, 90.0)),
+                    ("z1d.12xlarge", (None, 80.0, 90.0)),
+                    ("z1d.large", (None, 80.0, 90.0)),
+                    ("z1d.xlarge", (None, 80.0, 90.0)),
+                    ("m2.xlarge", (None, 80.0, 90.0)),
+                    ("m2.2xlarge", (None, 80.0, 90.0)),
+                    ("m2.4xlarge", (None, 80.0, 90.0)),
+                    ("cr1.8xlarge", (None, 80.0, 90.0)),
+                    ("c3.large", (None, 80.0, 90.0)),
+                    ("c3.xlarge", (None, 80.0, 90.0)),
+                    ("c3.2xlarge", (None, 80.0, 90.0)),
+                    ("c3.4xlarge", (None, 80.0, 90.0)),
+                    ("c3.8xlarge", (None, 80.0, 90.0)),
+                    ("c4.large", (None, 80.0, 90.0)),
+                    ("c4.xlarge", (None, 80.0, 90.0)),
+                    ("c4.2xlarge", (None, 80.0, 90.0)),
+                    ("c4.4xlarge", (None, 80.0, 90.0)),
+                    ("c4.8xlarge", (None, 80.0, 90.0)),
+                    ("c5.18xlarge", (None, 80.0, 90.0)),
+                    ("c5.2xlarge", (None, 80.0, 90.0)),
+                    ("c5.4xlarge", (None, 80.0, 90.0)),
+                    ("c5.9xlarge", (None, 80.0, 90.0)),
+                    ("c5.large", (None, 80.0, 90.0)),
+                    ("c5.xlarge", (None, 80.0, 90.0)),
+                    ("c5d.18xlarge", (None, 80.0, 90.0)),
+                    ("c5d.2xlarge", (None, 80.0, 90.0)),
+                    ("c5d.4xlarge", (None, 80.0, 90.0)),
+                    ("c5d.9xlarge", (None, 80.0, 90.0)),
+                    ("c5d.large", (None, 80.0, 90.0)),
+                    ("c5d.xlarge", (None, 80.0, 90.0)),
+                    ("c5n.18xlarge", (None, 80.0, 90.0)),
+                    ("c5n.2xlarge", (None, 80.0, 90.0)),
+                    ("c5n.4xlarge", (None, 80.0, 90.0)),
+                    ("c5n.9xlarge", (None, 80.0, 90.0)),
+                    ("c5n.large", (None, 80.0, 90.0)),
+                    ("c5n.xlarge", (None, 80.0, 90.0)),
+                    ("c1.medium", (None, 80.0, 90.0)),
+                    ("c1.xlarge", (None, 80.0, 90.0)),
+                    ("cc2.8xlarge", (None, 80.0, 90.0)),
+                    ("cc1.4xlarge", (None, 80.0, 90.0)),
+                    ("f1.4xlarge", (None, 80.0, 90.0)),
+                    ("p2.xlarge", (None, 80.0, 90.0)),
+                    ("p2.8xlarge", (None, 80.0, 90.0)),
+                    ("p2.16xlarge", (None, 80.0, 90.0)),
+                    ("p3.16xlarge", (None, 80.0, 90.0)),
+                    ("p3.2xlarge", (None, 80.0, 90.0)),
+                    ("p3.8xlarge", (None, 80.0, 90.0)),
+                    ("p3dn.24xlarge", (None, 80.0, 90.0)),
+                    ("i2.xlarge", (None, 80.0, 90.0)),
+                    ("i2.2xlarge", (None, 80.0, 90.0)),
+                    ("i2.4xlarge", (None, 80.0, 90.0)),
+                    ("i2.8xlarge", (None, 80.0, 90.0)),
+                    ("i3.large", (None, 80.0, 90.0)),
+                    ("i3.xlarge", (None, 80.0, 90.0)),
+                    ("i3.2xlarge", (None, 80.0, 90.0)),
+                    ("i3.4xlarge", (None, 80.0, 90.0)),
+                    ("i3.8xlarge", (None, 80.0, 90.0)),
+                    ("i3.16xlarge", (None, 80.0, 90.0)),
+                    ("i3.metal", (None, 80.0, 90.0)),
+                    ("h1.16xlarge", (None, 80.0, 90.0)),
+                    ("h1.2xlarge", (None, 80.0, 90.0)),
+                    ("h1.4xlarge", (None, 80.0, 90.0)),
+                    ("h1.8xlarge", (None, 80.0, 90.0)),
+                    ("hi1.4xlarge", (None, 80.0, 90.0)),
+                    ("hs1.8xlarge", (None, 80.0, 90.0)),
+                    ("d2.xlarge", (None, 80.0, 90.0)),
+                    ("d2.2xlarge", (None, 80.0, 90.0)),
+                    ("d2.4xlarge", (None, 80.0, 90.0)),
+                    ("d2.8xlarge", (None, 80.0, 90.0)),
+                    ("g2.2xlarge", (None, 80.0, 90.0)),
+                    ("g2.8xlarge", (None, 80.0, 90.0)),
+                    ("g3.16xlarge", (None, 80.0, 90.0)),
+                    ("g3.4xlarge", (None, 80.0, 90.0)),
+                    ("g3.8xlarge", (None, 80.0, 90.0)),
+                    ("g3s.xlarge", (None, 80.0, 90.0)),
+                    ("cg1.4xlarge", (None, 80.0, 90.0)),
+                    ("f1.2xlarge", (None, 80.0, 90.0)),
+                    ("f1.16xlarge", (None, 80.0, 90.0)),
+                ],
+                "active_spot_fleet_requests": (None, 80.0, 90.0),
+                "vpc_sec_group_rules": (None, 80.0, 90.0),
+                "spot_inst_requests": (None, 80.0, 90.0),
+                "spot_fleet_total_target_capacity": (None, 80.0, 90.0),
+                "elastic_ip_addresses": (None, 80.0, 90.0),
+                "running_ondemand_instances_total": (None, 80.0, 90.0),
+                "vpc_sec_groups": (None, 80.0, 90.0),
+            },
+            [['[["vpc_elastic_ip_addresses",', '"TITLE",', "10,", "1,", '"REGION"]]']],
+            [
+                Metric("aws_ec2_vpc_elastic_ip_addresses", 1.0),
+                Result(state=State.OK, notice="TITLE: 1 (of max. 10), 10.00%"),
+            ],
+        ),
+    ],
+)
+def test_check_aws_ec2_limits(  # type: ignore[misc]
+    item: str,
+    params: Mapping[str, Any],
+    info: StringTable,
+    expected_results: Sequence[Metric | Result],
+) -> None:
+    """Test check function for aws_ec2_limits check."""
+
+    parsed_section = parse_aws_limits_generic(info)
+    assert list(check_aws_ec2_limits(item, params, parsed_section)) == list(expected_results)
+
+
+def test_unlisted_instance_type_reports_usage_without_levels() -> None:
+    section = parse_aws_limits_generic(
+        [
+            [
+                '[["running_ondemand_instances_unlisted.xlarge",',
+                '"Running On-Demand unlisted.xlarge Instances",',
+                "20,",
+                "40,",
+                '"REGION"]]',
+            ]
+        ]
+    )
+
+    results = list(check_aws_ec2_limits("REGION", {}, section))
+
+    assert results == [
+        Metric("aws_ec2_running_ondemand_instances_unlisted.xlarge", 40.0),
+        Result(
+            state=State.OK,
+            summary="1 unrecognized instance type (limits not checked)",
+            details="Instance types unknown to Checkmk, no limits checked: unlisted.xlarge (40)",
+        ),
+    ]
+
+
+def test_listed_instance_type_keeps_levels_next_to_unlisted_type() -> None:
+    section = parse_aws_limits_generic(
+        [
+            [
+                '[["running_ondemand_instances_a1.xlarge",',
+                '"Running On-Demand a1.xlarge Instances",',
+                "20,",
+                "19,",
+                '"REGION"],',
+                '["running_ondemand_instances_unlisted.xlarge",',
+                '"Running On-Demand unlisted.xlarge Instances",',
+                "20,",
+                "1,",
+                '"REGION"]]',
+            ]
+        ]
+    )
+
+    results = list(check_aws_ec2_limits("REGION", {}, section))
+
+    assert results == [
+        Metric("aws_ec2_running_ondemand_instances_a1.xlarge", 19.0),
+        Result(
+            state=State.CRIT,
+            notice="Running On-Demand a1.xlarge Instances: 19 (of max. 20), 95.00% (warn/crit at 80.00%/90.00%)",
+        ),
+        Metric("aws_ec2_running_ondemand_instances_unlisted.xlarge", 1.0),
+        Result(
+            state=State.OK,
+            summary="1 unrecognized instance type (limits not checked)",
+            details="Instance types unknown to Checkmk, no limits checked: unlisted.xlarge (1)",
+        ),
+    ]
+
+
+def test_summary_counts_the_unlisted_instance_types() -> None:
+    section = parse_aws_limits_generic(
+        [
+            [
+                '[["running_ondemand_instances_unlisted.xlarge",',
+                '"Running On-Demand unlisted.xlarge Instances",',
+                "20,",
+                "3,",
+                '"REGION"],',
+                '["running_ondemand_instances_unlisted.2xlarge",',
+                '"Running On-Demand unlisted.2xlarge Instances",',
+                "20,",
+                "5,",
+                '"REGION"]]',
+            ]
+        ]
+    )
+
+    results = list(check_aws_ec2_limits("REGION", {}, section))
+
+    assert results[-1] == Result(
+        state=State.OK,
+        summary="2 unrecognized instance types (limits not checked)",
+        details="Instance types unknown to Checkmk, no limits checked: unlisted.xlarge (3), unlisted.2xlarge (5)",
+    )

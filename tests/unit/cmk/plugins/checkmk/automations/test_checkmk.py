@@ -31,6 +31,7 @@ from cmk.automations.internal import NoState
 from cmk.automations.results import (
     AnalyseHostResult,
     AnalyzeHostRuleEffectivenessResult,
+    AnalyzeHostRuleMatchingHostsResult,
     DiagHostResult,
     GetServicesLabelsResult,
 )
@@ -50,7 +51,7 @@ from cmk.inventory.host_labels import InventorizedHostLabelsStore
 from cmk.plugins.checkmk.automations import checkmk
 from cmk.relay_protocols.tasks import AdHocActiveCheckTask, AdHocSiteStores
 from cmk.ruleset_matcher.labels import LabelSource
-from cmk.ruleset_matcher.matcher import RuleSpec
+from cmk.ruleset_matcher.matcher import RuleConditionsSpec, RuleSpec
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
 from cmk.utils import config_warnings
@@ -865,6 +866,70 @@ def test_rule_effectiveness_is_not_answered_from_an_earlier_call(monkeypatch: Mo
         AnalyzeHostRuleEffectivenessResult({"01": True}),
         AnalyzeHostRuleEffectivenessResult({"01": False}),
     )
+
+
+def _matching_hosts(
+    monkeypatch: MonkeyPatch,
+    scenario: Scenario,
+    condition: RuleConditionsSpec,
+    host_names: list[str],
+) -> AnalyzeHostRuleMatchingHostsResult:
+    state = make_common_state(scenario.apply(monkeypatch))
+    rules: list[RuleSpec[bool]] = [{"id": "01", "value": True, "condition": condition}]
+    monkeypatch.setattr(sys, "stdin", io.StringIO(repr((rules, host_names))))
+    return checkmk.automation_analyze_host_rule_matching_hosts.handler(state, [])
+
+
+def test_matching_hosts_are_the_ones_with_the_label(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("prod-host"), labels={"env": "prod"})
+    ts.add_host(HostName("test-host"), labels={"env": "test"})
+
+    result = _matching_hosts(
+        monkeypatch,
+        ts,
+        {"host_label_groups": [("and", [("and", "env:prod")])]},
+        ["prod-host", "test-host"],
+    )
+
+    assert result == AnalyzeHostRuleMatchingHostsResult([HostName("prod-host")])
+
+
+def test_matching_hosts_include_the_subfolders_of_the_folder(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("in-folder"), host_path="/wato/prod/hosts.mk")
+    ts.add_host(HostName("in-subfolder"), host_path="/wato/prod/eu/hosts.mk")
+    ts.add_host(HostName("elsewhere"), host_path="/wato/test/hosts.mk")
+
+    result = _matching_hosts(
+        monkeypatch,
+        ts,
+        {"host_folder": "/wato/prod/"},
+        ["in-folder", "in-subfolder", "elsewhere"],
+    )
+
+    assert result == AnalyzeHostRuleMatchingHostsResult(
+        [HostName("in-folder"), HostName("in-subfolder")]
+    )
+
+
+def test_matching_hosts_omit_hosts_that_are_not_configured(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("known-host"))
+
+    result = _matching_hosts(monkeypatch, ts, {}, ["known-host", "unknown-host"])
+
+    assert result == AnalyzeHostRuleMatchingHostsResult([HostName("known-host")])
+
+
+def test_matching_hosts_are_only_the_requested_ones(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("requested-host"))
+    ts.add_host(HostName("other-host"))
+
+    result = _matching_hosts(monkeypatch, ts, {}, ["requested-host"])
+
+    assert result == AnalyzeHostRuleMatchingHostsResult([HostName("requested-host")])
 
 
 def test_service_labels(monkeypatch: MonkeyPatch) -> None:

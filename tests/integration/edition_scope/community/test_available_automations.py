@@ -12,6 +12,7 @@ def test_available_automations() -> None:
         "analyse-host",
         "analyze-host-rule-effectiveness",
         "analyze-host-rule-matches",
+        "analyze-host-rule-matching-hosts",
         "analyze-service-rule-matches",
         "get-services-labels",
         "analyse-service",

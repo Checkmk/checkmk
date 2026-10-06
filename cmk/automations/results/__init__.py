@@ -28,6 +28,9 @@ from cmk.automations.results.analysis import (
     AnalyzeHostRuleMatchesResult as AnalyzeHostRuleMatchesResult,
 )
 from cmk.automations.results.analysis import (
+    AnalyzeHostRuleMatchingHostsResult as AnalyzeHostRuleMatchingHostsResult,
+)
+from cmk.automations.results.analysis import (
     AnalyzeServiceRuleMatchesResult as AnalyzeServiceRuleMatchesResult,
 )
 from cmk.automations.results.analysis import (

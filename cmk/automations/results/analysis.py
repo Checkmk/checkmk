@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from typing import override, TypedDict
 
 from cmk.automations.internal import AutomationID, AutomationResult
+from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.checkengine.specs.parameters import TimespecificParametersPreview
 from cmk.checkengine.submitters import ServiceDetails
@@ -104,6 +105,16 @@ class AnalyzeHostRuleEffectivenessResult(AutomationResult):
     @override
     def automation_call() -> AutomationID:
         return AutomationID("analyze-host-rule-effectiveness")
+
+
+@dataclass
+class AnalyzeHostRuleMatchingHostsResult(AutomationResult):
+    hosts: Sequence[HostName]
+
+    @staticmethod
+    @override
+    def automation_call() -> AutomationID:
+        return AutomationID("analyze-host-rule-matching-hosts")
 
 
 @dataclass

@@ -449,6 +449,22 @@ def analyze_host_rule_effectiveness(
     )
 
 
+def analyze_host_rule_matching_hosts(
+    rules: Sequence[RuleSpec], host_names: Sequence[HostName], *, debug: bool
+) -> results.AnalyzeHostRuleMatchingHostsResult:
+    return _deserialize(
+        _automation_serialized(
+            AutomationID("analyze-host-rule-matching-hosts"),
+            automation_config=LocalAutomationConfig(),
+            args=[],
+            indata=(rules, host_names),
+            debug=debug,
+        ),
+        results.AnalyzeHostRuleMatchingHostsResult,
+        debug=debug,
+    )
+
+
 def delete_hosts(
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     host_names: Sequence[HostName],

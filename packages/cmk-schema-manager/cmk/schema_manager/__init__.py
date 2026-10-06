@@ -4,10 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.schema_manager._discovery import discover_db_migrations
 from cmk.schema_manager._mechanism import ensure_schema
+from cmk.schema_manager.errors import BackendUnavailableError
 from cmk.schema_manager.managed_database import ManagedDatabase
 from cmk.schema_manager.revision import Revision, RevisionChain
 
 __all__ = [
+    "BackendUnavailableError",
     "discover_db_migrations",
     "ensure_schema",
     "ManagedDatabase",

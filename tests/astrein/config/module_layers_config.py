@@ -832,6 +832,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.gui.verify_requirements",
         "cmk.gui.wato",
         "cmk.gui.watolib",
+        "cmk.schema_manager",
         "cmk.utils.escaping",
         "cmk.utils.log",
         "cmk.utils.paths",
@@ -972,6 +973,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.livestatus_client",
         "cmk.utils.http_proxy_config",
     ),
+    Component("cmk.schema_migrations"): _allow("cmk.schema_manager"),
     Component("cmk.server_side_calls_backend"): _allow(
         *PACKAGE_PLUGIN_APIS,
         *PACKAGE_CCC,

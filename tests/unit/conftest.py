@@ -40,6 +40,8 @@ from cmk.livestatus_client.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,
 )
+from cmk.schema_manager import discover_db_migrations, ensure_schema
+from cmk.schema_manager.backend.sqlite import Sqlite
 from cmk.utils import redis
 from tests.unit.mocks_and_helpers import DummyLicensingHandler, FixPluginLegacy
 
@@ -350,6 +352,10 @@ sites.update(%r)
             }
         ),
     )
+
+    # Mirror what the post-create hook does on a real site.
+    for database in discover_db_migrations(backend_type=Sqlite, event="create").values():
+        ensure_schema(database, logger)
 
     yield
     omd_site.cache_clear()

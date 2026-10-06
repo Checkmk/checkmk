@@ -15,8 +15,9 @@ from datetime import datetime, UTC
 from cmk.ccc.resulttype import Error, OK, Result
 from cmk.ccc.user import UserId
 from cmk.gui.log import logger
-from cmk.gui.oauth.token.backend import Backend, connect, oauth_db_path
+from cmk.gui.oauth.token.backend import connect
 from cmk.gui.scopes import format_scopes, InvalidScopeError, parse_scopes, ScopeId
+from cmk.schema_manager.backend.sqlite import write_transaction
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,7 +66,12 @@ class UnknownClient:
     """
 
 
-class TokenStore(Backend):
+class TokenStore:
+    """Borrows `connection`; it is closed when the `with get_token_store()` block ends."""
+
+    def __init__(self, connection: sqlite3.Connection) -> None:
+        self._connection = connection
+
     def issue_token(
         self,
         user_id: UserId,
@@ -98,7 +104,7 @@ class TokenStore(Backend):
             raise ValueError("expires_at must be later than the issue time")
 
         token = _mint_token()
-        with self.write_transaction():
+        with write_transaction(self._connection):
             self._connection.execute(
                 "DELETE FROM tokens WHERE expires_at <= ?", (issued_at_timestamp,)
             )
@@ -182,7 +188,7 @@ class TokenStore(Backend):
         if not unique_hashes:
             return 0
 
-        with self.write_transaction():
+        with write_transaction(self._connection):
             if user_id is None:
                 cursor = self._connection.executemany(
                     "DELETE FROM tokens WHERE token_hash = ?",
@@ -199,7 +205,7 @@ class TokenStore(Backend):
 @contextmanager
 def get_token_store() -> Iterator[TokenStore]:
     """Get the token store, on a connection closed at the end of the with block."""
-    with connect(oauth_db_path()) as connection:
+    with connect() as connection:
         yield TokenStore(connection)
 
 

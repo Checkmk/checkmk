@@ -14,7 +14,8 @@ from datetime import datetime, UTC
 from typing import NewType
 
 from cmk.ccc.resulttype import Error, OK, Result
-from cmk.gui.oauth.token.backend import Backend, connect, oauth_db_path
+from cmk.gui.oauth.token.backend import connect
+from cmk.schema_manager.backend.sqlite import write_transaction
 
 _MAX_REGISTERED_CLIENTS = 1000
 
@@ -37,12 +38,17 @@ class RegistryFull:
     """The client store already holds the maximum number of registrations."""
 
 
-class ClientStore(Backend):
+class ClientStore:
+    """Borrows `connection`; it is closed when the `with get_client_store()` block ends."""
+
+    def __init__(self, connection: sqlite3.Connection) -> None:
+        self._connection = connection
+
     def register(
         self, redirect_uris: list[str], client_name: str | None
     ) -> Result[ClientRegistration, RegistryFull]:
         """The new registration, or RegistryFull if the store already holds the maximum."""
-        with self.write_transaction():
+        with write_transaction(self._connection):
             count = self._connection.execute("SELECT COUNT(*) FROM clients").fetchone()[0]
             if count >= _MAX_REGISTERED_CLIENTS:
                 return Error(RegistryFull())
@@ -108,7 +114,7 @@ class ClientStore(Backend):
         if not unique_ids:
             return 0
 
-        with self.write_transaction():
+        with write_transaction(self._connection):
             cursor = self._connection.executemany(
                 "DELETE FROM clients WHERE client_id = ?",
                 [(client_id,) for client_id in unique_ids],
@@ -119,7 +125,7 @@ class ClientStore(Backend):
 @contextmanager
 def get_client_store() -> Iterator[ClientStore]:
     """Get the registered-client store, on a connection closed at the end of the with block."""
-    with connect(oauth_db_path()) as connection:
+    with connect() as connection:
         yield ClientStore(connection)
 
 

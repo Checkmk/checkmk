@@ -120,6 +120,7 @@ py_test(
         requirement("responses"),
         requirement("time-machine"),
         "//cmk:lib_cmk_repo",
+        "//packages/cmk-schema-manager:testlib",
         "//tests:testlib",
         "//tests/unit:conftest",
     ] + select({

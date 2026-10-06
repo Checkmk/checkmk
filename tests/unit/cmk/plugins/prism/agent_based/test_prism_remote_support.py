@@ -55,6 +55,25 @@ def test_discovery_prism_remote_support(
             ],
             id="If tunnel state is different from expected state the check is WARN.",
         ),
+        pytest.param(
+            # Newer Prism versions report "enable" as a plain flag.
+            {"tunnel_state": False},
+            {
+                "enable": False,
+                "remote_support_enabled": False,
+                "remote_tunnel_enabled": False,
+                "status": "disabled",
+            },
+            [
+                Result(state=State.OK, summary="Remote Tunnel is disabled"),
+            ],
+            id="The tunnel state is also read from a plain flag.",
+            marks=pytest.mark.xfail(
+                strict=True,
+                raises=AttributeError,
+                reason="Crash report ddb0f0b2-5f2b-11f1-8481-a27beee48cfe: AttributeError",
+            ),
+        ),
     ],
 )
 def test_check_prism_remote_support(

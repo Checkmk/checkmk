@@ -705,19 +705,14 @@ def test_process_job_stats(
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 Result(
-                    state=State.UNKNOWN,
-                    summary="Real time: got negative value -1.99 (expected zero or more)",
+                    state=State.OK,
+                    summary="Real time: got negative value -1.99 (check your system time)",
                 ),
                 Result(state=State.OK, notice="Latest job started at 2020-07-09 15:16:00"),
                 Result(state=State.OK, summary="Job age: 1 minute 0 seconds"),
                 Metric("job_age", 60.0, boundaries=(0.0, None)),
             ],
             id="negative real time",
-            marks=pytest.mark.xfail(
-                strict=True,
-                raises=ValueError,
-                reason="Crash report 07421678-9c5c-11f1-aa5e-6c3c8c8757ed: ValueError",
-            ),
         ),
     ],
 )

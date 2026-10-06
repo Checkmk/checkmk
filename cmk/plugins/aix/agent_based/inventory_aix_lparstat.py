@@ -34,24 +34,22 @@ def inventorize_aix_lparstat_inventory(section: Section) -> InventoryResult:
     yield Attributes(
         path=["hardware", "cpu"],
         inventory_attributes={
-            k: v
+            k: section[pk]
             for k, pk in (
                 ("cpu_max_capa", "Maximum Capacity"),
                 ("type", "Type"),
             )
-            if (v := section[pk]) is not None  # type: ignore[redundant-expr]
         },
     )
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes={
-            k: v
+            k: section[pk]
             for k, pk in (
                 ("node_name", "Node Name"),
                 ("partition_name", "Partition Name"),
                 ("partition_number", "Partition Number"),
             )
-            if (v := section[pk]) is not None  # type: ignore[redundant-expr]
         },
     )
 

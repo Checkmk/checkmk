@@ -107,7 +107,6 @@ def _register_pre_21_plugin_api() -> None:
     import cmk.gui.painter.v0.base as painter_base
     import cmk.gui.painter.v0.helpers as painter_helpers
     import cmk.gui.painter.v0.registry as gui_painter_registry
-    import cmk.gui.painter.v1.helpers as painter_v1_helpers
     import cmk.gui.plugins.views as api_module  # astrein: disable=cmk-module-layer-violation
     from cmk.gui import (
         data_source,
@@ -222,6 +221,9 @@ def _register_pre_21_plugin_api() -> None:
         "paint_host_list",
         "paint_nagiosflag",
         "render_cache_info",
+        "get_perfdata_nth_value",
+        "is_stale",
+        "paint_stalified",
     ):
         api_module.__dict__[name] = painter_helpers.__dict__[name]
 
@@ -230,13 +232,6 @@ def _register_pre_21_plugin_api() -> None:
         "replace_action_url_macros",
     ):
         api_module.__dict__[name] = view_utils.__dict__[name]
-
-    for name in (
-        "get_perfdata_nth_value",
-        "is_stale",
-        "paint_stalified",
-    ):
-        api_module.__dict__[name] = painter_v1_helpers.__dict__[name]
 
     for name in (
         "render_link_to_view",

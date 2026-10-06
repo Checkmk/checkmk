@@ -14,8 +14,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter.v0 import Cell, Painter
-from cmk.gui.painter.v0.helpers import RenderLink
-from cmk.gui.painter.v1.helpers import is_stale
+from cmk.gui.painter.v0.helpers import is_stale, RenderLink
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.graph import cmk_graph_url

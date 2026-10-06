@@ -43,7 +43,6 @@ py_library(
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/painter:v0_base",
         "//cmk/gui/painter:v0_impl",
-        "//cmk/gui/painter:v1",
         "//cmk/gui/utils",
         "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",

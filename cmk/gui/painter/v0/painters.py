@@ -83,14 +83,16 @@ from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import HTTPVariable
 
-from ..v1.helpers import get_perfdata_nth_value, is_stale, paint_stalified
 from .base import Cell, Painter
 from .helpers import (
     format_labels_for_csv_export,
     get_label_sources,
+    get_perfdata_nth_value,
     get_tag_groups,
+    is_stale,
     paint_host_list,
     paint_nagiosflag,
+    paint_stalified,
     render_cache_info,
     RenderLink,
     tag_choices_for_group,

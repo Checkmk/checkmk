@@ -1,22 +1,6 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 
 py_library(
-    name = "v1",
-    srcs = [
-        "v1/helpers.py",
-    ],
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        "//cmk/gui:core_toolkit",
-        "//cmk/gui:page_toolkit",
-    ],
-)
-
-py_library(
     name = "v0_base",
     srcs = [
         "v0/__init__.py",
@@ -59,7 +43,6 @@ py_library(
     ],
     deps = [
         ":v0_base",
-        ":v1",
         "//cmk/gui:auth_core",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",

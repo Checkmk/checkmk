@@ -19,7 +19,7 @@ from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.mobile import is_mobile
-from cmk.gui.view_utils import CellSpec, get_host_list_links
+from cmk.gui.view_utils import CellContent, CellSpec, get_host_list_links
 from cmk.ruleset_matcher.labels import Labels, LabelSources
 from cmk.ruleset_matcher.tags import TagGroup, TagGroupID, TagID
 from cmk.web.utils.html import HTML
@@ -149,3 +149,33 @@ class RenderLink:
         if mobile_filename is None:
             return filename
         return mobile_filename if is_mobile(self.request, self.response) else filename
+
+
+def get_perfdata_nth_value(row: Row, n: int, remove_unit: bool = False) -> str:
+    perfdata: str | None = row.get("service_perf_data")
+    if not perfdata:
+        return ""
+    try:
+        parts = perfdata.split()
+        if len(parts) <= n:
+            return ""  # too few values in perfdata
+        _varname, rest = parts[n].split("=")
+        number = rest.split(";")[0]
+        # Remove unit. Why should we? In case of sorter (numeric)
+        if remove_unit:
+            while len(number) > 0 and not number[-1].isdigit():
+                number = number[:-1]
+        return number
+    except Exception as e:
+        return str(e)
+
+
+def is_stale(row: Row, staleness_threshold: float) -> bool:
+    staleness = row.get("service_staleness", row.get("host_staleness", 0)) or 0
+    return staleness >= staleness_threshold
+
+
+def paint_stalified(row: Row, text: CellContent, staleness_threshold: float) -> CellSpec:
+    if is_stale(row, staleness_threshold):
+        return "stale", text
+    return "", text

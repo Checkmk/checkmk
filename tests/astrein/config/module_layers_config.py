@@ -620,6 +620,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.livestatus_client",
         "cmk.utils",
     ),
+    Component("cmk.fastapi"): _allow(),
     Component("cmk.fetchers"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_CRYPTO,

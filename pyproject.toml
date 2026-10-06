@@ -102,6 +102,7 @@ max-complexity = 64 # TODO: This is far too much, we need to lower this!
 [tool.ruff.lint.isort]
 known-first-party = ["agents", "buildscripts", "cmk", "tests"]
 known-third-party = [
+  "fastapi",      # avoid confusion with the cmk.fastapi package
   "requirements", # avoid confusion with our toplevel directory
 ]
 order-by-type = false
@@ -191,10 +192,16 @@ enable_error_code = [
   "unused-ignore",
 ]
 
+enable_incomplete_feature = ["TypeForm"]
+
 # Do not complain about --strict problems in generated protobuf code
 [[tool.mypy.overrides]]
 module = ["cmc_proto.*"]
 disallow_untyped_calls = false
+
+[[tool.mypy.overrides]]
+module = ["cmk.fastapi.*"]
+disallow_any_explicit = true
 
 [tool.pydantic-mypy]
 init_forbid_extra = true

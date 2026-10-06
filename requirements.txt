@@ -1118,6 +1118,7 @@ fastapi==0.138.2 \
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-fastapi/requirements.in
 feedparser==6.0.12 \
     --hash=sha256:64f76ce90ae3e8ef5d1ede0f8d3b50ce26bcce71dd8ae5e82b1cd2d4a5f94228 \
     --hash=sha256:6bbff10f5a52662c00a2e3f86a38928c37c48f77b3c511aedcd51de933549324
@@ -1670,6 +1671,7 @@ httpx2==2.11.0 \
     # via
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
+    #   -r packages/cmk-fastapi/dev-requirements.in
     #   anthropic
     #   genai-prices
     #   mcp
@@ -3854,6 +3856,7 @@ pydantic==2.12.5 \
     #   -r non-free/packages/cmk-otel-collector/requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-fastapi/requirements.in
     #   -r packages/cmk-flags/requirements.in
     #   -r packages/cmk-messaging/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
@@ -4283,6 +4286,7 @@ pytest==8.3.5 \
     #   -r packages/cmk-crypto/dev-requirements.in
     #   -r packages/cmk-ec/dev-requirements.in
     #   -r packages/cmk-events/dev-requirements.in
+    #   -r packages/cmk-fastapi/dev-requirements.in
     #   -r packages/cmk-flags/dev-requirements.in
     #   -r packages/cmk-livestatus-client/dev-requirements.in
     #   -r packages/cmk-messaging/dev-requirements.in
@@ -5798,6 +5802,7 @@ typing-extensions==4.15.0 \
     --hash=sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466 \
     --hash=sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548
     # via
+    #   -r packages/cmk-fastapi/requirements.in
     #   anthropic
     #   azure-core
     #   azure-identity

@@ -436,6 +436,7 @@ pkg_files(
                "//packages/cmk-crypto:pkg_tar",
                "//packages/cmk-ec:pkg_tar",
                "//packages/cmk-events:pkg_tar",
+               "//packages/cmk-fastapi:pkg_tar",
                "//packages/cmk-flags:pkg_tar",
                "//packages/cmk-frontend",
                "//packages/cmk-frontend-vue",

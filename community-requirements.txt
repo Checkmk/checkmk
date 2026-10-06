@@ -1126,6 +1126,7 @@ fastapi==0.138.2 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-fastapi/requirements.in
 feedparser==6.0.12 \
     --hash=sha256:64f76ce90ae3e8ef5d1ede0f8d3b50ce26bcce71dd8ae5e82b1cd2d4a5f94228 \
     --hash=sha256:6bbff10f5a52662c00a2e3f86a38928c37c48f77b3c511aedcd51de933549324
@@ -3827,6 +3828,7 @@ pydantic==2.12.5 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-fastapi/requirements.in
     #   -r packages/cmk-flags/requirements.in
     #   -r packages/cmk-messaging/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
@@ -5805,6 +5807,7 @@ typing-extensions==4.15.0 \
     --hash=sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548
     # via
     #   -c requirements.txt
+    #   -r packages/cmk-fastapi/requirements.in
     #   azure-core
     #   azure-identity
     #   azure-mgmt-compute

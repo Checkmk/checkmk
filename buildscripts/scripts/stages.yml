@@ -222,6 +222,12 @@ VARIABLES:
     - NAME: CHANGED_CMK_EVENTS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-events/' || true"
 
+    - NAME: CHANGED_CMK_FASTAPI_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-fastapi/' || true"
+
+    - NAME: CHANGED_FASTAPI_OPENAPI_SPEC_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^bazel/.*fastapi_openapi_spec' || true"
+
     - NAME: CHANGED_CMK_LIVESTATUS_CLIENT_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-livestatus-client/' || true"
 
@@ -680,6 +686,14 @@ STAGES:
       TEXT_ON_SKIP: "No cmk-events files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-events.txt"
 
+    - NAME: "Package cmk-fastapi"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_FASTAPI_FILES,CHANGED_PYTHON_REQUIREMENTS
+      DIR: "packages/cmk-fastapi"
+      COMMAND: "bazel build --config=mypy :all &> ${RESULTS}/cmk-fastapi.txt"
+      BAZEL_LOCKS_AMOUNT: 1
+      TEXT_ON_SKIP: "No cmk-fastapi files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-fastapi.txt"
+
     - NAME: "Package cmk-livestatus-client"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_LIVESTATUS_CLIENT_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-livestatus-client"
@@ -778,7 +792,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "cmk-update-agent.txt"
 
     - NAME: "Package cmk-frontend-vue"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FRONTEND_VUE_FILES,CHANGED_SHARED_TYPING_FILES,CHANGED_JS_DEPENDENCIES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FRONTEND_VUE_FILES,CHANGED_SHARED_TYPING_FILES,CHANGED_JS_DEPENDENCIES,CHANGED_CMK_AI_CONTROL_PLANE_FILES,CHANGED_CMK_FASTAPI_FILES,CHANGED_FASTAPI_OPENAPI_SPEC_FILES
       DIR: "packages/cmk-frontend-vue"
       COMMAND: "./run --build -B --build-dev --tests --tsc --lint &> ${RESULTS}/cmk-frontend-vue.txt"
       BAZEL_LOCKS_AMOUNT: 1

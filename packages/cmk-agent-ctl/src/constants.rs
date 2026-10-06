@@ -26,6 +26,8 @@ pub const CONFIG_FILE: &str = "cmk-agent-ctl.toml";
 // bakery plugins cannot write one file.
 pub const UPDATER_CONFIG_FILE: &str = "cmk-agent-ctl-update.toml";
 pub const UPDATER_STATE_FILE: &str = "agent-update-state.json";
+/// Directory holding a verified agent package until the installer has taken it.
+pub const UPDATER_PACKAGE_DIR: &str = "update";
 #[cfg(unix)]
 pub const AGENT_INFO_FILE: &str = "agent_info.json";
 #[cfg(windows)]

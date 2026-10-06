@@ -15,14 +15,14 @@ use crate::config::{
 use crate::environment::PathResolver;
 use crate::site_spec;
 use crate::types::AgentHash;
-use anyhow::{Context, Error, Result as AnyhowResult};
+use anyhow::{bail, Context, Error, Result as AnyhowResult};
 use log::{log, Level};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[cfg(windows)]
 use super::platform::parse_key_value;
@@ -34,8 +34,13 @@ const DEFAULT_INTERVAL: u64 = 3600;
 
 /// Permissions of the state file: owner only, as for the connection registry.
 /// The state carries the last error, which quotes paths and the site address.
-#[cfg(unix)]
+/// Without effect on Windows, where the file inherits them from its directory.
 const STATE_FILE_MODE: u32 = 0o600;
+
+/// Permissions of a spooled agent package: the controller writes it, the
+/// privileged installer reads it, nobody else gets to see it.
+/// Without effect on Windows, where the file inherits them from its directory.
+const PACKAGE_FILE_MODE: u32 = 0o640;
 
 /// Longest last error reported to the site, in characters. The state file may
 /// hold a longer one - the site only quotes it back in its deployment views.
@@ -123,8 +128,12 @@ impl UpdateState {
     /// Returns an error if the state cannot be serialized, written or renamed.
     pub fn save(&self, path: &Path) -> AnyhowResult<()> {
         let tmp_path = tmp_path_for_atomical_save(path);
-        write_restricted(&tmp_path, &serde_json::to_string_pretty(self)?)
-            .context(format!("Failed to write {tmp_path:?}"))?;
+        write_restricted(
+            &tmp_path,
+            serde_json::to_string_pretty(self)?.as_bytes(),
+            STATE_FILE_MODE,
+        )
+        .context(format!("Failed to write {tmp_path:?}"))?;
         fs::rename(&tmp_path, path).context(format!("Failed to move {tmp_path:?} to {path:?}"))
     }
 }
@@ -188,13 +197,111 @@ impl JSONLoader for AgentInfo {}
 const AGENT_HASH_KEY: &str = "hash";
 
 /// An agent package as the site delivered it, not verified yet.
+///
+/// It becomes a file only through [`UpdatePackage::verify`], which turns it
+/// into a [`VerifiedUpdatePackage`] - the only one that can be saved.
 #[derive(Debug)]
 pub struct UpdatePackage {
     /// Hash the site named it by, and the name it is spooled under later.
     pub hash: AgentHash,
 
+    /// Target platform of the package, which decides its file name extension.
+    pub platform: String,
+
     /// The package itself.
     pub bytes: Vec<u8>,
+}
+
+impl UpdatePackage {
+    /// Check the package against the signatures the site delivered with it and
+    /// the certificates the bakery configured.
+    ///
+    /// _Consumes_ the package: the unverified bytes of a semi-trusted site are
+    /// gone afterwards, only the verified package remains.
+    ///
+    /// Not implemented yet - accepts every package. See CMK-39501.
+    ///
+    /// # Returns
+    ///
+    /// The same package, verified.
+    ///
+    /// # Errors
+    ///
+    /// Once implemented: if none of `signatures` is a valid signature of the
+    /// package under one of `signature_keys`.
+    pub fn verify(
+        self,
+        _signatures: &[agent_receiver_api::AgentSignature],
+        _signature_keys: &[String],
+    ) -> AnyhowResult<VerifiedUpdatePackage> {
+        log::warn!("Agent package signature verification is not implemented yet (CMK-39501)");
+        Ok(VerifiedUpdatePackage {
+            hash: self.hash,
+            platform: self.platform,
+            bytes: self.bytes,
+        })
+    }
+}
+
+/// An agent package whose signature has been checked.
+#[derive(Debug)]
+pub struct VerifiedUpdatePackage {
+    /// Hash the site named it by, and the name it is spooled under.
+    pub hash: AgentHash,
+
+    /// Target platform of the package, which decides its file name extension.
+    pub platform: String,
+
+    /// The package itself.
+    pub bytes: Vec<u8>,
+}
+
+impl VerifiedUpdatePackage {
+    /// Write the package to `dir` as `<hash>.<extension>`, creating `dir` if it
+    /// does not exist yet.
+    ///
+    /// This is the point where bytes delivered by a semi-trusted site turn into
+    /// a file that a privileged process will install.
+    ///
+    /// The package appears under its `<hash>.<extension>` atomically, so that an
+    /// interrupted save cannot leave a truncated one behind for the installer.
+    ///
+    /// # Returns
+    ///
+    /// The path the package was written to.
+    ///
+    /// # Errors
+    ///
+    /// If no package format is known for the platform, or if the directory or
+    /// the package cannot be written.
+    pub fn save(&self, dir: &Path) -> AnyhowResult<PathBuf> {
+        let path = dir.join(format!(
+            "{}.{}",
+            self.hash,
+            package_extension(&self.platform)?
+        ));
+        fs::create_dir_all(dir).context(format!("Failed to create {dir:?}"))?;
+        let tmp_path = tmp_path_for_atomical_save(&path);
+        write_restricted(&tmp_path, &self.bytes, PACKAGE_FILE_MODE)
+            .context(format!("Failed to write {tmp_path:?}"))?;
+        fs::rename(&tmp_path, &path).context(format!("Failed to move {tmp_path:?} to {path:?}"))?;
+        Ok(path)
+    }
+}
+
+/// File name extension of an agent package, by the platform the bakery names.
+///
+/// # Errors
+///
+/// If no package format is known for `platform`, which is what the controller
+/// sees when the site offers a package it cannot install.
+fn package_extension(platform: &str) -> AnyhowResult<&'static str> {
+    match platform {
+        "linux_deb" => Ok("deb"),
+        "linux_rpm" => Ok("rpm"),
+        "windows_msi" => Ok("msi"),
+        other => bail!("No agent package format known for the platform {other:?}"),
+    }
 }
 
 /// The three updater artifacts of this host, loaded together.
@@ -431,6 +538,7 @@ impl Updater {
         );
         Ok(Some(UpdatePackage {
             hash: target.clone(),
+            platform: agent_info.platform.clone(),
             bytes,
         }))
     }
@@ -463,14 +571,14 @@ impl Updater {
     }
 }
 
-/// Write `contents` to `path`, owner-readable only from the moment the file
+/// Write `contents` to `path`, restricted to `mode` from the moment the file
 /// comes into existence.
 ///
 /// `mode` applies to the creation only and is masked by the umask, and a
 /// temporary file left behind by an interrupted save keeps the mode it was
 /// created with - hence the explicit [`fs::set_permissions`] afterwards.
 #[cfg(unix)]
-fn write_restricted(path: &Path, contents: &str) -> io::Result<()> {
+fn write_restricted(path: &Path, contents: &[u8], mode: u32) -> io::Result<()> {
     use std::io::Write;
     use std::os::unix::fs::OpenOptionsExt;
 
@@ -478,16 +586,16 @@ fn write_restricted(path: &Path, contents: &str) -> io::Result<()> {
         .write(true)
         .create(true)
         .truncate(true)
-        .mode(STATE_FILE_MODE)
+        .mode(mode)
         .open(path)?;
-    file.write_all(contents.as_bytes())?;
-    file.set_permissions(fs::Permissions::from_mode(STATE_FILE_MODE))
+    file.write_all(contents)?;
+    file.set_permissions(fs::Permissions::from_mode(mode))
 }
 
 /// Write `contents` to `path`. Windows inherits the permissions of the
 /// directory, which the installer owns.
 #[cfg(windows)]
-fn write_restricted(path: &Path, contents: &str) -> io::Result<()> {
+fn write_restricted(path: &Path, contents: &[u8], _mode: u32) -> io::Result<()> {
     fs::write(path, contents)
 }
 
@@ -1292,6 +1400,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             .unwrap();
 
         assert_eq!(package.hash.as_str(), TARGET_HASH);
+        assert_eq!(package.platform, "linux_deb");
         assert_eq!(package.bytes, PACKAGE);
         let download = api.download().unwrap();
         assert_eq!(download.url, "https://server:8000/site");
@@ -1350,6 +1459,127 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert_eq!(
             error.to_string(),
             "Agent update download of fedcba9876543210 from server/site failed"
+        );
+    }
+
+    /// A downloaded package of `platform`, not verified yet.
+    fn downloaded(platform: &str) -> UpdatePackage {
+        UpdatePackage {
+            hash: TARGET_HASH.parse().unwrap(),
+            platform: String::from(platform),
+            bytes: PACKAGE.to_vec(),
+        }
+    }
+
+    /// A downloaded package of `platform`, ready to be saved.
+    fn verified(platform: &str) -> VerifiedUpdatePackage {
+        downloaded(platform).verify(&[], &[]).unwrap()
+    }
+
+    /// Until CMK-39501, every package passes - including one the site signed
+    /// with nothing and a host that trusts no certificate.
+    #[test]
+    fn test_verify_package_accepts_anything_for_now() {
+        let package = downloaded("linux_deb").verify(&[], &[]).unwrap();
+
+        assert_eq!(package.hash.as_str(), TARGET_HASH);
+        assert_eq!(package.platform, "linux_deb");
+        assert_eq!(package.bytes, PACKAGE);
+    }
+
+    #[test]
+    fn test_save_package_of_a_deb_host() {
+        let dir = tempfile::TempDir::new().unwrap();
+
+        let path = verified("linux_deb").save(dir.path()).unwrap();
+
+        assert_eq!(path, dir.path().join("fedcba9876543210.deb"));
+        assert_eq!(fs::read(&path).unwrap(), PACKAGE);
+    }
+
+    #[test]
+    fn test_save_package_of_an_rpm_host() {
+        let dir = tempfile::TempDir::new().unwrap();
+
+        let path = verified("linux_rpm").save(dir.path()).unwrap();
+
+        assert_eq!(path, dir.path().join("fedcba9876543210.rpm"));
+    }
+
+    #[test]
+    fn test_save_package_of_a_windows_host() {
+        let dir = tempfile::TempDir::new().unwrap();
+
+        let path = verified("windows_msi").save(dir.path()).unwrap();
+
+        assert_eq!(path, dir.path().join("fedcba9876543210.msi"));
+    }
+
+    #[test]
+    fn test_save_package_of_a_platform_without_a_package_format() {
+        let dir = tempfile::TempDir::new().unwrap();
+
+        let error = verified("linux_tgz").save(dir.path()).unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "No agent package format known for the platform \"linux_tgz\""
+        );
+    }
+
+    /// A package that cannot be named is not written, and does not even bring
+    /// the directory it would have gone into into existence.
+    #[test]
+    fn test_save_package_of_an_unknown_platform_writes_nothing() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let package_dir = dir.path().join("update");
+
+        assert!(verified("linux_tgz").save(&package_dir).is_err());
+
+        assert!(!package_dir.exists());
+    }
+
+    /// The package directory is part of no package: the first update creates it.
+    #[test]
+    fn test_save_package_creates_the_package_directory() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let package_dir = dir.path().join("runtime").join("controller").join("update");
+
+        let path = verified("linux_deb").save(&package_dir).unwrap();
+
+        assert_eq!(path, package_dir.join("fedcba9876543210.deb"));
+    }
+
+    #[test]
+    fn test_save_package_leaves_no_temporary_file_behind() {
+        let dir = tempfile::TempDir::new().unwrap();
+
+        let path = verified("linux_deb").save(dir.path()).unwrap();
+
+        assert!(!tmp_path_for_atomical_save(&path).exists());
+    }
+
+    /// The same package is downloaded again after a failed installation.
+    #[test]
+    fn test_save_package_replaces_a_previous_one() {
+        let dir = tempfile::TempDir::new().unwrap();
+        write(&dir, "fedcba9876543210.deb", "a stale package");
+
+        let path = verified("linux_deb").save(dir.path()).unwrap();
+
+        assert_eq!(fs::read(&path).unwrap(), PACKAGE);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_save_package_is_readable_by_the_installer_only() {
+        let dir = tempfile::TempDir::new().unwrap();
+
+        let path = verified("linux_deb").save(dir.path()).unwrap();
+
+        assert_eq!(
+            fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+            PACKAGE_FILE_MODE
         );
     }
 }

@@ -35,6 +35,10 @@ pub struct PathResolver {
     /// In the classic layout on Linux this points outside the controller's own
     /// directory and may be unreadable for the user the controller runs as.
     pub agent_info_path: PathBuf,
+
+    /// Holds a verified agent package until the installer has taken it. Written
+    /// by the controller, read by the privileged installer.
+    pub updater_package_dir: PathBuf,
 }
 
 impl PathResolver {
@@ -71,6 +75,9 @@ impl PathResolver {
                 // officially supported for the classic layout on Linux.
                 Path::new("/usr/lib/check_mk_agent").join(constants::AGENT_INFO_FILE)
             },
+            // `$MK_LIBDIR/update` on Windows: `MK_LIBDIR` is the agent's user
+            // directory (`agents/wnx/src/engine/cfg.cpp`), which is `home_dir`.
+            updater_package_dir: home_dir.join(constants::UPDATER_PACKAGE_DIR),
         }
     }
 
@@ -90,6 +97,7 @@ impl PathResolver {
             updater_config_path: config_dir.join(constants::UPDATER_CONFIG_FILE),
             updater_state_path: runtime_dir.join(constants::UPDATER_STATE_FILE),
             agent_info_path: agent_dir.join(constants::AGENT_INFO_FILE),
+            updater_package_dir: runtime_dir.join(constants::UPDATER_PACKAGE_DIR),
         }
     }
 }
@@ -119,6 +127,8 @@ mod tests {
             paths.updater_state_path,
             home_dir.join("agent-update-state.json")
         );
+        // `$MK_LIBDIR/update` on Windows.
+        assert_eq!(paths.updater_package_dir, home_dir.join("update"));
         if cfg!(windows) {
             assert_eq!(
                 paths.agent_info_path,
@@ -162,6 +172,10 @@ mod tests {
         assert_eq!(
             paths.agent_info_path,
             install_dir.join("package/agent/agent_info.json")
+        );
+        assert_eq!(
+            paths.updater_package_dir,
+            install_dir.join("runtime/controller/update")
         );
     }
 }

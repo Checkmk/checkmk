@@ -96,7 +96,7 @@ def _metric_display_range_from_internal(
 ) -> MetricDisplayRangeModel:
     if value == "automatic":
         return "automatic"
-    if isinstance(value, tuple) and value[0] == "fixed":  # type: ignore[redundant-expr]
+    if value[0] == "fixed":
         _, (unit, (minimum, maximum)) = value
         return MetricDisplayRangeFixedModel(
             type="fixed",

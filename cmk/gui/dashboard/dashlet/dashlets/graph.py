@@ -90,11 +90,11 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig](Dashlet[T]):
         return ["host", "service"]
 
     @staticmethod
-    def _resolve_site(host: str) -> None:
+    def _resolve_site(host: str) -> SiteId:
         with sites.prepend_site():
             query = "GET hosts\nFilter: name = %s\nColumns: name" % livestatus.lqencode(host)
             try:
-                return sites.live().query_value(query)
+                return SiteId(sites.live().query_value(query))
             except livestatus.MKLivestatusNotFoundError:
                 raise WidgetRenderError(
                     _("The host '%(host)s' could not be found on any active site.")

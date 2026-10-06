@@ -106,7 +106,7 @@ class GraphRenderOptions:
             return ApiOmitted()
         if isinstance(value, str) and value == "fixed":
             return "fixed"
-        if isinstance(value, tuple) and value[0] == "explicit":  # type: ignore[redundant-expr]
+        if value[0] == "explicit":
             return value[1]
         raise ValueError(f"Invalid vertical axis width: {value!r}")
 

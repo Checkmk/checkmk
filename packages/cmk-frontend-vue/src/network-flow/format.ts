@@ -66,26 +66,3 @@ export function formatDelta(value: number, previous: number): Delta {
 export function noDelta(): Delta {
   return { ratio: null, text: DASH }
 }
-
-function pad(value: number): string {
-  return String(value).padStart(2, '0')
-}
-
-/**
- * A clock time as Checkmk renders one: 24-hour HH:MM:SS.
- *
- * Deliberately not left to Intl's locale default, which renders 12-hour AM/PM
- * for en-US and would make the column both wider and inconsistent with the rest
- * of Checkmk. No date: a listing covers a single time range, so repeating it on
- * every row tells the reader nothing.
- *
- * The zone is the browser's, matching the other Vue date-time components (they
- * resolve to getLocalTimeZone() unless handed a zone). Where a user's browser
- * sits in a different zone from the site, these times will not line up with the
- * timestamps Python renders server-side for the same flows; carrying the site
- * zone into the page would be needed to close that gap.
- */
-export function formatTimeOfDay(unixSeconds: number): string {
-  const date = new Date(unixSeconds * 1000)
-  return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
-}

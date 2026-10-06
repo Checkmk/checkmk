@@ -134,9 +134,10 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword, VuePassword]):
     def _validate(self, parsed_value: ParsedPassword) -> list[VueComponents.ValidationMessage]:
         if parsed_value[1] == "explicit_password":
             return [
-                VueComponents.ValidationMessage(location=[], message=x, replacement_value="")
-                for x in optional_validation(compute_validators(self.form_spec), parsed_value[2][1])
-                if x is not None  # type: ignore[redundant-expr]
+                VueComponents.ValidationMessage(location=[], message=msg, replacement_value="")
+                for msg in optional_validation(
+                    compute_validators(self.form_spec), parsed_value[2][1]
+                )
             ]
         if parsed_value[1] == "stored_password" and not parsed_value[2][0]:  # type: ignore[redundant-expr]
             return create_validation_error("", Title("No password selected"))

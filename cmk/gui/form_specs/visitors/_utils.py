@@ -91,10 +91,9 @@ def compute_validation_errors[ModelT](
 ) -> list[shared_type_defs.ValidationMessage]:
     return [
         shared_type_defs.ValidationMessage(
-            location=[], message=x, replacement_value=replacement_value()
+            location=[], message=msg, replacement_value=replacement_value()
         )
-        for x in optional_validation(validators, raw_value)
-        if x is not None  # type: ignore[redundant-expr]
+        for msg in optional_validation(validators, raw_value)
     ]
 
 

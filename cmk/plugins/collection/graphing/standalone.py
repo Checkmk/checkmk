@@ -14,7 +14,6 @@ UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 UNIT_HERTZ = metrics.Unit(metrics.DecimalNotation("Hz"))
 UNIT_TIME = metrics.Unit(metrics.TimeNotation())
-UNIT_REVOLUTIONS_PER_MINUTE = metrics.Unit(metrics.DecimalNotation("rpm"), metrics.AutoPrecision(4))
 
 metric_service_costs_eur = metrics.Metric(
     name="service_costs_eur",
@@ -396,11 +395,5 @@ metric_cpu_percent = metrics.Metric(
     name="cpu_percent",
     title=Title("CPU used"),
     unit=UNIT_PERCENTAGE,
-    color=metrics.Color.ORANGE,
-)
-metric_fan_speed = metrics.Metric(
-    name="fan_speed",
-    title=Title("Fan rotation speed"),
-    unit=UNIT_REVOLUTIONS_PER_MINUTE,
     color=metrics.Color.ORANGE,
 )

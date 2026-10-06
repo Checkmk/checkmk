@@ -97,7 +97,6 @@ GRAPHS_ORDER = [
     "docker_df_count",
     "shards_allocation",
     "active_shards",
-    "fan_speed",
     "battery_currents",
     "battery_capacity",
     "optical_signal_power",

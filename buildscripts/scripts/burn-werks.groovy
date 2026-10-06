@@ -22,15 +22,16 @@ void main() {
 
     def version = version_tag.startsWith("v") ? version_tag.substring(1) : "";
     def version_without_meta_data = version.replaceFirst(/\+security$/, "");
-    if (!versioning.is_official_release(version_without_meta_data)
-        || versioning.strip_rc_number_from_version(version_without_meta_data) != version_without_meta_data) {
-        raise("CUSTOM_GIT_REF '${version_tag}' is not a final Checkmk release tag, e.g. 'v2.4.0p12'");
-        }
+    // TEST: no release tag for the test branches
+    //if (!versioning.is_official_release(version_without_meta_data)
+    //    || versioning.strip_rc_number_from_version(version_without_meta_data) != version_without_meta_data) {
+    //    raise("CUSTOM_GIT_REF '${version_tag}' is not a final Checkmk release tag, e.g. 'v2.4.0p12'");
+    //    }
     def commit_message = "Burn werk version after release of ${version}";
     // GERRIT_URL is a global Jenkins variable, e.g. https://review.lan.tribe29.com
     def gerrit_host = env.GERRIT_URL.replaceFirst("^https?://", "");
     // TODO: Remove benedikt.seidl again as soon as the process is stable
-    def reviewers = [reviewer, "benedikt.seidl"].unique();
+    def reviewers = [reviewer].unique();  // TEST: without benedikt.seidl
     def push_options = ["hashtag=burn-werks"] + reviewers.collect { "r=${it}" };
 
     print(
@@ -52,9 +53,10 @@ void main() {
                 branch_version = versioning.get_branch_version(checkout_dir);
                 // burn uses VERSION of defines.make, not the tag, so both have to match
                 def defines_make_version = cmd_output("make --no-print-directory -f defines.make print-VERSION");
-                if (defines_make_version != version_without_meta_data) {
-                    raise("VERSION in defines.make (${defines_make_version}) does not match ${version_tag}");
-                }
+                // TEST: no release tag, so VERSION can't match
+                //if (defines_make_version != version_without_meta_data) {
+                //    raise("VERSION in defines.make (${defines_make_version}) does not match ${version_tag}");
+                //}
                 sh("bazel run //packages/cmk-werks:utils-bin -- burn \$PWD");
             }
 
@@ -159,7 +161,8 @@ List<String> burn_target_branches(String branch_version, String version_without_
         }
     }
     def first_release_of_branch = (release_tags == ["v${version_without_meta_data}".toString()]);
-    def target_branches = [branch_version] + (first_release_of_branch ? ["master"] : []);
+    // TEST: real detection runs and is printed, but always pick onto both test branches
+    def target_branches = ["burn-werk-test", "burn-werk-test-master"];
     print("Release tags of ${branch_version}: ${release_tags}");
     print("First release of ${branch_version}: ${first_release_of_branch}, burning the werks on: ${target_branches}");
     return target_branches;

@@ -12,6 +12,7 @@ use crate::config::{
     tmp_path_for_atomical_save, JSONLoader, JSONLoaderMissingSafe, Registry, TOMLLoader,
 };
 use crate::environment::PathResolver;
+use crate::types::AgentHash;
 use anyhow::{Context, Error, Result as AnyhowResult};
 use log::{log, Level};
 use serde::{Deserialize, Serialize};
@@ -133,7 +134,7 @@ impl UpdateState {
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 pub struct AgentInfo {
     /// Hash of the baked agent package, as the site knows it.
-    pub hash: String,
+    pub hash: AgentHash,
 
     /// Target platform of the package, for example "linux_deb".
     /// Constant on Windows, the artifact carries none.
@@ -162,10 +163,12 @@ impl AgentInfo {
         let content = fs::read_to_string(path)
             .context(format!("Failed to read the agent info from {path:?}"))?;
         Ok(Self {
-            hash: parse_key_value(&content)
-                .remove(AGENT_HASH_KEY)
-                .filter(|hash| !hash.is_empty())
-                .context(format!("No {AGENT_HASH_KEY:?} in {path:?}"))?,
+            hash: AgentHash::try_from(
+                parse_key_value(&content)
+                    .remove(AGENT_HASH_KEY)
+                    .context(format!("No {AGENT_HASH_KEY:?} in {path:?}"))?,
+            )
+            .context(format!("Unusable {AGENT_HASH_KEY:?} in {path:?}"))?,
             platform: String::from(constants::WINDOWS_PLATFORM),
         })
     }
@@ -373,6 +376,8 @@ mod tests {
     use crate::environment::SetupMode;
     use std::path::PathBuf;
 
+    const INSTALLED_HASH: &str = "0123456789abcdef";
+
     const UPDATER_CONFIG_TOML: &str = "\
 activated = false
 interval = 60
@@ -549,7 +554,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             ))
             .unwrap(),
             AgentInfo {
-                hash: String::from("0123456789abcdef"),
+                hash: INSTALLED_HASH.parse().unwrap(),
                 platform: String::from("linux_deb"),
             }
         );
@@ -568,7 +573,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert_eq!(
             AgentInfo::load(&write(&dir, "checkmk.dat", CHECKMK_DAT)).unwrap(),
             AgentInfo {
-                hash: String::from("0123456789abcdef"),
+                hash: INSTALLED_HASH.parse().unwrap(),
                 platform: String::from("windows_msi"),
             }
         );
@@ -659,7 +664,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert!(updater.load_error.is_none());
         assert_eq!(updater.config.unwrap().interval, 60);
         assert_eq!(updater.state.last_check, Some(1759276800));
-        assert_eq!(updater.agent_info.unwrap().hash, "0123456789abcdef");
+        assert_eq!(updater.agent_info.unwrap().hash.as_str(), INSTALLED_HASH);
     }
 
     #[test]
@@ -811,7 +816,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
     fn some_agent_info() -> Option<AgentInfo> {
         Some(AgentInfo {
-            hash: String::from("0123456789abcdef"),
+            hash: INSTALLED_HASH.parse().unwrap(),
             platform: String::from("linux_deb"),
         })
     }

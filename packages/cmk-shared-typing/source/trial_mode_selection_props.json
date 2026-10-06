@@ -32,7 +32,7 @@
     },
     "offline": {
       "type": "boolean",
-      "description": "The site cannot reach the Checkmk servers. Unset (online) until CMK-37828."
+      "description": "The site cannot reach the Checkmk servers."
     }
   },
   "required": [

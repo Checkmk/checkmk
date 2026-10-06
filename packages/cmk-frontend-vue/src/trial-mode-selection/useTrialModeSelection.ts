@@ -159,7 +159,7 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     screen.value = next
   }
 
-  /** Offline sites get the unreachable screen. Mocked: `offline` stays unset until CMK-37828. */
+  /** Starts the trial verification process if the site is online, or goes to the "offline" screen. */
   function startTrial(): void {
     goTo(props.offline ? 'unreachable' : 'email')
   }

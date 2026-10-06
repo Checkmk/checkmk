@@ -16,6 +16,10 @@
 # internal-style. In a later version we could have the user himself decide
 # about the unit he wants to use.
 
+# reportlab is deliberately imported at function level and not at module level: it adds several
+# MB to every process importing it, and every process loading the GUI imports this module. This
+# way reportlab is only loaded when a PDF is rendered.
+
 
 import io
 import os
@@ -25,15 +29,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from textwrap import wrap
-from typing import Literal, NewType, overload, override, Protocol, TypedDict
-
-from reportlab.lib.units import mm
-from reportlab.lib.utils import ImageReader
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-
-# Import software from reportlab (thanks to them!)
-from reportlab.pdfgen import canvas
+from typing import Literal, NewType, overload, override, Protocol, TYPE_CHECKING, TypedDict
 
 import cmk.utils.paths
 from cmk.gui.exceptions import MKInternalError
@@ -41,6 +37,12 @@ from cmk.gui.http import ContentDispositionType, response
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import RGBColor, RowShading, SizeMM, SizePT
 from cmk.gui.utils.images import CMKImage, ImageType
+
+if TYPE_CHECKING:
+    from reportlab.lib.utils import ImageReader
+
+# Points per mm, the same value as reportlab.lib.units.mm
+mm = 72.0 / 2.54 * 0.1
 
 RawIconColumn = tuple[Literal["icon"], str]
 RawRendererColumn = tuple[Literal["object"], "CellRenderer"]
@@ -176,6 +178,9 @@ class Document:
         self._bottom = self._margin_bottom
 
         # create PDF document
+        # Import software from reportlab (thanks to them!)
+        from reportlab.pdfgen import canvas
+
         self._output_buffer = io.BytesIO()
         self._canvas = canvas.Canvas(self._output_buffer, pagesize=self._pagesize)
         self._heading_entries: list[tuple[str, int]] = []
@@ -457,7 +462,7 @@ class Document:
     ) -> None:
         width, height = self.get_image_dimensions(image, width_mm, height_mm, resolution)
         x, y = self.convert_position(position, width, height)
-        ir = ImageReader(image.pil())
+        ir = _image_reader(image)
         self._canvas.drawImage(ir, x, y - height, width, height, mask="auto")
 
     # Functions for adding floating text
@@ -587,7 +592,7 @@ class Document:
         self.advance(height)
         x = self._left + (self._inner_width - width) / 2.0  # center
         y = self._linepos
-        self._canvas.drawImage(ImageReader(image.pil()), x, y, width, height, mask="auto")
+        self._canvas.drawImage(_image_reader(image), x, y, width, height, mask="auto")
         if border:
             self._canvas.rect(x, y, width, height, fill=0)
 
@@ -801,7 +806,7 @@ class Document:
     ) -> None:
         """Like render_image(), but for an already-loaded image (e.g. bytes rendered
         in-memory) instead of one read from a filesystem path."""
-        ir = ImageReader(image.pil())
+        ir = _image_reader(image)
         self._canvas.drawImage(
             ir, left_mm * mm, top_mm * mm, width_mm * mm, height_mm * mm, mask="auto"
         )
@@ -1044,11 +1049,20 @@ class Document:
 
     @staticmethod
     def _register_fonts() -> None:
+        from reportlab.pdfbase import pdfmetrics
+        from reportlab.pdfbase.ttfonts import TTFont
+
         # Vera comes included in reportlab, so we can use it directly
         pdfmetrics.registerFont(TTFont("Vera", "Vera.ttf"))
         pdfmetrics.registerFont(TTFont("Vera-Bold", "VeraBd.ttf"))
         pdfmetrics.registerFont(TTFont("Vera-Italic", "VeraIt.ttf"))
         pdfmetrics.registerFont(TTFont("Vera-BoldItalic", "VeraBI.ttf"))
+
+
+def _image_reader(image: CMKImage) -> ImageReader:
+    from reportlab.lib.utils import ImageReader
+
+    return ImageReader(image.pil())
 
 
 class CellRenderer(Protocol):

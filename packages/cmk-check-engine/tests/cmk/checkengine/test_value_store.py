@@ -62,9 +62,18 @@ class TestAllValueStoresStore:
             (HostName("host1"), "service2", None): {"key": "value2"},
         }
 
-    def test_load_corrupt_file(self, tmp_path: Path) -> None:
+    @pytest.mark.parametrize(
+        "content",
+        [
+            pytest.param("{'not': 'json'}", id="invalid-json"),
+            # Flat per-value format written by 2.4.0b1/b2
+            pytest.param('[[["host", "plugin", "item", "key"], "42"]]', id="2.4-beta-format"),
+            pytest.param("[[null, {}]]", id="key-not-a-sequence"),
+        ],
+    )
+    def test_load_corrupt_file(self, tmp_path: Path, content: str) -> None:
         file = tmp_path / "corrupt-file"
-        file.write_text("{'not': 'json'}")
+        file.write_text(content)
         assert value_store.AllValueStoresStore(file, log_debug=lambda x: None).load() == {}  # noqa: ARG005
 
     def test_update(self, tmp_path: Path) -> None:

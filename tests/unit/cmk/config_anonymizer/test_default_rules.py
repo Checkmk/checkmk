@@ -35,11 +35,7 @@ def load_plugins() -> None:
 
 
 @pytest.fixture()
-def flask_app(
-    patch_omd_site: None,  # noqa: ARG001
-    use_fakeredis_client: None,  # noqa: ARG001
-    load_plugins: None,  # noqa: ARG001
-) -> Iterator[Flask]:
+def flask_app(load_plugins: None) -> Iterator[Flask]:  # noqa: ARG001
     yield from create_flask_app()
 
 
@@ -87,7 +83,7 @@ def _build_section_info(plugins: AgentBasedPlugins) -> Mapping[str, Mapping[str,
     return section_infos
 
 
-@pytest.mark.usefixtures("flask_app")
+@pytest.mark.usefixtures("flask_app", "patch_omd_site")
 def test_default_rule_values_are_valid(
     monkeypatch: pytest.MonkeyPatch,
     agent_based_plugins: AgentBasedPlugins,

@@ -5,7 +5,6 @@
 """These functions implement a web service with that a master can call
 automation functions on slaves,"""
 
-# mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 

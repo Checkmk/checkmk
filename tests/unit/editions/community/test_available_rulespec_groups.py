@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
-
 import pytest
 
 from cmk.gui.rule_specs.legacy_converter import GENERATED_GROUP_PREFIX
-from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
+from cmk.gui.watolib.rulespecs import rulespec_group_registry
 
 
 def _is_dynamically_generated_group(group_name: str) -> bool:
@@ -17,197 +15,18 @@ def _is_dynamically_generated_group(group_name: str) -> bool:
 
 
 @pytest.mark.usefixtures("load_gui_plugins")
-def test_rulespec_group_choices() -> None:
-    assert {
-        g
-        for g in rulespec_group_registry.get_group_choices()
-        if not _is_dynamically_generated_group(g[0])
-    } == {
-        ("activechecks", "HTTP, TCP, email, ..."),
-        ("agent", "Access to agents"),
-        ("agent/check_mk_agent", "&nbsp;&nbsp;⌙ Checkmk agent"),
-        ("agent/general_settings", "&nbsp;&nbsp;⌙ General settings"),
-        ("agents", "Agent rules"),
-        ("agents/generic_options", "&nbsp;&nbsp;⌙ Generic agent options"),
-        ("checkparams", "Service discovery rules"),
-        ("checkparams/discovery", "&nbsp;&nbsp;⌙ Discovery of individual services"),
-        (
-            "checkparams/inventory_and_check_mk_settings",
-            "&nbsp;&nbsp;⌙ Discovery and Checkmk settings",
-        ),
-        ("datasource_programs", "Other integrations"),
-        ("eventconsole", "Event Console rules"),
-        ("inventory", "HW/SW inventory"),
-        ("host_monconf", "Host monitoring rules"),
-        ("host_monconf/host_checks", "&nbsp;&nbsp;⌙ Host checks"),
-        ("host_monconf/host_notifications", "&nbsp;&nbsp;⌙ Notifications"),
-        ("host_monconf/host_various", "&nbsp;&nbsp;⌙ Various"),
-        ("monconf", "Service monitoring rules"),
-        ("monconf/applications", "&nbsp;&nbsp;⌙ Applications, processes & services"),
-        ("monconf/networking", "&nbsp;&nbsp;⌙ Networking"),
-        ("monconf/os", "&nbsp;&nbsp;⌙ Operating System Resources"),
-        ("monconf/printers", "&nbsp;&nbsp;⌙ Printers"),
-        ("monconf/storage", "&nbsp;&nbsp;⌙ Storage, file systems and files"),
-        (
-            "monconf/environment",
-            "&nbsp;&nbsp;⌙ Temperature, humidity, electrical parameters, etc.",
-        ),
-        ("monconf/hardware", "&nbsp;&nbsp;⌙ Hardware, BIOS"),
-        ("monconf/virtualization", "&nbsp;&nbsp;⌙ Virtualization"),
-        ("monconf/notifications", "&nbsp;&nbsp;⌙ Notifications"),
-        ("monconf/service_checks", "&nbsp;&nbsp;⌙ Service Checks"),
-        ("monconf/various", "&nbsp;&nbsp;⌙ Various"),
-        ("custom_checks", "Other services"),
-        ("datasource_programs/apps", "&nbsp;&nbsp;⌙ Applications"),
-        ("datasource_programs/cloud", "&nbsp;&nbsp;⌙ Cloud-based environments"),
-        ("datasource_programs/container", "&nbsp;&nbsp;⌙ Containerization"),
-        ("datasource_programs/custom", "&nbsp;&nbsp;⌙ Custom integrations"),
-        ("datasource_programs/hw", "&nbsp;&nbsp;⌙ Hardware"),
-        ("datasource_programs/os", "&nbsp;&nbsp;⌙ Operating systems"),
-        ("datasource_programs/testing", "&nbsp;&nbsp;⌙ Testing"),
-        ("snmp", "SNMP rules"),
-        ("static", "Enforced services"),
-        ("static/applications", "&nbsp;&nbsp;⌙ Applications, processes & services"),
-        ("static/environment", "&nbsp;&nbsp;⌙ Temperature, humidity, electrical parameters, etc."),
-        ("static/hardware", "&nbsp;&nbsp;⌙ Hardware, BIOS"),
-        ("static/networking", "&nbsp;&nbsp;⌙ Networking"),
-        ("static/os", "&nbsp;&nbsp;⌙ Operating System Resources"),
-        ("static/printers", "&nbsp;&nbsp;⌙ Printers"),
-        ("static/storage", "&nbsp;&nbsp;⌙ Storage, file systems and files"),
-        ("static/virtualization", "&nbsp;&nbsp;⌙ Virtualization"),
-        ("vm_cloud_container", "VM, cloud, container"),
-    }
-
-
-@pytest.mark.usefixtures("load_gui_plugins")
-def test_rulespec_get_all_groups() -> None:
-    assert {
-        g for g in rulespec_registry.get_all_groups() if not _is_dynamically_generated_group(g)
-    } == {
+def test_registered_rulespec_groups() -> None:
+    assert sorted(g for g in rulespec_group_registry if not _is_dynamically_generated_group(g)) == [
         "activechecks",
-        "host_monconf/host_checks",
-        "host_monconf/host_notifications",
-        "host_monconf/host_various",
-        "monconf/applications",
-        "monconf/environment",
-        "monconf/hardware",
-        "monconf/service_checks",
-        "monconf/networking",
-        "monconf/notifications",
-        "monconf/os",
-        "monconf/printers",
-        "monconf/storage",
-        "monconf/various",
-        "monconf/virtualization",
-        "agent/general_settings",
+        "agent",
         "agent/check_mk_agent",
+        "agent/general_settings",
+        "agents",
         "agents/generic_options",
-        "custom_checks",
-        "snmp",
-        "vm_cloud_container",
-        "checkparams/inventory_and_check_mk_settings",
-        "static/networking",
-        "static/applications",
-        "checkparams/discovery",
-        "static/environment",
-        "static/storage",
-        "static/printers",
-        "static/os",
-        "static/virtualization",
-        "static/hardware",
-        "datasource_programs/apps",
-        "datasource_programs/custom",
-        "datasource_programs/hw",
-        "datasource_programs/os",
-        "inventory",
-        "eventconsole",
-    }
-
-
-@pytest.mark.usefixtures("load_gui_plugins")
-@pytest.mark.parametrize(
-    "term,result",
-    [
-        (
-            "host_monconf",
-            [
-                "host_monconf",
-                "host_monconf/host_checks",
-                "host_monconf/host_notifications",
-                "host_monconf/host_various",
-            ],
-        ),
-        (
-            "monconf",
-            [
-                "monconf",
-                "monconf/applications",
-                "monconf/environment",
-                "monconf/hardware",
-                "monconf/networking",
-                "monconf/notifications",
-                "monconf/os",
-                "monconf/printers",
-                "monconf/service_checks",
-                "monconf/storage",
-                "monconf/various",
-                "monconf/virtualization",
-            ],
-        ),
-        ("monconf/various", ["monconf/various"]),
-        (
-            "agent",
-            [
-                "agent",
-                "agent/check_mk_agent",
-                "agent/general_settings",
-            ],
-        ),
-    ],
-)
-def test_rulespec_get_matching_group_names(term: str, result: Sequence[str]) -> None:
-    actual_names = [
-        g
-        for g in rulespec_group_registry.get_matching_group_names(term)
-        if not _is_dynamically_generated_group(g)
-    ]
-    assert sorted(actual_names) == sorted(result)
-
-
-@pytest.mark.usefixtures("load_gui_plugins")
-def test_rulespec_get_main_groups() -> None:
-    main_group_names = [g_class().name for g_class in rulespec_group_registry.get_main_groups()]
-    assert sorted(main_group_names) == sorted(
-        [
-            "activechecks",
-            "monconf",
-            "host_monconf",
-            "agent",
-            "agents",
-            "checkparams",
-            "static",
-            "datasource_programs",
-            "inventory",
-            "eventconsole",
-            "custom_checks",
-            "snmp",
-            "vm_cloud_container",
-        ]
-    )
-
-
-@pytest.mark.usefixtures("load_gui_plugins")
-def test_rulespec_get_host_groups() -> None:
-    expected_rulespec_host_groups = [
         "checkparams",
         "checkparams/discovery",
         "checkparams/inventory_and_check_mk_settings",
-        "host_monconf/host_checks",
-        "host_monconf/host_notifications",
-        "host_monconf/host_various",
-        "agent/general_settings",
-        "agent/check_mk_agent",
-        "agents/generic_options",
+        "custom_checks",
         "datasource_programs",
         "datasource_programs/apps",
         "datasource_programs/cloud",
@@ -216,16 +35,33 @@ def test_rulespec_get_host_groups() -> None:
         "datasource_programs/hw",
         "datasource_programs/os",
         "datasource_programs/testing",
-        "inventory",
         "eventconsole",
-        "custom_checks",
+        "host_monconf",
+        "host_monconf/host_checks",
+        "host_monconf/host_notifications",
+        "host_monconf/host_various",
+        "inventory",
+        "monconf",
+        "monconf/applications",
+        "monconf/environment",
+        "monconf/hardware",
+        "monconf/networking",
+        "monconf/notifications",
+        "monconf/os",
+        "monconf/printers",
+        "monconf/service_checks",
+        "monconf/storage",
+        "monconf/various",
+        "monconf/virtualization",
         "snmp",
+        "static",
+        "static/applications",
+        "static/environment",
+        "static/hardware",
+        "static/networking",
+        "static/os",
+        "static/printers",
+        "static/storage",
+        "static/virtualization",
         "vm_cloud_container",
     ]
-
-    group_names = [
-        g
-        for g in rulespec_group_registry.get_host_rulespec_group_names(True)
-        if not _is_dynamically_generated_group(g)
-    ]
-    assert sorted(group_names) == sorted(expected_rulespec_host_groups)

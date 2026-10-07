@@ -164,6 +164,94 @@ def test_get_group_choices_no_duplicates_after_double_registration() -> None:
     assert choice_names == ["group", "group/sub"]
 
 
+@pytest.mark.parametrize(
+    "group_name, expected",
+    [
+        ("group", ["group", "group/sub"]),
+        ("group/sub", ["group/sub"]),
+        ("unknown", []),
+    ],
+)
+def test_matching_group_names_include_sub_groups_of_a_main_group(
+    group_name: str, expected: list[str]
+) -> None:
+    registry = RulespecGroupRegistry()
+    registry.register(DummyGroup)
+    registry.register(DummySubGroup)
+
+    assert registry.get_matching_group_names(group_name) == expected
+
+
+def _make_main_group(group_name: str) -> type[RulespecGroup]:
+    class _MainGroup(RulespecGroup):
+        @property
+        @override
+        def name(self) -> str:
+            return group_name
+
+        @property
+        @override
+        def title(self) -> str:
+            return group_name
+
+        @property
+        @override
+        def help(self) -> str:
+            return ""
+
+    return _MainGroup
+
+
+def _make_sub_group(main: type[RulespecGroup]) -> type[RulespecSubGroup]:
+    class _SubGroup(RulespecSubGroup):
+        @property
+        @override
+        def main_group(self) -> type[RulespecGroup]:
+            return main
+
+        @property
+        @override
+        def sub_group_name(self) -> str:
+            return "sub"
+
+        @property
+        @override
+        def title(self) -> str:
+            return "sub"
+
+    return _SubGroup
+
+
+def _host_rulespec_group_registry() -> RulespecGroupRegistry:
+    registry = RulespecGroupRegistry()
+    for group_name in ("mygroup", "monconf", "static", "agents"):
+        main = _make_main_group(group_name)
+        registry.register(main)
+        registry.register(_make_sub_group(main))
+    return registry
+
+
+def test_host_rulespec_groups_for_hosts_hide_service_monitoring_groups() -> None:
+    registry = _host_rulespec_group_registry()
+
+    assert registry.get_host_rulespec_group_names(for_host=True) == [
+        "mygroup",
+        "mygroup/sub",
+        "agents/sub",
+    ]
+
+
+def test_host_rulespec_groups_not_for_hosts_show_service_monitoring_sub_groups() -> None:
+    registry = _host_rulespec_group_registry()
+
+    assert registry.get_host_rulespec_group_names(for_host=False) == [
+        "mygroup",
+        "mygroup/sub",
+        "monconf/sub",
+        "agents/sub",
+    ]
+
+
 def test_rulespecs_get_by_group() -> None:
     group_registry = RulespecGroupRegistry()
     registry = RulespecRegistry(group_registry)
@@ -181,6 +269,19 @@ def test_rulespecs_get_by_group() -> None:
     result = registry.get_by_group("group")
     assert len(result) == 1
     assert isinstance(result[0], HostRulespec)
+
+
+def test_all_groups_are_the_groups_having_rulespecs() -> None:
+    used_group = _make_main_group("used")
+    group_registry = RulespecGroupRegistry()
+    group_registry.register(used_group)
+    group_registry.register(_make_main_group("unused"))
+    registry = RulespecRegistry(group_registry)
+    registry.register(
+        HostRulespec(name="dummy_name", group=used_group, valuespec=lambda: FixedValue(value=None))
+    )
+
+    assert registry.get_all_groups() == ["used"]
 
 
 def test_match_item_generator_rules() -> None:

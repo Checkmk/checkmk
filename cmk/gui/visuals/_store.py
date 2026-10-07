@@ -27,6 +27,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.permissions import declare_permission, permission_registry
+from cmk.gui.search import index as search_index
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.type_defs import RoleName, Visual, VisualName, VisualTypeName
 from cmk.gui.utils.roles import UserPermissions
@@ -70,6 +71,11 @@ def save[TVisual: Visual](
     }
     save_user_file("user_" + what, user_visuals, user_id=user_id)
     _CombinedVisualsCache(what).invalidate_cache()
+    search_index.request_update(visuals_saved_change_action(what))
+
+
+def visuals_saved_change_action(what: VisualTypeName) -> str:
+    return f"save-{what}"
 
 
 def load[TVisual: Visual](

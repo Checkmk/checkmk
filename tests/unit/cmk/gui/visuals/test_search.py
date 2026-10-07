@@ -17,16 +17,18 @@ from cmk.gui.type_defs import Visual
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.visuals import BuiltinVisualsSearch
+from cmk.gui.visuals import BuiltinVisualsSearch, CustomVisualsSearch
 from cmk.gui.visuals._search import (
     BuiltinVisualsMatchItemGenerator,
     BuiltinVisualsPermissionsHandler,
+    CustomVisualsMatchItemGenerator,
+    CustomVisualsPermissionsHandler,
 )
 
 OWNER = UserId("owner")
 
 
-def _visual(owner: UserId, name: str, title: str) -> Visual:
+def _visual(owner: UserId, name: str, title: str, *, packaged: bool = False) -> Visual:
     return Visual(
         owner=owner,
         name=name,
@@ -42,7 +44,7 @@ def _visual(owner: UserId, name: str, title: str) -> Visual:
         hidden=False,
         hidebutton=False,
         public=True,
-        packaged=False,
+        packaged=packaged,
         link_from={},
         main_menu_search_terms=["term"],
     )
@@ -115,3 +117,67 @@ def test_registered_builtin_views_are_visible_to_admin(load_config: Config) -> N
     assert handler.may_see_category("builtin_views")
     assert match_items
     assert all(visibility_check(item.url) for item in match_items)
+
+
+def _custom_search(logged_in_user: UserId) -> CustomVisualsSearch:
+    all_visuals = {
+        (UserId.builtin(), "allhosts"): _visual(UserId.builtin(), "allhosts", "All hosts"),
+        (UserId.builtin(), "shipped"): _visual(
+            UserId.builtin(), "shipped", "Shipped", packaged=True
+        ),
+        (logged_in_user, "mine"): _visual(logged_in_user, "mine", "Mine"),
+        (OWNER, "theirs"): _visual(OWNER, "theirs", "Theirs"),
+    }
+    return CustomVisualsSearch(
+        what="views",
+        topic=_l("Custom views"),
+        load_all=lambda: all_visuals,
+        url=lambda name, owner: f"edit.py?name={name}&owner={owner}",
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_match_items_cover_custom_visuals_only(load_config: Config) -> None:
+    generator = CustomVisualsMatchItemGenerator(_custom_search(UserId("me")))
+
+    match_items = generator.generate_match_items(
+        UserPermissions(load_config.roles, permission_registry, {}, []),
+        MatchItemConfig.from_config(load_config),
+    )
+
+    assert sorted((item.title, item.topic, item.url) for item in match_items) == [
+        ("Mine", "Custom views", "edit.py?name=mine&owner=me"),
+        ("Theirs", "Custom views", "edit.py?name=theirs&owner=owner"),
+    ]
+
+
+def test_custom_visuals_are_reindexed_when_visuals_of_their_type_are_saved() -> None:
+    generator = CustomVisualsMatchItemGenerator(_custom_search(UserId("me")))
+
+    assert generator.is_affected_by_change("save-views")
+    assert not generator.is_affected_by_change("save-dashboards")
+
+
+def test_custom_visuals_are_reindexed_when_users_are_edited() -> None:
+    generator = CustomVisualsMatchItemGenerator(_custom_search(UserId("me")))
+
+    assert generator.is_affected_by_change("edit-users")
+
+
+def test_user_sees_own_custom_visuals_only(with_user_login: UserId) -> None:
+    handler = CustomVisualsPermissionsHandler(_custom_search(with_user_login))
+
+    visibility_check = handler.get_visibility_check("custom_views")
+
+    assert handler.may_see_category("custom_views")
+    assert visibility_check(f"edit.py?name=mine&owner={with_user_login}")
+    assert not visibility_check("edit.py?name=theirs&owner=owner")
+
+
+def test_admin_sees_foreign_custom_visuals(with_admin_login: UserId) -> None:
+    handler = CustomVisualsPermissionsHandler(_custom_search(with_admin_login))
+
+    visibility_check = handler.get_visibility_check("custom_views")
+
+    assert visibility_check(f"edit.py?name=mine&owner={with_admin_login}")
+    assert visibility_check("edit.py?name=theirs&owner=owner")

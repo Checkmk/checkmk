@@ -100,9 +100,8 @@ class ABCMatchItemGenerator(ABC):
         self, user_permissions: UserPermissions, config: MatchItemConfig
     ) -> MatchItems: ...
 
-    @staticmethod
     @abstractmethod
-    def is_affected_by_change(change_action_name: str) -> bool: ...
+    def is_affected_by_change(self, change_action_name: str) -> bool: ...
 
     @property
     @abstractmethod

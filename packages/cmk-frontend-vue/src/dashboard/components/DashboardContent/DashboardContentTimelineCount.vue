@@ -4,117 +4,48 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
-import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
-import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
-import useTimer from 'cmk-ui-library/lib/useTimer'
-import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed } from 'vue'
 
 import CmkKpiStatCard from '@/dashboard/components/CmkKpiStatCard'
-import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
-import type { ComputedTimelineCount, TimelineContent } from '@/dashboard/types/widget.ts'
+import { useWidgetData } from '@/dashboard/composables/useWidgetData'
+import { useWidgetSource } from '@/dashboard/composables/useWidgetSource'
+import { widgetTimeRange } from '@/dashboard/lib/widgetTimeRange'
+import type { TimelineContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
 
-import DashboardContentContainer from './DashboardContentContainer.vue'
+import WidgetFigureFrame from './figures/WidgetFigureFrame.vue'
 import type { ContentProps } from './types.ts'
 
-const { _t } = usei18n()
-const props = defineProps<ContentProps<TimelineContent>>()
-const cmkToken = useInjectCmkToken()
-
-const data = ref<ComputedTimelineCount | undefined>(undefined)
-const fetchingErrorMessage = ref<string | null>(null)
-
-const fetchData = async () => {
-  try {
-    // A shared dashboard has no session to authenticate with, so it names the widget and
-    // lets the endpoint read the configuration off the dashboard its token belongs to.
-    const response =
-      cmkToken === undefined
-        ? await dashboardAPI.computeTimelineCountData(
-            props.content,
-            props.effective_filter_context.filters
-          )
-        : await dashboardAPI.computeSharedTimelineCountData(props.widget_id, cmkToken)
-    data.value = response.value
-    fetchingErrorMessage.value = null
-  } catch (error) {
-    console.error('Error fetching timeline count content:', error)
-    fetchingErrorMessage.value = `${_t('Failed to fetch timeline data:')} ${(error as Error).message}`
-  }
-}
-
-// The widget reloads on its own, as the figure it replaces did. The dashboard
-// has no configurable refresh interval, so this matches what the graph and
-// figure widgets use.
-const REFRESH_INTERVAL_MS = 60_000
-
-// A hidden tab does not need current data; coming back into view fetches once
-// so the widget is up to date right away rather than after the rest of the
-// interval.
-const reload = (): void => {
-  if (document.hidden) {
-    return
-  }
-  void fetchData()
-}
-
-const timer = useTimer(reload, REFRESH_INTERVAL_MS)
-
-onBeforeMount(() => {
-  void fetchData()
-})
-
-onMounted(() => {
-  timer.start()
-  document.addEventListener('visibilitychange', reload)
-})
-
-onBeforeUnmount(() => {
-  timer.stop()
-  document.removeEventListener('visibilitychange', reload)
-})
-
-const dataParameters = computed(() =>
-  JSON.stringify({ filters: props.effective_filter_context.filters, content: props.content })
-)
-
-watch(dataParameters, () => {
-  void fetchData()
-})
-
-// A count of log entries carries no metric color of its own, so it reads in the
-// dashboard's own foreground color.
 const VALUE_COLOR = 'var(--font-color)'
+
+const props = defineProps<ContentProps<TimelineContent>>()
+const { source, headers } = useWidgetSource(props)
+const timeRange = computed(() => widgetTimeRange(props.range))
+const followsDashboardRange = computed(() => props.content.render_mode.time_range === 'dashboard')
+const { state, retry } = useWidgetData(
+  () =>
+    dashboardAPI.computeTimelineCount(
+      { source: source.value, time_range: timeRange.value },
+      headers
+    ),
+  () => [
+    props.content,
+    props.effective_filter_context,
+    followsDashboardRange.value ? timeRange.value : null
+  ],
+  () => props.tick
+)
 </script>
 
 <template>
-  <DashboardContentContainer
+  <WidgetFigureFrame
     :effective-title="effectiveTitle"
     :general_settings="general_settings"
-    content-overflow="hidden"
+    :state="state"
+    @retry="retry"
   >
-    <div class="db-content-timeline-count__wrapper">
-      <div v-if="fetchingErrorMessage" class="db-content-timeline-count__error">
-        <CmkAlert variant="error" :text="untranslated(fetchingErrorMessage)" />
-      </div>
-      <CmkLoading v-else-if="data === undefined" />
-      <CmkKpiStatCard v-else :title="effectiveTitle" :value="data.value" :color="VALUE_COLOR" />
-    </div>
-  </DashboardContentContainer>
+    <template #default="{ value }">
+      <CmkKpiStatCard :title="effectiveTitle" :value="String(value.count)" :color="VALUE_COLOR" />
+    </template>
+  </WidgetFigureFrame>
 </template>
-
-<style scoped>
-/* No padding: the card fills the widget, so that its content reaches the
-   widget's own edges. The card insets its own content. */
-.db-content-timeline-count__wrapper {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
-
-.db-content-timeline-count__error {
-  margin: auto;
-  max-width: 90%;
-}
-</style>

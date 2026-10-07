@@ -39,7 +39,6 @@ import type {
   ComputedNetworkFlowTopTableResponse,
   ComputedNetworkFlowTrendChartResponse,
   ComputedSingleMetric,
-  ComputedTimelineCountResponse,
   ComputedTopList,
   ComputedWidgetResponse,
   ComputedWidgetSpecResponse,
@@ -63,6 +62,7 @@ import type {
   Stats,
   StatsContent,
   TimelineContent,
+  TimelineCount,
   TopListContent,
   VisualContext,
   WidgetAvailableInventory,
@@ -417,27 +417,15 @@ export const dashboardAPI = {
       })
     )
   },
-  computeTimelineCountData: async (
-    content: TimelineContent,
-    context: VisualContext
-  ): Promise<ComputedTimelineCountResponse> => {
+  computeTimelineCount: async (
+    body: { source: WidgetSource<TimelineContent>; time_range: WidgetTimeRange },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<TimelineCount>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-timeline-count/invoke', {
         ...CONTENT_TYPE_HEADER,
-        body: { content, context }
-      })
-    )
-  },
-  /** The same count on a shared (token-authenticated) dashboard, named by widget as above. */
-  computeSharedTimelineCountData: async (
-    widgetId: string,
-    cmkToken: string
-  ): Promise<ComputedTimelineCountResponse> => {
-    return unwrap(
-      await client.POST('/domain-types/dashboard/actions/compute-shared-timeline-count/invoke', {
-        ...CONTENT_TYPE_HEADER,
-        headers: { Authorization: `CMK-TOKEN ${cmkToken}` },
-        body: { widget_id: widgetId }
+        headers,
+        body
       })
     )
   },

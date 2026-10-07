@@ -172,7 +172,6 @@ CmkEndpointName = Literal[
     "cmk/compute_network_flow_kpi_stat_card",
     "cmk/compute_network_flow_top_table",
     "cmk/compute_network_flow_trend_chart",
-    "cmk/compute_shared_timeline_count",
     "cmk/compute_single_metric",
     "cmk/compute_site_overview",
     "cmk/compute_state",

@@ -39,6 +39,8 @@ from cmk.plugins.checkmk.agent_based.check_mk import (
                 HostLabel("cmk/os_platform", "ubuntu"),
                 HostLabel("cmk/os_name", "Ubuntu"),
                 HostLabel("cmk/os_version", "20.04"),
+                HostLabel("cmk/agent_version", "1.7.0i1"),
+                HostLabel("cmk/agent_version_major", "1.7.0"),
             ],
             id="linux current agent",
         ),
@@ -53,6 +55,8 @@ from cmk.plugins.checkmk.agent_based.check_mk import (
             [
                 HostLabel("cmk/os_family", "linux"),
                 HostLabel("cmk/os_platform", "linux"),
+                HostLabel("cmk/agent_version", "1.7.0i1"),
+                HostLabel("cmk/agent_version_major", "1.7.0"),
             ],
             id="old agent",
         ),
@@ -66,6 +70,8 @@ from cmk.plugins.checkmk.agent_based.check_mk import (
             [
                 HostLabel("cmk/os_family", "windows"),
                 HostLabel("cmk/os_platform", "windows"),
+                HostLabel("cmk/agent_version", "1.7.0i1"),
+                HostLabel("cmk/agent_version_major", "1.7.0"),
             ],
             id="windows agent",
         ),

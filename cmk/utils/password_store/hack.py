@@ -31,6 +31,7 @@ HACK_AGENTS = {
     "appdynamics": False,
     "aws": False,
     "aws_status": False,  # needs no secret
+    "aws_v2": False,
     "azure_status": False,  # needs no secret
     "azure": False,
     "azure_v2": False,

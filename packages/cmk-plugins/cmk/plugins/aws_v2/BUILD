@@ -17,6 +17,7 @@ py_library(
     deps = [
         "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-plugin-apis:server_side_calls",
         "//packages/cmk-plugin-apis:server_side_programs",
         requirement("boto3"),
         requirement("botocore"),

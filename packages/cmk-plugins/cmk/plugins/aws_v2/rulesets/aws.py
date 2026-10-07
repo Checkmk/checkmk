@@ -36,6 +36,7 @@ from cmk.rulesets.v1.form_specs import (
     String,
     validators,
 )
+from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 _ServiceSpec = tuple[str, Title, Mapping[str, DictElement]]
 
@@ -562,3 +563,50 @@ def configuration_services() -> Mapping[str, DictElement]:
             required=True,
         ),
     }
+
+
+def configuration_piggyback_naming() -> Mapping[str, DictElement]:
+    return {
+        "piggyback_naming_convention": DictElement(
+            parameter_form=SingleChoice(
+                title=Title("Piggyback names"),
+                help_text=Help(
+                    "Each EC2 instance creates a piggyback host.<br><b>Note:</b> "
+                    "Not every host name is pingable and changing the piggyback name "
+                    "will reset the piggyback host.<br><br><b>IP - Region - Instance "
+                    'ID:</b><br>The name consists of "{Private IPv4 '
+                    'address}-{Region}-{Instance ID}". This uniquely identifies the '
+                    "EC2 instance. It is not possible to ping this host name."
+                ),
+                elements=[
+                    SingleChoiceElement(
+                        name="ip_region_instance", title=Title("IP - region - instance ID")
+                    ),
+                    SingleChoiceElement(
+                        name="private_dns_name", title=Title("Private IP DNS name")
+                    ),
+                ],
+                prefill=DefaultValue("ip_region_instance"),
+            ),
+            required=True,
+        ),
+    }
+
+
+def formspec() -> Dictionary:
+    return Dictionary(
+        elements={
+            **configuration_authentication(),
+            **configuration_regions_and_tags(),
+            **configuration_services(),
+            **configuration_piggyback_naming(),
+        },
+    )
+
+
+rule_spec_aws_v2 = SpecialAgent(
+    name="aws_v2",
+    title=Title("Amazon Web Services (AWS) v2"),  # TODO: Change this once we deprecate the old one
+    topic=Topic.CLOUD,
+    parameter_form=formspec,
+)

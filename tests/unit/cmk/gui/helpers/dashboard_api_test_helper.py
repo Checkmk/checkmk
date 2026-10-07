@@ -14,6 +14,7 @@ from http import HTTPStatus
 import pytest
 
 from cmk.ccc.user import UserId
+from cmk.gui.dashboard.store import DashboardStore, get_all_dashboards, save_all_dashboards
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
@@ -524,6 +525,129 @@ class TestTimelineContent:
 
         widgets = resp.json["extensions"]["widgets"]
         assert next(iter(widgets.values()))["content"]["render_mode"] == render_mode
+
+    @pytest.mark.parametrize(
+        "render_mode",
+        [
+            {
+                "type": "bar_chart",
+                "time_range": {"type": "age", "days": 800},
+                "time_resolution": "day",
+            },
+            {"type": "simple_number", "time_range": {"type": "age", "days": 800}},
+        ],
+    )
+    def test_create_rejects_a_window_over_two_years(
+        self, clients: ClientRegistry, widget_type: str, render_mode: dict[str, object]
+    ) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "timeline_dashboard",
+                {
+                    "timeline": create_widget(
+                        {"type": widget_type, "render_mode": render_mode, "log_target": "host"}
+                    )
+                },
+            ),
+            expect_ok=False,
+        )
+
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, resp.body
+        field = f"body.widgets.timeline.content.{widget_type}.render_mode.time_range"
+        assert resp.json["fields"][field]["msg"] == (
+            "The time range must not span more than two years."
+        )
+
+    def test_create_accepts_a_window_of_two_years(
+        self, clients: ClientRegistry, widget_type: str
+    ) -> None:
+        check_widget_create(
+            clients,
+            {
+                "type": widget_type,
+                "render_mode": {
+                    "type": "simple_number",
+                    "time_range": {"type": "age", "days": 730},
+                },
+                "log_target": "both",
+            },
+        )
+
+    def test_edit_rejects_a_window_over_two_years(
+        self, clients: ClientRegistry, widget_type: str
+    ) -> None:
+        def payload(days: int) -> dict[str, object]:
+            return create_dashboard_payload(
+                "timeline_dashboard",
+                {
+                    "timeline": create_widget(
+                        {
+                            "type": widget_type,
+                            "render_mode": {
+                                "type": "simple_number",
+                                "time_range": {"type": "age", "days": days},
+                            },
+                            "log_target": "both",
+                        }
+                    )
+                },
+            )
+
+        clients.DashboardClient.create_relative_grid_dashboard(payload(30))
+
+        resp = clients.DashboardClient.edit_relative_grid_dashboard(
+            "timeline_dashboard", payload(800), expect_ok=False
+        )
+
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, resp.body
+
+    def test_a_stored_window_over_two_years_reads_back_cut_and_saves_again(
+        self, clients: ClientRegistry, widget_type: str
+    ) -> None:
+        def payload(content: dict[str, object]) -> dict[str, object]:
+            return create_dashboard_payload(
+                "timeline_dashboard", {"timeline": create_widget(content)}
+            )
+
+        clients.DashboardClient.create_relative_grid_dashboard(
+            payload(
+                {
+                    "type": widget_type,
+                    "render_mode": {
+                        "type": "simple_number",
+                        "time_range": {"type": "age", "days": 30},
+                    },
+                    "log_target": "both",
+                }
+            )
+        )
+        (owner, name), stored = next(
+            (key, dashboard)
+            for key, dashboard in get_all_dashboards().items()
+            if key[1] == "timeline_dashboard"
+        )
+        for widget in stored["widgets"].values():
+            widget["render_mode"] = (  # type: ignore[typeddict-unknown-key]
+                "simple_number",
+                {"time_range": {"type": "range", "window": ("age", 800 * 24 * 3600)}},
+            )
+        save_all_dashboards(owner)
+        DashboardStore.get_instance.cache_clear()  # type: ignore[attr-defined]
+
+        widgets = clients.DashboardClient.get_relative_grid_dashboard(name).json["extensions"][
+            "widgets"
+        ]
+        content = next(iter(widgets.values()))["content"]
+        resp = clients.DashboardClient.edit_relative_grid_dashboard(name, payload(content))
+
+        assert content["render_mode"]["time_range"] == {
+            "type": "age",
+            "days": 730,
+            "hours": 0,
+            "minutes": 0,
+            "seconds": 0,
+        }
+        assert resp.status_code == HTTPStatus.OK, resp.body
 
 
 @pytest.mark.parametrize("widget_type", ["ntop_alerts", "ntop_flows", "ntop_top_talkers"])

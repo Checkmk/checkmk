@@ -22,6 +22,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.valuespec import TimerangeValue
 from cmk.gui.views.store import internal_view_to_runtime_view
 from cmk.gui.watolib.profile_replication import start_profile_replication_job
 from cmk.utils import paths
@@ -31,6 +32,7 @@ from .builtin_dashboards import (
     builtin_dashboards,
 )
 from .dashlet.registry import dashlet_registry
+from .event_bar_chart_window import clamp_event_bar_chart_window, EVENT_BAR_CHART_TYPES
 from .legacy_visual_link import contextual_link_from_legacy_target
 from .metadata import dashboard_uses_relative_grid
 from .type_defs import (
@@ -244,9 +246,11 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
             }
 
     dashboard["widgets"] = {
-        widget_id: _migrate_timeline_time_range(
-            _migrate_alert_overview_time_range(
-                _migrate_inventory_link(_migrate_metric_time_range(widget))
+        widget_id: _clamp_timeline_window(
+            _migrate_timeline_time_range(
+                _migrate_alert_overview_time_range(
+                    _migrate_inventory_link(_migrate_metric_time_range(widget))
+                )
             )
         )
         for widget_id, widget in dashboard["widgets"].items()
@@ -287,11 +291,8 @@ def _migrate_alert_overview_time_range(widget: DashletConfig) -> DashletConfig:
     return cast(DashletConfig, {**widget, "time_range": time_range})
 
 
-_TIMELINE_TYPES = frozenset({"alerts_bar_chart", "notifications_bar_chart"})
-
-
 def _migrate_timeline_time_range(widget: DashletConfig) -> DashletConfig:
-    if widget["type"] not in _TIMELINE_TYPES:
+    if widget["type"] not in EVENT_BAR_CHART_TYPES:
         return widget
     match cast(dict[str, object], widget).get("render_mode"):
         case (str() as mode, dict() as parameters) if not isinstance(
@@ -299,6 +300,20 @@ def _migrate_timeline_time_range(widget: DashletConfig) -> DashletConfig:
         ):
             time_range = FixedWindow(type="range", window=parameters["time_range"])
             render_mode = (mode, {**parameters, "time_range": time_range})
+        case _:
+            return widget
+    return cast(DashletConfig, {**widget, "render_mode": render_mode})
+
+
+def _clamp_timeline_window(widget: DashletConfig) -> DashletConfig:
+    if widget["type"] not in EVENT_BAR_CHART_TYPES:
+        return widget
+    match cast(dict[str, object], widget).get("render_mode"):
+        case (str() as mode, {"time_range": {"type": "range", "window": window}} as parameters):
+            time_range = FixedWindow(
+                type="range", window=clamp_event_bar_chart_window(cast(TimerangeValue, window))
+            )
+            render_mode = (mode, {**cast(dict[str, object], parameters), "time_range": time_range})
         case _:
             return widget
     return cast(DashletConfig, {**widget, "render_mode": render_mode})

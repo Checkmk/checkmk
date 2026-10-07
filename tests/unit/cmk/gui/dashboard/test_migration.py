@@ -598,6 +598,49 @@ class TestMigrateTimelineTimeRange:
         assert result["widgets"]["w1"] == widget
 
 
+class TestClampTimelineWindow:
+    @pytest.mark.parametrize("widget_type", ["alerts_bar_chart", "notifications_bar_chart"])
+    def test_a_stored_window_over_two_years_is_cut(self, widget_type: str) -> None:
+        dashboard = _responsive_dashboard(
+            {
+                "type": widget_type,
+                "render_mode": (
+                    "bar_chart",
+                    {"time_range": ("age", 800 * 86400), "time_resolution": "d"},
+                ),
+                "log_target": "both",
+            }
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["render_mode"] == (  # type: ignore[typeddict-item]
+            "bar_chart",
+            {
+                "time_range": {"type": "range", "window": ("age", 730 * 86400)},
+                "time_resolution": "d",
+            },
+        )
+
+    def test_a_window_that_follows_the_dashboard_stays_unchanged(self) -> None:
+        render_mode = ("simple_number", {"time_range": {"type": "dashboard"}})
+        dashboard = _responsive_dashboard(
+            {"type": "alerts_bar_chart", "render_mode": render_mode, "log_target": "both"}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["render_mode"] == render_mode  # type: ignore[typeddict-item]
+
+    def test_another_widget_keeps_a_window_over_two_years(self) -> None:
+        time_range = {"type": "range", "window": ("age", 800 * 86400)}
+        dashboard = _responsive_dashboard({"type": "alert_overview", "time_range": time_range})
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == time_range  # type: ignore[typeddict-item]
+
+
 class TestMigrateInventoryLink:
     def test_a_stored_link_spec_becomes_an_inherited_link(self) -> None:
         dashboard = _responsive_dashboard(

@@ -99,6 +99,17 @@ _REGIONAL_SERVICES: Final[list[_ServiceSpec]] = [
 _EXTENDED_GLOBAL_SERVICE_NAMES: Final = ("route53", "cloudfront")
 _EXTENDED_REGIONAL_SERVICE_NAMES: Final = ("aws_lambda", "sns", "ecs", "elasticache")
 
+try:
+    from cmk.plugins.aws_v2_extended.rulesets.aws_services import (  # type: ignore[import-not-found]
+        EXTENDED_GLOBAL_SERVICES,
+        EXTENDED_REGIONAL_SERVICES,
+    )
+
+    _GLOBAL_SERVICES.extend(EXTENDED_GLOBAL_SERVICES)
+    _REGIONAL_SERVICES.extend(EXTENDED_REGIONAL_SERVICES)
+except ImportError:
+    pass
+
 _GLOBAL_SERVICE_REGIONS: Final = ("us-gov-east-1", "us-gov-west-1", "cn-north-1", "cn-northwest-1")
 
 

@@ -99,7 +99,6 @@ clean = [
   "allnet_ip_sensoric",
   "appdynamics",
   "aws_deprecated",
-  "aws_v2",
   "azure",
   "azure_status",
   "bazel",
@@ -137,6 +136,12 @@ clean = [
 # vnx_quotas — TODO: make the authorized keys configurable?
 
 # Plugin families that refuse to play by the rules.
+
+[plugin_families.violations.aws_v2]
+allows = [
+  # optional import of the Ultimate-only services for the special agent rule
+  "cmk.plugins.aws_v2_extended",
+]
 
 [plugin_families.violations.azure_v2_extended]
 allows = [

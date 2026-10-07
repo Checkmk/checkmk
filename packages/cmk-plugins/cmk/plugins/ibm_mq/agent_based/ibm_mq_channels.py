@@ -6,7 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -53,29 +53,46 @@ agent_section_ibm_mq_channels = AgentSection(
     parse_function=parse_ibm_mq_channels,
 )
 
-_DEFAULT_STATUS_MAP = {
-    "INACTIVE": ("inactive", 0),
-    "INITIALIZING": ("initializing", 0),
-    "BINDING": ("binding", 0),
-    "STARTING": ("starting", 0),
-    "RUNNING": ("running", 0),
-    "RETRYING": ("retrying", 1),
-    "STOPPING": ("stopping", 0),
-    "STOPPED": ("stopped", 2),
+# Channel status reported by the agent: parameter key of its service state
+_STATUS_KEYS = {
+    "INACTIVE": "inactive",
+    "INITIALIZING": "initializing",
+    "BINDING": "binding",
+    "STARTING": "starting",
+    "RUNNING": "running",
+    "RETRYING": "retrying",
+    "STOPPING": "stopping",
+    "STOPPED": "stopped",
+}
+
+_FACTORY_STATES = {
+    "inactive": 0,
+    "initializing": 0,
+    "binding": 0,
+    "starting": 0,
+    "running": 0,
+    "retrying": 1,
+    "stopping": 0,
+    "stopped": 2,
 }
 
 
-def map_ibm_mq_channel_status(status: str, params: Mapping[str, Any]) -> int:
-    wato_key, check_state = _DEFAULT_STATUS_MAP.get(status, ("unknown", 3))
-    if wato_key == "unknown" and "mapped_states_default" in params:
-        check_state = params["mapped_states_default"]
-    if "mapped_states" in params:
-        mapped_states = dict(params["mapped_states"])
-        if wato_key in mapped_states:
-            check_state = mapped_states[wato_key]
-        elif "mapped_states_default" in params:
-            check_state = params["mapped_states_default"]
-    return check_state
+class ChannelParams(TypedDict):
+    mapped_states: Mapping[str, int]
+    mapped_states_default: int
+
+
+DEFAULT_PARAMETERS: ChannelParams = {
+    "mapped_states": _FACTORY_STATES,
+    "mapped_states_default": 3,
+}
+
+
+def map_ibm_mq_channel_status(status: str, params: ChannelParams) -> int:
+    if (key := _STATUS_KEYS.get(status)) is None:
+        return params["mapped_states_default"]
+    # A rule may configure some of the states only.
+    return params["mapped_states"].get(key, _FACTORY_STATES[key])
 
 
 def discover_ibm_mq_channels(section: Any) -> DiscoveryResult:
@@ -91,7 +108,7 @@ def discover_ibm_mq_channels(section: Any) -> DiscoveryResult:
 # or search for 'inactive channels' in 'display chstatus' command manual
 # to learn more about INACTIVE status of channels
 #
-def check_ibm_mq_channels(item: str, params: Mapping[str, Any], section: Any) -> CheckResult:
+def check_ibm_mq_channels(item: str, params: ChannelParams, section: Any) -> CheckResult:
     if is_ibm_mq_service_vanished(item, section):
         return
     data = section[item]
@@ -110,7 +127,7 @@ check_plugin_ibm_mq_channels = CheckPlugin(
     discovery_function=discover_ibm_mq_channels,
     check_function=check_ibm_mq_channels,
     check_ruleset_name="ibm_mq_channels",
-    check_default_parameters={},
+    check_default_parameters=DEFAULT_PARAMETERS,
 )
 
 

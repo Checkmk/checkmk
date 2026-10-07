@@ -3,15 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from typing import Any
-
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Result, Service, State
 from cmk.plugins.ibm_mq.agent_based.ibm_mq_channels import (
+    ChannelParams,
     check_ibm_mq_channels,
+    DEFAULT_PARAMETERS,
     discover_ibm_mq_channels,
     parse_ibm_mq_channels,
 )
@@ -127,7 +125,7 @@ def test_discovery_qmgr_not_included() -> None:
 
 
 def test_check() -> None:
-    params: dict[str, Any] = {}
+    params = DEFAULT_PARAMETERS
     parsed = {
         "QM1": {"STATUS": "RUNNING"},
         "QM1:CHAN1": {"CHLTYPE": "SDR", "STATUS": "RETRYING", "XMITQ": "MY.XMIT.Q"},
@@ -153,7 +151,7 @@ def test_no_xmit_queue_defined() -> None:
     is a misconfiguration on the queue manager, but the monitoring should
     not choke on this.
     """
-    params: dict[str, Any] = {}
+    params = DEFAULT_PARAMETERS
     parsed = {
         "QM1": {"STATUS": "RUNNING"},
         "QM1:CHAN1": {"CHLTYPE": "SDR", "STATUS": "RETRYING", "XMITQ": "MY.XMIT.Q"},
@@ -166,14 +164,14 @@ def test_no_xmit_queue_defined() -> None:
 
 
 def test_stale_service_for_not_running_qmgr() -> None:
-    params: dict[str, Any] = {}
+    params = DEFAULT_PARAMETERS
     parsed = {"QM1": {"STATUS": "ENDED NORMALLY"}}
     with pytest.raises(IgnoreResultsError, match=r"Stale because queue manager ENDED NORMALLY"):
         list(check_ibm_mq_channels("QM1:CHAN2", params, parsed))
 
 
 def test_vanished_service_for_running_qmgr() -> None:
-    params: dict[str, Any] = {}
+    params = DEFAULT_PARAMETERS
     parsed = {
         "QM1": {"STATUS": "RUNNING"},
         "QM1:CHAN1": {"CHLTYPE": "SVRCONN"},
@@ -182,37 +180,35 @@ def test_vanished_service_for_running_qmgr() -> None:
     assert len(actual) == 0
 
 
-def test_status_wato_override() -> None:
-    parsed = {
-        "QM1": {"STATUS": "RUNNING"},
-        "QM1:CHAN1": {"CHLTYPE": "SVRCONN", "STATUS": "STOPPED"},
-    }
+_STOPPED_CHANNEL = {
+    "QM1": {"STATUS": "RUNNING"},
+    "QM1:CHAN1": {"CHLTYPE": "SVRCONN", "STATUS": "STOPPED"},
+}
 
-    # Factory defaults
-    params: dict[str, Any] = {}
-    actual = list(check_ibm_mq_channels("QM1:CHAN1", params, parsed))
-    assert actual == [Result(state=State.CRIT, summary="Status: STOPPED, Type: SVRCONN")]
 
-    # Override factory defaults
-    params = {"mapped_states": [("stopped", 1)]}
-    actual = list(check_ibm_mq_channels("QM1:CHAN1", params, parsed))
+def test_configured_state_overrides_the_factory_default() -> None:
+    params: ChannelParams = {**DEFAULT_PARAMETERS, "mapped_states": {"stopped": 1}}
+
+    actual = list(check_ibm_mq_channels("QM1:CHAN1", params, _STOPPED_CHANNEL))
+
     assert actual == [Result(state=State.WARN, summary="Status: STOPPED, Type: SVRCONN")]
 
-    # Override-does-not-match configuration
-    params = {
-        "mapped_states": [("retrying", 1)],
-        "mapped_states_default": 3,
-    }
-    actual = list(check_ibm_mq_channels("QM1:CHAN1", params, parsed))
-    assert actual == [Result(state=State.UNKNOWN, summary="Status: STOPPED, Type: SVRCONN")]
+
+def test_states_the_rule_leaves_out_keep_their_factory_default() -> None:
+    params: ChannelParams = {**DEFAULT_PARAMETERS, "mapped_states": {"retrying": 0}}
+
+    actual = list(check_ibm_mq_channels("QM1:CHAN1", params, _STOPPED_CHANNEL))
+
+    assert actual == [Result(state=State.CRIT, summary="Status: STOPPED, Type: SVRCONN")]
 
 
-def test_unknown_status_gets_the_fallback_state_without_a_state_map() -> None:
+def test_unknown_status_gets_the_configured_state() -> None:
     parsed = {
         "QM1": {"STATUS": "RUNNING"},
         "QM1:CHAN1": {"CHLTYPE": "SVRCONN", "STATUS": "SOMETHING NEW"},
     }
+    params: ChannelParams = {**DEFAULT_PARAMETERS, "mapped_states_default": 1}
 
-    actual = list(check_ibm_mq_channels("QM1:CHAN1", {"mapped_states_default": 1}, parsed))
+    actual = list(check_ibm_mq_channels("QM1:CHAN1", params, parsed))
 
     assert actual == [Result(state=State.WARN, summary="Status: SOMETHING NEW, Type: SVRCONN")]

@@ -2416,13 +2416,14 @@ def get_host_tags_condition_choices() -> dict[str, ConditionGroup]:
     return choices
 
 
-def _create_explicit_rule_conditions_dict(
+def create_explicit_rule_conditions_dict(
     *,
     tree: FolderTree,
     rule_spec_name: str,
     rule_spec_item: RuleSpecItem | None,
     is_service_rule: bool,
 ) -> DictionaryAPI:
+    """The explicit conditions of a rule, as the rule editor offers them."""
     elements: dict[str, DictElementAPI] = {
         "folder_path": DictElementAPI(
             parameter_form=SingleChoiceExtendedAPI[str](
@@ -2551,7 +2552,7 @@ def _create_rule_conditions_catalog_topic(
                             CascadingSingleChoiceElementAPI(
                                 name="explicit",
                                 title=Title("Explicit conditions"),
-                                parameter_form=_create_explicit_rule_conditions_dict(
+                                parameter_form=create_explicit_rule_conditions_dict(
                                     tree=tree,
                                     rule_spec_name=rule_spec_name,
                                     rule_spec_item=rule_spec_item,

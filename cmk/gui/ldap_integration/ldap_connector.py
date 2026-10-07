@@ -1409,13 +1409,9 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             if not is_member:
                 return None
 
-        user_id = self._sanitize_user_id(raw_user_id)
-        if user_id is None:
-            return None  # type: ignore[unreachable]
-
         fetched_ldap_user = FetchedLDAPUser(
             dn=dn if no_escape else dn.replace("\\", "\\\\"),
-            ldap_user_name=LdapUsername(user_id),
+            ldap_user_name=LdapUsername(self._sanitize_user_id(raw_user_id)),
             ldap_user_spec={**result[0][1], "dn": [dn]},
         )
 

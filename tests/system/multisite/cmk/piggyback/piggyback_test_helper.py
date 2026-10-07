@@ -8,7 +8,6 @@ import signal
 import subprocess
 from collections.abc import Iterator
 from contextlib import contextmanager, ExitStack
-from dataclasses import dataclass
 from types import FrameType
 from typing import Final, IO, Literal
 
@@ -21,14 +20,6 @@ CMK_TRACK_TIMEOUT: Final = 30  # secs
 # compare against. "DEBUG" adds every AMQP frame from pika, noisy enough to shift the
 # timing those tests measure.
 PIGGYBACK_HUB_LOG_LEVEL: Final = ""
-
-
-@dataclass
-class ServiceDiscoveredInfo:
-    host_name: str
-    check_plugin_name: str
-    service_name: str
-    service_item: str
 
 
 @contextmanager

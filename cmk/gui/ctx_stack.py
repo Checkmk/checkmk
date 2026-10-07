@@ -97,12 +97,12 @@ def session_attr[T](name: SessionVarName, type_class: type[T]) -> T:
             return None
 
     def maybe_tuple_lookup(attr_names: tuple[str, ...]) -> T | None:
-        rv = session
+        rv: object = session
         for attr in attr_names:
             rv = get_attr_or_item(rv, attr)
 
         if rv is None:
-            return None  # type: ignore[unreachable]
+            return None
 
         if not isinstance(rv, type_class):
             raise ValueError(

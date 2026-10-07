@@ -16,19 +16,26 @@ class CompositePermissionsHandler:
         self,
         registry: MatchItemGeneratorRegistry,
         handlers: Mapping[ProviderName, SearchPermissionsHandler],
+        category_handlers: Mapping[str, SearchPermissionsHandler] | None = None,
     ) -> None:
-        self._registry = registry
-        self._handlers = handlers
+        provider_handlers = {
+            category: handler
+            for category in registry
+            if (provider := registry.provider_for(category)) is not None
+            and (handler := handlers.get(provider)) is not None
+        }
+        self._handlers: Mapping[str, SearchPermissionsHandler] = provider_handlers | {
+            category: handler
+            for category, handler in (category_handlers or {}).items()
+            if category in registry
+        }
 
     def may_see_category(self, category: str) -> bool:
-        handler = self._handler_for(category)
-        return handler.may_see_category(category) if handler else False
+        handler = self._handlers.get(category)
+        return handler.may_see_category(category) if handler is not None else False
 
     def get_visibility_check(self, category: str) -> VisibilityCheck:
-        handler = self._handler_for(category)
-        return handler.get_visibility_check(category) if handler else (lambda _url: False)
-
-    def _handler_for(self, category: str) -> SearchPermissionsHandler | None:
-        if (provider := self._registry.provider_for(category)) is None:
-            return None
-        return self._handlers.get(provider)
+        handler = self._handlers.get(category)
+        return (
+            handler.get_visibility_check(category) if handler is not None else (lambda _url: False)
+        )

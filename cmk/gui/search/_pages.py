@@ -23,7 +23,10 @@ from ._collapsing import get_collapser
 from ._engines._livestatus import LivestatusSearchEngine
 from ._engines._redis import RedisSearchEngine
 from ._unified import UnifiedSearch
-from .permissions import search_permissions_handler_registry
+from .permissions import (
+    category_permissions_handler_registry,
+    search_permissions_handler_registry,
+)
 
 # Before making this something configurable, we want to first hardcode this setting to a reasonable
 # value and get feedback from users.
@@ -54,6 +57,10 @@ class PageUnifiedSearch(AjaxPage):
                 {
                     entry.provider: entry.build(ctx)
                     for entry in search_permissions_handler_registry.values()
+                },
+                category_permission_handlers={
+                    entry.category: entry.build(ctx)
+                    for entry in category_permissions_handler_registry.values()
                 },
             ),
             livestatus_engine=LivestatusSearchEngine(

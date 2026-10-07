@@ -120,3 +120,25 @@ class TestCompositePermissionsHandler:
         )
         assert composite.may_see_category("nope") is False
         assert composite.get_visibility_check("nope")("url") is False
+
+    def test_category_handler_takes_precedence_over_provider_handler(
+        self, registry: MatchItemGeneratorRegistry
+    ) -> None:
+        composite = CompositePermissionsHandler(
+            registry,
+            {ProviderName.customize: _FakeHandler(may_see=True, visible=True)},
+            {"customize": _FakeHandler(may_see=False, visible=False)},
+        )
+        assert composite.may_see_category("customize") is False
+        assert composite.get_visibility_check("customize")("url") is False
+
+    def test_category_handler_of_unknown_category_is_ignored(
+        self, registry: MatchItemGeneratorRegistry
+    ) -> None:
+        composite = CompositePermissionsHandler(
+            registry,
+            {ProviderName.setup: _FakeHandler()},
+            {"nope": _FakeHandler()},
+        )
+        assert composite.may_see_category("nope") is False
+        assert composite.get_visibility_check("nope")("url") is False

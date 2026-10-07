@@ -589,13 +589,16 @@ class RedisSearchEngine:
         config: Config,
         permission_handlers: Mapping[ProviderName, SearchPermissionsHandler],
         *,
+        category_permission_handlers: Mapping[str, SearchPermissionsHandler] | None = None,
         redis_client: redis.Redis | None = None,
     ) -> None:
         self._index_searcher = IndexSearcher(
             config=config,
             redis_client=redis_client or get_redis_client(),
             permissions_handler=CompositePermissionsHandler(
-                match_item_generator_registry, permission_handlers
+                match_item_generator_registry,
+                permission_handlers,
+                category_permission_handlers,
             ),
         )
 

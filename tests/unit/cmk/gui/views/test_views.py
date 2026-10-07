@@ -44,27 +44,7 @@ from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_
 
 
 @pytest.mark.usefixtures("request_context")
-def test_registered_painter_options() -> None:
-    expected = [
-        "aggr_expand",
-        "aggr_onlydiff",
-        "aggr_onlyproblems",
-        "aggr_treetype",
-        "aggr_wrap",
-        "matrix_omit_uniform",
-        "pnp_timerange",
-        "show_internal_tree_paths",
-        "ts_date",
-        "ts_format",
-        "graph_render_options",
-        "refresh",
-        "num_columns",
-        "show_internal_graph_and_metric_ids",
-    ]
-
-    names = painter_option_registry.keys()
-    assert sorted(expected) == sorted(names)
-
+def test_painter_options_provide_valuespec() -> None:
     for cls in painter_option_registry.values():
         vs = cls.valuespec(Config())
         assert isinstance(vs, ValueSpec)

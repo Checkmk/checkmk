@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { getLocalTimeZone } from '@internationalized/date'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkSurfaceNotice from 'cmk-ui-library/components/CmkSurfaceNotice.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -18,7 +19,7 @@ import { useGraphInteraction } from '../../composables/useGraphInteraction'
 import { hasPlottableData, useGraphNotice, useNoDataNotice } from '../../composables/useGraphNotice'
 import { useGraphVisibility } from '../../composables/useGraphVisibility'
 import type { RequestedTimeRange, TimeRangeCommitKind } from '../../types.ts'
-import { committedTimeRange, continuousTimeAxis } from '../../utils/timeRange'
+import { binnedTimeAxis, committedTimeRange, continuousTimeAxis } from '../../utils/timeRange'
 import GraphBurgerMenu from '../GraphBurgerMenu.vue'
 import GraphTimestamp from '../GraphTimestamp.vue'
 import TimeSeriesGraph, { type GraphOptions, type Size, type TimeRange } from '../TimeSeriesGraph'
@@ -75,7 +76,10 @@ const sourceKey = computed(() =>
   props.source.type === 'definition' ? props.source.internal : props.source.key
 )
 const graphDefinitions = computed(() => [{ internal: sourceKey.value }])
-const timeAxis = continuousTimeAxis()
+const binUnit = computed(() => (props.source.type === 'fetch' ? props.source.binUnit : null))
+const timeAxis = computed(() =>
+  binUnit.value === null ? continuousTimeAxis() : binnedTimeAxis(binUnit.value, getLocalTimeZone())
+)
 
 const { graphs, isLoading, error, partialErrors, warnings, reload } = useGraphData(
   () => graphDefinitions.value,
@@ -88,7 +92,7 @@ const { graphs, isLoading, error, partialErrors, warnings, reload } = useGraphDa
       props.source.type === 'definition'
         ? fetchGraphDataByDefinition(definition, params)
         : props.source.fetch(params),
-    planFetchWindow: timeAxis.planFetchWindow
+    planFetchWindow: (range, canvasWidth) => timeAxis.value.planFetchWindow(range, canvasWidth)
   }
 )
 const graph = computed(() => graphs.value[0] ?? null)
@@ -152,7 +156,7 @@ const onCommittedTimeRange = (range: RequestedTimeRange, kind: TimeRangeCommitKi
 
 const baselineTimeRange = computed<TimeRange | undefined>(() => {
   const served = graph.value?.timeRange
-  return served && timeAxis.drawnTimeRange(requestedTimeRange.value, served)
+  return served && timeAxis.value.drawnTimeRange(requestedTimeRange.value, served)
 })
 
 const {
@@ -188,7 +192,7 @@ const {
 )
 
 watch(
-  () => [sourceKey.value, props.combinationMode, JSON.stringify(props.timerange)],
+  () => [sourceKey.value, binUnit.value, props.combinationMode, JSON.stringify(props.timerange)],
   () => {
     zoomSessionActive.value = false
     abandonInspection()

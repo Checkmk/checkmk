@@ -17,7 +17,17 @@ import { useGlobalPin } from '@/graphing/composables/useGlobalPin'
 vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
   default: {
     inheritAttrs: false,
-    props: ['panEnabled', 'time_range', 'valueRange', 'options', 'pinEnabled', 'pinTime'],
+    props: [
+      'panEnabled',
+      'time_range',
+      'view_time_range',
+      'valueRange',
+      'options',
+      'pinEnabled',
+      'pinTime',
+      'binUnit',
+      'minTimeRange'
+    ],
     emits: ['zoom', 'pan', 'reset', 'pinCreate', 'pinAction'],
     template: `<div data-testid="time-series-graph">
       <span data-testid="pan-enabled">{{ panEnabled }}</span>
@@ -27,9 +37,25 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
       <span data-testid="y-axis-unit">{{ options?.y_axis?.unit?.notation ?? 'none' }}</span>
       <span data-testid="pin-enabled">{{ pinEnabled }}</span>
       <span data-testid="pin-time">{{ pinTime }}</span>
+      <span data-testid="view-start">{{ view_time_range.start }}</span>
+      <span data-testid="view-end">{{ view_time_range.end }}</span>
+      <span data-testid="bin-unit">{{ binUnit }}</span>
+      <span data-testid="min-time-range">{{ minTimeRange }}</span>
       <button
         data-testid="emit-pan"
         @click="$emit('pan', { timeRange: { start: 500, end: 900, step: 60 } })"
+      />
+      <button
+        data-testid="emit-pan-back-by-a-quarter"
+        @click="
+          $emit('pan', {
+            timeRange: {
+              start: view_time_range.start - (view_time_range.end - view_time_range.start) / 4,
+              end: view_time_range.end - (view_time_range.end - view_time_range.start) / 4,
+              step: 60
+            }
+          })
+        "
       />
       <button
         data-testid="emit-value-zoom"
@@ -126,8 +152,12 @@ function renderFigure(props: Record<string, unknown> = {}) {
   })
 }
 
-function fetchSource(fetch: unknown, key = DEFINITION): Record<string, unknown> {
-  return { source: { type: 'fetch', key, fetch } }
+function fetchSource(
+  fetch: unknown,
+  key = DEFINITION,
+  binUnit: string | null = null
+): Record<string, unknown> {
+  return { source: { type: 'fetch', key, fetch, binUnit } }
 }
 
 test('holds the loading icon back for a second while the fetch is pending', async () => {
@@ -561,4 +591,84 @@ test('omits the y-axis entirely when the prop has no unit and no metric supplies
 
   // No unit from the prop and none from a metric: the guard yields null, not a unit-less axis.
   expect(screen.getByTestId('y-axis')).toHaveTextContent('null')
+})
+
+describe('a figure of bar metrics', () => {
+  const NOW = Date.parse('2026-01-01T10:37:00Z') / 1000
+  const HOUR = 3600
+
+  const hourlyBars = vi.fn((params: { fetchWindow: { start: number; end: number } }) =>
+    Promise.resolve({
+      title: '',
+      metrics: [
+        {
+          ...FETCHED.metrics[0],
+          render: { shape: 'bar', stack: null, aggregation: 'sum', inverse: false, hidden: false },
+          data_points: [1, 2, 3, 4, 5]
+        }
+      ],
+      timeRange: { start: params.fetchWindow.start, end: params.fetchWindow.end, step: HOUR },
+      horizontalLines: [],
+      shadedRegions: [],
+      errors: [],
+      warnings: []
+    })
+  )
+
+  beforeEach(() => {
+    vi.useFakeTimers({ now: NOW * 1000, toFake: ['Date'] })
+    hourlyBars.mockClear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  function renderBarFigure() {
+    renderFigure({
+      ...fetchSource(hourlyBars, DEFINITION, 'hour'),
+      timerange: { type: 'age', hours: 4 }
+    })
+  }
+
+  test('fetches whole local bins on the step that meets their edges', async () => {
+    renderBarFigure()
+
+    await waitFor(() => expect(hourlyBars).toHaveBeenCalled())
+    expect(hourlyBars.mock.calls[0]![0].fetchWindow).toEqual({
+      start: NOW - 4 * HOUR - 37 * 60,
+      end: NOW + 23 * 60,
+      step: HOUR
+    })
+  })
+
+  test('starts at the bin that holds the requested start and ends in the open bin', async () => {
+    renderBarFigure()
+
+    expect(await screen.findByTestId('view-start')).toHaveTextContent(
+      String(NOW - 4 * HOUR - 37 * 60)
+    )
+    expect(screen.getByTestId('view-end')).toHaveTextContent(String(NOW))
+  })
+
+  test('keeps the requested span when a pan moves the view off a bin edge', async () => {
+    renderBarFigure()
+    await screen.findByTestId('view-start')
+
+    await fireEvent.click(screen.getByTestId('emit-pan-back-by-a-quarter'))
+
+    await waitFor(() => expect(hourlyBars).toHaveBeenCalledTimes(2))
+    expect(hourlyBars.mock.calls[1]![0].fetchWindow).toEqual({
+      start: NOW - 6 * HOUR - 37 * 60,
+      end: NOW - HOUR - 37 * 60,
+      step: HOUR
+    })
+  })
+
+  test('bins the bars by the unit and zooms no deeper than one bin', async () => {
+    renderBarFigure()
+
+    expect(await screen.findByTestId('bin-unit')).toHaveTextContent('hour')
+    expect(screen.getByTestId('min-time-range')).toHaveTextContent(String(HOUR))
+  })
 })

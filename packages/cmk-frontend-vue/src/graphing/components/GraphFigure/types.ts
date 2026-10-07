@@ -10,6 +10,7 @@ import type {
   GraphCombinationMode,
   GraphFetchParams
 } from '../../composables/useGraphData'
+import type { BinUnit } from '../TimeSeriesGraph'
 import type { TimerangeModel } from './computeEpochTimeRange'
 
 /** Fetches the figure's data for one request; the figure picks the window and the resolution. */
@@ -23,6 +24,8 @@ export type GraphFigureSource =
       /** Names what the fetch answers; a change resets the figure like a new definition. */
       key: string
       fetch: GraphFetch
+      /** The unit the bar metrics are binned by; null when the fetch answers no bar metric. */
+      binUnit: BinUnit | null
     }
 
 /**

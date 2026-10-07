@@ -60,7 +60,12 @@ const figureSource = computed<GraphFigureSource | null>(() => {
   const internal = shell.value.internal
   return cmkToken === undefined
     ? { type: 'definition', internal }
-    : { type: 'fetch', key: internal, fetch: createSharedGraphFetcher(props.widget_id, cmkToken) }
+    : {
+        type: 'fetch',
+        key: internal,
+        fetch: createSharedGraphFetcher(props.widget_id, cmkToken),
+        binUnit: null
+      }
 })
 
 const singleContext = computed(() => {

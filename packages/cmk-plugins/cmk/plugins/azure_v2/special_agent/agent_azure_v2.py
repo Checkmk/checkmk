@@ -2247,6 +2247,56 @@ async def _get_resources_reporting_metrics(
     return reported
 
 
+async def filter_otel_resources_reporting_metrics(
+    api_client: BaseAsyncApiClient,
+    resources: Sequence[AzureResource],
+    now: datetime.datetime,
+    debug: bool,
+) -> tuple[list[AzureResource], IssueCollector]:
+    """Drop the resources that reported no metric values
+
+    A resource keeps its host when the question cannot be answered.
+    """
+    issues = IssueCollector()
+    to_ask: defaultdict[tuple[str, str], list[str]] = defaultdict(list)
+    for resource in resources:
+        if region := resource.info.get("location"):
+            to_ask[(resource.info["type"], region)].append(resource.info["id"])
+
+    groups = list(to_ask.items())
+    results = await asyncio.gather(
+        *(
+            _get_resources_reporting_metrics(api_client, region, resource_type, ids, now)
+            for (resource_type, region), ids in groups
+        ),
+        return_exceptions=True,
+    )
+    reports: dict[str, bool] = {}
+    for ((resource_type, region), _ids), result in zip(groups, results, strict=True):
+        if isinstance(result, BaseException):
+            if debug:
+                raise result
+            LOGGER.warning(
+                "Cannot tell if %(type)s resources in %(region)s report metrics: %(error)s",
+                {"type": resource_type, "region": region, "error": result},
+            )
+            continue
+        reports.update(result)
+
+    kept = []
+    for resource in resources:
+        if reports.get(resource.info["id"].lower()) is False:
+            issues.add(
+                "info",
+                "OpenTelemetry resources",
+                f"No host for {resource.name} ({resource.info['type']}): "
+                "it reported no metric values in the last 24 hours",
+            )
+        else:
+            kept.append(resource)
+    return kept, issues
+
+
 def write_resource_groups_sections(resource_groups: Mapping[str, AzureResourceGroup]) -> None:
     # for inventory purposes
     for group_name, resource in resource_groups.items():
@@ -2893,19 +2943,29 @@ async def process_resources(
         for r in selected_resources
         if r.info["type"].lower() in monitored_services_lower
     }
-    otel_resources = get_otel_only_resources(
-        selected_resources, args.otel_resource_types, monitored_services
+    # metrics must be gathered before the actual section writing
+    # (which happens in the concurrent tasks below)
+    (otel_resources, otel_issues), _ = await asyncio.gather(
+        filter_otel_resources_reporting_metrics(
+            mgmt_client,
+            get_otel_only_resources(
+                selected_resources, args.otel_resource_types, monitored_services
+            ),
+            NOW,
+            args.debug,
+        ),
+        process_metrics(mgmt_client, subscription, monitored_resources_by_id, args),
     )
+    if otel_issues:
+        agent_info_section = AzureSection("agent_info")
+        agent_info_section.add(otel_issues.dumpinfo())
+        agent_info_section.write()
     resources_groups = {r.group for r in [*monitored_resources_by_id.values(), *otel_resources]}
     groups_with_monitored_resources = {
         group_name: group
         for group_name, group in monitored_groups.items()
         if group_name in resources_groups
     }
-
-    # metrics must be gathered before the actual section writing
-    # (which happens in the concurrent tasks below)
-    await process_metrics(mgmt_client, subscription, monitored_resources_by_id, args)
 
     tasks = {
         process_resource_health(

@@ -7,6 +7,7 @@
 # mypy: disable-error-code="type-arg"
 
 import argparse
+import datetime
 import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -22,6 +23,7 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     AzureResource,
     AzureResourceGroup,
     AzureSubscription,
+    filter_otel_resources_reporting_metrics,
     filter_tags,
     get_otel_identity_labels_section,
     get_otel_only_resources,
@@ -41,6 +43,7 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     write_subscription_labels,
     write_subscription_section,
 )
+from cmk.plugins.azure_v2.special_agent.azure_api_client import ApiError, BaseAsyncApiClient
 
 from .lib import fake_azure_subscription, MockAzureSection
 
@@ -271,6 +274,90 @@ def test_get_otel_only_resources(
         resource.name
         for resource in get_otel_only_resources(resources, otel_resource_types, monitored_services)
     ] == expected_names
+
+
+def _get_batch_answer(**values: float | None) -> Sequence[Mapping[str, object]]:
+    return [
+        {
+            "resourceid": f"/subscriptions/sub/resourceGroups/rg/providers/t/{name}",
+            "value": [{"name": {"value": "m"}, "timeseries": [{"data": [{"average": value}]}]}],
+        }
+        for name, value in values.items()
+    ]
+
+
+@pytest.mark.parametrize(
+    "answers, expected_names",
+    [
+        pytest.param(
+            [[{"name": {"value": "m"}}], _get_batch_answer(live=1.0, silent=None)],
+            ["live", "no_region"],
+            id="no host for a resource without metric values",
+        ),
+        pytest.param(
+            [[{"name": {"value": "m"}}], _get_batch_answer(live=0.0, silent=None)],
+            ["live", "no_region"],
+            id="a zero is a metric value",
+        ),
+        pytest.param(
+            [
+                [{"name": {"value": f"m{i}"}} for i in range(21)],
+                _get_batch_answer(live=None, silent=None),
+                _get_batch_answer(live=1.0, silent=None),
+            ],
+            ["live", "no_region"],
+            id="values after the first 20 metric names count",
+        ),
+        pytest.param(
+            [[{"name": {"value": "m"}}], _get_batch_answer(live=1.0)],
+            ["live", "silent", "no_region"],
+            id="host for a resource left out of the answer",
+        ),
+        pytest.param(
+            [[]],
+            ["live", "silent", "no_region"],
+            id="hosts for all resources without metric names",
+        ),
+        pytest.param(
+            [ApiError("denied")],
+            ["live", "silent", "no_region"],
+            id="hosts for all resources when the definitions call fails",
+        ),
+        pytest.param(
+            [[{"name": {"value": "m"}}], ApiError("denied")],
+            ["live", "silent", "no_region"],
+            id="hosts for all resources when the getBatch call fails",
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_filter_otel_resources_reporting_metrics(
+    answers: Sequence[object],
+    expected_names: Sequence[str],
+) -> None:
+    api_client = AsyncMock(spec=BaseAsyncApiClient)
+    api_client.request_async.side_effect = answers
+    resources = [
+        AzureResource(
+            {
+                "id": f"/subscriptions/sub/resourceGroups/rg/providers/t/{name}",
+                "name": name,
+                "type": "t",
+                "location": location,
+            },
+            TagsImportPatternOption.import_all,
+            fake_azure_subscription(),
+            UniqueHostnamesConfig(),
+        )
+        for name, location in [("live", "westeurope"), ("silent", "westeurope"), ("no_region", "")]
+    ]
+
+    kept, issues = await filter_otel_resources_reporting_metrics(
+        api_client, resources, datetime.datetime.now(datetime.UTC), debug=False
+    )
+
+    assert [resource.name for resource in kept] == expected_names
+    assert len(issues) == len(resources) - len(kept)
 
 
 @pytest.mark.parametrize(

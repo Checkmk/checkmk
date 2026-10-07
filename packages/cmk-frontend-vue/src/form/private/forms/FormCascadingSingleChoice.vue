@@ -131,7 +131,7 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
   >
     <div>
       <!-- The label is inline; a block of its own puts it above the choice. -->
-      <div v-if="rendersHelpItself(props.spec)">
+      <div v-if="rendersHelpItself(props.spec)" class="form-cascading-single-choice__label-above">
         <CmkLabel :for="componentId" :help="untranslated(props.spec.help)">
           {{ props.spec.label }}
         </CmkLabel>
@@ -203,6 +203,12 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
 
   .form-cascading-single-choice__button-group {
     display: inline-block;
+  }
+
+  /* The same space as between a label and its field in a row of a dictionary. */
+  .form-cascading-single-choice__label-above {
+    display: flex;
+    margin-bottom: var(--dimension-4);
   }
 }
 </style>

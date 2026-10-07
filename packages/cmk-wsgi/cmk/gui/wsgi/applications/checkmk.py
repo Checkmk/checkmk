@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-
 
 import functools
 import http.client as http_client
@@ -259,9 +257,7 @@ def _process_request(
         except WebMKNotFound as exc:
             raise MKNotFound(str(exc)) from exc
 
-        if file_name is None:
-            page_handler = _page_not_found  # type: ignore[unreachable]
-        elif _handler := pages.get_page_handler(file_name):
+        if _handler := pages.get_page_handler(file_name):
             page_handler = ensure_authentication(_handler)
         elif _handler := pages.get_page_handler(f"noauth:{file_name}"):
             page_handler = _noauth(_handler)

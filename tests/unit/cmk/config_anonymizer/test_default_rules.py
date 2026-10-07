@@ -43,12 +43,6 @@ def flask_app(
     yield from create_flask_app()
 
 
-@pytest.fixture()
-def request_context(flask_app: Flask) -> Iterator[None]:  # noqa: ARG001
-    """Empty fixture. Invokes usage of `flask_app` fixture."""
-    yield
-
-
 @pytest.fixture(scope="session")
 def agent_based_plugins() -> AgentBasedPlugins:
     """Load all check plugins, tolerating errors from non-free edition plugins unavailable
@@ -93,7 +87,7 @@ def _build_section_info(plugins: AgentBasedPlugins) -> Mapping[str, Mapping[str,
     return section_infos
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("flask_app")
 def test_default_rule_values_are_valid(
     monkeypatch: pytest.MonkeyPatch,
     agent_based_plugins: AgentBasedPlugins,

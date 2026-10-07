@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Literal
+
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
@@ -20,6 +22,13 @@ from cmk.rulesets.v1.form_specs import (
     TimeSpan,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
+
+
+def _cartridge_flag_state(title: Title) -> DictElement[Literal[0, 1, 2, 3]]:
+    return DictElement(
+        required=False,
+        parameter_form=ServiceState(title=title, prefill=DefaultValue(ServiceState.WARN)),
+    )
 
 
 def _parameter_valuespec_apc_symmetra() -> Dictionary:
@@ -102,6 +111,50 @@ def _parameter_valuespec_apc_symmetra() -> Dictionary:
                 parameter_form=ServiceState(
                     title=Title("State if battery needs replacement"),
                     prefill=DefaultValue(ServiceState.WARN),
+                ),
+            ),
+            "cartridge_flag_states": DictElement(
+                required=False,
+                parameter_form=Dictionary(
+                    title=Title("States of battery pack cartridge flags"),
+                    help_text=Help(
+                        "Some UPS models report status flags for each battery pack cartridge. "
+                        "A cartridge is reported with the worst state of the flags it has set. "
+                        "Flags not configured here result in a WARNING state. The flag "
+                        "<i>Needs Replacement</i> follows the option "
+                        "<i>State if battery needs replacement</i>."
+                    ),
+                    elements={
+                        "disconnected": _cartridge_flag_state(
+                            Title("State for <i>Disconnected</i>")
+                        ),
+                        "overvoltage": _cartridge_flag_state(Title("State for <i>Overvoltage</i>")),
+                        "overtemperature_critical": _cartridge_flag_state(
+                            Title("State for <i>Overtemperature Critical</i>")
+                        ),
+                        "charger": _cartridge_flag_state(Title("State for <i>Charger</i>")),
+                        "temperature_sensor": _cartridge_flag_state(
+                            Title("State for <i>Temperature Sensor</i>")
+                        ),
+                        "bus_soft_start": _cartridge_flag_state(
+                            Title("State for <i>Bus Soft Start</i>")
+                        ),
+                        "overtemperature_warning": _cartridge_flag_state(
+                            Title("State for <i>Overtemperature Warning</i>")
+                        ),
+                        "general_error": _cartridge_flag_state(
+                            Title("State for <i>General Error</i>")
+                        ),
+                        "communication": _cartridge_flag_state(
+                            Title("State for <i>Communication</i>")
+                        ),
+                        "disconnected_frame": _cartridge_flag_state(
+                            Title("State for <i>Disconnected Frame</i>")
+                        ),
+                        "firmware_mismatch": _cartridge_flag_state(
+                            Title("State for <i>Firmware Mismatch</i>")
+                        ),
+                    },
                 ),
             ),
         }

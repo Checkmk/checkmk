@@ -104,6 +104,7 @@ class CheckParameters(TypedDict):
     battery_replace_state: int
     post_calibration_levels: PostCalibrationParameters
     battime: LevelsT[float]
+    cartridge_flag_states: Mapping[str, int]
 
 
 def parse_apc_symmetra(
@@ -192,21 +193,29 @@ def discovery_apc_symmetra(section: ParsedSection) -> DiscoveryResult:
         yield Service()
 
 
-_CARTRIDGE_BITS = {
-    0: "Disconnected",
-    1: "Overvoltage",
-    2: "Needs Replacement",
-    3: "Overtemperature Critical",
-    4: "Charger",
-    5: "Temperature Sensor",
-    6: "Bus Soft Start",
-    7: "Overtemperature Warning",
-    8: "General Error",
-    9: "Communication",
-    10: "Disconnected Frame",
-    11: "Firmware Mismatch",
+# Flag bits of upsHighPrecBatteryPackCartridgeStatus: (rule parameter key, label)
+_CARTRIDGE_FLAGS = {
+    0: ("disconnected", "Disconnected"),
+    1: ("overvoltage", "Overvoltage"),
+    2: ("needs_replacement", "Needs Replacement"),
+    3: ("overtemperature_critical", "Overtemperature Critical"),
+    4: ("charger", "Charger"),
+    5: ("temperature_sensor", "Temperature Sensor"),
+    6: ("bus_soft_start", "Bus Soft Start"),
+    7: ("overtemperature_warning", "Overtemperature Warning"),
+    8: ("general_error", "General Error"),
+    9: ("communication", "Communication"),
+    10: ("disconnected_frame", "Disconnected Frame"),
+    11: ("firmware_mismatch", "Firmware Mismatch"),
 }
 _CARTRIDGE_NEEDS_REPLACEMENT_BIT = 2
+
+
+def _cartridge_flag_state(bit: int, params: CheckParameters) -> State:
+    if bit == _CARTRIDGE_NEEDS_REPLACEMENT_BIT:
+        return State(params["battery_replace_state"])
+    key, _label = _CARTRIDGE_FLAGS[bit]
+    return State(params.get("cartridge_flag_states", {}).get(key, State.WARN.value))
 
 
 def check_apc_symmetra(params: CheckParameters, section: ParsedSection) -> CheckResult:
@@ -349,16 +358,9 @@ def check_apc_symmetra(params: CheckParameters, section: ParsedSection) -> Check
         set_bits = [idx for idx, bit in enumerate(bitmask) if bit == "1"]
         if set_bits:
             yield Result(
-                state=State.worst(
-                    *(
-                        State(params["battery_replace_state"])
-                        if idx == _CARTRIDGE_NEEDS_REPLACEMENT_BIT
-                        else State.WARN
-                        for idx in set_bits
-                    )
-                ),
+                state=State.worst(*(_cartridge_flag_state(idx, params) for idx in set_bits)),
                 summary=f"Battery pack cartridge {cart_idx}: "
-                f"{', '.join(_CARTRIDGE_BITS[idx] for idx in set_bits)}",
+                f"{', '.join(_CARTRIDGE_FLAGS[idx][1] for idx in set_bits)}",
             )
         else:
             yield Result(state=State.OK, summary=f"Battery pack cartridge {cart_idx}: OK")
@@ -410,6 +412,7 @@ check_plugin_apc_symmetra = CheckPlugin(
         battery_replace_state=1,
         post_calibration_levels=PostCalibrationParameters(altcapacity=50.0, additional_time_span=0),
         battime=("fixed", (0.0, 0.0)),
+        cartridge_flag_states={},
     ),
 )
 

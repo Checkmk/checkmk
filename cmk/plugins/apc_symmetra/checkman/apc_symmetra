@@ -60,11 +60,13 @@ description:
 
  Battery pack cartridge:
 
- - Depending on configuration (default: {WARN}): "needs replacement"
+ - "Needs Replacement" flag: Depending on the configured state for battery replacement (default: {WARN})
 
- - {WARN}: If any other bit indicates a deviation from normal operation (Overvoltage, Overtemperature, Firmware mismatch, ...)
+ - Any other flag (Disconnected, Overvoltage, Overtemperature, Firmware Mismatch, ...): Depending on the configured state for that flag (default: {WARN})
 
- - {OK}: In all other cases
+ - {OK}: No flag set
+
+ If a cartridge has several flags set, the worst of their states applies.
 
  This check uses the PowerNet-MIB.
 

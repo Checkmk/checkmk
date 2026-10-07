@@ -76,16 +76,10 @@ def _check_agent_bailouts(bailouts: list[tuple[int, str]]) -> CheckResult:
 
 
 def _check_agent_issues(issues: dict[str, list[dict[str, Any]]], params: Params) -> CheckResult:
-    for type_ in ("warning", "exception"):
-        # The next 8 lines exist solely to make mypy happy.
-        levels: tuple[int, int] | None
-        match type_:
-            case "warning":
-                levels = params["warning_levels"]
-            case "exception":
-                levels = params["exception_levels"]
-            case _:
-                levels = None  # type: ignore[unreachable]
+    for type_, levels in (
+        ("warning", params["warning_levels"]),
+        ("exception", params["exception_levels"]),
+    ):
         count = len(issues.get(type_, ()))
         yield from check_levels_v1(
             count,

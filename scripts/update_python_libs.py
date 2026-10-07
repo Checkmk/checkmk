@@ -10,7 +10,10 @@ import argparse
 import io
 import re
 import subprocess
-from collections.abc import Mapping
+import sys
+import tempfile
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import IO
@@ -86,11 +89,13 @@ def test_parse_requirements_file() -> None:
             "    --hash=sha256:def\n"
             "pyjwt[crypto]==2.15.1 \\\n"
             "    --hash=sha256:123\n"
+            'foo==1.0 ; python_version < "3.13"\n'
             "six==1.17.0\n"
         )
     ) == {
         "pydantic-ai-slim": Info(name="pydantic-ai-slim", version="2.56.0", hashes=["abc", "def"]),
         "pyjwt": Info(name="pyjwt", version="2.15.1", hashes=["123"]),
+        "foo": Info(name="foo", version="1.0", hashes=[]),
         "six": Info(name="six", version="1.17.0", hashes=[]),
     }
 
@@ -124,13 +129,41 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         help="Call git commit with the generated message",
     )
-    parser.add_argument(
+    scope = parser.add_mutually_exclusive_group()
+    scope.add_argument(
+        "--with-windows",
+        action="store_true",
+        help="Also update the Windows agent module lock file",
+    )
+    scope.add_argument(
+        "--windows-only",
+        action="store_true",
+        help="Only update the Windows agent module lock file",
+    )
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
+        "--yolo",
+        action="store_true",
+        help="Update everything, allowing major updates (default: compatible releases only)",
+    )
+    mode.add_argument(
         "--package",
         action="append",
         dest="packages",
-        help="Only update the given package(s)",
+        help="Only update the given package(s), as far as possible; everything else stays "
+        "within compatible releases",
     )
     return parser.parse_args()
+
+
+# The license list has to cover all editions. Using the same configuration for every bazel call
+# keeps the analysis cache instead of discarding it on each edition switch.
+_BAZEL_FLAGS = ["--cmk_edition=ultimate"]
+_LICENSES_FILE = "omd/dependency_management/automatically_researched_licenses.json"
+
+
+def _bazel_run(target: str, *args: str) -> None:
+    subprocess.check_call(["bazel", "run", *_BAZEL_FLAGS, target, "--", *args])
 
 
 def _get_lock_files() -> list[str]:
@@ -140,28 +173,81 @@ def _get_lock_files() -> list[str]:
             [
                 "bazel",
                 "cquery",
+                *_BAZEL_FLAGS,
                 'kind("source file", deps(//:lock_python_requirements))',
                 "--output=files",
             ],
             text=True,
         ).splitlines()
-        if filename.endswith("requirements.txt")
+        if "requirements" in filename and filename.endswith(".txt")
     ]
+
+
+@dataclass(frozen=True)
+class LockGroup:
+    lock_file: Path
+    target: str
+    # locks constrained by lock_file, they just need to be regenerated afterwards
+    derived_targets: tuple[str, ...] = ()
+    commit_msg_heading: str = ""
+
+
+def _lock_groups(with_windows: bool, windows_only: bool) -> list[LockGroup]:
+    root = LockGroup(
+        lock_file=Path("requirements.txt"),
+        target="//:requirements",
+        derived_targets=("//:community_requirements", "//:runtime_requirements")
+        + (
+            ("//omd/non-free/relay:requirements",)
+            if Path("omd/non-free/relay/BUILD").exists()
+            else ()
+        ),
+    )
+    windows = LockGroup(
+        lock_file=Path("agents/modules/windows/requirements-windows.txt"),
+        target="//agents/modules/windows:requirements_windows",
+        commit_msg_heading="requirements-windows.txt:\n",
+    )
+    if windows_only:
+        return [windows]
+    return [root, windows] if with_windows else [root]
+
+
+@contextmanager
+def _constraints_file(lock: Mapping[str, Info]) -> Iterator[Path]:
+    """Pin every package of the lock to its compatible release"""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt") as f:
+        f.writelines(
+            f"{info.name}{'~=' if '.' in info.version else '=='}{info.version}\n"
+            for info in lock.values()
+        )
+        f.flush()
+        yield Path(f.name)
+
+
+def _relock(group: LockGroup, packages: list[str], yolo: bool) -> str:
+    """Update the lock files of the group and return the diff of the leading lock file"""
+    before = _parse_requirements(group.lock_file)
+    if packages:
+        _bazel_run(group.target, *(arg for p in packages for arg in ("--upgrade-package", p)))
+    elif yolo:
+        group.lock_file.write_text("")
+        _bazel_run(group.target)
+    else:
+        group.lock_file.write_text("")
+        with _constraints_file(before) as constraints:
+            _bazel_run(group.target, "--constraint", str(constraints))
+    # The plain rerun keeps the resolved versions but drops the temporary constraints file from
+    # the "via" annotations, so the lock matches what the lock test regenerates.
+    for target in (group.target, *group.derived_targets):
+        _bazel_run(target)
+    return _diff(before, _parse_requirements(group.lock_file))
 
 
 def _main() -> None:
     args = _parse_args()
-    requirements_txt_path = Path("requirements.txt")
-    before = _parse_requirements(requirements_txt_path)
-    if args.packages:
-        subprocess.check_call(
-            ["bazel", "run", "//:lock_python_requirements", "--"]
-            + [arg for p in args.packages for arg in ("--upgrade-package", p)]
-        )
-    else:
-        requirements_txt_path.write_text("")
-        subprocess.check_call(["bazel", "run", "//:lock_python_requirements"])
-    after = _parse_requirements(requirements_txt_path)
+    groups = _lock_groups(args.with_windows, args.windows_only)
+    diffs = [_relock(group, args.packages or [], args.yolo) for group in groups]
     # there is also a omd/requirements_lock.txt file, it looks like it will vanish soon
     # I'm not sure how we would want to update that anyways. Special commit or all in one?
     # Therefore let's keep it simple for now.
@@ -169,15 +255,20 @@ def _main() -> None:
     # echo > omd/requirements_lock.txt; bazel run //omd:requirements_lock
     with open(".git-commit-msg", "w") as f:
         f.write("Update Python libraries\n\n")
-        f.write(_diff(before, after))
-    if args.commit:
-        subprocess.check_call(
-            [
-                "git",
-                "add",
-            ]
-            + _get_lock_files()
+        f.write(
+            "\n\n".join(
+                f"{group.commit_msg_heading}{diff}"
+                for group, diff in zip(groups, diffs)
+                if diff.strip() or group is groups[0]
+            )
         )
+    # A failed lookup must not throw away the relock, the licenses can be researched by hand.
+    try:
+        _bazel_run("//omd/dependency_management:research_licenses")
+    except subprocess.CalledProcessError:
+        print(f"License research failed, {_LICENSES_FILE} needs manual care", file=sys.stderr)
+    if args.commit:
+        subprocess.check_call(["git", "add", _LICENSES_FILE, *_get_lock_files()])
         subprocess.check_call(["git", "commit", "-F", ".git-commit-msg"])
     else:
         print("git commit -F .git-commit-msg")

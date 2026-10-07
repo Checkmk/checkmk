@@ -424,8 +424,11 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("cmk.base.nonfree.ultimate.relay"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_RELAY_PROTOCOLS,
+        "cmk.base.active_check_result",
         "cmk.base.nonfree",
         "cmk.base.config",
+        "cmk.check_helper_protocol",
+        "cmk.checkengine.submitters",
         "cmk.base.configlib",
         "cmk.base.core",
         "cmk.fetcher_encoder",

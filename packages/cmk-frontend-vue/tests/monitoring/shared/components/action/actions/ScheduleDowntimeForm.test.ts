@@ -273,25 +273,22 @@ test.each(['Hours', 'Minutes'])(
 describe('isScheduleDowntimeValid', () => {
   it('requires a non-empty comment', () => {
     expect(
-      isScheduleDowntimeValid({ ...defaultScheduleDowntimeValues(PRESETS), comment: '' }, PRESETS)
+      isScheduleDowntimeValid({ ...defaultScheduleDowntimeValues(PRESETS), comment: '' })
     ).toBe(false)
     expect(
-      isScheduleDowntimeValid({ ...defaultScheduleDowntimeValues(PRESETS), comment: 'x' }, PRESETS)
+      isScheduleDowntimeValid({ ...defaultScheduleDowntimeValues(PRESETS), comment: 'x' })
     ).toBe(true)
   })
 
   it('rejects a zero ad hoc duration', () => {
     expect(
-      isScheduleDowntimeValid(
-        {
-          ...defaultScheduleDowntimeValues(PRESETS),
-          comment: 'x',
-          selection: 'adhoc',
-          adhocHours: 0,
-          adhocMinutes: 0
-        },
-        PRESETS
-      )
+      isScheduleDowntimeValid({
+        ...defaultScheduleDowntimeValues(PRESETS),
+        comment: 'x',
+        selection: 'adhoc',
+        adhocHours: 0,
+        adhocMinutes: 0
+      })
     ).toBe(false)
   })
 
@@ -300,16 +297,13 @@ describe('isScheduleDowntimeValid', () => {
     { part: 'minutes', adhocHours: 1, adhocMinutes: -30 }
   ])('rejects an ad hoc duration with negative $part', ({ adhocHours, adhocMinutes }) => {
     expect(
-      isScheduleDowntimeValid(
-        {
-          ...defaultScheduleDowntimeValues(PRESETS),
-          comment: 'x',
-          selection: 'adhoc',
-          adhocHours,
-          adhocMinutes
-        },
-        PRESETS
-      )
+      isScheduleDowntimeValid({
+        ...defaultScheduleDowntimeValues(PRESETS),
+        comment: 'x',
+        selection: 'adhoc',
+        adhocHours,
+        adhocMinutes
+      })
     ).toBe(false)
   })
 })
@@ -411,61 +405,18 @@ describe('Repeat', () => {
     expect(modelValue.recur).toBe('day')
   })
 
-  /**
-   * The classic view rejects the same thing: a downtime repeating on a day the short months do
-   * not have would skip them.
-   */
-  it('is invalid when a monthly repeat starts after the 28th', () => {
-    const start = toZoned(parseAbsolute('2026-08-29T10:00:00Z', 'UTC'), 'UTC')
+  it('is valid when a monthly repeat starts on a day short months do not have', () => {
+    const start = toZoned(parseAbsolute('2026-08-31T10:00:00Z', 'UTC'), 'UTC')
 
     expect(
-      isScheduleDowntimeValid(
-        {
-          ...defaultScheduleDowntimeValues(PRESETS),
-          comment: 'maintenance',
-          selection: 'custom',
-          customRange: { from: start, to: start.add({ hours: 4 }) },
-          recur: 'day_of_month'
-        },
-        PRESETS
-      )
-    ).toBe(false)
-  })
-
-  it('is valid when a monthly repeat starts on a day every month has', () => {
-    const start = toZoned(parseAbsolute('2026-08-28T10:00:00Z', 'UTC'), 'UTC')
-
-    expect(
-      isScheduleDowntimeValid(
-        {
-          ...defaultScheduleDowntimeValues(PRESETS),
-          comment: 'maintenance',
-          selection: 'custom',
-          customRange: { from: start, to: start.add({ hours: 4 }) },
-          recur: 'day_of_month'
-        },
-        PRESETS
-      )
-    ).toBe(true)
-  })
-
-  it('says why a monthly repeat is refused', async () => {
-    const start = toZoned(parseAbsolute('2026-08-29T10:00:00Z', 'UTC'), 'UTC')
-    mountForm(
-      {
+      isScheduleDowntimeValid({
+        ...defaultScheduleDowntimeValues(PRESETS),
         comment: 'maintenance',
         selection: 'custom',
         customRange: { from: start, to: start.add({ hours: 4 }) },
         recur: 'day_of_month'
-      },
-      RECURRENCES
-    )
-
-    expect(
-      await screen.findByText(
-        'A downtime repeating monthly has to start between the 1st and the 28th.'
-      )
-    ).toBeInTheDocument()
+      })
+    ).toBe(true)
   })
 })
 
@@ -490,15 +441,12 @@ describe('Custom duration', () => {
 
   it('is invalid when the downtime ends before it starts', () => {
     expect(
-      isScheduleDowntimeValid(
-        {
-          ...defaultScheduleDowntimeValues(PRESETS),
-          comment: 'maintenance',
-          selection: 'custom',
-          customRange: { from: start, to: start.subtract({ hours: 1 }) }
-        },
-        PRESETS
-      )
+      isScheduleDowntimeValid({
+        ...defaultScheduleDowntimeValues(PRESETS),
+        comment: 'maintenance',
+        selection: 'custom',
+        customRange: { from: start, to: start.subtract({ hours: 1 }) }
+      })
     ).toBe(false)
   })
 

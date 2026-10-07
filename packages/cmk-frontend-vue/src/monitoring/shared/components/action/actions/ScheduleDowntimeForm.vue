@@ -145,30 +145,10 @@ export function customRangeIsOrdered(values: ScheduleDowntimeFormValues): boolea
   return values.selection !== 'custom' || values.customRange.from.compare(values.customRange.to) < 0
 }
 
-export function isScheduleDowntimeValid(
-  values: ScheduleDowntimeFormValues,
-  presets: readonly DowntimePresetOption[]
-): boolean {
+export function isScheduleDowntimeValid(values: ScheduleDowntimeFormValues): boolean {
   const durationValid =
     (values.selection !== 'adhoc' || adhocDurationIsValid(values)) && customRangeIsOrdered(values)
-  return (
-    values.comment.trim() !== '' && durationValid && repeatsOnADayEveryMonthHas(values, presets)
-  )
-}
-
-/**
- * A downtime repeating on the same day of each month can only start on a day that every month
- * has, or the months short of it would go without.
- */
-export function repeatsOnADayEveryMonthHas(
-  values: ScheduleDowntimeFormValues,
-  presets: readonly DowntimePresetOption[]
-): boolean {
-  if (values.recur !== 'day_of_month') {
-    return true
-  }
-  const window = downtimeWindow(values, presets)
-  return window === null || new Date(window.start).getDate() <= 28
+  return values.comment.trim() !== '' && durationValid
 }
 
 /** The absolute downtime window in ISO 8601, or `null` when the selected duration is empty. */
@@ -279,12 +259,6 @@ const rangeOrderHint = computed(() =>
   customRangeIsOrdered(model.value) ? null : _t('The downtime has to end after it starts.')
 )
 
-const monthDayHint = computed(() =>
-  repeatsOnADayEveryMonthHas(model.value, props.presets)
-    ? null
-    : _t('A downtime repeating monthly has to start between the 1st and the 28th.')
-)
-
 const repeat = computed({
   get: () => model.value.recur,
   set: (recur) => {
@@ -302,7 +276,7 @@ const untilEndDate = computed(() => {
   return renderDate(untilPresetEnd(until, now(timeZone)).toDate(), timeZone)
 })
 
-watch(model, (values) => emit('update:valid', isScheduleDowntimeValid(values, props.presets)), {
+watch(model, (values) => emit('update:valid', isScheduleDowntimeValid(values)), {
   immediate: true,
   deep: true
 })
@@ -524,9 +498,6 @@ function selectOverflow(id: string | null): void {
           <span class="monitoring-schedule-downtime-form__label">{{ _t('Repeat') }}</span>
           <CmkDropdown v-model="repeat" :options="repeatOptions" :label="_t('Repeat')" />
         </label>
-        <p v-if="monthDayHint" class="monitoring-schedule-downtime-form__preset-hint">
-          {{ monthDayHint }}
-        </p>
       </div>
     </CmkCatalogPanel>
 

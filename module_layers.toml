@@ -387,7 +387,11 @@ allows = [
 allows = []
 
 [components."cmk.ai_control_plane.conversation"]
-allows = ["cmk.ai_control_plane.protocols", "cmk.password_store.v1"]
+allows = [
+  "cmk.ai_control_plane.lib.paths",
+  "cmk.ai_control_plane.protocols",
+  "cmk.password_store.v1",
+]
 
 [components."cmk.agent_receiver"]
 allows = ["@ccc", "@crypto", "@relay_protocols", "cmk.licensing.basics.options"]

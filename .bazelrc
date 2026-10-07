@@ -8,12 +8,6 @@ build --workspace_status_command=bazel/tools/workspace_status.sh
 # Add mirrors for certain download URLs
 common --downloader_config=bazel_downloader.cfg
 
-# Limit JVM thread pools to match cgroup CPU limit (nproc reports host CPUs, not cgroup)
-# --host_jvm_args is a startup option, see https://bazel.build/run/bazelrc
-startup --host_jvm_args=-XX:ActiveProcessorCount=8
-startup --host_jvm_args=-XX:ParallelGCThreads=4
-startup --host_jvm_args=-XX:ConcGCThreads=2
-
 # enable a local disk cache: this is especially relevant for local builds without an enabled bazel-remote
 common:linux --disk_cache=~/.cache/bazel_disk_cache/
 common:linux --experimental_disk_cache_gc_max_size=100G
@@ -86,6 +80,7 @@ common --@aspect_rules_ts//ts:skipLibCheck=always
 
 ## For specific commands
 
+import %workspace%/bazel/rc/performance.rc
 import %workspace%/bazel/rc/correctness.rc
 import %workspace%/bazel/rc/checkmk.rc
 import %workspace%/bazel/rc/ci.rc

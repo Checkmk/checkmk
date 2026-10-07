@@ -191,6 +191,11 @@ def test_get_missing_single_infos_missing_context() -> None:
     assert visuals.get_missing_single_infos(single_infos=["host"], context={}) == {"host"}
 
 
+def test_get_context_specs_omits_infos_without_filters() -> None:
+    result = visuals.get_context_specs([], ["contact", "hostgroup"], RequestCache(Config()))
+    assert [r[0] for r in result] == ["hostgroup"]
+
+
 def test_get_context_specs_only_host_and_service_info() -> None:
     result = visuals.get_context_specs(["host"], ["host", "service"], RequestCache(Config()))
     assert [r[0] for r in result] == [

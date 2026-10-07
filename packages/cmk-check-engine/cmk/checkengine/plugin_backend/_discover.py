@@ -62,7 +62,7 @@ def load_all_plugins(
     registered_snmp_sections: dict[SectionName, plugins.SNMPSectionPlugin] = {}
     registered_check_plugins: dict[plugins.CheckPluginName, plugins.CheckPlugin] = {}
     registered_inventory_plugins: dict[plugins.InventoryPluginName, plugins.InventoryPlugin] = {}
-    errors = [f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors]
+    errors = [f"Agent based plug-in: {exc}" for exc in discovered_plugins.errors]
 
     with tracer.span("load_discovered_plugins"):
         for location, plugin in discovered_plugins.plugins.items():
@@ -79,7 +79,7 @@ def load_all_plugins(
             except Exception as exc:
                 if raise_errors:
                     raise
-                errors.append(f"Error in agent based plug-in {plugin.name} ({type(plugin)}): {exc}")
+                errors.append(f"Agent based plug-in {plugin.name} ({type(plugin)}): {exc}")
 
     return plugins.AgentBasedPlugins(
         agent_sections=registered_agent_sections,

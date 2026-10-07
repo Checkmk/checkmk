@@ -275,7 +275,8 @@ class Collector[PluginType: _PluginProtocol]:
             if (existing := self._unique_plugins.get(key)) is not None:
                 self._handle_error(
                     ValueError(
-                        f"{location}: plug-in '{value.name}' already defined at {existing[0]}"
+                        f"Name conflict for '{value.name}': "
+                        f"Ignoring '{existing[0]}' in favor of '{location}'"
                     )
                 )
 

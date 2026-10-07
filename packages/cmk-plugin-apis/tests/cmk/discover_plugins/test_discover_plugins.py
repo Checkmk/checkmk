@@ -205,7 +205,7 @@ class TestCollector:
         collector = Collector({MyTestPlugin: "my_"}, skip_wrong_types=False, raise_errors=True)
         collector.add_from_module("my_module", self._importer)
 
-        with pytest.raises(ValueError, match="already defined"):
+        with pytest.raises(ValueError, match="Name conflict"):
             collector.add_from_module("my_collision", self._importer)
 
         # error not recorded, b/c we raised it:

@@ -10,10 +10,11 @@
 #content_area:has(> cmk-global-time-picker) {
   table.data.single > tbody > tr.data > td:has(> cmk-graph-group) {
     --graphing-graph-header-inline-padding: 0;
+    --graphing-graph-group-panel-padding: var(--dimension-7);
+    --graphing-graph-group-panel-background: #{$even-tr-bg-color};
+    --graphing-graph-group-panel-border-radius: var(--dimension-3);
 
-    padding: $spacing-double;
-    background-color: $even-tr-bg-color;
-    border-radius: $theme-border-radius;
+    padding-block: var(--dimension-7);
   }
 }
 

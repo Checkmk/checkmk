@@ -178,6 +178,7 @@ const REQUESTS_PER_PANEL = 2
 // zero-sized rects, so we mock rect sizes here to enable the fetch guard (so GraphPanel elements
 // render at all) and to assert proper calculation of the graphs' effective width.
 const MAIN_PAGE_CONTENT_ID = 'main_page_content'
+const PANEL_PADDING_STYLE_ID = 'panel-padding'
 let containerRight = 1_000
 let groupLeft = 0
 
@@ -235,6 +236,7 @@ beforeEach(() => {
 
 afterEach(() => {
   document.getElementById(MAIN_PAGE_CONTENT_ID)?.remove()
+  document.getElementById(PANEL_PADDING_STYLE_ID)?.remove()
   resetGlobalTimeState()
   vi.useRealTimers()
 })
@@ -256,6 +258,14 @@ const EVERYTHING_SHOWN: GraphDisplayOptions = {
   show_title: true,
   show_vertical_axis: true,
   show_time_axis: true
+}
+
+// As the legacy pages do to put each graph on its own padded box.
+function padPanels(padding: string): void {
+  const style = document.createElement('style')
+  style.id = PANEL_PADDING_STYLE_ID
+  style.textContent = `.graphing-graph-group { --graphing-graph-group-panel-padding: ${padding}; }`
+  document.head.appendChild(style)
 }
 
 function renderGroup(
@@ -316,6 +326,22 @@ test("sizes a refetch's skeletons from the panels they replace", async () => {
     `${PANEL_HEIGHTS['CPU utilization']}px`,
     `${PANEL_HEIGHTS['Memory']}px`
   ])
+})
+
+test("sizes a padded panel's skeleton to the panel's footprint, not adding the padding twice", async () => {
+  padPanels('20px')
+  vi.useFakeTimers()
+  renderGroup()
+  await vi.advanceTimersByTimeAsync(0)
+  expect(panels()).toHaveLength(1)
+
+  postSpy.mockReturnValue(new Promise(() => {}))
+  await fireEvent.click(screen.getByText('pan'))
+  await vi.advanceTimersByTimeAsync(1_000)
+
+  expect((skeletons()[0] as HTMLElement).style.height).toBe(
+    `${PANEL_HEIGHTS['CPU utilization']! - 40}px`
+  )
 })
 
 test('reports the busy state from the first moment of a refetch too', async () => {
@@ -792,6 +818,16 @@ test('derives the effective width from #main_page_content as container.right - g
   const { container: containerC } = renderGroup()
   const panelC = await within(containerC as HTMLElement).findByTestId('graph-panel')
   expect(panelC.getAttribute('data-figure-width')).toBe(`${MAX_FIGURE_WIDTH}`)
+})
+
+test("leaves room for the panels' own padding in the derived width", async () => {
+  padPanels('20px')
+  containerRight = 1_000
+  groupLeft = 100
+  renderGroup()
+
+  const panel = await screen.findByTestId('graph-panel')
+  expect(panel.getAttribute('data-figure-width')).toBe('860')
 })
 
 test('clamps the derived width to zero rather than going negative when the container is narrower than the inset', async () => {

@@ -101,6 +101,12 @@ function contentRightEdge(element: HTMLElement): number {
   )
 }
 
+// The panels' padding sits inside the group, out of reach of rightInsetWithin, so the figures
+// and the skeletons that stand in for them give it up themselves.
+function panelPadding(group: HTMLElement): number {
+  return pixels(getComputedStyle(group).getPropertyValue('--graphing-graph-group-panel-padding'))
+}
+
 function rightInsetWithin(descendant: HTMLElement, ancestor: HTMLElement): number {
   let inset = 0
   for (
@@ -129,7 +135,8 @@ if (props.figure_width === undefined) {
       0,
       contentRightEdge(container) -
         group.getBoundingClientRect().left -
-        rightInsetWithin(group, container)
+        rightInsetWithin(group, container) -
+        2 * panelPadding(group)
     )
   }
 
@@ -268,9 +275,11 @@ watch(showSkeletons, (showing) => {
   if (!showing) {
     return
   }
-  panelHeights.value = slots.value.map(
-    ({ index }) => panelEls.get(index)?.getBoundingClientRect().height
-  )
+  const verticalPadding = groupEl.value ? 2 * panelPadding(groupEl.value) : 0
+  panelHeights.value = slots.value.map(({ index }) => {
+    const height = panelEls.get(index)?.getBoundingClientRect().height
+    return height === undefined ? undefined : height - verticalPadding
+  })
 })
 
 const notice = useGraphNotice({
@@ -396,8 +405,10 @@ function onRetry(): void {
   display: flex;
 }
 
+// Panels keep their own width, not the group's, so a panel box ends where its capped graph does.
 .graphing-graph-group--column {
   flex-direction: column;
+  align-items: flex-start;
   gap: var(--dimension-7);
 }
 
@@ -413,8 +424,12 @@ function onRetry(): void {
   justify-content: var(--cmk-graph-group-justify-content, flex-start);
 }
 
+// Unset, the panels sit bare in the group; a page that wants each graph on its own box sets these.
 .graphing-graph-group__panel {
   position: relative;
+  padding: var(--graphing-graph-group-panel-padding, 0);
+  background-color: var(--graphing-graph-group-panel-background, transparent);
+  border-radius: var(--graphing-graph-group-panel-border-radius, 0);
 }
 
 // Centred on the panel, not on its plot alone: the plot's box is GraphPanel's own business.

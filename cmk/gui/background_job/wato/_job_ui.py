@@ -293,8 +293,6 @@ class JobRenderer:
             (_("Thread ID"), str(job_status.pid) or ""),
             (_("Result"), "<br>".join(loginfo["JobResult"])),
         ]:
-            if right is None:
-                continue  # type: ignore[unreachable]
             html.open_tr()
             html.th(left)
             html.td(HTML.without_escaping(right))
@@ -447,24 +445,18 @@ class JobRenderer:
 
         # Progress info
         loginfo = job_status.loginfo
-        if loginfo:
-            if job_status.state == background_job.JobStatusStates.EXCEPTION:
-                html.td(
-                    HTMLWriter.render_br().join(loginfo["JobException"]), css="job_last_progress"
-                )
-            else:
-                progress_text = ""
-                if loginfo["JobProgressUpdate"]:
-                    progress_text += "%s" % loginfo["JobProgressUpdate"][-1]
-                html.td(HTML.without_escaping(progress_text), css="job_last_progress")
-
-            html.td(
-                HTML.without_escaping("<br>".join(loginfo["JobResult"])),
-                css="job_result",
-            )
+        if job_status.state == background_job.JobStatusStates.EXCEPTION:
+            html.td(HTMLWriter.render_br().join(loginfo["JobException"]), css="job_last_progress")
         else:
-            html.td("", css="job_last_progress")  # type: ignore[unreachable]
-            html.td("", css="job_result")
+            progress_text = ""
+            if loginfo["JobProgressUpdate"]:
+                progress_text += "%s" % loginfo["JobProgressUpdate"][-1]
+            html.td(HTML.without_escaping(progress_text), css="job_last_progress")
+
+        html.td(
+            HTML.without_escaping("<br>".join(loginfo["JobResult"])),
+            css="job_result",
+        )
 
         html.close_tr()
 

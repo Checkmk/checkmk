@@ -3,17 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-from typing import Any
-
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.ibm_mq.agent_based.ibm_mq_managers import (
     check_ibm_mq_managers,
+    DEFAULT_PARAMETERS,
     discover_ibm_mq_managers,
     ManagerInfo,
+    ManagerParams,
     parse_ibm_mq_managers,
 )
 
@@ -72,7 +70,7 @@ QMNAME(THE.LOCAL.ONE)                                     STATUS(RUNNING) DEFAUL
     assert attrs["QMNAME"] == "THE.LOCAL.ONE"
     assert attrs["STATUS"] == "RUNNING"
 
-    params: dict[str, Any] = {}
+    params = DEFAULT_PARAMETERS
     actual = list(check_ibm_mq_managers("THE.LOCAL.ONE", params, parsed))
     expected = [
         Result(state=State.OK, summary="Status: RUNNING"),
@@ -96,7 +94,7 @@ QMNAME(THE.STANDBY.RDQM)                                  STATUS(RUNNING ELSEWHE
     assert attrs["QMNAME"] == "THE.RDQM.ONE"
     assert attrs["STATUS"] == "RUNNING"
 
-    params: dict[str, Any] = {}
+    params = DEFAULT_PARAMETERS
     actual = list(check_ibm_mq_managers("THE.RDQM.ONE", params, parsed))
     expected = [
         Result(state=State.OK, summary="Status: RUNNING"),
@@ -114,7 +112,7 @@ QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PREEMPTIV
     section = parse_info(lines, chr(10))
     parsed = parse_ibm_mq_managers(section)
 
-    params: dict[str, Any] = {}
+    params = DEFAULT_PARAMETERS
     actual = list(check_ibm_mq_managers("THE.ENDED.ONE", params, parsed))
     expected = [
         Result(state=State.WARN, summary="Status: ENDED PREEMPTIVELY"),
@@ -138,54 +136,38 @@ QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PRE-EMPTI
     assert expected == actual
 
 
-def test_status_wato_override() -> None:
-    lines = """\
+_PRE_EMPTIVELY_ENDED_MANAGER = """\
 QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PRE-EMPTIVELY) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(7.5.0.2)
 """
-    section = parse_info(lines, chr(10))
-    parsed = parse_ibm_mq_managers(section)
 
-    # Factory defaults
-    params: dict[str, Any] = {}
+
+def test_configured_state_overrides_the_factory_default() -> None:
+    parsed = parse_ibm_mq_managers(parse_info(_PRE_EMPTIVELY_ENDED_MANAGER, chr(10)))
+    params: ManagerParams = {**DEFAULT_PARAMETERS, "mapped_states": {"ended_pre_emptively": 2}}
+
     actual = list(check_ibm_mq_managers("THE.ENDED.ONE", params, parsed))
-    expected = [
-        Result(state=State.WARN, summary="Status: ENDED PRE-EMPTIVELY"),
-        Result(state=State.OK, summary="Version: 7.5.0.2"),
-        Result(state=State.OK, summary="Installation: /opt/mqm (Installation1), Default: NO"),
-    ]
-    assert expected == actual
 
-    # Override factory defaults
-    params = {"mapped_states": [("ended_pre_emptively", 2)]}
+    assert actual[0] == Result(state=State.CRIT, summary="Status: ENDED PRE-EMPTIVELY")
+
+
+def test_states_the_rule_leaves_out_keep_their_factory_default() -> None:
+    parsed = parse_ibm_mq_managers(parse_info(_PRE_EMPTIVELY_ENDED_MANAGER, chr(10)))
+    params: ManagerParams = {**DEFAULT_PARAMETERS, "mapped_states": {"running_as_standby": 2}}
+
     actual = list(check_ibm_mq_managers("THE.ENDED.ONE", params, parsed))
-    expected = [
-        Result(state=State.CRIT, summary="Status: ENDED PRE-EMPTIVELY"),
-        Result(state=State.OK, summary="Version: 7.5.0.2"),
-        Result(state=State.OK, summary="Installation: /opt/mqm (Installation1), Default: NO"),
-    ]
-    assert expected == actual
 
-    # Override-does-not-match configuration
-    params = {
-        "mapped_states": [("running_as_standby", 2)],
-        "mapped_states_default": 3,
-    }
-    actual = list(check_ibm_mq_managers("THE.ENDED.ONE", params, parsed))
-    expected = [
-        Result(state=State.UNKNOWN, summary="Status: ENDED PRE-EMPTIVELY"),
-        Result(state=State.OK, summary="Version: 7.5.0.2"),
-        Result(state=State.OK, summary="Installation: /opt/mqm (Installation1), Default: NO"),
-    ]
-    assert expected == actual
+    assert actual[0] == Result(state=State.WARN, summary="Status: ENDED PRE-EMPTIVELY")
 
 
-def test_unknown_status_gets_the_fallback_state_without_a_state_map() -> None:
+def test_unknown_status_gets_the_configured_state() -> None:
     lines = """\
 QMNAME(THE.ODD.ONE)                                       STATUS(SOMETHING NEW) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(9.4.0.0)
 """
     parsed = parse_ibm_mq_managers(parse_info(lines, chr(10)))
 
-    actual = list(check_ibm_mq_managers("THE.ODD.ONE", {"mapped_states_default": 1}, parsed))
+    params: ManagerParams = {**DEFAULT_PARAMETERS, "mapped_states_default": 1}
+
+    actual = list(check_ibm_mq_managers("THE.ODD.ONE", params, parsed))
 
     assert actual[0] == Result(state=State.WARN, summary="Status: SOMETHING NEW")
 
@@ -197,8 +179,10 @@ QMNAME(THE.RUNNING.ONE)                                   STATUS(RUNNING) DEFAUL
     section = parse_info(lines, chr(10))
     parsed = parse_ibm_mq_managers(section)
 
-    params: dict[str, Any] = {}
-    params.update({"version": (("at_least", "8.0"), 2)})
+    params: ManagerParams = {
+        **DEFAULT_PARAMETERS,
+        "version": ("at_least", {"version": "8.0", "state": 2}),
+    }
     actual = list(check_ibm_mq_managers("THE.RUNNING.ONE", params, parsed))
     expected = [
         Result(state=State.OK, summary="Status: RUNNING"),

@@ -7,7 +7,7 @@
 
 import re
 from collections.abc import Generator, Mapping
-from typing import Any
+from typing import Any, Literal, TypedDict
 
 from cmk.agent_based.v2 import IgnoreResultsError, StringTable
 
@@ -86,13 +86,22 @@ def parse_ibm_mq(string_table: StringTable, group_by_object: str) -> Section:
     return parsed
 
 
+class VersionExpectation(TypedDict):
+    version: str
+    state: int
+
+
+# See version_form() in cmk/plugins/ibm_mq/rulesets/lib.py, "any" comes without an expectation
+VersionParams = tuple[Literal["any", "at_least", "specific"], VersionExpectation | None]
+
+
 def ibm_mq_check_version(
-    actual_version: str | None, params: Mapping[str, Any], label: str
+    actual_version: str | None, expected: VersionParams, label: str
 ) -> tuple[int, str]:
     """
     >>> ibm_mq_check_version(
-    ...    "2.0.0b4",
-    ...     {"version": (("at_least", "2.0.0p2"), 2)},
+    ...     "2.0.0b4",
+    ...     ("at_least", {"version": "2.0.0p2", "state": 2}),
     ...     "Doc test",
     ... )
     (2, 'Doc test: 2.0.0b4 (should be at least 2.0.0p2)')
@@ -111,9 +120,11 @@ def ibm_mq_check_version(
     info = f"{label}: {actual_version}"
     if actual_version is None:
         return 3, info + " (no agent info)"
-    if "version" not in params:
+    comp_type, expectation = expected
+    if expectation is None:
         return 0, info
-    (comp_type, expected_version), state = params["version"]
+    expected_version = expectation["version"]
+    state = expectation["state"]
     try:
         parts_actual = tokenize(actual_version)
         parts_expected = tokenize(expected_version)

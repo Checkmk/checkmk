@@ -3,15 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
-
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.ibm_mq.agent_based.ibm_mq_plugin import (
     check_ibm_mq_plugin,
+    DEFAULT_PARAMETERS,
     discover_ibm_mq_plugin,
     parse_ibm_mq_plugin,
+    PluginParams,
 )
 
 pytestmark = pytest.mark.checks
@@ -63,7 +63,7 @@ def test_discover_empty() -> None:
     "params, parsed, expected",
     [
         pytest.param(
-            {},
+            DEFAULT_PARAMETERS,
             {
                 "version": "2.0.4",
                 "dspmq": "OK",
@@ -77,7 +77,7 @@ def test_discover_empty() -> None:
             id="all_ok",
         ),
         pytest.param(
-            {},
+            DEFAULT_PARAMETERS,
             {
                 "version": "2.0.4",
                 "dspmq": "OK",
@@ -91,7 +91,7 @@ def test_discover_empty() -> None:
             id="one_tool_not_found",
         ),
         pytest.param(
-            {},
+            DEFAULT_PARAMETERS,
             {
                 "version": "2.0.4",
                 "runmqsc": "Not found",
@@ -104,7 +104,7 @@ def test_discover_empty() -> None:
             id="tool_not_in_agent",
         ),
         pytest.param(
-            {"version": (("at_least", "2.1"), 2)},
+            {"version": ("at_least", {"version": "2.1", "state": 2})},
             {
                 "version": "2.0.4",
                 "dspmq": "OK",
@@ -120,7 +120,7 @@ def test_discover_empty() -> None:
     ],
 )
 def test_check(
-    params: Mapping[str, object],
+    params: PluginParams,
     parsed: dict[str, str],
     expected: list[Result],
 ) -> None:

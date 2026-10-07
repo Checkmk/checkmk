@@ -7,7 +7,7 @@
 
 import re
 from collections.abc import Mapping
-from typing import Any, NamedTuple
+from typing import NamedTuple, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
-from cmk.plugins.ibm_mq.lib import ibm_mq_check_version
+from cmk.plugins.ibm_mq.lib import ibm_mq_check_version, VersionParams
 
 # <<<ibm_mq_managers:sep(10)>>>
 # QMNAME(QMIMIQ11) STATUS(RUNNING) DEFAULT(NO) STANDBY(PERMITTED) INSTNAME(Installation1) INSTPATH(/usr/mqm) INSTVER(8.0.0.5)
@@ -75,39 +75,62 @@ agent_section_ibm_mq_managers = AgentSection(
     parse_function=parse_ibm_mq_managers,
 )
 
-_DEFAULT_STATUS_MAP = {
-    "STARTING": ("starting", 0),
-    "RUNNING": ("running", 0),
-    "RUNNING AS STANDBY": ("running_as_standby", 0),
-    "RUNNING ELSEWHERE": ("running_elsewhere", 0),
-    "QUIESCING": ("quiescing", 0),
-    "ENDING IMMEDIATELY": ("ending_immediately", 0),
+# Queue manager status reported by the agent: parameter key of its service state
+_STATUS_KEYS = {
+    "STARTING": "starting",
+    "RUNNING": "running",
+    "RUNNING AS STANDBY": "running_as_standby",
+    "RUNNING ELSEWHERE": "running_elsewhere",
+    "QUIESCING": "quiescing",
+    "ENDING IMMEDIATELY": "ending_immediately",
     # Older MQ-Versions (e.g. 7.5.0.2) use this status
-    "ENDING PREEMPTIVELY": ("ending_pre_emptively", 0),
-    "ENDING PRE-EMPTIVELY": ("ending_pre_emptively", 0),
-    "ENDED NORMALLY": ("ended_normally", 0),
-    "ENDED IMMEDIATELY": ("ended_immediately", 0),
-    "ENDED UNEXPECTEDLY": ("ended_unexpectedly", 2),
+    "ENDING PREEMPTIVELY": "ending_pre_emptively",
+    "ENDING PRE-EMPTIVELY": "ending_pre_emptively",
+    "ENDED NORMALLY": "ended_normally",
+    "ENDED IMMEDIATELY": "ended_immediately",
+    "ENDED UNEXPECTEDLY": "ended_unexpectedly",
     # Older MQ-Versions (e.g. 7.5.0.2) use this status
-    "ENDED PREEMPTIVELY": ("ended_pre_emptively", 1),
-    "ENDED PRE-EMPTIVELY": ("ended_pre_emptively", 1),
+    "ENDED PREEMPTIVELY": "ended_pre_emptively",
+    "ENDED PRE-EMPTIVELY": "ended_pre_emptively",
     # Older MQ-Versions (e.g. 7.5.0.2) use this status
-    "NOT AVAILABLE": ("status_not_available", 0),
-    "STATUS NOT AVAILABLE": ("status_not_available", 0),
+    "NOT AVAILABLE": "status_not_available",
+    "STATUS NOT AVAILABLE": "status_not_available",
+}
+
+_FACTORY_STATES = {
+    "starting": 0,
+    "running": 0,
+    "running_as_standby": 0,
+    "running_elsewhere": 0,
+    "quiescing": 0,
+    "ending_immediately": 0,
+    "ending_pre_emptively": 0,
+    "ended_normally": 0,
+    "ended_immediately": 0,
+    "ended_unexpectedly": 2,
+    "ended_pre_emptively": 1,
+    "status_not_available": 0,
 }
 
 
-def map_ibm_mq_manager_status(status: str, params: Mapping[str, Any]) -> int:
-    wato_key, check_state = _DEFAULT_STATUS_MAP.get(status, ("unknown", 3))
-    if wato_key == "unknown" and "mapped_states_default" in params:
-        check_state = params["mapped_states_default"]
-    if "mapped_states" in params:
-        mapped_states = dict(params["mapped_states"])
-        if wato_key in mapped_states:
-            check_state = mapped_states[wato_key]
-        elif "mapped_states_default" in params:
-            check_state = params["mapped_states_default"]
-    return check_state
+class ManagerParams(TypedDict):
+    mapped_states: Mapping[str, int]
+    mapped_states_default: int
+    version: VersionParams
+
+
+DEFAULT_PARAMETERS: ManagerParams = {
+    "mapped_states": _FACTORY_STATES,
+    "mapped_states_default": 3,
+    "version": ("any", None),
+}
+
+
+def map_ibm_mq_manager_status(status: str, params: ManagerParams) -> int:
+    if (key := _STATUS_KEYS.get(status)) is None:
+        return params["mapped_states_default"]
+    # A rule may configure some of the states only.
+    return params["mapped_states"].get(key, _FACTORY_STATES[key])
 
 
 def discover_ibm_mq_managers(section: Section) -> DiscoveryResult:
@@ -115,7 +138,7 @@ def discover_ibm_mq_managers(section: Section) -> DiscoveryResult:
         yield Service(item=item)
 
 
-def check_ibm_mq_managers(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_ibm_mq_managers(item: str, params: ManagerParams, section: Section) -> CheckResult:
     if not (data := section.get(item)):
         return
 
@@ -128,7 +151,7 @@ def check_ibm_mq_managers(item: str, params: Mapping[str, Any], section: Section
 
     check_state = map_ibm_mq_manager_status(status, params)
     yield Result(state=State(check_state), summary=f"Status: {status}")
-    version_state, version_summary = ibm_mq_check_version(instversion, params, "Version")
+    version_state, version_summary = ibm_mq_check_version(instversion, params["version"], "Version")
     yield Result(state=State(version_state), summary=version_summary)
     yield Result(
         state=State.OK, summary=f"Installation: {instpath} ({instname}), Default: {default}"
@@ -182,7 +205,7 @@ check_plugin_ibm_mq_managers = CheckPlugin(
     discovery_function=discover_ibm_mq_managers,
     check_function=check_ibm_mq_managers,
     check_ruleset_name="ibm_mq_managers",
-    check_default_parameters={},
+    check_default_parameters=DEFAULT_PARAMETERS,
 )
 
 

@@ -24,15 +24,15 @@ from cmk.gui.background_job.job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_checkbox_selection_topic,
+    make_click_action_link,
     make_javascript_action,
-    make_javascript_link,
     make_simple_link,
     PageMenu,
     PageMenuDropdown,
@@ -552,7 +552,9 @@ class ModeActivateChanges(WatoMode):
                 IconNames.save,
                 emblem="refresh",
             ),
-            item=make_javascript_link('cmk.activation.activate_changes("selected")'),
+            item=make_click_action_link(
+                ClickAction(action="activate_changes", arguments={"mode": "selected"})
+            ),
             name="activate_selected",
             is_shortcut=True,
             is_suggested=True,

@@ -91,7 +91,21 @@
       "title": "KnownClickAction",
       "description": "A named click handler the GUI's HTML can attach to an element.",
       "type": "string",
-      "enum": ["add_bookmark", "reload_page", "switch_master_state"]
+      "enum": [
+        "activate_changes",
+        "add_bookmark",
+        "dispatch_custom_event",
+        "loading_transition",
+        "page_menu_close_popup",
+        "page_menu_confirmed_form_submit",
+        "page_menu_form_submit",
+        "page_menu_toggle_popup",
+        "page_menu_toggle_suggestions",
+        "reload_page",
+        "switch_master_state",
+        "toggle_all_rows",
+        "toggle_inline_help"
+      ]
     },
     "dynamic_params_callback_name": {
       "title": "DynamicParamsCallbackName",

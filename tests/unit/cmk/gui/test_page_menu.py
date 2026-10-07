@@ -6,12 +6,15 @@
 import pytest
 from werkzeug.test import create_environ
 
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.page_menu import (
     _with_navigation,
     _without_navigation,
+    DropdownEntryRenderer,
     inpage_search_form,
+    make_click_action_link,
     make_external_link,
     make_form_submit_link,
     make_javascript_link,
@@ -21,8 +24,11 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuLink,
     PageMenuTopic,
+    ShortcutRenderer,
+    SuggestedEntryRenderer,
 )
-from cmk.web.utils.icons import DynamicIconName
+from cmk.gui.utils.output_funnel import output_funnel
+from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
 
 
 def test_make_simple_link() -> None:
@@ -46,13 +52,20 @@ def test_make_javascript_link() -> None:
     assert item.link.onclick == "bla.blub();cmk.page_menu.close_active_dropdown();"
 
 
+def test_make_click_action_link() -> None:
+    click_action = ClickAction(action="reload_page")
+    item = make_click_action_link(click_action)
+    assert item.link.url is None
+    assert item.link.onclick is None
+    assert item.link.click_action == click_action
+
+
 def test_make_form_submit_link() -> None:
     item = make_form_submit_link("frm", "btn")
     assert item.link.url is None
     assert item.link.target is None
-    assert (
-        item.link.onclick
-        == 'cmk.page_menu.form_submit("frm", "btn");cmk.page_menu.close_active_dropdown();'
+    assert item.link.click_action == ClickAction(
+        action="page_menu_form_submit", arguments={"form_name": "frm", "button_name": "btn"}
     )
 
 
@@ -113,6 +126,34 @@ def test_simple_page_menu() -> None:
     help_dropdown = pm.dropdowns[2]
     assert help_dropdown.name == "help"
     assert help_dropdown.topics[0].entries[0].name == "inline_help"
+
+
+@pytest.mark.usefixtures("request_context")
+def test_page_menu_renders_actions_as_action_links() -> None:
+    action = PageMenuEntry(
+        name="save",
+        title="Save",
+        icon_name=StaticIcon(IconNames.save),
+        item=make_form_submit_link("frm", "btn"),
+    )
+    link = PageMenuEntry(
+        name="views",
+        title="Views",
+        icon_name=StaticIcon(IconNames.trans),
+        item=make_simple_link("views.py"),
+    )
+
+    with output_funnel.plugged():
+        for entry in (action, link):
+            SuggestedEntryRenderer().show(entry)
+            ShortcutRenderer().show(entry)
+            DropdownEntryRenderer().show(entry)
+        written = output_funnel.drain()
+
+    assert "javascript:" not in written
+    assert written.count('data-cmk_on_click="page_menu_form_submit"') == 3
+    assert written.count('<a href="#"') == 3
+    assert written.count('href="views.py"') == 3
 
 
 def _make_request(

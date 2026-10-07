@@ -5,7 +5,74 @@
  */
 import { beforeAll, describe, expect, test } from '@jest/globals'
 
-import { prevent_hash_link_navigation } from '@/modules/click_action_dispatcher'
+import {
+  init_click_action_dispatcher,
+  prevent_hash_link_navigation,
+  register_click_actions
+} from '@/modules/click_action_dispatcher'
+
+const received_events: (MouseEvent | undefined)[] = []
+
+function click(html: string): MouseEvent {
+  document.body.innerHTML = html
+  const event = new MouseEvent('click', { bubbles: true, cancelable: true })
+  document.querySelector('a')!.dispatchEvent(event)
+  return event
+}
+
+describe('click action dispatcher', () => {
+  beforeAll(() => {
+    register_click_actions({
+      keep_default: () => true,
+      record_event: (_element, _options, event) => {
+        received_events.push(event)
+      }
+    })
+    init_click_action_dispatcher()
+  })
+
+  test('hands the click event to the action', () => {
+    document.body.innerHTML = '<a href="#" data-cmk_on_click="record_event"><span>link</span></a>'
+    const click = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true })
+
+    document.querySelector('span')!.dispatchEvent(click)
+
+    expect(received_events).toEqual([click])
+  })
+
+  test('keeps the default action if the action returns true', () => {
+    const event = click('<a href="view.py" data-cmk_on_click="keep_default">link</a>')
+
+    expect(event.defaultPrevented).toBe(false)
+  })
+
+  test('prevents the default action if the action returns nothing', () => {
+    const event = click('<a href="view.py" data-cmk_on_click="record_event">link</a>')
+
+    expect(event.defaultPrevented).toBe(true)
+  })
+
+  test('prevents the default action if the arguments are malformed', () => {
+    const errors: unknown[] = []
+    // Like a browser, jsdom reports exceptions of event listeners as uncaught errors
+    const on_error = (error_event: ErrorEvent) => {
+      errors.push(error_event.error)
+      error_event.preventDefault()
+    }
+    window.addEventListener('error', on_error)
+    let event: MouseEvent
+    try {
+      event = click(
+        '<a href="view.py" data-cmk_on_click="keep_default" data-cmk_on_click_arguments="{">x</a>'
+      )
+    } finally {
+      window.removeEventListener('error', on_error)
+    }
+
+    expect(errors).toEqual([expect.any(SyntaxError)])
+    expect(event.defaultPrevented).toBe(true)
+  })
+})
 
 describe('hash link guard', () => {
   beforeAll(() => {

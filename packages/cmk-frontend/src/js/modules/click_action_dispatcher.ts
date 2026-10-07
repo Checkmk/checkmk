@@ -17,7 +17,13 @@
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ClickActionArguments = { [key: string]: any }
-export type ClickAction = (element: HTMLElement, options: ClickActionArguments) => void
+// Return true to continue with the default action of the element, e.g. following a link. The
+// event is only available when the action is triggered by a click.
+export type ClickAction = (
+  element: HTMLElement,
+  options: ClickActionArguments,
+  event?: MouseEvent
+) => void | boolean
 
 const registry: { [name: string]: ClickAction } = {}
 
@@ -52,10 +58,18 @@ export function init_click_action_dispatcher() {
       console.error(`Unknown click action: ${action_name}`)
       return
     }
-    event.preventDefault()
-    const options: ClickActionArguments = element.dataset.cmk_on_click_arguments
-      ? JSON.parse(element.dataset.cmk_on_click_arguments)
-      : {}
-    click_action(element, options)
+    // Prevent the default action even if the arguments or the action are broken, otherwise a
+    // link with a real href would be followed
+    let keep_default = false
+    try {
+      const options: ClickActionArguments = element.dataset.cmk_on_click_arguments
+        ? JSON.parse(element.dataset.cmk_on_click_arguments)
+        : {}
+      keep_default = click_action(element, options, event) === true
+    } finally {
+      if (!keep_default) {
+        event.preventDefault()
+      }
+    }
   })
 }

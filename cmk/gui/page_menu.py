@@ -14,22 +14,19 @@ The hierarchy here is:
 
 # mypy: disable-error-code="type-arg"
 
-import json
 from collections.abc import Iterator
 from dataclasses import asdict, dataclass, field
 
 import cmk.ccc.version as cmk_version
 from cmk.gui.breadcrumb import Breadcrumb, breadcrumb_to_utm_content
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.tag_rendering import HTMLTagAttributeValue
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
-from cmk.gui.utils.loading_transition import (
-    loading_transition_onclick,
-    LoadingTransition,
-)
+from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.utils.selection_id import SelectionId
@@ -61,8 +58,9 @@ class Link:
     url: str | None = None
     target: str | None = None
     onclick: str | None = None
+    click_action: ClickAction | None = None
     transition: LoadingTransition | None = None
-    # Structured mirror of an `onclick` JS call, for consumers (e.g. the burger menu API) that
+    # Structured mirror of the click action, for consumers (e.g. the burger menu API) that
     # need the action and its parameters without parsing the JS string.
     action_id: str | None = None
     action_parameters: list[str] | None = None
@@ -106,13 +104,31 @@ def make_javascript_link(
     )
 
 
+def make_click_action_link(
+    click_action: ClickAction,
+    *,
+    action_id: str | None = None,
+    action_parameters: list[str] | None = None,
+) -> PageMenuLink:
+    return PageMenuLink(
+        Link(
+            click_action=click_action,
+            action_id=action_id,
+            action_parameters=action_parameters,
+        )
+    )
+
+
 def make_javascript_action(javascript: str) -> str:
     return javascript.rstrip(";") + ";cmk.page_menu.close_active_dropdown();"
 
 
 def make_form_submit_link(form_name: str, button_name: str) -> PageMenuLink:
-    return make_javascript_link(
-        f"cmk.page_menu.form_submit({json.dumps(form_name)}, {json.dumps(button_name)})"
+    return make_click_action_link(
+        ClickAction(
+            action="page_menu_form_submit",
+            arguments={"form_name": form_name, "button_name": button_name},
+        )
     )
 
 
@@ -128,16 +144,16 @@ def make_confirmed_form_submit_link(
     icon: str | None = None,
     warning: bool = False,
 ) -> PageMenuLink:
-    return make_javascript_link(
-        "cmk.page_menu.confirmed_form_submit(%s, %s, %s)"
-        % (
-            json.dumps(form_name),
-            json.dumps(button_name),
-            json.dumps(
-                confirmed_form_submit_options(
+    return make_click_action_link(
+        ClickAction(
+            action="page_menu_confirmed_form_submit",
+            arguments={
+                "form_name": form_name,
+                "button_name": button_name,
+                "options": confirmed_form_submit_options(
                     title, suffix, message, confirm_button, cancel_button, icon, warning
-                )
-            ),
+                ),
+            },
         )
     )
 
@@ -387,7 +403,7 @@ class PageMenu:
             yield PageMenuEntry(
                 title=_("Toggle suggested actions"),
                 icon_name=DynamicIconName("suggestion"),
-                item=make_javascript_link("cmk.page_menu.toggle_suggestions()"),
+                item=make_click_action_link(ClickAction(action="page_menu_toggle_suggestions")),
                 name="toggle_suggestions",
                 is_shortcut=True,
                 is_suggested=False,
@@ -515,7 +531,7 @@ def make_help_dropdown() -> PageMenuDropdown:
                         icon_name=DynamicIconName(
                             "toggle_" + ("on" if user.inline_help_as_text else "off")
                         ),
-                        item=make_javascript_link("cmk.help.toggle()"),
+                        item=make_click_action_link(ClickAction(action="toggle_inline_help")),
                         name="inline_help",
                         is_enabled=False,
                         disabled_tooltip=_("This page does not provide an inline help."),
@@ -578,9 +594,7 @@ def make_checkbox_selection_topic(selection_key: str, is_enabled: bool = True) -
                 name="checkbox_selection",
                 title=_("Select all checkboxes"),
                 icon_name=DynamicIconName("toggle_on" if is_selected else "toggle_off"),
-                item=make_javascript_link(
-                    "cmk.selection.toggle_all_rows(cmk.utils.querySelectorID('main_page_content'));"
-                ),
+                item=make_click_action_link(ClickAction(action="toggle_all_rows")),
                 is_enabled=is_enabled,
             ),
         ],
@@ -805,6 +819,52 @@ class PageMenuRenderer:
         html.call_ts_function(function_name="toggle_navigation_page_menu_entry")
 
 
+def _toggle_popup_action(entry: PageMenuEntry) -> ClickAction:
+    return ClickAction(
+        action="page_menu_toggle_popup", arguments={"popup_id": "popup_%s" % entry.name}
+    )
+
+
+def _vue_event_action(item: PageMenuVue) -> ClickAction:
+    return ClickAction(action="dispatch_custom_event", arguments={"name": item.component_name})
+
+
+def _render_entry_content(icon: StaticIcon | DynamicIcon, title: str) -> HTML:
+    with output_funnel.plugged():
+        if isinstance(icon, StaticIcon):
+            html.static_icon(icon)
+        elif not icon:
+            html.static_icon(StaticIcon(IconNames.trans))
+        else:
+            html.dynamic_icon(icon)
+        html.span(title)
+        return HTML(output_funnel.drain(), escape=False)
+
+
+def _show_entry_link(
+    content: HTML,
+    url: str | None,
+    click_action: ClickAction | None,
+    onclick: str | None,
+    target: str | None,
+    class_: list[str] | None = None,
+    **attrs: HTMLTagAttributeValue,
+) -> None:
+    if url is None:
+        html.action_link(
+            content, click_action=click_action, class_=class_, onclick=onclick, **attrs
+        )
+        return
+    html.a(
+        content,
+        href=url,
+        target=target,
+        class_=class_,
+        **attrs,
+        **(click_action.data_attributes() if click_action else {}),
+    )
+
+
 class SuggestedEntryRenderer:
     """Render the different item types for the suggestion area"""
 
@@ -821,16 +881,18 @@ class SuggestedEntryRenderer:
     def _show_vue_link_item(self, entry: PageMenuEntry, item: PageMenuVue) -> None:
         self._show_link(
             entry,
-            url="javascript:void(0)",
-            class_=item.class_ if item.class_ else None,
-            onclick=f"document.dispatchEvent(new CustomEvent('{item.component_name}'));",
+            url=None,
+            click_action=_vue_event_action(item),
+            onclick=None,
             target=None,
+            class_=item.class_ if item.class_ else None,
         )
 
     def _show_link_item(self, entry: PageMenuEntry, item: PageMenuLink) -> None:
         self._show_link(
             entry,
-            url=item.link.url or "javascript:void(0)",
+            url=item.link.url,
+            click_action=item.link.click_action,
             onclick=item.link.onclick,
             target=item.link.target,
         )
@@ -838,8 +900,9 @@ class SuggestedEntryRenderer:
     def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:  # noqa: ARG002
         self._show_link(
             entry,
-            url="javascript:void(0)",
-            onclick="cmk.page_menu.toggle_popup(%s)" % json.dumps("popup_%s" % entry.name),
+            url=None,
+            click_action=_toggle_popup_action(entry),
+            onclick=None,
             target=None,
         )
 
@@ -847,25 +910,20 @@ class SuggestedEntryRenderer:
         self,
         entry: PageMenuEntry,
         url: str | None,
+        click_action: ClickAction | None,
         onclick: str | None,
         target: str | None,
         class_: str | None = None,
     ) -> None:
-        html.open_a(
-            href=url,
+        _show_entry_link(
+            _render_entry_content(entry.icon_name, entry.shortcut_title or entry.title),
+            url=url,
+            click_action=click_action,
             onclick=onclick,
             target=target,
-            class_=class_ if class_ else ["suggestion_link"],
+            class_=[class_ if class_ else "suggestion_link"],
             id_=("menu_suggestion_%s" % entry.name if entry.name else None),
         )
-        if isinstance(entry.icon_name, StaticIcon):
-            html.static_icon(entry.icon_name)
-        elif not entry.icon_name:
-            html.static_icon(StaticIcon(IconNames.trans))
-        else:
-            html.dynamic_icon(entry.icon_name)
-        html.span(entry.shortcut_title or entry.title)
-        html.close_a()
 
 
 class ShortcutRenderer:
@@ -884,16 +942,18 @@ class ShortcutRenderer:
     def _show_vue_link_item(self, entry: PageMenuEntry, item: PageMenuVue) -> None:
         self._show_link(
             entry,
-            url="javascript:void(0)",
-            class_=item.class_ if item.class_ else None,
-            onclick=f"document.dispatchEvent(new CustomEvent('{item.component_name}'));",
+            url=None,
+            click_action=_vue_event_action(item),
+            onclick=None,
             target=None,
+            class_=item.class_ if item.class_ else None,
         )
 
     def _show_link_item(self, entry: PageMenuEntry, item: PageMenuLink) -> None:
         self._show_link(
             entry=entry,
             url=item.link.url,
+            click_action=item.link.click_action,
             onclick=item.link.onclick,
             target=item.link.target,
         )
@@ -901,8 +961,9 @@ class ShortcutRenderer:
     def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:  # noqa: ARG002
         self._show_link(
             entry,
-            url="javascript:void(0)",
-            onclick="cmk.page_menu.toggle_popup(%s)" % json.dumps("popup_%s" % entry.name),
+            url=None,
+            click_action=_toggle_popup_action(entry),
+            onclick=None,
             target=None,
         )
 
@@ -910,6 +971,7 @@ class ShortcutRenderer:
         self,
         entry: PageMenuEntry,
         url: str | None,
+        click_action: ClickAction | None,
         onclick: str | None,
         target: str | None,
         class_: str | None = None,
@@ -921,6 +983,7 @@ class ShortcutRenderer:
         html.icon_button(
             url=url,
             onclick=onclick,
+            click_action=click_action,
             title=entry.shortcut_title or entry.title,
             icon=entry.icon_name,
             target=target,
@@ -952,31 +1015,36 @@ class DropdownEntryRenderer:
         self._show_link(
             title=title,
             icon=icon,
-            url="javascript:void(0)",
-            onclick=f"document.dispatchEvent(new CustomEvent('{item.component_name}'));",
+            url=None,
+            click_action=_vue_event_action(item),
+            onclick=None,
             target=None,
         )
 
     def _show_link_item(
         self, title: str, icon: StaticIcon | DynamicIcon, item: PageMenuLink
     ) -> None:
-        if item.link.url is not None:
-            url = item.link.url
-            onclick = (
-                None
-                if item.link.transition is None
-                else loading_transition_onclick(item.link.transition, title=title)
+        click_action = item.link.click_action
+        if item.link.url is not None and item.link.transition is not None:
+            click_action = ClickAction(
+                action="loading_transition",
+                arguments={"template": item.link.transition.value, "title": title},
             )
-        else:
-            url = "javascript:void(0)"
-            onclick = item.link.onclick
 
-        self._show_link(url=url, onclick=onclick, target=item.link.target, icon=icon, title=title)
+        self._show_link(
+            url=item.link.url,
+            click_action=click_action,
+            onclick=item.link.onclick,
+            target=item.link.target,
+            icon=icon,
+            title=title,
+        )
 
     def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:  # noqa: ARG002
         self._show_link(
-            url="javascript:void(0)",
-            onclick="cmk.page_menu.toggle_popup(%s)" % json.dumps("popup_%s" % entry.name),
+            url=None,
+            click_action=_toggle_popup_action(entry),
+            onclick=None,
             target=None,
             icon=entry.icon_name,
             title=entry.title,
@@ -984,21 +1052,20 @@ class DropdownEntryRenderer:
 
     def _show_link(
         self,
-        url: str,
+        url: str | None,
+        click_action: ClickAction | None,
         onclick: str | None,
         target: str | None,
         icon: StaticIcon | DynamicIcon,
         title: str,
     ) -> None:
-        html.open_a(href=url, onclick=onclick, target=target)
-        if isinstance(icon, StaticIcon):
-            html.static_icon(icon)
-        elif not icon:
-            html.static_icon(StaticIcon(IconNames.trans))
-        else:
-            html.dynamic_icon(icon)
-        html.span(title)
-        html.close_a()
+        _show_entry_link(
+            _render_entry_content(icon, title),
+            url=url,
+            click_action=click_action,
+            onclick=onclick,
+            target=target,
+        )
 
 
 # TODO: Cleanup all calls using title and remove the argument
@@ -1087,11 +1154,10 @@ class PageMenuPopupsRenderer:
 
         html.open_div(class_="head")
         html.h3(entry.title)
-        html.a(
+        html.action_link(
             html.render_static_icon(StaticIcon(IconNames.close)),
-            class_="close_popup",
-            href="javascript:void(0)",
-            onclick="cmk.page_menu.close_popup(this)",
+            click_action=ClickAction(action="page_menu_close_popup"),
+            class_=["close_popup"],
         )
         html.close_div()
 

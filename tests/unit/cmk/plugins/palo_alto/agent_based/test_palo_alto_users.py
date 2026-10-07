@@ -8,7 +8,13 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
-from cmk.plugins.palo_alto.agent_based.palo_alto_users import check, cluster_check, parse, Section
+from cmk.plugins.palo_alto.agent_based.palo_alto_users import (
+    check,
+    cluster_check,
+    Params,
+    parse,
+    Section,
+)
 
 
 def test_parse() -> None:
@@ -19,7 +25,7 @@ def test_parse() -> None:
     "params, section, expected_result",
     [
         pytest.param(
-            {"levels": "ignore"},
+            Params(levels="ignore"),
             Section(num_users=1000, max_users=2000),
             [
                 Result(state=State.OK, summary="Number of logged in users: 50.00% - 1000 of 2000"),
@@ -31,7 +37,7 @@ def test_parse() -> None:
             id="no_levels",
         ),
         pytest.param(
-            {"levels": ("perc_user", (80, 90))},
+            Params(levels=("perc_user", (80, 90))),
             Section(num_users=1000, max_users=2000),
             [
                 Result(state=State.OK, summary="Number of logged in users: 50.00% - 1000 of 2000"),
@@ -43,7 +49,7 @@ def test_parse() -> None:
             id="relative_levels_ok",
         ),
         pytest.param(
-            {"levels": ("perc_user", (80, 90))},
+            Params(levels=("perc_user", (80, 90))),
             Section(num_users=1900, max_users=2000),
             [
                 Result(state=State.OK, summary="Number of logged in users: 95.00% - 1900 of 2000"),
@@ -58,7 +64,7 @@ def test_parse() -> None:
             id="relative_levels_crit",
         ),
         pytest.param(
-            {"levels": ("abs_user", (1600, 1800))},
+            Params(levels=("abs_user", (1600, 1800))),
             Section(num_users=1000, max_users=2000),
             [
                 Result(state=State.OK, summary="Number of logged in users: 50.00% - 1000 of 2000"),
@@ -70,7 +76,7 @@ def test_parse() -> None:
             id="absolute_levels_ok",
         ),
         pytest.param(
-            {"levels": ("abs_user", (1600, 1800))},
+            Params(levels=("abs_user", (1600, 1800))),
             Section(num_users=1900, max_users=2000),
             [
                 Result(state=State.OK, summary="Number of logged in users: 95.00% - 1900 of 2000"),
@@ -87,7 +93,7 @@ def test_parse() -> None:
     ],
 )
 def test_check(
-    params: Mapping[str, object],
+    params: Params,
     section: Section,
     expected_result: CheckResult,
 ) -> None:
@@ -98,7 +104,7 @@ def test_check(
     "params, section, expected_result",
     [
         pytest.param(
-            {"levels": "ignore"},
+            Params(levels="ignore"),
             {
                 "cluster_a": Section(num_users=1, max_users=5),
                 "cluster_b": Section(num_users=2, max_users=5),
@@ -112,7 +118,7 @@ def test_check(
             ],
         ),
         pytest.param(
-            {"levels": "ignore"},
+            Params(levels="ignore"),
             {"cluster_a": Section(num_users=1, max_users=5), "cluster_b": None},
             [
                 Result(state=State.OK, summary="Number of logged in users: 20.00% - 1 of 5"),
@@ -125,7 +131,7 @@ def test_check(
     ],
 )
 def test_cluster_check(
-    params: Mapping[str, object],
+    params: Params,
     section: Mapping[str, Section | None],
     expected_result: CheckResult,
 ) -> None:

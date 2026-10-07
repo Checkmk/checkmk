@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Literal, ReadOnly, TypedDict
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
@@ -23,8 +21,6 @@ from cmk.agent_based.v2 import (
 )
 from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.palo_alto.lib import DETECT_PALO_ALTO
-
-LEVEL_TYPE = tuple[float, float] | None
 
 
 @dataclass(frozen=True)
@@ -54,19 +50,30 @@ snmp_section_palo_alto_users = SimpleSNMPSection(
     ),
 )
 
+type Levels = (
+    Literal["ignore"]
+    | tuple[Literal["abs_user"], tuple[int, int]]
+    | tuple[Literal["perc_user"], tuple[float, float]]
+)
 
-def _abs_and_rel_levels(levels: tuple[str, LEVEL_TYPE]) -> tuple[LEVEL_TYPE, LEVEL_TYPE]:
-    match levels:  # type: ignore[exhaustive-match]
+
+class Params(TypedDict):
+    levels: ReadOnly[Levels]
+
+
+def _abs_and_rel_levels(
+    levels: Levels,
+) -> tuple[tuple[int, int] | None, tuple[float, float] | None]:
+    match levels:
         case "ignore":
-            return None, None  # type: ignore[unreachable]
+            return None, None
         case ("abs_user", thresholds):
             return thresholds, None
         case ("perc_user", thresholds):
             return None, thresholds
-    return None, None
 
 
-def check(params: Mapping[str, Any], section: Section) -> CheckResult:
+def check(params: Params, section: Section) -> CheckResult:
     user_perc = section.num_users / section.max_users * 100
 
     yield Result(
@@ -97,7 +104,7 @@ def check(params: Mapping[str, Any], section: Section) -> CheckResult:
 
 
 def cluster_check(
-    params: Mapping[str, Any],
+    params: Params,
     section: Mapping[str, Section | None],
 ) -> CheckResult:
     yield from check(
@@ -120,5 +127,5 @@ check_plugin_palo_alto_users = CheckPlugin(
     check_function=check,
     cluster_check_function=cluster_check,
     check_ruleset_name="palo_alto_users_rule",
-    check_default_parameters={"levels": "ignore"},
+    check_default_parameters=Params(levels="ignore"),
 )

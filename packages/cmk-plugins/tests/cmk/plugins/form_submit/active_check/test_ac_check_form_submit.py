@@ -139,3 +139,8 @@ def test_ac_check_form_submit_host_states_levels(
     status, info = check_form_submit.check_host_states(states, levels)
     assert status == expected_status
     assert info == expected_info
+
+
+def test_parse_form_reads_attribute_without_value_as_empty_string() -> None:
+    form = check_form_submit.parse_form('<form method><input name="a" value></form>', None)
+    assert form == check_form_submit.Form(attrs={"method": ""}, elements={"a": ""})

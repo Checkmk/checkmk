@@ -706,11 +706,7 @@ def is_contact_for_pack(bi_pack: BIAggregationPack) -> bool:
         return True  # meaning I am admin
 
     assert user.id is not None
-    contact_groups = userdb.contactgroups_of_user(user.id)
-    if contact_groups is None:
-        return True  # type: ignore[unreachable]
-
-    return any(group in bi_pack.contact_groups for group in contact_groups)
+    return any(group in bi_pack.contact_groups for group in userdb.contactgroups_of_user(user.id))
 
 
 class BIConfigStateOfHostAction(BIStateOfHostAction, ABCBIConfigAction):

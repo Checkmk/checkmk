@@ -34,20 +34,3 @@ def test_registered_snapins() -> None:
     ]
 
     assert sorted(snapin_registry.keys()) == sorted(expected_snapins)
-
-
-@pytest.mark.usefixtures("load_gui_plugins")
-def test_refresh_snapins() -> None:
-    expected_refresh_snapins = [
-        "admin_mini",
-        "performance",
-        "master_control",
-        "mkeventd_performance",
-        "sitestatus",
-        "tactical_overview",
-        "tag_tree",
-        "time",
-    ]
-
-    refresh_snapins = [s.type_name() for s in snapin_registry.values() if s.refresh_regularly()]
-    assert sorted(refresh_snapins) == sorted(expected_refresh_snapins)

@@ -61,6 +61,23 @@ def _report_crashes() -> None:
         )
 
 
+def pop_crash_report_file(crash_type: str, file_name: str) -> bytes | None:
+    """Read a file of the only crash report of the given type, then delete that report
+
+    Returns None if the report has no such file.
+    """
+    base_dir = make_crash_report_base_path(cmk.utils.paths.omd_root) / crash_type
+    crash_dirs = [p for p in base_dir.iterdir() if p.is_dir()] if base_dir.exists() else []
+    if len(crash_dirs) != 1:
+        raise AssertionError(
+            f"Expected exactly one {crash_type} crash report, found {len(crash_dirs)}"
+        )
+    path = crash_dirs[0] / file_name
+    content = path.read_bytes() if path.exists() else None
+    shutil.rmtree(crash_dirs[0])
+    return content
+
+
 def fake_paths() -> None:
     """Patch `cmk.utils.paths.*` into a temp directory so the tests run isolated"""
     from pytest import MonkeyPatch

@@ -25,7 +25,7 @@ from cmk.base.checkers import (
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS, RELATIVE_PATH_TRUSTED_CAS
-from cmk.base.errorhandling import CheckResultErrorHandler
+from cmk.base.errorhandling import CheckResultErrorHandler, RecordingFetcher
 from cmk.base.modes.check_mk import execute_active_check_inventory
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.cpu_tracking import CPUTracker
@@ -277,6 +277,7 @@ def _inventory_as_check(
             config_cache.summary_config,
             override_non_ok_state=parameters.fail_status,
         )
+        recording_fetcher = RecordingFetcher(fetcher)
         error_handler = CheckResultErrorHandler(
             exit_spec=config_cache.exit_code_spec(hostname),
             host_name=hostname,
@@ -285,6 +286,7 @@ def _inventory_as_check(
             is_cluster=hostname in hosts_config.clusters,
             snmp_backend=config_cache.get_snmp_backend(hostname),
             keepalive=False,
+            get_agent_output=lambda: recording_fetcher.serialized(hostname),
         )
         check_results: Sequence[ActiveCheckResult] = []
         with error_handler:
@@ -292,7 +294,7 @@ def _inventory_as_check(
                 check_results = execute_active_check_inventory(
                     hostname,
                     hosts_config=hosts_config,
-                    fetcher=fetcher,
+                    fetcher=recording_fetcher,
                     parser=parser,
                     summarizer=summarizer,
                     section_plugins=SectionPluginMapper(

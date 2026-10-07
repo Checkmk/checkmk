@@ -11,9 +11,11 @@ py_library(
     deps = [
         "//cmk/piggyback:backend",
         "//cmk/utils",
+        "//packages/cmk-ccc:cpu-tracking",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:resulttype",
         "//packages/cmk-ccc:version-info",
         "//packages/cmk-check-engine:fetcher-protocol",
         "//packages/cmk-check-engine:helper-interface",

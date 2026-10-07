@@ -618,13 +618,13 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
         value_store_manager: ValueStoreManager,
         *,
         clusters: Container[HostName],
-        rtc_package: AgentRawData | None,
+        get_agent_output: Callable[[], AgentRawData | None],
         omd_root: Path,
     ):
         self.config: Final = config
         self.value_store_manager: Final = value_store_manager
         self.clusters: Final = clusters
-        self.rtc_package: Final = rtc_package
+        self.get_agent_output: Final = get_agent_output
         self.check_plugins: Final = check_plugins
         self.omd_root: Final = omd_root
 
@@ -659,7 +659,7 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
                 service=service,
                 plugin=plugin,
                 check_function=check_function,
-                rtc_package=self.rtc_package,
+                get_agent_output=self.get_agent_output,
                 get_effective_host=self.config.effective_host,
                 snmp_backend=self.config.get_snmp_backend(host_name),
                 parameters=_compute_final_check_parameters(
@@ -1014,7 +1014,7 @@ def get_aggregated_result(  # type: ignore[explicit-any]
     check_function: Callable[..., ServiceCheckResult],
     *,
     parameters: Mapping[str, object],
-    rtc_package: AgentRawData | None,
+    get_agent_output: Callable[[], AgentRawData | None],
     get_effective_host: Callable[[HostName, ServiceName, _Labels], HostName],
     snmp_backend: SNMPBackendEnum,
 ) -> AggregatedResult:
@@ -1093,7 +1093,7 @@ def get_aggregated_result(  # type: ignore[explicit-any]
                 is_cluster=is_cluster,
                 is_enforced=service.is_enforced,
                 snmp_backend=snmp_backend,
-                rtc_package=rtc_package,
+                get_agent_output=get_agent_output,
             ),
         )
 

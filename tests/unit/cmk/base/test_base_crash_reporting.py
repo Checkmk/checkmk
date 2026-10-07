@@ -7,9 +7,14 @@
 from collections.abc import Mapping
 from pathlib import Path
 
-from cmk.base.errorhandling import CheckCrashReport, CheckDetails
+import pytest
+
+from cmk.base.errorhandling import CheckCrashReport, CheckDetails, create_check_crash_dump
 from cmk.ccc.hostaddress import HostName
+from cmk.checkengine.helper_interface import AgentRawData
+from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.crash import make_crash_report_base_path, VersionInfo
+from tests.testlib.unit.fake_site import pop_crash_report_file
 
 
 def _check_generic_crash_info(crash: CheckCrashReport) -> None:
@@ -73,3 +78,22 @@ def test_check_crash_report_from_exception(tmp_path: Path) -> None:
     assert crash.type() == "check"
     assert crash.crash_info["exc_type"] == "Exception"
     assert crash.crash_info["exc_value"] == "DING"
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_check_crash_dump_contains_the_given_agent_output() -> None:
+    try:
+        raise Exception("DING")
+    except Exception:
+        create_check_crash_dump(
+            HostName("testhost"),
+            "Uptime",
+            plugin_name="uptime",
+            plugin_kwargs={},
+            is_cluster=False,
+            is_enforced=False,
+            snmp_backend=SNMPBackendEnum.CLASSIC,
+            get_agent_output=lambda: AgentRawData(b"<<<uptime>>>\n123\n"),
+        )
+
+    assert pop_crash_report_file("check", "agent_output") == b"<<<uptime>>>\n123\n"

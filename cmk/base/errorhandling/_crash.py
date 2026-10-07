@@ -10,7 +10,7 @@
 import contextlib
 import json
 import traceback
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Literal, override, TypedDict
 
@@ -84,7 +84,7 @@ def create_check_crash_dump(
     is_cluster: bool,
     is_enforced: bool,
     snmp_backend: SNMPBackendEnum,
-    rtc_package: AgentRawData | None,
+    get_agent_output: Callable[[], AgentRawData | None],
 ) -> str:
     """Create a crash dump from an exception occurred during check execution
 
@@ -110,7 +110,7 @@ def create_check_crash_dump(
                     **plugin_kwargs,  # type: ignore[typeddict-item]
                 ),
             ),
-            agent_output=_read_agent_output(host_name) if rtc_package is None else rtc_package,
+            agent_output=get_agent_output(),
         )
         CrashReportStore().save(crash)
         text += " (Crash-ID: %s)" % crash.ident_to_text()

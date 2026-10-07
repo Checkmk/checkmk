@@ -39,7 +39,12 @@ from cmk.base.configlib.servicelevel import make_service_level_config
 from cmk.base.configlib.servicename import (
     make_passive_service_name_config,
 )
-from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
+from cmk.base.errorhandling import (
+    CheckResultErrorHandler,
+    create_section_crash_dump,
+    RecordingFetcher,
+    serialize_fetched,
+)
 from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.exceptions import MKBailOut, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName, HostNameValidationError, Hosts
@@ -581,6 +586,7 @@ def run_checking(
             override_non_ok_state=None,
         )
         dry_run = options.get("no-submit", False)
+        recording_fetcher = RecordingFetcher(fetcher)
         error_handler = CheckResultErrorHandler(
             exit_code_spec(hostname),
             host_name=hostname,
@@ -589,6 +595,7 @@ def run_checking(
             is_cluster=hostname in hosts_config.clusters,
             snmp_backend=config_cache.get_snmp_backend(hostname),
             keepalive=False,
+            get_agent_output=lambda: recording_fetcher.serialized(hostname),
         )
 
         checks_result: Sequence[ActiveCheckResult] = []
@@ -602,13 +609,13 @@ def run_checking(
             ) as value_store_manager,
         ):
             console.debug(f"Checkmk version {cmk_version.__version__}")
-            fetched = fetcher(hostname, ip_address=ipaddress)
+            fetched = recording_fetcher(hostname, ip_address=ipaddress)
             check_plugins = CheckerPluginMapper(
                 checker_config,
                 plugins.check_plugins,
                 value_store_manager,
                 clusters=hosts_config.clusters,
-                rtc_package=None,
+                get_agent_output=lambda: serialize_fetched((f[0], f[1]) for f in fetched),
                 omd_root=cmk.utils.paths.omd_root,
             )
             with CPUTracker(console.debug) as tracker:

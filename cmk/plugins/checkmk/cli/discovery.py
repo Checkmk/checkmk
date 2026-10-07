@@ -33,7 +33,11 @@ from cmk.base.core.active_config_layout import (
     RELATIVE_PATH_SECRETS,
     RELATIVE_PATH_TRUSTED_CAS,
 )
-from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
+from cmk.base.errorhandling import (
+    CheckResultErrorHandler,
+    create_section_crash_dump,
+    RecordingFetcher,
+)
 from cmk.base.modes.check_mk import (
     DiscoveryOptions,
     extract_plugin_selection,
@@ -236,6 +240,7 @@ def _mode_check_discovery(
             config_cache.summary_config,
             override_non_ok_state=None,
         )
+        recording_fetcher = RecordingFetcher(fetcher)
         error_handler = CheckResultErrorHandler(
             exit_spec=config_cache.exit_code_spec(hostname),
             host_name=hostname,
@@ -244,11 +249,12 @@ def _mode_check_discovery(
             is_cluster=hostname in hosts_config.clusters,
             snmp_backend=config_cache.get_snmp_backend(hostname),
             keepalive=False,
+            get_agent_output=lambda: recording_fetcher.serialized(hostname),
         )
 
         check_results: Sequence[ActiveCheckResult] = []
         with error_handler:
-            fetched = fetcher(hostname, ip_address=None)
+            fetched = recording_fetcher(hostname, ip_address=None)
             with CPUTracker(console.debug) as tracker:
                 check_results = execute_check_discovery(
                     hostname,

@@ -115,7 +115,7 @@ from cmk.base.configlib.servicename import (
 from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
 from cmk.base.core.interface import do_reload, do_restart
 from cmk.base.core.shared import autodetect_plugin, get_service_attributes
-from cmk.base.errorhandling import create_section_crash_dump
+from cmk.base.errorhandling import create_section_crash_dump, RecordingFetcher
 from cmk.base.parent_scan import ScanConfig
 from cmk.ccc import version
 from cmk.ccc.exceptions import (
@@ -908,12 +908,13 @@ def _execute_discovery(
         ) as value_store_manager,
     ):
         is_cluster = host_name in hosts_config.clusters
+        recording_fetcher = RecordingFetcher(fetcher)
         check_plugins = CheckerPluginMapper(
             checker_config,
             plugins.check_plugins,
             value_store_manager,
             clusters=hosts_config.clusters,
-            rtc_package=None,
+            get_agent_output=lambda: recording_fetcher.serialized(host_name),
             omd_root=cmk.utils.paths.omd_root,
         )
         passive_check_preview = get_check_preview(
@@ -923,7 +924,7 @@ def _execute_discovery(
             is_cluster=is_cluster,
             cluster_nodes=hosts_config.clusters.get(host_name, ()),
             parser=parser,
-            fetcher=fetcher,
+            fetcher=recording_fetcher,
             summarizer=CMKSummarizer(
                 host_name,
                 config_cache.summary_config,

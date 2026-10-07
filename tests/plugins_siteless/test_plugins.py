@@ -169,7 +169,7 @@ def test_checks_executor(agent_data_filename: str, request: pytest.FixtureReques
             agent_based_plugins.check_plugins,
             value_store_manager,
             clusters=(),
-            rtc_package=None,
+            get_agent_output=lambda: None,
             omd_root=Path(""),
         )
         assert check_plugins

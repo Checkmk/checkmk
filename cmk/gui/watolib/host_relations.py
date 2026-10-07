@@ -241,7 +241,7 @@ def host_relations_form_spec(
     dialog nests the direction and the host under the type, because the type decides them.
 
     ``kinds`` are the kinds the dialog offers. A stored link of any other kind has no row and is
-    left out here; the save puts it back (see :func:`with_links_the_dialog_cannot_show`).
+    left out here; the save puts it back (see :func:`with_links_not_shown`).
     """
     return TransformDataForLegacyFormatOrRecomposeFunction(
         # "Related hosts" is taken by the section this sits in.
@@ -268,20 +268,21 @@ def host_relations_form_spec(
     )
 
 
-def with_links_the_dialog_cannot_show(
+def with_links_not_shown(
     relations_value: object,
     stored_value: object,
     *,
     kinds: Mapping[str, RelationKind] = RELATION_KINDS,
 ) -> list[RelationLink]:
-    """``relations_value`` as the dialog submitted it, plus every stored link of a kind it has no
-    row for - a kind not in ``kinds``, the ones the dialog offered.
+    """``relations_value`` as a view of the host submitted it, plus every stored link of a kind
+    the view does not show - a kind not in ``kinds``.
 
-    The counterpart of :func:`host_relations_form_spec` leaving such a link out: no row showed
-    it, so the user cannot have removed it. Without this, saving a host from an older version
-    would drop the relations a newer one wrote on it - and, through the mirror, their other
-    halves too. A link of a known kind with an end that kind does not have is not kept: no
-    version will ever place it, and nothing but the save could get rid of it.
+    For a view that leaves such a link out, such as the host properties (see
+    :func:`host_relations_form_spec`): nobody saw it, so nobody can have removed it. Without this, saving a host from an older version would drop the relations a newer one
+    wrote on it - and, through the mirror, their other halves too. ``Host`` itself stores what it
+    is given, so the writers that state the whole value - the mirror, the cleanup after a
+    deletion - cover every kind. A link of a known kind with an end that kind does not have is
+    not kept: no version will ever place it, and nothing but the save could get rid of it.
     """
     links = relations_or_user_error(relations_value)
     links.extend(link for link in relations_or_empty(stored_value) if link["kind"] not in kinds)

@@ -214,8 +214,15 @@ def test_rename_host(
         assert set(nodes) == expected_nodes
 
 
+@pytest.mark.parametrize(
+    "kind",
+    [
+        pytest.param("management", id="known kind"),
+        pytest.param("later", id="kind this version cannot place"),
+    ],
+)
 @pytest.mark.usefixtures("test_env")
-def test_rename_host_rewrites_the_relations_pointing_at_it() -> None:
+def test_rename_host_rewrites_the_relations_pointing_at_it(kind: str) -> None:
     """Both halves of a relation are stored, but only the half sitting on the counterpart names
     the renamed host - so the pass is the same as for a parent definition."""
     tree = folder_tree()
@@ -231,11 +238,7 @@ def test_rename_host_rewrites_the_relations_pointing_at_it() -> None:
             (
                 HostName("board"),
                 HostAttributes(
-                    {
-                        "relations": [
-                            {"kind": "management", "direction": "parent", "host": HostName("os1")}
-                        ]
-                    }
+                    {"relations": [{"kind": kind, "direction": "parent", "host": HostName("os1")}]}
                 ),
                 None,
             ),
@@ -266,6 +269,4 @@ def test_rename_host_rewrites_the_relations_pointing_at_it() -> None:
     )
 
     renamed = tree.root_folder().hosts()[HostName("board")]
-    assert renamed.attributes["relations"] == [
-        {"kind": "management", "direction": "parent", "host": "os2"}
-    ]
+    assert renamed.attributes["relations"] == [{"kind": kind, "direction": "parent", "host": "os2"}]

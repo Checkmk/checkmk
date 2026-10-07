@@ -2178,6 +2178,34 @@ def test_a_relation_stored_the_other_way_round_is_not_offered_again(tree: Folder
     assert _outcomes(found.entries) == [("srv-01-ilo", "srv-01", LinkOutcome.STORED_OTHERWISE)]
 
 
+def test_a_run_does_not_replace_a_relation_of_a_kind_this_version_cannot_place(
+    tree: FolderTree,
+) -> None:
+    root = tree.root_folder()
+    _create_host(root, "srv-01")
+    later: RelationLink = {"kind": "later", "direction": "parent", "host": HostName("srv-01")}
+    _create_host(root, "srv-01-ilo", HostAttributes({"relations": [later]}))
+
+    (entry,) = link_relations(
+        [
+            HostPair(
+                source=HostName("srv-01-ilo"),
+                target=HostName("srv-01"),
+                kind_id="management",
+                source_direction="parent",
+            )
+        ],
+        tree,
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+        progress=lambda _entry: None,
+    )
+
+    assert entry.outcome is LinkOutcome.STORED_OTHERWISE
+    assert _stored_relations(tree, "srv-01-ilo") == [later]
+
+
 def test_a_run_does_not_replace_a_relation_somebody_stored_in_the_meantime(
     tree: FolderTree,
 ) -> None:

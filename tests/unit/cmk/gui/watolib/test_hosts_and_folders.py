@@ -16,7 +16,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from itertools import count
 from pathlib import Path
-from typing import cast, Literal, override
+from typing import cast, Final, Literal, override
 from unittest.mock import MagicMock, patch
 from zoneinfo import ZoneInfo
 
@@ -2750,6 +2750,15 @@ def test_plan_relation_mirror_turns_a_flip_into_one_write() -> None:
     }
 
 
+_LATER: Final[RelationLink] = {"kind": "later", "direction": "parent", "host": HostName("os1")}
+
+
+def _create_board_with_a_later_kind(root: Folder) -> hosts_and_folders.Host:
+    """A board whose relation to "os1" is of a kind a later version introduced."""
+    _create_host(root, "os1")
+    return _create_host(root, "board", HostAttributes({"relations": [_LATER]}))
+
+
 def test_clean_attributes_refuses_to_drop_a_relation(tree: FolderTree) -> None:
     """Only Host.edit() knows how to take the other half with it."""
     root = tree.root_folder()
@@ -2769,6 +2778,41 @@ def test_clean_attributes_refuses_to_drop_a_relation(tree: FolderTree) -> None:
             pending_changes=_noop_pending_changes(),
             acting_user=_SUPERUSER,
         )
+
+
+def test_update_attributes_stores_a_relation_of_a_kind_this_version_cannot_place_once(
+    tree: FolderTree,
+) -> None:
+    board = _create_board_with_a_later_kind(tree.root_folder())
+
+    board.update_attributes(
+        HostAttributes({"alias": "iLO"}),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+
+    assert board.attributes["relations"] == [_LATER]
+
+
+def test_delete_hosts_removes_the_other_half_of_a_kind_this_version_cannot_place(
+    tree: FolderTree, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Deleting the host's files needs a site connection, which this test has nothing to say about.
+    monkeypatch.setattr(hosts_and_folders.Folder, "_delete_host_files", lambda *_a, **_kw: None)
+    root = tree.root_folder()
+    board = _create_board_with_a_later_kind(root)
+
+    root.delete_hosts(
+        [HostName("os1")],
+        automation=lambda *_args, **_kwargs: DeleteHostsResult(),
+        pprint_value=False,
+        debug=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+
+    assert "relations" not in board.attributes
 
 
 def _edit_relations(

@@ -238,9 +238,10 @@ The attribute is intentionally not inherited from folders: a value on a folder
 would point all its hosts to the same board. It is not offered in bulk edit
 either: one value would point all selected hosts to the same board, rewrite
 the folder of that board once per selected host, and leave the selection half
-applied if one write is refused. The host cleanup does not offer it because
-removing a relation writes the other host as well, which only ``Host.edit()``
-does. The attribute is not shown in the host search and the host table. The
+applied if one write is refused. The host cleanup does not offer it either: it
+would save the folder of each related host once per selected host, and leave
+the selection half applied if one write is refused. The attribute is not shown
+in the host search and the host table. The
 host endpoints of the REST API do not expose it, but keep it: a full
 replacement of the attributes carries the stored value over, and removing it is
 refused.
@@ -273,8 +274,10 @@ Shared:
 Setup:
 
 * ``cmk/gui/watolib/host_relations.py``: The form of the host attribute, the
-  rules for conflicting relations, the resolver used by the export and the note
-  in the host deletion dialog.
+  rules for conflicting relations, the resolver used by the export, the note
+  in the host deletion dialog, and ``with_links_not_shown``, which the host
+  properties use to keep the links of kinds they do not show. ``Host`` itself
+  stores what it is given.
 * ``cmk/gui/watolib/hosts_and_folders.py``: The mirror (``plan_relation_mirror``,
   ``apply_relation_mirror``, ``relation_mirror_folders``, the cleanup after a
   deletion, and the ``Host`` methods ``set_relations_about`` and
@@ -879,7 +882,8 @@ Ordered by priority.
 6. The only mix of versions Checkmk supports is a downgrade to an older patch
    release of the same major version. Such a version keeps links of unknown
    kinds when a host is saved in the host properties, because its host
-   properties cannot show them. On every write of the host, however, it drops
+   properties cannot show them. Deleting or renaming a host covers links of
+   every kind. On every write of the host, however, it drops
    links with unknown directions and any fields a newer version added to a
    link, as it rebuilds each link from kind, direction and host. This includes
    any edit of the host, also one that only changes its IP address, and writing

@@ -41,7 +41,7 @@ from cmk.gui.watolib.host_relations import (
     relations_deletion_note,
     relations_or_user_error,
     resolve_all_relations,
-    with_links_the_dialog_cannot_show,
+    with_links_not_shown,
 )
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from tests.unit.cmk.gui.helpers.host_attributes_test_helper import submitted_relation_row
@@ -187,12 +187,12 @@ def test_the_form_leaves_out_a_link_it_cannot_offer_a_row_for() -> None:
     ]
 
 
-def test_the_save_puts_back_only_what_the_dialog_could_not_show() -> None:
-    """A link the dialog did show is the user's to keep or remove, not the save's to restore."""
+def test_the_save_puts_back_only_what_the_view_did_not_show() -> None:
+    """A link the view did show is the user's to keep or remove, not the save's to restore."""
     shown: RelationLink = {"kind": "peering", "direction": "symmetric", "host": HostName("peer")}
     hidden: RelationLink = {"kind": "rack", "direction": "symmetric", "host": HostName("rack")}
 
-    assert with_links_the_dialog_cannot_show([], [shown, hidden], kinds=_TWO_KINDS) == [hidden]
+    assert with_links_not_shown([], [shown, hidden], kinds=_TWO_KINDS) == [hidden]
 
 
 def test_the_form_stores_the_rows_the_dialog_submits() -> None:

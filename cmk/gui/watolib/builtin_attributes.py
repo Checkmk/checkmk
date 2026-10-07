@@ -94,7 +94,7 @@ from cmk.gui.watolib.host_relations import (
     host_relations_form_spec,
     relation_conflicts,
     relations_or_user_error,
-    with_links_the_dialog_cannot_show,
+    with_links_not_shown,
 )
 from cmk.gui.watolib.hosts_and_folders import Host, plan_relation_mirror
 from cmk.gui.watolib.tags import TagConfigFile
@@ -1461,7 +1461,8 @@ class HostAttributeRelations(ABCHostAttributeFormSpec):
 
     @override
     def show_in_host_cleanup(self) -> bool:
-        """Dropping a relation is a write on the other host, which only ``Host.edit()`` does."""
+        """It would save the folder of each related host once per selected host, and leave the
+        selection half applied if one write is refused."""
         return False
 
     @override
@@ -1480,7 +1481,7 @@ class HostAttributeRelations(ABCHostAttributeFormSpec):
     @override
     def merge_with_stored(self, value: object, stored_value: object) -> list[RelationLink]:
         """The form has no row for a link of a kind this version cannot place, so it is kept."""
-        return with_links_the_dialog_cannot_show(value, stored_value)
+        return with_links_not_shown(value, stored_value)
 
     @override
     def openapi_field(self) -> Field:

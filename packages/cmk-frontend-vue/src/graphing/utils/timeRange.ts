@@ -49,7 +49,7 @@ export function drawnTimeRange(
 
 // A fetch is answered at its RRA's resolution, coarser the further back it reaches; fewer than
 // MIN_ZOOM_SAMPLES of those is too narrow to label. Without a step the configured minimum stands.
-export function minZoomSpan(served: TimeRange | undefined): number {
+function minZoomSpan(served: TimeRange | undefined): number {
   if (served === undefined || !hasUsableStep(served)) {
     return MIN_ZOOM_TIME_RANGE_SECONDS
   }
@@ -95,8 +95,10 @@ export interface TimeAxis {
   binUnit: BinUnit | null
   planFetchWindow: FetchWindowPlanner
   drawnTimeRange(requested: RequestedTimeRange, served: TimeRange): TimeRange
-  /** The shortest span a time zoom may reach, given the host's own minimum. */
-  minSpan(hostMinimum: number | null): number | null
+  /** The shortest span a time zoom may reach, given the host's own minimum and the data on screen. */
+  minSpan(hostMinimum: number | null, served: TimeRange | undefined): number | null
+  /** The span at which a time zoom is refused, given the data on screen. */
+  zoomFloor(served: TimeRange | undefined): number
 }
 
 /** A time axis that draws the samples where they lie. */
@@ -105,7 +107,8 @@ export function continuousTimeAxis(): TimeAxis {
     binUnit: null,
     planFetchWindow: planFetchWindowByWidth,
     drawnTimeRange: (requested, served) => drawnTimeRange(requested, served),
-    minSpan: (hostMinimum) => hostMinimum
+    minSpan: (hostMinimum) => hostMinimum,
+    zoomFloor: (served) => minZoomSpan(served)
   }
 }
 
@@ -127,6 +130,13 @@ export function binnedTimeAxis(binUnit: BinUnit, timeZone: string): TimeAxis {
       end: requested.end,
       step: served.step
     }),
-    minSpan: (hostMinimum) => Math.max(hostMinimum ?? 0, BIN_UNIT_SECONDS[binUnit])
+    minSpan: (hostMinimum, served) => Math.max(hostMinimum ?? 0, binnedZoomFloor(binUnit, served)),
+    zoomFloor: (served) => binnedZoomFloor(binUnit, served)
   }
+}
+
+function binnedZoomFloor(binUnit: BinUnit, served: TimeRange | undefined): number {
+  const bin = BIN_UNIT_SECONDS[binUnit]
+  const step = served !== undefined && hasUsableStep(served) ? served.step : bin
+  return Math.max(MIN_ZOOM_TIME_RANGE_SECONDS, Math.ceil(step / bin) * bin)
 }

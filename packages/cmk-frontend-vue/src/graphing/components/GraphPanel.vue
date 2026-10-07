@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import { getLocalTimeZone } from '@internationalized/date'
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { type Ref, computed, onMounted, ref, watch } from 'vue'
@@ -21,7 +22,7 @@ import type {
   TimeRange,
   TimeRangeCommitKind
 } from '../types.ts'
-import { committedTimeRange, continuousTimeAxis, minZoomSpan } from '../utils/timeRange'
+import { binnedTimeAxis, committedTimeRange, continuousTimeAxis } from '../utils/timeRange'
 import GraphBrush from './GraphBrush/GraphBrush.vue'
 import TimeSeriesGraph, { type ZoomPayload } from './TimeSeriesGraph'
 import { deriveYAxis } from './TimeSeriesGraph/yAxis'
@@ -46,7 +47,11 @@ const emit = defineEmits<GraphPanelEmits>()
 // curves at all and nothing reads it.
 const NOMINAL_STEP_SECONDS = 60
 
-const timeAxis = continuousTimeAxis()
+const timeAxis = computed(() =>
+  props.binUnit === undefined
+    ? continuousTimeAxis()
+    : binnedTimeAxis(props.binUnit, getLocalTimeZone())
+)
 
 const baselineTimeRange = computed<TimeRange>(() => {
   if (!props.dataTimeRange) {
@@ -54,7 +59,7 @@ const baselineTimeRange = computed<TimeRange>(() => {
   }
   return props.awaitingData
     ? props.dataTimeRange
-    : timeAxis.drawnTimeRange(props.requestedTimeRange, props.dataTimeRange)
+    : timeAxis.value.drawnTimeRange(props.requestedTimeRange, props.dataTimeRange)
 })
 
 const headerTimeRange = computed<TimeRange | undefined>(() =>
@@ -141,13 +146,15 @@ const requestedSpan = computed(() => props.requestedTimeRange.end - props.reques
 const servedOnScreen = computed(() => (props.awaitingData ? undefined : props.dataTimeRange))
 
 // Read off the data on screen only: the fetch out may answer finer than the window before it.
-const zoomFloor = computed(() => minZoomSpan(servedOnScreen.value))
+const zoomFloor = computed(() => timeAxis.value.zoomFloor(servedOnScreen.value))
 
 // Time zoom clamps the *requested* window at the floor, so that is the range which reaches it;
 // the served window stays a step wider and would never compare equal.
 const atMinTimeZoom = computed(() => requestedSpan.value <= zoomFloor.value)
 
-const minTimeRange = timeAxis.minSpan(MIN_ZOOM_TIME_RANGE_SECONDS)
+const minTimeRange = computed(() =>
+  timeAxis.value.minSpan(MIN_ZOOM_TIME_RANGE_SECONDS, servedOnScreen.value)
+)
 
 const graphRenderer = ref<InstanceType<typeof TimeSeriesGraph> | null>(null)
 
@@ -302,6 +309,7 @@ const legendAlignedWithPlot = computed(() =>
           :data-domain="brushSnapshot.data.dataTimeRange"
           :window="brushWindow"
           :min-span="minTimeRange"
+          :bin-unit="timeAxis.binUnit"
           :width="figureWidth"
           :plot-left="plotLeft"
           :plot-width="brushPlotWidth"

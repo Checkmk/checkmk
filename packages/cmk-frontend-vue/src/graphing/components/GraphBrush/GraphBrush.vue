@@ -5,11 +5,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import { getLocalTimeZone } from '@internationalized/date'
 import { scaleLinear, scaleTime } from 'd3-scale'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import type { TimeInterval, TimeRangeCommitKind } from '../../types'
-import type { Metric, RequestedTimeRange, TimeRange } from '../TimeSeriesGraph'
+import { drawnBinEdges } from '../../utils/bins'
+import type { BinUnit, Metric, RequestedTimeRange, TimeRange } from '../TimeSeriesGraph'
 import { drawData } from '../TimeSeriesGraph/render'
 import {
   composeSeries,
@@ -38,6 +40,7 @@ const props = defineProps<{
   width: number // figure width (px)
   plotLeft: number // track left inset (= renderer MARGIN.left)
   plotWidth: number // track width (= plot width)
+  binUnit: BinUnit | null
 }>()
 
 const emit = defineEmits<{
@@ -98,7 +101,10 @@ function drawWaveform(): void {
     dataTimeRange: props.dataDomain,
     visibleTimeRange: [props.domain.start, props.domain.end],
     columnCount: Math.max(1, Math.floor(props.plotWidth)),
-    binEdges: null
+    binEdges:
+      props.binUnit === null
+        ? null
+        : drawnBinEdges(props.binUnit, props.domain, props.plotWidth, getLocalTimeZone())
   })
   const [yMin, yMax] = composedValueDomain(props.metrics, composed)
 
@@ -133,7 +139,10 @@ function drawWaveform(): void {
 onMounted(drawWaveform)
 // The selection window moves over the waveform without changing it, so a drag redraws the
 // scrims below and leaves the canvas alone.
-watch(() => [props.metrics, props.domain, props.dataDomain, props.plotWidth], drawWaveform)
+watch(
+  () => [props.metrics, props.domain, props.dataDomain, props.plotWidth, props.binUnit],
+  drawWaveform
+)
 
 const svgRef = ref<SVGSVGElement | null>(null)
 const preview = ref<{ start: number; end: number } | null>(null)

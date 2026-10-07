@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { getLocalTimeZone } from '@internationalized/date'
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
@@ -14,7 +15,8 @@ import type { Metric, TimeRange } from '@/graphing/components/TimeSeriesGraph'
 import { MIN_ZOOM_TIME_RANGE_SECONDS } from '@/graphing/components/constants'
 import { useGlobalPin } from '@/graphing/composables/useGlobalPin'
 import type { BurgerMenuCallable, GraphPanelProps, RequestedTimeRange } from '@/graphing/types'
-import { minZoomSpan } from '@/graphing/utils/timeRange'
+import { binStart } from '@/graphing/utils/bins'
+import { continuousTimeAxis } from '@/graphing/utils/timeRange'
 
 vi.mock('@/graphing/api/burgerMenu.ts', () => ({ loadMenu: vi.fn() }))
 
@@ -46,7 +48,9 @@ vi.mock('@/graphing/components/TimeSeriesGraph', async () => {
         'options',
         'showTimeAxis',
         'showValueAxis',
-        'minValueAxisWidth'
+        'minValueAxisWidth',
+        'binUnit',
+        'minTimeRange'
       ],
       emits: ['zoom', 'pan', 'reset', 'pinCreate', 'pinAction', 'update:valueResolution'],
       template: `<div data-testid="time-series-graph">
@@ -55,6 +59,8 @@ vi.mock('@/graphing/components/TimeSeriesGraph', async () => {
       <span data-testid="renderer-y-axis-unit">{{ options?.y_axis?.unit?.notation ?? 'none' }}</span>
       <span data-testid="view-start">{{ view_time_range.start }}</span>
       <span data-testid="view-end">{{ view_time_range.end }}</span>
+      <span data-testid="bin-unit">{{ binUnit }}</span>
+      <span data-testid="min-time-range">{{ minTimeRange }}</span>
       <span data-testid="inspecting">{{ inspecting }}</span>
       <span data-testid="highlighted">{{ highlightedMetricNames.join(",") }}</span>
       <span data-testid="show-pin">{{ pinEnabled }}</span>
@@ -503,7 +509,7 @@ function renderPanelServedSixHourly(overrides: Partial<GraphPanelProps> = {}) {
 // The resolution a window is served at is only known once a fetch has answered, so the floor
 // follows the data on screen: a coarse answer raises it above the configured minimum.
 test('reports time zoom at its floor once the requested window holds the fewest samples the served resolution fills', () => {
-  const floor = minZoomSpan(SERVED_SIX_HOURLY)
+  const floor = continuousTimeAxis().zoomFloor(SERVED_SIX_HOURLY)
 
   renderPanelServedSixHourly({
     requestedTimeRange: { start: SIX_HOURLY_GRID_BOUNDARY, end: SIX_HOURLY_GRID_BOUNDARY + floor }
@@ -1388,4 +1394,68 @@ test('hands the renderer the axis options it was given', () => {
   expect(screen.getByTestId('renderer-show-time-axis')).toHaveTextContent('false')
   expect(screen.getByTestId('renderer-show-value-axis')).toHaveTextContent('false')
   expect(screen.getByTestId('renderer-value-axis-width')).toHaveTextContent('48')
+})
+
+describe('a panel of bar metrics', () => {
+  const HOUR = 3600
+  const NOW = Date.UTC(2026, 0, 1, 10, 37) / 1000
+  const LAST_FOUR_HOURS = { start: NOW - 4 * HOUR, end: NOW }
+
+  beforeEach(() => {
+    vi.useFakeTimers({ now: NOW * 1000, toFake: ['Date'] })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  const SERVED = {
+    start: Date.UTC(2026, 0, 1, 5) / 1000,
+    end: Date.UTC(2026, 0, 1, 11) / 1000,
+    step: HOUR
+  }
+
+  function renderBarPanel() {
+    return renderPanelForRequest({
+      binUnit: 'hour',
+      requestedTimeRange: LAST_FOUR_HOURS,
+      dataTimeRange: SERVED
+    })
+  }
+
+  test('draws from the bin that holds the start up to now, inside the open bin', () => {
+    renderBarPanel()
+
+    expect(screen.getByTestId('view-start')).toHaveTextContent(
+      String(binStart('hour', LAST_FOUR_HOURS.start, getLocalTimeZone()))
+    )
+    expect(screen.getByTestId('view-end')).toHaveTextContent(String(NOW))
+  })
+
+  test('bins the bars by the unit and zooms no deeper than one bin', () => {
+    renderBarPanel()
+
+    expect(screen.getByTestId('bin-unit')).toHaveTextContent('hour')
+    expect(screen.getByTestId('min-time-range')).toHaveTextContent(String(HOUR))
+  })
+
+  // prettier-ignore
+  test.each([
+    { name: 'a 3 h view on the planned grid', step: HOUR, span: 3 * HOUR, awaitingData: false, atFloor: false, floor: HOUR },
+    { name: 'a 1 h view on the planned grid', step: HOUR, span: HOUR, awaitingData: false, atFloor: true, floor: HOUR },
+    { name: 'a 1 h view on a grid finer than a bin', step: 15 * 60, span: HOUR, awaitingData: false, atFloor: true, floor: HOUR },
+    { name: 'a 6 h view on a six-hour grid', step: 6 * HOUR, span: 6 * HOUR, awaitingData: false, atFloor: true, floor: 6 * HOUR },
+    { name: 'a 2 h view on a 90 min grid', step: 90 * 60, span: 2 * HOUR, awaitingData: false, atFloor: true, floor: 2 * HOUR },
+    { name: 'a 2 h view while a fetch is out', step: 6 * HOUR, span: 2 * HOUR, awaitingData: true, atFloor: false, floor: HOUR }
+  ])('refuses a time zoom where it clamps it, for $name', ({ step, span, awaitingData, atFloor, floor }) => {
+    renderPanelForRequest({
+      binUnit: 'hour',
+      requestedTimeRange: { start: NOW - span, end: NOW },
+      dataTimeRange: { start: NOW - span - step, end: NOW + step, step },
+      awaitingData
+    })
+
+    expect(screen.getByTestId('at-min-time-zoom')).toHaveTextContent(String(atFloor))
+    expect(screen.getByTestId('min-time-range')).toHaveTextContent(String(floor))
+  })
 })

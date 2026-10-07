@@ -7,6 +7,7 @@ import type { AddTo, Interaction, YAxis } from 'cmk-shared-typing/typescript/cmk
 import type { IconNames } from 'cmk-shared-typing/typescript/icon'
 
 import type {
+  BinUnit,
   HorizontalLine,
   Metric,
   ShadedRegion,
@@ -100,6 +101,8 @@ export interface GraphDisplayOptions {
 // the hosting group owns the data fetch and range state.
 export interface GraphPanelProps {
   metrics: Metric[]
+  /** The unit the bar metrics are binned by; absent while the graph holds no bar metric. */
+  binUnit?: BinUnit | undefined
   // The range the fetched data actually covers (as opposed to requestedTimeRange).
   // Absent until the first data fetch completes. Explicit undefined is accepted
   // so that parent components can forward their own optional range prop directly.

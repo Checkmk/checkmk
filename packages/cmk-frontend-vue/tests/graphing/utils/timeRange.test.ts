@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest'
 
 import { MIN_ZOOM_SAMPLES, MIN_ZOOM_TIME_RANGE_SECONDS } from '@/graphing/components/constants'
 import { drawnBinEdges, foldIntoBins } from '@/graphing/utils/bins'
-import { binnedTimeAxis, drawnTimeRange, minZoomSpan } from '@/graphing/utils/timeRange'
+import { binnedTimeAxis, continuousTimeAxis, drawnTimeRange } from '@/graphing/utils/timeRange'
 
 import { HOUR, SIX_HOUR_GRID, type ServedGrid, ones, servedGrid } from './localTimeCases'
 
@@ -73,12 +73,14 @@ describe('drawnTimeRange', () => {
   })
 })
 
-describe('minZoomSpan', () => {
+describe('the zoom floor of the continuous time axis', () => {
+  const zoomFloor = continuousTimeAxis().zoomFloor
+
   test.each([
     ['no fetch has resolved a step', undefined],
     ['the resolved step is unusable', { start: 0, end: 1_000, step: 0 }]
   ])('is the configured minimum while %s', (_case, served) => {
-    const span = minZoomSpan(served)
+    const span = zoomFloor(served)
 
     expect(span).toBe(MIN_ZOOM_TIME_RANGE_SECONDS)
   })
@@ -90,7 +92,7 @@ describe('minZoomSpan', () => {
       step: MIN_ZOOM_TIME_RANGE_SECONDS / MIN_ZOOM_SAMPLES
     }
 
-    const span = minZoomSpan(servedAtBaseResolution)
+    const span = zoomFloor(servedAtBaseResolution)
 
     expect(span).toBe(MIN_ZOOM_TIME_RANGE_SECONDS)
   })
@@ -98,9 +100,17 @@ describe('minZoomSpan', () => {
   test('keeps a window at a coarse resolution wide enough to hold its samples', () => {
     const servedSixHourly = { start: 0, end: 864_000, step: 21_600 }
 
-    const span = minZoomSpan(servedSixHourly)
+    const span = zoomFloor(servedSixHourly)
 
     expect(span / servedSixHourly.step).toBeGreaterThanOrEqual(MIN_ZOOM_SAMPLES)
+  })
+
+  test('lets a time zoom reach the minimum of the host, whatever the data on screen', () => {
+    const servedSixHourly = { start: 0, end: 864_000, step: 21_600 }
+
+    expect(continuousTimeAxis().minSpan(MIN_ZOOM_TIME_RANGE_SECONDS, servedSixHourly)).toBe(
+      MIN_ZOOM_TIME_RANGE_SECONDS
+    )
   })
 })
 
@@ -161,10 +171,27 @@ describe('binnedTimeAxis', () => {
     expect(drawn.start).toBe(Date.UTC(2026, 0, 1, 21) / 1000)
   })
 
-  test('zooms no deeper than one bin, or than the host allows', () => {
-    const axis = binnedTimeAxis('day', 'UTC')
+  // prettier-ignore
+  test.each([
+    { name: 'hour bins before a fetch has served a step', unit: 'hour' as const, step: null, floor: HOUR },
+    { name: 'hour bins on the planned grid', unit: 'hour' as const, step: HOUR, floor: HOUR },
+    { name: 'hour bins on a grid finer than a bin', unit: 'hour' as const, step: 15 * 60, floor: HOUR },
+    { name: 'hour bins on a six-hour grid', unit: 'hour' as const, step: 6 * HOUR, floor: 6 * HOUR },
+    { name: 'hour bins on a 90 min grid', unit: 'hour' as const, step: 90 * 60, floor: 2 * HOUR },
+    { name: 'day bins on a six-hour grid', unit: 'day' as const, step: 6 * HOUR, floor: 24 * HOUR }
+  ])('refuses a time zoom at whole bins that hold a served step, for $name', ({ unit, step, floor }) => {
+    const served = step === null ? undefined : { start: 0, end: 100 * step, step }
 
-    expect([axis.minSpan(null), axis.minSpan(2 * 86_400)]).toEqual([86_400, 2 * 86_400])
+    expect(binnedTimeAxis(unit, 'UTC').zoomFloor(served)).toBe(floor)
+  })
+
+  test('lets a time zoom reach the floor, or what the host allows', () => {
+    const axis = binnedTimeAxis('hour', 'UTC')
+    const servedSixHourly = { start: 0, end: 864_000, step: 6 * HOUR }
+
+    expect([axis.minSpan(null, servedSixHourly), axis.minSpan(12 * HOUR, servedSixHourly)]).toEqual(
+      [axis.zoomFloor(servedSixHourly), 12 * HOUR]
+    )
   })
 })
 

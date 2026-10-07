@@ -44,7 +44,7 @@ function createCanvasContextStub(): CanvasRenderingContext2D {
       if (prop === 'moveTo' || prop === 'lineTo') {
         return (x: number, y: number) => void drawnPoints.push([x, y])
       }
-      if (prop === 'fill' || prop === 'stroke') {
+      if (prop === 'fill' || prop === 'stroke' || prop === 'fillRect') {
         return () => void paintOps.push(prop)
       }
       return prop in target ? target[prop] : () => undefined
@@ -78,6 +78,7 @@ function renderBrush(overrides: Record<string, unknown> = {}) {
       width: 300,
       plotLeft: PLOT_LEFT,
       plotWidth: PLOT_WIDTH,
+      binUnit: null,
       ...overrides
     }
   })
@@ -169,4 +170,16 @@ test('draws a grouped metric as a filled area, the way the plot does', () => {
   renderBrush({ metrics })
 
   expect(paintOps).toContain('fill')
+})
+
+test('draws a bar metric as bars in the bins of its unit', () => {
+  const bars: Metric = {
+    ...makeMetric(samplesFilling(DOMAIN)),
+    render: { shape: 'bar', stack: null, aggregation: 'sum', inverse: false, hidden: false }
+  }
+
+  renderBrush({ metrics: [bars], binUnit: 'hour' })
+
+  expect(paintOps).toContain('fillRect')
+  expect(paintOps).not.toContain('stroke')
 })

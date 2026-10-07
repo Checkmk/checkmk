@@ -88,5 +88,3 @@ def field_size_translator(field_size: FieldSize) -> shared_type_defs.StringField
             return shared_type_defs.StringFieldSize.medium
         case FieldSize.LARGE:
             return shared_type_defs.StringFieldSize.large
-        case _:
-            return shared_type_defs.StringFieldSize.medium  # type: ignore[unreachable]

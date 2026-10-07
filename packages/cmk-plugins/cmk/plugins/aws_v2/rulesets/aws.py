@@ -16,6 +16,7 @@ from typing import Final
 from cmk.plugins.aws_v2.constants import AWS_REGIONS
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
     DefaultValue,
@@ -35,6 +36,68 @@ from cmk.rulesets.v1.form_specs import (
     String,
     validators,
 )
+
+_ServiceSpec = tuple[str, Title, Mapping[str, DictElement]]
+
+_GLOBAL_SERVICES: Final[list[_ServiceSpec]] = [
+    ("ce", Title("Costs and usage (CE)"), {}),
+]
+
+_REGIONAL_SERVICES: Final[list[_ServiceSpec]] = [
+    ("ec2", Title("Elastic Compute Cloud (EC2)"), {}),
+    ("ebs", Title("Elastic Block Storage (EBS)"), {}),
+    (
+        "s3",
+        Title("Simple Storage Service (S3)"),
+        {
+            "requests": DictElement(
+                parameter_form=BooleanChoice(
+                    title=Title("Request metrics"),
+                    label=Label("Monitor request metrics using the filter EntireBucket"),
+                    help_text=Help(
+                        "In order to monitor S3 request metrics, you have to enable "
+                        "request metrics in the AWS/S3 console, see the "
+                        "<a href='https://docs.aws.amazon.com/AmazonS3/latest/userguide/metrics-configurations.html'>AWS/S3 documentation</a>. "
+                        "This is a paid feature. Note that the filter name has to be "
+                        "set to <tt>EntireBucket</tt>, as is recommended in the "
+                        "<a href='https://docs.aws.amazon.com/AmazonS3/latest/userguide/configure-request-metrics-bucket.html'>documentation for a filter that applies to all objects</a>. "
+                        "The special agent will use this filter name to query S3 request "
+                        "metrics from the AWS API."
+                    ),
+                ),
+                required=True,
+            ),
+        },
+    ),
+    ("glacier", Title("Amazon S3 Glacier (Glacier)"), {}),
+    ("elb", Title("Classic load balancing (ELB)"), {}),
+    ("elbv2", Title("Application and network load balancing (ELBv2)"), {}),
+    ("rds", Title("Relational Database Service (RDS)"), {}),
+    ("cloudwatch_alarms", Title("CloudWatch alarms"), {}),
+    ("dynamodb", Title("DynamoDB"), {}),
+    (
+        "wafv2",
+        Title("Web Application Firewall (WAFV2)"),
+        {
+            "cloudfront": DictElement(
+                parameter_form=BooleanChoice(
+                    title=Title("CloudFront WAFs"),
+                    label=Label("Monitor CloudFront WAFs"),
+                    help_text=Help(
+                        "Include WAFs in front of CloudFront resources in the monitoring."
+                    ),
+                ),
+                required=True,
+            ),
+        },
+    ),
+]
+
+# These services need the aws_extended license option, and the aws_v2_extended package adds
+# them. Their names are also listed here: in an edition without the package, a rule that was
+# saved with them must still load.
+_EXTENDED_GLOBAL_SERVICE_NAMES: Final = ("route53", "cloudfront")
+_EXTENDED_REGIONAL_SERVICE_NAMES: Final = ("aws_lambda", "sns", "ecs", "elasticache")
 
 _GLOBAL_SERVICE_REGIONS: Final = ("us-gov-east-1", "us-gov-west-1", "cn-north-1", "cn-northwest-1")
 
@@ -119,6 +182,153 @@ def _tags(title: Title | None = None) -> List:
             ),
         ),
     )
+
+
+def _names(label: Label) -> List:
+    return List(
+        element_template=String(
+            label=label, custom_validate=(validators.LengthInRange(min_value=1),)
+        ),
+        add_element_label=Label("Add new name"),
+        remove_element_label=Label("Remove name"),
+        no_element_label=Label("No names defined"),
+        editable_order=False,
+        custom_validate=(validators.LengthInRange(min_value=1),),
+    )
+
+
+def _limits() -> DictElement:
+    return DictElement(
+        parameter_form=BooleanChoice(
+            title=Title("Service limits"),
+            label=Label("Monitor service limits"),
+            help_text=Help(
+                "If limits are monitored, all instances will be fetched "
+                "regardless of any name or tag restrictions that may have been "
+                "configured."
+            ),
+            prefill=DefaultValue(True),
+        ),
+        required=True,
+    )
+
+
+def _service(
+    title: Title,
+    options: Mapping[str, DictElement],
+    *,
+    filterable: bool,
+    prefill: str,
+) -> DictElement:
+    elements: list[CascadingSingleChoiceElement] = [
+        CascadingSingleChoiceElement(
+            name="none",
+            title=Title("Do not monitor service"),
+            parameter_form=FixedValue(value=None),
+        ),
+        CascadingSingleChoiceElement(
+            name="all",
+            title=(
+                Title("Gather all service instances and restrict by overall AWS tags")
+                if filterable
+                else Title("Monitor service")
+            ),
+            parameter_form=Dictionary(elements=options),
+        ),
+    ]
+    if filterable:
+        elements += [
+            CascadingSingleChoiceElement(
+                name="tags",
+                title=Title("Use explicit AWS service tags and overrule overall AWS tags"),
+                parameter_form=Dictionary(
+                    elements={
+                        "tags": DictElement(parameter_form=_tags(), required=True),
+                        **options,
+                    },
+                ),
+            ),
+            CascadingSingleChoiceElement(
+                name="names",
+                title=Title("Use explicit service names and ignore overall AWS tags"),
+                parameter_form=Dictionary(
+                    elements={
+                        "names": DictElement(
+                            parameter_form=_names(Label("Service name")), required=True
+                        ),
+                        **options,
+                    },
+                ),
+            ),
+        ]
+    return DictElement(
+        parameter_form=CascadingSingleChoice(
+            title=title,
+            help_text=Help(
+                "<b>Gather all service instances and restrict by overall AWS tags:</b><br>"
+                "If overall tags are specified, then all service instances will be "
+                "filtered by those tags. Otherwise, all instances will be collected.<br><br>"
+                "<b>Use explicit AWS service tags and overrule overall AWS tags:</b><br>"
+                "Specify explicit tags for these services. The overall tags will be "
+                "ignored for these services.<br><br>"
+                "<b>Use explicit service names and ignore overall AWS tags:</b><br>"
+                "Use this option to specify explicit names. The overall tags will be "
+                "ignored for these services."
+            )
+            if filterable
+            else None,
+            elements=elements,
+            prefill=DefaultValue(prefill),
+        ),
+        required=True,
+    )
+
+
+def _cloudwatch_alarms(title: Title) -> DictElement:
+    # Alarms are selected by their names only.
+    options = {"limits": _limits()}
+    return DictElement(
+        parameter_form=CascadingSingleChoice(
+            title=title,
+            elements=[
+                CascadingSingleChoiceElement(
+                    name="none",
+                    title=Title("Do not monitor service"),
+                    parameter_form=FixedValue(value=None),
+                ),
+                CascadingSingleChoiceElement(
+                    name="all",
+                    title=Title("Gather all"),
+                    parameter_form=Dictionary(elements=options),
+                ),
+                CascadingSingleChoiceElement(
+                    name="names",
+                    title=Title("Use explicit names"),
+                    parameter_form=Dictionary(
+                        elements={
+                            "names": DictElement(
+                                parameter_form=_names(Label("Alarm name")), required=True
+                            ),
+                            **options,
+                        },
+                    ),
+                ),
+            ],
+            prefill=DefaultValue("all"),
+        ),
+        required=True,
+    )
+
+
+def _global_service(name: str, title: Title, options: Mapping[str, DictElement]) -> DictElement:
+    # Costs and usage cannot be restricted to tags or names.
+    return _service(title, options, filterable=name != "ce", prefill="none")
+
+
+def _regional_service(name: str, title: Title, options: Mapping[str, DictElement]) -> DictElement:
+    if name == "cloudwatch_alarms":
+        return _cloudwatch_alarms(title)
+    return _service(title, {**options, "limits": _limits()}, filterable=True, prefill="all")
 
 
 def _access_key() -> Mapping[str, DictElement]:
@@ -304,6 +514,39 @@ def configuration_regions_and_tags() -> Mapping[str, DictElement]:
                     ),
                 ],
                 prefill=DefaultValue("all_tags"),
+            ),
+            required=True,
+        ),
+    }
+
+
+def _not_configurable(names: Sequence[str], elements: Mapping[str, DictElement]) -> tuple[str, ...]:
+    return tuple(name for name in names if name not in elements)
+
+
+def configuration_services() -> Mapping[str, DictElement]:
+    global_services = {
+        name: _global_service(name, title, options) for name, title, options in _GLOBAL_SERVICES
+    }
+    regional_services = {
+        name: _regional_service(name, title, options) for name, title, options in _REGIONAL_SERVICES
+    }
+    return {
+        "global_services": DictElement(
+            parameter_form=Dictionary(
+                title=Title("Global services to monitor"),
+                elements=global_services,
+                ignored_elements=_not_configurable(_EXTENDED_GLOBAL_SERVICE_NAMES, global_services),
+            ),
+            required=True,
+        ),
+        "regional_services": DictElement(
+            parameter_form=Dictionary(
+                title=Title("Services per region to monitor"),
+                elements=regional_services,
+                ignored_elements=_not_configurable(
+                    _EXTENDED_REGIONAL_SERVICE_NAMES, regional_services
+                ),
             ),
             required=True,
         ),

@@ -18,6 +18,8 @@ from cmk.gui.dashboard.api.model.widget import WidgetTitle
 from cmk.gui.dashboard.api.model.widget_content import _CONTENT_TYPES
 from cmk.gui.dashboard.api.model.widget_content._base import BaseWidgetContent
 from cmk.gui.dashboard.api.model.widget_content.network_flow import NetworkFlowDonutContent
+from cmk.gui.dashboard.api.model.widget_content.url import URLContent
+from cmk.gui.dashboard.dashlet.dashlets.custom_url import URLDashletConfig
 from cmk.gui.dashboard.type_defs import NetworkFlowDonutDashletConfig
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
@@ -82,6 +84,13 @@ def test_donut_content_defaults_of_a_stored_widget() -> None:
     content = NetworkFlowDonutContent.from_internal(config)
     assert content.legend_mode == "table"
     assert content.show_delta is False
+
+
+def test_url_content_defaults_of_a_stored_widget() -> None:
+    """A URL widget stored before the query parameter options existed includes nothing."""
+    config: URLDashletConfig = {"type": "url", "url": "https://example.com"}
+    content = URLContent.from_internal(config)
+    assert content.include_context is False
 
 
 @pytest.mark.parametrize(
@@ -490,8 +499,23 @@ class TestURLContent:
             {
                 "type": "url",
                 "url": "https://example.com",
+                "include_context": False,
             },
         )
+
+    def test_keeps_include_context(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {
+                    "test_widget": create_widget(
+                        {"type": "url", "url": "https://example.com", "include_context": True}
+                    )
+                },
+            )
+        )
+        widget = next(iter(resp.json["extensions"]["widgets"].values()))
+        assert widget["content"]["include_context"] is True
 
     @pytest.mark.parametrize(
         "url,should_fail",
@@ -520,6 +544,7 @@ class TestURLContent:
                         {
                             "type": "url",
                             "url": url,
+                            "include_context": False,
                         }
                     )
                 },

@@ -41,7 +41,8 @@ const iFrameUrl = computed(() => {
 const iFrameProps = computed(() => {
   const iFrameContent: IFrameContent = {
     type: 'url',
-    url: iFrameUrl.value
+    url: iFrameUrl.value,
+    include_context: false
   }
   return {
     ...props,

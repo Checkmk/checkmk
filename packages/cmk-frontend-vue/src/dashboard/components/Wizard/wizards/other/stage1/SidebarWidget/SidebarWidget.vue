@@ -9,6 +9,9 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
+import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/FieldComponent.vue'
+import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
+import TableFormRow from '@/dashboard/components/Wizard/components/TableForm/TableFormRow.vue'
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import type { BaseWidgetProp, WidgetProps } from '@/dashboard/components/Wizard/types'
 import DataSettings from '@/dashboard/components/Wizard/wizards/other/stage1/DataSettings.vue'
@@ -59,13 +62,18 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
 
     <ContentSpacer />
 
-    <DataSettings :label="_t('Select sidebar element')">
-      <SidebarElementSelector
-        v-model:selected-sidebar-element="handler.sidebarElementName.value"
-        :elements="sidebarElements.elements.value"
-        :is-loading="sidebarElements.isLoading.value"
-        :has-error="sidebarElements.hasError.value"
-      />
+    <DataSettings>
+      <TableFormRow>
+        <FieldDescription>{{ _t('Select sidebar element') }}</FieldDescription>
+        <FieldComponent>
+          <SidebarElementSelector
+            v-model:selected-sidebar-element="handler.sidebarElementName.value"
+            :elements="sidebarElements.elements.value"
+            :is-loading="sidebarElements.isLoading.value"
+            :has-error="sidebarElements.hasError.value"
+          />
+        </FieldComponent>
+      </TableFormRow>
     </DataSettings>
 
     <ContentSpacer :dimension="6" />

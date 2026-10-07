@@ -5,11 +5,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
+import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
+import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
+import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/FieldComponent.vue'
+import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
+import TableFormRow from '@/dashboard/components/Wizard/components/TableForm/TableFormRow.vue'
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import type { BaseWidgetProp, WidgetProps } from '@/dashboard/components/Wizard/types'
 import DataSettings from '@/dashboard/components/Wizard/wizards/other/stage1/DataSettings.vue'
@@ -49,8 +54,29 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
 
     <ContentSpacer />
 
-    <DataSettings :label="_t('Enter URL to embed')">
-      <CmkInput v-model="handler.url.value" type="text" field-size="large" />
+    <DataSettings>
+      <TableFormRow>
+        <FieldDescription>
+          {{ _t('Enter URL to embed') }}<CmkLabelRequired space="before" />
+        </FieldDescription>
+        <FieldComponent>
+          <CmkInput
+            v-model="handler.url.value"
+            type="text"
+            field-size="fill"
+            :aria-label="_t('Enter URL to embed')"
+            :external-errors="handler.urlValidationErrors.value"
+          />
+        </FieldComponent>
+      </TableFormRow>
+      <TableFormRow>
+        <FieldDescription>{{ _t('Include query parameters for') }}</FieldDescription>
+        <FieldComponent>
+          <div class="field-component__item">
+            <CmkCheckbox v-model="handler.includeContext.value" :label="_t('Dashboard filters')" />
+          </div>
+        </FieldComponent>
+      </TableFormRow>
     </DataSettings>
 
     <ContentSpacer :dimension="6" />

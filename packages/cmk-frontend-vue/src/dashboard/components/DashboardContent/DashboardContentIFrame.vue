@@ -8,6 +8,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { type Ref, computed } from 'vue'
 
 import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
+import { iframeUrl } from '@/dashboard/lib/iframeUrl'
 import { type IFrameContent } from '@/dashboard/types/widget.ts'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
@@ -23,9 +24,12 @@ interface DashboardContentIFrameProps extends ContentProps<IFrameContent> {
 const {
   content,
   contentCenter,
-  disableClickShield = false
+  disableClickShield = false,
+  effective_filter_context: effectiveFilterContext
 } = defineProps<DashboardContentIFrameProps>()
 const isPublicDashboard = useInjectIsPublicDashboard()
+
+const hasUrl: Ref<boolean> = computed(() => content.url.trim() !== '')
 
 const isValidUrl: Ref<boolean> = computed(() => {
   try {
@@ -34,6 +38,14 @@ const isValidUrl: Ref<boolean> = computed(() => {
     return false
   }
 })
+
+const showsIframe: Ref<boolean> = computed(() => hasUrl.value && isValidUrl.value)
+
+const src = computed(() =>
+  iframeUrl(content.url, {
+    context: content.include_context ? effectiveFilterContext.filters : null
+  })
+)
 </script>
 
 <template>
@@ -41,22 +53,22 @@ const isValidUrl: Ref<boolean> = computed(() => {
     :effective-title="effectiveTitle"
     :general_settings="general_settings"
     :content-center="contentCenter"
-    :is-scrollable-preview="isPreview && isValidUrl"
+    :is-scrollable-preview="isPreview && showsIframe"
   >
     <div
       class="db-content-i-frame__div"
       :class="{
-        'db-content-i-frame__preview': isPreview && isValidUrl
+        'db-content-i-frame__preview': isPreview && showsIframe
       }"
     >
       <iframe
-        v-if="isValidUrl"
-        :key="content.url"
+        v-if="showsIframe"
+        :key="src"
         class="db-content-i-frame__iframe"
         allowtransparency="true"
-        :src="content.url"
+        :src="src"
       />
-      <div v-else class="db-content-i-frame__invalid-url">{{ _t('Invalid URL') }}</div>
+      <div v-else-if="hasUrl" class="db-content-i-frame__invalid-url">{{ _t('Invalid URL') }}</div>
       <div
         v-if="isPublicDashboard && !disableClickShield"
         class="db-content-i-frame__click-shield"

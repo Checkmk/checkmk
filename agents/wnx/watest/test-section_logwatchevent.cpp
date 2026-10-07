@@ -291,7 +291,7 @@ TEST(LogWatchEventTest, CheckFabricConfig) {
     EXPECT_EQ(tout, -1);
 
     auto max_entries = cfg::GetVal(cfg::groups::kLogWatchEvent,
-                                   cfg::vars::kLogWatchEventTimeout, 445);
+                                   cfg::vars::kLogWatchEventMaxEntries, 445);
     EXPECT_EQ(max_entries, -1);
 
     auto sections = cfg::GetNode(cfg::groups::kLogWatchEvent,

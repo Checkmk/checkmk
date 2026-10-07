@@ -12,6 +12,7 @@ import { untranslated } from 'cmk-ui-library/lib/i18n'
 import useId from 'cmk-ui-library/lib/useId'
 
 import FormLabel from '@/form/private/FormLabel.vue'
+import FormRequired from '@/form/private/FormRequired.vue'
 import { type ValidationMessages, useValidation } from '@/form/private/validation'
 
 const props = defineProps<{
@@ -35,7 +36,8 @@ const componentId = useId()
       <div class="form-single-choice__label-column">
         <div class="form-single-choice__label-spacer"></div>
         <FormLabel v-if="$props.spec.label" :for="componentId"
-          >{{ spec.label }}<CmkSpace size="small"
+          >{{ spec.label }}<FormRequired :spec="props.spec" :space="'before'" /><CmkSpace
+            size="small"
         /></FormLabel>
       </div>
       <div class="form-single-choice__input-column">
@@ -59,7 +61,7 @@ const componentId = useId()
           :no-results-hint="untranslated(props.spec.no_elements_text || '')"
           :label="untranslated(props.spec.label || props.spec.title)"
           :form-validation="validation.length > 0"
-          required
+          :required="!props.spec.label && !props.spec.title"
         />
       </div>
     </div>

@@ -236,6 +236,44 @@ test('FormDictionary renders required only once depending on label presence', as
   expect(screen.getAllByText('(required)')).toHaveLength(3)
 })
 
+test('FormDictionary marks a dropdown required at its title', () => {
+  const direction: FormSpec.SingleChoice = {
+    type: 'single_choice',
+    title: 'Direction',
+    help: '',
+    validators: [],
+    elements: [{ name: 'parent', title: 'is parent of' }],
+    no_elements_text: null,
+    label: null,
+    input_hint: 'Select direction',
+    frozen: false
+  }
+  const dictionary: FormSpec.Dictionary = {
+    ...spec,
+    elements: [
+      {
+        name: 'direction',
+        render_only: false,
+        required: true,
+        default_value: null,
+        parameter_form: direction,
+        group: dictElementGroupFormSpec
+      }
+    ]
+  }
+  render(FormEdit, {
+    props: {
+      spec: dictionary,
+      data: { direction: null },
+      backendValidation: []
+    }
+  })
+
+  expect(screen.getByText('(required)').closest('label')).toHaveTextContent(
+    /^Direction\s*\(required\)$/
+  )
+})
+
 test.skip('FormDictionary enable element, render backend validation message', async () => {
   render(FormDictionary, {
     props: {

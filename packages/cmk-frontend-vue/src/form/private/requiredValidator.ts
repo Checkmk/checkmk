@@ -14,17 +14,16 @@ type RendersRequiredLabels =
   | FormSpec.SingleChoice
   | FormSpec.SingleChoiceEditable
 
-function isTypeRenderingRequiredLabel(
-  parameterForm: FormSpec.FormSpec
-): parameterForm is RendersRequiredLabels {
+function isTypeRenderingRequiredLabel(parameterForm: FormSpec.FormSpec): boolean {
   const type = (parameterForm as Components).type as RendersRequiredLabels['type']
   switch (type) {
     case 'password':
     case 'condition_choices':
     case 'cascading_single_choice':
-    case 'single_choice':
     case 'single_choice_editable':
       return true
+    case 'single_choice':
+      return !parameterForm.title
     default:
       staticAssertNever(type)
       return false
@@ -50,5 +49,8 @@ export function required(validator: FormSpec.Validator): boolean {
 }
 
 export function isRequired(spec: FormSpec.FormSpec): boolean {
-  return (spec as Components).type === 'file_upload' || (spec.validators?.some(required) ?? false)
+  const type = (spec as Components).type
+  return (
+    type === 'file_upload' || type === 'single_choice' || (spec.validators?.some(required) ?? false)
+  )
 }

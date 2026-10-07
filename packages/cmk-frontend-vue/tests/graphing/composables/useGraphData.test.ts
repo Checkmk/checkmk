@@ -7,7 +7,7 @@ import { render, waitFor } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { defineComponent, h, nextTick } from 'vue'
+import { defineComponent, h, nextTick, ref } from 'vue'
 
 import {
   initGlobalRefresh,
@@ -16,6 +16,7 @@ import {
 } from '@/graphing/GlobalTimePicker/globalTimeState'
 import { type GraphDataFetcher, useGraphData } from '@/graphing/composables/useGraphData'
 import type { RequestedTimeRange } from '@/graphing/types'
+import type { FetchWindowPlanner } from '@/graphing/utils/timeRange'
 
 const UNIT: components['schemas']['ApiUnitFormat'] = {
   notation: 'decimal',
@@ -151,6 +152,45 @@ describe('useGraphData — requested resolution', () => {
 
     const { start, end } = await requestedTimeRange()
     expect({ start, end }).toEqual(window)
+  })
+})
+
+describe('useGraphData — a planned fetch window', () => {
+  const PLANNED = { start: 0, end: 7_200, step: 900 }
+  const planFetchWindow: FetchWindowPlanner = () => PLANNED
+
+  function fetchPlanned(canvasWidth: { value: number }): void {
+    const harness = defineComponent({
+      setup() {
+        useGraphData(
+          () => [{ internal: '{"graphs": []}', add_to: null } as never],
+          () => ({ start: 0, end: 8 * 86_400 }),
+          () => canvasWidth.value,
+          () => ['max'],
+          () => null,
+          { planFetchWindow }
+        )
+        return () => h('div')
+      }
+    })
+    render(harness)
+  }
+
+  test('asks for the window the planner plans', async () => {
+    fetchPlanned(ref(750))
+
+    expect(await requestedTimeRange()).toEqual(PLANNED)
+  })
+
+  test('does not fetch again on a resize that keeps the planned step', async () => {
+    const canvasWidth = ref(750)
+    fetchPlanned(canvasWidth)
+    await requestedTimeRange()
+
+    canvasWidth.value = 300
+    await new Promise((resolve) => setTimeout(resolve, 400))
+
+    expect(postSpy).toHaveBeenCalledTimes(1)
   })
 })
 

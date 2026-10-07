@@ -17,8 +17,8 @@ import { fetchGraphDataByDefinition, useGraphData } from '../../composables/useG
 import { useGraphInteraction } from '../../composables/useGraphInteraction'
 import { hasPlottableData, useGraphNotice, useNoDataNotice } from '../../composables/useGraphNotice'
 import { useGraphVisibility } from '../../composables/useGraphVisibility'
-import type { RequestedTimeRange } from '../../types.ts'
-import { drawnTimeRange } from '../../utils/timeRange'
+import type { RequestedTimeRange, TimeRangeCommitKind } from '../../types.ts'
+import { committedTimeRange, continuousTimeAxis } from '../../utils/timeRange'
 import GraphBurgerMenu from '../GraphBurgerMenu.vue'
 import GraphTimestamp from '../GraphTimestamp.vue'
 import TimeSeriesGraph, { type GraphOptions, type Size, type TimeRange } from '../TimeSeriesGraph'
@@ -72,6 +72,7 @@ const requestedTimeRange = ref<RequestedTimeRange>(computeEpochTimeRange(props.t
 const zoomSessionActive = ref(false)
 
 const graphDefinitions = computed(() => [{ internal: props.internal }])
+const timeAxis = continuousTimeAxis()
 
 const { graphs, isLoading, error, partialErrors, warnings, reload } = useGraphData(
   () => graphDefinitions.value,
@@ -79,7 +80,10 @@ const { graphs, isLoading, error, partialErrors, warnings, reload } = useGraphDa
   () => plotWidth.value,
   () => [DEFAULT_CONSOLIDATION_FN],
   () => props.combinationMode,
-  { fetchGraph: props.fetchGraph ?? fetchGraphDataByDefinition }
+  {
+    fetchGraph: props.fetchGraph ?? fetchGraphDataByDefinition,
+    planFetchWindow: timeAxis.planFetchWindow
+  }
 )
 const graph = computed(() => graphs.value[0] ?? null)
 
@@ -134,15 +138,15 @@ watch(isLoading, (loading) => {
 
 // Both committed time-zoom and pan windows land here: fetch the window and suspend the
 // refresh timer so a tick cannot yank the inspected window away; reset resumes it.
-const onCommittedTimeRange = (range: RequestedTimeRange) => {
+const onCommittedTimeRange = (range: RequestedTimeRange, kind: TimeRangeCommitKind) => {
   zoomSessionActive.value = true
-  requestedTimeRange.value = { start: range.start, end: range.end }
+  requestedTimeRange.value = committedTimeRange(requestedTimeRange.value, range, kind)
   timer.stop()
 }
 
 const baselineTimeRange = computed<TimeRange | undefined>(() => {
   const served = graph.value?.timeRange
-  return served && drawnTimeRange(requestedTimeRange.value, served)
+  return served && timeAxis.drawnTimeRange(requestedTimeRange.value, served)
 })
 
 const {
@@ -280,7 +284,7 @@ onBeforeUnmount(() => {
           :value-range="viewValueRange"
           zoom-mode="time"
           :size="figureSize"
-          :min-time-range="null"
+          :min-time-range="timeAxis.minSpan(null)"
           :min-value-range="null"
           :inspecting="inspectionActive"
           :pan-enabled="true"

@@ -21,7 +21,7 @@ import type {
   TimeRange,
   TimeRangeCommitKind
 } from '../types.ts'
-import { drawnTimeRange, minZoomSpan } from '../utils/timeRange'
+import { committedTimeRange, continuousTimeAxis, minZoomSpan } from '../utils/timeRange'
 import GraphBrush from './GraphBrush/GraphBrush.vue'
 import TimeSeriesGraph, { type ZoomPayload } from './TimeSeriesGraph'
 import { deriveYAxis } from './TimeSeriesGraph/yAxis'
@@ -46,13 +46,15 @@ const emit = defineEmits<GraphPanelEmits>()
 // curves at all and nothing reads it.
 const NOMINAL_STEP_SECONDS = 60
 
+const timeAxis = continuousTimeAxis()
+
 const baselineTimeRange = computed<TimeRange>(() => {
   if (!props.dataTimeRange) {
     return { ...props.requestedTimeRange, step: NOMINAL_STEP_SECONDS }
   }
   return props.awaitingData
     ? props.dataTimeRange
-    : drawnTimeRange(props.requestedTimeRange, props.dataTimeRange)
+    : timeAxis.drawnTimeRange(props.requestedTimeRange, props.dataTimeRange)
 })
 
 const headerTimeRange = computed<TimeRange | undefined>(() =>
@@ -125,10 +127,7 @@ const { visibleMetrics: visibleBrushMetrics } = useGraphVisibility(
 )
 
 function updateTimeRange(val: RequestedTimeRange, kind: TimeRangeCommitKind) {
-  // The served window is a storage step wider; adopting its span would grow it on every pan.
-  const asked = props.requestedTimeRange
-  const end = kind === 'translated_timerange' ? val.start + (asked.end - asked.start) : val.end
-  emit('update:requestedTimeRange', { start: val.start, end }, kind)
+  emit('update:requestedTimeRange', committedTimeRange(props.requestedTimeRange, val, kind), kind)
 }
 
 // Backend-hidden metrics (stack references, render.hidden) are structural: they feed the
@@ -147,6 +146,8 @@ const zoomFloor = computed(() => minZoomSpan(servedOnScreen.value))
 // Time zoom clamps the *requested* window at the floor, so that is the range which reaches it;
 // the served window stays a step wider and would never compare equal.
 const atMinTimeZoom = computed(() => requestedSpan.value <= zoomFloor.value)
+
+const minTimeRange = timeAxis.minSpan(MIN_ZOOM_TIME_RANGE_SECONDS)
 
 const graphRenderer = ref<InstanceType<typeof TimeSeriesGraph> | null>(null)
 
@@ -255,7 +256,7 @@ const legendAlignedWithPlot = computed(() =>
             :value-range="viewValueRange"
             :zoom-mode="zoomMode"
             :size="{ width: figureWidth, height: figureHeight, mode: 'fixed' }"
-            :min-time-range="MIN_ZOOM_TIME_RANGE_SECONDS"
+            :min-time-range="minTimeRange"
             :at-min-time-zoom="atMinTimeZoom"
             :min-value-range="null"
             :show-time-axis="showTimeAxis"
@@ -299,7 +300,7 @@ const legendAlignedWithPlot = computed(() =>
           :domain="brushSnapshot.drawnDomain"
           :data-domain="brushSnapshot.data.dataTimeRange"
           :window="brushWindow"
-          :min-span="MIN_ZOOM_TIME_RANGE_SECONDS"
+          :min-span="minTimeRange"
           :width="figureWidth"
           :plot-left="plotLeft"
           :plot-width="brushPlotWidth"

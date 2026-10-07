@@ -368,7 +368,7 @@ test('a failed fetch outranks the no-data message', async () => {
   expect(screen.queryByText('No data available')).not.toBeInTheDocument()
 })
 
-test('a pan fetches the panned window', async () => {
+test('a pan fetches the panned window over the requested span', async () => {
   renderFigure()
   await screen.findByTestId('time-series-graph')
 
@@ -376,7 +376,7 @@ test('a pan fetches the panned window', async () => {
 
   await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
   const { start, end } = postSpy.mock.calls[1][1].body.requested_time_range
-  expect({ start, end }).toEqual({ start: 500, end: 900 })
+  expect({ start, end }).toEqual({ start: 500, end: 500 + 4 * 3600 })
 })
 
 test('a reset after a pan re-resolves the configured range', async () => {

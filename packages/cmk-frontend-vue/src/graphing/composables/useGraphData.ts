@@ -16,6 +16,7 @@ import {
 } from '../components/TimeSeriesGraph/interaction/timeBounds'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from '../components/consolidation'
 import type { RequestedTimeRange } from '../types'
+import { type FetchWindowPlanner, planFetchWindowByWidth } from '../utils/timeRange'
 
 // The fetch endpoint only needs the self-contained definition (the graph kind is embedded in
 // `internal`); a caller holding a full render shell additionally contributes its header title to
@@ -104,17 +105,6 @@ export const fetchGraphDataByDefinition: GraphDataFetcher = async (definition, p
   }
 }
 
-// The renderer decimates to one M4 bucket per plotted column (TimeSeriesGraph.vue) and draws into a
-// DPR-scaled bitmap, so a single sample per column collapses each bucket's min/max and loses the
-// detail between samples. Requesting several samples per column keeps that detail. RRD serves this
-// for free — RRDConsolidate never returns finer than the RRA step — while query backends honour the
-// step literally, bounding a request at ~4x the plotted width in points.
-const SAMPLES_PER_PLOTTED_COLUMN = 4
-
-function computeStep(start: number, end: number, canvasWidth: number): number {
-  return Math.max(60, Math.ceil((end - start) / (canvasWidth * SAMPLES_PER_PLOTTED_COLUMN)))
-}
-
 // Graph discovery (matching templates to a service) happens backend-only: the caller already
 // receives the self-contained `internal` definitions via the initial page props
 // (see build_template_graphs -> to_cmk_time_series_graph in cmk/gui/views/graph.py). This
@@ -122,6 +112,7 @@ function computeStep(start: number, end: number, canvasWidth: number): number {
 export interface GraphDataOptions {
   getFetchBounds?: () => NavigableBounds
   fetchGraph?: GraphDataFetcher
+  planFetchWindow?: FetchWindowPlanner
 }
 
 export function useGraphData(
@@ -141,6 +132,7 @@ export function useGraphData(
   reload: () => void
 } {
   const fetchGraph = options.fetchGraph ?? fetchGraphDataByDefinition
+  const planFetchWindow = options.planFetchWindow ?? planFetchWindowByWidth
 
   const graphsRef = ref<ResolvedGraph[]>([])
   const errorRef = ref<string | null>(null)
@@ -165,7 +157,7 @@ export function useGraphData(
   }
 
   // Step of the most recently requested load; a resize only re-fetches when the
-  // width-derived step actually changes.
+  // planned step actually changes.
   let lastRequestedStep: number | null = null
 
   let loadToken = 0
@@ -188,10 +180,9 @@ export function useGraphData(
 
   function currentRequest(): CurrentRequest {
     const range = getRequestedTimeRange()
-    const step = computeStep(range.start, range.end, getCanvasWidth())
-    lastRequestedStep = step
+    const window = planFetchWindow(range, getCanvasWidth())
+    lastRequestedStep = window.step
     const requestedTimeRange = { start: range.start, end: range.end }
-    const window = { ...requestedTimeRange, step }
     const bounds = options.getFetchBounds?.()
     return {
       fetchWindow: bounds === undefined ? window : clippedToNavigableTime(window, bounds),
@@ -342,8 +333,7 @@ export function useGraphData(
       void loadAllGraphs()
       return
     }
-    const range = getRequestedTimeRange()
-    if (computeStep(range.start, range.end, width) !== lastRequestedStep) {
+    if (planFetchWindow(getRequestedTimeRange(), width).step !== lastRequestedStep) {
       debouncedLoadAllGraphs()
     }
   })

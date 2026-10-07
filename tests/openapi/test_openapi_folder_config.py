@@ -20,6 +20,7 @@ from cmk.gui.fields import FOLDER_PATTERN, FolderField
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.framework import APIVersion
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
+from cmk.plugins.openapi_test.rulesets.sample import ACTIVE_CHECK_RULESET, ACTIVE_CHECK_VALUE_RAW
 from cmk.utils import paths
 from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 from tests.testlib.unit.rest_api_client import ClientRegistry
@@ -1030,10 +1031,10 @@ def test_openapi_delete_folder_with_rules(clients: ClientRegistry) -> None:
     )
 
     clients.Rule.create(
-        ruleset="active_checks:http",
+        ruleset=ACTIVE_CHECK_RULESET,
         folder="~new_folder",
         conditions={},
-        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+        value_raw=ACTIVE_CHECK_VALUE_RAW,
     )
 
     no_force_delete_result = clients.Folder.delete(

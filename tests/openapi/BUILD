@@ -12,15 +12,11 @@ py_library(
         "__init__.py",
         "conftest.py",
     ],
-    tags = [
-        "deballast-keep=//cmk/plugins",  # rulesets/graphing discovered at runtime, not imported
-    ],
     deps = [
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
         "//cmk/gui/utils:middle",
         "//cmk/gui/watolib:password_store",
-        "//cmk/plugins",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-livestatus-client:py_livestatus",
@@ -85,6 +81,7 @@ py_cmk_test(
         "//cmk/gui/valuespec",
         "//cmk/gui/watolib",
         "//cmk/validate_config",
+        "//tests/openapi/plugins/cmk/plugins/openapi_test",
         requirement("marshmallow-oneofschema"),
         requirement("polyfactory"),
         requirement("pytest-mock"),

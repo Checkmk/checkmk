@@ -32,6 +32,13 @@ from cmk.gui.watolib.pending_changes import (
     PendingChangesStore,
 )
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
+from cmk.plugins.openapi_test.rulesets.sample import (
+    ACTIVE_CHECK_RULESET,
+    ACTIVE_CHECK_VALUE_RAW,
+    LEVELS_RULESET,
+    LEVELS_VALUE_RAW,
+    SPECIAL_AGENT_RULESET,
+)
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
@@ -170,7 +177,7 @@ def test_openapi_create_rule_regression(clients: ClientRegistry) -> None:
         "mode": ("url", {"uri": "/lala/misite.html", "ssl": "auto", "urlize": True}),
     }"""
     clients.Rule.create(
-        ruleset=RuleGroup.ActiveChecks("http"),
+        ruleset=ACTIVE_CHECK_RULESET,
         value_raw=value_raw,
         conditions={},
         folder="~",
@@ -179,9 +186,9 @@ def test_openapi_create_rule_regression(clients: ClientRegistry) -> None:
 
 
 def test_openapi_value_raw_is_unaltered(clients: ClientRegistry) -> None:
-    value_raw = "{'levels': ('fixed', (10.0, 5.0))}"
+    value_raw = LEVELS_VALUE_RAW
     resp = clients.Rule.create(
-        ruleset=RuleGroup.CheckgroupParameters("memory_percentage_used"),
+        ruleset=LEVELS_RULESET,
         value_raw=value_raw,
         conditions={},
         folder="~",
@@ -204,17 +211,11 @@ def test_openapi_explicit_password_keeps_only_generated_ids(
     # Saving a rule with secrets updates the merged password file through the cmk binary
     monkeypatch.setattr(rulesets, "update_merged_password_file", lambda **_: None)
     value = {
-        "servername": "activemq.example.com",
-        "port": 8161,
-        "protocol": "http",
-        "use_piggyback": False,
-        "basicauth": {
-            "username": "user",
-            "password": ("cmk_postprocessed", "explicit_password", (password_id, "my_secret")),
-        },
+        "username": "user",
+        "password": ("cmk_postprocessed", "explicit_password", (password_id, "my_secret")),
     }
     resp = clients.Rule.create(
-        ruleset=RuleGroup.SpecialAgents("activemq"),
+        ruleset=SPECIAL_AGENT_RULESET,
         value_raw=repr(value),
         conditions={},
         folder="~",
@@ -224,33 +225,9 @@ def test_openapi_explicit_password_keeps_only_generated_ids(
     saved = ast.literal_eval(
         clients.Rule.get(rule_id=resp.json["id"]).json["extensions"]["value_raw"]
     )
-    saved_id = saved["basicauth"]["password"][2][0]
+    saved_id = saved["password"][2][0]
     assert (saved_id == password_id) is kept
     assert is_ad_hoc_password_id(saved_id)
-
-
-def test_openapi_value_active_check_http(clients: ClientRegistry) -> None:
-    value_raw = """{
-        "name": "Halli-gALLI",
-        "host": {"address": ("direct", "mimi.ch"), "virthost": "mimi.ch"},
-        "mode": (
-            "url",
-            {
-                "uri": "/lala/misite.html",
-                "ssl": "auto",
-                "expect_string": "status:UP",
-                "urlize": True,
-            },
-        ),
-    }"""
-    resp = clients.Rule.create(
-        ruleset=RuleGroup.ActiveChecks("http"),
-        value_raw=value_raw,
-        conditions={},
-        folder="~",
-        properties={"disabled": False},
-    )
-    clients.Rule.get(rule_id=resp.json["id"])
 
 
 def test_openapi_rules_href_escaped(clients: ClientRegistry) -> None:
@@ -681,9 +658,9 @@ def test_create_rule_empty_match_on_list_service_description(clients: ClientRegi
 
 def test_create_rule_no_conditions_nor_properties(clients: ClientRegistry) -> None:
     resp = clients.Rule.create(
-        ruleset="active_checks:http",
+        ruleset=ACTIVE_CHECK_RULESET,
         folder="/",
-        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+        value_raw=ACTIVE_CHECK_VALUE_RAW,
     )
 
     clients.Rule.get(rule_id=resp.json["id"])
@@ -691,10 +668,10 @@ def test_create_rule_no_conditions_nor_properties(clients: ClientRegistry) -> No
 
 def test_create_rule_no_conditions(clients: ClientRegistry) -> None:
     resp = clients.Rule.create(
-        ruleset="active_checks:http",
+        ruleset=ACTIVE_CHECK_RULESET,
         folder="/",
         properties={},
-        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+        value_raw=ACTIVE_CHECK_VALUE_RAW,
     )
 
     clients.Rule.get(rule_id=resp.json["id"])
@@ -702,10 +679,10 @@ def test_create_rule_no_conditions(clients: ClientRegistry) -> None:
 
 def test_create_rule_no_properties(clients: ClientRegistry) -> None:
     resp = clients.Rule.create(
-        ruleset="active_checks:http",
+        ruleset=ACTIVE_CHECK_RULESET,
         folder="/",
         conditions={},
-        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+        value_raw=ACTIVE_CHECK_VALUE_RAW,
     )
 
     clients.Rule.get(rule_id=resp.json["id"])
@@ -723,27 +700,27 @@ def test_openapi_create_rule_reject_incompatible_value_raw(clients: ClientRegist
 
 def test_openapi_edit_rule_reject_incompatible_value_raw(clients: ClientRegistry) -> None:
     resp = clients.Rule.create(
-        ruleset="active_checks:http",
+        ruleset=ACTIVE_CHECK_RULESET,
         folder="/",
         conditions={},
-        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+        value_raw=ACTIVE_CHECK_VALUE_RAW,
     )
 
     clients.Rule.edit(
         rule_id=resp.json["id"],
         value_raw='{"memory": {"horizon": 90, "levels_upper": ("absolute", (0.5, 1.0)), "period": "24x7"}}',
         expect_ok=False,
-    ).assert_rest_api_crash()
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_openapi_create_rule_label_groups_no_operator(clients: ClientRegistry) -> None:
     clients.Rule.create(
-        ruleset="active_checks:http",
+        ruleset=ACTIVE_CHECK_RULESET,
         folder="/",
         conditions={
             "host_label_groups": [{"label_group": [{"operator": "and", "label": "os:windows"}]}]
         },
-        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+        value_raw=ACTIVE_CHECK_VALUE_RAW,
     )
 
 
@@ -859,7 +836,7 @@ def test_openapi_cannot_change_locked_rule_conditions(
 def test_openapi_edit_conditions(clients: ClientRegistry) -> None:
     # test that for rules that are not locked by Quick setup, the conditions can be edited
     resp = clients.Rule.create(
-        ruleset="active_checks:http",
+        ruleset=ACTIVE_CHECK_RULESET,
         folder="/",
         conditions=RuleConditions(
             host_name={
@@ -867,7 +844,7 @@ def test_openapi_edit_conditions(clients: ClientRegistry) -> None:
                 "match_on": ["example.com"],
             }
         ),
-        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+        value_raw=ACTIVE_CHECK_VALUE_RAW,
     )
 
     clients.Rule.edit(

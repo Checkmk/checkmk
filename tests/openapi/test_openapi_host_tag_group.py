@@ -11,7 +11,7 @@ from typing import Any, Literal
 
 import pytest
 
-from cmk.ruleset_matcher.definition import RuleGroup
+from cmk.plugins.openapi_test.rulesets.sample import LEVELS_RULESET, LEVELS_VALUE_RAW
 from cmk.ruleset_matcher.tags import BuiltinTagConfig
 from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 from tests.testlib.unit.rest_api_client import ClientRegistry
@@ -427,8 +427,8 @@ def test_openapi_delete_host_tag_mode(
         attributes={"tag_group_id999": "pod"},
     )
     rule_resp = clients.Rule.create(
-        ruleset=RuleGroup.CheckgroupParameters("memory_percentage_used"),
-        value_raw="{'levels': ('fixed', (10.0, 5.0))}",
+        ruleset=LEVELS_RULESET,
+        value_raw=LEVELS_VALUE_RAW,
         conditions={
             "host_tags": [
                 {

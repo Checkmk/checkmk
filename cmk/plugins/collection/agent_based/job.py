@@ -205,9 +205,10 @@ _METRIC_SPECS: Mapping[str, tuple[str, Callable]] = {
 
 def _check_job_levels(job: Job, metric: str, notice_only: bool = True) -> CheckResult:
     label, render_func = _METRIC_SPECS[metric]
-    if (value := job["metrics"][metric]) < 0:
+    value = job["metrics"][metric]
+    if metric == "real_time" and value < 0:
         yield Result(
-            state=State.OK,
+            state=State.WARN,
             summary=f"{label}: got negative value {value} (check your system time)",
         )
         return

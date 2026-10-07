@@ -704,7 +704,7 @@ def test_process_job_stats(
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 Result(
-                    state=State.OK,
+                    state=State.WARN,
                     summary="Real time: got negative value -1.99 (check your system time)",
                 ),
                 Result(state=State.OK, notice="Latest job started at 2020-07-09 15:16:00"),

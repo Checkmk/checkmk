@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="480" font-family="Helvetica, Arial, sans-serif" viewBox="0 0 760 480" role="img" aria-label="A scheduled fetch passes through queues, so the main loop never waits" font-size="13">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs>
+<marker id="seq-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M0 0L10 5L0 10z" fill="#6b7280">
+</path>
+</marker>
+</defs>
+<text x="24" y="34" font-size="15" font-weight="600" fill="#111827">A scheduled fetch passes through queues, so the main loop never waits</text>
+<text x="24" y="54" font-size="11.5" fill="#4b5563">One FetchTask from scheduling to the site; numbers give the order</text>
+<g>
+<line x1="76" x2="76" y1="120" y2="456" stroke="#d1d5db" stroke-width="1.25" stroke-dasharray="4 4">
+</line>
+<line x1="198" x2="198" y1="120" y2="456" stroke="#d1d5db" stroke-width="1.25" stroke-dasharray="4 4">
+</line>
+<line x1="320" x2="320" y1="120" y2="456" stroke="#d1d5db" stroke-width="1.25" stroke-dasharray="4 4">
+</line>
+<line x1="442" x2="442" y1="120" y2="456" stroke="#d1d5db" stroke-width="1.25" stroke-dasharray="4 4">
+</line>
+<line x1="564" x2="564" y1="120" y2="456" stroke="#d1d5db" stroke-width="1.25" stroke-dasharray="4 4">
+</line>
+<line x1="684" x2="684" y1="120" y2="456" stroke="#d1d5db" stroke-width="1.25" stroke-dasharray="4 4">
+</line>
+</g>
+<g>
+<rect x="24" y="72" width="104" height="48" rx="8" fill="none" fill-opacity="1" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="76" y="92" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">Helper</text>
+<text x="76" y="108" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">process</text>
+</g>
+<g>
+<rect x="146" y="72" width="104" height="48" rx="8" fill="none" fill-opacity="1" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="198" y="92" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">Fetcher</text>
+<text x="198" y="108" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">worker</text>
+</g>
+<g>
+<rect x="268" y="72" width="104" height="48" rx="8" fill="#2563eb" fill-opacity="0.12" stroke="#2563eb" stroke-width="2">
+</rect>
+<text x="320" y="92" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">Main queue</text>
+<text x="320" y="108" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">+ main loop</text>
+</g>
+<g>
+<rect x="390" y="72" width="104" height="48" rx="8" fill="none" fill-opacity="1" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="442" y="92" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">Service</text>
+<text x="442" y="108" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">Scheduler</text>
+</g>
+<g>
+<rect x="512" y="72" width="104" height="48" rx="8" fill="none" fill-opacity="1" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="564" y="100" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">site-loop</text>
+</g>
+<g>
+<rect x="632" y="72" width="104" height="48" rx="8" fill="none" fill-opacity="1" stroke="#6b7280" stroke-width="1.25">
+</rect>
+<text x="684" y="92" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">Checkmk</text>
+<text x="684" y="108" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">site</text>
+</g>
+<g fill="none" stroke="#6b7280" stroke-width="1.25">
+<path d="M442 156H320" marker-end="url(#seq-arrow)">
+</path>
+<path d="M320 196H198" marker-end="url(#seq-arrow)">
+</path>
+<path d="M198 236H76" marker-end="url(#seq-arrow)">
+</path>
+<path d="M76 276H198" marker-end="url(#seq-arrow)">
+</path>
+<path d="M198 316H320" marker-end="url(#seq-arrow)">
+</path>
+<path d="M320 356H442" marker-end="url(#seq-arrow)">
+</path>
+<path d="M320 396H564" marker-end="url(#seq-arrow)">
+</path>
+<path d="M564 436H684" marker-end="url(#seq-arrow)">
+</path>
+</g>
+<text x="381" y="148" text-anchor="middle" font-size="11.5" fill="#111827">1  FetchTask</text>
+<text x="259" y="188" text-anchor="middle" font-size="11.5" fill="#111827">2  pool queue</text>
+<text x="137" y="228" text-anchor="middle" font-size="11.5" fill="#111827">3  command on stdin</text>
+<text x="137" y="268" text-anchor="middle" font-size="11.5" fill="#111827">4  reply on stdout</text>
+<text x="259" y="308" text-anchor="middle" font-size="11.5" fill="#111827">5  FetchResult</text>
+<text x="381" y="348" text-anchor="middle" font-size="11.5" fill="#111827">6  next check time</text>
+<text x="503" y="388" text-anchor="middle" font-size="11.5" fill="#111827">7  its inbox</text>
+<text x="624" y="428" text-anchor="middle" font-size="11.5" fill="#111827">8  sent over HTTPS</text>
+</svg>

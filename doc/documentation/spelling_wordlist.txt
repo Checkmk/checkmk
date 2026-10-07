@@ -21,6 +21,7 @@ CN
 codebase
 config
 configurability
+coroutine
 cron
 crontab
 Crontab
@@ -126,6 +127,7 @@ stdin
 stdout
 structs
 stunnel
+subcommand
 subprocess
 subprocesses
 summarizer

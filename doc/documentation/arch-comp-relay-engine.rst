@@ -213,4 +213,5 @@ See Also
 ========
 
 - :doc:`arch-comp-relay`: Relay system overview
+- :doc:`arch-comp-relay-engine-concurrency`: Event loop, background loops, subprocess pools and threads
 - :doc:`arch-comp-agent-receiver`: Agent receiver (includes relay endpoints)

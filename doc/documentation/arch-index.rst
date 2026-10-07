@@ -73,6 +73,7 @@ Components
    arch-comp-agent-bakery.rst
    arch-comp-relay.rst
    arch-comp-relay-engine.rst
+   arch-comp-relay-engine-concurrency.rst
    arch-comp-grafana-connector.rst
 
    arch-comp-template.rst

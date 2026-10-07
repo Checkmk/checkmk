@@ -20,7 +20,7 @@ from typing import Any
 
 from cmk.agent_based.v2 import DiscoveryResult, get_rate, GetRateError, IgnoreResultsError, Service
 
-Counters = dict[str, float]
+Counters = dict[str, int | float]
 Section = dict[tuple[str, str], Counters]
 
 
@@ -58,7 +58,7 @@ def get_int(mapping: Counters, key: str) -> int:
     """Try to return an int"""
     result = mapping.get(key)
     if isinstance(result, int):
-        return result  # type: ignore[unreachable]
+        return result
     raise ValueError(f"Cannot handle {key!r}={result!r}")
 
 

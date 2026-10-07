@@ -59,12 +59,13 @@ class DashboardStore:
 
     def __init__(self) -> None:
         user_permissions = UserPermissions.from_config(active_config, permission_registry)
-        self.all = self._load_all()
+        self.all = self.load_all()
         self.permitted = self._load_permitted(self.all, user_permissions)
         self.permitted_by_owner = self._load_permitted_by_owner(self.all, user_permissions)
         self.permitted_to_edit = self._load_permitted_to_edit(self.all, user_permissions)
 
-    def _load_all(self) -> dict[tuple[UserId, DashboardName], DashboardConfig]:
+    @staticmethod
+    def load_all() -> dict[tuple[UserId, DashboardName], DashboardConfig]:
         """Loads all definitions from disk and returns them"""
         dashboards = visuals.load(
             "dashboards",

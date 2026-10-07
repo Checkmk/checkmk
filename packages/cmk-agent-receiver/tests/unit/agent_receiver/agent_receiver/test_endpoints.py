@@ -985,3 +985,37 @@ def test_renew_certificate_ok(
 
     assert response.status_code == HTTPStatus.OK
     assert response.json()["agent_cert"].startswith("-----BEGIN CERTIFICATE-----")
+
+
+def test_agent_update_status_of_another_uuid_is_rejected(
+    client: TestClient,
+    uuid: UUID4,
+    registration_status_headers: MutableMapping[str, str],
+) -> None:
+    other_uuid = uuid4()
+
+    response = client.post(
+        f"/agent_update/status/{other_uuid}",
+        headers=registration_status_headers,
+        json={"platform": "linux_deb", "installed_aghash": "fedcba9876543210"},
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {
+        "detail": f"Verified client UUID ({uuid}) does not match UUID in URL ({other_uuid})"
+    }
+
+
+def test_agent_update_status_of_an_unregistered_host_is_forbidden(
+    client: TestClient,
+    uuid: UUID4,
+    registration_status_headers: MutableMapping[str, str],
+) -> None:
+    response = client.post(
+        f"/agent_update/status/{uuid}",
+        headers=registration_status_headers,
+        json={"platform": "linux_deb", "installed_aghash": "fedcba9876543210"},
+    )
+
+    assert response.status_code == HTTPStatus.FORBIDDEN
+    assert response.json() == {"detail": "Host is not registered"}

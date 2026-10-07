@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import asyncio
 import os
 import tempfile
-from functools import cache
+from concurrent.futures import ThreadPoolExecutor
+from functools import cache, partial
 from http import HTTPStatus
 from pathlib import Path
 from typing import Annotated, assert_never
@@ -35,6 +37,7 @@ from starlette.status import (
 from cmk.agent_receiver.agent_receiver.checkmk_rest_api import (
     cmk_edition,
     controller_certificate_settings,
+    deployment_status,
     get_root_cert,
     host_configuration,
     HostConfiguration,
@@ -64,6 +67,8 @@ from cmk.agent_receiver.agent_receiver.models import (
     RegistrationWithHNBody,
     RenewCertResponse,
     RequestForRegistration,
+    UpdateStatusRequest,
+    UpdateStatusResponse,
 )
 from cmk.agent_receiver.agent_receiver.utils import (
     NotRegisteredException,
@@ -591,4 +596,49 @@ async def renew_certificate(
 
     return RenewCertResponse(
         agent_cert=serialize_to_pem(agent_cert),
+    )
+
+
+@cache
+def _agent_update_executor() -> ThreadPoolExecutor:
+    # Own threads: waiting for a slow site would otherwise block the event loop, or use up the
+    # thread pool in which the mTLS check of every other request runs.
+    return ThreadPoolExecutor(max_workers=10, thread_name_prefix="agent-update")
+
+
+def _registered_host(uuid: UUID4) -> RegisteredHost:
+    try:
+        return RegisteredHost(uuid)
+    except NotRegisteredException as e:
+        logger.error(
+            "uuid=%(uuid)s Host is not registered",
+            {"uuid": uuid},
+        )
+        raise HTTPException(
+            status_code=HTTP_403_FORBIDDEN,
+            detail="Host is not registered",
+        ) from e
+
+
+@UUID_VALIDATION_ROUTER.post(
+    "/agent_update/status/{uuid}",
+    response_model=UpdateStatusResponse,
+    response_model_exclude_none=True,
+)
+async def agent_update_status(
+    uuid: UUID4,
+    *,
+    status_request: UpdateStatusRequest,
+) -> UpdateStatusResponse:
+    host = _registered_host(uuid)
+    return await asyncio.get_running_loop().run_in_executor(
+        _agent_update_executor(),
+        partial(
+            deployment_status,
+            f"uuid={uuid} Querying the agent update status failed",
+            internal_credentials(),
+            host.name,
+            uuid,
+            status_request,
+        ),
     )

@@ -48,11 +48,17 @@ class PluginDetails:
 
 _CMK_PLUGINS = [
     pytest.param(
+        awse := PluginDetails(
+            "aws_v2_extended", "//non-free/packages/cmk-plugins-nonfree:pkg_tar-aws_v2_extended"
+        ),
+        id=awse.name,
+    ),
+    pytest.param(
         aze := PluginDetails(
             "azure_v2_extended", "//non-free/packages/cmk-plugins-nonfree:pkg_tar-azure_v2_extended"
         ),
         id=aze.name,
-    )
+    ),
 ]
 
 

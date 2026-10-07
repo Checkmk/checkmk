@@ -101,9 +101,6 @@ def discover_graylog_nodes(section: Section) -> DiscoveryResult:
 
 
 def check_graylog_nodes(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    if section is None:
-        return  # type: ignore[unreachable]
-
     if item not in section:
         yield Result(state=State.CRIT, summary="Missing in agent output (graylog service running?)")
         return

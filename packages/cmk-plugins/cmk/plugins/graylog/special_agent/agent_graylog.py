@@ -102,7 +102,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         handle_section(args, session, "streams", "/streams", section_streams)
         handle_section(args, session, "events", "/events/search", section_events)
         return 0
-    return 2  # type: ignore[unreachable]
 
 
 def handle_section(

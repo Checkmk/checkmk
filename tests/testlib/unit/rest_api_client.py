@@ -5260,16 +5260,20 @@ class AlertClient(RestApiClient):
         configuration_name: str,
         alert_name: str,
         service_match: Mapping[str, Any],
+        conditions: Mapping[str, Any] | None = None,
         expect_ok: bool = True,
     ) -> Response:
+        body: dict[str, Any] = {
+            "configuration_name": configuration_name,
+            "alert_name": alert_name,
+            "service_match": dict(service_match),
+        }
+        if conditions is not None:
+            body["conditions"] = dict(conditions)
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/collections/all",
-            body={
-                "configuration_name": configuration_name,
-                "alert_name": alert_name,
-                "service_match": dict(service_match),
-            },
+            body=body,
             expect_ok=expect_ok,
         )
 

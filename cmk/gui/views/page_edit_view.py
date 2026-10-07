@@ -26,7 +26,7 @@ from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
-from cmk.gui.painter import all_painters, Cell, InternalPainter, PainterContext
+from cmk.gui.painter import all_painters, Cell, InternalPainter, PainterConfig, PainterContext
 from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
@@ -832,7 +832,7 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
         api_request = request.get_request()
 
         painter_context = PainterContext(
-            config=ctx.config,
+            config=PainterConfig.from_config(ctx.config),
             request=ctx.request,
             painter_options=PainterOptions.get_instance(),
             theme=theme,
@@ -889,7 +889,7 @@ def render_view_config(
         ).render_input("macros", value.get("inventory_join_macros"))
 
     painter_context = PainterContext(
-        config=active_config,
+        config=PainterConfig.from_config(active_config),
         request=request,
         painter_options=PainterOptions.get_instance(),
         theme=theme,
@@ -992,7 +992,7 @@ def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](
         _update_view_with_valuespec_values(view, ident, attrs)
 
     painter_context = PainterContext(
-        config=active_config,
+        config=PainterConfig.from_config(active_config),
         request=request,
         painter_options=PainterOptions.get_instance(),
         theme=theme,

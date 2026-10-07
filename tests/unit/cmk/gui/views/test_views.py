@@ -65,7 +65,7 @@ def test_registered_painter_options() -> None:
     assert sorted(expected) == sorted(names)
 
     for cls in painter_option_registry.values():
-        vs = cls.valuespec
+        vs = cls.valuespec(Config())
         assert isinstance(vs, ValueSpec)
 
 

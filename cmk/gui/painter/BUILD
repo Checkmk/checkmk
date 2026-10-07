@@ -30,6 +30,8 @@ py_library(
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:plugin-registry",
+        "//packages/cmk-livestatus-client",
+        "//packages/cmk-ruleset-matcher",
         "//packages/cmk-web/cmk/web/utils",
     ],
 )
@@ -57,6 +59,7 @@ py_library(
         "//cmk/gui/valuespec",
         "//cmk/utils",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-web/cmk/web/utils",
     ],

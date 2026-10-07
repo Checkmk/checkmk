@@ -148,7 +148,10 @@ class RenderLink:
     def get_filename(self, *, filename: str, mobile_filename: str | None = None) -> str:
         if mobile_filename is None:
             return filename
-        return mobile_filename if is_mobile(self.request, self.response) else filename
+        return mobile_filename if self.is_mobile() else filename
+
+    def is_mobile(self) -> bool:
+        return is_mobile(self.request, self.response)
 
     def sort_url(self, sort_url_parameter: str) -> str | None:
         if self.display_options.disabled(self.display_options.L):

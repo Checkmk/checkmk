@@ -26,7 +26,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenuDropdown
 from cmk.gui.pages import PageContext
-from cmk.gui.painter import Cell, columns_of_cells, PainterContext
+from cmk.gui.painter import Cell, columns_of_cells, PainterConfig, PainterContext
 from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
@@ -88,7 +88,7 @@ def page_show_view(
             view_spec,
             context,
             PainterContext(
-                config=ctx.config,
+                config=PainterConfig.from_config(ctx.config),
                 request=ctx.request,
                 painter_options=PainterOptions.get_instance(),
                 theme=theme,

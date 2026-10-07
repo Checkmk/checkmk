@@ -27,7 +27,7 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.http import Request, request, Response
 from cmk.gui.logged_in import user
-from cmk.gui.painter import all_painters, PainterContext
+from cmk.gui.painter import all_painters, PainterConfig, PainterContext
 from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter.painters import _paint_custom_notes
 from cmk.gui.painter_options import PainterOptions
@@ -471,9 +471,11 @@ _NO_PERMISSIONS = UserPermissions({}, {}, {}, [])
 def _painter_context_of_the_fake_site() -> PainterContext:
     painter_request = Request(create_environ())
     return PainterContext(
-        config=Config(sites=SiteConfigurations({SiteId("NO_SITE"): no_site_configuration()})),
+        config=PainterConfig.from_config(
+            Config(sites=SiteConfigurations({SiteId("NO_SITE"): no_site_configuration()}))
+        ),
         request=painter_request,
-        painter_options=PainterOptions(),
+        painter_options=PainterOptions(Config()),
         theme=make_theme(validate_choices=False),
         url_renderer=RenderLink(painter_request, Response(), DisplayOptions()),
         user_permissions=_NO_PERMISSIONS,
@@ -1530,7 +1532,7 @@ def test_paint_custom_notes(
         f.write("<hr>".join(notes))
 
     assert notes_file.read_text() == str(
-        _paint_custom_notes(notes_type, row, config=active_config)[1]
+        _paint_custom_notes(notes_type, row, site_configs=active_config.sites)[1]
     )
 
 
@@ -1766,7 +1768,9 @@ def test_paint_custom_notes_file_inclusion_and_html_tags(
         "host_address": "127.0.0.1",
     }
 
-    displayed_custom_notes = _paint_custom_notes(object_type, row, config=active_config)[1]
+    displayed_custom_notes = _paint_custom_notes(
+        object_type, row, site_configs=active_config.sites
+    )[1]
     assert isinstance(displayed_custom_notes, HTML)
 
     notes_as_string = str(displayed_custom_notes)

@@ -30,6 +30,7 @@ from cmk.gui.theme import Theme
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
+    GraphTimerange,
     PainterName,
     PainterParameters,
     PermittedViewSpecs,
@@ -48,6 +49,8 @@ from cmk.gui.view_utils import (
     JSONExportError,
     PythonExportError,
 )
+from cmk.livestatus_client import SiteConfigurations
+from cmk.ruleset_matcher.tags import TagConfig
 from cmk.web.utils import escaping
 from cmk.web.utils.escaping import replace_anchor_tags_with_urls, replace_br_with_newlines
 from cmk.web.utils.html import HTML
@@ -62,8 +65,49 @@ PDFCellSpec = tuple[Sequence[str], PDFCellContent]
 
 
 @dataclass(frozen=True, kw_only=True)
+class PainterConfig:
+    staleness_threshold: float
+    debug: bool
+    sites: SiteConfigurations
+    use_siteicons: bool
+    default_temperature_unit: str
+    graph_timeranges: Sequence[GraphTimerange]
+    tags: TagConfig
+    service_custom_attribute_titles: Mapping[str, str]
+    host_custom_attribute_titles: Mapping[str, str]
+    escape_plugin_output: bool
+    mkeventd_service_levels: Sequence[tuple[int, str]]
+    wato_enabled: bool
+    mkeventd_enabled: bool
+    multisite_draw_ruleicon: bool
+
+    @classmethod
+    def from_config(cls, config: Config) -> PainterConfig:
+        return cls(
+            staleness_threshold=config.staleness_threshold,
+            debug=config.debug,
+            sites=config.sites,
+            use_siteicons=config.use_siteicons,
+            default_temperature_unit=config.default_temperature_unit,
+            graph_timeranges=config.graph_timeranges,
+            tags=config.tags,
+            service_custom_attribute_titles={
+                ident: spec["title"] for ident, spec in config.custom_service_attributes.items()
+            },
+            host_custom_attribute_titles={
+                spec["name"]: spec["title"] for spec in config.wato_host_attrs
+            },
+            escape_plugin_output=config.escape_plugin_output,
+            mkeventd_service_levels=config.mkeventd_service_levels,
+            wato_enabled=config.wato_enabled,
+            mkeventd_enabled=config.mkeventd_enabled,
+            multisite_draw_ruleicon=config.multisite_draw_ruleicon,
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
 class PainterContext:
-    config: Config
+    config: PainterConfig
     request: Request
     painter_options: PainterOptions
     theme: Theme
@@ -105,9 +149,10 @@ class InternalPainter:
         uuid_col: Callable[[Cell], str] | None = None,
         parameters: ValueSpec | Callable[[PainterContext], ValueSpec | None] | None = None,
         group_by: Callable[[Row, Cell, PainterContext], GroupValue] | None = None,
-        derive: Callable[[Rows, Cell, Sequence[ColumnName]], None] | None = None,
+        derive: Callable[[Rows, Cell, Sequence[ColumnName], LoggedInUser, PainterContext], None]
+        | None = None,
         render: RowFunction[CellSpec],
-        compute_data: RowFunction[object] | None = None,
+        compute_data: Callable[[Row, PainterContext], object] | None = None,
         export_for_python: RowFunction[object] | None = None,
         export_for_csv: RowFunction[str | HTML] | None = None,
         export_for_json: RowFunction[object] | None = None,
@@ -194,9 +239,16 @@ class InternalPainter:
             return []
         return self._dynamic_columns(cell)
 
-    def derive(self, rows: Rows, cell: Cell, dynamic_columns: Sequence[ColumnName]) -> None:
+    def derive(
+        self,
+        rows: Rows,
+        cell: Cell,
+        dynamic_columns: Sequence[ColumnName],
+        user: LoggedInUser,
+        context: PainterContext,
+    ) -> None:
         if self._derive is not None:
-            self._derive(rows, cell, dynamic_columns)
+            self._derive(rows, cell, dynamic_columns, user, context)
 
     def group_by(self, row: Row, cell: Cell, context: PainterContext) -> GroupValue:
         if not self._groupable:
@@ -243,7 +295,7 @@ class InternalPainter:
     ) -> object:
         if self._compute_data_function is None:
             return self.render(row, cell, user, context)[1]
-        return self._compute_data_function(row, cell, user, context)
+        return self._compute_data_function(row, context)
 
     def export_for_python(
         self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext

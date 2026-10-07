@@ -13,6 +13,7 @@ from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
+from cmk.gui.logged_in import user
 from cmk.gui.painter import Cell
 from cmk.gui.type_defs import ColumnName, Rows, VisualContext
 from cmk.gui.visuals.filter import Filter
@@ -123,7 +124,7 @@ class RowTableLivestatus(RowTable):
 
         for index, cell in enumerate(cells):
             painter = cell.painter()
-            painter.derive(rows, cell, dynamic_columns.get(index, []))
+            painter.derive(rows, cell, dynamic_columns.get(index, []), user, cell.painter_context())
 
         return rows, len(data)
 

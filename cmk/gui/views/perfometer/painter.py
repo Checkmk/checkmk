@@ -20,9 +20,7 @@ from cmk.web.utils import escaping
 from .base import Perfometer
 
 
-def _compute_data_perfometer(
-    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
-) -> str:
+def _compute_data_perfometer(row: Row, context: PainterContext) -> str:
     try:
         title, _h = Perfometer(row, registered_metrics(), perfometers_from_api).render()
     except Exception:

@@ -32,7 +32,7 @@ from cmk.gui.http import Request, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.pages import Page, PageContext, PageResult
-from cmk.gui.painter import PainterContext
+from cmk.gui.painter import PainterConfig, PainterContext
 from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
@@ -179,7 +179,7 @@ class ViewWidgetIFramePageHelper:
             view_spec,
             context,
             painter_context=PainterContext(
-                config=config,
+                config=PainterConfig.from_config(config),
                 request=request,
                 painter_options=PainterOptions.get_instance(),
                 theme=theme,

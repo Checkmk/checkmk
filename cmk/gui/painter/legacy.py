@@ -245,26 +245,12 @@ class Painter(abc.ABC):
 
 def _legacy_painter(legacy: type[Painter], context: PainterContext) -> Painter:
     return legacy(
-        config=context.config,
+        config=active_config,
         request=context.request,
         painter_options=context.painter_options,
         theme=context.theme,
         url_renderer=context.url_renderer,
         user_permissions=context.user_permissions,
-    )
-
-
-def _context_free_legacy_painter(legacy: type[Painter]) -> Painter:
-    return _legacy_painter(
-        legacy,
-        PainterContext(
-            config=active_config,
-            request=request,
-            painter_options=PainterOptions.get_instance(),
-            theme=theme,
-            url_renderer=RenderLink(request, response, display_options),
-            user_permissions=UserPermissions({}, {}, {}, []),
-        ),
     )
 
 
@@ -288,8 +274,8 @@ def _legacy_export_title(legacy: type[Painter], cell: Cell) -> str:
     return _legacy_painter(legacy, cell.painter_context()).export_title(cell)
 
 
-def _legacy_columns(legacy: type[Painter]) -> Sequence[ColumnName]:
-    return _context_free_legacy_painter(legacy).columns
+def _legacy_columns(painter: Painter) -> Sequence[ColumnName]:
+    return painter.columns
 
 
 def _legacy_dynamic_columns(legacy: type[Painter], cell: Cell) -> list[ColumnName]:
@@ -297,9 +283,14 @@ def _legacy_dynamic_columns(legacy: type[Painter], cell: Cell) -> list[ColumnNam
 
 
 def _legacy_derive(
-    legacy: type[Painter], rows: Rows, cell: Cell, dynamic_columns: Sequence[ColumnName]
+    legacy: type[Painter],
+    rows: Rows,
+    cell: Cell,
+    dynamic_columns: Sequence[ColumnName],
+    _user: LoggedInUser,
+    context: PainterContext,
 ) -> None:
-    _legacy_painter(legacy, cell.painter_context()).derive(rows, cell, dynamic_columns)
+    _legacy_painter(legacy, context).derive(rows, cell, dynamic_columns)
 
 
 def _legacy_group_by(
@@ -337,11 +328,18 @@ def _legacy_export_for_json(
 
 
 def internal_painter_from_legacy(legacy: type[Painter]) -> InternalPainter:
-    painter = _context_free_legacy_painter(legacy)
+    painter = legacy(
+        config=active_config,
+        request=request,
+        painter_options=PainterOptions.get_instance(),
+        theme=theme,
+        url_renderer=RenderLink(request, response, display_options),
+        user_permissions=UserPermissions({}, {}, {}, []),
+    )
     return InternalPainter(
         ident=painter.ident,
         title=LazyText(partial(painter.title, EmptyCell())),
-        columns=partial(_legacy_columns, legacy),
+        columns=partial(_legacy_columns, painter),
         sorter=painter.sorter,
         printable=painter.printable,
         painter_options=painter.painter_options,

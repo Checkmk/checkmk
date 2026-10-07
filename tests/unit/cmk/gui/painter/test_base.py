@@ -11,6 +11,7 @@ from cmk.web.utils.html import HTML
 from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 
+@pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize(
     "input_html,expected_output",
     [

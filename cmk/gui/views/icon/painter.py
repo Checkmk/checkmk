@@ -6,10 +6,10 @@
 
 from collections.abc import Sequence
 
-from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.html import HTMLGenerator
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.painter import Cell, InternalPainter, PainterContext
+from cmk.gui.painter import Cell, InternalPainter, PainterConfig, PainterContext
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import (
@@ -32,6 +32,16 @@ from .entries import (
 )
 
 
+def _icon_config(config: PainterConfig) -> IconConfig:
+    return IconConfig(
+        wato_enabled=config.wato_enabled,
+        mkeventd_enabled=config.mkeventd_enabled,
+        multisite_draw_ruleicon=config.multisite_draw_ruleicon,
+        staleness_threshold=config.staleness_threshold,
+        debug=config.debug,
+    )
+
+
 def _columns_service_icons() -> Sequence[ColumnName]:
     return iconpainter_columns("service", toplevel=None)
 
@@ -42,19 +52,15 @@ def _render_service_icons(
     return _paint_icons(
         "service",
         row,
-        _get_row_icons(
-            "service", row, context.user_permissions, IconConfig.from_config(context.config)
-        ),
+        _get_row_icons("service", row, context.user_permissions, _icon_config(context.config)),
     )
 
 
-def _compute_data_service_icons(
-    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
-) -> list[DynamicIcon]:
+def _compute_data_service_icons(row: Row, context: PainterContext) -> list[DynamicIcon]:
     return [
         _handle_icon(i.icon_name)
         for i in _get_row_icons(
-            "service", row, context.user_permissions, IconConfig.from_config(context.config)
+            "service", row, context.user_permissions, _icon_config(context.config)
         )
         if isinstance(i, IconEntry)
     ]
@@ -90,20 +96,14 @@ def _render_host_icons(
     return _paint_icons(
         "host",
         row,
-        _get_row_icons(
-            "host", row, context.user_permissions, IconConfig.from_config(context.config)
-        ),
+        _get_row_icons("host", row, context.user_permissions, _icon_config(context.config)),
     )
 
 
-def _compute_data_host_icons(
-    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
-) -> list[DynamicIcon]:
+def _compute_data_host_icons(row: Row, context: PainterContext) -> list[DynamicIcon]:
     return [
         _handle_icon(i.icon_name)
-        for i in _get_row_icons(
-            "host", row, context.user_permissions, IconConfig.from_config(context.config)
-        )
+        for i in _get_row_icons("host", row, context.user_permissions, _icon_config(context.config))
         if isinstance(i, IconEntry)
     ]
 
@@ -159,13 +159,13 @@ def _paint_icons(
                     onclick = url[8:]
                     url = "javascript:void(0)"
 
-                output += html.render_icon_button(
+                output += HTMLGenerator.render_icon_button(
                     url, icon.title or "", icon.icon_name, onclick=onclick, target=target_frame
                 )
             elif isinstance(icon.icon_name, StaticIcon):
-                output += html.render_static_icon(icon.icon_name, title=icon.title)
+                output += HTMLGenerator.render_static_icon(icon.icon_name, title=icon.title)
             else:
-                output += html.render_dynamic_icon(icon.icon_name, title=icon.title)
+                output += HTMLGenerator.render_dynamic_icon(icon.icon_name, title=icon.title)
         elif isinstance(icon, LegacyIconEntry):
             output += icon.code
 

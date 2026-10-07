@@ -82,7 +82,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, Page, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.painter import PainterContext
+from cmk.gui.painter import PainterConfig, PainterContext
 from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
@@ -2106,7 +2106,7 @@ def _get_topology_context_and_filters(
         view_spec,
         context,
         PainterContext(
-            config=active_config,
+            config=PainterConfig.from_config(active_config),
             request=request,
             painter_options=PainterOptions.get_instance(),
             theme=theme,

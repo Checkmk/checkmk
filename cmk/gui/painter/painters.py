@@ -33,10 +33,10 @@ from cmk.gui.graphing import (
 )
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.html import HTMLGenerator
 from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l
-from cmk.gui.logged_in import LoggedInUser, user
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter_options import (
     paint_age,
     paint_age_or_never,
@@ -47,8 +47,8 @@ from cmk.gui.painter_options import (
 from cmk.gui.theme import Theme
 from cmk.gui.type_defs import PainterParameters, Row, VisualLinkSpec
 from cmk.gui.utils.host_relations import RELATIONS_CUSTOM_VARIABLE
-from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.valuespec import (
     Checkbox,
     DateFormat,
@@ -73,6 +73,7 @@ from cmk.gui.view_utils import (
     replace_action_url_macros,
 )
 from cmk.gui.visual_link import render_link_to_view
+from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.tags import TagConfig
 from cmk.utils import man_pages
@@ -84,7 +85,7 @@ from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.speaklater import LazyString
 from cmk.web.utils.urls import HTTPVariable
 
-from .base import Cell, InternalPainter, PainterContext
+from .base import Cell, InternalPainter, PainterConfig, PainterContext
 from .helpers import (
     format_labels_for_csv_export,
     get_label_sources,
@@ -332,12 +333,11 @@ class PainterOptionTimestampFormat(PainterOption):
     def __init__(self) -> None:
         super().__init__(ident="ts_format")
 
-    @property
     @override
-    def valuespec(self) -> ValueSpec:
+    def valuespec(self, config: Config) -> ValueSpec:
         return DropdownChoice(
             title=_("Timestamp format"),
-            default_value=self.config.default_ts_format,
+            default_value=config.default_ts_format,
             encode_value=False,
             choices=[
                 ("mixed", _("Mixed")),
@@ -380,7 +380,9 @@ class PainterOptionMatrixOmitUniform(PainterOption):
 
 
 # This helper function returns the value of the given custom var
-def paint_custom_var(what: str, key: CSSClass, row: Row, choices: list | None = None) -> CellSpec:
+def paint_custom_var(
+    what: str, key: CSSClass, row: Row, choices: Sequence[tuple[int, str]] | None = None
+) -> CellSpec:
     if choices is None:
         choices = []
 
@@ -506,9 +508,9 @@ def service_state_short(row: Row) -> tuple[str, str]:
     return "p", short_service_state_name(-1, "")
 
 
-def _paint_service_state_short(row: Row, *, config: Config) -> CellSpec:
+def _paint_service_state_short(row: Row, *, staleness_threshold: float) -> CellSpec:
     state, name = service_state_short(row)
-    if is_stale(row, config.staleness_threshold):
+    if is_stale(row, staleness_threshold):
         state = state + " stale"
     return "state svcstate state%s" % state, HTMLWriter.render_span(
         name, class_=["state_rounded_fill"]
@@ -527,9 +529,11 @@ def host_state_short(row: Row) -> tuple[str, str]:
     return state, name
 
 
-def _paint_host_state_short(row: Row, short: bool = False, *, config: Config) -> CellSpec:
+def _paint_host_state_short(
+    row: Row, short: bool = False, *, staleness_threshold: float
+) -> CellSpec:
     state, name = host_state_short(row)
-    if is_stale(row, config.staleness_threshold):
+    if is_stale(row, staleness_threshold):
         state = state + " stale"
 
     if short:
@@ -543,7 +547,7 @@ def _paint_host_state_short(row: Row, short: bool = False, *, config: Config) ->
 def _render_service_state(
     row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
-    return _paint_service_state_short(row, config=context.config)
+    return _paint_service_state_short(row, staleness_threshold=context.config.staleness_threshold)
 
 
 def make_service_state_painter() -> InternalPainter:
@@ -638,8 +642,8 @@ def _render_svc_long_plugin_output(
             _("Lost data due to truncation of long output to ")
             + f"{int(max_long_output_size / 1000)}kB "
             + setting_link_tag
-            + html.render_b("WARN", class_="stmark state1")
-            + html.render_br()
+            + HTMLWriter.render_b("WARN", class_="stmark state1")
+            + HTMLWriter.render_br()
             + content
         )
 
@@ -678,42 +682,56 @@ def _rendered_value(metric: EvaluatedMetric) -> str:
     return "" if value is None else metric.formatter.render(value)
 
 
-def _show_metrics_table(
+def _metric_row(
+    metric_name: MetricName,
+    metric: EvaluatedMetric,
+    host_name: str,
+    service_description: str,
+    show_metric_id: bool,
+) -> HTML:
+    optional_metric_id = ""
+    if show_metric_id:
+        optional_metric_id = f" (Metric ID: {metric_name})"
+    cells = (
+        HTMLWriter.render_td(render_color_icon(metric.color), class_="color")
+        + HTMLWriter.render_td(f"{metric.title}{optional_metric_id}:")
+        + HTMLWriter.render_td(_rendered_value(metric), class_="value")
+    )
+    if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY:
+        cells += HTMLWriter.render_td(
+            HTMLGenerator.render_popup_trigger(
+                HTMLGenerator.render_static_icon(
+                    StaticIcon(IconNames.menu),
+                    title=_("Use this metric for a forecast graph"),
+                    css_classes=["iconbutton"],
+                ),
+                ident="add_metric_to_graph_" + host_name + ";" + str(service_description),
+                method=MethodAjax(
+                    endpoint="add_metric_to_graph",
+                    url_vars=[
+                        ("host", host_name),
+                        ("service", service_description),
+                        ("metric", metric_name),
+                    ],
+                ),
+            )
+        )
+    return HTMLWriter.render_tr(cells)
+
+
+def _metrics_table(
     evaluated: Mapping[MetricName, EvaluatedMetric],
     host_name: str,
     service_description: str,
     show_metric_id: bool,
-) -> None:
-    html.open_table(class_="metricstable")
-    for metric_name, metric in sorted(evaluated.items(), key=lambda t: t[1].title):
-        optional_metric_id = ""
-        if show_metric_id:
-            optional_metric_id = f" (Metric ID: {metric_name})"
-        html.open_tr()
-        html.td(render_color_icon(metric.color), class_="color")
-        html.td(f"{metric.title}{optional_metric_id}:")
-        html.td(_rendered_value(metric), class_="value")
-        if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY:
-            html.td(
-                html.render_popup_trigger(
-                    html.render_static_icon(
-                        StaticIcon(IconNames.menu),
-                        title=_("Use this metric for a forecast graph"),
-                        css_classes=["iconbutton"],
-                    ),
-                    ident="add_metric_to_graph_" + host_name + ";" + str(service_description),
-                    method=MethodAjax(
-                        endpoint="add_metric_to_graph",
-                        url_vars=[
-                            ("host", host_name),
-                            ("service", service_description),
-                            ("metric", metric_name),
-                        ],
-                    ),
-                )
-            )
-        html.close_tr()
-    html.close_table()
+) -> HTML:
+    return HTMLWriter.render_table(
+        HTML.empty().join(
+            _metric_row(metric_name, metric, host_name, service_description, show_metric_id)
+            for metric_name, metric in sorted(evaluated.items(), key=lambda t: t[1].title)
+        ),
+        class_="metricstable",
+    )
 
 
 def _render_svc_metrics(
@@ -733,14 +751,12 @@ def _render_svc_metrics(
             "perf_data": row["service_perf_data"]
         }
 
-    with output_funnel.plugged():
-        _show_metrics_table(
-            evaluated,
-            row["host_name"],
-            row["service_description"],
-            show_metric_id=context.painter_options.get("show_internal_graph_and_metric_ids"),
-        )
-        return "", HTML.without_escaping(output_funnel.drain())
+    return "", _metrics_table(
+        evaluated,
+        row["host_name"],
+        row["service_description"],
+        show_metric_id=context.painter_options.get("show_internal_graph_and_metric_ids"),
+    )
 
 
 def make_svc_metrics_painter() -> InternalPainter:
@@ -918,7 +934,12 @@ def make_svc_state_age_painter() -> InternalPainter:
 
 
 def _paint_checked(
-    what: str, row: Row, *, config: Config, request: Request, painter_options: PainterOptions
+    what: str,
+    row: Row,
+    *,
+    staleness_threshold: float,
+    request: Request,
+    painter_options: PainterOptions,
 ) -> CellSpec:
     age = row[what + "_last_check"]
     if what == "service":
@@ -934,7 +955,7 @@ def _paint_checked(
         painter_options=painter_options,
     )
     assert css is not None
-    if is_stale(row, config.staleness_threshold):
+    if is_stale(row, staleness_threshold):
         css += " staletime"
     return css, td
 
@@ -945,7 +966,7 @@ def _render_svc_check_age(
     return _paint_checked(
         "service",
         row,
-        config=context.config,
+        staleness_threshold=context.config.staleness_threshold,
         request=context.request,
         painter_options=context.painter_options,
     )
@@ -1505,7 +1526,7 @@ def match_path_entries_with_item(dirs: Iterable[Path], item: str) -> Iterable[Pa
     )
 
 
-def _paint_custom_notes(what: str, row: Row, *, config: Config) -> CellSpec:
+def _paint_custom_notes(what: str, row: Row, *, site_configs: SiteConfigurations) -> CellSpec:
     host = row["host_name"]
     svc = row.get("service_description")
     if what == "service":
@@ -1523,7 +1544,7 @@ def _paint_custom_notes(what: str, row: Row, *, config: Config) -> CellSpec:
 
     def replace_tags(text: str) -> str:
         sitename = row["site"]
-        url_prefix = config.sites[sitename]["url_prefix"]
+        url_prefix = site_configs[sitename]["url_prefix"]
         return (
             text.replace("$URL_PREFIX$", url_prefix)
             .replace("$SITE$", sitename)
@@ -1547,7 +1568,7 @@ def _paint_custom_notes(what: str, row: Row, *, config: Config) -> CellSpec:
 def _render_svc_custom_notes(
     row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
-    return _paint_custom_notes("service", row, config=context.config)
+    return _paint_custom_notes("service", row, site_configs=context.config.sites)
 
 
 def make_svc_custom_notes_painter() -> InternalPainter:
@@ -1664,21 +1685,15 @@ def make_svc_custom_vars_painter() -> InternalPainter:
     )
 
 
-type _CustomAttributeChoices = Callable[[PainterContext], DropdownChoiceEntries]
+type _CustomAttributeChoices = Callable[[PainterConfig], DropdownChoiceEntries]
 
 
-def _service_custom_attribute_choices(context: PainterContext) -> DropdownChoiceEntries:
-    choices = []
-    for ident, attr_spec in context.config.custom_service_attributes.items():
-        choices.append((ident, attr_spec["title"]))
-    return sorted(choices, key=lambda x: x[1])
+def _service_custom_attribute_choices(config: PainterConfig) -> DropdownChoiceEntries:
+    return sorted(config.service_custom_attribute_titles.items(), key=lambda x: x[1])
 
 
-def _host_custom_attribute_choices(context: PainterContext) -> DropdownChoiceEntries:
-    choices = []
-    for attr_spec in context.config.wato_host_attrs:
-        choices.append((attr_spec["name"], attr_spec["title"]))
-    return sorted(choices, key=lambda x: x[1])
+def _host_custom_attribute_choices(config: PainterConfig) -> DropdownChoiceEntries:
+    return sorted(config.host_custom_attribute_titles.items(), key=lambda x: x[1])
 
 
 def _title_custom_variable(
@@ -1692,7 +1707,7 @@ def _title_custom_variable(
         return str(default_title)
 
     try:
-        attributes: dict = dict(attribute_choices(context))
+        attributes: dict = dict(attribute_choices(context.config))
         return attributes[params["ident"]]
     except KeyError:
         return str(default_title)
@@ -1712,7 +1727,7 @@ def _parameters_custom_variable(
             (
                 "ident",
                 DropdownChoice(
-                    choices=lambda: attribute_choices(context),
+                    choices=lambda: attribute_choices(context.config),
                     title=_("ID"),
                 ),
             ),
@@ -1837,7 +1852,7 @@ def make_host_custom_variable_painter() -> InternalPainter:
 def _render_host_state(
     row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
-    return _paint_host_state_short(row, config=context.config)
+    return _paint_host_state_short(row, staleness_threshold=context.config.staleness_threshold)
 
 
 def make_host_state_painter() -> InternalPainter:
@@ -1855,7 +1870,9 @@ def make_host_state_painter() -> InternalPainter:
 def _render_host_state_onechar(
     row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
-    return _paint_host_state_short(row, short=True, config=context.config)
+    return _paint_host_state_short(
+        row, short=True, staleness_threshold=context.config.staleness_threshold
+    )
 
 
 def make_host_state_onechar_painter() -> InternalPainter:
@@ -1992,7 +2009,7 @@ def _render_host_check_age(
     return _paint_checked(
         "host",
         row,
-        config=context.config,
+        staleness_threshold=context.config.staleness_threshold,
         request=context.request,
         painter_options=context.painter_options,
     )
@@ -2922,7 +2939,7 @@ def make_host_contact_groups_painter() -> InternalPainter:
 def _render_host_custom_notes(
     row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
-    return _paint_custom_notes("hosts", row, config=context.config)
+    return _paint_custom_notes("hosts", row, site_configs=context.config.sites)
 
 
 def make_host_custom_notes_painter() -> InternalPainter:
@@ -3084,21 +3101,21 @@ def _paint_discovery_output(
         return (
             None,
             {
-                "ignored": html.render_icon_button(
+                "ignored": HTMLGenerator.render_icon_button(
                     ruleset_url,
                     _("Disabled (configured away by admin)"),
                     StaticIcon(IconNames.rulesets),
                     theme=theme,
                 )
                 + HTML.with_escaping(_("Disabled (configured away by admin)")),
-                "vanished": html.render_icon_button(
+                "vanished": HTMLGenerator.render_icon_button(
                     discovery_url,
                     _("Vanished (checked, but no longer exists)"),
                     StaticIcon(IconNames.services),
                     theme=theme,
                 )
                 + HTML.with_escaping(_("Vanished (checked, but no longer exists)")),
-                "unmonitored": html.render_icon_button(
+                "unmonitored": HTMLGenerator.render_icon_button(
                     discovery_url,
                     _("Available (missing)"),
                     StaticIcon(IconNames.services),
@@ -3714,7 +3731,7 @@ def _render_comment_entry_type(
         help_txt = _("Acknowledgment")
     else:
         return "", ""
-    code: str | HTML = html.render_static_icon(icon, title=help_txt)
+    code: str | HTML = HTMLGenerator.render_static_icon(icon, title=help_txt)
     if linkview:
         code = render_link_to_view(
             code,
@@ -4028,8 +4045,8 @@ def _render_log_details_history(
         content = (
             _("HTML output cannot be rendered because of truncated data. ")
             + setting_link_tag
-            + html.render_b("WARN", class_="stmark state1")
-            + html.render_br()
+            + HTMLWriter.render_b("WARN", class_="stmark state1")
+            + HTMLWriter.render_br()
             + content
         )
 
@@ -4342,7 +4359,7 @@ def _render_log_icon(
             title = _("Stopped acknowledgment")
 
     if img:
-        return "icon", html.render_static_icon(img, title=title)  # type: ignore[possibly-undefined]
+        return "icon", HTMLGenerator.render_static_icon(img, title=title)  # type: ignore[possibly-undefined]
     return "icon", ""
 
 
@@ -4467,11 +4484,11 @@ def _render_log_state(
     ):
         return _paint_service_state_short(
             {"service_has_been_checked": 1, "service_state": state},
-            config=context.config,
+            staleness_threshold=context.config.staleness_threshold,
         )
     return _paint_host_state_short(
         {"host_has_been_checked": 1, "host_state": state},
-        config=context.config,
+        staleness_threshold=context.config.staleness_threshold,
     )
 
 
@@ -4597,11 +4614,11 @@ def make_host_tags_painter() -> InternalPainter:
     )
 
 
-def _tag_entries(object_type: str, row: Row, context: PainterContext) -> list[tuple[str, str]]:
+def _tag_entries(object_type: str, row: Row, tags: TagConfig) -> list[tuple[str, str]]:
     entries = []
-    aux_titles = _aux_tag_titles(context.config.tags)
+    aux_titles = _aux_tag_titles(tags)
     for tag_group_id, tag_id in get_tag_groups(row, object_type).items():
-        tag_group = context.config.tags.get_tag_group(tag_group_id)
+        tag_group = tags.get_tag_group(tag_group_id)
         if tag_group:
             choices = tag_choices_for_group(tag_group)
             entries.append((tag_group.title, choices.get(tag_id, tag_id)))
@@ -4619,7 +4636,7 @@ def _tag_entries(object_type: str, row: Row, context: PainterContext) -> list[tu
 def _render_tags_with_titles(
     object_type: str, row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
-    entries = _tag_entries(object_type, row, context)
+    entries = _tag_entries(object_type, row, context.config.tags)
     return "", HTMLWriter.render_br().join(
         [
             escaping.escape_to_html_permissive("%s: %s" % e, escape_links=False)
@@ -4683,17 +4700,15 @@ def make_service_tags_with_titles_painter() -> InternalPainter:
     )
 
 
-def _compute_data_host_labels(
-    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
-) -> Labels:
+def _compute_data_host_labels(row: Row, _context: PainterContext) -> Labels:
     return get_labels(row, "host")
 
 
 def _render_host_labels(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
     return "", render_labels(
-        _compute_data_host_labels(row, cell, user, context),
+        _compute_data_host_labels(row, context),
         "host",
         with_links=True,
         label_sources=get_label_sources(row, "host"),
@@ -4702,21 +4717,21 @@ def _render_host_labels(
 
 
 def _export_for_python_host_labels(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> Labels:
-    return _compute_data_host_labels(row, cell, user, context)
+    return _compute_data_host_labels(row, context)
 
 
 def _export_for_csv_host_labels(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> str | HTML:
-    return format_labels_for_csv_export(_compute_data_host_labels(row, cell, user, context))
+    return format_labels_for_csv_export(_compute_data_host_labels(row, context))
 
 
 def _export_for_json_host_labels(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> Labels:
-    return _compute_data_host_labels(row, cell, user, context)
+    return _compute_data_host_labels(row, context)
 
 
 def make_host_labels_painter() -> InternalPainter:
@@ -4733,17 +4748,15 @@ def make_host_labels_painter() -> InternalPainter:
     )
 
 
-def _compute_data_service_labels(
-    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
-) -> Labels:
+def _compute_data_service_labels(row: Row, _context: PainterContext) -> Labels:
     return get_labels(row, "service")
 
 
 def _render_service_labels(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
     return "", render_labels(
-        _compute_data_service_labels(row, cell, user, context),
+        _compute_data_service_labels(row, context),
         "service",
         with_links=True,
         label_sources=get_label_sources(row, "service"),
@@ -4752,21 +4765,21 @@ def _render_service_labels(
 
 
 def _export_for_python_service_labels(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> Labels:
-    return _compute_data_service_labels(row, cell, user, context)
+    return _compute_data_service_labels(row, context)
 
 
 def _export_for_csv_service_labels(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> str | HTML:
-    return format_labels_for_csv_export(_compute_data_service_labels(row, cell, user, context))
+    return format_labels_for_csv_export(_compute_data_service_labels(row, context))
 
 
 def _export_for_json_service_labels(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> Labels:
-    return _compute_data_service_labels(row, cell, user, context)
+    return _compute_data_service_labels(row, context)
 
 
 def make_service_labels_painter() -> InternalPainter:
@@ -4882,11 +4895,11 @@ def _parameters_specific_metric(_context: PainterContext) -> Dictionary:
 
 
 def _render_specific_metric(
-    row: Row,  # noqa: ARG001
     cell: Cell,
     perf_data_entries: str,
     check_command: str,
-    context: PainterContext,
+    temperature_unit: TemperatureUnit,
+    debug: bool,
 ) -> tuple[str, str]:
     parameters = cell.painter_parameters()
     assert parameters is not None
@@ -4897,8 +4910,8 @@ def _render_specific_metric(
         check_command,
         registered_metrics=registered_metrics(),
         registered_translations=registered_translations(),
-        temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
-        debug=context.config.debug,
+        temperature_unit=temperature_unit,
+        debug=debug,
     )
 
     if (metric := evaluated.get(MetricName(show_metric))) is None:
@@ -4908,11 +4921,17 @@ def _render_specific_metric(
 
 
 def _render_host_specific_metric(
-    row: Row, cell: Cell, _user: LoggedInUser, context: PainterContext
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
     perf_data_entries = row["host_perf_data"]
     check_command = row["host_check_command"]
-    return _render_specific_metric(row, cell, perf_data_entries, check_command, context)
+    return _render_specific_metric(
+        cell,
+        perf_data_entries,
+        check_command,
+        get_temperature_unit(user, context.config.default_temperature_unit),
+        context.config.debug,
+    )
 
 
 def make_host_specific_metric_painter() -> InternalPainter:
@@ -4929,11 +4948,17 @@ def make_host_specific_metric_painter() -> InternalPainter:
 
 
 def _render_service_specific_metric(
-    row: Row, cell: Cell, _user: LoggedInUser, context: PainterContext
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
     perf_data_entries = row["service_perf_data"]
     check_command = row["service_check_command"]
-    return _render_specific_metric(row, cell, perf_data_entries, check_command, context)
+    return _render_specific_metric(
+        cell,
+        perf_data_entries,
+        check_command,
+        get_temperature_unit(user, context.config.default_temperature_unit),
+        context.config.debug,
+    )
 
 
 def make_service_specific_metric_painter() -> InternalPainter:

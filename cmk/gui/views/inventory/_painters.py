@@ -12,7 +12,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
 from cmk.gui.hooks import request_memoize
-from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter import Cell, InternalPainter, PainterContext
@@ -67,13 +67,20 @@ def _validate_inventory_tree_uniqueness(row: Row) -> None:
         )
         > 1
     ):
-        html.show_error(
+        raise MultipleInventoryTreesError(
             _(
                 "Cannot display inventory tree of host '%(host_name)s': found this host on multiple sites: %(sites)s"
             )
             % {"host_name": raw_hostname, "sites": ", ".join(sites_with_same_named_hosts)}
         )
-        raise MultipleInventoryTreesError
+
+
+def _multiple_trees_cell(row: Row) -> CellSpec | None:
+    try:
+        _validate_inventory_tree_uniqueness(row)
+    except MultipleInventoryTreesError as error:
+        return "", HTMLWriter.render_div(str(error), class_="error")
+    return None
 
 
 def _get_inventory_tree(row: Row) -> ImmutableTree:
@@ -99,9 +106,7 @@ class PainterOptionShowInternalTreePaths(PainterOption):
         )
 
 
-def _compute_data_inventory_tree(
-    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
-) -> ImmutableTree:
+def _compute_data_inventory_tree(row: Row, _context: PainterContext) -> ImmutableTree:
     try:
         _validate_inventory_tree_uniqueness(row)
     except MultipleInventoryTreesError:
@@ -111,9 +116,11 @@ def _compute_data_inventory_tree(
 
 
 def _render_inventory_tree(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
-    if not (tree := _compute_data_inventory_tree(row, cell, user, context)):
+    if (error_cell := _multiple_trees_cell(row)) is not None:
+        return error_cell
+    if not (tree := _compute_data_inventory_tree(row, context)):
         return "", ""
 
     tree_renderer = TreeRenderer(
@@ -133,9 +140,9 @@ def _render_inventory_tree(
 
 
 def _export_for_python_inventory_tree(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> SDRawTree:
-    return serialize_tree(_compute_data_inventory_tree(row, cell, user, context))
+    return serialize_tree(_compute_data_inventory_tree(row, context))
 
 
 def _export_for_csv_inventory_tree(
@@ -145,9 +152,9 @@ def _export_for_csv_inventory_tree(
 
 
 def _export_for_json_inventory_tree(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> SDRawTree:
-    return serialize_tree(_compute_data_inventory_tree(row, cell, user, context))
+    return serialize_tree(_compute_data_inventory_tree(row, context))
 
 
 def make_inventory_tree_painter() -> InternalPainter:
@@ -188,9 +195,7 @@ def make_invhist_time_painter() -> InternalPainter:
     )
 
 
-def _compute_data_invhist_delta(
-    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
-) -> ImmutableDeltaTree:
+def _compute_data_invhist_delta(row: Row, _context: PainterContext) -> ImmutableDeltaTree:
     try:
         _validate_inventory_tree_uniqueness(row)
     except MultipleInventoryTreesError:
@@ -200,9 +205,11 @@ def _compute_data_invhist_delta(
 
 
 def _render_invhist_delta(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
-    if not (tree := _compute_data_invhist_delta(row, cell, user, context)):
+    if (error_cell := _multiple_trees_cell(row)) is not None:
+        return error_cell
+    if not (tree := _compute_data_invhist_delta(row, context)):
         return "", ""
 
     tree_renderer = TreeRenderer(
@@ -222,9 +229,9 @@ def _render_invhist_delta(
 
 
 def _export_for_python_invhist_delta(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> SDRawDeltaTree:
-    return serialize_delta_tree(_compute_data_invhist_delta(row, cell, user, context))
+    return serialize_delta_tree(_compute_data_invhist_delta(row, context))
 
 
 def _export_for_csv_invhist_delta(
@@ -234,9 +241,9 @@ def _export_for_csv_invhist_delta(
 
 
 def _export_for_json_invhist_delta(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> SDRawDeltaTree:
-    return serialize_delta_tree(_compute_data_invhist_delta(row, cell, user, context))
+    return serialize_delta_tree(_compute_data_invhist_delta(row, context))
 
 
 def make_invhist_delta_painter() -> InternalPainter:
@@ -349,6 +356,8 @@ def _render_inventory_attribute(
     _user: LoggedInUser,
     context: PainterContext,
 ) -> CellSpec:
+    if (error_cell := _multiple_trees_cell(row)) is not None:
+        return error_cell
     return _paint_host_inventory_attribute(row, path, key, hint, context.theme)
 
 
@@ -499,6 +508,8 @@ def _compute_node_painter_data(row: Row, path: SDPath) -> ImmutableTree:
 def _render_inventory_node(
     path: SDPath, row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
+    if (error_cell := _multiple_trees_cell(row)) is not None:
+        return error_cell
     if not (tree := _compute_node_painter_data(row, path)):
         return "", ""
 

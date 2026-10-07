@@ -23,7 +23,7 @@ from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
 from cmk.gui.page_menu_utils import collect_context_links
 from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.painter import PainterContext
+from cmk.gui.painter import PainterConfig, PainterContext
 from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
@@ -288,7 +288,7 @@ def _page_index(request: Request, config: Config) -> None:
                 view_spec,
                 context,
                 PainterContext(
-                    config=config,
+                    config=PainterConfig.from_config(config),
                     request=request,
                     painter_options=PainterOptions.get_instance(),
                     theme=theme,
@@ -364,7 +364,7 @@ def _page_view(request: Request, config: Config, *, debug: bool) -> None:
         view_spec,
         context,
         PainterContext(
-            config=config,
+            config=PainterConfig.from_config(config),
             request=request,
             painter_options=PainterOptions.get_instance(),
             theme=theme,

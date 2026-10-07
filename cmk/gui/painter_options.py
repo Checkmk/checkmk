@@ -15,7 +15,7 @@ from typing import Any, Final, override
 import cmk.utils.render
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui import forms, valuespec
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.display_options import display_options
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
@@ -38,12 +38,8 @@ class PainterOption:
     def __init__(self, ident: str, valuespec: ValueSpec | None = None) -> None:
         self.ident = ident
         self._valuespec = valuespec
-        self.request = request
-        self.config = active_config
 
-    @property
-    def valuespec(self) -> ValueSpec:
-        """Use this getter when active_config is required for valuespecs, else use the init paramater"""
+    def valuespec(self, config: Config) -> ValueSpec:  # noqa: ARG002
         if not self._valuespec:
             raise NotImplementedError
         return self._valuespec
@@ -64,10 +60,11 @@ class PainterOptions:
     @request_memoize()
     def get_instance(cls) -> PainterOptions:
         """Return the request bound instance"""
-        return cls()
+        return cls(active_config)
 
-    def __init__(self) -> None:
+    def __init__(self, config: Config) -> None:
         super().__init__()
+        self._config = config
         # The names of the painter options used by the current view
         self._used_option_names: Sequence[str] = []
         # The effective options for this view
@@ -160,7 +157,7 @@ class PainterOptions:
                 request.del_var(varname)
 
     def get_valuespec_of(self, name: str) -> ValueSpec:
-        return painter_option_registry[name].valuespec
+        return painter_option_registry[name].valuespec(self._config)
 
     def _is_set(self, name: str) -> bool:
         return name in self._options
@@ -273,14 +270,11 @@ class PainterOptionRefresh(PainterOption):
     def __init__(self) -> None:
         super().__init__(ident="refresh")
 
-    @property
     @override
-    def valuespec(self) -> ValueSpec:
+    def valuespec(self, config: Config) -> ValueSpec:
         return DropdownChoice(
             title=_("Refresh interval"),
-            choices=[
-                (x, {0: _("off")}.get(x, str(x) + "s")) for x in self.config.view_option_refreshes
-            ],
+            choices=[(x, {0: _("off")}.get(x, str(x) + "s")) for x in config.view_option_refreshes],
         )
 
 
@@ -288,12 +282,11 @@ class PainterOptionNumColumns(PainterOption):
     def __init__(self) -> None:
         super().__init__(ident="num_columns")
 
-    @property
     @override
-    def valuespec(self) -> ValueSpec:
+    def valuespec(self, config: Config) -> ValueSpec:
         return DropdownChoice(
             title=_("Entries per row"),
-            choices=[(x, str(x)) for x in self.config.view_option_columns],
+            choices=[(x, str(x)) for x in config.view_option_columns],
         )
 
 

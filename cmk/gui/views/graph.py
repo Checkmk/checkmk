@@ -11,7 +11,6 @@ from dataclasses import replace
 from typing import Literal
 
 from cmk.ccc.user import UserId
-from cmk.gui.config import active_config
 from cmk.gui.graphing import (
     DEFAULT_INTERACTION,
     default_time_range_seconds,
@@ -26,7 +25,7 @@ from cmk.gui.graphing import (
     TemplateGraphSpecification,
     vs_graph_render_options,
 )
-from cmk.gui.http import Request, Response, response
+from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter import Cell, InternalPainter, PainterContext
@@ -42,14 +41,12 @@ from cmk.gui.type_defs import (
     ViewName,
     ViewSpec,
 )
-from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
     MigrateNotUpdated,
     Timerange,
-    Transform,
 )
 from cmk.gui.view_utils import (
     CellSpec,
@@ -162,9 +159,7 @@ def _paint_time_graph_cmk(
     cell: Cell,
     *,
     debug: bool,
-    user: LoggedInUser,  # noqa: ARG001
-    request: Request,
-    response: Response,
+    mobile: bool,
     painter_options: PainterOptions,
     temperature_unit: TemperatureUnit,
     require_historic_metrics: bool = True,
@@ -199,7 +194,6 @@ def _paint_time_graph_cmk(
 
     # The engine takes its interactions as an explicit argument rather than off the display
     # config, so a mobile render has to hand it the static one.
-    mobile = is_mobile(request, response)
     if mobile:
         graph_size = (27.0, 18.0)
         display_config = display_config.model_copy(
@@ -286,14 +280,14 @@ def _vs_graph_render_options_for_views() -> MigrateNotUpdated:
     return vs_graph_render_options(exclude=_LEGACY_ONLY_RENDER_OPTIONS, with_inline_title=False)
 
 
-def cmk_time_graph_params() -> MigrateNotUpdated:
+def cmk_time_graph_params(context: PainterContext) -> MigrateNotUpdated:
     elements = [
         (
             "set_default_time_range",
             DropdownChoice(
                 title=_("Set default time range"),
                 choices=[
-                    (entry["duration"], entry["title"]) for entry in active_config.graph_timeranges
+                    (entry["duration"], entry["title"]) for entry in context.config.graph_timeranges
                 ],
             ),
         ),
@@ -324,19 +318,13 @@ def _migrate_old_graph_render_options(value: PainterParameters | None) -> Painte
     return value
 
 
-def _parameters_service_graphs(_context: PainterContext) -> MigrateNotUpdated:
-    return cmk_time_graph_params()
-
-
 def _render_service_graphs(
     row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
     return _paint_time_graph_cmk(
         row,
         cell,
-        user=user,
-        request=context.request,
-        response=response,
+        mobile=context.url_renderer.is_mobile(),
         painter_options=context.painter_options,
         debug=context.config.debug,
         temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
@@ -374,16 +362,12 @@ def make_service_graphs_painter() -> InternalPainter:
         ],
         printable="time_graph",
         painter_options=["graph_render_options"],
-        parameters=_parameters_service_graphs,
+        parameters=cmk_time_graph_params,
         render=_render_service_graphs,
         export_for_python=_export_for_python_service_graphs,
         export_for_csv=_export_for_csv_service_graphs,
         export_for_json=_export_for_json_service_graphs,
     )
-
-
-def _parameters_host_graphs(_context: PainterContext) -> MigrateNotUpdated:
-    return cmk_time_graph_params()
 
 
 def _render_host_graphs(
@@ -392,9 +376,7 @@ def _render_host_graphs(
     return _paint_time_graph_cmk(
         row,
         cell,
-        user=user,
-        request=context.request,
-        response=response,
+        mobile=context.url_renderer.is_mobile(),
         painter_options=context.painter_options,
         debug=context.config.debug,
         temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
@@ -429,7 +411,7 @@ def make_host_graphs_painter() -> InternalPainter:
         columns=["host_name", "host_perf_data", "host_metrics", "host_check_command"],
         printable="time_graph",
         painter_options=["graph_render_options"],
-        parameters=_parameters_host_graphs,
+        parameters=cmk_time_graph_params,
         render=_render_host_graphs,
         export_for_python=_export_for_python_host_graphs,
         export_for_csv=_export_for_csv_host_graphs,
@@ -456,19 +438,13 @@ class PainterOptionPNPTimerange(PainterOption):
         )
 
 
-def _parameters_svc_pnpgraph(_context: PainterContext) -> Transform:
-    return cmk_time_graph_params()
-
-
 def _render_svc_pnpgraph(
     row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
     return _paint_time_graph_cmk(
         row,
         cell,
-        user=user,
-        request=context.request,
-        response=response,
+        mobile=context.url_renderer.is_mobile(),
         painter_options=context.painter_options,
         debug=context.config.debug,
         temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
@@ -506,16 +482,12 @@ def make_svc_pnpgraph_painter() -> InternalPainter:
         ],
         printable="time_graph",
         painter_options=[],
-        parameters=_parameters_svc_pnpgraph,
+        parameters=cmk_time_graph_params,
         render=_render_svc_pnpgraph,
         export_for_python=_export_for_python_svc_pnpgraph,
         export_for_csv=_export_for_csv_svc_pnpgraph,
         export_for_json=_export_for_json_svc_pnpgraph,
     )
-
-
-def _parameters_host_pnpgraph(_context: PainterContext) -> Transform:
-    return cmk_time_graph_params()
 
 
 def _render_host_pnpgraph(
@@ -524,9 +496,7 @@ def _render_host_pnpgraph(
     return _paint_time_graph_cmk(
         row,
         cell,
-        user=user,
-        request=context.request,
-        response=response,
+        mobile=context.url_renderer.is_mobile(),
         painter_options=context.painter_options,
         debug=context.config.debug,
         temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
@@ -559,7 +529,7 @@ def make_host_pnpgraph_painter() -> InternalPainter:
         columns=["host_name", "host_perf_data", "host_metrics", "host_check_command"],
         printable="time_graph",
         painter_options=[],
-        parameters=_parameters_host_pnpgraph,
+        parameters=cmk_time_graph_params,
         render=_render_host_pnpgraph,
         export_for_python=_export_for_python_host_pnpgraph,
         export_for_csv=_export_for_csv_host_pnpgraph,

@@ -25,7 +25,7 @@ defineProps<{
 
 const shortCut: NavItemShortcut = {
   key: '/',
-  ctrl: true
+  alt: true
 }
 
 const combo = mainMenu.getNavShortCutCombo(shortCut)

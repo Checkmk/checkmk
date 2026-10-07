@@ -220,25 +220,20 @@ export class SidebarService extends ServiceBase {
       }
     }
 
-    this.registerShortCut(
-      {
-        key: ['/'],
-        ctrl: true,
-        scope: _t('Sidebar'),
-        description: _t('Toggle sidebar')
-      },
-      SidebarService.toggle
-    )
-    this.registerShortCut(
-      {
-        key: ['/'],
-        ctrl: true,
-        shift: true,
-        scope: _t('Sidebar'),
-        description: _t('Toggle sidebar')
-      },
-      SidebarService.toggle
-    )
+    for (const modifier of [{ alt: true }, { ctrl: true }]) {
+      for (const shift of [false, true]) {
+        this.registerShortCut(
+          {
+            key: ['/'],
+            ...modifier,
+            shift,
+            scope: _t('Sidebar'),
+            description: _t('Toggle sidebar')
+          },
+          SidebarService.toggle
+        )
+      }
+    }
 
     this.enableShortCuts()
 

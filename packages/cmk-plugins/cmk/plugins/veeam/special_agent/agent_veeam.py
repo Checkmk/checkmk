@@ -343,9 +343,10 @@ class VeeamAuth(requests.auth.AuthBase):
 
 
 class VeeamClient:
-    def __init__(self, api: VeeamApi, auth: VeeamAuth) -> None:
+    def __init__(self, api: VeeamApi, auth: VeeamAuth, storage: Storage) -> None:
         self._api = api
         self._auth = auth
+        self.storage = storage
 
     def get(self, path: str) -> object:
         response = self._api.request("GET", path, auth=self._auth)
@@ -663,6 +664,35 @@ def _is_skippable(exc: TerminateAgent) -> bool:
     )
 
 
+JOB_OBJECT_NAMES_STORAGE_KEY = "job_object_names"
+
+
+def _load_job_object_names_cache(storage: Storage) -> Mapping[str, Mapping[str, object]]:
+    try:
+        raw = json.loads(storage.read(JOB_OBJECT_NAMES_STORAGE_KEY, "{}"))
+    except json.JSONDecodeError:
+        return {}
+    if not isinstance(raw, dict):
+        return {}
+    return {
+        job_id: entry
+        for job_id, entry in raw.items()
+        if isinstance(job_id, str) and isinstance(entry, dict)
+    }
+
+
+def _cached_job_objects(entry: Mapping[str, object], job_name: str) -> _JobObjects | None:
+    names = entry.get("names")
+    session = entry.get("session")
+    if (
+        isinstance(names, list)
+        and all(isinstance(object_name, str) for object_name in names)
+        and isinstance(session, dict)
+    ):
+        return _JobObjects(names=names, job_name=job_name, session=session)
+    return None
+
+
 def _resolve_job_object_names(
     client: VeeamClient, session_to_job: Mapping[str, tuple[str, str]]
 ) -> dict[str, _JobObjects]:
@@ -680,9 +710,29 @@ def _resolve_job_object_names(
     /api/v1/backups/{id}/objects 400s under rev0 for File Backup jobs; rev1 fixes
     it, and the negotiated version already prefers rev1 when available. A job
     whose session/objects lookup 404s/400s is left out.
+
+    The result is cached per job, keyed by the job's own current `sessionId`: a job
+    whose session hasn't changed since the last run reuses its cached names/session
+    instead of repeating both requests. Only a session whose own `state` is
+    "Stopped" is cached, though: an in-progress session's `state`/`result`/`endTime`
+    still change in place under the same `sessionId`, so caching it would freeze a
+    job's single-object session fallback (`_session_fallback_task`) on a stale
+    in-progress snapshot until the job's next run. A job no longer present this run
+    is simply dropped from the cache.
     """
+    old_cache = _load_job_object_names_cache(client.storage)
+    new_cache: dict[str, Mapping[str, object]] = {}
     objects_by_job: dict[str, _JobObjects] = {}
     for session_id, (job_id, job_name) in session_to_job.items():
+        cached_entry = old_cache.get(job_id)
+        if (
+            cached_entry is not None
+            and cached_entry.get("sessionId") == session_id
+            and (cached := _cached_job_objects(cached_entry, job_name)) is not None
+        ):
+            objects_by_job[job_id] = cached
+            new_cache[job_id] = cached_entry
+            continue
         try:
             session = client.get(f"/api/v1/sessions/{session_id}")
         except TerminateAgent as exc:
@@ -708,6 +758,9 @@ def _resolve_job_object_names(
         ]
         if names:
             objects_by_job[job_id] = _JobObjects(names=names, job_name=job_name, session=session)
+            if session.get("state") == "Stopped":
+                new_cache[job_id] = {"sessionId": session_id, "names": names, "session": session}
+    client.storage.write(JOB_OBJECT_NAMES_STORAGE_KEY, json.dumps(new_cache))
     return objects_by_job
 
 
@@ -886,16 +939,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         with create_session(url, cert_server_name) as session:
             api = VeeamApi(session, url, cert_server_name=cert_server_name, timeout=args.timeout)
+            storage = Storage(AGENT, host=args.address)
             auth = VeeamAuth(
                 api,
-                storage=Storage(AGENT, host=args.address),
+                storage=storage,
                 user=args.user,
                 password=resolve_secret_option(args, PASSWORD_OPTION),
             )
             auth.authenticate()
             wanted = set(args.sections)
             selected = [section for section in SECTIONS if section[0] in wanted]
-            write_sections(VeeamClient(api, auth), selected)
+            write_sections(VeeamClient(api, auth, storage), selected)
     except TerminateAgent as exc:
         if args.debug:
             raise

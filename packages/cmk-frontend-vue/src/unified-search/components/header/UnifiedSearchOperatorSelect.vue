@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref, useTemplateRef } from 'vue'
+import { computed, ref, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import useClickOutside from '@/lib/useClickOutside'
@@ -21,6 +21,9 @@ const { _t } = usei18n()
 const searchUtils = getSearchUtils()
 const operatorDropdownBtn = useTemplateRef('unified-search-operator-btn')
 const filterOptions = ref<FilterOption[]>(availableFilterOptions)
+const lastHostOptionIdx = computed(
+  () => filterOptions.value.findIndex((opt) => opt.value === 's:') - 1
+)
 const props = defineProps<{
   disabled?: boolean | undefined
 }>()
@@ -136,7 +139,10 @@ function toggleOperatorOptions() {
         <SearchOperatorOptionEntry
           v-for="(opt, idx) in filterOptions"
           :key="opt.type.concat(opt.value)"
-          :class="[opt.type, { 'unified-search-operator-select__separator': idx === 5 }]"
+          :class="[
+            opt.type,
+            { 'unified-search-operator-select__separator': idx === lastHostOptionIdx }
+          ]"
           :focus="isFocused(idx)"
           :idx="idx"
           :option="opt"

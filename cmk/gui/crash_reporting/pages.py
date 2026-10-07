@@ -664,8 +664,8 @@ class ReportRendererCheck(ABCReportRenderer):
         self, crash_info: AggregatedCrashInfo, site_id: SiteId
     ) -> Iterator[PageMenuEntry]:
         details = crash_info["details"]
-        host = details["host"]
-        service = details["description"]
+        if (host := details.get("host")) is None:
+            return
 
         host_url = makeuri(
             request,
@@ -681,6 +681,9 @@ class ReportRendererCheck(ABCReportRenderer):
             icon_name=StaticIcon(IconNames.status),
             item=make_simple_link(host_url),
         )
+
+        if (service := details.get("description")) is None:
+            return
 
         service_url = makeuri(
             request,
@@ -719,9 +722,9 @@ class ReportRendererCheck(ABCReportRenderer):
         html.h3(_("Details"), class_="table")
         html.open_table(class_="data")
 
-        _crash_row(_("Host"), details["host"], odd=False, legend=True)
+        _crash_row(_("Host"), details.get("host", _("Unknown")), odd=False, legend=True)
         _crash_row(_("Is cluster host"), format_bool(details.get("is_cluster")), odd=True)
-        _crash_row(_("Check type"), details["check_type"], odd=False)
+        _crash_row(_("Check type"), details.get("check_type", _("Unknown")), odd=False)
         _crash_row(
             _("Enforced service"),
             format_bool(details.get("enforced_service")),
@@ -735,7 +738,7 @@ class ReportRendererCheck(ABCReportRenderer):
             pre=True,
         )
         _crash_row(_("Check item"), details.get("item", "This check has no item."), odd=False)
-        _crash_row(_("Description"), details["description"], odd=True)
+        _crash_row(_("Description"), details.get("description", _("Unknown")), odd=True)
         if "params" in details:
             _crash_row(
                 _("Parameters"),

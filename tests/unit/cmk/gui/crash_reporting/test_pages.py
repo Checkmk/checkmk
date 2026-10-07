@@ -7,7 +7,7 @@
 
 import base64
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 
 import pytest
 from polyfactory.factories.typed_dict_factory import TypedDictFactory
@@ -15,6 +15,7 @@ from werkzeug.test import create_environ
 
 from livestatus import OnlySites
 
+from cmk.ccc.site import SiteId
 from cmk.crash import AggregatedCrashInfo
 from cmk.gui.crash_reporting.pages import (
     _get_serialized_crash_report,
@@ -23,8 +24,11 @@ from cmk.gui.crash_reporting.pages import (
     CrashReport,
     CrashReportRow,
     PageCrash,
+    ReportRendererCheck,
+    ReportRendererGeneric,
     ReportRendererGUI,
     ReportRendererJavascript,
+    ReportRendererSection,
     show_automatic_upload_hint_on_view,
 )
 from cmk.gui.exceptions import MKUserError
@@ -285,3 +289,148 @@ def test_show_crash_report_without_traceback() -> None:
         rendered = "".join(output_funnel.drain())
 
     assert "ValueError (boom)" in rendered
+
+
+CHECK_DETAILS = {
+    "host": "myhost",
+    "check_type": "acme_temp",
+    "description": "Temperature Zone 1",
+    "section": "MAIN_SECTION_CONTENT",
+    "section_acme_temp": "NAMED_SECTION_CONTENT",
+    "sectionless": "NOT_A_SECTION",
+}
+
+
+@pytest.mark.parametrize(
+    "crash_type, renderer",
+    [
+        pytest.param("check", ReportRendererCheck, id="registered type"),
+        pytest.param("no_such_crash_type", ReportRendererGeneric, id="unknown type"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_crash_type_renderer(crash_type: str, renderer: type) -> None:
+    assert isinstance(PageCrash()._crash_type_renderer(crash_type), renderer)  # noqa: SLF001
+
+
+def _render_check_details(details: Mapping[str, object]) -> str:
+    with output_funnel.plugged():
+        ReportRendererCheck().show_details(
+            _minimal_crash_info(details=details), {"crash_id": "1", "site": "heute"}
+        )
+        return "".join(output_funnel.drain())
+
+
+@pytest.mark.usefixtures("request_context")
+def test_report_renderer_check_shows_section_keys() -> None:
+    rendered = _render_check_details(CHECK_DETAILS)
+
+    assert "MAIN_SECTION_CONTENT" in rendered
+    assert "Section: acme_temp" in rendered
+    assert "NAMED_SECTION_CONTENT" in rendered
+    assert "NOT_A_SECTION" not in rendered
+
+
+@pytest.mark.parametrize(
+    "missing_key, row_title",
+    [
+        pytest.param("host", "Host", id="host"),
+        pytest.param("check_type", "Check type", id="check type"),
+        pytest.param("description", "Description", id="description"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_report_renderer_check_with_incomplete_details(missing_key: str, row_title: str) -> None:
+    details = {k: v for k, v in CHECK_DETAILS.items() if k != missing_key}
+
+    rendered = _render_check_details(details)
+
+    assert all(str(value) in rendered for value in details.values() if value != "NOT_A_SECTION")
+    assert f">{row_title}</td><td>Unknown</td>" in rendered
+
+
+@pytest.mark.parametrize(
+    "details, expected_titles",
+    [
+        pytest.param(CHECK_DETAILS, ["Host state", "Service state"], id="complete"),
+        pytest.param({"host": "myhost"}, ["Host state"], id="without service"),
+        pytest.param({}, [], id="without host"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_report_renderer_check_related_monitoring(
+    details: dict[str, object], expected_titles: list[str]
+) -> None:
+    entries = ReportRendererCheck().page_menu_entries_related_monitoring(
+        _minimal_crash_info(details=details), SiteId("heute")
+    )
+
+    assert [entry.title for entry in entries] == expected_titles
+
+
+def _render_section_details(details: dict[str, object]) -> str:
+    with output_funnel.plugged():
+        ReportRendererSection().show_details(
+            _minimal_crash_info(crash_type="section", details=details),
+            {"crash_id": "1", "site": "heute"},
+        )
+        return "".join(output_funnel.drain())
+
+
+@pytest.mark.parametrize(
+    "inline_snmp, expected",
+    [
+        pytest.param(True, "Yes", id="inline snmp"),
+        pytest.param(False, "No", id="classic snmp"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_report_renderer_section(inline_snmp: bool, expected: str) -> None:
+    rendered = _render_section_details(
+        {
+            "section_name": "acme_temp",
+            "inline_snmp": inline_snmp,
+            "section_content": [["SECTION_LINE"]],
+        }
+    )
+
+    assert "acme_temp" in rendered
+    assert f"<pre>{expected}</pre>" in rendered
+    assert "SECTION_LINE" in rendered
+
+
+@pytest.mark.usefixtures("request_context")
+def test_report_renderer_section_without_content() -> None:
+    rendered = _render_section_details({"section_name": "acme_temp"})
+
+    assert "<pre>Unknown</pre>" in rendered
+    assert "String table" not in rendered
+
+
+@pytest.mark.parametrize(
+    "occurrences, expect_aggregate",
+    [
+        pytest.param(
+            {"first_seen": 1734000000.0, "last_seen": 1734000000.0, "count": 1},
+            False,
+            id="single occurrence",
+        ),
+        pytest.param(
+            {"first_seen": 1734000000.0, "last_seen": 1734090000.0, "count": 3},
+            True,
+            id="repeated occurrence",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_show_crash_report_occurrences(
+    occurrences: dict[str, float], expect_aggregate: bool
+) -> None:
+    with output_funnel.plugged():
+        PageCrash()._show_crash_report(  # noqa: SLF001
+            _minimal_crash_info(occurrences=occurrences)
+        )
+        rendered = "".join(output_funnel.drain())
+
+    assert ("(3 occurrences)" in rendered) is expect_aggregate
+    assert ("First: " in rendered) is expect_aggregate

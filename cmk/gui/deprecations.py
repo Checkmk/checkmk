@@ -401,8 +401,6 @@ def _filter_notifiable_users(
     users: Users, user_permissions: UserPermissions
 ) -> Iterator[_NotifiableUser]:
     for user_id, user_spec in users.items():
-        if user_id is None:
-            continue  # type: ignore[unreachable]
         notification_categories = []
         if user_permissions.user_may(user_id, "wato.manage_mkps"):
             notification_categories.append(_NotificationCategory.manage_mkps)

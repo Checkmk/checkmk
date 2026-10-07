@@ -205,3 +205,14 @@ def test_status_wato_override() -> None:
     }
     actual = list(check_ibm_mq_channels("QM1:CHAN1", params, parsed))
     assert actual == [Result(state=State.UNKNOWN, summary="Status: STOPPED, Type: SVRCONN")]
+
+
+def test_unknown_status_gets_the_fallback_state_without_a_state_map() -> None:
+    parsed = {
+        "QM1": {"STATUS": "RUNNING"},
+        "QM1:CHAN1": {"CHLTYPE": "SVRCONN", "STATUS": "SOMETHING NEW"},
+    }
+
+    actual = list(check_ibm_mq_channels("QM1:CHAN1", {"mapped_states_default": 1}, parsed))
+
+    assert actual == [Result(state=State.WARN, summary="Status: SOMETHING NEW, Type: SVRCONN")]

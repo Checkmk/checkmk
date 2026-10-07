@@ -99,6 +99,8 @@ _DEFAULT_STATUS_MAP = {
 
 def map_ibm_mq_manager_status(status: str, params: Mapping[str, Any]) -> int:
     wato_key, check_state = _DEFAULT_STATUS_MAP.get(status, ("unknown", 3))
+    if wato_key == "unknown" and "mapped_states_default" in params:
+        check_state = params["mapped_states_default"]
     if "mapped_states" in params:
         mapped_states = dict(params["mapped_states"])
         if wato_key in mapped_states:

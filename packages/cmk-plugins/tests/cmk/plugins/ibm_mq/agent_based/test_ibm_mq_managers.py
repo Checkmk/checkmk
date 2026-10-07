@@ -179,6 +179,17 @@ QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PRE-EMPTI
     assert expected == actual
 
 
+def test_unknown_status_gets_the_fallback_state_without_a_state_map() -> None:
+    lines = """\
+QMNAME(THE.ODD.ONE)                                       STATUS(SOMETHING NEW) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(9.4.0.0)
+"""
+    parsed = parse_ibm_mq_managers(parse_info(lines, chr(10)))
+
+    actual = list(check_ibm_mq_managers("THE.ODD.ONE", {"mapped_states_default": 1}, parsed))
+
+    assert actual[0] == Result(state=State.WARN, summary="Status: SOMETHING NEW")
+
+
 def test_version_mismatch() -> None:
     lines = """\
 QMNAME(THE.RUNNING.ONE)                                   STATUS(RUNNING) DEFAULT(NO) STANDBY(NOT APPLICABLE) INSTNAME(Installation1) INSTPATH(/opt/mqm) INSTVER(7.5.0.2)

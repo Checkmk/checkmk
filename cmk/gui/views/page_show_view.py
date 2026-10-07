@@ -688,19 +688,19 @@ def _sort_data(
     # Handle case where join columns are not present for all rows
     def safe_compare(
         compfunc: SorterProtocol,
-        row1: Row,
-        row2: Row,
+        row1: Row | None,
+        row2: Row | None,
         parameters: Mapping[str, object] | None,
         config: Config,
         req: Request,
         request_cache: RequestCache[RequestCacheConfig],
     ) -> int:
-        if row1 is None and row2 is None:  # type: ignore[unreachable]
-            return 0  # type: ignore[unreachable]
+        if row1 is None and row2 is None:
+            return 0
         if row1 is None:
-            return -1  # type: ignore[unreachable]
+            return -1
         if row2 is None:
-            return 1  # type: ignore[unreachable]
+            return 1
         return compfunc(
             row1,
             row2,

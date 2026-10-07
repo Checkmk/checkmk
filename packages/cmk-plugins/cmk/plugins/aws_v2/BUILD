@@ -15,10 +15,12 @@ py_library(
     imports = ["../../.."],
     visibility = ["//visibility:public"],
     deps = [
+        "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-plugin-apis:rulesets",
         "//packages/cmk-plugin-apis:server_side_calls",
         "//packages/cmk-plugin-apis:server_side_programs",
+        "//packages/cmk-plugins/cmk/plugins/lib",
         requirement("boto3"),
         requirement("botocore"),
         requirement("mypy-boto3-logs"),

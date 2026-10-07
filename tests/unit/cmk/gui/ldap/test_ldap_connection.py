@@ -663,3 +663,41 @@ def test_create_with_temperature_unit_from_group(
         ]
         == temperature_unit_groups
     )
+
+
+@pytest.mark.parametrize("visibility", ["show_all", "show_for_user_contacts_only"])
+def test_create_with_visibility_of_hosts_or_services_from_group(
+    clients: ClientRegistry, visibility: str
+) -> None:
+    groups_to_sync = [
+        {
+            "group_cn": "cmk_AD_admins",
+            "attribute_to_set": "visibility_of_hosts_or_services",
+            "value": visibility,
+        }
+    ]
+    resp = clients.LdapConnection.create(
+        ldap_data={
+            "general_properties": {"id": "LDAP_1"},
+            "ldap_connection": {
+                "directory_type": {
+                    "type": "active_directory_manual",
+                    "ldap_server": "10.200.3.32",
+                },
+            },
+            "sync_plugins": {
+                "groups_to_custom_user_attributes": {
+                    "state": "enabled",
+                    "handle_nested": True,
+                    "groups_to_sync": groups_to_sync,
+                },
+            },
+        }
+    )
+
+    assert (
+        resp.json["extensions"]["sync_plugins"]["groups_to_custom_user_attributes"][
+            "groups_to_sync"
+        ]
+        == groups_to_sync
+    )

@@ -807,10 +807,10 @@ def groups_to_attributes_internal_to_api(
             case "force_authuser":
                 fa = cast(FORCE_AUTH_USER, group["attribute"])
                 api_groups.append(
-                    {  # type: ignore[arg-type,misc]
+                    {
                         "group_cn": group["cn"],
                         "attribute_to_set": "visibility_of_hosts_or_services",
-                        "value": ("show_all" if fa[1] is None else "show_for_user_contacts_only"),
+                        "value": ("show_for_user_contacts_only" if fa[1] else "show_all"),
                     }
                 )
 

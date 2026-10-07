@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
-from enum import StrEnum
 from re import Pattern
 from typing import override
 
@@ -20,13 +19,6 @@ from tests.system.gui.testlib.playwright.pom.sidebar.runtime_filters_sidebar imp
 )
 
 logger = logging.getLogger(__name__)
-
-
-class SummarywidgetType(StrEnum):
-    """Types of summary widgets."""
-
-    HOST = "Host state summary"
-    SERVICE = "Service state summary"
 
 
 class BaseDashboard(CmkPage):

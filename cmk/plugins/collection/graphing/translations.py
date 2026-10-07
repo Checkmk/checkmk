@@ -469,6 +469,7 @@ translation_disk_utilization_check_diskstat_dict = translations.Translation(
         translations.PassiveCheck("diskstat_io_director"),
         translations.PassiveCheck("diskstat_io_volumes"),
         translations.PassiveCheck("aws_ebs"),
+        translations.PassiveCheck("aws_v2_ebs"),
         translations.PassiveCheck("aws_ec2_disk_io"),
         translations.PassiveCheck("aws_v2_ec2_disk_io"),
         translations.PassiveCheck("aws_rds_disk_io"),

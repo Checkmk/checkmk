@@ -1261,6 +1261,15 @@ rule_spec_aws_ebs_burst_balance = CheckParameters(
 )
 
 
+rule_spec_aws_v2_ebs_burst_balance = CheckParameters(
+    name="aws_v2_ebs_burst_balance",
+    title=Title("AWS v2/EBS burst balance"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_burst_balance,
+    condition=HostAndItemCondition(item_title=Title("Block storage name")),
+)
+
+
 def _parameter_form_spec_aws_ebs_limits() -> Dictionary:
     return Dictionary(
         elements={
@@ -1329,6 +1338,17 @@ def _parameter_form_spec_aws_ebs_limits() -> Dictionary:
 rule_spec_aws_ebs_limits = CheckParameters(
     name="aws_ebs_limits",
     title=Title("AWS/EBS limits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_ebs_limits,
+    condition=HostAndItemCondition(
+        item_title=Title("Region name"), item_form=_item_spec_aws_limits_generic()
+    ),
+)
+
+
+rule_spec_aws_v2_ebs_limits = CheckParameters(
+    name="aws_v2_ebs_limits",
+    title=Title("AWS v2/EBS limits"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_ebs_limits,
     condition=HostAndItemCondition(

@@ -47,8 +47,11 @@ from .tag_rendering import (
     render_end_tag,
     render_start_tag,
 )
+from .type_defs import CSSSpec
 
 TSFunctionArguments = Mapping[str, object]
+
+ClickActionArguments = Mapping[str, object]
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -58,24 +61,26 @@ class ClickAction:
     An enforcing Content Security Policy forbids inline event handlers like
     ``onclick="..."``. Instead of attaching JavaScript directly to an element,
     declare a named click action which is consumed by a delegated click
-    listener on the document (see /cmk-frontend/src/js/modules/click_actions.ts).
+    listener on the document (see
+    packages/cmk-frontend/src/js/modules/click_action_dispatcher.ts).
 
     To add a new click action:
 
     1. Add its name to ``known_click_action`` in
        packages/cmk-shared-typing/source/legacy_frontend_hooks.json.
     2. Implement the action under the same name in the ``click_actions``
-       dictionary in packages/cmk-frontend/src/js/modules/click_actions.ts.
+       dictionary in packages/cmk-frontend/src/js/modules/click_actions.ts
+       (and in mobile.ts if it is used on mobile pages).
     3. Pass a ``ClickAction`` to an HTML helper supporting it (e.g.
        ``html.toggle_switch``) or render the attributes returned by
        ``data_attributes`` on the clickable element yourself.
 
-    ``arguments`` must be a flat string-to-string mapping; it is serialized as
-    JSON and handed to the TypeScript function on each click.
+    ``arguments`` must be JSON serializable; it is handed to the TypeScript
+    function on each click.
     """
 
     action: KnownClickAction
-    arguments: Mapping[str, str] | None = None
+    arguments: ClickActionArguments | None = None
 
     def data_attributes(self) -> dict[str, str]:
         attrs: dict[str, str] = {"data_cmk_on_click": self.action}
@@ -195,6 +200,41 @@ class HTMLWriter:
 
     def a(self, content: HTMLContent, href: str, **attrs: HTMLTagAttributeValue) -> None:
         self.write_html(HTMLWriter.render_a(content, href, **attrs))
+
+    @staticmethod
+    def render_action_link(
+        content: HTMLContent,
+        *,
+        click_action: ClickAction | None = None,
+        class_: CSSSpec | None = None,
+        **attrs: HTMLTagAttributeValue,
+    ) -> HTML:
+        """Render a link which triggers an action instead of navigating
+
+        The frontend prevents the default action of links to "#".
+        """
+        return render_element(
+            "a",
+            content,
+            href="#",
+            class_=class_,
+            **attrs,
+            **(click_action.data_attributes() if click_action else {}),
+        )
+
+    def action_link(
+        self,
+        content: HTMLContent,
+        *,
+        click_action: ClickAction | None = None,
+        class_: CSSSpec | None = None,
+        **attrs: HTMLTagAttributeValue,
+    ) -> None:
+        self.write_html(
+            HTMLWriter.render_action_link(
+                content, click_action=click_action, class_=class_, **attrs
+            )
+        )
 
     def stylesheet(self, href: str) -> None:
         self.link(rel="stylesheet", href=href, type_="text/css")

@@ -3,28 +3,18 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-/**
- * Delegated click-action dispatcher
- *
- * An enforcing Content Security Policy forbids inline event handlers like
- * `onclick="..."`. Instead, the Python code renders a named click action as
- * data attributes on the clickable element which we consume here.
- *
- * See cmk.gui.htmllib.generator:ClickAction for the server side and for how
- * to add a new click action.
- */
 import type { KnownClickAction } from 'cmk-shared-typing/typescript/legacy_frontend_hooks'
 
 import { call_ajax } from '@/modules/ajax'
 import { add_bookmark, update_vue_snapin_contents } from '@/modules/sidebar'
 
-type ClickActionArguments = { [key: string]: string }
-type ClickAction = (element: HTMLElement, options: ClickActionArguments) => void
+import { type ClickAction, register_click_actions } from './click_action_dispatcher'
 
 const click_actions: Record<KnownClickAction, ClickAction> = {
   add_bookmark: () => add_bookmark(),
+  reload_page: () => location.reload(),
   switch_master_state: (_element, options) => {
-    call_ajax(options.url!, {
+    call_ajax(options.url, {
       method: 'POST',
       response_handler: update_vue_snapin_contents,
       handler_data: 'snapin_master_control'
@@ -32,25 +22,4 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
   }
 }
 
-export function init_click_action_dispatcher() {
-  // See cmk.gui.htmllib.generator:ClickAction
-  document.addEventListener('click', (event: MouseEvent) => {
-    if (!(event.target instanceof Element)) return
-    const element = event.target.closest<HTMLElement>('*[data-cmk_on_click]')
-    if (!element) return
-    const action_name: string = element.dataset.cmk_on_click!
-    const click_action = click_actions[action_name as KnownClickAction] as ClickAction | undefined
-    if (click_action === undefined) {
-      console.error(`Unknown click action: ${action_name}`)
-      return
-    }
-    event.preventDefault()
-    let options: ClickActionArguments
-    if (element.dataset.cmk_on_click_arguments) {
-      options = JSON.parse(element.dataset.cmk_on_click_arguments)
-    } else {
-      options = {}
-    }
-    click_action(element, options)
-  })
-}
+register_click_actions(click_actions)

@@ -4,8 +4,17 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 /* eslint-disable import-x/no-namespace -- Needed for exports */
-import type { KnownTSFunction } from 'cmk-shared-typing/typescript/legacy_frontend_hooks'
+import type {
+  KnownClickAction,
+  KnownTSFunction
+} from 'cmk-shared-typing/typescript/legacy_frontend_hooks'
 
+import {
+  type ClickAction,
+  init_click_action_dispatcher,
+  prevent_hash_link_navigation,
+  register_click_actions
+} from './modules/click_action_dispatcher'
 import * as forms from './modules/forms'
 import {
   type CallableFunction,
@@ -18,6 +27,8 @@ import {
 // https://github.com/jquery/jquery-mobile/issues/8662#issuecomment-687738965
 require('script-loader!jquery')
 require('script-loader!../jquery/jquery.mobile-1.4.5.min.js')
+
+prevent_hash_link_navigation()
 
 /* Disable data-ajax per default, as it makes problems in most
    of our cases */
@@ -83,8 +94,13 @@ register_callable_functions({
   }
 } satisfies Partial<Record<KnownTSFunction, CallableFunction>>)
 
+register_click_actions({
+  reload_page: () => location.reload()
+} satisfies Partial<Record<KnownClickAction, ClickAction>>)
+
 $(document).ready(function () {
   init_callable_ts_functions(document)
+  init_click_action_dispatcher()
 })
 
 export const cmk_export = {

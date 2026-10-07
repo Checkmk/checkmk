@@ -11,7 +11,8 @@ import * as d3Sankey from 'd3-sankey'
 import $ from 'jquery'
 
 import '@/modules/callable_functions'
-import * as click_actions from '@/modules/click_actions'
+import * as click_action_dispatcher from '@/modules/click_action_dispatcher'
+import '@/modules/click_actions'
 import * as ts_function_dispatcher from '@/modules/ts_function_dispatcher'
 
 import * as activation from './modules/activation'
@@ -59,6 +60,7 @@ import * as views from './modules/views'
 import * as visibility_detection from './modules/visibility_detection'
 import * as wato from './modules/wato'
 
+click_action_dispatcher.prevent_hash_link_navigation()
 register()
 
 ai_assistant.reserve_panel_space_before_first_paint()
@@ -78,7 +80,7 @@ $(() => {
   ts_function_dispatcher.init_callable_ts_functions(document)
 
   // CSP-compatible replacement for inline onclick handlers
-  click_actions.init_click_action_dispatcher()
+  click_action_dispatcher.init_click_action_dispatcher()
 
   document
     .querySelectorAll<HTMLFormElement>('form[data-cmk_form_confirmation]')

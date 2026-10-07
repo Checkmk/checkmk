@@ -10,7 +10,7 @@ import pytest
 from werkzeug.test import create_environ
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import _collect_stylesheets, html
 from cmk.gui.http import Request
 from cmk.gui.logged_in import LoggedInUser, user
@@ -349,3 +349,23 @@ def test_collect_stylesheets(
     manifest: dict[str, dict[str, list[str]]], entry_key: str, expected: list[str]
 ) -> None:
     assert _collect_stylesheets(manifest, entry_key) == expected
+
+
+def test_render_action_link_with_click_action() -> None:
+    assert HTMLWriter.render_action_link(
+        "Reload",
+        click_action=ClickAction(action="reload_page", arguments={"a": [1, {"b": True}]}),
+        class_=["foo"],
+        title="Reload page",
+    ) == HTML.without_escaping(
+        '<a href="#" title="Reload page" data-cmk_on_click="reload_page"'
+        ' data-cmk_on_click_arguments="{&quot;a&quot;: [1, {&quot;b&quot;: true}]}"'
+        ' class="foo">'
+        "Reload</a>"
+    )
+
+
+def test_render_action_link_with_onclick() -> None:
+    assert HTMLWriter.render_action_link("Toggle", onclick="toggle()") == HTML.without_escaping(
+        '<a href="#" onclick="toggle()">Toggle</a>'
+    )

@@ -183,12 +183,7 @@ common:debug --verbose_failures
 
 import %workspace%/bazel/rc/iwyu.rc
 import %workspace%/bazel/rc/mypy.rc
-################################################################################
-# Interactive use: `bazel lint //cmk/gui/...`
-# CI example: bazel build --config=deballast //cmk/gui/...
-################################################################################
-common:deballast --aspects //bazel/tools:aspects.bzl%deballast
-common:deballast --output_groups=rules_lint_human,rules_lint_machine
+import %workspace%/bazel/rc/deballast.rc
 
 # Turn off automatic capturing of environmental stuff like PATH - those will be set explicitly
 # (see https://blog.aspect.build/bazelrc-flags)

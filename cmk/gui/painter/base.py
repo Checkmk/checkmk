@@ -562,7 +562,6 @@ class Cell:
             # Handle <img...>. Our PDF writer cannot draw arbitrary
             # images, but all that we need for showing simple icons.
             # Current limitation: *one* image
-            assert not isinstance(txt, tuple)  # type: ignore[unreachable]
             if (isinstance(txt, str) and txt.lower().startswith("<img")) or (
                 isinstance(txt, HTML) and txt.lower().startswith(HTML.without_escaping("<img"))
             ):
@@ -576,7 +575,7 @@ class Cell:
                     html_str = replace_anchor_tags_with_urls(html_str)
                     html_str = replace_br_with_newlines(html_str)
                     content = escaping.strip_tags(html_str)
-                elif not isinstance(txt, tuple):  # type: ignore[unreachable]
+                else:
                     content = escaping.strip_tags(unescape(txt))
 
             return css_classes.split(), content

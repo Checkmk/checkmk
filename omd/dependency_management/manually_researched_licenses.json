@@ -123,7 +123,7 @@
   "pkg:pypi/reportlab@5.0.1": "BSD-3-Clause",
   "pkg:pypi/requests-unixsocket@0.4.1": "Apache-2.0",
   "pkg:pypi/rfc3339-validator@0.1.4": "MIT",
-  "pkg:pypi/robotframework@7.4.2": "Apache-2.0",
+  "pkg:pypi/robotframework@7.5": "Apache-2.0",
   "pkg:pypi/s3transfer@0.19.2": "Apache-2.0",
   "pkg:pypi/setuptools-scm@9.2.2": "MIT",
   "pkg:pypi/setuptools@78.1.1": "MIT",

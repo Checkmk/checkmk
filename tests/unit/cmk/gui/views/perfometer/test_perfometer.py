@@ -9,15 +9,9 @@ import pytest
 
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import perfometers, Title
-from cmk.gui.config import active_config
-from cmk.gui.display_options import display_options
 from cmk.gui.graphing import perfometers_from_api
-from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
 from cmk.gui.painter import Cell
-from cmk.gui.painter.helpers import RenderLink
-from cmk.gui.painter_options import PainterOptions
-from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.perfometer.base import Perfometer
@@ -130,14 +124,7 @@ def _perfometer_row() -> Row:
 
 
 def _make_painter() -> PainterPerfometer:
-    return PainterPerfometer(
-        config=active_config,
-        request=request,
-        painter_options=PainterOptions.get_instance(),
-        theme=theme,
-        url_renderer=RenderLink(request, response, display_options),
-        user_permissions=UserPermissions({}, {}, {}, []),
-    )
+    return PainterPerfometer()
 
 
 @pytest.mark.usefixtures("request_context", "registered_perfometer")
@@ -151,5 +138,5 @@ def test_perfometer_export_contains_label() -> None:
     cell = Cell(None, None, None, UserPermissions({}, {}, {}, []), None)
     row = _perfometer_row()
 
-    assert painter.export_for_csv(row, cell, user) == "42"
-    assert painter.export_for_json(row, cell, user) == "42"
+    assert painter.export_for_csv(row, cell, user, cell.painter_context()) == "42"
+    assert painter.export_for_json(row, cell, user, cell.painter_context()) == "42"

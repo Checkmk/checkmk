@@ -18,7 +18,7 @@ def group_value(row: Row, group_cells: Sequence[Cell]) -> Hashable:
     for cell in group_cells:
         painter = cell.painter()
 
-        group_by_val = painter.group_by(row, cell)
+        group_by_val = painter.group_by(row, cell, cell.painter_context())
         if group_by_val is not None:
             group.append(group_by_val)
 

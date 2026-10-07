@@ -21,16 +21,12 @@ from cmk.gui import visuals
 from cmk.gui.config import active_config
 from cmk.gui.dashboard.type_defs import ViewDashletConfig
 from cmk.gui.data_source import ABCDataSource, data_source_registry
-from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKInternalError, MKUserError
-from cmk.gui.http import request, response
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
-from cmk.gui.painter import all_painters, Cell, Painter
-from cmk.gui.painter.helpers import RenderLink
-from cmk.gui.painter_options import PainterOptions
+from cmk.gui.painter import all_painters, Cell, InternalPainter, painter_context, PainterFactory
 from cmk.gui.permissions import permission_registry
-from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
@@ -315,7 +311,7 @@ def _get_common_vs_column_choice(
     user_permissions: UserPermissions,
     add_custom_column_title: bool,
 ) -> _VSColumnChoice:
-    painters = painters_of_datasource(ds_name, user_permissions)
+    painters = painters_of_datasource(ds_name)
 
     elements = [_get_vs_column_dropdown(ds_name, "painter", painters, user_permissions)]
     if add_custom_column_title:
@@ -339,7 +335,7 @@ def _get_vs_column_title() -> tuple[str, TextInput]:
 def _get_join_vs_column_choice(
     ds_name: str, user_permissions: UserPermissions
 ) -> None | _VSColumnChoice:
-    if not (join_painters := join_painters_of_datasource(ds_name, user_permissions)):
+    if not (join_painters := join_painters_of_datasource(ds_name)):
         return None
 
     return _VSColumnChoice(
@@ -504,7 +500,7 @@ def _get_inventory_column_infos(
 def _get_vs_column_dropdown(
     ds_name: str,
     painter_type: str,
-    painters: Mapping[str, Painter],
+    painters: Mapping[str, InternalPainter],
     user_permissions: UserPermissions,
 ) -> tuple[str, ValueSpec]:
     return (
@@ -523,7 +519,7 @@ def _get_vs_column_dropdown(
 
 
 def _get_vs_link_or_tooltip_elements(
-    painters: Mapping[str, Painter],
+    painters: Mapping[str, InternalPainter],
     user_permissions: UserPermissions,
 ) -> list[tuple[str, ValueSpec]]:
     return [
@@ -766,7 +762,7 @@ def view_editor_sorter_specs(
         unsupported_columns: list[ColumnName] = datasource.unsupported_columns
         registered_painters = all_painters(active_config.tags.tag_groups)
 
-        for name, p in sorters_of_datasource(ds_name, user_permissions).items():
+        for name, p in sorters_of_datasource(ds_name).items():
             if any(column in p.columns for column in unsupported_columns):
                 continue
             # Sorters may provide a third element: That Dictionary will be displayed after the
@@ -821,9 +817,9 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
 
         user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         if api_request["painter_type"] == "painter":
-            painters = painters_of_datasource(api_request["ds_name"], user_permissions)
+            painters = painters_of_datasource(api_request["ds_name"])
         elif api_request["painter_type"] == "join_painter":
-            painters = join_painters_of_datasource(api_request["ds_name"], user_permissions)
+            painters = join_painters_of_datasource(api_request["ds_name"])
         else:
             raise NotImplementedError
 
@@ -982,13 +978,13 @@ def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](old_view: T, vi
 
 
 def _painter_choices(
-    painters: Mapping[str, Painter], user_permissions: UserPermissions
+    painters: Mapping[str, InternalPainter], user_permissions: UserPermissions
 ) -> DropdownChoiceEntries:
     return [(c[0], c[1]) for c in _painter_choices_with_params(painters, user_permissions)]
 
 
 def _painter_choices_with_params(
-    painters: Mapping[str, Painter], user_permissions: UserPermissions
+    painters: Mapping[str, InternalPainter], user_permissions: UserPermissions
 ) -> list[CascadingDropdownChoice]:
     registered_painters = all_painters(active_config.tags.tag_groups)
     return sorted(
@@ -998,7 +994,7 @@ def _painter_choices_with_params(
                 _get_painter_plugin_title_for_choices(
                     painter, registered_painters, user_permissions
                 ),
-                painter.parameters if painter.parameters else None,
+                painter.parameters(painter_context(user_permissions)),
             )
             for name, painter in painters.items()
         ),
@@ -1007,17 +1003,19 @@ def _painter_choices_with_params(
 
 
 def _get_painter_plugin_title_for_choices(
-    plugin: Painter,
-    registered_painters: Mapping[str, type[Painter]],
+    plugin: InternalPainter,
+    registered_painters: Mapping[str, PainterFactory],
     user_permissions: UserPermissions,
 ) -> str:
     dummy_cell = Cell(ColumnSpec(plugin.ident), None, registered_painters, user_permissions, None)
-    return f"{_get_info_title(plugin)}: {plugin.list_title(dummy_cell)}"
+    return (
+        f"{_get_info_title(plugin)}: {plugin.list_title(dummy_cell, dummy_cell.painter_context())}"
+    )
 
 
 def get_sorter_plugin_title_for_choices(
     plugin: Sorter,
-    registered_painters: Mapping[str, type[Painter]],
+    registered_painters: Mapping[str, PainterFactory],
     user_permissions: UserPermissions,
 ) -> str:
     dummy_cell = Cell(ColumnSpec(plugin.ident), None, registered_painters, user_permissions, None)
@@ -1062,7 +1060,7 @@ def _dummy_view_spec() -> ViewSpec:
     )
 
 
-def _get_info_title(plugin: Painter | Sorter) -> str:
+def _get_info_title(plugin: InternalPainter | Sorter) -> str:
     # TODO: Cleanup the special case for sites. How? Add an info for it?
     if plugin.columns == ["site"]:
         return _("Site")
@@ -1075,40 +1073,36 @@ def _get_info_title(plugin: Painter | Sorter) -> str:
     )
 
 
-def infos_needed_by_plugin(plugin: Painter | Sorter, add_columns: list | None = None) -> set[str]:
+def infos_needed_by_plugin(
+    plugin: InternalPainter | Sorter, add_columns: list | None = None
+) -> set[str]:
     if add_columns is None:
         add_columns = []
 
     return {c.split("_", 1)[0] for c in plugin.columns if c != "site" and c not in add_columns}
 
 
-def sorters_of_datasource(ds_name: str, user_permissions: UserPermissions) -> Mapping[str, Sorter]:
-    return _allowed_for_datasource(all_sorters(active_config), ds_name, user_permissions)
+def sorters_of_datasource(ds_name: str) -> Mapping[str, Sorter]:
+    return _allowed_for_datasource(all_sorters(active_config), ds_name)
 
 
-def painters_of_datasource(
-    ds_name: str, user_permissions: UserPermissions
-) -> Mapping[str, Painter]:
-    return _allowed_for_datasource(
-        all_painters(active_config.tags.tag_groups), ds_name, user_permissions
-    )
+def painters_of_datasource(ds_name: str) -> Mapping[str, InternalPainter]:
+    return _allowed_for_datasource(all_painters(active_config.tags.tag_groups), ds_name)
 
 
-def join_painters_of_datasource(
-    ds_name: str, user_permissions: UserPermissions
-) -> Mapping[str, Painter]:
+def join_painters_of_datasource(ds_name: str) -> Mapping[str, InternalPainter]:
     datasource = data_source_registry[ds_name]()
     if datasource.join is None:
         return {}  # no joining with this datasource
 
     # Get the painters allowed for the join "source" and "target"
-    painters = painters_of_datasource(ds_name, user_permissions)
+    painters = painters_of_datasource(ds_name)
     join_painters_unfiltered = _allowed_for_datasource(
-        all_painters(active_config.tags.tag_groups), datasource.join[0], user_permissions
+        all_painters(active_config.tags.tag_groups), datasource.join[0]
     )
 
     # Filter out painters associated with the "join source" datasource
-    join_painters: dict[str, Painter] = {}
+    join_painters: dict[str, InternalPainter] = {}
     for key, val in join_painters_unfiltered.items():
         if key not in painters:
             join_painters[key] = val
@@ -1118,45 +1112,30 @@ def join_painters_of_datasource(
 
 @overload
 def _allowed_for_datasource(
-    collection: Mapping[str, type[Painter]], ds_name: str, user_permissions: UserPermissions
-) -> Mapping[str, Painter]: ...
+    collection: Mapping[str, PainterFactory], ds_name: str
+) -> Mapping[str, InternalPainter]: ...
 
 
 @overload
 def _allowed_for_datasource(
-    collection: Mapping[str, Sorter], ds_name: str, user_permissions: UserPermissions
+    collection: Mapping[str, Sorter], ds_name: str
 ) -> Mapping[str, Sorter]: ...
 
 
 # Filters a list of sorters or painters and decides which of
 # those are available for a certain data source
 def _allowed_for_datasource(
-    collection: Mapping[str, type[Painter]] | Mapping[str, Sorter],
+    collection: Mapping[str, PainterFactory] | Mapping[str, Sorter],
     ds_name: str,
-    user_permissions: UserPermissions,
-) -> Mapping[str, Sorter | Painter]:
+) -> Mapping[str, Sorter | InternalPainter]:
     datasource: ABCDataSource = data_source_registry[ds_name]()
     infos_available: set[str] = set(datasource.infos)
     add_columns: list[ColumnName] = datasource.add_columns
     unsupported_columns: list[ColumnName] = datasource.unsupported_columns
 
-    allowed: dict[str, Sorter | Painter] = {}
-    plugin: Sorter | Painter
+    allowed: dict[str, Sorter | InternalPainter] = {}
     for name, instance in collection.items():
-        if isinstance(instance, Sorter):
-            plugin = instance
-        elif issubclass(instance, Painter):
-            plugin = instance(
-                config=active_config,
-                request=request,
-                painter_options=PainterOptions.get_instance(),
-                theme=theme,
-                url_renderer=RenderLink(request, response, display_options),
-                user_permissions=user_permissions,
-            )
-        else:
-            raise TypeError(f"Unexpected instance type ({type(instance)}): {instance}")
-
+        plugin = instance if isinstance(instance, Sorter) else instance()
         if any(column in plugin.columns for column in unsupported_columns):
             continue
         infos_needed = infos_needed_by_plugin(plugin, add_columns)

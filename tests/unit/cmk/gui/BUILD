@@ -192,7 +192,6 @@ py_cmk_test(
         "//cmk/gui:auth_core",
         "//cmk/gui:customer",
         "//cmk/gui:page_toolkit",
-        "//cmk/gui:painter_options",
         "//cmk/gui:session_context",
         "//cmk/gui:visual_link",
         "//cmk/gui/data_source",

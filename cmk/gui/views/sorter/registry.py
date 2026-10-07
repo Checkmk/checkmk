@@ -8,16 +8,10 @@
 from typing import Any, override
 
 from cmk.ccc.plugin_registry import Registry
-from cmk.gui.config import active_config, Config
-from cmk.gui.display_options import display_options
-from cmk.gui.http import request, response
+from cmk.gui.config import Config
 from cmk.gui.painter import EmptyCell, painter_registry
-from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter.host_tag_painters import HashableTagGroups
-from cmk.gui.painter_options import PainterOptions
-from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnName, PainterName, SorterFunction
-from cmk.gui.utils.roles import UserPermissions
 
 from .base import Sorter
 from .host_tag_sorters import host_tag_config_based_sorters
@@ -65,19 +59,13 @@ def declare_simple_sorter(name: str, title: str, column: ColumnName, func: Sorte
 def declare_1to1_sorter(
     painter_name: PainterName, func: SorterFunction, col_num: int = 0, reverse: bool = False
 ) -> PainterName:
-    painter = painter_registry[painter_name](
-        config=active_config,
-        request=request,
-        painter_options=PainterOptions.get_instance(),
-        theme=theme,
-        url_renderer=RenderLink(request, response, display_options),
-        user_permissions=UserPermissions({}, {}, {}, []),
-    )
+    painter = painter_registry[painter_name]()
+    cell = EmptyCell()
 
     sorter_registry.register(
         Sorter(
             ident=painter_name,
-            title=painter.title(EmptyCell()),
+            title=painter.title(cell, cell.painter_context()),
             columns=painter.columns,
             sort_function=(
                 (lambda r1, r2, **_kwargs: func(painter.columns[col_num], r2, r1))

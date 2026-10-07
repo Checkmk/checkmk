@@ -10,7 +10,7 @@ from typing import override
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.painter import Cell, Painter
+from cmk.gui.painter import Cell, InternalPainter, PainterContext
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import (
@@ -33,18 +33,18 @@ from .entries import (
 )
 
 
-class PainterServiceIcons(Painter):
+class PainterServiceIcons(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "service_icons"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Service icons")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Icons")
 
     @property
@@ -58,46 +58,50 @@ class PainterServiceIcons(Painter):
         return False
 
     @override
-    def group_by(self, row: Row, cell: Cell) -> tuple[str]:
+    def group_by(self, row: Row, cell: Cell, context: PainterContext) -> tuple[str]:
         return ("",)  # Do not account for in grouping
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return _paint_icons(
             "service",
             row,
             _get_row_icons(
-                "service", row, self._user_permissions, IconConfig.from_config(self.config)
+                "service", row, context.user_permissions, IconConfig.from_config(context.config)
             ),
         )
 
     @override
-    def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> list[DynamicIcon]:
+    def _compute_data(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> list[DynamicIcon]:
         return [
             _handle_icon(i.icon_name)
             for i in _get_row_icons(
-                "service", row, self._user_permissions, IconConfig.from_config(self.config)
+                "service", row, context.user_permissions, IconConfig.from_config(context.config)
             )
             if isinstance(i, IconEntry)
         ]
 
     @override
-    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
+    def export_for_csv(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> str | HTML:
         raise CSVExportError
 
 
-class PainterHostIcons(Painter):
+class PainterHostIcons(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "host_icons"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Host icons")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Icons")
 
     @property
@@ -111,31 +115,35 @@ class PainterHostIcons(Painter):
         return False
 
     @override
-    def group_by(self, row: Row, cell: Cell) -> tuple[str]:
+    def group_by(self, row: Row, cell: Cell, context: PainterContext) -> tuple[str]:
         return ("",)  # Do not account for in grouping
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return _paint_icons(
             "host",
             row,
             _get_row_icons(
-                "host", row, self._user_permissions, IconConfig.from_config(self.config)
+                "host", row, context.user_permissions, IconConfig.from_config(context.config)
             ),
         )
 
     @override
-    def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> list[DynamicIcon]:
+    def _compute_data(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> list[DynamicIcon]:
         return [
             _handle_icon(i.icon_name)
             for i in _get_row_icons(
-                "host", row, self._user_permissions, IconConfig.from_config(self.config)
+                "host", row, context.user_permissions, IconConfig.from_config(context.config)
             )
             if isinstance(i, IconEntry)
         ]
 
     @override
-    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
+    def export_for_csv(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> str | HTML:
         raise CSVExportError
 
 

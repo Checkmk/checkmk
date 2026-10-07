@@ -11,20 +11,15 @@ import pytest
 
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
-from cmk.gui.display_options import display_options
-from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
 from cmk.gui.painter import (
     all_painters,
     Cell,
-    Painter,
+    InternalPainter,
     PainterRegistry,
     register_painter,
     registry,
 )
-from cmk.gui.painter.helpers import RenderLink
-from cmk.gui.painter_options import PainterOptions
-from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, Row, SorterSpec, ViewSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import replace_action_url_macros
@@ -172,16 +167,13 @@ def test_group_value(monkeypatch: pytest.MonkeyPatch) -> None:
         },
     )
 
-    painter: Painter = painter_registry["tag_painter"](
-        config=active_config,
-        request=request,
-        painter_options=PainterOptions.get_instance(),
-        theme=theme,
-        url_renderer=RenderLink(request, response, display_options),
-        user_permissions=(user_permissions := UserPermissions({}, {}, {}, [])),
-    )
+    painter: InternalPainter = painter_registry["tag_painter"]()
     dummy_cell: Cell = Cell(
-        ColumnSpec(name=painter.ident), None, painter_registry, user_permissions, None
+        ColumnSpec(name=painter.ident),
+        None,
+        painter_registry,
+        UserPermissions({}, {}, {}, []),
+        None,
     )
 
     assert group_value({"host_tags": {"networking": "dmz"}}, [dummy_cell]) == ("dmz",)

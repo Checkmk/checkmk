@@ -15,21 +15,17 @@ import cmk.gui.views
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config, Config
 from cmk.gui.data_source import ABCDataSource, RowTable
-from cmk.gui.display_options import display_options
 from cmk.gui.graphing import vs_graph_render_option_elements
-from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
 from cmk.gui.painter import (
     all_painters,
     Cell,
-    Painter,
+    InternalPainter,
     PainterRegistry,
     register_painter,
 )
 from cmk.gui.painter import registry as painter_registry_module
-from cmk.gui.painter.helpers import RenderLink
-from cmk.gui.painter_options import painter_option_registry, PainterOptions
-from cmk.gui.theme.current_theme import theme
+from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.type_defs import ColumnSpec, Row, SorterSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import ValueSpec
@@ -122,18 +118,8 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_painter_export_title() -> None:
     registered_painters = all_painters(active_config.tags.tag_groups)
     user_permissions = UserPermissions({}, {}, {}, [])
-    painters: list[Painter] = [
-        painter_class(
-            config=active_config,
-            request=request,
-            painter_options=PainterOptions.get_instance(),
-            theme=theme,
-            url_renderer=RenderLink(request, response, display_options),
-            user_permissions=user_permissions,
-        )
-        for painter_class in registered_painters.values()
-    ]
-    painters_and_cells: list[tuple[Painter, Cell]] = [
+    painters: list[InternalPainter] = [factory() for factory in registered_painters.values()]
+    painters_and_cells: list[tuple[InternalPainter, Cell]] = [
         (
             painter,
             Cell(
@@ -178,27 +164,25 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
     registered_painters = all_painters(active_config.tags.tag_groups)
-    painter = registered_painters["abc"](
-        config=active_config,
-        request=request,
-        painter_options=PainterOptions.get_instance(),
-        theme=theme,
-        url_renderer=RenderLink(request, response, display_options),
-        user_permissions=(user_permissions := UserPermissions({}, {}, {}, [])),
-    )
+    painter = registered_painters["abc"]()
     dummy_cell = Cell(
-        ColumnSpec(name=painter.ident), None, registered_painters, user_permissions, None
+        ColumnSpec(name=painter.ident),
+        None,
+        registered_painters,
+        UserPermissions({}, {}, {}, []),
+        None,
     )
-    assert isinstance(painter, Painter)
+    context = dummy_cell.painter_context()
+    assert isinstance(painter, InternalPainter)
     assert painter.ident == "abc"
-    assert painter.title(dummy_cell) == "A B C"
-    assert painter.short_title(dummy_cell) == "ABC"
+    assert painter.title(dummy_cell, context) == "A B C"
+    assert painter.short_title(dummy_cell, context) == "ABC"
     assert painter.columns == ["x"]
     assert painter.sorter == "aaaa"
     assert painter.painter_options == ["opt1"]
     assert painter.printable is False
-    assert painter.render(row={}, cell=dummy_cell, user=user) == ("abc", "xyz")
-    assert painter.group_by(row={}, cell=dummy_cell) == "xyz"
+    assert painter.render(row={}, cell=dummy_cell, user=user, context=context) == ("abc", "xyz")
+    assert painter.group_by(row={}, cell=dummy_cell, context=context) == "xyz"
 
 
 def test_create_view_basics() -> None:

@@ -25,7 +25,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import LoggedInSuperUser, LoggedInUser, user
-from cmk.gui.painter import Cell, Painter
+from cmk.gui.painter import Cell, InternalPainter, PainterContext
 from cmk.gui.painter_options import PainterOption, PainterOptions
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
@@ -370,14 +370,14 @@ def _compute_bi_aggregation_filter(
 #
 
 
-class PainterAggrIcons(Painter):
+class PainterAggrIcons(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "aggr_icons"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Links")
 
     @property
@@ -391,7 +391,7 @@ class PainterAggrIcons(Painter):
         return False
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         single_url = "view.py?" + urlencode_vars(
             [
                 ("view_name", "aggr_single"),
@@ -471,14 +471,14 @@ class PainterAggrIcons(Painter):
         return "buttons", code
 
 
-class PainterAggrInDowntime(Painter):
+class PainterAggrInDowntime(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "aggr_in_downtime"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("In downtime")
 
     @property
@@ -487,18 +487,18 @@ class PainterAggrInDowntime(Painter):
         return ["aggr_effective_state"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return ("", (row["aggr_effective_state"]["in_downtime"] and "1" or "0"))
 
 
-class PainterAggrAcknowledged(Painter):
+class PainterAggrAcknowledged(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "aggr_acknowledged"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Acknowledged")
 
     @property
@@ -507,7 +507,7 @@ class PainterAggrAcknowledged(Painter):
         return ["aggr_effective_state"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return ("", (row["aggr_effective_state"]["acknowledged"] and "1" or "0"))
 
 
@@ -523,18 +523,18 @@ def _paint_aggr_state_short(
     return classes, HTMLWriter.render_span(name, class_=["state_rounded_fill"])
 
 
-class PainterAggrState(Painter):
+class PainterAggrState(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "aggr_state"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Aggregated state")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("State")
 
     @property
@@ -543,24 +543,24 @@ class PainterAggrState(Painter):
         return ["aggr_effective_state"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return _paint_aggr_state_short(
             row["aggr_effective_state"], row["aggr_effective_state"] != row["aggr_state"]
         )
 
 
-class PainterAggrStateNum(Painter):
+class PainterAggrStateNum(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "aggr_state_num"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Aggregated state (number)")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("State")
 
     @property
@@ -569,22 +569,22 @@ class PainterAggrStateNum(Painter):
         return ["aggr_effective_state"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return ("", str(row["aggr_effective_state"]["state"]))
 
 
-class PainterAggrRealState(Painter):
+class PainterAggrRealState(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "aggr_real_state"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Aggregated real state (never assumed)")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("R.State")
 
     @property
@@ -593,22 +593,22 @@ class PainterAggrRealState(Painter):
         return ["aggr_state"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return _paint_aggr_state_short(row["aggr_state"])
 
 
-class PainterAggrAssumedState(Painter):
+class PainterAggrAssumedState(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "aggr_assumed_state"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Aggregated assumed state")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Assumed")
 
     @property
@@ -617,22 +617,22 @@ class PainterAggrAssumedState(Painter):
         return ["aggr_assumed_state"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return _paint_aggr_state_short(row["aggr_assumed_state"])
 
 
-class PainterAggrGroup(Painter):
+class PainterAggrGroup(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "aggr_group"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Aggregation group")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Group")
 
     @property
@@ -641,22 +641,22 @@ class PainterAggrGroup(Painter):
         return ["aggr_group"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return "", HTML.with_escaping(row["aggr_group"])
 
 
-class PainterAggrName(Painter):
+class PainterAggrName(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "aggr_name"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Aggregation name")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Aggregation")
 
     @property
@@ -665,22 +665,22 @@ class PainterAggrName(Painter):
         return ["aggr_name"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return "", escape_attribute(row["aggr_name"])
 
 
-class PainterAggrOutput(Painter):
+class PainterAggrOutput(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "aggr_output"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Aggregation status output")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Output")
 
     @property
@@ -689,7 +689,7 @@ class PainterAggrOutput(Painter):
         return ["aggr_output"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return ("", row["aggr_output"])
 
 
@@ -706,18 +706,18 @@ def _paint_aggr_hosts(
     return "", HTML.without_escaping(" ").join(h)
 
 
-class PainterAggrHosts(Painter):
+class PainterAggrHosts(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "aggr_hosts"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Aggregation: affected hosts")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Hosts")
 
     @property
@@ -726,22 +726,22 @@ class PainterAggrHosts(Painter):
         return ["aggr_hosts"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return _paint_aggr_hosts(row, "aggr_host", request=self.request)
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
+        return _paint_aggr_hosts(row, "aggr_host", request=context.request)
 
 
-class PainterAggrHostsServices(Painter):
+class PainterAggrHostsServices(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "aggr_hosts_services"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Aggregation: affected hosts (link to host page)")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Hosts")
 
     @property
@@ -750,8 +750,8 @@ class PainterAggrHostsServices(Painter):
         return ["aggr_hosts"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return _paint_aggr_hosts(row, "host", request=self.request)
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
+        return _paint_aggr_hosts(row, "host", request=context.request)
 
 
 class PainterOptionAggrExpand(PainterOption):
@@ -881,18 +881,18 @@ def _paint_aggregated_tree_state(
     return renderer.css_class(), renderer.render()
 
 
-class PainterAggrTreestate(Painter):
+class PainterAggrTreestate(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "aggr_treestate"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Complete tree")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Tree")
 
     @property
@@ -906,38 +906,44 @@ class PainterAggrTreestate(Painter):
         return ["aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return _paint_aggregated_tree_state(
             row,
-            painter_options=self._painter_options,
-            escape_plugin_output=self.config.escape_plugin_output,
+            painter_options=context.painter_options,
+            escape_plugin_output=context.config.escape_plugin_output,
         )
 
     @override
-    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
-        return _render_tree_json(row, user=user, request=self.request)
+    def export_for_python(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> dict:
+        return _render_tree_json(row, user=user, request=context.request)
 
     @override
-    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
+    def export_for_csv(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> str | HTML:
         raise CSVExportError
 
     @override
-    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
-        return _render_tree_json(row, user=user, request=self.request)
+    def export_for_json(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> dict:
+        return _render_tree_json(row, user=user, request=context.request)
 
 
-class PainterAggrTreestateFrozenDiff(Painter):
+class PainterAggrTreestateFrozenDiff(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "aggr_treestate_frozen_diff"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Difference between frozen and live aggregation")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Difference between frozen and live aggregation")
 
     @property
@@ -951,29 +957,35 @@ class PainterAggrTreestateFrozenDiff(Painter):
         return ["aggr_expand", "aggr_onlydiff", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         frozen_info = row["aggr_compiled_aggregation"].frozen_info
         if frozen_info is None:
             return "", _("Aggregation not configured to be frozen")
 
         return _paint_aggregated_tree_state(
             row,
-            painter_options=self._painter_options,
-            escape_plugin_output=self.config.escape_plugin_output,
+            painter_options=context.painter_options,
+            escape_plugin_output=context.config.escape_plugin_output,
             show_frozen_difference=True,
         )
 
     @override
-    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
-        return _render_tree_json(row, user=user, request=self.request)
+    def export_for_python(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> dict:
+        return _render_tree_json(row, user=user, request=context.request)
 
     @override
-    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
+    def export_for_csv(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> str | HTML:
         raise CSVExportError
 
     @override
-    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
-        return _render_tree_json(row, user=user, request=self.request)
+    def export_for_json(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> dict:
+        return _render_tree_json(row, user=user, request=context.request)
 
 
 @request_memoize()
@@ -1195,18 +1207,18 @@ def _combine_branches(live_branch: BICompiledRule, frozen_branch: BICompiledRule
     return False
 
 
-class PainterAggrTreestateBoxed(Painter):
+class PainterAggrTreestateBoxed(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "aggr_treestate_boxed"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Aggregation: simplistic boxed layout")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Tree")
 
     @property
@@ -1215,25 +1227,31 @@ class PainterAggrTreestateBoxed(Painter):
         return ["aggr_treestate", "aggr_hosts"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return _paint_aggregated_tree_state(
             row,
-            painter_options=self._painter_options,
-            escape_plugin_output=self.config.escape_plugin_output,
+            painter_options=context.painter_options,
+            escape_plugin_output=context.config.escape_plugin_output,
             force_renderer_cls=FoldableTreeRendererBoxes,
         )
 
     @override
-    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
-        return _render_tree_json(row, user=user, request=self.request)
+    def export_for_python(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> dict:
+        return _render_tree_json(row, user=user, request=context.request)
 
     @override
-    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
+    def export_for_csv(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> str | HTML:
         raise CSVExportError
 
     @override
-    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
-        return _render_tree_json(row, user=user, request=self.request)
+    def export_for_json(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> dict:
+        return _render_tree_json(row, user=user, request=context.request)
 
 
 def _render_tree_json(

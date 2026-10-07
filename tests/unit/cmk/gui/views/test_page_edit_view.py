@@ -11,10 +11,10 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.page_edit_view import join_painters_of_datasource, view_editor_column_spec
 
 
-def _a_join_painter_name(user_permissions: UserPermissions) -> str:
+def _a_join_painter_name() -> str:
     # Any real join painter will do; picking one at runtime keeps the test from
     # failing on an unrelated "unknown painter" validation error.
-    return sorted(join_painters_of_datasource("hosts", user_permissions))[0]
+    return sorted(join_painters_of_datasource("hosts"))[0]
 
 
 @pytest.mark.usefixtures("request_context")
@@ -30,7 +30,7 @@ def test_column_spec_join_column_without_join_value_is_a_user_error() -> None:
                 "columns": [
                     ColumnSpec(
                         _column_type="join_column",
-                        name=_a_join_painter_name(user_permissions),
+                        name=_a_join_painter_name(),
                         join_value="",
                         column_title="",
                     )

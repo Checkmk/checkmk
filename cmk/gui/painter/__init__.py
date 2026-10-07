@@ -6,9 +6,13 @@
 from .base import Cell as Cell
 from .base import columns_of_cells as columns_of_cells
 from .base import EmptyCell as EmptyCell
+from .base import InternalPainter as InternalPainter
 from .base import join_row as join_row
 from .base import JoinCell as JoinCell
 from .base import Painter as Painter
+from .base import painter_context as painter_context
+from .base import PainterContext as PainterContext
+from .base import PainterFactory as PainterFactory
 from .registry import all_painters as all_painters
 from .registry import painter_registry as painter_registry
 from .registry import PainterRegistry as PainterRegistry

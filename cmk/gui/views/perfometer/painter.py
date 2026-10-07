@@ -9,12 +9,11 @@ from typing import override
 from cmk.gui.display_options import display_options
 from cmk.gui.graphing import perfometers_from_api, registered_metrics
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.http import response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.painter import Cell, Painter
-from cmk.gui.painter.helpers import is_stale, RenderLink
+from cmk.gui.painter import Cell, InternalPainter, PainterContext
+from cmk.gui.painter.helpers import is_stale
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.graph import cmk_graph_url
@@ -23,18 +22,18 @@ from cmk.web.utils import escaping
 from .base import Perfometer
 
 
-class PainterPerfometer(Painter):
+class PainterPerfometer(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "perfometer"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Service Perf-O-Meter")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Perf-O-Meter")
 
     @property
@@ -57,21 +56,23 @@ class PainterPerfometer(Painter):
         return "perfometer"
 
     @override
-    def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> str:
+    def _compute_data(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> str:
         """Used for CSV/JSON/Python exports."""
         try:
             title, _h = Perfometer(row, registered_metrics(), perfometers_from_api).render()
         except Exception:
             logger.exception("error rendering perfometer")
-            if self.config.debug:
+            if context.config.debug:
                 raise
             return ""
         return title or ""
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         classes = ["perfometer"]
-        if is_stale(row, self.config.staleness_threshold):
+        if is_stale(row, context.config.staleness_threshold):
             classes.append("stale")
 
         try:
@@ -84,7 +85,7 @@ class PainterPerfometer(Painter):
                 return "", ""
         except Exception as e:
             logger.exception("error rendering perfometer")
-            if self.config.debug:
+            if context.config.debug:
                 raise
             return " ".join(classes), _("Exception: %(e)s") % {"e": e}
 
@@ -97,14 +98,13 @@ class PainterPerfometer(Painter):
 
         # pnpgraph_present: -1 means unknown (path not configured), 0: no, 1: yes
         if display_options.enabled(display_options.X) and row["service_pnpgraph_present"] != 0:
-            url = cmk_graph_url(row, "service", request=self.request)
+            url = cmk_graph_url(row, "service", request=context.request)
             disabled = False
         else:
             url = "javascript:void(0)"
             disabled = True
 
-        renderer = RenderLink(self.request, response, display_options)
-        return " ".join(classes), renderer.link_direct(
+        return " ".join(classes), context.url_renderer.link_direct(
             url,
             html_text=content,
             title=escaping.strip_tags(title),

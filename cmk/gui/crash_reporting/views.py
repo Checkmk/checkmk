@@ -24,7 +24,7 @@ from cmk.gui.http import Request
 from cmk.gui.http import request as active_request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.painter import Cell, Painter
+from cmk.gui.painter import Cell, InternalPainter, PainterContext
 from cmk.gui.painter_options import paint_age
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
@@ -200,18 +200,18 @@ class CrashReportsRowTable(RowTableLivestatus):
         return (dict(zip(columns, r)) for r in rows)
 
 
-class PainterCrashIdent(Painter):
+class PainterCrashIdent(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "crash_ident"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Crash ident")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("ID")
 
     @property
@@ -220,9 +220,9 @@ class PainterCrashIdent(Painter):
         return ["crash_id"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         url = makeuri_contextless(
-            self.request,
+            context.request,
             [
                 ("crash_id", row["crash_id"]),
                 ("site", row["site"]),
@@ -232,18 +232,18 @@ class PainterCrashIdent(Painter):
         return None, HTMLWriter.render_a(row["crash_id"], href=url)
 
 
-class PainterCrashType(Painter):
+class PainterCrashType(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "crash_type"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Crash type")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Type")
 
     @property
@@ -252,22 +252,22 @@ class PainterCrashType(Painter):
         return ["crash_type"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return None, row["crash_type"]
 
 
-class PainterCrashSource(Painter):
+class PainterCrashSource(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "crash_source"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Crash source")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Source")
 
     @property
@@ -276,7 +276,7 @@ class PainterCrashSource(Painter):
         return ["crash_exc_traceback"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return (
             None,
             (
@@ -287,18 +287,18 @@ class PainterCrashSource(Painter):
         )
 
 
-class PainterCrashTime(Painter):
+class PainterCrashTime(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "crash_time"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Crash time")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Time")
 
     @property
@@ -312,28 +312,28 @@ class PainterCrashTime(Painter):
         return ["ts_format", "ts_date"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return paint_age(
             row["crash_time"],
             has_been_checked=True,
             bold_if_younger_than=3600,
-            request=self.request,
-            painter_options=self._painter_options,
+            request=context.request,
+            painter_options=context.painter_options,
         )
 
 
-class PainterCrashVersion(Painter):
+class PainterCrashVersion(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "crash_version"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Crash Checkmk version")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Version")
 
     @property
@@ -342,22 +342,22 @@ class PainterCrashVersion(Painter):
         return ["crash_version"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return None, row["crash_version"]
 
 
-class PainterCrashException(Painter):
+class PainterCrashException(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "crash_exception"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Crash exception")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Exc.")
 
     @property
@@ -366,7 +366,7 @@ class PainterCrashException(Painter):
         return ["crash_exc_type", "crash_exc_value"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         if not user.may("general.see_crash_reports"):
             return None, _("Insufficient permissions to view exception details.")
         return None, self.summarize(row["crash_exc_type"], row["crash_exc_value"])
@@ -455,18 +455,18 @@ CommandDeleteCrashReports = Command(
 )
 
 
-class PainterCrashHost(Painter):
+class PainterCrashHost(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "crash_host"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Crash host")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Host")
 
     @property
@@ -475,12 +475,12 @@ class PainterCrashHost(Painter):
         return ["crash_host"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         if not row.get("crash_host"):
             return None, ""
 
         url = makeuri_contextless(
-            self.request,
+            context.request,
             [
                 ("host", row["crash_host"]),
                 ("site", row["site"]),
@@ -491,18 +491,18 @@ class PainterCrashHost(Painter):
         return None, HTMLWriter.render_a(row["crash_host"], href=url)
 
 
-class PainterCrashItem(Painter):
+class PainterCrashItem(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "crash_item"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Crash service item")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Item")
 
     @property
@@ -511,22 +511,22 @@ class PainterCrashItem(Painter):
         return ["crash_item"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return None, row.get("crash_item", "")
 
 
-class PainterCrashCheckType(Painter):
+class PainterCrashCheckType(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "crash_check_type"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Crash check type")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Check")
 
     @property
@@ -535,22 +535,22 @@ class PainterCrashCheckType(Painter):
         return ["crash_check_type"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return None, row.get("crash_check_type", "")
 
 
-class PainterCrashServiceName(Painter):
+class PainterCrashServiceName(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "crash_service_name"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Crash service name")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Service")
 
     @property
@@ -559,12 +559,12 @@ class PainterCrashServiceName(Painter):
         return ["crash_service_name"]
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         if not row.get("crash_service_name"):
             return None, ""
 
         url = makeuri_contextless(
-            self.request,
+            context.request,
             [
                 ("host", row["crash_host"]),
                 ("site", row["site"]),

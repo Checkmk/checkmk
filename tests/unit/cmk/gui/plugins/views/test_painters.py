@@ -359,7 +359,7 @@ def test_registered_painters() -> None:
 
 @pytest.fixture(name="service_painter_idents")
 def fixture_service_painter_names() -> list[str]:
-    return sorted(painters_of_datasource("services", UserPermissions({}, {}, {}, [])).keys())
+    return sorted(painters_of_datasource("services").keys())
 
 
 @pytest.mark.usefixtures("request_context", "patch_theme")
@@ -396,7 +396,7 @@ def test_host_custom_attributes_leave_out_the_host_relations() -> None:
     assert "hidden-board" not in str(content)
     assert "hidden-board" not in str(cell.render_for_csv_export(row, user))
     assert "hidden-board" not in str(cell.render_for_json_export(row, user))
-    assert "hidden-board" not in str(cell.painter().group_by(row, cell))
+    assert "hidden-board" not in str(cell.painter().group_by(row, cell, cell.painter_context()))
 
 
 @pytest.mark.usefixtures("request_context", "patch_theme")

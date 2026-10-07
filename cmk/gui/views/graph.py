@@ -30,7 +30,7 @@ from cmk.gui.graphing import (
 from cmk.gui.http import Request, Response, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.painter import Cell, Painter
+from cmk.gui.painter import Cell, InternalPainter, PainterContext
 from cmk.gui.painter_options import (
     PainterOption,
     PainterOptionRegistry,
@@ -349,14 +349,14 @@ def _migrate_old_graph_render_options(value: PainterParameters | None) -> Painte
     return value
 
 
-class PainterServiceGraphs(Painter):
+class PainterServiceGraphs(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "service_graphs"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Service graphs with display options")
 
     @property
@@ -381,45 +381,50 @@ class PainterServiceGraphs(Painter):
         # No pnp_timerange: the engine takes its time range from the global time picker.
         return ["graph_render_options"]
 
-    @property
     @override
-    def parameters(self) -> MigrateNotUpdated:
+    def parameters(self, context: PainterContext) -> MigrateNotUpdated:
         return cmk_time_graph_params()
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return _paint_time_graph_cmk(
             row,
             cell,
             user=user,
-            request=self.request,
+            request=context.request,
             response=response,
-            painter_options=self._painter_options,
-            debug=self.config.debug,
-            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
+            painter_options=context.painter_options,
+            debug=context.config.debug,
+            temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
         )
 
     @override
-    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
+    def export_for_python(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> object:
         raise PythonExportError
 
     @override
-    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
+    def export_for_csv(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> str | HTML:
         raise CSVExportError
 
     @override
-    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
+    def export_for_json(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> object:
         raise JSONExportError
 
 
-class PainterHostGraphs(Painter):
+class PainterHostGraphs(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "host_graphs"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Host graphs with display options")
 
     @property
@@ -438,37 +443,42 @@ class PainterHostGraphs(Painter):
         # No pnp_timerange: the engine takes its time range from the global time picker.
         return ["graph_render_options"]
 
-    @property
     @override
-    def parameters(self) -> MigrateNotUpdated:
+    def parameters(self, context: PainterContext) -> MigrateNotUpdated:
         return cmk_time_graph_params()
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return _paint_time_graph_cmk(
             row,
             cell,
             user=user,
-            request=self.request,
+            request=context.request,
             response=response,
-            painter_options=self._painter_options,
-            debug=self.config.debug,
-            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
+            painter_options=context.painter_options,
+            debug=context.config.debug,
+            temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
             # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
             # also render the graphs if there are no historic metrics available (but perf data is)
             require_historic_metrics="service_description" not in row,
         )
 
     @override
-    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
+    def export_for_python(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> object:
         raise PythonExportError
 
     @override
-    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
+    def export_for_csv(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> str | HTML:
         raise CSVExportError
 
     @override
-    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
+    def export_for_json(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> object:
         raise JSONExportError
 
 
@@ -491,14 +501,14 @@ class PainterOptionPNPTimerange(PainterOption):
         )
 
 
-class PainterSvcPnpgraph(Painter):
+class PainterSvcPnpgraph(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "svc_pnpgraph"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Service graphs")
 
     @property
@@ -523,49 +533,54 @@ class PainterSvcPnpgraph(Painter):
         # No pnp_timerange: the engine takes its time range from the global time picker.
         return []
 
-    @property
     @override
-    def parameters(self) -> Transform:
+    def parameters(self, context: PainterContext) -> Transform:
         return cmk_time_graph_params()
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return _paint_time_graph_cmk(
             row,
             cell,
             user=user,
-            request=self.request,
+            request=context.request,
             response=response,
-            painter_options=self._painter_options,
-            debug=self.config.debug,
-            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
+            painter_options=context.painter_options,
+            debug=context.config.debug,
+            temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
         )
 
     @override
-    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
+    def export_for_python(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> object:
         raise PythonExportError
 
     @override
-    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
+    def export_for_csv(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> str | HTML:
         raise CSVExportError
 
     @override
-    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
+    def export_for_json(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> object:
         raise JSONExportError
 
 
-class PainterHostPnpgraph(Painter):
+class PainterHostPnpgraph(InternalPainter):
     @property
     @override
     def ident(self) -> str:
         return "host_pnpgraph"
 
     @override
-    def title(self, cell: Cell) -> str:
+    def title(self, cell: Cell, context: PainterContext) -> str:
         return _("Host graph")
 
     @override
-    def short_title(self, cell: Cell) -> str:
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
         return _("Graph")
 
     @property
@@ -584,34 +599,39 @@ class PainterHostPnpgraph(Painter):
         # No pnp_timerange: the engine takes its time range from the global time picker.
         return []
 
-    @property
     @override
-    def parameters(self) -> Transform:
+    def parameters(self, context: PainterContext) -> Transform:
         return cmk_time_graph_params()
 
     @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
         return _paint_time_graph_cmk(
             row,
             cell,
             user=user,
-            request=self.request,
+            request=context.request,
             response=response,
-            painter_options=self._painter_options,
-            debug=self.config.debug,
-            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
+            painter_options=context.painter_options,
+            debug=context.config.debug,
+            temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
         )
 
     @override
-    def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
+    def export_for_python(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> object:
         raise PythonExportError
 
     @override
-    def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
+    def export_for_csv(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> str | HTML:
         raise CSVExportError
 
     @override
-    def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
+    def export_for_json(
+        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    ) -> object:
         raise JSONExportError
 
 

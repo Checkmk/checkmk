@@ -14,7 +14,7 @@ from cmk.gui.type_defs import Row
 from cmk.gui.view_utils import CellSpec
 from cmk.ruleset_matcher.tags import TagGroup
 
-from .base import Painter
+from .base import InternalPainter
 from .helpers import get_tag_groups, tag_choices_for_group
 
 
@@ -36,11 +36,11 @@ class HashableTagGroups:
 @request_memoize()
 def host_tag_config_based_painters(
     hashed_tag_groups: HashableTagGroups,
-) -> dict[str, type[Painter]]:
+) -> dict[str, type[InternalPainter]]:
     return {
         (ident := "host_tag_" + tag_group.id): type(
             "HostTagPainter%s" % str(tag_group.id).title(),
-            (Painter,),
+            (InternalPainter,),
             {
                 "_ident": ident,
                 "_spec": {
@@ -55,15 +55,15 @@ def host_tag_config_based_painters(
                     "columns": ["host_tags"],
                 },
                 "ident": property(lambda self: self._ident),
-                "title": lambda self, cell: self._spec["title"],  # noqa: ARG005
-                "short_title": lambda self, cell: self._spec["short"],  # noqa: ARG005
+                "title": lambda self, cell, context: self._spec["title"],  # noqa: ARG005
+                "short_title": lambda self, cell, context: self._spec["short"],  # noqa: ARG005
                 "columns": property(lambda self: self._spec["columns"]),
-                "render": lambda self, row, cell, user, tag_group=tag_group: _paint_host_tag(  # noqa: ARG005
-                    row, tag_group=tag_group
+                "render": lambda self, row, cell, user, context, tag_group=tag_group: (  # noqa: ARG005
+                    _paint_host_tag(row, tag_group=tag_group)
                 ),
                 # Use title of the tag value for grouping, not the complete
                 # dictionary of custom variables!
-                "group_by": lambda self, row, _cell, tag_group=tag_group: _paint_host_tag(  # noqa: ARG005
+                "group_by": lambda self, row, _cell, context, tag_group=tag_group: _paint_host_tag(  # noqa: ARG005
                     row, tag_group=tag_group
                 )[1],
             },

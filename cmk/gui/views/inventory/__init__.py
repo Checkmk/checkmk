@@ -11,7 +11,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.data_source import DataSourceRegistry, RowTable
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.painter import Cell, Painter, PainterRegistry
+from cmk.gui.painter import Cell, InternalPainter, PainterContext, PainterRegistry
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import (
     ColumnName,
@@ -79,22 +79,22 @@ def register_inv_paint_functions(mapping: Mapping[str, object]) -> None:
 
 
 def _register_painter(painter_registry: PainterRegistry, from_hint: PainterFromHint) -> None:
-    class _PainterFromHint(Painter):
+    class _PainterFromHint(InternalPainter):
         @property
         @override
         def ident(self) -> str:
             return from_hint.name
 
         @override
-        def title(self, cell: Cell) -> str:
+        def title(self, cell: Cell, context: PainterContext) -> str:
             return from_hint.title
 
         @override
-        def short_title(self, cell: Cell) -> str:
+        def short_title(self, cell: Cell, context: PainterContext) -> str:
             return from_hint.short
 
         @override
-        def tooltip_title(self, cell: Cell) -> str:
+        def tooltip_title(self, cell: Cell, context: PainterContext) -> str:
             return from_hint.tooltip_title
 
         @property
@@ -103,28 +103,35 @@ def _register_painter(painter_registry: PainterRegistry, from_hint: PainterFromH
             return from_hint.columns
 
         @override
-        def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+        def render(
+            self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+        ) -> CellSpec:
             return from_hint.paint(row)
 
         @override
-        def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
+        def export_for_python(
+            self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+        ) -> object:
             return from_hint.export_for_python(row, cell)
 
         @override
-        def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
+        def export_for_csv(
+            self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+        ) -> str | HTML:
             return from_hint.export_for_csv(row, cell)
 
         @override
-        def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
+        def export_for_json(
+            self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+        ) -> object:
             return from_hint.export_for_json(row, cell)
 
         @override
-        def group_by(self, row: Row, cell: Cell) -> str | None:
+        def group_by(self, row: Row, cell: Cell, context: PainterContext) -> str | None:
             return from_hint.group_by(row, cell)
 
-        @property
         @override
-        def parameters(self) -> Dictionary | FixedValue[PainterParameters]:
+        def parameters(self, context: PainterContext) -> Dictionary | FixedValue[PainterParameters]:
             return from_hint.params
 
         @property

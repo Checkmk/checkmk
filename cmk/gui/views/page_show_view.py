@@ -26,7 +26,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenuDropdown
 from cmk.gui.pages import PageContext
-from cmk.gui.painter.v0 import Cell, columns_of_cells
+from cmk.gui.painter import Cell, columns_of_cells
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (

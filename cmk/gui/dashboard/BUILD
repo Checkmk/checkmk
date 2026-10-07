@@ -68,7 +68,7 @@ py_library(
         "//cmk/gui/openapi/framework:types",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/pagetypes",
-        "//cmk/gui/painter:v0_base",
+        "//cmk/gui/painter",
         "//cmk/gui/plugins/dashboard",
         "//cmk/gui/sidebar/_snapin:snapin_registry",
         "//cmk/gui/token_auth",

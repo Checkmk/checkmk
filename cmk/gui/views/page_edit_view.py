@@ -26,8 +26,8 @@ from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
-from cmk.gui.painter.v0 import all_painters, Cell, Painter
-from cmk.gui.painter.v0.helpers import RenderLink
+from cmk.gui.painter import all_painters, Cell, Painter
+from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme

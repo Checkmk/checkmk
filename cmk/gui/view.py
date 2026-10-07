@@ -14,7 +14,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import default_time_range_seconds, stored_time_range_seconds
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0 import all_painters, Cell, JoinCell, Painter
+from cmk.gui.painter import all_painters, Cell, JoinCell, Painter
 from cmk.gui.type_defs import (
     ColumnSpec,
     FilterName,

@@ -66,7 +66,7 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.page_menu_utils import LegacyHostMenus
 from cmk.gui.pages import PageRegistry
 from cmk.gui.pagetypes import registration as pagetypes_registration
-from cmk.gui.painter.v0 import PainterRegistry
+from cmk.gui.painter import PainterRegistry
 from cmk.gui.painter_options import PainterOptionRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.quick_setup import registration as quick_setup_registration

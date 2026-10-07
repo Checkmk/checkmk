@@ -14,7 +14,7 @@ from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0 import (
+from cmk.gui.painter import (
     all_painters,
     Cell,
     Painter,
@@ -22,7 +22,7 @@ from cmk.gui.painter.v0 import (
     register_painter,
     registry,
 )
-from cmk.gui.painter.v0.helpers import RenderLink
+from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, Row, SorterSpec, ViewSpec

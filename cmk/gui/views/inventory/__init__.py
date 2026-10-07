@@ -11,7 +11,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.data_source import DataSourceRegistry, RowTable
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.painter.v0 import Cell, Painter, PainterRegistry
+from cmk.gui.painter import Cell, Painter, PainterRegistry
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import (
     ColumnName,

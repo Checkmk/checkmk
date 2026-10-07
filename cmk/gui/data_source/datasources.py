@@ -10,7 +10,7 @@ from typing import override
 from cmk.gui.i18n import _
 from cmk.gui.openapi.framework import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
-from cmk.gui.painter.v0 import Cell
+from cmk.gui.painter import Cell
 from cmk.gui.type_defs import ColumnName, Rows, SingleInfos, VisualContext
 from cmk.gui.visuals.filter import Filter
 from cmk.livestatus_client import LivestatusColumn, OnlySites, Query, QuerySpecification

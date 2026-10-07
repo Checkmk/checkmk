@@ -111,7 +111,7 @@ py_library(
         "//cmk/gui/ldap_integration",
         "//cmk/gui/mkeventd",
         "//cmk/gui/oauth",
-        "//cmk/gui/painter:v0_base",
+        "//cmk/gui/painter",
         "//cmk/gui/plugins/wato",
         "//cmk/gui/quick_setup",
         "//cmk/gui/rule_specs:legacy_converter",

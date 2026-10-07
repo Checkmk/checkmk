@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.painter.v0.base import Cell
+from cmk.gui.painter.base import Cell
 from cmk.gui.utils.roles import UserPermissions
 from cmk.web.utils.html import HTML
 

@@ -11,9 +11,9 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.gui.config import active_config, Config
 from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
-from cmk.gui.painter.v0 import EmptyCell, painter_registry
-from cmk.gui.painter.v0.helpers import RenderLink
-from cmk.gui.painter.v0.host_tag_painters import HashableTagGroups
+from cmk.gui.painter import EmptyCell, painter_registry
+from cmk.gui.painter.helpers import RenderLink
+from cmk.gui.painter.host_tag_painters import HashableTagGroups
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnName, PainterName, SorterFunction

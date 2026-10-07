@@ -24,8 +24,8 @@ from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0 import all_painters
-from cmk.gui.painter.v0.painters import _paint_custom_notes
+from cmk.gui.painter import all_painters
+from cmk.gui.painter.painters import _paint_custom_notes
 from cmk.gui.type_defs import ColumnSpec, Row
 from cmk.gui.utils.host_relations import (
     dump_resolved_relations,

@@ -63,7 +63,7 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.painter.v0.helpers import format_plugin_output
+from cmk.gui.painter.helpers import format_plugin_output
 from cmk.gui.table import table_element
 from cmk.gui.top_heading import top_heading
 from cmk.gui.type_defs import (

@@ -12,7 +12,7 @@ from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.i18n import _, _u
 from cmk.gui.legacy_plugins import load_web_plugins
-from cmk.gui.painter.v0 import painter_registry, register_painter
+from cmk.gui.painter import painter_registry, register_painter
 from cmk.gui.permissions import declare_dynamic_permissions, declare_permission
 from cmk.gui.type_defs import Perfdata, ViewSpec, VisualLinkSpec
 from cmk.gui.view_utils import cmp_service_name_equiv, get_labels, render_labels, render_tag_groups
@@ -104,9 +104,9 @@ def _register_pre_21_plugin_api() -> None:
     CMK-12228
     """
     # Needs to be a local import to not influence the regular plug-in loading order
-    import cmk.gui.painter.v0.base as painter_base
-    import cmk.gui.painter.v0.helpers as painter_helpers
-    import cmk.gui.painter.v0.registry as gui_painter_registry
+    import cmk.gui.painter.base as painter_base
+    import cmk.gui.painter.helpers as painter_helpers
+    import cmk.gui.painter.registry as gui_painter_registry
     import cmk.gui.plugins.views as api_module  # astrein: disable=cmk-module-layer-violation
     from cmk.gui import (
         data_source,

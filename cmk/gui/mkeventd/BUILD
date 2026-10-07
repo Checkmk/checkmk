@@ -27,7 +27,7 @@ py_library(
         "//cmk/gui/openapi/framework:types",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/pagetypes",
-        "//cmk/gui/painter:v0_base",
+        "//cmk/gui/painter",
         "//cmk/gui/rule_specs:legacy_converter",
         "//cmk/gui/search:matchers",
         "//cmk/gui/sidebar",

@@ -22,8 +22,8 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
-from cmk.gui.painter.v0.helpers import get_perfdata_nth_value, get_tag_groups
-from cmk.gui.painter.v0.painters import (
+from cmk.gui.painter.helpers import get_perfdata_nth_value, get_tag_groups
+from cmk.gui.painter.painters import (
     _get_docker_container_status_outputs,
     AbstractColumnSpecificMetric,
 )

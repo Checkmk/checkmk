@@ -22,9 +22,9 @@ from cmk.gui.http import request as active_request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.pagetypes import BuiltinPagetypeTopic, BuiltinPagetypeTopicRegistry
-from cmk.gui.painter.v0 import Cell, Painter, PainterRegistry
-from cmk.gui.painter.v0.helpers import paint_nagiosflag
-from cmk.gui.painter.v0.painters import paint_custom_var
+from cmk.gui.painter import Cell, Painter, PainterRegistry
+from cmk.gui.painter.helpers import paint_nagiosflag
+from cmk.gui.painter.painters import paint_custom_var
 from cmk.gui.painter_options import paint_age
 from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.theme import Theme

@@ -12,8 +12,8 @@ from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
-from cmk.gui.painter.v0.helpers import get_tag_groups, tag_choices_for_group
-from cmk.gui.painter.v0.host_tag_painters import HashableTagGroups
+from cmk.gui.painter.helpers import get_tag_groups, tag_choices_for_group
+from cmk.gui.painter.host_tag_painters import HashableTagGroups
 from cmk.gui.type_defs import Row
 from cmk.ruleset_matcher.tags import TagGroup
 from cmk.web.utils.request_cache import RequestCache

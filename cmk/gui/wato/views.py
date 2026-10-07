@@ -12,7 +12,7 @@ from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.painter.v0 import Cell, Painter
+from cmk.gui.painter import Cell, Painter
 from cmk.gui.type_defs import ColumnName, Row, SorterName
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.sorter import Sorter

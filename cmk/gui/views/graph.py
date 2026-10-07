@@ -30,7 +30,7 @@ from cmk.gui.graphing import (
 from cmk.gui.http import Request, Response, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.painter.v0 import Cell, Painter
+from cmk.gui.painter import Cell, Painter
 from cmk.gui.painter_options import (
     PainterOption,
     PainterOptionRegistry,

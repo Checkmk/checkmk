@@ -14,7 +14,7 @@ for the Vue view; the frontend only renders what comes out of it.
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
-from cmk.gui.painter.v0.helpers import render_cache_info
+from cmk.gui.painter.helpers import render_cache_info
 
 from .._models import CheckType, Service
 

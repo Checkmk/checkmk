@@ -6,7 +6,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from cmk.gui.painter.v0.painters import service_state_short
+from cmk.gui.painter.painters import service_state_short
 from cmk.gui.type_defs import Row
 
 

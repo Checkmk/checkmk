@@ -17,7 +17,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.painter.v0 import Cell, Painter
+from cmk.gui.painter import Cell, Painter
 from cmk.gui.painter_options import paint_age, PainterOption, PainterOptions
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnName, PainterParameters, Row
@@ -473,7 +473,7 @@ def column_painter_from_hint(hint: ColumnDisplayHintOfView) -> PainterFromHint:
         tooltip_title=hint.long_title,
         columns=[hint.name],
         options=[],
-        # See views/painter/v0/base.py::Cell.painter_parameters
+        # See painter/base.py::Cell.painter_parameters
         # We have to add a dummy value here such that the painter_parameters are not None and
         # the "real" parameters, ie. _painter_params, are used.
         params=FixedValue(PainterParameters(), totext=""),

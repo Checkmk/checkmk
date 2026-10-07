@@ -1,13 +1,13 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 
 py_library(
-    name = "v0_base",
+    name = "painter",
     srcs = [
-        "v0/__init__.py",
-        "v0/base.py",
-        "v0/helpers.py",
-        "v0/host_tag_painters.py",
-        "v0/registry.py",
+        "__init__.py",
+        "base.py",
+        "helpers.py",
+        "host_tag_painters.py",
+        "registry.py",
     ],
     imports = ["../../.."],
     visibility = [
@@ -34,15 +34,15 @@ py_library(
 )
 
 py_library(
-    name = "v0_impl",
-    srcs = ["v0/painters.py"],
+    name = "painters",
+    srcs = ["painters.py"],
     imports = ["../../.."],
     visibility = [
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [
-        ":v0_base",
+        ":painter",
         "//cmk/gui:auth_core",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",

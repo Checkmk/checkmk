@@ -17,7 +17,7 @@ py_library(
         "//cmk/gui:painter_options",
         "//cmk/gui/data_source",
         "//cmk/gui/pagetypes",
-        "//cmk/gui/painter:v0_base",
+        "//cmk/gui/painter",
         "//cmk/gui/userdb",
         "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",

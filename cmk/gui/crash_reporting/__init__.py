@@ -12,7 +12,7 @@ from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.hooks import register_builtin
 from cmk.gui.pages import PageRegistry
-from cmk.gui.painter.v0 import PainterRegistry
+from cmk.gui.painter import PainterRegistry
 from cmk.gui.views.command import CommandRegistry
 from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.visuals.filter import FilterRegistry

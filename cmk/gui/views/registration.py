@@ -9,7 +9,7 @@ from cmk.gui.data_source import DataSourceRegistry, register_data_sources
 from cmk.gui.openapi.framework import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
-from cmk.gui.painter.v0 import PainterRegistry, painters
+from cmk.gui.painter import PainterRegistry, painters
 from cmk.gui.painter_options import PainterOptionRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.type_defs import ViewName, ViewSpec

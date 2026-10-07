@@ -47,7 +47,7 @@ from cmk.gui.openapi import (
 from cmk.gui.openapi.endpoints import metric as metric_endpoint
 from cmk.gui.pages import page_registry, PageEndpoint
 from cmk.gui.pagetypes import builtin_pagetype_topic_registry
-from cmk.gui.painter.v0 import painter_registry
+from cmk.gui.painter import painter_registry
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.parentscan.register import register as parentscan_register
 from cmk.gui.permissions import permission_registry, permission_section_registry

@@ -12,7 +12,7 @@ from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegist
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.pagetypes import BuiltinPagetypeTopicRegistry
-from cmk.gui.painter.v0 import PainterRegistry
+from cmk.gui.painter import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.search.matchers import match_item_generator_registry
 from cmk.gui.sidebar import SnapinRegistry

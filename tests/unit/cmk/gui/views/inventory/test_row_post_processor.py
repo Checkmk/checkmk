@@ -8,7 +8,7 @@ from typing import override
 import pytest
 
 from cmk.gui.config import Config
-from cmk.gui.painter.v0 import JoinCell, painter_registry
+from cmk.gui.painter import JoinCell, painter_registry
 from cmk.gui.type_defs import ColumnSpec, PainterParameters
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.inventory._row_post_processor import _join_inventory_rows

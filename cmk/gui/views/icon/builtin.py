@@ -17,7 +17,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0.helpers import is_stale, render_cache_info
+from cmk.gui.painter.helpers import is_stale, render_cache_info
 from cmk.gui.painter_options import paint_age, PainterOptions
 from cmk.gui.type_defs import Row, VisualLinkSpec
 from cmk.gui.utils.mobile import is_mobile

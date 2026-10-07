@@ -14,7 +14,7 @@ from typing import NamedTuple, override
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0 import Cell, join_row
+from cmk.gui.painter import Cell, join_row
 from cmk.gui.type_defs import Rows, ViewSpec
 from cmk.web.utils import escaping
 from cmk.web.utils.html import HTML

@@ -14,8 +14,8 @@ from cmk.gui.display_options import display_options
 from cmk.gui.graphing import perfometers_from_api
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0 import Cell
-from cmk.gui.painter.v0.helpers import RenderLink
+from cmk.gui.painter import Cell
+from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import Row

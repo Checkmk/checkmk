@@ -328,7 +328,7 @@ Monitoring GUI:
 * ``packages/cmk-frontend-vue/src/monitoring/all-hosts/``: The relations column
   and the related host cards in the slide-in
   (``components/slide-in/HostRelationsSection.vue``).
-* ``cmk/gui/painter/v0/painters.py``: The legacy painter "Host custom
+* ``cmk/gui/painter/painters.py``: The legacy painter "Host custom
   attributes" hides the variable.
 
 Interfaces

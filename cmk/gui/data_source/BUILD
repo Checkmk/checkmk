@@ -17,7 +17,7 @@ py_library(
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/framework:types",
         "//cmk/gui/openapi/restful_objects",
-        "//cmk/gui/painter:v0_base",
+        "//cmk/gui/painter",
         "//cmk/gui/visuals",
         "//cmk/utils",
         "//packages/cmk-ccc:plugin-registry",

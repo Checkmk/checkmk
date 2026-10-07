@@ -31,14 +31,23 @@ import {
   type ServiceMatches,
   searchCustomServices
 } from '@/mode-alerts/service-client'
-import { type AlertModel, alertName, hasUnparsableRegex, servicePattern } from '@/mode-alerts/types'
+import {
+  type AlertModel,
+  type FolderPaths,
+  alertConditions,
+  alertName,
+  hasUnparsableRegex,
+  servicePattern
+} from '@/mode-alerts/types'
 
 const SEARCH_DEBOUNCE_MS = 200
 const PREVIEW_LIMIT = 5
 
 const { _t } = usei18n()
 
-const { conditionsSpec } = defineProps<CmkWizardStepProps & { conditionsSpec: FormSpec }>()
+const { conditionsSpec, folderPaths } = defineProps<
+  CmkWizardStepProps & { conditionsSpec: FormSpec; folderPaths: FolderPaths }
+>()
 
 const model = defineModel<AlertModel>({ required: true })
 
@@ -125,7 +134,11 @@ async function search(): Promise<void> {
   searching.value = true
   searchError.value = null
   try {
-    const result = await searchCustomServices(model.value.matchType, servicePattern(model.value))
+    const result = await searchCustomServices(
+      model.value.matchType,
+      servicePattern(model.value),
+      alertConditions(model.value, folderPaths)
+    )
     if (token !== searchToken) {
       return
     }
@@ -156,14 +169,21 @@ function cancelPendingSearch(): void {
 
 // A result list left over from an earlier pattern would be misleading. The token is
 // invalidated here, not in `search()`, which a cleared or unparsable pattern never reaches.
-watch([() => model.value.servicePattern, () => model.value.matchType], () => {
-  searchToken++
-  matches.value = null
-  searching.value = false
-  searchError.value = null
-  cancelPendingSearch()
-  debounceTimer = setTimeout(() => void search(), SEARCH_DEBOUNCE_MS)
-})
+watch(
+  [
+    () => model.value.servicePattern,
+    () => model.value.matchType,
+    () => JSON.stringify(alertConditions(model.value, folderPaths))
+  ],
+  () => {
+    searchToken++
+    matches.value = null
+    searching.value = false
+    searchError.value = null
+    cancelPendingSearch()
+    debounceTimer = setTimeout(() => void search(), SEARCH_DEBOUNCE_MS)
+  }
+)
 
 onBeforeUnmount(cancelPendingSearch)
 

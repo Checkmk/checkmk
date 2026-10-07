@@ -61,6 +61,7 @@ async function saveAlert(): Promise<void> {
       <NameAndServicesStep
         v-model="model"
         :conditions-spec="conditions_form.spec"
+        :folder-paths="folder_paths"
         :index="1"
         :is-completed="() => currentStep > 1"
       />

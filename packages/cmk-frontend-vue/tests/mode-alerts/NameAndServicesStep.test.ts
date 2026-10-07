@@ -17,7 +17,7 @@ import { defineComponent, ref } from 'vue'
 import NameAndServicesStep from '@/mode-alerts/steps/NameAndServicesStep.vue'
 import { type AlertModel, emptyAlert } from '@/mode-alerts/types'
 
-import { CONDITIONS_SPEC, MAIN_FOLDER } from './conditions-spec'
+import { CONDITIONS_SPEC, FOLDER_PATHS, MAIN_FOLDER } from './conditions-spec'
 
 const ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/service/collections/all`
 
@@ -35,11 +35,20 @@ function collection(services: Array<[string, string]>) {
   }
 }
 
-const server = useMswServer(http.post(ENDPOINT, () => HttpResponse.json(collection(matching))))
+// The query of the latest search, to tell which conditions it applied.
+let lastQuery: unknown = null
+
+const server = useMswServer(
+  http.post(ENDPOINT, async ({ request }) => {
+    lastQuery = await request.json()
+    return HttpResponse.json(collection(matching))
+  })
+)
 
 afterEach(() => {
   cleanup()
   matching = []
+  lastQuery = null
 })
 
 function renderStep(alert: Partial<AlertModel> = {}) {
@@ -57,9 +66,9 @@ function renderStep(alert: Partial<AlertModel> = {}) {
   const wrapper = defineComponent({
     components: { NameAndServicesStep },
     setup() {
-      return { model, spec: CONDITIONS_SPEC }
+      return { model, spec: CONDITIONS_SPEC, folderPaths: FOLDER_PATHS }
     },
-    template: `<NameAndServicesStep v-model="model" :conditions-spec="spec" :index="1" :is-completed="() => false" />`
+    template: `<NameAndServicesStep v-model="model" :conditions-spec="spec" :folder-paths="folderPaths" :index="1" :is-completed="() => false" />`
   })
   render(wrapper, {
     global: { provide: { [wizardContextProvider as symbol]: context } }
@@ -386,4 +395,20 @@ test('valid conditions let the step continue', async () => {
   await userEvent.click(screen.getByRole('button', { name: /next step/i }))
 
   await waitFor(() => expect(navigation.next).toHaveBeenCalled())
+})
+
+test('choosing a folder searches the matching services again, in that folder', async () => {
+  matching = [['web01', 'HTTP request duration']]
+  renderStep({ name: 'Latency too high' })
+  await pickServiceName('HTTP request duration')
+  await waitFor(() => expect(screen.getByText('web01')).toBeInTheDocument())
+  matching = []
+
+  void userEvent.click(combobox('Folder'))
+  await userEvent.click(await screen.findByRole('option', { name: 'Main/Linux' }))
+
+  await waitFor(() => {
+    expect(screen.getByText(/No custom service matches this name/)).toBeInTheDocument()
+  })
+  expect(JSON.stringify(lastQuery)).toContain('^/wato/linux/')
 })

@@ -177,6 +177,7 @@ CmkEndpointName = Literal[
     "cmk/compute_state",
     "cmk/compute_state_summary",
     "cmk/compute_stats",
+    "cmk/compute_timeline",
     "cmk/compute_timeline_count",
     "cmk/configure",
     "cmk/create",

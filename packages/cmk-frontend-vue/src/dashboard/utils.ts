@@ -70,6 +70,7 @@ import type {
   WidgetSource,
   WidgetTimeRange
 } from '@/dashboard/types/widget.ts'
+import type { GraphFetchResponse } from '@/graphing'
 
 import type { ComputeWidgetTitlesRequest, ComputeWidgetTitlesResponse } from './types/api'
 
@@ -411,6 +412,22 @@ export const dashboardAPI = {
   ): Promise<ComputedWidgetResponse<ComputedSingleMetric>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-single-metric/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeTimeline: async (
+    body: {
+      source: WidgetSource<TimelineContent>
+      time_range: WidgetTimeRange
+      step: number
+    },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<GraphFetchResponse>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-timeline/invoke', {
         ...CONTENT_TYPE_HEADER,
         headers,
         body

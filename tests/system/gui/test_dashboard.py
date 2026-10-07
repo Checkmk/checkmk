@@ -664,11 +664,7 @@ def test_graph_widget_renders_through_the_engine(
 def test_problem_percentage_widget_renders_through_the_engine(
     javascript_errors: list[str], cloned_linux_hosts_dashboard: CustomDashboard
 ) -> None:
-    """The alerts & notifications widget renders through the engine as a problem percentage.
-
-    That visualisation is the one the widget offers on the engine; its alert and notification
-    timelines are drawn by the legacy figure component instead.
-    """
+    """The alerts & notifications widget renders through the engine as a problem percentage."""
     cloned_linux_hosts_dashboard.enter_edit_widgets_mode()
     widget_wizard = cloned_linux_hosts_dashboard.open_add_widget_sidebar(
         AlertsAndNotificationsWidgetWizard

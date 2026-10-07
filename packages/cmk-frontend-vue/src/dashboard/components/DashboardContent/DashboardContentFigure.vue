@@ -120,15 +120,6 @@ const httpVars: Ref<FilterHTTPVars> = computed(() => {
 // the widget titles arrive, so compare what we would send.
 const httpQuery = computed(() => new URLSearchParams(httpVars.value).toString())
 
-const figureType: Ref<string> = computed(() => {
-  // The timelines only reach this component in their bar chart mode; their simple number
-  // is a Vue KPI stat card, dispatched in DashboardContent.
-  if (props.content.type === 'alert_timeline' || props.content.type === 'notification_timeline') {
-    return 'timeseries'
-  }
-  return props.content.type
-})
-
 const updateInterval = 60
 
 function setupMutationObserver(targetElement: HTMLElement) {
@@ -163,7 +154,7 @@ const initializeFigure = () => {
   }
 
   figure = new FigureBase(
-    figureType.value,
+    props.content.type,
     `#${figureId.value}`,
     dataEndpointUrl.value,
     httpQuery.value,
@@ -234,7 +225,7 @@ onBeforeUnmount(() => {
             {
               'db-content-figure__background': !!general_settings.render_background
             },
-            figureType
+            content.type
           ]"
           @click.capture="suppressEventOnPublicDashboard"
           @auxclick.capture="suppressEventOnPublicDashboard"

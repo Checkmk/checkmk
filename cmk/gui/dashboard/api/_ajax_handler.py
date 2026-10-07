@@ -27,7 +27,6 @@ from cmk.gui.dashboard.type_defs import (
     BarplotDashletConfig,
     CombinedGraphDashletConfig,
     CustomGraphDashletConfig,
-    EventBarChartDashletConfig,
     ProblemsGraphDashletConfig,
     SingleTimeseriesDashletConfig,
 )
@@ -39,14 +38,10 @@ from cmk.gui.type_defs import SingleInfos, VisualContext
 
 from .model.widget import WidgetGeneralSettings, WidgetTitle
 from .model.widget_content.metric import BarplotContent
-from .model.widget_content.timeline import AlertTimelineContent, NotificationTimelineContent
 
-type FigureContent = Annotated[
-    AlertTimelineContent | BarplotContent | NotificationTimelineContent,
-    Discriminator("type"),
-]
+type FigureContent = BarplotContent
 
-type FigureDashletConfig = BarplotDashletConfig | EventBarChartDashletConfig
+type FigureDashletConfig = BarplotDashletConfig
 
 
 class _WidgetTitleInternal(TypedDict, total=True):

@@ -13,10 +13,12 @@ export type {
   GraphFigureSource
 } from './components/GraphFigure/types'
 export type { TimerangeModel } from './components/GraphFigure/computeEpochTimeRange'
+export { fetchedGraphOf } from './composables/useGraphData'
 export type {
   FetchedGraph,
   GraphCombinationMode,
-  GraphFetchParams
+  GraphFetchParams,
+  GraphFetchResponse
 } from './composables/useGraphData'
 export type { BurgerMenuGroup, RequestedTimeRange } from './types'
 
@@ -26,6 +28,7 @@ export { useGraphInteraction } from './composables/useGraphInteraction'
 export { useGraphVisibility } from './composables/useGraphVisibility'
 export { deriveYAxis } from './components/TimeSeriesGraph/yAxis'
 export type {
+  BinUnit,
   GraphOptions,
   Metric,
   Size,

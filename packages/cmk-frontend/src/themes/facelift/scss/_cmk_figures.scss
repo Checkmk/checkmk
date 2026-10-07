@@ -78,16 +78,6 @@ div.cmk_tab {
       stroke: $black;
     }
   }
-
-  rect.bar.bar_chart.barbar_chart {
-    fill: $barbar-fill-color;
-    stroke: rgba($black, 0.3);
-
-    &:hover {
-      fill: $barbar-hover-fill-color;
-      stroke: $black;
-    }
-  }
 }
 
 div.cmk_figure {

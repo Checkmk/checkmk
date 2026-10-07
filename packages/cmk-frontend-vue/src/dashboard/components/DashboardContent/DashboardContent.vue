@@ -15,6 +15,7 @@ import DashboardContentSidebarElement from './DashboardContentSidebarElement.vue
 import DashboardContentSingleMetric from './DashboardContentSingleMetric.vue'
 import DashboardContentStaticText from './DashboardContentStaticText.vue'
 import DashboardContentTimeSeriesGraph from './DashboardContentTimeSeriesGraph.vue'
+import DashboardContentTimeline from './DashboardContentTimeline.vue'
 import DashboardContentTimelineCount from './DashboardContentTimelineCount.vue'
 import DashboardContentTopList from './DashboardContentTopList.vue'
 import DashboardContentUserMessages from './DashboardContentUserMessages.vue'
@@ -53,6 +54,8 @@ function contentToComponent(content: WidgetContent): Component {
     // NOTE: this branch must match with the keys generated in componentKey() below.
     case isTimeline(content) && content.render_mode.type === 'simple_number':
       return DashboardContentTimelineCount
+    case isTimeline(content):
+      return DashboardContentTimeline
     case contentType === 'url':
       return DashboardContentIFrame
     case contentType === 'linked_view':

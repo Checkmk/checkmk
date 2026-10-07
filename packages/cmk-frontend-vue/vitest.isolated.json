@@ -22,6 +22,7 @@
   "tests/dashboard/components/DashboardContent/DashboardContentFigure.test.ts",
   "tests/dashboard/components/DashboardContent/DashboardContentNtop.test.ts",
   "tests/dashboard/components/DashboardContent/DashboardContentTimeSeriesGraph.test.ts",
+  "tests/dashboard/components/DashboardContent/DashboardContentTimeline.test.ts",
   "tests/dashboard/components/DashboardContent/DashboardContentUserMessages.test.ts",
   "tests/dashboard/components/DashboardMenuHeader/DashboardMenuHeader.test.ts",
   "tests/dashboard/components/DashboardMenuHeader/DashboardSelector.test.ts",

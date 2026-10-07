@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { AddTo, CmkTimeSeriesGraph } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, computed, readonly, ref, watch } from 'vue'
@@ -55,6 +56,8 @@ interface CurrentRequest {
   requestedTimeRange: RequestedTimeRange
 }
 
+export type GraphFetchResponse = components['schemas']['GraphFetchResponse']
+
 export interface FetchedGraph {
   // The evaluated title: a plug-in's title expression (e.g. the number of CPU cores) is only
   // substituted once there is data, so the header takes it from here, not from the definition.
@@ -82,18 +85,8 @@ export type GraphDataFetcher = (
   params: GraphFetchParams
 ) => Promise<FetchedGraph>
 
-export const fetchGraphDataByDefinition: GraphDataFetcher = async (definition, params) => {
-  const fetched = unwrap(
-    await client.POST('/domain-types/graph/actions/fetch_data/invoke', {
-      params: { header: { 'Content-Type': 'application/json' } },
-      body: {
-        internal: definition.internal,
-        requested_time_range: params.fetchWindow,
-        consolidation_function: params.consolidationFunction,
-        combination_mode: params.combinationMode
-      }
-    })
-  )
+/** The graph a fetch endpoint answers, in the shape the graph hosts draw. */
+export function fetchedGraphOf(fetched: GraphFetchResponse): FetchedGraph {
   return {
     title: fetched.title,
     metrics: fetched.metrics,
@@ -104,6 +97,21 @@ export const fetchGraphDataByDefinition: GraphDataFetcher = async (definition, p
     warnings: fetched.warnings
   }
 }
+
+export const fetchGraphDataByDefinition: GraphDataFetcher = async (definition, params) =>
+  fetchedGraphOf(
+    unwrap(
+      await client.POST('/domain-types/graph/actions/fetch_data/invoke', {
+        params: { header: { 'Content-Type': 'application/json' } },
+        body: {
+          internal: definition.internal,
+          requested_time_range: params.fetchWindow,
+          consolidation_function: params.consolidationFunction,
+          combination_mode: params.combinationMode
+        }
+      })
+    )
+  )
 
 // Graph discovery (matching templates to a service) happens backend-only: the caller already
 // receives the self-contained `internal` definitions via the initial page props

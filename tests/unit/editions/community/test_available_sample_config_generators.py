@@ -22,19 +22,3 @@ def test_registered_generators() -> None:
     ]
 
     assert sorted(sample_config_generator_registry.keys()) == sorted(expected_generators)
-
-
-@pytest.mark.usefixtures("load_gui_plugins")
-def test_get_sorted_generators() -> None:
-    expected = [
-        "contact_groups",
-        "basic_wato_config",
-        "create_local_site_connection",
-        "acknowledge_initial_werks",
-        "ec_sample_rule_pack",
-        "create_initial_admin_user",
-        "create_registration_automation_user",
-        "builtin_host_labels",
-    ]
-
-    assert {g.ident() for g in sample_config_generator_registry.get_generators()} == set(expected)

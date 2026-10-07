@@ -4,17 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
+from typing import override
 
 import pytest
 
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.groups_io import load_contact_group_information
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.sample_config import (
     init_wato_datastructures,
     sample_config_generator_registry,
+    SampleConfigGenerator,
     SampleConfigGeneratorGroups,
+    SampleConfigGeneratorRegistry,
 )
 from cmk.utils.paths import omd_root
 
@@ -54,3 +57,31 @@ def test_sample_config_gen_groups() -> None:
             "alias": "Everything",
         },
     }
+
+
+def _make_generator(name: str, index: int) -> type[SampleConfigGenerator]:
+    class _Generator(SampleConfigGenerator):
+        @classmethod
+        @override
+        def ident(cls) -> str:
+            return name
+
+        @classmethod
+        @override
+        def sort_index(cls) -> int:
+            return index
+
+        @override
+        def generate(self, tree: FolderTree) -> None:
+            pass
+
+    return _Generator
+
+
+def test_generators_are_executed_by_sort_index() -> None:
+    registry = SampleConfigGeneratorRegistry()
+    registry.register(_make_generator("last", 30))
+    registry.register(_make_generator("first", 10))
+    registry.register(_make_generator("middle", 20))
+
+    assert [g.ident() for g in registry.get_generators()] == ["first", "middle", "last"]

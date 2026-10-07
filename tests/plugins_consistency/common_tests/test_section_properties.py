@@ -133,6 +133,8 @@ def test_all_sections_are_subscribed_by_some_plugin(
         "elb_generic_labels",
         "elbv2_generic_labels",
         "aws_v2_ec2_labels",
+        "aws_v2_elb_generic_labels",
+        "aws_v2_elbv2_generic_labels",
     }
 
     all_existing_sections: Mapping[SectionName, SectionPlugin] = {

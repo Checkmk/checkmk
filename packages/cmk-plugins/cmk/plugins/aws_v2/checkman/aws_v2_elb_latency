@@ -1,0 +1,16 @@
+title: AWS v2 ELB: Latency
+agents: aws_v2
+catalog: cloud/aws
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the latency of AWS/ELB services.
+
+ To make this check work you have to configure the related
+ special agent {{Amazon Web Services (AWS) v2}}.
+
+ No default levels are set.
+ These are configurable.
+
+discovery:
+ One service is created if all required metrics (Latency) are given.

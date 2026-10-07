@@ -993,6 +993,15 @@ rule_spec_aws_elb_statistics = CheckParameters(
 )
 
 
+rule_spec_aws_v2_elb_statistics = CheckParameters(
+    name="aws_v2_elb_statistics",
+    title=Title("AWS v2/ELB statistics"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_elb_statistics,
+    condition=HostCondition(),
+)
+
+
 def _parameter_form_spec_aws_elb_latency() -> Dictionary:
     return Dictionary(elements=_fs_latency())
 
@@ -1000,6 +1009,15 @@ def _parameter_form_spec_aws_elb_latency() -> Dictionary:
 rule_spec_aws_elb_latency = CheckParameters(
     name="aws_elb_latency",
     title=Title("AWS/ELB latency"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_elb_latency,
+    condition=HostCondition(),
+)
+
+
+rule_spec_aws_v2_elb_latency = CheckParameters(
+    name="aws_v2_elb_latency",
+    title=Title("AWS v2/ELB latency"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_elb_latency,
     condition=HostCondition(),
@@ -1041,6 +1059,15 @@ rule_spec_aws_elb_http = CheckParameters(
 )
 
 
+rule_spec_aws_v2_elb_http = CheckParameters(
+    name="aws_v2_elb_http",
+    title=Title("AWS v2/ELB HTTP errors"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_elb_http,
+    condition=HostCondition(),
+)
+
+
 def _parameter_form_spec_aws_elb_healthy_hosts() -> Dictionary:
     return Dictionary(
         elements={
@@ -1065,6 +1092,15 @@ def _parameter_form_spec_aws_elb_healthy_hosts() -> Dictionary:
 rule_spec_aws_elb_healthy_hosts = CheckParameters(
     name="aws_elb_healthy_hosts",
     title=Title("AWS/ELB healthy hosts"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_elb_healthy_hosts,
+    condition=HostCondition(),
+)
+
+
+rule_spec_aws_v2_elb_healthy_hosts = CheckParameters(
+    name="aws_v2_elb_healthy_hosts",
+    title=Title("AWS v2/ELB healthy hosts"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_elb_healthy_hosts,
     condition=HostCondition(),
@@ -1096,6 +1132,15 @@ rule_spec_aws_elb_backend_connection_errors = CheckParameters(
 )
 
 
+rule_spec_aws_v2_elb_backend_connection_errors = CheckParameters(
+    name="aws_v2_elb_backend_connection_errors",
+    title=Title("AWS v2/ELB backend connection errors"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_elb_backend_connection_errors,
+    condition=HostCondition(),
+)
+
+
 def _parameter_form_spec_aws_elb_limits() -> Dictionary:
     return Dictionary(
         elements={
@@ -1115,6 +1160,17 @@ def _parameter_form_spec_aws_elb_limits() -> Dictionary:
 rule_spec_aws_elb_limits = CheckParameters(
     name="aws_elb_limits",
     title=Title("AWS/ELB limits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_elb_limits,
+    condition=HostAndItemCondition(
+        item_title=Title("Region name"), item_form=_item_spec_aws_limits_generic()
+    ),
+)
+
+
+rule_spec_aws_v2_elb_limits = CheckParameters(
+    name="aws_v2_elb_limits",
+    title=Title("AWS v2/ELB limits"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_elb_limits,
     condition=HostAndItemCondition(

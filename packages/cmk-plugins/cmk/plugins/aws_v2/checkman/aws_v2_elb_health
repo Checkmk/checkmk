@@ -1,0 +1,21 @@
+title: AWS v2 ELB: Health
+agents: aws_v2
+catalog: cloud/aws
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors all AWS ELB and reports a summary of their states.
+
+ To make this check work you have to configure the related special agent
+ {Amazon Web Services (AWS) v2}.
+
+ The service state is
+
+ - {OK} if the elastic load balancer is "in service"
+
+ - {WARN} if it is "out of service"
+
+ - {UNKNOWN} otherwise
+
+discovery:
+ One service is created.

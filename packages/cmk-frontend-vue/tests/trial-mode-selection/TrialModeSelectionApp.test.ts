@@ -685,6 +685,25 @@ describe('TrialModeSelectionApp', () => {
 
       expect(screen.getByLabelText('Email address')).toHaveValue('jane.doe@example.com')
     })
+
+    it('handles continuing without verification in case of backend errors', async () => {
+      renderApp()
+      mockCmkAjax.mockResolvedValue({
+        status: 'error',
+        errorMessage: 'Simulated Failure (as returned by the backend).'
+      })
+      await startTrial()
+      await user.type(screen.getByLabelText('Email address'), 'jane.doe@example.com')
+      await user.click(screen.getByRole('button', { name: 'Send code' }))
+      await user.click(screen.getByRole('button', { name: 'Continue without verification' }))
+
+      expect(mockCmkAjax).toHaveBeenCalledWith('ajax_save_trial_mode_selection.py', {
+        selection: 'unverified_trial',
+        unverified_reason: 'code_entry_error',
+        _csrf_token: 'the-csrf-token'
+      })
+      expect(screen.getByRole('heading', { name: 'Unverified trial' })).toBeInTheDocument()
+    })
   })
 
   describe('resend cooldown', () => {

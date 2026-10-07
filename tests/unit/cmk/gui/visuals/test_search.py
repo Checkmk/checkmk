@@ -1,0 +1,117 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import pytest
+
+from cmk.ccc.user import UserId
+from cmk.gui.config import Config
+from cmk.gui.http import request
+from cmk.gui.i18n import _l
+from cmk.gui.pages import PageContext
+from cmk.gui.permissions import permission_registry
+from cmk.gui.search.matchers import match_item_generator_registry, MatchItemConfig
+from cmk.gui.search.permissions import category_permissions_handler_registry
+from cmk.gui.type_defs import Visual
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.visuals import BuiltinVisualsSearch
+from cmk.gui.visuals._search import (
+    BuiltinVisualsMatchItemGenerator,
+    BuiltinVisualsPermissionsHandler,
+)
+
+OWNER = UserId("owner")
+
+
+def _visual(owner: UserId, name: str, title: str) -> Visual:
+    return Visual(
+        owner=owner,
+        name=name,
+        context={},
+        single_infos=[],
+        add_context_to_title=False,
+        title=title,
+        description="",
+        topic="overview",
+        sort_index=99,
+        is_show_more=False,
+        icon=None,
+        hidden=False,
+        hidebutton=False,
+        public=True,
+        packaged=False,
+        link_from={},
+        main_menu_search_terms=["term"],
+    )
+
+
+@pytest.fixture(name="search")
+def fixture_search() -> BuiltinVisualsSearch:
+    all_visuals = {
+        (UserId.builtin(), "allhosts"): _visual(UserId.builtin(), "allhosts", "All hosts"),
+        (OWNER, "my_view"): _visual(OWNER, "my_view", "My view"),
+    }
+    return BuiltinVisualsSearch(
+        what="views",
+        topic=_l("Built-in views"),
+        load_all=lambda: all_visuals,
+        url=lambda name: f"clone.py?name={name}",
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_match_items_cover_builtin_visuals_only(
+    search: BuiltinVisualsSearch, load_config: Config
+) -> None:
+    generator = BuiltinVisualsMatchItemGenerator(search)
+
+    match_items = list(
+        generator.generate_match_items(
+            UserPermissions(load_config.roles, permission_registry, {}, []),
+            MatchItemConfig.from_config(load_config),
+        )
+    )
+
+    assert [(item.title, item.topic, item.url) for item in match_items] == [
+        ("All hosts", "Built-in views", "clone.py?name=allhosts")
+    ]
+    assert list(match_items[0].match_texts) == ["all hosts", "allhosts", "term"]
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_permitted_builtin_visual_is_visible(
+    search: BuiltinVisualsSearch, load_config: Config, with_admin_login: UserId
+) -> None:
+    handler = BuiltinVisualsPermissionsHandler(
+        search,
+        UserPermissions(load_config.roles, permission_registry, {with_admin_login: ["admin"]}, []),
+    )
+
+    visibility_check = handler.get_visibility_check(search.category)
+
+    assert handler.may_see_category(search.category)
+    assert visibility_check("clone.py?name=allhosts")
+    assert not visibility_check("clone.py?name=my_view")
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_registered_builtin_views_are_visible_to_admin(load_config: Config) -> None:
+    ctx = PageContext(
+        config=load_config, request=request, session=session, transactions=transactions
+    )
+    handler = category_permissions_handler_registry["builtin_views"].build(ctx)
+
+    match_items = list(
+        match_item_generator_registry["builtin_views"].generate_match_items(
+            UserPermissions.from_config(load_config, permission_registry),
+            MatchItemConfig.from_config(load_config),
+        )
+    )
+
+    visibility_check = handler.get_visibility_check("builtin_views")
+    assert handler.may_see_category("builtin_views")
+    assert match_items
+    assert all(visibility_check(item.url) for item in match_items)

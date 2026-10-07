@@ -227,6 +227,7 @@ def register(
         data_source_registry,
         endpoint_family_registry,
         versioned_endpoint_registry,
+        match_item_generator_registry,
     )
     inventory.register(
         config_variable_registry,

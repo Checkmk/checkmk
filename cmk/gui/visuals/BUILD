@@ -24,6 +24,8 @@ py_library(
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/pagetypes",
         "//cmk/gui/plugins/visuals",
+        "//cmk/gui/search:matchers",
+        "//cmk/gui/search:permissions",
         "//cmk/gui/userdb",
         "//cmk/gui/utils",
         "//cmk/gui/utils:middle",

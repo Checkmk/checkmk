@@ -330,11 +330,10 @@ def _auth_args(
     ),
 ) -> tuple[str | Secret, ...]:
     match auth:
-        case (AuthMode.BASIC_AUTH, UserAuth(user=user, password=password)):  # type: ignore[unreachable]
-            return ("--auth-user", user, "--auth-pw-pwstore", password)
-        case (AuthMode.TOKEN_AUTH, TokenAuth(header=header, token=token)):  # type: ignore[unreachable]
-            return ("--token-header", header, "--token-key-pwstore", token)
-    raise ValueError(auth)
+        case (AuthMode.BASIC_AUTH, user_auth):
+            return ("--auth-user", user_auth.user, "--auth-pw-pwstore", user_auth.password)
+        case (AuthMode.TOKEN_AUTH, token_auth):
+            return ("--token-header", token_auth.header, "--token-key-pwstore", token_auth.token)
 
 
 def _tls_version_arg(tls_versions: EnforceTlsVersion) -> Iterator[str]:
@@ -554,23 +553,17 @@ def _header_match_args(
     ),
 ) -> Iterator[str]:
     match header:
-        case (MatchType.STRING, HeaderSpec(header_name=name, header_value=value)):  # type: ignore[unreachable]
+        case (MatchType.STRING, header_spec):
             yield "--header-strings"
-            yield f"{name}:{value}"
+            yield f"{header_spec.header_name}:{header_spec.header_value}"
 
-        case (
-            MatchType.REGEX,
-            HeaderRegex(  # type: ignore[unreachable]
-                regex=HeaderRegexSpec(header_name_pattern=name, header_value_pattern=value),
-                case_insensitive=case_insensitive,
-                invert=invert,
-            ),
-        ):
+        case (MatchType.REGEX, header_regex):
             yield "--header-regexes"
-            flagged_value = f"(?i){value}" if case_insensitive else value
+            value = header_regex.regex.header_value_pattern
+            flagged_value = f"(?i){value}" if header_regex.case_insensitive else value
             # Note: Header name is always case insensitive, so there's no need to apply the flag
-            yield f"{name}:{flagged_value}"
-            if invert:
+            yield f"{header_regex.regex.header_name_pattern}:{flagged_value}"
+            if header_regex.invert:
                 yield "--header-regexes-invert"
 
 
@@ -579,25 +572,18 @@ def _body_match_args(
     macros: Mapping[str, str],
 ) -> Iterator[str]:
     match body:
-        case (MatchType.STRING, str(string)):  # type: ignore[unreachable]
+        case (MatchType.STRING, string):
             yield "--body-string"
             yield replace_macros(string, macros)
 
-        case (
-            MatchType.REGEX,
-            BodyRegex(  # type: ignore[unreachable]
-                regex=regex,
-                case_insensitive=case_insensitive,
-                multiline=multiline,
-                invert=invert,
-            ),
-        ):
+        case (MatchType.REGEX, body_regex):
             yield "--body-regex"
             # multiline == True translates to (?m), while multiline == False translates to (?s):
             # m: match anchors ^ and $ on line beginnings/endings
             # s: match "." also on newlines. The standard is to *not* match the dot on newlines.
-            yield f"(?{'i' if case_insensitive else ''}{'m' if multiline else 's'}){regex}"
-            if invert:
+            flags = f"{'i' if body_regex.case_insensitive else ''}{'m' if body_regex.multiline else 's'}"
+            yield f"(?{flags}){body_regex.regex}"
+            if body_regex.invert:
                 yield "--body-regex-invert"
 
 

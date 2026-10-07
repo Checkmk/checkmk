@@ -15,7 +15,7 @@ import json
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, UTC
 from http import HTTPStatus
 from typing import override
@@ -46,10 +46,18 @@ MIN_TOKEN_VALIDITY = 60
 """Seconds a stored access token must still be valid to be reused at agent start."""
 
 
-type FetchStrategy = Callable[["VeeamClient", str], str]
-"""Fetches a section's data and renders it, including its `<<<name:sep(0)>>>`
-header(s), into the exact text to write to stdout for it. Takes the client and
-the section name; which API path(s) to call is baked into the strategy itself."""
+@dataclass(frozen=True, kw_only=True)
+class Fetched:
+    """A section rendered with its `<<<name:sep(0)>>>` header: for the Veeam server
+    itself (`own`) and per piggyback host (`piggyback`, without the host envelope)."""
+
+    own: str = ""
+    piggyback: Mapping[str, str] = field(default_factory=dict)
+
+
+type FetchStrategy = Callable[["VeeamClient", str], Fetched]
+"""Fetches a section's data and renders it. Takes the client and the section name;
+which API path(s) to call is baked into the strategy itself."""
 
 type Section = tuple[str, FetchStrategy]
 """The agent section name and how to fetch it."""
@@ -394,8 +402,8 @@ def _get_all(
 def fetch_object(path: str) -> FetchStrategy:
     """A single-object endpoint (no `data`/`pagination` envelope), e.g. /api/v1/serverInfo."""
 
-    def _fetch(client: VeeamClient, name: str) -> str:
-        return f"<<<{name}:sep(0)>>>\n{json.dumps(client.get(path))}\n"
+    def _fetch(client: VeeamClient, name: str) -> Fetched:
+        return Fetched(own=f"<<<{name}:sep(0)>>>\n{json.dumps(client.get(path))}\n")
 
     return _fetch
 
@@ -403,9 +411,11 @@ def fetch_object(path: str) -> FetchStrategy:
 def fetch_list(path: str) -> FetchStrategy:
     """A `data`/`pagination` endpoint, fetched to completion, one item per line."""
 
-    def _fetch(client: VeeamClient, name: str) -> str:
+    def _fetch(client: VeeamClient, name: str) -> Fetched:
         items = _get_all(client, path)
-        return f"<<<{name}:sep(0)>>>\n" + "".join(f"{json.dumps(item)}\n" for item in items)
+        return Fetched(
+            own=f"<<<{name}:sep(0)>>>\n" + "".join(f"{json.dumps(item)}\n" for item in items)
+        )
 
     return _fetch
 
@@ -484,7 +494,7 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
     attributed to one of several objects sharing a chain.
     """
 
-    def _fetch(client: VeeamClient, name: str) -> str:
+    def _fetch(client: VeeamClient, name: str) -> Fetched:
         backup_objects = _get_all(client, "/api/v1/backupObjects", limit)
         restore_points = _get_all(client, "/api/v1/restorePoints", limit)
 
@@ -575,7 +585,7 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
                 "malwareStatus": _malware_rollup(machine_points),
             }
             output += f"{json.dumps(record)}\n"
-        return output
+        return Fetched(own=output)
 
     return _fetch
 
@@ -713,7 +723,7 @@ def _session_fallback_task(session: Mapping[str, object], job_name: str) -> Mapp
     }
 
 
-def fetch_backups(client: VeeamClient, name: str) -> str:
+def fetch_backups(client: VeeamClient, name: str) -> Fetched:
     """One record per (job, object) pair: the newest task for that pairing,
     labelled with the job's name.
 
@@ -792,17 +802,25 @@ def fetch_backups(client: VeeamClient, name: str) -> str:
     for (object_name, _job_id), task in newest.items():
         groups.setdefault(object_name, []).append(task)
 
-    output = ""
-    for object_name, object_tasks in groups.items():
-        output += f"<<<<{object_name}>>>>\n<<<{name}:sep(0)>>>\n"
-        output += "".join(f"{json.dumps(task)}\n" for task in object_tasks)
-        output += "<<<<>>>>\n"
-    return output
+    return Fetched(
+        piggyback={
+            object_name: f"<<<{name}:sep(0)>>>\n"
+            + "".join(f"{json.dumps(task)}\n" for task in object_tasks)
+            for object_name, object_tasks in groups.items()
+        }
+    )
 
 
 def write_sections(client: VeeamClient, sections: Sequence[Section]) -> None:
+    """Each piggyback host is written once, with the sections of all fetches for it."""
+    piggyback: dict[str, list[str]] = {}
     for name, fetch in sections:
-        sys.stdout.write(fetch(client, name))
+        fetched = fetch(client, name)
+        sys.stdout.write(fetched.own)
+        for host, text in fetched.piggyback.items():
+            piggyback.setdefault(host, []).append(text)
+    for host, texts in piggyback.items():
+        sys.stdout.write(f"<<<<{host}>>>>\n{''.join(texts)}<<<<>>>>\n")
 
 
 SECTIONS: Sequence[Section] = (

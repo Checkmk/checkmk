@@ -22,6 +22,8 @@ from cmk.plugins.veeam.special_agent.agent_veeam import (
     fetch_list,
     fetch_object,
     fetch_restore_points,
+    Fetched,
+    FetchStrategy,
     main,
     parse_arguments,
     SECTIONS,
@@ -358,6 +360,37 @@ def test_object_section_is_written_as_a_single_line(
 
     assert (
         capsys.readouterr().out == '<<<veeam_server_info:sep(0)>>>\n{"name": "backup-server-01"}\n'
+    )
+
+
+def _piggyback_on(*hosts: str) -> FetchStrategy:
+    def _fetch(_client: VeeamClient, name: str) -> Fetched:
+        return Fetched(
+            own=f"<<<{name}:sep(0)>>>\n",
+            piggyback=dict.fromkeys(hosts, f"<<<{name}:sep(0)>>>\n{{}}\n"),
+        )
+
+    return _fetch
+
+
+def test_write_sections_writes_each_piggyback_host_once(
+    storage: Storage, capsys: pytest.CaptureFixture[str]
+) -> None:
+    write_sections(
+        _client(_auth(storage)),
+        [("section_a", _piggyback_on("host-1", "host-2")), ("section_b", _piggyback_on("host-1"))],
+    )
+
+    assert capsys.readouterr().out == (
+        "<<<section_a:sep(0)>>>\n"
+        "<<<section_b:sep(0)>>>\n"
+        "<<<<host-1>>>>\n"
+        "<<<section_a:sep(0)>>>\n{}\n"
+        "<<<section_b:sep(0)>>>\n{}\n"
+        "<<<<>>>>\n"
+        "<<<<host-2>>>>\n"
+        "<<<section_a:sep(0)>>>\n{}\n"
+        "<<<<>>>>\n"
     )
 
 

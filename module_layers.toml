@@ -534,6 +534,10 @@ allows = [
 allows = [
   "@ccc",
   "@relay_protocols",
+  "cmk.base.active_check_result",
+  "cmk.check_helper_protocol",
+  "cmk.checkengine.specs",
+  "cmk.checkengine.submitters",
   "cmk.base.config",
   "cmk.base.configlib",
   "cmk.base.core",

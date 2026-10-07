@@ -5,30 +5,27 @@
 
 import pytest
 
-from cmk.gui import cron
+from cmk.gui.cron import cron_job_registry
 
 
 @pytest.mark.usefixtures("load_gui_plugins")
 def test_registered_jobs() -> None:
-    expected = [
-        "execute_inventory_cleanup_job",
-        "execute_housekeeping_job",
-        "rebuild_folder_lookup_cache",
-        "execute_userdb_job",
-        "execute_user_messages_spool_job",
-        "execute_user_profile_cleanup_job",
-        "execute_ldap_quarantine_cleanup_job",
-        "execute_network_scan_job",
-        "execute_activation_cleanup_job",
-        "execute_sync_remote_sites",
-        "execute_host_removal_job",
+    assert sorted(cron_job_registry) == [
+        "cleanup_crash_reports",
         "cleanup_topology_layouts",
+        "compile_bi_aggregations",
+        "consolidate_crash_reports",
+        "execute_activation_cleanup_job",
         "execute_autodiscovery",
         "execute_deprecation_tests_and_notify_users",
-        "cleanup_crash_reports",
-        "consolidate_crash_reports",
-        "compile_bi_aggregations",
+        "execute_host_removal_job",
+        "execute_housekeeping_job",
+        "execute_inventory_cleanup_job",
+        "execute_ldap_quarantine_cleanup_job",
+        "execute_network_scan_job",
+        "execute_sync_remote_sites",
+        "execute_user_messages_spool_job",
+        "execute_user_profile_cleanup_job",
+        "execute_userdb_job",
+        "rebuild_folder_lookup_cache",
     ]
-
-    found_jobs = sorted([f.name for f in cron.cron_job_registry.values()])
-    assert found_jobs == sorted(expected)

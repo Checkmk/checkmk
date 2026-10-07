@@ -10,12 +10,9 @@ from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
 
 @pytest.mark.usefixtures("load_gui_plugins")
 def test_group_usage_finder_registry_entries() -> None:
-    expected = [
+    assert sorted(timeperiod_usage_finder_registry) == [
         "find_timeperiod_usage_in_ec_rules",
         "find_timeperiod_usage_in_notification_rules",
         "find_timeperiod_usage_in_rules",
         "find_timeperiod_usage_in_users",
     ]
-
-    registered = [f.__name__ for f in timeperiod_usage_finder_registry.values()]
-    assert sorted(registered) == sorted(expected)

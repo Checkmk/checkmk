@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
-
 import pytest
 
 import cmk.gui.pages
@@ -169,12 +167,4 @@ def test_registered_pages() -> None:
         "monitor_host_services",
     ]
 
-    actual_set = set(cmk.gui.pages.page_registry)
-
-    expected_set = set(expected_pages)
-    differences = actual_set.symmetric_difference(expected_set)
-    if differences:
-        sys.stdout.write("Registered pages differ\n")
-        sys.stdout.write("Expected but missing: %s\n" % ", ".join(expected_set - actual_set))
-        sys.stdout.write("Unknown new pages: %s\n" % ", ".join(actual_set - expected_set))
-    assert len(differences) == 0
+    assert sorted(cmk.gui.pages.page_registry) == sorted(expected_pages)

@@ -5,7 +5,6 @@
 
 import pytest
 
-from cmk.gui.views import legacy_plugins
 from cmk.gui.views.icon import icon_and_action_registry
 
 
@@ -47,6 +46,4 @@ def test_builtin_icons_and_actions() -> None:
         "wato",
     ]
 
-    legacy_plugins.register_legacy_icons()
-    builtin_icons = sorted(icon_and_action_registry.keys())
-    assert builtin_icons == sorted(expected_icons_and_actions)
+    assert sorted(icon_and_action_registry) == sorted(expected_icons_and_actions)

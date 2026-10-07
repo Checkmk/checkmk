@@ -151,7 +151,7 @@ def aws_arguments(
     auth = params.auth
     access = params.access or APIAccess()
 
-    match auth:  # type: ignore[exhaustive-match]
+    match auth:
         case ("sts", sts):
             assert isinstance(sts, AuthSts)
             args.extend(("--assume-role", "--role-arn", sts.role_arn_id))
@@ -168,8 +168,8 @@ def aws_arguments(
             args.extend(("--assume-role", "--role-arn", aksts.role_arn_id))
             if aksts.external_id:
                 args.extend(("--external-id", aksts.external_id))
-        case ("none", _):
-            ...  # type: ignore[unreachable]
+        case "none" | None:
+            pass
 
     if params.proxy_details:
         args.extend(_proxy_args(params.proxy_details))

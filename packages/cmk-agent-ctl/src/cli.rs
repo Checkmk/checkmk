@@ -88,6 +88,19 @@ pub enum Mode {
     /// Only possible for non-imported connections. To renew imported connections,
     /// please `proxy-register` and import again.
     RenewCertificate(RenewCertificateOpts),
+
+    /// Update the agent of this host from the Checkmk site it is registered with
+    Update(UpdateOpts),
+}
+
+#[derive(Parser)]
+pub struct UpdateOpts {
+    /// Only report which agent package the site has for this host, and change nothing
+    #[arg(long)]
+    pub check_only: bool,
+
+    #[clap(flatten)]
+    pub client_opts: ClientOpts,
 }
 
 #[derive(Parser)]

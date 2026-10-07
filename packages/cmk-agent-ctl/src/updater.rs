@@ -22,7 +22,7 @@
 
 mod backend;
 mod connection;
-pub use backend::{AgentInfo, UpdatePackage, UpdateState, Updater, UpdaterConfig};
+pub use backend::{AgentInfo, CheckOutcome, UpdatePackage, UpdateState, Updater, UpdaterConfig};
 
 #[cfg(windows)]
 mod platform;

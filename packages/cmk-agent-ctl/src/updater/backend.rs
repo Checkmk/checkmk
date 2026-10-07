@@ -304,6 +304,26 @@ fn package_extension(platform: &str) -> AnyhowResult<&'static str> {
     }
 }
 
+/// What the site answered a check with. Nothing was changed to learn it.
+#[derive(Debug, PartialEq, Eq)]
+pub enum CheckOutcome {
+    /// No site was asked: the updater is not operational, not activated, or no
+    /// registered connection can reach one. The reason is logged.
+    NotPossible,
+
+    /// The site has no agent package for this host.
+    NoPackage,
+
+    /// The site offers the package this host already runs.
+    UpToDate(AgentHash),
+
+    /// The site offers a package other than the installed one.
+    UpdateAvailable {
+        target: AgentHash,
+        installed: AgentHash,
+    },
+}
+
 /// The three updater artifacts of this host, loaded together.
 ///
 /// Fields are private: what is missing or broken is only observable through
@@ -406,32 +426,18 @@ impl Updater {
         self.config.as_ref().is_some_and(|config| config.activated)
     }
 
-    // TODO(sk): Split this function into `if check_***() then update_***()`
     /// Integrated updater main action.
-    ///
-    /// The updater reuses the controller's registration. It picks one of the
-    /// registered connections and talks to that site over the connection's mTLS
-    /// channel, where the receiver authenticates the host by the client
-    /// certificate and resolves its UUID to a host name.
     ///
     /// # Returns
     ///
     /// `true` when the updater is in a position to contact a site:
     /// operational, activated, and a connection was selected.
     pub fn handle_update_cycle(&self, registry: &Registry) -> bool {
-        if !self.is_operational() {
-            log::info!("Skipping the agent update: the updater is not operational");
-            return false;
-        }
         if !self.is_activated() {
             log::info!("Skipping the agent update: automatic agent updates are deactivated");
             return false;
         }
-        let Some(selected) = connection::select(registry) else {
-            log::info!(
-                "Skipping the agent update: none of the registered connections carries a \
-                 site address (imported connections cannot serve updates)"
-            );
+        let Some(selected) = self.find_update_connection(registry) else {
             return false;
         };
         log::info!(
@@ -445,6 +451,75 @@ impl Updater {
             selected.connection.trust.uuid
         );
         true
+    }
+
+    /// Ask the site which agent package it has for this host.
+    ///
+    /// Reports only: nothing is downloaded, and no artifact of the updater is
+    /// written - the state keeps the schedule of the automatic check, which a
+    /// check made by hand must not shift.
+    ///
+    /// Deactivated automatic updates do not stand in the way. They say what the
+    /// controller may do on its own, not what the site may be asked.
+    ///
+    /// # Errors
+    ///
+    /// If the site cannot be reached or does not answer with a status this
+    /// controller can parse.
+    pub fn check(
+        &self,
+        registry: &Registry,
+        api: &impl agent_receiver_api::AgentUpdate,
+    ) -> AnyhowResult<CheckOutcome> {
+        let Some(selected) = self.find_update_connection(registry) else {
+            return Ok(CheckOutcome::NotPossible);
+        };
+        let status = self.request_update_status(api, &selected)?;
+        let Some(target) = status.target_agent.map(|offered| offered.aghash) else {
+            return Ok(CheckOutcome::NoPackage);
+        };
+        let installed = self
+            .agent_info
+            .as_ref()
+            .context("Cannot check for an agent update without the info of the installed agent")?
+            .hash
+            .clone();
+        Ok(if target == installed {
+            CheckOutcome::UpToDate(target)
+        } else {
+            CheckOutcome::UpdateAvailable { target, installed }
+        })
+    }
+
+    /// The connection to run an update over, if the updater may run at all.
+    ///
+    /// The updater reuses the controller's registration. It picks one of the
+    /// registered connections and talks to that site over the connection's mTLS
+    /// channel, where the receiver authenticates the host by the client
+    /// certificate and resolves its UUID to a host name.
+    ///
+    /// # Returns
+    ///
+    /// `None`, with the reason logged, when the updater is not operational or
+    /// no registered connection can reach a site. Whether automatic updates are
+    /// activated is none of its business - that governs the automatic cycle,
+    /// not what an operator may ask for by hand.
+    fn find_update_connection<'a>(
+        &self,
+        registry: &'a Registry,
+    ) -> Option<connection::UpdateConnection<'a>> {
+        if !self.is_operational() {
+            log::info!("No agent update is possible: the updater is not operational");
+            return None;
+        }
+        let Some(selected) = connection::select(registry) else {
+            log::info!(
+                "No agent update is possible: none of the registered connections carries a \
+                 site address (imported connections cannot serve updates)"
+            );
+            return None;
+        };
+        Some(selected)
     }
 
     /// Ask the site behind `selected` which agent package it has for this host.
@@ -1380,6 +1455,109 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
         let error = updater_after(None)
             .request_update_status(&UnreachableApi, &selected)
+            .unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "Agent update status request to server/site failed"
+        );
+    }
+
+    #[test]
+    fn test_check_reports_a_package_that_is_not_installed() {
+        let registry = registry_with_one_connection();
+
+        let outcome = updater_after(None)
+            .check(&registry.registry, &TestApi::new(Some(TARGET_HASH)))
+            .unwrap();
+
+        assert_eq!(
+            outcome,
+            CheckOutcome::UpdateAvailable {
+                target: TARGET_HASH.parse().unwrap(),
+                installed: INSTALLED_HASH.parse().unwrap(),
+            }
+        );
+    }
+
+    #[test]
+    fn test_check_reports_the_installed_package() {
+        let registry = registry_with_one_connection();
+
+        let outcome = updater_after(None)
+            .check(&registry.registry, &TestApi::new(Some(INSTALLED_HASH)))
+            .unwrap();
+
+        assert_eq!(
+            outcome,
+            CheckOutcome::UpToDate(INSTALLED_HASH.parse().unwrap())
+        );
+    }
+
+    #[test]
+    fn test_check_reports_a_site_without_a_package() {
+        let registry = registry_with_one_connection();
+
+        let outcome = updater_after(None)
+            .check(&registry.registry, &TestApi::new(None))
+            .unwrap();
+
+        assert_eq!(outcome, CheckOutcome::NoPackage);
+    }
+
+    /// Nothing is asked when nothing may be updated, and the site is left
+    /// alone - the updater does not even open a connection.
+    #[test]
+    fn test_check_without_a_connection_asks_nobody() {
+        let registry = TestRegistry::new();
+        let api = TestApi::new(Some(TARGET_HASH));
+
+        let outcome = updater_after(None).check(&registry.registry, &api).unwrap();
+
+        assert_eq!(outcome, CheckOutcome::NotPossible);
+        assert!(api.request.borrow().is_none());
+    }
+
+    /// A host that may not update itself can still be asked what it would
+    /// update to: an admin wants to see that before activating anything.
+    #[test]
+    fn test_check_when_deactivated_asks_the_site_anyway() {
+        let registry = registry_with_one_connection();
+        let config = UpdaterConfig {
+            activated: false,
+            ..some_config().unwrap()
+        };
+
+        let outcome = updater(Some(config), some_agent_info())
+            .check(&registry.registry, &TestApi::new(Some(TARGET_HASH)))
+            .unwrap();
+
+        assert_eq!(
+            outcome,
+            CheckOutcome::UpdateAvailable {
+                target: TARGET_HASH.parse().unwrap(),
+                installed: INSTALLED_HASH.parse().unwrap(),
+            }
+        );
+    }
+
+    #[test]
+    fn test_check_when_not_operational() {
+        let registry = registry_with_one_connection();
+
+        let outcome = updater(some_config(), None)
+            .check(&registry.registry, &TestApi::new(Some(TARGET_HASH)))
+            .unwrap();
+
+        assert_eq!(outcome, CheckOutcome::NotPossible);
+    }
+
+    #[test]
+    fn test_check_names_the_site_that_did_not_answer() {
+        let registry = registry_with_one_connection();
+
+        let error = updater_after(None)
+            .check(&registry.registry, &UnreachableApi)
             .unwrap_err();
 
         assert_eq!(

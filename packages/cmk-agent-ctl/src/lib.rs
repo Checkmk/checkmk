@@ -33,6 +33,7 @@ use modes::push::handle_push_cycle as push;
 use modes::registration;
 use modes::renew_certificate::renew_certificate;
 use modes::status::status;
+use modes::update::update;
 pub use setup::init;
 
 #[cfg(windows)]
@@ -135,6 +136,12 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
         cli::Mode::DeleteAll(delete_all_opts) => {
             delete_all(&mut registry, delete_all_opts.enable_insecure_connections)
         }
+        cli::Mode::Update(update_opts) => update(
+            &updater,
+            &registry,
+            &config::ClientConfig::new(runtime_config, update_opts.client_opts, None),
+            update_opts.check_only,
+        ),
         cli::Mode::RenewCertificate(renew_certificate_opts) => renew_certificate(
             registry,
             &renew_certificate_opts.connection_opts.connection,

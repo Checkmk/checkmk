@@ -39,6 +39,7 @@ rust_library(
         "src/modes/registration.rs",
         "src/modes/renew_certificate.rs",
         "src/modes/status.rs",
+        "src/modes/update.rs",
         "src/monitoring_data.rs",
         "src/monitoring_data/linux.rs",
         "src/monitoring_data/win.rs",

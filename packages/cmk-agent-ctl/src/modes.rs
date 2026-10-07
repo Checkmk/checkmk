@@ -11,3 +11,4 @@ pub mod push;
 pub mod registration;
 pub mod renew_certificate;
 pub mod status;
+pub mod update;

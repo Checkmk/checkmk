@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import base64
 import json
 from http import HTTPMethod, HTTPStatus
 from uuid import UUID, uuid4
@@ -32,6 +33,8 @@ STATUS_REQUEST: dict[str, object] = {
     "platform": "linux_deb",
     "installed_aghash": "fedcba9876543210",
 }
+
+DOWNLOAD_REQUEST: dict[str, object] = {"platform": "linux_deb", "aghash": "0123456789abcdef"}
 
 NO_AGENT: dict[str, object] = {}
 
@@ -66,8 +69,32 @@ def _site_answers(
     )
 
 
+def _site_sends_package(wiremock: Wiremock, site: AgentReceiverSite, package: bytes) -> None:
+    # The Response model of the testlib only carries text bodies.
+    httpx2.post(
+        f"{wiremock.admin_url}/mappings",
+        json={
+            "request": {"method": "POST", "url": _site_path(site, "download")},
+            "response": {
+                "status": HTTPStatus.OK,
+                "base64Body": base64.b64encode(package).decode("ascii"),
+                "headers": {"Content-Type": "application/x-deb"},
+            },
+        },
+        timeout=1,
+    ).raise_for_status()
+
+
 def _forwarded(wiremock: Wiremock, site: AgentReceiverSite, action: str) -> list[FoundRequests]:
     return wiremock.get_all_url_path_requests(_site_path(site, action), HTTPMethod.POST)
+
+
+def _mtls_headers(site: AgentReceiverSite, uuid: UUID) -> dict[str, str]:
+    return {
+        INJECTED_UUID_HEADER: str(uuid),
+        INJECTED_ISSUER_HEADER: agent_ca_common_name(site.config.site_name),
+        INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
+    }
 
 
 def _request_status(
@@ -75,11 +102,17 @@ def _request_status(
 ) -> httpx2.Response:
     return client.post(
         f"/{site.config.site_name}/agent-receiver/agent_update/status/{uuid}",
-        headers={
-            INJECTED_UUID_HEADER: str(uuid),
-            INJECTED_ISSUER_HEADER: agent_ca_common_name(site.config.site_name),
-            INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
-        },
+        headers=_mtls_headers(site, uuid),
+        json=body,
+    )
+
+
+def _request_agent(
+    client: TestClient, site: AgentReceiverSite, uuid: UUID, body: dict[str, object]
+) -> httpx2.Response:
+    return client.post(
+        f"/{site.config.site_name}/agent-receiver/agent_update/agent/{uuid}",
+        headers=_mtls_headers(site, uuid),
         json=body,
     )
 
@@ -221,3 +254,87 @@ def test_status_passes_a_refusal_of_the_site_through(
         "detail": "Not available on a remote site - Details: "
         "Agent deployment is only available on the central site."
     }
+
+
+def test_agent_answers_with_the_package_of_the_site(
+    test_client: TestClient,
+    wiremock: Wiremock,
+    ar_site: AgentReceiverSite,
+    registered_uuid: UUID,
+) -> None:
+    package = bytes(range(256))
+    _site_sends_package(wiremock, ar_site, package)
+
+    response = _request_agent(test_client, ar_site, registered_uuid, DOWNLOAD_REQUEST)
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.headers["content-type"] == "application/octet-stream"
+    assert response.content == package
+
+
+def test_agent_forwards_the_request_on_behalf_of_the_registered_host(
+    test_client: TestClient,
+    wiremock: Wiremock,
+    ar_site: AgentReceiverSite,
+    registered_uuid: UUID,
+) -> None:
+    _site_sends_package(wiremock, ar_site, b"package")
+
+    _request_agent(test_client, ar_site, registered_uuid, DOWNLOAD_REQUEST)
+
+    forwarded = _forwarded(wiremock, ar_site, "download")
+    assert [
+        (r.headers["Authorization"], r.headers["Accept"], json.loads(r.body)) for r in forwarded
+    ] == [
+        (
+            f"InternalToken {ar_site.internal_credentials}",
+            "application/octet-stream",
+            DOWNLOAD_REQUEST | {"uuid": str(registered_uuid)},
+        )
+    ]
+
+
+@pytest.mark.parametrize(
+    "status, title",
+    [
+        pytest.param(HTTPStatus.NOT_FOUND, "No baked agent", id="no-baked-agent"),
+        pytest.param(HTTPStatus.CONFLICT, "Not the target agent", id="not-the-target"),
+    ],
+)
+def test_agent_passes_a_refusal_of_the_site_through(
+    test_client: TestClient,
+    wiremock: Wiremock,
+    ar_site: AgentReceiverSite,
+    registered_uuid: UUID,
+    status: HTTPStatus,
+    title: str,
+) -> None:
+    refusal = {"title": title, "status": status, "detail": "The reason."}
+    _site_answers(
+        wiremock, ar_site, "download", _json_answer(status, refusal, "application/problem+json")
+    )
+
+    response = _request_agent(test_client, ar_site, registered_uuid, DOWNLOAD_REQUEST)
+
+    assert response.status_code == status
+    assert response.json() == {"detail": f"{title} - Details: The reason."}
+
+
+def test_agent_reports_a_site_without_agent_updates_as_not_implemented(
+    test_client: TestClient,
+    wiremock: Wiremock,
+    ar_site: AgentReceiverSite,
+    registered_uuid: UUID,
+) -> None:
+    _site_answers(
+        wiremock,
+        ar_site,
+        "download",
+        _json_answer(HTTPStatus.NOT_FOUND, ROUTING_404, "application/problem+json"),
+    )
+
+    response = _request_agent(test_client, ar_site, registered_uuid, DOWNLOAD_REQUEST)
+
+    assert response.status_code == HTTPStatus.NOT_IMPLEMENTED
+    assert response.json() == {"detail": "This site offers no agent updates."}
+    assert len(_forwarded(wiremock, ar_site, "download")) == 1

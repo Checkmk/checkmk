@@ -16,6 +16,7 @@ from pydantic import BaseModel, UUID4, ValidationError
 
 from cmk.agent_receiver.agent_receiver.models import (
     ConnectionMode,
+    DownloadRequest,
     UpdateStatusRequest,
     UpdateStatusResponse,
 )
@@ -339,6 +340,23 @@ def deployment_status(
     )
     _verify_agent_update_response(response)
     return UpdateStatusResponse.model_validate(response.json())
+
+
+@log_http_exception
+def deployment_download(
+    site_internal_secret: B64SiteInternalSecret,
+    host_name: str,
+    uuid: UUID4,
+    download_request: DownloadRequest,
+) -> bytes:
+    response = _forward_post_internal(
+        f"objects/agent_deployment_internal/{_url_encode_hostname(host_name)}/actions/download/invoke",
+        site_internal_secret,
+        {**download_request.model_dump(), "uuid": str(uuid)},
+        "application/octet-stream",
+    )
+    _verify_agent_update_response(response)
+    return response.content
 
 
 def _verify_agent_update_response(response: requests.Response) -> None:

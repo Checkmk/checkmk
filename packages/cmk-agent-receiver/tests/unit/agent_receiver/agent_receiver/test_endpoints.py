@@ -987,17 +987,28 @@ def test_renew_certificate_ok(
     assert response.json()["agent_cert"].startswith("-----BEGIN CERTIFICATE-----")
 
 
-def test_agent_update_status_of_another_uuid_is_rejected(
+# fmt: off
+AGENT_UPDATE_REQUESTS = [
+    pytest.param("agent_update/status", {"platform": "linux_deb", "installed_aghash": "fedcba9876543210"}, id="status"),
+    pytest.param("agent_update/agent", {"platform": "linux_deb", "aghash": "0123456789abcdef"}, id="agent"),
+]
+# fmt: on
+
+
+@pytest.mark.parametrize("endpoint, body", AGENT_UPDATE_REQUESTS)
+def test_agent_update_of_another_uuid_is_rejected(
     client: TestClient,
     uuid: UUID4,
     registration_status_headers: MutableMapping[str, str],
+    endpoint: str,
+    body: dict[str, str],
 ) -> None:
     other_uuid = uuid4()
 
     response = client.post(
-        f"/agent_update/status/{other_uuid}",
+        f"/{endpoint}/{other_uuid}",
         headers=registration_status_headers,
-        json={"platform": "linux_deb", "installed_aghash": "fedcba9876543210"},
+        json=body,
     )
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
@@ -1006,15 +1017,18 @@ def test_agent_update_status_of_another_uuid_is_rejected(
     }
 
 
-def test_agent_update_status_of_an_unregistered_host_is_forbidden(
+@pytest.mark.parametrize("endpoint, body", AGENT_UPDATE_REQUESTS)
+def test_agent_update_of_an_unregistered_host_is_forbidden(
     client: TestClient,
     uuid: UUID4,
     registration_status_headers: MutableMapping[str, str],
+    endpoint: str,
+    body: dict[str, str],
 ) -> None:
     response = client.post(
-        f"/agent_update/status/{uuid}",
+        f"/{endpoint}/{uuid}",
         headers=registration_status_headers,
-        json={"platform": "linux_deb", "installed_aghash": "fedcba9876543210"},
+        json=body,
     )
 
     assert response.status_code == HTTPStatus.FORBIDDEN

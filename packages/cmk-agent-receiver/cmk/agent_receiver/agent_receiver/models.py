@@ -256,3 +256,8 @@ class TargetAgent(BaseModel, frozen=True):
 
 class UpdateStatusResponse(BaseModel, frozen=True):
     target_agent: TargetAgent | None = None
+
+
+class DownloadRequest(BaseModel, frozen=True):
+    platform: str
+    aghash: str

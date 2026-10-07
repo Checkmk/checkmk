@@ -37,6 +37,7 @@ from starlette.status import (
 from cmk.agent_receiver.agent_receiver.checkmk_rest_api import (
     cmk_edition,
     controller_certificate_settings,
+    deployment_download,
     deployment_status,
     get_root_cert,
     host_configuration,
@@ -51,6 +52,7 @@ from cmk.agent_receiver.agent_receiver.models import (
     CertificateRenewalBody,
     ConnectionMode,
     CsrField,
+    DownloadRequest,
     PairingBody,
     PairingResponse,
     R4RStatus,
@@ -642,3 +644,32 @@ async def agent_update_status(
             status_request,
         ),
     )
+
+
+@UUID_VALIDATION_ROUTER.post(
+    "/agent_update/agent/{uuid}",
+    response_class=Response,
+    responses={HTTPStatus.OK: {"content": {"application/octet-stream": {}}}},
+)
+async def agent_update_agent(
+    uuid: UUID4,
+    *,
+    download_request: DownloadRequest,
+) -> Response:
+    host = _registered_host(uuid)
+    package = await asyncio.get_running_loop().run_in_executor(
+        _agent_update_executor(),
+        partial(
+            deployment_download,
+            f"uuid={uuid} Downloading the agent package failed",
+            internal_credentials(),
+            host.name,
+            uuid,
+            download_request,
+        ),
+    )
+    logger.info(
+        "uuid=%(uuid)s Agent package %(aghash)s sent",
+        {"uuid": uuid, "aghash": download_request.aghash},
+    )
+    return Response(content=package, media_type="application/octet-stream")

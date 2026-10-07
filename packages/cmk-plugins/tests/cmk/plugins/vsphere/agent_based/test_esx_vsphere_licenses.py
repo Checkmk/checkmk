@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
-
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
 from cmk.plugins.vsphere.agent_based.esx_vsphere_licenses import (
     check_esx_vsphere_licenses,
     discover_esx_vsphere_licenses,
+    EsxVsphereLicensesParams,
     parse_esx_vsphere_licenses,
 )
 
@@ -19,10 +18,10 @@ STRING_TABLE = [
     [ENTERPRISE_PLUS, "8 32"],
     [VCENTER_STANDARD, "1 1"],
 ]
-ALWAYS_OK = {"levels": ("always_ok", False)}
+ALWAYS_OK = EsxVsphereLicensesParams(levels=("always_ok", False))
 
 
-def _check(item: str, params: Mapping[str, object]) -> list[Result | Metric]:
+def _check(item: str, params: EsxVsphereLicensesParams) -> list[Result | Metric]:
     results: CheckResult = check_esx_vsphere_licenses(
         item, params, parse_esx_vsphere_licenses(STRING_TABLE)
     )
@@ -60,3 +59,24 @@ def test_always_ok_does_not_alert_even_when_all_licenses_are_used() -> None:
 
     assert _used_result(results).state is State.OK
     assert _metric(results).levels == (None, None)
+
+
+def test_crit_on_all_alerts_when_all_licenses_are_used() -> None:
+    results = _check(VCENTER_STANDARD, EsxVsphereLicensesParams(levels=("crit_on_all", None)))
+
+    assert _used_result(results).state is State.CRIT
+    assert _metric(results).levels == (1.0, 1.0)
+
+
+def test_absolute_levels_apply_to_unused_licenses() -> None:
+    results = _check(ENTERPRISE_PLUS, EsxVsphereLicensesParams(levels=("absolute", (80, 10))))
+
+    assert _used_result(results).state is State.WARN
+    assert _metric(results).levels == (16.0, 86.0)
+
+
+def test_percentage_levels_apply_to_unused_licenses() -> None:
+    results = _check(ENTERPRISE_PLUS, EsxVsphereLicensesParams(levels=("percentage", (87.5, 75.0))))
+
+    assert _used_result(results).state is State.CRIT
+    assert _metric(results).levels == (12.0, 24.0)

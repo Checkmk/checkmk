@@ -2180,7 +2180,7 @@ FROZEN_SERVICE_NAMES: Final[Mapping[str, str]] = {
     "veeam_license": "Veeam License",
     "veeam_proxies": "Backup proxy %s",
     "veeam_repositories": "Backup repository %s",
-    "veeam_restore_points": "Restore points %s",
+    "veeam_restore_points": "Restore points",
     "veeam_scaleout_repositories": "Scale-out repository %s",
     "veeam_tapejobs": "VEEAM Tape Job %s",
     "veritas_vcs": "VCS Cluster %s",

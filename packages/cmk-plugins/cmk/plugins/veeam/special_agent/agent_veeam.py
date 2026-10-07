@@ -483,14 +483,18 @@ def _total_count(backup_objects: Sequence[Mapping[str, object]]) -> int | None:
 
 
 def fetch_restore_points(limit: int = 500) -> FetchStrategy:
-    """One record per backed up machine: its newest restore point and a malware rollup.
+    """One record per backed up machine: its newest restore point and a malware rollup,
+    piggybacked onto the machine's host.
 
-    A machine backed up by several jobs has one backup object per job; they are
-    merged, as they share the same name and platform.
+    The host is the object's name in its backup chain
+    (GET /api/v1/backups/{backupId}/objects), the identity `fetch_backups` uses too, or
+    its name in GET /api/v1/backupObjects if the chain could not be resolved. Every chain
+    (GET /api/v1/backups) is resolved, so that an object without restore points lands on
+    the same host as the others. A machine backed up by several jobs has one backup
+    object per job; they are merged on the host.
 
-    Restore points reference their chain via `backupId`, resolved to the chain's
-    object(s) via GET /api/v1/backups/{backupId}/objects; a chain this fails for
-    is simply left unjoined. See `_restore_point_object_id` for how a point is
+    Restore points reference their chain via `backupId`; a point whose chain could not
+    be resolved is joined by name and platform instead, if possible. See `_restore_point_object_id` for how a point is
     attributed to one of several objects sharing a chain.
     """
 
@@ -499,6 +503,10 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
         restore_points = _get_all(client, "/api/v1/restorePoints", limit)
 
         backup_ids = {
+            backup_id
+            for backup in _get_all(client, "/api/v1/backups", limit)
+            if isinstance(backup, dict) and isinstance(backup_id := backup.get("id"), str)
+        } | {
             backup_id
             for point in restore_points
             if isinstance(point, dict) and isinstance(backup_id := point.get("backupId"), str)
@@ -546,15 +554,28 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
             if object_id is not None:
                 points.setdefault(object_id, []).append(point)
 
-        machines: dict[tuple[object, object], list[Mapping[str, object]]] = {}
+        host_by_object_id: dict[str, str] = {
+            object_id: host
+            for objects in objects_by_backup_id.values()
+            for obj in objects
+            if isinstance(object_id := obj.get("id"), str)
+            and isinstance(host := obj.get("name"), str)
+            and host
+        }
+        machines: dict[str, list[Mapping[str, object]]] = {}
         for backup_object in backup_objects:
-            if isinstance(backup_object, dict) and isinstance(backup_object.get("id"), str):
-                machines.setdefault(
-                    (backup_object.get("name"), backup_object.get("platformName")), []
-                ).append(backup_object)
+            if (
+                isinstance(backup_object, dict)
+                and isinstance(object_id := backup_object.get("id"), str)
+                and isinstance(
+                    host := host_by_object_id.get(object_id, backup_object.get("name")), str
+                )
+                and host
+            ):
+                machines.setdefault(host, []).append(backup_object)
 
-        output = f"<<<{name}:sep(0)>>>\n"
-        for machine_objects in machines.values():
+        piggyback: dict[str, str] = {}
+        for host, machine_objects in machines.items():
             machine_points = [
                 point for obj in machine_objects for point in points.get(str(obj["id"]), [])
             ]
@@ -569,7 +590,6 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
                 machine_objects[0],
             )
             record = {
-                "name": owner.get("name"),
                 "platformName": owner.get("platformName"),
                 "type": owner.get("type"),
                 "restorePointsCount": _total_count(machine_objects),
@@ -584,8 +604,8 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
                 ),
                 "malwareStatus": _malware_rollup(machine_points),
             }
-            output += f"{json.dumps(record)}\n"
-        return Fetched(own=output)
+            piggyback[host] = f"<<<{name}:sep(0)>>>\n{json.dumps(record)}\n"
+        return Fetched(piggyback=piggyback)
 
     return _fetch
 
@@ -682,7 +702,9 @@ def _resolve_job_object_names(
         names = [
             object_name
             for obj in objects
-            if isinstance(obj, dict) and isinstance(object_name := obj.get("name"), str)
+            if isinstance(obj, dict)
+            and isinstance(object_name := obj.get("name"), str)
+            and object_name
         ]
         if names:
             objects_by_job[job_id] = _JobObjects(names=names, job_name=job_name, session=session)

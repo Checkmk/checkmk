@@ -404,6 +404,26 @@ def _restore_point(**overrides: object) -> dict[str, object]:
     } | overrides
 
 
+def _restore_points_by_host(out: str) -> dict[str, dict[str, object]]:
+    """The restore point record piggybacked onto each host."""
+    records: dict[str, dict[str, object]] = {}
+    lines = iter(out.splitlines())
+    for line in lines:
+        host = line.removeprefix("<<<<").removesuffix(">>>>")
+        assert host and line == f"<<<<{host}>>>>"
+        assert next(lines) == "<<<veeam_restore_points:sep(0)>>>"
+        records[host] = json.loads(next(lines))
+        assert next(lines) == "<<<<>>>>"
+    return records
+
+
+def _mock_backups(api: responses.RequestsMock, backup_ids: list[str]) -> None:
+    api.get(
+        f"{URL}/api/v1/backups?skip=0&limit=500",
+        json={"data": [{"id": i} for i in backup_ids], "pagination": {"total": len(backup_ids)}},
+    )
+
+
 def _reduce_restore_points(
     api: responses.RequestsMock,
     storage: Storage,
@@ -432,15 +452,14 @@ def _reduce_restore_points(
     )
     backup_ids = {bid for p in points if isinstance(bid := p.get("backupId"), str)}
     resolved = object_id_by_backup_id or dict.fromkeys(backup_ids, "obj-1")
+    _mock_backups(api, list(resolved))
     for backup_id, object_id in resolved.items():
         api.get(
             f"{URL}/api/v1/backups/{backup_id}/objects?skip=0&limit=500",
             json={"data": [{"id": object_id}], "pagination": {"total": 1}},
         )
     write_sections(_client(_auth(storage)), [("veeam_restore_points", fetch_restore_points())])
-    header, *lines = capsys.readouterr().out.splitlines()
-    assert header == "<<<veeam_restore_points:sep(0)>>>"
-    return [json.loads(line) for line in lines]
+    return list(_restore_points_by_host(capsys.readouterr().out).values())
 
 
 def test_restore_points_are_reduced_to_one_record_per_machine(
@@ -455,7 +474,6 @@ def test_restore_points_are_reduced_to_one_record_per_machine(
         [_restore_point(type="Full"), _restore_point(creationTime="2026-10-01T10:00:00+00:00")],
     ) == [
         {
-            "name": "vm-1",
             "platformName": "VMware",
             "type": "VM",
             "restorePointsCount": 2,
@@ -544,6 +562,7 @@ def test_restore_points_unsupported_backup_platform_is_not_joined(
         f"{URL}/api/v1/restorePoints?skip=0&limit=500",
         json={"data": points, "pagination": {"total": len(points)}},
     )
+    _mock_backups(api, ["backup-1"])
     api.get(
         f"{URL}/api/v1/backups/backup-1/objects?skip=0&limit=500",
         status=HTTPStatus.BAD_REQUEST,
@@ -552,9 +571,7 @@ def test_restore_points_unsupported_backup_platform_is_not_joined(
 
     write_sections(_client(_auth(storage)), [("veeam_restore_points", fetch_restore_points())])
 
-    header, *lines = capsys.readouterr().out.splitlines()
-    assert header == "<<<veeam_restore_points:sep(0)>>>"
-    (record,) = (json.loads(line) for line in lines)
+    record = _restore_points_by_host(capsys.readouterr().out)["vm-1"]
     assert record["lastRestorePoint"] is None
     assert record["malwareStatus"] is None
 
@@ -601,6 +618,7 @@ def test_restore_points_multi_object_chain_matched_by_suffixed_name(
         f"{URL}/api/v1/restorePoints?skip=0&limit=500",
         json={"data": points, "pagination": {"total": len(points)}},
     )
+    _mock_backups(api, ["shared-backup"])
     api.get(
         f"{URL}/api/v1/backups/shared-backup/objects?skip=0&limit=500",
         json={
@@ -611,11 +629,17 @@ def test_restore_points_multi_object_chain_matched_by_suffixed_name(
 
     write_sections(_client(_auth(storage)), [("veeam_restore_points", fetch_restore_points())])
 
-    header, *lines = capsys.readouterr().out.splitlines()
-    assert header == "<<<veeam_restore_points:sep(0)>>>"
-    records = {record["name"]: record for record in (json.loads(line) for line in lines)}
-    assert records["vm-1"]["lastRestorePoint"]["creationTime"] == "2026-10-01T09:00:00+00:00"
-    assert records["vm-2"]["lastRestorePoint"]["creationTime"] == "2026-10-01T10:00:00+00:00"
+    records = _restore_points_by_host(capsys.readouterr().out)
+    assert records["vm-1"]["lastRestorePoint"] == {
+        "creationTime": "2026-10-01T09:00:00+00:00",
+        "type": "Increment",
+        "malwareStatus": "Clean",
+    }
+    assert records["vm-2"]["lastRestorePoint"] == {
+        "creationTime": "2026-10-01T10:00:00+00:00",
+        "type": "Increment",
+        "malwareStatus": "Clean",
+    }
 
 
 def _backup_object(
@@ -636,8 +660,11 @@ def _run_restore_points(
     capsys: pytest.CaptureFixture[str],
     backup_objects: list[dict[str, object]],
     points_by_object: dict[str, list[dict[str, object]]],
-) -> list[dict[str, object]]:
-    """Each object gets its own backup chain, named after the object's id."""
+    chain_names: dict[str, str] | None = None,
+) -> dict[str, dict[str, object]]:
+    """Each object gets its own backup chain, named after the object's id. The object's
+    name in its chain is taken from `chain_names`, if given."""
+    _mock_backups(api, [str(o["id"]) for o in backup_objects])
     api.get(
         f"{URL}/api/v1/backupObjects?skip=0&limit=500",
         json={"data": backup_objects, "pagination": {"total": len(backup_objects)}},
@@ -651,15 +678,17 @@ def _run_restore_points(
         f"{URL}/api/v1/restorePoints?skip=0&limit=500",
         json={"data": points, "pagination": {"total": len(points)}},
     )
-    for object_id in points_by_object:
+    for object_id in (str(o["id"]) for o in backup_objects):
+        name = (chain_names or {}).get(object_id)
         api.get(
             f"{URL}/api/v1/backups/{object_id}/objects?skip=0&limit=500",
-            json={"data": [{"id": object_id}], "pagination": {"total": 1}},
+            json={
+                "data": [{"id": object_id} | ({} if name is None else {"name": name})],
+                "pagination": {"total": 1},
+            },
         )
     write_sections(_client(_auth(storage)), [("veeam_restore_points", fetch_restore_points())])
-    header, *lines = capsys.readouterr().out.splitlines()
-    assert header == "<<<veeam_restore_points:sep(0)>>>"
-    return [json.loads(line) for line in lines]
+    return _restore_points_by_host(capsys.readouterr().out)
 
 
 def test_restore_points_of_one_machine_in_several_jobs_are_merged(
@@ -679,14 +708,14 @@ def test_restore_points_of_one_machine_in_several_jobs_are_merged(
                 _restore_point(creationTime="2026-10-01T10:00:00+00:00"),
             ],
         },
-    )
+    ).values()
     assert record["restorePointsCount"] == 3
     assert isinstance(last := record["lastRestorePoint"], dict)
     assert last["creationTime"] == "2026-10-01T10:00:00+00:00"
     assert record["malwareStatus"] == "Suspicious"
 
 
-def test_restore_points_of_one_name_on_two_platforms_are_not_merged(
+def test_restore_points_are_piggybacked_onto_the_object_name_in_its_chain(
     api: responses.RequestsMock,
     storage: Storage,
     capsys: pytest.CaptureFixture[str],
@@ -695,10 +724,41 @@ def test_restore_points_of_one_name_on_two_platforms_are_not_merged(
         api,
         storage,
         capsys,
-        [_backup_object("obj-1", 1), _backup_object("obj-2", 1, platformName="HyperV")],
-        {"obj-1": [_restore_point()], "obj-2": [_restore_point()]},
+        [_backup_object("obj-1", 1, name="172.31.26.65")],
+        {"obj-1": [_restore_point()]},
+        chain_names={"obj-1": "ip-172-31-26-65"},
     )
-    assert [r["platformName"] for r in records] == ["VMware", "HyperV"]
+    assert list(records) == ["ip-172-31-26-65"]
+
+
+def test_restore_points_object_without_points_lands_on_its_chain_host(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    records = _run_restore_points(
+        api,
+        storage,
+        capsys,
+        [
+            _backup_object("obj-1", 1, name="172.31.26.65"),
+            _backup_object("obj-2", 0, name="172.31.26.65"),
+        ],
+        {"obj-1": [_restore_point()]},
+        chain_names={"obj-1": "ip-172-31-26-65", "obj-2": "ip-172-31-26-65"},
+    )
+    assert list(records) == ["ip-172-31-26-65"]
+    assert records["ip-172-31-26-65"]["restorePointsCount"] == 1
+
+
+def test_restore_points_without_host_name_are_dropped(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert not _run_restore_points(
+        api, storage, capsys, [_backup_object("obj-1", 1, name="")], {"obj-1": [_restore_point()]}
+    )
 
 
 def test_restore_points_type_is_taken_from_the_object_with_the_newest_point(
@@ -715,7 +775,7 @@ def test_restore_points_type_is_taken_from_the_object_with_the_newest_point(
             "obj-1": [_restore_point()],
             "obj-2": [_restore_point(creationTime="2026-10-01T10:00:00+00:00")],
         },
-    )
+    ).values()
     assert record["type"] == "Directory"
 
 
@@ -730,7 +790,7 @@ def test_restore_points_count_is_unknown_if_one_merged_object_lacks_it(
         capsys,
         [_backup_object("obj-1", 1), _backup_object("obj-2", None)],
         {"obj-1": [_restore_point()], "obj-2": [_restore_point()]},
-    )
+    ).values()
     assert record["restorePointsCount"] is None
 
 

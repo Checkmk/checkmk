@@ -15,7 +15,7 @@ from cmk.rulesets.v1.form_specs import (
     TimeMagnitude,
     TimeSpan,
 )
-from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
 _HOUR = 60.0 * 60.0
 
@@ -44,5 +44,5 @@ rule_spec_veeam_restore_points = CheckParameters(
     title=Title("Veeam: Restore points"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_veeam_restore_points,
-    condition=HostAndItemCondition(item_title=Title("Backup object name")),
+    condition=HostCondition(),
 )

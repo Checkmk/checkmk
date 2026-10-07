@@ -108,193 +108,193 @@ def register(
     painter_option_registry.register(PainterOptionTimestampDate())
     painter_option_registry.register(PainterOptionMatrixOmitUniform())
     painter_option_registry.register(PainterOptionShowInternalGraphAndMetricIds())
-    painter_registry.register(PainterSiteIcon())
-    painter_registry.register(PainterSitenamePlain())
-    painter_registry.register(PainterSitealias())
-    painter_registry.register(PainterServiceState())
-    painter_registry.register(PainterSvcPluginOutput())
-    painter_registry.register(PainterSvcLongPluginOutput())
-    painter_registry.register(PainterSvcPerfData())
-    painter_registry.register(PainterSvcMetrics())
+    painter_registry.register(make_site_icon_painter())
+    painter_registry.register(make_sitename_plain_painter())
+    painter_registry.register(make_sitealias_painter())
+    painter_registry.register(make_service_state_painter())
+    painter_registry.register(make_svc_plugin_output_painter())
+    painter_registry.register(make_svc_long_plugin_output_painter())
+    painter_registry.register(make_svc_perf_data_painter())
+    painter_registry.register(make_svc_metrics_painter())
     for num in range(1, 11):
-        painter_registry.register(PainterSvcPerfVal(num))
-    painter_registry.register(PainterSvcCheckCommand())
-    painter_registry.register(PainterSvcCheckCommandExpanded())
-    painter_registry.register(PainterSvcNotesURL())
-    painter_registry.register(PainterSvcContacts())
-    painter_registry.register(PainterSvcContactGroups())
-    painter_registry.register(PainterServiceDescription())
-    painter_registry.register(PainterServiceDisplayName())
-    painter_registry.register(PainterSvcStateAge())
-    painter_registry.register(PainterSvcCheckAge())
-    painter_registry.register(PainterSvcCheckCacheInfo())
-    painter_registry.register(PainterSvcNextCheck())
-    painter_registry.register(PainterSvcLastTimeOk())
-    painter_registry.register(PainterSvcNextNotification())
-    painter_registry.register(PainterSvcNotificationPostponementReason())
-    painter_registry.register(PainterSvcLastNotification())
-    painter_registry.register(PainterSvcNotificationNumber())
-    painter_registry.register(PainterSvcCheckLatency())
-    painter_registry.register(PainterSvcCheckDuration())
-    painter_registry.register(PainterSvcAttempt())
-    painter_registry.register(PainterSvcNormalInterval())
-    painter_registry.register(PainterSvcRetryInterval())
-    painter_registry.register(PainterSvcCheckInterval())
-    painter_registry.register(PainterSvcCheckType())
-    painter_registry.register(PainterSvcInDowntime())
-    painter_registry.register(PainterSvcInNotifper())
-    painter_registry.register(PainterSvcNotifper())
-    painter_registry.register(PainterSvcCheckPeriod())
-    painter_registry.register(PainterSvcFlapping())
-    painter_registry.register(PainterSvcNotificationsEnabled())
-    painter_registry.register(PainterSvcIsActive())
-    painter_registry.register(PainterSvcGroupMemberlist())
-    painter_registry.register(PainterCheckManpage())
-    painter_registry.register(PainterSvcComments())
-    painter_registry.register(PainterSvcAcknowledged())
-    painter_registry.register(PainterSvcCustomNotes())
-    painter_registry.register(PainterSvcStaleness())
-    painter_registry.register(PainterSvcIsStale())
-    painter_registry.register(PainterServiceCustomVariables())
-    painter_registry.register(PainterServiceCustomVariable())
-    painter_registry.register(PainterHostCustomVariable())
-    painter_registry.register(PainterHostState())
-    painter_registry.register(PainterHostStateOnechar())
-    painter_registry.register(PainterHostPluginOutput())
-    painter_registry.register(PainterHostPerfData())
-    painter_registry.register(PainterHostCheckCommand())
-    painter_registry.register(PainterHostCheckCommandExpanded())
-    painter_registry.register(PainterHostNotesURL())
-    painter_registry.register(PainterHostStateAge())
-    painter_registry.register(PainterHostCheckAge())
-    painter_registry.register(PainterHostNextCheck())
-    painter_registry.register(PainterHostNextNotification())
-    painter_registry.register(PainterHostNotificationPostponementReason())
-    painter_registry.register(PainterHostLastNotification())
-    painter_registry.register(PainterHostCheckLatency())
-    painter_registry.register(PainterHostCheckDuration())
-    painter_registry.register(PainterHostAttempt())
-    painter_registry.register(PainterHostNormalInterval())
-    painter_registry.register(PainterHostRetryInterval())
-    painter_registry.register(PainterHostCheckInterval())
-    painter_registry.register(PainterHostCheckType())
-    painter_registry.register(PainterHostInNotifper())
-    painter_registry.register(PainterHostNotifper())
-    painter_registry.register(PainterHostNotificationNumber())
-    painter_registry.register(PainterHostFlapping())
-    painter_registry.register(PainterHostIsActive())
-    painter_registry.register(PainterHostNotificationsEnabled())
-    painter_registry.register(PainterHostBlack())
-    painter_registry.register(PainterHostWithState())
-    painter_registry.register(PainterHost())
-    painter_registry.register(PainterAlias())
-    painter_registry.register(PainterHostAddress())
-    painter_registry.register(PainterHostIpv4Address())
-    painter_registry.register(PainterHostIpv6Address())
-    painter_registry.register(PainterHostAddresses())
-    painter_registry.register(PainterHostAddressesAdditional())
-    painter_registry.register(PainterHostAddressFamily())
-    painter_registry.register(PainterHostAddressFamilies())
-    painter_registry.register(PainterNumServices())
-    painter_registry.register(PainterNumServicesOk())
-    painter_registry.register(PainterNumProblems())
-    painter_registry.register(PainterNumServicesWarn())
-    painter_registry.register(PainterNumServicesCrit())
-    painter_registry.register(PainterNumServicesUnknown())
-    painter_registry.register(PainterNumServicesPending())
-    painter_registry.register(PainterHostServices())
-    painter_registry.register(PainterHostParents())
-    painter_registry.register(PainterHostChilds())
-    painter_registry.register(PainterHostGroupMemberlist())
-    painter_registry.register(PainterHostContacts())
-    painter_registry.register(PainterHostContactGroups())
-    painter_registry.register(PainterHostCustomNotes())
-    painter_registry.register(PainterHostComments())
-    painter_registry.register(PainterHostInDowntime())
-    painter_registry.register(PainterHostAcknowledged())
-    painter_registry.register(PainterHostStaleness())
-    painter_registry.register(PainterHostIsStale())
-    painter_registry.register(PainterHostCustomVariables())
-    painter_registry.register(PainterServiceDiscoveryState())
-    painter_registry.register(PainterServiceDiscoveryCheck())
-    painter_registry.register(PainterServiceDiscoveryService())
-    painter_registry.register(PainterHostgroupHosts())
-    painter_registry.register(PainterHgNumServices())
-    painter_registry.register(PainterHgNumServicesOk())
-    painter_registry.register(PainterHgNumServicesWarn())
-    painter_registry.register(PainterHgNumServicesCrit())
-    painter_registry.register(PainterHgNumServicesUnknown())
-    painter_registry.register(PainterHgNumServicesPending())
-    painter_registry.register(PainterHgNumHostsUp())
-    painter_registry.register(PainterHgNumHostsDown())
-    painter_registry.register(PainterHgNumHostsUnreach())
-    painter_registry.register(PainterHgNumHostsPending())
-    painter_registry.register(PainterHgName())
-    painter_registry.register(PainterHgAlias())
-    painter_registry.register(PainterSgServices())
-    painter_registry.register(PainterSgNumServices())
-    painter_registry.register(PainterSgNumServicesOk())
-    painter_registry.register(PainterSgNumServicesWarn())
-    painter_registry.register(PainterSgNumServicesCrit())
-    painter_registry.register(PainterSgNumServicesUnknown())
-    painter_registry.register(PainterSgNumServicesPending())
-    painter_registry.register(PainterSgName())
-    painter_registry.register(PainterSgAlias())
-    painter_registry.register(PainterCommentId())
-    painter_registry.register(PainterCommentAuthor())
-    painter_registry.register(PainterCommentComment())
-    painter_registry.register(PainterCommentWhat())
-    painter_registry.register(PainterCommentTime())
-    painter_registry.register(PainterCommentExpires())
-    painter_registry.register(PainterCommentEntryType())
-    painter_registry.register(PainterDowntimeId())
-    painter_registry.register(PainterDowntimeAuthor())
-    painter_registry.register(PainterDowntimeComment())
-    painter_registry.register(PainterDowntimeFixed())
-    painter_registry.register(PainterDowntimeOrigin())
-    painter_registry.register(PainterDowntimeWhat())
-    painter_registry.register(PainterDowntimeType())
-    painter_registry.register(PainterDowntimeEntryTime())
-    painter_registry.register(PainterDowntimeStartTime())
-    painter_registry.register(PainterDowntimeEndTime())
-    painter_registry.register(PainterDowntimeDuration())
-    painter_registry.register(PainterLogDetailsHistory())
-    painter_registry.register(PainterLogMessage())
-    painter_registry.register(PainterLogPluginOutput())
-    painter_registry.register(PainterLogWhat())
-    painter_registry.register(PainterLogAttempt())
-    painter_registry.register(PainterLogStateType())
-    painter_registry.register(PainterLogStateInfo())
-    painter_registry.register(PainterLogType())
-    painter_registry.register(PainterLogContactName())
-    painter_registry.register(PainterLogCommand())
-    painter_registry.register(PainterLogIcon())
-    painter_registry.register(PainterLogOptions())
-    painter_registry.register(PainterLogComment())
-    painter_registry.register(PainterLogTime())
-    painter_registry.register(PainterLogLineno())
-    painter_registry.register(PainterLogDate())
-    painter_registry.register(PainterLogState())
-    painter_registry.register(PainterAlertStatsOk())
-    painter_registry.register(PainterAlertStatsWarn())
-    painter_registry.register(PainterAlertStatsCrit())
-    painter_registry.register(PainterAlertStatsUnknown())
-    painter_registry.register(PainterAlertStatsProblem())
-    painter_registry.register(PainterHostTags())
-    painter_registry.register(PainterHostTagsWithTitles())
-    painter_registry.register(PainterServiceTags())
-    painter_registry.register(PainterServiceTagsWithTitles())
-    painter_registry.register(PainterHostLabels())
-    painter_registry.register(PainterServiceLabels())
-    painter_registry.register(PainterHostDockerNode())
-    painter_registry.register(PainterHostSpecificMetric())
-    painter_registry.register(PainterServiceSpecificMetric())
-    painter_registry.register(PainterHostKubernetesCluster())
-    painter_registry.register(PainterHostKubernetesNamespace())
-    painter_registry.register(PainterHostKubernetesDeployment())
-    painter_registry.register(PainterHostKubernetesDaemonset())
-    painter_registry.register(PainterHostKubernetesStatefulset())
-    painter_registry.register(PainterHostKubernetesNode())
+        painter_registry.register(make_svc_perf_val_painter(num))
+    painter_registry.register(make_svc_check_command_painter())
+    painter_registry.register(make_svc_check_command_expanded_painter())
+    painter_registry.register(make_svc_notes_url_painter())
+    painter_registry.register(make_svc_contacts_painter())
+    painter_registry.register(make_svc_contact_groups_painter())
+    painter_registry.register(make_service_description_painter())
+    painter_registry.register(make_service_display_name_painter())
+    painter_registry.register(make_svc_state_age_painter())
+    painter_registry.register(make_svc_check_age_painter())
+    painter_registry.register(make_svc_check_cache_info_painter())
+    painter_registry.register(make_svc_next_check_painter())
+    painter_registry.register(make_svc_last_time_ok_painter())
+    painter_registry.register(make_svc_next_notification_painter())
+    painter_registry.register(make_svc_notification_postponement_reason_painter())
+    painter_registry.register(make_svc_last_notification_painter())
+    painter_registry.register(make_svc_notification_number_painter())
+    painter_registry.register(make_svc_check_latency_painter())
+    painter_registry.register(make_svc_check_duration_painter())
+    painter_registry.register(make_svc_attempt_painter())
+    painter_registry.register(make_svc_normal_interval_painter())
+    painter_registry.register(make_svc_retry_interval_painter())
+    painter_registry.register(make_svc_check_interval_painter())
+    painter_registry.register(make_svc_check_type_painter())
+    painter_registry.register(make_svc_in_downtime_painter())
+    painter_registry.register(make_svc_in_notifper_painter())
+    painter_registry.register(make_svc_notifper_painter())
+    painter_registry.register(make_svc_check_period_painter())
+    painter_registry.register(make_svc_flapping_painter())
+    painter_registry.register(make_svc_notifications_enabled_painter())
+    painter_registry.register(make_svc_is_active_painter())
+    painter_registry.register(make_svc_group_memberlist_painter())
+    painter_registry.register(make_check_manpage_painter())
+    painter_registry.register(make_svc_comments_painter())
+    painter_registry.register(make_svc_acknowledged_painter())
+    painter_registry.register(make_svc_custom_notes_painter())
+    painter_registry.register(make_svc_staleness_painter())
+    painter_registry.register(make_svc_is_stale_painter())
+    painter_registry.register(make_svc_custom_vars_painter())
+    painter_registry.register(make_service_custom_variable_painter())
+    painter_registry.register(make_host_custom_variable_painter())
+    painter_registry.register(make_host_state_painter())
+    painter_registry.register(make_host_state_onechar_painter())
+    painter_registry.register(make_host_plugin_output_painter())
+    painter_registry.register(make_host_perf_data_painter())
+    painter_registry.register(make_host_check_command_painter())
+    painter_registry.register(make_host_check_command_expanded_painter())
+    painter_registry.register(make_host_notes_url_painter())
+    painter_registry.register(make_host_state_age_painter())
+    painter_registry.register(make_host_check_age_painter())
+    painter_registry.register(make_host_next_check_painter())
+    painter_registry.register(make_host_next_notification_painter())
+    painter_registry.register(make_host_notification_postponement_reason_painter())
+    painter_registry.register(make_host_last_notification_painter())
+    painter_registry.register(make_host_check_latency_painter())
+    painter_registry.register(make_host_check_duration_painter())
+    painter_registry.register(make_host_attempt_painter())
+    painter_registry.register(make_host_normal_interval_painter())
+    painter_registry.register(make_host_retry_interval_painter())
+    painter_registry.register(make_host_check_interval_painter())
+    painter_registry.register(make_host_check_type_painter())
+    painter_registry.register(make_host_in_notifper_painter())
+    painter_registry.register(make_host_notifper_painter())
+    painter_registry.register(make_host_notification_number_painter())
+    painter_registry.register(make_host_flapping_painter())
+    painter_registry.register(make_host_is_active_painter())
+    painter_registry.register(make_host_notifications_enabled_painter())
+    painter_registry.register(make_host_black_painter())
+    painter_registry.register(make_host_with_state_painter())
+    painter_registry.register(make_host_painter())
+    painter_registry.register(make_alias_painter())
+    painter_registry.register(make_host_address_painter())
+    painter_registry.register(make_host_ipv4_address_painter())
+    painter_registry.register(make_host_ipv6_address_painter())
+    painter_registry.register(make_host_addresses_painter())
+    painter_registry.register(make_host_addresses_additional_painter())
+    painter_registry.register(make_host_address_family_painter())
+    painter_registry.register(make_host_address_families_painter())
+    painter_registry.register(make_num_services_painter())
+    painter_registry.register(make_num_services_ok_painter())
+    painter_registry.register(make_num_problems_painter())
+    painter_registry.register(make_num_services_warn_painter())
+    painter_registry.register(make_num_services_crit_painter())
+    painter_registry.register(make_num_services_unknown_painter())
+    painter_registry.register(make_num_services_pending_painter())
+    painter_registry.register(make_host_services_painter())
+    painter_registry.register(make_host_parents_painter())
+    painter_registry.register(make_host_childs_painter())
+    painter_registry.register(make_host_group_memberlist_painter())
+    painter_registry.register(make_host_contacts_painter())
+    painter_registry.register(make_host_contact_groups_painter())
+    painter_registry.register(make_host_custom_notes_painter())
+    painter_registry.register(make_host_comments_painter())
+    painter_registry.register(make_host_in_downtime_painter())
+    painter_registry.register(make_host_acknowledged_painter())
+    painter_registry.register(make_host_staleness_painter())
+    painter_registry.register(make_host_is_stale_painter())
+    painter_registry.register(make_host_custom_vars_painter())
+    painter_registry.register(make_service_discovery_state_painter())
+    painter_registry.register(make_service_discovery_check_painter())
+    painter_registry.register(make_service_discovery_service_painter())
+    painter_registry.register(make_hostgroup_hosts_painter())
+    painter_registry.register(make_hg_num_services_painter())
+    painter_registry.register(make_hg_num_services_ok_painter())
+    painter_registry.register(make_hg_num_services_warn_painter())
+    painter_registry.register(make_hg_num_services_crit_painter())
+    painter_registry.register(make_hg_num_services_unknown_painter())
+    painter_registry.register(make_hg_num_services_pending_painter())
+    painter_registry.register(make_hg_num_hosts_up_painter())
+    painter_registry.register(make_hg_num_hosts_down_painter())
+    painter_registry.register(make_hg_num_hosts_unreach_painter())
+    painter_registry.register(make_hg_num_hosts_pending_painter())
+    painter_registry.register(make_hg_name_painter())
+    painter_registry.register(make_hg_alias_painter())
+    painter_registry.register(make_sg_services_painter())
+    painter_registry.register(make_sg_num_services_painter())
+    painter_registry.register(make_sg_num_services_ok_painter())
+    painter_registry.register(make_sg_num_services_warn_painter())
+    painter_registry.register(make_sg_num_services_crit_painter())
+    painter_registry.register(make_sg_num_services_unknown_painter())
+    painter_registry.register(make_sg_num_services_pending_painter())
+    painter_registry.register(make_sg_name_painter())
+    painter_registry.register(make_sg_alias_painter())
+    painter_registry.register(make_comment_id_painter())
+    painter_registry.register(make_comment_author_painter())
+    painter_registry.register(make_comment_comment_painter())
+    painter_registry.register(make_comment_what_painter())
+    painter_registry.register(make_comment_time_painter())
+    painter_registry.register(make_comment_expires_painter())
+    painter_registry.register(make_comment_entry_type_painter())
+    painter_registry.register(make_downtime_id_painter())
+    painter_registry.register(make_downtime_author_painter())
+    painter_registry.register(make_downtime_comment_painter())
+    painter_registry.register(make_downtime_fixed_painter())
+    painter_registry.register(make_downtime_origin_painter())
+    painter_registry.register(make_downtime_what_painter())
+    painter_registry.register(make_downtime_type_painter())
+    painter_registry.register(make_downtime_entry_time_painter())
+    painter_registry.register(make_downtime_start_time_painter())
+    painter_registry.register(make_downtime_end_time_painter())
+    painter_registry.register(make_downtime_duration_painter())
+    painter_registry.register(make_log_details_history_painter())
+    painter_registry.register(make_log_message_painter())
+    painter_registry.register(make_log_plugin_output_painter())
+    painter_registry.register(make_log_what_painter())
+    painter_registry.register(make_log_attempt_painter())
+    painter_registry.register(make_log_state_type_painter())
+    painter_registry.register(make_log_state_info_painter())
+    painter_registry.register(make_log_type_painter())
+    painter_registry.register(make_log_contact_name_painter())
+    painter_registry.register(make_log_command_painter())
+    painter_registry.register(make_log_icon_painter())
+    painter_registry.register(make_log_options_painter())
+    painter_registry.register(make_log_comment_painter())
+    painter_registry.register(make_log_time_painter())
+    painter_registry.register(make_log_lineno_painter())
+    painter_registry.register(make_log_date_painter())
+    painter_registry.register(make_log_state_painter())
+    painter_registry.register(make_alert_stats_ok_painter())
+    painter_registry.register(make_alert_stats_warn_painter())
+    painter_registry.register(make_alert_stats_crit_painter())
+    painter_registry.register(make_alert_stats_unknown_painter())
+    painter_registry.register(make_alert_stats_problem_painter())
+    painter_registry.register(make_host_tags_painter())
+    painter_registry.register(make_host_tags_with_titles_painter())
+    painter_registry.register(make_service_tags_painter())
+    painter_registry.register(make_service_tags_with_titles_painter())
+    painter_registry.register(make_host_labels_painter())
+    painter_registry.register(make_service_labels_painter())
+    painter_registry.register(make_host_docker_node_painter())
+    painter_registry.register(make_host_specific_metric_painter())
+    painter_registry.register(make_service_specific_metric_painter())
+    painter_registry.register(make_host_kubernetes_cluster_painter())
+    painter_registry.register(make_host_kubernetes_namespace_painter())
+    painter_registry.register(make_host_kubernetes_deployment_painter())
+    painter_registry.register(make_host_kubernetes_daemonset_painter())
+    painter_registry.register(make_host_kubernetes_statefulset_painter())
+    painter_registry.register(make_host_kubernetes_node_painter())
 
 
 #   .--Painter Options-----------------------------------------------------.
@@ -447,16 +447,15 @@ def _render_site_icon(
     return None, ""
 
 
-class PainterSiteIcon(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="site_icon",
-            title=_l("Site icon"),
-            render=_render_site_icon,
-            short_title="",
-            columns=["site"],
-            sorter="site",
-        )
+def make_site_icon_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="site_icon",
+        title=_l("Site icon"),
+        short_title="",
+        columns=["site"],
+        sorter="site",
+        render=_render_site_icon,
+    )
 
 
 def _render_sitename_plain(
@@ -465,16 +464,15 @@ def _render_sitename_plain(
     return (None, row["site"])
 
 
-class PainterSitenamePlain(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="sitename_plain",
-            title=_l("Site ID"),
-            render=_render_sitename_plain,
-            short_title=_l("Site"),
-            columns=["site"],
-            sorter="site",
-        )
+def make_sitename_plain_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="sitename_plain",
+        title=_l("Site ID"),
+        short_title=_l("Site"),
+        columns=["site"],
+        sorter="site",
+        render=_render_sitename_plain,
+    )
 
 
 def _render_sitealias(
@@ -483,11 +481,10 @@ def _render_sitealias(
     return (None, context.config.sites[row["site"]]["alias"])
 
 
-class PainterSitealias(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="sitealias", title=_l("Site alias"), render=_render_sitealias, columns=["site"]
-        )
+def make_sitealias_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="sitealias", title=_l("Site alias"), columns=["site"], render=_render_sitealias
+    )
 
 
 # .
@@ -549,17 +546,16 @@ def _render_service_state(
     return _paint_service_state_short(row, config=context.config)
 
 
-class PainterServiceState(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="service_state",
-            title=_l("Service state"),
-            render=_render_service_state,
-            short_title=_l("State"),
-            columns=["service_has_been_checked", "service_state"],
-            sorter="svcstate",
-            title_classes=["center"],
-        )
+def make_service_state_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="service_state",
+        title=_l("Service state"),
+        short_title=_l("State"),
+        columns=["service_has_been_checked", "service_state"],
+        sorter="svcstate",
+        title_classes=["center"],
+        render=_render_service_state,
+    )
 
 
 def _render_svc_plugin_output(
@@ -577,16 +573,15 @@ def _render_svc_plugin_output(
     )
 
 
-class PainterSvcPluginOutput(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_plugin_output",
-            title=_l("Summary"),
-            render=_render_svc_plugin_output,
-            list_title=_l("Summary (previously named: Status details or plug-in output)"),
-            columns=["service_plugin_output", "service_custom_variables", "service_check_command"],
-            sorter="svcoutput",
-        )
+def make_svc_plugin_output_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_plugin_output",
+        title=_l("Summary"),
+        list_title=_l("Summary (previously named: Status details or plug-in output)"),
+        columns=["service_plugin_output", "service_custom_variables", "service_check_command"],
+        sorter="svcoutput",
+        render=_render_svc_plugin_output,
+    )
 
 
 def _parameters_svc_long_plugin_output(_context: PainterContext) -> Dictionary:
@@ -651,16 +646,15 @@ def _render_svc_long_plugin_output(
     return paint_stalified(row, content, context.config.staleness_threshold)
 
 
-class PainterSvcLongPluginOutput(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_long_plugin_output",
-            title=_l("Details"),
-            render=_render_svc_long_plugin_output,
-            list_title=_l("Details (previously named: long output)"),
-            columns=["service_long_plugin_output", "service_custom_variables"],
-            parameters=_parameters_svc_long_plugin_output,
-        )
+def make_svc_long_plugin_output_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_long_plugin_output",
+        title=_l("Details"),
+        list_title=_l("Details (previously named: long output)"),
+        columns=["service_long_plugin_output", "service_custom_variables"],
+        parameters=_parameters_svc_long_plugin_output,
+        render=_render_svc_long_plugin_output,
+    )
 
 
 def _render_svc_perf_data(
@@ -669,15 +663,14 @@ def _render_svc_perf_data(
     return paint_stalified(row, row["service_perf_data"], context.config.staleness_threshold)
 
 
-class PainterSvcPerfData(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_perf_data",
-            title=_l("Service metrics (source code)"),
-            render=_render_svc_perf_data,
-            short_title=_l("Metrics"),
-            columns=["service_perf_data"],
-        )
+def make_svc_perf_data_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_perf_data",
+        title=_l("Service metrics (source code)"),
+        short_title=_l("Metrics"),
+        columns=["service_perf_data"],
+        render=_render_svc_perf_data,
+    )
 
 
 def _rendered_value(metric: EvaluatedMetric) -> str:
@@ -750,17 +743,16 @@ def _render_svc_metrics(
         return "", HTML.without_escaping(output_funnel.drain())
 
 
-class PainterSvcMetrics(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_metrics",
-            title=_l("Service metrics"),
-            render=_render_svc_metrics,
-            short_title=_l("Metrics"),
-            columns=["service_check_command", "service_perf_data"],
-            printable=False,
-            painter_options=["show_internal_graph_and_metric_ids"],
-        )
+def make_svc_metrics_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_metrics",
+        title=_l("Service metrics"),
+        short_title=_l("Metrics"),
+        columns=["service_check_command", "service_perf_data"],
+        printable=False,
+        painter_options=["show_internal_graph_and_metric_ids"],
+        render=_render_svc_metrics,
+    )
 
 
 def _render_svc_perf_val(
@@ -771,15 +763,14 @@ def _render_svc_perf_val(
     )
 
 
-class PainterSvcPerfVal(InternalPainter):
-    def __init__(self, num: int) -> None:
-        super().__init__(
-            ident=f"svc_perf_val{num:02d}",
-            title=_l("Service metrics - value number %(nr)2d") % {"nr": num},
-            render=partial(_render_svc_perf_val, num),
-            short_title=_l("Val. %(nr)d") % {"nr": num},
-            columns=["service_perf_data"],
-        )
+def make_svc_perf_val_painter(num: int) -> InternalPainter:
+    return InternalPainter(
+        ident=f"svc_perf_val{num:02d}",
+        title=_l("Service metrics - value number %(nr)2d") % {"nr": num},
+        short_title=_l("Val. %(nr)d") % {"nr": num},
+        columns=["service_perf_data"],
+        render=partial(_render_svc_perf_val, num),
+    )
 
 
 def _render_svc_check_command(
@@ -788,15 +779,14 @@ def _render_svc_check_command(
     return (None, row["service_check_command"])
 
 
-class PainterSvcCheckCommand(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_check_command",
-            title=_l("Service check command"),
-            render=_render_svc_check_command,
-            short_title=_l("Check command"),
-            columns=["service_check_command"],
-        )
+def make_svc_check_command_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_check_command",
+        title=_l("Service check command"),
+        short_title=_l("Check command"),
+        columns=["service_check_command"],
+        render=_render_svc_check_command,
+    )
 
 
 def _render_svc_check_command_expanded(
@@ -805,15 +795,14 @@ def _render_svc_check_command_expanded(
     return (None, row["service_check_command_expanded"])
 
 
-class PainterSvcCheckCommandExpanded(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_check_command_expanded",
-            title=_l("Service check command expanded"),
-            render=_render_svc_check_command_expanded,
-            short_title=_l("Check command expanded"),
-            columns=["service_check_command_expanded"],
-        )
+def make_svc_check_command_expanded_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_check_command_expanded",
+        title=_l("Service check command expanded"),
+        short_title=_l("Check command expanded"),
+        columns=["service_check_command_expanded"],
+        render=_render_svc_check_command_expanded,
+    )
 
 
 def _render_svc_notes_u_r_l(
@@ -828,15 +817,14 @@ def _render_svc_notes_u_r_l(
     return None, content
 
 
-class PainterSvcNotesURL(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_notes_url",
-            title=_l("Notes (URL) for services"),
-            render=_render_svc_notes_u_r_l,
-            short_title=_l("Notes URL"),
-            columns=["host_address", "service_notes_url"],
-        )
+def make_svc_notes_url_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_notes_url",
+        title=_l("Notes (URL) for services"),
+        short_title=_l("Notes URL"),
+        columns=["host_address", "service_notes_url"],
+        render=_render_svc_notes_u_r_l,
+    )
 
 
 def _render_svc_contacts(
@@ -845,15 +833,14 @@ def _render_svc_contacts(
     return (None, ", ".join(row["service_contacts"]))
 
 
-class PainterSvcContacts(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_contacts",
-            title=_l("Service contacts"),
-            render=_render_svc_contacts,
-            short_title=_l("Contacts"),
-            columns=["service_contacts"],
-        )
+def make_svc_contacts_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_contacts",
+        title=_l("Service contacts"),
+        short_title=_l("Contacts"),
+        columns=["service_contacts"],
+        render=_render_svc_contacts,
+    )
 
 
 def _render_svc_contact_groups(
@@ -862,15 +849,14 @@ def _render_svc_contact_groups(
     return (None, ", ".join(row["service_contact_groups"]))
 
 
-class PainterSvcContactGroups(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_contact_groups",
-            title=_l("Service contact groups"),
-            render=_render_svc_contact_groups,
-            short_title=_l("Contact groups"),
-            columns=["service_contact_groups"],
-        )
+def make_svc_contact_groups_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_contact_groups",
+        title=_l("Service contact groups"),
+        short_title=_l("Contact groups"),
+        columns=["service_contact_groups"],
+        render=_render_svc_contact_groups,
+    )
 
 
 def _render_service_description(
@@ -879,16 +865,15 @@ def _render_service_description(
     return (None, row["service_description"])
 
 
-class PainterServiceDescription(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="service_description",
-            title=_l("Service name"),
-            render=_render_service_description,
-            short_title=_l("Service"),
-            columns=["service_description"],
-            sorter="svcdescr",
-        )
+def make_service_description_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="service_description",
+        title=_l("Service name"),
+        short_title=_l("Service"),
+        columns=["service_description"],
+        sorter="svcdescr",
+        render=_render_service_description,
+    )
 
 
 def _render_service_display_name(
@@ -897,16 +882,15 @@ def _render_service_display_name(
     return (None, row["service_display_name"])
 
 
-class PainterServiceDisplayName(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="service_display_name",
-            title=_l("Service alternative display name"),
-            render=_render_service_display_name,
-            short_title=_l("Display name"),
-            columns=["service_display_name"],
-            sorter="svcdispname",
-        )
+def make_service_display_name_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="service_display_name",
+        title=_l("Service alternative display name"),
+        short_title=_l("Display name"),
+        columns=["service_display_name"],
+        sorter="svcdispname",
+        render=_render_service_display_name,
+    )
 
 
 def _render_svc_state_age(
@@ -921,17 +905,16 @@ def _render_svc_state_age(
     )
 
 
-class PainterSvcStateAge(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_state_age",
-            title=_l("Age of the current service state"),
-            render=_render_svc_state_age,
-            short_title=_l("Age"),
-            columns=["service_has_been_checked", "service_last_state_change"],
-            sorter="stateage",
-            painter_options=["ts_format", "ts_date"],
-        )
+def make_svc_state_age_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_state_age",
+        title=_l("Age of the current service state"),
+        short_title=_l("Age"),
+        columns=["service_has_been_checked", "service_last_state_change"],
+        sorter="stateage",
+        painter_options=["ts_format", "ts_date"],
+        render=_render_svc_state_age,
+    )
 
 
 def _paint_checked(
@@ -968,16 +951,15 @@ def _render_svc_check_age(
     )
 
 
-class PainterSvcCheckAge(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_check_age",
-            title=_l("Time since the last check of the service"),
-            render=_render_svc_check_age,
-            short_title=_l("Checked"),
-            columns=["service_has_been_checked", "service_last_check", "service_cached_at"],
-            painter_options=["ts_format", "ts_date"],
-        )
+def make_svc_check_age_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_check_age",
+        title=_l("Time since the last check of the service"),
+        short_title=_l("Checked"),
+        columns=["service_has_been_checked", "service_last_check", "service_cached_at"],
+        painter_options=["ts_format", "ts_date"],
+        render=_render_svc_check_age,
+    )
 
 
 def _render_svc_check_cache_info(
@@ -988,16 +970,15 @@ def _render_svc_check_cache_info(
     return "", render_cache_info("service", row)
 
 
-class PainterSvcCheckCacheInfo(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_check_cache_info",
-            title=_l("Cached agent data"),
-            render=_render_svc_check_cache_info,
-            short_title=_l("Cached"),
-            columns=["service_last_check", "service_cached_at", "service_cache_interval"],
-            painter_options=["ts_format", "ts_date"],
-        )
+def make_svc_check_cache_info_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_check_cache_info",
+        title=_l("Cached agent data"),
+        short_title=_l("Cached"),
+        columns=["service_last_check", "service_cached_at", "service_cache_interval"],
+        painter_options=["ts_format", "ts_date"],
+        render=_render_svc_check_cache_info,
+    )
 
 
 def _render_svc_next_check(
@@ -1010,15 +991,14 @@ def _render_svc_next_check(
     )
 
 
-class PainterSvcNextCheck(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_next_check",
-            title=_l("Time of the next scheduled service check"),
-            render=_render_svc_next_check,
-            short_title=_l("Next check"),
-            columns=["service_next_check"],
-        )
+def make_svc_next_check_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_next_check",
+        title=_l("Time of the next scheduled service check"),
+        short_title=_l("Next check"),
+        columns=["service_next_check"],
+        render=_render_svc_next_check,
+    )
 
 
 def _render_svc_last_time_ok(
@@ -1033,15 +1013,14 @@ def _render_svc_last_time_ok(
     )
 
 
-class PainterSvcLastTimeOk(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_last_time_ok",
-            title=_l("Last time the service was OK"),
-            render=_render_svc_last_time_ok,
-            short_title=_l("Last OK"),
-            columns=["service_last_time_ok", "service_has_been_checked"],
-        )
+def make_svc_last_time_ok_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_last_time_ok",
+        title=_l("Last time the service was OK"),
+        short_title=_l("Last OK"),
+        columns=["service_last_time_ok", "service_has_been_checked"],
+        render=_render_svc_last_time_ok,
+    )
 
 
 def _render_svc_next_notification(
@@ -1054,15 +1033,14 @@ def _render_svc_next_notification(
     )
 
 
-class PainterSvcNextNotification(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_next_notification",
-            title=_l("Time of the next service notification"),
-            render=_render_svc_next_notification,
-            short_title=_l("Next notification"),
-            columns=["service_next_notification"],
-        )
+def make_svc_next_notification_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_next_notification",
+        title=_l("Time of the next service notification"),
+        short_title=_l("Next notification"),
+        columns=["service_next_notification"],
+        render=_render_svc_next_notification,
+    )
 
 
 def _paint_notification_postponement_reason(what: str, row: Row) -> CellSpec:
@@ -1099,15 +1077,14 @@ def _render_svc_notification_postponement_reason(
     return _paint_notification_postponement_reason("service", row)
 
 
-class PainterSvcNotificationPostponementReason(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_notification_postponement_reason",
-            title=_l("Notification postponement reason"),
-            render=_render_svc_notification_postponement_reason,
-            short_title=_l("Notif. postponed"),
-            columns=["service_notification_postponement_reason"],
-        )
+def make_svc_notification_postponement_reason_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_notification_postponement_reason",
+        title=_l("Notification postponement reason"),
+        short_title=_l("Notif. postponed"),
+        columns=["service_notification_postponement_reason"],
+        render=_render_svc_notification_postponement_reason,
+    )
 
 
 def _render_svc_last_notification(
@@ -1122,16 +1099,15 @@ def _render_svc_last_notification(
     )
 
 
-class PainterSvcLastNotification(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_last_notification",
-            title=_l("Time of the last service notification"),
-            render=_render_svc_last_notification,
-            short_title=_l("last notification"),
-            columns=["service_last_notification"],
-            painter_options=["ts_format", "ts_date"],
-        )
+def make_svc_last_notification_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_last_notification",
+        title=_l("Time of the last service notification"),
+        short_title=_l("last notification"),
+        columns=["service_last_notification"],
+        painter_options=["ts_format", "ts_date"],
+        render=_render_svc_last_notification,
+    )
 
 
 def _render_svc_notification_number(
@@ -1142,15 +1118,14 @@ def _render_svc_notification_number(
     return ("", "1" if current == "0" else current)
 
 
-class PainterSvcNotificationNumber(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_notification_number",
-            title=_l("Service notification number"),
-            render=_render_svc_notification_number,
-            short_title=_l("N#"),
-            columns=["service_current_notification_number"],
-        )
+def make_svc_notification_number_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_notification_number",
+        title=_l("Service notification number"),
+        short_title=_l("N#"),
+        columns=["service_current_notification_number"],
+        render=_render_svc_notification_number,
+    )
 
 
 def _render_svc_check_latency(
@@ -1159,15 +1134,14 @@ def _render_svc_check_latency(
     return ("", approx_age(row["service_latency"]))
 
 
-class PainterSvcCheckLatency(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_check_latency",
-            title=_l("Service check latency"),
-            render=_render_svc_check_latency,
-            short_title=_l("Latency"),
-            columns=["service_latency"],
-        )
+def make_svc_check_latency_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_check_latency",
+        title=_l("Service check latency"),
+        short_title=_l("Latency"),
+        columns=["service_latency"],
+        render=_render_svc_check_latency,
+    )
 
 
 def _render_svc_check_duration(
@@ -1176,15 +1150,14 @@ def _render_svc_check_duration(
     return ("", approx_age(row["service_execution_time"]))
 
 
-class PainterSvcCheckDuration(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_check_duration",
-            title=_l("Service check duration"),
-            render=_render_svc_check_duration,
-            short_title=_l("Duration"),
-            columns=["service_execution_time"],
-        )
+def make_svc_check_duration_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_check_duration",
+        title=_l("Service check duration"),
+        short_title=_l("Duration"),
+        columns=["service_execution_time"],
+        render=_render_svc_check_duration,
+    )
 
 
 def _render_svc_attempt(
@@ -1193,15 +1166,14 @@ def _render_svc_attempt(
     return (None, "%d/%d" % (row["service_current_attempt"], row["service_max_check_attempts"]))
 
 
-class PainterSvcAttempt(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_attempt",
-            title=_l("Current check attempt"),
-            render=_render_svc_attempt,
-            short_title=_l("Att."),
-            columns=["service_current_attempt", "service_max_check_attempts"],
-        )
+def make_svc_attempt_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_attempt",
+        title=_l("Current check attempt"),
+        short_title=_l("Att."),
+        columns=["service_current_attempt", "service_max_check_attempts"],
+        render=_render_svc_attempt,
+    )
 
 
 def _render_svc_normal_interval(
@@ -1210,15 +1182,14 @@ def _render_svc_normal_interval(
     return ("number", approx_age(row["service_check_interval"] * 60.0))
 
 
-class PainterSvcNormalInterval(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_normal_interval",
-            title=_l("Service normal check interval"),
-            render=_render_svc_normal_interval,
-            short_title=_l("Check int."),
-            columns=["service_check_interval"],
-        )
+def make_svc_normal_interval_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_normal_interval",
+        title=_l("Service normal check interval"),
+        short_title=_l("Check int."),
+        columns=["service_check_interval"],
+        render=_render_svc_normal_interval,
+    )
 
 
 def _render_svc_retry_interval(
@@ -1227,15 +1198,14 @@ def _render_svc_retry_interval(
     return ("number", approx_age(row["service_retry_interval"] * 60.0))
 
 
-class PainterSvcRetryInterval(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_retry_interval",
-            title=_l("Service retry check interval"),
-            render=_render_svc_retry_interval,
-            short_title=_l("Retry"),
-            columns=["service_retry_interval"],
-        )
+def make_svc_retry_interval_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_retry_interval",
+        title=_l("Service retry check interval"),
+        short_title=_l("Retry"),
+        columns=["service_retry_interval"],
+        render=_render_svc_retry_interval,
+    )
 
 
 def _render_svc_check_interval(
@@ -1251,15 +1221,14 @@ def _render_svc_check_interval(
     )
 
 
-class PainterSvcCheckInterval(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_check_interval",
-            title=_l("Service normal/retry check interval"),
-            render=_render_svc_check_interval,
-            short_title=_l("Interval"),
-            columns=["service_check_interval", "service_retry_interval"],
-        )
+def make_svc_check_interval_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_check_interval",
+        title=_l("Service normal/retry check interval"),
+        short_title=_l("Interval"),
+        columns=["service_check_interval", "service_retry_interval"],
+        render=_render_svc_check_interval,
+    )
 
 
 def _render_svc_check_type(
@@ -1268,15 +1237,14 @@ def _render_svc_check_type(
     return (None, _("ACTIVE") if row["service_check_type"] == 0 else _("PASSIVE"))
 
 
-class PainterSvcCheckType(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_check_type",
-            title=_l("Service check type"),
-            render=_render_svc_check_type,
-            short_title=_l("Type"),
-            columns=["service_check_type"],
-        )
+def make_svc_check_type_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_check_type",
+        title=_l("Service check type"),
+        short_title=_l("Type"),
+        columns=["service_check_type"],
+        render=_render_svc_check_type,
+    )
 
 
 def _render_svc_in_downtime(
@@ -1285,15 +1253,14 @@ def _render_svc_in_downtime(
     return paint_nagiosflag(row, "service_scheduled_downtime_depth", True)
 
 
-class PainterSvcInDowntime(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_in_downtime",
-            title=_l("Currently in downtime"),
-            render=_render_svc_in_downtime,
-            short_title=_l("Dt."),
-            columns=["service_scheduled_downtime_depth"],
-        )
+def make_svc_in_downtime_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_in_downtime",
+        title=_l("Currently in downtime"),
+        short_title=_l("Dt."),
+        columns=["service_scheduled_downtime_depth"],
+        render=_render_svc_in_downtime,
+    )
 
 
 def _render_svc_in_notifper(
@@ -1302,15 +1269,14 @@ def _render_svc_in_notifper(
     return paint_nagiosflag(row, "service_in_notification_period", False)
 
 
-class PainterSvcInNotifper(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_in_notifper",
-            title=_l("In notification period"),
-            render=_render_svc_in_notifper,
-            short_title=_l("in notif. p."),
-            columns=["service_in_notification_period"],
-        )
+def make_svc_in_notifper_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_in_notifper",
+        title=_l("In notification period"),
+        short_title=_l("in notif. p."),
+        columns=["service_in_notification_period"],
+        render=_render_svc_in_notifper,
+    )
 
 
 def _render_svc_notifper(
@@ -1319,15 +1285,14 @@ def _render_svc_notifper(
     return (None, row["service_notification_period"])
 
 
-class PainterSvcNotifper(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_notifper",
-            title=_l("Service notification period"),
-            render=_render_svc_notifper,
-            short_title=_l("notif."),
-            columns=["service_notification_period"],
-        )
+def make_svc_notifper_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_notifper",
+        title=_l("Service notification period"),
+        short_title=_l("notif."),
+        columns=["service_notification_period"],
+        render=_render_svc_notifper,
+    )
 
 
 def _render_svc_check_period(
@@ -1336,15 +1301,14 @@ def _render_svc_check_period(
     return (None, row["service_check_period"])
 
 
-class PainterSvcCheckPeriod(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_check_period",
-            title=_l("Service check period"),
-            render=_render_svc_check_period,
-            short_title=_l("check."),
-            columns=["service_check_period"],
-        )
+def make_svc_check_period_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_check_period",
+        title=_l("Service check period"),
+        short_title=_l("check."),
+        columns=["service_check_period"],
+        render=_render_svc_check_period,
+    )
 
 
 def _render_svc_flapping(
@@ -1353,15 +1317,14 @@ def _render_svc_flapping(
     return paint_nagiosflag(row, "service_is_flapping", True)
 
 
-class PainterSvcFlapping(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_flapping",
-            title=_l("Service is flapping"),
-            render=_render_svc_flapping,
-            short_title=_l("Flap"),
-            columns=["service_is_flapping"],
-        )
+def make_svc_flapping_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_flapping",
+        title=_l("Service is flapping"),
+        short_title=_l("Flap"),
+        columns=["service_is_flapping"],
+        render=_render_svc_flapping,
+    )
 
 
 def _render_svc_notifications_enabled(
@@ -1370,15 +1333,14 @@ def _render_svc_notifications_enabled(
     return paint_nagiosflag(row, "service_notifications_enabled", False)
 
 
-class PainterSvcNotificationsEnabled(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_notifications_enabled",
-            title=_l("Service notifications enabled"),
-            render=_render_svc_notifications_enabled,
-            short_title=_l("Notif."),
-            columns=["service_notifications_enabled"],
-        )
+def make_svc_notifications_enabled_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_notifications_enabled",
+        title=_l("Service notifications enabled"),
+        short_title=_l("Notif."),
+        columns=["service_notifications_enabled"],
+        render=_render_svc_notifications_enabled,
+    )
 
 
 def _render_svc_is_active(
@@ -1387,15 +1349,14 @@ def _render_svc_is_active(
     return paint_nagiosflag(row, "service_active_checks_enabled", False)
 
 
-class PainterSvcIsActive(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_is_active",
-            title=_l("Service is active"),
-            render=_render_svc_is_active,
-            short_title=_l("Active"),
-            columns=["service_active_checks_enabled"],
-        )
+def make_svc_is_active_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_is_active",
+        title=_l("Service is active"),
+        short_title=_l("Active"),
+        columns=["service_active_checks_enabled"],
+        render=_render_svc_is_active,
+    )
 
 
 def _render_svc_group_memberlist(
@@ -1428,17 +1389,16 @@ def _export_for_json_svc_group_memberlist(
     return row["service_groups"]
 
 
-class PainterSvcGroupMemberlist(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_group_memberlist",
-            title=_l("Service groups the service is member of"),
-            render=_render_svc_group_memberlist,
-            short_title=_l("Groups"),
-            columns=["service_groups"],
-            export_for_csv=_export_for_csv_svc_group_memberlist,
-            export_for_json=_export_for_json_svc_group_memberlist,
-        )
+def make_svc_group_memberlist_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_group_memberlist",
+        title=_l("Service groups the service is member of"),
+        short_title=_l("Groups"),
+        columns=["service_groups"],
+        render=_render_svc_group_memberlist,
+        export_for_csv=_export_for_csv_svc_group_memberlist,
+        export_for_json=_export_for_json_svc_group_memberlist,
+    )
 
 
 def _render_check_manpage(
@@ -1481,15 +1441,14 @@ def _render_check_manpage(
     return "", description
 
 
-class PainterCheckManpage(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="check_manpage",
-            title=_l("Check manual (for Checkmk based checks)"),
-            render=_render_check_manpage,
-            short_title=_l("Manual"),
-            columns=["service_check_command"],
-        )
+def make_check_manpage_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="check_manpage",
+        title=_l("Check manual (for Checkmk based checks)"),
+        short_title=_l("Manual"),
+        columns=["service_check_command"],
+        render=_render_check_manpage,
+    )
 
 
 def _paint_comments(prefix: str, row: Row) -> CellSpec:
@@ -1510,15 +1469,14 @@ def _render_svc_comments(
     return _paint_comments("service_", row)
 
 
-class PainterSvcComments(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_comments",
-            title=_l("Service Comments"),
-            render=_render_svc_comments,
-            short_title=_l("Comments"),
-            columns=["service_comments_with_info"],
-        )
+def make_svc_comments_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_comments",
+        title=_l("Service Comments"),
+        short_title=_l("Comments"),
+        columns=["service_comments_with_info"],
+        render=_render_svc_comments,
+    )
 
 
 def _render_svc_acknowledged(
@@ -1527,15 +1485,14 @@ def _render_svc_acknowledged(
     return paint_nagiosflag(row, "service_acknowledged", False)
 
 
-class PainterSvcAcknowledged(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_acknowledged",
-            title=_l("Service problem acknowledged"),
-            render=_render_svc_acknowledged,
-            short_title=_l("Ack"),
-            columns=["service_acknowledged"],
-        )
+def make_svc_acknowledged_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_acknowledged",
+        title=_l("Service problem acknowledged"),
+        short_title=_l("Ack"),
+        columns=["service_acknowledged"],
+        render=_render_svc_acknowledged,
+    )
 
 
 def match_path_entries_with_item(dirs: Iterable[Path], item: str) -> Iterable[Path]:
@@ -1593,15 +1550,14 @@ def _render_svc_custom_notes(
     return _paint_custom_notes("service", row, config=context.config)
 
 
-class PainterSvcCustomNotes(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_custom_notes",
-            title=_l("Custom services notes"),
-            render=_render_svc_custom_notes,
-            short_title=_l("Notes"),
-            columns=["host_name", "host_address", "service_description", "service_plugin_output"],
-        )
+def make_svc_custom_notes_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_custom_notes",
+        title=_l("Custom services notes"),
+        short_title=_l("Notes"),
+        columns=["host_name", "host_address", "service_description", "service_plugin_output"],
+        render=_render_svc_custom_notes,
+    )
 
 
 def _render_svc_staleness(
@@ -1610,15 +1566,14 @@ def _render_svc_staleness(
     return ("", "%0.2f" % row.get("service_staleness", 0))
 
 
-class PainterSvcStaleness(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_staleness",
-            title=_l("Service staleness value"),
-            render=_render_svc_staleness,
-            short_title=_l("Staleness"),
-            columns=["service_staleness"],
-        )
+def make_svc_staleness_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_staleness",
+        title=_l("Service staleness value"),
+        short_title=_l("Staleness"),
+        columns=["service_staleness"],
+        render=_render_svc_staleness,
+    )
 
 
 def _paint_is_stale(row: Row, staleness_threshold: float) -> CellSpec:
@@ -1633,16 +1588,15 @@ def _render_svc_is_stale(
     return _paint_is_stale(row, context.config.staleness_threshold)
 
 
-class PainterSvcIsStale(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_is_stale",
-            title=_l("Service is stale"),
-            render=_render_svc_is_stale,
-            short_title=_l("Stale"),
-            columns=["service_staleness"],
-            sorter="svc_staleness",
-        )
+def make_svc_is_stale_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_is_stale",
+        title=_l("Service is stale"),
+        short_title=_l("Stale"),
+        columns=["service_staleness"],
+        sorter="svc_staleness",
+        render=_render_svc_is_stale,
+    )
 
 
 def _paint_custom_vars(what: str, row: Row, blacklist: list | None = None) -> CellSpec:
@@ -1698,17 +1652,16 @@ def _export_for_json_service_custom_variables(
     return _export_custom_vars("service", row)
 
 
-class PainterServiceCustomVariables(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_custom_vars",
-            title=_l("Service custom attributes"),
-            render=_render_service_custom_variables,
-            columns=["service_custom_variables"],
-            group_by=_group_by_service_custom_variables,
-            export_for_csv=_export_for_csv_service_custom_variables,
-            export_for_json=_export_for_json_service_custom_variables,
-        )
+def make_svc_custom_vars_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_custom_vars",
+        title=_l("Service custom attributes"),
+        columns=["service_custom_variables"],
+        group_by=_group_by_service_custom_variables,
+        render=_render_service_custom_variables,
+        export_for_csv=_export_for_csv_service_custom_variables,
+        export_for_json=_export_for_json_service_custom_variables,
+    )
 
 
 type _CustomAttributeChoices = Callable[[PainterContext], DropdownChoiceEntries]
@@ -1816,19 +1769,18 @@ def _parameters_service_custom_variable(context: PainterContext) -> Dictionary:
     return _parameters_custom_variable(_service_custom_attribute_choices, context)
 
 
-class PainterServiceCustomVariable(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="service_custom_variable",
-            title=_SERVICE_CUSTOM_VARIABLE_TITLE,
-            render=_render_service_custom_variable,
-            list_title=_SERVICE_CUSTOM_VARIABLE_TITLE,
-            cell_title=_title_service_custom_variable,
-            cell_short_title=_title_service_custom_variable,
-            export_title=_export_title_service_custom_variable,
-            columns=["service_custom_variable_names", "service_custom_variable_values"],
-            parameters=_parameters_service_custom_variable,
-        )
+def make_service_custom_variable_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="service_custom_variable",
+        title=_SERVICE_CUSTOM_VARIABLE_TITLE,
+        list_title=_SERVICE_CUSTOM_VARIABLE_TITLE,
+        columns=["service_custom_variable_names", "service_custom_variable_values"],
+        cell_title=_title_service_custom_variable,
+        cell_short_title=_title_service_custom_variable,
+        export_title=_export_title_service_custom_variable,
+        parameters=_parameters_service_custom_variable,
+        render=_render_service_custom_variable,
+    )
 
 
 _HOST_CUSTOM_VARIABLE_TITLE = _l("Host custom attribute")
@@ -1854,20 +1806,19 @@ def _parameters_host_custom_variable(context: PainterContext) -> Dictionary:
     return _parameters_custom_variable(_host_custom_attribute_choices, context)
 
 
-class PainterHostCustomVariable(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_custom_variable",
-            title=_HOST_CUSTOM_VARIABLE_TITLE,
-            render=_render_host_custom_variable,
-            list_title=_HOST_CUSTOM_VARIABLE_TITLE,
-            cell_title=_title_host_custom_variable,
-            cell_short_title=_title_host_custom_variable,
-            export_title=_export_title_host_custom_variable,
-            columns=["host_custom_variable_names", "host_custom_variable_values"],
-            group_by=_group_by_host_custom_variable,
-            parameters=_parameters_host_custom_variable,
-        )
+def make_host_custom_variable_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_custom_variable",
+        title=_HOST_CUSTOM_VARIABLE_TITLE,
+        list_title=_HOST_CUSTOM_VARIABLE_TITLE,
+        columns=["host_custom_variable_names", "host_custom_variable_values"],
+        cell_title=_title_host_custom_variable,
+        cell_short_title=_title_host_custom_variable,
+        export_title=_export_title_host_custom_variable,
+        parameters=_parameters_host_custom_variable,
+        group_by=_group_by_host_custom_variable,
+        render=_render_host_custom_variable,
+    )
 
 
 # .
@@ -1889,17 +1840,16 @@ def _render_host_state(
     return _paint_host_state_short(row, config=context.config)
 
 
-class PainterHostState(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_state",
-            title=_l("Host state"),
-            render=_render_host_state,
-            short_title=_l("State"),
-            columns=["host_has_been_checked", "host_state"],
-            sorter="hoststate",
-            title_classes=["center"],
-        )
+def make_host_state_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_state",
+        title=_l("Host state"),
+        short_title=_l("State"),
+        columns=["host_has_been_checked", "host_state"],
+        sorter="hoststate",
+        title_classes=["center"],
+        render=_render_host_state,
+    )
 
 
 def _render_host_state_onechar(
@@ -1908,16 +1858,15 @@ def _render_host_state_onechar(
     return _paint_host_state_short(row, short=True, config=context.config)
 
 
-class PainterHostStateOnechar(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_state_onechar",
-            title=_l("Host state (first character)"),
-            render=_render_host_state_onechar,
-            short_title=_l("S."),
-            columns=["host_has_been_checked", "host_state"],
-            sorter="hoststate",
-        )
+def make_host_state_onechar_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_state_onechar",
+        title=_l("Host state (first character)"),
+        short_title=_l("S."),
+        columns=["host_has_been_checked", "host_state"],
+        sorter="hoststate",
+        render=_render_host_state_onechar,
+    )
 
 
 def _render_host_plugin_output(
@@ -1934,15 +1883,14 @@ def _render_host_plugin_output(
     )
 
 
-class PainterHostPluginOutput(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_plugin_output",
-            title=_l("Summary"),
-            render=_render_host_plugin_output,
-            list_title=_l("Summary (previously named: Status details or plug-in output)"),
-            columns=["host_plugin_output", "host_custom_variables"],
-        )
+def make_host_plugin_output_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_plugin_output",
+        title=_l("Summary"),
+        list_title=_l("Summary (previously named: Status details or plug-in output)"),
+        columns=["host_plugin_output", "host_custom_variables"],
+        render=_render_host_plugin_output,
+    )
 
 
 def _render_host_perf_data(
@@ -1951,15 +1899,14 @@ def _render_host_perf_data(
     return (None, row["host_perf_data"])
 
 
-class PainterHostPerfData(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_perf_data",
-            title=_l("Host metrics"),
-            render=_render_host_perf_data,
-            short_title=_l("Metrics"),
-            columns=["host_perf_data"],
-        )
+def make_host_perf_data_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_perf_data",
+        title=_l("Host metrics"),
+        short_title=_l("Metrics"),
+        columns=["host_perf_data"],
+        render=_render_host_perf_data,
+    )
 
 
 def _render_host_check_command(
@@ -1968,15 +1915,14 @@ def _render_host_check_command(
     return (None, row["host_check_command"])
 
 
-class PainterHostCheckCommand(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_check_command",
-            title=_l("Host check command"),
-            render=_render_host_check_command,
-            short_title=_l("Check command"),
-            columns=["host_check_command"],
-        )
+def make_host_check_command_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_check_command",
+        title=_l("Host check command"),
+        short_title=_l("Check command"),
+        columns=["host_check_command"],
+        render=_render_host_check_command,
+    )
 
 
 def _render_host_check_command_expanded(
@@ -1985,15 +1931,14 @@ def _render_host_check_command_expanded(
     return (None, row["host_check_command_expanded"])
 
 
-class PainterHostCheckCommandExpanded(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_check_command_expanded",
-            title=_l("Host check command expanded"),
-            render=_render_host_check_command_expanded,
-            short_title=_l("Check command expanded"),
-            columns=["host_check_command_expanded"],
-        )
+def make_host_check_command_expanded_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_check_command_expanded",
+        title=_l("Host check command expanded"),
+        short_title=_l("Check command expanded"),
+        columns=["host_check_command_expanded"],
+        render=_render_host_check_command_expanded,
+    )
 
 
 def _render_host_notes_u_r_l(
@@ -2008,15 +1953,14 @@ def _render_host_notes_u_r_l(
     return None, content
 
 
-class PainterHostNotesURL(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_notes_url",
-            title=_l("Notes (URL) for hosts"),
-            render=_render_host_notes_u_r_l,
-            short_title=_l("Notes URL"),
-            columns=["host_address", "host_notes_url"],
-        )
+def make_host_notes_url_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_notes_url",
+        title=_l("Notes (URL) for hosts"),
+        short_title=_l("Notes URL"),
+        columns=["host_address", "host_notes_url"],
+        render=_render_host_notes_u_r_l,
+    )
 
 
 def _render_host_state_age(
@@ -2031,16 +1975,15 @@ def _render_host_state_age(
     )
 
 
-class PainterHostStateAge(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_state_age",
-            title=_l("Age of the current host state"),
-            render=_render_host_state_age,
-            short_title=_l("Age"),
-            columns=["host_has_been_checked", "host_last_state_change"],
-            painter_options=["ts_format", "ts_date"],
-        )
+def make_host_state_age_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_state_age",
+        title=_l("Age of the current host state"),
+        short_title=_l("Age"),
+        columns=["host_has_been_checked", "host_last_state_change"],
+        painter_options=["ts_format", "ts_date"],
+        render=_render_host_state_age,
+    )
 
 
 def _render_host_check_age(
@@ -2055,16 +1998,15 @@ def _render_host_check_age(
     )
 
 
-class PainterHostCheckAge(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_check_age",
-            title=_l("Time since the last check of the host"),
-            render=_render_host_check_age,
-            short_title=_l("Checked"),
-            columns=["host_has_been_checked", "host_last_check"],
-            painter_options=["ts_format", "ts_date"],
-        )
+def make_host_check_age_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_check_age",
+        title=_l("Time since the last check of the host"),
+        short_title=_l("Checked"),
+        columns=["host_has_been_checked", "host_last_check"],
+        painter_options=["ts_format", "ts_date"],
+        render=_render_host_check_age,
+    )
 
 
 def _render_host_next_check(
@@ -2077,15 +2019,14 @@ def _render_host_next_check(
     )
 
 
-class PainterHostNextCheck(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_next_check",
-            title=_l("Time of the next scheduled host check"),
-            render=_render_host_next_check,
-            short_title=_l("Next check"),
-            columns=["host_next_check"],
-        )
+def make_host_next_check_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_next_check",
+        title=_l("Time of the next scheduled host check"),
+        short_title=_l("Next check"),
+        columns=["host_next_check"],
+        render=_render_host_next_check,
+    )
 
 
 def _render_host_next_notification(
@@ -2098,15 +2039,14 @@ def _render_host_next_notification(
     )
 
 
-class PainterHostNextNotification(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_next_notification",
-            title=_l("Time of the next host notification"),
-            render=_render_host_next_notification,
-            short_title=_l("Next notification"),
-            columns=["host_next_notification"],
-        )
+def make_host_next_notification_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_next_notification",
+        title=_l("Time of the next host notification"),
+        short_title=_l("Next notification"),
+        columns=["host_next_notification"],
+        render=_render_host_next_notification,
+    )
 
 
 def _render_host_notification_postponement_reason(
@@ -2115,15 +2055,14 @@ def _render_host_notification_postponement_reason(
     return _paint_notification_postponement_reason("host", row)
 
 
-class PainterHostNotificationPostponementReason(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_notification_postponement_reason",
-            title=_l("Notification postponement reason"),
-            render=_render_host_notification_postponement_reason,
-            short_title=_l("Notif. postponed"),
-            columns=["host_notification_postponement_reason"],
-        )
+def make_host_notification_postponement_reason_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_notification_postponement_reason",
+        title=_l("Notification postponement reason"),
+        short_title=_l("Notif. postponed"),
+        columns=["host_notification_postponement_reason"],
+        render=_render_host_notification_postponement_reason,
+    )
 
 
 def _render_host_last_notification(
@@ -2138,16 +2077,15 @@ def _render_host_last_notification(
     )
 
 
-class PainterHostLastNotification(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_last_notification",
-            title=_l("Time of the last host notification"),
-            render=_render_host_last_notification,
-            short_title=_l("last notification"),
-            columns=["host_last_notification"],
-            painter_options=["ts_format", "ts_date"],
-        )
+def make_host_last_notification_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_last_notification",
+        title=_l("Time of the last host notification"),
+        short_title=_l("last notification"),
+        columns=["host_last_notification"],
+        painter_options=["ts_format", "ts_date"],
+        render=_render_host_last_notification,
+    )
 
 
 def _render_host_check_latency(
@@ -2156,15 +2094,14 @@ def _render_host_check_latency(
     return ("", approx_age(row["host_latency"]))
 
 
-class PainterHostCheckLatency(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_check_latency",
-            title=_l("Host check latency"),
-            render=_render_host_check_latency,
-            short_title=_l("Latency"),
-            columns=["host_latency"],
-        )
+def make_host_check_latency_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_check_latency",
+        title=_l("Host check latency"),
+        short_title=_l("Latency"),
+        columns=["host_latency"],
+        render=_render_host_check_latency,
+    )
 
 
 def _render_host_check_duration(
@@ -2173,15 +2110,14 @@ def _render_host_check_duration(
     return ("", approx_age(row["host_execution_time"]))
 
 
-class PainterHostCheckDuration(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_check_duration",
-            title=_l("Host check duration"),
-            render=_render_host_check_duration,
-            short_title=_l("Duration"),
-            columns=["host_execution_time"],
-        )
+def make_host_check_duration_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_check_duration",
+        title=_l("Host check duration"),
+        short_title=_l("Duration"),
+        columns=["host_execution_time"],
+        render=_render_host_check_duration,
+    )
 
 
 def _render_host_attempt(
@@ -2190,15 +2126,14 @@ def _render_host_attempt(
     return (None, "%d/%d" % (row["host_current_attempt"], row["host_max_check_attempts"]))
 
 
-class PainterHostAttempt(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_attempt",
-            title=_l("Current host check attempt"),
-            render=_render_host_attempt,
-            short_title=_l("Att."),
-            columns=["host_current_attempt", "host_max_check_attempts"],
-        )
+def make_host_attempt_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_attempt",
+        title=_l("Current host check attempt"),
+        short_title=_l("Att."),
+        columns=["host_current_attempt", "host_max_check_attempts"],
+        render=_render_host_attempt,
+    )
 
 
 def _render_host_normal_interval(
@@ -2207,15 +2142,14 @@ def _render_host_normal_interval(
     return (None, approx_age(row["host_check_interval"] * 60.0))
 
 
-class PainterHostNormalInterval(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_normal_interval",
-            title=_l("Normal check interval"),
-            render=_render_host_normal_interval,
-            short_title=_l("Check int."),
-            columns=["host_check_interval"],
-        )
+def make_host_normal_interval_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_normal_interval",
+        title=_l("Normal check interval"),
+        short_title=_l("Check int."),
+        columns=["host_check_interval"],
+        render=_render_host_normal_interval,
+    )
 
 
 def _render_host_retry_interval(
@@ -2224,15 +2158,14 @@ def _render_host_retry_interval(
     return (None, approx_age(row["host_retry_interval"] * 60.0))
 
 
-class PainterHostRetryInterval(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_retry_interval",
-            title=_l("Retry check interval"),
-            render=_render_host_retry_interval,
-            short_title=_l("Retry"),
-            columns=["host_retry_interval"],
-        )
+def make_host_retry_interval_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_retry_interval",
+        title=_l("Retry check interval"),
+        short_title=_l("Retry"),
+        columns=["host_retry_interval"],
+        render=_render_host_retry_interval,
+    )
 
 
 def _render_host_check_interval(
@@ -2248,15 +2181,14 @@ def _render_host_check_interval(
     )
 
 
-class PainterHostCheckInterval(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_check_interval",
-            title=_l("Normal/retry check interval"),
-            render=_render_host_check_interval,
-            short_title=_l("Interval"),
-            columns=["host_check_interval", "host_retry_interval"],
-        )
+def make_host_check_interval_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_check_interval",
+        title=_l("Normal/retry check interval"),
+        short_title=_l("Interval"),
+        columns=["host_check_interval", "host_retry_interval"],
+        render=_render_host_check_interval,
+    )
 
 
 def _render_host_check_type(
@@ -2265,15 +2197,14 @@ def _render_host_check_type(
     return (None, row["host_check_type"] == 0 and "ACTIVE" or "PASSIVE")
 
 
-class PainterHostCheckType(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_check_type",
-            title=_l("Host check type"),
-            render=_render_host_check_type,
-            short_title=_l("Type"),
-            columns=["host_check_type"],
-        )
+def make_host_check_type_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_check_type",
+        title=_l("Host check type"),
+        short_title=_l("Type"),
+        columns=["host_check_type"],
+        render=_render_host_check_type,
+    )
 
 
 def _render_host_in_notifper(
@@ -2282,15 +2213,14 @@ def _render_host_in_notifper(
     return paint_nagiosflag(row, "host_in_notification_period", False)
 
 
-class PainterHostInNotifper(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_in_notifper",
-            title=_l("Host in notif. period"),
-            render=_render_host_in_notifper,
-            short_title=_l("in notif. p."),
-            columns=["host_in_notification_period"],
-        )
+def make_host_in_notifper_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_in_notifper",
+        title=_l("Host in notif. period"),
+        short_title=_l("in notif. p."),
+        columns=["host_in_notification_period"],
+        render=_render_host_in_notifper,
+    )
 
 
 def _render_host_notifper(
@@ -2299,15 +2229,14 @@ def _render_host_notifper(
     return (None, row["host_notification_period"])
 
 
-class PainterHostNotifper(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_notifper",
-            title=_l("Host notification period"),
-            render=_render_host_notifper,
-            short_title=_l("notif."),
-            columns=["host_notification_period"],
-        )
+def make_host_notifper_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_notifper",
+        title=_l("Host notification period"),
+        short_title=_l("notif."),
+        columns=["host_notification_period"],
+        render=_render_host_notifper,
+    )
 
 
 def _render_host_notification_number(
@@ -2316,15 +2245,14 @@ def _render_host_notification_number(
     return ("", str(row["host_current_notification_number"]))
 
 
-class PainterHostNotificationNumber(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_notification_number",
-            title=_l("Host notification number"),
-            render=_render_host_notification_number,
-            short_title=_l("N#"),
-            columns=["host_current_notification_number"],
-        )
+def make_host_notification_number_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_notification_number",
+        title=_l("Host notification number"),
+        short_title=_l("N#"),
+        columns=["host_current_notification_number"],
+        render=_render_host_notification_number,
+    )
 
 
 def _render_host_flapping(
@@ -2333,15 +2261,14 @@ def _render_host_flapping(
     return paint_nagiosflag(row, "host_is_flapping", True)
 
 
-class PainterHostFlapping(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_flapping",
-            title=_l("Host is flapping"),
-            render=_render_host_flapping,
-            short_title=_l("Flap"),
-            columns=["host_is_flapping"],
-        )
+def make_host_flapping_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_flapping",
+        title=_l("Host is flapping"),
+        short_title=_l("Flap"),
+        columns=["host_is_flapping"],
+        render=_render_host_flapping,
+    )
 
 
 def _render_host_is_active(
@@ -2350,15 +2277,14 @@ def _render_host_is_active(
     return paint_nagiosflag(row, "host_active_checks_enabled", False)
 
 
-class PainterHostIsActive(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_is_active",
-            title=_l("Host is active"),
-            render=_render_host_is_active,
-            short_title=_l("Active"),
-            columns=["host_active_checks_enabled"],
-        )
+def make_host_is_active_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_is_active",
+        title=_l("Host is active"),
+        short_title=_l("Active"),
+        columns=["host_active_checks_enabled"],
+        render=_render_host_is_active,
+    )
 
 
 def _render_host_notifications_enabled(
@@ -2367,15 +2293,14 @@ def _render_host_notifications_enabled(
     return paint_nagiosflag(row, "host_notifications_enabled", False)
 
 
-class PainterHostNotificationsEnabled(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_notifications_enabled",
-            title=_l("Host notifications enabled"),
-            render=_render_host_notifications_enabled,
-            short_title=_l("Notif."),
-            columns=["host_notifications_enabled"],
-        )
+def make_host_notifications_enabled_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_notifications_enabled",
+        title=_l("Host notifications enabled"),
+        short_title=_l("Notif."),
+        columns=["host_notifications_enabled"],
+        render=_render_host_notifications_enabled,
+    )
 
 
 def _render_host_black(
@@ -2387,16 +2312,15 @@ def _render_host_black(
     return "nobr", row["host_name"]
 
 
-class PainterHostBlack(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_black",
-            title=_l("Host name, red background if down or unreachable (deprecated)"),
-            render=_render_host_black,
-            short_title=_l("Host"),
-            columns=["site", "host_name", "host_state"],
-            sorter="site_host",
-        )
+def make_host_black_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_black",
+        title=_l("Host name, red background if down or unreachable (deprecated)"),
+        short_title=_l("Host"),
+        columns=["site", "host_name", "host_state"],
+        sorter="site_host",
+        render=_render_host_black,
+    )
 
 
 def _render_host_with_state(
@@ -2408,16 +2332,15 @@ def _render_host_with_state(
     return "nobr", row["host_name"]
 
 
-class PainterHostWithState(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_with_state",
-            title=_l("Host name, marked red if down (deprecated)"),
-            render=_render_host_with_state,
-            short_title=_l("Host"),
-            columns=["site", "host_name", "host_state", "host_has_been_checked"],
-            sorter="site_host",
-        )
+def make_host_with_state_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_with_state",
+        title=_l("Host name, marked red if down (deprecated)"),
+        short_title=_l("Host"),
+        columns=["site", "host_name", "host_state", "host_has_been_checked"],
+        sorter="site_host",
+        render=_render_host_with_state,
+    )
 
 
 def _parameters_host(_context: PainterContext) -> Dictionary:
@@ -2474,37 +2397,35 @@ def _render_host(row: Row, cell: Cell, _user: LoggedInUser, _context: PainterCon
     )
 
 
-class PainterHost(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host",
-            title=_l("Host name"),
-            render=_render_host,
-            short_title=_l("Host"),
-            columns=[
-                "host_name",
-                "host_state",
-                "host_has_been_checked",
-                "host_scheduled_downtime_depth",
-            ],
-            parameters=_parameters_host,
-            sorter="site_host",
-        )
+def make_host_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host",
+        title=_l("Host name"),
+        short_title=_l("Host"),
+        columns=[
+            "host_name",
+            "host_state",
+            "host_has_been_checked",
+            "host_scheduled_downtime_depth",
+        ],
+        sorter="site_host",
+        parameters=_parameters_host,
+        render=_render_host,
+    )
 
 
 def _render_alias(row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext) -> CellSpec:
     return ("", row["host_alias"])
 
 
-class PainterAlias(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="alias",
-            title=_l("Host alias"),
-            render=_render_alias,
-            short_title=_l("Alias"),
-            columns=["host_alias"],
-        )
+def make_alias_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="alias",
+        title=_l("Host alias"),
+        short_title=_l("Alias"),
+        columns=["host_alias"],
+        render=_render_alias,
+    )
 
 
 def _render_host_address(
@@ -2513,15 +2434,14 @@ def _render_host_address(
     return ("", row["host_address"])
 
 
-class PainterHostAddress(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_address",
-            title=_l("Host address (primary)"),
-            render=_render_host_address,
-            short_title=_l("IP address"),
-            columns=["host_address"],
-        )
+def make_host_address_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_address",
+        title=_l("Host address (primary)"),
+        short_title=_l("IP address"),
+        columns=["host_address"],
+        render=_render_host_address,
+    )
 
 
 def _render_host_ipv4_address(
@@ -2530,15 +2450,14 @@ def _render_host_ipv4_address(
     return paint_custom_var("host", "ADDRESS_4", row)
 
 
-class PainterHostIpv4Address(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_ipv4_address",
-            title=_l("Host address (IPv4)"),
-            render=_render_host_ipv4_address,
-            short_title=_l("IPv4 address"),
-            columns=["host_custom_variable_names", "host_custom_variable_values"],
-        )
+def make_host_ipv4_address_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_ipv4_address",
+        title=_l("Host address (IPv4)"),
+        short_title=_l("IPv4 address"),
+        columns=["host_custom_variable_names", "host_custom_variable_values"],
+        render=_render_host_ipv4_address,
+    )
 
 
 def _render_host_ipv6_address(
@@ -2547,15 +2466,14 @@ def _render_host_ipv6_address(
     return paint_custom_var("host", "ADDRESS_6", row)
 
 
-class PainterHostIpv6Address(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_ipv6_address",
-            title=_l("Host address (IPv6)"),
-            render=_render_host_ipv6_address,
-            short_title=_l("IPv6 address"),
-            columns=["host_custom_variable_names", "host_custom_variable_values"],
-        )
+def make_host_ipv6_address_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_ipv6_address",
+        title=_l("Host address (IPv6)"),
+        short_title=_l("IPv6 address"),
+        columns=["host_custom_variable_names", "host_custom_variable_values"],
+        render=_render_host_ipv6_address,
+    )
 
 
 def _render_host_addresses(
@@ -2575,15 +2493,14 @@ def _render_host_addresses(
     return "", primary + secondary
 
 
-class PainterHostAddresses(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_addresses",
-            title=_l("Host addresses (IPv4/IPv6)"),
-            render=_render_host_addresses,
-            short_title=_l("IP addresses"),
-            columns=["host_address", "host_custom_variable_names", "host_custom_variable_values"],
-        )
+def make_host_addresses_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_addresses",
+        title=_l("Host addresses (IPv4/IPv6)"),
+        short_title=_l("IP addresses"),
+        columns=["host_address", "host_custom_variable_names", "host_custom_variable_values"],
+        render=_render_host_addresses,
+    )
 
 
 def _render_host_addresses_additional(
@@ -2603,15 +2520,14 @@ def _render_host_addresses_additional(
     return "", ", ".join(addresses)
 
 
-class PainterHostAddressesAdditional(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_addresses_additional",
-            title=_l("Host addresses (additional)"),
-            render=_render_host_addresses_additional,
-            short_title=_l("Add. addresses"),
-            columns=["host_custom_variable_names", "host_custom_variable_values"],
-        )
+def make_host_addresses_additional_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_addresses_additional",
+        title=_l("Host addresses (additional)"),
+        short_title=_l("Add. addresses"),
+        columns=["host_custom_variable_names", "host_custom_variable_values"],
+        render=_render_host_addresses_additional,
+    )
 
 
 def _render_host_address_family(
@@ -2620,15 +2536,14 @@ def _render_host_address_family(
     return paint_custom_var("host", "ADDRESS_FAMILY", row)
 
 
-class PainterHostAddressFamily(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_address_family",
-            title=_l("Host address family (primary)"),
-            render=_render_host_address_family,
-            short_title=_l("Address family"),
-            columns=["host_custom_variable_names", "host_custom_variable_values"],
-        )
+def make_host_address_family_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_address_family",
+        title=_l("Host address family (primary)"),
+        short_title=_l("Address family"),
+        columns=["host_custom_variable_names", "host_custom_variable_values"],
+        render=_render_host_address_family,
+    )
 
 
 def _render_host_address_families(
@@ -2647,15 +2562,14 @@ def _render_host_address_families(
     return "", ", ".join(families)
 
 
-class PainterHostAddressFamilies(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_address_families",
-            title=_l("Host address families"),
-            render=_render_host_address_families,
-            short_title=_l("Address families"),
-            columns=["host_custom_variable_names", "host_custom_variable_values"],
-        )
+def make_host_address_families_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_address_families",
+        title=_l("Host address families"),
+        short_title=_l("Address families"),
+        columns=["host_custom_variable_names", "host_custom_variable_values"],
+        render=_render_host_address_families,
+    )
 
 
 def paint_svc_count(id_: int | str, count: int) -> CellSpec:
@@ -2679,16 +2593,15 @@ def _render_num_services(
     return (None, str(row["host_num_services"]))
 
 
-class PainterNumServices(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="num_services",
-            title=_l("Number of services"),
-            render=_render_num_services,
-            short_title="",
-            columns=["host_num_services"],
-            title_classes=["right"],
-        )
+def make_num_services_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="num_services",
+        title=_l("Number of services"),
+        short_title="",
+        columns=["host_num_services"],
+        title_classes=["right"],
+        render=_render_num_services,
+    )
 
 
 def _render_num_services_ok(
@@ -2697,16 +2610,15 @@ def _render_num_services_ok(
     return paint_svc_count(0, row["host_num_services_ok"])
 
 
-class PainterNumServicesOk(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="num_services_ok",
-            title=_l("Number of services in state OK"),
-            render=_render_num_services_ok,
-            short_title=_l("OK"),
-            columns=["host_num_services_ok"],
-            title_classes=["right"],
-        )
+def make_num_services_ok_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="num_services_ok",
+        title=_l("Number of services in state OK"),
+        short_title=_l("OK"),
+        columns=["host_num_services_ok"],
+        title_classes=["right"],
+        render=_render_num_services_ok,
+    )
 
 
 def _render_num_problems(
@@ -2718,16 +2630,15 @@ def _render_num_problems(
     )
 
 
-class PainterNumProblems(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="num_problems",
-            title=_l("Number of problems"),
-            render=_render_num_problems,
-            short_title=_l("Prob."),
-            columns=["host_num_services", "host_num_services_ok", "host_num_services_pending"],
-            title_classes=["right"],
-        )
+def make_num_problems_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="num_problems",
+        title=_l("Number of problems"),
+        short_title=_l("Prob."),
+        columns=["host_num_services", "host_num_services_ok", "host_num_services_pending"],
+        title_classes=["right"],
+        render=_render_num_problems,
+    )
 
 
 def _render_num_services_warn(
@@ -2736,16 +2647,15 @@ def _render_num_services_warn(
     return paint_svc_count(1, row["host_num_services_warn"])
 
 
-class PainterNumServicesWarn(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="num_services_warn",
-            title=_l("Number of services in state WARN"),
-            render=_render_num_services_warn,
-            short_title=_l("Wa"),
-            columns=["host_num_services_warn"],
-            title_classes=["right"],
-        )
+def make_num_services_warn_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="num_services_warn",
+        title=_l("Number of services in state WARN"),
+        short_title=_l("Wa"),
+        columns=["host_num_services_warn"],
+        title_classes=["right"],
+        render=_render_num_services_warn,
+    )
 
 
 def _render_num_services_crit(
@@ -2754,16 +2664,15 @@ def _render_num_services_crit(
     return paint_svc_count(2, row["host_num_services_crit"])
 
 
-class PainterNumServicesCrit(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="num_services_crit",
-            title=_l("Number of services in state CRIT"),
-            render=_render_num_services_crit,
-            short_title=_l("Cr"),
-            columns=["host_num_services_crit"],
-            title_classes=["right"],
-        )
+def make_num_services_crit_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="num_services_crit",
+        title=_l("Number of services in state CRIT"),
+        short_title=_l("Cr"),
+        columns=["host_num_services_crit"],
+        title_classes=["right"],
+        render=_render_num_services_crit,
+    )
 
 
 def _render_num_services_unknown(
@@ -2772,16 +2681,15 @@ def _render_num_services_unknown(
     return paint_svc_count(3, row["host_num_services_unknown"])
 
 
-class PainterNumServicesUnknown(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="num_services_unknown",
-            title=_l("Number of services in state UNKNOWN"),
-            render=_render_num_services_unknown,
-            short_title=_l("Un"),
-            columns=["host_num_services_unknown"],
-            title_classes=["right"],
-        )
+def make_num_services_unknown_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="num_services_unknown",
+        title=_l("Number of services in state UNKNOWN"),
+        short_title=_l("Un"),
+        columns=["host_num_services_unknown"],
+        title_classes=["right"],
+        render=_render_num_services_unknown,
+    )
 
 
 def _render_num_services_pending(
@@ -2790,16 +2698,15 @@ def _render_num_services_pending(
     return paint_svc_count("p", row["host_num_services_pending"])
 
 
-class PainterNumServicesPending(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="num_services_pending",
-            title=_l("Number of services in state PENDING"),
-            render=_render_num_services_pending,
-            short_title=_l("Pd"),
-            columns=["host_num_services_pending"],
-            title_classes=["right"],
-        )
+def make_num_services_pending_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="num_services_pending",
+        title=_l("Number of services in state PENDING"),
+        short_title=_l("Pd"),
+        columns=["host_num_services_pending"],
+        title_classes=["right"],
+        render=_render_num_services_pending,
+    )
 
 
 def _paint_service_list(row: Row, columnname: str, *, renderer: RenderLink) -> CellSpec:
@@ -2886,16 +2793,15 @@ def _render_host_services(
     )
 
 
-class PainterHostServices(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_services",
-            title=_l("Services colored according to state"),
-            render=_render_host_services,
-            short_title=_l("Services"),
-            columns=["host_name", "host_services_with_state"],
-            parameters=_parameters_host_services,
-        )
+def make_host_services_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_services",
+        title=_l("Services colored according to state"),
+        short_title=_l("Services"),
+        columns=["host_name", "host_services_with_state"],
+        parameters=_parameters_host_services,
+        render=_render_host_services,
+    )
 
 
 def _render_host_parents(
@@ -2904,16 +2810,15 @@ def _render_host_parents(
     return paint_host_list(row["site"], row["host_parents"], request=context.request)
 
 
-class PainterHostParents(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_parents",
-            title=_l("Host's parents"),
-            render=_render_host_parents,
-            short_title=_l("Parents"),
-            columns=["host_parents"],
-            use_painter_link=False,
-        )
+def make_host_parents_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_parents",
+        title=_l("Host's parents"),
+        short_title=_l("Parents"),
+        columns=["host_parents"],
+        use_painter_link=False,
+        render=_render_host_parents,
+    )
 
 
 def _render_host_childs(
@@ -2922,16 +2827,15 @@ def _render_host_childs(
     return paint_host_list(row["site"], row["host_childs"], request=context.request)
 
 
-class PainterHostChilds(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_childs",
-            title=_l("Host's children"),
-            render=_render_host_childs,
-            short_title=_l("children"),
-            columns=["host_childs"],
-            use_painter_link=False,
-        )
+def make_host_childs_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_childs",
+        title=_l("Host's children"),
+        short_title=_l("children"),
+        columns=["host_childs"],
+        use_painter_link=False,
+        render=_render_host_childs,
+    )
 
 
 def _group_by_host_group_memberlist(
@@ -2969,19 +2873,18 @@ def _export_for_json_host_group_memberlist(
     return row["host_groups"]
 
 
-class PainterHostGroupMemberlist(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_group_memberlist",
-            title=_l("Host groups the host is member of"),
-            render=_render_host_group_memberlist,
-            short_title=_l("Groups"),
-            columns=["host_groups"],
-            group_by=_group_by_host_group_memberlist,
-            export_for_csv=_export_for_csv_host_group_memberlist,
-            export_for_json=_export_for_json_host_group_memberlist,
-            use_painter_link=False,
-        )
+def make_host_group_memberlist_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_group_memberlist",
+        title=_l("Host groups the host is member of"),
+        short_title=_l("Groups"),
+        columns=["host_groups"],
+        use_painter_link=False,
+        group_by=_group_by_host_group_memberlist,
+        render=_render_host_group_memberlist,
+        export_for_csv=_export_for_csv_host_group_memberlist,
+        export_for_json=_export_for_json_host_group_memberlist,
+    )
 
 
 def _render_host_contacts(
@@ -2990,15 +2893,14 @@ def _render_host_contacts(
     return (None, ", ".join(row["host_contacts"]))
 
 
-class PainterHostContacts(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_contacts",
-            title=_l("Host contacts"),
-            render=_render_host_contacts,
-            short_title=_l("Contacts"),
-            columns=["host_contacts"],
-        )
+def make_host_contacts_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_contacts",
+        title=_l("Host contacts"),
+        short_title=_l("Contacts"),
+        columns=["host_contacts"],
+        render=_render_host_contacts,
+    )
 
 
 def _render_host_contact_groups(
@@ -3007,15 +2909,14 @@ def _render_host_contact_groups(
     return (None, ", ".join(row["host_contact_groups"]))
 
 
-class PainterHostContactGroups(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_contact_groups",
-            title=_l("Host contact groups"),
-            render=_render_host_contact_groups,
-            short_title=_l("Contact groups"),
-            columns=["host_contact_groups"],
-        )
+def make_host_contact_groups_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_contact_groups",
+        title=_l("Host contact groups"),
+        short_title=_l("Contact groups"),
+        columns=["host_contact_groups"],
+        render=_render_host_contact_groups,
+    )
 
 
 def _render_host_custom_notes(
@@ -3024,15 +2925,14 @@ def _render_host_custom_notes(
     return _paint_custom_notes("hosts", row, config=context.config)
 
 
-class PainterHostCustomNotes(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_custom_notes",
-            title=_l("Custom host notes"),
-            render=_render_host_custom_notes,
-            short_title=_l("Notes"),
-            columns=["host_name", "host_address", "host_plugin_output"],
-        )
+def make_host_custom_notes_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_custom_notes",
+        title=_l("Custom host notes"),
+        short_title=_l("Notes"),
+        columns=["host_name", "host_address", "host_plugin_output"],
+        render=_render_host_custom_notes,
+    )
 
 
 def _render_host_comments(
@@ -3041,15 +2941,14 @@ def _render_host_comments(
     return _paint_comments("host_", row)
 
 
-class PainterHostComments(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_comments",
-            title=_l("Host comments"),
-            render=_render_host_comments,
-            short_title=_l("Comments"),
-            columns=["host_comments_with_info"],
-        )
+def make_host_comments_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_comments",
+        title=_l("Host comments"),
+        short_title=_l("Comments"),
+        columns=["host_comments_with_info"],
+        render=_render_host_comments,
+    )
 
 
 def _render_host_in_downtime(
@@ -3058,15 +2957,14 @@ def _render_host_in_downtime(
     return paint_nagiosflag(row, "host_scheduled_downtime_depth", True)
 
 
-class PainterHostInDowntime(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_in_downtime",
-            title=_l("Host in downtime"),
-            render=_render_host_in_downtime,
-            short_title=_l("Downtime"),
-            columns=["host_scheduled_downtime_depth"],
-        )
+def make_host_in_downtime_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_in_downtime",
+        title=_l("Host in downtime"),
+        short_title=_l("Downtime"),
+        columns=["host_scheduled_downtime_depth"],
+        render=_render_host_in_downtime,
+    )
 
 
 def _render_host_acknowledged(
@@ -3075,15 +2973,14 @@ def _render_host_acknowledged(
     return paint_nagiosflag(row, "host_acknowledged", False)
 
 
-class PainterHostAcknowledged(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_acknowledged",
-            title=_l("Host problem acknowledged"),
-            render=_render_host_acknowledged,
-            short_title=_l("Ack"),
-            columns=["host_acknowledged"],
-        )
+def make_host_acknowledged_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_acknowledged",
+        title=_l("Host problem acknowledged"),
+        short_title=_l("Ack"),
+        columns=["host_acknowledged"],
+        render=_render_host_acknowledged,
+    )
 
 
 def _render_host_staleness(
@@ -3092,15 +2989,14 @@ def _render_host_staleness(
     return ("", "%0.2f" % row.get("host_staleness", 0))
 
 
-class PainterHostStaleness(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_staleness",
-            title=_l("Host staleness value"),
-            render=_render_host_staleness,
-            short_title=_l("Staleness"),
-            columns=["host_staleness"],
-        )
+def make_host_staleness_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_staleness",
+        title=_l("Host staleness value"),
+        short_title=_l("Staleness"),
+        columns=["host_staleness"],
+        render=_render_host_staleness,
+    )
 
 
 def _render_host_is_stale(
@@ -3109,16 +3005,15 @@ def _render_host_is_stale(
     return _paint_is_stale(row, context.config.staleness_threshold)
 
 
-class PainterHostIsStale(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_is_stale",
-            title=_l("Host is stale"),
-            render=_render_host_is_stale,
-            short_title=_l("Stale"),
-            columns=["host_staleness"],
-            sorter="svc_staleness",
-        )
+def make_host_is_stale_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_is_stale",
+        title=_l("Host is stale"),
+        short_title=_l("Stale"),
+        columns=["host_staleness"],
+        sorter="svc_staleness",
+        render=_render_host_is_stale,
+    )
 
 
 _HOST_CUSTOM_VARIABLES_BLACKLIST: list[str] = [
@@ -3162,17 +3057,16 @@ def _export_for_json_host_custom_variables(
     return _export_custom_vars("host", row, _HOST_CUSTOM_VARIABLES_BLACKLIST)
 
 
-class PainterHostCustomVariables(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_custom_vars",
-            title=_l("Host custom attributes"),
-            render=_render_host_custom_variables,
-            columns=["host_custom_variables"],
-            group_by=_group_by_host_custom_variables,
-            export_for_csv=_export_for_csv_host_custom_variables,
-            export_for_json=_export_for_json_host_custom_variables,
-        )
+def make_host_custom_vars_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_custom_vars",
+        title=_l("Host custom attributes"),
+        columns=["host_custom_variables"],
+        group_by=_group_by_host_custom_variables,
+        render=_render_host_custom_variables,
+        export_for_csv=_export_for_csv_host_custom_variables,
+        export_for_json=_export_for_json_host_custom_variables,
+    )
 
 
 def _paint_discovery_output(
@@ -3237,15 +3131,14 @@ def _render_service_discovery_state(
     )
 
 
-class PainterServiceDiscoveryState(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="service_discovery_state",
-            title=_l("Service discovery: State"),
-            render=_render_service_discovery_state,
-            short_title=_l("State"),
-            columns=["discovery_state"],
-        )
+def make_service_discovery_state_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="service_discovery_state",
+        title=_l("Service discovery: State"),
+        short_title=_l("State"),
+        columns=["discovery_state"],
+        render=_render_service_discovery_state,
+    )
 
 
 def _render_service_discovery_check(
@@ -3256,15 +3149,14 @@ def _render_service_discovery_check(
     )
 
 
-class PainterServiceDiscoveryCheck(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="service_discovery_check",
-            title=_l("Service discovery: Check type"),
-            render=_render_service_discovery_check,
-            short_title=_l("Check type"),
-            columns=["discovery_state", "discovery_check", "discovery_service"],
-        )
+def make_service_discovery_check_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="service_discovery_check",
+        title=_l("Service discovery: Check type"),
+        short_title=_l("Check type"),
+        columns=["discovery_state", "discovery_check", "discovery_service"],
+        render=_render_service_discovery_check,
+    )
 
 
 def _render_service_discovery_service(
@@ -3275,15 +3167,14 @@ def _render_service_discovery_service(
     )
 
 
-class PainterServiceDiscoveryService(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="service_discovery_service",
-            title=_l("Service discovery: Service name"),
-            render=_render_service_discovery_service,
-            short_title=_l("Service name"),
-            columns=["discovery_state", "discovery_check", "discovery_service"],
-        )
+def make_service_discovery_service_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="service_discovery_service",
+        title=_l("Service discovery: Service name"),
+        short_title=_l("Service name"),
+        columns=["discovery_state", "discovery_check", "discovery_service"],
+        render=_render_service_discovery_service,
+    )
 
 
 #    _   _           _
@@ -3311,15 +3202,14 @@ def _render_hostgroup_hosts(
     return "", HTMLWriter.render_div(HTML.empty().join(divs), class_="objectlist")
 
 
-class PainterHostgroupHosts(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="hostgroup_hosts",
-            title=_l("Hosts colored according to state (host group)"),
-            render=_render_hostgroup_hosts,
-            short_title=_l("Hosts"),
-            columns=["hostgroup_members_with_state"],
-        )
+def make_hostgroup_hosts_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="hostgroup_hosts",
+        title=_l("Hosts colored according to state (host group)"),
+        short_title=_l("Hosts"),
+        columns=["hostgroup_members_with_state"],
+        render=_render_hostgroup_hosts,
+    )
 
 
 def _render_hg_num_services(
@@ -3328,15 +3218,14 @@ def _render_hg_num_services(
     return (None, str(row["hostgroup_num_services"]))
 
 
-class PainterHgNumServices(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="hg_num_services",
-            title=_l("Number of services (host group)"),
-            render=_render_hg_num_services,
-            short_title="",
-            columns=["hostgroup_num_services"],
-        )
+def make_hg_num_services_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="hg_num_services",
+        title=_l("Number of services (host group)"),
+        short_title="",
+        columns=["hostgroup_num_services"],
+        render=_render_hg_num_services,
+    )
 
 
 def _render_hg_num_services_ok(
@@ -3345,16 +3234,15 @@ def _render_hg_num_services_ok(
     return paint_svc_count(0, row["hostgroup_num_services_ok"])
 
 
-class PainterHgNumServicesOk(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="hg_num_services_ok",
-            title=_l("Number of services in state OK (host group)"),
-            render=_render_hg_num_services_ok,
-            short_title=_l("O"),
-            columns=["hostgroup_num_services_ok"],
-            title_classes=["right"],
-        )
+def make_hg_num_services_ok_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="hg_num_services_ok",
+        title=_l("Number of services in state OK (host group)"),
+        short_title=_l("O"),
+        columns=["hostgroup_num_services_ok"],
+        title_classes=["right"],
+        render=_render_hg_num_services_ok,
+    )
 
 
 def _render_hg_num_services_warn(
@@ -3363,16 +3251,15 @@ def _render_hg_num_services_warn(
     return paint_svc_count(1, row["hostgroup_num_services_warn"])
 
 
-class PainterHgNumServicesWarn(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="hg_num_services_warn",
-            title=_l("Number of services in state WARN (host group)"),
-            render=_render_hg_num_services_warn,
-            short_title=_l("W"),
-            columns=["hostgroup_num_services_warn"],
-            title_classes=["right"],
-        )
+def make_hg_num_services_warn_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="hg_num_services_warn",
+        title=_l("Number of services in state WARN (host group)"),
+        short_title=_l("W"),
+        columns=["hostgroup_num_services_warn"],
+        title_classes=["right"],
+        render=_render_hg_num_services_warn,
+    )
 
 
 def _render_hg_num_services_crit(
@@ -3381,16 +3268,15 @@ def _render_hg_num_services_crit(
     return paint_svc_count(2, row["hostgroup_num_services_crit"])
 
 
-class PainterHgNumServicesCrit(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="hg_num_services_crit",
-            title=_l("Number of services in state CRIT (host group)"),
-            render=_render_hg_num_services_crit,
-            short_title=_l("C"),
-            columns=["hostgroup_num_services_crit"],
-            title_classes=["right"],
-        )
+def make_hg_num_services_crit_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="hg_num_services_crit",
+        title=_l("Number of services in state CRIT (host group)"),
+        short_title=_l("C"),
+        columns=["hostgroup_num_services_crit"],
+        title_classes=["right"],
+        render=_render_hg_num_services_crit,
+    )
 
 
 def _render_hg_num_services_unknown(
@@ -3399,16 +3285,15 @@ def _render_hg_num_services_unknown(
     return paint_svc_count(3, row["hostgroup_num_services_unknown"])
 
 
-class PainterHgNumServicesUnknown(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="hg_num_services_unknown",
-            title=_l("Number of services in state UNKNOWN (host group)"),
-            render=_render_hg_num_services_unknown,
-            short_title=_l("U"),
-            columns=["hostgroup_num_services_unknown"],
-            title_classes=["right"],
-        )
+def make_hg_num_services_unknown_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="hg_num_services_unknown",
+        title=_l("Number of services in state UNKNOWN (host group)"),
+        short_title=_l("U"),
+        columns=["hostgroup_num_services_unknown"],
+        title_classes=["right"],
+        render=_render_hg_num_services_unknown,
+    )
 
 
 def _render_hg_num_services_pending(
@@ -3417,16 +3302,15 @@ def _render_hg_num_services_pending(
     return paint_svc_count("p", row["hostgroup_num_services_pending"])
 
 
-class PainterHgNumServicesPending(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="hg_num_services_pending",
-            title=_l("Number of services in state PENDING (host group)"),
-            render=_render_hg_num_services_pending,
-            short_title=_l("P"),
-            columns=["hostgroup_num_services_pending"],
-            title_classes=["right"],
-        )
+def make_hg_num_services_pending_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="hg_num_services_pending",
+        title=_l("Number of services in state PENDING (host group)"),
+        short_title=_l("P"),
+        columns=["hostgroup_num_services_pending"],
+        title_classes=["right"],
+        render=_render_hg_num_services_pending,
+    )
 
 
 def _render_hg_num_hosts_up(
@@ -3435,16 +3319,15 @@ def _render_hg_num_hosts_up(
     return paint_host_count(0, row["hostgroup_num_hosts_up"])
 
 
-class PainterHgNumHostsUp(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="hg_num_hosts_up",
-            title=_l("Number of hosts in state UP (host group)"),
-            render=_render_hg_num_hosts_up,
-            short_title=_l("Up"),
-            columns=["hostgroup_num_hosts_up"],
-            title_classes=["right"],
-        )
+def make_hg_num_hosts_up_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="hg_num_hosts_up",
+        title=_l("Number of hosts in state UP (host group)"),
+        short_title=_l("Up"),
+        columns=["hostgroup_num_hosts_up"],
+        title_classes=["right"],
+        render=_render_hg_num_hosts_up,
+    )
 
 
 def _render_hg_num_hosts_down(
@@ -3453,16 +3336,15 @@ def _render_hg_num_hosts_down(
     return paint_host_count(1, row["hostgroup_num_hosts_down"])
 
 
-class PainterHgNumHostsDown(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="hg_num_hosts_down",
-            title=_l("Number of hosts in state DOWN (host group)"),
-            render=_render_hg_num_hosts_down,
-            short_title=_l("Dw"),
-            columns=["hostgroup_num_hosts_down"],
-            title_classes=["right"],
-        )
+def make_hg_num_hosts_down_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="hg_num_hosts_down",
+        title=_l("Number of hosts in state DOWN (host group)"),
+        short_title=_l("Dw"),
+        columns=["hostgroup_num_hosts_down"],
+        title_classes=["right"],
+        render=_render_hg_num_hosts_down,
+    )
 
 
 def _render_hg_num_hosts_unreach(
@@ -3471,16 +3353,15 @@ def _render_hg_num_hosts_unreach(
     return paint_host_count(2, row["hostgroup_num_hosts_unreach"])
 
 
-class PainterHgNumHostsUnreach(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="hg_num_hosts_unreach",
-            title=_l("Number of hosts in state UNREACH (host group)"),
-            render=_render_hg_num_hosts_unreach,
-            short_title=_l("Un"),
-            columns=["hostgroup_num_hosts_unreach"],
-            title_classes=["right"],
-        )
+def make_hg_num_hosts_unreach_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="hg_num_hosts_unreach",
+        title=_l("Number of hosts in state UNREACH (host group)"),
+        short_title=_l("Un"),
+        columns=["hostgroup_num_hosts_unreach"],
+        title_classes=["right"],
+        render=_render_hg_num_hosts_unreach,
+    )
 
 
 def _render_hg_num_hosts_pending(
@@ -3489,16 +3370,15 @@ def _render_hg_num_hosts_pending(
     return paint_host_count(None, row["hostgroup_num_hosts_pending"])
 
 
-class PainterHgNumHostsPending(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="hg_num_hosts_pending",
-            title=_l("Number of hosts in state PENDING (host group)"),
-            render=_render_hg_num_hosts_pending,
-            short_title=_l("Pd"),
-            columns=["hostgroup_num_hosts_pending"],
-            title_classes=["right"],
-        )
+def make_hg_num_hosts_pending_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="hg_num_hosts_pending",
+        title=_l("Number of hosts in state PENDING (host group)"),
+        short_title=_l("Pd"),
+        columns=["hostgroup_num_hosts_pending"],
+        title_classes=["right"],
+        render=_render_hg_num_hosts_pending,
+    )
 
 
 def _render_hg_name(
@@ -3507,15 +3387,14 @@ def _render_hg_name(
     return (None, row["hostgroup_name"])
 
 
-class PainterHgName(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="hg_name",
-            title=_l("Host group name"),
-            render=_render_hg_name,
-            short_title=_l("Name"),
-            columns=["hostgroup_name"],
-        )
+def make_hg_name_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="hg_name",
+        title=_l("Host group name"),
+        short_title=_l("Name"),
+        columns=["hostgroup_name"],
+        render=_render_hg_name,
+    )
 
 
 def _render_hg_alias(
@@ -3524,15 +3403,14 @@ def _render_hg_alias(
     return (None, row["hostgroup_alias"])
 
 
-class PainterHgAlias(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="hg_alias",
-            title=_l("Host group alias"),
-            render=_render_hg_alias,
-            short_title=_l("Alias"),
-            columns=["hostgroup_alias"],
-        )
+def make_hg_alias_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="hg_alias",
+        title=_l("Host group alias"),
+        short_title=_l("Alias"),
+        columns=["hostgroup_alias"],
+        render=_render_hg_alias,
+    )
 
 
 #    ____                  _
@@ -3551,15 +3429,14 @@ def _render_sg_services(
     )
 
 
-class PainterSgServices(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="sg_services",
-            title=_l("Services colored according to state (service group)"),
-            render=_render_sg_services,
-            short_title=_l("Services"),
-            columns=["servicegroup_members_with_state"],
-        )
+def make_sg_services_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="sg_services",
+        title=_l("Services colored according to state (service group)"),
+        short_title=_l("Services"),
+        columns=["servicegroup_members_with_state"],
+        render=_render_sg_services,
+    )
 
 
 def _render_sg_num_services(
@@ -3568,15 +3445,14 @@ def _render_sg_num_services(
     return (None, str(row["servicegroup_num_services"]))
 
 
-class PainterSgNumServices(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="sg_num_services",
-            title=_l("Number of services (service group)"),
-            render=_render_sg_num_services,
-            short_title="",
-            columns=["servicegroup_num_services"],
-        )
+def make_sg_num_services_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="sg_num_services",
+        title=_l("Number of services (service group)"),
+        short_title="",
+        columns=["servicegroup_num_services"],
+        render=_render_sg_num_services,
+    )
 
 
 def _render_sg_num_services_ok(
@@ -3585,15 +3461,14 @@ def _render_sg_num_services_ok(
     return paint_svc_count(0, row["servicegroup_num_services_ok"])
 
 
-class PainterSgNumServicesOk(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="sg_num_services_ok",
-            title=_l("Number of services in state OK (service group)"),
-            render=_render_sg_num_services_ok,
-            short_title=_l("O"),
-            columns=["servicegroup_num_services_ok"],
-        )
+def make_sg_num_services_ok_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="sg_num_services_ok",
+        title=_l("Number of services in state OK (service group)"),
+        short_title=_l("O"),
+        columns=["servicegroup_num_services_ok"],
+        render=_render_sg_num_services_ok,
+    )
 
 
 def _render_sg_num_services_warn(
@@ -3602,15 +3477,14 @@ def _render_sg_num_services_warn(
     return paint_svc_count(1, row["servicegroup_num_services_warn"])
 
 
-class PainterSgNumServicesWarn(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="sg_num_services_warn",
-            title=_l("Number of services in state WARN (service group)"),
-            render=_render_sg_num_services_warn,
-            short_title=_l("W"),
-            columns=["servicegroup_num_services_warn"],
-        )
+def make_sg_num_services_warn_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="sg_num_services_warn",
+        title=_l("Number of services in state WARN (service group)"),
+        short_title=_l("W"),
+        columns=["servicegroup_num_services_warn"],
+        render=_render_sg_num_services_warn,
+    )
 
 
 def _render_sg_num_services_crit(
@@ -3619,15 +3493,14 @@ def _render_sg_num_services_crit(
     return paint_svc_count(2, row["servicegroup_num_services_crit"])
 
 
-class PainterSgNumServicesCrit(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="sg_num_services_crit",
-            title=_l("Number of services in state CRIT (service group)"),
-            render=_render_sg_num_services_crit,
-            short_title=_l("C"),
-            columns=["servicegroup_num_services_crit"],
-        )
+def make_sg_num_services_crit_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="sg_num_services_crit",
+        title=_l("Number of services in state CRIT (service group)"),
+        short_title=_l("C"),
+        columns=["servicegroup_num_services_crit"],
+        render=_render_sg_num_services_crit,
+    )
 
 
 def _render_sg_num_services_unknown(
@@ -3636,15 +3509,14 @@ def _render_sg_num_services_unknown(
     return paint_svc_count(3, row["servicegroup_num_services_unknown"])
 
 
-class PainterSgNumServicesUnknown(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="sg_num_services_unknown",
-            title=_l("Number of services in state UNKNOWN (service group)"),
-            render=_render_sg_num_services_unknown,
-            short_title=_l("U"),
-            columns=["servicegroup_num_services_unknown"],
-        )
+def make_sg_num_services_unknown_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="sg_num_services_unknown",
+        title=_l("Number of services in state UNKNOWN (service group)"),
+        short_title=_l("U"),
+        columns=["servicegroup_num_services_unknown"],
+        render=_render_sg_num_services_unknown,
+    )
 
 
 def _render_sg_num_services_pending(
@@ -3653,15 +3525,14 @@ def _render_sg_num_services_pending(
     return paint_svc_count("p", row["servicegroup_num_services_pending"])
 
 
-class PainterSgNumServicesPending(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="sg_num_services_pending",
-            title=_l("Number of services in state PENDING (service group)"),
-            render=_render_sg_num_services_pending,
-            short_title=_l("P"),
-            columns=["servicegroup_num_services_pending"],
-        )
+def make_sg_num_services_pending_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="sg_num_services_pending",
+        title=_l("Number of services in state PENDING (service group)"),
+        short_title=_l("P"),
+        columns=["servicegroup_num_services_pending"],
+        render=_render_sg_num_services_pending,
+    )
 
 
 def _render_sg_name(
@@ -3670,15 +3541,14 @@ def _render_sg_name(
     return (None, row["servicegroup_name"])
 
 
-class PainterSgName(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="sg_name",
-            title=_l("Service group name"),
-            render=_render_sg_name,
-            short_title=_l("Name"),
-            columns=["servicegroup_name"],
-        )
+def make_sg_name_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="sg_name",
+        title=_l("Service group name"),
+        short_title=_l("Name"),
+        columns=["servicegroup_name"],
+        render=_render_sg_name,
+    )
 
 
 def _render_sg_alias(
@@ -3687,15 +3557,14 @@ def _render_sg_alias(
     return (None, row["servicegroup_alias"])
 
 
-class PainterSgAlias(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="sg_alias",
-            title=_l("Service group alias"),
-            render=_render_sg_alias,
-            short_title=_l("Alias"),
-            columns=["servicegroup_alias"],
-        )
+def make_sg_alias_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="sg_alias",
+        title=_l("Service group alias"),
+        short_title=_l("Alias"),
+        columns=["servicegroup_alias"],
+        render=_render_sg_alias,
+    )
 
 
 #     ____                                     _
@@ -3712,15 +3581,14 @@ def _render_comment_id(
     return (None, str(row["comment_id"]))
 
 
-class PainterCommentId(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="comment_id",
-            title=_l("Comment ID"),
-            render=_render_comment_id,
-            short_title=_l("ID"),
-            columns=["comment_id"],
-        )
+def make_comment_id_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="comment_id",
+        title=_l("Comment ID"),
+        short_title=_l("ID"),
+        columns=["comment_id"],
+        render=_render_comment_id,
+    )
 
 
 def _render_comment_author(
@@ -3729,15 +3597,14 @@ def _render_comment_author(
     return (None, row["comment_author"])
 
 
-class PainterCommentAuthor(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="comment_author",
-            title=_l("Comment author"),
-            render=_render_comment_author,
-            short_title=_l("Author"),
-            columns=["comment_author"],
-        )
+def make_comment_author_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="comment_author",
+        title=_l("Comment author"),
+        short_title=_l("Author"),
+        columns=["comment_author"],
+        render=_render_comment_author,
+    )
 
 
 def _render_comment_comment(
@@ -3754,14 +3621,13 @@ def _render_comment_comment(
     )
 
 
-class PainterCommentComment(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="comment_comment",
-            title=_l("Comment text"),
-            render=_render_comment_comment,
-            columns=["comment_comment"],
-        )
+def make_comment_comment_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="comment_comment",
+        title=_l("Comment text"),
+        columns=["comment_comment"],
+        render=_render_comment_comment,
+    )
 
 
 def _render_comment_what(
@@ -3770,15 +3636,14 @@ def _render_comment_what(
     return (None, row["comment_type"] == 1 and _("Host") or _("Service"))
 
 
-class PainterCommentWhat(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="comment_what",
-            title=_l("Comment type (host/service)"),
-            render=_render_comment_what,
-            short_title=_l("Type"),
-            columns=["comment_type"],
-        )
+def make_comment_what_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="comment_what",
+        title=_l("Comment type (host/service)"),
+        short_title=_l("Type"),
+        columns=["comment_type"],
+        render=_render_comment_what,
+    )
 
 
 def _render_comment_time(
@@ -3793,16 +3658,15 @@ def _render_comment_time(
     )
 
 
-class PainterCommentTime(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="comment_time",
-            title=_l("Comment entry time"),
-            render=_render_comment_time,
-            short_title=_l("Time"),
-            columns=["comment_entry_time"],
-            painter_options=["ts_format", "ts_date"],
-        )
+def make_comment_time_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="comment_time",
+        title=_l("Comment entry time"),
+        short_title=_l("Time"),
+        columns=["comment_entry_time"],
+        painter_options=["ts_format", "ts_date"],
+        render=_render_comment_time,
+    )
 
 
 def _render_comment_expires(
@@ -3818,16 +3682,15 @@ def _render_comment_expires(
     )
 
 
-class PainterCommentExpires(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="comment_expires",
-            title=_l("Comment expiry time"),
-            render=_render_comment_expires,
-            short_title=_l("Expires"),
-            columns=["comment_expire_time"],
-            painter_options=["ts_format", "ts_date"],
-        )
+def make_comment_expires_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="comment_expires",
+        title=_l("Comment expiry time"),
+        short_title=_l("Expires"),
+        columns=["comment_expire_time"],
+        painter_options=["ts_format", "ts_date"],
+        render=_render_comment_expires,
+    )
 
 
 def _render_comment_entry_type(
@@ -3863,15 +3726,14 @@ def _render_comment_entry_type(
     return "icons", code
 
 
-class PainterCommentEntryType(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="comment_entry_type",
-            title=_l("Comment entry type (user/downtime/flapping/ack)"),
-            render=_render_comment_entry_type,
-            short_title=_l("E.Type"),
-            columns=["comment_entry_type", "host_name", "service_description"],
-        )
+def make_comment_entry_type_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="comment_entry_type",
+        title=_l("Comment entry type (user/downtime/flapping/ack)"),
+        short_title=_l("E.Type"),
+        columns=["comment_entry_type", "host_name", "service_description"],
+        render=_render_comment_entry_type,
+    )
 
 
 #    ____                      _   _
@@ -3888,15 +3750,14 @@ def _render_downtime_id(
     return (None, "%d" % row["downtime_id"])
 
 
-class PainterDowntimeId(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="downtime_id",
-            title=_l("Downtime ID"),
-            render=_render_downtime_id,
-            short_title=_l("ID"),
-            columns=["downtime_id"],
-        )
+def make_downtime_id_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="downtime_id",
+        title=_l("Downtime ID"),
+        short_title=_l("ID"),
+        columns=["downtime_id"],
+        render=_render_downtime_id,
+    )
 
 
 def _render_downtime_author(
@@ -3905,15 +3766,14 @@ def _render_downtime_author(
     return (None, row["downtime_author"])
 
 
-class PainterDowntimeAuthor(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="downtime_author",
-            title=_l("Downtime author"),
-            render=_render_downtime_author,
-            short_title=_l("Author"),
-            columns=["downtime_author"],
-        )
+def make_downtime_author_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="downtime_author",
+        title=_l("Downtime author"),
+        short_title=_l("Author"),
+        columns=["downtime_author"],
+        render=_render_downtime_author,
+    )
 
 
 def _render_downtime_comment(
@@ -3930,15 +3790,14 @@ def _render_downtime_comment(
     )
 
 
-class PainterDowntimeComment(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="downtime_comment",
-            title=_l("Downtime comment"),
-            render=_render_downtime_comment,
-            short_title=_l("Comment"),
-            columns=["downtime_comment"],
-        )
+def make_downtime_comment_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="downtime_comment",
+        title=_l("Downtime comment"),
+        short_title=_l("Comment"),
+        columns=["downtime_comment"],
+        render=_render_downtime_comment,
+    )
 
 
 def _render_downtime_fixed(
@@ -3947,15 +3806,14 @@ def _render_downtime_fixed(
     return (None, row["downtime_fixed"] == 0 and _("flexible") or _("fixed"))
 
 
-class PainterDowntimeFixed(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="downtime_fixed",
-            title=_l("Downtime start mode"),
-            render=_render_downtime_fixed,
-            short_title=_l("Mode"),
-            columns=["downtime_fixed"],
-        )
+def make_downtime_fixed_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="downtime_fixed",
+        title=_l("Downtime start mode"),
+        short_title=_l("Mode"),
+        columns=["downtime_fixed"],
+        render=_render_downtime_fixed,
+    )
 
 
 def _render_downtime_origin(
@@ -3964,15 +3822,14 @@ def _render_downtime_origin(
     return (None, row["downtime_origin"] == 1 and _("configuration") or _("command"))
 
 
-class PainterDowntimeOrigin(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="downtime_origin",
-            title=_l("Downtime origin"),
-            render=_render_downtime_origin,
-            short_title=_l("Origin"),
-            columns=["downtime_origin"],
-        )
+def make_downtime_origin_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="downtime_origin",
+        title=_l("Downtime origin"),
+        short_title=_l("Origin"),
+        columns=["downtime_origin"],
+        render=_render_downtime_origin,
+    )
 
 
 def _render_downtime_what(
@@ -3981,15 +3838,14 @@ def _render_downtime_what(
     return (None, row["downtime_is_service"] and _("Service") or _("Host"))
 
 
-class PainterDowntimeWhat(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="downtime_what",
-            title=_l("Downtime for host/service"),
-            render=_render_downtime_what,
-            short_title=_l("for"),
-            columns=["downtime_is_service"],
-        )
+def make_downtime_what_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="downtime_what",
+        title=_l("Downtime for host/service"),
+        short_title=_l("for"),
+        columns=["downtime_is_service"],
+        render=_render_downtime_what,
+    )
 
 
 def _render_downtime_type(
@@ -3998,15 +3854,14 @@ def _render_downtime_type(
     return (None, row["is_pending"] == 0 and _("active") or _("pending"))
 
 
-class PainterDowntimeType(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="downtime_type",
-            title=_l("Downtime active or pending"),
-            render=_render_downtime_type,
-            short_title=_l("act/pend"),
-            columns=["is_pending"],
-        )
+def make_downtime_type_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="downtime_type",
+        title=_l("Downtime active or pending"),
+        short_title=_l("act/pend"),
+        columns=["is_pending"],
+        render=_render_downtime_type,
+    )
 
 
 def _render_downtime_entry_time(
@@ -4021,16 +3876,15 @@ def _render_downtime_entry_time(
     )
 
 
-class PainterDowntimeEntryTime(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="downtime_entry_time",
-            title=_l("Downtime entry time"),
-            render=_render_downtime_entry_time,
-            short_title=_l("Entry"),
-            columns=["downtime_entry_time"],
-            painter_options=["ts_format", "ts_date"],
-        )
+def make_downtime_entry_time_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="downtime_entry_time",
+        title=_l("Downtime entry time"),
+        short_title=_l("Entry"),
+        columns=["downtime_entry_time"],
+        painter_options=["ts_format", "ts_date"],
+        render=_render_downtime_entry_time,
+    )
 
 
 def _render_downtime_start_time(
@@ -4046,16 +3900,15 @@ def _render_downtime_start_time(
     )
 
 
-class PainterDowntimeStartTime(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="downtime_start_time",
-            title=_l("Downtime start time"),
-            render=_render_downtime_start_time,
-            short_title=_l("Start"),
-            columns=["downtime_start_time"],
-            painter_options=["ts_format", "ts_date"],
-        )
+def make_downtime_start_time_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="downtime_start_time",
+        title=_l("Downtime start time"),
+        short_title=_l("Start"),
+        columns=["downtime_start_time"],
+        painter_options=["ts_format", "ts_date"],
+        render=_render_downtime_start_time,
+    )
 
 
 def _render_downtime_end_time(
@@ -4071,16 +3924,15 @@ def _render_downtime_end_time(
     )
 
 
-class PainterDowntimeEndTime(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="downtime_end_time",
-            title=_l("Downtime end time"),
-            render=_render_downtime_end_time,
-            short_title=_l("End"),
-            columns=["downtime_end_time"],
-            painter_options=["ts_format", "ts_date"],
-        )
+def make_downtime_end_time_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="downtime_end_time",
+        title=_l("Downtime end time"),
+        short_title=_l("End"),
+        columns=["downtime_end_time"],
+        painter_options=["ts_format", "ts_date"],
+        render=_render_downtime_end_time,
+    )
 
 
 def _render_downtime_duration(
@@ -4091,15 +3943,14 @@ def _render_downtime_duration(
     return "", ""
 
 
-class PainterDowntimeDuration(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="downtime_duration",
-            title=_l("Downtime duration (if flexible)"),
-            render=_render_downtime_duration,
-            short_title=_l("Flex. duration"),
-            columns=["downtime_duration", "downtime_fixed"],
-        )
+def make_downtime_duration_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="downtime_duration",
+        title=_l("Downtime duration (if flexible)"),
+        short_title=_l("Flex. duration"),
+        columns=["downtime_duration", "downtime_fixed"],
+        render=_render_downtime_duration,
+    )
 
 
 #    _
@@ -4185,20 +4036,19 @@ def _render_log_details_history(
     return paint_stalified(row, content, context.config.staleness_threshold)
 
 
-class PainterLogDetailsHistory(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="log_details_history",
-            title=_l("Log: Details"),
-            render=_render_log_details_history,
-            columns=[
-                "log_long_plugin_output",
-                "service_check_command",
-                "service_custom_variables",
-                "host_custom_variables",
-            ],
-            parameters=_parameters_log_details_history,
-        )
+def make_log_details_history_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="log_details_history",
+        title=_l("Log: Details"),
+        columns=[
+            "log_long_plugin_output",
+            "service_check_command",
+            "service_custom_variables",
+            "host_custom_variables",
+        ],
+        parameters=_parameters_log_details_history,
+        render=_render_log_details_history,
+    )
 
 
 def _render_log_message(
@@ -4207,15 +4057,14 @@ def _render_log_message(
     return ("", row["log_message"])
 
 
-class PainterLogMessage(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="log_message",
-            title=_l("Log: complete message"),
-            render=_render_log_message,
-            short_title=_l("Message"),
-            columns=["log_message"],
-        )
+def make_log_message_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="log_message",
+        title=_l("Log: complete message"),
+        short_title=_l("Message"),
+        columns=["log_message"],
+        render=_render_log_message,
+    )
 
 
 def _render_log_plugin_output(
@@ -4244,15 +4093,14 @@ def _render_log_plugin_output(
     return "", ""
 
 
-class PainterLogPluginOutput(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="log_plugin_output",
-            title=_l("Log: Summary"),
-            render=_render_log_plugin_output,
-            short_title=_l("Summary"),
-            columns=["log_plugin_output", "log_type", "log_state_type", "log_comment"],
-        )
+def make_log_plugin_output_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="log_plugin_output",
+        title=_l("Log: Summary"),
+        short_title=_l("Summary"),
+        columns=["log_plugin_output", "log_type", "log_state_type", "log_comment"],
+        render=_render_log_plugin_output,
+    )
 
 
 def _decode_item_log_plugin_output(
@@ -4273,15 +4121,14 @@ def _render_log_what(
     return "", _("Program")
 
 
-class PainterLogWhat(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="log_what",
-            title=_l("Log: host or service"),
-            render=_render_log_what,
-            short_title=_l("Host/service"),
-            columns=["log_type"],
-        )
+def make_log_what_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="log_what",
+        title=_l("Log: host or service"),
+        short_title=_l("Host/service"),
+        columns=["log_type"],
+        render=_render_log_what,
+    )
 
 
 def _render_log_attempt(
@@ -4290,15 +4137,14 @@ def _render_log_attempt(
     return ("", str(row["log_attempt"]))
 
 
-class PainterLogAttempt(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="log_attempt",
-            title=_l("Log: number of check attempt"),
-            render=_render_log_attempt,
-            short_title=_l("Att."),
-            columns=["log_attempt"],
-        )
+def make_log_attempt_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="log_attempt",
+        title=_l("Log: number of check attempt"),
+        short_title=_l("Att."),
+        columns=["log_attempt"],
+        render=_render_log_attempt,
+    )
 
 
 def _render_log_state_type(
@@ -4307,15 +4153,14 @@ def _render_log_state_type(
     return ("", row["log_state_type"])
 
 
-class PainterLogStateType(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="log_state_type",
-            title=_l('Log: state type (DEPRECATED: Use "state information")'),
-            render=_render_log_state_type,
-            short_title=_l("Type"),
-            columns=["log_state_type"],
-        )
+def make_log_state_type_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="log_state_type",
+        title=_l('Log: state type (DEPRECATED: Use "state information")'),
+        short_title=_l("Type"),
+        columns=["log_state_type"],
+        render=_render_log_state_type,
+    )
 
 
 def _render_log_state_info(
@@ -4330,15 +4175,14 @@ def _render_log_state_info(
     return ("", info)
 
 
-class PainterLogStateInfo(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="log_state_info",
-            title=_l("Log: State information"),
-            render=_render_log_state_info,
-            short_title=_l("State info"),
-            columns=["log_state_info", "log_state_type"],
-        )
+def make_log_state_info_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="log_state_info",
+        title=_l("Log: State information"),
+        short_title=_l("State info"),
+        columns=["log_state_info", "log_state_type"],
+        render=_render_log_state_info,
+    )
 
 
 def _render_log_type(
@@ -4347,15 +4191,14 @@ def _render_log_type(
     return ("nowrap", row["log_type"])
 
 
-class PainterLogType(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="log_type",
-            title=_l("Log: event"),
-            render=_render_log_type,
-            short_title=_l("Event"),
-            columns=["log_type"],
-        )
+def make_log_type_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="log_type",
+        title=_l("Log: event"),
+        short_title=_l("Event"),
+        columns=["log_type"],
+        render=_render_log_type,
+    )
 
 
 def _render_log_contact_name(
@@ -4380,15 +4223,14 @@ def _render_log_contact_name(
     return "nowrap", HTML.without_escaping(", ").join(links)
 
 
-class PainterLogContactName(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="log_contact_name",
-            title=_l("Log: contact name"),
-            render=_render_log_contact_name,
-            short_title=_l("Contact"),
-            columns=["log_contact_name"],
-        )
+def make_log_contact_name_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="log_contact_name",
+        title=_l("Log: contact name"),
+        short_title=_l("Contact"),
+        columns=["log_contact_name"],
+        render=_render_log_contact_name,
+    )
 
 
 def _render_log_command(
@@ -4397,15 +4239,14 @@ def _render_log_command(
     return ("nowrap", row["log_command_name"])
 
 
-class PainterLogCommand(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="log_command",
-            title=_l("Log: command/plug-in"),
-            render=_render_log_command,
-            short_title=_l("Command"),
-            columns=["log_command_name"],
-        )
+def make_log_command_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="log_command",
+        title=_l("Log: command/plug-in"),
+        short_title=_l("Command"),
+        columns=["log_command_name"],
+        render=_render_log_command,
+    )
 
 
 def _render_log_icon(
@@ -4505,15 +4346,14 @@ def _render_log_icon(
     return "icon", ""
 
 
-class PainterLogIcon(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="log_icon",
-            title=_l("Log: event icon"),
-            render=_render_log_icon,
-            short_title="",
-            columns=["log_type", "log_state", "log_state_type", "log_command_name"],
-        )
+def make_log_icon_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="log_icon",
+        title=_l("Log: event icon"),
+        short_title="",
+        columns=["log_type", "log_state", "log_state_type", "log_command_name"],
+        render=_render_log_icon,
+    )
 
 
 def _render_log_options(
@@ -4522,15 +4362,14 @@ def _render_log_options(
     return ("", row["log_options"])
 
 
-class PainterLogOptions(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="log_options",
-            title=_l("Log: informational part of message"),
-            render=_render_log_options,
-            short_title=_l("Info"),
-            columns=["log_options"],
-        )
+def make_log_options_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="log_options",
+        title=_l("Log: informational part of message"),
+        short_title=_l("Info"),
+        columns=["log_options"],
+        render=_render_log_options,
+    )
 
 
 def _render_log_comment(
@@ -4544,15 +4383,14 @@ def _render_log_comment(
     return ("", "")
 
 
-class PainterLogComment(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="log_comment",
-            title=_l("Log: comment"),
-            render=_render_log_comment,
-            short_title=_l("Comment"),
-            columns=["log_options"],
-        )
+def make_log_comment_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="log_comment",
+        title=_l("Log: comment"),
+        short_title=_l("Comment"),
+        columns=["log_options"],
+        render=_render_log_comment,
+    )
 
 
 def _render_log_time(
@@ -4567,16 +4405,15 @@ def _render_log_time(
     )
 
 
-class PainterLogTime(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="log_time",
-            title=_l("Log: entry time"),
-            render=_render_log_time,
-            short_title=_l("Time"),
-            columns=["log_time"],
-            painter_options=["ts_format", "ts_date"],
-        )
+def make_log_time_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="log_time",
+        title=_l("Log: entry time"),
+        short_title=_l("Time"),
+        columns=["log_time"],
+        painter_options=["ts_format", "ts_date"],
+        render=_render_log_time,
+    )
 
 
 def _render_log_lineno(
@@ -4585,15 +4422,14 @@ def _render_log_lineno(
     return ("number", str(row["log_lineno"]))
 
 
-class PainterLogLineno(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="log_lineno",
-            title=_l("Log: line number in log file"),
-            render=_render_log_lineno,
-            short_title=_l("Line"),
-            columns=["log_lineno"],
-        )
+def make_log_lineno_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="log_lineno",
+        title=_l("Log: line number in log file"),
+        short_title=_l("Line"),
+        columns=["log_lineno"],
+        render=_render_log_lineno,
+    )
 
 
 def _group_by_log_date(row: Row, _cell: Cell, _context: PainterContext) -> str:
@@ -4606,16 +4442,15 @@ def _render_log_date(
     return _paint_day(row["log_time"])
 
 
-class PainterLogDate(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="log_date",
-            title=_l("Log: day of entry"),
-            render=_render_log_date,
-            short_title=_l("Date"),
-            columns=["log_time"],
-            group_by=_group_by_log_date,
-        )
+def make_log_date_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="log_date",
+        title=_l("Log: day of entry"),
+        short_title=_l("Date"),
+        columns=["log_time"],
+        group_by=_group_by_log_date,
+        render=_render_log_date,
+    )
 
 
 def _render_log_state(
@@ -4640,16 +4475,15 @@ def _render_log_state(
     )
 
 
-class PainterLogState(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="log_state",
-            title=_l("Log: state of host/service at log time"),
-            render=_render_log_state,
-            short_title=_l("State"),
-            columns=["log_state", "log_state_type", "log_service_description", "log_type"],
-            title_classes=["center"],
-        )
+def make_log_state_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="log_state",
+        title=_l("Log: state of host/service at log time"),
+        short_title=_l("State"),
+        columns=["log_state", "log_state_type", "log_service_description", "log_type"],
+        title_classes=["center"],
+        render=_render_log_state,
+    )
 
 
 # Alert statistics
@@ -4661,16 +4495,15 @@ def _render_alert_stats_ok(
     return ("", str(row["log_alerts_ok"]))
 
 
-class PainterAlertStatsOk(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="alert_stats_ok",
-            title=_l("Alert statistics: Number of recoveries"),
-            render=_render_alert_stats_ok,
-            short_title=_l("OK"),
-            columns=["log_alerts_ok"],
-            title_classes=["right"],
-        )
+def make_alert_stats_ok_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="alert_stats_ok",
+        title=_l("Alert statistics: Number of recoveries"),
+        short_title=_l("OK"),
+        columns=["log_alerts_ok"],
+        title_classes=["right"],
+        render=_render_alert_stats_ok,
+    )
 
 
 def _render_alert_stats_warn(
@@ -4679,16 +4512,15 @@ def _render_alert_stats_warn(
     return paint_svc_count(1, row["log_alerts_warn"])
 
 
-class PainterAlertStatsWarn(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="alert_stats_warn",
-            title=_l("Alert statistics: Number of warnings"),
-            render=_render_alert_stats_warn,
-            short_title=_l("WARN"),
-            columns=["log_alerts_warn"],
-            title_classes=["right"],
-        )
+def make_alert_stats_warn_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="alert_stats_warn",
+        title=_l("Alert statistics: Number of warnings"),
+        short_title=_l("WARN"),
+        columns=["log_alerts_warn"],
+        title_classes=["right"],
+        render=_render_alert_stats_warn,
+    )
 
 
 def _render_alert_stats_crit(
@@ -4697,16 +4529,15 @@ def _render_alert_stats_crit(
     return paint_svc_count(2, row["log_alerts_crit"])
 
 
-class PainterAlertStatsCrit(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="alert_stats_crit",
-            title=_l("Alert statistics: Number of critical alerts"),
-            render=_render_alert_stats_crit,
-            short_title=_l("CRIT"),
-            columns=["log_alerts_crit"],
-            title_classes=["right"],
-        )
+def make_alert_stats_crit_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="alert_stats_crit",
+        title=_l("Alert statistics: Number of critical alerts"),
+        short_title=_l("CRIT"),
+        columns=["log_alerts_crit"],
+        title_classes=["right"],
+        render=_render_alert_stats_crit,
+    )
 
 
 def _render_alert_stats_unknown(
@@ -4715,16 +4546,15 @@ def _render_alert_stats_unknown(
     return paint_svc_count(3, row["log_alerts_unknown"])
 
 
-class PainterAlertStatsUnknown(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="alert_stats_unknown",
-            title=_l("Alert statistics: Number of unknown alerts"),
-            render=_render_alert_stats_unknown,
-            short_title=_l("UNKN"),
-            columns=["log_alerts_unknown"],
-            title_classes=["right"],
-        )
+def make_alert_stats_unknown_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="alert_stats_unknown",
+        title=_l("Alert statistics: Number of unknown alerts"),
+        short_title=_l("UNKN"),
+        columns=["log_alerts_unknown"],
+        title_classes=["right"],
+        render=_render_alert_stats_unknown,
+    )
 
 
 def _render_alert_stats_problem(
@@ -4733,16 +4563,15 @@ def _render_alert_stats_problem(
     return paint_svc_count("s", row["log_alerts_problem"])
 
 
-class PainterAlertStatsProblem(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="alert_stats_problem",
-            title=_l("Alert statistics: Number of problem alerts"),
-            render=_render_alert_stats_problem,
-            short_title=_l("Problems"),
-            columns=["log_alerts_problem"],
-            title_classes=["right"],
-        )
+def make_alert_stats_problem_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="alert_stats_problem",
+        title=_l("Alert statistics: Number of problem alerts"),
+        short_title=_l("Problems"),
+        columns=["log_alerts_problem"],
+        title_classes=["right"],
+        render=_render_alert_stats_problem,
+    )
 
 
 #
@@ -4758,15 +4587,14 @@ def _render_host_tags(
     )
 
 
-class PainterHostTags(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_tags",
-            title=_l("Host tags"),
-            render=_render_host_tags,
-            columns=["host_tags"],
-            sorter="host",
-        )
+def make_host_tags_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_tags",
+        title=_l("Host tags"),
+        columns=["host_tags"],
+        sorter="host",
+        render=_render_host_tags,
+    )
 
 
 def _tag_entries(object_type: str, row: Row, context: PainterContext) -> list[tuple[str, str]]:
@@ -4811,15 +4639,14 @@ def _render_host_tags_with_titles(
     return _render_tags_with_titles("host", row, cell, user, context)
 
 
-class PainterHostTagsWithTitles(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_tags_with_titles",
-            title=_l("Host tags (with titles)"),
-            render=_render_host_tags_with_titles,
-            columns=["host_tags"],
-            sorter="host",
-        )
+def make_host_tags_with_titles_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_tags_with_titles",
+        title=_l("Host tags (with titles)"),
+        columns=["host_tags"],
+        sorter="host",
+        render=_render_host_tags_with_titles,
+    )
 
 
 def _render_service_tags(
@@ -4830,15 +4657,14 @@ def _render_service_tags(
     )
 
 
-class PainterServiceTags(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="service_tags",
-            title=_l("Service tags"),
-            render=_render_service_tags,
-            columns=["service_tags"],
-            sorter="service_tags",
-        )
+def make_service_tags_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="service_tags",
+        title=_l("Service tags"),
+        columns=["service_tags"],
+        sorter="service_tags",
+        render=_render_service_tags,
+    )
 
 
 def _render_service_tags_with_titles(
@@ -4847,15 +4673,14 @@ def _render_service_tags_with_titles(
     return _render_tags_with_titles("service", row, cell, user, context)
 
 
-class PainterServiceTagsWithTitles(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="service_tags_with_titles",
-            title=_l("Service tags (with titles)"),
-            render=_render_service_tags_with_titles,
-            columns=["service_tags"],
-            sorter="service_tags",
-        )
+def make_service_tags_with_titles_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="service_tags_with_titles",
+        title=_l("Service tags (with titles)"),
+        columns=["service_tags"],
+        sorter="service_tags",
+        render=_render_service_tags_with_titles,
+    )
 
 
 def _compute_data_host_labels(
@@ -4894,19 +4719,18 @@ def _export_for_json_host_labels(
     return _compute_data_host_labels(row, cell, user, context)
 
 
-class PainterHostLabels(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_labels",
-            title=_l("Host labels"),
-            render=_render_host_labels,
-            columns=["host_labels", "host_label_sources"],
-            compute_data=_compute_data_host_labels,
-            export_for_python=_export_for_python_host_labels,
-            export_for_csv=_export_for_csv_host_labels,
-            export_for_json=_export_for_json_host_labels,
-            sorter="host_labels",
-        )
+def make_host_labels_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_labels",
+        title=_l("Host labels"),
+        columns=["host_labels", "host_label_sources"],
+        sorter="host_labels",
+        render=_render_host_labels,
+        compute_data=_compute_data_host_labels,
+        export_for_python=_export_for_python_host_labels,
+        export_for_csv=_export_for_csv_host_labels,
+        export_for_json=_export_for_json_host_labels,
+    )
 
 
 def _compute_data_service_labels(
@@ -4945,19 +4769,18 @@ def _export_for_json_service_labels(
     return _compute_data_service_labels(row, cell, user, context)
 
 
-class PainterServiceLabels(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="service_labels",
-            title=_l("Service labels"),
-            render=_render_service_labels,
-            columns=["service_labels", "service_label_sources"],
-            compute_data=_compute_data_service_labels,
-            export_for_python=_export_for_python_service_labels,
-            export_for_csv=_export_for_csv_service_labels,
-            export_for_json=_export_for_json_service_labels,
-            sorter="service_labels",
-        )
+def make_service_labels_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="service_labels",
+        title=_l("Service labels"),
+        columns=["service_labels", "service_label_sources"],
+        sorter="service_labels",
+        render=_render_service_labels,
+        compute_data=_compute_data_service_labels,
+        export_for_python=_export_for_python_service_labels,
+        export_for_csv=_export_for_csv_service_labels,
+        export_for_json=_export_for_json_service_labels,
+    )
 
 
 def _render_host_docker_node(
@@ -4985,15 +4808,14 @@ def _render_host_docker_node(
     return "", content
 
 
-class PainterHostDockerNode(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_docker_node",
-            title=_l("Docker node"),
-            render=_render_host_docker_node,
-            short_title=_l("Node"),
-            columns=["host_labels", "host_label_sources"],
-        )
+def make_host_docker_node_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_docker_node",
+        title=_l("Docker node"),
+        short_title=_l("Node"),
+        columns=["host_labels", "host_label_sources"],
+        render=_render_host_docker_node,
+    )
 
 
 @request_memoize()
@@ -5093,18 +4915,17 @@ def _render_host_specific_metric(
     return _render_specific_metric(row, cell, perf_data_entries, check_command, context)
 
 
-class PainterHostSpecificMetric(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_specific_metric",
-            title=_SPECIFIC_METRIC_DEFAULT_TITLE,
-            render=_render_host_specific_metric,
-            list_title=_l("Metric"),
-            cell_title=_title_specific_metric,
-            cell_short_title=_title_specific_metric,
-            columns=["host_perf_data", "host_check_command"],
-            parameters=_parameters_specific_metric,
-        )
+def make_host_specific_metric_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_specific_metric",
+        title=_SPECIFIC_METRIC_DEFAULT_TITLE,
+        list_title=_l("Metric"),
+        columns=["host_perf_data", "host_check_command"],
+        cell_title=_title_specific_metric,
+        cell_short_title=_title_specific_metric,
+        parameters=_parameters_specific_metric,
+        render=_render_host_specific_metric,
+    )
 
 
 def _render_service_specific_metric(
@@ -5115,18 +4936,17 @@ def _render_service_specific_metric(
     return _render_specific_metric(row, cell, perf_data_entries, check_command, context)
 
 
-class PainterServiceSpecificMetric(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="service_specific_metric",
-            title=_SPECIFIC_METRIC_DEFAULT_TITLE,
-            render=_render_service_specific_metric,
-            list_title=_l("Metric"),
-            cell_title=_title_specific_metric,
-            cell_short_title=_title_specific_metric,
-            columns=["service_perf_data", "service_check_command"],
-            parameters=_parameters_specific_metric,
-        )
+def make_service_specific_metric_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="service_specific_metric",
+        title=_SPECIFIC_METRIC_DEFAULT_TITLE,
+        list_title=_l("Metric"),
+        columns=["service_perf_data", "service_check_command"],
+        cell_title=_title_specific_metric,
+        cell_short_title=_title_specific_metric,
+        parameters=_parameters_specific_metric,
+        render=_render_service_specific_metric,
+    )
 
 
 def _render_host_kubernetes(
@@ -5167,79 +4987,67 @@ def _render_host_kubernetes(
     return "", content
 
 
-class _PainterHostKubernetes(InternalPainter):
-    def __init__(
-        self,
-        *,
-        object_type: str,
-        constraints: Sequence[str],
-        title: LazyString,
-        short_title: LazyString,
-    ) -> None:
-        super().__init__(
-            ident=f"host_kubernetes_{object_type}",
-            title=title,
-            render=partial(_render_host_kubernetes, object_type, constraints),
-            short_title=short_title,
-            columns=["host_labels", "host_name", "site"],
-        )
+def _make_host_kubernetes_painter(
+    *, object_type: str, constraints: Sequence[str], title: LazyString, short_title: LazyString
+) -> InternalPainter:
+    return InternalPainter(
+        ident=f"host_kubernetes_{object_type}",
+        title=title,
+        short_title=short_title,
+        columns=["host_labels", "host_name", "site"],
+        render=partial(_render_host_kubernetes, object_type, constraints),
+    )
 
 
-class PainterHostKubernetesCluster(_PainterHostKubernetes):
-    def __init__(self) -> None:
-        super().__init__(
-            object_type="cluster",
-            constraints=["cluster"],
-            title=_l("Kubernetes cluster"),
-            short_title=_l("Cluster"),
-        )
+def make_host_kubernetes_cluster_painter() -> InternalPainter:
+    return _make_host_kubernetes_painter(
+        object_type="cluster",
+        constraints=["cluster"],
+        title=_l("Kubernetes cluster"),
+        short_title=_l("Cluster"),
+    )
 
 
-class PainterHostKubernetesNamespace(_PainterHostKubernetes):
-    def __init__(self) -> None:
-        super().__init__(
-            object_type="namespace",
-            constraints=["namespace", "cluster-host", "cluster"],
-            title=_l("Kubernetes Namespace"),
-            short_title=_l("Namespace"),
-        )
+def make_host_kubernetes_namespace_painter() -> InternalPainter:
+    return _make_host_kubernetes_painter(
+        object_type="namespace",
+        constraints=["namespace", "cluster-host", "cluster"],
+        title=_l("Kubernetes Namespace"),
+        short_title=_l("Namespace"),
+    )
 
 
-class PainterHostKubernetesDeployment(_PainterHostKubernetes):
-    def __init__(self) -> None:
-        super().__init__(
-            object_type="deployment",
-            constraints=["deployment", "namespace", "cluster-host", "cluster"],
-            title=_l("Kubernetes deployment"),
-            short_title=_l("Deployment"),
-        )
+def make_host_kubernetes_deployment_painter() -> InternalPainter:
+    return _make_host_kubernetes_painter(
+        object_type="deployment",
+        constraints=["deployment", "namespace", "cluster-host", "cluster"],
+        title=_l("Kubernetes deployment"),
+        short_title=_l("Deployment"),
+    )
 
 
-class PainterHostKubernetesDaemonset(_PainterHostKubernetes):
-    def __init__(self) -> None:
-        super().__init__(
-            object_type="daemonset",
-            constraints=["daemonset", "namespace", "cluster-host", "cluster"],
-            title=_l("Kubernetes DaemonSet"),
-            short_title=_l("DaemonSet"),
-        )
+def make_host_kubernetes_daemonset_painter() -> InternalPainter:
+    return _make_host_kubernetes_painter(
+        object_type="daemonset",
+        constraints=["daemonset", "namespace", "cluster-host", "cluster"],
+        title=_l("Kubernetes DaemonSet"),
+        short_title=_l("DaemonSet"),
+    )
 
 
-class PainterHostKubernetesStatefulset(_PainterHostKubernetes):
-    def __init__(self) -> None:
-        super().__init__(
-            object_type="statefulset",
-            constraints=["statefulset", "namespace", "cluster-host", "cluster"],
-            title=_l("Kubernetes StatefulSet"),
-            short_title=_l("StatefulSet"),
-        )
+def make_host_kubernetes_statefulset_painter() -> InternalPainter:
+    return _make_host_kubernetes_painter(
+        object_type="statefulset",
+        constraints=["statefulset", "namespace", "cluster-host", "cluster"],
+        title=_l("Kubernetes StatefulSet"),
+        short_title=_l("StatefulSet"),
+    )
 
 
-class PainterHostKubernetesNode(_PainterHostKubernetes):
-    def __init__(self) -> None:
-        super().__init__(
-            object_type="node",
-            constraints=["node", "cluster"],
-            title=_l("Kubernetes node"),
-            short_title=_l("Node"),
-        )
+def make_host_kubernetes_node_painter() -> InternalPainter:
+    return _make_host_kubernetes_painter(
+        object_type="node",
+        constraints=["node", "cluster"],
+        title=_l("Kubernetes node"),
+        short_title=_l("Node"),
+    )

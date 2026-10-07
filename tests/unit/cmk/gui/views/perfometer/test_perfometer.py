@@ -11,11 +11,11 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import perfometers, Title
 from cmk.gui.graphing import perfometers_from_api
 from cmk.gui.logged_in import user
-from cmk.gui.painter import Cell
+from cmk.gui.painter import Cell, InternalPainter
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.perfometer.base import Perfometer
-from cmk.gui.views.perfometer.painter import PainterPerfometer
+from cmk.gui.views.perfometer.painter import make_perfometer_painter
 
 _REGISTERED_PERFOMETERS = {
     "kube_memory_usage": perfometers.Perfometer(
@@ -123,8 +123,8 @@ def _perfometer_row() -> Row:
     }
 
 
-def _make_painter() -> PainterPerfometer:
-    return PainterPerfometer()
+def _make_painter() -> InternalPainter:
+    return make_perfometer_painter()
 
 
 @pytest.mark.usefixtures("request_context", "registered_perfometer")

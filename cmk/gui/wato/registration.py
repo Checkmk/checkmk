@@ -64,10 +64,10 @@ from ._virtual_host_tree import VirtualHostTree
 from .icons import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
 from .pages._rule_conditions import PageAjaxDictHostTagConditionGetChoice
 from .views import (
-    PainterHostFilename,
-    PainterWatoFolderAbs,
-    PainterWatoFolderPlain,
-    PainterWatoFolderRel,
+    make_host_filename_painter,
+    make_wato_folder_abs_painter,
+    make_wato_folder_plain_painter,
+    make_wato_folder_rel_painter,
     SorterWatoFolderAbs,
     SorterWatoFolderPlain,
     SorterWatoFolderRel,
@@ -102,10 +102,10 @@ def register(
     replication_path_registry: ReplicationPathRegistry,
     user_menu_topics: Callable[[UserPermissions], list[NavItemTopic]],
 ) -> None:
-    painter_registry.register(PainterHostFilename())
-    painter_registry.register(PainterWatoFolderAbs())
-    painter_registry.register(PainterWatoFolderRel())
-    painter_registry.register(PainterWatoFolderPlain())
+    painter_registry.register(make_host_filename_painter())
+    painter_registry.register(make_wato_folder_abs_painter())
+    painter_registry.register(make_wato_folder_rel_painter())
+    painter_registry.register(make_wato_folder_plain_painter())
     sorter_registry.register(SorterWatoFolderAbs)
     sorter_registry.register(SorterWatoFolderRel)
     sorter_registry.register(SorterWatoFolderPlain)

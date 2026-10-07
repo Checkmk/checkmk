@@ -66,19 +66,18 @@ def _export_for_csv_service_icons(
     raise CSVExportError
 
 
-class PainterServiceIcons(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="service_icons",
-            title=_l("Service icons"),
-            render=_render_service_icons,
-            short_title=_l("Icons"),
-            columns=_columns_service_icons,
-            groupable=False,
-            compute_data=_compute_data_service_icons,
-            export_for_csv=_export_for_csv_service_icons,
-            printable=False,
-        )
+def make_service_icons_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="service_icons",
+        title=_l("Service icons"),
+        short_title=_l("Icons"),
+        columns=_columns_service_icons,
+        groupable=False,
+        printable=False,
+        render=_render_service_icons,
+        compute_data=_compute_data_service_icons,
+        export_for_csv=_export_for_csv_service_icons,
+    )
 
 
 def _columns_host_icons() -> Sequence[ColumnName]:
@@ -115,19 +114,18 @@ def _export_for_csv_host_icons(
     raise CSVExportError
 
 
-class PainterHostIcons(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_icons",
-            title=_l("Host icons"),
-            render=_render_host_icons,
-            short_title=_l("Icons"),
-            columns=_columns_host_icons,
-            groupable=False,
-            compute_data=_compute_data_host_icons,
-            export_for_csv=_export_for_csv_host_icons,
-            printable=False,
-        )
+def make_host_icons_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_icons",
+        title=_l("Host icons"),
+        short_title=_l("Icons"),
+        columns=_columns_host_icons,
+        groupable=False,
+        printable=False,
+        render=_render_host_icons,
+        compute_data=_compute_data_host_icons,
+        export_for_csv=_export_for_csv_host_icons,
+    )
 
 
 def _handle_icon(icon: StaticIcon | DynamicIcon) -> DynamicIcon:

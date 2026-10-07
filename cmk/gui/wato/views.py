@@ -28,15 +28,14 @@ def _render_host_filename(
     return ("tt", row["host_filename"])
 
 
-class PainterHostFilename(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_filename",
-            title=_l("Checkmk config file name"),
-            render=_render_host_filename,
-            short_title=_l("File name"),
-            columns=["host_filename"],
-        )
+def make_host_filename_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_filename",
+        title=_l("Checkmk config file name"),
+        short_title=_l("File name"),
+        columns=["host_filename"],
+        render=_render_host_filename,
+    )
 
 
 # TODO: Extremely bad idea ahead! The return type depends on a combination of
@@ -83,16 +82,15 @@ def _render_wato_folder_abs(
     return paint_wato_folder(row, "abs", request=context.request, request_cache=cell.request_cache)
 
 
-class PainterWatoFolderAbs(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="wato_folder_abs",
-            title=_l("Folder - complete path"),
-            render=_render_wato_folder_abs,
-            short_title=_l("Folder"),
-            columns=["host_filename"],
-            sorter="wato_folder_abs",
-        )
+def make_wato_folder_abs_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="wato_folder_abs",
+        title=_l("Folder - complete path"),
+        short_title=_l("Folder"),
+        columns=["host_filename"],
+        sorter="wato_folder_abs",
+        render=_render_wato_folder_abs,
+    )
 
 
 def _render_wato_folder_rel(
@@ -101,16 +99,15 @@ def _render_wato_folder_rel(
     return paint_wato_folder(row, "rel", request=context.request, request_cache=cell.request_cache)
 
 
-class PainterWatoFolderRel(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="wato_folder_rel",
-            title=_l("Folder - relative path"),
-            render=_render_wato_folder_rel,
-            short_title=_l("Folder"),
-            columns=["host_filename"],
-            sorter="wato_folder_rel",
-        )
+def make_wato_folder_rel_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="wato_folder_rel",
+        title=_l("Folder - relative path"),
+        short_title=_l("Folder"),
+        columns=["host_filename"],
+        sorter="wato_folder_rel",
+        render=_render_wato_folder_rel,
+    )
 
 
 def _render_wato_folder_plain(
@@ -121,16 +118,15 @@ def _render_wato_folder_plain(
     )
 
 
-class PainterWatoFolderPlain(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="wato_folder_plain",
-            title=_l("Folder - just folder name"),
-            render=_render_wato_folder_plain,
-            short_title=_l("Folder"),
-            columns=["host_filename"],
-            sorter="wato_folder_plain",
-        )
+def make_wato_folder_plain_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="wato_folder_plain",
+        title=_l("Folder - just folder name"),
+        short_title=_l("Folder"),
+        columns=["host_filename"],
+        sorter="wato_folder_plain",
+        render=_render_wato_folder_plain,
+    )
 
 
 def cmp_wato_folder(

@@ -38,7 +38,7 @@ from .builtin import (
 )
 from .config_icons import declare_icons_and_actions_perm
 from .page_ajax_popup_action_menu import ajax_popup_action_menu
-from .painter import PainterHostIcons, PainterServiceIcons
+from .painter import make_host_icons_painter, make_service_icons_painter
 from .permission_section import (
     PERMISSION_SECTION_ICONS_AND_ACTIONS,
 )
@@ -52,8 +52,8 @@ def register(
     permission_section_registry: PermissionSectionRegistry,
 ) -> None:
     permission_section_registry.register(PERMISSION_SECTION_ICONS_AND_ACTIONS)
-    painter_registry.register(PainterHostIcons())
-    painter_registry.register(PainterServiceIcons())
+    painter_registry.register(make_host_icons_painter())
+    painter_registry.register(make_service_icons_painter())
     icon_registry.register(ShowParentChildTopology)
     icon_registry.register(ActionMenuIcon)
     icon_registry.register(IconImageIcon)

@@ -11,7 +11,6 @@ import pytest
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.painter import Cell, EmptyCell, InternalPainter, PainterContext, PainterRegistry
 from cmk.gui.painter.legacy import Painter
-from cmk.gui.painter.painters import PainterHostAddress
 from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import FixedValue
@@ -38,13 +37,6 @@ class _LegacyPainter(Painter):
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return "", "own permissions" if self._user_permissions is _PERMISSIONS else "other"
-
-
-class _RenamedHostAddress(PainterHostAddress):
-    @property
-    @override
-    def ident(self) -> str:
-        return "renamed_host_address"
 
 
 _LATE_COLUMNS: list[ColumnName] = []
@@ -96,18 +88,6 @@ def test_legacy_painter_renders_with_the_permissions_of_its_cell() -> None:
     )
 
 
-def test_register_returns_a_built_in_painter_subclass() -> None:
-    assert PainterRegistry().register(_RenamedHostAddress) is _RenamedHostAddress
-
-
-@pytest.mark.usefixtures("request_context")
-def test_built_in_painter_subclass_renders_through_a_cell() -> None:
-    registry = PainterRegistry()
-    registry.register(_RenamedHostAddress)
-    cell = Cell(ColumnSpec(name="renamed_host_address"), None, registry, _PERMISSIONS, None)
-    assert cell.render_content({"host_address": "10.0.0.1"}, user) == ("", "10.0.0.1")
-
-
 @pytest.mark.usefixtures("request_context")
 def test_legacy_painter_reads_its_columns_on_access() -> None:
     registry = PainterRegistry()
@@ -132,9 +112,26 @@ def _render_host_address(
     return "", row["host_address"]
 
 
+def _host_address_registry() -> PainterRegistry:
+    registry = PainterRegistry()
+    registry.register(
+        InternalPainter(ident="host_address", title="Host address", render=_render_host_address)
+    )
+    return registry
+
+
+def test_painter_is_registered_by_its_ident() -> None:
+    assert list(_host_address_registry()) == ["host_address"]
+
+
+def test_painter_renders_through_a_cell() -> None:
+    cell = Cell(ColumnSpec(name="host_address"), None, _host_address_registry(), _PERMISSIONS, None)
+    assert cell.render_content({"host_address": "10.0.0.1"}, user) == ("", "10.0.0.1")
+
+
 def test_painter_that_is_not_groupable_puts_all_rows_into_one_group() -> None:
     painter = InternalPainter(
-        ident="icons", title="Icons", render=_render_host_address, groupable=False
+        ident="icons", title="Icons", groupable=False, render=_render_host_address
     )
     cell = EmptyCell()
     assert painter.group_by({"host_address": "10.0.0.1"}, cell, cell.painter_context()) == ("",)
@@ -144,8 +141,8 @@ def test_painter_shows_its_static_tooltip_title() -> None:
     painter = InternalPainter(
         ident="host_address",
         title="Host address",
-        render=_render_host_address,
         tooltip_title="Primary address",
+        render=_render_host_address,
     )
     cell = EmptyCell()
     assert painter.tooltip_title(cell, cell.painter_context()) == "Primary address"
@@ -162,8 +159,8 @@ def test_painter_builds_its_parameters_from_the_context() -> None:
     painter = InternalPainter(
         ident="host_address",
         title="Host address",
-        render=_render_host_address,
         parameters=_host_address_parameters,
+        render=_render_host_address,
     )
     assert painter.parameters(EmptyCell().painter_context()) is _HOST_ADDRESS_PARAMETERS
 
@@ -172,7 +169,7 @@ def test_painter_returns_its_static_parameters() -> None:
     painter = InternalPainter(
         ident="host_address",
         title="Host address",
-        render=_render_host_address,
         parameters=_HOST_ADDRESS_PARAMETERS,
+        render=_render_host_address,
     )
     assert painter.parameters(EmptyCell().painter_context()) is _HOST_ADDRESS_PARAMETERS

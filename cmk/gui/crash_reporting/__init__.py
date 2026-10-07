@@ -39,16 +39,16 @@ from .views import (
     FilterCrashTime,
     FilterCrashType,
     FilterCrashVersion,
-    PainterCrashCheckType,
-    PainterCrashException,
-    PainterCrashHost,
-    PainterCrashIdent,
-    PainterCrashItem,
-    PainterCrashServiceName,
-    PainterCrashSource,
-    PainterCrashTime,
-    PainterCrashType,
-    PainterCrashVersion,
+    make_crash_check_type_painter,
+    make_crash_exception_painter,
+    make_crash_host_painter,
+    make_crash_ident_painter,
+    make_crash_item_painter,
+    make_crash_service_name_painter,
+    make_crash_source_painter,
+    make_crash_time_painter,
+    make_crash_type_painter,
+    make_crash_version_painter,
     SorterCrashCheckType,
     SorterCrashException,
     SorterCrashHost,
@@ -101,16 +101,16 @@ def register(
     sorter_registry.register(SorterCrashType)
     sorter_registry.register(SorterCrashVersion)
     command_registry.register(CommandDeleteCrashReports)
-    painter_registry.register(PainterCrashCheckType())
-    painter_registry.register(PainterCrashException())
-    painter_registry.register(PainterCrashHost())
-    painter_registry.register(PainterCrashIdent())
-    painter_registry.register(PainterCrashItem())
-    painter_registry.register(PainterCrashServiceName())
-    painter_registry.register(PainterCrashSource())
-    painter_registry.register(PainterCrashTime())
-    painter_registry.register(PainterCrashType())
-    painter_registry.register(PainterCrashVersion())
+    painter_registry.register(make_crash_check_type_painter())
+    painter_registry.register(make_crash_exception_painter())
+    painter_registry.register(make_crash_host_painter())
+    painter_registry.register(make_crash_ident_painter())
+    painter_registry.register(make_crash_item_painter())
+    painter_registry.register(make_crash_service_name_painter())
+    painter_registry.register(make_crash_source_painter())
+    painter_registry.register(make_crash_time_painter())
+    painter_registry.register(make_crash_type_painter())
+    painter_registry.register(make_crash_version_painter())
     config_variable_registry.register(ConfigVariableCrashReportTarget)
     config_variable_registry.register(ConfigVariableCrashReportURL)
     config_variable_registry.register(ConfigVariableAutomaticCrashReportUpload)

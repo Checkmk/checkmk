@@ -384,26 +384,25 @@ def _export_for_json_service_graphs(
     raise JSONExportError
 
 
-class PainterServiceGraphs(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="service_graphs",
-            title=_l("Service graphs with display options"),
-            render=_render_service_graphs,
-            columns=[
-                "host_name",
-                "service_description",
-                "service_perf_data",
-                "service_metrics",
-                "service_check_command",
-            ],
-            parameters=_parameters_service_graphs,
-            export_for_python=_export_for_python_service_graphs,
-            export_for_csv=_export_for_csv_service_graphs,
-            export_for_json=_export_for_json_service_graphs,
-            printable="time_graph",
-            painter_options=["graph_render_options"],
-        )
+def make_service_graphs_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="service_graphs",
+        title=_l("Service graphs with display options"),
+        columns=[
+            "host_name",
+            "service_description",
+            "service_perf_data",
+            "service_metrics",
+            "service_check_command",
+        ],
+        printable="time_graph",
+        painter_options=["graph_render_options"],
+        parameters=_parameters_service_graphs,
+        render=_render_service_graphs,
+        export_for_python=_export_for_python_service_graphs,
+        export_for_csv=_export_for_csv_service_graphs,
+        export_for_json=_export_for_json_service_graphs,
+    )
 
 
 def _parameters_host_graphs(_context: PainterContext) -> MigrateNotUpdated:
@@ -446,20 +445,19 @@ def _export_for_json_host_graphs(
     raise JSONExportError
 
 
-class PainterHostGraphs(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_graphs",
-            title=_l("Host graphs with display options"),
-            render=_render_host_graphs,
-            columns=["host_name", "host_perf_data", "host_metrics", "host_check_command"],
-            parameters=_parameters_host_graphs,
-            export_for_python=_export_for_python_host_graphs,
-            export_for_csv=_export_for_csv_host_graphs,
-            export_for_json=_export_for_json_host_graphs,
-            printable="time_graph",
-            painter_options=["graph_render_options"],
-        )
+def make_host_graphs_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_graphs",
+        title=_l("Host graphs with display options"),
+        columns=["host_name", "host_perf_data", "host_metrics", "host_check_command"],
+        printable="time_graph",
+        painter_options=["graph_render_options"],
+        parameters=_parameters_host_graphs,
+        render=_render_host_graphs,
+        export_for_python=_export_for_python_host_graphs,
+        export_for_csv=_export_for_csv_host_graphs,
+        export_for_json=_export_for_json_host_graphs,
+    )
 
 
 class PainterOptionGraphRenderOptions(PainterOption):
@@ -518,26 +516,25 @@ def _export_for_json_svc_pnpgraph(
     raise JSONExportError
 
 
-class PainterSvcPnpgraph(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_pnpgraph",
-            title=_l("Service graphs"),
-            render=_render_svc_pnpgraph,
-            columns=[
-                "host_name",
-                "service_description",
-                "service_perf_data",
-                "service_metrics",
-                "service_check_command",
-            ],
-            parameters=_parameters_svc_pnpgraph,
-            export_for_python=_export_for_python_svc_pnpgraph,
-            export_for_csv=_export_for_csv_svc_pnpgraph,
-            export_for_json=_export_for_json_svc_pnpgraph,
-            printable="time_graph",
-            painter_options=[],
-        )
+def make_svc_pnpgraph_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_pnpgraph",
+        title=_l("Service graphs"),
+        columns=[
+            "host_name",
+            "service_description",
+            "service_perf_data",
+            "service_metrics",
+            "service_check_command",
+        ],
+        printable="time_graph",
+        painter_options=[],
+        parameters=_parameters_svc_pnpgraph,
+        render=_render_svc_pnpgraph,
+        export_for_python=_export_for_python_svc_pnpgraph,
+        export_for_csv=_export_for_csv_svc_pnpgraph,
+        export_for_json=_export_for_json_svc_pnpgraph,
+    )
 
 
 def _parameters_host_pnpgraph(_context: PainterContext) -> Transform:
@@ -577,21 +574,20 @@ def _export_for_json_host_pnpgraph(
     raise JSONExportError
 
 
-class PainterHostPnpgraph(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_pnpgraph",
-            title=_l("Host graph"),
-            render=_render_host_pnpgraph,
-            short_title=_l("Graph"),
-            columns=["host_name", "host_perf_data", "host_metrics", "host_check_command"],
-            parameters=_parameters_host_pnpgraph,
-            export_for_python=_export_for_python_host_pnpgraph,
-            export_for_csv=_export_for_csv_host_pnpgraph,
-            export_for_json=_export_for_json_host_pnpgraph,
-            printable="time_graph",
-            painter_options=[],
-        )
+def make_host_pnpgraph_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_pnpgraph",
+        title=_l("Host graph"),
+        short_title=_l("Graph"),
+        columns=["host_name", "host_perf_data", "host_metrics", "host_check_command"],
+        printable="time_graph",
+        painter_options=[],
+        parameters=_parameters_host_pnpgraph,
+        render=_render_host_pnpgraph,
+        export_for_python=_export_for_python_host_pnpgraph,
+        export_for_csv=_export_for_csv_host_pnpgraph,
+        export_for_json=_export_for_json_host_pnpgraph,
+    )
 
 
 def cmk_graph_url(row: Row, what: str, *, request: Request) -> str:

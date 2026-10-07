@@ -13,7 +13,7 @@ from cmk.gui.crash_reporting.views import (
     cmp_crash_source,
     crash_exception_row_filter,
     CrashReportsRowTable,
-    PainterCrashException,
+    make_crash_exception_painter,
 )
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
 from cmk.gui.painter import Cell
@@ -149,7 +149,7 @@ def test_get_crash_report_rows_queries(
 )
 def test_painter_crash_exception_render(user: LoggedInUser, may_see_exception: bool) -> None:
     cell = Cell(None, None, None, UserPermissions({}, {}, {}, []), None)
-    _css, content = PainterCrashException().render(
+    _css, content = make_crash_exception_painter().render(
         {"crash_exc_type": "ValueError", "crash_exc_value": "secret boom"},
         cell,
         user,

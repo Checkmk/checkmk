@@ -15,12 +15,12 @@ from cmk.gui.views.sorter import cmp_simple_number, declare_1to1_sorter
 from . import _paint_functions, _views
 from ._data_sources import DataSourceInventoryHistory
 from ._painters import (
-    PainterInventoryTree,
-    PainterInvhistChanged,
-    PainterInvhistDelta,
-    PainterInvhistNew,
-    PainterInvhistRemoved,
-    PainterInvhistTime,
+    make_inventory_tree_painter,
+    make_invhist_changed_painter,
+    make_invhist_delta_painter,
+    make_invhist_new_painter,
+    make_invhist_removed_painter,
+    make_invhist_time_painter,
     PainterOptionShowInternalTreePaths,
 )
 from ._row_post_processor import inventory_row_post_processor
@@ -39,12 +39,12 @@ def register(
     _paint_functions.register(inv_paint_functions)
     page_registry.register(PageEndpoint("ajax_inv_render_tree", ajax_inv_render_tree))
     data_source_registry_.register(DataSourceInventoryHistory)
-    painter_registry_.register(PainterInventoryTree())
-    painter_registry_.register(PainterInvhistTime())
-    painter_registry_.register(PainterInvhistDelta())
-    painter_registry_.register(PainterInvhistRemoved())
-    painter_registry_.register(PainterInvhistNew())
-    painter_registry_.register(PainterInvhistChanged())
+    painter_registry_.register(make_inventory_tree_painter())
+    painter_registry_.register(make_invhist_time_painter())
+    painter_registry_.register(make_invhist_delta_painter())
+    painter_registry_.register(make_invhist_removed_painter())
+    painter_registry_.register(make_invhist_new_painter())
+    painter_registry_.register(make_invhist_changed_painter())
     painter_option_registry.register(PainterOptionShowInternalTreePaths())
 
     declare_1to1_sorter("invhist_time", cmp_simple_number, reverse=True)

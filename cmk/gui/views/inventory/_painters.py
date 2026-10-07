@@ -151,20 +151,19 @@ def _export_for_json_inventory_tree(
     return serialize_tree(_compute_data_inventory_tree(row, cell, user, context))
 
 
-class PainterInventoryTree(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="inventory_tree",
-            title=_l("Inventory tree"),
-            render=_render_inventory_tree,
-            columns=["host_inventory", "host_structured_status"],
-            compute_data=_compute_data_inventory_tree,
-            export_for_python=_export_for_python_inventory_tree,
-            export_for_csv=_export_for_csv_inventory_tree,
-            export_for_json=_export_for_json_inventory_tree,
-            painter_options=["show_internal_tree_paths"],
-            load_inv=True,
-        )
+def make_inventory_tree_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="inventory_tree",
+        title=_l("Inventory tree"),
+        columns=["host_inventory", "host_structured_status"],
+        painter_options=["show_internal_tree_paths"],
+        load_inv=True,
+        render=_render_inventory_tree,
+        compute_data=_compute_data_inventory_tree,
+        export_for_python=_export_for_python_inventory_tree,
+        export_for_csv=_export_for_csv_inventory_tree,
+        export_for_json=_export_for_json_inventory_tree,
+    )
 
 
 def _render_invhist_time(
@@ -179,16 +178,15 @@ def _render_invhist_time(
     )
 
 
-class PainterInvhistTime(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="invhist_time",
-            title=_l("Inventory date/time"),
-            render=_render_invhist_time,
-            short_title=_l("Date/time"),
-            columns=["invhist_time"],
-            painter_options=["ts_format", "ts_date"],
-        )
+def make_invhist_time_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="invhist_time",
+        title=_l("Inventory date/time"),
+        short_title=_l("Date/time"),
+        columns=["invhist_time"],
+        painter_options=["ts_format", "ts_date"],
+        render=_render_invhist_time,
+    )
 
 
 def _compute_data_invhist_delta(
@@ -242,19 +240,18 @@ def _export_for_json_invhist_delta(
     return serialize_delta_tree(_compute_data_invhist_delta(row, cell, user, context))
 
 
-class PainterInvhistDelta(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="invhist_delta",
-            title=_l("Inventory changes"),
-            render=_render_invhist_delta,
-            columns=["invhist_delta", "invhist_time"],
-            compute_data=_compute_data_invhist_delta,
-            export_for_python=_export_for_python_invhist_delta,
-            export_for_csv=_export_for_csv_invhist_delta,
-            export_for_json=_export_for_json_invhist_delta,
-            painter_options=["show_internal_tree_paths"],
-        )
+def make_invhist_delta_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="invhist_delta",
+        title=_l("Inventory changes"),
+        columns=["invhist_delta", "invhist_time"],
+        painter_options=["show_internal_tree_paths"],
+        render=_render_invhist_delta,
+        compute_data=_compute_data_invhist_delta,
+        export_for_python=_export_for_python_invhist_delta,
+        export_for_csv=_export_for_csv_invhist_delta,
+        export_for_json=_export_for_json_invhist_delta,
+    )
 
 
 def _paint_invhist_count(row: Row, what: str) -> CellSpec:
@@ -270,15 +267,14 @@ def _render_invhist_removed(
     return _paint_invhist_count(row, "removed")
 
 
-class PainterInvhistRemoved(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="invhist_removed",
-            title=_l("Removed entries"),
-            render=_render_invhist_removed,
-            short_title=_l("Removed"),
-            columns=["invhist_removed"],
-        )
+def make_invhist_removed_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="invhist_removed",
+        title=_l("Removed entries"),
+        short_title=_l("Removed"),
+        columns=["invhist_removed"],
+        render=_render_invhist_removed,
+    )
 
 
 def _render_invhist_new(
@@ -287,15 +283,14 @@ def _render_invhist_new(
     return _paint_invhist_count(row, "new")
 
 
-class PainterInvhistNew(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="invhist_new",
-            title=_l("New entries"),
-            render=_render_invhist_new,
-            short_title=_l("New"),
-            columns=["invhist_new"],
-        )
+def make_invhist_new_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="invhist_new",
+        title=_l("New entries"),
+        short_title=_l("New"),
+        columns=["invhist_new"],
+        render=_render_invhist_new,
+    )
 
 
 def _render_invhist_changed(
@@ -304,15 +299,14 @@ def _render_invhist_changed(
     return _paint_invhist_count(row, "changed")
 
 
-class PainterInvhistChanged(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="invhist_changed",
-            title=_l("Changed entries"),
-            render=_render_invhist_changed,
-            short_title=_l("Changed"),
-            columns=["invhist_changed"],
-        )
+def make_invhist_changed_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="invhist_changed",
+        title=_l("Changed entries"),
+        short_title=_l("Changed"),
+        columns=["invhist_changed"],
+        render=_render_invhist_changed,
+    )
 
 
 @dataclass(frozen=True, kw_only=True)

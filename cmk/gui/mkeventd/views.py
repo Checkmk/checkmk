@@ -107,38 +107,38 @@ def register(
     multisite_builtin_views["ec_event_mobile"] = EC_EVENT_MOBILE
     multisite_builtin_views["ec_events_mobile"] = EC_EVENTS_MOBILE
 
-    painter_registry.register(PainterSvcServicelevel())
-    painter_registry.register(PainterHostServicelevel())
-    painter_registry.register(PainterEventId())
-    painter_registry.register(PainterEventCount())
-    painter_registry.register(PainterEventText())
-    painter_registry.register(PainterEventMatchGroups())
-    painter_registry.register(PainterEventFirst())
-    painter_registry.register(PainterEventLast())
-    painter_registry.register(PainterEventComment())
-    painter_registry.register(PainterEventSl())
-    painter_registry.register(PainterEventHost())
-    painter_registry.register(PainterEventIpaddress())
-    painter_registry.register(PainterEventHostInDowntime())
-    painter_registry.register(PainterEventOwner())
-    painter_registry.register(PainterEventContact())
-    painter_registry.register(PainterEventApplication())
-    painter_registry.register(PainterEventPid())
-    painter_registry.register(PainterEventPriority())
-    painter_registry.register(PainterEventFacility())
-    painter_registry.register(PainterEventRuleId())
-    painter_registry.register(PainterEventState())
-    painter_registry.register(PainterEventPhase())
-    painter_registry.register(PainterEventIcons())
-    painter_registry.register(PainterEventHistoryIcons())
-    painter_registry.register(PainterEventContactGroups())
-    painter_registry.register(PainterEventEffectiveContactGroups())
-    painter_registry.register(PainterHistoryLine())
-    painter_registry.register(PainterHistoryTime())
-    painter_registry.register(PainterHistoryWhat())
-    painter_registry.register(PainterHistoryWhatExplained())
-    painter_registry.register(PainterHistoryWho())
-    painter_registry.register(PainterHistoryAddinfo())
+    painter_registry.register(make_svc_servicelevel_painter())
+    painter_registry.register(make_host_servicelevel_painter())
+    painter_registry.register(make_event_id_painter())
+    painter_registry.register(make_event_count_painter())
+    painter_registry.register(make_event_text_painter())
+    painter_registry.register(make_event_match_groups_painter())
+    painter_registry.register(make_event_first_painter())
+    painter_registry.register(make_event_last_painter())
+    painter_registry.register(make_event_comment_painter())
+    painter_registry.register(make_event_sl_painter())
+    painter_registry.register(make_event_host_painter())
+    painter_registry.register(make_event_ipaddress_painter())
+    painter_registry.register(make_event_host_in_downtime_painter())
+    painter_registry.register(make_event_owner_painter())
+    painter_registry.register(make_event_contact_painter())
+    painter_registry.register(make_event_application_painter())
+    painter_registry.register(make_event_pid_painter())
+    painter_registry.register(make_event_priority_painter())
+    painter_registry.register(make_event_facility_painter())
+    painter_registry.register(make_event_rule_id_painter())
+    painter_registry.register(make_event_state_painter())
+    painter_registry.register(make_event_phase_painter())
+    painter_registry.register(make_event_icons_painter())
+    painter_registry.register(make_event_history_icons_painter())
+    painter_registry.register(make_event_contact_groups_painter())
+    painter_registry.register(make_event_effective_contact_groups_painter())
+    painter_registry.register(make_history_line_painter())
+    painter_registry.register(make_history_time_painter())
+    painter_registry.register(make_history_what_painter())
+    painter_registry.register(make_history_what_explained_painter())
+    painter_registry.register(make_history_who_painter())
+    painter_registry.register(make_history_addinfo_painter())
 
     command_registry.register(CommandECUpdateEvent)
     command_registry.register(CommandECChangeState)
@@ -442,16 +442,15 @@ def _render_svc_servicelevel(
     )
 
 
-class PainterSvcServicelevel(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="svc_servicelevel",
-            title=_l("Service service level"),
-            render=_render_svc_servicelevel,
-            short_title=_l("Service level"),
-            columns=["service_custom_variable_names", "service_custom_variable_values"],
-            sorter="servicelevel",
-        )
+def make_svc_servicelevel_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="svc_servicelevel",
+        title=_l("Service service level"),
+        short_title=_l("Service level"),
+        columns=["service_custom_variable_names", "service_custom_variable_values"],
+        sorter="servicelevel",
+        render=_render_svc_servicelevel,
+    )
 
 
 def _render_host_servicelevel(
@@ -465,16 +464,15 @@ def _render_host_servicelevel(
     )
 
 
-class PainterHostServicelevel(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="host_servicelevel",
-            title=_l("Host service level"),
-            render=_render_host_servicelevel,
-            short_title=_l("Service level"),
-            columns=["host_custom_variable_names", "host_custom_variable_values"],
-            sorter="servicelevel",
-        )
+def make_host_servicelevel_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_servicelevel",
+        title=_l("Host service level"),
+        short_title=_l("Service level"),
+        columns=["host_custom_variable_names", "host_custom_variable_values"],
+        sorter="servicelevel",
+        render=_render_host_servicelevel,
+    )
 
 
 def _render_event_id(
@@ -483,15 +481,14 @@ def _render_event_id(
     return ("number", str(row["event_id"]))
 
 
-class PainterEventId(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_id",
-            title=_l("ID of the event"),
-            render=_render_event_id,
-            short_title=_l("ID"),
-            columns=["event_id"],
-        )
+def make_event_id_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_id",
+        title=_l("ID of the event"),
+        short_title=_l("ID"),
+        columns=["event_id"],
+        render=_render_event_id,
+    )
 
 
 def _render_event_count(
@@ -500,15 +497,14 @@ def _render_event_count(
     return ("number", str(row["event_count"]))
 
 
-class PainterEventCount(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_count",
-            title=_l("Count (number of recent occurrences)"),
-            render=_render_event_count,
-            short_title=_l("Cnt."),
-            columns=["event_count"],
-        )
+def make_event_count_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_count",
+        title=_l("Count (number of recent occurrences)"),
+        short_title=_l("Cnt."),
+        columns=["event_count"],
+        render=_render_event_count,
+    )
 
 
 def _render_event_text(
@@ -519,15 +515,14 @@ def _render_event_text(
     )
 
 
-class PainterEventText(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_text",
-            title=_l("Text/Message of the event"),
-            render=_render_event_text,
-            short_title=_l("Message"),
-            columns=["event_text"],
-        )
+def make_event_text_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_text",
+        title=_l("Text/Message of the event"),
+        short_title=_l("Message"),
+        columns=["event_text"],
+        render=_render_event_text,
+    )
 
 
 def _render_event_match_groups(
@@ -542,15 +537,14 @@ def _render_event_match_groups(
     return "", HTML.empty()
 
 
-class PainterEventMatchGroups(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_match_groups",
-            title=_l("Match groups"),
-            render=_render_event_match_groups,
-            short_title=_l("Match"),
-            columns=["event_match_groups"],
-        )
+def make_event_match_groups_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_match_groups",
+        title=_l("Match groups"),
+        short_title=_l("Match"),
+        columns=["event_match_groups"],
+        render=_render_event_match_groups,
+    )
 
 
 def _render_event_first(
@@ -565,16 +559,15 @@ def _render_event_first(
     )
 
 
-class PainterEventFirst(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_first",
-            title=_l("Time of first occurrence of this serial"),
-            render=_render_event_first,
-            short_title=_l("First"),
-            columns=["event_first"],
-            painter_options=["ts_format", "ts_date"],
-        )
+def make_event_first_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_first",
+        title=_l("Time of first occurrence of this serial"),
+        short_title=_l("First"),
+        columns=["event_first"],
+        painter_options=["ts_format", "ts_date"],
+        render=_render_event_first,
+    )
 
 
 def _render_event_last(
@@ -589,16 +582,15 @@ def _render_event_last(
     )
 
 
-class PainterEventLast(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_last",
-            title=_l("Time of last occurrence"),
-            render=_render_event_last,
-            short_title=_l("Last"),
-            columns=["event_last"],
-            painter_options=["ts_format", "ts_date"],
-        )
+def make_event_last_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_last",
+        title=_l("Time of last occurrence"),
+        short_title=_l("Last"),
+        columns=["event_last"],
+        painter_options=["ts_format", "ts_date"],
+        render=_render_event_last,
+    )
 
 
 def _render_event_comment(
@@ -607,15 +599,14 @@ def _render_event_comment(
     return ("", row["event_comment"])
 
 
-class PainterEventComment(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_comment",
-            title=_l("Comment to the event"),
-            render=_render_event_comment,
-            short_title=_l("Comment"),
-            columns=["event_comment"],
-        )
+def make_event_comment_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_comment",
+        title=_l("Comment to the event"),
+        short_title=_l("Comment"),
+        columns=["event_comment"],
+        render=_render_event_comment,
+    )
 
 
 def _render_event_sl(
@@ -625,15 +616,14 @@ def _render_event_sl(
     return "", sl_txt
 
 
-class PainterEventSl(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_sl",
-            title=_l("Service-level"),
-            render=_render_event_sl,
-            short_title=_l("Level"),
-            columns=["event_sl"],
-        )
+def make_event_sl_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_sl",
+        title=_l("Service-level"),
+        short_title=_l("Level"),
+        columns=["event_sl"],
+        render=_render_event_sl,
+    )
 
 
 def _render_event_host(
@@ -647,16 +637,15 @@ def _render_event_host(
     )
 
 
-class PainterEventHost(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_host",
-            title=_l("Host name"),
-            render=_render_event_host,
-            short_title=_l("Host"),
-            columns=["event_host", "host_name"],
-            use_painter_link=False,
-        )
+def make_event_host_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_host",
+        title=_l("Host name"),
+        short_title=_l("Host"),
+        columns=["event_host", "host_name"],
+        use_painter_link=False,
+        render=_render_event_host,
+    )
 
 
 def _get_event_host_link(host_name: HostName, row: Row, cell: Cell, *, request: Request) -> str:
@@ -692,15 +681,14 @@ def _render_event_ipaddress(
     return ("", row["event_ipaddress"])
 
 
-class PainterEventIpaddress(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_ipaddress",
-            title=_l("Original IP address"),
-            render=_render_event_ipaddress,
-            short_title=_l("Orig. IP"),
-            columns=["event_ipaddress"],
-        )
+def make_event_ipaddress_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_ipaddress",
+        title=_l("Original IP address"),
+        short_title=_l("Orig. IP"),
+        columns=["event_ipaddress"],
+        render=_render_event_ipaddress,
+    )
 
 
 def _render_event_host_in_downtime(
@@ -709,15 +697,14 @@ def _render_event_host_in_downtime(
     return paint_nagiosflag(row, "event_host_in_downtime", True)
 
 
-class PainterEventHostInDowntime(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_host_in_downtime",
-            title=_l("Host in downtime during event creation"),
-            render=_render_event_host_in_downtime,
-            short_title=_l("Dt."),
-            columns=["event_host_in_downtime"],
-        )
+def make_event_host_in_downtime_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_host_in_downtime",
+        title=_l("Host in downtime during event creation"),
+        short_title=_l("Dt."),
+        columns=["event_host_in_downtime"],
+        render=_render_event_host_in_downtime,
+    )
 
 
 def _render_event_owner(
@@ -726,15 +713,14 @@ def _render_event_owner(
     return ("", row["event_owner"])
 
 
-class PainterEventOwner(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_owner",
-            title=_l("Owner of event"),
-            render=_render_event_owner,
-            short_title=_l("Owner"),
-            columns=["event_owner"],
-        )
+def make_event_owner_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_owner",
+        title=_l("Owner of event"),
+        short_title=_l("Owner"),
+        columns=["event_owner"],
+        render=_render_event_owner,
+    )
 
 
 def _render_event_contact(
@@ -743,15 +729,14 @@ def _render_event_contact(
     return ("", row["event_contact"])
 
 
-class PainterEventContact(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_contact",
-            title=_l("Contact person"),
-            render=_render_event_contact,
-            short_title=_l("Contact"),
-            columns=["event_contact"],
-        )
+def make_event_contact_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_contact",
+        title=_l("Contact person"),
+        short_title=_l("Contact"),
+        columns=["event_contact"],
+        render=_render_event_contact,
+    )
 
 
 def _render_event_application(
@@ -760,15 +745,14 @@ def _render_event_application(
     return ("", row["event_application"])
 
 
-class PainterEventApplication(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_application",
-            title=_l("Application / Syslog-Tag"),
-            render=_render_event_application,
-            short_title=_l("Application"),
-            columns=["event_application"],
-        )
+def make_event_application_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_application",
+        title=_l("Application / Syslog-Tag"),
+        short_title=_l("Application"),
+        columns=["event_application"],
+        render=_render_event_application,
+    )
 
 
 def _render_event_pid(
@@ -777,15 +761,14 @@ def _render_event_pid(
     return ("", "%s" % row["event_pid"])
 
 
-class PainterEventPid(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_pid",
-            title=_l("Process ID"),
-            render=_render_event_pid,
-            short_title=_l("PID"),
-            columns=["event_pid"],
-        )
+def make_event_pid_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_pid",
+        title=_l("Process ID"),
+        short_title=_l("PID"),
+        columns=["event_pid"],
+        render=_render_event_pid,
+    )
 
 
 # TODO: Rethink the typing of syslog_facilites/syslog_priorities.
@@ -801,15 +784,14 @@ def _render_event_priority(
     return ("", dict(_deref(syslog_priorities))[row["event_priority"]])
 
 
-class PainterEventPriority(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_priority",
-            title=_l("Syslog-Priority"),
-            render=_render_event_priority,
-            short_title=_l("Prio"),
-            columns=["event_priority"],
-        )
+def make_event_priority_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_priority",
+        title=_l("Syslog-Priority"),
+        short_title=_l("Prio"),
+        columns=["event_priority"],
+        render=_render_event_priority,
+    )
 
 
 def _render_event_facility(
@@ -818,15 +800,14 @@ def _render_event_facility(
     return ("", dict(_deref(syslog_facilities))[row["event_facility"]])
 
 
-class PainterEventFacility(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_facility",
-            title=_l("Syslog-Facility"),
-            render=_render_event_facility,
-            short_title=_l("Facility"),
-            columns=["event_facility"],
-        )
+def make_event_facility_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_facility",
+        title=_l("Syslog-Facility"),
+        short_title=_l("Facility"),
+        columns=["event_facility"],
+        render=_render_event_facility,
+    )
 
 
 def _render_event_rule_id(
@@ -839,15 +820,14 @@ def _render_event_rule_id(
     return "", rule_id
 
 
-class PainterEventRuleId(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_rule_id",
-            title=_l("Rule-ID"),
-            render=_render_event_rule_id,
-            short_title=_l("Rule"),
-            columns=["event_rule_id"],
-        )
+def make_event_rule_id_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_rule_id",
+        title=_l("Rule-ID"),
+        short_title=_l("Rule"),
+        columns=["event_rule_id"],
+        render=_render_event_rule_id,
+    )
 
 
 def _render_event_state(
@@ -860,15 +840,14 @@ def _render_event_state(
     )
 
 
-class PainterEventState(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_state",
-            title=_l("State (severity) of event"),
-            render=_render_event_state,
-            short_title=_l("State"),
-            columns=["event_state"],
-        )
+def make_event_state_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_state",
+        title=_l("State (severity) of event"),
+        short_title=_l("State"),
+        columns=["event_state"],
+        render=_render_event_state,
+    )
 
 
 def _render_event_phase(
@@ -877,15 +856,14 @@ def _render_event_phase(
     return ("", phase_names.get(row["event_phase"], ""))
 
 
-class PainterEventPhase(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_phase",
-            title=_l("Phase of event (open, counting, etc.)"),
-            render=_render_event_phase,
-            short_title=_l("Phase"),
-            columns=["event_phase"],
-        )
+def make_event_phase_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_phase",
+        title=_l("Phase of event (open, counting, etc.)"),
+        short_title=_l("Phase"),
+        columns=["event_phase"],
+        render=_render_event_phase,
+    )
 
 
 def paint_event_icons(
@@ -993,16 +971,15 @@ def _render_event_icons(
     return paint_event_icons(row, request=context.request, theme=context.theme)
 
 
-class PainterEventIcons(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_icons",
-            title=_l("Event icons"),
-            render=_render_event_icons,
-            short_title=_l("Icons"),
-            columns=["event_phase", "event_host_in_downtime"],
-            printable=False,
-        )
+def make_event_icons_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_icons",
+        title=_l("Event icons"),
+        short_title=_l("Icons"),
+        columns=["event_phase", "event_host_in_downtime"],
+        printable=False,
+        render=_render_event_icons,
+    )
 
 
 def _render_event_history_icons(
@@ -1011,16 +988,15 @@ def _render_event_history_icons(
     return paint_event_icons(row, history=True, request=context.request, theme=context.theme)
 
 
-class PainterEventHistoryIcons(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_history_icons",
-            title=_l("Event history icons"),
-            render=_render_event_history_icons,
-            short_title=_l("Icons"),
-            columns=["event_phase", "event_host_in_downtime"],
-            printable=False,
-        )
+def make_event_history_icons_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_history_icons",
+        title=_l("Event history icons"),
+        short_title=_l("Icons"),
+        columns=["event_phase", "event_host_in_downtime"],
+        printable=False,
+        render=_render_event_history_icons,
+    )
 
 
 def _render_event_contact_groups(
@@ -1034,15 +1010,14 @@ def _render_event_contact_groups(
     return "", "<i>" + _("none") + "</i>"
 
 
-class PainterEventContactGroups(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_contact_groups",
-            title=_l("Contact groups defined in rule"),
-            render=_render_event_contact_groups,
-            short_title=_l("Rule contact groups"),
-            columns=["event_contact_groups"],
-        )
+def make_event_contact_groups_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_contact_groups",
+        title=_l("Contact groups defined in rule"),
+        short_title=_l("Rule contact groups"),
+        columns=["event_contact_groups"],
+        render=_render_event_contact_groups,
+    )
 
 
 def _render_event_effective_contact_groups(
@@ -1060,19 +1035,18 @@ def _render_event_effective_contact_groups(
     return "", HTMLWriter.render_i(_("none"))
 
 
-class PainterEventEffectiveContactGroups(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="event_effective_contact_groups",
-            title=_l("Contact groups effective (host or rule contact groups)"),
-            render=_render_event_effective_contact_groups,
-            short_title=_l("Contact groups"),
-            columns=[
-                "event_contact_groups",
-                "event_contact_groups_precedence",
-                "host_contact_groups",
-            ],
-        )
+def make_event_effective_contact_groups_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="event_effective_contact_groups",
+        title=_l("Contact groups effective (host or rule contact groups)"),
+        short_title=_l("Contact groups"),
+        columns=[
+            "event_contact_groups",
+            "event_contact_groups_precedence",
+            "host_contact_groups",
+        ],
+        render=_render_event_effective_contact_groups,
+    )
 
 
 # Event History
@@ -1084,15 +1058,14 @@ def _render_history_line(
     return ("number", "%s" % row["history_line"])
 
 
-class PainterHistoryLine(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="history_line",
-            title=_l("Line number in log file"),
-            render=_render_history_line,
-            short_title=_l("Line"),
-            columns=["history_line"],
-        )
+def make_history_line_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="history_line",
+        title=_l("Line number in log file"),
+        short_title=_l("Line"),
+        columns=["history_line"],
+        render=_render_history_line,
+    )
 
 
 def _render_history_time(
@@ -1107,16 +1080,15 @@ def _render_history_time(
     )
 
 
-class PainterHistoryTime(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="history_time",
-            title=_l("Time of entry in log file"),
-            render=_render_history_time,
-            short_title=_l("Time"),
-            columns=["history_time"],
-            painter_options=["ts_format", "ts_date"],
-        )
+def make_history_time_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="history_time",
+        title=_l("Time of entry in log file"),
+        short_title=_l("Time"),
+        columns=["history_time"],
+        painter_options=["ts_format", "ts_date"],
+        render=_render_history_time,
+    )
 
 
 def _render_history_what(
@@ -1126,15 +1098,14 @@ def _render_history_what(
     return "", HTMLWriter.render_span(what, title=str(action_whats[what]))
 
 
-class PainterHistoryWhat(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="history_what",
-            title=_l("Type of event action"),
-            render=_render_history_what,
-            short_title=_l("Action"),
-            columns=["history_what"],
-        )
+def make_history_what_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="history_what",
+        title=_l("Type of event action"),
+        short_title=_l("Action"),
+        columns=["history_what"],
+        render=_render_history_what,
+    )
 
 
 def _render_history_what_explained(
@@ -1143,14 +1114,13 @@ def _render_history_what_explained(
     return ("", str(action_whats[row["history_what"]]))
 
 
-class PainterHistoryWhatExplained(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="history_what_explained",
-            title=_l("Explanation for event action"),
-            render=_render_history_what_explained,
-            columns=["history_what"],
-        )
+def make_history_what_explained_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="history_what_explained",
+        title=_l("Explanation for event action"),
+        columns=["history_what"],
+        render=_render_history_what_explained,
+    )
 
 
 def _render_history_who(
@@ -1159,15 +1129,14 @@ def _render_history_who(
     return ("", row["history_who"])
 
 
-class PainterHistoryWho(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="history_who",
-            title=_l("User who performed action"),
-            render=_render_history_who,
-            short_title=_l("Who"),
-            columns=["history_who"],
-        )
+def make_history_who_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="history_who",
+        title=_l("User who performed action"),
+        short_title=_l("Who"),
+        columns=["history_who"],
+        render=_render_history_who,
+    )
 
 
 def _render_history_addinfo(
@@ -1176,15 +1145,14 @@ def _render_history_addinfo(
     return ("", row["history_addinfo"])
 
 
-class PainterHistoryAddinfo(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="history_addinfo",
-            title=_l("Additional information"),
-            render=_render_history_addinfo,
-            short_title=_l("Info"),
-            columns=["history_addinfo"],
-        )
+def make_history_addinfo_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="history_addinfo",
+        title=_l("Additional information"),
+        short_title=_l("Info"),
+        columns=["history_addinfo"],
+        render=_render_history_addinfo,
+    )
 
 
 # .

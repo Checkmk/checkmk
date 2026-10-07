@@ -73,8 +73,8 @@ def make_host_tag_painter(tag_group: TagGroup) -> InternalPainter:
     return InternalPainter(
         ident="host_tag_" + tag_group.id,
         title=LazyText(partial(_host_tag_title, tag_group)),
-        render=partial(_render_host_tag, tag_group),
         short_title=tag_group.title,
         columns=["host_tags"],
         group_by=partial(_group_by_host_tag, tag_group),
+        render=partial(_render_host_tag, tag_group),
     )

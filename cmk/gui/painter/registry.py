@@ -5,9 +5,9 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from functools import partial
-from typing import Any, overload, override, TypeIs
+from typing import Any, overload, override
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.logged_in import LoggedInUser
@@ -18,12 +18,6 @@ from cmk.ruleset_matcher.tags import TagGroup
 from .base import Cell, InternalPainter, PainterContext
 from .host_tag_painters import HashableTagGroups, host_tag_config_based_painters
 from .legacy import internal_painter_from_legacy, Painter
-
-
-def _is_legacy_painter(
-    instance: type[Painter] | Callable[[], InternalPainter],
-) -> TypeIs[type[Painter]]:
-    return isinstance(instance, type) and issubclass(instance, Painter)
 
 
 class PainterRegistry(Registry[InternalPainter]):
@@ -37,21 +31,13 @@ class PainterRegistry(Registry[InternalPainter]):
     @overload
     def register(self, instance: type[Painter]) -> type[Painter]: ...
 
-    @overload
-    def register(
-        self, instance: Callable[[], InternalPainter]
-    ) -> Callable[[], InternalPainter]: ...
-
     @override
     def register(
-        self, instance: InternalPainter | type[Painter] | Callable[[], InternalPainter]
-    ) -> InternalPainter | type[Painter] | Callable[[], InternalPainter]:
+        self, instance: InternalPainter | type[Painter]
+    ) -> InternalPainter | type[Painter]:
         if isinstance(instance, InternalPainter):
             return super().register(instance)
-        if _is_legacy_painter(instance):
-            super().register(internal_painter_from_legacy(instance))
-            return instance
-        super().register(instance())
+        super().register(internal_painter_from_legacy(instance))
         return instance
 
 
@@ -94,18 +80,18 @@ def register_painter(ident: str, spec: dict[str, Any]) -> None:
         InternalPainter(
             ident=ident,
             title=spec["title"],
-            render=partial(_render_plugin_painter, spec),
             short_title=spec.get("short"),
             tooltip_title=spec.get("tooltip_title"),
             columns=spec["columns"],
-            group_by=partial(_group_by_plugin_painter, spec),
-            parameters=spec.get("params"),
-            export_for_python=partial(_export_plugin_painter, spec, "export_for_python"),
-            export_for_csv=partial(_export_plugin_painter, spec, "export_for_csv"),
-            export_for_json=partial(_export_plugin_painter, spec, "export_for_json"),
             sorter=spec.get("sorter"),
             printable=spec.get("printable", True),
             painter_options=spec.get("options", []),
             load_inv=spec.get("load_inv", False),
+            parameters=spec.get("params"),
+            group_by=partial(_group_by_plugin_painter, spec),
+            render=partial(_render_plugin_painter, spec),
+            export_for_python=partial(_export_plugin_painter, spec, "export_for_python"),
+            export_for_csv=partial(_export_plugin_painter, spec, "export_for_csv"),
+            export_for_json=partial(_export_plugin_painter, spec, "export_for_json"),
         )
     )

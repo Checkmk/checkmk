@@ -111,19 +111,19 @@ def make_inventory_hint_painter(from_hint: PainterFromHint) -> InternalPainter:
     return InternalPainter(
         ident=from_hint.name,
         title=from_hint.title,
-        render=partial(_hint_render, from_hint),
         short_title=from_hint.short,
         tooltip_title=from_hint.tooltip_title,
         columns=from_hint.columns,
-        group_by=partial(_hint_group_by, from_hint),
-        parameters=from_hint.params,
-        export_for_python=partial(_hint_export_for_python, from_hint),
-        export_for_csv=partial(_hint_export_for_csv, from_hint),
-        export_for_json=partial(_hint_export_for_json, from_hint),
         sorter=from_hint.sorter,
         printable=from_hint.printable,
         painter_options=from_hint.options,
         load_inv=from_hint.load_inv,
+        parameters=from_hint.params,
+        group_by=partial(_hint_group_by, from_hint),
+        render=partial(_hint_render, from_hint),
+        export_for_python=partial(_hint_export_for_python, from_hint),
+        export_for_csv=partial(_hint_export_for_csv, from_hint),
+        export_for_json=partial(_hint_export_for_json, from_hint),
     )
 
 

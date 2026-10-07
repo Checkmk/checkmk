@@ -32,21 +32,21 @@ from .view import (
     DataSourceBIHostAggregations,
     DataSourceBIHostnameAggregations,
     DataSourceBIHostnameByGroupAggregations,
-    PainterAggrAcknowledged,
-    PainterAggrAssumedState,
-    PainterAggrGroup,
-    PainterAggrHosts,
-    PainterAggrHostsServices,
-    PainterAggrIcons,
-    PainterAggrInDowntime,
-    PainterAggrName,
-    PainterAggrOutput,
-    PainterAggrRealState,
-    PainterAggrState,
-    PainterAggrStateNum,
-    PainterAggrTreestate,
-    PainterAggrTreestateBoxed,
-    PainterAggrTreestateFrozenDiff,
+    make_aggr_acknowledged_painter,
+    make_aggr_assumed_state_painter,
+    make_aggr_group_painter,
+    make_aggr_hosts_painter,
+    make_aggr_hosts_services_painter,
+    make_aggr_icons_painter,
+    make_aggr_in_downtime_painter,
+    make_aggr_name_painter,
+    make_aggr_output_painter,
+    make_aggr_real_state_painter,
+    make_aggr_state_num_painter,
+    make_aggr_state_painter,
+    make_aggr_treestate_boxed_painter,
+    make_aggr_treestate_frozen_diff_painter,
+    make_aggr_treestate_painter,
     PainterOptionAggrExpand,
     PainterOptionAggrOnlyDifferences,
     PainterOptionAggrOnlyProblems,
@@ -80,21 +80,21 @@ def register(
     data_source_registry.register(DataSourceBIHostnameAggregations)
     data_source_registry.register(DataSourceBIHostnameByGroupAggregations)
 
-    painter_registry.register(PainterAggrIcons())
-    painter_registry.register(PainterAggrInDowntime())
-    painter_registry.register(PainterAggrAcknowledged())
-    painter_registry.register(PainterAggrState())
-    painter_registry.register(PainterAggrStateNum())
-    painter_registry.register(PainterAggrRealState())
-    painter_registry.register(PainterAggrAssumedState())
-    painter_registry.register(PainterAggrGroup())
-    painter_registry.register(PainterAggrName())
-    painter_registry.register(PainterAggrOutput())
-    painter_registry.register(PainterAggrHosts())
-    painter_registry.register(PainterAggrHostsServices())
-    painter_registry.register(PainterAggrTreestate())
-    painter_registry.register(PainterAggrTreestateFrozenDiff())
-    painter_registry.register(PainterAggrTreestateBoxed())
+    painter_registry.register(make_aggr_icons_painter())
+    painter_registry.register(make_aggr_in_downtime_painter())
+    painter_registry.register(make_aggr_acknowledged_painter())
+    painter_registry.register(make_aggr_state_painter())
+    painter_registry.register(make_aggr_state_num_painter())
+    painter_registry.register(make_aggr_real_state_painter())
+    painter_registry.register(make_aggr_assumed_state_painter())
+    painter_registry.register(make_aggr_group_painter())
+    painter_registry.register(make_aggr_name_painter())
+    painter_registry.register(make_aggr_output_painter())
+    painter_registry.register(make_aggr_hosts_painter())
+    painter_registry.register(make_aggr_hosts_services_painter())
+    painter_registry.register(make_aggr_treestate_painter())
+    painter_registry.register(make_aggr_treestate_frozen_diff_painter())
+    painter_registry.register(make_aggr_treestate_boxed_painter())
 
     painter_option_registry.register(PainterOptionAggrExpand())
     painter_option_registry.register(PainterOptionAggrOnlyDifferences())

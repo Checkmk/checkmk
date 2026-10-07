@@ -91,67 +91,70 @@ type CellTitle = Callable[[Cell, PainterContext], str]
 type GroupValue = None | str | tuple[str, ...] | tuple[tuple[str, str], ...]
 
 
+type StaticText = str | LazyString | LazyText
+
+
 class InternalPainter:
     def __init__(
         self,
         *,
         ident: str | LazyText,
-        title: str | LazyString | LazyText,
-        render: RowFunction[CellSpec],
-        short_title: str | LazyString | LazyText | None = None,
-        list_title: str | LazyString | LazyText | None = None,
-        cell_title: CellTitle | None = None,
-        cell_short_title: CellTitle | None = None,
-        cell_list_title: CellTitle | None = None,
-        tooltip_title: str | LazyString | LazyText | None = None,
-        cell_tooltip_title: CellTitle | None = None,
-        export_title: Callable[[Cell], str] | None = None,
+        title: StaticText,
+        short_title: StaticText | None = None,
+        list_title: StaticText | None = None,
+        tooltip_title: StaticText | None = None,
         columns: Sequence[ColumnName] | Callable[[], Sequence[ColumnName]] = (),
-        dynamic_columns: Callable[[Cell], list[ColumnName]] | None = None,
-        derive: Callable[[Rows, Cell, Sequence[ColumnName]], None] | None = None,
-        group_by: Callable[[Row, Cell, PainterContext], GroupValue] | None = None,
         groupable: bool = True,
-        parameters: (ValueSpec | Callable[[PainterContext], ValueSpec | None] | None) = None,
-        uuid_col: Callable[[Cell], str] | None = None,
-        compute_data: RowFunction[object] | None = None,
-        export_for_python: RowFunction[object] | None = None,
-        export_for_csv: RowFunction[str | HTML] | None = None,
-        export_for_json: RowFunction[object] | None = None,
         sorter: SorterName | None = None,
         printable: bool | str = True,
         painter_options: Sequence[str] = (),
         load_inv: bool = False,
         use_painter_link: bool = True,
         title_classes: Sequence[str] = (),
+        cell_title: CellTitle | None = None,
+        cell_short_title: CellTitle | None = None,
+        cell_list_title: CellTitle | None = None,
+        cell_tooltip_title: CellTitle | None = None,
+        export_title: Callable[[Cell], str] | None = None,
+        dynamic_columns: Callable[[Cell], list[ColumnName]] | None = None,
+        uuid_col: Callable[[Cell], str] | None = None,
+        parameters: ValueSpec | Callable[[PainterContext], ValueSpec | None] | None = None,
+        group_by: Callable[[Row, Cell, PainterContext], GroupValue] | None = None,
+        derive: Callable[[Rows, Cell, Sequence[ColumnName]], None] | None = None,
+        render: RowFunction[CellSpec],
+        compute_data: RowFunction[object] | None = None,
+        export_for_python: RowFunction[object] | None = None,
+        export_for_csv: RowFunction[str | HTML] | None = None,
+        export_for_json: RowFunction[object] | None = None,
     ) -> None:
         self._ident = ident
         self._title = title
-        self._render = render
         self._short_title = short_title
         self._list_title = list_title
-        self._cell_title = cell_title
-        self._cell_short_title = cell_short_title
-        self._cell_list_title = cell_list_title
         self._tooltip_title = tooltip_title
-        self._cell_tooltip_title = cell_tooltip_title
-        self._export_title = export_title
         self._columns = columns
-        self._dynamic_columns = dynamic_columns
-        self._derive = derive
-        self._group_by = group_by
         self._groupable = groupable
-        self._parameters = parameters
-        self._uuid_col = uuid_col
-        self._compute_data_function = compute_data
-        self._export_for_python = export_for_python
-        self._export_for_csv = export_for_csv
-        self._export_for_json = export_for_json
         self._sorter = sorter
         self._printable = printable
         self._painter_options = painter_options
         self._load_inv = load_inv
         self._use_painter_link = use_painter_link
         self._title_classes = title_classes
+        self._cell_title = cell_title
+        self._cell_short_title = cell_short_title
+        self._cell_list_title = cell_list_title
+        self._cell_tooltip_title = cell_tooltip_title
+        self._export_title = export_title
+        self._dynamic_columns = dynamic_columns
+        self._uuid_col = uuid_col
+        self._parameters = parameters
+        self._group_by = group_by
+        self._derive = derive
+        self._render = render
+        self._compute_data_function = compute_data
+        self._export_for_python = export_for_python
+        self._export_for_csv = export_for_csv
+        self._export_for_json = export_for_json
 
     @property
     def ident(self) -> str:

@@ -448,20 +448,19 @@ def _render_aggr_icons(
     return "buttons", code
 
 
-class PainterAggrIcons(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="aggr_icons",
-            title=_l("Links"),
-            render=_render_aggr_icons,
-            columns=[
-                "aggr_group",
-                "aggr_name",
-                "aggr_effective_state",
-                "aggr_compiled_aggregation",
-            ],
-            printable=False,
-        )
+def make_aggr_icons_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="aggr_icons",
+        title=_l("Links"),
+        columns=[
+            "aggr_group",
+            "aggr_name",
+            "aggr_effective_state",
+            "aggr_compiled_aggregation",
+        ],
+        printable=False,
+        render=_render_aggr_icons,
+    )
 
 
 def _render_aggr_in_downtime(
@@ -470,14 +469,13 @@ def _render_aggr_in_downtime(
     return ("", (row["aggr_effective_state"]["in_downtime"] and "1" or "0"))
 
 
-class PainterAggrInDowntime(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="aggr_in_downtime",
-            title=_l("In downtime"),
-            render=_render_aggr_in_downtime,
-            columns=["aggr_effective_state"],
-        )
+def make_aggr_in_downtime_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="aggr_in_downtime",
+        title=_l("In downtime"),
+        columns=["aggr_effective_state"],
+        render=_render_aggr_in_downtime,
+    )
 
 
 def _render_aggr_acknowledged(
@@ -486,14 +484,13 @@ def _render_aggr_acknowledged(
     return ("", (row["aggr_effective_state"]["acknowledged"] and "1" or "0"))
 
 
-class PainterAggrAcknowledged(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="aggr_acknowledged",
-            title=_l("Acknowledged"),
-            render=_render_aggr_acknowledged,
-            columns=["aggr_effective_state"],
-        )
+def make_aggr_acknowledged_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="aggr_acknowledged",
+        title=_l("Acknowledged"),
+        columns=["aggr_effective_state"],
+        render=_render_aggr_acknowledged,
+    )
 
 
 def _paint_aggr_state_short(
@@ -516,15 +513,14 @@ def _render_aggr_state(
     )
 
 
-class PainterAggrState(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="aggr_state",
-            title=_l("Aggregated state"),
-            render=_render_aggr_state,
-            short_title=_l("State"),
-            columns=["aggr_effective_state"],
-        )
+def make_aggr_state_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="aggr_state",
+        title=_l("Aggregated state"),
+        short_title=_l("State"),
+        columns=["aggr_effective_state"],
+        render=_render_aggr_state,
+    )
 
 
 def _render_aggr_state_num(
@@ -533,15 +529,14 @@ def _render_aggr_state_num(
     return ("", str(row["aggr_effective_state"]["state"]))
 
 
-class PainterAggrStateNum(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="aggr_state_num",
-            title=_l("Aggregated state (number)"),
-            render=_render_aggr_state_num,
-            short_title=_l("State"),
-            columns=["aggr_effective_state"],
-        )
+def make_aggr_state_num_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="aggr_state_num",
+        title=_l("Aggregated state (number)"),
+        short_title=_l("State"),
+        columns=["aggr_effective_state"],
+        render=_render_aggr_state_num,
+    )
 
 
 def _render_aggr_real_state(
@@ -550,15 +545,14 @@ def _render_aggr_real_state(
     return _paint_aggr_state_short(row["aggr_state"])
 
 
-class PainterAggrRealState(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="aggr_real_state",
-            title=_l("Aggregated real state (never assumed)"),
-            render=_render_aggr_real_state,
-            short_title=_l("R.State"),
-            columns=["aggr_state"],
-        )
+def make_aggr_real_state_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="aggr_real_state",
+        title=_l("Aggregated real state (never assumed)"),
+        short_title=_l("R.State"),
+        columns=["aggr_state"],
+        render=_render_aggr_real_state,
+    )
 
 
 def _render_aggr_assumed_state(
@@ -567,15 +561,14 @@ def _render_aggr_assumed_state(
     return _paint_aggr_state_short(row["aggr_assumed_state"])
 
 
-class PainterAggrAssumedState(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="aggr_assumed_state",
-            title=_l("Aggregated assumed state"),
-            render=_render_aggr_assumed_state,
-            short_title=_l("Assumed"),
-            columns=["aggr_assumed_state"],
-        )
+def make_aggr_assumed_state_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="aggr_assumed_state",
+        title=_l("Aggregated assumed state"),
+        short_title=_l("Assumed"),
+        columns=["aggr_assumed_state"],
+        render=_render_aggr_assumed_state,
+    )
 
 
 def _render_aggr_group(
@@ -584,15 +577,14 @@ def _render_aggr_group(
     return "", HTML.with_escaping(row["aggr_group"])
 
 
-class PainterAggrGroup(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="aggr_group",
-            title=_l("Aggregation group"),
-            render=_render_aggr_group,
-            short_title=_l("Group"),
-            columns=["aggr_group"],
-        )
+def make_aggr_group_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="aggr_group",
+        title=_l("Aggregation group"),
+        short_title=_l("Group"),
+        columns=["aggr_group"],
+        render=_render_aggr_group,
+    )
 
 
 def _render_aggr_name(
@@ -601,15 +593,14 @@ def _render_aggr_name(
     return "", escape_attribute(row["aggr_name"])
 
 
-class PainterAggrName(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="aggr_name",
-            title=_l("Aggregation name"),
-            render=_render_aggr_name,
-            short_title=_l("Aggregation"),
-            columns=["aggr_name"],
-        )
+def make_aggr_name_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="aggr_name",
+        title=_l("Aggregation name"),
+        short_title=_l("Aggregation"),
+        columns=["aggr_name"],
+        render=_render_aggr_name,
+    )
 
 
 def _render_aggr_output(
@@ -618,15 +609,14 @@ def _render_aggr_output(
     return ("", row["aggr_output"])
 
 
-class PainterAggrOutput(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="aggr_output",
-            title=_l("Aggregation status output"),
-            render=_render_aggr_output,
-            short_title=_l("Output"),
-            columns=["aggr_output"],
-        )
+def make_aggr_output_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="aggr_output",
+        title=_l("Aggregation status output"),
+        short_title=_l("Output"),
+        columns=["aggr_output"],
+        render=_render_aggr_output,
+    )
 
 
 def _paint_aggr_hosts(
@@ -648,15 +638,14 @@ def _render_aggr_hosts(
     return _paint_aggr_hosts(row, "aggr_host", request=context.request)
 
 
-class PainterAggrHosts(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="aggr_hosts",
-            title=_l("Aggregation: affected hosts"),
-            render=_render_aggr_hosts,
-            short_title=_l("Hosts"),
-            columns=["aggr_hosts"],
-        )
+def make_aggr_hosts_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="aggr_hosts",
+        title=_l("Aggregation: affected hosts"),
+        short_title=_l("Hosts"),
+        columns=["aggr_hosts"],
+        render=_render_aggr_hosts,
+    )
 
 
 def _render_aggr_hosts_services(
@@ -665,15 +654,14 @@ def _render_aggr_hosts_services(
     return _paint_aggr_hosts(row, "host", request=context.request)
 
 
-class PainterAggrHostsServices(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="aggr_hosts_services",
-            title=_l("Aggregation: affected hosts (link to host page)"),
-            render=_render_aggr_hosts_services,
-            short_title=_l("Hosts"),
-            columns=["aggr_hosts"],
-        )
+def make_aggr_hosts_services_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="aggr_hosts_services",
+        title=_l("Aggregation: affected hosts (link to host page)"),
+        short_title=_l("Hosts"),
+        columns=["aggr_hosts"],
+        render=_render_aggr_hosts_services,
+    )
 
 
 class PainterOptionAggrExpand(PainterOption):
@@ -831,19 +819,18 @@ def _export_for_json_aggr_treestate(
     return _render_tree_json(row, user=user, request=context.request)
 
 
-class PainterAggrTreestate(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="aggr_treestate",
-            title=_l("Complete tree"),
-            render=_render_aggr_treestate,
-            short_title=_l("Tree"),
-            columns=["aggr_treestate", "aggr_hosts"],
-            export_for_python=_export_for_python_aggr_treestate,
-            export_for_csv=_export_for_csv_aggr_treestate,
-            export_for_json=_export_for_json_aggr_treestate,
-            painter_options=["aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"],
-        )
+def make_aggr_treestate_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="aggr_treestate",
+        title=_l("Complete tree"),
+        short_title=_l("Tree"),
+        columns=["aggr_treestate", "aggr_hosts"],
+        painter_options=["aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"],
+        render=_render_aggr_treestate,
+        export_for_python=_export_for_python_aggr_treestate,
+        export_for_csv=_export_for_csv_aggr_treestate,
+        export_for_json=_export_for_json_aggr_treestate,
+    )
 
 
 def _render_aggr_treestate_frozen_diff(
@@ -879,25 +866,24 @@ def _export_for_json_aggr_treestate_frozen_diff(
     return _render_tree_json(row, user=user, request=context.request)
 
 
-class PainterAggrTreestateFrozenDiff(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="aggr_treestate_frozen_diff",
-            title=_l("Difference between frozen and live aggregation"),
-            render=_render_aggr_treestate_frozen_diff,
-            short_title=_l("Difference between frozen and live aggregation"),
-            columns=["aggr_treestate", "aggr_hosts", "aggr_compiled_aggregation"],
-            export_for_python=_export_for_python_aggr_treestate_frozen_diff,
-            export_for_csv=_export_for_csv_aggr_treestate_frozen_diff,
-            export_for_json=_export_for_json_aggr_treestate_frozen_diff,
-            painter_options=[
-                "aggr_expand",
-                "aggr_onlydiff",
-                "aggr_onlyproblems",
-                "aggr_treetype",
-                "aggr_wrap",
-            ],
-        )
+def make_aggr_treestate_frozen_diff_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="aggr_treestate_frozen_diff",
+        title=_l("Difference between frozen and live aggregation"),
+        short_title=_l("Difference between frozen and live aggregation"),
+        columns=["aggr_treestate", "aggr_hosts", "aggr_compiled_aggregation"],
+        painter_options=[
+            "aggr_expand",
+            "aggr_onlydiff",
+            "aggr_onlyproblems",
+            "aggr_treetype",
+            "aggr_wrap",
+        ],
+        render=_render_aggr_treestate_frozen_diff,
+        export_for_python=_export_for_python_aggr_treestate_frozen_diff,
+        export_for_csv=_export_for_csv_aggr_treestate_frozen_diff,
+        export_for_json=_export_for_json_aggr_treestate_frozen_diff,
+    )
 
 
 @request_memoize()
@@ -1148,18 +1134,17 @@ def _export_for_json_aggr_treestate_boxed(
     return _render_tree_json(row, user=user, request=context.request)
 
 
-class PainterAggrTreestateBoxed(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="aggr_treestate_boxed",
-            title=_l("Aggregation: simplistic boxed layout"),
-            render=_render_aggr_treestate_boxed,
-            short_title=_l("Tree"),
-            columns=["aggr_treestate", "aggr_hosts"],
-            export_for_python=_export_for_python_aggr_treestate_boxed,
-            export_for_csv=_export_for_csv_aggr_treestate_boxed,
-            export_for_json=_export_for_json_aggr_treestate_boxed,
-        )
+def make_aggr_treestate_boxed_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="aggr_treestate_boxed",
+        title=_l("Aggregation: simplistic boxed layout"),
+        short_title=_l("Tree"),
+        columns=["aggr_treestate", "aggr_hosts"],
+        render=_render_aggr_treestate_boxed,
+        export_for_python=_export_for_python_aggr_treestate_boxed,
+        export_for_csv=_export_for_csv_aggr_treestate_boxed,
+        export_for_json=_export_for_json_aggr_treestate_boxed,
+    )
 
 
 def _render_tree_json(

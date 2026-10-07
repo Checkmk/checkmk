@@ -77,23 +77,22 @@ def _render_perfometer(
     )
 
 
-class PainterPerfometer(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="perfometer",
-            title=_l("Service Perf-O-Meter"),
-            render=_render_perfometer,
-            short_title=_l("Perf-O-Meter"),
-            columns=[
-                "host_name",
-                "service_description",
-                "service_staleness",
-                "service_perf_data",
-                "service_state",
-                "service_check_command",
-                "service_pnpgraph_present",
-                "service_plugin_output",
-            ],
-            compute_data=_compute_data_perfometer,
-            printable="perfometer",
-        )
+def make_perfometer_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="perfometer",
+        title=_l("Service Perf-O-Meter"),
+        short_title=_l("Perf-O-Meter"),
+        columns=[
+            "host_name",
+            "service_description",
+            "service_staleness",
+            "service_perf_data",
+            "service_state",
+            "service_check_command",
+            "service_pnpgraph_present",
+            "service_plugin_output",
+        ],
+        printable="perfometer",
+        render=_render_perfometer,
+        compute_data=_compute_data_perfometer,
+    )

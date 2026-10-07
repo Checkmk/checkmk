@@ -214,15 +214,14 @@ def _render_crash_ident(
     return None, HTMLWriter.render_a(row["crash_id"], href=url)
 
 
-class PainterCrashIdent(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="crash_ident",
-            title=_l("Crash ident"),
-            render=_render_crash_ident,
-            short_title=_l("ID"),
-            columns=["crash_id"],
-        )
+def make_crash_ident_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="crash_ident",
+        title=_l("Crash ident"),
+        short_title=_l("ID"),
+        columns=["crash_id"],
+        render=_render_crash_ident,
+    )
 
 
 def _render_crash_type(
@@ -231,15 +230,14 @@ def _render_crash_type(
     return None, row["crash_type"]
 
 
-class PainterCrashType(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="crash_type",
-            title=_l("Crash type"),
-            render=_render_crash_type,
-            short_title=_l("Type"),
-            columns=["crash_type"],
-        )
+def make_crash_type_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="crash_type",
+        title=_l("Crash type"),
+        short_title=_l("Type"),
+        columns=["crash_type"],
+        render=_render_crash_type,
+    )
 
 
 def _render_crash_source(
@@ -255,15 +253,14 @@ def _render_crash_source(
     )
 
 
-class PainterCrashSource(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="crash_source",
-            title=_l("Crash source"),
-            render=_render_crash_source,
-            short_title=_l("Source"),
-            columns=["crash_exc_traceback"],
-        )
+def make_crash_source_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="crash_source",
+        title=_l("Crash source"),
+        short_title=_l("Source"),
+        columns=["crash_exc_traceback"],
+        render=_render_crash_source,
+    )
 
 
 def _render_crash_time(
@@ -278,16 +275,15 @@ def _render_crash_time(
     )
 
 
-class PainterCrashTime(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="crash_time",
-            title=_l("Crash time"),
-            render=_render_crash_time,
-            short_title=_l("Time"),
-            columns=["crash_time"],
-            painter_options=["ts_format", "ts_date"],
-        )
+def make_crash_time_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="crash_time",
+        title=_l("Crash time"),
+        short_title=_l("Time"),
+        columns=["crash_time"],
+        painter_options=["ts_format", "ts_date"],
+        render=_render_crash_time,
+    )
 
 
 def _render_crash_version(
@@ -296,15 +292,14 @@ def _render_crash_version(
     return None, row["crash_version"]
 
 
-class PainterCrashVersion(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="crash_version",
-            title=_l("Crash Checkmk version"),
-            render=_render_crash_version,
-            short_title=_l("Version"),
-            columns=["crash_version"],
-        )
+def make_crash_version_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="crash_version",
+        title=_l("Crash Checkmk version"),
+        short_title=_l("Version"),
+        columns=["crash_version"],
+        render=_render_crash_version,
+    )
 
 
 def _summarize_exception(exc_type: str, exc_value: str) -> str:
@@ -321,15 +316,14 @@ def _render_crash_exception(
     return None, _summarize_exception(row["crash_exc_type"], row["crash_exc_value"])
 
 
-class PainterCrashException(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="crash_exception",
-            title=_l("Crash exception"),
-            render=_render_crash_exception,
-            short_title=_l("Exc."),
-            columns=["crash_exc_type", "crash_exc_value"],
-        )
+def make_crash_exception_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="crash_exception",
+        title=_l("Crash exception"),
+        short_title=_l("Exc."),
+        columns=["crash_exc_type", "crash_exc_value"],
+        render=_render_crash_exception,
+    )
 
 
 def _sort_crash_time(
@@ -427,15 +421,14 @@ def _render_crash_host(
     return None, HTMLWriter.render_a(row["crash_host"], href=url)
 
 
-class PainterCrashHost(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="crash_host",
-            title=_l("Crash host"),
-            render=_render_crash_host,
-            short_title=_l("Host"),
-            columns=["crash_host"],
-        )
+def make_crash_host_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="crash_host",
+        title=_l("Crash host"),
+        short_title=_l("Host"),
+        columns=["crash_host"],
+        render=_render_crash_host,
+    )
 
 
 def _render_crash_item(
@@ -444,15 +437,14 @@ def _render_crash_item(
     return None, row.get("crash_item", "")
 
 
-class PainterCrashItem(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="crash_item",
-            title=_l("Crash service item"),
-            render=_render_crash_item,
-            short_title=_l("Item"),
-            columns=["crash_item"],
-        )
+def make_crash_item_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="crash_item",
+        title=_l("Crash service item"),
+        short_title=_l("Item"),
+        columns=["crash_item"],
+        render=_render_crash_item,
+    )
 
 
 def _render_crash_check_type(
@@ -461,15 +453,14 @@ def _render_crash_check_type(
     return None, row.get("crash_check_type", "")
 
 
-class PainterCrashCheckType(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="crash_check_type",
-            title=_l("Crash check type"),
-            render=_render_crash_check_type,
-            short_title=_l("Check"),
-            columns=["crash_check_type"],
-        )
+def make_crash_check_type_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="crash_check_type",
+        title=_l("Crash check type"),
+        short_title=_l("Check"),
+        columns=["crash_check_type"],
+        render=_render_crash_check_type,
+    )
 
 
 def _render_crash_service_name(
@@ -491,15 +482,14 @@ def _render_crash_service_name(
     return None, HTMLWriter.render_a(row["crash_service_name"], href=url)
 
 
-class PainterCrashServiceName(InternalPainter):
-    def __init__(self) -> None:
-        super().__init__(
-            ident="crash_service_name",
-            title=_l("Crash service name"),
-            render=_render_crash_service_name,
-            short_title=_l("Service"),
-            columns=["crash_service_name"],
-        )
+def make_crash_service_name_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="crash_service_name",
+        title=_l("Crash service name"),
+        short_title=_l("Service"),
+        columns=["crash_service_name"],
+        render=_render_crash_service_name,
+    )
 
 
 def _sort_crash_host(

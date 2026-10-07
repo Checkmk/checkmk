@@ -49,8 +49,12 @@ py_cmk_test(
     size = "small",
     srcs = glob(["tests/**/*.py"]),
     data = glob(["templates/mail/*"]),
+    tags = [
+        "deballast-keep=//packages/cmk-notification-plugins:notification_scripts_lib",  # notifications.sms is run via runpy
+    ],
     deps = [
         ":cmk-notification-plugins",
+        ":notification_scripts_lib",
         ":testlib",
         requirement("pytest-mock"),
         requirement("jinja2"),

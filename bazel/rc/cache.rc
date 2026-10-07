@@ -1,0 +1,25 @@
+# Local disk cache, repository contents cache and remote cache
+
+# enable a local disk cache: this is especially relevant for local builds without an enabled bazel-remote
+common:linux --disk_cache=~/.cache/bazel_disk_cache/
+common:linux --experimental_disk_cache_gc_max_size=100G
+
+# Share fetched external repos across workspaces instead of extracting a private copy into every
+# output base.  Bazel 8 ships this disabled (the flag defaults to the empty string); Bazel 9 enables
+# it by default, at which point this can go. Entries unused for --repo_contents_cache_gc_max_age
+# (default 14d) are collected, so external/ stops growing without bound. CI moves it onto the node's
+# shared mount in /etc/ci.bazelrc.
+common:linux --repo_contents_cache=~/.cache/bazel/repo_contents_cache
+
+# Remote cache, its endpoint and credentials come from remote.bazelrc
+common --remote_cache_async
+common --remote_cache_compression
+# send pings after this time of no read operations on the connection, but only if there is at least one pending gRPC call
+# only with this flag "grpc_keepalive_timeout" is enabled, defaults to 20s
+common --grpc_keepalive_time=10s
+# minimum blob size required to compress/decompress with zstd (1MB)
+common --experimental_remote_cache_compression_threshold=1048576
+common --remote_local_fallback
+
+# Do not upload artifacts other than from CI, see ci.rc, CMK-18656
+common --remote_upload_local_results=false

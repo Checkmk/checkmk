@@ -8,35 +8,14 @@ build --workspace_status_command=bazel/tools/workspace_status.sh
 # Add mirrors for certain download URLs
 common --downloader_config=bazel_downloader.cfg
 
-# enable a local disk cache: this is especially relevant for local builds without an enabled bazel-remote
-common:linux --disk_cache=~/.cache/bazel_disk_cache/
-common:linux --experimental_disk_cache_gc_max_size=100G
-
-# Share fetched external repos across workspaces instead of extracting a private copy into every
-# output base.  Bazel 8 ships this disabled (the flag defaults to the empty string); Bazel 9 enables
-# it by default, at which point this can go. Entries unused for --repo_contents_cache_gc_max_age
-# (default 14d) are collected, so external/ stops growing without bound. CI moves it onto the node's
-# shared mount in /etc/ci.bazelrc.
-common:linux --repo_contents_cache=~/.cache/bazel/repo_contents_cache
-
 # WORKSPACE support is fully removed; everything is defined via Bzlmod (MODULE.bazel)
 common --noenable_workspace
 
 # default/common bazel args for all commands supporting it
 common --experimental_ui_max_stdouterr_bytes=10000000
-common --remote_cache_async
-common --remote_cache_compression
-# send pings after this time of no read operations on the connection, but only if there is at least one pending gRPC call
-# only with this flag "grpc_keepalive_timeout" is enabled, defaults to 20s
-common --grpc_keepalive_time=10s
-# minimum blob size required to compress/decompress with zstd (1MB)
-common --experimental_remote_cache_compression_threshold=1048576
-common --remote_local_fallback
 common --cycles
 # Enable Bzlmod for every Bazel command
 common --enable_bzlmod
-# Do not upload artifacts other than from CI, see below, CMK-18656
-common --remote_upload_local_results=false
 
 # The Aspect rulesets pull in aspect_tools_telemetry, which POSTs a report about
 # our module graph, OS and CI environment to telemetry.aspect.build from a repo
@@ -80,6 +59,7 @@ common --@aspect_rules_ts//ts:skipLibCheck=always
 
 ## For specific commands
 
+import %workspace%/bazel/rc/cache.rc
 import %workspace%/bazel/rc/performance.rc
 import %workspace%/bazel/rc/correctness.rc
 import %workspace%/bazel/rc/checkmk.rc

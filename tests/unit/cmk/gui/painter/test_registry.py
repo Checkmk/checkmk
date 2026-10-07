@@ -8,9 +8,11 @@ from typing import override
 
 import pytest
 
+from cmk.gui.i18n import _l
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.painter import Cell, EmptyCell, InternalPainter, PainterContext, PainterRegistry
 from cmk.gui.painter.legacy import Painter
+from cmk.gui.painter.registry import _make_plugin_painter
 from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import FixedValue
@@ -186,3 +188,127 @@ def test_painter_returns_its_static_parameters() -> None:
         render=_render_host_address,
     )
     assert painter.parameters(make_painter_context(_PERMISSIONS)) is _HOST_ADDRESS_PARAMETERS
+
+
+def _paint_nothing(_row: Row) -> CellSpec:
+    return "", ""
+
+
+def _host_name(row: Row) -> str:
+    return str(row["host_name"])
+
+
+def test_plugin_painter_accepts_a_lazy_title() -> None:
+    painter = _make_plugin_painter(
+        "plugin", {"title": _l("Plug-in"), "columns": [], "paint": _paint_nothing}
+    )
+    assert painter.title(EmptyCell(), make_painter_context(_PERMISSIONS)) == "Plug-in"
+
+
+def test_plugin_painter_groups_by_a_function_of_the_row() -> None:
+    painter = _make_plugin_painter(
+        "plugin",
+        {"title": "Plug-in", "columns": [], "paint": _paint_nothing, "groupby": _host_name},
+    )
+    context = make_painter_context(_PERMISSIONS)
+    assert painter.group_by({"host_name": "heute"}, EmptyCell(), context) == "heute"
+
+
+def _no_group(_row: Row) -> None:
+    return None
+
+
+def test_plugin_painter_keeps_a_missing_group_value_of_its_function() -> None:
+    painter = _make_plugin_painter(
+        "plugin",
+        {"title": "Plug-in", "columns": [], "paint": _paint_nothing, "groupby": _no_group},
+    )
+    context = make_painter_context(_PERMISSIONS)
+    assert painter.group_by({"host_name": "heute"}, EmptyCell(), context) is None
+
+
+def _paint_mapping(_row: Row) -> tuple[str, dict[str, str]]:
+    return "", {"key": "value"}
+
+
+def test_plugin_painter_renders_a_mapping() -> None:
+    painter = _make_plugin_painter(
+        "plugin", {"title": "Plug-in", "columns": [], "paint": _paint_mapping}
+    )
+    context = make_painter_context(_PERMISSIONS)
+    assert painter.render({}, EmptyCell(), user, context) == ("", {"key": "value"})
+
+
+def _paint_host_name(row: Row) -> CellSpec:
+    return "", str(row["host_name"])
+
+
+def _export_host_name_upper(row: Row, _cell: Cell) -> str:
+    return str(row["host_name"]).upper()
+
+
+def test_plugin_painter_exports_the_painted_content_by_default() -> None:
+    painter = _make_plugin_painter(
+        "plugin", {"title": "Plug-in", "columns": [], "paint": _paint_host_name}
+    )
+    context = make_painter_context(_PERMISSIONS)
+    assert painter.export_for_json({"host_name": "heute"}, EmptyCell(), user, context) == "heute"
+
+
+def test_plugin_painter_exports_through_its_own_export_function() -> None:
+    painter = _make_plugin_painter(
+        "plugin",
+        {
+            "title": "Plug-in",
+            "columns": [],
+            "paint": _paint_host_name,
+            "export_for_csv": _export_host_name_upper,
+        },
+    )
+    context = make_painter_context(_PERMISSIONS)
+    assert painter.export_for_csv({"host_name": "heute"}, EmptyCell(), user, context) == "HEUTE"
+
+
+def test_plugin_painter_groups_by_its_static_group_value() -> None:
+    painter = _make_plugin_painter(
+        "plugin", {"title": "Plug-in", "columns": [], "paint": _paint_nothing, "groupby": "dmz"}
+    )
+    context = make_painter_context(_PERMISSIONS)
+    assert painter.group_by({"host_name": "heute"}, EmptyCell(), context) == "dmz"
+
+
+def _export_host_name_length(row: Row, _cell: Cell) -> int:
+    return len(str(row["host_name"]))
+
+
+def test_plugin_painter_exports_a_value_that_is_no_text_as_its_string_to_csv() -> None:
+    painter = _make_plugin_painter(
+        "plugin",
+        {
+            "title": "Plug-in",
+            "columns": [],
+            "paint": _paint_host_name,
+            "export_for_csv": _export_host_name_length,
+        },
+    )
+    context = make_painter_context(_PERMISSIONS)
+    assert painter.export_for_csv({"host_name": "heute"}, EmptyCell(), user, context) == "5"
+
+
+def test_plugin_painter_takes_a_missing_short_title_as_its_title() -> None:
+    painter = _make_plugin_painter(
+        "plugin", {"title": "Plug-in", "short": None, "columns": [], "paint": _paint_nothing}
+    )
+    assert painter.short_title(EmptyCell(), make_painter_context(_PERMISSIONS)) == "Plug-in"
+
+
+def test_plugin_painter_validates_its_paint_function_at_registration() -> None:
+    with pytest.raises(TypeError):
+        _make_plugin_painter("plugin", {"title": "Plug-in", "columns": [], "paint": "host_name"})
+
+
+def test_plugin_painter_validates_its_spec_at_registration() -> None:
+    with pytest.raises(TypeError):
+        _make_plugin_painter(
+            "plugin", {"title": "Plug-in", "columns": "host_name", "paint": _paint_nothing}
+        )

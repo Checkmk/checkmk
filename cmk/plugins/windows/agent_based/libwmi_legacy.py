@@ -145,11 +145,6 @@ def wmi_yield_raw_persec(
     perfvar: str | None,
     levels: tuple | dict[str, tuple] | None = None,
 ) -> LegacyCheckResult:
-    if table is None:
-        # This case may be when a check was discovered with a table which subsequently disappeared again.
-        # We expect to get `None` in this case.
-        return  # type: ignore[unreachable]
-
     if row == "":
         row = 0
 

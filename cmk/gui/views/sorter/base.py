@@ -12,7 +12,7 @@ from cmk.gui.http import Request
 from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
 from cmk.gui.valuespec import Dictionary
 from cmk.web.utils.request_cache import RequestCache
-from cmk.web.utils.speaklater import LazyString
+from cmk.web.utils.speaklater import LazyString, LazyText
 
 
 class SorterProtocol(Protocol):
@@ -56,7 +56,7 @@ class Sorter:
     def __init__(
         self,
         ident: str,
-        title: str | LazyString,
+        title: str | LazyString | LazyText,
         columns: Sequence[ColumnName],
         sort_function: SorterProtocol,
         load_inv: bool = False,
@@ -86,7 +86,7 @@ class ParameterizedSorter(Sorter):
     def __init__(
         self,
         ident: str,
-        title: str | LazyString,
+        title: str | LazyString | LazyText,
         columns: Sequence[ColumnName],
         sort_function: SorterProtocol,
         parameter_valuespec: Callable[[Config, Sequence[ColumnSpec]], Dictionary],

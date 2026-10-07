@@ -46,7 +46,9 @@ def view_breadcrumb(view: View) -> Breadcrumb:
 
         breadcrumb = make_topic_breadcrumb(
             main_menu_registry.menu_monitoring(),
-            pagetypes.PagetypeTopics.get_topic(view.spec["topic"], view.user_permissions).title(),
+            pagetypes.PagetypeTopics.get_topic(
+                view.spec["topic"], view.painter_context.user_permissions
+            ).title(),
         )
         breadcrumb.append(
             BreadcrumbItem(
@@ -78,7 +80,7 @@ def _host_hierarchy_breadcrumb(view: View) -> Breadcrumb:
         host_name = HostName(view.context["host"]["host"])
     except ValueError:
         raise MKUserError("host", _("Invalid host name"))
-    breadcrumb = make_host_breadcrumb(host_name, view.user_permissions)
+    breadcrumb = make_host_breadcrumb(host_name, view.painter_context.user_permissions)
 
     if view.name == "host":
         # In case we are on the host homepage, we have the final breadcrumb
@@ -109,7 +111,9 @@ def _host_hierarchy_breadcrumb(view: View) -> Breadcrumb:
         return breadcrumb
 
     breadcrumb = make_service_breadcrumb(
-        host_name, ServiceName(view.context["service"]["service"]), view.user_permissions
+        host_name,
+        ServiceName(view.context["service"]["service"]),
+        view.painter_context.user_permissions,
     )
 
     if view.name == "service":

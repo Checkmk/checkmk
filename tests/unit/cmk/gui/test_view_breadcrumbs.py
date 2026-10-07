@@ -15,6 +15,7 @@ from cmk.gui.type_defs import ViewSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.web.utils.request_cache import RequestCache
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 HOST_BREADCRUMB = Breadcrumb([BreadcrumbItem("myhost", "view.py?view_name=host", None)])
 
@@ -26,7 +27,7 @@ def _single_service_view_without_service_context() -> View:
         "svcproblems",
         cast(ViewSpec, {"single_infos": ["host", "service"], "datasource": "services"}),
         {"host": {"host": "myhost"}},
-        UserPermissions({}, {}, {}, []),
+        make_painter_context(UserPermissions({}, {}, {}, [])),
         RequestCache(Config()),
     )
 

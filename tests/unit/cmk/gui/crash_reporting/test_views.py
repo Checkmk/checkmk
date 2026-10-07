@@ -20,6 +20,7 @@ from cmk.gui.painter import Cell
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 BUILT_IN_FILE = "/omd/sites/heute/lib/python3/cmk/base/modes/check_mk.py"
 LOCAL_FILE = "/omd/sites/heute/local/lib/python3/cmk_addons/plugins/acme/agent_based/acme.py"
@@ -148,7 +149,7 @@ def test_get_crash_report_rows_queries(
     ],
 )
 def test_painter_crash_exception_render(user: LoggedInUser, may_see_exception: bool) -> None:
-    cell = Cell(None, None, None, UserPermissions({}, {}, {}, []), None)
+    cell = Cell(None, None, None, make_painter_context(UserPermissions({}, {}, {}, [])), None)
     _css, content = make_crash_exception_painter().render(
         {"crash_exc_type": "ValueError", "crash_exc_value": "secret boom"},
         cell,

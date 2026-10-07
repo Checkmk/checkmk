@@ -14,7 +14,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import default_time_range_seconds, stored_time_range_seconds
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.painter import all_painters, Cell, InternalPainter, JoinCell
+from cmk.gui.painter import all_painters, Cell, InternalPainter, JoinCell, PainterContext
 from cmk.gui.type_defs import (
     ColumnSpec,
     FilterName,
@@ -23,7 +23,6 @@ from cmk.gui.type_defs import (
     ViewSpec,
     VisualContext,
 )
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.layout import Layout, layout_registry
 from cmk.gui.views.sort_url import compute_sort_url_parameter
 from cmk.gui.views.sorter import all_sorters, Sorter, SorterEntry
@@ -45,7 +44,7 @@ class View:
         view_name: str,
         view_spec: ViewSpec,
         context: VisualContext,
-        user_permissions: UserPermissions,
+        painter_context: PainterContext,
         request_cache: RequestCache[RequestCacheConfig],
     ) -> None:
         super().__init__()
@@ -59,7 +58,7 @@ class View:
         self._warning_messages: list[str] = []
         self.allow_browser_reload = True
         self.process_tracking = ViewProcessTracking()
-        self.user_permissions = user_permissions
+        self.painter_context = painter_context
         self.request_cache = request_cache
 
     @property
@@ -103,7 +102,7 @@ class View:
                             e, registered_sorters, registered_painters
                         ),
                         registered_painters,
-                        self.user_permissions,
+                        self.painter_context,
                         self.request_cache,
                     )
                 )
@@ -115,7 +114,7 @@ class View:
                             e, registered_sorters, registered_painters
                         ),
                         registered_painters,
-                        self.user_permissions,
+                        self.painter_context,
                         self.request_cache,
                     )
                 )
@@ -134,7 +133,7 @@ class View:
                 e,
                 self._compute_sort_url_parameter(e, registered_sorters, registered_painters),
                 registered_painters,
-                self.user_permissions,
+                self.painter_context,
                 self.request_cache,
             )
             for e in self.spec["group_painters"]

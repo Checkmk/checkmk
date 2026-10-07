@@ -16,6 +16,7 @@ from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.perfometer.base import Perfometer
 from cmk.gui.views.perfometer.painter import make_perfometer_painter
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 _REGISTERED_PERFOMETERS = {
     "kube_memory_usage": perfometers.Perfometer(
@@ -135,7 +136,7 @@ def test_perfometer_export_contains_label() -> None:
     link wrapper produced by render(). The export methods must therefore fall
     back to the plain label instead of returning empty content (SUP-28751)."""
     painter = _make_painter()
-    cell = Cell(None, None, None, UserPermissions({}, {}, {}, []), None)
+    cell = Cell(None, None, None, make_painter_context(UserPermissions({}, {}, {}, [])), None)
     row = _perfometer_row()
 
     assert painter.export_for_csv(row, cell, user, cell.painter_context()) == "42"

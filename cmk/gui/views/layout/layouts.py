@@ -119,7 +119,7 @@ class LayoutSingleDataset(Layout):
                     html.td(cell.title(use_short=False), class_="left")
 
                 for row in thispart:
-                    cell.paint(row, link_renderer, user=user)
+                    cell.paint(row, link_renderer, user=user, writer=html)
 
                 if len(thispart) < num_columns:
                     html.td(
@@ -255,7 +255,7 @@ class GroupedBoxesLayout(Layout):
                 render_checkbox_td(view, row, num_cells)
 
             for cell in cells:
-                cell.paint(row, link_renderer, user=user)
+                cell.paint(row, link_renderer, user=user, writer=html)
 
             html.close_tr()
 
@@ -281,7 +281,7 @@ class GroupedBoxesLayout(Layout):
         for cell in group_cells:
             if painted:
                 html.td(",&nbsp;")
-            painted = cell.paint(first_row, link_renderer, user=user)
+            painted = cell.paint(first_row, link_renderer, user=user, writer=html)
         html.close_tr()
         html.close_thead()
         html.close_table()
@@ -291,7 +291,7 @@ class GroupedBoxesLayout(Layout):
         if show_checkboxes:
             render_group_checkbox_th()
         for cell in cells:
-            cell.paint_as_header()
+            cell.paint_as_header(html)
             html.write_text_permissive("\n")
         html.close_tr()
 
@@ -513,7 +513,7 @@ class LayoutTiled(Layout):
                     for cell in group_cells:
                         if painted:
                             html.td(",&nbsp;")
-                        painted = cell.paint(row, link_renderer, user=user)
+                        painted = cell.paint(row, link_renderer, user=user, writer=html)
 
                     html.close_tr()
                     html.close_table()
@@ -691,7 +691,7 @@ class LayoutTable(Layout):
                         for cell in group_cells:
                             if painted:
                                 html.td(",&nbsp;")
-                            painted = cell.paint(row, link_renderer, user=user)
+                            painted = cell.paint(row, link_renderer, user=user, writer=html)
 
                         html.close_tr()
                         html.close_table()
@@ -763,7 +763,7 @@ class LayoutTable(Layout):
                 render_checkbox_td(view, row, num_cells)
 
             for cell in cells:
-                cell.paint(row, link_renderer, user=user)
+                cell.paint(row, link_renderer, user=user, writer=html)
 
             column += 1
 
@@ -791,7 +791,7 @@ class LayoutTable(Layout):
                     html.th("")
 
             for cell in cells:
-                cell.paint_as_header()
+                cell.paint_as_header(html)
 
             if n < num_columns:
                 html.td("", class_="gap")

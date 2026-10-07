@@ -13,6 +13,7 @@ from cmk.gui.views.page_edit_view import (
     view_editor_column_spec,
     view_editor_general_properties,
 )
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 
 def _a_join_painter_name() -> str:
@@ -26,7 +27,7 @@ def test_column_spec_join_column_without_join_value_is_a_user_error() -> None:
     # Adding a "Joined column" in the view editor without filling in the service it
     # joins on. The user must get a validation error on that field, not a crash.
     user_permissions = UserPermissions({}, {}, {}, [])
-    vs = view_editor_column_spec("columns", "hosts", user_permissions)
+    vs = view_editor_column_spec("columns", "hosts", make_painter_context(user_permissions))
 
     with pytest.raises(MKUserError) as excinfo:
         vs.validate_value(

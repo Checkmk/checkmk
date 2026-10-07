@@ -21,14 +21,16 @@ from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import Request, request
+from cmk.gui.http import Request, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenuDropdown
 from cmk.gui.pages import PageContext
-from cmk.gui.painter import Cell, columns_of_cells
+from cmk.gui.painter import Cell, columns_of_cells, PainterContext
+from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     ColumnName,
     PainterParameters,
@@ -81,7 +83,20 @@ def page_show_view(
             datasource.infos, view_spec["context"], request_cache
         )
 
-        view = View(view_name, view_spec, context, user_permissions, request_cache)
+        view = View(
+            view_name,
+            view_spec,
+            context,
+            PainterContext(
+                config=ctx.config,
+                request=ctx.request,
+                painter_options=PainterOptions.get_instance(),
+                theme=theme,
+                url_renderer=RenderLink(ctx.request, response, display_options),
+                user_permissions=user_permissions,
+            ),
+            request_cache,
+        )
         view.row_limit = get_limit(
             view_spec_row_limit=view_spec.get("row_limit", 0),
             request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),

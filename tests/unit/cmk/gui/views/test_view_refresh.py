@@ -21,6 +21,7 @@ from cmk.gui.view import View
 from cmk.gui.view_renderer import GUIViewRenderer
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.web.utils.request_cache import RequestCache
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 # The builtin view that paints engine graphs, and auto-refreshed long before the picker existed.
 ENGINE_GRAPH_VIEW = "service"
@@ -33,7 +34,7 @@ def _view(browser_reload: int) -> View:
         ENGINE_GRAPH_VIEW,
         spec,
         spec.get("context", {}),
-        UserPermissions({}, {}, {}, []),
+        make_painter_context(UserPermissions({}, {}, {}, [])),
         RequestCache(Config()),
     )
     # Guards the premise: without engine graphs the assertions below would be vacuous.

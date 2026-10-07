@@ -22,6 +22,7 @@ from cmk.gui.views.store import get_all_views
 from cmk.gui.visuals.filter import Filter
 from cmk.gui.visuals.filter.components import FilterComponent
 from cmk.web.utils.request_cache import RequestCache
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 
 def test_get_needed_regular_columns(view: View) -> None:
@@ -96,7 +97,13 @@ def _view_opened_with(view_name: str, url_vars: Mapping[str, str]) -> View:
     infos = data_source_registry[view_spec["datasource"]]().infos
     request_cache = RequestCache(Config())
     context = visuals.active_context_from_request(infos, view_spec["context"], request_cache)
-    return View(view_name, view_spec, context, UserPermissions({}, {}, {}, []), request_cache)
+    return View(
+        view_name,
+        view_spec,
+        context,
+        make_painter_context(UserPermissions({}, {}, {}, [])),
+        request_cache,
+    )
 
 
 @pytest.mark.usefixtures("request_context")

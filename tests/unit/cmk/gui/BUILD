@@ -107,6 +107,7 @@ py_cmk_test(
     use_project_pytest_config = True,
     deps = [
         ":conftest",
+        ":helpers",
         ":init_py",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
@@ -508,6 +509,7 @@ py_cmk_test(
     deps = [
         ":compare_html",
         ":conftest",
+        ":helpers",
         "//cmk/gui:app",
         "//cmk/gui:auth",
         "//cmk/gui:auth_core",

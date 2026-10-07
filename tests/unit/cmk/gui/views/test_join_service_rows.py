@@ -13,6 +13,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views._join_service_rows import _get_needed_join_columns
 from cmk.web.utils.request_cache import RequestCache
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 
 @pytest.mark.usefixtures("load_config")
@@ -26,7 +27,7 @@ def test_get_needed_join_columns(view: View) -> None:
         view.name,
         view_spec,
         view_spec.get("context", {}),
-        UserPermissions({}, {}, {}, []),
+        make_painter_context(UserPermissions({}, {}, {}, [])),
         RequestCache(Config()),
     )
 

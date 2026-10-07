@@ -13,7 +13,8 @@ from cmk.gui import pagetypes, sites, visuals
 from cmk.gui.bi._compiler import is_part_of_aggregation
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource
-from cmk.gui.http import request
+from cmk.gui.display_options import display_options
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -25,7 +26,11 @@ from cmk.gui.page_menu import (
     PageMenuLink,
     PageMenuTopic,
 )
+from cmk.gui.painter import PainterContext
+from cmk.gui.painter.helpers import RenderLink
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import InfoName, Rows, SingleInfos, Visual
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.roles import UserPermissions
@@ -718,7 +723,14 @@ class LegacyHostMenus:
             _HOST_VIEW_NAME,
             view_spec,
             {"host": {"host": hostname}},
-            user_permissions,
+            PainterContext(
+                config=active_config,
+                request=request,
+                painter_options=PainterOptions.get_instance(),
+                theme=theme,
+                url_renderer=RenderLink(request, response, display_options),
+                user_permissions=user_permissions,
+            ),
             RequestCache(active_config),
         )
 

@@ -164,6 +164,32 @@ def edition() -> cmk_version.Edition:
     )
 
 
+def no_site_configuration() -> livestatus.SiteConfiguration:
+    return livestatus.SiteConfiguration(
+        {
+            "id": SiteId("NO_SITE"),
+            "alias": "Local site NO_SITE",
+            "socket": ("local", None),
+            "disable_wato": True,
+            "disabled": False,
+            "insecure": False,
+            "url_prefix": "/NO_SITE/",
+            "multisiteurl": "",
+            "persist": False,
+            "replicate_ec": False,
+            "replicate_mkps": False,
+            "replication": None,
+            "timeout": 5,
+            "user_login": True,
+            "proxy": None,
+            "user_attribute_sync_connections": "all",
+            "status_host": None,
+            "message_broker_port": 5672,
+            "is_trusted": True,
+        }
+    )
+
+
 def setup_fake_omd_site(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     monkeypatch.setenv("OMD_ROOT", str(cmk.utils.paths.omd_root))
     omd_site.cache_clear()
@@ -244,33 +270,7 @@ rule_packs += \
 
 sites.update(%r)
         """
-        % livestatus.SiteConfigurations(
-            {
-                SiteId("NO_SITE"): livestatus.SiteConfiguration(
-                    {
-                        "id": SiteId("NO_SITE"),
-                        "alias": "Local site NO_SITE",
-                        "socket": ("local", None),
-                        "disable_wato": True,
-                        "disabled": False,
-                        "insecure": False,
-                        "url_prefix": "/NO_SITE/",
-                        "multisiteurl": "",
-                        "persist": False,
-                        "replicate_ec": False,
-                        "replicate_mkps": False,
-                        "replication": None,
-                        "timeout": 5,
-                        "user_login": True,
-                        "proxy": None,
-                        "user_attribute_sync_connections": "all",
-                        "status_host": None,
-                        "message_broker_port": 5672,
-                        "is_trusted": True,
-                    }
-                )
-            }
-        ),
+        % livestatus.SiteConfigurations({SiteId("NO_SITE"): no_site_configuration()}),
     )
 
     yield

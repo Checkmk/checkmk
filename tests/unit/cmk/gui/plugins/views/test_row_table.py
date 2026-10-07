@@ -11,6 +11,7 @@ from cmk.gui.view import View
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.web.utils.request_cache import RequestCache
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 
 @pytest.mark.usefixtures("request_context")
@@ -44,7 +45,7 @@ def test_row_table_object(mock_livestatus: MockLiveStatusConnection) -> None:
         view_name,
         view_spec,
         view_spec["context"],
-        UserPermissions({}, {}, {}, []),
+        make_painter_context(UserPermissions({}, {}, {}, [])),
         RequestCache(Config()),
     )
     rt = RowTableLivestatus("hosts")

@@ -941,7 +941,7 @@ def render_mobile_table(
         html.open_tr()
         n = 0
         for cell in cells:
-            cell.paint_as_header()
+            cell.paint_as_header(html)
         html.close_tr()
 
     link_renderer = make_link_renderer(request, user_permissions)
@@ -960,7 +960,7 @@ def render_mobile_table(
             else:
                 colspan = None
 
-            cell.paint(row, link_renderer, user=user, colspan=colspan)
+            cell.paint(row, link_renderer, user=user, writer=html, colspan=colspan)
         html.close_tr()
     html.close_table()
     html.javascript('$("table.mobile a").attr("data-ajax", "false");')
@@ -1044,7 +1044,7 @@ def render_mobile_list(
                     rendered_class, rendered_content = rendered_cell
                     assert isinstance(rendered_content, str | HTML)
                     html.open_p(class_="ui-li-desc")
-                    cell.paint_as_header()
+                    cell.paint_as_header(html)
                     html.write_text_permissive(": ")
                     html.span(rendered_content, class_=rendered_class)
                     html.close_p()
@@ -1116,7 +1116,7 @@ def render_mobile_dataset(
             html.close_tr()
 
             html.open_tr(class_="data")
-            cell.paint(row, link_renderer, user=user)
+            cell.paint(row, link_renderer, user=user, writer=html)
             html.close_tr()
 
         html.close_table()

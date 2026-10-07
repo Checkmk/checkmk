@@ -19,17 +19,14 @@ from typing import Any, Literal, override
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui import visuals
-from cmk.gui.config import active_config, Config, RequestCacheConfig
-from cmk.gui.display_options import display_options
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.html import html
-from cmk.gui.http import Request, request, response
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.theme import Theme
-from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
@@ -56,7 +53,6 @@ from cmk.web.utils.escaping import replace_anchor_tags_with_urls, replace_br_wit
 from cmk.web.utils.html import HTML
 from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.speaklater import LazyString, LazyText
-from cmk.web.utils.urls import HTTPVariable, makeuri
 
 from .helpers import RenderLink
 
@@ -73,17 +69,6 @@ class PainterContext:
     theme: Theme
     url_renderer: RenderLink
     user_permissions: UserPermissions
-
-
-def painter_context(user_permissions: UserPermissions) -> PainterContext:
-    return PainterContext(
-        config=active_config,
-        request=request,
-        painter_options=PainterOptions.get_instance(),
-        theme=theme,
-        url_renderer=RenderLink(request, response, display_options),
-        user_permissions=user_permissions,
-    )
 
 
 type RowFunction[T] = Callable[[Row, Cell, LoggedInUser, PainterContext], T]
@@ -159,6 +144,10 @@ class InternalPainter:
     @property
     def ident(self) -> str:
         return str(self._ident)
+
+    @property
+    def static_title(self) -> str | LazyString | LazyText:
+        return self._title
 
     def title(self, cell: Cell, context: PainterContext) -> str:
         if self._cell_title is None:
@@ -309,7 +298,7 @@ class Cell:
         column_spec: ColumnSpec | None,
         sort_url_parameter: str | None,
         registered_painters: Mapping[str, InternalPainter] | None,
-        user_permissions: UserPermissions,
+        painter_context: PainterContext | None,
         request_cache: RequestCache[RequestCacheConfig] | None,
     ) -> None:
         self._painter_name: PainterName | None
@@ -335,7 +324,7 @@ class Cell:
             self._tooltip_painter_name = None
 
         self._sort_url_parameter = sort_url_parameter
-        self._user_permissions = user_permissions
+        self._painter_context = painter_context
         self._request_cache = request_cache
 
     @property
@@ -386,7 +375,9 @@ class Cell:
         return self._registered_painters[self.painter_name()]
 
     def painter_context(self) -> PainterContext:
-        return painter_context(self._user_permissions)
+        if self._painter_context is None:
+            raise TypeError("Cell has no painter context: it is only a placeholder")
+        return self._painter_context
 
     def painter_name(self) -> PainterName:
         assert self._painter_name is not None
@@ -452,31 +443,21 @@ class Cell:
         assert self._registered_painters is not None
         return self._registered_painters[self._tooltip_painter_name]
 
-    def paint_as_header(self) -> None:
-        # Optional: Sort link in title cell
-        # Use explicit defined sorter or implicit the sorter with the painter name
-        # Important for links:
-        # - Add the display options (Keeping the same display options as current)
-        # - Link to _self (Always link to the current frame)
+    def paint_as_header(self, writer: HTMLWriter) -> None:
         classes: list[str] = []
         onclick = ""
         title = ""
-        if display_options.enabled(display_options.L) and self._sort_url_parameter:
-            params: list[HTTPVariable] = [
-                ("sort", self._sort_url_parameter),
-                ("_show_filter_form", 0),
-            ]
-            if display_options.title_options:
-                params.append(("display_options", display_options.title_options))
-
+        if self._sort_url_parameter and (
+            sort_url := self.painter_context().url_renderer.sort_url(self._sort_url_parameter)
+        ):
             classes += ["sort"]
-            onclick = "location.href='%s'" % makeuri(request, addvars=params, remove_prefix="sort")
+            onclick = "location.href='%s'" % sort_url
             title = _("Sort by %(title)s") % {"title": self.tooltip_title()}
         classes += self.painter().title_classes()
 
-        html.open_th(class_=classes, onclick=onclick, title=title)
-        html.write_text_permissive(self.title())
-        html.close_th()
+        writer.open_th(class_=classes, onclick=onclick, title=title)
+        writer.write_text_permissive(self.title())
+        writer.close_th()
 
     def render(
         self,
@@ -513,7 +494,7 @@ class Cell:
                 ColumnSpec(self.tooltip_painter_name()),
                 None,
                 self._registered_painters,
-                self._user_permissions,
+                self._painter_context,
                 self._request_cache,
             )
             _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row, user=user)
@@ -537,7 +518,7 @@ class Cell:
     ) -> PDFCellSpec:
         # TODO: Move this somewhere else!
         def find_htdocs_image_path(filename: str) -> str | None:
-            themes = theme.icon_themes()
+            themes = self.painter_context().theme.icon_themes()
             for file_path in [
                 cmk.utils.paths.local_web_dir / "htdocs" / filename,
                 cmk.utils.paths.web_dir / "htdocs" / filename,
@@ -585,7 +566,7 @@ class Cell:
             )
 
     def render_for_python_export(self, row: Row, user: LoggedInUser) -> object:
-        if request.var("output_format") not in ["python", "python_export"]:
+        if self.painter_context().request.var("output_format") not in ["python", "python_export"]:
             return "NOT_PYTHON_EXPORTABLE"
 
         if not row:
@@ -605,7 +586,7 @@ class Cell:
         return content
 
     def render_for_csv_export(self, row: Row, user: LoggedInUser) -> str | HTML:
-        if request.var("output_format") not in ["csv", "csv_export"]:
+        if self.painter_context().request.var("output_format") not in ["csv", "csv_export"]:
             return "NOT_CSV_EXPORTABLE"
 
         if not row:
@@ -619,7 +600,7 @@ class Cell:
         return self._render_html_content(content)
 
     def render_for_json_export(self, row: Row, user: LoggedInUser) -> object:
-        if request.var("output_format") not in ["json", "json_export"]:
+        if self.painter_context().request.var("output_format") not in ["json", "json_export"]:
             return "NOT_JSON_EXPORTABLE"
 
         if not row:
@@ -663,11 +644,12 @@ class Cell:
         row: Row,
         link_renderer: Callable[[str | HTML, Row, VisualLinkSpec], str | HTML] | None,
         user: LoggedInUser,
+        writer: HTMLWriter,
         colspan: int | None = None,
     ) -> bool:
         tdclass, content = self.render(row, link_renderer, user)
         assert isinstance(content, str | HTML)
-        html.td(content, class_=tdclass, colspan=colspan)
+        writer.td(content, class_=tdclass, colspan=colspan)
         return content != ""
 
 
@@ -677,11 +659,11 @@ class JoinCell(Cell):
         column_spec: ColumnSpec,
         sort_url_parameter: str | None,
         registered_painters: Mapping[str, InternalPainter],
-        user_permissions: UserPermissions,
+        painter_context: PainterContext,
         request_cache: RequestCache[RequestCacheConfig],
     ) -> None:
         super().__init__(
-            column_spec, sort_url_parameter, registered_painters, user_permissions, request_cache
+            column_spec, sort_url_parameter, registered_painters, painter_context, request_cache
         )
         if (join_value := column_spec.join_value) is None:
             raise ValueError
@@ -708,7 +690,7 @@ def join_row(row: Row, cell: Cell) -> Row:
 
 class EmptyCell(Cell):
     def __init__(self) -> None:
-        super().__init__(None, None, None, UserPermissions({}, {}, {}, []), None)
+        super().__init__(None, None, None, None, None)
 
     @override
     def render(
@@ -725,6 +707,7 @@ class EmptyCell(Cell):
         row: Row,
         link_renderer: Callable[[str | HTML, Row, VisualLinkSpec], str | HTML] | None,
         user: LoggedInUser,
+        writer: HTMLWriter,
         colspan: int | None = None,
     ) -> bool:
         return False

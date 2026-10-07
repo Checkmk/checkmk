@@ -16,6 +16,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.web.utils.request_cache import RequestCache
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 # A builtin view without engine graphs, which reloads on its own interval.
 SELF_RELOADING_VIEW = "allhosts"
@@ -29,7 +30,7 @@ def _view(*, allow_browser_reload: bool) -> View:
         SELF_RELOADING_VIEW,
         spec,
         spec.get("context", {}),
-        UserPermissions({}, {}, {}, []),
+        make_painter_context(UserPermissions({}, {}, {}, [])),
         RequestCache(Config()),
     )
     view.allow_browser_reload = allow_browser_reload

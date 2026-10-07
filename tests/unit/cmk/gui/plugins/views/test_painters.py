@@ -18,14 +18,20 @@ from zoneinfo import ZoneInfo
 
 import pytest
 import time_machine
+from werkzeug.test import create_environ
 
+from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
-from cmk.gui.http import request
+from cmk.gui.display_options import DisplayOptions
+from cmk.gui.http import Request, request, Response
 from cmk.gui.logged_in import user
-from cmk.gui.painter import all_painters
+from cmk.gui.painter import all_painters, PainterContext
+from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter.painters import _paint_custom_notes
+from cmk.gui.painter_options import PainterOptions
+from cmk.gui.theme import make_theme
 from cmk.gui.type_defs import ColumnSpec, Row
 from cmk.gui.utils.host_relations import (
     dump_resolved_relations,
@@ -37,11 +43,13 @@ from cmk.gui.view import View
 from cmk.gui.views.page_edit_view import painters_of_datasource
 from cmk.gui.visual_link import render_link_to_view
 from cmk.inventory.serialization import deserialize_tree
+from cmk.livestatus_client import SiteConfigurations
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIconName
 from cmk.web.utils.request_cache import RequestCache
+from tests.testlib.unit.fake_site import no_site_configuration
 
 
 @pytest.fixture(name="live")
@@ -460,6 +468,18 @@ def _embedded_service_graphs(
 _NO_PERMISSIONS = UserPermissions({}, {}, {}, [])
 
 
+def _painter_context_of_the_fake_site() -> PainterContext:
+    painter_request = Request(create_environ())
+    return PainterContext(
+        config=Config(sites=SiteConfigurations({SiteId("NO_SITE"): no_site_configuration()})),
+        request=painter_request,
+        painter_options=PainterOptions(),
+        theme=make_theme(validate_choices=False),
+        url_renderer=RenderLink(painter_request, Response(), DisplayOptions()),
+        user_permissions=_NO_PERMISSIONS,
+    )
+
+
 def _view_of(column: ColumnSpec, datasource: str) -> View:
     return View(
         view_name="",
@@ -494,7 +514,7 @@ def _view_of(column: ColumnSpec, datasource: str) -> View:
             "main_menu_search_terms": [],
         },
         context={},
-        user_permissions=_NO_PERMISSIONS,
+        painter_context=_painter_context_of_the_fake_site(),
         request_cache=RequestCache(Config()),
     )
 

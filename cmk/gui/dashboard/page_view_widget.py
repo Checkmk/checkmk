@@ -28,12 +28,15 @@ from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import Request
+from cmk.gui.http import Request, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.pages import Page, PageContext, PageResult
+from cmk.gui.painter import PainterContext
+from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.token_auth import AuthToken, DashboardToken
 from cmk.gui.type_defs import (
     AnnotatedUserId,
@@ -175,7 +178,14 @@ class ViewWidgetIFramePageHelper:
             widget_name,
             view_spec,
             context,
-            user_permissions=user_permissions,
+            painter_context=PainterContext(
+                config=config,
+                request=request,
+                painter_options=PainterOptions.get_instance(),
+                theme=theme,
+                url_renderer=RenderLink(request, response, display_options),
+                user_permissions=user_permissions,
+            ),
             request_cache=RequestCache(config),
         )
         view.row_limit = row_limit

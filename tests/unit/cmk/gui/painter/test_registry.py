@@ -15,6 +15,7 @@ from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import FixedValue
 from cmk.gui.view_utils import CellSpec
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 _PERMISSIONS = UserPermissions({}, {}, {}, [])
 
@@ -63,7 +64,7 @@ def _registry() -> PainterRegistry:
 
 
 def _cell(registry: PainterRegistry) -> Cell:
-    return Cell(ColumnSpec(name="legacy"), None, registry, _PERMISSIONS, None)
+    return Cell(ColumnSpec(name="legacy"), None, registry, make_painter_context(_PERMISSIONS), None)
 
 
 def test_register_returns_the_legacy_class() -> None:
@@ -78,6 +79,10 @@ def test_legacy_painter_is_registered_by_its_ident() -> None:
 @pytest.mark.usefixtures("request_context")
 def test_legacy_painter_title_reaches_the_cell() -> None:
     assert _cell(_registry()).title(use_short=False) == "Legacy"
+
+
+def test_legacy_painter_has_its_title_as_static_title() -> None:
+    assert str(_registry()["legacy"].static_title) == "Legacy"
 
 
 @pytest.mark.usefixtures("request_context")
@@ -125,7 +130,13 @@ def test_painter_is_registered_by_its_ident() -> None:
 
 
 def test_painter_renders_through_a_cell() -> None:
-    cell = Cell(ColumnSpec(name="host_address"), None, _host_address_registry(), _PERMISSIONS, None)
+    cell = Cell(
+        ColumnSpec(name="host_address"),
+        None,
+        _host_address_registry(),
+        make_painter_context(_PERMISSIONS),
+        None,
+    )
     assert cell.render_content({"host_address": "10.0.0.1"}, user) == ("", "10.0.0.1")
 
 
@@ -134,7 +145,9 @@ def test_painter_that_is_not_groupable_puts_all_rows_into_one_group() -> None:
         ident="icons", title="Icons", groupable=False, render=_render_host_address
     )
     cell = EmptyCell()
-    assert painter.group_by({"host_address": "10.0.0.1"}, cell, cell.painter_context()) == ("",)
+    assert painter.group_by(
+        {"host_address": "10.0.0.1"}, cell, make_painter_context(_PERMISSIONS)
+    ) == ("",)
 
 
 def test_painter_shows_its_static_tooltip_title() -> None:
@@ -145,7 +158,7 @@ def test_painter_shows_its_static_tooltip_title() -> None:
         render=_render_host_address,
     )
     cell = EmptyCell()
-    assert painter.tooltip_title(cell, cell.painter_context()) == "Primary address"
+    assert painter.tooltip_title(cell, make_painter_context(_PERMISSIONS)) == "Primary address"
 
 
 _HOST_ADDRESS_PARAMETERS = FixedValue(value=None)
@@ -162,7 +175,7 @@ def test_painter_builds_its_parameters_from_the_context() -> None:
         parameters=_host_address_parameters,
         render=_render_host_address,
     )
-    assert painter.parameters(EmptyCell().painter_context()) is _HOST_ADDRESS_PARAMETERS
+    assert painter.parameters(make_painter_context(_PERMISSIONS)) is _HOST_ADDRESS_PARAMETERS
 
 
 def test_painter_returns_its_static_parameters() -> None:
@@ -172,4 +185,4 @@ def test_painter_returns_its_static_parameters() -> None:
         parameters=_HOST_ADDRESS_PARAMETERS,
         render=_render_host_address,
     )
-    assert painter.parameters(EmptyCell().painter_context()) is _HOST_ADDRESS_PARAMETERS
+    assert painter.parameters(make_painter_context(_PERMISSIONS)) is _HOST_ADDRESS_PARAMETERS

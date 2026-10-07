@@ -23,7 +23,7 @@ from cmk.gui.view_utils import CellContent, CellSpec, get_host_list_links
 from cmk.ruleset_matcher.labels import Labels, LabelSources
 from cmk.ruleset_matcher.tags import TagGroup, TagGroupID, TagID
 from cmk.web.utils.html import HTML
-from cmk.web.utils.urls import HTTPVariable, makeuri_contextless
+from cmk.web.utils.urls import HTTPVariable, makeuri, makeuri_contextless
 
 
 def render_cache_info(what: str, row: Row) -> str:  # noqa: ARG001
@@ -149,6 +149,14 @@ class RenderLink:
         if mobile_filename is None:
             return filename
         return mobile_filename if is_mobile(self.request, self.response) else filename
+
+    def sort_url(self, sort_url_parameter: str) -> str | None:
+        if self.display_options.disabled(self.display_options.L):
+            return None
+        params: list[HTTPVariable] = [("sort", sort_url_parameter), ("_show_filter_form", 0)]
+        if self.display_options.title_options:
+            params.append(("display_options", self.display_options.title_options))
+        return makeuri(self.request, addvars=params, remove_prefix="sort")
 
 
 def get_perfdata_nth_value(row: Row, n: int, remove_unit: bool = False) -> str:

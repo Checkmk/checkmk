@@ -17,6 +17,7 @@ from cmk.gui.view import View
 from cmk.gui.views.inventory._data_sources import RowTableInventory, RowTableInventoryHistory
 from cmk.inventory.raw_paths import parse_internal_raw_path
 from cmk.web.utils.request_cache import RequestCache
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 EXPECTED_INV_KEYS = [
     "site",
@@ -86,7 +87,7 @@ def fixture_view() -> View:
         "synthetic_test_view",
         view_spec,
         view_spec.get("context", {}),
-        UserPermissions({}, {}, {}, []),
+        make_painter_context(UserPermissions({}, {}, {}, [])),
         RequestCache(Config()),
     )
 

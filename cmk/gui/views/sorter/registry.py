@@ -9,7 +9,7 @@ from typing import Any, override
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.config import Config
-from cmk.gui.painter import EmptyCell, painter_registry
+from cmk.gui.painter import painter_registry
 from cmk.gui.painter.host_tag_painters import HashableTagGroups
 from cmk.gui.type_defs import ColumnName, PainterName, SorterFunction
 
@@ -60,12 +60,11 @@ def declare_1to1_sorter(
     painter_name: PainterName, func: SorterFunction, col_num: int = 0, reverse: bool = False
 ) -> PainterName:
     painter = painter_registry[painter_name]
-    cell = EmptyCell()
 
     sorter_registry.register(
         Sorter(
             ident=painter_name,
-            title=painter.title(cell, cell.painter_context()),
+            title=painter.static_title,
             columns=painter.columns,
             sort_function=(
                 (lambda r1, r2, **_kwargs: func(painter.columns[col_num], r2, r1))

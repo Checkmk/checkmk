@@ -21,6 +21,7 @@ from cmk.gui.views import visual_type as views_visual_type
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.inventory.trees import SDPath
 from cmk.web.utils.request_cache import RequestCache
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 USER_PERMISSIONS = UserPermissions({}, {}, {}, [])
 
@@ -41,7 +42,7 @@ def _page_menu_urls(view_name: ViewName, context: VisualContext, rows: Rows) -> 
         view_name,
         multisite_builtin_views[view_name],
         context,
-        USER_PERMISSIONS,
+        make_painter_context(USER_PERMISSIONS),
         RequestCache(Config()),
     )
     return {

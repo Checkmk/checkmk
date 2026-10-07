@@ -8,6 +8,7 @@ import pytest
 from cmk.gui.painter.base import Cell
 from cmk.gui.utils.roles import UserPermissions
 from cmk.web.utils.html import HTML
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 
 @pytest.mark.parametrize(
@@ -94,7 +95,7 @@ def test_cell_render_html_content(input_html: str, expected_output: str) -> None
         column_spec=None,
         sort_url_parameter=None,
         registered_painters=None,
-        user_permissions=UserPermissions({}, {}, {}, []),
+        painter_context=make_painter_context(UserPermissions({}, {}, {}, [])),
         request_cache=None,
     )
 

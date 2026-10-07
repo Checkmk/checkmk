@@ -10,7 +10,6 @@ from .base import EmptyCell as EmptyCell
 from .base import InternalPainter as InternalPainter
 from .base import join_row as join_row
 from .base import JoinCell as JoinCell
-from .base import painter_context as painter_context
 from .base import PainterContext as PainterContext
 from .base import RowFunction as RowFunction
 from .legacy import Painter as Painter

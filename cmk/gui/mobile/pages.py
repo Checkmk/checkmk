@@ -23,9 +23,12 @@ from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
 from cmk.gui.page_menu_utils import collect_context_links
 from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.painter import PainterContext
+from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
 from cmk.gui.saml2_login import show_saml2_login
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.userdb import get_saml_connections_for_current_site
 from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
@@ -280,7 +283,20 @@ def _page_index(request: Request, config: Config) -> None:
                 datasource.infos, view_spec["context"], request_cache
             )
 
-            view = View(view_name, view_spec, context, user_permissions, request_cache)
+            view = View(
+                view_name,
+                view_spec,
+                context,
+                PainterContext(
+                    config=config,
+                    request=request,
+                    painter_options=PainterOptions.get_instance(),
+                    theme=theme,
+                    url_renderer=RenderLink(request, response, display_options),
+                    user_permissions=user_permissions,
+                ),
+                request_cache,
+            )
             view.row_limit = row_limit
             view.only_sites = get_only_sites_from_context(context)
             view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
@@ -343,7 +359,20 @@ def _page_view(request: Request, config: Config, *, debug: bool) -> None:
     )
 
     user_permissions = UserPermissions.from_config(config, permission_registry)
-    view = View(view_name, view_spec, context, user_permissions, request_cache)
+    view = View(
+        view_name,
+        view_spec,
+        context,
+        PainterContext(
+            config=config,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+            theme=theme,
+            url_renderer=RenderLink(request, response, display_options),
+            user_permissions=user_permissions,
+        ),
+        request_cache,
+    )
     view.row_limit = get_limit(
         view_spec_row_limit=view_spec.get("row_limit", 0),
         request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),

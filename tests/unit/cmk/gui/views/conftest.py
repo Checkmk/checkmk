@@ -11,6 +11,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.store import get_all_views
 from cmk.web.utils.request_cache import RequestCache
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 
 @pytest.fixture(name="view")
@@ -21,6 +22,6 @@ def view_fixture(request_context: None) -> View:  # noqa: ARG001  # Unused fixtu
         view_name,
         view_spec,
         view_spec.get("context", {}),
-        UserPermissions({}, {}, {}, []),
+        make_painter_context(UserPermissions({}, {}, {}, [])),
         RequestCache(Config()),
     )

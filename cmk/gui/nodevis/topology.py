@@ -34,11 +34,12 @@ from cmk.gui.breadcrumb import make_current_page_breadcrumb_item, make_topic_bre
 from cmk.gui.config import active_config, Config, RequestCacheConfig
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.data_source import data_source_registry
+from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.header import make_header
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import Request, request
+from cmk.gui.http import Request, request, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -81,6 +82,9 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, Page, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.painter import PainterContext
+from cmk.gui.painter.helpers import RenderLink
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, PainterParameters, Row, Visual, VisualLinkSpec
@@ -2101,7 +2105,14 @@ def _get_topology_context_and_filters(
         view_name,
         view_spec,
         context,
-        UserPermissions.from_config(active_config, permission_registry),
+        PainterContext(
+            config=active_config,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+            theme=theme,
+            url_renderer=RenderLink(request, response, display_options),
+            user_permissions=UserPermissions.from_config(active_config, permission_registry),
+        ),
         request_cache,
     )
     return context, visuals.visible_filters_of_visual(view.spec, get_all_active_filters(view))

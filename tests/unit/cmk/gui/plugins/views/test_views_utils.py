@@ -27,6 +27,7 @@ from cmk.gui.views.layout import group_value
 from cmk.gui.views.page_show_view import _parse_url_sorters
 from cmk.gui.views.sort_url import _encode_sorter_url
 from cmk.gui.views.store import multisite_builtin_views
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 
 @pytest.fixture(name="view_spec")
@@ -89,7 +90,7 @@ def test_parse_url_sorters_resolves_parameters_from_matching_cell() -> None:
             ),
             None,
             registered_painters,
-            user_permissions,
+            make_painter_context(user_permissions),
             None,
         ),
         Cell(
@@ -100,7 +101,7 @@ def test_parse_url_sorters_resolves_parameters_from_matching_cell() -> None:
             ),
             None,
             registered_painters,
-            user_permissions,
+            make_painter_context(user_permissions),
             None,
         ),
     ]
@@ -172,7 +173,7 @@ def test_group_value(monkeypatch: pytest.MonkeyPatch) -> None:
         ColumnSpec(name=painter.ident),
         None,
         painter_registry,
-        UserPermissions({}, {}, {}, []),
+        make_painter_context(UserPermissions({}, {}, {}, [])),
         None,
     )
 

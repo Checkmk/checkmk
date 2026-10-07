@@ -39,6 +39,7 @@ from cmk.gui.views.store import multisite_builtin_views
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.web.utils.request_cache import RequestCache
 from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 
 @pytest.mark.usefixtures("request_context")
@@ -126,7 +127,7 @@ def test_painter_export_title() -> None:
                 ColumnSpec(name=painter.ident),
                 None,
                 registered_painters,
-                user_permissions,
+                make_painter_context(user_permissions),
                 RequestCache(Config()),
             ),
         )
@@ -169,7 +170,7 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch) -> None:
         ColumnSpec(name=painter.ident),
         None,
         registered_painters,
-        UserPermissions({}, {}, {}, []),
+        make_painter_context(UserPermissions({}, {}, {}, [])),
         None,
     )
     context = dummy_cell.painter_context()
@@ -192,7 +193,7 @@ def test_create_view_basics() -> None:
         view_name,
         view_spec,
         view_spec.get("context", {}),
-        UserPermissions({}, {}, {}, []),
+        make_painter_context(UserPermissions({}, {}, {}, [])),
         RequestCache(Config()),
     )
 

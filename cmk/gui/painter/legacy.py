@@ -7,11 +7,13 @@ import abc
 from collections.abc import Sequence
 from functools import partial
 
-from cmk.gui.config import Config
-from cmk.gui.http import Request
+from cmk.gui.config import active_config, Config
+from cmk.gui.display_options import display_options
+from cmk.gui.http import Request, request, response
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.theme import Theme
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     ColumnName,
     Row,
@@ -24,12 +26,13 @@ from cmk.gui.view_utils import (
     CellSpec,
 )
 from cmk.web.utils.html import HTML
+from cmk.web.utils.speaklater import LazyText
 
 from .base import (
     Cell,
+    EmptyCell,
     GroupValue,
     InternalPainter,
-    painter_context,
     PainterContext,
 )
 from .helpers import RenderLink
@@ -252,7 +255,17 @@ def _legacy_painter(legacy: type[Painter], context: PainterContext) -> Painter:
 
 
 def _context_free_legacy_painter(legacy: type[Painter]) -> Painter:
-    return _legacy_painter(legacy, painter_context(UserPermissions({}, {}, {}, [])))
+    return _legacy_painter(
+        legacy,
+        PainterContext(
+            config=active_config,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+            theme=theme,
+            url_renderer=RenderLink(request, response, display_options),
+            user_permissions=UserPermissions({}, {}, {}, []),
+        ),
+    )
 
 
 def _legacy_title(legacy: type[Painter], cell: Cell, context: PainterContext) -> str:
@@ -327,7 +340,7 @@ def internal_painter_from_legacy(legacy: type[Painter]) -> InternalPainter:
     painter = _context_free_legacy_painter(legacy)
     return InternalPainter(
         ident=painter.ident,
-        title=painter.ident,
+        title=LazyText(partial(painter.title, EmptyCell())),
         columns=partial(_legacy_columns, legacy),
         sorter=painter.sorter,
         printable=painter.printable,

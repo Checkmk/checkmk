@@ -17,6 +17,7 @@ import pytest
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
+from cmk.gui.form_specs.visitors.single_choice import SingleChoiceVisitor
 from cmk.gui.http import request
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.watolib.host_attributes import (
@@ -458,11 +459,14 @@ class CaseFail:
 Case = CasePass | CaseFail
 
 
-def submitted_relation_row(kind: str, direction: object, host: str) -> list[object]:
+def submitted_relation_row(kind: str, direction: str | None, host: str) -> list[object]:
     """A relation row as the host dialog submits it: the type with the fields under it. The
-    direction toggle of a directed kind sends ``[direction, None]``, a symmetric kind the
-    plain ``"symmetric"``."""
-    return [kind, {"direction": direction, "host": host}]
+    direction dropdown of a directed kind sends the option id of the direction, or ``None``
+    while none is selected, a symmetric kind the plain ``"symmetric"``."""
+    submitted = (
+        direction if direction in (None, "symmetric") else SingleChoiceVisitor.option_id(direction)
+    )
+    return [kind, {"direction": submitted, "host": host}]
 
 
 # The attributes available in every edition, so every edition's module composes its cases
@@ -473,7 +477,7 @@ BASE_FORM_SPEC_CASES: Mapping[str, list[Case]] = {
         CasePass(
             "a-link",
             [{"kind": "management", "direction": "parent", "host": "board"}],
-            submitted=[submitted_relation_row("management", ["parent", None], "board")],
+            submitted=[submitted_relation_row("management", "parent", "board")],
         ),
         CaseFail("not-a-list", "management_parent"),
         CaseFail("without-host", [{"kind": "management", "direction": "parent", "host": ""}]),

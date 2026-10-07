@@ -61,9 +61,7 @@ def test_validate_input_does_not_care_which_host_it_is_about() -> None:
 def test_a_row_without_a_host_is_reported_at_the_field() -> None:
     """collect_attributes() reads the form before it validates it, so the refusal has to come out
     of from_html_vars() as a user error - otherwise the save ends in a crash report."""
-    request.set_var(
-        "relations", json.dumps([submitted_relation_row("management", ["child", None], "")])
-    )
+    request.set_var("relations", json.dumps([submitted_relation_row("management", "child", "")]))
 
     with pytest.raises(MKUserError, match="Select the host this relation points to"):
         HostAttributeRelations().from_html_vars("")
@@ -77,7 +75,7 @@ def test_a_saved_host_keeps_a_relation_of_a_kind_the_dialog_cannot_show() -> Non
     later: RelationLink = {"kind": "peering", "direction": "symmetric", "host": HostName("peer")}
     request.set_var("host_change_relations", "1")
     request.set_var(
-        "relations", json.dumps([submitted_relation_row("management", ["child", None], "board")])
+        "relations", json.dumps([submitted_relation_row("management", "child", "board")])
     )
 
     attributes = collect_attributes(
@@ -100,7 +98,7 @@ def test_a_saved_host_drops_a_relation_whose_kind_does_not_have_that_end() -> No
     attribute = HostAttributeRelations()
     request.set_var("host_change_relations", "1")
     request.set_var(
-        "relations", json.dumps([submitted_relation_row("management", ["child", None], "board")])
+        "relations", json.dumps([submitted_relation_row("management", "child", "board")])
     )
 
     attributes = collect_attributes(

@@ -17,6 +17,7 @@ from cmk.gui.form_specs import (
     RawFrontendData,
     VisitorOptions,
 )
+from cmk.gui.form_specs.visitors.single_choice import SingleChoiceVisitor
 from cmk.gui.i18n import _l
 from cmk.gui.utils.host_relation_kinds import (
     RELATION_KINDS,
@@ -90,9 +91,9 @@ def _field(
     return next(element for element in _ends(kind, kinds).elements if element.name == name)
 
 
-def _direction_toggle() -> shared_type_defs.CascadingSingleChoice:
+def _direction_choice() -> shared_type_defs.SingleChoice:
     spec = _field("direction").parameter_form
-    assert isinstance(spec, shared_type_defs.CascadingSingleChoice)
+    assert isinstance(spec, shared_type_defs.SingleChoice)
     return spec
 
 
@@ -126,24 +127,33 @@ def test_a_new_row_is_of_the_first_kind() -> None:
 
 
 def test_the_direction_reads_as_a_sentence_about_the_host_being_edited() -> None:
-    direction = _direction_toggle()
-    assert [element.name for element in direction.elements] == ["parent", "child"]
+    direction = _direction_choice()
+    assert [element.name for element in direction.elements] == [
+        SingleChoiceVisitor.option_id("parent"),
+        SingleChoiceVisitor.option_id("child"),
+    ]
     assert [element.title for element in direction.elements] == [
         "is management board of",
         "is OS host of",
     ]
 
 
-def test_the_direction_is_a_toggle_at_the_height_of_the_fields_next_to_it() -> None:
-    direction = _direction_toggle()
-    assert direction.layout == shared_type_defs.CascadingSingleChoiceLayout.button_group
-    assert (
-        direction.button_group_size == shared_type_defs.CascadingSingleChoiceButtonGroupSize.small
+def test_the_direction_is_marked_required_at_its_title_like_the_host() -> None:
+    direction = _direction_choice()
+    assert direction.title == "Direction"
+    assert direction.input_hint == "Select direction"
+
+
+def test_a_new_row_leaves_the_direction_to_the_user() -> None:
+    assert _field("direction").default_value is None
+
+
+def test_the_form_asks_for_a_direction_the_row_is_missing() -> None:
+    visitor = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS)
+    messages = visitor.validate(
+        RawFrontendData([submitted_relation_row("management", None, "board")])
     )
-
-
-def test_a_new_row_makes_this_host_the_management_board() -> None:
-    assert _field("direction").default_value == ("parent", None)
+    assert [message.message for message in messages] == ["Select the direction of this relation."]
 
 
 def test_a_symmetric_kind_has_nothing_to_choose_for_its_direction() -> None:
@@ -188,8 +198,8 @@ def test_the_save_puts_back_only_what_the_dialog_could_not_show() -> None:
 def test_the_form_stores_the_rows_the_dialog_submits() -> None:
     rows = RawFrontendData(
         [
-            submitted_relation_row("management", ["parent", None], "mgmt1"),
-            submitted_relation_row("management", ["child", None], "os1"),
+            submitted_relation_row("management", "parent", "mgmt1"),
+            submitted_relation_row("management", "child", "os1"),
             submitted_relation_row("peering", "symmetric", "peer"),
         ]
     )
@@ -206,7 +216,7 @@ def test_the_form_asks_for_a_host_the_row_is_missing() -> None:
     """The dialog submits the empty name the host field defaults to."""
     visitor = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS)
     messages = visitor.validate(
-        RawFrontendData([submitted_relation_row("management", ["child", None], "")])
+        RawFrontendData([submitted_relation_row("management", "child", "")])
     )
     assert [message.message for message in messages] == ["Select the host this relation points to."]
 
@@ -214,7 +224,7 @@ def test_the_form_asks_for_a_host_the_row_is_missing() -> None:
 def test_the_form_rejects_a_host_name_that_cannot_be_stored() -> None:
     visitor = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS)
     messages = visitor.validate(
-        RawFrontendData([submitted_relation_row("management", ["child", None], "no spaces")])
+        RawFrontendData([submitted_relation_row("management", "child", "no spaces")])
     )
     assert [message.message for message in messages] == ["This is not a usable host name."]
 

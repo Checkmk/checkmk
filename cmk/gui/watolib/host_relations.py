@@ -56,11 +56,12 @@ from cmk.gui.utils.host_relations import (
 )
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.rulesets.internal.form_specs import (
-    ButtonGroupSize,
     CascadingSingleChoiceExtended,
     CascadingSingleChoiceLayout,
     DictGroupExtended,
     DictionaryGroupLayout,
+    SingleChoiceElementExtended,
+    SingleChoiceExtended,
     StringAutocompleter,
 )
 from cmk.rulesets.v1 import Help, Label, Message, Title
@@ -71,6 +72,8 @@ from cmk.rulesets.v1.form_specs import (
     Dictionary,
     FixedValue,
     InputHint,
+    InvalidElementMode,
+    InvalidElementValidator,
     List,
 )
 from cmk.rulesets.v1.form_specs.validators import ValidationError
@@ -127,53 +130,38 @@ def relation_choice_name(kind_id: str, direction: RelationDirection) -> str:
     return f"{kind_id}_{direction}"
 
 
-def _direction_to_disk(choice: object) -> object:
-    assert isinstance(choice, tuple)
-    return choice[0]
-
-
-def _direction_toggle(
-    kind: DirectedRelationKind,
-) -> TransformDataForLegacyFormatOrRecomposeFunction:
-    """The direction as a toggle between the ends of the kind, stored as the plain direction.
-
-    Sized small to sit at the height of the fields next to it.
-    """
-    directions = kind.directions()
-    return TransformDataForLegacyFormatOrRecomposeFunction(
-        wrapped_form_spec=CascadingSingleChoiceExtended(
-            title=Title("Direction"),
-            help_text=Help("What this host is to the selected one."),
-            elements=[
-                CascadingSingleChoiceElement(
-                    name=direction,
-                    # Already a translatable string, held lazily by the kind.
-                    title=Title(  # astrein: disable=localization-checker
-                        str(kind.end(direction).row)
-                    ),
-                    parameter_form=FixedValue(value=None),
-                )
-                for direction in directions
-            ],
-            prefill=DefaultValue(directions[0]),
-            layout=CascadingSingleChoiceLayout.button_group,
-            button_group_size=ButtonGroupSize.small,
+def _direction_choice(kind: DirectedRelationKind) -> SingleChoiceExtended[RelationDirection]:
+    return SingleChoiceExtended[RelationDirection](
+        title=Title("Direction"),
+        help_text=Help("What this host is to the selected one."),
+        elements=[
+            SingleChoiceElementExtended(
+                name=direction,
+                # Already a translatable string, held lazily by the kind.
+                title=Title(  # astrein: disable=localization-checker
+                    str(kind.end(direction).row)
+                ),
+            )
+            for direction in kind.directions()
+        ],
+        prefill=InputHint(Title("Select direction")),
+        invalid_element_validation=InvalidElementValidator(
+            mode=InvalidElementMode.COMPLAIN,
+            error_msg=Message("Select the direction of this relation."),
         ),
-        from_disk=lambda direction: (direction, None),
-        to_disk=_direction_to_disk,
     )
 
 
 def _direction_field(
     kind: RelationKind,
-) -> TransformDataForLegacyFormatOrRecomposeFunction | FixedValue[str]:
+) -> SingleChoiceExtended[RelationDirection] | FixedValue[str]:
     """How a row says which end of ``kind`` the host being edited sits at.
 
     A symmetric kind has one end only, so there is nothing to choose: the row just reads it.
     """
     match kind:
         case DirectedRelationKind():
-            return _direction_toggle(kind)
+            return _direction_choice(kind)
         case SymmetricRelationKind():
             return FixedValue[str](
                 value="symmetric",

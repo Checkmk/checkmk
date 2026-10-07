@@ -1857,9 +1857,6 @@ class OverridableContainer[T_OverridableContainerConfig: OverridableContainerCon
             ctx.config,
         )
         # Redirect user to tha page this displays the thing we just added to
-        if target_page and not isinstance(target_page, str):
-            target_page = target_page.page_url()  # type: ignore[unreachable]
-
         response.set_content_type("text/plain")
         response.set_data(f"{target_page or ''}\n{'true' if need_sidebar_reload else 'false'}")
 

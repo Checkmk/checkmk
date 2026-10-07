@@ -311,29 +311,17 @@ def get_bulk_notification_subject(contexts: list[dict[str, str]], hosts: Iterabl
 def retrieve_from_passwordstore(parameter: str | list[str]) -> str:
     if isinstance(parameter, list):
         if "explicit_password" in parameter:
-            value: str | None = parameter[-1]
-        else:
-            value = cmk.utils.password_store.extract(parameter[-2])
-            if value is None:
-                sys.stderr.write("Unable to retrieve password from passwordstore")  # type: ignore[unreachable]
-                sys.exit(2)
-    else:
-        # old valuespec style
-        values = parameter.split()
+            return parameter[-1]
+        return cmk.utils.password_store.extract(parameter[-2])
 
-        if len(values) == 2:
-            if values[0] == "store":
-                value = cmk.utils.password_store.extract(values[1])
-                if value is None:
-                    sys.stderr.write("Unable to retrieve password from passwordstore")  # type: ignore[unreachable]
-                    sys.exit(2)
-            else:
-                value = values[1]
-        else:
-            value = values[0]
+    # old valuespec style
+    values = parameter.split()
+    if len(values) == 2:
+        if values[0] == "store":
+            return cmk.utils.password_store.extract(values[1])
+        return values[1]
 
-    assert value is not None
-    return value
+    return values[0]
 
 
 def get_password_from_env_or_context(key: str, context: dict[str, str] | None = None) -> str:
@@ -355,9 +343,6 @@ def post_request(
 
     if not url:
         url = retrieve_from_passwordstore(context["PARAMETER_WEBHOOK_URL"])
-        if url is None:
-            sys.stderr.write("No URL was retrieved from passwordstore")  # type: ignore[unreachable]
-            sys.exit(2)
 
     serialized_proxy_config = context.get("PARAMETER_PROXY_URL")
 

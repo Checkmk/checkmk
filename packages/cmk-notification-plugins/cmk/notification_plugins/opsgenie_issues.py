@@ -10,7 +10,7 @@ import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pprint import pformat
-from typing import cast
+from typing import assert_never, cast
 
 import urllib3
 
@@ -208,8 +208,7 @@ def _get_proxy_url(proxy_setting: str | None, url: str | None) -> str | None:
     if isinstance(proxy, ExplicitProxyConfig):
         return proxy_setting
 
-    sys.stderr.write(f"Unsupported proxy setting: {proxy_setting}\n")  # type: ignore[unreachable]
-    sys.exit(2)
+    assert_never(proxy)
 
 
 def _get_connector(context: PluginNotificationContext) -> Connector:

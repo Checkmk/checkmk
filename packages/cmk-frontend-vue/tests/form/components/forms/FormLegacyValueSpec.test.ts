@@ -49,7 +49,10 @@ const spec: FormSpec.CascadingSingleChoice = {
     {
       name: 'custom',
       title: 'Use custom certificate',
-      default_value: { input_html: '<input name="private_key" />' },
+      default_value: {
+        input_html: '<input name="legacy_varprefix" />',
+        varprefix: 'legacy_varprefix'
+      },
       parameter_form: {
         type: 'legacy_valuespec',
         title: '',
@@ -98,4 +101,50 @@ test('FormLegacyValueSpec dispatches callable TS functions of the legacy HTML', 
 
   const legacyForm = container.querySelector('.legacy_valuespec')
   expect(initCallableTsFunctions).toHaveBeenCalledWith(legacyForm)
+})
+
+function legacyEntry(varprefix: string) {
+  return {
+    input_html: `<input name="${varprefix}_value" id="${varprefix}_value" value="empty" />`,
+    readonly_html: '',
+    varprefix
+  }
+}
+
+test('FormLegacyValueSpec list entries post their fields under distinct varprefixes', async () => {
+  const listSpec: FormSpec.List = {
+    type: 'list',
+    title: 'Custom icons and actions',
+    help: '',
+    validators: [],
+    element_template: {
+      type: 'legacy_valuespec',
+      title: '',
+      help: '',
+      validators: [],
+      varprefix: 'template'
+    } as FormSpec.LegacyValuespec,
+    element_default_value: legacyEntry('template'),
+    editable_order: false,
+    add_element_label: 'Add element',
+    remove_element_label: 'Remove element',
+    no_element_label: 'No element'
+  }
+  const { getCurrentData } = await renderForm({
+    spec: listSpec,
+    data: [legacyEntry('from_disk')],
+    backendValidation: []
+  })
+
+  await fireEvent.click(screen.getByText('Add element'))
+  await fireEvent.click(screen.getByText('Add element'))
+
+  const entries = JSON.parse(getCurrentData()!) as Array<{
+    varprefix: string
+    input_context: Record<string, string>
+  }>
+  expect(entries.map((entry) => Object.keys(entry.input_context))).toEqual(
+    entries.map((entry) => [`${entry.varprefix}_value`])
+  )
+  expect(new Set(entries.map((entry) => entry.varprefix)).size).toBe(3)
 })

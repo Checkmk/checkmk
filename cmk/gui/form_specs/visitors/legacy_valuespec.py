@@ -90,9 +90,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
             value = parsed_value.value
             # Try to extract the value from the input_context
             # On error:   Render the form in error mode, highlighting problem fields
-            # On success: Replace value with the extracted value and rendered it with a new
-            #             varprefix to avoid conflicts with the previous form and stored
-            #             request vars.
+            # On success: Render the extracted value
             assert isinstance(value, dict)
             varprefix = value.get("varprefix", "")
             with request.stashed_vars():
@@ -115,7 +113,11 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
                             validators=fake_validators,
                             varprefix=varprefix,
                         ),
-                        {"input_html": input_html, "readonly_html": readonly_html},
+                        {
+                            "input_html": input_html,
+                            "readonly_html": readonly_html,
+                            "varprefix": varprefix,
+                        },
                     )
         else:
             value_to_render = parsed_value.value
@@ -131,7 +133,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, _ParsedValueModel,
                 validators=fake_validators,
                 varprefix=varprefix,
             ),
-            {"input_html": input_html, "readonly_html": readonly_html},
+            {"input_html": input_html, "readonly_html": readonly_html, "varprefix": varprefix},
         )
 
     @override

@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { LegacyValuespec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 
 import type { ValidationMessages } from '@/form/private/validation'
 
@@ -43,8 +43,13 @@ const legacyDOM = ref<HTMLFormElement>()
 
 const inputHtml = ref('')
 
+// Copies of the same default value (e.g. new list entries) share the varprefix the
+// HTML was rendered with. Its callable TS functions get the varprefix as argument and
+// look up elements by IDs derived from it, so every instance needs its own.
+const varprefix = `${data.value.varprefix}_${useId().replace(/\W/g, '_')}`
+
 onMounted(() => {
-  inputHtml.value = data.value.input_html
+  inputHtml.value = data.value.input_html.replaceAll(data.value.varprefix, varprefix)
   // @ts-expect-error comes from different javascript file
   window['cmk'].forms.enable_dynamic_form_elements(legacyDOM.value!)
   // @ts-expect-error comes from different javascript file
@@ -99,8 +104,9 @@ function collectData() {
   const result = Object.fromEntries(new FormData(legacyDOM.value))
   data.value = {
     ...data.value,
+    input_html: inputHtml.value,
     input_context: result,
-    varprefix: props.spec.varprefix
+    varprefix
   }
 }
 </script>

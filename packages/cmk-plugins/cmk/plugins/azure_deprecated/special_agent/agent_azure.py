@@ -917,7 +917,7 @@ class ExplicitConfig:
     def __init__(self, raw_list: Sequence[str]) -> None:
         super().__init__()
         self.groups: dict = {}
-        self.current_group = None
+        self.current_group: GroupConfig | None = None
         for item in raw_list:
             if "=" not in item:
                 raise ValueError("must be in <key>=<value> format: %r" % item)
@@ -935,7 +935,7 @@ class ExplicitConfig:
             return
         if self.current_group is None:
             raise RuntimeError("missing arg: group=<name>")
-        self.current_group.add_key(key, value)  # type: ignore[unreachable]
+        self.current_group.add_key(key, value)
 
     def is_configured(self, resource: AzureResource) -> bool:
         if self.fetchall:

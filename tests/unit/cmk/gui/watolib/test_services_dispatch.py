@@ -1444,7 +1444,7 @@ def test_update_service_phase_clears_the_discovery_failed_flag(
     assert sample_host.discovery_failed() is False
 
 
-# --- T2.15 / §10.10: quick setup applies remote-site hosts locally --------------------------
+# --- T2.15 / §10.10: quick setup applies on the host's site (Fixed in CMK-38596)-------------
 
 
 @pytest.fixture(name="quick_setup_fix_all")
@@ -1479,28 +1479,11 @@ def run_quick_setup_discovery(pending_changes: PendingChanges) -> None:
     )
 
 
-@pytest.mark.usefixtures("inline_background_jobs", "remote_host")
-def test_quick_setup_reads_remotely_and_writes_locally(
-    transport: Transport, pending_changes: RecordingPendingChanges, quick_setup_fix_all: MagicMock
-) -> None:
-    """Today: the check table is fetched from the remote site, the apply runs on the central one."""
-    run_quick_setup_discovery(pending_changes)
-
-    assert transport.synced_sites == [REMOTE_SITE]
-    assert [site for site, _command, _vars in transport.remote_jobs] == [REMOTE_SITE]
-    assert quick_setup_fix_all.call_args.kwargs["automation_config"] == LocalAutomationConfig()
-
-
-@pytest.mark.xfail(
-    strict=True,
-    reason="CMK-38596 (§10.10): quick setup derives the right automation config, uses it for the "
-    "read, and then passes LocalAutomationConfig() to perform_fix_all -- so a remote-site bundle's "
-    "autochecks land in the central site's var/check_mk/autochecks/",
-)
 @pytest.mark.usefixtures("inline_background_jobs", "remote_host", "transport")
 def test_quick_setup_writes_to_the_site_it_read_from(
     pending_changes: RecordingPendingChanges, quick_setup_fix_all: MagicMock
 ) -> None:
+    """The apply goes to the site quick setup was given, not the central one (CMK-38596)."""
     run_quick_setup_discovery(pending_changes)
 
     assert quick_setup_fix_all.call_args.kwargs["automation_config"] == REMOTE

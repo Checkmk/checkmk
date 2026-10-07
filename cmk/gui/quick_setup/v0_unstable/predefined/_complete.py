@@ -541,7 +541,7 @@ def _run_service_discovery(
         ),
         host=host,
         raise_errors=False,
-        automation_config=LocalAutomationConfig(),
+        automation_config=automation_config,
         user_permission_config=user_permission_config,
         pprint_value=pprint_value,
         debug=debug,

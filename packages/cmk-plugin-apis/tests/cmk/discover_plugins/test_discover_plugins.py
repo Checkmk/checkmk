@@ -9,7 +9,13 @@ from types import ModuleType
 
 import pytest
 
-from cmk.discover_plugins import Collector, discover_modules, PluginGroup, PluginLocation
+from cmk.discover_plugins import (
+    Collector,
+    discover_modules,
+    PluginConflict,
+    PluginGroup,
+    PluginLocation,
+)
 
 
 class AssumeDirs:
@@ -139,6 +145,8 @@ class TestCollector:
                 )
             case "your_module":
                 return _make_module("your_module", [], your_plugin_1=MyOtherPlugin("herbert"))
+            case "my_broken":
+                raise SyntaxError("invalid syntax")
             case _:
                 raise ValueError("this test seems broken")
 
@@ -213,6 +221,30 @@ class TestCollector:
         assert collector.plugins == {
             PluginLocation("my_module", "my_plugin_1"): MyTestPlugin("herta"),
         }
+
+    def test_name_collision_records_the_later_plugin_as_used(self) -> None:
+        collector = Collector({MyTestPlugin: "my_"}, skip_wrong_types=False, raise_errors=False)
+        collector.add_from_module("my_module", self._importer)
+
+        collector.add_from_module("my_collision", self._importer)
+
+        assert collector.conflicts == [
+            PluginConflict(
+                "herta",
+                used=PluginLocation("my_collision", "my_plugin_3"),
+                ignored=PluginLocation("my_module", "my_plugin_1"),
+            )
+        ]
+
+    def test_import_error_is_recorded_by_module(self) -> None:
+        collector = Collector({MyTestPlugin: "my_"}, skip_wrong_types=False, raise_errors=False)
+
+        collector.add_from_module("my_broken", self._importer)
+
+        assert {
+            module: [str(exc) for exc in excs]
+            for module, excs in collector.errors_by_module.items()
+        } == {"my_broken": ["my_broken: invalid syntax"]}
 
     def test_name_collision_different_type(self) -> None:
         """Plugins with same name but different type is ok"""

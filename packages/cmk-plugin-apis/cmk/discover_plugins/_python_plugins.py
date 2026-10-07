@@ -41,9 +41,22 @@ class PluginLocation:
 
 
 @dataclass(frozen=True)
+class PluginConflict:
+    """Two plug-ins of the same name: only one of them is used"""
+
+    name: str
+    used: PluginLocation
+    ignored: PluginLocation
+
+
+@dataclass(frozen=True)
 class DiscoveredPlugins[PluginType]:
     errors: Sequence[Exception]
     plugins: Mapping[PluginLocation, PluginType]
+    conflicts: Sequence[PluginConflict]
+    """The name conflicts among `errors`"""
+    errors_by_module: Mapping[str, Sequence[Exception]]
+    """The other `errors`, by the module they occurred in"""
 
 
 def discover_all_plugins[PluginType: _PluginProtocol](
@@ -85,7 +98,12 @@ def discover_plugins_from_modules[PluginType: _PluginProtocol](
     for mod_name in module_names_by_priority:
         collector.add_from_module(mod_name, _import_optionally)
 
-    return DiscoveredPlugins(collector.errors, collector.plugins)
+    return DiscoveredPlugins(
+        collector.errors,
+        collector.plugins,
+        collector.conflicts,
+        collector.errors_by_module,
+    )
 
 
 def _ls_defensive(path: str) -> Sequence[str]:
@@ -230,6 +248,8 @@ class Collector[PluginType: _PluginProtocol]:
         self.raise_errors: Final = raise_errors
 
         self.errors: list[Exception] = []
+        self.conflicts: list[PluginConflict] = []
+        self.errors_by_module: dict[str, list[Exception]] = {}
         self._unique_plugins: dict[
             tuple[type[PluginType], Hashable], tuple[PluginLocation, PluginType]
         ] = {}
@@ -244,6 +264,7 @@ class Collector[PluginType: _PluginProtocol]:
         except Exception as exc:
             exc_sub = type(exc)(f"{mod_name}: {exc}")
             self._handle_error(exc_sub)
+            self.errors_by_module.setdefault(mod_name, []).append(exc_sub)
             return
 
         if module is None:
@@ -268,7 +289,9 @@ class Collector[PluginType: _PluginProtocol]:
             location = PluginLocation(module_name, name)
             if not isinstance(value, plugin_types):
                 if not self.skip_wrong_types:
-                    self._handle_error(TypeError(f"{location}: {value!r}"))
+                    exc = TypeError(f"{location}: {value!r}")
+                    self._handle_error(exc)
+                    self.errors_by_module.setdefault(module_name, []).append(exc)
                 continue
 
             key = (value.__class__, value.name)
@@ -278,6 +301,9 @@ class Collector[PluginType: _PluginProtocol]:
                         f"Name conflict for '{value.name}': "
                         f"Ignoring '{existing[0]}' in favor of '{location}'"
                     )
+                )
+                self.conflicts.append(
+                    PluginConflict(str(value.name), used=location, ignored=existing[0])
                 )
 
             self._unique_plugins[key] = (location, value)

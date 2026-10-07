@@ -64,12 +64,14 @@ def fixture_fake_discovery(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         diagnostics_page,
         "load_diagnostics_plugins",
-        lambda *args, **kwargs: DiscoveredPlugins(  # noqa: ARG005
+        lambda *_a, **_kw: DiscoveredPlugins(
             errors=(),
             plugins={
                 PluginLocation("cmk.plugins.test.diagnostics.test", p.name): p
                 for p in _FAKE_PLUGINS
             },
+            conflicts=(),
+            errors_by_module={},
         ),
     )
 
@@ -105,13 +107,15 @@ def test_vs_diagnostics_omits_always_element_without_always_plugins(
     monkeypatch.setattr(
         diagnostics_page,
         "load_diagnostics_plugins",
-        lambda *args, **kwargs: DiscoveredPlugins(  # noqa: ARG005
+        lambda *_a, **_kw: DiscoveredPlugins(
             errors=(),
             plugins={
                 PluginLocation("cmk.plugins.test.diagnostics.test", "a_low"): _make_plugin(
                     "a_low", _TOPIC_A, Sensitivity.LOW
                 )
             },
+            conflicts=(),
+            errors_by_module={},
         ),
     )
     request.set_var("select_site_p_site", "NO_SITE")

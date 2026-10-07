@@ -62,6 +62,8 @@ def test_add_graphing_plugins_registers_every_supported_plugin_kind() -> None:
                 PluginLocation("syntest", "metric_2"): test_metric_2,
                 PluginLocation("syntest", "graph"): test_graph,
             },
+            conflicts=(),
+            errors_by_module={},
         )
     )
 

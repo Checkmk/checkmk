@@ -114,7 +114,7 @@ def parse_zpool_status(
 
 
 def discover_zpool_status(section: Section) -> DiscoveryResult:
-    if not section or section.message == "No pools available":  # type: ignore[redundant-expr]
+    if section.message == "No pools available":
         return
     yield Service()
 

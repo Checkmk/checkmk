@@ -23,7 +23,6 @@ def test_zpool_status_parse(string_table: StringTable, expected_result: Section 
 @pytest.mark.parametrize(
     "section, expected_result",
     [
-        (None, []),
         (Section(message="No pools available"), []),
         (Section(message="All pools are healthy"), [Service()]),
     ],

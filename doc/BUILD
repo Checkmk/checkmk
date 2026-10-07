@@ -1,7 +1,6 @@
 sh_library(
     name = "doc_sh",
     srcs = [
-        ".f12",
         "treasures/Event_Console/nsca2mkeventd/nsca2mkeventd.init",
         "treasures/agent_legacy_encryption/common.sh",
         "treasures/agent_legacy_encryption/decrypt.sh",

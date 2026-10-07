@@ -144,7 +144,6 @@ get_files_from_filesystem() {
             --exclude="distro" \
             --exclude="configure" \
             --exclude="MKEVENTD*" \
-            --exclude=".f12" \
             --exclude="AGENT_RECEIVER*" \
             --exclude="MULTISITE_*" \
             --exclude-dir="debian" \

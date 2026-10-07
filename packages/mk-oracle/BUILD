@@ -280,7 +280,6 @@ rust_wine_test(
 sh_library(
     name = "helpers",
     srcs = [
-        ".f12",
         "cargo_run",
         "db-endpoint.sh",
         "permissions-check-run",

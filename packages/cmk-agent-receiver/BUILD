@@ -207,7 +207,6 @@ py_binary(
 sh_library(
     name = "helpers",
     srcs = [
-        ".f12",
         "skel/etc/init.d/agent-receiver",
     ],
 )

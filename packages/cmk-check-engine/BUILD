@@ -534,13 +534,6 @@ pkg_tar(
     ],
 )
 
-sh_library(
-    name = "helpers",
-    srcs = [
-        ".f12",
-    ],
-)
-
 py_requirements_test(
     name = "requirements-test",
     libs = [

@@ -124,13 +124,6 @@ pkg_tar(
     deps = [":wheel_pkg"],
 )
 
-sh_library(
-    name = "helpers",
-    srcs = [
-        ".f12",
-    ],
-)
-
 py_requirements_test(
     name = "requirements-test",
     libs = [

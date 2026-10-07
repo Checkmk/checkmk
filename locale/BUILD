@@ -45,7 +45,6 @@ pkg_tar(
 sh_library(
     name = "locale_sh",
     srcs = [
-        ".f12",
         "compile_mo_files",
         "output_pot_file",
     ],

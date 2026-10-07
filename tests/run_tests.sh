@@ -681,11 +681,11 @@ test-unit-shell() {
 }
 
 test-unit-neb() {
-    cd "$REPO_PATH/packages/neb/test" && ./.f12
+    cd "$REPO_PATH/packages/neb/test" && ./.do-it
 }
 
 test-unit-cmc() {
-    cd "$REPO_PATH/non-free/packages/cmc/test" && ./.f12
+    cd "$REPO_PATH/non-free/packages/cmc/test" && ./.do-it
 }
 
 test-find-modified-lock-files() {

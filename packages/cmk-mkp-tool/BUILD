@@ -92,13 +92,6 @@ py_wheel(
     deps = [],
 )
 
-sh_library(
-    name = "helpers",
-    srcs = [
-        ".f12",
-    ],
-)
-
 py_requirements_test(
     name = "requirements-test",
     libs = [

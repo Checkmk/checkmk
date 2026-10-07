@@ -132,7 +132,7 @@ def _resolve_site_name(cli_site: str | None, repo_root: Path, cwd: Path) -> str:
         if site_name is not None:
             return site_name
 
-    # 4. SITE environment variable (deprecated fallback for .f12 migration)
+    # 4. SITE environment variable (deprecated fallback)
     env_site = os.environ.get("SITE")
     if env_site:
         output.warn(

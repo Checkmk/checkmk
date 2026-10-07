@@ -329,7 +329,6 @@ filegroup(
 sh_library(
     name = "agents_sh",
     srcs = [
-        ".f12",
         "check_mk_agent.aix",
         "check_mk_agent.freebsd",
         "check_mk_agent.hpux",

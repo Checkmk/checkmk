@@ -17,7 +17,6 @@ filegroup(
             ".gitattributes",
             ".gitignore",
             "**/OWNERS",
-            ".f12",
         ],
     ),
     tags = ["lint-with-psscriptanalyzer"],
@@ -130,11 +129,4 @@ pkg_tar(
     tags = ["manual"],
     target_compatible_with = ["@platforms//os:windows"],
     visibility = ["//visibility:public"],
-)
-
-sh_library(
-    name = "agents_windows_plugins_sh",
-    srcs = [
-        ".f12",
-    ],
 )

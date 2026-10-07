@@ -266,10 +266,10 @@ implements gets a test.
   code: no `document.querySelector()` or `v-deep` to change what a child
   renders. Variants are exposed through props.
 - Visual regressions belong to screenshot tests, which do not exist yet.
-- To see a change in the browser use the demo app, F12, or the hot-reload dev
-  server; the package README lists the workflows. If a good test in this style
-  seems impossible, that is a question for Team Bug, not a reason to test
-  implementation details.
+- To see a change in the browser use the demo app, cmk-dev-deploy, or the
+  hot-reload dev server; the package README lists the workflows. If a good test
+  in this style seems impossible, that is a question for Team Bug, not a reason
+  to test implementation details.
 
 ## 12. Self-check before finishing
 

@@ -93,11 +93,6 @@ build_test(
     ],
 )
 
-sh_library(
-    name = "f12",
-    srcs = [".f12"],
-)
-
 package_wheel(
     name = "pkg_tar",
     visibility = ["//visibility:public"],

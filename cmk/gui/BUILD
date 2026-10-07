@@ -786,13 +786,6 @@ py_library(
     ],
 )
 
-sh_library(
-    name = "f12",
-    srcs = [
-        ".f12",
-    ],
-)
-
 py_doc_test(
     name = "doctest",
     size = "small",

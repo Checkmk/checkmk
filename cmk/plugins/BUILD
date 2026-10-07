@@ -160,7 +160,6 @@ sh_library(
         "jolokia/libexec/agent_jolokia",
         "mobileiron/libexec/agent_mobileiron",
         "mqtt/libexec/agent_mqtt",
-        "oracle/.f12",
         "oracle/agents/oracle_unified_async",
         "oracle/agents/oracle_unified_async_custom_metrics",
         "oracle/agents/oracle_unified_sync",

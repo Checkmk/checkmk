@@ -282,7 +282,7 @@ class CMKVersion:
             raise RuntimeError(
                 "The VERSION='GIT' semantic has been deprecated for system tests. If you want to"
                 " patch your omd version with your local changes from the git repository, you need"
-                " to manually f12 the corresponding directories."
+                " to deploy them manually, e.g. with scripts/cmk-dev-deploy.py."
             )
 
         if ".cee" in version_spec or ".cre" in version_spec:

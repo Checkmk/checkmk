@@ -159,7 +159,6 @@ py_requirements_test(
 sh_library(
     name = "helpers",
     srcs = [
-        ".f12",
         "cmk-monitor-mkbackup",
     ],
 )

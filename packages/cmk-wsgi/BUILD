@@ -97,13 +97,6 @@ package_wheel(
     whl = "wheel",
 )
 
-sh_library(
-    name = "f12",
-    srcs = [
-        "cmk/gui/wsgi/.f12",
-    ],
-)
-
 py_requirements_test(
     name = "requirements-test",
     known_unused = ["pyyaml"],  # needed transitively by apispec.yaml_utils;

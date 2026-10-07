@@ -104,12 +104,7 @@ pkg_files(
 
 pkg_files(
     name = "skel_755",
-    srcs = glob(
-        ["skel/etc/init.d/*"],
-        exclude = [
-            "**/.f12",
-        ],
-    ),
+    srcs = glob(["skel/etc/init.d/*"]),
     attributes = pkg_attributes(
         mode = "0755",
     ),

@@ -554,7 +554,6 @@ build_test(
 sh_library(
     name = "helpers",
     srcs = [
-        ".f12",
         "run",
     ],
 )

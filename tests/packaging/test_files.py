@@ -344,7 +344,6 @@ def test_files_not_in_version_path(package_path: str) -> None:
         assert is_allowed, f"Found unexpected global file: {path} in {package_path}"
 
     disallowed_pattern = [
-        ".*/.f12$",
         ".*/OWNERS$",
         ".*/BUILD$",
         r".*/BUILD\..*$",
@@ -474,7 +473,6 @@ def test_src_does_not_contain_dev_files(
         ).splitlines()
         if (path := Path(line.split()[5])).name
         in {
-            ".f12",
             "OWNERS",
             "bazel-bin",
             "bazel-out",

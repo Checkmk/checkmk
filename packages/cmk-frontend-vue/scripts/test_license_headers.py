@@ -33,7 +33,6 @@ FILES_IGNORED = {
     Path(".editorconfig"),
     Path("eslint.config.mjs"),
     Path("gettext.config.js"),
-    Path(".f12"),
     Path(".gitignore"),
     Path(".gitattributes"),
     Path(".prettierignore"),

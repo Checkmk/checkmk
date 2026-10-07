@@ -99,10 +99,3 @@ py_library(
         "//cmk/gui/openapi/shared_endpoint_families",
     ],
 )
-
-sh_library(
-    name = "f12",
-    srcs = [
-        ".f12",
-    ],
-)

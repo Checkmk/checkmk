@@ -33,10 +33,10 @@ bazel run -- @pnpm//:pnpm --dir $PWD install --frozen-lockfile
 
 ## Trying out changes in a site
 
-### f12
+### cmk-dev-deploy
 
-f12 is working, but is using the production ready build process and
-therefore not super fast (currently six seconds)
+`./scripts/cmk-dev-deploy.py` deploys the production build to a local site,
+see `packages/cmk-dev-deploy/README.md`.
 
 ### Dev server
 

@@ -75,10 +75,3 @@ pkg_tar(
     strip_prefix = "plugin-api_html",
     visibility = ["//omd:__pkg__"],
 )
-
-sh_library(
-    name = "doc_plugin-api_sh",
-    srcs = [
-        ".f12",
-    ],
-)

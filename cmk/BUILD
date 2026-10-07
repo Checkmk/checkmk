@@ -205,13 +205,6 @@ package_wheel(
     whl = "whl",
 )
 
-sh_library(
-    name = "f12",
-    srcs = [
-        ".f12",
-    ],
-)
-
 py_requirements_test(
     name = "requirements-test",
     known_undeclared = [

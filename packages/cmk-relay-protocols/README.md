@@ -23,4 +23,4 @@ bazel lint //packages/cmk-relay-protocols/...
 bazel build --config=mypy //packages/cmk-relay-protocols:cmk-relay-protocols
 ```
 
-Deploy to a local site: `./.f12`
+Deploy to a local site: `./scripts/cmk-dev-deploy.py`

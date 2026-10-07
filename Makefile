@@ -11,7 +11,7 @@ TAROPTS            := --owner=root --group=root \
                       --exclude .git --exclude .gitignore --exclude .gitmodules --exclude .gitattributes \
                       --exclude=.svn \
                       --exclude=~* --exclude=*~ --exclude=*.swp \
-                      --exclude=.f12 --exclude=OWNERS \
+                      --exclude=OWNERS \
                       --exclude=__pycache__ --exclude=*.pyc
 UVENV              := scripts/run-uvenv
 

@@ -34,10 +34,3 @@ py_library(
         "//packages/cmk-wsgi",
     ],
 )
-
-sh_library(
-    name = "f12",
-    srcs = [
-        ".f12",
-    ],
-)

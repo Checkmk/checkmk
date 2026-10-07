@@ -6,6 +6,7 @@
 import { fireEvent, screen } from '@testing-library/vue'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { vi } from 'vitest'
+import { nextTick } from 'vue'
 
 import { renderForm } from '../cmk-form-helper'
 
@@ -103,9 +104,9 @@ test('FormLegacyValueSpec dispatches callable TS functions of the legacy HTML', 
   expect(initCallableTsFunctions).toHaveBeenCalledWith(legacyForm)
 })
 
-function legacyEntry(varprefix: string) {
+function legacyEntry(varprefix: string, value = 'empty') {
   return {
-    input_html: `<input name="${varprefix}_value" id="${varprefix}_value" value="empty" />`,
+    input_html: `<input name="${varprefix}_value" id="${varprefix}_value" value="${value}" />`,
     readonly_html: '',
     varprefix
   }
@@ -147,4 +148,60 @@ test('FormLegacyValueSpec list entries post their fields under distinct varprefi
     entries.map((entry) => [`${entry.varprefix}_value`])
   )
   expect(new Set(entries.map((entry) => entry.varprefix)).size).toBe(3)
+})
+
+const legacySpec: FormSpec.LegacyValuespec = {
+  type: 'legacy_valuespec',
+  title: 'Icon',
+  help: '',
+  validators: [],
+  varprefix: 'template'
+}
+
+test('FormLegacyValueSpec posts its fields again after its data is reloaded unchanged', async () => {
+  const { getCurrentData, rerender } = await renderForm({
+    spec: legacySpec,
+    data: legacyEntry('from_disk'),
+    backendValidation: []
+  })
+
+  await rerender({ data: legacyEntry('reloaded') })
+
+  const entry = JSON.parse(getCurrentData()!) as {
+    varprefix: string
+    input_context?: Record<string, string>
+  }
+  expect(Object.keys(entry.input_context ?? {})).toEqual([`${entry.varprefix}_value`])
+})
+
+test('FormLegacyValueSpec posts the reloaded value after its data is replaced', async () => {
+  const { getCurrentData, rerender } = await renderForm({
+    spec: legacySpec,
+    data: legacyEntry('from_disk'),
+    backendValidation: []
+  })
+
+  await rerender({ data: legacyEntry('reloaded', 'access') })
+  await nextTick()
+
+  const entry = JSON.parse(getCurrentData()!) as {
+    varprefix: string
+    input_context?: Record<string, string>
+  }
+  expect(entry.input_context).toEqual({ [`${entry.varprefix}_value`]: 'access' })
+})
+
+test('FormLegacyValueSpec dispatches callable TS functions of the reloaded legacy HTML', async () => {
+  const { container, rerender } = await renderForm({
+    spec: legacySpec,
+    data: legacyEntry('from_disk'),
+    backendValidation: []
+  })
+  initCallableTsFunctions.mockClear()
+
+  await rerender({ data: legacyEntry('reloaded', 'access') })
+  await nextTick()
+
+  const legacyForm = container.querySelector('.legacy_valuespec')
+  expect(initCallableTsFunctions).toHaveBeenCalledWith(legacyForm)
 })

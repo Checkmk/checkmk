@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { LegacyValuespec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
-import { nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, toRaw, useId, watch } from 'vue'
 
 import type { ValidationMessages } from '@/form/private/validation'
 
@@ -53,19 +53,27 @@ const observer = new MutationObserver(() => {
   updateEventListeners()
 })
 
+function instanceInputHtml(): string {
+  return data.value.input_html.replaceAll(data.value.varprefix, varprefix)
+}
+
+function renderInputHtml(onRendered: () => void = () => {}) {
+  inputHtml.value = instanceInputHtml()
+  nextTick(() => {
+    // @ts-expect-error comes from different javascript file
+    window['cmk'].ts_function_dispatcher.init_callable_ts_functions(legacyDOM.value!)
+    onRendered()
+  }).catch((error) => {
+    console.error('Error while rendering legacy valuespec', error)
+  })
+}
+
 onMounted(() => {
-  inputHtml.value = data.value.input_html.replaceAll(data.value.varprefix, varprefix)
+  renderInputHtml()
   // @ts-expect-error comes from different javascript file
   window['cmk'].forms.enable_dynamic_form_elements(legacyDOM.value!)
   // @ts-expect-error comes from different javascript file
   window['cmk'].valuespecs.initialize_autocompleters(legacyDOM.value!)
-
-  nextTick(() => {
-    // @ts-expect-error comes from different javascript file
-    window['cmk'].ts_function_dispatcher.init_callable_ts_functions(legacyDOM.value!)
-  }).catch((error) => {
-    console.error('Error while evaluating scripts in legacy valuespec', error)
-  })
 
   updateEventListeners()
 
@@ -101,14 +109,33 @@ function updateEventListeners() {
   })
 }
 
+let collectedData: PreRenderedHtml | null = null
+
+// The parent may replace the data, e.g. with a freshly loaded value. Without its
+// input_context, the backend could not read the value from it.
+watch(
+  () => data.value,
+  (newData) => {
+    if (toRaw(newData) === collectedData) {
+      return
+    }
+    if (instanceInputHtml() === inputHtml.value) {
+      collectData()
+    } else {
+      renderInputHtml(collectData)
+    }
+  }
+)
+
 function collectData() {
   const result = Object.fromEntries(new FormData(legacyDOM.value))
-  data.value = {
+  collectedData = {
     ...data.value,
     input_html: inputHtml.value,
     input_context: result,
     varprefix
   }
+  data.value = collectedData
 }
 </script>
 

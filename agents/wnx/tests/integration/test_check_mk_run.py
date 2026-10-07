@@ -8,7 +8,6 @@
 
 import ast
 import os
-import re
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Final
@@ -25,12 +24,9 @@ def _make_config(config: YamlDict, only_from: Sequence[str]) -> YamlDict:
 
 
 def _expected_ctl_version() -> str:
-    if version := os.environ.get("CMK_VERSION"):
-        return version
-    defines = (Path(__file__).parents[4] / "defines.make").read_text()
-    if match := re.search(r"^VERSION\s*:=\s*(\S+)", defines, re.MULTILINE):
-        return match.group(1)
-    raise AssertionError("no VERSION in defines.make")
+    version = os.environ.get("CMK_VERSION")
+    assert version, "Set CMK_VERSION to the version the controller was built with"
+    return version
 
 
 def _get_ctl_status_line(data: Sequence[str]) -> dict[str, str | list | bool]:

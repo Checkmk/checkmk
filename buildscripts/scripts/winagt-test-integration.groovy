@@ -4,19 +4,26 @@
 
 void main() {
     def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+
+    def branch_name = versioning.safe_branch_name();
+    def branch_version = versioning.get_branch_version(checkout_dir);
+    def cmk_version = versioning.get_cmk_version(branch_name, branch_version, "daily").replaceAll("['\"]", "");
 
     stage("Run 'test_integration'") {
         dir("${checkout_dir}") {
-            withCredentials([usernamePassword(
-                    credentialsId: 'nexus',
-                    passwordVariable: 'NEXUS_PASSWORD',
-                    usernameVariable: 'NEXUS_USERNAME')]) {
-                windows.build(
-                    TARGET: 'test_integration',
-                    CREDS: NEXUS_USERNAME + ':' + NEXUS_PASSWORD,
-                    CACHE_URL: 'https://artifacts.lan.tribe29.com/repository/omd-build-cache/'
-                );
-                    }
+            withEnv(["CMK_VERSION=${cmk_version}"]) {
+                withCredentials([usernamePassword(
+                        credentialsId: 'nexus',
+                        passwordVariable: 'NEXUS_PASSWORD',
+                        usernameVariable: 'NEXUS_USERNAME')]) {
+                    windows.build(
+                        TARGET: 'test_integration',
+                        CREDS: NEXUS_USERNAME + ':' + NEXUS_PASSWORD,
+                        CACHE_URL: 'https://artifacts.lan.tribe29.com/repository/omd-build-cache/'
+                    );
+                }
+            }
         }
     }
 }

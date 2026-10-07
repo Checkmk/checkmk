@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import asdict
-
 import pytest
 
 import cmk.gui.config
@@ -153,6 +151,3 @@ def test_default_config_from_plugins() -> None:
 
     default_config = cmk.gui.config.get_default_config()
     assert sorted(default_config.keys()) == sorted(expected)
-
-    default_config2 = asdict(cmk.gui.config.make_config_object(default_config))
-    assert sorted(default_config2.keys()) == sorted(expected)

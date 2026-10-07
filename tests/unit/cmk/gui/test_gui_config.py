@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from dataclasses import asdict
+
 import pytest
 
 import cmk.gui.config
@@ -34,6 +36,14 @@ def test_raw_config_with_custom_keys() -> None:
     config = cmk.gui.config.make_config_object(raw)
     assert config.raw is raw
     assert config.raw["my_custom_plugin_var"] == "hello"
+
+
+def test_custom_keys_become_config_fields() -> None:
+    raw = {**asdict(Config()), "my_custom_plugin_var": "hello"}
+
+    config = cmk.gui.config.make_config_object(raw)
+
+    assert asdict(config).keys() == raw.keys()
 
 
 def test_feature_config_defaults_appear_in_default_config() -> None:

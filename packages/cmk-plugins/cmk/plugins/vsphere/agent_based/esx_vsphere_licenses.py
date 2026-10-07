@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from collections import defaultdict
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Literal, ReadOnly, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -39,6 +38,17 @@ class _LicenseCounter:
 
 type _Section = Mapping[str, _LicenseCounter]
 
+type LicenseLevels = (
+    tuple[Literal["absolute"], tuple[int, int]]
+    | tuple[Literal["percentage"], tuple[float, float]]
+    | tuple[Literal["crit_on_all"], None]
+    | tuple[Literal["always_ok"], Literal[False]]
+)
+
+
+class EsxVsphereLicensesParams(TypedDict):
+    levels: ReadOnly[LicenseLevels]
+
 
 def parse_esx_vsphere_licenses(string_table: StringTable) -> _Section:
     parsed: dict[str, _LicenseCounter] = defaultdict(_LicenseCounter)
@@ -55,27 +65,25 @@ def discover_esx_vsphere_licenses(section: _Section) -> DiscoveryResult:
     yield from (Service(item=key) for key in section)
 
 
-def _make_levels(
-    total: int, params: Literal[False] | tuple[int, int] | tuple[float, float] | None
-) -> LevelsT[float]:
-    match params:
-        case False:
+def _make_levels(total: int, levels: LicenseLevels) -> LevelsT[float]:
+    match levels:
+        case ("always_ok", _):
             return ("no_levels", None)
-        case None:
+        case ("crit_on_all", _):
             return "fixed", (total, total)
-        case int(w), int(c):
-            return "fixed", (max(0, total - w), max(0, total - c))
-        case float(w), float(c):
+        case ("absolute", (warn, crit)):
+            return "fixed", (max(0, total - warn), max(0, total - crit))
+        case ("percentage", (warn, crit)):
             return "fixed", (
-                total * (1 - w / 100.0),
-                total * (1 - c / 100.0),
+                total * (1 - warn / 100.0),
+                total * (1 - crit / 100.0),
             )
         case _:
             return ("no_levels", None)
 
 
 def check_esx_vsphere_licenses(
-    item: str, params: Mapping[str, Any], section: _Section
+    item: str, params: EsxVsphereLicensesParams, section: _Section
 ) -> CheckResult:
     if not (license_count := section.get(item)):
         return
@@ -103,5 +111,5 @@ check_plugin_esx_vsphere_licenses = CheckPlugin(
     discovery_function=discover_esx_vsphere_licenses,
     check_function=check_esx_vsphere_licenses,
     check_ruleset_name="esx_licenses",
-    check_default_parameters={"levels": ("crit_on_all", None)},
+    check_default_parameters=EsxVsphereLicensesParams(levels=("crit_on_all", None)),
 )

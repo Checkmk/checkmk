@@ -470,6 +470,7 @@ translation_disk_utilization_check_diskstat_dict = translations.Translation(
         translations.PassiveCheck("diskstat_io_volumes"),
         translations.PassiveCheck("aws_ebs"),
         translations.PassiveCheck("aws_ec2_disk_io"),
+        translations.PassiveCheck("aws_v2_ec2_disk_io"),
         translations.PassiveCheck("aws_rds_disk_io"),
         translations.PassiveCheck("cadvisor_diskstat"),
         translations.PassiveCheck("scaleio_storage_pool_totalrw"),
@@ -898,6 +899,7 @@ translation_interfaces_aws_ec2_network_io_aws_rds_network_io_cadvisor_if_esx_vsp
     check_commands=[
         translations.PassiveCheck("interfaces"),
         translations.PassiveCheck("aws_ec2_network_io"),
+        translations.PassiveCheck("aws_v2_ec2_network_io"),
         translations.PassiveCheck("aws_rds_network_io"),
         translations.PassiveCheck("cadvisor_if"),
         translations.PassiveCheck("esx_vsphere_counters_if"),

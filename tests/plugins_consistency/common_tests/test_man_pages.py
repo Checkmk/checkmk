@@ -253,6 +253,7 @@ _ALLOWED_AGENTS = [
     "appdynamics",
     "aws",
     "aws_status",
+    "aws_v2",
     "azure",
     "azure_v2",
     "azure_status",

@@ -765,6 +765,15 @@ rule_spec_aws_ec2_cpu_credits = CheckParameters(
 )
 
 
+rule_spec_aws_v2_ec2_cpu_credits = CheckParameters(
+    name="aws_v2_ec2_cpu_credits",
+    title=Title("AWS v2/EC2 CPU credits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_ec2_cpu_credits,
+    condition=HostCondition(),
+)
+
+
 def _vs_limits_inst_types() -> List:
     return List(
         element_template=CascadingSingleChoiceExtended(
@@ -853,6 +862,17 @@ def _parameter_form_spec_aws_ec2_limits() -> Dictionary:
 rule_spec_aws_ec2_limits = CheckParameters(
     name="aws_ec2_limits",
     title=Title("AWS/EC2 limits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_ec2_limits,
+    condition=HostAndItemCondition(
+        item_title=Title("Region name"), item_form=_item_spec_aws_limits_generic()
+    ),
+)
+
+
+rule_spec_aws_v2_ec2_limits = CheckParameters(
+    name="aws_v2_ec2_limits",
+    title=Title("AWS v2/EC2 limits"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_ec2_limits,
     condition=HostAndItemCondition(

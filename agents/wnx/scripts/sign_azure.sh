@@ -96,6 +96,23 @@ sign() {
         "$1"
 }
 
+# The timestamp server fails a request now and then, and a build signs several
+# files. psign only replaces the file once signing succeeded, so trying again is safe.
+MAX_ATTEMPTS=3
+sign_with_retry() {
+    local attempt
+    for ((attempt = 1; ; attempt++)); do
+        if sign "$1"; then
+            return 0
+        fi
+        if ((attempt >= MAX_ATTEMPTS)); then
+            return 1
+        fi
+        echo "warning: signing $1 failed (attempt $attempt of $MAX_ATTEMPTS), retrying in $((10 * attempt)) s" >&2
+        sleep $((10 * attempt))
+    done
+}
+
 # Same call as tests/packaging/test_files.py (_verify_signature), but
 # osslsigncode exits 0 even when the timestamp check failed, so that result is
 # checked separately.
@@ -124,7 +141,7 @@ verify() {
 cd "$BUILD_WORKSPACE_DIRECTORY"
 failed=0
 for file in "$@"; do
-    if sign "$file" && verify "$file"; then
+    if sign_with_retry "$file" && verify "$file"; then
         echo "signed and verified: $file"
     else
         echo "error: signing or verification failed: $file" >&2

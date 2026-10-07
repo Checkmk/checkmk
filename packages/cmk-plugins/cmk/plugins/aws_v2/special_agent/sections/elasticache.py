@@ -65,9 +65,9 @@ class ParameterGroup(BaseModel):
     ARN: str
 
 
-def get_paginated_resources(
-    client: BaseClient, paginator_name: str, resource_name: str, resource_type: type[BaseModel]
-) -> Iterable[BaseModel]:
+def get_paginated_resources[T: BaseModel](
+    client: BaseClient, paginator_name: str, resource_name: str, resource_type: type[T]
+) -> Iterable[T]:
     for page in client.get_paginator(paginator_name).paginate():
         for resource_dict in page[resource_name]:
             yield resource_type(**resource_dict)
@@ -246,12 +246,14 @@ class ElastiCacheSummary(AWSSection):
         return AWSColleagueContents((), 0.0)
 
     def _fetch_data(
-        self, colleague_content: tuple[Sequence[ElastiCacheCluster], Sequence[ElastiCacheNode]]
+        self,
+        colleague_content: tuple[Sequence[ElastiCacheCluster], Sequence[ElastiCacheNode]]
+        | tuple[()],
     ) -> tuple[Sequence[ElastiCacheCluster], Sequence[ElastiCacheNode]]:
         if colleague_content:
             return colleague_content
 
-        clusters = list(  # type: ignore[unreachable]
+        clusters = list(
             get_paginated_resources(
                 self._client, "describe_replication_groups", "ReplicationGroups", ElastiCacheCluster
             )

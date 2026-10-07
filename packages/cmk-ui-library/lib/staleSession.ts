@@ -35,17 +35,6 @@ export class StaleSession {
     }
   }
 
-  static caused(error: Error): boolean {
-    let current: unknown = error
-    while (current instanceof Error) {
-      if (current instanceof StaleSessionError) {
-        return true
-      }
-      current = current.cause
-    }
-    return false
-  }
-
   static check(response: SessionResponse, requestUrl: string): void {
     if (StaleSession.isStale(response)) {
       StaleSession.report()

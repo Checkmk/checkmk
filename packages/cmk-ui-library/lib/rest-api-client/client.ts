@@ -5,6 +5,7 @@
  */
 import type { paths } from 'cmk-shared-typing/typescript/openapi_internal'
 import { CmkApiError } from 'cmk-ui-library/lib/error'
+import { networkAwareFetch } from 'cmk-ui-library/lib/networkAwareFetch'
 import type { MaybeRestApiCrashReport, MaybeRestApiError } from 'cmk-ui-library/lib/types'
 import createClientImpl from 'openapi-fetch'
 
@@ -72,9 +73,7 @@ export function createClient({ baseUrl }: { baseUrl: string }) {
     headers: {
       Accept: 'application/json'
     },
-    // Look `fetch` up per request instead of capturing it when this module is
-    // evaluated, so a later replacement of the global is picked up.
-    fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args)
+    fetch: networkAwareFetch
   })
 }
 

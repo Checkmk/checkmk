@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { CmkError } from 'cmk-ui-library/lib/error.ts'
+import { networkAwareFetch } from 'cmk-ui-library/lib/networkAwareFetch'
 import { StaleSession } from 'cmk-ui-library/lib/staleSession'
 import type { MaybeRestApiCrashReport, MaybeRestApiError } from 'cmk-ui-library/lib/types'
 
@@ -126,7 +127,7 @@ export async function cmkFetch(
   url: FetchParams[0],
   options: FetchParams[1]
 ): Promise<CmkFetchResponse> {
-  const response = await fetch(url, options)
+  const response = await networkAwareFetch(url, options)
   StaleSession.check(response, url instanceof Request ? url.url : String(url))
   return new CmkFetchResponse(response, options)
 }

@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { CmkApiError } from 'cmk-ui-library/lib/error'
+import { type CmkApiError, CmkNetworkError } from 'cmk-ui-library/lib/error'
 import { createClient, unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
@@ -17,6 +17,7 @@ const VALID_ENDPOINT = '/valid-endpoint'
 const BROKEN_ENDPOINT = '/broken-endpoint'
 const BROKEN_ENDPOINT_WITH_CRASHREPORT = '/broken-endpoint-with-crashreport'
 const BROKEN_ENDPOINT_WITHOUT_JSON = '/broken-endpoint-without-json'
+const UNREACHABLE_ENDPOINT = '/unreachable-endpoint'
 
 const restHandlers = [
   http.get(`${BASE_URL}${VALID_ENDPOINT}`, () => {
@@ -37,6 +38,9 @@ const restHandlers = [
   }),
   http.get(`${BASE_URL}${BROKEN_ENDPOINT_WITHOUT_JSON}`, () => {
     return HttpResponse.text('<html><body>Gateway Time-out</body></html>', { status: 504 })
+  }),
+  http.get(`${BASE_URL}${UNREACHABLE_ENDPOINT}`, () => {
+    return HttpResponse.error()
   })
 ]
 
@@ -109,4 +113,18 @@ test('unwrap throws CmkApiError without leaking a non-JSON error body', async ()
     expect(apiError.message).toBe('Error in fetch response')
     expect(apiError.statusCode).toBe(504)
   }
+})
+
+test('a request without response rejects with CmkNetworkError', async () => {
+  /* @ts-expect-error Testing mock endpoint */
+  await expect(client.GET(UNREACHABLE_ENDPOINT)).rejects.toBeInstanceOf(CmkNetworkError)
+})
+
+test('a request aborted through its signal rejects with the abort reason', async () => {
+  const controller = new AbortController()
+  const reason = new Error('unmounted')
+  controller.abort(reason)
+
+  /* @ts-expect-error Testing mock endpoint */
+  await expect(client.GET(VALID_ENDPOINT, { signal: controller.signal })).rejects.toBe(reason)
 })

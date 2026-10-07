@@ -7,7 +7,6 @@ import json
 
 import pytest
 
-from cmk.gui.config import active_config
 from cmk.gui.crash_reporting.views import (
     check_crash_source,
     cmp_crash_source,
@@ -15,13 +14,8 @@ from cmk.gui.crash_reporting.views import (
     CrashReportsRowTable,
     PainterCrashException,
 )
-from cmk.gui.display_options import display_options
-from cmk.gui.http import request, response
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
-from cmk.gui.painter.v0 import Cell
-from cmk.gui.painter.v0.helpers import RenderLink
-from cmk.gui.painter_options import PainterOptions
-from cmk.gui.theme.current_theme import theme
+from cmk.gui.painter import Cell
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.livestatus_client.testing import MockLiveStatusConnection
@@ -153,18 +147,12 @@ def test_get_crash_report_rows_queries(
     ],
 )
 def test_painter_crash_exception_render(user: LoggedInUser, may_see_exception: bool) -> None:
-    painter = PainterCrashException(
-        config=active_config,
-        request=request,
-        painter_options=PainterOptions.get_instance(),
-        theme=theme,
-        url_renderer=RenderLink(request, response, display_options),
-        user_permissions=UserPermissions({}, {}, {}, []),
-    )
-    _css, content = painter.render(
+    cell = Cell(None, None, None, UserPermissions({}, {}, {}, []), None)
+    _css, content = PainterCrashException().render(
         {"crash_exc_type": "ValueError", "crash_exc_value": "secret boom"},
-        Cell(None, None, None, UserPermissions({}, {}, {}, []), None),
+        cell,
         user,
+        cell.painter_context(),
     )
 
     assert ("secret boom" in str(content)) is may_see_exception

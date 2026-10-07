@@ -110,22 +110,24 @@ def _mssql_datafiles_process_sizes(
     datafile_usage: DatafileUsage,
 ) -> CheckResult:
     def calculate_levels(
-        levels: tuple[float, float],
+        levels: tuple[float, float] | tuple[int, int] | tuple[None, None],
         reference_value: float | None,
     ) -> tuple[float, float] | None:
-        if isinstance(levels[0], float):
-            if reference_value:
+        match levels:
+            case (float(warn), float(crit)):
+                if not reference_value:
+                    return None
                 return (
-                    levels[0] * reference_value / 100.0,
-                    levels[1] * reference_value / 100.0,
+                    warn * reference_value / 100.0,
+                    crit * reference_value / 100.0,
                 )
-        elif levels[0] is not None:  # type: ignore[unreachable]
-            return (
-                levels[0] * 1024 * 1024,
-                levels[1] * 1024 * 1024,
-            )
-
-        return None
+            case (int(warn), int(crit)):
+                return (
+                    warn * 1024 * 1024,
+                    crit * 1024 * 1024,
+                )
+            case _:
+                return None
 
     for param_key, name, perf_key, value, reference_value in [
         (

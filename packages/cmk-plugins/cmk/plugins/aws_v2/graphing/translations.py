@@ -44,6 +44,7 @@ translation_aws_v2_http = translations.Translation(
         translations.PassiveCheck("aws_v2_elb_http_elb"),
         translations.PassiveCheck("aws_v2_elb_http_backend"),
         translations.PassiveCheck("aws_v2_elbv2_application_http_elb"),
+        translations.PassiveCheck("aws_v2_s3_requests_http_errors"),
     ],
     translations={
         "http_4xx_perc": translations.RenameTo("aws_http_4xx_perc"),

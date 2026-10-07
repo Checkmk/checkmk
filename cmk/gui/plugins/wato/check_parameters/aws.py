@@ -435,9 +435,27 @@ rule_spec_aws_s3_buckets_objects = CheckParameters(
 )
 
 
+rule_spec_aws_v2_s3_buckets_objects = CheckParameters(
+    name="aws_v2_s3_buckets_objects",
+    title=Title("AWS v2/S3 bucket objects"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_s3_buckets,
+    condition=HostAndItemCondition(item_title=Title("Bucket name")),
+)
+
+
 rule_spec_aws_s3_buckets = CheckParameters(
     name="aws_s3_buckets",
     title=Title("AWS/S3 buckets"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_s3_buckets,
+    condition=HostCondition(),
+)
+
+
+rule_spec_aws_v2_s3_buckets = CheckParameters(
+    name="aws_v2_s3_buckets",
+    title=Title("AWS v2/S3 buckets"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_s3_buckets,
     condition=HostCondition(),
@@ -677,6 +695,15 @@ rule_spec_aws_s3_requests = CheckParameters(
 )
 
 
+rule_spec_aws_v2_s3_requests = CheckParameters(
+    name="aws_v2_s3_requests",
+    title=Title("AWS v2/S3 bucket requests"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_s3_requests,
+    condition=HostAndItemCondition(item_title=Title("Bucket name")),
+)
+
+
 def _parameter_form_spec_aws_s3_latency() -> Dictionary:
     return Dictionary(
         title=Title("Levels on latency"),
@@ -697,6 +724,15 @@ def _parameter_form_spec_aws_s3_latency() -> Dictionary:
 rule_spec_aws_s3_latency = CheckParameters(
     name="aws_s3_latency",
     title=Title("AWS/S3 latency"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_s3_latency,
+    condition=HostAndItemCondition(item_title=Title("Bucket name")),
+)
+
+
+rule_spec_aws_v2_s3_latency = CheckParameters(
+    name="aws_v2_s3_latency",
+    title=Title("AWS v2/S3 latency"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_s3_latency,
     condition=HostAndItemCondition(item_title=Title("Bucket name")),
@@ -726,6 +762,17 @@ rule_spec_aws_s3_limits = CheckParameters(
 )
 
 
+rule_spec_aws_v2_s3_limits = CheckParameters(
+    name="aws_v2_s3_limits",
+    title=Title("AWS v2/S3 limits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_s3_limits,
+    condition=HostAndItemCondition(
+        item_title=Title("Region name"), item_form=_item_spec_aws_limits_generic()
+    ),
+)
+
+
 def _parameter_form_spec_aws_s3_http_errors() -> Dictionary:
     return Dictionary(
         title=Title("Upper levels for HTTP errors"),
@@ -736,6 +783,15 @@ def _parameter_form_spec_aws_s3_http_errors() -> Dictionary:
 rule_spec_aws_s3_http_errors = CheckParameters(
     name="aws_s3_http_errors",
     title=Title("AWS/S3 HTTP errors"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_s3_http_errors,
+    condition=HostAndItemCondition(item_title=Title("Bucket name")),
+)
+
+
+rule_spec_aws_v2_s3_http_errors = CheckParameters(
+    name="aws_v2_s3_http_errors",
+    title=Title("AWS v2/S3 HTTP errors"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_s3_http_errors,
     condition=HostAndItemCondition(item_title=Title("Bucket name")),

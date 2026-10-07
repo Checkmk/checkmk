@@ -1,0 +1,26 @@
+title: AWS v2 S3: Objects
+agents: aws_v2
+catalog: cloud/aws
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the objects of AWS/S3 buckets and reports
+
+ - the number of objects
+
+ - the summarized size
+
+ - the largest object of a bucket
+
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS) v2}.
+
+ There are no default levels. Upper levels on the bucket size
+ are configurable via the rule "AWS v2/S3 Bucket Objects".
+
+item:
+ Name of the instance
+
+discovery:
+ One service is created for each bucket if all required metrics
+ (BucketSizeBytes, NumberOfObjects) are given.

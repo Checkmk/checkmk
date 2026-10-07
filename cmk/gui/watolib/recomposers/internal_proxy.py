@@ -124,7 +124,7 @@ def _transform_to_disk(value: FrontendRepresentation) -> DiskRepresentation:
         case "environment", "environment":
             return "cmk_postprocessed", "environment_proxy", ""
 
-        case "no_proxy", None:  # type: ignore[unreachable]
+        case "no_proxy", _:
             return "cmk_postprocessed", "no_proxy", ""
 
         case "global_", str(stored_proxy_id):

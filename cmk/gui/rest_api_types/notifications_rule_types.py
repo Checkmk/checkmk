@@ -1328,12 +1328,12 @@ class CheckboxURLPrefix:
             case None:
                 return CheckboxURLPrefixAPIValueType(state="disabled")
 
-            case ("automatic_http", None):  # type: ignore[unreachable]
+            case ("automatic_http", _):
                 return CheckboxURLPrefixAPIValueType(
                     state="enabled",
                     value={"option": "automatic", "schema": "http"},
                 )
-            case ("automatic_https", None):  # type: ignore[unreachable]
+            case ("automatic_https", _):
                 return CheckboxURLPrefixAPIValueType(
                     state="enabled",
                     value={"option": "automatic", "schema": "https"},
@@ -1964,9 +1964,6 @@ class ManagementType:
         return MgmtTypeIncidentAPI(option="incident", params=incident_params)
 
     def to_mk_file_format(self) -> MgmtTypeCaseType | MgmtTypeIncidentType | None:
-        if self.mgmt_type is None:
-            return None  # type: ignore[unreachable]
-
         if self.mgmt_type == "case":
             r_case = {
                 "host_short_desc": self.host_short_desc.to_mk_file_format(),

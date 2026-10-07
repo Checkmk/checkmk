@@ -21,7 +21,7 @@ metric_mem_lnx_committed_as = metrics.Metric(
 )
 metric_mem_lnx_total_total = metrics.Metric(
     name="mem_lnx_total_total",
-    title=Title("Total virtual memory"),
+    title=Title("Total RAM and swap"),
     unit=UNIT_BYTES,
     color=metrics.Color.PURPLE,
 )

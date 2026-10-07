@@ -1593,7 +1593,7 @@ metric_available_file_descriptors = metrics.Metric(
 )
 metric_mem_total_virtual_in_bytes = metrics.Metric(
     name="mem_total_virtual_in_bytes",
-    title=Title("Total JVM virtual memory"),
+    title=Title("Total virtual memory"),
     unit=UNIT_BYTES,
     color=metrics.Color.DARK_BROWN,
 )

@@ -34,15 +34,17 @@ class RestorePoint:
 
 @dataclass(frozen=True, kw_only=True)
 class BackupObject:
-    """A backup object (GET /api/v1/backupObjects), with its restore points
-    (GET /api/v1/restorePoints) reduced by the special agent."""
+    """A backed up machine: its backup objects (GET /api/v1/backupObjects, one per job)
+    merged by name and platform, with their restore points (GET /api/v1/restorePoints)
+    reduced by the special agent."""
 
     platform_name: str | None
     type: str | None
     restore_points_count: int | None
     last_restore_point: RestorePoint | None
     malware_status: str | None
-    """The worst malware status across all restore points of the object."""
+    """The worst malware status across all restore points of the object. None if no
+    restore point was scanned."""
 
 
 Section = Mapping[str, BackupObject]
@@ -85,7 +87,7 @@ def discovery_veeam_restore_points(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item in section)
 
 
-def _malware_state(malware_status: str | None) -> State:
+def _malware_state(malware_status: str) -> State:
     match malware_status:
         case "Clean" | "Informative":
             return State.OK
@@ -119,10 +121,13 @@ def check_veeam_restore_points(item: str, params: CheckParameters, section: Sect
                 render_func=lambda v: f"{render.timespan(v)} ago",
                 label="last",
             )
-        yield Result(
-            state=_malware_state(backup_object.malware_status),
-            notice=f"Malware status: {backup_object.malware_status or 'unknown'}",
-        )
+        if backup_object.malware_status is None:
+            yield Result(state=State.OK, notice="Malware status: not scanned")
+        else:
+            yield Result(
+                state=_malware_state(backup_object.malware_status),
+                notice=f"Malware status: {backup_object.malware_status}",
+            )
 
     yield Result(state=State.OK, notice=f"Platform: {backup_object.platform_name or 'unknown'}")
     yield Result(state=State.OK, notice=f"Object type: {backup_object.type or 'unknown'}")
@@ -130,7 +135,7 @@ def check_veeam_restore_points(item: str, params: CheckParameters, section: Sect
         yield Result(state=State.OK, notice=f"Last restore point type: {last.type or 'unknown'}")
         yield Result(
             state=State.OK,
-            notice=f"Last restore point malware status: {last.malware_status or 'unknown'}",
+            notice=f"Last restore point malware status: {last.malware_status or 'not scanned'}",
         )
 
 

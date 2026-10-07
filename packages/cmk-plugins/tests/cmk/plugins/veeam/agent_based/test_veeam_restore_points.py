@@ -100,9 +100,12 @@ def test_check_veeam_restore_points_age_levels(now: str, expected: State) -> Non
         pytest.param("Suspicious", State.WARN, id="suspicious"),
         pytest.param("Infected", State.CRIT, id="infected"),
         pytest.param("SomethingNew", State.UNKNOWN, id="unknown value"),
+        pytest.param(None, State.OK, id="not scanned"),
     ],
 )
-def test_check_veeam_restore_points_malware_status(malware_status: str, expected: State) -> None:
+def test_check_veeam_restore_points_malware_status(
+    malware_status: str | None, expected: State
+) -> None:
     assert State.worst(*_states(ITEM, [_object(malwareStatus=malware_status)])) == expected
 
 

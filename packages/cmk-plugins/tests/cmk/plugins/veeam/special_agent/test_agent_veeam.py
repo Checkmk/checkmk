@@ -410,7 +410,7 @@ def _reduce_restore_points(
     return [json.loads(line) for line in lines]
 
 
-def test_restore_points_are_reduced_to_one_record_per_backup_object(
+def test_restore_points_are_reduced_to_one_record_per_machine(
     api: responses.RequestsMock,
     storage: Storage,
     capsys: pytest.CaptureFixture[str],
@@ -585,12 +585,129 @@ def test_restore_points_multi_object_chain_matched_by_suffixed_name(
     assert records["vm-2"]["lastRestorePoint"]["creationTime"] == "2026-10-01T10:00:00+00:00"
 
 
+def _backup_object(
+    object_id: str, points_count: int | None, **overrides: object
+) -> dict[str, object]:
+    return {
+        "id": object_id,
+        "name": "vm-1",
+        "platformName": "VMware",
+        "type": "VM",
+        "restorePointsCount": points_count,
+    } | overrides
+
+
+def _run_restore_points(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+    backup_objects: list[dict[str, object]],
+    points_by_object: dict[str, list[dict[str, object]]],
+) -> list[dict[str, object]]:
+    """Each object gets its own backup chain, named after the object's id."""
+    api.get(
+        f"{URL}/api/v1/backupObjects?skip=0&limit=500",
+        json={"data": backup_objects, "pagination": {"total": len(backup_objects)}},
+    )
+    points = [
+        point | {"backupId": object_id}
+        for object_id, object_points in points_by_object.items()
+        for point in object_points
+    ]
+    api.get(
+        f"{URL}/api/v1/restorePoints?skip=0&limit=500",
+        json={"data": points, "pagination": {"total": len(points)}},
+    )
+    for object_id in points_by_object:
+        api.get(
+            f"{URL}/api/v1/backups/{object_id}/objects?skip=0&limit=500",
+            json={"data": [{"id": object_id}], "pagination": {"total": 1}},
+        )
+    write_sections(_client(_auth(storage)), [("veeam_restore_points", fetch_restore_points())])
+    header, *lines = capsys.readouterr().out.splitlines()
+    assert header == "<<<veeam_restore_points:sep(0)>>>"
+    return [json.loads(line) for line in lines]
+
+
+def test_restore_points_of_one_machine_in_several_jobs_are_merged(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    (record,) = _run_restore_points(
+        api,
+        storage,
+        capsys,
+        [_backup_object("obj-1", 1), _backup_object("obj-2", 2)],
+        {
+            "obj-1": [_restore_point(type="Full", malwareStatus="Suspicious")],
+            "obj-2": [
+                _restore_point(type="Full"),
+                _restore_point(creationTime="2026-10-01T10:00:00+00:00"),
+            ],
+        },
+    )
+    assert record["restorePointsCount"] == 3
+    assert isinstance(last := record["lastRestorePoint"], dict)
+    assert last["creationTime"] == "2026-10-01T10:00:00+00:00"
+    assert record["malwareStatus"] == "Suspicious"
+
+
+def test_restore_points_of_one_name_on_two_platforms_are_not_merged(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    records = _run_restore_points(
+        api,
+        storage,
+        capsys,
+        [_backup_object("obj-1", 1), _backup_object("obj-2", 1, platformName="HyperV")],
+        {"obj-1": [_restore_point()], "obj-2": [_restore_point()]},
+    )
+    assert [r["platformName"] for r in records] == ["VMware", "HyperV"]
+
+
+def test_restore_points_type_is_taken_from_the_object_with_the_newest_point(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    (record,) = _run_restore_points(
+        api,
+        storage,
+        capsys,
+        [_backup_object("obj-1", 1, type="VM"), _backup_object("obj-2", 1, type="Directory")],
+        {
+            "obj-1": [_restore_point()],
+            "obj-2": [_restore_point(creationTime="2026-10-01T10:00:00+00:00")],
+        },
+    )
+    assert record["type"] == "Directory"
+
+
+def test_restore_points_count_is_unknown_if_one_merged_object_lacks_it(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    (record,) = _run_restore_points(
+        api,
+        storage,
+        capsys,
+        [_backup_object("obj-1", 1), _backup_object("obj-2", None)],
+        {"obj-1": [_restore_point()], "obj-2": [_restore_point()]},
+    )
+    assert record["restorePointsCount"] is None
+
+
 @pytest.mark.parametrize(
     "statuses, expected",
     [
         pytest.param(["Clean", "Infected", "Suspicious"], "Infected", id="worst wins"),
         pytest.param(["Infected", "SomethingNew"], "SomethingNew", id="unknown is worst"),
-        pytest.param(["Infected", None], None, id="missing is worst"),
+        pytest.param(["Infected", None], "Infected", id="missing is ignored"),
+        pytest.param([None, None], None, id="none scanned"),
     ],
 )
 def test_restore_points_malware_status_rollup(

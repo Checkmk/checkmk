@@ -421,10 +421,13 @@ def _malware_severity(status: object) -> int:
 
 
 def _malware_rollup(points: Sequence[Mapping[str, object]]) -> object:
-    """The worst malware status of all restore points. A missing or unknown status
-    counts as worst, so that it surfaces in the check."""
+    """The worst malware status of all restore points. An unknown status counts as
+    worst, so that it surfaces in the check. A missing status means the point was not
+    scanned (Veeam does not scan file share backups) and is ignored."""
     return max(
-        (point.get("malwareStatus") for point in points), key=_malware_severity, default=None
+        (status for point in points if (status := point.get("malwareStatus")) is not None),
+        key=_malware_severity,
+        default=None,
     )
 
 
@@ -463,8 +466,17 @@ def _restore_point_object_id(
     return None
 
 
+def _total_count(backup_objects: Sequence[Mapping[str, object]]) -> int | None:
+    counts = [backup_object.get("restorePointsCount") for backup_object in backup_objects]
+    ints = [count for count in counts if isinstance(count, int)]
+    return sum(ints) if len(ints) == len(counts) else None
+
+
 def fetch_restore_points(limit: int = 500) -> FetchStrategy:
-    """One record per backup object: its newest restore point and a malware rollup.
+    """One record per backed up machine: its newest restore point and a malware rollup.
+
+    A machine backed up by several jobs has one backup object per job; they are
+    merged, as they share the same name and platform.
 
     Restore points reference their chain via `backupId`, resolved to the chain's
     object(s) via GET /api/v1/backups/{backupId}/objects; a chain this fails for
@@ -524,19 +536,33 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
             if object_id is not None:
                 points.setdefault(object_id, []).append(point)
 
-        output = f"<<<{name}:sep(0)>>>\n"
+        machines: dict[tuple[object, object], list[Mapping[str, object]]] = {}
         for backup_object in backup_objects:
-            if not isinstance(backup_object, dict) or not isinstance(
-                object_id := backup_object.get("id"), str
-            ):
-                continue
-            object_points = points.get(object_id, [])
-            newest = _newest(object_points)
+            if isinstance(backup_object, dict) and isinstance(backup_object.get("id"), str):
+                machines.setdefault(
+                    (backup_object.get("name"), backup_object.get("platformName")), []
+                ).append(backup_object)
+
+        output = f"<<<{name}:sep(0)>>>\n"
+        for machine_objects in machines.values():
+            machine_points = [
+                point for obj in machine_objects for point in points.get(str(obj["id"]), [])
+            ]
+            newest = _newest(machine_points)
+            # The object holding the newest point, so that its type matches the point
+            owner = next(
+                (
+                    obj
+                    for obj in machine_objects
+                    if any(p is newest for p in points.get(str(obj["id"]), []))
+                ),
+                machine_objects[0],
+            )
             record = {
-                "name": backup_object.get("name"),
-                "platformName": backup_object.get("platformName"),
-                "type": backup_object.get("type"),
-                "restorePointsCount": backup_object.get("restorePointsCount"),
+                "name": owner.get("name"),
+                "platformName": owner.get("platformName"),
+                "type": owner.get("type"),
+                "restorePointsCount": _total_count(machine_objects),
                 "lastRestorePoint": (
                     None
                     if newest is None
@@ -546,7 +572,7 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
                         "malwareStatus": newest.get("malwareStatus"),
                     }
                 ),
-                "malwareStatus": _malware_rollup(object_points),
+                "malwareStatus": _malware_rollup(machine_points),
             }
             output += f"{json.dumps(record)}\n"
         return output

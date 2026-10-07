@@ -28,7 +28,8 @@ const {
   buttonAlignment?: 'top' | 'center'
 }>()
 
-const localOrder = ref<number[]>([])
+const localOrder = ref<{ dataIndex: number; key: number }[]>([])
+let nextItemKey = 0
 
 immediateWatch(
   () => props.itemsProps,
@@ -46,7 +47,10 @@ immediateWatch(
     if (length === undefined) {
       throw new Error('itemsProps must not be empty')
     }
-    localOrder.value = Array.from({ length }, (_, i) => i)
+    localOrder.value = Array.from({ length }, (_, i) => ({
+      dataIndex: i,
+      key: localOrder.value[i]?.key ?? nextItemKey++
+    }))
   }
 )
 
@@ -64,25 +68,25 @@ function dragging(event: DragEvent) {
 
 function dragEnd(event: DragEvent) {
   _dragEnd(event)
-  props.dragCallbacks?.onReorder(localOrder.value)
+  props.dragCallbacks?.onReorder(localOrder.value.map(({ dataIndex }) => dataIndex))
 }
 
 function removeElement(dataIndex: number) {
   if (props.tryDelete(dataIndex) === false) {
     return
   }
-  const localIndex = localOrder.value.indexOf(dataIndex)
-  localOrder.value = localOrder.value.map((_dataIndex, _localIndex) =>
-    _localIndex > localIndex ? _dataIndex - 1 : _dataIndex
-  )
-  localOrder.value.splice(localIndex, 1)
+  localOrder.value = localOrder.value
+    .filter((entry) => entry.dataIndex !== dataIndex)
+    .map((entry) =>
+      entry.dataIndex > dataIndex ? { ...entry, dataIndex: entry.dataIndex - 1 } : entry
+    )
 }
 
 function addElement() {
   if (props.add.tryAdd && props.add.tryAdd(localOrder.value.length) === false) {
     return
   }
-  localOrder.value.push(localOrder.value.length)
+  localOrder.value.push({ dataIndex: localOrder.value.length, key: nextItemKey++ })
 }
 
 function getItemProps(dataIndex: number) {
@@ -110,7 +114,7 @@ function getItemVariant(index: number, length: number) {
       :class="{ 'cmk-list__table-empty': localOrder.length === 0 }"
     >
       <template v-if="orientation === 'vertical'">
-        <tr v-for="(dataIndex, listIndex) in localOrder" :key="dataIndex">
+        <tr v-for="({ dataIndex, key }, listIndex) in localOrder" :key="key">
           <td role="listitem">
             <CmkListItem
               :remove-element="() => removeElement(dataIndex)"
@@ -125,7 +129,7 @@ function getItemVariant(index: number, length: number) {
       </template>
       <template v-else>
         <tr>
-          <td v-for="(dataIndex, listIndex) in localOrder" :key="dataIndex" role="listitem">
+          <td v-for="({ dataIndex, key }, listIndex) in localOrder" :key="key" role="listitem">
             <CmkListItem
               :button-padding="'8px'"
               :button-alignment="buttonAlignment"

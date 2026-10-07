@@ -5,7 +5,7 @@
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
 import CmkList from 'cmk-ui-library/components/CmkList/CmkList.vue'
-import { defineComponent } from 'vue'
+import { defineComponent, nextTick, ref } from 'vue'
 
 test('CmkList does not submit form when clicking drag button', async () => {
   const submitHandler = vi.fn((e) => e.preventDefault())
@@ -130,4 +130,67 @@ test('CmkList centers the buttons of an item when asked to', () => {
   expect(renderListWithAlignment({ buttonAlignment: 'center' })).toHaveClass(
     'cmk-list-item--buttons-centered'
   )
+})
+
+function renderListOfTextboxes(onReorder: ((order: number[]) => void) | null = null) {
+  const testComponent = defineComponent({
+    components: { CmkList },
+    setup() {
+      const items = ref(['Item 1', 'Item 2', 'Item 3'])
+      const dragCallbacks = onReorder
+        ? {
+            onReorder: (order: number[]) => {
+              items.value = order.map((index) => items.value[index]!)
+              onReorder(order)
+            }
+          }
+        : null
+      return {
+        items,
+        dragCallbacks,
+        tryDelete: (index: number) => items.value.splice(index, 1).length === 1
+      }
+    },
+    template: `
+      <CmkList
+          :items-props="{ itemData: items }"
+          :drag-callbacks="dragCallbacks"
+          :try-delete="tryDelete"
+      >
+          <template #item-props="{ itemData }">
+              <input type="text" :aria-label="itemData" />
+          </template>
+      </CmkList>
+    `
+  })
+  render(testComponent)
+}
+
+test('CmkList keeps typed input with its item when removing another item', async () => {
+  renderListOfTextboxes()
+  await fireEvent.update(screen.getByRole('textbox', { name: 'Item 2' }), 'edited')
+
+  await fireEvent.click(screen.getAllByRole('button', { name: 'Remove element' })[0]!)
+
+  expect(screen.getByRole('textbox', { name: 'Item 2' })).toHaveValue('edited')
+})
+
+test('CmkList keeps typed input with its item when reordering items', async () => {
+  const onReorder = vi.fn()
+  renderListOfTextboxes(onReorder)
+  await fireEvent.update(screen.getByRole('textbox', { name: 'Item 1' }), 'edited')
+  const rows = screen.getAllByRole('listitem').map((item) => item.closest('tr')!)
+  rows.forEach((row, index) => {
+    row.getBoundingClientRect = vi.fn(() => DOMRect.fromRect({ y: index * 50, height: 50 }))
+  })
+  const firstDragButton = screen.getAllByRole('button', { name: 'Drag to reorder' })[0]!
+
+  await fireEvent.dragStart(firstDragButton, { clientY: 25 })
+  window.dispatchEvent(new MouseEvent('dragover', { clientY: 130, bubbles: true }))
+  await fireEvent.drag(firstDragButton, { clientY: 130 })
+  await fireEvent.dragEnd(firstDragButton, { clientY: 130 })
+  await nextTick()
+
+  expect(onReorder).toHaveBeenCalledWith([1, 2, 0])
+  expect(screen.getByRole('textbox', { name: 'Item 1' })).toHaveValue('edited')
 })

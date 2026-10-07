@@ -48,6 +48,11 @@ const inputHtml = ref('')
 // look up elements by IDs derived from it, so every instance needs its own.
 const varprefix = `${data.value.varprefix}_${useId().replace(/\W/g, '_')}`
 
+const observer = new MutationObserver(() => {
+  collectData()
+  updateEventListeners()
+})
+
 onMounted(() => {
   inputHtml.value = data.value.input_html.replaceAll(data.value.varprefix, varprefix)
   // @ts-expect-error comes from different javascript file
@@ -64,11 +69,6 @@ onMounted(() => {
 
   updateEventListeners()
 
-  const observer = new MutationObserver(() => {
-    collectData()
-    updateEventListeners()
-  })
-
   observer.observe(legacyDOM.value!, {
     attributes: true,
     characterData: true,
@@ -82,6 +82,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  observer.disconnect()
   legacyDOM.value!.querySelectorAll(QUERY_INPUT_OBSERVER).forEach((element) => {
     element.removeEventListener('input', collectData)
   })

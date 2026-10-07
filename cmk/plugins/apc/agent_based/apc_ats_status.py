@@ -77,9 +77,9 @@ def check_apc_ats_status(params: Mapping[str, object], section: Status) -> Check
         yield Result(state=State.CRIT, summary="exceeded output current threshold")
 
     for powersource in section.powersources:
-        if powersource is None:
-            continue  # type: ignore[unreachable]
-        match powersource.status:  # type: ignore[exhaustive-match]
+        match powersource.status:
+            case PowerSupplyStatus.OK:
+                pass
             case PowerSupplyStatus.Failure:
                 yield Result(state=State.CRIT, summary=f"{powersource.name} power supply failed")
             case PowerSupplyStatus.NotAvailable:

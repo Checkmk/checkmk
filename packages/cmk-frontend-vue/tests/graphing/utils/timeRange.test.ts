@@ -6,7 +6,9 @@
 import { describe, expect, test } from 'vitest'
 
 import { MIN_ZOOM_SAMPLES, MIN_ZOOM_TIME_RANGE_SECONDS } from '@/graphing/components/constants'
-import { drawnTimeRange, minZoomSpan } from '@/graphing/utils/timeRange'
+import { binnedTimeAxis, drawnTimeRange, minZoomSpan } from '@/graphing/utils/timeRange'
+
+import { HOUR } from './localTimeCases'
 
 describe('drawnTimeRange', () => {
   const STEP = 60
@@ -98,5 +100,69 @@ describe('minZoomSpan', () => {
     const span = minZoomSpan(servedSixHourly)
 
     expect(span / servedSixHourly.step).toBeGreaterThanOrEqual(MIN_ZOOM_SAMPLES)
+  })
+})
+
+describe('binnedTimeAxis', () => {
+  const TEN_THIRTY_SEVEN = Date.UTC(2026, 0, 1, 10, 37) / 1000
+  const LAST_FOUR_HOURS = { start: TEN_THIRTY_SEVEN - 4 * HOUR, end: TEN_THIRTY_SEVEN }
+  const SERVED = {
+    start: Date.UTC(2026, 0, 1, 5) / 1000,
+    end: Date.UTC(2026, 0, 1, 11) / 1000,
+    step: HOUR
+  }
+
+  test('fetches whole local bins, the open one included', () => {
+    const window = binnedTimeAxis('hour', 'UTC').planFetchWindow(LAST_FOUR_HOURS, 750)
+
+    expect(window).toEqual({
+      start: Date.UTC(2026, 0, 1, 6) / 1000,
+      end: Date.UTC(2026, 0, 1, 11) / 1000,
+      step: HOUR
+    })
+  })
+
+  test('fetches on the step that meets the local bin edges', () => {
+    const window = binnedTimeAxis('hour', 'Asia/Kathmandu').planFetchWindow(LAST_FOUR_HOURS, 750)
+
+    expect(window).toEqual({
+      start: Date.UTC(2026, 0, 1, 6, 15) / 1000,
+      end: Date.UTC(2026, 0, 1, 11, 15) / 1000,
+      step: 900
+    })
+  })
+
+  test('draws up to the requested end, inside the last bin', () => {
+    const drawn = binnedTimeAxis('hour', 'UTC').drawnTimeRange(LAST_FOUR_HOURS, SERVED)
+
+    expect(drawn.end).toBe(TEN_THIRTY_SEVEN)
+  })
+
+  test('draws on the served step', () => {
+    const drawn = binnedTimeAxis('hour', 'UTC').drawnTimeRange(LAST_FOUR_HOURS, SERVED)
+
+    expect(drawn.step).toBe(HOUR)
+  })
+
+  test('draws a window shorter than the served step from its bin start', () => {
+    const requested = {
+      start: Date.UTC(2026, 0, 1, 21, 30) / 1000,
+      end: Date.UTC(2026, 0, 1, 22, 30) / 1000
+    }
+    const servedSixHourly = {
+      start: Date.UTC(2026, 0, 1) / 1000,
+      end: Date.UTC(2026, 0, 2) / 1000,
+      step: 6 * HOUR
+    }
+
+    const drawn = binnedTimeAxis('hour', 'UTC').drawnTimeRange(requested, servedSixHourly)
+
+    expect(drawn.start).toBe(Date.UTC(2026, 0, 1, 21) / 1000)
+  })
+
+  test('zooms no deeper than one bin, or than the host allows', () => {
+    const axis = binnedTimeAxis('day', 'UTC')
+
+    expect([axis.minSpan(null), axis.minSpan(2 * 86_400)]).toEqual([86_400, 2 * 86_400])
   })
 })

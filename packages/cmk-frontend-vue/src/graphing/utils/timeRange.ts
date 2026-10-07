@@ -6,6 +6,7 @@
 import type { TimeRange } from '../components/TimeSeriesGraph'
 import { MIN_ZOOM_SAMPLES, MIN_ZOOM_TIME_RANGE_SECONDS } from '../components/constants'
 import type { RequestedTimeRange, TimeRangeCommitKind } from '../types'
+import { BIN_UNIT_SECONDS, type BinUnit, binEdges, binStart, gridStep } from './bins'
 
 export function sameRequestedTimeRange(a: RequestedTimeRange, b: RequestedTimeRange): boolean {
   return a.start === b.start && a.end === b.end
@@ -90,6 +91,8 @@ export function committedTimeRange(
 
 /** How a graph plans its fetch and draws its window along the time axis. */
 export interface TimeAxis {
+  /** The unit the renderer bins bar metrics by; null while the axis draws no bars. */
+  binUnit: BinUnit | null
   planFetchWindow: FetchWindowPlanner
   drawnTimeRange(requested: RequestedTimeRange, served: TimeRange): TimeRange
   /** The shortest span a time zoom may reach, given the host's own minimum. */
@@ -99,8 +102,31 @@ export interface TimeAxis {
 /** A time axis that draws the samples where they lie. */
 export function continuousTimeAxis(): TimeAxis {
   return {
+    binUnit: null,
     planFetchWindow: planFetchWindowByWidth,
     drawnTimeRange: (requested, served) => drawnTimeRange(requested, served),
     minSpan: (hostMinimum) => hostMinimum
+  }
+}
+
+/**
+ * A time axis that folds bar metrics into local-time bins. It fetches whole bins on the step that
+ * meets their edges, so a resize does not fetch again. It draws from the bin that holds the
+ * requested start to the requested end, whatever grid serves the bins: the outer bars hold their
+ * whole bins, also where the window cuts them.
+ */
+export function binnedTimeAxis(binUnit: BinUnit, timeZone: string): TimeAxis {
+  return {
+    binUnit,
+    planFetchWindow: (range) => {
+      const edges = binEdges(binUnit, range, timeZone)
+      return { start: edges[0]!, end: edges.at(-1)!, step: gridStep(edges) }
+    },
+    drawnTimeRange: (requested, served) => ({
+      start: binStart(binUnit, requested.start, timeZone),
+      end: requested.end,
+      step: served.step
+    }),
+    minSpan: (hostMinimum) => Math.max(hostMinimum ?? 0, BIN_UNIT_SECONDS[binUnit])
   }
 }

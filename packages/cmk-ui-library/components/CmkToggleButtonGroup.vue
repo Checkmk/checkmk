@@ -13,6 +13,7 @@ export type ToggleButtonOption = {
   label: string
   value: string
   icon?: OneColorIcons | undefined
+  rotateIcon?: number | undefined
   tooltip?: TranslatedString | undefined
   disabled?: boolean | string | undefined
   disabledTooltip?: TranslatedString | undefined
@@ -70,6 +71,7 @@ function setSelectedOption(value: string) {
       <CmkMultitoneIcon
         v-if="option.icon"
         :name="option.icon"
+        :rotate="option.rotateIcon"
         primary-color="font"
         size="small"
         aria-hidden="true"

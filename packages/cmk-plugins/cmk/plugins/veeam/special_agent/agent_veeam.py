@@ -24,7 +24,7 @@ from urllib.parse import quote
 import requests
 import requests.auth
 import urllib3
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option, Secret
 from cmk.plugins.veeam.lib import parse_iso8601_epoch
@@ -647,13 +647,30 @@ def _task_creation_epoch(task: Mapping[str, object]) -> float:
     return float("-inf")
 
 
+class _SessionResult(BaseModel):
+    result: str
+    message: str | None = None
+
+
+class _SessionInfo(BaseModel):
+    """The subset of SessionModel (GET /api/v1/sessions/{id}) we rely on."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    state: str | None = None
+    result: _SessionResult | None = None
+    creation_time: str | None = Field(default=None, alias="creationTime")
+    end_time: str | None = Field(default=None, alias="endTime")
+    resource_id: str | None = Field(default=None, alias="resourceId")
+
+
 @dataclass(frozen=True, kw_only=True)
 class _JobObjects:
     names: list[str]
     job_name: str
-    session: Mapping[str, object]
-    """The job's current session (GET /api/v1/sessions/{id}); used for the
-    single-object fallback in `fetch_backups`."""
+    session: _SessionInfo
+    """The job's current session; used for the single-object fallback in
+    `fetch_backups`."""
 
 
 def _is_skippable(exc: TerminateAgent) -> bool:
@@ -667,30 +684,28 @@ def _is_skippable(exc: TerminateAgent) -> bool:
 JOB_OBJECT_NAMES_STORAGE_KEY = "job_object_names"
 
 
-def _load_job_object_names_cache(storage: Storage) -> Mapping[str, Mapping[str, object]]:
+class _CachedJobCollection(BaseModel):
+    session_id: str
+    names: list[str]
+    session: _SessionInfo
+
+
+def _load_job_object_names_cache(storage: Storage) -> Mapping[str, _CachedJobCollection]:
     try:
         raw = json.loads(storage.read(JOB_OBJECT_NAMES_STORAGE_KEY, "{}"))
     except json.JSONDecodeError:
         return {}
     if not isinstance(raw, dict):
         return {}
-    return {
-        job_id: entry
-        for job_id, entry in raw.items()
-        if isinstance(job_id, str) and isinstance(entry, dict)
-    }
-
-
-def _cached_job_objects(entry: Mapping[str, object], job_name: str) -> _JobObjects | None:
-    names = entry.get("names")
-    session = entry.get("session")
-    if (
-        isinstance(names, list)
-        and all(isinstance(object_name, str) for object_name in names)
-        and isinstance(session, dict)
-    ):
-        return _JobObjects(names=names, job_name=job_name, session=session)
-    return None
+    cache: dict[str, _CachedJobCollection] = {}
+    for job_id, entry in raw.items():
+        if not isinstance(job_id, str):
+            continue
+        try:
+            cache[job_id] = _CachedJobCollection.model_validate(entry)
+        except ValidationError:
+            continue
+    return cache
 
 
 def _resolve_job_object_names(
@@ -721,30 +736,30 @@ def _resolve_job_object_names(
     is simply dropped from the cache.
     """
     old_cache = _load_job_object_names_cache(client.storage)
-    new_cache: dict[str, Mapping[str, object]] = {}
+    new_cache: dict[str, _CachedJobCollection] = {}
     objects_by_job: dict[str, _JobObjects] = {}
     for session_id, (job_id, job_name) in session_to_job.items():
         cached_entry = old_cache.get(job_id)
-        if (
-            cached_entry is not None
-            and cached_entry.get("sessionId") == session_id
-            and (cached := _cached_job_objects(cached_entry, job_name)) is not None
-        ):
-            objects_by_job[job_id] = cached
+        if cached_entry is not None and cached_entry.session_id == session_id:
+            objects_by_job[job_id] = _JobObjects(
+                names=cached_entry.names, job_name=job_name, session=cached_entry.session
+            )
             new_cache[job_id] = cached_entry
             continue
         try:
-            session = client.get(f"/api/v1/sessions/{session_id}")
+            raw_session = client.get(f"/api/v1/sessions/{session_id}")
         except TerminateAgent as exc:
             if _is_skippable(exc):
                 continue
             raise
-        if not isinstance(session, dict) or not isinstance(
-            resource_id := session.get("resourceId"), str
-        ):
+        try:
+            session_info = _SessionInfo.model_validate(raw_session)
+        except ValidationError:
+            continue
+        if session_info.resource_id is None:
             continue
         try:
-            objects = _get_all(client, f"/api/v1/backups/{resource_id}/objects")
+            objects = _get_all(client, f"/api/v1/backups/{session_info.resource_id}/objects")
         except TerminateAgent as exc:
             if _is_skippable(exc):
                 continue
@@ -757,10 +772,17 @@ def _resolve_job_object_names(
             and object_name
         ]
         if names:
-            objects_by_job[job_id] = _JobObjects(names=names, job_name=job_name, session=session)
-            if session.get("state") == "Stopped":
-                new_cache[job_id] = {"sessionId": session_id, "names": names, "session": session}
-    client.storage.write(JOB_OBJECT_NAMES_STORAGE_KEY, json.dumps(new_cache))
+            objects_by_job[job_id] = _JobObjects(
+                names=names, job_name=job_name, session=session_info
+            )
+            if session_info.state == "Stopped":
+                new_cache[job_id] = _CachedJobCollection(
+                    session_id=session_id, names=names, session=session_info
+                )
+    client.storage.write(
+        JOB_OBJECT_NAMES_STORAGE_KEY,
+        json.dumps({job_id: entry.model_dump() for job_id, entry in new_cache.items()}),
+    )
     return objects_by_job
 
 
@@ -776,24 +798,23 @@ def _format_dotnet_timespan(seconds: float) -> str:
     )
 
 
-def _session_fallback_task(session: Mapping[str, object], job_name: str) -> Mapping[str, object]:
+def _session_fallback_task(session: _SessionInfo, job_name: str) -> Mapping[str, object]:
     """Builds a taskSessions-shaped record from a job's own session, for a
     single-object job taskSessions has no task for. A session has no per-task
     progress breakdown (size, read, transferred, rate), so those are left out."""
-    created, end_time = session.get("creationTime"), session.get("endTime")
     duration = None
     if (
-        isinstance(created, str)
-        and isinstance(end_time, str)
-        and (created_epoch := parse_iso8601_epoch(created)) is not None
-        and (end_epoch := parse_iso8601_epoch(end_time)) is not None
+        session.creation_time is not None
+        and session.end_time is not None
+        and (created_epoch := parse_iso8601_epoch(session.creation_time)) is not None
+        and (end_epoch := parse_iso8601_epoch(session.end_time)) is not None
     ):
         duration = _format_dotnet_timespan(end_epoch - created_epoch)
     return {
-        "state": session.get("state"),
-        "result": session.get("result"),
+        "state": session.state,
+        "result": session.result.model_dump(exclude_none=True) if session.result else None,
         "progress": {"duration": duration} if duration is not None else {},
-        "endTime": end_time,
+        "endTime": session.end_time,
         "jobName": job_name,
     }
 
@@ -868,7 +889,7 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
     # Linux/Windows Agent Backup gap) fall back to the job's own session: with only
     # one object, the job's result already *is* that object's result.
     for job_id, job_obj in job_objects.items():
-        if len(job_obj.names) != 1:
+        if len(job_obj.names) != 1 or job_obj.session.state is None:
             continue
         key = (job_obj.names[0], job_id)
         if key not in newest:

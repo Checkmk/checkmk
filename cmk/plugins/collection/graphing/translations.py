@@ -239,6 +239,7 @@ translation_aws_elb_http_elb_aws_elb_http_backend_aws_elbv2_application_http_elb
         translations.PassiveCheck("aws_elb_http_backend"),
         translations.PassiveCheck("aws_v2_elb_http_backend"),
         translations.PassiveCheck("aws_elbv2_application_http_elb"),
+        translations.PassiveCheck("aws_v2_elbv2_application_http_elb"),
         translations.PassiveCheck("aws_s3_requests_http_errors"),
     ],
     translations={

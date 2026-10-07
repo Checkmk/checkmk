@@ -43,6 +43,7 @@ translation_aws_v2_http = translations.Translation(
     check_commands=[
         translations.PassiveCheck("aws_v2_elb_http_elb"),
         translations.PassiveCheck("aws_v2_elb_http_backend"),
+        translations.PassiveCheck("aws_v2_elbv2_application_http_elb"),
     ],
     translations={
         "http_4xx_perc": translations.RenameTo("aws_http_4xx_perc"),
@@ -61,5 +62,18 @@ translation_aws_v2_elb_backend_connection_errors = translations.Translation(
         "backend_connection_errors_rate": translations.RenameTo(
             "aws_backend_connection_errors_rate"
         )
+    },
+)
+
+translation_aws_v2_elbv2_application_connections = translations.Translation(
+    name="aws_v2_elbv2_application_connections",
+    check_commands=[
+        translations.PassiveCheck("aws_v2_elbv2_application_connections"),
+    ],
+    translations={
+        "aws_Active_connections": translations.RenameTo("aws_active_connections"),
+        "aws_New_connections": translations.RenameTo("aws_new_connections"),
+        "aws_Rejected_connections": translations.RenameTo("aws_rejected_connections"),
+        "aws_TLS errors_connections": translations.RenameTo("aws_client_tls_errors"),
     },
 )

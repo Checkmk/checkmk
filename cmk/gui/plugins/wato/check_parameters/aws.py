@@ -1236,6 +1236,17 @@ rule_spec_aws_elbv2_limits = CheckParameters(
 )
 
 
+rule_spec_aws_v2_elbv2_limits = CheckParameters(
+    name="aws_v2_elbv2_limits",
+    title=Title("AWS v2/ELBv2 Limits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_elbv2_limits,
+    condition=HostAndItemCondition(
+        item_title=Title("Region name"), item_form=_item_spec_aws_limits_generic()
+    ),
+)
+
+
 def _parameter_form_spec_aws_elbv2_lcu() -> Dictionary:
     return Dictionary(
         elements={
@@ -1252,6 +1263,15 @@ def _parameter_form_spec_aws_elbv2_lcu() -> Dictionary:
 rule_spec_aws_elbv2_lcu = CheckParameters(
     name="aws_elbv2_lcu",
     title=Title("AWS/ELBv2 LCU"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_elbv2_lcu,
+    condition=HostCondition(),
+)
+
+
+rule_spec_aws_v2_elbv2_lcu = CheckParameters(
+    name="aws_v2_elbv2_lcu",
+    title=Title("AWS v2/ELBv2 LCU"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_elbv2_lcu,
     condition=HostCondition(),
@@ -1288,6 +1308,15 @@ def _parameter_form_spec_aws_elbv2_application_target_errors() -> Dictionary:
 rule_spec_aws_elbv2_target_errors = CheckParameters(
     name="aws_elbv2_target_errors",
     title=Title("AWS/ELB application target errors"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_elbv2_application_target_errors,
+    condition=HostAndItemCondition(item_title=Title("Target group name")),
+)
+
+
+rule_spec_aws_v2_elbv2_target_errors = CheckParameters(
+    name="aws_v2_elbv2_target_errors",
+    title=Title("AWS v2/ELB application target errors"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_elbv2_application_target_errors,
     condition=HostAndItemCondition(item_title=Title("Target group name")),

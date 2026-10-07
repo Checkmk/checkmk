@@ -1,21 +1,28 @@
 diff --git a/lint/defs.bzl b/lint/defs.bzl
 new file mode 100644
-index 0000000..5ec52f8
 --- /dev/null
 +++ b/lint/defs.bzl
-@@ -0,0 +1,13 @@
+@@ -0,0 +1,21 @@
 +"""Make helpers available to internal tooling."""
 +
 +load("//lint/private:lint_aspect.bzl", _LintOptionsInfo = "LintOptionsInfo")
++load("//lint/private:lint_aspect.bzl", _OUTFILE_FORMAT = "OUTFILE_FORMAT")
 +load("//lint/private:lint_aspect.bzl", _filter_srcs = "filter_srcs")
 +load("//lint/private:lint_aspect.bzl", _noop_lint_action = "noop_lint_action")
 +load("//lint/private:lint_aspect.bzl", _output_files = "output_files")
++load("//lint/private:lint_aspect.bzl", _patch_and_output_files = "patch_and_output_files")
 +load("//lint/private:lint_aspect.bzl", _should_visit = "should_visit")
++load("//lint/private:patcher_action.bzl", _patcher_attrs = "patcher_attrs")
++load("//lint/private:patcher_action.bzl", _run_patcher = "run_patcher")
 +
 +LintOptionsInfo = _LintOptionsInfo
++OUTFILE_FORMAT = _OUTFILE_FORMAT
 +filter_srcs = _filter_srcs
 +noop_lint_action = _noop_lint_action
 +output_files = _output_files
++patch_and_output_files = _patch_and_output_files
++patcher_attrs = _patcher_attrs
++run_patcher = _run_patcher
 +should_visit = _should_visit
 diff --git a/format/formatter_binary.bzl b/format/formatter_binary.bzl
 new file mode 100644

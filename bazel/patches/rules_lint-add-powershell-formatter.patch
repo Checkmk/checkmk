@@ -1,16 +1,28 @@
+diff --git a/format/private/format.sh b/format/private/format.sh
+index 4af96e2..a9bda75 100755
+--- a/format/private/format.sh
++++ b/format/private/format.sh
+@@ -145,6 +145,7 @@ function ls-files {
+       'Less') patterns=('*.less') ;;
+       'Markdown') patterns=('contents.lr' '*.md' '*.livemd' '*.markdown' '*.mdown' '*.mdwn' '*.mkd' '*.mkdn' '*.mkdown' '*.ronn' '*.scd' '*.workbook') ;;
+       'Pkl') patterns=('*.pkl' 'PklProject') ;;
++      'PowerShell') patterns=('*.ps1' '*.psm1' '*.psd1') ;;
+       'Protocol Buffer') patterns=('*.proto') ;;
+       'Python') patterns=('.gclient' 'DEPS' 'SConscript' 'SConstruct' 'wscript' '*.py' '*.cgi' '*.fcgi' '*.gyp' '*.gypi' '*.lmi' '*.py3' '*.pyde' '*.pyi' '*.pyp' '*.pyt' '*.pyw' '*.rpy' '*.spec' '*.tac' '*.wsgi' '*.xpy') ;;
+       # GitHub Linguist also groups .qbs with QML, but qmlformat only supports .qml files.
 diff --git a/format/private/formatter_binary.bzl b/format/private/formatter_binary.bzl
-index c49d9be..1f86f5b 100644
+index 1b0c64e..27892b8 100644
 --- a/format/private/formatter_binary.bzl
 +++ b/format/private/formatter_binary.bzl
-@@ -33,6 +33,7 @@
+@@ -34,6 +34,7 @@ TOOLS = {
      "XML": "prettier",
      "Gherkin": "prettier",
      "Groovy": "groovy-format",
 +    "PowerShell": "ps-format",
      "F#": "fantomas",
      "C#": "csharpier",
- }
-@@ -68,6 +69,7 @@
+     "Pkl": "pkl",
+@@ -72,6 +73,7 @@ CHECK_FLAGS = {
      "scalafmt": "--test --respect-project-filters",
      "clang-format": "--style=file --fallback-style=none --dry-run -Werror",
      "yamlfmt": "-lint",
@@ -18,7 +30,7 @@ index c49d9be..1f86f5b 100644
      "rustfmt": "--check",
      "fantomas": "--check",
      "csharpier": "check",
-@@ -100,6 +102,7 @@
+@@ -107,6 +109,7 @@ FIX_FLAGS = {
      "scalafmt": "--respect-project-filters",
      "clang-format": "-style=file --fallback-style=none -i",
      "yamlfmt": "",
@@ -26,15 +38,3 @@ index c49d9be..1f86f5b 100644
      "rustfmt": "",
      "fantomas": "",
      "csharpier": "format",
-diff --git a/format/private/format.sh b/format/private/format.sh
-index 3d0dd66..e6a94a1 100755
---- a/format/private/format.sh
-+++ b/format/private/format.sh
-@@ -136,6 +136,7 @@
-       'Kotlin') patterns=('*.kt' '*.ktm' '*.kts') ;;
-       'Less') patterns=('*.less') ;;
-       'Markdown') patterns=('contents.lr' '*.md' '*.livemd' '*.markdown' '*.mdown' '*.mdwn' '*.mkd' '*.mkdn' '*.mkdown' '*.ronn' '*.scd' '*.workbook') ;;
-+      'PowerShell') patterns=('*.ps1' '*.psm1' '*.psd1') ;;
-       'Protocol Buffer') patterns=('*.proto') ;;
-       'Python') patterns=('.gclient' 'DEPS' 'SConscript' 'SConstruct' 'wscript' '*.py' '*.cgi' '*.fcgi' '*.gyp' '*.gypi' '*.lmi' '*.py3' '*.pyde' '*.pyi' '*.pyp' '*.pyt' '*.pyw' '*.rpy' '*.spec' '*.tac' '*.wsgi' '*.xpy') ;;
-       'Rust') patterns=('*.rs' '*.rs.in') ;;

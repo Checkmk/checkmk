@@ -19,30 +19,30 @@ Features:
  create mode 100644 lint/groovy.bzl
 
 diff --git a/README.md b/README.md
-index 10d9b89..cfcec37 100644
+index e2b611d..88140cb 100644
 --- a/README.md
 +++ b/README.md
-@@ -37,6 +37,7 @@ Linters which are not language-specific:
- | CSS, Less, Sass        | [Prettier]                | [Stylelint]                                |
- | Go                     | [gofmt] or [gofumpt]      |                                            |
- | Gherkin                | [prettier-plugin-gherkin] |                                            |
-+| Groovy                 |                           | [npm-groovy-lint]                          |
- | GraphQL                | [Prettier]                |                                            |
- | HCL (Hashicorp Config) | [terraform] fmt           |                                            |
- | HTML                   | [Prettier]                |                                            |
-@@ -84,6 +85,7 @@ Linters which are not language-specific:
+@@ -135,6 +135,7 @@ Linters which are not language-specific:
+ | Go                 | [gofmt] or [gofumpt]      |                                                         |
+ | Go Module          | [modfmt]                  |                                                         |
+ | Gherkin            | [prettier-plugin-gherkin] |                                                         |
++| Groovy             |                           | [npm-groovy-lint]                                       |
+ | GraphQL            | [Prettier]                |                                                         |
+ | HTML               | [Prettier]                |                                                         |
+ | HTML templates     | [djlint]                  |                                                         |
+@@ -190,6 +191,7 @@ Linters which are not language-specific:
  [prettier/plugin-xml]: https://github.com/prettier/plugin-xml
  [gofmt]: https://pkg.go.dev/cmd/gofmt
  [gofumpt]: https://github.com/mvdan/gofumpt
 +[npm-groovy-lint]: https://www.npmjs.com/package/npm-groovy-lint
+ [modfmt]: https://github.com/joshdk/modfmt
  [jsonnetfmt]: https://github.com/google/go-jsonnet
  [scalafmt]: https://scalameta.org/scalafmt
- [rubocop]: https://docs.rubocop.org/
 diff --git a/lint/BUILD.bazel b/lint/BUILD.bazel
-index 0cf847a..68e8f92 100644
+index 436984c..a6f9252 100644
 --- a/lint/BUILD.bazel
 +++ b/lint/BUILD.bazel
-@@ -153,6 +153,16 @@ bzl_library(
+@@ -168,6 +168,16 @@ bzl_library(
      deps = ["//lint/private:lint_aspect"],
  )
  
@@ -288,6 +288,3 @@ index 0000000..0797d98
 +            ),
 +        },
 +    )
--- 
-2.43.0
-

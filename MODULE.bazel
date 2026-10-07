@@ -14,7 +14,7 @@ bazel_dep(name = "aspect_rules_js", version = "3.4.1")
 
 # Both of the next two are pinned by a single_version_override below, which wins
 # unconditionally, so these versions have to match it or they merely mislead.
-bazel_dep(name = "aspect_rules_lint", version = "2.0.0")
+bazel_dep(name = "aspect_rules_lint", version = "2.9.1")
 bazel_dep(name = "aspect_rules_py", version = "1.5.2")
 bazel_dep(name = "aspect_rules_ts", version = "3.10.1")
 bazel_dep(name = "aspect_rules_webpack", version = "0.18.0")
@@ -156,10 +156,6 @@ single_version_override(
     ],
 )
 
-# Held at 2.0.0 by the stack of patches below. Note that this does not leave us
-# behind on aspect_rules_js: every 2.x release of rules_lint, 2.9.0 included,
-# declares a floor of aspect_rules_js 1.40.0 and relies on version resolution to
-# supply something newer, so upgrading would not change which rules_js it gets.
 single_version_override(
     module_name = "aspect_rules_lint",
     patch_strip = 1,
@@ -169,27 +165,15 @@ single_version_override(
         # Carried locally — no upstream PR yet.
         "//bazel/patches:rules_lint-add-powershell-formatter.patch",
         "//bazel/patches:rules_lint-include-files-with-bazel-extension.patch",
-        # https://github.com/aspect-build/rules_lint/issues/690
-        "//bazel/patches:rules_lint-fix-ruff-sarif-output.patch",
-        # https://github.com/aspect-build/rules_lint/pull/734
-        "//bazel/patches:rules_lint-clang_tidy_per_file.patch",
-        # https://github.com/aspect-build/rules_lint/pull/747
-        "//bazel/patches:rules_lint-no_copy.patch",
-        # Completes the patch above, not part of that PR (yet).
-        "//bazel/patches:rules_lint-clippy_fixer_at_exec_root.patch",
-        "//bazel/patches:rules_lint-clippy_fail_on_violation.patch",
         # For astrein and other internal tooling.
         "//bazel/patches:rules_lint_export_helpers.patch",
-        "//bazel/patches:rules_lint-fix_format_args_too_long.patch",
-        # https://github.com/aspect-build/rules_lint/pull/799
-        "//bazel/patches:rules_lint-stylelint-capture-stdout.patch",
         # Carried locally — no upstream PR yet.
         "//bazel/patches:rules_lint-clang_tidy_builtin_include_dir.patch",
         # Carried locally — no upstream PR yet. Follow-up to
         # https://github.com/aspect-build/rules_lint/pull/622
         "//bazel/patches:rules_lint-batch_shebang_detection.patch",
     ],
-    version = "2.0.0",
+    version = "2.9.1",
 )
 
 single_version_override(

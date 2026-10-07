@@ -182,12 +182,7 @@ common:debug --verbose_failures
 ## For specific commands
 
 import %workspace%/bazel/rc/iwyu.rc
-################################################################################
-# Example: bazel build --config=mypy //packages/cmk-agent-based:all
-################################################################################
-common:mypy --aspects //bazel/tools:aspects.bzl%mypy_aspect
-common:mypy --output_groups=mypy
-
+import %workspace%/bazel/rc/mypy.rc
 ################################################################################
 # Interactive use: `bazel lint //cmk/gui/...`
 # CI example: bazel build --config=deballast //cmk/gui/...

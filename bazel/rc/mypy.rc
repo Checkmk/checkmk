@@ -1,0 +1,5 @@
+################################################################################
+# Example: bazel build --config=mypy //packages/cmk-agent-based:all
+################################################################################
+common:mypy --aspects //bazel/tools:aspects.bzl%mypy_aspect
+common:mypy --output_groups=mypy

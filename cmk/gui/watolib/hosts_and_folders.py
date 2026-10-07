@@ -1553,6 +1553,87 @@ def apply_relation_mirror(
     )
 
 
+class RelationMirrorBatch:
+    """The other halves of the relations of several hosts of ``folder`` saved in one go.
+
+    Each host is refused on its own before a counterpart is mutated for it, so a caller can leave
+    a refused host out and save the rest. Counterparts are looked up among the hosts that exist
+    at that point: a host created in the same batch is not one of them, so a relation to it is
+    refused like one to any other host that is missing.
+    """
+
+    def __init__(self, folder: Folder, *, acting_user: LoggedInUser) -> None:
+        self._folder = folder
+        self._resolve_host = counterpart_resolver(folder)
+        self._acting_user = acting_user
+        self._pending: list[tuple[HostName, Sequence[_MirrorWrite]]] = []
+        self._written: list[tuple[Host, HostEditResult, HostName]] = []
+        self._folders: dict[PathWithoutSlash, Folder] = {}
+
+    def need_created(self, host_name: HostName, attributes: HostAttributes) -> None:
+        """Refuse now if a counterpart of a host about to be created would refuse."""
+        self._need(
+            host_name,
+            (),
+            relations_or_empty(attributes.get("relations", [])),
+            site_id=attributes.get("site") or self._folder.site_id(),
+        )
+
+    def _need(
+        self,
+        host_name: HostName,
+        before: Sequence[RelationLink],
+        after: Sequence[RelationLink],
+        *,
+        site_id: SiteId,
+    ) -> None:
+        self._pending.append(
+            (
+                host_name,
+                _need_relation_mirror(
+                    self._resolve_host,
+                    host_name,
+                    plan_relation_mirror(host_name, before, after),
+                    site_id=site_id,
+                    acting_user=self._acting_user,
+                ),
+            )
+        )
+
+    def write(self) -> None:
+        """Mutate the counterparts of every host needed so far, in memory."""
+        written = [
+            (counterpart, mirrored, host_name)
+            for host_name, pending in self._pending
+            for counterpart, mirrored in _write_relation_mirror(
+                host_name, pending, acting_user=self._acting_user
+            )
+        ]
+        self._pending.clear()
+        self._folders.update(
+            relation_mirror_folders(
+                [host for host, _mirrored, _related_to in written], acting_user=self._acting_user
+            )
+        )
+        self._written.extend(written)
+
+    def save(self, *, pprint_value: bool, pending_changes: PendingChanges) -> None:
+        """Write the counterpart folders, once ``folder`` itself is saved.
+
+        Every one of them has agreed to the write already. What is left is the disk saying no
+        halfway through - the hosts of ``folder`` are saved by then and one counterpart may be
+        written and the next not. Nothing can be rolled back here, and validate_host_relations()
+        reports the halves that end up missing.
+        """
+        for path, folder in self._folders.items():
+            if path != self._folder.path():
+                folder.save_hosts(pprint_value=pprint_value, acting_user=self._acting_user)
+        for counterpart, mirrored, related_to in self._written:
+            counterpart.add_relation_mirror_change(
+                mirrored, related_to, pending_changes=pending_changes
+            )
+
+
 def _drop_relations_to(
     resolve_host: Callable[[HostName], Host | None],
     gone: HostName,
@@ -3350,39 +3431,12 @@ class Folder:
             for host_name, attributes, _cluster_nodes in entries
         ]
 
-        # A host created with a relation is a write on the host it names. Refuse for every entry
-        # before any counterpart is mutated in memory, and mutate them before anything is
-        # written, the way editing a host does - create_validated_hosts() itself must stay a
+        # Every entry before any counterpart is mutated: create_validated_hosts() must stay a
         # phase that cannot fail, because the configuration bundles rely on that.
-        # Counterparts are looked up among the hosts that already exist: a host from this very
-        # batch is not one of them, so a relation to it is refused like one to any other host
-        # that is missing.
-        resolve_counterpart = counterpart_resolver(self)
-        writes = [
-            (
-                host_name,
-                _need_relation_mirror(
-                    resolve_counterpart,
-                    host_name,
-                    plan_relation_mirror(
-                        host_name, (), relations_or_empty(attributes.get("relations", []))
-                    ),
-                    site_id=attributes.get("site", self.site_id()),
-                    acting_user=acting_user,
-                ),
-            )
-            for host_name, attributes, _cluster_nodes in validated
-        ]
-        counterparts = [
-            (counterpart, mirrored, host_name)
-            for host_name, pending in writes
-            for counterpart, mirrored in _write_relation_mirror(
-                host_name, pending, acting_user=acting_user
-            )
-        ]
-        counterpart_folders = relation_mirror_folders(
-            [host for host, _mirrored, _related_to in counterparts], acting_user=acting_user
-        )
+        mirror = RelationMirrorBatch(self, acting_user=acting_user)
+        for host_name, attributes, _cluster_nodes in validated:
+            mirror.need_created(host_name, attributes)
+        mirror.write()
 
         self.create_validated_hosts(
             validated,
@@ -3390,19 +3444,7 @@ class Folder:
             pending_changes=pending_changes,
             acting_user=acting_user,
         )
-
-        # One file per counterpart folder, and every one of them has agreed to the write above.
-        # What is left is the disk saying no halfway through - the new hosts are created by then
-        # and one counterpart may be written and the next not. Nothing can be rolled back here,
-        # and validate_host_relations() reports the halves that end up missing.
-        for path, folder in counterpart_folders.items():
-            # create_validated_hosts() has saved this folder already.
-            if path != self.path():
-                folder.save_hosts(pprint_value=pprint_value, acting_user=acting_user)
-        for counterpart, mirrored, related_to in counterparts:
-            counterpart.add_relation_mirror_change(
-                mirrored, related_to, pending_changes=pending_changes
-            )
+        mirror.save(pprint_value=pprint_value, pending_changes=pending_changes)
 
     def create_validated_hosts(
         self,

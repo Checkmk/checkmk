@@ -279,10 +279,11 @@ Setup:
   properties use to keep the links of kinds they do not show. ``Host`` itself
   stores what it is given.
 * ``cmk/gui/watolib/hosts_and_folders.py``: The mirror (``plan_relation_mirror``,
-  ``apply_relation_mirror``, ``relation_mirror_folders``, the cleanup after a
-  deletion, and the ``Host`` methods ``set_relations_about`` and
-  ``rename_relation``). Creating, editing and deleting hosts, the relation
-  detection and renaming write relations through these functions. A new writer
+  ``apply_relation_mirror``, ``RelationMirrorBatch`` for several hosts saved in
+  one go, ``relation_mirror_folders``, the cleanup after a deletion, and the
+  ``Host`` methods ``set_relations_about`` and ``rename_relation``). Creating,
+  editing and deleting hosts, the relation detection and renaming write
+  relations through these functions. A new writer
   has to resolve related hosts with ``counterpart_resolver`` and save their
   folders through ``relation_mirror_folders``: ``FolderTree.host()`` can return
   a different instance of the folder being saved, and a change made on that

@@ -71,7 +71,6 @@ common --grpc_keepalive_time=10s
 common --experimental_remote_cache_compression_threshold=1048576
 common --remote_local_fallback
 common --cycles
-common --@cmk//distro="ubuntu-24.04"
 # Enable Bzlmod for every Bazel command
 common --enable_bzlmod
 # Do not upload artifacts other than from CI, see below, CMK-18656
@@ -94,9 +93,6 @@ common --java_language_version=21
 ## For specific commands
 # Always require debug info.
 # common --copt="-g"
-common --flag_alias=cmk_version=@cmk//version
-common --flag_alias=cmk_edition=@cmk//edition
-common --flag_alias=cmk_distro=@cmk//distro
 
 # For some obscure reason, the re2 project made itself valgrind-dirty by default:
 # https://github.com/google/re2/commit/ce6f2884c4b52509fd6c5d12b8f1c40587067784
@@ -123,6 +119,7 @@ common --@aspect_rules_ts//ts:skipLibCheck=always
 
 ## For specific commands
 
+import %workspace%/bazel/rc/checkmk.rc
 import %workspace%/bazel/rc/ci.rc
 import %workspace%/bazel/rc/debug.rc
 import %workspace%/bazel/rc/iwyu.rc

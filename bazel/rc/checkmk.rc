@@ -1,0 +1,8 @@
+# Checkmk specific build settings
+
+common --@cmk//distro="ubuntu-24.04"
+
+# Short names for the Checkmk build settings, e.g. --cmk_edition=pro
+common --flag_alias=cmk_version=@cmk//version
+common --flag_alias=cmk_edition=@cmk//edition
+common --flag_alias=cmk_distro=@cmk//distro

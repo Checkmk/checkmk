@@ -17,15 +17,21 @@ from cmk.gui.dashboard.api.model.context_filters import (
     ServiceStateContextFilter,
 )
 from cmk.gui.dashboard.api.model.contextual_link import (
+    built_in_contextual_link_from_internal,
+    built_in_contextual_link_to_internal,
+    BuiltInContextualLinkSpec,
     contextual_link_from_internal,
     contextual_link_to_internal,
     ContextualLink,
     ContextualLinkCustom,
+    ContextualLinkDefault,
     ContextualLinkInherited,
+    ContextualLinkNone,
     ContextualLinkSpec,
     VisualLocation,
 )
 from cmk.gui.dashboard.api.model.widget_content.inventory import InventoryContent
+from cmk.gui.dashboard.api.model.widget_content.metric import TopListContent
 from cmk.gui.dashboard.api.model.widget_content.state import (
     HostStateContent,
     ServiceStateContent,
@@ -138,3 +144,23 @@ def test_an_inventory_click_may_carry_the_host_name_in_a_custom_link() -> None:
     assert options.modes == ["default", "inherited", "custom"]
     assert "host" in options.filters
     assert options.single_infos == ["host"]
+
+
+def test_a_top_list_offers_only_its_built_in_link() -> None:
+    options = TopListContent.contextual_link_options()
+
+    assert options is not None
+    assert options.modes == ["default"]
+    assert options.filters == []
+    assert options.single_infos == []
+
+
+@pytest.mark.parametrize(
+    "link",
+    [ContextualLinkNone(type="none"), ContextualLinkDefault(type="default")],
+    ids=["none", "default"],
+)
+def test_a_built_in_only_link_round_trips(link: BuiltInContextualLinkSpec) -> None:
+    assert (
+        built_in_contextual_link_from_internal(built_in_contextual_link_to_internal(link)) == link
+    )

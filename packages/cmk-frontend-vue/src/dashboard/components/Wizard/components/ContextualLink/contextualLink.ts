@@ -11,7 +11,8 @@ import type {
   InventoryContent,
   ServiceStateContent,
   ServiceStatisticsContent,
-  SiteOverviewContent
+  SiteOverviewContent,
+  TopListContent
 } from '@/dashboard/components/Wizard/types'
 
 export type LinkedContent =
@@ -21,6 +22,7 @@ export type LinkedContent =
   | ServiceStateContent
   | SiteOverviewContent
   | InventoryContent
+  | TopListContent
 
 export type ContextualLinkOf<C extends LinkedContent> = C['contextual_link']
 export type ContextFilterIdOf<C extends LinkedContent> = Extract<

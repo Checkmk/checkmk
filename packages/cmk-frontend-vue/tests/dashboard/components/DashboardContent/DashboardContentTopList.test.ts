@@ -50,6 +50,7 @@ function props(content: Partial<TopListContent> = {}) {
       display_range: 'automatic' as const,
       ranking_order: 'high' as const,
       limit_to: 10,
+      contextual_link: { type: 'default' as const },
       ...content
     },
     {
@@ -162,6 +163,12 @@ describe('DashboardContentTopList', () => {
       'href',
       'view.py?view_name=service&site=heute&host=host-b&service=CPU+load'
     )
+  })
+
+  it('leaves hosts and services unlinked when the widget links nowhere', async () => {
+    await renderWidget({ contextual_link: { type: 'none' } })
+    expect(screen.queryAllByRole('link')).toHaveLength(0)
+    expect(screen.getByText('host-b')).toBeInTheDocument()
   })
 
   it('suppresses the links on a public dashboard', async () => {

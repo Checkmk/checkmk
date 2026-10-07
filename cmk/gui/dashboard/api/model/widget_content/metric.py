@@ -39,6 +39,12 @@ from cmk.gui.openapi.framework.model.common_fields import (
 )
 from cmk.gui.unit_formatter import AutoPrecision
 
+from ..contextual_link import (
+    AnyContextualLinkSpec,
+    built_in_contextual_link_from_internal,
+    built_in_contextual_link_to_internal,
+    BuiltInContextualLinkSpec,
+)
 from ._base import BaseWidgetContent
 
 
@@ -449,6 +455,9 @@ class TopListContent(_BaseMetricContent):
         description="Display highest or lowest values."
     )
     limit_to: int = api_field(description="Limit the number of entries in the top list.")
+    contextual_link: BuiltInContextualLinkSpec = api_field(
+        description="Where a click on a host or service name leads."
+    )
 
     @classmethod
     @override
@@ -464,11 +473,12 @@ class TopListContent(_BaseMetricContent):
             display_range=_metric_display_range_from_internal(config["display_range"]),
             ranking_order=config["ranking_order"],
             limit_to=config["limit_to"],
+            contextual_link=built_in_contextual_link_from_internal(config.get("contextual_link")),
         )
 
     @override
     def to_internal(self) -> TopListDashletConfig:
-        return TopListDashletConfig(
+        config = TopListDashletConfig(
             type=self.internal_type(),
             metric=self.metric,
             columns=self.columns.to_internal(),
@@ -476,3 +486,10 @@ class TopListContent(_BaseMetricContent):
             ranking_order=self.ranking_order,
             limit_to=self.limit_to,
         )
+        if (link := built_in_contextual_link_to_internal(self.contextual_link)) is not None:
+            config["contextual_link"] = link
+        return config
+
+    @override
+    def configured_contextual_link(self) -> AnyContextualLinkSpec:
+        return self.contextual_link

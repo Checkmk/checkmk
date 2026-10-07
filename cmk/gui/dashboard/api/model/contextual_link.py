@@ -125,6 +125,11 @@ type ContextualLinkSpec[F] = Annotated[
     Discriminator("type"),
 ]
 
+# The link of a widget whose clicks lead to its built-in target or nowhere.
+type BuiltInContextualLinkSpec = Annotated[
+    ContextualLinkNone | ContextualLinkDefault, Discriminator("type")
+]
+
 type AnyContextualLinkSpec = (
     ContextualLinkSpec[AggregateHostContextFilter]
     | ContextualLinkSpec[AggregateServiceContextFilter]
@@ -150,14 +155,19 @@ class ContextualLinkOptions:
 
 
 def contextual_link_options(link_type: object) -> ContextualLinkOptions:
-    """The options a widget's `contextual_link` type `ContextualLinkSpec[F]` accepts.
+    """The options a widget's `contextual_link` type accepts: a `ContextualLinkSpec[F]`, or an
+    unparameterized spec, whose links carry no filters.
 
     Read off the types, so the options cannot drift from what the API accepts.
     """
-    if (spec := get_origin(link_type)) is None:
-        raise TypeError(f"Not a parameterized contextual link type: {link_type!r}")
-    (filter_type,) = get_args(link_type)
-    filters = [_literal(member, "filter_id") for member in _members(filter_type)]
+    spec = link_type if isinstance(link_type, TypeAliasType) else get_origin(link_type)
+    if not isinstance(spec, TypeAliasType):
+        raise TypeError(f"Not a contextual link type: {link_type!r}")
+    filters = [
+        _literal(member, "filter_id")
+        for filter_type in get_args(link_type)
+        for member in _members(filter_type)
+    ]
     return ContextualLinkOptions(
         modes=_MODES_ADAPTER.validate_python(
             [mode for arm in _members(spec) if (mode := _literal(arm, "type")) != "none"]
@@ -213,6 +223,28 @@ def contextual_link_to_internal(
             return None
         case unreachable:
             assert_never(unreachable)
+
+
+def built_in_contextual_link_to_internal(
+    link: BuiltInContextualLinkSpec,
+) -> ContextualLinkNoneConfig | None:
+    """The stored form of a link that may only be built in; None for a `default` link."""
+    match link:
+        case ContextualLinkNone():
+            return ContextualLinkNoneConfig(type="none")
+        case ContextualLinkDefault():
+            return None
+        case unreachable:
+            assert_never(unreachable)
+
+
+def built_in_contextual_link_from_internal(
+    config: ContextualLinkNoneConfig | None,
+) -> BuiltInContextualLinkSpec:
+    """The API form of a stored link that may only be built in."""
+    if config is None:
+        return ContextualLinkDefault(type="default")
+    return ContextualLinkNone(type="none")
 
 
 def contextual_link_from_internal[F](

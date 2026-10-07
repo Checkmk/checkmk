@@ -270,8 +270,37 @@ class TestTopListContent:
                 },
                 "ranking_order": "high",
                 "limit_to": 10,
+                "contextual_link": {"type": "none"},
             },
         )
+
+    def test_a_none_link_round_trips(self, clients: ClientRegistry) -> None:
+        clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "top_list_dashboard",
+                {
+                    "top_list": create_widget(
+                        {
+                            "type": "top_list",
+                            "metric": "availability",
+                            "display_range": "automatic",
+                            "columns": {
+                                "show_service_description": True,
+                                "show_bar_visualization": True,
+                            },
+                            "ranking_order": "high",
+                            "limit_to": 10,
+                            "contextual_link": {"type": "none"},
+                        }
+                    )
+                },
+            )
+        )
+
+        widgets = clients.DashboardClient.get_relative_grid_dashboard("top_list_dashboard").json[
+            "extensions"
+        ]["widgets"]
+        assert next(iter(widgets.values()))["content"]["contextual_link"] == {"type": "none"}
 
 
 @pytest.mark.parametrize("widget_type", ["host_state", "service_state"])

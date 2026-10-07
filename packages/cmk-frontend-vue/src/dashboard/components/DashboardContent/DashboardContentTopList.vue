@@ -74,6 +74,12 @@ function link(url: string): { href?: string } {
   return isPublicDashboard ? {} : { href: url }
 }
 
+// Only the ranked rows follow the contextual link; the error table's links help to fix the
+// configuration.
+function contextualLink(url: string): { href?: string } {
+  return props.content.contextual_link.type === 'none' ? {} : link(url)
+}
+
 function columns(topList: ComputedTopList): RankedTableColumn[] {
   const showBar = props.content.columns.show_bar_visualization !== false
   const result: RankedTableColumn[] = [
@@ -99,8 +105,8 @@ function columns(topList: ComputedTopList): RankedTableColumn[] {
 // The backend delivers the entries pre-ranked, pre-formatted and colored by metric.
 function rows(topList: ComputedTopList): RankedTableRow[] {
   return topList.entries.map((entry) => ({
-    host: { value: entry.host_name, ...link(hostViewUrl(entry)) },
-    service: { value: entry.service_description, ...link(serviceViewUrl(entry)) },
+    host: { value: entry.host_name, ...contextualLink(hostViewUrl(entry)) },
+    service: { value: entry.service_description, ...contextualLink(serviceViewUrl(entry)) },
     value: {
       value: entry.metric.value,
       formatted: entry.metric.formatted,

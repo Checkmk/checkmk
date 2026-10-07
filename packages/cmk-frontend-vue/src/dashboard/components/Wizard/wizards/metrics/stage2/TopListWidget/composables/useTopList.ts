@@ -9,6 +9,10 @@ import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, ref, watch } from 'vue'
 
 import {
+  type UseContextualLink,
+  useContextualLink
+} from '@/dashboard/components/Wizard/components/ContextualLink/useContextualLink'
+import {
   type DataRangeType,
   useDataRangeInput
 } from '@/dashboard/components/Wizard/components/DataRangeInput/useDataRangeInput'
@@ -45,6 +49,7 @@ export interface UseTopList extends UseWidgetHandler, UseWidgetVisualizationOpti
 
   MAX_ENTRIES: number
   limitToValidationErrors: Ref<string[]>
+  contextualLink: UseContextualLink<TopListContent>
 
   widgetProps: Ref<WidgetProps>
 }
@@ -71,6 +76,10 @@ export const useTopList = async (
   const limitTo = ref<number>(currentContent?.limit_to ?? 10)
   const showServiceName = ref<boolean>(currentContent?.columns?.show_service_description ?? true)
   const showBarVisualization = ref<boolean>(currentContent?.columns?.show_bar_visualization ?? true)
+  const contextualLink = useContextualLink<TopListContent>(
+    constants.widgets[CONTENT_TYPE]!.contextual_link!,
+    currentContent?.contextual_link
+  )
 
   const {
     title,
@@ -97,8 +106,12 @@ export const useTopList = async (
     }
 
     validateTitle()
+    const isLinkValid = contextualLink.validate()
 
-    return titleUrlValidationErrors.value.length + limitToValidationErrors.value.length === 0
+    return (
+      titleUrlValidationErrors.value.length + limitToValidationErrors.value.length === 0 &&
+      isLinkValid
+    )
   }
 
   const _generateContent = (): TopListContent => {
@@ -111,7 +124,8 @@ export const useTopList = async (
       },
       display_range: dataRangeProps.value,
       ranking_order: rankingOrder.value,
-      limit_to: limitTo.value
+      limit_to: limitTo.value,
+      contextual_link: contextualLink.contextualLink.value ?? { type: 'default' }
     }
   }
 
@@ -145,7 +159,8 @@ export const useTopList = async (
       showServiceName,
       dataRangeProps,
       rankingOrder,
-      limitTo
+      limitTo,
+      contextualLink.contextualLink
     ],
     useDebounceFn(() => {
       void _updateWidgetProps()
@@ -177,6 +192,7 @@ export const useTopList = async (
     titleUrlValidationErrors,
     titleMacros,
     limitToValidationErrors,
+    contextualLink,
     validate,
 
     widgetProps: widgetProps as Ref<WidgetProps>,

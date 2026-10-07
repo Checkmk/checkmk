@@ -887,7 +887,10 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
             "tls_port": 25720,
         },
         "local_instance.http_port": 25962,
-        "local_instance.central_access": {"address": NoSaveableDefault()},
+        "local_instance.central_access": {
+            "address": NoSaveableDefault(),
+            "address_reachable_by_central": NoSaveableDefault(),
+        },
     },
     "mkeventd_notify_remotehost": {
         "[enable]": "",

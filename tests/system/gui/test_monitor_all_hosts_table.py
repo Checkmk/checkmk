@@ -124,10 +124,10 @@ def test_search_narrows_rows(dashboard_page: MainDashboard, table_hosts: list[st
 def test_sort_by_host_name_toggles_order(
     dashboard_page: MainDashboard, table_hosts: list[str]
 ) -> None:
-    """Clicking the Host header sorts ascending, then descending.
+    """The Host column is sorted ascending by default; clicking its header sorts descending.
 
-    Stable assertions: the host name at each row position is ascending after
-    the first click and descending after the second. Names are read from the
+    Stable assertions: the host name at each row position is ascending initially
+    (the default sort) and descending after one click on the header. Names are read from the
     cell `title` (the raw value) because `StringCell` injects zero-width spaces
     into the displayed text. Sorting is applied server-side; the auto-waiting
     `to_have_attribute` on each positioned cell absorbs the re-fetch/re-render.
@@ -139,13 +139,14 @@ def test_sort_by_host_name_toggles_order(
         for index, name in enumerate(order):
             expect(all_hosts.host_name_cell(index)).to_have_attribute("title", name)
 
-    # Ascending: e2e-host-a, e2e-host-b, e2e-host-c
-    all_hosts.sort_by("Host")
+    # The table is sorted ascending by host name by default, and the header shows it:
+    # e2e-host-a, e2e-host-b, e2e-host-c
+    expect(all_hosts.column_header("Host")).to_have_attribute("aria-sort", "ascending")
     expect_name_order(ALL_HOST_NAMES)
 
-    # Descending: reversed. This is the load-bearing half -- the site already answers in
-    # ascending name order, so only the second click can show the header drives the order.
+    # Clicking the active ascending header flips it to descending: reversed.
     all_hosts.sort_by("Host")
+    expect(all_hosts.column_header("Host")).to_have_attribute("aria-sort", "descending")
     expect_name_order(list(reversed(ALL_HOST_NAMES)))
 
 

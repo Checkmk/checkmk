@@ -31,6 +31,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -231,10 +232,16 @@ def open_url(
     return real_url, content
 
 
+@dataclass(frozen=True)
+class Form:
+    attrs: Mapping[str, str]
+    elements: dict[str, str]
+
+
 class FormParser(html.parser.HTMLParser):
     def __init__(self, debug_enabled: bool = False) -> None:
-        self.forms: dict = {}
-        self.current_form = None
+        self.forms: dict[str, Form] = {}
+        self.current_form: Form | None = None
         self.debug_enabled = debug_enabled
         super().__init__()
 
@@ -243,23 +250,21 @@ class FormParser(html.parser.HTMLParser):
     def error(self, message):
         raise AssertionError(message)
 
-    def handle_starttag(self, tag, attrs):
-        attrs = dict(attrs)
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        # An attribute without a value, e.g. <input value>, has the empty string as value.
+        attrs_dict = {key: value or "" for key, value in attrs}
 
         if tag == "form":
-            name = attrs.get("name", "unnamed-%d" % (len(self.forms) + 1))
-            self.forms[name] = {
-                "attrs": dict(attrs),
-                "elements": {},
-            }
+            name = attrs_dict.get("name", "unnamed-%d" % (len(self.forms) + 1))
+            self.forms[name] = Form(attrs=attrs_dict, elements={})
             self.current_form = self.forms[name]
         elif tag == "input":
             if self.current_form is None:
                 debug("Ignoring form field out of form tag", self.debug_enabled)
-            elif "name" in attrs:
-                self.current_form["elements"][attrs["name"]] = attrs.get("value", "")
+            elif "name" in attrs_dict:
+                self.current_form.elements[attrs_dict["name"]] = attrs_dict.get("value", "")
             else:
-                debug("Ignoring form field without name %r" % attrs, self.debug_enabled)
+                debug("Ignoring form field without name %r" % attrs_dict, self.debug_enabled)
 
     def handle_endtag(self, tag):
         if tag == "form":
@@ -270,7 +275,7 @@ class FormParser(html.parser.HTMLParser):
 # One form found and no form_name given, use that one
 # Loop all forms for the given form_name, use the matching one
 # otherwise raise an exception
-def parse_form(content: str, form_name: str):
+def parse_form(content: str, form_name: str | None) -> Form:
     parser = FormParser()
     parser.feed(content)
     forms = parser.forms
@@ -295,20 +300,20 @@ def parse_form(content: str, form_name: str):
         )
 
     else:
-        form = forms.get(form_name)
-        if form is None:
+        if form_name not in forms:
             new_state(
                 2,
                 'Found no form with name "{}" (Available: {})'.format(
                     form_name, ", ".join(forms.keys())
                 ),
             )
+        form = forms[form_name]
 
     return form
 
 
-def update_form_vars(form_elem, params: Mapping[str, str]):
-    v = form_elem["elements"].copy()
+def update_form_vars(form_elem: Form, params: Mapping[str, str]) -> dict[str, str]:
+    v = form_elem.elements.copy()
     v.update(params)
     return v
 
@@ -336,8 +341,8 @@ def raise_host_state(
 
     # Issue a HTTP request with those parameters
     # Extract the form target and method
-    method = form["attrs"].get("method", "GET").upper()
-    target = form["attrs"].get("action", real_url)
+    method = form.attrs.get("method", "GET").upper()
+    target = form.attrs.get("action", real_url)
     if target[0] == "/":
         # target is given as absolute path, relative to hostname
         target = base_url + target

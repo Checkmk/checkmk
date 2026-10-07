@@ -6,9 +6,9 @@
 # mypy: disable-error-code="type-arg"
 
 import functools
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from importlib import import_module
-from typing import assert_never
+from typing import assert_never, Final
 
 import cmk.trace
 from cmk.agent_based import v2, v3_unstable
@@ -17,6 +17,7 @@ from cmk.checkengine.plugins import SectionName
 from cmk.discover_plugins import (
     discover_all_plugins,
     DiscoveredPlugins,
+    PluginConflict,
     PluginGroup,
     PluginLocation,
 )
@@ -44,6 +45,14 @@ ENTRY_POINT_PREFIXES = dict(v2.entry_point_prefixes()) | dict(v3_unstable.entry_
 tracer = cmk.trace.get_tracer()
 
 
+class PluginNameConflictError(ValueError):
+    def __init__(self, name: object, used: PluginLocation, ignored: PluginLocation) -> None:
+        super().__init__(f"Name conflict for '{name}': Ignoring '{ignored}' in favor of '{used}'")
+        self.name: Final = str(name)
+        self.used: Final = used
+        self.ignored: Final = ignored
+
+
 @functools.lru_cache
 @tracer.instrument("load_all_plugins")
 def load_all_plugins(
@@ -58,28 +67,49 @@ def load_all_plugins(
             raise_errors=raise_errors,
         )
 
+    with tracer.span("load_discovered_plugins"):
+        return load_discovered_plugins(discovered_plugins, raise_errors=raise_errors)
+
+
+def load_discovered_plugins(
+    discovered_plugins: DiscoveredPlugins[_ABPlugins],
+    *,
+    raise_errors: bool,
+) -> plugins.AgentBasedPlugins:
     registered_agent_sections: dict[SectionName, plugins.AgentSectionPlugin] = {}
     registered_snmp_sections: dict[SectionName, plugins.SNMPSectionPlugin] = {}
     registered_check_plugins: dict[plugins.CheckPluginName, plugins.CheckPlugin] = {}
     registered_inventory_plugins: dict[plugins.InventoryPluginName, plugins.InventoryPlugin] = {}
     errors = [f"Agent based plug-in: {exc}" for exc in discovered_plugins.errors]
+    conflicts = list(discovered_plugins.conflicts)
+    errors_by_module = {
+        module: [f"Agent based plug-in: {exc}" for exc in excs]
+        for module, excs in discovered_plugins.errors_by_module.items()
+    }
 
-    with tracer.span("load_discovered_plugins"):
-        for location, plugin in discovered_plugins.plugins.items():
-            try:
-                _register_plugin_by_type(
-                    location,
-                    plugin,
-                    registered_agent_sections,
-                    registered_snmp_sections,
-                    registered_check_plugins,
-                    registered_inventory_plugins,
-                    validate=raise_errors,
-                )
-            except Exception as exc:
-                if raise_errors:
-                    raise
-                errors.append(f"Agent based plug-in {plugin.name} ({type(plugin)}): {exc}")
+    for location, plugin in discovered_plugins.plugins.items():
+        try:
+            _register_plugin_by_type(
+                location,
+                plugin,
+                registered_agent_sections,
+                registered_snmp_sections,
+                registered_check_plugins,
+                registered_inventory_plugins,
+                validate=raise_errors,
+            )
+        except PluginNameConflictError as exc:
+            if raise_errors:
+                raise
+            error = f"Agent based plug-in: {exc}"
+            errors.append(error)
+            conflicts.append(PluginConflict(exc.name, used=exc.used, ignored=exc.ignored))
+        except Exception as exc:
+            if raise_errors:
+                raise
+            error = f"Agent based plug-in {plugin.name} ({type(plugin)}): {exc}"
+            errors.append(error)
+            errors_by_module.setdefault(location.module, []).append(error)
 
     return plugins.AgentBasedPlugins(
         agent_sections=registered_agent_sections,
@@ -87,6 +117,8 @@ def load_all_plugins(
         check_plugins=registered_check_plugins,
         inventory_plugins=registered_inventory_plugins,
         errors=errors,
+        conflicts=conflicts,
+        errors_by_module=errors_by_module,
     )
 
 
@@ -168,6 +200,18 @@ def _register_plugin_by_type(
             assert_never(unreachable)
 
 
+def _raise_on_section_conflict(
+    name: SectionName,
+    location: PluginLocation,
+    registered_agent_sections: Mapping[SectionName, plugins.AgentSectionPlugin],
+    registered_snmp_sections: Mapping[SectionName, plugins.SNMPSectionPlugin],
+) -> None:
+    if (existing := registered_agent_sections.get(name)) is not None:
+        raise PluginNameConflictError(name, existing.location, location)
+    if (existing_snmp := registered_snmp_sections.get(name)) is not None:
+        raise PluginNameConflictError(name, existing_snmp.location, location)
+
+
 def _register_agent_section(
     section: v2.AgentSection,
     location: PluginLocation,
@@ -178,8 +222,9 @@ def _register_agent_section(
 ) -> None:
     section_plugin = create_agent_section_plugin(section, location, validate=validate)
 
-    if section_plugin.name in registered_agent_sections | registered_snmp_sections:
-        raise ValueError(f"duplicate section definition: {section_plugin.name}")
+    _raise_on_section_conflict(
+        section_plugin.name, location, registered_agent_sections, registered_snmp_sections
+    )
 
     registered_agent_sections[section_plugin.name] = section_plugin
 
@@ -194,8 +239,9 @@ def _register_metrics_section(
 ) -> None:
     section_plugin = create_metrics_section_plugin(section, location, validate=validate)
 
-    if section_plugin.name in registered_agent_sections | registered_snmp_sections:
-        raise ValueError(f"duplicate section definition: {section_plugin.name}")
+    _raise_on_section_conflict(
+        section_plugin.name, location, registered_agent_sections, registered_snmp_sections
+    )
 
     registered_agent_sections[section_plugin.name] = section_plugin
 
@@ -210,8 +256,9 @@ def _register_snmp_section(
 ) -> None:
     section_plugin = create_snmp_section_plugin(section, location, validate=validate)
 
-    if section_plugin.name in registered_agent_sections | registered_snmp_sections:
-        raise ValueError(f"duplicate section definition: {section_plugin.name}")
+    _raise_on_section_conflict(
+        section_plugin.name, location, registered_agent_sections, registered_snmp_sections
+    )
 
     registered_snmp_sections[section_plugin.name] = section_plugin
 
@@ -238,8 +285,8 @@ def _register_check_plugin(
         validate_kwargs=check.name not in {"logwatch_ec", "logwatch_ec_single"},
     )
 
-    if plugin.name in registered_check_plugins:
-        raise ValueError(f"duplicate check plug-in definition: {plugin.name}")
+    if (existing_check := registered_check_plugins.get(plugin.name)) is not None:
+        raise PluginNameConflictError(plugin.name, existing_check.location, location)
 
     registered_check_plugins[plugin.name] = plugin
 
@@ -258,7 +305,7 @@ def _register_inventory_plugin(
         location=location,
     )
 
-    if plugin.name in registered_inventory_plugins:
-        raise ValueError(f"duplicate inventory plug-in definition: {plugin.name}")
+    if (existing_inventory := registered_inventory_plugins.get(plugin.name)) is not None:
+        raise PluginNameConflictError(plugin.name, existing_inventory.location, location)
 
     registered_inventory_plugins[plugin.name] = plugin

@@ -172,15 +172,9 @@ common:ci --noshow_progress
 # run:ci ...
 # test:ci ...
 
-# Flags for Debug builds
-# Definition of "bazel x --config=debug -- ..."
-## Common
-common:debug --announce_rc
-# gRPC errors provide stack trace as well
-common:debug --verbose_failures
-
 ## For specific commands
 
+import %workspace%/bazel/rc/debug.rc
 import %workspace%/bazel/rc/iwyu.rc
 import %workspace%/bazel/rc/mypy.rc
 import %workspace%/bazel/rc/deballast.rc

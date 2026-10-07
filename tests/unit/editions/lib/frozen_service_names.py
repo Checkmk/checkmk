@@ -255,6 +255,7 @@ FROZEN_SERVICE_NAMES: Final[Mapping[str, str]] = {
     "aws_sns_sms_success_rate": "AWS/SNS %s SMS Success Rate",
     "aws_sns_summary": "AWS/SNS Summary",
     "aws_status": "AWS Status %s",
+    "aws_v2_cloudfront": "AWS/CloudFront %s distribution",
     "aws_v2_ebs": "AWS/EBS Disk IO %s",
     "aws_v2_ebs_burst_balance": "AWS/EBS Burst Balance %s",
     "aws_v2_ebs_limits": "AWS/EBS Limits %s",

@@ -143,6 +143,12 @@ allows = [
   "cmk.plugins.aws_v2_extended",
 ]
 
+[plugin_families.violations.aws_v2_extended]
+allows = [
+  # reuse of the free aws_v2 plugin library (agent_based helpers)
+  "cmk.plugins.aws_v2",
+]
+
 [plugin_families.violations.azure_v2_extended]
 allows = [
   # reuse of the free azure_v2 plugin library (agent_based + rulesets helpers)

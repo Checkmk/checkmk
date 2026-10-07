@@ -6,7 +6,6 @@
 startup --host_jvm_args=-DBAZEL_TRACK_SOURCE_DIRECTORIES=1
 
 # enable visibility checking for config_settings
-common --incompatible_enforce_config_setting_visibility
 common --incompatible_config_setting_private_default_visibility
 
 # Enable prebuilt protoc toolchain resolution.

@@ -12,7 +12,6 @@ common:linux --experimental_disk_cache_gc_max_size=100G
 common:linux --repo_contents_cache=~/.cache/bazel/repo_contents_cache
 
 # Remote cache, its endpoint and credentials come from remote.bazelrc
-common --remote_cache_async
 common --remote_cache_compression
 # send pings after this time of no read operations on the connection, but only if there is at least one pending gRPC call
 # only with this flag "grpc_keepalive_timeout" is enabled, defaults to 20s

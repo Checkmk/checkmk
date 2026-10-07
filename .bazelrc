@@ -19,7 +19,6 @@ build --workspace_status_command=bazel/tools/workspace_status.sh
 
 # default/common bazel args for all commands supporting it
 common --experimental_ui_max_stdouterr_bytes=10000000
-common --cycles
 
 # Required for tools using java such as plantuml
 common --java_runtime_version=remotejdk_21
@@ -39,7 +38,6 @@ clean --async
 
 # Control test verbosity
 common --test_output=errors
-common --test_summary=short
 
 # For better performance - passes an argument `--skipLibCheck` to *every* spawn of tsc
 common --@aspect_rules_ts//ts:skipLibCheck=always

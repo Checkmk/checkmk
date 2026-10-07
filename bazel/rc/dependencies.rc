@@ -7,12 +7,6 @@ common --registry=https://bcr.bazel.build
 # Add mirrors for certain download URLs
 common --downloader_config=bazel_downloader.cfg
 
-# WORKSPACE support is fully removed; everything is defined via Bzlmod (MODULE.bazel)
-common --noenable_workspace
-
-# Enable Bzlmod for every Bazel command
-common --enable_bzlmod
-
 # The Aspect rulesets pull in aspect_tools_telemetry, which POSTs a report about
 # our module graph, OS and CI environment to telemetry.aspect.build from a repo
 # rule.  Its one-time opt-out notice is suppressed as soon as MODULE.bazel.lock

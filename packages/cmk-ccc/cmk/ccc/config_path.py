@@ -96,6 +96,27 @@ def _increment_to_next_serial(base: Path) -> int:
     return new_serial
 
 
+def _rmtree_robust(path: Path) -> None:
+    """Remove a tree even if directory write permissions were removed externally.
+
+    Some deployments strip write permissions from the distributed site tree.
+    On POSIX, only the permissions of the *directories* matter for deletion,
+    so restore them and retry.
+    """
+    try:
+        shutil.rmtree(path)
+    except PermissionError:
+        path.chmod(0o700)
+        for dirpath, dirnames, _filenames in path.walk():
+            for dirname in dirnames:
+                subdir = dirpath / dirname
+                # Don't follow symlinks: we must not change permissions
+                # outside the tree.  The symlink itself is simply unlinked.
+                if not subdir.is_symlink():
+                    subdir.chmod(0o700)
+        shutil.rmtree(path)
+
+
 def cleanup_old_configs(base: Path) -> None:
     root = VersionedConfigPath.make_root_path(base)
     if not root.exists():
@@ -126,7 +147,7 @@ def cleanup_old_configs(base: Path) -> None:
             count_kept_serials += 1
             continue
 
-        shutil.rmtree(serial.path)
+        _rmtree_robust(serial.path)
 
 
 @contextmanager
@@ -141,7 +162,7 @@ def create(base: Path) -> Iterator[ConfigCreationContext]:
 
     with suppress(FileNotFoundError):
         # this should not exist, but we must be robust.
-        shutil.rmtree(under_construction_path)
+        _rmtree_robust(under_construction_path)
     under_construction_path.mkdir(parents=True, exist_ok=False)
 
     yield ConfigCreationContext(

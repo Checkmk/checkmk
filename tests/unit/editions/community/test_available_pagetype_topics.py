@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
 
-from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.wsgi.app import application_and_request_context
+from cmk.gui.pagetypes import builtin_pagetype_topic_registry
 
 
+@pytest.mark.usefixtures("load_gui_plugins")
 def test_registered_pagetype_topics() -> None:
-    expected = [
+    assert sorted(builtin_pagetype_topic_registry) == [
         "analyze",
         "applications",
         "bi",
@@ -25,6 +26,3 @@ def test_registered_pagetype_topics() -> None:
         "problems",
         "synthetic_monitoring",
     ]
-
-    with application_and_request_context():
-        assert sorted(PagetypeTopics.builtin_pages().keys()) == sorted(expected)

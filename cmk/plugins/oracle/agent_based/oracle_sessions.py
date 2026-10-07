@@ -67,9 +67,6 @@ def discover_oracle_sessions(section: Section) -> DiscoveryResult:
 
 
 def check_oracle_sessions(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    if isinstance(params, tuple):  # type: ignore[unreachable]
-        params = {"sessions_abs": params}  # type: ignore[unreachable]
-
     match section.get(item):
         case None:
             # In case of missing information we assume that the login into

@@ -225,10 +225,6 @@ def check_oracle_tablespaces(
     ts_status = tablespace["status"]
     db_version = tablespace["db_version"]
 
-    # Conversion of old autochecks params
-    if isinstance(params, tuple):  # type: ignore[unreachable]
-        params = {"autoextend": params[0], "levels": params[1:]}  # type: ignore[unreachable]
-
     autoext = params.get("autoextend")
     uses_default_increment = False
 

@@ -58,12 +58,6 @@ def discover_oracle_logswitches(section: Section) -> DiscoveryResult:
 
 
 def check_oracle_logswitches(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    if isinstance(params, tuple):  # type: ignore[unreachable]
-        params = {  # type: ignore[unreachable]
-            "levels": (params[2], params[3]),
-            "levels_lower": (params[0], params[1]),
-        }
-
     match section.get(item):
         case None:
             # In case of missing information we assume that the login into

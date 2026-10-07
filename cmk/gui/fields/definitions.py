@@ -992,6 +992,16 @@ class _CustomerField(base.String):
         )
 
     @override
+    def _validate_missing(self, value: object) -> None:
+        if (
+            value is marshmallow.missing
+            and self._required
+            and version.edition(paths.omd_root) is version.Edition.ULTIMATEMT
+        ):
+            raise self.make_error("required")
+        super()._validate_missing(value)
+
+    @override
     def _validate(self, value: str | None) -> None:
         if version.edition(paths.omd_root) is not version.Edition.ULTIMATEMT:
             raise self.make_error("edition_not_supported")

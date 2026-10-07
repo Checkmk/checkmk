@@ -5,8 +5,8 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Sequence
-from typing import Any, overload, override
+from collections.abc import Callable, Sequence
+from typing import Any, overload, override, TypeIs
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.ruleset_matcher.tags import TagGroup
@@ -14,6 +14,12 @@ from cmk.ruleset_matcher.tags import TagGroup
 from .base import InternalPainter
 from .host_tag_painters import HashableTagGroups, host_tag_config_based_painters
 from .legacy import LegacyPainterAdapter, Painter
+
+
+def _is_legacy_painter(
+    instance: type[Painter] | Callable[[], InternalPainter],
+) -> TypeIs[type[Painter]]:
+    return isinstance(instance, type) and issubclass(instance, Painter)
 
 
 class PainterRegistry(Registry[InternalPainter]):
@@ -28,18 +34,20 @@ class PainterRegistry(Registry[InternalPainter]):
     def register(self, instance: type[Painter]) -> type[Painter]: ...
 
     @overload
-    def register(self, instance: type[InternalPainter]) -> type[InternalPainter]: ...
+    def register(
+        self, instance: Callable[[], InternalPainter]
+    ) -> Callable[[], InternalPainter]: ...
 
     @override
     def register(
-        self, instance: InternalPainter | type[Painter] | type[InternalPainter]
-    ) -> InternalPainter | type[Painter] | type[InternalPainter]:
+        self, instance: InternalPainter | type[Painter] | Callable[[], InternalPainter]
+    ) -> InternalPainter | type[Painter] | Callable[[], InternalPainter]:
         if isinstance(instance, InternalPainter):
             return super().register(instance)
-        if issubclass(instance, InternalPainter):
-            super().register(instance())
+        if _is_legacy_painter(instance):
+            super().register(LegacyPainterAdapter(instance))
             return instance
-        super().register(LegacyPainterAdapter(instance))
+        super().register(instance())
         return instance
 
 
@@ -59,10 +67,7 @@ def register_painter(ident: str, spec: dict[str, Any]) -> None:
         "LegacyPainter%s" % ident.title(),
         (InternalPainter,),
         {
-            "_ident": ident,
             "_spec": spec,
-            "ident": property(lambda s: s._ident),  # noqa: SLF001
-            "title": lambda s, cell, context: s._spec["title"],  # noqa: ARG005, SLF001
             "short_title": lambda s, cell, context: s._spec.get("short", s.title),  # noqa: ARG005, SLF001
             "tooltip_title": lambda s, cell, context: s._spec.get("tooltip_title", s.title),  # noqa: ARG005, SLF001
             "columns": property(lambda s: s._spec["columns"]),  # noqa: SLF001
@@ -96,4 +101,4 @@ def register_painter(ident: str, spec: dict[str, Any]) -> None:
             "load_inv": property(lambda s: s._spec.get("load_inv", False)),  # noqa: SLF001
         },
     )
-    painter_registry.register(cls())
+    painter_registry.register(cls(ident=ident, title=spec["title"]))

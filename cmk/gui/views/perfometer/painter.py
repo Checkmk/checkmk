@@ -3,18 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
 from typing import override
 
 from cmk.gui.display_options import display_options
 from cmk.gui.graphing import perfometers_from_api, registered_metrics
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter import Cell, InternalPainter, PainterContext
 from cmk.gui.painter.helpers import is_stale
-from cmk.gui.type_defs import ColumnName, Row
+from cmk.gui.type_defs import Row
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.graph import cmk_graph_url
 from cmk.web.utils import escaping
@@ -23,37 +22,23 @@ from .base import Perfometer
 
 
 class PainterPerfometer(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "perfometer"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Service Perf-O-Meter")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Perf-O-Meter")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return [
-            "host_name",
-            "service_description",
-            "service_staleness",
-            "service_perf_data",
-            "service_state",
-            "service_check_command",
-            "service_pnpgraph_present",
-            "service_plugin_output",
-        ]
-
-    @property
-    @override
-    def printable(self) -> bool | str:
-        return "perfometer"
+    def __init__(self) -> None:
+        super().__init__(
+            ident="perfometer",
+            title=_l("Service Perf-O-Meter"),
+            short_title=_l("Perf-O-Meter"),
+            columns=[
+                "host_name",
+                "service_description",
+                "service_staleness",
+                "service_perf_data",
+                "service_state",
+                "service_check_command",
+                "service_pnpgraph_present",
+                "service_plugin_output",
+            ],
+            printable="perfometer",
+        )
 
     @override
     def _compute_data(

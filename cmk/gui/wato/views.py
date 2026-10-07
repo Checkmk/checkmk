@@ -5,15 +5,15 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from typing import Any, override
 
 from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.http import Request
-from cmk.gui.i18n import _, _l
+from cmk.gui.i18n import _l
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter import Cell, InternalPainter, PainterContext
-from cmk.gui.type_defs import ColumnName, Row, SorterName
+from cmk.gui.type_defs import Row
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.sorter import Sorter
 from cmk.web.utils.html import HTML
@@ -23,23 +23,13 @@ from ._folder_titles import FOLDER_TITLES
 
 
 class PainterHostFilename(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "host_filename"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Checkmk config file name")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("File name")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["host_filename"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="host_filename",
+            title=_l("Checkmk config file name"),
+            short_title=_l("File name"),
+            columns=["host_filename"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -85,28 +75,14 @@ def paint_wato_folder(
 
 
 class PainterWatoFolderAbs(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "wato_folder_abs"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Folder - complete path")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Folder")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["host_filename"]
-
-    @property
-    @override
-    def sorter(self) -> SorterName:
-        return "wato_folder_abs"
+    def __init__(self) -> None:
+        super().__init__(
+            ident="wato_folder_abs",
+            title=_l("Folder - complete path"),
+            short_title=_l("Folder"),
+            columns=["host_filename"],
+            sorter="wato_folder_abs",
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -116,28 +92,14 @@ class PainterWatoFolderAbs(InternalPainter):
 
 
 class PainterWatoFolderRel(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "wato_folder_rel"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Folder - relative path")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Folder")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["host_filename"]
-
-    @property
-    @override
-    def sorter(self) -> SorterName:
-        return "wato_folder_rel"
+    def __init__(self) -> None:
+        super().__init__(
+            ident="wato_folder_rel",
+            title=_l("Folder - relative path"),
+            short_title=_l("Folder"),
+            columns=["host_filename"],
+            sorter="wato_folder_rel",
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -147,28 +109,14 @@ class PainterWatoFolderRel(InternalPainter):
 
 
 class PainterWatoFolderPlain(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "wato_folder_plain"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Folder - just folder name")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Folder")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["host_filename"]
-
-    @property
-    @override
-    def sorter(self) -> SorterName:
-        return "wato_folder_plain"
+    def __init__(self) -> None:
+        super().__init__(
+            ident="wato_folder_plain",
+            title=_l("Folder - just folder name"),
+            short_title=_l("Folder"),
+            columns=["host_filename"],
+            sorter="wato_folder_plain",
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:

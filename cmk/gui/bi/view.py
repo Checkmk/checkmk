@@ -371,24 +371,18 @@ def _compute_bi_aggregation_filter(
 
 
 class PainterAggrIcons(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "aggr_icons"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Links")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["aggr_group", "aggr_name", "aggr_effective_state", "aggr_compiled_aggregation"]
-
-    @property
-    @override
-    def printable(self) -> bool:
-        return False
+    def __init__(self) -> None:
+        super().__init__(
+            ident="aggr_icons",
+            title=_l("Links"),
+            columns=[
+                "aggr_group",
+                "aggr_name",
+                "aggr_effective_state",
+                "aggr_compiled_aggregation",
+            ],
+            printable=False,
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -472,19 +466,10 @@ class PainterAggrIcons(InternalPainter):
 
 
 class PainterAggrInDowntime(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "aggr_in_downtime"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("In downtime")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["aggr_effective_state"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="aggr_in_downtime", title=_l("In downtime"), columns=["aggr_effective_state"]
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -492,19 +477,10 @@ class PainterAggrInDowntime(InternalPainter):
 
 
 class PainterAggrAcknowledged(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "aggr_acknowledged"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Acknowledged")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["aggr_effective_state"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="aggr_acknowledged", title=_l("Acknowledged"), columns=["aggr_effective_state"]
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -524,23 +500,13 @@ def _paint_aggr_state_short(
 
 
 class PainterAggrState(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "aggr_state"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Aggregated state")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("State")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["aggr_effective_state"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="aggr_state",
+            title=_l("Aggregated state"),
+            short_title=_l("State"),
+            columns=["aggr_effective_state"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -550,23 +516,13 @@ class PainterAggrState(InternalPainter):
 
 
 class PainterAggrStateNum(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "aggr_state_num"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Aggregated state (number)")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("State")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["aggr_effective_state"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="aggr_state_num",
+            title=_l("Aggregated state (number)"),
+            short_title=_l("State"),
+            columns=["aggr_effective_state"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -574,23 +530,13 @@ class PainterAggrStateNum(InternalPainter):
 
 
 class PainterAggrRealState(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "aggr_real_state"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Aggregated real state (never assumed)")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("R.State")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["aggr_state"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="aggr_real_state",
+            title=_l("Aggregated real state (never assumed)"),
+            short_title=_l("R.State"),
+            columns=["aggr_state"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -598,23 +544,13 @@ class PainterAggrRealState(InternalPainter):
 
 
 class PainterAggrAssumedState(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "aggr_assumed_state"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Aggregated assumed state")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Assumed")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["aggr_assumed_state"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="aggr_assumed_state",
+            title=_l("Aggregated assumed state"),
+            short_title=_l("Assumed"),
+            columns=["aggr_assumed_state"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -622,23 +558,13 @@ class PainterAggrAssumedState(InternalPainter):
 
 
 class PainterAggrGroup(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "aggr_group"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Aggregation group")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Group")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["aggr_group"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="aggr_group",
+            title=_l("Aggregation group"),
+            short_title=_l("Group"),
+            columns=["aggr_group"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -646,23 +572,13 @@ class PainterAggrGroup(InternalPainter):
 
 
 class PainterAggrName(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "aggr_name"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Aggregation name")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Aggregation")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["aggr_name"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="aggr_name",
+            title=_l("Aggregation name"),
+            short_title=_l("Aggregation"),
+            columns=["aggr_name"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -670,23 +586,13 @@ class PainterAggrName(InternalPainter):
 
 
 class PainterAggrOutput(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "aggr_output"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Aggregation status output")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Output")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["aggr_output"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="aggr_output",
+            title=_l("Aggregation status output"),
+            short_title=_l("Output"),
+            columns=["aggr_output"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -707,23 +613,13 @@ def _paint_aggr_hosts(
 
 
 class PainterAggrHosts(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "aggr_hosts"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Aggregation: affected hosts")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Hosts")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["aggr_hosts"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="aggr_hosts",
+            title=_l("Aggregation: affected hosts"),
+            short_title=_l("Hosts"),
+            columns=["aggr_hosts"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -731,23 +627,13 @@ class PainterAggrHosts(InternalPainter):
 
 
 class PainterAggrHostsServices(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "aggr_hosts_services"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Aggregation: affected hosts (link to host page)")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Hosts")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["aggr_hosts"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="aggr_hosts_services",
+            title=_l("Aggregation: affected hosts (link to host page)"),
+            short_title=_l("Hosts"),
+            columns=["aggr_hosts"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -882,28 +768,14 @@ def _paint_aggregated_tree_state(
 
 
 class PainterAggrTreestate(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "aggr_treestate"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Complete tree")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Tree")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["aggr_treestate", "aggr_hosts"]
-
-    @property
-    @override
-    def painter_options(self) -> list[str]:
-        return ["aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="aggr_treestate",
+            title=_l("Complete tree"),
+            short_title=_l("Tree"),
+            columns=["aggr_treestate", "aggr_hosts"],
+            painter_options=["aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -933,28 +805,20 @@ class PainterAggrTreestate(InternalPainter):
 
 
 class PainterAggrTreestateFrozenDiff(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "aggr_treestate_frozen_diff"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Difference between frozen and live aggregation")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Difference between frozen and live aggregation")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["aggr_treestate", "aggr_hosts", "aggr_compiled_aggregation"]
-
-    @property
-    @override
-    def painter_options(self) -> list[str]:
-        return ["aggr_expand", "aggr_onlydiff", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="aggr_treestate_frozen_diff",
+            title=_l("Difference between frozen and live aggregation"),
+            short_title=_l("Difference between frozen and live aggregation"),
+            columns=["aggr_treestate", "aggr_hosts", "aggr_compiled_aggregation"],
+            painter_options=[
+                "aggr_expand",
+                "aggr_onlydiff",
+                "aggr_onlyproblems",
+                "aggr_treetype",
+                "aggr_wrap",
+            ],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -1208,23 +1072,13 @@ def _combine_branches(live_branch: BICompiledRule, frozen_branch: BICompiledRule
 
 
 class PainterAggrTreestateBoxed(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "aggr_treestate_boxed"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Aggregation: simplistic boxed layout")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Tree")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["aggr_treestate", "aggr_hosts"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="aggr_treestate_boxed",
+            title=_l("Aggregation: simplistic boxed layout"),
+            short_title=_l("Tree"),
+            columns=["aggr_treestate", "aggr_hosts"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:

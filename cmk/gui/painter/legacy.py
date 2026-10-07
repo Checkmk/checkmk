@@ -242,6 +242,17 @@ class Painter(abc.ABC):
 class LegacyPainterAdapter(InternalPainter):
     def __init__(self, legacy: type[Painter]) -> None:
         self._legacy = legacy
+        painter = self._context_free_painter()
+        super().__init__(
+            ident=painter.ident,
+            title=painter.ident,
+            sorter=painter.sorter,
+            printable=painter.printable,
+            painter_options=painter.painter_options,
+            load_inv=painter.load_inv,
+            use_painter_link=painter.use_painter_link,
+            title_classes=painter.title_classes(),
+        )
 
     def _painter(self, context: PainterContext) -> Painter:
         return self._legacy(
@@ -260,18 +271,9 @@ class LegacyPainterAdapter(InternalPainter):
     def uuid_col(self, cell: Cell) -> str:
         return self._legacy.uuid_col(cell)
 
-    @property
-    @override
-    def ident(self) -> str:
-        return self._context_free_painter().ident
-
     @override
     def title(self, cell: Cell, context: PainterContext) -> str:
         return self._painter(context).title(cell)
-
-    @override
-    def title_classes(self) -> list[str]:
-        return self._context_free_painter().title_classes()
 
     @property
     @override
@@ -311,31 +313,6 @@ class LegacyPainterAdapter(InternalPainter):
     @override
     def parameters(self, context: PainterContext) -> ValueSpec[object] | None:
         return self._painter(context).parameters
-
-    @property
-    @override
-    def painter_options(self) -> list[str]:
-        return self._context_free_painter().painter_options
-
-    @property
-    @override
-    def printable(self) -> bool | str:
-        return self._context_free_painter().printable
-
-    @property
-    @override
-    def use_painter_link(self) -> bool:
-        return self._context_free_painter().use_painter_link
-
-    @property
-    @override
-    def sorter(self) -> SorterName | None:
-        return self._context_free_painter().sorter
-
-    @property
-    @override
-    def load_inv(self) -> bool:
-        return self._context_free_painter().load_inv
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:

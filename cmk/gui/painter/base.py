@@ -56,6 +56,7 @@ from cmk.web.utils import escaping
 from cmk.web.utils.escaping import replace_anchor_tags_with_urls, replace_br_with_newlines
 from cmk.web.utils.html import HTML
 from cmk.web.utils.request_cache import RequestCache
+from cmk.web.utils.speaklater import LazyString, LazyText
 from cmk.web.utils.urls import HTTPVariable, makeuri
 
 from .helpers import RenderLink
@@ -103,29 +104,49 @@ class InternalPainter(abc.ABC):
     service state. It uses the columns "service_state" and "has_been_checked".
     """
 
+    def __init__(
+        self,
+        *,
+        ident: str | LazyText,
+        title: str | LazyString | LazyText,
+        short_title: str | LazyString | LazyText | None = None,
+        list_title: str | LazyString | LazyText | None = None,
+        columns: Sequence[ColumnName] = (),
+        sorter: SorterName | None = None,
+        printable: bool | str = True,
+        painter_options: Sequence[str] = (),
+        load_inv: bool = False,
+        use_painter_link: bool = True,
+        title_classes: Sequence[str] = (),
+    ) -> None:
+        self._ident = ident
+        self._title = title
+        self._short_title = short_title
+        self._list_title = list_title
+        self._columns = columns
+        self._sorter = sorter
+        self._printable = printable
+        self._painter_options = painter_options
+        self._load_inv = load_inv
+        self._use_painter_link = use_painter_link
+        self._title_classes = title_classes
+
     def uuid_col(self, cell: Cell) -> str:  # noqa: ARG002
         return ""
 
     @property
-    @abc.abstractmethod
     def ident(self) -> str:
-        """The identity of a painter. One word, may contain alpha numeric characters"""
-        raise NotImplementedError
+        return str(self._ident)
 
-    @abc.abstractmethod
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        """Used as display string for the painter in the GUI (e.g. views using this painter)"""
-        raise NotImplementedError
+    def title(self, cell: Cell, context: PainterContext) -> str:  # noqa: ARG002
+        return str(self._title)
 
-    def title_classes(self) -> list[str]:
-        """Additional css classes used to render the title"""
-        return []
+    def title_classes(self) -> Sequence[str]:
+        return self._title_classes
 
     @property
-    @abc.abstractmethod
     def columns(self) -> Sequence[ColumnName]:
-        """Livestatus columns needed for this painter"""
-        raise NotImplementedError
+        return self._columns
 
     def dynamic_columns(self, cell: Cell) -> list[ColumnName]:  # noqa: ARG002
         """Return list of dynamically generated column as specified by Cell
@@ -156,9 +177,9 @@ class InternalPainter(abc.ABC):
         return
 
     def short_title(self, cell: Cell, context: PainterContext) -> str:
-        """Used as display string for the painter e.g. as table header
-        Falls back to the full title if no short title is given"""
-        return self.title(cell, context)
+        if self._short_title is None:
+            return self.title(cell, context)
+        return str(self._short_title)
 
     def tooltip_title(self, cell: Cell, context: PainterContext) -> str:
         """Used as string for the painter title in table header tooltips
@@ -170,9 +191,9 @@ class InternalPainter(abc.ABC):
         return self.ident
 
     def list_title(self, cell: Cell, context: PainterContext) -> str:
-        """Override this to define a custom title for the painter in the view editor
-        Falls back to the full title if no short title is given"""
-        return self.title(cell, context)
+        if self._list_title is None:
+            return self.title(cell, context)
+        return str(self._list_title)
 
     def group_by(
         self,
@@ -188,9 +209,8 @@ class InternalPainter(abc.ABC):
         return None
 
     @property
-    def painter_options(self) -> list[str]:
-        """Returns a list of painter option names that affect this painter"""
-        return []
+    def painter_options(self) -> Sequence[str]:
+        return self._painter_options
 
     @property
     def printable(self) -> bool | str:
@@ -199,23 +219,20 @@ class InternalPainter(abc.ABC):
         False      : Is not printable at all
         "<string>" : ID of a painter_printer (Reporting module)
         """
-        return True
+        return self._printable
 
     @property
     def use_painter_link(self) -> bool:
-        """Allow the view spec to define a view / dashboard to link to"""
-        return True
+        return self._use_painter_link
 
     @property
     def sorter(self) -> SorterName | None:
-        """Returns the optional name of the sorter for this painter"""
-        return None
+        return self._sorter
 
     # TODO: Cleanup this hack
     @property
     def load_inv(self) -> bool:
-        """Whether or not to load the HW/SW Inventory for this column"""
-        return False
+        return self._load_inv
 
     # TODO At the moment we use render as fallback but in the future every
     # painter should implement explicit
@@ -400,7 +417,7 @@ class Cell:
             return re.sub(r"[^\w]", "_", self._custom_title.lower())
         return self.painter().export_title(self)
 
-    def painter_options(self) -> list[str]:
+    def painter_options(self) -> Sequence[str]:
         return self.painter().painter_options
 
     def painter_parameters(self) -> PainterParameters | None:

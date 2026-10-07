@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from typing import override
 
 from cmk.gui.htmllib.html import html
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _l
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter import Cell, InternalPainter, PainterContext
 from cmk.gui.type_defs import ColumnName, Row
@@ -34,28 +34,18 @@ from .entries import (
 
 
 class PainterServiceIcons(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "service_icons"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Service icons")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Icons")
+    def __init__(self) -> None:
+        super().__init__(
+            ident="service_icons",
+            title=_l("Service icons"),
+            short_title=_l("Icons"),
+            printable=False,
+        )
 
     @property
     @override
     def columns(self) -> Sequence[ColumnName]:
         return iconpainter_columns("service", toplevel=None)
-
-    @property
-    @override
-    def printable(self) -> bool:
-        return False
 
     @override
     def group_by(self, row: Row, cell: Cell, context: PainterContext) -> tuple[str]:
@@ -91,28 +81,15 @@ class PainterServiceIcons(InternalPainter):
 
 
 class PainterHostIcons(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "host_icons"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Host icons")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Icons")
+    def __init__(self) -> None:
+        super().__init__(
+            ident="host_icons", title=_l("Host icons"), short_title=_l("Icons"), printable=False
+        )
 
     @property
     @override
     def columns(self) -> Sequence[ColumnName]:
         return iconpainter_columns("host", toplevel=None)
-
-    @property
-    @override
-    def printable(self) -> bool:
-        return False
 
     @override
     def group_by(self, row: Row, cell: Cell, context: PainterContext) -> tuple[str]:

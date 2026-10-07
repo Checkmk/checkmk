@@ -46,6 +46,16 @@ class _RenamedHostAddress(PainterHostAddress):
         return "renamed_host_address"
 
 
+_LATE_COLUMNS: list[ColumnName] = []
+
+
+class _LegacyPainterWithLateColumns(_LegacyPainter):
+    @property
+    @override
+    def columns(self) -> Sequence[ColumnName]:
+        return list(_LATE_COLUMNS)
+
+
 class _LegacyPainterWithUUIDColumn(_LegacyPainter):
     @staticmethod
     @override
@@ -95,6 +105,17 @@ def test_built_in_painter_subclass_renders_through_a_cell() -> None:
     registry.register(_RenamedHostAddress)
     cell = Cell(ColumnSpec(name="renamed_host_address"), None, registry, _PERMISSIONS, None)
     assert cell.render_content({"host_address": "10.0.0.1"}, user) == ("", "10.0.0.1")
+
+
+@pytest.mark.usefixtures("request_context")
+def test_legacy_painter_reads_its_columns_on_access() -> None:
+    registry = PainterRegistry()
+    registry.register(_LegacyPainterWithLateColumns)
+    _LATE_COLUMNS.append("host_name")
+    try:
+        assert registry["legacy"].columns == ["host_name"]
+    finally:
+        _LATE_COLUMNS.clear()
 
 
 @pytest.mark.usefixtures("request_context")

@@ -20,7 +20,6 @@ from cmk.gui.type_defs import (
     PainterParameters,
     Row,
     SingleInfos,
-    SorterName,
     VisualContext,
     VisualLinkSpec,
 )
@@ -80,27 +79,9 @@ def register_inv_paint_functions(mapping: Mapping[str, object]) -> None:
 
 def _register_painter(painter_registry: PainterRegistry, from_hint: PainterFromHint) -> None:
     class _PainterFromHint(InternalPainter):
-        @property
-        @override
-        def ident(self) -> str:
-            return from_hint.name
-
-        @override
-        def title(self, cell: Cell, context: PainterContext) -> str:
-            return from_hint.title
-
-        @override
-        def short_title(self, cell: Cell, context: PainterContext) -> str:
-            return from_hint.short
-
         @override
         def tooltip_title(self, cell: Cell, context: PainterContext) -> str:
             return from_hint.tooltip_title
-
-        @property
-        @override
-        def columns(self) -> Sequence[ColumnName]:
-            return from_hint.columns
 
         @override
         def render(
@@ -134,27 +115,18 @@ def _register_painter(painter_registry: PainterRegistry, from_hint: PainterFromH
         def parameters(self, context: PainterContext) -> Dictionary | FixedValue[PainterParameters]:
             return from_hint.params
 
-        @property
-        @override
-        def painter_options(self) -> list[str]:
-            return list(from_hint.options)
-
-        @property
-        @override
-        def printable(self) -> bool:
-            return from_hint.printable
-
-        @property
-        @override
-        def sorter(self) -> SorterName:
-            return from_hint.sorter
-
-        @property
-        @override
-        def load_inv(self) -> bool:
-            return from_hint.load_inv
-
-    painter_registry.register(_PainterFromHint())
+    painter_registry.register(
+        _PainterFromHint(
+            ident=from_hint.name,
+            title=from_hint.title,
+            short_title=from_hint.short,
+            columns=from_hint.columns,
+            sorter=from_hint.sorter,
+            printable=from_hint.printable,
+            painter_options=from_hint.options,
+            load_inv=from_hint.load_inv,
+        )
+    )
 
 
 def _register_sorter(sorter_registry: SorterRegistry, from_hint: SorterFromHint) -> None:

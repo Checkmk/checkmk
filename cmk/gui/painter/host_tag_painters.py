@@ -6,6 +6,7 @@
 """Dynamic host tag painters and sorters based on the site configuration"""
 
 from collections.abc import Sequence
+from functools import partial
 from typing import override
 
 from cmk.gui.hooks import request_memoize
@@ -13,6 +14,7 @@ from cmk.gui.i18n import _
 from cmk.gui.type_defs import Row
 from cmk.gui.view_utils import CellSpec
 from cmk.ruleset_matcher.tags import TagGroup
+from cmk.web.utils.speaklater import LazyText
 
 from .base import InternalPainter
 from .helpers import get_tag_groups, tag_choices_for_group
@@ -42,22 +44,6 @@ def host_tag_config_based_painters(
             "HostTagPainter%s" % str(tag_group.id).title(),
             (InternalPainter,),
             {
-                "_ident": ident,
-                "_spec": {
-                    "title": _("Host tag:")
-                    + " "
-                    + (
-                        f"{tag_group.topic}  / {tag_group.title}"
-                        if tag_group.topic
-                        else tag_group.title
-                    ),
-                    "short": tag_group.title,
-                    "columns": ["host_tags"],
-                },
-                "ident": property(lambda self: self._ident),
-                "title": lambda self, cell, context: self._spec["title"],  # noqa: ARG005
-                "short_title": lambda self, cell, context: self._spec["short"],  # noqa: ARG005
-                "columns": property(lambda self: self._spec["columns"]),
                 "render": lambda self, row, cell, user, context, tag_group=tag_group: (  # noqa: ARG005
                     _paint_host_tag(row, tag_group=tag_group)
                 ),
@@ -67,7 +53,12 @@ def host_tag_config_based_painters(
                     row, tag_group=tag_group
                 )[1],
             },
-        )()
+        )(
+            ident=ident,
+            title=LazyText(partial(_host_tag_title, tag_group)),
+            short_title=tag_group.title,
+            columns=["host_tags"],
+        )
         for tag_group in hashed_tag_groups.tag_groups
     }
 
@@ -75,3 +66,11 @@ def host_tag_config_based_painters(
 def _paint_host_tag(row: Row, *, tag_group: TagGroup) -> CellSpec:
     tag_id = get_tag_groups(row, "host").get(tag_group.id)
     return "", tag_choices_for_group(tag_group).get(tag_id, _("N/A"))
+
+
+def _host_tag_title(tag_group: TagGroup) -> str:
+    return (
+        _("Host tag:")
+        + " "
+        + (f"{tag_group.topic}  / {tag_group.title}" if tag_group.topic else tag_group.title)
+    )

@@ -7,7 +7,6 @@
 
 import copy
 import time
-from collections.abc import Sequence
 from dataclasses import replace
 from typing import Literal, override
 
@@ -37,7 +36,6 @@ from cmk.gui.painter_options import (
     PainterOptions,
 )
 from cmk.gui.type_defs import (
-    ColumnName,
     ColumnSpec,
     PainterParameters,
     Row,
@@ -350,36 +348,20 @@ def _migrate_old_graph_render_options(value: PainterParameters | None) -> Painte
 
 
 class PainterServiceGraphs(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "service_graphs"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Service graphs with display options")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return [
-            "host_name",
-            "service_description",
-            "service_perf_data",
-            "service_metrics",
-            "service_check_command",
-        ]
-
-    @property
-    @override
-    def printable(self) -> str:
-        return "time_graph"
-
-    @property
-    @override
-    def painter_options(self) -> list[str]:
-        # No pnp_timerange: the engine takes its time range from the global time picker.
-        return ["graph_render_options"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="service_graphs",
+            title=_l("Service graphs with display options"),
+            columns=[
+                "host_name",
+                "service_description",
+                "service_perf_data",
+                "service_metrics",
+                "service_check_command",
+            ],
+            printable="time_graph",
+            painter_options=["graph_render_options"],
+        )
 
     @override
     def parameters(self, context: PainterContext) -> MigrateNotUpdated:
@@ -418,30 +400,14 @@ class PainterServiceGraphs(InternalPainter):
 
 
 class PainterHostGraphs(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "host_graphs"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Host graphs with display options")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["host_name", "host_perf_data", "host_metrics", "host_check_command"]
-
-    @property
-    @override
-    def printable(self) -> str:
-        return "time_graph"
-
-    @property
-    @override
-    def painter_options(self) -> list[str]:
-        # No pnp_timerange: the engine takes its time range from the global time picker.
-        return ["graph_render_options"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="host_graphs",
+            title=_l("Host graphs with display options"),
+            columns=["host_name", "host_perf_data", "host_metrics", "host_check_command"],
+            printable="time_graph",
+            painter_options=["graph_render_options"],
+        )
 
     @override
     def parameters(self, context: PainterContext) -> MigrateNotUpdated:
@@ -502,36 +468,20 @@ class PainterOptionPNPTimerange(PainterOption):
 
 
 class PainterSvcPnpgraph(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "svc_pnpgraph"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Service graphs")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return [
-            "host_name",
-            "service_description",
-            "service_perf_data",
-            "service_metrics",
-            "service_check_command",
-        ]
-
-    @property
-    @override
-    def printable(self) -> str:
-        return "time_graph"
-
-    @property
-    @override
-    def painter_options(self) -> list[str]:
-        # No pnp_timerange: the engine takes its time range from the global time picker.
-        return []
+    def __init__(self) -> None:
+        super().__init__(
+            ident="svc_pnpgraph",
+            title=_l("Service graphs"),
+            columns=[
+                "host_name",
+                "service_description",
+                "service_perf_data",
+                "service_metrics",
+                "service_check_command",
+            ],
+            printable="time_graph",
+            painter_options=[],
+        )
 
     @override
     def parameters(self, context: PainterContext) -> Transform:
@@ -570,34 +520,15 @@ class PainterSvcPnpgraph(InternalPainter):
 
 
 class PainterHostPnpgraph(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "host_pnpgraph"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Host graph")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Graph")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["host_name", "host_perf_data", "host_metrics", "host_check_command"]
-
-    @property
-    @override
-    def printable(self) -> str:
-        return "time_graph"
-
-    @property
-    @override
-    def painter_options(self) -> list[str]:
-        # No pnp_timerange: the engine takes its time range from the global time picker.
-        return []
+    def __init__(self) -> None:
+        super().__init__(
+            ident="host_pnpgraph",
+            title=_l("Host graph"),
+            short_title=_l("Graph"),
+            columns=["host_name", "host_perf_data", "host_metrics", "host_check_command"],
+            printable="time_graph",
+            painter_options=[],
+        )
 
     @override
     def parameters(self, context: PainterContext) -> Transform:

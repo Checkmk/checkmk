@@ -201,23 +201,10 @@ class CrashReportsRowTable(RowTableLivestatus):
 
 
 class PainterCrashIdent(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "crash_ident"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Crash ident")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("ID")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_id"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="crash_ident", title=_l("Crash ident"), short_title=_l("ID"), columns=["crash_id"]
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -233,23 +220,13 @@ class PainterCrashIdent(InternalPainter):
 
 
 class PainterCrashType(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "crash_type"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Crash type")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Type")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_type"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="crash_type",
+            title=_l("Crash type"),
+            short_title=_l("Type"),
+            columns=["crash_type"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -257,23 +234,13 @@ class PainterCrashType(InternalPainter):
 
 
 class PainterCrashSource(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "crash_source"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Crash source")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Source")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_exc_traceback"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="crash_source",
+            title=_l("Crash source"),
+            short_title=_l("Source"),
+            columns=["crash_exc_traceback"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -288,28 +255,14 @@ class PainterCrashSource(InternalPainter):
 
 
 class PainterCrashTime(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "crash_time"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Crash time")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Time")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_time"]
-
-    @property
-    @override
-    def painter_options(self) -> list[str]:
-        return ["ts_format", "ts_date"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="crash_time",
+            title=_l("Crash time"),
+            short_title=_l("Time"),
+            columns=["crash_time"],
+            painter_options=["ts_format", "ts_date"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -323,23 +276,13 @@ class PainterCrashTime(InternalPainter):
 
 
 class PainterCrashVersion(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "crash_version"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Crash Checkmk version")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Version")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_version"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="crash_version",
+            title=_l("Crash Checkmk version"),
+            short_title=_l("Version"),
+            columns=["crash_version"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -347,23 +290,13 @@ class PainterCrashVersion(InternalPainter):
 
 
 class PainterCrashException(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "crash_exception"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Crash exception")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Exc.")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_exc_type", "crash_exc_value"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="crash_exception",
+            title=_l("Crash exception"),
+            short_title=_l("Exc."),
+            columns=["crash_exc_type", "crash_exc_value"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -456,23 +389,13 @@ CommandDeleteCrashReports = Command(
 
 
 class PainterCrashHost(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "crash_host"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Crash host")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Host")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_host"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="crash_host",
+            title=_l("Crash host"),
+            short_title=_l("Host"),
+            columns=["crash_host"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -492,23 +415,13 @@ class PainterCrashHost(InternalPainter):
 
 
 class PainterCrashItem(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "crash_item"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Crash service item")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Item")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_item"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="crash_item",
+            title=_l("Crash service item"),
+            short_title=_l("Item"),
+            columns=["crash_item"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -516,23 +429,13 @@ class PainterCrashItem(InternalPainter):
 
 
 class PainterCrashCheckType(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "crash_check_type"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Crash check type")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Check")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_check_type"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="crash_check_type",
+            title=_l("Crash check type"),
+            short_title=_l("Check"),
+            columns=["crash_check_type"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -540,23 +443,13 @@ class PainterCrashCheckType(InternalPainter):
 
 
 class PainterCrashServiceName(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "crash_service_name"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Crash service name")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Service")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_service_name"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="crash_service_name",
+            title=_l("Crash service name"),
+            short_title=_l("Service"),
+            columns=["crash_service_name"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:

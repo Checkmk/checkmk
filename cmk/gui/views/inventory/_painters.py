@@ -15,7 +15,7 @@ from cmk.gui import sites
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter import Cell, InternalPainter, PainterContext
 from cmk.gui.painter_options import paint_age, PainterOption, PainterOptions
@@ -102,29 +102,14 @@ class PainterOptionShowInternalTreePaths(PainterOption):
 
 
 class PainterInventoryTree(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "inventory_tree"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Inventory tree")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["host_inventory", "host_structured_status"]
-
-    @property
-    @override
-    def painter_options(self) -> list[str]:
-        return ["show_internal_tree_paths"]
-
-    @property
-    @override
-    def load_inv(self) -> bool:
-        return True
+    def __init__(self) -> None:
+        super().__init__(
+            ident="inventory_tree",
+            title=_l("Inventory tree"),
+            columns=["host_inventory", "host_structured_status"],
+            painter_options=["show_internal_tree_paths"],
+            load_inv=True,
+        )
 
     @override
     def _compute_data(
@@ -177,28 +162,14 @@ class PainterInventoryTree(InternalPainter):
 
 
 class PainterInvhistTime(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "invhist_time"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Inventory date/time")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Date/time")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["invhist_time"]
-
-    @property
-    @override
-    def painter_options(self) -> list[str]:
-        return ["ts_format", "ts_date"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="invhist_time",
+            title=_l("Inventory date/time"),
+            short_title=_l("Date/time"),
+            columns=["invhist_time"],
+            painter_options=["ts_format", "ts_date"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -212,24 +183,13 @@ class PainterInvhistTime(InternalPainter):
 
 
 class PainterInvhistDelta(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "invhist_delta"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Inventory changes")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["invhist_delta", "invhist_time"]
-
-    @property
-    @override
-    def painter_options(self) -> list[str]:
-        return ["show_internal_tree_paths"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="invhist_delta",
+            title=_l("Inventory changes"),
+            columns=["invhist_delta", "invhist_time"],
+            painter_options=["show_internal_tree_paths"],
+        )
 
     @override
     def _compute_data(
@@ -289,23 +249,13 @@ def _paint_invhist_count(row: Row, what: str) -> CellSpec:
 
 
 class PainterInvhistRemoved(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "invhist_removed"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Removed entries")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Removed")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["invhist_removed"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="invhist_removed",
+            title=_l("Removed entries"),
+            short_title=_l("Removed"),
+            columns=["invhist_removed"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -313,23 +263,13 @@ class PainterInvhistRemoved(InternalPainter):
 
 
 class PainterInvhistNew(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "invhist_new"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("New entries")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("New")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["invhist_new"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="invhist_new",
+            title=_l("New entries"),
+            short_title=_l("New"),
+            columns=["invhist_new"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
@@ -337,23 +277,13 @@ class PainterInvhistNew(InternalPainter):
 
 
 class PainterInvhistChanged(InternalPainter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "invhist_changed"
-
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Changed entries")
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return _("Changed")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["invhist_changed"]
+    def __init__(self) -> None:
+        super().__init__(
+            ident="invhist_changed",
+            title=_l("Changed entries"),
+            short_title=_l("Changed"),
+            columns=["invhist_changed"],
+        )
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:

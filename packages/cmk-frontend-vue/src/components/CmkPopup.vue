@@ -38,6 +38,7 @@ watch(
         ref="dialogContentRef"
         class="cmk-vue-app cmk-popup__container"
         :aria-describedby="undefined"
+        @keydown.escape.prevent
         @escape-key-down="emit('close')"
         @open-auto-focus.prevent
         @close-auto-focus.prevent

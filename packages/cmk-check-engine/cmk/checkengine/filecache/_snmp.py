@@ -7,7 +7,7 @@
 import ast
 from typing import override
 
-from cmk.checkengine.snmplib import SNMPRawData, SNMPSectionMarker
+from cmk.checkengine.snmplib import serialize_snmp_raw_data, SNMPRawData, SNMPSectionMarker
 
 from ._cache import FileCache
 
@@ -25,4 +25,4 @@ class SNMPFileCache(FileCache[SNMPRawData]):
     @staticmethod
     @override
     def _to_cache_file(raw_data: SNMPRawData) -> bytes:
-        return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")
+        return serialize_snmp_raw_data(raw_data)

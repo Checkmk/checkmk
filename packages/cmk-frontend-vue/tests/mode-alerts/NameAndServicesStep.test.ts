@@ -248,6 +248,16 @@ test('an exact search matching nothing offers a regular expression instead', asy
   })
 })
 
+test('a regex search matching nothing explains that it matches from the start', async () => {
+  renderStep({ name: 'Latency too high', matchType: 'regex', servicePattern: 'duration' })
+
+  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+
+  await waitFor(() => {
+    expect(screen.getByText(/matches from the start of the service name/)).toBeInTheDocument()
+  })
+})
+
 test('a regex search matching nothing points at the discovery requirement', async () => {
   renderStep({ name: 'Latency too high', matchType: 'regex', servicePattern: 'nonexistent' })
 

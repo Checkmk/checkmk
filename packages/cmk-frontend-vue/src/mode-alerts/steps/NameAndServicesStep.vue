@@ -101,7 +101,9 @@ const noMatchHint = computed(() =>
     ? _t(
         'Exact matching needs the complete service name. Switch to a regular expression to match part of it.'
       )
-    : _t('Only already discovered custom services can be matched.')
+    : _t(
+        'A regular expression matches from the start of the service name, so begin it with .* to match anywhere in it. Only already discovered custom services can be matched.'
+      )
 )
 
 const visibleMatches = computed(() =>

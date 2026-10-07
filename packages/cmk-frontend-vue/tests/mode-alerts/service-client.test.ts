@@ -63,14 +63,20 @@ test('an exact match asks livestatus for string equality on the service name', a
   })
 })
 
-test('a regex match asks livestatus for a regex match on the service name', async () => {
+test('a regex match asks livestatus for a regex match from the start of the service name', async () => {
   await searchCustomServices('regex', 'HTTP.*duration')
 
   expect(conditionOn('description')).toEqual({
     op: '~',
     left: 'description',
-    right: 'HTTP.*duration'
+    right: '^(?:HTTP.*duration)'
   })
+})
+
+test('an anchored regex keeps an alternation together', async () => {
+  await searchCustomServices('regex', 'CPU|Memory')
+
+  expect(conditionOn('description')?.right).toBe('^(?:CPU|Memory)')
 })
 
 test('the search is restricted to services of the custom services check plugin', async () => {

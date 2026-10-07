@@ -73,12 +73,20 @@ async function queryServices(op: '=' | '~', pattern: string): Promise<ServiceEnt
   return (collection.value ?? []) as unknown as ServiceEntry[]
 }
 
+// Livestatus searches anywhere in the name, but the alert's rule matches a service name
+// from its start, so the preview is anchored to list exactly the services the rule gets.
+function anchored(pattern: string): string {
+  return `^(?:${pattern})`
+}
+
 // Throws CmkApiError on HTTP error.
 export async function searchCustomServices(
   match: ServiceNameMatch,
   pattern: string
 ): Promise<ServiceMatches> {
-  const entries = await queryServices(match === 'exact' ? '=' : '~', pattern)
+  const entries = await (match === 'exact'
+    ? queryServices('=', pattern)
+    : queryServices('~', anchored(pattern)))
   return {
     services: entries.slice(0, MAX_MATCHES).map((entry) => ({
       hostName: entry.extensions.host_name,

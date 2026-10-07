@@ -1136,11 +1136,11 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "[add].end.until": "next_day",
     },
     "user_icons_and_actions": {
-        "[add]": (NoSaveableDefault(), {"icon": None}),
-        "[add].1.sort_index": 15,
-        "[add].1.title": NoSaveableDefault(),
-        "[add].1.toplevel": True,
-        "[add].1.url": (NoSaveableDefault(), "_blank"),
+        "[add]": {"id": NoSaveableDefault(), "icon": None},
+        "[add].sort_index": 15,
+        "[add].title": NoSaveableDefault(),
+        "[add].toplevel": True,
+        "[add].url": (NoSaveableDefault(), "_blank"),
     },
     "user_localizations": {
         "[add]": {"original": NoSaveableDefault(), "translation": {}},
@@ -2849,18 +2849,21 @@ CASES: Mapping[str, list[Case]] = {
         CaseDirty(
             "icon-existence-check-fails-in-test-environment",
             {
+                "wiki": {"icon": "help"},
                 "jira": {
                     "icon": "link",
                     "title": "Open Jira",
                     "url": ("https://jira.example.com/?host=$HOSTNAME$", "_blank"),
                     "toplevel": True,
                     "sort_index": 10,
-                }
+                },
             },
             MKUserError,
         ),
         CaseFail("missing-icon", {"jira": {"title": "No icon"}}),
         CaseFail("not-a-dict", ["jira"]),
+        CaseFail("action-not-a-dict", {"jira": "link"}),
+        CaseFail("action-with-id-key", {"jira": {"icon": "link", "id": "wiki"}}),
     ],
     "user_localizations": [
         CasePass("configured", {"Business critical": {"en": "Important"}}),

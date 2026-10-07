@@ -1554,104 +1554,121 @@ ConfigVariableUserLocalizations = ConfigVariable(
     ),
 )
 
+
+def _user_icons_and_actions_from_disk(value: object) -> list[dict[str, object]]:
+    if not isinstance(value, dict):
+        raise ValueError(f"Expected a mapping, got {value!r}")
+    if not all(isinstance(action, dict) and "id" not in action for action in value.values()):
+        raise ValueError(f"Expected a mapping of actions without an ID key, got {value!r}")
+    return [{"id": ident, **action} for ident, action in sorted(value.items())]
+
+
+def _user_icons_and_actions_to_disk(value: object) -> dict[object, object]:
+    if not isinstance(value, list):
+        raise ValueError(f"Expected a list, got {value!r}")
+    return {entry["id"]: {key: v for key, v in entry.items() if key != "id"} for entry in value}
+
+
 ConfigVariableUserIconsAndActions = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
     ident="user_icons_and_actions",
-    form_spec=lambda context: _fs_keyed_by_first_tuple_element(  # noqa: ARG005
-        fs.List[tuple[object, ...]](
-            element_template=FSTuple(
-                elements=[
-                    fs.String(title=Title("ID"), custom_validate=id_validators()),
-                    fs.Dictionary(
-                        elements={
-                            "icon": fs.DictElement(
-                                required=True,
-                                parameter_form=LegacyValueSpec.wrap(
-                                    IconSelector(
-                                        title=_("Icon"),
-                                        allow_empty=False,
-                                        with_emblem=False,
-                                    )
+    form_spec=lambda context: TransformDataForLegacyFormatOrRecomposeFunction(  # noqa: ARG005
+        from_disk=_user_icons_and_actions_from_disk,
+        to_disk=_user_icons_and_actions_to_disk,
+        wrapped_form_spec=fs.List[Mapping[str, object]](
+            element_template=fs.Dictionary(
+                elements={
+                    "id": fs.DictElement(
+                        required=True,
+                        parameter_form=fs.String(
+                            title=Title("ID"), custom_validate=id_validators()
+                        ),
+                    ),
+                    "icon": fs.DictElement(
+                        required=True,
+                        parameter_form=LegacyValueSpec.wrap(
+                            IconSelector(
+                                title=_("Icon"),
+                                allow_empty=False,
+                                with_emblem=False,
+                            )
+                        ),
+                    ),
+                    "title": fs.DictElement(
+                        parameter_form=fs.String(title=Title("Title")),
+                    ),
+                    "url": fs.DictElement(
+                        parameter_form=FSTuple(
+                            title=Title("Action"),
+                            elements=[
+                                fs.String(
+                                    title=Title("URL"),
+                                    help_text=Help(
+                                        "This URL is opened when clicking on the action / icon. You "
+                                        "can use some macros within the URL which are dynamically "
+                                        "replaced for each object. These are:<br>"
+                                        "<ul>"
+                                        "<li>$HOSTNAME$: Contains the name of the host</li>"
+                                        "<li>$HOSTNAME_URL_ENCODED$: Same as above but URL encoded</li>"
+                                        "<li>$SERVICEDESC$: Contains the service name "
+                                        "(in case this is a service)</li>"
+                                        "<li>$SERVICEDESC_URL_ENCODED$: Same as above but URL encoded</li>"
+                                        "<li>$HOSTADDRESS$: Contains the network address of the host</li>"
+                                        "<li>$HOSTADDRESS_URL_ENCODED$: Same as above but URL encoded</li>"
+                                        "<li>$USER_ID$: The user ID of the currently active user</li>"
+                                        "</ul>"
+                                    ),
+                                    field_size=fs.FieldSize.LARGE,
                                 ),
-                            ),
-                            "title": fs.DictElement(
-                                parameter_form=fs.String(title=Title("Title")),
-                            ),
-                            "url": fs.DictElement(
-                                parameter_form=FSTuple(
-                                    title=Title("Action"),
+                                SingleChoiceExtended(
+                                    title=Title("Open in"),
                                     elements=[
-                                        fs.String(
-                                            title=Title("URL"),
-                                            help_text=Help(
-                                                "This URL is opened when clicking on the action / icon. You "
-                                                "can use some macros within the URL which are dynamically "
-                                                "replaced for each object. These are:<br>"
-                                                "<ul>"
-                                                "<li>$HOSTNAME$: Contains the name of the host</li>"
-                                                "<li>$HOSTNAME_URL_ENCODED$: Same as above but URL encoded</li>"
-                                                "<li>$SERVICEDESC$: Contains the service name "
-                                                "(in case this is a service)</li>"
-                                                "<li>$SERVICEDESC_URL_ENCODED$: Same as above but URL encoded</li>"
-                                                "<li>$HOSTADDRESS$: Contains the network address of the host</li>"
-                                                "<li>$HOSTADDRESS_URL_ENCODED$: Same as above but URL encoded</li>"
-                                                "<li>$USER_ID$: The user ID of the currently active user</li>"
-                                                "</ul>"
-                                            ),
-                                            field_size=fs.FieldSize.LARGE,
+                                        SingleChoiceElementExtended(
+                                            name="_blank",
+                                            title=Title("Load in a new window / tab"),
                                         ),
-                                        SingleChoiceExtended(
-                                            title=Title("Open in"),
-                                            elements=[
-                                                SingleChoiceElementExtended(
-                                                    name="_blank",
-                                                    title=Title("Load in a new window / tab"),
-                                                ),
-                                                SingleChoiceElementExtended(
-                                                    name="_self",
-                                                    title=Title(
-                                                        "Load in current content area (keep sidebar)"
-                                                    ),
-                                                ),
-                                                SingleChoiceElementExtended(
-                                                    name="_top",
-                                                    title=Title("Load as new page (hide sidebar)"),
-                                                ),
-                                            ],
-                                            prefill=fs.DefaultValue("_blank"),
+                                        SingleChoiceElementExtended(
+                                            name="_self",
+                                            title=Title(
+                                                "Load in current content area (keep sidebar)"
+                                            ),
+                                        ),
+                                        SingleChoiceElementExtended(
+                                            name="_top",
+                                            title=Title("Load as new page (hide sidebar)"),
                                         ),
                                     ],
+                                    prefill=fs.DefaultValue("_blank"),
                                 ),
-                            ),
-                            "toplevel": fs.DictElement(
-                                parameter_form=_fs_fixed_true(
-                                    title=Title("Show in column"),
-                                    label=Label("Directly show the action icon in the column"),
-                                    help_text=Help(
-                                        "Makes the icon appear in the column instead "
-                                        "of the drop-down menu."
-                                    ),
-                                ),
-                            ),
-                            "sort_index": fs.DictElement(
-                                parameter_form=fs.Integer(
-                                    title=Title("Sort index"),
-                                    help_text=Help(
-                                        "You can use the sort index to control the order of the "
-                                        "elements in the column and the menu. The elements are sorted "
-                                        "from smaller to higher numbers. The action menu icon "
-                                        "has a sort index of <tt>10</tt>, the graph icon a sort index "
-                                        "of <tt>20</tt>. All other default icons have a sort index of "
-                                        "<tt>30</tt> configured."
-                                    ),
-                                    custom_validate=[fs.validators.NumberInRange(min_value=0)],
-                                    prefill=fs.DefaultValue(15),
-                                ),
-                            ),
-                        },
+                            ],
+                        ),
                     ),
-                ],
+                    "toplevel": fs.DictElement(
+                        parameter_form=_fs_fixed_true(
+                            title=Title("Show in column"),
+                            label=Label("Directly show the action icon in the column"),
+                            help_text=Help(
+                                "Makes the icon appear in the column instead of the drop-down menu."
+                            ),
+                        ),
+                    ),
+                    "sort_index": fs.DictElement(
+                        parameter_form=fs.Integer(
+                            title=Title("Sort index"),
+                            help_text=Help(
+                                "You can use the sort index to control the order of the "
+                                "elements in the column and the menu. The elements are sorted "
+                                "from smaller to higher numbers. The action menu icon "
+                                "has a sort index of <tt>10</tt>, the graph icon a sort index "
+                                "of <tt>20</tt>. All other default icons have a sort index of "
+                                "<tt>30</tt> configured."
+                            ),
+                            custom_validate=[fs.validators.NumberInRange(min_value=0)],
+                            prefill=fs.DefaultValue(15),
+                        ),
+                    ),
+                },
             ),
             title=Title("Custom icons and actions"),
             editable_order=False,

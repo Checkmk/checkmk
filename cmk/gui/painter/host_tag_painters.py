@@ -11,12 +11,13 @@ from typing import override
 
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.type_defs import Row
 from cmk.gui.view_utils import CellSpec
 from cmk.ruleset_matcher.tags import TagGroup
 from cmk.web.utils.speaklater import LazyText
 
-from .base import InternalPainter
+from .base import Cell, InternalPainter, PainterContext
 from .helpers import get_tag_groups, tag_choices_for_group
 
 
@@ -40,25 +41,7 @@ def host_tag_config_based_painters(
     hashed_tag_groups: HashableTagGroups,
 ) -> dict[str, InternalPainter]:
     return {
-        (ident := "host_tag_" + tag_group.id): type(
-            "HostTagPainter%s" % str(tag_group.id).title(),
-            (InternalPainter,),
-            {
-                "render": lambda self, row, cell, user, context, tag_group=tag_group: (  # noqa: ARG005
-                    _paint_host_tag(row, tag_group=tag_group)
-                ),
-                # Use title of the tag value for grouping, not the complete
-                # dictionary of custom variables!
-                "group_by": lambda self, row, _cell, context, tag_group=tag_group: _paint_host_tag(  # noqa: ARG005
-                    row, tag_group=tag_group
-                )[1],
-            },
-        )(
-            ident=ident,
-            title=LazyText(partial(_host_tag_title, tag_group)),
-            short_title=tag_group.title,
-            columns=["host_tags"],
-        )
+        "host_tag_" + tag_group.id: make_host_tag_painter(tag_group)
         for tag_group in hashed_tag_groups.tag_groups
     }
 
@@ -68,9 +51,30 @@ def _paint_host_tag(row: Row, *, tag_group: TagGroup) -> CellSpec:
     return "", tag_choices_for_group(tag_group).get(tag_id, _("N/A"))
 
 
+def _render_host_tag(
+    tag_group: TagGroup, row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return _paint_host_tag(row, tag_group=tag_group)
+
+
+def _group_by_host_tag(tag_group: TagGroup, row: Row, _cell: Cell, _context: PainterContext) -> str:
+    return str(_paint_host_tag(row, tag_group=tag_group)[1])
+
+
 def _host_tag_title(tag_group: TagGroup) -> str:
     return (
         _("Host tag:")
         + " "
         + (f"{tag_group.topic}  / {tag_group.title}" if tag_group.topic else tag_group.title)
+    )
+
+
+def make_host_tag_painter(tag_group: TagGroup) -> InternalPainter:
+    return InternalPainter(
+        ident="host_tag_" + tag_group.id,
+        title=LazyText(partial(_host_tag_title, tag_group)),
+        render=partial(_render_host_tag, tag_group),
+        short_title=tag_group.title,
+        columns=["host_tags"],
+        group_by=partial(_group_by_host_tag, tag_group),
     )

@@ -5,7 +5,6 @@
 
 
 from collections.abc import Sequence
-from typing import override
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _l
@@ -33,95 +32,102 @@ from .entries import (
 )
 
 
+def _columns_service_icons() -> Sequence[ColumnName]:
+    return iconpainter_columns("service", toplevel=None)
+
+
+def _render_service_icons(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_icons(
+        "service",
+        row,
+        _get_row_icons(
+            "service", row, context.user_permissions, IconConfig.from_config(context.config)
+        ),
+    )
+
+
+def _compute_data_service_icons(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> list[DynamicIcon]:
+    return [
+        _handle_icon(i.icon_name)
+        for i in _get_row_icons(
+            "service", row, context.user_permissions, IconConfig.from_config(context.config)
+        )
+        if isinstance(i, IconEntry)
+    ]
+
+
+def _export_for_csv_service_icons(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str | HTML:
+    raise CSVExportError
+
+
 class PainterServiceIcons(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="service_icons",
             title=_l("Service icons"),
+            render=_render_service_icons,
             short_title=_l("Icons"),
+            columns=_columns_service_icons,
+            groupable=False,
+            compute_data=_compute_data_service_icons,
+            export_for_csv=_export_for_csv_service_icons,
             printable=False,
         )
 
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return iconpainter_columns("service", toplevel=None)
 
-    @override
-    def group_by(self, row: Row, cell: Cell, context: PainterContext) -> tuple[str]:
-        return ("",)  # Do not account for in grouping
+def _columns_host_icons() -> Sequence[ColumnName]:
+    return iconpainter_columns("host", toplevel=None)
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_icons(
-            "service",
-            row,
-            _get_row_icons(
-                "service", row, context.user_permissions, IconConfig.from_config(context.config)
-            ),
+
+def _render_host_icons(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_icons(
+        "host",
+        row,
+        _get_row_icons(
+            "host", row, context.user_permissions, IconConfig.from_config(context.config)
+        ),
+    )
+
+
+def _compute_data_host_icons(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> list[DynamicIcon]:
+    return [
+        _handle_icon(i.icon_name)
+        for i in _get_row_icons(
+            "host", row, context.user_permissions, IconConfig.from_config(context.config)
         )
+        if isinstance(i, IconEntry)
+    ]
 
-    @override
-    def _compute_data(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> list[DynamicIcon]:
-        return [
-            _handle_icon(i.icon_name)
-            for i in _get_row_icons(
-                "service", row, context.user_permissions, IconConfig.from_config(context.config)
-            )
-            if isinstance(i, IconEntry)
-        ]
 
-    @override
-    def export_for_csv(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> str | HTML:
-        raise CSVExportError
+def _export_for_csv_host_icons(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str | HTML:
+    raise CSVExportError
 
 
 class PainterHostIcons(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
-            ident="host_icons", title=_l("Host icons"), short_title=_l("Icons"), printable=False
+            ident="host_icons",
+            title=_l("Host icons"),
+            render=_render_host_icons,
+            short_title=_l("Icons"),
+            columns=_columns_host_icons,
+            groupable=False,
+            compute_data=_compute_data_host_icons,
+            export_for_csv=_export_for_csv_host_icons,
+            printable=False,
         )
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return iconpainter_columns("host", toplevel=None)
-
-    @override
-    def group_by(self, row: Row, cell: Cell, context: PainterContext) -> tuple[str]:
-        return ("",)  # Do not account for in grouping
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_icons(
-            "host",
-            row,
-            _get_row_icons(
-                "host", row, context.user_permissions, IconConfig.from_config(context.config)
-            ),
-        )
-
-    @override
-    def _compute_data(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> list[DynamicIcon]:
-        return [
-            _handle_icon(i.icon_name)
-            for i in _get_row_icons(
-                "host", row, context.user_permissions, IconConfig.from_config(context.config)
-            )
-            if isinstance(i, IconEntry)
-        ]
-
-    @override
-    def export_for_csv(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> str | HTML:
-        raise CSVExportError
 
 
 def _handle_icon(icon: StaticIcon | DynamicIcon) -> DynamicIcon:

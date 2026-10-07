@@ -8,6 +8,7 @@ import json
 import pytest
 
 from cmk.gui.crash_reporting.views import (
+    _summarize_exception,
     check_crash_source,
     cmp_crash_source,
     crash_exception_row_filter,
@@ -64,7 +65,7 @@ def _traceback_row(*filepaths: str) -> Row:
     ],
 )
 def test_painter_crash_exception_summarize(exc_type: str, exc_value: str, expected: str) -> None:
-    summary = PainterCrashException.summarize(exc_type, exc_value)
+    summary = _summarize_exception(exc_type, exc_value)
     assert summary == expected
     assert "\n" not in summary
     assert "<" not in summary

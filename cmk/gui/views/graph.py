@@ -8,7 +8,7 @@
 import copy
 import time
 from dataclasses import replace
-from typing import Literal, override
+from typing import Literal
 
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
@@ -347,11 +347,49 @@ def _migrate_old_graph_render_options(value: PainterParameters | None) -> Painte
     return value
 
 
+def _parameters_service_graphs(_context: PainterContext) -> MigrateNotUpdated:
+    return cmk_time_graph_params()
+
+
+def _render_service_graphs(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_time_graph_cmk(
+        row,
+        cell,
+        user=user,
+        request=context.request,
+        response=response,
+        painter_options=context.painter_options,
+        debug=context.config.debug,
+        temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
+    )
+
+
+def _export_for_python_service_graphs(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    raise PythonExportError
+
+
+def _export_for_csv_service_graphs(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str | HTML:
+    raise CSVExportError
+
+
+def _export_for_json_service_graphs(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    raise JSONExportError
+
+
 class PainterServiceGraphs(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="service_graphs",
             title=_l("Service graphs with display options"),
+            render=_render_service_graphs,
             columns=[
                 "host_name",
                 "service_description",
@@ -359,44 +397,53 @@ class PainterServiceGraphs(InternalPainter):
                 "service_metrics",
                 "service_check_command",
             ],
+            parameters=_parameters_service_graphs,
+            export_for_python=_export_for_python_service_graphs,
+            export_for_csv=_export_for_csv_service_graphs,
+            export_for_json=_export_for_json_service_graphs,
             printable="time_graph",
             painter_options=["graph_render_options"],
         )
 
-    @override
-    def parameters(self, context: PainterContext) -> MigrateNotUpdated:
-        return cmk_time_graph_params()
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_time_graph_cmk(
-            row,
-            cell,
-            user=user,
-            request=context.request,
-            response=response,
-            painter_options=context.painter_options,
-            debug=context.config.debug,
-            temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
-        )
+def _parameters_host_graphs(_context: PainterContext) -> MigrateNotUpdated:
+    return cmk_time_graph_params()
 
-    @override
-    def export_for_python(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> object:
-        raise PythonExportError
 
-    @override
-    def export_for_csv(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> str | HTML:
-        raise CSVExportError
+def _render_host_graphs(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_time_graph_cmk(
+        row,
+        cell,
+        user=user,
+        request=context.request,
+        response=response,
+        painter_options=context.painter_options,
+        debug=context.config.debug,
+        temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
+        # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
+        # also render the graphs if there are no historic metrics available (but perf data is)
+        require_historic_metrics="service_description" not in row,
+    )
 
-    @override
-    def export_for_json(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> object:
-        raise JSONExportError
+
+def _export_for_python_host_graphs(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    raise PythonExportError
+
+
+def _export_for_csv_host_graphs(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str | HTML:
+    raise CSVExportError
+
+
+def _export_for_json_host_graphs(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    raise JSONExportError
 
 
 class PainterHostGraphs(InternalPainter):
@@ -404,48 +451,15 @@ class PainterHostGraphs(InternalPainter):
         super().__init__(
             ident="host_graphs",
             title=_l("Host graphs with display options"),
+            render=_render_host_graphs,
             columns=["host_name", "host_perf_data", "host_metrics", "host_check_command"],
+            parameters=_parameters_host_graphs,
+            export_for_python=_export_for_python_host_graphs,
+            export_for_csv=_export_for_csv_host_graphs,
+            export_for_json=_export_for_json_host_graphs,
             printable="time_graph",
             painter_options=["graph_render_options"],
         )
-
-    @override
-    def parameters(self, context: PainterContext) -> MigrateNotUpdated:
-        return cmk_time_graph_params()
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_time_graph_cmk(
-            row,
-            cell,
-            user=user,
-            request=context.request,
-            response=response,
-            painter_options=context.painter_options,
-            debug=context.config.debug,
-            temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
-            # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
-            # also render the graphs if there are no historic metrics available (but perf data is)
-            require_historic_metrics="service_description" not in row,
-        )
-
-    @override
-    def export_for_python(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> object:
-        raise PythonExportError
-
-    @override
-    def export_for_csv(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> str | HTML:
-        raise CSVExportError
-
-    @override
-    def export_for_json(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> object:
-        raise JSONExportError
 
 
 class PainterOptionGraphRenderOptions(PainterOption):
@@ -467,11 +481,49 @@ class PainterOptionPNPTimerange(PainterOption):
         )
 
 
+def _parameters_svc_pnpgraph(_context: PainterContext) -> Transform:
+    return cmk_time_graph_params()
+
+
+def _render_svc_pnpgraph(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_time_graph_cmk(
+        row,
+        cell,
+        user=user,
+        request=context.request,
+        response=response,
+        painter_options=context.painter_options,
+        debug=context.config.debug,
+        temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
+    )
+
+
+def _export_for_python_svc_pnpgraph(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    raise PythonExportError
+
+
+def _export_for_csv_svc_pnpgraph(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str | HTML:
+    raise CSVExportError
+
+
+def _export_for_json_svc_pnpgraph(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    raise JSONExportError
+
+
 class PainterSvcPnpgraph(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="svc_pnpgraph",
             title=_l("Service graphs"),
+            render=_render_svc_pnpgraph,
             columns=[
                 "host_name",
                 "service_description",
@@ -479,44 +531,50 @@ class PainterSvcPnpgraph(InternalPainter):
                 "service_metrics",
                 "service_check_command",
             ],
+            parameters=_parameters_svc_pnpgraph,
+            export_for_python=_export_for_python_svc_pnpgraph,
+            export_for_csv=_export_for_csv_svc_pnpgraph,
+            export_for_json=_export_for_json_svc_pnpgraph,
             printable="time_graph",
             painter_options=[],
         )
 
-    @override
-    def parameters(self, context: PainterContext) -> Transform:
-        return cmk_time_graph_params()
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_time_graph_cmk(
-            row,
-            cell,
-            user=user,
-            request=context.request,
-            response=response,
-            painter_options=context.painter_options,
-            debug=context.config.debug,
-            temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
-        )
+def _parameters_host_pnpgraph(_context: PainterContext) -> Transform:
+    return cmk_time_graph_params()
 
-    @override
-    def export_for_python(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> object:
-        raise PythonExportError
 
-    @override
-    def export_for_csv(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> str | HTML:
-        raise CSVExportError
+def _render_host_pnpgraph(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_time_graph_cmk(
+        row,
+        cell,
+        user=user,
+        request=context.request,
+        response=response,
+        painter_options=context.painter_options,
+        debug=context.config.debug,
+        temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
+    )
 
-    @override
-    def export_for_json(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> object:
-        raise JSONExportError
+
+def _export_for_python_host_pnpgraph(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    raise PythonExportError
+
+
+def _export_for_csv_host_pnpgraph(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str | HTML:
+    raise CSVExportError
+
+
+def _export_for_json_host_pnpgraph(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    raise JSONExportError
 
 
 class PainterHostPnpgraph(InternalPainter):
@@ -524,46 +582,16 @@ class PainterHostPnpgraph(InternalPainter):
         super().__init__(
             ident="host_pnpgraph",
             title=_l("Host graph"),
+            render=_render_host_pnpgraph,
             short_title=_l("Graph"),
             columns=["host_name", "host_perf_data", "host_metrics", "host_check_command"],
+            parameters=_parameters_host_pnpgraph,
+            export_for_python=_export_for_python_host_pnpgraph,
+            export_for_csv=_export_for_csv_host_pnpgraph,
+            export_for_json=_export_for_json_host_pnpgraph,
             printable="time_graph",
             painter_options=[],
         )
-
-    @override
-    def parameters(self, context: PainterContext) -> Transform:
-        return cmk_time_graph_params()
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_time_graph_cmk(
-            row,
-            cell,
-            user=user,
-            request=context.request,
-            response=response,
-            painter_options=context.painter_options,
-            debug=context.config.debug,
-            temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
-        )
-
-    @override
-    def export_for_python(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> object:
-        raise PythonExportError
-
-    @override
-    def export_for_csv(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> str | HTML:
-        raise CSVExportError
-
-    @override
-    def export_for_json(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> object:
-        raise JSONExportError
 
 
 def cmk_graph_url(row: Row, what: str, *, request: Request) -> str:

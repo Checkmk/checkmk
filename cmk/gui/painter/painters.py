@@ -6,10 +6,10 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
-import abc
 import time
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from fnmatch import fnmatch
+from functools import partial
 from pathlib import Path
 from typing import Literal, override
 
@@ -439,23 +439,30 @@ def _paint_day(timestamp: int) -> CellSpec:
 #   '----------------------------------------------------------------------'
 
 
+def _render_site_icon(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    if row.get("site") and context.config.use_siteicons:
+        return None, HTMLWriter.render_img("icons/site-%s-24.png" % row["site"], class_="siteicon")
+    return None, ""
+
+
 class PainterSiteIcon(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="site_icon",
             title=_l("Site icon"),
+            render=_render_site_icon,
             short_title="",
             columns=["site"],
             sorter="site",
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        if row.get("site") and context.config.use_siteicons:
-            return None, HTMLWriter.render_img(
-                "icons/site-%s-24.png" % row["site"], class_="siteicon"
-            )
-        return None, ""
+
+def _render_sitename_plain(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["site"])
 
 
 class PainterSitenamePlain(InternalPainter):
@@ -463,23 +470,24 @@ class PainterSitenamePlain(InternalPainter):
         super().__init__(
             ident="sitename_plain",
             title=_l("Site ID"),
+            render=_render_sitename_plain,
             short_title=_l("Site"),
             columns=["site"],
             sorter="site",
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["site"])
+
+def _render_sitealias(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return (None, context.config.sites[row["site"]]["alias"])
 
 
 class PainterSitealias(InternalPainter):
     def __init__(self) -> None:
-        super().__init__(ident="sitealias", title=_l("Site alias"), columns=["site"])
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, context.config.sites[row["site"]]["alias"])
+        super().__init__(
+            ident="sitealias", title=_l("Site alias"), render=_render_sitealias, columns=["site"]
+        )
 
 
 # .
@@ -535,20 +543,38 @@ def _paint_host_state_short(row: Row, short: bool = False, *, config: Config) ->
     )
 
 
+def _render_service_state(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_service_state_short(row, config=context.config)
+
+
 class PainterServiceState(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="service_state",
             title=_l("Service state"),
+            render=_render_service_state,
             short_title=_l("State"),
             columns=["service_has_been_checked", "service_state"],
             sorter="svcstate",
             title_classes=["center"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_service_state_short(row, config=context.config)
+
+def _render_svc_plugin_output(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_stalified(
+        row,
+        format_plugin_output(
+            row["service_plugin_output"],
+            request=context.request,
+            must_escape=determine_must_escape(context.config.sites, row),
+            row=row,
+        ),
+        context.config.staleness_threshold,
+    )
 
 
 class PainterSvcPluginOutput(InternalPainter):
@@ -556,23 +582,73 @@ class PainterSvcPluginOutput(InternalPainter):
         super().__init__(
             ident="svc_plugin_output",
             title=_l("Summary"),
+            render=_render_svc_plugin_output,
             list_title=_l("Summary (previously named: Status details or plug-in output)"),
             columns=["service_plugin_output", "service_custom_variables", "service_check_command"],
             sorter="svcoutput",
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_stalified(
-            row,
-            format_plugin_output(
-                row["service_plugin_output"],
-                request=context.request,
-                must_escape=determine_must_escape(context.config.sites, row),
-                row=row,
+
+def _parameters_svc_long_plugin_output(_context: PainterContext) -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "max_len",
+                Integer(
+                    title=_("Maximum number of characters to show"),
+                    help=_(
+                        "Truncate content at this amount of characters. "
+                        "A zero value means not to truncate."
+                    ),
+                    default_value=0,
+                    minvalue=0,
+                ),
             ),
-            context.config.staleness_threshold,
+        ]
+    )
+
+
+def _render_svc_long_plugin_output(
+    row: Row, cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    if (params := cell.painter_parameters()) is None:
+        params = {}
+
+    max_len = params.get("max_len", 0)
+    long_output = row["service_long_plugin_output"]
+    long_output_len = len(long_output)
+
+    if 0 < max_len < long_output_len:
+        long_output = long_output[:max_len] + "..."
+
+    content = format_plugin_output(
+        long_output,
+        request=context.request,
+        row=row,
+        newlineishs_to_brs=True,
+        must_escape=determine_must_escape(context.config.sites, row),
+    )
+
+    # has to be placed after format_plugin_output() to keep links save from
+    # escaping
+    if (
+        max_long_output_size := sites.states().get(row["site"], {}).get("max_long_output_size", 0)
+    ) and long_output_len > max_long_output_size:
+        setting_link_tag = context.url_renderer.link_from_filename(
+            "global_settings.py",
+            html_text="(%s)" % _("Increase limit"),
+            query_args=[("varname", "max_long_output_size")],
         )
+        content = (
+            _("Lost data due to truncation of long output to ")
+            + f"{int(max_long_output_size / 1000)}kB "
+            + setting_link_tag
+            + html.render_b("WARN", class_="stmark state1")
+            + html.render_br()
+            + content
+        )
+
+    return paint_stalified(row, content, context.config.staleness_threshold)
 
 
 class PainterSvcLongPluginOutput(InternalPainter):
@@ -580,71 +656,17 @@ class PainterSvcLongPluginOutput(InternalPainter):
         super().__init__(
             ident="svc_long_plugin_output",
             title=_l("Details"),
+            render=_render_svc_long_plugin_output,
             list_title=_l("Details (previously named: long output)"),
             columns=["service_long_plugin_output", "service_custom_variables"],
+            parameters=_parameters_svc_long_plugin_output,
         )
 
-    @override
-    def parameters(self, context: PainterContext) -> Dictionary:
-        return Dictionary(
-            elements=[
-                (
-                    "max_len",
-                    Integer(
-                        title=_("Maximum number of characters to show"),
-                        help=_(
-                            "Truncate content at this amount of characters. "
-                            "A zero value means not to truncate."
-                        ),
-                        default_value=0,
-                        minvalue=0,
-                    ),
-                ),
-            ]
-        )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        if (params := cell.painter_parameters()) is None:
-            params = {}
-
-        max_len = params.get("max_len", 0)
-        long_output = row["service_long_plugin_output"]
-        long_output_len = len(long_output)
-
-        if 0 < max_len < long_output_len:
-            long_output = long_output[:max_len] + "..."
-
-        content = format_plugin_output(
-            long_output,
-            request=context.request,
-            row=row,
-            newlineishs_to_brs=True,
-            must_escape=determine_must_escape(context.config.sites, row),
-        )
-
-        # has to be placed after format_plugin_output() to keep links save from
-        # escaping
-        if (
-            max_long_output_size := sites.states()
-            .get(row["site"], {})
-            .get("max_long_output_size", 0)
-        ) and long_output_len > max_long_output_size:
-            setting_link_tag = context.url_renderer.link_from_filename(
-                "global_settings.py",
-                html_text="(%s)" % _("Increase limit"),
-                query_args=[("varname", "max_long_output_size")],
-            )
-            content = (
-                _("Lost data due to truncation of long output to ")
-                + f"{int(max_long_output_size / 1000)}kB "
-                + setting_link_tag
-                + html.render_b("WARN", class_="stmark state1")
-                + html.render_br()
-                + content
-            )
-
-        return paint_stalified(row, content, context.config.staleness_threshold)
+def _render_svc_perf_data(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_stalified(row, row["service_perf_data"], context.config.staleness_threshold)
 
 
 class PainterSvcPerfData(InternalPainter):
@@ -652,13 +674,10 @@ class PainterSvcPerfData(InternalPainter):
         super().__init__(
             ident="svc_perf_data",
             title=_l("Service metrics (source code)"),
+            render=_render_svc_perf_data,
             short_title=_l("Metrics"),
             columns=["service_perf_data"],
         )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_stalified(row, row["service_perf_data"], context.config.staleness_threshold)
 
 
 def _rendered_value(metric: EvaluatedMetric) -> str:
@@ -704,41 +723,52 @@ def _show_metrics_table(
     html.close_table()
 
 
+def _render_svc_metrics(
+    row: Row, _cell: Cell, user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    evaluated = evaluated_metrics(
+        row["service_perf_data"],
+        row["service_check_command"],
+        registered_metrics=registered_metrics(),
+        registered_translations=registered_translations(),
+        temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
+        debug=context.config.debug,
+    )
+
+    if row["service_perf_data"] and not evaluated:
+        return "", _("Failed to parse metrics string: %(perf_data)s") % {
+            "perf_data": row["service_perf_data"]
+        }
+
+    with output_funnel.plugged():
+        _show_metrics_table(
+            evaluated,
+            row["host_name"],
+            row["service_description"],
+            show_metric_id=context.painter_options.get("show_internal_graph_and_metric_ids"),
+        )
+        return "", HTML.without_escaping(output_funnel.drain())
+
+
 class PainterSvcMetrics(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="svc_metrics",
             title=_l("Service metrics"),
+            render=_render_svc_metrics,
             short_title=_l("Metrics"),
             columns=["service_check_command", "service_perf_data"],
             printable=False,
             painter_options=["show_internal_graph_and_metric_ids"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        evaluated = evaluated_metrics(
-            row["service_perf_data"],
-            row["service_check_command"],
-            registered_metrics=registered_metrics(),
-            registered_translations=registered_translations(),
-            temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
-            debug=context.config.debug,
-        )
 
-        if row["service_perf_data"] and not evaluated:
-            return "", _("Failed to parse metrics string: %(perf_data)s") % {
-                "perf_data": row["service_perf_data"]
-            }
-
-        with output_funnel.plugged():
-            _show_metrics_table(
-                evaluated,
-                row["host_name"],
-                row["service_description"],
-                show_metric_id=context.painter_options.get("show_internal_graph_and_metric_ids"),
-            )
-            return "", HTML.without_escaping(output_funnel.drain())
+def _render_svc_perf_val(
+    num: int, row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_stalified(
+        row, get_perfdata_nth_value(row, num - 1), context.config.staleness_threshold
+    )
 
 
 class PainterSvcPerfVal(InternalPainter):
@@ -746,16 +776,16 @@ class PainterSvcPerfVal(InternalPainter):
         super().__init__(
             ident=f"svc_perf_val{num:02d}",
             title=_l("Service metrics - value number %(nr)2d") % {"nr": num},
+            render=partial(_render_svc_perf_val, num),
             short_title=_l("Val. %(nr)d") % {"nr": num},
             columns=["service_perf_data"],
         )
-        self._num = num
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_stalified(
-            row, get_perfdata_nth_value(row, self._num - 1), context.config.staleness_threshold
-        )
+
+def _render_svc_check_command(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["service_check_command"])
 
 
 class PainterSvcCheckCommand(InternalPainter):
@@ -763,13 +793,16 @@ class PainterSvcCheckCommand(InternalPainter):
         super().__init__(
             ident="svc_check_command",
             title=_l("Service check command"),
+            render=_render_svc_check_command,
             short_title=_l("Check command"),
             columns=["service_check_command"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["service_check_command"])
+
+def _render_svc_check_command_expanded(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["service_check_command_expanded"])
 
 
 class PainterSvcCheckCommandExpanded(InternalPainter):
@@ -777,13 +810,22 @@ class PainterSvcCheckCommandExpanded(InternalPainter):
         super().__init__(
             ident="svc_check_command_expanded",
             title=_l("Service check command expanded"),
+            render=_render_svc_check_command_expanded,
             short_title=_l("Check command expanded"),
             columns=["service_check_command_expanded"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["service_check_command_expanded"])
+
+def _render_svc_notes_u_r_l(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    raw_url = row.get("service_notes_url")
+    if not raw_url:
+        return None, HTML.empty()
+
+    url = replace_action_url_macros(raw_url, "service", row)
+    content = context.url_renderer.link_direct(url, html_text=url, target="_blank")
+    return None, content
 
 
 class PainterSvcNotesURL(InternalPainter):
@@ -791,19 +833,16 @@ class PainterSvcNotesURL(InternalPainter):
         super().__init__(
             ident="svc_notes_url",
             title=_l("Notes (URL) for services"),
+            render=_render_svc_notes_u_r_l,
             short_title=_l("Notes URL"),
             columns=["host_address", "service_notes_url"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        raw_url = row.get("service_notes_url")
-        if not raw_url:
-            return None, HTML.empty()
 
-        url = replace_action_url_macros(raw_url, "service", row)
-        content = context.url_renderer.link_direct(url, html_text=url, target="_blank")
-        return None, content
+def _render_svc_contacts(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, ", ".join(row["service_contacts"]))
 
 
 class PainterSvcContacts(InternalPainter):
@@ -811,13 +850,16 @@ class PainterSvcContacts(InternalPainter):
         super().__init__(
             ident="svc_contacts",
             title=_l("Service contacts"),
+            render=_render_svc_contacts,
             short_title=_l("Contacts"),
             columns=["service_contacts"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, ", ".join(row["service_contacts"]))
+
+def _render_svc_contact_groups(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, ", ".join(row["service_contact_groups"]))
 
 
 class PainterSvcContactGroups(InternalPainter):
@@ -825,13 +867,16 @@ class PainterSvcContactGroups(InternalPainter):
         super().__init__(
             ident="svc_contact_groups",
             title=_l("Service contact groups"),
+            render=_render_svc_contact_groups,
             short_title=_l("Contact groups"),
             columns=["service_contact_groups"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, ", ".join(row["service_contact_groups"]))
+
+def _render_service_description(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["service_description"])
 
 
 class PainterServiceDescription(InternalPainter):
@@ -839,14 +884,17 @@ class PainterServiceDescription(InternalPainter):
         super().__init__(
             ident="service_description",
             title=_l("Service name"),
+            render=_render_service_description,
             short_title=_l("Service"),
             columns=["service_description"],
             sorter="svcdescr",
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["service_description"])
+
+def _render_service_display_name(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["service_display_name"])
 
 
 class PainterServiceDisplayName(InternalPainter):
@@ -854,14 +902,23 @@ class PainterServiceDisplayName(InternalPainter):
         super().__init__(
             ident="service_display_name",
             title=_l("Service alternative display name"),
+            render=_render_service_display_name,
             short_title=_l("Display name"),
             columns=["service_display_name"],
             sorter="svcdispname",
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["service_display_name"])
+
+def _render_svc_state_age(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_age(
+        row["service_last_state_change"],
+        row["service_has_been_checked"] == 1,
+        60 * 10,
+        request=context.request,
+        painter_options=context.painter_options,
+    )
 
 
 class PainterSvcStateAge(InternalPainter):
@@ -869,20 +926,11 @@ class PainterSvcStateAge(InternalPainter):
         super().__init__(
             ident="svc_state_age",
             title=_l("Age of the current service state"),
+            render=_render_svc_state_age,
             short_title=_l("Age"),
             columns=["service_has_been_checked", "service_last_state_change"],
             sorter="stateage",
             painter_options=["ts_format", "ts_date"],
-        )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_age(
-            row["service_last_state_change"],
-            row["service_has_been_checked"] == 1,
-            60 * 10,
-            request=context.request,
-            painter_options=context.painter_options,
         )
 
 
@@ -908,25 +956,36 @@ def _paint_checked(
     return css, td
 
 
+def _render_svc_check_age(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_checked(
+        "service",
+        row,
+        config=context.config,
+        request=context.request,
+        painter_options=context.painter_options,
+    )
+
+
 class PainterSvcCheckAge(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="svc_check_age",
             title=_l("Time since the last check of the service"),
+            render=_render_svc_check_age,
             short_title=_l("Checked"),
             columns=["service_has_been_checked", "service_last_check", "service_cached_at"],
             painter_options=["ts_format", "ts_date"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_checked(
-            "service",
-            row,
-            config=context.config,
-            request=context.request,
-            painter_options=context.painter_options,
-        )
+
+def _render_svc_check_cache_info(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    if not row["service_cached_at"]:
+        return "", ""
+    return "", render_cache_info("service", row)
 
 
 class PainterSvcCheckCacheInfo(InternalPainter):
@@ -934,16 +993,21 @@ class PainterSvcCheckCacheInfo(InternalPainter):
         super().__init__(
             ident="svc_check_cache_info",
             title=_l("Cached agent data"),
+            render=_render_svc_check_cache_info,
             short_title=_l("Cached"),
             columns=["service_last_check", "service_cached_at", "service_cache_interval"],
             painter_options=["ts_format", "ts_date"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        if not row["service_cached_at"]:
-            return "", ""
-        return "", render_cache_info("service", row)
+
+def _render_svc_next_check(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_future_time(
+        row["service_next_check"],
+        request=context.request,
+        painter_options=context.painter_options,
+    )
 
 
 class PainterSvcNextCheck(InternalPainter):
@@ -951,17 +1015,22 @@ class PainterSvcNextCheck(InternalPainter):
         super().__init__(
             ident="svc_next_check",
             title=_l("Time of the next scheduled service check"),
+            render=_render_svc_next_check,
             short_title=_l("Next check"),
             columns=["service_next_check"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_future_time(
-            row["service_next_check"],
-            request=context.request,
-            painter_options=context.painter_options,
-        )
+
+def _render_svc_last_time_ok(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_age_or_never(
+        row["service_last_time_ok"],
+        row["service_has_been_checked"] == 1,
+        60 * 10,
+        request=context.request,
+        painter_options=context.painter_options,
+    )
 
 
 class PainterSvcLastTimeOk(InternalPainter):
@@ -969,19 +1038,20 @@ class PainterSvcLastTimeOk(InternalPainter):
         super().__init__(
             ident="svc_last_time_ok",
             title=_l("Last time the service was OK"),
+            render=_render_svc_last_time_ok,
             short_title=_l("Last OK"),
             columns=["service_last_time_ok", "service_has_been_checked"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_age_or_never(
-            row["service_last_time_ok"],
-            row["service_has_been_checked"] == 1,
-            60 * 10,
-            request=context.request,
-            painter_options=context.painter_options,
-        )
+
+def _render_svc_next_notification(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_future_time(
+        row["service_next_notification"],
+        request=context.request,
+        painter_options=context.painter_options,
+    )
 
 
 class PainterSvcNextNotification(InternalPainter):
@@ -989,16 +1059,9 @@ class PainterSvcNextNotification(InternalPainter):
         super().__init__(
             ident="svc_next_notification",
             title=_l("Time of the next service notification"),
+            render=_render_svc_next_notification,
             short_title=_l("Next notification"),
             columns=["service_next_notification"],
-        )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_future_time(
-            row["service_next_notification"],
-            request=context.request,
-            painter_options=context.painter_options,
         )
 
 
@@ -1030,18 +1093,33 @@ def _paint_notification_postponement_reason(what: str, row: Row) -> CellSpec:
     return ("", reasons.get(reason, reason))
 
 
+def _render_svc_notification_postponement_reason(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return _paint_notification_postponement_reason("service", row)
+
+
 class PainterSvcNotificationPostponementReason(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="svc_notification_postponement_reason",
             title=_l("Notification postponement reason"),
+            render=_render_svc_notification_postponement_reason,
             short_title=_l("Notif. postponed"),
             columns=["service_notification_postponement_reason"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_notification_postponement_reason("service", row)
+
+def _render_svc_last_notification(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_age(
+        row["service_last_notification"],
+        row["service_last_notification"],
+        0,
+        request=context.request,
+        painter_options=context.painter_options,
+    )
 
 
 class PainterSvcLastNotification(InternalPainter):
@@ -1049,20 +1127,19 @@ class PainterSvcLastNotification(InternalPainter):
         super().__init__(
             ident="svc_last_notification",
             title=_l("Time of the last service notification"),
+            render=_render_svc_last_notification,
             short_title=_l("last notification"),
             columns=["service_last_notification"],
             painter_options=["ts_format", "ts_date"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_age(
-            row["service_last_notification"],
-            row["service_last_notification"],
-            0,
-            request=context.request,
-            painter_options=context.painter_options,
-        )
+
+def _render_svc_notification_number(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    # Keep in sync with HACK in cmk/base/events.py
+    current: str = str(row["service_current_notification_number"])
+    return ("", "1" if current == "0" else current)
 
 
 class PainterSvcNotificationNumber(InternalPainter):
@@ -1070,15 +1147,16 @@ class PainterSvcNotificationNumber(InternalPainter):
         super().__init__(
             ident="svc_notification_number",
             title=_l("Service notification number"),
+            render=_render_svc_notification_number,
             short_title=_l("N#"),
             columns=["service_current_notification_number"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        # Keep in sync with HACK in cmk/base/events.py
-        current: str = str(row["service_current_notification_number"])
-        return ("", "1" if current == "0" else current)
+
+def _render_svc_check_latency(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", approx_age(row["service_latency"]))
 
 
 class PainterSvcCheckLatency(InternalPainter):
@@ -1086,13 +1164,16 @@ class PainterSvcCheckLatency(InternalPainter):
         super().__init__(
             ident="svc_check_latency",
             title=_l("Service check latency"),
+            render=_render_svc_check_latency,
             short_title=_l("Latency"),
             columns=["service_latency"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", approx_age(row["service_latency"]))
+
+def _render_svc_check_duration(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", approx_age(row["service_execution_time"]))
 
 
 class PainterSvcCheckDuration(InternalPainter):
@@ -1100,13 +1181,16 @@ class PainterSvcCheckDuration(InternalPainter):
         super().__init__(
             ident="svc_check_duration",
             title=_l("Service check duration"),
+            render=_render_svc_check_duration,
             short_title=_l("Duration"),
             columns=["service_execution_time"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", approx_age(row["service_execution_time"]))
+
+def _render_svc_attempt(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, "%d/%d" % (row["service_current_attempt"], row["service_max_check_attempts"]))
 
 
 class PainterSvcAttempt(InternalPainter):
@@ -1114,13 +1198,16 @@ class PainterSvcAttempt(InternalPainter):
         super().__init__(
             ident="svc_attempt",
             title=_l("Current check attempt"),
+            render=_render_svc_attempt,
             short_title=_l("Att."),
             columns=["service_current_attempt", "service_max_check_attempts"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, "%d/%d" % (row["service_current_attempt"], row["service_max_check_attempts"]))
+
+def _render_svc_normal_interval(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("number", approx_age(row["service_check_interval"] * 60.0))
 
 
 class PainterSvcNormalInterval(InternalPainter):
@@ -1128,13 +1215,16 @@ class PainterSvcNormalInterval(InternalPainter):
         super().__init__(
             ident="svc_normal_interval",
             title=_l("Service normal check interval"),
+            render=_render_svc_normal_interval,
             short_title=_l("Check int."),
             columns=["service_check_interval"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("number", approx_age(row["service_check_interval"] * 60.0))
+
+def _render_svc_retry_interval(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("number", approx_age(row["service_retry_interval"] * 60.0))
 
 
 class PainterSvcRetryInterval(InternalPainter):
@@ -1142,13 +1232,23 @@ class PainterSvcRetryInterval(InternalPainter):
         super().__init__(
             ident="svc_retry_interval",
             title=_l("Service retry check interval"),
+            render=_render_svc_retry_interval,
             short_title=_l("Retry"),
             columns=["service_retry_interval"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("number", approx_age(row["service_retry_interval"] * 60.0))
+
+def _render_svc_check_interval(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (
+        None,
+        "%s / %s"
+        % (
+            approx_age(row["service_check_interval"] * 60.0),
+            approx_age(row["service_retry_interval"] * 60.0),
+        ),
+    )
 
 
 class PainterSvcCheckInterval(InternalPainter):
@@ -1156,20 +1256,16 @@ class PainterSvcCheckInterval(InternalPainter):
         super().__init__(
             ident="svc_check_interval",
             title=_l("Service normal/retry check interval"),
+            render=_render_svc_check_interval,
             short_title=_l("Interval"),
             columns=["service_check_interval", "service_retry_interval"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (
-            None,
-            "%s / %s"
-            % (
-                approx_age(row["service_check_interval"] * 60.0),
-                approx_age(row["service_retry_interval"] * 60.0),
-            ),
-        )
+
+def _render_svc_check_type(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, _("ACTIVE") if row["service_check_type"] == 0 else _("PASSIVE"))
 
 
 class PainterSvcCheckType(InternalPainter):
@@ -1177,13 +1273,16 @@ class PainterSvcCheckType(InternalPainter):
         super().__init__(
             ident="svc_check_type",
             title=_l("Service check type"),
+            render=_render_svc_check_type,
             short_title=_l("Type"),
             columns=["service_check_type"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, _("ACTIVE") if row["service_check_type"] == 0 else _("PASSIVE"))
+
+def _render_svc_in_downtime(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_nagiosflag(row, "service_scheduled_downtime_depth", True)
 
 
 class PainterSvcInDowntime(InternalPainter):
@@ -1191,13 +1290,16 @@ class PainterSvcInDowntime(InternalPainter):
         super().__init__(
             ident="svc_in_downtime",
             title=_l("Currently in downtime"),
+            render=_render_svc_in_downtime,
             short_title=_l("Dt."),
             columns=["service_scheduled_downtime_depth"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_nagiosflag(row, "service_scheduled_downtime_depth", True)
+
+def _render_svc_in_notifper(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_nagiosflag(row, "service_in_notification_period", False)
 
 
 class PainterSvcInNotifper(InternalPainter):
@@ -1205,13 +1307,16 @@ class PainterSvcInNotifper(InternalPainter):
         super().__init__(
             ident="svc_in_notifper",
             title=_l("In notification period"),
+            render=_render_svc_in_notifper,
             short_title=_l("in notif. p."),
             columns=["service_in_notification_period"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_nagiosflag(row, "service_in_notification_period", False)
+
+def _render_svc_notifper(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["service_notification_period"])
 
 
 class PainterSvcNotifper(InternalPainter):
@@ -1219,13 +1324,16 @@ class PainterSvcNotifper(InternalPainter):
         super().__init__(
             ident="svc_notifper",
             title=_l("Service notification period"),
+            render=_render_svc_notifper,
             short_title=_l("notif."),
             columns=["service_notification_period"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["service_notification_period"])
+
+def _render_svc_check_period(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["service_check_period"])
 
 
 class PainterSvcCheckPeriod(InternalPainter):
@@ -1233,13 +1341,16 @@ class PainterSvcCheckPeriod(InternalPainter):
         super().__init__(
             ident="svc_check_period",
             title=_l("Service check period"),
+            render=_render_svc_check_period,
             short_title=_l("check."),
             columns=["service_check_period"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["service_check_period"])
+
+def _render_svc_flapping(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_nagiosflag(row, "service_is_flapping", True)
 
 
 class PainterSvcFlapping(InternalPainter):
@@ -1247,13 +1358,16 @@ class PainterSvcFlapping(InternalPainter):
         super().__init__(
             ident="svc_flapping",
             title=_l("Service is flapping"),
+            render=_render_svc_flapping,
             short_title=_l("Flap"),
             columns=["service_is_flapping"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_nagiosflag(row, "service_is_flapping", True)
+
+def _render_svc_notifications_enabled(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_nagiosflag(row, "service_notifications_enabled", False)
 
 
 class PainterSvcNotificationsEnabled(InternalPainter):
@@ -1261,13 +1375,16 @@ class PainterSvcNotificationsEnabled(InternalPainter):
         super().__init__(
             ident="svc_notifications_enabled",
             title=_l("Service notifications enabled"),
+            render=_render_svc_notifications_enabled,
             short_title=_l("Notif."),
             columns=["service_notifications_enabled"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_nagiosflag(row, "service_notifications_enabled", False)
+
+def _render_svc_is_active(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_nagiosflag(row, "service_active_checks_enabled", False)
 
 
 class PainterSvcIsActive(InternalPainter):
@@ -1275,13 +1392,40 @@ class PainterSvcIsActive(InternalPainter):
         super().__init__(
             ident="svc_is_active",
             title=_l("Service is active"),
+            render=_render_svc_is_active,
             short_title=_l("Active"),
             columns=["service_active_checks_enabled"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_nagiosflag(row, "service_active_checks_enabled", False)
+
+def _render_svc_group_memberlist(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    links = []
+
+    for group in row["service_groups"]:
+        link = context.url_renderer.link_from_filename(
+            "view.py",
+            html_text=group,
+            query_args=[
+                ("view_name", "servicegroup"),
+                ("servicegroup", group),
+            ],
+        )
+        links.append(link)
+    return "", HTML.without_escaping(", ").join(links)
+
+
+def _export_for_csv_svc_group_memberlist(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str:
+    return ", ".join(row["service_groups"])
+
+
+def _export_for_json_svc_group_memberlist(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    return row["service_groups"]
 
 
 class PainterSvcGroupMemberlist(InternalPainter):
@@ -1289,37 +1433,52 @@ class PainterSvcGroupMemberlist(InternalPainter):
         super().__init__(
             ident="svc_group_memberlist",
             title=_l("Service groups the service is member of"),
+            render=_render_svc_group_memberlist,
             short_title=_l("Groups"),
             columns=["service_groups"],
+            export_for_csv=_export_for_csv_svc_group_memberlist,
+            export_for_json=_export_for_json_svc_group_memberlist,
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        links = []
 
-        for group in row["service_groups"]:
-            link = context.url_renderer.link_from_filename(
-                "view.py",
-                html_text=group,
-                query_args=[
-                    ("view_name", "servicegroup"),
-                    ("servicegroup", group),
-                ],
-            )
-            links.append(link)
-        return "", HTML.without_escaping(", ").join(links)
+def _render_check_manpage(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    command = row["service_check_command"]
 
-    @override
-    def export_for_csv(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> str:
-        return ", ".join(row["service_groups"])
+    if not command.startswith(("check_mk-", "check-mk", "check_mk_active-cmk_inv")):
+        return "", ""
 
-    @override
-    def export_for_json(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> object:
-        return row["service_groups"]
+    if command == "check-mk":
+        checktype = "check-mk"
+    elif command == "check-mk-inventory":
+        checktype = "check-mk-inventory"
+    elif "check_mk_active-cmk_inv" in command:
+        checktype = "check_cmk_inv"
+    elif command.startswith("check_mk-mgmt_"):
+        checktype = command[14:]
+    else:
+        checktype = command[9:]
+
+    man_page_path_map = man_pages.make_man_page_path_map(
+        discover_families(raise_errors=False), PluginGroup.CHECKMAN.value
+    )
+    # some checks are run as commandlines (e.g. checks configured via the "Integrate nagios plugins" rule).
+    name = checktype.split()[0]
+
+    try:
+        page = man_pages.parse_man_page(name, man_page_path_map[name])
+    except KeyError:
+        return "", ""
+
+    description = HTML.without_escaping(
+        escaping.escape_attribute(page.description)
+        .replace("{", "<b>")
+        .replace("}", "</b>")
+        .replace("&lt;br&gt;", "<br>")
+        .replace("\n\n", "\n<br>\n")
+    )
+    return "", description
 
 
 class PainterCheckManpage(InternalPainter):
@@ -1327,47 +1486,10 @@ class PainterCheckManpage(InternalPainter):
         super().__init__(
             ident="check_manpage",
             title=_l("Check manual (for Checkmk based checks)"),
+            render=_render_check_manpage,
             short_title=_l("Manual"),
             columns=["service_check_command"],
         )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        command = row["service_check_command"]
-
-        if not command.startswith(("check_mk-", "check-mk", "check_mk_active-cmk_inv")):
-            return "", ""
-
-        if command == "check-mk":
-            checktype = "check-mk"
-        elif command == "check-mk-inventory":
-            checktype = "check-mk-inventory"
-        elif "check_mk_active-cmk_inv" in command:
-            checktype = "check_cmk_inv"
-        elif command.startswith("check_mk-mgmt_"):
-            checktype = command[14:]
-        else:
-            checktype = command[9:]
-
-        man_page_path_map = man_pages.make_man_page_path_map(
-            discover_families(raise_errors=False), PluginGroup.CHECKMAN.value
-        )
-        # some checks are run as commandlines (e.g. checks configured via the "Integrate nagios plugins" rule).
-        name = checktype.split()[0]
-
-        try:
-            page = man_pages.parse_man_page(name, man_page_path_map[name])
-        except KeyError:
-            return "", ""
-
-        description = HTML.without_escaping(
-            escaping.escape_attribute(page.description)
-            .replace("{", "<b>")
-            .replace("}", "</b>")
-            .replace("&lt;br&gt;", "<br>")
-            .replace("\n\n", "\n<br>\n")
-        )
-        return "", description
 
 
 def _paint_comments(prefix: str, row: Row) -> CellSpec:
@@ -1382,18 +1504,27 @@ def _paint_comments(prefix: str, row: Row) -> CellSpec:
     return "", text
 
 
+def _render_svc_comments(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return _paint_comments("service_", row)
+
+
 class PainterSvcComments(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="svc_comments",
             title=_l("Service Comments"),
+            render=_render_svc_comments,
             short_title=_l("Comments"),
             columns=["service_comments_with_info"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_comments("service_", row)
+
+def _render_svc_acknowledged(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_nagiosflag(row, "service_acknowledged", False)
 
 
 class PainterSvcAcknowledged(InternalPainter):
@@ -1401,13 +1532,10 @@ class PainterSvcAcknowledged(InternalPainter):
         super().__init__(
             ident="svc_acknowledged",
             title=_l("Service problem acknowledged"),
+            render=_render_svc_acknowledged,
             short_title=_l("Ack"),
             columns=["service_acknowledged"],
         )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_nagiosflag(row, "service_acknowledged", False)
 
 
 def match_path_entries_with_item(dirs: Iterable[Path], item: str) -> Iterable[Path]:
@@ -1459,18 +1587,27 @@ def _paint_custom_notes(what: str, row: Row, *, config: Config) -> CellSpec:
     return "", HTML.without_escaping("<hr>".join(contents))
 
 
+def _render_svc_custom_notes(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_custom_notes("service", row, config=context.config)
+
+
 class PainterSvcCustomNotes(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="svc_custom_notes",
             title=_l("Custom services notes"),
+            render=_render_svc_custom_notes,
             short_title=_l("Notes"),
             columns=["host_name", "host_address", "service_description", "service_plugin_output"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_custom_notes("service", row, config=context.config)
+
+def _render_svc_staleness(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", "%0.2f" % row.get("service_staleness", 0))
 
 
 class PainterSvcStaleness(InternalPainter):
@@ -1478,13 +1615,10 @@ class PainterSvcStaleness(InternalPainter):
         super().__init__(
             ident="svc_staleness",
             title=_l("Service staleness value"),
+            render=_render_svc_staleness,
             short_title=_l("Staleness"),
             columns=["service_staleness"],
         )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", "%0.2f" % row.get("service_staleness", 0))
 
 
 def _paint_is_stale(row: Row, staleness_threshold: float) -> CellSpec:
@@ -1493,19 +1627,22 @@ def _paint_is_stale(row: Row, staleness_threshold: float) -> CellSpec:
     return "goodflag", _("no")
 
 
+def _render_svc_is_stale(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_is_stale(row, context.config.staleness_threshold)
+
+
 class PainterSvcIsStale(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="svc_is_stale",
             title=_l("Service is stale"),
+            render=_render_svc_is_stale,
             short_title=_l("Stale"),
             columns=["service_staleness"],
             sorter="svc_staleness",
         )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_is_stale(row, context.config.staleness_threshold)
 
 
 def _paint_custom_vars(what: str, row: Row, blacklist: list | None = None) -> CellSpec:
@@ -1537,153 +1674,200 @@ def _export_custom_vars(what: str, row: Row, blacklist: list | None = None) -> s
     return ", ".join(rows)
 
 
+def _group_by_service_custom_variables(
+    row: Row, _cell: Cell, _context: PainterContext
+) -> tuple[tuple[str, str], ...]:
+    return tuple(row["service_custom_variables"].items())
+
+
+def _render_service_custom_variables(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return _paint_custom_vars("service", row)
+
+
+def _export_for_csv_service_custom_variables(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str:
+    return _export_custom_vars("service", row)
+
+
+def _export_for_json_service_custom_variables(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str:
+    return _export_custom_vars("service", row)
+
+
 class PainterServiceCustomVariables(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="svc_custom_vars",
             title=_l("Service custom attributes"),
+            render=_render_service_custom_variables,
             columns=["service_custom_variables"],
+            group_by=_group_by_service_custom_variables,
+            export_for_csv=_export_for_csv_service_custom_variables,
+            export_for_json=_export_for_json_service_custom_variables,
         )
 
-    @override
-    def group_by(
-        self, row: Row, cell: Cell, context: PainterContext
-    ) -> tuple[tuple[str, str], ...]:
-        return tuple(row["service_custom_variables"].items())
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_custom_vars("service", row)
-
-    @override
-    def export_for_csv(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> str:
-        return _export_custom_vars("service", row)
-
-    @override
-    def export_for_json(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> str:
-        return _export_custom_vars("service", row)
+type _CustomAttributeChoices = Callable[[PainterContext], DropdownChoiceEntries]
 
 
-class ABCPainterCustomVariable(InternalPainter, abc.ABC):
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return self._dynamic_title(cell, context)
+def _service_custom_attribute_choices(context: PainterContext) -> DropdownChoiceEntries:
+    choices = []
+    for ident, attr_spec in context.config.custom_service_attributes.items():
+        choices.append((ident, attr_spec["title"]))
+    return sorted(choices, key=lambda x: x[1])
 
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return self._dynamic_title(cell, context)
 
-    @override
-    def export_title(self, cell: Cell) -> str:
-        if (params := cell.painter_parameters()) is None:
-            return self.ident
-        return f"{self.ident}_{params['ident']}"
+def _host_custom_attribute_choices(context: PainterContext) -> DropdownChoiceEntries:
+    choices = []
+    for attr_spec in context.config.wato_host_attrs:
+        choices.append((attr_spec["name"], attr_spec["title"]))
+    return sorted(choices, key=lambda x: x[1])
 
-    def _dynamic_title(self, cell: Cell, context: PainterContext) -> str:
-        if (params := cell.painter_parameters()) is None:
-            # Happens in view editor when adding a painter
-            return super().title(cell, context)
 
-        try:
-            attributes: dict = dict(self._custom_attribute_choices(context))
-            return attributes[params["ident"]]
-        except KeyError:
-            return super().title(cell, context)
+def _title_custom_variable(
+    attribute_choices: _CustomAttributeChoices,
+    default_title: LazyString,
+    cell: Cell,
+    context: PainterContext,
+) -> str:
+    if (params := cell.painter_parameters()) is None:
+        # Happens in view editor when adding a painter
+        return str(default_title)
 
-    @override
-    def list_title(self, cell: Cell, context: PainterContext) -> str:
-        return super().title(cell, context)
+    try:
+        attributes: dict = dict(attribute_choices(context))
+        return attributes[params["ident"]]
+    except KeyError:
+        return str(default_title)
 
-    @property
-    @abc.abstractmethod
-    def _object_type(self) -> str:
-        raise NotImplementedError
 
-    @abc.abstractmethod
-    def _custom_attribute_choices(self, context: PainterContext) -> DropdownChoiceEntries:
-        raise NotImplementedError
+def _export_title_custom_variable(name: str, cell: Cell) -> str:
+    if (params := cell.painter_parameters()) is None:
+        return name
+    return f"{name}_{params['ident']}"
 
-    @override
-    def parameters(self, context: PainterContext) -> Dictionary:
-        return Dictionary(
-            elements=[
-                (
-                    "ident",
-                    DropdownChoice(
-                        choices=lambda: self._custom_attribute_choices(context),
-                        title=_("ID"),
-                    ),
+
+def _parameters_custom_variable(
+    attribute_choices: _CustomAttributeChoices, context: PainterContext
+) -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "ident",
+                DropdownChoice(
+                    choices=lambda: attribute_choices(context),
+                    title=_("ID"),
                 ),
-            ],
-            title=_("Options"),
-            optional_keys=[],
-        )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        if (params := cell.painter_parameters()) is None:
-            params = {}
-        return paint_custom_var(self._object_type, params.get("ident", "").upper(), row)
+            ),
+        ],
+        title=_("Options"),
+        optional_keys=[],
+    )
 
 
-class PainterServiceCustomVariable(ABCPainterCustomVariable):
+def _render_custom_variable(
+    object_type: str, row: Row, cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    if (params := cell.painter_parameters()) is None:
+        params = {}
+    return paint_custom_var(object_type, params.get("ident", "").upper(), row)
+
+
+def _group_by_host_custom_variable(
+    row: Row, cell: Cell, _context: PainterContext
+) -> str | tuple[str, ...]:
+    if (parameters := cell.painter_parameters()) is None:
+        return ""
+
+    custom_variable_name = parameters["ident"]
+    try:
+        index = row["host_custom_variable_names"].index(custom_variable_name.upper())
+    except ValueError:
+        # group all hosts without this custom variable into a single group.
+        # this group does not have a headline.
+        return ""
+    return row["host_custom_variable_values"][index]
+
+
+_SERVICE_CUSTOM_VARIABLE_TITLE = _l("Service custom attribute")
+
+
+def _render_service_custom_variable(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _render_custom_variable("service", row, cell, user, context)
+
+
+def _title_service_custom_variable(cell: Cell, context: PainterContext) -> str:
+    return _title_custom_variable(
+        _service_custom_attribute_choices, _SERVICE_CUSTOM_VARIABLE_TITLE, cell, context
+    )
+
+
+def _export_title_service_custom_variable(cell: Cell) -> str:
+    return _export_title_custom_variable("service_custom_variable", cell)
+
+
+def _parameters_service_custom_variable(context: PainterContext) -> Dictionary:
+    return _parameters_custom_variable(_service_custom_attribute_choices, context)
+
+
+class PainterServiceCustomVariable(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="service_custom_variable",
-            title=_l("Service custom attribute"),
+            title=_SERVICE_CUSTOM_VARIABLE_TITLE,
+            render=_render_service_custom_variable,
+            list_title=_SERVICE_CUSTOM_VARIABLE_TITLE,
+            cell_title=_title_service_custom_variable,
+            cell_short_title=_title_service_custom_variable,
+            export_title=_export_title_service_custom_variable,
             columns=["service_custom_variable_names", "service_custom_variable_values"],
+            parameters=_parameters_service_custom_variable,
         )
 
-    @property
-    @override
-    def _object_type(self) -> str:
-        return "service"
 
-    @override
-    def _custom_attribute_choices(self, context: PainterContext) -> DropdownChoiceEntries:
-        choices = []
-        for ident, attr_spec in context.config.custom_service_attributes.items():
-            choices.append((ident, attr_spec["title"]))
-        return sorted(choices, key=lambda x: x[1])
+_HOST_CUSTOM_VARIABLE_TITLE = _l("Host custom attribute")
 
 
-class PainterHostCustomVariable(ABCPainterCustomVariable):
+def _render_host_custom_variable(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _render_custom_variable("host", row, cell, user, context)
+
+
+def _title_host_custom_variable(cell: Cell, context: PainterContext) -> str:
+    return _title_custom_variable(
+        _host_custom_attribute_choices, _HOST_CUSTOM_VARIABLE_TITLE, cell, context
+    )
+
+
+def _export_title_host_custom_variable(cell: Cell) -> str:
+    return _export_title_custom_variable("host_custom_variable", cell)
+
+
+def _parameters_host_custom_variable(context: PainterContext) -> Dictionary:
+    return _parameters_custom_variable(_host_custom_attribute_choices, context)
+
+
+class PainterHostCustomVariable(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="host_custom_variable",
-            title=_l("Host custom attribute"),
+            title=_HOST_CUSTOM_VARIABLE_TITLE,
+            render=_render_host_custom_variable,
+            list_title=_HOST_CUSTOM_VARIABLE_TITLE,
+            cell_title=_title_host_custom_variable,
+            cell_short_title=_title_host_custom_variable,
+            export_title=_export_title_host_custom_variable,
             columns=["host_custom_variable_names", "host_custom_variable_values"],
+            group_by=_group_by_host_custom_variable,
+            parameters=_parameters_host_custom_variable,
         )
-
-    @override
-    def group_by(self, row: Row, cell: Cell, context: PainterContext) -> str | tuple[str, ...]:
-        if (parameters := cell.painter_parameters()) is None:
-            return ""
-
-        custom_variable_name = parameters["ident"]
-        try:
-            index = row["host_custom_variable_names"].index(custom_variable_name.upper())
-        except ValueError:
-            # group all hosts without this custom variable into a single group.
-            # this group does not have a headline.
-            return ""
-        return row["host_custom_variable_values"][index]
-
-    @property
-    @override
-    def _object_type(self) -> str:
-        return "host"
-
-    @override
-    def _custom_attribute_choices(self, context: PainterContext) -> DropdownChoiceEntries:
-        choices = []
-        for attr_spec in context.config.wato_host_attrs:
-            choices.append((attr_spec["name"], attr_spec["title"]))
-        return sorted(choices, key=lambda x: x[1])
 
 
 # .
@@ -1699,20 +1883,29 @@ class PainterHostCustomVariable(ABCPainterCustomVariable):
 #   '----------------------------------------------------------------------'
 
 
+def _render_host_state(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_host_state_short(row, config=context.config)
+
+
 class PainterHostState(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="host_state",
             title=_l("Host state"),
+            render=_render_host_state,
             short_title=_l("State"),
             columns=["host_has_been_checked", "host_state"],
             sorter="hoststate",
             title_classes=["center"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_host_state_short(row, config=context.config)
+
+def _render_host_state_onechar(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_host_state_short(row, short=True, config=context.config)
 
 
 class PainterHostStateOnechar(InternalPainter):
@@ -1720,14 +1913,25 @@ class PainterHostStateOnechar(InternalPainter):
         super().__init__(
             ident="host_state_onechar",
             title=_l("Host state (first character)"),
+            render=_render_host_state_onechar,
             short_title=_l("S."),
             columns=["host_has_been_checked", "host_state"],
             sorter="hoststate",
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_host_state_short(row, short=True, config=context.config)
+
+def _render_host_plugin_output(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return (
+        None,
+        format_plugin_output(
+            row["host_plugin_output"],
+            request=context.request,
+            must_escape=determine_must_escape(context.config.sites, row),
+            row=row,
+        ),
+    )
 
 
 class PainterHostPluginOutput(InternalPainter):
@@ -1735,21 +1939,16 @@ class PainterHostPluginOutput(InternalPainter):
         super().__init__(
             ident="host_plugin_output",
             title=_l("Summary"),
+            render=_render_host_plugin_output,
             list_title=_l("Summary (previously named: Status details or plug-in output)"),
             columns=["host_plugin_output", "host_custom_variables"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (
-            None,
-            format_plugin_output(
-                row["host_plugin_output"],
-                request=context.request,
-                must_escape=determine_must_escape(context.config.sites, row),
-                row=row,
-            ),
-        )
+
+def _render_host_perf_data(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["host_perf_data"])
 
 
 class PainterHostPerfData(InternalPainter):
@@ -1757,13 +1956,16 @@ class PainterHostPerfData(InternalPainter):
         super().__init__(
             ident="host_perf_data",
             title=_l("Host metrics"),
+            render=_render_host_perf_data,
             short_title=_l("Metrics"),
             columns=["host_perf_data"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["host_perf_data"])
+
+def _render_host_check_command(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["host_check_command"])
 
 
 class PainterHostCheckCommand(InternalPainter):
@@ -1771,13 +1973,16 @@ class PainterHostCheckCommand(InternalPainter):
         super().__init__(
             ident="host_check_command",
             title=_l("Host check command"),
+            render=_render_host_check_command,
             short_title=_l("Check command"),
             columns=["host_check_command"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["host_check_command"])
+
+def _render_host_check_command_expanded(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["host_check_command_expanded"])
 
 
 class PainterHostCheckCommandExpanded(InternalPainter):
@@ -1785,13 +1990,22 @@ class PainterHostCheckCommandExpanded(InternalPainter):
         super().__init__(
             ident="host_check_command_expanded",
             title=_l("Host check command expanded"),
+            render=_render_host_check_command_expanded,
             short_title=_l("Check command expanded"),
             columns=["host_check_command_expanded"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["host_check_command_expanded"])
+
+def _render_host_notes_u_r_l(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    raw_url = row.get("host_notes_url")
+    if not raw_url:
+        return None, HTML.empty()
+
+    url = replace_action_url_macros(raw_url, "host", row)
+    content = context.url_renderer.link_direct(url, html_text=url, target="_blank")
+    return None, content
 
 
 class PainterHostNotesURL(InternalPainter):
@@ -1799,19 +2013,22 @@ class PainterHostNotesURL(InternalPainter):
         super().__init__(
             ident="host_notes_url",
             title=_l("Notes (URL) for hosts"),
+            render=_render_host_notes_u_r_l,
             short_title=_l("Notes URL"),
             columns=["host_address", "host_notes_url"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        raw_url = row.get("host_notes_url")
-        if not raw_url:
-            return None, HTML.empty()
 
-        url = replace_action_url_macros(raw_url, "host", row)
-        content = context.url_renderer.link_direct(url, html_text=url, target="_blank")
-        return None, content
+def _render_host_state_age(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_age(
+        row["host_last_state_change"],
+        row["host_has_been_checked"] == 1,
+        60 * 10,
+        request=context.request,
+        painter_options=context.painter_options,
+    )
 
 
 class PainterHostStateAge(InternalPainter):
@@ -1819,20 +2036,23 @@ class PainterHostStateAge(InternalPainter):
         super().__init__(
             ident="host_state_age",
             title=_l("Age of the current host state"),
+            render=_render_host_state_age,
             short_title=_l("Age"),
             columns=["host_has_been_checked", "host_last_state_change"],
             painter_options=["ts_format", "ts_date"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_age(
-            row["host_last_state_change"],
-            row["host_has_been_checked"] == 1,
-            60 * 10,
-            request=context.request,
-            painter_options=context.painter_options,
-        )
+
+def _render_host_check_age(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_checked(
+        "host",
+        row,
+        config=context.config,
+        request=context.request,
+        painter_options=context.painter_options,
+    )
 
 
 class PainterHostCheckAge(InternalPainter):
@@ -1840,20 +2060,21 @@ class PainterHostCheckAge(InternalPainter):
         super().__init__(
             ident="host_check_age",
             title=_l("Time since the last check of the host"),
+            render=_render_host_check_age,
             short_title=_l("Checked"),
             columns=["host_has_been_checked", "host_last_check"],
             painter_options=["ts_format", "ts_date"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_checked(
-            "host",
-            row,
-            config=context.config,
-            request=context.request,
-            painter_options=context.painter_options,
-        )
+
+def _render_host_next_check(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_future_time(
+        row["host_next_check"],
+        request=context.request,
+        painter_options=context.painter_options,
+    )
 
 
 class PainterHostNextCheck(InternalPainter):
@@ -1861,17 +2082,20 @@ class PainterHostNextCheck(InternalPainter):
         super().__init__(
             ident="host_next_check",
             title=_l("Time of the next scheduled host check"),
+            render=_render_host_next_check,
             short_title=_l("Next check"),
             columns=["host_next_check"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_future_time(
-            row["host_next_check"],
-            request=context.request,
-            painter_options=context.painter_options,
-        )
+
+def _render_host_next_notification(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_future_time(
+        row["host_next_notification"],
+        request=context.request,
+        painter_options=context.painter_options,
+    )
 
 
 class PainterHostNextNotification(InternalPainter):
@@ -1879,17 +2103,16 @@ class PainterHostNextNotification(InternalPainter):
         super().__init__(
             ident="host_next_notification",
             title=_l("Time of the next host notification"),
+            render=_render_host_next_notification,
             short_title=_l("Next notification"),
             columns=["host_next_notification"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_future_time(
-            row["host_next_notification"],
-            request=context.request,
-            painter_options=context.painter_options,
-        )
+
+def _render_host_notification_postponement_reason(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return _paint_notification_postponement_reason("host", row)
 
 
 class PainterHostNotificationPostponementReason(InternalPainter):
@@ -1897,13 +2120,22 @@ class PainterHostNotificationPostponementReason(InternalPainter):
         super().__init__(
             ident="host_notification_postponement_reason",
             title=_l("Notification postponement reason"),
+            render=_render_host_notification_postponement_reason,
             short_title=_l("Notif. postponed"),
             columns=["host_notification_postponement_reason"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_notification_postponement_reason("host", row)
+
+def _render_host_last_notification(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_age(
+        row["host_last_notification"],
+        row["host_last_notification"],
+        0,
+        request=context.request,
+        painter_options=context.painter_options,
+    )
 
 
 class PainterHostLastNotification(InternalPainter):
@@ -1911,20 +2143,17 @@ class PainterHostLastNotification(InternalPainter):
         super().__init__(
             ident="host_last_notification",
             title=_l("Time of the last host notification"),
+            render=_render_host_last_notification,
             short_title=_l("last notification"),
             columns=["host_last_notification"],
             painter_options=["ts_format", "ts_date"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_age(
-            row["host_last_notification"],
-            row["host_last_notification"],
-            0,
-            request=context.request,
-            painter_options=context.painter_options,
-        )
+
+def _render_host_check_latency(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", approx_age(row["host_latency"]))
 
 
 class PainterHostCheckLatency(InternalPainter):
@@ -1932,13 +2161,16 @@ class PainterHostCheckLatency(InternalPainter):
         super().__init__(
             ident="host_check_latency",
             title=_l("Host check latency"),
+            render=_render_host_check_latency,
             short_title=_l("Latency"),
             columns=["host_latency"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", approx_age(row["host_latency"]))
+
+def _render_host_check_duration(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", approx_age(row["host_execution_time"]))
 
 
 class PainterHostCheckDuration(InternalPainter):
@@ -1946,13 +2178,16 @@ class PainterHostCheckDuration(InternalPainter):
         super().__init__(
             ident="host_check_duration",
             title=_l("Host check duration"),
+            render=_render_host_check_duration,
             short_title=_l("Duration"),
             columns=["host_execution_time"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", approx_age(row["host_execution_time"]))
+
+def _render_host_attempt(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, "%d/%d" % (row["host_current_attempt"], row["host_max_check_attempts"]))
 
 
 class PainterHostAttempt(InternalPainter):
@@ -1960,13 +2195,16 @@ class PainterHostAttempt(InternalPainter):
         super().__init__(
             ident="host_attempt",
             title=_l("Current host check attempt"),
+            render=_render_host_attempt,
             short_title=_l("Att."),
             columns=["host_current_attempt", "host_max_check_attempts"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, "%d/%d" % (row["host_current_attempt"], row["host_max_check_attempts"]))
+
+def _render_host_normal_interval(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, approx_age(row["host_check_interval"] * 60.0))
 
 
 class PainterHostNormalInterval(InternalPainter):
@@ -1974,13 +2212,16 @@ class PainterHostNormalInterval(InternalPainter):
         super().__init__(
             ident="host_normal_interval",
             title=_l("Normal check interval"),
+            render=_render_host_normal_interval,
             short_title=_l("Check int."),
             columns=["host_check_interval"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, approx_age(row["host_check_interval"] * 60.0))
+
+def _render_host_retry_interval(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, approx_age(row["host_retry_interval"] * 60.0))
 
 
 class PainterHostRetryInterval(InternalPainter):
@@ -1988,13 +2229,23 @@ class PainterHostRetryInterval(InternalPainter):
         super().__init__(
             ident="host_retry_interval",
             title=_l("Retry check interval"),
+            render=_render_host_retry_interval,
             short_title=_l("Retry"),
             columns=["host_retry_interval"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, approx_age(row["host_retry_interval"] * 60.0))
+
+def _render_host_check_interval(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (
+        None,
+        "%s / %s"
+        % (
+            approx_age(row["host_check_interval"] * 60.0),
+            approx_age(row["host_retry_interval"] * 60.0),
+        ),
+    )
 
 
 class PainterHostCheckInterval(InternalPainter):
@@ -2002,20 +2253,16 @@ class PainterHostCheckInterval(InternalPainter):
         super().__init__(
             ident="host_check_interval",
             title=_l("Normal/retry check interval"),
+            render=_render_host_check_interval,
             short_title=_l("Interval"),
             columns=["host_check_interval", "host_retry_interval"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (
-            None,
-            "%s / %s"
-            % (
-                approx_age(row["host_check_interval"] * 60.0),
-                approx_age(row["host_retry_interval"] * 60.0),
-            ),
-        )
+
+def _render_host_check_type(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["host_check_type"] == 0 and "ACTIVE" or "PASSIVE")
 
 
 class PainterHostCheckType(InternalPainter):
@@ -2023,13 +2270,16 @@ class PainterHostCheckType(InternalPainter):
         super().__init__(
             ident="host_check_type",
             title=_l("Host check type"),
+            render=_render_host_check_type,
             short_title=_l("Type"),
             columns=["host_check_type"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["host_check_type"] == 0 and "ACTIVE" or "PASSIVE")
+
+def _render_host_in_notifper(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_nagiosflag(row, "host_in_notification_period", False)
 
 
 class PainterHostInNotifper(InternalPainter):
@@ -2037,13 +2287,16 @@ class PainterHostInNotifper(InternalPainter):
         super().__init__(
             ident="host_in_notifper",
             title=_l("Host in notif. period"),
+            render=_render_host_in_notifper,
             short_title=_l("in notif. p."),
             columns=["host_in_notification_period"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_nagiosflag(row, "host_in_notification_period", False)
+
+def _render_host_notifper(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["host_notification_period"])
 
 
 class PainterHostNotifper(InternalPainter):
@@ -2051,13 +2304,16 @@ class PainterHostNotifper(InternalPainter):
         super().__init__(
             ident="host_notifper",
             title=_l("Host notification period"),
+            render=_render_host_notifper,
             short_title=_l("notif."),
             columns=["host_notification_period"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["host_notification_period"])
+
+def _render_host_notification_number(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", str(row["host_current_notification_number"]))
 
 
 class PainterHostNotificationNumber(InternalPainter):
@@ -2065,13 +2321,16 @@ class PainterHostNotificationNumber(InternalPainter):
         super().__init__(
             ident="host_notification_number",
             title=_l("Host notification number"),
+            render=_render_host_notification_number,
             short_title=_l("N#"),
             columns=["host_current_notification_number"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", str(row["host_current_notification_number"]))
+
+def _render_host_flapping(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_nagiosflag(row, "host_is_flapping", True)
 
 
 class PainterHostFlapping(InternalPainter):
@@ -2079,13 +2338,16 @@ class PainterHostFlapping(InternalPainter):
         super().__init__(
             ident="host_flapping",
             title=_l("Host is flapping"),
+            render=_render_host_flapping,
             short_title=_l("Flap"),
             columns=["host_is_flapping"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_nagiosflag(row, "host_is_flapping", True)
+
+def _render_host_is_active(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_nagiosflag(row, "host_active_checks_enabled", False)
 
 
 class PainterHostIsActive(InternalPainter):
@@ -2093,13 +2355,16 @@ class PainterHostIsActive(InternalPainter):
         super().__init__(
             ident="host_is_active",
             title=_l("Host is active"),
+            render=_render_host_is_active,
             short_title=_l("Active"),
             columns=["host_active_checks_enabled"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_nagiosflag(row, "host_active_checks_enabled", False)
+
+def _render_host_notifications_enabled(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_nagiosflag(row, "host_notifications_enabled", False)
 
 
 class PainterHostNotificationsEnabled(InternalPainter):
@@ -2107,13 +2372,19 @@ class PainterHostNotificationsEnabled(InternalPainter):
         super().__init__(
             ident="host_notifications_enabled",
             title=_l("Host notifications enabled"),
+            render=_render_host_notifications_enabled,
             short_title=_l("Notif."),
             columns=["host_notifications_enabled"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_nagiosflag(row, "host_notifications_enabled", False)
+
+def _render_host_black(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    state = row["host_state"]
+    if state != 0:
+        return "nobr", HTMLWriter.render_div(row["host_name"], class_="hostdown")
+    return "nobr", row["host_name"]
 
 
 class PainterHostBlack(InternalPainter):
@@ -2121,17 +2392,20 @@ class PainterHostBlack(InternalPainter):
         super().__init__(
             ident="host_black",
             title=_l("Host name, red background if down or unreachable (deprecated)"),
+            render=_render_host_black,
             short_title=_l("Host"),
             columns=["site", "host_name", "host_state"],
             sorter="site_host",
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        state = row["host_state"]
-        if state != 0:
-            return "nobr", HTMLWriter.render_div(row["host_name"], class_="hostdown")
-        return "nobr", row["host_name"]
+
+def _render_host_with_state(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    state = row["host_state"] if row["host_has_been_checked"] else "p"
+    if state != 0:
+        return "state hstate hstate%s" % state, HTMLWriter.render_span(row["host_name"])
+    return "nobr", row["host_name"]
 
 
 class PainterHostWithState(InternalPainter):
@@ -2139,17 +2413,65 @@ class PainterHostWithState(InternalPainter):
         super().__init__(
             ident="host_with_state",
             title=_l("Host name, marked red if down (deprecated)"),
+            render=_render_host_with_state,
             short_title=_l("Host"),
             columns=["site", "host_name", "host_state", "host_has_been_checked"],
             sorter="site_host",
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        state = row["host_state"] if row["host_has_been_checked"] else "p"
-        if state != 0:
-            return "state hstate hstate%s" % state, HTMLWriter.render_span(row["host_name"])
-        return "nobr", row["host_name"]
+
+def _parameters_host(_context: PainterContext) -> Dictionary:
+    elements: DictionaryElements = [
+        (
+            "color_choices",
+            ListChoice(
+                choices=[
+                    ("colorize_up", _("Colorize background if host is up")),
+                    ("colorize_down", _("Colorize background if host is down")),
+                    ("colorize_unreachable", _("Colorize background if host unreachable")),
+                    ("colorize_pending", _("Colorize background if host is pending")),
+                    ("colorize_downtime", _("Colorize background if host is downtime")),
+                ],
+                title=_("Coloring"),
+                help=_(
+                    "Here, you can configure the background color for specific states. "
+                    "The coloring for host in downtime overrules all other coloring."
+                ),
+            ),
+        )
+    ]
+
+    return Dictionary(elements=elements, title=_("Options"), optional_keys=[])
+
+
+def _render_host(row: Row, cell: Cell, _user: LoggedInUser, _context: PainterContext) -> CellSpec:
+    if (params := cell.painter_parameters()) is None:
+        params = {}
+
+    color_choices = params.get("color_choices", [])
+
+    state = row["host_state"] if row["host_has_been_checked"] else "p"
+
+    css = ["nobr"]
+    if "colorize_downtime" in color_choices and row["host_scheduled_downtime_depth"] > 0:
+        css.extend(["hstate", "hstated"])
+
+    # Also apply other css classes, even if its already in downtime
+    for key, option_state in [
+        ("colorize_up", 0),
+        ("colorize_down", 1),
+        ("colorize_unreachable", 2),
+        ("colorize_pending", "p"),
+    ]:
+        if key in color_choices and state == option_state:
+            if "hstate" not in css:
+                css.append("hstate")
+            css.append("hstate%s" % option_state)
+            break
+
+    return " ".join(css), HTMLWriter.render_span(
+        row["host_name"], class_=["state_rounded_fill", "host"]
+    )
 
 
 class PainterHost(InternalPainter):
@@ -2157,6 +2479,7 @@ class PainterHost(InternalPainter):
         super().__init__(
             ident="host",
             title=_l("Host name"),
+            render=_render_host,
             short_title=_l("Host"),
             columns=[
                 "host_name",
@@ -2164,73 +2487,30 @@ class PainterHost(InternalPainter):
                 "host_has_been_checked",
                 "host_scheduled_downtime_depth",
             ],
+            parameters=_parameters_host,
             sorter="site_host",
         )
 
-    @override
-    def parameters(self, context: PainterContext) -> Dictionary:
-        elements: DictionaryElements = [
-            (
-                "color_choices",
-                ListChoice(
-                    choices=[
-                        ("colorize_up", _("Colorize background if host is up")),
-                        ("colorize_down", _("Colorize background if host is down")),
-                        ("colorize_unreachable", _("Colorize background if host unreachable")),
-                        ("colorize_pending", _("Colorize background if host is pending")),
-                        ("colorize_downtime", _("Colorize background if host is downtime")),
-                    ],
-                    title=_("Coloring"),
-                    help=_(
-                        "Here, you can configure the background color for specific states. "
-                        "The coloring for host in downtime overrules all other coloring."
-                    ),
-                ),
-            )
-        ]
 
-        return Dictionary(elements=elements, title=_("Options"), optional_keys=[])
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        if (params := cell.painter_parameters()) is None:
-            params = {}
-
-        color_choices = params.get("color_choices", [])
-
-        state = row["host_state"] if row["host_has_been_checked"] else "p"
-
-        css = ["nobr"]
-        if "colorize_downtime" in color_choices and row["host_scheduled_downtime_depth"] > 0:
-            css.extend(["hstate", "hstated"])
-
-        # Also apply other css classes, even if its already in downtime
-        for key, option_state in [
-            ("colorize_up", 0),
-            ("colorize_down", 1),
-            ("colorize_unreachable", 2),
-            ("colorize_pending", "p"),
-        ]:
-            if key in color_choices and state == option_state:
-                if "hstate" not in css:
-                    css.append("hstate")
-                css.append("hstate%s" % option_state)
-                break
-
-        return " ".join(css), HTMLWriter.render_span(
-            row["host_name"], class_=["state_rounded_fill", "host"]
-        )
+def _render_alias(row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext) -> CellSpec:
+    return ("", row["host_alias"])
 
 
 class PainterAlias(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
-            ident="alias", title=_l("Host alias"), short_title=_l("Alias"), columns=["host_alias"]
+            ident="alias",
+            title=_l("Host alias"),
+            render=_render_alias,
+            short_title=_l("Alias"),
+            columns=["host_alias"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", row["host_alias"])
+
+def _render_host_address(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", row["host_address"])
 
 
 class PainterHostAddress(InternalPainter):
@@ -2238,13 +2518,16 @@ class PainterHostAddress(InternalPainter):
         super().__init__(
             ident="host_address",
             title=_l("Host address (primary)"),
+            render=_render_host_address,
             short_title=_l("IP address"),
             columns=["host_address"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", row["host_address"])
+
+def _render_host_ipv4_address(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_custom_var("host", "ADDRESS_4", row)
 
 
 class PainterHostIpv4Address(InternalPainter):
@@ -2252,13 +2535,16 @@ class PainterHostIpv4Address(InternalPainter):
         super().__init__(
             ident="host_ipv4_address",
             title=_l("Host address (IPv4)"),
+            render=_render_host_ipv4_address,
             short_title=_l("IPv4 address"),
             columns=["host_custom_variable_names", "host_custom_variable_values"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_custom_var("host", "ADDRESS_4", row)
+
+def _render_host_ipv6_address(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_custom_var("host", "ADDRESS_6", row)
 
 
 class PainterHostIpv6Address(InternalPainter):
@@ -2266,13 +2552,27 @@ class PainterHostIpv6Address(InternalPainter):
         super().__init__(
             ident="host_ipv6_address",
             title=_l("Host address (IPv6)"),
+            render=_render_host_ipv6_address,
             short_title=_l("IPv6 address"),
             columns=["host_custom_variable_names", "host_custom_variable_values"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_custom_var("host", "ADDRESS_6", row)
+
+def _render_host_addresses(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    custom_vars = dict(zip(row["host_custom_variable_names"], row["host_custom_variable_values"]))
+
+    if custom_vars.get("ADDRESS_FAMILY", "4") == "4":
+        primary = custom_vars.get("ADDRESS_4", "")
+        secondary = custom_vars.get("ADDRESS_6", "")
+    else:
+        primary = custom_vars.get("ADDRESS_6", "")
+        secondary = custom_vars.get("ADDRESS_4", "")
+
+    if secondary:
+        secondary = " (%s)" % secondary
+    return "", primary + secondary
 
 
 class PainterHostAddresses(InternalPainter):
@@ -2280,26 +2580,27 @@ class PainterHostAddresses(InternalPainter):
         super().__init__(
             ident="host_addresses",
             title=_l("Host addresses (IPv4/IPv6)"),
+            render=_render_host_addresses,
             short_title=_l("IP addresses"),
             columns=["host_address", "host_custom_variable_names", "host_custom_variable_values"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        custom_vars = dict(
-            zip(row["host_custom_variable_names"], row["host_custom_variable_values"])
-        )
 
-        if custom_vars.get("ADDRESS_FAMILY", "4") == "4":
-            primary = custom_vars.get("ADDRESS_4", "")
-            secondary = custom_vars.get("ADDRESS_6", "")
-        else:
-            primary = custom_vars.get("ADDRESS_6", "")
-            secondary = custom_vars.get("ADDRESS_4", "")
+def _render_host_addresses_additional(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    custom_vars = dict(zip(row["host_custom_variable_names"], row["host_custom_variable_values"]))
 
-        if secondary:
-            secondary = " (%s)" % secondary
-        return "", primary + secondary
+    ipv4_addresses = custom_vars.get("ADDRESSES_4", "").strip()
+    ipv6_addresses = custom_vars.get("ADDRESSES_6", "").strip()
+
+    addresses = []
+    if ipv4_addresses:
+        addresses += ipv4_addresses.split(" ")
+    if ipv6_addresses:
+        addresses += ipv6_addresses.split(" ")
+
+    return "", ", ".join(addresses)
 
 
 class PainterHostAddressesAdditional(InternalPainter):
@@ -2307,26 +2608,16 @@ class PainterHostAddressesAdditional(InternalPainter):
         super().__init__(
             ident="host_addresses_additional",
             title=_l("Host addresses (additional)"),
+            render=_render_host_addresses_additional,
             short_title=_l("Add. addresses"),
             columns=["host_custom_variable_names", "host_custom_variable_values"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        custom_vars = dict(
-            zip(row["host_custom_variable_names"], row["host_custom_variable_values"])
-        )
 
-        ipv4_addresses = custom_vars.get("ADDRESSES_4", "").strip()
-        ipv6_addresses = custom_vars.get("ADDRESSES_6", "").strip()
-
-        addresses = []
-        if ipv4_addresses:
-            addresses += ipv4_addresses.split(" ")
-        if ipv6_addresses:
-            addresses += ipv6_addresses.split(" ")
-
-        return "", ", ".join(addresses)
+def _render_host_address_family(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_custom_var("host", "ADDRESS_FAMILY", row)
 
 
 class PainterHostAddressFamily(InternalPainter):
@@ -2334,13 +2625,26 @@ class PainterHostAddressFamily(InternalPainter):
         super().__init__(
             ident="host_address_family",
             title=_l("Host address family (primary)"),
+            render=_render_host_address_family,
             short_title=_l("Address family"),
             columns=["host_custom_variable_names", "host_custom_variable_values"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_custom_var("host", "ADDRESS_FAMILY", row)
+
+def _render_host_address_families(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    custom_vars = dict(zip(row["host_custom_variable_names"], row["host_custom_variable_values"]))
+
+    primary = custom_vars.get("ADDRESS_FAMILY", "4")
+
+    families = [primary]
+    if primary == "6" and custom_vars.get("ADDRESS_4"):
+        families.append("4")
+    elif primary == "4" and custom_vars.get("ADDRESS_6"):
+        families.append("6")
+
+    return "", ", ".join(families)
 
 
 class PainterHostAddressFamilies(InternalPainter):
@@ -2348,25 +2652,10 @@ class PainterHostAddressFamilies(InternalPainter):
         super().__init__(
             ident="host_address_families",
             title=_l("Host address families"),
+            render=_render_host_address_families,
             short_title=_l("Address families"),
             columns=["host_custom_variable_names", "host_custom_variable_values"],
         )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        custom_vars = dict(
-            zip(row["host_custom_variable_names"], row["host_custom_variable_values"])
-        )
-
-        primary = custom_vars.get("ADDRESS_FAMILY", "4")
-
-        families = [primary]
-        if primary == "6" and custom_vars.get("ADDRESS_4"):
-            families.append("4")
-        elif primary == "4" and custom_vars.get("ADDRESS_6"):
-            families.append("6")
-
-        return "", ", ".join(families)
 
 
 def paint_svc_count(id_: int | str, count: int) -> CellSpec:
@@ -2384,19 +2673,28 @@ def paint_host_count(id_: int | None, count: int) -> CellSpec:
     return "count hstate", "0"
 
 
+def _render_num_services(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, str(row["host_num_services"]))
+
+
 class PainterNumServices(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="num_services",
             title=_l("Number of services"),
+            render=_render_num_services,
             short_title="",
             columns=["host_num_services"],
             title_classes=["right"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, str(row["host_num_services"]))
+
+def _render_num_services_ok(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_svc_count(0, row["host_num_services_ok"])
 
 
 class PainterNumServicesOk(InternalPainter):
@@ -2404,14 +2702,20 @@ class PainterNumServicesOk(InternalPainter):
         super().__init__(
             ident="num_services_ok",
             title=_l("Number of services in state OK"),
+            render=_render_num_services_ok,
             short_title=_l("OK"),
             columns=["host_num_services_ok"],
             title_classes=["right"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_svc_count(0, row["host_num_services_ok"])
+
+def _render_num_problems(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_svc_count(
+        "s",
+        row["host_num_services"] - row["host_num_services_ok"] - row["host_num_services_pending"],
+    )
 
 
 class PainterNumProblems(InternalPainter):
@@ -2419,19 +2723,17 @@ class PainterNumProblems(InternalPainter):
         super().__init__(
             ident="num_problems",
             title=_l("Number of problems"),
+            render=_render_num_problems,
             short_title=_l("Prob."),
             columns=["host_num_services", "host_num_services_ok", "host_num_services_pending"],
             title_classes=["right"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_svc_count(
-            "s",
-            row["host_num_services"]
-            - row["host_num_services_ok"]
-            - row["host_num_services_pending"],
-        )
+
+def _render_num_services_warn(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_svc_count(1, row["host_num_services_warn"])
 
 
 class PainterNumServicesWarn(InternalPainter):
@@ -2439,14 +2741,17 @@ class PainterNumServicesWarn(InternalPainter):
         super().__init__(
             ident="num_services_warn",
             title=_l("Number of services in state WARN"),
+            render=_render_num_services_warn,
             short_title=_l("Wa"),
             columns=["host_num_services_warn"],
             title_classes=["right"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_svc_count(1, row["host_num_services_warn"])
+
+def _render_num_services_crit(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_svc_count(2, row["host_num_services_crit"])
 
 
 class PainterNumServicesCrit(InternalPainter):
@@ -2454,14 +2759,17 @@ class PainterNumServicesCrit(InternalPainter):
         super().__init__(
             ident="num_services_crit",
             title=_l("Number of services in state CRIT"),
+            render=_render_num_services_crit,
             short_title=_l("Cr"),
             columns=["host_num_services_crit"],
             title_classes=["right"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_svc_count(2, row["host_num_services_crit"])
+
+def _render_num_services_unknown(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_svc_count(3, row["host_num_services_unknown"])
 
 
 class PainterNumServicesUnknown(InternalPainter):
@@ -2469,14 +2777,17 @@ class PainterNumServicesUnknown(InternalPainter):
         super().__init__(
             ident="num_services_unknown",
             title=_l("Number of services in state UNKNOWN"),
+            render=_render_num_services_unknown,
             short_title=_l("Un"),
             columns=["host_num_services_unknown"],
             title_classes=["right"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_svc_count(3, row["host_num_services_unknown"])
+
+def _render_num_services_pending(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_svc_count("p", row["host_num_services_pending"])
 
 
 class PainterNumServicesPending(InternalPainter):
@@ -2484,14 +2795,11 @@ class PainterNumServicesPending(InternalPainter):
         super().__init__(
             ident="num_services_pending",
             title=_l("Number of services in state PENDING"),
+            render=_render_num_services_pending,
             short_title=_l("Pd"),
             columns=["host_num_services_pending"],
             title_classes=["right"],
         )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_svc_count("p", row["host_num_services_pending"])
 
 
 def _paint_service_list(row: Row, columnname: str, *, renderer: RenderLink) -> CellSpec:
@@ -2528,62 +2836,72 @@ def _paint_service_list(row: Row, columnname: str, *, renderer: RenderLink) -> C
     return "", HTMLWriter.render_div(h, class_="objectlist")
 
 
+def _parameters_host_services(_context: PainterContext) -> Dictionary:
+    choices: ListChoiceChoices = [
+        (0, _("OK")),
+        (1, _("WARN")),
+        (2, _("CRIT")),
+        (3, _("UNKN")),
+        ("p", _("PEND")),
+    ]
+    elements: DictionaryElements = [
+        (
+            "render_states",
+            ListChoice(
+                choices=choices,
+                toggle_all=True,
+                default_value=[0, 1, 2, 3, "p"],
+                title=_("Only show services in this states"),
+                help=_(
+                    "Here, you can configure which services are displayed depending on "
+                    "their state. This is a filter at display level not query level."
+                ),
+            ),
+        )
+    ]
+
+    return Dictionary(elements=elements, title=_("Options"))
+
+
+def _render_host_services(
+    row: Row, cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    if (params := cell.painter_parameters()) is None:
+        params = {}
+
+    render_states = params.get("render_states", [0, 1, 2, 3, "p"])
+    render_pend = [1]
+    if "p" in render_states:
+        render_pend.append(0)
+
+    filtered_services = []
+    for svc, state, checked in row["host_services_with_state"]:
+        if state in render_states and checked in render_pend:
+            filtered_services.append([svc, state, checked])
+
+    row["host_services_with_state_filtered"] = filtered_services
+
+    return _paint_service_list(
+        row, "host_services_with_state_filtered", renderer=context.url_renderer
+    )
+
+
 class PainterHostServices(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="host_services",
             title=_l("Services colored according to state"),
+            render=_render_host_services,
             short_title=_l("Services"),
             columns=["host_name", "host_services_with_state"],
+            parameters=_parameters_host_services,
         )
 
-    @override
-    def parameters(self, context: PainterContext) -> Dictionary:
-        choices: ListChoiceChoices = [
-            (0, _("OK")),
-            (1, _("WARN")),
-            (2, _("CRIT")),
-            (3, _("UNKN")),
-            ("p", _("PEND")),
-        ]
-        elements: DictionaryElements = [
-            (
-                "render_states",
-                ListChoice(
-                    choices=choices,
-                    toggle_all=True,
-                    default_value=[0, 1, 2, 3, "p"],
-                    title=_("Only show services in this states"),
-                    help=_(
-                        "Here, you can configure which services are displayed depending on "
-                        "their state. This is a filter at display level not query level."
-                    ),
-                ),
-            )
-        ]
 
-        return Dictionary(elements=elements, title=_("Options"))
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        if (params := cell.painter_parameters()) is None:
-            params = {}
-
-        render_states = params.get("render_states", [0, 1, 2, 3, "p"])
-        render_pend = [1]
-        if "p" in render_states:
-            render_pend.append(0)
-
-        filtered_services = []
-        for svc, state, checked in row["host_services_with_state"]:
-            if state in render_states and checked in render_pend:
-                filtered_services.append([svc, state, checked])
-
-        row["host_services_with_state_filtered"] = filtered_services
-
-        return _paint_service_list(
-            row, "host_services_with_state_filtered", renderer=context.url_renderer
-        )
+def _render_host_parents(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_host_list(row["site"], row["host_parents"], request=context.request)
 
 
 class PainterHostParents(InternalPainter):
@@ -2591,14 +2909,17 @@ class PainterHostParents(InternalPainter):
         super().__init__(
             ident="host_parents",
             title=_l("Host's parents"),
+            render=_render_host_parents,
             short_title=_l("Parents"),
             columns=["host_parents"],
             use_painter_link=False,
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_host_list(row["site"], row["host_parents"], request=context.request)
+
+def _render_host_childs(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_host_list(row["site"], row["host_childs"], request=context.request)
 
 
 class PainterHostChilds(InternalPainter):
@@ -2606,14 +2927,46 @@ class PainterHostChilds(InternalPainter):
         super().__init__(
             ident="host_childs",
             title=_l("Host's children"),
+            render=_render_host_childs,
             short_title=_l("children"),
             columns=["host_childs"],
             use_painter_link=False,
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_host_list(row["site"], row["host_childs"], request=context.request)
+
+def _group_by_host_group_memberlist(
+    row: Row, _cell: Cell, _context: PainterContext
+) -> tuple[str, ...]:
+    return tuple(row["host_groups"])
+
+
+def _render_host_group_memberlist(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    links = []
+    for group in row["host_groups"]:
+        link = context.url_renderer.link_from_filename(
+            "view.py",
+            html_text=group,
+            query_args=[
+                ("view_name", "hostgroup"),
+                ("hostgroup", group),
+            ],
+        )
+        links.append(link)
+    return "", HTML.without_escaping(", ").join(links)
+
+
+def _export_for_csv_host_group_memberlist(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str:
+    return ", ".join(row["host_groups"])
+
+
+def _export_for_json_host_group_memberlist(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    return row["host_groups"]
 
 
 class PainterHostGroupMemberlist(InternalPainter):
@@ -2621,41 +2974,20 @@ class PainterHostGroupMemberlist(InternalPainter):
         super().__init__(
             ident="host_group_memberlist",
             title=_l("Host groups the host is member of"),
+            render=_render_host_group_memberlist,
             short_title=_l("Groups"),
             columns=["host_groups"],
+            group_by=_group_by_host_group_memberlist,
+            export_for_csv=_export_for_csv_host_group_memberlist,
+            export_for_json=_export_for_json_host_group_memberlist,
             use_painter_link=False,
         )
 
-    @override
-    def group_by(self, row: Row, cell: Cell, context: PainterContext) -> tuple[str, ...]:
-        return tuple(row["host_groups"])
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        links = []
-        for group in row["host_groups"]:
-            link = context.url_renderer.link_from_filename(
-                "view.py",
-                html_text=group,
-                query_args=[
-                    ("view_name", "hostgroup"),
-                    ("hostgroup", group),
-                ],
-            )
-            links.append(link)
-        return "", HTML.without_escaping(", ").join(links)
-
-    @override
-    def export_for_csv(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> str:
-        return ", ".join(row["host_groups"])
-
-    @override
-    def export_for_json(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> object:
-        return row["host_groups"]
+def _render_host_contacts(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, ", ".join(row["host_contacts"]))
 
 
 class PainterHostContacts(InternalPainter):
@@ -2663,13 +2995,16 @@ class PainterHostContacts(InternalPainter):
         super().__init__(
             ident="host_contacts",
             title=_l("Host contacts"),
+            render=_render_host_contacts,
             short_title=_l("Contacts"),
             columns=["host_contacts"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, ", ".join(row["host_contacts"]))
+
+def _render_host_contact_groups(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, ", ".join(row["host_contact_groups"]))
 
 
 class PainterHostContactGroups(InternalPainter):
@@ -2677,13 +3012,16 @@ class PainterHostContactGroups(InternalPainter):
         super().__init__(
             ident="host_contact_groups",
             title=_l("Host contact groups"),
+            render=_render_host_contact_groups,
             short_title=_l("Contact groups"),
             columns=["host_contact_groups"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, ", ".join(row["host_contact_groups"]))
+
+def _render_host_custom_notes(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_custom_notes("hosts", row, config=context.config)
 
 
 class PainterHostCustomNotes(InternalPainter):
@@ -2691,13 +3029,16 @@ class PainterHostCustomNotes(InternalPainter):
         super().__init__(
             ident="host_custom_notes",
             title=_l("Custom host notes"),
+            render=_render_host_custom_notes,
             short_title=_l("Notes"),
             columns=["host_name", "host_address", "host_plugin_output"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_custom_notes("hosts", row, config=context.config)
+
+def _render_host_comments(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return _paint_comments("host_", row)
 
 
 class PainterHostComments(InternalPainter):
@@ -2705,13 +3046,16 @@ class PainterHostComments(InternalPainter):
         super().__init__(
             ident="host_comments",
             title=_l("Host comments"),
+            render=_render_host_comments,
             short_title=_l("Comments"),
             columns=["host_comments_with_info"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_comments("host_", row)
+
+def _render_host_in_downtime(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_nagiosflag(row, "host_scheduled_downtime_depth", True)
 
 
 class PainterHostInDowntime(InternalPainter):
@@ -2719,13 +3063,16 @@ class PainterHostInDowntime(InternalPainter):
         super().__init__(
             ident="host_in_downtime",
             title=_l("Host in downtime"),
+            render=_render_host_in_downtime,
             short_title=_l("Downtime"),
             columns=["host_scheduled_downtime_depth"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_nagiosflag(row, "host_scheduled_downtime_depth", True)
+
+def _render_host_acknowledged(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_nagiosflag(row, "host_acknowledged", False)
 
 
 class PainterHostAcknowledged(InternalPainter):
@@ -2733,13 +3080,16 @@ class PainterHostAcknowledged(InternalPainter):
         super().__init__(
             ident="host_acknowledged",
             title=_l("Host problem acknowledged"),
+            render=_render_host_acknowledged,
             short_title=_l("Ack"),
             columns=["host_acknowledged"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_nagiosflag(row, "host_acknowledged", False)
+
+def _render_host_staleness(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", "%0.2f" % row.get("host_staleness", 0))
 
 
 class PainterHostStaleness(InternalPainter):
@@ -2747,13 +3097,16 @@ class PainterHostStaleness(InternalPainter):
         super().__init__(
             ident="host_staleness",
             title=_l("Host staleness value"),
+            render=_render_host_staleness,
             short_title=_l("Staleness"),
             columns=["host_staleness"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", "%0.2f" % row.get("host_staleness", 0))
+
+def _render_host_is_stale(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_is_stale(row, context.config.staleness_threshold)
 
 
 class PainterHostIsStale(InternalPainter):
@@ -2761,14 +3114,52 @@ class PainterHostIsStale(InternalPainter):
         super().__init__(
             ident="host_is_stale",
             title=_l("Host is stale"),
+            render=_render_host_is_stale,
             short_title=_l("Stale"),
             columns=["host_staleness"],
             sorter="svc_staleness",
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_is_stale(row, context.config.staleness_threshold)
+
+_HOST_CUSTOM_VARIABLES_BLACKLIST: list[str] = [
+    "FILENAME",
+    "TAGS",
+    "ADDRESS_4",
+    "ADDRESS_6",
+    "ADDRESS_FAMILY",
+    "NODEIPS",
+    "NODEIPS_4",
+    "NODEIPS_6",
+    RELATIONS_CUSTOM_VARIABLE,
+]
+
+
+def _group_by_host_custom_variables(
+    row: Row, _cell: Cell, _context: PainterContext
+) -> tuple[tuple[str, str], ...]:
+    return tuple(
+        item
+        for item in row["host_custom_variables"].items()
+        if item[0] not in _HOST_CUSTOM_VARIABLES_BLACKLIST
+    )
+
+
+def _render_host_custom_variables(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return _paint_custom_vars("host", row, _HOST_CUSTOM_VARIABLES_BLACKLIST)
+
+
+def _export_for_csv_host_custom_variables(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str:
+    return _export_custom_vars("host", row, _HOST_CUSTOM_VARIABLES_BLACKLIST)
+
+
+def _export_for_json_host_custom_variables(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str:
+    return _export_custom_vars("host", row, _HOST_CUSTOM_VARIABLES_BLACKLIST)
 
 
 class PainterHostCustomVariables(InternalPainter):
@@ -2776,44 +3167,12 @@ class PainterHostCustomVariables(InternalPainter):
         super().__init__(
             ident="host_custom_vars",
             title=_l("Host custom attributes"),
+            render=_render_host_custom_variables,
             columns=["host_custom_variables"],
+            group_by=_group_by_host_custom_variables,
+            export_for_csv=_export_for_csv_host_custom_variables,
+            export_for_json=_export_for_json_host_custom_variables,
         )
-
-    BLACKLIST: list[str] = [
-        "FILENAME",
-        "TAGS",
-        "ADDRESS_4",
-        "ADDRESS_6",
-        "ADDRESS_FAMILY",
-        "NODEIPS",
-        "NODEIPS_4",
-        "NODEIPS_6",
-        RELATIONS_CUSTOM_VARIABLE,
-    ]
-
-    @override
-    def group_by(
-        self, row: Row, cell: Cell, context: PainterContext
-    ) -> tuple[tuple[str, str], ...]:
-        return tuple(
-            item for item in row["host_custom_variables"].items() if item[0] not in self.BLACKLIST
-        )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_custom_vars("host", row, self.BLACKLIST)
-
-    @override
-    def export_for_csv(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> str:
-        return _export_custom_vars("host", row, self.BLACKLIST)
-
-    @override
-    def export_for_json(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> str:
-        return _export_custom_vars("host", row, self.BLACKLIST)
 
 
 def _paint_discovery_output(
@@ -2870,20 +3229,31 @@ def _paint_discovery_output(
     return None, HTMLWriter.render_div(href)
 
 
+def _render_service_discovery_state(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_discovery_output(
+        "discovery_state", row, renderer=context.url_renderer, theme=context.theme
+    )
+
+
 class PainterServiceDiscoveryState(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="service_discovery_state",
             title=_l("Service discovery: State"),
+            render=_render_service_discovery_state,
             short_title=_l("State"),
             columns=["discovery_state"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_discovery_output(
-            "discovery_state", row, renderer=context.url_renderer, theme=context.theme
-        )
+
+def _render_service_discovery_check(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_discovery_output(
+        "discovery_check", row, renderer=context.url_renderer, theme=context.theme
+    )
 
 
 class PainterServiceDiscoveryCheck(InternalPainter):
@@ -2891,15 +3261,18 @@ class PainterServiceDiscoveryCheck(InternalPainter):
         super().__init__(
             ident="service_discovery_check",
             title=_l("Service discovery: Check type"),
+            render=_render_service_discovery_check,
             short_title=_l("Check type"),
             columns=["discovery_state", "discovery_check", "discovery_service"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_discovery_output(
-            "discovery_check", row, renderer=context.url_renderer, theme=context.theme
-        )
+
+def _render_service_discovery_service(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_discovery_output(
+        "discovery_service", row, renderer=context.url_renderer, theme=context.theme
+    )
 
 
 class PainterServiceDiscoveryService(InternalPainter):
@@ -2907,14 +3280,9 @@ class PainterServiceDiscoveryService(InternalPainter):
         super().__init__(
             ident="service_discovery_service",
             title=_l("Service discovery: Service name"),
+            render=_render_service_discovery_service,
             short_title=_l("Service name"),
             columns=["discovery_state", "discovery_check", "discovery_service"],
-        )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_discovery_output(
-            "discovery_service", row, renderer=context.url_renderer, theme=context.theme
         )
 
 
@@ -2924,32 +3292,40 @@ class PainterServiceDiscoveryService(InternalPainter):
 #   |  _  | (_) \__ \ || (_| | | | (_) | |_| | |_) \__ \
 #   |_| |_|\___/|___/\__\__, |_|  \___/ \__,_| .__/|___/
 #                       |___/                |_|
-#
+def _render_hostgroup_hosts(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    divs = []
+    for host, state, checked in row["hostgroup_members_with_state"]:
+        link = context.url_renderer.link_from_filename(
+            "view.py",
+            html_text=host,
+            query_args=[
+                ("view_name", "host"),
+                ("site", row["site"]),
+                ("host", host),
+            ],
+        )
+        css = "hstate%d" % state if checked else "hstatep"
+        divs.append(HTMLWriter.render_div(link, class_=css))
+    return "", HTMLWriter.render_div(HTML.empty().join(divs), class_="objectlist")
+
+
 class PainterHostgroupHosts(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="hostgroup_hosts",
             title=_l("Hosts colored according to state (host group)"),
+            render=_render_hostgroup_hosts,
             short_title=_l("Hosts"),
             columns=["hostgroup_members_with_state"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        divs = []
-        for host, state, checked in row["hostgroup_members_with_state"]:
-            link = context.url_renderer.link_from_filename(
-                "view.py",
-                html_text=host,
-                query_args=[
-                    ("view_name", "host"),
-                    ("site", row["site"]),
-                    ("host", host),
-                ],
-            )
-            css = "hstate%d" % state if checked else "hstatep"
-            divs.append(HTMLWriter.render_div(link, class_=css))
-        return "", HTMLWriter.render_div(HTML.empty().join(divs), class_="objectlist")
+
+def _render_hg_num_services(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, str(row["hostgroup_num_services"]))
 
 
 class PainterHgNumServices(InternalPainter):
@@ -2957,13 +3333,16 @@ class PainterHgNumServices(InternalPainter):
         super().__init__(
             ident="hg_num_services",
             title=_l("Number of services (host group)"),
+            render=_render_hg_num_services,
             short_title="",
             columns=["hostgroup_num_services"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, str(row["hostgroup_num_services"]))
+
+def _render_hg_num_services_ok(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_svc_count(0, row["hostgroup_num_services_ok"])
 
 
 class PainterHgNumServicesOk(InternalPainter):
@@ -2971,14 +3350,17 @@ class PainterHgNumServicesOk(InternalPainter):
         super().__init__(
             ident="hg_num_services_ok",
             title=_l("Number of services in state OK (host group)"),
+            render=_render_hg_num_services_ok,
             short_title=_l("O"),
             columns=["hostgroup_num_services_ok"],
             title_classes=["right"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_svc_count(0, row["hostgroup_num_services_ok"])
+
+def _render_hg_num_services_warn(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_svc_count(1, row["hostgroup_num_services_warn"])
 
 
 class PainterHgNumServicesWarn(InternalPainter):
@@ -2986,14 +3368,17 @@ class PainterHgNumServicesWarn(InternalPainter):
         super().__init__(
             ident="hg_num_services_warn",
             title=_l("Number of services in state WARN (host group)"),
+            render=_render_hg_num_services_warn,
             short_title=_l("W"),
             columns=["hostgroup_num_services_warn"],
             title_classes=["right"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_svc_count(1, row["hostgroup_num_services_warn"])
+
+def _render_hg_num_services_crit(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_svc_count(2, row["hostgroup_num_services_crit"])
 
 
 class PainterHgNumServicesCrit(InternalPainter):
@@ -3001,14 +3386,17 @@ class PainterHgNumServicesCrit(InternalPainter):
         super().__init__(
             ident="hg_num_services_crit",
             title=_l("Number of services in state CRIT (host group)"),
+            render=_render_hg_num_services_crit,
             short_title=_l("C"),
             columns=["hostgroup_num_services_crit"],
             title_classes=["right"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_svc_count(2, row["hostgroup_num_services_crit"])
+
+def _render_hg_num_services_unknown(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_svc_count(3, row["hostgroup_num_services_unknown"])
 
 
 class PainterHgNumServicesUnknown(InternalPainter):
@@ -3016,14 +3404,17 @@ class PainterHgNumServicesUnknown(InternalPainter):
         super().__init__(
             ident="hg_num_services_unknown",
             title=_l("Number of services in state UNKNOWN (host group)"),
+            render=_render_hg_num_services_unknown,
             short_title=_l("U"),
             columns=["hostgroup_num_services_unknown"],
             title_classes=["right"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_svc_count(3, row["hostgroup_num_services_unknown"])
+
+def _render_hg_num_services_pending(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_svc_count("p", row["hostgroup_num_services_pending"])
 
 
 class PainterHgNumServicesPending(InternalPainter):
@@ -3031,14 +3422,17 @@ class PainterHgNumServicesPending(InternalPainter):
         super().__init__(
             ident="hg_num_services_pending",
             title=_l("Number of services in state PENDING (host group)"),
+            render=_render_hg_num_services_pending,
             short_title=_l("P"),
             columns=["hostgroup_num_services_pending"],
             title_classes=["right"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_svc_count("p", row["hostgroup_num_services_pending"])
+
+def _render_hg_num_hosts_up(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_host_count(0, row["hostgroup_num_hosts_up"])
 
 
 class PainterHgNumHostsUp(InternalPainter):
@@ -3046,14 +3440,17 @@ class PainterHgNumHostsUp(InternalPainter):
         super().__init__(
             ident="hg_num_hosts_up",
             title=_l("Number of hosts in state UP (host group)"),
+            render=_render_hg_num_hosts_up,
             short_title=_l("Up"),
             columns=["hostgroup_num_hosts_up"],
             title_classes=["right"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_host_count(0, row["hostgroup_num_hosts_up"])
+
+def _render_hg_num_hosts_down(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_host_count(1, row["hostgroup_num_hosts_down"])
 
 
 class PainterHgNumHostsDown(InternalPainter):
@@ -3061,14 +3458,17 @@ class PainterHgNumHostsDown(InternalPainter):
         super().__init__(
             ident="hg_num_hosts_down",
             title=_l("Number of hosts in state DOWN (host group)"),
+            render=_render_hg_num_hosts_down,
             short_title=_l("Dw"),
             columns=["hostgroup_num_hosts_down"],
             title_classes=["right"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_host_count(1, row["hostgroup_num_hosts_down"])
+
+def _render_hg_num_hosts_unreach(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_host_count(2, row["hostgroup_num_hosts_unreach"])
 
 
 class PainterHgNumHostsUnreach(InternalPainter):
@@ -3076,14 +3476,17 @@ class PainterHgNumHostsUnreach(InternalPainter):
         super().__init__(
             ident="hg_num_hosts_unreach",
             title=_l("Number of hosts in state UNREACH (host group)"),
+            render=_render_hg_num_hosts_unreach,
             short_title=_l("Un"),
             columns=["hostgroup_num_hosts_unreach"],
             title_classes=["right"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_host_count(2, row["hostgroup_num_hosts_unreach"])
+
+def _render_hg_num_hosts_pending(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_host_count(None, row["hostgroup_num_hosts_pending"])
 
 
 class PainterHgNumHostsPending(InternalPainter):
@@ -3091,14 +3494,17 @@ class PainterHgNumHostsPending(InternalPainter):
         super().__init__(
             ident="hg_num_hosts_pending",
             title=_l("Number of hosts in state PENDING (host group)"),
+            render=_render_hg_num_hosts_pending,
             short_title=_l("Pd"),
             columns=["hostgroup_num_hosts_pending"],
             title_classes=["right"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_host_count(None, row["hostgroup_num_hosts_pending"])
+
+def _render_hg_name(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["hostgroup_name"])
 
 
 class PainterHgName(InternalPainter):
@@ -3106,13 +3512,16 @@ class PainterHgName(InternalPainter):
         super().__init__(
             ident="hg_name",
             title=_l("Host group name"),
+            render=_render_hg_name,
             short_title=_l("Name"),
             columns=["hostgroup_name"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["hostgroup_name"])
+
+def _render_hg_alias(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["hostgroup_alias"])
 
 
 class PainterHgAlias(InternalPainter):
@@ -3120,13 +3529,10 @@ class PainterHgAlias(InternalPainter):
         super().__init__(
             ident="hg_alias",
             title=_l("Host group alias"),
+            render=_render_hg_alias,
             short_title=_l("Alias"),
             columns=["hostgroup_alias"],
         )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["hostgroup_alias"])
 
 
 #    ____                  _
@@ -3137,20 +3543,29 @@ class PainterHgAlias(InternalPainter):
 #                                     |___/                |_|
 
 
+def _render_sg_services(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _paint_service_list(
+        row, "servicegroup_members_with_state", renderer=context.url_renderer
+    )
+
+
 class PainterSgServices(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="sg_services",
             title=_l("Services colored according to state (service group)"),
+            render=_render_sg_services,
             short_title=_l("Services"),
             columns=["servicegroup_members_with_state"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_service_list(
-            row, "servicegroup_members_with_state", renderer=context.url_renderer
-        )
+
+def _render_sg_num_services(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, str(row["servicegroup_num_services"]))
 
 
 class PainterSgNumServices(InternalPainter):
@@ -3158,13 +3573,16 @@ class PainterSgNumServices(InternalPainter):
         super().__init__(
             ident="sg_num_services",
             title=_l("Number of services (service group)"),
+            render=_render_sg_num_services,
             short_title="",
             columns=["servicegroup_num_services"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, str(row["servicegroup_num_services"]))
+
+def _render_sg_num_services_ok(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_svc_count(0, row["servicegroup_num_services_ok"])
 
 
 class PainterSgNumServicesOk(InternalPainter):
@@ -3172,13 +3590,16 @@ class PainterSgNumServicesOk(InternalPainter):
         super().__init__(
             ident="sg_num_services_ok",
             title=_l("Number of services in state OK (service group)"),
+            render=_render_sg_num_services_ok,
             short_title=_l("O"),
             columns=["servicegroup_num_services_ok"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_svc_count(0, row["servicegroup_num_services_ok"])
+
+def _render_sg_num_services_warn(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_svc_count(1, row["servicegroup_num_services_warn"])
 
 
 class PainterSgNumServicesWarn(InternalPainter):
@@ -3186,13 +3607,16 @@ class PainterSgNumServicesWarn(InternalPainter):
         super().__init__(
             ident="sg_num_services_warn",
             title=_l("Number of services in state WARN (service group)"),
+            render=_render_sg_num_services_warn,
             short_title=_l("W"),
             columns=["servicegroup_num_services_warn"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_svc_count(1, row["servicegroup_num_services_warn"])
+
+def _render_sg_num_services_crit(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_svc_count(2, row["servicegroup_num_services_crit"])
 
 
 class PainterSgNumServicesCrit(InternalPainter):
@@ -3200,13 +3624,16 @@ class PainterSgNumServicesCrit(InternalPainter):
         super().__init__(
             ident="sg_num_services_crit",
             title=_l("Number of services in state CRIT (service group)"),
+            render=_render_sg_num_services_crit,
             short_title=_l("C"),
             columns=["servicegroup_num_services_crit"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_svc_count(2, row["servicegroup_num_services_crit"])
+
+def _render_sg_num_services_unknown(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_svc_count(3, row["servicegroup_num_services_unknown"])
 
 
 class PainterSgNumServicesUnknown(InternalPainter):
@@ -3214,13 +3641,16 @@ class PainterSgNumServicesUnknown(InternalPainter):
         super().__init__(
             ident="sg_num_services_unknown",
             title=_l("Number of services in state UNKNOWN (service group)"),
+            render=_render_sg_num_services_unknown,
             short_title=_l("U"),
             columns=["servicegroup_num_services_unknown"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_svc_count(3, row["servicegroup_num_services_unknown"])
+
+def _render_sg_num_services_pending(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_svc_count("p", row["servicegroup_num_services_pending"])
 
 
 class PainterSgNumServicesPending(InternalPainter):
@@ -3228,13 +3658,16 @@ class PainterSgNumServicesPending(InternalPainter):
         super().__init__(
             ident="sg_num_services_pending",
             title=_l("Number of services in state PENDING (service group)"),
+            render=_render_sg_num_services_pending,
             short_title=_l("P"),
             columns=["servicegroup_num_services_pending"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_svc_count("p", row["servicegroup_num_services_pending"])
+
+def _render_sg_name(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["servicegroup_name"])
 
 
 class PainterSgName(InternalPainter):
@@ -3242,13 +3675,16 @@ class PainterSgName(InternalPainter):
         super().__init__(
             ident="sg_name",
             title=_l("Service group name"),
+            render=_render_sg_name,
             short_title=_l("Name"),
             columns=["servicegroup_name"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["servicegroup_name"])
+
+def _render_sg_alias(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["servicegroup_alias"])
 
 
 class PainterSgAlias(InternalPainter):
@@ -3256,13 +3692,10 @@ class PainterSgAlias(InternalPainter):
         super().__init__(
             ident="sg_alias",
             title=_l("Service group alias"),
+            render=_render_sg_alias,
             short_title=_l("Alias"),
             columns=["servicegroup_alias"],
         )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["servicegroup_alias"])
 
 
 #     ____                                     _
@@ -3273,15 +3706,27 @@ class PainterSgAlias(InternalPainter):
 #
 
 
+def _render_comment_id(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, str(row["comment_id"]))
+
+
 class PainterCommentId(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
-            ident="comment_id", title=_l("Comment ID"), short_title=_l("ID"), columns=["comment_id"]
+            ident="comment_id",
+            title=_l("Comment ID"),
+            render=_render_comment_id,
+            short_title=_l("ID"),
+            columns=["comment_id"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, str(row["comment_id"]))
+
+def _render_comment_author(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["comment_author"])
 
 
 class PainterCommentAuthor(InternalPainter):
@@ -3289,32 +3734,40 @@ class PainterCommentAuthor(InternalPainter):
         super().__init__(
             ident="comment_author",
             title=_l("Comment author"),
+            render=_render_comment_author,
             short_title=_l("Author"),
             columns=["comment_author"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["comment_author"])
+
+def _render_comment_comment(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return (
+        None,
+        format_plugin_output(
+            row["comment_comment"],
+            request=context.request,
+            must_escape=determine_must_escape(context.config.sites, row),
+            row=row,
+        ),
+    )
 
 
 class PainterCommentComment(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
-            ident="comment_comment", title=_l("Comment text"), columns=["comment_comment"]
+            ident="comment_comment",
+            title=_l("Comment text"),
+            render=_render_comment_comment,
+            columns=["comment_comment"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (
-            None,
-            format_plugin_output(
-                row["comment_comment"],
-                request=context.request,
-                must_escape=determine_must_escape(context.config.sites, row),
-                row=row,
-            ),
-        )
+
+def _render_comment_what(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["comment_type"] == 1 and _("Host") or _("Service"))
 
 
 class PainterCommentWhat(InternalPainter):
@@ -3322,13 +3775,22 @@ class PainterCommentWhat(InternalPainter):
         super().__init__(
             ident="comment_what",
             title=_l("Comment type (host/service)"),
+            render=_render_comment_what,
             short_title=_l("Type"),
             columns=["comment_type"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["comment_type"] == 1 and _("Host") or _("Service"))
+
+def _render_comment_time(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_age(
+        row["comment_entry_time"],
+        True,
+        3600,
+        request=context.request,
+        painter_options=context.painter_options,
+    )
 
 
 class PainterCommentTime(InternalPainter):
@@ -3336,20 +3798,24 @@ class PainterCommentTime(InternalPainter):
         super().__init__(
             ident="comment_time",
             title=_l("Comment entry time"),
+            render=_render_comment_time,
             short_title=_l("Time"),
             columns=["comment_entry_time"],
             painter_options=["ts_format", "ts_date"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_age(
-            row["comment_entry_time"],
-            True,
-            3600,
-            request=context.request,
-            painter_options=context.painter_options,
-        )
+
+def _render_comment_expires(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_age(
+        row["comment_expire_time"],
+        row["comment_expire_time"] != 0,
+        3600,
+        request=context.request,
+        painter_options=context.painter_options,
+        what="future",
+    )
 
 
 class PainterCommentExpires(InternalPainter):
@@ -3357,21 +3823,44 @@ class PainterCommentExpires(InternalPainter):
         super().__init__(
             ident="comment_expires",
             title=_l("Comment expiry time"),
+            render=_render_comment_expires,
             short_title=_l("Expires"),
             columns=["comment_expire_time"],
             painter_options=["ts_format", "ts_date"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_age(
-            row["comment_expire_time"],
-            row["comment_expire_time"] != 0,
-            3600,
+
+def _render_comment_entry_type(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    t = row["comment_entry_type"]
+    linkview = None
+    if t == 1:
+        icon = StaticIcon(IconNames.comment)
+        help_txt = _("Comment")
+    elif t == 2:
+        icon = StaticIcon(IconNames.downtime)
+        help_txt = _("Downtime")
+        linkview = "downtimes_of_service" if row["service_description"] else "downtimes_of_host"
+
+    elif t == 3:
+        icon = StaticIcon(IconNames.flapping)
+        help_txt = _("Flapping")
+    elif t == 4:
+        icon = StaticIcon(IconNames.ack)
+        help_txt = _("Acknowledgment")
+    else:
+        return "", ""
+    code: str | HTML = html.render_static_icon(icon, title=help_txt)
+    if linkview:
+        code = render_link_to_view(
+            code,
+            row,
+            VisualLinkSpec("views", linkview),
+            context.user_permissions,
             request=context.request,
-            painter_options=context.painter_options,
-            what="future",
         )
+    return "icons", code
 
 
 class PainterCommentEntryType(InternalPainter):
@@ -3379,40 +3868,10 @@ class PainterCommentEntryType(InternalPainter):
         super().__init__(
             ident="comment_entry_type",
             title=_l("Comment entry type (user/downtime/flapping/ack)"),
+            render=_render_comment_entry_type,
             short_title=_l("E.Type"),
             columns=["comment_entry_type", "host_name", "service_description"],
         )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        t = row["comment_entry_type"]
-        linkview = None
-        if t == 1:
-            icon = StaticIcon(IconNames.comment)
-            help_txt = _("Comment")
-        elif t == 2:
-            icon = StaticIcon(IconNames.downtime)
-            help_txt = _("Downtime")
-            linkview = "downtimes_of_service" if row["service_description"] else "downtimes_of_host"
-
-        elif t == 3:
-            icon = StaticIcon(IconNames.flapping)
-            help_txt = _("Flapping")
-        elif t == 4:
-            icon = StaticIcon(IconNames.ack)
-            help_txt = _("Acknowledgment")
-        else:
-            return "", ""
-        code: str | HTML = html.render_static_icon(icon, title=help_txt)
-        if linkview:
-            code = render_link_to_view(
-                code,
-                row,
-                VisualLinkSpec("views", linkview),
-                context.user_permissions,
-                request=context.request,
-            )
-        return "icons", code
 
 
 #    ____                      _   _
@@ -3423,18 +3882,27 @@ class PainterCommentEntryType(InternalPainter):
 #
 
 
+def _render_downtime_id(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, "%d" % row["downtime_id"])
+
+
 class PainterDowntimeId(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="downtime_id",
             title=_l("Downtime ID"),
+            render=_render_downtime_id,
             short_title=_l("ID"),
             columns=["downtime_id"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, "%d" % row["downtime_id"])
+
+def _render_downtime_author(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["downtime_author"])
 
 
 class PainterDowntimeAuthor(InternalPainter):
@@ -3442,13 +3910,24 @@ class PainterDowntimeAuthor(InternalPainter):
         super().__init__(
             ident="downtime_author",
             title=_l("Downtime author"),
+            render=_render_downtime_author,
             short_title=_l("Author"),
             columns=["downtime_author"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["downtime_author"])
+
+def _render_downtime_comment(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return (
+        None,
+        format_plugin_output(
+            row["downtime_comment"],
+            request=context.request,
+            must_escape=determine_must_escape(context.config.sites, row),
+            row=row,
+        ),
+    )
 
 
 class PainterDowntimeComment(InternalPainter):
@@ -3456,21 +3935,16 @@ class PainterDowntimeComment(InternalPainter):
         super().__init__(
             ident="downtime_comment",
             title=_l("Downtime comment"),
+            render=_render_downtime_comment,
             short_title=_l("Comment"),
             columns=["downtime_comment"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (
-            None,
-            format_plugin_output(
-                row["downtime_comment"],
-                request=context.request,
-                must_escape=determine_must_escape(context.config.sites, row),
-                row=row,
-            ),
-        )
+
+def _render_downtime_fixed(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["downtime_fixed"] == 0 and _("flexible") or _("fixed"))
 
 
 class PainterDowntimeFixed(InternalPainter):
@@ -3478,13 +3952,16 @@ class PainterDowntimeFixed(InternalPainter):
         super().__init__(
             ident="downtime_fixed",
             title=_l("Downtime start mode"),
+            render=_render_downtime_fixed,
             short_title=_l("Mode"),
             columns=["downtime_fixed"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["downtime_fixed"] == 0 and _("flexible") or _("fixed"))
+
+def _render_downtime_origin(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["downtime_origin"] == 1 and _("configuration") or _("command"))
 
 
 class PainterDowntimeOrigin(InternalPainter):
@@ -3492,13 +3969,16 @@ class PainterDowntimeOrigin(InternalPainter):
         super().__init__(
             ident="downtime_origin",
             title=_l("Downtime origin"),
+            render=_render_downtime_origin,
             short_title=_l("Origin"),
             columns=["downtime_origin"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["downtime_origin"] == 1 and _("configuration") or _("command"))
+
+def _render_downtime_what(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["downtime_is_service"] and _("Service") or _("Host"))
 
 
 class PainterDowntimeWhat(InternalPainter):
@@ -3506,13 +3986,16 @@ class PainterDowntimeWhat(InternalPainter):
         super().__init__(
             ident="downtime_what",
             title=_l("Downtime for host/service"),
+            render=_render_downtime_what,
             short_title=_l("for"),
             columns=["downtime_is_service"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["downtime_is_service"] and _("Service") or _("Host"))
+
+def _render_downtime_type(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (None, row["is_pending"] == 0 and _("active") or _("pending"))
 
 
 class PainterDowntimeType(InternalPainter):
@@ -3520,13 +4003,22 @@ class PainterDowntimeType(InternalPainter):
         super().__init__(
             ident="downtime_type",
             title=_l("Downtime active or pending"),
+            render=_render_downtime_type,
             short_title=_l("act/pend"),
             columns=["is_pending"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (None, row["is_pending"] == 0 and _("active") or _("pending"))
+
+def _render_downtime_entry_time(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_age(
+        row["downtime_entry_time"],
+        True,
+        3600,
+        request=context.request,
+        painter_options=context.painter_options,
+    )
 
 
 class PainterDowntimeEntryTime(InternalPainter):
@@ -3534,20 +4026,24 @@ class PainterDowntimeEntryTime(InternalPainter):
         super().__init__(
             ident="downtime_entry_time",
             title=_l("Downtime entry time"),
+            render=_render_downtime_entry_time,
             short_title=_l("Entry"),
             columns=["downtime_entry_time"],
             painter_options=["ts_format", "ts_date"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_age(
-            row["downtime_entry_time"],
-            True,
-            3600,
-            request=context.request,
-            painter_options=context.painter_options,
-        )
+
+def _render_downtime_start_time(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_age(
+        row["downtime_start_time"],
+        True,
+        3600,
+        request=context.request,
+        painter_options=context.painter_options,
+        what="both",
+    )
 
 
 class PainterDowntimeStartTime(InternalPainter):
@@ -3555,21 +4051,24 @@ class PainterDowntimeStartTime(InternalPainter):
         super().__init__(
             ident="downtime_start_time",
             title=_l("Downtime start time"),
+            render=_render_downtime_start_time,
             short_title=_l("Start"),
             columns=["downtime_start_time"],
             painter_options=["ts_format", "ts_date"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_age(
-            row["downtime_start_time"],
-            True,
-            3600,
-            request=context.request,
-            painter_options=context.painter_options,
-            what="both",
-        )
+
+def _render_downtime_end_time(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_age(
+        row["downtime_end_time"],
+        True,
+        3600,
+        request=context.request,
+        painter_options=context.painter_options,
+        what="both",
+    )
 
 
 class PainterDowntimeEndTime(InternalPainter):
@@ -3577,21 +4076,19 @@ class PainterDowntimeEndTime(InternalPainter):
         super().__init__(
             ident="downtime_end_time",
             title=_l("Downtime end time"),
+            render=_render_downtime_end_time,
             short_title=_l("End"),
             columns=["downtime_end_time"],
             painter_options=["ts_format", "ts_date"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_age(
-            row["downtime_end_time"],
-            True,
-            3600,
-            request=context.request,
-            painter_options=context.painter_options,
-            what="both",
-        )
+
+def _render_downtime_duration(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    if row["downtime_fixed"] == 0:
+        return "number", "%02d:%02d:00" % divmod(int(row["downtime_duration"] / 60.0), 60)
+    return "", ""
 
 
 class PainterDowntimeDuration(InternalPainter):
@@ -3599,15 +4096,10 @@ class PainterDowntimeDuration(InternalPainter):
         super().__init__(
             ident="downtime_duration",
             title=_l("Downtime duration (if flexible)"),
+            render=_render_downtime_duration,
             short_title=_l("Flex. duration"),
             columns=["downtime_duration", "downtime_fixed"],
         )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        if row["downtime_fixed"] == 0:
-            return "number", "%02d:%02d:00" % divmod(int(row["downtime_duration"] / 60.0), 60)
-        return "", ""
 
 
 #    _
@@ -3618,91 +4110,101 @@ class PainterDowntimeDuration(InternalPainter):
 #               |___/
 
 
+def _parameters_log_details_history(_context: PainterContext) -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "max_len",
+                Integer(
+                    title=_("Maximum number of characters to show"),
+                    help=_(
+                        "Truncate content at this amount of characters. "
+                        "A zero value means not to truncate."
+                    ),
+                    default_value=0,
+                    minvalue=0,
+                ),
+            ),
+        ],
+    )
+
+
+def _render_log_details_history(
+    row: Row, cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    if (params := cell.painter_parameters()) is None:
+        params = {}
+
+    max_len = params.get("max_len", 0)
+    long_output = row["log_long_plugin_output"]
+    long_output_len = len(long_output)
+
+    if 0 < max_len < len(long_output):
+        long_output = long_output[:max_len] + "..."
+
+    # See werk #15523.
+    is_ps_check = row["service_check_command"] == "check_mk-ps"
+    # We can only display tables if they are complete.
+    non_displayable_html = "<table>" in long_output and not long_output.endswith("</table>")
+    # Only hand over relevant row to ensure correct escaping options in
+    # case of ps_check. Otherwise "ESCAPE_PLUGIN_OUTPUT" would be used in
+    # format_plugin_output()
+    row_to_format = (
+        {"log_long_plugin_output": long_output} if is_ps_check and non_displayable_html else row
+    )
+    content = format_plugin_output(
+        long_output,
+        request=context.request,
+        row=row_to_format,
+        must_escape=determine_must_escape(context.config.sites, row),
+        newlineishs_to_brs=True,
+    )
+
+    if is_ps_check:
+        content = HTML.without_escaping(str(content).replace("&bsol%3B", "\\"))
+
+    # has to be placed after format_plugin_output() to keep links save from
+    # escaping
+    host_custom_variables: dict = row.get("host_custom_variables", {})
+    custom_vars = row.get("service_custom_variables", host_custom_variables)
+    escape_plugin_output = custom_vars.get("ESCAPE_PLUGIN_OUTPUT", "1") == "0"
+    if long_output_len > max_len and escape_plugin_output and non_displayable_html:
+        setting_link_tag = context.url_renderer.link_from_filename(
+            "global_settings.py",
+            html_text="(%s)" % _("Increase limit for future entries"),
+            query_args=[("varname", "max_long_output_size")],
+        )
+        content = (
+            _("HTML output cannot be rendered because of truncated data. ")
+            + setting_link_tag
+            + html.render_b("WARN", class_="stmark state1")
+            + html.render_br()
+            + content
+        )
+
+    return paint_stalified(row, content, context.config.staleness_threshold)
+
+
 class PainterLogDetailsHistory(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="log_details_history",
             title=_l("Log: Details"),
+            render=_render_log_details_history,
             columns=[
                 "log_long_plugin_output",
                 "service_check_command",
                 "service_custom_variables",
                 "host_custom_variables",
             ],
+            parameters=_parameters_log_details_history,
         )
 
-    @override
-    def parameters(self, context: PainterContext) -> Dictionary:
-        return Dictionary(
-            elements=[
-                (
-                    "max_len",
-                    Integer(
-                        title=_("Maximum number of characters to show"),
-                        help=_(
-                            "Truncate content at this amount of characters. "
-                            "A zero value means not to truncate."
-                        ),
-                        default_value=0,
-                        minvalue=0,
-                    ),
-                ),
-            ],
-        )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        if (params := cell.painter_parameters()) is None:
-            params = {}
-
-        max_len = params.get("max_len", 0)
-        long_output = row["log_long_plugin_output"]
-        long_output_len = len(long_output)
-
-        if 0 < max_len < len(long_output):
-            long_output = long_output[:max_len] + "..."
-
-        # See werk #15523.
-        is_ps_check = row["service_check_command"] == "check_mk-ps"
-        # We can only display tables if they are complete.
-        non_displayable_html = "<table>" in long_output and not long_output.endswith("</table>")
-        # Only hand over relevant row to ensure correct escaping options in
-        # case of ps_check. Otherwise "ESCAPE_PLUGIN_OUTPUT" would be used in
-        # format_plugin_output()
-        row_to_format = (
-            {"log_long_plugin_output": long_output} if is_ps_check and non_displayable_html else row
-        )
-        content = format_plugin_output(
-            long_output,
-            request=context.request,
-            row=row_to_format,
-            must_escape=determine_must_escape(context.config.sites, row),
-            newlineishs_to_brs=True,
-        )
-
-        if is_ps_check:
-            content = HTML.without_escaping(str(content).replace("&bsol%3B", "\\"))
-
-        # has to be placed after format_plugin_output() to keep links save from
-        # escaping
-        host_custom_variables: dict = row.get("host_custom_variables", {})
-        custom_vars = row.get("service_custom_variables", host_custom_variables)
-        escape_plugin_output = custom_vars.get("ESCAPE_PLUGIN_OUTPUT", "1") == "0"
-        if long_output_len > max_len and escape_plugin_output and non_displayable_html:
-            setting_link_tag = context.url_renderer.link_from_filename(
-                "global_settings.py",
-                html_text="(%s)" % _("Increase limit for future entries"),
-                query_args=[("varname", "max_long_output_size")],
-            )
-            content = (
-                _("HTML output cannot be rendered because of truncated data. ")
-                + setting_link_tag
-                + html.render_b("WARN", class_="stmark state1")
-                + html.render_br()
-                + content
-            )
-
-        return paint_stalified(row, content, context.config.staleness_threshold)
+def _render_log_message(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", row["log_message"])
 
 
 class PainterLogMessage(InternalPainter):
@@ -3710,13 +4212,36 @@ class PainterLogMessage(InternalPainter):
         super().__init__(
             ident="log_message",
             title=_l("Log: complete message"),
+            render=_render_log_message,
             short_title=_l("Message"),
             columns=["log_message"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", row["log_message"])
+
+def _render_log_plugin_output(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    if output := _decode_item_log_plugin_output(row, column="log_plugin_output"):
+        return "", format_plugin_output(
+            output,
+            request=context.request,
+            must_escape=determine_must_escape(context.config.sites, row),
+            row=row,
+        )
+
+    if comment := _decode_item_log_plugin_output(row, column="log_comment"):
+        return "", comment
+
+    log_type = row["log_type"]
+    lst = row["log_state_type"]
+    if "FLAPPING" in log_type:
+        what = _("host") if "HOST" in log_type else _("service")
+        if lst == "STOPPED":
+            return "", _("The %(what)s stopped flapping") % {"what": what}
+        return "", _("The %(what)s started flapping") % {"what": what}
+    if lst:
+        return "", (lst + " - " + log_type)
+    return "", ""
 
 
 class PainterLogPluginOutput(InternalPainter):
@@ -3724,39 +4249,28 @@ class PainterLogPluginOutput(InternalPainter):
         super().__init__(
             ident="log_plugin_output",
             title=_l("Log: Summary"),
+            render=_render_log_plugin_output,
             short_title=_l("Summary"),
             columns=["log_plugin_output", "log_type", "log_state_type", "log_comment"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        if output := self._decode_item(row, column="log_plugin_output"):
-            return "", format_plugin_output(
-                output,
-                request=context.request,
-                must_escape=determine_must_escape(context.config.sites, row),
-                row=row,
-            )
 
-        if comment := self._decode_item(row, column="log_comment"):
-            return "", comment
+def _decode_item_log_plugin_output(
+    row: Row, *, column: Literal["log_plugin_output", "log_comment"]
+) -> str:
+    # TODO: decode all escaped characters coming from monitoring history.
+    return row.get(column, "").replace("%3B", ";")
 
-        log_type = row["log_type"]
-        lst = row["log_state_type"]
-        if "FLAPPING" in log_type:
-            what = _("host") if "HOST" in log_type else _("service")
-            if lst == "STOPPED":
-                return "", _("The %(what)s stopped flapping") % {"what": what}
-            return "", _("The %(what)s started flapping") % {"what": what}
-        if lst:
-            return "", (lst + " - " + log_type)
-        return "", ""
 
-    @staticmethod
-    def _decode_item(row: Row, *, column: Literal["log_plugin_output", "log_comment"]) -> str:
-        """Decode escaped characters coming from Nagios history monitoring."""
-        # TODO: decode all escaped characters coming from monitoring history.
-        return row.get(column, "").replace("%3B", ";")
+def _render_log_what(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    lt = row["log_type"]
+    if "HOST" in lt:
+        return "", _("Host")
+    if "SERVICE" in lt or "SVC" in lt:
+        return "", _("Service")
+    return "", _("Program")
 
 
 class PainterLogWhat(InternalPainter):
@@ -3764,18 +4278,16 @@ class PainterLogWhat(InternalPainter):
         super().__init__(
             ident="log_what",
             title=_l("Log: host or service"),
+            render=_render_log_what,
             short_title=_l("Host/service"),
             columns=["log_type"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        lt = row["log_type"]
-        if "HOST" in lt:
-            return "", _("Host")
-        if "SERVICE" in lt or "SVC" in lt:
-            return "", _("Service")
-        return "", _("Program")
+
+def _render_log_attempt(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", str(row["log_attempt"]))
 
 
 class PainterLogAttempt(InternalPainter):
@@ -3783,13 +4295,16 @@ class PainterLogAttempt(InternalPainter):
         super().__init__(
             ident="log_attempt",
             title=_l("Log: number of check attempt"),
+            render=_render_log_attempt,
             short_title=_l("Att."),
             columns=["log_attempt"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", str(row["log_attempt"]))
+
+def _render_log_state_type(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", row["log_state_type"])
 
 
 class PainterLogStateType(InternalPainter):
@@ -3797,13 +4312,22 @@ class PainterLogStateType(InternalPainter):
         super().__init__(
             ident="log_state_type",
             title=_l('Log: state type (DEPRECATED: Use "state information")'),
+            render=_render_log_state_type,
             short_title=_l("Type"),
             columns=["log_state_type"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", row["log_state_type"])
+
+def _render_log_state_info(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    info = row["log_state_info"]
+
+    # be compatible to <1.7 remote sites and show log_state_type content as fallback
+    if not info:
+        info = row["log_state_type"]
+
+    return ("", info)
 
 
 class PainterLogStateInfo(InternalPainter):
@@ -3811,30 +4335,49 @@ class PainterLogStateInfo(InternalPainter):
         super().__init__(
             ident="log_state_info",
             title=_l("Log: State information"),
+            render=_render_log_state_info,
             short_title=_l("State info"),
             columns=["log_state_info", "log_state_type"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        info = row["log_state_info"]
 
-        # be compatible to <1.7 remote sites and show log_state_type content as fallback
-        if not info:
-            info = row["log_state_type"]
-
-        return ("", info)
+def _render_log_type(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("nowrap", row["log_type"])
 
 
 class PainterLogType(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
-            ident="log_type", title=_l("Log: event"), short_title=_l("Event"), columns=["log_type"]
+            ident="log_type",
+            title=_l("Log: event"),
+            render=_render_log_type,
+            short_title=_l("Event"),
+            columns=["log_type"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("nowrap", row["log_type"])
+
+def _render_log_contact_name(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    target_view_name = context.url_renderer.get_filename(
+        filename="contactnotifications",
+        mobile_filename="mobile_contactnotifications",
+    )
+    links = [
+        context.url_renderer.link_from_filename(
+            "view.py",
+            html_text=contact,
+            query_args=[
+                ("view_name", target_view_name),
+                ("log_contact_name", contact),
+            ],
+            mobile_filename="mobile_view.py",
+        )
+        for contact in row["log_contact_name"].split(",")
+    ]
+    return "nowrap", HTML.without_escaping(", ").join(links)
 
 
 class PainterLogContactName(InternalPainter):
@@ -3842,29 +4385,16 @@ class PainterLogContactName(InternalPainter):
         super().__init__(
             ident="log_contact_name",
             title=_l("Log: contact name"),
+            render=_render_log_contact_name,
             short_title=_l("Contact"),
             columns=["log_contact_name"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        target_view_name = context.url_renderer.get_filename(
-            filename="contactnotifications",
-            mobile_filename="mobile_contactnotifications",
-        )
-        links = [
-            context.url_renderer.link_from_filename(
-                "view.py",
-                html_text=contact,
-                query_args=[
-                    ("view_name", target_view_name),
-                    ("log_contact_name", contact),
-                ],
-                mobile_filename="mobile_view.py",
-            )
-            for contact in row["log_contact_name"].split(",")
-        ]
-        return "nowrap", HTML.without_escaping(", ").join(links)
+
+def _render_log_command(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("nowrap", row["log_command_name"])
 
 
 class PainterLogCommand(InternalPainter):
@@ -3872,13 +4402,107 @@ class PainterLogCommand(InternalPainter):
         super().__init__(
             ident="log_command",
             title=_l("Log: command/plug-in"),
+            render=_render_log_command,
             short_title=_l("Command"),
             columns=["log_command_name"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("nowrap", row["log_command_name"])
+
+def _render_log_icon(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    img: StaticIcon | None = None
+    log_type = row["log_type"]
+    log_state = row["log_state"]
+
+    if log_type == "SERVICE ALERT":
+        img = {
+            0: StaticIcon(IconNames.alert_ok),
+            1: StaticIcon(IconNames.alert_warn),
+            2: StaticIcon(IconNames.alert_crit),
+            3: StaticIcon(IconNames.alert_unknown),
+        }.get(row["log_state"])
+        title = _("Service alert")
+
+    elif log_type == "HOST ALERT":
+        img = {
+            0: StaticIcon(IconNames.alert_up),
+            1: StaticIcon(IconNames.alert_down),
+            2: StaticIcon(IconNames.alert_unreach),
+        }.get(row["log_state"])
+        title = _("Host alert")
+
+    elif log_type.endswith("ALERT HANDLER STARTED"):
+        img = StaticIcon(IconNames.alert_alert_handler_started)
+        title = _("Alert handler started")
+
+    elif log_type.endswith("ALERT HANDLER STOPPED"):
+        if log_state == 0:
+            img = StaticIcon(IconNames.alert_alert_handler_stopped)
+            title = _("Alert handler stopped")
+        else:
+            img = StaticIcon(IconNames.alert_alert_handler_failed)
+            title = _("Alert handler failed")
+
+    elif "DOWNTIME" in log_type:
+        if row["log_state_type"] in ["END", "STOPPED"]:
+            img = StaticIcon(IconNames.alert_downtimestop)
+            title = _("Downtime stopped")
+        else:
+            img = StaticIcon(IconNames.alert_downtime)
+            title = _("Downtime")
+
+    elif log_type.endswith("NOTIFICATION"):
+        if row["log_command_name"] == "check-mk-notify":
+            img = StaticIcon(IconNames.alert_cmk_notify)
+            title = _("Core produced a notification")
+        else:
+            img = StaticIcon(IconNames.alert_notify)
+            title = _("User notification")
+
+    elif log_type.endswith("NOTIFICATION RESULT"):
+        img = StaticIcon(IconNames.alert_notify_result)
+        title = _("Final notification result")
+
+    elif log_type.endswith("NOTIFICATION PROGRESS"):
+        img = StaticIcon(IconNames.alert_notify_progress)
+        title = _("The notification is being processed")
+
+    elif log_type == "EXTERNAL COMMAND":
+        img = StaticIcon(IconNames.alert_command)
+        title = _("External command")
+
+    elif "restarting..." in log_type:
+        img = StaticIcon(IconNames.alert_restart)
+        title = _("Core restarted")
+
+    elif "Reloading configuration" in log_type:
+        img = StaticIcon(IconNames.alert_reload)
+        title = _("Core configuration reloaded")
+
+    elif "starting..." in log_type:
+        img = StaticIcon(IconNames.alert_start)
+        title = _("Core started")
+
+    elif "shutdown..." in log_type or "shutting down" in log_type:
+        img = StaticIcon(IconNames.alert_stop)
+        title = _("Core stopped")
+
+    elif " FLAPPING " in log_type:
+        img = StaticIcon(IconNames.alert_flapping)
+        title = _("Flapping")
+
+    elif "ACKNOWLEDGE ALERT" in log_type:
+        if row["log_state_type"] == "STARTED":
+            img = StaticIcon(IconNames.alert_ack)
+            title = _("Acknowledged")
+        else:
+            img = StaticIcon(IconNames.alert_ackstop)
+            title = _("Stopped acknowledgment")
+
+    if img:
+        return "icon", html.render_static_icon(img, title=title)  # type: ignore[possibly-undefined]
+    return "icon", ""
 
 
 class PainterLogIcon(InternalPainter):
@@ -3886,104 +4510,16 @@ class PainterLogIcon(InternalPainter):
         super().__init__(
             ident="log_icon",
             title=_l("Log: event icon"),
+            render=_render_log_icon,
             short_title="",
             columns=["log_type", "log_state", "log_state_type", "log_command_name"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        img: StaticIcon | None = None
-        log_type = row["log_type"]
-        log_state = row["log_state"]
 
-        if log_type == "SERVICE ALERT":
-            img = {
-                0: StaticIcon(IconNames.alert_ok),
-                1: StaticIcon(IconNames.alert_warn),
-                2: StaticIcon(IconNames.alert_crit),
-                3: StaticIcon(IconNames.alert_unknown),
-            }.get(row["log_state"])
-            title = _("Service alert")
-
-        elif log_type == "HOST ALERT":
-            img = {
-                0: StaticIcon(IconNames.alert_up),
-                1: StaticIcon(IconNames.alert_down),
-                2: StaticIcon(IconNames.alert_unreach),
-            }.get(row["log_state"])
-            title = _("Host alert")
-
-        elif log_type.endswith("ALERT HANDLER STARTED"):
-            img = StaticIcon(IconNames.alert_alert_handler_started)
-            title = _("Alert handler started")
-
-        elif log_type.endswith("ALERT HANDLER STOPPED"):
-            if log_state == 0:
-                img = StaticIcon(IconNames.alert_alert_handler_stopped)
-                title = _("Alert handler stopped")
-            else:
-                img = StaticIcon(IconNames.alert_alert_handler_failed)
-                title = _("Alert handler failed")
-
-        elif "DOWNTIME" in log_type:
-            if row["log_state_type"] in ["END", "STOPPED"]:
-                img = StaticIcon(IconNames.alert_downtimestop)
-                title = _("Downtime stopped")
-            else:
-                img = StaticIcon(IconNames.alert_downtime)
-                title = _("Downtime")
-
-        elif log_type.endswith("NOTIFICATION"):
-            if row["log_command_name"] == "check-mk-notify":
-                img = StaticIcon(IconNames.alert_cmk_notify)
-                title = _("Core produced a notification")
-            else:
-                img = StaticIcon(IconNames.alert_notify)
-                title = _("User notification")
-
-        elif log_type.endswith("NOTIFICATION RESULT"):
-            img = StaticIcon(IconNames.alert_notify_result)
-            title = _("Final notification result")
-
-        elif log_type.endswith("NOTIFICATION PROGRESS"):
-            img = StaticIcon(IconNames.alert_notify_progress)
-            title = _("The notification is being processed")
-
-        elif log_type == "EXTERNAL COMMAND":
-            img = StaticIcon(IconNames.alert_command)
-            title = _("External command")
-
-        elif "restarting..." in log_type:
-            img = StaticIcon(IconNames.alert_restart)
-            title = _("Core restarted")
-
-        elif "Reloading configuration" in log_type:
-            img = StaticIcon(IconNames.alert_reload)
-            title = _("Core configuration reloaded")
-
-        elif "starting..." in log_type:
-            img = StaticIcon(IconNames.alert_start)
-            title = _("Core started")
-
-        elif "shutdown..." in log_type or "shutting down" in log_type:
-            img = StaticIcon(IconNames.alert_stop)
-            title = _("Core stopped")
-
-        elif " FLAPPING " in log_type:
-            img = StaticIcon(IconNames.alert_flapping)
-            title = _("Flapping")
-
-        elif "ACKNOWLEDGE ALERT" in log_type:
-            if row["log_state_type"] == "STARTED":
-                img = StaticIcon(IconNames.alert_ack)
-                title = _("Acknowledged")
-            else:
-                img = StaticIcon(IconNames.alert_ackstop)
-                title = _("Stopped acknowledgment")
-
-        if img:
-            return "icon", html.render_static_icon(img, title=title)  # type: ignore[possibly-undefined]
-        return "icon", ""
+def _render_log_options(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", row["log_options"])
 
 
 class PainterLogOptions(InternalPainter):
@@ -3991,13 +4527,21 @@ class PainterLogOptions(InternalPainter):
         super().__init__(
             ident="log_options",
             title=_l("Log: informational part of message"),
+            render=_render_log_options,
             short_title=_l("Info"),
             columns=["log_options"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", row["log_options"])
+
+def _render_log_comment(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    msg = row["log_options"]
+    if ";" in msg:
+        parts = msg.split(";")
+        if len(parts) > 6:
+            return ("", parts[-1])
+    return ("", "")
 
 
 class PainterLogComment(InternalPainter):
@@ -4005,18 +4549,22 @@ class PainterLogComment(InternalPainter):
         super().__init__(
             ident="log_comment",
             title=_l("Log: comment"),
+            render=_render_log_comment,
             short_title=_l("Comment"),
             columns=["log_options"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        msg = row["log_options"]
-        if ";" in msg:
-            parts = msg.split(";")
-            if len(parts) > 6:
-                return ("", parts[-1])
-        return ("", "")
+
+def _render_log_time(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_age(
+        row["log_time"],
+        True,
+        3600 * 24,
+        request=context.request,
+        painter_options=context.painter_options,
+    )
 
 
 class PainterLogTime(InternalPainter):
@@ -4024,20 +4572,17 @@ class PainterLogTime(InternalPainter):
         super().__init__(
             ident="log_time",
             title=_l("Log: entry time"),
+            render=_render_log_time,
             short_title=_l("Time"),
             columns=["log_time"],
             painter_options=["ts_format", "ts_date"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_age(
-            row["log_time"],
-            True,
-            3600 * 24,
-            request=context.request,
-            painter_options=context.painter_options,
-        )
+
+def _render_log_lineno(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("number", str(row["log_lineno"]))
 
 
 class PainterLogLineno(InternalPainter):
@@ -4045,13 +4590,20 @@ class PainterLogLineno(InternalPainter):
         super().__init__(
             ident="log_lineno",
             title=_l("Log: line number in log file"),
+            render=_render_log_lineno,
             short_title=_l("Line"),
             columns=["log_lineno"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("number", str(row["log_lineno"]))
+
+def _group_by_log_date(row: Row, _cell: Cell, _context: PainterContext) -> str:
+    return str(_paint_day(row["log_time"])[1])
+
+
+def _render_log_date(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return _paint_day(row["log_time"])
 
 
 class PainterLogDate(InternalPainter):
@@ -4059,17 +4611,33 @@ class PainterLogDate(InternalPainter):
         super().__init__(
             ident="log_date",
             title=_l("Log: day of entry"),
+            render=_render_log_date,
             short_title=_l("Date"),
             columns=["log_time"],
+            group_by=_group_by_log_date,
         )
 
-    @override
-    def group_by(self, row: Row, cell: Cell, context: PainterContext) -> str:
-        return str(_paint_day(row["log_time"])[1])
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_day(row["log_time"])
+def _render_log_state(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    state = row["log_state"]
+
+    # Notification result/progress lines don't hold real states. They hold notification plugin
+    # exit results (0: ok, 1: temp issue, 2: perm issue). We display them as service states.
+    if (
+        row["log_service_description"]
+        or row["log_type"].endswith("NOTIFICATION RESULT")
+        or row["log_type"].endswith("NOTIFICATION PROGRESS")
+    ):
+        return _paint_service_state_short(
+            {"service_has_been_checked": 1, "service_state": state},
+            config=context.config,
+        )
+    return _paint_host_state_short(
+        {"host_has_been_checked": 1, "host_state": state},
+        config=context.config,
+    )
 
 
 class PainterLogState(InternalPainter):
@@ -4077,33 +4645,20 @@ class PainterLogState(InternalPainter):
         super().__init__(
             ident="log_state",
             title=_l("Log: state of host/service at log time"),
+            render=_render_log_state,
             short_title=_l("State"),
             columns=["log_state", "log_state_type", "log_service_description", "log_type"],
             title_classes=["center"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        state = row["log_state"]
-
-        # Notification result/progress lines don't hold real states. They hold notification plugin
-        # exit results (0: ok, 1: temp issue, 2: perm issue). We display them as service states.
-        if (
-            row["log_service_description"]
-            or row["log_type"].endswith("NOTIFICATION RESULT")
-            or row["log_type"].endswith("NOTIFICATION PROGRESS")
-        ):
-            return _paint_service_state_short(
-                {"service_has_been_checked": 1, "service_state": state},
-                config=context.config,
-            )
-        return _paint_host_state_short(
-            {"host_has_been_checked": 1, "host_state": state},
-            config=context.config,
-        )
-
 
 # Alert statistics
+
+
+def _render_alert_stats_ok(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", str(row["log_alerts_ok"]))
 
 
 class PainterAlertStatsOk(InternalPainter):
@@ -4111,14 +4666,17 @@ class PainterAlertStatsOk(InternalPainter):
         super().__init__(
             ident="alert_stats_ok",
             title=_l("Alert statistics: Number of recoveries"),
+            render=_render_alert_stats_ok,
             short_title=_l("OK"),
             columns=["log_alerts_ok"],
             title_classes=["right"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", str(row["log_alerts_ok"]))
+
+def _render_alert_stats_warn(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_svc_count(1, row["log_alerts_warn"])
 
 
 class PainterAlertStatsWarn(InternalPainter):
@@ -4126,14 +4684,17 @@ class PainterAlertStatsWarn(InternalPainter):
         super().__init__(
             ident="alert_stats_warn",
             title=_l("Alert statistics: Number of warnings"),
+            render=_render_alert_stats_warn,
             short_title=_l("WARN"),
             columns=["log_alerts_warn"],
             title_classes=["right"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_svc_count(1, row["log_alerts_warn"])
+
+def _render_alert_stats_crit(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_svc_count(2, row["log_alerts_crit"])
 
 
 class PainterAlertStatsCrit(InternalPainter):
@@ -4141,14 +4702,17 @@ class PainterAlertStatsCrit(InternalPainter):
         super().__init__(
             ident="alert_stats_crit",
             title=_l("Alert statistics: Number of critical alerts"),
+            render=_render_alert_stats_crit,
             short_title=_l("CRIT"),
             columns=["log_alerts_crit"],
             title_classes=["right"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_svc_count(2, row["log_alerts_crit"])
+
+def _render_alert_stats_unknown(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_svc_count(3, row["log_alerts_unknown"])
 
 
 class PainterAlertStatsUnknown(InternalPainter):
@@ -4156,14 +4720,17 @@ class PainterAlertStatsUnknown(InternalPainter):
         super().__init__(
             ident="alert_stats_unknown",
             title=_l("Alert statistics: Number of unknown alerts"),
+            render=_render_alert_stats_unknown,
             short_title=_l("UNKN"),
             columns=["log_alerts_unknown"],
             title_classes=["right"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_svc_count(3, row["log_alerts_unknown"])
+
+def _render_alert_stats_problem(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_svc_count("s", row["log_alerts_problem"])
 
 
 class PainterAlertStatsProblem(InternalPainter):
@@ -4171,14 +4738,11 @@ class PainterAlertStatsProblem(InternalPainter):
         super().__init__(
             ident="alert_stats_problem",
             title=_l("Alert statistics: Number of problem alerts"),
+            render=_render_alert_stats_problem,
             short_title=_l("Problems"),
             columns=["log_alerts_problem"],
             title_classes=["right"],
         )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_svc_count("s", row["log_alerts_problem"])
 
 
 #
@@ -4186,56 +4750,54 @@ class PainterAlertStatsProblem(InternalPainter):
 #
 
 
+def _render_host_tags(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return "", render_tag_groups(
+        get_tag_groups(row, "host"), "host", with_links=True, request=context.request
+    )
+
+
 class PainterHostTags(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
-            ident="host_tags", title=_l("Host tags"), columns=["host_tags"], sorter="host"
-        )
-
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return self.title(cell, context)
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return "", render_tag_groups(
-            get_tag_groups(row, "host"), "host", with_links=True, request=context.request
+            ident="host_tags",
+            title=_l("Host tags"),
+            render=_render_host_tags,
+            columns=["host_tags"],
+            sorter="host",
         )
 
 
-class ABCPainterTagsWithTitles(InternalPainter, abc.ABC):
-    @property
-    @abc.abstractmethod
-    def object_type(self) -> str:
-        raise NotImplementedError
+def _tag_entries(object_type: str, row: Row, context: PainterContext) -> list[tuple[str, str]]:
+    entries = []
+    aux_titles = _aux_tag_titles(context.config.tags)
+    for tag_group_id, tag_id in get_tag_groups(row, object_type).items():
+        tag_group = context.config.tags.get_tag_group(tag_group_id)
+        if tag_group:
+            choices = tag_choices_for_group(tag_group)
+            entries.append((tag_group.title, choices.get(tag_id, tag_id)))
+            continue
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        entries = self._get_entries(row, context)
-        return "", HTMLWriter.render_br().join(
-            [
-                escaping.escape_to_html_permissive("%s: %s" % e, escape_links=False)
-                for e in sorted(entries)
-            ]
-        )
+        aux_tag_title = aux_titles.get(tag_group_id)
+        if aux_tag_title:
+            entries.append((aux_tag_title, aux_tag_title))
+            continue
 
-    def _get_entries(self, row: Row, context: PainterContext) -> list[tuple[str, str]]:
-        entries = []
-        aux_titles = _aux_tag_titles(context.config.tags)
-        for tag_group_id, tag_id in get_tag_groups(row, self.object_type).items():
-            tag_group = context.config.tags.get_tag_group(tag_group_id)
-            if tag_group:
-                choices = tag_choices_for_group(tag_group)
-                entries.append((tag_group.title, choices.get(tag_id, tag_id)))
-                continue
+        entries.append((tag_group_id, tag_id))
+    return entries
 
-            aux_tag_title = aux_titles.get(tag_group_id)
-            if aux_tag_title:
-                entries.append((aux_tag_title, aux_tag_title))
-                continue
 
-            entries.append((tag_group_id, tag_id))
-        return entries
+def _render_tags_with_titles(
+    object_type: str, row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    entries = _tag_entries(object_type, row, context)
+    return "", HTMLWriter.render_br().join(
+        [
+            escaping.escape_to_html_permissive("%s: %s" % e, escape_links=False)
+            for e in sorted(entries)
+        ]
+    )
 
 
 @request_memoize()
@@ -4243,23 +4805,29 @@ def _aux_tag_titles(tag_config: TagConfig) -> dict[str, str]:
     return dict(tag_config.aux_tag_list.get_choices())
 
 
-class PainterHostTagsWithTitles(ABCPainterTagsWithTitles):
+def _render_host_tags_with_titles(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _render_tags_with_titles("host", row, cell, user, context)
+
+
+class PainterHostTagsWithTitles(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="host_tags_with_titles",
             title=_l("Host tags (with titles)"),
+            render=_render_host_tags_with_titles,
             columns=["host_tags"],
             sorter="host",
         )
 
-    @property
-    @override
-    def object_type(self) -> str:
-        return "host"
 
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return self.title(cell, context)
+def _render_service_tags(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return "", render_tag_groups(
+        get_tag_groups(row, "service"), "service", with_links=True, request=context.request
+    )
 
 
 class PainterServiceTags(InternalPainter):
@@ -4267,38 +4835,63 @@ class PainterServiceTags(InternalPainter):
         super().__init__(
             ident="service_tags",
             title=_l("Service tags"),
+            render=_render_service_tags,
             columns=["service_tags"],
             sorter="service_tags",
         )
 
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return self.title(cell, context)
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return "", render_tag_groups(
-            get_tag_groups(row, "service"), "service", with_links=True, request=context.request
-        )
+def _render_service_tags_with_titles(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _render_tags_with_titles("service", row, cell, user, context)
 
 
-class PainterServiceTagsWithTitles(ABCPainterTagsWithTitles):
+class PainterServiceTagsWithTitles(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="service_tags_with_titles",
             title=_l("Service tags (with titles)"),
+            render=_render_service_tags_with_titles,
             columns=["service_tags"],
             sorter="service_tags",
         )
 
-    @property
-    @override
-    def object_type(self) -> str:
-        return "service"
 
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return self.title(cell, context)
+def _compute_data_host_labels(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> Labels:
+    return get_labels(row, "host")
+
+
+def _render_host_labels(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return "", render_labels(
+        _compute_data_host_labels(row, cell, user, context),
+        "host",
+        with_links=True,
+        label_sources=get_label_sources(row, "host"),
+        request=context.request,
+    )
+
+
+def _export_for_python_host_labels(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> Labels:
+    return _compute_data_host_labels(row, cell, user, context)
+
+
+def _export_for_csv_host_labels(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> str | HTML:
+    return format_labels_for_csv_export(_compute_data_host_labels(row, cell, user, context))
+
+
+def _export_for_json_host_labels(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> Labels:
+    return _compute_data_host_labels(row, cell, user, context)
 
 
 class PainterHostLabels(InternalPainter):
@@ -4306,47 +4899,50 @@ class PainterHostLabels(InternalPainter):
         super().__init__(
             ident="host_labels",
             title=_l("Host labels"),
+            render=_render_host_labels,
             columns=["host_labels", "host_label_sources"],
+            compute_data=_compute_data_host_labels,
+            export_for_python=_export_for_python_host_labels,
+            export_for_csv=_export_for_csv_host_labels,
+            export_for_json=_export_for_json_host_labels,
             sorter="host_labels",
         )
 
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return self.title(cell, context)
 
-    @override
-    def _compute_data(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> Labels:
-        return get_labels(row, "host")
+def _compute_data_service_labels(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> Labels:
+    return get_labels(row, "service")
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return "", render_labels(
-            self._compute_data(row, cell, user, context),
-            "host",
-            with_links=True,
-            label_sources=get_label_sources(row, "host"),
-            request=context.request,
-        )
 
-    @override
-    def export_for_python(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> Labels:
-        return self._compute_data(row, cell, user, context)
+def _render_service_labels(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return "", render_labels(
+        _compute_data_service_labels(row, cell, user, context),
+        "service",
+        with_links=True,
+        label_sources=get_label_sources(row, "service"),
+        request=context.request,
+    )
 
-    @override
-    def export_for_csv(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> str | HTML:
-        return format_labels_for_csv_export(self._compute_data(row, cell, user, context))
 
-    @override
-    def export_for_json(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> Labels:
-        return self._compute_data(row, cell, user, context)
+def _export_for_python_service_labels(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> Labels:
+    return _compute_data_service_labels(row, cell, user, context)
+
+
+def _export_for_csv_service_labels(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> str | HTML:
+    return format_labels_for_csv_export(_compute_data_service_labels(row, cell, user, context))
+
+
+def _export_for_json_service_labels(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> Labels:
+    return _compute_data_service_labels(row, cell, user, context)
 
 
 class PainterServiceLabels(InternalPainter):
@@ -4354,47 +4950,39 @@ class PainterServiceLabels(InternalPainter):
         super().__init__(
             ident="service_labels",
             title=_l("Service labels"),
+            render=_render_service_labels,
             columns=["service_labels", "service_label_sources"],
+            compute_data=_compute_data_service_labels,
+            export_for_python=_export_for_python_service_labels,
+            export_for_csv=_export_for_csv_service_labels,
+            export_for_json=_export_for_json_service_labels,
             sorter="service_labels",
         )
 
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return self.title(cell, context)
 
-    @override
-    def _compute_data(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> Labels:
-        return get_labels(row, "service")
+def _render_host_docker_node(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    if row.get("host_labels", {}).get("cmk/docker_object") != "container":
+        return "", ""
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return "", render_labels(
-            self._compute_data(row, cell, user, context),
-            "service",
-            with_links=True,
-            label_sources=get_label_sources(row, "service"),
-            request=context.request,
-        )
+    docker_nodes = _get_docker_container_status_outputs()
+    output = docker_nodes.get(row["host_name"])
+    # Output with node: "Container running on node mynode2"
+    # Output without node: "Container running"
+    if output is None or "node" not in output:
+        return "", ""
 
-    @override
-    def export_for_python(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> Labels:
-        return self._compute_data(row, cell, user, context)
-
-    @override
-    def export_for_csv(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> str | HTML:
-        return format_labels_for_csv_export(self._compute_data(row, cell, user, context))
-
-    @override
-    def export_for_json(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> Labels:
-        return self._compute_data(row, cell, user, context)
+    node = output.split()[-1]
+    content = context.url_renderer.link_from_filename(
+        "view.py",
+        query_args=[
+            ("view_name", "host"),
+            ("host", node),
+        ],
+        html_text=node,
+    )
+    return "", content
 
 
 class PainterHostDockerNode(InternalPainter):
@@ -4402,35 +4990,10 @@ class PainterHostDockerNode(InternalPainter):
         super().__init__(
             ident="host_docker_node",
             title=_l("Docker node"),
+            render=_render_host_docker_node,
             short_title=_l("Node"),
             columns=["host_labels", "host_label_sources"],
         )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        """We use the information stored in output of docker_container_status
-        here. It's the most trusted source of the current node the container is
-        running on."""
-        if row.get("host_labels", {}).get("cmk/docker_object") != "container":
-            return "", ""
-
-        docker_nodes = _get_docker_container_status_outputs()
-        output = docker_nodes.get(row["host_name"])
-        # Output with node: "Container running on node mynode2"
-        # Output without node: "Container running"
-        if output is None or "node" not in output:
-            return "", ""
-
-        node = output.split()[-1]
-        content = context.url_renderer.link_from_filename(
-            "view.py",
-            query_args=[
-                ("view_name", "host"),
-                ("host", node),
-            ],
-            html_text=node,
-        )
-        return "", content
 
 
 @request_memoize()
@@ -4448,226 +5011,235 @@ def _get_docker_container_status_outputs() -> dict[str, str]:
     return {row[0]: row[1] for row in sites.live().query(query)}
 
 
-class AbstractColumnSpecificMetric(InternalPainter):
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        if not (parameters := cell.painter_parameters()):
-            # Used in Edit-View
-            return super().title(cell, context)
-        return self._title_with_parameters(parameters, metrics_from_api)
+_SPECIFIC_METRIC_DEFAULT_TITLE = _l("Show single metric")
 
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return self.title(cell, context)
 
-    def _title_with_parameters(
-        self,
-        parameters: PainterParameters,
-        registered_metrics: Mapping[str, RegisteredMetric],
-    ) -> str:
-        try:
-            return get_metric_spec(parameters["metric"], registered_metrics).title
-        except KeyError:
-            return _("Metric not found")
+def _title_specific_metric(cell: Cell, _context: PainterContext) -> str:
+    if not (parameters := cell.painter_parameters()):
+        # Used in Edit-View
+        return str(_SPECIFIC_METRIC_DEFAULT_TITLE)
+    return _title_with_parameters(parameters, metrics_from_api)
 
-    @override
-    def parameters(self, context: PainterContext) -> Dictionary:
-        return Dictionary(
-            elements=[
-                (
-                    "metric",
-                    DropdownChoice(
-                        title=_("Show metric"),
-                        choices=self.metric_choices(),
-                        help=_("If available, the following metric will be shown"),
-                    ),
-                ),
-                ("column_title", TextInput(title=_("Custom title"))),
-            ],
-            optional_keys=["column_title"],
-        )
 
-    @classmethod
-    @request_memoize()
-    def metric_choices(cls) -> list[tuple[str, str]]:
-        return sorted(
+def _title_with_parameters(
+    parameters: PainterParameters,
+    registered_metrics: Mapping[str, RegisteredMetric],
+) -> str:
+    try:
+        return get_metric_spec(parameters["metric"], registered_metrics).title
+    except KeyError:
+        return _("Metric not found")
+
+
+@request_memoize()
+def metric_choices() -> list[tuple[str, str]]:
+    return sorted(
+        (
+            (metric_id, metric_title)
+            for metric_id, metric_title in registered_metric_ids_and_titles(metrics_from_api)
+        ),
+        key=lambda x: x[1],
+    )
+
+
+def _parameters_specific_metric(_context: PainterContext) -> Dictionary:
+    return Dictionary(
+        elements=[
             (
-                (metric_id, metric_title)
-                for metric_id, metric_title in registered_metric_ids_and_titles(metrics_from_api)
+                "metric",
+                DropdownChoice(
+                    title=_("Show metric"),
+                    choices=metric_choices(),
+                    help=_("If available, the following metric will be shown"),
+                ),
             ),
-            key=lambda x: x[1],
-        )
-
-    def _render(
-        self,
-        row: Row,  # noqa: ARG002
-        cell: Cell,
-        perf_data_entries: str,
-        check_command: str,
-        context: PainterContext,
-    ) -> tuple[str, str]:
-        parameters = cell.painter_parameters()
-        assert parameters is not None
-        show_metric = parameters["metric"]
-
-        evaluated = evaluated_metrics(
-            perf_data_entries,
-            check_command,
-            registered_metrics=registered_metrics(),
-            registered_translations=registered_translations(),
-            temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
-            debug=context.config.debug,
-        )
-
-        if (metric := evaluated.get(MetricName(show_metric))) is None:
-            return "", ""
-
-        return "", _rendered_value(metric)
+            ("column_title", TextInput(title=_("Custom title"))),
+        ],
+        optional_keys=["column_title"],
+    )
 
 
-class PainterHostSpecificMetric(AbstractColumnSpecificMetric):
+def _render_specific_metric(
+    row: Row,  # noqa: ARG001
+    cell: Cell,
+    perf_data_entries: str,
+    check_command: str,
+    context: PainterContext,
+) -> tuple[str, str]:
+    parameters = cell.painter_parameters()
+    assert parameters is not None
+    show_metric = parameters["metric"]
+
+    evaluated = evaluated_metrics(
+        perf_data_entries,
+        check_command,
+        registered_metrics=registered_metrics(),
+        registered_translations=registered_translations(),
+        temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
+        debug=context.config.debug,
+    )
+
+    if (metric := evaluated.get(MetricName(show_metric))) is None:
+        return "", ""
+
+    return "", _rendered_value(metric)
+
+
+def _render_host_specific_metric(
+    row: Row, cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    perf_data_entries = row["host_perf_data"]
+    check_command = row["host_check_command"]
+    return _render_specific_metric(row, cell, perf_data_entries, check_command, context)
+
+
+class PainterHostSpecificMetric(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="host_specific_metric",
-            title=_l("Show single metric"),
+            title=_SPECIFIC_METRIC_DEFAULT_TITLE,
+            render=_render_host_specific_metric,
             list_title=_l("Metric"),
+            cell_title=_title_specific_metric,
+            cell_short_title=_title_specific_metric,
             columns=["host_perf_data", "host_check_command"],
+            parameters=_parameters_specific_metric,
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        perf_data_entries = row["host_perf_data"]
-        check_command = row["host_check_command"]
-        return self._render(row, cell, perf_data_entries, check_command, context)
+
+def _render_service_specific_metric(
+    row: Row, cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    perf_data_entries = row["service_perf_data"]
+    check_command = row["service_check_command"]
+    return _render_specific_metric(row, cell, perf_data_entries, check_command, context)
 
 
-class PainterServiceSpecificMetric(AbstractColumnSpecificMetric):
+class PainterServiceSpecificMetric(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="service_specific_metric",
-            title=_l("Show single metric"),
+            title=_SPECIFIC_METRIC_DEFAULT_TITLE,
+            render=_render_service_specific_metric,
             list_title=_l("Metric"),
+            cell_title=_title_specific_metric,
+            cell_short_title=_title_specific_metric,
             columns=["service_perf_data", "service_check_command"],
+            parameters=_parameters_specific_metric,
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        perf_data_entries = row["service_perf_data"]
-        check_command = row["service_check_command"]
-        return self._render(row, cell, perf_data_entries, check_command, context)
+
+def _render_host_kubernetes(
+    object_type: str,
+    constraints: Sequence[str],
+    row: Row,
+    _cell: Cell,
+    _user: LoggedInUser,
+    context: PainterContext,
+) -> CellSpec:
+    labels = row.get("host_labels", {})
+    if labels.get("cmk/kubernetes/object") != object_type:
+        return "", ""
+
+    links: list[HTTPVariable] = []
+    for link_key in constraints:
+        if (link_value := labels.get(f"cmk/kubernetes/{link_key}")) is None:
+            # a requested filter can not be set, so better don't show anything
+            return "", ""
+
+        links.append((f"kubernetes_{link_key}", link_value))
+
+    links.extend(
+        [
+            # name of the dashboard we are linking to
+            ("name", f"kubernetes_{object_type}"),
+            ("host", row["host_name"]),
+            ("site", row["site"]),
+        ]
+    )
+
+    if (object_name := labels.get(f"cmk/kubernetes/{object_type}")) is None:
+        return "", ""
+
+    content = context.url_renderer.link_from_filename(
+        "dashboard.py", html_text=object_name, query_args=links
+    )
+    return "", content
 
 
 class _PainterHostKubernetes(InternalPainter):
-    """
-    Link to kubernetes dashboard. The filters are set in a way that only hosts
-    belonging to the kubernetes_object are shown.
-
-    A host representing a kubernetes cluster will link to the kubernetes
-    cluster dashboard. This dashboard should only display objects (=cmk hosts)
-    belonging to cluster. So the link to the dashboard is augmented by a
-    kubernetes_cluster filter.
-
-    As nodes are not unique among multiple clusters, chains of multiple filters
-    have to build for certain objects: in order to show only objects of a
-    certain node, both node and cluster filter needs to be present.
-
-    The cmk host names and the kubernetes names may differ: normally the cmk
-    host names of kubernetes objects are prefixed with the cluster name. This
-    painter will show the original kubernetes name, not the checkmk host name.
-    """
-
-    _kubernetes_object_type: str
-    """
-    The content of the corresponding label will be displayed by this painter.
-    """
-    _constraints: list[str]
-    """
-    Defines which filters should be added for building up the link.
-    """
-
-    def __init__(self, *, title: LazyString, short_title: LazyString) -> None:
+    def __init__(
+        self,
+        *,
+        object_type: str,
+        constraints: Sequence[str],
+        title: LazyString,
+        short_title: LazyString,
+    ) -> None:
         super().__init__(
-            ident=f"host_kubernetes_{self._kubernetes_object_type}",
+            ident=f"host_kubernetes_{object_type}",
             title=title,
+            render=partial(_render_host_kubernetes, object_type, constraints),
             short_title=short_title,
             columns=["host_labels", "host_name", "site"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        labels = row.get("host_labels", {})
-        if labels.get("cmk/kubernetes/object") != self._kubernetes_object_type:
-            return "", ""
-
-        links: list[HTTPVariable] = []
-        for link_key in self._constraints:
-            if (link_value := labels.get(f"cmk/kubernetes/{link_key}")) is None:
-                # a requested filter can not be set, so better don't show anything
-                return "", ""
-
-            links.append((f"kubernetes_{link_key}", link_value))
-
-        links.extend(
-            [
-                # name of the dashboard we are linking to
-                ("name", f"kubernetes_{self._kubernetes_object_type}"),
-                ("host", row["host_name"]),
-                ("site", row["site"]),
-            ]
-        )
-
-        if (object_name := labels.get(f"cmk/kubernetes/{self._kubernetes_object_type}")) is None:
-            return "", ""
-
-        content = context.url_renderer.link_from_filename(
-            "dashboard.py", html_text=object_name, query_args=links
-        )
-        return "", content
-
 
 class PainterHostKubernetesCluster(_PainterHostKubernetes):
     def __init__(self) -> None:
-        super().__init__(title=_l("Kubernetes cluster"), short_title=_l("Cluster"))
-
-    _kubernetes_object_type = "cluster"
-    _constraints = ["cluster"]
+        super().__init__(
+            object_type="cluster",
+            constraints=["cluster"],
+            title=_l("Kubernetes cluster"),
+            short_title=_l("Cluster"),
+        )
 
 
 class PainterHostKubernetesNamespace(_PainterHostKubernetes):
     def __init__(self) -> None:
-        super().__init__(title=_l("Kubernetes Namespace"), short_title=_l("Namespace"))
-
-    _kubernetes_object_type = "namespace"
-    _constraints = ["namespace", "cluster-host", "cluster"]
+        super().__init__(
+            object_type="namespace",
+            constraints=["namespace", "cluster-host", "cluster"],
+            title=_l("Kubernetes Namespace"),
+            short_title=_l("Namespace"),
+        )
 
 
 class PainterHostKubernetesDeployment(_PainterHostKubernetes):
     def __init__(self) -> None:
-        super().__init__(title=_l("Kubernetes deployment"), short_title=_l("Deployment"))
-
-    _kubernetes_object_type = "deployment"
-    _constraints = ["deployment", "namespace", "cluster-host", "cluster"]
+        super().__init__(
+            object_type="deployment",
+            constraints=["deployment", "namespace", "cluster-host", "cluster"],
+            title=_l("Kubernetes deployment"),
+            short_title=_l("Deployment"),
+        )
 
 
 class PainterHostKubernetesDaemonset(_PainterHostKubernetes):
     def __init__(self) -> None:
-        super().__init__(title=_l("Kubernetes DaemonSet"), short_title=_l("DaemonSet"))
-
-    _kubernetes_object_type = "daemonset"
-    _constraints = ["daemonset", "namespace", "cluster-host", "cluster"]
+        super().__init__(
+            object_type="daemonset",
+            constraints=["daemonset", "namespace", "cluster-host", "cluster"],
+            title=_l("Kubernetes DaemonSet"),
+            short_title=_l("DaemonSet"),
+        )
 
 
 class PainterHostKubernetesStatefulset(_PainterHostKubernetes):
     def __init__(self) -> None:
-        super().__init__(title=_l("Kubernetes StatefulSet"), short_title=_l("StatefulSet"))
-
-    _kubernetes_object_type = "statefulset"
-    _constraints = ["statefulset", "namespace", "cluster-host", "cluster"]
+        super().__init__(
+            object_type="statefulset",
+            constraints=["statefulset", "namespace", "cluster-host", "cluster"],
+            title=_l("Kubernetes StatefulSet"),
+            short_title=_l("StatefulSet"),
+        )
 
 
 class PainterHostKubernetesNode(_PainterHostKubernetes):
     def __init__(self) -> None:
-        super().__init__(title=_l("Kubernetes node"), short_title=_l("Node"))
-
-    _kubernetes_object_type = "node"
-    _constraints = ["node", "cluster"]
+        super().__init__(
+            object_type="node",
+            constraints=["node", "cluster"],
+            title=_l("Kubernetes node"),
+            short_title=_l("Node"),
+        )

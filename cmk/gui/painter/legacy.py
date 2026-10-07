@@ -5,7 +5,7 @@
 
 import abc
 from collections.abc import Sequence
-from typing import override
+from functools import partial
 
 from cmk.gui.config import Config
 from cmk.gui.http import Request
@@ -27,6 +27,7 @@ from cmk.web.utils.html import HTML
 
 from .base import (
     Cell,
+    GroupValue,
     InternalPainter,
     painter_context,
     PainterContext,
@@ -239,99 +240,113 @@ class Painter(abc.ABC):
         return self._compute_data(row, cell, user)
 
 
-class LegacyPainterAdapter(InternalPainter):
-    def __init__(self, legacy: type[Painter]) -> None:
-        self._legacy = legacy
-        painter = self._context_free_painter()
-        super().__init__(
-            ident=painter.ident,
-            title=painter.ident,
-            sorter=painter.sorter,
-            printable=painter.printable,
-            painter_options=painter.painter_options,
-            load_inv=painter.load_inv,
-            use_painter_link=painter.use_painter_link,
-            title_classes=painter.title_classes(),
-        )
+def _legacy_painter(legacy: type[Painter], context: PainterContext) -> Painter:
+    return legacy(
+        config=context.config,
+        request=context.request,
+        painter_options=context.painter_options,
+        theme=context.theme,
+        url_renderer=context.url_renderer,
+        user_permissions=context.user_permissions,
+    )
 
-    def _painter(self, context: PainterContext) -> Painter:
-        return self._legacy(
-            config=context.config,
-            request=context.request,
-            painter_options=context.painter_options,
-            theme=context.theme,
-            url_renderer=context.url_renderer,
-            user_permissions=context.user_permissions,
-        )
 
-    def _context_free_painter(self) -> Painter:
-        return self._painter(painter_context(UserPermissions({}, {}, {}, [])))
+def _context_free_legacy_painter(legacy: type[Painter]) -> Painter:
+    return _legacy_painter(legacy, painter_context(UserPermissions({}, {}, {}, [])))
 
-    @override
-    def uuid_col(self, cell: Cell) -> str:
-        return self._legacy.uuid_col(cell)
 
-    @override
-    def title(self, cell: Cell, context: PainterContext) -> str:
-        return self._painter(context).title(cell)
+def _legacy_title(legacy: type[Painter], cell: Cell, context: PainterContext) -> str:
+    return _legacy_painter(legacy, context).title(cell)
 
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return self._context_free_painter().columns
 
-    @override
-    def dynamic_columns(self, cell: Cell) -> list[ColumnName]:
-        return self._painter(cell.painter_context()).dynamic_columns(cell)
+def _legacy_short_title(legacy: type[Painter], cell: Cell, context: PainterContext) -> str:
+    return _legacy_painter(legacy, context).short_title(cell)
 
-    @override
-    def derive(self, rows: Rows, cell: Cell, dynamic_columns: Sequence[ColumnName]) -> None:
-        self._painter(cell.painter_context()).derive(rows, cell, dynamic_columns)
 
-    @override
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        return self._painter(context).short_title(cell)
+def _legacy_list_title(legacy: type[Painter], cell: Cell, context: PainterContext) -> str:
+    return _legacy_painter(legacy, context).list_title(cell)
 
-    @override
-    def tooltip_title(self, cell: Cell, context: PainterContext) -> str:
-        return self._painter(context).tooltip_title(cell)
 
-    @override
-    def export_title(self, cell: Cell) -> str:
-        return self._painter(cell.painter_context()).export_title(cell)
+def _legacy_tooltip_title(legacy: type[Painter], cell: Cell, context: PainterContext) -> str:
+    return _legacy_painter(legacy, context).tooltip_title(cell)
 
-    @override
-    def list_title(self, cell: Cell, context: PainterContext) -> str:
-        return self._painter(context).list_title(cell)
 
-    @override
-    def group_by(
-        self, row: Row, cell: Cell, context: PainterContext
-    ) -> None | str | tuple[str, ...] | tuple[tuple[str, str], ...]:
-        return self._painter(context).group_by(row, cell)
+def _legacy_export_title(legacy: type[Painter], cell: Cell) -> str:
+    return _legacy_painter(legacy, cell.painter_context()).export_title(cell)
 
-    @override
-    def parameters(self, context: PainterContext) -> ValueSpec[object] | None:
-        return self._painter(context).parameters
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return self._painter(context).render(row, cell, user)
+def _legacy_columns(legacy: type[Painter]) -> Sequence[ColumnName]:
+    return _context_free_legacy_painter(legacy).columns
 
-    @override
-    def export_for_python(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> object:
-        return self._painter(context).export_for_python(row, cell, user)
 
-    @override
-    def export_for_csv(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> str | HTML:
-        return self._painter(context).export_for_csv(row, cell, user)
+def _legacy_dynamic_columns(legacy: type[Painter], cell: Cell) -> list[ColumnName]:
+    return _legacy_painter(legacy, cell.painter_context()).dynamic_columns(cell)
 
-    @override
-    def export_for_json(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> object:
-        return self._painter(context).export_for_json(row, cell, user)
+
+def _legacy_derive(
+    legacy: type[Painter], rows: Rows, cell: Cell, dynamic_columns: Sequence[ColumnName]
+) -> None:
+    _legacy_painter(legacy, cell.painter_context()).derive(rows, cell, dynamic_columns)
+
+
+def _legacy_group_by(
+    legacy: type[Painter], row: Row, cell: Cell, context: PainterContext
+) -> GroupValue:
+    return _legacy_painter(legacy, context).group_by(row, cell)
+
+
+def _legacy_parameters(legacy: type[Painter], context: PainterContext) -> ValueSpec[object] | None:
+    return _legacy_painter(legacy, context).parameters
+
+
+def _legacy_render(
+    legacy: type[Painter], row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return _legacy_painter(legacy, context).render(row, cell, user)
+
+
+def _legacy_export_for_python(
+    legacy: type[Painter], row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> object:
+    return _legacy_painter(legacy, context).export_for_python(row, cell, user)
+
+
+def _legacy_export_for_csv(
+    legacy: type[Painter], row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> str | HTML:
+    return _legacy_painter(legacy, context).export_for_csv(row, cell, user)
+
+
+def _legacy_export_for_json(
+    legacy: type[Painter], row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> object:
+    return _legacy_painter(legacy, context).export_for_json(row, cell, user)
+
+
+def internal_painter_from_legacy(legacy: type[Painter]) -> InternalPainter:
+    painter = _context_free_legacy_painter(legacy)
+    return InternalPainter(
+        ident=painter.ident,
+        title=painter.ident,
+        render=partial(_legacy_render, legacy),
+        cell_title=partial(_legacy_title, legacy),
+        cell_short_title=partial(_legacy_short_title, legacy),
+        cell_list_title=partial(_legacy_list_title, legacy),
+        cell_tooltip_title=partial(_legacy_tooltip_title, legacy),
+        export_title=partial(_legacy_export_title, legacy),
+        columns=partial(_legacy_columns, legacy),
+        dynamic_columns=partial(_legacy_dynamic_columns, legacy),
+        derive=partial(_legacy_derive, legacy),
+        group_by=partial(_legacy_group_by, legacy),
+        parameters=partial(_legacy_parameters, legacy),
+        uuid_col=legacy.uuid_col,
+        export_for_python=partial(_legacy_export_for_python, legacy),
+        export_for_csv=partial(_legacy_export_for_csv, legacy),
+        export_for_json=partial(_legacy_export_for_json, legacy),
+        sorter=painter.sorter,
+        printable=painter.printable,
+        painter_options=painter.painter_options,
+        load_inv=painter.load_inv,
+        use_painter_link=painter.use_painter_link,
+        title_classes=painter.title_classes(),
+    )

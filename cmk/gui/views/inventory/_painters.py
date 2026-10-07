@@ -7,7 +7,6 @@
 import time
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import override
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -101,64 +100,83 @@ class PainterOptionShowInternalTreePaths(PainterOption):
         )
 
 
+def _compute_data_inventory_tree(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> ImmutableTree:
+    try:
+        _validate_inventory_tree_uniqueness(row)
+    except MultipleInventoryTreesError:
+        return ImmutableTree()
+
+    return _get_inventory_tree(row)
+
+
+def _render_inventory_tree(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    if not (tree := _compute_data_inventory_tree(row, cell, user, context)):
+        return "", ""
+
+    tree_renderer = TreeRenderer(
+        site_id=row["site"],
+        host_name=row["host_name"],
+        hints=inv_display_hints,
+        theme=theme,
+        request=context.request,
+        show_internal_tree_paths=context.painter_options.get("show_internal_tree_paths"),
+    )
+
+    with output_funnel.plugged():
+        tree_renderer.show(time.time(), tree)
+        code = HTML.without_escaping(output_funnel.drain())
+
+    return "invtree", code
+
+
+def _export_for_python_inventory_tree(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> SDRawTree:
+    return serialize_tree(_compute_data_inventory_tree(row, cell, user, context))
+
+
+def _export_for_csv_inventory_tree(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str | HTML:
+    raise CSVExportError
+
+
+def _export_for_json_inventory_tree(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> SDRawTree:
+    return serialize_tree(_compute_data_inventory_tree(row, cell, user, context))
+
+
 class PainterInventoryTree(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="inventory_tree",
             title=_l("Inventory tree"),
+            render=_render_inventory_tree,
             columns=["host_inventory", "host_structured_status"],
+            compute_data=_compute_data_inventory_tree,
+            export_for_python=_export_for_python_inventory_tree,
+            export_for_csv=_export_for_csv_inventory_tree,
+            export_for_json=_export_for_json_inventory_tree,
             painter_options=["show_internal_tree_paths"],
             load_inv=True,
         )
 
-    @override
-    def _compute_data(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> ImmutableTree:
-        try:
-            _validate_inventory_tree_uniqueness(row)
-        except MultipleInventoryTreesError:
-            return ImmutableTree()
 
-        return _get_inventory_tree(row)
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        if not (tree := self._compute_data(row, cell, user, context)):
-            return "", ""
-
-        tree_renderer = TreeRenderer(
-            site_id=row["site"],
-            host_name=row["host_name"],
-            hints=inv_display_hints,
-            theme=theme,
-            request=context.request,
-            show_internal_tree_paths=context.painter_options.get("show_internal_tree_paths"),
-        )
-
-        with output_funnel.plugged():
-            tree_renderer.show(time.time(), tree)
-            code = HTML.without_escaping(output_funnel.drain())
-
-        return "invtree", code
-
-    @override
-    def export_for_python(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> SDRawTree:
-        return serialize_tree(self._compute_data(row, cell, user, context))
-
-    @override
-    def export_for_csv(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> str | HTML:
-        raise CSVExportError
-
-    @override
-    def export_for_json(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> SDRawTree:
-        return serialize_tree(self._compute_data(row, cell, user, context))
+def _render_invhist_time(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_age(
+        row["invhist_time"],
+        True,
+        60 * 10,
+        request=context.request,
+        painter_options=context.painter_options,
+    )
 
 
 class PainterInvhistTime(InternalPainter):
@@ -166,20 +184,62 @@ class PainterInvhistTime(InternalPainter):
         super().__init__(
             ident="invhist_time",
             title=_l("Inventory date/time"),
+            render=_render_invhist_time,
             short_title=_l("Date/time"),
             columns=["invhist_time"],
             painter_options=["ts_format", "ts_date"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_age(
-            row["invhist_time"],
-            True,
-            60 * 10,
-            request=context.request,
-            painter_options=context.painter_options,
-        )
+
+def _compute_data_invhist_delta(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> ImmutableDeltaTree:
+    try:
+        _validate_inventory_tree_uniqueness(row)
+    except MultipleInventoryTreesError:
+        return ImmutableDeltaTree()
+
+    return _get_delta_tree(row)
+
+
+def _render_invhist_delta(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    if not (tree := _compute_data_invhist_delta(row, cell, user, context)):
+        return "", ""
+
+    tree_renderer = TreeRenderer(
+        site_id=row["site"],
+        host_name=row["host_name"],
+        hints=inv_display_hints,
+        theme=theme,
+        request=context.request,
+        show_internal_tree_paths=context.painter_options.get("show_internal_tree_paths"),
+    )
+
+    with output_funnel.plugged():
+        tree_renderer.show(time.time(), tree, str(row["invhist_time"]))
+        code = HTML.without_escaping(output_funnel.drain())
+
+    return "invtree", code
+
+
+def _export_for_python_invhist_delta(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> SDRawDeltaTree:
+    return serialize_delta_tree(_compute_data_invhist_delta(row, cell, user, context))
+
+
+def _export_for_csv_invhist_delta(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str | HTML:
+    raise CSVExportError
+
+
+def _export_for_json_invhist_delta(
+    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+) -> SDRawDeltaTree:
+    return serialize_delta_tree(_compute_data_invhist_delta(row, cell, user, context))
 
 
 class PainterInvhistDelta(InternalPainter):
@@ -187,58 +247,14 @@ class PainterInvhistDelta(InternalPainter):
         super().__init__(
             ident="invhist_delta",
             title=_l("Inventory changes"),
+            render=_render_invhist_delta,
             columns=["invhist_delta", "invhist_time"],
+            compute_data=_compute_data_invhist_delta,
+            export_for_python=_export_for_python_invhist_delta,
+            export_for_csv=_export_for_csv_invhist_delta,
+            export_for_json=_export_for_json_invhist_delta,
             painter_options=["show_internal_tree_paths"],
         )
-
-    @override
-    def _compute_data(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> ImmutableDeltaTree:
-        try:
-            _validate_inventory_tree_uniqueness(row)
-        except MultipleInventoryTreesError:
-            return ImmutableDeltaTree()
-
-        return _get_delta_tree(row)
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        if not (tree := self._compute_data(row, cell, user, context)):
-            return "", ""
-
-        tree_renderer = TreeRenderer(
-            site_id=row["site"],
-            host_name=row["host_name"],
-            hints=inv_display_hints,
-            theme=theme,
-            request=context.request,
-            show_internal_tree_paths=context.painter_options.get("show_internal_tree_paths"),
-        )
-
-        with output_funnel.plugged():
-            tree_renderer.show(time.time(), tree, str(row["invhist_time"]))
-            code = HTML.without_escaping(output_funnel.drain())
-
-        return "invtree", code
-
-    @override
-    def export_for_python(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> SDRawDeltaTree:
-        return serialize_delta_tree(self._compute_data(row, cell, user, context))
-
-    @override
-    def export_for_csv(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> str | HTML:
-        raise CSVExportError
-
-    @override
-    def export_for_json(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-    ) -> SDRawDeltaTree:
-        return serialize_delta_tree(self._compute_data(row, cell, user, context))
 
 
 def _paint_invhist_count(row: Row, what: str) -> CellSpec:
@@ -248,18 +264,27 @@ def _paint_invhist_count(row: Row, what: str) -> CellSpec:
     return "narrow number unused", "0"
 
 
+def _render_invhist_removed(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return _paint_invhist_count(row, "removed")
+
+
 class PainterInvhistRemoved(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="invhist_removed",
             title=_l("Removed entries"),
+            render=_render_invhist_removed,
             short_title=_l("Removed"),
             columns=["invhist_removed"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_invhist_count(row, "removed")
+
+def _render_invhist_new(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return _paint_invhist_count(row, "new")
 
 
 class PainterInvhistNew(InternalPainter):
@@ -267,13 +292,16 @@ class PainterInvhistNew(InternalPainter):
         super().__init__(
             ident="invhist_new",
             title=_l("New entries"),
+            render=_render_invhist_new,
             short_title=_l("New"),
             columns=["invhist_new"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_invhist_count(row, "new")
+
+def _render_invhist_changed(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return _paint_invhist_count(row, "changed")
 
 
 class PainterInvhistChanged(InternalPainter):
@@ -281,13 +309,10 @@ class PainterInvhistChanged(InternalPainter):
         super().__init__(
             ident="invhist_changed",
             title=_l("Changed entries"),
+            render=_render_invhist_changed,
             short_title=_l("Changed"),
             columns=["invhist_changed"],
         )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return _paint_invhist_count(row, "changed")
 
 
 @dataclass(frozen=True, kw_only=True)

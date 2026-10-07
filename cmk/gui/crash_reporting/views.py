@@ -200,23 +200,35 @@ class CrashReportsRowTable(RowTableLivestatus):
         return (dict(zip(columns, r)) for r in rows)
 
 
+def _render_crash_ident(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    url = makeuri_contextless(
+        context.request,
+        [
+            ("crash_id", row["crash_id"]),
+            ("site", row["site"]),
+        ],
+        filename="crash.py",
+    )
+    return None, HTMLWriter.render_a(row["crash_id"], href=url)
+
+
 class PainterCrashIdent(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
-            ident="crash_ident", title=_l("Crash ident"), short_title=_l("ID"), columns=["crash_id"]
+            ident="crash_ident",
+            title=_l("Crash ident"),
+            render=_render_crash_ident,
+            short_title=_l("ID"),
+            columns=["crash_id"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        url = makeuri_contextless(
-            context.request,
-            [
-                ("crash_id", row["crash_id"]),
-                ("site", row["site"]),
-            ],
-            filename="crash.py",
-        )
-        return None, HTMLWriter.render_a(row["crash_id"], href=url)
+
+def _render_crash_type(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return None, row["crash_type"]
 
 
 class PainterCrashType(InternalPainter):
@@ -224,13 +236,23 @@ class PainterCrashType(InternalPainter):
         super().__init__(
             ident="crash_type",
             title=_l("Crash type"),
+            render=_render_crash_type,
             short_title=_l("Type"),
             columns=["crash_type"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return None, row["crash_type"]
+
+def _render_crash_source(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (
+        None,
+        (
+            _("Extension")
+            if local_files_involved_in_crash(row["crash_exc_traceback"])
+            else _("Built-in")
+        ),
+    )
 
 
 class PainterCrashSource(InternalPainter):
@@ -238,20 +260,22 @@ class PainterCrashSource(InternalPainter):
         super().__init__(
             ident="crash_source",
             title=_l("Crash source"),
+            render=_render_crash_source,
             short_title=_l("Source"),
             columns=["crash_exc_traceback"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return (
-            None,
-            (
-                _("Extension")
-                if local_files_involved_in_crash(row["crash_exc_traceback"])
-                else _("Built-in")
-            ),
-        )
+
+def _render_crash_time(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_age(
+        row["crash_time"],
+        has_been_checked=True,
+        bold_if_younger_than=3600,
+        request=context.request,
+        painter_options=context.painter_options,
+    )
 
 
 class PainterCrashTime(InternalPainter):
@@ -259,20 +283,17 @@ class PainterCrashTime(InternalPainter):
         super().__init__(
             ident="crash_time",
             title=_l("Crash time"),
+            render=_render_crash_time,
             short_title=_l("Time"),
             columns=["crash_time"],
             painter_options=["ts_format", "ts_date"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_age(
-            row["crash_time"],
-            has_been_checked=True,
-            bold_if_younger_than=3600,
-            request=context.request,
-            painter_options=context.painter_options,
-        )
+
+def _render_crash_version(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return None, row["crash_version"]
 
 
 class PainterCrashVersion(InternalPainter):
@@ -280,13 +301,24 @@ class PainterCrashVersion(InternalPainter):
         super().__init__(
             ident="crash_version",
             title=_l("Crash Checkmk version"),
+            render=_render_crash_version,
             short_title=_l("Version"),
             columns=["crash_version"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return None, row["crash_version"]
+
+def _summarize_exception(exc_type: str, exc_value: str) -> str:
+    plain_value = escaping.strip_tags(exc_value)
+    first_line = next((line.strip() for line in plain_value.splitlines() if line.strip()), "")
+    return f"{exc_type}: {first_line}"
+
+
+def _render_crash_exception(
+    row: Row, _cell: Cell, user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    if not user.may("general.see_crash_reports"):
+        return None, _("Insufficient permissions to view exception details.")
+    return None, _summarize_exception(row["crash_exc_type"], row["crash_exc_value"])
 
 
 class PainterCrashException(InternalPainter):
@@ -294,21 +326,10 @@ class PainterCrashException(InternalPainter):
         super().__init__(
             ident="crash_exception",
             title=_l("Crash exception"),
+            render=_render_crash_exception,
             short_title=_l("Exc."),
             columns=["crash_exc_type", "crash_exc_value"],
         )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        if not user.may("general.see_crash_reports"):
-            return None, _("Insufficient permissions to view exception details.")
-        return None, self.summarize(row["crash_exc_type"], row["crash_exc_value"])
-
-    @staticmethod
-    def summarize(exc_type: str, exc_value: str) -> str:
-        plain_value = escaping.strip_tags(exc_value)
-        first_line = next((line.strip() for line in plain_value.splitlines() if line.strip()), "")
-        return f"{exc_type}: {first_line}"
 
 
 def _sort_crash_time(
@@ -388,30 +409,39 @@ CommandDeleteCrashReports = Command(
 )
 
 
+def _render_crash_host(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    if not row.get("crash_host"):
+        return None, ""
+
+    url = makeuri_contextless(
+        context.request,
+        [
+            ("host", row["crash_host"]),
+            ("site", row["site"]),
+            ("view_name", "host"),
+        ],
+        filename="view.py",
+    )
+    return None, HTMLWriter.render_a(row["crash_host"], href=url)
+
+
 class PainterCrashHost(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="crash_host",
             title=_l("Crash host"),
+            render=_render_crash_host,
             short_title=_l("Host"),
             columns=["crash_host"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        if not row.get("crash_host"):
-            return None, ""
 
-        url = makeuri_contextless(
-            context.request,
-            [
-                ("host", row["crash_host"]),
-                ("site", row["site"]),
-                ("view_name", "host"),
-            ],
-            filename="view.py",
-        )
-        return None, HTMLWriter.render_a(row["crash_host"], href=url)
+def _render_crash_item(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return None, row.get("crash_item", "")
 
 
 class PainterCrashItem(InternalPainter):
@@ -419,13 +449,16 @@ class PainterCrashItem(InternalPainter):
         super().__init__(
             ident="crash_item",
             title=_l("Crash service item"),
+            render=_render_crash_item,
             short_title=_l("Item"),
             columns=["crash_item"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return None, row.get("crash_item", "")
+
+def _render_crash_check_type(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return None, row.get("crash_check_type", "")
 
 
 class PainterCrashCheckType(InternalPainter):
@@ -433,13 +466,29 @@ class PainterCrashCheckType(InternalPainter):
         super().__init__(
             ident="crash_check_type",
             title=_l("Crash check type"),
+            render=_render_crash_check_type,
             short_title=_l("Check"),
             columns=["crash_check_type"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return None, row.get("crash_check_type", "")
+
+def _render_crash_service_name(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    if not row.get("crash_service_name"):
+        return None, ""
+
+    url = makeuri_contextless(
+        context.request,
+        [
+            ("host", row["crash_host"]),
+            ("site", row["site"]),
+            ("view_name", "service"),
+            ("service", row["crash_service_name"]),
+        ],
+        filename="view.py",
+    )
+    return None, HTMLWriter.render_a(row["crash_service_name"], href=url)
 
 
 class PainterCrashServiceName(InternalPainter):
@@ -447,26 +496,10 @@ class PainterCrashServiceName(InternalPainter):
         super().__init__(
             ident="crash_service_name",
             title=_l("Crash service name"),
+            render=_render_crash_service_name,
             short_title=_l("Service"),
             columns=["crash_service_name"],
         )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        if not row.get("crash_service_name"):
-            return None, ""
-
-        url = makeuri_contextless(
-            context.request,
-            [
-                ("host", row["crash_host"]),
-                ("site", row["site"]),
-                ("view_name", "service"),
-                ("service", row["crash_service_name"]),
-            ],
-            filename="view.py",
-        )
-        return None, HTMLWriter.render_a(row["crash_service_name"], href=url)
 
 
 def _sort_crash_host(

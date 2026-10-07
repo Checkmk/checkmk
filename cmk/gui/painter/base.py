@@ -8,7 +8,6 @@
 # mypy: disable-error-code="type-arg"
 
 
-import abc
 import os
 import re
 import traceback
@@ -87,31 +86,37 @@ def painter_context(user_permissions: UserPermissions) -> PainterContext:
     )
 
 
-# TODO: Return value of render() could be cleaned up e.g. to a named tuple with an
-# optional CSS class. A lot of painters don't specify CSS classes.
-# TODO: Since we have the reporting also working with the painters it could be useful
-# to make the render function return structured data which can then be rendered for
-# HTML and PDF.
-# TODO: A lot of painter classes simply display plain livestatus column values. These
-# could be replaced with some simpler generic definition.
-class InternalPainter(abc.ABC):
-    """A painter computes HTML code based on information from a data row and
-    creates a CSS class for one display column.
+type RowFunction[T] = Callable[[Row, Cell, LoggedInUser, PainterContext], T]
+type CellTitle = Callable[[Cell, PainterContext], str]
+type GroupValue = None | str | tuple[str, ...] | tuple[tuple[str, str], ...]
 
-    Please note, that there is no
-    1:1 relation between data columns and display columns. A painter can
-    make use of more than one data columns. One example is the current
-    service state. It uses the columns "service_state" and "has_been_checked".
-    """
 
+class InternalPainter:
     def __init__(
         self,
         *,
         ident: str | LazyText,
         title: str | LazyString | LazyText,
+        render: RowFunction[CellSpec],
         short_title: str | LazyString | LazyText | None = None,
         list_title: str | LazyString | LazyText | None = None,
-        columns: Sequence[ColumnName] = (),
+        cell_title: CellTitle | None = None,
+        cell_short_title: CellTitle | None = None,
+        cell_list_title: CellTitle | None = None,
+        tooltip_title: str | LazyString | LazyText | None = None,
+        cell_tooltip_title: CellTitle | None = None,
+        export_title: Callable[[Cell], str] | None = None,
+        columns: Sequence[ColumnName] | Callable[[], Sequence[ColumnName]] = (),
+        dynamic_columns: Callable[[Cell], list[ColumnName]] | None = None,
+        derive: Callable[[Rows, Cell, Sequence[ColumnName]], None] | None = None,
+        group_by: Callable[[Row, Cell, PainterContext], GroupValue] | None = None,
+        groupable: bool = True,
+        parameters: (ValueSpec | Callable[[PainterContext], ValueSpec | None] | None) = None,
+        uuid_col: Callable[[Cell], str] | None = None,
+        compute_data: RowFunction[object] | None = None,
+        export_for_python: RowFunction[object] | None = None,
+        export_for_csv: RowFunction[str | HTML] | None = None,
+        export_for_json: RowFunction[object] | None = None,
         sorter: SorterName | None = None,
         printable: bool | str = True,
         painter_options: Sequence[str] = (),
@@ -121,9 +126,26 @@ class InternalPainter(abc.ABC):
     ) -> None:
         self._ident = ident
         self._title = title
+        self._render = render
         self._short_title = short_title
         self._list_title = list_title
+        self._cell_title = cell_title
+        self._cell_short_title = cell_short_title
+        self._cell_list_title = cell_list_title
+        self._tooltip_title = tooltip_title
+        self._cell_tooltip_title = cell_tooltip_title
+        self._export_title = export_title
         self._columns = columns
+        self._dynamic_columns = dynamic_columns
+        self._derive = derive
+        self._group_by = group_by
+        self._groupable = groupable
+        self._parameters = parameters
+        self._uuid_col = uuid_col
+        self._compute_data_function = compute_data
+        self._export_for_python = export_for_python
+        self._export_for_csv = export_for_csv
+        self._export_for_json = export_for_json
         self._sorter = sorter
         self._printable = printable
         self._painter_options = painter_options
@@ -131,82 +153,75 @@ class InternalPainter(abc.ABC):
         self._use_painter_link = use_painter_link
         self._title_classes = title_classes
 
-    def uuid_col(self, cell: Cell) -> str:  # noqa: ARG002
-        return ""
-
     @property
     def ident(self) -> str:
         return str(self._ident)
 
-    def title(self, cell: Cell, context: PainterContext) -> str:  # noqa: ARG002
-        return str(self._title)
+    def title(self, cell: Cell, context: PainterContext) -> str:
+        if self._cell_title is None:
+            return str(self._title)
+        return self._cell_title(cell, context)
+
+    def short_title(self, cell: Cell, context: PainterContext) -> str:
+        if self._cell_short_title is not None:
+            return self._cell_short_title(cell, context)
+        if self._short_title is None:
+            return self.title(cell, context)
+        return str(self._short_title)
+
+    def list_title(self, cell: Cell, context: PainterContext) -> str:
+        if self._cell_list_title is not None:
+            return self._cell_list_title(cell, context)
+        if self._list_title is None:
+            return self.title(cell, context)
+        return str(self._list_title)
+
+    def tooltip_title(self, cell: Cell, context: PainterContext) -> str:
+        if self._cell_tooltip_title is not None:
+            return self._cell_tooltip_title(cell, context)
+        if self._tooltip_title is None:
+            return self.title(cell, context)
+        return str(self._tooltip_title)
+
+    def export_title(self, cell: Cell) -> str:
+        if self._export_title is None:
+            return self.ident
+        return self._export_title(cell)
 
     def title_classes(self) -> Sequence[str]:
         return self._title_classes
 
     @property
     def columns(self) -> Sequence[ColumnName]:
-        return self._columns
+        if isinstance(self._columns, Sequence):
+            return self._columns
+        return self._columns()
 
-    def dynamic_columns(self, cell: Cell) -> list[ColumnName]:  # noqa: ARG002
-        """Return list of dynamically generated column as specified by Cell
+    def dynamic_columns(self, cell: Cell) -> list[ColumnName]:
+        if self._dynamic_columns is None:
+            return []
+        return self._dynamic_columns(cell)
 
-        Some columns for the Livestatus query need to be generated at
-        execution time, knowing user configuration. Using the Cell object
-        generated the required column names."""
-        return []
+    def derive(self, rows: Rows, cell: Cell, dynamic_columns: Sequence[ColumnName]) -> None:
+        if self._derive is not None:
+            self._derive(rows, cell, dynamic_columns)
 
-    def derive(self, rows: Rows, cell: Cell, dynamic_columns: Sequence[ColumnName]) -> None:  # noqa: ARG002
-        """Post process query according to cell
+    def group_by(self, row: Row, cell: Cell, context: PainterContext) -> GroupValue:
+        if not self._groupable:
+            return ("",)
+        if self._group_by is None:
+            return None
+        return self._group_by(row, cell, context)
 
-        This function processes data immediately after it is handled back
-        from the Livestatus Datasource. It gets access to the entire
-        returned table and sequentially to each of the cells configured.
+    def parameters(self, context: PainterContext) -> ValueSpec | None:
+        if self._parameters is None or isinstance(self._parameters, ValueSpec):
+            return self._parameters
+        return self._parameters(context)
 
-        rows: List of Dictionaries
-             Data table of the returning query. Every element is a
-             dictionary which keys are the column names. Derive function
-             should mutate in place each row. When processing data or
-             generating new columns.
-        cell: Cell
-            Used to retrieve configuration parameters
-        dynamic_columns: Sequence[ColumnName]
-            The exact dynamic columns generated by the painter before the
-            query. As they might be required to find them again within the
-            data."""
-        return
-
-    def short_title(self, cell: Cell, context: PainterContext) -> str:
-        if self._short_title is None:
-            return self.title(cell, context)
-        return str(self._short_title)
-
-    def tooltip_title(self, cell: Cell, context: PainterContext) -> str:
-        """Used as string for the painter title in table header tooltips
-        Falls back to the full title if no tooltip title is given"""
-        return self.title(cell, context)
-
-    def export_title(self, cell: Cell) -> str:  # noqa: ARG002
-        """Used for exporting views in JSON/CSV/python format"""
-        return self.ident
-
-    def list_title(self, cell: Cell, context: PainterContext) -> str:
-        if self._list_title is None:
-            return self.title(cell, context)
-        return str(self._list_title)
-
-    def group_by(
-        self,
-        row: Row,  # noqa: ARG002
-        cell: Cell,  # noqa: ARG002
-        context: PainterContext,  # noqa: ARG002
-    ) -> None | str | tuple[str, ...] | tuple[tuple[str, str], ...]:
-        """When a value is returned, this is used instead of the value produced by self.paint()"""
-        return None
-
-    def parameters(self, context: PainterContext) -> ValueSpec | None:  # noqa: ARG002
-        """Returns either the valuespec of the painter parameters or None"""
-        return None
+    def uuid_col(self, cell: Cell) -> str:
+        if self._uuid_col is None:
+            return ""
+        return self._uuid_col(cell)
 
     @property
     def painter_options(self) -> Sequence[str]:
@@ -214,11 +229,6 @@ class InternalPainter(abc.ABC):
 
     @property
     def printable(self) -> bool | str:
-        """
-        True       : Is printable in PDF
-        False      : Is not printable at all
-        "<string>" : ID of a painter_printer (Reporting module)
-        """
         return self._printable
 
     @property
@@ -229,62 +239,32 @@ class InternalPainter(abc.ABC):
     def sorter(self) -> SorterName | None:
         return self._sorter
 
-    # TODO: Cleanup this hack
     @property
     def load_inv(self) -> bool:
         return self._load_inv
 
-    # TODO At the moment we use render as fallback but in the future every
-    # painter should implement explicit
-    #   - _compute_data
-    #   - render
-    #   - export methods
-    # As soon as this is done all four methods will be abstract.
-
-    # See first implementations: PainterInventoryTree, PainterHostLabels, ...
-
-    # TODO For PDF we implement an additional method.
+    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
+        return self._render(row, cell, user, context)
 
     def _compute_data(
         self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
     ) -> object:
-        return self.render(row, cell, user, context)[1]
-
-    @abc.abstractmethod
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        """Renders the painter for the given row
-        The paint function gets one argument: A data row, which is a python
-        dictionary representing one data object (host, service, ...). Its
-        keys are the column names, its values the actual values from livestatus
-        (typed: numbers are float or int, not string)
-
-        The paint function must return a pair of two strings:
-            - A CSS class for the TD of the column and
-            - a Text string or HTML code for painting the column
-
-        That class is optional and set to "" in most cases. Currently CSS
-        styles are not modular and all defined in check_mk.css. This will
-        change in future."""
-        raise NotImplementedError
+        if self._compute_data_function is None:
+            return self.render(row, cell, user, context)[1]
+        return self._compute_data_function(row, cell, user, context)
 
     def export_for_python(
         self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
     ) -> object:
-        """Render the content of the painter for Pyton export based on the given row.
-
-        If the data of a painter can not be exported as Python, then this method
-        raises a 'PythonExportError'.
-        """
-        return self._compute_data(row, cell, user, context)
+        if self._export_for_python is None:
+            return self._compute_data(row, cell, user, context)
+        return self._export_for_python(row, cell, user, context)
 
     def export_for_csv(
         self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
     ) -> str | HTML:
-        """Render the content of the painter for CSV export based on the given row.
-
-        If the data of a painter can not be exported as CSV (like trees), then this method
-        raises a 'CSVExportError'.
-        """
+        if self._export_for_csv is not None:
+            return self._export_for_csv(row, cell, user, context)
         if isinstance(data := self._compute_data(row, cell, user, context), str | HTML):
             return data
         raise ValueError("Data must be of type 'str' or 'HTML' but is %r" % type(data))
@@ -292,12 +272,9 @@ class InternalPainter(abc.ABC):
     def export_for_json(
         self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
     ) -> object:
-        """Render the content of the painter for JSON export based on the given row.
-
-        If the data of a painter can not be exported as JSON, then this method
-        raises a 'JSONExportError'.
-        """
-        return self._compute_data(row, cell, user, context)
+        if self._export_for_json is None:
+            return self._compute_data(row, cell, user, context)
+        return self._export_for_json(row, cell, user, context)
 
 
 # .

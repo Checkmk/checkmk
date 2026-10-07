@@ -25,7 +25,7 @@ from cmk.gui.log import logger
 from cmk.gui.painter.helpers import get_perfdata_nth_value, get_tag_groups
 from cmk.gui.painter.painters import (
     _get_docker_container_status_outputs,
-    AbstractColumnSpecificMetric,
+    metric_choices,
 )
 from cmk.gui.type_defs import ColumnSpec, Row
 from cmk.gui.utils.misc import savefloat
@@ -671,7 +671,7 @@ def _sort_specific_metric_parameter_valuespec(
                 "metric",
                 DropdownChoice(
                     title=_("Metric"),
-                    choices=AbstractColumnSpecificMetric.metric_choices(),
+                    choices=metric_choices(),
                 ),
             ),
         ],

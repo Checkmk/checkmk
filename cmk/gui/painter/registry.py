@@ -6,14 +6,18 @@
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Callable, Sequence
+from functools import partial
 from typing import Any, overload, override, TypeIs
 
 from cmk.ccc.plugin_registry import Registry
+from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.type_defs import Row
+from cmk.gui.view_utils import CellSpec
 from cmk.ruleset_matcher.tags import TagGroup
 
-from .base import InternalPainter
+from .base import Cell, InternalPainter, PainterContext
 from .host_tag_painters import HashableTagGroups, host_tag_config_based_painters
-from .legacy import LegacyPainterAdapter, Painter
+from .legacy import internal_painter_from_legacy, Painter
 
 
 def _is_legacy_painter(
@@ -45,7 +49,7 @@ class PainterRegistry(Registry[InternalPainter]):
         if isinstance(instance, InternalPainter):
             return super().register(instance)
         if _is_legacy_painter(instance):
-            super().register(LegacyPainterAdapter(instance))
+            super().register(internal_painter_from_legacy(instance))
             return instance
         super().register(instance())
         return instance
@@ -60,45 +64,48 @@ def all_painters(tag_groups: Sequence[TagGroup]) -> dict[str, InternalPainter]:
     )
 
 
+def _render_plugin_painter(
+    spec: dict[str, Any], row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    cell_spec: CellSpec = spec["paint"](row)
+    return cell_spec
+
+
+def _export_plugin_painter(
+    spec: dict[str, Any],
+    key: str,
+    row: Row,
+    cell: Cell,
+    _user: LoggedInUser,
+    _context: PainterContext,
+) -> Any:
+    return spec[key](row, cell) if key in spec else spec["paint"](row)[1]
+
+
+def _group_by_plugin_painter(
+    spec: dict[str, Any], _row: Row, _cell: Cell, _context: PainterContext
+) -> Any:
+    return spec.get("groupby")
+
+
 # Kept for pre 1.6 compatibility.
 def register_painter(ident: str, spec: dict[str, Any]) -> None:
-    paint_function = spec["paint"]
-    cls = type(
-        "LegacyPainter%s" % ident.title(),
-        (InternalPainter,),
-        {
-            "_spec": spec,
-            "short_title": lambda s, cell, context: s._spec.get("short", s.title),  # noqa: ARG005, SLF001
-            "tooltip_title": lambda s, cell, context: s._spec.get("tooltip_title", s.title),  # noqa: ARG005, SLF001
-            "columns": property(lambda s: s._spec["columns"]),  # noqa: SLF001
-            "render": lambda self, row, cell, user, context: paint_function(row),  # noqa: ARG005
-            "export_for_python": (
-                lambda self, row, cell, user, context: (  # noqa: ARG005
-                    spec["export_for_python"](row, cell)
-                    if "export_for_python" in spec
-                    else paint_function(row)[1]
-                )
-            ),
-            "export_for_csv": (
-                lambda self, row, cell, user, context: (  # noqa: ARG005
-                    spec["export_for_csv"](row, cell)
-                    if "export_for_csv" in spec
-                    else paint_function(row)[1]
-                )
-            ),
-            "export_for_json": (
-                lambda self, row, cell, user, context: (  # noqa: ARG005
-                    spec["export_for_json"](row, cell)
-                    if "export_for_json" in spec
-                    else paint_function(row)[1]
-                )
-            ),
-            "group_by": lambda self, row, cell, context: self._spec.get("groupby"),  # noqa: ARG005
-            "parameters": lambda s, context: s._spec.get("params"),  # noqa: ARG005, SLF001
-            "painter_options": property(lambda s: s._spec.get("options", [])),  # noqa: SLF001
-            "printable": property(lambda s: s._spec.get("printable", True)),  # noqa: SLF001
-            "sorter": property(lambda s: s._spec.get("sorter", None)),  # noqa: SLF001
-            "load_inv": property(lambda s: s._spec.get("load_inv", False)),  # noqa: SLF001
-        },
+    painter_registry.register(
+        InternalPainter(
+            ident=ident,
+            title=spec["title"],
+            render=partial(_render_plugin_painter, spec),
+            short_title=spec.get("short"),
+            tooltip_title=spec.get("tooltip_title"),
+            columns=spec["columns"],
+            group_by=partial(_group_by_plugin_painter, spec),
+            parameters=spec.get("params"),
+            export_for_python=partial(_export_plugin_painter, spec, "export_for_python"),
+            export_for_csv=partial(_export_plugin_painter, spec, "export_for_csv"),
+            export_for_json=partial(_export_plugin_painter, spec, "export_for_json"),
+            sorter=spec.get("sorter"),
+            printable=spec.get("printable", True),
+            painter_options=spec.get("options", []),
+            load_inv=spec.get("load_inv", False),
+        )
     )
-    painter_registry.register(cls(ident=ident, title=spec["title"]))

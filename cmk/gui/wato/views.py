@@ -6,7 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Mapping
-from typing import Any, override
+from typing import Any
 
 from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.http import Request
@@ -22,18 +22,21 @@ from cmk.web.utils.request_cache import RequestCache
 from ._folder_titles import FOLDER_TITLES
 
 
+def _render_host_filename(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("tt", row["host_filename"])
+
+
 class PainterHostFilename(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="host_filename",
             title=_l("Checkmk config file name"),
+            render=_render_host_filename,
             short_title=_l("File name"),
             columns=["host_filename"],
         )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("tt", row["host_filename"])
 
 
 # TODO: Extremely bad idea ahead! The return type depends on a combination of
@@ -74,21 +77,28 @@ def paint_wato_folder(
     return "", get_wato_folder(row, how, request=request, request_cache=request_cache)
 
 
+def _render_wato_folder_abs(
+    row: Row, cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_wato_folder(row, "abs", request=context.request, request_cache=cell.request_cache)
+
+
 class PainterWatoFolderAbs(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="wato_folder_abs",
             title=_l("Folder - complete path"),
+            render=_render_wato_folder_abs,
             short_title=_l("Folder"),
             columns=["host_filename"],
             sorter="wato_folder_abs",
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_wato_folder(
-            row, "abs", request=context.request, request_cache=cell.request_cache
-        )
+
+def _render_wato_folder_rel(
+    row: Row, cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_wato_folder(row, "rel", request=context.request, request_cache=cell.request_cache)
 
 
 class PainterWatoFolderRel(InternalPainter):
@@ -96,16 +106,19 @@ class PainterWatoFolderRel(InternalPainter):
         super().__init__(
             ident="wato_folder_rel",
             title=_l("Folder - relative path"),
+            render=_render_wato_folder_rel,
             short_title=_l("Folder"),
             columns=["host_filename"],
             sorter="wato_folder_rel",
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_wato_folder(
-            row, "rel", request=context.request, request_cache=cell.request_cache
-        )
+
+def _render_wato_folder_plain(
+    row: Row, cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_wato_folder(
+        row, "plain", request=context.request, request_cache=cell.request_cache
+    )
 
 
 class PainterWatoFolderPlain(InternalPainter):
@@ -113,15 +126,10 @@ class PainterWatoFolderPlain(InternalPainter):
         super().__init__(
             ident="wato_folder_plain",
             title=_l("Folder - just folder name"),
+            render=_render_wato_folder_plain,
             short_title=_l("Folder"),
             columns=["host_filename"],
             sorter="wato_folder_plain",
-        )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_wato_folder(
-            row, "plain", request=context.request, request_cache=cell.request_cache
         )
 
 

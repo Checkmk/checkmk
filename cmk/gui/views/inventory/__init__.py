@@ -5,6 +5,7 @@
 
 
 from collections.abc import Iterable, Mapping, Sequence
+from functools import partial
 from typing import override
 
 from cmk.ccc.user import UserId
@@ -17,13 +18,12 @@ from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
     FilterName,
-    PainterParameters,
     Row,
     SingleInfos,
     VisualContext,
     VisualLinkSpec,
 )
-from cmk.gui.valuespec import Dictionary, DictionaryEntry, FixedValue
+from cmk.gui.valuespec import DictionaryEntry
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.sorter import Sorter, SorterRegistry
 from cmk.gui.views.store import multisite_builtin_views
@@ -77,56 +77,58 @@ def register_inv_paint_functions(mapping: Mapping[str, object]) -> None:
             inv_paint_functions.register(InvPaintFunction(name=k, func=v))
 
 
-def _register_painter(painter_registry: PainterRegistry, from_hint: PainterFromHint) -> None:
-    class _PainterFromHint(InternalPainter):
-        @override
-        def tooltip_title(self, cell: Cell, context: PainterContext) -> str:
-            return from_hint.tooltip_title
+def _hint_render(
+    from_hint: PainterFromHint, row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return from_hint.paint(row)
 
-        @override
-        def render(
-            self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-        ) -> CellSpec:
-            return from_hint.paint(row)
 
-        @override
-        def export_for_python(
-            self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-        ) -> object:
-            return from_hint.export_for_python(row, cell)
+def _hint_export_for_python(
+    from_hint: PainterFromHint, row: Row, cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    return from_hint.export_for_python(row, cell)
 
-        @override
-        def export_for_csv(
-            self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-        ) -> str | HTML:
-            return from_hint.export_for_csv(row, cell)
 
-        @override
-        def export_for_json(
-            self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
-        ) -> object:
-            return from_hint.export_for_json(row, cell)
+def _hint_export_for_csv(
+    from_hint: PainterFromHint, row: Row, cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str | HTML:
+    return from_hint.export_for_csv(row, cell)
 
-        @override
-        def group_by(self, row: Row, cell: Cell, context: PainterContext) -> str | None:
-            return from_hint.group_by(row, cell)
 
-        @override
-        def parameters(self, context: PainterContext) -> Dictionary | FixedValue[PainterParameters]:
-            return from_hint.params
+def _hint_export_for_json(
+    from_hint: PainterFromHint, row: Row, cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    return from_hint.export_for_json(row, cell)
 
-    painter_registry.register(
-        _PainterFromHint(
-            ident=from_hint.name,
-            title=from_hint.title,
-            short_title=from_hint.short,
-            columns=from_hint.columns,
-            sorter=from_hint.sorter,
-            printable=from_hint.printable,
-            painter_options=from_hint.options,
-            load_inv=from_hint.load_inv,
-        )
+
+def _hint_group_by(
+    from_hint: PainterFromHint, row: Row, cell: Cell, _context: PainterContext
+) -> str | None:
+    return from_hint.group_by(row, cell)
+
+
+def make_inventory_hint_painter(from_hint: PainterFromHint) -> InternalPainter:
+    return InternalPainter(
+        ident=from_hint.name,
+        title=from_hint.title,
+        render=partial(_hint_render, from_hint),
+        short_title=from_hint.short,
+        tooltip_title=from_hint.tooltip_title,
+        columns=from_hint.columns,
+        group_by=partial(_hint_group_by, from_hint),
+        parameters=from_hint.params,
+        export_for_python=partial(_hint_export_for_python, from_hint),
+        export_for_csv=partial(_hint_export_for_csv, from_hint),
+        export_for_json=partial(_hint_export_for_json, from_hint),
+        sorter=from_hint.sorter,
+        printable=from_hint.printable,
+        painter_options=from_hint.options,
+        load_inv=from_hint.load_inv,
     )
+
+
+def _register_painter(painter_registry: PainterRegistry, from_hint: PainterFromHint) -> None:
+    painter_registry.register(make_inventory_hint_painter(from_hint))
 
 
 def _register_sorter(sorter_registry: SorterRegistry, from_hint: SorterFromHint) -> None:

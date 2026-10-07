@@ -431,24 +431,38 @@ class DataSourceECEventHistory(ABCDataSource):
 #   '----------------------------------------------------------------------'
 
 
+def _render_svc_servicelevel(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_custom_var(
+        "service",
+        "EC_SL",
+        row,
+        context.config.mkeventd_service_levels,
+    )
+
+
 class PainterSvcServicelevel(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="svc_servicelevel",
             title=_l("Service service level"),
+            render=_render_svc_servicelevel,
             short_title=_l("Service level"),
             columns=["service_custom_variable_names", "service_custom_variable_values"],
             sorter="servicelevel",
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_custom_var(
-            "service",
-            "EC_SL",
-            row,
-            context.config.mkeventd_service_levels,
-        )
+
+def _render_host_servicelevel(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_custom_var(
+        "host",
+        "EC_SL",
+        row,
+        context.config.mkeventd_service_levels,
+    )
 
 
 class PainterHostServicelevel(InternalPainter):
@@ -456,19 +470,17 @@ class PainterHostServicelevel(InternalPainter):
         super().__init__(
             ident="host_servicelevel",
             title=_l("Host service level"),
+            render=_render_host_servicelevel,
             short_title=_l("Service level"),
             columns=["host_custom_variable_names", "host_custom_variable_values"],
             sorter="servicelevel",
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_custom_var(
-            "host",
-            "EC_SL",
-            row,
-            context.config.mkeventd_service_levels,
-        )
+
+def _render_event_id(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("number", str(row["event_id"]))
 
 
 class PainterEventId(InternalPainter):
@@ -476,13 +488,16 @@ class PainterEventId(InternalPainter):
         super().__init__(
             ident="event_id",
             title=_l("ID of the event"),
+            render=_render_event_id,
             short_title=_l("ID"),
             columns=["event_id"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("number", str(row["event_id"]))
+
+def _render_event_count(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("number", str(row["event_count"]))
 
 
 class PainterEventCount(InternalPainter):
@@ -490,13 +505,18 @@ class PainterEventCount(InternalPainter):
         super().__init__(
             ident="event_count",
             title=_l("Count (number of recent occurrences)"),
+            render=_render_event_count,
             short_title=_l("Cnt."),
             columns=["event_count"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("number", str(row["event_count"]))
+
+def _render_event_text(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return "", HTML.without_escaping(
+        escaping.escape_attribute(row["event_text"]).replace("\x01", "<br>")
+    )
 
 
 class PainterEventText(InternalPainter):
@@ -504,15 +524,22 @@ class PainterEventText(InternalPainter):
         super().__init__(
             ident="event_text",
             title=_l("Text/Message of the event"),
+            render=_render_event_text,
             short_title=_l("Message"),
             columns=["event_text"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return "", HTML.without_escaping(
-            escaping.escape_attribute(row["event_text"]).replace("\x01", "<br>")
-        )
+
+def _render_event_match_groups(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    groups = row["event_match_groups"]
+    if groups:
+        code = HTML.empty()
+        for text in groups:
+            code += HTMLWriter.render_span(text)
+        return "matchgroups", code
+    return "", HTML.empty()
 
 
 class PainterEventMatchGroups(InternalPainter):
@@ -520,19 +547,22 @@ class PainterEventMatchGroups(InternalPainter):
         super().__init__(
             ident="event_match_groups",
             title=_l("Match groups"),
+            render=_render_event_match_groups,
             short_title=_l("Match"),
             columns=["event_match_groups"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        groups = row["event_match_groups"]
-        if groups:
-            code = HTML.empty()
-            for text in groups:
-                code += HTMLWriter.render_span(text)
-            return "matchgroups", code
-        return "", HTML.empty()
+
+def _render_event_first(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_age(
+        row["event_first"],
+        True,
+        True,
+        request=context.request,
+        painter_options=context.painter_options,
+    )
 
 
 class PainterEventFirst(InternalPainter):
@@ -540,20 +570,23 @@ class PainterEventFirst(InternalPainter):
         super().__init__(
             ident="event_first",
             title=_l("Time of first occurrence of this serial"),
+            render=_render_event_first,
             short_title=_l("First"),
             columns=["event_first"],
             painter_options=["ts_format", "ts_date"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_age(
-            row["event_first"],
-            True,
-            True,
-            request=context.request,
-            painter_options=context.painter_options,
-        )
+
+def _render_event_last(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_age(
+        row["event_last"],
+        True,
+        True,
+        request=context.request,
+        painter_options=context.painter_options,
+    )
 
 
 class PainterEventLast(InternalPainter):
@@ -561,20 +594,17 @@ class PainterEventLast(InternalPainter):
         super().__init__(
             ident="event_last",
             title=_l("Time of last occurrence"),
+            render=_render_event_last,
             short_title=_l("Last"),
             columns=["event_last"],
             painter_options=["ts_format", "ts_date"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_age(
-            row["event_last"],
-            True,
-            True,
-            request=context.request,
-            painter_options=context.painter_options,
-        )
+
+def _render_event_comment(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", row["event_comment"])
 
 
 class PainterEventComment(InternalPainter):
@@ -582,13 +612,17 @@ class PainterEventComment(InternalPainter):
         super().__init__(
             ident="event_comment",
             title=_l("Comment to the event"),
+            render=_render_event_comment,
             short_title=_l("Comment"),
             columns=["event_comment"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", row["event_comment"])
+
+def _render_event_sl(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    sl_txt = dict(context.config.mkeventd_service_levels).get(row["event_sl"], str(row["event_sl"]))
+    return "", sl_txt
 
 
 class PainterEventSl(InternalPainter):
@@ -596,16 +630,21 @@ class PainterEventSl(InternalPainter):
         super().__init__(
             ident="event_sl",
             title=_l("Service-level"),
+            render=_render_event_sl,
             short_title=_l("Level"),
             columns=["event_sl"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        sl_txt = dict(context.config.mkeventd_service_levels).get(
-            row["event_sl"], str(row["event_sl"])
-        )
-        return "", sl_txt
+
+def _render_event_host(
+    row: Row, cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    event_host: HostAddress = row["event_host"]
+    host_name = row.get("host_name", event_host)
+
+    return "", html.render_a(
+        host_name, _get_event_host_link(host_name, row, cell, request=context.request)
+    )
 
 
 class PainterEventHost(InternalPainter):
@@ -613,18 +652,10 @@ class PainterEventHost(InternalPainter):
         super().__init__(
             ident="event_host",
             title=_l("Host name"),
+            render=_render_event_host,
             short_title=_l("Host"),
             columns=["event_host", "host_name"],
             use_painter_link=False,
-        )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        event_host: HostAddress = row["event_host"]
-        host_name = row.get("host_name", event_host)
-
-        return "", html.render_a(
-            host_name, _get_event_host_link(host_name, row, cell, request=context.request)
         )
 
 
@@ -655,18 +686,27 @@ def _get_event_host_link(host_name: HostName, row: Row, cell: Cell, *, request: 
     )
 
 
+def _render_event_ipaddress(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", row["event_ipaddress"])
+
+
 class PainterEventIpaddress(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="event_ipaddress",
             title=_l("Original IP address"),
+            render=_render_event_ipaddress,
             short_title=_l("Orig. IP"),
             columns=["event_ipaddress"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", row["event_ipaddress"])
+
+def _render_event_host_in_downtime(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return paint_nagiosflag(row, "event_host_in_downtime", True)
 
 
 class PainterEventHostInDowntime(InternalPainter):
@@ -674,13 +714,16 @@ class PainterEventHostInDowntime(InternalPainter):
         super().__init__(
             ident="event_host_in_downtime",
             title=_l("Host in downtime during event creation"),
+            render=_render_event_host_in_downtime,
             short_title=_l("Dt."),
             columns=["event_host_in_downtime"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_nagiosflag(row, "event_host_in_downtime", True)
+
+def _render_event_owner(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", row["event_owner"])
 
 
 class PainterEventOwner(InternalPainter):
@@ -688,13 +731,16 @@ class PainterEventOwner(InternalPainter):
         super().__init__(
             ident="event_owner",
             title=_l("Owner of event"),
+            render=_render_event_owner,
             short_title=_l("Owner"),
             columns=["event_owner"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", row["event_owner"])
+
+def _render_event_contact(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", row["event_contact"])
 
 
 class PainterEventContact(InternalPainter):
@@ -702,13 +748,16 @@ class PainterEventContact(InternalPainter):
         super().__init__(
             ident="event_contact",
             title=_l("Contact person"),
+            render=_render_event_contact,
             short_title=_l("Contact"),
             columns=["event_contact"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", row["event_contact"])
+
+def _render_event_application(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", row["event_application"])
 
 
 class PainterEventApplication(InternalPainter):
@@ -716,24 +765,27 @@ class PainterEventApplication(InternalPainter):
         super().__init__(
             ident="event_application",
             title=_l("Application / Syslog-Tag"),
+            render=_render_event_application,
             short_title=_l("Application"),
             columns=["event_application"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", row["event_application"])
+
+def _render_event_pid(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", "%s" % row["event_pid"])
 
 
 class PainterEventPid(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
-            ident="event_pid", title=_l("Process ID"), short_title=_l("PID"), columns=["event_pid"]
+            ident="event_pid",
+            title=_l("Process ID"),
+            render=_render_event_pid,
+            short_title=_l("PID"),
+            columns=["event_pid"],
         )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", "%s" % row["event_pid"])
 
 
 # TODO: Rethink the typing of syslog_facilites/syslog_priorities.
@@ -743,18 +795,27 @@ def _deref[T](x: T | Callable[[], T]) -> T:
     return x() if callable(x) else x
 
 
+def _render_event_priority(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", dict(_deref(syslog_priorities))[row["event_priority"]])
+
+
 class PainterEventPriority(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="event_priority",
             title=_l("Syslog-Priority"),
+            render=_render_event_priority,
             short_title=_l("Prio"),
             columns=["event_priority"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", dict(_deref(syslog_priorities))[row["event_priority"]])
+
+def _render_event_facility(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", dict(_deref(syslog_facilities))[row["event_facility"]])
 
 
 class PainterEventFacility(InternalPainter):
@@ -762,13 +823,20 @@ class PainterEventFacility(InternalPainter):
         super().__init__(
             ident="event_facility",
             title=_l("Syslog-Facility"),
+            render=_render_event_facility,
             short_title=_l("Facility"),
             columns=["event_facility"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", dict(_deref(syslog_facilities))[row["event_facility"]])
+
+def _render_event_rule_id(
+    row: Row, _cell: Cell, user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    rule_id = row["event_rule_id"]
+    if user.may("mkeventd.edit"):
+        urlvars = urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
+        return "", HTMLWriter.render_a(rule_id, "wato.py?%s" % urlvars)
+    return "", rule_id
 
 
 class PainterEventRuleId(InternalPainter):
@@ -776,17 +844,20 @@ class PainterEventRuleId(InternalPainter):
         super().__init__(
             ident="event_rule_id",
             title=_l("Rule-ID"),
+            render=_render_event_rule_id,
             short_title=_l("Rule"),
             columns=["event_rule_id"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        rule_id = row["event_rule_id"]
-        if user.may("mkeventd.edit"):
-            urlvars = urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
-            return "", HTMLWriter.render_a(rule_id, "wato.py?%s" % urlvars)
-        return "", rule_id
+
+def _render_event_state(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    state = row["event_state"]
+    name = short_service_state_name(state, "")
+    return "state svcstate state%s" % state, HTMLWriter.render_span(
+        name, class_=["state_rounded_fill"]
+    )
 
 
 class PainterEventState(InternalPainter):
@@ -794,17 +865,16 @@ class PainterEventState(InternalPainter):
         super().__init__(
             ident="event_state",
             title=_l("State (severity) of event"),
+            render=_render_event_state,
             short_title=_l("State"),
             columns=["event_state"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        state = row["event_state"]
-        name = short_service_state_name(state, "")
-        return "state svcstate state%s" % state, HTMLWriter.render_span(
-            name, class_=["state_rounded_fill"]
-        )
+
+def _render_event_phase(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", phase_names.get(row["event_phase"], ""))
 
 
 class PainterEventPhase(InternalPainter):
@@ -812,13 +882,10 @@ class PainterEventPhase(InternalPainter):
         super().__init__(
             ident="event_phase",
             title=_l("Phase of event (open, counting, etc.)"),
+            render=_render_event_phase,
             short_title=_l("Phase"),
             columns=["event_phase"],
         )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", phase_names.get(row["event_phase"], ""))
 
 
 def paint_event_icons(
@@ -920,19 +987,28 @@ def _is_linked_view_dashlet(dashlet_config: DashletConfig) -> TypeGuard[LinkedVi
     return dashlet_config["type"] == "linked_view"
 
 
+def _render_event_icons(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_event_icons(row, request=context.request, theme=context.theme)
+
+
 class PainterEventIcons(InternalPainter):
     def __init__(self) -> None:
         super().__init__(
             ident="event_icons",
             title=_l("Event icons"),
+            render=_render_event_icons,
             short_title=_l("Icons"),
             columns=["event_phase", "event_host_in_downtime"],
             printable=False,
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_event_icons(row, request=context.request, theme=context.theme)
+
+def _render_event_history_icons(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_event_icons(row, history=True, request=context.request, theme=context.theme)
 
 
 class PainterEventHistoryIcons(InternalPainter):
@@ -940,14 +1016,22 @@ class PainterEventHistoryIcons(InternalPainter):
         super().__init__(
             ident="event_history_icons",
             title=_l("Event history icons"),
+            render=_render_event_history_icons,
             short_title=_l("Icons"),
             columns=["event_phase", "event_host_in_downtime"],
             printable=False,
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_event_icons(row, history=True, request=context.request, theme=context.theme)
+
+def _render_event_contact_groups(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    cgs = row.get("event_contact_groups")
+    if cgs is None:
+        return "", ""
+    if cgs:
+        return "", ", ".join(cgs)
+    return "", "<i>" + _("none") + "</i>"
 
 
 class PainterEventContactGroups(InternalPainter):
@@ -955,18 +1039,25 @@ class PainterEventContactGroups(InternalPainter):
         super().__init__(
             ident="event_contact_groups",
             title=_l("Contact groups defined in rule"),
+            render=_render_event_contact_groups,
             short_title=_l("Rule contact groups"),
             columns=["event_contact_groups"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        cgs = row.get("event_contact_groups")
-        if cgs is None:
-            return "", ""
-        if cgs:
-            return "", ", ".join(cgs)
-        return "", "<i>" + _("none") + "</i>"
+
+def _render_event_effective_contact_groups(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    if row["event_contact_groups_precedence"] == "host":
+        cgs = row["host_contact_groups"]
+    else:
+        cgs = row["event_contact_groups"]
+
+    if cgs is None:
+        return "", ""
+    if cgs:
+        return "", ", ".join(sorted(cgs))
+    return "", HTMLWriter.render_i(_("none"))
 
 
 class PainterEventEffectiveContactGroups(InternalPainter):
@@ -974,6 +1065,7 @@ class PainterEventEffectiveContactGroups(InternalPainter):
         super().__init__(
             ident="event_effective_contact_groups",
             title=_l("Contact groups effective (host or rule contact groups)"),
+            render=_render_event_effective_contact_groups,
             short_title=_l("Contact groups"),
             columns=[
                 "event_contact_groups",
@@ -982,21 +1074,14 @@ class PainterEventEffectiveContactGroups(InternalPainter):
             ],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        if row["event_contact_groups_precedence"] == "host":
-            cgs = row["host_contact_groups"]
-        else:
-            cgs = row["event_contact_groups"]
-
-        if cgs is None:
-            return "", ""
-        if cgs:
-            return "", ", ".join(sorted(cgs))
-        return "", HTMLWriter.render_i(_("none"))
-
 
 # Event History
+
+
+def _render_history_line(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("number", "%s" % row["history_line"])
 
 
 class PainterHistoryLine(InternalPainter):
@@ -1004,13 +1089,22 @@ class PainterHistoryLine(InternalPainter):
         super().__init__(
             ident="history_line",
             title=_l("Line number in log file"),
+            render=_render_history_line,
             short_title=_l("Line"),
             columns=["history_line"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("number", "%s" % row["history_line"])
+
+def _render_history_time(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_age(
+        row["history_time"],
+        True,
+        True,
+        request=context.request,
+        painter_options=context.painter_options,
+    )
 
 
 class PainterHistoryTime(InternalPainter):
@@ -1018,20 +1112,18 @@ class PainterHistoryTime(InternalPainter):
         super().__init__(
             ident="history_time",
             title=_l("Time of entry in log file"),
+            render=_render_history_time,
             short_title=_l("Time"),
             columns=["history_time"],
             painter_options=["ts_format", "ts_date"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return paint_age(
-            row["history_time"],
-            True,
-            True,
-            request=context.request,
-            painter_options=context.painter_options,
-        )
+
+def _render_history_what(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    what = row["history_what"]
+    return "", HTMLWriter.render_span(what, title=str(action_whats[what]))
 
 
 class PainterHistoryWhat(InternalPainter):
@@ -1039,14 +1131,16 @@ class PainterHistoryWhat(InternalPainter):
         super().__init__(
             ident="history_what",
             title=_l("Type of event action"),
+            render=_render_history_what,
             short_title=_l("Action"),
             columns=["history_what"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        what = row["history_what"]
-        return "", HTMLWriter.render_span(what, title=str(action_whats[what]))
+
+def _render_history_what_explained(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", str(action_whats[row["history_what"]]))
 
 
 class PainterHistoryWhatExplained(InternalPainter):
@@ -1054,12 +1148,15 @@ class PainterHistoryWhatExplained(InternalPainter):
         super().__init__(
             ident="history_what_explained",
             title=_l("Explanation for event action"),
+            render=_render_history_what_explained,
             columns=["history_what"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", str(action_whats[row["history_what"]]))
+
+def _render_history_who(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", row["history_who"])
 
 
 class PainterHistoryWho(InternalPainter):
@@ -1067,13 +1164,16 @@ class PainterHistoryWho(InternalPainter):
         super().__init__(
             ident="history_who",
             title=_l("User who performed action"),
+            render=_render_history_who,
             short_title=_l("Who"),
             columns=["history_who"],
         )
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", row["history_who"])
+
+def _render_history_addinfo(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("", row["history_addinfo"])
 
 
 class PainterHistoryAddinfo(InternalPainter):
@@ -1081,13 +1181,10 @@ class PainterHistoryAddinfo(InternalPainter):
         super().__init__(
             ident="history_addinfo",
             title=_l("Additional information"),
+            render=_render_history_addinfo,
             short_title=_l("Info"),
             columns=["history_addinfo"],
         )
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return ("", row["history_addinfo"])
 
 
 # .

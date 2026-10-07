@@ -1,0 +1,20 @@
+title: Pure Storage FlashArray: Host Group
+agents: pure_storage_fa
+catalog: hw/storagehw/pure_storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the host groups of a Pure Storage.
+
+ The status is mapped to the following Checkmk state:
+
+ - {OK} always
+
+ To make this check work you have to configure the related special agent
+ {Pure Storage FlashArray}.
+
+item:
+ Name of the host group.
+
+discovery:
+ One service per host group is created.

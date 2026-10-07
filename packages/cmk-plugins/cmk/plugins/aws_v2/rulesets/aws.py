@@ -10,10 +10,11 @@ integration uses the same builders, so that the rule and the Quick Setup stay th
 
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Final
 
-from cmk.rulesets.v1 import Help, Title
+from cmk.plugins.aws_v2.constants import AWS_REGIONS
+from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
@@ -23,7 +24,12 @@ from cmk.rulesets.v1.form_specs import (
     FieldSize,
     FixedValue,
     Integer,
+    List,
+    MatchingScope,
+    MultipleChoice,
+    MultipleChoiceElement,
     Password,
+    RegularExpression,
     SingleChoice,
     SingleChoiceElement,
     String,
@@ -36,6 +42,83 @@ _GLOBAL_SERVICE_REGIONS: Final = ("us-gov-east-1", "us-gov-west-1", "cn-north-1"
 def _region_to_formspec_name(region: str) -> str:
     # Form spec names must be Python identifiers.
     return region.replace("-", "_")
+
+
+def _region_elements() -> Sequence[MultipleChoiceElement]:
+    # GovCloud regions go last.
+    regions = sorted(AWS_REGIONS, key=lambda region: ("GovCloud" in region[1], region[1]))
+    return [
+        MultipleChoiceElement(
+            name=_region_to_formspec_name(region_id),
+            title=Title("%(region_name)s | %(region_id)s")
+            % {"region_name": region_name, "region_id": region_id},
+        )
+        for region_id, region_name in regions
+    ]
+
+
+def _validate_no_aws_prefix(value: str) -> None:
+    if value.startswith("aws:"):
+        raise validators.ValidationError(Message("Do not use the 'aws:' prefix."))
+
+
+def _validate_unique_tag_keys(tags: Sequence[Mapping[str, object]]) -> None:
+    keys = [tag["key"] for tag in tags]
+    if len(keys) != len(set(keys)):
+        raise validators.ValidationError(
+            Message("Each tag key must be unique and cannot be used multiple times.")
+        )
+
+
+def _tags(title: Title | None = None) -> List:
+    return List(
+        title=title,
+        help_text=Help(
+            "For information on AWS tag configuration, visit "
+            "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html"
+        ),
+        element_template=Dictionary(
+            elements={
+                "key": DictElement(
+                    parameter_form=String(
+                        title=Title("Key"),
+                        custom_validate=(
+                            validators.LengthInRange(min_value=1, max_value=128),
+                            _validate_no_aws_prefix,
+                        ),
+                    ),
+                    required=True,
+                ),
+                "values": DictElement(
+                    parameter_form=List(
+                        element_template=String(
+                            label=Label("Value"),
+                            custom_validate=(
+                                validators.LengthInRange(max_value=256),
+                                _validate_no_aws_prefix,
+                            ),
+                        ),
+                        add_element_label=Label("Add new value"),
+                        remove_element_label=Label("Remove value"),
+                        no_element_label=Label("No values defined"),
+                        editable_order=False,
+                        custom_validate=(validators.LengthInRange(min_value=1),),
+                    ),
+                    required=True,
+                ),
+            },
+        ),
+        add_element_label=Label("Add new tag"),
+        remove_element_label=Label("Remove tag"),
+        no_element_label=Label("No tags defined"),
+        editable_order=False,
+        custom_validate=(
+            _validate_unique_tag_keys,
+            validators.LengthInRange(
+                max_value=50, error_msg=Message("The maximum number of tags per resource is 50.")
+            ),
+        ),
+    )
 
 
 def _access_key() -> Mapping[str, DictElement]:
@@ -171,5 +254,57 @@ def configuration_authentication() -> Mapping[str, DictElement]:
                     ),
                 },
             ),
+        ),
+    }
+
+
+def configuration_regions_and_tags() -> Mapping[str, DictElement]:
+    return {
+        "regions": DictElement(
+            parameter_form=MultipleChoice(
+                title=Title("Regions to monitor"),
+                elements=_region_elements(),
+            ),
+            required=True,
+        ),
+        "overall_tags": DictElement(
+            parameter_form=_tags(Title("Restrict monitoring services by one of these AWS tags")),
+        ),
+        "import_tags": DictElement(
+            parameter_form=CascadingSingleChoice(
+                title=Title("Import tags as host labels"),
+                help_text=Help(
+                    "Enable this option to import the AWS tags for EC2 and ELB instances "
+                    "as host labels for the respective piggyback hosts. The label syntax "
+                    "is 'cmk/aws/tag/{key}:{value}'.<br>Additionally, the piggyback hosts "
+                    "for EC2 instances are given the host label 'cmk/aws/ec2:instance', "
+                    "which is done independent of this option.<br>You can further restrict "
+                    "the imported tags by specifying a pattern which Checkmk searches for "
+                    "in the key of the AWS tag, or you can disable the import of AWS tags "
+                    "altogether."
+                ),
+                elements=[
+                    CascadingSingleChoiceElement(
+                        name="all_tags",
+                        title=Title("Import all valid tags"),
+                        parameter_form=FixedValue(value=None),
+                    ),
+                    CascadingSingleChoiceElement(
+                        name="filter_tags",
+                        title=Title("Filter valid tags by key pattern"),
+                        parameter_form=RegularExpression(
+                            predefined_help_text=MatchingScope.INFIX,
+                            custom_validate=(validators.LengthInRange(min_value=1),),
+                        ),
+                    ),
+                    CascadingSingleChoiceElement(
+                        name="ignore_tags",
+                        title=Title("Do not import tags"),
+                        parameter_form=FixedValue(value=None),
+                    ),
+                ],
+                prefill=DefaultValue("all_tags"),
+            ),
+            required=True,
         ),
     }

@@ -26,6 +26,7 @@ export const a11yData = [
 ]
 
 type ListOrientation = 'vertical' | 'horizontal'
+type ListButtonAlignment = 'top' | 'center'
 
 export const panelConfig = {
   orientation: {
@@ -36,6 +37,15 @@ export const panelConfig = {
       horizontal: 'Horizontal'
     }),
     initialState: 'vertical' as const
+  },
+  buttonAlignment: {
+    type: 'list' as const,
+    title: 'Button Alignment',
+    options: listOptions<ListButtonAlignment>({
+      top: 'Top',
+      center: 'Center'
+    }),
+    initialState: 'top' as const
   },
   showAdd: {
     type: 'boolean' as const,
@@ -98,6 +108,7 @@ const propState = new PanelStateCreator<
       <CmkList
         :items-props="listData"
         :orientation="propState.orientation"
+        :button-alignment="propState.buttonAlignment"
         :try-delete="tryDelete"
         :add="{ show: propState.showAdd, tryAdd, label: 'Add Item' }"
         :drag-callbacks="propState.enableDrag ? { onReorder: () => {} } : null"

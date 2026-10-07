@@ -115,16 +115,8 @@ def register(
     painter_registry.register(PainterSvcLongPluginOutput())
     painter_registry.register(PainterSvcPerfData())
     painter_registry.register(PainterSvcMetrics())
-    painter_registry.register(PainterSvcPerfVal01())
-    painter_registry.register(PainterSvcPerfVal02())
-    painter_registry.register(PainterSvcPerfVal03())
-    painter_registry.register(PainterSvcPerfVal04())
-    painter_registry.register(PainterSvcPerfVal05())
-    painter_registry.register(PainterSvcPerfVal06())
-    painter_registry.register(PainterSvcPerfVal07())
-    painter_registry.register(PainterSvcPerfVal08())
-    painter_registry.register(PainterSvcPerfVal09())
-    painter_registry.register(PainterSvcPerfVal10())
+    for num in range(1, 11):
+        painter_registry.register(PainterSvcPerfVal(num))
     painter_registry.register(PainterSvcCheckCommand())
     painter_registry.register(PainterSvcCheckCommandExpanded())
     painter_registry.register(PainterSvcNotesURL())
@@ -856,9 +848,9 @@ class PainterSvcMetrics(InternalPainter):
             return "", HTML.without_escaping(output_funnel.drain())
 
 
-# TODO: Use a parameterized painter for this instead of 10 painter classes
 class PainterSvcPerfVal(InternalPainter):
-    _num = 0
+    def __init__(self, num: int) -> None:
+        self._num = num
 
     @property
     @override
@@ -883,46 +875,6 @@ class PainterSvcPerfVal(InternalPainter):
         return paint_stalified(
             row, get_perfdata_nth_value(row, self._num - 1), context.config.staleness_threshold
         )
-
-
-class PainterSvcPerfVal01(PainterSvcPerfVal):
-    _num = 1
-
-
-class PainterSvcPerfVal02(PainterSvcPerfVal):
-    _num = 2
-
-
-class PainterSvcPerfVal03(PainterSvcPerfVal):
-    _num = 3
-
-
-class PainterSvcPerfVal04(PainterSvcPerfVal):
-    _num = 4
-
-
-class PainterSvcPerfVal05(PainterSvcPerfVal):
-    _num = 5
-
-
-class PainterSvcPerfVal06(PainterSvcPerfVal):
-    _num = 6
-
-
-class PainterSvcPerfVal07(PainterSvcPerfVal):
-    _num = 7
-
-
-class PainterSvcPerfVal08(PainterSvcPerfVal):
-    _num = 8
-
-
-class PainterSvcPerfVal09(PainterSvcPerfVal):
-    _num = 9
-
-
-class PainterSvcPerfVal10(PainterSvcPerfVal):
-    _num = 10
 
 
 class PainterSvcCheckCommand(InternalPainter):

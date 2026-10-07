@@ -234,9 +234,7 @@ class VisualFilterList(ListOfMultiple):
 
 def filters_allowed_for_info(info: str) -> Iterator[tuple[str, Filter]]:
     """Returns a map of filter names and filter objects that are registered for the given info"""
-    for fname, filt in filter_registry.items():
-        if filt.info is None or info == filt.info:  # type: ignore[redundant-expr]
-            yield fname, filt
+    return ((fname, filt) for fname, filt in filter_registry.items() if info == filt.info)
 
 
 def _sorted_filters_allowed_for_info(
@@ -259,11 +257,7 @@ def filters_allowed_for_infos(info_list: SingleInfos) -> dict[str, Filter]:
 
 def filters_exist_for_infos(infos: SingleInfos) -> bool:
     """Returns True if any filter is registered for the given infos"""
-    for _fname, filt in filter_registry.items():
-        for info in infos:
-            if filt.info is None or info == filt.info:  # type: ignore[redundant-expr]
-                return True
-    return False
+    return any(filt.info in infos for filt in filter_registry.values())
 
 
 class VisualFilterListWithAddPopup(VisualFilterList):

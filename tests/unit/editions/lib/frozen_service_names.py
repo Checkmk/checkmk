@@ -298,6 +298,7 @@ FROZEN_SERVICE_NAMES: Final[Mapping[str, str]] = {
     "aws_v2_glacier": "AWS/Glacier Vault: %s",
     "aws_v2_glacier_limits": "AWS/Glacier Limits %s",
     "aws_v2_glacier_summary": "AWS/Glacier Summary",
+    "aws_v2_route53": "AWS/Route53 %s",
     "aws_v2_s3": "AWS/S3 Objects %s",
     "aws_v2_s3_limits": "AWS/S3 Limits %s",
     "aws_v2_s3_requests": "AWS/S3 Requests %s",

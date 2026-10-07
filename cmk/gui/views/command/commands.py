@@ -8,7 +8,7 @@
 import time
 from collections.abc import Iterable, Sequence
 from datetime import datetime
-from typing import Literal, override, Protocol
+from typing import assert_never, Literal, override, Protocol
 
 import cmk.ccc.version as cmk_version
 from cmk.bi.trees import CompiledAggrLeaf, CompiledAggrRule, CompiledAggrTree
@@ -2162,13 +2162,10 @@ def _find_all_leaves(
             entries += _find_all_leaves(n)
         return entries
 
-    # place holders
-    return []  # type: ignore[unreachable]
+    assert_never(node)
 
 
-def _local_time_if_representable(timestamp: float | None) -> time.struct_time | None:
-    if timestamp is None:
-        return None
+def _local_time_if_representable(timestamp: float) -> time.struct_time | None:
     try:
         return time.localtime(timestamp)
     except OverflowError, OSError, ValueError:
@@ -2177,7 +2174,7 @@ def _local_time_if_representable(timestamp: float | None) -> time.struct_time | 
 
 def time_interval_end(
     time_value: int | Literal["next_day", "next_week", "next_month", "next_year"], start_time: float
-) -> float | None:
+) -> float:
     now = time.localtime(start_time)
     if isinstance(time_value, int):
         return start_time + time_value
@@ -2203,7 +2200,7 @@ def time_interval_end(
         return time.mktime((new_year, new_month, 1, 0, 0, 0, 0, 0, now.tm_isdst))
     if time_value == "next_year":
         return time.mktime((now.tm_year, 12, 31, 23, 59, 59, 0, 0, now.tm_isdst)) + 1
-    return None  # type: ignore[unreachable]
+    assert_never(time_value)
 
 
 def command_remove_downtime_render(what: str) -> None:  # noqa: ARG001

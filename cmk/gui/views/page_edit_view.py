@@ -564,7 +564,7 @@ class _RawVSColumnSpecOptional(TypedDict, total=False):
 
 
 class _RawVSColumnSpec(_RawVSColumnSpecOptional):
-    painter_spec: PainterName | tuple[PainterName, PainterParameters]
+    painter_spec: tuple[PainterName, PainterParameters]
     column_title: str
 
 
@@ -647,10 +647,10 @@ def _view_editor_spec(
         )
 
     def _get_name(value: _RawVSColumnSpec) -> PainterName:
-        return ps[0] if isinstance((ps := value["painter_spec"]), tuple) else ps
+        return value["painter_spec"][0]
 
     def _get_params(value: _RawVSColumnSpec) -> PainterParameters:
-        return ps[1] if isinstance((ps := value["painter_spec"]), tuple) else PainterParameters()
+        return value["painter_spec"][1]
 
     def _get_link_spec(value: _RawVSColumnSpec | _RawVSJoinInvColumnSpec) -> VisualLinkSpec | None:
         return None if (ls := value.get("link_spec")) is None else VisualLinkSpec.from_raw(ls)
@@ -714,9 +714,7 @@ def _view_editor_spec(
 
     def _get_painter_spec(
         column_spec: ColumnSpec,
-    ) -> PainterName | tuple[PainterName, PainterParameters]:
-        if column_spec.parameters is None:
-            return column_spec.name  # type: ignore[unreachable]
+    ) -> tuple[PainterName, PainterParameters]:
         return (column_spec.name, column_spec.parameters)
 
     vs_column = Transform(

@@ -421,7 +421,7 @@ class PageCrash(Page):
         )
 
     def _warn_about_local_files(self, crash_info: AggregatedCrashInfo) -> None:
-        files = local_files_involved_in_crash(crash_info["exc_traceback"])
+        files = local_files_involved_in_crash(crash_info.get("exc_traceback", []))
         if not files:
             return
 
@@ -443,9 +443,7 @@ class PageCrash(Page):
         html.show_warning(warn_text)
 
     def _warn_about_sensitive_information(self, crash_info: AggregatedCrashInfo) -> None:
-        if not ((vars_ := crash_info.get("details") or {}).get("vars")):
-            return
-
+        vars_ = (crash_info.get("details") or {}).get("vars") or {}
         if any(
             sensitive_keyword in key.lower()
             for sensitive_keyword in SENSITIVE_KEYWORDS
@@ -496,7 +494,7 @@ class PageCrash(Page):
             HTML.with_escaping(
                 "".join(
                     [
-                        self._format_traceback(info["exc_traceback"]),
+                        self._format_traceback(info.get("exc_traceback", [])),
                         info["exc_value"],
                     ]
                 )

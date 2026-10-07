@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="type-arg"
 
+import base64
 import json
 from collections.abc import Iterator
 
@@ -21,6 +22,7 @@ from cmk.gui.crash_reporting.pages import (
     _show_automatic_upload_hint,
     CrashReport,
     CrashReportRow,
+    PageCrash,
     ReportRendererGUI,
     ReportRendererJavascript,
     show_automatic_upload_hint_on_view,
@@ -204,3 +206,82 @@ def test_get_serialized_crash_report_with_bytes_crash_info() -> None:
     }
     result = _get_serialized_crash_report(row)
     assert result["crash_info"] == b'{"core": "cmc"}'
+
+
+LOCAL_FILE = "/omd/sites/heute/local/lib/python3/cmk_addons/plugins/acme/agent_based/acme.py"
+
+
+def _minimal_crash_info(**fields: object) -> AggregatedCrashInfo:
+    crash_info = CrashInfoFactory.build(
+        **{
+            "crash_type": "check",
+            "exc_type": "ValueError",
+            "exc_value": "boom",
+            "local_vars": base64.b64encode(b"{}").decode(),
+            "occurrences": {"first_seen": 1734000000.0, "last_seen": 1734000000.0, "count": 1},
+            "details": {},
+            **fields,
+        }
+    )
+    if "exc_traceback" not in fields:
+        crash_info.pop("exc_traceback", None)
+    return crash_info
+
+
+@pytest.mark.parametrize(
+    "details, expect_warning",
+    [
+        pytest.param(
+            {"vars": {"Password": "redacted", "host": "a"}}, True, id="sensitive request variable"
+        ),
+        pytest.param({"vars": {"host": "a"}}, False, id="harmless request variables"),
+        pytest.param({}, False, id="no request variables"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_warn_about_sensitive_information(details: dict[str, object], expect_warning: bool) -> None:
+    with output_funnel.plugged():
+        PageCrash()._warn_about_sensitive_information(  # noqa: SLF001
+            _minimal_crash_info(details=details)
+        )
+        rendered = "".join(output_funnel.drain())
+
+    assert ("redact sensitive information" in rendered) is expect_warning
+
+
+@pytest.mark.parametrize(
+    "filepath, expect_warning",
+    [
+        pytest.param(LOCAL_FILE, True, id="local frame"),
+        pytest.param("/omd/sites/heute/lib/python3/cmk/base/check_mk.py", False, id="no local"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_warn_about_local_files(filepath: str, expect_warning: bool) -> None:
+    crash_info = _minimal_crash_info(
+        exc_traceback=[(filepath, 1, "parse_acme", "return int(line)")]
+    )
+
+    with output_funnel.plugged():
+        PageCrash()._warn_about_local_files(crash_info)  # noqa: SLF001
+        rendered = "".join(output_funnel.drain())
+
+    assert ("local hierarchy" in rendered) is expect_warning
+
+
+@pytest.mark.usefixtures("request_context")
+def test_warn_about_local_files_without_traceback() -> None:
+    with output_funnel.plugged():
+        PageCrash()._warn_about_local_files(_minimal_crash_info())  # noqa: SLF001
+        rendered = "".join(output_funnel.drain())
+
+    assert rendered == ""
+
+
+@pytest.mark.usefixtures("request_context")
+def test_show_crash_report_without_traceback() -> None:
+    with output_funnel.plugged():
+        PageCrash()._show_crash_report(_minimal_crash_info())  # noqa: SLF001
+        rendered = "".join(output_funnel.drain())
+
+    assert "ValueError (boom)" in rendered

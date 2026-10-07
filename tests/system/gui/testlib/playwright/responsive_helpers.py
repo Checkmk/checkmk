@@ -10,10 +10,8 @@ KEEP IN SYNC WITH:
   - packages/cmk-frontend-vue/src/assets/breakpoints.css
 """
 
-from collections.abc import Sequence
 from dataclasses import dataclass
 
-import pytest
 from playwright.sync_api import ViewportSize
 
 
@@ -44,18 +42,3 @@ CANONICAL_BREAKPOINTS: tuple[Breakpoint, ...] = (
     Breakpoint(name="L", min_width=961, columns=12),
     Breakpoint(name="XL", min_width=1217, columns=24),
 )
-
-
-def parametrize_breakpoints(
-    breakpoints: Sequence[Breakpoint] = CANONICAL_BREAKPOINTS,
-) -> pytest.MarkDecorator:
-    """Return a `pytest.mark.parametrize` decorator over the canonical breakpoints.
-
-    Each parametrized test receives a single `breakpoint: Breakpoint` argument
-    and is given an id matching the breakpoint name (XS, S, M, L, XL).
-    """
-    return pytest.mark.parametrize(
-        "breakpoint_",
-        breakpoints,
-        ids=[bp.name for bp in breakpoints],
-    )

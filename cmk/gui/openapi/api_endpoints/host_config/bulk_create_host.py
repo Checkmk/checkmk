@@ -26,7 +26,7 @@ from cmk.gui.openapi.framework.model import (
 from cmk.gui.openapi.framework.model.restrict_features import RestrictFeatures
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.watolib import bakery
-from cmk.gui.watolib.hosts_and_folders import Folder, make_folder_tree
+from cmk.gui.watolib.hosts_and_folders import Folder, make_folder_tree, RelationMirrorBatch
 from cmk.licensing.basics.options import OptionName
 from cmk.web.utils import permission_verification as permissions
 
@@ -89,36 +89,38 @@ def bulk_create_host_v1(
     acting_user = api_context.user
     failed_hosts: dict[HostName, str] = {}
     succeeded_hosts: list[HostName] = []
+    pending_changes = make_pending_changes(api_context)
+    pprint_value = api_context.config.wato_pprint_config
 
     for folder, grouped_hosts in itertools.groupby(
         sorted(body.entries, key=_folder_key), key=_folder_key
     ):
         validated_entries = []
         folder.prepare_create_hosts(acting_user=acting_user)
+        mirror = RelationMirrorBatch(folder, acting_user=acting_user)
         for host in grouped_hosts:
             attributes = host.attributes.to_internal()
             if (error := deprecated_attributes_error({}, attributes)) is not None:
                 failed_hosts[host.host_name] = error
                 continue
             try:
-                validated_entries.append(
-                    (
-                        host.host_name,
-                        folder.verify_and_update_host_details(
-                            host.host_name, attributes, acting_user=acting_user
-                        ),
-                        None,
-                    )
+                validated = folder.verify_and_update_host_details(
+                    host.host_name, attributes, acting_user=acting_user
                 )
+                mirror.need_created(host.host_name, validated)
             except (MKUserError, MKAuthException) as e:
                 failed_hosts[host.host_name] = f"Validation failed: {e}"
+                continue
+            validated_entries.append((host.host_name, validated, None))
 
+        mirror.write()
         folder.create_validated_hosts(
             validated_entries,
-            pprint_value=api_context.config.wato_pprint_config,
-            pending_changes=make_pending_changes(api_context),
+            pprint_value=pprint_value,
+            pending_changes=pending_changes,
             acting_user=acting_user,
         )
+        mirror.save(pprint_value=pprint_value, pending_changes=pending_changes)
         succeeded_hosts.extend(entry[0] for entry in validated_entries)
 
     if not isinstance(bake_agent, ApiOmitted) and bake_agent:

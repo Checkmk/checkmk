@@ -254,13 +254,7 @@ def bulk_host_action_response(
 
 #: Attributes the API does not model. A full replacement of "attributes" has to carry them over,
 #: or the request would silently drop configuration it never saw.
-UNEXPOSED_HOST_ATTRIBUTES: Final = ("meta_data", "relations")
-
-#: Of those, the ones a request must not remove either: dropping "relations" would leave the
-#: other half of every relation on the related host without its counterpart (see
-#: cmk.gui.watolib.hosts_and_folders.plan_relation_mirror). "meta_data" stays removable, the way
-#: it was before relations existed.
-UNREMOVABLE_HOST_ATTRIBUTES: Final = ("relations",)
+UNEXPOSED_HOST_ATTRIBUTES: Final = ("meta_data",)
 
 
 def carry_over_unexposed_attributes(

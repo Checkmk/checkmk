@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""GUI-only "Relations" between hosts, such as a management board and the OS hosts it manages.
+"""Relations between hosts, such as a management board and the OS hosts it manages.
 
-This is a pure Setup/GUI feature. It links two hosts so both sides are navigable, and it is
+This is a feature of the web components - Setup, the REST API and the monitoring GUI - never of
+the core. It links two hosts so both sides are navigable, and it is
 surfaced in the monitoring without ever changing how a host is checked or notified. Which kinds
 of relation there are is the table in :mod:`cmk.gui.utils.host_relation_kinds`; everything here
 works off it.
@@ -279,15 +280,11 @@ def with_links_not_shown(
     *,
     kinds: Mapping[str, RelationKind] = RELATION_KINDS,
 ) -> list[RelationLink]:
-    """``relations_value`` as a view of the host submitted it, plus every stored link of a kind
-    the view does not show - a kind not in ``kinds``.
+    """``relations_value`` plus every stored link of a kind not in ``kinds``.
 
-    For a view that leaves such a link out, such as the host properties (see
-    :func:`host_relations_form_spec`): nobody saw it, so nobody can have removed it. Without this, saving a host from an older version would drop the relations a newer one
-    wrote on it - and, through the mirror, their other halves too. ``Host`` itself stores what it
-    is given, so the writers that state the whole value - the mirror, the cleanup after a
-    deletion - cover every kind. A link of a known kind with an end that kind does not have is
-    not kept: no version will ever place it, and nothing but the save could get rid of it.
+    Nobody saw such a link, so nobody can have removed it; dropping it would also drop its other
+    half on the related host. A link of a known kind with an end that kind does not have is not
+    kept: no version will ever place it, and nothing but the save could get rid of it.
     """
     links = relations_or_user_error(relations_value)
     links.extend(link for link in relations_or_empty(stored_value) if link["kind"] not in kinds)
@@ -383,7 +380,11 @@ def relations_or_user_error(raw: object, *, owner: HostName | None = None) -> Re
         return parse_relations_value(raw)
     except ValueError as exc:
         message = (
-            _("The relations of this host are malformed: %(error)s") % {"error": exc}
+            _(
+                "The relations of this host are malformed: %(error)s "
+                "Store valid ones or remove them."
+            )
+            % {"error": exc}
             if owner is None
             else _("The relations of '%(host)s' are malformed: %(error)s")
             % {"host": owner, "error": exc}

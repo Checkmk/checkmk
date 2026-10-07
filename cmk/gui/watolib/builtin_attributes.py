@@ -1456,7 +1456,7 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
 
 
 class HostAttributeRelations(ABCHostAttributeFormSpec):
-    """GUI-only relations between a host and other hosts, such as its management board.
+    """Relations between a host and other hosts, such as its management board.
 
     Stored in ``hosts.mk`` on both hosts of a relation, but exported to the monitoring core
     elsewhere - see :mod:`cmk.gui.watolib.host_relations_export`.
@@ -1511,6 +1511,8 @@ class HostAttributeRelations(ABCHostAttributeFormSpec):
 
     @override
     def openapi_editable(self) -> bool:
+        """The host endpoints of the REST API model the attribute themselves; as a generic
+        attribute it would be offered where one value applies to many hosts."""
         return False
 
     @override
@@ -1525,10 +1527,10 @@ class HostAttributeRelations(ABCHostAttributeFormSpec):
     @override
     def openapi_field(self) -> Field:
         """Required of every attribute, but nothing reads this one: the host schemas list their
-        fields by hand and relations are configured in Setup only."""
+        fields by hand."""
         return fields.List(
             fields.Dict(),
-            description="GUI-only relations between this host and other hosts, such as its "
+            description="Relations between this host and other hosts, such as its "
             "management board.",
             required=False,
         )

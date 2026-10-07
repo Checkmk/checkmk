@@ -20,7 +20,8 @@ from cmk.gui.openapi.framework.model.converter import HostConverter, TypedPlainV
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.host_relations import with_links_not_shown
+from cmk.gui.watolib.hosts_and_folders import attributes_without, Host
 
 from ._family import HOST_CONFIG_FAMILY
 from ._utils import (
@@ -30,7 +31,6 @@ from ._utils import (
     PERMISSIONS_UPDATE,
     reject_deprecated_attributes,
     serialize_host,
-    UNREMOVABLE_HOST_ATTRIBUTES,
     validate_host_attributes_for_quick_setup,
 )
 from .models.request_models import UpdateHost
@@ -52,6 +52,8 @@ def update_host_v1(
     api_context.user.need_permission("wato.edit")
     api_context.user.need_permission("wato.edit_hosts")
     acting_user = api_context.user
+    pprint_value = api_context.config.wato_pprint_config
+    pending_changes = make_pending_changes(api_context)
     if api_context.etag.enabled:
         api_context.etag.verify(host_etag(host))
 
@@ -72,42 +74,57 @@ def update_host_v1(
         host.attributes, {**(new_attributes or {}), **(update_attributes or {})}
     )
 
+    stored_relations = host.attributes.get("relations", [])
+    if new_attributes is not None:
+        new_attributes["relations"] = with_links_not_shown(
+            new_attributes.get("relations", []), stored_relations
+        )
+    if update_attributes is not None and "relations" in update_attributes:
+        update_attributes["relations"] = with_links_not_shown(
+            update_attributes["relations"], stored_relations
+        )
+
     if new_attributes is not None:
         host.edit(
             new_attributes,
             host.cluster_nodes(),
-            pprint_value=api_context.config.wato_pprint_config,
-            pending_changes=make_pending_changes(api_context),
+            pprint_value=pprint_value,
+            pending_changes=pending_changes,
             acting_user=acting_user,
         )
 
     if update_attributes is not None:
         host.update_attributes(
             update_attributes,
-            pprint_value=api_context.config.wato_pprint_config,
-            pending_changes=make_pending_changes(api_context),
+            pprint_value=pprint_value,
+            pending_changes=pending_changes,
             acting_user=acting_user,
         )
 
     if body.remove_attributes:
-        if unexposed := sorted(set(body.remove_attributes) & set(UNREMOVABLE_HOST_ATTRIBUTES)):
-            raise ProblemException(
-                status=HTTPStatus.BAD_REQUEST,
-                title="Some attributes cannot be removed",
-                detail=f"The following attributes are not managed through the API: {', '.join(unexposed)}",
-            )
-
         faulty_attributes = []
         for attribute in body.remove_attributes:
             if attribute not in host.attributes:
                 faulty_attributes.append(attribute)
 
-        host.clean_attributes(  # silently ignores missing attributes
-            body.remove_attributes,
-            pprint_value=api_context.config.wato_pprint_config,
-            pending_changes=make_pending_changes(api_context),
-            acting_user=acting_user,
-        )
+        if "relations" in body.remove_attributes:
+            host.edit(
+                {
+                    **attributes_without(host.attributes, body.remove_attributes),
+                    "relations": with_links_not_shown([], stored_relations),
+                },
+                host.cluster_nodes(),
+                pprint_value=pprint_value,
+                pending_changes=pending_changes,
+                acting_user=acting_user,
+            )
+        else:
+            host.clean_attributes(  # silently ignores missing attributes
+                body.remove_attributes,
+                pprint_value=pprint_value,
+                pending_changes=pending_changes,
+                acting_user=acting_user,
+            )
 
         if faulty_attributes:
             raise ProblemException(

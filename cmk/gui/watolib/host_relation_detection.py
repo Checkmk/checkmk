@@ -5,13 +5,14 @@
 
 """Find the relations the hosts in Setup already show, and store the ones the user confirms.
 
-Relations are stored on both hosts of a pair, which is why every bulk route into the
-``relations`` attribute is closed (see
-:class:`cmk.gui.watolib.builtin_attributes.HostAttributeRelations`). Onboarding a fleet
-still needs one, and this is the shape that keeps the invariant: read the evidence that is
-already in the configuration, propose what it speaks for, and let the mirroring primitives
-of :mod:`cmk.gui.watolib.hosts_and_folders` do the writing for the proposals the user
-accepts.
+Relations are stored on both hosts of a pair, which is why bulk edit and the host cleanup leave
+the ``relations`` attribute out (see
+:class:`cmk.gui.watolib.builtin_attributes.HostAttributeRelations`), and the bulk endpoints of the
+REST API write one host at a time. Onboarding a fleet still needs something that proposes
+relations instead of applying one value to many hosts, and this is the shape that keeps the
+invariant: read the evidence that is already in the configuration, propose what it speaks for,
+and let the mirroring primitives of :mod:`cmk.gui.watolib.hosts_and_folders` do the writing for
+the proposals the user accepts.
 
 Detection rather than a rule, the way services are found rather than configured: the two
 hosts of a relation say so themselves - a board named after the host it sits in, or a

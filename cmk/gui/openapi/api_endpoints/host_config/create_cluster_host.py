@@ -6,7 +6,9 @@ from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.hostaddress import HostName
-from cmk.gui.openapi.api_endpoints.models.host_attribute_models import HostAttributeRequestModel
+from cmk.gui.openapi.api_endpoints.models.host_attribute_models import (
+    HostConfigAttributeRequestModel,
+)
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -48,8 +50,8 @@ class CreateClusterHostModel:
         description="The path name of the folder.",
         example="/folder/subfolder",
     )
-    attributes: HostAttributeRequestModel = api_field(
-        default_factory=lambda: HostAttributeRequestModel(dynamic_fields={}),
+    attributes: HostConfigAttributeRequestModel = api_field(
+        default_factory=lambda: HostConfigAttributeRequestModel(dynamic_fields={}),
         description="Attributes to set on the newly created host. You can specify custom attributes and tag groups in addition to the built-in ones listed below.",
         example={"ipaddress": "192.168.0.123"},
     )

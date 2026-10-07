@@ -3,15 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Materialize the GUI-only host relations into the monitoring core.
+"""Materialize the host relations into the monitoring core.
 
-Host relations (see :mod:`cmk.gui.watolib.host_relations`) are a Setup-only feature: the links
+Host relations (see :mod:`cmk.gui.watolib.host_relations`) are configured in Setup: the links
 live in the ``relations`` host attribute.
 
 To make the relations available for monitoring (Livestatus, views) they are resolved *once*,
 centrally, at activation time and written as the ``_CMK_RELATIONS`` custom host variable via a
 generated ``explicit_host_conf`` file. This runs on the central site before the configuration
-snapshots are built, so the file is replicated to all sites. The central config knows every host
+snapshots are built, so the file reaches every site with the configuration sync (``ultimatemt``
+builds a filtered one per site, see ``relations_of_site``). The central config knows every host
 of every site, so cross-site links resolve correctly here; each site's core only emits the macro
 for the hosts it actually monitors.
 

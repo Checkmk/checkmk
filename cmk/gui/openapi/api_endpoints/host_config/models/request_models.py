@@ -3,13 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.openapi.api_endpoints.models.host_attribute_models import HostAttributeRequestModel
+from cmk.gui.openapi.api_endpoints.models.host_attribute_models import (
+    HostConfigAttributeRequestModel,
+)
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 
 
 @api_model
 class UpdateHost:
-    attributes: HostAttributeRequestModel | ApiOmitted = api_field(
+    attributes: HostConfigAttributeRequestModel | ApiOmitted = api_field(
         description=(
             "Replace all currently set attributes on the host, with these attributes. "
             "Any previously set attributes which are not given here will be removed. "
@@ -19,7 +21,7 @@ class UpdateHost:
         default_factory=ApiOmitted,
     )
 
-    update_attributes: HostAttributeRequestModel | ApiOmitted = api_field(
+    update_attributes: HostConfigAttributeRequestModel | ApiOmitted = api_field(
         description=(
             "Just update the hosts attributes with these attributes. The previously set "
             "attributes will be overwritten. Can't be used together with attributes or "

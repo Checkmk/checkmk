@@ -13,15 +13,16 @@ software, they have to know the naming convention and open the second host by
 hand.
 
 Host relations bring this link into the product. A relation is configured in
-Setup, either in the properties of a single host or for many hosts at once with
-the relation detection. In the monitoring GUI the relations show up on the page
+Setup, either in the properties of a single host, through the host endpoints of
+the REST API (see `Data model`_), or for many hosts at once with the relation
+detection. In the monitoring GUI the relations show up on the page
 "All hosts" (``monitor_all_hosts.py``): as a column with the number of related
 hosts, and as cards of the related hosts (with their state) in the host
 slide-in. The classic views, including the view "All hosts" (``allhosts``), do
 not show relations.
 
-Relations are a GUI feature. The public REST API neither reads nor writes them;
-its host endpoints only keep what is stored (see `Data model`_).
+Relations are a feature of the web components, not of the core or the check
+engine.
 
 At the moment "Management board" is the only kind of relation. The model itself
 is not specific to management boards, though: adding another kind is mostly one
@@ -33,8 +34,8 @@ reachability. The legacy management board settings of a host
 (``management_address``, ``management_protocol`` etc.) are an older, separate
 mechanism and are not touched by this component.
 
-The work is tracked in CMK-39466 (model, Setup and monitoring) and CMK-39967
-(relation detection).
+The work is tracked in CMK-39466 (model, Setup and monitoring), CMK-39967
+(relation detection) and CMK-40315 (REST API).
 
 Terms
 -----
@@ -96,9 +97,9 @@ The main requirements we need to meet are:
   migrating any configuration.
 * Older Checkmk versions must be able to read configurations written by newer
   ones and skip relations they do not know, without losing the others. Saving a
-  host in the host properties must keep the relations of unknown kinds, as the
-  host properties cannot show them (see `Risks and technical debts`_ for what is
-  still dropped).
+  host in the host properties or through the REST API must keep the relations
+  of unknown kinds, as neither can show them (see `Risks and technical debts`_
+  for what is still dropped).
 * The page "All hosts" and the host slide-in must only show what the user is
   allowed to see. A related host the user cannot see is neither shown nor
   counted there.
@@ -249,10 +250,27 @@ the folder of that board once per selected host, and leave the selection half
 applied if one write is refused. The host cleanup does not offer it either: it
 would save the folder of each related host once per selected host, and leave
 the selection half applied if one write is refused. The attribute is not shown
-in the host search and the host table. The
-host endpoints of the REST API do not expose it, but keep it: a full
-replacement of the attributes carries the stored value over, and removing it is
-refused.
+in the host search and the host table.
+
+The host endpoints of the REST API expose it as a list of links. Creating,
+updating and removing it write the related hosts the way the host properties
+do, so the ETag of a related host changes as well. A full replacement of the
+attributes states the whole host: links it does not name are removed from both
+hosts. A link this version cannot place (an unknown kind, or a direction the
+kind does not have) is refused in a request and not shown in a response;
+stored links of unknown kinds are kept by every write, removing the attribute
+included, as in the host properties. Only the host endpoints model the
+attribute (``HostConfigAttributeRequestModel``). The generic attribute model,
+which templates for many hosts like the one of a DCD connector use, leaves it
+out, as one value would apply to every host.
+
+The bulk endpoints do the same through ``RelationMirrorBatch``, one folder of
+the request after the other. Both report a host whose relations are refused as
+failed and save the others. Any other value the bulk update cannot apply,
+including a change of the site the edition refuses for the relations the host
+keeps, still fails the request; folders processed before are saved. A related
+host has to exist when the folder of the host naming it is processed, so a
+relation to a host created in the same request can be refused.
 
 For the monitoring each host with relations gets a ``_CMK_RELATIONS`` custom
 host variable during the activation. It contains the same information as JSON,
@@ -284,8 +302,9 @@ Setup:
 * ``cmk/gui/watolib/host_relations.py``: The form of the host attribute, the
   rules for conflicting relations, the resolver used by the export, the note
   in the host deletion dialog, and ``with_links_not_shown``, which the host
-  properties use to keep the links of kinds they do not show. ``Host`` itself
-  stores what it is given.
+  properties and the REST API use to keep the links of kinds they do not show.
+  ``Host`` itself stores what it is given; ``store_relations``
+  (``host_attributes.py``) only normalizes it, so no links means no attribute.
 * ``cmk/gui/watolib/hosts_and_folders.py``: The mirror (``plan_relation_mirror``,
   ``apply_relation_mirror``, ``RelationMirrorBatch`` for several hosts saved in
   one go, ``relation_mirror_folders``, the cleanup after a deletion, and the
@@ -308,8 +327,15 @@ Setup:
 * ``cmk/gui/wato/pages/hosts.py`` and ``cmk/gui/wato/pages/folders.py``: The
   deletion note in the host properties and in the folder view, and cloning a
   host without its relations.
-* ``cmk/gui/openapi/api_endpoints/host_config/_utils.py``: The host endpoints of
-  the REST API neither expose the attribute nor let a request remove it.
+* ``cmk/gui/openapi/api_endpoints/models/host_attribute_models.py``: The
+  ``relations`` field of the host endpoints of the REST API.
+* ``cmk/gui/openapi/api_endpoints/host_config/create_host.py`` and
+  ``update_host.py``: The single host endpoints write it through
+  ``Folder.create_hosts()`` and ``Host.edit()`` and keep the links of kinds the
+  API does not show.
+* ``cmk/gui/openapi/api_endpoints/host_config/bulk_create_host.py`` and
+  ``bulk_update_host.py``: The bulk endpoints write it through
+  ``RelationMirrorBatch``.
 * ``cmk/gui/watolib/host_relations_export.py``: Writes the resolved relations
   for the monitoring core. ``cmk/gui/watolib/activate_changes.py`` calls it in
   ``_pre_activate_changes``.
@@ -351,6 +377,10 @@ Interfaces
   direction and the related host. Problems with the stored relations
   (``validate_host_relations``) are shown in the host properties and in the
   folder view, like a missing parent.
+* Public REST API, host endpoints (``host_config``): the attribute
+  ``relations`` as a list of ``kind``, ``direction`` and ``host``. Creating,
+  updating and removing it writes the related hosts, which get a pending change
+  of their own, in the bulk endpoints as well (see `Data model`_).
 * Setup page "Relation detection" (``wato.py?mode=host_relation_detection``). It
   is linked in the "Related" section of the folder menu as "Detect related
   hosts" and requires the permissions ``wato.edit``, ``wato.hosts`` and
@@ -455,7 +485,8 @@ about all of its relations (see below).
 When several hosts are created at once, the related hosts are looked up among
 the hosts that already exist. A relation to a host created in the same call is
 refused like one to a missing host, so a board and its OS host cannot be created
-together with their relation.
+together with their relation in one folder. The bulk endpoints of the REST API
+process one folder after the other (see `Data model`_).
 
 Deleting, renaming, cloning hosts and changing their site
 ---------------------------------------------------------
@@ -706,9 +737,8 @@ Testing
   ``test_host_relation_scan.py``: The detection and its jobs.
   ``tests/unit/cmk/gui/openapi/api_endpoints/test_host_relation_detection.py``
   and ``tests/openapi/test_openapi_host_relation_detection.py``: Its endpoints.
-* ``tests/unit/cmk/gui/openapi/api_endpoints/test_host_config_attributes.py``
-  and ``tests/openapi/test_openapi_host_config.py``: The host endpoints neither
-  expose nor remove the attribute.
+* ``tests/openapi/test_openapi_host_config.py``: The host endpoints of the REST
+  API.
 * ``tests/unit/cmk/gui/monitor/hosts/test_impl.py`` and ``test_sorting.py``, and
   ``tests/openapi/test_openapi_monitor_all_hosts.py``: The count, the sorting
   and the overview.
@@ -736,8 +766,9 @@ Security considerations
   who may see all hosts (``wato.see_all_folders``); for other users it says
   nothing about related hosts they cannot see. Neither tells whether a hidden
   host exists. The stored links themselves are shown as they are, as for
-  parents: the host properties and the delete confirmation name every related
-  host, also one the user may not see (without a link to it). The detection
+  parents: the host properties, the host endpoints of the REST API and the
+  delete confirmation name every related host, also one the user may not see
+  (in the GUI without a link to it). The detection
   only reads hosts in folders the user may read.
   Scan results are bound to the user who started the scan, because the
   endpoints do not require the permission to see the background jobs of others.
@@ -846,6 +877,12 @@ Architecture decisions
   what it changes and writes each host once and logs it once.
 * **The detection endpoints are internal.** They only serve the detection page
   and can change with it.
+* **The public REST API writes relations like the host properties.** Every
+  host endpoint goes through the mirror, the bulk endpoints included, so a
+  relation means the same whichever endpoint wrote it. A full replacement
+  replaces the relations too, as it states the whole host; links of kinds the
+  API does not show are kept. Hiding the attribute instead would have left
+  automation no way to configure relations.
 
 Adding a relation kind
 ======================
@@ -931,14 +968,15 @@ Ordered by priority.
    in ``web.log``.
 6. The only mix of versions Checkmk supports is a downgrade to an older patch
    release of the same major version. Such a version keeps links of unknown
-   kinds when a host is saved in the host properties, because its host
-   properties cannot show them. Deleting or renaming a host covers links of
+   kinds when a host is saved in the host properties or through the REST API,
+   because neither can show them. Deleting or renaming a host covers links of
    every kind. On every write of the host, however, it drops
    links with unknown directions and any fields a newer version added to a
    link, as it rebuilds each link from kind, direction and host. This includes
    any edit of the host, also one that only changes its IP address, and writing
-   the other half onto a related host. Saving a host in the host properties
-   also drops links of a known kind with a direction that kind does not have.
+   the other half onto a related host. Saving a host in the host properties or
+   through the REST API also drops links of a known kind with a direction that
+   kind does not have.
    The contract in `Data model`_ keeps a newer version from relying on either.
 7. When hosts are created or edited with relations, or the store run writes its
    folders, and writing one folder to disk fails halfway, nothing is rolled

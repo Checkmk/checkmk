@@ -32,6 +32,7 @@ from cmk.gui.openapi.endpoints._common.host_attribute_schemas import (
 from cmk.gui.openapi.framework import APIVersion
 from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.user_sites import activation_sites
+from cmk.gui.utils.host_relations import RelationLink
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundleStore
@@ -2125,6 +2126,7 @@ def test_openapi_host_config_effective_attributes_includes_all_host_attributes_r
             "state": "running",
         },
         "parents": [],
+        "relations": [],
         "site": "NO_SITE",
         "snmp_community": None,
         "tag_address_family": "ip-v4-only",
@@ -2337,54 +2339,339 @@ class TestHostsFilters:
         assert not resp.json["value"]
 
 
-def test_openapi_host_relations_cannot_be_removed(clients: ClientRegistry) -> None:
-    """A relation is stored on both hosts, so removing one side through the API would leave the
-    other one pointing at nothing. It is not settable either, so there is nothing to remove."""
-    clients.HostConfig.create(host_name="foobar", folder="/")
-
-    clients.HostConfig.edit(
-        host_name="foobar",
-        remove_attributes=["relations"],
-        expect_ok=False,
-    ).assert_status_code(HTTPStatus.BAD_REQUEST)
+_BOARD_OF_OS1 = {"kind": "management", "direction": "parent", "host": "os1"}
+_OS_HOST_OF_BOARD = {"kind": "management", "direction": "child", "host": "board"}
 
 
-def test_openapi_host_relations_cannot_be_removed_in_bulk_either(clients: ClientRegistry) -> None:
-    """The bulk endpoint says so in the same words, and leaves the host alone - rather than
-    reporting it as failed and applying the rest of the update to it anyway."""
-    clients.HostConfig.create(host_name="foobar", folder="/", attributes={"alias": "before"})
-
-    resp = clients.HostConfig.bulk_edit(
-        entries=[{"host_name": "foobar", "remove_attributes": ["alias", "relations"]}],
-        expect_ok=False,
-    ).assert_status_code(HTTPStatus.BAD_REQUEST)
-
-    assert resp.json["ext"]["failed_hosts"] == {
-        "foobar": "The following attributes are not managed through the API: relations"
-    }
-    assert clients.HostConfig.get(host_name="foobar").json["extensions"]["attributes"]["alias"] == (
-        "before"
+def _create_board_of_os1(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(host_name="os1", folder="/")
+    clients.HostConfig.create(
+        host_name="board", folder="/", attributes={"alias": "before", "relations": [_BOARD_OF_OS1]}
     )
 
 
-def test_openapi_host_relations_leave_the_other_entries_of_that_host_alone(
+def _host_attributes(clients: ClientRegistry, host_name: str) -> dict[str, Any]:
+    attributes: dict[str, Any] = clients.HostConfig.get(host_name=host_name).json["extensions"][
+        "attributes"
+    ]
+    return attributes
+
+
+def test_openapi_host_relations_are_shown(clients: ClientRegistry) -> None:
+    _create_board_of_os1(clients)
+
+    assert _host_attributes(clients, "board")["relations"] == [_BOARD_OF_OS1]
+
+
+def test_openapi_host_relations_are_written_to_the_related_host_on_create(
     clients: ClientRegistry,
 ) -> None:
-    """A host may appear in the request more than once. It is refused as a whole, rather than
-    having the entries before the offending one saved while it is reported as failed."""
-    clients.HostConfig.create(host_name="foobar", folder="/", attributes={"alias": "before"})
+    _create_board_of_os1(clients)
 
-    clients.HostConfig.bulk_edit(
+    assert _host_attributes(clients, "os1")["relations"] == [_OS_HOST_OF_BOARD]
+
+
+def test_openapi_host_relations_are_written_to_the_related_host_on_bulk_create(
+    clients: ClientRegistry,
+) -> None:
+    clients.HostConfig.create(host_name="os1", folder="/")
+
+    clients.HostConfig.bulk_create(
         entries=[
-            {"host_name": "foobar", "update_attributes": {"alias": "after"}},
-            {"host_name": "foobar", "remove_attributes": ["relations"]},
+            {"host_name": "board", "folder": "/", "attributes": {"relations": [_BOARD_OF_OS1]}}
+        ]
+    )
+
+    assert _host_attributes(clients, "os1")["relations"] == [_OS_HOST_OF_BOARD]
+
+
+def test_openapi_host_relations_refused_by_bulk_create_leave_the_other_hosts_created(
+    clients: ClientRegistry,
+) -> None:
+    """The related host has to exist already: one created in the same request does not yet."""
+    resp = clients.HostConfig.bulk_create(
+        entries=[
+            {"host_name": "os1", "folder": "/"},
+            {"host_name": "board", "folder": "/", "attributes": {"relations": [_BOARD_OF_OS1]}},
         ],
         expect_ok=False,
     ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
-    assert clients.HostConfig.get(host_name="foobar").json["extensions"]["attributes"]["alias"] == (
-        "before"
+    assert set(resp.json["ext"]["failed_hosts"]) == {"board"}
+    assert "relations" not in _host_attributes(clients, "os1")
+
+
+def test_openapi_host_relations_left_empty_are_accepted_by_bulk_create(
+    clients: ClientRegistry,
+) -> None:
+    clients.HostConfig.bulk_create(
+        entries=[{"host_name": "board", "folder": "/", "attributes": {"relations": []}}]
     )
+
+    assert "relations" not in _host_attributes(clients, "board")
+
+
+def test_openapi_host_relations_are_written_to_the_related_host_on_update(
+    clients: ClientRegistry,
+) -> None:
+    clients.HostConfig.create(host_name="os1", folder="/")
+    clients.HostConfig.create(host_name="board", folder="/")
+
+    clients.HostConfig.edit(host_name="os1", update_attributes={"relations": [_OS_HOST_OF_BOARD]})
+
+    assert _host_attributes(clients, "board")["relations"] == [_BOARD_OF_OS1]
+
+
+def test_openapi_host_relations_removed_from_a_host_are_removed_from_the_related_host(
+    clients: ClientRegistry,
+) -> None:
+    _create_board_of_os1(clients)
+
+    clients.HostConfig.edit(host_name="board", remove_attributes=["relations"])
+
+    assert "relations" not in _host_attributes(clients, "os1")
+
+
+def test_openapi_host_relations_not_named_in_a_full_replacement_are_removed(
+    clients: ClientRegistry,
+) -> None:
+    _create_board_of_os1(clients)
+
+    clients.HostConfig.edit(host_name="board", attributes={"alias": "after"})
+
+    assert "relations" not in _host_attributes(clients, "os1")
+
+
+def _break_relations_of_board(clients: ClientRegistry) -> None:
+    """Written in Setup directly, as by a manual edit of hosts.mk: the API refuses such a value."""
+    clients.HostConfig.create(host_name="board", folder="/")
+    board = folder_tree().load_host(HostName("board"))
+    board.attributes["relations"] = "not-a-list"  # type: ignore[typeddict-item]
+    board.folder().save_hosts(pprint_value=False, acting_user=user)
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_openapi_host_relations_malformed_refuse_an_update_naming_the_way_out(
+    clients: ClientRegistry,
+) -> None:
+    _break_relations_of_board(clients)
+
+    resp = clients.HostConfig.edit(
+        host_name="board", update_attributes={"alias": "after"}, expect_ok=False
+    )
+
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
+    assert "Store valid ones or remove them." in resp.json["detail"]
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_openapi_host_relations_malformed_are_replaced_by_removing_them(
+    clients: ClientRegistry,
+) -> None:
+    _break_relations_of_board(clients)
+
+    clients.HostConfig.edit(host_name="board", remove_attributes=["relations"])
+
+    assert "relations" not in _host_attributes(clients, "board")
+
+
+_LATER_OF_OS1: RelationLink = {"kind": "later", "direction": "parent", "host": HostName("os1")}
+
+
+def _create_heute_with_a_later_kind(clients: ClientRegistry) -> None:
+    """Created in Setup directly: the API refuses a kind this version cannot place."""
+    clients.HostConfig.create(host_name="os1", folder="/")
+    clients.HostConfig.create(host_name="os2", folder="/")
+    _create_host_with_management_board(
+        HostAttributes(
+            {
+                "relations": [
+                    _LATER_OF_OS1,
+                    {"kind": "management", "direction": "parent", "host": HostName("os2")},
+                ]
+            }
+        )
+    )
+
+
+def _stored_relations_of_heute() -> object:
+    return folder_tree().load_host(HostName("heute")).attributes["relations"]
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_openapi_host_relations_of_a_kind_the_api_does_not_show_are_not_shown(
+    clients: ClientRegistry,
+) -> None:
+    _create_heute_with_a_later_kind(clients)
+
+    assert _host_attributes(clients, "heute")["relations"] == [
+        {"kind": "management", "direction": "parent", "host": "os2"}
+    ]
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_openapi_host_relations_of_a_kind_the_api_does_not_show_survive_a_full_replacement(
+    clients: ClientRegistry,
+) -> None:
+    """A later version may have written them; the request cannot have meant to remove them."""
+    _create_heute_with_a_later_kind(clients)
+
+    clients.HostConfig.edit(host_name="heute", attributes={"alias": "after"})
+
+    assert _stored_relations_of_heute() == [_LATER_OF_OS1]
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_openapi_host_relations_of_a_kind_the_api_does_not_show_survive_an_update(
+    clients: ClientRegistry,
+) -> None:
+    _create_heute_with_a_later_kind(clients)
+
+    clients.HostConfig.edit(host_name="heute", update_attributes={"relations": []})
+
+    assert _stored_relations_of_heute() == [_LATER_OF_OS1]
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_openapi_host_relations_of_a_kind_the_api_does_not_show_survive_removing_relations(
+    clients: ClientRegistry,
+) -> None:
+    _create_heute_with_a_later_kind(clients)
+
+    clients.HostConfig.edit(host_name="heute", remove_attributes=["relations"])
+
+    assert _stored_relations_of_heute() == [_LATER_OF_OS1]
+    assert "relations" not in _host_attributes(clients, "os2")
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_openapi_host_relations_removed_with_other_attributes_keep_the_kinds_not_shown(
+    clients: ClientRegistry,
+) -> None:
+    _create_heute_with_a_later_kind(clients)
+    clients.HostConfig.edit(host_name="heute", update_attributes={"alias": "before"})
+
+    clients.HostConfig.edit(host_name="heute", remove_attributes=["relations", "alias"])
+
+    assert _stored_relations_of_heute() == [_LATER_OF_OS1]
+    assert "alias" not in _host_attributes(clients, "heute")
+    assert "relations" not in _host_attributes(clients, "os2")
+
+
+@pytest.mark.parametrize(
+    "relation",
+    [
+        pytest.param({"kind": "unknown", "direction": "parent", "host": "os1"}, id="unknown kind"),
+        pytest.param(
+            {"kind": "management", "direction": "symmetric", "host": "os1"},
+            id="direction not of the kind",
+        ),
+        pytest.param(
+            {"kind": "management", "direction": "parent", "host": "missing"}, id="missing host"
+        ),
+    ],
+)
+def test_openapi_host_relations_that_cannot_be_mirrored_are_refused(
+    clients: ClientRegistry, relation: dict[str, str]
+) -> None:
+    clients.HostConfig.create(host_name="os1", folder="/")
+
+    clients.HostConfig.create(
+        host_name="board", folder="/", attributes={"relations": [relation]}, expect_ok=False
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
+
+
+def test_openapi_host_relations_removed_by_bulk_update_are_removed_from_the_related_host(
+    clients: ClientRegistry,
+) -> None:
+    _create_board_of_os1(clients)
+
+    clients.HostConfig.bulk_edit(
+        entries=[{"host_name": "board", "remove_attributes": ["relations"]}]
+    )
+
+    assert "relations" not in _host_attributes(clients, "os1")
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_openapi_host_relations_of_a_kind_the_api_does_not_show_survive_removing_them_in_bulk(
+    clients: ClientRegistry,
+) -> None:
+    _create_heute_with_a_later_kind(clients)
+
+    clients.HostConfig.bulk_edit(
+        entries=[{"host_name": "heute", "remove_attributes": ["relations"]}]
+    )
+
+    assert _stored_relations_of_heute() == [_LATER_OF_OS1]
+    assert "relations" not in _host_attributes(clients, "os2")
+
+
+def test_openapi_host_relations_refused_by_bulk_update_leave_only_that_host_alone(
+    clients: ClientRegistry,
+) -> None:
+    _create_board_of_os1(clients)
+    clients.HostConfig.create(host_name="os2", folder="/")
+    missing_board = {"kind": "management", "direction": "child", "host": "missing"}
+
+    resp = clients.HostConfig.bulk_edit(
+        entries=[
+            {"host_name": "os2", "update_attributes": {"relations": [missing_board]}},
+            {"host_name": "board", "update_attributes": {"alias": "after"}},
+        ],
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
+    assert list(resp.json["ext"]["failed_hosts"]) == ["os2"]
+    assert "relations" not in _host_attributes(clients, "os2")
+    assert _host_attributes(clients, "board")["alias"] == "after"
+
+
+def test_openapi_host_relations_restated_unchanged_in_bulk_are_accepted(
+    clients: ClientRegistry,
+) -> None:
+    _create_board_of_os1(clients)
+
+    clients.HostConfig.bulk_edit(
+        entries=[
+            {
+                "host_name": "board",
+                "update_attributes": {"alias": "after", "relations": [_BOARD_OF_OS1]},
+            }
+        ]
+    )
+
+    assert _host_attributes(clients, "board")["alias"] == "after"
+
+
+def test_openapi_host_relations_added_by_bulk_update_are_written_to_the_related_host(
+    clients: ClientRegistry,
+) -> None:
+    _create_board_of_os1(clients)
+    clients.HostConfig.create(host_name="os2", folder="/")
+    board_of_os2 = {"kind": "management", "direction": "parent", "host": "os2"}
+
+    clients.HostConfig.bulk_edit(
+        entries=[
+            {
+                "host_name": "board",
+                "update_attributes": {"relations": [_BOARD_OF_OS1, board_of_os2]},
+            }
+        ]
+    )
+
+    assert _host_attributes(clients, "os2")["relations"] == [_OS_HOST_OF_BOARD]
+
+
+def test_openapi_host_relations_not_named_in_a_full_replacement_in_bulk_are_removed(
+    clients: ClientRegistry,
+) -> None:
+    _create_board_of_os1(clients)
+
+    clients.HostConfig.bulk_edit(entries=[{"host_name": "board", "attributes": {"alias": "after"}}])
+
+    assert "relations" not in _host_attributes(clients, "os1")
 
 
 def test_openapi_built_in_host_attributes_in_sync() -> None:

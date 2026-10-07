@@ -6,7 +6,7 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable, Sequence
-from typing import Annotated, Literal, Self
+from typing import Annotated, Literal, override, Self
 
 from pydantic import AfterValidator, model_validator, PlainSerializer, WithJsonSchema
 
@@ -34,6 +34,7 @@ from cmk.gui.openapi.api_endpoints.models.attributes import (
     validate_custom_attributes_and_tag_groups,
 )
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
+from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
 from cmk.gui.openapi.framework.model.converter import (
     HostAddressConverter,
     HostConverter,
@@ -42,6 +43,8 @@ from cmk.gui.openapi.framework.model.converter import (
 )
 from cmk.gui.openapi.framework.model.restrict_editions import RestrictEditions
 from cmk.gui.openapi.framework.model.restrict_features import RestrictFeatures
+from cmk.gui.utils.host_relation_kinds import known_relations, RELATION_KINDS
+from cmk.gui.utils.host_relations import RelationDirection, RelationLink, relations_or_empty
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels, HostAttributeWaitingForDiscovery
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.licensing.basics.options import OptionName
@@ -92,6 +95,43 @@ def _validate_tag_id(tag_id: str, built_in_tag_group_id: TagGroupID) -> str:
         raise ValueError(f"Tag ID '{tag_id}' is not valid for tag group '{built_in_tag_group_id}'.")
 
     return tag_id
+
+
+@api_model
+class HostRelationModel:
+    kind: str = api_field(
+        description=f"The kind of the relation. Known kinds: {', '.join(RELATION_KINDS)}.",
+        example="management",
+    )
+    direction: RelationDirection = api_field(
+        description=(
+            "The end of the relation this host sits at. For `management`, `parent` is the "
+            "management board and `child` the OS host."
+        ),
+        example="parent",
+    )
+    host: AnnotatedHostName = api_field(description="The related host.", example="srv-01")
+
+    @staticmethod
+    def from_internal(link: RelationLink) -> HostRelationModel:
+        return HostRelationModel(kind=link["kind"], direction=link["direction"], host=link["host"])
+
+    def to_internal(self) -> RelationLink:
+        return {"kind": self.kind, "direction": self.direction, "host": self.host}
+
+
+def _validate_relation_kinds(relations: list[HostRelationModel]) -> list[HostRelationModel]:
+    for relation in relations:
+        if (kind := RELATION_KINDS.get(relation.kind)) is None:
+            raise ValueError(
+                f"Unknown relation kind {relation.kind!r}. Known kinds: {', '.join(RELATION_KINDS)}."
+            )
+        if relation.direction not in kind.directions():
+            raise ValueError(
+                f"The relation kind {relation.kind!r} has no direction {relation.direction!r}."
+                f" Its directions: {', '.join(kind.directions())}."
+            )
+    return relations
 
 
 @api_model(slots=False)
@@ -347,6 +387,9 @@ class HostAttributeResponseModel(
         description="The relay ID through which this host is monitored, if not empty.",
         default_factory=ApiOmitted,
     )
+    relations: list[HostRelationModel] | ApiOmitted = api_field(
+        description="The relations of this host to other hosts.", default_factory=ApiOmitted
+    )
 
     @staticmethod
     def from_internal(
@@ -416,6 +459,12 @@ class HostAttributeResponseModel(
             ),
             inventory_failed=value.get("inventory_failed", ApiOmitted()),
             relay=value.get("relay", ApiOmitted()),
+            relations=[
+                HostRelationModel.from_internal(link)
+                for link in known_relations(relations_or_empty(value["relations"]))
+            ]
+            if "relations" in value
+            else ApiOmitted(),
             dynamic_fields={
                 k: v
                 for k, v in value.items()
@@ -511,4 +560,35 @@ class HostAttributeRequestModel(
             for k, v in self.dynamic_fields.items():
                 attributes[k] = v  # type: ignore[literal-required]
 
+        return attributes
+
+
+@api_model
+class HostConfigAttributeRequestModel(HostAttributeRequestModel):
+    """Host attributes for the host endpoints, including relations.
+
+    Templates that create many hosts, like a DCD connector's, use the base model: there one value
+    would apply to all hosts.
+    """
+
+    relations: (
+        Annotated[list[HostRelationModel], AfterValidator(_validate_relation_kinds)] | ApiOmitted
+    ) = api_field(
+        description=(
+            "The relations of this host to other hosts. Saving the host also writes the other "
+            "half of each relation to the related host. The monitoring follows the half stored "
+            "at the parent end, e.g. on the management board; the half at the child end is a "
+            "copy. A full replacement of the attributes removes the relations it does not name "
+            "from both hosts. Relations of a kind this version does not know are neither shown "
+            "nor removed."
+        ),
+        default_factory=ApiOmitted,
+    )
+
+    @override
+    def to_internal(self) -> HostAttributes:
+        # slots=True recreates the class, which breaks the zero-argument super().
+        attributes = HostAttributeRequestModel.to_internal(self)
+        if not isinstance(self.relations, ApiOmitted):
+            attributes["relations"] = [relation.to_internal() for relation in self.relations]
         return attributes

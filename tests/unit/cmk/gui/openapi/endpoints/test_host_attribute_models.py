@@ -13,6 +13,7 @@ from cmk.gui.openapi.api_endpoints.models.host_attribute_models import (
     BaseHostAttributeModel,
     HostAttributeRequestModel,
     HostAttributeResponseModel,
+    HostConfigAttributeRequestModel,
 )
 from cmk.gui.openapi.framework.model import ApiOmitted, json_dump_without_omitted
 from cmk.licensing.basics.options import OptionName
@@ -23,6 +24,27 @@ def test_parents_validator(sample_host: str) -> None:
         BaseHostAttributeModel
     ).validate_python({"parents": [sample_host]})
     assert result.parents == [HostName(sample_host)]
+
+
+@pytest.mark.parametrize(
+    "kind, direction, error",
+    [
+        pytest.param("later", "parent", "Unknown relation kind 'later'", id="unknown kind"),
+        pytest.param(
+            "management",
+            "symmetric",
+            "The relation kind 'management' has no direction 'symmetric'",
+            id="known kind, wrong direction",
+        ),
+    ],
+)
+def test_a_relation_this_version_cannot_place_is_refused_with_its_reason(
+    kind: str, direction: str, error: str
+) -> None:
+    with pytest.raises(ValidationError, match=error):
+        TypeAdapter(  # astrein: disable=pydantic-type-adapter
+            HostConfigAttributeRequestModel
+        ).validate_python({"relations": [{"kind": kind, "direction": direction, "host": "os1"}]})
 
 
 def test_bake_agent_package_allowed_when_bakery_feature_enabled(

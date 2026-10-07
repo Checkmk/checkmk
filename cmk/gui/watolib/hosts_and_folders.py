@@ -1427,18 +1427,18 @@ def _refusal_of(
         if not visible:
             message = _(
                 "The relation concerns '%(host)s' as well, which you cannot edit. "
-                "Put the entry back to save this host."
+                "Keep the relation to save this host."
             )
         elif isinstance(exc, MKAuthException):
             message = (
                 _(
                     "The relation concerns '%(host)s' as well, which you cannot edit: "
-                    "%(reason)s Put the entry back to save this host."
+                    "%(reason)s Keep the relation to save this host."
                 )
                 if dropping
                 else _(
                     "The relation concerns '%(host)s' as well, which you cannot edit: "
-                    "%(reason)s Remove the entry to save this host."
+                    "%(reason)s Leave the relation out to save this host."
                 )
             )
         else:
@@ -1621,6 +1621,16 @@ class RelationMirrorBatch:
             (),
             relations_or_empty(attributes.get("relations", [])),
             site_id=attributes.get("site") or self._folder.site_id(),
+        )
+
+    def need_edit(self, host: Host, attributes: HostAttributes) -> None:
+        """Refuse now if a counterpart would refuse ``host`` being edited to ``attributes``."""
+        stored = host.attributes.get("relations", [])
+        self._need(
+            host.name(),
+            relations_or_empty(stored),
+            _relations_to_store(host.name(), attributes.get("relations", []), stored),
+            site_id=attributes.get("site") or host.folder().site_id(),
         )
 
     def _need(
@@ -4756,16 +4766,12 @@ class Host:
                 _need_relatable_from(folder_site, [self], counterpart_resolver(folder))
         self.need_unlocked()
 
-        old_attrs = self.attributes.copy()
+        old_attrs = self.attributes
         old_nodes = self._cluster_nodes
+        old_site = self.site_id()
 
         # 2. Actual modification
-        affected_sites = [self.site_id()]
-        for attrname in attrnames_to_clean:
-            if attrname in self.attributes:
-                # Mypy can not help here with the dynamic key access
-                del self.attributes[attrname]  # type: ignore[misc]
-        affected_sites = list(set(affected_sites + [self.site_id()]))
+        self.attributes = attributes_without(self.attributes, attrnames_to_clean)
         self.folder().save_hosts(pprint_value=pprint_value, acting_user=acting_user)
 
         pending_changes.add(
@@ -4779,7 +4785,7 @@ class Host:
                 domains=[CORE_DOMAIN],
                 domain_settings=_core_settings_hosts_to_update([self.name()]),
             ),
-            ChangeScope.sites(affected_sites),
+            ChangeScope.sites(list({old_site, self.site_id()})),
         )
 
     def _need_folder_write_permissions(self, acting_user: LoggedInUser) -> None:
@@ -5004,6 +5010,15 @@ class Host:
             ChangeScope.sites([self.site_id(), omd_site()]),
         )
         self._name = new_name
+
+
+def attributes_without(attributes: HostAttributes, names: Collection[str]) -> HostAttributes:
+    remaining = attributes.copy()
+    for name in names:
+        if name in remaining:
+            # Mypy can not help here with the dynamic key access
+            del remaining[name]  # type: ignore[misc]
+    return remaining
 
 
 def diff_attributes(

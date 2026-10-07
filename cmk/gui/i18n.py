@@ -34,7 +34,7 @@ class Translation(NamedTuple):
     name: str
 
 
-translation = request_local_attr("translation", Translation)
+translation: Translation | None = request_local_attr("translation", Translation)
 
 
 @request_memoize()
@@ -48,7 +48,7 @@ def translate_to_current_language(message: str) -> str:
         return ""
     if translation:
         return translation.translation.gettext(message)
-    return str(message)  # type: ignore[unreachable]
+    return str(message)
 
 
 def _(message: str, /) -> str:
@@ -71,7 +71,7 @@ def ungettext(singular: str, plural: str, n: int, /) -> str:
     """
     if translation:
         return translation.translation.ngettext(singular, plural, n)
-    if n == 1:  # type: ignore[unreachable]
+    if n == 1:
         return str(singular)
     return str(plural)
 
@@ -79,7 +79,7 @@ def ungettext(singular: str, plural: str, n: int, /) -> str:
 def get_current_language() -> str:
     if translation:
         return translation.name
-    return "en"  # type: ignore[unreachable]
+    return "en"
 
 
 def _get_language_dirs() -> list[Path]:

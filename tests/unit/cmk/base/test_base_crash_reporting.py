@@ -9,11 +9,18 @@ from pathlib import Path
 
 import pytest
 
-from cmk.base.errorhandling import CheckCrashReport, CheckDetails, create_check_crash_dump
+from cmk.base.errorhandling import (
+    CheckCrashReport,
+    CheckDetails,
+    create_check_crash_dump,
+    create_section_crash_dump,
+)
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.helper_interface import AgentRawData
+from cmk.checkengine.plugins import SectionName
 from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.crash import make_crash_report_base_path, VersionInfo
+from cmk.utils import paths
 from tests.testlib.unit.fake_site import pop_crash_report_file
 
 
@@ -97,3 +104,39 @@ def test_check_crash_dump_contains_the_given_agent_output() -> None:
         )
 
     assert pop_crash_report_file("check", "agent_output") == b"<<<uptime>>>\n123\n"
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_section_crash_dump_contains_the_given_agent_output() -> None:
+    try:
+        raise Exception("DING")
+    except Exception:
+        create_section_crash_dump(
+            operation="parsing",
+            section_name=SectionName("uptime"),
+            section_content=[["123"]],
+            host_name=HostName("testhost"),
+            get_agent_output=lambda: AgentRawData(b"<<<uptime>>>\n123\n"),
+        )
+
+    assert pop_crash_report_file("section", "agent_output") == b"<<<uptime>>>\n123\n"
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_section_crash_dump_without_agent_output_attaches_none_even_if_a_cache_file_exists() -> (
+    None
+):
+    paths.tcp_cache_dir.mkdir(parents=True, exist_ok=True)
+    (paths.tcp_cache_dir / "testhost").write_bytes(b"<<<stale>>>\n")
+    try:
+        raise Exception("DING")
+    except Exception:
+        create_section_crash_dump(
+            operation="parsing",
+            section_name=SectionName("uptime"),
+            section_content=[["123"]],
+            host_name=HostName("testhost"),
+            get_agent_output=lambda: None,
+        )
+
+    assert pop_crash_report_file("section", "agent_output") is None

@@ -7,7 +7,6 @@
 
 """Check_MK base specific code of the crash reporting"""
 
-import contextlib
 import json
 import traceback
 from collections.abc import Callable, Mapping, Sequence
@@ -27,7 +26,6 @@ from cmk.crash import (
     CrashReportStore,
     make_crash_report_base_path,
 )
-from cmk.piggyback.backend import get_messages_for
 from cmk.utils.servicename import ServiceName
 
 _MAX_SECTION_CONTENT_BYTES = 1024 * 1024  # 1 MB
@@ -49,7 +47,7 @@ def create_section_crash_dump(
     section_name: SectionName,
     section_content: Sequence[object],
     host_name: HostName,
-    rtc_package: AgentRawData | None,
+    get_agent_output: Callable[[], AgentRawData | None],
 ) -> str:
     """Create a crash dump from an exception raised in a parse or host label function"""
 
@@ -65,7 +63,7 @@ def create_section_crash_dump(
                     "host_name": host_name,
                 },
             ),
-            agent_output=_read_agent_output(host_name) if rtc_package is None else rtc_package,
+            agent_output=get_agent_output(),
         )
         CrashReportStore().save(crash)
         return f"{text} - please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
@@ -175,18 +173,3 @@ class CheckCrashReport(CrashReportWithAgentOutput[CheckDetails]):
     @override
     def type() -> Literal["check"]:
         return "check"
-
-
-def _read_agent_output(hostname: HostName) -> AgentRawData | None:
-    agent_outputs = []
-
-    cache_path = cmk.utils.paths.tcp_cache_dir / hostname
-    with contextlib.suppress(OSError):
-        agent_outputs.append(cache_path.read_bytes())
-
-    # Note: this is not quite what the fetcher does :(
-    agent_outputs.extend(r.raw_data for r in get_messages_for(hostname, cmk.utils.paths.omd_root))
-
-    if agent_outputs:
-        return AgentRawData(b"\n".join(agent_outputs))
-    return None

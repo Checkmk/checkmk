@@ -37,6 +37,7 @@ from cmk.base.errorhandling import (
     CheckResultErrorHandler,
     create_section_crash_dump,
     RecordingFetcher,
+    serialize_fetched,
 )
 from cmk.base.modes.check_mk import (
     DiscoveryOptions,
@@ -274,7 +275,7 @@ def _mode_check_discovery(
                         section_name=section_name,
                         section_content=raw_data,
                         host_name=hostname,
-                        rtc_package=None,
+                        get_agent_output=lambda: serialize_fetched((f[0], f[1]) for f in fetched),
                     ),
                     host_label_plugins=HostLabelPluginMapper(
                         discovery_config=discovery_config,
@@ -530,6 +531,7 @@ def _mode_discover(
                 secrets=secrets,
             ),
         )
+        recording_fetcher = RecordingFetcher(fetcher)
         any_failed = False
         known_hosts = frozenset(hosts_config.all_configured_hosts)
         for hostname in sorted(
@@ -557,14 +559,14 @@ def _mode_discover(
                     section_name=section_name,
                     section_content=raw_data,
                     host_name=host_name,
-                    rtc_package=None,
+                    get_agent_output=lambda: recording_fetcher.serialized(host_name),
                 )
 
             succeeded = commandline_discovery(
                 hostname,
                 clear_ruleset_matcher_caches=ruleset_matcher.clear_caches,
                 parser=parser,
-                fetcher=fetcher,
+                fetcher=recording_fetcher,
                 section_plugins=SectionPluginMapper(
                     {**plugins.agent_sections, **plugins.snmp_sections}
                 ),

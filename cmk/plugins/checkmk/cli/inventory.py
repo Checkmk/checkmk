@@ -25,7 +25,7 @@ from cmk.base.core.active_config_layout import (
     RELATIVE_PATH_SECRETS,
     RELATIVE_PATH_TRUSTED_CAS,
 )
-from cmk.base.errorhandling import create_section_crash_dump
+from cmk.base.errorhandling import create_section_crash_dump, RecordingFetcher
 from cmk.base.modes.check_mk import (
     execute_active_check_inventory,
     extract_plugin_selection,
@@ -240,6 +240,7 @@ def _mode_inventory(
                 path=cmk.utils.password_store.pending_secrets_path_site(), secrets=secrets
             ),
         )
+        recording_fetcher = RecordingFetcher(fetcher)
         parser = CMKParser(
             config.make_parser_config(
                 loaded_config,
@@ -268,7 +269,7 @@ def _mode_inventory(
                     section_name=section_name,
                     section_content=raw_data,
                     host_name=host_name,
-                    rtc_package=None,
+                    get_agent_output=lambda: recording_fetcher.serialized(host_name),
                 )
 
             parameters = config_cache.inventory_config.hwsw_parameters(hostname)
@@ -293,7 +294,7 @@ def _mode_inventory(
                     check_results = inventory.inventorize_host(
                         hostname,
                         omd_root=cmk.utils.paths.omd_root,
-                        fetcher=fetcher,
+                        fetcher=recording_fetcher,
                         parser=parser,
                         summarizer=summarizer,
                         inventory_parameters=config_cache.inventory_config.plugin_parameters,

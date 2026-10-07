@@ -633,7 +633,7 @@ def run_checking(
                         section_name=section_name,
                         section_content=raw_data,
                         host_name=hostname,
-                        rtc_package=None,
+                        get_agent_output=lambda: serialize_fetched((f[0], f[1]) for f in fetched),
                     ),
                     check_plugins=check_plugins,
                     inventory_plugins=plugins.inventory_plugins,
@@ -765,10 +765,11 @@ def execute_active_check_inventory(
             previous_tree=previous_tree,
         )
     else:
+        recording_fetcher = RecordingFetcher(fetcher)
         result = inventory.inventorize_host(
             host_name,
             omd_root=cmk.utils.paths.omd_root,
-            fetcher=fetcher,
+            fetcher=recording_fetcher,
             parser=parser,
             summarizer=summarizer,
             inventory_parameters=inventory_parameters,
@@ -778,7 +779,7 @@ def execute_active_check_inventory(
                 section_name=section_name,
                 section_content=raw_data,
                 host_name=host_name,
-                rtc_package=None,
+                get_agent_output=lambda: recording_fetcher.serialized(host_name),
             ),
             inventory_plugins=inventory_plugins,
             run_plugin_names=EVERYTHING,

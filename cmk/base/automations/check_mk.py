@@ -407,6 +407,7 @@ def _automation_service_discovery(
             secrets=load_secrets_file(site_secrets_path),
         ),
     )
+    recording_fetcher = RecordingFetcher(fetcher)
     # sort clusters last, to have them operate with the new nodes host labels.
     for is_cluster, hostname in sorted((h in hosts_config.clusters, h) for h in hostnames):
 
@@ -420,7 +421,7 @@ def _automation_service_discovery(
                 section_name=section_name,
                 section_content=raw_data,
                 host_name=host_name,
-                rtc_package=None,
+                get_agent_output=lambda: recording_fetcher.serialized(host_name),
             )
 
         results[hostname] = _automation_discovery(
@@ -435,7 +436,7 @@ def _automation_service_discovery(
             },
             clear_ruleset_matcher_caches=env.ruleset_matcher.clear_caches,
             parser=parser,
-            fetcher=fetcher,
+            fetcher=recording_fetcher,
             summarizer=CMKSummarizer(
                 hostname,
                 config_cache.summary_config,
@@ -938,7 +939,7 @@ def _execute_discovery(
                 section_name=section_name,
                 section_content=raw_data,
                 host_name=host_name,
-                rtc_package=None,
+                get_agent_output=lambda: recording_fetcher.serialized(host_name),
             ),
             host_label_plugins=HostLabelPluginMapper(
                 discovery_config=discovery_config,
@@ -1163,6 +1164,7 @@ def _execute_autodiscovery(
             secrets=secrets,
         ),
     )
+    recording_fetcher = RecordingFetcher(fetcher)
     section_plugins = SectionPluginMapper(
         {**env.plugins.agent_sections, **env.plugins.snmp_sections}
     )
@@ -1225,7 +1227,7 @@ def _execute_autodiscovery(
                         section_name=section_name,
                         section_content=raw_data,
                         host_name=host_name,
-                        rtc_package=None,
+                        get_agent_output=lambda: recording_fetcher.serialized(host_name),
                     )
 
                 # TODO: Add host to hosts_processed AFTER it was processed!
@@ -1248,7 +1250,7 @@ def _execute_autodiscovery(
                         },
                         clear_ruleset_matcher_caches=env.ruleset_matcher.clear_caches,
                         parser=parser,
-                        fetcher=fetcher,
+                        fetcher=recording_fetcher,
                         summarizer=CMKSummarizer(
                             host_name,
                             env.config_cache.summary_config,

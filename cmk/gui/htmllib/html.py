@@ -962,7 +962,7 @@ class HTMLGenerator(HTMLWriter):
         enabled: bool,
         help_txt: str,
         class_: CSSSpec | None = None,
-        href: str = "javascript:void(0)",
+        href: str = "#",
         onclick: str | None = None,
         click_action: ClickAction | None = None,
     ) -> None:
@@ -1465,7 +1465,7 @@ class HTMLGenerator(HTMLWriter):
         elif class_ is not None:
             classes.append(class_)  # type: ignore[unreachable]
 
-        href = url if not (onclick or click_action) else "javascript:void(0)"
+        href = url if not (onclick or click_action) else "#"
         assert href is not None
 
         if isinstance(icon, StaticIcon):
@@ -1559,7 +1559,7 @@ class HTMLGenerator(HTMLWriter):
             return
 
         self.open_a(
-            href="javascript:void(0)",
+            href="#",
             id_="more_%s" % id_,
             class_=["more", "has_text" if with_text else ""],
             onclick="cmk.utils.toggle_more(this, %s, %d);%s"
@@ -1640,7 +1640,7 @@ class HTMLGenerator(HTMLWriter):
         atag = HTMLWriter.render_a(
             content,
             class_="popup_trigger",
-            href="javascript:void(0);",
+            href="#",
             # Needed to prevent wrong linking when views are parts of dashlets
             target="_self",
             onclick=onclick,
@@ -1680,7 +1680,7 @@ class HTMLGenerator(HTMLWriter):
             HTMLGenerator.render_static_icon(
                 StaticIcon(IconNames.drag), title=_("Move this entry")
             ),
-            href="javascript:void(0)",
+            href="#",
             class_=["element_dragger"],
             onmousedown=f"cmk.element_dragging.start(event, this, {json.dumps(dragging_tag.upper())}, {drop_handler}",
         )

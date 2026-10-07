@@ -56,6 +56,7 @@ py_cmk_test(
         requirement("jinja2"),
         requirement("requests"),
         requirement("responses"),
+        requirement("urllib3"),
     ],
 )
 

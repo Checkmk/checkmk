@@ -27,7 +27,6 @@ from .api_endpoints import (
     custom_host_attributes,
     host,
     icon,
-    rule,
     site_management,
 )
 from .api_endpoints import (
@@ -57,6 +56,7 @@ from .api_endpoints import service_discovery as api_service_discovery
 from .api_endpoints import user_config as api_user_config
 from .api_endpoints.graph_timerange import registration as api_graph_timerange
 from .api_endpoints.password import registration as api_password
+from .api_endpoints.rule import registration as api_rule
 from .api_endpoints.user_role import registration as api_user_role
 from .framework.registry import VersionedEndpointRegistry
 from .restful_objects.endpoint_family import EndpointFamilyRegistry
@@ -129,7 +129,7 @@ def register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
     )
-    rule.register(
+    api_rule.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
     )

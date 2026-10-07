@@ -227,15 +227,14 @@ class BookmarkList(pagetypes.Overridable[BookmarkListConfig]):
 
     @classmethod
     def _topic_choices(cls, user_permissions: UserPermissions) -> list[tuple[str, str]]:
-        topics = set()
-        instances = BookmarkList.load(user_permissions)
-        for instance in instances.instances_sorted():
-            if instance.is_permitted(user_permissions):
-                for topic, _bookmarks in instance.bookmarks_by_topic():
-                    if topic is None:
-                        topic = instance.default_bookmark_topic()  # type: ignore[unreachable]
-                    topics.add(topic)
-        return [(t, t) for t in sorted(topics)]
+        return sorted(
+            {
+                (topic, topic)
+                for instance in BookmarkList.load(user_permissions).instances_sorted()
+                if instance.is_permitted(user_permissions)
+                for topic, _bookmarks in instance.bookmarks_by_topic()
+            }
+        )
 
     @classmethod
     def validate_url(cls, value: str, varprefix: str) -> None:
@@ -343,10 +342,7 @@ class Bookmarks(SidebarSnapin):
         for instance in instances.instances_sorted():
             if instance.is_permitted(user_permissions):
                 for topic, bookmarks in instance.bookmarks_by_topic():
-                    if topic is None:
-                        topic = instance.default_bookmark_topic()  # type: ignore[unreachable]
-                    bookmark_list = topics.setdefault(topic, [])
-                    bookmark_list += bookmarks
+                    topics.setdefault(topic, []).extend(bookmarks)
         return sorted(topics.items())
 
     def _ajax_add_bookmark(self, ctx: PageContext) -> None:

@@ -11,8 +11,6 @@ site. The fixture stack below is the one the REST-API suite uses, trimmed to wha
 needs, plus the fleet itself.
 """
 
-# mypy: disable-error-code="no-untyped-def"
-
 import logging
 import os
 import queue

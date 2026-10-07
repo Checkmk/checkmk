@@ -185,6 +185,17 @@ describe('the clock', () => {
 
     expect(refreshTick.value).toBe(ticksBefore)
   })
+
+  test('refreshing once while paused stays paused', () => {
+    const { refreshOnce, refreshPaused, refreshTick } = useGlobalRefresh()
+    const ticksBefore = refreshTick.value
+
+    refreshOnce()
+    vi.advanceTimersByTime(3 * oneIntervalMs())
+
+    expect(refreshTick.value).toBe(ticksBefore + 1)
+    expect(refreshPaused.value).toBe(true)
+  })
 })
 
 describe('wiring the page', () => {
@@ -309,6 +320,14 @@ describe('a page whose content the refresh re-fetches', () => {
   beforeEach(() => {
     reloads = 0
     releaseContent = () => {}
+  })
+
+  test('refreshing once re-fetches the content', () => {
+    initGlobalRefresh({ intervalSeconds: 30, live: false, strategy })
+
+    useGlobalRefresh().refreshOnce()
+
+    expect(reloads).toBe(1)
   })
 
   test('every refresh re-fetches the content', () => {

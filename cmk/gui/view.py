@@ -57,6 +57,7 @@ class View:
         self._user_sorters: list[SorterSpec] | None = None
         self._want_checkboxes: bool = False
         self._warning_messages: list[str] = []
+        self.allow_browser_reload = True
         self.process_tracking = ViewProcessTracking()
         self.user_permissions = user_permissions
         self.request_cache = request_cache
@@ -281,19 +282,25 @@ class View:
 
         # Mandatory options for all views (if permitted)
         if display_options.enabled(display_options.O):
-            if (
-                display_options.enabled(display_options.R)
-                and user.may("general.view_option_refresh")
-                # The global time picker's refresh control offers the interval on such a view; a
-                # second control for the same setting would only disagree with it.
-                and not self.renders_engine_graphs
-            ):
+            if self.reloads_itself and user.may("general.view_option_refresh"):
                 options.add("refresh")
 
             if user.may("general.view_option_columns") and not self.layout.hide_entries_per_row:
                 options.add("num_columns")
 
         return sorted(options)
+
+    @property
+    def reloads_itself(self) -> bool:
+        """Whether the page reloads this view on its own interval."""
+        return (
+            self.allow_browser_reload
+            and display_options.enabled(display_options.R)
+            # Such a view refreshes through the global time picker's control: a reload would
+            # re-mount the Vue apps and discard the picker state, and a second control for the
+            # same setting would only disagree with it.
+            and not self.renders_engine_graphs
+        )
 
     @property
     def renders_engine_graphs(self) -> bool:

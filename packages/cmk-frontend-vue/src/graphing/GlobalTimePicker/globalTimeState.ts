@@ -188,6 +188,8 @@ export interface GlobalRefresh {
   pauseRefresh: () => void
   /** Goes live and refreshes now: live data means now, not one interval from now. */
   resumeRefresh: () => void
+  /** Refreshes now and leaves the clock as it is, for a page that someone else's clock drives. */
+  refreshOnce: () => void
   /** Whether a content reload is between asked for and swapped in: a fetch owner about to be
    * unmounted skips instead. A function, not a ref: a reactive read would re-run the watcher
    * that skipped a fetch, issuing it on release.
@@ -203,6 +205,7 @@ export function useGlobalRefresh(): GlobalRefresh {
     setRefreshIntervalSeconds,
     pauseRefresh,
     resumeRefresh,
+    refreshOnce: fireRefresh,
     contentReloadPending: () => contentReloadInFlight
   }
 }

@@ -181,6 +181,7 @@ class ViewWidgetIFramePageHelper:
         view.row_limit = row_limit
         view.only_sites = get_only_sites_from_context(context)
         view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
+        view.allow_browser_reload = False
         with cls._wrapper_context(is_reload, is_preview, is_public):
             process_view(
                 GUIViewRenderer(
@@ -245,6 +246,7 @@ class ViewWidgetIFramePageHelper:
         if is_public:
             html.add_body_css_class("dashboard_public_view")
         html.open_div(id_="dashlet_content_wrapper")
+        html.vue_component("cmk-dashboard-time-follower", data={})
         if is_preview:
             html.open_div(class_="click_shield")
         try:
@@ -699,7 +701,7 @@ class ViewWidgetEditPage(Page):
             html.hidden_field("mode", "create")  # copy and duplicate save as create
             html.hidden_field("owner", str(owner))
 
-            render_view_config(view_spec, general_properties=True)
+            render_view_config(view_spec, general_properties=True, allow_browser_reload=False)
 
         html.close_div()
         html.body_end()
@@ -714,7 +716,9 @@ class ViewWidgetEditPage(Page):
     @staticmethod
     def _save(dashboard: DashboardConfig, embedded_id: str, view_spec: ViewSpec) -> None:
         # first arg is just used for the datasource (so it can't be overwritten)
-        view_spec = create_view_from_valuespec(old_view=view_spec, view=view_spec)
+        view_spec = create_view_from_valuespec(
+            old_view=view_spec, view=view_spec, allow_browser_reload=False
+        )
         embedded = EmbeddedViewSpecManager.normal_to_embedded_view_spec(view_spec)
         dashboard.setdefault("embedded_views", {})[embedded_id] = embedded
         save_all_dashboards(dashboard["owner"])

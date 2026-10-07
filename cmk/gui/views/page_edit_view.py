@@ -95,10 +95,18 @@ def page_edit_view(ctx: PageContext) -> None:
         get_all_views(),
         UserPermissions.from_config(ctx.config, permission_registry),
         ctx.config,
-        custom_field_handler=render_view_config,
-        create_handler=create_view_from_valuespec,
+        custom_field_handler=_render_editable_view_config,
+        create_handler=_create_editable_view,
         info_handler=get_view_infos,
     )
+
+
+def _render_editable_view_config(view_spec: ViewSpec) -> None:
+    render_view_config(view_spec, allow_browser_reload=True)
+
+
+def _create_editable_view(old_view: ViewSpec, view: ViewSpec) -> ViewSpec:
+    return create_view_from_valuespec(old_view, view, allow_browser_reload=True)
 
 
 def view_editor_options() -> list[
@@ -113,7 +121,7 @@ def view_editor_options() -> list[
     ]
 
 
-def view_editor_general_properties(ds_name: str) -> Dictionary:
+def view_editor_general_properties(ds_name: str, *, allow_browser_reload: bool) -> Dictionary:
     return Dictionary(
         title=_("View properties"),
         render="form",
@@ -136,14 +144,20 @@ def view_editor_general_properties(ds_name: str) -> Dictionary:
                     default_value=["user_sortable"],
                 ),
             ),
-            (
-                "browser_reload",
-                Integer(
-                    title=_("Automatic page reload"),
-                    unit=_("seconds"),
-                    minvalue=0,
-                    help=_('Set to "0" to disable the automatic reload.'),
-                ),
+            *(
+                [
+                    (
+                        "browser_reload",
+                        Integer(
+                            title=_("Automatic page reload"),
+                            unit=_("seconds"),
+                            minvalue=0,
+                            help=_('Set to "0" to disable the automatic reload.'),
+                        ),
+                    )
+                ]
+                if allow_browser_reload
+                else []
             ),
             (
                 "row_limit",
@@ -840,7 +854,9 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
         raise MKGeneralException("Invaild choice")
 
 
-def render_view_config(view_spec: ViewSpec, general_properties: bool = True) -> None:
+def render_view_config(
+    view_spec: ViewSpec, general_properties: bool = True, *, allow_browser_reload: bool
+) -> None:
     value = _transform_view_to_valuespec_value(view_spec)
 
     # TODO: This and the modification of the view_spec should not be here. Find a better place
@@ -853,7 +869,9 @@ def render_view_config(view_spec: ViewSpec, general_properties: bool = True) -> 
     value["datasource"] = ds_name
 
     if general_properties:
-        view_editor_general_properties(ds_name).render_input("view", value.get("view"))
+        view_editor_general_properties(
+            ds_name, allow_browser_reload=allow_browser_reload
+        ).render_input("view", value.get("view"))
 
     if _is_inventory_datasource(ds_name):
         view_inventory_join_macros(
@@ -946,7 +964,9 @@ def _update_view_with_valuespec_values(
 #
 # old_view is the old view dict which might be loaded from storage.
 # view is the new dict object to be updated.
-def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](old_view: T, view: T) -> T:
+def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](
+    old_view: T, view: T, *, allow_browser_reload: bool
+) -> T:
     ds_name = old_view.get("datasource") or request.get_ascii_input_mandatory("datasource")
     view["datasource"] = ds_name
 
@@ -956,7 +976,9 @@ def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](old_view: T, vi
         _update_view_with_valuespec_values(view, ident, attrs)
 
     user_permissions = UserPermissions.from_config(active_config, permission_registry)
-    update_view("view", view_editor_general_properties(ds_name))
+    update_view(
+        "view", view_editor_general_properties(ds_name, allow_browser_reload=allow_browser_reload)
+    )
     update_view("columns", view_editor_column_spec("columns", ds_name, user_permissions))
     update_view("grouping", view_editor_grouping_spec("grouping", ds_name, user_permissions))
     update_view(

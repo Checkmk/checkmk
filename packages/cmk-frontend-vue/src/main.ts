@@ -24,6 +24,7 @@ import { translationLoader } from '@/translationLoader'
 import AiExplainThisIssueApp from './ai/AiExplainButtonApp.vue'
 import Dashboard from './dashboard/DashboardApp.vue'
 import SharedDashboard from './dashboard/DashboardSharedApp.vue'
+import DashboardTimeFollowerApp from './dashboard/DashboardTimeFollowerApp.vue'
 import DateTimePickerApp from './date-time-picker/CmkDateTimePickerApp.vue'
 import DialogApp from './dialog/DialogApp.vue'
 import GlobalSettingsApp from './global-settings/GlobalSettingsApp.vue'
@@ -70,6 +71,7 @@ defineCmkComponent('cmk-form-spec', FormApp)
 defineCmkComponent('cmk-quick-setup', QuickSetup)
 defineCmkComponent('cmk-dashboard', Dashboard)
 defineCmkComponent('cmk-shared-dashboard', SharedDashboard)
+defineCmkComponent('cmk-dashboard-time-follower', DashboardTimeFollowerApp)
 defineCmkComponent('cmk-notification-overview', NotificationOverview)
 defineCmkComponent('cmk-agent-download', AgentDownload)
 defineCmkComponent('cmk-notification-parameters-overview', NotificationParametersOverviewApp)

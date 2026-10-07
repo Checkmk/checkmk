@@ -8,7 +8,11 @@ import pytest
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.type_defs import ColumnSpec
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.views.page_edit_view import join_painters_of_datasource, view_editor_column_spec
+from cmk.gui.views.page_edit_view import (
+    join_painters_of_datasource,
+    view_editor_column_spec,
+    view_editor_general_properties,
+)
 
 
 def _a_join_painter_name() -> str:
@@ -41,3 +45,17 @@ def test_column_spec_join_column_without_join_value_is_a_user_error() -> None:
 
     # The error must point at the join value field, not at some unrelated element.
     assert "join_value" in (excinfo.value.varname or "")
+
+
+@pytest.mark.usefixtures("request_context")
+def test_the_view_editor_offers_the_automatic_page_reload() -> None:
+    properties = view_editor_general_properties("hosts", allow_browser_reload=True)
+
+    assert "browser_reload" in properties.default_value()
+
+
+@pytest.mark.usefixtures("request_context")
+def test_the_view_editor_without_browser_reload_hides_the_automatic_page_reload() -> None:
+    properties = view_editor_general_properties("hosts", allow_browser_reload=False)
+
+    assert "browser_reload" not in properties.default_value()

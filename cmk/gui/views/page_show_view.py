@@ -407,13 +407,7 @@ def _show_view(
     show_filters = _filter_form_filters(view)
 
     # Set browser reload
-    if (
-        browser_reload
-        and display_options.enabled(display_options.R)
-        # A reload would re-mount the Vue apps and discard the time picker state; such a view
-        # refreshes through the picker's control instead (see GUIViewRenderer._render_time_picker).
-        and not view.renders_engine_graphs
-    ):
+    if browser_reload and view.reloads_itself:
         html.browser_reload = browser_reload
 
     if config.enable_sounds and config.sounds:

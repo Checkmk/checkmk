@@ -83,6 +83,12 @@ def test_match_items_cover_builtin_visuals_only(
     assert list(match_items[0].match_texts) == ["all hosts", "allhosts", "term"]
 
 
+@pytest.mark.parametrize("what", ["views", "dashboards"])
+def test_permissions_checked_by_visual_search_exist(what: str) -> None:
+    assert f"general.edit_{what}" in permission_registry
+    assert f"general.edit_foreign_{what}" in permission_registry
+
+
 @pytest.mark.usefixtures("with_admin_login")
 def test_permitted_builtin_visual_is_visible(
     search: BuiltinVisualsSearch, load_config: Config, with_admin_login: UserId

@@ -70,6 +70,8 @@ py_library(
         "//cmk/gui/pagetypes",
         "//cmk/gui/painter",
         "//cmk/gui/plugins/dashboard",
+        "//cmk/gui/search:matchers",
+        "//cmk/gui/search:permissions",
         "//cmk/gui/sidebar/_snapin:snapin_registry",
         "//cmk/gui/token_auth",
         "//cmk/gui/userdb",

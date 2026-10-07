@@ -9,6 +9,8 @@ from cmk.gui.openapi.framework import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.permissions import PermissionSection, PermissionSectionRegistry
+from cmk.gui.search.matchers import MatchItemGeneratorRegistry
+from cmk.gui.search.permissions import category_permissions_handler_registry
 from cmk.gui.token_auth import (
     TokenAuthenticatedEndpoint,
     TokenAuthenticatedPageRegistry,
@@ -16,6 +18,7 @@ from cmk.gui.token_auth import (
 from cmk.gui.visuals.type import VisualTypeRegistry
 from cmk.gui.watolib.groups_io import ContactGroupUsageFinderRegistry
 
+from . import _search
 from ._find_group_usage import find_usages_of_contact_group_in_dashboards
 from .api import register_endpoints
 from .builtin_dashboards import builtin_dashboards
@@ -44,6 +47,7 @@ def register(
     autocompleter_registry: AutocompleterRegistry,
     endpoint_family_registry: EndpointFamilyRegistry,
     versioned_endpoint_registry: VersionedEndpointRegistry,
+    match_item_generator_registry: MatchItemGeneratorRegistry,
 ) -> None:
     visual_type_registry.register(VisualTypeDashboards)
     permission_section_registry.register(PERMISSION_SECTION_DASHBOARD)
@@ -71,6 +75,7 @@ def register(
         endpoint_family_registry,
         versioned_endpoint_registry,
     )
+    _search.register(match_item_generator_registry, category_permissions_handler_registry)
 
 
 PERMISSION_SECTION_DASHBOARD = PermissionSection(

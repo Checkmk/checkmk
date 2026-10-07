@@ -703,9 +703,9 @@ SorterCrashIdent = Sorter(
 
 
 def cmp_crash_source(column: ColumnName, r1: Row, r2: Row) -> int:
-    v1 = str(local_files_involved_in_crash(r1.get(column, [])))
-    v2 = str(local_files_involved_in_crash(r2.get(column, [])))
-    return cmp_insensitive_string(v1, v2)
+    v1 = bool(local_files_involved_in_crash(r1.get(column, [])))
+    v2 = bool(local_files_involved_in_crash(r2.get(column, [])))
+    return (v1 > v2) - (v1 < v2)
 
 
 def _sort_crash_source(
@@ -825,12 +825,14 @@ FilterCrashException.query_filter = query_filters.TableTextQuery(
 
 
 def check_crash_source(selection: str, row: Row) -> bool:
-    is_extension = local_files_involved_in_crash(row["crash_exc_traceback"])
-
-    if selection == "built_in" and is_extension:
-        return False
-
-    return selection != "extension" or bool(is_extension)
+    is_extension = bool(local_files_involved_in_crash(row["crash_exc_traceback"]))
+    match selection:
+        case "built_in":
+            return not is_extension
+        case "extension":
+            return is_extension
+        case _:
+            return True
 
 
 FilterCrashSource = FilterOption(

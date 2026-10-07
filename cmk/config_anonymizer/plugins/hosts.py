@@ -389,7 +389,59 @@ def _anonymize_metrics_association_lookup_rule(
             rule["host_name_template"],
             "metrics_association",
         )
+    if "attribute_filter" in rule:
+        anonymized["attribute_filter"] = _anonymize_metrics_association_wire_filter(
+            anon_interface, rule["attribute_filter"]
+        )
     return anonymized
+
+
+def _anonymize_metrics_association_wire_filter(
+    anon_interface: AnonInterface,
+    node: dict[str, Any],
+) -> object:
+    """Anonymize the attribute names and values of a recursive wire attribute filter."""
+    match node["type"]:
+        case "and":
+            return {
+                "type": "and",
+                "conjuncts": [
+                    _anonymize_metrics_association_wire_filter(anon_interface, conjunct)
+                    for conjunct in node["conjuncts"]
+                ],
+            }
+        case "or":
+            return {
+                "type": "or",
+                "disjuncts": [
+                    _anonymize_metrics_association_wire_filter(anon_interface, disjunct)
+                    for disjunct in node["disjuncts"]
+                ],
+            }
+        case "not":
+            return {
+                "type": "not",
+                "condition": _anonymize_metrics_association_wire_filter(
+                    anon_interface, node["condition"]
+                ),
+            }
+        case _:
+            anonymized: dict[str, Any] = {
+                "type": node["type"],
+                "key": {
+                    "kind": node["key"]["kind"],
+                    "name": anon_interface.get_generic_mapping(
+                        node["key"]["name"],
+                        "metric_association_attr_key",
+                    ),
+                },
+            }
+            if "value" in node:
+                anonymized["value"] = anon_interface.get_generic_mapping(
+                    node["value"],
+                    "metric_association_attr_value",
+                )
+            return anonymized
 
 
 def _anonymize_metrics_association_attribute_filter(

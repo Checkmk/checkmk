@@ -2,6 +2,8 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import json
+
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
@@ -12,7 +14,7 @@ from cmk.gui.openapi.api_endpoints.models.host_attribute_models import (
     HostAttributeRequestModel,
     HostAttributeResponseModel,
 )
-from cmk.gui.openapi.framework.model import ApiOmitted
+from cmk.gui.openapi.framework.model import ApiOmitted, json_dump_without_omitted
 from cmk.licensing.basics.options import OptionName
 
 
@@ -110,63 +112,48 @@ def test_metrics_association_multi_rule_request_maps_to_lookup_rules(
     )
 
 
-def test_metrics_association_wire_attribute_filter_request_projects_to_three_lists(
+def test_metrics_association_wire_attribute_filter_reads_back_as_written(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A rule's wire ``attribute_filter`` projects its ``equals`` conditions into the three
-    per-kind lists. Regression test for CMK-37860."""
+    """A rule's wire ``attribute_filter`` is stored as sent and read back unchanged, so a writer
+    that diffs what it sent against what it reads back (DCD) sees no change. Regression test for
+    CMK-38656 (every DCD cycle reported every host as modified)."""
     monkeypatch.setattr(
         "cmk.gui.openapi.framework.model.restrict_editions.edition",
         lambda _omd_root: Edition.ULTIMATE,
     )
-    payload = {
-        "metrics_association": [
-            "enabled",
-            {
-                "host_name_lookup_rules": [
-                    {
-                        "resource_attributes": [],
-                        "scope_attributes": [],
-                        "data_point_attributes": [],
-                        "attribute_filter": {
-                            "type": "and",
-                            "conjuncts": [
-                                {
-                                    "type": "equals",
-                                    "key": {"kind": "resource", "name": "k8s.pod.name"},
-                                    "value": "pod-a",
-                                },
-                                {
-                                    "type": "equals",
-                                    "key": {"kind": "data_point", "name": "unit"},
-                                    "value": "bytes",
-                                },
-                            ],
-                        },
-                        "host_name_template": "$RESOURCE_ATTR.k8s.pod.name$",
-                    },
-                ],
-            },
-        ]
-    }
-
-    model = TypeAdapter(  # astrein: disable=pydantic-type-adapter
-        HostAttributeRequestModel
-    ).validate_python(payload)
-
-    assert model.to_internal()["metrics_association"] == (
-        "enabled",
-        {
-            "host_name_lookup_rules": [
+    sent_rule = {
+        "resource_attributes": [],
+        "scope_attributes": [],
+        "data_point_attributes": [],
+        "attribute_filter": {
+            "type": "and",
+            "conjuncts": [
                 {
-                    "resource_attributes": [{"key": "k8s.pod.name", "value": "pod-a"}],
-                    "scope_attributes": [],
-                    "data_point_attributes": [{"key": "unit", "value": "bytes"}],
-                    "host_name_template": "$RESOURCE_ATTR.k8s.pod.name$",
+                    "type": "equals",
+                    "key": {"kind": "resource", "name": "k8s.pod.name"},
+                    "value": "pod-a",
+                },
+                {
+                    "type": "equals",
+                    "key": {"kind": "data_point", "name": "unit"},
+                    "value": "bytes",
                 },
             ],
         },
-    )
+        "host_name_template": "$RESOURCE_ATTR.k8s.pod.name$",
+    }
+    request = TypeAdapter(  # astrein: disable=pydantic-type-adapter
+        HostAttributeRequestModel
+    ).validate_python({"metrics_association": ["enabled", {"host_name_lookup_rules": [sent_rule]}]})
+
+    response = HostAttributeResponseModel.from_internal(request.to_internal(), set())
+
+    read_back = json.loads(json_dump_without_omitted(HostAttributeResponseModel, response))
+    assert read_back["metrics_association"] == [
+        "enabled",
+        {"host_name_lookup_rules": [sent_rule]},
+    ]
 
 
 def test_metrics_association_non_equals_wire_attribute_filter_request_is_rejected(

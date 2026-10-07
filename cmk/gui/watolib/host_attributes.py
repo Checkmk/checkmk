@@ -147,6 +147,9 @@ class MetricsAssociationHostNameLookupRule(TypedDict):
     # host's own name. Resolved into concrete attribute filters at fetch time. A rule without a
     # template selects its series by the attribute filters alone.
     host_name_template: NotRequired[str]
+    # Optional: the recursive wire attribute filter a dynamic host management connection sends.
+    # Takes precedence over the three lists above.
+    attribute_filter: NotRequired[Mapping[str, object]]
 
 
 class MetricsAssociationEnabled(TypedDict):

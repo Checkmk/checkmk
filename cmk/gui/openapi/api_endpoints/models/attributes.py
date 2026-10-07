@@ -64,7 +64,6 @@ from cmk.shared_typing.attribute_filter import (
     AttributeFilter,
     AttributeFilterAnd,
     AttributeFilterEquals,
-    AttributeKind,
 )
 
 # Shared between the lenient input model (flags optional) and the read-only view model
@@ -922,8 +921,8 @@ class MetricsAssociationFilterGroupModel:
     )
     attribute_filter: Mapping[str, object] | ApiOmitted = api_field(
         description="Optional. The recursive attribute filter the Setup GUI persists for a rule. "
-        "When present it takes precedence over the three attribute lists: its 'equals' conditions "
-        "are projected into them. Only an AND of 'equals' conditions is supported.",
+        "When present it takes precedence over the three attribute lists. Only an AND of 'equals' "
+        "conditions is supported.",
         default_factory=ApiOmitted,
     )
 
@@ -977,54 +976,42 @@ _WIRE_FILTER_ADAPTER: TypeAdapter[AttributeFilter] = TypeAdapter(
 )
 
 
-def _wire_equals_by_kind(
-    attribute_filter: Mapping[str, object],
-) -> dict[AttributeKind, list[MetricsAssociationAttributeFilterModel]]:
-    """Project the wire filter's ``equals`` conjuncts into the three per-kind lists."""
+def _validate_wire_filter(attribute_filter: Mapping[str, object]) -> None:
+    """Reject anything richer than an AND of ``equals`` conditions (see CMK-37370)."""
     root = _WIRE_FILTER_ADAPTER.validate_python(attribute_filter)
     if not isinstance(root, AttributeFilterAnd):
         raise ValueError(f"Expected a top-level 'and' attribute filter, got {root!r}")
-    by_kind: dict[AttributeKind, list[MetricsAssociationAttributeFilterModel]] = {
-        "resource": [],
-        "scope": [],
-        "data_point": [],
-    }
     for conjunct in root.conjuncts:
         if not isinstance(conjunct, AttributeFilterEquals):
             raise ValueError(f"Expected an 'equals' attribute filter condition, got {conjunct!r}")
-        by_kind[conjunct.key.kind].append(
-            MetricsAssociationAttributeFilterModel(key=conjunct.key.name, value=conjunct.value)
-        )
-    return by_kind
 
 
 def _lookup_rule_to_internal(
     rule: MetricsAssociationFilterGroupModel,
 ) -> MetricsAssociationHostNameLookupRule:
-    """Build one internal host name lookup rule from an API rule."""
-    if isinstance(rule.attribute_filter, ApiOmitted):
-        resource_attributes = rule.resource_attributes
-        scope_attributes = rule.scope_attributes
-        data_point_attributes = rule.data_point_attributes
-    else:
-        by_kind = _wire_equals_by_kind(rule.attribute_filter)
-        resource_attributes = by_kind["resource"]
-        scope_attributes = by_kind["scope"]
-        data_point_attributes = by_kind["data_point"]
+    """Build one internal host name lookup rule from an API rule.
+
+    The wire ``attribute_filter`` is stored as received: a writer that diffs what it sent against
+    what it reads back (DCD) must not see a difference for an unchanged rule."""
     internal = MetricsAssociationHostNameLookupRule(
         resource_attributes=[
-            MetricsAssociationAttributeFilter(key=f.key, value=f.value) for f in resource_attributes
+            MetricsAssociationAttributeFilter(key=f.key, value=f.value)
+            for f in rule.resource_attributes
         ],
         scope_attributes=[
-            MetricsAssociationAttributeFilter(key=f.key, value=f.value) for f in scope_attributes
+            MetricsAssociationAttributeFilter(key=f.key, value=f.value)
+            for f in rule.scope_attributes
         ],
         data_point_attributes=[
             MetricsAssociationAttributeFilter(key=f.key, value=f.value)
-            for f in data_point_attributes
+            for f in rule.data_point_attributes
         ],
     )
     if not isinstance(rule.host_name_template, ApiOmitted):
         internal["host_name_template"] = rule.host_name_template
+    if not isinstance(rule.attribute_filter, ApiOmitted):
+        _validate_wire_filter(rule.attribute_filter)
+        internal["attribute_filter"] = rule.attribute_filter
     return internal
 
 
@@ -1061,6 +1048,7 @@ def _lookup_rule_from_internal(
             for f in rule["data_point_attributes"]
         ],
         host_name_template=rule.get("host_name_template", ApiOmitted()),
+        attribute_filter=rule.get("attribute_filter", ApiOmitted()),
     )
 
 

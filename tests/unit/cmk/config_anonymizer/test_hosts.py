@@ -44,3 +44,74 @@ def test_a_malformed_relations_value_is_dropped_rather_than_leaked() -> None:
     )
 
     assert anonymized["relations"] == []
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_a_metrics_association_attribute_filter_hides_its_attributes() -> None:
+    anon_interface = _anon_interface()
+    attribute_filter = {
+        "type": "and",
+        "conjuncts": [
+            {
+                "type": "equals",
+                "key": {"kind": "resource", "name": "service.name"},
+                "value": "checkout",
+            },
+            {"type": "not", "condition": {"type": "exists", "key": {"kind": "scope", "name": "x"}}},
+        ],
+    }
+
+    anonymized = _anonymize_single_host_and_folder_attributes(
+        anon_interface,
+        [],
+        {
+            "metrics_association": (
+                "enabled",
+                {
+                    "host_name_lookup_rules": [
+                        {
+                            "resource_attributes": [],
+                            "scope_attributes": [],
+                            "data_point_attributes": [],
+                            "attribute_filter": attribute_filter,
+                        }
+                    ]
+                },
+            )
+        },
+    )
+
+    key = anon_interface.get_generic_mapping
+    assert anonymized["metrics_association"] == {
+        "host_name_lookup_rules": [
+            {
+                "resource_attributes": [],
+                "scope_attributes": [],
+                "data_point_attributes": [],
+                "attribute_filter": {
+                    "type": "and",
+                    "conjuncts": [
+                        {
+                            "type": "equals",
+                            "key": {
+                                "kind": "resource",
+                                "name": key("service.name", "metric_association_attr_key"),
+                            },
+                            "value": key("checkout", "metric_association_attr_value"),
+                        },
+                        {
+                            "type": "not",
+                            "condition": {
+                                "type": "exists",
+                                "key": {
+                                    "kind": "scope",
+                                    "name": key("x", "metric_association_attr_key"),
+                                },
+                            },
+                        },
+                    ],
+                },
+            }
+        ]
+    }
+    assert "service.name" not in str(anonymized) and "checkout" not in str(anonymized)

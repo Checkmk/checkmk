@@ -22,6 +22,10 @@ class URLContent(BaseWidgetContent):
         description="Whether the URL carries the widget's effective filter context as query "
         "parameters."
     )
+    include_time_range: bool = api_field(
+        description="Whether the URL carries the dashboard's time range as the query parameters "
+        "'from' and 'to', in epoch milliseconds."
+    )
 
     @field_validator("url")
     @classmethod
@@ -43,10 +47,14 @@ class URLContent(BaseWidgetContent):
             type="url",
             url=config["url"],
             include_context=config.get("include_context", False),
+            include_time_range=config.get("include_time_range", False),
         )
 
     @override
     def to_internal(self) -> URLDashletConfig:
         return URLDashletConfig(
-            type=self.internal_type(), url=self.url, include_context=self.include_context
+            type=self.internal_type(),
+            url=self.url,
+            include_context=self.include_context,
+            include_time_range=self.include_time_range,
         )

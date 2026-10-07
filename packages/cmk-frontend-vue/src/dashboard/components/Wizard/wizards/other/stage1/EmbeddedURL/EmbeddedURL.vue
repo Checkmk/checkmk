@@ -75,6 +75,9 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
           <div class="field-component__item">
             <CmkCheckbox v-model="handler.includeContext.value" :label="_t('Dashboard filters')" />
           </div>
+          <div class="field-component__item">
+            <CmkCheckbox v-model="handler.includeTimeRange.value" :label="_t('Time range')" />
+          </div>
         </FieldComponent>
       </TableFormRow>
     </DataSettings>

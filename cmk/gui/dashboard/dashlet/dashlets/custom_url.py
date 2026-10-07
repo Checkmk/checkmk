@@ -13,6 +13,7 @@ from cmk.gui.i18n import _
 class URLDashletConfig(DashletConfig):
     url: str
     include_context: NotRequired[bool]
+    include_time_range: NotRequired[bool]
 
 
 class URLDashlet(IFrameDashlet[URLDashletConfig]):

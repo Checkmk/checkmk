@@ -74,6 +74,12 @@ describe('EmbeddedURL', () => {
     expect(screen.getByRole('checkbox', { name: 'Dashboard filters' })).not.toBeChecked()
   })
 
+  it('leaves the time range out by default', () => {
+    openEmbeddedURL(null)
+
+    expect(screen.getByRole('checkbox', { name: 'Time range' })).not.toBeChecked()
+  })
+
   it('requires a URL', async () => {
     const wizard = openEmbeddedURL(null)
 
@@ -109,9 +115,30 @@ describe('EmbeddedURL', () => {
     )
   })
 
-  it('keeps the stored choice of an edited widget', () => {
+  it('includes the time range once checked', async () => {
+    const wizard = openEmbeddedURL(null)
+
+    await fireEvent.update(
+      screen.getByRole('textbox', { name: 'Enter URL to embed' }),
+      'https://example.com'
+    )
+    await fireEvent.click(screen.getByRole('checkbox', { name: 'Time range' }))
+
+    await waitFor(() =>
+      expect(wizard.value!.getValidWidgetProps()?.content).toMatchObject({
+        include_time_range: true
+      })
+    )
+  })
+
+  it('keeps the stored choices of an edited widget', () => {
     openEmbeddedURL({
-      content: { type: 'url', url: 'https://example.com', include_context: true },
+      content: {
+        type: 'url',
+        url: 'https://example.com',
+        include_context: true,
+        include_time_range: true
+      },
       filter_context: { filters: {}, uses_infos: [] },
       general_settings: {
         title: { text: 'Custom URL', render_mode: 'with_background' },
@@ -120,5 +147,6 @@ describe('EmbeddedURL', () => {
     })
 
     expect(screen.getByRole('checkbox', { name: 'Dashboard filters' })).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: 'Time range' })).toBeChecked()
   })
 })

@@ -5,9 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { type Ref, computed } from 'vue'
+import { type Ref, computed, useTemplateRef, watch } from 'vue'
 
 import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
+import { dashboardTimeRangeMessage } from '@/dashboard/lib/dashboardTimeRangeMessage'
 import { iframeUrl } from '@/dashboard/lib/iframeUrl'
 import { type IFrameContent } from '@/dashboard/types/widget.ts'
 
@@ -25,7 +26,9 @@ const {
   content,
   contentCenter,
   disableClickShield = false,
-  effective_filter_context: effectiveFilterContext
+  effective_filter_context: effectiveFilterContext,
+  range,
+  tick
 } = defineProps<DashboardContentIFrameProps>()
 const isPublicDashboard = useInjectIsPublicDashboard()
 
@@ -43,9 +46,21 @@ const showsIframe: Ref<boolean> = computed(() => hasUrl.value && isValidUrl.valu
 
 const src = computed(() =>
   iframeUrl(content.url, {
-    context: content.include_context ? effectiveFilterContext.filters : null
+    context: content.include_context ? effectiveFilterContext.filters : null,
+    timeRange: content.include_time_range ? range : null
   })
 )
+
+const iframe = useTemplateRef<HTMLIFrameElement>('iframe')
+
+function postTimeRange(): void {
+  iframe.value?.contentWindow?.postMessage(
+    dashboardTimeRangeMessage(range, tick),
+    new URL(src.value, window.location.origin).origin
+  )
+}
+
+watch(() => [range, tick], postTimeRange)
 </script>
 
 <template>
@@ -64,9 +79,11 @@ const src = computed(() =>
       <iframe
         v-if="showsIframe"
         :key="src"
+        ref="iframe"
         class="db-content-i-frame__iframe"
         allowtransparency="true"
         :src="src"
+        @load="postTimeRange"
       />
       <div v-else-if="hasUrl" class="db-content-i-frame__invalid-url">{{ _t('Invalid URL') }}</div>
       <div

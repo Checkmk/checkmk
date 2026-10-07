@@ -26,7 +26,8 @@ const iFrameProps = computed(() => {
   const iFrameContent: IFrameContent = {
     type: 'url',
     url: `widget_iframe_sidebar.py?${urlParams}`,
-    include_context: false
+    include_context: false,
+    include_time_range: false
   }
   return {
     ...props,

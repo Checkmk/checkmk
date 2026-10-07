@@ -91,6 +91,7 @@ def test_url_content_defaults_of_a_stored_widget() -> None:
     config: URLDashletConfig = {"type": "url", "url": "https://example.com"}
     content = URLContent.from_internal(config)
     assert content.include_context is False
+    assert content.include_time_range is False
 
 
 @pytest.mark.parametrize(
@@ -500,22 +501,29 @@ class TestURLContent:
                 "type": "url",
                 "url": "https://example.com",
                 "include_context": False,
+                "include_time_range": False,
             },
         )
 
-    def test_keeps_include_context(self, clients: ClientRegistry) -> None:
+    def test_keeps_the_query_parameter_options(self, clients: ClientRegistry) -> None:
         resp = clients.DashboardClient.create_relative_grid_dashboard(
             create_dashboard_payload(
                 "test_dashboard",
                 {
                     "test_widget": create_widget(
-                        {"type": "url", "url": "https://example.com", "include_context": True}
+                        {
+                            "type": "url",
+                            "url": "https://example.com",
+                            "include_context": True,
+                            "include_time_range": True,
+                        }
                     )
                 },
             )
         )
         widget = next(iter(resp.json["extensions"]["widgets"].values()))
         assert widget["content"]["include_context"] is True
+        assert widget["content"]["include_time_range"] is True
 
     @pytest.mark.parametrize(
         "url,should_fail",
@@ -545,6 +553,7 @@ class TestURLContent:
                             "type": "url",
                             "url": url,
                             "include_context": False,
+                            "include_time_range": False,
                         }
                     )
                 },

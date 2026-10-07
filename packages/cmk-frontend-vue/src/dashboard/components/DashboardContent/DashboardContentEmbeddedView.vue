@@ -42,7 +42,8 @@ const iFrameProps = computed(() => {
   const iFrameContent: IFrameContent = {
     type: 'url',
     url: iFrameUrl.value,
-    include_context: false
+    include_context: false,
+    include_time_range: false
   }
   return {
     ...props,

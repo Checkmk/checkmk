@@ -25,6 +25,7 @@ export interface UseEmbeddedURL extends UseWidgetHandler, UseWidgetVisualization
   url: Ref<string>
   urlValidationErrors: Ref<string[]>
   includeContext: Ref<boolean>
+  includeTimeRange: Ref<boolean>
 }
 
 export function useEmbeddedURL(currentSpec: WidgetSpec | null): UseEmbeddedURL {
@@ -48,12 +49,14 @@ export function useEmbeddedURL(currentSpec: WidgetSpec | null): UseEmbeddedURL {
   const url = ref(currentContent?.url || '')
   const urlValidationErrors = ref<string[]>([])
   const includeContext = ref(currentContent?.include_context ?? false)
+  const includeTimeRange = ref(currentContent?.include_time_range ?? false)
 
   const content = computed<URLContent>(() => {
     return {
       type: CONTENT_TYPE,
       url: url.value,
-      include_context: includeContext.value
+      include_context: includeContext.value,
+      include_time_range: includeTimeRange.value
     }
   })
   const debouncedContent = useDebounceRef(content, 300)
@@ -111,6 +114,7 @@ export function useEmbeddedURL(currentSpec: WidgetSpec | null): UseEmbeddedURL {
     url,
     urlValidationErrors,
     includeContext,
+    includeTimeRange,
 
     widgetProps,
     getSubmitProps: async () => widgetProps.value

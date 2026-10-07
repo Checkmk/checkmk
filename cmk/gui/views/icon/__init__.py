@@ -52,8 +52,8 @@ def register(
     permission_section_registry: PermissionSectionRegistry,
 ) -> None:
     permission_section_registry.register(PERMISSION_SECTION_ICONS_AND_ACTIONS)
-    painter_registry.register(PainterHostIcons)
-    painter_registry.register(PainterServiceIcons)
+    painter_registry.register(PainterHostIcons())
+    painter_registry.register(PainterServiceIcons())
     icon_registry.register(ShowParentChildTopology)
     icon_registry.register(ActionMenuIcon)
     icon_registry.register(IconImageIcon)

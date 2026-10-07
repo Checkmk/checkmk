@@ -154,7 +154,7 @@ def _register_painter(painter_registry: PainterRegistry, from_hint: PainterFromH
         def load_inv(self) -> bool:
             return from_hint.load_inv
 
-    painter_registry.register(_PainterFromHint)
+    painter_registry.register(_PainterFromHint())
 
 
 def _register_sorter(sorter_registry: SorterRegistry, from_hint: SorterFromHint) -> None:

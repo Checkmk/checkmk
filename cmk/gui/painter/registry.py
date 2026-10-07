@@ -6,43 +6,46 @@
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Sequence
-from functools import partial
-from typing import Any, overload, override, TypeIs
+from typing import Any, overload, override
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.ruleset_matcher.tags import TagGroup
 
-from .base import InternalPainter, LegacyPainterAdapter, Painter, PainterFactory
+from .base import InternalPainter, LegacyPainterAdapter, Painter
 from .host_tag_painters import HashableTagGroups, host_tag_config_based_painters
 
 
-def _is_legacy_painter(instance: PainterFactory | type[Painter]) -> TypeIs[type[Painter]]:
-    return isinstance(instance, type) and issubclass(instance, Painter)
-
-
-class PainterRegistry(Registry[PainterFactory]):
+class PainterRegistry(Registry[InternalPainter]):
     @override
-    def plugin_name(self, instance: PainterFactory) -> str:
-        return instance().ident
+    def plugin_name(self, instance: InternalPainter) -> str:
+        return instance.ident
+
+    @overload
+    def register(self, instance: InternalPainter) -> InternalPainter: ...
 
     @overload
     def register(self, instance: type[Painter]) -> type[Painter]: ...
 
     @overload
-    def register(self, instance: PainterFactory) -> PainterFactory: ...
+    def register(self, instance: type[InternalPainter]) -> type[InternalPainter]: ...
 
     @override
-    def register(self, instance: PainterFactory | type[Painter]) -> PainterFactory | type[Painter]:
-        if _is_legacy_painter(instance):
-            super().register(partial(LegacyPainterAdapter, instance))
+    def register(
+        self, instance: InternalPainter | type[Painter] | type[InternalPainter]
+    ) -> InternalPainter | type[Painter] | type[InternalPainter]:
+        if isinstance(instance, InternalPainter):
+            return super().register(instance)
+        if issubclass(instance, InternalPainter):
+            super().register(instance())
             return instance
-        return super().register(instance)
+        super().register(LegacyPainterAdapter(instance))
+        return instance
 
 
 painter_registry = PainterRegistry()
 
 
-def all_painters(tag_groups: Sequence[TagGroup]) -> dict[str, PainterFactory]:
+def all_painters(tag_groups: Sequence[TagGroup]) -> dict[str, InternalPainter]:
     return dict(painter_registry.items()) | host_tag_config_based_painters(
         HashableTagGroups(tag_groups)
     )
@@ -92,4 +95,4 @@ def register_painter(ident: str, spec: dict[str, Any]) -> None:
             "load_inv": property(lambda s: s._spec.get("load_inv", False)),  # noqa: SLF001
         },
     )
-    painter_registry.register(cls)
+    painter_registry.register(cls())

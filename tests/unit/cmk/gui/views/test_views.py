@@ -118,7 +118,7 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_painter_export_title() -> None:
     registered_painters = all_painters(active_config.tags.tag_groups)
     user_permissions = UserPermissions({}, {}, {}, [])
-    painters: list[InternalPainter] = [factory() for factory in registered_painters.values()]
+    painters: list[InternalPainter] = list(registered_painters.values())
     painters_and_cells: list[tuple[InternalPainter, Cell]] = [
         (
             painter,
@@ -164,7 +164,7 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
     registered_painters = all_painters(active_config.tags.tag_groups)
-    painter = registered_painters["abc"]()
+    painter = registered_painters["abc"]
     dummy_cell = Cell(
         ColumnSpec(name=painter.ident),
         None,

@@ -59,7 +59,7 @@ def declare_simple_sorter(name: str, title: str, column: ColumnName, func: Sorte
 def declare_1to1_sorter(
     painter_name: PainterName, func: SorterFunction, col_num: int = 0, reverse: bool = False
 ) -> PainterName:
-    painter = painter_registry[painter_name]()
+    painter = painter_registry[painter_name]
     cell = EmptyCell()
 
     sorter_registry.register(

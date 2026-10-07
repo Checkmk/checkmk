@@ -102,10 +102,10 @@ def register(
     replication_path_registry: ReplicationPathRegistry,
     user_menu_topics: Callable[[UserPermissions], list[NavItemTopic]],
 ) -> None:
-    painter_registry.register(PainterHostFilename)
-    painter_registry.register(PainterWatoFolderAbs)
-    painter_registry.register(PainterWatoFolderRel)
-    painter_registry.register(PainterWatoFolderPlain)
+    painter_registry.register(PainterHostFilename())
+    painter_registry.register(PainterWatoFolderAbs())
+    painter_registry.register(PainterWatoFolderRel())
+    painter_registry.register(PainterWatoFolderPlain())
     sorter_registry.register(SorterWatoFolderAbs)
     sorter_registry.register(SorterWatoFolderRel)
     sorter_registry.register(SorterWatoFolderPlain)

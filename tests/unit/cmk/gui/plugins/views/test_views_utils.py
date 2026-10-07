@@ -167,7 +167,7 @@ def test_group_value(monkeypatch: pytest.MonkeyPatch) -> None:
         },
     )
 
-    painter: InternalPainter = painter_registry["tag_painter"]()
+    painter: InternalPainter = painter_registry["tag_painter"]
     dummy_cell: Cell = Cell(
         ColumnSpec(name=painter.ident),
         None,

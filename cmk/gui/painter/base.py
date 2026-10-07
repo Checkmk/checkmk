@@ -304,9 +304,6 @@ def columns_of_cells(cells: Sequence[Cell], permitted_views: PermittedViewSpecs)
     return columns
 
 
-type PainterFactory = Callable[[], InternalPainter]
-
-
 class Cell:
     """A cell is an instance of a painter in a view (-> a cell or a grouping cell)"""
 
@@ -314,7 +311,7 @@ class Cell:
         self,
         column_spec: ColumnSpec | None,
         sort_url_parameter: str | None,
-        registered_painters: Mapping[str, PainterFactory] | None,
+        registered_painters: Mapping[str, InternalPainter] | None,
         user_permissions: UserPermissions,
         request_cache: RequestCache[RequestCacheConfig] | None,
     ) -> None:
@@ -389,7 +386,7 @@ class Cell:
 
     def painter(self) -> InternalPainter:
         assert self._registered_painters is not None
-        return self._registered_painters[self.painter_name()]()
+        return self._registered_painters[self.painter_name()]
 
     def painter_context(self) -> PainterContext:
         return painter_context(self._user_permissions)
@@ -456,7 +453,7 @@ class Cell:
     def tooltip_painter(self) -> InternalPainter:
         assert self._tooltip_painter_name is not None
         assert self._registered_painters is not None
-        return self._registered_painters[self._tooltip_painter_name]()
+        return self._registered_painters[self._tooltip_painter_name]
 
     def paint_as_header(self) -> None:
         # Optional: Sort link in title cell
@@ -683,7 +680,7 @@ class JoinCell(Cell):
         self,
         column_spec: ColumnSpec,
         sort_url_parameter: str | None,
-        registered_painters: Mapping[str, PainterFactory],
+        registered_painters: Mapping[str, InternalPainter],
         user_permissions: UserPermissions,
         request_cache: RequestCache[RequestCacheConfig],
     ) -> None:

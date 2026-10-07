@@ -12,7 +12,7 @@ from .sorter import sorter_perfometer
 
 def register(sorter_registry: SorterRegistry, painter_registry: PainterRegistry) -> None:
     sorter_registry.register(sorter_perfometer())
-    painter_registry.register(PainterPerfometer)
+    painter_registry.register(PainterPerfometer())
 
 
 __all__ = [

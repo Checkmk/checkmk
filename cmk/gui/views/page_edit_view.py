@@ -25,7 +25,7 @@ from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
-from cmk.gui.painter import all_painters, Cell, InternalPainter, painter_context, PainterFactory
+from cmk.gui.painter import all_painters, Cell, InternalPainter, painter_context
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (
     ColumnName,
@@ -1004,7 +1004,7 @@ def _painter_choices_with_params(
 
 def _get_painter_plugin_title_for_choices(
     plugin: InternalPainter,
-    registered_painters: Mapping[str, PainterFactory],
+    registered_painters: Mapping[str, InternalPainter],
     user_permissions: UserPermissions,
 ) -> str:
     dummy_cell = Cell(ColumnSpec(plugin.ident), None, registered_painters, user_permissions, None)
@@ -1015,7 +1015,7 @@ def _get_painter_plugin_title_for_choices(
 
 def get_sorter_plugin_title_for_choices(
     plugin: Sorter,
-    registered_painters: Mapping[str, PainterFactory],
+    registered_painters: Mapping[str, InternalPainter],
     user_permissions: UserPermissions,
 ) -> str:
     dummy_cell = Cell(ColumnSpec(plugin.ident), None, registered_painters, user_permissions, None)
@@ -1112,7 +1112,7 @@ def join_painters_of_datasource(ds_name: str) -> Mapping[str, InternalPainter]:
 
 @overload
 def _allowed_for_datasource(
-    collection: Mapping[str, PainterFactory], ds_name: str
+    collection: Mapping[str, InternalPainter], ds_name: str
 ) -> Mapping[str, InternalPainter]: ...
 
 
@@ -1125,7 +1125,7 @@ def _allowed_for_datasource(
 # Filters a list of sorters or painters and decides which of
 # those are available for a certain data source
 def _allowed_for_datasource(
-    collection: Mapping[str, PainterFactory] | Mapping[str, Sorter],
+    collection: Mapping[str, InternalPainter] | Mapping[str, Sorter],
     ds_name: str,
 ) -> Mapping[str, Sorter | InternalPainter]:
     datasource: ABCDataSource = data_source_registry[ds_name]()
@@ -1134,8 +1134,7 @@ def _allowed_for_datasource(
     unsupported_columns: list[ColumnName] = datasource.unsupported_columns
 
     allowed: dict[str, Sorter | InternalPainter] = {}
-    for name, instance in collection.items():
-        plugin = instance if isinstance(instance, Sorter) else instance()
+    for name, plugin in collection.items():
         if any(column in plugin.columns for column in unsupported_columns):
             continue
         infos_needed = infos_needed_by_plugin(plugin, add_columns)

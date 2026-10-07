@@ -12,7 +12,6 @@ from .base import JoinCell as JoinCell
 from .base import Painter as Painter
 from .base import painter_context as painter_context
 from .base import PainterContext as PainterContext
-from .base import PainterFactory as PainterFactory
 from .registry import all_painters as all_painters
 from .registry import painter_registry as painter_registry
 from .registry import PainterRegistry as PainterRegistry

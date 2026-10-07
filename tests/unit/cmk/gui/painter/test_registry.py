@@ -101,4 +101,4 @@ def test_built_in_painter_subclass_renders_through_a_cell() -> None:
 def test_legacy_painter_keeps_its_uuid_column() -> None:
     registry = PainterRegistry()
     registry.register(_LegacyPainterWithUUIDColumn)
-    assert registry["legacy"]().uuid_col(_cell(registry)) == "legacy_uuid"
+    assert registry["legacy"].uuid_col(_cell(registry)) == "legacy_uuid"

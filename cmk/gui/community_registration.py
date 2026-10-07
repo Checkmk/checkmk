@@ -130,10 +130,10 @@ def register_pages() -> None:
 
 
 def register_painters() -> None:
-    painter_registry.register(graph.PainterServiceGraphs)
-    painter_registry.register(graph.PainterHostGraphs)
-    painter_registry.register(graph.PainterSvcPnpgraph)
-    painter_registry.register(graph.PainterHostPnpgraph)
+    painter_registry.register(graph.PainterServiceGraphs())
+    painter_registry.register(graph.PainterHostGraphs())
+    painter_registry.register(graph.PainterSvcPnpgraph())
+    painter_registry.register(graph.PainterHostPnpgraph())
 
 
 def register(

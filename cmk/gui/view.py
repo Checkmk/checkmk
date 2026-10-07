@@ -14,7 +14,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import default_time_range_seconds, stored_time_range_seconds
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.painter import all_painters, Cell, JoinCell, PainterFactory
+from cmk.gui.painter import all_painters, Cell, InternalPainter, JoinCell
 from cmk.gui.type_defs import (
     ColumnSpec,
     FilterName,
@@ -158,7 +158,7 @@ class View:
         self,
         painter: ColumnSpec,
         registered_sorters: Mapping[str, Sorter],
-        registered_painters: Mapping[str, PainterFactory],
+        registered_painters: Mapping[str, InternalPainter],
     ) -> str | None:
         if not self.spec.get("user_sortable", False):
             return None

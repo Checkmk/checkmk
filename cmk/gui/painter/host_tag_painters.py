@@ -36,7 +36,7 @@ class HashableTagGroups:
 @request_memoize()
 def host_tag_config_based_painters(
     hashed_tag_groups: HashableTagGroups,
-) -> dict[str, type[InternalPainter]]:
+) -> dict[str, InternalPainter]:
     return {
         (ident := "host_tag_" + tag_group.id): type(
             "HostTagPainter%s" % str(tag_group.id).title(),
@@ -67,7 +67,7 @@ def host_tag_config_based_painters(
                     row, tag_group=tag_group
                 )[1],
             },
-        )
+        )()
         for tag_group in hashed_tag_groups.tag_groups
     }
 

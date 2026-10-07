@@ -5,7 +5,7 @@
 
 from collections.abc import Iterable, Mapping, Sequence
 
-from cmk.gui.painter import PainterFactory
+from cmk.gui.painter import InternalPainter
 from cmk.gui.type_defs import ColumnSpec, PainterName, PainterParameters, SorterName, SorterSpec
 
 from .sorter import ParameterizedSorter, Sorter, sorter_parameter_ident
@@ -19,7 +19,7 @@ def compute_sort_url_parameter(
     config_sorters: Sequence[SorterSpec],
     user_sorters: Sequence[SorterSpec],
     registered_sorters: Mapping[str, Sorter],
-    registered_painters: Mapping[str, PainterFactory],
+    registered_painters: Mapping[str, InternalPainter],
 ) -> str:
     """Computes the `sort` URL parameter value for a column header
 
@@ -92,7 +92,7 @@ def _get_separated_sorters(
     config_sorters: Sequence[SorterSpec],
     user_sorters: list[SorterSpec],
     registered_sorters: Mapping[str, Sorter],
-    registered_painters: Mapping[str, PainterFactory],
+    registered_painters: Mapping[str, InternalPainter],
 ) -> tuple[list[SorterSpec], list[SorterSpec], list[SorterSpec]]:
     group_sort = _get_group_sorters(group_painters, registered_sorters, registered_painters)
     view_sort = [s for s in config_sorters if not any(s.sorter == gs.sorter for gs in group_sort)]
@@ -107,7 +107,7 @@ def _get_separated_sorters(
 def _get_group_sorters(
     group_painters: Sequence[ColumnSpec],
     registered_sorters: Mapping[str, Sorter],
-    registered_painters: Mapping[str, PainterFactory],
+    registered_painters: Mapping[str, InternalPainter],
 ) -> list[SorterSpec]:
     group_sort: list[SorterSpec] = []
     for p in group_painters:
@@ -124,14 +124,14 @@ def _get_group_sorters(
 def _get_sorter_name_of_painter(
     painter_name_or_spec: PainterName | ColumnSpec,
     registered_sorters: Mapping[str, Sorter],
-    registered_painters: Mapping[str, PainterFactory],
+    registered_painters: Mapping[str, InternalPainter],
 ) -> SorterName | None:
     painter_name = (
         painter_name_or_spec.name
         if isinstance(painter_name_or_spec, ColumnSpec)
         else painter_name_or_spec
     )
-    painter = registered_painters[painter_name]()
+    painter = registered_painters[painter_name]
     if painter.sorter:
         return painter.sorter
 

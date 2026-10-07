@@ -390,9 +390,27 @@ rule_spec_aws_glacier_vault_archives = CheckParameters(
 )
 
 
+rule_spec_aws_v2_glacier_vault_archives = CheckParameters(
+    name="aws_v2_glacier_vault_archives",
+    title=Title("AWS v2/Glacier vault objects"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_glacier_vaults,
+    condition=HostAndItemCondition(item_title=Title("Vault name")),
+)
+
+
 rule_spec_aws_glacier_vaults = CheckParameters(
     name="aws_glacier_vaults",
     title=Title("AWS/Glacier vaults"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_glacier_vaults,
+    condition=HostCondition(),
+)
+
+
+rule_spec_aws_v2_glacier_vaults = CheckParameters(
+    name="aws_v2_glacier_vaults",
+    title=Title("AWS v2/Glacier vaults"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_glacier_vaults,
     condition=HostCondition(),
@@ -412,6 +430,17 @@ def _parameter_form_spec_aws_glacier_limits() -> Dictionary:
 rule_spec_aws_glacier_limits = CheckParameters(
     name="aws_glacier_limits",
     title=Title("AWS/Glacier limits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_glacier_limits,
+    condition=HostAndItemCondition(
+        item_title=Title("Region name"), item_form=_item_spec_aws_limits_generic()
+    ),
+)
+
+
+rule_spec_aws_v2_glacier_limits = CheckParameters(
+    name="aws_v2_glacier_limits",
+    title=Title("AWS v2/Glacier limits"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_glacier_limits,
     condition=HostAndItemCondition(

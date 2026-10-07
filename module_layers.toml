@@ -1857,6 +1857,9 @@ allows = ["@crypto", "@relay_protocols", "cmk.agent_receiver"]
 [components."cmk.testlib.mcp"]
 allows = ["cmk.mcp"]
 
+[components."cmk.testlib.notification_plugins"]
+allows = []
+
 [components."cmk.testlib.data_backend"]
 allows = ["cmk.data_backend"]
 

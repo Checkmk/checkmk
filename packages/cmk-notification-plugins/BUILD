@@ -32,6 +32,18 @@ py_library(
     ],
 )
 
+py_library(
+    name = "testlib",
+    testonly = True,
+    srcs = glob(["cmk/testlib/notification_plugins/**/*.py"]),
+    imports = ["."],
+    visibility = [
+        "//non-free/packages/cmk-notification-plugins-nonfree:__pkg__",
+        "//packages/cmk-notification-plugins:__pkg__",
+    ],
+    deps = [requirement("pytest")],
+)
+
 py_cmk_test(
     name = "unit",
     size = "small",
@@ -39,9 +51,11 @@ py_cmk_test(
     data = glob(["templates/mail/*"]),
     deps = [
         ":cmk-notification-plugins",
+        ":testlib",
         requirement("pytest-mock"),
         requirement("jinja2"),
         requirement("requests"),
+        requirement("responses"),
     ],
 )
 

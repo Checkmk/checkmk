@@ -5587,6 +5587,7 @@ responses==0.26.3 \
     --hash=sha256:74474f799334ac4f37d93b6437ecc3bb1bb5c77a8d31780a338643be2dce0af8 \
     --hash=sha256:b0c11ca8131b8b227b8d5108e6ed39772222bd5aab030ed430e8f99057c4c409
     # via
+    #   -r packages/cmk-notification-plugins/dev-requirements.in
     #   -r packages/cmk-plugins/dev-requirements.in
     #   -r tests/dev-requirements.in
 rfc3339-validator==0.1.4 \

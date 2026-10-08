@@ -47,6 +47,15 @@ class AssumedRole:
 class HubCredentials:
     login: AccessKey | DefaultCredentials
     role: AssumedRole | None = None
+    session_name: str = "checkmk"
+
+
+def role_session_name(site: str | None) -> str:
+    """The RoleSessionName of every AssumeRole call. CloudTrail shows it to the customer.
+
+    Site IDs only use letters, digits and underscores, which AWS accepts here.
+    """
+    return f"checkmk-{site}" if site else "checkmk"
 
 
 def _login_session(login: AccessKey | DefaultCredentials, region: str) -> boto3.session.Session:
@@ -70,12 +79,13 @@ def _login_session(login: AccessKey | DefaultCredentials, region: str) -> boto3.
 def _assume_role(
     session: boto3.session.Session,
     role: AssumedRole,
+    session_name: str,
     region: str,
     config: botocore.config.Config | None,
 ) -> boto3.session.Session:
     assumed_role_object = session.client("sts", config=config).assume_role(
         RoleArn=role.arn,
-        RoleSessionName="AssumeRoleSession",
+        RoleSessionName=session_name,
         **({"ExternalId": role.external_id} if role.external_id else {}),
     )
     credentials = assumed_role_object["Credentials"]
@@ -93,7 +103,9 @@ def create_hub_session(
     if hub.role is None:
         return _login_session(hub.login, region)
     try:
-        return _assume_role(_login_session(hub.login, region), hub.role, region, config)
+        return _assume_role(
+            _login_session(hub.login, region), hub.role, hub.session_name, region, config
+        )
     except Exception as e:
         raise AwsAccessError(describe_credential_failure(e))
 

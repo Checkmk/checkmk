@@ -13,6 +13,7 @@ Checkmk special agent for monitoring Amazon Web Services (AWS).
 
 import argparse
 import logging
+import os
 import sys
 from collections.abc import Sequence
 from typing import NamedTuple
@@ -37,6 +38,7 @@ from .credentials import (
     AwsCredentials,
     DefaultCredentials,
     HubCredentials,
+    role_session_name,
 )
 from .runner import AWSSectionsGeneric, AWSSectionsUSEast
 from .sections.s3 import ResultDistributorS3Limits
@@ -570,7 +572,7 @@ def _hub_credentials_from_args(args: argparse.Namespace) -> HubCredentials:
         else DefaultCredentials()
     )
     role = AssumedRole(args.role_arn, args.external_id or None) if args.assume_role else None
-    return HubCredentials(login, role)
+    return HubCredentials(login, role, role_session_name(os.environ.get("OMD_SITE")))
 
 
 def _test_connection(credentials: AwsCredentials) -> int:

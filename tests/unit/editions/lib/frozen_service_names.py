@@ -316,6 +316,7 @@ FROZEN_SERVICE_NAMES: Final[Mapping[str, str]] = {
     "aws_v2_elbv2_summary_network": "AWS/NetworkELB Summary",
     "aws_v2_elbv2_target_groups": "AWS/ApplicationELB Target Groups",
     "aws_v2_elbv2_target_groups_network": "AWS/NetworkELB Target Groups",
+    "aws_v2_exceptions": "AWS Exceptions",
     "aws_v2_glacier": "AWS/Glacier Vault: %s",
     "aws_v2_glacier_limits": "AWS/Glacier Limits %s",
     "aws_v2_glacier_summary": "AWS/Glacier Summary",

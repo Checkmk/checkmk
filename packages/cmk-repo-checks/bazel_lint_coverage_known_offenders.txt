@@ -60,12 +60,6 @@ non-free/packages/cmc/src/main.cc
 non-free/packages/cmk-bakery/run
 non-free/packages/cmk-liveproxyd/run
 non-free/packages/cmk-multi-tenancy/run
-non-free/packages/cmk-relay-engine/windows-installer/Setup-WSL.Tests.ps1
-non-free/packages/cmk-relay-engine/windows-installer/Start-RelayKeepalive.Tests.ps1
-non-free/packages/cmk-relay-engine/windows-installer/build-msi.ps1
-non-free/packages/cmk-relay-engine/windows-installer/run-tests.ps1
-non-free/packages/cmk-relay-engine/windows-installer/test-check-virtualization.Tests.ps1
-non-free/packages/cmk-relay-engine/windows-installer/test-msi.Tests.ps1
 non-free/packages/cmk-update-agent/build_in_rootfs.sh
 omd/configure
 omd/debian/config

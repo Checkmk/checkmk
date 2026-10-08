@@ -5,14 +5,16 @@
 
 import pytest
 
+from cmk.plugins.aws_v2.special_agent.config import AwsAccessError
 from cmk.plugins.aws_v2.special_agent.credentials import (
     AccessKey,
     AssumedRole,
     AwsCredentials,
     DefaultCredentials,
     HubCredentials,
+    SpokeAccounts,
 )
-from cmk.testlib.aws_v2.fake_sts import FakeSts, HUB_ACCOUNT, ROLE, ROLE_ACCOUNT
+from cmk.testlib.aws_v2.fake_sts import DENIED_ACCOUNT, FakeSts, HUB_ACCOUNT, ROLE, ROLE_ACCOUNT
 
 
 def _account_id(hub: HubCredentials) -> str:
@@ -67,3 +69,51 @@ def test_role_without_external_id_sends_none(fake_sts: FakeSts) -> None:
 
     [call] = fake_sts.assume_role_calls
     assert "ExternalId" not in call.params
+
+
+SPOKES = SpokeAccounts(["333333333333", "444444444444"], "CheckmkMonitoring")
+
+
+def _spoke_accounts(spokes: SpokeAccounts) -> list[tuple[str, str]]:
+    """Each monitored account with the account its session really belongs to."""
+    credentials = AwsCredentials(
+        HubCredentials(AccessKey("AKIAHUB", "secret")), "us-east-1", None, spokes
+    )
+    return [
+        (account.id, account.session.client("sts").get_caller_identity()["Account"])
+        for account in credentials.accounts()
+    ]
+
+
+@pytest.mark.usefixtures("fake_sts")
+def test_every_spoke_account_gets_a_session_of_that_account() -> None:
+    assert _spoke_accounts(SPOKES) == [
+        ("333333333333", "333333333333"),
+        ("444444444444", "444444444444"),
+    ]
+
+
+def test_spoke_roles_are_assumed_directly_from_the_login(fake_sts: FakeSts) -> None:
+    _spoke_accounts(SPOKES)
+
+    assert [(c.caller_key_id, c.params["RoleArn"]) for c in fake_sts.assume_role_calls] == [
+        ("AKIAHUB", "arn:aws:iam::333333333333:role/CheckmkMonitoring"),
+        ("AKIAHUB", "arn:aws:iam::444444444444:role/CheckmkMonitoring"),
+    ]
+
+
+def test_spoke_external_id_reaches_every_assume_role_call(fake_sts: FakeSts) -> None:
+    _spoke_accounts(
+        SpokeAccounts(["333333333333", "444444444444"], "CheckmkMonitoring", "tenant-42")
+    )
+
+    assert [c.params["ExternalId"] for c in fake_sts.assume_role_calls] == [
+        "tenant-42",
+        "tenant-42",
+    ]
+
+
+@pytest.mark.usefixtures("fake_sts")
+def test_denied_spoke_role_names_its_account() -> None:
+    with pytest.raises(AwsAccessError, match=DENIED_ACCOUNT):
+        _spoke_accounts(SpokeAccounts(["333333333333", DENIED_ACCOUNT], "CheckmkMonitoring"))

@@ -1865,6 +1865,17 @@ rule_spec_aws_cloudwatch_alarms_limits = CheckParameters(
     ),
 )
 
+
+rule_spec_aws_v2_cloudwatch_alarms_limits = CheckParameters(
+    name="aws_v2_cloudwatch_alarms_limits",
+    title=Title("AWS v2/CloudWatch alarms limits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_cloudwatch_alarms_limits,
+    condition=HostAndItemCondition(
+        item_title=Title("Region name"), item_form=_item_spec_aws_limits_generic()
+    ),
+)
+
 # .
 #   .--DynamoDB------------------------------------------------------------.
 #   |         ____                                    ____  ____           |

@@ -26,7 +26,7 @@ def inventory_dell_idrac_power(section: Sequence[StringTable]) -> DiscoveryResul
         yield Service(item=index)
 
 
-FIRMWARE_PATTERN = re.compile(r"(?i)^idrac(\d+)")
+SHORT_NAME_PATTERN = re.compile(r"(?i)^idrac(\d+)")
 TRANSLATE_STATUS_V4 = {
     "0": (State.OK, "not redundant"),
     "1": (State.OK, "full"),
@@ -41,25 +41,41 @@ TRANSLATE_STATUS_V3 = {
     "6": (State.OK, "not redundant"),
     "7": (State.WARN, "redundancy offline"),
 }
+MIB_V4 = "iDRAC10 or newer"
+MIB_V3 = "iDRAC9 or older"
+
+# RacTypeEnum gives every iDRAC generation a block of 16 values: iDRAC7 starts at 16, iDRAC8 at
+# 32, iDRAC9 at 48 and continues at 64 and 80 for the 15th and 16th server generation, iDRAC10
+# starts at 96. Below 16 only other(1) and unknown(2) are defined, neither of which names a
+# generation.
+RAC_TYPE_IDRAC7 = 16
+RAC_TYPE_IDRAC10 = 96
 
 
-def _get_translate_status(firmware_shortname: str | None) -> Mapping[str, tuple[State, str]]:
+def _get_translate_status(
+    rac_type: str, short_name: str
+) -> tuple[Mapping[str, tuple[State, str]], str]:
     """
-    Get the version dependent powerUnitRedundancyStatus table.
+    Get the version dependent powerUnitRedundancyStatus table and the name of its MIB.
 
     With iDRAC10 v4 of the MIB was introduced, all other still supported generations use v3.
+    racType names the generation even on devices whose racShortName does not, so it is asked
+    first.
     """
-    if firmware_shortname is None:
-        return TRANSLATE_STATUS_V4
+    try:
+        rac_type_value = int(rac_type)
+    except ValueError:
+        pass
+    else:
+        if rac_type_value >= RAC_TYPE_IDRAC10:
+            return TRANSLATE_STATUS_V4, MIB_V4
+        if rac_type_value >= RAC_TYPE_IDRAC7:
+            return TRANSLATE_STATUS_V3, MIB_V3
 
-    match = FIRMWARE_PATTERN.match(firmware_shortname)
-    if not match:
-        return TRANSLATE_STATUS_V4
+    if (match := SHORT_NAME_PATTERN.match(short_name)) is not None and int(match.group(1)) < 10:
+        return TRANSLATE_STATUS_V3, MIB_V3
 
-    if int(match.group(1)) < 10:
-        return TRANSLATE_STATUS_V3
-
-    return TRANSLATE_STATUS_V4
+    return TRANSLATE_STATUS_V4, MIB_V4
 
 
 # A column the device does not answer for a row is padded with an empty string, and a row exists
@@ -68,20 +84,25 @@ NOT_REPORTED = "Status: not reported by the device"
 
 
 def check_dell_idrac_power(item: str, section: Sequence[StringTable]) -> CheckResult:
-    def _get_value(idx: int) -> str | None:
+    def _rac_info(column: int) -> str:
+        """Read one of the racInfoGroup scalars, which the device may leave unanswered."""
         try:
-            return section[idx][0][0]
+            return section[2][0][column]
         except IndexError:
-            return None
+            return ""
 
-    translate_status = _get_translate_status(_get_value(2))
+    translate_status, mib = _get_translate_status(rac_type=_rac_info(1), short_name=_rac_info(0))
 
     for index, status, _count in section[0]:
         if index == item:
             if not status:
                 yield Result(state=State.UNKNOWN, summary=NOT_REPORTED)
                 return
-            state, state_readable = translate_status.get(status, (State.UNKNOWN, "n/a"))
+            # A value the detected MIB does not define. Naming it together with the MIB makes a
+            # wrong detection visible.
+            state, state_readable = translate_status.get(
+                status, (State.UNKNOWN, f"undefined value {status} (assuming the MIB for {mib})")
+            )
             yield Result(state=state, summary="Status: %s" % state_readable)
 
 
@@ -101,7 +122,13 @@ snmp_section_dell_idrac_power = SNMPSection(
             base=".1.3.6.1.4.1.674.10892.5.4.600.12.1",
             oids=["2", "5", "7", "8"],
         ),
-        SNMPTree(base=".1.3.6.1.4.1.674.10892.5.1.1", oids=["2"]),
+        SNMPTree(
+            base=".1.3.6.1.4.1.674.10892.5.1.1",
+            oids=[
+                "2",  # IDRAC-MIB::racShortName
+                "7",  # IDRAC-MIB::racType
+            ],
+        ),
     ],
     parse_function=parse_dell_idrac_power,
 )

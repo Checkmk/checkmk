@@ -138,7 +138,6 @@ packages/mk-sql/tests/test_running_instances.rs
 packages/mk-sql/wine-prepare.sh
 packages/neb/test/NagiosMockup.cc
 packages/unixcat/src/unixcat.cc
-prettier.config.cjs
 scripts/bootstrap_container.sh
 scripts/run-in-docker2.sh
 tests/packaging/package_validator/src/main.rs

@@ -75,6 +75,12 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
+# For editors and plain `prettier` runs only; Bazel uses bazel/tools/prettier.config.cjs.
+filegroup(
+    name = "prettier_config",
+    srcs = ["prettier.config.cjs"],
+)
+
 npm_link_all_packages(name = "node_modules")
 
 copy_to_directory(

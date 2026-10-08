@@ -2,7 +2,7 @@
 
 def _git_hash_file_impl(ctx):
     ctx.actions.run_shell(
-        inputs = [ctx.version_file, ctx.info_file],
+        inputs = [ctx.info_file],
         outputs = [ctx.outputs.out],
         command = """
 set -e

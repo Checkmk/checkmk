@@ -58,10 +58,6 @@ non-free/packages/cmc/src/icmp_receiver.cc
 non-free/packages/cmc/src/icmp_sender.cc
 non-free/packages/cmc/src/main.cc
 non-free/packages/cmk-bakery/run
-non-free/packages/cmk-data-backend/cmk-data-backend-schema-manager
-non-free/packages/cmk-data-backend/cmk-metric-backend-schema-manager
-non-free/packages/cmk-data-backend/cmk-monitor-data-backend
-non-free/packages/cmk-data-backend/cmk-monitor-data-backend-health
 non-free/packages/cmk-liveproxyd/run
 non-free/packages/cmk-multi-tenancy/run
 non-free/packages/cmk-relay-engine/windows-installer/Setup-WSL.Tests.ps1
@@ -78,9 +74,6 @@ omd/debian/postrm.in
 omd/debian/preinst.in
 omd/debian/prerm.in
 omd/distro
-omd/non-free/packages/data-backend/scripts/post-restore/03_recover-data-backend-schema
-omd/non-free/packages/data-backend/scripts/post-update/03_upgrade-data-backend-schema
-omd/non-free/packages/data-backend/skel/etc/init.d/data-backend
 omd/packages/apache-omd/skel/etc/init.d/apache
 omd/packages/appliance/post-install
 omd/packages/cmk-maps/skel/etc/init.d/maps
@@ -90,7 +83,6 @@ omd/packages/mk-livestatus/lc
 omd/packages/mk-livestatus/lq
 omd/packages/monitoring-plugins/cmk_password_store.h
 omd/packages/nagios/skel/etc/init.d/nagios
-omd/packages/omd/omd.init
 omd/packages/omd/restart_site_apache
 omd/packages/omd/skel/etc/init.d/xinetd
 omd/packages/pnp4nagios/skel/etc/init.d/npcd

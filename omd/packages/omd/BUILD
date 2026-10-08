@@ -354,3 +354,11 @@ pkg_tar(
     stamp = 1,
     visibility = ["//omd:__pkg__"],
 )
+
+# Lets shellcheck see these scripts. Nothing depends on this target.
+sh_library(
+    name = "shell_scripts",
+    srcs = [
+        "omd.init",
+    ],
+)

@@ -17,7 +17,7 @@ from collections.abc import Mapping
 from contextlib import AbstractContextManager, nullcontext
 from pathlib import Path
 from threading import Lock
-from typing import Any, final, TYPE_CHECKING
+from typing import Any, final, Literal, TYPE_CHECKING
 
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.ccc.i18n import _
@@ -50,6 +50,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "activation_lock",
+    "bootstrap_statement",
     "BytesSerializer",
     "DimSerializer",
     "FileIo",
@@ -176,22 +177,28 @@ def save_to_mk_file(
 ) -> None:
     fmt = pprint.pformat if pprint_value else repr
 
-    # Self-bootstrap `key` into the exec's locals so the file loads against
-    # `default={}` — symmetric with `Ruleset.format_raw_value`. Using locals()
-    # (not globals()) keeps each call isolated from process-wide module
-    # globals that would otherwise accumulate across loads.
     if isinstance(value, Mapping):
-        content = (
-            f"{key} = locals().setdefault({key!r}, {{}})\n"  #
-            f"{key}.update({fmt(dict(value))})"
-        )
+        content = f"{bootstrap_statement(key, '{}')}\n{key}.update({fmt(dict(value))})"
     else:
-        content = (
-            f"{key} = locals().setdefault({key!r}, [])\n"  #
-            f"{key} += {fmt(list(value))}"
-        )
+        content = f"{bootstrap_statement(key, '[]')}\n{key} += {fmt(list(value))}"
 
     save_mk_file(path, content)
+
+
+def bootstrap_statement(varname: str, empty: Literal["{}", "[]"]) -> str:
+    """The statement that lets a .mk file extend `varname` without it being predefined
+
+    Exec-style .mk files extend their variables in place (`x.update(...)`,
+    `x += [...]`). The statement defines `varname` as `empty` unless the
+    loader predefined it, in which case the predefined object is kept, so
+    the file loads both against `default={}` and against a pre-seeded
+    namespace.
+
+    The lookup goes through locals(), not globals(): the locals are the
+    per-call `default` dict the loader passes to exec, while globals() would
+    be this module's namespace, shared by all loads in the process.
+    """
+    return f"{varname} = locals().setdefault({varname!r}, {empty})"
 
 
 # .

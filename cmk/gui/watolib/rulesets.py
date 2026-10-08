@@ -969,12 +969,7 @@ class Ruleset:
             dictname, subkey = name.split(":")
             varname = f"{dictname}[{subkey!r}]"
 
-            # Self-bootstrap the parent dict via the exec's locals (the
-            # `default` dict the loader passes in). Using locals(), not
-            # globals(), keeps each load call isolated: the cmk.ccc.store
-            # module globals would otherwise carry rules across calls and
-            # cause spurious accumulation.
-            content += f"\n{dictname} = locals().setdefault({dictname!r}, {{}})\n"
+            content += f"\n{store.bootstrap_statement(dictname, '{}')}\n"
             content += f"\n{dictname}.setdefault({subkey!r}, [])\n"
         else:
             varname = name

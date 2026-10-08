@@ -70,7 +70,7 @@ from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher, RulesetMatche
 from cmk.ruleset_matcher.ruleset_name import RuleSetName
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
-from cmk.utils import password_store
+from cmk.utils import host_storage, password_store
 from cmk.utils.ip_lookup import IPStackConfig, make_lookup_ip_address
 from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.testlib.unit.empty_config import EMPTY_CONFIG
@@ -2747,6 +2747,49 @@ def test_load_config_folder_paths(folder_path_test_config: BaseConfig) -> None:
         "LVL0",
         "MAIN",
     ]
+
+
+@pytest.fixture(name="main_mk")
+def main_mk_fixture() -> Iterator[Path]:
+    cmk.utils.paths.main_config_file.parent.mkdir(parents=True, exist_ok=True)
+    cmk.utils.paths.main_config_file.write_text("")
+    yield cmk.utils.paths.main_config_file
+    cmk.utils.paths.main_config_file.unlink(missing_ok=True)
+
+
+@pytest.fixture(name="wato_folder")
+def wato_folder_fixture(main_mk: Path) -> Iterator[Path]:
+    folder = cmk.utils.paths.check_mk_config_dir / "wato"
+    folder.mkdir(parents=True, exist_ok=True)
+    yield folder
+    shutil.rmtree(folder)
+
+
+def test_load_raw_config_tracks_the_folder_of_a_written_hosts_mk(wato_folder: Path) -> None:
+    host_storage.get_standard_hosts_storage().write(
+        wato_folder / "hosts",
+        host_storage.HostsStorageData(
+            locked_hosts=False,
+            all_hosts=[HostName("host1")],
+            clusters={},
+            attributes={},
+            custom_macros={},
+            host_tags={},
+            host_labels={},
+            contact_groups=host_storage.ContactGroupsField(
+                hosts=[], services=[], folder_hosts=[], folder_services=[]
+            ),
+            explicit_host_conf={},
+            host_attributes={HostName("host1"): {}},
+            folder_attributes={},
+        ),
+        repr,
+    )
+
+    raw_config = config.load_raw_config(with_conf_d=True)
+
+    assert raw_config["all_hosts"] == ["host1"]
+    assert raw_config["host_paths"] == {"host1": "/wato/hosts.mk"}
 
 
 @pytest.fixture(name="folder_path_test_config")

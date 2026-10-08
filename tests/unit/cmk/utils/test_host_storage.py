@@ -159,3 +159,43 @@ def test_pickled_hosts_extend_the_predefined_objects(tmp_path: Path) -> None:
     assert variables["all_hosts"] is all_hosts
     assert variables["extra_host_conf"] is extra_host_conf
     assert extra_host_conf["_CUSTOM"] == [("value", ["host1"])]
+
+
+def test_written_hosts_mk_loads_into_an_empty_namespace(tmp_path: Path) -> None:
+    path = tmp_path / "hosts"
+    _write_hosts_files(path)
+    loaders = get_host_storage_loaders(StorageFormat.STANDARD)
+
+    seeded = get_hosts_file_variables()
+    apply_hosts_file_to_object(path, loaders, seeded)
+    unseeded: dict[str, object] = {}
+    apply_hosts_file_to_object(path, loaders, unseeded)
+
+    assert unseeded["all_hosts"] == ["host1"]
+    assert unseeded["host_contactgroups"] == seeded["host_contactgroups"]
+    assert {k: v for k, v in seeded.items() if k in unseeded and k != "extra_host_conf"} == {
+        k: v for k, v in unseeded.items() if k != "extra_host_conf"
+    }
+
+
+def test_written_hosts_mk_bootstraps_each_variable_once(tmp_path: Path) -> None:
+    path = tmp_path / "hosts"
+    get_standard_hosts_storage().write(path, _hosts_storage_data(), repr)
+
+    content = path.with_suffix(".mk").read_text()
+
+    # host_contactgroups is extended twice: by the host rules and the folder rules.
+    assert content.count("host_contactgroups = locals().setdefault(") == 1
+    assert content.index("host_contactgroups = locals()") < content.index("host_contactgroups +=")
+
+
+def test_written_hosts_mk_ends_each_update_with_a_blank_line(tmp_path: Path) -> None:
+    """The diagnostics redaction of the SNMP credentials relies on it."""
+    path = tmp_path / "hosts"
+    data = _hosts_storage_data()
+    data.attributes["management_snmp_credentials"] = {HostName("host1"): "public"}
+    get_standard_hosts_storage().write(path, data, repr)
+
+    content = path.with_suffix(".mk").read_text()
+
+    assert "management_snmp_credentials.update({'host1': 'public'})\n\n" in content

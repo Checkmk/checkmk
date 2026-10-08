@@ -55,6 +55,14 @@ from cmk.diagnostics.internal import redact_passwords_in_content, REDACT_STRING
 
             """,
         ),
+        (
+            3,
+            "conf.d/wato/hosts.mk",
+            """management_snmp_credentials = locals().setdefault('management_snmp_credentials', {})
+management_snmp_credentials.update({'host1': ('authPriv', 'md5', 'username', TESTPW, 'DES', TESTPW), 'host2': TESTPW})
+
+            """,
+        ),
         (1, "mkeventd.d/wato/global.mk", "{'credentials': TESTPW, 'description': ''},"),
         (
             1,

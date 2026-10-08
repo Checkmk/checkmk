@@ -194,55 +194,89 @@ class StandardHostsStorage(ABCHostsStorage[str]):
         self, file_path: Path, data: HostsStorageData, value_formatter: Callable[[Any], str]
     ) -> None:
         out = io.StringIO()
+        bootstrapped: set[str] = set()
+
+        def bootstrap(varname: str, empty: Literal["{}", "[]"]) -> None:
+            """Define the variable before it is first extended
+
+            The file extends its variables in place, so it must define each one
+            unless the loader predefined it (see cmk.ccc.store.bootstrap_statement).
+            """
+            if varname in bootstrapped:
+                return
+            bootstrapped.add(varname)
+            out.write(f"{store.bootstrap_statement(varname, empty)}\n")
+
         contact_groups = data.contact_groups
         if contact_groups["hosts"]:
-            out.write("\nhost_contactgroups += %s\n\n" % (value_formatter(contact_groups["hosts"])))
+            out.write("\n")
+            bootstrap("host_contactgroups", "[]")
+            out.write("host_contactgroups += %s\n\n" % (value_formatter(contact_groups["hosts"])))
         if contact_groups["services"]:
+            out.write("\n")
+            bootstrap("service_contactgroups", "[]")
             out.write(
-                "\nservice_contactgroups += %s\n\n" % (value_formatter(contact_groups["services"]))
+                "service_contactgroups += %s\n\n" % (value_formatter(contact_groups["services"]))
             )
 
         if data.all_hosts:
+            bootstrap("all_hosts", "[]")
             out.write("all_hosts += %s\n" % value_formatter(data.all_hosts))
 
         if data.clusters:
-            out.write("\nclusters.update(%s)\n" % value_formatter(data.clusters))
+            out.write("\n")
+            bootstrap("clusters", "{}")
+            out.write("clusters.update(%s)\n" % value_formatter(data.clusters))
 
         if data.host_tags:
-            out.write("\nhost_tags.update(%s)\n" % (value_formatter(data.host_tags)))
+            out.write("\n")
+            bootstrap("host_tags", "{}")
+            out.write("host_tags.update(%s)\n" % (value_formatter(data.host_tags)))
         if data.host_labels:
-            out.write("\nhost_labels.update(%s)\n" % (value_formatter(data.host_labels)))
+            out.write("\n")
+            bootstrap("host_labels", "{}")
+            out.write("host_labels.update(%s)\n" % (value_formatter(data.host_labels)))
 
         for cmk_base_varname, dictionary in data.attributes.items():
             if dictionary:
                 out.write("\n# %s\n" % cmk_base_varname)
+                bootstrap(cmk_base_varname, "{}")
                 out.write("%s.update(" % cmk_base_varname)
                 out.write(value_formatter(dictionary))
                 out.write(")\n")
 
         for custom_varname, macro_list in data.custom_macros.items():
             out.write("\n# Settings for %s\n" % custom_varname)
+            bootstrap("extra_host_conf", "{}")
             out.write("extra_host_conf.setdefault(%r, []).extend(\n" % custom_varname)
             out.write("  %s)\n" % value_formatter(macro_list))
 
         for varname, entries in data.explicit_host_conf.items():
             if len(entries) > 0:
                 out.write("\n# Explicit settings for %s\n" % varname)
+                bootstrap("explicit_host_conf", "{}")
                 out.write("explicit_host_conf.setdefault(%r, {})\n" % varname)
                 out.write(f"explicit_host_conf['{varname}'].update({entries!r})\n")
 
         if folder_host_contactgroups := contact_groups["folder_hosts"]:
             for group in folder_host_contactgroups:
-                out.write("\nhost_contactgroups.insert(0, %r)\n" % group)
+                out.write("\n")
+                bootstrap("host_contactgroups", "[]")
+                out.write("host_contactgroups.insert(0, %r)\n" % group)
 
         if folder_service_contactgroups := contact_groups["folder_services"]:
             for group in folder_service_contactgroups:
-                out.write("\nservice_contactgroups.insert(0, %r)\n" % group)
+                out.write("\n")
+                bootstrap("service_contactgroups", "[]")
+                out.write("service_contactgroups.insert(0, %r)\n" % group)
 
         # TODO: discuss. cmk.base also parses host_attributes. ipaddresses, mgmtboard, etc.
-        out.write("\n# Host attributes (needed for WATO)")
-        out.write("\nhost_attributes.update(%s)\n" % value_formatter(data.host_attributes))
-        out.write("\nfolder_attributes.update(%s)\n" % value_formatter(data.folder_attributes))
+        out.write("\n# Host attributes (needed for WATO)\n")
+        bootstrap("host_attributes", "{}")
+        out.write("host_attributes.update(%s)\n" % value_formatter(data.host_attributes))
+        out.write("\n")
+        bootstrap("folder_attributes", "{}")
+        out.write("folder_attributes.update(%s)\n" % value_formatter(data.folder_attributes))
 
         # final
         store.save_text_to_file(file_path, host_storage_fileheader() + out.getvalue())

@@ -60,6 +60,7 @@ def test_registered_main_modules() -> None:
         "wato.py?group=static&mode=rulesets",
         "wato.py?group=vm_cloud_container&mode=rulesets",
         "wato.py?mode=edit_configuration_bundles&varname=special_agents%3Aaws",
+        "wato.py?mode=edit_configuration_bundles&varname=special_agents%3Aaws_v2",
         "wato.py?mode=edit_configuration_bundles&varname=special_agents%3Aazure",
         "wato.py?mode=edit_configuration_bundles&varname=special_agents%3Aazure_v2",
         "wato.py?mode=edit_configuration_bundles&varname=special_agents%3Agcp",

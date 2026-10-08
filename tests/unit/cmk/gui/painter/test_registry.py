@@ -10,7 +10,7 @@ import pytest
 
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.painter import Cell, PainterRegistry
-from cmk.gui.painter.base import Painter
+from cmk.gui.painter.legacy import Painter
 from cmk.gui.painter.painters import PainterHostAddress
 from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
 from cmk.gui.utils.roles import UserPermissions

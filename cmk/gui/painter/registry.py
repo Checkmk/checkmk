@@ -11,8 +11,9 @@ from typing import Any, overload, override
 from cmk.ccc.plugin_registry import Registry
 from cmk.ruleset_matcher.tags import TagGroup
 
-from .base import InternalPainter, LegacyPainterAdapter, Painter
+from .base import InternalPainter
 from .host_tag_painters import HashableTagGroups, host_tag_config_based_painters
+from .legacy import LegacyPainterAdapter, Painter
 
 
 class PainterRegistry(Registry[InternalPainter]):

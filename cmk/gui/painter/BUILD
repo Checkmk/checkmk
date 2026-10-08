@@ -7,6 +7,7 @@ py_library(
         "base.py",
         "helpers.py",
         "host_tag_painters.py",
+        "legacy.py",
         "registry.py",
     ],
     imports = ["../../.."],

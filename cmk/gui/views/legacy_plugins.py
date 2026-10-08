@@ -106,6 +106,7 @@ def _register_pre_21_plugin_api() -> None:
     # Needs to be a local import to not influence the regular plug-in loading order
     import cmk.gui.painter.base as painter_base
     import cmk.gui.painter.helpers as painter_helpers
+    import cmk.gui.painter.legacy as painter_legacy
     import cmk.gui.painter.registry as gui_painter_registry
     import cmk.gui.plugins.views as api_module  # astrein: disable=cmk-module-layer-violation
     from cmk.gui import (
@@ -202,11 +203,12 @@ def _register_pre_21_plugin_api() -> None:
         "Cell",
         "EmptyCell",
         "CellSpec",
-        "Painter",
         "ExportCellContent",
         "join_row",
     ):
         api_module.__dict__[name] = painter_base.__dict__[name]
+
+    api_module.__dict__["Painter"] = painter_legacy.__dict__["Painter"]
 
     for name in (
         "painter_registry",

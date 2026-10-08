@@ -43,6 +43,7 @@ from cmk.gui.utils.host_relation_kinds import (
     RelationKind,
 )
 from cmk.gui.utils.host_relations import (
+    is_primary_direction,
     RelationDirection,
     RelationLink,
     relations_or_empty,
@@ -1388,7 +1389,7 @@ def _state_of(
         # carries none either - two rows of the same table must not read differently.
         return LinkOutcome.ALREADY_LINKED, ""
 
-    if (otherwise := _stored_otherwise(source, target)) is not None:
+    if (otherwise := _stored_otherwise(pair, source, target)) is not None:
         return LinkOutcome.STORED_OTHERWISE, otherwise
 
     if (unwritable := _unwritable(source, target)) is not None:
@@ -1401,29 +1402,55 @@ def _state_of(
 
 
 def _holds(pair: HostPair, source: Host, target: Host) -> bool:
-    """Whether the relation ``pair`` asks for is stored already, by either half of it.
+    """Whether the relation ``pair`` asks for is stored already, by its primary half.
 
-    One half is enough: :func:`cmk.gui.watolib.host_relations.resolve_all_relations` derives
-    the other, so the monitoring shows the relation whichever of the two hosts stores it.
+    The primary half is what the monitoring shows (see
+    :func:`cmk.gui.utils.host_relations.is_primary_direction`); the other one alone is not, so a
+    pair holding only that one is written - which settles it. Nor is a primary half the other
+    host claims as well: the activation drops both.
     """
     link = link_of(pair)
-    if source.stores_relations_about(target.name(), [link]):
-        return True
-    # A source saying something else about the target holds a different relation, not a lost half.
-    if not source.stores_relations_about(target.name(), []):
+    primary, other, half = (
+        (source, target, link)
+        if is_primary_direction(link["direction"])
+        else (target, source, _target_half(pair))
+    )
+    if not primary.stores_relations_about(other.name(), [half]):
         return False
-    other_half = plan_relation_mirror(pair.source, [], [link])[pair.target]
-    return target.stores_relations_about(source.name(), other_half)
+    if half["direction"] == "symmetric":
+        return True
+    return not any(
+        link["host"] == primary.name()
+        and link["kind"] == half["kind"]
+        and is_primary_direction(link["direction"])
+        for link in relations_or_empty(other.attributes.get("relations", []))
+    )
 
 
-def _stored_otherwise(source: Host, target: Host) -> str | None:
+def _target_half(pair: HostPair) -> RelationLink:
+    """The row the pair will store on its target host: :func:`link_of` seen from there."""
+    return {
+        "kind": pair.kind_id,
+        "direction": reverse_direction(pair.source_direction),
+        "host": pair.source,
+    }
+
+
+def _stored_otherwise(pair: HostPair, source: Host, target: Host) -> str | None:
     """Why this pair must not be written: the two hosts are related in some other way already.
 
     Storing a pair replaces whatever the two hosts say about each other, so a relation somebody
     entered by hand would be lost without a trace. The detection proposes, it does not correct.
+    A host storing its half of this very pair already is no other way.
     """
-    for host, other in ((source, target), (target, source)):
-        if not host.stores_relations_about(other.name(), []):
+    for host, other, half in (
+        (source, target, [link_of(pair)]),
+        (target, source, [_target_half(pair)]),
+    ):
+        if not (
+            host.stores_relations_about(other.name(), [])
+            or host.stores_relations_about(other.name(), half)
+        ):
             return _('"%(source)s" and "%(target)s" are already related in another way.') % {
                 "source": source.name(),
                 "target": target.name(),
@@ -1713,25 +1740,28 @@ def _write_pair(
         return RelationEntry(pair=pair, outcome=LinkOutcome.ALREADY_LINKED)
     # Asked again rather than trusted from the scan: somebody may have related the two hosts
     # by hand since, and that relation is not the detection's to replace.
-    if (otherwise := _stored_otherwise(source, target)) is not None:
+    if (otherwise := _stored_otherwise(pair, source, target)) is not None:
         return RelationEntry(pair=pair, outcome=LinkOutcome.STORED_OTHERWISE, detail=otherwise)
 
     unchanged = {host.name(): host.attributes for host in (source, target)}
-    before = relations_or_empty(source.attributes.get("relations", []))
     relation_mirror_folders([source, target], acting_user=acting_user)
 
-    if (edit := source.set_relations_about(target.name(), [link], acting_user=acting_user)) is None:
-        return RelationEntry(pair=pair, outcome=LinkOutcome.ALREADY_LINKED)
+    # Nothing to edit where the source stores its half already and only the target's primary
+    # half is missing.
+    edited = (
+        []
+        if (edit := source.set_relations_about(target.name(), [link], acting_user=acting_user))
+        is None
+        else [(source, edit)]
+    )
 
     try:
         mirrored = apply_relation_mirror(
             counterpart_resolver(source.folder()),
             source.name(),
-            plan_relation_mirror(
-                source.name(),
-                before,
-                relations_or_empty(source.attributes.get("relations", [])),
-            ),
+            # This pair only: the run settles what it was asked to store, not every relation of
+            # the source - those hosts are no part of the run.
+            plan_relation_mirror(source.name(), [], [link]),
             site_id=source.site_id(),
             acting_user=acting_user,
         )
@@ -1740,7 +1770,7 @@ def _write_pair(
         # at the end of the run if any other pair touched it.
         source.attributes = unchanged[source.name()]
         raise
-    batch.record([(source, edit), *mirrored], unchanged, acting_user=acting_user)
+    batch.record([*edited, *mirrored], unchanged, acting_user=acting_user)
     return RelationEntry(pair=pair, outcome=LinkOutcome.LINK)
 
 

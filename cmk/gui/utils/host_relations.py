@@ -69,6 +69,19 @@ def reverse_direction(direction: RelationDirection) -> RelationDirection:
             return "symmetric"
 
 
+def is_primary_direction(direction: RelationDirection) -> bool:
+    """Whether the host storing a link of this direction holds the primary half of the relation.
+
+    Both halves are stored, but only the one at the ``parent`` end - the managing side - is what
+    the monitoring shows; the ``child`` half is a copy of it for Setup's readers of that host,
+    re-derived whenever the ``parent`` end is saved. A save of the ``child`` end that leaves the
+    relation alone never writes back what it was copied from. With one primary end, every pair can
+    be settled without asking anybody which half is right. A symmetric relation is its own
+    reverse, so both of its halves are primary and can never contradict each other.
+    """
+    return direction != "child"
+
+
 def _is_nonempty_str(value: object) -> TypeGuard[str]:
     """An empty name is as unusable as a missing one, and would be looked up as if it were real."""
     return isinstance(value, str) and bool(value)
@@ -82,7 +95,7 @@ class RelationLink(TypedDict):
     ``host``". One entry per linked host, mirroring the one row per relation of the dialog. Both
     halves of a relation are stored - each host holds the link from its own side (see
     :func:`reverse_direction`), so no host has to look at any other one to know what it is
-    related to.
+    related to. Which of the two halves counts is :func:`is_primary_direction`.
 
     ``kind`` is a plain ``str`` here rather than one of the ids this version knows: a link may
     well name a kind a later version introduced, and a reader has to be able to hold it before it

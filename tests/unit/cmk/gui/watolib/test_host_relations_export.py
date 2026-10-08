@@ -39,7 +39,7 @@ def test_export_writes_both_sides_of_a_relation(tmp_path: Path) -> None:
     export_file = tmp_path / "relations.mk"
 
     export_host_relations(
-        fake_hosts(srv=[{"kind": "management", "direction": "child", "host": "mgmt"}], mgmt=None),
+        fake_hosts(mgmt=[{"kind": "management", "direction": "parent", "host": "srv"}], srv=None),
         export_file,
     )
 
@@ -55,7 +55,7 @@ def test_export_writes_both_sides_of_a_relation(tmp_path: Path) -> None:
 def test_export_reads_back_as_it_was_resolved(tmp_path: Path) -> None:
     export_file = tmp_path / "relations.mk"
     export_host_relations(
-        fake_hosts(srv=[{"kind": "management", "direction": "child", "host": "mgmt"}], mgmt=None),
+        fake_hosts(mgmt=[{"kind": "management", "direction": "parent", "host": "srv"}], srv=None),
         export_file,
     )
 
@@ -88,7 +88,7 @@ def test_export_leaves_an_unchanged_file_untouched(tmp_path: Path) -> None:
     incremental activation, and this export runs on every activation."""
     export_file = tmp_path / "relations.mk"
     hosts = fake_hosts(
-        srv=[{"kind": "management", "direction": "child", "host": "mgmt"}], mgmt=None
+        mgmt=[{"kind": "management", "direction": "parent", "host": "srv"}], srv=None
     )
     export_host_relations(hosts, export_file)
     mtime = export_file.stat().st_mtime_ns
@@ -101,7 +101,7 @@ def test_export_leaves_an_unchanged_file_untouched(tmp_path: Path) -> None:
 def test_export_rewrites_a_file_whose_relations_changed(tmp_path: Path) -> None:
     export_file = tmp_path / "relations.mk"
     export_host_relations(
-        fake_hosts(srv=[{"kind": "management", "direction": "child", "host": "mgmt"}], mgmt=None),
+        fake_hosts(mgmt=[{"kind": "management", "direction": "parent", "host": "srv"}], srv=None),
         export_file,
     )
 
@@ -115,7 +115,7 @@ def test_export_rewrites_a_file_whose_relations_changed(tmp_path: Path) -> None:
     [
         pytest.param(
             fake_hosts(
-                srv=[{"kind": "management", "direction": "child", "host": "mgmt"}], mgmt=None
+                mgmt=[{"kind": "management", "direction": "parent", "host": "srv"}], srv=None
             ),
             2,
             2,

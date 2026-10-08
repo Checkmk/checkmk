@@ -12,11 +12,14 @@ works off it.
 
 Links are stored in the ``relations`` host attribute of **both** hosts, each from its own side,
 and one save writes both halves - so every host knows what it is related to by looking at itself,
-and whoever saves last decides what a pair says.
+and whoever saves last decides what a pair says. The half at the board's end is the primary one
+(see :func:`cmk.gui.utils.host_relations.is_primary_direction`); the other is a copy of it that
+every save of the board settles again.
 
 For the monitoring the relations are resolved centrally at activation time (see
-:mod:`cmk.gui.watolib.host_relations_export`). The reverse of every stored half is derived in the
-same pass, so a half whose counterpart row was lost still materializes on both sides.
+:mod:`cmk.gui.watolib.host_relations_export`), from the primary halves only. The reverse of each is
+derived in the same pass, so a primary half whose counterpart row was lost still materializes on
+both sides.
 """
 
 from collections import defaultdict
@@ -45,6 +48,7 @@ from cmk.gui.utils.host_relation_kinds import (
     SymmetricRelationKind,
 )
 from cmk.gui.utils.host_relations import (
+    is_primary_direction,
     parse_relations_value,
     referenced_host_names,
     RelationDirection,
@@ -251,7 +255,8 @@ def host_relations_form_spec(
             "to the selected one - the management board of that host, for instance, "
             "or an OS host managed by it. A relation concerns both hosts, so it is stored on "
             "both: it appears here right away when someone records it on the other host, and "
-            "adding or removing one here changes that host too."
+            "adding or removing one here changes that host too. The monitoring shows what the "
+            "management board stores."
         ),
         wrapped_form_spec=List[tuple[str, object]](
             add_element_label=Label("Add new relation"),
@@ -389,9 +394,12 @@ def relations_or_user_error(raw: object, *, owner: HostName | None = None) -> Re
 def resolve_all_relations(all_hosts: Mapping[HostName, RelatedHost]) -> ResolvedRelations:
     """Resolve every host's relations (both directions) into concrete host names.
 
-    Both halves of a relation are stored, so one pass over the ``relations`` attribute of every
-    host sees every relation twice. The reverse of each half is derived anyway: that is what makes
-    a hand written ``hosts.mk`` holding only one half still materialize on both sides.
+    Both halves of a relation are stored, but only the primary one is read (see
+    :func:`is_primary_direction`); the reverse of it is derived. A half at the other end alone is
+    not shown - it is a copy that lost what it was copied from, and only storing the relation
+    again brings it back. Two primary halves that contradict each other - both hosts claiming to be
+    the board - are both dropped with a warning: neither is more right than the other, and
+    showing both would make each host the board of the other.
 
     Reads each host's *own* attributes, not its effective ones. That is deliberate - a
     folder-level value would mean every host in the folder pointing at the same board - and it is
@@ -400,8 +408,8 @@ def resolve_all_relations(all_hosts: Mapping[HostName, RelatedHost]) -> Resolved
 
     The result maps each host to the list of hosts related to it, with the end that host sits at
     towards each of them - the same reading as the stored links, so the materialized value and
-    the one in "hosts.mk" say the same thing. Duplicates are removed, so a stored pair collapses
-    into one relation per side. Hosts without relations are omitted.
+    the one in "hosts.mk" say the same thing. Duplicates are removed, so a symmetric pair stored
+    on both hosts collapses into one relation per side. Hosts without relations are omitted.
     """
     # A relation identifies itself, so a dict keyed by it is the set of them that keeps the
     # order they were resolved in.
@@ -444,6 +452,8 @@ def resolve_all_relations(all_hosts: Mapping[HostName, RelatedHost]) -> Resolved
             {"owner": owner, "kind": link["kind"], "direction": link["direction"]},
         )
 
+    primary: dict[tuple[str, HostName, HostName], RelationDirection] = {}
+    derived: list[tuple[HostName, RelationLink]] = []
     for host_name, host in all_hosts.items():
         try:
             parsed = parse_relations_value(
@@ -471,9 +481,37 @@ def resolve_all_relations(all_hosts: Mapping[HostName, RelatedHost]) -> Resolved
                     },
                 )
                 continue
-            other = all_hosts[link["host"]]
-            _add(host_name, link["kind"], link["direction"], other)
-            _add(other.name(), link["kind"], reverse_direction(link["direction"]), host)
+            if is_primary_direction(link["direction"]):
+                primary[(link["kind"], host_name, link["host"])] = link["direction"]
+            else:
+                derived.append((host_name, link))
+
+    for owner, link in derived:
+        if (link["kind"], link["host"], owner) not in primary:
+            _LOGGER.debug(
+                "Relation %(owner)r -> %(other)r (%(kind)s/%(direction)s) dropped: %(other)r"
+                " does not store it.",
+                {
+                    "owner": owner,
+                    "other": link["host"],
+                    "kind": link["kind"],
+                    "direction": link["direction"],
+                },
+            )
+
+    for (kind_id, owner, other), direction in primary.items():
+        counter = primary.get((kind_id, other, owner))
+        if counter is not None and counter != reverse_direction(direction):
+            # Logged once, from the host that sorts first.
+            if owner < other:
+                _LOGGER.warning(
+                    "Relation %(kind)r between %(host)r and %(other)r dropped: both hosts store"
+                    " it as their %(direction)r end. Save one of the two hosts to settle it.",
+                    {"kind": kind_id, "host": owner, "other": other, "direction": direction},
+                )
+            continue
+        _add(owner, kind_id, direction, all_hosts[other])
+        _add(other, kind_id, reverse_direction(direction), all_hosts[owner])
 
     return {owner: list(relations) for owner, relations in resolved.items()}
 

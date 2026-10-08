@@ -12,6 +12,7 @@ import pytest
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.utils.host_relations import (
     dump_resolved_relations,
+    is_primary_direction,
     parse_relations_value,
     parse_resolved_relations,
     referenced_host_names,
@@ -138,6 +139,20 @@ def test_the_two_ends_of_a_relation_answer_each_other() -> None:
 
 def test_a_symmetric_relation_reads_the_same_from_either_side() -> None:
     assert reverse_direction("symmetric") == "symmetric"
+
+
+@pytest.mark.parametrize(
+    "direction, primary",
+    [
+        pytest.param("parent", True, id="the board"),
+        pytest.param("child", False, id="the OS host"),
+        pytest.param("symmetric", True, id="either peer"),
+    ],
+)
+def test_the_primary_half_is_the_one_at_the_parent_end(
+    direction: RelationDirection, primary: bool
+) -> None:
+    assert is_primary_direction(direction) is primary
 
 
 def test_the_stored_direction_names_are_what_is_on_disk() -> None:

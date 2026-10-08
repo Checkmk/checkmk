@@ -807,9 +807,10 @@ def test_a_group_a_run_has_answered_is_not_asked_again(tree: FolderTree) -> None
     assert question.settled == HostName("srv-02")
 
 
-def test_a_group_whose_members_hold_only_the_other_half_is_not_asked_again(
+def test_a_group_whose_members_hold_only_the_os_half_is_asked_again(
     tree: FolderTree,
 ) -> None:
+    """The monitoring shows only what the board stores, so answering it is what settles it."""
     root = tree.root_folder()
     _create_other_half(root, "srv-01", "srv-02", labels={"cmdb/serial": "5XJ9K2"})
     _create_host(root, "srv-02", HostAttributes({"labels": {"cmdb/serial": "5XJ9K2"}}))
@@ -821,7 +822,7 @@ def test_a_group_whose_members_hold_only_the_other_half_is_not_asked_again(
         acting_user=_SUPERUSER,
     ).groups
 
-    assert question.settled == HostName("srv-02")
+    assert question.settled is None
 
 
 def test_a_member_of_a_group_that_cannot_be_written_cannot_be_named(tree: FolderTree) -> None:
@@ -889,10 +890,68 @@ def test_a_relation_that_is_already_stored_is_reported_as_such(tree: FolderTree)
     assert _outcomes(found.entries) == [("srv-01-ilo", "srv-01", LinkOutcome.ALREADY_LINKED)]
 
 
-def test_a_relation_only_its_target_holds_is_reported_as_stored(tree: FolderTree) -> None:
+def test_a_relation_only_the_os_host_holds_is_offered(tree: FolderTree) -> None:
+    """The monitoring shows only what the board stores, so storing the pair is what settles it."""
     root = tree.root_folder()
     _create_other_half(root, "srv-01", "srv-01-ilo")
     _create_host(root, "srv-01-ilo")
+    tree.invalidate_caches()
+
+    found = detect_relations(tree, evidence=_evidence(), acting_user=_SUPERUSER)
+
+    assert _outcomes(found.entries) == [("srv-01-ilo", "srv-01", LinkOutcome.LINK)]
+
+
+def test_a_relation_both_hosts_hold_as_the_board_is_not_reported_as_stored(
+    tree: FolderTree,
+) -> None:
+    """The activation drops both halves, so the monitoring shows nothing of it."""
+    root = tree.root_folder()
+    os_host = _create_host(root, "srv-01")
+    board = _create_host(root, "srv-01-ilo")
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("srv-01")}
+    ]
+    os_host.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("srv-01-ilo")}
+    ]
+    root.save_hosts(pprint_value=False, acting_user=_SUPERUSER)
+    tree.invalidate_caches()
+
+    found = detect_relations(tree, evidence=_evidence(), acting_user=_SUPERUSER)
+
+    assert _outcomes(found.entries) == [("srv-01-ilo", "srv-01", LinkOutcome.STORED_OTHERWISE)]
+
+
+def test_a_relation_both_hosts_hold_as_the_board_is_not_stored_next_to_another_relation(
+    tree: FolderTree,
+) -> None:
+    root = tree.root_folder()
+    os_host = _create_host(root, "srv-01")
+    board = _create_host(root, "srv-01-ilo")
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("srv-01")}
+    ]
+    os_host.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("srv-01-ilo")},
+        {"kind": "later", "direction": "parent", "host": HostName("srv-01-ilo")},
+    ]
+    root.save_hosts(pprint_value=False, acting_user=_SUPERUSER)
+    tree.invalidate_caches()
+
+    found = detect_relations(tree, evidence=_evidence(), acting_user=_SUPERUSER)
+
+    assert _outcomes(found.entries) == [("srv-01-ilo", "srv-01", LinkOutcome.STORED_OTHERWISE)]
+
+
+def test_a_relation_only_the_board_holds_is_reported_as_stored(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "srv-01")
+    board = _create_host(root, "srv-01-ilo")
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("srv-01")}
+    ]
+    root.save_hosts(pprint_value=False, acting_user=_SUPERUSER)
     tree.invalidate_caches()
 
     found = detect_relations(tree, evidence=_evidence(), acting_user=_SUPERUSER)
@@ -1509,7 +1568,7 @@ def test_a_host_that_is_gone_by_the_time_the_run_starts_is_reported(tree: Folder
     assert done[0].detail == "The host is gone."
 
 
-def test_a_relation_only_its_target_holds_is_not_stored_again(tree: FolderTree) -> None:
+def test_a_relation_only_the_os_host_holds_is_completed_on_the_board(tree: FolderTree) -> None:
     root = tree.root_folder()
     _create_other_half(root, "srv-01", "srv-01-ilo")
     _create_host(root, "srv-01-ilo")
@@ -1531,7 +1590,11 @@ def test_a_relation_only_its_target_holds_is_not_stored_again(tree: FolderTree) 
         progress=lambda _entry: None,
     )
 
-    assert _outcomes(done) == [("srv-01-ilo", "srv-01", LinkOutcome.ALREADY_LINKED)]
+    assert _outcomes(done) == [("srv-01-ilo", "srv-01", LinkOutcome.LINK)]
+    tree.invalidate_caches()
+    assert tree.load_host(HostName("srv-01-ilo")).attributes["relations"] == [
+        {"kind": "management", "direction": "parent", "host": "srv-01"}
+    ]
 
 
 def test_a_pair_that_cannot_be_written_leaves_the_others_stored(tree: FolderTree) -> None:

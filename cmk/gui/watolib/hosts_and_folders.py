@@ -84,6 +84,7 @@ from cmk.gui.session_context import get_session_csrf_token
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import CustomHostAttrSpec, SetOnceDict
 from cmk.gui.utils.host_relations import (
+    is_primary_direction,
     referenced_host_names,
     relation_key,
     RelationDirection,
@@ -1257,9 +1258,30 @@ def _relation_counterpart_hosts(tree: FolderTree, *relations_values: object) -> 
     return [host for name in referenced if (host := tree.host(name)) is not None]
 
 
-#: For each counterpart, exactly the rows it must hold about the host being saved. An empty
-#: sequence means it must hold none - the relation is gone.
-RelationMirror = Mapping[HostName, Sequence[RelationLink]]
+class MirrorEntry(NamedTuple):
+    """Exactly the rows a counterpart must hold about the host being saved.
+
+    An empty ``links`` means it must hold none - the relation is gone. ``changed`` says whether
+    this save changes the pair or only re-states it.
+    """
+
+    links: Sequence[RelationLink]
+    changed: bool
+
+    @property
+    def from_primary(self) -> bool:
+        """Whether the host being saved holds the primary half of every link of the pair.
+
+        Only then does a save that leaves the pair alone settle the counterpart: a copy must not
+        write back the half it was copied from (see :func:`is_primary_direction`). A pair holding
+        both ends of different kinds is settled from neither side, only by changing it.
+        """
+        return all(
+            is_primary_direction(reverse_direction(link["direction"])) for link in self.links
+        )
+
+
+RelationMirror = Mapping[HostName, MirrorEntry]
 
 
 def plan_relation_mirror(
@@ -1273,11 +1295,11 @@ def plan_relation_mirror(
     same relation converge - the later save re-states the whole pair, so the last writer decides
     what it says and both halves agree.
 
-    Only the pairs this save changes are planned. A pair it leaves alone is none of this save's
-    business: its counterpart may be locked, unwritable for this user, or missing its half
-    entirely, and none of that may stand between the user and saving the host in front of them.
-    A lost half costs nothing in the monitoring either, because :func:`resolve_all_relations`
-    derives the reverse of every stored half anyway.
+    Every pair the host names is planned, also the ones this save leaves alone: a save of the
+    host holding the primary half is what settles a half that went missing or contradicts it.
+    Whether a counterpart may stand
+    between the user and saving the host depends on whether the save changes that pair, see
+    :func:`_need_relation_mirror`.
 
     A link naming the host itself is no pair at all - mirroring it would edit the host a second
     time, from inside its own save.
@@ -1285,12 +1307,14 @@ def plan_relation_mirror(
     stored = _links_per_counterpart(before, host_name)
     wanted = _links_per_counterpart(after, host_name)
     return {
-        other: [
-            {"kind": kind_id, "direction": reverse_direction(direction), "host": host_name}
-            for kind_id, direction in wanted.get(other, ())
-        ]
+        other: MirrorEntry(
+            links=[
+                {"kind": kind_id, "direction": reverse_direction(direction), "host": host_name}
+                for kind_id, direction in wanted.get(other, ())
+            ],
+            changed=stored.get(other) != wanted.get(other),
+        )
         for other in {**stored, **wanted}
-        if stored.get(other) != wanted.get(other)
     }
 
 
@@ -1381,11 +1405,9 @@ def _refusal_of(
 ) -> Iterator[None]:
     """Say a counterpart's refusal in terms of the host the user is actually saving.
 
-    An ``optional`` write is one whose counterpart may simply keep its row: the host it is about
-    is being deleted, so the row names a host that is gone - which
-    :func:`cmk.gui.watolib.host_relations.resolve_all_relations` drops and
-    :func:`cmk.gui.watolib.builtin_attributes.validate_host_relations` reports. Such a refusal is
-    only logged.
+    An ``optional`` write is one whose counterpart may keep its row: the save only settles a pair
+    it does not change (see :func:`_need_relation_mirror`), or the row names a host that is being
+    deleted (see :func:`_drop_relations_to`). Such a refusal is only logged.
 
     ``dropping`` says the write would have removed the counterpart's row rather than set it, and
     only picks what the refusal tells the user to do about it.
@@ -1398,7 +1420,7 @@ def _refusal_of(
     except (MKAuthException, MKUserError) as exc:
         if optional:
             logger.warning(
-                "Kept the relation of host %(host)r to %(about)r: %(reason)s",
+                "Left the relations of host %(host)r to %(about)r unchanged: %(reason)s",
                 {"host": counterpart, "about": about, "reason": exc},
             )
             return
@@ -1465,6 +1487,7 @@ class _MirrorWrite(NamedTuple):
     counterpart: Host
     links: Sequence[RelationLink]
     visible: bool
+    optional: bool
 
 
 def _need_relation_mirror(
@@ -1483,20 +1506,33 @@ def _need_relation_mirror(
     re-stating a relation never needs write access to its folder.
 
     Dropping a relation is refused just like establishing one when the counterpart cannot be
-    written. Removing only this host's half would not get rid of it:
-    :func:`cmk.gui.watolib.host_relations.resolve_all_relations` derives the reverse of the half
-    the counterpart keeps, so the relation would be back on both hosts in the monitoring while
-    the dialog of this host shows none. A deleted host is the one case where a half may stay
-    behind (see :func:`_drop_relations_to`) - it names a host that is gone, which every reader of
-    the relations drops anyway.
+    written. Removing only this host's half would not get rid of it: the counterpart keeps its
+    own, and where that is the primary half the monitoring keeps showing the relation and its
+    next save writes it back onto this one. A deleted host is the one case where
+    a half may stay behind (see :func:`_drop_relations_to`) - it names a host that is gone, which
+    every reader of the relations drops anyway.
 
     Establishing a pair needs a counterpart the user may see; a missing and a hidden one get the
     same refusal, so it does not tell which hosts exist.
+
+    A pair the save does not change is settled on a best effort basis only: its counterpart may
+    be locked, unwritable for this user or gone, and none of that may stand between the user and
+    saving the host in front of them. Such a refusal is logged, and
+    :func:`cmk.gui.watolib.builtin_attributes.validate_host_relations` keeps reporting the pair.
+    The edition is not asked about such a pair either - the host stores it already, and only a
+    change of its site asks again (see :func:`_need_relatable_from`). Only the host holding the
+    primary half settles such a pair (see :attr:`MirrorEntry.from_primary`).
     """
     pending: list[_MirrorWrite] = []
-    for name, links in mirror.items():
+    for name, entry in mirror.items():
+        links, changed = entry.links, entry.changed
+        optional = not changed
+        if optional and not entry.from_primary:
+            continue
         counterpart = resolve_host(name)
         visible = counterpart is not None and counterpart.permissions.may("read", acting_user)
+        if optional and not visible:
+            continue
         if links and not visible:
             raise MKUserError(
                 None,
@@ -1506,14 +1542,20 @@ def _need_relation_mirror(
         if counterpart is None:
             # The pair is dropped, and the host it named is gone: nothing to mirror onto.
             continue
-        if links:
+        if links and changed:
             need_relatable(site_id, counterpart)
         if counterpart.stores_relations_about(host_name, links):
             continue
-        with _refusal_of(counterpart.name(), host_name, dropping=not links, visible=visible):
+        with _refusal_of(
+            counterpart.name(),
+            host_name,
+            optional=optional,
+            dropping=not links,
+            visible=visible,
+        ):
             counterpart.writable_relations()
             need_writable_folders([counterpart.folder()], acting_user=acting_user)
-            pending.append(_MirrorWrite(counterpart, links, visible))
+            pending.append(_MirrorWrite(counterpart, links, visible, optional))
     return pending
 
 
@@ -1521,8 +1563,10 @@ def _write_relation_mirror(
     host_name: HostName, pending: Sequence[_MirrorWrite], *, acting_user: LoggedInUser
 ) -> Sequence[tuple[Host, HostEditResult]]:
     applied: list[tuple[Host, HostEditResult]] = []
-    for counterpart, links, visible in pending:
-        with _refusal_of(counterpart.name(), host_name, dropping=not links, visible=visible):
+    for counterpart, links, visible, optional in pending:
+        with _refusal_of(
+            counterpart.name(), host_name, optional=optional, dropping=not links, visible=visible
+        ):
             if (
                 mirrored := counterpart.set_relations_about(
                     host_name, links, acting_user=acting_user

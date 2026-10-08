@@ -33,13 +33,14 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.site_config import has_distributed_setup_remote_sites, is_distributed_setup_remote_site
-from cmk.gui.utils.host_relation_kinds import known_relations
+from cmk.gui.utils.host_relation_kinds import known_relations, RELATION_KINDS
 from cmk.gui.utils.host_relations import (
     parse_relations_value,
     referenced_host_names,
     relation_key,
     RelationDirection,
     RelationLink,
+    reverse_direction,
 )
 from cmk.gui.valuespec import (
     AbsoluteDate,
@@ -673,8 +674,9 @@ def validate_host_relations(host: Host, *, acting_user: LoggedInUser) -> None:
     "hosts.mk", or a locked host the cleanup after a deletion could not write - long after the
     link was stored. Rejecting any of it on save would leave the host unsavable until someone
     else cleans up, so the save only refuses what it introduces itself and the rest is reported
-    like a missing parent. A save writes only the pairs it changes, so the report says which
-    host to edit to settle it.
+    like a missing parent. Saving the host holding the primary half (see
+    :attr:`MirrorEntry.from_primary`) settles the pair, as far as the user may write the other
+    one; the report says whether the monitoring shows the relation and where to settle it.
 
     Only a user who may see every host is told about a counterpart that is missing. For anyone
     else a missing one and one they may not see are left alone alike: what either is reported
@@ -701,7 +703,7 @@ def validate_host_relations(host: Host, *, acting_user: LoggedInUser) -> None:
     # Known kinds only: what a later version wrote is not for this one to judge. Sets, since a
     # duplicated row is the counterpart's own conflict.
     known = known_relations(links)
-    for related_name, expected in plan_relation_mirror(host.name(), (), known).items():
+    for related_name, mirror in plan_relation_mirror(host.name(), (), known).items():
         if related_name not in counterparts:
             continue
         try:
@@ -713,26 +715,63 @@ def validate_host_relations(host: Host, *, acting_user: LoggedInUser) -> None:
                 % {"related_name": related_name, "error": exc},
             ) from exc
         stored = stored_about.get(host.name(), frozenset())
-        if stored == set(map(relation_key, expected)):
+        if stored == set(map(relation_key, mirror.links)):
             continue
+        own = [link for link in known if link["host"] == related_name]
         if not stored:
-            raise MKUserError(
-                None,
-                _(
+            if mirror.from_primary:
+                message = _(
                     "'%(related_name)s' does not store its half of the relation to this host. "
-                    "The monitoring shows the relation anyway. Add the relation on "
-                    "'%(related_name)s' to store it on both hosts."
+                    "The monitoring shows the relation anyway. Saving this host stores it on "
+                    "'%(related_name)s' too, unless '%(related_name)s' is locked or you cannot "
+                    "edit it."
                 )
-                % {"related_name": related_name},
+            else:
+                message = _(
+                    "'%(related_name)s' does not store this relation, so the monitoring does not "
+                    "show it. Add it on '%(related_name)s', or remove it here."
+                )
+            raise MKUserError(None, message % {"related_name": related_name})
+        for link in own:
+            # Both hosts at the same end. A symmetric end is the one both share anyway.
+            if (
+                link["direction"] != "symmetric"
+                and (link["kind"], link["direction"], host.name()) in stored
+            ):
+                kind = RELATION_KINDS[link["kind"]]
+                if mirror.from_primary:
+                    message = _(
+                        "'%(related_name)s' also stores itself as '%(end)s' of this host, so the "
+                        "monitoring shows neither relation. Saving keeps this host as "
+                        "'%(end)s' and makes '%(related_name)s' its '%(other_end)s', unless "
+                        "'%(related_name)s' is locked or you cannot edit it."
+                    )
+                else:
+                    message = _(
+                        "'%(related_name)s' also stores itself as '%(end)s' of this host, so the "
+                        "monitoring shows neither relation. Add the relation on the host that is "
+                        "the '%(other_end)s'."
+                    )
+                raise MKUserError(
+                    None,
+                    message
+                    % {
+                        "related_name": related_name,
+                        "end": kind.end(link["direction"]).noun,
+                        "other_end": kind.end(reverse_direction(link["direction"])).noun,
+                    },
+                )
+        if mirror.from_primary:
+            message = _(
+                "'%(related_name)s' stores a different relation to this host. Saving this "
+                "host makes both agree, unless '%(related_name)s' is locked or you cannot edit it."
             )
-        raise MKUserError(
-            None,
-            _(
-                "'%(related_name)s' stores a different relation to this host. Change the "
-                "relation on one of the two hosts so that both agree; saving writes both."
+        else:
+            message = _(
+                "'%(related_name)s' stores a different relation to this host. Change the relation "
+                "on '%(related_name)s', or remove it here."
             )
-            % {"related_name": related_name},
-        )
+        raise MKUserError(None, message % {"related_name": related_name})
 
 
 @hooks.request_memoize()

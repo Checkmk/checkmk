@@ -229,23 +229,32 @@ def test_the_form_rejects_a_host_name_that_cannot_be_stored() -> None:
     assert [message.message for message in messages] == ["This is not a usable host name."]
 
 
-@pytest.mark.parametrize("stored, mirrored", [("child", "parent"), ("parent", "child")])
-def test_one_stored_half_materializes_on_both_sides(
-    stored: RelationDirection, mirrored: RelationDirection
-) -> None:
-    """A dialog row reads "this host is OS host of <other>", and so does the value the core
-    gets - from either end, and for a half whose counterpart row was lost as well: the
-    monitoring is never one-sided, only Setup can be."""
+def test_a_stored_board_half_materializes_on_both_sides() -> None:
+    """A dialog row reads "this host is management board of <other>", and so does the value the
+    core gets - also for a board whose counterpart row was lost."""
     resolved = resolve_all_relations(
-        fake_hosts(srv=[{"kind": "management", "direction": stored, "host": "board"}], board=None)
+        fake_hosts(board=[{"kind": "management", "direction": "parent", "host": "srv"}], srv=None)
     )
 
-    assert resolved[HostName("srv")] == [
-        ResolvedRelation(kind="management", direction=stored, host="board", site="central")
-    ]
     assert resolved[HostName("board")] == [
-        ResolvedRelation(kind="management", direction=mirrored, host="srv", site="central")
+        ResolvedRelation(kind="management", direction="parent", host="srv", site="central")
     ]
+    assert resolved[HostName("srv")] == [
+        ResolvedRelation(kind="management", direction="child", host="board", site="central")
+    ]
+
+
+def test_an_os_half_alone_is_not_materialized(caplog: pytest.LogCaptureFixture) -> None:
+    """The board's half is the primary one; without it the OS host only holds a stale copy."""
+    with caplog.at_level(logging.DEBUG, logger="cmk.web.host_relations"):
+        resolved = resolve_all_relations(
+            fake_hosts(
+                srv=[{"kind": "management", "direction": "child", "host": "board"}], board=None
+            )
+        )
+
+    assert resolved == {}
+    assert "'board' does not store it" in caplog.text
 
 
 def test_resolve_all_relations_carries_the_site_of_the_counterpart() -> None:
@@ -302,21 +311,31 @@ def test_a_link_stored_twice_on_one_host_is_one_relation() -> None:
     ]
 
 
-def test_two_halves_that_contradict_each_other_are_both_reported() -> None:
-    """Only reachable by hand editing "hosts.mk" - a save re-states both halves. The resolver
-    must not pick a winner: it does not know which side is the newer one, and dropping either
-    would hide the mistake that validate_host_relations() reports."""
+def test_two_hosts_both_storing_the_board_half_are_both_dropped() -> None:
+    """Neither half is more right than the other, and showing both would make each host the
+    board of the other. The next save of either host settles the pair."""
     all_hosts = fake_hosts(
         board=[{"kind": "management", "direction": "parent", "host": "os1"}],
         os1=[{"kind": "management", "direction": "parent", "host": "board"}],
     )
 
-    resolved = resolve_all_relations(all_hosts)
+    assert resolve_all_relations(all_hosts) == {}
 
-    assert set(resolved[HostName("board")]) == {
-        ResolvedRelation(kind="management", direction="parent", host="os1", site="central"),
-        ResolvedRelation(kind="management", direction="child", host="os1", site="central"),
-    }
+
+def test_two_hosts_both_storing_the_board_half_are_logged_as_a_warning_once(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    all_hosts = fake_hosts(
+        board=[{"kind": "management", "direction": "parent", "host": "os1"}],
+        os1=[{"kind": "management", "direction": "parent", "host": "board"}],
+    )
+
+    with caplog.at_level(logging.WARNING, logger="cmk.web.host_relations"):
+        resolve_all_relations(all_hosts)
+
+    assert [record.levelno for record in caplog.records] == [logging.WARNING]
+    assert "'board'" in caplog.text
+    assert "'os1'" in caplog.text
 
 
 @pytest.mark.parametrize(

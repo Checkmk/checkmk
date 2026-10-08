@@ -50,11 +50,16 @@ Terms
   and related host.
 * **Half:** The link one of the two hosts stores about a relation. A relation
   consists of two halves.
+* **Primary half:** The half at the ``parent`` end (the board), which the
+  activation reads. For a symmetric kind both halves are primary.
+* **Derived half:** The half at the ``child`` end (the OS host). It is a copy of
+  the primary half for the host properties of the OS host, and is not read by
+  the activation.
 * **Pair:** Two hosts and everything they store about each other.
 * **Related host:** The host at the other end of a relation, called counterpart
   in the code.
-* **Mirror:** Writing the other half onto the related host whenever a host's
-  relations change.
+* **Mirror:** Writing the other half onto the related host whenever a host is
+  saved and the related host does not store it yet.
 * **Finding:** One source of evidence the relation detection looks at: a word in
   host names, or a label or custom host attribute whose values hosts share.
 * **Deciding end:** The end of a kind that a finding identifies, e.g. the board
@@ -106,10 +111,11 @@ The main requirements we need to meet are:
 Quality goals
 -------------
 
-1. **Consistency:** Both halves of a relation agree after every write that
-   changes the pair. Where they do not (manual edits, locks, an interrupted
-   rename), the monitoring GUI still shows the relation on both hosts, and
-   ``validate_host_relations`` reports it in Setup.
+1. **Consistency:** Both halves of a relation agree after every save that
+   changes it, and after every save of the board. Where they do not (manual
+   edits, locks, an interrupted rename), the primary half decides what the
+   monitoring GUI shows, ``validate_host_relations`` reports it in Setup, and
+   the next save of the board settles it.
 2. **Robustness:** A broken related host does not prevent saving a host, unless
    the save changes the relation to that host. A failed export does not fail the
    activation (outside of debug mode).
@@ -222,7 +228,9 @@ link above reads like the row in the host properties: "this host is management
 board of ``srv-01``".
 
 Both halves of a relation are stored. In the example, ``srv-01`` holds the link
-``{"kind": "management", "direction": "child", "host": "srv-01-ilo"}``.
+``{"kind": "management", "direction": "child", "host": "srv-01-ilo"}``. The
+link of the board is the primary half; the one of ``srv-01`` is derived from it
+(``is_primary_direction``).
 
 The kind ids and directions end up in the configuration of every installation.
 Renaming them would require a migration (see :doc:`arch-migrations`). The
@@ -403,12 +411,11 @@ for a new host) does the following:
    is only refused if the save introduces it. A conflict that was already
    stored before does not block the save. A value that cannot be read at all is
    refused.
-2. It calculates what each affected related host has to store about the saved
-   host. This is always the complete state of the pair, not a diff. If two users
-   edit the same relation at the same time, the last save wins and both halves
-   still agree.
-3. Before anything is written, it checks every related host whose pair the save
-   changes:
+2. It calculates what each related host has to store about the saved host,
+   also for the pairs the save does not change. This is always the complete
+   state of the pair, not a diff. If two users edit the same relation at the
+   same time, the last save wins and both halves still agree.
+3. Before anything is written, it checks every related host:
 
    * If the pair keeps a relation, the related host must exist and be visible to
      the user, and the edition must accept the two sites
@@ -429,11 +436,21 @@ for a new host) does the following:
    related hosts get a pending change of their own and are activated together
    with the saved host.
 
-Pairs the save does not change are not touched. This way a broken related host
-(locked, not writable, half missing) never blocks saving the host the user is
-working on, as long as the save leaves that relation alone. The one exception:
-if the save changes the site of the host, the edition hook is asked about all
-of its relations (see below).
+For a pair the save changes, each of these checks refuses the save. A pair the
+save does not change is settled on a best effort basis: a related host that is
+missing or hidden from the user is left alone without a message, as one would
+tell whether it exists; one that is locked, not writable for the user or stores
+a ``relations`` value that cannot be read is logged as a warning and left as it
+is. ``validate_host_relations`` keeps reporting all of them. The edition hook is
+not asked about such a pair, as the host stores it already. This way a broken
+related host never blocks saving the host the user is working on, as long as
+the save leaves that relation alone. Only a save of the host holding the
+primary half settles such a pair: saving the OS host never writes the board's
+half, as its own half is only a copy of it. An OS host half the board does not
+store stays until the relation is stored on the board or removed from the OS
+host. The one
+exception: if the save changes the site of the host, the edition hook is asked
+about all of its relations (see below).
 
 When several hosts are created at once, the related hosts are looked up among
 the hosts that already exist. A relation to a host created in the same call is
@@ -476,9 +493,17 @@ Before the configuration snapshots are created, the activation calls
    skips all links of that host. Links to unknown kinds or directions, with a
    direction their kind does not have, to the host itself or to hosts that do
    not exist any more are dropped (logged on debug level).
-2. For each link the relation is added to the host and the reverse relation to
-   the related host. Even if a ``hosts.mk`` only holds one half (e.g. after a
-   manual edit), both hosts get the relation in the monitoring.
+2. Only primary halves are read. For each, the relation is added to the host and
+   the reverse relation to the related host:
+
+   * If only the board stores its half, both hosts still get the relation.
+   * If only the OS host stores its half, neither host gets it (logged on debug
+     level).
+   * If both hosts store the board's half about each other, neither gets it, and
+     a warning is logged.
+
+   Saving the board settles the first case, saving either host the last. The
+   second needs the relation stored on the board or removed from the OS host.
 3. ``relations.mk`` is only written if its content has changed: a file in
    ``conf.d`` that is newer than the last core config makes the CMC do a full
    instead of an incremental config compilation.
@@ -629,10 +654,14 @@ Operation
 
 * **Logging:** The logger ``cmk.web.host_relations`` logs a failed export as an
   error and a malformed ``relations`` attribute that the export skips as a
-  warning. On "Debug" it also logs every relation that was dropped during the
+  warning, and so are two hosts that both store the board's half about each
+  other. On "Debug" it also logs every relation that was dropped during the
   export, and why, and a summary of each export. A related host that keeps its
-  half after a deletion because it is locked is logged as a warning on the
-  general ``cmk.web`` logger, not on the relations logger.
+  half after a deletion because it is locked, or whose half a save could not
+  settle because it is locked, not writable or holds a value that cannot be
+  read, is logged as a warning on the general ``cmk.web`` logger, not on the
+  relations logger. A missing or hidden related host of a pair the save does
+  not change is not logged.
 * **Locking:** The store run holds the configuration lock for its whole run,
   like a bulk import of hosts. Storing relations for a large fleet blocks other
   Setup changes meanwhile: measured were 11 seconds for 2,500 pairs (about 4 ms
@@ -653,11 +682,12 @@ Operation
   host may not carry the variable yet, and the relation stays hidden until the
   other site is activated as well.
 * **Troubleshooting:** If a relation is missing in the monitoring GUI, check in
-  this order: the ``relations`` attribute of both hosts in Setup (the host
-  properties report problems), ``etc/check_mk/conf.d/relations.mk`` on the site
-  of the host, the variable in Livestatus (``lq "GET hosts\nColumns: name
-  custom_variables\nFilter: custom_variable_names >= CMK_RELATIONS"``), and the
-  messages of ``cmk.web.host_relations`` in ``var/log/web.log``.
+  this order: the ``relations`` attribute of both hosts in Setup, the board
+  first, as only its half is shown (the host properties report problems),
+  ``etc/check_mk/conf.d/relations.mk`` on the site of the host, the variable
+  in Livestatus (``lq "GET hosts\nColumns: name custom_variables\nFilter:
+  custom_variable_names >= CMK_RELATIONS"``), and the messages of
+  ``cmk.web.host_relations`` in ``var/log/web.log``.
 
 Testing
 =======
@@ -754,12 +784,22 @@ Security considerations
 Architecture decisions
 ======================
 
-* **Both halves are stored.** Every host knows its relations without looking at
-  other hosts, so the host properties, the deletion dialog and the validation
-  never search the whole folder tree. The price is the mirror that keeps both
-  halves in sync (see `Risks and technical debts`_). *Alternative:* store one
-  half and derive the other on read. Every reader of a host would then have to
-  scan all hosts.
+* **Both halves are stored, the board's half is primary.** Every host knows its
+  relations without looking at other hosts, so the host properties, the
+  deletion dialog and the validation never search the whole folder tree. The
+  half of the OS host is a copy that only Setup reads; the activation reads the
+  board's. With one primary half, every mismatch of the two can be settled
+  without asking the user which one is right, and every save of the board
+  does so. A save of the OS host never writes the board's half back from its
+  copy. The price is the mirror that keeps both halves in sync (see `Risks
+  and technical debts`_). ``is_primary_direction`` is the one rule for it, and
+  what a later blanket cleanup would reuse. *Direction:* store only the
+  board's half. The OS host would read its relations from a lookup of all
+  boards, kept like the folder lookup cache. The board's half being primary
+  already makes the OS host's half a copy that no activation reads, so dropping
+  it later changes Setup only. *Alternative:* store both halves without a
+  primary one: a contradiction could then not be resolved without a decision of
+  the user.
 * **A write states the whole pair, the last writer wins.** The mirror replaces
   what the related host stores about the saved host instead of applying a diff.
   A flipped direction is then one write, and two concurrent edits of the same
@@ -820,6 +860,10 @@ also for pairs found by shared values. For a symmetric kind, a shared value
 proposes pairs only if a word or marker names one host of the group; with
 nothing marked it proposes nothing, as it never asks group questions.
 
+The ``parent`` end of a directed kind holds the primary half. Both halves of a
+symmetric kind are primary, as each is the reverse of the other and the two can
+never contradict each other.
+
 In the host properties the type decides the rest of the row: a directed kind
 offers its two ends, and a symmetric kind just shows its one end. The relations
 column of the page "All hosts" counts relations of every kind this version
@@ -869,14 +913,19 @@ Ordered by priority.
 4. Each relation is stored twice, and only the mirror keeps both halves in
    sync. A manually edited ``hosts.mk``, a locked related host or a rename that
    stops at a related host the user may not write can leave one half alone.
-   The export compensates for this. ``validate_host_relations``
-   reports contradictions and an unreadable value on the host itself, a half
-   that points to a missing host, and a related host that does not store its
-   half, stores a different one, or stores a ``relations`` value that cannot be
-   read. It reports one problem at a time. Saving the host again does not
-   repair this, as a save only writes the pairs it changes; adding or changing
-   the relation on either host writes both. The detection does not repair it
-   either: it treats a relation as stored if one half is.
+   A board's half alone is still shown in the monitoring, an OS host's half
+   alone is not, and two board halves are both dropped.
+   ``validate_host_relations`` reports contradictions and an unreadable value
+   on the host itself, a half that points to a missing host, and a related
+   host that does not store its half, stores a different one, or stores a
+   ``relations`` value that cannot be read. It reports one problem at a time.
+   Saving the board repairs it, as far as the user may write the OS host. An
+   OS host half alone is repaired by storing the relation on the board or
+   removing it from the OS host. The OS host does not report a board half it
+   lacks, as finding it would mean searching all hosts.
+   The detection stores a relation whose board half is missing like a new one.
+   One that both hosts store as the board's half it reports as related in
+   another way and leaves alone; saving either host settles it.
 5. If the export fails, the activation still succeeds (outside of debug mode)
    and the monitoring GUI shows outdated relations. The reason can only be found
    in ``web.log``.
@@ -894,8 +943,8 @@ Ordered by priority.
 7. When hosts are created or edited with relations, or the store run writes its
    folders, and writing one folder to disk fails halfway, nothing is rolled
    back: some hosts are written and some related hosts are left without their
-   half. Saving again does not repair this, as the save no longer changes the
-   pair. "Revert changes" restores the state of the last activation. Moving
+   half. Saving one of the hosts again repairs this. "Revert changes" restores
+   the state of the last activation. Moving
    hosts between folders has the same gap.
 8. The ``_CMK_RELATIONS`` variable of a host grows with the number of its
    relations, and nothing bounds its size. A management board carries a few

@@ -28,7 +28,7 @@ metric_ap_devices_minor = metrics.Metric(
 
 graph_access_point_statistics2 = graphs.Graph(
     name="access_point_statistics2",
-    title=Title("Access point statistics"),
+    title=Title("Access points by status"),
     compound_lines=[
         "ap_devices_cleared",
         "ap_devices_minor",

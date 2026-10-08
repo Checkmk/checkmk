@@ -36,6 +36,7 @@ from cmk.base.configlib.servicename import (
 )
 from cmk.base.default_config.base import _PeriodicDiscovery
 from cmk.base.notify import make_notification_parameters_config
+from cmk.ccc import store
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -2765,26 +2766,30 @@ def wato_folder_fixture(main_mk: Path) -> Iterator[Path]:
     shutil.rmtree(folder)
 
 
-def test_load_raw_config_tracks_the_folder_of_a_written_hosts_mk(wato_folder: Path) -> None:
+def _write_hosts_mk(folder: Path, host_name: HostName) -> None:
     host_storage.get_standard_hosts_storage().write(
-        wato_folder / "hosts",
+        folder / "hosts",
         host_storage.HostsStorageData(
             locked_hosts=False,
-            all_hosts=[HostName("host1")],
+            all_hosts=[host_name],
             clusters={},
-            attributes={},
+            attributes={"ipaddresses": {host_name: "127.0.0.1"}},
             custom_macros={},
-            host_tags={},
+            host_tags={host_name: {}},
             host_labels={},
             contact_groups=host_storage.ContactGroupsField(
                 hosts=[], services=[], folder_hosts=[], folder_services=[]
             ),
             explicit_host_conf={},
-            host_attributes={HostName("host1"): {}},
+            host_attributes={host_name: {}},
             folder_attributes={},
         ),
         repr,
     )
+
+
+def test_load_raw_config_tracks_the_folder_of_a_written_hosts_mk(wato_folder: Path) -> None:
+    _write_hosts_mk(wato_folder, HostName("host1"))
 
     raw_config = config.load_raw_config()
 
@@ -2825,6 +2830,44 @@ def test_exit_on_config_file_load_error_ends_the_process() -> None:
 def test_exit_on_config_file_load_error_reraises_when_debugging() -> None:
     with pytest.raises(config.ConfigFileLoadError), config.exit_on_config_file_load_error():
         raise config.ConfigFileLoadError(Path("main.mk"), ValueError("broken"))
+
+
+def test_load_raw_config_into_an_empty_context(wato_folder: Path) -> None:
+    """Self-bootstrapping config files load the same with and without the seed."""
+    _write_hosts_mk(wato_folder, HostName("host1"))
+    (wato_folder / "rules.mk").write_text(  # as Ruleset.format_raw_value writes it
+        "checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})\n"
+        "checkgroup_parameters.setdefault('memory', [])\n"
+        "checkgroup_parameters['memory'] = [\n"
+        "{'id': '01', 'condition': {}, 'value': {'levels': (80.0, 90.0)}},\n"
+        "] + checkgroup_parameters['memory']\n"
+    )
+    store.save_to_mk_file(wato_folder / "groups.mk", key="define_hostgroups", value={"a": "A"})
+
+    seeded = config.load_raw_config()
+    unseeded = config.load_raw_config(context_factory=dict)
+
+    assert unseeded == {k: v for k, v in seeded.items() if k in unseeded}
+    assert unseeded["host_paths"] == {"host1": "/wato/hosts.mk"}
+    assert unseeded["define_hostgroups"] == {"a": "A"}
+    assert "define_servicegroups" not in unseeded
+
+
+def test_load_raw_config_into_an_empty_context_fails_on_legacy_config_files(main_mk: Path) -> None:
+    main_mk.write_text("define_hostgroups.update({'linux': 'Linux'})\n")
+
+    with pytest.raises(config.ConfigFileLoadError) as excinfo:
+        config.load_raw_config(config_files=[main_mk], context_factory=dict)
+
+    assert isinstance(excinfo.value.__cause__, NameError)
+
+
+def test_load_raw_config_seeds_legacy_config_files_by_default(main_mk: Path) -> None:
+    main_mk.write_text("define_hostgroups.update({'linux': 'Linux'})\n")
+
+    raw_config = config.load_raw_config(config_files=[main_mk])
+
+    assert raw_config["define_hostgroups"] == {"linux": "Linux"}
 
 
 @pytest.fixture(name="folder_path_test_config")

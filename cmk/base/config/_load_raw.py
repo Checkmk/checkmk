@@ -8,7 +8,7 @@
 import contextlib
 import copy
 import sys
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from pathlib import Path
 from types import ModuleType
 from typing import override
@@ -139,13 +139,22 @@ def _load_config_file(file_to_load: Path, into_dict: dict[str, object]) -> None:
 def load_raw_config(
     *,
     config_files: Iterable[Path] | None = None,
+    context_factory: Callable[[], dict[str, object]] = get_default_config,
 ) -> Mapping[str, object]:
     """Execute the config files into a namespace
 
     `config_files` defaults to all of them: main.mk, everything below
     conf.d, final.mk and local.mk.
+
+    The namespace starts out with what is returned by `context_factory`,
+    which defaults to get_default_config: legacy config files reference
+    variables before assigning them.
     """
-    target_context = get_default_config()
+    target_context = context_factory()
+    # The loader itself needs these, regardless of what the config files expect.
+    target_context.setdefault("all_hosts", [])
+    target_context.setdefault("clusters", {})
+    target_context.setdefault("host_paths", {})
     helper_vars = {
         "FOLDER_PATH": None,
     }

@@ -24,7 +24,11 @@ from cmk.gui.dashboard.token_util import (
     InvalidWidgetError,
 )
 from cmk.gui.dashboard.type_defs import EmbeddedViewDashletConfig, LinkedViewDashletConfig
-from cmk.gui.dashboard.view_drilldown import column_drilldowns
+from cmk.gui.dashboard.view_drilldown import (
+    column_drilldown_targets,
+    column_drilldowns,
+    inherited_column_link,
+)
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -50,7 +54,11 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.view_renderer import GUIViewRenderer
-from cmk.gui.views.page_edit_view import create_view_from_valuespec, render_view_config
+from cmk.gui.views.page_edit_view import (
+    ColumnDrilldownTarget,
+    create_embedded_view_from_valuespec,
+    render_view_config,
+)
 from cmk.gui.views.page_show_view import get_limit, get_user_sorters, process_view
 from cmk.gui.views.store import get_permitted_views, get_view_by_name
 from cmk.gui.visuals import get_merged_context, get_only_sites_from_context
@@ -704,7 +712,11 @@ class ViewWidgetEditPage(Page):
             html.hidden_field("owner", str(owner))
 
             render_view_config(
-                view_spec, general_properties=True, allow_browser_reload=False, config=ctx.config
+                view_spec,
+                general_properties=True,
+                allow_browser_reload=False,
+                config=ctx.config,
+                column_drilldowns=self._get_column_drilldowns(ctx.request, dashboard, mode),
             )
 
         html.close_div()
@@ -724,10 +736,14 @@ class ViewWidgetEditPage(Page):
         dashboard: DashboardConfig, embedded_id: str, view_spec: ViewSpec, config: Config
     ) -> None:
         # first arg is just used for the datasource (so it can't be overwritten)
-        view_spec = create_view_from_valuespec(
+        view_spec, column_drilldowns = create_embedded_view_from_valuespec(
             old_view=view_spec, view=view_spec, allow_browser_reload=False, config=config
         )
         embedded = EmbeddedViewSpecManager.normal_to_embedded_view_spec(view_spec)
+        if column_drilldowns:
+            embedded["column_links"] = {
+                index: inherited_column_link(target) for index, target in column_drilldowns.items()
+            }
         dashboard.setdefault("embedded_views", {})[embedded_id] = embedded
         save_all_dashboards(dashboard["owner"])
         # we don't do the remote site sync here, as this is done when the dashboard is saved
@@ -824,6 +840,18 @@ class ViewWidgetEditPage(Page):
         return self._create_new_view_spec(
             dashboard, embedded_id, view_name, datasource, single_infos
         )
+
+    @staticmethod
+    def _get_column_drilldowns(
+        request: Request, dashboard: DashboardConfig, mode: Mode
+    ) -> dict[int, ColumnDrilldownTarget]:
+        # Only a duplicate starts from an embedded view, the one place column links live in.
+        if mode != "duplicate":
+            return {}
+        source = dashboard["embedded_views"][
+            request.get_ascii_input_mandatory("source_embedded_id")
+        ]
+        return column_drilldown_targets(source.get("column_links", {}))
 
     @staticmethod
     def _create_new_view_spec(

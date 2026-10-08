@@ -14,7 +14,7 @@ import datetime as dt
 import string
 from collections.abc import Iterator, Mapping, Sequence
 from functools import partial
-from typing import Any, Literal, NamedTuple, overload, override, TypedDict
+from typing import Any, Literal, NamedTuple, overload, override, TypedDict, TypeIs
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
@@ -36,6 +36,7 @@ from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
     ColumnTypes,
+    ContextualLinkTargetType,
     InventoryJoinMacrosSpec,
     PainterName,
     PainterParameters,
@@ -79,8 +80,20 @@ from cmk.web.utils.icons import DynamicIconName
 
 from .layout import layout_registry
 from .sorter import all_sorters, ParameterizedSorter, Sorter
-from .store import get_all_views
+from .store import get_all_views, get_permitted_views
 from .view_choices import view_choices
+
+type ColumnDrilldownTarget = tuple[ContextualLinkTargetType, VisualName]
+
+# The Link choices of a column that carries the context it is shown in, by the visual it opens.
+type _DrilldownChoice = Literal["drilldown_views", "drilldown_dashboards"]
+_DRILLDOWN_TARGETS: Mapping[_DrilldownChoice, ContextualLinkTargetType] = {
+    "drilldown_views": "views",
+    "drilldown_dashboards": "dashboards",
+}
+_DRILLDOWN_CHOICES: Mapping[ContextualLinkTargetType, _DrilldownChoice] = {
+    target: choice for choice, target in _DRILLDOWN_TARGETS.items()
+}
 
 
 def page_edit_view(ctx: PageContext) -> None:
@@ -279,13 +292,32 @@ def view_inventory_join_macros(
 
 
 def view_editor_column_spec(
-    ident: str, ds_name: str, painter_context: PainterContext
+    ident: str, ds_name: str, painter_context: PainterContext, *, with_drilldown: bool = False
 ) -> Dictionary:
-    choices = [_get_common_vs_column_choice(ds_name, painter_context, add_custom_column_title=True)]
-    if join_vs_column_choice := _get_join_vs_column_choice(ds_name, painter_context):
+    """The columns of the view editor.
+
+    With drill-down, a column may also link to a view or dashboard carrying the context it is
+    shown in, and each column's value is a pair of its spec and that drill-down target.
+    """
+    drilldown_choices = (
+        _drilldown_link_choices(ds_name, painter_context.user_permissions) if with_drilldown else []
+    )
+    choices = [
+        _get_common_vs_column_choice(
+            ds_name,
+            painter_context,
+            add_custom_column_title=True,
+            drilldown_choices=drilldown_choices,
+        )
+    ]
+    if join_vs_column_choice := _get_join_vs_column_choice(
+        ds_name, painter_context, drilldown_choices=drilldown_choices
+    ):
         choices.append(join_vs_column_choice)
 
-    if join_inv_vs_column_choice := _get_join_inv_vs_column_choice(ds_name, painter_context):
+    if join_inv_vs_column_choice := _get_join_inv_vs_column_choice(
+        ds_name, painter_context, drilldown_choices=drilldown_choices
+    ):
         choices.append(join_inv_vs_column_choice)
 
     return _view_editor_spec(
@@ -295,6 +327,7 @@ def view_editor_column_spec(
         vs_column=CascadingDropdown(choices=choices),
         allow_empty=False,
         empty_text=_("Please add at least one column to your view."),
+        with_drilldown=with_drilldown,
     )
 
 
@@ -327,13 +360,14 @@ def _get_common_vs_column_choice(
     ds_name: str,
     painter_context: PainterContext,
     add_custom_column_title: bool,
+    drilldown_choices: Sequence[CascadingDropdownChoice] = (),
 ) -> _VSColumnChoice:
     painters = painters_of_datasource(ds_name)
 
     elements = [_get_vs_column_dropdown(ds_name, "painter", painters, painter_context)]
     if add_custom_column_title:
         elements.append(_get_vs_column_title())
-    elements.extend(_get_vs_link_or_tooltip_elements(painters, painter_context))
+    elements.extend(_get_vs_link_or_tooltip_elements(painters, painter_context, drilldown_choices))
 
     return _VSColumnChoice(
         column_type="column",
@@ -350,7 +384,9 @@ def _get_vs_column_title() -> tuple[str, TextInput]:
 
 
 def _get_join_vs_column_choice(
-    ds_name: str, painter_context: PainterContext
+    ds_name: str,
+    painter_context: PainterContext,
+    drilldown_choices: Sequence[CascadingDropdownChoice] = (),
 ) -> None | _VSColumnChoice:
     if not (join_painters := join_painters_of_datasource(ds_name)):
         return None
@@ -385,14 +421,16 @@ def _get_join_vs_column_choice(
                 ),
                 _get_vs_column_title(),
             ]
-            + _get_vs_link_or_tooltip_elements(join_painters, painter_context),
+            + _get_vs_link_or_tooltip_elements(join_painters, painter_context, drilldown_choices),
             optional_keys=["link_spec", "tooltip"],
         ),
     )
 
 
 def _get_join_inv_vs_column_choice(
-    ds_name: str, painter_context: PainterContext
+    ds_name: str,
+    painter_context: PainterContext,
+    drilldown_choices: Sequence[CascadingDropdownChoice] = (),
 ) -> _VSColumnChoice | None:
     if not _is_inventory_datasource(ds_name):
         return None
@@ -461,7 +499,8 @@ def _get_join_inv_vs_column_choice(
         column_type="join_inv_column",
         title=_("Joined inventory column"),
         vs=Dictionary(
-            elements=elements + _get_vs_link_or_tooltip_elements({}, painter_context),
+            elements=elements
+            + _get_vs_link_or_tooltip_elements({}, painter_context, drilldown_choices),
             optional_keys=["link_spec", "tooltip"],
         ),
     )
@@ -538,13 +577,17 @@ def _get_vs_column_dropdown(
 def _get_vs_link_or_tooltip_elements(
     painters: Mapping[str, InternalPainter],
     painter_context: PainterContext,
+    drilldown_choices: Sequence[CascadingDropdownChoice] = (),
 ) -> list[tuple[str, ValueSpec]]:
     return [
         (
             "link_spec",
             CascadingDropdown(
                 title=_("Link"),
-                choices=_column_link_choices(painter_context.user_permissions),
+                choices=[
+                    *_column_link_choices(painter_context.user_permissions),
+                    *drilldown_choices,
+                ],
                 orientation="horizontal",
             ),
         ),
@@ -558,9 +601,16 @@ def _get_vs_link_or_tooltip_elements(
     ]
 
 
+type _RawVSLinkSpec = tuple[VisualTypeName, VisualName] | tuple[_DrilldownChoice, VisualName]
+
+
 class _RawVSColumnSpecOptional(TypedDict, total=False):
-    link_spec: tuple[VisualTypeName, VisualName]
+    link_spec: _RawVSLinkSpec
     tooltip: ColumnName
+
+
+def _is_drilldown(link_spec: _RawVSLinkSpec) -> TypeIs[tuple[_DrilldownChoice, VisualName]]:
+    return link_spec[0] in _DRILLDOWN_TARGETS
 
 
 class _RawVSColumnSpec(_RawVSColumnSpecOptional):
@@ -593,6 +643,7 @@ def _view_editor_spec(
     vs_column: ValueSpec,
     allow_empty: bool,
     empty_text: str | None,
+    with_drilldown: bool = False,
 ) -> Dictionary:
     # Note: for ident == "grouping" we always have "column" type,
     # ie. there aren't any "join_column"s.
@@ -662,7 +713,9 @@ def _view_editor_spec(
         return painter_spec, PainterParameters()
 
     def _get_link_spec(value: _RawVSColumnSpec | _RawVSJoinInvColumnSpec) -> VisualLinkSpec | None:
-        return None if (ls := value.get("link_spec")) is None else VisualLinkSpec.from_raw(ls)
+        if (ls := value.get("link_spec")) is None or _is_drilldown(ls):
+            return None
+        return VisualLinkSpec.from_raw(ls)
 
     def _to_vs(column_spec: ColumnSpec | _RawVSColumn | None) -> _RawVSColumn | None:
         if column_spec is None or isinstance(column_spec, tuple):
@@ -719,10 +772,35 @@ def _view_editor_spec(
     ) -> tuple[PainterName, PainterParameters]:
         return (column_spec.name, column_spec.parameters)
 
-    vs_column = Transform(
-        valuespec=vs_column,
-        from_valuespec=_from_vs,
-        to_valuespec=_to_vs,
+    def _from_vs_with_drilldown(
+        value: _RawVSColumn,
+    ) -> tuple[ColumnSpec | _RawVSColumn, ColumnDrilldownTarget | None]:
+        if (ls := value[1].get("link_spec")) is None or not _is_drilldown(ls):
+            return _from_vs(value), None
+        return _from_vs(value), (_DRILLDOWN_TARGETS[ls[0]], ls[1])
+
+    def _to_vs_with_drilldown(
+        value: tuple[ColumnSpec | _RawVSColumn, ColumnDrilldownTarget | None] | None,
+    ) -> _RawVSColumn | None:
+        if value is None:
+            return None
+        column_spec, drilldown = value
+        if (raw := _to_vs(column_spec)) is not None and drilldown is not None:
+            raw[1]["link_spec"] = (_DRILLDOWN_CHOICES[drilldown[0]], drilldown[1])
+        return raw
+
+    vs_column = (
+        Transform(
+            valuespec=vs_column,
+            from_valuespec=_from_vs_with_drilldown,
+            to_valuespec=_to_vs_with_drilldown,
+        )
+        if with_drilldown
+        else Transform(
+            valuespec=vs_column,
+            from_valuespec=_from_vs,
+            to_valuespec=_to_vs,
+        )
     )
 
     return Dictionary(
@@ -760,6 +838,53 @@ def _column_link_choices(user_permissions: UserPermissions) -> list[CascadingDro
             _("Link to dashboard") + ":",
             DropdownChoice(
                 choices=visual_type.choices(visual_type.visuals(), user_permissions),
+                sorted=True,
+            ),
+        ),
+    ]
+
+
+def _drilldown_link_choices(
+    ds_name: str, user_permissions: UserPermissions
+) -> list[CascadingDropdownChoice]:
+    """The targets a row of the data source can drill down to: those whose single infos it fills.
+
+    A row names one host or one service, so a data source of neither offers no drill-down.
+    """
+    infos = data_source_registry[ds_name]().infos
+    if not (object_infos := {info for info in ("host", "service") if info in infos}):
+        return []
+    dashboard_type = visual_type_registry["dashboards"]()
+    fillable_views = {
+        name
+        for name, view in get_permitted_views().items()
+        if set(view["single_infos"]) <= object_infos
+    }
+    fillable_dashboards = {
+        name
+        for name, dashboard in dashboard_type.permitted_visuals(
+            dashboard_type.visuals(), user_permissions
+        ).items()
+        if set(dashboard["single_infos"]) <= object_infos
+    }
+    return [
+        (
+            "drilldown_views",
+            _("Drill down to view") + ":",
+            DropdownChoice(
+                choices=[choice for choice in view_choices() if choice[0] in fillable_views],
+                sorted=True,
+            ),
+        ),
+        (
+            "drilldown_dashboards",
+            _("Drill down to dashboard") + ":",
+            DropdownChoice(
+                choices=[
+                    choice
+                    for choice in dashboard_type.choices(dashboard_type.visuals(), user_permissions)
+                    if choice[0] in fillable_dashboards
+                ],
                 sorted=True,
             ),
         ),
@@ -870,7 +995,9 @@ def render_view_config(
     *,
     allow_browser_reload: bool,
     config: Config,
+    column_drilldowns: Mapping[int, ColumnDrilldownTarget] | None = None,
 ) -> None:
+    """Render the view editor's fields; with column_drilldowns, a column may also drill down."""
     value = _transform_view_to_valuespec_value(view_spec)
 
     # TODO: This and the modification of the view_spec should not be here. Find a better place
@@ -901,8 +1028,22 @@ def render_view_config(
         url_renderer=RenderLink(request, response, display_options),
         user_permissions=UserPermissions.from_config(config, permission_registry),
     )
-    vs_columns = view_editor_column_spec("columns", ds_name, painter_context)
-    vs_columns.render_input("columns", value["columns"])
+    if column_drilldowns is None:
+        vs_columns = view_editor_column_spec("columns", ds_name, painter_context)
+        vs_columns.render_input("columns", value["columns"])
+    else:
+        vs_columns = view_editor_column_spec(
+            "columns", ds_name, painter_context, with_drilldown=True
+        )
+        vs_columns.render_input(
+            "columns",
+            {
+                "columns": [
+                    (column, column_drilldowns.get(index))
+                    for index, column in enumerate(value["columns"]["columns"])
+                ]
+            },
+        )
 
     vs_sorting = view_editor_sorter_specs(
         "sorting", ds_name, value["columns"]["columns"], painter_context
@@ -988,6 +1129,35 @@ def _update_view_with_valuespec_values(
 def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](
     old_view: T, view: T, *, allow_browser_reload: bool, config: Config
 ) -> T:
+    view, _column_drilldowns = _create_view_from_valuespec(
+        old_view,
+        view,
+        allow_browser_reload=allow_browser_reload,
+        config=config,
+        with_drilldown=False,
+    )
+    return view
+
+
+def create_embedded_view_from_valuespec(
+    old_view: ViewSpec, view: ViewSpec, *, allow_browser_reload: bool, config: Config
+) -> tuple[ViewSpec, dict[int, ColumnDrilldownTarget]]:
+    """Like create_view_from_valuespec, where a column may also drill down.
+
+    The drill-down targets come by painter index, beside the view they have no place in.
+    """
+    return _create_view_from_valuespec(
+        old_view,
+        view,
+        allow_browser_reload=allow_browser_reload,
+        config=config,
+        with_drilldown=True,
+    )
+
+
+def _create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](
+    old_view: T, view: T, *, allow_browser_reload: bool, config: Config, with_drilldown: bool
+) -> tuple[T, dict[int, ColumnDrilldownTarget]]:
     ds_name = old_view.get("datasource") or request.get_ascii_input_mandatory("datasource")
     view["datasource"] = ds_name
 
@@ -1007,7 +1177,22 @@ def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](
     update_view(
         "view", view_editor_general_properties(ds_name, allow_browser_reload=allow_browser_reload)
     )
-    update_view("columns", view_editor_column_spec("columns", ds_name, painter_context))
+
+    vs_columns = view_editor_column_spec(
+        "columns", ds_name, painter_context, with_drilldown=with_drilldown
+    )
+    columns = vs_columns.from_html_vars("columns")
+    vs_columns.validate_value(columns, "columns")
+    column_drilldowns: dict[int, ColumnDrilldownTarget] = {}
+    if with_drilldown:
+        column_drilldowns = {
+            index: target
+            for index, (_column, target) in enumerate(columns["columns"])
+            if target is not None
+        }
+        columns = {"columns": [column for column, _target in columns["columns"]]}
+    _update_view_with_valuespec_values(view, "columns", columns)
+
     update_view("grouping", view_editor_grouping_spec("grouping", ds_name, painter_context))
     update_view(
         "sorting", view_editor_sorter_specs("sorting", ds_name, view["painters"], painter_context)
@@ -1024,7 +1209,7 @@ def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](
 
     view["modified_at"] = dt.datetime.now(dt.UTC).isoformat()
 
-    return view
+    return view, column_drilldowns
 
 
 def _painter_choices(

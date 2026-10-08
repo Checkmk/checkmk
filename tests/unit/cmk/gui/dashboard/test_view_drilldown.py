@@ -9,9 +9,14 @@ import pytest
 
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config
-from cmk.gui.dashboard.view_drilldown import column_drilldowns
+from cmk.gui.dashboard.view_drilldown import (
+    column_drilldown_targets,
+    column_drilldowns,
+    inherited_column_link,
+)
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (
+    ContextFilterConfig,
     ContextualLinkEntryConfig,
     ContextualLinkLocationConfig,
     Row,
@@ -235,3 +240,16 @@ def test_column_drilldowns_reads_the_columns_naming_the_row(
     )
 
     assert drilldowns[0].columns == columns
+
+
+def test_column_drilldown_targets_reads_back_what_the_editor_stored() -> None:
+    column_links = {2: inherited_column_link(("dashboards", "main"))}
+
+    assert column_drilldown_targets(column_links) == {2: ("dashboards", "main")}
+
+
+def test_column_drilldown_targets_leaves_out_a_link_with_filters() -> None:
+    custom = _inherited()
+    custom["filters"] = [ContextFilterConfig(filter_id="host")]
+
+    assert column_drilldown_targets({0: custom}) == {}

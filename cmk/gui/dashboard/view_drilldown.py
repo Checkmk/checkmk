@@ -22,6 +22,7 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.views.page_edit_view import ColumnDrilldownTarget
 from cmk.web.utils.urls import makeuri_contextless
 
 from .api.model.contextual_link import (
@@ -81,6 +82,29 @@ def column_drilldowns(
             ),
         )
     return drilldowns
+
+
+def inherited_column_link(target: ColumnDrilldownTarget) -> ContextualLinkEntryConfig:
+    """The stored link of a column the view editor set to drill down to the target."""
+    return ContextualLinkEntryConfig(
+        title=target[1],
+        location=target,
+        filters=[],
+        include_context=True,
+        include_time_range=True,
+        show_filter_form=False,
+    )
+
+
+def column_drilldown_targets(
+    column_links: Mapping[int, ContextualLinkEntryConfig],
+) -> dict[int, ColumnDrilldownTarget]:
+    """The targets of the inherited column links, as the view editor shows them."""
+    return {
+        index: (link["location"][0], link["location"][1])
+        for index, link in column_links.items()
+        if not link["filters"]
+    }
 
 
 def _object_columns(object_infos: Sequence[InfoName]) -> list[ColumnName]:

@@ -5,9 +5,12 @@
 
 import pytest
 
+from cmk.ccc.user import UserId
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.painter import PainterContext
-from cmk.gui.type_defs import ColumnSpec, PainterParameters
+from cmk.gui.permissions import permission_registry
+from cmk.gui.type_defs import ColumnSpec, PainterParameters, VisualLinkSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.page_edit_view import (
     join_painters_of_datasource,
@@ -117,3 +120,81 @@ def test_the_view_editor_without_browser_reload_hides_the_automatic_page_reload(
     properties = view_editor_general_properties("hosts", allow_browser_reload=False)
 
     assert "browser_reload" not in properties.default_value()
+
+
+@pytest.fixture(name="admin_painter_context")
+def fixture_admin_painter_context(load_config: Config, with_admin_login: UserId) -> PainterContext:
+    return make_painter_context(
+        UserPermissions(load_config.roles, permission_registry, {with_admin_login: ["admin"]}, [])
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_view_editor_column_spec_with_drilldown_keeps_a_drilldown_apart_from_the_link(
+    admin_painter_context: PainterContext,
+) -> None:
+    vs = view_editor_column_spec("columns", "hosts", admin_painter_context, with_drilldown=True)
+    value = {
+        "columns": [
+            (
+                ColumnSpec(
+                    "host",
+                    parameters=PainterParameters(color_choices=[]),
+                    column_title="",
+                    _column_type="column",
+                ),
+                ("dashboards", "main"),
+            )
+        ]
+    }
+
+    assert vs.transform_value(value) == value
+
+
+@pytest.mark.usefixtures("request_context")
+def test_view_editor_column_spec_with_drilldown_keeps_a_link_to_a_view(
+    admin_painter_context: PainterContext,
+) -> None:
+    vs = view_editor_column_spec("columns", "hosts", admin_painter_context, with_drilldown=True)
+    value = {
+        "columns": [
+            (
+                ColumnSpec(
+                    "host",
+                    parameters=PainterParameters(color_choices=[]),
+                    link_spec=VisualLinkSpec("views", "host"),
+                    column_title="",
+                    _column_type="column",
+                ),
+                None,
+            )
+        ]
+    }
+
+    assert vs.transform_value(value) == value
+
+
+@pytest.mark.usefixtures("request_context")
+def test_view_editor_column_spec_with_drilldown_rejects_a_view_the_row_cannot_fill(
+    admin_painter_context: PainterContext,
+) -> None:
+    vs = view_editor_column_spec("columns", "hosts", admin_painter_context, with_drilldown=True)
+
+    with pytest.raises(MKUserError) as excinfo:
+        vs.validate_value({"columns": [(ColumnSpec("alias"), ("views", "service"))]}, "columns")
+
+    assert "link_spec" in (excinfo.value.varname or "")
+
+
+@pytest.mark.usefixtures("request_context")
+def test_view_editor_column_spec_offers_no_drilldown_on_a_datasource_without_hosts(
+    admin_painter_context: PainterContext,
+) -> None:
+    vs = view_editor_column_spec(
+        "columns", "hostgroups", admin_painter_context, with_drilldown=True
+    )
+
+    with pytest.raises(MKUserError) as excinfo:
+        vs.validate_value({"columns": [(ColumnSpec("hg_name"), ("views", "allhosts"))]}, "columns")
+
+    assert "link_spec" in (excinfo.value.varname or "")

@@ -366,11 +366,16 @@ function legendScrollMaxHeightPx(container: Element): number {
   return Number.parseInt(scroller!.style.maxHeight, 10)
 }
 
-function legendHeightVariablesPx(container: Element): { header: number; row: number } {
+function legendHeightVariablesPx(container: Element): {
+  header: number
+  row: number
+  dividerGap: number
+} {
   const root = container.querySelector<HTMLElement>('.graphing-graph-legend')!
   return {
     header: Number.parseInt(root.style.getPropertyValue('--legend-header-height'), 10),
-    row: Number.parseInt(root.style.getPropertyValue('--legend-row-height'), 10)
+    row: Number.parseInt(root.style.getPropertyValue('--legend-row-height'), 10),
+    dividerGap: Number.parseInt(root.style.getPropertyValue('--legend-divider-gap'), 10)
   }
 }
 
@@ -382,24 +387,26 @@ test('caps the legend at its header plus seven rows by default', () => {
   expect(legendScrollMaxHeightPx(container)).toBe(header + 7 * row)
 })
 
-test('the header and row heights the cap is derived from reach the stylesheet', () => {
+test('the header, row and divider heights the cap is derived from reach the stylesheet', () => {
   const { container } = render(GraphLegend, { props: { metrics: [CPU, MEM] } })
 
   // The header and the rows take their heights from the same constants the cap sums up. Were
   // they to drift apart, the cap would stop landing on a row boundary.
   const root = container.querySelector<HTMLElement>('.graphing-graph-legend')!
   expect(root.style.getPropertyValue('--legend-row-height')).toBe('24px')
-  expect(root.style.getPropertyValue('--legend-header-height')).toBe('40px')
+  expect(root.style.getPropertyValue('--legend-header-height')).toBe('52px')
+  expect(root.style.getPropertyValue('--legend-divider-gap')).toBe('12px')
 })
 
-test('threshold lines eat into the same seven-item budget instead of adding height', () => {
+test('threshold lines eat into the same seven-item budget, adding only their divider', () => {
   const withoutLines = render(GraphLegend, { props: { metrics: [CPU, MEM] } })
   const withLines = render(GraphLegend, {
     props: { metrics: [CPU, MEM], horizontalLines: [WARN_LINE, CRIT_LINE] }
   })
 
+  const { dividerGap } = legendHeightVariablesPx(withLines.container)
   expect(legendScrollMaxHeightPx(withLines.container)).toBe(
-    legendScrollMaxHeightPx(withoutLines.container)
+    legendScrollMaxHeightPx(withoutLines.container) + 2 * dividerGap
   )
 })
 
@@ -409,8 +416,10 @@ test('the metric rows keep room for one row even when thresholds outnumber the b
     props: { metrics: [CPU, MEM], horizontalLines: manyLines }
   })
 
-  const { header, row } = legendHeightVariablesPx(container)
-  expect(legendScrollMaxHeightPx(container)).toBe(header + (manyLines.length + 1) * row)
+  const { header, row, dividerGap } = legendHeightVariablesPx(container)
+  expect(legendScrollMaxHeightPx(container)).toBe(
+    header + (manyLines.length + 1) * row + 2 * dividerGap
+  )
 })
 
 test('fillHeight applies the fill modifier and lifts the height cap', () => {

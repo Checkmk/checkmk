@@ -78,9 +78,14 @@ const visibilityLabel = computed(() =>
 // Counts threshold lines too: 5 metrics plus 2 thresholds scrolls where 7 metrics would.
 const VISIBLE_ITEM_BUDGET = 7
 const ROW_HEIGHT_PX = 24
-const HEADER_ROW_HEIGHT_PX = 40
+// The space on either side of the divider under the header and the one above the footer.
+const DIVIDER_GAP_PX = 12
+const HEADER_ROW_HEIGHT_PX = 40 + DIVIDER_GAP_PX
 const rowHeight = `${ROW_HEIGHT_PX}px`
 const headerRowHeight = `${HEADER_ROW_HEIGHT_PX}px`
+const dividerGap = `${DIVIDER_GAP_PX}px`
+
+const hasFooter = computed(() => props.horizontalLines.length > 0 || props.shadedRegions.length > 0)
 
 const scrollMaxHeight = computed(() => {
   if (props.fillHeight) {
@@ -88,7 +93,8 @@ const scrollMaxHeight = computed(() => {
   }
   const rowsForMetrics = Math.max(1, VISIBLE_ITEM_BUDGET - props.horizontalLines.length)
   const visibleRows = rowsForMetrics + props.horizontalLines.length
-  return `${HEADER_ROW_HEIGHT_PX + visibleRows * ROW_HEIGHT_PX}px`
+  const footerDividerHeight = hasFooter.value ? 2 * DIVIDER_GAP_PX : 0
+  return `${HEADER_ROW_HEIGHT_PX + visibleRows * ROW_HEIGHT_PX + footerDividerHeight}px`
 })
 
 const displayMetrics = computed(() => orderMetricsTopToBottom(props.metrics))
@@ -143,7 +149,11 @@ function toggleLine(name: string) {
   <div
     class="graphing-graph-legend"
     :class="{ 'graphing-graph-legend--fill': fillHeight }"
-    :style="{ '--legend-row-height': rowHeight, '--legend-header-height': headerRowHeight }"
+    :style="{
+      '--legend-row-height': rowHeight,
+      '--legend-header-height': headerRowHeight,
+      '--legend-divider-gap': dividerGap
+    }"
   >
     <CmkScrollContainer
       class="graphing-graph-legend__scroll"
@@ -245,7 +255,7 @@ function toggleLine(name: string) {
             </tr>
           </template>
         </tbody>
-        <tfoot v-if="horizontalLines.length > 0 || shadedRegions.length > 0">
+        <tfoot v-if="hasFooter">
           <tr
             v-for="line in horizontalLines"
             :key="line.name"
@@ -309,6 +319,7 @@ function toggleLine(name: string) {
   box-sizing: border-box;
   padding: var(--dimension-5);
   background: var(--ux-theme-2);
+  border-radius: var(--border-radius);
   font-size: var(--font-size-normal);
   color: var(--font-color);
   width: 100%;
@@ -345,12 +356,15 @@ function toggleLine(name: string) {
     top: 0;
     z-index: 1;
     padding-top: var(--dimension-3);
-    padding-bottom: var(--dimension-5);
+    padding-bottom: calc(2 * var(--legend-divider-gap));
     text-align: right;
     font-weight: normal;
     white-space: nowrap;
+    color: var(--font-color);
     background: var(--ux-theme-2);
-    box-shadow: inset 0 -1px 0 var(--ux-theme-6);
+    box-shadow:
+      inset 0 calc(-1 * var(--legend-divider-gap)) 0 var(--ux-theme-2),
+      inset 0 calc(-1 * var(--legend-divider-gap) - 1px) 0 var(--ux-theme-6);
   }
 }
 
@@ -393,8 +407,13 @@ function toggleLine(name: string) {
   background: var(--ux-theme-2);
 }
 
+/* Background-coloured shadows keep the row hover off the gaps around the divider. */
 .graphing-graph-legend__line-row:first-child td {
-  box-shadow: inset 0 1px 0 var(--ux-theme-6);
+  padding-top: calc(2 * var(--legend-divider-gap) + 2px);
+  box-shadow:
+    inset 0 var(--legend-divider-gap) 0 var(--ux-theme-2),
+    inset 0 calc(var(--legend-divider-gap) + 1px) 0 var(--ux-theme-6),
+    inset 0 calc(2 * var(--legend-divider-gap)) 0 var(--ux-theme-2);
 }
 
 /* The eye button fills its column exactly, so with no cell padding the name cell's own
@@ -472,12 +491,19 @@ function toggleLine(name: string) {
   font-variant-numeric: tabular-nums;
 }
 
+/* Unqualified, so the hidden row's colour still wins. */
+.graphing-graph-legend__stat {
+  color: var(--graphing-legend-stat-color);
+}
+
 body[data-theme='facelift'] .graphing-graph-legend {
+  --graphing-legend-stat-color: var(--color-mid-grey-100);
   --graphing-legend-hidden-color: var(--color-conference-grey-70);
   --graphing-legend-row-hover: var(--ux-theme-4);
 }
 
 body[data-theme='modern-dark'] .graphing-graph-legend {
+  --graphing-legend-stat-color: var(--color-mid-grey-0);
   --graphing-legend-hidden-color: var(--color-white-70);
   --graphing-legend-row-hover: var(--color-white-10);
 }

@@ -1,13 +1,6 @@
 # Source files that are not in a Bazel rule their linter visits, checked by
 # //packages/cmk-repo-checks:bazel_lint_coverage. This list may only shrink.
 # A new file must go into a matching target instead of this list.
-.paseo/claude-firejail
-.paseo/reclaim-bazel-output-base.sh
-.paseo/setup-claude-firejail.sh
-.pre-commit-scripts/check-cmk-namespace
-.pre-commit-scripts/check-licence
-.pre-commit-scripts/check-qa-test-data
-.pre-commit-scripts/lib-precommit
 .pre-commit-scripts/run-doctests
 .pre-commit-scripts/run-lint-bazel
 .pre-commit-scripts/run-mypy-bazel
@@ -147,42 +140,22 @@ packages/neb/test/NagiosMockup.cc
 packages/unixcat/src/unixcat.cc
 prettier.config.cjs
 scripts/bootstrap_container.sh
-scripts/check_no_py_test.sh
-scripts/check_requirements_test_coverage.sh
-scripts/decent-output
-scripts/deploy-python
-scripts/install-iwyu.sh
-scripts/remove-unused-filelevel-mypy-suppressions.sh
 scripts/run-in-docker2.sh
-scripts/run-iwyu
-tests/agent-plugin-unit/bootstrap.sh
 tests/packaging/package_validator/src/main.rs
 tests/run_tests.sh
-tests/unit-shell/agents/plugins/test_common_inventory_parts.sh
-tests/unit-shell/agents/plugins/test_common_plugin_parts.sh
 tests/unit-shell/agents/plugins/test_ibm_mq.sh
 tests/unit-shell/agents/plugins/test_kaspersky_av.sh
 tests/unit-shell/agents/plugins/test_mk_inventory.sh
-tests/unit-shell/agents/plugins/test_mk_oracle.sh
 tests/unit-shell/agents/plugins/test_mk_redis.sh
-tests/unit-shell/agents/plugins/test_mk_sap_hana.sh
 tests/unit-shell/agents/plugins/test_mk_tsm.sh
 tests/unit-shell/agents/plugins/test_netstat.linux.sh
 tests/unit-shell/agents/plugins/test_symantec_av.sh
 tests/unit-shell/agents/scripts/super-server/0_systemd/test_setup.sh
 tests/unit-shell/agents/scripts/super-server/test_setup.sh
-tests/unit-shell/agents/test_bourne_again_shell.sh
-tests/unit-shell/agents/test_bourne_shell.sh
-tests/unit-shell/agents/test_common_agent_parts.sh
-tests/unit-shell/agents/test_common_mk-job_parts.sh
-tests/unit-shell/agents/test_current_shell.sh
 tests/unit-shell/agents/test_encryption_linux.sh
 tests/unit-shell/agents/test_encryption_solaris.sh
 tests/unit-shell/agents/test_get_epoch.sh
-tests/unit-shell/agents/test_korn_shell.sh
-tests/unit-shell/agents/test_korn_shell_93.sh
 tests/unit-shell/agents/test_log_section_time.sh
-tests/unit-shell/agents/test_manage_binaries.sh
 tests/unit-shell/agents/test_mk-job.sh
 tests/unit-shell/agents/test_mrpe.sh
 tests/unit-shell/agents/test_plugin_execution.sh
@@ -193,4 +166,3 @@ tests/unit-shell/agents/test_section_local_linux.sh
 tests/unit-shell/agents/test_section_nfs_mounts.sh
 tests/unit-shell/agents/test_section_uptime_aix.sh
 tests/unit-shell/agents/test_set_up_path.sh
-tests/unit-shell/agents/test_z_shell.sh

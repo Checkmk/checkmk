@@ -21,3 +21,11 @@ py_cmk_test(
         "//agents/plugins:agent-plugins-python",
     ],
 )
+
+# Lets shellcheck see these scripts. Nothing depends on this target.
+sh_library(
+    name = "shell_scripts",
+    srcs = [
+        "bootstrap.sh",
+    ],
+)

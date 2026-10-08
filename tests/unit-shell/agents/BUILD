@@ -28,3 +28,23 @@ shunit2_test(
     },
     deps = ["//agents/plugins:agents_plugins_sh"],
 )
+
+# Lets shellcheck see these scripts. Nothing depends on this target.
+sh_library(
+    name = "shell_scripts",
+    srcs = [
+        "plugins/test_common_inventory_parts.sh",
+        "plugins/test_common_plugin_parts.sh",
+        "plugins/test_mk_oracle.sh",
+        "plugins/test_mk_sap_hana.sh",
+        "test_bourne_again_shell.sh",
+        "test_bourne_shell.sh",
+        "test_common_agent_parts.sh",
+        "test_common_mk-job_parts.sh",
+        "test_current_shell.sh",
+        "test_korn_shell.sh",
+        "test_korn_shell_93.sh",
+        "test_manage_binaries.sh",
+        "test_z_shell.sh",
+    ],
+)

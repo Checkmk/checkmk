@@ -5,7 +5,6 @@
 
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
-# mypy: disable-error-code="type-arg"
 
 import logging
 import os

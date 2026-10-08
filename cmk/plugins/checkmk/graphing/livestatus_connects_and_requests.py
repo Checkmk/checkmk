@@ -36,7 +36,7 @@ graph_livestatus_requests_per_connection = graphs.Graph(
                 [
                     "livestatus_connect_rate",
                     metrics.Constant(
-                        Title(""),
+                        Title("Zero division guard"),
                         UNIT_NUMBER,
                         metrics.Color.GRAY,
                         1e-16,

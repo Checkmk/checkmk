@@ -86,12 +86,12 @@ graph_size_per_process = graphs.Graph(
             metrics.Color.BLUE,
             dividend="process_resident_size",
             divisor=metrics.Sum(
-                Title(""),
+                Title("Number of processes"),
                 metrics.Color.GRAY,
                 [
                     "processes",
                     metrics.Constant(
-                        Title(""),
+                        Title("Zero division guard"),
                         UNIT_NUMBER,
                         metrics.Color.GRAY,
                         1e-16,
@@ -107,12 +107,12 @@ graph_size_per_process = graphs.Graph(
             metrics.Color.GREEN,
             dividend="process_virtual_size",
             divisor=metrics.Sum(
-                Title(""),
+                Title("Number of processes"),
                 metrics.Color.GRAY,
                 [
                     "processes",
                     metrics.Constant(
-                        Title(""),
+                        Title("Zero division guard"),
                         UNIT_NUMBER,
                         metrics.Color.GRAY,
                         1e-16,

@@ -6,7 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Iterable, Mapping
 from typing import Any
 
 from cmk.gui.form_specs.generators.age import Age
@@ -228,17 +228,26 @@ def _fs_cpu_credits_balance() -> Mapping[str, DictElement]:
     }
 
 
+_NO_TITLE_SUFFIXES: Mapping[str, Title] = {}
+
+
+def _http_errors_levels_title(http_err_code: str, title_suffixes: Mapping[str, Title]) -> Title:
+    title = Title(  # astrein: disable=localization-checker
+        f"Upper percentual levels for HTTP {http_err_code.upper()} errors"
+    )
+    if (suffix := title_suffixes.get(http_err_code)) is None:
+        return title
+    return title + suffix
+
+
 def _fs_elements_http_errors(
     http_err_codes: Iterable[str],
-    title_add: Callable[[str], Title] = lambda http_err_code: Title(""),  # noqa: ARG005
+    title_suffixes: Mapping[str, Title] = _NO_TITLE_SUFFIXES,
 ) -> Mapping[str, DictElement]:
     return {
         "levels_http_%s_perc" % http_err_code: DictElement(
             parameter_form=TupleLevels(
-                title=Title(  # astrein: disable=localization-checker
-                    f"Upper percentual levels for HTTP {http_err_code.upper()} errors"
-                )
-                + title_add(http_err_code),
+                title=_http_errors_levels_title(http_err_code, title_suffixes),
                 help_text=Help(  # astrein: disable=localization-checker
                     f"Specify levels for HTTP {http_err_code.upper()} errors in percent "
                     "which refer to the total number of requests."
@@ -986,11 +995,10 @@ def _parameter_form_spec_aws_elb_http() -> Dictionary:
                     title=Title("Upper levels for Load Balancers"),
                     elements=_fs_elements_http_errors(
                         ["3xx", "4xx", "5xx", "500", "502", "503", "504"],
-                        title_add=lambda http_err_code: (
-                            Title("")
-                            if http_err_code in ["4xx", "5xx"]
-                            else Title(" (application load balancers only)")
-                        ),
+                        title_suffixes={
+                            http_err_code: Title(" (application load balancers only)")
+                            for http_err_code in ["3xx", "500", "502", "503", "504"]
+                        },
                     ),
                 ),
             ),

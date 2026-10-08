@@ -95,16 +95,16 @@ perfometer_mem_used_perc = Perfometer(
     ),
     segments=[
         Fraction(
-            Title(""),
+            Title("Used memory percentage"),
             UNIT_PERCENTAGE,
             Color.BLUE,
             dividend=Product(
-                Title(""),
+                Title("Used memory times 100"),
                 UNIT_NUMBER,
                 Color.GRAY,
                 [
                     Constant(
-                        Title(""),
+                        Title("Percent factor"),
                         UNIT_NUMBER,
                         Color.GRAY,
                         100.0,
@@ -200,7 +200,7 @@ graph_ram_swap_used = Graph(
     minimal_range=MinimalRange(
         0,
         Sum(
-            Title(""),
+            Title("Maximum RAM and swap used"),
             Color.GRAY,
             [
                 MaximumOf(

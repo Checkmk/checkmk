@@ -28,7 +28,7 @@ perfometer_inbound_and_outbound_messages = perfometers.Perfometer(
     ),
     segments=[
         metrics.Sum(
-            Title(""),
+            Title("Inbound and outbound messages"),
             metrics.Color.GRAY,
             [
                 "messages_inbound",

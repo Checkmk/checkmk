@@ -29,7 +29,9 @@ def get_cloudwatch_alarms_sections() -> CreateCloudwatchAlarmSections:
         alarm_names: object | None,
     ) -> tuple[CloudwatchAlarmsLimits, CloudwatchAlarms]:
         region = "region"
-        config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
+        config = AWSConfig(
+            "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+        ).for_account("123456789012")
         config.add_single_service_config("cloudwatch_alarms", alarm_names)
 
         fake_cloudwatch_client = FakeCloudwatchClient()

@@ -91,7 +91,7 @@ def create_config(
         ([], []),
         NamingConvention.ip_region_instance,
         tag_import,
-    )
+    ).for_account("123456789012")
     config.add_single_service_config("lambda_names", names)
     config.add_service_tags("lambda_tags", tags)
     return config

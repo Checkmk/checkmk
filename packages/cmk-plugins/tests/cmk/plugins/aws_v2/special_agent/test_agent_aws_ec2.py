@@ -138,7 +138,7 @@ def get_ec2_sections() -> EC2Sections:
         region = "region"
         config = AWSConfig(
             "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
-        )
+        ).for_account("123456789012")
         config.add_single_service_config("ec2_names", names)
         config.add_service_tags("ec2_tags", tags)
         fake_ec2_client = FakeEC2Client(skip_entities)

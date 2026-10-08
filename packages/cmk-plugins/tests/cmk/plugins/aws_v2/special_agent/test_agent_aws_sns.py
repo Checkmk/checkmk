@@ -109,8 +109,12 @@ class FakeSNSClient:
         raise NotImplementedError
 
 
-def _create_sns_limits(n_std_topics: int, n_fifo_topics: int, n_subs: int) -> SNSLimits:
-    config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
+def _create_sns_limits(
+    n_std_topics: int, n_fifo_topics: int, n_subs: int, account_id: str = "123456789012"
+) -> SNSLimits:
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account(account_id)
     config.add_single_service_config("sns_names", [])
     config.add_single_service_config("sns_tags", [])
     fake_sns_client = FakeSNSClient(n_std_topics, n_fifo_topics, n_subs)
@@ -142,6 +146,15 @@ def test_agent_aws_sns_limits(n_std_topics: int, n_fifo_topics: int, n_subs: int
     assert limits_topics_fifo.amount == n_fifo_topics
 
 
+def test_sns_limits_of_one_account_are_not_cached_for_another() -> None:
+    _create_sns_limits(1, 0, 0, account_id="111111111111").run(use_cache=True)
+
+    results = _create_sns_limits(2, 0, 0, account_id="222222222222").run(use_cache=True).results
+
+    limits_topics_standard: AWSRegionLimit = results[0].content[0]
+    assert limits_topics_standard.amount == 2
+
+
 SNSSectionsOut = tuple[SNSSummary, SNSSMS, SNS]
 
 
@@ -164,7 +177,7 @@ def get_sns_sections() -> SNSSections:
         region = "eu-west-1"
         config = AWSConfig(
             "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
-        )
+        ).for_account("123456789012")
         config.add_single_service_config("sns_names", names)
         config.add_service_tags("sns_tags", tags)
 

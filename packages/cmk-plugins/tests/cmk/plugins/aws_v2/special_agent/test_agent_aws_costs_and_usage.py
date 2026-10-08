@@ -31,7 +31,9 @@ class FakeCEClient:
 
 def test_agent_aws_costs_and_usage() -> None:
     region = "us-east-1"
-    config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("123456789012")
 
     # TODO: FakeECClient shoud actually subclass ECClient.
     ce = CostsAndUsage(FakeCEClient(), region, config)

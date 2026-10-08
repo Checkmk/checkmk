@@ -161,7 +161,7 @@ def get_ecs_sections() -> ECSSections:
         region = "region"
         config = AWSConfig(
             "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
-        )
+        ).for_account("123456789012")
         config.add_single_service_config("ecs_names", names)
         config.add_service_tags("ecs_tags", tags)
         fake_ecs_client1 = FakeECSClient(CLUSTERS_CLIENT_RESPONSE1)
@@ -298,7 +298,9 @@ def test_agent_aws_ecs_limits(
 @pytest.mark.usefixtures("get_ecs_sections")
 def test_agent_aws_ecs_limits_without_quota_client() -> None:
     region = "region"
-    config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("123456789012")
     fake_ecs_client = FakeECSClient(CLUSTERS_CLIENT_RESPONSE2)
 
     # TODO: FakeECSClient shoud actually subclass ECSClient, etc.

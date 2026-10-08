@@ -6,12 +6,13 @@
 # mypy: disable-error-code="type-arg"
 
 import argparse
+import copy
 import hashlib
 import json
 import logging
 from collections.abc import Mapping, Sequence
 from enum import Enum
-from typing import Literal, TypedDict
+from typing import Literal, Self, TypedDict
 
 import botocore.exceptions
 
@@ -95,6 +96,13 @@ class AWSConfig:
         self._current_config_hash = self._compute_config_hash(sys_argv)
         self.piggyback_naming_convention = piggyback_naming_convention
         self.tags_option = tags_option
+        self.account_id: str | None = None
+
+    def for_account(self, account_id: str) -> Self:
+        """The same rule settings, scoped to one AWS account. Sections need this scope."""
+        account_config = copy.copy(self)
+        account_config.account_id = account_id
+        return account_config
 
     def add_service_tags(self, tags_key: str, tags: OverallTags) -> None:
         """Convert commandline input

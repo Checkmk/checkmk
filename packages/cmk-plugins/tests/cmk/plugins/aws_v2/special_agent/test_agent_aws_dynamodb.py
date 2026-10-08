@@ -106,7 +106,7 @@ def get_dynamodb_sections() -> DynamobSections:
         region = "region"
         config = AWSConfig(
             "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
-        )
+        ).for_account("123456789012")
         config.add_single_service_config("dynamodb_names", names)
         config.add_service_tags("dynamodb_tags", tags)
 

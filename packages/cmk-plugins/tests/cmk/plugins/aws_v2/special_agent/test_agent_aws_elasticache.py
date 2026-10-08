@@ -361,7 +361,7 @@ def get_elasticache_sections() -> ElasticacheSections:
         region = "region"
         config = AWSConfig(
             "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
-        )
+        ).for_account("123456789012")
         config.add_single_service_config("elasticache_names", names)
         config.add_service_tags("elasticache_tags", tags)
         fake_elasticache_client1 = FakeElastiCacheClient(CLUSTERS_RESPONSE1)
@@ -436,7 +436,9 @@ def test_agent_aws_elasticache_limits(
 
 def test_agent_aws_elasticache_limits_without_quota_client() -> None:
     region = "region"
-    config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("123456789012")
     fake_elasticache_client = FakeElastiCacheClient(CLUSTERS_RESPONSE1)
     # TODO: FakeElastiCacheClient shoud actually subclass ElastiCacheClient.
     elasticache_limits = ElastiCacheLimits(fake_elasticache_client, region, config)

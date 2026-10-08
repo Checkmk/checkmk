@@ -116,7 +116,7 @@ def create_sections(
 
     config = AWSConfig(
         "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
-    )
+    ).for_account("123456789012")
     config.add_single_service_config("wafv2_names", names)
     config.add_service_tags("wafv2_tags", tags)
 
@@ -211,7 +211,9 @@ wafv2_params = [
 
 
 def test_agent_aws_wafv2_regional_cloudfront() -> None:
-    config = AWSConfig("hostname", Args(), ([], []), NamingConvention.ip_region_instance)
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("123456789012")
 
     region = "region"
     # TODO: This is plainly wrong, the client can't be None.

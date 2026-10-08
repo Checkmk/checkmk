@@ -97,7 +97,7 @@ def get_elb_sections() -> ELBSections:
         region = "region"
         config = AWSConfig(
             "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
-        )
+        ).for_account("123456789012")
         config.add_single_service_config("elb_names", names)
         config.add_service_tags("elb_tags", tags)
 

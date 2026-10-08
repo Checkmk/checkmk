@@ -83,7 +83,7 @@ def get_s3_sections(monkeypatch: pytest.MonkeyPatch) -> CreateS3Sections:
         region = "region"
         config = AWSConfig(
             "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
-        )
+        ).for_account("123456789012")
         config.add_single_service_config("s3_names", names)
         config.add_service_tags("s3_tags", tags)
 

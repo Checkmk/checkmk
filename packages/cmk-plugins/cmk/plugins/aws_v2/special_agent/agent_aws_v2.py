@@ -680,7 +680,7 @@ def agent_aws_main(args: argparse.Namespace) -> int:
             has_exceptions |= _run_account(
                 args,
                 account,
-                aws_config,
+                aws_config.for_account(account.id),
                 global_services,
                 regional_services,
                 use_cache,

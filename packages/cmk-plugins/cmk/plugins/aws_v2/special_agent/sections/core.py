@@ -216,8 +216,12 @@ class AWSSection(DataCache):
         config: AWSConfig,
         distributor: ResultDistributor | None = None,
     ) -> None:
+        if config.account_id is None:
+            raise ValueError("A section needs a config scoped to an account, see for_account()")
         super().__init__(
-            host_name=config.hostname, agent=f"agent_{AGENT}", key=f"{region}-{self.name}"
+            host_name=config.hostname,
+            agent=f"agent_{AGENT}",
+            key=f"{config.account_id}-{region}-{self.name}",
         )
         self._client = client
         self._region = region

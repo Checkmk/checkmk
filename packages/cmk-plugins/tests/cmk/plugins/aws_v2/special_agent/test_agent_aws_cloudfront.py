@@ -243,7 +243,7 @@ def get_cloudfront_sections() -> CloudFrontSections:
         region = "us-east-1"
         config = AWSConfig(
             "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
-        )
+        ).for_account("123456789012")
         config.add_single_service_config("cloudfront_names", names)
         config.add_service_tags("cloudfront_tags", tags)
 

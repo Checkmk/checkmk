@@ -23,7 +23,7 @@ from cmk.gui.watolib.sidebar_reload import is_sidebar_reload_needed
 from cmk.utils.paths import configuration_lockfile
 from cmk.web.utils.flashed_messages import get_flashed_messages_with_categories
 
-from .pages._html_elements import initialize_wato_html_head, wato_html_footer, wato_html_head
+from .pages._html_elements import wato_html_head, wato_html_page
 from .pages.not_implemented import ModeNotImplemented
 
 # .
@@ -52,8 +52,6 @@ from .pages.not_implemented import ModeNotImplemented
 
 
 def page_handler(edition: Edition, ctx: PageContext) -> None:
-    initialize_wato_html_head()
-
     ensure_setup_enabled(ctx.config)
 
     current_mode = request.get_str_input_mandatory("mode")
@@ -70,12 +68,13 @@ def page_handler(edition: Edition, ctx: PageContext) -> None:
     if display_options.disabled(display_options.N):
         html.add_body_css_class("inline")
 
-    # If we do an action, we acquire an exclusive lock on the complete Setup.
-    if request.has_var("_transid"):
-        with store.lock_checkmk_configuration(configuration_lockfile):
+    with wato_html_page(show_body_end=display_options.enabled(display_options.H)):
+        # If we do an action, we acquire an exclusive lock on the complete Setup.
+        if request.has_var("_transid"):
+            with store.lock_checkmk_configuration(configuration_lockfile):
+                _wato_page_handler(ctx.config, current_mode, mode_instance)
+        else:
             _wato_page_handler(ctx.config, current_mode, mode_instance)
-    else:
-        _wato_page_handler(ctx.config, current_mode, mode_instance)
 
 
 def _wato_page_handler(config: Config, current_mode: str, mode: WatoMode[object]) -> None:
@@ -136,10 +135,10 @@ def _wato_page_handler(config: Config, current_mode: str, mode: WatoMode[object]
             flashed=True,
         )
 
-    # Catch known user-input failures here so the matching wato_html_footer
-    # below still runs. wato_html_head opens `<div class="wato">` (and the
-    # surrounding main_navigation chrome via make_header); only the footer
-    # closes them. A bare-propagating user-input error would hand the
+    # Catch known user-input failures here so wato_html_page still closes the
+    # page. wato_html_head opens `<div class="wato">` (and the surrounding
+    # main_navigation chrome via make_header); only wato_html_page closes
+    # them on a normal exit. A bare-propagating user-input error would hand the
     # response to the WSGI exception renderer, which assumes the page has
     # not been opened yet and would leave .wato (and behind it content_area /
     # main_page_content) unclosed.
@@ -154,5 +153,3 @@ def _wato_page_handler(config: Config, current_mode: str, mode: WatoMode[object]
 
     if is_sidebar_reload_needed():
         html.reload_whole_page()
-
-    wato_html_footer(show_body_end=display_options.enabled(display_options.H))

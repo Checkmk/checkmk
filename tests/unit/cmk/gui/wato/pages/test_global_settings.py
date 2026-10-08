@@ -3,35 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
-from collections.abc import Iterator
 from http import HTTPStatus
 
 import pytest
 
-import cmk.utils.paths
 from cmk.ccc import store
-from cmk.gui.htmllib.html import _load_vue_manifest
 from cmk.gui.watolib.paths import wato_var_dir
 from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
-
-
-@pytest.fixture(name="frontend_vue_manifest")
-def fixture_frontend_vue_manifest() -> Iterator[None]:
-    base = cmk.utils.paths.web_dir / "htdocs/cmk-frontend-vue"
-    base.mkdir(parents=True, exist_ok=True)
-    (base / ".manifest.json").write_text(
-        json.dumps(
-            {
-                "src/main.ts": {"file": "main.js"},
-                "src/nav_sidebar.ts": {"file": "nav_sidebar.js"},
-                "src/stage1.ts": {"file": "stage1.js"},
-            }
-        )
-    )
-    _load_vue_manifest.cache_clear()
-    yield
-    _load_vue_manifest.cache_clear()
 
 
 @pytest.mark.usefixtures("frontend_vue_manifest", "patch_theme")

@@ -3,20 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterator
+from contextlib import contextmanager
+
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
+from cmk.gui.ctx_stack import g
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenu
 
-# TODO: Refactor to context handler or similar?
-_html_head_open = False
 
+@contextmanager
+def wato_html_page(*, show_body_end: bool) -> Iterator[None]:
+    """Scope of a Setup page
 
-def initialize_wato_html_head() -> None:
-    global _html_head_open
-    _html_head_open = False
+    The head is opened by the first call of wato_html_head() within this scope. This may already
+    happen during the action of a mode, e.g. to show a confirmation. When the page is complete, the
+    elements opened by the head are closed. When the page processing ends with an exception, the
+    exception handler is responsible for the response."""
+    # Request local, because a page is processed by one request
+    g.wato_html_head_open = False
+    yield
+    if g.wato_html_head_open:
+        html.close_div()
+        html.footer(show_body_end)
 
 
 def wato_html_head(
@@ -27,12 +39,10 @@ def wato_html_head(
     show_body_start: bool = True,
     show_top_heading: bool = True,
 ) -> None:
-    global _html_head_open
-
-    if _html_head_open:
+    if g.wato_html_head_open:
         return
 
-    _html_head_open = True
+    g.wato_html_head_open = True
     make_header(
         html,
         title=title,
@@ -51,11 +61,3 @@ def wato_html_head(
         user_role_ids=user.role_ids,
     )
     html.open_div(class_="wato")
-
-
-def wato_html_footer(show_body_end: bool = True) -> None:
-    if not _html_head_open:
-        return
-
-    html.close_div()
-    html.footer(show_body_end)

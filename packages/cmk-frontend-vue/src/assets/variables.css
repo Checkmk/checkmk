@@ -124,6 +124,7 @@
     --dropdown-arrow-color: var(--color-conference-grey-100);
     --dashed-border-color: var(--color-mid-grey-20);
     --shared-dashboard-indicator-background: var(--color-daylight-grey-30);
+    --ai-purple: var(--color-purple-60);
 
     /* Form Labels Colors */
     --tag-color: var(--color-cyan-80);
@@ -249,6 +250,7 @@
     --dropdown-arrow-color: var(--color-white-100);
     --dashed-border-color: var(--color-mid-grey-80);
     --shared-dashboard-indicator-background: var(--color-midnight-grey-100);
+    --ai-purple: var(--color-purple-50);
 
     /* Form Labels Colors */
     --tag-color: var(--color-cyan-80);

@@ -768,7 +768,8 @@ export const oneColorIcons = [
   'waiting',
   'chat-new',
   'chat-history',
-  'docking'
+  'docking',
+  'arrow-down'
 ] as const
 export const twoColorIcons = ['aggr', 'experiment'] as const
 

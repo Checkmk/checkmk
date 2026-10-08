@@ -124,11 +124,11 @@ STAGES:
       # the final `exit $make_rc`). Put explanatory comments here, above COMMAND, never
       # inside the block.
       #
-      # Every .ps1 file must be declared in a filegroup. The existing strays are
-      # accepted as --known-offender exceptions and should be drained into proper
-      # filegroups incrementally. Being in a filegroup is necessary but not sufficient
-      # for the PSScriptAnalyzer aspect to discover the script — the filegroup must
-      # also carry the lint-with-psscriptanalyzer tag (separate follow-up).
+      # The Bazel lint-coverage check requires every shell (also by shebang),
+      # PowerShell, Rust and C/C++ file to be in a rule kind its lint aspect visits,
+      # and every .js/.cjs file to be in some target. Existing offenders are listed in
+      # packages/cmk-repo-checks/bazel_lint_coverage_known_offenders.txt, which may
+      # only shrink.
       #
       # The py-extension check scans all git-tracked files (the aspect only sees
       # declared srcs) and is unguarded on purpose: adding a plain file matches
@@ -145,7 +145,7 @@ STAGES:
               --path "non-free/packages" \
               >> ${RESULTS}/results.txt || make_rc=$?
           ./scripts/check_requirements_test_coverage.sh >> ${RESULTS}/results.txt || make_rc=$?
-          ./scripts/in_bazel.sh ".ps1" "filegroup" \
+          bazel run //packages/cmk-repo-checks:bazel_lint_coverage \
               >> ${RESULTS}/results.txt || make_rc=$?
           ./tests/agent-plugin-unit/bootstrap.sh --check-sources >> ${RESULTS}/results.txt || make_rc=$?
           ./scripts/check_no_py_test.sh \

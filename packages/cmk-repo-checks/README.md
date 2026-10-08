@@ -57,6 +57,53 @@ Flags Python source files that lack a `.py` extension, so they get picked up by 
 It is implemented as a Bazel aspect (`lint_python_extensions.bzl`) driving `cmk/repo_checks/python_extension_checker.py`, which parses each declared src and reports extension-less files whose content is Python.
 Because it runs as an aspect over Bazel `srcs`, it only covers files that are part of a `py_*` target; a target opts out with `tags = ["no-python-extension-checker"]`.
 
+## bazel-lint-coverage
+
+Checks that every tracked source file is in a Bazel rule that its lint aspect visits.
+The aspects above, and the language linters in `bazel/tools/aspects.bzl`, only see files declared in specific rule kinds.
+A file outside those rules is never linted, and no aspect can report it.
+This checker therefore works from the other side: it compares `git ls-files` with `bazel query`.
+
+| Files                                        | Must be in                                               |
+| -------------------------------------------- | -------------------------------------------------------- |
+| `*.sh`, and other files with a shell shebang | `srcs` of `sh_binary`, `sh_library` or `sh_test`         |
+| `*.ps1`                                      | a `filegroup` tagged `lint-with-psscriptanalyzer`        |
+| `*.rs`                                       | `srcs` of `rust_binary`, `rust_library`, `rust_test`, …  |
+| `*.c`, `*.cc`, `*.h`                         | `srcs` or `hdrs` of `cc_binary`, `cc_library`, `cc_test` |
+| `*.js`, `*.cjs`                              | any target                                               |
+
+A file whose extension belongs to none of the other classes counts as shell when its shebang names `sh`, `bash`, `dash` or `ksh`.
+The rule kinds must match exactly. The transitioned rules from `bazel/rules/private/xcomp/`, such as `_cc_binary_transitioned`, do not count, because no aspect visits them.
+A target tagged `no-lint` (or `noclippy` for Rust) does not count either.
+A `filegroup` in `srcs` counts with its own `srcs`.
+`bazel query` follows every `select()` branch, so the result covers all editions.
+`doc/treasures/` is excluded. For C and C++ files, `agents/wnx/` (MSBuild) is excluded as well.
+Files with the attribute `rules-lint-ignored=true` in a `.gitattributes` file are excluded, for example vendored files that are kept identical to upstream.
+
+For C and C++, the check guarantees less than for the other classes.
+A source file in `cc_test` and a header in `hdrs` count as covered, but clang-tidy lints neither of them today.
+The `clang_tidy` aspect in `bazel/tools/aspects.bzl` uses the default rule kinds of `aspect_rules_lint` (`cc_binary`, `cc_library`) and an empty `header_filter`.
+The check still keeps these files in a `cc_*` target, so a later change of the aspect configuration (CMK-40386) covers all of them at once.
+
+Files that were uncovered when the check was introduced are listed in `bazel_lint_coverage_known_offenders.txt`.
+The list may only shrink. The check fails on an uncovered file that is not listed, and on a listed file that is covered by now or no longer exists.
+
+### Usage
+
+The checker runs `bazel query` itself, so start it with `bazel run`:
+
+```console
+bazel run //packages/cmk-repo-checks:bazel_lint_coverage
+# all current offenders, in the format of the known-offenders file:
+bazel run //packages/cmk-repo-checks:bazel_lint_coverage -- --print-offenders
+```
+
+The "Bazel sanity check" stage of the change validation runs it on every change.
+Exit code 1 means new or stale offenders, exit code 2 means that a `bazel query` failed or returned no files.
+
+To fix a new offender, add the file to a matching target, for example an `sh_library` next to the script, and check it with `bazel lint` on that target.
+To fix a listed offender, do the same and remove its line from the list in the same commit.
+
 ## Development
 
 ```console

@@ -6,8 +6,8 @@ load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
 load(":format_dispatch.bzl", "format_dispatch")
 
 # Opts the formatter's own PowerShell wrapper into PSScriptAnalyzer so we eat
-# our own dog food. Also satisfies scripts/in_bazel.sh's "every .ps1 in a
-# filegroup" requirement.
+# our own dog food. Also satisfies //packages/cmk-repo-checks:bazel_lint_coverage,
+# which requires every .ps1 in a filegroup with this tag.
 filegroup(
     name = "powershell_scripts",
     srcs = ["pwsh_format.ps1"],

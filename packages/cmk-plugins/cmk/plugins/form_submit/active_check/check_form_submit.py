@@ -341,14 +341,10 @@ def raise_host_state(
     # Issue a HTTP request with those parameters
     # Extract the form target and method
     method = form.attrs.get("method", "GET").upper()
-    target = form.attrs.get("action", real_url)
-    if target[0] == "/":
-        # target is given as absolute path, relative to hostname
-        target = base_url + target
-    elif target[0] != "":
-        # relative URL
-        target = "{}/{}".format("/".join(real_url.rstrip("/").split("/")[:-1]), target)
-
+    target = urllib.parse.urljoin(real_url, form.attrs.get("action", ""))
+    if method == "GET":
+        # A browser replaces the query of the action with the form data
+        target = urllib.parse.urlsplit(target)._replace(query="", fragment="").geturl()
     real_url, content = open_url(
         client=client,
         url=target,

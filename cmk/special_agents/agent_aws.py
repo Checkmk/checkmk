@@ -341,10 +341,8 @@ class AWSConfig:
             filter(lambda el: el[0] not in ["debug", "verbose", "no_cache"], vars(sys_argv).items())
         )
 
-        # Be careful to use a hashing mechanism that generates the same hash across
-        # different python processes! Otherwise the config file will always be
-        # out-of-date
-        return hashlib.sha256("".join(sorted(filtered_sys_argv)).encode()).hexdigest()
+        serialized = json.dumps(filtered_sys_argv, sort_keys=True, default=str)
+        return hashlib.sha256(serialized.encode()).hexdigest()
 
     def is_up_to_date(self) -> bool:
         old_config_hash = self._load_config_hash()

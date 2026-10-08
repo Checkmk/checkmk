@@ -236,7 +236,7 @@ def _find_bundle_id(all_stages_form_data: ParsedFormData) -> BundleId:
     return BundleId(bundle_id)
 
 
-def _convert_explicit_passwords_to_stored_passwords(
+def convert_explicit_passwords_to_stored_passwords(
     rule_params: Mapping, explicit_password_ids: set[str]
 ) -> Mapping[str, object]:
     """Passwords that are explicitly set in the form data are replaced with a reference to the
@@ -244,24 +244,36 @@ def _convert_explicit_passwords_to_stored_passwords(
 
     Notes:
         * assumed that the password store entry will get the same id as the password id
-        * assumed that passwords are not part of a list and only a direct entry in a dictionary
+        * passwords can be nested in dictionaries, lists and cascading choices
     """
-    params_with_converted_passwords: dict = {}
-    for key, value in rule_params.items():
-        match value:
-            case dict():
-                params_with_converted_passwords[key] = (
-                    _convert_explicit_passwords_to_stored_passwords(value, explicit_password_ids)
-                )
-            case ("cmk_postprocessed", "explicit_password", (pw_id, _password)):
-                if pw_id in explicit_password_ids:
-                    password_store_reference = ("cmk_postprocessed", "stored_password", (pw_id, ""))
-                    params_with_converted_passwords[key] = password_store_reference
-                else:
-                    params_with_converted_passwords[key] = value
-            case _:
-                params_with_converted_passwords[key] = value
-    return params_with_converted_passwords
+    return {
+        key: _convert_explicit_password_to_stored_password(value, explicit_password_ids)
+        for key, value in rule_params.items()
+    }
+
+
+def _convert_explicit_password_to_stored_password(
+    value: object, explicit_password_ids: set[str]
+) -> object:
+    match value:
+        case ("cmk_postprocessed", "explicit_password", (pw_id, _password)) if (
+            pw_id in explicit_password_ids
+        ):
+            return ("cmk_postprocessed", "stored_password", (pw_id, ""))
+        case dict():
+            return convert_explicit_passwords_to_stored_passwords(value, explicit_password_ids)
+        case list():
+            return [
+                _convert_explicit_password_to_stored_password(element, explicit_password_ids)
+                for element in value
+            ]
+        case tuple():
+            return tuple(
+                _convert_explicit_password_to_stored_password(element, explicit_password_ids)
+                for element in value
+            )
+        case _:
+            return value
 
 
 def _extract_explicit_password_entities(
@@ -279,7 +291,7 @@ def _extract_explicit_password_entities(
     explicit_passwords = {
         pwid: pw for pwid, pw in collected_passwords.items() if pwid not in stored_passwords
     }
-    params = _convert_explicit_passwords_to_stored_passwords(params, set(explicit_passwords.keys()))
+    params = convert_explicit_passwords_to_stored_passwords(params, set(explicit_passwords.keys()))
 
     password_entities = create_passwords(
         passwords=explicit_passwords,

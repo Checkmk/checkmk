@@ -42,7 +42,6 @@ from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_ch
 from cmk.gui.form_specs.unstable import (
     Catalog,
     CommentTextArea,
-    id_validators,
     LegacyValueSpec,
 )
 from cmk.gui.htmllib.html import html
@@ -653,7 +652,11 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
                         "The ID must be unique. It acts as internal key when objects reference it."
                     ),
                     prefill=form_specs.DefaultValue(self._default_id()),
-                    custom_validate=id_validators(Message("Unique ID should not be empty.")),
+                    custom_validate=(
+                        form_specs.validators.LengthInRange(
+                            min_value=1, error_msg=Message("Unique ID should not be empty.")
+                        ),
+                    ),
                     field_size=FieldSize.LARGE,
                 ),
             )

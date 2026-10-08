@@ -17,6 +17,9 @@ Decorative only; GraphGroup owns the announcement for assistive tech.
 import CmkSkeleton from 'cmk-ui-library/components/CmkSkeleton.vue'
 import { computed } from 'vue'
 
+// Matches GraphHeader's single row: its 20px controls plus its 8px padding above and below.
+const headerHeight = '36px'
+
 // Matches GraphBrush's own HEIGHT, which it derives from its track and label geometry.
 const brushHeight = '66px'
 
@@ -98,7 +101,8 @@ const rootStyle = computed(() => ({
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-double);
-  margin-bottom: var(--spacing-double);
+  height: v-bind(headerHeight);
+  margin-bottom: var(--dimension-3);
 }
 
 .graphing-graph-skeleton__brush {

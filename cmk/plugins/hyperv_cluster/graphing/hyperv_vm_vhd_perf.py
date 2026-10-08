@@ -17,7 +17,7 @@ prefix = "hyperv_vhd_metrics_"
 
 metric_hyperv_vhd_file_size_percent = Metric(
     name=f"{prefix}file_size_percent",
-    title=Title("Current disk size %"),
+    title=Title("Current disk size percentage"),
     unit=PERCENT_UNIT,
     color=Color.PURPLE,
 )

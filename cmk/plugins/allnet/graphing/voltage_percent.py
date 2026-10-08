@@ -9,11 +9,7 @@ UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 
 metric_voltage_percent = metrics.Metric(
     name="voltage_percent",
-    # astrein: disable=localization-named-placeholder
-    title=Title(
-        # xgettext: no-python-format
-        "Electrical tension in % of normal value"
-    ),
+    title=Title("Electrical tension as percentage of normal value"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.YELLOW,
 )

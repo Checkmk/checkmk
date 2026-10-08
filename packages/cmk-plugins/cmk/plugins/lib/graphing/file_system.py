@@ -9,7 +9,7 @@ UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 
 metric_fs_used_percent = metrics.Metric(
     name="fs_used_percent",
-    title=Title("Used space %"),
+    title=Title("Used space percentage"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.CYAN,
 )

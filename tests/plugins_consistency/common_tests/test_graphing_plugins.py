@@ -375,9 +375,7 @@ def test_duplicate_metric_titles_fixed() -> None:
     )
 
 
-_ALLOWED_DUPLICATE_GRAPH_TITLES = {
-    "Huge pages": {"huge_pages_2", "huge_pages"},
-}
+_ALLOWED_DUPLICATE_GRAPH_TITLES: dict[str, set[str]] = {}
 
 
 def test_duplicate_graph_titles_new() -> None:

@@ -44,7 +44,7 @@ metric_shmem_pmd_mapped = Metric(
 
 graph_huge_pages = Graph(
     name="huge_pages_2",
-    title=Title("Huge pages"),
+    title=Title("Transparent huge pages"),
     simple_lines=[
         "file_huge_pages",
         "file_pmd_mapped",

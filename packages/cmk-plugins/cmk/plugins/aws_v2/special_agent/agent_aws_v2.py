@@ -578,7 +578,7 @@ def _hub_credentials_from_args(args: argparse.Namespace) -> HubCredentials:
 
 def _test_connection(credentials: AwsCredentials) -> int:
     try:
-        credentials.account_id()
+        credentials.accounts()
     except AwsAccessError as ae:
         error_msg = f"Connection failed with: {ae}\n"
         sys.stderr.write(error_msg)
@@ -601,7 +601,7 @@ def _run_account(
     proxy_config: botocore.config.Config | None,
 ) -> bool:
     """Run the sections of one account in every region. Returns whether a section failed."""
-    # Special distributor for S3 limits which distributes results across different regions
+    # Collects the S3 limits across the regions of this account, so it must not be shared.
     s3_limits_distributor = ResultDistributorS3Limits()
 
     has_exceptions = False

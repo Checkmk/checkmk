@@ -60,12 +60,8 @@ def role_session_name(site: str | None) -> str:
 
 
 def _login_session(login: AccessKey | DefaultCredentials, region: str) -> boto3.session.Session:
-    # No try/except here, but not because this cannot fail. The constructor does not
-    # resolve credentials, so it raises nothing about them, yet it does read the shared
-    # config: a missing AWS_PROFILE gives ProfileNotFound and an unparsable file gives
-    # ConfigParseError. Both are BotoCoreError, and every caller builds the session
-    # inside its own try, so they are reported there together with the errors from
-    # session.client(...).
+    # Reads the shared config, so a bad AWS_PROFILE or config file raises a BotoCoreError
+    # here. The callers build the session inside their own try.
     match login:
         case AccessKey(key_id=key_id, secret=secret):
             return boto3.session.Session(
@@ -98,7 +94,7 @@ def _assume_role(
     )
 
 
-def create_hub_session(
+def _create_hub_session(
     hub: HubCredentials, region: str, config: botocore.config.Config | None
 ) -> boto3.session.Session:
     if hub.role is None:
@@ -148,7 +144,7 @@ class AwsCredentials:
     def session(self) -> boto3.session.Session:
         """The single session of this run, built on first use and then reused."""
         if self._session is None:
-            self._session = create_hub_session(
+            self._session = _create_hub_session(
                 self._hub, self._global_service_region, self._proxy_config
             )
         return self._session

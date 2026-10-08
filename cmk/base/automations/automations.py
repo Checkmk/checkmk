@@ -9,10 +9,9 @@ import sys
 from collections.abc import Iterable, Iterator, Mapping
 from contextlib import contextmanager, nullcontext, redirect_stdout
 from pathlib import Path
-from typing import Any, Final, override
+from typing import Any, Final
 
 import cmk.ccc.debug
-import cmk.utils.paths
 from cmk import trace
 from cmk.automations.internal import (
     Automation,
@@ -23,8 +22,6 @@ from cmk.automations.internal import (
     StateFactory,
 )
 from cmk.base import config
-from cmk.base.app import make_app
-from cmk.base.base_app import CheckmkBaseApp
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.timeout import Timeout
 from cmk.discover_plugins import discover_all_plugins, PluginGroup
@@ -48,53 +45,6 @@ class AutomationError(enum.IntEnum):
 # back to the very handler that declared it, and the plug-in built both halves
 # together. There is no single state type to name here, so Any is the honest one.
 type DiscoveredAutomation = Automation[Any, AutomationResult]  # type: ignore[explicit-any]
-
-
-class BaseConfigState(AutomationState):
-    """The state of an automation that needs the base configuration only.
-
-    It picks the configuration values from the raw configuration, and derives
-    nothing below them: no hosts, no rulesets, no caches.
-    """
-
-    def __init__(self, _omd_root: Path, raw_config: Mapping[str, object]) -> None:
-        self.loaded_config = config.make_base_config(raw_config)
-
-    @override
-    def update(self, _omd_root: Path, raw_config: Mapping[str, object]) -> None:
-        self.loaded_config = config.make_base_config(raw_config)
-
-
-class CommonState(AutomationState):
-    """The state most automations share for now.
-
-    It derives what the handlers used to get passed from the raw configuration.
-    The automations that need it name this class as their factory, so the engine
-    builds it once. They will move to states of their own, one by one.
-    """
-
-    def __init__(self, omd_root: Path, raw_config: Mapping[str, object]) -> None:
-        self.app: CheckmkBaseApp = make_app(omd_root)
-        self.loading_result = _derive_loading_result(raw_config)
-
-    @override
-    def update(self, omd_root: Path, raw_config: Mapping[str, object]) -> None:
-        # The site, and with it the app, does not change while we run. We rebuild the
-        # app anyway, so that the state is derived from its arguments alone.
-        self.app = make_app(omd_root)
-        # Deriving afresh also resets all caches below the configuration, including
-        # those of the ruleset optimizer: a new configuration starts from scratch.
-        self.loading_result = _derive_loading_result(raw_config)
-
-
-def _derive_loading_result(raw_config: Mapping[str, object]) -> config.LoadingResult:
-    with tracer.span("derive_loading_result"):
-        return config.perform_post_config_loading_actions(
-            raw_config,
-            autochecks_dir=cmk.utils.paths.autochecks_dir,
-            discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
-            builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
-        )
 
 
 def discover_automations() -> Iterable[DiscoveredAutomation]:

@@ -7,7 +7,7 @@
 import dataclasses
 
 import cmk.utils.paths
-from cmk.base.automations.automations import CommonState
+from cmk.base.automations.states import CommonState
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import LoadingResult
 

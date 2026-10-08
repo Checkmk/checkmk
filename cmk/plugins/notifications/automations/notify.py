@@ -21,7 +21,7 @@ from cmk.automations.results import (
     NotificationReplayResult,
     NotificationTestResult,
 )
-from cmk.base.automations.automations import BaseConfigState, CommonState
+from cmk.base.automations.states import BaseConfigState, CommonState
 from cmk.base.notify import (
     find_bulks,
     make_ensure_nagios,

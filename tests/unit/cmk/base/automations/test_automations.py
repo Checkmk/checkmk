@@ -21,9 +21,9 @@ from cmk.automations.internal import (
 from cmk.base.automations.automations import (
     AutomationError,
     Automations,
-    BaseConfigState,
     DiscoveredAutomation,
 )
+from cmk.base.automations.states import BaseConfigState
 from cmk.ccc.exceptions import MKGeneralException
 from tests.testlib.unit.empty_config import EMPTY_CONFIG
 

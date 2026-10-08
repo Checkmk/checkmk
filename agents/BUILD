@@ -2,6 +2,7 @@ load("@rules_gzip//gzip/compress:defs.bzl", "gzip_compress")
 load("@rules_pkg//pkg:deb.bzl", "pkg_deb")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:agent_package_signing.bzl", "signed_or_unsigned_agent_rpm")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:filename_from_flag.bzl", "filename_from_flag")
 load("//bazel/rules:pkg_rpm_from_buildroot.bzl", "pkg_rpm_from_buildroot")
@@ -15,21 +16,20 @@ AGENT_PACKAGES = {
 }
 
 # What each AGENT_PACKAGES key resolves to: the check-mk-agent .deb/.rpm
-# built below. The .rpm defaults to signed (see
-# //:disable_agent_package_signing to opt out, e.g. for contexts without
-# --//bazel/rules:signing_key_file access); --//:use_faked_artifacts also
-# selects the unsigned rpm, so //agents:agents stays buildable (and
-# everything depending on it stays compatible) without a key. .deb is
-# never signed.
+# built below. The .rpm is only signed if --//bazel/rules:signing_key_file is
+# set and signing is neither disabled nor artifacts are faked. //agents:agents
+# itself is buildable without a key, but the release packages in //omd refuse
+# to build with the unsigned .rpm unless signing is disabled or artifacts are
+# faked, see //:agent_package_signing_missing. .deb is never signed.
 _AGENT_PACKAGE_TARGETS = {
-    "check-mk-agent.aarch64.rpm": select({
-        "//:agent_package_signing_effectively_disabled": ":check-mk-agent-rpm-aarch64",
-        "//conditions:default": ":check-mk-agent-rpm-aarch64_signed",
-    }),
-    "check-mk-agent.noarch.rpm": select({
-        "//:agent_package_signing_effectively_disabled": ":check-mk-agent-rpm",
-        "//conditions:default": ":check-mk-agent-rpm_signed",
-    }),
+    "check-mk-agent.aarch64.rpm": signed_or_unsigned_agent_rpm(
+        signed = ":check-mk-agent-rpm-aarch64_signed",
+        unsigned = ":check-mk-agent-rpm-aarch64",
+    ),
+    "check-mk-agent.noarch.rpm": signed_or_unsigned_agent_rpm(
+        signed = ":check-mk-agent-rpm_signed",
+        unsigned = ":check-mk-agent-rpm",
+    ),
     "check-mk-agent_all.deb": ":check-mk-agent-deb",
     "check-mk-agent_arm64.deb": ":check-mk-agent-deb-aarch64",
 }

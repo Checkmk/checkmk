@@ -119,10 +119,11 @@ config_setting(
     visibility = ["//visibility:public"],
 )
 
-# Mirrors the Jenkins DISABLE_CMK_DISTRO_PACKAGE_SIGNING job parameter: by
-# default the check-mk-agent .rpm bundled in //agents:agents is signed (see
-# agents/BUILD); pass --//:disable_agent_package_signing=true for contexts
-# without --//bazel/rules:signing_key_file access.
+# Mirrors the Jenkins DISABLE_CMK_DISTRO_PACKAGE_SIGNING job parameter: the
+# check-mk-agent .rpm bundled in //agents:agents is only signed if
+# --//bazel/rules:signing_key_file is set (see agents/BUILD). Release packages
+# refuse to build without a key, unless signing is disabled with
+# --//:disable_agent_package_signing=true or artifacts are faked.
 bool_flag(
     name = "disable_agent_package_signing",
     build_setting_default = False,
@@ -135,14 +136,40 @@ config_setting(
     visibility = ["//visibility:public"],
 )
 
-# Fake artifacts never needed a real signing key before - don't make
-# //agents:agents and its dependents incompatible under
-# --//:use_faked_artifacts just because no key is configured.
+# //agents:agents bundles the unsigned .rpm if signing is disabled, artifacts
+# are faked, or no signing key is configured. The latter keeps everything
+# that merely analyses or tests the agent packages (SBOM, license checks,
+# ...) usable without a key. Release packages are guarded separately, see
+# :agent_package_signing_missing.
 selects.config_setting_group(
     name = "agent_package_signing_effectively_disabled",
     match_any = [
         ":agent_package_signing_disabled",
         ":use_fake_artifacts_enabled",
+        "//bazel/rules:signing_key_file_unset",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Neither is signing disabled nor are artifacts faked.
+config_setting(
+    name = "agent_package_signing_required",
+    flag_values = {
+        ":disable_agent_package_signing": "False",
+        ":use_faked_artifacts": "False",
+    },
+)
+
+# The unsigned agent .rpm is used although signing is required, e.g. because
+# no signing key is configured. Release packages are incompatible then, so
+# they never silently ship an unsigned .rpm. Derived from
+# :agent_package_signing_effectively_disabled, so any further reason to fall
+# back to the unsigned .rpm refuses release packages, too.
+selects.config_setting_group(
+    name = "agent_package_signing_missing",
+    match_all = [
+        ":agent_package_signing_effectively_disabled",
+        ":agent_package_signing_required",
     ],
     visibility = ["//visibility:public"],
 )
@@ -545,6 +572,6 @@ deploy_python(
 
 deploy_python_drift_test(
     name = "deploy-python-drift-test",
-    product = "//omd:deps_packages",
+    product = "//omd:deps_packages_base",
     whls = EDITION_WHEELS,
 )

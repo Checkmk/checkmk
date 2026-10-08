@@ -3,6 +3,7 @@ load("@rules_gzip//gzip/compress:defs.bzl", "gzip_compress")
 load("@rules_pkg//pkg:deb.bzl", "pkg_deb")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:agent_package_signing.bzl", "requires_signed_agent_rpm")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:git_hash_file.bzl", "git_hash_file")
 load("//bazel/rules:md5sums_from_archive.bzl", "md5sums_from_archive")
@@ -790,7 +791,12 @@ pkg_tar(
     ],
     stamp = 1,
     tags = ["manual"],
-    visibility = ["//omd:__subpackages__"],
+    visibility = [
+        # //:deploy-python-drift-test checks the deploy wheel lists against
+        # the wheels actually shipped via this target.
+        "//:__pkg__",
+        "//omd:__subpackages__",
+    ],
     deps = [
         "//active_checks:pkg_tar",
         "//cmk:cmk_tar",
@@ -883,13 +889,26 @@ pkg_tar(
     }) + edition_deps,
 )
 
+# Every release package is built from :deps_packages, which bundles
+# //agents:agents. Depending on this empty target makes them refuse to build
+# with the unsigned agent .rpm, i.e. without a signing key, unless signing is
+# disabled or artifacts are faked. It is a dependency instead of a
+# target_compatible_with on the packages themselves, because Bazel doesn't
+# analyse the dependencies of directly incompatible targets: cquery
+# 'deps(//omd:deb)' without a key, as used by
+# check_community_edition_all_free.sh, would silently come up empty.
+filegroup(
+    name = "agent_package_signing_guard",
+    srcs = [],
+    tags = ["manual"],
+    target_compatible_with = requires_signed_agent_rpm(),
+)
+
 # If we include the bom in the initial tar, we have a circular dependency
 pkg_tar(
     name = "deps_packages",
+    srcs = [":agent_package_signing_guard"],
     tags = ["manual"],
-    # //:deploy-python-drift-test checks the deploy wheel lists against
-    # the wheels actually shipped via this target.
-    visibility = ["//:__pkg__"],
     deps = [
         ":deps_packages_base",
         "//omd/dependency_management:license_info",

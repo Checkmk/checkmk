@@ -33,7 +33,9 @@ string_flag(
 )
 
 # Used by sign_package() to mark its targets incompatible until a key is
-# configured. See sign_package.bzl/.md.
+# configured (see sign_package.bzl/.md), and by
+# //:agent_package_signing_effectively_disabled to fall back to the unsigned
+# agent .rpm.
 config_setting(
     name = "signing_key_file_unset",
     flag_values = {":signing_key_file": ""},

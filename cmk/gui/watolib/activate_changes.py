@@ -40,7 +40,7 @@ from itertools import filterfalse
 from multiprocessing.pool import AsyncResult, ThreadPool
 from pathlib import Path
 from typing import Any, assert_never, Final, Literal, NamedTuple, override, TypedDict
-from urllib.parse import urlparse
+from urllib.parse import urlencode, urlparse
 
 from pydantic import BaseModel
 from setproctitle import setthreadtitle
@@ -52,7 +52,7 @@ import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.utils
 from cmk import mkp_tool, trace
 from cmk.ccc import store, tar_archive, version
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException, MKTerminate
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import get_omd_config, omd_site, SiteId
@@ -65,10 +65,15 @@ from cmk.gui.background_job.job import (
     BackgroundProcessInterface,
     InitialStatusArgs,
     JobStatusSpec,
+    JobStatusStates,
     JobTarget,
 )
 from cmk.gui.config import active_config, Config
-from cmk.gui.crash_handler import crash_dump_message, handle_exception_as_gui_crash_report
+from cmk.gui.crash_handler import (
+    crash_dump_message,
+    create_gui_crash_report,
+    handle_exception_as_gui_crash_report,
+)
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
 from cmk.gui.http import Request
@@ -118,7 +123,9 @@ from cmk.gui.watolib.broker_certificates import (
 )
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
+    ACTIVATION_CORE_RESTART_TIMEOUT,
     ActivationContext,
+    ActivationContextKey,
     config_domain_registry,
     ConfigDomainName,
     DomainRequest,
@@ -726,9 +733,19 @@ def _set_result(
 def _handle_activation_changes_exception(
     exc_logger: logging.Logger, exception: Exception, site_activation_status: SiteActivationState
 ) -> None:
-    if isinstance(exception, MKGeneralException | MKUserError):
+    if isinstance(exception, RemoteActivationCrash):
         # NOTE: We are always called from within an exception handler (hopefully!), but ruff can't
         # determine this statically.
+        exc_logger.exception("error activating changes")  # noqa: LOG004
+        message = str(exception)
+        if user.may("general.see_crash_reports"):
+            message += "<br>\n<br>\n" + _(
+                'Open the <a href="%(url)s">crash report page</a> of the remote site for details.'
+            ) % {
+                "url": "crash.py?"
+                + urlencode([("crash_id", exception.crash_id), ("site", exception.site_id)])
+            }
+    elif isinstance(exception, MKGeneralException | MKUserError):
         exc_logger.exception("error activating changes")  # noqa: LOG004
         message = str(exception)
     else:
@@ -1073,6 +1090,117 @@ def _get_omd_domain_background_job_result(
             return [e.message]
 
 
+# How long the central site accepts a remote activation job that is neither running nor finished.
+# This happens when the job scheduler of the remote site is unreachable for a moment or when it was
+# stopped while the job was running.
+_REMOTE_ACTIVATION_VANISHED_TIMEOUT = 30.0
+
+# How long the central site waits for an unreachable remote site to come back. A restart of the
+# remote site, e.g. triggered by the OMD domain, makes it unreachable for a moment.
+_REMOTE_ACTIVATION_UNREACHABLE_TIMEOUT = 300.0
+
+# How long the central site waits for the remote activation job in total. The remote site ends
+# a hanging core restart itself (_REMOTE_ACTIVATION_CORE_RESTART_TIMEOUT), which fails the job
+# and reports an error here, so this safety net only fires when the job hangs in another way.
+_REMOTE_ACTIVATION_TIMEOUT = 30 * 60.0
+
+
+class RemoteActivationCrash(Exception):
+    """The activation job on the remote site crashed and created a crash report there
+
+    Not an MKGeneralException: it is no error the user can fix, and the central site creates no
+    crash report of its own for it."""
+
+    def __init__(self, message: str, *, site_id: SiteId, crash_id: str) -> None:
+        super().__init__(message)
+        self.site_id = site_id
+        self.crash_id = crash_id
+
+
+def activate_remote_site(
+    automation_config: RemoteAutomationConfig,
+    site_id: SiteId,
+    domain_requests: DomainRequests,
+    *,
+    debug: bool,
+) -> ConfigWarnings:
+    """Activate the changes in a background job on the remote site and wait for its result"""
+    job_id = cmk.gui.watolib.automations.do_remote_automation(
+        automation_config,
+        "activate-changes-start",
+        [("domains", serialize_domain_requests(domain_requests)), ("site_id", site_id)],
+        debug=debug,
+    )
+    assert isinstance(job_id, str)
+
+    started = time.monotonic()
+    vanished_since: float | None = None
+    unreachable_since: float | None = None
+    while True:
+        if time.monotonic() - started > _REMOTE_ACTIVATION_TIMEOUT:
+            raise MKGeneralException(
+                _(
+                    "Activation on site %(site_id)s did not finish within %(minutes)d minutes. "
+                    "The job %(job_id)s may still be running on the remote site and holding its "
+                    "configuration lock."
+                )
+                % {
+                    "site_id": site_id,
+                    "minutes": _REMOTE_ACTIVATION_TIMEOUT / 60,
+                    "job_id": job_id,
+                }
+            )
+        try:
+            status = cmk.gui.watolib.automations.do_remote_automation(
+                automation_config,
+                "activate-changes-get-status",
+                [("job_id", job_id)],
+                debug=debug,
+            )
+        except cmk.gui.watolib.automations.MKRemoteSiteUnavailable:
+            now = time.monotonic()
+            if unreachable_since is None:
+                unreachable_since = now
+            elif now - unreachable_since > _REMOTE_ACTIVATION_UNREACHABLE_TIMEOUT:
+                raise
+            time.sleep(0.5)
+            continue
+        unreachable_since = None
+
+        assert isinstance(status, dict)
+        if status["is_active"]:
+            vanished_since = None
+            time.sleep(0.5)
+            continue
+
+        if status["state"] == JobStatusStates.FINISHED:
+            return status["warnings"]
+        if status["state"] in (JobStatusStates.EXCEPTION, JobStatusStates.STOPPED):
+            message = _("Activation on site %(site_id)s failed: %(error)s") % {
+                "site_id": site_id,
+                "error": "\n".join(status["exception"]),
+            }
+            if status["crash_id"]:
+                raise RemoteActivationCrash(message, site_id=site_id, crash_id=status["crash_id"])
+            # The text is escaped when it is shown, apart from simple formatting tags like <pre>.
+            raise MKGeneralException(
+                f"{message}<pre>{status['traceback']}</pre>" if status["traceback"] else message
+            )
+
+        now = time.monotonic()
+        if vanished_since is None:
+            vanished_since = now
+        elif now - vanished_since > _REMOTE_ACTIVATION_VANISHED_TIMEOUT:
+            raise MKGeneralException(
+                _(
+                    "Activation on site %(site_id)s did not finish: The job %(job_id)s on the "
+                    "remote site is no longer running."
+                )
+                % {"site_id": site_id, "job_id": job_id}
+            )
+        time.sleep(0.5)
+
+
 def _call_activate_changes_automation(
     tree: FolderTree,
     site_id: SiteId,
@@ -1085,25 +1213,17 @@ def _call_activate_changes_automation(
     domain_requests = _get_domains_needing_activation(site_changes_activate_until)
 
     if isinstance(automation_config, LocalAutomationConfig):
-        return execute_activate_changes(tree, domain_requests, is_remote_site=is_remote_site)
-
-    serialized_requests = [asdict(x) for x in domain_requests]
-    try:
-        response = cmk.gui.watolib.automations.do_remote_automation(
-            automation_config,
-            "activate-changes",
-            [("domains", repr(serialized_requests)), ("site_id", site_id)],
-            debug=debug,
+        return execute_activate_changes(
+            tree,
+            domain_requests,
+            is_remote_site=is_remote_site,
+            # The activation of the local site stays unbounded, as before.
+            core_restart_timeout=None,
         )
-    except cmk.gui.watolib.automations.MKAutomationException as e:
-        if "Invalid automation command: activate-changes" in "%s" % e:
-            raise MKGeneralException(
-                "Activate changes failed (%s). The version of this site may be too old."
-            )
-        raise
+
+    response = activate_remote_site(automation_config, site_id, domain_requests, debug=debug)
 
     # If request.settings is empty no `omd-config-change` job is started
-    assert isinstance(response, dict)
     if any(request.name == OMDDomainName and request.settings for request in domain_requests):
         response.setdefault(OMDDomainName, []).extend(
             _get_omd_domain_background_job_result(automation_config, debug=debug)
@@ -3193,9 +3313,15 @@ def sort_for_activation(domain_requests: DomainRequests) -> list[DomainRequest]:
 
 @tracer.instrument("execute_activate_changes")
 def execute_activate_changes(
-    tree: FolderTree, domain_requests: DomainRequests, is_remote_site: bool
+    tree: FolderTree,
+    domain_requests: DomainRequests,
+    is_remote_site: bool,
+    core_restart_timeout: int | None,
 ) -> ConfigWarnings:
-    ctx = ActivationContext({ACTIVATION_FOLDER_TREE: tree})
+    ctx_values: dict[ActivationContextKey[object], object] = {ACTIVATION_FOLDER_TREE: tree}
+    if core_restart_timeout is not None:
+        ctx_values[ACTIVATION_CORE_RESTART_TIMEOUT] = core_restart_timeout
+    ctx = ActivationContext(ctx_values)
     # A site a major version behind still names a domain by its pre-rename ident.
     local_requests = [
         DomainRequest(
@@ -3273,6 +3399,195 @@ def _update_links_for_agent_receiver(tree: FolderTree) -> None:
     )
 
     uuid_link_manager.update_links(collect_all_hosts(tree))
+
+
+def serialize_domain_requests(domain_requests: DomainRequests) -> str:
+    return repr([asdict(x) for x in domain_requests])
+
+
+def deserialize_domain_requests(raw: str) -> DomainRequests:
+    try:
+        return [DomainRequest(**x) for x in ast.literal_eval(raw)]
+    except SyntaxError:
+        raise MKGeneralException(_("Invalid domain requests: %(raw)r") % {"raw": raw})
+
+
+class RemoteActivationJobArgs(BaseModel, frozen=True):
+    job_id: str
+    # The settings of the domain requests contain types pydantic can not handle
+    serialized_domain_requests: str
+    site_configs: SiteConfigurations
+    wato_hide_folders_without_read_permissions: bool
+    wato_host_attrs: Sequence[CustomHostAttrSpec]
+    tags: TagConfigSpec
+    user_permission_config: UserPermissionSerializableConfig
+
+
+def remote_activation_job_entry_point(
+    job_interface: BackgroundProcessInterface, args: RemoteActivationJobArgs
+) -> None:
+    RemoteActivationBackgroundJob(args.job_id).activate(job_interface, args)
+
+
+class RemoteActivationStatus(TypedDict):
+    state: str
+    is_active: bool
+    exception: Sequence[str]
+    # Set when the activation failed with an error meant for the user, which gets no crash report
+    traceback: str
+    # Set when the activation crashed. The crash report is stored on the remote site.
+    crash_id: str
+    warnings: ConfigWarnings
+
+
+# The remote activation job holds the configuration lock of its site. A core restart that hangs,
+# e.g. when the automation helper does not answer, would keep the lock until someone kills the
+# job scheduler. The restart automation ends itself after this timeout, which fails the job and
+# releases the lock. Generous, so that it never ends the restart of a large configuration.
+_REMOTE_ACTIVATION_CORE_RESTART_TIMEOUT = 15 * 60
+
+
+class RemoteActivationBackgroundJob(BackgroundJob):
+    """Executes the activation a central site requested on this remote site
+
+    The activation compiles the core configuration and restarts the core. This may take longer
+    than an HTTP request is allowed to take, so the central site starts this job and polls for
+    its result instead of waiting for the response of a single request."""
+
+    job_prefix = "activate-changes-remote-"
+    housekeeping_max_age_sec = 86400 * 30
+    housekeeping_max_count = 20
+
+    @classmethod
+    @override
+    def gui_title(cls) -> str:
+        return _("Activate changes requested by central site")
+
+    @classmethod
+    def from_job_id(cls, job_id: str) -> RemoteActivationBackgroundJob:
+        """Create the job object for a job ID received from the central site"""
+        if not job_id.startswith(cls.job_prefix) or not validate_uuid_str(
+            job_id.removeprefix(cls.job_prefix)
+        ):
+            raise MKUserError("job_id", _("Invalid job ID: %(job_id)s") % {"job_id": job_id})
+        return cls(job_id)
+
+    @classmethod
+    def start_activation(
+        cls,
+        tree: FolderTree,
+        domain_requests: DomainRequests,
+        user_permission_config: UserPermissionSerializableConfig,
+    ) -> RemoteActivationBackgroundJob:
+        job = cls(f"{cls.job_prefix}{gen_id()}")
+        result = job.start(
+            JobTarget(
+                callable=remote_activation_job_entry_point,
+                args=RemoteActivationJobArgs(
+                    job_id=job.get_job_id(),
+                    serialized_domain_requests=serialize_domain_requests(domain_requests),
+                    site_configs=SiteConfigurations(tree.config.sites),
+                    wato_hide_folders_without_read_permissions=tree.config.wato_hide_folders_without_read_permissions,
+                    wato_host_attrs=tree.config.wato_host_attrs,
+                    tags=tree.config.tags.get_dict_format(),
+                    user_permission_config=user_permission_config,
+                ),
+            ),
+            InitialStatusArgs(
+                title=cls.gui_title(),
+                deletable=False,
+                stoppable=False,
+                lock_wato=True,
+            ),
+        )
+        if result.is_error():
+            raise result.error
+        return job
+
+    def activate(
+        self, job_interface: BackgroundProcessInterface, args: RemoteActivationJobArgs
+    ) -> None:
+        tree = FolderTree(
+            config=HostsAndFoldersConfig(
+                wato_hide_folders_without_read_permissions=args.wato_hide_folders_without_read_permissions,
+                wato_host_attrs=args.wato_host_attrs,
+                tags=TagConfig.from_config(args.tags),
+                sites=args.site_configs,
+            )
+        )
+        try:
+            with job_interface.gui_context(
+                UserPermissions.from_serialized_config(
+                    args.user_permission_config, permission_registry
+                )
+            ):
+                warnings = execute_activate_changes(
+                    tree,
+                    deserialize_domain_requests(args.serialized_domain_requests),
+                    is_remote_site=True,
+                    core_restart_timeout=_REMOTE_ACTIVATION_CORE_RESTART_TIMEOUT,
+                )
+        except (MKGeneralException, MKUserError) as e:
+            # Report errors meant for the user as they are, without a crash report. The central
+            # site shows them with the traceback as the result of the site activation, as it did
+            # before the activation moved into this job. Other exceptions reach the generic
+            # handler of the job, which creates a crash report.
+            logger.exception("error activating changes")
+            store.save_text_to_file(self._traceback_path(), traceback.format_exc())
+            job_interface.send_exception(str(e))
+            return
+        except MKTerminate:
+            raise
+        except Exception as e:
+            # Same as the generic handler of the job, but keep the crash ID for the central site,
+            # which links to the crash report.
+            crash = create_gui_crash_report()
+            logger.exception(
+                "Exception in background function (Crash ID: %(crash_id)s)",
+                {"crash_id": crash.ident_to_text()},
+            )
+            store.save_text_to_file(self._crash_id_path(), crash.ident_to_text())
+            job_interface.send_exception(
+                _("Exception (crash ID: %(crash_id)s): %(error)s")
+                % {"crash_id": crash.ident_to_text(), "error": e}
+            )
+            return
+        store.save_object_to_file(self._result_path(), warnings)
+        job_interface.send_result_message(_("Activation finished"))
+
+    def activation_status(self) -> RemoteActivationStatus:
+        status = self.get_status()
+        return RemoteActivationStatus(
+            state=status.state,
+            # The state in the status file stays "running" when the job scheduler is stopped
+            # while the job runs. Ask the job scheduler whether the job is still running.
+            is_active=self.is_active(),
+            exception=list(status.loginfo["JobException"]),
+            traceback=(
+                self._traceback_path().read_text()
+                if status.state == JobStatusStates.EXCEPTION and self._traceback_path().exists()
+                else ""
+            ),
+            crash_id=(
+                self._crash_id_path().read_text()
+                if status.state == JobStatusStates.EXCEPTION and self._crash_id_path().exists()
+                else ""
+            ),
+            warnings=(
+                store.load_object_from_file(self._result_path(), default={})
+                if status.state == JobStatusStates.FINISHED
+                else {}
+            ),
+        )
+
+    def _result_path(self) -> Path:
+        return Path(self.get_work_dir()) / "result.mk"
+
+    def _traceback_path(self) -> Path:
+        return Path(self.get_work_dir()) / "traceback.txt"
+
+    def _crash_id_path(self) -> Path:
+        return Path(self.get_work_dir()) / "crash_id.txt"
 
 
 def get_pending_changes_tooltip(changes_info: PendingChangesInfo) -> str:

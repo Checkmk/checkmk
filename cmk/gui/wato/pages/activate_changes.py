@@ -8,18 +8,19 @@
 """Mode for activating pending changes. Does also replication with
 remote sites in distributed Setup."""
 
-import ast
 import enum
 from collections.abc import Collection, Iterator, Sequence
 from pathlib import Path
 from typing import Literal, NamedTuple, override
 
 from cmk.ccc import tar_archive
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition_has_enforced_licensing
 from cmk.gui import forms
+from cmk.gui.background_job.job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
@@ -48,24 +49,25 @@ from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.session import session
-from cmk.gui.utils.timeout_manager import timeout_manager
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUnicode
 from cmk.gui.watolib import activate_changes, backup_snapshots, read_only
 from cmk.gui.watolib.activate_changes import (
     affects_all_sites,
     ConfigWarnings,
+    deserialize_domain_requests,
     get_status_for_site,
     has_been_activated,
     is_foreign_change,
     prevent_discard_changes,
+    RemoteActivationBackgroundJob,
+    RemoteActivationStatus,
     verify_remote_site_config,
 )
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
-from cmk.gui.watolib.automations import MKAutomationException
 from cmk.gui.watolib.backup_snapshots import get_last_wato_snapshot_file
-from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequest, DomainRequests
+from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequests
 from cmk.gui.watolib.hosts_and_folders import (
     folder_preserving_link,
     FolderTree,
@@ -108,6 +110,8 @@ def register(
     mode_registry.register(ModeActivateChanges)
     mode_registry.register(ModeRevertChanges)
     automation_command_registry.register(AutomationActivateChanges)
+    automation_command_registry.register(AutomationActivateChangesStart)
+    automation_command_registry.register(AutomationActivateChangesGetStatus)
 
 
 class ActivationState(enum.Enum):
@@ -1152,34 +1156,84 @@ class PageAjaxActivationState(AjaxPage):
 class _ActivateChangesRequest(NamedTuple):
     domain_requests: DomainRequests
     tree: FolderTree
+    user_permission_config: UserPermissionSerializableConfig
 
 
-class AutomationActivateChanges(AutomationCommand[_ActivateChangesRequest]):
+class _ABCAutomationActivateChanges(AutomationCommand[_ActivateChangesRequest]):
     @override
-    def command_name(self) -> str:
-        return "activate-changes"
+    def needs_configuration_lock(self) -> bool:
+        # The activation job holds the configuration lock while it runs.
+        return False
 
     @override
     def get_request(self, config: Config, request: Request) -> _ActivateChangesRequest:
         verify_remote_site_config(
             config.sites, SiteId(request.get_ascii_input_mandatory("site_id"))
         )
-        domains = request.get_ascii_input_mandatory("domains")
-        try:
-            domain_requests = [DomainRequest(**x) for x in ast.literal_eval(domains)]
-        except SyntaxError:
-            raise MKAutomationException(_("Invalid request: %(domains)r") % {"domains": domains})
-        return _ActivateChangesRequest(domain_requests, make_folder_tree(config))
+        return _ActivateChangesRequest(
+            deserialize_domain_requests(request.get_ascii_input_mandatory("domains")),
+            make_folder_tree(config),
+            UserPermissionSerializableConfig.from_global_config(config),
+        )
+
+    def _start(self, api_request: _ActivateChangesRequest) -> RemoteActivationBackgroundJob:
+        return RemoteActivationBackgroundJob.start_activation(
+            api_request.tree, api_request.domain_requests, api_request.user_permission_config
+        )
+
+
+class AutomationActivateChangesStart(_ABCAutomationActivateChanges):
+    """Starts the activation job and returns its ID for polling with activate-changes-get-status"""
+
+    @override
+    def command_name(self) -> str:
+        return "activate-changes-start"
+
+    @override
+    def execute(self, api_request: _ActivateChangesRequest) -> str:
+        return self._start(api_request).get_job_id()
+
+
+class AutomationActivateChanges(_ABCAutomationActivateChanges):
+    """Activates the changes and responds with the result
+
+    Central sites of the previous major version use this command. The activation runs in a job
+    which continues when this request is cancelled due to a timeout. Remove this command with
+    the next major version."""
+
+    @override
+    def command_name(self) -> str:
+        return "activate-changes"
 
     @override
     def execute(self, api_request: _ActivateChangesRequest) -> ConfigWarnings:
-        timeout_manager.enable_timeout(500)
-        try:
-            return activate_changes.execute_activate_changes(
-                api_request.tree, api_request.domain_requests, is_remote_site=True
+        job = self._start(api_request)
+        job.wait_for_completion()
+        status = job.activation_status()
+        if status["state"] != JobStatusStates.FINISHED:
+            raise MKGeneralException(
+                _("Activation failed: %(error)s") % {"error": "\n".join(status["exception"])}
             )
-        finally:
-            timeout_manager.disable_timeout()
+        return status["warnings"]
+
+
+class AutomationActivateChangesGetStatus(AutomationCommand[str]):
+    @override
+    def command_name(self) -> str:
+        return "activate-changes-get-status"
+
+    @override
+    def needs_configuration_lock(self) -> bool:
+        # The activation job holds the configuration lock while it runs.
+        return False
+
+    @override
+    def get_request(self, config: Config, request: Request) -> str:
+        return request.get_ascii_input_mandatory("job_id")
+
+    @override
+    def execute(self, api_request: str) -> RemoteActivationStatus:
+        return RemoteActivationBackgroundJob.from_job_id(api_request).activation_status()
 
 
 def _pending_changes(config: Config, local_site: SiteId, user_id: UserId | None) -> PendingChanges:

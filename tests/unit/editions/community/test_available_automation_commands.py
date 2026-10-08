@@ -12,6 +12,8 @@ from cmk.gui.watolib.automation_commands import automation_command_registry
 def test_registered_automation_commands() -> None:
     expected_automation_commands = [
         "activate-changes",
+        "activate-changes-get-status",
+        "activate-changes-start",
         "agent-download-token-create",
         "agent-registration-token-create",
         "check-analyze-config",

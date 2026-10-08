@@ -44,6 +44,7 @@ from cmk.gui.watolib import bakery, config_domain_name
 from cmk.gui.watolib.check_mk_automations import get_configuration, reload, restart
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
+    ACTIVATION_CORE_RESTART_TIMEOUT,
     ActivationContext,
     ConfigDomainName,
     DomainRequest,
@@ -143,6 +144,7 @@ class ConfigDomainCore(ABCConfigDomain):
         return {"restart": restart, "reload": reload}[active_config.wato_activation_method](
             self._parse_settings(settings).hosts_to_update,
             tree=ctx.get(ACTIVATION_FOLDER_TREE),
+            timeout=ctx.get_or_none(ACTIVATION_CORE_RESTART_TIMEOUT),
             debug=active_config.debug,
         ).config_warnings
 

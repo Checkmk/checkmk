@@ -108,6 +108,17 @@ class ActivationContext:
             raise MKGeneralException(f"The activation provides no {key.name}")
         return value
 
+    def get_or_none[T](self, key: ActivationContextKey[T]) -> T | None:
+        """The value, or None for a value the activation does not provide"""
+        if not isinstance(value := self.values.get(key), key.type_):
+            return None
+        return value
+
+
+# Limits the core restart/reload automation of an activation, in seconds. An activation that
+# does not provide it lets the restart take as long as it takes.
+ACTIVATION_CORE_RESTART_TIMEOUT = ActivationContextKey("core restart timeout", int)
+
 
 class ABCConfigDomain(abc.ABC):
     """

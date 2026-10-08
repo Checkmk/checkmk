@@ -43,6 +43,7 @@ from .activate_changes import (
     AutomationGetConfigSyncState,
     AutomationReceiveConfigSync,
     execute_activation_cleanup_job,
+    RemoteActivationBackgroundJob,
 )
 from .agent_registration import AutomationRemoveTLSRegistration
 from .agent_token_automations import (
@@ -192,6 +193,7 @@ def _register_gui_background_jobs(job_registry: BackgroundJobRegistry) -> None:
     job_registry.register(autodiscovery.AutodiscoveryBackgroundJob)
     job_registry.register(BulkDiscoveryBackgroundJob)
     job_registry.register(ActivateChangesSchedulerBackgroundJob)
+    job_registry.register(RemoteActivationBackgroundJob)
     job_registry.register(RenameHostsBackgroundJob)
     job_registry.register(RenameHostBackgroundJob)
     job_registry.register(ServiceDiscoveryBackgroundJob)

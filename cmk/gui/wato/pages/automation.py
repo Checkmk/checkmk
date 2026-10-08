@@ -170,17 +170,20 @@ class PageAutomation(AjaxPage):
         # the normal Setup page processing. This might not be needed for some
         # special automation requests, like inventory e.g., but to keep it simple,
         # we request the lock in all cases.
-        lock_config = not (
-            self._command == "checkmk-automation"
-            and request.get_str_input_mandatory("automation") == "active-check"
-        )
         with (
             store.lock_checkmk_configuration(configuration_lockfile)
-            if lock_config
+            if self._needs_configuration_lock()
             else nullcontext()
         ):
             self._execute_automation(ctx.config)
         return None
+
+    def _needs_configuration_lock(self) -> bool:
+        if self._command == "checkmk-automation":
+            return request.get_str_input_mandatory("automation") != "active-check"
+        if self._command in automation_command_registry:
+            return automation_command_registry[self._command]().needs_configuration_lock()
+        return True
 
     def _execute_automation(self, config: Config) -> None:
         with tracer.span(f"_execute_automation[{self._command}]"):

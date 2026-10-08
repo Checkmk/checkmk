@@ -25,6 +25,7 @@ def test_registered_background_jobs() -> None:
         "SearchIndexBackgroundJob",
         "AutodiscoveryBackgroundJob",
         "QuickSetupStageActionBackgroundJob",
+        "RemoteActivationBackgroundJob",
         "QuickSetupActionBackgroundJob",
         "ProfileReplicationBackgroundJob",
         "RelationDetectionBackgroundJob",

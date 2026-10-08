@@ -20,7 +20,8 @@ number of remote sites without the resource cost of real OMD sites:
     ``_get_config_sync_file_info``.
   - ``receive-config-sync``: unpacks the sync archive into the mock site's
     state directory and applies deletions, like a real remote.
-  - ``activate-changes``: returns no warnings; optionally sleeps to emulate
+  - ``activate-changes-start`` / ``activate-changes-get-status``: the job
+    reports no warnings; it optionally stays active for a while to emulate
     remote activation time.
   - ``create-broker-certs`` / ``store-broker-certs``: serves a real CSR and
     accepts the signed certificates, like a real remote message broker setup.
@@ -44,6 +45,7 @@ import tarfile
 import threading
 import time
 import urllib.parse
+import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
 from email.parser import BytesParser
@@ -91,6 +93,7 @@ class _MockSiteState:
         self.state_dir = state_dir
         self.config_generation = 0
         self.lock = threading.Lock()
+        self.activation_ends: dict[str, float] = {}
         state_dir.mkdir(parents=True, exist_ok=True)
 
     def file_infos(self) -> dict[str, tuple[int, int, str | None, str | None]]:
@@ -223,11 +226,27 @@ class _AutomationHTTPHandler(BaseHTTPRequestHandler):
             state.apply_sync(sync_archive, to_delete)
             return repr(True)
 
-        if command == "activate-changes":
-            if self.server.activate_delay:
-                time.sleep(self.server.activate_delay)
-            # domain name -> list of warnings
-            return repr({})
+        if command == "activate-changes-start":
+            job_id = f"activate-changes-remote-{uuid.uuid4()}"
+            with state.lock:
+                state.activation_ends[job_id] = time.monotonic() + self.server.activate_delay
+            return repr(job_id)
+
+        if command == "activate-changes-get-status":
+            with state.lock:
+                activation_end = state.activation_ends[str(params["job_id"])]
+            is_active = time.monotonic() < activation_end
+            return repr(
+                {
+                    "state": "running" if is_active else "finished",
+                    "is_active": is_active,
+                    "exception": [],
+                    "traceback": "",
+                    "crash_id": "",
+                    # domain name -> list of warnings
+                    "warnings": {},
+                }
+            )
 
         if command == "create-broker-certs":
             return repr({"csr": _create_csr_pem(state.site_id)})

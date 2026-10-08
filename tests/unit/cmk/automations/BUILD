@@ -12,5 +12,6 @@ py_cmk_test(
         "//cmk/automations",
         "//tests/unit:conftest",
         requirement("pytest-random-order"),
+        requirement("requests"),
     ],
 )

@@ -467,13 +467,18 @@ def delete_hosts(
 
 
 def restart(
-    hosts_to_update: Sequence[HostName] | None, *, tree: FolderTree, debug: bool
+    hosts_to_update: Sequence[HostName] | None,
+    *,
+    tree: FolderTree,
+    timeout: int | None,
+    debug: bool,
 ) -> results.RestartResult:
     return _deserialize(
         _automation_serialized(
             AutomationID("restart"),
             automation_config=LocalAutomationConfig(),
             args=hosts_to_update,
+            timeout=timeout,
             debug=debug,
             collect_hosts=lambda: collect_all_hosts(tree),
         ),
@@ -483,13 +488,18 @@ def restart(
 
 
 def reload(
-    hosts_to_update: Sequence[HostName] | None, *, tree: FolderTree, debug: bool
+    hosts_to_update: Sequence[HostName] | None,
+    *,
+    tree: FolderTree,
+    timeout: int | None,
+    debug: bool,
 ) -> results.ReloadResult:
     return _deserialize(
         _automation_serialized(
             AutomationID("reload"),
             automation_config=LocalAutomationConfig(),
             args=hosts_to_update,
+            timeout=timeout,
             debug=debug,
             collect_hosts=lambda: collect_all_hosts(tree),
         ),

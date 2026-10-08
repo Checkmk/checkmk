@@ -8,7 +8,7 @@ from typing import Final
 
 import cmk.ccc.store
 import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
-from cmk.ccc.version import __version__, parse_check_mk_version
+from cmk.ccc.version import __version__, Version
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.mkp_tool import (
     cli,
@@ -67,7 +67,7 @@ _SITE_CONTEXT: Final = cli.SiteContext(
         )
     ),
     version=__version__,
-    parse_version=parse_check_mk_version,
+    parse_version=Version.from_str,
 )
 
 

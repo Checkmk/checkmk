@@ -100,3 +100,68 @@ def test_handle_list_hosts_keeps_a_hidden_service_count_column_independent() -> 
     host = response.hosts[0]
     assert host.num_services_ok == 5
     assert isinstance(host.num_services, ApiOmitted)
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_list_hosts_returns_no_hosts_when_the_filter_excludes_every_site(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"], match_type="loose")
+
+    with mock_livestatus:
+        resp = aut_user_auth_wsgi_app.post(
+            "/NO_SITE/check_mk/api/internal/monitor/hosts",
+            params=json.dumps(
+                {
+                    "filter": {
+                        "type": "not",
+                        "child": {
+                            "type": "condition",
+                            "field": "site_id",
+                            "op": "one_of",
+                            "value": ["NO_SITE"],
+                        },
+                    }
+                }
+            ),
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+            status=HTTPStatus.OK,
+        )
+
+    assert resp.json["hosts"] == []
+    assert resp.json["meta"]["matched"] == 0
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_list_hosts_rejects_a_site_condition_inside_or_without_querying_livestatus(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    with mock_livestatus(expect_status_query=False):
+        aut_user_auth_wsgi_app.post(
+            "/NO_SITE/check_mk/api/internal/monitor/hosts",
+            params=json.dumps(
+                {
+                    "filter": {
+                        "type": "or",
+                        "children": [
+                            {
+                                "type": "condition",
+                                "field": "site_id",
+                                "op": "one_of",
+                                "value": ["NO_SITE"],
+                            },
+                            {
+                                "type": "condition",
+                                "field": "name",
+                                "op": "contains",
+                                "value": "web",
+                            },
+                        ],
+                    }
+                }
+            ),
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+            status=HTTPStatus.BAD_REQUEST,
+        )

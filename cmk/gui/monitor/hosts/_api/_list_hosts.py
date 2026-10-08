@@ -24,9 +24,11 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
+from cmk.livestatus_client import SiteConfigurations
 from cmk.web.utils import permission_verification as permissions
 
 from .._customer import customer_resolver
+from .._exceptions import InvalidFilterError
 from .._folder import MonitorFolders
 from .._impl import LiveStatusHostRepository
 from .._models import (
@@ -337,71 +339,93 @@ def _list_hosts(
         case _:
             limit = body.limit
 
-    # Validated before opening a Livestatus connection below, so a bad filter is rejected without
-    # ever needing one.
-    if isinstance(body.filter, ApiOmitted):
-        filters, site_ids = None, None
-    else:
-        try:
-            filters, site_ids = extract_site_scope(
-                node=body.filter,
-                all_site_ids=frozenset(api_context.config.sites),
-            )
-        except ValueError as exc:
-            raise RestAPIRequestGeneralException(
-                status=HTTPStatus.BAD_REQUEST, title="Invalid filter", detail=str(exc)
-            ) from exc
-
-    customer_of = customer_resolver(sites=api_context.config.sites)
-    host_repo = LiveStatusHostRepository(
-        connection=sites.live(),
-        folders=folders,
-        sites=MonitorSites(
-            MonitorSite(id=site_id, customer=customer_of(site_id))
-            for site_id in api_context.config.sites
-        ),
-    )
-
-    # NOTE: we never want this value scoped by the selected sites. It should always get full count.
-    # As a temporary solution, we are querying count here and passing the result to the handler.
-    # This is done to make the handler more testable without the need to be tested within a request
-    # context as `sites` triggers that side-effect.
-    total_host_count = host_repo.count_total()
-
-    fields = _DEFAULT_FIELDS if isinstance(body.fields, ApiOmitted) else body.fields
-    sorters = _DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort
-
-    # `sites.only_sites([])` can't express "query zero sites"; an empty list is falsy to it and
-    # gets treated as "no restriction" instead, i.e. every site. This happens when the filter
-    # negates every currently configured site, so it's handled here before ever calling into
-    # Livestatus, rather than being passed through.
-    if site_ids == []:
-        return HostsResponse(
-            hosts=[],
-            meta=HostsPageMeta(limit=limit, matched=0, total=total_host_count, fields=fields),
-        )
-
-    # Like the total count above, and for the same reason: what a host is related to does not
-    # change with the sites the reader has filtered the listing down to.
-    visible_relations = host_repo.visible_relation_hosts(fields=fields, sorters=sorters)
-
-    with sites.only_sites(site_ids):
-        return _handle_list_hosts(
-            host_repo,
-            total_host_count,
+    try:
+        return HostTable(api_context.config.sites, folders).list(
             limit=limit,
             query="" if isinstance(body.q, ApiOmitted) else body.q,
-            sorters=sorters,
-            filters=(
-                HostFilter("")
-                if filters is None
-                else parse_as_livestatus_filter(filters, setup_folders=folders.titles)
-            ),
-            fields=fields,
-            site_ids=site_ids,
-            customer_of=customer_of,
-            visible_relations=visible_relations,
+            sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
+            filter_node=None if isinstance(body.filter, ApiOmitted) else body.filter,
+            fields=_DEFAULT_FIELDS if isinstance(body.fields, ApiOmitted) else body.fields,
         )
+    except InvalidFilterError as exc:
+        raise RestAPIRequestGeneralException(
+            status=HTTPStatus.BAD_REQUEST, title="Invalid filter", detail=str(exc)
+        ) from exc
+
+
+class HostTable:
+    def __init__(self, site_configs: SiteConfigurations, folders: MonitorFolders) -> None:
+        self._folders = folders
+        self._site_ids = frozenset(site_configs)
+        self._customer_of = customer_resolver(sites=site_configs)
+        self._sites = MonitorSites(
+            MonitorSite(id=site_id, customer=self._customer_of(site_id)) for site_id in site_configs
+        )
+
+    def list(
+        self,
+        *,
+        limit: int | None,
+        query: str,
+        sorters: Sequence[HostSort],
+        filter_node: FilterNode | None,
+        fields: Set[HostOptionalField],
+    ) -> HostsResponse:
+        # Validated before opening a Livestatus connection below, so a bad filter is rejected
+        # without ever needing one.
+        if filter_node is None:
+            filters, site_ids = None, None
+        else:
+            try:
+                filters, site_ids = extract_site_scope(
+                    node=filter_node, all_site_ids=self._site_ids
+                )
+            except ValueError as exc:
+                raise InvalidFilterError(str(exc)) from exc
+
+        host_repo = LiveStatusHostRepository(
+            connection=sites.live(),
+            folders=self._folders,
+            sites=self._sites,
+        )
+
+        # NOTE: we never want this value scoped by the selected sites. It should always get full
+        # count. As a temporary solution, we are querying count here and passing the result to the
+        # handler. This is done to make the handler more testable without the need to be tested
+        # within a request context as `sites` triggers that side-effect.
+        total_host_count = host_repo.count_total()
+
+        # `sites.only_sites([])` can't express "query zero sites"; an empty list is falsy to it and
+        # gets treated as "no restriction" instead, i.e. every site. This happens when the filter
+        # negates every currently configured site, so it's handled here before ever calling into
+        # Livestatus, rather than being passed through.
+        if site_ids == []:
+            return HostsResponse(
+                hosts=[],
+                meta=HostsPageMeta(limit=limit, matched=0, total=total_host_count, fields=fields),
+            )
+
+        # Like the total count above, and for the same reason: what a host is related to does not
+        # change with the sites the reader has filtered the listing down to.
+        visible_relations = host_repo.visible_relation_hosts(fields=fields, sorters=sorters)
+
+        with sites.only_sites(site_ids):
+            return _handle_list_hosts(
+                host_repo,
+                total_host_count,
+                limit=limit,
+                query=query,
+                sorters=sorters,
+                filters=(
+                    HostFilter("")
+                    if filters is None
+                    else parse_as_livestatus_filter(filters, setup_folders=self._folders.titles)
+                ),
+                fields=fields,
+                site_ids=site_ids,
+                customer_of=self._customer_of,
+                visible_relations=visible_relations,
+            )
 
 
 def _handle_list_hosts(

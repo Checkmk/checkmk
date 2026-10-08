@@ -50,6 +50,22 @@ type LabelField = Literal["labels", "tags"]
 
 type NameListField = Literal["contacts", "contact_groups", "groups"]
 
+type StringField = Literal["name", "alias", "address", "contacts"]
+
+type BooleanField = Literal[
+    "acknowledged",
+    "in_downtime",
+    "notifications_enabled",
+    "has_comments",
+    "active_checks_disabled",
+    "passive_checks_disabled",
+    "in_notification_period",
+    "in_service_period",
+    "in_check_period",
+    "is_flapping",
+    "stale",
+]
+
 type NumericField = Literal[
     "num_services",
     "num_services_crit",
@@ -65,9 +81,7 @@ class StringCondition:
     type: Literal["condition"] = api_field(
         description="Node type discriminator", example="condition"
     )
-    field: Literal["name", "alias", "address", "contacts"] = api_field(
-        description="String host field to filter on", example="name"
-    )
+    field: StringField = api_field(description="String host field to filter on", example="name")
     op: StringOp = api_field(description="String match operation", example="contains")
     value: str = api_field(
         description="Value to match against the field", example="web", pattern=_NO_NEWLINES_REGEX
@@ -161,19 +175,9 @@ class BooleanCondition:
     type: Literal["condition"] = api_field(
         description="Node type discriminator", example="condition"
     )
-    field: Literal[
-        "acknowledged",
-        "in_downtime",
-        "notifications_enabled",
-        "has_comments",
-        "active_checks_disabled",
-        "passive_checks_disabled",
-        "in_notification_period",
-        "in_service_period",
-        "in_check_period",
-        "is_flapping",
-        "stale",
-    ] = api_field(description="Host boolean field to filter on", example="acknowledged")
+    field: BooleanField = api_field(
+        description="Host boolean field to filter on", example="acknowledged"
+    )
     op: Literal["eq"] = api_field(description="Equality operation", example="eq")
     value: bool = api_field(description="Boolean value to compare against", example=False)
 

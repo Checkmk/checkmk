@@ -34,8 +34,9 @@ const props = withDefaults(
     // Lazy loader for the overflow menu entries of this host.
     loadActionMenu?: ((host: HostRef) => Promise<CellAction[]>) | undefined
     displayOptions: DisplayOptions
+    readOnly?: boolean
   }>(),
-  { rowActions: () => [], loadActionMenu: undefined }
+  { rowActions: () => [], loadActionMenu: undefined, readOnly: false }
 )
 
 const emit = defineEmits<{
@@ -133,14 +134,14 @@ const lastStateChange = computed(() =>
     v-if="hasColumn('name')"
     column-id="name"
     :value="row.name"
-    :button="true"
+    :button="!readOnly"
     @click="emit('open', row)"
   />
   <NumberCell
     v-if="hasColumn('num_relations')"
     column-id="num_relations"
     :value="row.num_relations"
-    :button="!!row.num_relations"
+    :button="!readOnly && !!row.num_relations"
     :button-label="relationsLabel"
     blank-when-zero
     @click="emit('open', row, true)"

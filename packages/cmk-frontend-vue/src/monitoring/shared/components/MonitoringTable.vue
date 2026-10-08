@@ -28,6 +28,7 @@ import {
   type ColumnLayoutInfo,
   type HeaderFitWidths,
   MONITORING_SERVICE,
+  MONITORING_TABLE_STATE,
   TABLE_BORDER_SPACING,
   TABLE_BORDER_SPACING_PX,
   resolveUpdater
@@ -62,6 +63,7 @@ const emit = defineEmits<{
 const { _t } = usei18n()
 
 const monitoringService = inject(MONITORING_SERVICE, null)
+const tableState = inject(MONITORING_TABLE_STATE, null) ?? monitoringService
 const showSkeleton = computed(() => !props.hasLoaded || props.fetchState === 'foreground')
 const showEmptyState = computed(
   () => props.hasLoaded && props.rows.length === 0 && props.loadFailed !== true
@@ -85,7 +87,7 @@ const table = useVueTable({
   },
   state: {
     get sorting() {
-      return monitoringService?.sortState.value ?? []
+      return tableState?.sortState.value ?? []
     },
     get columnFilters() {
       return props.filterState
@@ -94,7 +96,7 @@ const table = useVueTable({
       return props.columnPinning ?? {}
     },
     get columnVisibility() {
-      return monitoringService?.columnVisibility.value ?? {}
+      return tableState?.columnVisibility.value ?? {}
     },
     get rowSelection() {
       return rowSelection.value
@@ -119,7 +121,7 @@ const table = useVueTable({
     ? { getRowId: (row: T, index: number) => String(props.getRowKey!(row, index)) }
     : {}),
   onSortingChange: (updater) => {
-    monitoringService?.updateSort(resolveUpdater(updater, monitoringService.sortState.value))
+    tableState?.updateSort(resolveUpdater(updater, tableState.sortState.value))
   },
   onColumnFiltersChange: (updater) => {
     emit('update:filterState', resolveUpdater(updater, props.filterState))

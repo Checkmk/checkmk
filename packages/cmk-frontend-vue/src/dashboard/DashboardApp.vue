@@ -396,12 +396,16 @@ function editWidget(widgetId: string) {
     throw new Error('Dashboard not yet initialized.')
   }
 
-  widgetToEdit.value = widgetId
   const widgetSpec = dashboardsManager.activeDashboard.value!.model.content.widgets[widgetId]
   if (!widgetSpec) {
     throw new Error(`Widget with id ${widgetId} not found`)
   }
-  selectedWizard.value = widgetTypeToSelectorMatcher(widgetSpec.content.type)
+  const wizard = widgetTypeToSelectorMatcher(widgetSpec.content.type)
+  if (wizard === null) {
+    return
+  }
+  widgetToEdit.value = widgetId
+  selectedWizard.value = wizard
   openWizard.value = true
 }
 

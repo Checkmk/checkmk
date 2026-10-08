@@ -34,6 +34,7 @@ import type {
   AlertOverviewContent,
   Barplot,
   BarplotContent,
+  ComputedMonitoringTable,
   ComputedNetworkFlowDonut,
   ComputedNetworkFlowKpiStatCard,
   ComputedNetworkFlowTopTable,
@@ -49,6 +50,7 @@ import type {
   HostOrServiceState,
   InventoryAttribute,
   InventoryContent,
+  MonitoringTableContent,
   NetworkFlowDonutContent,
   NetworkFlowKpiStatCardContent,
   NetworkFlowTopTableContent,
@@ -328,6 +330,18 @@ export const dashboardAPI = {
   ): Promise<ComputedWidgetResponse<AlertOverview>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-alert-overview/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeMonitoringTable: async (
+    body: { source: WidgetSource<MonitoringTableContent>; sort: string[] },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<ComputedMonitoringTable>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-monitoring-table/invoke', {
         ...CONTENT_TYPE_HEADER,
         headers,
         body

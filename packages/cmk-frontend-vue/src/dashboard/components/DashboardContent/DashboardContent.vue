@@ -9,6 +9,7 @@ import { type Component } from 'vue'
 import DashboardContentEmbeddedView from './DashboardContentEmbeddedView.vue'
 import DashboardContentIFrame from './DashboardContentIFrame.vue'
 import DashboardContentLinkedView from './DashboardContentLinkedView.vue'
+import DashboardContentMonitoringTable from './DashboardContentMonitoringTable.vue'
 import DashboardContentNtop from './DashboardContentNtop.vue'
 import DashboardContentSidebarElement from './DashboardContentSidebarElement.vue'
 import DashboardContentStaticText from './DashboardContentStaticText.vue'
@@ -106,6 +107,8 @@ function contentToComponent(content: WidgetContent): Component {
       return DashboardContentSiteOverview
     case contentType === 'alert_overview':
       return DashboardContentAlertOverview
+    case contentType === 'monitoring_table':
+      return DashboardContentMonitoringTable
     case NTOP_TYPES.includes(contentType):
       return DashboardContentNtop
     default:

@@ -22,6 +22,12 @@ describe('widgetTypeToSelectorMatcher', () => {
 
     expect(wizardKey).toBe('link_custom_graph')
   })
+
+  it('has no wizard for a monitoring table widget', () => {
+    const wizardKey = widgetTypeToSelectorMatcher('monitoring_table')
+
+    expect(wizardKey).toBeNull()
+  })
 })
 
 describe('wizardSlideInSize', () => {

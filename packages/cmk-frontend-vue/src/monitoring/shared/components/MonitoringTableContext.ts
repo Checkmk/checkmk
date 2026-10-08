@@ -3,9 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { RowData, Updater } from '@tanstack/vue-table'
+import type { RowData, SortingState, Updater, VisibilityState } from '@tanstack/vue-table'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import type { ComputedRef, InjectionKey } from 'vue'
+import type { ComputedRef, InjectionKey, Ref } from 'vue'
 
 import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 
@@ -67,6 +67,15 @@ export type CellBreakpoints = Readonly<Record<string, BreakpointValue>>
 
 export const MONITORING_SERVICE: InjectionKey<MonitoringService<unknown>> =
   Symbol('MonitoringService')
+
+export interface MonitoringTableState {
+  readonly sortState: Ref<SortingState>
+  readonly columnVisibility: Ref<VisibilityState>
+  updateSort(sortState: SortingState): void
+}
+
+export const MONITORING_TABLE_STATE: InjectionKey<MonitoringTableState> =
+  Symbol('MonitoringTableState')
 
 /** The width, per column id, that each `fitHeader` column needs to show its label in full. */
 export type HeaderFitWidths = Record<string, number>

@@ -8,7 +8,7 @@ import type { WidgetContentType } from '@/dashboard/types/widget.ts'
 
 export function widgetTypeToSelectorMatcher(
   widgetContentType: WidgetContentType
-): DashboardWidgetWorkflowKey {
+): DashboardWidgetWorkflowKey | null {
   switch (widgetContentType) {
     case 'combined_graph':
     case 'performance_graph':
@@ -76,6 +76,10 @@ export function widgetTypeToSelectorMatcher(
     case 'network_flow_kpi_stat_card':
     case 'network_flow_trend_chart': {
       return 'network_flow'
+    }
+
+    case 'monitoring_table': {
+      return null
     }
 
     default: {

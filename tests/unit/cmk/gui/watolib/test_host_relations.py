@@ -33,8 +33,11 @@ from cmk.gui.utils.host_relations import (
     reverse_direction,
 )
 from cmk.gui.watolib.host_relations import (
+    BothPrimaryRelation,
+    DroppedRelation,
     host_relations_form_spec,
     MAX_LISTED_RELATED_HOSTS,
+    PrimaryMissingRelation,
     RelatedHost,
     relation_conflicts,
     RelationConflict,
@@ -246,7 +249,7 @@ def test_a_stored_board_half_materializes_on_both_sides() -> None:
 
 def test_an_os_half_alone_is_not_materialized(caplog: pytest.LogCaptureFixture) -> None:
     """The board's half is the primary one; without it the OS host only holds a stale copy."""
-    with caplog.at_level(logging.DEBUG, logger="cmk.web.host_relations"):
+    with caplog.at_level(logging.WARNING, logger="cmk.web.host_relations"):
         resolved = resolve_all_relations(
             fake_hosts(
                 srv=[{"kind": "management", "direction": "child", "host": "board"}], board=None
@@ -254,7 +257,27 @@ def test_an_os_half_alone_is_not_materialized(caplog: pytest.LogCaptureFixture) 
         )
 
     assert resolved == {}
+    assert [record.levelno for record in caplog.records] == [logging.WARNING]
     assert "'board' does not store it" in caplog.text
+
+
+def test_an_os_half_alone_is_reported_to_the_sites_of_both_hosts() -> None:
+    """Setup shows the relation on the OS host, so its absence in the monitoring needs telling."""
+    all_hosts = {
+        HostName("srv"): FakeHost(
+            "srv", [{"kind": "management", "direction": "child", "host": "board"}], site="site_a"
+        ),
+        HostName("board"): FakeHost("board", None, site="site_b"),
+    }
+    dropped: list[DroppedRelation] = []
+
+    resolve_all_relations(all_hosts, on_dropped=dropped.append)
+
+    assert dropped == [
+        PrimaryMissingRelation(
+            reason="primary_missing", hosts=["srv", "board"], sites=["site_a", "site_b"]
+        )
+    ]
 
 
 def test_resolve_all_relations_carries_the_site_of_the_counterpart() -> None:
@@ -311,6 +334,18 @@ def test_a_link_stored_twice_on_one_host_is_one_relation() -> None:
     ]
 
 
+def test_an_os_half_of_a_board_that_cannot_be_read_is_only_reported_as_unreadable() -> None:
+    """Adding the relation on the board would not help; its value needs fixing first."""
+    all_hosts = fake_hosts(
+        srv=[{"kind": "management", "direction": "child", "host": "board"}], board="not a list"
+    )
+    dropped: list[DroppedRelation] = []
+
+    resolve_all_relations(all_hosts, on_dropped=dropped.append)
+
+    assert [entry["reason"] for entry in dropped] == ["unreadable"]
+
+
 def test_two_hosts_both_storing_the_board_half_are_both_dropped() -> None:
     """Neither half is more right than the other, and showing both would make each host the
     board of the other. The next save of either host settles the pair."""
@@ -336,6 +371,42 @@ def test_two_hosts_both_storing_the_board_half_are_logged_as_a_warning_once(
     assert [record.levelno for record in caplog.records] == [logging.WARNING]
     assert "'board'" in caplog.text
     assert "'os1'" in caplog.text
+
+
+def test_two_hosts_both_storing_the_board_half_are_reported_to_both_sites() -> None:
+    """The log alone reaches no user: the activation shows the message where the hosts are."""
+    all_hosts = {
+        HostName("board"): FakeHost(
+            "board", [{"kind": "management", "direction": "parent", "host": "os1"}], site="site_a"
+        ),
+        HostName("os1"): FakeHost(
+            "os1", [{"kind": "management", "direction": "parent", "host": "board"}], site="site_b"
+        ),
+    }
+    dropped: list[DroppedRelation] = []
+
+    resolve_all_relations(all_hosts, on_dropped=dropped.append)
+
+    assert dropped == [
+        BothPrimaryRelation(
+            reason="both_primary",
+            hosts=["board", "os1"],
+            sites=["site_a", "site_b"],
+            kind="management",
+            direction="parent",
+        )
+    ]
+
+
+def test_a_malformed_value_is_reported_to_the_site_of_its_host() -> None:
+    all_hosts = {HostName("broken"): FakeHost("broken", "not a list", site="site_a")}
+    dropped: list[DroppedRelation] = []
+
+    resolve_all_relations(all_hosts, on_dropped=dropped.append)
+
+    assert [(entry["reason"], entry["hosts"], entry["sites"]) for entry in dropped] == [
+        ("unreadable", ["broken"], ["site_a"])
+    ]
 
 
 @pytest.mark.parametrize(

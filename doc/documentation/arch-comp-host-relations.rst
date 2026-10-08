@@ -337,8 +337,9 @@ Setup:
   ``bulk_update_host.py``: The bulk endpoints write it through
   ``RelationMirrorBatch``.
 * ``cmk/gui/watolib/host_relations_export.py``: Writes the resolved relations
-  for the monitoring core. ``cmk/gui/watolib/activate_changes.py`` calls it in
-  ``_pre_activate_changes``.
+  for the monitoring core, and what was dropped for the activation to report.
+  ``cmk/gui/watolib/activate_changes.py`` calls it in ``_pre_activate_changes``
+  and adds the dropped relations to the site results in ``_do_activate``.
 * ``cmk/gui/watolib/host_relation_detection.py`` and
   ``cmk/gui/watolib/host_relation_scan.py``: The relation detection and its
   background jobs. The module docstrings explain the heuristics.
@@ -535,10 +536,11 @@ Before the configuration snapshots are created, the activation calls
    the reverse relation to the related host:
 
    * If only the board stores its half, both hosts still get the relation.
-   * If only the OS host stores its half, neither host gets it (logged on debug
-     level).
+   * If only the OS host stores its half, neither host gets it, and a warning
+     is logged and reported (see `Activation warnings`_), unless the board's
+     value cannot be read, which is reported instead.
    * If both hosts store the board's half about each other, neither gets it, and
-     a warning is logged.
+     a warning is logged and reported (see `Activation warnings`_).
 
    Saving the board settles the first case, saving either host the last. The
    second needs the relation stored on the board or removed from the OS host.
@@ -554,6 +556,25 @@ exported relations.
 ``relations.mk`` is synced to all sites, except in ``ultimatemt`` (see
 `Multi-tenancy (ultimatemt)`_). Each core only sets the variable for the hosts
 it monitors.
+
+Activation warnings
+-------------------
+
+What the export dropped with a warning - a malformed ``relations`` value, two
+hosts both storing the board's half, an OS host's half without the board's -
+is written to
+``var/check_mk/wato/host_relations_dropped.mk`` on the central site, as data
+with the hosts concerned and their sites. The file is not replicated: the
+central site builds the result of every site's activation, and adds a
+translated warning for each entry naming that site once the site has
+activated. The
+file is rewritten by every export, so the warning stays until someone settles
+the pair in Setup and disappears with the next activation; a failed export
+keeps the last one. An entry this version cannot word, e.g. one left by
+another version, is skipped. It only shows when a site with one of the hosts is
+activated. In ``ultimatemt``, an entry whose hosts belong to different customers
+is not written, as the warning names both hosts; it stays in the log of the
+central site.
 
 Monitoring
 ----------
@@ -691,15 +712,14 @@ Operation
 =========
 
 * **Logging:** The logger ``cmk.web.host_relations`` logs a failed export as an
-  error and a malformed ``relations`` attribute that the export skips as a
-  warning, and so are two hosts that both store the board's half about each
-  other. On "Debug" it also logs every relation that was dropped during the
-  export, and why, and a summary of each export. A related host that keeps its
-  half after a deletion because it is locked, or whose half a save could not
-  settle because it is locked, not writable or holds a value that cannot be
-  read, is logged as a warning on the general ``cmk.web`` logger, not on the
-  relations logger. A missing or hidden related host of a pair the save does
-  not change is not logged.
+  error, and as a warning everything the activation reports (see `Activation
+  warnings`_). On "Debug" it also logs every relation that was
+  dropped during the export, and why, and a summary of each export. A related
+  host that keeps its half after a deletion because it is locked, or whose half
+  a save could not settle because it is locked, not writable or holds a value
+  that cannot be read, is logged as a warning on the general ``cmk.web``
+  logger, not on the relations logger. A missing or hidden related host of a
+  pair the save does not change is not logged.
 * **Locking:** The store run holds the configuration lock for its whole run,
   like a bulk import of hosts. Storing relations for a large fleet blocks other
   Setup changes meanwhile: measured were 11 seconds for 2,500 pairs (about 4 ms
@@ -834,10 +854,10 @@ Architecture decisions
   what a later blanket cleanup would reuse. *Direction:* store only the
   board's half. The OS host would read its relations from a lookup of all
   boards, kept like the folder lookup cache. The board's half being primary
-  already makes the OS host's half a copy that no activation reads, so dropping
-  it later changes Setup only. *Alternative:* store both halves without a
-  primary one: a contradiction could then not be resolved without a decision of
-  the user.
+  already makes the OS host's half a copy the activation only reads to warn
+  about it, so dropping it later changes Setup and that warning only.
+  *Alternative:* store both halves without a primary one: a contradiction could
+  then not be resolved without a decision of the user.
 * **A write states the whole pair, the last writer wins.** The mirror replaces
   what the related host stores about the saved host instead of applying a diff.
   A flipped direction is then one write, and two concurrent edits of the same
@@ -970,6 +990,9 @@ Ordered by priority.
    The detection stores a relation whose board half is missing like a new one.
    One that both hosts store as the board's half it reports as related in
    another way and leaves alone; saving either host settles it.
+   The activation warns about an OS host's half alone and two board halves,
+   but only when a site with one of the hosts is activated; on a site without
+   pending changes such a pair goes unnoticed until then.
 5. If the export fails, the activation still succeeds (outside of debug mode)
    and the monitoring GUI shows outdated relations. The reason can only be found
    in ``web.log``.

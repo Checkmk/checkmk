@@ -27,7 +27,7 @@ from collections import defaultdict
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
-from typing import Literal, Protocol
+from typing import Literal, Protocol, TypedDict, TypeGuard
 
 from cmk.ccc.hostaddress import HostName, HostNameValidationError
 from cmk.ccc.site import SiteId
@@ -392,7 +392,96 @@ def relations_or_user_error(raw: object, *, owner: HostName | None = None) -> Re
         raise MKUserError(None, message) from exc
 
 
-def resolve_all_relations(all_hosts: Mapping[HostName, RelatedHost]) -> ResolvedRelations:
+class UnreadableRelations(TypedDict):
+    """The ``relations`` value of the one host in ``hosts`` cannot be read."""
+
+    reason: Literal["unreadable"]
+    hosts: list[str]
+    sites: list[str]
+    error: str
+
+
+class BothPrimaryRelation(TypedDict):
+    """The two ``hosts`` both store themselves at the ``direction`` end of ``kind``."""
+
+    reason: Literal["both_primary"]
+    hosts: list[str]
+    sites: list[str]
+    kind: str
+    direction: RelationDirection
+
+
+class PrimaryMissingRelation(TypedDict):
+    """The first of ``hosts`` stores a relation the second does not."""
+
+    reason: Literal["primary_missing"]
+    hosts: list[str]
+    sites: list[str]
+
+
+#: What the resolution left out and the user should hear about, not just the log. ``sites`` are
+#: the sites of the hosts: the activation reports it there. Kept as data rather than as the log
+#: line, so that the activation words it translated.
+DroppedRelation = UnreadableRelations | BothPrimaryRelation | PrimaryMissingRelation
+
+
+def _is_str_list(value: object, length: int | None = None) -> TypeGuard[list[str]]:
+    return (
+        isinstance(value, list)
+        and (length is None or len(value) == length)
+        and all(isinstance(item, str) for item in value)
+    )
+
+
+def parse_dropped_relation(raw: object) -> DroppedRelation | None:
+    """``None`` for an entry this version cannot word, e.g. one written by another version."""
+    if not isinstance(raw, dict):
+        return None
+    hosts, sites = raw.get("hosts"), raw.get("sites")
+    if not _is_str_list(sites):
+        return None
+    match raw.get("reason"):
+        case "unreadable" if _is_str_list(hosts, 1) and isinstance(error := raw.get("error"), str):
+            return UnreadableRelations(reason="unreadable", hosts=hosts, sites=sites, error=error)
+        case "primary_missing" if _is_str_list(hosts, 2):
+            return PrimaryMissingRelation(reason="primary_missing", hosts=hosts, sites=sites)
+        case "both_primary" if _is_str_list(hosts, 2) and isinstance(kind := raw.get("kind"), str):
+            if (known := RELATION_KINDS.get(kind)) is None:
+                return None
+            for direction in known.directions():
+                if direction == raw.get("direction"):
+                    return BothPrimaryRelation(
+                        reason="both_primary",
+                        hosts=hosts,
+                        sites=sites,
+                        kind=kind,
+                        direction=direction,
+                    )
+    return None
+
+
+def dropped_relation_message(dropped: DroppedRelation) -> str:
+    if dropped["reason"] == "unreadable":
+        return _("The relations of host '%(host)s' cannot be read and are left out: %(error)s") % {
+            "host": dropped["hosts"][0],
+            "error": dropped["error"],
+        }
+    if dropped["reason"] == "primary_missing":
+        return _(
+            "'%(host)s' stores a relation to '%(other)s' that '%(other)s' does not store, so the "
+            "monitoring does not show it. Add it on '%(other)s', or remove it from '%(host)s'."
+        ) % {"host": dropped["hosts"][0], "other": dropped["hosts"][1]}
+    end = RELATION_KINDS[dropped["kind"]].end(dropped["direction"]).noun
+    return _(
+        "'%(host)s' and '%(other)s' both store themselves as '%(end)s' of the other, so the "
+        "monitoring shows neither relation. Save one of the two hosts in Setup to settle it."
+    ) % {"host": dropped["hosts"][0], "other": dropped["hosts"][1], "end": end}
+
+
+def resolve_all_relations(
+    all_hosts: Mapping[HostName, RelatedHost],
+    on_dropped: Callable[[DroppedRelation], None] = lambda _dropped: None,
+) -> ResolvedRelations:
     """Resolve every host's relations (both directions) into concrete host names.
 
     Both halves of a relation are stored, but only the primary one is read (see
@@ -401,6 +490,8 @@ def resolve_all_relations(all_hosts: Mapping[HostName, RelatedHost]) -> Resolved
     again brings it back. Two primary halves that contradict each other - both hosts claiming to be
     the board - are both dropped with a warning: neither is more right than the other, and
     showing both would make each host the board of the other.
+
+    What is dropped with a warning is also handed to ``on_dropped``.
 
     Reads each host's *own* attributes, not its effective ones. That is deliberate - a
     folder-level value would mean every host in the folder pointing at the same board - and it is
@@ -423,6 +514,9 @@ def resolve_all_relations(all_hosts: Mapping[HostName, RelatedHost]) -> Resolved
         if (site := sites.get(name := host.name())) is None:
             site = sites[name] = str(host.site_id())
         return site
+
+    def _sites_of(*hosts: RelatedHost) -> list[str]:
+        return list(dict.fromkeys(_site_of(host) for host in hosts))
 
     def _drop_reason(owner: HostName, other: HostName) -> str | None:
         if owner == other:
@@ -455,6 +549,7 @@ def resolve_all_relations(all_hosts: Mapping[HostName, RelatedHost]) -> Resolved
 
     primary: dict[tuple[str, HostName, HostName], RelationDirection] = {}
     derived: list[tuple[HostName, RelationLink]] = []
+    unreadable: set[HostName] = set()
     for host_name, host in all_hosts.items():
         try:
             parsed = parse_relations_value(
@@ -468,6 +563,12 @@ def resolve_all_relations(all_hosts: Mapping[HostName, RelatedHost]) -> Resolved
                 "Skipping malformed 'relations' attribute of host %(host)r: %(error)s",
                 {"host": host_name, "error": exc},
             )
+            on_dropped(
+                UnreadableRelations(
+                    reason="unreadable", hosts=[host_name], sites=_sites_of(host), error=str(exc)
+                )
+            )
+            unreadable.add(host_name)
             continue
         for link in known_relations(parsed, on_unknown=partial(_unknown_kind, host_name)):
             if (reason := _drop_reason(host_name, link["host"])) is not None:
@@ -489,9 +590,14 @@ def resolve_all_relations(all_hosts: Mapping[HostName, RelatedHost]) -> Resolved
 
     for owner, link in derived:
         if (link["kind"], link["host"], owner) not in primary:
-            _LOGGER.debug(
+            # Already reported as unreadable, and adding the relation there would not help.
+            if link["host"] in unreadable:
+                continue
+            # Across customers this is not reported at activation, so the log is all that is
+            # left of it.
+            _LOGGER.warning(
                 "Relation %(owner)r -> %(other)r (%(kind)s/%(direction)s) dropped: %(other)r"
-                " does not store it.",
+                " does not store it. Add it on %(other)r or remove it from %(owner)r.",
                 {
                     "owner": owner,
                     "other": link["host"],
@@ -499,16 +605,32 @@ def resolve_all_relations(all_hosts: Mapping[HostName, RelatedHost]) -> Resolved
                     "direction": link["direction"],
                 },
             )
+            on_dropped(
+                PrimaryMissingRelation(
+                    reason="primary_missing",
+                    hosts=[owner, link["host"]],
+                    sites=_sites_of(all_hosts[owner], all_hosts[link["host"]]),
+                )
+            )
 
     for (kind_id, owner, other), direction in primary.items():
         counter = primary.get((kind_id, other, owner))
         if counter is not None and counter != reverse_direction(direction):
-            # Logged once, from the host that sorts first.
+            # Reported once, from the host that sorts first.
             if owner < other:
                 _LOGGER.warning(
                     "Relation %(kind)r between %(host)r and %(other)r dropped: both hosts store"
                     " it as their %(direction)r end. Save one of the two hosts to settle it.",
                     {"kind": kind_id, "host": owner, "other": other, "direction": direction},
+                )
+                on_dropped(
+                    BothPrimaryRelation(
+                        reason="both_primary",
+                        hosts=[owner, other],
+                        sites=_sites_of(all_hosts[owner], all_hosts[other]),
+                        kind=kind_id,
+                        direction=direction,
+                    )
                 )
             continue
         _add(owner, kind_id, direction, all_hosts[other])

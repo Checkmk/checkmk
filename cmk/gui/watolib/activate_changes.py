@@ -69,6 +69,7 @@ from cmk.gui.background_job.job import (
 )
 from cmk.gui.config import active_config, Config
 from cmk.gui.crash_handler import crash_dump_message, handle_exception_as_gui_crash_report
+from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
 from cmk.gui.http import Request
 from cmk.gui.http import request as _request
@@ -137,7 +138,12 @@ from cmk.gui.watolib.config_sync import (
     SnapshotSettings,
 )
 from cmk.gui.watolib.global_settings import load_configuration_settings
-from cmk.gui.watolib.host_relations_export import export_host_relations, relations_export_path
+from cmk.gui.watolib.host_relations_export import (
+    add_dropped_relations,
+    export_host_relations,
+    relations_dropped_path,
+    relations_export_path,
+)
 from cmk.gui.watolib.host_relations_export import LOGGER as relations_logger
 from cmk.gui.watolib.hosts_and_folders import (
     ACTIVATION_FOLDER_TREE,
@@ -1118,6 +1124,9 @@ def _do_activate(
         debug=debug,
         is_remote_site=is_remote_site,
     )
+    # Added here rather than by the site: only the central site's export knows what it dropped.
+    if not is_distributed_setup_remote_site(SiteConfigurations(tree.config.sites)):
+        add_dropped_relations(configuration_warnings, site_id, relations_dropped_path())
 
     duration = time.time() - start
     update_activation_time(site_id, ACTIVATION_TIME_RESTART, duration)
@@ -2103,7 +2112,14 @@ class ActivateChangesManager:
         is_central_site = not is_distributed_setup_remote_site(all_site_configs)
         if is_central_site:
             try:
-                export_host_relations(all_hosts(), relations_export_path())
+                export_host_relations(
+                    all_hosts(),
+                    relations_export_path(),
+                    relations_dropped_path(),
+                    customer_of_site=lambda site: customer_api().get_customer_id(
+                        all_site_configs.get(SiteId(site)) or {}
+                    ),
+                )
             except Exception:
                 if debug:
                     raise

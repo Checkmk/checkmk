@@ -36,6 +36,7 @@ JAVASCRIPT = _BY_NAME["javascript"]
         pytest.param("agents/wnx/x.ps1", b"", POWERSHELL, id="powershell in msbuild tree"),
         pytest.param("a/script.ps1", b"", POWERSHELL, id="powershell"),
         pytest.param("a/main.rs", b"", RUST, id="rust"),
+        pytest.param("packages/foo/src/sub/version.rs", b"", RUST, id="nested version.rs"),
         pytest.param("a/x.h", b"", C_CPP, id="c header"),
         pytest.param("a/x.cjs", b"", JAVASCRIPT, id="commonjs"),
     ],
@@ -54,6 +55,8 @@ def test_source_file_gets_its_class(path: str, first_line: bytes, expected: File
         pytest.param("a/run.pl", b"#!/usr/bin/perl\n", id="perl shebang"),
         pytest.param("doc/treasures/x.sh", b"", id="excluded tree"),
         pytest.param("agents/wnx/x.cc", b"", id="c++ in msbuild tree"),
+        pytest.param("packages/foo/build.rs", b"", id="cargo build script"),
+        pytest.param("packages/foo/src/version.rs", b"", id="cargo-only version file"),
     ],
 )
 def test_other_files_are_ignored(path: str, first_line: bytes) -> None:

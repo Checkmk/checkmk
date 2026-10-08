@@ -79,6 +79,9 @@ A `filegroup` in `srcs` counts with its own `srcs`.
 `bazel query` follows every `select()` branch, so the result covers all editions.
 `doc/treasures/` is excluded. For C and C++ files, `agents/wnx/` (MSBuild) is excluded as well.
 Files with the attribute `rules-lint-ignored=true` in a `.gitattributes` file are excluded, for example vendored files that are kept identical to upstream.
+For Rust, build scripts (`build.rs`) and the `packages/*/src/version.rs` files are excluded.
+Clippy never lints build scripts, whether Cargo or `cargo_build_script` runs them.
+The `version.rs` files exist only for Cargo, because Bazel sets the version with a build flag.
 
 For C and C++, the check guarantees less than for the other classes.
 A source file in `cc_test` and a header in `hdrs` count as covered, but clang-tidy lints neither of them today.

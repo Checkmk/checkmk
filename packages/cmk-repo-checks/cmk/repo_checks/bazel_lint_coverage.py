@@ -66,7 +66,7 @@ class FileClass:
     covering_query: str
     # Shown next to an offender: where the file has to go.
     target_hint: str
-    excluded_prefixes: tuple[str, ...] = ()
+    excluded: re.Pattern[str] | None = None
 
 
 def _linted_by_rule_kinds(
@@ -74,14 +74,14 @@ def _linted_by_rule_kinds(
     extensions: tuple[str, ...],
     kinds: Sequence[str],
     skip_tags: Sequence[str] = (),
-    excluded_prefixes: tuple[str, ...] = (),
+    excluded: re.Pattern[str] | None = None,
 ) -> FileClass:
     return FileClass(
         name=name,
         extensions=extensions,
         covering_query=_linted_sources(_rules_of_kind(*kinds), skip_tags),
         target_hint=f"{', '.join(kinds[:-1])} or {kinds[-1]}",
-        excluded_prefixes=excluded_prefixes,
+        excluded=excluded,
     )
 
 
@@ -111,13 +111,17 @@ FILE_CLASSES: Final = (
         (".rs",),
         ("rust_binary", "rust_library", "rust_shared_library", "rust_test"),
         skip_tags=("noclippy",),
+        # clippy never lints build scripts, whether Cargo or
+        # cargo_build_script runs them. The version.rs files exist only for
+        # Cargo, Bazel sets the version with a build flag.
+        excluded=re.compile(r"(^|/)build\.rs$|^packages/[^/]+/src/version\.rs$"),
     ),
     _linted_by_rule_kinds(
         "c/c++",
         (".c", ".cc", ".h"),
         ("cc_binary", "cc_library", "cc_test"),
         # MSBuild builds the Windows agent.
-        excluded_prefixes=("agents/wnx/",),
+        excluded=re.compile(r"^agents/wnx/"),
     ),
     FileClass(
         # Most .js files outside an eslint rule kind are vendored bundles, which
@@ -144,7 +148,7 @@ def classify(path: str, first_line: bytes) -> FileClass | None:
     file_class = next((fc for fc in FILE_CLASSES if path.endswith(fc.extensions)), None)
     if file_class is None and SHELL_SHEBANG.match(first_line):
         file_class = SHELL
-    if file_class is None or path.startswith(file_class.excluded_prefixes):
+    if file_class is None or (file_class.excluded and file_class.excluded.search(path)):
         return None
     return file_class
 

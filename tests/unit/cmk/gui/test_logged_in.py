@@ -509,3 +509,26 @@ def test_user_context_calls_permission_checked(with_user: tuple[UserId, str]) ->
         global_user.may("any_permission")
 
     assert checked["any_permission"] is True
+
+
+@pytest.mark.parametrize(
+    "permissions, expected",
+    [
+        pytest.param({"wato.rulesets"}, True, id="rulesets"),
+        pytest.param(
+            {"wato.services", "wato.service_discovery_to_ignored"},
+            True,
+            id="services_and_discovery_to_ignored",
+        ),
+        pytest.param({"wato.services"}, False, id="services_only"),
+        pytest.param({"wato.service_discovery_to_ignored"}, False, id="discovery_to_ignored_only"),
+        pytest.param(set(), False, id="none"),
+    ],
+)
+def test_may_edit_ignored_services_ruleset(
+    with_user: tuple[UserId, str], permissions: set[str], expected: bool
+) -> None:
+    with UserContext(
+        with_user[0], UserPermissions({}, {}, {}, []), explicit_permissions=permissions
+    ):
+        assert may_edit_ruleset("ignored_services") is expected

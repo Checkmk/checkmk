@@ -47,7 +47,7 @@ def _omd_socket_prefill() -> InputHint[str] | DefaultValue[str]:
     if omd_root:
         # /tmp/run/live is the OMD Livestatus Unix-domain socket, not a
         # temp-file path — bandit B108 is a false positive here.
-        return DefaultValue(f"{omd_root}/tmp/run/live")  # nosec B108
+        return DefaultValue(f"{omd_root}/tmp/run/live")  # nosec B108 # BNS:7a2427
     return InputHint("/omd/sites/<site>/tmp/run/live")
 
 

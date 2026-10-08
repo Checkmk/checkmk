@@ -187,6 +187,16 @@ def relation_key(link: RelationLink) -> tuple[str, RelationDirection, HostName]:
     return link["kind"], link["direction"], link["host"]
 
 
+def same_links(links: Sequence[RelationLink], other: Sequence[RelationLink]) -> bool:
+    """Whether the two say the same: a duplicated row is a difference, the order is not."""
+    return sorted(map(relation_key, links)) == sorted(map(relation_key, other))
+
+
+def adds_links(before: Sequence[RelationLink], after: Sequence[RelationLink]) -> bool:
+    """Whether ``after`` has a link ``before`` lacks; dropping or re-stating one does not count."""
+    return not {*map(relation_key, after)} <= {*map(relation_key, before)}
+
+
 #: The custom host variable Setup writes, via a generated ``explicit_host_conf`` file.
 RELATIONS_MACRO = "_CMK_RELATIONS"
 

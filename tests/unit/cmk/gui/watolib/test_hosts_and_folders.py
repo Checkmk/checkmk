@@ -53,6 +53,12 @@ from cmk.gui.watolib import hosts_and_folders
 from cmk.gui.watolib.audit_log import AuditLogStore, make_audit_log_change_hook
 from cmk.gui.watolib.builtin_attributes import validate_host_parents, validate_host_relations
 from cmk.gui.watolib.config_domain_name import CORE as CORE_DOMAIN
+from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle
+from cmk.gui.watolib.configuration_bundles import (
+    create_config_bundle,
+    CreateBundleEntities,
+    CreateHost,
+)
 from cmk.gui.watolib.host_attributes import HostAttributes, HostContactGroupSpec
 from cmk.gui.watolib.host_match_item_generator import MatchItemGeneratorHosts
 from cmk.gui.watolib.hosts_and_folders import (
@@ -76,6 +82,7 @@ from cmk.gui.watolib.pending_changes import (
 )
 from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
+from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.host_storage import PickleHostsStorage
 from cmk.utils.redis import disable_redis
 from cmk.web.utils.urls import HTTPVariable
@@ -2300,6 +2307,27 @@ def test_mirror_batch_refuses_a_counterpart_the_user_may_not_write_before_touchi
         )
 
 
+def test_mirror_batch_refuses_a_relation_on_a_host_locked_by_quick_setup(
+    tree: FolderTree,
+) -> None:
+    """Refused while planning, like apply_edit() refuses it, so a bulk caller fails it alone."""
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    board = _host_locked_by_quick_setup(root, "board")
+
+    with pytest.raises(MKUserError, match="'board' is locked by Quick setup"):
+        RelationMirrorBatch(root, acting_user=_SUPERUSER).need_edit(
+            board,
+            HostAttributes(
+                {
+                    "relations": [
+                        {"kind": "management", "direction": "parent", "host": HostName("os1")}
+                    ]
+                }
+            ),
+        )
+
+
 def _refuse_editing_board(
     _folder_site_id: SiteId, host_name: HostName, _attributes: object, _sites: object
 ) -> None:
@@ -2936,6 +2964,140 @@ def test_set_relations_about_needs_write_permission_on_the_counterpart(tree: Fol
 
     with pytest.raises(MKAuthException):
         board.set_relations_about(HostName("os1"), (), acting_user=LoggedInNobody())
+
+
+def _host_locked_by_quick_setup(
+    folder: Folder, name: str, attributes: HostAttributes | None = None
+) -> hosts_and_folders.Host:
+    create_config_bundle(
+        folder.tree,
+        BundleId("qs-bundle"),
+        ConfigBundle(
+            title="",
+            comment="",
+            owned_by=None,
+            group="special_agents:aws",
+            program_id=PROGRAM_ID_QUICK_SETUP,
+        ),
+        CreateBundleEntities(
+            hosts=[CreateHost(folder=folder, name=HostName(name), attributes=attributes or {})]
+        ),
+        acting_user=_SUPERUSER,
+        user_permissions=UserPermissions({}, {}, {}, []),
+        pprint_value=False,
+        debug=False,
+        pending_changes=_noop_pending_changes(),
+    )
+    return folder.hosts()[HostName(name)]
+
+
+def test_edit_refuses_a_relation_on_a_host_locked_by_quick_setup(tree: FolderTree) -> None:
+    """Like the other half is refused onto such a host: Quick setup re-creates it on every edit
+    of its bundle, which would drop the relation without a trace."""
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    board = _host_locked_by_quick_setup(root, "board")
+
+    with pytest.raises(MKUserError, match="'board' is locked by Quick setup"):
+        _edit_relations(
+            board, [{"kind": "management", "direction": "parent", "host": HostName("os1")}]
+        )
+
+    assert _relations_of(tree, HostName("os1")) == []
+
+
+def _hosts_mk(folder: Folder) -> Path:
+    return Path(folder.filesystem_path()) / "hosts.mk"
+
+
+def _pair_with_the_board_locked_by_quick_setup(
+    tree: FolderTree,
+) -> tuple[hosts_and_folders.Host, hosts_and_folders.Host]:
+    """Both halves stored and the board locked, as a site from before the lock holds them.
+
+    Written straight into the folder: Quick setup's own host creation bypasses the mirror and
+    passes no relations, and the lock refuses the relation on any other way in. Saving reloads
+    the folder's hosts, so the instances handed out are the ones the folder holds afterwards;
+    creating the bundle regenerates the tree's root folder, so ask the hosts for theirs.
+    """
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    board = _host_locked_by_quick_setup(root, "board")
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("os1")}
+    ]
+    os1.attributes["relations"] = [
+        {"kind": "management", "direction": "child", "host": HostName("board")}
+    ]
+    root.save_hosts(pprint_value=False, acting_user=_SUPERUSER)
+    return root.hosts()[HostName("os1")], root.hosts()[HostName("board")]
+
+
+def test_edit_drops_a_relation_from_a_host_locked_by_quick_setup(tree: FolderTree) -> None:
+    """Dropping one stores nothing on the host, so Quick setup has nothing to lose."""
+    _os1, board = _pair_with_the_board_locked_by_quick_setup(tree)
+
+    _edit_relations(board, [])
+
+    assert "relations" not in board.attributes
+    assert "relations" not in board.folder().hosts()[HostName("os1")].attributes
+    assert "'management'" not in _hosts_mk(board.folder()).read_text()
+
+
+def test_edit_drops_the_other_half_from_a_host_locked_by_quick_setup(tree: FolderTree) -> None:
+    os1, _board = _pair_with_the_board_locked_by_quick_setup(tree)
+
+    _edit_relations(os1, [])
+
+    assert "relations" not in os1.folder().hosts()[HostName("board")].attributes
+    assert "'management'" not in _hosts_mk(os1.folder()).read_text()
+
+
+def test_mirror_batch_lets_a_host_locked_by_quick_setup_drop_a_relation(
+    tree: FolderTree,
+) -> None:
+    _os1, board = _pair_with_the_board_locked_by_quick_setup(tree)
+
+    RelationMirrorBatch(board.folder(), acting_user=_SUPERUSER).need_edit(
+        board, HostAttributes({"relations": []})
+    )
+
+
+def test_delete_hosts_removes_the_relation_from_a_counterpart_locked_by_quick_setup(
+    tree: FolderTree, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(hosts_and_folders.Folder, "_delete_host_files", lambda *_a, **_kw: None)
+    _os1, board = _pair_with_the_board_locked_by_quick_setup(tree)
+
+    board.folder().delete_hosts(
+        [HostName("os1")],
+        automation=lambda *_args, **_kwargs: DeleteHostsResult(),
+        pprint_value=False,
+        debug=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+
+    assert "relations" not in board.folder().hosts()[HostName("board")].attributes
+    assert "'management'" not in _hosts_mk(board.folder()).read_text()
+
+
+def test_edit_keeps_saving_a_host_quick_setup_took_over_with_its_relations(
+    tree: FolderTree,
+) -> None:
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    board = _host_locked_by_quick_setup(
+        root,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+
+    _edit_relations(board, board.attributes["relations"], alias="still savable")
+
+    assert board.attributes["alias"] == "still savable"
 
 
 def test_set_relations_about_reports_nothing_when_the_pair_already_says_that(

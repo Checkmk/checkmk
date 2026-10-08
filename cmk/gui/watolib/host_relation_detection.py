@@ -53,7 +53,7 @@ from cmk.gui.utils.host_relations import (
 from cmk.gui.watolib.config_domain_name import CORE as CORE_DOMAIN
 from cmk.gui.watolib.config_domain_name import generate_hosts_to_update_settings
 from cmk.gui.watolib.host_attributes import HostAttributes
-from cmk.gui.watolib.host_relations import relation_choice_name
+from cmk.gui.watolib.host_relations import relation_choice_name, relations_or_user_error
 from cmk.gui.watolib.hosts_and_folders import (
     apply_relation_mirror,
     counterpart_resolver,
@@ -1520,14 +1520,15 @@ def _member_at_end(proposal: GroupProposal, all_hosts: Mapping[HostName, Host]) 
 
 
 def _unwritable(*hosts: Host) -> str | None:
-    """Why no relation can be stored on one of these hosts - asked per host, not per folder.
+    """Why no new relation can be stored on one of these hosts - asked per host, not per folder.
 
     ``Host.set_relations_about()`` refuses such a host as well, so this is what keeps the
     proposal honest rather than what keeps the write safe.
     """
     for host in hosts:
         try:
-            host.writable_relations()
+            host.need_relations_writable()
+            relations_or_user_error(host.attributes.get("relations", []), owner=host.name())
         except MKUserError as exc:
             return str(exc)
     return None

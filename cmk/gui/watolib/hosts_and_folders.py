@@ -84,14 +84,15 @@ from cmk.gui.session_context import get_session_csrf_token
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import CustomHostAttrSpec, SetOnceDict
 from cmk.gui.utils.host_relations import (
+    adds_links,
     is_primary_direction,
     referenced_host_names,
-    relation_key,
     RelationDirection,
     RelationLink,
     relations_or_empty,
     RelationsValue,
     reverse_direction,
+    same_links,
 )
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.automations import (
@@ -1587,7 +1588,7 @@ def _need_relation_mirror(
             dropping=not links,
             visible=visible,
         ):
-            counterpart.writable_relations()
+            counterpart.writable_relations(links)
             counterpart.permissions.need_permission("write", acting_user)
             need_writable_folders([counterpart.folder()], acting_user=acting_user)
             # validate_edit_host does not look at relations, so the stored attributes stand for
@@ -1668,6 +1669,8 @@ class RelationMirrorBatch:
         after = _relations_to_store(host.name(), attributes.get("relations", []), stored)
         site_id = attributes.get("site") or host.folder().site_id()
         # What apply_edit() refuses of the host itself, so a bulk caller can fail it alone.
+        if adds_links(before, after):
+            host.need_relations_writable()
         if site_id != host.site_id():
             _need_links_relatable(site_id, after, self._resolve_host, moving=(host.name(),))
         self._need(host.name(), before, after, site_id=site_id)
@@ -1746,10 +1749,10 @@ def _drop_relations_to(
     makes a user able to delete their own host while its counterpart sits where they may not
     write.
 
-    A lock is still a lock: a counterpart in a locked folder, or one held by Quick setup, keeps
-    its row - in memory as well as on disk - which
-    :func:`cmk.gui.watolib.builtin_attributes.validate_host_relations` reports and the export
-    drops.
+    A lock is still a lock: a counterpart in a locked folder keeps its row - in memory as well
+    as on disk - which :func:`cmk.gui.watolib.builtin_attributes.validate_host_relations` reports
+    and the export drops. One held by Quick setup loses its row like any other: that stores
+    nothing on it.
 
     Returns the counterparts that exist, whether or not their row could be removed: the relation
     is gone from this side either way, so their cores have to be refreshed.
@@ -4686,9 +4689,12 @@ class Host:
             _get_cgconf_from_attributes(attributes)["groups"],
             acting_user,
         )
-        links = _relations_to_store(
-            self.name(), attributes.get("relations", []), self.attributes.get("relations", [])
-        )
+        stored_relations = self.attributes.get("relations", [])
+        links = _relations_to_store(self.name(), attributes.get("relations", []), stored_relations)
+        # Only a new link is refused: a host taken over by Quick setup keeps saving what it
+        # stores, and dropping a relation stores nothing on it.
+        if adds_links(relations_or_empty(stored_relations), links):
+            self.need_relations_writable()
 
         # Normalize the way the mirror is planned from it - an empty list is no attribute at all,
         # not a stored empty one - and leave the caller's dictionary alone while doing so.
@@ -4697,9 +4703,7 @@ class Host:
 
         diff = diff_attributes(self.attributes, self._cluster_nodes, attributes, cluster_nodes)
 
-        counterparts = _relation_counterpart_hosts(
-            folder.tree, self.attributes.get("relations", []), attributes.get("relations", [])
-        )
+        counterparts = _relation_counterpart_hosts(folder.tree, stored_relations, links)
 
         # 2. Actual modification
         stored_site = self.site_id()
@@ -4972,22 +4976,30 @@ class Host:
         self.folder().save_hosts(pprint_value=pprint_value, acting_user=acting_user)
         return True
 
-    def writable_relations(self) -> RelationsValue:
-        """This host's links, refusing if no relation may be written onto it.
+    def need_relations_writable(self) -> None:
+        """Refuse if no relation may be stored on this host.
 
-        A value that cannot be read is refused too: read as no links at all, it would be
-        replaced by the one link written, and every other counterpart of this host would keep a
-        half this host no longer stores.
+        Quick setup re-creates the host on every edit of its bundle, which would drop the
+        relation without a trace - from the related host as well, see
+        :func:`_drop_relations_to`.
         """
         if is_locked_by_config_bundle(self.locked_by()):
             raise MKUserError(
                 None,
-                _(
-                    "'%(host)s' is locked by Quick setup, so the other half of the relation "
-                    "cannot be stored on it."
-                )
+                _("'%(host)s' is locked by Quick setup, so no relation can be stored on it.")
                 % {"host": self.name()},
             )
+
+    def writable_relations(self, links: Sequence[RelationLink]) -> RelationsValue:
+        """This host's links, refusing if ``links`` may not be written onto it.
+
+        Dropping a half is not refused: it stores nothing on this host, so Quick setup has
+        nothing to lose. A value that cannot be read is refused: read as no links at all, it
+        would be replaced by the one link written, and every other counterpart of this host would
+        keep a half this host no longer stores.
+        """
+        if adds_links(relations_or_empty(self.attributes.get("relations", [])), links):
+            self.need_relations_writable()
         return relations_or_user_error(self.attributes.get("relations", []), owner=self.name())
 
     def stores_relations_about(self, other: HostName, links: Sequence[RelationLink]) -> bool:
@@ -4995,16 +5007,13 @@ class Host:
 
         Asked before mutating anything, so that a save which changes nothing here needs nothing
         from this host - not its lock, not its folder.
-
-        Compared as sorted keys rather than as sets: a duplicated row is a difference too, and
-        the order the rows are stored in is not.
         """
         about_other = [
             link
             for link in relations_or_empty(self.attributes.get("relations", []))
             if link["host"] == other
         ]
-        return sorted(map(relation_key, about_other)) == sorted(map(relation_key, links))
+        return same_links(about_other, links)
 
     def set_relations_about(
         self, other: HostName, links: Sequence[RelationLink], *, acting_user: LoggedInUser
@@ -5022,9 +5031,9 @@ class Host:
         if self.stores_relations_about(other, links):
             return None
 
-        # Only a write is refused: a save that re-states a pair this host already agrees with
+        # Only a new link is refused: a save that re-states a pair this host already agrees with
         # must not become impossible because the host was taken over by Quick setup afterwards.
-        stored = self.writable_relations()
+        stored = self.writable_relations(links)
         wanted = [*(link for link in stored if link["host"] != other), *links]
 
         attributes = self.attributes.copy()

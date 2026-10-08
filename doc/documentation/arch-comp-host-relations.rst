@@ -440,7 +440,11 @@ for a new host) does the following:
    The last two are only checked for kinds this version knows. Such a conflict
    is only refused if the save introduces it. A conflict that was already
    stored before does not block the save. A value that cannot be read at all is
-   refused.
+   refused. A host locked by Quick setup refuses a new relation, but lets one
+   be removed: Quick setup re-creates the host on every edit of its bundle,
+   which would drop a new relation without a trace, while removing one stores
+   nothing on the host. Creating such a host is not checked, since Quick setup
+   passes no relations.
 2. It calculates what each related host has to store about the saved host,
    also for the pairs the save does not change. This is always the complete
    state of the pair, not a diff. If two users edit the same relation at the
@@ -456,9 +460,9 @@ for a new host) does the following:
      other relation of that host.
    * Its folder must be writable for the user and not locked.
    * The change of the related host goes through ``Host.apply_edit()``: the
-     user needs write permission for the host, the host must not be locked
-     (not even by Quick setup), and the edition hook ``validate_edit_host`` is
-     asked.
+     user needs write permission for the host, the host must not be locked (a
+     host locked by Quick setup refuses a new half, not the removal of one), and
+     the edition hook ``validate_edit_host`` is asked.
    * If the user may not see the related host, the error message does not name
      its folder or contact groups.
 
@@ -495,9 +499,10 @@ Deleting, renaming, cloning hosts and changing their site
   deleted host stores from the related hosts. A half that only the related host
   stores stays behind. This cleanup runs with superuser rights, so a user can
   delete their own host even if the related host is in a folder they may not
-  write to. Locked folders and hosts locked by Quick setup are still respected,
-  so a half stays behind there as well. Such a half is reported by
-  ``validate_host_relations`` and ignored by the export. The delete confirmation
+  write to. Locked folders are still respected, so a half stays behind there as
+  well. Such a half is reported by ``validate_host_relations`` and ignored by
+  the export. A host locked by Quick setup loses its half like any other, since
+  removing it stores nothing on the host. The delete confirmation
   of a host lists the first ``MAX_LISTED_RELATED_HOSTS`` related hosts.
 * **Renaming** a host updates all links to the old name, just like for parents.
   If the user may not write the folder of a related host, the rename stops

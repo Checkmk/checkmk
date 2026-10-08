@@ -123,6 +123,8 @@ sh_library(
         "check_community_edition_all_free.sh",
         "create_unsign_msi_patch.sh",
         "extract_llvm.sh",
+        "gcc-toolchain/docker/build.sh",
+        "gcc-toolchain/docker/test.sh",
         "sign-packages.sh",
     ],
 )

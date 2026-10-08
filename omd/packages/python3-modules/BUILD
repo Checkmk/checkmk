@@ -135,3 +135,11 @@ build_test(
     name = "build_test",
     targets = [":python3-modules"],
 )
+
+# Lets shellcheck see these scripts. Nothing depends on this target.
+sh_library(
+    name = "shell_scripts",
+    srcs = [
+        "git_wrapper",
+    ],
+)

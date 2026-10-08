@@ -93,3 +93,11 @@ py_library(
         "//packages/cmk-ccc:version",
     ],
 )
+
+# Lets shellcheck see these scripts. Nothing depends on this target.
+sh_library(
+    name = "shell_scripts",
+    srcs = [
+        "post-install",
+    ],
+)

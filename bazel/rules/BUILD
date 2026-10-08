@@ -79,3 +79,11 @@ py_cmk_test(
         ":set_runpath_whl",
     ],
 )
+
+# Lets shellcheck see these scripts. Nothing depends on this target.
+sh_library(
+    name = "shell_scripts",
+    srcs = [
+        "sign_package.sh",
+    ],
+)

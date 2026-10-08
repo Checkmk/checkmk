@@ -491,16 +491,16 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.43.108 \
-    --hash=sha256:03341f089158368acf83e921aca98b706095322ca52bc4c039a616940aa5ad41 \
-    --hash=sha256:19e9da95ef0c494e27052049a42137550e66730509bb613e76eaa30ddf9a7170
+boto3==1.43.109 \
+    --hash=sha256:703a81baed186d31e27cf50065d25a9faeb704f009e7c56b0f002ca52a328896 \
+    --hash=sha256:c829bc3352e1e3922d8fe1db10b697182ac411b64ce5fc3acb0a06a29837417e
     # via
     #   -c requirements.txt
     #   -r packages/cmk-backup/requirements.in
     #   -r packages/cmk-plugins/requirements.in
-botocore==1.43.108 \
-    --hash=sha256:ab9d16c6b4350aaa54ed28202dfa2998b2d735fdbf3247eb60af469d8d48a5b8 \
-    --hash=sha256:ee4f75cf3bdbb0da7912e089950e8112f692016539d939312c771499958e6cfd
+botocore==1.43.109 \
+    --hash=sha256:46b15bea4d942aaea6d7ab7c4b8a3a7290305064a3b41a6cb271cde9da3ba371 \
+    --hash=sha256:cd00edff465264fb448e36acc9ee29a828f738fff3746270b3f685a19194a5a6
     # via
     #   -c requirements.txt
     #   -r packages/cmk-plugins/requirements.in
@@ -1328,9 +1328,9 @@ fakeredis[lua]==2.39.0 \
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-fastapi==0.142.2 \
-    --hash=sha256:06366626f2e70576367714d9ab2fe8472e6c8456dba69b399f9f797ab5e92570 \
-    --hash=sha256:bd5f4d81f1e93a88bcd77caf4dfe3c2dbffc3805407a0007e9a114c18b3a670b
+fastapi==0.143.0 \
+    --hash=sha256:1acffe48206a80917cf7dac21992b5c44b25384e8902bf745c1fd9dabcf6c51f \
+    --hash=sha256:3e9395fd35276425b61b516a31fdd7c77fe2af83e41b4da22e30696fb1304c5d
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -1605,9 +1605,9 @@ google-api-python-client==2.201.0 \
     # via
     #   -c requirements.txt
     #   -r packages/cmk-plugins/requirements.in
-google-auth==2.60.0 \
-    --hash=sha256:34aa0283ef72c99cd410e35db4417211fa3e6aaa5399183227bbe3b82bd15192 \
-    --hash=sha256:e78414cd2e22cc02884768707def024ca32da17695f2c0e6194cdbe1316c4cd4
+google-auth==2.61.0 \
+    --hash=sha256:37f0815967322e8c32b12bf422531e8b637cafdaae0acbb9141117cfe6a96f23 \
+    --hash=sha256:ca60266a37475ae68b63bac007272f46094b3d571abe92aded329b6cfb568025
     # via
     #   -c requirements.txt
     #   -r packages/cmk-plugins/requirements.in
@@ -2136,9 +2136,9 @@ jschema-to-python==1.2.3 \
     # via
     #   -c requirements.txt
     #   bandit
-json5==0.15.0 \
-    --hash=sha256:56636a30c0e8a4665fe2179c0212f32eae3796dea89ea6f649b9436ecdb39618 \
-    --hash=sha256:7424d1f1eb1d56da6e3d70643f53619862b4ce81440bdb8ecfd6f875e5ba4a71
+json5==0.16.0 \
+    --hash=sha256:8b135a77b231f22e3656c601fec7621c5354c64c4fb2773715ee0814e4dc6bf7 \
+    --hash=sha256:ab703e0d2e565ecff92b4d3525159108911db47e1becc3903a9433d4d504505a
     # via
     #   -c requirements.txt
     #   djlint
@@ -2161,9 +2161,9 @@ jsonpickle==4.1.3 \
     # via
     #   -c requirements.txt
     #   jschema-to-python
-jsonpointer==3.1.1 \
-    --hash=sha256:0b801c7db33a904024f6004d526dcc53bbb8a4a0f4e32bfd10beadf60adf1900 \
-    --hash=sha256:8ff8b95779d071ba472cf5bc913028df06031797532f08a7d5b602d8b2a488ca
+jsonpointer==3.2.0 \
+    --hash=sha256:3e25c9bcadf5ae20c3420922234eaba1ae36ab9bef64cd72454aeaceb0b29aad \
+    --hash=sha256:807db557622fbe07a0d49e19cf4795a269d55eee5ba345fb9959d148eba5ef94
     # via
     #   -c requirements.txt
     #   jsonpatch

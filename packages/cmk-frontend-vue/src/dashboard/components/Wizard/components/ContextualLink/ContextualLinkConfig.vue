@@ -5,9 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts" generic="C extends LinkedContent">
 import CmkButton from 'cmk-ui-library/components/CmkButton'
-import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkIndent from 'cmk-ui-library/components/CmkIndent.vue'
+import CmkToggleButtonGroup from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
 import { useFilterDefinitions } from 'cmk-ui-library/components/filter'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
@@ -37,7 +37,7 @@ const MODE_TITLES = {
 }
 
 const modeOptions = computed(() =>
-  handler.value.modes.map((mode) => ({ name: mode, title: MODE_TITLES[mode] }))
+  handler.value.modes.map((mode) => ({ value: mode, label: MODE_TITLES[mode] }))
 )
 
 const selectedMode = computed<string | null>({
@@ -65,11 +65,7 @@ function toggleFilter(
 <template>
   <CmkCheckbox v-model="handler.enabled.value" :label="_t('Add contextual link')" />
   <CmkIndent v-if="handler.enabled.value">
-    <CmkDropdown
-      v-model="selectedMode"
-      :label="_t('Mode')"
-      :options="{ type: 'fixed', suggestions: modeOptions }"
-    />
+    <CmkToggleButtonGroup v-model="selectedMode" :options="modeOptions" />
 
     <div v-if="handler.mode.value === 'default'" class="db-contextual-link-config__mode">
       <template v-if="defaultTarget !== undefined">

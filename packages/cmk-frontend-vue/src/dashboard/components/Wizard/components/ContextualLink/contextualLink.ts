@@ -8,8 +8,10 @@ import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import type {
   HostStateContent,
   HostStatisticsContent,
+  InventoryContent,
   ServiceStateContent,
-  ServiceStatisticsContent
+  ServiceStatisticsContent,
+  SiteOverviewContent
 } from '@/dashboard/components/Wizard/types'
 
 export type LinkedContent =
@@ -17,6 +19,8 @@ export type LinkedContent =
   | ServiceStatisticsContent
   | HostStateContent
   | ServiceStateContent
+  | SiteOverviewContent
+  | InventoryContent
 
 export type ContextualLinkOf<C extends LinkedContent> = C['contextual_link']
 export type ContextFilterIdOf<C extends LinkedContent> = Extract<

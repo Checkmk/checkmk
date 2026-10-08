@@ -145,5 +145,3 @@ export type CombinedGraphContentPresentation =
   components['schemas']['CombinedGraphContent']['presentation']
 export type ForStates = components['schemas']['ForStates']
 export type ShowServiceStatusType = components['schemas']['MetricStatusDisplayModel']['type']
-export type InventoryLinkType = components['schemas']['VisualLocation']['type']
-export type LinkContentType = components['schemas']['VisualLocation']

@@ -8,7 +8,7 @@ import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
 import { describe, expect, it } from 'vitest'
-import { defineComponent, h, ref } from 'vue'
+import { type Ref, defineComponent, h, ref } from 'vue'
 
 import type {
   UseWidgetHandler,
@@ -31,10 +31,12 @@ type ContextualLinkSpec =
   | components['schemas']['ContextualLinkDefault']
   | components['schemas']['ContextualLinkInherited']
 
+type LinkWizardHandler = UseWidgetHandler & { contextualLink: { enabled: Ref<boolean> } }
+
 interface LinkWizard {
   name: string
   type: string
-  openWizard: (stored: WidgetContentType | null) => Promise<UseWidgetHandler>
+  openWizard: (stored: WidgetContentType | null) => Promise<LinkWizardHandler>
   storedContent: (contextualLink: ContextualLinkSpec) => WidgetContentType
 }
 
@@ -141,7 +143,7 @@ const CONSTANTS: DashboardConstants = {
 }
 
 async function open(openWizard: LinkWizard['openWizard'], stored: WidgetContentType | null = null) {
-  let handler: Promise<UseWidgetHandler> | undefined
+  let handler: Promise<LinkWizardHandler> | undefined
   const consumer = defineComponent({
     setup() {
       handler = openWizard(stored)
@@ -183,6 +185,14 @@ describe.each(WIZARDS)('$name', ({ openWizard, storedContent }) => {
     const handler = await open(openWizard, storedContent(INHERITED))
 
     expect(await submittedLink(handler)).toEqual(INHERITED)
+  })
+
+  it('submits a link that leads nowhere once the link is unchecked', async () => {
+    const handler = await open(openWizard)
+
+    handler.contextualLink.enabled.value = false
+
+    expect(await submittedLink(handler)).toEqual({ type: 'none' })
   })
 
   it('keeps a stored link that leads nowhere when it edits a widget', async () => {

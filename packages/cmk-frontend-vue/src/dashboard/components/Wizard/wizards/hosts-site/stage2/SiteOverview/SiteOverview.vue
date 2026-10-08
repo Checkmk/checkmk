@@ -12,6 +12,7 @@ import { computed } from 'vue'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
+import ContextualLinkConfig from '@/dashboard/components/Wizard/components/ContextualLink/ContextualLinkConfig.vue'
 import RadioButton from '@/dashboard/components/Wizard/components/RadioButton.vue'
 import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/FieldComponent.vue'
 import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
@@ -28,6 +29,18 @@ const handler = defineModel<UseSiteOverview>('handler', { required: true })
 defineProps<BaseWidgetProp>()
 
 const widgetProps = computed(() => handler.value.widgetProps)
+
+// The built-in link leads to the site dashboard or to the host view, as the dataset decides.
+const defaultTarget = computed(() => {
+  switch (handler.value.showStateOf.value) {
+    case 'hosts':
+      return _t('Host')
+    case 'sites':
+      return _t('Site')
+    default:
+      return _t('Site or host, depending on context')
+  }
+})
 const hexagonSizeHelpText = _t(
   `When many hexagons are displayed, they scale to fit into the widget.
    Differences between "Small" and "Large" may not be visible in the preview.`
@@ -110,6 +123,15 @@ const hexagonSizeHelpText = _t(
       v-model:title-url-enabled="handler.titleUrlEnabled.value"
       v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
       :title-macros="handler.titleMacros.value"
+    />
+  </CmkCatalogPanel>
+
+  <ContentSpacer />
+
+  <CmkCatalogPanel :title="_t('Contextual link')" variant="padded">
+    <ContextualLinkConfig
+      v-model:handler="handler.contextualLink"
+      :default-target="defaultTarget"
     />
   </CmkCatalogPanel>
 

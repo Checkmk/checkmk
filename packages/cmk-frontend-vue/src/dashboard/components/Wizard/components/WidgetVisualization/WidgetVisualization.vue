@@ -9,22 +9,16 @@ import type { Suggestion } from 'cmk-ui-library/components/CmkSuggestions'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
-import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
-
-import type { VisualCopy } from '@/dashboard/components/selectors/visualKey'
 
 import FieldComponent from '../TableForm/FieldComponent.vue'
 import FieldDescription from '../TableForm/FieldDescription.vue'
 import TableForm from '../TableForm/TableForm.vue'
 import TableFormRow from '../TableForm/TableFormRow.vue'
-import LinkContent from './LinkContent.vue'
 
 const { _t } = usei18n()
 
 interface WidgetVisualizationProps {
-  linkValidation?: TranslatedString[]
-  linkOptions?: Suggestion[]
   targetOptions?: Suggestion[]
   titleMacros?: string[] | null
 }
@@ -55,16 +49,6 @@ const titleUrlValidationErrors = defineModel<string[]>('titleUrlValidationErrors
 const showTitle = defineModel<boolean>('showTitle', { required: true })
 const showTitleBackground = defineModel<boolean>('showTitleBackground', { required: true })
 const showWidgetBackground = defineModel<boolean>('showWidgetBackground', { required: true })
-
-const linkType = defineModel<string | null>('linkType', { required: false, default: undefined })
-const linkTarget = defineModel<VisualCopy | null>('linkTarget', {
-  required: false,
-  default: undefined
-})
-
-const displayLinkContent = computed(
-  () => linkType.value !== undefined || linkTarget.value !== undefined
-)
 </script>
 
 <template>
@@ -94,13 +78,6 @@ const displayLinkContent = computed(
               @update:model-value="(value) => (titleUrl = value ?? titleUrl)"
             />
           </CmkIndent>
-        </div>
-        <div v-if="displayLinkContent" class="field-component__item">
-          <LinkContent
-            v-model:link-type="linkType"
-            v-model:link-target="linkTarget"
-            :link-validation="linkValidation || []"
-          />
         </div>
       </FieldComponent>
     </TableFormRow>

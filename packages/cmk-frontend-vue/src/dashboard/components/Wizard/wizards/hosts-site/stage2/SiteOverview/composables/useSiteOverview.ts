@@ -8,6 +8,10 @@ import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, ref, watch } from 'vue'
 
 import {
+  type UseContextualLink,
+  useContextualLink
+} from '@/dashboard/components/Wizard/components/ContextualLink/useContextualLink'
+import {
   type UseWidgetVisualizationOptions,
   useWidgetVisualizationProps
 } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
@@ -26,6 +30,7 @@ export interface UseSiteOverview extends UseWidgetHandler, UseWidgetVisualizatio
   //Data settings
   showStateOf: Ref<string>
   hexagonSize: Ref<string>
+  contextualLink: UseContextualLink<SiteOverviewContent>
 }
 
 export const useSiteOverview = async (
@@ -57,10 +62,16 @@ export const useSiteOverview = async (
     currentContent?.dataset ?? 'via_context'
   )
   const hexagonSize = ref<string>(currentContent?.hexagon_size === 'large' ? 'large' : 'small')
+  const contextualLink = useContextualLink<SiteOverviewContent>(
+    constants.widgets[CONTENT_TYPE]!.contextual_link!,
+    currentContent?.contextual_link
+  )
   const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
-    return validateTitle()
+    const isTitleValid = validateTitle()
+    const isLinkValid = contextualLink.validate()
+    return isTitleValid && isLinkValid
   }
 
   const _generateContent = (): SiteOverviewContent => {
@@ -68,7 +79,7 @@ export const useSiteOverview = async (
       type: CONTENT_TYPE,
       dataset: showStateOf.value,
       hexagon_size: hexagonSize.value === 'small' ? 'default' : 'large',
-      contextual_link: currentContent?.contextual_link ?? { type: 'default' }
+      contextual_link: contextualLink.contextualLink.value ?? { type: 'default' }
     }
   }
 
@@ -96,7 +107,7 @@ export const useSiteOverview = async (
   }
 
   watch(
-    [widgetGeneralSettings, showStateOf, hexagonSize],
+    [widgetGeneralSettings, showStateOf, hexagonSize, contextualLink.contextualLink],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -108,6 +119,7 @@ export const useSiteOverview = async (
   return {
     showStateOf,
     hexagonSize,
+    contextualLink,
 
     title,
     showTitle,

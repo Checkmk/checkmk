@@ -39,6 +39,13 @@ useMswServer(
       links: [],
       value: [dashboard('main', 'Overview', []), dashboard('host', 'Host details', ['host'])]
     })
+  ),
+  // The views selector lists the views and their data sources.
+  http.get(`${API}/domain-types/view/collections/all`, () =>
+    HttpResponse.json({ domainType: 'view', id: 'all', links: [], value: [] })
+  ),
+  http.get(`${API}/objects/constant/data_source/collections/all`, () =>
+    HttpResponse.json({ domainType: 'constant', id: 'data_source', links: [], value: [] })
   )
 )
 
@@ -68,5 +75,17 @@ describe('ContextualLinkTargetPicker', () => {
     const dropdown = await renderPicker({ type: 'dashboards', name: 'main', owner: null }, [])
 
     await waitFor(() => expect(dropdown).toHaveTextContent('main (resolved by name)'))
+  })
+
+  it('clears the target when the category changes, so no hidden target is saved', async () => {
+    const { emitted } = render(ContextualLinkTargetPicker, {
+      props: { modelValue: { type: 'views', name: 'allhosts', owner: null }, singleInfos: [] }
+    })
+    const user = userEvent.setup()
+
+    await user.click(await screen.findByRole('combobox', { name: 'Select a category' }))
+    await user.click(await screen.findByRole('option', { name: 'Dashboards' }))
+
+    expect(emitted('update:modelValue')).toEqual([[null]])
   })
 })

@@ -421,6 +421,8 @@ def _extract_relevant_values(rule_value: Mapping[str, object]) -> Sequence[int]:
 
 
 def cleanup_piggyback_files(
+    *,
+    now: float,
     max_cache_file_age: int,
     all_configured_rule_values: Iterable[Mapping[str, object]],
     omd_root: Path,
@@ -432,7 +434,7 @@ def cleanup_piggyback_files(
     # if and only if they have exceeded the maximum cache age configured in the
     # global settings or in the rule 'Piggybacked Host Files'."""
 
-    cut_off_timestamp = time.time() - max(
+    cut_off_timestamp = now - max(
         max_cache_file_age, _compute_largest_configured_threshold(all_configured_rule_values)
     )
     logger.debug(
@@ -443,67 +445,44 @@ def cleanup_piggyback_files(
         },
     )
 
-    piggybacked_hosts_settings = [
-        (piggybacked_host_folder, _files_in(piggybacked_host_folder))
-        for piggybacked_host_folder in _get_piggybacked_host_folders(omd_root)
-    ]
-
-    _cleanup_old_source_status_files(_get_source_state_files(omd_root), cut_off_timestamp)
-    _cleanup_old_piggybacked_files(piggybacked_hosts_settings, cut_off_timestamp)
+    _remove_files_older_than(_get_source_state_files(omd_root), cut_off_timestamp)
+    for piggybacked_host_folder in _get_piggybacked_host_folders(omd_root):
+        _remove_files_older_than(_files_in(piggybacked_host_folder), cut_off_timestamp)
+        _remove_folder_if_empty(piggybacked_host_folder)
 
 
-def _cleanup_old_source_status_files(
-    source_state_files: Sequence[Path],
-    cut_off_timestamp: float,
-) -> None:
-    """Remove source status files which exceed provided maximum age."""
-    for source_state_file in source_state_files:
-        if (mtime := _get_mtime(source_state_file)) is None:
-            continue  # File has been removed, that's OK.
+def _remove_files_older_than(files: Iterable[Path], cut_off_timestamp: float) -> None:
+    """Remove the files last modified before the cut-off.
 
-        if mtime < cut_off_timestamp:
-            logger.debug(
-                "Piggyback source status file '%(source_state_file)s' too old (%(mtime)s). "
-                "Remove it.",
-                {
-                    "source_state_file": source_state_file,
-                    "mtime": _render_datetime(mtime),
-                },
-            )
-            _remove_piggyback_file(source_state_file)
+    Other processes may remove any of these files while we're looking at them.
+    That's OK: the file is gone, which is what we want anyway."""
+    for file in files:
+        if (mtime := _get_mtime(file)) is None or mtime >= cut_off_timestamp:
+            continue
 
-
-def _cleanup_old_piggybacked_files(
-    piggybacked_hosts_settings: Iterable[tuple[Path, Iterable[Path]]], cut_off_timestamp: float
-) -> None:
-    """Remove piggybacked data files which exceed provided maximum age."""
-
-    for piggybacked_host_folder, source_hosts in piggybacked_hosts_settings:
-        for piggybacked_host_source in source_hosts:
-            if (mtime := _get_mtime(piggybacked_host_source)) is None:
-                continue
-
-            if mtime < cut_off_timestamp:
-                logger.debug(
-                    "Piggyback file '%(piggybacked_host_source)s' too old (%(mtime)s). Remove it.",
-                    {
-                        "piggybacked_host_source": piggybacked_host_source,
-                        "mtime": _render_datetime(mtime),
-                    },
-                )
-                _remove_piggyback_file(piggybacked_host_source)
-
-        # Remove empty backed host directory
-        try:
-            piggybacked_host_folder.rmdir()
-        except OSError as e:
-            if e.errno == errno.ENOTEMPTY:
-                continue
-            raise
         logger.debug(
-            "Piggyback folder '%(piggybacked_host_folder)s' was empty. Removed it.",
-            {"piggybacked_host_folder": piggybacked_host_folder},
+            "Piggyback file '%(file)s' too old (%(mtime)s). Remove it.",
+            {"file": file, "mtime": _render_datetime(mtime)},
         )
+        file.unlink(missing_ok=True)
+
+
+def _remove_folder_if_empty(folder: Path) -> None:
+    """Remove the folder unless it still contains files.
+
+    A folder that has vanished meanwhile (concurrent cleanup, host rename) is fine, too."""
+    try:
+        folder.rmdir()
+    except FileNotFoundError:
+        return
+    except OSError as e:
+        if e.errno == errno.ENOTEMPTY:
+            return
+        raise
+    logger.debug(
+        "Piggyback folder '%(folder)s' was empty. Removed it.",
+        {"folder": folder},
+    )
 
 
 def _get_mtime(path: Path) -> int | None:

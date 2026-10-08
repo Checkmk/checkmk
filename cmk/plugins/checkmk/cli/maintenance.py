@@ -6,6 +6,7 @@
 
 import itertools
 import os
+import time
 from pathlib import Path
 
 import cmk.utils.paths
@@ -77,9 +78,10 @@ def _mode_cleanup_piggyback(
 ) -> int:
     loaded_config = config.load(validate_hosts=True).loaded_config
     piggyback_backend.cleanup_piggyback_files(
-        loaded_config.piggyback_max_cachefile_age,
-        (r["value"] for r in loaded_config.piggybacked_host_files),
-        cmk.utils.paths.omd_root,
+        now=time.time(),
+        max_cache_file_age=loaded_config.piggyback_max_cachefile_age,
+        all_configured_rule_values=(r["value"] for r in loaded_config.piggybacked_host_files),
+        omd_root=cmk.utils.paths.omd_root,
     )
     return 0
 

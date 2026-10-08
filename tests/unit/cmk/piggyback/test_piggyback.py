@@ -4,11 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import os
 import pprint
+from collections.abc import Mapping, Sequence
+from pathlib import Path
+
+import pytest
 
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostAddress
 from cmk.piggyback import backend
+from cmk.piggyback.backend._storage import _remove_files_older_than, _remove_folder_if_empty
 
 _TEST_HOST_NAME = HostAddress("test-host")
 
@@ -219,6 +225,143 @@ def test_get_source_and_piggyback_hosts() -> None:
             ),
         ],
     }
+
+
+_MAX_AGE = 3600
+
+
+def _store_aged(
+    omd_root: Path,
+    *,
+    source: str = "source",
+    piggybacked: str = "piggybacked",
+    message_age: float = 0.0,
+    contact_age: float = 0.0,
+) -> None:
+    backend.store_piggyback_raw_data(
+        HostAddress(source),
+        {HostAddress(piggybacked): _PAYLOAD},
+        message_timestamp=_REF_TIME - message_age,
+        contact_timestamp=_REF_TIME - contact_age,
+        omd_root=omd_root,
+    )
+
+
+def _cleanup(
+    omd_root: Path,
+    max_cache_file_age: int = _MAX_AGE,
+    rule_values: Sequence[Mapping[str, object]] = (),
+) -> None:
+    backend.cleanup_piggyback_files(
+        now=_REF_TIME,
+        max_cache_file_age=max_cache_file_age,
+        all_configured_rule_values=rule_values,
+        omd_root=omd_root,
+    )
+
+
+@pytest.mark.parametrize(
+    "message_age, expected_sources",
+    [
+        pytest.param(_MAX_AGE + 1, set(), id="older than cut-off: removed"),
+        pytest.param(_MAX_AGE, {"source"}, id="exactly at cut-off: kept"),
+        pytest.param(_MAX_AGE - 1, {"source"}, id="newer than cut-off: kept"),
+    ],
+)
+def test_cleanup_removes_payload_older_than_cut_off(
+    tmp_path: Path, message_age: float, expected_sources: set[str]
+) -> None:
+    _store_aged(tmp_path, message_age=message_age)
+
+    _cleanup(tmp_path)
+
+    assert (
+        backend.get_current_piggyback_sources_of_host(tmp_path, HostAddress("piggybacked"))
+        == expected_sources
+    )
+
+
+@pytest.mark.parametrize(
+    "contact_age, expected_last_contact",
+    [
+        pytest.param(_MAX_AGE + 1, None, id="older than cut-off: removed"),
+        pytest.param(_MAX_AGE, int(_REF_TIME - _MAX_AGE), id="exactly at cut-off: kept"),
+        pytest.param(_MAX_AGE - 1, int(_REF_TIME - _MAX_AGE + 1), id="newer than cut-off: kept"),
+    ],
+)
+def test_cleanup_removes_source_status_file_older_than_cut_off(
+    tmp_path: Path, contact_age: float, expected_last_contact: int | None
+) -> None:
+    _store_aged(tmp_path, contact_age=contact_age)
+
+    _cleanup(tmp_path)
+
+    (message,) = backend.get_messages_for(HostAddress("piggybacked"), tmp_path)
+    assert message.meta.last_contact == expected_last_contact
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "max_cache_file_age, rule_values, effective_max_age",
+    [
+        pytest.param(3600, [], 3600, id="empty ruleset: global setting applies"),
+        pytest.param(3600, [{"global_max_cache_age": 60}], 3600, id="global setting larger than rule"),
+        pytest.param(60, [{"global_max_cache_age": 3600}], 3600, id="rule larger than global setting"),
+        pytest.param(60, [{"per_piggybacked_host": [{"max_cache_age": 3600}]}], 3600, id="per-host exception larger than global setting"),
+        pytest.param(60, [{"global_max_cache_age": 120}, {"global_max_cache_age": 3600}], 3600, id="largest value across rules"),
+        pytest.param(60, [{"global_max_cache_age": "global", "per_piggybacked_host": [{"max_cache_age": "global"}]}], 60, id="non-integer values ignored"),
+        pytest.param(60, [{"per_piggybacked_host": [{}]}], 60, id="rule without max age ignored"),
+    ],
+)
+# fmt: on
+def test_cleanup_cut_off_uses_largest_configured_max_age(
+    tmp_path: Path,
+    max_cache_file_age: int,
+    rule_values: Sequence[Mapping[str, object]],
+    effective_max_age: int,
+) -> None:
+    _store_aged(tmp_path, piggybacked="aged-out", message_age=effective_max_age + 1)
+    _store_aged(tmp_path, piggybacked="still-valid", message_age=effective_max_age)
+
+    _cleanup(tmp_path, max_cache_file_age, rule_values)
+
+    assert set(backend.get_piggybacked_host_with_sources(tmp_path)) == {"still-valid"}
+
+
+def test_cleanup_removes_emptied_piggybacked_host_folder(tmp_path: Path) -> None:
+    _store_aged(tmp_path, message_age=_MAX_AGE + 1)
+
+    _cleanup(tmp_path)
+
+    assert not backend.get_piggybacked_host_with_sources(tmp_path)
+
+
+def test_cleanup_keeps_piggybacked_host_folder_with_fresh_payload(tmp_path: Path) -> None:
+    _store_aged(tmp_path, source="stale-source", message_age=_MAX_AGE + 1)
+    _store_aged(tmp_path, source="fresh-source")
+
+    _cleanup(tmp_path)
+
+    assert backend.get_current_piggyback_sources_of_host(
+        tmp_path, HostAddress("piggybacked")
+    ) == {"fresh-source"}
+
+
+# These two call private functions on purpose: a file or folder vanishing while the
+# cleanup runs (another process removing it) can't be provoked through
+# cleanup_piggyback_files without patching the filesystem.
+def test_remove_files_older_than_continues_after_vanished_file(tmp_path: Path) -> None:
+    expired = tmp_path / "expired"
+    expired.touch()
+    os.utime(expired, (_REF_TIME - 1, _REF_TIME - 1))
+
+    _remove_files_older_than([tmp_path / "vanished", expired], _REF_TIME)
+
+    assert not expired.exists()
+
+
+def test_remove_folder_if_empty_tolerates_vanished_folder(tmp_path: Path) -> None:
+    _remove_folder_if_empty(tmp_path / "vanished")
 
 
 class TestPiggybackMetaData:

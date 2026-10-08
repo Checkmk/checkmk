@@ -27,6 +27,7 @@ from cmk.automations.models.helper import (
     AUTOMATION_HELPER_SOCKET_RELATIVE_PATH,
     AutomationPayload,
 )
+from cmk.ccc import version as cmk_version
 from cmk.utils.unixsocket_http import make_session
 
 
@@ -74,6 +75,15 @@ def _parse_arguments(argv: list[str]) -> argparse.Namespace:
             "ignored with --health (default: %(default)s)"
         ),
     )
+    parser.add_argument(
+        "--for-cmk-version",
+        default=cmk_version.__version__,
+        metavar="VERSION",
+        help=(
+            "serialize the result for a site running this Checkmk version; "
+            "ignored with --health (default: %(default)s)"
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -93,6 +103,7 @@ def main() -> int:
                 args=automation_args,
                 stdin=stdin,
                 log_level=logging.getLevelNamesMapping()[args.log_level],
+                for_cmk_version=args.for_cmk_version,
             ).model_dump(mode="json")
             response = session.post(f"{AUTOMATION_HELPER_BASE_URL}/automation", json=payload)
     except requests.ConnectionError as e:

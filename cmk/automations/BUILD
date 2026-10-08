@@ -59,7 +59,6 @@ py_library(
         ":automations",
         "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:site",
-        "//packages/cmk-ccc:version",
         "//packages/cmk-trace",
         requirement("fastapi"),
         requirement("opentelemetry-api"),

@@ -22,6 +22,8 @@ class AutomationPayload(BaseModel, frozen=True):
     args: Sequence[str]
     stdin: str
     log_level: int
+    for_cmk_version: str
+    """The Checkmk version of the site the result is meant for (it may be an older central site)."""
 
 
 class AutomationResponse(BaseModel, frozen=True):

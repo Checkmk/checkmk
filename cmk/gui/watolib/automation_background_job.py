@@ -19,6 +19,7 @@ from pydantic import BaseModel
 from cmk.automations.internal import AutomationID
 from cmk.automations.results import result_type_registry
 from cmk.ccc import store  # Some braindead "unit" test monkeypatch this like hell :-/
+from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Version
 from cmk.gui.background_job.job import (
@@ -263,6 +264,7 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
             indata=api_request.indata,
             stdin_data=api_request.stdin_data,
             timeout=api_request.timeout,
+            for_cmk_version=cmk_version.__version__,
             debug=api_request.debug,
             collect_all_hosts=collect_all_hosts,
         )

@@ -13,7 +13,8 @@ import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk import trace
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout
-from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
+from cmk.cli.engine.commands import option_string
+from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
 from cmk.profiling import backend as profiling
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ tracer = trace.get_tracer()
 
 
 def _mode_automation(
-    omd_root: Path, _global_options: GlobalOptions, _options: Options, args: Args
+    omd_root: Path, _global_options: GlobalOptions, options: Options, args: Args
 ) -> int:
     from cmk.automations.engine import (
         AutomationError,
@@ -37,6 +38,7 @@ def _mode_automation(
         raise MKBailOut("You need to provide arguments")
 
     name, automation_args = AutomationID(args[0]), list(args[1:])
+    for_cmk_version = _for_cmk_version(options)
     automations = Automations(discover_automations())
     with tracer.span(
         f"mode_automation[{name}]",
@@ -73,9 +75,20 @@ def _mode_automation(
         if isinstance(result, AutomationError):
             return result
         with suppress(IOError):
-            sys.stdout.write(result.serialize(cmk_version.__version__) + "\n")
+            sys.stdout.write(result.serialize(for_cmk_version) + "\n")
             sys.stdout.flush()
         return 0
+
+
+def _for_cmk_version(options: Options) -> str:
+    """The version to serialize the result for, checked before the automation runs"""
+    if (for_cmk_version := option_string(options, "for-cmk-version")) is None:
+        return cmk_version.__version__
+    try:
+        cmk_version.Version.from_str(for_cmk_version)
+    except ValueError as e:
+        raise MKBailOut(f"--for-cmk-version: {e}") from e
+    return for_cmk_version
 
 
 cli_command_automation = CLICommand(
@@ -85,4 +98,15 @@ cli_command_automation = CLICommand(
     argument_descr="COMMAND...",
     argument_optional=True,
     short_help="Internal helper to invoke Check_MK actions",
+    sub_options=[
+        CLIOption(
+            long_option="for-cmk-version",
+            argument=True,
+            argument_descr="VERSION",
+            short_help=(
+                "Serialize the result for a site running this Checkmk version"
+                " (default: the version of this site)"
+            ),
+        ),
+    ],
 )

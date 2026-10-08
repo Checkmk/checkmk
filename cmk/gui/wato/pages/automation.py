@@ -243,6 +243,7 @@ class PageAutomation(AjaxPage):
             indata=indata,
             stdin_data=stdin_data,
             timeout=timeout,
+            for_cmk_version=cmk_version.__version__,
             debug=debug,
             collect_all_hosts=lambda: collect_all_hosts(make_folder_tree(config)),
         )

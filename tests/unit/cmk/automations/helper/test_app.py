@@ -111,7 +111,7 @@ class _RecordingAutomationEngine(_DummyAutomationEngineSuccess):
 
 
 _EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
-    name=AutomationID("dummy"), args=[], stdin="", log_level=logging.INFO
+    name=AutomationID("dummy"), args=[], stdin="", log_level=logging.INFO, for_cmk_version="2.4.0"
 ).model_dump()
 
 
@@ -199,6 +199,34 @@ def test_automation_with_success(mocker: MockerFixture, cache: Cache) -> None:
         stderr="stderr_success",
     )
     mock_reload_config.assert_called_once()  # only at application startup
+
+
+class _VersionedAutomationResult(_DummyAutomationResult):
+    @override
+    def serialize(self, for_cmk_version: str) -> str:
+        return f"serialized for {for_cmk_version}"
+
+
+class _VersionedAutomationEngine(_DummyAutomationEngineSuccess):
+    @override
+    def execute(
+        self,
+        cmd: str,
+        args: list[str],
+    ) -> _VersionedAutomationResult:
+        return _VersionedAutomationResult()
+
+
+def test_automation_result_is_serialized_for_requested_version(
+    mocker: MockerFixture, cache: Cache
+) -> None:
+    with _make_test_client(_VersionedAutomationEngine(), cache, mocker.MagicMock()) as client:
+        resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
+
+    assert (
+        AutomationResponse.model_validate(resp.json()).serialized_result_or_error_code
+        == "serialized for 2.4.0"
+    )
 
 
 def test_automation_with_failure(mocker: MockerFixture, cache: Cache) -> None:

@@ -46,6 +46,8 @@ class HelperExecutor(AutomationExecutor):
         args: Sequence[str],
         stdin: str,
         timeout: int | None,
+        *,
+        for_cmk_version: str,
     ) -> LocalAutomationResult:
         session = make_unixsocket_session(
             self._SOCKET_PATH,
@@ -57,6 +59,7 @@ class HelperExecutor(AutomationExecutor):
             args=arguments_with_timeout(args, timeout),
             stdin=stdin,
             log_level=logger.getEffectiveLevel(),
+            for_cmk_version=for_cmk_version,
         ).model_dump(mode="json")
 
         try:
@@ -79,14 +82,18 @@ class HelperExecutor(AutomationExecutor):
                 return LocalAutomationResult(
                     exit_code=0,
                     output=response_data.serialized_result_or_error_code,
-                    command_description=self.command_description(command, args, timeout),
+                    command_description=self.command_description(
+                        command, args, timeout, for_cmk_version=for_cmk_version
+                    ),
                     error=response_data.stderr,
                 )
             case int():
                 return LocalAutomationResult(
                     exit_code=response_data.serialized_result_or_error_code,
                     output=response_data.stdout,
-                    command_description=self.command_description(command, args, timeout),
+                    command_description=self.command_description(
+                        command, args, timeout, for_cmk_version=for_cmk_version
+                    ),
                     error=response_data.stderr,
                 )
             case _:
@@ -98,5 +105,13 @@ class HelperExecutor(AutomationExecutor):
         command: AutomationID,
         args: Sequence[str],
         timeout: int | None,
+        *,
+        for_cmk_version: str,
     ) -> str:
-        return repr({"command": command, "args": arguments_with_timeout(args, timeout)})
+        return repr(
+            {
+                "command": command,
+                "args": arguments_with_timeout(args, timeout),
+                "for_cmk_version": for_cmk_version,
+            }
+        )

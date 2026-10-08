@@ -123,9 +123,11 @@ def check_mk_local_automation_serialized(
     stdin_data: str | None = None,
     timeout: int | None = None,
     force_cli_interface: bool = False,
+    for_cmk_version: str,
     debug: bool,
     collect_all_hosts: Callable[[], Mapping[HostName, CollectedHostAttributes]],
 ) -> tuple[Sequence[str], str]:
+    """Run an automation on this site, its result serialized for a site of the given version"""
     with tracer.span(
         f"local_automation[{command}]",
         attributes={"cmk.automation.args": repr(args)},
@@ -148,7 +150,9 @@ def check_mk_local_automation_serialized(
         )
 
         try:
-            result = executor.execute(command, args, stdin_data, timeout)
+            result = executor.execute(
+                command, args, stdin_data, timeout, for_cmk_version=for_cmk_version
+            )
         except Exception as e:
             match e:
                 case RequestException(response=response) if response is not None:
@@ -161,7 +165,9 @@ def check_mk_local_automation_serialized(
 
                     msg = get_local_automation_failure_message(
                         command=command,
-                        cmdline=executor.command_description(command, args, timeout),
+                        cmdline=executor.command_description(
+                            command, args, timeout, for_cmk_version=for_cmk_version
+                        ),
                         code=response.status_code,
                         err=error_text,
                         debug=debug,
@@ -171,7 +177,9 @@ def check_mk_local_automation_serialized(
                     # Case 2: Network error (Timeout, DNS, Connection Refused) - No response object
                     msg = get_local_automation_failure_message(
                         command=command,
-                        cmdline=executor.command_description(command, args, timeout),
+                        cmdline=executor.command_description(
+                            command, args, timeout, for_cmk_version=for_cmk_version
+                        ),
                         exc=e,
                         debug=debug,
                     )

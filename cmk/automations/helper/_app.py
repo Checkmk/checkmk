@@ -23,7 +23,6 @@ from cmk.automations.engine import AutomationError
 from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.automations.logging import LoggingManager
 from cmk.automations.models.helper import AutomationPayload, AutomationResponse
-from cmk.ccc import version as cmk_version
 
 from ._cache import Cache, CacheError
 from ._config import Config, ReloaderConfig
@@ -331,7 +330,7 @@ def _execute_automation_endpoint(
             case AutomationResult():
                 return AutomationResponse(
                     serialized_result_or_error_code=result_or_error_code.serialize(
-                        cmk_version.__version__
+                        payload.for_cmk_version
                     ),
                     stdout=buffer_stdout.getvalue(),
                     stderr=buffer_stderr.getvalue(),

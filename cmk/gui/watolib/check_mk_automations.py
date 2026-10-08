@@ -78,6 +78,7 @@ def _automation_serialized(
             stdin_data=stdin_data,
             timeout=timeout,
             force_cli_interface=force_cli_interface,
+            for_cmk_version=cmk_version.__version__,
             debug=debug,
             collect_all_hosts=collect_hosts,
         )

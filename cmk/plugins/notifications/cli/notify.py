@@ -25,6 +25,7 @@ from cmk.base.notify import (
     make_notification_config,
 )
 from cmk.ccc import store
+from cmk.ccc import version as cmk_version
 from cmk.ccc.exceptions import raise_mkterminate_on_sigint
 from cmk.ccc.version import Edition
 from cmk.ccc.version import edition as edition_of_site
@@ -94,6 +95,7 @@ def _do_notify_via_automation(options: dict[str, bool], args: list[str]) -> int 
             args=args,
             stdin="",
             timeout=None,
+            for_cmk_version=cmk_version.__version__,
         )
     except AutomationHelperUnavailable:
         logger.exception(

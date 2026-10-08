@@ -25,13 +25,18 @@ class AutomationExecutor(Protocol):
         args: Sequence[str],
         stdin: str,
         timeout: int | None,
-    ) -> LocalAutomationResult: ...
+        *,
+        for_cmk_version: str,
+    ) -> LocalAutomationResult:
+        """Run the automation and serialize its result for a site of the given Checkmk version"""
 
     def command_description(
         self,
         command: AutomationID,
         args: Sequence[str],
         timeout: int | None,
+        *,
+        for_cmk_version: str,
     ) -> str: ...
 
 

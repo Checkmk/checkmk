@@ -31,9 +31,13 @@ class SubprocessExecutor(AutomationExecutor):
         args: Sequence[str],
         stdin: str,
         timeout: int | None,
+        *,
+        for_cmk_version: str,
     ) -> LocalAutomationResult:
-        cmd = _automation_command(command, args, timeout)
-        cmd_descr = self.command_description(command, args, timeout)
+        cmd = _automation_command(command, args, timeout, for_cmk_version)
+        cmd_descr = self.command_description(
+            command, args, timeout, for_cmk_version=for_cmk_version
+        )
 
         logger.info("RUN: %(command)s", {"command": cmd_descr})
         span = trace.get_current_span()
@@ -70,12 +74,17 @@ class SubprocessExecutor(AutomationExecutor):
         command: AutomationID,
         args: Sequence[str],
         timeout: int | None,
+        *,
+        for_cmk_version: str,
     ) -> str:
-        return subprocess.list2cmdline(_automation_command(command, args, timeout))
+        return subprocess.list2cmdline(_automation_command(command, args, timeout, for_cmk_version))
 
 
 def _automation_command(
-    command: AutomationID, args: Sequence[str], timeout: int | None
+    command: AutomationID,
+    args: Sequence[str],
+    timeout: int | None,
+    for_cmk_version: str,
 ) -> list[str]:
     cmd = ["check_mk"]
     if (log_level := logger.getEffectiveLevel()) <= logging.DEBUG:
@@ -83,4 +92,12 @@ def _automation_command(
     elif log_level <= VERBOSE:
         cmd.append("-v")
 
-    return [*cmd, "--automation", command, *arguments_with_timeout(args, timeout)]
+    return [
+        *cmd,
+        "--automation",
+        # An option, so it must come before the automation's name
+        "--for-cmk-version",
+        for_cmk_version,
+        command,
+        *arguments_with_timeout(args, timeout),
+    ]

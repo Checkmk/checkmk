@@ -10,6 +10,7 @@
 import json
 import random
 import string
+from http import HTTPStatus
 
 import pytest
 from pytest import FixtureRequest
@@ -584,3 +585,37 @@ def test_contact_group_inventory_paths(
             path.setdefault("nodes", {"type": "no_restriction"})
 
     assert group.json["extensions"]["inventory_paths"] == inventory_paths
+
+
+@managedtest
+@pytest.mark.parametrize("group_type", ["host", "contact", "service"])
+def test_openapi_create_group_without_customer(
+    group_type: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
+    resp = aut_user_auth_wsgi_app.call_method(
+        "post",
+        f"/NO_SITE/check_mk/api/1.0/domain-types/{group_type}_group_config/collections/all",
+        params=json.dumps({"name": _random_string(10), "alias": _random_string(10)}),
+        headers={"Accept": "application/json"},
+        status=HTTPStatus.BAD_REQUEST,
+        content_type="application/json",
+    )
+    assert "customer" in resp.json_body["fields"]
+
+
+@managedtest
+@pytest.mark.parametrize("group_type", ["contact", "service"])
+def test_openapi_bulk_create_groups_without_customer(
+    group_type: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
+    resp = aut_user_auth_wsgi_app.call_method(
+        "post",
+        f"/NO_SITE/check_mk/api/1.0/domain-types/{group_type}_group_config/actions/bulk-create/invoke",
+        params=json.dumps({"entries": [{"name": _random_string(10), "alias": _random_string(10)}]}),
+        headers={"Accept": "application/json"},
+        status=HTTPStatus.BAD_REQUEST,
+        content_type="application/json",
+    )
+    assert "customer" in resp.json_body["fields"]["entries"]["0"]

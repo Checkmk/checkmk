@@ -5,16 +5,12 @@
 
 import ast
 from collections.abc import Sequence
-from dataclasses import dataclass
 from http import HTTPStatus
-from typing import override
 
 import pytest
 from flask import Flask
 
 import cmk.ccc.version as cmk_version
-from cmk.automations.internal import AutomationID, AutomationResult
-from cmk.automations.results import ResultTypeRegistry
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config
@@ -26,44 +22,14 @@ from cmk.utils import paths
 from cmk.utils.local_secrets import DistributedSetupSecret
 
 
-@dataclass
-class ResultTest(AutomationResult):
-    field_1: tuple[int, int]
-    field_2: str | None
-
-    @override
-    def serialize(self, for_cmk_version: str) -> str:
-        return (
-            super().serialize(for_cmk_version)
-            if cmk_version.Version.from_str(for_cmk_version)
-            >= cmk_version.Version.from_str("3.0.0b1")
-            else repr((self.field_1,))
-        )
-
-    @staticmethod
-    @override
-    def automation_call() -> AutomationID:
-        return AutomationID("test")
-
-
 class TestPageAutomation:
-    @pytest.fixture(name="result_type_registry")
-    def result_type_registry_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        registry = ResultTypeRegistry()
-        registry.register(ResultTest)
-        monkeypatch.setattr(
-            automation,
-            "result_type_registry",
-            registry,
-        )
-
     @staticmethod
     def _check_mk_local_automation_serialized(
-        **_kwargs: object,
+        *, for_cmk_version: str, **_kwargs: object
     ) -> tuple[Sequence[str], str]:
         return (
             ["x", "y", "z"],
-            "((1, 2), 'this field was not sent by version N-1')",
+            f"result for {for_cmk_version}",
         )
 
     @pytest.fixture(name="check_mk_local_automation_serialized")
@@ -96,35 +62,12 @@ class TestPageAutomation:
 
     @pytest.mark.usefixtures(
         "request_context",
-        "result_type_registry",
-        "check_mk_local_automation_serialized",
-        "setup_request",
-        "patch_edition",
-        "fix_secret_checking",
-    )
-    def test_execute_cmk_automation_current_version(
-        self, monkeypatch: pytest.MonkeyPatch, test_edition: cmk_version.Edition
-    ) -> None:
-        with monkeypatch.context() as m:
-            m.setattr(
-                request,
-                "headers",
-                {"x-checkmk-version": cmk_version.__version__, "x-checkmk-edition": "cee"},
-            )
-            automation.PageAutomation(test_edition)._execute_cmk_automation(  # noqa: SLF001
-                Config(), debug=False
-            )
-            assert response.get_data() == b"((1, 2), 'this field was not sent by version N-1')"
-
-    @pytest.mark.usefixtures(
-        "request_context",
-        "result_type_registry",
         "check_mk_local_automation_serialized",
         "setup_request",
         "fix_secret_checking",
         "patch_edition",
     )
-    def test_execute_cmk_automation_previous_version(
+    def test_execute_cmk_automation_serializes_for_central_site(
         self, monkeypatch: pytest.MonkeyPatch, test_edition: cmk_version.Edition
     ) -> None:
         with monkeypatch.context() as m:
@@ -136,11 +79,10 @@ class TestPageAutomation:
             automation.PageAutomation(test_edition)._execute_cmk_automation(  # noqa: SLF001
                 Config(), debug=False
             )
-            assert response.get_data() == b"((1, 2),)"
+            assert response.get_data() == b"result for 2.4.0p13"
 
     @pytest.mark.usefixtures(
         "request_context",
-        "result_type_registry",
         "check_mk_local_automation_serialized",
         "setup_request",
         "fix_secret_checking",
@@ -167,7 +109,6 @@ class TestPageAutomation:
     )
     @pytest.mark.usefixtures(
         "request_context",
-        "result_type_registry",
         "check_mk_local_automation_serialized",
         "setup_request",
         "fix_secret_checking",

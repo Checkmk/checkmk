@@ -10,7 +10,7 @@ automation functions on slaves,"""
 
 import secrets
 import traceback
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from contextlib import nullcontext
 from datetime import datetime
 from typing import override
@@ -20,7 +20,6 @@ import cmk.gui.watolib.utils as watolib_utils
 import cmk.utils.paths
 from cmk import trace
 from cmk.automations.internal import AutomationID
-from cmk.automations.results import result_type_registry
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
@@ -43,10 +42,8 @@ from cmk.gui.watolib.automation_commands import automation_command_registry, Aut
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
     cmk_version_of_remote_automation_source,
-    get_local_automation_failure_message,
     LastKnownCentralSiteVersion,
     LastKnownCentralSiteVersionStore,
-    MKAutomationException,
     verify_request_compatibility,
 )
 from cmk.gui.watolib.hosts_and_folders import collect_all_hosts, make_folder_tree
@@ -207,55 +204,24 @@ class PageAutomation(AjaxPage):
                 )
             self._execute_automation_command(automation_command, config)
 
-    @staticmethod
-    def _format_cmk_automation_result(
-        *,
-        serialized_result: str,
-        cmk_command: AutomationID,
-        cmdline_cmd: Iterable[str],
-        debug: bool,
-    ) -> str:
-        try:
-            return (
-                result_type_registry[cmk_command]
-                .deserialize(serialized_result)
-                .serialize(str(cmk_version_of_remote_automation_source(request)))
-            )
-        except SyntaxError as e:
-            msg = get_local_automation_failure_message(
-                command=cmk_command,
-                cmdline=cmdline_cmd,
-                out=serialized_result,
-                exc=e,
-                debug=debug,
-            )
-            raise MKAutomationException(msg)
-
     def _execute_cmk_automation(self, config: Config, *, debug: bool) -> None:
         cmk_command = AutomationID(request.get_str_input_mandatory("automation"))
         args = watolib_utils.mk_eval(request.get_str_input_mandatory("arguments"))
         indata = watolib_utils.mk_eval(request.get_str_input_mandatory("indata"))
         stdin_data = watolib_utils.mk_eval(request.get_str_input_mandatory("stdin_data"))
         timeout = watolib_utils.mk_eval(request.get_str_input_mandatory("timeout"))
-        cmdline_cmd, serialized_result = check_mk_local_automation_serialized(
+        _cmdline, serialized_result = check_mk_local_automation_serialized(
             command=cmk_command,
             args=args,
             indata=indata,
             stdin_data=stdin_data,
             timeout=timeout,
-            for_cmk_version=cmk_version.__version__,
+            for_cmk_version=str(cmk_version_of_remote_automation_source(request)),
             debug=debug,
             collect_all_hosts=lambda: collect_all_hosts(make_folder_tree(config)),
         )
         # Don't use write_text() here (not needed, because no HTML document is rendered)
-        response.set_data(
-            self._format_cmk_automation_result(
-                serialized_result=serialized_result,
-                cmk_command=cmk_command,
-                cmdline_cmd=cmdline_cmd,
-                debug=debug,
-            )
-        )
+        response.set_data(serialized_result)
 
     def _execute_push_profile(
         self,

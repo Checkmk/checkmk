@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
+from ast import literal_eval
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import override
@@ -75,41 +76,49 @@ class TestDiscoveryResult:
 
 
 class TestTryDiscoveryResult:
+    RESULT = ServiceDiscoveryPreviewResult(
+        output="output",
+        check_table=[
+            CheckPreviewEntry(
+                check_source="my_check_source",
+                check_plugin_name="my_check_plugin_name",
+                ruleset_name=None,
+                discovery_ruleset_name=None,
+                item=None,
+                old_discovered_parameters={},
+                new_discovered_parameters={},
+                effective_parameters={},
+                description="description",
+                state=0,
+                output="output",
+                metrics=[],
+                old_labels={},
+                new_labels={},
+                found_on_nodes=[],
+            )
+        ],
+        nodes_check_table={},
+        host_labels={},
+        new_labels={},
+        vanished_labels={},
+        changed_labels={},
+        source_results=[(0, "Success")],
+        labels_by_host={HostName("my_host"): [HostLabel("cmk/foo", "bar", SectionName("baz"))]},
+        config_warnings=["Don't leave your luggage unattended."],
+    )
+
     def test_serialization(self) -> None:
-        result = ServiceDiscoveryPreviewResult(
-            output="output",
-            check_table=[
-                CheckPreviewEntry(
-                    check_source="my_check_source",
-                    check_plugin_name="my_check_plugin_name",
-                    ruleset_name=None,
-                    discovery_ruleset_name=None,
-                    item=None,
-                    old_discovered_parameters={},
-                    new_discovered_parameters={},
-                    effective_parameters={},
-                    description="description",
-                    state=0,
-                    output="output",
-                    metrics=[],
-                    old_labels={},
-                    new_labels={},
-                    found_on_nodes=[],
-                )
-            ],
-            nodes_check_table={},
-            host_labels={},
-            new_labels={},
-            vanished_labels={},
-            changed_labels={},
-            source_results=[(0, "Success")],
-            labels_by_host={HostName("my_host"): [HostLabel("cmk/foo", "bar", SectionName("baz"))]},
-            config_warnings=["Don't leave your luggage unattended."],
-        )
         assert (
-            ServiceDiscoveryPreviewResult.deserialize(result.serialize(cmk_version.__version__))
-            == result
+            ServiceDiscoveryPreviewResult.deserialize(
+                self.RESULT.serialize(cmk_version.__version__)
+            )
+            == self.RESULT
         )
+
+    def test_serialization_for_2_4_keys_source_results(self) -> None:
+        assert literal_eval(self.RESULT.serialize("2.4.0p1"))["source_results"] == {
+            0: (0, "Success")
+        }
 
 
 class TestScanParentsResult:

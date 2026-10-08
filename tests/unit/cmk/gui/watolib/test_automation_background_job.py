@@ -8,14 +8,11 @@ import os
 import threading
 from collections.abc import Sequence
 from contextlib import nullcontext
-from dataclasses import dataclass
 from pathlib import Path
-from typing import override
 
 import pytest
 
-from cmk.automations.internal import AutomationID, AutomationResult
-from cmk.automations.results import ResultTypeRegistry
+from cmk.automations.internal import AutomationID
 from cmk.ccc import store
 from cmk.ccc import version as cmk_version
 from cmk.gui.background_job.job import BackgroundProcessInterface
@@ -35,26 +32,6 @@ from cmk.ruleset_matcher.tags import TagConfigSpec
 RESULT: object = None
 
 
-@dataclass
-class ResultTest(AutomationResult):
-    field_1: int
-    field_2: str | None
-
-    @override
-    def serialize(self, for_cmk_version: str) -> str:
-        return (
-            super().serialize(for_cmk_version)
-            if cmk_version.Version.from_str(for_cmk_version)
-            >= cmk_version.Version.from_str("2.2.0i1")
-            else "i was very different previously"
-        )
-
-    @staticmethod
-    @override
-    def automation_call() -> AutomationID:
-        return AutomationID("test")
-
-
 class TestCheckmkAutomationBackgroundJob:
     @staticmethod
     def _mock_save(_path: object, data: object, **kwargs: object) -> None:  # noqa: ARG004
@@ -65,23 +42,13 @@ class TestCheckmkAutomationBackgroundJob:
     def save_text_to_file_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(store, "save_text_to_file", self._mock_save)
 
-    @pytest.fixture(name="result_type_registry")
-    def result_type_registry_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        registry = ResultTypeRegistry()
-        registry.register(ResultTest)
-        monkeypatch.setattr(
-            automation_background_job,
-            "result_type_registry",
-            registry,
-        )
-
     @staticmethod
     def _check_mk_local_automation_serialized(
-        **_kwargs: object,
+        *, for_cmk_version: str, **_kwargs: object
     ) -> tuple[Sequence[str], str]:
         return (
             ["x", "y", "z"],
-            "(2, None)",
+            f"result for {for_cmk_version}",
         )
 
     @staticmethod
@@ -102,25 +69,16 @@ class TestCheckmkAutomationBackgroundJob:
             self._check_mk_local_automation_serialized,
         )
 
-    @pytest.mark.parametrize(
-        ["version", "expected_result"],
-        [
-            pytest.param("2.1.0p10", "i was very different previously", id="old version"),
-            pytest.param("2.2.0i1", "(2, None)", id="first version with new serialization"),
-            pytest.param("2.5.0b1", "(2, None)", id="current version with new serialization"),
-        ],
-    )
     @pytest.mark.usefixtures(
-        "result_type_registry",
         "check_mk_local_automation_serialized",
         "save_text_to_file",
         "request_context",
     )
-    def test_execute_automation(self, version: str, expected_result: str) -> None:
+    def test_execute_automation(self) -> None:
         """
         Test the most inner logic of the job
 
-        The serialized output is expected to depend on the provided version
+        The result is serialized for the provided version and stored as is
         """
         api_request = self._api_request()
         job = CheckmkAutomationBackgroundJob("job_id")
@@ -136,29 +94,22 @@ class TestCheckmkAutomationBackgroundJob:
                     progress_update,
                 ),
                 api_request,
-                cmk_version.Version.from_str(version),
+                cmk_version.Version.from_str("2.4.0p1"),
                 dict,
             )
-        assert expected_result == RESULT
+        assert RESULT == "result for 2.4.0p1"
 
     @pytest.mark.parametrize(
         ["version", "result"],
         [
-            pytest.param(None, "i was very different previously", id="Missing version header"),
-            pytest.param(
-                "2.1.0p10",
-                "i was very different previously",
-                id="Old version with old serialization",
-            ),
-            pytest.param("2.2.0i1", "(2, None)", id="First version with new serialization"),
-            pytest.param("2.5.0b1", "(2, None)", id="Latest version with new serialization"),
+            pytest.param(None, "result for 1.6.0p1", id="Missing version header"),
+            pytest.param("2.4.0p1", "result for 2.4.0p1", id="Version header"),
         ],
     )
     @pytest.mark.usefixtures(
         "patch_omd_site",
         "allow_background_jobs",
         "request_context",
-        "result_type_registry",
         "check_mk_local_automation_serialized",
     )
     def test_automation_commands(
@@ -167,8 +118,7 @@ class TestCheckmkAutomationBackgroundJob:
         """
         Test the execution of the whole background job
 
-        Assert that the version gets passed correctly
-        and that the result serialization depends on that version
+        Assert that the version of the central site gets passed correctly
         """
         with monkeypatch.context() as m:
             if version is not None:

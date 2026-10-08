@@ -9,17 +9,14 @@
 
 import ast
 import uuid
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import override
 
 from pydantic import BaseModel
 
-from cmk.automations.internal import AutomationID
-from cmk.automations.results import result_type_registry
 from cmk.ccc import store  # Some braindead "unit" test monkeypatch this like hell :-/
-from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Version
 from cmk.gui.background_job.job import (
@@ -45,8 +42,6 @@ from cmk.gui.watolib.automations import (
     CheckmkAutomationGetStatusResponse,
     CheckmkAutomationRequest,
     cmk_version_of_remote_automation_source,
-    get_local_automation_failure_message,
-    MKAutomationException,
     RemoteAutomationGetStatusResponseRaw,
 )
 from cmk.gui.watolib.host_attributes import CollectedHostAttributes
@@ -209,33 +204,6 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
     def gui_title(cls) -> str:
         return _("Checkmk automation")
 
-    @staticmethod
-    def _store_result(
-        *,
-        path: Path,
-        serialized_result: str,
-        automation_cmd: AutomationID,
-        cmdline_cmd: Iterable[str],
-        debug: bool,
-        for_cmk_version: Version,
-    ) -> None:
-        try:
-            store.save_text_to_file(
-                path,
-                result_type_registry[automation_cmd]
-                .deserialize(serialized_result)
-                .serialize(str(for_cmk_version)),
-            )
-        except SyntaxError as e:
-            msg = get_local_automation_failure_message(
-                command=automation_cmd,
-                cmdline=cmdline_cmd,
-                out=serialized_result,
-                exc=e,
-                debug=debug,
-            )
-            raise MKAutomationException(msg)
-
     def execute_automation(
         self,
         job_interface: BackgroundProcessInterface,
@@ -258,23 +226,16 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
     ) -> None:
         self._logger.info("Starting automation: %(command)s", {"command": api_request.command})
         self._logger.debug(api_request)
-        cmdline_cmd, serialized_result = check_mk_local_automation_serialized(
+        _cmdline, serialized_result = check_mk_local_automation_serialized(
             command=api_request.command,
             args=api_request.args,
             indata=api_request.indata,
             stdin_data=api_request.stdin_data,
             timeout=api_request.timeout,
-            for_cmk_version=cmk_version.__version__,
+            for_cmk_version=str(for_cmk_version),
             debug=api_request.debug,
             collect_all_hosts=collect_all_hosts,
         )
         # This file will be read by the get-status request
-        self._store_result(
-            path=Path(job_interface.get_work_dir()) / "result.mk",
-            serialized_result=serialized_result,
-            automation_cmd=api_request.command,
-            cmdline_cmd=cmdline_cmd,
-            debug=api_request.debug,
-            for_cmk_version=for_cmk_version,
-        )
+        store.save_text_to_file(Path(job_interface.get_work_dir()) / "result.mk", serialized_result)
         job_interface.send_result_message(_("Finished."))

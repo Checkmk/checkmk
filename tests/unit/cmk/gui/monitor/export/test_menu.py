@@ -6,7 +6,9 @@
 import pytest
 
 from cmk.ccc.user import UserId
-from cmk.gui.monitor.export import MonitorExportMenu, MonitorReportExportMenu
+from cmk.gui.htmllib.generator import ClickAction
+from cmk.gui.monitor.export import EXPORT_EVENT, MonitorExportMenu, MonitorReportExportMenu
+from cmk.gui.page_menu import PageMenuLink
 from tests.testlib.unit.gui.global_settings import logged_in
 
 
@@ -23,6 +25,24 @@ def test_export_dropdown_offers_csv_and_json_with_permission() -> None:
         for topic in dropdown.topics
         for entry in topic.entries
     ] == ["export_csv", "export_json"]
+
+
+@pytest.mark.usefixtures("with_user_login")
+def test_export_entries_dispatch_the_export_event_via_click_action() -> None:
+    items = [
+        entry.item
+        for dropdown in MonitorExportMenu().dropdowns()
+        for topic in dropdown.topics
+        for entry in topic.entries
+    ]
+
+    assert [item.link.click_action for item in items if isinstance(item, PageMenuLink)] == [
+        ClickAction(
+            action="page_menu_dispatch_custom_event",
+            arguments={"name": EXPORT_EVENT, "detail": export_format},
+        )
+        for export_format in ("csv", "json")
+    ]
 
 
 @pytest.mark.usefixtures("with_user_login")

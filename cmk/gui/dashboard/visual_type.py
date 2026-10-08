@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-import json
 import uuid
 from collections.abc import Iterator
 from typing import cast, override
@@ -18,10 +17,11 @@ from cmk.gui.graphing import (
     GraphSpecification,
     TemplateGraphSpecification,
 )
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.http import Request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.page_menu import make_javascript_link, PageMenuEntry
+from cmk.gui.page_menu import make_click_action_link, PageMenuEntry
 from cmk.gui.type_defs import ADD_TO_GRAPH_TYPES, DashboardEmbeddedViewSpec, VisualContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals.type import VisualType
@@ -100,8 +100,11 @@ class VisualTypeDashboards(VisualType):
                 yield PageMenuEntry(
                     title=str(dashboard["title"]),
                     icon_name=StaticIcon(IconNames.dashboard),
-                    item=make_javascript_link(
-                        "cmk.popup_menu.add_to_visual('dashboards', %s)" % json.dumps(name),
+                    item=make_click_action_link(
+                        ClickAction(
+                            action="add_to_visual",
+                            arguments={"visual_type": "dashboards", "visual_name": name},
+                        ),
                         action_id="add_to_visual",
                         action_parameters=["dashboards", name],
                     ),

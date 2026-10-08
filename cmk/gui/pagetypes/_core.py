@@ -44,7 +44,7 @@ from cmk.gui.default_permissions import PERMISSION_SECTION_GENERAL
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.header import make_header
 from cmk.gui.hooks import request_memoize
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request, response
 from cmk.gui.i18n import _, _l, _u
@@ -59,10 +59,10 @@ from cmk.gui.main_menu import (
 from cmk.gui.main_menu_types import MainMenuItem
 from cmk.gui.page_menu import (
     doc_reference_to_page_menu,
+    make_click_action_link,
     make_confirmed_form_submit_link,
     make_external_link,
     make_form_submit_link,
-    make_javascript_link,
     make_simple_link,
     PageMenu,
     PageMenuDropdown,
@@ -1808,8 +1808,11 @@ class OverridableContainer[T_OverridableContainerConfig: OverridableContainerCon
             yield PageMenuEntry(
                 title=page.title(),
                 icon_name=cls.type_icon(),
-                item=make_javascript_link(
-                    f"cmk.popup_menu.pagetype_add_to_container({json.dumps(cls.type_name())}, {json.dumps(page.name())});",
+                item=make_click_action_link(
+                    ClickAction(
+                        action="pagetype_add_to_container",
+                        arguments={"page_type": cls.type_name(), "page_name": page.name()},
+                    ),
                     action_id="add_to_container",
                     action_parameters=[cls.type_name(), page.name()],
                 ),

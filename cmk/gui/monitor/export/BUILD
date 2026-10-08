@@ -11,6 +11,7 @@ py_library(
     deps = [
         "//cmk/gui:auth_core",
         "//cmk/gui:core_toolkit",
+        "//cmk/gui:html_toolkit",
         "//cmk/gui:page_toolkit",
         "//packages/cmk-web/cmk/web/utils",
     ],

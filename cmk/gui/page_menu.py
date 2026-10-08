@@ -57,11 +57,10 @@ class Link:
 
     url: str | None = None
     target: str | None = None
-    onclick: str | None = None
     click_action: ClickAction | None = None
     transition: LoadingTransition | None = None
-    # Structured mirror of the click action, for consumers (e.g. the burger menu API) that
-    # need the action and its parameters without parsing the JS string.
+    # Structured description of the action, for consumers (e.g. the burger menu API) that
+    # need the action and its parameters.
     action_id: str | None = None
     action_parameters: list[str] | None = None
 
@@ -87,31 +86,16 @@ def make_external_link(url: str) -> PageMenuLink:
     return PageMenuLink(Link(url=url, target="_blank"))
 
 
-def make_javascript_link(
-    javascript: str,
-    *,
-    action_id: str | None = None,
-    action_parameters: list[str] | None = None,
-) -> PageMenuLink:
-    # Make all actions close the menu, even actions on the page, like for example toggling of the
-    # bulk selection checkboxes
-    return PageMenuLink(
-        Link(
-            onclick=make_javascript_action(javascript),
-            action_id=action_id,
-            action_parameters=action_parameters,
-        )
-    )
-
-
 def make_click_action_link(
     click_action: ClickAction,
     *,
+    url: str | None = None,
     action_id: str | None = None,
     action_parameters: list[str] | None = None,
 ) -> PageMenuLink:
     return PageMenuLink(
         Link(
+            url=url,
             click_action=click_action,
             action_id=action_id,
             action_parameters=action_parameters,
@@ -845,15 +829,12 @@ def _show_entry_link(
     content: HTML,
     url: str | None,
     click_action: ClickAction | None,
-    onclick: str | None,
     target: str | None,
     class_: list[str] | None = None,
     **attrs: HTMLTagAttributeValue,
 ) -> None:
     if url is None:
-        html.action_link(
-            content, click_action=click_action, class_=class_, onclick=onclick, **attrs
-        )
+        html.action_link(content, click_action=click_action, class_=class_, **attrs)
         return
     html.a(
         content,
@@ -883,7 +864,6 @@ class SuggestedEntryRenderer:
             entry,
             url=None,
             click_action=_vue_event_action(item),
-            onclick=None,
             target=None,
             class_=item.class_ if item.class_ else None,
         )
@@ -893,7 +873,6 @@ class SuggestedEntryRenderer:
             entry,
             url=item.link.url,
             click_action=item.link.click_action,
-            onclick=item.link.onclick,
             target=item.link.target,
         )
 
@@ -902,7 +881,6 @@ class SuggestedEntryRenderer:
             entry,
             url=None,
             click_action=_toggle_popup_action(entry),
-            onclick=None,
             target=None,
         )
 
@@ -911,7 +889,6 @@ class SuggestedEntryRenderer:
         entry: PageMenuEntry,
         url: str | None,
         click_action: ClickAction | None,
-        onclick: str | None,
         target: str | None,
         class_: str | None = None,
     ) -> None:
@@ -919,7 +896,6 @@ class SuggestedEntryRenderer:
             _render_entry_content(entry.icon_name, entry.shortcut_title or entry.title),
             url=url,
             click_action=click_action,
-            onclick=onclick,
             target=target,
             class_=[class_ if class_ else "suggestion_link"],
             id_=("menu_suggestion_%s" % entry.name if entry.name else None),
@@ -944,7 +920,6 @@ class ShortcutRenderer:
             entry,
             url=None,
             click_action=_vue_event_action(item),
-            onclick=None,
             target=None,
             class_=item.class_ if item.class_ else None,
         )
@@ -954,7 +929,6 @@ class ShortcutRenderer:
             entry=entry,
             url=item.link.url,
             click_action=item.link.click_action,
-            onclick=item.link.onclick,
             target=item.link.target,
         )
 
@@ -963,7 +937,6 @@ class ShortcutRenderer:
             entry,
             url=None,
             click_action=_toggle_popup_action(entry),
-            onclick=None,
             target=None,
         )
 
@@ -972,7 +945,6 @@ class ShortcutRenderer:
         entry: PageMenuEntry,
         url: str | None,
         click_action: ClickAction | None,
-        onclick: str | None,
         target: str | None,
         class_: str | None = None,
     ) -> None:
@@ -982,7 +954,6 @@ class ShortcutRenderer:
 
         html.icon_button(
             url=url,
-            onclick=onclick,
             click_action=click_action,
             title=entry.shortcut_title or entry.title,
             icon=entry.icon_name,
@@ -1017,7 +988,6 @@ class DropdownEntryRenderer:
             icon=icon,
             url=None,
             click_action=_vue_event_action(item),
-            onclick=None,
             target=None,
         )
 
@@ -1034,7 +1004,6 @@ class DropdownEntryRenderer:
         self._show_link(
             url=item.link.url,
             click_action=click_action,
-            onclick=item.link.onclick,
             target=item.link.target,
             icon=icon,
             title=title,
@@ -1044,7 +1013,6 @@ class DropdownEntryRenderer:
         self._show_link(
             url=None,
             click_action=_toggle_popup_action(entry),
-            onclick=None,
             target=None,
             icon=entry.icon_name,
             title=entry.title,
@@ -1054,7 +1022,6 @@ class DropdownEntryRenderer:
         self,
         url: str | None,
         click_action: ClickAction | None,
-        onclick: str | None,
         target: str | None,
         icon: StaticIcon | DynamicIcon,
         title: str,
@@ -1063,7 +1030,6 @@ class DropdownEntryRenderer:
             _render_entry_content(icon, title),
             url=url,
             click_action=click_action,
-            onclick=onclick,
             target=target,
         )
 

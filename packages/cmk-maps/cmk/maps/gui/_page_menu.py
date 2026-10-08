@@ -13,11 +13,12 @@ list's layout is a page parameter instead, so the menu can offer the other one.
 from typing import Final, Literal
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.page_menu import (
-    make_javascript_link,
+    make_click_action_link,
     make_simple_link,
     PageMenu,
     PageMenuDropdown,
@@ -107,7 +108,9 @@ def _layout_entry(shown: MapListView) -> PageMenuEntry:
 def _switch_layout(layout: MapListView) -> PageMenuLink:
     # Built from the URL at the time of the click, which also holds the search
     # and scope the list has written into it since the page was rendered.
-    return make_javascript_link(f"location.href = cmk.utils.makeuri({{layout: '{layout}'}})")
+    return make_click_action_link(
+        ClickAction(action="page_menu_reload_with_vars", arguments={"vars": {"layout": layout}})
+    )
 
 
 def _maps_dropdown(acting_user: LoggedInUser, settings_url: str) -> PageMenuDropdown:
@@ -158,6 +161,9 @@ def _maps_dropdown(acting_user: LoggedInUser, settings_url: str) -> PageMenuDrop
 
 
 def _dispatch(action: PageMenuAction) -> PageMenuLink:
-    return make_javascript_link(
-        f"document.dispatchEvent(new CustomEvent('{PAGE_MENU_EVENT}', {{detail: '{action}'}}))"
+    return make_click_action_link(
+        ClickAction(
+            action="page_menu_dispatch_custom_event",
+            arguments={"name": PAGE_MENU_EVENT, "detail": action},
+        )
     )

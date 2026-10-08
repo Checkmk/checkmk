@@ -8,6 +8,7 @@
 import pytest
 
 from cmk.ccc.user import UserId
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenu, PageMenuLink
 from cmk.gui.session_context import UserContext
@@ -50,9 +51,10 @@ def test_actions_dispatch_the_event_the_app_listens_for(
 ) -> None:
     create = next(entry for entry in _menu().shortcuts if entry.name == "maps_create")
     assert isinstance(create.item, PageMenuLink)
-    assert create.item.link.onclick is not None
-    assert f"'{PAGE_MENU_EVENT}'" in create.item.link.onclick
-    assert "detail: 'create'" in create.item.link.onclick
+    assert create.item.link.click_action == ClickAction(
+        action="page_menu_dispatch_custom_event",
+        arguments={"name": PAGE_MENU_EVENT, "detail": "create"},
+    )
 
 
 @pytest.mark.parametrize(
@@ -77,8 +79,9 @@ def test_layout_switch_keeps_what_the_list_put_in_the_url(
 ) -> None:
     switch = next(entry for entry in _menu().suggestions if entry.name == "maps_show_table")
     assert isinstance(switch.item, PageMenuLink)
-    assert switch.item.link.onclick is not None
-    assert "location.href = cmk.utils.makeuri({layout: 'table'})" in switch.item.link.onclick
+    assert switch.item.link.click_action == ClickAction(
+        action="page_menu_reload_with_vars", arguments={"vars": {"layout": "table"}}
+    )
 
 
 def test_user_without_permissions_gets_no_list_actions(

@@ -41,15 +41,14 @@ from cmk.gui.form_specs import (
     VisitorOptions,
 )
 from cmk.gui.htmllib.foldable_container import foldable_container
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
+    make_click_action_link,
     make_display_options_dropdown,
-    make_javascript_action,
-    make_javascript_link,
     make_simple_link,
     PageMenu,
     PageMenuDropdown,
@@ -2426,8 +2425,8 @@ def _page_menu_entry_show_parameters(host: Host, options: DiscoveryOptions) -> P
         icon_name=StaticIcon(
             IconNames.toggle_on if options.show_parameters else IconNames.toggle_off
         ),
-        item=make_simple_link(
-            _checkbox_js_url(
+        item=make_click_action_link(
+            _start_click_action(
                 host,
                 options._replace(show_parameters=not options.show_parameters),
             )
@@ -2443,8 +2442,8 @@ def _page_menu_entry_show_checkboxes(host: Host, options: DiscoveryOptions) -> P
         icon_name=StaticIcon(
             IconNames.toggle_on if options.show_checkboxes else IconNames.toggle_off
         ),
-        item=make_simple_link(
-            _checkbox_js_url(
+        item=make_click_action_link(
+            _start_click_action(
                 host,
                 options._replace(show_checkboxes=not options.show_checkboxes),
             )
@@ -2454,18 +2453,14 @@ def _page_menu_entry_show_checkboxes(host: Host, options: DiscoveryOptions) -> P
     )
 
 
-def _checkbox_js_url(host: Host, options: DiscoveryOptions) -> str:
-    return "javascript:%s" % make_javascript_action(_start_js_call(host, options))
-
-
 def _page_menu_entry_show_discovered_labels(host: Host, options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Show active discovered service labels"),
         icon_name=StaticIcon(
             IconNames.toggle_on if options.show_discovered_labels else IconNames.toggle_off
         ),
-        item=make_simple_link(
-            _checkbox_js_url(
+        item=make_click_action_link(
+            _start_click_action(
                 host,
                 options._replace(show_discovered_labels=not options.show_discovered_labels),
             )
@@ -2481,8 +2476,8 @@ def _page_menu_entry_show_plugin_names(host: Host, options: DiscoveryOptions) ->
         icon_name=StaticIcon(
             IconNames.toggle_on if options.show_plugin_names else IconNames.toggle_off
         ),
-        item=make_simple_link(
-            _checkbox_js_url(
+        item=make_click_action_link(
+            _start_click_action(
                 host,
                 options._replace(show_plugin_names=not options.show_plugin_names),
             )
@@ -2498,8 +2493,8 @@ def _page_menu_service_configuration_entries(
     yield PageMenuEntry(
         title=_("Accept all"),
         icon_name=StaticIcon(IconNames.accept),
-        item=make_javascript_link(
-            _start_js_call(
+        item=make_click_action_link(
+            _start_click_action(
                 host,
                 options._replace(action=DiscoveryAction.FIX_ALL),
                 waiting_message=_waiting_message_fix_all(host.name()),
@@ -2514,8 +2509,8 @@ def _page_menu_service_configuration_entries(
     yield PageMenuEntry(
         title=_("Remove all and find new"),
         icon_name=StaticIcon(IconNames.services_tabula_rasa),
-        item=make_javascript_link(
-            _start_js_call(host, options._replace(action=DiscoveryAction.TABULA_RASA))
+        item=make_click_action_link(
+            _start_click_action(host, options._replace(action=DiscoveryAction.TABULA_RASA))
         ),
         name="tabula_rasa",
         is_enabled=False,
@@ -2525,8 +2520,8 @@ def _page_menu_service_configuration_entries(
     yield PageMenuEntry(
         title=_("Rescan"),
         icon_name=StaticIcon(IconNames.services_refresh),
-        item=make_javascript_link(
-            _start_js_call(
+        item=make_click_action_link(
+            _start_click_action(
                 host,
                 options._replace(action=DiscoveryAction.REFRESH),
                 waiting_message=_waiting_message_refresh(host.name()),
@@ -2541,8 +2536,8 @@ def _page_menu_service_configuration_entries(
     yield PageMenuEntry(
         title=_("Stop job"),
         icon_name=StaticIcon(IconNames.services_stop),
-        item=make_javascript_link(
-            _start_js_call(host, options._replace(action=DiscoveryAction.STOP))
+        item=make_click_action_link(
+            _start_click_action(host, options._replace(action=DiscoveryAction.STOP))
         ),
         name="stop",
         is_enabled=False,
@@ -2574,8 +2569,8 @@ def _page_menu_selected_services_entries(
     yield PageMenuEntry(
         title=_("Add missing, remove vanished"),
         icon_name=StaticIcon(IconNames.services_fix_all),
-        item=make_javascript_link(
-            _start_js_call(host, options._replace(action=DiscoveryAction.UPDATE_SERVICES))
+        item=make_click_action_link(
+            _start_click_action(host, options._replace(action=DiscoveryAction.UPDATE_SERVICES))
         ),
         name="fix_all",
         is_enabled=False,
@@ -2660,8 +2655,8 @@ def _page_menu_selected_services_entries(
         yield PageMenuEntry(
             title=entry.title,
             icon_name=entry.icon,
-            item=make_javascript_link(
-                _start_js_call(
+            item=make_click_action_link(
+                _start_click_action(
                     host,
                     options._replace(action=DiscoveryAction.BULK_UPDATE),
                     request_vars={
@@ -2679,8 +2674,8 @@ def _page_menu_selected_services_entries(
     yield PageMenuEntry(
         title=_("Update service labels"),
         icon_name=StaticIcon(IconNames.update_service_labels),
-        item=make_javascript_link(
-            _start_js_call(
+        item=make_click_action_link(
+            _start_click_action(
                 host,
                 options._replace(action=DiscoveryAction.UPDATE_SERVICE_LABELS),
                 request_vars={
@@ -2697,8 +2692,8 @@ def _page_menu_selected_services_entries(
     yield PageMenuEntry(
         title=_("Update discovery parameters"),
         icon_name=StaticIcon(IconNames.update_discovery_parameters),
-        item=make_javascript_link(
-            _start_js_call(
+        item=make_click_action_link(
+            _start_click_action(
                 host,
                 options._replace(action=DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS),
                 request_vars={
@@ -2720,8 +2715,8 @@ def _page_menu_host_labels_entries(
     yield PageMenuEntry(
         title=_("Update host labels"),
         icon_name=StaticIcon(IconNames.update_host_labels),
-        item=make_javascript_link(
-            _start_js_call(host, options._replace(action=DiscoveryAction.UPDATE_HOST_LABELS))
+        item=make_click_action_link(
+            _start_click_action(host, options._replace(action=DiscoveryAction.UPDATE_HOST_LABELS))
         ),
         name="update_host_labels",
         is_enabled=False,
@@ -2729,6 +2724,22 @@ def _page_menu_host_labels_entries(
         is_suggested=True,
         css_classes=["action"],
     )
+
+
+def _start_args(
+    host: Host,
+    options: DiscoveryOptions,
+    request_vars: dict | None,
+    waiting_message: str | None,
+) -> dict[str, object]:
+    return {
+        "host_name": host.name(),
+        "folder_path": host.folder().path(),
+        "discovery_options": options._asdict(),
+        "transid": transactions.get(),
+        "request_vars": request_vars,
+        "waiting_message": waiting_message,
+    }
 
 
 def _start_js_call(
@@ -2739,16 +2750,21 @@ def _start_js_call(
 ) -> str:
     params = ", ".join(
         json.dumps(param)
-        for param in [
-            host.name(),
-            host.folder().path(),
-            options._asdict(),
-            transactions.get(),
-            request_vars,
-            waiting_message,
-        ]
+        for param in _start_args(host, options, request_vars, waiting_message).values()
     )
     return f"cmk.service_discovery.start({params})"
+
+
+def _start_click_action(
+    host: Host,
+    options: DiscoveryOptions,
+    request_vars: dict | None = None,
+    waiting_message: str | None = None,
+) -> ClickAction:
+    return ClickAction(
+        action="service_discovery_start",
+        arguments=_start_args(host, options, request_vars, waiting_message),
+    )
 
 
 def ajax_popup_service_action_menu(ctx: PageContext) -> None:

@@ -94,17 +94,26 @@
       "enum": [
         "activate_changes",
         "add_bookmark",
+        "add_to_visual",
         "dispatch_custom_event",
+        "graph_export",
         "loading_transition",
+        "nodevis_toggle_compare_history",
+        "nodevis_toggle_layout_designer",
         "page_menu_close_popup",
         "page_menu_confirmed_form_submit",
+        "page_menu_dispatch_custom_event",
         "page_menu_form_submit",
+        "page_menu_reload_with_vars",
         "page_menu_toggle_popup",
         "page_menu_toggle_suggestions",
+        "pagetype_add_to_container",
         "reload_page",
+        "service_discovery_start",
         "switch_master_state",
         "toggle_all_rows",
-        "toggle_inline_help"
+        "toggle_inline_help",
+        "waiting_flash_message"
       ]
     },
     "dynamic_params_callback_name": {

@@ -1465,8 +1465,8 @@ class HTMLGenerator(HTMLWriter):
         elif class_ is not None:
             classes.append(class_)  # type: ignore[unreachable]
 
-        href = url if not (onclick or click_action) else "#"
-        assert href is not None
+        # Keep a real URL next to a click action: actions returning true let the browser follow it
+        href = "#" if onclick or not url else url
 
         if isinstance(icon, StaticIcon):
             icon_content = HTMLGenerator.render_static_icon(icon, css_classes=["iconbutton"])

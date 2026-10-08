@@ -17,7 +17,6 @@ from cmk.gui.page_menu import (
     make_click_action_link,
     make_external_link,
     make_form_submit_link,
-    make_javascript_link,
     make_simple_link,
     PageMenu,
     PageMenuDropdown,
@@ -35,28 +34,27 @@ def test_make_simple_link() -> None:
     item = make_simple_link("views.py")
     assert item.link.url == "views.py"
     assert item.link.target is None
-    assert item.link.onclick is None
+    assert item.link.click_action is None
 
 
 def test_make_external_link() -> None:
     item = make_external_link("https://checkmk.com/")
     assert item.link.url == "https://checkmk.com/"
     assert item.link.target == "_blank"
-    assert item.link.onclick is None
-
-
-def test_make_javascript_link() -> None:
-    item = make_javascript_link("bla.blub()")
-    assert item.link.url is None
-    assert item.link.target is None
-    assert item.link.onclick == "bla.blub();cmk.page_menu.close_active_dropdown();"
+    assert item.link.click_action is None
 
 
 def test_make_click_action_link() -> None:
     click_action = ClickAction(action="reload_page")
     item = make_click_action_link(click_action)
     assert item.link.url is None
-    assert item.link.onclick is None
+    assert item.link.click_action == click_action
+
+
+def test_make_click_action_link_with_url() -> None:
+    click_action = ClickAction(action="waiting_flash_message", arguments={"message": "Wait"})
+    item = make_click_action_link(click_action, url="wato.py?_action=verify")
+    assert item.link.url == "wato.py?_action=verify"
     assert item.link.click_action == click_action
 
 
@@ -118,7 +116,7 @@ def test_simple_page_menu() -> None:
             assert isinstance(entry.item, PageMenuLink)
             assert entry.item.link.url == "https://checkmk.com/"
             assert entry.item.link.target == "_blank"
-            assert entry.item.link.onclick is None
+            assert entry.item.link.click_action is None
 
     display_dropdown = pm.dropdowns[1]
     assert display_dropdown.name == "display"

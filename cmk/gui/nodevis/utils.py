@@ -12,8 +12,9 @@ import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
 from cmk.gui import sites
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.i18n import _
-from cmk.gui.page_menu import make_javascript_link, PageMenuEntry
+from cmk.gui.page_menu import make_click_action_link, PageMenuEntry
 from cmk.livestatus_client import lqencode
 from cmk.utils.paths import default_config_dir
 from cmk.utils.servicename import ServiceName
@@ -74,11 +75,7 @@ def get_toggle_layout_designer_page_menu_entry() -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Layout configuration"),
         icon_name=StaticIcon(IconNames.toggle_off),
-        item=make_javascript_link(
-            "const new_state = node_instance.toggle_layout_designer();"
-            "cmk.d3.select('.suggestion.topology_layout_designer').select('img').classed('on', new_state);"
-            "cmk.d3.select('#menu_shortcut_edit_layout').select('img').classed('on', new_state);"
-        ),
+        item=make_click_action_link(ClickAction(action="nodevis_toggle_layout_designer")),
         name="edit_layout",
         css_classes=["topology_layout_designer", "noselect"],
         is_shortcut=True,
@@ -90,10 +87,7 @@ def get_compare_history_page_menu_entry() -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Compare history"),
         icon_name=StaticIcon(IconNames.toggle_off),
-        item=make_javascript_link(
-            "const new_state = node_instance.toggle_compare_history();"
-            "cmk.d3.select('.suggestion.topology_compare_history').select('img').classed('on', new_state);"
-        ),
+        item=make_click_action_link(ClickAction(action="nodevis_toggle_compare_history")),
         name="compare_history",
         css_classes=["topology_compare_history", "noselect"],
         is_shortcut=True,

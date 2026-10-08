@@ -543,6 +543,16 @@ def test_community_not_contains_nonfree_files(package_path: str) -> None:
     )
 
 
+def test_package_does_not_contain_test_plans(package_path: str) -> None:
+    """test plans are internal QA documents and must not ship in any package"""
+    test_plans = [
+        path
+        for path in _get_paths_from_package(package_path)
+        if re.search(r"test[_-]?plan.*\.md$", Path(path).name, re.IGNORECASE)
+    ]
+    assert not test_plans, f"Found test plans in {package_path}: {test_plans}"
+
+
 def test_package_is_identifiable_by_commit(package_path: str) -> None:
     if os.environ.get("CIPARAM_GATED_REBASE_ONTO"):
         pytest.skip("Package was built from a rebased commit, HEAD mismatch is expected")

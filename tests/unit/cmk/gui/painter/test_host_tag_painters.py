@@ -5,35 +5,31 @@
 
 import pytest
 
-from cmk.gui.config import active_config
 from cmk.gui.painter import all_painters
 from cmk.ruleset_matcher.tags import TagConfig, TagGroupID, TagID
 
+_TAG_GROUPS = TagConfig.from_config(
+    {
+        "aux_tags": [],
+        "tag_groups": [
+            {
+                "id": TagGroupID("whoot"),
+                "topic": "Blubberei",
+                "tags": [{"aux_tags": [], "id": TagID("bla"), "title": "Bla"}],
+                "title": "Whoot",
+            },
+        ],
+    }
+).tag_groups
+
 
 @pytest.mark.usefixtures("load_config")
-def test_host_tag_painter_registration(monkeypatch: pytest.MonkeyPatch) -> None:
-    with monkeypatch.context() as m:
-        m.setattr(
-            active_config,
-            "tags",
-            TagConfig.from_config(
-                {
-                    "aux_tags": [],
-                    "tag_groups": [
-                        {
-                            "id": TagGroupID("whoot"),
-                            "topic": "Blubberei",
-                            "tags": [
-                                {
-                                    "aux_tags": [],
-                                    "id": TagID("bla"),
-                                    "title": "Bla",
-                                },
-                            ],
-                            "title": "Whoot",
-                        },
-                    ],
-                }
-            ),
-        )
-        assert "host_tag_whoot" in all_painters(active_config.tags.tag_groups)
+def test_host_tag_painter_registration() -> None:
+    assert "host_tag_whoot" in all_painters(_TAG_GROUPS)
+
+
+@pytest.mark.usefixtures("request_context")
+def test_host_tag_painter_titles_itself_after_its_tag_group() -> None:
+    assert str(all_painters(_TAG_GROUPS)["host_tag_whoot"].static_title) == (
+        "Host tag: Blubberei  / Whoot"
+    )

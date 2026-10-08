@@ -15,11 +15,9 @@ from cmk.gui.logged_in import user
 from cmk.gui.painter import (
     all_painters,
     Cell,
-    InternalPainter,
     PainterRegistry,
-    register_painter,
-    registry,
 )
+from cmk.gui.painter.registry import _make_plugin_painter
 from cmk.gui.type_defs import ColumnSpec, Row, SorterSpec, ViewSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import replace_action_url_macros
@@ -147,34 +145,33 @@ def test_replace_action_url_macros(
         assert replace_action_url_macros(url, what, row) == result
 
 
+def _paint_abc_xyz(_row: Row) -> tuple[str, str]:
+    return ("abc", "xyz")
+
+
 @pytest.mark.usefixtures("view_spec")
-def test_group_value(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(registry, "painter_registry", painter_registry := PainterRegistry())
-
-    def rendr(row: Row) -> tuple[str, str]:
-        return ("abc", "xyz")
-
-    register_painter(
-        "tag_painter",
-        {
-            "title": "Tag painter",
-            "short": "tagpaint",
-            "columns": ["x"],
-            "sorter": "aaaa",
-            "options": ["opt1"],
-            "printable": False,
-            "paint": rendr,
-            "groupby": "dmz",
-        },
+def test_group_value() -> None:
+    painter_registry = PainterRegistry()
+    painter_registry.register(
+        _make_plugin_painter(
+            "tag_painter",
+            {
+                "title": "Tag painter",
+                "short": "tagpaint",
+                "columns": ["x"],
+                "sorter": "aaaa",
+                "options": ["opt1"],
+                "printable": False,
+                "paint": _paint_abc_xyz,
+                "groupby": "dmz",
+            },
+        )
     )
-
-    painter: InternalPainter = painter_registry["tag_painter"]
-    dummy_cell: Cell = Cell(
-        ColumnSpec(name=painter.ident),
+    dummy_cell = Cell(
+        ColumnSpec(name="tag_painter"),
         None,
         painter_registry,
         make_painter_context(UserPermissions({}, {}, {}, [])),
         None,
     )
-
     assert group_value({"host_tags": {"networking": "dmz"}}, [dummy_cell]) == ("dmz",)

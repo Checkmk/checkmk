@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from functools import partial
 from typing import override
 
 import pytest
@@ -15,7 +16,7 @@ from cmk.gui.painter.legacy import Painter
 from cmk.gui.painter.registry import _make_plugin_painter
 from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.valuespec import FixedValue
+from cmk.gui.valuespec import FixedValue, ValueSpec
 from cmk.gui.view_utils import CellSpec
 from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
@@ -50,6 +51,24 @@ class _LegacyPainterWithLateColumns(_LegacyPainter):
     @override
     def columns(self) -> Sequence[ColumnName]:
         return list(_LATE_COLUMNS)
+
+
+_LEGACY_PARAMETERS: FixedValue[object] = FixedValue(value=None)
+
+
+class _LegacyPainterWithBehaviour(_LegacyPainter):
+    @override
+    def group_by(self, row: Row, cell: Cell) -> str:
+        return f"group of {row['host_name']}"
+
+    @property
+    @override
+    def parameters(self) -> ValueSpec[object] | None:
+        return _LEGACY_PARAMETERS
+
+    @override
+    def export_title(self, cell: Cell) -> str:
+        return "legacy_export"
 
 
 class _LegacyPainterWithUUIDColumn(_LegacyPainter):
@@ -106,6 +125,32 @@ def test_legacy_painter_reads_its_columns_on_access() -> None:
         _LATE_COLUMNS.clear()
 
 
+def test_legacy_painter_groups_by_its_own_group_by() -> None:
+    registry = PainterRegistry()
+    registry.register(_LegacyPainterWithBehaviour)
+    cell = Cell(ColumnSpec(name="legacy"), None, registry, make_painter_context(_PERMISSIONS), None)
+    assert registry["legacy"].group_by({"host_name": "heute"}, cell, cell.painter_context()) == (
+        "group of heute"
+    )
+
+
+def test_legacy_painter_builds_its_own_parameters() -> None:
+    registry = PainterRegistry()
+    registry.register(_LegacyPainterWithBehaviour)
+    assert registry["legacy"].parameters(make_painter_context(_PERMISSIONS)) is _LEGACY_PARAMETERS
+
+
+def test_legacy_painter_exports_its_own_export_title() -> None:
+    registry = PainterRegistry()
+    registry.register(_LegacyPainterWithBehaviour)
+    assert (
+        Cell(
+            ColumnSpec(name="legacy"), None, registry, make_painter_context(_PERMISSIONS), None
+        ).export_title()
+        == "legacy_export"
+    )
+
+
 @pytest.mark.usefixtures("request_context")
 def test_legacy_painter_keeps_its_uuid_column() -> None:
     registry = PainterRegistry()
@@ -140,6 +185,18 @@ def test_painter_renders_through_a_cell() -> None:
         None,
     )
     assert cell.render_content({"host_address": "10.0.0.1"}, user) == ("", "10.0.0.1")
+
+
+def test_painter_computes_its_columns_on_access() -> None:
+    late_columns: list[ColumnName] = []
+    painter = InternalPainter(
+        ident="late",
+        title="Late",
+        columns=partial(list, late_columns),
+        render=_render_host_address,
+    )
+    late_columns.append("host_name")
+    assert painter.columns == ["host_name"]
 
 
 def test_painter_that_is_not_groupable_puts_all_rows_into_one_group() -> None:

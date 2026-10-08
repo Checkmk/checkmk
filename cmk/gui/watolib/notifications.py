@@ -883,5 +883,6 @@ class NotificationParameterConfigFile(WatoSimpleConfigFile[NotificationParameter
         formatted = pprint.pformat(cfg, sort_dicts=False) if pprint_value else repr(cfg)
         store.save_mk_file(
             target_path,
+            f"{store.bootstrap_statement(self._config_variable, '{}')}\n"
             f"{self._config_variable}.update({formatted})",
         )

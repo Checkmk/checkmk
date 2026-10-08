@@ -2173,6 +2173,7 @@ def get_otel_identity_labels_section(resource: AzureResource) -> _Section:
 
 
 _METRICS_REPORT_WINDOW = datetime.timedelta(days=1)
+_METRICS_REPORT_CACHE_INTERVAL = 60 * 60 * 24
 _METRIC_NAMES_PER_QUERY = 20
 
 
@@ -2247,15 +2248,87 @@ async def _get_resources_reporting_metrics(
     return reported
 
 
+class MetricsReportCache(AzureAsyncCache):
+    """Answers of one subscription, region and resource type, kept for a day
+
+    One file per group, "<subscription[:6]>_<region>_<resource_type>_reported"
+    with "/" in the type replaced by "_", for example
+    "4db893_westeurope_Microsoft.Network_publicIPAddresses_reported":
+
+        {"/subscriptions/.../pip-a": true, "/subscriptions/.../pip-b": false,
+         "/subscriptions/.../pip-c": null}
+
+    - true: Azure sent at least one value (0 too) in the last 24 hours, the host is created
+    - false: Azure answered, but all values are empty, no host is created
+    - null: Azure did not answer for the resource (for example, a getBatch query
+      failed), the host is created
+
+    The stored answers are used when they are younger than a day and contain
+    all the requested resources. Otherwise the whole group is asked again and
+    the file is written again. Failed queries are not stored.
+    """
+
+    def __init__(
+        self,
+        *,
+        subscription: str,
+        region: str,
+        resource_type: str,
+        cache_id: str,
+        debug: bool = False,
+    ) -> None:
+        self._region = region
+        self._resource_type = resource_type
+        super().__init__(
+            host_name=cache_id,
+            agent=f"agent_{AGENT}",
+            key=f"{MetricCache.get_cache_key_prefix(resource_type, region, subscription)}_reported",
+            debug=debug,
+        )
+
+    @property
+    @override
+    def cache_interval(self) -> int:
+        return _METRICS_REPORT_CACHE_INTERVAL
+
+    @override
+    def get_validity_from_args(self, *args: Any) -> bool:
+        # A resource that is not in the stored answers (a new one) needs the group asked again.
+        resource_ids: Sequence[str] = args[1]
+        if (stored := self._read_storage()) is None:
+            return False
+        try:
+            answered = json.loads(stored[1]).keys()
+        except ValueError:
+            return False
+        return {resource_id.lower() for resource_id in resource_ids} <= answered
+
+    @override
+    async def get_live_data(self, *args: Any) -> Mapping[str, bool | None]:
+        api_client: BaseAsyncApiClient = args[0]
+        resource_ids: Sequence[str] = args[1]
+        now: datetime.datetime = args[2]
+        reported = await _get_resources_reporting_metrics(
+            api_client, self._region, self._resource_type, resource_ids, now
+        )
+        # Unknown answers are kept too, so that the group is not asked again on each run.
+        return {
+            resource_id.lower(): reported.get(resource_id.lower()) for resource_id in resource_ids
+        }
+
+
 async def filter_otel_resources_reporting_metrics(
     api_client: BaseAsyncApiClient,
     resources: Sequence[AzureResource],
+    subscription_id: str,
+    cache_id: str,
     now: datetime.datetime,
     debug: bool,
 ) -> tuple[list[AzureResource], IssueCollector]:
     """Drop the resources that reported no metric values
 
     A resource keeps its host when the question cannot be answered.
+    The answers are kept for a day.
     """
     issues = IssueCollector()
     to_ask: defaultdict[tuple[str, str], list[str]] = defaultdict(list)
@@ -2266,12 +2339,18 @@ async def filter_otel_resources_reporting_metrics(
     groups = list(to_ask.items())
     results = await asyncio.gather(
         *(
-            _get_resources_reporting_metrics(api_client, region, resource_type, ids, now)
+            MetricsReportCache(
+                subscription=subscription_id,
+                region=region,
+                resource_type=resource_type,
+                cache_id=cache_id,
+                debug=debug,
+            ).get_data(api_client, ids, now)
             for (resource_type, region), ids in groups
         ),
         return_exceptions=True,
     )
-    reports: dict[str, bool] = {}
+    reports: dict[str, bool | None] = {}
     for ((resource_type, region), _ids), result in zip(groups, results, strict=True):
         if isinstance(result, BaseException):
             if debug:
@@ -2951,6 +3030,8 @@ async def process_resources(
             get_otel_only_resources(
                 selected_resources, args.otel_resource_types, monitored_services
             ),
+            subscription.id,
+            args.cache_id,
             NOW,
             args.debug,
         ),

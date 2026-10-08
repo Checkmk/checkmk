@@ -9,6 +9,7 @@
 import argparse
 import datetime
 import json
+import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from unittest.mock import AsyncMock
@@ -330,6 +331,7 @@ def _get_batch_answer(**values: float | None) -> Sequence[Mapping[str, object]]:
         ),
     ],
 )
+@pytest.mark.usefixtures("storage_path")
 @pytest.mark.asyncio
 async def test_filter_otel_resources_reporting_metrics(
     answers: Sequence[object],
@@ -353,11 +355,101 @@ async def test_filter_otel_resources_reporting_metrics(
     ]
 
     kept, issues = await filter_otel_resources_reporting_metrics(
-        api_client, resources, datetime.datetime.now(datetime.UTC), debug=False
+        api_client, resources, "sub", "azure_host", datetime.datetime.now(datetime.UTC), debug=False
     )
 
     assert [resource.name for resource in kept] == expected_names
     assert len(issues) == len(resources) - len(kept)
+
+
+def _otel_resources(*names: str) -> Sequence[AzureResource]:
+    return [
+        AzureResource(
+            {
+                "id": f"/subscriptions/sub/resourceGroups/rg/providers/t/{name}",
+                "name": name,
+                "type": "t",
+                "location": "westeurope",
+            },
+            TagsImportPatternOption.import_all,
+            fake_azure_subscription(),
+            UniqueHostnamesConfig(),
+        )
+        for name in names
+    ]
+
+
+@pytest.mark.parametrize(
+    "first_answers, hours_ago, resources, answers, expected_names",
+    [
+        pytest.param(
+            [[{"name": {"value": "m"}}], _get_batch_answer(silent=None)],
+            23,
+            _otel_resources("silent"),
+            [[{"name": {"value": "m"}}], _get_batch_answer(silent=1.0)],
+            [],
+            id="an answer of the last day is used again",
+        ),
+        pytest.param(
+            [[{"name": {"value": "m"}}], []],
+            23,
+            _otel_resources("silent"),
+            [[{"name": {"value": "m"}}], _get_batch_answer(silent=None)],
+            ["silent"],
+            id="an unknown answer of the last day is used again",
+        ),
+        pytest.param(
+            [[{"name": {"value": "m"}}], _get_batch_answer(silent=None)],
+            25,
+            _otel_resources("silent"),
+            [[{"name": {"value": "m"}}], _get_batch_answer(silent=1.0)],
+            ["silent"],
+            id="an answer older than a day is asked again",
+        ),
+        pytest.param(
+            [ApiError("denied")],
+            1,
+            _otel_resources("silent"),
+            [[{"name": {"value": "m"}}], _get_batch_answer(silent=1.0)],
+            ["silent"],
+            id="no answer is asked again",
+        ),
+        pytest.param(
+            [[{"name": {"value": "m"}}], _get_batch_answer(silent=None)],
+            1,
+            _otel_resources("silent", "new"),
+            [[{"name": {"value": "m"}}], _get_batch_answer(silent=None, new=1.0)],
+            ["new"],
+            id="a new resource gets its group asked again",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("storage_path")
+@pytest.mark.asyncio
+async def test_filter_otel_resources_reporting_metrics_keeps_answers_for_a_day(
+    first_answers: Sequence[object],
+    hours_ago: int,
+    resources: Sequence[AzureResource],
+    answers: Sequence[object],
+    expected_names: Sequence[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    now = datetime.datetime.now(datetime.UTC)
+    first_run_client = AsyncMock(spec=BaseAsyncApiClient)
+    first_run_client.request_async.side_effect = first_answers
+    with monkeypatch.context() as patch:
+        patch.setattr(time, "time", lambda: now.timestamp() - hours_ago * 3600)
+        await filter_otel_resources_reporting_metrics(
+            first_run_client, _otel_resources("silent"), "sub", "azure_host", now, debug=False
+        )
+    api_client = AsyncMock(spec=BaseAsyncApiClient)
+    api_client.request_async.side_effect = answers
+
+    kept, _issues = await filter_otel_resources_reporting_metrics(
+        api_client, resources, "sub", "azure_host", now, debug=False
+    )
+
+    assert [resource.name for resource in kept] == expected_names
 
 
 @pytest.mark.parametrize(

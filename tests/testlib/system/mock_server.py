@@ -44,6 +44,7 @@ class MockResponse:
     status: int
     body: bytes | Callable[[dict[str, str], bytes], bytes]
     request_validator: Callable[[dict[str, str], bytes], bool] | None = None
+    content_type: str = "application/json"
 
 
 class MockHTTPServer(HTTPServer):
@@ -101,7 +102,7 @@ class MockHandler(BaseHTTPRequestHandler):
             else response.body(request_headers, request_body)
         )
         self.send_response(response.status)
-        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Type", response.content_type)
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)

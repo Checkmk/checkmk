@@ -93,7 +93,7 @@ const active = computed(() => props.navToggle.isActive())
     align-items: center;
     justify-content: center;
     text-decoration: none;
-    padding-right: 4px;
+    padding: 0 4px 0 0;
 
     .mm-nav-toggle-item__icon {
       margin-bottom: var(--dimension-4);

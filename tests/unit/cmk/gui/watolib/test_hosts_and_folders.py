@@ -11,7 +11,7 @@ import shutil
 import sys
 import time
 import uuid
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from itertools import count
@@ -68,12 +68,13 @@ from cmk.gui.watolib.hosts_and_folders import (
     plan_relation_mirror,
 )
 from cmk.gui.watolib.pending_changes import (
+    ChangeHook,
     NoopPendingChangesStore,
     PendingChanges,
     PendingChangesStore,
 )
 from cmk.gui.watolib.site_changes import ChangeSpec
-from cmk.livestatus_client import SiteConfigurations
+from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.utils.host_storage import PickleHostsStorage
 from cmk.utils.redis import disable_redis
 from cmk.web.utils.urls import HTTPVariable
@@ -84,14 +85,49 @@ from cmk.web.utils.urls import HTTPVariable
 _SUPERUSER = LoggedInSuperUser()
 
 
-def _noop_pending_changes() -> PendingChanges:
+def _pending_changes(
+    *,
+    store: PendingChangesStore | None = None,
+    activation_sites: Iterable[SiteId] = (),
+    hooks: Sequence[ChangeHook] = (),
+) -> PendingChanges:
     return PendingChanges(
-        activation_sites=SiteConfigurations({}),
+        activation_sites=SiteConfigurations(
+            {site_id: _site_configuration(site_id) for site_id in activation_sites}
+        ),
         local_site=SiteId("NO_SITE"),
         acting_user=None,
-        store=NoopPendingChangesStore(),
-        hooks=(make_audit_log_change_hook(use_git=False),),
+        store=store or NoopPendingChangesStore(),
+        hooks=(make_audit_log_change_hook(use_git=False), *hooks),
     )
+
+
+def _site_configuration(site_id: SiteId) -> SiteConfiguration:
+    return SiteConfiguration(
+        id=site_id,
+        alias=site_id,
+        socket=("local", None),
+        disable_wato=True,
+        disabled=False,
+        insecure=False,
+        url_prefix=f"/{site_id}/",
+        multisiteurl="",
+        persist=False,
+        replicate_ec=False,
+        replicate_mkps=False,
+        replication=None,
+        timeout=5,
+        user_login=True,
+        proxy=None,
+        user_attribute_sync_connections="all",
+        status_host=None,
+        message_broker_port=5672,
+        is_trusted=False,
+    )
+
+
+def _noop_pending_changes() -> PendingChanges:
+    return _pending_changes()
 
 
 class _RecordingPendingChangesStore(PendingChangesStore):
@@ -104,12 +140,16 @@ class _RecordingPendingChangesStore(PendingChangesStore):
 
 
 def _recording_pending_changes(recorded: list[ChangeSpec]) -> PendingChanges:
-    return PendingChanges(
-        activation_sites=SiteConfigurations({}),
-        local_site=SiteId("NO_SITE"),
-        acting_user=None,
-        store=_RecordingPendingChangesStore(recorded),
-        hooks=(make_audit_log_change_hook(use_git=False),),
+    return _pending_changes(store=_RecordingPendingChangesStore(recorded))
+
+
+def _site_recording_pending_changes(
+    recorded: list[SiteId], activation_sites: Iterable[SiteId]
+) -> PendingChanges:
+    """Records which of ``activation_sites`` each change is marked for."""
+    return _pending_changes(
+        activation_sites=activation_sites,
+        hooks=(lambda event: recorded.extend(event.affected_sites),),
     )
 
 
@@ -1894,6 +1934,120 @@ def test_apply_edit_removing_relation_flags_former_counterpart(tree: FolderTree)
     assert SiteId("remote") in edit.affected_sites
 
 
+def _related_pair_in(
+    folder: Folder, board_attributes: HostAttributes | None = None
+) -> hosts_and_folders.Host:
+    """``board`` in ``folder``, related to ``os1`` in the root folder, which is monitored on
+    site ``other``."""
+    _create_host(folder.tree.root_folder(), "os1", HostAttributes({"site": SiteId("other")}))
+    return _create_host(
+        folder,
+        "board",
+        HostAttributes(
+            {
+                **(board_attributes or {}),
+                "relations": [
+                    {"kind": "management", "direction": "parent", "host": HostName("os1")}
+                ],
+            }
+        ),
+    )
+
+
+def _subfolder(parent: Folder, name: str, attributes: HostAttributes | None = None) -> Folder:
+    return parent.create_subfolder(
+        name,
+        name,
+        attributes or HostAttributes(),
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+
+
+def test_move_hosts_to_another_site_flags_the_counterpart_site(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _related_pair_in(root)
+    remote = _subfolder(root, "remote", HostAttributes({"site": SiteId("remote")}))
+    recorded: list[SiteId] = []
+
+    root.move_hosts(
+        [HostName("board")],
+        remote,
+        pprint_value=False,
+        pending_changes=_site_recording_pending_changes(recorded, [SiteId("other")]),
+        acting_user=_SUPERUSER,
+    )
+
+    assert SiteId("other") in recorded
+
+
+def test_move_hosts_within_a_site_leaves_the_counterpart_site_alone(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _related_pair_in(root)
+    same_site = _subfolder(root, "same_site")
+    recorded: list[SiteId] = []
+
+    root.move_hosts(
+        [HostName("board")],
+        same_site,
+        pprint_value=False,
+        pending_changes=_site_recording_pending_changes(recorded, [SiteId("other")]),
+        acting_user=_SUPERUSER,
+    )
+
+    assert SiteId("other") not in recorded
+
+
+def test_move_subfolder_to_another_site_flags_the_counterpart_site(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    boards = _subfolder(root, "boards")
+    _related_pair_in(boards)
+    remote = _subfolder(root, "remote", HostAttributes({"site": SiteId("remote")}))
+    recorded: list[SiteId] = []
+
+    root.move_subfolder_to(
+        boards,
+        remote,
+        pprint_value=False,
+        pending_changes=_site_recording_pending_changes(recorded, [SiteId("other")]),
+        acting_user=_SUPERUSER,
+    )
+
+    assert SiteId("other") in recorded
+
+
+def test_edit_folder_site_flags_the_counterpart_site(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    boards = _subfolder(root, "boards")
+    _related_pair_in(boards)
+    recorded: list[SiteId] = []
+
+    boards.edit(
+        "boards",
+        HostAttributes({"site": SiteId("remote")}),
+        pprint_value=False,
+        pending_changes=_site_recording_pending_changes(recorded, [SiteId("other")]),
+        acting_user=_SUPERUSER,
+    )
+
+    assert SiteId("other") in recorded
+
+
+def test_clean_site_attribute_flags_the_counterpart_site(tree: FolderTree) -> None:
+    board = _related_pair_in(tree.root_folder(), HostAttributes({"site": SiteId("remote")}))
+    recorded: list[SiteId] = []
+
+    board.clean_attributes(
+        ["site"],
+        pprint_value=False,
+        pending_changes=_site_recording_pending_changes(recorded, [SiteId("other")]),
+        acting_user=_SUPERUSER,
+    )
+
+    assert SiteId("other") in recorded
+
+
 def test_rename_relation_rewrites_the_link(tree: FolderTree) -> None:
     root = tree.root_folder()
     _create_host(root, "os1")
@@ -2011,13 +2165,8 @@ def test_create_host_refuses_before_touching_a_counterpart_it_may_not_write(
 
 
 def _folder_of(tree: FolderTree, name: str, contact_group: str) -> Folder:
-    return tree.root_folder().create_subfolder(
-        name,
-        name.title(),
-        HostAttributes({"contactgroups": _contact_groups(contact_group)}),
-        pprint_value=False,
-        pending_changes=_noop_pending_changes(),
-        acting_user=_SUPERUSER,
+    return _subfolder(
+        tree.root_folder(), name, HostAttributes({"contactgroups": _contact_groups(contact_group)})
     )
 
 

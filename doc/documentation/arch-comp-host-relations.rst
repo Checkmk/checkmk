@@ -511,7 +511,9 @@ Deleting, renaming, cloning hosts and changing their site
   changing the ``site`` attribute of a host or a folder, and removing it in the
   host cleanup. Related hosts that are moved along are not checked. Hosts with
   an explicit ``site`` attribute do not change their site when their folder
-  does, and are not checked either.
+  does, and are not checked either. The sites of the related hosts are part of
+  the change, because the exported relation names the site of the related
+  host (see `Distributed setups`_).
 
 Activate changes
 ----------------
@@ -666,8 +668,8 @@ different sites. ``relations.mk`` is created on the central site and reaches the
 remote sites with the normal config sync. Remote sites never run the export
 themselves, not even during local activations triggered by cron jobs. A relation
 is shown once the sites of both hosts have activated it (see `Operation`_). When
-a host is edited, the sites of its related hosts are part of the change, so they
-are activated together with the edited host.
+a host is edited or changes its site, the sites of its related hosts are part of
+the change, so they are activated together with it.
 
 Multi-tenancy (ultimatemt)
 --------------------------

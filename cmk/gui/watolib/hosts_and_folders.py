@@ -1460,19 +1460,25 @@ def need_relatable(site_id: SiteId, counterpart: Host) -> None:
 
 def _need_relatable_from(
     site_id: SiteId, hosts: Iterable[Host], resolve_host: Callable[[HostName], Host | None]
-) -> None:
+) -> set[SiteId]:
     """Let the edition refuse a relation ``hosts`` keep once they are monitored on ``site_id``.
 
     A counterpart among ``hosts`` moves along, so that relation stays on one site.
+
+    Returns the sites of the counterparts that stay behind: the exported relation names the site
+    of the related host, so theirs have to be activated along with the hosts that change it.
     """
     hosts = list(hosts)
     moving = {host.name() for host in hosts}
+    counterpart_sites: set[SiteId] = set()
     for host in hosts:
         for other in referenced_host_names(
             relations_or_empty(host.attributes.get("relations", []))
         ):
             if other not in moving and (counterpart := resolve_host(other)) is not None:
                 need_relatable(site_id, counterpart)
+                counterpart_sites.add(counterpart.site_id())
+    return counterpart_sites
 
 
 def _inheriting_hosts_below(folder: Folder) -> Iterator[Host]:
@@ -3317,15 +3323,18 @@ class Folder:
             )
 
         target_site = target_folder.site_id()
-        if "site" not in subfolder.attributes and target_site != subfolder.site_id():
+        counterpart_sites = (
             _need_relatable_from(
                 target_site, _inheriting_hosts_below(subfolder), counterpart_resolver(subfolder)
             )
+            if "site" not in subfolder.attributes and target_site != subfolder.site_id()
+            else set()
+        )
 
         original_alias_path = subfolder.alias_path()
 
         # 2. Actual modification
-        affected_sites = subfolder.all_site_ids()
+        affected_sites = subfolder.all_site_ids() + list(counterpart_sites)
         old_filesystem_path = subfolder.filesystem_path()
         shutil.move(old_filesystem_path, target_folder.filesystem_path())
 
@@ -3384,10 +3393,13 @@ class Folder:
         new_site_id = (
             new_attributes["site"] if "site" in new_attributes else self._inherited_site_id()
         )
-        if new_site_id != self.site_id():
+        counterpart_sites = (
             _need_relatable_from(
                 new_site_id, _inheriting_hosts_below(self), counterpart_resolver(self)
             )
+            if new_site_id != self.site_id()
+            else set()
+        )
 
         # For changing contact groups user needs write permission on parent folder
         new_cgconf = _get_cgconf_from_attributes(new_attributes)
@@ -3415,7 +3427,7 @@ class Folder:
         # dirty. Therefore we first mark dirty according to the current
         # host->site mapping and after the change we mark again according
         # to the new mapping.
-        affected_sites = self.all_site_ids()
+        affected_sites = self.all_site_ids() + list(counterpart_sites)
 
         diff = diff_attributes(self.attributes, None, new_attributes, None)
 
@@ -3740,7 +3752,8 @@ class Folder:
         self.validators.validate_move_hosts(
             self, host_names, target_folder, SiteConfigurations(self.tree.config.sites)
         )
-        if (target_site := target_folder.site_id()) != self.site_id():
+        target_site = target_folder.site_id()
+        counterpart_sites = (
             _need_relatable_from(
                 target_site,
                 (
@@ -3750,17 +3763,22 @@ class Folder:
                 ),
                 counterpart_resolver(self),
             )
+            if target_site != self.site_id()
+            else set()
+        )
 
         # 2. Actual modification
         for host_name in host_names:
             host = self.load_host(host_name)
 
-            affected_sites = [host.site_id()]
+            affected_sites = {host.site_id()}
+            if not host.attributes.get("site"):
+                affected_sites |= counterpart_sites
 
             self._remove_host(host)
             target_folder._add_host(host)
 
-            affected_sites = list(set(affected_sites + [host.site_id()]))
+            affected_sites.add(host.site_id())
             old_folder_text = self.path() or self.tree.root_folder().title()
             new_folder_text = target_folder.path() or self.tree.root_folder().title()
             pending_changes.add(
@@ -4760,10 +4778,13 @@ class Host:
             raise MKUserError(
                 None, _("Relations are stored on both hosts and cannot be cleaned up in bulk.")
             )
+        counterpart_sites: set[SiteId] = set()
         if "site" in attrnames_to_clean:
             folder = self.folder()
             if (folder_site := folder.site_id()) != self.site_id():
-                _need_relatable_from(folder_site, [self], counterpart_resolver(folder))
+                counterpart_sites = _need_relatable_from(
+                    folder_site, [self], counterpart_resolver(folder)
+                )
         self.need_unlocked()
 
         old_attrs = self.attributes
@@ -4785,7 +4806,7 @@ class Host:
                 domains=[CORE_DOMAIN],
                 domain_settings=_core_settings_hosts_to_update([self.name()]),
             ),
-            ChangeScope.sites(list({old_site, self.site_id()})),
+            ChangeScope.sites({old_site, self.site_id(), *counterpart_sites}),
         )
 
     def _need_folder_write_permissions(self, acting_user: LoggedInUser) -> None:

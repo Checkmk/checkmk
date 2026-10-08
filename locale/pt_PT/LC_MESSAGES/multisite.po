@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-10-06 09:12+0000\n"
+"PO-Revision-Date: 2026-10-08 10:53+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -13360,6 +13360,10 @@ msgstr "Posição alterada da ligação %s para %d"
 msgid "Changed position of notification parameter %d"
 msgstr "Posição alterada da regra de notificação %d de usuário %s"
 
+#, fuzzy, python-format
+msgid "Changed position of notification rule #%(rule_number)s"
+msgstr "Posição alterada da regra de notificação %d de usuário %s"
+
 #, python-format
 msgid "Changed position of notification rule %d of user %s"
 msgstr "Posição alterada da regra de notificação %d de usuário %s"
@@ -17675,6 +17679,10 @@ msgstr ""
 "Não foi possível consultar o ifid para o endereço '%s' do host_address. O "
 "seu usuário ntopng pode não ter direitos suficientes para consultar esta "
 "informação."
+
+#, fuzzy
+msgid "Could not read the certificate."
+msgstr "Certificado inválido"
 
 #, python-format
 msgid "Could not reload DCD: %s. See web.log for further information."
@@ -74649,6 +74657,10 @@ msgstr ""
 "A regra que você selecionou precisa de %d argumento(s) (%s), mas você "
 "configurou %d argumento(s)."
 
+#, fuzzy, python-format
+msgid "The rule_id %(rule_id)s does not exist."
+msgstr "A rule_id %s não existe."
+
 #, python-format
 msgid "The rule_id %s does not exist."
 msgstr "A rule_id %s não existe."
@@ -85992,6 +86004,10 @@ msgstr "Configuração de agente desconhecido"
 
 msgid "Unknown aggregation"
 msgstr "Agregação desconhecida"
+
+#, fuzzy
+msgid "Unknown certificate."
+msgstr "Sem certificado"
 
 #, fuzzy
 msgid "Unknown check parameter rule sets"

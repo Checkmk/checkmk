@@ -13406,6 +13406,11 @@ msgid "Changed position of notification parameter %d"
 msgstr ""
 "A fost modificată poziția regulii de notificare %d a utilizatorului %s."
 
+#, fuzzy, python-format
+msgid "Changed position of notification rule #%(rule_number)s"
+msgstr ""
+"A fost modificată poziția regulii de notificare %d a utilizatorului %s."
+
 #, python-format
 msgid "Changed position of notification rule %d of user %s"
 msgstr ""
@@ -17723,6 +17728,10 @@ msgstr ""
 "Nu a putut interoga ifid pentru host_address '%s'. Este posibil ca "
 "utilizatorul dvs. ntopng să nu aibă drepturi suficiente pentru a interoga "
 "aceste informații."
+
+#, fuzzy
+msgid "Could not read the certificate."
+msgstr "Certificat invalid"
 
 #, python-format
 msgid "Could not reload DCD: %s. See web.log for further information."
@@ -74938,6 +74947,10 @@ msgstr ""
 "Regula pe care ați selectat-o are nevoie de %d argument(e) (%s), dar ați "
 "configurat %d argumente."
 
+#, fuzzy, python-format
+msgid "The rule_id %(rule_id)s does not exist."
+msgstr "Rule_id %s nu există."
+
 #, python-format
 msgid "The rule_id %s does not exist."
 msgstr "Rule_id %s nu există."
@@ -86340,6 +86353,10 @@ msgstr "Configurație necunoscută a agentului"
 
 msgid "Unknown aggregation"
 msgstr "Agregare necunoscută"
+
+#, fuzzy
+msgid "Unknown certificate."
+msgstr "Fără certificat"
 
 #, fuzzy
 msgid "Unknown check parameter rule sets"

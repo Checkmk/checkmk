@@ -13420,6 +13420,10 @@ msgstr "Cambiada la posición de la conexión %s a %d"
 msgid "Changed position of notification parameter %d"
 msgstr "Posición modificada de la regla de notificación %d del usuario %s"
 
+#, fuzzy, python-format
+msgid "Changed position of notification rule #%(rule_number)s"
+msgstr "Posición modificada de la regla de notificación %d del usuario %s"
+
 #, python-format
 msgid "Changed position of notification rule %d of user %s"
 msgstr "Posición modificada de la regla de notificación %d del usuario %s"
@@ -17770,6 +17774,10 @@ msgstr ""
 "No se ha podido consultar el ifid de la dirección de host '%s'. Es posible "
 "que su usuario de ntopng no tenga suficientes derechos para consultar esta "
 "información."
+
+#, fuzzy
+msgid "Could not read the certificate."
+msgstr "Certificado no válido"
 
 #, python-format
 msgid "Could not reload DCD: %s. See web.log for further information."
@@ -75233,6 +75241,10 @@ msgstr ""
 "configurado %d argumentos."
 
 #, fuzzy, python-format
+msgid "The rule_id %(rule_id)s does not exist."
+msgstr "El conjunto de reglas \"%s\" no existe."
+
+#, fuzzy, python-format
 msgid "The rule_id %s does not exist."
 msgstr "El conjunto de reglas \"%s\" no existe."
 
@@ -86653,6 +86665,10 @@ msgstr "Configuración desconocida del agente"
 
 msgid "Unknown aggregation"
 msgstr "Agregación desconocida"
+
+#, fuzzy
+msgid "Unknown certificate."
+msgstr "Sin certificado"
 
 #, fuzzy
 msgid "Unknown check parameter rule sets"

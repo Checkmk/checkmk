@@ -13187,6 +13187,10 @@ msgstr "Modificata la posizione della connessione %s in %d"
 msgid "Changed position of notification parameter %d"
 msgstr "Modificata la posizione della regola di notifica %d dell'utente %s"
 
+#, fuzzy, python-format
+msgid "Changed position of notification rule #%(rule_number)s"
+msgstr "Modificata la posizione della regola di notifica %d dell'utente %s"
+
 #, python-format
 msgid "Changed position of notification rule %d of user %s"
 msgstr "Modificata la posizione della regola di notifica %d dell'utente %s"
@@ -17482,6 +17486,10 @@ msgid ""
 msgstr ""
 "Impossibile interrogare ifid per host_address '%s'. Il tuo utente ntopng "
 "potrebbe non avere diritti sufficienti per interrogare questa informazione."
+
+#, fuzzy
+msgid "Could not read the certificate."
+msgstr "Certificato non valido"
 
 #, python-format
 msgid "Could not reload DCD: %s. See web.log for further information."
@@ -74466,6 +74474,10 @@ msgstr ""
 "La regola che hai selezionato necessita di %d argomenti (%s), ma hai "
 "configurato %d argomenti."
 
+#, fuzzy, python-format
+msgid "The rule_id %(rule_id)s does not exist."
+msgstr "La regola_id %s non esiste."
+
 #, python-format
 msgid "The rule_id %s does not exist."
 msgstr "La regola_id %s non esiste."
@@ -85839,6 +85851,10 @@ msgstr "Configurazione agente sconosciuta"
 
 msgid "Unknown aggregation"
 msgstr "Aggregazione sconosciuta"
+
+#, fuzzy
+msgid "Unknown certificate."
+msgstr "Nessun certificato"
 
 #, fuzzy
 msgid "Unknown check parameter rule sets"

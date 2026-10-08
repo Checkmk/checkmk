@@ -12944,6 +12944,10 @@ msgstr "Position der Verbindung %s auf %d gesetzt"
 msgid "Changed position of notification parameter %d"
 msgstr "Position des Parameters für Benachrichtigung %d geändert"
 
+#, fuzzy, python-format
+msgid "Changed position of notification rule #%(rule_number)s"
+msgstr "Position von Benachrichtigungsregel %d von Benutzer %s geändert"
+
 #, python-format
 msgid "Changed position of notification rule %d of user %s"
 msgstr "Position von Benachrichtigungsregel %d von Benutzer %s geändert"
@@ -17184,6 +17188,10 @@ msgstr ""
 "Die ifid für die Host-Adresse '%s' konnte nicht abgefragt werden. Ihr ntopng-"
 "Benutzer hat möglicherweise nicht genügend Rechte, um diese Informationen "
 "abzufragen."
+
+#, fuzzy
+msgid "Could not read the certificate."
+msgstr "TLS-Zertifikate nicht validieren"
 
 #, python-format
 msgid "Could not reload DCD: %s. See web.log for further information."
@@ -71975,6 +71983,10 @@ msgstr ""
 "Die gewählte Regel benötigt %d Argument(e) (%s), aber es sind nur %d "
 "Argumente konfiguriert."
 
+#, fuzzy, python-format
+msgid "The rule_id %(rule_id)s does not exist."
+msgstr "Die rule_id %s existiert nicht."
+
 #, python-format
 msgid "The rule_id %s does not exist."
 msgstr "Die rule_id %s existiert nicht."
@@ -82852,6 +82864,10 @@ msgstr "Unbekannte Agentenkonfiguration"
 
 msgid "Unknown aggregation"
 msgstr "Unbekannte Aggregation"
+
+#, fuzzy
+msgid "Unknown certificate."
+msgstr "Kein Zertifikat"
 
 msgid "Unknown check parameter rule sets"
 msgstr "Unbekannte Check-Parameter-Regelsätze"

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-10-06 09:12+0000\n"
+"PO-Revision-Date: 2026-10-08 10:53+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -2695,7 +2695,7 @@ msgid ""
 "only supported on Linux and Windows agents as well as devices monitored "
 "through the host-resource MIB."
 msgstr ""
-"CPU の総使用率だけを監視していると、1 つのスレッドが 1 つのコアをフルに使用し"
+"CPU の総利用率だけを監視していると、1 つのスレッドが 1 つのコアをフルに使用し"
 "ていても（バグの可能性があるため）気付かないことがあります。この構成では、単"
 "一のコアが長期間にわたって利用率のしきい値を超えた場合に、Checkmk が警告を発"
 "します。これは現在、Linux および Windows エージェント、および host-resource "
@@ -3100,7 +3100,7 @@ msgid "AWS/ELBv2 Limits"
 msgstr "AWS/ELBv2の制限"
 
 msgid "AWS/ElastiCache CPU utilization"
-msgstr "AWS/ElastiCache CPU使用率"
+msgstr "AWS/ElastiCache CPU利用率"
 
 msgid "AWS/ElastiCache connections"
 msgstr "AWS/ElastiCache 接続"
@@ -5720,16 +5720,16 @@ msgid "Alert on too high CPU utilization"
 msgstr "CPU利用率が高すぎる場合のアラート"
 
 msgid "Alert on too high FPGA utilization"
-msgstr "FPGA使用率が高すぎる場合のアラート"
+msgstr "FPGA利用率が高すぎる場合のアラート"
 
 msgid "Alert on too high PCI I/O utilization"
 msgstr "PCI I/O 利用率が高すぎるというアラート"
 
 msgid "Alert on too high memory utilization"
-msgstr "メモリ使用率が高すぎる場合のアラート"
+msgstr "メモリ利用率が高すぎる場合のアラート"
 
 msgid "Alert on too high overall utilization"
-msgstr "全体的な使用率が高すぎる場合のアラート"
+msgstr "全体的な利用率が高すぎる場合のアラート"
 
 msgid "Alert on too high power consumption"
 msgstr "消費電力が高すぎる場合のアラート"
@@ -7102,7 +7102,7 @@ msgid "Appliance VPN statuses"
 msgstr "ApacheのVPNステータス"
 
 msgid "Appliance device utilization"
-msgstr "アプライアンス機器の利用状況"
+msgstr "アプライアンス機器の利用率"
 
 msgid "Appliance performance"
 msgstr "アプライアンスパフォーマンス"
@@ -7268,8 +7268,8 @@ msgid ""
 "Apply the levels for single cores to the averaged instead of the "
 "instantaneous utilizations."
 msgstr ""
-"シングルコアのレベルを、瞬間的な使用率ではなく、平均化されたものに適用しま"
-"す。"
+"シングルコアのレベルを、瞬間的な利用率ではなく、平均化されたものに適用します"
+"。"
 
 msgid ""
 "Apply these levels to clusters that have at least the following number of "
@@ -8476,7 +8476,7 @@ msgid "Average utilization core 104"
 msgstr "平均利用率 コア104"
 
 msgid "Average utilization core 105"
-msgstr "平均使用率コア 105"
+msgstr "平均利用率コア 105"
 
 msgid "Average utilization core 106"
 msgstr "平均利用率 コア106"
@@ -8836,10 +8836,10 @@ msgid "Average utilization core 99"
 msgstr "平均利用率 コア99"
 
 msgid "Average utilization of memory on the active supervisor"
-msgstr "アクティブスーパーバイザーのメモリの平均使用率"
+msgstr "アクティブスーパーバイザーのメモリの平均利用率"
 
 msgid "Average utilization per core"
-msgstr "コアあたりの平均使用率"
+msgstr "コアあたりの平均利用率"
 
 msgid "Average value"
 msgstr "平均値"
@@ -9196,7 +9196,7 @@ msgid "BAR1 memory usage (used)"
 msgstr "BAR1 メモリー使用量(used)"
 
 msgid "BAR1 memory utilization"
-msgstr "BAR1 メモリ使用率"
+msgstr "BAR1 メモリ利用率"
 
 msgid "BBcredit zero"
 msgstr "BBcreditゼロ"
@@ -10141,7 +10141,7 @@ msgid ""
 "defined alerting levels then these will automatically be applied on the "
 "averaged value. This helps to mask out short peaks. "
 msgstr ""
-"平均化を有効にすると、Checkmkは、常駐メモリ使用率の指数移動平均を計算し、総"
+"平均化を有効にすると、Checkmkは、常駐メモリ利用率の指数移動平均を計算し、総"
 "RAMに対するパーセンテージで表示します。アラートレベルを定義した場合は、平均値"
 "に自動的に適用されます。これは、短いピークをマスクするのに役立ちます。 "
 
@@ -10151,7 +10151,7 @@ msgid ""
 "these will automatically be applied on the averaged value. This helps to "
 "mask out short peaks. "
 msgstr ""
-"平均化を有効にすると、Checkmkは、常駐メモリ使用率の指数移動平均を計算します。"
+"平均化を有効にすると、Checkmkは、常駐メモリ利用率の指数移動平均を計算します。"
 "アラートレベルを定義した場合は、平均値に自動的に適用されます。これは、短い"
 "ピークをマスクするのに役立ちます。 "
 
@@ -10171,7 +10171,7 @@ msgid ""
 "these will automatically be applied on the averaged value. This helps to "
 "mask out short peaks. "
 msgstr ""
-"平均化を有効にすると、Checkmkは、仮想メモリ使用率の指数移動平均を計算します。"
+"平均化を有効にすると、Checkmkは、仮想メモリ利用率の指数移動平均を計算します。"
 "アラートレベルを定義した場合は、平均値に自動的に適用されます。これは、短い"
 "ピークをマスクするのに役立ちます。 "
 
@@ -10317,9 +10317,8 @@ msgstr ""
 "が、一部のデバイスは異なる SNMPv3 コンテキストで情報を提供します。このルール"
 "を使用して、ホストと SNMP セクションに基づいて、SNMPv3 経由で情報を取得すると"
 "きに Checkmk が問い合わせる SNMPv3 コンテキストを設定できます。ここで選択され"
-"た場合のみ、デフォルトのコンテキストがクエリの対象となります。複数の"
-"コンテキストが同じOIDを返す場合、最初のコンテキストのデータのみが使用されます"
-"。"
+"た場合のみ、デフォルトのコンテキストがクエリの対象となります。複数のコンテキ"
+"ストが同じOIDを返す場合、最初のコンテキストのデータのみが使用されます。"
 
 #, python-brace-format
 msgid ""
@@ -11207,7 +11206,7 @@ msgid "CPU inventory of all hosts"
 msgstr "全ホストのCPUインベントリ"
 
 msgid "CPU load (not utilization!)"
-msgstr "CPU負荷(使用率ではありません!)"
+msgstr "CPU負荷(利用率ではありません!)"
 
 msgid ""
 "CPU load and utilization, number of threads, Kernel performance, OMD, file "
@@ -11305,7 +11304,7 @@ msgid "CPU usage: Pods"
 msgstr "CPU 利用量: Pods"
 
 msgid "CPU used"
-msgstr "CPU使用率"
+msgstr "使用されたCPU"
 
 msgid "CPU utilization"
 msgstr "CPU 利用率"
@@ -12036,7 +12035,7 @@ msgid "Carbon queue usage"
 msgstr "カーボンキュー使用量"
 
 msgid "Carbon queue usage rate"
-msgstr "カーボンキュー使用率"
+msgstr "カーボンキュー使用量"
 
 msgid "Cardinality reduction aggregation method"
 msgstr "カーディナリティ削減集約法"
@@ -12343,6 +12342,10 @@ msgstr "接続%sの位置を%dに変更しました"
 msgid "Changed position of notification parameter %d"
 msgstr "通知パラメータの位置を変更 %d"
 
+#, fuzzy, python-format
+msgid "Changed position of notification rule #%(rule_number)s"
+msgstr "ユーザー%dの通知ルール%sの位置を変更しました"
+
 #, python-format
 msgid "Changed position of notification rule %d of user %s"
 msgstr "ユーザー%dの通知ルール%sの位置を変更しました"
@@ -12424,13 +12427,13 @@ msgid "Channel state"
 msgstr "チャネル状態"
 
 msgid "Channel utilization"
-msgstr "チャネル使用率"
+msgstr "チャネル利用率"
 
 msgid "Channel utilization for 2,4GHz band"
-msgstr "2,4GHz帯域のチャネル使用率"
+msgstr "2,4GHz帯域のチャネル利用率"
 
 msgid "Channel utilization for 5GHz band"
-msgstr "5GHz帯域のチャネル使用率"
+msgstr "5GHz帯域のチャネル利用率"
 
 msgid "Channel width"
 msgstr "チャネル幅"
@@ -14174,10 +14177,10 @@ msgid "Clusters per account"
 msgstr "アカウントごとのクラスター"
 
 msgid "Clusters: node-specific CPU utilization"
-msgstr "クラスター: ノードごとのCPU使用率"
+msgstr "クラスター: ノードごとのCPU利用率"
 
 msgid "Clusters: node-specific memory utilization"
-msgstr "クラスタ: ノードごとのメモリ使用率"
+msgstr "クラスタ: ノードごとのメモリ利用率"
 
 msgid "Clusters: preferred check result of local checks"
 msgstr "クラスター: ローカルチェックの優先チェック結果"
@@ -14624,9 +14627,10 @@ msgid ""
 "method, which considers both the new value and the previous average while "
 "applying a weighted factor to each."
 msgstr ""
-"平均化されたシングルコアCPU使用率を計算します。このオプションは、サブオプショ"
-"ン 'シングルコアレベルの適用'または '平均シングルコア使用率のグラフ'の少なく"
-"とも1つが有効になっている場合にのみ効果があることに注意してください。\n"
+"平均化されたシングルコアCPU利用率を計算します。このオプションは、"
+"サブオプション 'シングルコアレベルの適用'または '平均シングルコア利用率の"
+"グラフ'の少なくとも1つが有効になっている場合にのみ効果があることに注意してく"
+"ださい。\n"
 "注意：平均は指数移動平均（EMA）法を使用して計算され、新しい値と前回の平均の両"
 "方を考慮し、それぞれに重み付け係数を適用します。"
 
@@ -14923,7 +14927,7 @@ msgid ""
 "for user processes and kernel routines over all available cores within the "
 "last check interval. The possible range is from 0% to 100%"
 msgstr ""
-"クラスタノードの数に応じて、平均的なCPU使用率のレベルを設定します。CPU使用率"
+"クラスタノードの数に応じて、平均的なCPU利用率のレベルを設定します。CPU利用率"
 "は、直近のチェック間隔において、ユーザープロセスおよびカーネルルーチンに使用"
 "されたCPU時間のパーセンテージを利用可能なすべてのコアで集計したものです。設定"
 "可能な範囲は0%～100%"
@@ -16365,6 +16369,10 @@ msgstr ""
 "host_address '%s'のifidを照会できませんでした。ntopngユーザーには、この情報を"
 "照会するための十分な権限がない可能性があります。"
 
+#, fuzzy
+msgid "Could not read the certificate."
+msgstr "TLS証明書を検証する"
+
 #, python-format
 msgid "Could not reload DCD: %s. See web.log for further information."
 msgstr ""
@@ -16651,7 +16659,7 @@ msgstr "各物理ディスクごとに個別のチェックを作成する"
 
 msgid ""
 "Create a separate graph showing the averaged single-core CPU utilizations."
-msgstr "シングルコアCPU使用率の平均を示す別のグラフを作成します。"
+msgstr "シングルコアCPU利用率の平均を示す別のグラフを作成します。"
 
 msgid ""
 "Create a service account in \"IAM & Admin\" and assign the roles "
@@ -18578,7 +18586,7 @@ msgid "Decoded traffic"
 msgstr "デコードされたトラフィック"
 
 msgid "Decoder utilization"
-msgstr "デコーダの使用率"
+msgstr "デコーダの利用率"
 
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "新規および消滅したサービス専用のホワイト/ブラックリスト"
@@ -20186,13 +20194,11 @@ msgstr "利用可能なデバイス"
 msgid "Device component PCI I/O utilization"
 msgstr "デバイスコンポーネントの PCI I/O 利用率"
 
-#, fuzzy
 msgid "Device component memory utilization"
-msgstr "デバイスコンポーネントのメモリ使用率"
+msgstr "デバイスコンポーネントのメモリ利用率"
 
-#, fuzzy
 msgid "Device component overall utilization"
-msgstr "デバイスコンポーネントの全体的な使用率"
+msgstr "デバイスコンポーネントの全体的な利用率"
 
 #, fuzzy
 msgid "Device component power consumption"
@@ -20841,7 +20847,7 @@ msgid "Disk usage (Podman volumes)"
 msgstr "ディスク使用量（Podmanボリューム）"
 
 msgid "Disk utilization"
-msgstr "ディスク使用率"
+msgstr "ディスク利用率"
 
 msgid "Disk write"
 msgstr "ディスク書込"
@@ -22340,7 +22346,7 @@ msgid "ESTABLISHED"
 msgstr "ESTABLISHED"
 
 msgid "ESX GPU utilization"
-msgstr "ESX GPU使用率"
+msgstr "ESX GPU利用率"
 
 msgid "ESX VM memory usage"
 msgstr "ESX VMのメモリ使用量"
@@ -22350,7 +22356,7 @@ msgid "ESX VM template discovery"
 msgstr "SDMテンプレートの不一致"
 
 msgid "ESX Vsphere host system CPU utilization"
-msgstr "ESX VsphereホストシステムのCPU使用率"
+msgstr "ESX VsphereホストシステムのCPU利用率"
 
 #, fuzzy
 msgid "ESX data stores (used space and growth)"
@@ -23662,7 +23668,7 @@ msgid "Enclosures"
 msgstr "エンクロージャー"
 
 msgid "Encoder utilization"
-msgstr "エンコーダーの使用率"
+msgstr "エンコーダーの利用率"
 
 msgid "Encrypt SMTP communication using TLS"
 msgstr "TLSを使用してSMTP通信を暗号化する"
@@ -23803,7 +23809,7 @@ msgid "Engaged alerts"
 msgstr "エンゲージドアラート"
 
 msgid "Engine CPU utilization"
-msgstr "EngineCPU使用率"
+msgstr "EngineCPU利用率"
 
 msgid "Engine IDs (only needed for SNMPv3)"
 msgstr "エンジンIDs(SNMPv3にのみ必要)"
@@ -25364,7 +25370,7 @@ msgid "FB memory usage (used)"
 msgstr "FB メモリー使用量(used)"
 
 msgid "FB memory utilization"
-msgstr "FB メモリ使用率"
+msgstr "FB メモリ利用率"
 
 msgid "FC ports"
 msgstr "FCポート"
@@ -25421,7 +25427,7 @@ msgid "FCP write throughput"
 msgstr "FCP 書き込みスループット"
 
 msgid "FGPA utilization"
-msgstr "FGPAの使用率"
+msgstr "FGPAの利用率"
 
 msgid "FIFO topics"
 msgstr "FIFOトピック"
@@ -25436,7 +25442,7 @@ msgid "FPGA"
 msgstr "FPGA"
 
 msgid "FPGA utilization"
-msgstr "FPGAの使用率"
+msgstr "FPGAの利用率"
 
 msgid "FQDN"
 msgstr "FQDN"
@@ -26461,9 +26467,8 @@ msgstr "FireEyeの隔離機能の使用状況"
 msgid "FireEye security content"
 msgstr "FireEyeセキュリティコンテンツ"
 
-#, fuzzy
 msgid "Firewall SNAT port utilization"
-msgstr "全体的な使用率"
+msgstr "ファイアウォールのSNATポート利用率"
 
 msgid "Firewall connections"
 msgstr "ファイアウォール接続"
@@ -27506,13 +27511,13 @@ msgid "GCP services to monitor"
 msgstr "監視するGCPサービス"
 
 msgid "GCP/Cloud Run CPU utilization"
-msgstr "GCP/Cloud CPU使用率"
+msgstr "GCP/Cloud CPU利用率"
 
 msgid "GCP/Cloud Run instance"
 msgstr "GCP/Cloud Runインスタンス"
 
 msgid "GCP/Cloud Run memory utilization"
-msgstr "GCP/Cloud メモリ―使用率"
+msgstr "GCP/Cloud メモリ―利用率"
 
 msgid "GCP/Cloud Run network"
 msgstr "GCP/Cloud Runネットワーク"
@@ -27524,13 +27529,13 @@ msgid "GCP/Cloud Run requests"
 msgstr "GCP/Cloud Runリクエスト"
 
 msgid "GCP/Cloud SQL CPU utilization"
-msgstr "GCP/Cloud SQL CPU使用率"
+msgstr "GCP/Cloud SQL CPU利用率"
 
 msgid "GCP/Cloud SQL disk"
 msgstr "GCP/Cloud SQLディスク"
 
 msgid "GCP/Cloud SQL memory utilization"
-msgstr "GCP/Cloud SQL メモリー使用率"
+msgstr "GCP/Cloud SQL メモリー利用率"
 
 msgid "GCP/Cloud SQL network"
 msgstr "GCP/Cloud SQLネットワーク"
@@ -27554,7 +27559,7 @@ msgid "GCP/Function network"
 msgstr "GCP/機能ネットワーク"
 
 msgid "GCP/GCE CPU utilization"
-msgstr "GCP/GCE CPU使用率"
+msgstr "GCP/GCE CPU利用率"
 
 msgid "GCP/GCE disk IO"
 msgstr "GCP/GCEのディスクIO"
@@ -27578,7 +27583,7 @@ msgid "GCP/HTTP(S) load balancer requests"
 msgstr "GCP/HTTP(S)ロードバランサーのリクエスト"
 
 msgid "GCP/Redis CPU utilization"
-msgstr "GCP/Redis CPU使用率"
+msgstr "GCP/Redis CPU利用率"
 
 msgid "GCP/Redis clients blocked"
 msgstr "ブロックされたGCP/Redis クライアント"
@@ -27590,7 +27595,7 @@ msgid "GCP/Redis clients rejected"
 msgstr "拒否されたGCP/Redisクライアント"
 
 msgid "GCP/Redis memory utilization"
-msgstr "GCP/Redis メモリ使用率"
+msgstr "GCP/Redis メモリ利用率"
 
 msgid "GCP/Redis replication lag"
 msgstr "GCP/Redis レプリケーションラグ"
@@ -27612,7 +27617,7 @@ msgid "GPU"
 msgstr "CPU"
 
 msgid "GPU utilization"
-msgstr "GPU使用率"
+msgstr "GPU利用率"
 
 msgid "GUI design"
 msgstr "GUIデザイン"
@@ -27839,7 +27844,7 @@ msgstr "GiB"
 msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
 "100%."
-msgstr "FPGA使用率レベルをパーセントで示します。可能な範囲は0%から100%です。"
+msgstr "FPGA利用率レベルをパーセントで示します。可能な範囲は0%から100%です。"
 
 msgid ""
 "Give a base distinguished name here, e. g. <tt>OU=groups,DC=example,DC=com</"
@@ -27902,7 +27907,7 @@ msgid "Global settings matching '%s'"
 msgstr "グローバル設定'%s'に一致する"
 
 msgid "GlobalProtect Utilization"
-msgstr "グローバルプロテクトの使用率"
+msgstr "グローバルプロテクトの利用率"
 
 msgid "Globally configured proxy"
 msgstr "グローバルに設定されたプロキシ"
@@ -28110,7 +28115,7 @@ msgid "Graphs"
 msgstr "グラフ"
 
 msgid "Graphs for averaged single-core utilizations"
-msgstr "シングルコア使用率の平均のグラフ"
+msgstr "シングルコア利用率の平均のグラフ"
 
 msgid "Graphs for individual cores"
 msgstr "個々のコアのグラフ"
@@ -29027,14 +29032,14 @@ msgid ""
 "Here, you can configure levels for usage, requests utilization and limits "
 "utilization, respectively."
 msgstr ""
-"ここでは、使用量、リクエスト使用率、制限使用率のレベルをそれぞれ設定すること"
+"ここでは、使用量、リクエスト利用率、制限利用率のレベルをそれぞれ設定すること"
 "ができます。"
 
 msgid ""
 "Here, you can configure levels for usage, requests utilization, limits "
 "utilization and node utilization, respectively."
 msgstr ""
-"ここでは、使用量、リクエスト使用率、制限使用率、ノード使用率のレベルをそれぞ"
+"ここでは、使用量、リクエスト利用率、制限利用率、ノード利用率のレベルをそれぞ"
 "れ設定することができます。"
 
 msgid "Here, you can configure messages filtering parameters"
@@ -29203,8 +29208,9 @@ msgid ""
 "performance reasons CPU averaging will not be applied to to the levels of "
 "single processes."
 msgstr ""
-"ここでは、単一プロセスのCPU使用率のレベルを定義することができます。パフォーマ"
-"ンス上の理由から、単一プロセスのレベルにはCPUの平均化は適用されません。"
+"ここでは、単一プロセスのCPU利用率のレベルを定義することができます。"
+"パフォーマンス上の理由から、単一プロセスのレベルにはCPUの平均化は適用されませ"
+"ん。"
 
 msgid ""
 "Here, you can define levels on the resident memory utilization (in "
@@ -29212,27 +29218,27 @@ msgid ""
 "resident memory averaging will not be applied to to the levels of single "
 "processes."
 msgstr ""
-"ここでは、単一プロセスの常駐メモリ使用率（総RAMに対する割合）についてのレベル"
-"を定義できます。パフォーマンス上の理由から、単一プロセスのレベルには常駐メモ"
-"リ平均化は適用されません。"
+"ここでは、単一プロセスの常駐メモリ利用率（総RAMに対する割合）についてのレベル"
+"を定義できます。パフォーマンス上の理由から、単一プロセスのレベルには常駐"
+"メモリ平均化は適用されません。"
 
 msgid ""
 "Here, you can define levels on the resident memory utilization of single "
 "processes. For performance reasons resident memory averaging will not be "
 "applied to to the levels of single processes."
 msgstr ""
-"ここでは、単一プロセスの常駐メモリ使用率のレベルを定義することができます。パ"
-"フォーマンス上の理由から、単一プロセスのレベルには常駐メモリ平均化が適用され"
-"ません。"
+"ここでは、単一プロセスの常駐メモリ利用率のレベルを定義することができます。"
+"パフォーマンス上の理由から、単一プロセスのレベルには常駐メモリ平均化が適用さ"
+"れません。"
 
 msgid ""
 "Here, you can define levels on the virtual memory utilization of single "
 "processes. For performance reasons virtual memory averaging will not be "
 "applied to to the levels of single processes."
 msgstr ""
-"ここでは、単一プロセスの仮想メモリ使用率に関するレベルを定義できます。パ"
-"フォーマンス上の理由から、単一プロセスのレベルには仮想メモリの平均化は適用さ"
-"れません。"
+"ここでは、単一プロセスの仮想メモリ利用率に関するレベルを定義できます。"
+"パフォーマンス上の理由から、単一プロセスのレベルには仮想メモリの平均化は適用"
+"されません。"
 
 #, fuzzy, python-format
 msgid ""
@@ -29524,10 +29530,10 @@ msgstr ""
 "ルを設定できます。"
 
 msgid "Here, you can set levels on the CPU utilization on single cores."
-msgstr "ここでは、各コアのCPU使用率のレベルを設定できます。"
+msgstr "ここでは、各コアのCPU利用率のレベルを設定できます。"
 
 msgid "Here, you can set levels on the steal CPU utilization."
-msgstr "ここでは、 steal CPU使用率のレベルを設定できます。"
+msgstr "ここでは、 steal CPU利用率のレベルを設定できます。"
 
 msgid ""
 "Here, you can set the failover state for BIG-IP system of version 11.2.0"
@@ -29787,7 +29793,7 @@ msgid "High alerts"
 msgstr "アラートが高い"
 
 msgid "High utilization at "
-msgstr "での高い使用率 "
+msgstr "での高い利用率 "
 
 msgid "High watermark"
 msgstr "ハイ ウォーターマーク"
@@ -35143,7 +35149,7 @@ msgid "InfluxDB queue usage"
 msgstr "InfluxDBキューの使用状況"
 
 msgid "InfluxDB queue usage rate"
-msgstr "InfluxDBキューの使用率"
+msgstr "InfluxDBキューの利用率"
 
 msgid "InfluxDB service rules"
 msgstr "InfluxDBサービスルール"
@@ -36849,9 +36855,8 @@ msgstr "Juniperメモリ使用量(%s)"
 msgid "Juniper modules memory usage"
 msgstr "Juniperモジュールのメモリ使用量"
 
-#, fuzzy
 msgid "Juniper processor utilization of operating CPU"
-msgstr "動作中のCPUのジュニパープロセッサ使用率"
+msgstr "動作中のCPUのジュニパープロセッサ利用率"
 
 msgid "Just remove the affected tags from the rules."
 msgstr "影響を受けるタグをルールから削除するだけです。"
@@ -36996,7 +37001,7 @@ msgid "Kubernetes"
 msgstr "Kubernetes"
 
 msgid "Kubernetes CPU resource utilization"
-msgstr "Kubernetes CPU使用率"
+msgstr "Kubernetes CPU利用率"
 
 #, fuzzy
 msgid "Kubernetes Collector info"
@@ -37046,7 +37051,7 @@ msgid "Kubernetes deployments"
 msgstr "Kubernetesデプロイメント"
 
 msgid "Kubernetes memory resource utilization"
-msgstr "Kubernetesメモリー使用率"
+msgstr "Kubernetesメモリー利用率"
 
 msgid "Kubernetes namespace"
 msgstr "Kubernetes 名前空間"
@@ -37081,12 +37086,11 @@ msgstr "Kubernetes Podステータス"
 msgid "Kubernetes replicas"
 msgstr "Kubernetesレプリカ"
 
-#, fuzzy
 msgid "Kubernetes resource quota CPU utilization"
-msgstr "Kubernetesリソースクオータ cpu使用率"
+msgstr "Kubernetesリソースクオータ cpu利用率"
 
 msgid "Kubernetes resource quota memory utilization"
-msgstr "Kubernetesリソースクオータ メモリー使用率"
+msgstr "Kubernetesリソースクオータ メモリー利用率"
 
 msgid "Kubernetes statefulSet"
 msgstr "Kubernetesステートフルセット"
@@ -37783,7 +37787,7 @@ msgid "Levels CPU credits"
 msgstr "CPUクレジットレベル"
 
 msgid "Levels CPU utilization"
-msgstr "CPU使用率のレベル"
+msgstr "CPU利用率のレベル"
 
 #, fuzzy
 msgid "Levels Livestatus overflows"
@@ -37837,7 +37841,7 @@ msgid "Levels for ATS output parameters"
 msgstr "ATS出力パラメータのレベル"
 
 msgid "Levels for CPU utilization"
-msgstr "CPU使用率のレベル"
+msgstr "CPU利用率のレベル"
 
 msgid "Levels for Cisco CPU memory"
 msgstr "Cisco CPUメモリのレベル"
@@ -37978,7 +37982,7 @@ msgid "Levels for memory usage"
 msgstr "メモリ使用量のレベル"
 
 msgid "Levels for memory utilization"
-msgstr "メモリ使用率のレベル"
+msgstr "メモリ利用率のレベル"
 
 #, fuzzy
 msgid "Levels for meta"
@@ -38245,7 +38249,7 @@ msgid "Levels on CPU load: 5 minutes average"
 msgstr "CPU loadのレベル： 5分平均"
 
 msgid "Levels on CPU utilization of a single process"
-msgstr "単一プロセスのCPU使用率のレベル"
+msgstr "単一プロセスのCPU利用率のレベル"
 
 msgid "Levels on I/O wait (Unix only)"
 msgstr "I/O待ち時間のレベル(UNIXのみ)"
@@ -38309,9 +38313,8 @@ msgstr "ネットワークトラフィックのレベル"
 msgid "Levels on performance"
 msgstr "パフォーマンスのレベル"
 
-#, fuzzy
 msgid "Levels on queue utilization"
-msgstr "CPU使用率のレベル"
+msgstr "キュー利用率のレベル"
 
 msgid "Levels on read capacity"
 msgstr "読み取り容量のレベル"
@@ -38329,9 +38332,8 @@ msgstr "サーバー遅延のレベル(秒単位)"
 msgid "Levels on single cores"
 msgstr "シングルコアのレベル"
 
-#, fuzzy
 msgid "Levels on steal CPU utilization (Unix only)"
-msgstr "CPU steal使用率のレベル(UNIXのみ)"
+msgstr "CPU利用率の奪取中のレベル（Unixのみ）"
 
 msgid "Levels on task count"
 msgstr "タスク数のレベル"
@@ -38371,7 +38373,7 @@ msgid "Levels on time since last successful backup"
 msgstr "最終バックアップ成功からの時間レベル"
 
 msgid "Levels on total CPU utilization"
-msgstr "総CPU使用率のレベル"
+msgstr "総CPU利用率のレベル"
 
 #, fuzzy
 msgid "Levels on total number of messages in queue"
@@ -38401,13 +38403,13 @@ msgid "Levels over an extended period of time"
 msgstr "レプリケーションラグに関する長期間のレベル"
 
 msgid "Levels over an extended time period on a single core CPU utilization"
-msgstr "シングルコアCPU使用率の長期間にわたるレベル"
+msgstr "シングルコアCPU利用率の長期間にわたるレベル"
 
 msgid "Levels over an extended time period on replication lag"
 msgstr "レプリケーションラグに関する長期間のレベル"
 
 msgid "Levels over an extended time period on total CPU utilization"
-msgstr "総CPU使用率の長期間にわたるレベル"
+msgstr "総CPU利用率の長期間にわたるレベル"
 
 msgid "Levels performance"
 msgstr "パフォーマンスのレベル"
@@ -39592,7 +39594,7 @@ msgid "Logical Volume Pools (LVM)"
 msgstr "論理ボリュームプール(LVM)"
 
 msgid "Logical processor(s) utilization"
-msgstr "論理プロセッサーの使用率"
+msgstr "論理プロセッサーの利用率"
 
 #, fuzzy
 msgid "Logical volume manager for AIX"
@@ -39950,10 +39952,10 @@ msgid "Lower levels for remaining API reads"
 msgstr "残りのAPI読み取りの下位レベル"
 
 msgid "Lower levels for requests utilization"
-msgstr "リクエスト使用率の下位レベル"
+msgstr "リクエスト利用率の下位レベル"
 
 msgid "Lower levels for reservation utilization"
-msgstr "予約使用率の下位レベル"
+msgstr "予約利用率の下位レベル"
 
 #, fuzzy
 msgid "Lower levels for successful connections"
@@ -41643,8 +41645,8 @@ msgid ""
 msgstr ""
 "同時に処理できるデータストリームの最大数です。受信データストリームの数がこの"
 "制限を超えると、それらは破棄されます。値を０に設定すると、この制限は無効にな"
-"ります。この制限を設定すると、データ件数が非常に多い場合に、プロセッサのリ"
-"ソース使用率が高くなりすぎるのを防ぐのに役立ちます。"
+"ります。この制限を設定すると、データ件数が非常に多い場合に、プロセッサの"
+"リソース利用率が高くなりすぎるのを防ぐのに役立ちます。"
 
 msgid "Maximum number of threads"
 msgstr "スレッドの最大数"
@@ -41971,13 +41973,14 @@ msgid "Memory pages statistics"
 msgstr "メモリページの統計"
 
 msgid "Memory percentage usage"
-msgstr "メモリ使用率"
+msgstr "メモリパーセンテージ使用量"
 
 msgid "Memory percentage used of devices with modules"
 msgstr "モジュールを備えたデバイスの使用メモリパーセンテージ"
 
+#, fuzzy
 msgid "Memory percentage used of devices with modules (Huawei)"
-msgstr "モジュール搭載機器のメモリ使用率（ファーウェイ製）"
+msgstr "モジュールを備えたデバイスの使用メモリパーセンテージ"
 
 #, fuzzy
 msgid "Memory pool name"
@@ -42063,7 +42066,7 @@ msgid "Memory usage upper levels"
 msgstr "メモリ使用長の上位レベル"
 
 msgid "Memory usage: Namespace"
-msgstr "メモリ使用率: 名前空間"
+msgstr "メモリ使用量: 名前空間"
 
 msgid "Memory usage: Pods"
 msgstr "メモリ使用量: Pod"
@@ -42075,27 +42078,25 @@ msgid "Memory used by caches"
 msgstr "キャッシュによって使用されるメモリ"
 
 msgid "Memory utilization"
-msgstr "メモリ使用率"
+msgstr "メモリ利用率"
 
 msgid "Memory utilization (50th percentile)"
-msgstr "メモリ使用率(50パーセンタイル)"
+msgstr "メモリ利用率(50パーセンタイル)"
 
 msgid "Memory utilization (95th percentile)"
-msgstr "メモリ使用率(95パーセンタイル)"
+msgstr "メモリ利用率(95パーセンタイル)"
 
 msgid "Memory utilization (99th percentile)"
-msgstr "メモリ使用率(99パーセンタイル)"
+msgstr "メモリ利用率(99パーセンタイル)"
 
-#, fuzzy
 msgid "Memory utilization (Azure, Redis)"
-msgstr "メモリ使用率"
+msgstr "メモリ利用率 (Azure, Redis)"
 
-#, fuzzy
 msgid "Memory utilization (percentiles)"
-msgstr "メモリ使用率(50パーセンタイル)"
+msgstr "メモリ利用率(パーセンタイル)"
 
 msgid "Memory utilization: Cluster"
-msgstr "メモリ使用率: クラスター"
+msgstr "メモリ利用率: クラスター"
 
 msgid "Memory warning at"
 msgstr "メモリに関する警告"
@@ -47003,7 +47004,7 @@ msgid "Numerical ID of the VHM, e.g. 102"
 msgstr "VHMの数値ID、例: 102"
 
 msgid "Nutanix Cluster CPU utilization"
-msgstr "NutanixクラスタのCPU使用率"
+msgstr "NutanixクラスタのCPU利用率"
 
 msgid "Nutanix Cluster memory usage"
 msgstr "Nutanixクラスタのメモリ使用量"
@@ -47012,7 +47013,7 @@ msgid "Nutanix Disk name"
 msgstr "Nutanixディスク名"
 
 msgid "Nutanix Host CPU utilization"
-msgstr "NutanixホストのCPU使用率"
+msgstr "NutanixホストのCPU利用率"
 
 msgid "Nutanix Host Disk State"
 msgstr "Nutanixホストのディスク状態"
@@ -47039,7 +47040,7 @@ msgid "Nutanix Prism VM Tools"
 msgstr "Nutanix Prism VMツール"
 
 msgid "Nutanix VM CPU utilization"
-msgstr "Nutanix VM のCPU使用率"
+msgstr "Nutanix VM のCPU利用率"
 
 msgid "Nutanix VM State"
 msgstr "Nutanix VMの状態"
@@ -47073,7 +47074,7 @@ msgid "Nvidia GPU En-/Decoder utilization"
 msgstr "Nvidia GPUエンコーダ/デコーダ利用率"
 
 msgid "Nvidia GPU Memory utilization"
-msgstr "Nvidia GPUメモリ使用率"
+msgstr "Nvidia GPUメモリ利用率"
 
 msgid "Nvidia GPU Power"
 msgstr "Nvidia GPUパワー"
@@ -47082,7 +47083,7 @@ msgid "Nvidia GPU monitoring (Linux, Windows)"
 msgstr "Nvidia GPUの監視（Linux、Windows）"
 
 msgid "Nvidia GPU utilization"
-msgstr "Nvidia GPU使用率"
+msgstr "Nvidia GPU利用率"
 
 msgid "O"
 msgstr "O"
@@ -49491,7 +49492,7 @@ msgid "Overall status"
 msgstr "全体的なステータス"
 
 msgid "Overall utilization"
-msgstr "全体的な使用率"
+msgstr "全体的な利用率"
 
 msgid "Overdue bulk notifications!"
 msgstr "期限切れの一括通知!"
@@ -49907,21 +49908,17 @@ msgstr "PSU(シャーシ/ベイ)"
 msgid "PSU capacity levels"
 msgstr "PSU容量レベル"
 
-#, fuzzy
 msgid "PSU input current"
-msgstr "オープン入力カウント"
+msgstr "PSUの入力電流"
 
-#, fuzzy
 msgid "PSU input power"
-msgstr "入力電力"
+msgstr "PSU入力電力"
 
-#, fuzzy
 msgid "PSU input voltage"
-msgstr "入力電圧"
+msgstr "PSU入力電圧"
 
-#, fuzzy
 msgid "PSU output power"
-msgstr "出力電力"
+msgstr "PSU出力電力"
 
 msgid "PUBLISH messages received"
 msgstr "PUBLISHメッセージの受信"
@@ -50129,9 +50126,8 @@ msgstr "PagerDutyサービス統合キー"
 msgid "PagerDuty parameters"
 msgstr "PagerDuty パラメータ"
 
-#, fuzzy
 msgid "PagerDuty region"
-msgstr "PagerDuty パラメータ"
+msgstr "PagerDuty リージョン"
 
 msgid "Pages"
 msgstr "ページ"
@@ -50148,7 +50144,6 @@ msgstr "Palo Altoの状態"
 msgid "Palo Alto Users"
 msgstr "Palo Alto ユーザー"
 
-#, fuzzy
 msgid "Palo Alto active sessions"
 msgstr "Palo Altoアクティブセッション"
 
@@ -50200,7 +50195,6 @@ msgstr "パラメータルールセット"
 msgid "Parameters"
 msgstr "パラメーター"
 
-#, fuzzy
 msgid ""
 "Parameters are used in order to make rules more flexible. They must be named "
 "like variables in programming languages. For example, you can make your rule "
@@ -50365,9 +50359,8 @@ msgstr "パーティション名"
 msgid "Partitions (XEN)"
 msgstr "パーティション(XEN)"
 
-#, fuzzy
 msgid "Parts per million"
-msgstr "100万個当たり"
+msgstr "100万分の1"
 
 msgid "Passive checks"
 msgstr "パッシブチェック"
@@ -50493,7 +50486,6 @@ msgstr "sapgenpseへの道"
 msgid "Path to temporary directory (will be created)"
 msgstr "一時ディレクトリへのパス(作成されます)"
 
-#, fuzzy
 msgid "Path to the CA file"
 msgstr "CAファイルのパス"
 
@@ -50665,9 +50657,8 @@ msgstr "保留中の更新"
 msgid "Pending vBuckets"
 msgstr "保留中のvBuckets"
 
-#, fuzzy
 msgid "Per core utilization"
-msgstr "コアあたりの使用率"
+msgstr "コアあたりの利用率"
 
 msgid ""
 "Per default only one notification is generated for all recipients. "
@@ -50703,7 +50694,6 @@ msgstr ""
 "で事前構成されています。カウンターオブジェクトの形式に互換性がない場合は、カ"
 "ウンターオフセットを手動で調整できます。"
 
-#, fuzzy
 msgid ""
 "Per default, Checkmk tries to map the underlying Checkmk host to the Node "
 "Exporter host which contains either the Checkmk host name, host address or "
@@ -50993,9 +50983,8 @@ msgstr "パフォーマンスオプション"
 msgid "Performance utilization"
 msgstr "コアあたりの使用率"
 
-#, fuzzy
 msgid "Performance: I/O stats"
-msgstr "パフォーマンス: IO ステータス"
+msgstr "パフォーマンス: I/O ステータス"
 
 msgid "Performing license online verification..."
 msgstr "ライセンスオンライン検証を実行中..."
@@ -51046,9 +51035,8 @@ msgstr "権限の問題: パスが書き込み可能ではありません %s"
 msgid "Permissions"
 msgstr "権限"
 
-#, fuzzy
 msgid "Permissions requested"
-msgstr "アクセス拒否"
+msgstr "要求された権限"
 
 msgid "Permit X11 forwarding"
 msgstr "X11転送を許可する"
@@ -51175,9 +51163,8 @@ msgstr "物理CPU消費"
 msgid "Physical Disks"
 msgstr "物理ディスク"
 
-#, fuzzy
 msgid "Physical I/O"
-msgstr "物理的"
+msgstr "物理I/O"
 
 msgid "Physical address (MAC)"
 msgstr "物理アドレス(MAC)"
@@ -51340,7 +51327,6 @@ msgstr ""
 msgid "Plan configuration"
 msgstr "プラン構成"
 
-#, fuzzy
 msgid "Plan settings"
 msgstr "プラン設定"
 
@@ -51567,9 +51553,8 @@ msgstr "フィルターをかけるためのコメントを入力してくださ
 msgid "Please enter a file name."
 msgstr "ファイル名を入力してください。"
 
-#, fuzzy
 msgid "Please enter a model name."
-msgstr "名前を入力してください。"
+msgstr "モデル名を入力してください。"
 
 msgid "Please enter a name."
 msgstr "名前を入力してください。"
@@ -51619,7 +51604,6 @@ msgstr "サイト %s のエイリアス名または説明を入力してくだ�
 msgid "Please enter an automation secret of at least 10 characters."
 msgstr "10文字以上のオートメーションの秘密を入力してください。"
 
-#, fuzzy
 msgid ""
 "Please enter the complete shell command including path name and arguments to "
 "execute. If the plug-in you want to execute is located in either <tt>~/local/"
@@ -51767,9 +51751,8 @@ msgstr ""
 "クスラッシュは使用しないでください。両プラットフォームでスラッシュを使用でき"
 "ます。"
 
-#, fuzzy
 msgid "Please provide a path with at least one segment"
-msgstr "少なくとも1つの要素を選択してください"
+msgstr "少なくとも1つのセグメントを含むパスを入力してください"
 
 msgid "Please provide a relative Windows path"
 msgstr "Windowsの相対パスを指定してください"
@@ -51848,9 +51831,10 @@ msgstr "少なくとも1つ以上の地域を選択してください。"
 msgid "Please select some hosts before doing bulk actions on hosts."
 msgstr "ホストに対して一括操作を行う前に、いくつかのホストを選択してください。"
 
-#, fuzzy
 msgid "Please select the default context or enter at least one context name."
-msgstr "少なくとも1つ以上の地域を選択してください。"
+msgstr ""
+"デフォルトのコンテキストを選択するか、少なくとも1つのコンテキスト名を入力して"
+"ください。"
 
 msgid "Please select the destination folder"
 msgstr "宛先フォルダを選択してください"
@@ -51975,7 +51959,6 @@ msgstr "アプリケーション名を指定してください"
 msgid "Please specify at least on address"
 msgstr "少なくとも1つのアドレスを指定してください"
 
-#, fuzzy
 msgid "Please specify at least one \"OpenTelemetry hosts creation option\""
 msgstr "\"Open telemetry ホストの作成オプション\"を1つ以上指定してください"
 
@@ -52019,9 +52002,8 @@ msgstr "少なくとも1つの値を指定してください"
 msgid "Please specify either host or folder or hash."
 msgstr "ホスト、フォルダ、またはハッシュのいずれかを指定してください。"
 
-#, fuzzy
 msgid "Please specify either host or folder."
-msgstr "ホスト、フォルダ、またはハッシュのいずれかを指定してください。"
+msgstr "ホストまたはフォルダを指定してください。"
 
 msgid "Please specify the extensions in lower case and without dot."
 msgstr "拡張子は小文字でドットなしで指定してください。"
@@ -52247,7 +52229,6 @@ msgstr "ポリシー固有のレベル(クラスターモードのみ)"
 msgid "Pool name"
 msgstr "プール名"
 
-#, fuzzy
 msgid ""
 "Populates the alias attribute of the Setup user by synchronizing an "
 "attribute from the LDAP user account. By default, the LDAP attribute <tt>cn</"
@@ -52293,7 +52274,6 @@ msgstr "vSphereへのHTTPS接続のポート番号"
 msgid "Port number for communicating with the PLC"
 msgstr "PLCと通信するためのポート番号"
 
-#, fuzzy
 msgid "Port number for connection to the REST API. Usually 443 (TLS)"
 msgstr "Rest APIへの接続に使用するポート番号。通常は443（TLS）です"
 
@@ -52354,7 +52334,6 @@ msgstr "正の一致(サービスホストをセットに追加)"
 msgid "Postfix"
 msgstr "Postfix"
 
-#, fuzzy
 msgid "Postfix: mail queue"
 msgstr "Postfix: メールキュー"
 
@@ -52407,16 +52386,14 @@ msgstr "BGPピア 状態マッピング"
 msgid "Power state unknown"
 msgstr "電源状態不明"
 
-#, fuzzy
 msgid "Power subsystem"
 msgstr "Powerサブシステム"
 
 msgid "Power supplies"
 msgstr "電源供給装置"
 
-#, fuzzy
 msgid "Power supply"
-msgstr "電源装置"
+msgstr "電源供給装置"
 
 msgid "Power supply name"
 msgstr "電源名"
@@ -52619,7 +52596,7 @@ msgid "Preview this report"
 msgstr "このレポートをプレビューする"
 
 msgid "Previous cycle"
-msgstr "前のサイクル"
+msgstr "前回のサイクル"
 
 msgid "PrimSeq erros"
 msgstr "PrimSeqエラー"
@@ -52988,9 +52965,8 @@ msgstr "プロトコル"
 msgid "Protocol Overview"
 msgstr "プロトコルの概要"
 
-#, fuzzy
 msgid "Protocol for the connection to the REST API."
-msgstr "Rest APIへの接続プロトコル。"
+msgstr "REST API への接続プロトコル。"
 
 msgid "Protocol of Server"
 msgstr "サーバーのプロトコル"
@@ -53036,16 +53012,14 @@ msgstr ""
 msgid "Provider"
 msgstr "レベルを提供する"
 
-#, fuzzy
 msgid "Provisioned IOPS SSD (io1) I/O operations per second"
-msgstr "1秒ごとのプロビジョニングIOPS SSD(io1) IO動作"
+msgstr "1秒ごとのプロビジョニングIOPS SSD(io1) I/O動作"
 
 msgid "Provisioned IOPS SSD (io1) space"
 msgstr "プロビジョニングIOPS SSD (io1) スペース"
 
-#, fuzzy
 msgid "Provisioned IOPS SSD (io2) I/O operations per second"
-msgstr "1秒ごとのプロビジョニングIOPS SSD (io2) IO動作"
+msgstr "1秒ごとのプロビジョニングIOPS SSD(io2) I/O動作"
 
 msgid "Provisioned IOPS SSD (io2) space"
 msgstr "プロビジョニングIOPS SSD (io2) スペース"
@@ -53083,9 +53057,8 @@ msgstr "Proxmox VE"
 msgid "Proxmox VE"
 msgstr "Proxmox VE"
 
-#, fuzzy
 msgid "Proxmox VE CPU utilization"
-msgstr "CPU使用率"
+msgstr "Proxmox VE CPU 使用率"
 
 #, fuzzy
 msgid "Proxmox VE HA Manager Watcher"
@@ -53109,11 +53082,9 @@ msgstr "レプリケーション"
 msgid "Proxmox VE VM Info"
 msgstr "Proxmox VEVM情報"
 
-#, fuzzy
 msgid "Proxmox VE VM backup"
 msgstr "Proxmox VE VMバックアップ"
 
-#, fuzzy
 msgid "Proxmox VE VM snapshot age"
 msgstr "Proxmox VEVMスナップショット"
 
@@ -53159,15 +53130,14 @@ msgstr "DNSホスト名またはIPアドレス"
 msgid "Proxy settings"
 msgstr "プロキシ設定"
 
-#, fuzzy
 msgid ""
 "Proxy used to reach Microsoft, both for the authorization performed here and "
 "for the recurring API calls of the services using this connection. Without "
 "this option the proxy settings of the process environment are used."
 msgstr ""
-"Microsoftへのアクセスにはプロキシが使用されます。これは、ここで行われる認証お"
-"よびこの接続を利用するサービスによる定期的なAPI呼び出しの両方に適用されます。"
-"このオプションを指定しない場合、プロセス環境のプロキシ設定が使用されます。"
+"Microsoftへのアクセスにはプロキシが使用されます。これは、ここで認証する作業お"
+"よび、この接続を使用するサービスの定期的なAPI呼び出しの両方に適用されます。こ"
+"のオプションを指定しない場合、プロセス環境のプロキシ設定が使用されます。"
 
 msgid "Public"
 msgstr "公衆"
@@ -53330,9 +53300,8 @@ msgstr "Pythonエージェントプラグインを実行するためのPythonバ
 msgid "QPS"
 msgstr "PSU"
 
-#, fuzzy
 msgid "Qmail: mail queue"
-msgstr "Qmail:メールキュー"
+msgstr "Qmail: メールキュー"
 
 msgid "QoS class"
 msgstr "QoSクラス"
@@ -53359,7 +53328,6 @@ msgstr "クアンタムストレージステータス"
 msgid "Quarantine Usage"
 msgstr "検疫の使用"
 
-#, fuzzy
 msgid "Queried host is a ESXi host (standalone / not vCenter integrated)"
 msgstr ""
 "クエリ対象のホストはESXi ホストです（スタンドアロン / vCenter と統合されてい"
@@ -53396,9 +53364,8 @@ msgstr "カスタムグラフエディタからのメトリックバックエン
 msgid "Query or SQL statement"
 msgstr "クエリまたはSQLステートメント"
 
-#, fuzzy
 msgid "Query the default context (no context name)"
-msgstr "テーマのデフォルトの色を使用します。"
+msgstr "デフォルトのコンテキストを照会する（コンテキスト名なし）"
 
 #, fuzzy
 msgid "Query the metric backend"
@@ -53586,9 +53553,8 @@ msgstr "使用されるRAM"
 msgid "RAM used (averaged)"
 msgstr "RAM使用量（平均）"
 
-#, fuzzy
 msgid "RCC"
-msgstr "CMC"
+msgstr "RCC"
 
 msgid "RCC (see important inline help on root deployments)"
 msgstr "RCC（ルート環境でのデプロイに関する重要なインラインヘルプを参照）"
@@ -53599,9 +53565,8 @@ msgstr "RCC（Linux に関する重要なインラインヘルプを参照）"
 msgid "RCC Remote server address"
 msgstr "RCC リモートサーバーのアドレス"
 
-#, fuzzy
 msgid "RCC configuration"
-msgstr "MTR構成"
+msgstr "RCCの設定"
 
 msgid "RCC profile configuration"
 msgstr "RCCプロファイル設定"
@@ -53889,16 +53854,14 @@ msgstr "再実行"
 msgid "Read"
 msgstr "読んだ"
 
-#, fuzzy
 msgid "Read & write"
-msgstr "読む待機"
+msgstr "読み取りと書き込み"
 
 msgid "Read / Write queue length"
 msgstr "読み取り/書き込みキューの長さ"
 
-#, fuzzy
 msgid "Read I/O operations per second"
-msgstr "1秒あたりのIO操作の読み取り"
+msgstr "1秒あたりのの読み取りIO操作"
 
 msgid "Read Latency"
 msgstr "読み取りレイテンシ"
@@ -53997,9 +53960,8 @@ msgstr ""
 "[正規表現|Checkmkでの正規表現マッチング]の詳細については、ユーザーガイドを参"
 "照してください。"
 
-#, fuzzy
 msgid "Read only"
-msgstr "読み取り専用モード"
+msgstr "読み取り専用"
 
 msgid "Read only mode"
 msgstr "読み取り専用モード"
@@ -54166,9 +54128,8 @@ msgstr ""
 "ライセンス・サーバ (%s) から無効な応答を受け取りました。後で再試行してくださ"
 "い。このエラーが続く場合は、Checkmk サポートにお問い合わせください。"
 
-#, fuzzy
 msgid "Received bandwidth"
-msgstr "受信メール"
+msgstr "受信帯域幅"
 
 msgid "Received messages"
 msgstr "受信したメッセージ"
@@ -54251,9 +54212,8 @@ msgstr "Recovery Services Vault"
 msgid "Recovery area"
 msgstr "リカバリエリア"
 
-#, fuzzy
 msgid "Recovery area CRITICAL"
-msgstr "リカバリエリア"
+msgstr "リカバリエリア CRITICAL"
 
 msgid "Recovery status"
 msgstr "リカバリ状況"
@@ -54292,41 +54252,33 @@ msgstr "編集済みの秘密が変更されました。"
 msgid "Redfish"
 msgstr "Redfish"
 
-#, fuzzy
 msgid "Redfish Ethernet interface"
-msgstr "Redfish Ethernet Interface"
+msgstr "Redfish イーサネットインターフェース"
 
-#, fuzzy
 msgid "Redfish Ethernet interface discovery"
-msgstr "Redfish Ethernet Interface の検出"
+msgstr "Redfish イーサネットインターフェースの検出"
 
-#, fuzzy
 msgid "Redfish compatible management controller"
 msgstr "Redfish 対応管理コントローラー"
 
-#, fuzzy
 msgid "Redfish compatible power equipment (PDU)"
 msgstr "Redfish 対応電源装置（PDU）"
 
 msgid "Redfish outlet discovery"
 msgstr "Redfish のアウトレット検出"
 
-#, fuzzy
 msgid "Redfish physical drive discovery"
 msgstr "Redfish 物理ドライブの検出"
 
 msgid "Redfish physical port discovery"
 msgstr "Redfish 物理ポート検出"
 
-#, fuzzy
 msgid "Redfish power consumption"
-msgstr "Redfish Power Consumption"
+msgstr "Redfishの消費電力"
 
-#, fuzzy
 msgid "Redfish storage controller"
 msgstr "Redfish ストレージコントローラー"
 
-#, fuzzy
 msgid "Redfish volume discovery"
 msgstr "Redfish ボリューム検出"
 
@@ -54334,9 +54286,8 @@ msgstr "Redfish ボリューム検出"
 msgid "Redirect URI"
 msgstr "ダイレクトI/O"
 
-#, fuzzy
 msgid "Redirect URIs"
-msgstr "ダイレクトI/O"
+msgstr "リダイレクト URI"
 
 msgid "Redirect URL (has to be https)"
 msgstr "リダイレクトURL(httpsである必要があります)"
@@ -54345,9 +54296,8 @@ msgstr "リダイレクトURL(httpsである必要があります)"
 msgid "Redirect target: %(redirect_uri)s"
 msgstr "リダイレクト先: %(redirect_uri)s"
 
-#, fuzzy
 msgid "Redirecting..."
-msgstr "リロード中..."
+msgstr "リダイレクト中..."
 
 #, fuzzy
 msgid "Redis Caches"
@@ -54614,9 +54564,8 @@ msgstr ""
 msgid "Registered"
 msgstr "登録済み"
 
-#, fuzzy
 msgid "Registered OAuth clients"
-msgstr "登録エージェント"
+msgstr "登録済みのOAuthクライアント"
 
 msgid "Registered agents"
 msgstr "登録エージェント"
@@ -54927,13 +54876,12 @@ msgstr "読み残し"
 msgid "Remaining time"
 msgstr "残りのライフ"
 
-#, fuzzy
 msgid ""
 "Remaining time (seconds) until the license expires. The defaults equate to "
 "14 days (WARNING) and 7 days (CRITICAL)."
 msgstr ""
 "ライセンスが有効期限切れになるまでの残り時間（秒）。デフォルト設定は14日"
-"（warning）と7日（critical）です。"
+"（WARNING）と7日（CRITICAL）です。"
 
 msgid "Remaining validity time"
 msgstr "残りの有効期間"
@@ -55120,9 +55068,8 @@ msgstr "一致する消失したサービスのみを削除する"
 msgid "Remove pattern"
 msgstr "パターンを削除する"
 
-#, fuzzy
 msgid "Remove responder"
-msgstr "削除：%r"
+msgstr "レスポンダーを削除"
 
 msgid "Remove scheduled downtimes?"
 msgstr "全ての予定されたダウンタイムを削除しますか?"
@@ -55342,9 +55289,8 @@ msgstr "%s の名前変更"
 msgid "Renaming of %s -> %s"
 msgstr "%sの名前変更 -> %s"
 
-#, fuzzy
 msgid "Renaming operations"
-msgstr "操作の名前変更"
+msgstr "名称変更操作"
 
 msgid "Render an error message into the document"
 msgstr "エラーメッセージをドキュメントにレンダリングします"
@@ -55586,7 +55532,6 @@ msgstr "リポジトリ/タグ"
 msgid "Req. Version"
 msgstr "必須 バージョン"
 
-#, fuzzy
 msgid ""
 "Request data from a RabbitMQ instance. This special agent queries the HTTP "
 "API provided by RabbitMQ's 'Management Plug-in'. You need to enable this "
@@ -56320,9 +56265,8 @@ msgstr "再試行するホストチェックのチェック間隔"
 msgid "Retry check interval for service checks"
 msgstr "再試行するサービスチェックのチェック間隔"
 
-#, fuzzy
 msgid "Retry fetching system data"
-msgstr "このテストを再試行してください"
+msgstr "システムデータの取得を再試行する"
 
 msgid "Retry this test"
 msgstr "このテストを再試行してください"
@@ -56384,9 +56328,8 @@ msgstr ""
 "クライアントID、およびクライアントシークレットを使用してください。Graph API経"
 "由でリソースを監視する場合のみ、サブスクリプションIDは不要です。"
 
-#, fuzzy
 msgid "Return to classic view"
-msgstr "標準偏差に関連して"
+msgstr "従来のビューに戻る"
 
 msgid ""
 "Returns the current state of DCD cycles and batches. Executes the commands "
@@ -56412,7 +56355,6 @@ msgstr "他者の変更を戻す"
 msgid "Reverting pending changes."
 msgstr "保留中の変更はありません。"
 
-#, fuzzy
 msgid "Reverting pending changes. Reload this page to see the current status."
 msgstr ""
 "保留中の変更を戻します。現在の状況を確認するには、このページを再読み込みして"
@@ -56427,21 +56369,17 @@ msgstr "レビューとテスト設定"
 msgid "Review your configuration and run preview service discovery"
 msgstr "設定を確認し、プレビューサービスディスカバリーを実行する"
 
-#, fuzzy
 msgid "Revoke access token"
-msgstr "APIアクセストークン"
+msgstr "アクセストークンの無効化"
 
-#, fuzzy
 msgid "Revoke selected access tokens"
-msgstr "APIアクセストークン"
+msgstr "選択したトークンを無効にする"
 
-#, fuzzy
 msgid "Revoke this access token"
-msgstr "APIアクセストークン"
+msgstr "アクセストークンを無効化しました。"
 
-#, fuzzy
 msgid "Revoke tokens"
-msgstr "リフレッシュ"
+msgstr "トークンの無効化"
 
 #, python-format
 msgid "Revoked %(n)d access tokens."
@@ -56606,9 +56544,8 @@ msgstr "使用する必要がある、または使用してはならないルー
 msgid "Routes"
 msgstr "ルート"
 
-#, fuzzy
 msgid "Row limit in view tables"
-msgstr "ユーザーテーブルに表示"
+msgstr "ビューテーブルの行数制限"
 
 msgid "Rows"
 msgstr "行"
@@ -57011,9 +56948,8 @@ msgstr "ランタイム"
 msgid "Runtime (peak attempt)"
 msgstr "ランタイム（ピーク時）"
 
-#, fuzzy
 msgid "Runtime limit (total)"
-msgstr "ランタイムリミットレート（ピークトライ）"
+msgstr "ランタイムリミット（合計）"
 
 msgid "Runtime run queue"
 msgstr "ランタイム実行キュー"
@@ -57036,9 +56972,8 @@ msgstr "S3バックエンドキャッシュヒット数"
 msgid "S3 backend cache missess"
 msgstr "S3バックエンドキャッシュのミス"
 
-#, fuzzy
 msgid "S3 buckets"
-msgstr "AWS/S3 バケット"
+msgstr "S3バケット"
 
 msgid "SAML"
 msgstr "SAML"
@@ -57183,9 +57118,8 @@ msgstr "SELECT リクエスト"
 msgid "SELinux information"
 msgstr "SELinux情報"
 
-#, fuzzy
 msgid "SGA memory"
-msgstr "記憶"
+msgstr "SGAメモリ"
 
 msgid "SHA-1 (SHA-96)"
 msgstr "SHA-1(SHA-96)"
@@ -57419,9 +57353,8 @@ msgstr "SNMPトラップのSNMPコミュニティ"
 msgid "SNMP context names"
 msgstr "SNMPコンテキスト名"
 
-#, fuzzy
 msgid "SNMP contexts"
-msgstr "SNMPコンテキスト名"
+msgstr "SNMPコンテキスト"
 
 msgid "SNMP credentials"
 msgstr "SNMP資格情報"
@@ -57436,15 +57369,12 @@ msgstr "SNMP情報"
 msgid "SNMP interface check for LANCOM devices"
 msgstr "LANCOMデバイスのSNMPインターフェースチェック"
 
-#, fuzzy
 msgid "SNMP interface check for TP-Link switches"
 msgstr "TP-LinkスイッチのSNMPインターフェースチェック"
 
-#, fuzzy
 msgid "SNMP interface check with 32-bit counters (v1)"
 msgstr "32ビットカウンタを使用したSNMPインターフェイスチェック(v1)"
 
-#, fuzzy
 msgid "SNMP interface check with 64-bit counters (using v2c)"
 msgstr "64ビットカウンターを使用したSNMPインターフェイスチェック(v2cを使用)"
 
@@ -57551,9 +57481,8 @@ msgstr "SSL"
 msgid "SSL certificate checking"
 msgstr "SSL証明書のチェック"
 
-#, fuzzy
 msgid "SSL certificate revocation checks"
-msgstr "SSL証明書の検証"
+msgstr "SSL証明書の失効チェック"
 
 msgid "SSL certificate validation"
 msgstr "SSL証明書の検証"
@@ -57594,9 +57523,8 @@ msgstr "SUSEConnect(Linux)"
 msgid "SVM Status"
 msgstr "SVMステータス"
 
-#, fuzzy
 msgid "SVM name"
-msgstr "VM名"
+msgstr "SVM名"
 
 msgid "SYN_RECV"
 msgstr "SYN_RECV"
@@ -57625,9 +57553,8 @@ msgstr "SYSOPER"
 msgid "SaaS version: Skip request ID verification"
 msgstr "SaaS バージョン: リクエスト ID の検証をスキップする"
 
-#, fuzzy
 msgid "Safe groups and/or users"
-msgstr "グループまたはユーザーを追加"
+msgstr "セーフグループおよび／またはユーザー"
 
 msgid "Safenet HSM Event Stats"
 msgstr "Safenet HSMイベント統計"
@@ -57673,7 +57600,6 @@ msgstr "保存してテストする"
 msgid "Save & go to %s"
 msgstr "保存して%sに移動します"
 
-#, fuzzy
 msgid "Save & go to 'Activate changes'"
 msgstr "保存し変更のアクティブ化へ"
 
@@ -57708,9 +57634,9 @@ msgstr "このホストを保存して、行く"
 msgid "Save without version change"
 msgstr "保存し変更のアクティブ化へ"
 
-#, fuzzy
 msgid "Save your progress and go to the 'Activate changes' page to enable it."
-msgstr "進捗を保存し、変更を有効化するページに移動して有効化してください。"
+msgstr ""
+"進捗を保存し、変更をアクティブ化するページに移動して有効化してください。"
 
 #, fuzzy
 msgid "Saved"
@@ -57771,9 +57697,8 @@ msgstr "ダウンタイムをスケジュールする"
 msgid "Schedule execution"
 msgstr "実行スケジュール"
 
-#, fuzzy
 msgid "Schedule name"
-msgstr "スケジューラジョブ名"
+msgstr "スケジュール名"
 
 msgid "Schedule title"
 msgstr "スケジュールタイトル"
@@ -58526,7 +58451,6 @@ msgstr ""
 "LDAPサーバーが提供しているLDAPのバージョンを選択します。最近のサーバーの多く"
 "は、LDAPバージョン3を使用しています。"
 
-#, fuzzy
 msgid ""
 "Select the NetApp resources you would like to fetch from the API. Note that "
 "some sections depend on others: 'Volume performance counters' requires "
@@ -58767,9 +58691,8 @@ msgstr "送信"
 msgid "Send HTTP POST data"
 msgstr "HTTP POSTデータを送信する"
 
-#, fuzzy
 msgid "Send MCP usage data to Checkmk"
-msgstr "Checkmkからトレースを送信する"
+msgstr "MCPの使用状況データをCheckmkに送信する"
 
 msgid "Send custom notification"
 msgstr "カスタム通知の送信"
@@ -70563,6 +70486,10 @@ msgid ""
 "arguments."
 msgstr "選択したルールには%d引数(%s)が必要ですが、%d引数を構成しました。"
 
+#, fuzzy, python-format
+msgid "The rule_id %(rule_id)s does not exist."
+msgstr "ルールID%sは存在しません。"
+
 #, python-format
 msgid "The rule_id %s does not exist."
 msgstr "ルールID%sは存在しません。"
@@ -81207,6 +81134,10 @@ msgstr "不明なエージェント構成"
 
 msgid "Unknown aggregation"
 msgstr "不明なアグリゲーション"
+
+#, fuzzy
+msgid "Unknown certificate."
+msgstr "証明書なし"
 
 msgid "Unknown check parameter rule sets"
 msgstr "不明なチェックパラメータールールセット"

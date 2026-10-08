@@ -13449,6 +13449,11 @@ msgid "Changed position of notification parameter %d"
 msgstr ""
 "Changement de la position de la règle de notification %d de l'utilisateur %s"
 
+#, fuzzy, python-format
+msgid "Changed position of notification rule #%(rule_number)s"
+msgstr ""
+"Changement de la position de la règle de notification %d de l'utilisateur %s"
+
 #, python-format
 msgid "Changed position of notification rule %d of user %s"
 msgstr ""
@@ -17811,6 +17816,10 @@ msgstr ""
 "Impossible de demander l'ifid pour l'adresse d'hôte '%s'. Votre utilisateur "
 "ntopng n'a peut-être pas les droits suffisants pour demander cette "
 "information."
+
+#, fuzzy
+msgid "Could not read the certificate."
+msgstr "Certificat invalide"
 
 #, python-format
 msgid "Could not reload DCD: %s. See web.log for further information."
@@ -75297,6 +75306,10 @@ msgstr ""
 "avez configuré %d arguments."
 
 #, fuzzy, python-format
+msgid "The rule_id %(rule_id)s does not exist."
+msgstr "Le jeu de règles \"%s\" n'existe pas."
+
+#, fuzzy, python-format
 msgid "The rule_id %s does not exist."
 msgstr "Le jeu de règles \"%s\" n'existe pas."
 
@@ -86775,6 +86788,10 @@ msgstr "Configuration d'agent inconnue"
 
 msgid "Unknown aggregation"
 msgstr "Agrégation inconnue"
+
+#, fuzzy
+msgid "Unknown certificate."
+msgstr "Aucun certificat"
 
 #, fuzzy
 msgid "Unknown check parameter rule sets"

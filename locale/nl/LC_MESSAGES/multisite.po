@@ -13346,6 +13346,10 @@ msgstr "Positie van verbinding %s gewijzigd in %d"
 msgid "Changed position of notification parameter %d"
 msgstr "Gewijzigde positie van meldingsregel %d van gebruiker %s"
 
+#, fuzzy, python-format
+msgid "Changed position of notification rule #%(rule_number)s"
+msgstr "Gewijzigde positie van meldingsregel %d van gebruiker %s"
+
 #, python-format
 msgid "Changed position of notification rule %d of user %s"
 msgstr "Gewijzigde positie van meldingsregel %d van gebruiker %s"
@@ -17671,6 +17675,10 @@ msgid ""
 msgstr ""
 "Kon ifid niet opvragen voor host_adres '%s'. Uw ntopng gebruiker heeft "
 "misschien niet voldoende rechten om deze informatie op te vragen."
+
+#, fuzzy
+msgid "Could not read the certificate."
+msgstr "Ongeldig certificaat"
 
 #, python-format
 msgid "Could not reload DCD: %s. See web.log for further information."
@@ -74663,6 +74671,10 @@ msgstr ""
 "hebt %d argumenten geconfigureerd."
 
 #, fuzzy, python-format
+msgid "The rule_id %(rule_id)s does not exist."
+msgstr "De regelset \"%s\" bestaat niet."
+
+#, fuzzy, python-format
 msgid "The rule_id %s does not exist."
 msgstr "De regelset \"%s\" bestaat niet."
 
@@ -86026,6 +86038,10 @@ msgstr "Onbekende agent configuratie"
 
 msgid "Unknown aggregation"
 msgstr "Onbekende aggregatie"
+
+#, fuzzy
+msgid "Unknown certificate."
+msgstr "Geen certificaat"
 
 #, fuzzy
 msgid "Unknown check parameter rule sets"

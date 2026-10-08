@@ -6,12 +6,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts" generic="C extends LinkedContent">
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
+import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkIndent from 'cmk-ui-library/components/CmkIndent.vue'
 import { useFilterDefinitions } from 'cmk-ui-library/components/filter'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
 import ContextualLinkTargetPicker from './ContextualLinkTargetPicker.vue'
@@ -21,6 +23,10 @@ import type { CustomLinkDraft, UseContextualLink } from './useContextualLink'
 const { _t } = usei18n()
 
 const handler = defineModel<UseContextualLink<C>>('handler', { required: true })
+const { defaultTarget } = defineProps<{
+  // The title of the page the widget's built-in link leads to, if it has a single one.
+  defaultTarget?: TranslatedString
+}>()
 
 const filterDefinitions = useFilterDefinitions()
 
@@ -64,6 +70,17 @@ function toggleFilter(
       :label="_t('Mode')"
       :options="{ type: 'fixed', suggestions: modeOptions }"
     />
+
+    <div v-if="handler.mode.value === 'default'" class="db-contextual-link-config__mode">
+      <template v-if="defaultTarget !== undefined">
+        <p>{{ _t('Target page') }}</p>
+        <span class="db-contextual-link-config__target">
+          <CmkIcon name="link" size="small" />
+          {{ defaultTarget }}
+        </span>
+      </template>
+      <p>{{ _t('Redirect to the default page defined by Checkmk.') }}</p>
+    </div>
 
     <div v-if="handler.mode.value === 'inherited'" class="db-contextual-link-config__mode">
       <ContextualLinkTargetPicker
@@ -121,6 +138,12 @@ function toggleFilter(
   flex-direction: column;
   gap: var(--dimension-4);
   margin-top: var(--dimension-4);
+}
+
+.db-contextual-link-config__target {
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-3);
 }
 
 .db-contextual-link-config__link {

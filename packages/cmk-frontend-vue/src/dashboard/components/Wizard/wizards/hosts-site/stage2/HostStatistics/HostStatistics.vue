@@ -53,7 +53,10 @@ const widgetProps = computed(() => handler.value.widgetProps)
   <ContentSpacer />
 
   <CmkCatalogPanel :title="_t('Contextual link')" variant="padded">
-    <ContextualLinkConfig v-model:handler="handler.contextualLink" />
+    <ContextualLinkConfig
+      v-model:handler="handler.contextualLink"
+      :default-target="_t('All hosts')"
+    />
   </CmkCatalogPanel>
 
   <ContentSpacer />

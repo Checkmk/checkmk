@@ -57,3 +57,11 @@ pkg_tar(
         "//packages/cmk-maps:wheel_pkg",
     ],
 )
+
+# Lets shellcheck see these scripts. Nothing depends on this target.
+sh_library(
+    name = "shell_scripts",
+    srcs = [
+        "skel/etc/init.d/maps",
+    ],
+)

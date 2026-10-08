@@ -76,7 +76,6 @@ omd/debian/prerm.in
 omd/distro
 omd/packages/apache-omd/skel/etc/init.d/apache
 omd/packages/appliance/post-install
-omd/packages/cmk-maps/skel/etc/init.d/maps
 omd/packages/maintenance/logrotate
 omd/packages/maintenance/skel/etc/init.d/crontab
 omd/packages/mk-livestatus/lc
@@ -105,7 +104,6 @@ packages/cmk-ec/src/mkeventd_open514.cc
 packages/cmk-frontend/babel.config.js
 packages/cmk-frontend/postcss.config.js
 packages/cmk-frontend/resources/license-header.js
-packages/cmk-notification-plugins/notifications/mkeventd
 packages/cmk-plugins/cmk/plugins/ssh/agents/mk_sshd_config
 packages/mk-oracle/build-and-upload
 packages/mk-oracle/build.rs

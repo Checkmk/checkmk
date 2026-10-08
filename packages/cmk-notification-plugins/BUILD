@@ -151,3 +151,11 @@ py_requirements_test(
     ],
     requirements_in = "requirements.in",
 )
+
+# Lets shellcheck see these scripts. Nothing depends on this target.
+sh_library(
+    name = "shell_scripts",
+    srcs = [
+        "notifications/mkeventd",
+    ],
+)

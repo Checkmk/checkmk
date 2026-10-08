@@ -28,7 +28,7 @@ import urllib.parse
 import urllib.request
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import override
+from typing import NoReturn, override
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -132,7 +132,7 @@ class HostResult(Exception):
         self.result = result
 
 
-def new_state(rc: int, s: str) -> None:
+def new_state(rc: int, s: str) -> NoReturn:
     raise HostResult((rc, s))
 
 
@@ -211,7 +211,7 @@ def open_url(
     except TimeoutError as e:
         new_state(2, f"Unable to open {url} : {e}")
 
-    real_url = fd.geturl()  # type: ignore[possibly-undefined]
+    real_url = fd.geturl()
     code = fd.getcode()
     content = fd.read()
 
@@ -308,7 +308,7 @@ def parse_form(content: str, form_name: str | None) -> Form:
             )
         form = forms[form_name]
 
-    return form  # type: ignore[possibly-undefined]
+    return form
 
 
 def update_form_vars(form_elem: Form, params: Mapping[str, str]) -> dict[str, str]:
@@ -323,7 +323,7 @@ def raise_host_state(
     base_url: str,
     args: argparse.Namespace,
     params: Mapping[str, str],
-) -> None:
+) -> NoReturn:
     # Perform first HTTP request to fetch the page containing the form(s)
     real_url, body = open_url(
         client=client,

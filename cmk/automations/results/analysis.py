@@ -14,9 +14,6 @@ from dataclasses import dataclass
 from typing import override, TypedDict
 
 from cmk.automations.internal import AutomationID, AutomationResult
-from cmk.automations.results._base import (
-    result_type_registry,
-)
 from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.checkengine.specs.parameters import TimespecificParametersPreview
 from cmk.checkengine.submitters import ServiceDetails
@@ -48,9 +45,6 @@ class AnalyseServiceResult(AutomationResult):
         return AutomationID("analyse-service")
 
 
-result_type_registry.register(AnalyseServiceResult)
-
-
 @dataclass
 class GetServicesLabelsResult(AutomationResult):
     labels: Mapping[ServiceName, Labels]
@@ -61,9 +55,6 @@ class GetServicesLabelsResult(AutomationResult):
         return AutomationID("get-services-labels")
 
 
-result_type_registry.register(GetServicesLabelsResult)
-
-
 @dataclass
 class GetServiceNameResult(AutomationResult):
     service_name: str
@@ -72,9 +63,6 @@ class GetServiceNameResult(AutomationResult):
     @override
     def automation_call() -> AutomationID:
         return AutomationID("get-service-name")
-
-
-result_type_registry.register(GetServiceNameResult)
 
 
 @dataclass
@@ -88,9 +76,6 @@ class AnalyseHostResult(AutomationResult):
         return AutomationID("analyse-host")
 
 
-result_type_registry.register(AnalyseHostResult)
-
-
 @dataclass
 class AnalyzeHostRuleMatchesResult(AutomationResult):
     results: dict[str, list[object]]
@@ -99,9 +84,6 @@ class AnalyzeHostRuleMatchesResult(AutomationResult):
     @override
     def automation_call() -> AutomationID:
         return AutomationID("analyze-host-rule-matches")
-
-
-result_type_registry.register(AnalyzeHostRuleMatchesResult)
 
 
 @dataclass
@@ -114,9 +96,6 @@ class AnalyzeServiceRuleMatchesResult(AutomationResult):
         return AutomationID("analyze-service-rule-matches")
 
 
-result_type_registry.register(AnalyzeServiceRuleMatchesResult)
-
-
 @dataclass
 class AnalyzeHostRuleEffectivenessResult(AutomationResult):
     results: dict[str, bool]
@@ -125,9 +104,6 @@ class AnalyzeHostRuleEffectivenessResult(AutomationResult):
     @override
     def automation_call() -> AutomationID:
         return AutomationID("analyze-host-rule-effectiveness")
-
-
-result_type_registry.register(AnalyzeHostRuleEffectivenessResult)
 
 
 @dataclass
@@ -141,9 +117,6 @@ class ActiveCheckResult(AutomationResult):
         return AutomationID("active-check")
 
 
-result_type_registry.register(ActiveCheckResult)
-
-
 @dataclass
 class UnknownCheckParameterRuleSetsResult(AutomationResult):
     result: Sequence[str]
@@ -152,6 +125,3 @@ class UnknownCheckParameterRuleSetsResult(AutomationResult):
     @override
     def automation_call() -> AutomationID:
         return AutomationID("find-unknown-check-parameter-rule-sets")
-
-
-result_type_registry.register(UnknownCheckParameterRuleSetsResult)

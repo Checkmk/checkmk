@@ -18,7 +18,6 @@ from typing import override, Self
 from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.automations.results._base import (
     DiscoveredHostLabelsDict,
-    result_type_registry,
 )
 from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import HostName
@@ -88,9 +87,6 @@ class ServiceDiscoveryResult(AutomationResult):
     @override
     def automation_call() -> AutomationID:
         return AutomationID("service-discovery")
-
-
-result_type_registry.register(ServiceDiscoveryResult)
 
 
 @dataclass
@@ -165,17 +161,11 @@ class ServiceDiscoveryPreviewResult(AutomationResult):
         return AutomationID("service-discovery-preview")
 
 
-result_type_registry.register(ServiceDiscoveryPreviewResult)
-
-
 class SpecialAgentDiscoveryPreviewResult(ServiceDiscoveryPreviewResult):
     @staticmethod
     @override
     def automation_call() -> AutomationID:
         return AutomationID("special-agent-discovery-preview")
-
-
-result_type_registry.register(SpecialAgentDiscoveryPreviewResult)
 
 
 @dataclass
@@ -208,18 +198,12 @@ class AutodiscoveryResult(AutomationResult):
         return AutomationID("autodiscovery")
 
 
-result_type_registry.register(AutodiscoveryResult)
-
-
 @dataclass
 class SetAutochecksV2Result(AutomationResult):
     @staticmethod
     @override
     def automation_call() -> AutomationID:
         return AutomationID("set-autochecks-v2")
-
-
-result_type_registry.register(SetAutochecksV2Result)
 
 
 @dataclass
@@ -268,6 +252,3 @@ class UpdateHostLabelsResult(AutomationResult):
     @override
     def automation_call() -> AutomationID:
         return AutomationID("update-host-labels")
-
-
-result_type_registry.register(UpdateHostLabelsResult)

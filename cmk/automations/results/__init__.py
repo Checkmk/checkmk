@@ -12,12 +12,6 @@ All public symbols are re-exported here so that existing imports of the form
 from cmk.automations.results._base import (
     DiscoveredHostLabelsDict as DiscoveredHostLabelsDict,
 )
-from cmk.automations.results._base import (
-    result_type_registry as result_type_registry,
-)
-from cmk.automations.results._base import (
-    ResultTypeRegistry as ResultTypeRegistry,
-)
 from cmk.automations.results.analysis import (
     ActiveCheckResult as ActiveCheckResult,
 )

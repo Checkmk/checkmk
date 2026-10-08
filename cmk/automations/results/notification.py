@@ -10,7 +10,6 @@ from dataclasses import asdict, dataclass
 from typing import override, Self
 
 from cmk.automations.internal import AutomationID, AutomationResult
-from cmk.automations.results._base import result_type_registry
 from cmk.events.notify_types import NotifyAnalysisInfo, NotifyBulks
 
 
@@ -20,9 +19,6 @@ class NotificationReplayResult(AutomationResult):
     @override
     def automation_call() -> AutomationID:
         return AutomationID("notification-replay")
-
-
-result_type_registry.register(NotificationReplayResult)
 
 
 @dataclass
@@ -35,9 +31,6 @@ class NotificationAnalyseResult(AutomationResult):
         return AutomationID("notification-analyse")
 
 
-result_type_registry.register(NotificationAnalyseResult)
-
-
 @dataclass
 class NotificationTestResult(AutomationResult):
     result: NotifyAnalysisInfo | None
@@ -48,9 +41,6 @@ class NotificationTestResult(AutomationResult):
         return AutomationID("notification-test")
 
 
-result_type_registry.register(NotificationTestResult)
-
-
 @dataclass
 class NotificationGetBulksResult(AutomationResult):
     result: NotifyBulks
@@ -59,9 +49,6 @@ class NotificationGetBulksResult(AutomationResult):
     @override
     def automation_call() -> AutomationID:
         return AutomationID("notification-get-bulks")
-
-
-result_type_registry.register(NotificationGetBulksResult)
 
 
 @dataclass
@@ -85,6 +72,3 @@ class NotifyResult(AutomationResult):
         for_cmk_version: str,
     ) -> str:
         return str(asdict(self))
-
-
-result_type_registry.register(NotifyResult)

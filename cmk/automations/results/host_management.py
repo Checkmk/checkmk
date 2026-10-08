@@ -14,7 +14,6 @@ from dataclasses import dataclass
 from typing import override
 
 from cmk.automations.internal import AutomationID, AutomationResult
-from cmk.automations.results._base import result_type_registry
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.helper_interface import AgentRawData
 from cmk.checkengine.submitters import ServiceDetails
@@ -31,9 +30,6 @@ class RenameHostsResult(AutomationResult):
         return AutomationID("rename-hosts")
 
 
-result_type_registry.register(RenameHostsResult)
-
-
 @dataclass
 class DeleteHostsResult(AutomationResult):
     @staticmethod
@@ -42,18 +38,12 @@ class DeleteHostsResult(AutomationResult):
         return AutomationID("delete-hosts")
 
 
-result_type_registry.register(DeleteHostsResult)
-
-
 @dataclass
 class DeleteHostsKnownRemoteResult(AutomationResult):
     @staticmethod
     @override
     def automation_call() -> AutomationID:
         return AutomationID("delete-hosts-known-remote")
-
-
-result_type_registry.register(DeleteHostsKnownRemoteResult)
 
 
 @dataclass
@@ -66,18 +56,12 @@ class RestartResult(AutomationResult):
         return AutomationID("restart")
 
 
-result_type_registry.register(RestartResult)
-
-
 @dataclass
 class ReloadResult(RestartResult):
     @staticmethod
     @override
     def automation_call() -> AutomationID:
         return AutomationID("reload")
-
-
-result_type_registry.register(ReloadResult)
 
 
 @dataclass
@@ -90,9 +74,6 @@ class GetConfigurationResult(AutomationResult):
         return AutomationID("get-configuration")
 
 
-result_type_registry.register(GetConfigurationResult)
-
-
 @dataclass
 class GetCheckInformationResult(AutomationResult):
     plugin_infos: Mapping[str, Mapping[str, object]]
@@ -103,9 +84,6 @@ class GetCheckInformationResult(AutomationResult):
         return AutomationID("get-check-information")
 
 
-result_type_registry.register(GetCheckInformationResult)
-
-
 @dataclass
 class GetSectionInformationResult(AutomationResult):
     section_infos: Mapping[str, Mapping[str, str]]
@@ -114,9 +92,6 @@ class GetSectionInformationResult(AutomationResult):
     @override
     def automation_call() -> AutomationID:
         return AutomationID("get-section-information")
-
-
-result_type_registry.register(GetSectionInformationResult)
 
 
 @dataclass
@@ -130,18 +105,12 @@ class UpdateDNSCacheResult(AutomationResult):
         return AutomationID("update-dns-cache")
 
 
-result_type_registry.register(UpdateDNSCacheResult)
-
-
 @dataclass
 class UpdatePasswordsMergedFileResult(AutomationResult):
     @staticmethod
     @override
     def automation_call() -> AutomationID:
         return AutomationID("update-passwords-merged-file")
-
-
-result_type_registry.register(UpdatePasswordsMergedFileResult)
 
 
 @dataclass
@@ -156,9 +125,6 @@ class GetAgentOutputResult(AutomationResult):
         return AutomationID("get-agent-output")
 
 
-result_type_registry.register(GetAgentOutputResult)
-
-
 @dataclass
 class BakeAgentsResult(AutomationResult):
     output: str | None
@@ -167,9 +133,6 @@ class BakeAgentsResult(AutomationResult):
     @override
     def automation_call() -> AutomationID:
         return AutomationID("bake-agents")
-
-
-result_type_registry.register(BakeAgentsResult)
 
 
 @dataclass
@@ -184,6 +147,3 @@ class BakeryChangedTargetsResult(AutomationResult):
     @override
     def automation_call() -> AutomationID:
         return AutomationID("bakery-changed-targets")
-
-
-result_type_registry.register(BakeryChangedTargetsResult)

@@ -17,13 +17,8 @@ from enum import StrEnum
 from typing import Literal, override, Self
 
 from cmk.automations.internal import AutomationID, AutomationResult
-from cmk.automations.results._base import result_type_registry
 from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.diagnostics.automation_types import (
-    CreateDiagnosticsDumpResult,
-    CreateDiagnosticsDumpV2Result,
-)
 from cmk.password_store.v1 import Secret
 from cmk.utils.http_proxy_config import HTTPProxySpec
 from cmk.utils.ip_lookup import IPStackConfig
@@ -68,9 +63,6 @@ class ScanParentsResult(AutomationResult):
             for gw, state, ping_fails, message in serialized_results
         ]
         return cls(results=results)
-
-
-result_type_registry.register(ScanParentsResult)
 
 
 @dataclass
@@ -222,9 +214,6 @@ class DiagSpecialAgentResult(AutomationResult):
         )
 
 
-result_type_registry.register(DiagSpecialAgentResult)
-
-
 @dataclass
 class DiagCmkAgentInput:
     host_name: HostName
@@ -267,8 +256,6 @@ class DiagCmkAgentResult(AutomationResult):
     def automation_call() -> AutomationID:
         return AutomationID("diag-cmk-agent")
 
-
-result_type_registry.register(DiagCmkAgentResult)
 
 SnmpV3SecurityLevel = Literal["authPriv", "authNoPriv", "noAuthNoPriv"]
 SnmpV3AuthProtocol = Literal["md5", "sha", "SHA-224", "SHA-256", "SHA-384", "SHA-512"]
@@ -343,9 +330,6 @@ class DiagSnmpResult(AutomationResult):
         return AutomationID("diag-snmp")
 
 
-result_type_registry.register(DiagSnmpResult)
-
-
 @dataclass
 class DiagHostResult(AutomationResult):
     return_code: int
@@ -357,9 +341,6 @@ class DiagHostResult(AutomationResult):
         return AutomationID("diag-host")
 
 
-result_type_registry.register(DiagHostResult)
-
-
 @dataclass
 class PingHostResult(AutomationResult):
     return_code: int
@@ -369,9 +350,6 @@ class PingHostResult(AutomationResult):
     @override
     def automation_call() -> AutomationID:
         return AutomationID("ping-host")
-
-
-result_type_registry.register(PingHostResult)
 
 
 class PingHostCmd(StrEnum):
@@ -400,8 +378,3 @@ class PingHostInput:
                 "base_cmd": self.base_cmd.value,
             }
         )
-
-
-# The result types of the diagnostics dump live with the diagnostics package.
-result_type_registry.register(CreateDiagnosticsDumpResult)
-result_type_registry.register(CreateDiagnosticsDumpV2Result)

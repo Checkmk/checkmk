@@ -96,7 +96,10 @@ def site_neutral_path(path: str | Path) -> str:
 
 def may_edit_ruleset(varname: str) -> bool:
     if varname == "ignored_services":
-        return user.may("wato.services") or user.may("wato.rulesets")
+        # same effect as disabling via service discovery
+        return user.may("wato.rulesets") or (
+            user.may("wato.services") and user.may("wato.service_discovery_to_ignored")
+        )
     if varname in [
         "custom_checks",
         "datasource_programs",

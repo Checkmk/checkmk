@@ -372,3 +372,29 @@ def test_monitoring_user_permissions(
 )
 def test_ruleset_permissions_with_commandline_access(varname: str) -> None:
     assert may_edit_ruleset(varname) is False
+
+
+@pytest.mark.parametrize(
+    "explicit_permissions, expected",
+    [
+        pytest.param({"wato.rulesets"}, True, id="rulesets"),
+        pytest.param(
+            {"wato.services", "wato.service_discovery_to_ignored"},
+            True,
+            id="services_and_discovery_to_ignored",
+        ),
+        pytest.param({"wato.services"}, False, id="services_only"),
+        pytest.param({"wato.service_discovery_to_ignored"}, False, id="discovery_to_ignored_only"),
+        pytest.param(set(), False, id="none"),
+    ],
+)
+def test_may_edit_ignored_services_ruleset(
+    with_user: tuple[UserId, str],
+    monkeypatch: MonkeyPatch,
+    explicit_permissions: set[str],
+    expected: bool,
+) -> None:
+    # Only consider the explicitly given permissions, not those of the user's roles
+    monkeypatch.setattr("cmk.gui.logged_in.may_with_roles", lambda _role_ids, _pname: False)
+    with UserContext(with_user[0], explicit_permissions=explicit_permissions):
+        assert may_edit_ruleset("ignored_services") is expected

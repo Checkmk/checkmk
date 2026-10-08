@@ -48,7 +48,6 @@ py_library(
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",
         "//cmk/gui/watolib:timeperiods",
-        "//cmk/utils",
         "//packages/cmk-ccc:regex",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",

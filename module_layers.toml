@@ -1353,7 +1353,6 @@ allows = [
   "cmk.utils.certs",
   "cmk.utils.check_utils",
   "cmk.utils.config_warnings",
-  "cmk.utils.datastructures",
   "cmk.utils.dateutils",
   "cmk.utils.encoding",
   "cmk.utils.encryption",
@@ -1907,9 +1906,6 @@ allows = []
 allows = ["cmk.ccc.tty", "cmk.utils.log"]
 
 [components."cmk.utils.crypto"]
-allows = []
-
-[components."cmk.utils.datastructures"]
 allows = []
 
 [components."cmk.utils.dateutils"]

@@ -19,7 +19,6 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     RawParameter,
     translate_to_openapi_keys,
 )
-from cmk.utils.datastructures import denilled
 
 PARAM_RE = re.compile(r"{([a-z][a-z0-9_]*)}")
 
@@ -121,24 +120,25 @@ def marshmallow_to_openapi(
             raise ValueError(f"Don't recognize parameter of form: {raw_param!r}")
 
         for name, field in _fields:
-            metadata = denilled(
-                {
-                    "description": field.metadata.get("description"),
-                    "example": field.metadata.get("example"),
-                    "required": (
+            result.append(
+                translate_to_openapi_keys(
+                    name=name,
+                    location=location,
+                    description=field.metadata.get("description"),
+                    example=field.metadata.get("example"),
+                    required=(  # path parameters are always required
                         field.required or location == "path"
-                    ),  # path parameters are always required
-                    "allow_empty": (
+                    ),
+                    allow_empty=(  # only allowed for query parameters
                         field.allow_none if location == "query" else None
-                    ),  # only allowed for query parameters
-                    "schema_enum": field.metadata.get("enum"),
-                    "schema_string_format": field.metadata.get("format"),
-                    "schema_string_pattern": field.metadata.get("pattern"),
-                    "schema_num_minimum": field.metadata.get("minimum"),
-                    "schema_num_maximum": field.metadata.get("maximum"),
-                }
+                    ),
+                    schema_enum=field.metadata.get("enum"),
+                    schema_string_pattern=field.metadata.get("pattern"),
+                    schema_string_format=field.metadata.get("format"),
+                    schema_num_minimum=field.metadata.get("minimum"),
+                    schema_num_maximum=field.metadata.get("maximum"),
+                )
             )
-            result.append(translate_to_openapi_keys(name=name, location=location, **metadata))
     return result
 
 

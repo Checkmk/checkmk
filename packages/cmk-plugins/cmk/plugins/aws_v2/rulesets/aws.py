@@ -348,7 +348,7 @@ def _regional_service(name: str, title: Title, options: Mapping[str, DictElement
     return _service(title, {**options, "limits": _limits()}, filterable=True, prefill="all")
 
 
-def _access_key() -> Mapping[str, DictElement]:
+def configuration_access_key() -> Mapping[str, DictElement]:
     return {
         "access_key_id": DictElement(
             parameter_form=String(
@@ -498,12 +498,16 @@ def configuration_authentication() -> Mapping[str, DictElement]:
                     CascadingSingleChoiceElement(
                         name="access_key",
                         title=Title("Access key"),
-                        parameter_form=Dictionary(elements={**_access_key(), **_accounts()}),
+                        parameter_form=Dictionary(
+                            elements={**configuration_access_key(), **_accounts()}
+                        ),
                     ),
                     CascadingSingleChoiceElement(
                         name="access_key_sts",
                         title=Title("Access key + IAM role"),
-                        parameter_form=Dictionary(elements={**_access_key(), **_assume_role()}),
+                        parameter_form=Dictionary(
+                            elements={**configuration_access_key(), **_assume_role()}
+                        ),
                     ),
                     CascadingSingleChoiceElement(
                         name="none",

@@ -1048,9 +1048,10 @@ def _get_omd_domain_background_job_result(
             if not omd_response.job_status.is_active:
                 return list(omd_response.job_status.loginfo["JobException"])
             time.sleep(0.5)
+        except cmk.gui.watolib.automations.MKRemoteSiteUnavailable:
+            pass  # The remote site restarts, keep polling
         except MKUserError as e:
-            if not (e.message == "Site is not running" or e.message.startswith("HTTP Error - 502")):
-                return [e.message]
+            return [e.message]
 
 
 def _call_activate_changes_automation(

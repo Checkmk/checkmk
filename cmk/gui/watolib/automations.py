@@ -424,6 +424,16 @@ def do_remote_automation(
         )
 
 
+class MKRemoteSiteUnavailable(MKUserError):
+    """The remote site does not process requests at the moment, e.g. because it restarts
+
+    Callers waiting for a remote site catch this exception instead of comparing the message, which
+    is translated."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(None, message)
+
+
 def get_url_raw(
     url: str,
     insecure: bool,
@@ -461,7 +471,13 @@ def get_url_raw(
         response.status_code == HTTPStatus.SERVICE_UNAVAILABLE
         and "Site Not Started" in response.text
     ):
-        raise MKUserError(None, _("Site is not running"))
+        raise MKRemoteSiteUnavailable(_("Site is not running"))
+
+    if response.status_code == HTTPStatus.BAD_GATEWAY:
+        raise MKRemoteSiteUnavailable(
+            _("HTTP Error - %(status_code)d: %(text)s")
+            % {"status_code": response.status_code, "text": response.text}
+        )
 
     if response.status_code != HTTPStatus.OK:
         raise MKUserError(

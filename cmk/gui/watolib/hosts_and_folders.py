@@ -1458,6 +1458,14 @@ def need_relatable(site_id: SiteId, counterpart: Host) -> None:
     )
 
 
+def _need_edit_accepted(host: Host, attributes: HostAttributes) -> None:
+    """Let the edition refuse ``host`` being edited to ``attributes``."""
+    folder = host.folder()
+    folder.validators.validate_edit_host(
+        folder.site_id(), host.name(), attributes, SiteConfigurations(folder.tree.config.sites)
+    )
+
+
 def _need_relatable_from(
     site_id: SiteId, hosts: Iterable[Host], resolve_host: Callable[[HostName], Host | None]
 ) -> set[SiteId]:
@@ -1472,12 +1480,32 @@ def _need_relatable_from(
     moving = {host.name() for host in hosts}
     counterpart_sites: set[SiteId] = set()
     for host in hosts:
-        for other in referenced_host_names(
-            relations_or_empty(host.attributes.get("relations", []))
-        ):
-            if other not in moving and (counterpart := resolve_host(other)) is not None:
-                need_relatable(site_id, counterpart)
-                counterpart_sites.add(counterpart.site_id())
+        counterpart_sites |= _need_links_relatable(
+            site_id,
+            relations_or_empty(host.attributes.get("relations", [])),
+            resolve_host,
+            moving=moving,
+        )
+    return counterpart_sites
+
+
+def _need_links_relatable(
+    site_id: SiteId,
+    links: Sequence[RelationLink],
+    resolve_host: Callable[[HostName], Host | None],
+    *,
+    moving: Container[HostName] = (),
+) -> set[SiteId]:
+    """Let the edition refuse the relations ``links`` name once their host is monitored on
+    ``site_id``. Counterparts in ``moving`` move along and are skipped.
+
+    Returns the sites of the counterparts asked about.
+    """
+    counterpart_sites: set[SiteId] = set()
+    for other in referenced_host_names(links):
+        if other not in moving and (counterpart := resolve_host(other)) is not None:
+            need_relatable(site_id, counterpart)
+            counterpart_sites.add(counterpart.site_id())
     return counterpart_sites
 
 
@@ -1525,8 +1553,8 @@ def _need_relation_mirror(
     be locked, unwritable for this user or gone, and none of that may stand between the user and
     saving the host in front of them. Such a refusal is logged, and
     :func:`cmk.gui.watolib.builtin_attributes.validate_host_relations` keeps reporting the pair.
-    The edition is not asked about such a pair either - the host stores it already, and only a
-    change of its site asks again (see :func:`_need_relatable_from`). Only the host holding the
+    The edition is not asked whether such a pair may exist - the host stores it already, and only
+    a change of its site asks again (see :func:`_need_relatable_from`). Only the host holding the
     primary half settles such a pair (see :attr:`MirrorEntry.from_primary`).
     """
     pending: list[_MirrorWrite] = []
@@ -1560,7 +1588,11 @@ def _need_relation_mirror(
             visible=visible,
         ):
             counterpart.writable_relations()
+            counterpart.permissions.need_permission("write", acting_user)
             need_writable_folders([counterpart.folder()], acting_user=acting_user)
+            # validate_edit_host does not look at relations, so the stored attributes stand for
+            # the edit.
+            _need_edit_accepted(counterpart, counterpart.attributes)
             pending.append(_MirrorWrite(counterpart, links, visible, optional))
     return pending
 
@@ -1632,12 +1664,13 @@ class RelationMirrorBatch:
     def need_edit(self, host: Host, attributes: HostAttributes) -> None:
         """Refuse now if a counterpart would refuse ``host`` being edited to ``attributes``."""
         stored = host.attributes.get("relations", [])
-        self._need(
-            host.name(),
-            relations_or_empty(stored),
-            _relations_to_store(host.name(), attributes.get("relations", []), stored),
-            site_id=attributes.get("site") or host.folder().site_id(),
-        )
+        before = relations_or_empty(stored)
+        after = _relations_to_store(host.name(), attributes.get("relations", []), stored)
+        site_id = attributes.get("site") or host.folder().site_id()
+        # What apply_edit() refuses of the host itself, so a bulk caller can fail it alone.
+        if site_id != host.site_id():
+            _need_links_relatable(site_id, after, self._resolve_host, moving=(host.name(),))
+        self._need(host.name(), before, after, site_id=site_id)
 
     def _need(
         self,
@@ -4647,9 +4680,7 @@ class Host:
         self.need_unlocked()
 
         folder = self.folder()
-        folder.validators.validate_edit_host(
-            folder.site_id(), self.name(), attributes, SiteConfigurations(folder.tree.config.sites)
-        )
+        _need_edit_accepted(self, attributes)
         _validate_contact_group_modification(
             _get_cgconf_from_attributes(self.attributes)["groups"],
             _get_cgconf_from_attributes(attributes)["groups"],

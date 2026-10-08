@@ -266,11 +266,11 @@ out, as one value would apply to every host.
 
 The bulk endpoints do the same through ``RelationMirrorBatch``, one folder of
 the request after the other. Both report a host whose relations are refused as
-failed and save the others. Any other value the bulk update cannot apply,
-including a change of the site the edition refuses for the relations the host
-keeps, still fails the request; folders processed before are saved. A related
-host has to exist when the folder of the host naming it is processed, so a
-relation to a host created in the same request can be refused.
+failed and save the others. This includes a new site that the edition refuses
+for a relation the host keeps. Any other value the bulk update cannot apply
+still fails the request; folders processed before are saved. A related host has
+to exist when the folder of the host naming it is processed, so a relation to a
+host created in the same request can be refused.
 
 For the monitoring each host with relations gets a ``_CMK_RELATIONS`` custom
 host variable during the activation. It contains the same information as JSON,

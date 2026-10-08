@@ -17,7 +17,6 @@ import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.config import get_default_config, make_config_object
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import LoggedInSuperUser, LoggedInUser, UserDefaultConfig
 from cmk.gui.utils.host_relation_kinds import (
@@ -69,6 +68,7 @@ from cmk.gui.watolib.pending_changes import (
 from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.livestatus_client import SiteConfigurations
 from cmk.utils.redis import disable_redis
+from tests.unit.cmk.gui.watolib.host_relations_fakes import refuse_relations_across_sites
 
 _SUPERUSER = LoggedInSuperUser()
 
@@ -1057,11 +1057,6 @@ def test_a_host_the_user_may_not_edit_is_reported_instead_of_offered(tree: Folde
     assert found.entries[0].detail == 'No permission to edit the host "srv-01".'
 
 
-def _refuse_relations_across_sites(site_id: SiteId, other_site_id: SiteId, _sites: object) -> None:
-    if site_id != other_site_id:
-        raise MKUserError(None, "Only hosts of the same customer can be related.")
-
-
 def test_a_pair_the_edition_refuses_is_reported_instead_of_offered(tree: FolderTree) -> None:
     """The run asks the edition before it writes the other half; the scan has to ask the same,
     or a pair across customers is offered and only refused once the user stores it."""
@@ -1070,9 +1065,7 @@ def test_a_pair_the_edition_refuses_is_reported_instead_of_offered(tree: FolderT
     _create_host(root, "srv-01", HostAttributes({"site": SiteId("customer_b")}))
     tree.invalidate_caches()
     root = tree.root_folder()
-    root.validators = replace(
-        root.validators, validate_host_relation=_refuse_relations_across_sites
-    )
+    root.validators = replace(root.validators, validate_host_relation=refuse_relations_across_sites)
 
     found = detect_relations(tree, evidence=_evidence(), acting_user=_SUPERUSER)
 

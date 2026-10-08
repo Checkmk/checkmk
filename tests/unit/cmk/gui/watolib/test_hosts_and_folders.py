@@ -66,6 +66,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     may_read_host,
     MirrorEntry,
     plan_relation_mirror,
+    RelationMirrorBatch,
 )
 from cmk.gui.watolib.pending_changes import (
     ChangeHook,
@@ -78,6 +79,7 @@ from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.utils.host_storage import PickleHostsStorage
 from cmk.utils.redis import disable_redis
 from cmk.web.utils.urls import HTTPVariable
+from tests.unit.cmk.gui.watolib.host_relations_fakes import refuse_relations_across_sites
 
 # Cheap in-memory acting user with all permissions. Avoids the expensive
 # with_admin_login fixture (which creates a real user on disk) for tests that
@@ -2274,6 +2276,111 @@ def test_refusal_to_drop_a_relation_keeps_the_hidden_counterparts_folder_to_itse
 
     assert "Hidden" not in str(refused.value)
     assert "another_cg" not in str(refused.value)
+
+
+def test_mirror_batch_refuses_a_counterpart_the_user_may_not_write_before_touching_it(
+    tree: FolderTree,
+) -> None:
+    """A host's contact groups are not its folder's: the user may write the folder and still not
+    the host in it. Refused while planning, so a bulk endpoint can fail that host alone."""
+    own = _folder_of(tree, "own", "cg")
+    os1 = _create_host(own, "os1")
+    _create_host(own, "board", HostAttributes({"contactgroups": _contact_groups("another_cg")}))
+
+    with pytest.raises(MKUserError, match="'board' as well, which you cannot edit"):
+        RelationMirrorBatch(own, acting_user=_user_of_one_contact_group("cg")).need_edit(
+            os1,
+            HostAttributes(
+                {
+                    "relations": [
+                        {"kind": "management", "direction": "child", "host": HostName("board")}
+                    ]
+                }
+            ),
+        )
+
+
+def _refuse_editing_board(
+    _folder_site_id: SiteId, host_name: HostName, _attributes: object, _sites: object
+) -> None:
+    if host_name == "board":
+        raise MKUserError(None, "The edition refuses 'board'.")
+
+
+def test_mirror_batch_refuses_a_counterpart_the_edition_refuses_before_touching_it(
+    tree: FolderTree,
+) -> None:
+    """Refused while planning, so a bulk caller fails that host alone."""
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1")
+    _create_host(root, "board")
+    root.validators = replace(root.validators, validate_edit_host=_refuse_editing_board)
+
+    with pytest.raises(MKUserError, match="The edition refuses 'board'"):
+        RelationMirrorBatch(root, acting_user=_SUPERUSER).need_edit(
+            os1,
+            HostAttributes(
+                {
+                    "relations": [
+                        {"kind": "management", "direction": "child", "host": HostName("board")}
+                    ]
+                }
+            ),
+        )
+
+
+def test_mirror_batch_refuses_a_site_the_edition_refuses_for_a_kept_relation(
+    tree: FolderTree,
+) -> None:
+    """Refused while planning, like apply_edit() refuses it, so a bulk caller fails it alone."""
+    root = tree.root_folder()
+    os1 = _create_host(root, "os1", HostAttributes({"site": SiteId("site_a")}))
+    _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {
+                "site": SiteId("site_a"),
+                "relations": [
+                    {"kind": "management", "direction": "parent", "host": HostName("os1")}
+                ],
+            }
+        ),
+    )
+    root.validators = replace(root.validators, validate_host_relation=refuse_relations_across_sites)
+
+    with pytest.raises(MKUserError, match="Only hosts of the same customer"):
+        RelationMirrorBatch(root, acting_user=_SUPERUSER).need_edit(
+            os1, HostAttributes({**os1.attributes, "site": SiteId("site_b")})
+        )
+
+
+def test_create_asks_the_edition_about_the_folder_site_of_a_host_with_an_empty_site(
+    tree: FolderTree,
+) -> None:
+    """An empty site is the placeholder for the folder's one, as in Host.site_id()."""
+    folder = _subfolder(tree.root_folder(), "site_a", HostAttributes({"site": SiteId("site_a")}))
+    _create_host(folder, "board")
+    folder.validators = replace(
+        folder.validators, validate_host_relation=refuse_relations_across_sites
+    )
+
+    os1 = _create_host(
+        folder,
+        "os1",
+        HostAttributes(
+            {
+                "site": SiteId(""),
+                "relations": [
+                    {"kind": "management", "direction": "child", "host": HostName("board")}
+                ],
+            }
+        ),
+    )
+
+    assert os1.attributes["relations"] == [
+        {"kind": "management", "direction": "child", "host": HostName("board")}
+    ]
 
 
 def test_delete_subfolder_logs_no_change_for_a_pair_inside_it(tree: FolderTree) -> None:

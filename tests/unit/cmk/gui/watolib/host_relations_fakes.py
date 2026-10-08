@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""A host as the relation resolution and the export see it, without a folder tree behind it."""
+"""Stand-ins for what the relations ask of a host and of the edition."""
 
 from collections.abc import Mapping
 from typing import cast
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.host_relations import RelatedHost
 
@@ -37,3 +38,9 @@ class FakeHost:
 def fake_hosts(**relations: object) -> Mapping[HostName, RelatedHost]:
     """The hosts named by the keyword arguments, each holding the relations given as its value."""
     return {HostName(name): FakeHost(name, value) for name, value in relations.items()}
+
+
+def refuse_relations_across_sites(site_id: SiteId, other_site_id: SiteId, _sites: object) -> None:
+    """``validate_host_relation`` of an edition that keeps every customer on a site of its own."""
+    if site_id != other_site_id:
+        raise MKUserError(None, "Only hosts of the same customer can be related.")

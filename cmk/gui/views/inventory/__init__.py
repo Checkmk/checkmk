@@ -5,33 +5,27 @@
 
 
 from collections.abc import Iterable, Mapping, Sequence
-from functools import partial
 from typing import override
 
 from cmk.ccc.user import UserId
 from cmk.gui.data_source import DataSourceRegistry, RowTable
 from cmk.gui.i18n import _l
-from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.painter import Cell, InternalPainter, PainterContext, PainterRegistry
-from cmk.gui.painter_options import PainterOptions
+from cmk.gui.painter import PainterRegistry
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
     FilterName,
-    Row,
     SingleInfos,
     VisualContext,
     VisualLinkSpec,
 )
 from cmk.gui.valuespec import DictionaryEntry
-from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.sorter import Sorter, SorterRegistry
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.visuals.filter.components import FilterComponent
 from cmk.gui.visuals.info import VisualInfo, VisualInfoRegistry
 from cmk.inventory.raw_paths import InventoryPath, TreeSource
-from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName, StaticIcon
 
 from ._data_sources import ABCDataSourceInventory, RowTableInventory
@@ -46,10 +40,9 @@ from ._display_hints import (
     TableWithView,
 )
 from ._painters import (
-    attribute_painter_from_hint,
-    column_painter_from_hint,
-    node_painter_from_hint,
-    PainterFromHint,
+    make_inventory_attribute_painter,
+    make_inventory_column_painter,
+    make_inventory_node_painter,
 )
 from ._sorter import attribute_sorter_from_hint, column_sorter_from_hint, SorterFromHint
 from ._tree_renderer import make_table_view_name_of_host
@@ -75,60 +68,6 @@ def register_inv_paint_functions(mapping: Mapping[str, object]) -> None:
     for k, v in mapping.items():
         if k.startswith(PAINT_FUNCTION_NAME_PREFIX) and callable(v):
             inv_paint_functions.register(InvPaintFunction(name=k, func=v))
-
-
-def _hint_render(
-    from_hint: PainterFromHint, row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
-) -> CellSpec:
-    return from_hint.paint(row)
-
-
-def _hint_export_for_python(
-    from_hint: PainterFromHint, row: Row, cell: Cell, _user: LoggedInUser, _context: PainterContext
-) -> object:
-    return from_hint.export_for_python(row, cell)
-
-
-def _hint_export_for_csv(
-    from_hint: PainterFromHint, row: Row, cell: Cell, _user: LoggedInUser, _context: PainterContext
-) -> str | HTML:
-    return from_hint.export_for_csv(row, cell)
-
-
-def _hint_export_for_json(
-    from_hint: PainterFromHint, row: Row, cell: Cell, _user: LoggedInUser, _context: PainterContext
-) -> object:
-    return from_hint.export_for_json(row, cell)
-
-
-def _hint_group_by(
-    from_hint: PainterFromHint, row: Row, cell: Cell, _context: PainterContext
-) -> str | None:
-    return from_hint.group_by(row, cell)
-
-
-def make_inventory_hint_painter(from_hint: PainterFromHint) -> InternalPainter:
-    return InternalPainter(
-        ident=from_hint.name,
-        title=from_hint.title,
-        short_title=from_hint.short,
-        tooltip_title=from_hint.tooltip_title,
-        columns=from_hint.columns,
-        sorter=from_hint.sorter,
-        printable=from_hint.printable,
-        painter_options=from_hint.options,
-        load_inv=from_hint.load_inv,
-        parameters=from_hint.params,
-        group_by=partial(_hint_group_by, from_hint),
-        render=partial(_hint_render, from_hint),
-        export_for_python=partial(_hint_export_for_python, from_hint),
-        export_for_csv=partial(_hint_export_for_csv, from_hint),
-        export_for_json=partial(_hint_export_for_json, from_hint),
-    )
-
-
-def _register_painter(painter_registry: PainterRegistry, from_hint: PainterFromHint) -> None:
-    painter_registry.register(make_inventory_hint_painter(from_hint))
 
 
 def _register_sorter(sorter_registry: SorterRegistry, from_hint: SorterFromHint) -> None:
@@ -346,7 +285,7 @@ def _register_table_view(
     painters: list[ColumnSpec] = []
     filters = []
     for col_hint in table.columns.values():
-        _register_painter(painter_registry, column_painter_from_hint(col_hint))
+        painter_registry.register(make_inventory_column_painter(col_hint))
         _register_sorter(sorter_registry, column_sorter_from_hint(col_hint))
         filter_registry.register(col_hint.filter)
 
@@ -363,7 +302,6 @@ def register_table_views_and_columns(
     visual_info_registry: VisualInfoRegistry,
     data_source_registry: DataSourceRegistry,
 ) -> None:
-    painter_options = PainterOptions.get_instance()
     register_display_hints(load_inventory_ui_plugins(), inventory_displayhints)
     for node_hint in inv_display_hints:
         if "*" in node_hint.path:
@@ -378,12 +316,11 @@ def register_table_views_and_columns(
             #   'DataSourceInventory' uses 'RowTableInventory'
             continue
 
-        _register_painter(painter_registry, node_painter_from_hint(node_hint, painter_options))
+        painter_registry.register(make_inventory_node_painter(node_hint))
 
         for key, attr_hint in node_hint.attributes.items():
-            _register_painter(
-                painter_registry,
-                attribute_painter_from_hint(node_hint.path, key, attr_hint),
+            painter_registry.register(
+                make_inventory_attribute_painter(node_hint.path, key, attr_hint)
             )
             _register_sorter(
                 sorter_registry,

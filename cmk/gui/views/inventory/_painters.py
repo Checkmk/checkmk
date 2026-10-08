@@ -5,21 +5,20 @@
 
 
 import time
-from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from collections.abc import Mapping, Sequence
+from functools import partial
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter import Cell, InternalPainter, PainterContext
-from cmk.gui.painter_options import paint_age, PainterOption, PainterOptions
-from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import ColumnName, PainterParameters, Row
+from cmk.gui.painter_options import paint_age, PainterOption
+from cmk.gui.theme import Theme
+from cmk.gui.type_defs import PainterParameters, Row
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.valuespec import Checkbox, Dictionary, FixedValue
 from cmk.gui.view_utils import CellSpec, CSVExportError
@@ -121,7 +120,7 @@ def _render_inventory_tree(
         site_id=row["site"],
         host_name=row["host_name"],
         hints=inv_display_hints,
-        theme=theme,
+        theme=context.theme,
         request=context.request,
         show_internal_tree_paths=context.painter_options.get("show_internal_tree_paths"),
     )
@@ -210,7 +209,7 @@ def _render_invhist_delta(
         site_id=row["site"],
         host_name=row["host_name"],
         hints=inv_display_hints,
-        theme=theme,
+        theme=context.theme,
         request=context.request,
         show_internal_tree_paths=context.painter_options.get("show_internal_tree_paths"),
     )
@@ -309,29 +308,6 @@ def make_invhist_changed_painter() -> InternalPainter:
     )
 
 
-@dataclass(frozen=True, kw_only=True)
-class PainterFromHint:
-    name: str
-    title: str
-    short: str
-    tooltip_title: str
-    columns: Sequence[ColumnName]
-    options: Sequence[str]
-    params: Dictionary | FixedValue[PainterParameters]
-    printable: bool
-    load_inv: bool
-    sorter: str
-    paint: Callable[[Row], CellSpec]
-    export_for_python: Callable[[Row, Cell], object]
-    export_for_csv: Callable[[Row, Cell], str | HTML]
-    export_for_json: Callable[[Row, Cell], object]
-    group_by: Callable[[Row, Cell], str | None]
-
-
-def _no_group_value(_row: Row, _cell: Cell) -> None:
-    return None
-
-
 def _get_attributes(row: Row, path: SDPath) -> ImmutableAttributes | None:
     try:
         _validate_inventory_tree_uniqueness(row)
@@ -347,7 +323,7 @@ def _compute_attribute_painter_data(row: Row, path: SDPath, key: SDKey) -> SDVal
 
 
 def _paint_host_inventory_attribute(
-    row: Row, path: SDPath, key: SDKey, hint: AttributeDisplayHint
+    row: Row, path: SDPath, key: SDKey, hint: AttributeDisplayHint, theme: Theme
 ) -> CellSpec:
     if (attributes := _get_attributes(row, path)) is None:
         return "", ""
@@ -364,22 +340,61 @@ def _paint_host_inventory_attribute(
     )
 
 
-def attribute_painter_from_hint(
+def _render_inventory_attribute(
+    path: SDPath,
+    key: SDKey,
+    hint: AttributeDisplayHint,
+    row: Row,
+    _cell: Cell,
+    _user: LoggedInUser,
+    context: PainterContext,
+) -> CellSpec:
+    return _paint_host_inventory_attribute(row, path, key, hint, context.theme)
+
+
+def _export_inventory_attribute(
+    path: SDPath, key: SDKey, row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> SDValue:
+    return _compute_attribute_painter_data(row, path, key)
+
+
+def _export_inventory_attribute_for_csv(
+    path: SDPath, key: SDKey, row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str:
+    return "" if (data := _compute_attribute_painter_data(row, path, key)) is None else str(data)
+
+
+def _group_by_inventory_attribute(
+    path: SDPath,
+    key: SDKey,
+    hint: AttributeDisplayHint,
+    row: Row,
+    _cell: Cell,
+    context: PainterContext,
+) -> str | None:
+    painted = _paint_host_inventory_attribute(row, path, key, hint, context.theme)[1]
+    return str(painted) if isinstance(painted, str | HTML) else None
+
+
+def make_inventory_attribute_painter(
     path: SDPath, key: SDKey, hint: AttributeDisplayHint
-) -> PainterFromHint:
-    return PainterFromHint(
-        name=hint.name,
+) -> InternalPainter:
+    return InternalPainter(
+        ident=hint.name,
         title=hint.long_inventory_title,
         # The short titles (used in column headers) may overlap for different painters, e.g.:
         # - BIOS > Version
         # - Firmware > Version
         # We want to keep column titles short, yet, to make up for overlapping we show the
         # long_title in the column title tooltips
-        short=hint.short_title,
+        short_title=hint.short_title,
         tooltip_title=hint.long_title,
         columns=["host_inventory", "host_structured_status"],
-        options=["show_internal_tree_paths"],
-        params=Dictionary(
+        sorter=hint.name,
+        printable=True,
+        painter_options=["show_internal_tree_paths"],
+        load_inv=True,
+        parameters=Dictionary(
             title=_("Report options"),
             elements=[
                 (
@@ -392,24 +407,15 @@ def attribute_painter_from_hint(
             ],
             required_keys=["use_short"],
         ),
-        printable=True,
-        load_inv=True,
-        sorter=hint.name,
-        paint=lambda row: _paint_host_inventory_attribute(row, path, key, hint),
-        export_for_python=lambda row, _cell: _compute_attribute_painter_data(row, path, key),
-        export_for_csv=lambda row, _cell: (
-            "" if (data := _compute_attribute_painter_data(row, path, key)) is None else str(data)
-        ),
-        export_for_json=lambda row, _cell: _compute_attribute_painter_data(row, path, key),
-        group_by=lambda row, _cell: (
-            str(r)
-            if isinstance(r := _paint_host_inventory_attribute(row, path, key, hint)[1], str | HTML)
-            else None
-        ),
+        group_by=partial(_group_by_inventory_attribute, path, key, hint),
+        render=partial(_render_inventory_attribute, path, key, hint),
+        export_for_python=partial(_export_inventory_attribute, path, key),
+        export_for_csv=partial(_export_inventory_attribute_for_csv, path, key),
+        export_for_json=partial(_export_inventory_attribute, path, key),
     )
 
 
-def _paint_host_inventory_column(row: Row, hint: ColumnDisplayHintOfView) -> CellSpec:
+def _paint_host_inventory_column(row: Row, hint: ColumnDisplayHintOfView, theme: Theme) -> CellSpec:
     if hint.name not in row:
         return "", ""
     return compute_cell_spec(
@@ -425,31 +431,59 @@ def _paint_host_inventory_column(row: Row, hint: ColumnDisplayHintOfView) -> Cel
     )
 
 
-def column_painter_from_hint(hint: ColumnDisplayHintOfView) -> PainterFromHint:
-    return PainterFromHint(
-        name=hint.name,
+def _render_inventory_column(
+    hint: ColumnDisplayHintOfView,
+    row: Row,
+    _cell: Cell,
+    _user: LoggedInUser,
+    context: PainterContext,
+) -> CellSpec:
+    return _paint_host_inventory_column(row, hint, context.theme)
+
+
+def _export_inventory_column(
+    hint: ColumnDisplayHintOfView,
+    row: Row,
+    _cell: Cell,
+    _user: LoggedInUser,
+    _context: PainterContext,
+) -> object:
+    return row.get(hint.name)
+
+
+def _export_inventory_column_for_csv(
+    hint: ColumnDisplayHintOfView,
+    row: Row,
+    _cell: Cell,
+    _user: LoggedInUser,
+    _context: PainterContext,
+) -> str:
+    return "" if (data := row.get(hint.name)) is None else str(data)
+
+
+def make_inventory_column_painter(hint: ColumnDisplayHintOfView) -> InternalPainter:
+    return InternalPainter(
+        ident=hint.name,
         title=hint.long_inventory_title,
         # The short titles (used in column headers) may overlap for different painters, e.g.:
         # - BIOS > Version
         # - Firmware > Version
         # We want to keep column titles short, yet, to make up for overlapping we show the
         # long_title in the column title tooltips
-        short=hint.short_title,
+        short_title=hint.short_title,
         tooltip_title=hint.long_title,
         columns=[hint.name],
-        options=[],
+        sorter=hint.name,
+        printable=True,
+        load_inv=False,
         # See painter/base.py::Cell.painter_parameters
         # We have to add a dummy value here such that the painter_parameters are not None and
         # the "real" parameters, ie. _painter_params, are used.
-        params=FixedValue(PainterParameters(), totext=""),
-        printable=True,
-        load_inv=False,
-        sorter=hint.name,
-        paint=lambda row: _paint_host_inventory_column(row, hint),
-        export_for_python=lambda row, _cell: row.get(hint.name),
-        export_for_csv=lambda row, _cell: "" if (data := row.get(hint.name)) is None else str(data),
-        export_for_json=lambda row, _cell: row.get(hint.name),
-        group_by=_no_group_value,
+        parameters=FixedValue(PainterParameters(), totext=""),
+        render=partial(_render_inventory_column, hint),
+        export_for_python=partial(_export_inventory_column, hint),
+        export_for_csv=partial(_export_inventory_column_for_csv, hint),
+        export_for_json=partial(_export_inventory_column, hint),
     )
 
 
@@ -462,7 +496,9 @@ def _compute_node_painter_data(row: Row, path: SDPath) -> ImmutableTree:
     return _get_inventory_tree(row).get_tree(path)
 
 
-def _paint_host_inventory_tree(row: Row, path: SDPath, painter_options: PainterOptions) -> CellSpec:
+def _render_inventory_node(
+    path: SDPath, row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
     if not (tree := _compute_node_painter_data(row, path)):
         return "", ""
 
@@ -470,9 +506,9 @@ def _paint_host_inventory_tree(row: Row, path: SDPath, painter_options: PainterO
         site_id=row["site"],
         host_name=row["host_name"],
         hints=inv_display_hints,
-        theme=theme,
-        request=request,
-        show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
+        theme=context.theme,
+        request=context.request,
+        show_internal_tree_paths=context.painter_options.get("show_internal_tree_paths"),
     )
 
     with output_funnel.plugged():
@@ -482,21 +518,33 @@ def _paint_host_inventory_tree(row: Row, path: SDPath, painter_options: PainterO
     return "invtree", code
 
 
-def _export_node_for_csv() -> str | HTML:
+def _export_inventory_node(
+    path: SDPath, row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> object:
+    return serialize_tree(_compute_node_painter_data(row, path))
+
+
+def _export_inventory_node_for_csv(
+    _row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> str | HTML:
     raise CSVExportError
 
 
-def node_painter_from_hint(
-    hint: NodeDisplayHint, painter_options: PainterOptions
-) -> PainterFromHint:
-    return PainterFromHint(
-        name=hint.name,
+def make_inventory_node_painter(hint: NodeDisplayHint) -> InternalPainter:
+    return InternalPainter(
+        ident=hint.name,
         title=hint.long_inventory_title,
-        short=hint.short_title,
+        short_title=hint.short_title,
         tooltip_title=hint.long_inventory_title,
         columns=["host_inventory", "host_structured_status"],
-        options=["show_internal_tree_paths"],
-        params=Dictionary(
+        sorter=hint.name,
+        # Only attributes can be shown in reports. There is currently no way to render trees.
+        # The HTML code would simply be stripped by the default rendering mechanism which does
+        # not look good for the HW/SW Inventory tree
+        printable=False,
+        painter_options=["show_internal_tree_paths"],
+        load_inv=True,
+        parameters=Dictionary(
             title=_("Report options"),
             elements=[
                 (
@@ -509,19 +557,8 @@ def node_painter_from_hint(
             ],
             required_keys=["use_short"],
         ),
-        # Only attributes can be shown in reports. There is currently no way to render trees.
-        # The HTML code would simply be stripped by the default rendering mechanism which does
-        # not look good for the HW/SW Inventory tree
-        printable=False,
-        load_inv=True,
-        sorter=hint.name,
-        paint=lambda row: _paint_host_inventory_tree(row, hint.path, painter_options),
-        export_for_python=lambda row, _cell: serialize_tree(
-            _compute_node_painter_data(row, hint.path)
-        ),
-        export_for_csv=lambda _row, _cell: _export_node_for_csv(),
-        export_for_json=lambda row, _cell: serialize_tree(
-            _compute_node_painter_data(row, hint.path)
-        ),
-        group_by=_no_group_value,
+        render=partial(_render_inventory_node, hint.path),
+        export_for_python=partial(_export_inventory_node, hint.path),
+        export_for_csv=_export_inventory_node_for_csv,
+        export_for_json=partial(_export_inventory_node, hint.path),
     )

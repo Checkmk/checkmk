@@ -1,3 +1,4 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@python_modules//:requirements.bzl", "all_requirements")
 load("//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 load(":build-python3-modules.bzl", "build_python_module", "create_requirements_file")
@@ -130,8 +131,7 @@ genrule(
     visibility = ["//omd:__subpackages__"],
 )
 
-# TODO: Re-enable as soon this gets cache hits again in CV
-# build_test(
-#     name = "build_test",
-#     targets = [":python3-modules"],
-# )
+build_test(
+    name = "build_test",
+    targets = [":python3-modules"],
+)

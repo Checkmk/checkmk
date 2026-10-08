@@ -203,3 +203,14 @@ py_doc_test(
     size = "small",
     srcs = [":plugins"],
 )
+
+filegroup(
+    name = "powershell_scripts",
+    srcs = [
+        "hyperv_cluster/agents/hyperv_host.ps1",
+        "oracle/agents/oracle_unified_async.ps1",
+        "oracle/agents/oracle_unified_async_custom_metrics.ps1",
+        "oracle/agents/oracle_unified_sync.ps1",
+    ],
+    tags = ["lint-with-psscriptanalyzer"],
+)

@@ -7,7 +7,6 @@
 .pre-commit-scripts/run-unittests-bazel
 active_checks/check_mkevents.cc
 agents/waitmax.c
-agents/windows/cfg_examples/mk_oracle_cfg.ps1
 agents/wnx/extensions/robotmk_ext/src/main.rs
 agents/wnx/test_files/tools/v/src/main.rs
 agents/z_os/waitmax.c
@@ -19,11 +18,7 @@ buildscripts/scripts/gcc-toolchain/common.sh
 buildscripts/scripts/gcc-toolchain/test.sh
 buildscripts/scripts/gcc-toolchain/upload.sh
 cmk/plugins/collection/agents/dnsclient
-cmk/plugins/hyperv_cluster/agents/hyperv_host.ps1
 cmk/plugins/nvidia/agents/nvidia_smi
-cmk/plugins/oracle/agents/oracle_unified_async.ps1
-cmk/plugins/oracle/agents/oracle_unified_async_custom_metrics.ps1
-cmk/plugins/oracle/agents/oracle_unified_sync.ps1
 cmk/plugins/sap/agents/mk_saprouter
 non-free/packages/cmc/src/check_helper.cc
 non-free/packages/cmc/src/icmp_receiver.cc

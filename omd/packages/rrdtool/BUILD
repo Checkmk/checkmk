@@ -1,4 +1,4 @@
-load("@bazel_skylib//rules:copy_directory.bzl", "copy_directory")
+load("@aspect_bazel_lib//lib:copy_directory.bzl", "copy_directory")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:patchelf.bzl", "set_runpath", "set_runpath_tree", "set_runpath_whl")

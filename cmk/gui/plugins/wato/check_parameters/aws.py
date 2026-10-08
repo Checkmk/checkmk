@@ -2088,6 +2088,17 @@ rule_spec_aws_wafv2_limits = CheckParameters(
 )
 
 
+rule_spec_aws_v2_wafv2_limits = CheckParameters(
+    name="aws_v2_wafv2_limits",
+    title=Title("AWS v2/WAFV2 limits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_wafv2_limits,
+    condition=HostAndItemCondition(
+        item_title=Title("Region name"), item_form=_item_spec_aws_wafv2_limits()
+    ),
+)
+
+
 def _parameter_form_spec_aws_wafv2_web_acl() -> Dictionary:
     return Dictionary(
         title=Title("Levels on Web ACL requests"),
@@ -2110,6 +2121,15 @@ def _parameter_form_spec_aws_wafv2_web_acl() -> Dictionary:
 rule_spec_aws_wafv2_web_acl = CheckParameters(
     name="aws_wafv2_web_acl",
     title=Title("AWS/WAFV2 web ACL requests"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_wafv2_web_acl,
+    condition=HostCondition(),
+)
+
+
+rule_spec_aws_v2_wafv2_web_acl = CheckParameters(
+    name="aws_v2_wafv2_web_acl",
+    title=Title("AWS v2/WAFV2 web ACL requests"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_wafv2_web_acl,
     condition=HostCondition(),

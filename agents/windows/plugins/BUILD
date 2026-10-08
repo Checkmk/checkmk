@@ -1,5 +1,5 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 # Sign all PowerShell scripts in the current directory.
 # `build bazel //agents/windows/plugins:all`

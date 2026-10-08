@@ -7,10 +7,10 @@ load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//packages/cmk-frontend:webpack-cli/package_json.bzl", webpack_cli_bin = "bin")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:py_test.bzl", "py_test")
 load("//bazel/rules:css_library.bzl", "css_library")
 load("//bazel/rules:dependency_info.bzl", "dependency_info")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 exports_files(["package.json"])
 

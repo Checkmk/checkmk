@@ -1,10 +1,10 @@
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_library", "rust_test", "rust_test_suite")
 load("@site_crates//:defs.bzl", "aliases", "all_crate_deps")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:patchelf.bzl", "set_runpath")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:xcomp/rust.bzl", "rust_binary")
 
 rust_library(

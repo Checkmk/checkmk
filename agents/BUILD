@@ -1,10 +1,10 @@
 load("@rules_gzip//gzip/compress:defs.bzl", "gzip_compress")
 load("@rules_pkg//pkg:deb.bzl", "pkg_deb")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:agent_package_signing.bzl", "signed_or_unsigned_agent_rpm")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:filename_from_flag.bzl", "filename_from_flag")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:pkg_rpm_from_buildroot.bzl", "pkg_rpm_from_buildroot")
 load("//bazel/rules:sign_package.bzl", "RELEASE_KEY_FINGERPRINT", "sign_package")
 

@@ -573,5 +573,6 @@ deploy_python(
 deploy_python_drift_test(
     name = "deploy-python-drift-test",
     product = "//omd:deps_packages_base",
+    tags = ["no-remote-cache"],
     whls = EDITION_WHEELS,
 )

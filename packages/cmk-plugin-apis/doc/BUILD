@@ -1,8 +1,8 @@
 load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_sphinx//sphinx:defs.bzl", "sphinx_html")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 py_binary(
     name = "sphinx_build",

@@ -1,8 +1,8 @@
 load("@cpp_libs_opt//:symlink_mappings.bzl", opt_mappings = "SYMLINK_MAPPINGS")
 load("@cpp_libs_usr//:symlink_mappings.bzl", usr_mappings = "SYMLINK_MAPPINGS")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:patchelf.bzl", "set_runpath")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load(":create_symlink_targets.bzl", "create_symlink_targets")
 
 # Create pkg_mklink targets from symlink mappings

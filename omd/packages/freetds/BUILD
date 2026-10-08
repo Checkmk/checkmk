@@ -1,8 +1,8 @@
 load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path")
 load("@rules_pkg//pkg:mappings.bzl", "filter_directory", "pkg_filegroup", "pkg_files", "pkg_mklink", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:patchelf.bzl", "set_runpath_tree")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 filegroup(
     name = "freetds_gen_dir",

@@ -1,6 +1,6 @@
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 run_binary(
     name = "run_werks_precompile_community",

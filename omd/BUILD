@@ -2,11 +2,11 @@ load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@rules_gzip//gzip/compress:defs.bzl", "gzip_compress")
 load("@rules_pkg//pkg:deb.bzl", "pkg_deb")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:agent_package_signing.bzl", "requires_signed_agent_rpm")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:git_hash_file.bzl", "git_hash_file")
 load("//bazel/rules:md5sums_from_archive.bzl", "md5sums_from_archive")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:pkg_cma_from_tar.bzl", "pkg_cma_from_tar")
 load("//bazel/rules:pkg_name_info.bzl", "pkg_name_info")
 load("//bazel/rules:pkg_rpm_from_tar.bzl", "pkg_rpm_from_tar")
@@ -905,10 +905,15 @@ filegroup(
 )
 
 # If we include the bom in the initial tar, we have a circular dependency
+# deps_packages_base is stamped, so this target and everything packing it
+# below is unique per build: keep them out of the remote cache.
 pkg_tar(
     name = "deps_packages",
     srcs = [":agent_package_signing_guard"],
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
     deps = [
         ":deps_packages_base",
         "//omd/dependency_management:license_info",
@@ -920,7 +925,10 @@ pkg_tar(
     mtime = 1767744000,
     package_dir_file = ":omd_root_dir",
     portable_mtime = False,
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
     deps = [
         ":deps_packages",
     ],
@@ -930,7 +938,10 @@ pkg_tar(
     name = "complete_install",
     mtime = 1767744000,
     portable_mtime = False,
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
     deps = [
         ":deps_install",
         ":omd_global_dirs_tar",
@@ -947,7 +958,10 @@ pkg_tar(
     extension = "tar.zst",
     mtime = 1767744000,
     portable_mtime = False,
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
     deps = [
         ":complete_install",
     ],
@@ -957,7 +971,10 @@ pkg_tar(
     name = "complete_install_uncompressed",
     mtime = 1767744000,
     portable_mtime = False,
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
     deps = [
         ":complete_install",
     ],
@@ -1008,6 +1025,7 @@ md5sums_from_archive(
     name = "md5sums",
     src = "//omd/packages/heirloom-mailx",
     out = "md5",
+    tags = ["no-remote-cache"],
 )
 
 pkg_deb(
@@ -1032,7 +1050,10 @@ pkg_deb(
     prerm = "//omd/debian:prerm",
     priority = "optional",
     section = "admin",
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
     templates = "//omd/debian:templates",
     triggers = "//omd/debian:triggers",
     version_file = "//omd/distros:distro_version_file",
@@ -1095,7 +1116,10 @@ sh_test(
             "//tests/packaging/package_validator:system_dependencies_ubuntu",
         ],
     }),
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
 )
 
 write_omd_spec(
@@ -1145,7 +1169,10 @@ pkg_rpm_from_tar(
     input_tarball = "complete_install",
     omd_spec = ":omd_spec",
     rpm = "cmk.rpm",
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
     target_compatible_with = select({
         "@cmk//distro:almalinux": [],
         "@cmk//distro:sles": [],
@@ -1158,7 +1185,10 @@ sign_package(
     name = "rpm_signed",
     src = ":rpm",
     expected_fingerprint = RELEASE_KEY_FINGERPRINT,
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
 )
 
 sh_test(
@@ -1218,7 +1248,10 @@ sh_test(
             "//tests/packaging/package_validator:system_dependencies_sles16_0",
         ],
     }),
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
     target_compatible_with = select({
         "@cmk//distro:almalinux": [],
         "@cmk//distro:sles": [],
@@ -1232,6 +1265,7 @@ pkg_tar(
     mtime = 1767744000,
     package_dir_file = "//omd:omd_root_dir_appliance",
     portable_mtime = False,
+    tags = ["no-remote-cache"],
     target_compatible_with = select({
         "@cmk//edition:pro": [],
         "@cmk//edition:ultimate": [],
@@ -1255,7 +1289,10 @@ pkg_cma_from_tar(
     }),
     edition = "@cmk//edition",
     input_tarball = ":appliance",
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
     target_compatible_with = select({
         "@cmk//distro:debian-12": [],
         "//conditions:default": ["@platforms//:incompatible"],
@@ -1280,5 +1317,8 @@ sh_test(
         "//tests/packaging/package_validator:system_dependencies_all",
         "//tests/packaging/package_validator:system_dependencies_cma",
     ],
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
 )

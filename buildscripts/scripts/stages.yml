@@ -98,6 +98,7 @@ STAGES:
               bazel aquery --cmk_edition=$edition ... &> ${RESULTS}/results.txt && rm ${RESULTS}/results.txt || exit 1
               bazel cquery --cmk_edition=$edition ... &> ${RESULTS}/results.txt && rm ${RESULTS}/results.txt || exit 1
           done
+          bazel run //buildscripts/scripts:check_no_remote_cache_tags &> ${RESULTS}/results.txt && rm ${RESULTS}/results.txt || exit 1
           bazel mod graph --output=json | jq -e ".. | select(.name? == \"boringssl\")" >"${RESULTS}/results.txt" && exit 1 || true
       RESULT_CHECK_FILE_PATTERN: "results/results.txt"
 

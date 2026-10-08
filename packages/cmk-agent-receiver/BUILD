@@ -2,10 +2,10 @@ load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mklink", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([

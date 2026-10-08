@@ -1,7 +1,7 @@
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:patchelf.bzl", "set_runpath")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:xcomp/cc.bzl", "cc_binary", "cc_test")
 
 cc_binary(

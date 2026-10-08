@@ -1,6 +1,6 @@
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 ARTIFACTS = [
     "mk-oracle.aix",

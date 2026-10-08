@@ -1,6 +1,6 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:patchelf.bzl", "set_runpath")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 exports_files(["skel.permissions"])
 

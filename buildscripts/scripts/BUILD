@@ -41,6 +41,11 @@ py_binary(
 )
 
 py_binary(
+    name = "check_no_remote_cache_tags",
+    srcs = ["check_no_remote_cache_tags.py"],
+)
+
+py_binary(
     name = "check_thirdparty_modules",
     srcs = ["check_thirdparty_modules.py"],
 )
@@ -133,6 +138,7 @@ py_cmk_test(
         requirement("requests"),
         ":assert_build_artifacts",
         ":build_cmk_container",
+        ":check_no_remote_cache_tags",
         ":check_thirdparty_modules",
         ":collect_mypy_lib",
         ":collect_rust_tests_lib",

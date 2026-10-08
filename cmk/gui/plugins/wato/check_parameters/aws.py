@@ -1973,6 +1973,15 @@ rule_spec_aws_dynamodb_capacity = CheckParameters(
 )
 
 
+rule_spec_aws_v2_dynamodb_capacity = CheckParameters(
+    name="aws_v2_dynamodb_capacity",
+    title=Title("AWS v2/DynamoDB read/write capacity"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_dynamodb_capacity,
+    condition=HostCondition(),
+)
+
+
 def _parameter_form_spec_aws_dynamodb_latency() -> Dictionary:
     return Dictionary(
         title=Title("Levels on latency"),
@@ -1998,6 +2007,15 @@ def _parameter_form_spec_aws_dynamodb_latency() -> Dictionary:
 rule_spec_aws_dynamodb_latency = CheckParameters(
     name="aws_dynamodb_latency",
     title=Title("AWS/DynamoDB latency"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_dynamodb_latency,
+    condition=HostCondition(),
+)
+
+
+rule_spec_aws_v2_dynamodb_latency = CheckParameters(
+    name="aws_v2_dynamodb_latency",
+    title=Title("AWS v2/DynamoDB latency"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_dynamodb_latency,
     condition=HostCondition(),

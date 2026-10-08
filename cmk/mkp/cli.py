@@ -10,7 +10,7 @@ import cmk.ccc.store
 import cmk.ec.export as ec
 from cmk.ccc.version import (
     __version__,
-    parse_check_mk_version,
+    Version,
 )
 from cmk.discover_plugins import (
     addons_plugins_local_path,
@@ -75,7 +75,7 @@ _SITE_CONTEXT: Final = cli.SiteContext(
         )
     ),
     version=__version__,
-    parse_version=parse_check_mk_version,
+    parse_version=Version.from_str,
 )
 
 

@@ -3338,7 +3338,7 @@ def _execute_update_mkps(
             ),
             ec.mkp_callbacks(paths.omd_root),
             version.__version__,
-            parse_version=version.parse_check_mk_version,
+            parse_version=version.Version.from_str,
         )
     return uninstalled, installed
 

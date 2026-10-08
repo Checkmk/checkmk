@@ -211,9 +211,16 @@ class LivestatusTestingError(RuntimeError):
 
 tracer = trace.get_tracer()
 
+
+class _PersistentConnections(threading.local):
+    def __init__(self) -> None:
+        self.sockets: dict[str, socket.socket] = {}
+
+
 # TODO: This mechanism does not take different connection options into account
-# Keep a global array of persistent connections
-persistent_connections: dict[str, socket.socket] = {}
+# The persistent connections are kept per thread. Threads sharing a socket would mix up
+# their queries and responses.
+_persistent_connections = _PersistentConnections()
 
 # Regular expression for removing Cache: headers if caching is not allowed
 remove_cache_regex = re.compile("\nCache:[^\n]*")
@@ -639,16 +646,16 @@ class SingleSiteConnection(Helpers):
             self.socket.settimeout(float(timeout))
 
     def _try_get_persisted_connection(self) -> socket.socket | None:
-        if self.persist and self.socketurl in persistent_connections:
+        if self.persist and self.socketurl in _persistent_connections.sockets:
             self.successful_persistence = True
-            return persistent_connections[self.socketurl]
+            return _persistent_connections.sockets[self.socketurl]
         return None
 
     def connect(self) -> None:
         if (site_socket := self._try_get_persisted_connection()) is None:
             site_socket = self._create_new_socket_connection()
             if self.persist:
-                persistent_connections[self.socketurl] = site_socket
+                _persistent_connections.sockets[self.socketurl] = site_socket
         self.socket = site_socket
 
     def _create_new_socket_connection(self) -> socket.socket:
@@ -733,7 +740,7 @@ class SingleSiteConnection(Helpers):
         if self.persist:
             self.successful_persistence = False
             with contextlib.suppress(KeyError):
-                del persistent_connections[self.socketurl]
+                del _persistent_connections.sockets[self.socketurl]
 
     def receive_data(self, size: int, timeout: float | None = None) -> bytes:
         if self.socket is None:

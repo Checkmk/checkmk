@@ -17,7 +17,6 @@ import sys
 from collections.abc import Sequence
 from typing import NamedTuple
 
-import boto3
 import botocore
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
@@ -28,10 +27,16 @@ from .config import (
     AGENT,
     AwsAccessError,
     AWSConfig,
-    describe_credential_failure,
     LOGGER,
     NamingConvention,
     TagsImportPatternOption,
+)
+from .credentials import (
+    AccessKey,
+    AssumedRole,
+    AwsCredentials,
+    DefaultCredentials,
+    HubCredentials,
 )
 from .runner import AWSSectionsGeneric, AWSSectionsUSEast
 from .sections.s3 import ResultDistributorS3Limits
@@ -402,94 +407,6 @@ def _setup_logging(opt_debug: bool, opt_verbose: int) -> None:
     configure_logging(logging.DEBUG if opt_verbose > 1 else logging.INFO)
 
 
-def _create_anonymous_session(
-    region: str,
-    config: botocore.config.Config | None,  # noqa: ARG001
-) -> boto3.session.Session:
-    # According to the documentation of AWS botocore this could snippet should be necessary for anonymous sessions.
-    # However this does not work and has to be left out (a reported bug on github).
-    # Leave it here for potential future bugfix of the AWS botocore.
-    # https://github.com/boto/botocore/issues/1395
-    # https://github.com/boto/botocore/issues/2442
-    # When necessary return -> tuple[boto3.session.Session, botocore.config.Config | None]:
-    # ---------------------------------
-    # if config is None:
-    #     config = botocore.config.Config(signature_version=botocore.UNSIGNED)
-    # else:
-    #     config.signature_version = botocore.UNSIGNED  # type: ignore[attr-defined]
-
-    # No try/except here, but not because this cannot fail. The constructor does not
-    # resolve credentials, so it raises nothing about them, yet it does read the shared
-    # config: a missing AWS_PROFILE gives ProfileNotFound and an unparsable file gives
-    # ConfigParseError. Both are BotoCoreError, and every caller builds the session
-    # inside its own try, so they are reported there together with the errors from
-    # session.client(...).
-    return boto3.session.Session(
-        region_name=region,
-    )
-
-
-def _create_session(
-    access_key_id: str | None,
-    secret_access_key: str | None,
-    region: str,
-    config: botocore.config.Config | None,
-) -> boto3.session.Session:
-    if access_key_id is None or secret_access_key is None:
-        return _create_anonymous_session(region=region, config=config)
-
-    # See _create_anonymous_session on why there is no try/except here, and on what
-    # this constructor can still raise.
-    return boto3.session.Session(
-        aws_access_key_id=access_key_id,
-        aws_secret_access_key=secret_access_key,
-        region_name=region,
-    )
-
-
-def _sts_assume_role(
-    access_key_id: str | None,
-    secret_access_key: str | None,
-    role_arn: str,
-    external_id: str,
-    region: str,
-    config: botocore.config.Config | None,
-) -> boto3.session.Session:
-    """
-    Returns a session using a set of temporary security credentials that
-    you can use to access AWS resources from another account.
-    :param access_key_id: AWS credentials
-    :param secret_access_key: AWS credentials
-    :param role_arn: The Amazon Resource Name (ARN) of the role to assume
-    :param region: AWS region
-    :param external_id: Unique identifier to assume a role in another account (optional)
-    :return: AWS session
-    """
-    try:
-        session = _create_session(access_key_id, secret_access_key, region, config)
-
-        sts_client = session.client("sts", config=config)
-
-        if external_id:
-            assumed_role_object = sts_client.assume_role(
-                RoleArn=role_arn, RoleSessionName="AssumeRoleSession", ExternalId=external_id
-            )
-        else:
-            assumed_role_object = sts_client.assume_role(
-                RoleArn=role_arn, RoleSessionName="AssumeRoleSession"
-            )
-
-        credentials = assumed_role_object["Credentials"]
-        return boto3.session.Session(
-            aws_access_key_id=credentials["AccessKeyId"],
-            aws_secret_access_key=credentials["SecretAccessKey"],
-            aws_session_token=credentials["SessionToken"],
-            region_name=region,
-        )
-    except Exception as e:
-        raise AwsAccessError(describe_credential_failure(e))
-
-
 def _sanitize_aws_services_params(
     g_aws_services: Sequence[str],
     r_aws_services: Sequence[str],
@@ -642,74 +559,15 @@ def _configure_aws(args: argparse.Namespace) -> AWSConfig:
     return aws_config
 
 
-def _create_session_from_args(
-    args: argparse.Namespace, region: str, config: botocore.config.Config | None
-) -> boto3.session.Session:
+def _hub_credentials_from_args(args: argparse.Namespace) -> HubCredentials:
     secret_access_key = _resolve_optional_secret(args, ACCESS_KEY_SECRET_OPTION)
-
-    if args.assume_role:
-        return _sts_assume_role(
-            args.access_key_identity,
-            secret_access_key,
-            args.role_arn,
-            args.external_id,
-            region,
-            config,
-        )
-
-    return _create_session(args.access_key_identity, secret_access_key, region, config=config)
-
-
-class AwsCredentials:
-    """Owns the credentials for one agent run.
-
-    One base session is built, and every region shares it. Credentials are therefore
-    resolved once per run instead of once per region. That costs nothing with a static
-    access key, but with AssumeRole it is one STS call instead of N, and with the boto3
-    credential provider chain it is one provider lookup instead of N. A
-    `credential_process` or IAM Roles Anywhere setup pays a subprocess or a signed HTTPS
-    round trip for each of those lookups.
-
-    The base session is pinned to --global-service-region. Clients override the region
-    individually, so a shared session does not force a shared region. Keeping the base
-    session in the configured global region also keeps the AssumeRole STS call inside the
-    partition being monitored, which is what us-gov-* and cn-* setups need.
-    """
-
-    def __init__(
-        self, args: argparse.Namespace, proxy_config: botocore.config.Config | None
-    ) -> None:
-        self._args = args
-        self._proxy_config = proxy_config
-        self._session: boto3.session.Session | None = None
-        self._account_id: str | None = None
-
-    def session(self) -> boto3.session.Session:
-        """The single session of this run, built on first use and then reused."""
-        if self._session is None:
-            self._session = _create_session_from_args(
-                self._args, self._args.global_service_region, self._proxy_config
-            )
-        return self._session
-
-    def account_id(self) -> str:
-        """The account the credentials belong to. One STS call per run, then cached."""
-        if self._account_id is None:
-            try:
-                # The session is built inside the try on purpose. It does not resolve
-                # credentials, but it does read the shared config, so a missing
-                # AWS_PROFILE or an unparsable config file raises here rather than at the
-                # client call below.
-                self._account_id = (
-                    self.session()
-                    .client("sts", config=self._proxy_config)
-                    .get_caller_identity()["Account"]
-                )
-            except (botocore.exceptions.BotoCoreError, botocore.exceptions.ClientError) as e:
-                # BotoCoreError covers every client-side failure, including all the
-                # credential ones. ClientError is not a BotoCoreError, so it stays listed.
-                raise AwsAccessError(describe_credential_failure(e))
-        return self._account_id
+    login: AccessKey | DefaultCredentials = (
+        DefaultCredentials()
+        if args.access_key_identity is None or secret_access_key is None
+        else AccessKey(args.access_key_identity, secret_access_key)
+    )
+    role = AssumedRole(args.role_arn, args.external_id or None) if args.assume_role else None
+    return HubCredentials(login, role)
 
 
 def _test_connection(credentials: AwsCredentials) -> int:
@@ -728,7 +586,9 @@ def agent_aws_main(args: argparse.Namespace) -> int:
     proxy_config = _get_proxy(args)
     # One credential owner for the whole run. The connection test and the agent run take
     # the same one, so both resolve credentials through the same path.
-    credentials = AwsCredentials(args, proxy_config)
+    credentials = AwsCredentials(
+        _hub_credentials_from_args(args), args.global_service_region, proxy_config
+    )
 
     if args.connection_test:
         return _test_connection(credentials)

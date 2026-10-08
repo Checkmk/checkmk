@@ -6,7 +6,6 @@
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import type { CustomGraphDesigner } from 'cmk-shared-typing/typescript/custom_graph_designer'
-import { CmkNetworkError } from 'cmk-ui-library/lib/error'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
@@ -547,7 +546,7 @@ describe('a failed save', () => {
   }
 
   test('an unreachable server offers a retry that sends again', async () => {
-    putSpy.mockRejectedValue(new CmkNetworkError(new TypeError('Failed to fetch')))
+    putSpy.mockRejectedValue(new TypeError('Failed to fetch'))
     await renderApp()
     await enterEdit()
 
@@ -577,7 +576,7 @@ describe('a failed save', () => {
   })
 
   test('a failure with nothing to add states its message instead of heading an empty box', async () => {
-    putSpy.mockRejectedValue(new CmkNetworkError(new TypeError('Failed to fetch')))
+    putSpy.mockRejectedValue(new TypeError('Failed to fetch'))
     await renderApp()
     await enterEdit()
 
@@ -604,7 +603,7 @@ describe('a failed save', () => {
   })
 
   test('a later blocked save clears the alert of the attempt before it', async () => {
-    putSpy.mockRejectedValue(new CmkNetworkError(new TypeError('Failed to fetch')))
+    putSpy.mockRejectedValue(new TypeError('Failed to fetch'))
     await renderApp()
     await enterEdit()
     await save()

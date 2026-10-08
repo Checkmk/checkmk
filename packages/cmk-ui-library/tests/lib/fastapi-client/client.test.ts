@@ -3,7 +3,6 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { CmkNetworkError } from 'cmk-ui-library/lib/error'
 import { type FastApiEvent, createFastApiClient } from 'cmk-ui-library/lib/fastapi-client/client'
 import { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { describe, expect, expectTypeOf, test, vi } from 'vitest'
@@ -157,15 +156,6 @@ describe('createFastApiClient', () => {
       message: 'HTTP 503',
       statusCode: 503
     })
-  })
-
-  test('rejects a call without response with a CmkNetworkError', async () => {
-    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'))
-    const api = createFastApiClient<TestPaths>({ baseUrl: BASE_URL })
-
-    const call = api.GET('/thing')
-
-    await expect(call).rejects.toBeInstanceOf(CmkNetworkError)
   })
 
   test('resolves a 204 to undefined', async () => {

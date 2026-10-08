@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { CmkApiError, CmkNetworkError } from 'cmk-ui-library/lib/error'
+import { CmkApiError } from 'cmk-ui-library/lib/error'
 
 import { useSaveFailures } from '@/graphing/designer/composables/saveFailure'
 
@@ -14,7 +14,7 @@ function apiError(status: number, message = 'Title: detail', context = ''): CmkA
 }
 
 test('an unreachable server keeps the changes and offers a retry', () => {
-  expect(describeSaveFailure(new CmkNetworkError(new TypeError('Failed to fetch')))).toMatchObject({
+  expect(describeSaveFailure(new TypeError('Failed to fetch'))).toMatchObject({
     actions: ['retry'],
     message: 'Could not reach the server. Your changes are still here.'
   })

@@ -5,7 +5,7 @@
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
 import { useCmkErrorBoundary } from 'cmk-ui-library/components/CmkErrorBoundary'
-import { CmkError, CmkNetworkError } from 'cmk-ui-library/lib/error.ts'
+import { CmkError } from 'cmk-ui-library/lib/error.ts'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { StaleSessionError } from 'cmk-ui-library/lib/staleSession'
 import { defineComponent } from 'vue'
@@ -236,9 +236,9 @@ test('CmkErrorBoundary keeps the first error when rendering it fails again', asy
   screen.getAllByText('the first error', { exact: false })
 })
 
-function renderThrowingComponent(error: Error) {
+function renderStaleSessionComponent(error: Error) {
   const testComponent = defineComponent({
-    name: 'ThrowingComponent',
+    name: 'StaleSessionComponent',
     setup() {
       // eslint-disable-next-line @typescript-eslint/naming-convention
       const { CmkErrorBoundary } = useCmkErrorBoundary()
@@ -258,7 +258,7 @@ function renderThrowingComponent(error: Error) {
 }
 
 test('CmkErrorBoundary shows a stale session without reporting it', async () => {
-  renderThrowingComponent(new StaleSessionError('ajax_poll.py'))
+  renderStaleSessionComponent(new StaleSessionError('ajax_poll.py'))
 
   await fireEvent.click(screen.getByRole<HTMLButtonElement>('button', { name: 'throw' }))
 
@@ -267,28 +267,8 @@ test('CmkErrorBoundary shows a stale session without reporting it', async () => 
 })
 
 test('CmkErrorBoundary does not report a stale session wrapped in another error', async () => {
-  renderThrowingComponent(
+  renderStaleSessionComponent(
     new CmkError('Could not load the data', new StaleSessionError('ajax_poll.py'))
-  )
-
-  await fireEvent.click(screen.getByRole<HTMLButtonElement>('button', { name: 'throw' }))
-
-  await screen.findByText('Could not load the data')
-  expect(postSpy).not.toHaveBeenCalled()
-})
-
-test('CmkErrorBoundary shows a request without response without reporting it', async () => {
-  renderThrowingComponent(new CmkNetworkError(new TypeError('Failed to fetch')))
-
-  await fireEvent.click(screen.getByRole<HTMLButtonElement>('button', { name: 'throw' }))
-
-  await screen.findByText('Failed to fetch')
-  expect(postSpy).not.toHaveBeenCalled()
-})
-
-test('CmkErrorBoundary does not report a request without response wrapped in another error', async () => {
-  renderThrowingComponent(
-    new CmkError('Could not load the data', new CmkNetworkError(new TypeError('Failed to fetch')))
   )
 
   await fireEvent.click(screen.getByRole<HTMLButtonElement>('button', { name: 'throw' }))

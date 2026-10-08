@@ -4,7 +4,6 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { cmkFetch } from 'cmk-ui-library/lib/cmkFetch'
-import { CmkNetworkError } from 'cmk-ui-library/lib/error'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
 
@@ -28,9 +27,6 @@ export const restHandlers = [
       },
       { status: 500 }
     )
-  }),
-  http.get('some_unreachable_endpoint', () => {
-    return HttpResponse.error()
   })
 ]
 
@@ -65,16 +61,4 @@ test('raiseForStatus for an known error', async () => {
         'GET http://localhost:3000/some_endpoint_with_crashreport_response\nSTATUS 500: Internal Server Error\n\nCrash report: random_href'
     })
   )
-})
-
-test('a request without response rejects with CmkNetworkError', async () => {
-  await expect(cmkFetch('some_unreachable_endpoint', {})).rejects.toBeInstanceOf(CmkNetworkError)
-})
-
-test('a request aborted through its signal rejects with the abort reason', async () => {
-  const controller = new AbortController()
-  const reason = new Error('unmounted')
-  controller.abort(reason)
-
-  await expect(cmkFetch('some_random_url', { signal: controller.signal })).rejects.toBe(reason)
 })

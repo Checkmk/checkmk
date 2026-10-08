@@ -50,3 +50,11 @@ sh_library(
     ),
     visibility = ["//packages/cmk-plugins:__pkg__"],
 )
+
+# Lets shellcheck see these scripts. Nothing depends on this target.
+sh_library(
+    name = "shell_scripts",
+    srcs = [
+        "agents/mk_sshd_config",
+    ],
+)

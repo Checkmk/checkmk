@@ -283,6 +283,7 @@ sh_library(
     name = "helpers",
     srcs = [
         "run",
+        "wine-prepare.sh",
     ],
 )
 

@@ -26,3 +26,14 @@ filegroup(
     srcs = ["iis_app_pool_state.ps1"],
     tags = ["lint-with-psscriptanalyzer"],
 )
+
+# Lets shellcheck see these scripts. Nothing depends on this target.
+sh_library(
+    name = "shell_scripts",
+    srcs = [
+        "kaspersky_av",
+        "lnx_quota",
+        "mk_nfsiostat",
+        "mk_zypper",
+    ],
+)

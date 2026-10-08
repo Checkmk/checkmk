@@ -280,12 +280,15 @@ rust_wine_test(
 sh_library(
     name = "helpers",
     srcs = [
+        "build-and-upload",
         "cargo_run",
         "db-endpoint.sh",
         "permissions-check-run",
         "references/mk_oracle",
         "run",
         "run-pytests",
+        "run_compare_all.sh",
+        "run_comparison.sh",
         "ssh-run",
         "ssh-run.conf",
         "ssh-run-ci",
@@ -293,6 +296,7 @@ sh_library(
         "tests/files/docker/run-db.sh",
         "tests/test_cmd_line.sh",
         "tools/call-ora",
+        "wine-prepare.sh",
     ],
 )
 

@@ -3,11 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
+
 import pytest
 
+from cmk.ccc.hostaddress import HostName
 from cmk.utils.host_storage import (
+    apply_hosts_file_to_object,
+    ContactGroupsField,
+    get_host_storage_loaders,
     get_hosts_file_variables,
     get_standard_hosts_storage,
+    HostsStorageData,
+    PickleHostsStorage,
     StandardStorageLoader,
     StorageFormat,
 )
@@ -91,3 +99,63 @@ def tests_standard_format_loader() -> None:
     variables = get_hosts_file_variables()
     standard_loader.apply(_hosts_mk_test_data, variables)
     assert variables["all_hosts"] == ["test"]
+
+
+def _hosts_storage_data() -> HostsStorageData:
+    host = HostName("host1")
+    return HostsStorageData(
+        locked_hosts=False,
+        all_hosts=[host],
+        clusters={HostName("cluster1"): [host]},
+        attributes={"ipaddresses": {host: "1.2.3.4"}},
+        custom_macros={"_CUSTOM": [("value", [host])]},
+        host_tags={host: {}},
+        host_labels={host: {"label": "value"}},
+        contact_groups=ContactGroupsField(
+            hosts=[{"value": "group", "condition": {"host_name": [host]}}],
+            services=[],
+            folder_hosts=[{"value": ["group"], "condition": {"host_folder": "/wato/"}}],
+            folder_services=[],
+        ),
+        explicit_host_conf={"alias": {host: "An alias"}},
+        host_attributes={host: {"ipaddress": "1.2.3.4"}},
+        folder_attributes={"/": {"bake_agent_package": False}},
+    )
+
+
+def _write_hosts_files(path_without_extension: Path) -> None:
+    data = _hosts_storage_data()
+    # The pickled file is only used if it is not older than hosts.mk.
+    get_standard_hosts_storage().write(path_without_extension, data, repr)
+    PickleHostsStorage().write(path_without_extension, data, repr)
+
+
+def test_pickled_hosts_apply_to_an_empty_namespace(tmp_path: Path) -> None:
+    path = tmp_path / "hosts"
+    _write_hosts_files(path)
+    loaders = get_host_storage_loaders(StorageFormat.PICKLE)
+
+    seeded = get_hosts_file_variables()
+    apply_hosts_file_to_object(path, loaders, seeded)
+    unseeded: dict[str, object] = {}
+    apply_hosts_file_to_object(path, loaders, unseeded)
+
+    assert unseeded["all_hosts"] == ["host1"]
+    assert unseeded["extra_host_conf"] == {"_CUSTOM": [("value", ["host1"])]}
+    # The seed predefines an alias macro; everything else is the same.
+    assert {k: v for k, v in seeded.items() if k in unseeded and k != "extra_host_conf"} == {
+        k: v for k, v in unseeded.items() if k != "extra_host_conf"
+    }
+
+
+def test_pickled_hosts_extend_the_predefined_objects(tmp_path: Path) -> None:
+    path = tmp_path / "hosts"
+    _write_hosts_files(path)
+    variables = get_hosts_file_variables()
+    all_hosts, extra_host_conf = variables["all_hosts"], variables["extra_host_conf"]
+
+    apply_hosts_file_to_object(path, get_host_storage_loaders(StorageFormat.PICKLE), variables)
+
+    assert variables["all_hosts"] is all_hosts
+    assert variables["extra_host_conf"] is extra_host_conf
+    assert extra_host_conf["_CUSTOM"] == [("value", ["host1"])]

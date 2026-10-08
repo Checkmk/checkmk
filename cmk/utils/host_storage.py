@@ -376,10 +376,14 @@ class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
     def apply(self, data: HostsData, global_dict: dict[str, Any]) -> bool:
         """Integrates HostsData from PickleHostsStorage/RawHostsStorage into the global_dict"""
 
+        # The variables are created if the namespace lacks them, so the data
+        # can be applied to any namespace, including an empty one. If they are
+        # present, the existing objects are extended in place.
+
         # List based settings, append based
         # TODO: all_hosts can be computed out of host_attributes.keys() -> remove?
         if all_hosts := data["all_hosts"]:
-            global_dict["all_hosts"].extend(all_hosts)
+            global_dict.setdefault("all_hosts", []).extend(all_hosts)
 
         cgs = data["contact_groups"]
         for name, global_key in [
@@ -387,18 +391,19 @@ class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
             ("services", "service_contactgroups"),
         ]:
             if new_cgs := cgs[name]:
-                global_dict[global_key].extend(new_cgs)
+                global_dict.setdefault(global_key, []).extend(new_cgs)
 
         for name, global_key in [
             ("folder_hosts", "host_contactgroups"),
             ("folder_services", "service_contactgroups"),
         ]:
+            global_cgs = global_dict.setdefault(global_key, [])
             if new_cgs := cgs[name]:
-                global_dict[global_key].extend(new_cgs)
-            new_cgs.extend(global_dict[global_key])
+                global_cgs.extend(new_cgs)
+            new_cgs.extend(global_cgs)
             # Do not replace the list reference (in case some outer instance already uses it)
-            global_dict[global_key].clear()
-            global_dict[global_key].extend(new_cgs)
+            global_cgs.clear()
+            global_cgs.extend(new_cgs)
 
         # dict-based settings with {key: value}
         for key in [
@@ -414,11 +419,13 @@ class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
             "host_attributes",
             "folder_attributes",
         ]:
-            global_dict[key].update(data.get(key, {}))
+            global_dict.setdefault(key, {}).update(data.get(key, {}))
 
         # dict-based setting with {key: {another_key: value}}
         for explicit_name, values in data.get("explicit_host_conf", {}).items():
-            global_dict["explicit_host_conf"].setdefault(explicit_name, {}).update(values)
+            global_dict.setdefault("explicit_host_conf", {}).setdefault(explicit_name, {}).update(
+                values
+            )
 
         # "attributes" are moved to global scope
         # 'attributes': {'ipaddresses': {'test': '1.2.3.4'}}
@@ -430,7 +437,7 @@ class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
 
         # Custom macros are moved into extra_host_conf
         for key, values in data["custom_macros"].items():
-            global_dict["extra_host_conf"].setdefault(key, []).extend(values)
+            global_dict.setdefault("extra_host_conf", {}).setdefault(key, []).extend(values)
 
         global_dict["_lock"] = data["locked_hosts"]
         return True

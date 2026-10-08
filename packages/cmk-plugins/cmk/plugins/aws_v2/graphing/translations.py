@@ -9,6 +9,7 @@ translation_aws_v2_network = translations.Translation(
     name="aws_v2_network",
     check_commands=[
         translations.PassiveCheck("aws_v2_ec2_network_io"),
+        translations.PassiveCheck("aws_v2_rds_network_io"),
     ],
     translations={
         "in": translations.RenameToAndScaleBy(

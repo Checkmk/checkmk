@@ -1560,6 +1560,19 @@ rule_spec_aws_rds_cpu_credits = CheckParameters(
 )
 
 
+rule_spec_aws_v2_rds_cpu_credits = CheckParameters(
+    name="aws_v2_rds_cpu_credits",
+    title=Title("AWS v2/RDS CPU credits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=lambda: Dictionary(
+        elements={**_fs_cpu_credits_balance(), **_fs_burst_balance()}
+    ),
+    condition=HostAndItemCondition(
+        item_title=Title("Instance identifier & region"), item_form=_item_spec_aws_rds()
+    ),
+)
+
+
 def _parameter_form_spec_aws_rds_disk_usage() -> Dictionary:
     return Dictionary(
         elements={
@@ -1601,6 +1614,17 @@ def _parameter_form_spec_aws_rds_disk_usage() -> Dictionary:
 rule_spec_aws_rds_disk_usage = CheckParameters(
     name="aws_rds_disk_usage",
     title=Title("AWS/RDS disk usage"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_rds_disk_usage,
+    condition=HostAndItemCondition(
+        item_title=Title("Instance identifier & region"), item_form=_item_spec_aws_rds()
+    ),
+)
+
+
+rule_spec_aws_v2_rds_disk_usage = CheckParameters(
+    name="aws_v2_rds_disk_usage",
+    title=Title("AWS v2/RDS disk usage"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_rds_disk_usage,
     condition=HostAndItemCondition(
@@ -1658,6 +1682,17 @@ rule_spec_aws_rds_connections = CheckParameters(
 )
 
 
+rule_spec_aws_v2_rds_connections = CheckParameters(
+    name="aws_v2_rds_connections",
+    title=Title("AWS v2/RDS connections"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_rds_connections,
+    condition=HostAndItemCondition(
+        item_title=Title("Instance identifier & region"), item_form=_item_spec_aws_rds()
+    ),
+)
+
+
 def _parameter_form_spec_aws_rds_replica_lag() -> Dictionary:
     return Dictionary(
         elements={
@@ -1704,6 +1739,17 @@ def _parameter_form_spec_aws_rds_replica_lag() -> Dictionary:
 rule_spec_aws_rds_replica_lag = CheckParameters(
     name="aws_rds_replica_lag",
     title=Title("AWS/RDS replica lag"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_rds_replica_lag,
+    condition=HostAndItemCondition(
+        item_title=Title("Instance identifier & region"), item_form=_item_spec_aws_rds()
+    ),
+)
+
+
+rule_spec_aws_v2_rds_replica_lag = CheckParameters(
+    name="aws_v2_rds_replica_lag",
+    title=Title("AWS v2/RDS replica lag"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_rds_replica_lag,
     condition=HostAndItemCondition(
@@ -1770,6 +1816,17 @@ def _parameter_form_spec_aws_rds_limits() -> Dictionary:
 rule_spec_aws_rds_limits = CheckParameters(
     name="aws_rds_limits",
     title=Title("AWS/RDS limits"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_rds_limits,
+    condition=HostAndItemCondition(
+        item_title=Title("Region name"), item_form=_item_spec_aws_limits_generic()
+    ),
+)
+
+
+rule_spec_aws_v2_rds_limits = CheckParameters(
+    name="aws_v2_rds_limits",
+    title=Title("AWS v2/RDS limits"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_rds_limits,
     condition=HostAndItemCondition(

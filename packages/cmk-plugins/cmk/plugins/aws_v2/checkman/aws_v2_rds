@@ -1,0 +1,21 @@
+title: AWS v2 RDS: CPU Utilization
+agents: aws_v2
+catalog: cloud/aws
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the CPU utilization of AWS/RDS.
+
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS) v2}.
+
+ Upper default levels are set to 80, 90 percent. These levels are
+ configurable via the rule "CPU utilization of Devices with Modules".
+
+item:
+ Name of the instance and region name (to avoid duplicate services
+ in case of multi-region monitoring).
+
+discovery:
+ One service is created for each database if all required metrics
+ (CPUUtilization) are given.

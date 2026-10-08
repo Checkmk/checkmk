@@ -8,11 +8,10 @@
 
 
 import dataclasses
-import queue
 import re
 import time
 from collections.abc import Collection, Mapping, Sequence
-from multiprocessing import get_context, JoinableQueue
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, cast, NamedTuple, override, Protocol
 
 from flask import has_request_context
@@ -27,7 +26,7 @@ from cmk.ccc.regex import SITE_ID_PATTERN
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.store import load_from_mk_file
 from cmk.ccc.user import UserId
-from cmk.gui import hooks, log
+from cmk.gui import hooks
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.generators.host_address import create_host_address
@@ -37,7 +36,6 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
     Tuple,
 )
 from cmk.gui.form_specs.unstable.validators import not_empty
-from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -53,6 +51,7 @@ from cmk.gui.userdb import (
     distributed_saml_supported,
     saml_connection_choices,
 )
+from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Dictionary as _LegacyDictionary,
@@ -1265,103 +1264,53 @@ class ReplicationStatusFetcher:
         self._logger.debug(
             "Fetching replication status for %(num_sites)d sites", {"num_sites": len(sites)}
         )
-        results_by_site: dict[SiteId, ReplicationStatus] = {}
+        if not sites:
+            return {}
 
-        # NOTE: Things don't work out-of-the-box here for Python 3.14's default start method
-        # "forkserver", see
-        # https://docs.python.org/3/library/multiprocessing.html#the-spawn-and-forkserver-start-methods
-        # The concrete problem here is that the licensing handler registry is filled at runtime, so
-        # a non-forked child cannot determine the license state for the automation request headers.
-        ctx = get_context("fork")
-
-        # Results are fetched simultaneously from the remote sites
-        result_queue: JoinableQueue[ReplicationStatus] = ctx.JoinableQueue()
-
-        processes = []
-        for site_id, automation_config in sites:
-            process = ctx.Process(
-                target=self._fetch_for_site, args=(site_id, automation_config, result_queue, debug)
-            )
-            process.start()
-            processes.append((site_id, process))
-
-        # Now collect the results from the queue until all processes are finished
-        while any(p.is_alive() for site_id, p in processes):
-            try:
-                result = result_queue.get_nowait()
-                result_queue.task_done()
-                results_by_site[result.site_id] = result
-
-            except queue.Empty:
-                time.sleep(0.5)  # wait some time to prevent CPU hogs
-
-            except Exception as e:
-                logger.exception(
-                    "error collecting replication results from site %(site_id)s",
-                    {"site_id": result.site_id},  # type: ignore[possibly-undefined]
+        # The results are fetched simultaneously from the remote sites. This uses threads, because
+        # the GUI process is multithreaded: a forked child could inherit a lock which another thread
+        # holds at the moment of the fork.
+        fetch_for_site = (
+            copy_request_context(self._fetch_for_site)
+            if has_request_context()
+            else self._fetch_for_site
+        )
+        with ThreadPoolExecutor(max_workers=len(sites)) as pool:
+            results = list(
+                pool.map(
+                    lambda site: fetch_for_site(site[0], site[1], debug=debug),
+                    sites,
                 )
-                html.show_error(f"{result.site_id}: {e}")  # type: ignore[possibly-undefined]
+            )
 
         self._logger.debug("Got results")
-        return results_by_site
+        return {result.site_id: result for result in results}
 
     def _fetch_for_site(
         self,
         site_id: SiteId,
         automation_config: RemoteAutomationConfig,
-        result_queue: JoinableQueue[ReplicationStatus],
+        *,
         debug: bool,
-    ) -> None:
-        """Executes the tests on the site. This method is executed in a dedicated
-        subprocess (One per site)"""
+    ) -> ReplicationStatus:
         self._logger.debug("[%(site_id)s] Starting", {"site_id": site_id})
-        result = None
         try:
-            # TODO: Would be better to clean all open fds that are not needed, but we don't
-            # know the FDs of the result_queue pipe. Can we find it out somehow?
-            # Cleanup resources of the apache
-            # TODO: Needs to be solved for analzye_configuration too
-            # for x in range(3, 256):
-            #    try:
-            #        os.close(x)
-            #    except OSError, e:
-            #        if e.errno == errno.EBADF:
-            #            pass
-            #        else:
-            #            raise
-
-            # Reinitialize logging targets
-            log.init_logging()  # NOTE: We run in a subprocess!
-
             raw_result = do_remote_automation(automation_config, "ping", [], timeout=5, debug=debug)
             assert isinstance(raw_result, dict)
-
-            result = ReplicationStatus(
-                site_id=site_id,
-                success=True,
-                response=PingResult(
-                    version=raw_result["version"],
-                    edition=raw_result["edition"],
-                    license_state=wire_format.license_state_from_ping_string(
-                        raw_result.get("license_state", "")
-                    ),
-                    omd_status=raw_result["omd_status"],
+            response = PingResult(
+                version=raw_result["version"],
+                edition=raw_result["edition"],
+                license_state=wire_format.license_state_from_ping_string(
+                    raw_result.get("license_state", "")
                 ),
+                omd_status=raw_result["omd_status"],
             )
-            self._logger.debug("[%(site_id)s] Finished", {"site_id": site_id})
         except Exception as e:
             self._logger.debug("[%(site_id)s] Failed", {"site_id": site_id}, exc_info=True)
-            result = ReplicationStatus(
-                site_id=site_id,
-                success=False,
-                response=e,
-            )
-        finally:
-            if result:
-                result_queue.put(result)
-            result_queue.close()
-            result_queue.join_thread()
-            result_queue.join()
+            return ReplicationStatus(site_id=site_id, success=False, response=e)
+
+        self._logger.debug("[%(site_id)s] Finished", {"site_id": site_id})
+        return ReplicationStatus(site_id=site_id, success=True, response=response)
 
 
 def ldap_connections_are_configurable() -> bool:

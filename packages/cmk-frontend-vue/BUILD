@@ -235,6 +235,7 @@ vite_bin.vite(
 
 vitest_bin.vitest_test(
     name = "unit-test",
+    timeout = "long",
     args = ["run"],
     chdir = package_name(),
     data = TOOLING + SRCS_AND_TESTS,

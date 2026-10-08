@@ -41,7 +41,6 @@ from cmk.gui.type_defs import (
     Row,
     ViewName,
     ViewSpec,
-    VisualLinkSpec,
 )
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.temperature_unit import TemperatureUnit
@@ -95,20 +94,7 @@ _GRAPH_VIEWS = {
             "description": _l(
                 "Shows all graphs including time range selections of a collection of services."
             ),
-            "group_painters": [
-                ColumnSpec(
-                    name="sitealias",
-                    link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
-                ),
-                ColumnSpec(
-                    name="host_with_state",
-                    link_spec=VisualLinkSpec(type_name="views", name="host"),
-                ),
-                ColumnSpec(
-                    name="service_description",
-                    link_spec=VisualLinkSpec(type_name="views", name="service"),
-                ),
-            ],
+            "group_painters": [],
             "hidden": True,
             "hidebutton": False,
             "layout": "boxed_graph",
@@ -143,16 +129,7 @@ _GRAPH_VIEWS = {
             "description": _l(
                 "Shows host graphs including time range selections of a collection of hosts."
             ),
-            "group_painters": [
-                ColumnSpec(
-                    name="sitealias",
-                    link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
-                ),
-                ColumnSpec(
-                    name="host_with_state",
-                    link_spec=VisualLinkSpec(type_name="views", name="host"),
-                ),
-            ],
+            "group_painters": [],
             "hidden": True,
             "hidebutton": False,
             "layout": "boxed_graph",

@@ -88,7 +88,7 @@
       top: -$graph-page-content-padding;
       padding-bottom: 0;
       padding-left: $spacing-double;
-      margin-bottom: 0;
+      margin-bottom: var(--dimension-7);
       background-color: $bg-color;
     }
 
@@ -105,7 +105,7 @@
         --graphing-graph-group-panel-background: #{$even-tr-bg-color};
         --graphing-graph-group-panel-border-radius: var(--dimension-3);
 
-        padding: var(--dimension-7) 0 0;
+        padding: 0;
         background-color: $bg-color;
       }
     }

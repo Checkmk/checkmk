@@ -93,14 +93,14 @@ cli_command_update_dns_cache = CLICommand(
 
 
 def _mode_cleanup_piggyback(
-    _omd_root: Path, global_options: CLIGlobalOptions, _options: Options, _args: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, _options: Options, _args: CLIArgs
 ) -> CLIExitCode:
     loaded_config = config.load(validate_hosts=True, debug=global_options.debug).loaded_config
     piggyback_backend.cleanup_piggyback_files(
         now=time.time(),
         max_cache_file_age=loaded_config.piggyback_max_cachefile_age,
         all_configured_rule_values=(r["value"] for r in loaded_config.piggybacked_host_files),
-        omd_root=cmk.utils.paths.omd_root,
+        omd_root=omd_root,
     )
     return CLIExitCode.SUCCESS
 

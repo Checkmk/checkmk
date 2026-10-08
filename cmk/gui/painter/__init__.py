@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from .base import Cell as Cell
+from .base import CellDrilldown as CellDrilldown
 from .base import CellTitle as CellTitle
 from .base import columns_of_cells as columns_of_cells
 from .base import EmptyCell as EmptyCell

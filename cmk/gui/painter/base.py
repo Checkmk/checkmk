@@ -20,6 +20,7 @@ import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui import visuals
 from cmk.gui.config import Config, RequestCacheConfig
+from cmk.gui.display_options import DisplayOptions
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
@@ -337,6 +338,17 @@ class InternalPainter:
 #   '----------------------------------------------------------------------'
 
 
+@dataclass(frozen=True)
+class CellDrilldown:
+    """A link from a cell that its owner builds per row, for a cell without a link_spec.
+
+    A row without a URL leaves its cell unlinked.
+    """
+
+    columns: Sequence[ColumnName]
+    url: Callable[[Row], str | None]
+
+
 def columns_of_cells(cells: Sequence[Cell], permitted_views: PermittedViewSpecs) -> set[ColumnName]:
     columns: set[ColumnName] = set()
     for cell in cells:
@@ -354,10 +366,13 @@ class Cell:
         registered_painters: Mapping[str, InternalPainter] | None,
         painter_context: PainterContext | None,
         request_cache: RequestCache[RequestCacheConfig] | None,
+        *,
+        drilldown: CellDrilldown | None = None,
     ) -> None:
         self._painter_name: PainterName | None
         self._painter_params: PainterParameters | None
         self._registered_painters = registered_painters
+        self._drilldown = drilldown
 
         if column_spec:
             self._painter_name = column_spec.name
@@ -408,6 +423,9 @@ class Cell:
 
         if self.has_tooltip():
             columns.update(self.tooltip_painter().columns)
+
+        if self._drilldown is not None:
+            columns.update(self._drilldown.columns)
 
         return columns
 
@@ -519,6 +537,8 @@ class Cell:
         link_renderer: Callable[[str | HTML, Row, VisualLinkSpec], str | HTML] | None,
         user: LoggedInUser,
     ) -> tuple[str, str | HTML]:
+        # A drill-down names the object of the view's row, which a joined row may not carry.
+        view_row = row
         row = join_row(row, self)
 
         try:
@@ -540,6 +560,15 @@ class Cell:
         # Add the optional link to another view
         if content and self._link_spec is not None and self._use_painter_link() and link_renderer:
             content = link_renderer(content, row, self._link_spec)
+        elif (
+            content
+            and self._drilldown is not None
+            and self._use_painter_link()
+            and link_renderer
+            and self.painter_context().url_renderer.display_options.enabled(DisplayOptions.I)
+            and (url := self._drilldown.url(view_row)) is not None
+        ):
+            content = HTMLWriter.render_a(content, href=url)
 
         # Add the optional mouseover tooltip
         if content and self.has_tooltip():
@@ -715,9 +744,16 @@ class JoinCell(Cell):
         registered_painters: Mapping[str, InternalPainter],
         painter_context: PainterContext,
         request_cache: RequestCache[RequestCacheConfig],
+        *,
+        drilldown: CellDrilldown | None = None,
     ) -> None:
         super().__init__(
-            column_spec, sort_url_parameter, registered_painters, painter_context, request_cache
+            column_spec,
+            sort_url_parameter,
+            registered_painters,
+            painter_context,
+            request_cache,
+            drilldown=drilldown,
         )
         if (join_value := column_spec.join_value) is None:
             raise ValueError

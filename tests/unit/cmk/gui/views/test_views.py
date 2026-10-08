@@ -20,6 +20,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.painter import (
     all_painters,
     Cell,
+    CellDrilldown,
     InternalPainter,
     PainterRegistry,
     register_painter,
@@ -208,6 +209,27 @@ def test_create_view_basics() -> None:
     assert view.user_sorters is None
     assert view.want_checkboxes is False
     assert view.only_sites is None
+
+
+@pytest.mark.usefixtures("request_context")
+def test_view_row_cells_hands_a_drilldown_to_its_painters_cell_past_a_skipped_painter() -> None:
+    view_spec = multisite_builtin_views["allhosts"].copy()
+    view_spec["painters"] = [ColumnSpec("not_a_registered_painter"), ColumnSpec("alias")]
+    drilldown = CellDrilldown(columns=["host_name"], url=lambda _row: "")
+    view = View(
+        "allhosts",
+        view_spec,
+        {},
+        make_painter_context(UserPermissions({}, {}, {}, [])),
+        RequestCache(Config()),
+        column_drilldowns={1: drilldown},
+    )
+
+    cells = view.row_cells
+
+    assert [(cell.painter_name(), cell.needed_columns({})) for cell in cells] == [
+        ("alias", {"host_alias", "host_name"})
+    ]
 
 
 def test_view_row_limit(view: View) -> None:

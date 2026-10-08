@@ -14,7 +14,14 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import default_time_range_seconds, stored_time_range_seconds
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.painter import all_painters, Cell, InternalPainter, JoinCell, PainterContext
+from cmk.gui.painter import (
+    all_painters,
+    Cell,
+    CellDrilldown,
+    InternalPainter,
+    JoinCell,
+    PainterContext,
+)
 from cmk.gui.type_defs import (
     ColumnSpec,
     FilterName,
@@ -46,11 +53,15 @@ class View:
         context: VisualContext,
         painter_context: PainterContext,
         request_cache: RequestCache[RequestCacheConfig],
+        *,
+        column_drilldowns: Mapping[int, CellDrilldown] | None = None,
     ) -> None:
         super().__init__()
         self.name = view_name
         self.spec = view_spec
         self.context: VisualContext = context
+        # Keyed by the index into the spec's painters, which row_cells may skip some of.
+        self._column_drilldowns = column_drilldowns or {}
         self._row_limit: int | None = None
         self._only_sites: list[SiteId] | None = None
         self._user_sorters: list[SorterSpec] | None = None
@@ -90,7 +101,7 @@ class View:
         cells: list[Cell] = []
         registered_sorters = all_sorters(active_config)
         registered_painters = all_painters(active_config.tags.tag_groups)
-        for e in self.spec["painters"]:
+        for index, e in enumerate(self.spec["painters"]):
             if e.name not in registered_painters:
                 continue
 
@@ -104,6 +115,7 @@ class View:
                         registered_painters,
                         self.painter_context,
                         self.request_cache,
+                        drilldown=self._column_drilldowns.get(index),
                     )
                 )
             elif col_type == "column":
@@ -116,6 +128,7 @@ class View:
                         registered_painters,
                         self.painter_context,
                         self.request_cache,
+                        drilldown=self._column_drilldowns.get(index),
                     )
                 )
             else:

@@ -7,7 +7,7 @@ py_library(
     testonly = True,
     srcs = ["conftest.py"],
     tags = [
-        "deballast-keep=//packages/cmk-maps:registration",  # loaded by cmk.gui.main_modules.register via _FEATURE_PLUGIN_MODULES, which the GUI tests expect
+        "deballast-keep=//packages/cmk-maps:registration",  # FIXME: test exercises feature specific code
     ],
     visibility = ["//tests/unit/cmk/gui:__subpackages__"],
     deps = [

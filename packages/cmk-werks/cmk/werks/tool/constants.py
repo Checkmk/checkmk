@@ -10,6 +10,7 @@ NON_WERK_FILES_IN_WERK_FOLDER = {
     "config.json",
     "first_free",
     ".gitignore",
+    ".f12",
     ".last",
     "README.md",
 }

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
 import dataclasses
-from collections.abc import Generator
+from collections.abc import Generator, Mapping
 from typing import Annotated, cast, get_args, Literal, override, Self
 
 from pydantic import BaseModel, Json, model_validator, ValidationError
@@ -24,6 +24,7 @@ from cmk.gui.dashboard.token_util import (
     InvalidWidgetError,
 )
 from cmk.gui.dashboard.type_defs import EmbeddedViewDashletConfig, LinkedViewDashletConfig
+from cmk.gui.dashboard.view_drilldown import column_drilldowns
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -40,6 +41,7 @@ from cmk.gui.theme.current_theme import theme
 from cmk.gui.token_auth import AuthToken, DashboardToken
 from cmk.gui.type_defs import (
     AnnotatedUserId,
+    ContextualLinkEntryConfig,
     DashboardEmbeddedViewSpec,
     SingleInfos,
     ViewSpec,
@@ -167,6 +169,7 @@ class ViewWidgetIFramePageHelper:
         user_permissions: UserPermissions,
         config: Config,
         *,
+        column_links: Mapping[int, ContextualLinkEntryConfig],
         is_reload: bool,
         is_debug: bool,  # noqa: ARG003
         is_preview: bool = False,
@@ -187,6 +190,7 @@ class ViewWidgetIFramePageHelper:
                 user_permissions=user_permissions,
             ),
             request_cache=RequestCache(config),
+            column_drilldowns=column_drilldowns(view_spec, column_links, context, user_permissions),
         )
         view.row_limit = row_limit
         view.only_sites = get_only_sites_from_context(context)
@@ -347,12 +351,13 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
     def unique_widget_name(self) -> str:
         return f"{self.dashboard_owner}_{self.dashboard_name}_{self.widget_id}"
 
-    def load_view_spec(self) -> ViewSpec:
-        """Load the requested view spec, either embedded in the dashboard or a normal view."""
+    def load_view_spec(self) -> tuple[ViewSpec, Mapping[int, ContextualLinkEntryConfig]]:
+        """Load the requested view spec, either embedded in the dashboard or a normal view, with
+        its column links. Only an embedded view has any."""
         if self.embedded_id:
             return self._get_embedded_view_spec(self.embedded_id)
 
-        return self._get_linked_view_spec()
+        return self._get_linked_view_spec(), {}
 
     def _get_linked_view_spec(self) -> ViewSpec:
         if not self.view_name:
@@ -367,7 +372,9 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
 
         return view_spec
 
-    def _get_embedded_view_spec(self, embedded_id: str) -> ViewSpec:
+    def _get_embedded_view_spec(
+        self, embedded_id: str
+    ) -> tuple[ViewSpec, Mapping[int, ContextualLinkEntryConfig]]:
         if not self.dashboard_name:
             raise MKUserError("dashboard", _("No dashboard name provided."))
 
@@ -384,11 +391,12 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
                 % {"dashboard_name": self.dashboard_name},
             ) from None
 
-        return EmbeddedViewSpecManager.get_embedded_view_spec(
+        view_spec = EmbeddedViewSpecManager.get_embedded_view_spec(
             dashboard,
             embedded_id,
             f"{self.dashboard_name}_{embedded_id}",
         )
+        return view_spec, dashboard["embedded_views"][embedded_id].get("column_links", {})
 
     def get_context(self) -> VisualContext:
         return {
@@ -426,7 +434,7 @@ class ViewWidgetIFramePage(Page):
             ctx.request, parameters.unique_widget_name(), display_opts
         )
         try:
-            view_spec = parameters.load_view_spec()
+            view_spec, column_links = parameters.load_view_spec()
         except MKUserError as e:
             # a linked view used by a widget can be (intentionally) deleted,
             # so we need to handle this gracefully so that the rest of the dashboard still works
@@ -460,6 +468,7 @@ class ViewWidgetIFramePage(Page):
             parameters.get_context(),
             user_permissions,
             ctx.config,
+            column_links=column_links,
             is_reload=parameters.is_reload(),
             is_debug=parameters.is_debug(),
             is_preview=parameters.is_preview,
@@ -559,6 +568,8 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
                 context=widget.context,
                 user_permissions=user_permissions,
                 config=ctx.config,
+                # Every drill-down target sits behind a login, so a shared dashboard links nowhere.
+                column_links={},
                 is_reload=parameters.is_reload(),
                 is_debug=False,
                 is_public=True,

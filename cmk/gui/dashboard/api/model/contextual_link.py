@@ -24,14 +24,20 @@ from cmk.gui.dashboard.type_defs import (
     ContextFilterConfig,
     ContextualLinkConfig,
     ContextualLinkCustomConfig,
-    ContextualLinkEntryConfig,
     ContextualLinkInheritedConfig,
-    ContextualLinkLocationConfig,
     ContextualLinkNoneConfig,
     ContextualLinkTargetType,
 )
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.type_defs import AnnotatedUserId, FilterName, InfoName, Visual, VisualName
+from cmk.gui.type_defs import (
+    AnnotatedUserId,
+    ContextualLinkEntryConfig,
+    ContextualLinkLocationConfig,
+    FilterName,
+    InfoName,
+    Visual,
+    VisualName,
+)
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals.type import visual_type_registry
 
@@ -258,7 +264,7 @@ def contextual_link_from_internal[F](
     if config["type"] == "inherited":
         return ContextualLinkInherited(
             type="inherited",
-            location=_location_from_internal(config["location"]),
+            location=location_from_internal(config["location"]),
             include_context=config["include_context"],
             include_time_range=config["include_time_range"],
             show_filter_form=config["show_filter_form"],
@@ -269,7 +275,7 @@ def contextual_link_from_internal[F](
             links=[
                 ContextualLink(
                     title=entry["title"],
-                    location=_location_from_internal(entry["location"]),
+                    location=location_from_internal(entry["location"]),
                     filters=[filter_adapter.validate_python(f) for f in entry["filters"]],
                     include_context=entry["include_context"],
                     include_time_range=entry["include_time_range"],
@@ -383,7 +389,7 @@ def _location_to_internal(location: VisualLocation) -> ContextualLinkLocationCon
     return location.type, location.name, location.owner
 
 
-def _location_from_internal(location: ContextualLinkLocationConfig) -> VisualLocation:
+def location_from_internal(location: ContextualLinkLocationConfig) -> VisualLocation:
     match location:
         case (target_type, name):
             return VisualLocation(type=target_type, name=name, owner=None)

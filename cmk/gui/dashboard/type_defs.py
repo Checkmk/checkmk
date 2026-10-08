@@ -6,9 +6,10 @@
 from collections.abc import Sequence
 from typing import Literal, NewType, NotRequired, TypedDict
 
-from cmk.ccc.user import UserId
 from cmk.gui.type_defs import (
     ColumnSpec,
+    ContextualLinkEntryConfig,
+    ContextualLinkLocationConfig,
     DashboardEmbeddedViewSpec,
     FilterName,
     GraphPresentation,
@@ -18,8 +19,9 @@ from cmk.gui.type_defs import (
     SorterSpec,
     Visual,
     VisualContext,
-    VisualName,
 )
+from cmk.gui.type_defs import ContextFilterConfig as ContextFilterConfig
+from cmk.gui.type_defs import ContextualLinkTargetType as ContextualLinkTargetType
 from cmk.gui.valuespec import HostStateValue, MonitoringStateValue, TimerangeValue
 
 DashboardName = str
@@ -41,36 +43,13 @@ class DashletSizeAndPosition(TypedDict):
     position: DashletPosition
 
 
-type ContextualLinkTargetType = Literal["views", "dashboards"]
-
-
 class ContextualLinkNoneConfig(TypedDict):
     type: Literal["none"]
-
-
-# Without an owner, the name resolves for each viewer, as on the target page.
-type ContextualLinkLocationConfig = (
-    tuple[ContextualLinkTargetType, VisualName]
-    | tuple[ContextualLinkTargetType, VisualName, UserId]
-)
 
 
 class ContextualLinkInheritedConfig(TypedDict):
     type: Literal["inherited"]
     location: ContextualLinkLocationConfig
-    include_context: bool
-    include_time_range: bool
-    show_filter_form: bool
-
-
-class ContextFilterConfig(TypedDict):
-    filter_id: FilterName
-
-
-class ContextualLinkEntryConfig(TypedDict):
-    title: str
-    location: ContextualLinkLocationConfig
-    filters: list[ContextFilterConfig]
     include_context: bool
     include_time_range: bool
     show_filter_form: bool

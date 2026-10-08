@@ -661,6 +661,29 @@ class ViewSpec(Visual):
     modified_at: NotRequired[str]  # timestamp in ISO format
 
 
+type ContextualLinkTargetType = Literal["views", "dashboards"]
+
+
+# Without an owner, the name resolves for each viewer, as on the target page.
+type ContextualLinkLocationConfig = (
+    tuple[ContextualLinkTargetType, VisualName]
+    | tuple[ContextualLinkTargetType, VisualName, UserId]
+)
+
+
+class ContextFilterConfig(TypedDict):
+    filter_id: FilterName
+
+
+class ContextualLinkEntryConfig(TypedDict):
+    title: str
+    location: ContextualLinkLocationConfig
+    filters: list[ContextFilterConfig]
+    include_context: bool
+    include_time_range: bool
+    show_filter_form: bool
+
+
 # NOTE: keep in sync with `ViewSpec`
 # Trimmed down version of `ViewSpec` for embedded views in dashboards
 class DashboardEmbeddedViewSpec(TypedDict):
@@ -686,6 +709,8 @@ class DashboardEmbeddedViewSpec(TypedDict):
     play_sounds: NotRequired[bool]
     inventory_join_macros: NotRequired[InventoryJoinMacrosSpec]
     modified_at: NotRequired[str]  # timestamp in ISO format
+    # Keyed by the index into `painters`; an entry without filters is an inherited drill-down.
+    column_links: NotRequired[dict[int, ContextualLinkEntryConfig]]
 
 
 AllViewSpecs = dict[tuple[UserId, ViewName], ViewSpec]

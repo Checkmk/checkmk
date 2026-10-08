@@ -39,8 +39,11 @@ from tests.unit.cmk.gui.watolib.host_relations_fakes import fake_hosts, FakeHost
 
 def _exported_macro(export_file: Path) -> dict[str, str]:
     """The ``_CMK_RELATIONS`` variable the way the core reads the generated file back."""
-    namespace: dict[str, dict[str, dict[str, str]]] = {"explicit_host_conf": {}}
-    exec(export_file.read_text(), namespace)  # this is exactly how the core loads it
+    namespace: dict[str, dict[str, dict[str, str]]] = {}
+    # An empty namespace is how Checkmk 3.1 loads the file. The core of 3.0 still
+    # predefines explicit_host_conf; test_export_keeps_a_preseeded_explicit_host_conf
+    # covers that the file keeps what is already there.
+    exec(export_file.read_text(), namespace)
     return namespace["explicit_host_conf"][RELATIONS_MACRO]
 
 
@@ -60,6 +63,24 @@ def test_export_writes_both_sides_of_a_relation(tmp_path: Path) -> None:
     assert json.loads(macro["mgmt"]) == [
         {"kind": "management", "direction": "parent", "host": "srv", "site": "central"}
     ]
+
+
+def test_export_keeps_a_preseeded_explicit_host_conf(tmp_path: Path) -> None:
+    """The core predefines explicit_host_conf; the file must extend it, not replace it."""
+    export_file = tmp_path / "relations.mk"
+    export_host_relations(
+        fake_hosts(mgmt=[{"kind": "management", "direction": "parent", "host": "srv"}], srv=None),
+        export_file,
+        tmp_path / "dropped.mk",
+    )
+    namespace: dict[str, dict[str, dict[str, str]]] = {
+        "explicit_host_conf": {"other": {"srv": "kept"}}
+    }
+
+    exec(export_file.read_text(), namespace)
+
+    assert namespace["explicit_host_conf"]["other"] == {"srv": "kept"}
+    assert set(namespace["explicit_host_conf"][RELATIONS_MACRO]) == {"srv", "mgmt"}
 
 
 def test_export_reads_back_as_it_was_resolved(tmp_path: Path) -> None:

@@ -89,6 +89,7 @@ def _write_export_file(path: Path, macro_values: dict[str, str]) -> bool:
     """
     lines = [
         "# Created by Checkmk host relations export. Do not edit manually.\n",
+        f"{store.bootstrap_statement('explicit_host_conf', '{}')}\n",
         "explicit_host_conf.setdefault(%r, {})\n" % RELATIONS_MACRO,
     ]
     if macro_values:

@@ -347,6 +347,7 @@ class VeeamClient:
         self._api = api
         self._auth = auth
         self.storage = storage
+        self._lists: dict[tuple[str, str], list[object]] = {}
 
     def get(self, path: str) -> object:
         response = self._api.request("GET", path, auth=self._auth)
@@ -368,36 +369,41 @@ class VeeamClient:
             ) from error
         raise TerminateAgent(str(error)) from error
 
+    def get_all(self, path: str, limit: int | None = None, extra_params: str = "") -> list[object]:
+        """Fetch every page of a `data`/`pagination` endpoint and merge them.
 
-def _get_all(
-    client: VeeamClient,
-    path: str,
-    limit: int | None = None,
-    extra_params: str = "",
-) -> list[object]:
-    """Fetch every page of a `data`/`pagination` endpoint and merge them.
+        `extra_params` is appended verbatim to every page's query string, e.g.
+        "&typeFilter=Backup"; it must already be percent-encoded where needed.
 
-    `extra_params` is appended verbatim to every page's query string, e.g.
-    "&typeFilter=Backup"; it must already be percent-encoded where needed.
-    """
-    items: list[object] = []
-    skip = 0
-    page_size = "" if limit is None else f"&limit={limit}"
-    while True:
-        page = client.get(f"{path}?skip={skip}{page_size}{extra_params}")
-        if not isinstance(page, dict) or "data" not in page or "pagination" not in page:
-            raise TerminateAgent(f"Request to {path} did not return a paginated data list")
-        batch = page["data"]
-        total = page["pagination"]["total"]
-        if not batch and len(items) < total:
-            raise TerminateAgent(
-                f"Request to {path} returned an empty page before reaching {total} total items"
-            )
-        items.extend(batch)
-        # Advance by the number of items actually returned, not the requested page size
-        skip += len(batch)
-        if len(items) >= total:
-            return items
+        The result is kept for the lifetime of this client (one agent run), so
+        sections requesting the same list (e.g. /api/v1/jobs/states) share one
+        fetch and see the same snapshot. `limit` only sets the page size, not
+        the merged result, so it is not part of the cache key.
+        """
+        key = (path, extra_params)
+        if (cached := self._lists.get(key)) is None:
+            cached = self._lists[key] = self._fetch_all_pages(path, limit, extra_params)
+        return list(cached)
+
+    def _fetch_all_pages(self, path: str, limit: int | None, extra_params: str) -> list[object]:
+        items: list[object] = []
+        skip = 0
+        page_size = "" if limit is None else f"&limit={limit}"
+        while True:
+            page = self.get(f"{path}?skip={skip}{page_size}{extra_params}")
+            if not isinstance(page, dict) or "data" not in page or "pagination" not in page:
+                raise TerminateAgent(f"Request to {path} did not return a paginated data list")
+            batch = page["data"]
+            total = page["pagination"]["total"]
+            if not batch and len(items) < total:
+                raise TerminateAgent(
+                    f"Request to {path} returned an empty page before reaching {total} total items"
+                )
+            items.extend(batch)
+            # Advance by the number of items actually returned, not the requested page size
+            skip += len(batch)
+            if len(items) >= total:
+                return items
 
 
 def fetch_object(path: str) -> FetchStrategy:
@@ -413,7 +419,7 @@ def fetch_list(path: str) -> FetchStrategy:
     """A `data`/`pagination` endpoint, fetched to completion, one item per line."""
 
     def _fetch(client: VeeamClient, name: str) -> Fetched:
-        items = _get_all(client, path)
+        items = client.get_all(path)
         return Fetched(
             own=f"<<<{name}:sep(0)>>>\n" + "".join(f"{json.dumps(item)}\n" for item in items)
         )
@@ -500,12 +506,12 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
     """
 
     def _fetch(client: VeeamClient, name: str) -> Fetched:
-        backup_objects = _get_all(client, "/api/v1/backupObjects", limit)
-        restore_points = _get_all(client, "/api/v1/restorePoints", limit)
+        backup_objects = client.get_all("/api/v1/backupObjects", limit)
+        restore_points = client.get_all("/api/v1/restorePoints", limit)
 
         backup_ids = {
             backup_id
-            for backup in _get_all(client, "/api/v1/backups", limit)
+            for backup in client.get_all("/api/v1/backups", limit)
             if isinstance(backup, dict) and isinstance(backup_id := backup.get("id"), str)
         } | {
             backup_id
@@ -515,7 +521,7 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
         objects_by_backup_id: dict[str, list[Mapping[str, object]]] = {}
         for backup_id in backup_ids:
             try:
-                objects = _get_all(client, f"/api/v1/backups/{backup_id}/objects", limit)
+                objects = client.get_all(f"/api/v1/backups/{backup_id}/objects", limit)
             except TerminateAgent as exc:
                 if (
                     isinstance(exc.__cause__, VeeamApiError)
@@ -759,7 +765,7 @@ def _resolve_job_object_names(
         if session_info.resource_id is None:
             continue
         try:
-            objects = _get_all(client, f"/api/v1/backups/{session_info.resource_id}/objects")
+            objects = client.get_all(f"/api/v1/backups/{session_info.resource_id}/objects")
         except TerminateAgent as exc:
             if _is_skippable(exc):
                 continue
@@ -844,7 +850,7 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
     matches nothing even for matching records, so `sessionType` is filtered
     client-side instead.
     """
-    jobs = _get_all(client, "/api/v1/jobs/states")
+    jobs = client.get_all("/api/v1/jobs/states")
     session_to_job, created_after = _job_sessions_and_window(jobs)
     job_objects = _resolve_job_object_names(client, session_to_job)
 
@@ -853,8 +859,7 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
     newest: dict[tuple[str, str], Mapping[str, object]] = {}
 
     if created_after is not None:
-        tasks = _get_all(
-            client,
+        tasks = client.get_all(
             "/api/v1/taskSessions",
             extra_params=f"&typeFilter=Backup&createdAfterFilter={quote(created_after)}",
         )

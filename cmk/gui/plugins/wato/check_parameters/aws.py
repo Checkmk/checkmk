@@ -1001,6 +1001,15 @@ rule_spec_aws_costs_and_usage = CheckParameters(
 )
 
 
+rule_spec_aws_v2_costs_and_usage = CheckParameters(
+    name="aws_v2_costs_and_usage",
+    title=Title("AWS v2/CE costs and usage"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_costs_and_usage,
+    condition=HostAndItemCondition(item_title=Title("Service name")),
+)
+
+
 def _parameter_form_spec_aws_reservation_utilization() -> Dictionary:
     return Dictionary(
         elements={
@@ -1020,6 +1029,15 @@ def _parameter_form_spec_aws_reservation_utilization() -> Dictionary:
 rule_spec_aws_reservation_utilization = CheckParameters(
     name="aws_reservation_utilization",
     title=Title("AWS/CE total reservation utilization"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_reservation_utilization,
+    condition=HostCondition(),
+)
+
+
+rule_spec_aws_v2_reservation_utilization = CheckParameters(
+    name="aws_v2_reservation_utilization",
+    title=Title("AWS v2/CE total reservation utilization"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_reservation_utilization,
     condition=HostCondition(),

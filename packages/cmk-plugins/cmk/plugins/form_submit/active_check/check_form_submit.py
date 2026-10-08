@@ -283,7 +283,7 @@ def parse_form(content: str, form_name: str | None) -> Form:
     if num_forms == 0:
         new_state(2, "Found no form element in HTML code")
 
-    elif num_forms == 1 and form_name is not None and form_name in forms:
+    elif num_forms == 1 and form_name is not None and form_name not in forms:
         new_state(
             2,
             f'Found one form with name "{list(forms.keys())[0]}" but expected name "{form_name}"',

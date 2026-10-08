@@ -115,3 +115,26 @@ def test_one_assume_role_serves_every_region(
     assert {(r.key_id, r.region) for r in fake_sts.service_requests} == {
         (TEMPORARY_KEY_ID, region) for region in regions
     }
+
+
+SPOKE_ARGS = [
+    *ACCESS_KEY_ARGS,
+    "--account",
+    "333333333333",
+    "--account",
+    "444444444444",
+    "--spoke-role-name",
+    "CheckmkMonitoring",
+]
+
+
+def test_account_options_reach_the_assume_role_calls(fake_sts: FakeSts) -> None:
+    exit_code = agent_aws_main(
+        parse_arguments([*SPOKE_ARGS, "--spoke-external-id", "tenant-42", "--connection-test"])
+    )
+
+    assert exit_code == 0
+    assert [(c.params["RoleArn"], c.params["ExternalId"]) for c in fake_sts.assume_role_calls] == [
+        ("arn:aws:iam::333333333333:role/CheckmkMonitoring", "tenant-42"),
+        ("arn:aws:iam::444444444444:role/CheckmkMonitoring", "tenant-42"),
+    ]

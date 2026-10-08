@@ -25,12 +25,14 @@ const props = defineProps<CustomServicesWizard>()
 
 const { _t } = usei18n()
 
-const currentStep = ref(1)
+const editing = props.configuration_name !== null
+// A stored service keeps its name (the update endpoint cannot rename it), so editing skips step 1.
+const currentStep = ref(editing ? 2 : 1)
 const model = ref<ServiceModel>(emptyService())
 const saving = ref(false)
 const saveError = ref<string | null>(null)
 const editETag = ref<string | null>(null)
-const loading = ref(props.configuration_name !== null)
+const loading = ref(editing)
 const loadError = ref<string | null>(null)
 const nameStepRef = useTemplateRef<InstanceType<typeof ConfigureNameStep>>('nameStep')
 
@@ -78,16 +80,12 @@ async function validateMetricStep(): Promise<boolean> {
   return metricStepValid.value
 }
 
-const editing = computed(() => props.configuration_name !== null)
-
 const finishLabel = computed(() =>
-  editing.value ? _t('Save & activate changes') : _t('Create & activate changes')
+  editing ? _t('Save & activate changes') : _t('Create & activate changes')
 )
 
 const failureMessage = computed(() =>
-  editing.value
-    ? _t('Failed to save the custom service.')
-    : _t('Failed to create the custom service.')
+  editing ? _t('Failed to save the custom service.') : _t('Failed to create the custom service.')
 )
 
 async function persist(): Promise<SaveResult> {
@@ -127,17 +125,13 @@ async function saveService(): Promise<void> {
   <div class="mode-custom-services-custom-services-wizard-app">
     <CmkAlert v-if="loadError" variant="error" :text="untranslated(loadError)" />
     <CmkWizard v-else-if="!loading" v-model="currentStep" mode="guided">
-      <CmkWizardStep :index="1" :is-completed="() => currentStep > 1">
+      <CmkWizardStep v-if="!editing" :index="1" :is-completed="() => currentStep > 1">
         <template #header>
           <CmkHeading type="h3">{{ _t('General configuration properties') }}</CmkHeading>
         </template>
         <template #content>
           <CmkParagraph>{{ _t('Set the custom service configuration name.') }}</CmkParagraph>
-          <ConfigureNameStep
-            ref="nameStep"
-            v-model:configuration-name="model.configurationName"
-            :read-only="editing"
-          />
+          <ConfigureNameStep ref="nameStep" v-model:configuration-name="model.configurationName" />
         </template>
         <template #actions>
           <CmkWizardButton type="next" :validation-cb="validateNameStep" />
@@ -163,7 +157,7 @@ async function saveService(): Promise<void> {
             :validation-cb="validateMetricStep"
             :disabled="!metricStepValid"
           />
-          <CmkWizardButton type="previous" />
+          <CmkWizardButton v-if="!editing" type="previous" />
         </template>
       </CmkWizardStep>
 

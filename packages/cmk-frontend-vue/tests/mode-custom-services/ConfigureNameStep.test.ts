@@ -31,14 +31,14 @@ function serveListError() {
   server.use(http.get(LIST_URL, () => HttpResponse.json({ title: 'Boom' }, { status: 500 })))
 }
 
-function renderStep(initialName = '', readOnly = false) {
+function renderStep(initialName = '') {
   const name = ref(initialName)
   const stepRef = ref<InstanceType<typeof ConfigureNameStep>>()
   render(
     defineComponent({
       components: { ConfigureNameStep },
-      setup: () => ({ name, stepRef, readOnly }),
-      template: `<ConfigureNameStep ref="stepRef" v-model:configuration-name="name" :read-only="readOnly" />`
+      setup: () => ({ name, stepRef }),
+      template: `<ConfigureNameStep ref="stepRef" v-model:configuration-name="name" />`
     })
   )
   return { name, stepRef }
@@ -147,24 +147,5 @@ describe('validate', () => {
     serveListError()
     expect(await stepRef.value!.validate()).toBe(false)
     await screen.findByText('Failed to validate the configuration name. Please try again.')
-  })
-})
-
-describe('read-only', () => {
-  test('shows the stored name as text and accepts it without asking the server', async () => {
-    let listRequests = 0
-    server.use(
-      http.get(LIST_URL, () => {
-        listRequests += 1
-        return HttpResponse.json({ value: [{ id: 'stored_name', domainType: 'custom_service' }] })
-      })
-    )
-    const { stepRef } = renderStep('stored_name', true)
-    await waitFor(() => expect(stepRef.value).toBeDefined())
-
-    expect(screen.getByText('stored_name')).toBeTruthy()
-    expect(screen.queryByRole('textbox')).toBeNull()
-    expect(await stepRef.value!.validate()).toBe(true)
-    expect(listRequests).toBe(0)
   })
 })

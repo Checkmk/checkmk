@@ -5,7 +5,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
-import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -26,9 +25,6 @@ const { _t } = usei18n()
 
 const configurationNameId = useId()
 
-// A stored service keeps its name: the update endpoint cannot rename it.
-const props = defineProps<{ readOnly?: boolean }>()
-
 const configurationName = defineModel<string>('configurationName', { required: true })
 
 const displayErrors = ref(false)
@@ -40,7 +36,7 @@ const formatErrors = computed<string[]>(() =>
 const allErrors = computed<string[]>(() => [...formatErrors.value, ...takenErrors.value])
 
 onMounted(async () => {
-  if (props.readOnly || configurationName.value !== '') {
+  if (configurationName.value !== '') {
     return
   }
   let existingNames: string[] = []
@@ -55,9 +51,6 @@ onMounted(async () => {
 })
 
 async function validate(): Promise<boolean> {
-  if (props.readOnly) {
-    return true
-  }
   displayErrors.value = true
   takenErrors.value = []
   if (formatErrors.value.length > 0) {
@@ -84,11 +77,9 @@ defineExpose({ validate })
     :aria-label="_t('General configuration properties')"
   >
     <CmkLabel :for="configurationNameId"
-      >{{ _t('Configuration name') }} <CmkLabelRequired v-if="!readOnly"
+      >{{ _t('Configuration name') }} <CmkLabelRequired
     /></CmkLabel>
-    <CmkParagraph v-if="readOnly">{{ configurationName }}</CmkParagraph>
     <CmkInput
-      v-else
       :id="configurationNameId"
       v-model="configurationName"
       type="text"

@@ -42,7 +42,6 @@ const WRITTEN_EXTENSIONS = {
 let updateRequests = 0
 let lastBody: unknown = null
 let lastIfMatch: string | null = null
-let listRequests = 0
 
 const server = useMswServer(
   http.get(OBJECT_URL, () =>
@@ -67,12 +66,11 @@ const server = useMswServer(
       extensions: STORED_EXTENSIONS
     })
   }),
-  http.get(LIST_URL, () => {
-    listRequests += 1
-    return HttpResponse.json({
+  http.get(LIST_URL, () =>
+    HttpResponse.json({
       value: [{ id: 'http_duration_on_web01', domainType: 'custom_service' }]
     })
-  }),
+  ),
   http.post(AUTOCOMPLETE_URL, () =>
     HttpResponse.json({ choices: [{ id: 'web01', value: 'web01' }] })
   ),
@@ -86,7 +84,6 @@ afterEach(() => {
   updateRequests = 0
   lastBody = null
   lastIfMatch = null
-  listRequests = 0
 })
 
 function renderWizard(configurationName: string | null = 'http_duration_on_web01') {
@@ -105,21 +102,17 @@ async function expectActiveStep(heading: string): Promise<void> {
 }
 
 async function goToHostStep(): Promise<void> {
-  await userEvent.click(await screen.findByRole('button', { name: 'Next step' }))
   await expectActiveStep('Define metric')
   await userEvent.click(await screen.findByRole('button', { name: 'Next step' }))
   await expectActiveStep('Assign to host')
 }
 
-test('shows the stored configuration name as text and passes it without a name check', async () => {
+test('starts at the metric step without the configuration name step', async () => {
   renderWizard()
 
-  expect(await screen.findByText('http_duration_on_web01')).toBeTruthy()
-  expect(screen.queryByDisplayValue('http_duration_on_web01')).toBeNull()
-  await userEvent.click(await screen.findByRole('button', { name: 'Next step' }))
-
   await expectActiveStep('Define metric')
-  expect(listRequests).toBe(0)
+  expect(screen.queryByText('General configuration properties')).toBeNull()
+  expect(screen.queryByRole('button', { name: 'Previous step' })).toBeNull()
 })
 
 test('shows the stored service name, editable', async () => {
@@ -189,6 +182,6 @@ test('a service that cannot be loaded shows the reason instead of the wizard', a
 test('without a configuration name the wizard creates instead of saving', async () => {
   renderWizard(null)
 
-  expect(await screen.findByRole('button', { name: 'Next step' })).toBeTruthy()
+  await expectActiveStep('General configuration properties')
   expect(screen.queryByRole('button', { name: 'Save & activate changes' })).toBeNull()
 })

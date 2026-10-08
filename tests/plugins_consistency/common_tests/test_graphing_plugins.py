@@ -376,7 +376,6 @@ def test_duplicate_metric_titles_fixed() -> None:
 
 
 _ALLOWED_DUPLICATE_GRAPH_TITLES = {
-    "Active sessions": {"active_sessions", "active_sessions_with_peak_value"},
     "Huge pages": {"huge_pages_2", "huge_pages"},
 }
 

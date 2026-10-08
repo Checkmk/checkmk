@@ -4,6 +4,7 @@ apache
 api
 async
 Auth
+automations
 backend
 Backend
 backends
@@ -12,6 +13,8 @@ Bazel
 BMC
 cAdvisor
 changelog
+checkhelper
+checkhelpers
 Checkmk
 checksums
 ClickHouse
@@ -20,6 +23,7 @@ cmk
 CN
 codebase
 config
+configs
 configurability
 coroutine
 cron

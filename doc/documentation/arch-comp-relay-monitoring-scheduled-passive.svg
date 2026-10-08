@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="1224" font-family="Helvetica, Arial, sans-serif" viewBox="0 0 760 1224" role="img" aria-label="Scheduled passive checks: the relay fetches, the site evaluates" font-size="13">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs><marker id="sched-passive-site" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2563eb"/></marker><marker id="sched-passive-relay" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#ea580c"/></marker><marker id="sched-passive-read" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6b7280"/></marker></defs>
+<text x="24" y="34" font-size="15" font-weight="600" fill="#111827">Scheduled passive checks: the relay fetches, the site evaluates</text>
+<text x="24" y="54" font-size="11.5" fill="#4b5563">Check_MK and Check_MK Discovery on their normal schedule</text>
+<g><rect x="24" y="72" width="584" height="660" rx="10" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="40" y="90" font-size="12.5" font-weight="600" fill="#111827">Checkmk site</text></g>
+<g><rect x="24" y="772" width="584" height="384" rx="10" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="40" y="790" font-size="12.5" font-weight="600" fill="#111827">Relay</text></g>
+<text x="736" y="756" text-anchor="end" font-size="11.5" fill="#4b5563">HTTPS, relay to site</text>
+<g opacity="0.3"><rect x="40" y="100" width="552" height="64" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="1"/><text x="52" y="118" font-size="12" font-weight="600" fill="#111827">GUI</text></g>
+<g opacity="0.3"><rect x="56" y="126" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="136" y="144" text-anchor="middle" font-size="11.5" fill="#111827">Activate changes</text></g>
+<g opacity="0.3"><rect x="236" y="126" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="316" y="144" text-anchor="middle" font-size="11.5" fill="#111827">Reschedule check</text></g>
+<g opacity="0.3"><rect x="416" y="126" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="496" y="144" text-anchor="middle" font-size="11.5" fill="#111827">Service discovery page</text></g>
+<g opacity="0.3"><rect x="40" y="192" width="552" height="64" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="1"/><text x="52" y="210" font-size="12" font-weight="600" fill="#111827">Automation helper</text></g>
+<g opacity="0.3"><rect x="56" y="218" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="136" y="236" text-anchor="middle" font-size="11.5" fill="#111827">Config generation</text></g>
+<g opacity="0.3"><rect x="236" y="218" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="316" y="236" text-anchor="middle" font-size="11.5" fill="#111827">active-check automation</text></g>
+<g opacity="0.3"><rect x="416" y="218" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="496" y="236" text-anchor="middle" font-size="11.5" fill="#111827">Discovery automations</text></g>
+<g><rect x="40" y="284" width="552" height="64" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="1"/><text x="52" y="302" font-size="12" font-weight="600" fill="#111827">Site disk</text></g>
+<g opacity="0.3"><rect x="56" y="310" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="136" y="328" text-anchor="middle" font-size="11.5" fill="#111827">config.pb</text></g>
+<g><rect x="236" y="310" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="316" y="328" text-anchor="middle" font-size="11.5" fill="#111827">helper_config/&lt;serial&gt;/</text></g>
+<g opacity="0.3"><rect x="416" y="310" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="496" y="328" text-anchor="middle" font-size="11.5" fill="#111827">…/relays/&lt;relay id&gt;/</text></g>
+<g><rect x="40" y="376" width="552" height="64" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="1"/><text x="52" y="394" font-size="12" font-weight="600" fill="#111827">CMC core</text></g>
+<g><rect x="56" y="402" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="136" y="420" text-anchor="middle" font-size="11.5" fill="#111827">Scheduler</text></g>
+<g opacity="0.3"><rect x="236" y="402" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="316" y="420" text-anchor="middle" font-size="11.5" fill="#111827">Livestatus</text></g>
+<g><rect x="416" y="402" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="496" y="420" text-anchor="middle" font-size="11.5" fill="#111827">raw-data socket</text></g>
+<g><rect x="40" y="468" width="552" height="64" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="1"/><text x="52" y="486" font-size="12" font-weight="600" fill="#111827">CMC helper pools</text></g>
+<g><rect x="56" y="494" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="136" y="512" text-anchor="middle" font-size="11.5" fill="#111827">Fetcher helpers</text></g>
+<g opacity="0.3"><rect x="236" y="494" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="316" y="512" text-anchor="middle" font-size="11.5" fill="#111827">Checkhelpers (C++)</text></g>
+<g><rect x="416" y="494" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="496" y="512" text-anchor="middle" font-size="11.5" fill="#111827">Checker helpers</text></g>
+<g><rect x="40" y="560" width="552" height="64" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="1"/><text x="52" y="578" font-size="12" font-weight="600" fill="#111827">Forked on the site</text></g>
+<g><rect x="56" y="586" width="118" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="115" y="604" text-anchor="middle" font-size="11.5" fill="#111827">Special agents</text></g>
+<g opacity="0.3"><rect x="190" y="586" width="118" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="249" y="604" text-anchor="middle" font-size="11.5" fill="#111827">check_on_relay</text></g>
+<g opacity="0.3"><rect x="324" y="586" width="118" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="383" y="604" text-anchor="middle" font-size="11.5" fill="#111827">check_cmk_inv</text></g>
+<g opacity="0.3"><rect x="458" y="586" width="118" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="517" y="604" text-anchor="middle" font-size="11.5" fill="#111827">Active checks</text></g>
+<g><rect x="40" y="652" width="552" height="64" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="1"/><text x="52" y="670" font-size="12" font-weight="600" fill="#111827">Agent receiver</text></g>
+<g opacity="0.3"><rect x="56" y="678" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="136" y="696" text-anchor="middle" font-size="11.5" fill="#111827">activate-config</text></g>
+<g opacity="0.3"><rect x="236" y="678" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="316" y="696" text-anchor="middle" font-size="11.5" fill="#111827">Task store</text></g>
+<g><rect x="416" y="678" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="496" y="696" text-anchor="middle" font-size="11.5" fill="#111827">/monitoring</text></g>
+<g><rect x="40" y="800" width="552" height="64" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="1"/><text x="52" y="818" font-size="12" font-weight="600" fill="#111827">cmk-relay daemon</text></g>
+<g opacity="0.3"><rect x="56" y="826" width="118" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="115" y="844" text-anchor="middle" font-size="11.5" fill="#111827">Poll scheduler</text></g>
+<g><rect x="190" y="826" width="118" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="249" y="844" text-anchor="middle" font-size="11.5" fill="#111827">Service scheduler</text></g>
+<g><rect x="324" y="826" width="118" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="383" y="844" text-anchor="middle" font-size="11.5" fill="#111827">Main loop</text></g>
+<g><rect x="458" y="826" width="118" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="517" y="844" text-anchor="middle" font-size="11.5" fill="#111827">Site loop</text></g>
+<g><rect x="40" y="892" width="552" height="64" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="1"/><text x="52" y="910" font-size="12" font-weight="600" fill="#111827">Relay disk</text></g>
+<g><rect x="190" y="918" width="252" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="316" y="936" text-anchor="middle" font-size="11.5" fill="#111827">helper_config/&lt;serial&gt;/ + latest</text></g>
+<g><rect x="40" y="984" width="552" height="64" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="1"/><text x="52" y="1002" font-size="12" font-weight="600" fill="#111827">Relay helper processes</text></g>
+<g><rect x="56" y="1010" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="136" y="1028" text-anchor="middle" font-size="11.5" fill="#111827">fetcher</text></g>
+<g opacity="0.3"><rect x="236" y="1010" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="316" y="1028" text-anchor="middle" font-size="11.5" fill="#111827">fetch-ad-hoc</text></g>
+<g opacity="0.3"><rect x="416" y="1010" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="496" y="1028" text-anchor="middle" font-size="11.5" fill="#111827">checkhelper (C++)</text></g>
+<g><rect x="40" y="1076" width="552" height="64" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="1"/><text x="52" y="1094" font-size="12" font-weight="600" fill="#111827">Forked on the relay</text></g>
+<g><rect x="56" y="1102" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="136" y="1120" text-anchor="middle" font-size="11.5" fill="#111827">Special agents</text></g>
+<g opacity="0.3"><rect x="416" y="1102" width="160" height="28" rx="6" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="496" y="1120" text-anchor="middle" font-size="11.5" fill="#111827">Active checks</text></g>
+<g><rect x="624" y="468" width="112" height="148" rx="8" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="680" y="538" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">Site-monitored</text><text x="680" y="554" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">hosts</text></g>
+<g><rect x="624" y="984" width="112" height="148" rx="8" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="680" y="1054" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">Relay-monitored</text><text x="680" y="1070" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">hosts</text></g>
+<g fill="none">
+<path d="M170 430V494" stroke="#2563eb" stroke-width="1.75" marker-end="url(#sched-passive-site)"/>
+<path d="M236 324H226V508H216" stroke="#6b7280" stroke-width="1.25" stroke-dasharray="4 3" marker-end="url(#sched-passive-read)"/>
+<path d="M100 522V544H32V600H56" stroke="#2563eb" stroke-width="1.75" marker-end="url(#sched-passive-site)"/>
+<path d="M115 614V638H690V616" stroke="#2563eb" stroke-width="1.75" marker-start="url(#sched-passive-site)" marker-end="url(#sched-passive-site)"/>
+<path d="M136 522V550H624" stroke="#2563eb" stroke-width="1.75" marker-start="url(#sched-passive-site)" marker-end="url(#sched-passive-site)"/>
+<path d="M190 494V430" stroke="#2563eb" stroke-width="1.75" marker-end="url(#sched-passive-site)"/>
+<path d="M456 494V454H210V430" stroke="#2563eb" stroke-width="1.75" marker-start="url(#sched-passive-site)" marker-end="url(#sched-passive-site)"/>
+<path d="M308 840H324" stroke="#ea580c" stroke-width="1.75" marker-end="url(#sched-passive-relay)"/>
+<path d="M340 854V878H32V1024H56" stroke="#ea580c" stroke-width="1.75" marker-start="url(#sched-passive-relay)" marker-end="url(#sched-passive-relay)"/>
+<path d="M210 946V1010" stroke="#6b7280" stroke-width="1.25" stroke-dasharray="4 3" marker-end="url(#sched-passive-read)"/>
+<path d="M190 1038V1102" stroke="#ea580c" stroke-width="1.75" marker-end="url(#sched-passive-relay)"/>
+<path d="M136 1130V1148H680V1132" stroke="#ea580c" stroke-width="1.75" marker-start="url(#sched-passive-relay)" marker-end="url(#sched-passive-relay)"/>
+<path d="M210 1038V1062H624" stroke="#ea580c" stroke-width="1.75" marker-start="url(#sched-passive-relay)" marker-end="url(#sched-passive-relay)"/>
+<path d="M442 840H458" stroke="#ea580c" stroke-width="1.75" marker-end="url(#sched-passive-relay)"/>
+<path d="M540 826V706" stroke="#ea580c" stroke-width="1.75" marker-end="url(#sched-passive-relay)"/>
+<path d="M576 692H600V416H576" stroke="#ea580c" stroke-width="1.75" marker-end="url(#sched-passive-relay)"/>
+<path d="M536 430V494" stroke="#ea580c" stroke-width="1.75" marker-start="url(#sched-passive-relay)" marker-end="url(#sched-passive-relay)"/>
+</g>
+<line x1="24" y1="1180" x2="48" y2="1180" stroke="#2563eb" stroke-width="2"/><text x="56" y="1184" font-size="11.5" fill="#111827">site-monitored host</text>
+<line x1="205" y1="1180" x2="229" y2="1180" stroke="#ea580c" stroke-width="2"/><text x="237" y="1184" font-size="11.5" fill="#111827">relay-monitored host</text>
+<line x1="393" y1="1180" x2="417" y2="1180" stroke="#6b7280" stroke-width="2" stroke-dasharray="4 3"/><text x="425" y="1184" font-size="11.5" fill="#111827">reads config</text>
+<text x="24" y="1206" font-size="11.5" fill="#4b5563">Gray boxes are not involved.</text>
+</svg>

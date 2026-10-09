@@ -4,20 +4,18 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fromDate } from '@internationalized/date'
-import { render, screen, waitFor } from '@testing-library/vue'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-import { HttpResponse, http } from 'msw'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { nextTick } from 'vue'
+import { screen, waitFor } from '@testing-library/vue'
+import { describe, expect, it } from 'vitest'
 
 import DashboardContentSingleMetric from '@/dashboard/components/DashboardContent/DashboardContentSingleMetric.vue'
 import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
 import type { ComputedSingleMetric, SingleMetricContent } from '@/dashboard/types/widget'
 
+import {
+  renderComputedWidget,
+  useComputeWidgetEndpoint
+} from '@tests/dashboard/computeWidgetEndpoint'
 import { makeContentProps } from '@tests/dashboard/contentProps'
-import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
-
-const ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/dashboard/actions/compute-single-metric/invoke`
 
 const OTHER_RANGE = {
   from: fromDate(new Date('2026-01-02T00:00:00Z'), 'UTC'),
@@ -90,40 +88,23 @@ const FIXED_WINDOW: SingleMetricContent = {
   }
 }
 
-let answer: () => ComputedSingleMetric = () => singleMetric()
-let requests: unknown[] = []
-
-useMswServer(
-  http.post(ENDPOINT, async ({ request }) => {
-    requests.push(await request.json())
-    return HttpResponse.json({ domainType: 'widget-compute', value: answer() })
-  })
+const endpoint = useComputeWidgetEndpoint<ComputedSingleMetric>('compute-single-metric', () =>
+  singleMetric()
 )
 
 async function renderWidget(
   props: ContentProps<SingleMetricContent> = makeContentProps(CURRENT_VALUE)
 ) {
-  const rendered = render(DashboardContentSingleMetric, { props })
-  await nextTick()
-  deliverSize(400, 200)
+  const rendered = await renderComputedWidget(DashboardContentSingleMetric, props)
   await screen.findByText('801.84')
   return rendered
 }
-
-beforeEach(() => {
-  vi.stubGlobal('ResizeObserver', FakeResizeObserver)
-})
-afterEach(() => {
-  answer = () => singleMetric()
-  requests = []
-  FakeResizeObserver.instances = []
-})
 
 describe('DashboardContentSingleMetric', () => {
   it('requests the explicit widget with the dashboard time range', async () => {
     await renderWidget()
 
-    expect(requests).toEqual([
+    expect(endpoint.requests).toEqual([
       {
         source: { type: 'explicit', content: CURRENT_VALUE, context: {} },
         time_range: { start: '2026-01-01T00:00:00.000Z', end: '2026-01-01T01:00:00.000Z' }
@@ -158,7 +139,7 @@ describe('DashboardContentSingleMetric', () => {
   })
 
   it('does not link the value without a resolved link', async () => {
-    answer = () => singleMetric({ links: [], link_properties: { links: [] } })
+    endpoint.answer(singleMetric({ links: [], link_properties: { links: [] } }))
 
     const { container } = await renderWidget()
 
@@ -166,7 +147,7 @@ describe('DashboardContentSingleMetric', () => {
   })
 
   it('shows the service state when the backend reports one', async () => {
-    answer = () => singleMetric({ state: { severity: 'warn', tint_background: true } })
+    endpoint.answer(singleMetric({ state: { severity: 'warn', tint_background: true } }))
 
     const { container } = await renderWidget()
 
@@ -177,7 +158,7 @@ describe('DashboardContentSingleMetric', () => {
   })
 
   it('labels the range ends when the backend reports them', async () => {
-    answer = () => singleMetric({ range_limits: { minimum: '0 B', maximum: '1.00 TB' } })
+    endpoint.answer(singleMetric({ range_limits: { minimum: '0 B', maximum: '1.00 TB' } }))
 
     const { container } = await renderWidget()
 
@@ -190,7 +171,7 @@ describe('DashboardContentSingleMetric', () => {
   })
 
   it('scales the comparison value like the value itself', async () => {
-    answer = () =>
+    endpoint.answer(
       singleMetric({
         series: [
           { timestamp: 0, value: 1_000_000 },
@@ -199,6 +180,7 @@ describe('DashboardContentSingleMetric', () => {
           { timestamp: 180, value: 4_000_000 }
         ]
       })
+    )
 
     const { container } = await renderWidget()
 
@@ -208,7 +190,7 @@ describe('DashboardContentSingleMetric', () => {
   })
 
   it('gives the whole widget to the value for the current value alone', async () => {
-    answer = () => singleMetric({ series: [] })
+    endpoint.answer(singleMetric({ series: [] }))
 
     const { container } = await renderWidget()
 
@@ -218,20 +200,12 @@ describe('DashboardContentSingleMetric', () => {
     )
   })
 
-  it('fetches again on a refresh tick', async () => {
-    const { rerender } = await renderWidget(makeContentProps(FIXED_WINDOW))
-
-    await rerender(makeContentProps(FIXED_WINDOW, { tick: 1 }))
-
-    await waitFor(() => expect(requests).toHaveLength(2))
-  })
-
   it('fetches again when the dashboard range changes and the widget follows it', async () => {
     const { rerender } = await renderWidget(makeContentProps(FOLLOWS_DASHBOARD))
 
     await rerender(makeContentProps(FOLLOWS_DASHBOARD, { range: OTHER_RANGE }))
 
-    await waitFor(() => expect(requests).toHaveLength(2))
+    await waitFor(() => expect(endpoint.requests).toHaveLength(2))
   })
 
   it('does not fetch again when the dashboard range changes under a fixed window', async () => {
@@ -240,6 +214,6 @@ describe('DashboardContentSingleMetric', () => {
     await rerender(makeContentProps(FIXED_WINDOW, { range: OTHER_RANGE }))
     await rerender(makeContentProps(FIXED_WINDOW, { range: OTHER_RANGE, tick: 1 }))
 
-    await waitFor(() => expect(requests).toHaveLength(2))
+    await waitFor(() => expect(endpoint.requests).toHaveLength(2))
   })
 })

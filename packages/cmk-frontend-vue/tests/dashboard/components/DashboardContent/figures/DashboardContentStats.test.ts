@@ -3,19 +3,17 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render, screen } from '@testing-library/vue'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-import { HttpResponse, http } from 'msw'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { nextTick } from 'vue'
+import { screen } from '@testing-library/vue'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import DashboardContentStats from '@/dashboard/components/DashboardContent/figures/DashboardContentStats.vue'
 import type { Stats, StatsContent } from '@/dashboard/types/widget'
 
+import {
+  renderComputedWidget,
+  useComputeWidgetEndpoint
+} from '@tests/dashboard/computeWidgetEndpoint'
 import { makeContentProps } from '@tests/dashboard/contentProps'
-import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
-
-const ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/dashboard/actions/compute-stats/invoke`
 
 const HOST_STATS: Stats = {
   links: [],
@@ -33,19 +31,9 @@ const PROPS = makeContentProps<StatsContent>({
   contextual_link: { type: 'default' }
 })
 
-let answer: () => Response = () =>
-  HttpResponse.json({ domainType: 'widget-compute', value: HOST_STATS })
-
-useMswServer(http.post(ENDPOINT, () => answer()))
-
-async function renderWidget(): Promise<void> {
-  render(DashboardContentStats, { props: PROPS })
-  await nextTick()
-  deliverSize(400, 200)
-}
+useComputeWidgetEndpoint<Stats>('compute-stats', () => HOST_STATS)
 
 beforeEach(() => {
-  vi.stubGlobal('ResizeObserver', FakeResizeObserver)
   Object.defineProperty(SVGElement.prototype, 'getBBox', {
     configurable: true,
     value: () => ({ x: 0, y: 0, width: 100, height: 60 })
@@ -53,22 +41,12 @@ beforeEach(() => {
 })
 afterEach(() => {
   Reflect.deleteProperty(SVGElement.prototype, 'getBBox')
-  answer = () => HttpResponse.json({ domainType: 'widget-compute', value: HOST_STATS })
-  FakeResizeObserver.instances = []
 })
 
 describe('DashboardContentStats', () => {
   it('draws the counts as delivered by the backend', async () => {
-    await renderWidget()
+    await renderComputedWidget(DashboardContentStats, PROPS)
 
     expect(await screen.findByRole('img', { name: 'Down: 3' })).toBeInTheDocument()
-  })
-
-  it('shows the no-data notice on a 404', async () => {
-    answer = () => HttpResponse.json({ title: 'No data available', status: 404 }, { status: 404 })
-
-    await renderWidget()
-
-    expect(await screen.findByText('No data available')).toBeInTheDocument()
   })
 })

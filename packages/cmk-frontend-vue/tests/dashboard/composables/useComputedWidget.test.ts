@@ -84,6 +84,18 @@ describe('useComputedWidget', () => {
 
     expect(bodies).toHaveLength(2)
   })
+
+  it('fetches again on a refresh tick', async () => {
+    const props = widgetProps()
+    const { bodies, compute } = recordingCompute()
+    mount(() => useComputedWidget(props, compute))
+    await flushPromises()
+
+    props.tick = 1
+    await flushPromises()
+
+    expect(bodies).toHaveLength(2)
+  })
 })
 
 describe('useRangedComputedWidget', () => {

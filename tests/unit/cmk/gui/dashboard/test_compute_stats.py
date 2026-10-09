@@ -13,6 +13,7 @@ from tests.testlib.unit.rest_api_client import ClientRegistry, Response
 from tests.unit.cmk.gui.helpers.dashboard_api_test_helper import (
     create_dashboard_payload,
     dashboard_widget_token,
+    explicit_source,
     SavedWidget,
 )
 
@@ -105,12 +106,6 @@ _NOT_IN_DOWNTIME = {
 }
 
 
-def _explicit(
-    content: dict[str, object], context: dict[str, object] | None = None
-) -> dict[str, object]:
-    return {"source": {"type": "explicit", "content": content, "context": context or {}}}
-
-
 def _compute_hosts(
     clients: ClientRegistry,
     live: MockLiveStatusConnection,
@@ -123,7 +118,7 @@ def _compute_hosts(
     live.add_table("hosts", _HOSTS if rows is None else rows)
     live.expect_query(_HOST_STATS_QUERY)
     with live:
-        return clients.DashboardClient.compute_stats(body, headers=headers)
+        return clients.DashboardClient.compute_widget("compute-stats", body, headers=headers)
 
 
 def _compute_services(
@@ -137,7 +132,7 @@ def _compute_services(
     live.add_table("services", _SERVICES)
     live.expect_query(query)
     with live:
-        return clients.DashboardClient.compute_stats(body)
+        return clients.DashboardClient.compute_widget("compute-stats", body)
 
 
 def _counts(response: Response) -> list[int]:
@@ -175,7 +170,7 @@ def test_a_host_statistics_widget_answers_one_value(
     response = _compute_hosts(
         clients,
         mock_livestatus,
-        _explicit({"type": "host_stats", "contextual_link": _DEFAULT_LINK}),
+        {"source": explicit_source({"type": "host_stats", "contextual_link": _DEFAULT_LINK})},
     )
 
     assert response.json == {
@@ -252,7 +247,9 @@ def test_a_link_without_owner_takes_the_title_of_the_copy_the_name_resolves_to(
     }
 
     response = _compute_hosts(
-        clients, mock_livestatus, _explicit({"type": "host_stats", "contextual_link": link})
+        clients,
+        mock_livestatus,
+        {"source": explicit_source({"type": "host_stats", "contextual_link": link})},
     )
 
     assert [link["title"] for link in response.json["value"]["links"]] == ["Test Dashboard"]
@@ -266,7 +263,7 @@ def test_both_arms_answer_the_same_counts(
     explicit = _compute_hosts(
         clients,
         mock_livestatus,
-        _explicit({"type": "host_stats", "contextual_link": _DEFAULT_LINK}),
+        {"source": explicit_source({"type": "host_stats", "contextual_link": _DEFAULT_LINK})},
     )
 
     saved = _saved(clients, mock_livestatus, saved_stats_widget)
@@ -293,7 +290,7 @@ def test_an_empty_result_answers_zero_counts(
     response = _compute_hosts(
         clients,
         mock_livestatus,
-        _explicit({"type": "host_stats", "contextual_link": _DEFAULT_LINK}),
+        {"source": explicit_source({"type": "host_stats", "contextual_link": _DEFAULT_LINK})},
         rows=[],
     )
 
@@ -304,9 +301,11 @@ def test_an_empty_result_answers_zero_counts(
 def test_an_explicit_source_computes_the_sent_content(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    body = _explicit(
-        {"type": "service_stats", "contextual_link": _DEFAULT_LINK}, {"host": {"host": "web01"}}
-    )
+    body: dict[str, object] = {
+        "source": explicit_source(
+            {"type": "service_stats", "contextual_link": _DEFAULT_LINK}, {"host": {"host": "web01"}}
+        )
+    }
 
     response = _compute_services(
         clients, mock_livestatus, body, query=_SERVICE_STATS_QUERY + "\nFilter: host_name = web01"
@@ -326,18 +325,20 @@ def test_an_explicit_source_computes_the_sent_content(
 def test_inherited_yields_one_link_with_the_native_click_key(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    body = _explicit(
-        {
-            "type": "host_stats",
-            "contextual_link": {
-                "type": "inherited",
-                "location": {"type": "views", "name": "allhosts", "owner": None},
-                "include_context": False,
-                "include_time_range": False,
-                "show_filter_form": False,
-            },
-        }
-    )
+    body: dict[str, object] = {
+        "source": explicit_source(
+            {
+                "type": "host_stats",
+                "contextual_link": {
+                    "type": "inherited",
+                    "location": {"type": "views", "name": "allhosts", "owner": None},
+                    "include_context": False,
+                    "include_time_range": False,
+                    "show_filter_form": False,
+                },
+            }
+        )
+    }
 
     value = _compute_hosts(clients, mock_livestatus, body).json["value"]
 
@@ -357,24 +358,26 @@ def test_inherited_yields_one_link_with_the_native_click_key(
 def test_a_custom_link_carries_the_state_of_a_part_and_drops_its_site(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    body = _explicit(
-        {
-            "type": "host_stats",
-            "contextual_link": {
-                "type": "custom",
-                "links": [
-                    {
-                        "title": "Down hosts",
-                        "location": {"type": "views", "name": "allhosts", "owner": None},
-                        "filters": [{"filter_id": "hoststate"}, {"filter_id": "siteopt"}],
-                        "include_context": False,
-                        "include_time_range": False,
-                        "show_filter_form": False,
-                    }
-                ],
-            },
-        }
-    )
+    body: dict[str, object] = {
+        "source": explicit_source(
+            {
+                "type": "host_stats",
+                "contextual_link": {
+                    "type": "custom",
+                    "links": [
+                        {
+                            "title": "Down hosts",
+                            "location": {"type": "views", "name": "allhosts", "owner": None},
+                            "filters": [{"filter_id": "hoststate"}, {"filter_id": "siteopt"}],
+                            "include_context": False,
+                            "include_time_range": False,
+                            "show_filter_form": False,
+                        }
+                    ],
+                },
+            }
+        )
+    }
 
     value = _compute_hosts(clients, mock_livestatus, body).json["value"]
 
@@ -400,7 +403,9 @@ def test_a_widget_without_a_link_field_takes_the_built_in_link(
     )
 
     with mock_livestatus:
-        response = clients.DashboardClient.compute_stats(_explicit({"type": "event_stats"}))
+        response = clients.DashboardClient.compute_widget(
+            "compute-stats", {"source": explicit_source({"type": "event_stats"})}
+        )
 
     assert [link["location"] for link in response.json["value"]["links"]] == [
         {"type": "views", "name": "ec_events", "owner": None}
@@ -436,6 +441,8 @@ def test_a_user_who_sees_only_related_events_gets_the_event_statistics(
     )
 
     with mock_livestatus:
-        response = clients.DashboardClient.compute_stats(_explicit({"type": "event_stats"}))
+        response = clients.DashboardClient.compute_widget(
+            "compute-stats", {"source": explicit_source({"type": "event_stats"})}
+        )
 
     assert _counts(response) == [0, 0, 0, 1]

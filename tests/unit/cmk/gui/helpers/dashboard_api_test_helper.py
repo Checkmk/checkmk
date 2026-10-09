@@ -69,6 +69,13 @@ def create_widget(content: dict[str, object]) -> dict[str, object]:
     }
 
 
+def explicit_source(
+    content: dict[str, object], context: dict[str, object] | None = None
+) -> dict[str, object]:
+    """The source of a widget data request that names the widget content itself."""
+    return {"type": "explicit", "content": content, "context": context or {}}
+
+
 @dataclass(frozen=True)
 class SavedWidget:
     source: dict[str, object]

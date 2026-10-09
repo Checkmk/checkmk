@@ -41,6 +41,21 @@ JSON = int | str | bool | list[Any] | dict[str, Any] | None
 JSON_HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
 IF_MATCH_HEADER_OPTIONS = Literal["valid_etag", "invalid_etag", "star"] | None
 
+type WidgetComputeAction = Literal[
+    "compute-stats",
+    "compute-top-list",
+    "compute-barplot",
+    "compute-gauge",
+    "compute-alert-overview",
+    "compute-timeline",
+    "compute-timeline-count",
+    "compute-inventory",
+    "compute-site-overview",
+    "compute-state",
+    "compute-state-summary",
+    "compute-single-metric",
+]
+
 
 def _only_set_keys(body: dict[str, Any | None]) -> dict[str, Any]:
     return {k: v for k, v in body.items() if v is not None}
@@ -4840,180 +4855,16 @@ class DashboardClient(RestApiClient):
             api_version=APIVersion.INTERNAL,
         )
 
-    def compute_stats(
+    def compute_widget(
         self,
+        action: WidgetComputeAction,
         body: dict[str, Any],
         headers: Mapping[str, str] | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "post",
-            url=f"/domain-types/{self.domain}/actions/compute-stats/invoke",
-            body=body,
-            headers=headers,
-            expect_ok=expect_ok,
-            api_version=APIVersion.INTERNAL,
-        )
-
-    def compute_top_list(
-        self,
-        body: dict[str, Any],
-        headers: Mapping[str, str] | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        return self.request(
-            "post",
-            url=f"/domain-types/{self.domain}/actions/compute-top-list/invoke",
-            body=body,
-            headers=headers,
-            expect_ok=expect_ok,
-            api_version=APIVersion.INTERNAL,
-        )
-
-    def compute_barplot(
-        self,
-        body: dict[str, Any],
-        headers: Mapping[str, str] | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        return self.request(
-            "post",
-            url=f"/domain-types/{self.domain}/actions/compute-barplot/invoke",
-            body=body,
-            headers=headers,
-            expect_ok=expect_ok,
-            api_version=APIVersion.INTERNAL,
-        )
-
-    def compute_gauge(
-        self,
-        body: dict[str, Any],
-        headers: Mapping[str, str] | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        return self.request(
-            "post",
-            url=f"/domain-types/{self.domain}/actions/compute-gauge/invoke",
-            body=body,
-            headers=headers,
-            expect_ok=expect_ok,
-            api_version=APIVersion.INTERNAL,
-        )
-
-    def compute_alert_overview(
-        self,
-        body: dict[str, Any],
-        headers: Mapping[str, str] | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        return self.request(
-            "post",
-            url=f"/domain-types/{self.domain}/actions/compute-alert-overview/invoke",
-            body=body,
-            headers=headers,
-            expect_ok=expect_ok,
-            api_version=APIVersion.INTERNAL,
-        )
-
-    def compute_timeline(
-        self,
-        body: dict[str, Any],
-        headers: Mapping[str, str] | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        return self.request(
-            "post",
-            url=f"/domain-types/{self.domain}/actions/compute-timeline/invoke",
-            body=body,
-            headers=headers,
-            expect_ok=expect_ok,
-            api_version=APIVersion.INTERNAL,
-        )
-
-    def compute_timeline_count(
-        self,
-        body: dict[str, Any],
-        headers: Mapping[str, str] | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        return self.request(
-            "post",
-            url=f"/domain-types/{self.domain}/actions/compute-timeline-count/invoke",
-            body=body,
-            headers=headers,
-            expect_ok=expect_ok,
-            api_version=APIVersion.INTERNAL,
-        )
-
-    def compute_inventory(
-        self,
-        body: dict[str, Any],
-        headers: Mapping[str, str] | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        return self.request(
-            "post",
-            url=f"/domain-types/{self.domain}/actions/compute-inventory/invoke",
-            body=body,
-            headers=headers,
-            expect_ok=expect_ok,
-            api_version=APIVersion.INTERNAL,
-        )
-
-    def compute_site_overview(
-        self,
-        body: dict[str, Any],
-        headers: Mapping[str, str] | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        return self.request(
-            "post",
-            url=f"/domain-types/{self.domain}/actions/compute-site-overview/invoke",
-            body=body,
-            headers=headers,
-            expect_ok=expect_ok,
-            api_version=APIVersion.INTERNAL,
-        )
-
-    def compute_state(
-        self,
-        body: dict[str, Any],
-        headers: Mapping[str, str] | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        return self.request(
-            "post",
-            url=f"/domain-types/{self.domain}/actions/compute-state/invoke",
-            body=body,
-            headers=headers,
-            expect_ok=expect_ok,
-            api_version=APIVersion.INTERNAL,
-        )
-
-    def compute_state_summary(
-        self,
-        body: dict[str, Any],
-        headers: Mapping[str, str] | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        return self.request(
-            "post",
-            url=f"/domain-types/{self.domain}/actions/compute-state-summary/invoke",
-            body=body,
-            headers=headers,
-            expect_ok=expect_ok,
-            api_version=APIVersion.INTERNAL,
-        )
-
-    def compute_single_metric(
-        self,
-        body: dict[str, Any],
-        headers: Mapping[str, str] | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        return self.request(
-            "post",
-            url=f"/domain-types/{self.domain}/actions/compute-single-metric/invoke",
+            url=f"/domain-types/{self.domain}/actions/{action}/invoke",
             body=body,
             headers=headers,
             expect_ok=expect_ok,

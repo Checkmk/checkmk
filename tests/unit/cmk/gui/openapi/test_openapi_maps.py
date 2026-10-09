@@ -303,6 +303,33 @@ def test_object_rejects_null_for_non_nullable_line_fields(clients: ClientRegistr
     clients.Maps.create(config=map_spec, expect_ok=False).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
+def _geo_map(**view: object) -> dict[str, object]:
+    return _map("map1", view={"type": "worldmap", "lat": 51.0, "lng": 10.0, "zoom": 5, **view})
+
+
+def test_geo_view_accepts_its_bounds(clients: ClientRegistry) -> None:
+    clients.Maps.create(config=_geo_map(lat=-90.0, lng=180.0, zoom=18))
+
+    stored = clients.Maps.get("map1").json["extensions"]["config"]["view"]
+    assert (stored["lat"], stored["lng"], stored["zoom"]) == (-90.0, 180.0, 18)
+
+
+@pytest.mark.parametrize(
+    "view",
+    [
+        pytest.param({"lat": 999.0}, id="lat"),
+        pytest.param({"lng": -500.0}, id="lng"),
+        pytest.param({"zoom": 25}, id="zoom"),
+    ],
+)
+def test_geo_view_rejects_a_view_it_cannot_open_on(
+    clients: ClientRegistry, view: dict[str, object]
+) -> None:
+    clients.Maps.create(config=_geo_map(**view), expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
+
+
 # Pagetype permission model (own / foreign-in-place / built-in override) across
 # the CRUD endpoints, exercised with distinct built-in roles:
 #   * admin -> edit/delete own *and* foreign maps

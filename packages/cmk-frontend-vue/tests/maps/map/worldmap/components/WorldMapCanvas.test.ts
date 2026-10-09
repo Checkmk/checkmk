@@ -29,7 +29,7 @@ const leaflet = vi.hoisted(() => {
     getPane: vi.fn(() => undefined),
     getContainer: vi.fn(() => mapContainer ?? document.body),
     fitBounds: vi.fn(),
-    getCenter: vi.fn(() => ({ lat: 51, lng: 10 })),
+    getCenter: vi.fn(() => ({ wrap: () => ({ lat: 51, lng: 10 }) })),
     getZoom: vi.fn(() => 5),
     setView: vi.fn(),
     zoomIn: vi.fn(),

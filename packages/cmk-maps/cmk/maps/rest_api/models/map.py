@@ -35,6 +35,7 @@ from pydantic import AfterValidator, BeforeValidator, Field
 
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.maps.shared.filters import normalize_object_filter
+from cmk.maps.shared.geo import LAT_LIMIT, LNG_LIMIT, MAX_ZOOM
 from cmk.maps.shared.map_payload import (
     ClickAction,
     LinePerfdataLabel,
@@ -362,9 +363,15 @@ class MapStaticView:
 @api_model
 class MapWorldmapView:
     type: Literal["worldmap"] = api_field(description="View discriminator.", example="worldmap")
-    lat: float = api_field(description="Initial map center latitude.", example=51.0)
-    lng: float = api_field(description="Initial map center longitude.", example=10.0)
-    zoom: int = api_field(description="Initial zoom level.", example=5)
+    lat: Annotated[float, Field(ge=-LAT_LIMIT, le=LAT_LIMIT)] = api_field(
+        description="Initial map center latitude.", example=51.0
+    )
+    lng: Annotated[float, Field(ge=-LNG_LIMIT, le=LNG_LIMIT)] = api_field(
+        description="Initial map center longitude.", example=10.0
+    )
+    zoom: Annotated[int, Field(ge=0, le=MAX_ZOOM)] = api_field(
+        description="Initial zoom level.", example=5
+    )
     tile_url: _UserUrl | None | ApiOmitted = api_field(
         description="Leaflet tile URL template override.",
         example="https://tiles.example.com/{z}/{x}/{y}.png",

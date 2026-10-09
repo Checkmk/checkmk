@@ -41,6 +41,7 @@ import WorldmapSettings from '@/maps/map/edit/settings/components/WorldmapSettin
 import {
   flowViewData,
   formFromMap,
+  geoViewOutOfRange,
   hiddenMetadataFields,
   metadataFormData,
   metadataOverridesFrom,
@@ -125,12 +126,19 @@ const missingFields = computed<string[]>(() => {
   }
   return missing
 })
-const isComplete = computed(() => missingFields.value.length === 0)
+// Shown at the fields as they are typed; only blocks the save here.
+const geoViewInvalid = computed(
+  () => mapType.value === 'worldmap' && geoViewOutOfRange(form.value).length > 0
+)
+const isComplete = computed(() => missingFields.value.length === 0 && !geoViewInvalid.value)
 
 const errorMessages = computed<string[]>(() => {
   const messages = saveAttempted.value
     ? missingFields.value.map((field) => _t('%{field} is required.', { field }))
     : []
+  if (saveAttempted.value && geoViewInvalid.value) {
+    messages.push(_t('The map view is out of range.'))
+  }
   return saveError.value ? [...messages, saveError.value] : messages
 })
 

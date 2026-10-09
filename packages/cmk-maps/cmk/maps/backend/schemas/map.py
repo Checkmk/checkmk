@@ -10,6 +10,7 @@ from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_v
 
 from cmk.maps.backend.schemas.presentation import PresentationView
 from cmk.maps.shared.filters import normalize_object_filter
+from cmk.maps.shared.geo import LAT_LIMIT, LNG_LIMIT, MAX_ZOOM
 from cmk.maps.shared.map_payload import (
     ClickAction,
     LinePerfdataLabel,
@@ -127,9 +128,10 @@ class StaticView(BaseModel):
 
 class WorldmapView(BaseModel):
     type: Literal["worldmap"] = "worldmap"
-    lat: float = 51.0
-    lng: float = 10.0
-    zoom: int = 5
+    # Out of these bounds the map opens on nothing.
+    lat: float = Field(default=51.0, ge=-LAT_LIMIT, le=LAT_LIMIT)
+    lng: float = Field(default=10.0, ge=-LNG_LIMIT, le=LNG_LIMIT)
+    zoom: int = Field(default=5, ge=0, le=MAX_ZOOM)
     # Optional override for the Leaflet tile-URL template. Use ``{s}`` for
     # subdomain, ``{z}/{x}/{y}`` for tile coords. When omitted, the frontend
     # fetches tiles directly from OpenStreetMap; set this to point at an

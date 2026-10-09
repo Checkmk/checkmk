@@ -16,6 +16,29 @@ import type {
 /** Where a geo map centres when the map itself says nothing. */
 const DEFAULT_GEO_VIEW = { lat: 51.0, lng: 10.0, zoom: 5 }
 
+/** The highest zoom the tile servers draw; the REST API holds a view to the same bounds. */
+export const GEO_MAX_ZOOM = 18
+
+/** The geo view fields that hold a value the map cannot open on: it would be empty. */
+export function geoViewOutOfRange(form: SettingsForm): ('lat' | 'lng' | 'zoom')[] {
+  const out: ('lat' | 'lng' | 'zoom')[] = []
+  // An emptied number field holds '' rather than a number, which isFinite
+  // refuses where Math.abs would take it for 0.
+  const within = (value: number, limit: number) =>
+    Number.isFinite(value) && Math.abs(value) <= limit
+  if (!within(form.worldmap_lat, 90)) {
+    out.push('lat')
+  }
+  if (!within(form.worldmap_lng, 180)) {
+    out.push('lng')
+  }
+  const zoom = form.worldmap_zoom
+  if (!(Number.isInteger(zoom) && zoom >= 0 && zoom <= GEO_MAX_ZOOM)) {
+    out.push('zoom')
+  }
+  return out
+}
+
 /**
  * Everything the settings form edits outside the FormSpec blocks: the map type
  * and the per-type view fields, flattened into one bag of scalars a form can

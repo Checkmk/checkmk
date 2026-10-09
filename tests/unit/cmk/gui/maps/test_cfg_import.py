@@ -563,6 +563,24 @@ def test_worldmap_global_becomes_geo_view() -> None:
     assert parsed_map["objects"] == []
 
 
+def test_worldmap_view_out_of_range_is_brought_within_it() -> None:
+    # Leaflet's centre past the antimeridian still shows the same spot.
+    text = (
+        "define global {\n object_id=0\n sources=worldmap\n"
+        " worldmap_center=95,499.5\n worldmap_zoom=25\n}\n"
+    )
+    view = cfg_to_map(text, "wm")["view"]
+    assert view["type"] == "worldmap"
+    assert (view["lat"], view["lng"], view["zoom"]) == (90.0, 139.5, 18)
+
+
+def test_worldmap_center_that_is_no_number_falls_back_to_the_default() -> None:
+    text = "define global {\n object_id=0\n sources=worldmap\n worldmap_center=nan,inf\n}\n"
+    view = cfg_to_map(text, "wm")["view"]
+    assert view["type"] == "worldmap"
+    assert (view["lat"], view["lng"]) == (51.0, 10.0)
+
+
 def test_automap_layer_depths_stay_within_the_daemons_range() -> None:
     content = (
         "define global {\n    sources = automap\n    child_layers = 50\n    parent_layers = -3\n}\n"

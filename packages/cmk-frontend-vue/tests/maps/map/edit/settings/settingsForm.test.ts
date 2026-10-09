@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest'
 import {
   flowViewData,
   formFromMap,
+  geoViewOutOfRange,
   hiddenMetadataFields,
   initialGeoView,
   metadataFormData,
@@ -75,6 +76,32 @@ describe('formFromMap', () => {
       worldmap_tile_url: 'https://tiles/{z}',
       radar_filter: 'hostgroup'
     })
+  })
+})
+
+describe('geoViewOutOfRange', () => {
+  const form = (lat: number, lng: number, zoom: number) => ({
+    ...formFromMap(geoMap(), null),
+    worldmap_lat: lat,
+    worldmap_lng: lng,
+    worldmap_zoom: zoom
+  })
+
+  it('accepts a view at its bounds', () => {
+    expect(geoViewOutOfRange(form(-90, 180, 18))).toEqual([])
+  })
+
+  it('names every field a map could not open on', () => {
+    expect(geoViewOutOfRange(form(999, -500, 25))).toEqual(['lat', 'lng', 'zoom'])
+  })
+
+  it('takes an emptied field or a fractional zoom as out of range', () => {
+    expect(geoViewOutOfRange(form(Number.NaN, 10, 4.5))).toEqual(['lat', 'zoom'])
+  })
+
+  // What an emptied number input hands the v-model, despite the field's type.
+  it('takes an empty string as out of range, not as 0', () => {
+    expect(geoViewOutOfRange(form('' as unknown as number, 10, 5))).toEqual(['lat'])
   })
 })
 

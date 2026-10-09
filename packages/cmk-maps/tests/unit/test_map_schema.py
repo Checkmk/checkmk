@@ -7,7 +7,7 @@
 import pytest
 from pydantic import ValidationError
 
-from cmk.maps.backend.schemas.map import MapConfig, MapElement
+from cmk.maps.backend.schemas.map import MapConfig, MapElement, WorldmapView
 
 
 def test_object_filter_without_filter_header_is_rejected() -> None:
@@ -82,3 +82,16 @@ def test_legacy_weathermap_style_migrates_to_arrow_inward() -> None:
     assert obj.line_style == "arrow_inward"
     assert obj.line_perfdata_label == "bandwidth"
     assert obj.line_weather_color is True
+
+
+@pytest.mark.parametrize(
+    "view",
+    [
+        pytest.param({"lat": 95.0}, id="lat"),
+        pytest.param({"lng": -181.0}, id="lng"),
+        pytest.param({"zoom": 19}, id="zoom"),
+    ],
+)
+def test_worldmap_view_rejects_a_view_it_cannot_open_on(view: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        WorldmapView.model_validate({"type": "worldmap", **view})

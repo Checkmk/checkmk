@@ -22,6 +22,7 @@ from typing import get_args, Literal, TypedDict
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, ungettext
 from cmk.maps.gui._settings import connection_choices
+from cmk.maps.shared.geo import bounded_view, parse_degrees
 from cmk.maps.shared.map_payload import (
     FlowView,
     GadgetType,
@@ -492,16 +493,16 @@ _GEO_DEFAULT_ZOOM = 5
 
 
 def _parse_latlng(value: str | None) -> tuple[float, float] | None:
-    """Parse a NagVis ``worldmap_center`` value (``"lat,lng"``) into floats."""
-    if not value:
-        return None
-    parts = [s.strip() for s in value.split(",")]
+    """Parse a NagVis ``worldmap_center`` value (``"lat,lng"``) into floats.
+
+    Not range-checked: NagVis saved Leaflet's centre, which runs past the
+    antimeridian once the map is panned across it.
+    """
+    parts = (value or "").split(",")
     if len(parts) != 2:
         return None
-    try:
-        return float(parts[0]), float(parts[1])
-    except ValueError:
-        return None
+    lat, lng = parse_degrees(parts[0]), parse_degrees(parts[1])
+    return None if lat is None or lng is None else (lat, lng)
 
 
 def _geo_view(p: dict[str, str]) -> WorldmapView:
@@ -514,12 +515,8 @@ def _geo_view(p: dict[str, str]) -> WorldmapView:
     """
     lat, lng = _parse_latlng(p.get("worldmap_center")) or (_GEO_DEFAULT_LAT, _GEO_DEFAULT_LNG)
     zoom = p.get("worldmap_zoom") or p.get("geomap_zoom")
-    view: WorldmapView = {
-        "type": "worldmap",
-        "lat": lat,
-        "lng": lng,
-        "zoom": _int(zoom, _GEO_DEFAULT_ZOOM) if zoom else _GEO_DEFAULT_ZOOM,
-    }
+    lat, lng, zoom_level = bounded_view(lat, lng, _int(zoom, _GEO_DEFAULT_ZOOM))
+    view: WorldmapView = {"type": "worldmap", "lat": lat, "lng": lng, "zoom": zoom_level}
     saturate = p.get("worldmap_tiles_saturate")
     if saturate not in (None, ""):
         view["tile_saturate"] = float(max(0, min(100, _int(saturate, 100))))

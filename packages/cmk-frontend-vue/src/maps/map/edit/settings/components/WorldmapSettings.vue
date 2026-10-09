@@ -17,7 +17,11 @@ import { computed } from 'vue'
 
 import EditField from '@/maps/map/edit/components/EditField.vue'
 import SettingsSection from '@/maps/map/edit/settings/components/SettingsSection.vue'
-import type { SettingsForm } from '@/maps/map/edit/settings/settingsForm'
+import {
+  GEO_MAX_ZOOM,
+  type SettingsForm,
+  geoViewOutOfRange
+} from '@/maps/map/edit/settings/settingsForm'
 import { useSettings } from '@/maps/services/context'
 import { isAllowedTileUrl } from '@/maps/shared/worldmap/tileLayer'
 
@@ -51,6 +55,8 @@ const groupNameMissing = computed(
   () => props.saveAttempted && !form.value.worldmap_auto_filter_value
 )
 
+const outOfRange = computed(() => new Set(geoViewOutOfRange(form.value)))
+
 // Tiles are fetched by the browser, so a server the site has not configured is
 // blocked by the page policy and the map just stays empty — say it here.
 const tiles = useSettings().tiles
@@ -66,16 +72,38 @@ const tileUrlBlocked = computed(
     <div class="maps-worldmap-settings__view">
       <div class="maps-worldmap-settings__coords">
         <EditField :label="_t('Latitude')">
-          <CmkInput v-model="form.worldmap_lat" type="number" />
+          <CmkInput
+            v-model="form.worldmap_lat"
+            type="number"
+            min="-90"
+            max="90"
+            :external-errors="outOfRange.has('lat') ? [_t('Between -90 and 90.')] : []"
+          />
         </EditField>
         <EditField :label="_t('Longitude')">
-          <CmkInput v-model="form.worldmap_lng" type="number" />
+          <CmkInput
+            v-model="form.worldmap_lng"
+            type="number"
+            min="-180"
+            max="180"
+            :external-errors="outOfRange.has('lng') ? [_t('Between -180 and 180.')] : []"
+          />
         </EditField>
         <EditField
           :label="_t('Zoom')"
           :help="_t('Pan/zoom the map first, then reopen settings to capture the current view.')"
         >
-          <CmkInput v-model="form.worldmap_zoom" type="number" min="1" max="18" />
+          <CmkInput
+            v-model="form.worldmap_zoom"
+            type="number"
+            min="0"
+            :max="GEO_MAX_ZOOM"
+            :external-errors="
+              outOfRange.has('zoom')
+                ? [_t('A whole number from 0 to %{max}.', { max: GEO_MAX_ZOOM })]
+                : []
+            "
+          />
         </EditField>
       </div>
       <CmkButton

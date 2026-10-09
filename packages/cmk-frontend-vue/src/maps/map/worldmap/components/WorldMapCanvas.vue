@@ -317,7 +317,8 @@ function currentViewport(): WorldmapViewport | null {
   if (!map) {
     return null
   }
-  const centre = map.getCenter()
+  // Panned across the antimeridian, Leaflet's centre runs past ±180.
+  const centre = map.getCenter().wrap()
   return { lat: centre.lat, lng: centre.lng, zoom: Math.round(map.getZoom()) }
 }
 

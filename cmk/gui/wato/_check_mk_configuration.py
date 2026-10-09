@@ -230,6 +230,7 @@ def register(
     config_variable_registry.register(ConfigVariableDefaultDynamicVisualsPermission)
     config_variable_registry.register(ConfigVariableLogLogonFailures)
     config_variable_registry.register(ConfigVariableLockOnLogonFailures)
+    config_variable_registry.register(ConfigVariableTimeoutOnLogonFailures)
     config_variable_registry.register(ConfigVariablePasswordPolicy)
     config_variable_registry.register(ConfigVariableSessionManagement)
     config_variable_registry.register(ConfigVariableSingleUserSession)
@@ -2501,12 +2502,39 @@ ConfigVariableLockOnLogonFailures = ConfigVariable(
         help_text=Help(
             "This options enables automatic locking of user accounts "
             "after the configured number of consecutive invalid login "
-            "attempts. These attempts include failed two factor "
-            "authentication events. Once the account is locked only an "
-            "admin user can unlock it. Beware: Also the admin users will "
+            "attempts."
+            "<ul>"
+            "<li>Admin users can unlock accounts.</li>"
+            "<li>Timeouts will always take priority but "
+            "all attempts will still be tracked.</li>"
+            "<li>These attempts include failed two factor "
+            "authentication events.</li>"
+            "</ul>"
+            "Beware: Also the admin users will "
             "be locked that way. You need to manually edit "
             "<tt>etc/htpasswd</tt> and remove the <tt>!</tt> in case "
             "you are locked out completely."
+        ),
+    ),
+)
+
+ConfigVariableTimeoutOnLogonFailures = ConfigVariable(
+    group=ConfigVariableGroupUserManagement,
+    primary_domain=ConfigDomainGUI,
+    ident="time_based_lock_out_enabled",
+    form_spec=lambda context: fs.BooleanChoice(  # noqa: ARG005
+        title=Title("Timeout user accounts and IP addresses after multiple failed logon attempts"),
+        label=Label("Enable login timeout"),
+        help_text=Help(
+            "This options enables automatic timing out of user accounts "
+            "after a number of consecutive invalid login attempts."
+            "<ul>"
+            "<li>These attempts include failed two factor "
+            "authentication events.</li>"
+            "<li> Users have 5 attempts before timeout.</li>"
+            "<li> If 2 unique users from the same IP are timed out, a 15 minute IP timeout is applied.</li>"
+            "<li> Failed attempts are tracked in 3 minute intervals</li>"
+            "</ul>"
         ),
     ),
 )

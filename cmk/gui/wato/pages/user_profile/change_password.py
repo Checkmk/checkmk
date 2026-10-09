@@ -114,6 +114,7 @@ class UserChangePasswordPage(Page):
                 config.user_connections,
                 now,
                 config.default_user_profile,
+                time_based_lock_out_enabled=False,
                 pprint_value=config.wato_pprint_config,
                 debug=config.debug,
             )

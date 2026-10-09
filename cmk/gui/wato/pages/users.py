@@ -11,6 +11,7 @@ import base64
 import time
 import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
+from datetime import datetime
 from typing import cast, Literal, NamedTuple, overload, override, TypedDict
 
 from cmk.ccc.site import omd_site, SiteId
@@ -570,6 +571,7 @@ class ModeUsers(WatoMode):
             limit=table_row_limit,
         ) as table:
             online_threshold = time.time() - user_online_maxage
+            login_timeout_store = userdb.LoginTimeoutStore()
             for uid, user_spec in sorted(entries, key=lambda x: x[1].get("alias", x[0]).lower()):
                 table.row()
 
@@ -705,6 +707,10 @@ class ModeUsers(WatoMode):
                 table.cell(_("Authentication"), auth_method)
 
                 table.cell(_("State"), sortable=False)
+                if login_timeout_store.timeout_status(uid, None, datetime.now(), cleanup=False):
+                    html.static_icon(
+                        StaticIcon(IconNames.user_locked), title=_("Temporarily timed out")
+                    )
                 if user_spec.get("locked", False):
                     html.static_icon(
                         StaticIcon(IconNames.user_locked), title=_("The login is currently locked")

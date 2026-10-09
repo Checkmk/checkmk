@@ -123,6 +123,7 @@ def test_registered_configvars() -> None:
         "statistics_interval",
         "table_row_limit",
         "tcp_connect_timeout",
+        "time_based_lock_out_enabled",
         "translate_snmptraps",
         "trusted_certificate_authorities",
         "ui_theme",

@@ -240,7 +240,10 @@ def test_failed_login_counter_human(site: Site) -> None:
     """test that all authentication methods count towards the failed login attempts"""
     session = CMKWebSession(site)
 
-    with _reset_failed_logins(site, username := ADMIN_USER):
+    with (
+        update_global_config(site, ["lock_on_logon_failures = 10"]),
+        _reset_failed_logins(site, username := ADMIN_USER),
+    ):
         session.get(
             f"/{site.id}/check_mk/api/1.0/version",
             headers={"Authorization": f"Bearer {username} wrong_password"},
@@ -279,7 +282,10 @@ def test_failed_login_counter_automation(with_automation_user: tuple[str, str], 
     session = CMKWebSession(site)
 
     username, _password = with_automation_user
-    with _reset_failed_logins(site, username):
+    with (
+        update_global_config(site, ["lock_on_logon_failures = 10"]),
+        _reset_failed_logins(site, username),
+    ):
         session.get(
             f"/{site.id}/check_mk/api/1.0/version",
             headers={"Authorization": f"Bearer {username} wrong_password"},

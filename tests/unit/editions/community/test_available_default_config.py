@@ -82,6 +82,7 @@ def test_default_config_from_plugins() -> None:
         "default_user_profile",
         "log_logon_failures",
         "lock_on_logon_failures",
+        "time_based_lock_out_enabled",
         "ldap_quarantine_period",
         "single_user_session",
         "site_subject_alternative_names",

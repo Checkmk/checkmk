@@ -2810,6 +2810,7 @@ CASES: Mapping[str, list[Case]] = {
     "statistics_interval": UNBOUNDED_TIME_SPAN_CASES,
     "table_row_limit": MIN_ONE_INTEGER_CASES,
     "tcp_connect_timeout": MIN_ONE_FLOAT_CASES,
+    "time_based_lock_out_enabled": CHECKBOX_CASES,
     "translate_snmptraps": [
         CasePass("disabled", False),
         CasePass("configured", (True, {"add_description": True})),

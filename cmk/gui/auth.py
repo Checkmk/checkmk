@@ -227,6 +227,7 @@ def _check_auth_by_header(
     parse_token: Callable[[str], tuple[str, str]],
     custom_user_attributes: Sequence[CustomUserAttrSpec],
     lock_on_logon_failures: int | None,
+    time_based_lock_out_enabled: bool,
     log_logon_failures: bool,
     default_user_profile: UserSpec,
     user_connections: Sequence[UserConnectionConfig],
@@ -261,6 +262,7 @@ def _check_auth_by_header(
         user_attributes,
         user_connections,
         default_user_profile,
+        time_based_lock_out_enabled=time_based_lock_out_enabled,
         pprint_value=pprint_value,
         debug=debug,
     ):
@@ -274,6 +276,7 @@ def _check_auth_by_header(
         user_connections,
         now=datetime.now(),
         lock_on_logon_failures=lock_on_logon_failures,
+        time_based_lock_out_enabled=time_based_lock_out_enabled,
         log_logon_failures=log_logon_failures,
         pprint_value=pprint_value,
     )
@@ -298,6 +301,7 @@ def _check_auth_by_basic_header(config: Config) -> UserId | None:
             _parse_basic_auth_token,
             config.wato_user_attrs,
             config.lock_on_logon_failures,
+            config.time_based_lock_out_enabled,
             config.log_logon_failures,
             config.default_user_profile,
             config.user_connections,
@@ -414,6 +418,7 @@ def _check_auth_by_bearer_header(config: Config) -> UserId | None:
         _parse_bearer_token,
         config.wato_user_attrs,
         config.lock_on_logon_failures,
+        config.time_based_lock_out_enabled,
         config.log_logon_failures,
         config.default_user_profile,
         config.user_connections,
@@ -542,6 +547,7 @@ def _verify_user_login(
     user_connections: Sequence[UserConnectionConfig],
     default_user_profile: UserSpec,
     *,
+    time_based_lock_out_enabled: bool,
     pprint_value: bool,
     debug: bool,
 ) -> bool:
@@ -559,6 +565,7 @@ def _verify_user_login(
                 user_connections,
                 datetime.now(),
                 default_user_profile,
+                time_based_lock_out_enabled=time_based_lock_out_enabled,
                 pprint_value=pprint_value,
                 debug=debug,
             )

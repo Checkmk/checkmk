@@ -45,7 +45,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_brea
 from cmk.gui.config import Config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
-from cmk.gui.exceptions import HTTPRedirect, MKUserError
+from cmk.gui.exceptions import HTTPRedirect, MKHTTPException, MKUserError
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, response
@@ -80,6 +80,7 @@ from cmk.gui.userdb import (
     is_two_factor_backup_code_valid,
     is_two_factor_login_enabled,
     load_two_factor_credentials,
+    LoginTimeoutStore,
     make_two_factor_backup_codes,
     on_failed_login,
     user_locked,
@@ -155,27 +156,50 @@ def _log_event_auth(remote_ip: str | None, two_factor_method: str) -> None:
     )
 
 
-def _handle_failed_auth(
+class UserTimedOutError(MKHTTPException):
+    """Raised if a user is currently timed out."""
+
+
+class UserLockedError(MKHTTPException):
+    """Raised if a user is locked."""
+
+
+def _validate_timeout_lockout(
     user_id: UserId,
     user_spec: UserSpec,
+    time_based_lock_out_enabled: bool,
+    remote_ip: str | None,
+    now: datetime.datetime,
+) -> None:
+    """
+    Order here matters to prevent username enumeration. This may change if we choose to remove lockout error on auth request being displayed.
+    """
+    if time_based_lock_out_enabled and LoginTimeoutStore().timeout_status(user_id, remote_ip, now):
+        raise UserTimedOutError
+    if user_locked(user_id, user_spec):
+        raise UserLockedError
+
+
+def _handle_failed_auth(
+    user_id: UserId,
     user_attributes: Sequence[tuple[str, UserAttribute]],
     lock_on_logon_failures: int | None,
+    time_based_lock_out_enabled: bool,
     log_logon_failures: bool,
     user_connections: Sequence[UserConnectionConfig],
     pprint_value: bool,
+    now: datetime.datetime,
 ) -> None:
     on_failed_login(
         user_id,
         user_attributes,
         user_connections,
-        now=datetime.datetime.now(),
+        now=now,
         lock_on_logon_failures=lock_on_logon_failures,
+        time_based_lock_out_enabled=time_based_lock_out_enabled,
         log_logon_failures=log_logon_failures,
         pprint_value=pprint_value,
     )
-    if user_locked(user_id, user_spec):
-        session.logout()
-        raise MKUserError(None, _("User is locked"), HTTPStatus.UNAUTHORIZED)
 
 
 def _handle_success_auth(user_id: UserId) -> None:
@@ -1340,19 +1364,28 @@ class UserLoginTwoFactor(Page):
                 ctx.config.sites,
                 get_user_attributes(ctx.config.wato_user_attrs),
                 ctx.config.lock_on_logon_failures,
+                ctx.config.time_based_lock_out_enabled,
                 ctx.config.log_logon_failures,
                 ctx.config.user_connections,
                 ctx.config.wato_pprint_config,
             )
             self._set_json_response(
                 http_client.UNAUTHORIZED,
-                {"message": _("Invalid code provided")},
+                {"message": _("Invalid code provided"), "reason": "invalid_code"},
             )
         except HTTPRedirect as e:
             self._set_json_response(http_client.OK, {"status": "OK", "redirect": e.url})
+        except UserTimedOutError:
+            self._set_json_response(
+                http_client.UNAUTHORIZED, {"message": _("User is timed out"), "reason": "timed_out"}
+            )
+        except UserLockedError:
+            self._set_json_response(
+                http_client.UNAUTHORIZED, {"message": _("User is locked"), "reason": "locked"}
+            )
         except MKUserError as e:
             status_code = getattr(e, "status", http_client.BAD_REQUEST)
-            self._set_json_response(status_code, {"message": str(e)})
+            self._set_json_response(status_code, {"message": str(e), "reason": "invalid_code"})
         except Exception as e:
             self._set_json_response(http_client.INTERNAL_SERVER_ERROR, {"message": str(e)})
 
@@ -1374,11 +1407,19 @@ class UserLoginTwoFactor(Page):
         site_configs: SiteConfigurations,
         user_attributes: Sequence[tuple[str, UserAttribute]],
         lock_on_logon_failures: int | None,
+        time_based_lock_out_enabled: bool,
         log_logon_failures: bool,
         user_connections: Sequence[UserConnectionConfig],
         pprint_value: bool,
     ) -> None:
         assert user.id is not None
+        _validate_timeout_lockout(
+            user.id,
+            user.attributes,
+            time_based_lock_out_enabled,
+            request.remote_ip,
+            datetime.datetime.now(),
+        )
         if "totp_credentials" in available_methods and (
             totp_code := request.get_validated_type_input(Password, "_totp_code")
         ):
@@ -1394,12 +1435,13 @@ class UserLoginTwoFactor(Page):
             _log_event_auth(request.remote_ip, "Authenticator application (TOTP)")
             _handle_failed_auth(
                 user.id,
-                user.attributes,
                 user_attributes,
                 lock_on_logon_failures,
+                time_based_lock_out_enabled,
                 log_logon_failures,
                 user_connections,
                 pprint_value,
+                datetime.datetime.now(),
             )
             raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
 
@@ -1422,12 +1464,13 @@ class UserLoginTwoFactor(Page):
             _log_event_auth(request.remote_ip, "Backup code")
             _handle_failed_auth(
                 user.id,
-                user.attributes,
                 user_attributes,
                 lock_on_logon_failures,
+                time_based_lock_out_enabled,
                 log_logon_failures,
                 user_connections,
                 pprint_value,
+                datetime.datetime.now(),
             )
             raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
 
@@ -1478,17 +1521,23 @@ class UserLoginTwoFactor(Page):
         html.close_div()
 
         # Handle authentication attempts
-        self._check_totp_and_backup(
-            ctx.request,
-            available_methods,
-            credentials,
-            ctx.config.sites,
-            get_user_attributes(ctx.config.wato_user_attrs),
-            ctx.config.lock_on_logon_failures,
-            ctx.config.log_logon_failures,
-            ctx.config.user_connections,
-            ctx.config.wato_pprint_config,
-        )
+        try:
+            self._check_totp_and_backup(
+                ctx.request,
+                available_methods,
+                credentials,
+                ctx.config.sites,
+                get_user_attributes(ctx.config.wato_user_attrs),
+                ctx.config.lock_on_logon_failures,
+                ctx.config.time_based_lock_out_enabled,
+                ctx.config.log_logon_failures,
+                ctx.config.user_connections,
+                ctx.config.wato_pprint_config,
+            )
+        except UserTimedOutError:
+            raise MKUserError(None, _("User is timed out"), HTTPStatus.UNAUTHORIZED)
+        except UserLockedError:
+            raise MKUserError(None, _("User is locked"), HTTPStatus.UNAUTHORIZED)
 
         html.footer()
 
@@ -1520,15 +1569,21 @@ class UserWebAuthnLoginComplete(JsonPage):
 
         if not is_two_factor_login_enabled(user.id):
             raise MKGeneralException(_("Two-factor authentication not enabled"))
-        json_data = json.loads(ctx.request.get_data())
-        data = AuthenticatorAssertionResponse.from_dict(json_data)
-        logger.debug("ClientData: %(client_data)r", {"client_data": data.client_data})
-        logger.debug(
-            "AuthenticatorData: %(authenticator_data)r",
-            {"authenticator_data": data.authenticator_data},
-        )
-
         try:
+            _validate_timeout_lockout(
+                user.id,
+                user.attributes,
+                ctx.config.time_based_lock_out_enabled,
+                ctx.request.remote_ip,
+                datetime.datetime.now(),
+            )
+            json_data = json.loads(ctx.request.get_data())
+            data = AuthenticatorAssertionResponse.from_dict(json_data)
+            logger.debug("ClientData: %(client_data)r", {"client_data": data.client_data})
+            logger.debug(
+                "AuthenticatorData: %(authenticator_data)r",
+                {"authenticator_data": data.authenticator_data},
+            )
             make_fido2_server(ctx.request.host).authenticate_complete(
                 state=session.session_info.webauthn_action_state,
                 credentials=[
@@ -1539,16 +1594,21 @@ class UserWebAuthnLoginComplete(JsonPage):
                     raw_id=b64decode(json_data["credentialId"]), response=data
                 ),
             )
+        except UserTimedOutError:
+            raise MKUserError(None, _("User is timed out"), HTTPStatus.UNAUTHORIZED)
+        except UserLockedError:
+            raise MKUserError(None, _("User is locked"), HTTPStatus.UNAUTHORIZED)
         except ValueError:
             _log_event_auth(ctx.request.remote_ip, "Webauthn")
             _handle_failed_auth(
                 user.id,
-                user.attributes,
                 get_user_attributes(ctx.config.wato_user_attrs),
                 ctx.config.lock_on_logon_failures,
+                ctx.config.time_based_lock_out_enabled,
                 ctx.config.log_logon_failures,
                 ctx.config.user_connections,
                 ctx.config.wato_pprint_config,
+                datetime.datetime.now(),
             )
             raise MKUserError(None, _("WebAuthn login failed"), HTTPStatus.UNAUTHORIZED)
 

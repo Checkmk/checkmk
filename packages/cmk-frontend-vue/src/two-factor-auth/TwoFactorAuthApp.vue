@@ -17,7 +17,7 @@ import TwoFactorAuthHeader from './components/TwoFactorAuthHeader.vue'
 import TwoFactorAuthLinks from './components/TwoFactorAuthLinks.vue'
 import TwoFactorEnabledMethods from './components/TwoFactorEnabledMethods.vue'
 import type { AuthMode } from './twoFactorAuth'
-import { completeWebAuthnLogin, verifyCode } from './twoFactorAuthService'
+import { AuthFailureError, completeWebAuthnLogin, verifyCode } from './twoFactorAuthService'
 import type { WebAuthnMessage } from './webauthn'
 
 const { _t } = usei18n()
@@ -166,14 +166,21 @@ async function handleSubmit() {
       const redirectUrl = response.redirect || originTarget.value
       window.location.href = redirectUrl
     }
-  } catch {
+  } catch (error: unknown) {
     isSubmitting.value = false
-    message.value = buildMessage()
+    message.value = buildMessage(error)
     await clearAndRefocus()
   }
 }
 
-function buildMessage(): Message {
+function buildMessage(error: unknown): Message {
+  if (error instanceof AuthFailureError && error.reason !== 'invalid_code') {
+    return {
+      title: error.message,
+      lines: [],
+      type: 'error'
+    }
+  }
   switch (currentMode.value) {
     case 'totp_credentials':
       return {

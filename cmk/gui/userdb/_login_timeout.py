@@ -10,7 +10,7 @@ are treated equally.
 
 import json
 from collections.abc import Generator, Mapping
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from datetime import datetime, timedelta
 from typing import Final
 
@@ -107,6 +107,14 @@ class IPEntry(BaseModel):
             self.timed_out_at = now
 
 
+class TimeoutStatus(BaseModel):
+    user_timed_out: bool = False
+    ip_timed_out: bool = False
+
+    def __bool__(self) -> bool:
+        return self.user_timed_out or self.ip_timed_out
+
+
 class TimeoutData(BaseModel):
     users: dict[str, UserEntry] = Field(default_factory=dict)
     ips: dict[str, IPEntry] = Field(default_factory=dict)
@@ -115,10 +123,13 @@ class TimeoutData(BaseModel):
         """Remove any entry that has exceeded its lifetime unless its tracking an active timeout"""
 
         def _filter_entries[T: (UserEntry, IPEntry)](entries: Mapping[str, T]) -> dict[str, T]:
+            # Keep entries that are still locked, or recent enough that they might still get
+            # locked. Drop everything else mainly expired locks, and expired entries that never locked.
             return {
                 k: v
                 for k, v in entries.items()
-                if v.is_locked(now) or now - v.last_attempt <= ENTRY_STORAGE_LIFETIME
+                if v.is_locked(now)
+                or (v.timed_out_at is None and now - v.last_attempt <= ENTRY_STORAGE_LIFETIME)
             }
 
         self.users = _filter_entries(self.users)
@@ -145,24 +156,26 @@ class LoginTimeoutStore:
         self._io.write(data.model_dump_json().encode())
 
     @contextmanager
-    def read_write_locked(self, now: datetime) -> Generator[TimeoutData]:  # noqa: ARG002
+    def read_write_locked(self, now: datetime) -> Generator[TimeoutData]:
         with self._locked():
             data = self._read()
+            data.cleanup(now)
             yield data
             self._write(data)
 
-    def is_timed_out(self, user_id: UserId, remote_ip: str | None, now: datetime) -> bool:
-        with self.read_write_locked(now) as data:
-            data.cleanup(now)
+    def timeout_status(
+        self, user_id: UserId, remote_ip: str | None, now: datetime, cleanup: bool = True
+    ) -> TimeoutStatus:
+        with self.read_write_locked(now) if cleanup else nullcontext(self._read()) as data:
             ip_entry = data.ips.get(_hash_ip(remote_ip)) if remote_ip else None
-            if ip_entry is not None and ip_entry.is_locked(now):
-                return True
             user_entry = data.users.get(user_id)
-            return user_entry is not None and user_entry.is_locked(now)
+            return TimeoutStatus(
+                user_timed_out=user_entry is not None and user_entry.is_locked(now),
+                ip_timed_out=ip_entry is not None and ip_entry.is_locked(now),
+            )
 
     def record_failed_login(self, user_id: UserId, remote_ip: str | None, now: datetime) -> None:
         with self.read_write_locked(now) as data:
-            data.cleanup(now)
             user_entry = data.users.setdefault(user_id, UserEntry(attempts=0, last_attempt=now))
             user_currently_locked = user_entry.is_locked(now)
             user_entry.add_attempt(now)
@@ -176,6 +189,5 @@ class LoginTimeoutStore:
 
     def clear_on_success(self, user_id: UserId, now: datetime) -> None:
         with self.read_write_locked(now) as data:
-            data.cleanup(now)
             if user_id in data.users:
                 del data.users[user_id]

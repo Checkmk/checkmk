@@ -16,15 +16,18 @@ from cmk.crypto.password import Password
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.user_connection_config_types import UserConnectionConfig
+from cmk.gui.utils import roles
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.utils.security_event import log_security_event
 
 from ._connections import active_connections, get_connection
+from ._login_timeout import LoginTimeoutStore
 from ._user_attribute import UserAttribute
 from ._user_spec import new_user_template
 from .store import load_cached_profile, load_user, load_users, save_users
@@ -50,10 +53,23 @@ def check_credentials(
     now: datetime,
     default_user_profile: UserSpec,
     *,
+    time_based_lock_out_enabled: bool,
     pprint_value: bool,
     debug: bool,
 ) -> UserId | Literal[False]:
     """Verify the credentials given by a user using all auth connections"""
+    if (
+        # Timeout is checked before lockout to prevent username enum as we timeout both real and fake users.
+        time_based_lock_out_enabled
+        and not roles.is_automation_user(username)
+        and LoginTimeoutStore().timeout_status(username, request.remote_ip, now)
+    ):
+        auth_logger.debug(
+            "User '%(user_id)s' is not allowed to login: User or IP is timed out",
+            {"user_id": username},
+        )
+        return False
+
     user_attribute_connector = _connection_id_of_user(username)
 
     connections = sorted(

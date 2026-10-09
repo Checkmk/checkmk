@@ -486,12 +486,12 @@ def configuration_authentication() -> Mapping[str, DictElement]:
                 title=Title("Authentication type"),
                 help_text=Help(
                     "Choose how Checkmk logs in to AWS.<br>"
-                    "<b>Access key:</b> the access key ID and secret access key of an IAM user. "
-                    "Use this when Checkmk does not run on AWS.<br>"
+                    "<b>Access key:</b> the access key ID and secret access key of an IAM user.<br>"
                     "<b>Default AWS credentials:</b> Checkmk stores no secret. The agent uses the "
                     "default credential chain of the AWS SDK: environment variables, the files in "
                     "<tt>~/.aws</tt> of the site user, and the instance profile or EKS Pod Identity "
-                    "when Checkmk runs on AWS. Use this when Checkmk runs on AWS.<br>"
+                    "when Checkmk runs on AWS. Recommended on AWS, because AWS renews the "
+                    "instance profile and EKS Pod Identity credentials itself.<br>"
                     "Both can be combined with an IAM role. The agent then assumes this role and "
                     "monitors the account the role belongs to. The AWS CloudTrail log shows these "
                     "calls with the session name <tt>checkmk-&lt;site&gt;</tt>.<br>"

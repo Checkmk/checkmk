@@ -152,7 +152,7 @@ class InternalPainter:
         derive: Callable[[Rows, Cell, Sequence[ColumnName], LoggedInUser, PainterContext], None]
         | None = None,
         render: RowFunction[CellSpec],
-        compute_data: Callable[[Row, PainterContext], object] | None = None,
+        compute_data: Callable[[Row, LoggedInUser, PainterContext], object] | None = None,
         export_for_python: RowFunction[object] | None = None,
         export_for_csv: RowFunction[str | HTML] | None = None,
         export_for_json: RowFunction[object] | None = None,
@@ -297,7 +297,7 @@ class InternalPainter:
     ) -> object:
         if self._compute_data_function is None:
             return self.render(row, cell, acting_user, context)[1]
-        return self._compute_data_function(row, context)
+        return self._compute_data_function(row, acting_user, context)
 
     def export_for_python(
         self, row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext

@@ -14,6 +14,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.painter import Cell, InternalPainter
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.views.perfometer.base import Perfometer
 from cmk.gui.views.perfometer.painter import make_perfometer_painter
 from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
@@ -61,7 +62,7 @@ def test_rows_sort_by_their_perfometer_with_the_undrawn_ones_first(
     ]
 
     def _key(row: Row) -> tuple[str, float]:
-        return Perfometer(row, {}, _REGISTERED_PERFOMETERS).sort_value()
+        return Perfometer(row, {}, _REGISTERED_PERFOMETERS, debug=False).sort_value()
 
     assert [_key(row)[1] for row in sorted(data, key=_key)] == [
         -float("inf"),
@@ -73,8 +74,10 @@ def test_rows_sort_by_their_perfometer_with_the_undrawn_ones_first(
 
 @pytest.mark.usefixtures("request_context")
 def test_sort_value_groups_by_the_drawing_plugin() -> None:
-    drawn = Perfometer(_row("kube_memory_usage=42;;;0;"), {}, _REGISTERED_PERFOMETERS)
-    undrawn = Perfometer(_row("kube_memory_request=42;;;0;"), {}, _REGISTERED_PERFOMETERS)
+    drawn = Perfometer(_row("kube_memory_usage=42;;;0;"), {}, _REGISTERED_PERFOMETERS, debug=False)
+    undrawn = Perfometer(
+        _row("kube_memory_request=42;;;0;"), {}, _REGISTERED_PERFOMETERS, debug=False
+    )
     assert drawn.sort_value() == ("kube_memory_usage", 42.0)
     assert undrawn.sort_value() == ("", -float("inf"))
 
@@ -90,8 +93,8 @@ def test_a_segment_takes_the_attributes_of_its_registered_metric() -> None:
         )
     }
     title, html = Perfometer(
-        _row("kube_memory_usage=209715200;;;0;"), metrics, _REGISTERED_PERFOMETERS
-    ).render()
+        _row("kube_memory_usage=209715200;;;0;"), metrics, _REGISTERED_PERFOMETERS, debug=False
+    ).render(TemperatureUnit.CELSIUS, "#ffffff")
     assert title == "200 MiB"
     assert html is not None
     assert "background-color: #28a2f3" in str(html)

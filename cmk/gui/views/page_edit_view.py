@@ -13,12 +13,13 @@ import ast
 import datetime as dt
 import string
 from collections.abc import Iterator, Mapping, Sequence
+from functools import partial
 from typing import Any, Literal, NamedTuple, overload, override, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard.type_defs import ViewDashletConfig
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
@@ -99,18 +100,18 @@ def page_edit_view(ctx: PageContext) -> None:
         get_all_views(),
         UserPermissions.from_config(ctx.config, permission_registry),
         ctx.config,
-        custom_field_handler=_render_editable_view_config,
-        create_handler=_create_editable_view,
+        custom_field_handler=partial(_render_editable_view_config, config=ctx.config),
+        create_handler=partial(_create_editable_view, config=ctx.config),
         info_handler=get_view_infos,
     )
 
 
-def _render_editable_view_config(view_spec: ViewSpec) -> None:
-    render_view_config(view_spec, allow_browser_reload=True)
+def _render_editable_view_config(view_spec: ViewSpec, *, config: Config) -> None:
+    render_view_config(view_spec, allow_browser_reload=True, config=config)
 
 
-def _create_editable_view(old_view: ViewSpec, view: ViewSpec) -> ViewSpec:
-    return create_view_from_valuespec(old_view, view, allow_browser_reload=True)
+def _create_editable_view(old_view: ViewSpec, view: ViewSpec, *, config: Config) -> ViewSpec:
+    return create_view_from_valuespec(old_view, view, allow_browser_reload=True, config=config)
 
 
 def view_editor_options() -> list[
@@ -864,7 +865,11 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
 
 
 def render_view_config(
-    view_spec: ViewSpec, general_properties: bool = True, *, allow_browser_reload: bool
+    view_spec: ViewSpec,
+    general_properties: bool = True,
+    *,
+    allow_browser_reload: bool,
+    config: Config,
 ) -> None:
     value = _transform_view_to_valuespec_value(view_spec)
 
@@ -889,12 +894,12 @@ def render_view_config(
         ).render_input("macros", value.get("inventory_join_macros"))
 
     painter_context = PainterContext(
-        config=PainterConfig.from_config(active_config),
+        config=PainterConfig.from_config(config),
         request=request,
         painter_options=PainterOptions.get_instance(),
         theme=theme,
         url_renderer=RenderLink(request, response, display_options),
-        user_permissions=UserPermissions.from_config(active_config, permission_registry),
+        user_permissions=UserPermissions.from_config(config, permission_registry),
     )
     vs_columns = view_editor_column_spec("columns", ds_name, painter_context)
     vs_columns.render_input("columns", value["columns"])
@@ -981,7 +986,7 @@ def _update_view_with_valuespec_values(
 # old_view is the old view dict which might be loaded from storage.
 # view is the new dict object to be updated.
 def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](
-    old_view: T, view: T, *, allow_browser_reload: bool
+    old_view: T, view: T, *, allow_browser_reload: bool, config: Config
 ) -> T:
     ds_name = old_view.get("datasource") or request.get_ascii_input_mandatory("datasource")
     view["datasource"] = ds_name
@@ -992,12 +997,12 @@ def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](
         _update_view_with_valuespec_values(view, ident, attrs)
 
     painter_context = PainterContext(
-        config=PainterConfig.from_config(active_config),
+        config=PainterConfig.from_config(config),
         request=request,
         painter_options=PainterOptions.get_instance(),
         theme=theme,
         url_renderer=RenderLink(request, response, display_options),
-        user_permissions=UserPermissions.from_config(active_config, permission_registry),
+        user_permissions=UserPermissions.from_config(config, permission_registry),
     )
     update_view(
         "view", view_editor_general_properties(ds_name, allow_browser_reload=allow_browser_reload)

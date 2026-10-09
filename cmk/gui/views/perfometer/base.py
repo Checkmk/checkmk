@@ -7,12 +7,10 @@ from collections.abc import Mapping, Sequence
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics as metrics_v1
-from cmk.gui.config import active_config
 from cmk.gui.graphing import (
     drawn_segments,
     DrawnSegment,
     evaluated_perfometer,
-    get_temperature_unit,
     perfometer_label,
     perfometer_sort_value,
     PerfometerFromAPI,
@@ -20,9 +18,8 @@ from cmk.gui.graphing import (
 )
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Row
-from cmk.gui.view_utils import get_themed_perfometer_bg_color
+from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.web.utils.html import HTML
 
 
@@ -32,8 +29,9 @@ class Perfometer:
         row: Row,
         registered_metrics: Mapping[str, metrics_v1.Metric],
         registered_perfometers: Mapping[str, PerfometerFromAPI],
+        *,
+        debug: bool,
     ) -> None:
-        self._temperature_unit = get_temperature_unit(user, active_config.default_temperature_unit)
         self._evaluated = evaluated_perfometer(
             row["service_perf_data"],
             row["service_check_command"],
@@ -42,15 +40,17 @@ class Perfometer:
             registered_perfometers=registered_perfometers,
             registered_metrics=registered_metrics,
             registered_translations=registered_translations(),
-            debug=active_config.debug,
+            debug=debug,
         )
 
-    def render(self) -> tuple[str | None, HTML | None]:
+    def render(
+        self, temperature_unit: TemperatureUnit, background_color: str
+    ) -> tuple[str | None, HTML | None]:
         if self._evaluated is None:
             return None, None
         return (
-            perfometer_label(self._evaluated, self._temperature_unit),
-            _render_metricometer(drawn_segments(self._evaluated)),
+            perfometer_label(self._evaluated, temperature_unit),
+            _render_metricometer(drawn_segments(self._evaluated), background_color),
         )
 
     def sort_value(self) -> tuple[str, float]:
@@ -89,13 +89,12 @@ def _render_row(segments: Sequence[DrawnSegment], background_color: str) -> HTML
     )
 
 
-def _render_metricometer(rows: Sequence[Sequence[DrawnSegment]]) -> HTML:
+def _render_metricometer(rows: Sequence[Sequence[DrawnSegment]], background_color: str) -> HTML:
     if len(rows) not in (1, 2):
         raise MKGeneralException(
             _("Invalid Perf-O-Meter definition %(stack)r: only one or two entries are allowed")
             % {"stack": rows}
         )
-    background_color = get_themed_perfometer_bg_color()
     h = HTML.empty().join(_render_row(row, background_color) for row in rows)
     if len(rows) == 2:
         h = HTMLWriter.render_div(h, class_="stacked")

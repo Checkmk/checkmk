@@ -106,7 +106,9 @@ class PainterOptionShowInternalTreePaths(PainterOption):
         )
 
 
-def _compute_data_inventory_tree(row: Row, _context: PainterContext) -> ImmutableTree:
+def _compute_data_inventory_tree(
+    row: Row, _user: LoggedInUser, _context: PainterContext
+) -> ImmutableTree:
     try:
         _validate_inventory_tree_uniqueness(row)
     except MultipleInventoryTreesError:
@@ -116,11 +118,11 @@ def _compute_data_inventory_tree(row: Row, _context: PainterContext) -> Immutabl
 
 
 def _render_inventory_tree(
-    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
     if (error_cell := _multiple_trees_cell(row)) is not None:
         return error_cell
-    if not (tree := _compute_data_inventory_tree(row, context)):
+    if not (tree := _compute_data_inventory_tree(row, acting_user, context)):
         return "", ""
 
     tree_renderer = TreeRenderer(
@@ -140,9 +142,9 @@ def _render_inventory_tree(
 
 
 def _export_for_python_inventory_tree(
-    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> SDRawTree:
-    return serialize_tree(_compute_data_inventory_tree(row, context))
+    return serialize_tree(_compute_data_inventory_tree(row, acting_user, context))
 
 
 def _export_for_csv_inventory_tree(
@@ -152,9 +154,9 @@ def _export_for_csv_inventory_tree(
 
 
 def _export_for_json_inventory_tree(
-    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> SDRawTree:
-    return serialize_tree(_compute_data_inventory_tree(row, context))
+    return serialize_tree(_compute_data_inventory_tree(row, acting_user, context))
 
 
 def make_inventory_tree_painter() -> InternalPainter:
@@ -195,7 +197,9 @@ def make_invhist_time_painter() -> InternalPainter:
     )
 
 
-def _compute_data_invhist_delta(row: Row, _context: PainterContext) -> ImmutableDeltaTree:
+def _compute_data_invhist_delta(
+    row: Row, _user: LoggedInUser, _context: PainterContext
+) -> ImmutableDeltaTree:
     try:
         _validate_inventory_tree_uniqueness(row)
     except MultipleInventoryTreesError:
@@ -205,11 +209,11 @@ def _compute_data_invhist_delta(row: Row, _context: PainterContext) -> Immutable
 
 
 def _render_invhist_delta(
-    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
     if (error_cell := _multiple_trees_cell(row)) is not None:
         return error_cell
-    if not (tree := _compute_data_invhist_delta(row, context)):
+    if not (tree := _compute_data_invhist_delta(row, acting_user, context)):
         return "", ""
 
     tree_renderer = TreeRenderer(
@@ -229,9 +233,9 @@ def _render_invhist_delta(
 
 
 def _export_for_python_invhist_delta(
-    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> SDRawDeltaTree:
-    return serialize_delta_tree(_compute_data_invhist_delta(row, context))
+    return serialize_delta_tree(_compute_data_invhist_delta(row, acting_user, context))
 
 
 def _export_for_csv_invhist_delta(
@@ -241,9 +245,9 @@ def _export_for_csv_invhist_delta(
 
 
 def _export_for_json_invhist_delta(
-    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> SDRawDeltaTree:
-    return serialize_delta_tree(_compute_data_invhist_delta(row, context))
+    return serialize_delta_tree(_compute_data_invhist_delta(row, acting_user, context))
 
 
 def make_invhist_delta_painter() -> InternalPainter:

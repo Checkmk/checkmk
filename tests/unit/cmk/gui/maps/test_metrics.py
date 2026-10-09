@@ -33,6 +33,7 @@ from cmk.gui.graphing import (
     PerfometerFromAPI,
     RegisteredMetric,
 )
+from cmk.gui.theme import make_theme
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.maps.gui._metrics import (
     GraphGroup,
@@ -143,6 +144,7 @@ def _info(
         registered_translations=registered_translations,
         registered_perfometers=_REGISTERED_PERFOMETERS,
         temperature_unit=TemperatureUnit.CELSIUS,
+        theme=make_theme(validate_choices=False),
         debug=True,
     )
 
@@ -156,6 +158,7 @@ def _info_with_graphs(perf_data: str) -> MetricInfo:
         registered_translations=(),
         registered_perfometers=_REGISTERED_PERFOMETERS,
         temperature_unit=TemperatureUnit.CELSIUS,
+        theme=make_theme(validate_choices=False),
         debug=True,
         registered_graphs=_REGISTERED_GRAPHS,
         object_context=_OBJECT_CONTEXT,

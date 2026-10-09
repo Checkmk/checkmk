@@ -13,12 +13,12 @@ from typing import Literal
 from cmk.ccc.user import UserId
 from cmk.gui.graphing import (
     DEFAULT_INTERACTION,
-    default_time_range_seconds,
     EngineDisplayOptions,
     get_temperature_unit,
     GraphDisplayConfigHTML,
     GraphRenderOptions,
     render_engine_graph_group,
+    resolve_default_time_range_seconds,
     resolve_size,
     STATIC_INTERACTION,
     stored_time_range_seconds,
@@ -162,6 +162,7 @@ def _paint_time_graph_cmk(
     mobile: bool,
     painter_options: PainterOptions,
     temperature_unit: TemperatureUnit,
+    default_duration: int,
     require_historic_metrics: bool = True,
 ) -> tuple[Literal[""], HTML | str]:
     # Load the graph render options from
@@ -189,7 +190,7 @@ def _paint_time_graph_cmk(
         painter_parameters=painter_params, stored_by_the_view=cell.has_painter_params()
     )
     if duration is None:
-        duration = default_time_range_seconds()
+        duration = default_duration
     raw_time_range: tuple[int, int] = (now - duration, now)
 
     # The engine takes its interactions as an explicit argument rather than off the display
@@ -328,6 +329,9 @@ def _render_service_graphs(
         painter_options=context.painter_options,
         debug=context.config.debug,
         temperature_unit=get_temperature_unit(acting_user, context.config.default_temperature_unit),
+        default_duration=resolve_default_time_range_seconds(
+            context.config.graph_timeranges, acting_user.get_attribute("graph_default_time_range")
+        ),
     )
 
 
@@ -380,6 +384,9 @@ def _render_host_graphs(
         painter_options=context.painter_options,
         debug=context.config.debug,
         temperature_unit=get_temperature_unit(acting_user, context.config.default_temperature_unit),
+        default_duration=resolve_default_time_range_seconds(
+            context.config.graph_timeranges, acting_user.get_attribute("graph_default_time_range")
+        ),
         # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
         # also render the graphs if there are no historic metrics available (but perf data is)
         require_historic_metrics="service_description" not in row,
@@ -448,6 +455,9 @@ def _render_svc_pnpgraph(
         painter_options=context.painter_options,
         debug=context.config.debug,
         temperature_unit=get_temperature_unit(acting_user, context.config.default_temperature_unit),
+        default_duration=resolve_default_time_range_seconds(
+            context.config.graph_timeranges, acting_user.get_attribute("graph_default_time_range")
+        ),
     )
 
 
@@ -500,6 +510,9 @@ def _render_host_pnpgraph(
         painter_options=context.painter_options,
         debug=context.config.debug,
         temperature_unit=get_temperature_unit(acting_user, context.config.default_temperature_unit),
+        default_duration=resolve_default_time_range_seconds(
+            context.config.graph_timeranges, acting_user.get_attribute("graph_default_time_range")
+        ),
     )
 
 

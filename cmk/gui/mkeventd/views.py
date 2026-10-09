@@ -39,7 +39,7 @@ from cmk.gui.type_defs import (
     VisualContext,
     VisualLinkSpec,
 )
-from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.valuespec import MonitoringState
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.command import (
@@ -870,6 +870,7 @@ def paint_event_icons(
     row: Row,
     history: bool = False,
     *,
+    acting_user: LoggedInUser,
     request: Request,
     theme: Theme,
 ) -> CellSpec:
@@ -897,8 +898,10 @@ def paint_event_icons(
     else:
         htmlcode = ""
 
-    if not history:
-        htmlcode += render_delete_event_icons(row, request=request)
+    if not history and acting_user.may("mkeventd.delete"):
+        htmlcode += render_delete_event_icons(
+            row, transactions=acting_user.transactions, request=request
+        )
 
     if row["event_host_in_downtime"]:
         htmlcode += html.render_static_icon(
@@ -911,9 +914,9 @@ def paint_event_icons(
     return "", ""
 
 
-def render_delete_event_icons(row: Row, *, request: Request) -> str | HTML:
-    if not user.may("mkeventd.delete"):
-        return ""
+def render_delete_event_icons(
+    row: Row, *, transactions: TransactionManager, request: Request
+) -> HTML:
     urlvars: list[HTTPVariable] = []
 
     # Found no cleaner way to get the view. Sorry.
@@ -966,9 +969,11 @@ def _is_linked_view_dashlet(dashlet_config: DashletConfig) -> TypeGuard[LinkedVi
 
 
 def _render_event_icons(
-    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
-    return paint_event_icons(row, request=context.request, theme=context.theme)
+    return paint_event_icons(
+        row, acting_user=acting_user, request=context.request, theme=context.theme
+    )
 
 
 def make_event_icons_painter() -> InternalPainter:
@@ -983,9 +988,11 @@ def make_event_icons_painter() -> InternalPainter:
 
 
 def _render_event_history_icons(
-    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
-    return paint_event_icons(row, history=True, request=context.request, theme=context.theme)
+    return paint_event_icons(
+        row, history=True, acting_user=acting_user, request=context.request, theme=context.theme
+    )
 
 
 def make_event_history_icons_painter() -> InternalPainter:

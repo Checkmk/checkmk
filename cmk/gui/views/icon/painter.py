@@ -56,7 +56,9 @@ def _render_service_icons(
     )
 
 
-def _compute_data_service_icons(row: Row, context: PainterContext) -> list[DynamicIcon]:
+def _compute_data_service_icons(
+    row: Row, _user: LoggedInUser, context: PainterContext
+) -> list[DynamicIcon]:
     return [
         _handle_icon(i.icon_name)
         for i in _get_row_icons(
@@ -100,7 +102,9 @@ def _render_host_icons(
     )
 
 
-def _compute_data_host_icons(row: Row, context: PainterContext) -> list[DynamicIcon]:
+def _compute_data_host_icons(
+    row: Row, _user: LoggedInUser, context: PainterContext
+) -> list[DynamicIcon]:
     return [
         _handle_icon(i.icon_name)
         for i in _get_row_icons("host", row, context.user_permissions, _icon_config(context.config))

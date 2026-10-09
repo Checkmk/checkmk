@@ -34,8 +34,12 @@ def _sort_perfometer(
     request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     try:
-        v1 = Perfometer(r1, registered_metrics_, registered_perfometers).sort_value()
-        v2 = Perfometer(r2, registered_metrics_, registered_perfometers).sort_value()
+        v1 = Perfometer(
+            r1, registered_metrics_, registered_perfometers, debug=config.debug
+        ).sort_value()
+        v2 = Perfometer(
+            r2, registered_metrics_, registered_perfometers, debug=config.debug
+        ).sort_value()
         return (v1 > v2) - (v1 < v2)
     except Exception:
         logger.exception("error sorting perfometer values")

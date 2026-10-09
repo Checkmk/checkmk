@@ -672,7 +672,7 @@ class ViewWidgetEditPage(Page):
         error = None
         if ctx.request.var("_save"):
             try:
-                self._save(dashboard, embedded_id, view_spec)
+                self._save(dashboard, embedded_id, view_spec, ctx.config)
             except MKUserError as e:
                 error = e
             else:
@@ -711,7 +711,9 @@ class ViewWidgetEditPage(Page):
             html.hidden_field("mode", "create")  # copy and duplicate save as create
             html.hidden_field("owner", str(owner))
 
-            render_view_config(view_spec, general_properties=True, allow_browser_reload=False)
+            render_view_config(
+                view_spec, general_properties=True, allow_browser_reload=False, config=ctx.config
+            )
 
         html.close_div()
         html.body_end()
@@ -724,10 +726,12 @@ class ViewWidgetEditPage(Page):
         html.javascript(f"window.parent.postMessage({serialized!r})")
 
     @staticmethod
-    def _save(dashboard: DashboardConfig, embedded_id: str, view_spec: ViewSpec) -> None:
+    def _save(
+        dashboard: DashboardConfig, embedded_id: str, view_spec: ViewSpec, config: Config
+    ) -> None:
         # first arg is just used for the datasource (so it can't be overwritten)
         view_spec = create_view_from_valuespec(
-            old_view=view_spec, view=view_spec, allow_browser_reload=False
+            old_view=view_spec, view=view_spec, allow_browser_reload=False, config=config
         )
         embedded = EmbeddedViewSpecManager.normal_to_embedded_view_spec(view_spec)
         dashboard.setdefault("embedded_views", {})[embedded_id] = embedded

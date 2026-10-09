@@ -32,6 +32,7 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
+from cmk.gui.theme.current_theme import theme
 from cmk.maps.gui._metrics import metric_info, object_context
 from cmk.maps.rest_api.internal.endpoint_family import MAPS_INTERNAL_FAMILY
 from cmk.maps.rest_api.internal.models.request_models import MapsMetricInfoRequest
@@ -84,6 +85,7 @@ def show_metric_info_v1(
         registered_translations=registered_translations(),
         registered_perfometers=perfometers_from_api,
         temperature_unit=get_temperature_unit(user, api_context.config.default_temperature_unit),
+        theme=theme,
         debug=api_context.config.debug,
         registered_graphs=graphs_from_api if context is not None else None,
         object_context=context,

@@ -64,6 +64,7 @@ from cmk.gui.graphing import (
     translated_names_and_scales,
 )
 from cmk.gui.i18n import translate_to_current_language
+from cmk.gui.theme import Theme
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 from cmk.utils.servicename import ServiceName
@@ -242,6 +243,7 @@ def _perfometer_payload(
     registered_perfometers: Mapping[str, PerfometerFromAPI],
     engine: _EngineInputs,
     temperature_unit: TemperatureUnit,
+    theme: Theme,
 ) -> Perfometer | None:
     evaluated = evaluated_perfometer(
         perf_data_str,
@@ -258,7 +260,7 @@ def _perfometer_payload(
 
     # The engine leaves the trailing padding segment colourless; the wire model
     # paints it in the theme colour and names that colour, so the SPA can swap it.
-    bg_color = get_themed_perfometer_bg_color()
+    bg_color = get_themed_perfometer_bg_color(theme)
     return Perfometer(
         label=perfometer_label(evaluated, temperature_unit),
         rows=[
@@ -425,6 +427,7 @@ def metric_info(
     registered_translations: Sequence[translations_v1.Translation],
     registered_perfometers: Mapping[str, PerfometerFromAPI],
     temperature_unit: TemperatureUnit,
+    theme: Theme,
     debug: bool,
     registered_graphs: Mapping[str, GraphFromAPI] | None = None,
     object_context: tuple[SiteId, HostName, ServiceName] | None = None,
@@ -472,6 +475,7 @@ def metric_info(
             registered_perfometers,
             engine,
             temperature_unit,
+            theme,
         ),
         metrics=_metrics_payload(names_and_scales, metrics, registered_metrics),
         graphs=(

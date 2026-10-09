@@ -4700,15 +4700,15 @@ def make_service_tags_with_titles_painter() -> InternalPainter:
     )
 
 
-def _compute_data_host_labels(row: Row, _context: PainterContext) -> Labels:
+def _compute_data_host_labels(row: Row, _user: LoggedInUser, _context: PainterContext) -> Labels:
     return get_labels(row, "host")
 
 
 def _render_host_labels(
-    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
     return "", render_labels(
-        _compute_data_host_labels(row, context),
+        _compute_data_host_labels(row, acting_user, context),
         "host",
         with_links=True,
         label_sources=get_label_sources(row, "host"),
@@ -4717,21 +4717,21 @@ def _render_host_labels(
 
 
 def _export_for_python_host_labels(
-    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> Labels:
-    return _compute_data_host_labels(row, context)
+    return _compute_data_host_labels(row, acting_user, context)
 
 
 def _export_for_csv_host_labels(
-    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> str | HTML:
-    return format_labels_for_csv_export(_compute_data_host_labels(row, context))
+    return format_labels_for_csv_export(_compute_data_host_labels(row, acting_user, context))
 
 
 def _export_for_json_host_labels(
-    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> Labels:
-    return _compute_data_host_labels(row, context)
+    return _compute_data_host_labels(row, acting_user, context)
 
 
 def make_host_labels_painter() -> InternalPainter:
@@ -4748,15 +4748,15 @@ def make_host_labels_painter() -> InternalPainter:
     )
 
 
-def _compute_data_service_labels(row: Row, _context: PainterContext) -> Labels:
+def _compute_data_service_labels(row: Row, _user: LoggedInUser, _context: PainterContext) -> Labels:
     return get_labels(row, "service")
 
 
 def _render_service_labels(
-    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
     return "", render_labels(
-        _compute_data_service_labels(row, context),
+        _compute_data_service_labels(row, acting_user, context),
         "service",
         with_links=True,
         label_sources=get_label_sources(row, "service"),
@@ -4765,21 +4765,21 @@ def _render_service_labels(
 
 
 def _export_for_python_service_labels(
-    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> Labels:
-    return _compute_data_service_labels(row, context)
+    return _compute_data_service_labels(row, acting_user, context)
 
 
 def _export_for_csv_service_labels(
-    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> str | HTML:
-    return format_labels_for_csv_export(_compute_data_service_labels(row, context))
+    return format_labels_for_csv_export(_compute_data_service_labels(row, acting_user, context))
 
 
 def _export_for_json_service_labels(
-    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> Labels:
-    return _compute_data_service_labels(row, context)
+    return _compute_data_service_labels(row, acting_user, context)
 
 
 def make_service_labels_painter() -> InternalPainter:

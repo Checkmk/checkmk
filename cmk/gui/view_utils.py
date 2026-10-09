@@ -17,7 +17,7 @@ from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
-from cmk.gui.theme.current_theme import theme
+from cmk.gui.theme import Theme
 from cmk.gui.type_defs import FilterHTTPVariables, Row
 from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group, Label
 from cmk.gui.utils.loading_transition import with_loading_transition
@@ -438,7 +438,7 @@ def _render_tag_group(
     return HTMLWriter.render_a(span, href=url)
 
 
-def get_themed_perfometer_bg_color() -> str:
+def get_themed_perfometer_bg_color(theme: Theme) -> str:
     """Return the theme specific background color for perfometer rendering"""
     if theme.get() == "modern-dark":
         return "#bdbdbd"

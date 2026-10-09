@@ -10,8 +10,9 @@ import types
 from collections.abc import Callable
 from http import HTTPStatus
 from inspect import BoundArguments
-from typing import get_origin, TypeAliasType
+from typing import get_origin
 
+from typing_extensions import TypeForm
 from werkzeug.datastructures import MIMEAccept
 from werkzeug.http import parse_accept_header
 
@@ -50,8 +51,7 @@ tracer = trace.get_tracer()
 
 def dump_body(
     body: object | None,
-    # TODO(PEP-747): replace with TypeForm | None once available
-    body_type: type | TypeAliasType | types.UnionType | None,
+    body_type: TypeForm[object] | None,
     *,
     is_testing: bool,
     body_kind: str = "Response body",
@@ -77,7 +77,7 @@ def dump_body(
 
 def _create_response(
     endpoint_response: TypedResponse[object | None],
-    response_body_type: type[object] | None,
+    response_body_type: TypeForm[object] | None,
     content_type: str | None,
     *,
     fields_filter: FieldsFilter | None,

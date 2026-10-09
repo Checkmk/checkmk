@@ -14,6 +14,7 @@ from typing import cast, Literal
 
 from apispec import APISpec
 from pydantic import PydanticInvalidForJsonSchema, TypeAdapter
+from typing_extensions import TypeForm
 
 from cmk.ccc.version import Edition
 from cmk.gui.http import Response
@@ -69,7 +70,7 @@ class PydanticSchemaDefinitions:
 
     def get_type(
         self, schema_type: Literal["body", "path", "query", "headers", "response"]
-    ) -> type | None:
+    ) -> TypeForm[object] | None:
         if schema_type == "response":
             return self.model.response_body_type
 
@@ -313,7 +314,9 @@ def _inline_refs(value: object, defs: dict[str, dict[str, object]]) -> None:
             _inline_refs(item, defs)
 
 
-def _get_parameters(location: LocationType, schema: type | None) -> Sequence[OpenAPIParameter]:
+def _get_parameters(
+    location: LocationType, schema: TypeForm[object] | None
+) -> Sequence[OpenAPIParameter]:
     out: list[OpenAPIParameter] = []
     if schema is not None:
         # TypeAdapter: this is only used during spec generation
@@ -328,7 +331,7 @@ def _get_parameters(location: LocationType, schema: type | None) -> Sequence[Ope
             # TODO: this is a workaround and should be cleaned up when we generate the spec manually
             _inline_refs(json_schema, defs)
 
-        assert json_schema["type"] == "object", f"expected dataclass, got: {schema.__name__}"
+        assert json_schema["type"] == "object", f"expected dataclass, got: {schema}"
         required_fields = set(json_schema.get("required", []))
         for name, field in json_schema["properties"].items():
             param: OpenAPIParameter = {

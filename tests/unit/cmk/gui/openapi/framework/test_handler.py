@@ -11,7 +11,7 @@ import json
 from collections.abc import Iterator
 from dataclasses import dataclass
 from http import HTTPStatus
-from typing import Annotated, cast, override
+from typing import Annotated, override
 from unittest.mock import MagicMock
 
 import pytest
@@ -89,7 +89,7 @@ def test_dump_response_omitted() -> None:
 def test_dump_response_annotated() -> None:
     result = dump_body(
         _TestResponse(field=123),
-        cast(type[_TestResponse], Annotated[_TestResponse, "foo"]),
+        Annotated[_TestResponse, "foo"],
         is_testing=True,
     )
     assert result == b'{"field":123}'
@@ -102,7 +102,7 @@ def test_dump_response_pydantic_annotated() -> None:
 
     result = dump_body(
         _TestResponse(field=123),
-        cast(type[_TestResponse], Annotated[_TestResponse, PlainSerializer(_serializer)]),
+        Annotated[_TestResponse, PlainSerializer(_serializer)],
         is_testing=True,
     )
     assert result == b'{"custom_name":"246"}'

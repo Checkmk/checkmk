@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import Annotated, cast, Literal, TypeVar
 
 import pytest
+from typing_extensions import TypeForm
 
 from cmk.gui.openapi.framework._utils import (
     get_resolved_origin,
@@ -40,14 +41,14 @@ type _TAliasOfListStr = list[str]
     "input_type",
     [
         _A,
-        cast(type, Annotated[_A, "meta"]),
-        cast(type, Annotated[Annotated[_A, "inner"], "outer"]),
+        Annotated[_A, "meta"],
+        Annotated[Annotated[_A, "inner"], "outer"],
         _TAliasOfA,
         _TAliasOfAnnotatedA,
-        cast(type, Annotated[_TAliasOfA, "meta"]),
+        Annotated[_TAliasOfA, "meta"],
     ],
 )
-def test_resolve_type_resolves_to_a(input_type: type) -> None:
+def test_resolve_type_resolves_to_a(input_type: TypeForm[object]) -> None:
     assert resolve_type(input_type) is _A
 
 
@@ -60,13 +61,13 @@ def test_resolve_type_resolves_to_a(input_type: type) -> None:
         _TNestedAlias,
     ],
 )
-def test_resolve_type_resolves_to_union(input_type: type) -> None:
+def test_resolve_type_resolves_to_union(input_type: TypeForm[object]) -> None:
     assert resolve_type(input_type) == (_A | _B)
 
 
 def test_resolve_type_preserves_inner_generic_annotated() -> None:
     # Only outermost wrapper stripped; inner Annotated inside dict value is preserved
-    result = resolve_type(cast(type, Annotated[dict[str, Annotated[int, "foo"]], "bar"]))
+    result = resolve_type(Annotated[dict[str, Annotated[int, "foo"]], "bar"])
     assert result == dict[str, Annotated[int, "foo"]]
 
 
@@ -74,12 +75,12 @@ def test_resolve_type_preserves_inner_generic_annotated() -> None:
     "input_type, expected",
     [
         (_A, _A),
-        (cast(type, Annotated[list[str], "meta"]), list),
+        (Annotated[list[str], "meta"], list),
         (_TAliasOfListStr, list),
         (_A | _B, types.UnionType),
     ],
 )
-def test_get_resolved_origin(input_type: type, expected: type) -> None:
+def test_get_resolved_origin(input_type: TypeForm[object], expected: type) -> None:
     assert get_resolved_origin(input_type) is expected
 
 

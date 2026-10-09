@@ -7,14 +7,14 @@ import functools
 import operator
 import types
 from collections.abc import Iterable, Iterator, Mapping
-from typing import Annotated, get_args, get_origin, get_type_hints, TypeAliasType, TypeVar
+from typing import Annotated, cast, get_args, get_origin, get_type_hints, TypeAliasType, TypeVar
+
+from typing_extensions import TypeForm
 
 from cmk.gui.utils.dataclasses import DataclassInstance
 
 
-# TODO(PEP-747): replace `type | TypeAliasType | types.UnionType` with `TypeForm` once available;
-#   the return type would then be `TypeForm` as well
-def resolve_type(t: type | TypeAliasType | types.UnionType) -> type | types.UnionType:
+def resolve_type(t: TypeForm[object]) -> type | types.UnionType:
     """Strip Annotated wrappers and unwrap TypeAliasType to reach the underlying concrete type.
 
     Handles arbitrarily nested combinations in any order. Only the outermost wrappers are
@@ -29,13 +29,17 @@ def resolve_type(t: type | TypeAliasType | types.UnionType) -> type | types.Unio
         >>> resolve_type(Annotated[dict[str, Annotated[list[str], "foo"]], "bar"])
         dict[str, typing.Annotated[list[str], 'foo']]
     """
-    while isinstance(t, TypeAliasType) or get_origin(t) is Annotated:
-        t = t.__value__ if isinstance(t, TypeAliasType) else get_args(t)[0]
-    return t
+    # mypy wrongly assumes that a TypeForm can't be a TypeAliasType, so we use an object here.
+    resolved: object = t
+    while isinstance(resolved, TypeAliasType) or get_origin(resolved) is Annotated:
+        resolved = (
+            resolved.__value__ if isinstance(resolved, TypeAliasType) else get_args(resolved)[0]
+        )
+    # cast: this can be other type forms like a generic alias `list[str]`, too.
+    return cast("type | types.UnionType", resolved)
 
 
-# TODO(PEP-747): replace `type | TypeAliasType | types.UnionType` with `TypeForm`.
-def get_resolved_origin(t: type | TypeAliasType | types.UnionType) -> type:
+def get_resolved_origin(t: TypeForm[object]) -> type:
     """Get the origin of the resolved type, dropping Annotated and TypeAliasType first.
 
     For union types (A | B) returns types.UnionType (the class) as the origin.

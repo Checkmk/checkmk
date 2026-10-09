@@ -13,6 +13,8 @@ import types
 from collections.abc import Iterator, Mapping
 from typing import Any, cast, get_args, TypeAliasType, Union
 
+from typing_extensions import TypeForm
+
 from cmk.gui.openapi.restful_objects.type_defs import ErrorStatusCodeInt, StatusCodeInt
 from cmk.gui.openapi.restful_objects.utils import identify_expected_status_codes
 from cmk.gui.openapi.restful_objects.validators import PathParamsValidator
@@ -144,8 +146,7 @@ def _validate_defaults_model_fields(
 
 
 def _validate_schema_type(
-    # TODO(PEP-747): replace `type | TypeAliasType | types.UnionType` with `TypeForm`
-    schema_type: type | TypeAliasType | types.UnionType,
+    schema_type: TypeForm[object],
     *,
     path_prefix: str,
     other_defaults_allowed: bool,

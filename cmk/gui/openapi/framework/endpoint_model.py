@@ -15,6 +15,7 @@ from http import HTTPStatus
 from typing import Annotated, cast, get_args, get_origin, Literal, Self, TypeAliasType, TypedDict
 
 from pydantic import BaseModel, ConfigDict, ValidationError, with_config
+from typing_extensions import TypeForm
 
 from cmk import trace
 from cmk.gui.openapi.restful_objects.validators import RequestDataValidator
@@ -60,13 +61,13 @@ class Parameters:
     headers: dict[str, Parameter] = dataclasses.field(default_factory=dict)
 
 
-def _request_body_type(signature: inspect.Signature) -> type | None:
-    if "body" not in signature.parameters:
+def _request_body_type(signature: inspect.Signature) -> TypeForm[object] | None:
+    if (body := signature.parameters.get("body")) is None:
         return None
-    return signature.parameters["body"].annotation
+    return body.annotation
 
 
-def _return_type(signature: inspect.Signature) -> type | None:
+def _return_type(signature: inspect.Signature) -> TypeForm[object] | None:
     if signature.return_annotation is inspect.Signature.empty:
         raise ValueError("Missing return type annotation")
     annotation = signature.return_annotation
@@ -217,7 +218,7 @@ class _IgnoreExtra:
     """Empty dataclass that includes `extra="ignore"` in the pydantic config."""
 
 
-def _configure_extra_forbid(tp: type) -> None:
+def _configure_extra_forbid(tp: TypeForm[object]) -> None:
     """Set extra="forbid" on a BaseModel/dataclass type, and on every member of a union.
 
     Unwraps Annotated and TypeAliasType. A parameterized generic model is configured on its
@@ -238,7 +239,9 @@ def _configure_extra_forbid(tp: type) -> None:
         origin.__pydantic_config__ = config  # type: ignore[attr-defined]
 
 
-def _build_input_model(parameters: Parameters, request_body_type: type | None) -> ApiInputModel:
+def _build_input_model(
+    parameters: Parameters, request_body_type: TypeForm[object] | None
+) -> ApiInputModel:
     """Build the input model for the endpoint.
 
     This model will be used to validate the request data and extract the parameters for the handler.
@@ -308,8 +311,8 @@ class EndpointModel[**P, T]:
         signature: inspect.Signature,
         parameters: Parameters,
         input_model: ApiInputModel,
-        request_body_type: type | None,
-        response_body_type: type[T] | None,
+        request_body_type: TypeForm[object] | None,
+        response_body_type: TypeForm[object] | None,
         uses_api_context: bool,
     ) -> None:
         self._signature = signature
@@ -469,10 +472,12 @@ class EndpointModel[**P, T]:
                 status_code=status_code,
             ) from e
 
-    def get_annotation(self, field: Literal["body", "path", "query", "headers"], /) -> type | None:
+    def get_annotation(
+        self, field: Literal["body", "path", "query", "headers"], /
+    ) -> TypeForm[object] | None:
         for field_instance in dataclasses.fields(self._input_model):
             if field_instance.name == field:
-                # this will be `Annotated`, but there is no way to type that
-                return cast(type, field_instance.type)
+                # cast: _build_input_model passes type forms, not strings, to make_dataclass.
+                return cast("TypeForm[object]", field_instance.type)
 
         return None

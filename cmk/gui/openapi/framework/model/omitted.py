@@ -17,12 +17,12 @@ default value. For serializing the response, the `json_dump_without_omitted` fun
 to remove the `ApiOmitted` values from the response body.
 """
 
-import types
-from typing import ClassVar, Literal, NoReturn, override, Self, TypeAliasType
+from typing import ClassVar, Literal, NoReturn, override, Self
 
 from pydantic import GetCoreSchemaHandler, GetJsonSchemaHandler
 from pydantic_core import CoreSchema, ErrorDetails, PydanticOmit
 from pydantic_core.core_schema import is_instance_schema
+from typing_extensions import TypeForm
 
 from cmk.gui.openapi._type_adapter import get_cached_type_adapter
 
@@ -80,11 +80,8 @@ class ApiOmitted:
         return value
 
 
-# TODO(PEP-747): once TypeForm lands, replace `type | TypeAliasType | types.UnionType` with
-#   `TypeForm[T]` restore `json_dump_without_omitted` to its original generic form:
-#   `json_dump_without_omitted[T](instance_type: TypeForm[T], instance: T) -> bytes`
 def json_dump_without_omitted(
-    instance_type: type | TypeAliasType | types.UnionType,
+    instance_type: TypeForm[object],
     instance: object,
     *,
     is_testing: bool = False,
@@ -92,7 +89,8 @@ def json_dump_without_omitted(
     """Serialize the given dataclass instance to JSON, removing omitted fields.
 
     Args:
-        instance_type: The class of the `instance` - will be used to create a `TypeAdapter`.
+        instance_type: The declared type of `instance`, e.g. a class, a union or a type alias - will
+            be used to create a `TypeAdapter`.
         instance: The data to be serialized, must be an instance of `instance_type`.
         is_testing: Will perform round-trip validation to ensure proper serialization.
 

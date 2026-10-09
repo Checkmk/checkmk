@@ -62,6 +62,7 @@ setproctitle
 setuptools
 setuptools-scm
 starlette
+typing-extensions
 tzlocal
 urllib3
 uvicorn

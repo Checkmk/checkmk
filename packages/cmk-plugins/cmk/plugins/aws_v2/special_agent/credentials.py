@@ -12,6 +12,7 @@ default credential chain, optionally followed by one AssumeRole into a role whos
 account is then monitored.
 """
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 import boto3
@@ -110,6 +111,12 @@ def create_hub_session(
         raise AwsAccessError(describe_credential_failure(e))
 
 
+@dataclass(frozen=True)
+class AwsAccount:
+    id: str
+    session: boto3.session.Session
+
+
 class AwsCredentials:
     """Owns the credentials for one agent run.
 
@@ -164,3 +171,7 @@ class AwsCredentials:
                 # credential ones. ClientError is not a BotoCoreError, so it stays listed.
                 raise AwsAccessError(describe_credential_failure(e))
         return self._account_id
+
+    def accounts(self) -> Sequence[AwsAccount]:
+        """The accounts this run monitors, each with the session to use for all its regions."""
+        return [AwsAccount(self.account_id(), self.session())]

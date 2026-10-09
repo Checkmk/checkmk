@@ -35,6 +35,7 @@ from .config import (
 from .credentials import (
     AccessKey,
     AssumedRole,
+    AwsAccount,
     AwsCredentials,
     DefaultCredentials,
     HubCredentials,
@@ -585,46 +586,23 @@ def _test_connection(credentials: AwsCredentials) -> int:
     return 0
 
 
-def agent_aws_main(args: argparse.Namespace) -> int:
-    _setup_logging(args.debug, args.verbose)
+def _write_access_error(error: AwsAccessError) -> None:
+    sys.stdout.write("<<<aws_v2_exceptions>>>\n")
+    sys.stdout.write("Exception: %s\n" % error)
 
-    proxy_config = _get_proxy(args)
-    # One credential owner for the whole run. The connection test and the agent run take
-    # the same one, so both resolve credentials through the same path.
-    credentials = AwsCredentials(
-        _hub_credentials_from_args(args), args.global_service_region, proxy_config
-    )
 
-    if args.connection_test:
-        return _test_connection(credentials)
-
-    try:
-        account_id = credentials.account_id()
-    except AwsAccessError as ae:
-        # can not access AWS, retreat
-        sys.stdout.write("<<<aws_v2_exceptions>>>\n")
-        sys.stdout.write("Exception: %s\n" % ae)
-        return 0
-
-    aws_config = _configure_aws(args)
-
-    global_services, regional_services = _sanitize_aws_services_params(
-        args.global_services, args.services, r_and_g_aws_services=("wafv2",)
-    )
-
-    use_cache = aws_config.is_up_to_date() and not args.no_cache
-
+def _run_account(
+    args: argparse.Namespace,
+    account: AwsAccount,
+    account_config: AWSConfig,
+    global_services: Sequence[str],
+    regional_services: Sequence[str],
+    use_cache: bool,
+    proxy_config: botocore.config.Config | None,
+) -> bool:
+    """Run the sections of one account in every region. Returns whether a section failed."""
     # Special distributor for S3 limits which distributes results across different regions
     s3_limits_distributor = ResultDistributorS3Limits()
-
-    if regional_services and not args.regions:
-        LOGGER.error(
-            (
-                "You have to specify a region for the services: %(services)s."
-                " Otherwise data for these services cannot be fetched."
-            ),
-            {"services": ", ".join(regional_services)},
-        )
 
     has_exceptions = False
     for aws_services, aws_regions, aws_sections in [
@@ -640,18 +618,15 @@ def agent_aws_main(args: argparse.Namespace) -> int:
                 # sections which region their clients belong to.
                 sections = aws_sections(
                     args.hostname,
-                    credentials.session(),
-                    account_id,
+                    account.session,
+                    account.id,
                     debug=args.debug,
                     config=proxy_config,
                 )
-                sections.init_sections(aws_services, region, aws_config, s3_limits_distributor)
+                sections.init_sections(aws_services, region, account_config, s3_limits_distributor)
                 sections.run(use_cache=use_cache)
-            except AwsAccessError as ae:
-                # can not access AWS, retreat
-                sys.stdout.write("<<<aws_v2_exceptions>>>\n")
-                sys.stdout.write("Exception: %s\n" % ae)
-                return 0
+            except AwsAccessError:
+                raise
             except AssertionError:
                 if args.debug:
                     raise
@@ -660,6 +635,60 @@ def agent_aws_main(args: argparse.Namespace) -> int:
                 has_exceptions = True
                 if args.debug:
                     raise
+    return has_exceptions
+
+
+def agent_aws_main(args: argparse.Namespace) -> int:
+    _setup_logging(args.debug, args.verbose)
+
+    proxy_config = _get_proxy(args)
+    # One credential owner for the whole run. The connection test and the agent run take
+    # the same one, so both resolve credentials through the same path.
+    credentials = AwsCredentials(
+        _hub_credentials_from_args(args), args.global_service_region, proxy_config
+    )
+
+    if args.connection_test:
+        return _test_connection(credentials)
+
+    try:
+        accounts = credentials.accounts()
+    except AwsAccessError as ae:
+        _write_access_error(ae)
+        return 0
+
+    aws_config = _configure_aws(args)
+
+    global_services, regional_services = _sanitize_aws_services_params(
+        args.global_services, args.services, r_and_g_aws_services=("wafv2",)
+    )
+
+    use_cache = aws_config.is_up_to_date() and not args.no_cache
+
+    if regional_services and not args.regions:
+        LOGGER.error(
+            (
+                "You have to specify a region for the services: %(services)s."
+                " Otherwise data for these services cannot be fetched."
+            ),
+            {"services": ", ".join(regional_services)},
+        )
+
+    has_exceptions = False
+    try:
+        for account in accounts:
+            has_exceptions |= _run_account(
+                args,
+                account,
+                aws_config,
+                global_services,
+                regional_services,
+                use_cache,
+                proxy_config,
+            )
+    except AwsAccessError as ae:
+        _write_access_error(ae)
+        return 0
 
     return 1 if has_exceptions else 0
 

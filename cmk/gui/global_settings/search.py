@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Final, override
 
 from cmk.ccc.site import omd_site
@@ -27,6 +27,11 @@ from cmk.gui.watolib.global_settings import (
 )
 from cmk.utils import paths
 from cmk.web.utils.urls import makeuri_contextless
+
+
+def _no_folder_choices() -> Sequence[tuple[str, str]]:
+    """Only the titles of the settings reach the index, and they do not depend on the folders"""
+    return []
 
 
 class MatchItemGeneratorSettings(ABCMatchItemGenerator):
@@ -54,6 +59,7 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
             omd_site(),
             sites=config.sites,
             graph_timeranges=config.graph_timeranges,
+            folder_choices=_no_folder_choices,
         )
         default_values = ABCConfigDomain.get_all_default_globals()
         is_activated = get_global_config().global_settings.is_activated

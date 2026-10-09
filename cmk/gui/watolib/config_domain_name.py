@@ -391,6 +391,7 @@ class GlobalSettingsContext:
     site_neutral_var_dir: Path
     configured_sites: SiteConfigurations
     configured_graph_timeranges: Sequence[GraphTimerange]
+    folder_choices: Callable[[], Sequence[tuple[str, str]]]
 
 
 @dataclass(frozen=True)

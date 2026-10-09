@@ -22,6 +22,7 @@ def test_site_trace_send_saving_form_selection_keeps_legacy_disk_format() -> Non
         site_neutral_var_dir=Path("/tmp"),
         configured_sites=SiteConfigurations({}),
         configured_graph_timeranges=[],
+        folder_choices=lambda: [("", "Main")],
     )
     form_spec = ConfigVariableSiteTraceSend.value_model(context)
     assert isinstance(form_spec, FormSpec)

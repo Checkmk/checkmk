@@ -19,6 +19,7 @@ from cmk.gui.global_settings import (
 )
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.search.matchers import MatchItemGeneratorRegistry
@@ -49,13 +50,14 @@ def _owned_by_the_event_console(config_variable: ConfigVariable) -> bool:
     return isinstance(config_variable.primary_domain(), ConfigDomainEventConsole)
 
 
-def event_console_settings(config: Config) -> GlobalSettingsApp:
+def event_console_settings(config: Config, *, acting_user: LoggedInUser) -> GlobalSettingsApp:
     ensure_page_access(config, ["mkeventd.config"])
     if not config.mkeventd_enabled:
         raise MKUserError(None, _('The Event Console is disabled ("omd config").'))
     title = _("Event Console configuration")
     return central_settings(
         config,
+        acting_user=acting_user,
         title=title,
         breadcrumb=_breadcrumb(title),
         shows=_owned_by_the_event_console,
@@ -80,4 +82,4 @@ def _breadcrumb(title: str) -> Breadcrumb:
 
 
 def _event_console_settings_page(ctx: PageContext) -> None:
-    render_settings_page(ctx.config, event_console_settings(ctx.config))
+    render_settings_page(ctx.config, event_console_settings(ctx.config, acting_user=user))

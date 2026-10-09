@@ -11,6 +11,7 @@ from pytest_mock import MockerFixture
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
 from cmk.gui.config import active_config
+from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.wato._check_mk_configuration import ConfigVariableLogLevels
@@ -53,6 +54,7 @@ def test_update_global_config_migrates_form_spec_values(
         logging.getLogger(),
         {"key": "old"},
         active_config,
+        LoggedInSuperUser(),
     ) == {"key": "new"}
 
 
@@ -78,6 +80,7 @@ def test_update_global_config_migrates_renamed_log_level(
         logging.getLogger(),
         {"log_levels": {"cmk.web": 30, "cmk.web.automations": 10}},
         active_config,
+        LoggedInSuperUser(),
     ) == {
         "log_levels": {
             "cmk.web": 30,
@@ -119,6 +122,7 @@ def test_update_global_config(
             "unknown": "How did this get here?",
         },
         active_config,
+        LoggedInSuperUser(),
     ) == {
         "keep": "do not remove me",
         "unknown": "How did this get here?",
@@ -151,7 +155,9 @@ def test_update_global_config_normalizes_only_non_string_user_icons(
         global_settings, "filter_unknown_settings", lambda global_config: global_config
     )
     mocker.patch.object(
-        global_settings, "_transform_global_config_values", lambda settings, _: settings
+        global_settings,
+        "_transform_global_config_values",
+        lambda settings, _config, _user: settings,
     )
 
     assert global_settings.update_global_config(
@@ -170,6 +176,7 @@ def test_update_global_config_normalizes_only_non_string_user_icons(
             }
         },
         active_config,
+        LoggedInSuperUser(),
     ) == {
         "user_icons_and_actions": {
             "valid": {"icon": "status", "title": "Valid"},
@@ -212,8 +219,11 @@ def test_update_global_config_is_idempotent(monkeypatch: pytest.MonkeyPatch) -> 
         logging.getLogger(),
         {"key": "old", "old_name": 14, "withdrawn": "drop me"},
         active_config,
+        LoggedInSuperUser(),
     )
-    twice = global_settings.update_global_config(logging.getLogger(), dict(once), active_config)
+    twice = global_settings.update_global_config(
+        logging.getLogger(), dict(once), active_config, LoggedInSuperUser()
+    )
 
     assert once == {"key": "new", "new_name": 14}
     assert twice == once
@@ -246,7 +256,9 @@ def test_site_specific_settings_are_converted(
     saved: list[GlobalSettings] = []
     monkeypatch.setattr(global_settings, "save_site_global_settings_raw", saved.append)
 
-    global_settings._update_site_specific_global_settings(logging.getLogger(), active_config)  # noqa: SLF001
+    global_settings._update_site_specific_global_settings(  # noqa: SLF001
+        logging.getLogger(), active_config, LoggedInSuperUser()
+    )
 
     assert saved == [UPDATED_PREVIOUS_RELEASE_SETTINGS]
 
@@ -280,7 +292,9 @@ def test_site_settings_in_the_central_config_are_converted(
     monkeypatch.setattr(global_settings, "site_management_registry", {"site_management": fake})
     monkeypatch.setattr(global_settings, "make_folder_tree", lambda _config: None)
 
-    global_settings._update_remote_site_specific_global_settings(logging.getLogger(), active_config)  # noqa: SLF001
+    global_settings._update_remote_site_specific_global_settings(  # noqa: SLF001
+        logging.getLogger(), active_config, LoggedInSuperUser()
+    )
 
     assert fake.saved == {
         SiteId("central"): {

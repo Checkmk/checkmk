@@ -11,6 +11,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _l
+from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.watolib.config_domain_name import ConfigVariableGroup
 from cmk.maps.gui._config_domain import (
     CONFIG_VAR_CONNECTIONS,
@@ -41,7 +42,7 @@ def fixture_maps_and_gui_variables(monkeypatch: pytest.MonkeyPatch) -> Iterator[
 
 @pytest.mark.usefixtures("maps_and_gui_variables", "with_admin_login")
 def test_the_page_shows_the_maps_variables_in_their_two_topics(load_config: Config) -> None:
-    data = maps_settings(load_config)
+    data = maps_settings(load_config, acting_user=LoggedInSuperUser())
 
     assert {
         topic.headline: {variable.name for variable in topic.variables} for topic in data.topics
@@ -57,7 +58,9 @@ def test_the_page_shows_the_maps_variables_in_their_two_topics(load_config: Conf
 
 @pytest.mark.usefixtures("maps_and_gui_variables", "with_admin_login")
 def test_a_fresh_site_lists_its_own_connection_unmodified(load_config: Config) -> None:
-    current = shown_variables(maps_settings(load_config))[CONFIG_VAR_CONNECTIONS].current
+    current = shown_variables(maps_settings(load_config, acting_user=LoggedInSuperUser()))[
+        CONFIG_VAR_CONNECTIONS
+    ].current
 
     assert isinstance(current, GlobalScopeValue)
     assert not current.explicit
@@ -69,7 +72,7 @@ def test_the_maps_configure_permission_suffices_for_the_page(
     load_config: Config, with_user: tuple[UserId, str]
 ) -> None:
     with logged_in(with_user[0], "wato.use", "maps.configure"):
-        assert shown_variables(maps_settings(load_config))
+        assert shown_variables(maps_settings(load_config, acting_user=LoggedInSuperUser()))
 
 
 def test_the_page_refuses_a_user_with_only_the_global_settings_permission(
@@ -79,12 +82,12 @@ def test_the_page_refuses_a_user_with_only_the_global_settings_permission(
         logged_in(with_user[0], "wato.use", "wato.global"),
         pytest.raises(MKAuthException),
     ):
-        maps_settings(load_config)
+        maps_settings(load_config, acting_user=LoggedInSuperUser())
 
 
 @pytest.mark.usefixtures("maps_and_gui_variables", "with_admin_login")
 def test_the_breadcrumb_hangs_under_the_map_list(load_config: Config) -> None:
-    data = maps_settings(load_config)
+    data = maps_settings(load_config, acting_user=LoggedInSuperUser())
 
     assert [item.title for item in data.breadcrumb] == ["Customize", "Maps", "Maps settings"]
     assert data.breadcrumb[1].link == "maps.py"

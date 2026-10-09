@@ -14,6 +14,7 @@ from cmk.gui.form_specs.visitors import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.main_navigation import MainNavigation
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.watolib import read_only
@@ -33,6 +34,7 @@ from cmk.gui.watolib.global_settings import (
     make_global_settings_context,
     may_read,
 )
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.mode import ensure_static_permissions
 from cmk.gui.watolib.setup_access import ensure_provider_site, ensure_setup_enabled
 from cmk.gui.watolib.sites import (
@@ -89,12 +91,14 @@ def ensure_page_access(config: Config, permissions: Iterable[PermissionName]) ->
 def central_settings(
     config: Config,
     *,
+    acting_user: LoggedInUser,
     title: str,
     breadcrumb: Breadcrumb,
     shows: Callable[[ConfigVariable], bool],
 ) -> GlobalSettingsApp:
     return _app_data(
         config,
+        acting_user,
         title,
         breadcrumb,
         _GlobalScope(
@@ -108,6 +112,7 @@ def central_settings(
 def site_settings(
     config: Config,
     *,
+    acting_user: LoggedInUser,
     title: str,
     breadcrumb: Breadcrumb,
     sites: SiteConfigurations,
@@ -115,6 +120,7 @@ def site_settings(
 ) -> GlobalSettingsApp:
     return _app_data(
         config,
+        acting_user,
         title,
         breadcrumb,
         _SiteScope(
@@ -140,6 +146,7 @@ def render_settings_page(config: Config, data: GlobalSettingsApp) -> None:
 
 def _app_data(
     config: Config,
+    acting_user: LoggedInUser,
     title: str,
     breadcrumb: Breadcrumb,
     scope: _Scope,
@@ -158,7 +165,7 @@ def _app_data(
                 managed_by_central_site=scope.managed_by_central_site,
             )
         ),
-        topics=list(_topics(config, scope, shows)),
+        topics=list(_topics(config, acting_user, scope, shows)),
     )
 
 
@@ -169,13 +176,17 @@ def _breadcrumb_items(breadcrumb: Breadcrumb) -> list[GlobalSettingsBreadcrumbIt
 
 
 def _topics(
-    config: Config, scope: _Scope, shows: Callable[[ConfigVariable], bool]
+    config: Config,
+    acting_user: LoggedInUser,
+    scope: _Scope,
+    shows: Callable[[ConfigVariable], bool],
 ) -> Iterator[GlobalSettingsTopic]:
     context = make_global_settings_context(
         edition(paths.omd_root),
         omd_site() if isinstance(scope, _GlobalScope) else scope.site_id,
         sites=config.sites,
         graph_timeranges=config.graph_timeranges,
+        folder_choices=lambda: make_folder_tree(config).folder_choices_fulltitle(acting_user),
     )
     default_values = dict(ABCConfigDomain.get_all_default_globals())
     is_activated = get_global_config().global_settings.is_activated

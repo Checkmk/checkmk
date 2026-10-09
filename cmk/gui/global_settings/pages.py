@@ -20,6 +20,7 @@ from cmk.gui.global_settings.utils import (
 )
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.search.matchers import MatchItemGeneratorRegistry
@@ -59,18 +60,21 @@ def _shown_on_the_global_page(config_variable: ConfigVariable) -> bool:
     return config_variable.primary_domain().in_global_settings
 
 
-def global_settings(config: Config) -> GlobalSettingsApp:
+def global_settings(config: Config, *, acting_user: LoggedInUser) -> GlobalSettingsApp:
     ensure_page_access(config, ["wato.global"])
     title = _("Global settings")
     return central_settings(
         config,
+        acting_user=acting_user,
         title=title,
         breadcrumb=_global_breadcrumb(title),
         shows=_shown_on_the_global_page,
     )
 
 
-def site_specific_settings(config: Config, site_id: SiteId) -> GlobalSettingsApp:
+def site_specific_settings(
+    config: Config, site_id: SiteId, *, acting_user: LoggedInUser
+) -> GlobalSettingsApp:
     ensure_page_access(config, STATIC_PERMISSIONS_SITES)
     sites = site_management_registry["site_management"].load_sites()
     if site_id not in sites:
@@ -80,6 +84,7 @@ def site_specific_settings(config: Config, site_id: SiteId) -> GlobalSettingsApp
     title = _("Site-specific settings of %(alias)s") % {"alias": sites[site_id]["alias"]}
     return site_settings(
         config,
+        acting_user=acting_user,
         title=title,
         breadcrumb=_site_specific_breadcrumb(site_id, title),
         sites=sites,
@@ -135,11 +140,11 @@ def _setup_breadcrumb() -> Breadcrumb:
 
 
 def _global_settings_page(ctx: PageContext) -> None:
-    data = global_settings(ctx.config)
+    data = global_settings(ctx.config, acting_user=user)
     render_settings_page(ctx.config, data)
 
 
 def _site_specific_settings_page(ctx: PageContext) -> None:
     site_id = SiteId(request.get_ascii_input_mandatory("site"))
-    data = site_specific_settings(ctx.config, site_id)
+    data = site_specific_settings(ctx.config, site_id, acting_user=user)
     render_settings_page(ctx.config, data)

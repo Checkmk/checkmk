@@ -148,6 +148,9 @@ def global_settings_context_of(site_id: SiteId, api_context: ApiContext) -> Glob
         site_id,
         sites=api_context.config.sites,
         graph_timeranges=api_context.config.graph_timeranges,
+        folder_choices=lambda: make_folder_tree(api_context.config).folder_choices_fulltitle(
+            api_context.user
+        ),
     )
 
 

@@ -5,6 +5,8 @@
 
 # mypy: disable-error-code="type-arg"
 
+from collections.abc import Callable, Sequence
+
 from cmk.gui.form_specs.unstable import ConditionChoices, not_empty
 from cmk.gui.form_specs.unstable import Labels as FSLabels
 from cmk.gui.form_specs.unstable import World as FSLabelsWorld
@@ -21,7 +23,7 @@ from cmk.gui.valuespec import (
     MonitoredHostname,
 )
 from cmk.gui.watolib.form_spec_generators import create_full_path_folder_choice
-from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.rulesets import get_host_tags_condition_choices
 from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.internal.form_specs import (
@@ -150,6 +152,7 @@ def common_host_rule_match_conditions() -> list[DictionaryEntry]:
 
 def fs_multifolder_host_rule_match_conditions(
     sites: SiteConfigurations,
+    folder_choices: Callable[[], Sequence[tuple[str, str]]],
 ) -> dict[str, fs.DictElement]:
     """FormSpec counterpart of multifolder_host_rule_match_conditions().
 
@@ -181,7 +184,7 @@ def fs_multifolder_host_rule_match_conditions(
                         "via Setup and that are contained in this folder - either directly "
                         "or in one of its subfolders."
                     ),
-                    folder_choices=lambda: folder_tree().folder_choices_fulltitle(user),
+                    folder_choices=folder_choices,
                 ),
                 add_element_label=Label("Add additional folder"),
                 editable_order=False,

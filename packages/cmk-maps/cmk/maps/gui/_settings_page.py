@@ -20,6 +20,7 @@ from cmk.gui.breadcrumb import (
 from cmk.gui.config import Config
 from cmk.gui.global_settings import central_settings, ensure_page_access, render_settings_page
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariable
@@ -34,11 +35,12 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("maps_settings", _maps_settings_page))
 
 
-def maps_settings(config: Config) -> GlobalSettingsApp:
+def maps_settings(config: Config, *, acting_user: LoggedInUser) -> GlobalSettingsApp:
     ensure_page_access(config, [ConfigDomainMaps.global_settings_permission])
     title = _("Maps settings")
     return central_settings(
         config,
+        acting_user=acting_user,
         title=title,
         breadcrumb=_breadcrumb(title),
         shows=_owned_by_maps,
@@ -58,4 +60,4 @@ def _breadcrumb(title: str) -> Breadcrumb:
 
 
 def _maps_settings_page(ctx: PageContext) -> None:
-    render_settings_page(ctx.config, maps_settings(ctx.config))
+    render_settings_page(ctx.config, maps_settings(ctx.config, acting_user=user))

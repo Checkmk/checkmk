@@ -17,6 +17,7 @@ from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.global_settings.pages import global_settings, site_specific_settings
 from cmk.gui.i18n import _l
+from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.mkeventd.config_domain import ConfigDomainEventConsole
 from cmk.gui.watolib.config_domain_name import (
     config_domain_registry,
@@ -115,7 +116,7 @@ def _override_in_the_sites_file(site_id: SiteId, overrides: Mapping[str, object]
 @pytest.mark.usefixtures("factory_defaults", "with_admin_login")
 def test_a_registered_group_with_a_visible_variable_becomes_a_topic(load_config: Config) -> None:
     with registered(ConfigVariableGroup(title=_l("Test group"), sort_index=1), "test_var_a"):
-        topics = global_settings(load_config).topics
+        topics = global_settings(load_config, acting_user=LoggedInSuperUser()).topics
     assert [topic.headline for topic in topics] == ["Test group"]
     assert [variable.name for variable in topics[0].variables] == ["test_var_a"]
 
@@ -123,7 +124,7 @@ def test_a_registered_group_with_a_visible_variable_becomes_a_topic(load_config:
 @pytest.mark.usefixtures("factory_defaults", "with_admin_login")
 def test_a_group_without_visible_variables_yields_no_topic(load_config: Config) -> None:
     with registered(ConfigVariableGroup(title=_l("Empty group"), sort_index=1)):
-        topics = global_settings(load_config).topics
+        topics = global_settings(load_config, acting_user=LoggedInSuperUser()).topics
     assert topics == []
 
 
@@ -136,7 +137,7 @@ def test_the_group_icon_and_description_become_the_topic_header(load_config: Con
         description=_l("Configures the test"),
     )
     with registered(group, "test_var_a"):
-        topic = global_settings(load_config).topics[0]
+        topic = global_settings(load_config, acting_user=LoggedInSuperUser()).topics[0]
     assert topic.icon == shared.IconNames.sites
     assert topic.subline == "Configures the test"
 
@@ -144,7 +145,7 @@ def test_the_group_icon_and_description_become_the_topic_header(load_config: Con
 @pytest.mark.usefixtures("factory_defaults", "with_admin_login")
 def test_a_group_without_icon_and_description_gets_the_defaults(load_config: Config) -> None:
     with registered(ConfigVariableGroup(title=_l("Test group"), sort_index=1), "test_var_a"):
-        topic = global_settings(load_config).topics[0]
+        topic = global_settings(load_config, acting_user=LoggedInSuperUser()).topics[0]
     assert topic.icon == shared.IconNames.configuration
     assert topic.subline == ""
 
@@ -155,13 +156,13 @@ def test_topics_follow_the_group_sort_index(load_config: Config) -> None:
         registered(ConfigVariableGroup(title=_l("Later"), sort_index=20), "test_var_a"),
         registered(ConfigVariableGroup(title=_l("Earlier"), sort_index=10), "test_var_b"),
     ):
-        topics = global_settings(load_config).topics
+        topics = global_settings(load_config, acting_user=LoggedInSuperUser()).topics
     assert [topic.headline for topic in topics] == ["Earlier", "Later"]
 
 
 @pytest.mark.usefixtures("executables_variable", "with_admin_login")
 def test_an_administrator_sees_a_variable_that_adds_executables(load_config: Config) -> None:
-    topics = global_settings(load_config).topics
+    topics = global_settings(load_config, acting_user=LoggedInSuperUser()).topics
     assert [variable.name for variable in topics[0].variables] == ["actions"]
 
 
@@ -170,12 +171,14 @@ def test_a_variable_the_user_may_not_read_is_left_out(
     load_config: Config, with_user: tuple[UserId, str]
 ) -> None:
     with logged_in(with_user[0], "wato.use", "wato.global"):
-        assert global_settings(load_config).topics == []
+        assert global_settings(load_config, acting_user=LoggedInSuperUser()).topics == []
 
 
 @pytest.mark.usefixtures("test_variables", "with_admin_login")
 def test_an_unset_variable_comes_from_the_factory_defaults(load_config: Config) -> None:
-    variable = shown_variables(global_settings(load_config))["test_var_a"]
+    variable = shown_variables(global_settings(load_config, acting_user=LoggedInSuperUser()))[
+        "test_var_a"
+    ]
 
     assert variable.factory_value == 1
     assert variable.current == shared.GlobalScopeValue(value=1, explicit=False, site_overrides=[])
@@ -187,14 +190,18 @@ def test_a_centrally_configured_variable_comes_from_the_global_settings(
 ) -> None:
     ConfigDomainGUI().save({"test_var_a": 5})
 
-    variable = shown_variables(global_settings(load_config))["test_var_a"]
+    variable = shown_variables(global_settings(load_config, acting_user=LoggedInSuperUser()))[
+        "test_var_a"
+    ]
 
     assert variable.current == shared.GlobalScopeValue(value=5, explicit=True, site_overrides=[])
 
 
 @pytest.mark.usefixtures("test_variables", "distributed_setup", "with_admin_login")
 def test_the_global_page_links_the_site_that_overrides_a_variable(load_config: Config) -> None:
-    variable = shown_variables(global_settings(load_config))["test_var_a"]
+    variable = shown_variables(global_settings(load_config, acting_user=LoggedInSuperUser()))[
+        "test_var_a"
+    ]
 
     assert variable.current == shared.GlobalScopeValue(
         value=1,
@@ -211,13 +218,13 @@ def test_the_global_page_links_the_site_that_overrides_a_variable(load_config: C
 
 @pytest.mark.usefixtures("factory_defaults", "with_admin_login")
 def test_an_administrator_reaches_the_page(load_config: Config) -> None:
-    global_settings(load_config)
+    global_settings(load_config, acting_user=LoggedInSuperUser())
 
 
 @pytest.mark.usefixtures("factory_defaults", "with_user_login")
 def test_the_page_needs_the_global_settings_permission(load_config: Config) -> None:
     with pytest.raises(MKAuthException, match="Global settings"):
-        global_settings(load_config)
+        global_settings(load_config, acting_user=LoggedInSuperUser())
 
 
 @pytest.mark.usefixtures("factory_defaults")
@@ -225,13 +232,15 @@ def test_reading_all_modules_suffices_for_the_page(
     load_config: Config, with_user: tuple[UserId, str]
 ) -> None:
     with logged_in(with_user[0], "wato.use", "wato.seeall"):
-        global_settings(load_config)
+        global_settings(load_config, acting_user=LoggedInSuperUser())
 
 
 @pytest.mark.usefixtures("factory_defaults", "with_admin_login")
 def test_a_disabled_setup_refuses_the_page(load_config: Config) -> None:
     with pytest.raises(MKGeneralException):
-        global_settings(dataclasses.replace(load_config, wato_enabled=False))
+        global_settings(
+            dataclasses.replace(load_config, wato_enabled=False), acting_user=LoggedInSuperUser()
+        )
 
 
 @pytest.mark.usefixtures(
@@ -251,7 +260,9 @@ def test_the_read_only_message_is_shown_on_the_page(
 
 @pytest.mark.usefixtures("test_variables", "distributed_setup", "with_admin_login")
 def test_a_site_override_is_shown_beside_the_global_layer(load_config: Config) -> None:
-    variable = shown_variables(site_specific_settings(load_config, REMOTE_SITE))["test_var_a"]
+    variable = shown_variables(
+        site_specific_settings(load_config, REMOTE_SITE, acting_user=LoggedInSuperUser())
+    )["test_var_a"]
 
     assert variable.current == shared.SiteScopeValue(
         value=5,
@@ -264,7 +275,9 @@ def test_a_site_override_is_shown_beside_the_global_layer(load_config: Config) -
 def test_a_site_inherits_a_centrally_configured_value(load_config: Config) -> None:
     ConfigDomainGUI().save({"test_var_b": 7})
 
-    variable = shown_variables(site_specific_settings(load_config, REMOTE_SITE))["test_var_b"]
+    variable = shown_variables(
+        site_specific_settings(load_config, REMOTE_SITE, acting_user=LoggedInSuperUser())
+    )["test_var_b"]
 
     assert variable.current == shared.SiteScopeValue(
         value=7,
@@ -277,7 +290,9 @@ def test_a_site_inherits_a_centrally_configured_value(load_config: Config) -> No
 def test_a_site_inherits_the_factory_value_when_nothing_configures_it(
     load_config: Config,
 ) -> None:
-    variable = shown_variables(site_specific_settings(load_config, REMOTE_SITE))["test_var_b"]
+    variable = shown_variables(
+        site_specific_settings(load_config, REMOTE_SITE, acting_user=LoggedInSuperUser())
+    )["test_var_b"]
 
     assert variable.factory_value == 2
     assert variable.current == shared.SiteScopeValue(
@@ -290,13 +305,13 @@ def test_a_site_inherits_the_factory_value_when_nothing_configures_it(
 @pytest.mark.usefixtures("patch_omd_site", "with_admin_login")
 def test_an_unknown_site_is_refused(load_config: Config) -> None:
     with pytest.raises(MKUserError, match="This site does not exist"):
-        site_specific_settings(load_config, SiteId("nowhere"))
+        site_specific_settings(load_config, SiteId("nowhere"), acting_user=LoggedInSuperUser())
 
 
 @pytest.mark.usefixtures("patch_omd_site", "with_admin_login")
 def test_a_non_distributed_setup_offers_no_site_specific_settings(load_config: Config) -> None:
     with pytest.raises(MKUserError, match="non-distributed setups"):
-        site_specific_settings(load_config, omd_site())
+        site_specific_settings(load_config, omd_site(), acting_user=LoggedInSuperUser())
 
 
 @pytest.mark.usefixtures("distributed_setup", "with_admin_login")
@@ -304,14 +319,16 @@ def test_a_site_without_replication_offers_no_site_specific_settings(load_config
     _add_remote_site(UNREPLICATED_SITE, "Unreplicated site", replicated=False)
 
     with pytest.raises(MKUserError, match="not the central site nor a replication remote site"):
-        site_specific_settings(load_config, UNREPLICATED_SITE)
+        site_specific_settings(load_config, UNREPLICATED_SITE, acting_user=LoggedInSuperUser())
 
 
 @pytest.mark.usefixtures("test_variables", "patch_omd_site", "remote_site", "with_admin_login")
 def test_a_remote_site_shows_the_override_the_central_site_pushed(load_config: Config) -> None:
     ConfigDomainGUI().save_site_globals({"test_var_a": 5})
 
-    variable = shown_variables(site_specific_settings(load_config, omd_site()))["test_var_a"]
+    variable = shown_variables(
+        site_specific_settings(load_config, omd_site(), acting_user=LoggedInSuperUser())
+    )["test_var_a"]
 
     assert variable.current == shared.SiteScopeValue(
         value=5,
@@ -324,7 +341,9 @@ def test_a_remote_site_shows_the_override_the_central_site_pushed(load_config: C
 def test_a_remote_site_ignores_an_override_in_its_own_sites_file(load_config: Config) -> None:
     _override_in_the_sites_file(omd_site(), {"test_var_a": 5})
 
-    variable = shown_variables(site_specific_settings(load_config, omd_site()))["test_var_a"]
+    variable = shown_variables(
+        site_specific_settings(load_config, omd_site(), acting_user=LoggedInSuperUser())
+    )["test_var_a"]
 
     assert variable.current == shared.SiteScopeValue(
         value=1,
@@ -335,7 +354,7 @@ def test_a_remote_site_ignores_an_override_in_its_own_sites_file(load_config: Co
 
 @pytest.mark.usefixtures("factory_defaults", "patch_omd_site", "remote_site", "with_admin_login")
 def test_a_remote_site_marks_its_scope_as_managed_by_the_central_site(load_config: Config) -> None:
-    data = site_specific_settings(load_config, omd_site())
+    data = site_specific_settings(load_config, omd_site(), acting_user=LoggedInSuperUser())
 
     assert data.scope == shared.GlobalSettingsScopeSite(
         site_id=omd_site(), managed_by_central_site=True
@@ -346,21 +365,21 @@ def test_a_remote_site_marks_its_scope_as_managed_by_the_central_site(load_confi
 def test_a_remote_site_marks_the_global_scope_as_managed_by_the_central_site(
     load_config: Config,
 ) -> None:
-    data = global_settings(load_config)
+    data = global_settings(load_config, acting_user=LoggedInSuperUser())
 
     assert data.scope == shared.GlobalSettingsScopeGlobal(managed_by_central_site=True)
 
 
 @pytest.mark.usefixtures("factory_defaults", "distributed_setup", "with_admin_login")
 def test_the_central_site_does_not_mark_the_global_scope_as_pushed(load_config: Config) -> None:
-    data = global_settings(load_config)
+    data = global_settings(load_config, acting_user=LoggedInSuperUser())
 
     assert data.scope == shared.GlobalSettingsScopeGlobal(managed_by_central_site=False)
 
 
 @pytest.mark.usefixtures("factory_defaults", "distributed_setup", "with_admin_login")
 def test_the_central_site_does_not_mark_a_site_scope_as_pushed(load_config: Config) -> None:
-    data = site_specific_settings(load_config, REMOTE_SITE)
+    data = site_specific_settings(load_config, REMOTE_SITE, acting_user=LoggedInSuperUser())
 
     assert data.scope == shared.GlobalSettingsScopeSite(
         site_id=REMOTE_SITE, managed_by_central_site=False
@@ -372,7 +391,7 @@ def test_a_remote_site_offers_no_settings_of_another_connection(load_config: Con
     _add_remote_site(UNREPLICATED_SITE, "Unreplicated site", replicated=False)
 
     with pytest.raises(MKUserError, match="managed on the central site"):
-        site_specific_settings(load_config, UNREPLICATED_SITE)
+        site_specific_settings(load_config, UNREPLICATED_SITE, acting_user=LoggedInSuperUser())
 
 
 @pytest.mark.usefixtures("factory_defaults", "distributed_setup")
@@ -380,7 +399,7 @@ def test_the_site_management_permission_suffices_for_the_site_page(
     load_config: Config, with_user: tuple[UserId, str]
 ) -> None:
     with logged_in(with_user[0], "wato.use", "wato.sites"):
-        site_specific_settings(load_config, REMOTE_SITE)
+        site_specific_settings(load_config, REMOTE_SITE, acting_user=LoggedInSuperUser())
 
 
 @pytest.mark.usefixtures("factory_defaults", "distributed_setup", "with_user_login")
@@ -388,7 +407,7 @@ def test_the_site_page_refuses_a_user_without_the_site_management_permission(
     load_config: Config,
 ) -> None:
     with pytest.raises(MKAuthException, match="Site management"):
-        site_specific_settings(load_config, REMOTE_SITE)
+        site_specific_settings(load_config, REMOTE_SITE, acting_user=LoggedInSuperUser())
 
 
 @pytest.mark.usefixtures("test_variables", "distributed_setup")
@@ -396,12 +415,15 @@ def test_a_site_manager_does_not_see_a_variable_they_may_not_read(
     load_config: Config, with_user: tuple[UserId, str]
 ) -> None:
     with logged_in(with_user[0], "wato.use", "wato.sites"):
-        assert site_specific_settings(load_config, REMOTE_SITE).topics == []
+        assert (
+            site_specific_settings(load_config, REMOTE_SITE, acting_user=LoggedInSuperUser()).topics
+            == []
+        )
 
 
 @pytest.mark.usefixtures("factory_defaults", "distributed_setup", "with_admin_login")
 def test_the_site_specific_breadcrumb_hangs_under_the_site_connection(load_config: Config) -> None:
-    data = site_specific_settings(load_config, REMOTE_SITE)
+    data = site_specific_settings(load_config, REMOTE_SITE, acting_user=LoggedInSuperUser())
 
     assert [item.title for item in data.breadcrumb][-3:] == [
         "Distributed monitoring",
@@ -416,12 +438,18 @@ def test_the_site_specific_breadcrumb_hangs_under_the_site_connection(load_confi
 
 @pytest.mark.usefixtures("variables_of_both_domains", "with_admin_login")
 def test_the_global_page_hides_event_console_variables(load_config: Config) -> None:
-    assert set(shown_variables(global_settings(load_config))) == {GUI_VAR}
+    assert set(shown_variables(global_settings(load_config, acting_user=LoggedInSuperUser()))) == {
+        GUI_VAR
+    }
 
 
 @pytest.mark.usefixtures("variables_of_both_domains", "distributed_setup", "with_admin_login")
 def test_the_site_page_shows_event_console_variables_too(load_config: Config) -> None:
-    assert set(shown_variables(site_specific_settings(load_config, REMOTE_SITE))) == {
+    assert set(
+        shown_variables(
+            site_specific_settings(load_config, REMOTE_SITE, acting_user=LoggedInSuperUser())
+        ),
+    ) == {
         EVENT_CONSOLE_VAR,
         GUI_VAR,
     }
@@ -456,7 +484,9 @@ def test_the_domain_hint_precedes_the_hints_of_the_variable(load_config: Config)
         primary_domain=_HintingDomain,
         hints=lambda: [ConfigVariableHint(HTML.without_escaping("Take care"), variant="info")],
     ):
-        variable = shown_variables(global_settings(load_config))["test_var_a"]
+        variable = shown_variables(global_settings(load_config, acting_user=LoggedInSuperUser()))[
+            "test_var_a"
+        ]
 
     assert variable.hints == [
         shared.GlobalSettingsHint(
@@ -472,7 +502,12 @@ def test_the_domain_hint_precedes_the_hints_of_the_variable(load_config: Config)
 
 @pytest.mark.usefixtures("test_variables", "with_admin_login")
 def test_a_variable_of_a_domain_without_a_hint_has_none(load_config: Config) -> None:
-    assert shown_variables(global_settings(load_config))["test_var_a"].hints == []
+    assert (
+        shown_variables(global_settings(load_config, acting_user=LoggedInSuperUser()))[
+            "test_var_a"
+        ].hints
+        == []
+    )
 
 
 @pytest.mark.usefixtures("factory_defaults", "with_admin_login")
@@ -484,7 +519,9 @@ def test_a_copyable_hint_keeps_its_value_out_of_the_text(load_config: Config) ->
             ConfigVariableHint(HTML.without_escaping("Reachable at "), copyable="http://host/mcp")
         ],
     ):
-        variable = shown_variables(global_settings(load_config))["test_var_a"]
+        variable = shown_variables(global_settings(load_config, acting_user=LoggedInSuperUser()))[
+            "test_var_a"
+        ]
 
     assert variable.hints == [
         shared.GlobalSettingsHint(

@@ -11,6 +11,7 @@ import pytest
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.watolib.config_domain_name import config_variable_registry
 from cmk.update_config.plugins.actions import global_settings
 from tests.testlib.unit.fake_site import edition as edition_from_env
@@ -36,9 +37,12 @@ def test_updating_the_updated_configuration_again_changes_nothing() -> None:
         logging.getLogger(),
         previous_release_settings(),
         active_config,
+        LoggedInSuperUser(),
     )
 
-    twice = global_settings.update_global_config(logging.getLogger(), dict(once), active_config)
+    twice = global_settings.update_global_config(
+        logging.getLogger(), dict(once), active_config, LoggedInSuperUser()
+    )
 
     assert twice == once
 
@@ -49,6 +53,7 @@ def test_the_current_form_refuses_only_the_recorded_previous_release_values() ->
         logging.getLogger(),
         previous_release_settings(),
         active_config,
+        LoggedInSuperUser(),
     )
     context = make_global_settings_context(edition_from_env())
 
@@ -75,6 +80,7 @@ def test_a_setting_withdrawn_since_the_previous_release_is_dropped(ident: str) -
             still_offered: previous_release_settings()[still_offered],
         },
         active_config,
+        LoggedInSuperUser(),
     )
 
     assert updated == {still_offered: PREVIOUS_RELEASE_SETTINGS[still_offered]}

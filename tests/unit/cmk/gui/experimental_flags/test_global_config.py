@@ -12,6 +12,7 @@ from cmk.gui import experimental_flags
 from cmk.gui.config import Config
 from cmk.gui.experimental_flags.global_config import is_development_site
 from cmk.gui.global_settings.pages import global_settings
+from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.watolib.config_domain_name import (
     config_domain_registry,
     config_variable_group_registry,
@@ -50,7 +51,10 @@ def _register(*, show_in_global_settings: bool) -> None:
 def test_a_dev_site_shows_the_experimental_flags(load_config: Config) -> None:
     _register(show_in_global_settings=True)
 
-    assert set(shown_variables(global_settings(load_config))) == FLAG_NAMES
+    assert (
+        set(shown_variables(global_settings(load_config, acting_user=LoggedInSuperUser())))
+        == FLAG_NAMES
+    )
 
 
 @pytest.mark.usefixtures(
@@ -59,7 +63,9 @@ def test_a_dev_site_shows_the_experimental_flags(load_config: Config) -> None:
 def test_a_non_dev_site_hides_the_experimental_flags(load_config: Config) -> None:
     _register(show_in_global_settings=False)
 
-    assert not FLAG_NAMES & set(shown_variables(global_settings(load_config)))
+    assert not FLAG_NAMES & set(
+        shown_variables(global_settings(load_config, acting_user=LoggedInSuperUser()))
+    )
 
 
 @pytest.mark.parametrize(

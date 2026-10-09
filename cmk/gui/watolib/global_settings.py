@@ -306,6 +306,7 @@ def make_global_settings_context(
     *,
     sites: SiteConfigurations,
     graph_timeranges: Sequence[GraphTimerange],
+    folder_choices: Callable[[], Sequence[tuple[str, str]]],
 ) -> GlobalSettingsContext:
     return GlobalSettingsContext(
         target_site_id=target_site_id,
@@ -314,6 +315,7 @@ def make_global_settings_context(
         site_neutral_var_dir=site_neutral_path(var_dir),
         configured_sites=sites,
         configured_graph_timeranges=graph_timeranges,
+        folder_choices=folder_choices,
     )
 
 

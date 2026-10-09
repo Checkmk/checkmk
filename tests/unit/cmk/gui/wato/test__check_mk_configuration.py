@@ -174,6 +174,7 @@ def _global_settings_context(edition: Edition) -> GlobalSettingsContext:
         site_neutral_var_dir=Path("/omd/sites/mysite/var"),
         configured_sites=SiteConfigurations({}),
         configured_graph_timeranges=[],
+        folder_choices=lambda: [("", "Main")],
     )
 
 

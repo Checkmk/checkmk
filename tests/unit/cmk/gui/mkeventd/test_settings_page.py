@@ -12,6 +12,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.i18n import _l
+from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.mkeventd._settings_page import event_console_settings, register
 from cmk.gui.mkeventd.config_domain import ConfigDomainEventConsole
 from cmk.gui.pages import PageRegistry
@@ -45,7 +46,9 @@ def fixture_variables_of_both_domains(monkeypatch: pytest.MonkeyPatch) -> Iterat
 
 @pytest.mark.usefixtures("variables_of_both_domains", "with_admin_login")
 def test_the_page_lists_only_event_console_variables(load_config: Config) -> None:
-    assert set(shown_variables(event_console_settings(load_config))) == {EVENT_CONSOLE_VAR}
+    assert set(
+        shown_variables(event_console_settings(load_config, acting_user=LoggedInSuperUser()))
+    ) == {EVENT_CONSOLE_VAR}
 
 
 @pytest.mark.usefixtures("variables_of_both_domains", "load_config")
@@ -65,7 +68,10 @@ def test_the_search_index_lists_only_event_console_variables() -> None:
 @pytest.mark.usefixtures("with_admin_login")
 def test_a_disabled_event_console_refuses_the_page(load_config: Config) -> None:
     with pytest.raises(MKUserError, match="Event Console is disabled"):
-        event_console_settings(dataclasses.replace(load_config, mkeventd_enabled=False))
+        event_console_settings(
+            dataclasses.replace(load_config, mkeventd_enabled=False),
+            acting_user=LoggedInSuperUser(),
+        )
 
 
 @pytest.mark.usefixtures("variables_of_both_domains")
@@ -73,7 +79,7 @@ def test_the_event_console_permission_suffices_for_the_page(
     load_config: Config, with_user: tuple[UserId, str]
 ) -> None:
     with logged_in(with_user[0], "wato.use", "mkeventd.config"):
-        event_console_settings(load_config)
+        event_console_settings(load_config, acting_user=LoggedInSuperUser())
 
 
 def test_the_page_refuses_a_user_with_only_the_global_settings_permission(
@@ -83,12 +89,12 @@ def test_the_page_refuses_a_user_with_only_the_global_settings_permission(
         logged_in(with_user[0], "wato.use", "wato.global"),
         pytest.raises(MKAuthException, match="Configuration of Event Console"),
     ):
-        event_console_settings(load_config)
+        event_console_settings(load_config, acting_user=LoggedInSuperUser())
 
 
 @pytest.mark.usefixtures("variables_of_both_domains", "with_admin_login")
 def test_the_breadcrumb_hangs_under_the_event_console_rule_packs(load_config: Config) -> None:
-    data = event_console_settings(load_config)
+    data = event_console_settings(load_config, acting_user=LoggedInSuperUser())
 
     assert [item.title for item in data.breadcrumb][-3:] == [
         "Events",

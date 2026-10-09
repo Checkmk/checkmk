@@ -27,6 +27,7 @@
   --popup-dialog-danger: var(--color-light-red-50);
   --popup-dialog-info: var(--color-light-blue-50);
   --border-color-purple: rgb(105 102 229);
+  --background-color-ai: var(--color-purple-60);
 
   /* Fonts */
   --font-size-xxlarge: 18px;
@@ -124,6 +125,7 @@
     --dropdown-arrow-color: var(--color-conference-grey-100);
     --dashed-border-color: var(--color-mid-grey-20);
     --ai-purple: var(--color-purple-60);
+    --border-color-ai: var(--color-purple-80);
 
     /* Form Labels Colors */
     --tag-color: var(--color-cyan-80);
@@ -249,6 +251,7 @@
     --dropdown-arrow-color: var(--color-white-100);
     --dashed-border-color: var(--color-mid-grey-80);
     --ai-purple: var(--color-purple-50);
+    --border-color-ai: var(--color-purple-40);
 
     /* Form Labels Colors */
     --tag-color: var(--color-cyan-80);

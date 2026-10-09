@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import logging
 import socket
 from collections.abc import Iterator
 from http import HTTPStatus
@@ -403,6 +404,7 @@ def _restore_point(**overrides: object) -> dict[str, object]:
     return {
         "name": "ip-vm-1",
         "backupId": "backup-1",
+        "platformId": "00000000-0000-0000-0000-000000000000",
         "creationTime": "2026-10-01T09:00:00+00:00",
         "type": "Increment",
         "malwareStatus": "Clean",
@@ -462,7 +464,10 @@ def _reduce_restore_points(
     for backup_id, object_id in resolved.items():
         api.get(
             f"{URL}/api/v1/backups/{backup_id}/objects?skip=0&limit=500",
-            json={"data": [{"id": object_id}], "pagination": {"total": 1}},
+            json={
+                "data": [{"id": object_id, "platformName": "VMware"}],
+                "pagination": {"total": 1},
+            },
         )
     write_sections(
         _client(_auth(storage), storage), [("veeam_restore_points", fetch_restore_points())]
@@ -587,6 +592,94 @@ def test_restore_points_unsupported_backup_platform_is_not_joined(
     assert record["malwareStatus"] is None
 
 
+def test_restore_points_of_a_chain_with_an_invalid_object_are_not_misattributed(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # Shared chain backup-1: obj-1 is valid, obj-2 lacks its id. Taken as a one-object
+    # chain, vm-2's newer point would land on vm-1.
+    api.get(
+        f"{URL}/api/v1/backupObjects?skip=0&limit=500",
+        json={
+            "data": [
+                _backup_object("obj-1", 1, platformId="platform-1"),
+                _backup_object("obj-2", 1, name="vm-2", platformId="platform-1"),
+            ],
+            "pagination": {"total": 2},
+        },
+    )
+    points = [
+        _restore_point(name="vm-1", platformId="platform-1"),
+        _restore_point(
+            name="vm-2", platformId="platform-1", creationTime="2026-10-01T10:00:00+00:00"
+        ),
+    ]
+    api.get(
+        f"{URL}/api/v1/restorePoints?skip=0&limit=500",
+        json={"data": points, "pagination": {"total": 2}},
+    )
+    _mock_backups(api, ["backup-1"])
+    _mock_jobs(api, [])
+    api.get(
+        f"{URL}/api/v1/backups/backup-1/objects?skip=0&limit=500",
+        json={
+            "data": [
+                {"id": "obj-1", "platformName": "VMware", "name": "vm-1"},
+                {"platformName": "VMware", "name": "vm-2"},
+            ],
+            "pagination": {"total": 2},
+        },
+    )
+
+    write_sections(
+        _client(_auth(storage), storage), [("veeam_restore_points", fetch_restore_points())]
+    )
+
+    record = _restore_points_by_host(capsys.readouterr().out)["vm-1"]
+    assert isinstance(last := record["lastRestorePoint"], dict)
+    assert last["creationTime"] == "2026-10-01T09:00:00+00:00"
+
+
+def test_restore_points_of_an_unresolvable_chain_are_joined_by_name_and_platform(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    api.get(
+        f"{URL}/api/v1/backupObjects?skip=0&limit=500",
+        json={
+            "data": [_backup_object("obj-1", 1, platformId="platform-1")],
+            "pagination": {"total": 1},
+        },
+    )
+    api.get(
+        f"{URL}/api/v1/restorePoints?skip=0&limit=500",
+        json={
+            "data": [_restore_point(name="vm-1", platformId="platform-1")],
+            "pagination": {"total": 1},
+        },
+    )
+    _mock_backups(api, ["backup-1"])
+    _mock_jobs(api, [])
+    api.get(
+        f"{URL}/api/v1/backups/backup-1/objects?skip=0&limit=500",
+        status=HTTPStatus.BAD_REQUEST,
+        json={"message": "Backup platform or job type are not supported"},
+    )
+
+    write_sections(
+        _client(_auth(storage), storage), [("veeam_restore_points", fetch_restore_points())]
+    )
+
+    record = _restore_points_by_host(capsys.readouterr().out)["vm-1"]
+    assert record["lastRestorePoint"] == {
+        "creationTime": "2026-10-01T09:00:00+00:00",
+        "type": "Increment",
+        "malwareStatus": "Clean",
+    }
+
+
 def test_restore_points_multi_object_chain_matched_by_suffixed_name(
     api: responses.RequestsMock,
     storage: Storage,
@@ -634,7 +727,10 @@ def test_restore_points_multi_object_chain_matched_by_suffixed_name(
     api.get(
         f"{URL}/api/v1/backups/shared-backup/objects?skip=0&limit=500",
         json={
-            "data": [{"id": "obj-1", "name": "vm-1"}, {"id": "obj-2", "name": "vm-2"}],
+            "data": [
+                {"id": "obj-1", "platformName": "VMware", "name": "vm-1"},
+                {"id": "obj-2", "platformName": "VMware", "name": "vm-2"},
+            ],
             "pagination": {"total": 2},
         },
     )
@@ -680,7 +776,10 @@ def _mock_restore_points_with_one_chain(
     _mock_jobs(api, [_job(status=job_status, sessionId=session_id)])
     api.get(
         f"{URL}/api/v1/backups/backup-1/objects?skip=0&limit=500",
-        json={"data": [{"id": "obj-1", "name": "vm-1"}], "pagination": {"total": 1}},
+        json={
+            "data": [{"id": "obj-1", "platformName": "VMware", "name": "vm-1"}],
+            "pagination": {"total": 1},
+        },
     )
 
 
@@ -783,7 +882,10 @@ def test_restore_points_reuse_cached_objects_of_a_per_machine_backup_via_its_par
     for backup_id in ("backup-1", "machine-1"):
         api.get(
             f"{URL}/api/v1/backups/{backup_id}/objects?skip=0&limit=500",
-            json={"data": [{"id": "obj-1", "name": "vm-1"}], "pagination": {"total": 1}},
+            json={
+                "data": [{"id": "obj-1", "platformName": "VMware", "name": "vm-1"}],
+                "pagination": {"total": 1},
+            },
         )
 
     _write_restore_points(storage)
@@ -854,7 +956,10 @@ def _run_restore_points(
         api.get(
             f"{URL}/api/v1/backups/{object_id}/objects?skip=0&limit=500",
             json={
-                "data": [{"id": object_id} | ({} if name is None else {"name": name})],
+                "data": [
+                    {"id": object_id, "platformName": "VMware"}
+                    | ({} if name is None else {"name": name})
+                ],
                 "pagination": {"total": 1},
             },
         )
@@ -862,6 +967,92 @@ def _run_restore_points(
         _client(_auth(storage), storage), [("veeam_restore_points", fetch_restore_points())]
     )
     return _restore_points_by_host(capsys.readouterr().out)
+
+
+def _fetch_restore_points_with_one_invalid_backup_object(
+    api: responses.RequestsMock, storage: Storage, capsys: pytest.CaptureFixture[str]
+) -> dict[str, dict[str, object]]:
+    """vm-1 is a valid backup object; the other has no `id`, which the API schema requires."""
+    api.get(
+        f"{URL}/api/v1/backupObjects?skip=0&limit=500",
+        json={
+            "data": [_backup_object("obj-1", 1), {"name": "vm-2", "platformName": "VMware"}],
+            "pagination": {"total": 2},
+        },
+    )
+    api.get(
+        f"{URL}/api/v1/restorePoints?skip=0&limit=500",
+        json={"data": [_restore_point()], "pagination": {"total": 1}},
+    )
+    _mock_backups(api, ["backup-1"])
+    _mock_jobs(api, [])
+    api.get(
+        f"{URL}/api/v1/backups/backup-1/objects?skip=0&limit=500",
+        json={
+            "data": [{"id": "obj-1", "platformName": "VMware", "name": "vm-1"}],
+            "pagination": {"total": 1},
+        },
+    )
+    write_sections(
+        _client(_auth(storage), storage), [("veeam_restore_points", fetch_restore_points())]
+    )
+    return _restore_points_by_host(capsys.readouterr().out)
+
+
+def test_an_item_that_does_not_fit_its_model_is_skipped(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    records = _fetch_restore_points_with_one_invalid_backup_object(api, storage, capsys)
+
+    assert list(records) == ["vm-1"]
+
+
+def test_a_skipped_item_is_logged_for_debugging(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.DEBUG, logger="cmk.plugins.veeam.special_agent.agent_veeam")
+
+    _fetch_restore_points_with_one_invalid_backup_object(api, storage, capsys)
+
+    assert any(
+        record.message.startswith("Skipping an item that does not fit _BackupObject")
+        for record in caplog.records
+    )
+
+
+def test_restore_point_without_platform_id_is_kept(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    point = _restore_point()
+    del point["platformId"]
+
+    records = _run_restore_points(
+        api, storage, capsys, [_backup_object("obj-1", 1)], {"obj-1": [point]}
+    )
+
+    assert records["vm-1"]["lastRestorePoint"] is not None
+
+
+def test_backup_object_without_platform_name_is_kept(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    backup_object = _backup_object("obj-1", 1)
+    del backup_object["platformName"]
+
+    records = _run_restore_points(
+        api, storage, capsys, [backup_object], {"obj-1": [_restore_point()]}
+    )
+
+    assert records["vm-1"]["platformName"] is None
 
 
 def test_restore_points_of_one_machine_in_several_jobs_are_merged(
@@ -1056,7 +1247,9 @@ def _mock_session_and_objects(
     api.get(
         f"{URL}/api/v1/backups/{resource_id}/objects?skip=0",
         json={
-            "data": [{"id": f"object-{n}", "name": n} for n in object_names],
+            "data": [
+                {"id": f"object-{n}", "platformName": "VMware", "name": n} for n in object_names
+            ],
             "pagination": {"total": len(object_names)},
         },
     )
@@ -1247,7 +1440,10 @@ def test_fetch_backups_falls_back_to_the_session_for_a_single_object_job_with_no
     )
     api.get(
         f"{URL}/api/v1/backups/resource-1/objects?skip=0",
-        json={"data": [{"id": "object-vm-1", "name": "vm-1"}], "pagination": {"total": 1}},
+        json={
+            "data": [{"id": "object-vm-1", "platformName": "VMware", "name": "vm-1"}],
+            "pagination": {"total": 1},
+        },
     )
     _mock_tasks(api, "2026-09-29T00:00:00+00:00", [])
 
@@ -1278,6 +1474,34 @@ def test_fetch_backups_session_404_skips_just_that_job(
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
 
     assert capsys.readouterr().out == ""
+
+
+def test_fetch_backups_job_with_an_invalid_object_is_not_misattributed(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # vm-2 lacks its id. Taken as a one-object job, vm-2's task would land on vm-1.
+    _mock_jobs(api, [_job()])
+    api.get(
+        f"{URL}/api/v1/sessions/session-1",
+        json={"resourceId": "resource-1", "state": "Stopped"},
+    )
+    api.get(
+        f"{URL}/api/v1/backups/resource-1/objects?skip=0",
+        json={
+            "data": [
+                {"id": "object-vm-1", "platformName": "VMware", "name": "vm-1"},
+                {"platformName": "VMware", "name": "vm-2"},
+            ],
+            "pagination": {"total": 2},
+        },
+    )
+    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [_task(name="vm-2")])
+
+    write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
+
+    assert "<<<<vm-1>>>>" not in capsys.readouterr().out
 
 
 def test_fetch_backups_objects_400_skips_just_that_job(
@@ -1311,7 +1535,10 @@ def test_fetch_backups_session_missing_state_keeps_the_jobs_tasks(
     api.get(f"{URL}/api/v1/sessions/session-1", json={"resourceId": "resource-1"})
     api.get(
         f"{URL}/api/v1/backups/resource-1/objects?skip=0",
-        json={"data": [{"id": "object-vm-1", "name": "vm-1"}], "pagination": {"total": 1}},
+        json={
+            "data": [{"id": "object-vm-1", "platformName": "VMware", "name": "vm-1"}],
+            "pagination": {"total": 1},
+        },
     )
     _mock_tasks(api, "2026-09-29T00:00:00+00:00", [_task()])
 
@@ -1333,7 +1560,10 @@ def test_fetch_backups_session_missing_state_writes_no_fallback_record(
     api.get(f"{URL}/api/v1/sessions/session-1", json={"resourceId": "resource-1"})
     api.get(
         f"{URL}/api/v1/backups/resource-1/objects?skip=0",
-        json={"data": [{"id": "object-vm-1", "name": "vm-1"}], "pagination": {"total": 1}},
+        json={
+            "data": [{"id": "object-vm-1", "platformName": "VMware", "name": "vm-1"}],
+            "pagination": {"total": 1},
+        },
     )
     _mock_tasks(api, "2026-09-29T00:00:00+00:00", [])
 
@@ -1360,7 +1590,10 @@ def test_fetch_backups_cached_session_feeds_the_fallback_task_on_a_later_run(
     )
     api.get(
         f"{URL}/api/v1/backups/resource-1/objects?skip=0",
-        json={"data": [{"id": "object-vm-1", "name": "vm-1"}], "pagination": {"total": 1}},
+        json={
+            "data": [{"id": "object-vm-1", "platformName": "VMware", "name": "vm-1"}],
+            "pagination": {"total": 1},
+        },
     )
     _mock_tasks(api, "2026-09-29T00:00:00+00:00", [_task()])
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
@@ -1477,7 +1710,10 @@ def test_fetch_backups_only_caches_a_session_once_it_has_stopped(
     )
     api.get(
         f"{URL}/api/v1/backups/resource-1/objects?skip=0",
-        json={"data": [{"id": "object-vm-1", "name": "vm-1"}], "pagination": {"total": 1}},
+        json={
+            "data": [{"id": "object-vm-1", "platformName": "VMware", "name": "vm-1"}],
+            "pagination": {"total": 1},
+        },
     )
     _mock_jobs(api, [_job()])
     _mock_tasks(api, "2026-09-29T00:00:00+00:00", [])
@@ -1534,7 +1770,10 @@ def test_sections_sharing_a_list_with_different_page_sizes_fetch_it_once_per_run
     _mock_backups(api, ["backup-1"])
     api.get(
         f"{URL}/api/v1/backups/backup-1/objects?skip=0&limit=500",
-        json={"data": [{"id": "object-vm-1", "name": "vm-1"}], "pagination": {"total": 1}},
+        json={
+            "data": [{"id": "object-vm-1", "platformName": "VMware", "name": "vm-1"}],
+            "pagination": {"total": 1},
+        },
     )
 
     write_sections(

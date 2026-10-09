@@ -12,9 +12,10 @@ has to be installed on the backup server itself.
 
 import argparse
 import json
+import logging
 import sys
 import time
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, UTC
 from http import HTTPStatus
@@ -24,13 +25,16 @@ from urllib.parse import quote
 import requests
 import requests.auth
 import urllib3
-from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic.alias_generators import to_camel
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option, Secret
 from cmk.plugins.veeam.lib import parse_iso8601_epoch
 from cmk.server_side_programs.v1 import HostnameValidationAdapter, report_agent_crashes, Storage
 
 AGENT = "veeam"
+
+_LOGGER = logging.getLogger(__name__)
 
 __version__ = "3.0.0b1"
 
@@ -427,39 +431,105 @@ def fetch_list(path: str) -> FetchStrategy:
     return _fetch
 
 
+class _ApiItem(BaseModel):
+    """An item of a REST API list, with the API's camelCase field names. A field is
+    required exactly when the API schema (/swagger/v1.3-rev1/swagger.json) requires it."""
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
+
+
+def _parse_items[Item: _ApiItem](model: type[Item], items: Iterable[object]) -> list[Item]:
+    """The items that fit `model`; one that doesn't is skipped rather than fatal."""
+    parsed: list[Item] = []
+    for item in items:
+        try:
+            parsed.append(model.model_validate(item))
+        except ValidationError as exc:
+            _LOGGER.debug(
+                "Skipping an item that does not fit %(model)s: %(error)s",
+                {"model": model.__name__, "error": exc},
+            )
+    return parsed
+
+
+class _Backup(_ApiItem):
+    """An item of GET /api/v1/backups."""
+
+    id: str
+    job_id: str | None = None
+
+
+class _JobState(_ApiItem):
+    """An item of GET /api/v1/jobs/states."""
+
+    id: str
+    name: str
+    status: str
+    session_id: str | None = None
+    last_run: str | None = None
+
+
+class _RestorePoint(_ApiItem):
+    """An item of GET /api/v1/restorePoints."""
+
+    backup_id: str
+    parent_backup_id: str | None = None
+    name: str
+    # Required by the API schema, but only used for the name/platform fallback join, so a
+    # missing value must not drop the restore point.
+    platform_id: str | None = None
+    creation_time: str
+    type: str | None = None
+    malware_status: str | None = None
+
+
+class _BackupObject(_ApiItem):
+    """An item of GET /api/v1/backupObjects and of GET /api/v1/backups/{backupId}/objects
+    (both BackupObjectModel)."""
+
+    id: str
+    name: str | None = None
+    platform_id: str | None = None
+    # Required by the API schema, but only passed through, so a missing value must not drop
+    # the object.
+    platform_name: str | None = None
+    type: str | None = None
+    restore_points_count: int | None = None
+
+
 _MALWARE_SEVERITY = {"Clean": 0, "Informative": 1, "Suspicious": 2, "Infected": 3}
 _UNKNOWN_MALWARE_SEVERITY = len(_MALWARE_SEVERITY)
 
 
-def _malware_severity(status: object) -> int:
-    if not isinstance(status, str):
-        return _UNKNOWN_MALWARE_SEVERITY
+def _malware_severity(status: str) -> int:
     return _MALWARE_SEVERITY.get(status, _UNKNOWN_MALWARE_SEVERITY)
 
 
-def _malware_rollup(points: Sequence[Mapping[str, object]]) -> object:
+def _malware_rollup(points: Sequence[_RestorePoint]) -> str | None:
     """The worst malware status of all restore points. An unknown status counts as
     worst, so that it surfaces in the check. A missing status means the point was not
     scanned (Veeam does not scan file share backups) and is ignored."""
     return max(
-        (status for point in points if (status := point.get("malwareStatus")) is not None),
+        (point.malware_status for point in points if point.malware_status is not None),
         key=_malware_severity,
         default=None,
     )
 
 
-def _newest(points: Sequence[Mapping[str, object]]) -> Mapping[str, object] | None:
+def _newest(points: Sequence[_RestorePoint]) -> _RestorePoint | None:
     dated = [
         (epoch, point)
         for point in points
-        if isinstance(created := point.get("creationTime"), str)
-        and (epoch := parse_iso8601_epoch(created)) is not None
+        if (epoch := parse_iso8601_epoch(point.creation_time)) is not None
     ]
     return max(dated, key=lambda item: item[0])[1] if dated else None
 
 
 def _restore_point_object_id(
-    point: Mapping[str, object], candidates: Sequence[Mapping[str, object]]
+    point: _RestorePoint, candidates: Sequence[_BackupObject]
 ) -> str | None:
     """Picks which of a backup chain's object(s) a restore point belongs to.
 
@@ -471,21 +541,14 @@ def _restore_point_object_id(
     point's name is what actually identifies which object it belongs to.
     """
     if len(candidates) == 1:
-        object_id = candidates[0].get("id")
-        return object_id if isinstance(object_id, str) else None
-    point_name = point.get("name")
-    if not isinstance(point_name, str):
-        return None
-    base_name = point_name.rsplit(" Id: ", 1)[0]
-    for obj in candidates:
-        if obj.get("name") == base_name and isinstance(object_id := obj.get("id"), str):
-            return object_id
-    return None
+        return candidates[0].id
+    base_name = point.name.rsplit(" Id: ", 1)[0]
+    return next((obj.id for obj in candidates if obj.name == base_name), None)
 
 
-def _total_count(backup_objects: Sequence[Mapping[str, object]]) -> int | None:
-    counts = [backup_object.get("restorePointsCount") for backup_object in backup_objects]
-    ints = [count for count in counts if isinstance(count, int)]
+def _total_count(backup_objects: Sequence[_BackupObject]) -> int | None:
+    counts = [backup_object.restore_points_count for backup_object in backup_objects]
+    ints = [count for count in counts if count is not None]
     return sum(ints) if len(ints) == len(counts) else None
 
 
@@ -494,7 +557,7 @@ BACKUP_OBJECTS_STORAGE_KEY = "backup_objects"
 
 class _CachedBackupObjects(BaseModel):
     session_id: str
-    objects: list[dict[str, JsonValue]]
+    objects: list[_BackupObject]
 
 
 def _load_backup_objects_cache(storage: Storage) -> Mapping[str, _CachedBackupObjects]:
@@ -540,47 +603,33 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
     """
 
     def _fetch(client: VeeamClient, name: str) -> Fetched:
-        backup_objects = client.get_all("/api/v1/backupObjects", limit)
-        restore_points = client.get_all("/api/v1/restorePoints", limit)
-        backups = client.get_all("/api/v1/backups", limit)
+        backup_objects = _parse_items(_BackupObject, client.get_all("/api/v1/backupObjects", limit))
+        restore_points = _parse_items(_RestorePoint, client.get_all("/api/v1/restorePoints", limit))
+        backups = _parse_items(_Backup, client.get_all("/api/v1/backups", limit))
+        jobs = _parse_items(_JobState, client.get_all("/api/v1/jobs/states"))
 
-        backup_ids = {
-            backup_id
-            for backup in backups
-            if isinstance(backup, dict) and isinstance(backup_id := backup.get("id"), str)
-        } | {
-            backup_id
-            for point in restore_points
-            if isinstance(point, dict) and isinstance(backup_id := point.get("backupId"), str)
+        backup_ids = {backup.id for backup in backups} | {
+            point.backup_id for point in restore_points
         }
         job_id_by_backup_id = {
-            backup_id: job_id
-            for backup in backups
-            if isinstance(backup, dict)
-            and isinstance(backup_id := backup.get("id"), str)
-            and isinstance(job_id := backup.get("jobId"), str)
+            backup.id: backup.job_id for backup in backups if backup.job_id is not None
         }
         job_id_by_backup_id |= {
-            backup_id: job_id
+            point.backup_id: job_id
             for point in restore_points
-            if isinstance(point, dict)
-            and isinstance(backup_id := point.get("backupId"), str)
-            and backup_id not in job_id_by_backup_id
-            and isinstance(parent_id := point.get("parentBackupId"), str)
-            and (job_id := job_id_by_backup_id.get(parent_id)) is not None
+            if point.backup_id not in job_id_by_backup_id
+            and point.parent_backup_id is not None
+            and (job_id := job_id_by_backup_id.get(point.parent_backup_id)) is not None
         }
         finished_session_by_job_id = {
-            job_id: session_id
-            for job in client.get_all("/api/v1/jobs/states")
-            if isinstance(job, dict)
-            and job.get("status") == "Stopped"
-            and isinstance(job_id := job.get("id"), str)
-            and isinstance(session_id := job.get("sessionId"), str)
+            job.id: job.session_id
+            for job in jobs
+            if job.status == "Stopped" and job.session_id is not None
         }
 
         old_cache = _load_backup_objects_cache(client.storage)
         new_cache: dict[str, _CachedBackupObjects] = {}
-        objects_by_backup_id: dict[str, Sequence[Mapping[str, object]]] = {}
+        objects_by_backup_id: dict[str, Sequence[_BackupObject]] = {}
         for backup_id in backup_ids:
             job_id = job_id_by_backup_id.get(backup_id)
             session_id = None if job_id is None else finished_session_by_job_id.get(job_id)
@@ -597,7 +646,11 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
                 ):
                     continue
                 raise
-            chain_objects = [obj for obj in objects if isinstance(obj, dict)]
+            chain_objects = _parse_items(_BackupObject, objects)
+            if len(chain_objects) != len(objects):
+                # A partial list would attribute the skipped objects' restore points to the
+                # others; leave the chain unresolved instead.
+                continue
             objects_by_backup_id[backup_id] = chain_objects
             if session_id is not None:
                 new_cache[backup_id] = _CachedBackupObjects(
@@ -609,81 +662,58 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
         )
 
         object_id_by_name_platform: dict[tuple[str, str], str] = {
-            (obj_name, obj_platform_id): object_id
+            (obj.name, obj.platform_id): obj.id
             for obj in backup_objects
-            if isinstance(obj, dict)
-            and isinstance(obj_name := obj.get("name"), str)
-            and isinstance(obj_platform_id := obj.get("platformId"), str)
-            and isinstance(object_id := obj.get("id"), str)
+            if obj.name is not None and obj.platform_id is not None
         }
 
-        points: dict[str, list[Mapping[str, object]]] = {}
+        points: dict[str, list[_RestorePoint]] = {}
         for point in restore_points:
-            if not isinstance(point, dict) or not isinstance(
-                backup_id := point.get("backupId"), str
-            ):
-                continue
-            candidates = objects_by_backup_id.get(backup_id, [])
+            candidates = objects_by_backup_id.get(point.backup_id, [])
             object_id = _restore_point_object_id(point, candidates)
-            if (
-                object_id is None
-                and not candidates
-                and isinstance(point_name := point.get("name"), str)
-                and isinstance(point_platform_id := point.get("platformId"), str)
-            ):
+            if object_id is None and not candidates and point.platform_id is not None:
                 # The chain's objects couldn't be resolved via id at all (lookup
                 # failed or unsupported); fall back to the pre-id join, which
                 # still works where the point's own name matches the object's.
-                object_id = object_id_by_name_platform.get((point_name, point_platform_id))
+                object_id = object_id_by_name_platform.get((point.name, point.platform_id))
             if object_id is not None:
                 points.setdefault(object_id, []).append(point)
 
         host_by_object_id: dict[str, str] = {
-            object_id: host
+            obj.id: obj.name
             for objects in objects_by_backup_id.values()
             for obj in objects
-            if isinstance(object_id := obj.get("id"), str)
-            and isinstance(host := obj.get("name"), str)
-            and host
+            if obj.name
         }
-        machines: dict[str, list[Mapping[str, object]]] = {}
+        machines: dict[str, list[_BackupObject]] = {}
         for backup_object in backup_objects:
-            if (
-                isinstance(backup_object, dict)
-                and isinstance(object_id := backup_object.get("id"), str)
-                and isinstance(
-                    host := host_by_object_id.get(object_id, backup_object.get("name")), str
-                )
-                and host
-            ):
+            if host := host_by_object_id.get(backup_object.id, backup_object.name):
                 machines.setdefault(host, []).append(backup_object)
 
         piggyback: dict[str, str] = {}
         for host, machine_objects in machines.items():
-            machine_points = [
-                point for obj in machine_objects for point in points.get(str(obj["id"]), [])
-            ]
+            machine_points = [point for obj in machine_objects for point in points.get(obj.id, [])]
             newest = _newest(machine_points)
             # The object holding the newest point, so that its type matches the point
             owner = next(
                 (
                     obj
                     for obj in machine_objects
-                    if any(p is newest for p in points.get(str(obj["id"]), []))
+                    if any(p is newest for p in points.get(obj.id, []))
                 ),
                 machine_objects[0],
             )
             record = {
-                "platformName": owner.get("platformName"),
-                "type": owner.get("type"),
+                "platformName": owner.platform_name,
+                "type": owner.type,
                 "restorePointsCount": _total_count(machine_objects),
                 "lastRestorePoint": (
                     None
                     if newest is None
                     else {
-                        "creationTime": newest.get("creationTime"),
-                        "type": newest.get("type"),
-                        "malwareStatus": newest.get("malwareStatus"),
+                        "creationTime": newest.creation_time,
+                        "type": newest.type,
+                        "malwareStatus": newest.malware_status,
                     }
                 ),
                 "malwareStatus": _malware_rollup(machine_points),
@@ -695,7 +725,7 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
 
 
 def _job_sessions_and_window(
-    jobs: list[object],
+    jobs: Sequence[_JobState],
 ) -> tuple[dict[str, tuple[str, str]], str | None]:
     """Builds `sessionId -> (job id, job name)` from each job's current session,
     plus the earliest `lastRun` (the taskSessions window's lower bound).
@@ -709,13 +739,11 @@ def _job_sessions_and_window(
     session_to_job: dict[str, tuple[str, str]] = {}
     last_runs: list[float] = []
     for job in jobs:
-        if not isinstance(job, dict) or job.get("status") == "Disabled":
+        if job.status == "Disabled":
             continue
-        session_id, job_id, job_name = job.get("sessionId"), job.get("id"), job.get("name")
-        if isinstance(session_id, str) and isinstance(job_id, str) and isinstance(job_name, str):
-            session_to_job[session_id] = (job_id, job_name)
-        last_run = job.get("lastRun")
-        if isinstance(last_run, str) and (epoch := parse_iso8601_epoch(last_run)) is not None:
+        if job.session_id is not None:
+            session_to_job[job.session_id] = (job.id, job.name)
+        if job.last_run is not None and (epoch := parse_iso8601_epoch(job.last_run)) is not None:
             last_runs.append(epoch)
 
     if not last_runs:
@@ -847,13 +875,11 @@ def _resolve_job_object_names(
             if _is_skippable(exc):
                 continue
             raise
-        names = [
-            object_name
-            for obj in objects
-            if isinstance(obj, dict)
-            and isinstance(object_name := obj.get("name"), str)
-            and object_name
-        ]
+        parsed_objects = _parse_items(_BackupObject, objects)
+        if len(parsed_objects) != len(objects):
+            # A partial list would attribute the skipped objects' tasks to the others.
+            continue
+        names = [obj.name for obj in parsed_objects if obj.name]
         if names:
             objects_by_job[job_id] = _JobObjects(
                 names=names, job_name=job_name, session=session_info
@@ -927,7 +953,7 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
     matches nothing even for matching records, so `sessionType` is filtered
     client-side instead.
     """
-    jobs = client.get_all("/api/v1/jobs/states")
+    jobs = _parse_items(_JobState, client.get_all("/api/v1/jobs/states"))
     session_to_job, created_after = _job_sessions_and_window(jobs)
     job_objects = _resolve_job_object_names(client, session_to_job)
 
@@ -1038,6 +1064,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parse_arguments(sys.argv[1:] if argv is None else argv)
     url = base_url(args.address, args.port)
     cert_server_name = None if args.disable_cert_verification else args.cert_server_name
+    logging.basicConfig(level=logging.WARNING)
+    if args.debug:
+        _LOGGER.setLevel(logging.DEBUG)
 
     try:
         with create_session(url, cert_server_name) as session:

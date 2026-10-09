@@ -71,11 +71,13 @@ def configure_host() -> QuickSetupStage:
             "Enter a unique configuration ID and the host name of your Proxmox VE node, then "
             "define the folder path where nodes and VMs should be created."
         ),
-        configure_components=[
+        configure_components=lambda ctx: [
             widgets.unique_id_formspec_wrapper(
                 title=Title("Configuration name"), prefill_template="proxmox_ve_config"
             ),
-            widgets.host_name_and_host_path_formspec_wrapper(host_prefill_template="proxmox_ve"),
+            widgets.host_name_and_host_path_formspec_wrapper(
+                ctx.tree, ctx.user, host_prefill_template="proxmox_ve"
+            ),
             widgets.site_formspec_wrapper(),
         ],
         actions=[

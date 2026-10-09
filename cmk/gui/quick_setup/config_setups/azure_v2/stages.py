@@ -169,8 +169,10 @@ def configure_host_and_authority() -> QuickSetupStage:
         sub_title=_(
             "Name your host and define the folder",
         ),
-        configure_components=[
-            widgets.host_name_and_host_path_formspec_wrapper(host_prefill_template="azure_v2"),
+        configure_components=lambda ctx: [
+            widgets.host_name_and_host_path_formspec_wrapper(
+                ctx.tree, ctx.user, host_prefill_template="azure_v2"
+            ),
             widgets.site_formspec_wrapper(),
         ],
         actions=[

@@ -141,8 +141,10 @@ def configure_host() -> QuickSetupStage:
     return QuickSetupStage(
         title=_("Configure host"),
         sub_title=_("Name your host and define the folder path"),
-        configure_components=[
-            widgets.host_name_and_host_path_formspec_wrapper(host_prefill_template="gcp"),
+        configure_components=lambda ctx: [
+            widgets.host_name_and_host_path_formspec_wrapper(
+                ctx.tree, ctx.user, host_prefill_template="gcp"
+            ),
             widgets.site_formspec_wrapper(),
         ],
         actions=[

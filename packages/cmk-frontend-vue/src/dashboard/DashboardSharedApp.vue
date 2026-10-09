@@ -39,7 +39,6 @@ const dashboardKey = computed(() => {
 const sharedDashboard = createDashboardModel(props.dashboard.spec, DashboardLayout.RELATIVE_GRID)
 
 // So far, urlParams is only needed and used by the DashboardContentNtop component (ntop.ts)
-//         cmkToken only by the DashboardContentFigure component
 provide(urlParamsKey, props.url_params)
 // TODO: remove this hard coded "0:" once the backend can provide the token version
 const cmkToken = `0:${props.token_value}`

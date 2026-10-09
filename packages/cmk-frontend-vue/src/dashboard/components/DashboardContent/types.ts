@@ -26,11 +26,6 @@ export interface ContentProps<T = WidgetContent> {
 }
 export type ContentPropsRecord = Readonly<Record<string, ContentProps>>
 
-// Figure
-export const CONTENT_FIGURE_TYPES: string[] = []
-
-export type ContentFigureType = (typeof CONTENT_FIGURE_TYPES)[number]
-
 // Ntop
 export const NTOP_TYPES: string[] = ['ntop_alerts', 'ntop_flows', 'ntop_top_talkers']
 

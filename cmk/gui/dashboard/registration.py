@@ -24,7 +24,6 @@ from .dashlet import DashletRegistry, register_dashlets
 from .page_check_token_validity import CheckTokenValidityPage
 from .page_edit_dashboard import page_edit_dashboard
 from .page_edit_dashboards import page_edit_dashboards, PAGE_EDIT_DASHBOARDS_LINK
-from .page_figure_widget import FigureWidgetPage, FigureWidgetTokenAuthPage
 from .page_show_dashboard import page_dashboard_app
 from .page_show_shared_dashboard import SharedDashboardPage
 from .page_view_widget import (
@@ -49,7 +48,6 @@ def register(
     visual_type_registry.register(VisualTypeDashboards)
     permission_section_registry.register(PERMISSION_SECTION_DASHBOARD)
 
-    page_registry.register(PageEndpoint(FigureWidgetPage.ident(), FigureWidgetPage()))
     page_registry.register(PageEndpoint("widget_iframe_view", ViewWidgetIFramePage()))
     page_registry.register(PageEndpoint("widget_edit_view", ViewWidgetEditPage()))
     page_registry.register(PageEndpoint("dashboard", page_dashboard_app))
@@ -59,9 +57,6 @@ def register(
     page_registry.register(PageEndpoint("edit_dashboard", page_edit_dashboard))
     page_registry.register(PageEndpoint(PAGE_EDIT_DASHBOARDS_LINK, page_edit_dashboards))
 
-    token_authenticated_page_registry.register(
-        TokenAuthenticatedEndpoint(FigureWidgetTokenAuthPage.ident(), FigureWidgetTokenAuthPage())
-    )
     token_authenticated_page_registry.register(
         TokenAuthenticatedEndpoint("widget_iframe_view_token_auth", ViewWidgetIFrameTokenPage())
     )

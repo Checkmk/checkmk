@@ -7,7 +7,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type Component } from 'vue'
 
 import DashboardContentEmbeddedView from './DashboardContentEmbeddedView.vue'
-import DashboardContentFigure from './DashboardContentFigure.vue'
 import DashboardContentIFrame from './DashboardContentIFrame.vue'
 import DashboardContentLinkedView from './DashboardContentLinkedView.vue'
 import DashboardContentNtop from './DashboardContentNtop.vue'
@@ -31,7 +30,7 @@ import DashboardContentSiteOverview from './figures/DashboardContentSiteOverview
 import DashboardContentState from './figures/DashboardContentState.vue'
 import DashboardContentStateSummary from './figures/DashboardContentStateSummary.vue'
 import DashboardContentStats from './figures/DashboardContentStats.vue'
-import { CONTENT_FIGURE_TYPES, NTOP_TYPES } from './types.ts'
+import { NTOP_TYPES } from './types.ts'
 </script>
 
 <script setup lang="ts">
@@ -107,8 +106,6 @@ function contentToComponent(content: WidgetContent): Component {
       return DashboardContentSiteOverview
     case contentType === 'alert_overview':
       return DashboardContentAlertOverview
-    case CONTENT_FIGURE_TYPES.includes(contentType):
-      return DashboardContentFigure
     case NTOP_TYPES.includes(contentType):
       return DashboardContentNtop
     default:

@@ -144,7 +144,6 @@ def test_registered_pages() -> None:
         "user_webauthn_login_begin",
         "view",
         "widget_edit_view",
-        "widget_figure",
         "widget_iframe_sidebar",
         "widget_iframe_view",
         "wato",

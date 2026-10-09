@@ -3,14 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._ajax_handler import (
-    FigureDashletConfig,
-    FigureRequestInternal,
-    get_validated_internal_figure_request,
-    get_validated_internal_graph_request,
-    GraphDashletConfig,
-    GraphRequestInternal,
-)
 from ._contextual_link_encoding import clicked_object_values, EffectiveLink, link_properties_for
 from ._family import DASHBOARD_FAMILY
 from ._registration import register_endpoints
@@ -47,10 +39,6 @@ __all__ = [
     "DashboardOwnerWithBuiltin",
     "EffectiveLink",
     "ExplicitWidgetContent",
-    "FigureDashletConfig",
-    "FigureRequestInternal",
-    "GraphDashletConfig",
-    "GraphRequestInternal",
     "INTERNAL_TO_API_TYPE_NAME",
     "LinkProperties",
     "PERMISSIONS_DASHBOARD",
@@ -67,8 +55,6 @@ __all__ = [
     "dashboard_owner_description",
     "get_dashboard_for_read",
     "get_permitted_user_id",
-    "get_validated_internal_figure_request",
-    "get_validated_internal_graph_request",
     "link_properties_for",
     "make_pending_changes",
     "register_endpoints",

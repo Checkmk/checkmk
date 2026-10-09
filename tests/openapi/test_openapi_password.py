@@ -194,7 +194,7 @@ def test_password_min_length_update(clients: ClientRegistry) -> None:
     )
 
     resp.assert_status_code(HTTPStatus.BAD_REQUEST)
-    assert resp.json["fields"]["body.password.constrained-str"]["type"] == "string_too_short"
+    assert resp.json["fields"]["body.password"]["type"] == "string_too_short"
 
 
 def test_password_identifier_regex(clients: ClientRegistry) -> None:

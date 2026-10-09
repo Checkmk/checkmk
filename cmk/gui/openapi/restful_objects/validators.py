@@ -16,10 +16,9 @@ import json
 import logging
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from http import HTTPStatus
-from typing import Any, Literal, NoReturn, Self
+from typing import Any, Literal, Self
 from urllib import parse
 
-import pydantic
 from marshmallow import fields as ma_fields
 from marshmallow import Schema, ValidationError
 from pydantic_core import ErrorDetails
@@ -288,26 +287,6 @@ class RequestDataValidator:
     @staticmethod
     def _format_pydantic_location(location: Iterable[str | int]) -> str:
         return ".".join(str(loc) for loc in location)
-
-    @staticmethod
-    def raise_formatted_pydantic_error(
-        validation_error: pydantic.ValidationError,
-        status_code: Literal[
-            HTTPStatus.BAD_REQUEST,
-            HTTPStatus.UNAUTHORIZED,
-            HTTPStatus.FORBIDDEN,
-            HTTPStatus.NOT_FOUND,
-            HTTPStatus.NOT_ACCEPTABLE,
-            HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
-        ] = HTTPStatus.BAD_REQUEST,
-    ) -> NoReturn:
-        """Convert a Pydantic validation error to a RestAPIRequestDataValidationException."""
-        # the context may contain the actual exception, which is usually not serializable
-        # the msg contains the exception details, which is hopefully enough to understand the issue
-        raise RequestDataValidator.format_error_details(
-            status_code=status_code,
-            errors=validation_error.errors(include_context=False),
-        ) from validation_error
 
     @staticmethod
     def format_error_details(

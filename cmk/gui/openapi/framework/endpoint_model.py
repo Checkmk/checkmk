@@ -27,6 +27,7 @@ from ._types import HeaderParam, PathParam, QueryParam, RawRequestData
 from ._utils import get_resolved_origin, iter_dataclass_fields, resolve_type
 from .content_types import convert_request_body
 from .model import api_field
+from .model.omitted import drop_omitted_union_errors
 from .model.response import ApiResponse, TypedResponse
 
 type ApiInputModel[T: type[DataclassInstance]] = T
@@ -457,7 +458,13 @@ class EndpointModel[**P, T]:
                 if self._contains_path_parameter_errors(e)
                 else HTTPStatus.BAD_REQUEST
             )
-            RequestDataValidator.raise_formatted_pydantic_error(e, status_code=status_code)
+            # the context may contain the actual exception, which is usually not serializable
+            # the msg contains the exception details, which is hopefully enough to understand
+            # the issue
+            raise RequestDataValidator.format_error_details(
+                drop_omitted_union_errors(e.errors(include_context=False)),
+                status_code=status_code,
+            ) from e
 
     def get_annotation(self, field: Literal["body", "path", "query", "headers"], /) -> type | None:
         for field_instance in dataclasses.fields(self._input_model):

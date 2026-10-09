@@ -21,7 +21,7 @@ import types
 from typing import ClassVar, Literal, NoReturn, override, Self, TypeAliasType
 
 from pydantic import GetCoreSchemaHandler, GetJsonSchemaHandler
-from pydantic_core import CoreSchema, PydanticOmit
+from pydantic_core import CoreSchema, ErrorDetails, PydanticOmit
 from pydantic_core.core_schema import is_instance_schema
 
 from cmk.gui.openapi._type_adapter import get_cached_type_adapter
@@ -106,3 +106,34 @@ def json_dump_without_omitted(
     #       in serializers or implements `exclude_if`
     # NOTE: keep in sync with CheckmkGenerateJsonSchema.encode_default for correct schemas
     return adapter.dump_json(instance, by_alias=True, exclude_defaults=True, round_trip=is_testing)
+
+
+def drop_omitted_union_errors(errors: list[ErrorDetails]) -> list[ErrorDetails]:
+    """Clean the validation errors of `X | ApiOmitted` fields.
+
+    A value in a request is never an `ApiOmitted` instance, so pydantic reports every invalid
+    omittable field once per union branch, each under a location that carries the branch label.
+    Drop the `ApiOmitted` branch error and, when only one branch remains, its label, so the
+    location is the path of the field the client sent.
+    """
+    omitted_label = f"is-instance[{ApiOmitted.__name__}]"
+    union_locs = {error["loc"][:-1] for error in errors if error["loc"][-1:] == (omitted_label,)}
+    if not union_locs:
+        return errors
+
+    cleaned = [error for error in errors if error["loc"][-1:] != (omitted_label,)]
+    # Strip inner labels first, so the outer prefixes still match the locations of nested
+    # omittable fields.
+    for prefix in sorted(union_locs, key=len, reverse=True):
+        depth = len(prefix)
+        in_union = [
+            error
+            for error in cleaned
+            if error["loc"][:depth] == prefix and len(error["loc"]) > depth
+        ]
+        if len({error["loc"][depth] for error in in_union}) != 1:
+            # several failing branches stay apart through their labels, like in any other union
+            continue
+        for error in in_union:
+            error["loc"] = error["loc"][:depth] + error["loc"][depth + 1 :]
+    return cleaned

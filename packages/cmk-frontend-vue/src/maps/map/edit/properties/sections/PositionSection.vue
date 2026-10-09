@@ -29,23 +29,23 @@ const isGeo = computed(() => props.mapType === 'worldmap')
 <template>
   <PropertySection :title="_t('Position')">
     <template v-if="isGeo">
-      <PropertyRow :label="_t('Lat')">
-        <CmkInput v-model="form.lat" type="number" step="any" />
+      <PropertyRow v-slot="{ id }" labels-control :label="_t('Lat')">
+        <CmkInput :id="id" v-model="form.lat" type="number" step="any" />
       </PropertyRow>
-      <PropertyRow :label="_t('Lng')">
-        <CmkInput v-model="form.lng" type="number" step="any" />
+      <PropertyRow v-slot="{ id }" labels-control :label="_t('Lng')">
+        <CmkInput :id="id" v-model="form.lng" type="number" step="any" />
       </PropertyRow>
     </template>
     <template v-else>
-      <PropertyRow :label="_t('X')">
-        <CmkInput v-model="form.x" type="number" min="0" max="10000" />
+      <PropertyRow v-slot="{ id }" labels-control :label="_t('X')">
+        <CmkInput :id="id" v-model="form.x" type="number" min="0" max="10000" />
       </PropertyRow>
-      <PropertyRow :label="_t('Y')">
-        <CmkInput v-model="form.y" type="number" min="0" max="10000" />
+      <PropertyRow v-slot="{ id }" labels-control :label="_t('Y')">
+        <CmkInput :id="id" v-model="form.y" type="number" min="0" max="10000" />
       </PropertyRow>
     </template>
-    <PropertyRow :label="_t('Z')">
-      <CmkInput v-model="form.z" type="number" min="1" max="999" />
+    <PropertyRow v-slot="{ id }" labels-control :label="_t('Z')">
+      <CmkInput :id="id" v-model="form.z" type="number" min="1" max="999" />
     </PropertyRow>
   </PropertySection>
 </template>

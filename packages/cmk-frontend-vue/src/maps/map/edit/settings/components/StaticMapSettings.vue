@@ -35,9 +35,11 @@ const { _t } = usei18n()
         @update:pending-remove="background.setRemoved($event)"
       />
     </EditField>
-    <EditField :label="_t('Background color')">
+    <EditField v-slot="{ id, label }" labels-control :label="_t('Background color')">
       <MapsColorInput
         v-model="form.background_color"
+        :label="label"
+        :input-id="id"
         :enable-label="_t('Use color')"
         default-color="#1f2937"
       />

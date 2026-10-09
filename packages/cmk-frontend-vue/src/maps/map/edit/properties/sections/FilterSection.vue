@@ -37,15 +37,17 @@ const { feedback } = useExcludeMembersPreview({
     collapsible
     :default-open="!!(form.exclude_members || form.exclude_member_states)"
   >
-    <PropertyRow :label="_t('Exclude members')">
+    <PropertyRow v-slot="{ id }" labels-control :label="_t('Exclude members')">
       <CmkInput
+        :id="id"
         v-model="form.exclude_members"
         :placeholder="_t('regex pattern…')"
         field-size="fill"
       />
     </PropertyRow>
-    <PropertyRow :label="_t('Exclude states')">
+    <PropertyRow v-slot="{ id }" labels-control :label="_t('Exclude states')">
       <CmkInput
+        :id="id"
         v-model="form.exclude_member_states"
         :placeholder="untranslated('DOWN,CRITICAL')"
         field-size="fill"

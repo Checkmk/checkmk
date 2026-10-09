@@ -37,29 +37,40 @@ watch(
 <template>
   <PropertySection :title="_t('Label')">
     <PropertyRow :label="_t('Show label')">
-      <CmkCheckbox v-model="form.label.show" />
+      <CmkCheckbox v-model="form.label.show" :aria-label="_t('Show label')" />
     </PropertyRow>
 
     <div :class="{ 'maps-label-section--off': !form.label.show }">
       <div class="maps-label-section__rows">
-        <PropertyRow v-if="object.type !== 'textbox'" :label="_t('Label text')">
+        <PropertyRow
+          v-if="object.type !== 'textbox'"
+          v-slot="{ id }"
+          labels-control
+          :label="_t('Label text')"
+        >
           <CmkInput
+            :id="id"
             v-model="form.label.text"
             :placeholder="_t('(auto from object)')"
             field-size="fill"
           />
         </PropertyRow>
-        <PropertyRow :label="_t('Size')">
-          <CmkInput v-model="form.label.size" type="number" min="8" max="72" />
+        <PropertyRow v-slot="{ id }" labels-control :label="_t('Size')">
+          <CmkInput :id="id" v-model="form.label.size" type="number" min="8" max="72" />
         </PropertyRow>
-        <PropertyRow :label="_t('Color')">
-          <MapsColorInput v-model="form.label.color" default-color="#ffffff" />
+        <PropertyRow v-slot="{ id, label }" labels-control :label="_t('Color')">
+          <MapsColorInput
+            v-model="form.label.color"
+            :label="label"
+            :input-id="id"
+            default-color="#ffffff"
+          />
         </PropertyRow>
-        <PropertyRow :label="_t('Offset X')">
-          <CmkInput v-model="form.label.x" type="number" />
+        <PropertyRow v-slot="{ id }" labels-control :label="_t('Offset X')">
+          <CmkInput :id="id" v-model="form.label.x" type="number" />
         </PropertyRow>
-        <PropertyRow :label="_t('Offset Y')">
-          <CmkInput v-model="form.label.y" type="number" />
+        <PropertyRow v-slot="{ id }" labels-control :label="_t('Offset Y')">
+          <CmkInput :id="id" v-model="form.label.y" type="number" />
         </PropertyRow>
 
         <CmkCollapsibleTitle
@@ -68,23 +79,28 @@ watch(
           @toggle-open="showAdvanced = !showAdvanced"
         />
         <template v-if="showAdvanced">
-          <PropertyRow :label="_t('Background')">
+          <PropertyRow v-slot="{ id, label }" labels-control :label="_t('Background')">
             <MapsColorInput
               v-model="form.label.background"
+              :label="label"
+              :input-id="id"
               :enable-label="_t('Use color')"
               none-value="transparent"
               default-color="#000000"
             />
           </PropertyRow>
-          <PropertyRow :label="_t('Border color')">
+          <PropertyRow v-slot="{ id, label }" labels-control :label="_t('Border color')">
             <MapsColorInput
               v-model="form.label_border"
+              :label="label"
+              :input-id="id"
               :enable-label="_t('Use color')"
               default-color="#e5e5e5"
             />
           </PropertyRow>
-          <PropertyRow :label="_t('Max length')">
+          <PropertyRow v-slot="{ id }" labels-control :label="_t('Max length')">
             <CmkInput
+              :id="id"
               v-model="form.label_maxlen"
               type="number"
               min="0"

@@ -45,9 +45,10 @@ const offersAutoUrl = computed(() => !!props.autoUrl && !form.value.url)
     :default-open="!!form.url"
     :side-title="untranslated(form.url)"
   >
-    <PropertyRow :label="_t('URL')" tall>
+    <PropertyRow v-slot="{ id }" labels-control :label="_t('URL')" tall>
       <div class="maps-link-section__url">
         <CmkInput
+          :id="id"
           v-model="form.url"
           :placeholder="untranslated(autoUrl ?? 'https://…')"
           field-size="fill"

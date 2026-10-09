@@ -9,6 +9,7 @@ import CmkSwitch from 'cmk-ui-library/components/CmkSwitch.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import useId from 'cmk-ui-library/lib/useId'
 import { computed, ref, watch } from 'vue'
 
 import ImagePicker from '@/maps/image-library/components/ImagePicker.vue'
@@ -31,6 +32,7 @@ import PresentationBindingForm from '../PresentationBindingForm.vue'
 import PresentationGadgetMetricField from '../PresentationGadgetMetricField.vue'
 
 const { _t } = usei18n()
+const slotLabelId = useId()
 
 const props = defineProps<{
   element: DataElement | ShapeElement
@@ -322,10 +324,11 @@ watch(
     <label v-if="element.kind === 'shape'" class="maps-inspector-data-section__slot">
       <CmkSwitch
         :model-value="element.data_slot ?? false"
+        :aria-labelledby="slotLabelId"
         @update:model-value="emit('patch', { data_slot: $event })"
         @click.stop
       />
-      <span class="maps-inspector-data-section__slot-label">
+      <span :id="slotLabelId" class="maps-inspector-data-section__slot-label">
         {{ _t('Data slot (fill in connect mode)') }}
       </span>
     </label>

@@ -98,8 +98,13 @@ const dyngroupTypeSuggestions = computed(() => ({
         :empty-hint="_t('No other maps available')"
       />
     </EditField>
-    <EditField :label="_t('Label')">
-      <CmkInput v-model="draft.label_text" :placeholder="_t('optional')" field-size="fill" />
+    <EditField v-slot="{ id }" labels-control :label="_t('Label')">
+      <CmkInput
+        :id="id"
+        v-model="draft.label_text"
+        :placeholder="_t('optional')"
+        field-size="fill"
+      />
     </EditField>
   </template>
 
@@ -158,8 +163,13 @@ const dyngroupTypeSuggestions = computed(() => ({
   </template>
 
   <template v-else-if="draft.type === 'textbox'">
-    <EditField :label="_t('Text content')">
-      <CmkInput v-model="draft.label_text" :placeholder="_t('optional')" field-size="fill" />
+    <EditField v-slot="{ id }" labels-control :label="_t('Text content')">
+      <CmkInput
+        :id="id"
+        v-model="draft.label_text"
+        :placeholder="_t('optional')"
+        field-size="fill"
+      />
     </EditField>
   </template>
 
@@ -167,8 +177,13 @@ const dyngroupTypeSuggestions = computed(() => ({
     <EditField :label="_t('Image')" required>
       <ImagePicker v-model="draft.image_src" />
     </EditField>
-    <EditField :label="_t('Label')">
-      <CmkInput v-model="draft.label_text" :placeholder="_t('optional')" field-size="fill" />
+    <EditField v-slot="{ id }" labels-control :label="_t('Label')">
+      <CmkInput
+        :id="id"
+        v-model="draft.label_text"
+        :placeholder="_t('optional')"
+        field-size="fill"
+      />
     </EditField>
   </template>
 
@@ -191,8 +206,9 @@ const dyngroupTypeSuggestions = computed(() => ({
         :placeholder="_t('optional')"
       />
     </EditField>
-    <EditField :label="_t('URL')">
+    <EditField v-slot="{ id }" labels-control :label="_t('URL')">
       <CmkInput
+        :id="id"
         v-model="draft.graph_url"
         :placeholder="_t('optional')"
         field-size="fill"

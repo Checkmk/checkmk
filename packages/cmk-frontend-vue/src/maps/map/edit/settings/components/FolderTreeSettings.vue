@@ -12,6 +12,7 @@ import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import CmkSwitch from 'cmk-ui-library/components/CmkSwitch.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import useId from 'cmk-ui-library/lib/useId'
 import { computed, onMounted, ref } from 'vue'
 
 import EditField from '@/maps/map/edit/components/EditField.vue'
@@ -23,6 +24,12 @@ import { useMapsApis } from '@/maps/services/context'
 const form = defineModel<SettingsForm>('form', { required: true })
 
 const { _t } = usei18n()
+const labelIds = {
+  emptyFolders: useId(),
+  services: useId(),
+  problems: useId(),
+  hardStates: useId()
+}
 const { objects } = useMapsApis()
 
 const folders = ref<{ path: string; title: string }[]>([])
@@ -97,10 +104,12 @@ const pickedSites = computed<string[]>({
     </EditField>
 
     <EditField
+      v-slot="{ id }"
+      labels-control
       :label="_t('Auto-expand depth')"
       :help="_t('How many folder levels are expanded when the map opens.')"
     >
-      <CmkInput v-model="form.ft_default_expand_depth" type="number" min="0" max="20" />
+      <CmkInput :id="id" v-model="form.ft_default_expand_depth" type="number" min="0" max="20" />
     </EditField>
 
     <EditField
@@ -129,16 +138,24 @@ const pickedSites = computed<string[]>({
       <!-- .stop on the switches: the slider toggles itself, and the wrapping
            label would forward a second click to the hidden checkbox. -->
       <label class="maps-folder-tree-settings__toggle">
-        <CmkSwitch v-model="form.ft_show_empty_folders" @click.stop />
-        <span>{{ _t('Show empty folders') }}</span>
+        <CmkSwitch
+          v-model="form.ft_show_empty_folders"
+          :aria-labelledby="labelIds.emptyFolders"
+          @click.stop
+        />
+        <span :id="labelIds.emptyFolders">{{ _t('Show empty folders') }}</span>
       </label>
       <label class="maps-folder-tree-settings__toggle">
-        <CmkSwitch v-model="form.ft_show_services" @click.stop />
-        <span>{{ _t('Expand hosts to their services') }}</span>
+        <CmkSwitch
+          v-model="form.ft_show_services"
+          :aria-labelledby="labelIds.services"
+          @click.stop
+        />
+        <span :id="labelIds.services">{{ _t('Expand hosts to their services') }}</span>
       </label>
       <label class="maps-folder-tree-settings__toggle">
-        <CmkSwitch v-model="form.problems_only" @click.stop />
-        <span>{{ _t('Show only folders/hosts with problems') }}</span>
+        <CmkSwitch v-model="form.problems_only" :aria-labelledby="labelIds.problems" @click.stop />
+        <span :id="labelIds.problems">{{ _t('Show only folders/hosts with problems') }}</span>
       </label>
       <EditField
         v-if="form.problems_only"
@@ -158,8 +175,12 @@ const pickedSites = computed<string[]>({
         />
       </EditField>
       <label class="maps-folder-tree-settings__toggle">
-        <CmkSwitch v-model="form.ft_only_hard_states" @click.stop />
-        <span>{{ _t('Use hard states only') }}</span>
+        <CmkSwitch
+          v-model="form.ft_only_hard_states"
+          :aria-labelledby="labelIds.hardStates"
+          @click.stop
+        />
+        <span :id="labelIds.hardStates">{{ _t('Use hard states only') }}</span>
       </label>
     </div>
   </SettingsSection>

@@ -77,10 +77,12 @@ const aggregationFunction = computed(() =>
   </CmkChip>
 
   <EditField
+    v-slot="{ id }"
+    labels-control
     :label="_t('Expand depth')"
     :help="_t('Show child nodes up to N levels (0 = root only).')"
   >
-    <CmkInput v-model="expandDepth" type="number" min="0" max="10" field-size="small" />
+    <CmkInput :id="id" v-model="expandDepth" type="number" min="0" max="10" field-size="small" />
   </EditField>
 
   <AggregationPreview

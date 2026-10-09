@@ -15,20 +15,30 @@ panel that adds an object.
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import useId from 'cmk-ui-library/lib/useId'
 
 defineProps<{
   label: TranslatedString
   help?: TranslatedString | undefined
   required?: boolean
+  /** The control takes the slot's ``id``; others name themselves, so the label points at nothing. */
+  labelsControl?: boolean
 }>()
+
+defineSlots<{
+  /** ``id`` goes on the control, so the label names it. */
+  default(props: { id: string; label: TranslatedString }): unknown
+}>()
+
+const id = useId()
 </script>
 
 <template>
   <div class="maps-edit-field">
-    <CmkLabel :help="help">
+    <CmkLabel v-bind="labelsControl ? { for: id } : {}" :help="help">
       {{ label }}<CmkLabelRequired v-if="required" space="before" />
     </CmkLabel>
-    <slot />
+    <slot :id="id" :label="label" />
   </div>
 </template>
 

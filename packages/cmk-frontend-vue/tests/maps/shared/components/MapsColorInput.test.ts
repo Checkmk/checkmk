@@ -14,7 +14,12 @@ import { mapsGlobal } from '../../support/services'
 
 function renderInput(props: Record<string, unknown> = {}) {
   return render(MapsColorInput, {
-    props: { modelValue: '#ff0000', defaultColor: '#000000', ...props },
+    props: {
+      modelValue: '#ff0000',
+      defaultColor: '#000000',
+      label: untranslated('Background'),
+      ...props
+    },
     global: mapsGlobal()
   })
 }
@@ -64,5 +69,21 @@ describe('MapsColorInput – typing a colour', () => {
     await userEvent.clear(hexField())
 
     expect(emitted()['update:modelValue']).toContainEqual(['transparent'])
+  })
+})
+
+describe('MapsColorInput – names', () => {
+  // The label outside points at the hex field only; three colours in one card
+  // must not leave three pickers that say nothing.
+  it('names the picker after what the colour is for', () => {
+    renderInput()
+
+    expect(screen.getByLabelText('Choose Background')).toHaveAttribute('type', 'color')
+  })
+
+  it('names the switch after what the colour is for', () => {
+    renderInput({ enableLabel: untranslated('Use color') })
+
+    expect(screen.getByRole('switch', { name: 'Use color – Background' })).toBeInTheDocument()
   })
 })

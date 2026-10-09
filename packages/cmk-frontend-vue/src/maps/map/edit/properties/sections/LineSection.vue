@@ -87,8 +87,8 @@ const hasOwnCoordinates = computed(() => props.mapType !== 'worldmap')
   </PropertySection>
 
   <PropertySection :title="_t('Line')">
-    <PropertyRow :label="_t('Z')">
-      <CmkInput v-model="form.z" type="number" min="0" max="999" />
+    <PropertyRow v-slot="{ id }" labels-control :label="_t('Z')">
+      <CmkInput :id="id" v-model="form.z" type="number" min="0" max="999" />
     </PropertyRow>
     <PropertyRow :label="_t('Style')">
       <CmkDropdown
@@ -145,23 +145,28 @@ const hasOwnCoordinates = computed(() => props.mapType !== 'worldmap')
       colour fields would have no effect while it is on.
     -->
     <template v-if="!form.line_weather_color">
-      <PropertyRow :label="_t('Line color')">
+      <PropertyRow v-slot="{ id, label }" labels-control :label="_t('Line color')">
         <MapsColorInput
           v-model="form.line_color"
+          :label="label"
+          :input-id="id"
           :enable-label="_t('Use color')"
           default-color="#ffffff"
         />
       </PropertyRow>
-      <PropertyRow :label="_t('Border color')">
+      <PropertyRow v-slot="{ id, label }" labels-control :label="_t('Border color')">
         <MapsColorInput
           v-model="form.line_color_border"
+          :label="label"
+          :input-id="id"
           :enable-label="_t('Use color')"
           default-color="#000000"
         />
       </PropertyRow>
     </template>
-    <PropertyRow :label="_t('Line width')">
+    <PropertyRow v-slot="{ id }" labels-control :label="_t('Line width')">
       <CmkInput
+        :id="id"
         v-model="form.line_width"
         type="number"
         :min="1"
@@ -171,25 +176,25 @@ const hasOwnCoordinates = computed(() => props.mapType !== 'worldmap')
     </PropertyRow>
 
     <template v-if="hasOwnCoordinates">
-      <PropertyRow :label="_t('Start X')">
-        <CmkInput v-model="form.x" type="number" min="0" max="10000" />
+      <PropertyRow v-slot="{ id }" labels-control :label="_t('Start X')">
+        <CmkInput :id="id" v-model="form.x" type="number" min="0" max="10000" />
       </PropertyRow>
-      <PropertyRow :label="_t('Start Y')">
-        <CmkInput v-model="form.y" type="number" min="0" max="10000" />
+      <PropertyRow v-slot="{ id }" labels-control :label="_t('Start Y')">
+        <CmkInput :id="id" v-model="form.y" type="number" min="0" max="10000" />
       </PropertyRow>
-      <PropertyRow :label="_t('End X')">
-        <CmkInput v-model="form.x2" type="number" min="0" max="10000" />
+      <PropertyRow v-slot="{ id }" labels-control :label="_t('End X')">
+        <CmkInput :id="id" v-model="form.x2" type="number" min="0" max="10000" />
       </PropertyRow>
-      <PropertyRow :label="_t('End Y')">
-        <CmkInput v-model="form.y2" type="number" min="0" max="10000" />
+      <PropertyRow v-slot="{ id }" labels-control :label="_t('End Y')">
+        <CmkInput :id="id" v-model="form.y2" type="number" min="0" max="10000" />
       </PropertyRow>
     </template>
 
     <PropertyRow :label="_t('Show label')">
-      <CmkCheckbox v-model="form.label.show" />
+      <CmkCheckbox v-model="form.label.show" :aria-label="_t('Show label')" />
     </PropertyRow>
-    <PropertyRow v-if="form.label.show" :label="_t('Line label')">
-      <CmkInput v-model="form.label.text" field-size="fill" />
+    <PropertyRow v-if="form.label.show" v-slot="{ id }" labels-control :label="_t('Line label')">
+      <CmkInput :id="id" v-model="form.label.text" field-size="fill" />
     </PropertyRow>
   </PropertySection>
 </template>

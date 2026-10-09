@@ -146,6 +146,16 @@ describe('ObjectPropertiesModal – conditional fields by object type', () => {
   })
 })
 
+describe('ObjectPropertiesModal – field names', () => {
+  it('names each field by its row', () => {
+    renderModal(obj({ type: 'host', host_name: 'web01' }))
+
+    expect(screen.getByLabelText('X')).toHaveValue(40)
+    expect(screen.getByLabelText('Label text')).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: 'Show label' })).toBeInTheDocument()
+  })
+})
+
 describe('ObjectPropertiesModal – save payload', () => {
   it('emits a host payload with the host-only keys and no service field', async () => {
     const user = userEvent.setup()

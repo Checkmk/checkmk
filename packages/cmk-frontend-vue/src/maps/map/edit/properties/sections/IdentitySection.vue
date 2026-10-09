@@ -110,8 +110,9 @@ const showsSubtreeLines = computed(() => form.value.expand_depth > 0)
           @update:model-value="form.object_types = ($event ?? 'host') as 'host' | 'service'"
         />
       </PropertyRow>
-      <PropertyRow :label="_t('Livestatus filter')" tall>
+      <PropertyRow v-slot="{ id }" labels-control :label="_t('Livestatus filter')" tall>
         <MapsTextArea
+          :id="id"
           v-model="form.object_filter"
           :rows="4"
           monospace
@@ -154,8 +155,9 @@ const showsSubtreeLines = computed(() => form.value.expand_depth > 0)
           "
         />
       </PropertyRow>
-      <PropertyRow :label="_t('Expand depth')">
+      <PropertyRow v-slot="{ id }" labels-control :label="_t('Expand depth')">
         <CmkInput
+          :id="id"
           v-model="form.expand_depth"
           type="number"
           min="0"
@@ -163,15 +165,28 @@ const showsSubtreeLines = computed(() => form.value.expand_depth > 0)
           :title="_t('Show child nodes up to N levels (0 = root only).')"
         />
       </PropertyRow>
-      <PropertyRow v-if="showsSubtreeLines" :label="_t('Subtree line')">
+      <PropertyRow
+        v-if="showsSubtreeLines"
+        v-slot="{ id, label }"
+        labels-control
+        :label="_t('Subtree line')"
+      >
         <MapsColorInput
           v-model="form.line_color"
+          :label="label"
+          :input-id="id"
           :enable-label="_t('Use color')"
           default-color="#a1a1aa"
         />
       </PropertyRow>
-      <PropertyRow v-if="showsSubtreeLines" :label="_t('Subtree width')">
+      <PropertyRow
+        v-if="showsSubtreeLines"
+        v-slot="{ id }"
+        labels-control
+        :label="_t('Subtree width')"
+      >
         <CmkInput
+          :id="id"
           v-model="form.line_width"
           type="number"
           :min="1"

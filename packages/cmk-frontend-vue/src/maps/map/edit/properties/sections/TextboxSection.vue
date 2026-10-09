@@ -49,22 +49,26 @@ const alignOptions = computed(() => ({
         @update:model-value="form.label.align = ($event ?? 'left') as 'left' | 'center' | 'right'"
       />
     </PropertyRow>
-    <PropertyRow :label="_t('Width')">
-      <CmkInput v-model="form.textbox_width" type="number" :placeholder="_t('auto')" />
+    <PropertyRow v-slot="{ id }" labels-control :label="_t('Width')">
+      <CmkInput :id="id" v-model="form.textbox_width" type="number" :placeholder="_t('auto')" />
     </PropertyRow>
-    <PropertyRow :label="_t('Height')">
-      <CmkInput v-model="form.textbox_height" type="number" :placeholder="_t('auto')" />
+    <PropertyRow v-slot="{ id }" labels-control :label="_t('Height')">
+      <CmkInput :id="id" v-model="form.textbox_height" type="number" :placeholder="_t('auto')" />
     </PropertyRow>
-    <PropertyRow :label="_t('Background')">
+    <PropertyRow v-slot="{ id, label }" labels-control :label="_t('Background')">
       <MapsColorInput
         v-model="form.textbox_background"
+        :label="label"
+        :input-id="id"
         :enable-label="_t('Use color')"
         default-color="#1a1a2e"
       />
     </PropertyRow>
-    <PropertyRow :label="_t('Border color')">
+    <PropertyRow v-slot="{ id, label }" labels-control :label="_t('Border color')">
       <MapsColorInput
         v-model="form.textbox_border"
+        :label="label"
+        :input-id="id"
         :enable-label="_t('Use color')"
         default-color="#e5e5e5"
       />

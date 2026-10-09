@@ -11,21 +11,34 @@ lines up down the whole card.
 <script setup lang="ts">
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import useId from 'cmk-ui-library/lib/useId'
 
 defineProps<{
   label: TranslatedString
   /** Top-aligns the label for a control that is taller than one line. */
   tall?: boolean
+  labelsControl?: boolean
 }>()
+
+defineSlots<{
+  /** ``id`` goes on the control, so the label names it. */
+  default(props: { id: string; label: TranslatedString }): unknown
+}>()
+
+const id = useId()
 </script>
 
 <template>
   <div class="maps-property-row" :class="{ 'maps-property-row--tall': tall }">
-    <CmkLabel class="maps-property-row__label">{{ label }}</CmkLabel>
-    <!-- Named, so what the row edits is announced with it: the controls come in
-         through the slot, which cannot carry the label's ``for``. -->
-    <div class="maps-property-row__control" role="group" :aria-label="label">
-      <slot />
+    <CmkLabel v-bind="labelsControl ? { for: id } : {}" class="maps-property-row__label">
+      {{ label }}
+    </CmkLabel>
+    <!-- A control the label cannot point at is named by the group around it. -->
+    <div
+      class="maps-property-row__control"
+      v-bind="labelsControl ? {} : { role: 'group', 'aria-label': label }"
+    >
+      <slot :id="id" :label="label" />
     </div>
   </div>
 </template>

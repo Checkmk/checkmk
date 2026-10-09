@@ -18,11 +18,15 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 const props = defineProps<{
   modelValue: string | null | undefined
+  /** What the colour is for; names the picker, which the outside label cannot point at. */
+  label: TranslatedString
   /** Renders the on/off switch when set; without it the picker is always live. */
   enableLabel?: TranslatedString
   defaultColor: string
   /** What "off" stores — null (default) or a keyword such as 'transparent'. */
   noneValue?: string | null
+  /** For the hex field, so a label outside can name it. */
+  inputId?: string | undefined
 }>()
 
 const emit = defineEmits<{ 'update:modelValue': [string | null] }>()
@@ -123,7 +127,12 @@ function onTyped(value: string): void {
     <!-- .stop on the switch: the slider toggles itself, and the wrapping label
          would forward a second click to the hidden checkbox. -->
     <label v-if="enableLabel !== undefined" class="maps-color-input__toggle">
-      <CmkSwitch :model-value="enabled" @update:model-value="setEnabled" @click.stop />
+      <CmkSwitch
+        :model-value="enabled"
+        :aria-label="_t('%{enable} – %{name}', { enable: enableLabel, name: label })"
+        @update:model-value="setEnabled"
+        @click.stop
+      />
       <span>{{ enableLabel }}</span>
     </label>
     <span
@@ -132,11 +141,13 @@ function onTyped(value: string): void {
     >
       <CmkColorPicker
         :model-value="displayedColor"
+        :aria-label="_t('Choose %{name}', { name: label })"
         :disabled="!enabled"
         @update:model-value="setColor"
       />
     </span>
     <CmkInput
+      :id="inputId"
       :model-value="typed"
       :placeholder="defaultColor"
       field-size="fill"

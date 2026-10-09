@@ -317,7 +317,7 @@ describe('MapSettingsForm – save', () => {
     const user = userEvent.setup()
     await renderReady(makeMap({ view_type: 'radar', view: { ...radar, problems_only: true } }))
 
-    const problemsOnly = screen.getByRole('switch')
+    const problemsOnly = screen.getByRole('switch', { name: 'Show only problems' })
     expect(problemsOnly).toHaveAttribute('aria-checked', 'true')
     await user.click(problemsOnly)
     await waitFor(() => expect(footerButton('Save')).toBeEnabled())

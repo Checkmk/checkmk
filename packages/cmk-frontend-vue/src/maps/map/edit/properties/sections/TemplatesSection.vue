@@ -36,18 +36,29 @@ const exampleTemplate = computed(() => _t('e.g. {{name}} is {{state}}'))
     collapsible
     :default-open="!!(form.hover_template || form.context_template || form.hover_url)"
   >
-    <PropertyRow :label="_t('Hover template')">
-      <CmkInput v-model="form.hover_template" :placeholder="exampleTemplate" field-size="fill" />
-    </PropertyRow>
-    <PropertyRow :label="_t('Hover URL')">
+    <PropertyRow v-slot="{ id }" labels-control :label="_t('Hover template')">
       <CmkInput
+        :id="id"
+        v-model="form.hover_template"
+        :placeholder="exampleTemplate"
+        field-size="fill"
+      />
+    </PropertyRow>
+    <PropertyRow v-slot="{ id }" labels-control :label="_t('Hover URL')">
+      <CmkInput
+        :id="id"
         v-model="form.hover_url"
         :placeholder="untranslated('https://…')"
         field-size="fill"
       />
     </PropertyRow>
-    <PropertyRow :label="_t('Context template')">
-      <CmkInput v-model="form.context_template" :placeholder="exampleTemplate" field-size="fill" />
+    <PropertyRow v-slot="{ id }" labels-control :label="_t('Context template')">
+      <CmkInput
+        :id="id"
+        v-model="form.context_template"
+        :placeholder="exampleTemplate"
+        field-size="fill"
+      />
     </PropertyRow>
     <p class="maps-templates-section__hint">{{ placeholderHint }}</p>
   </PropertySection>

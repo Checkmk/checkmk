@@ -74,8 +74,9 @@ const sizePlaceholder = computed(() => {
         @update:model-value="form.display.mode = ($event ?? 'icon') as typeof form.display.mode"
       />
     </PropertyRow>
-    <PropertyRow :label="_t('Size')">
+    <PropertyRow v-slot="{ id }" labels-control :label="_t('Size')">
       <CmkInput
+        :id="id"
         v-model="form.display.image_size"
         type="number"
         min="1"

@@ -32,8 +32,9 @@ const embedOptions = computed(() => ({
 
 <template>
   <PropertySection :title="_t('URL embed')">
-    <PropertyRow :label="_t('URL')">
+    <PropertyRow v-slot="{ id }" labels-control :label="_t('URL')">
       <CmkInput
+        :id="id"
         v-model="form.graph_url"
         :placeholder="untranslated('https://…')"
         field-size="fill"
@@ -49,14 +50,14 @@ const embedOptions = computed(() => ({
         @update:model-value="form.graph_embed_type = ($event ?? 'img') as 'img' | 'iframe'"
       />
     </PropertyRow>
-    <PropertyRow :label="_t('Width')">
-      <CmkInput v-model="form.graph_width" type="number" min="50" />
+    <PropertyRow v-slot="{ id }" labels-control :label="_t('Width')">
+      <CmkInput :id="id" v-model="form.graph_width" type="number" min="50" />
     </PropertyRow>
-    <PropertyRow :label="_t('Height')">
-      <CmkInput v-model="form.graph_height" type="number" min="30" />
+    <PropertyRow v-slot="{ id }" labels-control :label="_t('Height')">
+      <CmkInput :id="id" v-model="form.graph_height" type="number" min="30" />
     </PropertyRow>
-    <PropertyRow :label="_t('Auto-refresh (s)')">
-      <CmkInput v-model="form.graph_refresh_interval" type="number" min="0" />
+    <PropertyRow v-slot="{ id }" labels-control :label="_t('Auto-refresh (s)')">
+      <CmkInput :id="id" v-model="form.graph_refresh_interval" type="number" min="0" />
       <span class="maps-graph-embed-section__hint">{{ _t('0 = off') }}</span>
     </PropertyRow>
   </PropertySection>

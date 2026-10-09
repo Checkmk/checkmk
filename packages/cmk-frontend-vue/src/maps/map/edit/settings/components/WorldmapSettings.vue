@@ -71,8 +71,9 @@ const tileUrlBlocked = computed(
   <SettingsSection :title="_t('Map view')">
     <div class="maps-worldmap-settings__view">
       <div class="maps-worldmap-settings__coords">
-        <EditField :label="_t('Latitude')">
+        <EditField v-slot="{ id }" labels-control :label="_t('Latitude')">
           <CmkInput
+            :id="id"
             v-model="form.worldmap_lat"
             type="number"
             min="-90"
@@ -80,8 +81,9 @@ const tileUrlBlocked = computed(
             :external-errors="outOfRange.has('lat') ? [_t('Between -90 and 90.')] : []"
           />
         </EditField>
-        <EditField :label="_t('Longitude')">
+        <EditField v-slot="{ id }" labels-control :label="_t('Longitude')">
           <CmkInput
+            :id="id"
             v-model="form.worldmap_lng"
             type="number"
             min="-180"
@@ -90,10 +92,13 @@ const tileUrlBlocked = computed(
           />
         </EditField>
         <EditField
+          v-slot="{ id }"
+          labels-control
           :label="_t('Zoom')"
           :help="_t('Pan/zoom the map first, then reopen settings to capture the current view.')"
         >
           <CmkInput
+            :id="id"
             v-model="form.worldmap_zoom"
             type="number"
             min="0"
@@ -117,6 +122,8 @@ const tileUrlBlocked = computed(
     </div>
 
     <EditField
+      v-slot="{ id }"
+      labels-control
       :label="_t('Tile server URL')"
       :help="
         _t(
@@ -125,6 +132,7 @@ const tileUrlBlocked = computed(
       "
     >
       <CmkInput
+        :id="id"
         v-model="form.worldmap_tile_url"
         :placeholder="untranslated('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')"
         field-size="fill"
@@ -135,8 +143,9 @@ const tileUrlBlocked = computed(
         "
       />
     </EditField>
-    <EditField :label="_t('Map saturation (%)')">
+    <EditField v-slot="{ id }" labels-control :label="_t('Map saturation (%)')">
       <CmkInput
+        :id="id"
         v-model="form.worldmap_tile_saturate"
         type="number"
         :min="0"
@@ -164,8 +173,15 @@ const tileUrlBlocked = computed(
         "
       />
     </EditField>
-    <EditField v-if="needsGroupName" :label="_t('Group name')" required>
+    <EditField
+      v-if="needsGroupName"
+      v-slot="{ id }"
+      labels-control
+      :label="_t('Group name')"
+      required
+    >
       <CmkInput
+        :id="id"
         v-model="form.worldmap_auto_filter_value"
         :placeholder="_t('group name')"
         field-size="fill"

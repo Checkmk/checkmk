@@ -132,6 +132,8 @@ def _create_hub_session(
 class AwsAccount:
     id: str
     session: boto3.session.Session
+    # The piggyback host for the account's own data, or None for the rule host.
+    host: str | None = None
 
 
 class AwsCredentials:
@@ -222,4 +224,4 @@ class AwsCredentials:
             )
         except Exception as e:
             raise AwsAccessError(f"Account {account_id}: {describe_credential_failure(e)}")
-        return AwsAccount(assumed_account_id, session)
+        return AwsAccount(assumed_account_id, session, host=assumed_account_id)

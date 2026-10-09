@@ -614,8 +614,7 @@ test-mypy-not-cmk() {
 }
 
 test-mypy-gpl() {
-    ADDITIONAL_MYPY_ARGS="--config-file=$(realpath "$REPO_PATH/mypy-gpl.ini")" \
-        bazel build --config=mypy ...
+    bazel build --config=mypy-gpl ...
 }
 
 test-github-actions() {

@@ -111,7 +111,7 @@ first-party-not-cmk = ["cmc_proto", "omdlib", "livestatus"]
 [tool.ruff.lint.pylint]
 max-positional-args = 16
 
-# NOTE: Keep this is sync with mypy-gpl.ini!
+# NOTE: Keep this in sync with mypy-gpl.toml!
 # The number of errors/files below are just a snapshot to give a rough idea. In
 # addition, a single cause can imply multiple symptoms, so these numbers have to
 # be taken with a grain of salt...
@@ -202,7 +202,6 @@ follow_imports = "skip"
 init_forbid_extra = true
 init_typed = true
 warn_required_dynamic_aliases = true
-warn_untyped_fields = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -28,34 +28,48 @@ clippy = lint_clippy_aspect(
     config = Label("//:.clippy.toml"),
 )
 
-mypy_aspect = mypy(
-    mypy_cli = Label("@//bazel/tools:mypy_cli"),
-    mypy_ini = Label("@//:pyproject.toml"),
-    # TODO: Re-enable as soon as we have a solution regarding huge execroot folders
-    # Reference: https://tribe29.slack.com/archives/C01UJKY2D7Y/p1773328309307479
-    cache = False,
-    suppression_tags = ["no-mypy"],
-    color = False,
-    # `rules_mypy//mypy:types.bzl` mostly takes care of this but needs help with some packages.
-    types = {
-        pkg: types_pkg
-        for pkg, types_pkg in types.items()
-        if pkg not in [
-            # The types for these are pulled transitively but we don't have/need
-            # the corresponding packages.
-            requirement("awscrt"),
-            requirement("html5lib"),
-            requirement("pika-ts"),
-            requirement("pytz"),
-        ]
-    } | {
-        # `types-pika-ts` wrongfully resolves `pika-ts` instead of `pika`.
-        requirement("pika"): types[requirement("pika-ts")],
-        # Add stubs for 3rd party packages we use
-        requirement("marshmallow-oneofschema"): Label("@//tests/typeshed:marshmallow-oneofschema-stubs"),
-        requirement("pyprof2calltree"): Label("@//tests/typeshed:pyprof2calltree-stubs"),
-    },
-)
+def _mypy_aspect(mypy_ini):
+    """Create a mypy aspect using the given config file.
+
+    Args:
+        mypy_ini: The label of the mypy config file.
+
+    Returns:
+        The mypy aspect.
+    """
+    return mypy(
+        mypy_cli = Label("@//bazel/tools:mypy_cli"),
+        mypy_ini = mypy_ini,
+        # TODO: Re-enable as soon as we have a solution regarding huge execroot folders
+        # Reference: https://tribe29.slack.com/archives/C01UJKY2D7Y/p1773328309307479
+        cache = False,
+        suppression_tags = ["no-mypy"],
+        color = False,
+        # `rules_mypy//mypy:types.bzl` mostly takes care of this but needs help with some packages.
+        types = {
+            pkg: types_pkg
+            for pkg, types_pkg in types.items()
+            if pkg not in [
+                # The types for these are pulled transitively but we don't have/need
+                # the corresponding packages.
+                requirement("awscrt"),
+                requirement("html5lib"),
+                requirement("pika-ts"),
+                requirement("pytz"),
+            ]
+        } | {
+            # `types-pika-ts` wrongfully resolves `pika-ts` instead of `pika`.
+            requirement("pika"): types[requirement("pika-ts")],
+            # Add stubs for 3rd party packages we use
+            requirement("marshmallow-oneofschema"): Label("@//tests/typeshed:marshmallow-oneofschema-stubs"),
+            requirement("pyprof2calltree"): Label("@//tests/typeshed:pyprof2calltree-stubs"),
+        },
+    )
+
+mypy_aspect = _mypy_aspect(Label("@//:pyproject.toml"))
+
+# The same with the config for the GPL code, which doesn't know about the non-free parts.
+mypy_gpl_aspect = _mypy_aspect(Label("@//:mypy-gpl.toml"))
 
 bandit = lint_bandit_aspect(
     binary = Label(":bandit"),

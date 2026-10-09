@@ -35,6 +35,7 @@ exports_files(
         "defines.make",
         "host.Cargo.lock.bazel",
         "module_layers.toml",
+        "mypy-gpl.toml",
         "package_versions.bzl",
         "pnpm-lock.yaml",
         "pyproject.toml",

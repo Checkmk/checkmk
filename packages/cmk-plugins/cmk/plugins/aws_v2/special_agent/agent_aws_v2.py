@@ -649,6 +649,8 @@ def _run_account(
                     account.id,
                     debug=args.debug,
                     config=proxy_config,
+                    # With a list of accounts, each account gets its own host.
+                    account_host=account.id if args.accounts else None,
                 )
                 sections.init_sections(aws_services, region, account_config, s3_limits_distributor)
                 sections.run(use_cache=use_cache)

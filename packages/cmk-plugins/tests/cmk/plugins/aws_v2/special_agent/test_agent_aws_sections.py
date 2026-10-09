@@ -147,3 +147,52 @@ class TestAWSHostLabelSections:
         generic_section._write_host_labels(cached_data)  # noqa: SLF001
         section_stdout = capsys.readouterr().out
         assert section_stdout.strip().split("\n") == expected_lines
+
+
+def _account_host_sections() -> AWSSectionsGeneric:
+    return AWSSectionsGeneric(
+        hostname="aws-org",
+        session=mock.Mock(),
+        account_id="333333333333",
+        account_host="333333333333",
+    )
+
+
+def test_account_host_receives_the_rule_host_sections(capsys: pytest.CaptureFixture[str]) -> None:
+    results: Results = {
+        ("ec2_limits", 1606382471.693873, 300.0): [
+            AWSSectionResult(piggyback_hostname="", content=[{"limit": 1}])
+        ],
+    }
+
+    _account_host_sections()._write_section_results(results)  # noqa: SLF001
+
+    assert capsys.readouterr().out.splitlines() == [
+        "<<<<333333333333>>>>",
+        "<<<aws_v2_ec2_limits:cached(1606382471,360)>>>",
+        '[{"limit": 1}]',
+        "<<<<>>>>",
+    ]
+
+
+def test_account_host_keeps_resource_piggyback_hosts(capsys: pytest.CaptureFixture[str]) -> None:
+    results: Results = {
+        ("ec2", 1606382471.693873, 300.0): [
+            AWSSectionResult(piggyback_hostname="10.0.0.1-eu-central-1-i-1", content=[{}])
+        ],
+    }
+
+    _account_host_sections()._write_section_results(results)  # noqa: SLF001
+
+    assert capsys.readouterr().out.splitlines()[0] == "<<<<10.0.0.1-eu-central-1-i-1>>>>"
+
+
+def test_account_host_receives_the_labels(capsys: pytest.CaptureFixture[str]) -> None:
+    _account_host_sections()._write_host_labels({})  # noqa: SLF001
+
+    assert capsys.readouterr().out.splitlines() == [
+        "<<<<333333333333>>>>",
+        "<<<labels:sep(0)>>>",
+        '{"cmk/aws/account": "333333333333"}',
+        "<<<<>>>>",
+    ]

@@ -197,8 +197,11 @@ class AWSSections(abc.ABC):
         account_id: str,
         debug: bool = False,
         config: botocore.config.Config | None = None,
+        account_host: str | None = None,
     ) -> None:
         self._hostname = hostname
+        # The piggyback host that receives what would otherwise go to the rule host.
+        self._account_host = account_host
         self._session = session
         # None until init_sections runs. boto3 then falls back to the session's own
         # region, which is what happened before the region moved onto the client.
@@ -307,9 +310,20 @@ class AWSSections(abc.ABC):
                     host_labels[str(row.piggyback_hostname)].update(row.piggyback_host_labels)
         return host_labels
 
+    def _target_host(self, section_result: AWSSectionResult) -> str | None:
+        if self._is_piggyback_host_result(section_result):
+            return str(section_result.piggyback_hostname)
+        return self._account_host
+
+    @staticmethod
+    def _write_to_host(host: str | None, content: str) -> None:
+        sys.stdout.write(content if host is None else f"<<<<{host}>>>>\n{content}<<<<>>>>\n")
+
     def _write_host_labels(self, results: Results) -> None:
         static_host_labels = self._collect_static_host_labels()
-        sys.stdout.write(f"<<<labels:sep(0)>>>\n{json.dumps(static_host_labels)}\n")
+        self._write_to_host(
+            self._account_host, f"<<<labels:sep(0)>>>\n{json.dumps(static_host_labels)}\n"
+        )
 
         piggyback_host_labels = self._collect_piggyback_host_labels(results, static_host_labels)
         for hostname, host_labels in piggyback_host_labels.items():
@@ -329,13 +343,13 @@ class AWSSections(abc.ABC):
         return repr(exception)
 
     def _write_exceptions(self, exceptions: Sequence) -> None:
-        sys.stdout.write("<<<aws_v2_exceptions>>>\n")
-
         if exceptions:
             out = "\n".join([self._safe_exception(e) for e in exceptions])
         else:
             out = "No exceptions"
-        sys.stdout.write(f"{self.__class__.__name__}: {out}\n")
+        self._write_to_host(
+            self._account_host, f"<<<aws_v2_exceptions>>>\n{self.__class__.__name__}: {out}\n"
+        )
 
     def _write_section_results(self, results: Results) -> None:
         if not results:
@@ -373,13 +387,10 @@ class AWSSections(abc.ABC):
             section_header = f"<<<aws_v2_{section_name}{cached_suffix}>>>\n"
 
         for row in result:
-            write_piggyback_header = self._is_piggyback_host_result(row)
-            if write_piggyback_header:
-                sys.stdout.write("<<<<%s>>>>\n" % str(row.piggyback_hostname))
-            sys.stdout.write(section_header)
-            sys.stdout.write("%s\n" % json.dumps(row.content, default=datetime_serializer))
-            if write_piggyback_header:
-                sys.stdout.write("<<<<>>>>\n")
+            self._write_to_host(
+                self._target_host(row),
+                f"{section_header}{json.dumps(row.content, default=datetime_serializer)}\n",
+            )
 
 
 class AWSSectionsUSEast(AWSSections):

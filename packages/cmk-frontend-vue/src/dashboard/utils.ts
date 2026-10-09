@@ -32,6 +32,8 @@ import type { ContextFilter, ContextFilters, FilterOrigin } from '@/dashboard/ty
 import type {
   AlertOverview,
   AlertOverviewContent,
+  Barplot,
+  BarplotContent,
   ComputedNetworkFlowAutonomousSystemResponse,
   ComputedNetworkFlowDonutResponse,
   ComputedNetworkFlowHostResponse,
@@ -388,6 +390,18 @@ export const dashboardAPI = {
   ): Promise<ComputedWidgetResponse<ComputedTopList>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-top-list/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeBarplot: async (
+    body: { source: WidgetSource<BarplotContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<Barplot>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-barplot/invoke', {
         ...CONTENT_TYPE_HEADER,
         headers,
         body

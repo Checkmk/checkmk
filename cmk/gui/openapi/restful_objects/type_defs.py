@@ -161,6 +161,7 @@ CmkEndpointName = Literal[
     "cmk/clone_dashboard_responsive_grid",
     "cmk/compute",
     "cmk/compute_alert_overview",
+    "cmk/compute_barplot",
     "cmk/compute_dashboard_widget_titles",
     "cmk/compute-list",
     "cmk/compute_gauge",

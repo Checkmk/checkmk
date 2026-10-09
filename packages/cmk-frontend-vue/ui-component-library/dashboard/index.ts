@@ -6,6 +6,7 @@
 import { Page } from '@ucl/_ucl/types/page'
 
 import UclCmkAlertOverviewFigure from './CmkAlertOverviewFigure/UclCmkAlertOverviewFigure.vue'
+import UclCmkBarplotFigure from './CmkBarplotFigure/UclCmkBarplotFigure.vue'
 import UclCmkGaugeFigure from './CmkGaugeFigure/UclCmkGaugeFigure.vue'
 import UclCmkInventoryFigure from './CmkInventoryFigure/UclCmkInventoryFigure.vue'
 import UclCmkKpiStatCard from './CmkKpiStatCard/UclCmkKpiStatCard.vue'
@@ -18,6 +19,7 @@ import UclCmkStatsFigure from './CmkStatsFigure/UclCmkStatsFigure.vue'
 
 export const pages: Array<Page> = [
   new Page('CmkAlertOverviewFigure', UclCmkAlertOverviewFigure),
+  new Page('CmkBarplotFigure', UclCmkBarplotFigure),
   new Page('CmkGaugeFigure', UclCmkGaugeFigure),
   new Page('CmkInventoryFigure', UclCmkInventoryFigure),
   new Page('CmkKpiStatCard', UclCmkKpiStatCard),

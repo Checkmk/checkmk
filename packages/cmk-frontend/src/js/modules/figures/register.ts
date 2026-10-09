@@ -6,7 +6,6 @@
 import { HorizontalBarFigure } from '@/modules/figures/cmk_horizontal_bar'
 import { PieChartFigure } from '@/modules/figures/cmk_pie_chart'
 
-import { BarplotFigure } from './cmk_barplot'
 import { figure_registry } from './cmk_figures'
 import { GaugeFigure } from './cmk_gauge'
 import { TableFigure } from './cmk_table'
@@ -14,7 +13,6 @@ import { TimeseriesFigure } from './timeseries/cmk_timeseries'
 
 export function register() {
   figure_registry.register(TableFigure)
-  figure_registry.register(BarplotFigure)
   figure_registry.register(HorizontalBarFigure)
   figure_registry.register(GaugeFigure)
   figure_registry.register(PieChartFigure)

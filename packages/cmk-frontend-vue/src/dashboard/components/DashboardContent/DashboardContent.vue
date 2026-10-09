@@ -24,6 +24,7 @@ import DashboardContentNetworkFlowKpiStatCard from './NetworkFlow/DashboardConte
 import DashboardContentNetworkFlowTopTable from './NetworkFlow/DashboardContentNetworkFlowTopTable.vue'
 import DashboardContentNetworkFlowTrendChart from './NetworkFlow/DashboardContentNetworkFlowTrendChart.vue'
 import DashboardContentAlertOverview from './figures/DashboardContentAlertOverview.vue'
+import DashboardContentBarplot from './figures/DashboardContentBarplot.vue'
 import DashboardContentGauge from './figures/DashboardContentGauge.vue'
 import DashboardContentInventory from './figures/DashboardContentInventory.vue'
 import DashboardContentSiteOverview from './figures/DashboardContentSiteOverview.vue'
@@ -92,6 +93,8 @@ function contentToComponent(content: WidgetContent): Component {
       return DashboardContentTimeSeriesGraph
     case ['host_stats', 'service_stats', 'event_stats'].includes(contentType):
       return DashboardContentStats
+    case contentType === 'barplot':
+      return DashboardContentBarplot
     case contentType === 'gauge':
       return DashboardContentGauge
     case ['host_state', 'service_state'].includes(contentType):

@@ -167,6 +167,7 @@ class SingleMetricDashletConfig(DashletConfig):
 
 class BarplotDashletConfig(SingleMetricDashletConfig):
     display_range: MetricDisplayRangeWithAutomatic
+    contextual_link: NotRequired[ContextualLinkConfig]
 
 
 class GaugeDashletConfig(SingleMetricDashletConfig):

@@ -27,7 +27,7 @@ export interface ContentProps<T = WidgetContent> {
 export type ContentPropsRecord = Readonly<Record<string, ContentProps>>
 
 // Figure
-export const CONTENT_FIGURE_TYPES: string[] = ['barplot']
+export const CONTENT_FIGURE_TYPES: string[] = []
 
 export type ContentFigureType = (typeof CONTENT_FIGURE_TYPES)[number]
 

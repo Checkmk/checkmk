@@ -113,13 +113,8 @@ type MetricDisplayRangeFixedModel = {
   minimum: number
   maximum: number
 }
-type MetricDisplayRangeModel = 'automatic' | MetricDisplayRangeFixedModel
 
 // Specific figure content types
-export interface BarplotContent extends FigureWidgetContent {
-  type: 'barplot'
-  display_range: MetricDisplayRangeModel
-}
 export interface GaugeContent extends FigureWidgetContent {
   type: 'gauge'
   display_range: MetricDisplayRangeFixedModel

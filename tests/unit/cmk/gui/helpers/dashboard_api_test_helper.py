@@ -198,6 +198,7 @@ class TestBarplotContent:
                 "type": "barplot",
                 "metric": "availability",
                 "display_range": "automatic",
+                "contextual_link": {"type": "default"},
             },
         )
 

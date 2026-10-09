@@ -7,6 +7,10 @@ import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, ref, watch } from 'vue'
 
+import {
+  type UseContextualLink,
+  useContextualLink
+} from '@/dashboard/components/Wizard/components/ContextualLink/useContextualLink'
 import { useDataRangeInput } from '@/dashboard/components/Wizard/components/DataRangeInput/useDataRangeInput'
 import {
   type UseWidgetVisualizationOptions,
@@ -27,6 +31,7 @@ type DataRangeType = 'fixed' | 'automatic'
 const CONTENT_TYPE = 'barplot'
 
 export interface UseBarplot extends UseWidgetHandler, UseWidgetVisualizationOptions {
+  contextualLink: UseContextualLink<BarplotContent>
   //Data settings
   dataRangeType: Ref<DataRangeType>
   dataRangeSymbol: Ref<string>
@@ -64,17 +69,25 @@ export const useBarplot = async (
     dataRangeProps
   } = useDataRangeInput(currentContent?.display_range)
 
+  const contextualLink = useContextualLink<BarplotContent>(
+    constants.widgets[CONTENT_TYPE]!.contextual_link!,
+    currentContent?.contextual_link
+  )
+
   const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
-    return validateTitle()
+    const isTitleValid = validateTitle()
+    const isLinkValid = contextualLink.validate()
+    return isTitleValid && isLinkValid
   }
 
   const _generateContent = (): BarplotContent => {
     return {
       type: CONTENT_TYPE,
       metric: metric,
-      display_range: dataRangeProps.value
+      display_range: dataRangeProps.value,
+      contextual_link: contextualLink.contextualLink.value ?? { type: 'default' }
     }
   }
 
@@ -102,7 +115,7 @@ export const useBarplot = async (
   }
 
   watch(
-    [widgetGeneralSettings, dataRangeProps],
+    [contextualLink.contextualLink, widgetGeneralSettings, dataRangeProps],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -112,6 +125,8 @@ export const useBarplot = async (
   await _updateWidgetProps()
 
   return {
+    contextualLink,
+
     dataRangeType,
     dataRangeSymbol: symbol,
     dataRangeMin: minimum,

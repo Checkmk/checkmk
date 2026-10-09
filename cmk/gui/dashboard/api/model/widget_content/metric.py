@@ -39,11 +39,15 @@ from cmk.gui.openapi.framework.model.common_fields import (
 )
 from cmk.gui.unit_formatter import AutoPrecision
 
+from ..context_filters import OBJECT_SERVICE_FILTER_ADAPTER, ObjectServiceContextFilter
 from ..contextual_link import (
     AnyContextualLinkSpec,
     built_in_contextual_link_from_internal,
     built_in_contextual_link_to_internal,
     BuiltInContextualLinkSpec,
+    contextual_link_from_internal,
+    contextual_link_to_internal,
+    ContextualLinkSpec,
 )
 from ._base import BaseWidgetContent
 
@@ -262,6 +266,9 @@ class _BaseMetricContent(BaseWidgetContent, ABC):
 class BarplotContent(_BaseMetricContent):
     type: Literal["barplot"] = api_field(description="Display a single metric as a barplot.")
     display_range: MetricDisplayRangeModel = api_field(description="Range of values to display.")
+    contextual_link: ContextualLinkSpec[ObjectServiceContextFilter] = api_field(
+        description="Where a click on a bar leads."
+    )
 
     @classmethod
     @override
@@ -274,15 +281,25 @@ class BarplotContent(_BaseMetricContent):
             type="barplot",
             metric=config["metric"],
             display_range=_metric_display_range_from_internal(config["display_range"]),
+            contextual_link=contextual_link_from_internal(
+                config.get("contextual_link"), OBJECT_SERVICE_FILTER_ADAPTER
+            ),
         )
 
     @override
     def to_internal(self) -> BarplotDashletConfig:
-        return BarplotDashletConfig(
+        config = BarplotDashletConfig(
             type=self.internal_type(),
             metric=self.metric,
             display_range=_metric_display_range_to_internal(self.metric, self.display_range),
         )
+        if (link := contextual_link_to_internal(self.contextual_link)) is not None:
+            config["contextual_link"] = link
+        return config
+
+    @override
+    def configured_contextual_link(self) -> AnyContextualLinkSpec:
+        return self.contextual_link
 
 
 @api_model

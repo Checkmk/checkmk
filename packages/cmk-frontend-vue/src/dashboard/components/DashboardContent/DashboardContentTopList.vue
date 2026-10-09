@@ -11,8 +11,10 @@ import CmkRankedTable from '@/dashboard/components/CmkRankedTable'
 import type { RankedTableColumn, RankedTableRow } from '@/dashboard/components/CmkRankedTable'
 import { useComputedWidget } from '@/dashboard/composables/useComputedWidget'
 import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
+import { contextualLinkUrl } from '@/dashboard/lib/contextualLinkUrl'
 import type {
   ComputedTopList,
+  LinkProperties,
   TopListContent,
   TopListEntry,
   TopListError
@@ -69,9 +71,21 @@ function link(url: string): { href?: string } {
 }
 
 // Only the ranked rows follow the contextual link; the error table's links help to fix the
-// configuration.
-function contextualLink(url: string): { href?: string } {
-  return props.content.contextual_link.type === 'none' ? {} : link(url)
+// configuration. The server resolves no built-in link, as each cell has its own view.
+function contextualLink(
+  topList: ComputedTopList,
+  builtInUrl: string,
+  properties: LinkProperties
+): { href?: string } {
+  if (props.content.contextual_link.type === 'default') {
+    return link(builtInUrl)
+  }
+  const resolved = topList.links[0]
+  const cellProperties = properties.links[0]
+  if (resolved === undefined || cellProperties === undefined) {
+    return {}
+  }
+  return link(contextualLinkUrl(resolved, cellProperties, props.effective_filter_context.filters))
 }
 
 function columns(topList: ComputedTopList): RankedTableColumn[] {
@@ -99,8 +113,14 @@ function columns(topList: ComputedTopList): RankedTableColumn[] {
 // The backend delivers the entries pre-ranked, pre-formatted and colored by metric.
 function rows(topList: ComputedTopList): RankedTableRow[] {
   return topList.entries.map((entry) => ({
-    host: { value: entry.host_name, ...contextualLink(hostViewUrl(entry)) },
-    service: { value: entry.service_description, ...contextualLink(serviceViewUrl(entry)) },
+    host: {
+      value: entry.host_name,
+      ...contextualLink(topList, hostViewUrl(entry), entry.host_link_properties)
+    },
+    service: {
+      value: entry.service_description,
+      ...contextualLink(topList, serviceViewUrl(entry), entry.service_link_properties)
+    },
     value: {
       value: entry.metric.value,
       formatted: entry.metric.formatted,

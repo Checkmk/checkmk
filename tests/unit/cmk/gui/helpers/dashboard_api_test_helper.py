@@ -311,6 +311,41 @@ class TestTopListContent:
         ]["widgets"]
         assert next(iter(widgets.values()))["content"]["contextual_link"] == {"type": "none"}
 
+    def test_an_inherited_link_round_trips(self, clients: ClientRegistry) -> None:
+        link = {
+            "type": "inherited",
+            "location": {"type": "dashboards", "name": "main", "owner": None},
+            "include_context": True,
+            "include_time_range": True,
+            "show_filter_form": False,
+        }
+        clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "top_list_dashboard",
+                {
+                    "top_list": create_widget(
+                        {
+                            "type": "top_list",
+                            "metric": "availability",
+                            "display_range": "automatic",
+                            "columns": {
+                                "show_service_description": True,
+                                "show_bar_visualization": True,
+                            },
+                            "ranking_order": "high",
+                            "limit_to": 10,
+                            "contextual_link": link,
+                        }
+                    )
+                },
+            )
+        )
+
+        widgets = clients.DashboardClient.get_relative_grid_dashboard("top_list_dashboard").json[
+            "extensions"
+        ]["widgets"]
+        assert next(iter(widgets.values()))["content"]["contextual_link"] == link
+
 
 @pytest.mark.parametrize("widget_type", ["host_state", "service_state"])
 class TestStateContent:

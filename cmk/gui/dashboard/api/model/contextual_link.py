@@ -131,9 +131,10 @@ type ContextualLinkSpec[F] = Annotated[
     Discriminator("type"),
 ]
 
-# The link of a widget whose clicks lead to its built-in target or nowhere.
-type BuiltInContextualLinkSpec = Annotated[
-    ContextualLinkNone | ContextualLinkDefault, Discriminator("type")
+# The link of a widget whose clicks lead to its built-in target, a target the user picks, or
+# nowhere. F names the objects its click names, as the filter set of `ContextualLinkSpec` does.
+type InheritableContextualLinkSpec[F] = Annotated[
+    ContextualLinkNone | ContextualLinkDefault | ContextualLinkInherited, Discriminator("type")
 ]
 
 type AnyContextualLinkSpec = (
@@ -161,12 +162,12 @@ class ContextualLinkOptions:
 
 
 def contextual_link_options(link_type: object) -> ContextualLinkOptions:
-    """The options a widget's `contextual_link` type accepts: a `ContextualLinkSpec[F]`, or an
-    unparameterized spec, whose links carry no filters.
+    """The options a widget's `contextual_link` type accepts, a spec parameterized with the
+    filter set of its clicks.
 
     Read off the types, so the options cannot drift from what the API accepts.
     """
-    spec = link_type if isinstance(link_type, TypeAliasType) else get_origin(link_type)
+    spec = get_origin(link_type)
     if not isinstance(spec, TypeAliasType):
         raise TypeError(f"Not a contextual link type: {link_type!r}")
     filters = [
@@ -174,11 +175,12 @@ def contextual_link_options(link_type: object) -> ContextualLinkOptions:
         for filter_type in get_args(link_type)
         for member in _members(filter_type)
     ]
+    modes = _MODES_ADAPTER.validate_python(
+        [mode for arm in _members(spec) if (mode := _literal(arm, "type")) != "none"]
+    )
     return ContextualLinkOptions(
-        modes=_MODES_ADAPTER.validate_python(
-            [mode for arm in _members(spec) if (mode := _literal(arm, "type")) != "none"]
-        ),
-        filters=filters,
+        modes=modes,
+        filters=filters if "custom" in modes else [],
         # An object filter set holds the name filter of exactly the objects its click names.
         single_infos=[info for info in ("host", "service") if info in filters],
     )
@@ -203,13 +205,7 @@ def contextual_link_to_internal(
         case ContextualLinkNone():
             return ContextualLinkNoneConfig(type="none")
         case ContextualLinkInherited():
-            return ContextualLinkInheritedConfig(
-                type="inherited",
-                location=_location_to_internal(link.location),
-                include_context=link.include_context,
-                include_time_range=link.include_time_range,
-                show_filter_form=link.show_filter_form,
-            )
+            return _inherited_to_internal(link)
         case ContextualLinkCustom():
             return ContextualLinkCustomConfig(
                 type="custom",
@@ -231,26 +227,29 @@ def contextual_link_to_internal(
             assert_never(unreachable)
 
 
-def built_in_contextual_link_to_internal(
-    link: BuiltInContextualLinkSpec,
-) -> ContextualLinkNoneConfig | None:
-    """The stored form of a link that may only be built in; None for a `default` link."""
+def inheritable_contextual_link_to_internal(
+    link: ContextualLinkNone | ContextualLinkDefault | ContextualLinkInherited,
+) -> ContextualLinkNoneConfig | ContextualLinkInheritedConfig | None:
+    """The stored form of a link that may not be custom; None for a `default` link."""
     match link:
         case ContextualLinkNone():
             return ContextualLinkNoneConfig(type="none")
+        case ContextualLinkInherited():
+            return _inherited_to_internal(link)
         case ContextualLinkDefault():
             return None
         case unreachable:
             assert_never(unreachable)
 
 
-def built_in_contextual_link_from_internal(
-    config: ContextualLinkNoneConfig | None,
-) -> BuiltInContextualLinkSpec:
-    """The API form of a stored link that may only be built in."""
-    if config is None:
-        return ContextualLinkDefault(type="default")
-    return ContextualLinkNone(type="none")
+def _inherited_to_internal(link: ContextualLinkInherited) -> ContextualLinkInheritedConfig:
+    return ContextualLinkInheritedConfig(
+        type="inherited",
+        location=_location_to_internal(link.location),
+        include_context=link.include_context,
+        include_time_range=link.include_time_range,
+        show_filter_form=link.show_filter_form,
+    )
 
 
 def contextual_link_from_internal[F](
@@ -262,13 +261,7 @@ def contextual_link_from_internal[F](
     if config["type"] == "none":
         return ContextualLinkNone(type="none")
     if config["type"] == "inherited":
-        return ContextualLinkInherited(
-            type="inherited",
-            location=location_from_internal(config["location"]),
-            include_context=config["include_context"],
-            include_time_range=config["include_time_range"],
-            show_filter_form=config["show_filter_form"],
-        )
+        return _inherited_from_internal(config)
     if config["type"] == "custom":
         return ContextualLinkCustom(
             type="custom",
@@ -285,6 +278,27 @@ def contextual_link_from_internal[F](
             ],
         )
     assert_never(config)
+
+
+def inheritable_contextual_link_from_internal(
+    config: ContextualLinkNoneConfig | ContextualLinkInheritedConfig | None,
+) -> ContextualLinkNone | ContextualLinkDefault | ContextualLinkInherited:
+    """The API form of a stored link that may not be custom."""
+    if config is None:
+        return ContextualLinkDefault(type="default")
+    if config["type"] == "none":
+        return ContextualLinkNone(type="none")
+    return _inherited_from_internal(config)
+
+
+def _inherited_from_internal(config: ContextualLinkInheritedConfig) -> ContextualLinkInherited:
+    return ContextualLinkInherited(
+        type="inherited",
+        location=location_from_internal(config["location"]),
+        include_context=config["include_context"],
+        include_time_range=config["include_time_range"],
+        show_filter_form=config["show_filter_form"],
+    )
 
 
 _TARGET_TITLES: Mapping[ContextualLinkTargetType, str] = {

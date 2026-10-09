@@ -186,7 +186,7 @@ class TopListDashletConfig(DashletConfig):
     display_range: MetricDisplayRangeWithAutomatic
     ranking_order: Literal["high", "low"]
     limit_to: int
-    contextual_link: NotRequired[ContextualLinkNoneConfig]
+    contextual_link: NotRequired[ContextualLinkNoneConfig | ContextualLinkInheritedConfig]
 
 
 NetworkFlowTopTableDimension = Literal[

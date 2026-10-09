@@ -39,15 +39,19 @@ from cmk.gui.openapi.framework.model.common_fields import (
 )
 from cmk.gui.unit_formatter import AutoPrecision
 
-from ..context_filters import OBJECT_SERVICE_FILTER_ADAPTER, ObjectServiceContextFilter
+from ..context_filters import (
+    OBJECT_SERVICE_FILTER_ADAPTER,
+    ObjectHostContextFilter,
+    ObjectServiceContextFilter,
+)
 from ..contextual_link import (
     AnyContextualLinkSpec,
-    built_in_contextual_link_from_internal,
-    built_in_contextual_link_to_internal,
-    BuiltInContextualLinkSpec,
     contextual_link_from_internal,
     contextual_link_to_internal,
     ContextualLinkSpec,
+    inheritable_contextual_link_from_internal,
+    inheritable_contextual_link_to_internal,
+    InheritableContextualLinkSpec,
 )
 from ._base import BaseWidgetContent
 
@@ -472,7 +476,8 @@ class TopListContent(_BaseMetricContent):
         description="Display highest or lowest values."
     )
     limit_to: int = api_field(description="Limit the number of entries in the top list.")
-    contextual_link: BuiltInContextualLinkSpec = api_field(
+    # Both cells of a row name its host, so a target restricted to a single host fits either.
+    contextual_link: InheritableContextualLinkSpec[ObjectHostContextFilter] = api_field(
         description="Where a click on a host or service name leads."
     )
 
@@ -490,7 +495,9 @@ class TopListContent(_BaseMetricContent):
             display_range=_metric_display_range_from_internal(config["display_range"]),
             ranking_order=config["ranking_order"],
             limit_to=config["limit_to"],
-            contextual_link=built_in_contextual_link_from_internal(config.get("contextual_link")),
+            contextual_link=inheritable_contextual_link_from_internal(
+                config.get("contextual_link")
+            ),
         )
 
     @override
@@ -503,7 +510,7 @@ class TopListContent(_BaseMetricContent):
             ranking_order=self.ranking_order,
             limit_to=self.limit_to,
         )
-        if (link := built_in_contextual_link_to_internal(self.contextual_link)) is not None:
+        if (link := inheritable_contextual_link_to_internal(self.contextual_link)) is not None:
             config["contextual_link"] = link
         return config
 

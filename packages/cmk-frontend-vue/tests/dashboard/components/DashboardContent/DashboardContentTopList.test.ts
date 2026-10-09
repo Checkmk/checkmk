@@ -9,7 +9,7 @@ import { defineComponent, h } from 'vue'
 
 import DashboardContentTopList from '@/dashboard/components/DashboardContent/DashboardContentTopList.vue'
 import { useProvideIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
-import type { ComputedTopList, TopListContent } from '@/dashboard/types/widget'
+import type { ComputedTopList, TopListContent, VisualContext } from '@/dashboard/types/widget'
 
 import {
   renderComputedWidget,
@@ -19,6 +19,7 @@ import { makeContentProps } from '@tests/dashboard/contentProps'
 
 function topList(overrides: Partial<ComputedTopList> = {}): ComputedTopList {
   return {
+    links: [],
     full_metric_name: 'CPU load',
     value_range: { min_value: 0, max_value: 20 },
     entries: [
@@ -26,13 +27,17 @@ function topList(overrides: Partial<ComputedTopList> = {}): ComputedTopList {
         site_id: 'heute',
         host_name: 'host-b',
         service_description: 'CPU load',
-        metric: { value: 20, formatted: '20.00', color: '#ff0000' }
+        metric: { value: 20, formatted: '20.00', color: '#ff0000' },
+        host_link_properties: { links: [] },
+        service_link_properties: { links: [] }
       },
       {
         site_id: 'heute',
         host_name: 'host-a',
         service_description: 'CPU load',
-        metric: { value: 5, formatted: '5.00', color: '#00ff00' }
+        metric: { value: 5, formatted: '5.00', color: '#00ff00' },
+        host_link_properties: { links: [] },
+        service_link_properties: { links: [] }
       }
     ],
     errors: [],
@@ -40,7 +45,7 @@ function topList(overrides: Partial<ComputedTopList> = {}): ComputedTopList {
   }
 }
 
-function props(content: Partial<TopListContent> = {}) {
+function props(content: Partial<TopListContent> = {}, filters: VisualContext = {}) {
   return makeContentProps(
     {
       type: 'top_list' as const,
@@ -58,7 +63,8 @@ function props(content: Partial<TopListContent> = {}) {
         title: { text: 'Top list', render_mode: 'with_background' },
         render_background: true
       },
-      effectiveTitle: 'Top 10: CPU load'
+      effectiveTitle: 'Top 10: CPU load',
+      effective_filter_context: { uses_infos: [], filters, restricted_to_single: [] }
     }
   )
 }
@@ -67,9 +73,9 @@ const endpoint = useComputeWidgetEndpoint<ComputedTopList>('compute-top-list', (
 
 async function renderWidget(
   content: Partial<TopListContent> = {},
-  { isPublicDashboard = false } = {}
+  { isPublicDashboard = false, filters = {} as VisualContext } = {}
 ) {
-  const componentProps = props(content)
+  const componentProps = props(content, filters)
   const wrapper = defineComponent({
     setup() {
       if (isPublicDashboard) {
@@ -132,6 +138,53 @@ describe('DashboardContentTopList', () => {
     expect(screen.getAllByRole('link', { name: 'CPU load' })[0]).toHaveAttribute(
       'href',
       'view.py?view_name=service&site=heute&host=host-b&service=CPU+load'
+    )
+  })
+
+  it('links hosts and services to the inherited target with the filters and their own key', async () => {
+    const site = { status: 'encoded' as const, variables: { site: 'heute' } }
+    const host = { status: 'encoded' as const, variables: { host: 'host-b' } }
+    const service = { status: 'encoded' as const, variables: { service: 'CPU load' } }
+    const inherited = topList()
+    endpoint.answer({
+      ...inherited,
+      links: [
+        {
+          title: 'Linux hosts',
+          location: { type: 'dashboards', name: 'linux', owner: null },
+          include_context: true,
+          include_time_range: true,
+          show_filter_form: false
+        }
+      ],
+      entries: [
+        {
+          ...inherited.entries[0]!,
+          host_link_properties: { links: [{ siteopt: site, host }] },
+          service_link_properties: { links: [{ siteopt: site, host, service }] }
+        }
+      ]
+    })
+    await renderWidget(
+      {
+        contextual_link: {
+          type: 'inherited',
+          location: { type: 'dashboards', name: 'linux', owner: null },
+          include_context: true,
+          include_time_range: true,
+          show_filter_form: false
+        }
+      },
+      { filters: { opthostgroup: { opthost_group: 'linux' } } }
+    )
+
+    expect(screen.getByRole('link', { name: 'host-b' })).toHaveAttribute(
+      'href',
+      'dashboard.py?name=linux&opthost_group=linux&site=heute&host=host-b&filled_in=filter&_show_filter_form=0'
+    )
+    expect(screen.getByRole('link', { name: 'CPU load' })).toHaveAttribute(
+      'href',
+      'dashboard.py?name=linux&opthost_group=linux&site=heute&host=host-b&service=CPU+load&filled_in=filter&_show_filter_form=0'
     )
   })
 

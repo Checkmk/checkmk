@@ -116,9 +116,8 @@ def _auth_args(auth: AccessKey | AssumeRole | DefaultCredentials | None) -> list
 
 def _account_args(login: AccessKey | AssumeRole | DefaultCredentials | None) -> list[str]:
     # Only the logins without a role can monitor a list of accounts.
-    if not isinstance(login, AccessKeyLogin | DefaultCredentials):
-        return []
-    if (accounts := login.accounts[1]) is None:
+    accounts = login.accounts[1] if isinstance(login, AccessKeyLogin | DefaultCredentials) else None
+    if accounts is None:
         return []
     args = [arg for account_id in accounts.account_ids for arg in ("--account", account_id)]
     args += ["--spoke-role-name", accounts.role_name]

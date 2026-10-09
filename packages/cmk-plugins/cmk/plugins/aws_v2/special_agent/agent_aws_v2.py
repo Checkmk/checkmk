@@ -607,8 +607,7 @@ def _test_connection(credentials: AwsCredentials) -> int:
     try:
         credentials.accounts()
     except AwsAccessError as ae:
-        error_msg = f"Connection failed with: {ae}\n"
-        sys.stderr.write(error_msg)
+        sys.stderr.write(f"Connection failed with: {ae}\n")
         return 2
     return 0
 

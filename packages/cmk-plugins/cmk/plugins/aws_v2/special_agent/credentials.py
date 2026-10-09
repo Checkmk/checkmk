@@ -111,11 +111,12 @@ def _assume_role(
 
 def _create_hub_session(
     hub: HubCredentials, region: str, config: botocore.config.Config | None
-) -> boto3.session.Session:
+) -> tuple[boto3.session.Session, str | None]:
+    """The hub session, and its account if the AssumeRole answer already told it."""
     if hub.role is None:
-        return _login_session(hub.login, region)
+        return _login_session(hub.login, region), None
     try:
-        session, _account_id = _assume_role(
+        return _assume_role(
             _login_session(hub.login, region),
             hub.role.arn,
             hub.role.external_id,
@@ -123,7 +124,6 @@ def _create_hub_session(
             region,
             config,
         )
-        return session
     except Exception as e:
         raise AwsAccessError(describe_credential_failure(e))
 
@@ -169,29 +169,29 @@ class AwsCredentials:
     def session(self) -> boto3.session.Session:
         """The single session of this run, built on first use and then reused."""
         if self._session is None:
-            self._session = _create_hub_session(
+            self._session, self._account_id = _create_hub_session(
                 self._hub, self._global_service_region, self._proxy_config
             )
         return self._session
 
     def account_id(self) -> str:
-        """The account the credentials belong to. One STS call per run, then cached."""
-        if self._account_id is None:
-            try:
-                # The session is built inside the try on purpose. It does not resolve
-                # credentials, but it does read the shared config, so a missing
-                # AWS_PROFILE or an unparsable config file raises here rather than at the
-                # client call below.
-                self._account_id = (
-                    self.session()
-                    .client("sts", config=self._proxy_config)
-                    .get_caller_identity()["Account"]
-                )
-            except (botocore.exceptions.BotoCoreError, botocore.exceptions.ClientError) as e:
-                # BotoCoreError covers every client-side failure, including all the
-                # credential ones. ClientError is not a BotoCoreError, so it stays listed.
-                raise AwsAccessError(describe_credential_failure(e))
-        return self._account_id
+        """The account the credentials belong to. At most one STS call per run."""
+        try:
+            # The session is built inside the try on purpose. It does not resolve
+            # credentials, but it does read the shared config, so a missing AWS_PROFILE or
+            # an unparsable config file raises here rather than at the client call below.
+            # With an assumed role, building it already tells the account.
+            session = self.session()
+            if (account_id := self._account_id) is None:
+                account_id = session.client("sts", config=self._proxy_config).get_caller_identity()[
+                    "Account"
+                ]
+                self._account_id = account_id
+        except (botocore.exceptions.BotoCoreError, botocore.exceptions.ClientError) as e:
+            # BotoCoreError covers every client-side failure, including all the
+            # credential ones. ClientError is not a BotoCoreError, so it stays listed.
+            raise AwsAccessError(describe_credential_failure(e))
+        return account_id
 
     def accounts(self) -> Sequence[AwsAccount]:
         """The accounts this run monitors, each with the session to use for all its regions."""

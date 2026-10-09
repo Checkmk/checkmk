@@ -468,3 +468,29 @@ describe('MapStatesService — hidden tab', () => {
     store.disconnect()
   })
 })
+
+describe('MapStatesService — overlapping connects', () => {
+  beforeEach(() => {
+    FakeEventSource.instances = []
+    vi.stubGlobal('EventSource', FakeEventSource)
+  })
+
+  // A caller that goes on to ask the daemon about the map must not run ahead of
+  // the registration the first connect is still doing.
+  it('lets an overlapping connect wait until the map is registered', async () => {
+    let registered = false
+    const register = vi.fn(async () => {
+      await Promise.resolve()
+      registered = true
+    })
+    const store = newService(null, {}, { register })
+    const signed = { config_b64: 'x', sig: 'y' }
+
+    const first = store.connectToMap('b', signed)
+    await store.connectToMap('b', signed)
+
+    expect(registered).toBe(true)
+    expect(register).toHaveBeenCalledTimes(1)
+    await first
+  })
+})

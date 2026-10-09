@@ -21,7 +21,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ValidationError
 
 from cmk.maps.backend.api.v1.connections import auth_user_scope
-from cmk.maps.backend.api.v1.deps import can_create_map, get_current_user, resolve_auth_user
+from cmk.maps.backend.api.v1.deps import (
+    can_create_map,
+    get_current_user,
+    registered_map,
+    resolve_auth_user,
+)
 from cmk.maps.backend.api.v1.types import MapName
 from cmk.maps.backend.core.auth import InvalidTicket, Principal, verify_map_config
 from cmk.maps.backend.schemas.map import (
@@ -125,9 +130,7 @@ async def get_auto_objects(
     transient — they're never persisted, so the editor only ever sees the
     operator's curated set.
     """
-    cfg = map_service.get_map(current_user.map_key_owner, name)
-    if cfg is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Map '{name}' not found")
+    cfg = registered_map(current_user, name)
     connection = state_service.get_connection(cfg.connection_id)
     if connection is None:
         return []

@@ -8,6 +8,7 @@ import { type Ref, reactive, ref } from 'vue'
 
 import type { MapConfigApi, SignedMap } from '@/maps/api/mapConfig'
 import type { MapStatesApi } from '@/maps/api/mapStates'
+import { isAutoObjectId } from '@/maps/api/wire'
 import type {
   CfgImport,
   FolderTreeView,
@@ -19,7 +20,7 @@ import type {
   RenderMode,
   ServiceLayout
 } from '@/maps/types/api'
-import { newMapView } from '@/maps/utils/model'
+import { hasAutoSource, newMapView } from '@/maps/utils/model'
 
 /** Edits are optimistic and coalesced; this is how long a burst is collected. */
 const SAVE_DEBOUNCE_MS = 400
@@ -122,21 +123,6 @@ export class MapService {
           ? { ...object, map_title: signed.map_link_titles[object.map_name] ?? null }
           : object
       )
-      // A worldmap with an auto source merges transient hosts on top of the
-      // persisted set. It happens here rather than in the editor so the canvas,
-      // the drawer and the stream all see one object list.
-      const worldmap = cfg.view?.type === 'worldmap' ? cfg.view : null
-      if (worldmap?.auto_source) {
-        try {
-          const auto = await this.statesApi.fetchAutoObjects(name)
-          if (seq !== this.fetchSeq) {
-            return
-          }
-          cfg.objects = [...cfg.objects, ...auto]
-        } catch {
-          // An auto-source failure must not block the persisted view.
-        }
-      }
       this.currentMapSig.value = { config_b64: signed.config_b64, sig: signed.sig }
       this.currentMap.value = cfg
     } catch (e: unknown) {
@@ -150,7 +136,24 @@ export class MapService {
     }
   }
 
-  /** One map's stored config, without the auto-source merge {@link fetchMap} does. */
+  /**
+   * Merges a worldmap's auto-source hosts into the open map, so the canvas, the
+   * drawer and the stream all see one object list. The daemon inflates them from
+   * the config it was handed, so this only works once the map is registered.
+   * Replaces an earlier merge rather than adding to it.
+   */
+  public async loadAutoObjects(name: string): Promise<void> {
+    if (this.currentMap.value?.name !== name || !hasAutoSource(this.currentMap.value.view)) {
+      return
+    }
+    const auto = await this.statesApi.fetchAutoObjects(name)
+    const map = this.currentMap.value
+    if (map?.name !== name) {
+      return
+    }
+    map.objects = [...map.objects.filter((object) => !isAutoObjectId(object.id)), ...auto]
+  }
+
   /**
    * The per-map pagetype capability the backend stamps on the map-list entry:
    * admin rights ride in via "edit foreign maps", not via configure/admin status.

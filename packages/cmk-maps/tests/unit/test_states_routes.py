@@ -32,7 +32,7 @@ from fastapi.testclient import TestClient
 from starlette.types import Message
 
 from cmk.fastapi.sse import SentEvent
-from cmk.maps.backend.api.v1 import states
+from cmk.maps.backend.api.v1 import deps, states
 from cmk.maps.backend.app import create_app
 from cmk.maps.backend.core.auth import Principal
 from cmk.maps.backend.core.ratelimit import sse_stream_limiter, ws_connect_limiter
@@ -135,29 +135,29 @@ def test_the_api_description_names_each_event_with_the_schema_of_its_data() -> N
 
 
 # --------------------------------------------------------------------------- #
-# _map_for_stream — resolution + map-scoped ticket binding
+# registered_map — resolution + map-scoped ticket binding
 # --------------------------------------------------------------------------- #
 
 
-def test_map_for_stream_returns_registered_config() -> None:
+def test_registered_map_returns_registered_config() -> None:
     map_service.register_map("alice", MapConfig(name="b1", alias="Map One"))
-    cfg = states._map_for_stream(Principal(name="alice"), "b1")  # noqa: SLF001
+    cfg = deps.registered_map(Principal(name="alice"), "b1")
     assert cfg.name == "b1"
 
 
-def test_map_for_stream_missing_map_is_404() -> None:
+def test_registered_map_missing_map_is_404() -> None:
     with pytest.raises(HTTPException) as exc:
-        states._map_for_stream(Principal(name="alice"), "absent")  # noqa: SLF001
+        deps.registered_map(Principal(name="alice"), "absent")
     assert exc.value.status_code == HTTPStatus.NOT_FOUND
 
 
-def test_map_for_stream_map_scoped_ticket_rejects_other_map() -> None:
+def test_registered_map_map_scoped_ticket_rejects_other_map() -> None:
     # A ticket minted for one map must not be usable to stream another, even if
     # that other map exists under the same resolved owner.
     map_service.register_map("alice", MapConfig(name="other"))
     scoped = Principal(name="alice", map_owner="alice", map_name="shared")
     with pytest.raises(HTTPException) as exc:
-        states._map_for_stream(scoped, "other")  # noqa: SLF001
+        deps.registered_map(scoped, "other")
     assert exc.value.status_code == HTTPStatus.NOT_FOUND
 
 

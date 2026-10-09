@@ -213,3 +213,29 @@ def test_single_site_connection_never_reports_dead_sites(monkeypatch: pytest.Mon
     live, stale = _staleness(tree)
     assert live == {"h"}
     assert stale == set()
+
+
+def test_geo_hosts_are_asked_for_once_per_user_within_a_tick(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    conn = _tcp_connection(monkeypatch)
+    queries: list[str] = []
+
+    async def _query(query: str) -> list[list[object]]:
+        queries.append(query)
+        return [["muc", "Munich", {"maps_lat": "48.1", "maps_lng": "11.6"}, [], []]]
+
+    monkeypatch.setattr(conn, "_query", _query)
+
+    async def _as(auth_user: str | None) -> list[str]:
+        token = livestatus._auth_user_ctx.set(auth_user)  # noqa: SLF001
+        try:
+            return [h["name"] for h in await conn.get_hosts_with_geo()]
+        finally:
+            livestatus._auth_user_ctx.reset(token)  # noqa: SLF001
+
+    async def _ticks() -> list[list[str]]:
+        return [await _as("alice"), await _as("alice"), await _as("bob")]
+
+    assert asyncio.run(_ticks()) == [["muc"], ["muc"], ["muc"]]
+    assert len(queries) == 2

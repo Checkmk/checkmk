@@ -27,6 +27,8 @@ from cmk.maps.backend.core.auth import (
     validate_ticket,
 )
 from cmk.maps.backend.core.ratelimit import rest_read_limiter
+from cmk.maps.backend.schemas.map import MapConfig
+from cmk.maps.backend.services import map_service
 
 __all__ = [
     "Principal",
@@ -36,6 +38,7 @@ __all__ = [
     "get_current_user",
     "principal_from_token",
     "rate_limited_read",
+    "registered_map",
     "require_connection_read",
     "resolve_auth_user",
 ]
@@ -146,3 +149,18 @@ async def require_connection_read(current_user: Principal = Depends(get_current_
             status_code=status.HTTP_403_FORBIDDEN, detail="Maps configuration access required"
         )
     return current_user
+
+
+def registered_map(user: Principal, name: str) -> MapConfig:
+    """Resolve the viewed map's config under its REAL owner, or 404.
+
+    Keyed by ``map_key_owner`` (the map's real owner for a map-scoped ticket,
+    else the caller), so all viewers of a published map resolve the one config
+    registered under it. A map-scoped ticket must match the requested map, so a
+    ticket for one map can't be used to reach another."""
+    if user.map_name is not None and name != user.map_name:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Map '{name}' not found")
+    cfg = map_service.get_map(user.map_key_owner, name)
+    if cfg is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Map '{name}' not found")
+    return cfg

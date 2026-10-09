@@ -484,6 +484,11 @@ class LivestatusConnection(ConnectionBase):
         self._services_summary_cache: TtlCache[
             tuple[str | None, frozenset[str]], dict[str, ServicesSummary]
         ] = TtlCache(maxsize=32)
+        # get_hosts_with_geo: the first states of a geo map and its auto-objects
+        # fetch ask for the same hosts back to back, as do concurrent viewers.
+        self._geo_hosts_cache: TtlCache[
+            tuple[str | None, str | None, str | None], list[GeoHost]
+        ] = TtlCache(maxsize=32)
 
         # Auto-federate when this connection points at the central site's local
         # Livestatus socket — the socket only sees local data, so MultiSiteConnection
@@ -915,6 +920,10 @@ class LivestatusConnection(ConnectionBase):
             for sid, r in tagged
         ]
 
+    # Under the refresh interval, like _SERVICES_SUMMARY_CACHE_TTL: a tick still
+    # sees hosts added since the last one.
+    _GEO_HOSTS_CACHE_TTL = 4.0
+
     @override
     async def get_hosts_with_geo(
         self, *, group_type: str | None = None, group_name: str | None = None
@@ -932,6 +941,17 @@ class LivestatusConnection(ConnectionBase):
         values, so over-matching here (e.g. a host with maps_lat but no
         maps_lng) is harmless rather than a silent omission.
         """
+        cache_key = (_auth_user_ctx.get(), group_type, group_name)
+        cached = self._geo_hosts_cache.get(cache_key, ttl=self._GEO_HOSTS_CACHE_TTL)
+        if cached is not None:
+            return list(cached)
+        hosts = await self._query_hosts_with_geo(group_type, group_name)
+        self._geo_hosts_cache.set(cache_key, hosts)
+        return list(hosts)
+
+    async def _query_hosts_with_geo(
+        self, group_type: str | None, group_name: str | None
+    ) -> list[GeoHost]:
         # (maps_lat AND maps_lng labels) OR (LAT AND LONG custom vars). The
         # ``labels ~~ key .`` form matches a label key with any non-empty value;
         # ``custom_variable_names >= NAME`` matches the list-membership. Keys

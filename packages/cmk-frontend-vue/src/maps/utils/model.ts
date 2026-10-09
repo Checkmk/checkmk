@@ -100,6 +100,11 @@ export function newObjectState(
   }
 }
 
+/** A geo map that populates itself from the hosts' own coordinates. */
+export function hasAutoSource(view: MapView | undefined): boolean {
+  return view?.type === 'worldmap' && !!view.auto_source
+}
+
 /**
  * The view a map of the given type starts with, matching the server's own
  * defaults for every field so a map created here and one created through the API

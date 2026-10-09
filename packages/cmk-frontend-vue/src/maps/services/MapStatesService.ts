@@ -221,12 +221,13 @@ export class MapStatesService {
   private stream: EventStream | null = null
   private currentMap: string | null = null
   /**
-   * The map a connect is in flight for. The "already open" guard below only
-   * catches a reconnect once the stream is up; this catches an overlapping
-   * connect before that (a view effect firing twice on mount), which otherwise
-   * tore down and re-registered on every load.
+   * The connect in flight. The "already open" guard below only catches a
+   * reconnect once the stream is up; this catches an overlapping connect before
+   * that (a view effect firing twice on mount), which otherwise tore down and
+   * re-registered on every load. The overlapping caller gets the same promise,
+   * so it too only continues once the map is registered.
    */
-  private connectingMap: string | null = null
+  private connecting: { map: string; done: Promise<void> } | null = null
   private folderTreeIndex = new Map<string, FolderTreeNode>()
   /** Previous foldertree host states, for deriving notifications. */
   private prevFolderHostStates: Map<string, string> | null = null
@@ -267,18 +268,30 @@ export class MapStatesService {
    * Binds to a map: scopes the ticket to it, hands the daemon the signed config,
    * loads the first states and opens the stream.
    */
-  public async connectToMap(
+  public connectToMap(
+    mapName: string,
+    signed?: { config_b64: string; sig: string }
+  ): Promise<void> {
+    if (this.connecting?.map === mapName) {
+      return this.connecting.done
+    }
+    if (this.currentMap === mapName && this.stream) {
+      return Promise.resolve()
+    }
+    const done = this.connect(mapName, signed).finally(() => {
+      if (this.connecting?.done === done) {
+        this.connecting = null
+      }
+    })
+    this.connecting = { map: mapName, done }
+    return done
+  }
+
+  private async connect(
     mapName: string,
     signed?: { config_b64: string; sig: string }
   ): Promise<void> {
     const { _t } = usei18n()
-    if (this.connectingMap === mapName) {
-      return
-    }
-    if (this.currentMap === mapName && this.stream) {
-      return
-    }
-    this.connectingMap = mapName
     try {
       this.disconnect()
       // Re-scope the ticket before anything talks to the daemon, so registering
@@ -305,8 +318,6 @@ export class MapStatesService {
       // that got no states needs the reason on screen, not only in a toast.
       this.loadError.value = e instanceof Error ? e.message : _t('Live connection failed')
       throw e
-    } finally {
-      this.connectingMap = null
     }
   }
 

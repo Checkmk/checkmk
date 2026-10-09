@@ -45,6 +45,10 @@ type MapPresentationElementWire = Schemas['MapPresentationView']['elements'][num
 // linger, the config bloats), defeating auto_source.
 const AUTO_OBJECT_ID_PREFIX = 'auto:'
 
+export function isAutoObjectId(id: string): boolean {
+  return id.startsWith(AUTO_OBJECT_ID_PREFIX)
+}
+
 // Result of dropping the ``undefined`` members: each key becomes optional and its
 // value type loses ``undefined``, so the result satisfies the wire's
 // ``exactOptionalPropertyTypes`` optional fields (present ⇒ not ``undefined``).
@@ -224,7 +228,7 @@ export function toWireConfig(map: MapConfig): MapConfigWire {
     objects: map.objects
       .filter(
         (o): o is MapElement & { type: Exclude<ObjectType, 'site'> } =>
-          o.type !== 'site' && !o.id.startsWith(AUTO_OBJECT_ID_PREFIX)
+          o.type !== 'site' && !isAutoObjectId(o.id)
       )
       .map(objectToWire),
     view: viewToWire(map.view)
@@ -331,7 +335,7 @@ export function daemonConfig(map: MapConfig): DaemonSchemas['MapConfig'] {
     ...map,
     objects: map.objects.filter(
       (o): o is MapElement & { type: Exclude<ObjectType, 'site'> } =>
-        o.type !== 'site' && !o.id.startsWith(AUTO_OBJECT_ID_PREFIX)
+        o.type !== 'site' && !isAutoObjectId(o.id)
     )
   }
 }

@@ -16,6 +16,7 @@
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { onUnmounted, watch, watchEffect } from 'vue'
 
+import { isAutoObjectId } from '@/maps/api/wire'
 import { useMaps, useStates, useToast } from '@/maps/services/context'
 
 export function useMapLifecycle(source: {
@@ -59,13 +60,23 @@ export function useMapLifecycle(source: {
       if (superseded) {
         return
       }
-      // A failed connect — the daemon rejecting a stored configuration, a
-      // transient outage — leaves the map reading "Offline"; catching it keeps
-      // that from surfacing as an unhandled rejection.
-      states.connectToMap(name, maps.currentMapSig.value ?? undefined).catch((error: unknown) => {
-        report(error, 'Live connection failed')
-      })
       source.rotation.schedule(maps.currentMap.value?.rotation_interval ?? 0)
+      try {
+        await states.connectToMap(name, maps.currentMapSig.value ?? undefined)
+      } catch (error: unknown) {
+        // A failed connect — the daemon rejecting a stored configuration, a
+        // transient outage — leaves the map reading "Offline".
+        report(error, 'Live connection failed')
+        return
+      }
+      if (superseded) {
+        return
+      }
+      // The daemon inflates the auto-source hosts from the config it was just
+      // handed, so they can only be asked for after the connect registered it.
+      maps.loadAutoObjects(name).catch((error: unknown) => {
+        report(error, 'Failed to load the hosts of the automap source')
+      })
     })()
   })
 
@@ -77,9 +88,14 @@ export function useMapLifecycle(source: {
    *
    * Keyed on the set of ids, so moving an object or editing its properties —
    * neither of which changes what to resolve — does not trigger a round trip.
+   * The auto-source hosts are left out: the daemon inflates those itself.
    */
   watch(
-    () => maps.currentMap.value?.objects.map((object) => object.id).join('\n'),
+    () =>
+      maps.currentMap.value?.objects
+        .map((object) => object.id)
+        .filter((id) => !isAutoObjectId(id))
+        .join('\n'),
     (ids, previous) => {
       // The initial load and the unload are not edits.
       if (ids === undefined || previous === undefined) {

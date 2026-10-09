@@ -164,3 +164,18 @@ def test_auto_objects_scopes_geo_query_to_auth_user(
         assert spy.geo_query_auth_user == "bob"
     finally:
         state_service.unregister_connection("spy")
+
+
+def test_auto_objects_refuses_a_ticket_scoped_to_another_map(
+    router_client: RouterClientFactory,
+) -> None:
+    viewer = Principal(name="bob", map_owner="alice", map_name="europe")
+    map_service.register_map(
+        "alice",
+        MapConfig(name="world", connection_id="live_1", view=WorldmapView(auto_source="all_hosts")),
+    )
+    client = router_client(maps.router, "/api/v1/maps", overrides={deps.get_current_user: viewer})
+
+    resp = client.get("/api/v1/maps/world/auto-objects")
+
+    assert resp.status_code == HTTPStatus.NOT_FOUND

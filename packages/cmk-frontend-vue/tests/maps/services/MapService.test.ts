@@ -5,7 +5,7 @@
  */
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, delay, http } from 'msw'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { MapConfigApi } from '@/maps/api/mapConfig'
 import { MapStatesApi } from '@/maps/api/mapStates'
@@ -333,5 +333,59 @@ describe('MapService', () => {
     // No extra list() round-trip — map is removed in place.
     expect(listCalls).toBe(1)
     expect(store.maps.value).toEqual([])
+  })
+})
+
+describe('MapService.loadAutoObjects()', () => {
+  function serviceWithAutoObjects(...batches: MapConfig['objects'][]): MapService {
+    const fetchAutoObjects = vi.fn()
+    for (const batch of batches) {
+      fetchAutoObjects.mockResolvedValueOnce(batch)
+    }
+    return new MapService(new MapConfigApi(), { fetchAutoObjects })
+  }
+
+  const world = (): MapConfig =>
+    aMap({
+      name: 'world',
+      view: {
+        type: 'worldmap',
+        lat: 51,
+        lng: 10,
+        zoom: 5,
+        auto_source: 'all_hosts',
+        auto_filter_value: '',
+        problems_only: false
+      },
+      objects: [anObject({ id: 'core', type: 'host' })]
+    })
+
+  it('replaces the hosts of an earlier load and keeps the rest', async () => {
+    const store = serviceWithAutoObjects(
+      [anObject({ id: 'auto:db01', type: 'host' })],
+      [anObject({ id: 'auto:db02', type: 'host' })]
+    )
+    store.currentMap.value = world()
+
+    await store.loadAutoObjects('world')
+    store.currentMap.value!.objects.push(anObject({ id: 'placed', type: 'host' }))
+    await store.loadAutoObjects('world')
+
+    expect(store.currentMap.value!.objects.map((object) => object.id)).toEqual([
+      'core',
+      'placed',
+      'auto:db02'
+    ])
+  })
+
+  it('leaves a map that was switched to meanwhile alone', async () => {
+    const store = serviceWithAutoObjects([anObject({ id: 'auto:db01', type: 'host' })])
+    store.currentMap.value = world()
+
+    const loading = store.loadAutoObjects('world')
+    store.currentMap.value = aMap({ name: 'other', objects: [] })
+    await loading
+
+    expect(store.currentMap.value!.objects).toEqual([])
   })
 })

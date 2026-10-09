@@ -18,6 +18,7 @@ from cmk.maps.backend.api.v1.connections import auth_user_scope, build_topology_
 from cmk.maps.backend.api.v1.deps import (
     principal_from_token,
     rate_limited_read,
+    registered_map,
     resolve_auth_user,
 )
 from cmk.maps.backend.api.v1.types import MapName
@@ -140,21 +141,6 @@ def _map_key(owner: str, name: str) -> str:
     users' same-named maps get separate cache entries, broadcast loops, and
     snapshots. NUL can't appear in either part (name is pattern-validated)."""
     return f"{owner}\x00{name}"
-
-
-def _map_for_stream(user: Principal, name: str) -> MapConfig:
-    """Resolve the viewed map's config under its REAL owner, or 404.
-
-    Keyed by ``map_key_owner`` (the map's real owner for a map-scoped ticket,
-    else the caller), so all viewers of a published map resolve the one config
-    registered under it. A map-scoped ticket must match the requested map, so a
-    ticket for one map can't be used to stream another."""
-    if user.map_name is not None and name != user.map_name:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Map '{name}' not found")
-    cfg = map_service.get_map(user.map_key_owner, name)
-    if cfg is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Map '{name}' not found")
-    return cfg
 
 
 async def _push_topology_to(
@@ -311,7 +297,7 @@ async def get_map_states(
     ft_only_hard_states: bool = False,
     ft_sites: list[str] = Query(default_factory=list),
 ) -> Response:
-    cfg = _map_for_stream(current_user, name)
+    cfg = registered_map(current_user, name)
     # Settings-preview override for radar maps. Both query params arrive
     # together so we never mix disk-state filter with a half-edited override.
     if (
@@ -375,7 +361,7 @@ async def get_folder_host_services(
     host-scoped Livestatus query — so the map scales to environments with
     millions of hosts (services are never pushed eagerly over SSE).
     """
-    cfg = _map_for_stream(current_user, name)
+    cfg = registered_map(current_user, name)
     if not isinstance(cfg.view, FolderTreeView):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Not a foldertree map")
     connection = state_service.get_connection(cfg.connection_id)
@@ -450,7 +436,7 @@ async def folder_service_search(
     if not service_terms and not any_terms:
         return FolderServiceSearchResult(matches=[], truncated=False, limit=limit)
 
-    cfg = _map_for_stream(current_user, name)
+    cfg = registered_map(current_user, name)
     if not isinstance(cfg.view, FolderTreeView):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Not a foldertree map")
     connection = state_service.get_connection(cfg.connection_id)
@@ -533,7 +519,7 @@ async def _subscribe_to_stream(
     # a client value — so all viewers of a published map share one broadcast loop,
     # while a private map stays in its owner's namespace and no user can address
     # another's stream. Falls back to the caller for an unbound ticket.
-    cfg = _map_for_stream(user, name)
+    cfg = registered_map(user, name)
     owner = user.map_key_owner
     map_key = _map_key(owner, name)
 

@@ -1,11 +1,14 @@
-load("@rules_pkg//:pkg.bzl", "pkg_zip")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_mklink")
+load("//bazel/rules:pkg.bzl", "pkg_zip")
 
 pkg_zip(
     name = "oci_light_win_x64",
     srcs = ["@oci-basic-light-win-x64//:srcs"],
     stamp = 1,
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
     visibility = ["//visibility:public"],
 )
 
@@ -75,5 +78,8 @@ pkg_zip(
            [":occi%s" % link_name for link_name in occi_symlinks],
     mode = "0644",
     stamp = 1,
-    tags = ["manual"],
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
 )

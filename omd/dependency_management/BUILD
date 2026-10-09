@@ -2,7 +2,7 @@ load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_pytest_main", "py_test")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load(":dependency_management.bzl", "bill_of_materials", "dependency_list")
 
 py_binary(

@@ -1,7 +1,7 @@
 load("@rules_pkg//pkg:mappings.bzl", "filter_directory", "pkg_attributes", "pkg_files", "pkg_mklink", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:exclude_from_filegroup.bzl", "exclude_from_filegroup")
 load("//bazel/rules:patchelf.bzl", "set_runpath")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//omd/packages/erlang:vars.bzl", "PLACE_HOLDER")
 
 OMD_ROOT_AWARE = [

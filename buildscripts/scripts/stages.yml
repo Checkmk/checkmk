@@ -557,6 +557,13 @@ STAGES:
       COMMAND: echo "Just have this line here, task is handled in test-gerrit.groovy"
       BAZEL_LOCKS_AMOUNT: 1
 
+    - NAME: "Bazel no-remote-cache tags"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_BAZEL_FILES
+      COMMAND: "bazel run //buildscripts/scripts:check_no_remote_cache_tags &> ${RESULTS}/no-remote-cache-tags.txt"
+      BAZEL_LOCKS_AMOUNT: 1
+      TEXT_ON_SKIP: "No Bazel files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/no-remote-cache-tags.txt"
+
     ########## packages ########################################################
 
     - NAME: "Package check-cert"

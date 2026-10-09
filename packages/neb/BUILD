@@ -1,8 +1,8 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:define_from_flag.bzl", "define_from_flag")
 load("//bazel/rules:dependency_info.bzl", "dependency_info")
 load("//bazel/rules:patchelf.bzl", "set_runpath")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:xcomp/cc.bzl", "cc_library", "cc_test")
 
 define_from_flag(

@@ -1,6 +1,6 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:patchelf.bzl", "set_runpath", "set_soname")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 set_soname(
     name = "libsnap7_soname",

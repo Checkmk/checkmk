@@ -1,8 +1,8 @@
 load("@bazel_skylib//rules:copy_directory.bzl", "copy_directory")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:patchelf.bzl", "set_runpath", "set_runpath_tree")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 exports_files(["skel.permissions"])
 

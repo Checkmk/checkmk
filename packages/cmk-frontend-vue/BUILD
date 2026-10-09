@@ -11,7 +11,7 @@ load("@npm//:vue-tsc/package_json.bzl", vue_tsc_bin = "bin")
 load("@npm//:vue3-gettext/package_json.bzl", vue_gettext_bin = "bin")
 load("@npm//packages/cmk-frontend-vue:vite/package_json.bzl", vite_bin = "bin")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 exports_files(["package.json"])
 

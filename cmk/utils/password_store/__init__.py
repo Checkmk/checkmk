@@ -23,7 +23,6 @@ from ._pwstore import generate_ad_hoc_secrets_path as generate_ad_hoc_secrets_pa
 from ._pwstore import is_ad_hoc_password_id as is_ad_hoc_password_id
 from ._pwstore import load as load
 from ._pwstore import lookup as lookup
-from ._pwstore import lookup_for_bakery as lookup_for_bakery
 from ._pwstore import make_configured_passwords_lookup as make_configured_passwords_lookup
 from ._pwstore import make_passwords_hasher as make_passwords_hasher
 from ._pwstore import make_staged_passwords_lookup as make_staged_passwords_lookup

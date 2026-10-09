@@ -235,14 +235,3 @@ def lookup(pw_file: Path, pw_id: str) -> str:
         # the fact that this is a dict is an implementation detail.
         # Let's make it a ValueError.
         raise ValueError(f"Password '{pw_id}' not found in {pw_file}")
-
-
-def lookup_for_bakery(pw_id: str) -> str:
-    return lookup(
-        active_secrets_path_site(
-            # Duplicated from cmk.base.core.active_config_layout.
-            # But this function is depricated anyway.
-            Path("stored_passwords"),
-        ),
-        pw_id,
-    )

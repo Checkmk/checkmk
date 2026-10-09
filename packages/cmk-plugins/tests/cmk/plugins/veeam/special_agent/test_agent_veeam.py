@@ -1458,6 +1458,109 @@ def test_fetch_backups_falls_back_to_the_session_for_a_single_object_job_with_no
     assert record["progress"]["duration"] == "1.01:02:03"
 
 
+def _session_progress(**overrides: object) -> dict[str, object]:
+    return {
+        "duration": "00:03:59",
+        "processingRate": "6.5 MB/s",
+        "bottleneck": "Source",
+        "processedSize": 3954836992,
+        "readSize": 199229440,
+        "transferredSize": 49147986,
+        "progressPercent": 100,
+    } | overrides
+
+
+def _fetch_backup_records(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+    job: dict[str, object],
+    tasks: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    """One run of `veeam_backups` for a single-object job (object vm-1)."""
+    _mock_jobs(api, [job])
+    _mock_session_and_objects(api, "session-1", ["vm-1"])
+    _mock_tasks(api, "2026-09-29T00:00:00+00:00", tasks)
+    write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
+    _header, *lines = capsys.readouterr().out.splitlines()
+    return [json.loads(line) for line in lines[1:-1]]
+
+
+def test_fetch_backups_session_fallback_has_the_jobs_sizes(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    (record,) = _fetch_backup_records(
+        api, storage, capsys, _job(sessionProgress=_session_progress()), tasks=[]
+    )
+
+    assert record["progress"] == {
+        "processedSize": 3954836992,
+        "readSize": 199229440,
+        "transferredSize": 49147986,
+    }
+
+
+def test_fetch_backups_session_fallback_without_session_progress_has_no_sizes(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    (record,) = _fetch_backup_records(api, storage, capsys, _job(), tasks=[])
+
+    assert record["progress"] == {}
+
+
+def test_fetch_backups_session_fallback_leaves_out_null_sizes(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    progress = _session_progress(processedSize=None, readSize=None, transferredSize=None)
+
+    (record,) = _fetch_backup_records(
+        api, storage, capsys, _job(sessionProgress=progress), tasks=[]
+    )
+
+    assert record["progress"] == {}
+
+
+def test_fetch_backups_session_fallback_with_a_partial_session_progress_keeps_the_job(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # As returned by VBR 13 for a File Backup job: no readSize, no transferredSize.
+    progress = {
+        "bottleneck": "Source",
+        "duration": "00:00:33",
+        "processingRate": "N/A",
+        "processedSize": 0,
+        "progressPercent": 100,
+    }
+
+    (record,) = _fetch_backup_records(
+        api, storage, capsys, _job(sessionProgress=progress), tasks=[]
+    )
+
+    assert record["progress"] == {"processedSize": 0}
+
+
+def test_fetch_backups_task_keeps_its_own_sizes_over_the_jobs(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    task = _task(progress={"processedSize": 1, "readSize": 2, "transferredSize": 3})
+
+    (record,) = _fetch_backup_records(
+        api, storage, capsys, _job(sessionProgress=_session_progress()), tasks=[task]
+    )
+
+    assert record["progress"] == {"processedSize": 1, "readSize": 2, "transferredSize": 3}
+
+
 def test_fetch_backups_session_404_skips_just_that_job(
     api: responses.RequestsMock,
     storage: Storage,

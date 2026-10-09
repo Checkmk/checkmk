@@ -462,6 +462,16 @@ class _Backup(_ApiItem):
     job_id: str | None = None
 
 
+class _SessionProgress(_ApiItem):
+    """The `sessionProgress` of a job in GET /api/v1/jobs/states: totals of its current
+    session, over all of the job's objects."""
+
+    # Required by the API schema, but VBR 13 leaves some out (seen for a File Backup job).
+    processed_size: int | None = None
+    read_size: int | None = None
+    transferred_size: int | None = None
+
+
 class _JobState(_ApiItem):
     """An item of GET /api/v1/jobs/states."""
 
@@ -470,6 +480,7 @@ class _JobState(_ApiItem):
     status: str
     session_id: str | None = None
     last_run: str | None = None
+    session_progress: _SessionProgress | None = None
 
 
 class _RestorePoint(_ApiItem):
@@ -907,10 +918,13 @@ def _format_dotnet_timespan(seconds: float) -> str:
     )
 
 
-def _session_fallback_task(session: _SessionInfo, job_name: str) -> Mapping[str, object]:
+def _session_fallback_task(
+    session: _SessionInfo, job_name: str, session_progress: _SessionProgress | None
+) -> Mapping[str, object]:
     """Builds a taskSessions-shaped record from a job's own session, for a
-    single-object job taskSessions has no task for. A session has no per-task
-    progress breakdown (size, read, transferred, rate), so those are left out."""
+    single-object job taskSessions has no task for. With a single object, the job's
+    `sessionProgress` sizes are that object's; its duration and rate cover the whole
+    session rather than the object's processing, so they are left out."""
     duration = None
     if (
         session.creation_time is not None
@@ -922,7 +936,12 @@ def _session_fallback_task(session: _SessionInfo, job_name: str) -> Mapping[str,
     return {
         "state": session.state,
         "result": session.result.model_dump(exclude_none=True) if session.result else None,
-        "progress": {"duration": duration} if duration is not None else {},
+        "progress": ({} if duration is None else {"duration": duration})
+        | (
+            {}
+            if session_progress is None
+            else session_progress.model_dump(by_alias=True, exclude_none=True)
+        ),
         "endTime": session.end_time,
         "jobName": job_name,
     }
@@ -955,6 +974,9 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
     """
     jobs = _parse_items(_JobState, client.get_all("/api/v1/jobs/states"))
     session_to_job, created_after = _job_sessions_and_window(jobs)
+    progress_by_job_id = {
+        job.id: job.session_progress for job in jobs if job.session_progress is not None
+    }
     job_objects = _resolve_job_object_names(client, session_to_job)
 
     groups: dict[str, list[Mapping[str, object]]] = {}
@@ -1001,7 +1023,9 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
             continue
         key = (job_obj.names[0], job_id)
         if key not in newest:
-            newest[key] = _session_fallback_task(job_obj.session, job_obj.job_name)
+            newest[key] = _session_fallback_task(
+                job_obj.session, job_obj.job_name, progress_by_job_id.get(job_id)
+            )
 
     for (object_name, _job_id), task in newest.items():
         groups.setdefault(object_name, []).append(task)

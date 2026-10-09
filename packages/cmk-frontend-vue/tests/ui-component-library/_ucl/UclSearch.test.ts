@@ -70,3 +70,48 @@ test('clears results when input is emptied', async () => {
 
   expect(screen.queryByText('No results found')).toBeNull()
 })
+
+test('arrow down in the input focuses the first result', async () => {
+  render(UclSearch, { global: renderOptions })
+  const input = screen.getByPlaceholderText('Search...')
+  await fireEvent.update(input, 'cmk')
+
+  await fireEvent.keyDown(input, { key: 'ArrowDown' })
+
+  const links = within(screen.getByRole('list')).getAllByRole('link')
+  expect(document.activeElement).toBe(links[0])
+})
+
+test('arrow down on a result focuses the next result', async () => {
+  render(UclSearch, { global: renderOptions })
+  await fireEvent.update(screen.getByPlaceholderText('Search...'), 'cmk')
+  const links = within(screen.getByRole('list')).getAllByRole('link')
+  links[0]!.focus()
+
+  await fireEvent.keyDown(links[0]!, { key: 'ArrowDown' })
+
+  expect(document.activeElement).toBe(links[1])
+})
+
+test('arrow up on the first result focuses the input', async () => {
+  render(UclSearch, { global: renderOptions })
+  const input = screen.getByPlaceholderText('Search...')
+  await fireEvent.update(input, 'cmk')
+  const firstLink = within(screen.getByRole('list')).getAllByRole('link')[0]!
+  firstLink.focus()
+
+  await fireEvent.keyDown(firstLink, { key: 'ArrowUp' })
+
+  expect(document.activeElement).toBe(input)
+})
+
+test('arrow up on a later result focuses the previous result', async () => {
+  render(UclSearch, { global: renderOptions })
+  await fireEvent.update(screen.getByPlaceholderText('Search...'), 'cmk')
+  const links = within(screen.getByRole('list')).getAllByRole('link')
+  links[1]!.focus()
+
+  await fireEvent.keyDown(links[1]!, { key: 'ArrowUp' })
+
+  expect(document.activeElement).toBe(links[0])
+})

@@ -292,7 +292,7 @@ def validate_at_least_one_event(trigger_events: Mapping[str, object]) -> None:
 
 
 def triggering_events() -> QuickSetupStage:
-    def _components() -> Sequence[Widget]:
+    def _components(_ctx: QuickSetupContext) -> Sequence[Widget]:
         return [
             FormSpecWrapper(
                 id=FormSpecId("triggering_events"),
@@ -491,7 +491,7 @@ class IsValidRegularExpression:
 
 
 def filter_for_hosts_and_services() -> QuickSetupStage:
-    def _components() -> Sequence[Widget]:
+    def _components(_ctx: QuickSetupContext) -> Sequence[Widget]:
         return [
             ConditionalNotificationECAlertStageWidget(
                 items=[
@@ -1302,7 +1302,7 @@ def notification_method() -> QuickSetupStage:
             },
         )
 
-    def _components() -> Sequence[Widget]:
+    def _components(_ctx: QuickSetupContext) -> Sequence[Widget]:
         notification_scripts = load_notification_scripts()
         default_method_choice: DefaultValue[str] | InputHint[Title] = InputHint(
             Title("Please choose")
@@ -1437,7 +1437,7 @@ def custom_macros_cannot_be_empty(custom_macros: Sequence[tuple[str, str]]) -> N
 
 
 def recipient(edition: Edition) -> QuickSetupStage:
-    def _components() -> Sequence[Widget]:
+    def _components(_ctx: QuickSetupContext) -> Sequence[Widget]:
         recipient_elements = [
             UniqueCascadingSingleChoiceElement(
                 parameter_form=CascadingSingleChoiceElementExtended(
@@ -1713,7 +1713,7 @@ def validate_throttling_values(values: tuple[object, ...]) -> None:
 
 
 def sending_conditions() -> QuickSetupStage:
-    def _components() -> Sequence[Widget]:
+    def _components(_ctx: QuickSetupContext) -> Sequence[Widget]:
         return [
             FormSpecWrapper(
                 id=FormSpecId("sending_conditions"),
@@ -1857,7 +1857,7 @@ def sending_conditions() -> QuickSetupStage:
 
 
 def general_properties() -> QuickSetupStage:
-    def _components() -> Sequence[Widget]:
+    def _components(_ctx: QuickSetupContext) -> Sequence[Widget]:
         return [
             FormSpecWrapper(
                 id=FormSpecId("general_properties"),

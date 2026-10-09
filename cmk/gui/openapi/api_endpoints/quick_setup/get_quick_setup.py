@@ -9,6 +9,7 @@ from typing import Annotated, Literal
 from cmk.gui import i18n
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointBehavior,
     EndpointDoc,
@@ -26,7 +27,7 @@ from cmk.gui.quick_setup.handlers.setup import (
     quick_setup_overview_mode,
 )
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
-from cmk.gui.quick_setup.v0_unstable.setups import get_all_permissions
+from cmk.gui.quick_setup.v0_unstable.setups import get_all_permissions, QuickSetupContext
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 
 from ._family import QUICK_SETUP_FAMILY
@@ -35,6 +36,7 @@ from .models.response_models import QuickSetupResponseModel
 
 
 def get_quick_setup_v1(
+    api_context: ApiContext,
     quick_setup_id: Annotated[str, PathParam(description="The quick setup id", example="aws")],
     mode: Annotated[
         Literal["guided", "overview"] | None,
@@ -94,6 +96,7 @@ def get_quick_setup_v1(
             quick_setup_overview_mode(
                 quick_setup=quick_setup,
                 prefill_data=prefill_data,
+                ctx=QuickSetupContext.from_config(api_context.config),
                 is_edit_mode=bool(object_id),
             )
         )
@@ -101,6 +104,7 @@ def get_quick_setup_v1(
         quick_setup_guided_mode(
             quick_setup=quick_setup,
             prefill_data=prefill_data,
+            ctx=QuickSetupContext.from_config(api_context.config),
             is_edit_mode=bool(object_id),
         )
     )

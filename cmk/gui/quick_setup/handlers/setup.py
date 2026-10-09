@@ -104,7 +104,10 @@ def _action_visible_for_mode(action: QuickSetupAction, is_edit_mode: bool) -> bo
 
 
 def quick_setup_guided_mode(
-    quick_setup: QuickSetup, prefill_data: ParsedFormData | None, is_edit_mode: bool = False
+    quick_setup: QuickSetup,
+    prefill_data: ParsedFormData | None,
+    ctx: QuickSetupContext,
+    is_edit_mode: bool = False,
 ) -> QuickSetupOverview:
     stages = [stage() for stage in quick_setup.stages]
     # Nothing is submitted yet, so the conditions read the prefill data only and no formspec
@@ -128,7 +131,7 @@ def quick_setup_guided_mode(
         stage=NextStageStructure(
             components=[
                 get_stage_components_from_widget(widget, prefill_data)
-                for widget in stage_components(stages[0])
+                for widget in stage_components(stages[0], ctx)
             ],
             actions=[
                 Action(
@@ -189,6 +192,7 @@ class QuickSetupAllStages:
 def quick_setup_overview_mode(
     quick_setup: QuickSetup,
     prefill_data: ParsedFormData | None,
+    ctx: QuickSetupContext,
     is_edit_mode: bool = False,
 ) -> QuickSetupAllStages:
     stages = [stage() for stage in quick_setup.stages]
@@ -202,7 +206,7 @@ def quick_setup_overview_mode(
                 sub_title=stage.sub_title,
                 components=[
                     get_stage_components_from_widget(widget, prefill_data)
-                    for widget in stage_components(stage)
+                    for widget in stage_components(stage, ctx)
                 ],
                 # TODO: the actions as well the prev_button should be removed from the overview mode
                 #  as they are not rendered. The removal must be performed alongside adjustment
@@ -449,7 +453,9 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
             action_id=self._action_id,
             mode=self._mode,
             input_stages=self._user_input_stages,
-            form_spec_map=build_formspec_map_from_stages([stage() for stage in quick_setup.stages]),
+            form_spec_map=build_formspec_map_from_stages(
+                [stage() for stage in quick_setup.stages], ctx
+            ),
             object_id=self._object_id,
             progress_logger=JobBasedProgressLogger(job_interface),
             ctx=ctx,

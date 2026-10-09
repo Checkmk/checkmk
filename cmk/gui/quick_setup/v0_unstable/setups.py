@@ -109,7 +109,7 @@ CallableAction = Callable[
     str,
 ]
 CallableStageApplicability = Callable[[ParsedFormData], bool]
-WidgetConfigurator = Callable[[], Sequence[Widget]]
+WidgetConfigurator = Callable[[QuickSetupContext], Sequence[Widget]]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -184,8 +184,8 @@ class QuickSetupStage:
             The title of the stage
 
         configure_components:
-            A callable that returns a sequence of widgets that are displayed in the stage body
-            (only visible if the stage is on focus)
+            The widgets that are displayed in the stage body (only visible if the stage is on
+            focus), or a callable that builds them from the context of the current request
 
         actions:
             A sequence of mutually exclusive stage actions that can be triggered in the stage

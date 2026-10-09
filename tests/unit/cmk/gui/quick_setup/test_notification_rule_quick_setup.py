@@ -64,12 +64,14 @@ _FILTER_FORM_SPEC_IDS = [
 def test_stage_offers_its_form_specs(
     stage: Callable[[], QuickSetupStage], expected_ids: list[str]
 ) -> None:
-    assert list(build_formspec_map_from_stages([stage()])) == expected_ids
+    assert list(build_formspec_map_from_stages([stage()], _context(Config()))) == expected_ids
 
 
 @pytest.mark.usefixtures("request_context")
 def test_recipient_stage_offers_its_form_spec(test_edition: Edition) -> None:
-    assert list(build_formspec_map_from_stages([recipient(test_edition)])) == ["recipient"]
+    assert list(
+        build_formspec_map_from_stages([recipient(test_edition)], _context(Config()))
+    ) == ["recipient"]
 
 
 # fmt: off

@@ -225,7 +225,8 @@ def complete_quick_setup_action(
             detail=f"Action with id '{action_id}' requires {', '.join(repr(p) for p in action.permissions)} permissions.",
         )
 
-    form_spec_map = build_formspec_map_from_stages([stage() for stage in quick_setup.stages])
+    ctx = QuickSetupContext.from_config(api_context.config)
+    form_spec_map = build_formspec_map_from_stages([stage() for stage in quick_setup.stages], ctx)
     _stage_applicability, stages_raw_form_data = stage_applicability_and_form_data(
         quick_setup.stages,
         [RawFormData(cast(Mapping[FormSpecId, object], stage.form_data)) for stage in body.stages],
@@ -291,7 +292,7 @@ def complete_quick_setup_action(
         input_stages=[{"form_data": s.form_data} for s in body.stages],
         form_spec_map=form_spec_map,
         object_id=object_id,
-        ctx=QuickSetupContext.from_config(api_context.config),
+        ctx=ctx,
     )
 
     if not result.redirect_url and not result.all_stage_errors:

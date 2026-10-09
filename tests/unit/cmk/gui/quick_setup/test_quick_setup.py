@@ -57,7 +57,14 @@ def test_form_spec_recap() -> None:
     stage_index = StageIndex(0)
 
     built_stages = [stage() for stage in quick_setup.stages[: stage_index + 1]]
-    form_spec_map = build_formspec_map_from_stages(built_stages)
+    ctx = QuickSetupContext(
+        tree=make_folder_tree(Config()),
+        site_configs={},
+        debug=False,
+        use_git=False,
+        pprint_value=False,
+    )
+    form_spec_map = build_formspec_map_from_stages(built_stages, ctx)
 
     stage_recap = recap_stage(
         quick_setup_id=quick_setup.id,
@@ -69,13 +76,7 @@ def test_form_spec_recap() -> None:
         ],
         quick_setup_formspec_map=form_spec_map,
         progress_logger=InfoLogger(),
-        ctx=QuickSetupContext(
-            tree=make_folder_tree(Config()),
-            site_configs={},
-            debug=False,
-            use_git=False,
-            pprint_value=False,
-        ),
+        ctx=ctx,
     )
 
     assert len(stage_recap) == 1

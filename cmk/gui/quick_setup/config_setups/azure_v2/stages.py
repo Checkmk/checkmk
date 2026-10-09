@@ -189,7 +189,7 @@ def configure_host_and_authority() -> QuickSetupStage:
     )
 
 
-def _configure() -> Sequence[Widget]:
+def _configure(_ctx: QuickSetupContext) -> Sequence[Widget]:
     return [
         FormSpecWrapper(
             id=FormSpecId("configure_services_to_monitor"),

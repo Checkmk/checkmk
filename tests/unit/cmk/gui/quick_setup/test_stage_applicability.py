@@ -7,11 +7,13 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.gui.config import Config
 from cmk.gui.quick_setup.handlers.utils import stage_applicability_and_form_data
 from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
 from cmk.gui.quick_setup.v0_unstable.setups import (
     applicable_if,
     CallableStageApplicability,
+    QuickSetupContext,
     QuickSetupStage,
     QuickSetupStageAction,
     StageFactory,
@@ -20,6 +22,10 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import ActionId, ParsedFormData, 
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecWrapper
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, String
+
+
+def _ctx() -> QuickSetupContext:
+    return QuickSetupContext.from_config(Config())
 
 
 def _stage(
@@ -115,7 +121,7 @@ def test_stage_applicability(
     stages = [_stage("mode"), _stage("pull", condition)]
 
     applicability, _visible_form_data = stage_applicability_and_form_data(
-        stages, raw_form_data, build_formspec_map_from_stages([stage() for stage in stages])
+        stages, raw_form_data, build_formspec_map_from_stages([stage() for stage in stages], _ctx())
     )
 
     assert applicability == expected
@@ -154,7 +160,7 @@ def test_cascading_conditions(raw_form_data: Sequence[RawFormData], expected: li
     ]
 
     applicability, _visible_form_data = stage_applicability_and_form_data(
-        stages, raw_form_data, build_formspec_map_from_stages([stage() for stage in stages])
+        stages, raw_form_data, build_formspec_map_from_stages([stage() for stage in stages], _ctx())
     )
 
     assert applicability == expected
@@ -195,7 +201,7 @@ def test_visible_form_data(
     stages = [_stage("mode"), _stage("pull", _value_is("mode", "pull")), _stage("review")]
 
     _applicability_out, visible_form_data = stage_applicability_and_form_data(
-        stages, raw_form_data, build_formspec_map_from_stages([stage() for stage in stages])
+        stages, raw_form_data, build_formspec_map_from_stages([stage() for stage in stages], _ctx())
     )
 
     assert visible_form_data == expected
@@ -228,7 +234,7 @@ def test_prefill_data(
     applicability, _visible_form_data = stage_applicability_and_form_data(
         stages,
         raw_form_data,
-        build_formspec_map_from_stages([stage() for stage in stages]),
+        build_formspec_map_from_stages([stage() for stage in stages], _ctx()),
         prefill_data=prefill_data,
     )
 
@@ -244,7 +250,7 @@ def test_submitted_form_data_without_a_stage_is_kept() -> None:
     ]
 
     _applicability, visible_form_data = stage_applicability_and_form_data(
-        stages, raw_form_data, build_formspec_map_from_stages([stage() for stage in stages])
+        stages, raw_form_data, build_formspec_map_from_stages([stage() for stage in stages], _ctx())
     )
 
     assert visible_form_data == raw_form_data
@@ -296,7 +302,7 @@ def test_invalid_form_data_granularity(
     stages = [first_stage, _stage("pull", _value_is("mode", "pull"))]
 
     applicability, _visible_form_data = stage_applicability_and_form_data(
-        stages, raw_form_data, build_formspec_map_from_stages([stage() for stage in stages])
+        stages, raw_form_data, build_formspec_map_from_stages([stage() for stage in stages], _ctx())
     )
 
     assert applicability == expected
@@ -310,7 +316,7 @@ def test_every_stage_applies_if_no_stage_has_a_condition() -> None:
     ]
 
     applicability, visible_form_data = stage_applicability_and_form_data(
-        stages, raw_form_data, build_formspec_map_from_stages([stage() for stage in stages])
+        stages, raw_form_data, build_formspec_map_from_stages([stage() for stage in stages], _ctx())
     )
 
     assert applicability == [True, True, True]
@@ -323,7 +329,7 @@ def test_condition_on_the_first_stage_is_ignored() -> None:
     applicability, _visible_form_data = stage_applicability_and_form_data(
         stages,
         [RawFormData({FormSpecId("mode"): {"value": "push"}})],
-        build_formspec_map_from_stages([stage() for stage in stages]),
+        build_formspec_map_from_stages([stage() for stage in stages], _ctx()),
     )
 
     assert applicability == [True, True]

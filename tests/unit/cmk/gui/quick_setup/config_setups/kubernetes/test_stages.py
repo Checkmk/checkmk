@@ -5,6 +5,7 @@
 
 import pytest
 
+from cmk.gui.config import Config
 from cmk.gui.form_specs import DEFAULT_VALUE, get_visitor, VisitorOptions
 from cmk.gui.quick_setup.config_setups.kubernetes.connection_forms import connection_configuration
 from cmk.gui.quick_setup.config_setups.kubernetes.settings import ADVANCED, CONNECTION, PULL_URL
@@ -21,7 +22,10 @@ from cmk.gui.quick_setup.handlers.stage import get_stage_structure
 from cmk.gui.quick_setup.handlers.utils import stage_applicability_and_form_data
 from cmk.gui.quick_setup.v0_unstable.definitions import QSSiteSelection
 from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupBackgroundStageAction
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    QuickSetupBackgroundStageAction,
+    QuickSetupContext,
+)
 from cmk.gui.quick_setup.v0_unstable.type_defs import RawFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import Collapsible
 from cmk.licensing.basics.options import OptionName
@@ -30,6 +34,10 @@ from cmk.shared_typing.vue_formspec_components import CascadingSingleChoice
 from cmk.utils import paths
 
 pytestmark = pytest.mark.usefixtures("with_admin_login")
+
+
+def _ctx() -> QuickSetupContext:
+    return QuickSetupContext.from_config(Config())
 
 
 @pytest.mark.parametrize(
@@ -45,7 +53,7 @@ pytestmark = pytest.mark.usefixtures("with_admin_login")
 def test_stage_responses_offer_back_navigation_after_first_stage(
     stage_index: int, expected_label: str | None
 ) -> None:
-    response = get_stage_structure(quick_setup_kubernetes.stages[stage_index]())
+    response = get_stage_structure(quick_setup_kubernetes.stages[stage_index](), _ctx())
 
     assert (response.prev_button.label if response.prev_button else None) == expected_label
 
@@ -55,14 +63,14 @@ def test_advanced_options_are_collapsed_but_part_of_form_validation() -> None:
     components = stage.configure_components
     assert not callable(components)
     assert any(isinstance(component, Collapsible) for component in components)
-    assert ADVANCED in build_formspec_map_from_stages([stage])
+    assert ADVANCED in build_formspec_map_from_stages([stage], _ctx())
 
 
 def test_pull_url_is_only_in_the_final_stage() -> None:
     assert PULL_URL not in build_formspec_map_from_stages(
-        [configure_cluster(), configure_host(), prepare_deployment()]
+        [configure_cluster(), configure_host(), prepare_deployment()], _ctx()
     )
-    assert set(build_formspec_map_from_stages([configure_pull_url()])) == {PULL_URL}
+    assert set(build_formspec_map_from_stages([configure_pull_url()], _ctx())) == {PULL_URL}
 
 
 def test_deployment_action_authorizes_centrally_and_checks_host_permissions() -> None:
@@ -78,7 +86,7 @@ def test_deployment_action_authorizes_centrally_and_checks_host_permissions() ->
 
 
 def test_deployment_stage_applies_the_sites_push_capability() -> None:
-    forms = build_formspec_map_from_stages([prepare_deployment()])
+    forms = build_formspec_map_from_stages([prepare_deployment()], _ctx())
     schema, _values = get_visitor(
         forms[CONNECTION], VisitorOptions(migrate_values=True, mask_values=False)
     ).to_vue(DEFAULT_VALUE)
@@ -93,7 +101,7 @@ def test_pull_url_offers_a_background_connection_test_and_explicit_skip() -> Non
     stage = configure_pull_url()
     test_action, skip_action = stage.actions
 
-    assert [action.button.label for action in get_stage_structure(stage).actions] == [
+    assert [action.button.label for action in get_stage_structure(stage, _ctx()).actions] == [
         "Test connection",
         "Skip test",
     ]
@@ -160,7 +168,7 @@ def test_switching_to_push_discards_a_previous_pull_url() -> None:
 
 
 def test_initial_guided_setup_does_not_show_the_pull_stages() -> None:
-    overview = quick_setup_guided_mode(quick_setup_kubernetes, None)
+    overview = quick_setup_guided_mode(quick_setup_kubernetes, None, _ctx())
 
     assert [stage.is_applicable for stage in overview.overviews] == [
         True,

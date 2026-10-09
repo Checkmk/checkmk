@@ -9,6 +9,7 @@ from typing import Annotated
 from cmk.gui import i18n
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointBehavior,
     EndpointDoc,
@@ -23,7 +24,7 @@ from cmk.gui.openapi.restful_objects.constructors import sub_object_href
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.quick_setup.handlers.stage import get_stage_structure
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
-from cmk.gui.quick_setup.v0_unstable.setups import get_all_permissions
+from cmk.gui.quick_setup.v0_unstable.setups import get_all_permissions, QuickSetupContext
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 
 from ._family import QUICK_SETUP_FAMILY
@@ -32,6 +33,7 @@ from .models.response_models import StageStructureModel
 
 
 def get_stage_structure_v1(
+    api_context: ApiContext,
     quick_setup_id: Annotated[str, PathParam(description="The quick setup id", example="aws")],
     stage_index: Annotated[str, PathParam(description="The stage index", example="1")],
     object_id: Annotated[
@@ -74,6 +76,7 @@ def get_stage_structure_v1(
     return _convert_stage_structure(
         get_stage_structure(
             stage=quick_setup.stages[stage_idx](),
+            ctx=QuickSetupContext.from_config(api_context.config),
             prefill_data=prefill_data,
         )
     )

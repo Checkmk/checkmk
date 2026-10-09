@@ -422,7 +422,7 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
         built_stages_up_to_index = [
             stage() for stage in quick_setup.stages[: self._stage_index + 1]
         ]
-        form_spec_map = build_formspec_map_from_stages(built_stages_up_to_index)
+        form_spec_map = build_formspec_map_from_stages(built_stages_up_to_index, ctx)
         action_result = verify_custom_validators_and_recap_stage(
             quick_setup=quick_setup,
             stage_index=self._stage_index,
@@ -559,12 +559,13 @@ class NextStageStructure:
 
 def get_stage_structure(
     stage: QuickSetupStage,
+    ctx: QuickSetupContext,
     prefill_data: ParsedFormData | None = None,
 ) -> NextStageStructure:
     return NextStageStructure(
         components=[
             get_stage_components_from_widget(widget, prefill_data)
-            for widget in stage_components(stage)
+            for widget in stage_components(stage, ctx)
         ],
         prev_button=Button(label=stage.prev_button_label, aria_label=PREV_BUTTON_ARIA_LABEL)
         if stage.prev_button_label

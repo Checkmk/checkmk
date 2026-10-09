@@ -107,8 +107,9 @@ def run_stage_action_v1(
             ),
         )
 
+    ctx = QuickSetupContext.from_config(api_context.config)
     built_stages = [stage() for stage in quick_setup.stages[: stage_index + 1]]
-    form_spec_map = build_formspec_map_from_stages(built_stages)
+    form_spec_map = build_formspec_map_from_stages(built_stages, ctx)
     stage_applicability, stages_raw_formspecs = stage_applicability_and_form_data(
         quick_setup.stages,
         [RawFormData(cast(Mapping[FormSpecId, object], stage.form_data)) for stage in body.stages],
@@ -197,7 +198,7 @@ def run_stage_action_v1(
         form_spec_map=form_spec_map,
         built_stages=built_stages,
         progress_logger=None,
-        ctx=QuickSetupContext.from_config(api_context.config),
+        ctx=ctx,
     )
     status_code = HTTPStatus.OK if result.validation_errors is None else HTTPStatus.BAD_REQUEST
     return ApiResponse(

@@ -8,6 +8,7 @@ from werkzeug.test import create_environ
 from cmk.gui.config import Config
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.http import Request, Response
+from cmk.gui.logged_in import LoggedInUser, UserDefaultConfig
 from cmk.gui.painter import PainterConfig, PainterContext
 from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
@@ -20,7 +21,17 @@ def make_painter_context(user_permissions: UserPermissions) -> PainterContext:
     return PainterContext(
         config=PainterConfig.from_config(Config()),
         request=request,
-        painter_options=PainterOptions(Config()),
+        painter_options=PainterOptions(
+            Config(),
+            request,
+            LoggedInUser(
+                None,
+                user_permissions,
+                defaults=UserDefaultConfig(
+                    users={}, default_language="en", default_show_mode="default"
+                ),
+            ),
+        ),
         theme=make_theme(validate_choices=False),
         url_renderer=RenderLink(request, Response(), DisplayOptions()),
         user_permissions=user_permissions,

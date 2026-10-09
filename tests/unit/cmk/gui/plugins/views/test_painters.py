@@ -26,7 +26,7 @@ from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.http import Request, request, Response
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user, UserDefaultConfig
 from cmk.gui.painter import all_painters, PainterConfig, PainterContext
 from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter.painters import _paint_custom_notes
@@ -475,7 +475,17 @@ def _painter_context_of_the_fake_site() -> PainterContext:
             Config(sites=SiteConfigurations({SiteId("NO_SITE"): no_site_configuration()}))
         ),
         request=painter_request,
-        painter_options=PainterOptions(Config()),
+        painter_options=PainterOptions(
+            Config(),
+            painter_request,
+            LoggedInUser(
+                None,
+                _NO_PERMISSIONS,
+                defaults=UserDefaultConfig(
+                    users={}, default_language="en", default_show_mode="default"
+                ),
+            ),
+        ),
         theme=make_theme(validate_choices=False),
         url_renderer=RenderLink(painter_request, Response(), DisplayOptions()),
         user_permissions=_NO_PERMISSIONS,

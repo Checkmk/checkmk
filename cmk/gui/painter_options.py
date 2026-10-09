@@ -21,7 +21,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.type_defs import ViewSpec
 from cmk.gui.valuespec import DropdownChoice, ValueSpec
 from cmk.gui.view_utils import CellSpec
@@ -60,11 +60,13 @@ class PainterOptions:
     @request_memoize()
     def get_instance(cls) -> PainterOptions:
         """Return the request bound instance"""
-        return cls(active_config)
+        return cls(active_config, request, user)
 
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: Config, request: Request, acting_user: LoggedInUser) -> None:
         super().__init__()
         self._config = config
+        self._request = request
+        self._user = acting_user
         # The names of the painter options used by the current view
         self._used_option_names: Sequence[str] = []
         # The effective options for this view
@@ -81,16 +83,16 @@ class PainterOptions:
             return
 
         # Options are stored per view. Get all options for all views
-        vo = user.load_file("viewoptions", {})
+        vo = self._user.load_file("viewoptions", {})
         self._options = vo.get(view_name, {})
 
     def _is_anonymous_view(self, view_name: str | None) -> bool:
         return view_name is None
 
     def save_to_config(self, view_name: str) -> None:
-        vo = user.load_file("viewoptions", {}, lock=True)
+        vo = self._user.load_file("viewoptions", {}, lock=True)
         vo[view_name] = self._options
-        user.save_file("viewoptions", vo)
+        self._user.save_file("viewoptions", vo)
 
     def update_from_url(self, view_name: str, used_option_names: Sequence[str]) -> None:
         self._used_option_names = used_option_names
@@ -98,18 +100,18 @@ class PainterOptions:
         if not self.painter_option_form_enabled():
             return
 
-        if request.has_var("_reset_painter_options"):
+        if self._request.has_var("_reset_painter_options"):
             self._clear_painter_options("po", view_name, painter_option_registry.keys())
             return
 
-        if request.has_var("_reset_painter_options_graph_time"):
+        if self._request.has_var("_reset_painter_options_graph_time"):
             self._clear_painter_options("pog", view_name, _GRAPH_TIME_OPTION_NAMES)
             return
 
-        if request.has_var("_update_painter_options"):
+        if self._request.has_var("_update_painter_options"):
             self._set_from_submitted_form("po", view_name, self._used_option_names)
 
-        if request.has_var("_update_painter_options_graph_time"):
+        if self._request.has_var("_update_painter_options_graph_time"):
             self._set_from_submitted_form(
                 "pog", view_name, set(used_option_names) & set(_GRAPH_TIME_OPTION_NAMES)
             )
@@ -152,9 +154,9 @@ class PainterOptions:
         # Also remove the options from current html vars. Otherwise the
         # painter option form will display the just removed options as
         # defaults of the painter option form.
-        for varname, _value in list(request.itervars(prefix=f"{prefix}_")):
+        for varname, _value in list(self._request.itervars(prefix=f"{prefix}_")):
             if any(varname.startswith(f"{prefix}_{name}") for name in option_names):
-                request.del_var(varname)
+                self._request.del_var(varname)
 
     def get_valuespec_of(self, name: str) -> ValueSpec:
         return painter_option_registry[name].valuespec(self._config)
@@ -188,7 +190,7 @@ class PainterOptions:
         return self._options
 
     def painter_options_permitted(self) -> bool:
-        return user.may("general.painter_options")
+        return self._user.may("general.painter_options")
 
     def set_used_option_names(self, used_option_names: Sequence[str]) -> None:
         self._used_option_names = used_option_names

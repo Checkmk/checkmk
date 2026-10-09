@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import random
-from collections.abc import Sized
+from collections.abc import Callable, Sized
 from pathlib import Path
 
 import pytest
@@ -55,6 +55,34 @@ class TestCacheTTL:
     def test_fetcher_with_no_arguments_cache_miss(self, storage: Storage) -> None:
         fn = cache_ttl(storage, ttl=0)(random.random)
         assert fn() != fn()
+
+    @pytest.mark.parametrize(
+        "corrupt",
+        [
+            pytest.param(lambda text: text + "]}", id="trailing-data"),
+            pytest.param(lambda _: "not json", id="invalid-json"),
+            pytest.param(lambda _: "[]", id="wrong-type-expects-object"),
+            pytest.param(lambda _: "{}", id="missing-internal-cache-keys"),
+        ],
+    )
+    def test_corrupted_entry_handling(
+        self,
+        storage: Storage,
+        tmp_path: Path,
+        corrupt: Callable[[str], str],
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        fn = cache_ttl(storage, ttl=60)(random.random)
+        first_run = fn()
+        for entry in tmp_path.rglob("*"):
+            if entry.is_file():
+                entry.write_text(corrupt(entry.read_text()))
+
+        assert fn() != first_run
+
+        [record] = caplog.records
+        assert record.levelname == "WARNING"
+        assert record.getMessage().startswith("Discarding corrupted cache entry for")
 
     def test_function_with_unhashable_arguments(self, storage: Storage) -> None:
         def len_items(items: Sized) -> int:

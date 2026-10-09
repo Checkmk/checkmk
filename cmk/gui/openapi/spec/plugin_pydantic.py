@@ -334,6 +334,18 @@ class CheckmkGenerateJsonSchema(GenerateJsonSchema):
 
     @override
     def dataclass_schema(self, schema: core_schema.DataclassSchema) -> JsonSchemaValue:
+        # A dataclass without an `extra` config of its own inherits the one of its parent, which
+        # pydantic documents as `additionalProperties`. Request bodies and parameters forbid extra
+        # fields (see `_build_input_model`), responses don't, so a dataclass nested in both would
+        # get two different schemas under the same name. We only document the dataclass' own
+        # `extra` config. The rest of the parent's config is still inherited, which is fine as
+        # long as our models don't configure anything else.
+        core_config = schema.get("config")
+        if core_config is not None and "extra_fields_behavior" in core_config:
+            core_config = core_config.copy()
+            del core_config["extra_fields_behavior"]
+            schema = schema.copy()
+            schema["config"] = core_config
         with self._replace_path(schema):
             return super().dataclass_schema(schema)
 

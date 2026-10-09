@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Print the file system levels that the 'magic factor' computes for a set of sizes.
 
-Usage: magic_levels.py [NORMSIZE_GB] [--markdown]
+Usage: magic_levels.py [NORMSIZE_GIB] [--markdown]
 """
 
 import sys
 
-# Sizes in GB used for the columns of the table.
-SIZES = [500, 1000, 2000, 5000, 10000, 20000, 50000]
+# Sizes in GiB used for the columns of the table.
+SIZES = [512, 1024, 2048, 5120, 10240, 20480, 51200]
 
 # Magic factors used for the rows of the table.
 FACTORS = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2]
@@ -29,21 +29,21 @@ def magic_level(level: float, factor: float, size: float, normsize: float) -> fl
     return 1 - ((1 - level) * scale)
 
 
-def human(size_gb: float) -> str:
-    if round(size_gb) >= 1000:
-        return f"{size_gb / 1000:.1f} TB".replace(".0 TB", " TB")
-    return f"{size_gb:.0f} GB"
+def human(size_gib: float) -> str:
+    if round(size_gib) >= 1024:
+        return f"{size_gib / 1024:.1f} TiB".replace(".0 TiB", " TiB")
+    return f"{size_gib:.0f} GiB"
 
 
 def print_plain(normsize: float) -> None:
     for level in BASE_LEVELS:
-        print(f"Level for {normsize:.0f} GB norm partition: {int(level * 100)}%")
+        print(f"Level for {normsize:.0f} GiB norm partition: {int(level * 100)}%")
         for factor in FACTORS:
             cells = []
             for size in SIZES:
                 new_level = magic_level(level, factor, size, normsize)
                 free = size * (1.0 - new_level)
-                cells.append(f"{human(size):>6}:{new_level * 100:5.1f}%({human(free):>6} free)")
+                cells.append(f"{human(size):>7}:{new_level * 100:5.1f}%({human(free):>8} free)")
             print(f"f={factor:3.1f}: " + " ".join(cells))
         print("-" * 110)
 

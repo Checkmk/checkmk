@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { CmkApiError } from 'cmk-ui-library/lib/error'
+import { networkAwareFetch } from 'cmk-ui-library/lib/networkAwareFetch'
 import { readSseFrames } from 'cmk-ui-library/lib/sse/sseFrames'
 import createClientImpl, {
   type Client,
@@ -110,7 +111,8 @@ export function createFastApiClient<Paths extends object>({
 }: FastApiClientOptions): FastApiClient<Paths> {
   const client = createClientImpl<UntypedPaths, Media>({
     baseUrl,
-    headers: { Accept: 'application/json' }
+    headers: { Accept: 'application/json' },
+    fetch: networkAwareFetch
   })
 
   if (auth) {

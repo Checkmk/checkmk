@@ -56,6 +56,18 @@ export class CmkSimpleError extends CmkError {
   }
 }
 
+/**
+ * A request that got no response at all, for example because a page navigation cancelled it.
+ *
+ * The browser's own rejection is kept as the cause.
+ */
+export class CmkNetworkError extends CmkError {
+  constructor(cause: Error) {
+    super(cause.message, cause)
+    this.name = 'CmkNetworkError'
+  }
+}
+
 export class CmkApiError extends CmkError {
   context: string
   readonly statusCode: number

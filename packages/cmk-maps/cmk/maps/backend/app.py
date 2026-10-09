@@ -12,6 +12,7 @@ that touches the running site lives in :mod:`cmk.maps.backend.main`.
 """
 
 from fastapi.middleware.gzip import GZipMiddleware
+from starlette.middleware.body_limit import RequestBodyLimitMiddleware
 from starlette.types import Lifespan
 
 from cmk.fastapi import FastAPI
@@ -22,6 +23,11 @@ from cmk.maps.backend.api.v1 import (
 )
 from cmk.maps.backend.core.middleware import SecurityHeadersMiddleware
 from cmk.maps.backend.core.version import APP_VERSION
+
+# Apache's LimitRequestBody does not cover the proxied /maps/api path, and the
+# body is read before the ticket check, so the daemon bounds it itself. The only
+# body it accepts is a map config (at most 5000 objects, no inline images).
+MAX_REQUEST_BODY_BYTES = 16 * 1024 * 1024
 
 
 def create_app(*, lifespan: Lifespan[FastAPI] | None = None) -> FastAPI:
@@ -48,6 +54,7 @@ def create_app(*, lifespan: Lifespan[FastAPI] | None = None) -> FastAPI:
         openapi_url=None,
     )
 
+    app.add_middleware(RequestBodyLimitMiddleware, max_body_size=MAX_REQUEST_BODY_BYTES)
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(GZipMiddleware, minimum_size=1024)
 

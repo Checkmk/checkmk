@@ -2,11 +2,13 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Unit tests for the security-headers ASGI middleware.
+"""Unit tests for the daemon's ASGI middlewares.
 
 The daemon serves only JSON/SSE behind the site proxy, so every response must
 carry the hardening headers (nosniff, frame/referrer policy, and the strict
 CSP). These are pinned here so a future refactor cannot silently drop one.
+Request bodies are bounded before the ticket check, because the proxied path
+has no Apache body limit.
 """
 
 import asyncio
@@ -20,6 +22,7 @@ from starlette.routing import Route
 from starlette.testclient import TestClient
 from starlette.types import Receive, Scope, Send
 
+from cmk.maps.backend.app import create_app, MAX_REQUEST_BODY_BYTES
 from cmk.maps.backend.core.middleware import _CONTENT_SECURITY_POLICY, SecurityHeadersMiddleware
 
 
@@ -76,3 +79,21 @@ def test_non_http_scope_passes_through_untouched() -> None:
     # (the header-wrapping send is only installed for http responses).
     assert seen["scope_type"] == "lifespan"
     assert seen["send"] is _send
+
+
+def test_oversized_body_is_refused_before_authentication() -> None:
+    client = TestClient(create_app())
+
+    resp = client.post("/api/v1/maps/register", content=b"x" * (MAX_REQUEST_BODY_BYTES + 1))
+
+    assert resp.status_code == HTTPStatus.REQUEST_ENTITY_TOO_LARGE
+
+
+def test_chunked_oversized_body_is_refused() -> None:
+    client = TestClient(create_app())
+    chunk = b"x" * (MAX_REQUEST_BODY_BYTES // 2 + 1)
+
+    resp = client.post("/api/v1/maps/register", content=iter([chunk, chunk]))
+
+    assert "content-length" not in resp.request.headers
+    assert resp.status_code == HTTPStatus.REQUEST_ENTITY_TOO_LARGE

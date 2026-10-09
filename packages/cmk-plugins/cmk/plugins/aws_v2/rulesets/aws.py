@@ -395,9 +395,16 @@ def configuration_authentication() -> Mapping[str, DictElement]:
             parameter_form=CascadingSingleChoice(
                 title=Title("Authentication type"),
                 help_text=Help(
-                    "Monitoring via an IAM role is recommended, however it requires the monitoring "
-                    "site to be located on an AWS EC2 instance with the according permissions to "
-                    "the accounts to be monitored."
+                    "Choose how Checkmk logs in to AWS.<br>"
+                    "<b>Access key:</b> the access key ID and secret access key of an IAM user. "
+                    "Use this when Checkmk does not run on AWS.<br>"
+                    "<b>Default AWS credentials:</b> Checkmk stores no secret. The agent uses the "
+                    "default credential chain of the AWS SDK: environment variables, the files in "
+                    "<tt>~/.aws</tt> of the site user, and the instance profile or EKS Pod Identity "
+                    "when Checkmk runs on AWS. Use this when Checkmk runs on AWS.<br>"
+                    "Both can be combined with an IAM role. The agent then assumes this role and "
+                    "monitors the account the role belongs to. The AWS CloudTrail log shows these "
+                    "calls with the session name <tt>checkmk-&lt;site&gt;</tt>."
                 ),
                 elements=[
                     CascadingSingleChoiceElement(
@@ -411,14 +418,14 @@ def configuration_authentication() -> Mapping[str, DictElement]:
                         parameter_form=Dictionary(elements={**_access_key(), **_assume_role()}),
                     ),
                     CascadingSingleChoiceElement(
-                        name="sts",
-                        title=Title("IAM role (on EC2 instance only)"),
-                        parameter_form=Dictionary(elements=_assume_role()),
+                        name="none",
+                        title=Title("Default AWS credentials"),
+                        parameter_form=FixedValue(value=None),
                     ),
                     CascadingSingleChoiceElement(
-                        name="none",
-                        title=Title("None (on EC2 instance only)"),
-                        parameter_form=FixedValue(value=None),
+                        name="sts",
+                        title=Title("Default AWS credentials + IAM role"),
+                        parameter_form=Dictionary(elements=_assume_role()),
                     ),
                 ],
                 prefill=DefaultValue("access_key"),

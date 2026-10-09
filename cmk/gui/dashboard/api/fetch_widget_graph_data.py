@@ -41,7 +41,7 @@ from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
 
 from ._family import DASHBOARD_FAMILY
-from ._widget_resolution import PERMISSIONS_WIDGET_QUERY, resolve_widget
+from ._widget_resolution import no_built_in_link, PERMISSIONS_WIDGET_QUERY, resolve_widget
 from .model.widget_content.graph import CombinedGraphContent
 from .model.widget_source import SavedWidgetContent
 
@@ -74,9 +74,7 @@ def fetch_widget_graph_data_v1(
     api_context: ApiContext, body: WidgetGraphFetchRequest
 ) -> GraphFetchResponse:
     """Fetch the data of a shared dashboard's graph widget over a requested time range"""
-    with resolve_widget(
-        api_context, body.source, GRAPH_WIDGET_TYPES, lambda _content, _context: None
-    ) as widget:
+    with resolve_widget(api_context, body.source, GRAPH_WIDGET_TYPES, no_built_in_link) as widget:
         discovered = discover_widget_graphs(
             widget.config,
             widget.context,

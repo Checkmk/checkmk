@@ -3,7 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._contextual_link_encoding import clicked_object_values, EffectiveLink, link_properties_for
+from ._contextual_link_encoding import (
+    clicked_object_values,
+    EffectiveLink,
+    link_properties_for,
+    view_link,
+)
 from ._family import DASHBOARD_FAMILY
 from ._registration import register_endpoints
 from ._utils import (
@@ -23,6 +28,7 @@ from ._utils import (
     validated_dashboard_token,
 )
 from ._widget_resolution import (
+    no_built_in_link,
     PERMISSIONS_LINK_TARGET,
     PERMISSIONS_WIDGET_QUERY,
     resolve_widget,
@@ -57,9 +63,11 @@ __all__ = [
     "get_permitted_user_id",
     "link_properties_for",
     "make_pending_changes",
+    "no_built_in_link",
     "register_endpoints",
     "resolve_widget",
     "save_dashboard_to_file",
     "validated_dashboard_token",
+    "view_link",
     "clicked_object_values",
 ]

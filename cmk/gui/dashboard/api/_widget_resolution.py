@@ -83,6 +83,10 @@ class ResolvedWidget:
     links: Sequence[EffectiveLink]
 
 
+def no_built_in_link(_content: BaseWidgetContent, _context: VisualContext) -> None:
+    """The built-in link of a widget type that links nowhere by default."""
+
+
 @contextmanager
 def resolve_widget[C: BaseWidgetContent](
     api_context: ApiContext,

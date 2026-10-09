@@ -29,7 +29,7 @@ from cmk.gui.type_defs import VisualContext, VisualName
 from cmk.livestatus_client import MKLivestatusNotFoundError
 from cmk.web.utils.speaklater import LazyString
 
-from ._contextual_link_encoding import EffectiveLink, link_properties_for
+from ._contextual_link_encoding import EffectiveLink, link_properties_for, view_link
 from ._family import DASHBOARD_FAMILY
 from ._widget_resolution import (
     PERMISSIONS_LINK_TARGET,
@@ -37,7 +37,6 @@ from ._widget_resolution import (
     resolve_widget,
     ResolvedWidget,
 )
-from .model.contextual_link import VisualLocation
 from .model.link_properties import LinkProperties, ResolvedLink
 from .model.response_model import ComputedWidgetResponse
 from .model.widget_content.stats import EventStatsContent, HostStatsContent, ServiceStatsContent
@@ -267,11 +266,10 @@ STATS_TYPES = frozenset(_STATS_BY_TYPE)
 
 def _built_in_link(content: StatsContent, _context: VisualContext) -> EffectiveLink:
     stats_type = _STATS_BY_TYPE[content.internal_type()]
-    return EffectiveLink(
-        title=str(stats_type.link_title),
-        location=VisualLocation(type="views", name=stats_type.view_name, owner=None),
+    return view_link(
+        str(stats_type.link_title),
+        stats_type.view_name,
         include_context=True,
-        include_time_range=False,
         show_filter_form=True,
     )
 

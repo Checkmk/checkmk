@@ -40,6 +40,19 @@ class EffectiveLink:
         )
 
 
+def view_link(
+    title: str, view_name: str, *, include_context: bool, show_filter_form: bool = False
+) -> EffectiveLink:
+    """The built-in link of a widget to a built-in view."""
+    return EffectiveLink(
+        title=title,
+        location=VisualLocation(type="views", name=view_name, owner=None),
+        include_context=include_context,
+        include_time_range=False,
+        show_filter_form=show_filter_form,
+    )
+
+
 def link_properties_for(
     links: Sequence[EffectiveLink],
     native_key: Mapping[FilterName, FilterHTTPVariables],

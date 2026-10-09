@@ -5,6 +5,11 @@
   "properties": {
     "status": { "title": "RequestStatus", "enum": ["ok", "error"] },
     "errorMessage": { "title": "ErrorMessage", "type": "string" },
+    "errorCode": {
+      "title": "ErrorCode",
+      "enum": ["rate_limited", "unavailable", "rejected"],
+      "description": "What the user may do after an error: wait before requesting another code (rate_limited), try again right away (unavailable), or follow the error message (rejected)."
+    },
     "salt": { "title": "Salt", "type": "string" }
   },
   "required": ["status"]

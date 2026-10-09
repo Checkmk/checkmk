@@ -384,6 +384,23 @@ test('a condition the form rejects blocks navigation and says why', async () => 
   expect(navigation.next).not.toHaveBeenCalled()
 })
 
+test('a host label group without labels blocks navigation like in the rule editor', async () => {
+  matching = [['web01', 'HTTP request duration']]
+  const { navigation } = renderStep({
+    name: 'Latency too high',
+    servicePattern: 'HTTP request duration',
+    conditions: {
+      folder_path: MAIN_FOLDER,
+      host_label_groups: [{ operator: 'and', label_group: [] }]
+    }
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+
+  expect(await screen.findByText('Please add at least one host label.')).toBeVisible()
+  expect(navigation.next).not.toHaveBeenCalled()
+})
+
 test('valid conditions let the step continue', async () => {
   matching = [['web01', 'HTTP request duration']]
   const { navigation } = renderStep({

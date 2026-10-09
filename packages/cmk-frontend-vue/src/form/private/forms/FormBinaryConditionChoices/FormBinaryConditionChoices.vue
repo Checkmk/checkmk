@@ -9,9 +9,12 @@ import type * as typing from 'cmk-shared-typing/typescript/vue_formspec_componen
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkInlineButton from 'cmk-ui-library/components/user-input/CmkInlineButton.vue'
+import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { immediateWatch } from 'cmk-ui-library/lib/watch'
+import { ref, watch } from 'vue'
 
-import { type ValidationMessages } from '@/form/private/validation'
+import { type ValidationMessages, validateValue } from '@/form/private/validation'
 
 import BinaryConditionChoices from './BinaryConditionChoices.vue'
 import { operatorSuggestions } from './suggestions'
@@ -27,6 +30,28 @@ const data = defineModel<typing.BinaryConditionChoicesValue | null>('data', {
   required: true,
   default: null
 })
+
+const validation = ref<Array<string>>([])
+immediateWatch(
+  () => props.backendValidation,
+  (newValidation: ValidationMessages) => {
+    newValidation.forEach((message) => {
+      data.value = message.replacement_value as typing.BinaryConditionChoicesValue
+    })
+    validation.value = newValidation.map((m) => m.message)
+  }
+)
+// The labels are edited deep inside the groups. Validate like the backend, which drops
+// groups without labels. Synchronous, so the backend messages set right after applying
+// their replacement value are not overwritten.
+watch(
+  data,
+  (newData) => {
+    const groups = (newData ?? []).filter((group) => group.label_group.length > 0)
+    validation.value = validateValue(groups, props.spec.validators)
+  },
+  { deep: true, flush: 'sync' }
+)
 
 function addGroup() {
   if (data.value === null) {
@@ -44,6 +69,7 @@ function removeGroup(groupIndex: number) {
 
 <template>
   <div>
+    <CmkInlineValidation :validation="validation" />
     <table>
       <tbody>
         <tr v-for="(group, groupIndex) in data" :key="groupIndex">

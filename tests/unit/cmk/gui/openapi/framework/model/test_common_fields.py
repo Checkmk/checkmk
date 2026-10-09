@@ -9,7 +9,6 @@ from typing import Annotated
 
 import pytest
 from pydantic import TypeAdapter, ValidationError
-from werkzeug.datastructures import ETags
 
 from livestatus import SiteConfigurations
 
@@ -18,7 +17,6 @@ from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.logged_in import user as logged_in_user
-from cmk.gui.openapi.framework import ApiContext, APIVersion
 from cmk.gui.openapi.framework.model.common_fields import (
     _FolderValidation,
     AnnotatedFolder,
@@ -28,24 +26,13 @@ from cmk.gui.openapi.framework.model.common_fields import (
     parse_query_expression,
     query_expression_validator,
 )
-from cmk.gui.openapi.framework.model.validation_context import RequestValidationContext
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, make_folder_tree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.livestatus_client.expressions import BinaryExpression, NothingExpression, QueryExpression
 from cmk.livestatus_client.tables import Hosts, Status
 from cmk.livestatus_client.types import Column
-
-
-def _api_context() -> ApiContext:
-    return ApiContext.new(
-        config=Config(),
-        version=APIVersion.UNSTABLE,
-        etag_if_match=ETags(),
-        host_url="http://localhost/",
-        user=LoggedInNobody(),
-        token=None,
-    )
+from tests.testlib.unit.gui.validation_context import make_validation_context
 
 
 class TestBinaryBase64:
@@ -332,11 +319,13 @@ class TestFolderValidation:
         adapter: TypeAdapter[Folder] = TypeAdapter(  # astrein: disable=pydantic-type-adapter
             AnnotatedFolder
         )
-        context = RequestValidationContext(_api_context())
+        context = make_validation_context(Config(), LoggedInNobody())
 
         first = adapter.validate_python("/", context=context)
         second = adapter.validate_python("/", context=context)
-        other = adapter.validate_python("/", context=RequestValidationContext(_api_context()))
+        other = adapter.validate_python(
+            "/", context=make_validation_context(Config(), LoggedInNobody())
+        )
 
         assert first.tree is second.tree
         assert first.tree is not other.tree

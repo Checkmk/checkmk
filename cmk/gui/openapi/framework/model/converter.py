@@ -23,13 +23,13 @@ from cmk.gui.groups import GroupName, GroupType
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework._context import ApiContext
 from cmk.gui.openapi.framework.model import ApiOmitted
-from cmk.gui.openapi.framework.model.validation_context import RequestValidationContext
+from cmk.gui.openapi.framework.model.validation_context import validation_context_of
 from cmk.gui.permissions import load_dynamic_permissions, permission_registry
 from cmk.gui.site_config import distributed_setup_remote_sites
 from cmk.gui.userdb import connection_choices, get_saml_connections
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import groups_io, tags
-from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree, Host, make_folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree, Host, make_folder_tree
 from cmk.gui.watolib.passwords import load_passwords, password_id_in_use
 from cmk.gui.watolib.userroles import role_exists, RoleID
 from cmk.livestatus_client.expressions import LqSafe
@@ -105,10 +105,7 @@ def _folder_tree_of_request(api_context: ApiContext) -> FolderTree:
 
 def folder_tree_of(info: ValidationInfo[object]) -> FolderTree:
     """The folder tree of the request a value is validated for."""
-    if isinstance(info.context, RequestValidationContext):
-        return info.context.shared(_folder_tree_of_request)
-    # Validated outside of a request, e.g. by a model built in a test.
-    return folder_tree()
+    return validation_context_of(info).shared(_folder_tree_of_request)
 
 
 @dataclass(slots=True)

@@ -10,14 +10,12 @@ import pytest
 from pydantic import AfterValidator, TypeAdapter, ValidationError
 from pydantic.dataclasses import dataclass as pydantic_dataclass
 from pytest_mock import MockerFixture
-from werkzeug.datastructures import ETags
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config, Config
 from cmk.gui.groups import GroupType
 from cmk.gui.logged_in import LoggedInNobody
-from cmk.gui.openapi.framework import ApiContext, APIVersion
 from cmk.gui.openapi.framework.model import ApiOmitted, json_dump_without_omitted
 from cmk.gui.openapi.framework.model.converter import (
     GroupConverter,
@@ -27,24 +25,13 @@ from cmk.gui.openapi.framework.model.converter import (
     TypedPlainValidator,
     UserConverter,
 )
-from cmk.gui.openapi.framework.model.validation_context import RequestValidationContext
 from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.hosts_and_folders import FolderTree, Host, make_folder_tree
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.ruleset_matcher.tags import TagGroup, TagGroupID, TagID
 from tests.testlib.unit.gui.users import create_and_destroy_user
-
-
-def _api_context() -> ApiContext:
-    return ApiContext.new(
-        config=Config(),
-        version=APIVersion.UNSTABLE,
-        etag_if_match=ETags(),
-        host_url="http://localhost/",
-        user=LoggedInNobody(),
-        token=None,
-    )
+from tests.testlib.unit.gui.validation_context import make_validation_context
 
 
 def test_validators_dont_run_on_json_dump() -> None:
@@ -404,11 +391,11 @@ class TestHostConverter:
         adapter: TypeAdapter[Host] = TypeAdapter(  # astrein: disable=pydantic-type-adapter
             Annotated[Host, TypedPlainValidator(str, HostConverter().host)]
         )
-        context = RequestValidationContext(_api_context())
+        context = make_validation_context(Config(), LoggedInNobody())
 
         first = adapter.validate_python(sample_host, context=context)
         other = adapter.validate_python(
-            sample_host, context=RequestValidationContext(_api_context())
+            sample_host, context=make_validation_context(Config(), LoggedInNobody())
         )
 
         assert first.folder().tree is not other.folder().tree

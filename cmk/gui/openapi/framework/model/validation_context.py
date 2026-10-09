@@ -5,6 +5,8 @@
 from collections.abc import Callable
 from typing import cast
 
+from pydantic import ValidationInfo
+
 from cmk.gui.openapi.framework._context import ApiContext
 
 
@@ -35,3 +37,15 @@ class RequestValidationContext:
         if build not in self._shared:
             self._shared[build] = build(self.api_context)
         return cast(T, self._shared[build])
+
+
+def validation_context_of(info: ValidationInfo[object]) -> RequestValidationContext:
+    """The validation context of the request a value is validated for.
+
+    The framework provides it with every request. A validator that needs it can only run inside
+    a request validation; tests have to pass `RequestValidationContext(api_context)` as the
+    `context` of their `validate_python` call.
+    """
+    if isinstance(info.context, RequestValidationContext):
+        return info.context
+    raise TypeError("This validator runs without the RequestValidationContext of the framework")

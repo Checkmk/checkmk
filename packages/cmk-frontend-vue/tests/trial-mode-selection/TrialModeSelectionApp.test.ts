@@ -823,6 +823,31 @@ describe('TrialModeSelectionApp', () => {
         } satisfies SaveRequest
       ])
     })
+
+    it('keeps the code for another try when it could not be checked', async () => {
+      renderApp()
+      await reachCodeStep()
+      answerVerificationWith({
+        status: 'error',
+        errorCode: 'unavailable',
+        errorMessage: 'The verification code could not be checked.'
+      })
+
+      await user.type(codeDigits()[0]!, '424242')
+
+      expect(
+        await screen.findByText('The verification code could not be checked.')
+      ).toBeInTheDocument()
+      expect(codeDigits().map((input) => (input as HTMLInputElement).value)).toEqual([
+        '4',
+        '2',
+        '4',
+        '2',
+        '4',
+        '2'
+      ])
+      expect(screen.getByRole('button', { name: 'Verify' })).toBeEnabled()
+    })
   })
 
   describe('resend cooldown', () => {
@@ -897,6 +922,42 @@ describe('TrialModeSelectionApp', () => {
       await waitFor(() => {
         expect(resendButton()).toHaveTextContent('Resend code (1:00)')
       })
+    })
+
+    it('holds off a resend once the service reports a limit', async () => {
+      renderApp()
+      answerVerificationWith({
+        status: 'error',
+        errorCode: 'rate_limited',
+        errorMessage: 'Too many verification codes have been requested.'
+      })
+      await startTrial()
+      await user.type(screen.getByLabelText('Email address'), 'jane.doe@example.com{Enter}')
+
+      expect(
+        await screen.findByText('Too many verification codes have been requested.')
+      ).toBeInTheDocument()
+      expect(resendButton()).toHaveTextContent('Resend code (1:00)')
+      expect(resendButton()).toBeDisabled()
+    })
+
+    it('allows a resend right away when the code could not be sent', async () => {
+      renderApp()
+      await reachCodeStep()
+      await vi.advanceTimersByTimeAsync(60_000)
+      answerVerificationWith({
+        status: 'error',
+        errorCode: 'unavailable',
+        errorMessage: 'The verification code could not be sent.'
+      })
+
+      await user.click(resendButton())
+
+      expect(
+        await screen.findByText('The verification code could not be sent.')
+      ).toBeInTheDocument()
+      expect(resendButton()).toHaveTextContent(/^Resend code$/)
+      expect(resendButton()).toBeEnabled()
     })
 
     it('starts the cooldown over on a resend', async () => {

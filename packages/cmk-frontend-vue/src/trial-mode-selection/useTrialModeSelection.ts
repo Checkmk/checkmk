@@ -24,8 +24,7 @@ const RESEND_COOLDOWN_SECONDS = 60
 /**
  * Screens the gate dialog can show. The customer branch asks how the license is verified,
  * and "Verify later" leads to pending; the trial branch walks choice -> email -> code -> success.
- * Offline sites go choice -> unreachable -> unverified; the send limit also leads to
- * unverified.
+ * Offline sites go choice -> unreachable -> unverified.
  */
 export type TrialModeScreen =
   | 'choice'
@@ -75,10 +74,6 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
   /** When the standing cooldown runs out, as a timestamp. */
   let resendAvailableAt = 0
   let ticker: ReturnType<typeof setInterval> | undefined
-  const now = ref(Date.now())
-  /** Ticks `now` every second, so the limit countdown updates and resets at midnight. */
-  const clock = setInterval(() => (now.value = Date.now()), 1000)
-  onScopeDispose(() => clearInterval(clock))
 
   async function sendCodeRequest(): Promise<void> {
     cancelResendCooldown()
@@ -97,6 +92,11 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
         errorMessage.value = response.errorMessage
           ? untranslated(response.errorMessage)
           : _t('Internal error. Please try again or contact Checkmk support.')
+        // The service does not say how long its limit lasts; the usual cooldown at least
+        // keeps the next request from running straight into it again.
+        if (response.errorCode === 'rate_limited') {
+          armResendCooldown()
+        }
         return
       }
       emailSalt.value = response.salt

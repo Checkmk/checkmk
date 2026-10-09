@@ -2181,6 +2181,7 @@ FROZEN_SERVICE_NAMES: Final[Mapping[str, str]] = {
     "veeam_managed_servers": "Managed server %s",
     "veeam_protection_groups": "Protection group %s",
     "veeam_proxies": "Backup proxy %s",
+    "veeam_replicas": "Replica %s",
     "veeam_repositories": "Backup repository %s",
     "veeam_restore_points": "Restore points",
     "veeam_scaleout_repositories": "Scale-out repository %s",

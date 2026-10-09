@@ -399,7 +399,10 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         help="Run a connection test. No further agent code is executed.",
     )
 
-    return parser.parse_args(argv)
+    args = parser.parse_args(argv)
+    if args.access_key_identity and args.secret is None and args.secret_id is None:
+        parser.error("--access-key-identity requires --secret or --secret-id")
+    return args
 
 
 def _setup_logging(opt_debug: bool, opt_verbose: int) -> None:
@@ -462,12 +465,6 @@ def _proxy_address(
     return f"{authentication}{address}"
 
 
-def _resolve_optional_secret(args: argparse.Namespace, option_name: str) -> str | None:
-    if getattr(args, option_name) is None and getattr(args, f"{option_name}_id") is None:
-        return None
-    return resolve_secret_option(args, option_name).reveal()
-
-
 def _get_proxy(args: argparse.Namespace) -> botocore.config.Config | None:
     if args.proxy_host:
         return botocore.config.Config(
@@ -476,7 +473,11 @@ def _get_proxy(args: argparse.Namespace) -> botocore.config.Config | None:
                     args.proxy_host,
                     args.proxy_port,
                     args.proxy_user,
-                    _resolve_optional_secret(args, PROXY_SECRET_OPTION),
+                    (
+                        resolve_secret_option(args, PROXY_SECRET_OPTION).reveal()
+                        if args.proxysecret is not None or args.proxysecret_id is not None
+                        else None
+                    ),
                 )
             }
         )
@@ -560,11 +561,13 @@ def _configure_aws(args: argparse.Namespace) -> AWSConfig:
 
 
 def _hub_credentials_from_args(args: argparse.Namespace) -> HubCredentials:
-    secret_access_key = _resolve_optional_secret(args, ACCESS_KEY_SECRET_OPTION)
     login: AccessKey | DefaultCredentials = (
-        DefaultCredentials()
-        if args.access_key_identity is None or secret_access_key is None
-        else AccessKey(args.access_key_identity, secret_access_key)
+        AccessKey(
+            args.access_key_identity,
+            resolve_secret_option(args, ACCESS_KEY_SECRET_OPTION).reveal(),
+        )
+        if args.access_key_identity
+        else DefaultCredentials()
     )
     role = AssumedRole(args.role_arn, args.external_id or None) if args.assume_role else None
     return HubCredentials(login, role)

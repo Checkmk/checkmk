@@ -112,3 +112,23 @@ def test_parse_arguments(args: Sequence[str], expected: Mapping[str, Any]) -> No
     ns = parse_arguments(args)
     for prop, value in expected.items():
         assert getattr(ns, prop) == value
+
+
+def test_access_key_without_secret_is_rejected(capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit):
+        parse_arguments([*REQUIRED_ARGS, "--access-key-identity", "AKIAEXAMPLE"])
+
+    assert "--access-key-identity requires --secret or --secret-id" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    "secret_args",
+    [
+        pytest.param(["--secret", "secret"], id="secret"),
+        pytest.param(["--secret-id", "password_store_id"], id="secret id"),
+    ],
+)
+def test_access_key_with_secret_is_accepted(secret_args: Sequence[str]) -> None:
+    args = parse_arguments([*REQUIRED_ARGS, "--access-key-identity", "AKIAEXAMPLE", *secret_args])
+
+    assert args.access_key_identity == "AKIAEXAMPLE"

@@ -44,7 +44,8 @@ ServicesValueSpec = list[tuple[str, ValueSpec]]
 
 
 def _unmigrate_password(
-    model: tuple[
+    model: tuple[Literal["password", "store"], str]
+    | tuple[
         Literal["cmk_postprocessed"],
         Literal["explicit_password", "stored_password"],
         tuple[str, str],
@@ -52,9 +53,9 @@ def _unmigrate_password(
 ) -> object:
     match model:
         case "password", password:
-            return "password", password  # type: ignore[unreachable]
+            return "password", password
         case "store", password_store_id:
-            return "store", password_store_id  # type: ignore[unreachable]
+            return "store", password_store_id
         # already migrated passwords
         case "cmk_postprocessed", "explicit_password", (str(_password_id), str(password)):
             return "password", password

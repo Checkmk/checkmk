@@ -460,14 +460,18 @@ def _account_list() -> Mapping[str, DictElement]:
             ),
             required=True,
         ),
+        # A String, not a Password: AWS does not treat the external ID as a secret.
+        # Without the hub credentials it grants nothing. It only keeps a rule that does
+        # not know it from using the roles through the hub login that all rules share.
+        # A masked value would also keep admins from checking it against the trust policy.
         "external_id": DictElement(
             parameter_form=String(
                 title=Title("External ID"),
                 help_text=Help(
-                    "The same external ID for the role in every account. It prevents another "
-                    "user of this site from monitoring an account through these credentials "
-                    "without knowing the ID. Use it on sites where several teams or customers "
-                    "can create AWS rules."
+                    "Sent with every AssumeRole call, the same for every account. Set it when "
+                    "the roles in the accounts require one. A rule on this site can then use "
+                    "those roles only if it knows the ID. It is not a secret: it is stored "
+                    "and passed in plain text, so every user who can read this rule can copy it."
                 ),
                 custom_validate=(validators.LengthInRange(min_value=1),),
             ),

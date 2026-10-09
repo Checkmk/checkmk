@@ -358,6 +358,10 @@ onMounted(() => {
     keyboard: !props.preview,
     touchZoom: !props.preview
   })
+  // The tile licence wants the attribution legible: its own class lets the
+  // theme reach it, and bottom left keeps it out from under the edit button.
+  map.attributionControl.setPosition('bottomleft')
+  map.attributionControl.getContainer()?.classList.add('maps-world-map-canvas__attribution')
   map.on('click', (event: L.LeafletMouseEvent) => {
     // A click anywhere but on an object dismisses whatever it opened.
     menus.close()
@@ -582,6 +586,23 @@ defineExpose({
   position: absolute;
   inset: 0;
 }
+
+/* stylelint-disable selector-pseudo-class-no-unknown -- Leaflet renders the
+   attribution, so it carries no scope attribute of its own. Under the root, the
+   rule outweighs Leaflet's own white-on-white one. */
+.maps-world-map-canvas :deep(.maps-world-map-canvas__attribution) {
+  padding: 1px var(--dimension-3);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--font-color);
+  background: var(--maps-map-view-glass);
+}
+
+.maps-world-map-canvas :deep(.maps-world-map-canvas__attribution a) {
+  color: var(--font-color);
+  text-decoration: underline;
+}
+/* stylelint-enable selector-pseudo-class-no-unknown */
 
 /* Leaflet stacks its panes up to z-index 700; isolating them keeps that ladder
    to itself instead of letting it climb over everything the map draws on top. */

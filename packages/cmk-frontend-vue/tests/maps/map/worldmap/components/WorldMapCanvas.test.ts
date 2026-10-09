@@ -23,7 +23,9 @@ import { mapsGlobal } from '../../../support/services'
 // real Leaflet's DivIcon follows, and the one the Vue layer teleports into.
 const leaflet = vi.hoisted(() => {
   let mapContainer: HTMLElement | null = null
+  const attribution = document.createElement('div')
   const mapStub = {
+    attributionControl: { setPosition: vi.fn(), getContainer: vi.fn(() => attribution) },
     on: vi.fn(),
     remove: vi.fn(),
     getPane: vi.fn(() => undefined),
@@ -86,7 +88,7 @@ const leaflet = vi.hoisted(() => {
     latLngBounds: vi.fn((points: unknown) => points),
     DomEvent: { stopPropagation: vi.fn(), preventDefault: vi.fn() }
   }
-  return { L, mapStub }
+  return { L, mapStub, attribution }
 })
 
 vi.mock('leaflet', () => ({ default: leaflet.L }))
@@ -255,5 +257,18 @@ describe('WorldMapCanvas', () => {
     const lastOffset = (marker: { setZIndexOffset: { mock: { calls: number[][] } } }) =>
       marker.setZIndexOffset.mock.calls.at(-1)![0]!
     expect(lastOffset(upMarker)).toBeGreaterThan(lastOffset(downMarker))
+  })
+
+  // The tile licence wants it legible, and bottom right is under the edit button.
+  it('puts the tile attribution bottom left, where the theme can reach it', async () => {
+    render(WorldMapCanvas, {
+      global: mapsGlobal(),
+      props: { ...baseProps, config: sampleConfig() }
+    })
+
+    await waitFor(() =>
+      expect(leaflet.mapStub.attributionControl.setPosition).toHaveBeenCalledWith('bottomleft')
+    )
+    expect(leaflet.attribution.classList).toContain('maps-world-map-canvas__attribution')
   })
 })

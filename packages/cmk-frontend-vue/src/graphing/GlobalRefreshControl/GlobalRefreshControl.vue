@@ -9,7 +9,9 @@ import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { renderTimeOfDay } from 'cmk-ui-library/lib/renderTime'
 import { computed, nextTick, ref, watch } from 'vue'
 
@@ -49,6 +51,17 @@ const intervalOptions = computed<Suggestions>(() => ({
   ]
 }))
 
+// Polite live-region text voicing what the user just changed: the control taking the focus alone
+// does not say it.
+const announcement = ref<TranslatedString>(untranslated(''))
+
+// Cleared first: a live region only speaks on a change, so a repeated message would stay silent.
+async function announce(message: TranslatedString): Promise<void> {
+  announcement.value = untranslated('')
+  await nextTick()
+  announcement.value = message
+}
+
 // Each control unmounts itself when used, so the one taking its place takes the focus and its name
 // announces the new state.
 const intervalDropdown = ref<InstanceType<typeof CmkDropdown> | null>(null)
@@ -60,9 +73,11 @@ const intervalModel = computed<string | null>({
     if (value === TURN_OFF) {
       pauseRefresh()
       void nextTick(() => resumeButton.value?.focus())
+      void announce(_t('Live refresh off'))
     } else if (value !== null) {
       // Only rendered while the refresh runs, so this only changes the rhythm; Resume goes live.
       setRefreshIntervalSeconds(Number(value))
+      void announce(_t('Refresh interval set to %{seconds} seconds', { seconds: Number(value) }))
     }
   }
 })
@@ -74,6 +89,11 @@ function resume(): void {
   emit('resume')
   resumeRefresh()
   void nextTick(() => intervalDropdown.value?.focus())
+  void announce(
+    _t('Live refresh resumed, every %{seconds} seconds', {
+      seconds: refreshIntervalSeconds.value
+    })
+  )
 }
 
 const lastRefreshLabel = computed(() => {
@@ -131,6 +151,7 @@ const lastRefreshLabel = computed(() => {
         </CmkButton>
       </template>
     </div>
+    <CmkVisuallyHidden :text="announcement" live="polite" />
   </div>
 </template>
 

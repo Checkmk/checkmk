@@ -53,6 +53,19 @@ test('selecting another interval stores it unpaused', async () => {
   expect(useGlobalRefresh().refreshPaused.value).toBe(false)
 })
 
+test('selecting another interval announces it', async () => {
+  const user = userEvent.setup()
+  useGlobalRefresh().resumeRefresh()
+  render(GlobalRefreshControl, { props: PROPS })
+
+  await user.click(screen.getByRole('combobox', { name: 'Live refresh every' }))
+  await user.click(await screen.findByText('60 sec'))
+
+  await waitFor(() =>
+    expect(screen.getByRole('status')).toHaveTextContent('Refresh interval set to 60 seconds')
+  )
+})
+
 test('"Turn off" pauses and keeps the interval', async () => {
   const user = userEvent.setup()
   useGlobalRefresh().resumeRefresh()
@@ -63,6 +76,17 @@ test('"Turn off" pauses and keeps the interval', async () => {
 
   expect(useGlobalRefresh().refreshPaused.value).toBe(true)
   expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(30)
+})
+
+test('"Turn off" announces that the live refresh is off', async () => {
+  const user = userEvent.setup()
+  useGlobalRefresh().resumeRefresh()
+  render(GlobalRefreshControl, { props: PROPS })
+
+  await user.click(screen.getByRole('combobox', { name: 'Live refresh every' }))
+  await user.click(await screen.findByText('Turn off'))
+
+  await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Live refresh off'))
 })
 
 test('paused state shows the time of the last refresh tick', async () => {
@@ -138,4 +162,16 @@ test('Resume goes live, keeping the interval that was chosen before', async () =
 
   expect(useGlobalRefresh().refreshPaused.value).toBe(false)
   expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(chosenInterval)
+})
+
+test('Resume announces that the live refresh resumed, with its interval', async () => {
+  useGlobalRefresh().setRefreshIntervalSeconds(60)
+  useGlobalRefresh().pauseRefresh()
+  render(GlobalRefreshControl, { props: PROPS })
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Resume live refresh' }))
+
+  await waitFor(() =>
+    expect(screen.getByRole('status')).toHaveTextContent('Live refresh resumed, every 60 seconds')
+  )
 })

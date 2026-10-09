@@ -82,6 +82,8 @@ RUN apt-get install -y --fix-missing \
     netcat-openbsd \
     openssh-client \
     patch \
+    # rpm provides rpmbuild, which Bazel uses to build the agent .rpm
+    # (//agents:check-mk-agent-rpm) on every distro, the .deb ones too.
     rpm \
     cpio \
     rpcbind \

@@ -9,26 +9,43 @@ from typing import Annotated
 
 import pytest
 from pydantic import TypeAdapter, ValidationError
+from werkzeug.datastructures import ETags
 
 from livestatus import SiteConfigurations
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+from cmk.gui.config import Config
+from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.logged_in import user as logged_in_user
+from cmk.gui.openapi.framework import ApiContext, APIVersion
 from cmk.gui.openapi.framework.model.common_fields import (
     _FolderValidation,
+    AnnotatedFolder,
     BinaryBase64,
     columns_validator,
     parse_columns,
     parse_query_expression,
     query_expression_validator,
 )
+from cmk.gui.openapi.framework.model.validation_context import RequestValidationContext
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
+from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, make_folder_tree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.livestatus_client.expressions import BinaryExpression, NothingExpression, QueryExpression
 from cmk.livestatus_client.tables import Hosts, Status
 from cmk.livestatus_client.types import Column
+
+
+def _api_context() -> ApiContext:
+    return ApiContext.new(
+        config=Config(),
+        version=APIVersion.UNSTABLE,
+        etag_if_match=ETags(),
+        host_url="http://localhost/",
+        user=LoggedInNobody(),
+        token=None,
+    )
 
 
 class TestBinaryBase64:
@@ -234,7 +251,11 @@ def test_parse_columns_validates_against_call_time_table() -> None:
 
 class TestFolderValidation:
     @pytest.fixture
-    def subfolder(self, with_admin_login: UserId) -> Iterator[Folder]:  # noqa: ARG002
+    def tree(self) -> FolderTree:
+        return make_folder_tree(Config())
+
+    @pytest.fixture
+    def subfolder(self, with_admin_login: UserId, tree: FolderTree) -> Iterator[Folder]:  # noqa: ARG002
         # The name "abc" is a valid hex string, which makes it ambiguous with a folder id.
         pending_changes = PendingChanges(
             activation_sites=SiteConfigurations({}),
@@ -243,7 +264,7 @@ class TestFolderValidation:
             store=NoopPendingChangesStore(),
             hooks=(make_audit_log_change_hook(use_git=False),),
         )
-        root = folder_tree().root_folder()
+        root = tree.root_folder()
         folder = root.create_subfolder(
             "abc",
             "abc",
@@ -261,12 +282,12 @@ class TestFolderValidation:
         )
 
     @pytest.mark.usefixtures("load_config")
-    def test_root_via_slash(self) -> None:
-        assert _FolderValidation.validate("/") == folder_tree().root_folder()
+    def test_root_via_slash(self, tree: FolderTree) -> None:
+        assert _FolderValidation.validate_in_tree("/", tree) == tree.root_folder()
 
     @pytest.mark.usefixtures("load_config")
-    def test_root_via_empty_string(self) -> None:
-        assert _FolderValidation.validate("") == folder_tree().root_folder()
+    def test_root_via_empty_string(self, tree: FolderTree) -> None:
+        assert _FolderValidation.validate_in_tree("", tree) == tree.root_folder()
 
     @pytest.mark.parametrize(
         "value",
@@ -277,29 +298,45 @@ class TestFolderValidation:
             pytest.param("/abc/", id="surrounding-slashes"),
         ],
     )
-    def test_separator_forces_path_lookup_for_hex_name(self, value: str, subfolder: Folder) -> None:
-        assert _FolderValidation.validate(value) == subfolder
+    def test_separator_forces_path_lookup_for_hex_name(
+        self, value: str, subfolder: Folder, tree: FolderTree
+    ) -> None:
+        assert _FolderValidation.validate_in_tree(value, tree) == subfolder
 
     @pytest.mark.parametrize("value", ["abc/", "abc~"])
     def test_trailing_separator_hex_name_resolves_as_path(
-        self, value: str, subfolder: Folder
+        self, value: str, subfolder: Folder, tree: FolderTree
     ) -> None:
-        assert _FolderValidation.validate(value) == subfolder
+        assert _FolderValidation.validate_in_tree(value, tree) == subfolder
 
     @pytest.mark.usefixtures("subfolder")
-    def test_bare_hex_name_is_treated_as_id_not_path(self) -> None:
+    def test_bare_hex_name_is_treated_as_id_not_path(self, tree: FolderTree) -> None:
         with pytest.raises(ValueError):
-            _FolderValidation.validate("abc")
+            _FolderValidation.validate_in_tree("abc", tree)
 
-    def test_hex_id_resolved_by_id(self, subfolder: Folder) -> None:
-        assert _FolderValidation.validate(subfolder.id()) == subfolder
-
-    @pytest.mark.usefixtures("load_config")
-    def test_invalid_hex_id_raises_value_error(self) -> None:
-        with pytest.raises(ValueError):
-            _FolderValidation.validate("deadbeef")
+    def test_hex_id_resolved_by_id(self, subfolder: Folder, tree: FolderTree) -> None:
+        assert _FolderValidation.validate_in_tree(subfolder.id(), tree) == subfolder
 
     @pytest.mark.usefixtures("load_config")
-    def test_unknown_path_raises_value_error(self) -> None:
+    def test_invalid_hex_id_raises_value_error(self, tree: FolderTree) -> None:
         with pytest.raises(ValueError):
-            _FolderValidation.validate("~does~not~exist")
+            _FolderValidation.validate_in_tree("deadbeef", tree)
+
+    @pytest.mark.usefixtures("load_config")
+    def test_unknown_path_raises_value_error(self, tree: FolderTree) -> None:
+        with pytest.raises(ValueError):
+            _FolderValidation.validate_in_tree("~does~not~exist", tree)
+
+    @pytest.mark.usefixtures("load_config")
+    def test_folder_is_looked_up_in_the_tree_of_the_request(self) -> None:
+        adapter: TypeAdapter[Folder] = TypeAdapter(  # astrein: disable=pydantic-type-adapter
+            AnnotatedFolder
+        )
+        context = RequestValidationContext(_api_context())
+
+        first = adapter.validate_python("/", context=context)
+        second = adapter.validate_python("/", context=context)
+        other = adapter.validate_python("/", context=RequestValidationContext(_api_context()))
+
+        assert first.tree is second.tree
+        assert first.tree is not other.tree

@@ -21,13 +21,15 @@ from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.groups import GroupName, GroupType
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.framework._context import ApiContext
 from cmk.gui.openapi.framework.model import ApiOmitted
+from cmk.gui.openapi.framework.model.validation_context import RequestValidationContext
 from cmk.gui.permissions import load_dynamic_permissions, permission_registry
 from cmk.gui.site_config import distributed_setup_remote_sites
 from cmk.gui.userdb import connection_choices, get_saml_connections
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import groups_io, tags
-from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree, Host, make_folder_tree
 from cmk.gui.watolib.passwords import load_passwords, password_id_in_use
 from cmk.gui.watolib.userroles import role_exists, RoleID
 from cmk.livestatus_client.expressions import LqSafe
@@ -97,6 +99,18 @@ def _takes_validation_info[T](
     return len(positional) == 2
 
 
+def _folder_tree_of_request(api_context: ApiContext) -> FolderTree:
+    return make_folder_tree(api_context.config)
+
+
+def folder_tree_of(info: ValidationInfo[object]) -> FolderTree:
+    """The folder tree of the request a value is validated for."""
+    if isinstance(info.context, RequestValidationContext):
+        return info.context.shared(_folder_tree_of_request)
+    # Validated outside of a request, e.g. by a model built in a test.
+    return folder_tree()
+
+
 @dataclass(slots=True)
 class RegistryConverter[T]:
     registry_or_getter: Mapping[str, T] | Callable[[UserPermissions], Mapping[str, T]]
@@ -147,26 +161,36 @@ class HostConverter:
             raise ValueError("Host name cannot be empty.")
         return HostName.parse(value)
 
-    def host(self, value: str) -> Host:
+    def host(self, value: str, info: ValidationInfo[object]) -> Host:
+        return self.host_in_tree(value, folder_tree_of(info))
+
+    def host_in_tree(self, value: str, tree: FolderTree) -> Host:
         name = HostName(self._parse_host_name(value))
-        if host := folder_tree().host(name):
+        if host := tree.host(name):
             self._verify(host)
             return host
 
         raise ValueError(f"Host not found: {value!r}")
 
-    def host_name(self, value: str) -> HostName:
+    def host_name(self, value: str, info: ValidationInfo[object]) -> HostName:
+        return self.host_name_in_tree(value, folder_tree_of(info))
+
+    def host_name_in_tree(self, value: str, tree: FolderTree) -> HostName:
         name = self._parse_host_name(value)
-        if host := folder_tree().host(name):
+        if host := tree.host(name):
             self._verify(host)
             return name
 
         raise ValueError(f"Host not found: {value!r}")
 
     @classmethod
-    def not_exists(cls, value: str) -> HostName:
+    def not_exists(cls, value: str, info: ValidationInfo[object]) -> HostName:
+        return cls.not_exists_in_tree(value, folder_tree_of(info))
+
+    @classmethod
+    def not_exists_in_tree(cls, value: str, tree: FolderTree) -> HostName:
         name = cls._parse_host_name(value)
-        if folder_tree().host(name):
+        if tree.host(name):
             raise ValueError(f"Host {value!r} already exists.")
 
         return name

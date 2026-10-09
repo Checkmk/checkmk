@@ -6,7 +6,13 @@
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
-import { type AlertModel, alertName, servicePattern } from '@/mode-alerts/types'
+import {
+  type AlertModel,
+  type FolderPaths,
+  alertConditions,
+  alertName,
+  servicePattern
+} from '@/mode-alerts/types'
 
 export type CreateResult = { ok: true } | { ok: false; error: string }
 
@@ -17,7 +23,10 @@ function slugForId(value: string): string {
     .replace(/^_+|_+$/g, '')
 }
 
-export async function createAlert(model: AlertModel): Promise<CreateResult> {
+export async function createAlert(
+  model: AlertModel,
+  folderPaths: FolderPaths
+): Promise<CreateResult> {
   const name = alertName(model)
   try {
     unwrap(
@@ -32,7 +41,8 @@ export async function createAlert(model: AlertModel): Promise<CreateResult> {
           // ASCII letters or digits share the ID "alert", so only the first one can be created.
           configuration_name: slugForId(name) || 'alert',
           alert_name: name,
-          service_match: { mode: model.matchType, pattern: servicePattern(model) }
+          service_match: { mode: model.matchType, pattern: servicePattern(model) },
+          conditions: alertConditions(model, folderPaths)
         }
       })
     )

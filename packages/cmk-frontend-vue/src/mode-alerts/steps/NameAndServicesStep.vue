@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
@@ -21,7 +22,10 @@ import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import useId from 'cmk-ui-library/lib/useId'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
+import { FormEdit, type ValidationMessages } from '@/form'
+
 import CustomServiceSelect from '@/mode-alerts/CustomServiceSelect.vue'
+import { formSpecErrors } from '@/mode-alerts/conditions-validation'
 import {
   MAX_MATCHES,
   type ServiceMatches,
@@ -34,7 +38,7 @@ const PREVIEW_LIMIT = 5
 
 const { _t } = usei18n()
 
-defineProps<CmkWizardStepProps>()
+const { conditionsSpec } = defineProps<CmkWizardStepProps & { conditionsSpec: FormSpec }>()
 
 const model = defineModel<AlertModel>({ required: true })
 
@@ -68,6 +72,7 @@ const matches = ref<ServiceMatches | null>(null)
 const searching = ref(false)
 const searchError = ref<string | null>(null)
 const displayErrors = ref(false)
+const conditionsValidation = ref<ValidationMessages>([])
 const showAllMatches = ref(false)
 
 // Discards the result of a search whose pattern has since been replaced, so two searches
@@ -165,7 +170,12 @@ onBeforeUnmount(cancelPendingSearch)
 async function validate(): Promise<boolean> {
   displayErrors.value = true
   cancelPendingSearch()
-  if (getNameErrors().length > 0 || getPatternErrors().length > 0) {
+  conditionsValidation.value = formSpecErrors(conditionsSpec, model.value.conditions)
+  if (
+    getNameErrors().length > 0 ||
+    getPatternErrors().length > 0 ||
+    conditionsValidation.value.length > 0
+  ) {
     return false
   }
   if (matches.value === null) {
@@ -229,6 +239,15 @@ async function validate(): Promise<boolean> {
             variant="error"
             size="small"
             :text="untranslated(error)"
+          />
+        </div>
+
+        <div class="mode-alerts-name-and-services-step__field">
+          <CmkHeading type="h4">{{ _t('Conditions') }}</CmkHeading>
+          <FormEdit
+            v-model:data="model.conditions"
+            :spec="conditionsSpec"
+            :backend-validation="conditionsValidation"
           />
         </div>
 

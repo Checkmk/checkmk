@@ -17,6 +17,8 @@ import { defineComponent, ref } from 'vue'
 import NameAndServicesStep from '@/mode-alerts/steps/NameAndServicesStep.vue'
 import { type AlertModel, emptyAlert } from '@/mode-alerts/types'
 
+import { CONDITIONS_SPEC, MAIN_FOLDER } from './conditions-spec'
+
 const ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/service/collections/all`
 
 // The services the endpoint reports for any search, so a test only has to say whether
@@ -41,7 +43,7 @@ afterEach(() => {
 })
 
 function renderStep(alert: Partial<AlertModel> = {}) {
-  const model = ref<AlertModel>({ ...emptyAlert(), ...alert })
+  const model = ref<AlertModel>({ ...emptyAlert({ folder_path: MAIN_FOLDER }), ...alert })
   const navigation = {
     next: vi.fn<() => void>(),
     prev: vi.fn<() => void>(),
@@ -55,9 +57,9 @@ function renderStep(alert: Partial<AlertModel> = {}) {
   const wrapper = defineComponent({
     components: { NameAndServicesStep },
     setup() {
-      return { model }
+      return { model, spec: CONDITIONS_SPEC }
     },
-    template: `<NameAndServicesStep v-model="model" :index="1" :is-completed="() => false" />`
+    template: `<NameAndServicesStep v-model="model" :conditions-spec="spec" :index="1" :is-completed="() => false" />`
   })
   render(wrapper, {
     global: { provide: { [wizardContextProvider as symbol]: context } }
@@ -341,4 +343,47 @@ test('a search still in flight is discarded once the service name is cleared', a
 
   expect(screen.queryByText('stale-host')).not.toBeInTheDocument()
   expect(screen.queryByText(/Matching services/)).not.toBeInTheDocument()
+})
+
+test('the conditions start at the Main folder, which applies to all hosts', async () => {
+  renderStep()
+
+  expect(screen.getByRole('heading', { name: 'Conditions' })).toBeVisible()
+  await waitFor(() => expect(combobox('Folder')).toHaveTextContent('Main'))
+})
+
+test('choosing a folder narrows the conditions to it', async () => {
+  const { model } = renderStep()
+
+  void userEvent.click(combobox('Folder'))
+  await userEvent.click(await screen.findByRole('option', { name: 'Main/Linux' }))
+
+  expect(model.value.conditions.folder_path).toBe('option-linux')
+})
+
+test('a condition the form rejects blocks navigation and says why', async () => {
+  matching = [['web01', 'HTTP request duration']]
+  const { navigation } = renderStep({
+    name: 'Latency too high',
+    servicePattern: 'HTTP request duration',
+    conditions: { folder_path: MAIN_FOLDER, explicit_hosts: { value: [], negate: false } }
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+
+  expect(await screen.findByText('Please add at least one host.')).toBeVisible()
+  expect(navigation.next).not.toHaveBeenCalled()
+})
+
+test('valid conditions let the step continue', async () => {
+  matching = [['web01', 'HTTP request duration']]
+  const { navigation } = renderStep({
+    name: 'Latency too high',
+    servicePattern: 'HTTP request duration',
+    conditions: { folder_path: MAIN_FOLDER, explicit_hosts: { value: ['web01'], negate: false } }
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+
+  await waitFor(() => expect(navigation.next).toHaveBeenCalled())
 })

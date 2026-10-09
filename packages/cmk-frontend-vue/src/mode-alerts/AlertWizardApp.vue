@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkWizard, { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
@@ -13,12 +14,25 @@ import { ref } from 'vue'
 
 import { createAlert } from '@/mode-alerts/alert-client'
 import NameAndServicesStep from '@/mode-alerts/steps/NameAndServicesStep.vue'
-import { type AlertModel, emptyAlert } from '@/mode-alerts/types'
+import {
+  type AlertModel,
+  type FolderPaths,
+  type HostConditions,
+  emptyAlert
+} from '@/mode-alerts/types'
 
 const { _t } = usei18n()
 
+const props = defineProps<{
+  conditions_form: {
+    spec: FormSpec
+    data: HostConditions
+  }
+  folder_paths: FolderPaths
+}>()
+
 const currentStep = ref(1)
-const model = ref<AlertModel>(emptyAlert())
+const model = ref<AlertModel>(emptyAlert(props.conditions_form.data))
 const saving = ref(false)
 const created = ref(false)
 const saveError = ref<string | null>(null)
@@ -27,7 +41,7 @@ async function saveAlert(): Promise<void> {
   saveError.value = null
   saving.value = true
   try {
-    const result = await createAlert(model.value)
+    const result = await createAlert(model.value, props.folder_paths)
     if (result.ok) {
       created.value = true
     } else {
@@ -44,7 +58,12 @@ async function saveAlert(): Promise<void> {
 <template>
   <div class="mode-alerts-alert-wizard-app">
     <CmkWizard v-model="currentStep" mode="guided">
-      <NameAndServicesStep v-model="model" :index="1" :is-completed="() => currentStep > 1" />
+      <NameAndServicesStep
+        v-model="model"
+        :conditions-spec="conditions_form.spec"
+        :index="1"
+        :is-completed="() => currentStep > 1"
+      />
 
       <CmkWizardStep :index="2" :is-completed="() => false">
         <template #header>

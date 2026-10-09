@@ -11,6 +11,8 @@ import { afterEach, expect, test } from 'vitest'
 
 import AlertWizardApp from '@/mode-alerts/AlertWizardApp.vue'
 
+import { CONDITIONS_SPEC, FOLDER_PATHS, MAIN_FOLDER } from './conditions-spec'
+
 const API_BASE = `${location.protocol}//${location.host}/api/internal`
 const ENDPOINT = `${API_BASE}/domain-types/service/collections/all`
 const CREATE_ENDPOINT = `${API_BASE}/domain-types/telemetry_alert/collections/all`
@@ -30,7 +32,12 @@ afterEach(() => {
 })
 
 function renderApp() {
-  render(AlertWizardApp)
+  render(AlertWizardApp, {
+    props: {
+      conditions_form: { spec: CONDITIONS_SPEC, data: { folder_path: MAIN_FOLDER } },
+      folder_paths: FOLDER_PATHS
+    }
+  })
 }
 
 test('the wizard opens on naming the alert and selecting its services', () => {
@@ -45,7 +52,7 @@ test('the threshold step is offered alongside it', () => {
   expect(screen.getByRole('heading', { name: 'Define threshold' })).toBeVisible()
 })
 
-async function completeFirstStep() {
+async function completeFirstStep(beforeNext: () => Promise<void> = async () => {}) {
   await userEvent.type(screen.getByRole('textbox', { name: /Alert name/ }), 'Latency too high')
 
   const serviceName = screen.getByRole('combobox', { name: 'Service name' })
@@ -56,6 +63,7 @@ async function completeFirstStep() {
   await waitFor(() => {
     expect(screen.getByText('web01')).toBeInTheDocument()
   })
+  await beforeNext()
 
   await userEvent.click(screen.getByRole('button', { name: /next step/i }))
 }
@@ -70,7 +78,7 @@ test('a completed first step advances to the threshold step', async () => {
   })
 })
 
-test('creating the alert sends its name and service match', async () => {
+test('creating the alert sends its name, service match and conditions', async () => {
   let sentBody: unknown = null
   server.use(
     http.post(CREATE_ENDPOINT, async ({ request }) => {
@@ -87,8 +95,29 @@ test('creating the alert sends its name and service match', async () => {
   expect(sentBody).toEqual({
     configuration_name: 'latency_too_high',
     alert_name: 'Latency too high',
-    service_match: { mode: 'exact', pattern: 'HTTP request duration' }
+    service_match: { mode: 'exact', pattern: 'HTTP request duration' },
+    conditions: { folder: '/', host_tags: [], host_label_groups: [] }
   })
+})
+
+test('creating the alert sends the chosen folder', async () => {
+  let sentBody: { conditions?: unknown } = {}
+  server.use(
+    http.post(CREATE_ENDPOINT, async ({ request }) => {
+      sentBody = (await request.json()) as { conditions?: unknown }
+      return HttpResponse.json({})
+    })
+  )
+  renderApp()
+  await completeFirstStep(async () => {
+    void userEvent.click(screen.getByRole('combobox', { name: 'Folder' }))
+    await userEvent.click(await screen.findByRole('option', { name: 'Main/Linux' }))
+  })
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Create alert' }))
+
+  await screen.findByText('The alert was created.')
+  expect(sentBody.conditions).toEqual({ folder: '/linux', host_tags: [], host_label_groups: [] })
 })
 
 test('a rejected alert shows the reason', async () => {

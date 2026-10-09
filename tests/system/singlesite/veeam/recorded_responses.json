@@ -1,0 +1,2010 @@
+{
+  "recorded_at": "2026-10-27T11:04:07.343137+00:00",
+  "api_version": "1.3-rev1",
+  "responses": {
+    "/api/v1/agents/protectionGroups": {
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "computers": [
+              {
+                "connectionType": "PermanentCredentials",
+                "hostName": "63.179.4.165",
+                "credentialsId": "2ee4b073-86b6-41d7-8f6d-ded8b54cdbb6"
+              }
+            ],
+            "options": {
+              "rescanSchedule": {
+                "daily": {
+                  "dailyKind": "Everyday",
+                  "isEnabled": true,
+                  "localTime": "22:00",
+                  "days": [
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday",
+                    "Sunday"
+                  ]
+                },
+                "periodically": {
+                  "periodicallyKind": "Hours",
+                  "isEnabled": false,
+                  "frequency": 1,
+                  "backupWindow": {
+                    "days": [
+                      {
+                        "day": "Sunday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Monday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Tuesday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Wednesday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Thursday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Friday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Saturday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      }
+                    ]
+                  },
+                  "startTimeWithinAnHour": 0
+                },
+                "continuously": {
+                  "isEnabled": false,
+                  "backupWindow": {
+                    "days": [
+                      {
+                        "day": "Sunday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Monday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Tuesday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Wednesday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Thursday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Friday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Saturday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      }
+                    ]
+                  }
+                }
+              },
+              "distributionServerId": "6745a759-2205-4cd2-b172-8ec8f7e60ef8",
+              "distributionRepositoryId": "00000000-0000-0000-0000-000000000000",
+              "installBackupAgent": true,
+              "installCBTDriver": false,
+              "installApplicationPlugins": false,
+              "applicationPlugins": [],
+              "updateAutomatically": true,
+              "rebootIfRequired": false,
+              "advancedSettings": {
+                "windowsAgentSettings": {
+                  "throttlingUnit": "MbitPerSpec",
+                  "agentThrottlingTarget": "Workstations",
+                  "throttlingEnabled": false,
+                  "throttlingValue": 1,
+                  "restrictBackupOverMeteredConnection": true,
+                  "restrictBackupOverVPNConnection": false,
+                  "useSpecifiedWifiNetworks": false,
+                  "wifiNetworks": [],
+                  "agentThrottlingEnabled": true,
+                  "FLRWithoutAdminAccountEnabled": false
+                },
+                "notifications": {
+                  "isEnabled": false
+                }
+              }
+            },
+            "type": "ManuallyAdded",
+            "id": "730dc485-84c2-4a9d-86e7-2e35d1d5a0be",
+            "name": "Manually Added",
+            "description": "Contains manually added computers",
+            "isDisabled": true
+          },
+          {
+            "computers": [
+              {
+                "connectionType": "PermanentCredentials",
+                "hostName": "172.31.26.65",
+                "credentialsId": "2ee4b073-86b6-41d7-8f6d-ded8b54cdbb6"
+              }
+            ],
+            "options": {
+              "rescanSchedule": {
+                "daily": {
+                  "dailyKind": "Everyday",
+                  "isEnabled": true,
+                  "localTime": "21:00",
+                  "days": [
+                    "Sunday",
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday"
+                  ]
+                },
+                "periodically": {
+                  "periodicallyKind": "Hours",
+                  "isEnabled": false,
+                  "frequency": 1,
+                  "backupWindow": {
+                    "days": [
+                      {
+                        "day": "Sunday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Monday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Tuesday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Wednesday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Thursday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Friday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Saturday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      }
+                    ]
+                  },
+                  "startTimeWithinAnHour": 0
+                },
+                "continuously": {
+                  "isEnabled": false,
+                  "backupWindow": {
+                    "days": [
+                      {
+                        "day": "Sunday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Monday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Tuesday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Wednesday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Thursday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Friday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Saturday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      }
+                    ]
+                  }
+                }
+              },
+              "distributionServerId": "6745a759-2205-4cd2-b172-8ec8f7e60ef8",
+              "distributionRepositoryId": "00000000-0000-0000-0000-000000000000",
+              "installBackupAgent": true,
+              "installCBTDriver": false,
+              "installApplicationPlugins": false,
+              "applicationPlugins": [],
+              "updateAutomatically": true,
+              "rebootIfRequired": false,
+              "advancedSettings": {
+                "windowsAgentSettings": {
+                  "throttlingUnit": "MbitPerSpec",
+                  "agentThrottlingTarget": "Workstations",
+                  "throttlingEnabled": false,
+                  "throttlingValue": 1,
+                  "restrictBackupOverMeteredConnection": true,
+                  "restrictBackupOverVPNConnection": false,
+                  "useSpecifiedWifiNetworks": false,
+                  "wifiNetworks": [],
+                  "agentThrottlingEnabled": true,
+                  "FLRWithoutAdminAccountEnabled": false
+                },
+                "notifications": {
+                  "isEnabled": false
+                }
+              }
+            },
+            "type": "IndividualComputers",
+            "id": "d9cbedfa-07c5-486b-b729-8df889e59985",
+            "name": "PG-Linux-Test",
+            "description": "Created by .\\Administrator at 10/2/2026 11:20 AM.",
+            "isDisabled": false
+          },
+          {
+            "computers": [
+              {
+                "connectionType": "PermanentCredentials",
+                "hostName": "EC2AMAZ-C4O89E0",
+                "credentialsId": "345c4c87-48c4-4cf9-91d2-1b996a0d2d57"
+              }
+            ],
+            "options": {
+              "rescanSchedule": {
+                "daily": {
+                  "dailyKind": "Everyday",
+                  "isEnabled": true,
+                  "localTime": "21:00",
+                  "days": [
+                    "Sunday",
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday"
+                  ]
+                },
+                "periodically": {
+                  "periodicallyKind": "Hours",
+                  "isEnabled": false,
+                  "frequency": 1,
+                  "backupWindow": {
+                    "days": [
+                      {
+                        "day": "Sunday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Monday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Tuesday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Wednesday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Thursday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Friday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Saturday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      }
+                    ]
+                  },
+                  "startTimeWithinAnHour": 0
+                },
+                "continuously": {
+                  "isEnabled": false,
+                  "backupWindow": {
+                    "days": [
+                      {
+                        "day": "Sunday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Monday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Tuesday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Wednesday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Thursday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Friday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      },
+                      {
+                        "day": "Saturday",
+                        "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                      }
+                    ]
+                  }
+                }
+              },
+              "distributionServerId": "6745a759-2205-4cd2-b172-8ec8f7e60ef8",
+              "distributionRepositoryId": "00000000-0000-0000-0000-000000000000",
+              "installBackupAgent": true,
+              "installCBTDriver": false,
+              "installApplicationPlugins": false,
+              "applicationPlugins": [],
+              "updateAutomatically": true,
+              "rebootIfRequired": false,
+              "advancedSettings": {
+                "windowsAgentSettings": {
+                  "throttlingUnit": "MbitPerSpec",
+                  "agentThrottlingTarget": "Workstations",
+                  "throttlingEnabled": false,
+                  "throttlingValue": 1,
+                  "restrictBackupOverMeteredConnection": true,
+                  "restrictBackupOverVPNConnection": false,
+                  "useSpecifiedWifiNetworks": false,
+                  "wifiNetworks": [],
+                  "agentThrottlingEnabled": true,
+                  "FLRWithoutAdminAccountEnabled": false
+                },
+                "notifications": {
+                  "isEnabled": false
+                }
+              }
+            },
+            "type": "IndividualComputers",
+            "id": "d566bdcd-20e7-4b18-9daa-c16504bf6de8",
+            "name": "PG-Windows-Test",
+            "description": "Created by .\\Administrator at 10/6/2026 11:04 AM.",
+            "isDisabled": false
+          }
+        ],
+        "pagination": {
+          "total": 3,
+          "count": 3,
+          "skip": 0,
+          "limit": 200
+        }
+      }
+    },
+    "/api/v1/backupInfrastructure/managedServers": {
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "credentialsStorageType": "Permanent",
+            "credentialsId": "2ee4b073-86b6-41d7-8f6d-ded8b54cdbb6",
+            "sshSettings": {
+              "components": [
+                {
+                  "componentName": "OpenSSL3v13",
+                  "port": -1
+                },
+                {
+                  "componentName": "InstallerSvc",
+                  "port": 6160
+                },
+                {
+                  "componentName": "TransportSvc",
+                  "port": 6162
+                },
+                {
+                  "componentName": "GuestInteractionProxy",
+                  "port": 6190
+                },
+                {
+                  "componentName": "StoreOnceCatalystSdk",
+                  "port": -1
+                },
+                {
+                  "componentName": "DDBoostSdk",
+                  "port": -1
+                },
+                {
+                  "componentName": "SnapDiffV3",
+                  "port": -1
+                },
+                {
+                  "componentName": "CifsGateway",
+                  "port": -1
+                },
+                {
+                  "componentName": "NfsGateway",
+                  "port": -1
+                },
+                {
+                  "componentName": "MountTarget",
+                  "port": -1
+                },
+                {
+                  "componentName": "VPowerNFS",
+                  "port": 6161
+                },
+                {
+                  "componentName": "RestoreProxy",
+                  "port": 6170
+                },
+                {
+                  "componentName": "WanAccelerator",
+                  "port": 6164
+                },
+                {
+                  "componentName": "TapeProxy",
+                  "port": 6166
+                },
+                {
+                  "componentName": "CloudGateway",
+                  "port": 6168
+                }
+              ],
+              "sshTimeOutMs": 20000,
+              "portRangeStart": 2500,
+              "portRangeEnd": 3300,
+              "serverSide": false
+            },
+            "isBackupServer": false,
+            "isDefaultMountServer": false,
+            "optionalComponents": {
+              "optionalComponents": [
+                {
+                  "optionalComponent": "CatalystSdk",
+                  "displayName": "HPE StoreOnce Library"
+                },
+                {
+                  "optionalComponent": "DDBoostSdk",
+                  "displayName": "Dell Data Domain Library"
+                },
+                {
+                  "optionalComponent": "SnapDiffV3",
+                  "displayName": "NetApp SnapDiff library"
+                }
+              ]
+            },
+            "isVBRLinuxAppliance": false,
+            "type": "LinuxHost",
+            "status": "Available",
+            "id": "8da3c8d4-0ca3-4a30-99a3-0cf3fd3c8c5c",
+            "name": "172.31.26.65",
+            "description": "Created by .\\Administrator at 10/26/2026 10:05 AM."
+          },
+          {
+            "credentialsStorageType": "Permanent",
+            "credentialsId": "00000000-0000-0000-0000-000000000000",
+            "networkSettings": {
+              "components": [
+                {
+                  "componentName": "InstallerSvc",
+                  "port": 6160
+                },
+                {
+                  "componentName": "TransportSvc",
+                  "port": 6162
+                },
+                {
+                  "componentName": "GuestInteractionProxy",
+                  "port": 6190
+                },
+                {
+                  "componentName": "StoreOnceCatalystSdk",
+                  "port": -1
+                },
+                {
+                  "componentName": "DDBoostSdk",
+                  "port": -1
+                },
+                {
+                  "componentName": "VPowerNFS",
+                  "port": 6161
+                },
+                {
+                  "componentName": "RestoreProxy",
+                  "port": 6170
+                },
+                {
+                  "componentName": "WanAccelerator",
+                  "port": 6164
+                },
+                {
+                  "componentName": "TapeProxy",
+                  "port": 6166
+                },
+                {
+                  "componentName": "CloudGateway",
+                  "port": 6168
+                },
+                {
+                  "componentName": "DistributionSvc",
+                  "port": 9380
+                },
+                {
+                  "componentName": "VssIntegration",
+                  "port": 6210
+                },
+                {
+                  "componentName": "VssHvSnapshotProvider",
+                  "port": -1
+                }
+              ],
+              "portRangeStart": 2500,
+              "portRangeEnd": 3300,
+              "serverSide": false
+            },
+            "isBackupServer": true,
+            "isDefaultMountServer": true,
+            "type": "WindowsHost",
+            "status": "Available",
+            "id": "6745a759-2205-4cd2-b172-8ec8f7e60ef8",
+            "name": "EC2AMAZ-C4O89E0",
+            "description": "Backup server"
+          }
+        ],
+        "pagination": {
+          "total": 2,
+          "count": 2,
+          "skip": 0,
+          "limit": 200
+        }
+      }
+    },
+    "/api/v1/backupInfrastructure/proxies/states": {
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "type": "GeneralPurposeProxy",
+            "id": "50cbf622-129e-482a-9197-d67e5bb1fb1f",
+            "name": "Backup Proxy",
+            "description": "Created by Veeam Backup & Replication",
+            "hostId": "6745a759-2205-4cd2-b172-8ec8f7e60ef8",
+            "hostName": "This server",
+            "isDisabled": false,
+            "isOnline": true,
+            "isOutOfDate": false
+          },
+          {
+            "type": "ViProxy",
+            "id": "18b661c1-d9dc-4233-90a0-7e7b10dc2d09",
+            "name": "VMware Backup Proxy",
+            "description": "Created by Veeam Backup & Replication",
+            "hostId": "6745a759-2205-4cd2-b172-8ec8f7e60ef8",
+            "hostName": "This server",
+            "isDisabled": false,
+            "isOnline": true,
+            "isOutOfDate": false
+          }
+        ],
+        "pagination": {
+          "total": 2,
+          "count": 2,
+          "skip": 0,
+          "limit": 200
+        }
+      }
+    },
+    "/api/v1/backupInfrastructure/repositories/states": {
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "type": "LinuxLocal",
+            "id": "22d8ed25-bb96-4e91-b7a3-4d0e87b880c3",
+            "name": "Backup Repository on Linux",
+            "description": "Created by .\\Administrator at 10/26/2026 9:54 AM.",
+            "hostId": "8da3c8d4-0ca3-4a30-99a3-0cf3fd3c8c5c",
+            "hostName": "172.31.26.65",
+            "path": "/backups",
+            "capacityGB": 18.3,
+            "freeGB": 14.6,
+            "usedSpaceGB": 0.0,
+            "isOnline": true,
+            "scaleOutRepositoryDetails": {
+              "extentType": "Performance",
+              "membership": "Scale-out Backup Repository",
+              "scaleOutRepositoryId": "91995a51-bc7d-4162-82fc-8d25ea4573ac"
+            },
+            "isOutOfDate": false
+          },
+          {
+            "type": "WinLocal",
+            "id": "88788f9e-d8f5-4eb4-bc4f-9b3f5403bcec",
+            "name": "Default Backup Repository",
+            "description": "Created by Veeam Backup",
+            "hostId": "6745a759-2205-4cd2-b172-8ec8f7e60ef8",
+            "hostName": "EC2AMAZ-C4O89E0",
+            "path": "c:\\backup",
+            "capacityGB": 200.0,
+            "freeGB": 95.6,
+            "usedSpaceGB": 48.1,
+            "isOnline": true,
+            "isOutOfDate": false
+          }
+        ],
+        "pagination": {
+          "total": 2,
+          "count": 2,
+          "skip": 0,
+          "limit": 200
+        }
+      }
+    },
+    "/api/v1/backupInfrastructure/scaleOutRepositories": {
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "id": "91995a51-bc7d-4162-82fc-8d25ea4573ac",
+            "name": "Scale-out Backup Repository",
+            "description": "Created by .\\Administrator at 10/26/2026 1:30 PM.",
+            "uniqueId": "91995A51BC7D416282FC8D25EA4573AC",
+            "performanceTier": {
+              "performanceExtents": [
+                {
+                  "id": "22d8ed25-bb96-4e91-b7a3-4d0e87b880c3",
+                  "name": "Backup Repository on Linux",
+                  "status": ["Normal"]
+                }
+              ],
+              "advancedSettings": {
+                "perVmBackup": true,
+                "fullWhenExtentOffline": false
+              }
+            },
+            "placementPolicy": {
+              "type": "DataLocality",
+              "settings": [
+                {
+                  "allowedBackups": "All",
+                  "name": "Backup Repository on Linux",
+                  "extentId": "22d8ed25-bb96-4e91-b7a3-4d0e87b880c3"
+                }
+              ],
+              "enforceStrictPlacementPolicy": false
+            },
+            "capacityTier": {
+              "isEnabled": false,
+              "extents": [],
+              "offloadWindow": {
+                "days": [
+                  {
+                    "day": "Sunday",
+                    "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                  },
+                  {
+                    "day": "Monday",
+                    "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                  },
+                  {
+                    "day": "Tuesday",
+                    "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                  },
+                  {
+                    "day": "Wednesday",
+                    "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                  },
+                  {
+                    "day": "Thursday",
+                    "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                  },
+                  {
+                    "day": "Friday",
+                    "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                  },
+                  {
+                    "day": "Saturday",
+                    "hours": "1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1"
+                  }
+                ]
+              },
+              "backupHealth": {
+                "isEnabled": true,
+                "weekly": {
+                  "isEnabled": false,
+                  "days": ["Saturday"]
+                },
+                "monthly": {
+                  "dayOfWeek": "Saturday",
+                  "dayNumberInMonth": "Last",
+                  "isEnabled": true,
+                  "dayOfMonth": 1,
+                  "months": [
+                    "January",
+                    "February",
+                    "March",
+                    "April",
+                    "May",
+                    "June",
+                    "July",
+                    "August",
+                    "September",
+                    "October",
+                    "November",
+                    "December"
+                  ],
+                  "isLastDayOfMonth": false
+                }
+              },
+              "copyPolicyEnabled": false,
+              "movePolicyEnabled": true,
+              "operationalRestorePeriodDays": 14,
+              "overridePolicy": {
+                "isEnabled": false,
+                "overrideSpaceThresholdPercents": 90
+              },
+              "encryption": {
+                "encryptionType": "ByUserPassword",
+                "isEnabled": false
+              }
+            },
+            "archiveTier": {
+              "isEnabled": false,
+              "archivePeriodDays": 90,
+              "advancedSettings": {
+                "costOptimizedArchiveEnabled": true,
+                "archiveDeduplicationEnabled": true
+              }
+            }
+          }
+        ],
+        "pagination": {
+          "total": 1,
+          "count": 1,
+          "skip": 0,
+          "limit": 200
+        }
+      }
+    },
+    "/api/v1/backupInfrastructure/wanAccelerators": {
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "id": "30e653b9-0f43-457f-b174-f87a389d5e4f",
+            "name": "EC2AMAZ-C4O89E0",
+            "server": {
+              "hostId": "ea007f36-a093-4f00-b77d-af10e563ce5f",
+              "description": "Created by .\\Administrator at 10/9/2026 5:32 AM.",
+              "trafficPort": 6165,
+              "streamsCount": 5,
+              "highBandwidthModeEnabled": false
+            },
+            "cache": {
+              "cacheSizeUnit": "GB",
+              "cacheFolder": "C:\\VeeamWAN",
+              "cacheSize": 100
+            }
+          }
+        ],
+        "pagination": {
+          "total": 1,
+          "count": 1,
+          "skip": 0,
+          "limit": 200
+        }
+      }
+    },
+    "/api/v1/backupObjects": {
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "platformName": "UnstructuredData",
+            "id": "dea0ef97-8277-4f87-b1a4-13872fb0f44d",
+            "name": "\\\\EC2AMAZ-C4O89E0\\TestData",
+            "type": "Directory",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "restorePointsCount": 1,
+            "lastRunFailed": false
+          },
+          {
+            "platformName": "UnstructuredData",
+            "id": "0fa6f182-45a9-45d5-8bd1-7f0cad7f298b",
+            "name": "\\\\EC2AMAZ-C4O89E0\\TestData2",
+            "type": "Directory",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "restorePointsCount": 1,
+            "lastRunFailed": false
+          },
+          {
+            "platformName": "UnstructuredData",
+            "id": "6da253c3-3bac-4968-b9b5-d45579b337f0",
+            "name": "\\\\EC2AMAZ-C4O89E0\\TestData3",
+            "type": "Directory",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "restorePointsCount": 1,
+            "lastRunFailed": false
+          },
+          {
+            "platformName": "UnstructuredData",
+            "id": "3a3ed7a8-0641-4eb3-8e93-ebada963529f",
+            "name": "\\\\EC2AMAZ-C4O89E0\\TestData4",
+            "type": "Directory",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "restorePointsCount": 1,
+            "lastRunFailed": false
+          },
+          {
+            "biosUuid": "874f26ec-d509-8bad-f2bd-2416e60e1ac9",
+            "protectionGroupIds": ["d9cbedfa-07c5-486b-b729-8df889e59985"],
+            "computerId": "f57cc991-2048-45df-a6df-cdafe026e436",
+            "platformName": "LinuxPhysical",
+            "id": "41aa6261-1fb9-41d5-9043-d29a36e4bfa8",
+            "name": "172.31.26.65",
+            "type": "Directory",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "restorePointsCount": 1,
+            "lastRunFailed": false
+          },
+          {
+            "biosUuid": "874f26ec-d509-8bad-f2bd-2416e60e1ac9",
+            "protectionGroupIds": ["d9cbedfa-07c5-486b-b729-8df889e59985"],
+            "computerId": "f57cc991-2048-45df-a6df-cdafe026e436",
+            "platformName": "LinuxPhysical",
+            "id": "f6a2325c-e183-4f79-a0e1-b8a88d54cd0f",
+            "name": "172.31.26.65",
+            "type": "Directory",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "restorePointsCount": 7,
+            "lastRunFailed": false
+          },
+          {
+            "biosUuid": "ec2d60f7-faab-3f6d-3e31-9c70c646e93a",
+            "protectionGroupIds": ["d566bdcd-20e7-4b18-9daa-c16504bf6de8"],
+            "computerId": "547a5e6f-1480-4eb6-a156-45ebc79c18c6",
+            "platformName": "WindowsPhysical",
+            "id": "31086ce9-2098-4a07-9d03-76750f4e84b8",
+            "name": "EC2AMAZ-C4O89E0",
+            "type": "Directory",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "restorePointsCount": 1,
+            "lastRunFailed": false
+          }
+        ],
+        "pagination": {
+          "total": 7,
+          "count": 7,
+          "skip": 0,
+          "limit": 500
+        }
+      }
+    },
+    "/api/v1/backups": {
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "platformName": "LinuxPhysical",
+            "jobType": "LinuxAgentBackup",
+            "id": "341ca343-fe0d-4dd8-a8ef-87a9faf39783",
+            "jobId": "00000000-0000-0000-0000-000000000000",
+            "policyUniqueId": "0a144d3c-7e12-4cb7-85b4-e9346627c819",
+            "name": "Agent Backup Job 2",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-23T13:50:31.415229+00:00",
+            "repositoryId": "88788f9e-d8f5-4eb4-bc4f-9b3f5403bcec",
+            "repositoryName": "Default Backup Repository"
+          },
+          {
+            "platformName": "LinuxPhysical",
+            "jobType": "LinuxAgentBackup",
+            "id": "faf1502d-2e0a-4f61-bda8-5abd4fd62028",
+            "jobId": "00000000-0000-0000-0000-000000000000",
+            "policyUniqueId": "d528d456-2c32-4155-b9cc-1bd72b8e3768",
+            "name": "Disabled job",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-23T13:19:20.945508+00:00",
+            "repositoryId": "88788f9e-d8f5-4eb4-bc4f-9b3f5403bcec",
+            "repositoryName": "Default Backup Repository"
+          },
+          {
+            "platformName": "LinuxPhysical",
+            "jobType": "LinuxAgentBackup",
+            "id": "eb6898ce-fe98-4ad7-9a4d-32caef5fc645",
+            "jobId": "1ec37ede-04cd-44e0-9def-d54fb9c36ebc",
+            "policyUniqueId": "1ec37ede-04cd-44e0-9def-d54fb9c36ebc",
+            "name": "Succsessful job",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-23T13:18:00.952484+00:00",
+            "repositoryId": "88788f9e-d8f5-4eb4-bc4f-9b3f5403bcec",
+            "repositoryName": "Default Backup Repository"
+          },
+          {
+            "platformName": "WindowsPhysical",
+            "jobType": "WindowsAgentBackupServerPolicy",
+            "id": "896bcafd-9086-4b87-8d07-753cd5dab243",
+            "jobId": "fc1d7216-1ef6-460d-b131-d0b9f0baf37e",
+            "policyUniqueId": "fc1d7216-1ef6-460d-b131-d0b9f0baf37e",
+            "name": "Checkmk Agent Policy",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-16T06:15:35.716064+00:00",
+            "repositoryId": "88788f9e-d8f5-4eb4-bc4f-9b3f5403bcec",
+            "repositoryName": "Default Backup Repository"
+          },
+          {
+            "platformName": "LinuxPhysical",
+            "jobType": "LinuxAgentBackup",
+            "id": "f0361479-4c63-4f8a-8727-9ed7513742cd",
+            "jobId": "00000000-0000-0000-0000-000000000000",
+            "policyUniqueId": "5c8d0d4e-e898-417d-af43-571608a5509e",
+            "name": "Agent Backup Job- OK",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-02T11:36:57.932634+00:00",
+            "repositoryId": "88788f9e-d8f5-4eb4-bc4f-9b3f5403bcec",
+            "repositoryName": "Default Backup Repository"
+          },
+          {
+            "platformName": "UnstructuredData",
+            "jobType": "FileBackup",
+            "id": "dbf21667-8ec7-4c2b-a17d-a910aaabf484",
+            "jobId": "7a597775-1100-4f22-8c74-24eae6da8921",
+            "policyUniqueId": "",
+            "name": "File Backup Job 1",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-02T10:50:24.987473+00:00",
+            "repositoryId": "88788f9e-d8f5-4eb4-bc4f-9b3f5403bcec",
+            "repositoryName": "Default Backup Repository"
+          }
+        ],
+        "pagination": {
+          "total": 6,
+          "count": 6,
+          "skip": 0,
+          "limit": 500
+        }
+      }
+    },
+    "/api/v1/backups/341ca343-fe0d-4dd8-a8ef-87a9faf39783/objects": {
+      "status": 200,
+      "body": {
+        "data": [],
+        "pagination": {
+          "total": 0,
+          "count": 0,
+          "skip": 0,
+          "limit": 500
+        }
+      }
+    },
+    "/api/v1/backups/5cb8b3a1-0e81-4b63-8c69-6650add67be5/objects": {
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "biosUuid": "874f26ec-d509-8bad-f2bd-2416e60e1ac9",
+            "protectionGroupIds": ["d9cbedfa-07c5-486b-b729-8df889e59985"],
+            "computerId": "f57cc991-2048-45df-a6df-cdafe026e436",
+            "platformName": "LinuxPhysical",
+            "id": "f6a2325c-e183-4f79-a0e1-b8a88d54cd0f",
+            "name": "ip-172-31-26-65",
+            "type": "Directory",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "restorePointsCount": 6,
+            "lastRunFailed": false
+          }
+        ],
+        "pagination": {
+          "total": 1,
+          "count": 1,
+          "skip": 0,
+          "limit": 500
+        }
+      }
+    },
+    "/api/v1/backups/7fe4c907-b09b-460c-8526-7f6642e86179/objects": {
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "biosUuid": "ec2d60f7-faab-3f6d-3e31-9c70c646e93a",
+            "protectionGroupIds": ["d566bdcd-20e7-4b18-9daa-c16504bf6de8"],
+            "computerId": "547a5e6f-1480-4eb6-a156-45ebc79c18c6",
+            "platformName": "WindowsPhysical",
+            "id": "31086ce9-2098-4a07-9d03-76750f4e84b8",
+            "name": "EC2AMAZ-C4O89E0",
+            "type": "Directory",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "restorePointsCount": 1,
+            "lastRunFailed": false
+          }
+        ],
+        "pagination": {
+          "total": 1,
+          "count": 1,
+          "skip": 0,
+          "limit": 500
+        }
+      }
+    },
+    "/api/v1/backups/896bcafd-9086-4b87-8d07-753cd5dab243/objects": {
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "biosUuid": "ec2d60f7-faab-3f6d-3e31-9c70c646e93a",
+            "protectionGroupIds": ["d566bdcd-20e7-4b18-9daa-c16504bf6de8"],
+            "computerId": "547a5e6f-1480-4eb6-a156-45ebc79c18c6",
+            "platformName": "WindowsPhysical",
+            "id": "31086ce9-2098-4a07-9d03-76750f4e84b8",
+            "name": "EC2AMAZ-C4O89E0",
+            "type": "Directory",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "restorePointsCount": 1,
+            "lastRunFailed": false
+          }
+        ],
+        "pagination": {
+          "total": 1,
+          "count": 1,
+          "skip": 0,
+          "limit": 500
+        }
+      }
+    },
+    "/api/v1/backups/a2cfb573-bfb6-4d98-837e-9dbb88e15563/objects": {
+      "status": 200,
+      "body": {
+        "data": [],
+        "pagination": {
+          "total": 0,
+          "count": 0,
+          "skip": 0,
+          "limit": 500
+        }
+      }
+    },
+    "/api/v1/backups/d2b1f0ca-ea48-45d9-9107-4aeb6c68531a/objects": {
+      "status": 200,
+      "body": {
+        "data": [],
+        "pagination": {
+          "total": 0,
+          "count": 0,
+          "skip": 0,
+          "limit": 500
+        }
+      }
+    },
+    "/api/v1/backups/d4bdefb0-e2b7-4452-bbbf-46fbd55787a8/objects": {
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "biosUuid": "874f26ec-d509-8bad-f2bd-2416e60e1ac9",
+            "protectionGroupIds": ["d9cbedfa-07c5-486b-b729-8df889e59985"],
+            "computerId": "f57cc991-2048-45df-a6df-cdafe026e436",
+            "platformName": "LinuxPhysical",
+            "id": "41aa6261-1fb9-41d5-9043-d29a36e4bfa8",
+            "name": "ip-172-31-26-65",
+            "type": "Directory",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "restorePointsCount": 1,
+            "lastRunFailed": false
+          }
+        ],
+        "pagination": {
+          "total": 1,
+          "count": 1,
+          "skip": 0,
+          "limit": 500
+        }
+      }
+    },
+    "/api/v1/backups/dbf21667-8ec7-4c2b-a17d-a910aaabf484/objects": {
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "platformName": "UnstructuredData",
+            "id": "dea0ef97-8277-4f87-b1a4-13872fb0f44d",
+            "name": "\\\\EC2AMAZ-C4O89E0\\TestData",
+            "type": "Directory",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "restorePointsCount": 1,
+            "lastRunFailed": false
+          },
+          {
+            "platformName": "UnstructuredData",
+            "id": "0fa6f182-45a9-45d5-8bd1-7f0cad7f298b",
+            "name": "\\\\EC2AMAZ-C4O89E0\\TestData2",
+            "type": "Directory",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "restorePointsCount": 1,
+            "lastRunFailed": false
+          },
+          {
+            "platformName": "UnstructuredData",
+            "id": "6da253c3-3bac-4968-b9b5-d45579b337f0",
+            "name": "\\\\EC2AMAZ-C4O89E0\\TestData3",
+            "type": "Directory",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "restorePointsCount": 1,
+            "lastRunFailed": false
+          },
+          {
+            "platformName": "UnstructuredData",
+            "id": "3a3ed7a8-0641-4eb3-8e93-ebada963529f",
+            "name": "\\\\EC2AMAZ-C4O89E0\\TestData4",
+            "type": "Directory",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "restorePointsCount": 1,
+            "lastRunFailed": false
+          }
+        ],
+        "pagination": {
+          "total": 4,
+          "count": 4,
+          "skip": 0
+        }
+      }
+    },
+    "/api/v1/backups/eb6898ce-fe98-4ad7-9a4d-32caef5fc645/objects": {
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "biosUuid": "874f26ec-d509-8bad-f2bd-2416e60e1ac9",
+            "protectionGroupIds": ["d9cbedfa-07c5-486b-b729-8df889e59985"],
+            "computerId": "f57cc991-2048-45df-a6df-cdafe026e436",
+            "platformName": "LinuxPhysical",
+            "id": "41aa6261-1fb9-41d5-9043-d29a36e4bfa8",
+            "name": "ip-172-31-26-65",
+            "type": "Directory",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "restorePointsCount": 1,
+            "lastRunFailed": false
+          }
+        ],
+        "pagination": {
+          "total": 1,
+          "count": 1,
+          "skip": 0
+        }
+      }
+    },
+    "/api/v1/backups/f0361479-4c63-4f8a-8727-9ed7513742cd/objects": {
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "biosUuid": "874f26ec-d509-8bad-f2bd-2416e60e1ac9",
+            "protectionGroupIds": ["d9cbedfa-07c5-486b-b729-8df889e59985"],
+            "computerId": "f57cc991-2048-45df-a6df-cdafe026e436",
+            "platformName": "LinuxPhysical",
+            "id": "f6a2325c-e183-4f79-a0e1-b8a88d54cd0f",
+            "name": "ip-172-31-26-65",
+            "type": "Directory",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "restorePointsCount": 6,
+            "lastRunFailed": false
+          }
+        ],
+        "pagination": {
+          "total": 1,
+          "count": 1,
+          "skip": 0,
+          "limit": 500
+        }
+      }
+    },
+    "/api/v1/backups/faf1502d-2e0a-4f61-bda8-5abd4fd62028/objects": {
+      "status": 200,
+      "body": {
+        "data": [],
+        "pagination": {
+          "total": 0,
+          "count": 0,
+          "skip": 0,
+          "limit": 500
+        }
+      }
+    },
+    "/api/v1/configBackup": {
+      "status": 200,
+      "body": {
+        "isEnabled": true,
+        "backupRepositoryId": "88788f9e-d8f5-4eb4-bc4f-9b3f5403bcec",
+        "restorePointsToKeep": 10,
+        "notifications": {
+          "SNMPEnabled": true,
+          "SMTPSettings": {
+            "settingsType": "Custom",
+            "isEnabled": false,
+            "recipients": [],
+            "subject": "[%JobResult%] %JobName% (%Time%)",
+            "notifyOnSuccess": true,
+            "notifyOnWarning": true,
+            "notifyOnError": true
+          }
+        },
+        "schedule": {
+          "isEnabled": true,
+          "daily": {
+            "dailyKind": "Everyday",
+            "isEnabled": true,
+            "localTime": "10:00",
+            "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+          },
+          "monthly": {
+            "dayOfWeek": "Saturday",
+            "dayNumberInMonth": "Fourth",
+            "isEnabled": false,
+            "localTime": "22:00",
+            "months": [
+              "January",
+              "February",
+              "March",
+              "April",
+              "May",
+              "June",
+              "July",
+              "August",
+              "September",
+              "October",
+              "November",
+              "December"
+            ],
+            "isLastDayOfMonth": false
+          }
+        },
+        "lastSuccessfulBackup": {
+          "lastSuccessfulTime": "2026-10-27T10:00:14.642925+00:00",
+          "sessionId": "1863fb3c-db0e-439c-8c18-887409da895c"
+        },
+        "encryption": {
+          "isEnabled": false,
+          "passwordId": "00000000-0000-0000-0000-000000000000"
+        }
+      }
+    },
+    "/api/v1/jobs/states": {
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "type": "WindowsAgentBackupServerPolicy",
+            "status": "Disabled",
+            "lastResult": "Success",
+            "workload": "Vm",
+            "id": "fc1d7216-1ef6-460d-b131-d0b9f0baf37e",
+            "name": "Disabled Windows AP",
+            "description": "Created by Powershell at 10/16/2026 6:02:42 AM.",
+            "lastRun": "2026-10-23T15:24:44.657264+00:00",
+            "nextRunPolicy": "N/A",
+            "repositoryId": "88788f9e-d8f5-4eb4-bc4f-9b3f5403bcec",
+            "repositoryName": "Default Backup Repository",
+            "objectsCount": 1,
+            "sessionId": "408f6e1e-12e8-41ab-aa25-da5658950dbb",
+            "highPriority": false,
+            "progressPercent": 100,
+            "sessionProgress": {
+              "bottleneck": "NotDefined",
+              "duration": "00:00:08",
+              "processingRate": "N/A",
+              "processedSize": 0,
+              "readSize": 0,
+              "transferredSize": 0,
+              "progressPercent": 100
+            },
+            "isStorageSnapshot": false
+          },
+          {
+            "type": "LinuxAgentBackupServerPolicy",
+            "status": "Enabled",
+            "lastResult": "Failed",
+            "workload": "Vm",
+            "id": "b50355ba-17ea-4123-9a7d-40071f91aa99",
+            "name": "Failing job",
+            "description": "Created by .\\Administrator at 10/23/2026 12:48 PM.",
+            "lastRun": "2026-10-27T11:02:51.871707+00:00",
+            "nextRunPolicy": "N/A",
+            "repositoryId": "88788f9e-d8f5-4eb4-bc4f-9b3f5403bcec",
+            "repositoryName": "Default Backup Repository",
+            "objectsCount": 1,
+            "sessionId": "aee005b7-50a2-47ca-a20f-a3ce1a369103",
+            "highPriority": false,
+            "progressPercent": 100,
+            "sessionProgress": {
+              "bottleneck": "NotDefined",
+              "duration": "00:00:03",
+              "processingRate": "N/A",
+              "processedSize": 0,
+              "readSize": 0,
+              "transferredSize": 0,
+              "progressPercent": 100
+            },
+            "isStorageSnapshot": false
+          },
+          {
+            "type": "FileBackup",
+            "status": "Stopped",
+            "lastResult": "Success",
+            "workload": "File",
+            "id": "7a597775-1100-4f22-8c74-24eae6da8921",
+            "name": "File Backup Job",
+            "description": "Created by .\\Administrator at 10/2/2026 10:47 AM.",
+            "lastRun": "2026-10-27T11:01:57.219219+00:00",
+            "nextRun": "2026-10-27T23:00:00+00:00",
+            "nextRunPolicy": "10/27/2026 11:00 PM",
+            "repositoryId": "88788f9e-d8f5-4eb4-bc4f-9b3f5403bcec",
+            "repositoryName": "Default Backup Repository",
+            "objectsCount": 4,
+            "sessionId": "4a34cf92-fa76-452e-9337-75b7a9061353",
+            "highPriority": false,
+            "progressPercent": 100,
+            "sessionProgress": {
+              "bottleneck": "Source",
+              "duration": "00:01:02",
+              "processingRate": "N/A",
+              "processedSize": 0,
+              "readSize": 0,
+              "transferredSize": 0,
+              "progressPercent": 100
+            },
+            "isStorageSnapshot": false
+          },
+          {
+            "type": "FileBackup",
+            "status": "Inactive",
+            "lastResult": "None",
+            "workload": "File",
+            "id": "1d532d6b-ad90-403e-889b-f9b9b31cfe6c",
+            "name": "Never run job",
+            "description": "Created by .\\Administrator at 10/26/2026 3:13 PM.",
+            "nextRunPolicy": "<Not scheduled>",
+            "repositoryId": "88788f9e-d8f5-4eb4-bc4f-9b3f5403bcec",
+            "repositoryName": "Default Backup Repository",
+            "objectsCount": 1,
+            "highPriority": false,
+            "progressPercent": 0,
+            "isStorageSnapshot": false
+          },
+          {
+            "type": "LinuxAgentBackup",
+            "status": "Stopped",
+            "lastResult": "Success",
+            "workload": "Vm",
+            "id": "1ec37ede-04cd-44e0-9def-d54fb9c36ebc",
+            "name": "Successful job",
+            "description": "Created by .\\Administrator at 10/23/2026 1:15 PM.",
+            "lastRun": "2026-10-26T08:57:31.919511+00:00",
+            "nextRunPolicy": "<Not scheduled>",
+            "repositoryId": "88788f9e-d8f5-4eb4-bc4f-9b3f5403bcec",
+            "repositoryName": "Default Backup Repository",
+            "objectsCount": 1,
+            "sessionId": "de69b51c-1b67-44e1-9cf3-67734b07c1a6",
+            "highPriority": false,
+            "progressPercent": 100,
+            "sessionProgress": {
+              "bottleneck": "Source",
+              "duration": "00:06:31",
+              "processingRate": "74.1 MB/s",
+              "processedSize": 28055699456,
+              "readSize": 28055699456,
+              "transferredSize": 24969156137,
+              "progressPercent": 100
+            },
+            "isStorageSnapshot": false
+          }
+        ],
+        "pagination": {
+          "total": 5,
+          "count": 5,
+          "skip": 0
+        }
+      }
+    },
+    "/api/v1/license": {
+      "status": 200,
+      "body": {
+        "status": "Valid",
+        "type": "NFR",
+        "edition": "EnterprisePlus",
+        "cloudConnect": "Disabled",
+        "expirationDate": "2027-02-23T00:00:00Z",
+        "licensedTo": "Checkmk",
+        "instanceLicenseSummary": {
+          "package": "Advanced",
+          "licensedInstancesNumber": 20.0,
+          "usedInstancesNumber": 2.0,
+          "newInstancesNumber": 0.0,
+          "rentalInstancesNumber": 0.0,
+          "objects": [
+            {
+              "type": "Servers",
+              "count": 2,
+              "multiplier": 1.0,
+              "usedInstancesNumber": 2.0
+            }
+          ],
+          "workload": [
+            {
+              "platformType": "LinuxServer",
+              "name": "172.31.26.65",
+              "displayName": "Server",
+              "hostName": "PG-Linux-Test",
+              "usedInstancesNumber": 1.0,
+              "type": "Server",
+              "instanceId": "874f26ec-d509-8bad-f2bd-2416e60e1ac9",
+              "canBeRevoked": false
+            },
+            {
+              "platformType": "WindowsServer",
+              "name": "EC2AMAZ-C4O89E0",
+              "displayName": "Server",
+              "hostName": "PG-Windows-Test",
+              "usedInstancesNumber": 1.0,
+              "type": "Server",
+              "instanceId": "ec2d60f7-faab-3f6d-3e31-9c70c646e93a",
+              "canBeRevoked": false
+            }
+          ]
+        },
+        "supportId": "",
+        "autoUpdateEnabled": true,
+        "freeAgentInstanceConsumptionEnabled": true,
+        "IsMultiSection": false,
+        "proactiveSupportEnabled": true
+      }
+    },
+    "/api/v1/replicas": {
+      "status": 200,
+      "body": {
+        "data": [],
+        "pagination": {
+          "total": 0,
+          "count": 0,
+          "skip": 0,
+          "limit": 200
+        }
+      }
+    },
+    "/api/v1/restorePoints": {
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "platformName": "UnstructuredData",
+            "guestOsFamily": "Unknown",
+            "id": "a4712720-e050-4b71-b671-696b8fb1c13d",
+            "name": "\\\\EC2AMAZ-C4O89E0\\TestData2 Id: 5",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-27T11:02:18.396489+00:00",
+            "backupId": "dbf21667-8ec7-4c2b-a17d-a910aaabf484",
+            "allowedOperations": ["StartFlrRestore"],
+            "originalSize": 0
+          },
+          {
+            "platformName": "UnstructuredData",
+            "guestOsFamily": "Unknown",
+            "id": "4c0f3c38-8cc2-4c52-be68-c988bc6f49c5",
+            "name": "\\\\EC2AMAZ-C4O89E0\\TestData4 Id: 0",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-27T11:02:17.914777+00:00",
+            "backupId": "dbf21667-8ec7-4c2b-a17d-a910aaabf484",
+            "allowedOperations": ["StartFlrRestore"],
+            "originalSize": 0
+          },
+          {
+            "platformName": "UnstructuredData",
+            "guestOsFamily": "Unknown",
+            "id": "d23ceb36-3db1-448c-8810-2a925a82287a",
+            "name": "\\\\EC2AMAZ-C4O89E0\\TestData3 Id: 5",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-27T11:02:13.912734+00:00",
+            "backupId": "dbf21667-8ec7-4c2b-a17d-a910aaabf484",
+            "allowedOperations": ["StartFlrRestore"],
+            "originalSize": 0
+          },
+          {
+            "platformName": "UnstructuredData",
+            "guestOsFamily": "Unknown",
+            "id": "1ef0dd29-b0a4-40d6-9750-be90f20dd689",
+            "name": "\\\\EC2AMAZ-C4O89E0\\TestData Id: 7",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-27T11:02:13.80224+00:00",
+            "backupId": "dbf21667-8ec7-4c2b-a17d-a910aaabf484",
+            "allowedOperations": ["StartFlrRestore"],
+            "originalSize": 0
+          },
+          {
+            "platformName": "LinuxPhysical",
+            "type": "Full",
+            "malwareStatus": "Clean",
+            "guestOsFamily": "Linux",
+            "id": "f7ebc628-ee62-4b18-ba0f-ec2eae892dea",
+            "name": "ip-172-31-26-65",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-26T08:58:48+00:00",
+            "backupId": "d4bdefb0-e2b7-4452-bbbf-46fbd55787a8",
+            "parentBackupId": "eb6898ce-fe98-4ad7-9a4d-32caef5fc645",
+            "sessionId": "8a94c4b7-5633-4974-a327-4bb1a29985b4",
+            "allowedOperations": ["StartFlrRestore"],
+            "backupFileId": "31dca363-1d9f-45de-b686-9bbfc9237423",
+            "originalSize": 25549993472
+          },
+          {
+            "platformName": "LinuxPhysical",
+            "type": "Full",
+            "malwareStatus": "Clean",
+            "guestOsFamily": "Other",
+            "id": "6169c8a5-f8e6-42c3-a3ed-1c7f6792e3e4",
+            "name": "ip-172-31-26-65",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-23T13:54:59.787188+00:00",
+            "backupId": "a2cfb573-bfb6-4d98-837e-9dbb88e15563",
+            "parentBackupId": "341ca343-fe0d-4dd8-a8ef-87a9faf39783",
+            "sessionId": "9a4dae0d-00b4-4801-9a96-776367841148",
+            "allowedOperations": ["StartFlrRestore"],
+            "backupFileId": "a2cad04a-4dae-4f1f-99e0-97b592a4ddfb",
+            "originalSize": 3894611968
+          },
+          {
+            "platformName": "LinuxPhysical",
+            "type": "Full",
+            "malwareStatus": "Clean",
+            "guestOsFamily": "Other",
+            "id": "cd038dcd-ca74-4892-9376-3f6a6a1d290c",
+            "name": "ip-172-31-26-65",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-23T13:20:33.419096+00:00",
+            "backupId": "d2b1f0ca-ea48-45d9-9107-4aeb6c68531a",
+            "parentBackupId": "faf1502d-2e0a-4f61-bda8-5abd4fd62028",
+            "sessionId": "7bd8f102-9e64-4ec6-b028-897a4def1ba0",
+            "allowedOperations": ["StartFlrRestore"],
+            "backupFileId": "0f8f7188-805d-494a-bc0f-9ffea3abf813",
+            "originalSize": 25560393216
+          },
+          {
+            "platformName": "LinuxPhysical",
+            "type": "Increment",
+            "malwareStatus": "Clean",
+            "guestOsFamily": "Other",
+            "id": "4610b47f-f78e-4398-b22a-96f8ac755904",
+            "name": "ip-172-31-26-65",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-23T13:00:59.048579+00:00",
+            "backupId": "5cb8b3a1-0e81-4b63-8c69-6650add67be5",
+            "parentBackupId": "f0361479-4c63-4f8a-8727-9ed7513742cd",
+            "sessionId": "81365b0f-decd-4bc3-9209-43c457513f56",
+            "allowedOperations": ["StartFlrRestore"],
+            "backupFileId": "edc860ff-fa01-40a3-8a3d-c7d414ca743d",
+            "originalSize": 25559528960
+          },
+          {
+            "platformName": "WindowsPhysical",
+            "type": "Full",
+            "malwareStatus": "Clean",
+            "guestOsFamily": "Windows",
+            "id": "39de9104-36a0-43f4-9060-5138b4838da9",
+            "name": "EC2AMAZ-C4O89E0",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-16T06:16:13+00:00",
+            "backupId": "7fe4c907-b09b-460c-8526-7f6642e86179",
+            "parentBackupId": "896bcafd-9086-4b87-8d07-753cd5dab243",
+            "sessionId": "00000000-0000-0000-0000-000000000000",
+            "allowedOperations": ["StartFlrRestore"],
+            "backupFileId": "b662ec6b-f865-4303-bd77-1c212c3cdc48",
+            "originalSize": 209767518208
+          },
+          {
+            "platformName": "LinuxPhysical",
+            "type": "Increment",
+            "malwareStatus": "Clean",
+            "guestOsFamily": "Linux",
+            "id": "2a133801-4b1a-418c-9b8b-4765d70ecd87",
+            "name": "ip-172-31-26-65",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-07T23:00:29+00:00",
+            "backupId": "5cb8b3a1-0e81-4b63-8c69-6650add67be5",
+            "parentBackupId": "f0361479-4c63-4f8a-8727-9ed7513742cd",
+            "sessionId": "cb1f97bc-5b13-41a4-ad68-48a5efc89dfa",
+            "allowedOperations": ["StartFlrRestore"],
+            "backupFileId": "d0907f72-0fa9-4237-9417-7d154872d011",
+            "originalSize": 25429673472
+          },
+          {
+            "platformName": "LinuxPhysical",
+            "type": "Increment",
+            "malwareStatus": "Clean",
+            "guestOsFamily": "Linux",
+            "id": "fbf469bb-a635-4200-b16b-2513378587ae",
+            "name": "ip-172-31-26-65",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-07T12:50:38+00:00",
+            "backupId": "5cb8b3a1-0e81-4b63-8c69-6650add67be5",
+            "parentBackupId": "f0361479-4c63-4f8a-8727-9ed7513742cd",
+            "sessionId": "fa48828f-018e-463a-87e0-752bae20b205",
+            "allowedOperations": ["StartFlrRestore"],
+            "backupFileId": "596553fb-519c-4543-a416-1e2dc60b3d0e",
+            "originalSize": 25417082368
+          },
+          {
+            "platformName": "LinuxPhysical",
+            "type": "Increment",
+            "malwareStatus": "Clean",
+            "guestOsFamily": "Linux",
+            "id": "7b586a8c-93ed-4d6e-99b9-17b44791bff4",
+            "name": "ip-172-31-26-65",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-06T07:44:49+00:00",
+            "backupId": "5cb8b3a1-0e81-4b63-8c69-6650add67be5",
+            "parentBackupId": "f0361479-4c63-4f8a-8727-9ed7513742cd",
+            "sessionId": "c0bdd120-ab09-4113-a8ec-8ce33037d311",
+            "allowedOperations": ["StartFlrRestore"],
+            "backupFileId": "415f4e19-3e10-45f8-9084-8dc871707b47",
+            "originalSize": 25399309824
+          },
+          {
+            "platformName": "LinuxPhysical",
+            "type": "Increment",
+            "malwareStatus": "Clean",
+            "guestOsFamily": "Linux",
+            "id": "d3cfe25f-6887-44c7-a1b5-0bd1b0ddaf64",
+            "name": "ip-172-31-26-65",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-05T23:00:19+00:00",
+            "backupId": "5cb8b3a1-0e81-4b63-8c69-6650add67be5",
+            "parentBackupId": "f0361479-4c63-4f8a-8727-9ed7513742cd",
+            "sessionId": "05b63202-fe46-423f-ba9b-3ca94601ebdd",
+            "allowedOperations": ["StartFlrRestore"],
+            "backupFileId": "aca30ab2-eb3b-459a-a83f-71aa78c5148a",
+            "originalSize": 25349842432
+          },
+          {
+            "platformName": "LinuxPhysical",
+            "type": "Increment",
+            "malwareStatus": "Clean",
+            "guestOsFamily": "Linux",
+            "id": "0ee3a1f8-b545-4ec1-9822-975478dc0a04",
+            "name": "ip-172-31-26-65",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-05T15:07:20+00:00",
+            "backupId": "5cb8b3a1-0e81-4b63-8c69-6650add67be5",
+            "parentBackupId": "f0361479-4c63-4f8a-8727-9ed7513742cd",
+            "sessionId": "1061f6da-611e-4330-aa9d-414c0832a472",
+            "allowedOperations": ["StartFlrRestore"],
+            "backupFileId": "c3aec192-e7b1-4ea6-8539-1fb546dca90d",
+            "originalSize": 25338762752
+          },
+          {
+            "platformName": "LinuxPhysical",
+            "type": "Full",
+            "malwareStatus": "Clean",
+            "guestOsFamily": "Linux",
+            "id": "6b657062-706f-4cb9-b3a5-d57af2327c52",
+            "name": "ip-172-31-26-65",
+            "platformId": "00000000-0000-0000-0000-000000000000",
+            "creationTime": "2026-10-02T11:37:11+00:00",
+            "backupId": "5cb8b3a1-0e81-4b63-8c69-6650add67be5",
+            "parentBackupId": "f0361479-4c63-4f8a-8727-9ed7513742cd",
+            "sessionId": "1c2aca06-9a25-4e4a-aa59-ae195811398b",
+            "allowedOperations": ["StartFlrRestore"],
+            "backupFileId": "855174f0-554f-438f-82a9-2889a773717f",
+            "originalSize": 25310991872
+          }
+        ],
+        "pagination": {
+          "total": 15,
+          "count": 15,
+          "skip": 0,
+          "limit": 500
+        }
+      }
+    },
+    "/api/v1/serverInfo": {
+      "status": 200,
+      "body": {
+        "platform": "Windows",
+        "vbrId": "e897bcfa-e4ee-404f-9638-316354de45e4",
+        "name": "EC2AMAZ-C4O89E0",
+        "buildVersion": "13.0.3.63",
+        "patches": [],
+        "databaseVendor": "PostgreSQL",
+        "sqlServerEdition": "",
+        "sqlServerVersion": "PostgreSQL 17.10 on x86_64-windows, compiled by msvc-19.44.35226, 64-bit",
+        "databaseSchemaVersion": "9819",
+        "databaseContentVersion": "9819",
+        "veeamRegistration": {
+          "isRegistered": false
+        }
+      }
+    },
+    "/api/v1/sessions/4a34cf92-fa76-452e-9337-75b7a9061353": {
+      "status": 200,
+      "body": {
+        "sessionType": "BackupJob",
+        "state": "Stopped",
+        "platformName": "UnstructuredData",
+        "id": "4a34cf92-fa76-452e-9337-75b7a9061353",
+        "name": "File Backup Job",
+        "jobId": "7a597775-1100-4f22-8c74-24eae6da8921",
+        "creationTime": "2026-10-27T11:01:57.219219+00:00",
+        "endTime": "2026-10-27T11:03:00.200003+00:00",
+        "progressPercent": 100,
+        "result": {
+          "result": "Success",
+          "message": "Success",
+          "isCanceled": false
+        },
+        "resourceId": "dbf21667-8ec7-4c2b-a17d-a910aaabf484",
+        "resourceReference": "/api/v1/backups/dbf21667-8ec7-4c2b-a17d-a910aaabf484",
+        "usn": 86230,
+        "platformId": "00000000-0000-0000-0000-000000000000",
+        "initiatedBy": ".\\Administrator"
+      }
+    },
+    "/api/v1/sessions/aee005b7-50a2-47ca-a20f-a3ce1a369103": {
+      "status": 404,
+      "body": {
+        "errorCode": "NotFound",
+        "message": "Not found",
+        "title": "Not found",
+        "status": 404,
+        "instance": "https://3.70.18.72:9419/api/v1/sessions/aee005b7-50a2-47ca-a20f-a3ce1a369103"
+      }
+    },
+    "/api/v1/sessions/de69b51c-1b67-44e1-9cf3-67734b07c1a6": {
+      "status": 200,
+      "body": {
+        "sessionType": "AgentBackup",
+        "state": "Stopped",
+        "platformName": "LinuxPhysical",
+        "id": "de69b51c-1b67-44e1-9cf3-67734b07c1a6",
+        "name": "Succsessful job",
+        "jobId": "1ec37ede-04cd-44e0-9def-d54fb9c36ebc",
+        "creationTime": "2026-10-26T08:57:31.919511+00:00",
+        "endTime": "2026-10-26T09:04:03.864878+00:00",
+        "progressPercent": 100,
+        "result": {
+          "result": "Success",
+          "message": "Success",
+          "isCanceled": false
+        },
+        "resourceId": "eb6898ce-fe98-4ad7-9a4d-32caef5fc645",
+        "resourceReference": "/api/v1/backups/eb6898ce-fe98-4ad7-9a4d-32caef5fc645",
+        "usn": 79695,
+        "platformId": "00000000-0000-0000-0000-000000000000",
+        "initiatedBy": "SYSTEM"
+      }
+    },
+    "/api/v1/taskSessions": {
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "algorithm": "None",
+            "state": "Stopped",
+            "name": "\\\\EC2AMAZ-C4O89E0\\TestData4",
+            "repositoryId": "00000000-0000-0000-0000-000000000000",
+            "usn": 85761,
+            "result": {
+              "result": "Success",
+              "message": "Success",
+              "isCanceled": false
+            },
+            "progress": {
+              "bottleneck": "NotDefined",
+              "duration": "00:00:10",
+              "processingRate": "N/A",
+              "processedSize": 0,
+              "readSize": 0,
+              "transferredSize": 0,
+              "progressPercent": 100
+            },
+            "type": "Backup",
+            "sessionType": "BackupJob",
+            "id": "f325c288-3f52-4ebf-8d38-9e11352e6326",
+            "sessionId": "4a34cf92-fa76-452e-9337-75b7a9061353",
+            "creationTime": "2026-10-27T11:02:19.773109",
+            "endTime": "2026-10-27T11:02:30.292292"
+          },
+          {
+            "algorithm": "None",
+            "state": "Stopped",
+            "name": "\\\\EC2AMAZ-C4O89E0\\TestData2",
+            "repositoryId": "00000000-0000-0000-0000-000000000000",
+            "usn": 86216,
+            "result": {
+              "result": "Success",
+              "message": "Success",
+              "isCanceled": false
+            },
+            "progress": {
+              "bottleneck": "NotDefined",
+              "duration": "00:00:40",
+              "processingRate": "N/A",
+              "processedSize": 0,
+              "readSize": 0,
+              "transferredSize": 0,
+              "progressPercent": 100
+            },
+            "type": "Backup",
+            "sessionType": "BackupJob",
+            "id": "732a577b-bff7-46aa-ae06-b224500234eb",
+            "sessionId": "4a34cf92-fa76-452e-9337-75b7a9061353",
+            "creationTime": "2026-10-27T11:02:19.224001",
+            "endTime": "2026-10-27T11:02:59.539429"
+          },
+          {
+            "algorithm": "None",
+            "state": "Stopped",
+            "name": "\\\\EC2AMAZ-C4O89E0\\TestData3",
+            "repositoryId": "00000000-0000-0000-0000-000000000000",
+            "usn": 86164,
+            "result": {
+              "result": "Success",
+              "message": "Success",
+              "isCanceled": false
+            },
+            "progress": {
+              "bottleneck": "NotDefined",
+              "duration": "00:00:41",
+              "processingRate": "N/A",
+              "processedSize": 0,
+              "readSize": 0,
+              "transferredSize": 0,
+              "progressPercent": 100
+            },
+            "type": "Backup",
+            "sessionType": "BackupJob",
+            "id": "76640b1c-2164-4f3c-a67d-9e1488052b2c",
+            "sessionId": "4a34cf92-fa76-452e-9337-75b7a9061353",
+            "creationTime": "2026-10-27T11:02:14.742166",
+            "endTime": "2026-10-27T11:02:56.476031"
+          },
+          {
+            "algorithm": "None",
+            "state": "Stopped",
+            "name": "\\\\EC2AMAZ-C4O89E0\\TestData",
+            "repositoryId": "00000000-0000-0000-0000-000000000000",
+            "usn": 86145,
+            "result": {
+              "result": "Success",
+              "message": "Success",
+              "isCanceled": false
+            },
+            "progress": {
+              "bottleneck": "NotDefined",
+              "duration": "00:00:41",
+              "processingRate": "N/A",
+              "processedSize": 0,
+              "readSize": 0,
+              "transferredSize": 0,
+              "progressPercent": 100
+            },
+            "type": "Backup",
+            "sessionType": "BackupJob",
+            "id": "1c038258-6be0-4ee7-ad1d-8be6b0d54a9e",
+            "sessionId": "4a34cf92-fa76-452e-9337-75b7a9061353",
+            "creationTime": "2026-10-27T11:02:14.74216",
+            "endTime": "2026-10-27T11:02:56.237565"
+          },
+          {
+            "algorithm": "None",
+            "state": "Stopped",
+            "name": "63.179.4.165",
+            "repositoryId": "00000000-0000-0000-0000-000000000000",
+            "usn": 85230,
+            "result": {
+              "result": "Failed",
+              "message": "Unable to install backup agent: failed to connect to 63.179.4.165 Error: Connection attempt timed out.",
+              "isCanceled": false
+            },
+            "progress": {
+              "bottleneck": "NotDefined",
+              "duration": "00:00:00",
+              "processingRate": "N/A",
+              "processedSize": 0,
+              "readSize": 0,
+              "transferredSize": 0,
+              "progressPercent": 100
+            },
+            "type": "Backup",
+            "sessionType": "AgentDiscovery",
+            "id": "2f79695a-f8c2-4426-a8c4-8ce7769442a6",
+            "sessionId": "ef655030-92c4-4cd8-8663-c16c5877b59d",
+            "creationTime": "2026-10-27T11:00:40.890698",
+            "endTime": "2026-10-27T11:00:41.008169"
+          },
+          {
+            "algorithm": "None",
+            "state": "Stopped",
+            "name": "63.179.4.165",
+            "repositoryId": "00000000-0000-0000-0000-000000000000",
+            "usn": 85153,
+            "result": {
+              "result": "Failed",
+              "message": "Unable to install backup agent: failed to connect to 63.179.4.165 Error: Connection attempt timed out.",
+              "isCanceled": false
+            },
+            "progress": {
+              "bottleneck": "NotDefined",
+              "duration": "00:00:00",
+              "processingRate": "N/A",
+              "processedSize": 0,
+              "readSize": 0,
+              "transferredSize": 0,
+              "progressPercent": 100
+            },
+            "type": "Backup",
+            "sessionType": "AgentDiscovery",
+            "id": "ba2b2ef1-c10d-4e21-86b3-f2a70d3c4fc9",
+            "sessionId": "09bfc573-dcb2-4e80-bbb5-32ca3f73c964",
+            "creationTime": "2026-10-27T10:59:18.495485",
+            "endTime": "2026-10-27T10:59:18.601399"
+          },
+          {
+            "algorithm": "None",
+            "state": "Stopped",
+            "name": "63.179.4.165",
+            "repositoryId": "00000000-0000-0000-0000-000000000000",
+            "usn": 84896,
+            "result": {
+              "result": "Failed",
+              "message": "Unable to install backup agent: failed to connect to 63.179.4.165 Error: Connection attempt timed out.",
+              "isCanceled": false
+            },
+            "progress": {
+              "bottleneck": "NotDefined",
+              "duration": "00:00:00",
+              "processingRate": "N/A",
+              "processedSize": 0,
+              "readSize": 0,
+              "transferredSize": 0,
+              "progressPercent": 100
+            },
+            "type": "Backup",
+            "sessionType": "AgentDiscovery",
+            "id": "02c20365-c49d-4d8d-bfd7-ccde3ddeb84c",
+            "sessionId": "0a293dc4-9c88-4139-959f-070d4b84b42d",
+            "creationTime": "2026-10-27T10:12:18.065685",
+            "endTime": "2026-10-27T10:12:18.184413"
+          }
+        ],
+        "pagination": {
+          "total": 7,
+          "count": 7,
+          "skip": 0,
+          "limit": 200
+        }
+      }
+    }
+  }
+}

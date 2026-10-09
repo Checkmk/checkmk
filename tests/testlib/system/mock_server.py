@@ -13,6 +13,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from ipaddress import IPv4Address
 from pathlib import Path
 from types import TracebackType
+from urllib.parse import urlsplit
 
 from cmk.crypto.certificate import (
     CertificateWithPrivateKey,
@@ -72,7 +73,8 @@ class MockEndpoints:
     No HTTP here: MockHandler reads the request and writes the answer.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, *, ignore_query: bool = False) -> None:
+        self._ignore_query = ignore_query
         self._responses: dict[MockEndpoint, list[MockResponse]] = {}
         self._received_requests: list[ReceivedRequest] = []
 
@@ -95,7 +97,8 @@ class MockEndpoints:
 
     def answer(self, request: ReceivedRequest) -> MockAnswer:
         self._received_requests.append(request)
-        endpoint = MockEndpoint(method=request.method, path=request.path)
+        path = urlsplit(request.path).path if self._ignore_query else request.path
+        endpoint = MockEndpoint(method=request.method, path=path)
         if not (responses := self._responses.get(endpoint)):
             return MockAnswer(status=HTTPStatus.NOT_FOUND)
         # The last response answers every further request.
@@ -128,9 +131,10 @@ class MockHTTPServer(HTTPServer):
         server_address: tuple[str, int],
         RequestHandlerClass: type[BaseHTTPRequestHandler],
         bind_and_activate: bool = True,
+        ignore_query: bool = False,
     ) -> None:
         super().__init__(server_address, RequestHandlerClass, bind_and_activate)
-        self.endpoints = MockEndpoints()
+        self.endpoints = MockEndpoints(ignore_query=ignore_query)
 
 
 class MockHandler(BaseHTTPRequestHandler):
@@ -181,6 +185,8 @@ class MockServer:
         port (int, optional): The port to bind to. If 0 (default), a random free port is used.
         https (bool, optional): Whether to use HTTPS. Defaults to False.
         cert_dir (Path, optional): Directory to store certificates when using HTTPS.
+        ignore_query (bool, optional): Match endpoints on the URL path only, whatever query
+            string a request carries. Defaults to False.
 
     Attributes:
         server: The HTTPServer instance.
@@ -216,6 +222,7 @@ class MockServer:
         port: int = 0,  # port=0 → random free port
         https: bool = False,
         cert_dir: Path = Path("/tmp"),  # nosec
+        ignore_query: bool = False,
     ) -> None:
         self.host = host
         self.https = https
@@ -227,7 +234,7 @@ class MockServer:
         if self.https:
             self._create_self_signed_cert()
 
-        self.server = MockHTTPServer((host, port), MockHandler)
+        self.server = MockHTTPServer((host, port), MockHandler, ignore_query=ignore_query)
         self.thread = threading.Thread(target=self.server.serve_forever)
         self.thread.daemon = True
 

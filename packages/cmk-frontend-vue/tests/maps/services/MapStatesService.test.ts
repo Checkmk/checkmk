@@ -3,13 +3,17 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { CmkApiError } from 'cmk-ui-library/lib/error'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed, ref } from 'vue'
 
 import type { ConnectionsApi } from '@/maps/api/connections'
+import type { SignedMap } from '@/maps/api/mapConfig'
 import type { MapStatesApi } from '@/maps/api/mapStates'
 import type { MonitoringObjectsApi } from '@/maps/api/monitoringObjects'
+import type { MapService } from '@/maps/services/MapService'
 import { MapStatesService } from '@/maps/services/MapStatesService'
+import type { MapsAuthService } from '@/maps/services/MapsAuthService'
 import type { MapConfig, MapStates } from '@/maps/types/api'
 
 import { aMap, aTopologyNode, anObject } from '../support/fixtures'
@@ -42,6 +46,10 @@ class FakeEventSource {
   emit(name: string, data: unknown) {
     this.listeners.get(name)?.(new MessageEvent(name, { data: JSON.stringify(data) }))
   }
+  failToOpen() {
+    this.readyState = FakeEventSource.CLOSED
+    this.onerror?.()
+  }
 }
 
 const emptyStates: MapStates = {
@@ -63,12 +71,24 @@ afterEach(() => {
   }
 })
 
+const freshlySigned: SignedMap = {
+  config: aMap({ name: 'b' }),
+  config_b64: 'fresh',
+  sig: 'fresh-sig',
+  owner: '',
+  map_link_titles: {}
+}
+
 function newService(
   map: MapConfig | null = null,
   objectOverrides: Partial<
     Pick<MonitoringObjectsApi, 'fetchAggregationStates' | 'fetchAggregationTree'>
   > = {},
-  statesOverrides: Partial<Pick<MapStatesApi, 'register' | 'fetchStates'>> = {}
+  statesOverrides: Partial<Pick<MapStatesApi, 'register' | 'fetchStates'>> = {},
+  session: {
+    refresh?: Pick<MapsAuthService, 'refresh'>['refresh']
+    getSignedMap?: Pick<MapService, 'getSignedMap'>['getSignedMap']
+  } = {}
 ): MapStatesService {
   const statesApi: Pick<MapStatesApi, 'register' | 'registerEdit' | 'fetchStates'> = {
     register: vi.fn().mockResolvedValue(undefined),
@@ -86,10 +106,12 @@ function newService(
   }
   const auth = {
     setStreamMap: vi.fn().mockResolvedValue(undefined),
-    streamToken: computed(() => 'maps-stream-token' as string | null)
+    streamToken: computed(() => 'maps-stream-token' as string | null),
+    refresh: session.refresh ?? vi.fn().mockResolvedValue(true)
   }
   const service = new MapStatesService(statesApi, connections, objects, auth, {
-    currentMap: ref(map)
+    currentMap: ref(map),
+    getSignedMap: session.getSignedMap ?? vi.fn().mockResolvedValue(freshlySigned)
   })
   services.push(service)
   return service
@@ -492,5 +514,103 @@ describe('MapStatesService — overlapping connects', () => {
     expect(registered).toBe(true)
     expect(register).toHaveBeenCalledTimes(1)
     await first
+  })
+})
+
+describe('MapStatesService — a daemon that lost the map', () => {
+  beforeEach(() => {
+    FakeEventSource.instances = []
+    vi.stubGlobal('EventSource', FakeEventSource)
+  })
+
+  const failure = (status: number) => new CmkApiError(`HTTP ${status}`, null, '', status)
+  const signed = { config_b64: 'x', sig: 'y' }
+
+  // The daemon keeps registrations in memory, so a restart forgets every map.
+  it('registers the map again, signed afresh, and carries on', async () => {
+    const register = vi.fn().mockResolvedValue(undefined)
+    const fetchStates = vi.fn().mockResolvedValue(emptyStates)
+    const getSignedMap = vi.fn().mockResolvedValue(freshlySigned)
+    const store = newService(null, {}, { register, fetchStates }, { getSignedMap })
+    await store.connectToMap('b', signed)
+    fetchStates.mockRejectedValueOnce(failure(404))
+
+    await store.refresh()
+
+    expect(getSignedMap).toHaveBeenCalledWith('b')
+    expect(register).toHaveBeenLastCalledWith(freshlySigned)
+    expect(store.connected.value).toBe(true)
+  })
+
+  // A site start rotates the secret every ticket is checked against.
+  it('takes a new ticket before registering again when the old one is refused', async () => {
+    const register = vi.fn().mockResolvedValue(undefined)
+    const fetchStates = vi.fn().mockResolvedValue(emptyStates)
+    const refresh = vi.fn().mockResolvedValue(true)
+    const store = newService(null, {}, { register, fetchStates }, { refresh })
+    await store.connectToMap('b', signed)
+    fetchStates.mockRejectedValueOnce(failure(401))
+
+    await store.refresh()
+
+    expect(refresh).toHaveBeenCalledTimes(1)
+    expect(register).toHaveBeenLastCalledWith(freshlySigned)
+    expect(store.connected.value).toBe(true)
+  })
+
+  it('does not register a map that was left while the ticket was renewed', async () => {
+    const register = vi.fn().mockResolvedValue(undefined)
+    const fetchStates = vi.fn().mockResolvedValue(emptyStates)
+    const refresh = vi.fn()
+    const store = newService(null, {}, { register, fetchStates }, { refresh })
+    refresh.mockImplementation(async () => {
+      store.disconnect()
+      return true
+    })
+    await store.connectToMap('b', signed)
+    fetchStates.mockRejectedValueOnce(failure(401))
+
+    await store.refresh()
+
+    expect(register).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not register again for a failure that is not about the map', async () => {
+    const register = vi.fn().mockResolvedValue(undefined)
+    const fetchStates = vi.fn().mockResolvedValue(emptyStates)
+    const store = newService(null, {}, { register, fetchStates })
+    await store.connectToMap('b', signed)
+    fetchStates.mockRejectedValueOnce(failure(500))
+
+    await store.refresh()
+
+    expect(register).toHaveBeenCalledTimes(1)
+    expect(store.connected.value).toBe(false)
+  })
+
+  it('opens the stream again once the restarted daemon took the map back', async () => {
+    const fetchStates = vi.fn().mockResolvedValue(emptyStates)
+    const store = newService(null, {}, { fetchStates })
+    await store.connectToMap('b', signed)
+    fetchStates.mockRejectedValueOnce(failure(401))
+
+    FakeEventSource.instances[0]!.failToOpen()
+
+    await vi.waitFor(() => expect(FakeEventSource.instances).toHaveLength(2))
+    expect(store.streamAvailable.value).toBe(true)
+  })
+
+  it('leaves a stream blocked on its way to the polling', async () => {
+    const fetchStates = vi.fn().mockResolvedValue(emptyStates)
+    const store = newService(null, {}, { fetchStates })
+    await store.connectToMap('b', signed)
+
+    FakeEventSource.instances[0]!.failToOpen()
+    await vi.waitFor(() => expect(fetchStates).toHaveBeenCalledTimes(2))
+    store.reconnectStream()
+    await new Promise((resolve) => setTimeout(resolve, 10))
+
+    expect(FakeEventSource.instances).toHaveLength(1)
+    expect(store.streamAvailable.value).toBe(false)
   })
 })

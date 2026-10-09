@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { paths } from 'cmk-shared-typing/typescript/maps_openapi'
+import { CmkApiError } from 'cmk-ui-library/lib/error'
 import type { FastApiEvent } from 'cmk-ui-library/lib/fastapi-client/client'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { type EventStream, createEventStream } from 'cmk-ui-library/lib/sse/eventStream'
@@ -22,6 +23,7 @@ import type {
   FolderTreeOverride,
   MapConfig,
   MapElement,
+  MapStates,
   MetricPoint,
   MonitoringState,
   ObjectState,
@@ -228,6 +230,13 @@ export class MapStatesService {
    * so it too only continues once the map is registered.
    */
   private connecting: { map: string; done: Promise<void> } | null = null
+  /**
+   * How the open map was last handed to the daemon, to hand it over again. The
+   * daemon keeps registrations in memory only, so after a restart it no longer
+   * knows the map; and a site start rotates the secret that every ticket and
+   * every signed config is checked against.
+   */
+  private registration: (() => Promise<void>) | null = null
   private folderTreeIndex = new Map<string, FolderTreeNode>()
   /** Previous foldertree host states, for deriving notifications. */
   private prevFolderHostStates: Map<string, string> | null = null
@@ -245,8 +254,8 @@ export class MapStatesService {
       MonitoringObjectsApi,
       'fetchAggregationStates' | 'fetchAggregationTree'
     >,
-    private readonly auth: Pick<MapsAuthService, 'setStreamMap' | 'streamToken'>,
-    private readonly maps: Pick<MapService, 'currentMap'>
+    private readonly auth: Pick<MapsAuthService, 'setStreamMap' | 'streamToken' | 'refresh'>,
+    private readonly maps: Pick<MapService, 'currentMap' | 'getSignedMap'>
   ) {
     // The ticket is re-minted every few minutes and the stream token rotates
     // with it. A long-open map would keep the stale one in its URL until the
@@ -305,6 +314,8 @@ export class MapStatesService {
       this.initialLoad.value = true
       try {
         if (signed) {
+          // Signed afresh for a later hand-over: the key may have rotated by then.
+          this.registration = async () => this.api.register(await this.maps.getSignedMap(mapName))
           await this.api.register(signed)
         }
         await this.refresh()
@@ -335,7 +346,8 @@ export class MapStatesService {
     if (!this.currentMap || map.name !== this.currentMap) {
       return
     }
-    await this.api.registerEdit(map)
+    this.registration = () => this.api.registerEdit(map)
+    await this.registration()
     await this.refresh()
     // The edit may have added or removed aggregation objects; resolve now rather
     // than waiting for the next interval tick.
@@ -352,6 +364,7 @@ export class MapStatesService {
     this.paused = false
     this.stream?.disconnect()
     this.stream = null
+    this.registration = null
     this.stopAggregationTimer()
     if (this.postCommandTimer) {
       clearTimeout(this.postCommandTimer)
@@ -383,11 +396,7 @@ export class MapStatesService {
     }
     const mapAtStart = this.currentMap
     try {
-      const data = await this.api.fetchStates(
-        mapAtStart,
-        this.radarOverride.value,
-        this.folderOverride.value
-      )
+      const data = await this.fetchStates(mapAtStart)
       if (this.currentMap !== mapAtStart) {
         return
       }
@@ -423,9 +432,71 @@ export class MapStatesService {
       }
       this.loadError.value = null
     } catch (e: unknown) {
+      if (this.currentMap !== mapAtStart) {
+        return
+      }
       this.connected.value = false
       this.loadError.value = e instanceof Error ? e.message : _t('Failed to load states')
     }
+  }
+
+  /**
+   * The map's states, handing the map over again to a daemon that lost it (404)
+   * or no longer takes the ticket (401, after a site start rotated the secret).
+   */
+  private async fetchStates(mapName: string): Promise<MapStates> {
+    const fetch = () =>
+      this.api.fetchStates(mapName, this.radarOverride.value, this.folderOverride.value)
+    // Taken now: by the time the error arrives, another map may have been opened.
+    const registration = this.registration
+    try {
+      return await fetch()
+    } catch (e: unknown) {
+      if (
+        !registration ||
+        !(e instanceof CmkApiError && (e.statusCode === 401 || e.statusCode === 404))
+      ) {
+        throw e
+      }
+      // Another map, or a newer config of this one, was handed over meanwhile.
+      const superseded = () => this.registration !== registration
+      if (e.statusCode === 401) {
+        await this.auth.refresh()
+        if (superseded()) {
+          throw e
+        }
+      }
+      await registration()
+      if (superseded()) {
+        throw e
+      }
+      const states = await fetch()
+      if (!superseded()) {
+        this.restartStream()
+      }
+      return states
+    }
+  }
+
+  /**
+   * The stream fell back to polling on the credential the restarted daemon
+   * refused, and a new credential only re-points a live stream: reopen it now
+   * rather than at the next re-probe.
+   */
+  private restartStream(): void {
+    if (!this.paused && this.stream?.isPolling()) {
+      this.reopenStream()
+    }
+  }
+
+  /**
+   * A fresh connect tries the stream first even if it had fallen back to
+   * polling; a stream that still cannot open reports the fallback again.
+   */
+  private reopenStream(): void {
+    this.stream?.disconnect()
+    this.streamAvailable.value = true
+    void this.stream?.connect()
   }
 
   /** Refetches with the loading indicator, for an explicit user refresh. */
@@ -568,6 +639,9 @@ export class MapStatesService {
       },
       onFallback: () => {
         this.streamAvailable.value = false
+        // An event stream cannot tell a refused credential from a proxy that
+        // blocks it; the states request can, and recovers from the former.
+        void this.refresh()
       },
       onRecovered: () => {
         this.streamAvailable.value = true
@@ -619,10 +693,7 @@ export class MapStatesService {
 
   private resume(): void {
     this.paused = false
-    // A fresh connect tries the stream first even if it had fallen back to
-    // polling; a stream that still cannot open reports the fallback again.
-    this.streamAvailable.value = true
-    void this.stream?.connect()
+    this.reopenStream()
     void this.refreshAggregations()
     this.startAggregationTimer()
   }

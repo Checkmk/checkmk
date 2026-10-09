@@ -177,6 +177,29 @@ defineExpose({
     <MapPlaceholder v-if="error" :message="error" variant="error" overlay />
 
     <template v-else-if="config">
+      <!-- Before the canvas in the DOM: the keyboard reaches the controls first,
+           and the map's objects after them as a single tab stop. -->
+      <MapSearch
+        v-if="config.objects.length > 0 && !editor.editMode.value && !preview"
+        :model-value="filterNeedle"
+        @update:model-value="emit('update:filterNeedle', $event)"
+      >
+        <template #trailing>
+          <ProblemsOnlyToggle
+            :model-value="problemsOnly"
+            @update:model-value="emit('update:problemsOnly', $event)"
+          />
+        </template>
+      </MapSearch>
+
+      <MapZoomControls
+        v-if="!preview"
+        :can-fit="canFit"
+        @zoom-in="canvas?.zoomIn()"
+        @zoom-out="canvas?.zoomOut()"
+        @fit="canvas?.fitAll()"
+      />
+
       <WorldMapCanvas
         ref="canvas"
         :config="config"
@@ -230,27 +253,6 @@ defineExpose({
         <CmkLoading />
         <span>{{ _t('Loading hosts…') }}</span>
       </div>
-
-      <MapSearch
-        v-if="config.objects.length > 0 && !editor.editMode.value && !preview"
-        :model-value="filterNeedle"
-        @update:model-value="emit('update:filterNeedle', $event)"
-      >
-        <template #trailing>
-          <ProblemsOnlyToggle
-            :model-value="problemsOnly"
-            @update:model-value="emit('update:problemsOnly', $event)"
-          />
-        </template>
-      </MapSearch>
-
-      <MapZoomControls
-        v-if="!preview"
-        :can-fit="canFit"
-        @zoom-in="canvas?.zoomIn()"
-        @zoom-out="canvas?.zoomOut()"
-        @fit="canvas?.fitAll()"
-      />
 
       <MapsMenu
         v-if="canvasMenu"

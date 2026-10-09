@@ -23,6 +23,7 @@ import MapMarqueeBox from '@/maps/map/components/MapMarqueeBox.vue'
 import MapZoomResetPill from '@/maps/map/components/MapZoomResetPill.vue'
 import { useMapObjectMenus } from '@/maps/map/composables/useMapObjectMenus'
 import { useObjectResize } from '@/maps/map/composables/useObjectResize'
+import { useRovingFocus } from '@/maps/map/composables/useRovingFocus'
 import { useCanvasBackground } from '@/maps/map/static/composables/useCanvasBackground'
 import { useCanvasExtents } from '@/maps/map/static/composables/useCanvasExtents'
 import { useCanvasLayout } from '@/maps/map/static/composables/useCanvasLayout'
@@ -34,6 +35,7 @@ import { CANVAS_SCALE, useCanvasViewport } from '@/maps/map/static/composables/u
 import { useSettings } from '@/maps/services/context'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
 import { type AnchorRect, anchorRectOf } from '@/maps/utils/anchorRect'
+import { objectDisplayName } from '@/maps/utils/dropdownOptions'
 
 import MapCanvasGrid from './MapCanvasGrid.vue'
 import MapCanvasObject from './MapCanvasObject.vue'
@@ -201,6 +203,14 @@ const layout = useCanvasLayout({
   dragPositions: () => drag.positions
 })
 
+// No ``reveal``: the canvas scrolls, and the browser scrolls a focused object into view.
+const roving = useRovingFocus({
+  objects: () => layout.placedObjects.value,
+  states: () => props.states,
+  nameOf: (object) => objectDisplayName(object, _t),
+  root: () => canvas.value
+})
+
 const iconSizes = computed(() => ({
   map: props.config.icon_size,
   override: props.iconSizeOverride,
@@ -346,6 +356,8 @@ defineExpose({
     :style="viewport.style.value"
     role="group"
     :aria-label="_t('Map canvas')"
+    @keydown="roving.onKeydown"
+    @focusin="roving.onFocusin"
     @click="onClick"
     @pointerdown="onPointerDown"
     @pointermove.prevent="onPointerMove"
@@ -404,6 +416,7 @@ defineExpose({
       :resize-override="resize.sizes[object.id]"
       :box-style="layout.objectStyle(object)"
       :preview="preview"
+      :tab-stop="roving.isTabStop(object.id)"
       @pointer-down="onObjectPointerDown($event, object)"
       @activate="onObjectActivate(object, $event)"
       @double-click="emit('object-dblclick', object, anchorRectOf($event.currentTarget))"

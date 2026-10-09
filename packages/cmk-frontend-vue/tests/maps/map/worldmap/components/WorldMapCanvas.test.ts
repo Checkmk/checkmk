@@ -34,6 +34,8 @@ const leaflet = vi.hoisted(() => {
     getCenter: vi.fn(() => ({ wrap: () => ({ lat: 51, lng: 10 }) })),
     getZoom: vi.fn(() => 5),
     setView: vi.fn(),
+    getBounds: vi.fn(() => ({ contains: () => true })),
+    panTo: vi.fn(),
     zoomIn: vi.fn(),
     zoomOut: vi.fn(),
     invalidateSize: vi.fn(),

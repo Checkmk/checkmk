@@ -41,6 +41,7 @@ const props = defineProps<{
   boxStyle: Record<string, string | number | undefined>
   /** The settings preview is not interactive. */
   preview?: boolean
+  tabStop?: boolean
 }>()
 
 /** The object's own box, so the hover card anchors on what was hovered. */
@@ -85,7 +86,7 @@ function onKeydown(event: KeyboardEvent): void {
     }"
     :data-object-id="object.id"
     :style="boxStyle"
-    :tabindex="preview ? -1 : 0"
+    :tabindex="!preview && tabStop ? 0 : -1"
     role="button"
     :aria-label="objectAriaLabel(_t, object, state?.state, state?.stale)"
     @pointerdown="emit('pointer-down', $event)"
@@ -118,9 +119,11 @@ function onKeydown(event: KeyboardEvent): void {
   position: absolute;
 }
 
+/* Two-tone, so the ring reads on any background. */
 .maps-map-canvas-object:focus-visible {
   outline: 2px solid var(--interactive-accent);
   outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--white);
 }
 
 /* The object a line being dragged would bind to on release. */

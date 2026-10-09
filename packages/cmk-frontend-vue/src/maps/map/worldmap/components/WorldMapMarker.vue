@@ -38,6 +38,7 @@ defineProps<{
   dimmed: boolean
   /** The settings preview is not interactive. */
   preview: boolean
+  tabStop: boolean
 }>()
 
 const emit = defineEmits<{
@@ -85,7 +86,7 @@ function onResizeStart(event: PointerEvent): void {
     :class="{ 'maps-world-map-marker--selected': selected }"
     :style="dimmedStyle(dimmed)"
     :data-object-id="object.id"
-    :tabindex="preview ? -1 : 0"
+    :tabindex="!preview && tabStop ? 0 : -1"
     role="button"
     :aria-label="objectAriaLabel(_t, object, state?.state, state?.stale)"
     @click.stop="emit('activate', $event)"
@@ -114,9 +115,11 @@ function onResizeStart(event: PointerEvent): void {
 </template>
 
 <style scoped>
+/* Two-tone, so the ring reads on light and dark tiles alike. */
 .maps-world-map-marker:focus-visible {
   outline: 2px solid var(--interactive-accent);
   outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--white);
 }
 
 /* The static map's dashed selection outline, plus a white ring and a dark glow

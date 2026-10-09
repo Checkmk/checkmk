@@ -27,6 +27,7 @@ import { useMapObjectMenus } from '@/maps/map/composables/useMapObjectMenus'
 import { useMapPalette } from '@/maps/map/composables/useMapPalette'
 import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
 import { useObjectResize } from '@/maps/map/composables/useObjectResize'
+import { useRovingFocus } from '@/maps/map/composables/useRovingFocus'
 import MapElementLabel from '@/maps/map/elements/components/MapElementLabel.vue'
 import { objectIconSize } from '@/maps/map/objectIconSize'
 import {
@@ -38,11 +39,17 @@ import {
   useWorldmapMarkers
 } from '@/maps/map/worldmap/composables/useWorldmapMarkers'
 import { useWorldmapMarquee } from '@/maps/map/worldmap/composables/useWorldmapMarquee'
-import { type LatLng, type WorldmapViewport, pointObjects } from '@/maps/map/worldmap/geo'
+import {
+  type LatLng,
+  type WorldmapViewport,
+  objectLatLng,
+  pointObjects
+} from '@/maps/map/worldmap/geo'
 import { useSettings } from '@/maps/services/context'
 import { applyTileLayer } from '@/maps/shared/worldmap/tileLayer'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
 import { type AnchorRect, anchorRectOf } from '@/maps/utils/anchorRect'
+import { objectDisplayName } from '@/maps/utils/dropdownOptions'
 import {
   dimmedStyle,
   objectMatchesTerms,
@@ -281,6 +288,20 @@ const markerViews = computed(() =>
   })
 )
 
+const roving = useRovingFocus({
+  objects: () => markerViews.value.map((view) => view.object),
+  states: () => props.states,
+  nameOf: (object) => objectDisplayName(object, _t),
+  root: () => surface.value,
+  // A marker off screen would take the focus where nobody sees it.
+  reveal: (object) => {
+    const at = objectLatLng(object)
+    if (map && at && !map.getBounds().contains(at)) {
+      map.panTo(at)
+    }
+  }
+})
+
 /** Every line label paired with the line whose configuration it is drawn from. */
 const labelViews = computed(() =>
   lines.decorations.value.labels.flatMap((label) => {
@@ -484,6 +505,8 @@ defineExpose({
     @pointermove="resize.move"
     @pointerup="onResizeEnd"
     @pointercancel="onResizeEnd"
+    @keydown="roving.onKeydown"
+    @focusin="roving.onFocusin"
   >
     <div
       ref="container"
@@ -504,6 +527,7 @@ defineExpose({
         :connection-id="config.connection_id"
         :dimmed="filterActive && !matches(view.object)"
         :preview="preview"
+        :tab-stop="roving.isTabStop(view.object.id)"
         @activate="onObjectClick(view.object, $event)"
         @double-click="onObjectDblclick(view.object, $event)"
         @context-menu="onObjectContext(view.object, $event)"
@@ -610,5 +634,12 @@ defineExpose({
   position: absolute;
   inset: 0;
   isolation: isolate;
+}
+
+/* Two-tone, so the ring reads on light and dark tiles alike. */
+.maps-world-map-canvas__map:focus-visible {
+  outline: 2px solid var(--color-corporate-green-50);
+  outline-offset: -2px;
+  box-shadow: inset 0 0 0 4px var(--white);
 }
 </style>

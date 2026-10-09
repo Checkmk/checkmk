@@ -281,13 +281,14 @@ const size = computed(() => {
       :stroke="link.onWorstPath ? WORST_PATH_COLOR : resolvedLineColor"
       :stroke-width="link.onWorstPath ? worstPathLineWidth : resolvedLineWidth"
     />
-    <!-- Root is the MapElement icon itself, so skip it here -->
+    <!-- Root is the MapElement icon itself, so skip it here. No tab stops: the
+         map is one, and the drawer lists these leaves for the keyboard. -->
     <g
       v-for="node in renderedNodes"
       :key="node.id"
       :transform="`translate(${node.x}, ${node.y})`"
       class="maps-aggregation-subtree__node"
-      tabindex="0"
+      tabindex="-1"
       role="button"
       :aria-label="tooltipFor(node.data)"
       @click.stop="onNodeClick(node.data)"

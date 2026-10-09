@@ -156,9 +156,13 @@ def _plugin_export_function(
 
 
 def _export_plugin_painter_for_csv(
-    export: RowFunction[object], row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    export: RowFunction[object],
+    row: Row,
+    cell: Cell,
+    acting_user: LoggedInUser,
+    context: PainterContext,
 ) -> str | HTML:
-    return _plugin_csv(export(row, cell, user, context))
+    return _plugin_csv(export(row, cell, acting_user, context))
 
 
 def _plugin_group_value(value: object) -> GroupValue:

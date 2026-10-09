@@ -182,7 +182,10 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch) -> None:
     assert painter.sorter == "aaaa"
     assert painter.painter_options == ["opt1"]
     assert painter.printable is False
-    assert painter.render(row={}, cell=dummy_cell, user=user, context=context) == ("abc", "xyz")
+    assert painter.render(row={}, cell=dummy_cell, acting_user=user, context=context) == (
+        "abc",
+        "xyz",
+    )
     assert painter.group_by(row={}, cell=dummy_cell, context=context) == "xyz"
 
 

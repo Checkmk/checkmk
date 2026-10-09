@@ -735,14 +735,14 @@ def _metrics_table(
 
 
 def _render_svc_metrics(
-    row: Row, _cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
     evaluated = evaluated_metrics(
         row["service_perf_data"],
         row["service_check_command"],
         registered_metrics=registered_metrics(),
         registered_translations=registered_translations(),
-        temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
+        temperature_unit=get_temperature_unit(acting_user, context.config.default_temperature_unit),
         debug=context.config.debug,
     )
 
@@ -1765,9 +1765,9 @@ _SERVICE_CUSTOM_VARIABLE_TITLE = _l("Service custom attribute")
 
 
 def _render_service_custom_variable(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
-    return _render_custom_variable("service", row, cell, user, context)
+    return _render_custom_variable("service", row, cell, acting_user, context)
 
 
 def _title_service_custom_variable(cell: Cell, context: PainterContext) -> str:
@@ -1802,9 +1802,9 @@ _HOST_CUSTOM_VARIABLE_TITLE = _l("Host custom attribute")
 
 
 def _render_host_custom_variable(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
-    return _render_custom_variable("host", row, cell, user, context)
+    return _render_custom_variable("host", row, cell, acting_user, context)
 
 
 def _title_host_custom_variable(cell: Cell, context: PainterContext) -> str:
@@ -4651,9 +4651,9 @@ def _aux_tag_titles(tag_config: TagConfig) -> dict[str, str]:
 
 
 def _render_host_tags_with_titles(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
-    return _render_tags_with_titles("host", row, cell, user, context)
+    return _render_tags_with_titles("host", row, cell, acting_user, context)
 
 
 def make_host_tags_with_titles_painter() -> InternalPainter:
@@ -4685,9 +4685,9 @@ def make_service_tags_painter() -> InternalPainter:
 
 
 def _render_service_tags_with_titles(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
-    return _render_tags_with_titles("service", row, cell, user, context)
+    return _render_tags_with_titles("service", row, cell, acting_user, context)
 
 
 def make_service_tags_with_titles_painter() -> InternalPainter:
@@ -4921,7 +4921,7 @@ def _render_specific_metric(
 
 
 def _render_host_specific_metric(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
     perf_data_entries = row["host_perf_data"]
     check_command = row["host_check_command"]
@@ -4929,7 +4929,7 @@ def _render_host_specific_metric(
         cell,
         perf_data_entries,
         check_command,
-        get_temperature_unit(user, context.config.default_temperature_unit),
+        get_temperature_unit(acting_user, context.config.default_temperature_unit),
         context.config.debug,
     )
 
@@ -4948,7 +4948,7 @@ def make_host_specific_metric_painter() -> InternalPainter:
 
 
 def _render_service_specific_metric(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
     perf_data_entries = row["service_perf_data"]
     check_command = row["service_check_command"]
@@ -4956,7 +4956,7 @@ def _render_service_specific_metric(
         cell,
         perf_data_entries,
         check_command,
-        get_temperature_unit(user, context.config.default_temperature_unit),
+        get_temperature_unit(acting_user, context.config.default_temperature_unit),
         context.config.debug,
     )
 

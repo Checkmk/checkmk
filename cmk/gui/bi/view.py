@@ -802,9 +802,9 @@ def _render_aggr_treestate(
 
 
 def _export_for_python_aggr_treestate(
-    row: Row, _cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> dict:
-    return _render_tree_json(row, user=user, request=context.request)
+    return _render_tree_json(row, acting_user=acting_user, request=context.request)
 
 
 def _export_for_csv_aggr_treestate(
@@ -814,9 +814,9 @@ def _export_for_csv_aggr_treestate(
 
 
 def _export_for_json_aggr_treestate(
-    row: Row, _cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> dict:
-    return _render_tree_json(row, user=user, request=context.request)
+    return _render_tree_json(row, acting_user=acting_user, request=context.request)
 
 
 def make_aggr_treestate_painter() -> InternalPainter:
@@ -849,9 +849,9 @@ def _render_aggr_treestate_frozen_diff(
 
 
 def _export_for_python_aggr_treestate_frozen_diff(
-    row: Row, _cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> dict:
-    return _render_tree_json(row, user=user, request=context.request)
+    return _render_tree_json(row, acting_user=acting_user, request=context.request)
 
 
 def _export_for_csv_aggr_treestate_frozen_diff(
@@ -861,9 +861,9 @@ def _export_for_csv_aggr_treestate_frozen_diff(
 
 
 def _export_for_json_aggr_treestate_frozen_diff(
-    row: Row, _cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> dict:
-    return _render_tree_json(row, user=user, request=context.request)
+    return _render_tree_json(row, acting_user=acting_user, request=context.request)
 
 
 def make_aggr_treestate_frozen_diff_painter() -> InternalPainter:
@@ -1117,9 +1117,9 @@ def _render_aggr_treestate_boxed(
 
 
 def _export_for_python_aggr_treestate_boxed(
-    row: Row, _cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> dict:
-    return _render_tree_json(row, user=user, request=context.request)
+    return _render_tree_json(row, acting_user=acting_user, request=context.request)
 
 
 def _export_for_csv_aggr_treestate_boxed(
@@ -1129,9 +1129,9 @@ def _export_for_csv_aggr_treestate_boxed(
 
 
 def _export_for_json_aggr_treestate_boxed(
-    row: Row, _cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> dict:
-    return _render_tree_json(row, user=user, request=context.request)
+    return _render_tree_json(row, acting_user=acting_user, request=context.request)
 
 
 def make_aggr_treestate_boxed_painter() -> InternalPainter:
@@ -1150,16 +1150,16 @@ def make_aggr_treestate_boxed_painter() -> InternalPainter:
 def _render_tree_json(
     row: typing.Mapping[str, typing.Any],
     *,
-    user: LoggedInUser,
+    acting_user: LoggedInUser,
     request: Request,
 ) -> dict[str, Any]:
     expansion_level = request.get_integer_input_mandatory("expansion_level", 999)
 
-    if expansion_level != user.bi_expansion_level:
+    if expansion_level != acting_user.bi_expansion_level:
         treestate: dict[str, Any] = {}
-        user.set_tree_states("bi", treestate)
-        if not isinstance(user, LoggedInSuperUser):
-            user.save_tree_states()
+        acting_user.set_tree_states("bi", treestate)
+        if not isinstance(acting_user, LoggedInSuperUser):
+            acting_user.save_tree_states()
 
     def render_node_json(
         tree: BIAggrTreeState | BILeafTreeState,

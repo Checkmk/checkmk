@@ -319,7 +319,7 @@ def _migrate_old_graph_render_options(value: PainterParameters | None) -> Painte
 
 
 def _render_service_graphs(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
     return _paint_time_graph_cmk(
         row,
@@ -327,7 +327,7 @@ def _render_service_graphs(
         mobile=context.url_renderer.is_mobile(),
         painter_options=context.painter_options,
         debug=context.config.debug,
-        temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
+        temperature_unit=get_temperature_unit(acting_user, context.config.default_temperature_unit),
     )
 
 
@@ -371,7 +371,7 @@ def make_service_graphs_painter() -> InternalPainter:
 
 
 def _render_host_graphs(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
     return _paint_time_graph_cmk(
         row,
@@ -379,7 +379,7 @@ def _render_host_graphs(
         mobile=context.url_renderer.is_mobile(),
         painter_options=context.painter_options,
         debug=context.config.debug,
-        temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
+        temperature_unit=get_temperature_unit(acting_user, context.config.default_temperature_unit),
         # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
         # also render the graphs if there are no historic metrics available (but perf data is)
         require_historic_metrics="service_description" not in row,
@@ -439,7 +439,7 @@ class PainterOptionPNPTimerange(PainterOption):
 
 
 def _render_svc_pnpgraph(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
     return _paint_time_graph_cmk(
         row,
@@ -447,7 +447,7 @@ def _render_svc_pnpgraph(
         mobile=context.url_renderer.is_mobile(),
         painter_options=context.painter_options,
         debug=context.config.debug,
-        temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
+        temperature_unit=get_temperature_unit(acting_user, context.config.default_temperature_unit),
     )
 
 
@@ -491,7 +491,7 @@ def make_svc_pnpgraph_painter() -> InternalPainter:
 
 
 def _render_host_pnpgraph(
-    row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+    row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
     return _paint_time_graph_cmk(
         row,
@@ -499,7 +499,7 @@ def _render_host_pnpgraph(
         mobile=context.url_renderer.is_mobile(),
         painter_options=context.painter_options,
         debug=context.config.debug,
-        temperature_unit=get_temperature_unit(user, context.config.default_temperature_unit),
+        temperature_unit=get_temperature_unit(acting_user, context.config.default_temperature_unit),
     )
 
 

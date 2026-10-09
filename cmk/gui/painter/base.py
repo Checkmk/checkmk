@@ -244,11 +244,11 @@ class InternalPainter:
         rows: Rows,
         cell: Cell,
         dynamic_columns: Sequence[ColumnName],
-        user: LoggedInUser,
+        acting_user: LoggedInUser,
         context: PainterContext,
     ) -> None:
         if self._derive is not None:
-            self._derive(rows, cell, dynamic_columns, user, context)
+            self._derive(rows, cell, dynamic_columns, acting_user, context)
 
     def group_by(self, row: Row, cell: Cell, context: PainterContext) -> GroupValue:
         if not self._groupable:
@@ -287,38 +287,40 @@ class InternalPainter:
     def load_inv(self) -> bool:
         return self._load_inv
 
-    def render(self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext) -> CellSpec:
-        return self._render(row, cell, user, context)
+    def render(
+        self, row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext
+    ) -> CellSpec:
+        return self._render(row, cell, acting_user, context)
 
     def _compute_data(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+        self, row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext
     ) -> object:
         if self._compute_data_function is None:
-            return self.render(row, cell, user, context)[1]
+            return self.render(row, cell, acting_user, context)[1]
         return self._compute_data_function(row, context)
 
     def export_for_python(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+        self, row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext
     ) -> object:
         if self._export_for_python is None:
-            return self._compute_data(row, cell, user, context)
-        return self._export_for_python(row, cell, user, context)
+            return self._compute_data(row, cell, acting_user, context)
+        return self._export_for_python(row, cell, acting_user, context)
 
     def export_for_csv(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+        self, row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext
     ) -> str | HTML:
         if self._export_for_csv is not None:
-            return self._export_for_csv(row, cell, user, context)
-        if isinstance(data := self._compute_data(row, cell, user, context), str | HTML):
+            return self._export_for_csv(row, cell, acting_user, context)
+        if isinstance(data := self._compute_data(row, cell, acting_user, context), str | HTML):
             return data
         raise ValueError("Data must be of type 'str' or 'HTML' but is %r" % type(data))
 
     def export_for_json(
-        self, row: Row, cell: Cell, user: LoggedInUser, context: PainterContext
+        self, row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext
     ) -> object:
         if self._export_for_json is None:
-            return self._compute_data(row, cell, user, context)
-        return self._export_for_json(row, cell, user, context)
+            return self._compute_data(row, cell, acting_user, context)
+        return self._export_for_json(row, cell, acting_user, context)
 
 
 # .

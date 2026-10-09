@@ -811,10 +811,10 @@ def make_event_facility_painter() -> InternalPainter:
 
 
 def _render_event_rule_id(
-    row: Row, _cell: Cell, user: LoggedInUser, _context: PainterContext
+    row: Row, _cell: Cell, acting_user: LoggedInUser, _context: PainterContext
 ) -> CellSpec:
     rule_id = row["event_rule_id"]
-    if user.may("mkeventd.edit"):
+    if acting_user.may("mkeventd.edit"):
         urlvars = urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
         return "", HTMLWriter.render_a(rule_id, "wato.py?%s" % urlvars)
     return "", rule_id

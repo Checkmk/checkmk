@@ -92,12 +92,10 @@ def test_register_returns_the_legacy_class() -> None:
     assert PainterRegistry().register(_LegacyPainter) is _LegacyPainter
 
 
-@pytest.mark.usefixtures("request_context")
 def test_legacy_painter_is_registered_by_its_ident() -> None:
     assert list(_registry()) == ["legacy"]
 
 
-@pytest.mark.usefixtures("request_context")
 def test_legacy_painter_title_reaches_the_cell() -> None:
     assert _cell(_registry()).title(use_short=False) == "Legacy"
 
@@ -106,7 +104,6 @@ def test_legacy_painter_has_its_title_as_static_title() -> None:
     assert str(_registry()["legacy"].static_title) == "Legacy"
 
 
-@pytest.mark.usefixtures("request_context")
 def test_legacy_painter_renders_with_the_permissions_of_its_cell() -> None:
     assert _cell(_registry()).render_content({"host_name": "heute"}, user) == (
         "",
@@ -114,7 +111,6 @@ def test_legacy_painter_renders_with_the_permissions_of_its_cell() -> None:
     )
 
 
-@pytest.mark.usefixtures("request_context")
 def test_legacy_painter_reads_its_columns_on_access() -> None:
     registry = PainterRegistry()
     registry.register(_LegacyPainterWithLateColumns)
@@ -151,7 +147,6 @@ def test_legacy_painter_exports_its_own_export_title() -> None:
     )
 
 
-@pytest.mark.usefixtures("request_context")
 def test_legacy_painter_keeps_its_uuid_column() -> None:
     registry = PainterRegistry()
     registry.register(_LegacyPainterWithUUIDColumn)

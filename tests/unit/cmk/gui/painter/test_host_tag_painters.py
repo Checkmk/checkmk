@@ -28,7 +28,6 @@ def test_host_tag_painter_registration() -> None:
     assert "host_tag_whoot" in all_painters(_TAG_GROUPS)
 
 
-@pytest.mark.usefixtures("request_context")
 def test_host_tag_painter_titles_itself_after_its_tag_group() -> None:
     assert str(all_painters(_TAG_GROUPS)["host_tag_whoot"].static_title) == (
         "Host tag: Blubberei  / Whoot"

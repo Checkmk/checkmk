@@ -1519,7 +1519,6 @@ def _load_notes_into_files(notes_dirs: list[Path], notes: list[dict[str, object]
         ),
     ],
 )
-@pytest.mark.usefixtures("request_context")
 def test_paint_custom_notes(
     notes_type: Literal["host", "service"],
     notes_dir: Path,
@@ -1532,7 +1531,11 @@ def test_paint_custom_notes(
         f.write("<hr>".join(notes))
 
     assert notes_file.read_text() == str(
-        _paint_custom_notes(notes_type, row, site_configs=active_config.sites)[1]
+        _paint_custom_notes(
+            notes_type,
+            row,
+            site_configs=SiteConfigurations({SiteId("NO_SITE"): no_site_configuration()}),
+        )[1]
     )
 
 
@@ -1751,7 +1754,6 @@ def test_paint_custom_notes(
         ),
     ],
 )
-@pytest.mark.usefixtures("request_context")
 def test_paint_custom_notes_file_inclusion_and_html_tags(
     object_type: Literal["host", "service"],
     host_name: str,
@@ -1769,7 +1771,9 @@ def test_paint_custom_notes_file_inclusion_and_html_tags(
     }
 
     displayed_custom_notes = _paint_custom_notes(
-        object_type, row, site_configs=active_config.sites
+        object_type,
+        row,
+        site_configs=SiteConfigurations({SiteId("NO_SITE"): no_site_configuration()}),
     )[1]
     assert isinstance(displayed_custom_notes, HTML)
 

@@ -10,7 +10,7 @@ import pytest
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import perfometers, Title
 from cmk.gui.graphing import perfometers_from_api
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, UserDefaultConfig
 from cmk.gui.painter import Cell, InternalPainter
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
@@ -48,7 +48,6 @@ def _row(perf_data: str, check_command: str = "check_mk-kube_memory") -> Row:
         [1, None, 0, -1],
     ],
 )
-@pytest.mark.usefixtures("request_context")
 def test_rows_sort_by_their_perfometer_with_the_undrawn_ones_first(
     sort_values: Sequence[float | None],
 ) -> None:
@@ -72,7 +71,6 @@ def test_rows_sort_by_their_perfometer_with_the_undrawn_ones_first(
     ]
 
 
-@pytest.mark.usefixtures("request_context")
 def test_sort_value_groups_by_the_drawing_plugin() -> None:
     drawn = Perfometer(_row("kube_memory_usage=42;;;0;"), {}, _REGISTERED_PERFOMETERS, debug=False)
     undrawn = Perfometer(
@@ -82,7 +80,6 @@ def test_sort_value_groups_by_the_drawing_plugin() -> None:
     assert undrawn.sort_value() == ("", -float("inf"))
 
 
-@pytest.mark.usefixtures("request_context")
 def test_a_segment_takes_the_attributes_of_its_registered_metric() -> None:
     metrics = {
         "kube_memory_usage": metrics_v1.Metric(
@@ -131,7 +128,7 @@ def _make_painter() -> InternalPainter:
     return make_perfometer_painter()
 
 
-@pytest.mark.usefixtures("request_context", "registered_perfometer")
+@pytest.mark.usefixtures("registered_perfometer")
 def test_perfometer_export_contains_label() -> None:
     """The Perf-O-Meter label must be present in CSV/JSON exports.
 
@@ -141,6 +138,11 @@ def test_perfometer_export_contains_label() -> None:
     painter = _make_painter()
     cell = Cell(None, None, None, make_painter_context(UserPermissions({}, {}, {}, [])), None)
     row = _perfometer_row()
+    user = LoggedInUser(
+        None,
+        UserPermissions({}, {}, {}, []),
+        defaults=UserDefaultConfig(users={}, default_language="en", default_show_mode="default"),
+    )
 
     assert painter.export_for_csv(row, cell, user, cell.painter_context()) == "42"
     assert painter.export_for_json(row, cell, user, cell.painter_context()) == "42"

@@ -338,10 +338,11 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
         cls,
         edition: Edition,
         sites: SiteConfigurations,
+        tree: FolderTree,
         service_levels: Sequence[tuple[int, str]],
     ) -> list[DictionaryEntry | tuple[str, ListChoice]]:
         return (
-            cls._generic_rule_match_conditions(edition, sites, service_levels)
+            cls._generic_rule_match_conditions(edition, sites, tree, service_levels)
             + cls._event_rule_match_conditions(flavour="notify")
             + cls._notification_rule_match_conditions(edition)
         )
@@ -534,6 +535,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
             elements=self._rule_match_conditions(
                 self._edition,
                 config.sites,
+                make_folder_tree(config),
                 config.mkeventd_service_levels,
             )
         )
@@ -3178,6 +3180,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         return self._vs_notification_rule(
             self._user_id(),
             config.sites,
+            make_folder_tree(config),
             config.mkeventd_service_levels,
         )
 
@@ -3185,6 +3188,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         self,
         userid: UserId | None,
         sites: SiteConfigurations,
+        tree: FolderTree,
         service_levels: Sequence[tuple[int, str]],
     ) -> Dictionary:
         if userid:
@@ -3460,7 +3464,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             title=_("Rule Properties"),
             elements=rule_option_elements()
             + section_override
-            + self._rule_match_conditions(self._edition, sites, service_levels)
+            + self._rule_match_conditions(self._edition, sites, tree, service_levels)
             + section_contacts
             + [
                 (

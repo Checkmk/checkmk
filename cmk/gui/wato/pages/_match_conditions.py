@@ -21,7 +21,7 @@ from cmk.gui.valuespec import (
     MonitoredHostname,
 )
 from cmk.gui.watolib.form_spec_generators import create_full_path_folder_choice
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.rulesets import get_host_tags_condition_choices
 from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.internal.form_specs import (
@@ -41,10 +41,11 @@ from ._rule_conditions import DictHostTagCondition
 
 def multifolder_host_rule_match_conditions(
     sites: SiteConfigurations,
+    tree: FolderTree,
 ) -> list[DictionaryEntry]:
     return [
         site_rule_match_condition(sites, only_sites_with_replication=True),
-        _multi_folder_rule_match_condition(),
+        _multi_folder_rule_match_condition(tree),
     ] + common_host_rule_match_conditions()
 
 
@@ -66,11 +67,12 @@ def site_rule_match_condition(
     )
 
 
-def _multi_folder_rule_match_condition() -> DictionaryEntry:
+def _multi_folder_rule_match_condition(tree: FolderTree) -> DictionaryEntry:
     return (
         "match_folders",
         ListOf(
             valuespec=FullPathFolderChoice(
+                tree,
                 title=_("Folder"),
                 help=_(
                     "This condition makes the rule match only hosts that are managed "
@@ -86,9 +88,9 @@ def _multi_folder_rule_match_condition() -> DictionaryEntry:
 
 
 class FullPathFolderChoice(DropdownChoice):
-    def __init__(self, title: str, help: str) -> None:  # noqa: A002
+    def __init__(self, tree: FolderTree, title: str, help: str) -> None:  # noqa: A002
         super().__init__(
-            title=title, help=help, choices=lambda: folder_tree().folder_choices_fulltitle(user)
+            title=title, help=help, choices=lambda: tree.folder_choices_fulltitle(user)
         )
 
 

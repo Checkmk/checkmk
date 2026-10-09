@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import assert_never, NamedTuple, Self
+from typing import assert_never, NamedTuple, Self, TypedDict
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -182,6 +182,29 @@ OTHER_STATE_DESCRIPTION = (
 )
 
 
+class Params(TypedDict):
+    condition_other_state: int
+    board_condition_other_state: int
+    board_status_other_state: int
+
+
+# Defaults reproduce the historic behaviour (the "other" value maps to WARN).
+# HPE ProLiant Gen11 / iLO 6 firmware tends to report the board condition as
+# "other" for perfectly healthy controllers, which makes the service WARN
+# forever; the check ruleset lets users remap each "other" value independently.
+DEFAULT_PARAMETERS: Params = {
+    "condition_other_state": State.WARN.value,
+    "board_condition_other_state": State.WARN.value,
+    "board_status_other_state": State.WARN.value,
+}
+
+
+def _monitoring_state(value: SNMPCondition | SNMPState, other_state: State) -> State:
+    if value in (SNMPCondition.OTHER, SNMPState.OTHER):
+        return other_state
+    return value.to_state()
+
+
 def parse_hp_proliant_da_cntlr(string_table: StringTable) -> ParsedSection:
     return {line[0]: ControllerData.from_line(line) for line in string_table}
 
@@ -191,7 +214,9 @@ def discovery_hp_proliant_da_cntlr(section: ParsedSection) -> DiscoveryResult:
         yield from (Service(item=item) for item in section)
 
 
-def check_hp_proliant_da_cntlr(item: ControllerID, section: ParsedSection) -> CheckResult:
+def check_hp_proliant_da_cntlr(
+    item: ControllerID, params: Params, section: ParsedSection
+) -> CheckResult:
     if not (subsection := section.get(item)):
         yield Result(state=State.UNKNOWN, summary="Controller not found in SNMP data")
         return
@@ -201,9 +226,16 @@ def check_hp_proliant_da_cntlr(item: ControllerID, section: ParsedSection) -> Ch
         "Board-Condition": subsection.b_cond,
         "Board-Status": subsection.b_status,
     }
+    other_states: Mapping[str, State] = {
+        "Condition": State(params["condition_other_state"]),
+        "Board-Condition": State(params["board_condition_other_state"]),
+        "Board-Status": State(params["board_status_other_state"]),
+    }
 
     yield Result(
-        state=State.worst(*(state.to_state() for state in states.values())),
+        state=State.worst(
+            *(_monitoring_state(state, other_states[label]) for label, state in states.items())
+        ),
         summary=(
             f"{', '.join(f'{label}: {state}' for label, state in states.items())} "
             f"(Role: {subsection.role}, Model: {subsection.model}, Slot: {subsection.slot}, "
@@ -231,4 +263,6 @@ check_plugin_hp_proliant_da_cntlr = CheckPlugin(
     service_name="HW Controller %s",
     discovery_function=discovery_hp_proliant_da_cntlr,
     check_function=check_hp_proliant_da_cntlr,
+    check_default_parameters=DEFAULT_PARAMETERS,
+    check_ruleset_name="hp_proliant_da_cntlr",
 )

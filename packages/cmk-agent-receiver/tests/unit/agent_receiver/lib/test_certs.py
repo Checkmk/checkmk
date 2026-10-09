@@ -27,6 +27,8 @@ from cmk.agent_receiver.lib.certs import (
 from cmk.agent_receiver.lib.config import get_config
 from cmk.testlib.agent_receiver.certs import generate_csr_pair
 
+pytestmark = pytest.mark.usefixtures("setup_site_context")
+
 
 def test_sign_csr() -> None:
     root_ca = agent_root_ca()

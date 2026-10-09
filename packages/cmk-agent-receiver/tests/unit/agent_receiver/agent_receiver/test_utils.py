@@ -17,6 +17,8 @@ from cmk.agent_receiver.agent_receiver.models import (
 from cmk.agent_receiver.agent_receiver.utils import NotRegisteredException, R4R, RegisteredHost
 from cmk.agent_receiver.lib.config import get_config
 
+pytestmark = pytest.mark.usefixtures("setup_site_context")
+
 
 def test_host_not_registered(uuid: UUID4) -> None:
     with pytest.raises(NotRegisteredException):

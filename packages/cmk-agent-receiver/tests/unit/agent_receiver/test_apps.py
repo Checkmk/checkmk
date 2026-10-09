@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
 from fastapi import APIRouter, FastAPI
 from fastapi.testclient import TestClient
 from starlette.routing import Mount
@@ -16,6 +17,8 @@ from cmk.agent_receiver.lib.mtls_auth_validator import (
 )
 from cmk.agent_receiver.main import main_app
 from cmk.testlib.agent_receiver.certs import agent_ca_common_name
+
+pytestmark = pytest.mark.usefixtures("setup_site_context")
 
 
 def test_uuid_validation_route() -> None:

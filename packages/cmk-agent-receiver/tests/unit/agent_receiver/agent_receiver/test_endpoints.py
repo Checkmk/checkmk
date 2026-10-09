@@ -30,7 +30,7 @@ from cmk.agent_receiver.agent_receiver.models import (
     RequestForRegistration,
 )
 from cmk.agent_receiver.agent_receiver.utils import R4R
-from cmk.agent_receiver.lib.config import get_config
+from cmk.agent_receiver.lib.config import Config, get_config
 from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_ISSUER_HEADER, INJECTED_UUID_HEADER
 from cmk.testlib.agent_receiver.certs import agent_ca_common_name, generate_csr_pair
 
@@ -39,15 +39,16 @@ from cmk.testlib.agent_receiver.certs import agent_ca_common_name, generate_csr_
 def fixture_symlink_push_host(
     tmp_path: Path,
     uuid: UUID4,
+    setup_site_context: Config,
 ) -> None:
-    _symlink_push_host(tmp_path, uuid)
+    _symlink_push_host(setup_site_context, tmp_path, uuid)
 
 
 def _symlink_push_host(
+    config: Config,
     tmp_path: Path,
     uuid: UUID4,
 ) -> None:
-    config = get_config()
     source = config.agent_output_dir / str(uuid)
     (target_dir := tmp_path / "push-agent" / "hostname").mkdir(parents=True)
     source.symlink_to(target_dir)
@@ -67,7 +68,7 @@ def test_register_existing_ok(
     serialized_csr: str,
 ) -> None:
     def rest_api_register_mock(*_args: object, **_kwargs: object) -> RegisterResponse:
-        _symlink_push_host(tmp_path, uuid)
+        _symlink_push_host(get_config(), tmp_path, uuid)
         return RegisterResponse(connection_mode=ConnectionMode.PULL)
 
     mocker.patch(

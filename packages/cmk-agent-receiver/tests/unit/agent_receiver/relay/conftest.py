@@ -6,7 +6,6 @@ import json
 from collections.abc import Iterator
 from datetime import datetime, UTC
 from http import HTTPStatus
-from pathlib import Path
 
 import httpx
 import pytest
@@ -74,16 +73,10 @@ def create_relay_mock_transport() -> httpx.MockTransport:
 
 
 @pytest.fixture
-def site_context(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Config:
-    site_id = "NO_SITE"
-    site_dir = tmp_path / site_id
-    site_dir.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("OMD_ROOT", str(site_dir))
-    monkeypatch.setenv("OMD_SITE", site_id)
-    site_context = Config()
-    site_context.internal_secret_path.parent.mkdir(parents=True, exist_ok=True)
-    site_context.internal_secret_path.write_text("lol")
-    return site_context
+def site_context(setup_site_context: Config) -> Config:
+    setup_site_context.internal_secret_path.parent.mkdir(parents=True, exist_ok=True)
+    setup_site_context.internal_secret_path.write_text("lol")
+    return setup_site_context
 
 
 @pytest.fixture()

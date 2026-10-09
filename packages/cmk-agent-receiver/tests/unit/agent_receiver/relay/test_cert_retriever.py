@@ -15,6 +15,7 @@ from cmk.testlib.agent_receiver import certs as certslib
 from cmk.testlib.agent_receiver.relay import random_relay_id
 
 
+@pytest.mark.usefixtures("setup_site_context")
 def test_process_creates_valid_certificate() -> None:
     relay_id = random_relay_id()
     private_key, csr = certslib.generate_csr_pair(cn=relay_id)
@@ -37,6 +38,7 @@ def test_process_validates_csr() -> None:
         get_certificates(csr.dump_pem().bytes.decode(), relay_id)
 
 
+@pytest.mark.usefixtures("setup_site_context")
 def test_certificate_lifetime() -> None:
     relay_id = random_relay_id()
     _, csr = certslib.generate_csr_pair(cn=relay_id)

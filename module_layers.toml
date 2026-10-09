@@ -1267,6 +1267,7 @@ allows = [
   "cmk.backup",
   "cmk.bi",
   "cmk.dcd.gui",
+  "cmk.ec.export",
   "cmk.gui",
   "cmk.gui_plugins.internal",
   "cmk.inventory",

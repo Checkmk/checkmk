@@ -367,9 +367,9 @@ describe('MapService.loadAutoObjects()', () => {
     )
     store.currentMap.value = world()
 
-    await store.loadAutoObjects('world')
+    await store.loadAutoObjects('world', true)
     store.currentMap.value!.objects.push(anObject({ id: 'placed', type: 'host' }))
-    await store.loadAutoObjects('world')
+    await store.loadAutoObjects('world', true)
 
     expect(store.currentMap.value!.objects.map((object) => object.id)).toEqual([
       'core',
@@ -378,11 +378,57 @@ describe('MapService.loadAutoObjects()', () => {
     ])
   })
 
+  it('stops waiting for the hosts once they are in', async () => {
+    const store = serviceWithAutoObjects([])
+    store.currentMap.value = world()
+    store.autoObjects.value = 'loading'
+
+    await store.loadAutoObjects('world', true)
+
+    expect(store.autoObjects.value).toBe('loaded')
+  })
+
+  it('does not take a failed load for an answer', async () => {
+    const store = new MapService(new MapConfigApi(), {
+      fetchAutoObjects: vi.fn().mockRejectedValue(new Error('HTTP 500'))
+    })
+    store.currentMap.value = world()
+    store.autoObjects.value = 'loading'
+
+    await expect(store.loadAutoObjects('world', true)).rejects.toThrow()
+
+    expect(store.autoObjects.value).toBe('failed')
+  })
+
+  it('stops waiting for the hosts of a map the daemon was never handed', async () => {
+    const fetchAutoObjects = vi.fn()
+    const store = new MapService(new MapConfigApi(), { fetchAutoObjects })
+    store.currentMap.value = world()
+    store.autoObjects.value = 'loading'
+
+    await store.loadAutoObjects('world', false)
+
+    expect(store.autoObjects.value).toBe('failed')
+    expect(fetchAutoObjects).not.toHaveBeenCalled()
+  })
+
+  it('drops the hosts of an auto source that was removed', async () => {
+    const store = serviceWithAutoObjects([anObject({ id: 'auto:db01', type: 'host' })])
+    store.currentMap.value = world()
+    await store.loadAutoObjects('world', true)
+
+    store.currentMap.value = { ...store.currentMap.value!, view: aMap().view }
+    await store.loadAutoObjects('world', true)
+
+    expect(store.currentMap.value.objects.map((object) => object.id)).toEqual(['core'])
+    expect(store.autoObjects.value).toBe('none')
+  })
+
   it('leaves a map that was switched to meanwhile alone', async () => {
     const store = serviceWithAutoObjects([anObject({ id: 'auto:db01', type: 'host' })])
     store.currentMap.value = world()
 
-    const loading = store.loadAutoObjects('world')
+    const loading = store.loadAutoObjects('world', true)
     store.currentMap.value = aMap({ name: 'other', objects: [] })
     await loading
 

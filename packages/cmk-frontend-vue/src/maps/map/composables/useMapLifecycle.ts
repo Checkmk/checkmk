@@ -61,20 +61,26 @@ export function useMapLifecycle(source: {
         return
       }
       source.rotation.schedule(maps.currentMap.value?.rotation_interval ?? 0)
+      let registered = true
       try {
         await states.connectToMap(name, maps.currentMapSig.value ?? undefined)
       } catch (error: unknown) {
+        // A run another one took over from shares its connect, and so its
+        // failure: only the current run tells.
+        if (superseded) {
+          return
+        }
         // A failed connect — the daemon rejecting a stored configuration, a
         // transient outage — leaves the map reading "Offline".
         report(error, 'Live connection failed')
-        return
+        registered = false
       }
       if (superseded) {
         return
       }
       // The daemon inflates the auto-source hosts from the config it was just
       // handed, so they can only be asked for after the connect registered it.
-      maps.loadAutoObjects(name).catch((error: unknown) => {
+      maps.loadAutoObjects(name, registered).catch((error: unknown) => {
         report(error, 'Failed to load the hosts of the automap source')
       })
     })()

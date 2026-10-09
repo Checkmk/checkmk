@@ -105,7 +105,7 @@ describe('useMapLifecycle', () => {
     connect.resolve()
     await settle()
 
-    expect(services.maps.loadAutoObjects).toHaveBeenCalledWith('world')
+    expect(services.maps.loadAutoObjects).toHaveBeenCalledWith('world', true)
   })
 
   it('does not load the auto-source hosts of a map that has since been left', async () => {
@@ -122,7 +122,7 @@ describe('useMapLifecycle', () => {
     expect(services.maps.loadAutoObjects).not.toHaveBeenCalledWith('world')
   })
 
-  it('does not load the auto-source hosts when the connect failed', async () => {
+  it('gives up on the auto-source hosts when the connect failed', async () => {
     const connect = deferredConnect()
     mountLifecycle(ref('world'))
     await settle()
@@ -130,7 +130,7 @@ describe('useMapLifecycle', () => {
     connect.reject(new Error('Maps daemon unreachable'))
     await settle()
 
-    expect(services.maps.loadAutoObjects).not.toHaveBeenCalled()
+    expect(services.maps.loadAutoObjects).toHaveBeenCalledWith('world', false)
   })
 
   it('reports auto-source hosts that could not be loaded', async () => {

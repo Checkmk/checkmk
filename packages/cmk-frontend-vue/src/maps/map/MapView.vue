@@ -731,12 +731,26 @@ function openSettings() {
 }
 
 async function onSettingsUpdated() {
-  // Settings save may have changed the connection or filter; refresh
-  // monitoring states so the canvas reflects the new scope. Flipping
-  // ``initialLoad`` gives radar / flow maps a spinner in the gap.
+  // The daemon resolves the config it was handed at connect, so a changed
+  // connection, filter or auto source only applies once it is registered
+  // again. ``initialLoad`` shows the view's spinner instead of any map in the gap.
   stopRotation()
-  scheduleRotation(mapsStore.currentMap.value?.rotation_interval ?? 0)
-  await statesStore.refreshWithIndicator()
+  const map = mapsStore.currentMap.value
+  scheduleRotation(map?.rotation_interval ?? 0)
+  if (!map) {
+    return
+  }
+  // As on a connect, a failed register still settles the auto-source hosts.
+  let registered = true
+  try {
+    await statesStore.reregisterWithIndicator(map)
+  } catch (e) {
+    toast.error(errorText(e, _t('Live update failed')))
+    registered = false
+  }
+  mapsStore.loadAutoObjects(map.name, registered).catch((e: unknown) => {
+    toast.error(errorText(e, _t('Live update failed')))
+  })
 }
 
 useMapLifecycle({
@@ -816,6 +830,7 @@ function closeBulkAckModal(sent: boolean): void {
         :editor="editor"
         :error="mapsStore.error.value"
         :preview="isPreview"
+        :can-edit="canEdit"
         :checkmk-url="checkmkUrl"
         @object-click="onObjectClick"
         @object-properties="openPropsModal"

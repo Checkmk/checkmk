@@ -499,11 +499,10 @@ export class MapStatesService {
     void this.stream?.connect()
   }
 
-  /** Refetches with the loading indicator, for an explicit user refresh. */
-  public async refreshWithIndicator(): Promise<void> {
+  public async reregisterWithIndicator(map: MapConfig): Promise<void> {
     this.initialLoad.value = true
     try {
-      await this.refresh()
+      await this.reregister(map)
     } finally {
       this.initialLoad.value = false
     }

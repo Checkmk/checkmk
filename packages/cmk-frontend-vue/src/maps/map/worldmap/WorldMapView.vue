@@ -16,6 +16,7 @@ an object leads to is the map view's.
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, onUnmounted, ref, useTemplateRef } from 'vue'
 
@@ -27,10 +28,12 @@ import type { MapEditor } from '@/maps/map/composables/useMapEditor'
 import type { LineEndpoint } from '@/maps/map/worldmap/composables/useWorldmapLines'
 import type { MarkerMove } from '@/maps/map/worldmap/composables/useWorldmapMarkers'
 import { type LatLng, type WorldmapViewport, pointObjects } from '@/maps/map/worldmap/geo'
+import { useMaps } from '@/maps/services/context'
 import MapsMenu from '@/maps/shared/components/MapsMenu.vue'
 import MapsMenuItem from '@/maps/shared/components/MapsMenuItem.vue'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
 import type { AnchorRect } from '@/maps/utils/anchorRect'
+import { hasAutoSource } from '@/maps/utils/model'
 
 import WorldMapCanvas from './components/WorldMapCanvas.vue'
 
@@ -43,6 +46,7 @@ const props = defineProps<{
   /** Why the map could not be loaded, if it could not. */
   error: string | null
   preview: boolean
+  canEdit: boolean
   checkmkUrl: string | null
   filterNeedle: string
   problemsOnly: boolean
@@ -64,6 +68,30 @@ const emit = defineEmits<{
 }>()
 
 const canvas = useTemplateRef<InstanceType<typeof WorldMapCanvas>>('canvas')
+
+const { autoObjects } = useMaps()
+
+/** What to say on a map with nothing on it; nothing while there may still be. */
+const emptyText = computed<string | null>(() => {
+  const config = props.config
+  if (!config || config.objects.length > 0 || props.editor.editMode.value || props.preview) {
+    return null
+  }
+  if (hasAutoSource(config.view)) {
+    // Only an answer says there are no hosts; a source still loading or one
+    // that failed says nothing about them.
+    return autoObjects.value !== 'loaded'
+      ? null
+      : _t(
+          'No hosts with geo coordinates found — set the maps_lat and maps_lng labels on hosts to show them here'
+        )
+  }
+  return props.canEdit
+    ? _t(
+        'No objects yet — click the Edit button (bottom right) to place some, or populate the map from hosts with the maps_lat and maps_lng labels under Map settings → Automap source'
+      )
+    : _t('This map has no objects yet')
+})
 
 // The same objects the canvas fits the viewport to, so the control never
 // promises something the map will not do.
@@ -189,6 +217,20 @@ defineExpose({
         "
       />
 
+      <!-- Text only, as on a static map; over the tiles, which stay usable. -->
+      <div v-if="emptyText" class="maps-world-map-view__empty">
+        <p class="maps-world-map-view__empty-text">{{ emptyText }}</p>
+      </div>
+
+      <div
+        v-if="autoObjects === 'loading' && !preview"
+        class="maps-world-map-view__loading"
+        role="status"
+      >
+        <CmkLoading />
+        <span>{{ _t('Loading hosts…') }}</span>
+      </div>
+
       <MapSearch
         v-if="config.objects.length > 0 && !editor.editMode.value && !preview"
         :model-value="filterNeedle"
@@ -242,6 +284,44 @@ defineExpose({
 </template>
 
 <style scoped>
+.maps-world-map-view__empty {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--dimension-8);
+  pointer-events: none;
+}
+
+.maps-world-map-view__empty-text {
+  max-width: 480px;
+  margin: 0;
+  padding: var(--dimension-4) var(--dimension-6);
+  font-size: var(--font-size-normal);
+  text-align: center;
+  color: var(--font-color);
+  background: var(--maps-map-view-glass);
+  border-radius: var(--border-radius);
+}
+
+/* Bottom centre: the top centre is where an unreachable site is announced. */
+.maps-world-map-view__loading {
+  position: absolute;
+  bottom: var(--dimension-6);
+  left: 50%;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-4);
+  padding: var(--dimension-3) var(--dimension-5);
+  color: var(--font-color);
+  background: var(--maps-map-view-glass);
+  border-radius: 9999px;
+  transform: translateX(-50%);
+}
+
 .maps-world-map-view {
   position: relative;
   flex: 1 1 0%;

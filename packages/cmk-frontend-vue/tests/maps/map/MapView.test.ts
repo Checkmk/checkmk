@@ -340,3 +340,82 @@ describe('MapView – unreachable sites', () => {
     ).toBeInTheDocument()
   })
 })
+
+describe('MapView – saving the settings', () => {
+  const automap: MapView = {
+    type: 'worldmap',
+    lat: 51,
+    lng: 10,
+    zoom: 5,
+    auto_source: 'all_hosts',
+    auto_filter_value: '',
+    problems_only: false
+  }
+
+  const openSettingsTopbar = defineComponent({
+    emits: ['open-settings'],
+    setup(_props, { emit }) {
+      return () => h('button', { onClick: () => emit('open-settings') }, 'Map settings')
+    }
+  })
+
+  // Turns the map into a geo automap and saves it, as the settings form does.
+  const savingSettings = defineComponent({
+    emits: ['updated'],
+    setup(_props, { emit }) {
+      const onClick = () => {
+        const map = services.maps.currentMap.value
+        if (map) {
+          map.view = automap
+        }
+        emit('updated')
+      }
+      return () => h('button', { onClick }, 'Save')
+    }
+  })
+
+  beforeEach(() => {
+    services = fakeMapsServices()
+    vi.stubGlobal('EventSource', FakeEventSource)
+    services.nav.replace({ view: 'map', name: 'map1' })
+  })
+
+  async function saveSettings(): Promise<void> {
+    opensMap(newMapView('static'))
+    services.maps.maps.value = [aListedMap({ name: 'map1', can_edit: true })]
+    const { global: provided } = provideServices(services)
+    render(MapViewComponent, {
+      global: {
+        ...provided,
+        stubs: { ...stubs, MapViewTopbar: openSettingsTopbar, MapSettingsModal: savingSettings }
+      }
+    })
+    await waitFor(() => expect(screen.getByTestId('renderer-static')).toBeInTheDocument())
+    await userEvent.click(screen.getByRole('button', { name: 'Map settings' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Save' }))
+  }
+
+  it('loads the hosts of a new automap source once the map is registered again', async () => {
+    let registered: () => void = () => {}
+    vi.mocked(services.apis.mapStates.registerEdit).mockReturnValue(
+      new Promise((resolve) => (registered = resolve))
+    )
+    vi.mocked(services.apis.mapStates.fetchAutoObjects).mockResolvedValue([])
+
+    await saveSettings()
+
+    expect(services.apis.mapStates.fetchAutoObjects).not.toHaveBeenCalled()
+    registered()
+    await waitFor(() => expect(services.maps.autoObjects.value).toBe('loaded'))
+    expect(services.apis.mapStates.fetchAutoObjects).toHaveBeenCalledWith('map1')
+  })
+
+  it('settles the hosts as failed when registering again fails', async () => {
+    vi.mocked(services.apis.mapStates.registerEdit).mockRejectedValue(new Error('down'))
+
+    await saveSettings()
+
+    await waitFor(() => expect(services.maps.autoObjects.value).toBe('failed'))
+    expect(services.apis.mapStates.fetchAutoObjects).not.toHaveBeenCalled()
+  })
+})

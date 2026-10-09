@@ -25,6 +25,10 @@ import { hasAutoSource, newMapView } from '@/maps/utils/model'
 /** Edits are optimistic and coalesced; this is how long a burst is collected. */
 const SAVE_DEBOUNCE_MS = 400
 
+function withoutAutoObjects(objects: MapConfig['objects']): MapConfig['objects'] {
+  return objects.filter((object) => !isAutoObjectId(object.id))
+}
+
 /** The view fields an operator can change from the map itself. */
 export interface ViewChoices {
   problems_only?: boolean
@@ -55,6 +59,12 @@ export class MapService {
   public readonly loading: Ref<boolean> = ref(false)
   public readonly saving: Ref<boolean> = ref(false)
   public readonly error: Ref<string | null> = ref(null)
+  /**
+   * Where the open map's auto-source hosts are: ``loading`` from the load of a
+   * geo map with an auto source until {@link loadAutoObjects} settles. Only
+   * ``loaded`` means an empty answer is no hosts.
+   */
+  public readonly autoObjects: Ref<'none' | 'loading' | 'loaded' | 'failed'> = ref('none')
   /** Bumped per map to make a changed background image reload. */
   public readonly bgRefreshTicks: Ref<Record<string, number>> = ref({})
   /**
@@ -111,6 +121,7 @@ export class MapService {
     this.error.value = null
     this.currentMap.value = null
     this.currentMapSig.value = null
+    this.autoObjects.value = 'none'
     try {
       const signed = await this.api.get(name)
       if (seq !== this.fetchSeq) {
@@ -126,6 +137,7 @@ export class MapService {
           : object
       )
       this.currentMapSig.value = { config_b64: signed.config_b64, sig: signed.sig }
+      this.autoObjects.value = hasAutoSource(cfg.view) ? 'loading' : 'none'
       this.currentMap.value = cfg
     } catch (e: unknown) {
       if (seq === this.fetchSeq) {
@@ -141,19 +153,42 @@ export class MapService {
   /**
    * Merges a worldmap's auto-source hosts into the open map, so the canvas, the
    * drawer and the stream all see one object list. The daemon inflates them from
-   * the config it was handed, so this only works once the map is registered.
-   * Replaces an earlier merge rather than adding to it.
+   * the config it was handed, so this only works once the map is registered:
+   * without that, the hosts will not come. Replaces an earlier merge rather
+   * than adding to it, and drops it from a map whose auto source was removed.
    */
-  public async loadAutoObjects(name: string): Promise<void> {
-    if (this.currentMap.value?.name !== name || !hasAutoSource(this.currentMap.value.view)) {
+  public async loadAutoObjects(name: string, registered: boolean): Promise<void> {
+    const current = this.currentMap.value
+    if (current?.name !== name) {
       return
     }
-    const auto = await this.statesApi.fetchAutoObjects(name)
-    const map = this.currentMap.value
-    if (map?.name !== name) {
+    if (!hasAutoSource(current.view)) {
+      // Left alone without any: a new array would redraw the canvas for nothing.
+      if (current.objects.some((object) => isAutoObjectId(object.id))) {
+        current.objects = withoutAutoObjects(current.objects)
+      }
+      this.autoObjects.value = 'none'
       return
     }
-    map.objects = [...map.objects.filter((object) => !isAutoObjectId(object.id)), ...auto]
+    if (!registered) {
+      this.autoObjects.value = 'failed'
+      return
+    }
+    this.autoObjects.value = 'loading'
+    try {
+      const auto = await this.statesApi.fetchAutoObjects(name)
+      const map = this.currentMap.value
+      if (map?.name !== name) {
+        return
+      }
+      map.objects = [...withoutAutoObjects(map.objects), ...auto]
+      this.autoObjects.value = 'loaded'
+    } catch (error: unknown) {
+      if (this.currentMap.value?.name === name) {
+        this.autoObjects.value = 'failed'
+      }
+      throw error
+    }
   }
 
   /**

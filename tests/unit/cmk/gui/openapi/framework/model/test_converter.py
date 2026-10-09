@@ -2,7 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Iterator
+from collections.abc import Container, Iterator
 from dataclasses import dataclass
 from typing import Annotated, get_args
 
@@ -15,7 +15,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config, Config
 from cmk.gui.groups import GroupType
-from cmk.gui.logged_in import LoggedInNobody
+from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, UserDefaultConfig
 from cmk.gui.openapi.framework.model import ApiOmitted, json_dump_without_omitted
 from cmk.gui.openapi.framework.model.converter import (
     GroupConverter,
@@ -25,13 +25,30 @@ from cmk.gui.openapi.framework.model.converter import (
     TypedPlainValidator,
     UserConverter,
 )
-from cmk.gui.session_context import UserContext
+from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.hosts_and_folders import FolderTree, Host, make_folder_tree
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.ruleset_matcher.tags import TagGroup, TagGroupID, TagID
 from tests.testlib.unit.gui.users import create_and_destroy_user
 from tests.testlib.unit.gui.validation_context import make_validation_context
+
+
+def _user_with_permissions(
+    permissions: Container[str],
+    user_id: UserId = UserId("made-up"),
+    users: dict[str, UserSpec] | None = None,
+) -> LoggedInUser:
+    return LoggedInUser(
+        user_id,
+        UserPermissions({}, {}, {}, []),
+        defaults=UserDefaultConfig(
+            users=users if users is not None else {},
+            default_language="en",
+            default_show_mode="default_show_less",
+        ),
+        explicitly_given_permissions=permissions,
+    )
 
 
 def test_validators_dont_run_on_json_dump() -> None:
@@ -321,67 +338,54 @@ class TestHostConverter:
     ) -> None:
         with pytest.raises(ValueError, match="Host not found"):
             HostConverter(permission_type=permission_type).host_name_in_tree(
-                "non_existent_host", tree
+                "non_existent_host", tree, _user_with_permissions(frozenset())
             )
 
     def test_exists_monitor_without_permissions(self, sample_host: str, tree: FolderTree) -> None:
-        with UserContext(UserId("made-up"), UserPermissions({}, {}, {}, [])):
-            assert sample_host == HostConverter(permission_type="monitor").host_name_in_tree(
-                sample_host, tree
-            )
+        assert sample_host == HostConverter(permission_type="monitor").host_name_in_tree(
+            sample_host, tree, _user_with_permissions(frozenset())
+        )
 
     @pytest.mark.parametrize("permission_type", _permission_types(except_monitor=True))
     def test_exists_fails_no_permission(
         self, sample_host: str, permission_type: HostConverter.PermissionType, tree: FolderTree
     ) -> None:
-        with (
-            UserContext(UserId("made-up"), UserPermissions({}, {}, {}, [])),
-            pytest.raises(ValueError, match="Host .* not found"),
-        ):
-            HostConverter(permission_type=permission_type).host_name_in_tree(sample_host, tree)
+        with pytest.raises(ValueError, match="Host .* not found"):
+            HostConverter(permission_type=permission_type).host_name_in_tree(
+                sample_host, tree, _user_with_permissions(frozenset())
+            )
 
     def test_exists_setup_read_all_folders(self, sample_host: str, tree: FolderTree) -> None:
-        with UserContext(
-            UserId("made-up"),
-            UserPermissions({}, {}, {}, []),
-            explicit_permissions={"wato.see_all_folders"},
-        ):
-            assert sample_host == HostConverter(permission_type="setup_read").host_name_in_tree(
-                sample_host, tree
-            )
+        assert sample_host == HostConverter(permission_type="setup_read").host_name_in_tree(
+            sample_host, tree, _user_with_permissions({"wato.see_all_folders"})
+        )
 
     def test_exists_setup_write_all_folders(self, sample_host: str, tree: FolderTree) -> None:
         # write also requires read permissions, could be changed in the future
-        with UserContext(
-            UserId("made-up"),
-            UserPermissions({}, {}, {}, []),
-            explicit_permissions={"wato.see_all_folders", "wato.all_folders"},
-        ):
-            assert sample_host == HostConverter(permission_type="setup_write").host_name_in_tree(
-                sample_host, tree
-            )
+        assert sample_host == HostConverter(permission_type="setup_write").host_name_in_tree(
+            sample_host, tree, _user_with_permissions({"wato.see_all_folders", "wato.all_folders"})
+        )
 
     def test_exists_setup_write_edit_hosts(self, sample_host: str, tree: FolderTree) -> None:
         # write also requires read permissions, could be changed in the future
-        with (
-            create_and_destroy_user(config=active_config) as (user_id, _password),
-            UserContext(
-                user_id,
-                UserPermissions({}, {}, {}, []),
-                explicit_permissions={"wato.see_all_folders", "wato.edit_hosts"},
-            ),
-        ):
+        with create_and_destroy_user(config=active_config) as (user_id, _password):
+            acting_user = _user_with_permissions(
+                {"wato.see_all_folders", "wato.edit_hosts"},
+                user_id=user_id,
+                users=dict(active_config.multisite_users),
+            )
+
             assert sample_host == HostConverter(permission_type="setup_write").host_name_in_tree(
-                sample_host, tree
+                sample_host, tree, acting_user
             )
 
     def test_host_fails_empty_host(self, tree: FolderTree) -> None:
         with pytest.raises(ValueError, match="Host name cannot be empty"):
-            HostConverter().host_in_tree("", tree)
+            HostConverter().host_in_tree("", tree, LoggedInNobody())
 
     def test_host_name_fails_empty_host(self, tree: FolderTree) -> None:
         with pytest.raises(ValueError, match="Host name cannot be empty"):
-            HostConverter().host_name_in_tree("", tree)
+            HostConverter().host_name_in_tree("", tree, LoggedInNobody())
 
     def test_not_exists_fails_empty_host(self, tree: FolderTree) -> None:
         with pytest.raises(ValueError, match="Host name cannot be empty"):
@@ -399,6 +403,19 @@ class TestHostConverter:
         )
 
         assert first.folder().tree is not other.folder().tree
+
+    def test_host_permissions_are_checked_against_the_user_of_the_request(
+        self, sample_host: str
+    ) -> None:
+        context = make_validation_context(Config(), _user_with_permissions(frozenset()))
+        adapter: TypeAdapter[Host] = TypeAdapter(  # astrein: disable=pydantic-type-adapter
+            Annotated[
+                Host, TypedPlainValidator(str, HostConverter(permission_type="setup_read").host)
+            ]
+        )
+
+        with pytest.raises(ValidationError, match="not found or access denied"):
+            adapter.validate_python(sample_host, context=context)
 
     @pytest.fixture(name="host_is_not_monitored")
     def fixture_host_is_not_monitored(
@@ -426,7 +443,7 @@ class TestHostConverter:
     ) -> None:
         with mock_livestatus:
             assert host_is_monitored == HostConverter(should_be_monitored=True).host_name_in_tree(
-                host_is_monitored, tree
+                host_is_monitored, tree, _user_with_permissions(frozenset())
             )
 
     def test_should_be_monitored_fails(
@@ -436,7 +453,9 @@ class TestHostConverter:
         tree: FolderTree,
     ) -> None:
         with mock_livestatus, pytest.raises(ValueError, match="should be monitored"):
-            HostConverter(should_be_monitored=True).host_name_in_tree(host_is_not_monitored, tree)
+            HostConverter(should_be_monitored=True).host_name_in_tree(
+                host_is_not_monitored, tree, _user_with_permissions(frozenset())
+            )
 
     def test_should_not_be_monitored_passes(
         self,
@@ -447,7 +466,7 @@ class TestHostConverter:
         with mock_livestatus:
             assert host_is_not_monitored == HostConverter(
                 should_be_monitored=False
-            ).host_name_in_tree(host_is_not_monitored, tree)
+            ).host_name_in_tree(host_is_not_monitored, tree, _user_with_permissions(frozenset()))
 
     def test_should_not_be_monitored_fails(
         self,
@@ -456,7 +475,9 @@ class TestHostConverter:
         tree: FolderTree,
     ) -> None:
         with mock_livestatus, pytest.raises(ValueError, match="should not be monitored"):
-            HostConverter(should_be_monitored=False).host_name_in_tree(host_is_monitored, tree)
+            HostConverter(should_be_monitored=False).host_name_in_tree(
+                host_is_monitored, tree, _user_with_permissions(frozenset())
+            )
 
 
 class TestHostConverterMonitoredHostName:

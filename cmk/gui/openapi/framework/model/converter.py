@@ -20,7 +20,7 @@ from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.groups import GroupName, GroupType
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.openapi.framework._context import ApiContext
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.validation_context import validation_context_of
@@ -159,23 +159,31 @@ class HostConverter:
         return HostName.parse(value)
 
     def host(self, value: str, info: ValidationInfo[object]) -> Host:
-        return self.host_in_tree(value, folder_tree_of(info))
+        context = validation_context_of(info)
+        return self.host_in_tree(
+            value, context.shared(_folder_tree_of_request), context.api_context.user
+        )
 
-    def host_in_tree(self, value: str, tree: FolderTree) -> Host:
+    def host_in_tree(self, value: str, tree: FolderTree, acting_user: LoggedInUser) -> Host:
         name = HostName(self._parse_host_name(value))
         if host := tree.host(name):
-            self._verify(host)
+            self._verify(host, acting_user)
             return host
 
         raise ValueError(f"Host not found: {value!r}")
 
     def host_name(self, value: str, info: ValidationInfo[object]) -> HostName:
-        return self.host_name_in_tree(value, folder_tree_of(info))
+        context = validation_context_of(info)
+        return self.host_name_in_tree(
+            value, context.shared(_folder_tree_of_request), context.api_context.user
+        )
 
-    def host_name_in_tree(self, value: str, tree: FolderTree) -> HostName:
+    def host_name_in_tree(
+        self, value: str, tree: FolderTree, acting_user: LoggedInUser
+    ) -> HostName:
         name = self._parse_host_name(value)
         if host := tree.host(name):
-            self._verify(host)
+            self._verify(host, acting_user)
             return name
 
         raise ValueError(f"Host not found: {value!r}")
@@ -206,23 +214,23 @@ class HostConverter:
             )
         return name
 
-    def _verify(self, host: Host) -> None:
+    def _verify(self, host: Host, acting_user: LoggedInUser) -> None:
         """Run all configured verifications for the host."""
-        self._verify_user_permissions(host)
+        self._verify_user_permissions(host, acting_user)
         self._verify_cluster(host)
         self._verify_monitored(host)
 
-    def _verify_user_permissions(self, host: Host) -> None:
+    def _verify_user_permissions(self, host: Host, acting_user: LoggedInUser) -> None:
         if self.permission_type == "monitor":
             return
 
         try:
-            host.permissions.need_permission("read", user)
+            host.permissions.need_permission("read", acting_user)
         except MKAuthException:
             raise ValueError(f"Host {host.name()!r} not found or access denied")
 
         if self.permission_type == "setup_write":
-            host.permissions.need_permission("write", user)
+            host.permissions.need_permission("write", acting_user)
 
     def _verify_cluster(self, host: Host) -> None:
         if self.should_be_cluster is None:

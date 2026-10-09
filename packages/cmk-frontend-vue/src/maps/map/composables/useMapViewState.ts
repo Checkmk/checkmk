@@ -8,9 +8,15 @@
  * its settings dialog — the problems filter, a flow map's layout, a world map's
  * default viewport.
  *
- * These are part of the map, so they are saved; but they are changed in passing
- * while reading a map, so they are saved on the store's own debounce rather
- * than through the settings dialog.
+ * A flow map's layout and a folder tree's drawing are part of the map, so they
+ * are saved; but they are changed in passing while reading a map, so they are
+ * saved on the store's own debounce rather than through the settings dialog.
+ *
+ * The problems filter is the viewer's own: switching it while reading must not
+ * change what everybody else sees on a published map. It is held for the
+ * session on every map, and the map's stored value -- set in the settings
+ * dialog -- is where it starts. Saving a different value there starts it over,
+ * so the new setting shows rather than the choice made before it.
  *
  * A map the user may not edit -- every built-in one -- takes no writes, but the
  * change still has to take effect: not editable means "this map is not
@@ -77,25 +83,47 @@ export function useMapViewState(): MapViewState {
     return config === null ? undefined : sessionChoices.get(config.name)
   }
 
+  /** The map a viewer's own choice is held for, whatever the map takes. */
+  function viewerMap(): MapConfig | null {
+    return nav.state.preview ? null : maps.currentMap.value
+  }
+
+  function viewerChosen(): ViewChoices | undefined {
+    const config = viewerMap()
+    return config === null ? undefined : sessionChoices.get(config.name)
+  }
+
+  function chooseForViewer(patch: ViewChoices): void {
+    const config = viewerMap()
+    if (config !== null) {
+      sessionChoices.set(config.name, { ...sessionChoices.get(config.name), ...patch })
+    }
+  }
+
   /** Save the change where the map can take it, hold it for the session where it cannot. */
   function choose(patch: ViewChoices): void {
-    const config = heldMap()
-    if (config === null) {
+    if (heldMap() === null) {
       persist(patch)
       return
     }
-    sessionChoices.set(config.name, { ...sessionChoices.get(config.name), ...patch })
+    chooseForViewer(patch)
+  }
+
+  function savedProblemsOnly(): boolean {
+    const view = maps.currentMap.value?.view as { problems_only?: boolean } | undefined
+    return view?.problems_only ?? false
   }
 
   return {
     persist,
     problemsOnly: computed({
       get: () => {
-        const view = maps.currentMap.value?.view as { problems_only?: boolean } | undefined
-        return chosen()?.problems_only ?? view?.problems_only ?? false
+        const saved = savedProblemsOnly()
+        const choice = viewerChosen()
+        return choice?.problems_only_saved === saved ? (choice.problems_only ?? saved) : saved
       },
       set: (value) => {
-        choose({ problems_only: value })
+        chooseForViewer({ problems_only: value, problems_only_saved: savedProblemsOnly() })
       }
     }),
     serviceLayout: computed({

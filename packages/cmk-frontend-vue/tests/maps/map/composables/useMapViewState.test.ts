@@ -38,16 +38,54 @@ afterEach(() => {
 })
 
 describe('useMapViewState — a map that can be saved', () => {
-  it('writes the chosen filter into the map and saves it', () => {
-    const config = aMap('writable-saves')
+  it('writes the chosen drawing into the map and saves it', () => {
+    const config = { ...aMap('writable-saves'), view: { type: 'foldertree' } } as MapConfig
+    const services = openMap(config, true)
+
+    const state = runWithServices(services, () => useMapViewState())
+    state.folderView.value = 'list'
+
+    expect(config.view).toMatchObject({ default_view: 'list' })
+    vi.advanceTimersByTime(400)
+    expect(services.apis.mapConfig.update).toHaveBeenCalled()
+  })
+
+  // A published map shows every viewer what its settings say, not what the
+  // last editor happened to filter while reading it.
+  it('keeps the problems filter to the viewer', () => {
+    const config = aMap('writable-filter')
     const services = openMap(config, true)
 
     const state = runWithServices(services, () => useMapViewState())
     state.problemsOnly.value = true
 
-    expect(config.view).toMatchObject({ problems_only: true })
+    expect(state.problemsOnly.value).toBe(true)
+    expect(config.view).toEqual({ type: 'static' })
     vi.advanceTimersByTime(400)
-    expect(services.apis.mapConfig.update).toHaveBeenCalled()
+    expect(services.apis.mapConfig.update).not.toHaveBeenCalled()
+  })
+
+  it('starts from the problems filter the map was saved with', () => {
+    const config = { ...aMap('writable-default'), view: { type: 'static', problems_only: true } }
+    const services = openMap(config as MapConfig, true)
+
+    const state = runWithServices(services, () => useMapViewState())
+
+    expect(state.problemsOnly.value).toBe(true)
+  })
+})
+
+describe('useMapViewState — the saved problems filter changes', () => {
+  it('shows the newly saved filter over a choice made before it', () => {
+    const config = aMap('writable-resaved')
+    const services = openMap(config, true)
+    const state = runWithServices(services, () => useMapViewState())
+    state.problemsOnly.value = true
+    state.problemsOnly.value = false
+
+    config.view = { type: 'static', problems_only: true }
+
+    expect(state.problemsOnly.value).toBe(true)
   })
 })
 

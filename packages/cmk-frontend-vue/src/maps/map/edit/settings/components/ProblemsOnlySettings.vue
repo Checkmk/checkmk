@@ -4,8 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <!--
-Whether the map shows only its objects with a problem. The switch on the map
-itself sets the same field, so the form shows what the map currently shows.
+Whether the map starts out showing only its objects with a problem. The
+switch on the map is each viewer's own and is not saved.
 -->
 <script setup lang="ts">
 import CmkSwitch from 'cmk-ui-library/components/CmkSwitch.vue'

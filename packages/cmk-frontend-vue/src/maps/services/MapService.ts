@@ -28,6 +28,8 @@ const SAVE_DEBOUNCE_MS = 400
 /** The view fields an operator can change from the map itself. */
 export interface ViewChoices {
   problems_only?: boolean
+  /** The saved filter the viewer's choice was made over; once it changes, the choice lapses. */
+  problems_only_saved?: boolean
   service_layout?: ServiceLayout
   default_view?: FolderTreeView['default_view']
 }

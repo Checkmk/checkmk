@@ -27,6 +27,7 @@ let lastIfMatch: string | null = null
 function completeModel() {
   return {
     ...emptyService(),
+    configurationName: 'http_duration_on_web01',
     metricName: 'otel.http.duration',
     serviceName: 'HTTP duration',
     hostName: 'web01'
@@ -122,6 +123,13 @@ describe('createCustomService', () => {
         lower_threshold: 10
       } as ConsolidationFunction
     })
+    expect(result.ok).toBe(false)
+    expect(result.error).toBeTruthy()
+    expect(createRequests).toBe(0)
+  })
+
+  test('refuses to save without a configuration name and issues no request', async () => {
+    const result = await createCustomService({ ...completeModel(), configurationName: '' })
     expect(result.ok).toBe(false)
     expect(result.error).toBeTruthy()
     expect(createRequests).toBe(0)

@@ -5,6 +5,8 @@
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
 
+import { configNameFormatErrors } from '@/lib/configuration-name'
+
 import { type SaveResult, saveCustomServiceDefinition, updateCustomServiceDefinition } from './api'
 import {
   aggregationProblem,
@@ -40,6 +42,10 @@ function validate(model: ServiceModel): Validated {
 }
 
 export async function createCustomService(model: ServiceModel): Promise<SaveResult> {
+  const [nameError] = configNameFormatErrors(model.configurationName)
+  if (nameError !== undefined) {
+    return { ok: false, error: nameError }
+  }
   const validated = validate(model)
   if (!validated.ok) {
     return validated

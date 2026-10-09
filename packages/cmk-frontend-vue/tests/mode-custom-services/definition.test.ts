@@ -11,9 +11,7 @@ import {
   aggregationProblem,
   buildCustomServiceDefinition,
   buildCustomServiceUpdate,
-  configurationNameFor,
-  serviceModelFrom,
-  slugForId
+  serviceModelFrom
 } from '@/mode-custom-services/definition'
 import { type ServiceModel, emptyService } from '@/mode-custom-services/types'
 
@@ -231,30 +229,6 @@ describe('buildCustomServiceDefinition', () => {
       buildCustomServiceDefinition(model({ configurationName: 'my_config' })).configuration_name
     ).toBe('my_config')
   })
-
-  test('derives the identifier from the service name and the host', () => {
-    expect(buildCustomServiceDefinition(model()).configuration_name).toBe('http_duration_on_web01')
-  })
-
-  test('falls back to the metric when the service name yields no identifier', () => {
-    const definition = buildCustomServiceDefinition(
-      model({ serviceName: '\u5ef6\u8fdf\u6642\u9593' })
-    )
-    expect(definition.configuration_name).toBe('otel_http_duration_on_web01')
-  })
-
-  test('falls back to a constant when neither name yields an identifier', () => {
-    const definition = buildCustomServiceDefinition(
-      model({ serviceName: '\u5ef6\u8fdf', metricName: '\u5ef6\u8fdf' })
-    )
-    expect(definition.configuration_name).toBe('custom_service_on_web01')
-  })
-
-  test('gives the same service on two hosts distinct identifiers', () => {
-    expect(buildCustomServiceDefinition(model({ hostName: 'web01' })).configuration_name).not.toBe(
-      buildCustomServiceDefinition(model({ hostName: 'web02' })).configuration_name
-    )
-  })
 })
 
 describe('buildCustomServiceUpdate', () => {
@@ -352,30 +326,5 @@ describe('aggregationProblem', () => {
     expect(
       aggregationProblem({ type: 'gauge', function: 'gauge_last', lookback_seconds: 120 })
     ).toBeUndefined()
-  })
-})
-
-describe('slugForId', () => {
-  test.each([
-    ['HTTP duration', 'http_duration'],
-    ['otel.http.server.duration', 'otel_http_server_duration'],
-    ['  Latency (p99)!  ', 'latency_p99'],
-    ['already_fine', 'already_fine'],
-    ['\u5ef6\u8fdf\u6642\u9593', ''],
-    ['!!!', '']
-  ])('turns %o into %o', (serviceName, expected) => {
-    expect(slugForId(serviceName)).toBe(expected)
-  })
-})
-
-describe('configurationNameFor', () => {
-  test('scopes the identifier to the host', () => {
-    expect(
-      configurationNameFor({
-        serviceName: 'HTTP duration',
-        metricName: 'otel.http.duration',
-        hostName: 'web-01.example.com'
-      })
-    ).toBe('http_duration_on_web_01_example_com')
   })
 })

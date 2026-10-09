@@ -23,6 +23,11 @@ const NAME_PREFIX = 'custom_service_config_'
 
 const { _t } = usei18n()
 
+const { stacked = false } = defineProps<{
+  /** Label above a wide input, as in the slide-in, instead of the wizard's label beside the input. */
+  stacked?: boolean
+}>()
+
 const configurationNameId = useId()
 
 const configurationName = defineModel<string>('configurationName', { required: true })
@@ -73,17 +78,18 @@ defineExpose({ validate })
 <template>
   <div
     class="mode-custom-services-configure-name-step"
+    :class="{ 'mode-custom-services-configure-name-step--stacked': stacked }"
     role="group"
     :aria-label="_t('General configuration properties')"
   >
-    <CmkLabel :for="configurationNameId"
+    <CmkLabel :for="configurationNameId" :variant="stacked ? 'subtitle' : 'default'"
       >{{ _t('Configuration name') }} <CmkLabelRequired
     /></CmkLabel>
     <CmkInput
       :id="configurationNameId"
       v-model="configurationName"
       type="text"
-      field-size="medium"
+      :field-size="stacked ? 'large' : 'medium'"
       :placeholder="`${NAME_PREFIX}1`"
       :external-errors="allErrors"
       aria-required="true"
@@ -97,5 +103,10 @@ defineExpose({ validate })
   grid-template-columns: auto 1fr;
   gap: var(--spacing) var(--dimension-6);
   align-items: start;
+
+  &.mode-custom-services-configure-name-step--stacked {
+    grid-template-columns: 1fr;
+    row-gap: var(--dimension-2);
+  }
 }
 </style>

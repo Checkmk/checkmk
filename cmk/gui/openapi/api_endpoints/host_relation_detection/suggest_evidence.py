@@ -16,7 +16,7 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.watolib.host_relation_detection import scan_for_evidence
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 
 from ._family import HOST_RELATION_DETECTION_FAMILY
 from ._shared import (
@@ -43,16 +43,17 @@ def suggest_host_relation_evidence(
     """
     need_detection_permissions()
     attribute_names = [attribute["name"] for attribute in api_context.config.wato_host_attrs]
+    tree = make_folder_tree(api_context.config)
     return as_suggestions_model(
         scan_for_evidence(
-            folder_tree(),
+            tree,
             attribute_names=attribute_names,
             acting_user=user,
             words=parsed_words(body),
             values=parsed_values(body, attribute_names),
             in_names="names" in body.look_in,
             in_values="values" in body.look_in,
-            scope=parsed_scope(body.scope).scope(),
+            scope=parsed_scope(tree, body.scope).scope(),
         )
     )
 

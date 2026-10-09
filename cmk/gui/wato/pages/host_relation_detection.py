@@ -38,7 +38,7 @@ from cmk.gui.watolib.host_relation_detection import (
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_preserving_link,
-    folder_tree,
+    make_folder_tree,
     SearchFolder,
 )
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
@@ -76,7 +76,7 @@ class ModeHostRelationDetection(WatoMode[None]):
     def page(self, config: Config) -> None:
         folders = [
             ScopeChoice(name=f"/{path}", title=title)
-            for path, title in folder_tree().folder_choices_fulltitle(user)
+            for path, title in make_folder_tree(config).folder_choices_fulltitle(user)
         ]
         sites = get_configured_site_choices()
         html.vue_component(

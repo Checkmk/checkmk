@@ -38,7 +38,7 @@ from cmk.gui.watolib.host_relation_scan import (
     ValueArgs,
 )
 from cmk.gui.watolib.host_relations import relation_choice_name
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.web.utils import permission_verification as permissions
 
 from .models.request_models import (
@@ -145,7 +145,7 @@ def _need_offered_value(source: str, name: str, custom_attributes: Collection[st
         raise invalid_request(f"{name!r} is not a custom host attribute.")
 
 
-def parsed_scope(model: ScopeModel | ApiOmitted) -> ScopeArgs:
+def parsed_scope(tree: FolderTree, model: ScopeModel | ApiOmitted) -> ScopeArgs:
     """Where the page asked to look, or a 400 for a folder or site the page would not offer.
 
     Asked against the very choices the page offers, so the two cannot disagree.
@@ -153,7 +153,7 @@ def parsed_scope(model: ScopeModel | ApiOmitted) -> ScopeArgs:
     if isinstance(model, ApiOmitted):
         return ScopeArgs()
     folder = "" if isinstance(model.folder, ApiOmitted) else model.folder.path()
-    if folder not in dict(folder_tree().folder_choices_fulltitle(user)):
+    if folder not in dict(tree.folder_choices_fulltitle(user)):
         raise invalid_request(f"The folder {'/' + folder!r} cannot be looked in.")
     site = None if isinstance(model.site, ApiOmitted) else model.site
     if site is not None and site not in dict(get_configured_site_choices()):

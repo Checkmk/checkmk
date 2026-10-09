@@ -20,6 +20,7 @@ from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib.host_relation_scan import RelationScanBackgroundJob, start_relation_scan
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 
 from ._family import HOST_RELATION_DETECTION_FAMILY
 from ._shared import finding_args, need_detection_permissions, parsed_scope, PERMISSIONS
@@ -38,7 +39,7 @@ def scan_host_relations(api_context: ApiContext, body: ScanRequestModel) -> Rela
     findings = finding_args(
         body, [attribute["name"] for attribute in api_context.config.wato_host_attrs]
     )
-    scope = parsed_scope(body.scope)
+    scope = parsed_scope(make_folder_tree(api_context.config), body.scope)
     job = RelationScanBackgroundJob()
     if (
         result := start_relation_scan(

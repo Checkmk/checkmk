@@ -847,6 +847,15 @@ _KNOWN_COLUMNS_KEY_ORDERS = {
         "url",
     ],
     ("software", "applications", "veeam", "patches"): ["name"],
+    ("software", "applications", "veeam", "wan_accelerators"): [
+        "name",
+        "description",
+        "traffic_port",
+        "streams_count",
+        "high_bandwidth_mode_enabled",
+        "cache_folder",
+        "cache_size",
+    ],
     ("software", "applications", "cisco_meraki", "organisations"): [
         "org_id",
         "org_name",

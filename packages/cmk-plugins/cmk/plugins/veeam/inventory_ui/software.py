@@ -5,7 +5,20 @@
 
 import time
 
-from cmk.inventory_ui.v1 import BoolField, Label, Node, NumberField, Table, TextField, Title, View
+from cmk.inventory_ui.v1 import (
+    BoolField,
+    Label,
+    Node,
+    NumberField,
+    SINotation,
+    Table,
+    TextField,
+    Title,
+    Unit,
+    View,
+)
+
+UNIT_BYTES = Unit(SINotation("B"))
 
 
 def _render_date(value: int | float) -> Label | str:
@@ -47,6 +60,27 @@ node_software_applications_veeam_patches = Node(
         view=View(name="invveeampatches", title=Title("Veeam Backup & Replication patches")),
         columns={
             "name": TextField(Title("Name")),
+        },
+    ),
+)
+
+node_software_applications_veeam_wan_accelerators = Node(
+    name="software_applications_veeam_wan_accelerators",
+    path=["software", "applications", "veeam", "wan_accelerators"],
+    title=Title("WAN accelerators"),
+    table=Table(
+        view=View(
+            name="invveeamwanaccelerators",
+            title=Title("Veeam Backup & Replication WAN accelerators"),
+        ),
+        columns={
+            "name": TextField(Title("Name")),
+            "description": TextField(Title("Description")),
+            "traffic_port": NumberField(Title("Traffic port")),
+            "streams_count": NumberField(Title("Streams")),
+            "high_bandwidth_mode_enabled": BoolField(Title("High bandwidth mode")),
+            "cache_folder": TextField(Title("Cache folder")),
+            "cache_size": NumberField(Title("Cache size"), render=UNIT_BYTES),
         },
     ),
 )

@@ -22,6 +22,7 @@ defineProps<{ connected: boolean }>()
   <div
     class="maps-map-live-indicator"
     :class="connected ? 'maps-map-live-indicator--live' : 'maps-map-live-indicator--offline'"
+    :title="connected ? undefined : _t('Connection lost — showing last known state')"
   >
     <span class="maps-map-live-indicator__dot" />
     {{ connected ? _t('Live') : _t('Offline') }}

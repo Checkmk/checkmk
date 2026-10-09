@@ -159,7 +159,7 @@ describe('RadarMapView', () => {
 
     return vi.waitFor(() =>
       expect(
-        screen.getByText('Site unreachable: remote-1 — showing last known state for its hosts')
+        screen.getByText('Site unreachable: remote-1 — its hosts are missing from the map')
       ).toBeInTheDocument()
     )
   })

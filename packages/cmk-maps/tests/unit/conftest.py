@@ -91,6 +91,7 @@ def mock_connection() -> MagicMock:
     connection = MagicMock(spec=ConnectionBase)
     connection.connection_id = "mock_connection"
     connection.is_available = AsyncMock(return_value=True)
+    connection.dead_sites = MagicMock(return_value=[])
 
     connection.get_host_state = AsyncMock()
     connection.get_service_state = AsyncMock()

@@ -1269,6 +1269,10 @@ class LivestatusConnection(ConnectionBase):
         return MetricHistoryResult(series=series)
 
     @override
+    def dead_sites(self) -> list[str]:
+        return sorted(self._mc_dead) if self._sites else []
+
+    @override
     async def is_available(self) -> bool:
         # The cmk client raises on connect / protocol errors, so a clean return
         # here genuinely means the connection talked Livestatus end-to-end. The
@@ -1377,7 +1381,7 @@ class LivestatusConnection(ConnectionBase):
         # last successful fetch for dead sites instead, marked ``stale`` so the
         # UI greys them out. The cache is keyed by the auth scope (a contact-
         # scoped user must never see another user's host rows) + site filter.
-        dead_sites = sorted(self._mc_dead) if self._sites else []
+        dead_sites = self.dead_sites()
         cache_key = (_auth_user_ctx.get(), tuple(sorted(sites)) if sites else None)
         # Bound the per-scope cache: SSE groups are few, but REST calls from
         # rotating contact-scoped users would otherwise accumulate forever.

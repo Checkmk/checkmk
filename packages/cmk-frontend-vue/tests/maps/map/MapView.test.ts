@@ -282,3 +282,61 @@ describe('MapView – what the settings slide-in is handed', () => {
     })
   })
 })
+
+describe('MapView – unreachable sites', () => {
+  beforeEach(() => {
+    services = fakeMapsServices()
+    vi.stubGlobal('EventSource', FakeEventSource)
+    services.nav.replace({ view: 'map', name: 'map1' })
+    vi.mocked(services.apis.mapStates.fetchStates).mockResolvedValue({
+      map_name: 'map1',
+      states: [],
+      generated_at: 1,
+      connection_ok: true,
+      dead_sites: ['remote'],
+      folder_tree: null,
+      runtime: { log_level: 'INFO', state_refresh_interval: 5 }
+    })
+  })
+
+  it('tells a geo automap that the hosts of an unreachable site are missing', async () => {
+    opensMap({
+      type: 'worldmap',
+      lat: 51,
+      lng: 10,
+      zoom: 5,
+      auto_source: 'all_hosts',
+      auto_filter_value: '',
+      problems_only: false
+    })
+    renderMap()
+
+    expect(
+      await screen.findByRole('status', {
+        name: 'Site unreachable: remote — its hosts are missing from the map'
+      })
+    ).toHaveTextContent('1 site unreachable')
+  })
+
+  it('tells a static map that the hosts of an unreachable site have no state', async () => {
+    opensMap(newMapView('static'))
+    renderMap()
+
+    expect(
+      await screen.findByRole('status', {
+        name: 'Site unreachable: remote — its hosts show no current state'
+      })
+    ).toHaveTextContent('1 site unreachable')
+  })
+
+  // A wall display has no topbar, and nobody clicks on it.
+  it('says it over the map in kiosk mode', async () => {
+    services.nav.replace({ view: 'map', name: 'map1', kiosk: true })
+    opensMap(newMapView('static'))
+    renderMap()
+
+    expect(
+      await screen.findByText('Site unreachable: remote — its hosts show no current state')
+    ).toBeInTheDocument()
+  })
+})

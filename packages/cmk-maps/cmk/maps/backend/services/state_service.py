@@ -200,6 +200,7 @@ async def _execute_map_states(
         states=states,
         generated_at=time.time(),
         connection_ok=connection_ok,
+        dead_sites=connection.dead_sites(),
         runtime=get_daemon_runtime(),
     )
 
@@ -822,6 +823,7 @@ async def _get_presentation_states(
         states=states,
         generated_at=time.time(),
         connection_ok=connection_ok,
+        dead_sites=connection.dead_sites(),
         runtime=get_daemon_runtime(),
     )
 
@@ -914,6 +916,7 @@ async def _get_radar_states(cfg: MapConfig, connection: ConnectionBase) -> MapSt
         states=states,
         generated_at=time.time(),
         connection_ok=connection_ok,
+        dead_sites=connection.dead_sites(),
         runtime=get_daemon_runtime(),
     )
 

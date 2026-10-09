@@ -137,6 +137,22 @@ def test_get_map_states_batch_exception_yields_pending(
     assert result.states[0].stale is True
 
 
+def test_get_map_states_names_the_sites_that_stopped_answering(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.dead_sites = MagicMock(return_value=["remote"])
+    cfg = MapConfig(
+        name="geo",
+        alias="Geo",
+        connection_id="mock",
+        view=WorldmapView(auto_source="all_hosts"),
+        objects=[],
+    )
+
+    assert asyncio.run(get_map_states(cfg)).dead_sites == ["remote"]
+
+
 def test_get_map_states_non_monitoring_objects(
     mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:

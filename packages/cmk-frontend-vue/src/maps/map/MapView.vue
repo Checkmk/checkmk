@@ -34,7 +34,10 @@ import ObjectCommandModals from '@/maps/map/commands/ObjectCommandModals.vue'
 import { useObjectActions } from '@/maps/map/commands/useObjectActions'
 import MapKioskExit from '@/maps/map/components/MapKioskExit.vue'
 import MapProblemsPill, { type ProblemCounts } from '@/maps/map/components/MapProblemsPill.vue'
+import MapSitesPill from '@/maps/map/components/MapSitesPill.vue'
+import MapStateAlert from '@/maps/map/components/MapStateAlert.vue'
 import MapViewTopbar from '@/maps/map/components/MapViewTopbar.vue'
+import { deadSiteHostsOf } from '@/maps/map/components/deadSites'
 import { useMapEditor } from '@/maps/map/composables/useMapEditor'
 import { useMapFullscreen } from '@/maps/map/composables/useMapFullscreen'
 import { useMapLifecycle } from '@/maps/map/composables/useMapLifecycle'
@@ -134,6 +137,18 @@ const isWorldmap = computed(() => mapConfig.value?.view.type === 'worldmap')
 const isFlowmap = computed(() => mapConfig.value?.view.type === 'flow')
 const isRadar = computed(() => mapConfig.value?.view.type === 'radar')
 const isFolderTree = computed(() => mapConfig.value?.view.type === 'foldertree')
+/**
+ * Whether the map's own chrome says what is not current. Radar and folder tree
+ * say it in their own flow; any map says it only once states have arrived, so
+ * one still connecting does not read as lost.
+ */
+const showsMapState = computed(
+  () =>
+    !isPreview.value &&
+    !isRadar.value &&
+    !isFolderTree.value &&
+    statesStore.lastUpdate.value !== null
+)
 const isPresentation = computed(() => mapConfig.value?.view.type === 'presentation')
 // Content comes from a live query, so there is nothing on it to arrange.
 const derivesItsContent = computed(() => isFlowmap.value || isRadar.value || isFolderTree.value)
@@ -774,6 +789,11 @@ function closeBulkAckModal(sent: boolean): void {
       </template>
       <template #status>
         <MapProblemsPill v-if="isFlowmap && flowProblems.total > 0" :problems="flowProblems" />
+        <MapSitesPill
+          v-if="showsMapState && mapConfig && statesStore.deadSites.value.length"
+          :dead-sites="statesStore.deadSites.value"
+          :dead-site-hosts="deadSiteHostsOf(mapConfig.view)"
+        />
       </template>
     </MapViewTopbar>
 
@@ -866,6 +886,16 @@ function closeBulkAckModal(sent: boolean): void {
         @object-properties="openPropsModal"
         @object-delete="onObjectDelete"
         @placed="onObjectPlaced"
+      />
+
+      <!-- Kiosk mode has no topbar to say it in, and nothing on a wall display
+           is clicked, so there it sits over the map's bottom edge. -->
+      <MapStateAlert
+        v-if="isKiosk && showsMapState && mapConfig"
+        class="maps-map-view__state-alert"
+        :connected="statesStore.connected.value"
+        :dead-sites="statesStore.deadSites.value"
+        :dead-site-hosts="deadSiteHostsOf(mapConfig.view)"
       />
 
       <!-- Shared detail drawer for static / worldmap / radar maps -->
@@ -1056,6 +1086,16 @@ function closeBulkAckModal(sent: boolean): void {
   display: flex;
   flex: 1 1 0%;
   overflow: hidden;
+}
+
+.maps-map-view__state-alert {
+  position: absolute;
+  bottom: var(--dimension-6);
+  left: 50%;
+  z-index: 7;
+  max-width: calc(100% - 2 * var(--dimension-6));
+  transform: translateX(-50%);
+  pointer-events: none;
 }
 
 .maps-map-view__loading {

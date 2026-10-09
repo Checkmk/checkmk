@@ -15,13 +15,14 @@ a leaf leads to is the map view's, like everywhere else -- but a leaf is not in
 the state stream, so it is handed up with the state its tree node carries.
 -->
 <script setup lang="ts">
-import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref, watch } from 'vue'
 
 import HoverMenu from '@/maps/map/components/HoverMenu.vue'
 import MapPlaceholder from '@/maps/map/components/MapPlaceholder.vue'
+import MapStateAlert from '@/maps/map/components/MapStateAlert.vue'
+import { deadSiteHostsOf } from '@/maps/map/components/deadSites'
 import { useMapViewState } from '@/maps/map/composables/useMapViewState'
 import { useObjectHoverMenu } from '@/maps/map/composables/useObjectHoverMenu'
 import { useAuth, useStates } from '@/maps/services/context'
@@ -304,20 +305,11 @@ function closeBulkModal(): void {
 
       <!-- In flow rather than floating: a banner over the drawing would cover
            the very tiles it is warning about. -->
-      <CmkAlert
-        v-if="!preview && root && !states.connected.value"
-        variant="warning"
-        size="small"
-        :text="_t('Connection lost — showing last known state')"
-      />
-      <CmkAlert
-        v-else-if="!preview && root && states.deadSites.value.length"
-        variant="warning"
-        :text="
-          _t('Site unreachable: %{sites} — showing last known state for its hosts', {
-            sites: states.deadSites.value.join(', ')
-          })
-        "
+      <MapStateAlert
+        v-if="!preview && root && config"
+        :connected="states.connected.value"
+        :dead-sites="states.deadSites.value"
+        :dead-site-hosts="deadSiteHostsOf(config.view)"
       />
 
       <div v-if="!root" class="maps-folder-tree-map-view__note">

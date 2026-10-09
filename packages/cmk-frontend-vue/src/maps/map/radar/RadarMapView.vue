@@ -13,14 +13,15 @@ lookup the placed map types work from. What a click on a card leads to is the
 map view's, like everywhere else.
 -->
 <script setup lang="ts">
-import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import MapPlaceholder from '@/maps/map/components/MapPlaceholder.vue'
 import MapSearch from '@/maps/map/components/MapSearch.vue'
+import MapStateAlert from '@/maps/map/components/MapStateAlert.vue'
 import ProblemsOnlyToggle from '@/maps/map/components/ProblemsOnlyToggle.vue'
+import { deadSiteHostsOf } from '@/maps/map/components/deadSites'
 import { useStates } from '@/maps/services/context'
 import type { MapConfig, MapElement } from '@/maps/types/api'
 import { stateWordFromToken } from '@/maps/utils/objectAria'
@@ -117,20 +118,11 @@ const counts = computed(() => radarStateCounts(matching.value))
         <template v-else>
           <!-- In flow above the grid rather than over it: a banner across the
                cards would cover the very states it is warning about. -->
-          <CmkAlert
-            v-if="!preview && !statesStore.connected.value"
-            variant="warning"
-            size="small"
-            :text="_t('Connection lost — showing last known state')"
-          />
-          <CmkAlert
-            v-else-if="!preview && statesStore.deadSites.value.length"
-            variant="warning"
-            :text="
-              _t('Site unreachable: %{sites} — showing last known state for its hosts', {
-                sites: statesStore.deadSites.value.join(', ')
-              })
-            "
+          <MapStateAlert
+            v-if="!preview && config"
+            :connected="statesStore.connected.value"
+            :dead-sites="statesStore.deadSites.value"
+            :dead-site-hosts="deadSiteHostsOf(config.view)"
           />
 
           <!-- Live: objects come and go as the filter's members change. -->

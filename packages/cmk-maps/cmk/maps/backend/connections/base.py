@@ -426,6 +426,10 @@ class ConnectionBase(ABC):
         """
         return MetricHistoryResult()
 
+    def dead_sites(self) -> list[str]:
+        """Sites of a distributed setup that stopped answering; their objects drop out."""
+        return []
+
     @abstractmethod
     async def is_available(self) -> bool:
         """Check whether the connection is reachable."""

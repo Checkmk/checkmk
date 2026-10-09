@@ -294,6 +294,9 @@ export class MapStatesService {
     const { _t } = usei18n()
     try {
       this.disconnect()
+      // What the last map's daemon said is not news about this one.
+      this.lastUpdate.value = null
+      this.deadSites.value = []
       // Re-scope the ticket before anything talks to the daemon, so registering
       // and the stream URL carry a map-scoped token whose baked-in owner lets the
       // daemon share one broadcast loop across the map's viewers.

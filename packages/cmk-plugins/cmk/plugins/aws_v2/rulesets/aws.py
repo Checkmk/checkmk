@@ -145,6 +145,11 @@ def _validate_unique_tag_keys(tags: Sequence[Mapping[str, object]]) -> None:
         )
 
 
+def _validate_unique_account_ids(account_ids: Sequence[str]) -> None:
+    if len(account_ids) != len(set(account_ids)):
+        raise validators.ValidationError(Message("Each account ID may appear only once."))
+
+
 def _tags(title: Title | None = None) -> List:
     return List(
         title=title,
@@ -433,7 +438,10 @@ def _account_list() -> Mapping[str, DictElement]:
                         ),
                     ),
                 ),
-                custom_validate=(validators.LengthInRange(min_value=1),),
+                custom_validate=(
+                    validators.LengthInRange(min_value=1),
+                    _validate_unique_account_ids,
+                ),
             ),
             required=True,
         ),

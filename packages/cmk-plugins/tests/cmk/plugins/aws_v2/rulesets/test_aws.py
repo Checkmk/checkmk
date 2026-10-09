@@ -123,3 +123,11 @@ def test_role_name_with_a_path_is_rejected() -> None:
     with pytest.raises(ValidationError):
         for validate in role_name.custom_validate or ():
             validate("monitoring/CheckmkMonitoring")
+
+
+def test_account_ids_must_be_unique() -> None:
+    account_ids = _parameter_form(_account_list_elements(), "account_ids", List)
+
+    with pytest.raises(ValidationError):
+        for validate in account_ids.custom_validate or ():
+            validate(["333333333333", "333333333333"])

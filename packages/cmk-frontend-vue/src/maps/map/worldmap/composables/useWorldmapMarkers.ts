@@ -53,6 +53,16 @@ interface MarkerEntry {
 /** Multiplier turning an object's ``z`` into Leaflet's marker stacking offset. */
 const Z_STEP = 1000
 
+/**
+ * Stacking step per severity rank, within one ``z``. Leaflet stacks markers by
+ * their screen row, so a step has to outweigh the few pixels between markers
+ * that overlap; all ranks together stay below ``Z_STEP``.
+ */
+const RANK_STEP = 100
+
+/** Lifts the lowest rank (``EMPTY``, -2) to zero. */
+const RANK_BASE = 2
+
 /** Stacking boost that lifts a search match above everything dimmed. */
 const MATCH_BOOST = 10000
 
@@ -64,6 +74,8 @@ export function useWorldmapMarkers(source: {
   /** The object's icon footprint, which is also the marker's hit area. */
   iconSizeOf: (object: MapElement) => number
   defaultZ: () => number
+  /** How severe the object's state is, so a problem is not hidden under an OK. */
+  rankOf: (object: MapElement) => number
   draggable: () => boolean
   selectedIds: () => string[] | undefined
   /** Whether an object passes the map's search and problems-only filter. */
@@ -120,8 +132,9 @@ export function useWorldmapMarkers(source: {
 
   function stackingOf(object: MapElement): number {
     const base = (object.z ?? source.defaultZ()) * Z_STEP
+    const rank = (source.rankOf(object) + RANK_BASE) * RANK_STEP
     const boosted = source.filterActive() && source.matches(object)
-    return base + (boosted ? MATCH_BOOST : 0)
+    return base + rank + (boosted ? MATCH_BOOST : 0)
   }
 
   /** Where the grabbed marker and everything dragged along with it now sit. */

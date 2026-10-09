@@ -218,4 +218,42 @@ describe('WorldMapCanvas', () => {
     // test; the container must be empty after unmount.
     await waitFor(() => expect(container.innerHTML).toBe(''))
   })
+
+  // Leaflet stacks markers by their screen row, so on a shared coordinate it
+  // would be chance whether the DOWN host shows or an UP one covers it.
+  it('stacks the more severe of two overlapping markers on top', async () => {
+    leaflet.L.marker.mockClear()
+    const at = { lat: 52.52, lng: 13.405 }
+    const config = aMap({
+      ...sampleConfig(),
+      objects: [
+        anObject({ id: 'up', type: 'host', host_name: 'up-host', ...at }),
+        anObject({ id: 'down', type: 'host', host_name: 'down-host', ...at })
+      ]
+    })
+    const states = (
+      up: ObjectState['state'],
+      down: ObjectState['state']
+    ): Record<string, ObjectState> => ({
+      up: aState({ object_id: 'up', type: 'host', state: up }),
+      down: aState({ object_id: 'down', type: 'host', state: down })
+    })
+    const { rerender } = render(WorldMapCanvas, {
+      global: mapsGlobal(),
+      props: { ...baseProps, config, states: states('UP', 'DOWN') }
+    })
+    await waitFor(() => expect(leaflet.L.marker).toHaveBeenCalledTimes(2))
+    const [upMarker, downMarker] = leaflet.L.marker.mock.results.map((result) => result.value)
+    const [upOptions, downOptions] = leaflet.L.marker.mock.calls.map(
+      ([, options]) => options as { zIndexOffset: number }
+    )
+
+    expect(downOptions!.zIndexOffset).toBeGreaterThan(upOptions!.zIndexOffset)
+
+    await rerender({ states: states('DOWN', 'UP') })
+
+    const lastOffset = (marker: { setZIndexOffset: { mock: { calls: number[][] } } }) =>
+      marker.setZIndexOffset.mock.calls.at(-1)![0]!
+    expect(lastOffset(upMarker)).toBeGreaterThan(lastOffset(downMarker))
+  })
 })

@@ -49,6 +49,7 @@ import {
   parseFilterTerms,
   passesProblemFilter
 } from '@/maps/utils/objectFilter'
+import { stateRank } from '@/maps/utils/stateColors'
 
 import WorldMapLineArrow from './WorldMapLineArrow.vue'
 import WorldMapLineHandle from './WorldMapLineHandle.vue'
@@ -241,6 +242,7 @@ const markers = useWorldmapMarkers({
   fallbackAt: () => (viewport.value ? [viewport.value.lat, viewport.value.lng] : DEFAULT_CENTRE),
   iconSizeOf,
   defaultZ: () => props.config.default_z ?? 1,
+  rankOf: (object) => stateRank(props.states[object.id]?.state),
   draggable: () => props.editMode,
   selectedIds: () => props.selectedIds,
   matches,

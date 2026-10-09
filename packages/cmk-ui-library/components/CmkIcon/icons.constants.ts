@@ -799,7 +799,12 @@ export const oneColorIcons = [
   'arrow-down',
   'chat-new',
   'chat-history',
-  'docking'
+  'docking',
+  'calendar',
+  'clock',
+  'megaphone',
+  'sparkle',
+  'wrench'
 ] as const
 export const twoColorIcons = ['aggr', 'experiment', 'columns', 'display-options'] as const
 

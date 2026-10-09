@@ -123,7 +123,6 @@ from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
     folder_preserving_link,
-    folder_tree,
     FolderTree,
     Host,
     make_action_link,
@@ -1679,7 +1678,7 @@ class ModeEditRuleset(WatoMode):
 
         # Conditions
         table.cell(_("Conditions"), css=["condition"])
-        self._rule_conditions(rule, folder_choices=lambda: tree.folder_choices(user))
+        self._rule_conditions(rule, tree)
 
         # Value
         table.cell(_("Value"), css=["value"])
@@ -1739,12 +1738,12 @@ class ModeEditRuleset(WatoMode):
 
         quick_setup_source_cell(table, rule.locked_by)
 
-    def _rule_conditions(self, rule: Rule, folder_choices: DropdownChoices) -> None:
+    def _rule_conditions(self, rule: Rule, tree: FolderTree) -> None:
         self._predefined_condition_info(rule)
         html.write_text_permissive(
-            VSExplicitConditions(
-                rulespec=self._rulespec, folder_choices=folder_choices, render="normal"
-            ).value_to_html(rule.get_rule_conditions())
+            VSExplicitConditions(rulespec=self._rulespec, tree=tree, render="normal").value_to_html(
+                rule.get_rule_conditions()
+            )
         )
 
     def _predefined_condition_info(self, rule: Rule) -> None:
@@ -2717,13 +2716,14 @@ class VSExplicitConditions(Transform):
     def __init__(
         self,
         rulespec: Rulespec,
-        folder_choices: DropdownChoices,
+        tree: FolderTree,
         render: Literal["normal", "form_part"],
     ) -> None:
         self._rulespec = rulespec
+        self._tree = tree
         super().__init__(
             valuespec=Dictionary(
-                elements=self._condition_elements(folder_choices),
+                elements=self._condition_elements(lambda: tree.folder_choices(user)),
                 headers=[
                     (_("Folder"), "condition explicit", ["folder_path"]),
                     (_("Host tags"), "condition explicit", ["host_tags"]),
@@ -3033,7 +3033,7 @@ class VSExplicitConditions(Transform):
     def value_to_html(self, value: RuleConditions) -> ValueSpecText:
         with output_funnel.plugged():
             html.open_ul(class_="conditions")
-            renderer = RuleConditionRenderer()
+            renderer = RuleConditionRenderer(self._tree)
             conditions = list(renderer.render(self._rulespec, value))
             if conditions:
                 for condition in conditions:
@@ -3045,6 +3045,9 @@ class VSExplicitConditions(Transform):
 
 
 class RuleConditionRenderer:
+    def __init__(self, tree: FolderTree) -> None:
+        self._tree = tree
+
     def render(
         self,
         rulespec: Rulespec,
@@ -3194,7 +3197,7 @@ class RuleConditionRenderer:
         )
 
         text_list: list[HTML] = []
-        tree = folder_tree()
+        tree = self._tree
         if regex_count == len(host_name_conditions) or regex_count == 0:
             # Entries are either complete regex or no regex at all
             if is_negate:

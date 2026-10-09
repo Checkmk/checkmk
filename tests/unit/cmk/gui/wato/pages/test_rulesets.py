@@ -10,9 +10,9 @@ import pytest
 from pytest import MonkeyPatch
 from pytest_mock import MockerFixture
 
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.wato.pages.rulesets import RuleConditionRenderer
-from cmk.gui.watolib.hosts_and_folders import FolderTree
+from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
 from cmk.ruleset_matcher.conditions import HostOrServiceConditions
 from cmk.ruleset_matcher.matcher import TagConditionNE
 from cmk.ruleset_matcher.tags import TagConfig, TagGroupID, TagID
@@ -93,6 +93,11 @@ def patch_tag_config(
         yield
 
 
+@pytest.fixture(name="tree")
+def fixture_tree() -> FolderTree:
+    return make_folder_tree(Config())
+
+
 @pytest.fixture(name="folder_lookup")
 def fixture_folder_lookup(mocker: MockerFixture) -> None:
     class MockHost:
@@ -153,18 +158,19 @@ class TestRuleConditionRenderer:
         taggroup_id: TagGroupID,
         tag_spec: TagID | None | TagConditionNE,
         rendered_condition: HTML,
+        tree: FolderTree,
     ) -> None:
         assert (
-            RuleConditionRenderer()._single_tag_condition(  # noqa: SLF001
+            RuleConditionRenderer(tree)._single_tag_condition(  # noqa: SLF001
                 taggroup_id,
                 tag_spec,
             )
             == rendered_condition
         )
 
-    def test_tag_condition(self) -> None:
+    def test_tag_condition(self, tree: FolderTree) -> None:
         assert list(
-            RuleConditionRenderer()._tag_conditions(  # noqa: SLF001
+            RuleConditionRenderer(tree)._tag_conditions(  # noqa: SLF001
                 {
                     TagGroupID("tag_grp_1"): {
                         "$or": [
@@ -276,9 +282,9 @@ class TestRuleConditionRenderer:
     )
     @pytest.mark.usefixtures("folder_lookup")
     def test_render_host_condition_text(
-        self, conditions: HostOrServiceConditions, expected: str
+        self, conditions: HostOrServiceConditions, expected: str, tree: FolderTree
     ) -> None:
-        assert RuleConditionRenderer()._render_host_condition_text(  # noqa: SLF001
+        assert RuleConditionRenderer(tree)._render_host_condition_text(  # noqa: SLF001
             conditions
         ) == HTML.without_escaping(expected)
 
@@ -304,16 +310,16 @@ class TestRuleConditionRenderer:
     )
     @pytest.mark.usefixtures("folder_lookup")
     def test_render_host_condition_text_raises(
-        self, conditions: HostOrServiceConditions, exception: type[Exception]
+        self, conditions: HostOrServiceConditions, exception: type[Exception], tree: FolderTree
     ) -> None:
         with pytest.raises(exception):
-            assert RuleConditionRenderer()._render_host_condition_text(conditions)  # noqa: SLF001
+            assert RuleConditionRenderer(tree)._render_host_condition_text(conditions)  # noqa: SLF001
 
     @pytest.mark.usefixtures("folder_lookup")
-    def test_render_host_condition_text_wildcard_host_spec(self) -> None:
+    def test_render_host_condition_text_wildcard_host_spec(self, tree: FolderTree) -> None:
         # Host specs in rule conditions can contain wildcards (e.g. "AP-SEDE-TCOTILLAS*"),
         # but HostName() rejects them. Ensure this is rendered gracefully instead of crashing.
-        result = RuleConditionRenderer()._render_host_condition_text(["AP-SEDE-TCOTILLAS*"])  # noqa: SLF001
+        result = RuleConditionRenderer(tree)._render_host_condition_text(["AP-SEDE-TCOTILLAS*"])  # noqa: SLF001
         assert result == HTML.without_escaping("Host name is <b>AP-SEDE-TCOTILLAS*</b>")
 
     @pytest.mark.parametrize(
@@ -479,9 +485,10 @@ class TestRuleConditionRenderer:
         item_name: str | None,
         conditions: HostOrServiceConditions | None,
         expected: list[HTML],
+        tree: FolderTree,
     ) -> None:
         assert (
-            list(RuleConditionRenderer()._service_conditions(item_type, item_name, conditions))  # noqa: SLF001
+            list(RuleConditionRenderer(tree)._service_conditions(item_type, item_name, conditions))  # noqa: SLF001
             == expected
         )
 

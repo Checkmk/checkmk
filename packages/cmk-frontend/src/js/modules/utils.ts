@@ -881,11 +881,26 @@ function getContentBody(): HTMLElement | null {
   return document.getElementById('content_area') ?? document.body
 }
 
+function opensElsewhere(event: Event | undefined): boolean {
+  if (!(event instanceof MouseEvent)) {
+    return false
+  }
+  if (event.ctrlKey || event.metaKey || event.shiftKey || event.button !== 0) {
+    return true
+  }
+  const target = event.target instanceof Element ? event.target.closest('a')?.target : undefined
+  return !!target && target !== '_self'
+}
+
 export function makeLoadingTransition(
   template: string | null,
   delay: number,
-  title?: string
+  title?: string,
+  event?: Event
 ): void {
+  if (opensElsewhere(event)) {
+    return
+  }
   const contentBody = getContentBody()
   if (!contentBody) {
     return

@@ -65,7 +65,8 @@ def test_folder_save_returns_full_title(create_folder_test_environment: FolderTr
 
     # GIVEN
     visitor = get_visitor(
-        get_folder_slidein_schema(tree), VisitorOptions(migrate_values=True, mask_values=False)
+        get_folder_slidein_schema(tree, user),
+        VisitorOptions(migrate_values=True, mask_values=False),
     )
     _, data = visitor.to_vue(
         RawDiskData({"general": {"title": "foo", "parent_folder": SUB_FOLDER}})
@@ -73,7 +74,11 @@ def test_folder_save_returns_full_title(create_folder_test_environment: FolderTr
 
     # WHEN
     description = save_folder_from_slidein_schema(
-        tree, RawFrontendData(data), pprint_value=False, pending_changes=_noop_pending_changes()
+        tree,
+        RawFrontendData(data),
+        acting_user=user,
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
     )
 
     # THEN
@@ -91,7 +96,8 @@ def test_folder_save_roundtrip(
 
     # GIVEN
     visitor = get_visitor(
-        get_folder_slidein_schema(tree), VisitorOptions(migrate_values=True, mask_values=False)
+        get_folder_slidein_schema(tree, user),
+        VisitorOptions(migrate_values=True, mask_values=False),
     )
     _, data = visitor.to_vue(
         RawDiskData({"general": {"title": "foo", "parent_folder": parent_folder}})
@@ -99,7 +105,11 @@ def test_folder_save_roundtrip(
 
     # WHEN
     save_folder_from_slidein_schema(
-        tree, RawFrontendData(data), pprint_value=False, pending_changes=_noop_pending_changes()
+        tree,
+        RawFrontendData(data),
+        acting_user=user,
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
     )
 
     # THEN

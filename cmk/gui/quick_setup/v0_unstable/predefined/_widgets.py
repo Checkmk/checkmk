@@ -10,6 +10,7 @@ from cmk.gui.fields.definitions import HOST_NAME_REGEXP
 from cmk.gui.form_specs.unstable import id_validators
 from cmk.gui.form_specs.unstable.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.i18n import translate_to_current_language
+from cmk.gui.logged_in import user
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     QSHostName,
     QSHostPath,
@@ -115,6 +116,7 @@ def _host_path_dict_element(title: Title = Title("Folder")) -> DictElement:
             title=title,
             help_text=Help("Specify the location where the host will be created."),
             allow_new_folder_creation=True,
+            folder_choices=lambda: folder_tree().folder_choices_fulltitle(user),
         ),
         required=True,
     )

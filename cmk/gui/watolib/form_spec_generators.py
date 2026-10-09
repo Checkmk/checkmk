@@ -11,7 +11,6 @@ from typing import Any, TypeVar
 from cmk.gui.config import active_config
 from cmk.gui.form_specs.unstable import SingleChoiceEditable
 from cmk.gui.i18n import translate_to_current_language
-from cmk.gui.logged_in import user
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeFormSpec,
     ABCHostAttributeValueSpec,
@@ -19,7 +18,6 @@ from cmk.gui.watolib.host_attributes import (
     sorted_host_attribute_topics,
     sorted_host_attributes_by_topic,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.timeperiods import load_timeperiods
 from cmk.rulesets.internal.form_specs import (
     CascadingSingleChoiceElementExtended,
@@ -41,9 +39,15 @@ T = TypeVar("T")
 def create_full_path_folder_choice(
     title: Title,
     help_text: Help | None,
+    *,
+    folder_choices: Callable[[], Sequence[tuple[str, str]]],
     custom_validate: Sequence[Callable[[str], object]] | None = None,
     allow_new_folder_creation: bool = False,
 ) -> SingleChoiceExtended[str] | SingleChoiceEditable:
+    """A choice of a folder by its full title
+
+    `folder_choices` returns the path and the full title of each folder the user may choose.
+    """
     if allow_new_folder_creation:
         return SingleChoiceEditable(
             # FormSpec
@@ -66,7 +70,7 @@ def create_full_path_folder_choice(
                 name=path,
                 title=Title(folder_title),  # astrein: disable=localization-checker
             )
-            for path, folder_title in folder_tree().folder_choices_fulltitle(user)
+            for path, folder_title in folder_choices()
         ],
         prefill=DefaultValue(""),
         custom_validate=custom_validate,

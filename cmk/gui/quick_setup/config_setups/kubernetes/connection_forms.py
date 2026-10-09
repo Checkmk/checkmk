@@ -9,7 +9,9 @@ from urllib.parse import urlsplit
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.form_specs.unstable import TwoColumnDictionary
 from cmk.gui.form_specs.unstable.validators import HostAddress
+from cmk.gui.logged_in import user
 from cmk.gui.watolib.form_spec_generators import create_full_path_folder_choice
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -68,6 +70,7 @@ def host_configuration() -> Dictionary:
                 parameter_form=create_full_path_folder_choice(
                     title=Title("Folder"),
                     allow_new_folder_creation=False,
+                    folder_choices=lambda: folder_tree().folder_choices_fulltitle(user),
                     help_text=Help(
                         "Select the folder for the source host. Create a new folder first if needed."
                     ),

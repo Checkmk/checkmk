@@ -21,7 +21,7 @@ from cmk.gui.valuespec import (
     MonitoredHostname,
 )
 from cmk.gui.watolib.form_spec_generators import create_full_path_folder_choice
-from cmk.gui.watolib.hosts_and_folders import FolderTree
+from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree
 from cmk.gui.watolib.rulesets import get_host_tags_condition_choices
 from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.internal.form_specs import (
@@ -181,6 +181,7 @@ def fs_multifolder_host_rule_match_conditions(
                         "via Setup and that are contained in this folder - either directly "
                         "or in one of its subfolders."
                     ),
+                    folder_choices=lambda: folder_tree().folder_choices_fulltitle(user),
                 ),
                 add_element_label=Label("Add additional folder"),
                 editable_order=False,

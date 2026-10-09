@@ -212,7 +212,6 @@ class WAFV2Limits(AWSSectionLimits):
             ("RegexPatternSets", "regex_pattern_sets", "Regex sets", 10),
         ]:
             self._add_limit(
-                "",
                 AWSLimit(limit_key, limit_title, def_limit, len(resources[resource_key])),
                 region=self._region_report,
             )
@@ -220,7 +219,6 @@ class WAFV2Limits(AWSSectionLimits):
         # limits per Web ACL
         for web_acl in web_acls:
             self._add_limit(
-                self._target_host(hosts.WAFV2WebACL(web_acl["Name"], self._region_report)),
                 AWSLimit(
                     "web_acl_capacity_units",
                     "Web ACL capacity units (WCUs)",
@@ -228,6 +226,7 @@ class WAFV2Limits(AWSSectionLimits):
                     web_acl["Capacity"],
                 ),
                 region=self._region_report,
+                resource=hosts.WAFV2WebACL(web_acl["Name"], self._region_report),
             )
 
         return AWSComputedContent(web_acls, raw_content.cache_timestamp)
@@ -327,7 +326,11 @@ class WAFV2Summary(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", list(computed_content.content.values()))]
+        return [
+            AWSSectionResult(
+                self._target_host(hosts.AccountScope()), list(computed_content.content.values())
+            )
+        ]
 
 
 class WAFV2WebACL(AWSSectionCloudwatch):

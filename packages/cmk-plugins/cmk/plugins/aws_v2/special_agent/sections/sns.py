@@ -13,6 +13,7 @@ from typing import override
 
 from botocore.client import BaseClient
 
+from .. import hosts
 from ..config import AWSConfig
 from .core import (
     AWSColleagueContents,
@@ -166,7 +167,6 @@ class SNSLimits(AWSSectionLimits):
         topics: Sequence[Mapping] = raw_content.content
 
         self._add_limit(
-            "",
             AWSLimit(
                 key="topics_standard",
                 title="Standard Topics",
@@ -176,7 +176,6 @@ class SNSLimits(AWSSectionLimits):
             region=self._region,
         )
         self._add_limit(
-            "",
             AWSLimit(
                 key="topics_fifo",
                 title="FIFO Topics",
@@ -262,7 +261,7 @@ class SNSSummary(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
 
 
 class SNSSMS(AWSSectionCloudwatch):
@@ -319,7 +318,7 @@ class SNSSMS(AWSSectionCloudwatch):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
 
 
 class SNS(AWSSectionCloudwatch):
@@ -388,4 +387,4 @@ class SNS(AWSSectionCloudwatch):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]

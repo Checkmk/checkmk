@@ -103,7 +103,6 @@ class EBSLimits(AWSSectionLimits):
         # Space values are in TiB.
         # Reference: https://docs.aws.amazon.com/general/latest/gr/ebs-service.html
         self._add_limit(
-            "",
             AWSLimit(
                 "block_store_snapshots",
                 "Block store snapshots",
@@ -112,7 +111,6 @@ class EBSLimits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "block_store_space_standard",
                 "Magnetic volumes space",
@@ -121,7 +119,6 @@ class EBSLimits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "block_store_space_io1",
                 "Provisioned IOPS SSD (io1) space",
@@ -130,7 +127,6 @@ class EBSLimits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "block_store_iops_io1",
                 "Provisioned IOPS SSD (io1) IO operations per second",
@@ -139,7 +135,6 @@ class EBSLimits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "block_store_space_io2",
                 "Provisioned IOPS SSD (io2) space",
@@ -148,7 +143,6 @@ class EBSLimits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "block_store_iops_io2",
                 "Provisioned IOPS SSD (io2) IO operations per second",
@@ -157,7 +151,6 @@ class EBSLimits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "block_store_space_gp2",
                 "General Purpose SSD (gp2) space",
@@ -166,7 +159,6 @@ class EBSLimits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "block_store_space_gp3",
                 "General Purpose SSD (gp3) space",
@@ -175,7 +167,6 @@ class EBSLimits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "block_store_space_sc1",
                 "Cold HDD space",
@@ -184,7 +175,6 @@ class EBSLimits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "block_store_space_st1",
                 "Throughput Optimized HDD space",

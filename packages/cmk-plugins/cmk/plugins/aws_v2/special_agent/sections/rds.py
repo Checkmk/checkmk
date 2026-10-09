@@ -13,6 +13,7 @@ from typing import override
 
 from botocore.client import BaseClient
 
+from .. import hosts
 from ..config import AWSConfig, LOGGER, Tags
 from .core import (
     AWSColleagueContents,
@@ -93,7 +94,6 @@ class RDSLimits(AWSSectionLimits):
                 )
                 continue
             self._add_limit(
-                "",
                 AWSLimit(
                     key,
                     title,
@@ -193,7 +193,11 @@ class RDSSummary(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", list(computed_content.content.values()))]
+        return [
+            AWSSectionResult(
+                self._target_host(hosts.AccountScope()), list(computed_content.content.values())
+            )
+        ]
 
 
 class RDS(AWSSectionCloudwatch):
@@ -298,4 +302,4 @@ class RDS(AWSSectionCloudwatch):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]

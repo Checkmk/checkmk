@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from cmk.plugins.aws_v2.constants import AWS_ELASTICACHE_QUOTA_DEFAULTS
 
+from .. import hosts
 from ..config import AWSConfig
 from .core import (
     AWSColleagueContents,
@@ -161,7 +162,6 @@ class ElastiCacheLimits(AWSSectionLimits):
 
         for cluster in clusters:
             self._add_limit(
-                "",
                 AWSLimit(
                     key="nodes_per_cluster",
                     title=f"Nodes of {cluster.ClusterId}",
@@ -174,7 +174,6 @@ class ElastiCacheLimits(AWSSectionLimits):
             )
 
         self._add_limit(
-            "",
             AWSLimit(
                 key="nodes",
                 title="Nodes",
@@ -184,7 +183,6 @@ class ElastiCacheLimits(AWSSectionLimits):
             region=self._region,
         )
         self._add_limit(
-            "",
             AWSLimit(
                 key="subnet_groups",
                 title="Subnet groups",
@@ -194,7 +192,6 @@ class ElastiCacheLimits(AWSSectionLimits):
             region=self._region,
         )
         self._add_limit(
-            "",
             AWSLimit(
                 key="parameter_groups",
                 title="Parameter groups",
@@ -326,7 +323,9 @@ class ElastiCacheSummary(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content[0])]
+        return [
+            AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content[0])
+        ]
 
 
 class ElastiCache(AWSSectionCloudwatch):
@@ -406,4 +405,4 @@ class ElastiCache(AWSSectionCloudwatch):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]

@@ -12,6 +12,7 @@ from typing import Any, Literal, override
 
 from botocore.client import BaseClient
 
+from .. import hosts
 from ..config import AWSConfig, LOGGER, Tags
 from .core import (
     AWSColleagueContents,
@@ -136,7 +137,7 @@ class S3Limits(AWSSectionLimits):
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         self._add_limit(
-            "", AWSLimit("buckets", "Buckets", 100, len(raw_content.content)), region="Global"
+            AWSLimit("buckets", "Buckets", 100, len(raw_content.content)), region="Global"
         )
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
@@ -244,7 +245,11 @@ class S3Summary(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", list(computed_content.content.values()))]
+        return [
+            AWSSectionResult(
+                self._target_host(hosts.AccountScope()), list(computed_content.content.values())
+            )
+        ]
 
 
 class S3(AWSSectionCloudwatch):
@@ -339,7 +344,7 @@ class S3(AWSSectionCloudwatch):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
 
 
 class S3Requests(AWSSectionCloudwatch):
@@ -422,4 +427,4 @@ class S3Requests(AWSSectionCloudwatch):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]

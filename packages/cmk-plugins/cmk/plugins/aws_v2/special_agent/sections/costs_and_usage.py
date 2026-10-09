@@ -9,6 +9,7 @@
 from datetime import datetime, timedelta
 from typing import override
 
+from .. import hosts
 from ..config import LOGGER
 from .core import (
     AWSColleagueContents,
@@ -76,7 +77,7 @@ class CostsAndUsage(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
 
 
 class ReservationUtilization(AWSSection):
@@ -143,4 +144,4 @@ class ReservationUtilization(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]

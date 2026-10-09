@@ -182,7 +182,6 @@ class EC2Limits(AWSSectionLimits):
                     inst_fam_name = "Unknown Instance Family"
                 ondemand_limit = instance_quotas.get(inst_fam_name, ondemand_limit)
                 self._add_limit(
-                    "",
                     AWSLimit(
                         "running_ondemand_instances_%s" % inst_type.lower(),
                         inst_fam_name + " vCPUs",
@@ -194,7 +193,6 @@ class EC2Limits(AWSSectionLimits):
 
             total_instances += count
             self._add_limit(
-                "",
                 AWSLimit(
                     "running_ondemand_instances_%s" % inst_type,
                     "Running On-Demand %s Instances" % inst_type,
@@ -203,7 +201,6 @@ class EC2Limits(AWSSectionLimits):
                 ),
             )
         self._add_limit(
-            "",
             AWSLimit(
                 "running_ondemand_instances_total",
                 "Total Running On-Demand Instances",
@@ -270,7 +267,6 @@ class EC2Limits(AWSSectionLimits):
             elif domain == "standard":
                 std_addresses += 1
         self._add_limit(
-            "",
             AWSLimit(
                 "vpc_elastic_ip_addresses",
                 "VPC Elastic IP addresses",
@@ -279,7 +275,6 @@ class EC2Limits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "elastic_ip_addresses",
                 "Elastic IP addresses",
@@ -294,7 +289,6 @@ class EC2Limits(AWSSectionLimits):
         quotas_by_name: Mapping[str, float],
     ) -> None:
         self._add_limit(
-            "",
             AWSLimit(
                 "vpc_sec_groups",
                 "VPC security groups",
@@ -308,7 +302,6 @@ class EC2Limits(AWSSectionLimits):
             if not vpc_id:
                 continue
             self._add_limit(
-                "",
                 AWSLimit(
                     "vpc_sec_group_rules",
                     "Rules of VPC security group %s" % sec_group["GroupName"],
@@ -327,7 +320,6 @@ class EC2Limits(AWSSectionLimits):
         if_sec_group_limit = int(quotas_by_name.get("Security groups per network interface", 5))
         for iface in interfaces:
             self._add_limit(
-                "",
                 AWSLimit(
                     "if_vpc_sec_group",
                     "VPC security groups of elastic network interface %s"
@@ -343,7 +335,6 @@ class EC2Limits(AWSSectionLimits):
             if spot_inst_req["State"] in ["open", "active"]:
                 count_spot_inst_reqs += 1
         self._add_limit(
-            "",
             AWSLimit(
                 "spot_inst_requests",
                 "Spot Instance Requests",
@@ -363,7 +354,6 @@ class EC2Limits(AWSSectionLimits):
             total_target_cap += spot_fleet_req["SpotFleetRequestConfig"]["TargetCapacity"]
 
         self._add_limit(
-            "",
             AWSLimit(
                 "active_spot_fleet_requests",
                 "Active Spot Fleet Requests",
@@ -372,7 +362,6 @@ class EC2Limits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "spot_fleet_total_target_capacity",
                 "Spot Fleet Requests Total Target Capacity",
@@ -505,7 +494,11 @@ class EC2Summary(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", list(computed_content.content.values()))]
+        return [
+            AWSSectionResult(
+                self._target_host(hosts.AccountScope()), list(computed_content.content.values())
+            )
+        ]
 
 
 class EC2Labels(AWSSectionLabels):

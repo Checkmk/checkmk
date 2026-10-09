@@ -15,6 +15,7 @@ from typing import override, TYPE_CHECKING
 
 from botocore.client import BaseClient
 
+from .. import hosts
 from ..config import AWSConfig, LOGGER, Tags
 from .core import (
     AWSColleagueContents,
@@ -73,7 +74,6 @@ class LambdaRegionLimits(AWSSectionLimits):
     ) -> AWSComputedContent:
         limits = raw_content.content
         self._add_limit(
-            "",
             AWSLimit(
                 "total_code_size",
                 "Total Code Size",
@@ -83,7 +83,6 @@ class LambdaRegionLimits(AWSSectionLimits):
             region=self._region,
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "concurrent_executions",
                 "Concurrent Executions",
@@ -93,7 +92,6 @@ class LambdaRegionLimits(AWSSectionLimits):
             region=self._region,
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "unreserved_concurrent_executions",
                 "Unreserved Concurrent Executions",
@@ -173,7 +171,7 @@ class LambdaSummary(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
 
 
 def _function_arn_to_function_name_dim(function_arn: str) -> str:
@@ -290,7 +288,7 @@ class LambdaCloudwatch(AWSSectionCloudwatch):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
 
 
 class LambdaProvisionedConcurrency(AWSSection):
@@ -348,7 +346,7 @@ class LambdaProvisionedConcurrency(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
 
     @override
     def _validate_result_content(self, content: list | dict) -> None:
@@ -544,7 +542,7 @@ class LambdaCloudwatchInsights(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
 
     @override
     def _validate_result_content(self, content: list | dict) -> None:

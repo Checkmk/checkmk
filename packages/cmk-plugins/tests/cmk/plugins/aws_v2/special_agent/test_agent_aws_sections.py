@@ -12,6 +12,7 @@ from unittest import mock
 
 import pytest
 
+from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST, TargetHost
 from cmk.plugins.aws_v2.special_agent.runner import AWSSectionsGeneric, Results
 from cmk.plugins.aws_v2.special_agent.sections.core import (
     AWSSectionResult,
@@ -53,7 +54,7 @@ class TestAWSSections:
         cached_data: Results = {
             ("costs_and_usage", 1606382471.693873, 38582.763184): [
                 AWSSectionResult(
-                    piggyback_hostname="",
+                    piggyback_hostname=SOURCE_HOST,
                     content=[
                         {
                             "TimePeriod": {
@@ -103,7 +104,7 @@ class TestAWSHostLabelSections:
             pytest.param(
                 {
                     ("costs_and_usage", 1606382471.693873, 38582.763184): [
-                        AWSSectionResult(piggyback_hostname="", content=[{}])
+                        AWSSectionResult(piggyback_hostname=SOURCE_HOST, content=[{}])
                     ],
                 },
                 [
@@ -115,11 +116,11 @@ class TestAWSHostLabelSections:
             pytest.param(
                 {
                     ("costs_and_usage", 1606382471.693873, 38582.763184): [
-                        AWSSectionResult(piggyback_hostname="", content=[{}])
+                        AWSSectionResult(piggyback_hostname=SOURCE_HOST, content=[{}])
                     ],
                     ("ec2", 1606382471.693873, 38582.763184): [
                         AWSSectionResult(
-                            piggyback_hostname="test-piggyback",
+                            piggyback_hostname=TargetHost("test-piggyback"),
                             content=[{}],
                             piggyback_host_labels={"cmk/aws/test-key": "test-value"},
                         )
@@ -161,7 +162,7 @@ def _account_host_sections() -> AWSSectionsGeneric:
 def test_account_host_receives_the_rule_host_sections(capsys: pytest.CaptureFixture[str]) -> None:
     results: Results = {
         ("ec2_limits", 1606382471.693873, 300.0): [
-            AWSSectionResult(piggyback_hostname="", content=[{"limit": 1}])
+            AWSSectionResult(piggyback_hostname=SOURCE_HOST, content=[{"limit": 1}])
         ],
     }
 
@@ -178,7 +179,9 @@ def test_account_host_receives_the_rule_host_sections(capsys: pytest.CaptureFixt
 def test_account_host_keeps_resource_piggyback_hosts(capsys: pytest.CaptureFixture[str]) -> None:
     results: Results = {
         ("ec2", 1606382471.693873, 300.0): [
-            AWSSectionResult(piggyback_hostname="10.0.0.1-eu-central-1-i-1", content=[{}])
+            AWSSectionResult(
+                piggyback_hostname=TargetHost("10.0.0.1-eu-central-1-i-1"), content=[{}]
+            )
         ],
     }
 

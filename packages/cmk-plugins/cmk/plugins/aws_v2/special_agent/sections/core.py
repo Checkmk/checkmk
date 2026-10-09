@@ -24,7 +24,7 @@ from pydantic import BaseModel
 
 from ..config import AGENT, AWSConfig, LOGGER, RawTags, Tags, TagsImportPatternOption
 from ..data_cache import DataCache
-from ..hosts import HostedResource, target_host, TargetHost
+from ..hosts import AccountScope, HostedResource, target_host, TargetHost
 
 NOW = datetime.now()
 
@@ -166,7 +166,7 @@ class AWSSectionResults(NamedTuple):
 
 
 class AWSSectionResult(NamedTuple):
-    piggyback_hostname: AWSStrings
+    piggyback_hostname: TargetHost
     content: Any
     piggyback_host_labels: Mapping[str, str] | None = None
 
@@ -445,15 +445,19 @@ class AWSSectionLimits(AWSSection):
     ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._quota_client = quota_client
-        self._limits: dict = {}
+        self._limits: dict[TargetHost, list[AWSRegionLimit]] = {}
 
     def _add_limit(
-        self, piggyback_hostname: str, limit: AWSLimit, region: str | None = None
+        self,
+        limit: AWSLimit,
+        region: str | None = None,
+        *,
+        resource: HostedResource = AccountScope(),
     ) -> None:
         if region is None:
             region = self._region
 
-        self._limits.setdefault(piggyback_hostname, []).append(
+        self._limits.setdefault(self._target_host(resource), []).append(
             AWSRegionLimit(
                 key=limit.key,
                 title=limit.title,

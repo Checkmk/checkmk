@@ -76,7 +76,6 @@ class ELBLimits(AWSSectionLimits):
         limits = {r["Name"]: int(r["Max"]) for r in limits}
 
         self._add_limit(
-            "",
             AWSLimit(
                 "load_balancers",
                 "Load balancers",
@@ -86,24 +85,24 @@ class ELBLimits(AWSSectionLimits):
         )
 
         for load_balancer in load_balancers:
-            lb_host = self._target_host(hosts.ClassicLoadBalancer(load_balancer["DNSName"]))
+            lb = hosts.ClassicLoadBalancer(load_balancer["DNSName"])
             self._add_limit(
-                lb_host,
                 AWSLimit(
                     "load_balancer_listeners",
                     "Listeners",
                     limits["classic-listeners"],
                     len(load_balancer["ListenerDescriptions"]),
                 ),
+                resource=lb,
             )
             self._add_limit(
-                lb_host,
                 AWSLimit(
                     "load_balancer_registered_instances",
                     "Registered instances",
                     limits["classic-registered-instances"],
                     len(load_balancer["Instances"]),
                 ),
+                resource=lb,
             )
         return AWSComputedContent(load_balancers, raw_content.cache_timestamp)
 
@@ -231,7 +230,11 @@ class ELBSummaryGeneric(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", list(computed_content.content.values()))]
+        return [
+            AWSSectionResult(
+                self._target_host(hosts.AccountScope()), list(computed_content.content.values())
+            )
+        ]
 
 
 class ELBLabelsGeneric(AWSSectionLabels):

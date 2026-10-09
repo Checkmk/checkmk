@@ -73,7 +73,6 @@ class GlacierLimits(AWSSectionLimits):
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         self._add_limit(
-            "",
             AWSLimit(
                 "number_of_vaults",
                 "Vaults",
@@ -197,7 +196,7 @@ class GlacierSummary(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
 
 
 class Glacier(AWSSection):

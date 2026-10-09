@@ -11,6 +11,7 @@ from typing import override, TypedDict
 
 from botocore.client import BaseClient
 
+from .. import hosts
 from ..config import AWSConfig
 from .core import (
     AWSColleagueContents,
@@ -92,7 +93,7 @@ class Route53HealthChecks(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
 
 
 class Route53Cloudwatch(AWSSectionCloudwatch):
@@ -172,4 +173,7 @@ class Route53Cloudwatch(AWSSectionCloudwatch):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", rows) for _id, rows in computed_content.content.items()]
+        return [
+            AWSSectionResult(self._target_host(hosts.AccountScope()), rows)
+            for _id, rows in computed_content.content.items()
+        ]

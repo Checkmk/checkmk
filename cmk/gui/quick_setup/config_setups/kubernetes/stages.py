@@ -72,8 +72,11 @@ def configure_host() -> QuickSetupStage:
     return QuickSetupStage(
         title=_("Configure the Checkmk host"),
         prev_button_label=_("Back"),
-        configure_components=[
-            FormSpecWrapper(id=HOST, form_spec=host_configuration()),
+        configure_components=lambda ctx: [
+            FormSpecWrapper(
+                id=HOST,
+                form_spec=host_configuration(lambda: ctx.tree.folder_choices_fulltitle(ctx.user)),
+            ),
             widgets.site_formspec_wrapper(),
         ],
         actions=[

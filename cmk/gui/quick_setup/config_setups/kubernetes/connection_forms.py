@@ -3,15 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable, Sequence
 from dataclasses import replace
 from urllib.parse import urlsplit
 
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.form_specs.unstable import TwoColumnDictionary
 from cmk.gui.form_specs.unstable.validators import HostAddress
-from cmk.gui.logged_in import user
 from cmk.gui.watolib.form_spec_generators import create_full_path_folder_choice
-from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -26,7 +25,7 @@ from cmk.rulesets.v1.form_specs import (
 )
 
 
-def host_configuration() -> Dictionary:
+def host_configuration(folder_choices: Callable[[], Sequence[tuple[str, str]]]) -> Dictionary:
     return TwoColumnDictionary(
         elements={
             "host_name_source": DictElement(
@@ -70,7 +69,7 @@ def host_configuration() -> Dictionary:
                 parameter_form=create_full_path_folder_choice(
                     title=Title("Folder"),
                     allow_new_folder_creation=False,
-                    folder_choices=lambda: folder_tree().folder_choices_fulltitle(user),
+                    folder_choices=folder_choices,
                     help_text=Help(
                         "Select the folder for the source host. Create a new folder first if needed."
                     ),

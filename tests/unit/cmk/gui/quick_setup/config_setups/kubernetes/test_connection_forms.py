@@ -133,7 +133,7 @@ def test_pull_base_url_accepts_nodeport_proxy_path_and_ipv6(url: str) -> None:
 @pytest.mark.usefixtures("with_admin_login")
 @pytest.mark.parametrize("name", ["-legacy", ".legacy", "legacy\n"])
 def test_invalid_explicit_host_names_are_rejected(name: str) -> None:
-    visitor = get_visitor(host_configuration(), OPTIONS)
+    visitor = get_visitor(host_configuration(lambda: [("", "Main")]), OPTIONS)
 
     assert visitor.validate(RawDiskData({"host_name_source": ("explicit", name), "host_path": ""}))
 
@@ -148,7 +148,7 @@ def test_invalid_explicit_host_names_are_rejected(name: str) -> None:
     ],
 )
 def test_host_name_choice_is_preserved(choice: object) -> None:
-    visitor = get_visitor(host_configuration(), OPTIONS)
+    visitor = get_visitor(host_configuration(lambda: [("", "Main")]), OPTIONS)
     data = RawDiskData({"host_name_source": choice, "host_path": ""})
 
     assert not visitor.validate(data)

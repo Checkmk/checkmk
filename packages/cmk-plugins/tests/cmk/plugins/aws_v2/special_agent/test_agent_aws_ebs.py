@@ -6,7 +6,7 @@
 
 from argparse import Namespace as Args
 from collections.abc import Mapping, Sequence
-from typing import Protocol
+from typing import override, Protocol
 
 import pytest
 
@@ -78,6 +78,19 @@ class FakeEC2Client:
         }
 
 
+class FakeEC2ClientWithUnattachedVolumes(FakeEC2Client):
+    @override
+    def describe_volumes(
+        self,
+        VolumeIds: object = None,
+        Filters: object = None,
+    ) -> Mapping[str, object]:
+        volumes = EC2DescribeVolumesIB.create_instances(amount=3)
+        for volume in volumes:
+            volume["Attachments"] = []
+        return {"Volumes": volumes, "NextToken": "string"}
+
+
 EBSectionsOut = tuple[EC2Summary, EBSLimits, EBSSummary, EBS]
 
 
@@ -87,6 +100,7 @@ class EBSSections(Protocol):
         names: object | None,
         tags: OverallTags,
         tag_import: TagsOption = TagsImportPatternOption.import_all,
+        ec2_client: FakeEC2Client | None = None,
     ) -> EBSectionsOut: ...
 
 
@@ -96,6 +110,7 @@ def get_ebs_sections() -> EBSSections:
         names: object | None,
         tags: OverallTags,
         tag_import: TagsOption = TagsImportPatternOption.import_all,
+        ec2_client: FakeEC2Client | None = None,
     ) -> EBSectionsOut:
         region = "region"
         config = AWSConfig(
@@ -106,7 +121,7 @@ def get_ebs_sections() -> EBSSections:
         config.add_single_service_config("ec2_names", None)
         config.add_service_tags("ec2_tags", ([], []))
 
-        fake_ec2_client = FakeEC2Client()
+        fake_ec2_client = FakeEC2Client() if ec2_client is None else ec2_client
         fake_cloudwatch_client = FakeCloudwatchClient()
 
         distributor = ResultDistributor()
@@ -249,6 +264,43 @@ def test_agent_aws_ebs_without_limits(get_ebs_sections: EBSSections) -> None:
         # Y (len results) == 6 (metrics) * X (buckets)
         # But: 5 metrics for all volume types
         assert len(result.content) >= 5
+
+
+# The fake attaches VolumeId-N to InstanceId-N, and only instances 0 and 1 are monitored.
+@pytest.mark.parametrize(
+    ("volume_id", "expected_host"),
+    [
+        pytest.param(
+            "VolumeId-0", "PrivateIpAddress-0-region-InstanceId-0", id="monitored instance"
+        ),
+        pytest.param("VolumeId-2", "", id="instance not monitored"),
+    ],
+)
+def test_agent_aws_ebs_volume_goes_to_its_instance_host_if_the_instance_is_monitored(
+    get_ebs_sections: EBSSections, volume_id: str, expected_host: str
+) -> None:
+    ec2_summary, _ebs_limits, ebs_summary, _ebs = get_ebs_sections(None, (None, None))
+    ec2_summary.run()
+
+    ebs_summary_results = ebs_summary.run().results
+
+    host_by_volume = {
+        volume["VolumeId"]: result.piggyback_hostname
+        for result in ebs_summary_results
+        for volume in result.content
+    }
+    assert host_by_volume[volume_id] == expected_host
+
+
+def test_agent_aws_ebs_drops_volumes_without_attachments(get_ebs_sections: EBSSections) -> None:
+    ec2_summary, _ebs_limits, ebs_summary, _ebs = get_ebs_sections(
+        None, (None, None), ec2_client=FakeEC2ClientWithUnattachedVolumes()
+    )
+    ec2_summary.run()
+
+    ebs_summary_results = ebs_summary.run().results
+
+    assert ebs_summary_results == []
 
 
 @pytest.mark.parametrize(

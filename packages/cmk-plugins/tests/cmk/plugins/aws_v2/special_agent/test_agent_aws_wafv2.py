@@ -368,3 +368,25 @@ def test_agent_aws_wafv2_summary_filters_tags(
 
         for result in wafv2_summary_result.content:
             assert list(result["TagsForCmkLabels"].keys()) == expected_tags[result["ARN"]]
+
+
+@pytest.mark.parametrize(
+    ("is_regional", "expected_suffix"),
+    [
+        pytest.param(True, "region", id="regional"),
+        pytest.param(False, "CloudFront", id="cloudfront"),
+    ],
+)
+def test_agent_aws_wafv2_web_acl_metrics_go_to_a_host_per_web_acl_and_scope(
+    is_regional: bool, expected_suffix: str
+) -> None:
+    wafv2_sections = create_sections(None, (None, None), is_regional)
+    wafv2_sections["wafv2_summary"].run()
+
+    wafv2_web_acl_results = wafv2_sections["wafv2_web_acl"].run().results
+
+    assert sorted(result.piggyback_hostname for result in wafv2_web_acl_results) == [
+        f"Name-0_{expected_suffix}",
+        f"Name-1_{expected_suffix}",
+        f"Name-2_{expected_suffix}",
+    ]

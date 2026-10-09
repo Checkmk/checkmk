@@ -124,6 +124,7 @@ class EC2Sections(Protocol):
         tags: OverallTags = (None, None),
         skip_entities: Mapping[str, Collection[str]] | None = None,
         tag_import: TagsOption = TagsImportPatternOption.import_all,
+        naming_convention: NamingConvention = NamingConvention.ip_region_instance,
     ) -> EC2SectionsOut: ...
 
 
@@ -134,11 +135,12 @@ def get_ec2_sections() -> EC2Sections:
         tags: OverallTags = (None, None),
         skip_entities: Mapping[str, Collection[str]] | None = None,
         tag_import: TagsOption = TagsImportPatternOption.import_all,
+        naming_convention: NamingConvention = NamingConvention.ip_region_instance,
     ) -> EC2SectionsOut:
         region = "region"
-        config = AWSConfig(
-            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
-        ).for_account("123456789012")
+        config = AWSConfig("hostname", Args(), ([], []), naming_convention, tag_import).for_account(
+            "123456789012"
+        )
         config.add_single_service_config("ec2_names", names)
         config.add_service_tags("ec2_tags", tags)
         fake_ec2_client = FakeEC2Client(skip_entities)
@@ -399,6 +401,55 @@ def test_agent_aws_ec2_without_limits(get_ec2_sections: EC2Sections) -> None:
 
         # 11 metrics
         assert len(result.content) == 11
+
+
+def test_agent_aws_ec2_metrics_go_to_ip_region_instance_hosts(
+    get_ec2_sections: EC2Sections,
+) -> None:
+    _ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, ec2 = get_ec2_sections(
+        naming_convention=NamingConvention.ip_region_instance
+    )
+    ec2_summary.run()
+
+    ec2_results = ec2.run().results
+
+    assert sorted(result.piggyback_hostname for result in ec2_results) == [
+        "PrivateIpAddress-0-region-InstanceId-0",
+        "PrivateIpAddress-1-region-InstanceId-1",
+        "PrivateIpAddress-2-region-InstanceId-2",
+    ]
+
+
+def test_agent_aws_ec2_metrics_go_to_private_dns_name_hosts(
+    get_ec2_sections: EC2Sections,
+) -> None:
+    _ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, ec2 = get_ec2_sections(
+        naming_convention=NamingConvention.private_dns_name
+    )
+    ec2_summary.run()
+
+    ec2_results = ec2.run().results
+
+    assert sorted(result.piggyback_hostname for result in ec2_results) == [
+        "PrivateDnsName-0",
+        "PrivateDnsName-1",
+        "PrivateDnsName-2",
+    ]
+
+
+def test_agent_aws_ec2_security_groups_go_to_the_host_of_their_instance(
+    get_ec2_sections: EC2Sections,
+) -> None:
+    _ec2_limits, ec2_summary, _ec2_labels, ec2_security_groups, _ec2 = get_ec2_sections()
+    ec2_summary.run()
+
+    ec2_security_groups_results = ec2_security_groups.run().results
+
+    assert sorted(result.piggyback_hostname for result in ec2_security_groups_results) == [
+        "PrivateIpAddress-0-region-InstanceId-0",
+        "PrivateIpAddress-1-region-InstanceId-1",
+        "PrivateIpAddress-2-region-InstanceId-2",
+    ]
 
 
 @pytest.mark.parametrize("names,tags,found_ec2,found_ec2_with_labels", ec2_params)

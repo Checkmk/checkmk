@@ -329,3 +329,18 @@ def test_agent_aws_dynamodb_summary_filters_tags(
 
     for result in dynamodb_summary_result.content:
         assert list(result["TagsForCmkLabels"].keys()) == expected_tags[result["TableName"]]
+
+
+def test_agent_aws_dynamodb_table_metrics_go_to_a_host_per_table_and_region(
+    get_dynamodb_sections: DynamobSections,
+) -> None:
+    dynamodb_sections = get_dynamodb_sections(None, (None, None))
+    dynamodb_sections["dynamodb_summary"].run()
+
+    dynamodb_table_results = dynamodb_sections["dynamodb_table"].run().results
+
+    assert sorted(result.piggyback_hostname for result in dynamodb_table_results) == [
+        "TableName-0_region",
+        "TableName-1_region",
+        "TableName-2_region",
+    ]

@@ -333,6 +333,34 @@ def test_agent_aws_elbv2_limits(
             assert len(result.content) in (2, 4)
 
 
+def test_agent_aws_elbv2_limits_go_to_each_load_balancer_then_to_the_account(
+    get_elbv2_sections: ELBv2Sections,
+) -> None:
+    elbv2_limits_results = get_elbv2_sections().elbv2_limits.run().results
+
+    assert [result.piggyback_hostname for result in elbv2_limits_results] == [
+        "DNSName-0",
+        "DNSName-1",
+        "DNSName-2",
+        "",
+    ]
+
+
+def test_agent_aws_elbv2_target_groups_go_to_the_host_of_their_load_balancer(
+    get_elbv2_sections: ELBv2Sections,
+) -> None:
+    elbv2_sections = get_elbv2_sections()
+    elbv2_sections.elbv2_summary.run()
+
+    elbv2_target_groups_results = elbv2_sections.elbv2_target_groups.run().results
+
+    assert sorted(result.piggyback_hostname for result in elbv2_target_groups_results) == [
+        "DNSName-0",
+        "DNSName-1",
+        "DNSName-2",
+    ]
+
+
 @pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
 def test_agent_aws_elbv2_summary(
     get_elbv2_sections: ELBv2Sections,

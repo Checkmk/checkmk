@@ -15,7 +15,8 @@ from pytest_mock import MockerFixture
 from starlette.routing import Mount
 
 from cmk.agent_receiver.agent_receiver.checkmk_rest_api import ControllerCertSettings
-from cmk.agent_receiver.lib.config import get_config
+from cmk.agent_receiver.lib.certs import agent_root_ca, get_local_site_cn, relay_root_ca
+from cmk.agent_receiver.lib.config import Config, get_config
 from cmk.agent_receiver.main import main_app
 from cmk.testlib.agent_receiver.certs import set_up_site_certs
 
@@ -38,8 +39,8 @@ def site_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("OMD_SITE", site_id)
 
 
-@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
-def setup_site_context(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+@pytest.fixture
+def setup_site_context(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[Config]:
     site_env(monkeypatch, tmp_path)
     get_config.cache_clear()
     config = get_config()
@@ -47,6 +48,12 @@ def setup_site_context(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     config.r4r_dir.mkdir(parents=True)
     config.log_path.parent.mkdir(parents=True)
     set_up_site_certs(config=config)
+    yield config
+    # Tests that use the site without requesting it must fail, not reuse this one.
+    get_config.cache_clear()
+    agent_root_ca.cache_clear()
+    relay_root_ca.cache_clear()
+    get_local_site_cn.cache_clear()
 
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
@@ -59,7 +66,7 @@ def mock_controller_certificate_settings(mocker: MockerFixture) -> None:
 
 
 @pytest.fixture(name="client")
-def fixture_client() -> TestClient:
+def fixture_client(setup_site_context: Config) -> TestClient:  # noqa: ARG001 - needs the site
     app = main_app()
     assert len(app.routes) == 2
     assert isinstance(mount := app.routes[1], Mount)

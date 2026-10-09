@@ -5,6 +5,7 @@
 
 from http import HTTPStatus
 
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from starlette.status import HTTP_403_FORBIDDEN
@@ -18,6 +19,8 @@ from cmk.agent_receiver.lib.mtls_auth_validator import (
     mtls_authorization_dependency,
 )
 from cmk.testlib.agent_receiver.certs import agent_ca_common_name, revoke_serial_number
+
+pytestmark = pytest.mark.usefixtures("setup_site_context")
 
 _UUID = "ff09de6f-2c11-4d7d-9a37-09e1d02a4ce4"
 

@@ -5,6 +5,7 @@
 
 from http import HTTPStatus
 
+import pytest
 from fastapi import APIRouter, FastAPI
 from fastapi.testclient import TestClient
 from starlette.routing import Mount
@@ -19,6 +20,8 @@ from cmk.agent_receiver.lib.mtls_auth_validator import (
 )
 from cmk.agent_receiver.main import main_app
 from cmk.testlib.agent_receiver.certs import agent_ca_common_name, UNREVOKED_SERIAL_NUMBER
+
+pytestmark = pytest.mark.usefixtures("setup_site_context")
 
 
 def test_uuid_validation_route() -> None:

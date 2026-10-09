@@ -13,7 +13,7 @@ from http import HTTPStatus
 from typing import Annotated
 
 import pytest
-from pydantic import AfterValidator, ValidationError
+from pydantic import AfterValidator, ValidationError, ValidationInfo
 from werkzeug.datastructures import ETags, Headers
 
 from cmk.gui.config import Config
@@ -37,6 +37,7 @@ from cmk.gui.openapi.framework.endpoint_model import (
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.converter import TypedPlainValidator
 from cmk.gui.openapi.framework.model.response import TypedResponse
+from cmk.gui.openapi.framework.model.validation_context import RequestValidationContext
 from cmk.gui.openapi.utils import (
     RestAPIRequestDataValidationException,
     RestAPIRequestGeneralException,
@@ -550,6 +551,30 @@ class TestAnnotatedValidators:
         request_data = _request_data()
         bound = model._validate_request_parameters(request_data, None, _api_context())  # noqa: SLF001
         assert isinstance(bound.arguments["_arg"], ApiOmitted)
+
+
+def test_validators_see_the_api_context_of_the_request() -> None:
+    seen: list[ApiContext] = []
+
+    def _remember_api_context(value: str, info: ValidationInfo[object]) -> str:
+        assert isinstance(info.context, RequestValidationContext)
+        seen.append(info.context.api_context)
+        return value
+
+    def handler(
+        _arg: Annotated[
+            Annotated[str, TypedPlainValidator(str, _remember_api_context)],
+            QueryParam(description="...", example="..."),
+        ],
+    ) -> None:
+        return None
+
+    api_context = _api_context()
+    EndpointModel.build(handler)._validate_request_parameters(  # noqa: SLF001
+        _request_data(query={"_arg": ["one"]}), None, api_context
+    )
+
+    assert seen == [api_context]
 
 
 def test_query_parameter_list() -> None:

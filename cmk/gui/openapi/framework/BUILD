@@ -95,6 +95,7 @@ py_library(
         "model/converter.py",
         "model/restrict_editions.py",
         "model/restrict_features.py",
+        "model/validation_context.py",
     ],
     imports = ["../../../.."],
     visibility = [

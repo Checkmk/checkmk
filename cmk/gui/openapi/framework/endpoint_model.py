@@ -29,6 +29,7 @@ from .content_types import convert_request_body
 from .model import api_field
 from .model.omitted import drop_omitted_union_errors
 from .model.response import ApiResponse, TypedResponse
+from .model.validation_context import RequestValidationContext
 
 type ApiInputModel[T: type[DataclassInstance]] = T
 """Dataclass with optional fields: body, path, query, headers
@@ -417,7 +418,9 @@ class EndpointModel[**P, T]:
         # validate the input model
         # TypeAdapter performance: once per request
         input_type_adapter = get_cached_type_adapter(self._input_model)
-        input_data = input_type_adapter.validate_python(prepared_data, strict=False)
+        input_data = input_type_adapter.validate_python(
+            prepared_data, strict=False, context=RequestValidationContext(api_context)
+        )
 
         # unwrap the parameters
         # we CANNOT use dataclasses.asdict or similar here, as we might accidentally change the

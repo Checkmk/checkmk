@@ -2,13 +2,14 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import inspect
 import ipaddress
 import re
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, TypeIs
 
-from pydantic import PlainValidator
+from pydantic import PlainValidator, ValidationInfo
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.regex import GROUP_NAME_PATTERN, regex, REGEX_ID
@@ -35,7 +36,10 @@ from cmk.livestatus_client.tables import Hostgroups, Hosts, Servicegroups
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 
 
-def TypedPlainValidator[T](input_type: type[T], validator: Callable[[T], object]) -> PlainValidator:
+def TypedPlainValidator[T](
+    input_type: type[T],
+    validator: Callable[[T], object] | Callable[[T, ValidationInfo[object]], object],
+) -> PlainValidator:
     """
     Creates a pydantic validator that replaces the normal validation with the given `validator`.
 
@@ -49,18 +53,48 @@ def TypedPlainValidator[T](input_type: type[T], validator: Callable[[T], object]
     Args:
         input_type: Allowed input type, will be used for the schema and actual validation.
         validator: A function which validates the input value and converts it to the output type.
+            If it takes a second parameter, it is called with the `ValidationInfo` as well, the
+            way pydantic calls its own validators.
     """
+    validate = _with_validation_info(validator)
 
-    def _with_type_check(value: T) -> object:
+    def _with_type_check(value: T, info: ValidationInfo[object]) -> object:
         if not isinstance(value, input_type):
             raise ValueError(f"Expected {input_type.__name__}, got {type(value).__name__}")
 
-        return validator(value)
+        return validate(value, info)
 
     return PlainValidator(
         func=_with_type_check,
         json_schema_input_type=input_type,
     )
+
+
+def _with_validation_info[T](
+    validator: Callable[[T], object] | Callable[[T, ValidationInfo[object]], object],
+) -> Callable[[T, ValidationInfo[object]], object]:
+    if _takes_validation_info(validator):
+        return validator
+    return lambda value, _info: validator(value)
+
+
+def _takes_validation_info[T](
+    validator: Callable[[T], object] | Callable[[T, ValidationInfo[object]], object],
+) -> TypeIs[Callable[[T, ValidationInfo[object]], object]]:
+    """Whether the validator has a second required positional parameter, like pydantic decides."""
+    try:
+        parameters = inspect.signature(validator).parameters.values()
+    except TypeError, ValueError:
+        # some built-in callables have no signature, they take the value alone
+        return False
+    positional = [
+        parameter
+        for parameter in parameters
+        if parameter.kind
+        in (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD)
+        and parameter.default is inspect.Parameter.empty
+    ]
+    return len(positional) == 2
 
 
 @dataclass(slots=True)

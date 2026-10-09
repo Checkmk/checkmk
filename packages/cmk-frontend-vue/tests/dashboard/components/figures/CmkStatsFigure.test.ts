@@ -37,9 +37,9 @@ const TABLE_BOX = { x: -20, y: 0, width: 100, height: 100 }
 const HEXAGON_WIDTH = 48 * Math.sqrt(3)
 const GROUP_GAP = 12
 
-function renderFigure(interactive = true, width = 400) {
+function renderFigure(width = 400) {
   return render(CmkStatsFigure, {
-    props: { value: HOST_STATS, width, height: 200, filters: {}, interactive }
+    props: { value: HOST_STATS, width, height: 200, filters: {} }
   })
 }
 
@@ -87,13 +87,6 @@ describe('CmkStatsFigure', () => {
     expect(screen.getAllByRole('link')).toHaveLength(5)
   })
 
-  it('renders no anchor when not interactive', () => {
-    renderFigure(false)
-
-    expect(screen.queryAllByRole('link')).toHaveLength(0)
-    expect(screen.getByText('12')).toBeInTheDocument()
-  })
-
   it('sizes its root SVG and view box from its props', () => {
     renderFigure()
 
@@ -104,7 +97,7 @@ describe('CmkStatsFigure', () => {
   })
 
   it('centres the hexagon and the measured table as one group', async () => {
-    renderFigure(true, 400)
+    renderFigure(400)
     await nextTick()
 
     const groupX = (400 - (HEXAGON_WIDTH + GROUP_GAP + TABLE_BOX.width)) / 2
@@ -113,7 +106,7 @@ describe('CmkStatsFigure', () => {
   })
 
   it('aligns the group to the left edge when it does not fit', async () => {
-    renderFigure(true, 150)
+    renderFigure(150)
     await nextTick()
 
     expect(hexagonX()).toBeCloseTo(HEXAGON_WIDTH / 2)

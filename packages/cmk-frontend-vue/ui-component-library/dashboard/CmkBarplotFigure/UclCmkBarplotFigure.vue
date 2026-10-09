@@ -58,7 +58,7 @@ export const panelConfig = {
     title: 'Height (px)',
     initialState: 200
   }
-} satisfies PanelConfigFor<typeof CmkBarplotFigure, 'value' | 'filters' | 'interactive'> & {
+} satisfies PanelConfigFor<typeof CmkBarplotFigure, 'value' | 'filters'> & {
   hosts: NumberPropDef
   unit: ListPropDef<Unit>
   fixedRange: BoolPropDef
@@ -86,10 +86,9 @@ import type { Barplot, ResolvedLink } from '@/dashboard/types/widget'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = new PanelStateCreator<
-  typeof CmkBarplotFigure,
-  'value' | 'filters' | 'interactive'
->().createRef(panelConfig)
+const propState = new PanelStateCreator<typeof CmkBarplotFigure, 'value' | 'filters'>().createRef(
+  panelConfig
+)
 
 const UNIT_FORMAT: Record<Unit, Barplot['unit_format']> = {
   percent: {
@@ -150,7 +149,6 @@ const value = computed<Barplot>(() => {
           :width="Math.max(0, propState.width)"
           :height="Math.max(0, propState.height)"
           :filters="{}"
-          :interactive="propState.linked"
         />
       </UclResizablePreview>
 

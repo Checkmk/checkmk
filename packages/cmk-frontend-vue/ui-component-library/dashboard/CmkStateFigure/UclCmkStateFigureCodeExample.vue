@@ -18,5 +18,5 @@ const value: ObjectState = {
 </script>
 
 <template>
-  <CmkStateFigure :value="value" :width="300" :height="200" :filters="{}" :interactive="false" />
+  <CmkStateFigure :value="value" :width="300" :height="200" :filters="{}" />
 </template>

@@ -39,7 +39,7 @@ export const panelConfig = {
     title: 'Height (px)',
     initialState: 150
   }
-} satisfies PanelConfigFor<typeof CmkInventoryFigure, 'value' | 'filters' | 'interactive'> & {
+} satisfies PanelConfigFor<typeof CmkInventoryFigure, 'value' | 'filters'> & {
   attribute: StringPropDef
   present: BoolPropDef
   linked: BoolPropDef
@@ -64,10 +64,9 @@ import type { InventoryAttribute, ResolvedLink } from '@/dashboard/types/widget'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = new PanelStateCreator<
-  typeof CmkInventoryFigure,
-  'value' | 'filters' | 'interactive'
->().createRef(panelConfig)
+const propState = new PanelStateCreator<typeof CmkInventoryFigure, 'value' | 'filters'>().createRef(
+  panelConfig
+)
 
 const LINK: ResolvedLink = {
   title: 'Inventory of host',
@@ -95,7 +94,6 @@ const value = computed<InventoryAttribute>(() => ({
           :width="Math.max(0, propState.width)"
           :height="Math.max(0, propState.height)"
           :filters="{}"
-          :interactive="propState.linked"
         />
       </UclResizablePreview>
 

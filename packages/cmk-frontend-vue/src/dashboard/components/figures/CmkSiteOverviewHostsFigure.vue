@@ -25,7 +25,6 @@ const props = defineProps<{
   height: number
   hexagonSize: SiteOverviewContent['hexagon_size']
   filters: VisualContext
-  interactive: boolean
 }>()
 
 const { _t, _tn } = usei18n()
@@ -158,7 +157,6 @@ function tooltip(index: number): FigureTooltipContent {
       :height="height"
       :max-box-width="HEXAGON_MAX_BOX_WIDTH[hexagonSize]"
       :filters="filters"
-      :interactive="interactive"
     >
       <template #tooltip="{ index }">
         <FigureTooltip v-bind="tooltip(index)" />

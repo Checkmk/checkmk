@@ -39,10 +39,7 @@ export const panelConfig = {
     title: 'Height (px)',
     initialState: 300
   }
-} satisfies PanelConfigFor<
-  typeof CmkSiteOverviewSitesFigure,
-  'value' | 'filters' | 'interactive'
-> & {
+} satisfies PanelConfigFor<typeof CmkSiteOverviewSitesFigure, 'value' | 'filters'> & {
   count: NumberPropDef
   linked: BoolPropDef
 }
@@ -68,7 +65,7 @@ defineProps<{ screenshotMode: boolean }>()
 
 const propState = new PanelStateCreator<
   typeof CmkSiteOverviewSitesFigure,
-  'value' | 'filters' | 'interactive'
+  'value' | 'filters'
 >().createRef(panelConfig)
 
 const LINK: ResolvedLink = {
@@ -133,7 +130,6 @@ const value = computed<SiteOverviewSites>(() => {
           :height="Math.max(0, propState.height)"
           :hexagon-size="propState.hexagonSize"
           :filters="{}"
-          :interactive="propState.linked"
         />
       </UclResizablePreview>
 

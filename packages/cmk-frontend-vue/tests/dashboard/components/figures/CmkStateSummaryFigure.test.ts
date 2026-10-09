@@ -28,9 +28,9 @@ const SUMMARY: StateSummary = {
   total: 10
 }
 
-function renderFigure(interactive = true) {
+function renderFigure() {
   return render(CmkStateSummaryFigure, {
-    props: { value: SUMMARY, width: 300, height: 200, filters: {}, interactive }
+    props: { value: SUMMARY, width: 300, height: 200, filters: {} }
   })
 }
 
@@ -47,12 +47,6 @@ describe('CmkStateSummaryFigure', () => {
     const link = screen.getByRole('link')
     expect(link).toHaveTextContent('3/10')
     expect(link.getAttribute('href')).toContain('hst1=on')
-  })
-
-  it('renders no anchor when not interactive', () => {
-    renderFigure(false)
-
-    expect(screen.queryByRole('link')).toBeNull()
   })
 
   it('sizes its root SVG and view box from its props', () => {

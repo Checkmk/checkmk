@@ -64,7 +64,7 @@ export const panelConfig = {
     title: 'Height (px)',
     initialState: 200
   }
-} satisfies PanelConfigFor<typeof CmkStateFigure, 'value' | 'filters' | 'interactive'> & {
+} satisfies PanelConfigFor<typeof CmkStateFigure, 'value' | 'filters'> & {
   state: ListPropDef<State>
   checked: BoolPropDef
   tintBackground: BoolPropDef
@@ -91,10 +91,9 @@ import type { ResolvedLink } from '@/dashboard/types/widget'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = new PanelStateCreator<
-  typeof CmkStateFigure,
-  'value' | 'filters' | 'interactive'
->().createRef(panelConfig)
+const propState = new PanelStateCreator<typeof CmkStateFigure, 'value' | 'filters'>().createRef(
+  panelConfig
+)
 
 const LINK: ResolvedLink = {
   title: 'Service',
@@ -125,7 +124,6 @@ const value = computed<ObjectState>(() => ({
           :width="Math.max(0, propState.width)"
           :height="Math.max(0, propState.height)"
           :filters="{}"
-          :interactive="propState.linked"
         />
       </UclResizablePreview>
 

@@ -24,5 +24,5 @@ const value: Gauge = {
 </script>
 
 <template>
-  <CmkGaugeFigure :value="value" :width="300" :height="200" :filters="{}" :interactive="false" />
+  <CmkGaugeFigure :value="value" :width="300" :height="200" :filters="{}" />
 </template>

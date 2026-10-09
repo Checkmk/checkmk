@@ -40,7 +40,6 @@ const props = defineProps<{
   height: number
   maxBoxWidth: number
   filters: VisualContext
-  interactive: boolean
 }>()
 
 defineSlots<{ tooltip(props: { index: number }): unknown }>()
@@ -147,7 +146,6 @@ function track(event: PointerEvent): void {
         :links="hoveredBox.cell.links"
         :link-properties="hoveredBox.cell.linkProperties"
         :filters="filters"
-        :interactive="interactive"
       >
         <rect
           :x="hoveredBox.x"

@@ -5,7 +5,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkBarplotFigure from '@/dashboard/components/figures/CmkBarplotFigure.vue'
-import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import { useWidgetData } from '@/dashboard/composables/useWidgetData'
 import { useWidgetSource } from '@/dashboard/composables/useWidgetSource'
 import type { BarplotContent } from '@/dashboard/types/widget'
@@ -21,7 +20,6 @@ const { state, retry } = useWidgetData(
   () => [props.content, props.effective_filter_context],
   () => props.tick
 )
-const interactive = !useInjectIsPublicDashboard()
 </script>
 
 <template>
@@ -37,7 +35,6 @@ const interactive = !useInjectIsPublicDashboard()
         :width="width"
         :height="height"
         :filters="effective_filter_context.filters"
-        :interactive="interactive"
       />
     </template>
   </WidgetFigureFrame>

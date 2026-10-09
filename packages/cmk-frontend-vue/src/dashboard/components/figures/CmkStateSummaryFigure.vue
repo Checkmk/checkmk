@@ -16,7 +16,6 @@ const props = defineProps<{
   width: number
   height: number
   filters: VisualContext
-  interactive: boolean
 }>()
 
 const text = computed(() => `${props.value.in_state.count}/${props.value.total}`)
@@ -38,7 +37,6 @@ const fontSizePx = computed(
       :links="value.links"
       :link-properties="value.in_state.link_properties"
       :filters="filters"
-      :interactive="interactive"
     >
       <text
         class="db-cmk-state-summary-figure__text"

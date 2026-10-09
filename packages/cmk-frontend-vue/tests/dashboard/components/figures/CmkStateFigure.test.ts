@@ -34,14 +34,13 @@ const SERVICE_STATE: ObjectState = {
   plugin_output: null
 }
 
-function renderFigure(value: Partial<ObjectState> = {}, interactive = true) {
+function renderFigure(value: Partial<ObjectState> = {}) {
   return render(CmkStateFigure, {
     props: {
       value: { ...SERVICE_STATE, ...value },
       width: 300,
       height: 200,
-      filters: {},
-      interactive
+      filters: {}
     }
   })
 }
@@ -77,12 +76,6 @@ describe('CmkStateFigure', () => {
     const link = screen.getByRole('link')
     expect(link).toHaveTextContent('CRIT')
     expect(link).toHaveTextContent('load is too high')
-  })
-
-  it('renders no anchor when not interactive', () => {
-    renderFigure({}, false)
-
-    expect(screen.queryByRole('link')).toBeNull()
   })
 
   it('sizes its root SVG and view box from its props', () => {

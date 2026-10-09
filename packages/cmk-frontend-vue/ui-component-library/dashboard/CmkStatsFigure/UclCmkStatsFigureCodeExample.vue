@@ -20,5 +20,5 @@ const value: Stats = {
 </script>
 
 <template>
-  <CmkStatsFigure :value="value" :width="400" :height="200" :filters="{}" :interactive="false" />
+  <CmkStatsFigure :value="value" :width="400" :height="200" :filters="{}" />
 </template>

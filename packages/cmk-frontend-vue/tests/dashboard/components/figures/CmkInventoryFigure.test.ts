@@ -30,14 +30,13 @@ const ATTRIBUTE: InventoryAttribute = {
   value: 'Ubuntu 24.04'
 }
 
-function renderFigure(value: Partial<InventoryAttribute> = {}, interactive = true) {
+function renderFigure(value: Partial<InventoryAttribute> = {}) {
   return render(CmkInventoryFigure, {
     props: {
       value: { ...ATTRIBUTE, ...value },
       width: 300,
       height: 150,
-      filters: {},
-      interactive
+      filters: {}
     }
   })
 }
@@ -59,12 +58,6 @@ describe('CmkInventoryFigure', () => {
     renderFigure()
 
     expect(screen.getByRole('link')).toHaveTextContent('Ubuntu 24.04')
-  })
-
-  it('renders no anchor when not interactive', () => {
-    renderFigure({}, false)
-
-    expect(screen.queryByRole('link')).toBeNull()
   })
 
   it('sizes its root SVG and view box from its props', () => {

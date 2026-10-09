@@ -47,12 +47,9 @@ const BARPLOT: Barplot = {
   bars: [bar('myhost', 40), bar('otherhost', 60)]
 }
 
-function renderFigure(
-  value: Partial<Barplot> = {},
-  { height = 200, interactive = true }: { height?: number; interactive?: boolean } = {}
-) {
+function renderFigure(value: Partial<Barplot> = {}, { height = 200 }: { height?: number } = {}) {
   return render(CmkBarplotFigure, {
-    props: { value: { ...BARPLOT, ...value }, width: 300, height, filters: {}, interactive }
+    props: { value: { ...BARPLOT, ...value }, width: 300, height, filters: {} }
   })
 }
 
@@ -92,12 +89,6 @@ describe('CmkBarplotFigure', () => {
       expect.stringContaining('host=myhost'),
       expect.stringContaining('host=otherhost')
     ])
-  })
-
-  it('renders no anchor when not interactive', () => {
-    renderFigure({}, { interactive: false })
-
-    expect(screen.queryByRole('link')).toBeNull()
   })
 
   it('sizes its root SVG and view box from its props', () => {

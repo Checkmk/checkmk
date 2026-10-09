@@ -18,7 +18,6 @@ const props = defineProps<{
   width: number
   height: number
   filters: VisualContext
-  interactive: boolean
 }>()
 
 const { _t } = usei18n()
@@ -130,7 +129,6 @@ const tableOrigin = computed(() => ({
         :links="value.links"
         :link-properties="row.linkProperties"
         :filters="filters"
-        :interactive="interactive"
       >
         <g :transform="`translate(0, ${index * ROW_HEIGHT})`">
           <text

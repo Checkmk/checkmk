@@ -15,11 +15,5 @@ const value: InventoryAttribute = {
 </script>
 
 <template>
-  <CmkInventoryFigure
-    :value="value"
-    :width="300"
-    :height="150"
-    :filters="{}"
-    :interactive="false"
-  />
+  <CmkInventoryFigure :value="value" :width="300" :height="150" :filters="{}" />
 </template>

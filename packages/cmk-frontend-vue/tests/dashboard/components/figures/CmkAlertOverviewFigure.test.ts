@@ -45,9 +45,9 @@ const VALUE: AlertOverview = {
   ]
 }
 
-function renderFigure(interactive = true) {
+function renderFigure() {
   return render(CmkAlertOverviewFigure, {
-    props: { value: VALUE, width: 400, height: 200, filters: {}, interactive }
+    props: { value: VALUE, width: 400, height: 200, filters: {} }
   })
 }
 
@@ -85,14 +85,6 @@ describe('CmkAlertOverviewFigure', () => {
     await hover(52, 61)
 
     expect(await screen.findByText('Problems in total')).toBeInTheDocument()
-  })
-
-  it('renders no anchor when not interactive', async () => {
-    renderFigure(false)
-
-    await hover(52, 61)
-
-    expect(screen.queryByRole('link')).toBeNull()
   })
 
   it('sizes its root SVG and view box from its props', () => {

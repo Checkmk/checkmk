@@ -34,6 +34,5 @@ const value: SiteOverviewHosts = {
     :height="150"
     hexagon-size="default"
     :filters="{}"
-    :interactive="false"
   />
 </template>

@@ -52,9 +52,9 @@ function valueText(text: string) {
     element?.tagName === 'text' && element.textContent?.trim() === text
 }
 
-function renderFigure(value: Partial<Gauge> = {}, interactive = true) {
+function renderFigure(value: Partial<Gauge> = {}) {
   return render(CmkGaugeFigure, {
-    props: { value: { ...GAUGE, ...value }, width: 300, height: 200, filters: {}, interactive }
+    props: { value: { ...GAUGE, ...value }, width: 300, height: 200, filters: {} }
   })
 }
 
@@ -78,12 +78,6 @@ describe('CmkGaugeFigure', () => {
     renderFigure()
 
     expect(screen.getByRole('link')).toHaveTextContent('42%')
-  })
-
-  it('renders no anchor when not interactive', () => {
-    renderFigure({}, false)
-
-    expect(screen.queryByRole('link')).toBeNull()
   })
 
   it('labels the status with the short state of the service', () => {

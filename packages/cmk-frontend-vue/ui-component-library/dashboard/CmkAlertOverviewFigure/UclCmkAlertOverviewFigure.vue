@@ -45,7 +45,7 @@ export const panelConfig = {
     title: 'Height (px)',
     initialState: 300
   }
-} satisfies PanelConfigFor<typeof CmkAlertOverviewFigure, 'value' | 'filters' | 'interactive'> & {
+} satisfies PanelConfigFor<typeof CmkAlertOverviewFigure, 'value' | 'filters'> & {
   count: NumberPropDef
   maxProblems: NumberPropDef
   seed: NumberPropDef
@@ -73,7 +73,7 @@ defineProps<{ screenshotMode: boolean }>()
 
 const propState = new PanelStateCreator<
   typeof CmkAlertOverviewFigure,
-  'value' | 'filters' | 'interactive'
+  'value' | 'filters'
 >().createRef(panelConfig)
 
 function link(name: string): ResolvedLink {
@@ -135,7 +135,6 @@ const value = computed<AlertOverview>(() => {
           :width="Math.max(0, propState.width)"
           :height="Math.max(0, propState.height)"
           :filters="{}"
-          :interactive="propState.linked"
         />
       </UclResizablePreview>
 

@@ -30,7 +30,6 @@ const props = defineProps<{
   height: number
   hexagonSize: SiteOverviewContent['hexagon_size']
   filters: VisualContext
-  interactive: boolean
 }>()
 
 const { _t, _tnp } = usei18n()
@@ -187,7 +186,6 @@ const tooltip = computed<FigureTooltipContent | null>(() => {
         :links="value.links"
         :link-properties="shape.site.link_properties"
         :filters="filters"
-        :interactive="interactive"
       >
         <g :aria-label="shape.site.alias">
           <path :d="shape.hitPath" fill="transparent" />

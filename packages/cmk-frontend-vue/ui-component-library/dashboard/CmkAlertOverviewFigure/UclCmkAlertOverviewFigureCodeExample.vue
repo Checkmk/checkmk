@@ -26,11 +26,5 @@ const value: AlertOverview = {
 </script>
 
 <template>
-  <CmkAlertOverviewFigure
-    :value="value"
-    :width="300"
-    :height="150"
-    :filters="{}"
-    :interactive="false"
-  />
+  <CmkAlertOverviewFigure :value="value" :width="300" :height="150" :filters="{}" />
 </template>

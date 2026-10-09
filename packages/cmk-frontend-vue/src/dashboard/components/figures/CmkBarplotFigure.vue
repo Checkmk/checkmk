@@ -21,7 +21,6 @@ const props = defineProps<{
   width: number
   height: number
   filters: VisualContext
-  interactive: boolean
 }>()
 
 const MARGIN = { top: 20, right: 10, bottom: 10, left: 10 }
@@ -111,7 +110,6 @@ function barLabel(bar: BarplotBar): string {
         :links="value.links"
         :link-properties="bar.link_properties"
         :filters="filters"
-        :interactive="interactive"
       >
         <rect
           class="db-cmk-barplot-figure__bar"

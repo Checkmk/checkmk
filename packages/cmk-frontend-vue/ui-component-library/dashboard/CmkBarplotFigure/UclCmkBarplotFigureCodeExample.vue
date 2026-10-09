@@ -29,5 +29,5 @@ const value: Barplot = {
 </script>
 
 <template>
-  <CmkBarplotFigure :value="value" :width="300" :height="200" :filters="{}" :interactive="false" />
+  <CmkBarplotFigure :value="value" :width="300" :height="200" :filters="{}" />
 </template>

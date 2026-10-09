@@ -17,7 +17,6 @@ const props = defineProps<{
   width: number
   height: number
   filters: VisualContext
-  interactive: boolean
 }>()
 
 const { _t } = usei18n()
@@ -37,7 +36,6 @@ const fontSizePx = computed(() => `${valueFontSize(props.width, props.height)}px
       :links="value.links"
       :link-properties="value.link_properties"
       :filters="filters"
-      :interactive="interactive"
     >
       <foreignObject :width="width" :height="height">
         <div class="db-cmk-inventory-figure__box">

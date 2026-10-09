@@ -13,13 +13,12 @@ const props = defineProps<{
   links: ResolvedLink[]
   linkProperties: LinkProperties
   filters: VisualContext
-  interactive: boolean
 }>()
 
 const href = computed(() => {
   const link = props.links[0]
   const properties = props.linkProperties.links[0]
-  if (!props.interactive || link === undefined || properties === undefined) {
+  if (link === undefined || properties === undefined) {
     return null
   }
   return contextualLinkUrl(link, properties, props.filters)

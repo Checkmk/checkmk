@@ -35,6 +35,5 @@ const value: SiteOverviewSites = {
     :height="150"
     hexagon-size="default"
     :filters="{}"
-    :interactive="false"
   />
 </template>

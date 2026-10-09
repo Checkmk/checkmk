@@ -39,7 +39,7 @@ export const panelConfig = {
     title: 'Height (px)',
     initialState: 200
   }
-} satisfies PanelConfigFor<typeof CmkStateSummaryFigure, 'value' | 'filters' | 'interactive'> & {
+} satisfies PanelConfigFor<typeof CmkStateSummaryFigure, 'value' | 'filters'> & {
   inState: NumberPropDef
   total: NumberPropDef
   linked: BoolPropDef
@@ -66,7 +66,7 @@ defineProps<{ screenshotMode: boolean }>()
 
 const propState = new PanelStateCreator<
   typeof CmkStateSummaryFigure,
-  'value' | 'filters' | 'interactive'
+  'value' | 'filters'
 >().createRef(panelConfig)
 
 const LINK: ResolvedLink = {
@@ -98,7 +98,6 @@ const value = computed<StateSummary>(() => ({
           :width="Math.max(0, propState.width)"
           :height="Math.max(0, propState.height)"
           :filters="{}"
-          :interactive="propState.linked"
         />
       </UclResizablePreview>
 

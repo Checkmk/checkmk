@@ -15,11 +15,5 @@ const value: StateSummary = {
 </script>
 
 <template>
-  <CmkStateSummaryFigure
-    :value="value"
-    :width="300"
-    :height="200"
-    :filters="{}"
-    :interactive="false"
-  />
+  <CmkStateSummaryFigure :value="value" :width="300" :height="200" :filters="{}" />
 </template>

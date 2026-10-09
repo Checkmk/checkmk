@@ -27,13 +27,9 @@ const DOWN_HOSTS: LinkProperties = {
   links: [{ hoststate: { status: 'encoded', variables: { hst1: 'on' } } }, {}]
 }
 
-function renderTrigger(
-  links: ResolvedLink[],
-  interactive = true,
-  linkProperties: LinkProperties = DOWN_HOSTS
-) {
+function renderTrigger(links: ResolvedLink[], linkProperties: LinkProperties = DOWN_HOSTS) {
   return render(ContextualLinkTrigger, {
-    props: { links, linkProperties, filters: {}, interactive },
+    props: { links, linkProperties, filters: {} },
     slots: { default: '<span>Down</span>' }
   })
 }
@@ -54,13 +50,6 @@ describe('ContextualLinkTrigger', () => {
     )
   })
 
-  it('renders no anchor when the dashboard is public', () => {
-    renderTrigger([SEARCHHOST], false)
-
-    expect(screen.queryByRole('link')).toBeNull()
-    expect(screen.getByText('Down')).toBeInTheDocument()
-  })
-
   it('renders no anchor for an empty link list', () => {
     renderTrigger([])
 
@@ -69,7 +58,7 @@ describe('ContextualLinkTrigger', () => {
   })
 
   it('renders no anchor for a link without properties', () => {
-    renderTrigger([SEARCHHOST], true, { links: [] })
+    renderTrigger([SEARCHHOST], { links: [] })
 
     expect(screen.queryByRole('link')).toBeNull()
   })

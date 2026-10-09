@@ -11,7 +11,6 @@ import CmkKpiStatCard, {
   type KpiDeltaConfig,
   type KpiState
 } from '@/dashboard/components/CmkKpiStatCard'
-import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import { useWidgetData } from '@/dashboard/composables/useWidgetData'
 import { useWidgetSource } from '@/dashboard/composables/useWidgetSource'
 import { contextualLinkUrl } from '@/dashboard/lib/contextualLinkUrl'
@@ -41,12 +40,11 @@ const { state, retry } = useWidgetData(
   ],
   () => props.tick
 )
-const interactive = !useInjectIsPublicDashboard()
 
 function href(metric: ComputedSingleMetric): string | undefined {
   const link = metric.links[0]
   const properties = metric.link_properties.links[0]
-  if (!interactive || link === undefined || properties === undefined) {
+  if (link === undefined || properties === undefined) {
     return undefined
   }
   return contextualLinkUrl(link, properties, props.effective_filter_context.filters)

@@ -7,7 +7,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed } from 'vue'
 
 import CmkGaugeFigure from '@/dashboard/components/figures/CmkGaugeFigure.vue'
-import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import { useWidgetData } from '@/dashboard/composables/useWidgetData'
 import { useWidgetSource } from '@/dashboard/composables/useWidgetSource'
 import { widgetTimeRange } from '@/dashboard/lib/widgetTimeRange'
@@ -32,7 +31,6 @@ const { state, retry } = useWidgetData(
   ],
   () => props.tick
 )
-const interactive = !useInjectIsPublicDashboard()
 </script>
 
 <template>
@@ -48,7 +46,6 @@ const interactive = !useInjectIsPublicDashboard()
         :width="width"
         :height="height"
         :filters="effective_filter_context.filters"
-        :interactive="interactive"
       />
     </template>
   </WidgetFigureFrame>

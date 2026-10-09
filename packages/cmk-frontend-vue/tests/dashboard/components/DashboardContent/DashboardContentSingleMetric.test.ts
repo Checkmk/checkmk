@@ -8,11 +8,10 @@ import { render, screen, waitFor } from '@testing-library/vue'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent, h, nextTick } from 'vue'
+import { nextTick } from 'vue'
 
 import DashboardContentSingleMetric from '@/dashboard/components/DashboardContent/DashboardContentSingleMetric.vue'
 import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
-import { useProvideIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type { ComputedSingleMetric, SingleMetricContent } from '@/dashboard/types/widget'
 
 import { makeContentProps } from '@tests/dashboard/contentProps'
@@ -102,28 +101,13 @@ useMswServer(
 )
 
 async function renderWidget(
-  props: ContentProps<SingleMetricContent> = makeContentProps(CURRENT_VALUE),
-  { isPublicDashboard = false } = {}
+  props: ContentProps<SingleMetricContent> = makeContentProps(CURRENT_VALUE)
 ) {
-  const wrapper = defineComponent({
-    props: { widgetProps: { type: Object, required: true } },
-    setup(wrapperProps) {
-      if (isPublicDashboard) {
-        useProvideIsPublicDashboard()
-      }
-      return () => h(DashboardContentSingleMetric, wrapperProps.widgetProps as never)
-    }
-  })
-  const rendered = render(wrapper, { props: { widgetProps: props } })
+  const rendered = render(DashboardContentSingleMetric, { props })
   await nextTick()
   deliverSize(400, 200)
   await screen.findByText('801.84')
-  return {
-    ...rendered,
-    rerender: async (next: ContentProps<SingleMetricContent>) => {
-      await rendered.rerender({ widgetProps: next })
-    }
-  }
+  return rendered
 }
 
 beforeEach(() => {
@@ -177,14 +161,6 @@ describe('DashboardContentSingleMetric', () => {
     answer = () => singleMetric({ links: [], link_properties: { links: [] } })
 
     const { container } = await renderWidget()
-
-    expect(container.querySelector('a')).toBeNull()
-  })
-
-  it('does not link the value on a public dashboard', async () => {
-    const { container } = await renderWidget(makeContentProps(CURRENT_VALUE), {
-      isPublicDashboard: true
-    })
 
     expect(container.querySelector('a')).toBeNull()
   })

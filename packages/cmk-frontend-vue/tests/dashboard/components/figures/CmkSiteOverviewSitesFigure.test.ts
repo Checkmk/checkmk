@@ -40,15 +40,14 @@ const SITES: SiteOverviewSites = {
   ]
 }
 
-function renderFigure(interactive = true, value: SiteOverviewSites = SITES) {
+function renderFigure(value: SiteOverviewSites = SITES) {
   return render(CmkSiteOverviewSitesFigure, {
     props: {
       value,
       width: 400,
       height: 200,
       hexagonSize: 'default',
-      filters: {},
-      interactive
+      filters: {}
     }
   })
 }
@@ -78,7 +77,7 @@ describe('CmkSiteOverviewSitesFigure', () => {
   })
 
   it('shows the missing icon for a site with an unknown status', () => {
-    const { container } = renderFigure(true, {
+    const { container } = renderFigure({
       ...SITES,
       sites: [{ status: 'unknown', site_id: 'remote', alias: 'Remote site' }]
     })
@@ -87,12 +86,6 @@ describe('CmkSiteOverviewSitesFigure', () => {
       'href',
       expect.stringContaining('icon_site_missing')
     )
-  })
-
-  it('renders no site anchor when not interactive', () => {
-    renderFigure(false)
-
-    expect(screen.queryByRole('link')).toBeNull()
   })
 
   it('sizes its root SVG and view box from its props', () => {

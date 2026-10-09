@@ -86,7 +86,7 @@ export const panelConfig = {
     title: 'Height (px)',
     initialState: 200
   }
-} satisfies PanelConfigFor<typeof CmkGaugeFigure, 'value' | 'filters' | 'interactive'> & {
+} satisfies PanelConfigFor<typeof CmkGaugeFigure, 'value' | 'filters'> & {
   current: NumberPropDef
   hasValue: BoolPropDef
   unit: ListPropDef<Unit>
@@ -116,10 +116,9 @@ import type { Gauge, GaugeStatus, ResolvedLink } from '@/dashboard/types/widget'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = new PanelStateCreator<
-  typeof CmkGaugeFigure,
-  'value' | 'filters' | 'interactive'
->().createRef(panelConfig)
+const propState = new PanelStateCreator<typeof CmkGaugeFigure, 'value' | 'filters'>().createRef(
+  panelConfig
+)
 
 const UNIT_FORMAT: Record<Unit, Gauge['unit_format']> = {
   percent: {
@@ -204,7 +203,6 @@ const value = computed<Gauge>(() => {
           :width="Math.max(0, propState.width)"
           :height="Math.max(0, propState.height)"
           :filters="{}"
-          :interactive="propState.linked"
         />
       </UclResizablePreview>
 

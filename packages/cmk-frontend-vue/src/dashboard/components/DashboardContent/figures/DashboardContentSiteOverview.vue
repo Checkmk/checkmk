@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkSiteOverviewHostsFigure from '@/dashboard/components/figures/CmkSiteOverviewHostsFigure.vue'
 import CmkSiteOverviewSitesFigure from '@/dashboard/components/figures/CmkSiteOverviewSitesFigure.vue'
-import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import { useWidgetData } from '@/dashboard/composables/useWidgetData'
 import { useWidgetSource } from '@/dashboard/composables/useWidgetSource'
 import type { SiteOverviewContent } from '@/dashboard/types/widget'
@@ -22,7 +21,6 @@ const { state, retry } = useWidgetData(
   () => [props.content, props.effective_filter_context],
   () => props.tick
 )
-const interactive = !useInjectIsPublicDashboard()
 </script>
 
 <template>
@@ -40,7 +38,6 @@ const interactive = !useInjectIsPublicDashboard()
         :height="height"
         :hexagon-size="content.hexagon_size"
         :filters="effective_filter_context.filters"
-        :interactive="interactive"
       />
       <CmkSiteOverviewSitesFigure
         v-else
@@ -49,7 +46,6 @@ const interactive = !useInjectIsPublicDashboard()
         :height="height"
         :hexagon-size="content.hexagon_size"
         :filters="effective_filter_context.filters"
-        :interactive="interactive"
       />
     </template>
   </WidgetFigureFrame>

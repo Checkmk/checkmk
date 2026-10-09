@@ -46,15 +46,14 @@ const HOSTS: SiteOverviewHosts = {
   hosts: [host('alpha'), host('beta', { state: 'DOWN' })]
 }
 
-function renderFigure(interactive = true, value: SiteOverviewHosts = HOSTS) {
+function renderFigure(value: SiteOverviewHosts = HOSTS) {
   return render(CmkSiteOverviewHostsFigure, {
     props: {
       value,
       width: 400,
       height: 200,
       hexagonSize: 'default',
-      filters: {},
-      interactive
+      filters: {}
     }
   })
 }
@@ -90,16 +89,8 @@ describe('CmkSiteOverviewHostsFigure', () => {
     expect(await screen.findByText('Host is up')).toBeInTheDocument()
   })
 
-  it('renders no anchor to a hovered host when not interactive', async () => {
-    renderFigure(false)
-
-    await hoverFirstHost()
-
-    expect(screen.queryByRole('link')).toBeNull()
-  })
-
   it('draws the inner hexagons above the outer hexagons of every state', () => {
-    const { container } = renderFigure(true, {
+    const { container } = renderFigure({
       ...HOSTS,
       hosts: [host('alpha'), host('beta', { num_warn: 2 }), host('gamma', { num_crit: 1 })]
     })

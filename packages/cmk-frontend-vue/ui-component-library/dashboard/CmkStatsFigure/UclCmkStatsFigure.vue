@@ -66,7 +66,7 @@ export const panelConfig = {
     title: 'Height (px)',
     initialState: 200
   }
-} satisfies PanelConfigFor<typeof CmkStatsFigure, 'value' | 'filters' | 'interactive'> & {
+} satisfies PanelConfigFor<typeof CmkStatsFigure, 'value' | 'filters'> & {
   family: ListPropDef<StatsFamily>
   scenario: ListPropDef<Scenario>
   linked: BoolPropDef
@@ -91,10 +91,9 @@ import type { ResolvedLink, Stats, StatsPart } from '@/dashboard/types/widget'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = new PanelStateCreator<
-  typeof CmkStatsFigure,
-  'value' | 'filters' | 'interactive'
->().createRef(panelConfig)
+const propState = new PanelStateCreator<typeof CmkStatsFigure, 'value' | 'filters'>().createRef(
+  panelConfig
+)
 
 type Category = StatsPart['category']
 
@@ -185,7 +184,6 @@ const value = computed<Stats>(() => {
           :width="Math.max(0, propState.width)"
           :height="Math.max(0, propState.height)"
           :filters="{}"
-          :interactive="propState.linked"
         />
       </UclResizablePreview>
 

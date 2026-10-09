@@ -22,7 +22,6 @@ const props = defineProps<{
   width: number
   height: number
   filters: VisualContext
-  interactive: boolean
 }>()
 
 const { _t } = usei18n()
@@ -246,7 +245,6 @@ function hover(bin: Bin, event: PointerEvent): void {
         :links="value.links"
         :link-properties="value.link_properties"
         :filters="filters"
-        :interactive="interactive"
       >
         <text
           class="db-cmk-gauge-figure__value"

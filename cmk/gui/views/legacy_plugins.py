@@ -208,7 +208,11 @@ def _register_pre_21_plugin_api() -> None:
     ):
         api_module.__dict__[name] = painter_base.__dict__[name]
 
-    api_module.__dict__["Painter"] = painter_legacy.__dict__["Painter"]
+    for name in (
+        "Painter",
+        "format_plugin_output",
+    ):
+        api_module.__dict__[name] = painter_legacy.__dict__[name]
 
     for name in (
         "painter_registry",
@@ -217,7 +221,6 @@ def _register_pre_21_plugin_api() -> None:
         api_module.__dict__[name] = gui_painter_registry.__dict__[name]
 
     for name in (
-        "format_plugin_output",
         "get_label_sources",
         "get_tag_groups",
         "paint_host_list",

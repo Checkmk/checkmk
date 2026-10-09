@@ -10,7 +10,6 @@ import cmk.utils.render
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui import http
-from cmk.gui.config import active_config
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -52,16 +51,6 @@ def paint_host_list(site: SiteId, hosts: list[HostName], *, request: Request) ->
             [str(host) for host in hosts],
             request=request,
         )
-    )
-
-
-def format_plugin_output(output: str, *, request: Request, row: Row) -> HTML:
-    return cmk.gui.view_utils.format_plugin_output(
-        output,
-        request=request,
-        row=row,
-        must_escape=cmk.gui.view_utils.determine_must_escape(active_config.sites, row),
-        shall_escape=active_config.escape_plugin_output,
     )
 
 

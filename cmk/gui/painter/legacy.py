@@ -7,6 +7,7 @@ import abc
 from collections.abc import Sequence
 from functools import partial
 
+from cmk.gui import view_utils
 from cmk.gui.config import active_config, Config
 from cmk.gui.display_options import display_options
 from cmk.gui.http import Request, request, response
@@ -360,4 +361,14 @@ def internal_painter_from_legacy(legacy: type[Painter]) -> InternalPainter:
         export_for_python=partial(_legacy_export_for_python, legacy),
         export_for_csv=partial(_legacy_export_for_csv, legacy),
         export_for_json=partial(_legacy_export_for_json, legacy),
+    )
+
+
+def format_plugin_output(output: str, *, request: Request, row: Row) -> HTML:
+    return view_utils.format_plugin_output(
+        output,
+        request=request,
+        row=row,
+        must_escape=view_utils.determine_must_escape(active_config.sites, row),
+        shall_escape=active_config.escape_plugin_output,
     )

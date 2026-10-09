@@ -62,7 +62,6 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.painter.helpers import format_plugin_output
 from cmk.gui.table import table_element
 from cmk.gui.top_heading import top_heading
 from cmk.gui.type_defs import (
@@ -79,6 +78,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import ValueSpec
+from cmk.gui.view_utils import determine_must_escape, format_plugin_output
 from cmk.gui.visuals import page_menu_topic_add_to, view_title
 from cmk.gui.visuals.filter import Filter
 from cmk.utils import paths
@@ -717,7 +717,11 @@ def _render_availability_timeline(
                 table.cell(
                     _("Summary at last status change"),
                     format_plugin_output(
-                        row.get("log_output", ""), request=request, row=cast(Row, row)
+                        row.get("log_output", ""),
+                        request=request,
+                        row=cast(Row, row),
+                        must_escape=determine_must_escape(active_config.sites, cast(Row, row)),
+                        shall_escape=active_config.escape_plugin_output,
                     ),
                 )
 
@@ -725,7 +729,11 @@ def _render_availability_timeline(
                 table.cell(
                     _("Last known details"),
                     format_plugin_output(
-                        row.get("long_log_output", ""), request=request, row=cast(Row, row)
+                        row.get("long_log_output", ""),
+                        request=request,
+                        row=cast(Row, row),
+                        must_escape=determine_must_escape(active_config.sites, cast(Row, row)),
+                        shall_escape=active_config.escape_plugin_output,
                     ),
                 )
 

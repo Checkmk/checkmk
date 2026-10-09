@@ -148,6 +148,9 @@ class AwsCredentials:
     individually, so a shared session does not force a shared region. Keeping the base
     session in the configured global region also keeps the AssumeRole STS call inside the
     partition being monitored, which is what us-gov-* and cn-* setups need.
+
+    With spoke accounts, each account gets one more session from its role, also built
+    once per run.
     """
 
     def __init__(
@@ -167,7 +170,10 @@ class AwsCredentials:
         self._account_id: str | None = None
 
     def session(self) -> boto3.session.Session:
-        """The single session of this run, built on first use and then reused."""
+        """The login (hub) session, built on first use and then reused.
+
+        The sessions of spoke accounts come from accounts().
+        """
         if self._session is None:
             self._session, self._account_id = _create_hub_session(
                 self._hub, self._global_service_region, self._proxy_config

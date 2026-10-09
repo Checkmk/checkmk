@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
-from cmk.maps.backend.connections.base import FolderTreeData, GeoHost, ServiceRow
+from cmk.maps.backend.connections.base import FolderTreeData, GeoHost
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.integrations.checkmk import FolderScope
 from cmk.maps.backend.schemas.map import (
@@ -288,6 +288,9 @@ async def inflate_auto_objects(cfg: MapConfig, connection: ConnectionBase) -> li
                     host_name=h["name"],
                     lat=h["lat"],
                     lng=h["lng"],
+                    # An automap host has no properties of its own to opt in
+                    # with, and a host that is UP with a CRIT service is a problem.
+                    recognize_services=True,
                 )
             )
     return inflated
@@ -439,54 +442,25 @@ async def _resolve_host_states(
             and results[o.id].state not in ("NO_PERMISSION", "NOT_FOUND")
         }
     )
-    rs_objs = [
-        o
-        for o in host_objs
-        if o.recognize_services
-        and results.get(o.id) is not None
-        and results[o.id].state != "NO_PERMISSION"
-    ]
-    rs_names = list({o.host_name for o in rs_objs if o.host_name is not None})
 
-    # Run summary + recognize_services service-batch in parallel — both depend on
-    # the host-state batch above but neither depends on the other.
-    summary_task: asyncio.Task[dict[str, ServicesSummary]] | None = (
-        asyncio.create_task(connection.get_services_summary(summary_hosts))
-        if summary_hosts
-        else None
-    )
-    rs_task: asyncio.Task[dict[str, list[ServiceRow]]] | None = (
-        asyncio.create_task(connection.get_hosts_services_batch(rs_names)) if rs_objs else None
-    )
-
-    if summary_task is not None:
-        try:
-            summary_batch = await summary_task
-        except Exception:
-            logger.warning("Services-summary query failed", exc_info=True)
-            summary_batch = {}
-        for obj in host_objs:
-            if obj.host_name is None:
-                continue
-            existing = results.get(obj.id)
-            if existing is None:
-                continue
-            summary = summary_batch.get(obj.host_name)
-            if summary is not None:
-                results[obj.id] = existing.model_copy(update={"services_summary": summary})
-
-    if rs_task is not None:
-        try:
-            rs_svc_batch = await rs_task
-        except Exception:
-            logger.warning("Batch host-services query failed", exc_info=True)
-            rs_svc_batch = {}
-        for obj in rs_objs:
-            assert obj.host_name is not None
-            results[obj.id] = _aggregate_host_with_services_from_data(
-                results[obj.id],
-                rs_svc_batch.get(obj.host_name, []),
-            )
+    if not summary_hosts:
+        return
+    try:
+        summary_batch = await connection.get_services_summary(summary_hosts)
+    except Exception:
+        logger.warning("Services-summary query failed", exc_info=True)
+        return
+    for obj in host_objs:
+        if obj.host_name is None:
+            continue
+        existing = results.get(obj.id)
+        summary = summary_batch.get(obj.host_name)
+        if existing is None or summary is None:
+            continue
+        update: dict[str, object] = {"services_summary": summary}
+        if obj.recognize_services:
+            update["state"] = _combined_state_from_summary(existing.state, summary)
+        results[obj.id] = existing.model_copy(update=update)
 
 
 async def _resolve_service_states(
@@ -652,27 +626,6 @@ async def _get_map_states_batched(
     return results
 
 
-def _aggregate_host_with_services_from_data(
-    host_state: ObjectState, services: list[ServiceRow]
-) -> ObjectState:
-    """Aggregate a pre-fetched host state with its services (no I/O)."""
-    if not services:
-        return host_state
-    all_states = [host_state.state] + [s.get("state", "PENDING") for s in services]
-    worst = max(all_states, key=lambda s: SEVERITY_RANK.get(s, 0))
-    if worst == host_state.state:
-        return host_state
-    return ObjectState(
-        object_id=host_state.object_id,
-        type="host",
-        state=worst,
-        output=host_state.output,
-        perf_data=host_state.perf_data,
-        acknowledged=host_state.acknowledged,
-        in_downtime=host_state.in_downtime,
-    )
-
-
 async def _get_object_state(connection: ConnectionBase, obj: MapElement) -> ObjectState:
     try:
         if obj.type == "host" and obj.host_name:
@@ -724,10 +677,12 @@ async def _aggregate_host_with_services(
 ) -> ObjectState:
     """Aggregate host state with the worst state of all its services."""
     try:
-        services = await connection.get_host_services(hostname)
+        summary = (await connection.get_services_summary([hostname])).get(hostname)
     except Exception:
         return host_state
-    return _aggregate_host_with_services_from_data(host_state, services)
+    return host_state.model_copy(
+        update={"state": _combined_state_from_summary(host_state.state, summary)}
+    )
 
 
 async def _resolve_primary_host(connection: ConnectionBase) -> str | None:

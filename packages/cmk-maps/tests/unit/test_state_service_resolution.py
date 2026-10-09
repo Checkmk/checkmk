@@ -304,6 +304,32 @@ def test_worldmap_auto_source_inflates_geo_hosts(
     assert by_id["auto:muc-srv1"].state == "DOWN"
 
 
+def test_worldmap_auto_source_folds_service_states_into_hosts(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={"lei-srv1": ObjectState(object_id="lei-srv1", type="host", state="UP")}
+    )
+    mock_connection.get_services_summary = AsyncMock(
+        return_value={"lei-srv1": ServicesSummary(ok=3, critical=1)}
+    )
+    mock_connection.get_hosts_with_geo = AsyncMock(
+        return_value=[{"name": "lei-srv1", "alias": "Leipzig srv1", "lat": 51.3, "lng": 12.4}]
+    )
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+
+    cfg = MapConfig(
+        name="geo",
+        alias="Geo",
+        connection_id="mock",
+        view=WorldmapView(auto_source="all_hosts"),
+        objects=[],
+    )
+    result = asyncio.run(get_map_states(cfg))
+    by_id = {s.object_id: s for s in result.states}
+    assert by_id["auto:lei-srv1"].state == "CRITICAL"
+
+
 def test_worldmap_auto_source_skips_persisted_duplicates(
     mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:

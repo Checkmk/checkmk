@@ -4484,7 +4484,6 @@ pydantic==2.13.5 \
     #   -r non-free/packages/cmk-telemetry/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-backup/requirements.in
-    #   -r packages/cmk-events/requirements.in
     #   -r packages/cmk-fastapi/requirements.in
     #   -r packages/cmk-flags/requirements.in
     #   -r packages/cmk-maps/requirements.in

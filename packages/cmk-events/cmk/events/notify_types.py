@@ -20,11 +20,6 @@ from typing import (
     TypeIs,
 )
 
-from pydantic import (
-    TypeAdapter,
-    ValidationInfo,
-)
-
 from cmk.ruleset_matcher.matcher import TagCondition
 from cmk.ruleset_matcher.tags import TagGroupID
 
@@ -854,23 +849,6 @@ def get_builtin_plugin_names() -> list[BuiltInPluginNames]:
 
 def is_known_plugin(notify_plugin: PluginNameWithParameters) -> TypeGuard[KnownPluginParameters]:
     return notify_plugin[0] in get_builtin_plugin_names()
-
-
-custom_plugin_type_adapter: TypeAdapter = TypeAdapter(CustomPluginParameters)
-known_plugin_type_adapter: TypeAdapter = TypeAdapter(KnownPluginParameters)
-
-
-def validate_plugin(value: Any, _handler: ValidationInfo) -> PluginNameWithParameters:
-    assert isinstance(value, tuple)
-    assert len(value) == 2
-
-    # If it's a builtin plugin, validate against it's corresponding typeddict.
-    if value[0] in get_args(BuiltInPluginNames):
-        known_plugin_type_adapter.validate_python(value, strict=True)
-        return value
-
-    custom_plugin_type_adapter.validate_python(value)
-    return value
 
 
 class _EventRuleMandatory(TypedDict):

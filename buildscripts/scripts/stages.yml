@@ -175,10 +175,18 @@ STAGES:
               --test_verbose_timeout_warnings \
               --test_env=TZ='America/Chicago' \
               --cmk_edition=ultimate \
+              --execution_log_json_file="$PWD/../bazel_execution_log_unit_tests.json" \
               -- \
               //... || make_rc=$?
           ../buildscripts/scripts/bazel_test_post_archive_xunit.sh || :
           bazel --run_under="cd $PWD &&" run //buildscripts/scripts:collect_rust_tests -- "../results" "../results" || :
+          ../buildscripts/scripts/bazel_execution_log_parser.sh \
+              --execution_logs_root .. \
+              --bazel_log_file_pattern bazel_execution_log_unit_tests.json \
+              --summary_file ../results/bazel_log_execution_summary_unit_tests.json \
+              --cachehit_csv ../results/bazel_log_cache_hits_unit_tests.csv \
+              --distro ubuntu-24.04 || :
+          rm -f ../bazel_execution_log_unit_tests.json
           exit $make_rc
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/unit/**/test.xml"

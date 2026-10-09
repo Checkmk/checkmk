@@ -16,6 +16,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from pydantic import PlainSerializer
+from typing_extensions import TypeForm
 from werkzeug.datastructures import ETags, Headers
 
 from cmk.ccc import store
@@ -118,6 +119,7 @@ type _AliasedResponseWithSerializer = Annotated[
     _TestResponse | _TestResponseB,
     PlainSerializer(lambda x: {"custom": x.field if hasattr(x, "field") else x.name}),
 ]
+type _Identity[T] = T
 
 
 def test_dump_response_union_first_member() -> None:
@@ -128,6 +130,31 @@ def test_dump_response_union_first_member() -> None:
 def test_dump_response_union_second_member() -> None:
     result = dump_body(
         _TestResponseB(name="hello"), _TestResponse | _TestResponseB, is_testing=True
+    )
+    assert result == b'{"name":"hello"}'
+
+
+def test_dump_response_union_serializes_matching_annotated_member() -> None:
+    result = dump_body(
+        _TestResponseB(name="hello"),
+        _TestResponse | Annotated[_TestResponseB, "foo"],
+        is_testing=True,
+    )
+    assert result == b'{"name":"hello"}'
+
+
+def test_dump_response_union_serializes_matching_generic_member() -> None:
+    result = dump_body(
+        _TestGenericResponse(value=[_TestResponse(field=1)]),
+        _TestGenericResponse[_TestResponse] | _TestResponseB,
+        is_testing=True,
+    )
+    assert result == b'{"value":[{"field":1}]}'
+
+
+def test_dump_response_union_serializes_matching_generic_alias_member() -> None:
+    result = dump_body(
+        _TestResponseB(name="hello"), _TestResponse | _Identity[_TestResponseB], is_testing=True
     )
     assert result == b'{"name":"hello"}'
 
@@ -149,6 +176,21 @@ def test_dump_response_generic_wrong_type_raises() -> None:
 def test_dump_response_union_wrong_type_raises() -> None:
     with pytest.raises(ValueError, match="should be"):
         dump_body(object(), _TestResponse | _TestResponseB, is_testing=True)
+
+
+@pytest.mark.parametrize(
+    "body_type",
+    [
+        pytest.param(_TestResponse | Annotated[_TestResponseB, "foo"], id="annotated member"),
+        pytest.param(_TestGenericResponse[_TestResponse] | _TestResponseB, id="generic member"),
+        pytest.param(_TestResponse | _Identity[_TestResponseB], id="generic alias member"),
+    ],
+)
+def test_dump_response_union_with_non_class_member_wrong_type_raises(
+    body_type: TypeForm[object],
+) -> None:
+    with pytest.raises(ValueError, match="should be"):
+        dump_body(object(), body_type, is_testing=True)
 
 
 def test_dump_response_type_alias_union() -> None:

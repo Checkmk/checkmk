@@ -10,7 +10,7 @@ import types
 from collections.abc import Callable
 from http import HTTPStatus
 from inspect import BoundArguments
-from typing import get_origin
+from typing import get_args, get_origin
 
 from typing_extensions import TypeForm
 from werkzeug.datastructures import MIMEAccept
@@ -65,14 +65,22 @@ def dump_body(
     if body_type is None:
         raise ValueError(f"{body_kind} is of type: {type(body)}, but should be None")
 
-    resolved = resolve_type(body_type)
-    check_type = (
-        resolved if isinstance(resolved, types.UnionType) else (get_origin(resolved) or resolved)
-    )
-    if not isinstance(body, check_type):
+    if not isinstance(body, _instance_classes(body_type)):
         raise ValueError(f"{body_kind} is of type: {type(body)}, but should be {body_type}")
 
     return json_dump_without_omitted(body_type, body, is_testing=is_testing)
+
+
+def _instance_classes(type_: TypeForm[object]) -> tuple[type, ...]:
+    """Get the classes to check an instance of the type against, one per member of a union.
+
+    Every member is resolved on its own, because isinstance can't check a union with members like
+    Annotated forms, type aliases or parameterized generics.
+    """
+    resolved = resolve_type(type_)
+    if isinstance(resolved, types.UnionType):
+        return tuple(cls for member in get_args(resolved) for cls in _instance_classes(member))
+    return (get_origin(resolved) or resolved,)
 
 
 def _create_response(

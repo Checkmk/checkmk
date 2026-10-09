@@ -30,6 +30,11 @@ describe('objectAriaLabel', () => {
     expect(objectAriaLabel(_t, service, 'CRITICAL')).toBe('server01 / CPU load, Critical')
   })
 
+  it('says when a state is stale', () => {
+    const host: MapElement = anObject({ ...base, type: 'host', host_name: 'server01' })
+    expect(objectAriaLabel(_t, host, 'UP', true)).toBe('server01, Up, stale')
+  })
+
   it('announces stateless objects explicitly', () => {
     const host: MapElement = anObject({ ...base, type: 'host', host_name: 'server01' })
     expect(objectAriaLabel(_t, host, undefined)).toBe('server01, No state')

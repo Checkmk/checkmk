@@ -87,7 +87,7 @@ function onResizeStart(event: PointerEvent): void {
     :data-object-id="object.id"
     :tabindex="preview ? -1 : 0"
     role="button"
-    :aria-label="objectAriaLabel(_t, object, state?.state)"
+    :aria-label="objectAriaLabel(_t, object, state?.state, state?.stale)"
     @click.stop="emit('activate', $event)"
     @dblclick.stop="emit('double-click', $event)"
     @contextmenu.prevent.stop="emit('context-menu', $event)"

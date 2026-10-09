@@ -18,7 +18,7 @@ export interface SummaryChip {
   state: string
   count: number
   label: string
-  tone: 'crit' | 'warn' | 'unknown' | 'ok'
+  tone: 'crit' | 'warn' | 'unknown' | 'pending' | 'ok'
   url: string | null
 }
 
@@ -112,6 +112,7 @@ export function useSummaryChips(options: SummaryChipsOptions) {
       make('CRITICAL', s.critical ?? 0, 'CRIT', 'crit'),
       make('WARNING', s.warning ?? 0, 'WARN', 'warn'),
       make('UNKNOWN', s.unknown ?? 0, 'UNKN', 'unknown'),
+      make('PENDING', s.pending ?? 0, 'PEND', 'pending'),
       make('OK', s.ok ?? 0, 'OK', 'ok')
     ].filter((chip) => chip.state === 'OK' || chip.count > 0)
   })

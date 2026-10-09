@@ -20,7 +20,7 @@ export interface DetailChip {
   key: string
   label: string
   count: number
-  tone: 'crit' | 'warn' | 'unknown' | 'ok'
+  tone: 'crit' | 'warn' | 'unknown' | 'pending' | 'ok'
   /** Where the chip leads, if it leads anywhere. */
   url?: string | null
 }
@@ -171,6 +171,16 @@ button.maps-detail-chip-grid__chip:hover {
 .maps-detail-chip-grid__chip--unknown .maps-detail-chip-grid__count,
 .maps-detail-chip-grid__chip--unknown .maps-detail-chip-grid__chip-label {
   color: var(--color-state-unknown);
+}
+
+.maps-detail-chip-grid__chip--pending {
+  background: color-mix(in srgb, var(--color-state-pending) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-state-pending) 35%, transparent);
+}
+
+.maps-detail-chip-grid__chip--pending .maps-detail-chip-grid__count,
+.maps-detail-chip-grid__chip--pending .maps-detail-chip-grid__chip-label {
+  color: var(--color-state-pending);
 }
 
 .maps-detail-chip-grid__chip--ok {

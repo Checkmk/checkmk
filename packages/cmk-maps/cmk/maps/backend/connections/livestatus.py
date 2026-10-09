@@ -218,11 +218,16 @@ _STATE_TYPE_MAP = {0: "SOFT", 1: "HARD"}
 _HOST_EXTRA_COLS = (
     "address alias last_check next_check state_type current_attempt max_check_attempts"
     " last_state_change notifications_enabled active_checks_enabled check_command"
+    " has_been_checked staleness"
 )
 _SVC_EXTRA_COLS = (
     "last_check next_check state_type current_attempt max_check_attempts last_state_change"
-    " notifications_enabled active_checks_enabled check_command"
+    " notifications_enabled active_checks_enabled check_command has_been_checked staleness"
 )
+
+# Checkmk's default ``staleness_threshold`` (cmk.gui.general_config): from here
+# on a state is older than its check interval allows and views mark it stale.
+_STALENESS_THRESHOLD = 1.5
 
 # Column lists for the on-demand object-details endpoint. Order matters —
 # _build_details indexes positionally.
@@ -261,6 +266,13 @@ def _apply_extra(
     state.notifications_enabled = row_bool(row, col + 6, default=True)
     state.active_checks_enabled = row_bool(row, col + 7, default=True)
     state.check_command = row_str(row, col + 8)
+    # The core reports an object that was never checked as state 0, which
+    # would read as UP / OK. Its staleness says nothing, and a stale PENDING
+    # is what a failed query reports.
+    if not row_bool(row, col + 9, default=True):
+        state.state = "PENDING"
+    elif row_float(row, col + 10) >= _STALENESS_THRESHOLD:
+        state.stale = True
     return state
 
 
@@ -1351,7 +1363,7 @@ class LivestatusConnection(ConnectionBase):
             f"Columns: name filename {state_col} plugin_output acknowledged "
             f"scheduled_downtime_depth num_services_ok num_services_warn "
             f"num_services_crit num_services_unknown num_services_pending "
-            f"is_flapping last_state_change\n"
+            f"is_flapping last_state_change has_been_checked\n"
         )
         site_filter = set(sites) if sites else None
         hosts: list[FolderTreeHostRow] = []
@@ -1363,7 +1375,12 @@ class LivestatusConnection(ConnectionBase):
             host_row: FolderTreeHostRow = {
                 "host_name": row_str(row, 0),
                 "folder_path": _folder_path_from_filename(row_str(row, 1)),
-                "state": HOST_STATE_MAP.get(row_int(row, 2), "UNKNOWN"),
+                # A host that was never checked reports state 0, which would read as UP.
+                "state": (
+                    HOST_STATE_MAP.get(row_int(row, 2), "UNKNOWN")
+                    if row_bool(row, 13, default=True)
+                    else "PENDING"
+                ),
                 "output": row_str(row, 3),
                 "site_id": site,
                 "acknowledged": row_int(row, 4) > 0,

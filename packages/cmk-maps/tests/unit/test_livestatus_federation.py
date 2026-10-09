@@ -102,11 +102,13 @@ async def _no_folders() -> list[object]:
     return []
 
 
-def _host_row(name: str, *, state: int = 0, filename: str = "") -> list[object]:
+def _host_row(
+    name: str, *, state: int = 0, filename: str = "", checked: bool = True
+) -> list[object]:
     """One ``GET hosts`` row in the column order ``get_folder_tree`` reads:
     name, filename, state, output, ack, downtime, 5×num_services_*, is_flapping,
-    last_state_change."""
-    return [name, filename, state, f"OK - {name}", 0, 0, 3, 0, 0, 0, 0, 0, None]
+    last_state_change, has_been_checked."""
+    return [name, filename, state, f"OK - {name}", 0, 0, 3, 0, 0, 0, 0, 0, None, int(checked)]
 
 
 def _rows_from(
@@ -213,6 +215,23 @@ def test_single_site_connection_never_reports_dead_sites(monkeypatch: pytest.Mon
     live, stale = _staleness(tree)
     assert live == {"h"}
     assert stale == set()
+
+
+def test_folder_tree_shows_a_host_never_checked_as_pending(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    conn = _tcp_connection(monkeypatch)
+    monkeypatch.setattr(
+        conn,
+        "_query_with_site",
+        _rows_from(
+            [("central", _host_row("new-h", checked=False)), ("central", _host_row("up-h"))]
+        ),
+    )
+
+    tree = asyncio.run(conn.get_folder_tree())
+
+    assert {h["host_name"]: h["state"] for h in tree.hosts} == {"new-h": "PENDING", "up-h": "UP"}
 
 
 def test_geo_hosts_are_asked_for_once_per_user_within_a_tick(

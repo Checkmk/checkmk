@@ -96,11 +96,13 @@ export function stateShortWordFromToken(_t: TranslateFn, token: string): string 
 export function objectAriaLabel(
   _t: TranslateFn,
   object: MapElement,
-  state: string | undefined
+  state: string | undefined,
+  stale = false
 ): string {
   const name = objectDisplayName(object, _t)
   if (VISUAL_ONLY_TYPES.includes(object.type)) {
     return name
   }
-  return `${name}, ${stateAriaLabel(_t, state)}`
+  const label = `${name}, ${stateAriaLabel(_t, state)}`
+  return stale ? `${label}, ${_t('stale')}` : label
 }

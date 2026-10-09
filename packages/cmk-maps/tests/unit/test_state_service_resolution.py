@@ -127,14 +127,31 @@ def test_get_map_states_batch_exception_yields_pending(
 ) -> None:
     monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
     mock_connection.get_hosts_states = AsyncMock(side_effect=Exception("socket error"))
+    # A socket that still answers does not make a failed query a live map.
+    mock_connection.is_available = AsyncMock(return_value=True)
 
     map_cfg = _map([_obj("h1", "host", host_name="srv1")])
     result = asyncio.run(get_map_states(map_cfg))
 
-    # All monitoring states stale → connection_ok=False.
     assert result.connection_ok is False
     assert result.states[0].state == "PENDING"
     assert result.states[0].stale is True
+
+
+def test_get_map_states_overdue_checks_keep_the_connection_up(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={"srv1": ObjectState(object_id="h1", type="host", state="UP", stale=True)}
+    )
+    mock_connection.is_available = AsyncMock(return_value=False)
+
+    result = asyncio.run(get_map_states(_map([_obj("h1", "host", host_name="srv1")])))
+
+    assert result.connection_ok is True
+    assert result.states[0].stale is True
+    mock_connection.is_available.assert_not_awaited()
 
 
 def test_get_map_states_names_the_sites_that_stopped_answering(
@@ -310,9 +327,8 @@ def test_worldmap_auto_source_folds_service_states_into_hosts(
     mock_connection.get_hosts_states = AsyncMock(
         return_value={"lei-srv1": ObjectState(object_id="lei-srv1", type="host", state="UP")}
     )
-    mock_connection.get_services_summary = AsyncMock(
-        return_value={"lei-srv1": ServicesSummary(ok=3, critical=1)}
-    )
+    summary = ServicesSummary(ok=3, critical=1)
+    mock_connection.get_services_summary = AsyncMock(return_value={"lei-srv1": summary})
     mock_connection.get_hosts_with_geo = AsyncMock(
         return_value=[{"name": "lei-srv1", "alias": "Leipzig srv1", "lat": 51.3, "lng": 12.4}]
     )
@@ -328,6 +344,34 @@ def test_worldmap_auto_source_folds_service_states_into_hosts(
     result = asyncio.run(get_map_states(cfg))
     by_id = {s.object_id: s for s in result.states}
     assert by_id["auto:lei-srv1"].state == "CRITICAL"
+    # The fold changes the state, not what else is known about the host.
+    assert by_id["auto:lei-srv1"].services_summary == summary
+
+
+def test_worldmap_auto_source_keeps_a_pending_host_with_ok_services_pending(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={"kie-srv1": ObjectState(object_id="kie-srv1", type="host", state="PENDING")}
+    )
+    mock_connection.get_services_summary = AsyncMock(
+        return_value={"kie-srv1": ServicesSummary(ok=1, pending=1)}
+    )
+    mock_connection.get_hosts_with_geo = AsyncMock(
+        return_value=[{"name": "kie-srv1", "alias": "Kiel srv1", "lat": 54.3, "lng": 10.1}]
+    )
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+
+    cfg = MapConfig(
+        name="geo",
+        alias="Geo",
+        connection_id="mock",
+        view=WorldmapView(auto_source="all_hosts"),
+        objects=[],
+    )
+    result = asyncio.run(get_map_states(cfg))
+    by_id = {s.object_id: s for s in result.states}
+    assert by_id["auto:kie-srv1"].state == "PENDING"
 
 
 def test_worldmap_auto_source_skips_persisted_duplicates(

@@ -87,7 +87,7 @@ function onKeydown(event: KeyboardEvent): void {
     :style="boxStyle"
     :tabindex="preview ? -1 : 0"
     role="button"
-    :aria-label="objectAriaLabel(_t, object, state?.state)"
+    :aria-label="objectAriaLabel(_t, object, state?.state, state?.stale)"
     @pointerdown="emit('pointer-down', $event)"
     @dragstart.prevent
     @click.stop="emit('activate', $event)"

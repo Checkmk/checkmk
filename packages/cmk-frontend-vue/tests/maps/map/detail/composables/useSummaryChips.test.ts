@@ -59,6 +59,18 @@ describe('serviceChips', () => {
     expect(serviceChips.value.map((c) => c.state)).toEqual(['CRITICAL', 'WARNING', 'OK'])
   })
 
+  // A host whose services were never checked would otherwise read "0 OK".
+  it('counts services that were never checked', () => {
+    const { serviceChips } = setup(
+      obj('host', { host_name: 'web01' }),
+      state({ services_summary: summary({ pending: 4 }) })
+    )
+    expect(serviceChips.value.map((c) => [c.label, c.count])).toEqual([
+      ['PEND', 4],
+      ['OK', 0]
+    ])
+  })
+
   it('is empty without a services_summary', () => {
     const { serviceChips } = setup(obj('host'), state())
     expect(serviceChips.value).toEqual([])

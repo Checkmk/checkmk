@@ -162,8 +162,9 @@ export function aggregatedChildren(
   if (folder.ok_group || query.problemsOnly || query.terms.length > 0) {
     return folder.children
   }
+  // Not merely "no problem": a host never checked is not OK either.
   const isHealthyHost = (child: FolderTreeNode) =>
-    child.kind === 'host' && !isProblemState(child.state)
+    child.kind === 'host' && (child.state === 'UP' || child.state === 'OK')
   const healthy = folder.children.filter(isHealthyHost)
   if (healthy.length < 2) {
     return folder.children

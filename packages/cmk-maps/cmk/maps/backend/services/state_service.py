@@ -150,13 +150,13 @@ async def _derive_connection_ok(states: list[ObjectState], connection: Connectio
     """Connection health from monitoring-object states.
 
     Non-monitoring types (image, textbox, map) always return PENDING without
-    ``stale=True``, so they are excluded — the connection counts as down only
-    when ALL monitoring queries raised (stale). Maps without monitoring
-    objects ping the connection explicitly.
+    ``stale=True``, so they are excluded. A failed query reports a stale
+    PENDING; an overdue check keeps its state, so it does not count as down.
+    A map without monitoring objects pings the connection.
     """
     monitoring_states = [s for s in states if s.type in _MONITORING_TYPES]
     if monitoring_states:
-        return not all(s.stale for s in monitoring_states)
+        return not all(s.stale and s.state == "PENDING" for s in monitoring_states)
     try:
         return await connection.is_available()
     except Exception:
@@ -865,7 +865,7 @@ async def _get_radar_states(cfg: MapConfig, connection: ConnectionBase) -> MapSt
                 s.object_id = member_id
                 states.append(s)
 
-    connection_ok = bool(states) and not all(s.stale for s in states)
+    connection_ok = await _derive_connection_ok(states, connection)
     return MapStates(
         map_name=cfg.name,
         states=states,

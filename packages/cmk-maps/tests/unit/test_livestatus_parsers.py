@@ -102,6 +102,30 @@ def test_apply_extra_zero_timing_becomes_none() -> None:
     assert result.state_type == "SOFT"
 
 
+def test_apply_extra_reads_a_never_checked_object_as_pending() -> None:
+    state = ObjectState(object_id="", type="host", state="UP")
+    # offset 5: ...the eight timing columns, check_command, has_been_checked, staleness
+    row = ["", "", "", "", "", 0, 0, 1, 1, 1, 0, 1, 1, "", 0, 0.0]
+    assert _apply_extra(state, row, offset=5).state == "PENDING"
+
+
+def test_apply_extra_does_not_mark_a_never_checked_object_stale() -> None:
+    state = ObjectState(object_id="", type="host", state="UP")
+    row = ["", "", "", "", "", 0, 0, 1, 1, 1, 0, 1, 1, "", 0, 5.0]
+    assert _apply_extra(state, row, offset=5).stale is False
+
+
+@pytest.mark.parametrize(("staleness", "stale"), [(1.4, False), (1.5, True), (3.0, True)])
+def test_apply_extra_marks_a_state_past_the_staleness_threshold(
+    staleness: float, stale: bool
+) -> None:
+    state = ObjectState(object_id="", type="host", state="UP")
+    row = ["", "", "", "", "", 100.0, 200.0, 1, 1, 1, 50.0, 1, 1, "", 1, staleness]
+    result = _apply_extra(state, row, offset=5)
+    assert result.state == "UP"
+    assert result.stale is stale
+
+
 def test_parse_host_state_row_parses_name_and_state() -> None:
     row = ["web01", 1, "DOWN output", "", 0, 0, "10.0.0.1", "Web 01", 0, 0, 1, 1, 1, 0, 1, 1]
     name, state = _parse_host_state_row(row, site_id="muc")

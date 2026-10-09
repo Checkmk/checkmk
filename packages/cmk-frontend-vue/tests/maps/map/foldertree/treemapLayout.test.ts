@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 
 import { parseFolderQuery } from '@/maps/map/foldertree/filter'
 import {
+  aggregatedChildren,
   filteredRoot,
   layoutTreemap,
   tileSignature,
@@ -125,5 +126,29 @@ describe('filteredRoot', () => {
     }
 
     expect(filteredRoot(root, query, () => []).state).toBe('EMPTY')
+  })
+})
+
+describe('aggregatedChildren', () => {
+  it('leaves a host that was never checked out of the healthy bundle', () => {
+    const folder = aFolderNode({
+      path: '/main',
+      children: [
+        aFolderNode({ path: '/main/a', kind: 'host', state: 'UP' }),
+        aFolderNode({ path: '/main/b', kind: 'host', state: 'UP' }),
+        aFolderNode({ path: '/main/new', kind: 'host', state: 'PENDING' })
+      ]
+    })
+
+    const query = {
+      terms: [],
+      problemsOnly: false,
+      severity: 'any' as const,
+      matchedHosts: new Set<string>()
+    }
+
+    const children = aggregatedChildren(folder, query, (count) => `${count} OK`)
+
+    expect(children.map((child) => child.title || child.path)).toEqual(['/main/new', '2 OK'])
   })
 })

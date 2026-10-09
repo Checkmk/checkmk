@@ -64,7 +64,7 @@ def test_role_is_assumed_with_its_arn_and_external_id(fake_sts: FakeSts) -> None
     assert (call.params["RoleArn"], call.params["ExternalId"]) == (ROLE, "tenant-42")
 
 
-def test_role_without_external_id_sends_none(fake_sts: FakeSts) -> None:
+def test_role_without_external_id_omits_it(fake_sts: FakeSts) -> None:
     _account_id(HubCredentials(AccessKey("AKIAHUB", "secret"), AssumedRole(ROLE)))
 
     [call] = fake_sts.assume_role_calls

@@ -306,7 +306,7 @@ def test_account_list_is_passed_with_role_name_and_external_id() -> None:
     ]
 
 
-def test_account_list_without_external_id_sends_none() -> None:
+def test_account_list_without_external_id_omits_it() -> None:
     accounts = ("list", {"account_ids": ["333333333333"], "role_name": "CheckmkMonitoring"})
 
     assert "--spoke-external-id" not in _arguments(auth=("none", {"accounts": accounts}))

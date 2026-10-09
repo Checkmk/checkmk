@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 from datetime import datetime, UTC
+from functools import cache
 from ipaddress import IPv4Address
 from pathlib import Path
+from typing import NamedTuple
 
 from dateutil.relativedelta import relativedelta
 
@@ -19,7 +22,7 @@ from cmk.crypto.certificate import (
     CertificateWithPrivateKey,
     RevokedCertificate,
 )
-from cmk.crypto.issued_certificates import issued_certificates_file
+from cmk.crypto.issued_certificates import issued_certificates_file, IssuedCertificateEntry
 from cmk.crypto.keys import PrivateKey
 from cmk.crypto.x509 import SAN, SubjectAlternativeNames, X509Name
 
@@ -40,71 +43,91 @@ def relay_ca_common_name(site_name: str) -> str:
     return f"Site '{site_name}' relay signing CA"
 
 
+class _SiteCerts(NamedTuple):
+    site_ca: CertificateWithPrivateKey
+    agent_ca: CertificateWithPrivateKey
+    relay_ca: CertificateWithPrivateKey
+    site_cert: CertificateWithPrivateKey
+
+
 def set_up_site_certs(config: Config) -> None:
     """Mirror the cert layout that omd and the init.d script create at site startup.
 
-    Three independent self-signed CAs are generated (site, agent, relay), each written
-    as key+cert PEM to their canonical path. A site server certificate is issued by the
-    site CA and written to etc/ssl/sites/<site>.pem. Finally, a cert-only trust store
-    (agent_cert_store.pem) is assembled from the agent CA, relay CA, and site CA certs,
-    matching what the init.d startup script builds via `openssl x509`.
+    Writes the site, agent and relay CAs, the site certificate issued by the site CA,
+    and the cert-only trust store (agent_cert_store.pem) of all three CA certs. Sites
+    with the same name share the CAs and site certificate.
     """
-    site_ca = CertificateWithPrivateKey.generate_self_signed(
-        common_name=f"Site '{config.site_name}' local CA",
-        organization=f"Checkmk Site {config.site_name}",
-        expiry=_CERT_EXPIRY,
-        key_size=_KEY_SIZE,
-        is_ca=True,
-    )
-    agent_ca = CertificateWithPrivateKey.generate_self_signed(
-        common_name=agent_ca_common_name(config.site_name),
-        organization=f"Checkmk Site {config.site_name}",
-        expiry=_CERT_EXPIRY,
-        key_size=_KEY_SIZE,
-        is_ca=True,
-    )
-    relay_ca = CertificateWithPrivateKey.generate_self_signed(
-        common_name=relay_ca_common_name(config.site_name),
-        organization=f"Checkmk Site {config.site_name}",
-        expiry=_CERT_EXPIRY,
-        key_size=_KEY_SIZE,
-        is_ca=True,
-    )
+    certs = _generate_site_certs(config.site_name)
 
     for ca, path in [
-        (site_ca, config.site_ca_path),
-        (agent_ca, config.agent_ca_path),
-        (relay_ca, config.relay_ca_path),
+        (certs.site_ca, config.site_ca_path),
+        (certs.agent_ca, config.agent_ca_path),
+        (certs.relay_ca, config.relay_ca_path),
     ]:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(ca.private_key.dump_pem(None).bytes + ca.certificate.dump_pem().bytes)
 
-    site_cert = site_ca.issue_new_certificate(
-        common_name=config.site_name,
-        organization=f"Checkmk Site {config.site_name}",
-        expiry=_CERT_EXPIRY,
-        key_size=_KEY_SIZE,
-        subject_alternative_names=SubjectAlternativeNames(
-            [SAN.ip_address(IPv4Address("127.0.0.1"))]
-        ),
-        cert_log=issued_certificates_file(config.omd_root / "var/log", "sites"),
+    IssuedCertificateEntry.from_certificate(certs.site_cert.certificate, "issued").append_to(
+        issued_certificates_file(config.omd_root / "var/log", "sites")
     )
     config.site_cert_path.parent.mkdir(parents=True, exist_ok=True)
     config.site_cert_path.write_bytes(
-        site_cert.private_key.dump_pem(None).bytes + site_cert.certificate.dump_pem().bytes
+        certs.site_cert.private_key.dump_pem(None).bytes
+        + certs.site_cert.certificate.dump_pem().bytes
     )
 
     # Cert-only trust store: agents/*.pem + relays/*.pem + ca.pem (no private keys)
     cert_store = config.agent_cert_store_path
     cert_store.write_bytes(
-        agent_ca.certificate.dump_pem().bytes
-        + relay_ca.certificate.dump_pem().bytes
-        + site_ca.certificate.dump_pem().bytes
+        certs.agent_ca.certificate.dump_pem().bytes
+        + certs.relay_ca.certificate.dump_pem().bytes
+        + certs.site_ca.certificate.dump_pem().bytes
     )
 
     agent_root_ca.cache_clear()
     relay_root_ca.cache_clear()
     get_local_site_cn.cache_clear()
+
+
+# Generating the four RSA keys dominates the setup time of every test using this, so
+# they are generated once per process. Each site still gets its own files.
+@cache
+def _generate_site_certs(site_name: str) -> _SiteCerts:
+    site_ca = CertificateWithPrivateKey.generate_self_signed(
+        common_name=f"Site '{site_name}' local CA",
+        organization=f"Checkmk Site {site_name}",
+        expiry=_CERT_EXPIRY,
+        key_size=_KEY_SIZE,
+        is_ca=True,
+    )
+    return _SiteCerts(
+        site_ca=site_ca,
+        agent_ca=CertificateWithPrivateKey.generate_self_signed(
+            common_name=agent_ca_common_name(site_name),
+            organization=f"Checkmk Site {site_name}",
+            expiry=_CERT_EXPIRY,
+            key_size=_KEY_SIZE,
+            is_ca=True,
+        ),
+        relay_ca=CertificateWithPrivateKey.generate_self_signed(
+            common_name=relay_ca_common_name(site_name),
+            organization=f"Checkmk Site {site_name}",
+            expiry=_CERT_EXPIRY,
+            key_size=_KEY_SIZE,
+            is_ca=True,
+        ),
+        site_cert=site_ca.issue_new_certificate(
+            common_name=site_name,
+            organization=f"Checkmk Site {site_name}",
+            expiry=_CERT_EXPIRY,
+            key_size=_KEY_SIZE,
+            subject_alternative_names=SubjectAlternativeNames(
+                [SAN.ip_address(IPv4Address("127.0.0.1"))]
+            ),
+            # set_up_site_certs logs the issuance in each site it sets up.
+            cert_log=Path(os.devnull),
+        ),
+    )
 
 
 def revoke_serial_number(ca_path: Path, serial_number: int) -> None:

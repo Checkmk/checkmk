@@ -6,11 +6,13 @@
 
 from argparse import Namespace as Args
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
 from cmk.plugins.aws_v2.special_agent.agent_aws_v2 import parse_arguments
 from cmk.plugins.aws_v2.special_agent.config import AWSConfig, NamingConvention
+from cmk.plugins.aws_v2.special_agent.sections.costs_and_usage import CostsAndUsage
 
 
 @pytest.mark.parametrize(
@@ -121,3 +123,10 @@ def test_account_config_changes_do_not_reach_the_rule_config() -> None:
     rule_config.for_account("333333333333").add_single_service_config("sns_names", ["topic"])
 
     assert "sns_names" not in rule_config.service_config
+
+
+def test_section_refuses_a_config_without_an_account() -> None:
+    rule_config = AWSConfig("heute1", Args(), ([], []), NamingConvention.ip_region_instance)
+
+    with pytest.raises(ValueError):
+        CostsAndUsage(mock.Mock(), "us-east-1", rule_config)

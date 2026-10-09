@@ -77,7 +77,6 @@ from cmk.gui.watolib.groups_io import (
     load_host_group_information,
     load_service_group_information,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.mode import mode_url
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.pending_changes import (
@@ -491,7 +490,7 @@ class IsValidRegularExpression:
 
 
 def filter_for_hosts_and_services() -> QuickSetupStage:
-    def _components(_ctx: QuickSetupContext) -> Sequence[Widget]:
+    def _components(ctx: QuickSetupContext) -> Sequence[Widget]:
         return [
             ConditionalNotificationECAlertStageWidget(
                 items=[
@@ -1057,7 +1056,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 % {"folder": _(" %(folder)s")}
                                                 % {"folder": folder},
                                             )
-                                            for name, folder in folder_tree().folder_choices(
+                                            for name, folder in ctx.tree.folder_choices(
                                                 logged_in_user
                                             )
                                         ],

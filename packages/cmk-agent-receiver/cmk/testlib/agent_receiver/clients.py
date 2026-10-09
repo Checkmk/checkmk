@@ -111,7 +111,10 @@ class RelayClient:
         )
 
     def get_tasks(
-        self, status: str | None = None, if_none_match: str | None = None
+        self,
+        status: str | None = None,
+        if_none_match: str | None = None,
+        config_encoding: str | None = "gzip",
     ) -> httpx.Response:
         headers = {
             INJECTED_UUID_HEADER: self.identity_cn,
@@ -121,6 +124,8 @@ class RelayClient:
             headers[HEADERS.SERIAL] = str(self._serial)
         if if_none_match:
             headers["If-None-Match"] = if_none_match
+        if config_encoding is not None:
+            headers[HEADERS.CONFIG_ENCODING] = config_encoding
         params: dict[str, str] = {}
         if status:
             params = {"status": status}
@@ -135,13 +140,21 @@ class RelayClient:
         assert response.status_code == HTTPStatus.OK, response.text
         return TaskListResponse.model_validate(response.json())
 
-    def update_task(self, task_id: str, result_type: str, result_payload: str) -> httpx.Response:
+    def update_task(
+        self,
+        task_id: str,
+        result_type: str,
+        result_payload: str,
+        config_encoding: str | None = "gzip",
+    ) -> httpx.Response:
         headers = {
             INJECTED_UUID_HEADER: self.identity_cn,
             INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
         }
         if self._serial:
             headers[HEADERS.SERIAL] = str(self._serial)
+        if config_encoding is not None:
+            headers[HEADERS.CONFIG_ENCODING] = config_encoding
         return self.fastAPI_client.patch(  # type: ignore[no-any-return]
             f"/{self.site_name}/relays/{self.relay_id}/tasks/{task_id}",
             headers=headers,

@@ -131,9 +131,12 @@ class ConfigTaskFactory:
 
 
 def create_tar(parent: Path) -> bytes:
-    """Create an uncompressed tar archive in memory preserving structure from common parent.
+    """Create a gzip compressed tar archive in memory preserving structure from common parent.
 
-    This function creates an uncompressed tar archive containing the specified folder
+    The archive is mostly JSON plus tar block padding, so the fastest gzip level already
+    shrinks it by more than an order of magnitude.
+
+    This function creates a tar archive containing the specified folder
     with its directory structure preserved. The paths in the archive are relative
     to the specified common parent directory. The common parent directory will be
     renamed to "config" in the archive
@@ -162,7 +165,7 @@ def create_tar(parent: Path) -> bytes:
     tar_buffer = io.BytesIO()
 
     # Create tar archive in memory
-    with tarfile.open(fileobj=tar_buffer, mode="w", dereference=False) as tar:
+    with tarfile.open(fileobj=tar_buffer, mode="w:gz", compresslevel=1, dereference=False) as tar:
         tar.add(parent, arcname=CONFIG_ARCHIVE_ROOT_FOLDER_NAME)
 
     # Get the binary content of the tar archive

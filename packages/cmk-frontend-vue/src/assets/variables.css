@@ -27,6 +27,7 @@
   --popup-dialog-danger: var(--color-light-red-50);
   --popup-dialog-info: var(--color-light-blue-50);
   --border-color-purple: var(--color-purple-60);
+  --background-color-ai: var(--color-purple-60);
 
   /* Monitoring state palette, mirroring the themes' $color-state-*-background
      SCSS values. */
@@ -289,6 +290,7 @@
     --sticky-header-border-color: var(--border-color-separator);
     --shared-dashboard-indicator-background: var(--color-daylight-grey-30);
     --ai-purple: var(--color-purple-60);
+    --border-color-ai: var(--color-purple-80);
 
     /* Cmk Button Variants */
     --default-button-primary-color: var(--color-corporate-green-50);
@@ -479,6 +481,7 @@
     --sticky-header-border-color: var(--border-color-separator);
     --shared-dashboard-indicator-background: var(--color-midnight-grey-100);
     --ai-purple: var(--color-purple-50);
+    --border-color-ai: var(--color-purple-40);
 
     /* Cmk Button Variants */
     --default-button-primary-color: var(--color-corporate-green-50);

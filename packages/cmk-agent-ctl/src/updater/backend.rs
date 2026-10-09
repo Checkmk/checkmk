@@ -18,6 +18,7 @@ use crate::types::AgentHash;
 use anyhow::{bail, Context, Error, Result as AnyhowResult};
 use log::{log, Level};
 use serde::{Deserialize, Serialize};
+use serde_with::DisplayFromStr;
 use std::fs;
 use std::io;
 #[cfg(unix)]
@@ -96,12 +97,36 @@ impl UpdaterConfig {
     }
 }
 
+/// The connection the updater talks to its site over.
+///
+/// The updater has no site of its own: it reuses one of the controller's
+/// registered connections, where the receiver authenticates this host by the
+/// connection's client certificate. Recording which one was taken keeps the
+/// choice stable across runs and names it for whoever reads the state file.
+#[serde_with::serde_as]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct UpdateSource {
+    /// Site of the source connection, as `registered_connections.json` keys it,
+    /// for example `server/site`.
+    pub site_id: site_spec::SiteID,
+
+    /// UUID of the source connection.
+    #[serde_as(as = "DisplayFromStr")]
+    pub uuid: uuid::Uuid,
+
+    /// Whether the site serves agent updates. False once it answered 501.
+    pub available: bool,
+}
+
 /// Operational state of the updater, owned and written by the controller.
 ///
 /// A missing state file is equivalent to the default state, so the first run on
 /// a freshly installed host needs no bootstrapping.
 #[derive(Serialize, Deserialize, Debug, Default, PartialEq, Eq, Clone)]
 pub struct UpdateState {
+    /// The connection the updater uses. Absent until one was recorded.
+    pub source: Option<UpdateSource>,
+
     /// Unix timestamp of the last check against the site.
     pub last_check: Option<u64>,
 
@@ -682,6 +707,7 @@ mod tests {
     use crate::environment::SetupMode;
     use std::cell::RefCell;
     use std::path::PathBuf;
+    use std::str::FromStr;
 
     use crate::agent_receiver_api::{TargetAgent, UpdateStatusResponse};
 
@@ -806,6 +832,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let dir = tempfile::TempDir::new().unwrap();
         let path = dir.path().join("state.json");
         let state = UpdateState {
+            source: Some(some_source()),
             last_check: Some(1759276800),
             last_update: Some(1759190400),
             pending_hash: Some(String::from("0123456789abcdef")),
@@ -815,6 +842,33 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         state.save(&path).unwrap();
 
         assert_eq!(UpdateState::load(&path).unwrap(), state);
+    }
+
+    /// The source of the one connection the test registry carries.
+    fn some_source() -> UpdateSource {
+        UpdateSource {
+            site_id: site_spec::SiteID::from_str("server/site").unwrap(),
+            uuid: uuid::Uuid::from_str(CONNECTION_UUID).unwrap(),
+            available: true,
+        }
+    }
+
+    #[test]
+    fn test_state_file_keys_the_source_by_site_and_uuid() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let path = dir.path().join("state.json");
+
+        UpdateState {
+            source: Some(some_source()),
+            ..Default::default()
+        }
+        .save(&path)
+        .unwrap();
+
+        let written = fs::read_to_string(&path).unwrap();
+        assert!(written.contains(r#""site_id": "server/site""#));
+        assert!(written.contains(&format!(r#""uuid": "{CONNECTION_UUID}""#)));
+        assert!(written.contains(r#""available": true"#));
     }
 
     #[test]

@@ -12,6 +12,7 @@ Since this endpoint is public, no authentication is required.
 
 import argparse
 import json
+import logging
 import re
 import sys
 import time
@@ -20,7 +21,7 @@ from typing import NamedTuple
 
 import requests
 import urllib3
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, Storage, vcrtrace
@@ -30,6 +31,7 @@ from .semantic_version import SemanticVersion
 __version__ = "2.5.0p16"
 
 AGENT = "bazel_cache"
+LOGGER = logging.getLogger(f"agent_{AGENT}")
 
 CAMEL_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 DEFAULT_VERSION_CACHE_INTERVAL = 8 * 3600
@@ -67,7 +69,11 @@ class VersionCache:
     def _get_cached_version_info(self) -> BazelVersionInfo | None:
         if not (raw := self.storage.read(self.VERSION_CACHE_KEY, None)):
             return None
-        info = BazelVersionInfo.model_validate_json(raw)
+        try:
+            info = BazelVersionInfo.model_validate_json(raw)
+        except ValidationError as e:
+            LOGGER.warning("Discarding corrupted version cache: %(error)r", {"error": e})
+            return None
         return info if (time.time() - info.timestamp) < self.ttl else None
 
     def _renew_cached_version_info(

@@ -8,12 +8,14 @@
 # mypy: disable-error-code="no-untyped-def"
 
 import json
+from collections.abc import Callable
 from pathlib import Path
 from unittest import mock
 
 import pytest
 
-from cmk.plugins.bazel.lib.agent import agent_bazel_cache_main, parse_arguments
+from cmk.plugins.bazel.lib.agent import agent_bazel_cache_main, parse_arguments, VersionCache
+from cmk.server_side_programs.v1_unstable import Storage
 
 METRICS_RESPONSE = """# HELP bazel_remote_azblob_cache_hits The total number of azblob backend cache hits
 # TYPE bazel_remote_azblob_cache_hits counter
@@ -449,6 +451,41 @@ def test_bazel_cache_agent_output_has_no_version_section(
     captured = capsys.readouterr()
     output = captured.out.rstrip().split("\n")
     assert "<<<bazel_cache_version:sep(0)>>>" not in output
+
+
+@pytest.mark.parametrize(
+    "corrupt",
+    [
+        pytest.param(lambda text: text + "]}", id="trailing-data"),
+        pytest.param(lambda _: "not json", id="invalid-json"),
+        pytest.param(lambda _: "[]", id="wrong-type-expects-object"),
+        pytest.param(lambda _: "{}", id="missing-internal-cache-keys"),
+    ],
+)
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
+def test_corrupted_version_cache_handling(
+    tmp_path: Path,
+    corrupt: Callable[[str], str],
+    caplog: pytest.LogCaptureFixture,
+    patched_environment: None,
+) -> None:
+    tags_url = "https://bazel-remote.tld/tags"
+    commit = "c5bf6e13938aa89923c637b5a4f01c2203a3c9f8"
+    version_cache = VersionCache(Storage("test_agent", "test_host"), ttl=60)
+    first_call = version_cache.get_or_update(tags_url, commit)
+    for entry in tmp_path.rglob("*"):
+        if entry.is_file():
+            entry.write_text(corrupt(entry.read_text()))
+
+    # corrupted entry is treated as a miss and refetched
+    second_call = version_cache.get_or_update(tags_url, commit)
+    assert first_call and second_call
+    assert second_call.timestamp > first_call.timestamp
+
+    # check that warning was logged
+    [record] = caplog.records
+    assert record.levelname == "WARNING"
+    assert record.getMessage().startswith("Discarding corrupted version cache")
 
 
 @mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)

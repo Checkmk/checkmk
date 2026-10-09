@@ -163,3 +163,20 @@ def test_account_without_spoke_role_name_is_rejected() -> None:
 def test_account_with_assumed_role_is_rejected() -> None:
     with pytest.raises(SystemExit):
         parse_arguments([*ACCOUNT_ARGS, "--assume-role", "--role-arn", "arn:aws:iam::1:role/Other"])
+
+
+@pytest.mark.parametrize(
+    "spoke_args",
+    [
+        pytest.param(["--spoke-role-name", "CheckmkMonitoring"], id="role name"),
+        pytest.param(["--spoke-external-id", "tenant-42"], id="external id"),
+    ],
+)
+def test_spoke_options_without_account_are_rejected(spoke_args: Sequence[str]) -> None:
+    with pytest.raises(SystemExit):
+        parse_arguments([*REQUIRED_ARGS, *spoke_args])
+
+
+def test_assume_role_without_role_arn_is_rejected() -> None:
+    with pytest.raises(SystemExit):
+        parse_arguments([*REQUIRED_ARGS, "--assume-role"])

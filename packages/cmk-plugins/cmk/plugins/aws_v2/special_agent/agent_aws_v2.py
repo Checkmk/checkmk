@@ -419,8 +419,12 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     args = parser.parse_args(argv)
     if args.access_key_identity and args.secret is None and args.secret_id is None:
         parser.error("--access-key-identity requires --secret or --secret-id")
+    if args.assume_role and not args.role_arn:
+        parser.error("--assume-role requires --role-arn")
     if args.accounts and not args.spoke_role_name:
         parser.error("--account requires --spoke-role-name")
+    if (args.spoke_role_name or args.spoke_external_id) and not args.accounts:
+        parser.error("--spoke-role-name and --spoke-external-id require --account")
     if args.accounts and args.assume_role:
         parser.error(
             "--account cannot be combined with --assume-role: every account role must be"

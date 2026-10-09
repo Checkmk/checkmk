@@ -24,7 +24,7 @@ from urllib.parse import quote
 import requests
 import requests.auth
 import urllib3
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option, Secret
 from cmk.plugins.veeam.lib import parse_iso8601_epoch
@@ -489,6 +489,30 @@ def _total_count(backup_objects: Sequence[Mapping[str, object]]) -> int | None:
     return sum(ints) if len(ints) == len(counts) else None
 
 
+BACKUP_OBJECTS_STORAGE_KEY = "backup_objects"
+
+
+class _CachedBackupObjects(BaseModel):
+    session_id: str
+    objects: list[dict[str, JsonValue]]
+
+
+def _load_backup_objects_cache(storage: Storage) -> Mapping[str, _CachedBackupObjects]:
+    try:
+        raw = json.loads(storage.read(BACKUP_OBJECTS_STORAGE_KEY, "{}"))
+    except json.JSONDecodeError:
+        return {}
+    if not isinstance(raw, dict):
+        return {}
+    cache: dict[str, _CachedBackupObjects] = {}
+    for backup_id, entry in raw.items():
+        try:
+            cache[backup_id] = _CachedBackupObjects.model_validate(entry)
+        except ValidationError:
+            continue
+    return cache
+
+
 def fetch_restore_points(limit: int = 500) -> FetchStrategy:
     """One record per backed up machine: its newest restore point and a malware rollup,
     piggybacked onto the machine's host.
@@ -503,23 +527,67 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
     Restore points reference their chain via `backupId`; a point whose chain could not
     be resolved is joined by name and platform instead, if possible. See `_restore_point_object_id` for how a point is
     attributed to one of several objects sharing a chain.
+
+    A chain's objects only change when its job runs, so they are cached across runs and
+    reused while the chain's job (`jobId` in GET /api/v1/backups) is still on the same
+    session in GET /api/v1/jobs/states. Only a job whose `status` is "Stopped" counts, so
+    a run in progress never caches or reuses an incomplete list. A chain without such a
+    job is fetched every run.
+
+    Veeam Agent jobs keep a separate per-machine chain for each computer, which
+    GET /api/v1/backups does not list. Its job is found via the `parentBackupId` of its
+    restore points: the job's own chain, which is listed.
     """
 
     def _fetch(client: VeeamClient, name: str) -> Fetched:
         backup_objects = client.get_all("/api/v1/backupObjects", limit)
         restore_points = client.get_all("/api/v1/restorePoints", limit)
+        backups = client.get_all("/api/v1/backups", limit)
 
         backup_ids = {
             backup_id
-            for backup in client.get_all("/api/v1/backups", limit)
+            for backup in backups
             if isinstance(backup, dict) and isinstance(backup_id := backup.get("id"), str)
         } | {
             backup_id
             for point in restore_points
             if isinstance(point, dict) and isinstance(backup_id := point.get("backupId"), str)
         }
-        objects_by_backup_id: dict[str, list[Mapping[str, object]]] = {}
+        job_id_by_backup_id = {
+            backup_id: job_id
+            for backup in backups
+            if isinstance(backup, dict)
+            and isinstance(backup_id := backup.get("id"), str)
+            and isinstance(job_id := backup.get("jobId"), str)
+        }
+        job_id_by_backup_id |= {
+            backup_id: job_id
+            for point in restore_points
+            if isinstance(point, dict)
+            and isinstance(backup_id := point.get("backupId"), str)
+            and backup_id not in job_id_by_backup_id
+            and isinstance(parent_id := point.get("parentBackupId"), str)
+            and (job_id := job_id_by_backup_id.get(parent_id)) is not None
+        }
+        finished_session_by_job_id = {
+            job_id: session_id
+            for job in client.get_all("/api/v1/jobs/states")
+            if isinstance(job, dict)
+            and job.get("status") == "Stopped"
+            and isinstance(job_id := job.get("id"), str)
+            and isinstance(session_id := job.get("sessionId"), str)
+        }
+
+        old_cache = _load_backup_objects_cache(client.storage)
+        new_cache: dict[str, _CachedBackupObjects] = {}
+        objects_by_backup_id: dict[str, Sequence[Mapping[str, object]]] = {}
         for backup_id in backup_ids:
+            job_id = job_id_by_backup_id.get(backup_id)
+            session_id = None if job_id is None else finished_session_by_job_id.get(job_id)
+            if (cached := old_cache.get(backup_id)) is not None and cached.session_id == session_id:
+                objects_by_backup_id[backup_id] = cached.objects
+                new_cache[backup_id] = cached
+                continue
             try:
                 objects = client.get_all(f"/api/v1/backups/{backup_id}/objects", limit)
             except TerminateAgent as exc:
@@ -529,7 +597,16 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
                 ):
                     continue
                 raise
-            objects_by_backup_id[backup_id] = [obj for obj in objects if isinstance(obj, dict)]
+            chain_objects = [obj for obj in objects if isinstance(obj, dict)]
+            objects_by_backup_id[backup_id] = chain_objects
+            if session_id is not None:
+                new_cache[backup_id] = _CachedBackupObjects(
+                    session_id=session_id, objects=chain_objects
+                )
+        client.storage.write(
+            BACKUP_OBJECTS_STORAGE_KEY,
+            json.dumps({backup_id: entry.model_dump() for backup_id, entry in new_cache.items()}),
+        )
 
         object_id_by_name_platform: dict[tuple[str, str], str] = {
             (obj_name, obj_platform_id): object_id

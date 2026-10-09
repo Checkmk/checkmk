@@ -17,6 +17,7 @@ import time_machine
 
 from cmk.password_store.v1 import Secret
 from cmk.plugins.veeam.special_agent.agent_veeam import (
+    BACKUP_OBJECTS_STORAGE_KEY,
     create_session,
     fetch_backups,
     fetch_list,
@@ -457,6 +458,7 @@ def _reduce_restore_points(
     backup_ids = {bid for p in points if isinstance(bid := p.get("backupId"), str)}
     resolved = object_id_by_backup_id or dict.fromkeys(backup_ids, "obj-1")
     _mock_backups(api, list(resolved))
+    _mock_jobs(api, [])
     for backup_id, object_id in resolved.items():
         api.get(
             f"{URL}/api/v1/backups/{backup_id}/objects?skip=0&limit=500",
@@ -569,6 +571,7 @@ def test_restore_points_unsupported_backup_platform_is_not_joined(
         json={"data": points, "pagination": {"total": len(points)}},
     )
     _mock_backups(api, ["backup-1"])
+    _mock_jobs(api, [])
     api.get(
         f"{URL}/api/v1/backups/backup-1/objects?skip=0&limit=500",
         status=HTTPStatus.BAD_REQUEST,
@@ -627,6 +630,7 @@ def test_restore_points_multi_object_chain_matched_by_suffixed_name(
         json={"data": points, "pagination": {"total": len(points)}},
     )
     _mock_backups(api, ["shared-backup"])
+    _mock_jobs(api, [])
     api.get(
         f"{URL}/api/v1/backups/shared-backup/objects?skip=0&limit=500",
         json={
@@ -652,6 +656,162 @@ def test_restore_points_multi_object_chain_matched_by_suffixed_name(
     }
 
 
+def _mock_restore_points_with_one_chain(
+    api: responses.RequestsMock,
+    *,
+    job_status: str = "Stopped",
+    session_id: str = "session-1",
+    job_id: str | None = "job-id-1",
+) -> None:
+    """Machine vm-1, backed up into chain backup-1 by the job `job_id` (none if None)."""
+    api.get(
+        f"{URL}/api/v1/backupObjects?skip=0&limit=500",
+        json={"data": [_backup_object("obj-1", 1)], "pagination": {"total": 1}},
+    )
+    api.get(
+        f"{URL}/api/v1/restorePoints?skip=0&limit=500",
+        json={"data": [_restore_point()], "pagination": {"total": 1}},
+    )
+    backup = {"id": "backup-1"} if job_id is None else {"id": "backup-1", "jobId": job_id}
+    api.get(
+        f"{URL}/api/v1/backups?skip=0&limit=500",
+        json={"data": [backup], "pagination": {"total": 1}},
+    )
+    _mock_jobs(api, [_job(status=job_status, sessionId=session_id)])
+    api.get(
+        f"{URL}/api/v1/backups/backup-1/objects?skip=0&limit=500",
+        json={"data": [{"id": "obj-1", "name": "vm-1"}], "pagination": {"total": 1}},
+    )
+
+
+def _write_restore_points(storage: Storage) -> None:
+    """One agent run: a fresh client, as each run starts a new process."""
+    write_sections(
+        _client(_auth(storage), storage), [("veeam_restore_points", fetch_restore_points())]
+    )
+
+
+def _chain_objects_requests(api: responses.RequestsMock) -> int:
+    return sum("/api/v1/backups/backup-1/objects" in (call.request.url or "") for call in api.calls)
+
+
+def test_restore_points_reuse_cached_chain_objects_while_the_job_session_is_unchanged(
+    api: responses.RequestsMock,
+    storage: Storage,
+) -> None:
+    _mock_restore_points_with_one_chain(api)
+
+    _write_restore_points(storage)
+    _write_restore_points(storage)
+
+    assert _chain_objects_requests(api) == 1
+
+
+def test_restore_points_from_cached_chain_objects_are_unchanged(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _mock_restore_points_with_one_chain(api)
+    _write_restore_points(storage)
+    first_run = capsys.readouterr().out
+
+    _write_restore_points(storage)
+
+    assert capsys.readouterr().out == first_run
+
+
+def test_restore_points_refetch_chain_objects_after_the_job_ran_again(
+    api: responses.RequestsMock,
+    storage: Storage,
+) -> None:
+    _mock_restore_points_with_one_chain(api, session_id="session-1")
+    _write_restore_points(storage)
+    _mock_jobs(api, [_job(status="Stopped", sessionId="session-2")])
+
+    _write_restore_points(storage)
+
+    assert _chain_objects_requests(api) == 2
+
+
+def test_restore_points_refetch_chain_objects_while_the_job_is_running(
+    api: responses.RequestsMock,
+    storage: Storage,
+) -> None:
+    _mock_restore_points_with_one_chain(api, job_status="Running")
+
+    _write_restore_points(storage)
+    _write_restore_points(storage)
+
+    assert _chain_objects_requests(api) == 2
+
+
+def test_restore_points_refetch_chain_objects_of_a_backup_without_a_job(
+    api: responses.RequestsMock,
+    storage: Storage,
+) -> None:
+    _mock_restore_points_with_one_chain(api, job_id=None)
+
+    _write_restore_points(storage)
+    _write_restore_points(storage)
+
+    assert _chain_objects_requests(api) == 2
+
+
+def test_restore_points_reuse_cached_objects_of_a_per_machine_backup_via_its_parent(
+    api: responses.RequestsMock,
+    storage: Storage,
+) -> None:
+    # Veeam Agent jobs: the job's own chain (backup-1) is listed but holds no points;
+    # each computer's points sit in an unlisted per-machine chain pointing back to it.
+    api.get(
+        f"{URL}/api/v1/backupObjects?skip=0&limit=500",
+        json={"data": [_backup_object("obj-1", 1)], "pagination": {"total": 1}},
+    )
+    api.get(
+        f"{URL}/api/v1/restorePoints?skip=0&limit=500",
+        json={
+            "data": [_restore_point(backupId="machine-1", parentBackupId="backup-1")],
+            "pagination": {"total": 1},
+        },
+    )
+    api.get(
+        f"{URL}/api/v1/backups?skip=0&limit=500",
+        json={"data": [{"id": "backup-1", "jobId": "job-id-1"}], "pagination": {"total": 1}},
+    )
+    _mock_jobs(api, [_job(status="Stopped")])
+    for backup_id in ("backup-1", "machine-1"):
+        api.get(
+            f"{URL}/api/v1/backups/{backup_id}/objects?skip=0&limit=500",
+            json={"data": [{"id": "obj-1", "name": "vm-1"}], "pagination": {"total": 1}},
+        )
+
+    _write_restore_points(storage)
+    _write_restore_points(storage)
+
+    assert (
+        sum("/api/v1/backups/machine-1/objects" in (call.request.url or "") for call in api.calls)
+        == 1
+    )
+
+
+def test_restore_points_drop_a_vanished_backup_from_the_cache(
+    api: responses.RequestsMock,
+    storage: Storage,
+) -> None:
+    _mock_restore_points_with_one_chain(api)
+    _write_restore_points(storage)
+    assert "backup-1" in storage.read(BACKUP_OBJECTS_STORAGE_KEY, "{}")
+    for path in ("backupObjects", "restorePoints", "backups"):
+        api.get(
+            f"{URL}/api/v1/{path}?skip=0&limit=500", json={"data": [], "pagination": {"total": 0}}
+        )
+
+    _write_restore_points(storage)
+
+    assert storage.read(BACKUP_OBJECTS_STORAGE_KEY, "{}") == "{}"
+
+
 def _backup_object(
     object_id: str, points_count: int | None, **overrides: object
 ) -> dict[str, object]:
@@ -675,6 +835,7 @@ def _run_restore_points(
     """Each object gets its own backup chain, named after the object's id. The object's
     name in its chain is taken from `chain_names`, if given."""
     _mock_backups(api, [str(o["id"]) for o in backup_objects])
+    _mock_jobs(api, [])
     api.get(
         f"{URL}/api/v1/backupObjects?skip=0&limit=500",
         json={"data": backup_objects, "pagination": {"total": len(backup_objects)}},

@@ -19,7 +19,8 @@ def resolve_type(t: TypeForm[object]) -> type | types.UnionType:
 
     Handles arbitrarily nested combinations in any order. Only the outermost wrappers are
     removed — Annotated inside generic arguments (e.g. dict[str, Annotated[...]]) is preserved.
-    Union types (A | B) are passed through unchanged.
+    A parameterized generic alias (e.g. Alias[int]) is unwrapped with its type arguments
+    substituted. Union types (A | B) are passed through unchanged.
 
     Examples:
         >>> resolve_type(Annotated[list[str], "foo"])
@@ -31,12 +32,34 @@ def resolve_type(t: TypeForm[object]) -> type | types.UnionType:
     """
     # mypy wrongly assumes that a TypeForm can't be a TypeAliasType, so we use an object here.
     resolved: object = t
-    while isinstance(resolved, TypeAliasType) or get_origin(resolved) is Annotated:
-        resolved = (
-            resolved.__value__ if isinstance(resolved, TypeAliasType) else get_args(resolved)[0]
-        )
+    while True:
+        if isinstance(resolved, TypeAliasType):
+            resolved = resolved.__value__
+        elif isinstance(origin := get_origin(resolved), TypeAliasType):
+            resolved = _substitute_alias_arguments(origin, get_args(resolved))
+        elif origin is Annotated:
+            resolved = get_args(resolved)[0]
+        else:
+            break
     # cast: this can be other type forms like a generic alias `list[str]`, too.
     return cast("type | types.UnionType", resolved)
+
+
+def _substitute_alias_arguments(alias: TypeAliasType, arguments: tuple[object, ...]) -> object:
+    """Get the value of a generic type alias, with its type parameters replaced by the arguments.
+
+    Raises:
+        ValueError: if the alias has a ParamSpec or TypeVarTuple, or the number of arguments is
+            wrong.
+    """
+    type_vars = [param for param in alias.__type_params__ if isinstance(param, TypeVar)]
+    if len(type_vars) != len(alias.__type_params__):
+        raise ValueError(f"Only type variables are supported as type parameters of {alias}.")
+    if len(type_vars) != len(arguments):
+        raise ValueError(
+            f"Expected {len(type_vars)} type argument(s) for {alias}, got {len(arguments)}."
+        )
+    return substitute_type_vars(alias.__value__, dict(zip(type_vars, arguments, strict=True)))
 
 
 def get_resolved_origin(t: TypeForm[object]) -> type:

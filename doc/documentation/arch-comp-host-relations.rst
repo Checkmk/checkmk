@@ -35,7 +35,7 @@ reachability. The legacy management board settings of a host
 mechanism and are not touched by this component.
 
 The work is tracked in CMK-39466 (model, Setup and monitoring), CMK-39967
-(relation detection) and CMK-40315 (REST API).
+(relation detection) and CMK-40315 (REST API and activation warnings).
 
 Terms
 -----
@@ -156,6 +156,7 @@ White-box overall system
         [Site snapshots\n(ultimatemt only)] as snapshots
         file "hosts.mk\n(relations attribute)" as hosts_mk
         file "conf.d/relations.mk" as relations_mk
+        file "host_relations_dropped.mk" as dropped_mk
     }
 
     package "Every site (central site included)" {
@@ -187,6 +188,8 @@ White-box overall system
     activation ..> export: before building snapshots
     export ..> hosts: read all hosts
     export ..> relations_mk: write if changed
+    export ..> dropped_mk: what was dropped
+    activation ..> dropped_mk: read (warnings per site)
     relations_mk ..> site_relations_mk: config sync (not ultimatemt)
     activation ..> snapshots
     snapshots ..> relations_mk: read
@@ -194,6 +197,7 @@ White-box overall system
     core ..> site_relations_mk: read when generating the config
     core - livestatus
     views ..> monitor_api: use
+    views ..> livestatus: column offered?
     monitor_api ..> livestatus: custom_variables
     hosts ..> shared
     export ..> shared
@@ -270,7 +274,10 @@ failed and save the others. This includes a new site that the edition refuses
 for a relation the host keeps. Any other value the bulk update cannot apply
 still fails the request; folders processed before are saved. A related host has
 to exist when the folder of the host naming it is processed, so a relation to a
-host created in the same request can be refused.
+host created in the same request can be refused. A host may have several
+entries in a bulk update, which are applied one after the other. If the
+relations of a later one are refused, the earlier ones stay applied, as with
+the Quick setup lock (see `Risks and technical debts`_).
 
 For the monitoring each host with relations gets a ``_CMK_RELATIONS`` custom
 host variable during the activation. It contains the same information as JSON,
@@ -300,16 +307,20 @@ Shared:
 Setup:
 
 * ``cmk/gui/watolib/host_relations.py``: The form of the host attribute, the
-  rules for conflicting relations, the resolver used by the export, the note
-  in the host deletion dialog, and ``with_links_not_shown``, which the host
+  rules for conflicting relations, the resolver used by the export, the
+  relations it drops and the activation warning for them (``DroppedRelation``,
+  ``dropped_relation_message``), the note in the host deletion dialog
+  (``MAX_LISTED_RELATED_HOSTS``), and ``with_links_not_shown``, which the host
   properties and the REST API use to keep the links of kinds they do not show.
   ``Host`` itself stores what it is given; ``store_relations``
   (``host_attributes.py``) only normalizes it, so no links means no attribute.
 * ``cmk/gui/watolib/hosts_and_folders.py``: The mirror (``plan_relation_mirror``,
   ``apply_relation_mirror``, ``RelationMirrorBatch`` for several hosts saved in
   one go, ``relation_mirror_folders``, the cleanup after a deletion, and the
-  ``Host`` methods ``set_relations_about`` and ``rename_relation``). Creating,
-  editing and deleting hosts, the relation detection and renaming write
+  ``Host`` methods ``set_relations_about`` and ``rename_relation``), and the
+  checks before writing (``need_relatable``, ``Host.writable_relations``,
+  ``Host.need_relations_writable``). Creating, editing, moving and deleting
+  hosts, changing their site, the relation detection and renaming write
   relations through these functions. A new writer
   has to resolve related hosts with ``counterpart_resolver`` and save their
   folders through ``relation_mirror_folders``: ``FolderTree.host()`` can return
@@ -328,14 +339,17 @@ Setup:
   deletion note in the host properties and in the folder view, and cloning a
   host without its relations.
 * ``cmk/gui/openapi/api_endpoints/models/host_attribute_models.py``: The
-  ``relations`` field of the host endpoints of the REST API.
-* ``cmk/gui/openapi/api_endpoints/host_config/create_host.py`` and
-  ``update_host.py``: The single host endpoints write it through
-  ``Folder.create_hosts()`` and ``Host.edit()`` and keep the links of kinds the
-  API does not show.
-* ``cmk/gui/openapi/api_endpoints/host_config/bulk_create_host.py`` and
-  ``bulk_update_host.py``: The bulk endpoints write it through
-  ``RelationMirrorBatch``.
+  ``relations`` field in the request attributes
+  (``HostConfigAttributeRequestModel``) and the response attributes of the host
+  endpoints.
+* ``cmk/gui/openapi/api_endpoints/host_config/create_host.py``,
+  ``create_cluster_host.py`` and ``bulk_create_host.py``: Creating hosts writes
+  the related hosts through ``RelationMirrorBatch``, which
+  ``Folder.create_hosts()`` uses as well.
+* ``cmk/gui/openapi/api_endpoints/host_config/update_host.py`` and
+  ``bulk_update_host.py``: Updating writes them through ``Host.edit()`` or
+  ``RelationMirrorBatch`` and keeps the links of kinds the API does not show
+  (``with_links_not_shown``).
 * ``cmk/gui/watolib/host_relations_export.py``: Writes the resolved relations
   for the monitoring core, and what was dropped for the activation to report.
   ``cmk/gui/watolib/activate_changes.py`` calls it in ``_pre_activate_changes``
@@ -347,23 +361,32 @@ Setup:
   endpoints used by the detection page.
 * ``cmk/gui/wato/pages/host_relation_detection.py`` and
   ``packages/cmk-frontend-vue/src/mode-host-relation-detection/``: The Setup page
-  "Relation detection".
+  "Relation detection". What the page gets from Python is typed in
+  ``packages/cmk-shared-typing/source/mode_host_relation_detection.json``.
 * ``cmk/gui/watolib/registration.py``: Registers the attribute, the
-  ``validate-host`` hook, the replication path and the two background jobs.
-  ``cmk/gui/general_config.py`` holds the default log level, and
-  ``cmk/config_anonymizer/plugins/hosts.py`` anonymizes the related host names.
+  ``validate-host`` hook, the replication path, the two background jobs and the
+  default ``validate_host_relation``, which accepts every pair.
+  ``cmk/gui/wato/pages/__init__.py`` registers the page and its menu entry,
+  ``cmk/gui/openapi/registration.py`` the endpoints of the detection.
+* ``cmk/gui/wato/_check_mk_configuration.py``: The global setting "Logging" >
+  "Host relations". Its default is in ``cmk/gui/general_config.py`` and
+  ``cmk/gui/single_global_setting.py``.
+* ``cmk/config_anonymizer/plugins/hosts.py``: Anonymizes the related host
+  names.
 * ``cmk/gui/nonfree/ultimatemt/host_and_folder_validators.py``
   (``validate_host_relation``) and
   ``cmk/gui/nonfree/ultimatemt/managed_snapshots.py`` (``relations_of_site``):
-  The rules of the multi-tenant edition.
+  The rules of the multi-tenant edition, registered in
+  ``cmk/gui/nonfree/ultimatemt/registration.py``.
 
 Monitoring GUI:
 
 * ``cmk/gui/monitor/hosts/``: Reads the relations from Livestatus for the page
-  "All hosts". The queries and the visibility rule are in ``_impl.py``, the
-  limit and the response models in ``_models.py``, the sort column in
-  ``_sorting.py``, the REST fields in ``_api/``, and the check whether the
-  column is shown at all in ``_pages/``.
+  "All hosts". The queries and the visibility rule are in ``_impl.py``, what
+  the REST API asks of them in ``_repositories.py``, the limit and the response
+  models in ``_models.py``, the sort column in ``_sorting.py``, the REST fields
+  in ``_api/``, and the check whether the column is shown at all in
+  ``_pages/``, which asks Livestatus directly.
 * ``packages/cmk-frontend-vue/src/monitoring/all-hosts/``: The relations column
   and the related host cards in the slide-in
   (``components/slide-in/HostRelationsSection.vue``).
@@ -383,14 +406,15 @@ Interfaces
   updating and removing it writes the related hosts, which get a pending change
   of their own, in the bulk endpoints as well (see `Data model`_).
 * Setup page "Relation detection" (``wato.py?mode=host_relation_detection``). It
-  is linked in the "Related" section of the folder menu as "Detect related
-  hosts" and requires the permissions ``wato.edit``, ``wato.hosts`` and
+  is linked as "Relation detection" in the "Related" section of the folder
+  menu and requires the permissions ``wato.edit``, ``wato.hosts`` and
   ``wato.edit_hosts``.
 * Internal REST API "Host relation detection" (not part of the public API). All
   endpoints require the same permissions as the page. This includes the
   read-only endpoints, as in the service discovery.
-  ``background_jobs.delete_jobs`` is declared as optional, as reading the state
-  of a job asks whether the user may delete it:
+  Two permissions are optional: ``background_jobs.delete_jobs``, because
+  reading the state of a job asks whether the user may delete it, and
+  ``wato.all_folders``, as for the host endpoints:
 
   * ``POST /domain-types/host_relation_detection/actions/suggest/invoke``: What
     the hosts reveal (words in host names, labels and attributes shared by few
@@ -409,6 +433,10 @@ Interfaces
 * Generated file ``etc/check_mk/conf.d/relations.mk``, which sets
   ``explicit_host_conf["_CMK_RELATIONS"]``. It is registered as replication path
   ``host_relations``.
+* Generated file ``var/check_mk/wato/host_relations_dropped.mk`` on the central
+  site: what the export dropped, as data for the activation warnings (see
+  `Activation warnings`_). An entry a version cannot word is skipped, so the
+  entries may change between versions.
 * Livestatus columns ``custom_variables`` and ``custom_variable_names`` of the
   ``hosts`` table. Livestatus strips the leading underscore, so the variable is
   called ``CMK_RELATIONS`` there.
@@ -473,19 +501,20 @@ for a new host) does the following:
 
 For a pair the save changes, each of these checks refuses the save. A pair the
 save does not change is settled on a best effort basis: a related host that is
-missing or hidden from the user is left alone without a message, as one would
-tell whether it exists; one that is locked, not writable for the user or stores
-a ``relations`` value that cannot be read is logged as a warning and left as it
-is. ``validate_host_relations`` keeps reporting all of them. The edition hook is
-not asked about such a pair, as the host stores it already. This way a broken
-related host never blocks saving the host the user is working on, as long as
-the save leaves that relation alone. Only a save of the host holding the
-primary half settles such a pair: saving the OS host never writes the board's
-half, as its own half is only a copy of it. An OS host half the board does not
-store stays until the relation is stored on the board or removed from the OS
-host. The one
-exception: if the save changes the site of the host, the edition hook is asked
-about all of its relations (see below).
+missing or hidden from the user is left alone without a message, as a message
+would tell whether it exists; one that is locked, not writable for the user,
+refused by ``validate_edit_host`` or stores a ``relations`` value that cannot be
+read is logged as a warning and left as it is. ``validate_host_relations`` keeps
+reporting them (a missing related host only to users who may see all hosts, see
+`Security considerations`_). ``validate_host_relation`` is not asked about such
+a pair, as the host stores it already. This way a broken related host never
+blocks saving the host the user is working on, as long as the save leaves that
+relation alone. Only a save of the host holding the primary half settles such a
+pair: saving the OS host never writes the board's half, as its own half is only
+a copy of it. An OS host half the board does not store stays until the relation
+is stored on the board or removed from the OS host. The one exception: if the
+save changes the site of the host, ``validate_host_relation`` is asked about all
+of its relations (see below).
 
 When several hosts are created at once, the related hosts are looked up among
 the hosts that already exist. A relation to a host created in the same call is
@@ -500,16 +529,20 @@ Deleting, renaming, cloning hosts and changing their site
   deleted host stores from the related hosts. A half that only the related host
   stores stays behind. This cleanup runs with superuser rights, so a user can
   delete their own host even if the related host is in a folder they may not
-  write to. Locked folders are still respected, so a half stays behind there as
-  well. Such a half is reported by ``validate_host_relations`` and ignored by
-  the export. A host locked by Quick setup loses its half like any other, since
-  removing it stores nothing on the host. The delete confirmation
-  of a host lists the first ``MAX_LISTED_RELATED_HOSTS`` related hosts.
+  write to. A half also stays behind on a host that is locked, that
+  ``validate_edit_host`` refuses, or whose ``relations`` value cannot be read.
+  Such a half is reported by ``validate_host_relations`` and ignored by the
+  export. A host locked by Quick setup loses its half like any other, since
+  removing it stores nothing on the host. The delete confirmation of a host
+  lists the first ``MAX_LISTED_RELATED_HOSTS`` related hosts.
 * **Renaming** a host updates all links to the old name, just like for parents.
   If the user may not write the folder of a related host, the rename stops
-  there, as it does for parents: the host is renamed, but that related host
-  and everything the rename would have changed after it keep the old name.
-  The related host then stores a half that points to a missing host.
+  there, as it does for parents: the host is renamed in Setup, but that related
+  host and everything the rename would have changed after it keep the old name,
+  the rule sets included. The rename in the monitoring (performance data,
+  history, core) is skipped, and the host is reported as a permission problem.
+  The related host then stores a half that points to a missing host, and its
+  pending change for the rename is recorded although nothing was written.
 * **Cloning** a host does not copy its relations, because the related hosts
   would not know about the clone.
 * **Changing the site** of hosts asks the edition hook about each relation of
@@ -583,18 +616,20 @@ Monitoring
   one host the user can see carries the ``CMK_RELATIONS`` variable. Once
   offered, it shows 0 for hosts whose related hosts are all hidden from the
   user. To count the relations of each host, the page asks Livestatus once, on
-  all sites, which hosts carry the variable at all, with the permissions of the
-  user. A relation
-  is counted if the related host (by site and name) is in this set or, for
-  users who see all hosts, is on a site that currently cannot be reached. Sites
-  the user disabled do not count as unreachable.
+  all sites the user has not disabled, which hosts carry the variable at all,
+  with the permissions of the user. A relation is counted if the related host
+  (by site and name) is in this set or, for users who see all hosts, is on a
+  site that currently cannot be reached. Sites the user disabled do not count
+  as unreachable.
 * The **host slide-in** shows the first ``MAX_RESOLVED_RELATIONS`` related hosts
   the user may see, in the order of the export, with their state and service
   counts. ``more_relations`` says that there are more. It uses the same set of
   hosts and the same rule as the column, so up to that limit the number in the
   column matches the cards. The query that reads the state only names these
-  hosts and only goes to their sites. The slide-in first shows a few cards
-  and the others when the user expands the list.
+  hosts and only goes to their sites. The slide-in first shows
+  ``RELATION_PREVIEW_LIMIT`` cards and the others when the user expands the
+  list. If the user may see none of the related hosts, it says that no
+  relations are set.
 * Both leave out related hosts the user may not see, hosts that no site knows
   any more, and hosts on a site the user disabled (that site is not asked). A
   related host only counts as existing if it carries the variable itself. This
@@ -656,12 +691,12 @@ flow. The page is a wizard:
      serial number) are one pair, attributed to the finding the scan reports
      first.
 
-   A value that too many hosts share is ignored, as it names a category (like a
-   location) rather than one machine. For each pair the page shows whether it
-   can be stored, is already stored, is stored differently, or cannot be written
-   (and why). "Cannot be written" checks the same as the store run: locks, write
-   permissions, a ``relations`` value that cannot be read and the edition hook
-   ``validate_host_relation``.
+   A value that more hosts share than ``_MACHINE_SIZE`` is ignored, as it names
+   a category (like a location) rather than one machine. For each pair the page
+   shows whether it can be stored, is already stored, is stored differently, or
+   cannot be written (and why). "Cannot be written" checks what a save checks
+   (see `Editing a host`_, step 3), except ``validate_edit_host``, which only
+   the store run asks; it then reports the pair as not writable.
 
 4. **Summary.** The page sends the id of the scan, the findings to use and what
    the user changed (excluded rows, answered questions, resolved conflicts), not
@@ -715,11 +750,11 @@ Operation
   error, and as a warning everything the activation reports (see `Activation
   warnings`_). On "Debug" it also logs every relation that was
   dropped during the export, and why, and a summary of each export. A related
-  host that keeps its half after a deletion because it is locked, or whose half
-  a save could not settle because it is locked, not writable or holds a value
-  that cannot be read, is logged as a warning on the general ``cmk.web``
-  logger, not on the relations logger. A missing or hidden related host of a
-  pair the save does not change is not logged.
+  host whose half a deletion or a save leaves as it is (see `Editing a host`_
+  and `Deleting, renaming, cloning hosts and changing their site`_) is logged as
+  a warning on the general ``cmk.web`` logger, not on the relations logger. A
+  missing or hidden related host of a pair the save does not change, and a
+  ``relations`` value that cannot be read during a deletion, are not logged.
 * **Locking:** The store run holds the configuration lock for its whole run,
   like a bulk import of hosts. Storing relations for a large fleet blocks other
   Setup changes meanwhile: measured were 11 seconds for 2,500 pairs (about 4 ms
@@ -731,7 +766,8 @@ Operation
   type, counted over all users (``housekeeping_max_age_sec``,
   ``housekeeping_max_count``). The newest job of a type and running jobs are
   never removed. A scan that is still being reviewed can therefore disappear
-  when other users scan a lot; the page then reports an unknown scan.
+  when other users scan a lot; the page then cannot read its rows, and storing
+  it fails.
 * **Core compilation:** Every activation that changes ``relations.mk`` makes the
   core of every site that receives the file compile its whole configuration.
   This includes the first activation after an update that creates the file.
@@ -753,24 +789,37 @@ Testing
 * ``tests/unit/cmk/gui/utils/test_host_relations.py`` and
   ``test_host_relation_kinds.py``: The formats and the table of kinds.
 * ``tests/unit/cmk/gui/watolib/test_host_relations.py``: The form of the
-  attribute, the resolver and the deletion note.
+  attribute, the resolver and what it drops, and the deletion note.
   ``test_host_attributes_relations.py``: Merging with the stored value.
-  ``test_host_relations_export.py``: The export. ``host_relations_fakes.py``
-  holds the shared fakes.
+  ``test_host_relations_export.py``: The export and the activation warnings. ``host_relations_fakes.py`` holds the shared fakes.
 * ``tests/unit/cmk/gui/watolib/test_hosts_and_folders.py``: The mirror when
-  hosts are created, edited, deleted and moved, and ``validate_host_relations``.
-  ``test_host_rename.py``: Renaming.
+  hosts are created, edited, deleted and moved or change their site, the checks
+  before writing (locks, Quick setup, edition hooks), and
+  ``validate_host_relations``. ``test_host_rename.py``: Renaming.
+  ``test_host_attributes.py`` (and its edition variants): The topic "Related
+  hosts" of the attribute.
 * ``tests/unit/cmk/gui/watolib/test_host_relation_detection.py`` and
   ``test_host_relation_scan.py``: The detection and its jobs.
   ``tests/unit/cmk/gui/openapi/api_endpoints/test_host_relation_detection.py``
   and ``tests/openapi/test_openapi_host_relation_detection.py``: Its endpoints.
-* ``tests/openapi/test_openapi_host_config.py``: The host endpoints of the REST
-  API.
+* ``tests/openapi/test_openapi_host_config.py``: The host endpoints of the
+  REST API. Its edition variants in ``tests/openapi/nonfree/`` expect the
+  attribute among the effective attributes.
+  ``tests/unit/cmk/gui/openapi/endpoints/test_host_attribute_models.py``: Their
+  validation of kind and direction.
 * ``tests/unit/cmk/gui/monitor/hosts/test_impl.py`` and ``test_sorting.py``, and
   ``tests/openapi/test_openapi_monitor_all_hosts.py``: The count, the sorting
   and the overview.
+* ``tests/unit/cmk/gui/plugins/views/test_painters.py``: The legacy painter
+  hides the variable.
 * ``tests/unit/cmk/gui/nonfree/ultimatemt/test_managed_snapshots.py`` and
   ``test_host_and_folder_validators.py``: The multi-tenant rules.
+* ``test_available_replication_paths.py`` of each edition under
+  ``tests/unit/editions/``: The replication path ``host_relations``.
+  ``tests/unit/cmk/gui/nonfree/ultimatemt/watolib/test_config_sync.py``: The
+  snapshot of a remote site contains ``relations.mk``.
+* ``tests/unit/cmk/config_anonymizer/test_hosts.py``: Anonymizing the related
+  host names.
 * ``packages/cmk-frontend-vue/tests/mode-host-relation-detection/`` and
   ``packages/cmk-frontend-vue/tests/monitoring/all-hosts/``: The Vue parts.
 
@@ -781,21 +830,29 @@ Security considerations
   hosts. The user needs write permission for both hosts and both folders, and
   this is checked before anything is written. There are two exceptions. The
   cleanup after deleting a host runs with superuser rights, but only removes
-  the link to the deleted host and still respects locks. Renaming a host
+  the links to the deleted host (apart from what any write of a host drops, see
+  `Risks and technical debts`_) and still respects what it may not write (see
+  `Deleting, renaming, cloning hosts and changing their site`_). Renaming a host
   rewrites the links on its related hosts without checking the permissions for
   these hosts, as for parents; their folders must be writable and not locked,
   or the rename stops there (see `Deleting, renaming, cloning hosts and changing
   their site`_).
 * **Information in Setup:** Error messages about a related host the user may not
-  see do not contain its folder or contact groups. Saving a relation to a
-  related host the user may not see gets the same message as one to a missing
-  host. ``validate_host_relations`` reports a missing related host only to users
-  who may see all hosts (``wato.see_all_folders``); for other users it says
-  nothing about related hosts they cannot see. Neither tells whether a hidden
-  host exists. The stored links themselves are shown as they are, as for
-  parents: the host properties, the host endpoints of the REST API and the
-  delete confirmation name every related host, also one the user may not see
-  (in the GUI without a link to it). The detection
+  see do not contain its folder or contact groups. The one exception is a rename
+  that stops at such a host: like for parents, its result names the folder the
+  user may not write and the contact groups permitted on it. Saving a relation
+  to a related host the user may not see gets the same message as one to a
+  missing host. ``validate_host_relations`` reports a missing related host only
+  to users who may see all hosts (``wato.see_all_folders``); for other users it
+  says nothing about related hosts they cannot see. Neither tells whether a hidden
+  host exists. Two refusals do, but only for a host a stored link already
+  names. Removing a relation to a hidden host that still stores its half is
+  refused, while one to a missing host is removed. A change of the site asks
+  the edition about every related host, hidden ones included. The stored links
+  themselves are shown as they are, as for parents: the host properties, the
+  host endpoints of the REST API and the delete confirmation name every related
+  host, also one the user may not see (in the GUI without a link to it). The
+  detection
   only reads hosts in folders the user may read.
   Scan results are bound to the user who started the scan, because the
   endpoints do not require the permission to see the background jobs of others.
@@ -818,7 +875,8 @@ Security considerations
   works because a parent is monitored on the same site, so the core knows its
   contacts. A related host is often monitored on another site, which the core
   cannot ask. The notification context of parents is no stricter:
-  ``HOSTCHILDREN`` lists all descendants. The variable is an internal format,
+  ``HOSTCHILDREN`` lists the descendants, whether the contact may see them or
+  not. The variable is an internal format,
   like ``_FILENAME``, and not meant to be read by scripts.
 
 * **Distribution of the export:** Except for ``ultimatemt``, every site gets the
@@ -865,8 +923,8 @@ Architecture decisions
   can leave two contradicting halves behind.
 * **The deletion cleanup acts with superuser rights.** Deleting a host must
   neither fail over a relation nor leave a link to a host that no longer
-  exists, even where the user may not write the related host. Locks are still
-  respected.
+  exists, even where the user may not write the related host. Locks and the
+  edition are still respected.
 * **Relations are resolved during the activation and written to a file of their
   own.** The reverse relations belong to hosts in other folders, and the site
   of a related host is only known for the whole tree. The usual way of a host
@@ -973,16 +1031,18 @@ Ordered by priority.
    hosts to users who may see the host, but not the related host, via
    Livestatus and the REST API. The columns of the parents leave such hosts out
    (see `Security considerations`_). Nothing else about the related host is
-   revealed.
+   revealed. In Setup, two refusals tell whether a hidden host that a stored
+   link names exists (see `Security considerations`_).
 4. Each relation is stored twice, and only the mirror keeps both halves in
    sync. A manually edited ``hosts.mk``, a locked related host or a rename that
    stops at a related host the user may not write can leave one half alone.
    A board's half alone is still shown in the monitoring, an OS host's half
    alone is not, and two board halves are both dropped.
    ``validate_host_relations`` reports contradictions and an unreadable value
-   on the host itself, a half that points to a missing host, and a related
-   host that does not store its half, stores a different one, or stores a
-   ``relations`` value that cannot be read. It reports one problem at a time.
+   on the host itself, a half that points to a missing host (see `Security
+   considerations`_), and a related host that does not store its half, stores a
+   different one, or stores a ``relations`` value that cannot be read. It
+   reports one problem at a time.
    Saving the board repairs it, as far as the user may write the OS host. An
    OS host half alone is repaired by storing the relation on the board or
    removing it from the OS host. The OS host does not report a board half it
@@ -1008,21 +1068,31 @@ Ordered by priority.
    through the REST API also drops links of a known kind with a direction that
    kind does not have.
    The contract in `Data model`_ keeps a newer version from relying on either.
-7. When hosts are created or edited with relations, or the store run writes its
-   folders, and writing one folder to disk fails halfway, nothing is rolled
-   back: some hosts are written and some related hosts are left without their
-   half. Saving one of the hosts again repairs this. "Revert changes" restores
-   the state of the last activation. Moving
-   hosts between folders has the same gap.
+7. When hosts are created, edited or deleted with relations, or the store run
+   writes its folders, and writing one folder to disk fails halfway, nothing is
+   rolled back: some hosts are written and some related hosts are left without
+   their half. Saving the board repairs this; an OS host's half left alone is
+   repaired as described in point 4. A deletion writes the related hosts before
+   the folder of the deleted host; if that folder fails, the host stays without
+   the other halves of its relations, and deleting it again completes it.
+   "Revert changes" restores the state of the last activation. Moving hosts
+   between folders has the same gap.
 8. The ``_CMK_RELATIONS`` variable of a host grows with the number of its
    relations, and nothing bounds its size. A management board carries a few
    dozen entries at most, as a blade chassis holds up to 32 servers. The
-   notification context cuts each value at 65,536 bytes, which a few hundred
+   notification context cuts each value at about 64 KiB, which a few hundred
    entries reach; a notification script then gets JSON it cannot parse.
 9. The suggestions of the relation detection read all hosts in folders the user
    may read, with their labels and attributes, synchronously within the
    request; only the scan runs in the background. Measured were 0.2 seconds for
    5,000 hosts, growing linearly with the number of hosts.
+10. A bulk update with several entries for the same host checks and applies them
+    one after the other. If the relations of a later entry are refused, the
+    earlier ones are saved nevertheless, and the host is reported as failed and,
+    for the earlier entries, as succeeded. The Quick setup lock and the removal
+    of an attribute the host does not have behave the same in this endpoint.
+    Checking all entries of a host before applying the first one would solve
+    it for every attribute.
 
 See also
 ========

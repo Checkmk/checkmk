@@ -19,6 +19,7 @@ from cmk.gui.i18n import Translation
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
+from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
@@ -394,3 +395,14 @@ def test_icon_button_with_click_action_keeps_its_url() -> None:
     )
 
     assert rendered.startswith('<a href="wato.py?_action=verify"')
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_render_icon_button_with_confirm_link() -> None:
+    link = make_confirm_delete_link(i18n=lambda s: s, url="wato.py?a=1&b=2", title="Delete")
+
+    rendered = str(html.render_icon_button(link, "Delete", StaticIcon(IconNames.delete)))
+
+    assert rendered.startswith('<a href="#"')
+    assert 'data-cmk_on_click="confirm_link"' in rendered
+    assert "&quot;url&quot;: &quot;wato.py?a=1&amp;b=2&quot;" in rendered

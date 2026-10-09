@@ -37,6 +37,7 @@ from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.shared_typing.legacy_frontend_hooks import KnownClickAction, KnownTSFunction
 from cmk.web.htmllib.builder import HtmlBuilder
 from cmk.web.utils import escaping
+from cmk.web.utils.confirm_links import ConfirmLink
 from cmk.web.utils.flashed_messages import MsgType
 from cmk.web.utils.html import HTML
 
@@ -89,6 +90,10 @@ class ClickAction:
                 dict(self.arguments)
             )
         return attrs
+
+    @classmethod
+    def confirm(cls, link: ConfirmLink) -> ClickAction:
+        return cls(action="confirm_link", arguments=link.arguments())
 
 
 def _dump_standard_compliant_json(data: object) -> str:

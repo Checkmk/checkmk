@@ -7,7 +7,7 @@ import type { KnownClickAction } from 'cmk-shared-typing/typescript/legacy_front
 
 import { activate_changes } from '@/modules/activation'
 import { call_ajax } from '@/modules/ajax'
-import { waiting_flash_message } from '@/modules/forms'
+import { confirm_link, waiting_flash_message } from '@/modules/forms'
 import { toggle as toggle_inline_help } from '@/modules/help'
 import {
   close_active_dropdown,
@@ -17,7 +17,12 @@ import {
   toggle_popup,
   toggle_suggestions
 } from '@/modules/page_menu'
-import { add_to_visual, graph_export, pagetype_add_to_container } from '@/modules/popup_menu'
+import {
+  add_to_visual,
+  close_popup as close_icon_popup,
+  graph_export,
+  pagetype_add_to_container
+} from '@/modules/popup_menu'
 import { toggle_all_rows } from '@/modules/selection'
 import { start as start_service_discovery } from '@/modules/service_discovery'
 import { add_bookmark, update_vue_snapin_contents } from '@/modules/sidebar'
@@ -53,6 +58,10 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
   add_to_visual: closing_dropdown((_element, options) =>
     add_to_visual(options.visual_type, options.visual_name)
   ),
+  confirm_link: (_element, options) => {
+    confirm_link(options.url, options.message, options.options, options.post_confirm_waiting_text)
+    close_icon_popup()
+  },
   dispatch_custom_event: dispatch_custom_event,
   graph_export: closing_dropdown((_element, options) => graph_export(options.page)),
   loading_transition: (_element, options, event) => {

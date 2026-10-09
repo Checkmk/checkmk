@@ -27,6 +27,7 @@ from cmk.gui.page_menu import (
     SuggestedEntryRenderer,
 )
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.web.utils.confirm_links import make_confirm_link
 from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
 
 
@@ -230,3 +231,9 @@ def test_inpage_search_form_keeps_safe_reset_url() -> None:
         output = html.output_funnel.drain()
 
     assert 'value="dashboard.py"' in output
+
+
+def test_make_simple_link_with_confirm_link() -> None:
+    link = make_confirm_link(i18n=lambda s: s, url="wato.py?a=1", title="Reset")
+
+    assert make_simple_link(link) == make_click_action_link(ClickAction.confirm(link))

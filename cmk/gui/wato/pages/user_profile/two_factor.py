@@ -47,6 +47,7 @@ from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKHTTPException, MKUserError
 from cmk.gui.header import make_header
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, response
 from cmk.gui.i18n import _
@@ -536,7 +537,7 @@ class UserTwoFactorOverview(Page):
                 ),
             )
 
-            invalidate_codes_url = make_confirm_delete_link(
+            invalidate_codes_link = make_confirm_delete_link(
                 i18n=_,
                 url=makeactionuri(request, transactions.get(), [("_delete_codes", "")]),
                 title=_("Invalidate all backup codes"),
@@ -546,9 +547,9 @@ class UserTwoFactorOverview(Page):
                 html.render_input(
                     "invalidate_codes",
                     type_="button",
-                    onclick="location.href=%s" % json.dumps(invalidate_codes_url),
                     value=_("Invalidate all codes"),
                     class_=["button buttonlink"],
+                    **ClickAction.confirm(invalidate_codes_link).data_attributes(),
                 ),
             )
         else:

@@ -40,6 +40,7 @@ from cmk.gui.utils.user_errors import user_errors
 from cmk.shared_typing.icon import DynamicIconAppProps, StaticIconAppProps
 from cmk.web.utils import escaping
 from cmk.web.utils.choices import Choice, ChoiceId, ChoiceText
+from cmk.web.utils.confirm_links import ConfirmLink
 from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, IconSizes, StaticIcon
@@ -1444,7 +1445,7 @@ class HTMLGenerator(HTMLWriter):
 
     @staticmethod
     def render_icon_button(
-        url: None | str,
+        url: None | str | ConfirmLink,
         title: str,
         icon: DynamicIcon | StaticIcon,
         id_: str | None = None,
@@ -1459,6 +1460,10 @@ class HTMLGenerator(HTMLWriter):
         download: str | None = None,
         click_action: ClickAction | None = None,
     ) -> HTML:
+        if isinstance(url, ConfirmLink):
+            click_action = ClickAction.confirm(url)
+            url = None
+
         classes = [] if cssclass is None else [cssclass]
         if isinstance(class_, list):
             classes.extend(class_)
@@ -1511,7 +1516,7 @@ class HTMLGenerator(HTMLWriter):
 
     def icon_button(
         self,
-        url: str | None,
+        url: str | ConfirmLink | None,
         title: str,
         icon: DynamicIcon | StaticIcon,
         id_: str | None = None,

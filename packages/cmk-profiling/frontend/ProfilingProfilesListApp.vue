@@ -12,6 +12,7 @@ conditions defined in the file COPYING, which is part of this source code packag
  * Python-rendered form via `document.getElementById` in onMounted. A future
  * refactor would move the upload to a REST endpoint and own the <input> here.
  */
+import type { KnownClickAction } from 'cmk-shared-typing/typescript/legacy_frontend_hooks'
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkBadge from 'cmk-ui-library/components/CmkBadge.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
@@ -31,7 +32,8 @@ type SortKey = 'timestamp' | 'source_type' | 'source_info' | 'duration_ms'
 type ProfileRow = ProfileMetadata & {
   flamegraph_url: string
   download_url: string
-  delete_url: string
+  // See cmk.gui.htmllib.generator:ClickAction
+  delete_action: { action: KnownClickAction; arguments: Record<string, unknown> }
 }
 
 const props = defineProps<{
@@ -426,7 +428,9 @@ onUnmounted(() => {
             <CmkIconLink
               name="delete"
               size="small"
-              :href="p.delete_url"
+              href="#"
+              :data-cmk_on_click="p.delete_action.action"
+              :data-cmk_on_click_arguments="JSON.stringify(p.delete_action.arguments)"
               :title="_t('Delete')"
               :aria-label="_t('Delete profile')"
             />

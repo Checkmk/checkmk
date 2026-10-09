@@ -95,6 +95,7 @@
         "activate_changes",
         "add_bookmark",
         "add_to_visual",
+        "confirm_link",
         "dispatch_custom_event",
         "graph_export",
         "loading_transition",

@@ -205,7 +205,7 @@ from cmk.shared_typing.notifications import (
 from cmk.utils.automation_config import LocalAutomationConfig
 from cmk.utils.statename import host_state_name, service_state_name
 from cmk.web.utils.autocompleter_config import ContextAutocompleterConfig
-from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.confirm_links import ConfirmLink, make_confirm_delete_link
 from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import flash
@@ -323,10 +323,10 @@ def register(
 
 
 class NotificationRuleLinks(NamedTuple):
-    delete: str
+    delete: ConfirmLink
     edit: str
     drag: str
-    clone: str
+    clone: str | ConfirmLink
 
 
 class ABCNotificationsMode(ABCEventsMode[EventRule]):
@@ -817,7 +817,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
         if mode_from_vars:
             back_mode.append(("back_mode", mode_from_vars))
 
-        def _delete_url() -> str:
+        def _delete_url() -> ConfirmLink:
             httpvars: list[HTTPVariable] = [
                 ("mode", listmode),
                 ("user", userid),
@@ -857,7 +857,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
                 httpvars.append(("search", search))
             return makeuri_contextless(request, httpvars + back_mode, filename="wato.py")
 
-        def _clone_url() -> str:
+        def _clone_url() -> ConfirmLink:
             httpvars: list[HTTPVariable] = [
                 ("mode", mode),
                 ("clone", nr),

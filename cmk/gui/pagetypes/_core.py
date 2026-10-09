@@ -112,7 +112,7 @@ from cmk.shared_typing.main_menu import (
     NavItemTopic,
     NavItemTopicEntry,
 )
-from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.confirm_links import ConfirmLink, make_confirm_delete_link
 from cmk.web.utils.flashed_messages import flash, get_flashed_messages
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
@@ -703,7 +703,7 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
             filename="edit_%s.py" % self.type_name(),
         )
 
-    def delete_url(self) -> str:
+    def delete_url(self) -> ConfirmLink:
         add_vars: list[HTTPVariable] = [("_delete", self.name())]
         if not self.is_mine():
             add_vars.append(("_owner", self.owner()))

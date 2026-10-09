@@ -570,6 +570,7 @@ py_cmk_test(
         "//packages/cmk-livestatus-client:livestatus-api",
         "//packages/cmk-mkp-tool",
         "//packages/cmk-plugin-apis:inventory_ui",
+        "//packages/cmk-profiling:gui",
         "//packages/cmk-trace",
         "//packages/cmk-web/cmk/web/utils",
         "//packages/cmk-wsgi",

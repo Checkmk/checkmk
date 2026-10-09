@@ -32,7 +32,7 @@ from cmk.gui.utils.popups import MethodInline
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.utils import paths
 from cmk.web.utils import escaping
-from cmk.web.utils.confirm_links import get_confirm_link_title
+from cmk.web.utils.confirm_links import ConfirmLink, get_confirm_link_title
 from cmk.web.utils.doc_references import (
     DocReference,
     DocReferenceUtm,
@@ -78,7 +78,11 @@ class PageMenuLink(BasePageMenuItem):
     link: Link
 
 
-def make_simple_link(url: str, *, transition: LoadingTransition | None = None) -> PageMenuLink:
+def make_simple_link(
+    url: str | ConfirmLink, *, transition: LoadingTransition | None = None
+) -> PageMenuLink:
+    if isinstance(url, ConfirmLink):
+        return make_click_action_link(ClickAction.confirm(url))
     return PageMenuLink(Link(url=url, transition=transition))
 
 

@@ -1,5 +1,5 @@
 {
-  "checksum": "1eb1e4a57e6e56172de26c7cb29b76bab5420c3454c69448424b23e1cf7199ff",
+  "checksum": "683ff5b651ee93c3994dd802faf4da1762500c3ebed5666c5c4df5d27ccdeec4",
   "conditions": {
     "aarch64-linux-android": [],
     "aarch64-pc-windows-gnullvm": [],
@@ -2608,6 +2608,10 @@
             {
               "id": "anyhow 1.0.99",
               "target": "anyhow"
+            },
+            {
+              "id": "base64 0.22.1",
+              "target": "base64"
             },
             {
               "id": "clap 4.5.45",
@@ -15892,6 +15896,7 @@
       "common_attrs": {
         "crate_features": [
           "default",
+          "oid",
           "std"
         ],
         "deps": {
@@ -23193,6 +23198,7 @@
     "aes-gcm 0.10.3",
     "anyhow 1.0.99",
     "async-trait 0.1.89",
+    "base64 0.22.1",
     "bytes 1.12.0",
     "clap 4.5.45",
     "der-parser 8.2.0",

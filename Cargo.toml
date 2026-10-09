@@ -33,6 +33,7 @@ anyhow = "1.0.94"
 assert_cmd = "*"
 assertor = "*"
 async-trait = "0.1"
+base64 = "0.22"
 bytes = "*"
 clap = { version = "4.5.22", features = ["derive"] }
 derive_more = "1.0"

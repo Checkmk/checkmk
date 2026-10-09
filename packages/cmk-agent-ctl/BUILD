@@ -51,6 +51,7 @@ rust_library(
         "src/updater/backend.rs",
         "src/updater/connection.rs",
         "src/updater/platform.rs",
+        "src/updater/verification.rs",
         ":version.rs",  # invalidates the cache
     ],
     aliases = aliases(),

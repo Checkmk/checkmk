@@ -8,6 +8,7 @@
 //! See [`crate::updater`] for what the three artifacts are and how they relate.
 
 use super::connection;
+use super::verification;
 use crate::agent_receiver_api;
 use crate::config::{
     tmp_path_for_atomical_save, JSONLoader, JSONLoaderMissingSafe, Registry, TOMLLoader,
@@ -25,6 +26,7 @@ use std::io;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
+use x509_parser::certificate::X509Certificate;
 
 #[cfg(windows)]
 use super::platform::parse_key_value;
@@ -240,12 +242,10 @@ pub struct UpdatePackage {
 
 impl UpdatePackage {
     /// Check the package against the signatures the site delivered with it and
-    /// the certificates the bakery configured.
+    /// the local certificates.
     ///
     /// _Consumes_ the package: the unverified bytes of a semi-trusted site are
     /// gone afterwards, only the verified package remains.
-    ///
-    /// Not implemented yet - accepts every package. See CMK-39501.
     ///
     /// # Returns
     ///
@@ -253,14 +253,14 @@ impl UpdatePackage {
     ///
     /// # Errors
     ///
-    /// Once implemented: if none of `signatures` is a valid signature of the
-    /// package under one of `signature_keys`.
+    /// If none of `signatures` is a valid signature of the package under one of
+    /// `local_certificates`.
     pub fn verify(
         self,
-        _signatures: &[agent_receiver_api::AgentSignature],
-        _signature_keys: &[String],
+        signatures: &[agent_receiver_api::AgentSignature],
+        local_certificates: &[X509Certificate],
     ) -> AnyhowResult<VerifiedUpdatePackage> {
-        log::warn!("Agent package signature verification is not implemented yet (CMK-39501)");
+        verification::verify(&self.bytes, signatures, local_certificates)?;
         Ok(VerifiedUpdatePackage {
             hash: self.hash,
             platform: self.platform,
@@ -1873,29 +1873,13 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         );
     }
 
-    /// A downloaded package of `platform`, not verified yet.
-    fn downloaded(platform: &str) -> UpdatePackage {
-        UpdatePackage {
+    /// A downloaded package of `platform`, ready to be saved.
+    fn verified(platform: &str) -> VerifiedUpdatePackage {
+        VerifiedUpdatePackage {
             hash: TARGET_HASH.parse().unwrap(),
             platform: String::from(platform),
             bytes: PACKAGE.to_vec(),
         }
-    }
-
-    /// A downloaded package of `platform`, ready to be saved.
-    fn verified(platform: &str) -> VerifiedUpdatePackage {
-        downloaded(platform).verify(&[], &[]).unwrap()
-    }
-
-    /// Until CMK-39501, every package passes - including one the site signed
-    /// with nothing and a host that trusts no certificate.
-    #[test]
-    fn test_verify_package_accepts_anything_for_now() {
-        let package = downloaded("linux_deb").verify(&[], &[]).unwrap();
-
-        assert_eq!(package.hash.as_str(), TARGET_HASH);
-        assert_eq!(package.platform, "linux_deb");
-        assert_eq!(package.bytes, PACKAGE);
     }
 
     #[test]

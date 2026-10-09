@@ -551,6 +551,7 @@ dependencies = [
  "anyhow",
  "assert_cmd",
  "async-trait",
+ "base64",
  "clap",
  "faccess",
  "flate2",

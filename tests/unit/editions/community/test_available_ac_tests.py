@@ -39,6 +39,7 @@ def test_registered_ac_tests() -> None:
         "ACTestPasswordStoreAPI",
         "ACTestSpecialAgentsAPI",
         "ACTestPersistentConnections",
+        "ACTestShadowedWebFiles",
         "ACTestSizeOfExtensions",
         "ACTestTmpfs",
         "ACTestUnexpectedAllowedIPRanges",

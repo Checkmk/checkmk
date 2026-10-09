@@ -22,6 +22,7 @@ from cmk.gui.wato._ac_tests import (
     ACTestGenericCheckHelperUsage,
     ACTestHaSIAPI,
     ACTestPasswordStoreAPI,
+    ACTestShadowedWebFiles,
     ACTestSpecialAgentsAPI,
     ACTestUnexpectedAllowedIPRanges,
 )
@@ -572,3 +573,67 @@ def test_outdated_plugin_apis_reports_one_result_per_api(tmp_path: Path) -> None
     # Only the detection is under test here, the state follows the timeline.
     assert [r.path for r in results] == [path]
     assert ".bakery_api, cmk.base.plugins.bakery.bakery_api" in results[0].text
+
+
+def _touch(root: Path, rel_path: str) -> None:
+    path = root / rel_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.touch()
+
+
+def _shadowed_web_files_results(tmp_path: Path) -> Sequence[ACSingleResult]:
+    return list(
+        ACTestShadowedWebFiles(tmp_path / "local", tmp_path / "shipped").execute(
+            SiteId("NO_SITE"), Config()
+        )
+    )
+
+
+def test_shadowed_web_files_reports_local_copies_of_shipped_files(tmp_path: Path) -> None:
+    _touch(tmp_path / "shipped", "themes/facelift/theme.css")
+    _touch(tmp_path / "local", "themes/facelift/theme.css")
+
+    [result] = _shadowed_web_files_results(tmp_path)
+
+    assert result.state is ACResultState.WARN
+    assert "themes/facelift/theme.css" in result.text
+
+
+def test_shadowed_web_files_ignores_files_that_shadow_nothing(tmp_path: Path) -> None:
+    _touch(tmp_path / "shipped", "themes/facelift/theme.css")
+    _touch(tmp_path / "local", "themes/my_theme/theme.css")
+
+    [result] = _shadowed_web_files_results(tmp_path)
+
+    assert result.state is ACResultState.OK
+
+
+def test_shadowed_web_files_ignores_files_other_than_style_sheets_and_scripts(
+    tmp_path: Path,
+) -> None:
+    _touch(tmp_path / "shipped", "images/icon_checkmk_logo.svg")
+    _touch(tmp_path / "local", "images/icon_checkmk_logo.svg")
+
+    [result] = _shadowed_web_files_results(tmp_path)
+
+    assert result.state is ACResultState.OK
+
+
+def test_shadowed_web_files_without_local_dir(tmp_path: Path) -> None:
+    _touch(tmp_path / "shipped", "themes/facelift/theme.css")
+
+    [result] = _shadowed_web_files_results(tmp_path)
+
+    assert result.state is ACResultState.OK
+
+
+def test_shadowed_web_files_lists_only_the_first_files(tmp_path: Path) -> None:
+    for idx in range(12):
+        _touch(tmp_path / "shipped", f"js/script_{idx:02}.js")
+        _touch(tmp_path / "local", f"js/script_{idx:02}.js")
+
+    [result] = _shadowed_web_files_results(tmp_path)
+
+    assert "js/script_09.js" in result.text
+    assert "js/script_10.js" not in result.text
+    assert "and 2 more" in result.text

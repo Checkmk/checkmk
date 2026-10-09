@@ -23,7 +23,7 @@ from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.site_config import (
     distributed_setup_remote_sites,
@@ -53,6 +53,7 @@ from cmk.utils.paths import (
     local_gui_plugins_dir,
     local_pnp_templates_dir,
     local_web_dir,
+    web_dir,
 )
 
 # Disable python warnings in background job output or logs like "Unverified
@@ -91,6 +92,7 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestUnexpectedAllowedIPRanges)
     ac_test_registry.register(ACTestCheckMKCheckerNumber)
     ac_test_registry.register(ACTestAutomationUserSecret)
+    ac_test_registry.register(ACTestShadowedWebFiles)
 
 
 class ACTestPersistentConnections(ACTest):
@@ -1218,6 +1220,84 @@ class ACTestUnknownCheckParameterRuleSets(ACTest):
             state=ACResultState.OK,
             text=_("No unknown check parameter rule sets found."),
             site_id=site_id,
+        )
+
+
+class ACTestShadowedWebFiles(ACTest):
+    _MAX_LISTED = 10
+    _CHECKED_SUFFIXES = frozenset({".css", ".js"})
+
+    def __init__(
+        self,
+        local_htdocs: Path = local_web_dir / "htdocs",
+        shipped_htdocs: Path = web_dir / "htdocs",
+    ) -> None:
+        self._local_htdocs = local_htdocs
+        self._shipped_htdocs = shipped_htdocs
+
+    @override
+    def category(self) -> str:
+        return ACTestCategories.reliability
+
+    @override
+    def title(self) -> str:
+        return _("Local files overriding shipped style sheets or scripts")
+
+    @override
+    def help(self) -> str:
+        return _(
+            "<p>A style sheet or script below <tt>%(local_dir)s</tt> is served instead of the"
+            " shipped file with the same path. Such copies are not updated together with"
+            " Checkmk: after an update, an outdated style sheet or script of an older version"
+            " is still delivered and may break the user interface. Other local files, e.g."
+            " replaced logos, are not reported.</p>"
+            "<p>Remove the copies you do not need. To customize the look of the user"
+            " interface, use a theme of your own below <tt>%(themes_dir)s</tt> instead of"
+            " overriding the shipped themes.</p>"
+        ) % {
+            "local_dir": self._local_htdocs,
+            "themes_dir": self._local_htdocs / "themes",
+        }
+
+    @override
+    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not (shadowing := self._shadowing_files()):
+            yield ACSingleResult(
+                state=ACResultState.OK,
+                text=_("No local files override shipped style sheets or scripts"),
+                site_id=site_id,
+            )
+            return
+
+        listed = ", ".join(str(p) for p in shadowing[: self._MAX_LISTED])
+        if (unlisted := len(shadowing) - self._MAX_LISTED) > 0:
+            listed = _("%(files)s and %(count)d more") % {"files": listed, "count": unlisted}
+        yield ACSingleResult(
+            state=ACResultState.WARN,
+            text=ungettext(
+                "%(count)d local file below %(local_dir)s overrides a shipped style sheet or"
+                " script and may be outdated: %(files)s",
+                "%(count)d local files below %(local_dir)s override shipped style sheets or"
+                " scripts and may be outdated: %(files)s",
+                len(shadowing),
+            )
+            % {
+                "count": len(shadowing),
+                "local_dir": try_relative_site_path(site_id, self._local_htdocs),
+                "files": listed,
+            },
+            site_id=site_id,
+        )
+
+    def _shadowing_files(self) -> Sequence[Path]:
+        return sorted(
+            rel_path
+            for path in self._local_htdocs.rglob("*")
+            if path.suffix in self._CHECKED_SUFFIXES
+            and path.is_file()
+            and (
+                self._shipped_htdocs / (rel_path := path.relative_to(self._local_htdocs))
+            ).is_file()
         )
 
 

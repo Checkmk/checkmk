@@ -289,8 +289,10 @@ function onPointerUp(event: PointerEvent): void {
     return
   }
   // A press that moved nothing while placing is the placement click. Otherwise
-  // the object's own click handler takes it, and stops it here.
+  // the object's own click handler takes it, and stops it here. The click that
+  // follows would deselect what was just placed.
   if (props.placing && (!dragging || !drag.moved())) {
+    swallowNextClick = true
     emit('canvas-click', event)
   }
 }

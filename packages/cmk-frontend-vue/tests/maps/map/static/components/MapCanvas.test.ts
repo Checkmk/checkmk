@@ -168,6 +168,22 @@ describe('MapCanvas', () => {
 
 // Smoke test for the full render path: real MapElement children (not stubbed),
 // so a regression anywhere in the static map's object rendering fails here.
+describe('MapCanvas – placing', () => {
+  it('reports the placement once, not again with the click that ends it', async () => {
+    const { emitted } = render(MapCanvas, {
+      props: { ...baseProps, editMode: true, placing: true },
+      global: mapsGlobal(stubs)
+    })
+    const canvas = screen.getByRole('group', { name: 'Map canvas' })
+
+    await fireEvent.pointerDown(canvas, { button: 0 })
+    await fireEvent.pointerUp(canvas, { button: 0 })
+    await fireEvent.click(canvas)
+
+    expect(emitted()['canvas-click']).toHaveLength(1)
+  })
+})
+
 describe('MapCanvas – smoke with real MapElement', () => {
   const smokeConfig: MapConfig = aMap({
     ...sampleConfig,

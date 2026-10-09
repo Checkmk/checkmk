@@ -252,6 +252,13 @@ const selectedObjectAnchor = computed<AnchorRect | null>(() => {
 const propsModalObject = ref<MapElement | null>(null)
 
 /**
+ * The object a click on the canvas just created, until its properties are saved.
+ * Placing writes it straight away so the spot can be judged, so cancelling the
+ * properties has to take it back out.
+ */
+const justPlacedId = ref<string | null>(null)
+
+/**
  * The box the properties card sits beside, or ``null`` when it was reached
  * from somewhere with nothing to sit next to and opens as a centered dialog.
  *
@@ -260,8 +267,14 @@ const propsModalObject = ref<MapElement | null>(null)
  * the card beside where the object used to be.
  */
 const openedOnAnchor = ref<AnchorRect | null>(null)
+// A just-placed object sits beside its card too, so the operator still sees
+// where it went; its element only renders after the card opens. Kept apart
+// from ``justPlacedId``, which a save clears before it is done.
+const besidePlaced = ref(false)
 const propsModalAnchor = computed<AnchorRect | null>(() =>
-  openedOnAnchor.value ? (selectedObjectAnchor.value ?? openedOnAnchor.value) : null
+  openedOnAnchor.value || besidePlaced.value
+    ? (selectedObjectAnchor.value ?? openedOnAnchor.value)
+    : null
 )
 const deleteTargetObject = ref<MapElement | null>(null)
 const bulkDeleteOpen = ref(false)
@@ -325,23 +338,13 @@ function openPropsModal(obj: MapElement, anchor?: AnchorRect | null) {
   propsModalObject.value = obj
 }
 
-/**
- * The object a click on the canvas just created, until its properties are saved.
- *
- * Placing writes the object straight away -- the map has to show it somewhere to
- * let the operator judge the spot. The properties modal that opens on top of it
- * is therefore an *undo* point, not a create form: dismissing it has to take the
- * object back out, or "Cancel" would leave behind exactly what it says it did
- * not do, and the only way back would be to find the thing and delete it.
- */
-const justPlacedId = ref<string | null>(null)
-
 function onObjectPlaced() {
   const obj = selectedObject.value
   if (!obj) {
     return
   }
   justPlacedId.value = obj.id
+  besidePlaced.value = true
   openPropsModal(obj)
 }
 
@@ -357,6 +360,7 @@ function _closePropsModal() {
   propsModalObject.value = null
   openedOnAnchor.value = null
   justPlacedId.value = null
+  besidePlaced.value = false
 }
 
 /** Dismissing the modal: an object that only exists because of it goes with it. */

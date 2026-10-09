@@ -40,7 +40,11 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributeTopic,
     HostContactGroupSpec,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, FolderTree
+from cmk.gui.watolib.hosts_and_folders import (
+    find_usages_of_contact_group_in_hosts_and_folders,
+    folder_preserving_link,
+    FolderTree,
+)
 from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.timeperiods import load_timeperiods
@@ -284,6 +288,7 @@ def find_usages_of_contact_group(tree: FolderTree, name: GroupName) -> list[tupl
     used_in = _find_usages_of_group_in_rules(
         tree, name, ["host_contactgroups", "service_contactgroups"]
     )
+    used_in += find_usages_of_contact_group_in_hosts_and_folders(name, tree.root_folder())
     for finder in contact_group_usage_finder_registry.values():
         used_in += finder(name, global_config)
 

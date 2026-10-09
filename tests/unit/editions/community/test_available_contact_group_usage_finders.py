@@ -14,7 +14,6 @@ def test_group_usage_finder_registry_entries() -> None:
         "find_usages_of_contact_group_in_dashboards",
         "find_usages_of_contact_group_in_default_user_profile",
         "find_usages_of_contact_group_in_ec_rules",
-        "find_usages_of_contact_group_in_hosts_and_folders",
         "find_usages_of_contact_group_in_mkeventd_notify_contactgroup",
         "find_usages_of_contact_group_in_notification_rules",
         "find_usages_of_contact_group_in_users",

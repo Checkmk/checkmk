@@ -82,7 +82,7 @@ from cmk.gui.page_menu import confirmed_form_submit_options
 from cmk.gui.pages import PageContext
 from cmk.gui.session_context import get_session_csrf_token
 from cmk.gui.site_config import is_distributed_setup_remote_site
-from cmk.gui.type_defs import CustomHostAttrSpec, GlobalSettings, SetOnceDict
+from cmk.gui.type_defs import CustomHostAttrSpec, SetOnceDict
 from cmk.gui.utils.host_relations import (
     referenced_host_names,
     relation_key,
@@ -5241,13 +5241,11 @@ def ajax_popup_host_action_menu(ctx: PageContext) -> None:
 
 
 def find_usages_of_contact_group_in_hosts_and_folders(
-    name: GroupName, _settings: GlobalSettings, folder: Folder | None = None
+    name: GroupName, folder: Folder
 ) -> list[tuple[str, str]]:
-    if folder is None:
-        folder = folder_tree().root_folder()
     used_in = []
     for subfolder in folder.subfolders():
-        used_in += find_usages_of_contact_group_in_hosts_and_folders(name, _settings, subfolder)
+        used_in += find_usages_of_contact_group_in_hosts_and_folders(name, subfolder)
 
     if name in folder.attributes.get("contactgroups", {}).get("groups", []):
         used_in.append(

@@ -77,7 +77,6 @@ from .host_rename import (
     RenameHostsBackgroundJob,
 )
 from .hosts_and_folders import (
-    find_usages_of_contact_group_in_hosts_and_folders,
     FolderValidators,
     FolderValidatorsRegistry,
     rebuild_folder_lookup_cache,
@@ -156,7 +155,6 @@ def register(
     automation_command_registry.register(AutomationCheckAnalyzeConfig)
     automation_command_registry.register(AutomationDiscoveredHostLabelSync)
     sample_config.register(sample_config_generator_registry)
-    contact_group_usage_finder_registry_.register(find_usages_of_contact_group_in_hosts_and_folders)
     contact_group_usage_finder_registry_.register(
         find_usages_of_contact_group_in_notification_rules
     )

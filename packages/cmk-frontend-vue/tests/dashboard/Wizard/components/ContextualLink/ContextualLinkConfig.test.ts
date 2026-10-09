@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen } from '@testing-library/vue'
+import { render, screen, within } from '@testing-library/vue'
 import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
@@ -37,9 +37,10 @@ useMswServer(
 
 function renderConfig(
   options: ContextualLinkOptions = HOST_STATISTICS_OPTIONS,
-  props: { defaultTarget?: TranslatedString } = {}
+  props: { defaultTarget?: TranslatedString } = {},
+  stored?: HostStatisticsContent['contextual_link']
 ) {
-  const handler = useContextualLink<HostStatisticsContent>(options, undefined)
+  const handler = useContextualLink<HostStatisticsContent>(options, stored)
   render(
     defineComponent({
       setup() {
@@ -79,5 +80,44 @@ describe('ContextualLinkConfig', () => {
     await userEvent.setup().click(screen.getByRole('button', { name: 'Toggle Inherited' }))
 
     expect(handler.mode.value).toBe('inherited')
+  })
+
+  it('names the target page of an inherited link', async () => {
+    renderConfig()
+
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Toggle Inherited' }))
+
+    expect(screen.getByText('Target page')).toBeInTheDocument()
+  })
+
+  it('lists what an inherited link always carries', async () => {
+    renderConfig()
+
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Toggle Inherited' }))
+
+    const included = within(screen.getByRole('list')).getAllByRole('listitem')
+    expect(included.map((item) => item.textContent?.trim())).toEqual([
+      'Applied dashboard & widget filters',
+      'Contextual filter = clicked element'
+    ])
+  })
+
+  it('lists only the clicked element for an inherited link without the filters', () => {
+    renderConfig(
+      HOST_STATISTICS_OPTIONS,
+      {},
+      {
+        type: 'inherited',
+        location: { type: 'views', name: 'allhosts', owner: null },
+        include_context: false,
+        include_time_range: false,
+        show_filter_form: false
+      }
+    )
+
+    const included = within(screen.getByRole('list')).getAllByRole('listitem')
+    expect(included.map((item) => item.textContent?.trim())).toEqual([
+      'Contextual filter = clicked element'
+    ])
   })
 })

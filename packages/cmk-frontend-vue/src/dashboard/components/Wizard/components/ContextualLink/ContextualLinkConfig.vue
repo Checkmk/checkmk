@@ -79,6 +79,7 @@ function toggleFilter(
     </div>
 
     <div v-if="handler.mode.value === 'inherited'" class="db-contextual-link-config__mode">
+      <p>{{ _t('Target page') }}</p>
       <ContextualLinkTargetPicker
         v-model="handler.inheritedTarget.value"
         :single-infos="handler.singleInfos"
@@ -87,12 +88,15 @@ function toggleFilter(
         v-model="handler.inheritedIncludeTimeRange.value"
         :label="_t('Include current time range')"
       />
-      <p v-if="handler.inheritedIncludesContext">
-        {{
-          _t('Always included: the applied dashboard and widget filters, and the clicked element.')
-        }}
-      </p>
-      <p v-else>{{ _t('Always included: the clicked element.') }}</p>
+      <div>
+        <p>{{ _t('Always included in the contextual link:') }}</p>
+        <ul class="db-contextual-link-config__included">
+          <li v-if="handler.inheritedIncludesContext">
+            {{ _t('Applied dashboard & widget filters') }}
+          </li>
+          <li>{{ _t('Contextual filter = clicked element') }}</li>
+        </ul>
+      </div>
     </div>
 
     <div v-if="handler.mode.value === 'custom'" class="db-contextual-link-config__mode">
@@ -140,6 +144,11 @@ function toggleFilter(
   display: flex;
   align-items: center;
   gap: var(--dimension-3);
+}
+
+.db-contextual-link-config__included {
+  margin: var(--dimension-3) 0 0;
+  padding-left: var(--dimension-6);
 }
 
 .db-contextual-link-config__link {

@@ -11,6 +11,8 @@ from typing import Final, TypedDict
 
 from cmk.server_side_programs.v1_unstable import Storage
 
+from .log import LOGGER
+
 # A namespace to match a string to a uuid hash.
 _HASH_NAMESPACE: Final = uuid.UUID("be8bc5b5-a401-4acc-b8db-a875cca98c79")
 
@@ -37,11 +39,17 @@ def cache_ttl[**P, R](store: Storage, *, ttl: float) -> Callable[[Callable[P, R]
             key = _hash(f"args={args}, kwargs={tuple(sorted(kwargs.items()))}")
 
             if (data := store.read(key, None)) is not None:
-                raw_cache = json.loads(data)
-                cache = Cache[R](ts=raw_cache["ts"], data=raw_cache["data"])
-
-                if 0 < time.time() - cache["ts"] < ttl:
-                    return cache["data"]
+                try:
+                    raw_cache = json.loads(data)
+                    cache = Cache[R](ts=raw_cache["ts"], data=raw_cache["data"])
+                except (json.JSONDecodeError, KeyError, TypeError) as e:
+                    LOGGER.warning(
+                        "Discarding corrupted cache entry for %(func)s: %(error)r",
+                        {"func": f.__name__, "error": e},
+                    )
+                else:
+                    if 0 < time.time() - cache["ts"] < ttl:
+                        return cache["data"]
 
             new_data = f(*args, **kwargs)
             new_cache = Cache[R](ts=time.time(), data=new_data)

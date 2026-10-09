@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
@@ -13,7 +14,11 @@ from cmk.gui.config import Config
 from cmk.gui.permissions import Permission, PermissionSection
 from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.wato._ac_tests import ACTestAutomationUserSecret, ACTestGenericCheckHelperUsage
+from cmk.gui.wato._ac_tests import (
+    ACTestAutomationUserSecret,
+    ACTestGenericCheckHelperUsage,
+    ACTestShadowedWebFiles,
+)
 from cmk.gui.watolib.analyze_configuration import (
     ACResultState,
     ACSingleResult,
@@ -170,3 +175,76 @@ def test_automation_user_secret_flagging() -> None:
     ) == {
         UserId("automation"): ["wato.manage_mkps", "wato.users"],
     }
+
+
+def _touch(root: Path, rel_path: str) -> None:
+    path = root / rel_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.touch()
+
+
+def _shadowed_web_files_results(tmp_path: Path) -> Sequence[ACSingleResult]:
+    return list(
+        ACTestShadowedWebFiles(tmp_path / "local", tmp_path / "shipped").execute(
+            SiteId("NO_SITE"), Config()
+        )
+    )
+
+
+def test_shadowed_web_files_reports_local_copies_of_shipped_files(tmp_path: Path) -> None:
+    _touch(tmp_path / "shipped", "themes/facelift/theme.css")
+    _touch(tmp_path / "local", "themes/facelift/theme.css")
+
+    [result] = _shadowed_web_files_results(tmp_path)
+
+    assert result.state is ACResultState.WARN
+    assert "themes/facelift/theme.css" in result.text
+
+
+def test_shadowed_web_files_runs_as_part_of_analyze_configuration(tmp_path: Path) -> None:
+    _touch(tmp_path / "shipped", "themes/facelift/theme.css")
+    _touch(tmp_path / "local", "themes/facelift/theme.css")
+    ac_test = ACTestShadowedWebFiles(tmp_path / "local", tmp_path / "shipped")
+
+    assert ac_test.is_relevant()
+    assert [r.state for r in ac_test.run(SiteId("NO_SITE"), Config())] == [ACResultState.WARN]
+
+
+def test_shadowed_web_files_ignores_files_that_shadow_nothing(tmp_path: Path) -> None:
+    _touch(tmp_path / "shipped", "themes/facelift/theme.css")
+    _touch(tmp_path / "local", "themes/my_theme/theme.css")
+
+    [result] = _shadowed_web_files_results(tmp_path)
+
+    assert result.state is ACResultState.OK
+
+
+def test_shadowed_web_files_ignores_files_other_than_style_sheets_and_scripts(
+    tmp_path: Path,
+) -> None:
+    _touch(tmp_path / "shipped", "images/icon_checkmk_logo.svg")
+    _touch(tmp_path / "local", "images/icon_checkmk_logo.svg")
+
+    [result] = _shadowed_web_files_results(tmp_path)
+
+    assert result.state is ACResultState.OK
+
+
+def test_shadowed_web_files_without_local_dir(tmp_path: Path) -> None:
+    _touch(tmp_path / "shipped", "themes/facelift/theme.css")
+
+    [result] = _shadowed_web_files_results(tmp_path)
+
+    assert result.state is ACResultState.OK
+
+
+def test_shadowed_web_files_lists_only_the_first_files(tmp_path: Path) -> None:
+    for idx in range(12):
+        _touch(tmp_path / "shipped", f"js/script_{idx:02}.js")
+        _touch(tmp_path / "local", f"js/script_{idx:02}.js")
+
+    [result] = _shadowed_web_files_results(tmp_path)
+
+    assert "js/script_09.js" in result.text
+    assert "js/script_10.js" not in result.text
+    assert "and 2 more" in result.text

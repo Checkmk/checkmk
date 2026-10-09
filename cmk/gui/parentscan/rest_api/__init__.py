@@ -35,7 +35,7 @@ from cmk.gui.parentscan.background_job import (
 )
 from cmk.gui.parentscan.rest_api.request_schemas import ParentScan
 from cmk.gui.parentscan.rest_api.response_schemas import BackgroundJobStatusObject
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.web.utils import permission_verification as permissions
 
 
@@ -77,7 +77,7 @@ def start_parent_scan_background_job(params: Mapping[str, Any]) -> Response:
             assert_never(other)
 
     parent_scan_job = ParentScanBackgroundJob()
-    tree = folder_tree()
+    tree = make_folder_tree(active_config)
     if (
         result := start_parent_scan(
             hosts=[tree.load_host(name) for name in body["host_names"]],

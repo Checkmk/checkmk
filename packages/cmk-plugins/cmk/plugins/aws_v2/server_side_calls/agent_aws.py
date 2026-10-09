@@ -24,6 +24,23 @@ class AssumeRole(BaseModel):
 class AccessKeyAndAssumeRole(AccessKey, AssumeRole): ...
 
 
+class AccountList(BaseModel):
+    account_ids: list[str]
+    role_name: str
+    external_id: str | None = None
+
+
+Accounts = tuple[Literal["single"], None] | tuple[Literal["list"], AccountList]
+
+
+class AccessKeyLogin(AccessKey):
+    accounts: Accounts = ("single", None)
+
+
+class DefaultCredentials(BaseModel):
+    accounts: Accounts = ("single", None)
+
+
 class ProxyDetails(BaseModel):
     proxy_host: str
     proxy_port: int | None = None
@@ -55,10 +72,10 @@ ServiceSelection = (
 
 class AwsParams(BaseModel):
     auth: (
-        tuple[Literal["access_key"], AccessKey]
+        tuple[Literal["access_key"], AccessKeyLogin]
         | tuple[Literal["access_key_sts"], AccessKeyAndAssumeRole]
         | tuple[Literal["sts"], AssumeRole]
-        | tuple[Literal["none"], None]
+        | tuple[Literal["none"], DefaultCredentials | None]
     )
     global_service_region: str = "default"
     proxy_details: ProxyDetails | None = None
@@ -85,7 +102,7 @@ def _service_from_formspec_name(formspec_name: str) -> str:
     return "lambda" if formspec_name == "aws_lambda" else formspec_name
 
 
-def _auth_args(auth: AccessKey | AssumeRole | None) -> list[str | Secret]:
+def _auth_args(auth: AccessKey | AssumeRole | DefaultCredentials | None) -> list[str | Secret]:
     # AccessKeyAndAssumeRole is both, so it gets the arguments of both.
     args: list[str | Secret] = []
     if isinstance(auth, AccessKey):
@@ -94,6 +111,19 @@ def _auth_args(auth: AccessKey | AssumeRole | None) -> list[str | Secret]:
         args += ["--assume-role", "--role-arn", auth.role_arn_id]
         if auth.external_id:
             args += ["--external-id", auth.external_id]
+    return args
+
+
+def _account_args(login: AccessKey | AssumeRole | DefaultCredentials | None) -> list[str]:
+    # Only the logins without a role can monitor a list of accounts.
+    if not isinstance(login, AccessKeyLogin | DefaultCredentials):
+        return []
+    if (accounts := login.accounts[1]) is None:
+        return []
+    args = [arg for account_id in accounts.account_ids for arg in ("--account", account_id)]
+    args += ["--spoke-role-name", accounts.role_name]
+    if accounts.external_id:
+        args += ["--spoke-external-id", accounts.external_id]
     return args
 
 
@@ -152,6 +182,7 @@ def _import_tags_args(import_tags: tuple[str, str | None]) -> list[str]:
 
 def aws_arguments(params: AwsParams, host_config: HostConfig) -> Iterable[SpecialAgentCommand]:
     args = _auth_args(params.auth[1])
+    args += _account_args(params.auth[1])
     if params.proxy_details:
         args += _proxy_args(params.proxy_details)
     if params.global_service_region != "default":

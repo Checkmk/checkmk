@@ -276,3 +276,59 @@ def test_agent_accepts_the_arguments_of_every_option() -> None:
         ["ce", "cloudfront"],
         ["s3", "wafv2", "lambda", "cloudwatch_alarms"],
     )
+
+
+_ACCOUNT_LIST = (
+    "list",
+    {
+        "account_ids": ["333333333333", "444444444444"],
+        "role_name": "CheckmkMonitoring",
+        "external_id": "tenant-42",
+    },
+)
+
+
+def test_single_account_adds_no_account_options() -> None:
+    assert _arguments(auth=("none", {"accounts": ("single", None)})) == _arguments()
+
+
+def test_account_list_is_passed_with_role_name_and_external_id() -> None:
+    assert _arguments(auth=("none", {"accounts": _ACCOUNT_LIST})) == [
+        "--account",
+        "333333333333",
+        "--account",
+        "444444444444",
+        "--spoke-role-name",
+        "CheckmkMonitoring",
+        "--spoke-external-id",
+        "tenant-42",
+        *_HOST_ARGS,
+    ]
+
+
+def test_account_list_without_external_id_sends_none() -> None:
+    accounts = ("list", {"account_ids": ["333333333333"], "role_name": "CheckmkMonitoring"})
+
+    assert "--spoke-external-id" not in _arguments(auth=("none", {"accounts": accounts}))
+
+
+def test_access_key_carries_the_account_list() -> None:
+    arguments = _arguments(
+        auth=(
+            "access_key",
+            {
+                "access_key_id": "my_key_id",
+                "secret_access_key": Secret(0),
+                "accounts": _ACCOUNT_LIST,
+            },
+        )
+    )
+    command_line = [arg if isinstance(arg, str) else "password_store_reference" for arg in arguments]
+
+    parsed = parse_arguments(command_line)
+
+    assert (parsed.accounts, parsed.spoke_role_name, parsed.spoke_external_id) == (
+        ["333333333333", "444444444444"],
+        "CheckmkMonitoring",
+        "tenant-42",
+    )

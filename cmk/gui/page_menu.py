@@ -103,10 +103,6 @@ def make_click_action_link(
     )
 
 
-def make_javascript_action(javascript: str) -> str:
-    return javascript.rstrip(";") + ";cmk.page_menu.close_active_dropdown();"
-
-
 def make_form_submit_link(form_name: str, button_name: str) -> PageMenuLink:
     return make_click_action_link(
         ClickAction(
@@ -168,7 +164,7 @@ def show_success_dialog(
 
 def show_confirm_cancel_dialog(
     title: str,
-    confirm_url: str,
+    confirm_url: str | ClickAction,
     cancel_url: str | None = None,
     message: str | HTML | None = None,
     confirm_text: str | None = None,
@@ -191,7 +187,11 @@ def show_confirm_cancel_dialog(
         function_name="confirm_dialog_redirect",
         arguments={
             "dialog_options": dialog_options,
-            "confirm_url": confirm_url,
+            **(
+                {"confirm_action": asdict(confirm_url)}
+                if isinstance(confirm_url, ClickAction)
+                else {"confirm_url": confirm_url}
+            ),
             "cancel_url": cancel_url,
             "post_confirm_waiting_text": post_confirm_waiting_text,
         },

@@ -108,11 +108,15 @@
         "page_menu_toggle_popup",
         "page_menu_toggle_suggestions",
         "pagetype_add_to_container",
+        "randomize_secret",
         "reload_page",
         "service_discovery_start",
         "switch_master_state",
         "toggle_all_rows",
         "toggle_inline_help",
+        "valuespec_duallist_switch",
+        "valuespec_iconselector_toggle",
+        "valuespec_list_choice_toggle_all",
         "waiting_flash_message"
       ]
     },

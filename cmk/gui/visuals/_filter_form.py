@@ -85,7 +85,7 @@ def _show_filter_form_buttons(
     html.open_div(class_="side_popup_controls")
 
     html.open_a(
-        href="javascript:void(0);",
+        href="#",
         onclick="cmk.page_menu.toggle_popup_filter_list(this, %s)" % json.dumps(filter_list_id),
         class_="add",
     )

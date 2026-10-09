@@ -27,7 +27,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config, Config
 from cmk.gui.customer import ABCCustomerAPI, customer_api
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u, get_language_alias, get_languages, ungettext
@@ -1593,10 +1593,17 @@ class ModeEditUser(WatoMode):
             html.open_b(style=["position: relative", "top: 4px;"])
             html.write_text_permissive(" &nbsp;")
             html.icon_button(
-                "javascript:cmk.wato.randomize_secret('automation_secret', '16', '%s');"
-                % _("Copied secret to clipboard"),
+                None,
                 _("Create random secret and copy secret to clipboard"),
                 StaticIcon(IconNames.random),
+                click_action=ClickAction(
+                    action="randomize_secret",
+                    arguments={
+                        "id": "automation_secret",
+                        "length": 16,
+                        "message": _("Copied secret to clipboard"),
+                    },
+                ),
             )
             html.close_b()
             html.close_div()

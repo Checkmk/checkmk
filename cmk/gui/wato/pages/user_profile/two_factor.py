@@ -972,7 +972,7 @@ class RegisterTotpSecret(Page):
             html.a(
                 html.render_span(base32_secret)
                 + html.render_static_icon(StaticIcon(IconNames.insert)),
-                href="javascript:void(0)",
+                href="#",
                 onclick="cmk.utils.copy_to_clipboard(%s, %s);"
                 % (
                     json.dumps(base32_secret),

@@ -34,6 +34,7 @@ import * as utils from '@/modules/utils'
 import * as valuespecs from '@/modules/valuespecs'
 import * as wato from '@/modules/wato'
 
+import { run_click_action } from './click_action_dispatcher'
 import { type CallableFunction, register_callable_functions } from './ts_function_dispatcher'
 
 const license_usage_graphs: Record<string, (num_graphs: number, aggregation: any) => void> = {
@@ -88,11 +89,16 @@ const callable_functions: Record<Exclude<KnownTSFunction, `mobile_${string}`>, C
   init_filter_form: (_node, options) => page_menu.init_filter_form(options.filter_list_selected_id),
 
   // forms
-  confirm_dialog_redirect: (_node, options) =>
+  confirm_dialog_redirect: (node, options) =>
     forms.confirm_dialog(
       options.dialog_options,
       () => {
-        location.href = options.confirm_url
+        if (options.confirm_action) {
+          const { action, arguments: args } = options.confirm_action
+          run_click_action(action, node, args ?? {})
+        } else {
+          location.href = options.confirm_url
+        }
       },
       options.cancel_url ? () => (location.href = options.cancel_url) : null,
       null,

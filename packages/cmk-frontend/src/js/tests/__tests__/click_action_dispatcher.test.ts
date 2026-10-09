@@ -22,9 +22,11 @@ function click(html: string): MouseEvent {
 
 describe('click action dispatcher', () => {
   beforeAll(() => {
+    // Real names, as only known click actions can be registered. The test only loads the
+    // dispatcher, so these implementations are the only ones.
     register_click_actions({
-      keep_default: () => true,
-      record_event: (_element, _options, event) => {
+      reload_page: () => true,
+      add_bookmark: (_element, _options, event) => {
         received_events.push(event)
       }
     })
@@ -32,7 +34,7 @@ describe('click action dispatcher', () => {
   })
 
   test('hands the click event to the action', () => {
-    document.body.innerHTML = '<a href="#" data-cmk_on_click="record_event"><span>link</span></a>'
+    document.body.innerHTML = '<a href="#" data-cmk_on_click="add_bookmark"><span>link</span></a>'
     const click = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true })
 
     document.querySelector('span')!.dispatchEvent(click)
@@ -41,13 +43,13 @@ describe('click action dispatcher', () => {
   })
 
   test('keeps the default action if the action returns true', () => {
-    const event = click('<a href="view.py" data-cmk_on_click="keep_default">link</a>')
+    const event = click('<a href="view.py" data-cmk_on_click="reload_page">link</a>')
 
     expect(event.defaultPrevented).toBe(false)
   })
 
   test('prevents the default action if the action returns nothing', () => {
-    const event = click('<a href="view.py" data-cmk_on_click="record_event">link</a>')
+    const event = click('<a href="view.py" data-cmk_on_click="add_bookmark">link</a>')
 
     expect(event.defaultPrevented).toBe(true)
   })
@@ -63,7 +65,7 @@ describe('click action dispatcher', () => {
     let event: MouseEvent
     try {
       event = click(
-        '<a href="view.py" data-cmk_on_click="keep_default" data-cmk_on_click_arguments="{">x</a>'
+        '<a href="view.py" data-cmk_on_click="reload_page" data-cmk_on_click_arguments="{">x</a>'
       )
     } finally {
       window.removeEventListener('error', on_error)

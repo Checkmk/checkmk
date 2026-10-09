@@ -32,7 +32,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_checkbox_selection_topic,
     make_click_action_link,
-    make_javascript_action,
     make_simple_link,
     PageMenu,
     PageMenuDropdown,
@@ -641,13 +640,9 @@ class ModeActivateChanges(WatoMode):
             class_="confirm_info",
         )
 
-        confirm_url = "javascript:" + make_javascript_action(
-            'cmk.activation.activate_changes("selected")'
-        )
-
         show_confirm_cancel_dialog(
             title=_("Activate pending changes"),
-            confirm_url=confirm_url,
+            confirm_url=ClickAction(action="activate_changes", arguments={"mode": "selected"}),
             confirm_text=_("Activate on selected sites"),
             message=message,
             show_cancel_button=False,
@@ -818,7 +813,7 @@ class ModeActivateChanges(WatoMode):
                 # State
                 if can_activate_all and need_sync:
                     html.icon_button(
-                        url="javascript:void(0)",
+                        url=None,
                         id_="activate_%s" % site_id,
                         cssclass="activate_site",
                         title=_("This site is not update and needs a replication. Start it now."),
@@ -828,7 +823,7 @@ class ModeActivateChanges(WatoMode):
 
                 if can_activate_all and need_restart:
                     html.icon_button(
-                        url="javascript:void(0)",
+                        url=None,
                         id_="activate_%s" % site_id,
                         cssclass="activate_site",
                         title=_(

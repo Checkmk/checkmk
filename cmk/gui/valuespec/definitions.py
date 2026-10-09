@@ -68,7 +68,7 @@ from cmk.gui import forms, site_config, sites, user_sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.tag_rendering import HTMLTagAttributes
 from cmk.gui.http import request, UploadedFile
@@ -2512,7 +2512,7 @@ class ListOf[T](ValueSpec[ListOfModel[T]]):
             html.open_a(
                 id_=varprefix + "_add",
                 class_=["vlof_add_button"],
-                href="javascript:void(0)",
+                href="#",
                 onclick=onclick,
                 target="",
             )
@@ -4240,9 +4240,11 @@ class ListChoice(ValueSpec[ListChoiceModel]):
 
     def _draw_listchoice(self, varprefix: str, value: ListChoiceModel) -> None:
         if self._toggle_all:
-            html.a(
+            html.action_link(
                 _("Check / Uncheck all"),
-                href="javascript:cmk.valuespecs.list_choice_toggle_all('%s')" % varprefix,
+                click_action=ClickAction(
+                    action="valuespec_list_choice_toggle_all", arguments={"varprefix": varprefix}
+                ),
             )
         html.open_table(id_="%s_tbl" % varprefix, class_=["listchoice"])
         for nr, (key, title) in enumerate(self._elements):
@@ -4456,13 +4458,35 @@ class DualListChoice(ListChoice):
         html.open_td(class_="head")
         html.write_text_permissive(_("Available"))
         if not self._instant_add:
-            html.a(">", href="javascript:%s;" % select_func, class_=["control", "add"])
+            html.action_link(
+                ">",
+                click_action=ClickAction(
+                    action="valuespec_duallist_switch",
+                    arguments={
+                        "field_suffix": "unselected",
+                        "varprefix": varprefix,
+                        "keeporder": self._custom_order,
+                    },
+                ),
+                class_=["control", "add"],
+            )
         html.close_td()
 
         html.open_td(class_="head")
         html.write_text_permissive(_("Selected"))
         if not self._instant_add:
-            html.a("<", href="javascript:%s;" % unselect_func, class_=["control", "del"])
+            html.action_link(
+                "<",
+                click_action=ClickAction(
+                    action="valuespec_duallist_switch",
+                    arguments={
+                        "field_suffix": "selected",
+                        "varprefix": varprefix,
+                        "keeporder": self._custom_order,
+                    },
+                ),
+                class_=["control", "del"],
+            )
         html.close_td()
         html.close_tr()
 
@@ -8223,7 +8247,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
             icon_tag = html.render_icon(DynamicIconName(icon), title=title, id_=id_)
 
         if onclick:
-            icon_tag = HTMLWriter.render_a(icon_tag, href="javascript:void(0)", onclick=onclick)
+            icon_tag = HTMLWriter.render_a(icon_tag, href="#", onclick=onclick)
 
         return icon_tag
 
@@ -8300,11 +8324,14 @@ class IconSelector(ValueSpec[IconSelectorModel]):
         html.open_ul()
         for category_name, category_alias, _icons in available_icons:
             html.open_li(class_="active" if active_category == category_name else None)
-            html.a(
+            html.action_link(
                 category_alias,
-                href=f"javascript:cmk.valuespecs.iconselector_toggle({json.dumps(varprefix)}, {json.dumps(category_name)})",
+                click_action=ClickAction(
+                    action="valuespec_iconselector_toggle",
+                    arguments={"varprefix": varprefix, "category_name": category_name},
+                ),
                 id_=f"{varprefix}_{category_name}_nav",
-                class_="%s_nav" % varprefix,
+                class_=["%s_nav" % varprefix],
             )
             html.close_li()
         html.close_ul()

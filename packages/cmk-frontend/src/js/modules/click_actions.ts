@@ -22,6 +22,8 @@ import { toggle_all_rows } from '@/modules/selection'
 import { start as start_service_discovery } from '@/modules/service_discovery'
 import { add_bookmark, update_vue_snapin_contents } from '@/modules/sidebar'
 import { makeLoadingTransition, makeuri, querySelectorID } from '@/modules/utils'
+import { duallist_switch, iconselector_toggle, list_choice_toggle_all } from '@/modules/valuespecs'
+import { randomize_secret } from '@/modules/wato'
 
 import { type ClickAction, register_click_actions } from './click_action_dispatcher'
 
@@ -83,6 +85,8 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
   pagetype_add_to_container: closing_dropdown((_element, options) =>
     pagetype_add_to_container(options.page_type, options.page_name)
   ),
+  randomize_secret: (_element, options) =>
+    randomize_secret(options.id, options.length, options.message),
   reload_page: () => location.reload(),
   service_discovery_start: closing_dropdown((_element, options) =>
     start_service_discovery(
@@ -105,6 +109,12 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
     toggle_all_rows(querySelectorID('main_page_content') ?? undefined)
   ),
   toggle_inline_help: closing_dropdown(() => toggle_inline_help()),
+  valuespec_duallist_switch: (_element, options) =>
+    duallist_switch(options.field_suffix, options.varprefix, options.keeporder ? 1 : 0),
+  valuespec_iconselector_toggle: (_element, options) =>
+    iconselector_toggle(options.varprefix, options.category_name),
+  valuespec_list_choice_toggle_all: (_element, options) =>
+    list_choice_toggle_all(options.varprefix),
   waiting_flash_message: (_element, options) => {
     waiting_flash_message('top_heading', options.message)
     return true

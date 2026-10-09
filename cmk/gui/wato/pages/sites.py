@@ -1745,7 +1745,7 @@ class ModeDistributedMonitoring(WatoMode):
                 arguments={"redirect_url": trigger_url},
             )
             html.icon_button(
-                url="javascript:void(0)",
+                url="#",
                 title=_("Recreate certificates"),
                 icon=StaticIcon(IconNames.recreate_broker_certificate),
                 class_=["lockable"],

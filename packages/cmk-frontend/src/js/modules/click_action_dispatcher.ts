@@ -14,6 +14,7 @@
  * See cmk.gui.htmllib.generator:ClickAction for the server side and for how
  * to add a new click action.
  */
+import type { KnownClickAction } from 'cmk-shared-typing/typescript/legacy_frontend_hooks'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ClickActionArguments = { [key: string]: any }
@@ -25,10 +26,29 @@ export type ClickAction = (
   event?: MouseEvent
 ) => void | boolean
 
-const registry: { [name: string]: ClickAction } = {}
+// Only the click actions known to the backend can be registered. Each bundle registers the ones it
+// implements, e.g. mobile.ts only a few, while click_actions.ts has to implement all of them.
+type ClickActionRegistry = Partial<Record<KnownClickAction, ClickAction>>
 
-export function register_click_actions(actions: { [name: string]: ClickAction }) {
+const registry: ClickActionRegistry = {}
+
+export function register_click_actions(actions: ClickActionRegistry) {
   Object.assign(registry, actions)
+}
+
+export function run_click_action(
+  name: string,
+  element: HTMLElement,
+  options: ClickActionArguments,
+  event?: MouseEvent
+): void | boolean {
+  // The name comes from the page, so unknown names are only detected here
+  const click_action = registry[name as KnownClickAction]
+  if (click_action === undefined) {
+    console.error(`Unknown click action: ${name}`)
+    return
+  }
+  return click_action(element, options, event)
 }
 
 // Links to "#" only trigger actions. Call this when the bundle is evaluated, before the page has
@@ -52,12 +72,6 @@ export function init_click_action_dispatcher() {
     if (!(event.target instanceof Element)) return
     const element = event.target.closest<HTMLElement>('*[data-cmk_on_click]')
     if (!element) return
-    const action_name: string = element.dataset.cmk_on_click!
-    const click_action = registry[action_name]
-    if (click_action === undefined) {
-      console.error(`Unknown click action: ${action_name}`)
-      return
-    }
     // Prevent the default action even if the arguments or the action are broken, otherwise a
     // link with a real href would be followed
     let keep_default = false
@@ -65,7 +79,8 @@ export function init_click_action_dispatcher() {
       const options: ClickActionArguments = element.dataset.cmk_on_click_arguments
         ? JSON.parse(element.dataset.cmk_on_click_arguments)
         : {}
-      keep_default = click_action(element, options, event) === true
+      keep_default =
+        run_click_action(element.dataset.cmk_on_click!, element, options, event) === true
     } finally {
       if (!keep_default) {
         event.preventDefault()

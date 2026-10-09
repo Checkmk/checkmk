@@ -58,30 +58,40 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
     // Loaded for every mode: the updater is an integral part of the controller,
     // not a subsystem the individual modes opt into. It may be adjusted later, but
     // the updater is _always_ present and its state is _always_ relevant.
-    let updater = updater::Updater::new(&paths);
+    let mut updater = updater::Updater::new(&paths);
     // Kept at info although the default level is still warn: the default is to be
     // raised, and the summary is then wanted on every run.
     log::info!("Updater {}", updater.summary());
     match cli.mode {
-        cli::Mode::Register(reg_opts) => registration::register_existing(
-            &config::RegisterExistingConfig::new(runtime_config, reg_opts)?,
-            &mut registry,
-        ),
+        cli::Mode::Register(reg_opts) => {
+            let config = config::RegisterExistingConfig::new(runtime_config, reg_opts)?;
+            registration::register_existing(&config, &mut registry)?;
+            register_update_source(
+                &mut updater,
+                &mut registry,
+                &config.connection_config.site_id,
+                &config.updater_registration,
+            )
+        }
         cli::Mode::RegisterNew(reg_new_opts) => {
             let updater_registration = runtime_config
                 .updater_registration
                 .clone()
                 .unwrap_or_default();
-            registration::register_new(
-                &config::RegisterNewConfig::new(
-                    config::RegistrationConnectionConfig::from_register_new_opts(
-                        runtime_config,
-                        reg_new_opts.connection_opts,
-                    )?,
-                    reg_new_opts.agent_labels_raw.into_iter().collect(),
-                    updater_registration,
+            let config = config::RegisterNewConfig::new(
+                config::RegistrationConnectionConfig::from_register_new_opts(
+                    runtime_config,
+                    reg_new_opts.connection_opts,
                 )?,
+                reg_new_opts.agent_labels_raw.into_iter().collect(),
+                updater_registration,
+            )?;
+            registration::register_new(&config, &mut registry)?;
+            register_update_source(
+                &mut updater,
                 &mut registry,
+                &config.connection_config.site_id,
+                &config.updater_registration,
             )
         }
         cli::Mode::ProxyRegister(reg_opts) => registration::proxy_register(
@@ -148,6 +158,49 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
             config::ClientConfig::new(runtime_config, renew_certificate_opts.client_opts, None),
         ),
     }
+}
+
+/// Hand the connection a registration just created to the updater.
+///
+/// The source is the connection the registry now holds for `site_id`: the
+/// registration put the UUID it generated there, and the updater talks to the
+/// site over that connection's mTLS channel.
+///
+/// # Arguments
+///
+/// * `updater` - the updater of this controller run
+/// * `registry` - the registry the registration just wrote
+/// * `site_id` - the site the registration registered this host at
+/// * `registration` - what the host is configured to do about the updater
+///
+/// # Errors
+///
+/// If the updater state cannot be written.
+fn register_update_source(
+    updater: &mut updater::Updater,
+    registry: &mut config::Registry,
+    site_id: &site_spec::SiteID,
+    registration: &config::UpdaterRegistration,
+) -> AnyhowResult<()> {
+    let Some(connection) = registry.get_connection_as_mut(site_id) else {
+        // Nothing registered means nothing to update from, so the updater keeps
+        // whatever source it had.
+        log::warn!("No registered connection to {site_id}, leaving the update source alone");
+        return Ok(());
+    };
+    let source = updater::UpdateSource {
+        site_id: site_id.clone(),
+        uuid: connection.trust.uuid,
+        // Only the site, by answering 501, can say that it serves no agent updates.
+        available: true,
+    };
+    log::info!(
+        "Update source after the registration: connection {} to {}, available: {}",
+        source.uuid,
+        source.site_id,
+        source.available
+    );
+    updater.register_update_source(registration, source)
 }
 
 /// This check is currently only useful on Unix. On Windows, the internal agent address can be passed

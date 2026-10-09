@@ -11,6 +11,7 @@ use super::connection;
 use crate::agent_receiver_api;
 use crate::config::{
     tmp_path_for_atomical_save, JSONLoader, JSONLoaderMissingSafe, Registry, TOMLLoader,
+    UpdaterRegistration,
 };
 use crate::environment::PathResolver;
 use crate::site_spec;
@@ -358,6 +359,9 @@ pub struct Updater {
     state: UpdateState,
     agent_info: Option<AgentInfo>,
     load_error: Option<Error>,
+
+    /// Where the state was read from, and where it is written back.
+    state_path: PathBuf,
 }
 
 impl Updater {
@@ -370,6 +374,12 @@ impl Updater {
             &mut load_error,
         )
         .flatten();
+        if !paths.updater_state_path.exists() {
+            log::info!(
+                "No updater state at {:?}, starting from the default state",
+                paths.updater_state_path
+            );
+        }
         // Unparsable state means a broken controller: non-operational by design.
         let state = Self::load_or_log(
             "updater state",
@@ -393,7 +403,49 @@ impl Updater {
             state,
             agent_info,
             load_error,
+            state_path: paths.updater_state_path.clone(),
         }
+    }
+
+    /// Record the connection a registration just created as the update source.
+    ///
+    /// `Keep` fills an empty slot and refreshes a source naming the site this
+    /// registration ran against, so that only a source pointing at _another_
+    /// site survives: a registration generates a new UUID and the registry
+    /// holds one connection per site, so re-registering at the recorded site
+    /// leaves the recorded UUID naming a connection that is gone. `Overwrite`
+    /// replaces the source in any case. `Manual` leaves it alone - with it the
+    /// updater is the operator's business.
+    ///
+    /// # Arguments
+    ///
+    /// * `registration` - what the host is configured to do about the updater
+    /// * `source` - the connection the registration created
+    ///
+    /// # Errors
+    ///
+    /// If the state cannot be written.
+    pub fn register_update_source(
+        &mut self,
+        registration: &UpdaterRegistration,
+        source: UpdateSource,
+    ) -> AnyhowResult<()> {
+        match registration {
+            UpdaterRegistration::Overwrite => self.state.source = Some(source),
+            UpdaterRegistration::Keep
+                if self
+                    .state
+                    .source
+                    .as_ref()
+                    .is_none_or(|recorded| recorded.site_id == source.site_id) =>
+            {
+                self.state.source = Some(source)
+            }
+            UpdaterRegistration::Keep | UpdaterRegistration::Manual => log::info!(
+                "Keeping the recorded update source: updater registration is {registration:?}"
+            ),
+        }
+        self.state.save(&self.state_path)
     }
 
     /// Keeps the *first* error: the artifacts fail independently, so the first
@@ -714,6 +766,7 @@ mod tests {
     const INSTALLED_HASH: &str = "0123456789abcdef";
     const TARGET_HASH: &str = "fedcba9876543210";
     const CONNECTION_UUID: &str = "2da62f8f-9e4a-4b1b-8b3a-1c1a0b0f1a01";
+    const STATE_FILE: &str = "state.json";
     const PACKAGE: &[u8] = b"an agent package";
 
     const UPDATER_CONFIG_TOML: &str = "\
@@ -851,6 +904,121 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             uuid: uuid::Uuid::from_str(CONNECTION_UUID).unwrap(),
             available: true,
         }
+    }
+
+    /// The source of a second registration at another site, to tell a kept
+    /// source from a replaced one.
+    fn other_source() -> UpdateSource {
+        UpdateSource {
+            site_id: site_spec::SiteID::from_str("other-server/site").unwrap(),
+            uuid: uuid::Uuid::from_str("8f0e3a1c-5b2d-4e6f-9a7b-0c1d2e3f4a5b").unwrap(),
+            available: true,
+        }
+    }
+
+    /// The source of a second registration at the site of [`some_source`],
+    /// whose connection - and with it the UUID - it replaced.
+    fn reregistered_source() -> UpdateSource {
+        UpdateSource {
+            uuid: uuid::Uuid::from_str("3c9d1e7b-6a4f-42c8-9e05-7d8b1f2a3c4d").unwrap(),
+            ..some_source()
+        }
+    }
+
+    /// The source the updater saved to its state file.
+    fn saved_source(updater: &Updater) -> Option<UpdateSource> {
+        UpdateState::load(&updater.state_path).unwrap().source
+    }
+
+    #[test]
+    fn test_register_update_source_into_a_state_without_one() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut updater = updater_in(&dir, UpdateState::default());
+
+        updater
+            .register_update_source(&UpdaterRegistration::Keep, some_source())
+            .unwrap();
+
+        assert_eq!(updater.state.source, Some(some_source()));
+        assert_eq!(saved_source(&updater), Some(some_source()));
+    }
+
+    #[test]
+    fn test_register_update_source_keeps_the_recorded_one() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut updater = updater_in(
+            &dir,
+            UpdateState {
+                source: Some(some_source()),
+                ..Default::default()
+            },
+        );
+
+        updater
+            .register_update_source(&UpdaterRegistration::Keep, other_source())
+            .unwrap();
+
+        assert_eq!(saved_source(&updater), Some(some_source()));
+    }
+
+    #[test]
+    fn test_register_update_source_refreshes_the_recorded_one_of_the_same_site() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut updater = updater_in(
+            &dir,
+            UpdateState {
+                source: Some(some_source()),
+                ..Default::default()
+            },
+        );
+
+        updater
+            .register_update_source(&UpdaterRegistration::Keep, reregistered_source())
+            .unwrap();
+
+        // Keeping the recorded source would leave it naming the connection this
+        // registration replaced.
+        assert_eq!(saved_source(&updater), Some(reregistered_source()));
+    }
+
+    #[test]
+    fn test_register_update_source_overwrites_the_recorded_one() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut updater = updater_in(
+            &dir,
+            UpdateState {
+                source: Some(some_source()),
+                last_check: Some(1759276800),
+                ..Default::default()
+            },
+        );
+
+        updater
+            .register_update_source(&UpdaterRegistration::Overwrite, other_source())
+            .unwrap();
+
+        let saved = UpdateState::load(&updater.state_path).unwrap();
+        assert_eq!(saved.source, Some(other_source()));
+        // The rest of the state belongs to the update cycle, not to the registration.
+        assert_eq!(saved.last_check, Some(1759276800));
+    }
+
+    #[test]
+    fn test_register_update_source_with_manual_registration() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut updater = updater_in(
+            &dir,
+            UpdateState {
+                source: Some(some_source()),
+                ..Default::default()
+            },
+        );
+
+        updater
+            .register_update_source(&UpdaterRegistration::Manual, other_source())
+            .unwrap();
+
+        assert_eq!(saved_source(&updater), Some(some_source()));
     }
 
     #[test]
@@ -1083,6 +1251,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             state: UpdateState::default(),
             agent_info: None,
             load_error: None,
+            state_path: PathBuf::from(STATE_FILE),
         }
         .summary();
 
@@ -1194,6 +1363,16 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             state: UpdateState::default(),
             agent_info,
             load_error: None,
+            state_path: PathBuf::from(STATE_FILE),
+        }
+    }
+
+    /// An updater that writes its state into `dir`.
+    fn updater_in(dir: &tempfile::TempDir, state: UpdateState) -> Updater {
+        Updater {
+            state,
+            state_path: dir.path().join(STATE_FILE),
+            ..updater(some_config(), some_agent_info())
         }
     }
 

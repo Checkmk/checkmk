@@ -2901,11 +2901,16 @@ def _gather_sections_from_resources(
     resources: list[AzureResource],
     monitored_groups: Mapping[str, AzureResourceGroup],
     otel_resource_types: Iterable[str],
+    section_name: str | None = None,
 ) -> Sequence[_Section]:
     otel_types_lower = {t.lower() for t in otel_resource_types}
     sections: list[_Section] = []
     for resource in resources:
-        section = AzureResourceSection(resource)
+        section = (
+            AzureSection(section_name, [resource.piggytarget])
+            if section_name
+            else AzureResourceSection(resource)
+        )
         section.add(resource.dumpinfo())
         sections.append(section)
         sections.append(get_resource_host_labels_section(resource, monitored_groups))
@@ -2998,11 +3003,18 @@ async def process_single_resources(
             assert isinstance(resource_async, list)
             processed_resources.extend(resource_async)
 
-    return _gather_sections_from_resources(
-        [*processed_resources, *otel_resources],
-        groups_with_monitored_resources,
-        args.otel_resource_types,
-    )
+    return [
+        *_gather_sections_from_resources(
+            processed_resources, groups_with_monitored_resources, args.otel_resource_types
+        ),
+        # one section name for all types, so that no plugin of a resource type reads them
+        *_gather_sections_from_resources(
+            otel_resources,
+            groups_with_monitored_resources,
+            args.otel_resource_types,
+            section_name="otel_resource",
+        ),
+    ]
 
 
 async def process_resources(

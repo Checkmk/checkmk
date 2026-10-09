@@ -32,6 +32,7 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     get_resource_host_labels_section,
     process_app_registrations,
     process_organization,
+    process_single_resources,
     process_users,
     ResourceHealth,
     Selector,
@@ -275,6 +276,45 @@ def test_get_otel_only_resources(
         resource.name
         for resource in get_otel_only_resources(resources, otel_resource_types, monitored_services)
     ] == expected_names
+
+
+@pytest.mark.asyncio
+async def test_process_single_resources_writes_otel_resources_under_one_section_name(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    app, storage = [
+        AzureResource(
+            {
+                "id": f"{name}_id",
+                "name": name,
+                "type": resource_type,
+                "location": "westeurope",
+                "tags": {},
+                "group": "my_group",
+            },
+            TagsImportPatternOption.import_all,
+            fake_azure_subscription(),
+            UniqueHostnamesConfig(),
+        )
+        for name, resource_type in [
+            ("my_app", "Microsoft.App/containerApps"),
+            ("my_storage", "Microsoft.Storage/storageAccounts"),
+        ]
+    ]
+
+    for section in await process_single_resources(
+        AsyncMock(spec=BaseAsyncApiClient),
+        Args(debug=False, otel_resource_types=[app.info["type"], storage.info["type"]]),
+        fake_azure_subscription(),
+        {},
+        {storage.info["id"]: storage},
+        [app],
+    ):
+        section.write()
+
+    output = capsys.readouterr().out
+    assert "<<<<my_app>>>>\n<<<azure_v2_otel_resource:sep(124)>>>" in output
+    assert "<<<<my_storage>>>>\n<<<azure_v2_storageaccounts:sep(124)>>>" in output
 
 
 def _get_batch_answer(**values: float | None) -> Sequence[Mapping[str, object]]:

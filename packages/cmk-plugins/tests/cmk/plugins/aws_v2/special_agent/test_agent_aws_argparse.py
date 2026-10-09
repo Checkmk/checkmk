@@ -132,3 +132,34 @@ def test_access_key_with_secret_is_accepted(secret_args: Sequence[str]) -> None:
     args = parse_arguments([*REQUIRED_ARGS, "--access-key-identity", "AKIAEXAMPLE", *secret_args])
 
     assert args.access_key_identity == "AKIAEXAMPLE"
+
+
+ACCOUNT_ARGS = [
+    *REQUIRED_ARGS,
+    "--account",
+    "333333333333",
+    "--account",
+    "444444444444",
+    "--spoke-role-name",
+    "CheckmkMonitoring",
+]
+
+
+def test_account_options_are_parsed() -> None:
+    args = parse_arguments([*ACCOUNT_ARGS, "--spoke-external-id", "tenant-42"])
+
+    assert (args.accounts, args.spoke_role_name, args.spoke_external_id) == (
+        ["333333333333", "444444444444"],
+        "CheckmkMonitoring",
+        "tenant-42",
+    )
+
+
+def test_account_without_spoke_role_name_is_rejected() -> None:
+    with pytest.raises(SystemExit):
+        parse_arguments([*REQUIRED_ARGS, "--account", "333333333333"])
+
+
+def test_account_with_assumed_role_is_rejected() -> None:
+    with pytest.raises(SystemExit):
+        parse_arguments([*ACCOUNT_ARGS, "--assume-role", "--role-arn", "arn:aws:iam::1:role/Other"])

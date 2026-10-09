@@ -40,6 +40,7 @@ from .credentials import (
     DefaultCredentials,
     HubCredentials,
     role_session_name,
+    SpokeAccounts,
 )
 from .runner import AWSSectionsGeneric, AWSSectionsUSEast
 from .sections.s3 import ResultDistributorS3Limits
@@ -286,6 +287,19 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         "--external-id", help="Unique identifier to assume a role in another account"
     )
     parser.add_argument(
+        "--account",
+        dest="accounts",
+        action="append",
+        help="Monitor this account ID instead of the account of the credentials. Repeat it for"
+        " several accounts. The agent assumes the role --spoke-role-name in each of them.",
+    )
+    parser.add_argument(
+        "--spoke-role-name", help="The name of the role to assume in every --account"
+    )
+    parser.add_argument(
+        "--spoke-external-id", help="The external ID of the role in every --account"
+    )
+    parser.add_argument(
         "--region",
         dest="regions",
         action="append",
@@ -405,6 +419,13 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     args = parser.parse_args(argv)
     if args.access_key_identity and args.secret is None and args.secret_id is None:
         parser.error("--access-key-identity requires --secret or --secret-id")
+    if args.accounts and not args.spoke_role_name:
+        parser.error("--account requires --spoke-role-name")
+    if args.accounts and args.assume_role:
+        parser.error(
+            "--account cannot be combined with --assume-role: every account role must be"
+            " assumed directly from the credentials, not through another role"
+        )
     return args
 
 
@@ -576,6 +597,12 @@ def _hub_credentials_from_args(args: argparse.Namespace) -> HubCredentials:
     return HubCredentials(login, role, role_session_name(os.environ.get("OMD_SITE")))
 
 
+def _spoke_accounts_from_args(args: argparse.Namespace) -> SpokeAccounts | None:
+    if not args.accounts:
+        return None
+    return SpokeAccounts(args.accounts, args.spoke_role_name, args.spoke_external_id or None)
+
+
 def _test_connection(credentials: AwsCredentials) -> int:
     try:
         credentials.accounts()
@@ -645,7 +672,10 @@ def agent_aws_main(args: argparse.Namespace) -> int:
     # One credential owner for the whole run. The connection test and the agent run take
     # the same one, so both resolve credentials through the same path.
     credentials = AwsCredentials(
-        _hub_credentials_from_args(args), args.global_service_region, proxy_config
+        _hub_credentials_from_args(args),
+        args.global_service_region,
+        proxy_config,
+        _spoke_accounts_from_args(args),
     )
 
     if args.connection_test:

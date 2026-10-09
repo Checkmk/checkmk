@@ -10,6 +10,10 @@
 The agent logs in once per run as the "hub": with an access key or with the boto3
 default credential chain, optionally followed by one AssumeRole into a role whose
 account is then monitored.
+
+To monitor several accounts, the hub assumes a "spoke" role of the same name in each of
+them. Every spoke is exactly one AssumeRole away from the login identity: an assumed role
+cannot be combined with spokes, because that would chain roles.
 """
 
 from collections.abc import Sequence
@@ -51,6 +55,13 @@ class HubCredentials:
     session_name: str = "checkmk"
 
 
+@dataclass(frozen=True)
+class SpokeAccounts:
+    account_ids: Sequence[str]
+    role_name: str
+    external_id: str | None = None
+
+
 def role_session_name(site: str | None) -> str:
     """The RoleSessionName of every AssumeRole call. CloudTrail shows it to the customer.
 
@@ -75,15 +86,16 @@ def _login_session(login: AccessKey | DefaultCredentials, region: str) -> boto3.
 
 def _assume_role(
     session: boto3.session.Session,
-    role: AssumedRole,
+    role_arn: str,
+    external_id: str | None,
     session_name: str,
     region: str,
     config: botocore.config.Config | None,
 ) -> boto3.session.Session:
     assumed_role_object = session.client("sts", config=config).assume_role(
-        RoleArn=role.arn,
+        RoleArn=role_arn,
         RoleSessionName=session_name,
-        **({"ExternalId": role.external_id} if role.external_id else {}),
+        **({"ExternalId": external_id} if external_id else {}),
     )
     credentials = assumed_role_object["Credentials"]
     return boto3.session.Session(
@@ -101,7 +113,12 @@ def _create_hub_session(
         return _login_session(hub.login, region)
     try:
         return _assume_role(
-            _login_session(hub.login, region), hub.role, hub.session_name, region, config
+            _login_session(hub.login, region),
+            hub.role.arn,
+            hub.role.external_id,
+            hub.session_name,
+            region,
+            config,
         )
     except Exception as e:
         raise AwsAccessError(describe_credential_failure(e))
@@ -134,8 +151,12 @@ class AwsCredentials:
         hub: HubCredentials,
         global_service_region: str,
         proxy_config: botocore.config.Config | None,
+        spokes: SpokeAccounts | None = None,
     ) -> None:
+        if hub.role is not None and spokes is not None:
+            raise ValueError("An assumed role cannot be combined with spoke accounts")
         self._hub = hub
+        self._spokes = spokes
         self._global_service_region = global_service_region
         self._proxy_config = proxy_config
         self._session: boto3.session.Session | None = None
@@ -170,4 +191,25 @@ class AwsCredentials:
 
     def accounts(self) -> Sequence[AwsAccount]:
         """The accounts this run monitors, each with the session to use for all its regions."""
-        return [AwsAccount(self.account_id(), self.session())]
+        if self._spokes is None:
+            return [AwsAccount(self.account_id(), self.session())]
+        return [
+            self._spoke_account(account_id, self._spokes) for account_id in self._spokes.account_ids
+        ]
+
+    def _spoke_account(self, account_id: str, spokes: SpokeAccounts) -> AwsAccount:
+        try:
+            # Without an assumed role, session() is the login identity itself.
+            login = self.session()
+            partition = login.get_partition_for_region(self._global_service_region)
+            session = _assume_role(
+                login,
+                f"arn:{partition}:iam::{account_id}:role/{spokes.role_name}",
+                spokes.external_id,
+                self._hub.session_name,
+                self._global_service_region,
+                self._proxy_config,
+            )
+        except Exception as e:
+            raise AwsAccessError(f"Account {account_id}: {describe_credential_failure(e)}")
+        return AwsAccount(account_id, session)

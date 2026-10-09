@@ -5,8 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkBarplotFigure from '@/dashboard/components/figures/CmkBarplotFigure.vue'
-import { useWidgetData } from '@/dashboard/composables/useWidgetData'
-import { useWidgetSource } from '@/dashboard/composables/useWidgetSource'
+import { useComputedWidget } from '@/dashboard/composables/useComputedWidget'
 import type { BarplotContent } from '@/dashboard/types/widget'
 import { dashboardAPI } from '@/dashboard/utils'
 
@@ -14,12 +13,7 @@ import type { ContentProps } from '../types'
 import WidgetFigureFrame from './WidgetFigureFrame.vue'
 
 const props = defineProps<ContentProps<BarplotContent>>()
-const { source, headers } = useWidgetSource(props)
-const { state, retry } = useWidgetData(
-  () => dashboardAPI.computeBarplot({ source: source.value }, headers),
-  () => [props.content, props.effective_filter_context],
-  () => props.tick
-)
+const { state, retry } = useComputedWidget(props, dashboardAPI.computeBarplot)
 </script>
 
 <template>

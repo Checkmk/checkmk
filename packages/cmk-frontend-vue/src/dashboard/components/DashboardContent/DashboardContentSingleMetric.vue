@@ -11,10 +11,8 @@ import CmkKpiStatCard, {
   type KpiDeltaConfig,
   type KpiState
 } from '@/dashboard/components/CmkKpiStatCard'
-import { useWidgetData } from '@/dashboard/composables/useWidgetData'
-import { useWidgetSource } from '@/dashboard/composables/useWidgetSource'
+import { useRangedComputedWidget } from '@/dashboard/composables/useComputedWidget'
 import { contextualLinkUrl } from '@/dashboard/lib/contextualLinkUrl'
-import { widgetTimeRange } from '@/dashboard/lib/widgetTimeRange'
 import type { ComputedSingleMetric, SingleMetricContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
 
@@ -22,23 +20,10 @@ import WidgetFigureFrame from './figures/WidgetFigureFrame.vue'
 import type { ContentProps } from './types.ts'
 
 const props = defineProps<ContentProps<SingleMetricContent>>()
-const { source, headers } = useWidgetSource(props)
-const timeRange = computed(() => widgetTimeRange(props.range))
-const followsDashboardRange = computed(
+const { state, retry } = useRangedComputedWidget(
+  props,
+  dashboardAPI.computeSingleMetric,
   () => props.content.time_range !== 'current' && props.content.time_range.window === 'dashboard'
-)
-const { state, retry } = useWidgetData(
-  () =>
-    dashboardAPI.computeSingleMetric(
-      { source: source.value, time_range: timeRange.value },
-      headers
-    ),
-  () => [
-    props.content,
-    props.effective_filter_context,
-    followsDashboardRange.value ? timeRange.value : null
-  ],
-  () => props.tick
 )
 
 function href(metric: ComputedSingleMetric): string | undefined {

@@ -9,9 +9,8 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 
 import CmkRankedTable from '@/dashboard/components/CmkRankedTable'
 import type { RankedTableColumn, RankedTableRow } from '@/dashboard/components/CmkRankedTable'
+import { useComputedWidget } from '@/dashboard/composables/useComputedWidget'
 import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
-import { useWidgetData } from '@/dashboard/composables/useWidgetData'
-import { useWidgetSource } from '@/dashboard/composables/useWidgetSource'
 import type {
   ComputedTopList,
   TopListContent,
@@ -26,12 +25,7 @@ import type { ContentProps } from './types.ts'
 const { _t } = usei18n()
 const props = defineProps<ContentProps<TopListContent>>()
 const isPublicDashboard = useInjectIsPublicDashboard()
-const { source, headers } = useWidgetSource(props)
-const { state, retry } = useWidgetData(
-  () => dashboardAPI.computeTopList({ source: source.value }, headers),
-  () => [props.content, props.effective_filter_context],
-  () => props.tick
-)
+const { state, retry } = useComputedWidget(props, dashboardAPI.computeTopList)
 
 const errorMessage: string = _t(
   `Due to a limitation in how Checkmk handles metrics internally, the results contain conflicting metrics and this top list may be incorrect or incomplete.\n

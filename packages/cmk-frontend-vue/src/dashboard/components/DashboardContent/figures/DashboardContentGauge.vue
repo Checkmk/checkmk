@@ -4,12 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed } from 'vue'
-
 import CmkGaugeFigure from '@/dashboard/components/figures/CmkGaugeFigure.vue'
-import { useWidgetData } from '@/dashboard/composables/useWidgetData'
-import { useWidgetSource } from '@/dashboard/composables/useWidgetSource'
-import { widgetTimeRange } from '@/dashboard/lib/widgetTimeRange'
+import { useRangedComputedWidget } from '@/dashboard/composables/useComputedWidget'
 import type { GaugeContent } from '@/dashboard/types/widget'
 import { dashboardAPI } from '@/dashboard/utils'
 
@@ -17,19 +13,10 @@ import type { ContentProps } from '../types'
 import WidgetFigureFrame from './WidgetFigureFrame.vue'
 
 const props = defineProps<ContentProps<GaugeContent>>()
-const { source, headers } = useWidgetSource(props)
-const timeRange = computed(() => widgetTimeRange(props.range))
-const followsDashboardRange = computed(
+const { state, retry } = useRangedComputedWidget(
+  props,
+  dashboardAPI.computeGauge,
   () => props.content.time_range !== 'current' && props.content.time_range.window === 'dashboard'
-)
-const { state, retry } = useWidgetData(
-  () => dashboardAPI.computeGauge({ source: source.value, time_range: timeRange.value }, headers),
-  () => [
-    props.content,
-    props.effective_filter_context,
-    followsDashboardRange.value ? timeRange.value : null
-  ],
-  () => props.tick
 )
 </script>
 

@@ -91,19 +91,22 @@ def _assume_role(
     session_name: str,
     region: str,
     config: botocore.config.Config | None,
-) -> boto3.session.Session:
+) -> tuple[boto3.session.Session, str]:
+    """The session of the assumed role, and the account AWS says the role belongs to."""
     assumed_role_object = session.client("sts", config=config).assume_role(
         RoleArn=role_arn,
         RoleSessionName=session_name,
         **({"ExternalId": external_id} if external_id else {}),
     )
     credentials = assumed_role_object["Credentials"]
+    # arn:<partition>:sts::<account>:assumed-role/<role>/<session>
+    account_id = assumed_role_object["AssumedRoleUser"]["Arn"].split(":")[4]
     return boto3.session.Session(
         aws_access_key_id=credentials["AccessKeyId"],
         aws_secret_access_key=credentials["SecretAccessKey"],
         aws_session_token=credentials["SessionToken"],
         region_name=region,
-    )
+    ), account_id
 
 
 def _create_hub_session(
@@ -112,7 +115,7 @@ def _create_hub_session(
     if hub.role is None:
         return _login_session(hub.login, region)
     try:
-        return _assume_role(
+        session, _account_id = _assume_role(
             _login_session(hub.login, region),
             hub.role.arn,
             hub.role.external_id,
@@ -120,6 +123,7 @@ def _create_hub_session(
             region,
             config,
         )
+        return session
     except Exception as e:
         raise AwsAccessError(describe_credential_failure(e))
 
@@ -202,7 +206,7 @@ class AwsCredentials:
             # Without an assumed role, session() is the login identity itself.
             login = self.session()
             partition = login.get_partition_for_region(self._global_service_region)
-            session = _assume_role(
+            session, assumed_account_id = _assume_role(
                 login,
                 f"arn:{partition}:iam::{account_id}:role/{spokes.role_name}",
                 spokes.external_id,
@@ -212,4 +216,4 @@ class AwsCredentials:
             )
         except Exception as e:
             raise AwsAccessError(f"Account {account_id}: {describe_credential_failure(e)}")
-        return AwsAccount(account_id, session)
+        return AwsAccount(assumed_account_id, session)

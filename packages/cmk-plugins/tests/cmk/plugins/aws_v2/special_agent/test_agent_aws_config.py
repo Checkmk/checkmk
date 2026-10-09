@@ -113,3 +113,11 @@ def test_unchanged_agent_command_line_keeps_the_config_up_to_date() -> None:
     )
 
     assert rerun.is_up_to_date()
+
+
+def test_account_config_changes_do_not_reach_the_rule_config() -> None:
+    rule_config = AWSConfig("heute1", Args(), ([], []), NamingConvention.ip_region_instance)
+
+    rule_config.for_account("333333333333").add_single_service_config("sns_names", ["topic"])
+
+    assert "sns_names" not in rule_config.service_config

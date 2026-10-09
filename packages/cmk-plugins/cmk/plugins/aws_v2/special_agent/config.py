@@ -100,7 +100,7 @@ class AWSConfig:
 
     def for_account(self, account_id: str) -> Self:
         """The same rule settings, scoped to one AWS account. Sections need this scope."""
-        account_config = copy.copy(self)
+        account_config = copy.deepcopy(self)
         account_config.account_id = account_id
         return account_config
 

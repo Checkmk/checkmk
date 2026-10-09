@@ -13,6 +13,7 @@ from typing import override
 
 from botocore.client import BaseClient
 
+from .. import hosts
 from ..config import AWSConfig, Tags
 from .core import (
     AWSColleagueContents,
@@ -85,9 +86,9 @@ class ELBLimits(AWSSectionLimits):
         )
 
         for load_balancer in load_balancers:
-            dns_name = load_balancer["DNSName"]
+            lb_host = self._target_host(hosts.ClassicLoadBalancer(load_balancer["DNSName"]))
             self._add_limit(
-                dns_name,
+                lb_host,
                 AWSLimit(
                     "load_balancer_listeners",
                     "Listeners",
@@ -96,7 +97,7 @@ class ELBLimits(AWSSectionLimits):
                 ),
             )
             self._add_limit(
-                dns_name,
+                lb_host,
                 AWSLimit(
                     "load_balancer_registered_instances",
                     "Registered instances",
@@ -117,12 +118,15 @@ class ELBSummaryGeneric(AWSSection):
         resource: str = "",
     ) -> None:
         self._resource = resource
+        self._load_balancer_type: type[hosts.ClassicLoadBalancer] | type[hosts.LoadBalancerV2]
         if self._resource == "elb":
             self._describe_load_balancers_karg = "LoadBalancerNames"
             self._describe_load_balancers_key = "LoadBalancerDescriptions"
+            self._load_balancer_type = hosts.ClassicLoadBalancer
         elif self._resource == "elbv2":
             self._describe_load_balancers_karg = "Names"
             self._describe_load_balancers_key = "LoadBalancers"
+            self._load_balancer_type = hosts.LoadBalancerV2
         else:
             raise AssertionError(
                 "ELBSummaryGeneric: resource argument must be either 'elb' or 'elbv2'"
@@ -220,7 +224,9 @@ class ELBSummaryGeneric(AWSSection):
                 # We skip "gateway" type load balancers
                 # because they don't provide DNSName information
                 continue
-            content_by_piggyback_hosts.setdefault(dns_name, load_balancer)
+            content_by_piggyback_hosts.setdefault(
+                self._target_host(self._load_balancer_type(dns_name)), load_balancer
+            )
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     @override

@@ -14,6 +14,7 @@ from typing import override
 import botocore
 from botocore.client import BaseClient
 
+from .. import hosts
 from ..config import AWSConfig, LOGGER, Tags
 from .core import (
     AWSColleagueContents,
@@ -24,7 +25,6 @@ from .core import (
     AWSSectionLimits,
     AWSSectionResult,
     get_seconds_since_midnight,
-    hostname_from_name_and_region,
     NOW,
     ResultDistributor,
 )
@@ -233,7 +233,7 @@ class Glacier(AWSSection):
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
             AWSSectionResult(
-                hostname_from_name_and_region(vault["VaultName"], self._region),
+                self._target_host(hosts.GlacierVault(vault["VaultName"], self._region)),
                 [vault],
                 {"cmk/aws/service": "glacier"},
             )

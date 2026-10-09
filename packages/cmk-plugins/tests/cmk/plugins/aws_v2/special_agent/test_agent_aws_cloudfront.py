@@ -7,7 +7,7 @@
 import datetime
 from argparse import Namespace as Args
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Literal, Protocol
+from typing import Protocol
 
 import pytest
 from dateutil.tz import tzutc
@@ -242,7 +242,12 @@ def get_cloudfront_sections() -> CloudFrontSections:
     ) -> CloudFrontSectionsOut:
         region = "us-east-1"
         config = AWSConfig(
-            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
+            "hostname",
+            Args(),
+            ([], []),
+            NamingConvention.ip_region_instance,
+            tag_import,
+            cloudfront_host_assignment="domain_host" if assign_to_domain_host else "aws_host",
         ).for_account("123456789012")
         config.add_single_service_config("cloudfront_names", names)
         config.add_service_tags("cloudfront_tags", tags)
@@ -261,10 +266,7 @@ def get_cloudfront_sections() -> CloudFrontSections:
             config,
             distributor,
         )
-        host_assignment: Literal["domain_host", "aws_host"] = (
-            "domain_host" if assign_to_domain_host else "aws_host"
-        )
-        cloudfront = CloudFront(fake_cloudwatch_client, region, config, host_assignment)
+        cloudfront = CloudFront(fake_cloudwatch_client, region, config)
         distributor.add(cloudfront_summary.name, cloudfront)
 
         return cloudfront_summary, cloudfront

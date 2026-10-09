@@ -461,12 +461,7 @@ class AWSSectionsUSEast(AWSSections):
             cloudfront_summary = CloudFrontSummary(
                 cloudfront_client, tagging_client, region, config, distributor
             )
-            cloudfront = CloudFront(
-                cloudwatch_client,
-                region,
-                config,
-                config.service_config["cloudfront_host_assignment"],
-            )
+            cloudfront = CloudFront(cloudwatch_client, region, config)
             distributor.add(cloudfront_summary.name, cloudfront)
             self._sections.append(cloudfront_summary)
             self._sections.append(cloudfront)

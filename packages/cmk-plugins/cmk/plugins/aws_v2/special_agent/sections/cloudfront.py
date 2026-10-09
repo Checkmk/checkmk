@@ -9,10 +9,11 @@
 
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
-from typing import Literal, override
+from typing import override
 
 from botocore.client import BaseClient
 
+from .. import hosts
 from ..config import AWSConfig
 from .core import (
     AWSColleagueContents,
@@ -107,17 +108,6 @@ class CloudFrontSummary(AWSSection):
 
 
 class CloudFront(AWSSectionCloudwatch):
-    def __init__(
-        self,
-        client: BaseClient,
-        region: str,
-        config: AWSConfig,
-        host_assignment: Literal["aws_host", "domain_host"],
-        distributor: ResultDistributor | None = None,
-    ):
-        super().__init__(client, region, config, distributor=distributor)
-        self.assign_to_origin_domain_host = host_assignment == "domain_host"
-
     @property
     @override
     def name(self) -> str:
@@ -179,35 +169,34 @@ class CloudFront(AWSSectionCloudwatch):
                 metrics.append(metric)
         return metrics
 
-    def _get_piggyback_host_by_distribution(
+    def _get_origin_domain_by_distribution(
         self, cloudfront_summary: Sequence[Mapping]
     ) -> Mapping[str, str]:
         if not cloudfront_summary:
             return {}
 
-        host_by_distribution: dict[str, str] = {}
+        origin_domain_by_distribution: dict[str, str] = {}
         for distribution_data in cloudfront_summary:
             distribution_id = distribution_data.get("Id")
             origins = distribution_data.get("Origins", {}).get("Items")
             if not distribution_id or not origins:
                 continue
-            distribution_origin = origins[0].get("DomainName", "")
-            host_by_distribution[distribution_id] = distribution_origin
-        return host_by_distribution
+            origin_domain_by_distribution[distribution_id] = origins[0].get("DomainName", "")
+        return origin_domain_by_distribution
 
     @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         content_by_host = defaultdict(list)
-        host_by_distribution: Mapping[str, str] = {}
-        if self.assign_to_origin_domain_host:
-            host_by_distribution = self._get_piggyback_host_by_distribution(
-                colleague_contents.content
-            )
+        origin_domain_by_distribution = self._get_origin_domain_by_distribution(
+            colleague_contents.content
+        )
         for distribution_data in raw_content.content:
             distribution_id = distribution_data.get("Label", "")
-            piggyback_host = host_by_distribution.get(distribution_id, "")
+            piggyback_host = self._target_host(
+                hosts.CloudFrontDistribution(origin_domain_by_distribution.get(distribution_id))
+            )
             content_by_host[piggyback_host].append(distribution_data)
         return AWSComputedContent(content_by_host, raw_content.cache_timestamp)
 

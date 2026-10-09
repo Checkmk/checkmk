@@ -13,6 +13,7 @@ from typing import override
 
 from botocore.client import BaseClient
 
+from .. import hosts
 from ..config import AWSConfig, Tags
 from .core import (
     AWSColleagueContents,
@@ -25,7 +26,6 @@ from .core import (
     AWSSectionLimits,
     AWSSectionResult,
     Dimension,
-    hostname_from_name_and_region,
     Metrics,
     ResultDistributor,
 )
@@ -250,7 +250,7 @@ class DynamoDBLimits(AWSSectionLimits):
             account_write_usage += table_usage_write
 
             self._add_read_write_limits(
-                hostname_from_name_and_region(table["TableName"], self._region),
+                self._target_host(hosts.DynamoDBTable(table["TableName"], self._region)),
                 table_usage_read,
                 table_usage_write,
                 limits["TableMaxReadCapacityUnits"],
@@ -368,7 +368,7 @@ class DynamoDBSummary(AWSSection):
         content_by_piggyback_hosts: dict[str, str] = {}
         for table in raw_content.content:
             content_by_piggyback_hosts.setdefault(
-                hostname_from_name_and_region(table["TableName"], self._region), table
+                self._target_host(hosts.DynamoDBTable(table["TableName"], self._region)), table
             )
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 

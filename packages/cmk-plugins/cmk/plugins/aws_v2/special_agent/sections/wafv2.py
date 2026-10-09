@@ -13,6 +13,7 @@ from typing import Any, Literal, override
 
 from botocore.client import BaseClient
 
+from .. import hosts
 from ..config import AWSConfig, Tags
 from .core import (
     AWSColleagueContents,
@@ -24,7 +25,6 @@ from .core import (
     AWSSectionLimits,
     AWSSectionResult,
     Dimension,
-    hostname_from_name_and_region,
     Metrics,
     ResultDistributor,
 )
@@ -220,7 +220,7 @@ class WAFV2Limits(AWSSectionLimits):
         # limits per Web ACL
         for web_acl in web_acls:
             self._add_limit(
-                hostname_from_name_and_region(web_acl["Name"], self._region_report),
+                self._target_host(hosts.WAFV2WebACL(web_acl["Name"], self._region_report)),
                 AWSLimit(
                     "web_acl_capacity_units",
                     "Web ACL capacity units (WCUs)",
@@ -321,7 +321,7 @@ class WAFV2Summary(AWSSection):
         content_by_piggyback_hosts: dict[str, str] = {}
         for web_acl in raw_content.content:
             content_by_piggyback_hosts.setdefault(
-                hostname_from_name_and_region(web_acl["Name"], self._region_report), web_acl
+                self._target_host(hosts.WAFV2WebACL(web_acl["Name"], self._region_report)), web_acl
             )
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 

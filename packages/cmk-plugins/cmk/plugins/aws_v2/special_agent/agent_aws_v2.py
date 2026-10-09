@@ -522,6 +522,7 @@ def _configure_aws(args: argparse.Namespace) -> AWSConfig:
         (args.overall_tag_keys, args.overall_tag_values),
         args.piggyback_naming_convention,
         args.tag_key_pattern,
+        cloudfront_host_assignment=args.cloudfront_host_assignment or "aws_host",
     )
     for service_key, service_names, service_tags, service_limits in [
         ("ec2", args.ec2_names, (args.ec2_tag_keys, args.ec2_tag_values), args.ec2_limits),
@@ -584,7 +585,6 @@ def _configure_aws(args: argparse.Namespace) -> AWSConfig:
         "cloudwatch_alarms_limits",
         "cloudwatch_alarms",
         "wafv2_cloudfront",
-        "cloudfront_host_assignment",
     ]:
         aws_config.add_single_service_config(arg, getattr(args, arg))
 

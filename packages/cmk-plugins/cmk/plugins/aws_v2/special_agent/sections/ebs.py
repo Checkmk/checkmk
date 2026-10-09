@@ -12,6 +12,7 @@ from typing import override
 
 from botocore.client import BaseClient
 
+from .. import hosts
 from ..config import AWSConfig, LOGGER
 from .core import (
     AWSColleagueContents,
@@ -288,7 +289,10 @@ class EBSSummary(AWSSection):
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         _col_volumes, col_instances = colleague_contents.content
-        instance_name_mapping = {v["InstanceId"]: k for k, v in col_instances.items()}
+        # The keys of the EC2 summary are the hosts of the monitored instances.
+        instance_hosts: dict[str, hosts.TargetHost] = {
+            v["InstanceId"]: k for k, v in col_instances.items()
+        }
 
         content_by_piggyback_hosts: dict[str, list[str]] = {}
         for vol in raw_content.content.values():
@@ -299,10 +303,11 @@ class EBSSummary(AWSSection):
                 # Just for security
                 if vol["VolumeId"] != attachment["VolumeId"]:
                     continue
-                instance_name = instance_name_mapping.get(attachment["InstanceId"])
-                if instance_name is None:
-                    instance_name = ""
-                instance_names.append(instance_name)
+                instance_names.append(
+                    self._target_host(
+                        hosts.EBSAttachment(instance_hosts.get(attachment["InstanceId"]))
+                    )
+                )
 
             # Should be attached to max. one instance
             for instance_name in instance_names:

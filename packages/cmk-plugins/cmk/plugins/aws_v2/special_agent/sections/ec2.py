@@ -10,10 +10,9 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
-from typing import assert_never, override
+from typing import override
 
 from botocore.client import BaseClient
-from pydantic import BaseModel, Field
 
 from cmk.plugins.aws_v2.constants import (
     AWS_EC2_INST_FAMILIES,
@@ -22,7 +21,8 @@ from cmk.plugins.aws_v2.constants import (
     AWS_EC2_LIMITS_SPECIAL,
 )
 
-from ..config import AWSConfig, LOGGER, NamingConvention
+from .. import hosts
+from ..config import AWSConfig, LOGGER
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -37,36 +37,6 @@ from .core import (
     Metrics,
     ResultDistributor,
 )
-
-
-class Instance(BaseModel):
-    private_ip_address: str | None = Field(None, alias="PrivateIpAddress")
-    private_dns_name: str | None = Field(None, alias="PrivateDnsName")
-    instance_id: str = Field(..., alias="InstanceId")
-
-
-def _get_ec2_piggyback_hostname(
-    piggyback_naming_convention: NamingConvention, inst: Mapping[str, object], region: str
-) -> str | None:
-    # PrivateIpAddress and InstanceId is available although the instance is stopped
-    # When we terminate an instance, the instance gets the state "terminated":
-    # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html
-    # The instance remains in this state about 60 minutes, after 60 minutes the
-    # instance is no longer visible in the console.
-    # In this case we do not deliever any data for this piggybacked host such that
-    # the services go stable and Check_MK service reports "CRIT - Got not information".
-    parsed_instance = Instance.model_validate(inst)
-    match piggyback_naming_convention:
-        case NamingConvention.private_dns_name:
-            return parsed_instance.private_dns_name
-        case NamingConvention.ip_region_instance:
-            if parsed_instance.private_ip_address and parsed_instance.instance_id:
-                return (
-                    f"{parsed_instance.private_ip_address}-{region}-{parsed_instance.instance_id}"
-                )
-            return None
-        case _:
-            assert_never(piggyback_naming_convention)
 
 
 class EC2Limits(AWSSectionLimits):
@@ -525,12 +495,12 @@ class EC2Summary(AWSSection):
     def _format_instances(self, instances):
         formatted_instances = {}
         for inst in instances:
-            inst_id = _get_ec2_piggyback_hostname(
-                self._config.piggyback_naming_convention, inst, self._region
+            host = hosts.target_host(
+                hosts.EC2Instance.from_api(inst, self._region), self._config.host_naming
             )
-            if inst_id:
+            if host is not None:
                 inst["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(inst.get("Tags", []))
-                formatted_instances[inst_id] = inst
+                formatted_instances[host] = inst
         return formatted_instances
 
     @override

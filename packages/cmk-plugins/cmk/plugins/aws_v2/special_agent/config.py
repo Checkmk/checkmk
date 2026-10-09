@@ -11,6 +11,7 @@ import hashlib
 import json
 import logging
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from enum import Enum
 from typing import Literal, Self, TypedDict
 
@@ -71,6 +72,20 @@ class NamingConvention(Enum):
     private_dns_name = "private_dns_name"
 
 
+CloudFrontHostAssignment = Literal["aws_host", "domain_host"]
+
+
+@dataclass(frozen=True)
+class HostNaming:
+    """The rule settings that the host names of AWS resources depend on.
+
+    See hosts.target_host, which is the only reader.
+    """
+
+    ec2: NamingConvention
+    cloudfront: CloudFrontHostAssignment
+
+
 class TagsImportPatternOption(Enum):
     ignore_all = "IGNORE_ALL"
     import_all = "IMPORT_ALL"
@@ -87,6 +102,8 @@ class AWSConfig:
         overall_tags: OverallTags,
         piggyback_naming_convention: NamingConvention,
         tags_option: TagsOption = TagsImportPatternOption.import_all,
+        *,
+        cloudfront_host_assignment: CloudFrontHostAssignment = "aws_host",
     ) -> None:
         self.hostname = hostname
         self._overall_tags = self._prepare_tags(overall_tags)
@@ -94,7 +111,9 @@ class AWSConfig:
         self._config_hash_storage = Storage(AGENT, hostname)
         self._config_hash_key = "config_hash"
         self._current_config_hash = self._compute_config_hash(sys_argv)
-        self.piggyback_naming_convention = piggyback_naming_convention
+        self.host_naming = HostNaming(
+            ec2=piggyback_naming_convention, cloudfront=cloudfront_host_assignment
+        )
         self.tags_option = tags_option
         self.account_id: str | None = None
 

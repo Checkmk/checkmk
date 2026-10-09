@@ -24,6 +24,7 @@ from pydantic import BaseModel
 
 from ..config import AGENT, AWSConfig, LOGGER, RawTags, Tags, TagsImportPatternOption
 from ..data_cache import DataCache
+from ..hosts import HostedResource, target_host, TargetHost
 
 NOW = datetime.now()
 
@@ -71,14 +72,6 @@ def get_seconds_since_midnight(current_time: datetime) -> float:
 
 def chunks[T](list_: Sequence[T], length: int = 100) -> Sequence[Sequence[T]]:
     return [list_[i : i + length] for i in range(0, len(list_), length)]
-
-
-def hostname_from_name_and_region(name: str, region: str) -> str:
-    """
-    We add the region to the the hostname because resources in different regions might have the
-    same names (for example replicated DynamoDB tables).
-    """
-    return f"{name}_{region}"
 
 
 ResourceTags = Mapping[str, Tags]
@@ -298,6 +291,9 @@ class AWSSection(DataCache):
                 f"10, 30, 60 in case of high resolution."
             )
         return period
+
+    def _target_host(self, resource: HostedResource) -> TargetHost:
+        return target_host(resource, self._config.host_naming)
 
     def _send(self, content: AWSComputedContent) -> None:
         self._distributor.distribute(self, content)

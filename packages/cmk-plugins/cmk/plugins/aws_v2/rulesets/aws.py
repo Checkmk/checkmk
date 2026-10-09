@@ -389,6 +389,84 @@ def _assume_role() -> Mapping[str, DictElement]:
     }
 
 
+def _accounts() -> Mapping[str, DictElement]:
+    return {
+        "accounts": DictElement(
+            parameter_form=CascadingSingleChoice(
+                title=Title("Accounts"),
+                help_text=Help(
+                    "<b>Single account:</b> monitor the account these credentials belong to.<br>"
+                    "<b>Explicit list of account IDs:</b> monitor several accounts with this one "
+                    "rule. Every listed account needs a role with the same name that these "
+                    "credentials may assume. The data of each account goes to a piggyback host "
+                    "named after its account ID."
+                ),
+                elements=[
+                    CascadingSingleChoiceElement(
+                        name="single",
+                        title=Title("Single account"),
+                        parameter_form=FixedValue(value=None),
+                    ),
+                    CascadingSingleChoiceElement(
+                        name="list",
+                        title=Title("Explicit list of account IDs"),
+                        parameter_form=Dictionary(elements=_account_list()),
+                    ),
+                ],
+                prefill=DefaultValue("single"),
+            ),
+            required=True,
+        ),
+    }
+
+
+def _account_list() -> Mapping[str, DictElement]:
+    return {
+        "account_ids": DictElement(
+            parameter_form=List(
+                title=Title("Account IDs"),
+                element_template=String(
+                    field_size=FieldSize.SMALL,
+                    custom_validate=(
+                        validators.MatchRegex(
+                            r"^[0-9]{12}$", Message("An AWS account ID has exactly 12 digits.")
+                        ),
+                    ),
+                ),
+                custom_validate=(validators.LengthInRange(min_value=1),),
+            ),
+            required=True,
+        ),
+        "role_name": DictElement(
+            parameter_form=String(
+                title=Title("Name of the role in every account"),
+                help_text=Help("For example <tt>CheckmkMonitoring</tt>."),
+                custom_validate=(
+                    validators.MatchRegex(
+                        r"^[\w+=,.@-]{1,64}$",
+                        Message(
+                            "An IAM role name has 1 to 64 characters: letters, digits and _+=,.@-"
+                        ),
+                    ),
+                ),
+            ),
+            required=True,
+        ),
+        "external_id": DictElement(
+            parameter_form=String(
+                title=Title("External ID"),
+                help_text=Help(
+                    "The same external ID for the role in every account. It prevents another "
+                    "user of this site from monitoring an account through these credentials "
+                    "without knowing the ID. Use it on sites where several teams or customers "
+                    "can create AWS rules."
+                ),
+                custom_validate=(validators.LengthInRange(min_value=1),),
+            ),
+        ),
+    }
+
+
 def configuration_authentication() -> Mapping[str, DictElement]:
     return {
         "auth": DictElement(
@@ -404,13 +482,15 @@ def configuration_authentication() -> Mapping[str, DictElement]:
                     "when Checkmk runs on AWS. Use this when Checkmk runs on AWS.<br>"
                     "Both can be combined with an IAM role. The agent then assumes this role and "
                     "monitors the account the role belongs to. The AWS CloudTrail log shows these "
-                    "calls with the session name <tt>checkmk-&lt;site&gt;</tt>."
+                    "calls with the session name <tt>checkmk-&lt;site&gt;</tt>.<br>"
+                    "Only the choices without an IAM role can monitor a list of accounts: each "
+                    "account role must be assumed directly from the credentials."
                 ),
                 elements=[
                     CascadingSingleChoiceElement(
                         name="access_key",
                         title=Title("Access key"),
-                        parameter_form=Dictionary(elements=_access_key()),
+                        parameter_form=Dictionary(elements={**_access_key(), **_accounts()}),
                     ),
                     CascadingSingleChoiceElement(
                         name="access_key_sts",
@@ -420,7 +500,7 @@ def configuration_authentication() -> Mapping[str, DictElement]:
                     CascadingSingleChoiceElement(
                         name="none",
                         title=Title("Default AWS credentials"),
-                        parameter_form=FixedValue(value=None),
+                        parameter_form=Dictionary(elements=_accounts()),
                     ),
                     CascadingSingleChoiceElement(
                         name="sts",

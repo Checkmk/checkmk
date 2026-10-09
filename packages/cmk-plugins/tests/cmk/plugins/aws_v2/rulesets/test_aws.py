@@ -8,10 +8,22 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.aws_v2.constants import AWS_REGIONS
-from cmk.plugins.aws_v2.rulesets.aws import configuration_regions_and_tags, configuration_services
+from cmk.plugins.aws_v2.rulesets.aws import (
+    configuration_authentication,
+    configuration_regions_and_tags,
+    configuration_services,
+)
 from cmk.plugins.aws_v2.server_side_calls.agent_aws import special_agent_aws_v2
 from cmk.plugins.aws_v2.special_agent.agent_aws_v2 import AWS_SERVICES
-from cmk.rulesets.v1.form_specs import DictElement, Dictionary, MultipleChoice
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    DictElement,
+    Dictionary,
+    List,
+    MultipleChoice,
+    String,
+)
+from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.server_side_calls.v1 import HostConfig, Secret
 
 
@@ -69,3 +81,45 @@ def test_saved_ultimate_only_services_are_kept_without_the_extended_package() ->
 
     assert set(global_form.ignored_elements) == {"route53", "cloudfront"}
     assert set(regional_form.ignored_elements) == {"aws_lambda", "sns", "ecs", "elasticache"}
+
+
+def _login_forms() -> dict[str, object]:
+    auth = _parameter_form(configuration_authentication(), "auth", CascadingSingleChoice)
+    return {element.name: element.parameter_form for element in auth.elements}
+
+
+def _account_list_elements() -> Mapping[str, DictElement[object]]:
+    login = _login_forms()["none"]
+    assert isinstance(login, Dictionary)
+    accounts = _parameter_form(login.elements, "accounts", CascadingSingleChoice)
+    (account_list,) = [e.parameter_form for e in accounts.elements if e.name == "list"]
+    assert isinstance(account_list, Dictionary)
+    return account_list.elements
+
+
+def test_only_logins_without_a_role_offer_an_account_list() -> None:
+    offering = {
+        name
+        for name, form in _login_forms().items()
+        if isinstance(form, Dictionary) and "accounts" in form.elements
+    }
+
+    assert offering == {"access_key", "none"}
+
+
+@pytest.mark.parametrize("account_id", ["12345678901", "1234567890123", "12345678901a"])
+def test_account_id_needs_exactly_twelve_digits(account_id: str) -> None:
+    account_ids = _parameter_form(_account_list_elements(), "account_ids", List)
+    assert isinstance(account_ids.element_template, String)
+
+    with pytest.raises(ValidationError):
+        for validate in account_ids.element_template.custom_validate or ():
+            validate(account_id)
+
+
+def test_role_name_with_a_path_is_rejected() -> None:
+    role_name = _parameter_form(_account_list_elements(), "role_name", String)
+
+    with pytest.raises(ValidationError):
+        for validate in role_name.custom_validate or ():
+            validate("monitoring/CheckmkMonitoring")

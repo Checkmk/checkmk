@@ -64,22 +64,26 @@ if [[ ! -d "$execution_logs_root" ]]; then
     exit 1
 fi
 
-query='[ .[] | {
-  targetLabel: .targetLabel ,
-  cacheHit: (.cacheHit // false),
-  cacheable: (.cacheable // false),
-  remotable: (.remotable // false)
-}] | {
-  overallTargets: length,
-  cacheHits: map(select(.cacheHit == true)) | length,
-  percentRemoteCacheHits: ((map(select(.cacheHit == true)) | length) / (length | select(. != 0)) * 100 | round ),
-  targetsWithMissedCache: map(select(.cacheHit == false) | .targetLabel),
-  numberUncacheableTargets: map(select(.cacheable == false)) | length,
-  numberRemotableTargets: map(select(.remotable == true)) | length,
+# The execution log can be several GB, so reduce it entry by entry instead
+# of slurping it into memory with "jq -s".
+# shellcheck disable=SC2016  # $e is a jq variable, not a shell one
+query='reduce inputs as $e (
+  {overallTargets: 0, cacheHits: 0, targetsWithMissedCache: [], numberUncacheableTargets: 0, numberRemotableTargets: 0};
+  .overallTargets += 1
+  | if ($e.cacheHit // false) then .cacheHits += 1 else .targetsWithMissedCache += [$e.targetLabel] end
+  | if ($e.cacheable // false) then . else .numberUncacheableTargets += 1 end
+  | if ($e.remotable // false) then .numberRemotableTargets += 1 else . end
+) | select(.overallTargets != 0) | {
+  overallTargets,
+  cacheHits,
+  percentRemoteCacheHits: (.cacheHits / .overallTargets * 100 | round),
+  targetsWithMissedCache,
+  numberUncacheableTargets,
+  numberRemotableTargets,
 }'
 
 # we explicitely want globing here!
 # shellcheck disable=SC2086
-jq -sc "$query" ${execution_logs_root}/${bazel_log_file_pattern} >"${summary_file}"
+jq -nc "$query" ${execution_logs_root}/${bazel_log_file_pattern} >"${summary_file}"
 echo "${distro}" >"${cachehit_csv}"
 jq .percentRemoteCacheHits "${summary_file}" >>"${cachehit_csv}"

@@ -8,7 +8,7 @@ from typing import Annotated, Self
 
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
-from cmk.gui.monitor.hosts._folder import monitor_folders
+from cmk.gui.monitor.setup_folders import SetupFolderSource
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -190,36 +190,6 @@ class ServiceOverviewResponse:
         )
 
 
-def get_service_overview(
-    hostname: Annotated[
-        AnnotatedHostName,
-        PathParam(description="Host name", example="web-server-01"),
-    ],
-    site_id: Annotated[
-        Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_exist)],
-        QueryParam(description="An existing site id", example="local"),
-    ],
-    service_name: Annotated[
-        str,
-        QueryParam(description="The service name", example="CPU utilization"),
-    ],
-    api_context: ApiContext,
-) -> ServiceOverviewResponse:
-    """Show the overview for a single service of a host."""
-    with sites.only_sites(site_id):
-        host_services_repo = LiveStatusHostServicesRepository(connection=sites.live())
-
-        return _handle_get_service_overview(
-            host_services_repo,
-            hostname=hostname,
-            service_name=service_name,
-            site_id=site_id,
-            may_see_parameters=api_context.config.wato_enabled
-            and api_context.user.may("wato.rulesets")
-            and monitor_folders.may_read_host(hostname, None),
-        )
-
-
 def _handle_get_service_overview(
     host_services_repo: HostServicesRepository,
     *,
@@ -245,30 +215,64 @@ def _handle_get_service_overview(
     return ServiceOverviewResponse.from_domain(service, may_see_parameters=may_see_parameters)
 
 
-ENDPOINT_GET_SERVICE_OVERVIEW = VersionedEndpoint(
-    metadata=EndpointMetadata(
-        path="/monitor/hosts/{hostname}/service",
-        link_relation="cmk/show",
-        method="get",
-    ),
-    permissions=EndpointPermissions(
-        # Declared for the permission tracker: inspected via user.may() during the request, but
-        # none is required.
-        required=permissions.Undocumented(
-            permissions.AnyPerm(
-                [
-                    permissions.OkayToIgnorePerm("general.see_all"),
-                    permissions.OkayToIgnorePerm("bi.see_all"),
-                    permissions.OkayToIgnorePerm("mkeventd.seeall"),
-                    permissions.OkayToIgnorePerm("wato.rulesets"),
-                    # Read while asking Setup whether the user may open the host.
-                    permissions.OkayToIgnorePerm("wato.see_all_folders"),
-                    permissions.OkayToIgnorePerm("general.see_crash_reports"),
-                ]
+def make_endpoint_get_service_overview(setup_folders: SetupFolderSource) -> VersionedEndpoint:
+    """The endpoint showing one service, asking `setup_folders` who may open its host."""
+
+    def get_service_overview(
+        hostname: Annotated[
+            AnnotatedHostName,
+            PathParam(description="Host name", example="web-server-01"),
+        ],
+        site_id: Annotated[
+            Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_exist)],
+            QueryParam(description="An existing site id", example="local"),
+        ],
+        service_name: Annotated[
+            str,
+            QueryParam(description="The service name", example="CPU utilization"),
+        ],
+        api_context: ApiContext,
+    ) -> ServiceOverviewResponse:
+        """Show the overview for a single service of a host."""
+        with sites.only_sites(site_id):
+            host_services_repo = LiveStatusHostServicesRepository(connection=sites.live())
+
+            return _handle_get_service_overview(
+                host_services_repo,
+                hostname=hostname,
+                service_name=service_name,
+                site_id=site_id,
+                may_see_parameters=api_context.config.wato_enabled
+                and api_context.user.may("wato.rulesets")
+                and setup_folders(api_context.config, api_context.user).may_read_host(
+                    hostname, None
+                ),
             )
-        )
-    ),
-    doc=EndpointDoc(family=MONITOR_SERVICES_FAMILY.name),
-    behavior=EndpointBehavior(skip_locking=True),
-    versions={APIVersion.INTERNAL: EndpointHandler(handler=get_service_overview)},
-)
+
+    return VersionedEndpoint(
+        metadata=EndpointMetadata(
+            path="/monitor/hosts/{hostname}/service",
+            link_relation="cmk/show",
+            method="get",
+        ),
+        permissions=EndpointPermissions(
+            # Declared for the permission tracker: inspected via user.may() during the request, but
+            # none is required.
+            required=permissions.Undocumented(
+                permissions.AnyPerm(
+                    [
+                        permissions.OkayToIgnorePerm("general.see_all"),
+                        permissions.OkayToIgnorePerm("bi.see_all"),
+                        permissions.OkayToIgnorePerm("mkeventd.seeall"),
+                        permissions.OkayToIgnorePerm("wato.rulesets"),
+                        # Read while asking Setup whether the user may open the host.
+                        permissions.OkayToIgnorePerm("wato.see_all_folders"),
+                        permissions.OkayToIgnorePerm("general.see_crash_reports"),
+                    ]
+                )
+            )
+        ),
+        doc=EndpointDoc(family=MONITOR_SERVICES_FAMILY.name),
+        behavior=EndpointBehavior(skip_locking=True),
+        versions={APIVersion.INTERNAL: EndpointHandler(handler=get_service_overview)},
+    )

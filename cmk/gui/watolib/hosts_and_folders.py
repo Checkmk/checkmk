@@ -5296,6 +5296,28 @@ def may_read_host(
     return host is not None and host.permissions.may("read", acting_user)
 
 
+class FolderReader:
+    """Setup's folders as one user sees them, for a reader outside Setup.
+
+    The tree is read once from the given config, so all questions of one request are answered
+    from the same tree: the title lookups are memoized per tree, so the rows of one response walk
+    it at most once.
+    """
+
+    def __init__(self, config: FolderTreeConfigSource, acting_user: LoggedInUser) -> None:
+        self._tree = make_folder_tree(config)
+        self._acting_user = acting_user
+
+    def title_of(self, path: PathWithoutSlash) -> str | None:
+        return folder_title_path(self._tree, path, self._acting_user)
+
+    def all_titles(self) -> Mapping[PathWithoutSlash, str]:
+        return all_folder_title_paths(self._tree, self._acting_user)
+
+    def may_read_host(self, host_name: str, path: PathWithoutSlash | None) -> bool:
+        return may_read_host(self._tree, HostName(host_name), path, self._acting_user)
+
+
 def _ensure_trailing_slash(path: str) -> PathWithSlash:
     """Ensure one single trailing slash on a pathname.
 

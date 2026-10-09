@@ -11,7 +11,7 @@ import pytest
 
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
-from cmk.gui.monitor.hosts._folder import MonitorFolders, SetupFolders
+from cmk.gui.monitor.hosts._folder import MonitorFolders
 from cmk.gui.monitor.hosts._impl import (
     _build_primary_sort,
     _build_query_filter,
@@ -113,17 +113,22 @@ def test_every_sort_column_says_how_livestatus_orders_by_it() -> None:
 _TITLES = {"web_dmz": "Web DMZ", "network": "Netzwerk"}
 
 
+class _SetupTitling:
+    """Setup's folders, titling two folders and granting no host."""
+
+    def title_of(self, path: str) -> str | None:
+        return _TITLES.get(path)
+
+    def all_titles(self) -> Mapping[str, str]:
+        return _TITLES
+
+    def may_read_host(self, _host_name: str, _path: str | None) -> bool:
+        return False
+
+
 def _folders() -> MonitorFolders:
-    """A `MonitorFolders` titling two folders, the way Setup's functions are wired in."""
-    folders = MonitorFolders()
-    folders.use_setup_source(
-        SetupFolders(
-            title_of=_TITLES.get,
-            all_titles=lambda: _TITLES,
-            may_read_host=lambda _host_name, _path: False,
-        ),
-    )
-    return folders
+    """A `MonitorFolders` titling two folders, the way Setup is wired in."""
+    return MonitorFolders(_SetupTitling())
 
 
 def _sites() -> MonitorSites:
@@ -906,14 +911,14 @@ class _SetupHostAccess:
         self.asked.append((host_name, path))
         return (host_name, path) in self._readable
 
+    def title_of(self, path: str) -> str | None:
+        return _TITLES.get(path)
+
+    def all_titles(self) -> Mapping[str, str]:
+        return _TITLES
+
     def folders(self) -> MonitorFolders:
-        folders = MonitorFolders()
-        folders.use_setup_source(
-            SetupFolders(
-                title_of=_TITLES.get, all_titles=lambda: _TITLES, may_read_host=self.may_read_host
-            )
-        )
-        return folders
+        return MonitorFolders(self)
 
 
 @pytest.mark.usefixtures("request_context")

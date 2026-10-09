@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -11,21 +11,28 @@ from cmk.gui.monitor.hosts._folder import (
     folder_path_from_filename,
     folder_title,
     MonitorFolders,
-    SetupFolders,
 )
 
 
+class _SetupTitling:
+    """Setup's folders, reading these titles."""
+
+    def __init__(self, titles: Mapping[str, str]) -> None:
+        self._titles = titles
+
+    def title_of(self, path: str) -> str | None:
+        return self._titles.get(path)
+
+    def all_titles(self) -> Mapping[str, str]:
+        return self._titles
+
+    def may_read_host(self, _host_name: str, _path: str | None) -> bool:
+        return False
+
+
 def _wired_to(titles: dict[str, str]) -> MonitorFolders:
-    """A `MonitorFolders` reading these titles, the way Setup's functions are wired in."""
-    folders = MonitorFolders()
-    folders.use_setup_source(
-        SetupFolders(
-            title_of=titles.get,
-            all_titles=lambda: titles,
-            may_read_host=lambda _host_name, _path: False,
-        ),
-    )
-    return folders
+    """A `MonitorFolders` reading these titles, the way Setup is wired in."""
+    return MonitorFolders(_SetupTitling(titles))
 
 
 # How Setup titles the folders of the filenames below: the root, a title that shares nothing with

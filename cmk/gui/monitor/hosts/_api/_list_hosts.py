@@ -11,6 +11,7 @@ from pydantic import PlainValidator
 
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
+from cmk.gui.monitor.setup_folders import SetupFolderSource
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -26,7 +27,7 @@ from cmk.gui.openapi.utils import RestAPIRequestGeneralException
 from cmk.web.utils import permission_verification as permissions
 
 from .._customer import customer_resolver
-from .._folder import monitor_folders
+from .._folder import MonitorFolders
 from .._impl import LiveStatusHostRepository
 from .._models import (
     Host,
@@ -322,11 +323,9 @@ class HostsRequestBody:
     )
 
 
-def list_hosts(
-    api_context: ApiContext,
-    body: HostsRequestBody = HostsRequestBody(),
+def _list_hosts(
+    api_context: ApiContext, body: HostsRequestBody, folders: MonitorFolders
 ) -> HostsResponse:
-    """List hosts to be consumed by the all host monitoring page."""
     # A `None` request means "remove the limit". We only honor that for users allowed to ignore
     # the hard limit; everyone else is clamped to the safety ceiling. Numeric requests are already
     # bounded to the ceiling by the request schema, so they pass through unchanged.
@@ -356,7 +355,7 @@ def list_hosts(
     customer_of = customer_resolver(sites=api_context.config.sites)
     host_repo = LiveStatusHostRepository(
         connection=sites.live(),
-        folders=monitor_folders,
+        folders=folders,
         sites=MonitorSites(
             MonitorSite(id=site_id, customer=customer_of(site_id))
             for site_id in api_context.config.sites
@@ -396,7 +395,7 @@ def list_hosts(
             filters=(
                 HostFilter("")
                 if filters is None
-                else parse_as_livestatus_filter(filters, setup_folders=monitor_folders.titles)
+                else parse_as_livestatus_filter(filters, setup_folders=folders.titles)
             ),
             fields=fields,
             site_ids=site_ids,
@@ -454,30 +453,44 @@ def _handle_list_hosts(
     )
 
 
-ENDPOINT_LIST_HOSTS = VersionedEndpoint(
-    metadata=EndpointMetadata(
-        path="/monitor/hosts",
-        link_relation="cmk/list",
-        method="post",
-    ),
-    permissions=EndpointPermissions(
-        # Declared for the permission tracker: inspected via user.may() during the request, but
-        # none is required.
-        required=permissions.Undocumented(
-            permissions.AnyPerm(
-                [
-                    permissions.OkayToIgnorePerm("general.see_all"),
-                    permissions.OkayToIgnorePerm("bi.see_all"),
-                    permissions.OkayToIgnorePerm("mkeventd.seeall"),
-                    permissions.OkayToIgnorePerm("general.ignore_hard_limit"),
-                    # Read while titling a folder, on an installation that keeps the folders a
-                    # user may not read out of sight.
-                    permissions.OkayToIgnorePerm("wato.see_all_folders"),
-                ]
-            )
+def make_endpoint_list_hosts(setup_folders: SetupFolderSource) -> VersionedEndpoint:
+    """The endpoint listing hosts, titling their folders the way `setup_folders` reads them."""
+
+    def list_hosts(
+        api_context: ApiContext,
+        body: HostsRequestBody = HostsRequestBody(),
+    ) -> HostsResponse:
+        """List hosts to be consumed by the all host monitoring page."""
+        return _list_hosts(
+            api_context,
+            body,
+            MonitorFolders(setup_folders(api_context.config, api_context.user)),
         )
-    ),
-    doc=EndpointDoc(family=MONITOR_HOSTS_FAMILY.name),
-    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
-    versions={APIVersion.INTERNAL: EndpointHandler(handler=list_hosts)},
-)
+
+    return VersionedEndpoint(
+        metadata=EndpointMetadata(
+            path="/monitor/hosts",
+            link_relation="cmk/list",
+            method="post",
+        ),
+        permissions=EndpointPermissions(
+            # Declared for the permission tracker: inspected via user.may() during the request, but
+            # none is required.
+            required=permissions.Undocumented(
+                permissions.AnyPerm(
+                    [
+                        permissions.OkayToIgnorePerm("general.see_all"),
+                        permissions.OkayToIgnorePerm("bi.see_all"),
+                        permissions.OkayToIgnorePerm("mkeventd.seeall"),
+                        permissions.OkayToIgnorePerm("general.ignore_hard_limit"),
+                        # Read while titling a folder, on an installation that keeps the folders a
+                        # user may not read out of sight.
+                        permissions.OkayToIgnorePerm("wato.see_all_folders"),
+                    ]
+                )
+            )
+        ),
+        doc=EndpointDoc(family=MONITOR_HOSTS_FAMILY.name),
+        behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
+        versions={APIVersion.INTERNAL: EndpointHandler(handler=list_hosts)},
+    )

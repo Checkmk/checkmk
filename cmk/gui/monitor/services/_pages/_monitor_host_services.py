@@ -30,6 +30,7 @@ from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_vi
 from cmk.gui.monitor.services._ai_explain import ai_explain
 from cmk.gui.monitor.services._api._list_host_services import LIMIT_TIERS
 from cmk.gui.monitor.services._page_menu import build_page_menu, HostMenus
+from cmk.gui.monitor.setup_folders import SetupFolderSource
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
@@ -94,13 +95,13 @@ class MonitorHostServicesPage(Page):
         host_menus: HostMenus,
         teleport_target: str | None = None,
         *,
-        may_read_host: Callable[[HostName], bool],
+        setup_folders: SetupFolderSource,
     ) -> None:
         self._commands = commands
         self._recurrences = recurrences
         self._host_menus = host_menus
         self._teleport_target = teleport_target
-        self._may_read_host = may_read_host
+        self._setup_folders = setup_folders
 
     def _permitted_actions(self) -> list[MonitoringAction]:
         return [
@@ -168,7 +169,9 @@ class MonitorHostServicesPage(Page):
                     row_actions=_row_actions(
                         ctx.config,
                         hostname,
-                        setup_access=lambda: self._may_read_host(hostname),
+                        setup_access=lambda: self._setup_folders(ctx.config, user).may_read_host(
+                            hostname, None
+                        ),
                     ),
                     acknowledge_presets_url=acknowledge_presets_url(ctx.config),
                     acknowledge_defaults=AcknowledgeDefaults(

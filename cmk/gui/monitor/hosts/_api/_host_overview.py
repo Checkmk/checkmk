@@ -8,6 +8,7 @@ from typing import Annotated, Self
 
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
+from cmk.gui.monitor.setup_folders import SetupFolderSource
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -30,7 +31,7 @@ from cmk.web.utils import permission_verification as permissions
 
 from .._customer import customer_resolver
 from .._exceptions import HostNotFoundError
-from .._folder import monitor_folders
+from .._folder import MonitorFolders
 from .._impl import LiveStatusHostRepository
 from .._models import (
     Host,
@@ -246,30 +247,6 @@ class HostOverviewResponse:
         )
 
 
-def get_host_overview(
-    hostname: Annotated[
-        AnnotatedHostName,
-        PathParam(description="The host name", example="web-server-01"),
-    ],
-    site_id: Annotated[
-        Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_exist)],
-        QueryParam(description="An existing site id", example="local"),
-    ],
-    api_context: ApiContext,
-) -> HostOverviewResponse:
-    """Show the overview for a single host."""
-    host_repo = LiveStatusHostRepository(connection=sites.live(), folders=monitor_folders)
-    site_alias = api_context.config.sites[site_id]["alias"]
-
-    return _handle_get_host_overview(
-        host_repo,
-        hostname=hostname,
-        site_id=site_id,
-        site_alias=site_alias,
-        customer=customer_resolver(sites=api_context.config.sites)(site_id),
-    )
-
-
 def _handle_get_host_overview(
     host_repo: HostRepository,
     *,
@@ -290,29 +267,58 @@ def _handle_get_host_overview(
     return HostOverviewResponse.from_domain(host, site_alias=site_alias, customer=customer)
 
 
-ENDPOINT_GET_HOST_OVERVIEW = VersionedEndpoint(
-    metadata=EndpointMetadata(
-        path="/monitor/hosts/{hostname}",
-        link_relation="cmk/show",
-        method="get",
-    ),
-    permissions=EndpointPermissions(
-        # Declared for the permission tracker: inspected via user.may() during the request, but
-        # none is required.
-        required=permissions.Undocumented(
-            permissions.AnyPerm(
-                [
-                    permissions.OkayToIgnorePerm("general.see_all"),
-                    permissions.OkayToIgnorePerm("bi.see_all"),
-                    permissions.OkayToIgnorePerm("mkeventd.seeall"),
-                    # Read while titling a folder, on an installation that keeps the folders a
-                    # user may not read out of sight.
-                    permissions.OkayToIgnorePerm("wato.see_all_folders"),
-                ]
-            )
+def make_endpoint_get_host_overview(setup_folders: SetupFolderSource) -> VersionedEndpoint:
+    """The endpoint showing one host, titling its folder the way `setup_folders` reads it."""
+
+    def get_host_overview(
+        hostname: Annotated[
+            AnnotatedHostName,
+            PathParam(description="The host name", example="web-server-01"),
+        ],
+        site_id: Annotated[
+            Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_exist)],
+            QueryParam(description="An existing site id", example="local"),
+        ],
+        api_context: ApiContext,
+    ) -> HostOverviewResponse:
+        """Show the overview for a single host."""
+        host_repo = LiveStatusHostRepository(
+            connection=sites.live(),
+            folders=MonitorFolders(setup_folders(api_context.config, api_context.user)),
         )
-    ),
-    doc=EndpointDoc(family=MONITOR_HOSTS_FAMILY.name),
-    behavior=EndpointBehavior(skip_locking=True),
-    versions={APIVersion.INTERNAL: EndpointHandler(handler=get_host_overview)},
-)
+        site_alias = api_context.config.sites[site_id]["alias"]
+
+        return _handle_get_host_overview(
+            host_repo,
+            hostname=hostname,
+            site_id=site_id,
+            site_alias=site_alias,
+            customer=customer_resolver(sites=api_context.config.sites)(site_id),
+        )
+
+    return VersionedEndpoint(
+        metadata=EndpointMetadata(
+            path="/monitor/hosts/{hostname}",
+            link_relation="cmk/show",
+            method="get",
+        ),
+        permissions=EndpointPermissions(
+            # Declared for the permission tracker: inspected via user.may() during the request, but
+            # none is required.
+            required=permissions.Undocumented(
+                permissions.AnyPerm(
+                    [
+                        permissions.OkayToIgnorePerm("general.see_all"),
+                        permissions.OkayToIgnorePerm("bi.see_all"),
+                        permissions.OkayToIgnorePerm("mkeventd.seeall"),
+                        # Read while titling a folder, on an installation that keeps the folders a
+                        # user may not read out of sight.
+                        permissions.OkayToIgnorePerm("wato.see_all_folders"),
+                    ]
+                )
+            )
+        ),
+        doc=EndpointDoc(family=MONITOR_HOSTS_FAMILY.name),
+        behavior=EndpointBehavior(skip_locking=True),
+        versions={APIVersion.INTERNAL: EndpointHandler(handler=get_host_overview)},
+    )

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from urllib.parse import parse_qs, urlparse
 
 import pytest
@@ -37,6 +37,19 @@ from cmk.gui.utils.transaction_manager import transactions
 from tests.testlib.unit.gui.users import create_and_destroy_user
 
 
+class _SetupGrantingAll:
+    """Setup's folders, knowing no folder and letting the user open every host."""
+
+    def title_of(self, _path: str) -> str | None:
+        return None
+
+    def all_titles(self) -> Mapping[str, str]:
+        return {}
+
+    def may_read_host(self, _host_name: str, _path: str | None) -> bool:
+        return True
+
+
 @pytest.fixture(name="user_without_permissions")
 def fixture_user_without_permissions(load_config: Config) -> Iterator[UserId]:
     with create_and_destroy_user(
@@ -58,7 +71,7 @@ def test_page_denied_without_legacy_view_permission() -> None:
         MonitorCommands(monitor_command_registry),
         DowntimeRecurrences(),
         HostMenus(),
-        may_read_host=lambda _host_name: True,
+        setup_folders=lambda _config, _user: _SetupGrantingAll(),
     )
 
     with pytest.raises(MKAuthException):

@@ -32,43 +32,20 @@ labels instead; a folder column cannot show it, and labels are the dimension tha
 """
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
 from pathlib import PurePosixPath
 
-
-@dataclass(frozen=True, kw_only=True)
-class SetupFolders:
-    """What this domain needs from Setup: how its folders are titled, and who may open a host.
-
-    Two questions about titles rather than one mapping, because they do not cost the same: the
-    title of one folder is a lookup, while every title means walking the whole folder tree - which
-    the column, redrawn on a timer, has no business doing. They arrive as functions, so Setup
-    answers them off its own request-scoped caches and this domain holds nothing of Setup's to call
-    them on.
-
-    Whether the user may open a host in Setup decides whether a page links there at all: Setup
-    restricts its hosts by contact group, so a user allowed into Setup may still be refused the one
-    host a row shows. The folder path, when known, spares Setup the search for the host.
-    """
-
-    title_of: Callable[[str], str | None]
-    all_titles: Callable[[], Mapping[str, str]]
-    may_read_host: Callable[[str, str | None], bool]
+from cmk.gui.monitor.setup_folders import SetupFolders
 
 
 class MonitorFolders:
-    """How the monitoring pages name the folder a host is configured in.
+    """How the monitoring pages of one request name the folder a host is configured in.
 
-    Setup is injected as a source and asked when a caller wants to know rather than read out at
-    wiring time: its folders live for one request only, and one added meanwhile has to be found.
-    While no source is wired no folder has a title, which reads as no folder at all.
+    Setup is asked when a caller wants to know rather than read out up front, so a folder added
+    meanwhile is found. Without Setup no folder has a title, which reads as no folder at all.
     """
 
-    def __init__(self) -> None:
-        self._setup: SetupFolders | None = None
-
-    def use_setup_source(self, source: SetupFolders) -> None:
-        self._setup = source
+    def __init__(self, setup: SetupFolders | None = None) -> None:
+        self._setup = setup
 
     def title_of(self, path: str) -> str | None:
         """The title Setup shows for one folder, None when the user has no folder of that path."""
@@ -81,9 +58,6 @@ class MonitorFolders:
     def may_read_host(self, host_name: str, path: str | None) -> bool:
         """Whether the user may open the host in Setup, False while Setup is not wired."""
         return self._setup is not None and self._setup.may_read_host(host_name, path)
-
-
-monitor_folders = MonitorFolders()
 
 
 def folder_path_from_filename(filename: str) -> str | None:

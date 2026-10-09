@@ -69,6 +69,7 @@ py_library(
         "__init__.py",
         "_join_service_rows.py",
         "_permissions.py",
+        "_row_extenders.py",
         "_search.py",
         "availability.py",
         "datasource_selection.py",

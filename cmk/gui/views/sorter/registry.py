@@ -66,6 +66,7 @@ def declare_1to1_sorter(
             ident=painter_name,
             title=painter.static_title,
             columns=painter.columns,
+            row_extender=painter.row_extender,
             sort_function=(
                 (lambda r1, r2, **_kwargs: func(painter.columns[col_num], r2, r1))
                 if reverse

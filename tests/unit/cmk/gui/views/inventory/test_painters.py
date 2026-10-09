@@ -23,6 +23,8 @@ from cmk.gui.views.inventory._painters import (
     _get_inventory_tree,
     make_inventory_column_painter,
     make_inventory_node_painter,
+    make_inventory_tree_painter,
+    SITES_OF_SAME_NAMED_HOSTS,
 )
 from cmk.inventory.delta import ImmutableDeltaTree
 from cmk.inventory.serialization import deserialize_tree
@@ -90,3 +92,11 @@ def test_inventory_node_painter_cannot_be_exported_to_csv() -> None:
     context = make_painter_context(UserPermissions({}, {}, {}, []))
     with pytest.raises(CSVExportError):
         painter.export_for_csv({"host_inventory": _tree()}, EmptyCell(), user, context)
+
+
+def test_inventory_tree_painter_refuses_a_host_name_found_on_several_sites() -> None:
+    painter = make_inventory_tree_painter()
+    context = make_painter_context(UserPermissions({}, {}, {}, []))
+    row: Row = {"host_name": "h", SITES_OF_SAME_NAMED_HOSTS: ["a", "b"]}
+    _css, content = painter.render(row, EmptyCell(), user, context)
+    assert "found this host on multiple sites: a, b" in str(content)

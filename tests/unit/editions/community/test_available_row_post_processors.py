@@ -12,5 +12,6 @@ from cmk.gui.views.row_post_processing import row_post_processor_registry
 def test_post_processor_registrations() -> None:
     assert sorted(row_post_processor_registry) == [
         "cmk.gui.views._join_service_rows.join_service_row_post_processor",
+        "cmk.gui.views._row_extenders.row_extenders_post_processor",
         "cmk.gui.views.inventory._row_post_processor.inventory_row_post_processor",
     ]

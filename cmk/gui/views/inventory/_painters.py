@@ -8,10 +8,8 @@ import time
 from collections.abc import Mapping, Sequence
 from functools import partial
 
-from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
-from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser
@@ -40,15 +38,25 @@ from ._display_hints import (
 )
 from ._tree_renderer import compute_cell_spec, SDItem, TreeRenderer
 
+SITES_OF_SAME_NAMED_HOSTS = "host_sites_of_same_named_hosts"
 
-@request_memoize()
-def _get_sites_with_same_named_hosts_cache() -> Mapping[HostName, Sequence[SiteId]]:
-    cache: dict[HostName, list[SiteId]] = {}
-    query_str = "GET hosts\nColumns: host_name\n"
+
+def _sites_of_host_names() -> Mapping[str, Sequence[SiteId]]:
+    sites_of_host_names: dict[str, list[SiteId]] = {}
     with sites.prepend_site():
-        for row in sites.live().query(query_str):
-            cache.setdefault(HostName(row[1]), []).append(SiteId(row[0]))
-    return cache
+        for site_id, host_name in sites.live().query("GET hosts\nColumns: host_name\n"):
+            sites_of_host_names.setdefault(host_name, []).append(SiteId(site_id))
+    return sites_of_host_names
+
+
+def add_sites_of_same_named_hosts(rows: Sequence[Row]) -> Sequence[Row]:
+    sites_of_host_names = _sites_of_host_names()
+    return [
+        {**row, SITES_OF_SAME_NAMED_HOSTS: sites_of_host_names.get(row["host_name"], [])}
+        if "host_name" in row
+        else row
+        for row in rows
+    ]
 
 
 class MultipleInventoryTreesError(Exception):
@@ -59,14 +67,7 @@ def _validate_inventory_tree_uniqueness(row: Row) -> None:
     raw_hostname = row.get("host_name")
     assert isinstance(raw_hostname, str)
 
-    if (
-        len(
-            sites_with_same_named_hosts := _get_sites_with_same_named_hosts_cache().get(
-                HostName(raw_hostname), []
-            )
-        )
-        > 1
-    ):
+    if len(sites_with_same_named_hosts := row.get(SITES_OF_SAME_NAMED_HOSTS, [])) > 1:
         raise MultipleInventoryTreesError(
             _(
                 "Cannot display inventory tree of host '%(host_name)s': found this host on multiple sites: %(sites)s"
@@ -166,6 +167,7 @@ def make_inventory_tree_painter() -> InternalPainter:
         columns=["host_inventory", "host_structured_status"],
         painter_options=["show_internal_tree_paths"],
         load_inv=True,
+        row_extender=add_sites_of_same_named_hosts,
         render=_render_inventory_tree,
         compute_data=_compute_data_inventory_tree,
         export_for_python=_export_for_python_inventory_tree,
@@ -256,6 +258,7 @@ def make_invhist_delta_painter() -> InternalPainter:
         title=_l("Inventory changes"),
         columns=["invhist_delta", "invhist_time"],
         painter_options=["show_internal_tree_paths"],
+        row_extender=add_sites_of_same_named_hosts,
         render=_render_invhist_delta,
         compute_data=_compute_data_invhist_delta,
         export_for_python=_export_for_python_invhist_delta,
@@ -407,6 +410,7 @@ def make_inventory_attribute_painter(
         printable=True,
         painter_options=["show_internal_tree_paths"],
         load_inv=True,
+        row_extender=add_sites_of_same_named_hosts,
         parameters=Dictionary(
             title=_("Report options"),
             elements=[
@@ -559,6 +563,7 @@ def make_inventory_node_painter(hint: NodeDisplayHint) -> InternalPainter:
         printable=False,
         painter_options=["show_internal_tree_paths"],
         load_inv=True,
+        row_extender=add_sites_of_same_named_hosts,
         parameters=Dictionary(
             title=_("Report options"),
             elements=[

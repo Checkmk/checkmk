@@ -178,22 +178,19 @@ def _docker_node_groups(
         "Filter: check_command = check_mk-docker_container_status"
     )
     (cell,) = _view_of(ColumnSpec(name="host_docker_node"), "hosts").row_cells
-    with live(expect_status_query=False):
-        return {
-            # Each container runs another image, so the labels differ from row to row.
-            host_name: cell.painter().group_by(
-                {
-                    "host_name": host_name,
-                    "host_labels": {
-                        "cmk/docker_object": "container",
-                        "cmk/docker_image": host_name,
-                    },
-                },
-                cell,
-                cell.painter_context(),
-            )
-            for host_name in status_outputs
+    painter = cell.painter()
+    assert painter.row_extender is not None
+    # Each container runs another image, so the labels differ from row to row.
+    rows: Sequence[Row] = [
+        {
+            "host_name": host_name,
+            "host_labels": {"cmk/docker_object": "container", "cmk/docker_image": host_name},
         }
+        for host_name in status_outputs
+    ]
+    with live(expect_status_query=False):
+        rows = painter.row_extender(rows)
+    return {row["host_name"]: painter.group_by(row, cell, cell.painter_context()) for row in rows}
 
 
 @pytest.mark.usefixtures("request_context", "patch_theme")
@@ -1220,12 +1217,6 @@ def _painter_name_spec(painter_ident):
 
 
 def _set_expected_queries(painter_ident, live):
-    if painter_ident == "inv":
-        # TODO: Why is it querying twice?
-        live.expect_query(
-            "GET hosts\nColumns: host_name\nLocaltime: 1523811000\nOutputFormat: json\nKeepAlive: on\nResponseHeader: fixed16"
-        )
-        return
     if painter_ident in ("service_graphs", "svc_pnpgraph", "host_graphs", "host_pnpgraph"):
         # Every graph painter renders through the engine, which resolves the metric names
         # during the render. The row carries a service_description, so the host painters
@@ -1234,18 +1225,6 @@ def _set_expected_queries(painter_ident, live):
             "GET services\nColumns: host_name description perf_data metrics check_command\n"
             "Filter: host_name = abc\nFilter: description = Interface 3\nAnd: 2"
         )
-        return
-    if painter_ident == "svc_long_plugin_output":
-        # The size limit comes from the cached site states, not a per-render query.
-        live.add_table(
-            "status",
-            [
-                {
-                    "max_long_output_size": 2000,
-                }
-            ],
-        )
-        return
 
 
 def _load_notes_into_files(notes_dirs: list[Path], notes: list[dict[str, object]]) -> list[str]:

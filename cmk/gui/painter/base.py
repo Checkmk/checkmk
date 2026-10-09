@@ -14,7 +14,7 @@ import traceback
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from html import unescape
-from typing import Any, Literal, override
+from typing import Any, Literal, override, Protocol
 
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
@@ -121,6 +121,10 @@ type CellTitle = Callable[[Cell, PainterContext], str]
 type GroupValue = None | str | tuple[str, ...] | tuple[tuple[str, str], ...]
 
 
+class RowExtender(Protocol):
+    def __call__(self, rows: Sequence[Row]) -> Sequence[Row]: ...
+
+
 type StaticText = str | LazyString | LazyText
 
 
@@ -139,6 +143,7 @@ class InternalPainter:
         printable: bool | str = True,
         painter_options: Sequence[str] = (),
         load_inv: bool = False,
+        row_extender: RowExtender | None = None,
         use_painter_link: bool = True,
         title_classes: Sequence[str] = (),
         cell_title: CellTitle | None = None,
@@ -169,6 +174,7 @@ class InternalPainter:
         self._printable = printable
         self._painter_options = painter_options
         self._load_inv = load_inv
+        self._row_extender = row_extender
         self._use_painter_link = use_painter_link
         self._title_classes = title_classes
         self._cell_title = cell_title
@@ -287,6 +293,10 @@ class InternalPainter:
     @property
     def load_inv(self) -> bool:
         return self._load_inv
+
+    @property
+    def row_extender(self) -> RowExtender | None:
+        return self._row_extender
 
     def render(
         self, row: Row, cell: Cell, acting_user: LoggedInUser, context: PainterContext
@@ -428,6 +438,12 @@ class Cell:
             columns.update(self._drilldown.columns)
 
         return columns
+
+    def needed_row_extenders(self) -> Sequence[RowExtender]:
+        painters = (
+            [self.painter(), self.tooltip_painter()] if self.has_tooltip() else [self.painter()]
+        )
+        return [painter.row_extender for painter in painters if painter.row_extender is not None]
 
     def has_link_spec(self) -> bool:
         """Whether the column has a user-configured "Link to view / dashboard"."""

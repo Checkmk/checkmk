@@ -1622,6 +1622,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
             all_host_attributes(config.wato_host_attrs, config.tags.get_tag_groups_by_topic()),
             "folder",
             new=self._is_new,
+            validation_config=config,
             stored=None if self._is_new else self._folder.attributes,
         )
         self._save(

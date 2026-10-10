@@ -741,6 +741,7 @@ class ModeEditHost(ABCHostMode):
             all_host_attributes(config.wato_host_attrs, config.tags.get_tag_groups_by_topic()),
             "host" if not self._is_cluster() else "cluster",
             new=False,
+            validation_config=config,
             stored=host.attributes,
         )
 
@@ -1048,6 +1049,7 @@ class CreateHostMode(ABCHostMode):
             all_host_attributes(config.wato_host_attrs, config.tags.get_tag_groups_by_topic()),
             self._host_type_name(),
             new=True,
+            validation_config=config,
         )
         cluster_nodes = self._get_cluster_nodes(tree, attributes)
         try:

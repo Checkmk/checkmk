@@ -760,7 +760,7 @@ class CustomHostAttributesAndTagGroups(ValueTypedDictSchema):
             self._raise_error(f"Attribute {host_attribute.name()!r} must be a string.")
 
         try:
-            host_attribute.validate_input(value, "")
+            host_attribute.validate_input(value, "", active_config)
 
         except MKUserError as exc:
             self._raise_error(f"{host_attribute.name()}: {str(exc)}")

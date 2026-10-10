@@ -559,7 +559,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
         return DualListChoice(choices=cg_choices, rows=20, size=100)
 
     @override
-    def validate_input(self, value: HostContactGroupSpec, varprefix: str) -> None:
+    def validate_input(self, value: HostContactGroupSpec, varprefix: str, config: Config) -> None:
         if not isinstance(value, dict):
             raise MKUserError(self.name(), "Unknown format.")
         self.load_data()

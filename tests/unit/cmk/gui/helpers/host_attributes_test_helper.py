@@ -14,7 +14,7 @@ from typing import Any, Final, NamedTuple
 
 import pytest
 
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.form_specs.visitors.single_choice import SingleChoiceVisitor
@@ -594,22 +594,29 @@ def assert_form_spec_attribute_lifecycle(
 
     request.set_var(attr.name(), json.dumps(submitted))
     assert attr.from_html_vars("") == value
-    attr.validate_input(value, "")
+    attr.validate_input(value, "", Config())
 
     # Only attributes whose checkbox is ticked are collected, and they are validated.
-    assert collect_attributes({attr.name(): attr}, for_what="host", new=True) == {}
+    assert (
+        collect_attributes(
+            {attr.name(): attr}, for_what="host", new=True, validation_config=Config()
+        )
+        == {}
+    )
     request.set_var(f"host_change_{attr.name()}", "on")
-    assert collect_attributes({attr.name(): attr}, for_what="host", new=True) == {
-        attr.name(): value
-    }
+    assert collect_attributes(
+        {attr.name(): attr}, for_what="host", new=True, validation_config=Config()
+    ) == {attr.name(): value}
 
 
 def assert_form_spec_attribute_rejects(attr: ABCHostAttributeFormSpec, value: object) -> None:
     """A rejected value must not slip through the edit-page submit path."""
     with pytest.raises(MKUserError):
-        attr.validate_input(value, "")
+        attr.validate_input(value, "", Config())
 
     request.set_var(attr.name(), json.dumps(value))
     request.set_var(f"host_change_{attr.name()}", "on")
     with pytest.raises(MKUserError):
-        collect_attributes({attr.name(): attr}, for_what="host", new=True)
+        collect_attributes(
+            {attr.name(): attr}, for_what="host", new=True, validation_config=Config()
+        )

@@ -15,6 +15,7 @@ import json
 import pytest
 
 from cmk.ccc.hostaddress import HostName
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.utils.host_relations import RelationLink
@@ -46,14 +47,16 @@ from tests.unit.cmk.gui.helpers.host_attributes_test_helper import submitted_rel
 def test_validate_input_accepts_a_relation_it_does_not_know(link: object) -> None:
     """A row a later version wrote: dropped wherever the value is read, so refusing the save here
     would leave the host unsavable after a downgrade."""
-    HostAttributeRelations().validate_input([link], "attr_")
+    HostAttributeRelations().validate_input([link], "attr_", Config())
 
 
 @pytest.mark.usefixtures("request_context")
 def test_validate_input_does_not_care_which_host_it_is_about() -> None:
     """The attribute never sees the host; relation_conflicts() checks where the owner is known."""
     HostAttributeRelations().validate_input(
-        [{"kind": "management", "direction": "parent", "host": HostName("srv1")}], "attr_"
+        [{"kind": "management", "direction": "parent", "host": HostName("srv1")}],
+        "attr_",
+        Config(),
     )
 
 
@@ -82,6 +85,7 @@ def test_a_saved_host_keeps_a_relation_of_a_kind_the_dialog_cannot_show() -> Non
         {attribute.name(): attribute},
         for_what="host",
         new=False,
+        validation_config=Config(),
         stored=HostAttributes({"relations": [later]}),
     )
 
@@ -105,6 +109,7 @@ def test_a_saved_host_drops_a_relation_whose_kind_does_not_have_that_end() -> No
         {attribute.name(): attribute},
         for_what="host",
         new=False,
+        validation_config=Config(),
         stored=HostAttributes(
             {
                 "relations": [

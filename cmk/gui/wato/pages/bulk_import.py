@@ -169,6 +169,7 @@ def _detect_attribute(attributes: Sequence[Choice], header: str) -> str:
 def _host_rows_to_bulk(
     iterator: typing.Iterator[dict[str, str]],
     host_attributes: Mapping[str, ABCHostAttribute],
+    validation_config: Config,
 ) -> typing.Generator[ImportTuple]:
     """Here we transform each row into a tuple of HostName and HostAttributes and None.
 
@@ -209,7 +210,7 @@ def _host_rows_to_bulk(
                         % {"attr_name": attr_name},
                     )
                 try:
-                    host_attribute_inst.validate_input(attr_value, "")
+                    host_attribute_inst.validate_input(attr_value, "", validation_config)
                 except MKUserError as exc:
                     raise MKUserError(
                         None,
@@ -467,6 +468,7 @@ class ModeBulkImport(WatoMode):
                     host_attributes=all_host_attributes(
                         config.wato_host_attrs, config.tags.get_tag_groups_by_topic()
                     ),
+                    validation_config=config,
                     debug=config.debug,
                     pprint_value=config.wato_pprint_config,
                     pending_changes=PendingChanges(
@@ -546,6 +548,7 @@ class ModeBulkImport(WatoMode):
         csv_bulk_import: CSVBulkImport,
         host_attributes: Mapping[str, ABCHostAttribute],
         *,
+        validation_config: Config,
         debug: bool,
         pprint_value: bool,
         pending_changes: PendingChanges,
@@ -561,7 +564,7 @@ class ModeBulkImport(WatoMode):
         ]
         raw_rows = csv_bulk_import.rows_as_dict(attr_names)
         host_attribute_tuples: typing.Iterator[ImportTuple] = _host_rows_to_bulk(
-            raw_rows, host_attributes
+            raw_rows, host_attributes, validation_config
         )
 
         folder = folder_from_request(tree, request.var("folder"), request.get_ascii_input("host"))

@@ -543,7 +543,7 @@ class ABCHostAttribute(abc.ABC):
             and (for_what != "host_search" or self.show_in_host_search())
         )
 
-    def validate_input(self, value: Any, varprefix: str) -> None:  # noqa: ARG002
+    def validate_input(self, value: Any, varprefix: str, config: Config) -> None:  # noqa: ARG002
         """Check if the value entered by the user is valid.
         This method may raise MKUserError in case of invalid user input."""
         return
@@ -1012,11 +1012,14 @@ def collect_attributes(
     host_attributes: Mapping[str, ABCHostAttribute],
     for_what: str,
     new: bool,
-    do_validate: bool = True,
+    validation_config: Config | None,
     varprefix: str = "",
     stored: HostAttributes | None = None,
 ) -> HostAttributes:
     """Read attributes from HTML variables.
+
+    ``validation_config`` is handed to the attributes' input validation; ``None``
+    skips the validation.
 
     ``stored`` are the attributes of the object being edited. The result replaces them whole, so
     an editor of an existing object has to pass them: an attribute its form does not offer is
@@ -1053,8 +1056,8 @@ def collect_attributes(
         if stored is not None and attrname in stored:
             value = attr.merge_with_stored(value, stored[attrname])  # type: ignore[literal-required]
 
-        if do_validate and attr.needs_validation(for_what, new):
-            attr.validate_input(value, varprefix)
+        if validation_config is not None and attr.needs_validation(for_what, new):
+            attr.validate_input(value, varprefix, validation_config)
 
         # Mypy can not help here with the dynamic key
         host[attrname] = value  # type: ignore[literal-required]
@@ -1094,7 +1097,7 @@ class ABCHostAttributeText(ABCHostAttribute, abc.ABC):
         return value.strip()
 
     @override
-    def validate_input(self, value: str | None, varprefix: str) -> None:
+    def validate_input(self, value: str | None, varprefix: str, config: Config) -> None:
         if self.is_mandatory() and not value:
             raise MKUserError(
                 varprefix + "attr_" + self.name(),
@@ -1156,7 +1159,7 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
         return self.valuespec().from_html_vars(varprefix + self.name())
 
     @override
-    def validate_input(self, value: Any, varprefix: str) -> None:
+    def validate_input(self, value: Any, varprefix: str, config: Config) -> None:
         vs = self.valuespec()
         prefix = varprefix + self.name()
         vs.validate_datatype(value, prefix)
@@ -1253,7 +1256,7 @@ class ABCHostAttributeFormSpec(ABCHostAttribute):
             )
 
     @override
-    def validate_input(self, value: Any, varprefix: str) -> None:
+    def validate_input(self, value: Any, varprefix: str, config: Config) -> None:
         visitor = get_visitor(
             self.form_spec(), VisitorOptions(migrate_values=False, mask_values=False)
         )

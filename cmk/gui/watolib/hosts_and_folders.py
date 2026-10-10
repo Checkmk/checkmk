@@ -2093,7 +2093,7 @@ def _search_folder_from_request(
                 tree.all_host_attributes(),
                 "host_search",
                 new=False,
-                do_validate=False,
+                validation_config=None,
                 varprefix="host_search_",
             ),
         }

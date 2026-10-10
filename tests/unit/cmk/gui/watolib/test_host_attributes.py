@@ -338,6 +338,7 @@ def _collect_host_attributes(stored: attrs.HostAttributes | None) -> attrs.HostA
         ),
         "host",
         new=False,
+        validation_config=Config(),
         stored=stored,
     )
 

@@ -212,6 +212,7 @@ def test_bulk_import_csv_parsing(
             folder_tree(),
             csv_bulk_import,
             host_attributes,
+            validation_config=Config(),
             debug=False,
             pprint_value=False,
             pending_changes=_noop_pending_changes(),
@@ -336,7 +337,7 @@ def test_host_rows_to_bulk(
     host_attributes = all_host_attributes(
         active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
     )
-    host_attribute_tuples = _host_rows_to_bulk(raw_rows, host_attributes)
+    host_attribute_tuples = _host_rows_to_bulk(raw_rows, host_attributes, Config())
     assert list(host_attribute_tuples) == expected
 
 
@@ -376,7 +377,7 @@ def test_host_rows_to_bulk_exceptions(
         active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
     )
     with pytest.raises(MKUserError, match=exc_matches):
-        list(_host_rows_to_bulk(raw_rows, host_attributes))
+        list(_host_rows_to_bulk(raw_rows, host_attributes, Config()))
 
 
 @pytest.mark.parametrize(

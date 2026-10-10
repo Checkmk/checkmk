@@ -114,6 +114,7 @@ class ModeBulkEdit(WatoMode):
             ),
             "bulk",
             new=False,
+            validation_config=config,
         )
         host_names = get_hostnames_from_checkboxes(self._folder)
         for host_name in host_names:

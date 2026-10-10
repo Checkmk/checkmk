@@ -7,7 +7,7 @@ from collections.abc import Container, Mapping
 from enum import StrEnum
 from typing import Literal, Self
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import (
@@ -124,6 +124,13 @@ class GraphDisplayConfigHTML(_GraphDisplayConfigBase):
 class GraphDisplayConfigImage(_GraphDisplayConfigBase):
     size: tuple[float, float] = (70, 16)
     show_title: bool = True
+
+    @field_validator("show_title", mode="before")
+    @classmethod
+    def _show_inline_title_above_the_graph(cls, value: object) -> object:
+        # An image has no title on the graph area. Graph options of reports may still ask for
+        # it ("inline"), the image then shows the title as usual.
+        return True if value == "inline" else value
 
 
 _DEFAULT_GRAPH_SIZE: tuple[float, float] = (70.0, 16.0)

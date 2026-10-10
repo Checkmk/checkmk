@@ -22,7 +22,9 @@ from cmk.diagnostics.automation_types import CreateDiagnosticsDumpV2Result
 from cmk.events.notification_result import NotificationContext
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
-from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
+from cmk.gui.watolib.activate_changes import (
+    sync_changes_from_active_config_before_remote_automation,
+)
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
     check_mk_remote_automation_serialized,
@@ -30,7 +32,7 @@ from cmk.gui.watolib.automations import (
     MKAutomationException,
 )
 from cmk.gui.watolib.host_attributes import CollectedHostAttributes
-from cmk.gui.watolib.hosts_and_folders import collect_all_hosts, folder_tree, FolderTree
+from cmk.gui.watolib.hosts_and_folders import collect_all_hosts, FolderTree
 from cmk.ruleset_matcher.labels import HostLabel, Labels
 from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
@@ -95,13 +97,10 @@ def _automation_serialized(
             indata=indata,
             stdin_data=stdin_data,
             timeout=timeout,
-            # Syncing starts an activation, which needs a tree; this function is handed none.
+            # Syncing starts an activation, which needs a tree; the automation
+            # wrappers are handed none, so the sync builds its own.
             sync=(
-                (
-                    lambda site_id, debug: sync_changes_before_remote_automation(
-                        folder_tree(), site_id, debug
-                    )
-                )
+                sync_changes_from_active_config_before_remote_automation
                 if sync
                 else lambda site_id, debug: None  # noqa: ARG005
             ),

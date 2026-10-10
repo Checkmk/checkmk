@@ -152,6 +152,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_preserving_link,
     FolderTree,
     HostsAndFoldersConfig,
+    make_folder_tree,
     validate_all_hosts,
 )
 from cmk.gui.watolib.paths import wato_var_dir
@@ -416,6 +417,15 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:  # no
         ),
     ]:
         replication_path_registry.register(repl_path)
+
+
+def sync_changes_from_active_config_before_remote_automation(site_id: SiteId, debug: bool) -> None:
+    """Sync for callers that hold no folder tree, such as the automation wrappers.
+
+    The sync takes the sites and the snapshot settings from the active config
+    anyway, so the tree comes from the active config as well.
+    """
+    sync_changes_before_remote_automation(make_folder_tree(active_config), site_id, debug)
 
 
 # If the site is not up-to-date, synchronize it first.

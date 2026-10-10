@@ -386,7 +386,22 @@ msgid "%%d locked elements"
 msgstr "%%d elemente blocate"
 
 #, python-format
+msgid ""
+"%(count)d local file below %(local_dir)s overrides a shipped style sheet or "
+"script and may be outdated: %(files)s"
+msgid_plural ""
+"%(count)d local files below %(local_dir)s override shipped style sheets or "
+"scripts and may be outdated: %(files)s"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#, python-format
 msgid "%(family)s (locally installed, download requires login)"
+msgstr ""
+
+#, python-format
+msgid "%(files)s and %(count)d more"
 msgstr ""
 
 #, python-format
@@ -1770,6 +1785,18 @@ msgid ""
 "individually</b>. As every site collects and transmits data independently, "
 "please verify that your firewall rules permit traffic from every site to "
 "prevent local transmission errors.</p>"
+msgstr ""
+
+#, python-format
+msgid ""
+"<p>A style sheet or script below <tt>%(local_dir)s</tt> is served instead of "
+"the shipped file with the same path. Such copies are not updated together "
+"with Checkmk: after an update, an outdated style sheet or script of an older "
+"version is still delivered and may break the user interface. Other local "
+"files, e.g. replaced logos, are not reported.</p><p>Remove the copies you do "
+"not need. To customize the look of the user interface, use a theme of your "
+"own below <tt>%(themes_dir)s</tt> instead of overriding the shipped themes.</"
+"p>"
 msgstr ""
 
 #, fuzzy
@@ -12794,10 +12821,10 @@ msgstr "Nu se poate șterge sarcina. Lucrarea nu poate fi oprită."
 msgid "Cannot delete rules that are managed by Quick Setup."
 msgstr "Nu puteți șterge rolurile care sunt încă în uz (%s)!"
 
-#, fuzzy, python-format
+#, fuzzy
 msgid ""
 "Cannot delete this customer because the following objects are still assigned "
-"to it: %(references)s."
+"to it:"
 msgstr ""
 "Nu se poate șterge acest client deoarece site-urile %s îi sunt încă "
 "atribuite."
@@ -39986,6 +40013,10 @@ msgstr ""
 msgid "LDAP version"
 msgstr "Versiunea LDAP"
 
+#, fuzzy
+msgid "LDAP/SAML connections"
+msgstr "Conexiuni SAML"
+
 msgid "LED"
 msgstr "LED"
 
@@ -42115,6 +42146,9 @@ msgstr "Director local"
 
 msgid "Local file"
 msgstr "Fișier local"
+
+msgid "Local files overriding shipped style sheets or scripts"
+msgstr ""
 
 msgid "Local group name"
 msgstr "Numele grupului local"
@@ -48328,6 +48362,9 @@ msgstr "Nu există niveluri pe inodes"
 
 msgid "No license verification performed yet"
 msgstr "Nu s-a efectuat încă nicio verificare a licenței"
+
+msgid "No local files override shipped style sheets or scripts"
+msgstr ""
 
 msgid "No logging"
 msgstr "Fără logare"
@@ -57924,6 +57961,9 @@ msgstr "Motivul: %s"
 msgid "Reasons"
 msgstr "Motive"
 
+msgid "Reassign or remove them before deleting the customer."
+msgstr ""
+
 msgid "Receipt"
 msgstr "Chitanță"
 
@@ -65938,6 +65978,13 @@ msgstr ""
 "acest lucru numai dacă nu este posibilă o altă abordare (de exemplu, "
 "limitarea dimensiunii bulk), deoarece bulk walks sunt mult mai performante."
 
+msgid ""
+"Some UPS models report status flags for each battery pack cartridge. A "
+"cartridge is reported with the worst state of the flags it has set. Flags "
+"not configured here result in a WARNING state. The flag <i>Needs "
+"Replacement</i> follows the option <i>State if battery needs replacement</i>."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Some agent commands or plug-ins may follow the environment variable TMPDIR "
@@ -67640,11 +67687,39 @@ msgstr "Statul pentru 'este inactiv'"
 msgid "State for 'now printing'"
 msgstr "Statul pentru 'acum tipărire'"
 
+#, fuzzy
+msgid "State for <i>Bus Soft Start</i>"
+msgstr "Stare pentru <i>Global Hot Spare</i>"
+
+#, fuzzy
+msgid "State for <i>Charger</i>"
+msgstr "Starea pentru <i>Degradat</i>"
+
+#, fuzzy
+msgid "State for <i>Communication</i>"
+msgstr "Statul pentru <i>Online</i>"
+
 msgid "State for <i>Dedicated Hot Spare</i>"
 msgstr "Starea pentru <i>Dedicated Hot Spare</i>"
 
 msgid "State for <i>Degraded</i>"
 msgstr "Starea pentru <i>Degradat</i>"
+
+#, fuzzy
+msgid "State for <i>Disconnected Frame</i>"
+msgstr "Starea pentru <i>Degradat</i>"
+
+#, fuzzy
+msgid "State for <i>Disconnected</i>"
+msgstr "Starea pentru <i>Degradat</i>"
+
+#, fuzzy
+msgid "State for <i>Firmware Mismatch</i>"
+msgstr "Starea pentru <i>Optimal</i>"
+
+#, fuzzy
+msgid "State for <i>General Error</i>"
+msgstr "Stare pentru <i>Global Hot Spare</i>"
 
 msgid "State for <i>Global Hot Spare</i>"
 msgstr "Stare pentru <i>Global Hot Spare</i>"
@@ -67662,11 +67737,27 @@ msgstr "Statul pentru <i>Online</i>"
 msgid "State for <i>Optimal</i>"
 msgstr "Starea pentru <i>Optimal</i>"
 
+#, fuzzy
+msgid "State for <i>Overtemperature Critical</i>"
+msgstr "Starea pentru <i>Optimal</i>"
+
+#, fuzzy
+msgid "State for <i>Overtemperature Warning</i>"
+msgstr "Statul pentru <i>Online</i>"
+
+#, fuzzy
+msgid "State for <i>Overvoltage</i>"
+msgstr "Starea pentru <i>Degradat</i>"
+
 msgid "State for <i>Partially Degraded</i>"
 msgstr "Starea pentru <i>Parțial degradat</i>"
 
 msgid "State for <i>Recovery</i>"
 msgstr "Statul pentru <i>Recuperare</i>"
+
+#, fuzzy
+msgid "State for <i>Temperature Sensor</i>"
+msgstr "Starea pentru <i>Degradat</i>"
 
 msgid "State for <i>Unconfigured Bad</i>"
 msgstr "Stare pentru <i>Nu este configurat Bad</i>."
@@ -68405,6 +68496,9 @@ msgstr "Începutul anului viitor"
 #, fuzzy
 msgid "States of Nutanix host"
 msgstr "Starea unei gazde"
+
+msgid "States of battery pack cartridge flags"
+msgstr ""
 
 msgid "States other than the above"
 msgstr "Alte state decât cele de mai sus"
@@ -95974,10 +96068,6 @@ msgstr "conexiune/sec"
 msgid "connections"
 msgstr "conexiuni"
 
-#, fuzzy
-msgid "contact groups"
-msgstr "grupuri de contact: "
-
 msgid "contact groups: "
 msgstr "grupuri de contact: "
 
@@ -96455,10 +96545,6 @@ msgstr[2] ""
 #, fuzzy, python-format
 msgid "host \"%s\""
 msgstr "pe gazda %s"
-
-#, fuzzy
-msgid "host groups"
-msgstr "Grupuri gazdă"
 
 msgid "host in total"
 msgstr "gazdă în total"
@@ -97604,11 +97690,6 @@ msgid_plural "services"
 msgstr[0] "serviciu"
 msgstr[1] ""
 msgstr[2] ""
-
-# georgem ##############
-#, fuzzy
-msgid "service groups"
-msgstr "Grupuri de servicii"
 
 #, python-format
 msgid "service in %s state"
@@ -102212,18 +102293,6 @@ msgid "The answer ended before it was complete."
 msgstr ""
 
 #, fuzzy
-msgid "Conversations"
-msgstr "Conexiuni"
-
-#, fuzzy
-msgid "New conversation"
-msgstr "Conexiuni noi"
-
-#, fuzzy
-msgid "Conversation"
-msgstr "Conexiune"
-
-#, fuzzy
 msgid "Ctrl+Enter to send"
 msgstr "Șirul de trimis"
 
@@ -102240,12 +102309,47 @@ msgid "Dock to the right"
 msgstr "Setați înălțimea"
 
 #, fuzzy
+msgid "Back to chat"
+msgstr "Înapoi la vizualizare"
+
+#, fuzzy
+msgid "Chat history"
+msgstr "Istoric de căutare"
+
+#, fuzzy
 msgid "AI assistant"
 msgstr "Instanța"
 
 #, fuzzy
+msgid "New chat"
+msgstr "Acțiune nouă"
+
+#, fuzzy
+msgid "Dock position"
+msgstr "Poziția mouse-ului"
+
+#, fuzzy
 msgid "Cancelled"
 msgstr "Anulat"
+
+msgid "No chats yet"
+msgstr ""
+
+#, fuzzy
+msgid "Untitled chat"
+msgstr "Untitled setting"
+
+#, fuzzy
+msgid "Delete chat"
+msgstr "Ștergeți gazda"
+
+msgid "Delete chat “%{title}”?"
+msgstr ""
+
+msgid ""
+"This will permanently delete this chat and its messages. This action can’t "
+"be undone."
+msgstr ""
 
 #, fuzzy
 msgid "Help us improve Checkmk with product usage analytics"
@@ -103146,6 +103250,31 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "contact groups"
+#~ msgstr "grupuri de contact: "
+
+#, fuzzy
+#~ msgid "host groups"
+#~ msgstr "Grupuri gazdă"
+
+# georgem ##############
+#, fuzzy
+#~ msgid "service groups"
+#~ msgstr "Grupuri de servicii"
+
+#, fuzzy
+#~ msgid "Conversations"
+#~ msgstr "Conexiuni"
+
+#, fuzzy
+#~ msgid "New conversation"
+#~ msgstr "Conexiuni noi"
+
+#, fuzzy
+#~ msgid "Conversation"
+#~ msgstr "Conexiune"
 
 #, fuzzy
 #~ msgid "The license usage history was updated at least three days ago."

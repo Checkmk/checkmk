@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-10-08 10:53+0000\n"
+"PO-Revision-Date: 2026-10-09 20:31+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -378,9 +378,22 @@ msgid "%%d locked elements"
 msgstr "%%d ロックされた要素"
 
 #, python-format
+msgid ""
+"%(count)d local file below %(local_dir)s overrides a shipped style sheet or "
+"script and may be outdated: %(files)s"
+msgid_plural ""
+"%(count)d local files below %(local_dir)s override shipped style sheets or "
+"scripts and may be outdated: %(files)s"
+msgstr[0] ""
+
+#, python-format
 msgid "%(family)s (locally installed, download requires login)"
 msgstr ""
 "%(family)s（ローカルインストール済、ダウンロードにはログインが必要です）"
+
+#, python-format
+msgid "%(files)s and %(count)d more"
+msgstr ""
 
 #, python-format
 msgid "%.1f mm"
@@ -1731,6 +1744,18 @@ msgstr ""
 "ます。各サイトは独立してデータを収集・送信するため、ローカル送信エラーを防ぐ"
 "には、ファイアウォールルールが全サイトからのトラフィックを許可していることを"
 "確認してください。</p>"
+
+#, python-format
+msgid ""
+"<p>A style sheet or script below <tt>%(local_dir)s</tt> is served instead of "
+"the shipped file with the same path. Such copies are not updated together "
+"with Checkmk: after an update, an outdated style sheet or script of an older "
+"version is still delivered and may break the user interface. Other local "
+"files, e.g. replaced logos, are not reported.</p><p>Remove the copies you do "
+"not need. To customize the look of the user interface, use a theme of your "
+"own below <tt>%(themes_dir)s</tt> instead of overriding the shipped themes.</"
+"p>"
+msgstr ""
 
 msgid ""
 "<p>By default, each Checkmk site has its own temporary file system (a "
@@ -7268,8 +7293,8 @@ msgid ""
 "Apply the levels for single cores to the averaged instead of the "
 "instantaneous utilizations."
 msgstr ""
-"シングルコアのレベルを、瞬間的な利用率ではなく、平均化されたものに適用します"
-"。"
+"シングルコアのレベルを、瞬間的な利用率ではなく、平均化されたものに適用しま"
+"す。"
 
 msgid ""
 "Apply these levels to clusters that have at least the following number of "
@@ -11765,10 +11790,10 @@ msgstr "ジョブを削除できません。ジョブを停止することはで
 msgid "Cannot delete rules that are managed by Quick Setup."
 msgstr "クイックセットアップで管理されているルールは削除できません。"
 
-#, python-format
+#, fuzzy
 msgid ""
 "Cannot delete this customer because the following objects are still assigned "
-"to it: %(references)s."
+"to it:"
 msgstr ""
 "以下のオブジェクトがまだこの顧客に割り当てられているため、この顧客を削除でき"
 "ません：%(references)s。"
@@ -14627,10 +14652,9 @@ msgid ""
 "method, which considers both the new value and the previous average while "
 "applying a weighted factor to each."
 msgstr ""
-"平均化されたシングルコアCPU利用率を計算します。このオプションは、"
-"サブオプション 'シングルコアレベルの適用'または '平均シングルコア利用率の"
-"グラフ'の少なくとも1つが有効になっている場合にのみ効果があることに注意してく"
-"ださい。\n"
+"平均化されたシングルコアCPU利用率を計算します。このオプションは、サブオプショ"
+"ン 'シングルコアレベルの適用'または '平均シングルコア利用率のグラフ'の少なく"
+"とも1つが有効になっている場合にのみ効果があることに注意してください。\n"
 "注意：平均は指数移動平均（EMA）法を使用して計算され、新しい値と前回の平均の両"
 "方を考慮し、それぞれに重み付け係数を適用します。"
 
@@ -29208,9 +29232,8 @@ msgid ""
 "performance reasons CPU averaging will not be applied to to the levels of "
 "single processes."
 msgstr ""
-"ここでは、単一プロセスのCPU利用率のレベルを定義することができます。"
-"パフォーマンス上の理由から、単一プロセスのレベルにはCPUの平均化は適用されませ"
-"ん。"
+"ここでは、単一プロセスのCPU利用率のレベルを定義することができます。パフォーマ"
+"ンス上の理由から、単一プロセスのレベルにはCPUの平均化は適用されません。"
 
 msgid ""
 "Here, you can define levels on the resident memory utilization (in "
@@ -29219,26 +29242,26 @@ msgid ""
 "processes."
 msgstr ""
 "ここでは、単一プロセスの常駐メモリ利用率（総RAMに対する割合）についてのレベル"
-"を定義できます。パフォーマンス上の理由から、単一プロセスのレベルには常駐"
-"メモリ平均化は適用されません。"
+"を定義できます。パフォーマンス上の理由から、単一プロセスのレベルには常駐メモ"
+"リ平均化は適用されません。"
 
 msgid ""
 "Here, you can define levels on the resident memory utilization of single "
 "processes. For performance reasons resident memory averaging will not be "
 "applied to to the levels of single processes."
 msgstr ""
-"ここでは、単一プロセスの常駐メモリ利用率のレベルを定義することができます。"
-"パフォーマンス上の理由から、単一プロセスのレベルには常駐メモリ平均化が適用さ"
-"れません。"
+"ここでは、単一プロセスの常駐メモリ利用率のレベルを定義することができます。パ"
+"フォーマンス上の理由から、単一プロセスのレベルには常駐メモリ平均化が適用され"
+"ません。"
 
 msgid ""
 "Here, you can define levels on the virtual memory utilization of single "
 "processes. For performance reasons virtual memory averaging will not be "
 "applied to to the levels of single processes."
 msgstr ""
-"ここでは、単一プロセスの仮想メモリ利用率に関するレベルを定義できます。"
-"パフォーマンス上の理由から、単一プロセスのレベルには仮想メモリの平均化は適用"
-"されません。"
+"ここでは、単一プロセスの仮想メモリ利用率に関するレベルを定義できます。パ"
+"フォーマンス上の理由から、単一プロセスのレベルには仮想メモリの平均化は適用さ"
+"れません。"
 
 #, fuzzy, python-format
 msgid ""
@@ -37174,6 +37197,10 @@ msgstr ""
 msgid "LDAP version"
 msgstr "LDAPバージョン"
 
+#, fuzzy
+msgid "LDAP/SAML connections"
+msgstr "SAML 接続"
+
 msgid "LED"
 msgstr "LED"
 
@@ -39216,6 +39243,9 @@ msgstr "ローカルディレクトリ"
 
 msgid "Local file"
 msgstr "ローカルファイル"
+
+msgid "Local files overriding shipped style sheets or scripts"
+msgstr ""
 
 msgid "Local group name"
 msgstr "ローカルグループ名"
@@ -41645,8 +41675,8 @@ msgid ""
 msgstr ""
 "同時に処理できるデータストリームの最大数です。受信データストリームの数がこの"
 "制限を超えると、それらは破棄されます。値を０に設定すると、この制限は無効にな"
-"ります。この制限を設定すると、データ件数が非常に多い場合に、プロセッサの"
-"リソース利用率が高くなりすぎるのを防ぐのに役立ちます。"
+"ります。この制限を設定すると、データ件数が非常に多い場合に、プロセッサのリ"
+"ソース利用率が高くなりすぎるのを防ぐのに役立ちます。"
 
 msgid "Maximum number of threads"
 msgstr "スレッドの最大数"
@@ -41978,9 +42008,8 @@ msgstr "メモリパーセンテージ使用量"
 msgid "Memory percentage used of devices with modules"
 msgstr "モジュールを備えたデバイスの使用メモリパーセンテージ"
 
-#, fuzzy
 msgid "Memory percentage used of devices with modules (Huawei)"
-msgstr "モジュールを備えたデバイスの使用メモリパーセンテージ"
+msgstr "モジュール搭載機器のメモリ使用率（Huawei製）"
 
 #, fuzzy
 msgid "Memory pool name"
@@ -45114,6 +45143,9 @@ msgstr "Iノード レベルなし"
 
 msgid "No license verification performed yet"
 msgstr "ライセンス認証はまだ行われていない"
+
+msgid "No local files override shipped style sheets or scripts"
+msgstr ""
 
 msgid "No logging"
 msgstr "ロギングなし"
@@ -54071,6 +54103,9 @@ msgstr "理由:%s"
 msgid "Reasons"
 msgstr "理由"
 
+msgid "Reassign or remove them before deleting the customer."
+msgstr ""
+
 msgid "Receipt"
 msgstr "受理"
 
@@ -58950,7 +58985,6 @@ msgstr "サーバ時間 (現在: %s)"
 msgid "Server-side command latency"
 msgstr "サーバーの待ち時間"
 
-#, fuzzy
 msgid "Server-side handling of unencrypted data"
 msgstr "サーバー側の未暗号化データのハンドリング"
 
@@ -59069,9 +59103,8 @@ msgstr "サービスチェック期間"
 msgid "Service check rate"
 msgstr "サービスチェック率"
 
-#, fuzzy
 msgid "Service check timeout (Checkmk Micro Core)"
-msgstr "サービスチェックタイムアウト(Micro core)"
+msgstr "サービスチェックタイムアウト (Checkmk Micro Core)"
 
 msgid "Service check type"
 msgstr "サービスチェックタイプ"
@@ -59163,9 +59196,8 @@ msgstr "サービスイベント"
 msgid "Service filters"
 msgstr "サービスフィルター"
 
-#, fuzzy
 msgid "Service folder"
-msgstr "サービスフィルター"
+msgstr "サービスフォルダ"
 
 #, fuzzy
 msgid "Service goes into CRITICAL state"
@@ -59275,7 +59307,6 @@ msgstr "サービスのサービスレベル"
 msgid "Service levels"
 msgstr "サービスレベル"
 
-#, fuzzy
 msgid "Service limit reached: Action required."
 msgstr "サービス上限に達しました：対応が必要です。"
 
@@ -59445,9 +59476,8 @@ msgstr "サービス状態"
 msgid "Service state age"
 msgstr "サービス状態経過日数"
 
-#, fuzzy
 msgid "Service state for differing VM/LXC states"
-msgstr "一致するマップルールがない場合のサービス状態"
+msgstr "VM/LXCの状態が異なる場合のサービス状態"
 
 msgid "Service state for failing text search condition."
 msgstr "テキスト検索条件が失敗した時のサービス状態。"
@@ -59459,9 +59489,8 @@ msgstr "サービスステータスのグループ化"
 msgid "Service state if no map rule matches"
 msgstr "一致するマップルールがない場合のサービス状態"
 
-#, fuzzy
 msgid "Service state if reboot required"
-msgstr "マクロ名は必須"
+msgstr "再起動が必要な場合のサービス状態"
 
 msgid "Service state percentage"
 msgstr "サービス状態のパーセンテージ"
@@ -59550,9 +59579,8 @@ msgid ""
 msgstr ""
 "このパターンに一致するiOSのバージョンはOK、それ以外はCRITとして報告されます。"
 
-#, fuzzy
 msgid "Services needing attention"
-msgstr "メトリック設定"
+msgstr "対応が必要なサービス"
 
 msgid "Services not being monitored due to configuration."
 msgstr "設定により監視されていないサービス。"
@@ -60242,11 +60270,9 @@ msgstr "親スキャンの設定"
 msgid "Settings for certificates issued to registered agents."
 msgstr "登録代理人に発行される証明書に関する設定。"
 
-#, fuzzy
 msgid "Settings for host checks via Smart Ping"
 msgstr "Smart PINGによるホストチェックの設定"
 
-#, fuzzy
 msgid "Settings for incident state in case of acknowledgment"
 msgstr "承認があった場合のインシデント状態の設定"
 
@@ -60319,9 +60345,8 @@ msgstr "重大度"
 msgid "Severity of failed service discovery check"
 msgstr "失敗したサービス検出チェックの重大度"
 
-#, fuzzy
 msgid "Severity of invalid auto-extend setting"
-msgstr "無効な自動拡張設定の重大度"
+msgstr "無効な自動延長設定のセベリティ"
 
 msgid "Severity of new host labels"
 msgstr "新しいホストラベルの重大度"
@@ -60794,7 +60819,6 @@ msgstr "セットアップメニューのホストテーブルにこの属性を
 msgid "Show this attribute in the user table of the setup menu"
 msgstr "セットアップメニューのユーザーテーブルにこの属性を表示する"
 
-#, fuzzy
 msgid "Show this view in the mobile GUI"
 msgstr "モバイルGUIでこのビューを表示する"
 
@@ -60817,9 +60841,8 @@ msgstr ""
 msgid "Show title"
 msgstr "タイトルを表示"
 
-#, fuzzy
 msgid "Show unacknowledged incompatible Werks"
-msgstr "未承認の互換性のない作業を表示"
+msgstr "未承認の非互換なワークの表示"
 
 msgid "Show up to"
 msgstr "に現れる"
@@ -61225,9 +61248,8 @@ msgstr "サイト証明書の有効性"
 msgid "Site connection"
 msgstr "サイト接続"
 
-#, fuzzy
 msgid "Site connection errors"
-msgstr "サイト接続"
+msgstr "サイト接続エラー"
 
 msgid "Site connectivity"
 msgstr "サイト接続性"
@@ -61254,9 +61276,8 @@ msgstr "サイトがありません"
 msgid "Site is not running"
 msgstr "サイトが実行されていません"
 
-#, fuzzy
 msgid "Site is unreachable. No data from this site could be retrieved."
-msgstr "このサイトのステータスはまだ決定されていません。"
+msgstr "サイトに接続できません。このサイトからのデータを取得できませんでした。"
 
 msgid "Site is using HTTPS"
 msgstr "サイトはHTTPSを使用しています"
@@ -61273,9 +61294,8 @@ msgstr "サイトはLivestatusプロキシデーモンを使用しています"
 msgid "Site management"
 msgstr "サイト管理"
 
-#, fuzzy
 msgid "Site management configuration (OMD)"
-msgstr "SSHデーモン設定(Linux)"
+msgstr "サイト管理設定 (OMD)"
 
 msgid "Site name"
 msgstr "サイト名"
@@ -61559,11 +61579,9 @@ msgstr "以下の最小ファイルサイズ"
 msgid "Smart Ping"
 msgstr "スマートping"
 
-#, fuzzy
 msgid "Smart Ping (only with Checkmk Micro Core)"
 msgstr "スマートPING(Checkmk Micro Coreのみ)"
 
-#, fuzzy
 msgid ""
 "Smart Ping is the default method for host checks when using the Checkmk "
 "Micro Core. The Core sends out ICMP echo requests (ping) at the rate "
@@ -61694,7 +61712,13 @@ msgstr ""
 "（例えば、バルクサイズを制限するなど）が実行できない場合にのみ、この方法をと"
 "るということに注意してください。"
 
-#, fuzzy
+msgid ""
+"Some UPS models report status flags for each battery pack cartridge. A "
+"cartridge is reported with the worst state of the flags it has set. Flags "
+"not configured here result in a WARNING state. The flag <i>Needs "
+"Replacement</i> follows the option <i>State if battery needs replacement</i>."
+msgstr ""
+
 msgid ""
 "Some agent commands or plug-ins may follow the environment variable TMPDIR "
 "for storage of temporary files. For some reasons, you might want to adapt "
@@ -61708,7 +61732,6 @@ msgstr ""
 "は、エージェントのアップデータは動作しません。Checkmk エージェントは、このカ"
 "スタムパス上で自動クリーニングを行わないことに注意してください。"
 
-#, fuzzy
 msgid ""
 "Some agents or agent plug-ins send data not only for the queried host but "
 "also for other hosts \"piggyback\" with their own data. This is the case for "
@@ -63351,11 +63374,39 @@ msgstr "'の状態はアイドルです'"
 msgid "State for 'now printing'"
 msgstr "印刷中'の状態"
 
+#, fuzzy
+msgid "State for <i>Bus Soft Start</i>"
+msgstr "<i>グローバルホットスペア</i>の状態"
+
+#, fuzzy
+msgid "State for <i>Charger</i>"
+msgstr "<i>劣化</i>状態"
+
+#, fuzzy
+msgid "State for <i>Communication</i>"
+msgstr "<i>オンライン</i>の状態"
+
 msgid "State for <i>Dedicated Hot Spare</i>"
 msgstr "<i>専用ホットスペア</i>の状態"
 
 msgid "State for <i>Degraded</i>"
 msgstr "<i>劣化</i>状態"
+
+#, fuzzy
+msgid "State for <i>Disconnected Frame</i>"
+msgstr "<i>劣化</i>状態"
+
+#, fuzzy
+msgid "State for <i>Disconnected</i>"
+msgstr "<i>劣化</i>状態"
+
+#, fuzzy
+msgid "State for <i>Firmware Mismatch</i>"
+msgstr "<i>最適</i>状態"
+
+#, fuzzy
+msgid "State for <i>General Error</i>"
+msgstr "<i>グローバルホットスペア</i>の状態"
 
 msgid "State for <i>Global Hot Spare</i>"
 msgstr "<i>グローバルホットスペア</i>の状態"
@@ -63372,11 +63423,27 @@ msgstr "<i>オンライン</i>の状態"
 msgid "State for <i>Optimal</i>"
 msgstr "<i>最適</i>状態"
 
+#, fuzzy
+msgid "State for <i>Overtemperature Critical</i>"
+msgstr "<i>最適</i>状態"
+
+#, fuzzy
+msgid "State for <i>Overtemperature Warning</i>"
+msgstr "<i>オンライン</i>の状態"
+
+#, fuzzy
+msgid "State for <i>Overvoltage</i>"
+msgstr "<i>劣化</i>状態"
+
 msgid "State for <i>Partially Degraded</i>"
 msgstr "<i>部分的に劣化</i>の状態"
 
 msgid "State for <i>Recovery</i>"
 msgstr "<i>回復</i>状態"
+
+#, fuzzy
+msgid "State for <i>Temperature Sensor</i>"
+msgstr "<i>劣化</i>状態"
 
 msgid "State for <i>Unconfigured Bad</i>"
 msgstr "<i>未構成の不良</i>の状態"
@@ -64067,6 +64134,9 @@ msgstr "Juniper のアラームの状態"
 #, fuzzy
 msgid "States of Nutanix host"
 msgstr "Nutanixホストの状態"
+
+msgid "States of battery pack cartridge flags"
+msgstr ""
 
 msgid "States other than the above"
 msgstr "上記以外の状態"
@@ -90400,10 +90470,6 @@ msgstr "接続/秒"
 msgid "connections"
 msgstr "接続"
 
-#, fuzzy
-msgid "contact groups"
-msgstr "連絡先グループ: "
-
 msgid "contact groups: "
 msgstr "連絡先グループ: "
 
@@ -90863,10 +90929,6 @@ msgstr[0] "ホスト"
 #, fuzzy, python-format
 msgid "host \"%s\""
 msgstr "ホスト %sで"
-
-#, fuzzy
-msgid "host groups"
-msgstr "ホストグループ"
 
 msgid "host in total"
 msgstr "ホスト合計"
@@ -91964,10 +92026,6 @@ msgstr "シリアルナンバー"
 msgid "service"
 msgid_plural "services"
 msgstr[0] "サービス"
-
-#, fuzzy
-msgid "service groups"
-msgstr "サービスグループ"
 
 #, python-format
 msgid "service in %s state"
@@ -96641,18 +96699,6 @@ msgid "The answer ended before it was complete."
 msgstr "回答が途中で途切れてしまいました。"
 
 #, fuzzy
-msgid "Conversations"
-msgstr "接続"
-
-#, fuzzy
-msgid "New conversation"
-msgstr "新しい接続"
-
-#, fuzzy
-msgid "Conversation"
-msgstr "接続"
-
-#, fuzzy
 msgid "Ctrl+Enter to send"
 msgstr "送信する文字列"
 
@@ -96668,12 +96714,47 @@ msgstr "レポートストアに移動します"
 msgid "Dock to the right"
 msgstr "高さを設定する"
 
+#, fuzzy
+msgid "Back to chat"
+msgstr "表示に戻る"
+
+#, fuzzy
+msgid "Chat history"
+msgstr "DCDバッチ履歴"
+
 msgid "AI assistant"
 msgstr "AIアシスタント"
 
 #, fuzzy
+msgid "New chat"
+msgstr "新しいアクション"
+
+#, fuzzy
+msgid "Dock position"
+msgstr "マウスの位置"
+
+#, fuzzy
 msgid "Cancelled"
 msgstr "キャンセル"
+
+msgid "No chats yet"
+msgstr ""
+
+#, fuzzy
+msgid "Untitled chat"
+msgstr "無題の設定"
+
+#, fuzzy
+msgid "Delete chat"
+msgstr "ホストを削除"
+
+msgid "Delete chat “%{title}”?"
+msgstr ""
+
+msgid ""
+"This will permanently delete this chat and its messages. This action can’t "
+"be undone."
+msgstr ""
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr "製品利用状況の分析を通じて、Checkmkの改善にご協力ください"
@@ -97707,6 +97788,30 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#, fuzzy
+#~ msgid "contact groups"
+#~ msgstr "連絡先グループ: "
+
+#, fuzzy
+#~ msgid "host groups"
+#~ msgstr "ホストグループ"
+
+#, fuzzy
+#~ msgid "service groups"
+#~ msgstr "サービスグループ"
+
+#, fuzzy
+#~ msgid "Conversations"
+#~ msgstr "接続"
+
+#, fuzzy
+#~ msgid "New conversation"
+#~ msgstr "新しい接続"
+
+#, fuzzy
+#~ msgid "Conversation"
+#~ msgstr "接続"
 
 #~ msgid ""
 #~ "The license usage history is older than five days. In order to have a "

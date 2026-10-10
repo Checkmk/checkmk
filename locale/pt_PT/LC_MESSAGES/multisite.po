@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-10-08 10:53+0000\n"
+"PO-Revision-Date: 2026-10-09 20:31+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -389,7 +389,21 @@ msgid "%%d locked elements"
 msgstr "%%d elementos bloqueados"
 
 #, python-format
+msgid ""
+"%(count)d local file below %(local_dir)s overrides a shipped style sheet or "
+"script and may be outdated: %(files)s"
+msgid_plural ""
+"%(count)d local files below %(local_dir)s override shipped style sheets or "
+"scripts and may be outdated: %(files)s"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
 msgid "%(family)s (locally installed, download requires login)"
+msgstr ""
+
+#, python-format
+msgid "%(files)s and %(count)d more"
 msgstr ""
 
 #, python-format
@@ -1754,6 +1768,18 @@ msgid ""
 "individually</b>. As every site collects and transmits data independently, "
 "please verify that your firewall rules permit traffic from every site to "
 "prevent local transmission errors.</p>"
+msgstr ""
+
+#, python-format
+msgid ""
+"<p>A style sheet or script below <tt>%(local_dir)s</tt> is served instead of "
+"the shipped file with the same path. Such copies are not updated together "
+"with Checkmk: after an update, an outdated style sheet or script of an older "
+"version is still delivered and may break the user interface. Other local "
+"files, e.g. replaced logos, are not reported.</p><p>Remove the copies you do "
+"not need. To customize the look of the user interface, use a theme of your "
+"own below <tt>%(themes_dir)s</tt> instead of overriding the shipped themes.</"
+"p>"
 msgstr ""
 
 #, fuzzy
@@ -12741,10 +12767,10 @@ msgstr "Não é possível apagar o trabalho. O trabalho não pode ser parado."
 msgid "Cannot delete rules that are managed by Quick Setup."
 msgstr "Você não pode apagar papéis que ainda estão em uso (%s)!"
 
-#, fuzzy, python-format
+#, fuzzy
 msgid ""
 "Cannot delete this customer because the following objects are still assigned "
-"to it: %(references)s."
+"to it:"
 msgstr ""
 "Não é possível eliminar este cliente porque as %s locais ainda estão "
 "atribuídas a ele."
@@ -39836,6 +39862,10 @@ msgstr ""
 msgid "LDAP version"
 msgstr "versão LDAP"
 
+#, fuzzy
+msgid "LDAP/SAML connections"
+msgstr "Ligações SAML"
+
 msgid "LED"
 msgstr "LED"
 
@@ -41985,6 +42015,9 @@ msgstr "Diretório local"
 
 msgid "Local file"
 msgstr "Arquivo local"
+
+msgid "Local files overriding shipped style sheets or scripts"
+msgstr ""
 
 msgid "Local group name"
 msgstr "Nome do grupo local"
@@ -48188,6 +48221,9 @@ msgstr "Sem níveis nos inodes"
 
 msgid "No license verification performed yet"
 msgstr "Ainda não foi efectuada a verificação da licença"
+
+msgid "No local files override shipped style sheets or scripts"
+msgstr ""
 
 msgid "No logging"
 msgstr "Sem corte"
@@ -57762,6 +57798,9 @@ msgstr "Motivo: %s"
 msgid "Reasons"
 msgstr "Razões"
 
+msgid "Reassign or remove them before deleting the customer."
+msgstr ""
+
 msgid "Receipt"
 msgstr "Recibo"
 
@@ -65714,6 +65753,13 @@ msgstr ""
 "só o deve fazer se não for possível outra abordagem (por exemplo, limitando "
 "o tamanho do volume), uma vez que os bulk walks são muito mais eficazes."
 
+msgid ""
+"Some UPS models report status flags for each battery pack cartridge. A "
+"cartridge is reported with the worst state of the flags it has set. Flags "
+"not configured here result in a WARNING state. The flag <i>Needs "
+"Replacement</i> follows the option <i>State if battery needs replacement</i>."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Some agent commands or plug-ins may follow the environment variable TMPDIR "
@@ -67400,11 +67446,39 @@ msgstr "Estado para \"é ocioso"
 msgid "State for 'now printing'"
 msgstr "Estado para \"agora imprimir"
 
+#, fuzzy
+msgid "State for <i>Bus Soft Start</i>"
+msgstr "Estado para <i>Peças Sobressalentes Quentes Globais</i>"
+
+#, fuzzy
+msgid "State for <i>Charger</i>"
+msgstr "Estado para <i>Degradado</i>"
+
+#, fuzzy
+msgid "State for <i>Communication</i>"
+msgstr "Estado para <i>Online</i>"
+
 msgid "State for <i>Dedicated Hot Spare</i>"
 msgstr "Estado para <i>Peças Sobressalentes Quentes Dedicadas</i>"
 
 msgid "State for <i>Degraded</i>"
 msgstr "Estado para <i>Degradado</i>"
+
+#, fuzzy
+msgid "State for <i>Disconnected Frame</i>"
+msgstr "Estado para <i>Degradado</i>"
+
+#, fuzzy
+msgid "State for <i>Disconnected</i>"
+msgstr "Estado para <i>Degradado</i>"
+
+#, fuzzy
+msgid "State for <i>Firmware Mismatch</i>"
+msgstr "Estado para <i>Optimal</i>"
+
+#, fuzzy
+msgid "State for <i>General Error</i>"
+msgstr "Estado para <i>Peças Sobressalentes Quentes Globais</i>"
 
 msgid "State for <i>Global Hot Spare</i>"
 msgstr "Estado para <i>Peças Sobressalentes Quentes Globais</i>"
@@ -67422,11 +67496,27 @@ msgstr "Estado para <i>Online</i>"
 msgid "State for <i>Optimal</i>"
 msgstr "Estado para <i>Optimal</i>"
 
+#, fuzzy
+msgid "State for <i>Overtemperature Critical</i>"
+msgstr "Estado para <i>Optimal</i>"
+
+#, fuzzy
+msgid "State for <i>Overtemperature Warning</i>"
+msgstr "Estado para <i>Online</i>"
+
+#, fuzzy
+msgid "State for <i>Overvoltage</i>"
+msgstr "Estado para <i>Degradado</i>"
+
 msgid "State for <i>Partially Degraded</i>"
 msgstr "Estado para <i>Parcialmente Degradado</i>"
 
 msgid "State for <i>Recovery</i>"
 msgstr "Estado para <i>Recuperação</i>"
+
+#, fuzzy
+msgid "State for <i>Temperature Sensor</i>"
+msgstr "Estado para <i>Degradado</i>"
 
 msgid "State for <i>Unconfigured Bad</i>"
 msgstr "Estado para <i>Má Configuração Não-Configurada</i>"
@@ -68155,6 +68245,9 @@ msgstr "Início do próximo ano"
 #, fuzzy
 msgid "States of Nutanix host"
 msgstr "Estado de um país anfitrião"
+
+msgid "States of battery pack cartridge flags"
+msgstr ""
 
 msgid "States other than the above"
 msgstr "Estados que não os acima mencionados"
@@ -95558,10 +95651,6 @@ msgstr "ligação/segundo"
 msgid "connections"
 msgstr "conexões"
 
-#, fuzzy
-msgid "contact groups"
-msgstr "grupos de contacto: "
-
 msgid "contact groups: "
 msgstr "grupos de contacto: "
 
@@ -95577,7 +95666,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -96039,10 +96127,6 @@ msgstr[1] "hospedeiros"
 msgid "host \"%s\""
 msgstr "no anfitrião %s"
 
-#, fuzzy
-msgid "host groups"
-msgstr "Grupos anfitriões"
-
 msgid "host in total"
 msgstr "anfitrião no total"
 
@@ -96104,7 +96188,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -97176,10 +97259,6 @@ msgid "service"
 msgid_plural "services"
 msgstr[0] "serviço"
 msgstr[1] "serviços"
-
-#, fuzzy
-msgid "service groups"
-msgstr "Grupos de serviço"
 
 #, python-format
 msgid "service in %s state"
@@ -101756,18 +101835,6 @@ msgid "The answer ended before it was complete."
 msgstr ""
 
 #, fuzzy
-msgid "Conversations"
-msgstr "Ligações"
-
-#, fuzzy
-msgid "New conversation"
-msgstr "Novas ligações"
-
-#, fuzzy
-msgid "Conversation"
-msgstr "Ligação"
-
-#, fuzzy
 msgid "Ctrl+Enter to send"
 msgstr "Cordão para enviar"
 
@@ -101784,12 +101851,47 @@ msgid "Dock to the right"
 msgstr "Ajuste a altura"
 
 #, fuzzy
+msgid "Back to chat"
+msgstr "Voltar para ver"
+
+#, fuzzy
+msgid "Chat history"
+msgstr "Histórico de pesquisa"
+
+#, fuzzy
 msgid "AI assistant"
 msgstr "Instância"
 
 #, fuzzy
+msgid "New chat"
+msgstr "Nova Ação"
+
+#, fuzzy
+msgid "Dock position"
+msgstr "Opções de montagem"
+
+#, fuzzy
 msgid "Cancelled"
 msgstr "Cancelado"
+
+msgid "No chats yet"
+msgstr ""
+
+#, fuzzy
+msgid "Untitled chat"
+msgstr "Sem título"
+
+#, fuzzy
+msgid "Delete chat"
+msgstr "Eliminar o anfitrião"
+
+msgid "Delete chat “%{title}”?"
+msgstr ""
+
+msgid ""
+"This will permanently delete this chat and its messages. This action can’t "
+"be undone."
+msgstr ""
 
 #, fuzzy
 msgid "Help us improve Checkmk with product usage analytics"
@@ -102685,6 +102787,30 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "contact groups"
+#~ msgstr "grupos de contacto: "
+
+#, fuzzy
+#~ msgid "host groups"
+#~ msgstr "Grupos anfitriões"
+
+#, fuzzy
+#~ msgid "service groups"
+#~ msgstr "Grupos de serviço"
+
+#, fuzzy
+#~ msgid "Conversations"
+#~ msgstr "Ligações"
+
+#, fuzzy
+#~ msgid "New conversation"
+#~ msgstr "Novas ligações"
+
+#, fuzzy
+#~ msgid "Conversation"
+#~ msgstr "Ligação"
 
 #, fuzzy
 #~ msgid "The license usage history was updated at least three days ago."

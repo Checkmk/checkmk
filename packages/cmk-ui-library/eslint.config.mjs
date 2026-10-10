@@ -3,8 +3,6 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { globalIgnores } from 'eslint/config'
-
 import {
   checkmkVueConfig,
   checkmkVueModuleRegistryConfig,
@@ -22,8 +20,6 @@ export default [
   checkmkVueModuleScopeTranslationConfig('packages/cmk-ui-library'),
 
   checkmkVueModuleRegistryConfig('packages/cmk-ui-library', isolatedTests),
-
-  globalIgnores(['packages/cmk-ui-library/components/graphics/RnbwCursor.vue']),
 
   checkmkVueTestConfig('packages/cmk-ui-library')
 ]

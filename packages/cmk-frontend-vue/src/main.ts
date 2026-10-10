@@ -5,7 +5,6 @@
  */
 import DynamicIconApp from 'cmk-ui-library/components/CmkIcon/CmkDynamicIcon/DynamicIconApp.vue'
 import IconApp from 'cmk-ui-library/components/CmkIcon/IconApp.vue'
-import RnbwApp from 'cmk-ui-library/components/graphics/RnbwApp.vue'
 import initCmkUi from 'cmk-ui-library/lib/initCmkUi'
 
 import '@/lib/keyboard-cheat-sheet/keyboardCheatSheet'
@@ -93,7 +92,6 @@ defineCmkComponent('cmk-unified-search', UnifiedSearchApp)
 defineCmkComponent('cmk-welcome', WelcomeApp)
 defineCmkComponent('cmk-welcome-snapin', WelcomeSnapin)
 defineCmkComponent('cmk-global-settings', GlobalSettingsApp)
-defineCmkComponent('cmk-rnbw', RnbwApp, { pure: true })
 defineCmkComponent('cmk-ai-explain-button', AiExplainThisIssueApp)
 defineCmkComponent('cmk-dialog', DialogApp)
 defineCmkComponent('cmk-dynamic-icon', DynamicIconApp, { pure: true })

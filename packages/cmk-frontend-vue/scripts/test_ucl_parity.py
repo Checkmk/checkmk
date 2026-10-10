@@ -120,10 +120,6 @@ def test_ucl_parity() -> None:
     assert len(components) > 55
     assert len(ucl) > 55
 
-    # we don't talk about this:
-    components.remove("RnbwApp")
-    components.remove("RnbwCursor")
-
     # this is a implementation detail of CmkDropdown
     # and should probably be moved into CmkDropdown?
     components.remove("CmkSuggestions")

@@ -16,9 +16,11 @@ import pytest
 from cmk.ccc import version
 from cmk.ccc.regex import WATO_FOLDER_PATH_NAME_REGEX
 from cmk.ccc.user import UserId
+from cmk.gui.config import get_default_config, make_config_object
 from cmk.gui.fields import FOLDER_PATTERN, FolderField
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.framework import APIVersion
+from cmk.gui.watolib.openapi_fields import request_schema_context
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.plugins.openapi_test.rulesets.sample import ACTIVE_CHECK_RULESET, ACTIVE_CHECK_VALUE_RAW
 from cmk.utils import paths
@@ -70,6 +72,7 @@ def test_folder_schema() -> None:
         folder = FolderField(required=True)
 
     schema = FolderSchema()
+    schema.context.update(request_schema_context(make_config_object(get_default_config())))
     assert schema.load({"folder": "/"})["folder"]
     assert schema.load({"folder": "\\"})["folder"]
     assert schema.load({"folder": "~"})["folder"]

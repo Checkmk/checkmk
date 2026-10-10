@@ -111,12 +111,15 @@ class PathParamsValidator:
     def validate_marshmallow_schema(
         path_schema: type[Schema],
         path_params: dict[str, Any],
+        context: Mapping[str, object],
     ) -> dict[str, Any]:
         """Validate path parameters against a Marshmallow schema."""
         try:
             # URL decode the path parameters before validation
             unquoted_params = {k: parse.unquote(v) for k, v in path_params.items()}
-            return path_schema().load(unquoted_params)
+            schema = path_schema()
+            schema.context.update(context)
+            return schema.load(unquoted_params)
         except ValidationError as exc:
             raise PathParamsValidator._schema_validation_exception(exc.messages)
         except MKAuthException as exc:
@@ -209,17 +212,20 @@ class QueryParamsValidator:
     def validate_marshmallow_schema(
         query_schema: type[Schema],
         query_args: MultiDict,
+        context: Mapping[str, object],
     ) -> dict[str, Any]:
         """Validate query parameters against a Marshmallow schema."""
         try:
+            schema = query_schema()
             list_fields = tuple(
-                {k for k, v in query_schema().fields.items() if isinstance(v, ma_fields.List)}
+                {k for k, v in schema.fields.items() if isinstance(v, ma_fields.List)}
             )
 
             processed_args = _filter_profile_headers(_from_multi_dict(query_args, list_fields))
 
             # Validate with the schema
-            return query_schema().load(processed_args)
+            schema.context.update(context)
+            return schema.load(processed_args)
         except ValidationError as exc:
             raise QueryParamsValidator._schema_validation_exception(exc.messages)
         except MKAuthException as exc:
@@ -273,10 +279,11 @@ class RequestDataValidator:
         content_type: str,
         request_obj: Request,
         request_schema: type[Schema] | None,
+        context: Mapping[str, object],
     ) -> tuple[Any, str]:
         """Decode and validate request body data."""
         try:
-            return decode(content_type, request_obj, request_schema)
+            return decode(content_type, request_obj, request_schema, context)
         except ValidationError as exc:
             raise RequestDataValidator._data_validation_exception(
                 exc.messages,

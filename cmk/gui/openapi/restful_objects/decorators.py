@@ -77,6 +77,7 @@ from cmk.gui.watolib.activate_changes import (
     update_config_generation as activate_changes_update_config_generation,
 )
 from cmk.gui.watolib.git import do_git_commit
+from cmk.gui.watolib.openapi_fields import request_schema_context
 from cmk.licensing.basics.options import OptionName
 from cmk.utils.paths import configuration_lockfile
 from cmk.web.utils import permission_verification as permissions
@@ -497,7 +498,12 @@ class Endpoint:
             method=self.method,
         )
 
-    def _path_validation(self, path_schema: type[Schema] | None, _params: dict[str, Any]) -> None:
+    def _path_validation(
+        self,
+        path_schema: type[Schema] | None,
+        _params: dict[str, Any],
+        schema_context: Mapping[str, object],
+    ) -> None:
         if path_schema is None:
             return
 
@@ -505,11 +511,15 @@ class Endpoint:
             validated_path_params = PathParamsValidator.validate_marshmallow_schema(
                 path_schema,
                 _params,
+                schema_context,
             )
             _params.update(validated_path_params)
 
     def _query_param_validation(
-        self, query_schema: type[Schema] | None, _params: dict[str, Any]
+        self,
+        query_schema: type[Schema] | None,
+        _params: dict[str, Any],
+        schema_context: Mapping[str, object],
     ) -> None:
         if query_schema is None:
             return
@@ -518,6 +528,7 @@ class Endpoint:
             validated_query_params = QueryParamsValidator.validate_marshmallow_schema(
                 query_schema,
                 request.args,
+                schema_context,
             )
             _params.update(validated_query_params)
 
@@ -535,7 +546,10 @@ class Endpoint:
         HeaderValidator.validate_accept_header(self.content_type, request.accept_mimetypes)
 
     def _request_data_validation(
-        self, request_schema: type[Schema] | None, _params: dict[str, Any]
+        self,
+        request_schema: type[Schema] | None,
+        _params: dict[str, Any],
+        schema_context: Mapping[str, object],
     ) -> None:
         # request.content_type was previously validated and is accepted by the endpoint or is None.
         # If there is content_type, then we try to decode the payload
@@ -547,6 +561,7 @@ class Endpoint:
                     content_type=content_type,
                     request_obj=request,
                     request_schema=request_schema,
+                    context=schema_context,
                 )
                 if body is not None:
                     _params["body"] = body
@@ -683,11 +698,14 @@ class Endpoint:
             _params = dict(param)
             del param
 
+            # The fields looking up hosts and folders share the tree of this request.
+            schema_context = request_schema_context(active_config)
+
             self._content_type_validation()
-            self._path_validation(path_schema, _params)
-            self._query_param_validation(query_schema, _params)
+            self._path_validation(path_schema, _params, schema_context)
+            self._query_param_validation(query_schema, _params, schema_context)
             self._header_validation(header_schema, _params)
-            self._request_data_validation(request_schema, _params)
+            self._request_data_validation(request_schema, _params, schema_context)
 
             # make pylint happy
             assert callable(self.func)

@@ -45,10 +45,10 @@ from cmk.gui.watolib.groups_io import load_group_information
 from cmk.gui.watolib.host_attributes import ABCHostAttribute, all_host_attributes
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
-    folder_tree,
     Host,
     strip_hostname_whitespace_chars,
 )
+from cmk.gui.watolib.openapi_fields import folder_tree_of
 from cmk.gui.watolib.passwords import contact_group_choices, load_passwords, password_id_in_use
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import load_tag_config_read_only
@@ -201,8 +201,7 @@ class FolderField(base.String):
             folder_id = folder_id[:-1]
         return folder_id
 
-    @classmethod
-    def load_folder(cls, folder_id: str) -> Folder:
+    def _load_folder(self, folder_id: str) -> Folder:
         def _ishexdigit(hex_string: str) -> bool:
             try:
                 int(hex_string, 16)
@@ -210,13 +209,13 @@ class FolderField(base.String):
             except ValueError:
                 return False
 
-        tree = folder_tree()
+        tree = folder_tree_of(self)
         if folder_id == "/":
             folder = tree.root_folder()
         elif _ishexdigit(folder_id):
             folder = tree._by_id(folder_id)  # noqa: SLF001
         else:
-            folder_id = cls._normalize_folder(folder_id)
+            folder_id = self._normalize_folder(folder_id)
             folder = tree.folder(folder_id[1:])
 
         return folder
@@ -228,7 +227,7 @@ class FolderField(base.String):
         x = super()._deserialize(value, attr, data)
         assert isinstance(x, str), f"Expected a string value, got {value!r}"
         try:
-            return self.load_folder(x)
+            return self._load_folder(x)
         # I added MKGeneralException during a refactoring, but I did not check if it is needed.
         except MKException, MKGeneralException:
             if x:
@@ -618,7 +617,7 @@ class HostField(base.String):
     @override
     def _validate(self, value: HostAddress) -> None:
         super()._validate(value)
-        host = folder_tree().host(value)
+        host = folder_tree_of(self).host(value)
         self._confirm_user_has_permission(host)
 
         if (

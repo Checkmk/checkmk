@@ -17,7 +17,7 @@ from typing import Any, Literal, override
 
 from marshmallow import ValidationError
 from marshmallow.decorators import post_load, pre_dump, validates_schema
-from marshmallow.fields import DateTime
+from marshmallow.fields import DateTime, Field
 from marshmallow.types import StrSequenceOrSet
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
@@ -36,8 +36,47 @@ from cmk.livestatus_client.tables import Hostgroups, Hosts, Servicegroups
 from cmk.ruleset_matcher.tags import TagGroupID
 
 from .groups_io import load_group_information
-from .hosts_and_folders import folder_tree, Host, strip_hostname_whitespace_chars
+from .hosts_and_folders import (
+    FolderTree,
+    FolderTreeConfigSource,
+    Host,
+    make_folder_tree,
+    strip_hostname_whitespace_chars,
+)
 from .tags import load_tag_group
+
+_FOLDER_TREE = "folder_tree"
+
+
+class _RequestFolderTree:
+    """The folder tree of a request, built on the first lookup"""
+
+    def __init__(self, config: FolderTreeConfigSource) -> None:
+        self._config = config
+        self._tree: FolderTree | None = None
+
+    def __call__(self) -> FolderTree:
+        if self._tree is None:
+            self._tree = make_folder_tree(self._config)
+        return self._tree
+
+
+def request_schema_context(config: FolderTreeConfigSource) -> dict[str, object]:
+    """The context of the marshmallow schemas validating a request
+
+    The folder tree is built on the first host or folder lookup. A request without one builds no
+    tree, and the fields of one request share a tree.
+    """
+    return {_FOLDER_TREE: _RequestFolderTree(config)}
+
+
+def folder_tree_of(field: Field) -> FolderTree:
+    """The folder tree of the request the field validates"""
+    tree_of = (field.context or {}).get(_FOLDER_TREE)
+    if not isinstance(tree_of, _RequestFolderTree):
+        raise RuntimeError(f"No folder tree in the context of field {field}")
+    return tree_of()
+
 
 HOST_NAME_REGEXP = r"^[-0-9a-zA-Z_. ]+$"
 
@@ -258,7 +297,7 @@ class HostField(base.String):
     @override
     def _validate(self, value: HostAddress) -> None:
         super()._validate(value)
-        host = folder_tree().host(value)
+        host = folder_tree_of(self).host(value)
         self._confirm_user_has_permission(host)
 
         if (

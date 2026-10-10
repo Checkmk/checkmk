@@ -6,7 +6,7 @@
 import time
 import urllib.parse
 from collections.abc import Mapping, Sequence
-from typing import NamedTuple
+from typing import NamedTuple, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -30,6 +30,10 @@ class PluginData(NamedTuple):
 
 
 MRPESection = Mapping[str, PluginData]
+
+
+class MRPEParams(TypedDict, total=False):
+    hide_cache_info_from_summary: bool
 
 
 def parse_mrpe(string_table: StringTable) -> MRPESection:
@@ -143,7 +147,7 @@ def _parse_nagios_perfstring(perfinfo: str) -> Metric:
     )
 
 
-def check_mrpe(item: str, section: MRPESection) -> CheckResult:
+def check_mrpe(item: str, params: MRPEParams, section: MRPESection) -> CheckResult:
     dataset = section.get(item)
     if dataset is None:
         return
@@ -165,15 +169,23 @@ def check_mrpe(item: str, section: MRPESection) -> CheckResult:
                 perfdata += parts[1].strip().split()
                 now_comes_perfdata = True
 
+    hide = params.get("hide_cache_info_from_summary", False)
+
+    summary = output[0] if output[0] else "No further information available"
+    if dataset.cache_info is not None and hide:
+        summary = f"{summary} ◷"
+
     yield Result(
         state=dataset.state,
-        summary=output[0] if output[0] else "No further information available",
+        summary=summary,
         details="\n".join(output) if output[0] else None,
     )
     yield from _output_metrics(perfdata)
 
     # This is at the end of the summary, to be consistent with local checks.
-    if dataset.cache_info is not None:
+    if dataset.cache_info is not None and hide:
+        yield Result(state=State.OK, notice=cache_helper.render_cache_info(dataset.cache_info))
+    elif dataset.cache_info is not None and not hide:
         yield Result(state=State.OK, summary=cache_helper.render_cache_info(dataset.cache_info))
 
     # name of check command needed for PNP to choose the correct template
@@ -185,5 +197,7 @@ check_plugin_mrpe = CheckPlugin(
     name="mrpe",
     discovery_function=discover_mrpe,
     check_function=check_mrpe,
+    check_default_parameters={},
+    check_ruleset_name="hide_cache_info_mrpe",
     service_name="%s",
 )

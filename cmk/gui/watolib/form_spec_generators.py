@@ -9,7 +9,7 @@ from collections.abc import Callable, Sequence
 from typing import Any, TypeVar
 
 from cmk.gui.config import active_config
-from cmk.gui.form_specs.unstable import SingleChoiceEditable
+from cmk.gui.form_specs.unstable import FolderChoiceEditable
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeFormSpec,
@@ -30,7 +30,6 @@ from cmk.rulesets.internal.form_specs import (
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import DefaultValue
 from cmk.rulesets.v1.form_specs.validators import ValidationError
-from cmk.shared_typing.configuration_entity import ConfigEntityType
 from cmk.utils.timeperiod import TimeperiodName
 
 T = TypeVar("T")
@@ -43,23 +42,23 @@ def create_full_path_folder_choice(
     folder_choices: Callable[[], Sequence[tuple[str, str]]],
     custom_validate: Sequence[Callable[[str], object]] | None = None,
     allow_new_folder_creation: bool = False,
-) -> SingleChoiceExtended[str] | SingleChoiceEditable:
+) -> SingleChoiceExtended[str] | FolderChoiceEditable:
     """A choice of a folder by its full title
 
     `folder_choices` returns the path and the full title of each folder the user may choose.
     """
     if allow_new_folder_creation:
-        return SingleChoiceEditable(
+        return FolderChoiceEditable(
             # FormSpec
             title=title,
             help_text=help_text,
             custom_validate=custom_validate,
             # SingleChoiceEditable
-            entity_type=ConfigEntityType.folder,
-            entity_type_specifier="all",  # must not be empty, unused
             prefill=DefaultValue(""),
             create_element_label=Label("Create new"),
             allow_editing_existing_elements=False,
+            # FolderChoiceEditable
+            folder_choices=folder_choices,
         )
 
     return SingleChoiceExtended[str](

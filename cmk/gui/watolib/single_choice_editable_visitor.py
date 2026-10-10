@@ -6,6 +6,7 @@
 from collections.abc import Callable, Sequence
 from typing import override
 
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.form_specs import (
     compute_title_input_hint,
     compute_validators,
@@ -16,14 +17,16 @@ from cmk.gui.form_specs import (
     IncomingData,
     InvalidValue,
 )
-from cmk.gui.form_specs.unstable.single_choice_editable import SingleChoiceEditable
+from cmk.gui.form_specs.unstable.single_choice_editable import (
+    FolderChoiceEditable,
+    SingleChoiceEditable,
+)
 from cmk.gui.form_specs.visitors.validators import build_vue_validators
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.configuration_entity.configuration_entity import (
     get_list_of_configuration_entities,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
@@ -33,8 +36,8 @@ _ParsedValueModel = str | None
 _FallbackModel = str | None
 
 
-class SingleChoiceEditableVisitor(
-    FormSpecVisitor[SingleChoiceEditable, _ParsedValueModel, _FallbackModel]
+class SingleChoiceEditableVisitor[T: SingleChoiceEditable](
+    FormSpecVisitor[T, _ParsedValueModel, _FallbackModel]
 ):
     @override
     def _parse_value(
@@ -77,14 +80,6 @@ class SingleChoiceEditableVisitor(
         self, parsed_value: _ParsedValueModel | InvalidValue[_FallbackModel]
     ) -> tuple[shared_type_defs.SingleChoiceEditable, object]:
         title, help_text = get_title_and_help(self.form_spec)
-        entity_type = ConfigEntityType(self.form_spec.entity_type.value)
-        entity_selection = self.form_spec.entity_type_specifier
-        entities = get_list_of_configuration_entities(
-            folder_tree() if entity_type is ConfigEntityType.folder else None,
-            entity_type,
-            entity_selection,
-            user=user,
-        )
         return (
             shared_type_defs.SingleChoiceEditable(
                 # FormSpec
@@ -95,10 +90,8 @@ class SingleChoiceEditableVisitor(
                 config_entity_type=self.form_spec.entity_type.value,
                 config_entity_type_specifier=self.form_spec.entity_type_specifier,
                 elements=[
-                    shared_type_defs.SingleChoiceElement(
-                        name=entity.ident, title=entity.description
-                    )
-                    for entity in entities
+                    shared_type_defs.SingleChoiceElement(name=name, title=title)
+                    for name, title in self._elements()
                 ],
                 allow_editing_existing_elements=self.form_spec.allow_editing_existing_elements,
                 input_hint=compute_title_input_hint(self.form_spec.prefill),
@@ -106,6 +99,25 @@ class SingleChoiceEditableVisitor(
             None if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
+    def _elements(self) -> Sequence[tuple[str, str]]:
+        if self.form_spec.entity_type is ConfigEntityType.folder:
+            raise MKGeneralException("Use FolderChoiceEditable for folder choices")
+        return [
+            (entity.ident, entity.description)
+            for entity in get_list_of_configuration_entities(
+                None,
+                ConfigEntityType(self.form_spec.entity_type.value),
+                self.form_spec.entity_type_specifier,
+                user=user,
+            )
+        ]
+
     @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> object:
         return parsed_value
+
+
+class FolderChoiceEditableVisitor(SingleChoiceEditableVisitor[FolderChoiceEditable]):
+    @override
+    def _elements(self) -> Sequence[tuple[str, str]]:
+        return self.form_spec.folder_choices()

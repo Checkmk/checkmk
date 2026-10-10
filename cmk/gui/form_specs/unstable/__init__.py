@@ -15,7 +15,7 @@ from .list_unique_selection import ListUniqueSelection
 from .metric import MetricExtended
 from .optional_choice import OptionalChoice
 from .passwordstore_password import PasswordStorePassword
-from .single_choice_editable import SingleChoiceEditable
+from .single_choice_editable import FolderChoiceEditable, SingleChoiceEditable
 from .static_text import StaticText
 from .time_picker import TimePicker
 from .time_specific import TimeSpecific
@@ -29,6 +29,7 @@ __all__ = [
     "CommentTextArea",
     "ConditionChoices",
     "DatePicker",
+    "FolderChoiceEditable",
     "id_validators",
     "Labels",
     "LegacyValueSpec",

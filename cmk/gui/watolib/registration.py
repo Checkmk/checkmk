@@ -15,7 +15,7 @@ from cmk.gui.autocompleters import AutocompleterRegistry
 from cmk.gui.background_job.job import BackgroundJobRegistry
 from cmk.gui.config import Config
 from cmk.gui.cron import CronJob, CronJobRegistry
-from cmk.gui.form_specs.unstable import SingleChoiceEditable
+from cmk.gui.form_specs.unstable import FolderChoiceEditable, SingleChoiceEditable
 from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
 from cmk.gui.form_specs.visitors import register_recomposer_function, register_visitor_class
 from cmk.gui.logged_in import user
@@ -98,7 +98,10 @@ from .rulespecs import (
 )
 from .sample_config import SampleConfigGeneratorRegistry
 from .services import ServiceDiscoveryBackgroundJob
-from .single_choice_editable_visitor import SingleChoiceEditableVisitor
+from .single_choice_editable_visitor import (
+    FolderChoiceEditableVisitor,
+    SingleChoiceEditableVisitor,
+)
 from .time_specific_visitor import TimeSpecificVisitor
 from .timeperiods import TimeperiodUsageFinderRegistry
 from .user_profile import handle_ldap_sync_finished, PushUserProfilesToSite
@@ -266,6 +269,7 @@ def _register_cronjobs(cron_job_registry: CronJobRegistry) -> None:
 
 def _register_form_specs() -> None:
     register_visitor_class(SingleChoiceEditable, SingleChoiceEditableVisitor)
+    register_visitor_class(FolderChoiceEditable, FolderChoiceEditableVisitor)
     register_visitor_class(TimeSpecific, TimeSpecificVisitor)
     register_visitor_class(Password, PasswordVisitor)
     register_recomposer_function(Proxy, recompose_proxy)

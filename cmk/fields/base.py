@@ -9,7 +9,7 @@ import re
 from collections.abc import Collection, Hashable, Mapping
 from typing import Any, override, Protocol
 
-from marshmallow import fields, ValidationError
+from marshmallow import class_registry, fields, Schema, ValidationError
 from marshmallow.types import StrSequenceOrSet
 
 
@@ -325,6 +325,37 @@ class Nested(OpenAPIAttributes, fields.Nested, UniqueFields):
     ) -> None:
         super().__init__(*args, **kwargs)
         self.context = context or {}
+
+    @property
+    @override
+    def schema(self) -> Schema:
+        """The nested schema, handed the context of the parent schema
+
+        marshmallow 3 hands the parent's context to the constructor of a nested schema class and
+        warns about doing so. The nested schema is built without the context and gets it
+        afterwards, the way marshmallow treats a nested schema instance.
+        """
+        if self._schema is None:
+            nested = (
+                self.nested()
+                if callable(self.nested) and not isinstance(self.nested, type)
+                else self.nested
+            )
+            if isinstance(nested, str):
+                # A schema referenced by its class name, resolved the way marshmallow's
+                # Nested.schema does. Nested("self") needs no handling: marshmallow's
+                # constructor already rejects it with a RemovedInMarshmallow4Warning.
+                nested = class_registry.get_class(nested)
+            if isinstance(nested, type) and issubclass(nested, Schema):
+                self._schema = nested(
+                    many=self.many,
+                    only=self.only,
+                    exclude=self.exclude,
+                    load_only=self._nested_normalized_option("load_only"),
+                    dump_only=self._nested_normalized_option("dump_only"),
+                )
+                self._schema.context.update(getattr(self.parent, "context", {}))
+        return super().schema
 
     @override
     def _deserialize(

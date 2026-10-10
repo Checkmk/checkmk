@@ -40,8 +40,7 @@ class AgentSectionPlugin(NamedTuple):
     host_label_ruleset_name: RuleSetName | None
     host_label_ruleset_type: RuleSetTypeName
     supersedes: set[SectionName]
-    # We need to allow 'None' for the trivial agent section :-|
-    location: PluginLocation | None
+    location: PluginLocation
 
 
 class _OIDSpecLike(Protocol):

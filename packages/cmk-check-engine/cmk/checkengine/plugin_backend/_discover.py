@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="type-arg"
 
 import functools
@@ -102,16 +101,15 @@ def load_selected_plugins(
     registered_inventory_plugins: dict[plugins.InventoryPluginName, plugins.InventoryPlugin] = {}
     for location in locations:
         module = import_module(location.module)
-        if location.name is not None:
-            _register_plugin_by_type(
-                location,
-                getattr(module, location.name),
-                registered_agent_sections,
-                registered_snmp_sections,
-                registered_check_plugins,
-                registered_inventory_plugins,
-                validate=validate,
-            )
+        _register_plugin_by_type(
+            location,
+            getattr(module, location.name),
+            registered_agent_sections,
+            registered_snmp_sections,
+            registered_check_plugins,
+            registered_inventory_plugins,
+            validate=validate,
+        )
     return plugins.AgentBasedPlugins(
         agent_sections=registered_agent_sections,
         snmp_sections=registered_snmp_sections,

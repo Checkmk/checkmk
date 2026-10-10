@@ -39,7 +39,7 @@ def create_plugin_index(plugins: AgentBasedPlugins) -> str:
     )
     raw = {
         "locations": [
-            *(str(p.location) for p in sections.values() if isinstance(p.location, PluginLocation)),
+            *(str(p.location) for p in sections.values()),
             *(str(p.location) for p in plugins.inventory_plugins.values()),
         ],
     }

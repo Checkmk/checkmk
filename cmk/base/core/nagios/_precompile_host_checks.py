@@ -355,5 +355,5 @@ def _get_disabled_service_ids(
 def _get_needed_agent_based_locations(
     plugins: Iterable[SectionPlugin | CheckPlugin | InventoryPlugin],
 ) -> list[PluginLocation]:
-    modules = {plugin.location for plugin in plugins if isinstance(plugin.location, PluginLocation)}
-    return sorted(modules, key=lambda l: (l.module, l.name or ""))
+    modules = {plugin.location for plugin in plugins}
+    return sorted(modules, key=str)

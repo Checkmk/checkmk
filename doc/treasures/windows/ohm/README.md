@@ -23,7 +23,7 @@ Second, copy the files to the local structure of your site:
 
     URL="https://github.com/Checkmk/checkmk/raw/refs/heads/master/doc/treasures/windows/ohm"
     wget "$URL/OpenHardwareMonitorCLI.exe" -P local/share/check_mk/agents/windows/
-    wget $URL/OpenHardwareMonitorLib.dll" -P local/share/check_mk/agents/windows/
+    wget "$URL/OpenHardwareMonitorLib.dll" -P local/share/check_mk/agents/windows/
 
 ## Appendix
 

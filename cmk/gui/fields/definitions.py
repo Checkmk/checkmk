@@ -27,10 +27,10 @@ from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk.ccc import version
 from cmk.ccc.exceptions import MKException, MKGeneralException
-from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.regex import regex, REGEX_ID
 from cmk.ccc.user import UserId
-from cmk.fields import base, Boolean, DateTime, validators
+from cmk.fields import base, Boolean, DateTime
 from cmk.gui import sites
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.customer import customer_api, SCOPE_GLOBAL
@@ -778,135 +778,6 @@ def ensure_string(value: object) -> None:
         raise ValidationError(f"Not a string, but a {type(value).__name__}")
 
 
-class HostnameOrIP(base.String):
-    default_error_messages = {
-        "too_short": "The length of {value!r} is less than the minimum {min!r}.",
-        "too_long": "The length of {value!r} is more than the maximum {max!r}.",
-        "should_exist": "Host not found: {host_name!r}",
-        "should_not_exist": "Host {host_name!r} already exists.",
-        "should_be_cluster": "Host {host_name!r} is not a cluster host, but needs to be.",
-        "should_not_be_cluster": "Host {host_name!r} may not be a cluster host, but is.",
-        "should_be_monitored": "Host {host_name!r} exists, but is not monitored.",
-        "should_not_be_monitored": "Host {host_name!r} exists, but should not be monitored.",
-    }
-
-    def __init__(
-        self,
-        description: str = "A host name or IP address",
-        example: str = "example.com",
-        required: bool = True,
-        strip: bool = True,
-        minlen: int = 1,
-        maxlen: int | None = None,
-        host_type_allowed: Literal[
-            "hostname_and_ipv4", "hostname_and_ipv6", "hostname_only", "ipv4", "ipv6"
-        ] = "hostname_and_ipv4",
-        presence: Literal["should_exist", "should_not_exist", "ignore"] = "ignore",
-        should_be_monitored: bool = False,
-        should_be_cluster: bool = False,
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(description=description, example=example, required=required, **kwargs)
-
-        self.strip = strip
-        self.minlen = minlen
-        self.maxlen = maxlen
-        self.host_type_allowed = host_type_allowed
-        self.presence = presence
-        self.should_be_monitored = should_be_monitored
-        self.should_be_cluster = should_be_cluster
-
-    @override
-    def _validate(self, value: str) -> None:
-        if self.strip:
-            value = value.strip()
-
-        super()._validate(value)
-
-        validate_results: dict[str, ValidationError | Literal["pass"]] = {
-            "hostname": self._validate_hostname(value),
-            "ipv4": self._validate_ip4(value),
-            "ipv6": self._validate_ip6(value),
-        }
-
-        validated_host_type_names = {k for k, v in validate_results.items() if v == "pass"}
-
-        match self.host_type_allowed:
-            case "hostname_and_ipv4":
-                if validated_host_type_names.difference({"ipv4", "hostname"}):
-                    self._raise_an_error(validate_results)
-
-            case "hostname_and_ipv6":
-                if validated_host_type_names.difference({"ipv6", "hostname"}):
-                    self._raise_an_error(validate_results)
-
-            case "hostname_only":
-                if validated_host_type_names.difference({"hostname"}):
-                    self._raise_an_error(validate_results)
-
-            case "ipv4":
-                if "ipv4" not in validated_host_type_names:
-                    self._raise_an_error(validate_results)
-
-            case "ipv6":
-                if "ipv6" not in validated_host_type_names:
-                    self._raise_an_error(validate_results)
-
-        if len(value) < self.minlen:
-            self.make_error("too_short", value=value, min=self.minlen)
-
-        if self.maxlen and len(value) > self.maxlen:
-            self.make_error("too_long", value=value, min=self.minlen)
-
-    def _raise_an_error(
-        self, validate_results: Mapping[str, ValidationError | Literal["pass"]]
-    ) -> None:
-        for val_error in {v for _, v in validate_results.items() if v != "pass"}:
-            raise val_error
-
-    def _validate_hostname(self, value: str) -> ValidationError | Literal["pass"]:
-        try:
-            if self.presence != "ignore" or self.should_be_cluster or self.should_be_monitored:
-                if host := folder_tree().host(HostName(value)):
-                    if self.presence == "should_not_exist":
-                        raise self.make_error("should_not_exist", host_name=value)
-
-                    if self.should_be_cluster and not host.is_cluster():
-                        raise self.make_error("should_be_cluster", host_name=value)
-
-                    if not self.should_be_cluster and host.is_cluster():
-                        raise self.make_error("should_not_be_cluster", host_name=value)
-
-                    if self.should_be_monitored and not host_is_monitored(value):
-                        raise self.make_error("should_be_monitored", host_name=value)
-
-                    if not self.should_be_monitored and host_is_monitored(value):
-                        raise self.make_error("should_not_be_monitored", host_name=value)
-                else:
-                    raise self.make_error("should_exist", host_name=value)
-
-            if not re.match("^(:?" + HOST_NAME_REGEXP + ")$", value):
-                raise self.make_error("pattern", value=value, pattern=HOST_NAME_REGEXP)
-
-        except ValidationError as ve:
-            return ve
-        return "pass"
-
-    def _validate_ip4(self, value: str) -> ValidationError | Literal["pass"]:
-        try:
-            validators.ValidateIPv4()(value)
-        except ValidationError as ve:
-            return ve
-        return "pass"
-
-    def _validate_ip6(self, value: str) -> ValidationError | Literal["pass"]:
-        try:
-            validators.ValidateIPv6()(value)
-        except ValidationError as ve:
-            return ve
-        return "pass"
-
-
 class SiteField(base.String):
     """A field representing a site name."""
 
@@ -1507,7 +1378,6 @@ __all__ = [
     "FOLDER_PATTERN",
     "GroupField",
     "HostField",
-    "HostnameOrIP",
     "MultiNested",
     "PasswordEditableBy",
     "PasswordIdent",

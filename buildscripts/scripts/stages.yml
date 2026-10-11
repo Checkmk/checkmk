@@ -506,7 +506,7 @@ STAGES:
     # are skipped.
     - NAME: "Bazel local registry modules"
       ONLY_WHEN_NOT_EMPTY: CHANGED_THIRDPARTY_MODULES
-      COMMAND: "bazel run //buildscripts/scripts:check_thirdparty_modules &> ${RESULTS}/thirdparty-modules.txt || exit 1; for m in ${CHANGED_THIRDPARTY_MODULE_NAMES}; do [ -d bazel/thirdparty/modules/$m ] || continue; bazel fetch --force --repo_contents_cache= --repository_cache= --repo=@@$m+ &>> ${RESULTS}/thirdparty-modules.txt || exit 1; done; rm ${RESULTS}/thirdparty-modules.txt"
+      COMMAND: "bazel run //buildscripts/scripts:check_thirdparty_modules &> ${RESULTS}/thirdparty-modules.txt || exit 1; for m in ${CHANGED_THIRDPARTY_MODULE_NAMES}; do [ -d bazel/thirdparty/modules/$m ] || continue; bazel fetch --force --repo_contents_cache= --repository_cache= --repo=@@$m+ &>> ${RESULTS}/thirdparty-modules.txt || exit 1; done; : > ${RESULTS}/thirdparty-modules.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No local registry modules changed"
       RESULT_CHECK_FILE_PATTERN: "results/thirdparty-modules.txt"

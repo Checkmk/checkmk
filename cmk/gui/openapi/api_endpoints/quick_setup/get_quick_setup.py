@@ -96,7 +96,7 @@ def get_quick_setup_v1(
             quick_setup_overview_mode(
                 quick_setup=quick_setup,
                 prefill_data=prefill_data,
-                ctx=QuickSetupContext.from_config(api_context.config),
+                ctx=QuickSetupContext.from_config(api_context.config, api_context.user),
                 is_edit_mode=bool(object_id),
             )
         )
@@ -104,7 +104,7 @@ def get_quick_setup_v1(
         quick_setup_guided_mode(
             quick_setup=quick_setup,
             prefill_data=prefill_data,
-            ctx=QuickSetupContext.from_config(api_context.config),
+            ctx=QuickSetupContext.from_config(api_context.config, api_context.user),
             is_edit_mode=bool(object_id),
         )
     )

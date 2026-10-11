@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.config import Config
+from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.quick_setup.handlers.stage import recap_stage
 from cmk.gui.quick_setup.handlers.utils import InfoLogger
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
@@ -63,6 +64,7 @@ def test_form_spec_recap() -> None:
         debug=False,
         use_git=False,
         pprint_value=False,
+        user=LoggedInSuperUser(),
     )
     form_spec_map = build_formspec_map_from_stages(built_stages, ctx)
 

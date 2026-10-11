@@ -9,6 +9,7 @@ import pytest
 
 from cmk.ccc.version import Edition
 from cmk.gui.config import Config
+from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.quick_setup.handlers.utils import InfoLogger
 from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
 from cmk.gui.quick_setup.v0_unstable.setups import (
@@ -152,6 +153,7 @@ def _action(action_id: str, edition: Edition) -> QuickSetupAction:
 def _context(config: Config) -> QuickSetupContext:
     return QuickSetupContext(
         tree=make_folder_tree(config),
+        user=LoggedInSuperUser(),
         site_configs=config.sites,
         debug=False,
         use_git=False,

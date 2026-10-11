@@ -396,6 +396,7 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
                         debug=debug,
                         use_git=use_git,
                         pprint_value=pprint_value,
+                        user=user,
                     ),
                 )
             except Exception as e:

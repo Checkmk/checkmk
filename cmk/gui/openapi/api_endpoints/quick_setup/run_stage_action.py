@@ -107,7 +107,7 @@ def run_stage_action_v1(
             ),
         )
 
-    ctx = QuickSetupContext.from_config(api_context.config)
+    ctx = QuickSetupContext.from_config(api_context.config, api_context.user)
     built_stages = [stage() for stage in quick_setup.stages[: stage_index + 1]]
     form_spec_map = build_formspec_map_from_stages(built_stages, ctx)
     stage_applicability, stages_raw_formspecs = stage_applicability_and_form_data(

@@ -76,7 +76,7 @@ def get_stage_structure_v1(
     return _convert_stage_structure(
         get_stage_structure(
             stage=quick_setup.stages[stage_idx](),
-            ctx=QuickSetupContext.from_config(api_context.config),
+            ctx=QuickSetupContext.from_config(api_context.config, api_context.user),
             prefill_data=prefill_data,
         )
     )

@@ -8,6 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.gui.config import Config
+from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.quick_setup.handlers.utils import stage_applicability_and_form_data
 from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
 from cmk.gui.quick_setup.v0_unstable.setups import (
@@ -25,7 +26,7 @@ from cmk.rulesets.v1.form_specs import DictElement, Dictionary, String
 
 
 def _ctx() -> QuickSetupContext:
-    return QuickSetupContext.from_config(Config())
+    return QuickSetupContext.from_config(Config(), LoggedInSuperUser())
 
 
 def _stage(

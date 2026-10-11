@@ -9,6 +9,7 @@ from cmk.automations.results import DiagSpecialAgentInput, DiagSpecialAgentResul
 from cmk.automations.results.diagnostics import SpecialAgentResult
 from cmk.ccc.site import omd_site
 from cmk.gui.config import Config
+from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.quick_setup.config_setups.kubernetes.configuration import pull_configuration
 from cmk.gui.quick_setup.config_setups.kubernetes.connection_test import validate_pull_connection
 from cmk.gui.quick_setup.config_setups.kubernetes.constants import QUICK_SETUP_ID
@@ -56,6 +57,7 @@ def test_pull_connection_uses_saved_rule_parameters_and_an_ad_hoc_secret(
             debug=False,
             use_git=False,
             pprint_value=False,
+            user=LoggedInSuperUser(),
         ),
         run_diagnostic=run_diagnostic,
     )
@@ -116,6 +118,7 @@ def test_failed_pull_test_returns_errors_without_exposing_response_credentials(
             debug=False,
             use_git=False,
             pprint_value=False,
+            user=LoggedInSuperUser(),
         ),
         run_diagnostic=lambda _input: result,
     )
@@ -138,6 +141,7 @@ def test_pull_automation_failure_does_not_expose_command_input(pull_data: Parsed
             debug=False,
             use_git=False,
             pprint_value=False,
+            user=LoggedInSuperUser(),
         ),
         run_diagnostic=failed_automation,
     )
@@ -164,6 +168,7 @@ def test_pull_failure_points_to_the_site_log_without_exposing_output(
             debug=False,
             use_git=False,
             pprint_value=False,
+            user=LoggedInSuperUser(),
         ),
         run_diagnostic=lambda _input: diagnostic,
     )
@@ -198,6 +203,7 @@ def test_pull_test_rejects_wrong_mode_or_site_before_running(
                 debug=False,
                 use_git=False,
                 pprint_value=False,
+                user=LoggedInSuperUser(),
             ),
             run_diagnostic=unexpected_diagnostic,
         )

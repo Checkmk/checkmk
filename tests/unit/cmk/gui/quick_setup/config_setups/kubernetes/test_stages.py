@@ -7,6 +7,7 @@ import pytest
 
 from cmk.gui.config import Config
 from cmk.gui.form_specs import DEFAULT_VALUE, get_visitor, VisitorOptions
+from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.quick_setup.config_setups.kubernetes.connection_forms import connection_configuration
 from cmk.gui.quick_setup.config_setups.kubernetes.settings import ADVANCED, CONNECTION, PULL_URL
 from cmk.gui.quick_setup.config_setups.kubernetes.stages import (
@@ -37,7 +38,7 @@ pytestmark = pytest.mark.usefixtures("with_admin_login")
 
 
 def _ctx() -> QuickSetupContext:
-    return QuickSetupContext.from_config(Config())
+    return QuickSetupContext.from_config(Config(), LoggedInSuperUser())
 
 
 @pytest.mark.parametrize(

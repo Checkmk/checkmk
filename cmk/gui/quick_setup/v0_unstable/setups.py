@@ -13,6 +13,7 @@ from enum import StrEnum
 from typing import Protocol, Self
 
 from cmk.ccc.site import SiteId
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ActionId,
     GeneralStageErrors,
@@ -66,15 +67,17 @@ class QuickSetupConfigSource(FolderTreeConfigSource, Protocol):
 @dataclass(frozen=True, kw_only=True)
 class QuickSetupContext:
     tree: FolderTree
+    user: LoggedInUser
     site_configs: Mapping[SiteId, SiteConfiguration]
     debug: bool
     use_git: bool
     pprint_value: bool
 
     @classmethod
-    def from_config(cls, config: QuickSetupConfigSource) -> Self:
+    def from_config(cls, config: QuickSetupConfigSource, user: LoggedInUser) -> Self:
         return cls(
             tree=make_folder_tree(config),
+            user=user,
             site_configs=config.sites,
             debug=config.debug,
             use_git=config.wato_use_git,

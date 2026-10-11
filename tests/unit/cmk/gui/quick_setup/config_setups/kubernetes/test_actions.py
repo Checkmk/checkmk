@@ -14,7 +14,7 @@ from cmk.ccc.user import UserId
 from cmk.gui import login
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.quick_setup.config_setups.kubernetes.actions import (
     finish_setup,
@@ -62,6 +62,7 @@ def test_pull_recap_works_without_a_push_receiver_or_site_ca(data: ParsedFormDat
             debug=False,
             use_git=False,
             pprint_value=False,
+            user=LoggedInSuperUser(),
         ),
     )
 
@@ -136,6 +137,7 @@ def test_host_validation_does_not_require_a_connection_mode(data: ParsedFormData
                 debug=False,
                 use_git=False,
                 pprint_value=False,
+                user=LoggedInSuperUser(),
             ),
         )
         == []
@@ -160,6 +162,7 @@ def test_deployment_without_a_mode_does_not_prepare_push_credentials(data: Parse
                 debug=False,
                 use_git=False,
                 pprint_value=False,
+                user=LoggedInSuperUser(),
             ),
             prepare_push=unexpected_credentials,
         )
@@ -178,6 +181,7 @@ def test_save_without_a_mode_does_not_create_configuration(data: ParsedFormData)
                 debug=False,
                 use_git=False,
                 pprint_value=False,
+                user=LoggedInSuperUser(),
             ),
         )
 
@@ -203,6 +207,7 @@ def test_pull_deployment_requires_password_store_permission(data: ParsedFormData
                 debug=False,
                 use_git=False,
                 pprint_value=False,
+                user=LoggedInSuperUser(),
             ),
         )
 
@@ -218,6 +223,7 @@ def test_configuration_name_must_be_a_helm_release_name(data: ParsedFormData) ->
             debug=False,
             use_git=False,
             pprint_value=False,
+            user=LoggedInSuperUser(),
         ),
     )
 
@@ -247,6 +253,7 @@ def test_configuration_names_cannot_normalize_to_the_same_release(data: ParsedFo
             debug=False,
             use_git=False,
             pprint_value=False,
+            user=LoggedInSuperUser(),
         ),
     )
 
@@ -267,6 +274,7 @@ def test_configuration_names_cannot_normalize_to_the_same_release(data: ParsedFo
                 debug=False,
                 use_git=False,
                 pprint_value=False,
+                user=LoggedInSuperUser(),
             ),
             prepare_push=unexpected_credentials,
         )
@@ -285,5 +293,6 @@ def test_editing_through_quick_setup_is_rejected(data: ParsedFormData) -> None:
                 debug=False,
                 use_git=False,
                 pprint_value=False,
+                user=LoggedInSuperUser(),
             ),
         )

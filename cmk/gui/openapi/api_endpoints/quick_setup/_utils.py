@@ -225,7 +225,7 @@ def complete_quick_setup_action(
             detail=f"Action with id '{action_id}' requires {', '.join(repr(p) for p in action.permissions)} permissions.",
         )
 
-    ctx = QuickSetupContext.from_config(api_context.config)
+    ctx = QuickSetupContext.from_config(api_context.config, api_context.user)
     form_spec_map = build_formspec_map_from_stages([stage() for stage in quick_setup.stages], ctx)
     _stage_applicability, stages_raw_form_data = stage_applicability_and_form_data(
         quick_setup.stages,

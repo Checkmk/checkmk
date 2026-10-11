@@ -525,6 +525,16 @@ msgstr[1] "Algemene eigenschappen"
 msgid "%(count)d hosts looked at."
 msgstr "Niet geselecteerd"
 
+#, python-format
+msgid ""
+"%(count)d local file below %(local_dir)s overrides a shipped style sheet or "
+"script and may be outdated: %(files)s"
+msgid_plural ""
+"%(count)d local files below %(local_dir)s override shipped style sheets or "
+"scripts and may be outdated: %(files)s"
+msgstr[0] ""
+msgstr[1] ""
+
 #, fuzzy, python-format
 msgid "%(count)d new label"
 msgid_plural "%(count)d new labels"
@@ -615,6 +625,10 @@ msgstr "%(failed_notifications)d mislukte notificaties"
 #, python-format
 msgid "%(filename)s (local, download requires login)"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "%(files)s and %(count)d more"
+msgstr " en %s '%s'"
 
 #, fuzzy, python-format
 msgid "%(folder)s"
@@ -836,9 +850,17 @@ msgstr ""
 "%s nu om Checkmk te blijven gebruiken zoals u nu doet. Als u al een licentie "
 "heeft, vul dan uw licentiegegevens in op de %s."
 
+#, fuzzy, python-format
+msgid "%(region)s"
+msgstr "Naam van de regio"
+
 #, python-format
 msgid "%(region_id)s | %(region_name)s"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "%(region_name)s | %(region_id)s"
+msgstr "%(error_marker)s: %(reason)s"
 
 #, python-format
 msgid "%(remaining_days)d days"
@@ -881,6 +903,10 @@ msgstr "%(timeperiod)s"
 #, python-format
 msgid "%(title)s"
 msgstr "%(title)s"
+
+#, fuzzy, python-format
+msgid "%(title)s (experimental)"
+msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy, python-format
 msgid "%(title)s by host"
@@ -997,13 +1023,26 @@ msgid "&lt;None&gt;"
 msgstr "&lt;Geen&gt;"
 
 #, python-format
-msgid "'%(host)s' is linked more than once. Remove the duplicate."
+msgid ""
+"'%(host)s' and '%(other)s' both store themselves as '%(end)s' of the other, "
+"so the monitoring shows neither relation. Save one of the two hosts in Setup "
+"to settle it."
 msgstr ""
 
 #, python-format
+msgid "'%(host)s' is linked more than once. Remove the duplicate."
+msgstr ""
+
+#, fuzzy, python-format
 msgid ""
-"'%(host)s' is locked by Quick setup, so the other half of the relation "
-"cannot be stored on it."
+"'%(host)s' is locked by Quick setup, so no relation can be stored on it."
+msgstr "Snelle installatie"
+
+#, python-format
+msgid ""
+"'%(host)s' stores a relation to '%(other)s' that '%(other)s' does not store, "
+"so the monitoring does not show it. Add it on '%(other)s', or remove it from "
+"'%(host)s'."
 msgstr ""
 
 #, python-format
@@ -1029,15 +1068,44 @@ msgstr ""
 
 #, python-format
 msgid ""
+"'%(related_name)s' also stores itself as '%(end)s' of this host, so the "
+"monitoring shows neither relation. Add the relation on the host that is the "
+"'%(other_end)s'."
+msgstr ""
+
+#, python-format
+msgid ""
+"'%(related_name)s' also stores itself as '%(end)s' of this host, so the "
+"monitoring shows neither relation. Saving keeps this host as '%(end)s' and "
+"makes '%(related_name)s' its '%(other_end)s', unless '%(related_name)s' is "
+"locked or you cannot edit it."
+msgstr ""
+
+#, python-format
+msgid ""
 "'%(related_name)s' does not store its half of the relation to this host. The "
-"monitoring shows the relation anyway. Add the relation on '%(related_name)s' "
-"to store it on both hosts."
+"monitoring shows the relation anyway. Saving this host stores it on "
+"'%(related_name)s' too, unless '%(related_name)s' is locked or you cannot "
+"edit it."
+msgstr ""
+
+#, python-format
+msgid ""
+"'%(related_name)s' does not store this relation, so the monitoring does not "
+"show it. Add it on '%(related_name)s', or remove it here."
 msgstr ""
 
 #, python-format
 msgid ""
 "'%(related_name)s' stores a different relation to this host. Change the "
-"relation on one of the two hosts so that both agree; saving writes both."
+"relation on '%(related_name)s', or remove it here."
+msgstr ""
+
+#, python-format
+msgid ""
+"'%(related_name)s' stores a different relation to this host. Saving this "
+"host makes both agree, unless '%(related_name)s' is locked or you cannot "
+"edit it."
 msgstr ""
 
 #, fuzzy
@@ -1746,6 +1814,26 @@ msgid ""
 "collect: the content of your requests or their results."
 msgstr ""
 
+#, fuzzy
+msgid ""
+"<b>Gather all service instances and restrict by overall AWS tags:</b><br>If "
+"overall tags are specified, then all service instances will be filtered by "
+"those tags. Otherwise, all instances will be collected.<br><br><b>Use "
+"explicit AWS service tags and overrule overall AWS tags:</b><br>Specify "
+"explicit tags for these services. The overall tags will be ignored for these "
+"services.<br><br><b>Use explicit service names and ignore overall AWS tags:</"
+"b><br>Use this option to specify explicit names. The overall tags will be "
+"ignored for these services."
+msgstr ""
+"<b>Alle dienstinstanties verzamelen en beperken door algemene tags:</"
+"b><br>Als algemene tags hierboven zijn gespecificeerd, dan worden alle "
+"dienstinstanties op die tags gefilterd. Anders worden alle instanties "
+"verzameld.<br><br><b>Expliciete diensttags en overschrijven algemene tags:</"
+"b><br>Specificeer expliciete tags voor deze diensten. De algemene tags "
+"worden voor deze diensten genegeerd.<br><br><b>Expliciete dienstnamen en "
+"algemene tags negeren:</b><br>Gebruik deze optie om expliciete namen op te "
+"geven. De algemene tags worden voor deze diensten genegeerd."
+
 msgid ""
 "<b>Gather all service instances and restrict by overall tags:</b><br>If "
 "overall tags are specified above, then all service instances will be "
@@ -1957,6 +2045,18 @@ msgid ""
 "individually</b>. As every site collects and transmits data independently, "
 "please verify that your firewall rules permit traffic from every site to "
 "prevent local transmission errors.</p>"
+msgstr ""
+
+#, python-format
+msgid ""
+"<p>A style sheet or script below <tt>%(local_dir)s</tt> is served instead of "
+"the shipped file with the same path. Such copies are not updated together "
+"with Checkmk: after an update, an outdated style sheet or script of an older "
+"version is still delivered and may break the user interface. Other local "
+"files, e.g. replaced logos, are not reported.</p><p>Remove the copies you do "
+"not need. To customize the look of the user interface, use a theme of your "
+"own below <tt>%(themes_dir)s</tt> instead of overriding the shipped themes.</"
+"p>"
 msgstr ""
 
 #, fuzzy
@@ -3776,9 +3876,6 @@ msgstr "Geaccepteerde verbindingsverzoeken"
 msgid "Accepted connections"
 msgstr "Geaccepteerde verbindingen"
 
-msgid "Accepted connections per second"
-msgstr "Geaccepteerde verbindingen per seconde"
-
 #, fuzzy
 msgid "Accepted packages/s"
 msgstr "Geaccepteerde pakketten/s"
@@ -3854,6 +3951,10 @@ msgstr "Toegangspunt statistieken"
 
 msgid "Access points"
 msgstr "Toegangspunten"
+
+#, fuzzy
+msgid "Access points by status"
+msgstr "Toegangspunt statistieken"
 
 #, fuzzy
 msgid "Access points/Wireless (MR)"
@@ -6402,6 +6503,10 @@ msgstr "Niveaus voor luchtstroomafwijking gemeten aan luchtstroomsensoren "
 msgid "Airflow levels"
 msgstr "Luchtstroom niveaus"
 
+#, fuzzy
+msgid "Alarm name"
+msgstr "Namen van waarschuwingsregels"
+
 msgid "Alarms"
 msgstr "Alarmen"
 
@@ -7628,6 +7733,10 @@ msgstr "Amazon Web Services (AWS)"
 msgid "Amazon Web Services (AWS) status"
 msgstr "Amazon Web Services (AWS) Status"
 
+#, fuzzy
+msgid "Amazon Web Services (AWS) v2"
+msgstr "Amazon Web Services (AWS)"
+
 msgid "Amount in billed currency"
 msgstr "Bedrag in gefactureerde valuta"
 
@@ -8743,6 +8852,10 @@ msgid "Attribute"
 msgstr "Attribuut"
 
 #, fuzzy
+msgid "Attribute filter"
+msgstr "In te stellen attribuut"
+
+#, fuzzy
 msgid "Attribute key"
 msgstr "Attribuut"
 
@@ -9322,10 +9435,6 @@ msgid "Average CPU value over"
 msgstr "Gemiddelde waarde"
 
 #, fuzzy
-msgid "Average Corosync latency"
-msgstr "Sync latentie"
-
-#, fuzzy
 msgid "Average RPC latency"
 msgstr "Gemiddelde latentie"
 
@@ -9402,6 +9511,10 @@ msgstr "Gemiddelde verwerkingstijd van inkomende berichten"
 
 msgid "Average interval"
 msgstr "Gemiddeld interval"
+
+#, fuzzy
+msgid "Average latency"
+msgstr "Gemiddelde latentie"
 
 #, fuzzy
 msgid "Average latency (ms)"
@@ -10799,10 +10912,6 @@ msgid "Backup modes"
 msgstr "Back-up modi"
 
 #, fuzzy
-msgid "Backup object name"
-msgstr "Back-up tijd"
-
-#, fuzzy
 msgid "Backup proxies"
 msgstr "Back-up codes"
 
@@ -10908,9 +11017,6 @@ msgstr "Verhoogd geheugengebruik"
 
 msgid "Band"
 msgstr "Band"
-
-msgid "Bandwidth"
-msgstr "Bandbreedte"
 
 #, fuzzy
 msgid "Bandwidth levels (per second)"
@@ -11047,9 +11153,6 @@ msgstr "Elektrische stroom van de batterij"
 msgid "Battery levels"
 msgstr "Geheugenniveaus"
 
-msgid "Battery temperature"
-msgstr "Temperatuur van de batterij"
-
 msgid "Battery time remaining"
 msgstr "Resterende batterijtijd"
 
@@ -11174,6 +11277,10 @@ msgstr "Bit kaart updates"
 
 msgid "Bits"
 msgstr "Bits"
+
+#, fuzzy
+msgid "Bits per octet"
+msgstr "Bits per seconde"
 
 msgid "Bits per second"
 msgstr "Bits per seconde"
@@ -12539,9 +12646,6 @@ msgstr "CARA"
 msgid "CAdvisor"
 msgstr "CAdvisor"
 
-msgid "CAs to accept"
-msgstr "CA's te aanvaarden"
-
 msgid "CBC-DES"
 msgstr "CBC-DES"
 
@@ -12579,18 +12683,6 @@ msgid "CIFS operations"
 msgstr "NFS operaties"
 
 #, fuzzy
-msgid "CIFS other data"
-msgstr "ZFS metagegevens"
-
-#, fuzzy
-msgid "CIFS other latency"
-msgstr "Andere latentie"
-
-#, fuzzy
-msgid "CIFS other ops"
-msgstr "%s ander %s"
-
-#, fuzzy
 msgid "CIFS read ios"
 msgstr "%s lees %s"
 
@@ -12601,10 +12693,6 @@ msgstr "Schijf lees latentie"
 #, fuzzy
 msgid "CIFS read ops"
 msgstr "%s lees %s"
-
-#, fuzzy
-msgid "CIFS read throughput"
-msgstr "Lees doorvoer"
 
 #, fuzzy
 msgid "CIFS traffic"
@@ -12621,10 +12709,6 @@ msgstr "Schijf schrijf latentie"
 #, fuzzy
 msgid "CIFS write ops"
 msgstr "%s schrijf %s"
-
-#, fuzzy
-msgid "CIFS write throughput"
-msgstr "Schrijf doorvoer"
 
 msgid "CISCO Digital Optical Monitoring (DOM)"
 msgstr "CISCO digitale optische bewaking (DOM)"
@@ -12813,6 +12897,10 @@ msgstr "CPU-tijd in systeemruimte"
 
 msgid "CPU time in user space"
 msgstr "CPU-tijd in gebruikersruimte"
+
+#, fuzzy
+msgid "CPU time percentage"
+msgstr "CPU in procenten"
 
 #, fuzzy
 msgid "CPU time upper levels"
@@ -13052,10 +13140,6 @@ msgid "CRITICAL"
 msgstr "CRITISCH"
 
 #, fuzzy
-msgid "CRT/PEM file"
-msgstr "CRT/PEM Bestand"
-
-#, fuzzy
 msgid "CSV file"
 msgstr "CSV-bestand"
 
@@ -13095,6 +13179,10 @@ msgstr "Cache leeftijd voor achtergrond controles"
 
 msgid "Cache age for background checks"
 msgstr "Cache leeftijd voor achtergrond controles"
+
+#, fuzzy
+msgid "Cache folder"
+msgstr "Wedstrijd map"
 
 #, python-format
 msgid "Cache generated %(cache_age)s ago, cache interval: %(cache_interval)s"
@@ -13359,10 +13447,10 @@ msgstr "Kan taak niet verwijderen. Taak kan niet worden gestopt."
 msgid "Cannot delete rules that are managed by Quick Setup."
 msgstr "U kunt geen rollen verwijderen, die nog in gebruik zijn (%s)!"
 
-#, fuzzy, python-format
+#, fuzzy
 msgid ""
 "Cannot delete this customer because the following objects are still assigned "
-"to it: %(references)s."
+"to it:"
 msgstr ""
 "Kan deze klant niet verwijderen omdat de sites %(sites)s nog steeds aan hem "
 "zijn toegewezen."
@@ -13628,6 +13716,10 @@ msgstr "Verenigbaarheid"
 #, fuzzy
 msgid "Capabilities supported"
 msgstr "Verenigbaarheid"
+
+#, fuzzy
+msgid "Capacity and virtual space"
+msgstr "Capaciteit"
 
 msgid "Capacity license consumption"
 msgstr ""
@@ -19580,8 +19672,8 @@ msgid "Current disk size"
 msgstr "Huidige grootte"
 
 #, fuzzy
-msgid "Current disk size %"
-msgstr "Huidige grootte"
+msgid "Current disk size percentage"
+msgstr "Huidig O2 percentage"
 
 msgid "Current events"
 msgstr "Actuele gebeurtenissen"
@@ -20581,7 +20673,15 @@ msgstr "Gewijzigde attributen"
 msgid "Data read"
 msgstr "Gelezen gegevens"
 
+#, fuzzy
+msgid "Data read and written"
+msgstr "Geschreven gegevens"
+
 msgid "Data received"
+msgstr "Ontvangen gegevens"
+
+#, fuzzy
+msgid "Data received and sent"
 msgstr "Ontvangen gegevens"
 
 #, fuzzy
@@ -20733,6 +20833,10 @@ msgstr "Naam databank"
 
 msgid "Database is being recovered"
 msgstr "Database wordt hersteld"
+
+#, fuzzy
+msgid "Database job duration"
+msgstr "Databasepoort"
 
 msgid "Database must be recovered"
 msgstr "Database moet hersteld worden"
@@ -24224,6 +24328,10 @@ msgid "Do not use absolute levels"
 msgstr "Gebruik geen absolute niveaus"
 
 #, fuzzy
+msgid "Do not use the 'aws:' prefix."
+msgstr "Gebruik geen namespace voorvoegsel"
+
+#, fuzzy
 msgid "Do not validate TLS certificates"
 msgstr "Ongeldig certificaat"
 
@@ -25724,8 +25832,8 @@ msgstr "Elektrisch vermogen"
 msgid "Electrical power for devices with only one phase"
 msgstr "Elektrisch vermogen voor apparaten met slechts één fase"
 
-#, fuzzy, no-python-format
-msgid "Electrical tension in % of normal value"
+#, fuzzy
+msgid "Electrical tension as percentage of normal value"
 msgstr "Elektrische spanning in % van de normale waarde"
 
 msgid "Electrical voltage"
@@ -28224,22 +28332,6 @@ msgid "FCP operations"
 msgstr "NFS operaties"
 
 #, fuzzy
-msgid "FCP other data"
-msgstr "Perfdata"
-
-#, fuzzy
-msgid "FCP other latency"
-msgstr "Andere latentie"
-
-#, fuzzy
-msgid "FCP other ops"
-msgstr "%s ander %s"
-
-#, fuzzy
-msgid "FCP read ios"
-msgstr "%s lees %s"
-
-#, fuzzy
 msgid "FCP read latency"
 msgstr "Schijf lees latentie"
 
@@ -28248,16 +28340,8 @@ msgid "FCP read ops"
 msgstr "%s lees %s"
 
 #, fuzzy
-msgid "FCP read throughput"
-msgstr "Lees doorvoer"
-
-#, fuzzy
 msgid "FCP traffic"
 msgstr "%s verkeer"
-
-#, fuzzy
-msgid "FCP write ios"
-msgstr "%s schrijf %s"
 
 #, fuzzy
 msgid "FCP write latency"
@@ -28266,10 +28350,6 @@ msgstr "Schijf schrijf latentie"
 #, fuzzy
 msgid "FCP write ops"
 msgstr "%s schrijf %s"
-
-#, fuzzy
-msgid "FCP write throughput"
-msgstr "Schrijf doorvoer"
 
 msgid "FGPA utilization"
 msgstr "Gebruik van de FGPA"
@@ -28762,10 +28842,6 @@ msgstr "Temperatuur"
 msgid "Fan name"
 msgstr "Naam ventilator"
 
-#, fuzzy
-msgid "Fan rotation speed"
-msgstr "Ventilatorsnelheid"
-
 msgid "Fan speed"
 msgstr "Ventilatorsnelheid"
 
@@ -28808,9 +28884,6 @@ msgstr "Agent output ophalen"
 
 msgid "Fetch all available sub OIDs"
 msgstr "Alle beschikbare sub-OID's ophalen"
-
-msgid "Fetch certificate from server"
-msgstr "Certificaat van server halen"
 
 msgid "Fetch chunked"
 msgstr "Chunked ophalen"
@@ -31584,6 +31657,10 @@ msgid "HTTP request header variable"
 msgstr "HTTP verzoek header variabele"
 
 #, fuzzy
+msgid "HTTP requests per second"
+msgstr "HTTP verzoeken per seconde"
+
+#, fuzzy
 msgid "HTTP timings"
 msgstr "HTTP-timings"
 
@@ -31695,9 +31772,6 @@ msgstr "Real-Time controles uitvoeren"
 
 msgid "Handled connections"
 msgstr "Afgehandelde verbindingen"
-
-msgid "Handled connections per second"
-msgstr "Verwerkte verbindingen per seconde"
 
 #, fuzzy
 msgid "Handled requests"
@@ -32979,6 +33053,10 @@ msgstr "Hoog (met escalatie)"
 msgid "High alerts"
 msgstr "Hoge waarschuwingen"
 
+#, fuzzy
+msgid "High bandwidth mode"
+msgstr "Bandbreedte"
+
 msgid "High utilization at "
 msgstr "Hoge bezettingsgraad bij "
 
@@ -34256,6 +34334,10 @@ msgstr "Host administratie"
 msgid "Host alert"
 msgstr "Gastheer alarm"
 
+#, fuzzy
+msgid "Host alerts"
+msgstr "Gastheer alarm"
+
 msgid "Host alias"
 msgstr "Host alias"
 
@@ -34768,6 +34850,10 @@ msgstr "Kennisgevingsnummer van de gastheer"
 msgid "Host notification period"
 msgstr "Kennisgevingstermijn gastheer"
 
+#, fuzzy
+msgid "Host notifications"
+msgstr "laatste mededeling"
+
 msgid "Host notifications enabled"
 msgstr "Host meldingen ingeschakeld"
 
@@ -34982,9 +35068,6 @@ msgstr "Hosts"
 #, fuzzy
 msgid "Hosts & Layer"
 msgstr "Gastheer alarm"
-
-msgid "Hosts & services:"
-msgstr "Hosts & diensten:"
 
 msgid "Hosts : $SHORT_STATE_NAME$"
 msgstr ""
@@ -39410,6 +39493,10 @@ msgstr "Interface"
 msgid "Interface ID"
 msgstr "Interface"
 
+#, fuzzy
+msgid "Interface bandwidth"
+msgstr "Interface-id"
+
 msgid "Interface groups"
 msgstr "Interface groepen"
 
@@ -39644,10 +39731,6 @@ msgstr "Ongeldige ident"
 
 msgid "Invalid certificate"
 msgstr "Ongeldig certificaat"
-
-#, python-format
-msgid "Invalid certificate file: %(e)s"
-msgstr "Ongeldig certificaatbestand: %(e)s"
 
 #, fuzzy, python-format
 msgid "Invalid certificate: %(e)s"
@@ -40045,10 +40128,6 @@ msgid ""
 msgstr ""
 "Ongeldige tijdvaknaam. Alleen de tekens a-z, A-Z, 0-9, _ en - zijn "
 "toegestaan."
-
-#, python-format
-msgid "Invalid time resolution key \"%(resolution)s\" given"
-msgstr "Ongeldige tijdresolutiesleutel \"%(resolution)s\" gegeven"
 
 #, fuzzy
 msgid "Invalid time-specific data"
@@ -40723,9 +40802,6 @@ msgstr "jitter"
 msgid "Job"
 msgstr "Job"
 
-msgid "Job Duration"
-msgstr "Baan Duur"
-
 msgid "Job ID"
 msgstr "Job ID"
 
@@ -41258,6 +41334,10 @@ msgstr ""
 
 msgid "LDAP version"
 msgstr "LDAP-versie"
+
+#, fuzzy
+msgid "LDAP/SAML connections"
+msgstr "SAML-verbindingen"
 
 msgid "LED"
 msgstr "LED"
@@ -43072,7 +43152,8 @@ msgid ""
 "host is to the selected one - the management board of that host, for "
 "instance, or an OS host managed by it. A relation concerns both hosts, so it "
 "is stored on both: it appears here right away when someone records it on the "
-"other host, and adding or removing one here changes that host too."
+"other host, and adding or removing one here changes that host too. The "
+"monitoring shows what the management board stores."
 msgstr ""
 
 msgid "Link to dashboard"
@@ -43533,6 +43614,9 @@ msgstr "Lokaal bestand"
 #, fuzzy
 msgid "Local files & extensions"
 msgstr "Grootte van de uitbreidingen"
+
+msgid "Local files overriding shipped style sheets or scripts"
+msgstr ""
 
 msgid "Local group name"
 msgstr "Naam lokale groep"
@@ -45935,10 +46019,6 @@ msgid "Maximum %(count)s instances of duration greater than %(duration)s"
 msgstr "Maximum %(count)s instanties van duur groter dan %(duration)s"
 
 #, fuzzy
-msgid "Maximum Corosync latency"
-msgstr "Sync latentie"
-
-#, fuzzy
 msgid "Maximum HTTP requests per second"
 msgstr "HTTP verzoeken per seconde"
 
@@ -45963,6 +46043,10 @@ msgstr "Maximaal PGA gebruikt voor handmatige werkgebieden"
 #, fuzzy
 msgid "Maximum RAM"
 msgstr "Maximum"
+
+#, fuzzy
+msgid "Maximum RAM and swap used"
+msgstr "RAM + Swap gebruikt"
 
 msgid "Maximum accepted age of the reported data in seconds"
 msgstr "Maximaal aanvaarde leeftijd van de gerapporteerde gegevens in seconden"
@@ -46104,6 +46188,10 @@ msgstr "Maximaal verwachte looptijd voor hartslagpakket"
 #, python-format
 msgid "Maximum image size: %(max_w)dx%(max_h)dpx"
 msgstr "Maximale afbeeldingsgrootte: %(max_w)dx%(max_h)dpx"
+
+#, fuzzy
+msgid "Maximum latency"
+msgstr "Maximale leeftijd"
 
 #, fuzzy
 msgid "Maximum latency (ms)"
@@ -46851,6 +46939,14 @@ msgstr "Bericht voor dienstwaarschuwingen"
 
 msgid "Message processing"
 msgstr "Verwerking van berichten"
+
+#, fuzzy
+msgid "Message queue length"
+msgstr "Lees Queue-Lengte"
+
+#, fuzzy
+msgid "Message queue utilization"
+msgstr "Niveaus voor CPU-gebruik"
 
 #, fuzzy
 msgid "Message rate"
@@ -47868,6 +47964,14 @@ msgstr "Monitor andere dan Android- of iOS-apparaten"
 msgid "Monitor request metrics using the filter <tt>EntireBucket</tt>"
 msgstr ""
 
+#, fuzzy
+msgid "Monitor request metrics using the filter EntireBucket"
+msgstr "De eerste regel in het bestand bevat titels."
+
+#, fuzzy
+msgid "Monitor service"
+msgstr "Bewaakte diensten"
+
 msgid "Monitor service limits"
 msgstr "Bewaak de servicelimieten"
 
@@ -48615,18 +48719,6 @@ msgid "NFS operations"
 msgstr "NFS operaties"
 
 #, fuzzy
-msgid "NFS other data"
-msgstr "Geen gegevens"
-
-#, fuzzy
-msgid "NFS other latency"
-msgstr "Andere latentie"
-
-#, fuzzy
-msgid "NFS other ops"
-msgstr "%s ander %s"
-
-#, fuzzy
 msgid "NFS read ios"
 msgstr "NFS operaties"
 
@@ -48681,22 +48773,6 @@ msgid "NFSv4 operations"
 msgstr "NFSv4 operaties"
 
 #, fuzzy
-msgid "NFSv4 other data"
-msgstr "NFSv4 operaties"
-
-#, fuzzy
-msgid "NFSv4 other latency"
-msgstr "Andere latentie"
-
-#, fuzzy
-msgid "NFSv4 other ops"
-msgstr "NFSv4 operaties"
-
-#, fuzzy
-msgid "NFSv4 read ios"
-msgstr "NFSv4 operaties"
-
-#, fuzzy
 msgid "NFSv4 read latency"
 msgstr "Schijf lees latentie"
 
@@ -48711,10 +48787,6 @@ msgstr "Lees doorvoer"
 #, fuzzy
 msgid "NFSv4 traffic"
 msgstr "%s verkeer"
-
-#, fuzzy
-msgid "NFSv4 write ios"
-msgstr "NFSv4 operaties"
 
 #, fuzzy
 msgid "NFSv4 write latency"
@@ -48744,22 +48816,6 @@ msgid "NFSv4.1 operations"
 msgstr "NFSv4.1 operaties"
 
 #, fuzzy
-msgid "NFSv4.1 other data"
-msgstr "NFSv4.1 operaties"
-
-#, fuzzy
-msgid "NFSv4.1 other latency"
-msgstr "NFSv4.1 operaties"
-
-#, fuzzy
-msgid "NFSv4.1 other ops"
-msgstr "NFSv4.1 operaties"
-
-#, fuzzy
-msgid "NFSv4.1 read ios"
-msgstr "NFSv4.1 operaties"
-
-#, fuzzy
 msgid "NFSv4.1 read latency"
 msgstr "Schijf lees latentie"
 
@@ -48773,10 +48829,6 @@ msgstr "Lees doorvoer"
 
 #, fuzzy
 msgid "NFSv4.1 traffic"
-msgstr "NFSv4.1 operaties"
-
-#, fuzzy
-msgid "NFSv4.1 write ios"
 msgstr "NFSv4.1 operaties"
 
 #, fuzzy
@@ -50176,6 +50228,9 @@ msgstr "Geen niveaus op inodes"
 msgid "No license verification performed yet"
 msgstr "Nog geen licentieverificatie uitgevoerd"
 
+msgid "No local files override shipped style sheets or scripts"
+msgstr ""
+
 msgid "No logging"
 msgstr "Geen logboekregistratie"
 
@@ -50851,10 +50906,6 @@ msgstr "niet beschikbaar"
 msgid "Not available duration"
 msgstr "Niet beschikbaar duur"
 
-#, python-format
-msgid "Not before: %(not_before)s - Not after: %(not_after)s"
-msgstr ""
-
 msgid "Not configured."
 msgstr "Niet geconfigureerd."
 
@@ -51527,9 +51578,6 @@ msgstr "Aantal mislukte paden"
 msgid "Number of attempted SIP/H323 fax calls"
 msgstr "Aantal mislukte paden"
 
-msgid "Number of available file descriptors"
-msgstr "Aantal beschikbare bestandsdescriptors"
-
 msgid "Number of blocked tasks"
 msgstr "Aantal geblokkeerde taken"
 
@@ -52106,6 +52154,10 @@ msgstr "Aantal containers"
 msgid "Number of stopped Podman pods"
 msgstr "Aantal containers"
 
+#, fuzzy
+msgid "Number of streams"
+msgstr "Aantal draden"
+
 msgid "Number of stuck tasks"
 msgstr "Aantal vastgelopen taken"
 
@@ -52152,12 +52204,6 @@ msgstr "Aantal onbekende signaleringen"
 
 msgid "Number of unassigned shards"
 msgstr "Aantal niet-toegewezen scherven"
-
-msgid "Number of unique inside MAC addresses"
-msgstr "Aantal unieke interne MAC-adressen"
-
-msgid "Number of unique outside MAC addresses"
-msgstr "Aantal unieke MAC-adressen van buiten"
 
 msgid "Number of unknown alerts"
 msgstr "Aantal onbekende signaleringen"
@@ -54660,9 +54706,6 @@ msgid ""
 "incorrect operation due to incorrect translations. "
 msgstr ""
 
-msgid "Other latency"
-msgstr "Andere latentie"
-
 msgid "Other logs for this service"
 msgstr "Andere logboeken voor deze dienst"
 
@@ -54893,6 +54936,10 @@ msgstr "Instellingen voor tekstcodering van uitvoer voor SNMP-apparaten"
 
 msgid "Output traffic"
 msgstr "Uitgaand verkeer"
+
+#, fuzzy
+msgid "Output unicast and non-unicast octets"
+msgstr "Uitgang niet-unicast octetten"
 
 msgid "Output unicast octets"
 msgstr "Uitvoer unicast octetten"
@@ -55570,10 +55617,6 @@ msgstr "Pagina-einde"
 msgid "Page cache mapped into userspace with huge pages"
 msgstr ""
 
-#, fuzzy
-msgid "Page lookups"
-msgstr "Pagina Lookups"
-
 msgid "Page not found"
 msgstr "Pagina niet gevonden"
 
@@ -55608,9 +55651,6 @@ msgstr "Titel van de pagina"
 #, fuzzy
 msgid "Page writes"
 msgstr "Page Schrijft"
-
-msgid "Pagefile installed"
-msgstr "Pagefile geïnstalleerd"
 
 msgid "Pager"
 msgstr "Pager"
@@ -56302,6 +56342,10 @@ msgstr ""
 
 msgid "Percent and time"
 msgstr "Percentage en tijd"
+
+#, fuzzy
+msgid "Percent factor"
+msgstr "Percentage vol"
 
 msgid "Percent of OK-nodes"
 msgstr "Percentage OK-knooppunten"
@@ -58547,15 +58591,16 @@ msgid "Private and shared memory"
 msgstr "Privé en gedeeld geheugen"
 
 #, fuzzy
+msgid "Private guest memory"
+msgstr "Privé-geheugen"
+
+#, fuzzy
 msgid "Private key"
 msgstr "Privé-geheugen"
 
 #, fuzzy
 msgid "Private key must not be empty"
 msgstr "Geheime sleutel"
-
-msgid "Private memory"
-msgstr "Privé-geheugen"
 
 msgid "Private memory usage"
 msgstr "Privé geheugengebruik"
@@ -58847,6 +58892,10 @@ msgstr "Bescherm agentgegevens tegen ongeoorloofde toegang"
 #, fuzzy
 msgid "Protection Domain"
 msgstr "Verbindingsoptie"
+
+#, fuzzy
+msgid "Protection group name"
+msgstr "Naam doelgroep"
 
 msgid "Protocol"
 msgstr "Protocol"
@@ -59348,10 +59397,6 @@ msgstr "Wachtrij"
 
 msgid "Queue Latency"
 msgstr "Wachtrijvertraging"
-
-#, fuzzy
-msgid "Queue Length"
-msgstr "Lengte wachtrij"
 
 msgid "Queue Name"
 msgstr "Naam wachtrij"
@@ -59892,6 +59937,10 @@ msgstr "Leestoegang tot alle hosts en mappen"
 msgid "Read access to all modules"
 msgstr "Leestoegang tot alle modules"
 
+#, fuzzy
+msgid "Read and write latency"
+msgstr "Gelezen en geschreven blokken"
+
 msgid "Read and written blocks"
 msgstr "Gelezen en geschreven blokken"
 
@@ -60110,6 +60159,9 @@ msgstr "Reden: %(reason)s"
 #, fuzzy
 msgid "Reasons"
 msgstr "Reden: %s"
+
+msgid "Reassign or remove them before deleting the customer."
+msgstr ""
 
 msgid "Receipt"
 msgstr "Ontvangstbewijs"
@@ -61880,10 +61932,6 @@ msgid "Request rate"
 msgstr "Aanvraag tarief"
 
 #, fuzzy
-msgid "Request too large"
-msgstr "Aanvraag tarief"
-
-#, fuzzy
 msgid "Request transfer rate"
 msgstr "Aanvraag tarief"
 
@@ -61931,9 +61979,6 @@ msgstr "Verzoeken in behandeling"
 msgid "Requests node, cluster and indice data from a Graylog instance."
 msgstr ""
 "Vraagt knooppunt-, cluster- en indicegegevens op van een Graylog-instantie."
-
-msgid "Requests per connection"
-msgstr "Aanvragen per verbinding"
 
 msgid "Requests per second"
 msgstr "Verzoeken per seconde"
@@ -62019,6 +62064,10 @@ msgstr "Reseller: %s"
 
 msgid "Reserved DB instances"
 msgstr "Gereserveerde DB-instanties"
+
+#, fuzzy
+msgid "Reserved database space"
+msgstr "Gereserveerde ruimte"
 
 #, fuzzy
 msgid "Reserved size"
@@ -63402,22 +63451,6 @@ msgid "SAN operations"
 msgstr "NFS operaties"
 
 #, fuzzy
-msgid "SAN other data"
-msgstr "Geen gegevens"
-
-#, fuzzy
-msgid "SAN other latency"
-msgstr "Andere latentie"
-
-#, fuzzy
-msgid "SAN other ops"
-msgstr "%s ander %s"
-
-#, fuzzy
-msgid "SAN read ios"
-msgstr "%s lees %s"
-
-#, fuzzy
 msgid "SAN read latency"
 msgstr "Schijf lees latentie"
 
@@ -63426,16 +63459,8 @@ msgid "SAN read ops"
 msgstr "%s lees %s"
 
 #, fuzzy
-msgid "SAN read throughput"
-msgstr "Lees doorvoer"
-
-#, fuzzy
 msgid "SAN traffic"
 msgstr "%s verkeer"
-
-#, fuzzy
-msgid "SAN write ios"
-msgstr "%s schrijf %s"
 
 #, fuzzy
 msgid "SAN write latency"
@@ -63444,10 +63469,6 @@ msgstr "Schijf schrijf latentie"
 #, fuzzy
 msgid "SAN write ops"
 msgstr "%s schrijf %s"
-
-#, fuzzy
-msgid "SAN write throughput"
-msgstr "Schrijf doorvoer"
 
 msgid "SAP Dialog"
 msgstr "SAP Dialoog"
@@ -64809,6 +64830,10 @@ msgstr "Selecteer gegevensbron"
 msgid "Select device type"
 msgstr "Selecteer type apparaat"
 
+#, fuzzy
+msgid "Select direction"
+msgstr "Afgewezen verbindingen"
+
 msgid "Select file"
 msgstr "Selecteer bestand"
 
@@ -65034,6 +65059,10 @@ msgstr ""
 #, fuzzy
 msgid "Select the contact group that can edit this OAuth2 connection."
 msgstr "Aansluiting toevoegen"
+
+#, fuzzy
+msgid "Select the direction of this relation."
+msgstr "Piggyback creatie opties"
 
 msgid ""
 "Select the folder for the source host. Create a new folder first if needed."
@@ -65588,6 +65617,10 @@ msgid "Service Type"
 msgstr "Type dienst"
 
 msgid "Service alert"
+msgstr "Service waarschuwing"
+
+#, fuzzy
+msgid "Service alerts"
 msgstr "Service waarschuwing"
 
 msgid "Service alternative display name"
@@ -66277,6 +66310,11 @@ msgstr "Selecteer ten minste één element"
 
 msgid "Set by rule pack"
 msgstr "Ingesteld per regelpakket"
+
+msgid ""
+"Set by the dynamic host management connection that created this host. When "
+"present it selects this rule's metrics instead of the attribute lists above."
+msgstr ""
 
 #, fuzzy
 msgid "Set cache age for plug-ins (Linux, Unix)"
@@ -67007,6 +67045,10 @@ msgstr "Gedeelde sleutel"
 
 msgid "Shared Access Locks"
 msgstr "Sloten met gedeelde toegang"
+
+#, fuzzy
+msgid "Shared guest memory"
+msgstr "Gedeeld geheugen"
 
 msgid "Shared key"
 msgstr "Gedeelde sleutel"
@@ -68375,7 +68417,7 @@ msgid "Snapshot reserve size"
 msgstr "Toon gereserveerde ruimte"
 
 #, fuzzy
-msgid "Snapshot reserve used %"
+msgid "Snapshot reserve used percentage"
 msgstr "Toon gereserveerde ruimte"
 
 #, fuzzy
@@ -70984,6 +71026,10 @@ msgid "State when software packages info is missing"
 msgstr "Staat wanneer informatie over softwarepakketten ontbreekt"
 
 #, fuzzy
+msgid "State when the protection group is disabled"
+msgstr "Staat wanneer de job in de status uitgeschakeld is"
+
+#, fuzzy
 msgid "State when the proxy is disabled"
 msgstr "Staat wanneer de job in de status uitgeschakeld is"
 
@@ -71359,6 +71405,10 @@ msgid "Storage space used"
 msgstr "Gebruikte opslagruimte"
 
 #, fuzzy
+msgid "Storage space used percentage"
+msgstr "Dienststaat percentage"
+
+#, fuzzy
 msgid "Storage, file systems and files"
 msgstr "Opslag, bestandssystemen en bestanden"
 
@@ -71438,6 +71488,10 @@ msgstr "Stream regels"
 
 msgid "Streams"
 msgstr "Stromen"
+
+#, fuzzy
+msgid "Streams CPU utilization"
+msgstr "Niveaus CPU-gebruik"
 
 msgid "Streams pool size"
 msgstr "Stroompjes poolgrootte"
@@ -77690,20 +77744,20 @@ msgstr "Beperk het aantal verwerkte zoekresultaten"
 
 #, python-format
 msgid ""
-"The relation concerns '%(host)s' as well, which you cannot edit. Put the "
-"entry back to save this host."
+"The relation concerns '%(host)s' as well, which you cannot edit. Keep the "
+"relation to save this host."
 msgstr ""
 
 #, python-format
 msgid ""
 "The relation concerns '%(host)s' as well, which you cannot edit: %(reason)s "
-"Put the entry back to save this host."
+"Keep the relation to save this host."
 msgstr ""
 
 #, python-format
 msgid ""
 "The relation concerns '%(host)s' as well, which you cannot edit: %(reason)s "
-"Remove the entry to save this host."
+"Leave the relation out to save this host."
 msgstr ""
 
 #, fuzzy, python-format
@@ -77715,7 +77769,14 @@ msgid "The relations of '%(related_name)s' are malformed: %(error)s"
 msgstr "Verificatie is mislukt: %s"
 
 #, fuzzy, python-format
-msgid "The relations of this host are malformed: %(error)s"
+msgid ""
+"The relations of host '%(host)s' cannot be read and are left out: %(error)s"
+msgstr "Verificatie is mislukt: %s"
+
+#, fuzzy, python-format
+msgid ""
+"The relations of this host are malformed: %(error)s Store valid ones or "
+"remove them."
 msgstr "Verificatie is mislukt: %s"
 
 #. weblate-flags: read-only, domain-specific
@@ -84740,9 +84801,6 @@ msgstr "Bovenste niveaus voor het gebruik van de licentie"
 msgid "Time dependencies"
 msgstr "Tijdsverschil"
 
-msgid "Time difference"
-msgstr "Tijdsverschil"
-
 msgid "Time dispersion (jitter)"
 msgstr "Tijdspreiding (jitter)"
 
@@ -85062,9 +85120,6 @@ msgstr "Tijd besteed aan vuilnisophaling in procenten"
 
 msgid "Time spent for various page types"
 msgstr "Tijd besteed aan verschillende paginatypes"
-
-msgid "Time spent in GC"
-msgstr "Tijd doorgebracht in GC"
 
 msgid "Time spent waiting for Checkmk agent"
 msgstr "Tijd besteed aan wachten op Checkmk agent"
@@ -85816,10 +85871,6 @@ msgid "Total Index Size"
 msgstr "Totale indexomvang"
 
 #, fuzzy
-msgid "Total JVM virtual memory"
-msgstr "Totaal virtueel geheugen"
-
-#, fuzzy
 msgid "Total Kubernetes containers"
 msgstr "Kubernetes pod containers"
 
@@ -85851,6 +85902,10 @@ msgstr "Totaal bruikbare RAM"
 
 msgid "Total RAM + Swap installed"
 msgstr "Totaal RAM + Swap geïnstalleerd"
+
+#, fuzzy
+msgid "Total RAM and swap"
+msgstr "Totaal geïnstalleerd RAM"
 
 #, fuzzy
 msgid "Total RUs lower levels"
@@ -86015,6 +86070,10 @@ msgstr "Stale gastheren"
 
 msgid "Total index failure count upper levels"
 msgstr "Totaal aantal indexfouten bovenste niveaus"
+
+#, fuzzy
+msgid "Total input and split output packets"
+msgstr "Totaal aantal pakketten"
 
 msgid "Total interfaces"
 msgstr "Totaal interfaces"
@@ -88705,6 +88764,10 @@ msgid "Traffic overview"
 msgstr "Overzicht van de site"
 
 #, fuzzy
+msgid "Traffic port"
+msgstr "Verkeer Verzonden"
+
+#, fuzzy
 msgid "Traffic trend"
 msgstr "Verkeer Verzonden"
 
@@ -88790,6 +88853,10 @@ msgstr "Overgebrachte woorden"
 
 #, fuzzy
 msgid "Transparent"
+msgstr "Transportvertraging"
+
+#, fuzzy
+msgid "Transparent huge pages"
 msgstr "Transportvertraging"
 
 msgid "Transport Lag"
@@ -89121,6 +89188,10 @@ msgstr "UCWA - Actieve Sessies (%s)"
 #, fuzzy
 msgid "UCWA - Active sessions (iPhone)"
 msgstr "UCWA - Actieve Sessies (%s)"
+
+#, fuzzy
+msgid "UCWA active sessions"
+msgstr "Actieve sessies"
 
 msgid "UDP"
 msgstr "UDP"
@@ -89657,10 +89728,6 @@ msgstr "Niet-corrigeerbare codewoorden"
 msgid "Uncorrectable errors (ID 187)"
 msgstr "Niet-corrigeerbare codewoorden"
 
-#, fuzzy
-msgid "Uncorrectable harddrive errors"
-msgstr "Niet-corrigeerbare codewoorden"
-
 msgid "Undecided clustered services"
 msgstr "Niet-besloten geclusterde diensten"
 
@@ -89743,6 +89810,10 @@ msgstr "Ongeldige actie"
 #, fuzzy
 msgid "Unhealthy"
 msgstr "Gezondheid"
+
+#, fuzzy
+msgid "Unicast and non-unicast packets"
+msgstr "Invoer niet-unicast-pakketten"
 
 msgid "Unicast packet rates"
 msgstr "Unicast pakketsnelheden"
@@ -90381,6 +90452,10 @@ msgstr "Absolute bovengrenzen"
 
 msgid "Upper fan speed levels"
 msgstr "Bovenste ventilatorsnelheidsniveaus"
+
+#, fuzzy
+msgid "Upper focus range limit"
+msgstr "bovengrens"
 
 msgid "Upper level for GC run rate"
 msgstr "Bovenste niveau voor GC run rate"
@@ -92396,6 +92471,14 @@ msgstr "Gebruikt CPU-geheugen"
 msgid "Used memory RSS"
 msgstr "Gebruikt CPU-geheugen"
 
+#, fuzzy
+msgid "Used memory percentage"
+msgstr "Dienststaat percentage"
+
+#, fuzzy
+msgid "Used memory times 100"
+msgstr "Gebruikt CPU-geheugen"
+
 msgid "Used meta data"
 msgstr "Gebruikte metagegevens"
 
@@ -92412,9 +92495,6 @@ msgstr "Gebruikte grootte van logbestanden"
 msgid "Used space"
 msgstr "Gebruikte ruimte"
 
-msgid "Used space %"
-msgstr "Gebruikte ruimte %"
-
 #, fuzzy
 msgid "Used space in ZFS pools and file systems"
 msgstr "Gebruikte ruimte in ZFS pools en bestandssystemen"
@@ -92426,6 +92506,10 @@ msgstr "Gebruikte ruimte in bestandssystemen"
 #, fuzzy
 msgid "Used space in file systems via SNMP"
 msgstr "Gebruikte ruimte in bestandssystemen via SNMP"
+
+#, fuzzy
+msgid "Used space percentage"
+msgstr "Dienststaat percentage"
 
 #, fuzzy
 msgid "Used storage"
@@ -92458,6 +92542,14 @@ msgstr "Gemiddeld virtueel geheugen"
 #, fuzzy
 msgid "Used virtual memory in percent"
 msgstr "Totaal virtueel geheugen"
+
+#, fuzzy
+msgid "Used virtual memory percentage"
+msgstr "Totaal virtueel geheugen"
+
+#, fuzzy
+msgid "Used virtual memory percentage (averaged)"
+msgstr "Gemiddeld virtueel geheugen"
 
 msgid "User"
 msgstr "Gebruiker"
@@ -93447,6 +93539,10 @@ msgid "VMalloc address space"
 msgstr "VMalloc Adresruimte"
 
 #, fuzzy
+msgid "VMalloc usage and largest free chunk"
+msgstr "Grootste vrije brok"
+
+#, fuzzy
 msgid "VMs / Templates"
 msgstr "Sjabloon hostnaam"
 
@@ -93537,9 +93633,6 @@ msgstr "Geldig vanaf"
 msgid "Valid till"
 msgstr "Geldig tot"
 
-msgid "Valid until"
-msgstr "Geldig tot"
-
 msgid "Valid until Checkmk version"
 msgstr "Geldig tot Checkmk versie"
 
@@ -93553,10 +93646,6 @@ msgstr "Servercertificaat valideren tijdens poortverzoek"
 #, fuzzy
 msgid "Validate with custom certificate authority (CA)"
 msgstr "Servercertificaat valideren tijdens poortverzoek"
-
-#, fuzzy
-msgid "Validity"
-msgstr "Geldig tot"
 
 msgid "Validity of missing data"
 msgstr "Geldigheid van ontbrekende gegevens"
@@ -93714,6 +93803,10 @@ msgid "Veeam Backup & Replication"
 msgstr "Herschrijf toepassing"
 
 #, fuzzy
+msgid "Veeam Backup & Replication WAN accelerators"
+msgstr "Herschrijf toepassing"
+
+#, fuzzy
 msgid "Veeam Backup & Replication patches"
 msgstr "Herschrijf toepassing"
 
@@ -93736,6 +93829,10 @@ msgstr "BI Configuratie Pakketten"
 #, fuzzy
 msgid "Veeam: License"
 msgstr "Erkende"
+
+#, fuzzy
+msgid "Veeam: Protection group"
+msgstr "Aggregatiegroepen"
 
 msgid "Veeam: Restore points"
 msgstr ""
@@ -99021,12 +99118,6 @@ msgstr ""
 "agent updater in de agents gebakken moet worden. Daar moet je ook de "
 "toegangsgegevens tot de update server opgeven."
 
-msgid ""
-"You need to enter at least one CA. Otherwise no SSL connection can be made."
-msgstr ""
-"Je moet ten minste één CA invoeren. Anders kan er geen SSL-verbinding tot "
-"stand worden gebracht."
-
 msgid "You need to provide a \"host\"."
 msgstr "Je moet zorgen voor een \"gastheer\"."
 
@@ -99479,6 +99570,9 @@ msgstr "ZFS metagegevens"
 msgid "ZFS storage pool status"
 msgstr "ZFS opslagpool status"
 
+msgid "Zero division guard"
+msgstr ""
+
 msgid "Zero padded port ID"
 msgstr ""
 
@@ -99865,10 +99959,6 @@ msgstr "verbinding/sec"
 
 msgid "connections"
 msgstr "verbindingen"
-
-#, fuzzy
-msgid "contact groups"
-msgstr "contactgroepen: "
 
 msgid "contact groups: "
 msgstr "contactgroepen: "
@@ -100358,10 +100448,6 @@ msgid "host \"%(host_name)s\""
 msgstr "Hostnaam: %s"
 
 #, fuzzy
-msgid "host groups"
-msgstr "Hostgroep"
-
-#, fuzzy
 msgid "host name will be ignored when agent_hash is given."
 msgstr "hostname zal worden genegeerd wanneer agent_hash is gegeven."
 
@@ -100450,22 +100536,6 @@ msgid "iSCSI operations"
 msgstr "NFS operaties"
 
 #, fuzzy
-msgid "iSCSI other data"
-msgstr "ZFS metagegevens"
-
-#, fuzzy
-msgid "iSCSI other latency"
-msgstr "Andere latentie"
-
-#, fuzzy
-msgid "iSCSI other ops"
-msgstr "%s ander %s"
-
-#, fuzzy
-msgid "iSCSI read IOs"
-msgstr "%s lees %s"
-
-#, fuzzy
 msgid "iSCSI read latency"
 msgstr "Schijf lees latentie"
 
@@ -100474,16 +100544,8 @@ msgid "iSCSI read ops"
 msgstr "%s lees %s"
 
 #, fuzzy
-msgid "iSCSI read throughput"
-msgstr "Lees doorvoer"
-
-#, fuzzy
 msgid "iSCSI traffic"
 msgstr "%s verkeer"
-
-#, fuzzy
-msgid "iSCSI write IOs"
-msgstr "%s schrijf %s"
 
 #, fuzzy
 msgid "iSCSI write latency"
@@ -100492,10 +100554,6 @@ msgstr "Schijf schrijf latentie"
 #, fuzzy
 msgid "iSCSI write ops"
 msgstr "%s schrijf %s"
-
-#, fuzzy
-msgid "iSCSI write throughput"
-msgstr "Schrijf doorvoer"
 
 msgid "idle"
 msgstr ""
@@ -101219,10 +101277,6 @@ msgstr "Pauzeer"
 msgid "pending"
 msgstr "in afwachting van"
 
-#, python-format
-msgid "per %(per_string)s"
-msgstr "per %(per_string)s"
-
 msgid "per second"
 msgstr "per seconde"
 
@@ -101472,10 +101526,6 @@ msgid "service"
 msgid_plural "services"
 msgstr[0] "service"
 msgstr[1] "services"
-
-#, fuzzy
-msgid "service groups"
-msgstr "Dienstengroep"
 
 #, fuzzy
 msgid "service names"
@@ -102711,8 +102761,11 @@ msgid "Not available on shared dashboards"
 msgstr "U mag dashboards niet bewerken."
 
 #, fuzzy
-msgid "Failed to fetch timeline data:"
-msgstr "Het decoderen van certificaatgegevens is mislukt"
+msgid "This widget follows the dashboard time range"
+msgstr "Toon grafiek tijdsbereik"
+
+msgid "The bar chart does not support the dashboard time range yet."
+msgstr ""
 
 #, fuzzy
 msgid "Missing needed host and service parameters."
@@ -103271,6 +103324,13 @@ msgid "Add contextual link"
 msgstr "Inhoud toevoegen"
 
 #, fuzzy
+msgid "Target page"
+msgstr "Doel Agent"
+
+msgid "Redirect to the default page defined by Checkmk."
+msgstr ""
+
+#, fuzzy
 msgid "Include current time range"
 msgstr "Ingeschakeld in tijdzone"
 
@@ -103749,14 +103809,6 @@ msgid "Add & place widget"
 msgstr "Doel toevoegen"
 
 #, fuzzy
-msgid "Link content to"
-msgstr "Link van titel"
-
-#, fuzzy
-msgid "Must select a target"
-msgstr "Afgewezen verbindingen"
-
-#, fuzzy
 msgid "Value must be a valid URL"
 msgstr "De waarde moet een string zijn"
 
@@ -104071,6 +104123,10 @@ msgid "Link settings saved."
 msgstr "Licentie staat"
 
 #, fuzzy
+msgid "Validity"
+msgstr "Geldig tot"
+
+#, fuzzy
 msgid "Set expiration date"
 msgstr "Registratie Staat"
 
@@ -104135,6 +104191,9 @@ msgstr "Context Info"
 
 msgid "Selected state"
 msgstr "Geselecteerde staat"
+
+msgid "Site or host, depending on context"
+msgstr ""
 
 msgid ""
 "When many hexagons are displayed, they scale to fit into the widget.\n"
@@ -104441,6 +104500,14 @@ msgid "Enter URL to embed"
 msgstr ""
 
 #, fuzzy
+msgid "Include query parameters for"
+msgstr "Ongeldige controleparameter"
+
+#, fuzzy
+msgid "Dashboard filters"
+msgstr "Dashboard-element"
+
+#, fuzzy
 msgid "Loading sidebar elements..."
 msgstr "Zijbalk element toevoegen"
 
@@ -104598,6 +104665,9 @@ msgstr "Upload MIB-bestand"
 msgid "Fetch from server"
 msgstr "Aangepast URL-serveradres"
 
+msgid "Fetch certificate from server"
+msgstr "Certificaat van server halen"
+
 #, fuzzy
 msgid "Fetch a certificate first"
 msgstr "Certificaat van server halen"
@@ -104609,6 +104679,9 @@ msgstr "CA-certificaat"
 #, fuzzy
 msgid "Fetch"
 msgstr "Vangt"
+
+msgid "Valid until"
+msgstr "Geldig tot"
 
 #, fuzzy
 msgid "No certificate fetched yet."
@@ -108482,6 +108555,9 @@ msgstr "Hosts verwijderen"
 msgid "Percent"
 msgstr "procent"
 
+msgid "Bandwidth"
+msgstr "Bandbreedte"
+
 msgid "Pending"
 msgstr "In afwachting van"
 
@@ -108542,7 +108618,10 @@ msgid ""
 "expression to match part of it."
 msgstr ""
 
-msgid "Only already discovered custom services can be matched."
+msgid ""
+"A regular expression matches from the start of the service name, so begin it "
+"with .* to match anywhere in it. Only already discovered custom services can "
+"be matched."
 msgstr ""
 
 #, fuzzy
@@ -108582,6 +108661,10 @@ msgid "Failed to create the custom service."
 msgstr "Naam van de aangepaste dienst"
 
 #, fuzzy
+msgid "Set the custom service configuration name."
+msgstr "Regel voor gastheer- en dienstconfiguratie"
+
+#, fuzzy
 msgid "Failed to load the custom service."
 msgstr "Naam van de aangepaste dienst"
 
@@ -108600,10 +108683,6 @@ msgstr "Naam van de aangepaste dienst"
 #, fuzzy
 msgid "General configuration properties"
 msgstr "Configuratiefout"
-
-#, fuzzy
-msgid "Set the custom service configuration name."
-msgstr "Regel voor gastheer- en dienstconfiguratie"
 
 #, fuzzy
 msgid "Define metric"
@@ -109370,8 +109449,33 @@ msgid "Generate new token"
 msgstr "Genereer"
 
 #, fuzzy
+msgid "Still no agent baked for this host."
+msgstr "Updates zullen worden ingeschakeld voor deze host."
+
+#, fuzzy
+msgid "The check failed. Please try again."
+msgstr "Zijbalk element toevoegen"
+
+#, fuzzy
 msgid "Download and install"
 msgstr "Gedownloade Agent"
+
+#, fuzzy
+msgid "No agent baked for this host yet"
+msgstr "Geen gebakken agent voor deze host beschikbaar"
+
+msgid ""
+"The download command would fail because the Agent Bakery has no package of "
+"this type for the host. Bake the agents, then check again."
+msgstr ""
+
+#, fuzzy
+msgid "Open Agent Bakery"
+msgstr "Agent bakkerij"
+
+#, fuzzy
+msgid "Check again"
+msgstr "Checkmk agent"
 
 msgid ""
 "To securely fetch the latest agent package via the command line, you must "
@@ -111802,10 +111906,6 @@ msgid "Attribute operator"
 msgstr "In te stellen attribuut"
 
 #, fuzzy
-msgid "Attribute filter"
-msgstr "In te stellen attribuut"
-
-#, fuzzy
 msgid "Move between items"
 msgstr "Vertraging gebeurtenis creatie"
 
@@ -113200,9 +113300,297 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
-#, fuzzy, python-format
-#~ msgid "'%(host)s' is locked by Quick setup."
-#~ msgstr "Snelle installatie"
+#~ msgid "Accepted connections per second"
+#~ msgstr "Geaccepteerde verbindingen per seconde"
+
+#, fuzzy
+#~ msgid "Average Corosync latency"
+#~ msgstr "Sync latentie"
+
+#, fuzzy
+#~ msgid "Backup object name"
+#~ msgstr "Back-up tijd"
+
+#~ msgid "Battery temperature"
+#~ msgstr "Temperatuur van de batterij"
+
+#~ msgid "CAs to accept"
+#~ msgstr "CA's te aanvaarden"
+
+#, fuzzy
+#~ msgid "CIFS other data"
+#~ msgstr "ZFS metagegevens"
+
+#, fuzzy
+#~ msgid "CIFS other latency"
+#~ msgstr "Andere latentie"
+
+#, fuzzy
+#~ msgid "CIFS other ops"
+#~ msgstr "%s ander %s"
+
+#, fuzzy
+#~ msgid "CIFS read throughput"
+#~ msgstr "Lees doorvoer"
+
+#, fuzzy
+#~ msgid "CIFS write throughput"
+#~ msgstr "Schrijf doorvoer"
+
+#, fuzzy
+#~ msgid "CRT/PEM file"
+#~ msgstr "CRT/PEM Bestand"
+
+#, fuzzy
+#~ msgid "Current disk size %"
+#~ msgstr "Huidige grootte"
+
+#, fuzzy
+#~ msgid "FCP other data"
+#~ msgstr "Perfdata"
+
+#, fuzzy
+#~ msgid "FCP other latency"
+#~ msgstr "Andere latentie"
+
+#, fuzzy
+#~ msgid "FCP other ops"
+#~ msgstr "%s ander %s"
+
+#, fuzzy
+#~ msgid "FCP read ios"
+#~ msgstr "%s lees %s"
+
+#, fuzzy
+#~ msgid "FCP read throughput"
+#~ msgstr "Lees doorvoer"
+
+#, fuzzy
+#~ msgid "FCP write ios"
+#~ msgstr "%s schrijf %s"
+
+#, fuzzy
+#~ msgid "FCP write throughput"
+#~ msgstr "Schrijf doorvoer"
+
+#, fuzzy
+#~ msgid "Fan rotation speed"
+#~ msgstr "Ventilatorsnelheid"
+
+#~ msgid "Handled connections per second"
+#~ msgstr "Verwerkte verbindingen per seconde"
+
+#~ msgid "Hosts & services:"
+#~ msgstr "Hosts & diensten:"
+
+#, python-format
+#~ msgid "Invalid certificate file: %(e)s"
+#~ msgstr "Ongeldig certificaatbestand: %(e)s"
+
+#, python-format
+#~ msgid "Invalid time resolution key \"%(resolution)s\" given"
+#~ msgstr "Ongeldige tijdresolutiesleutel \"%(resolution)s\" gegeven"
+
+#~ msgid "Job Duration"
+#~ msgstr "Baan Duur"
+
+#, fuzzy
+#~ msgid "Maximum Corosync latency"
+#~ msgstr "Sync latentie"
+
+#, fuzzy
+#~ msgid "NFS other data"
+#~ msgstr "Geen gegevens"
+
+#, fuzzy
+#~ msgid "NFS other latency"
+#~ msgstr "Andere latentie"
+
+#, fuzzy
+#~ msgid "NFS other ops"
+#~ msgstr "%s ander %s"
+
+#, fuzzy
+#~ msgid "NFSv4 other data"
+#~ msgstr "NFSv4 operaties"
+
+#, fuzzy
+#~ msgid "NFSv4 other latency"
+#~ msgstr "Andere latentie"
+
+#, fuzzy
+#~ msgid "NFSv4 other ops"
+#~ msgstr "NFSv4 operaties"
+
+#, fuzzy
+#~ msgid "NFSv4 read ios"
+#~ msgstr "NFSv4 operaties"
+
+#, fuzzy
+#~ msgid "NFSv4 write ios"
+#~ msgstr "NFSv4 operaties"
+
+#, fuzzy
+#~ msgid "NFSv4.1 other data"
+#~ msgstr "NFSv4.1 operaties"
+
+#, fuzzy
+#~ msgid "NFSv4.1 other latency"
+#~ msgstr "NFSv4.1 operaties"
+
+#, fuzzy
+#~ msgid "NFSv4.1 other ops"
+#~ msgstr "NFSv4.1 operaties"
+
+#, fuzzy
+#~ msgid "NFSv4.1 read ios"
+#~ msgstr "NFSv4.1 operaties"
+
+#, fuzzy
+#~ msgid "NFSv4.1 write ios"
+#~ msgstr "NFSv4.1 operaties"
+
+#~ msgid "Number of available file descriptors"
+#~ msgstr "Aantal beschikbare bestandsdescriptors"
+
+#~ msgid "Number of unique inside MAC addresses"
+#~ msgstr "Aantal unieke interne MAC-adressen"
+
+#~ msgid "Number of unique outside MAC addresses"
+#~ msgstr "Aantal unieke MAC-adressen van buiten"
+
+#~ msgid "Other latency"
+#~ msgstr "Andere latentie"
+
+#, fuzzy
+#~ msgid "Page lookups"
+#~ msgstr "Pagina Lookups"
+
+#~ msgid "Pagefile installed"
+#~ msgstr "Pagefile geïnstalleerd"
+
+#, fuzzy
+#~ msgid "Queue Length"
+#~ msgstr "Lengte wachtrij"
+
+#, fuzzy
+#~ msgid "Request too large"
+#~ msgstr "Aanvraag tarief"
+
+#~ msgid "Requests per connection"
+#~ msgstr "Aanvragen per verbinding"
+
+#, fuzzy
+#~ msgid "SAN other data"
+#~ msgstr "Geen gegevens"
+
+#, fuzzy
+#~ msgid "SAN other latency"
+#~ msgstr "Andere latentie"
+
+#, fuzzy
+#~ msgid "SAN other ops"
+#~ msgstr "%s ander %s"
+
+#, fuzzy
+#~ msgid "SAN read ios"
+#~ msgstr "%s lees %s"
+
+#, fuzzy
+#~ msgid "SAN read throughput"
+#~ msgstr "Lees doorvoer"
+
+#, fuzzy
+#~ msgid "SAN write ios"
+#~ msgstr "%s schrijf %s"
+
+#, fuzzy
+#~ msgid "SAN write throughput"
+#~ msgstr "Schrijf doorvoer"
+
+#, fuzzy
+#~ msgid "Snapshot reserve used %"
+#~ msgstr "Toon gereserveerde ruimte"
+
+#~ msgid "Time difference"
+#~ msgstr "Tijdsverschil"
+
+#~ msgid "Time spent in GC"
+#~ msgstr "Tijd doorgebracht in GC"
+
+#, fuzzy
+#~ msgid "Total JVM virtual memory"
+#~ msgstr "Totaal virtueel geheugen"
+
+#, fuzzy
+#~ msgid "Uncorrectable harddrive errors"
+#~ msgstr "Niet-corrigeerbare codewoorden"
+
+#~ msgid "Used space %"
+#~ msgstr "Gebruikte ruimte %"
+
+#~ msgid ""
+#~ "You need to enter at least one CA. Otherwise no SSL connection can be "
+#~ "made."
+#~ msgstr ""
+#~ "Je moet ten minste één CA invoeren. Anders kan er geen SSL-verbinding tot "
+#~ "stand worden gebracht."
+
+#, fuzzy
+#~ msgid "contact groups"
+#~ msgstr "contactgroepen: "
+
+#, fuzzy
+#~ msgid "host groups"
+#~ msgstr "Hostgroep"
+
+#, fuzzy
+#~ msgid "iSCSI other data"
+#~ msgstr "ZFS metagegevens"
+
+#, fuzzy
+#~ msgid "iSCSI other latency"
+#~ msgstr "Andere latentie"
+
+#, fuzzy
+#~ msgid "iSCSI other ops"
+#~ msgstr "%s ander %s"
+
+#, fuzzy
+#~ msgid "iSCSI read IOs"
+#~ msgstr "%s lees %s"
+
+#, fuzzy
+#~ msgid "iSCSI read throughput"
+#~ msgstr "Lees doorvoer"
+
+#, fuzzy
+#~ msgid "iSCSI write IOs"
+#~ msgstr "%s schrijf %s"
+
+#, fuzzy
+#~ msgid "iSCSI write throughput"
+#~ msgstr "Schrijf doorvoer"
+
+#, python-format
+#~ msgid "per %(per_string)s"
+#~ msgstr "per %(per_string)s"
+
+#, fuzzy
+#~ msgid "service groups"
+#~ msgstr "Dienstengroep"
+
+#, fuzzy
+#~ msgid "Failed to fetch timeline data:"
+#~ msgstr "Het decoderen van certificaatgegevens is mislukt"
+
+#, fuzzy
+#~ msgid "Link content to"
+#~ msgstr "Link van titel"
+
+#, fuzzy
+#~ msgid "Must select a target"
+#~ msgstr "Afgewezen verbindingen"
 
 #~ msgid "Average usage"
 #~ msgstr "Gemiddeld gebruik"
@@ -113293,10 +113681,6 @@ msgstr ""
 
 #~ msgid "Limits"
 #~ msgstr "Grenzen"
-
-#, fuzzy
-#~ msgid "Maximum latency"
-#~ msgstr "Maximale leeftijd"
 
 #~ msgid "Maximum number of messages"
 #~ msgstr "Maximum aantal berichten"
@@ -114330,10 +114714,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Add to ..."
 #~ msgstr "Toevoegen aan"
-
-#, fuzzy
-#~ msgid "All hosts (experimental)"
-#~ msgstr "Configuratie toestand toevoegen"
 
 #~ msgid "Cannot calculate graph recipes"
 #~ msgstr "Kan grafiekrecepten niet berekenen"
@@ -117563,10 +117943,6 @@ msgstr ""
 #~ "gebruiken."
 
 #, fuzzy
-#~ msgid "Average Latency"
-#~ msgstr "Gemiddelde latentie"
-
-#, fuzzy
 #~ msgid "Bulk outside of the timeperiod"
 #~ msgstr "Ook bulk buiten de periode"
 
@@ -117644,9 +118020,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "IP Address of Hosts"
 #~ msgstr "IP-adres van gastheer"
-
-#~ msgid "Interface id"
-#~ msgstr "Interface-id"
 
 #~ msgid "Kubernetes Cluster"
 #~ msgstr "Kubernetes Cluster"
@@ -118374,10 +118747,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Oracle type of authentication"
 #~ msgstr "Token authenticatie"
-
-#, fuzzy
-#~ msgid "Show bandwidth"
-#~ msgstr "Bandbreedte"
 
 #, fuzzy
 #~ msgid "Total commitable memory"
@@ -120051,9 +120420,6 @@ msgstr ""
 #~ msgid "Oversubscribed"
 #~ msgstr "Overschreven"
 
-#~ msgid "Percent full"
-#~ msgstr "Percentage vol"
-
 #~ msgid "Percent subscribed"
 #~ msgstr "Percentage ingeschrevenen"
 
@@ -120700,10 +121066,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Fout bij wijzigingen activeren. Kan site snapshots niet voorbereiden. "
 #~ "Mislukt commando: %r; StdOut: %r; StdErr: %s"
-
-#, fuzzy
-#~ msgid "Agent Bakery"
-#~ msgstr "Agent bakkerij"
 
 #~ msgid "B/d"
 #~ msgstr "B/d"
@@ -122343,9 +122705,6 @@ msgstr ""
 
 #~ msgid "Shrinkage"
 #~ msgstr "Krimp"
-
-#~ msgid "Total RAM installed"
-#~ msgstr "Totaal geïnstalleerd RAM"
 
 #~ msgid "Connect to ACME SBC"
 #~ msgstr "Verbinden met ACME SBC"

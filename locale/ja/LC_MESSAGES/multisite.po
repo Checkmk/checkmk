@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-10-09 17:31+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
@@ -514,6 +514,15 @@ msgid "%(count)d hosts looked at."
 msgstr "%(count)d 調査対象のホスト。"
 
 #, python-format
+msgid ""
+"%(count)d local file below %(local_dir)s overrides a shipped style sheet or "
+"script and may be outdated: %(files)s"
+msgid_plural ""
+"%(count)d local files below %(local_dir)s override shipped style sheets or "
+"scripts and may be outdated: %(files)s"
+msgstr[0] ""
+
+#, python-format
 msgid "%(count)d new label"
 msgid_plural "%(count)d new labels"
 msgstr[0] "%(count)d 新しいラベル"
@@ -605,6 +614,10 @@ msgstr "%(failed_notifications)d 失敗した通知"
 #, python-format
 msgid "%(filename)s (local, download requires login)"
 msgstr "%(filename)s （ローカル、ダウンロードにはログインが必要です）"
+
+#, fuzzy, python-format
+msgid "%(files)s and %(count)d more"
+msgstr "および%s以上"
 
 #, python-format
 msgid "%(folder)s"
@@ -831,8 +844,16 @@ msgstr ""
 "けます。すでにライセンスをお持ちの場合は、%(licensing_page_link)sでライセンス"
 "情報を入力してください。"
 
+#, fuzzy, python-format
+msgid "%(region)s"
+msgstr "リージョン"
+
 #, python-format
 msgid "%(region_id)s | %(region_name)s"
+msgstr "%(region_id)s | %(region_name)s"
+
+#, fuzzy, python-format
+msgid "%(region_name)s | %(region_id)s"
 msgstr "%(region_id)s | %(region_name)s"
 
 #, python-format
@@ -876,6 +897,10 @@ msgstr "%(timeperiod)s"
 #, python-format
 msgid "%(title)s"
 msgstr "%(title)s"
+
+#, fuzzy, python-format
+msgid "%(title)s (experimental)"
+msgstr "OpenTelemetry（実験的）"
 
 #, python-format
 msgid "%(title)s by host"
@@ -995,16 +1020,29 @@ msgid "&lt;None&gt;"
 msgstr "&lt;なし&gt;"
 
 #, python-format
+msgid ""
+"'%(host)s' and '%(other)s' both store themselves as '%(end)s' of the other, "
+"so the monitoring shows neither relation. Save one of the two hosts in Setup "
+"to settle it."
+msgstr ""
+
+#, python-format
 msgid "'%(host)s' is linked more than once. Remove the duplicate."
 msgstr "%(host)sへのリンクが複数回あります。重複するリンクを削除してください。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"'%(host)s' is locked by Quick setup, so the other half of the relation "
-"cannot be stored on it."
+"'%(host)s' is locked by Quick setup, so no relation can be stored on it."
 msgstr ""
 "%(host)sはクイックセットアップによってロックされているため、この関係のもう一"
 "方をそこに保存することはできません。"
+
+#, python-format
+msgid ""
+"'%(host)s' stores a relation to '%(other)s' that '%(other)s' does not store, "
+"so the monitoring does not show it. Add it on '%(other)s', or remove it from "
+"'%(host)s'."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -1036,20 +1074,61 @@ msgstr ""
 "%(deprecated_version)s で非推奨となっており、Checkmk %(removed_version)s で削"
 "除される予定です。代わりに %(successor)s を使用してください。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"'%(related_name)s' does not store its half of the relation to this host. The "
-"monitoring shows the relation anyway. Add the relation on '%(related_name)s' "
-"to store it on both hosts."
+"'%(related_name)s' also stores itself as '%(end)s' of this host, so the "
+"monitoring shows neither relation. Add the relation on the host that is the "
+"'%(other_end)s'."
 msgstr ""
 "「%(related_name)s」は、このホストとの関連性の半分を保存していません。それで"
 "も監視画面には関連性が表示されています。「%(related_name)s」側でも関連性を追"
 "加し、両方のホストに保存するようにしてください。"
 
-#, python-format
+#, fuzzy, python-format
+msgid ""
+"'%(related_name)s' also stores itself as '%(end)s' of this host, so the "
+"monitoring shows neither relation. Saving keeps this host as '%(end)s' and "
+"makes '%(related_name)s' its '%(other_end)s', unless '%(related_name)s' is "
+"locked or you cannot edit it."
+msgstr ""
+"「%(related_name)s」は、このホストとの関連性の半分を保存していません。それで"
+"も監視画面には関連性が表示されています。「%(related_name)s」側でも関連性を追"
+"加し、両方のホストに保存するようにしてください。"
+
+#, fuzzy, python-format
+msgid ""
+"'%(related_name)s' does not store its half of the relation to this host. The "
+"monitoring shows the relation anyway. Saving this host stores it on "
+"'%(related_name)s' too, unless '%(related_name)s' is locked or you cannot "
+"edit it."
+msgstr ""
+"「%(related_name)s」は、このホストとの関連性の半分を保存していません。それで"
+"も監視画面には関連性が表示されています。「%(related_name)s」側でも関連性を追"
+"加し、両方のホストに保存するようにしてください。"
+
+#, fuzzy, python-format
+msgid ""
+"'%(related_name)s' does not store this relation, so the monitoring does not "
+"show it. Add it on '%(related_name)s', or remove it here."
+msgstr ""
+"「%(related_name)s」は、このホストとの関連性の半分を保存していません。それで"
+"も監視画面には関連性が表示されています。「%(related_name)s」側でも関連性を追"
+"加し、両方のホストに保存するようにしてください。"
+
+#, fuzzy, python-format
 msgid ""
 "'%(related_name)s' stores a different relation to this host. Change the "
-"relation on one of the two hosts so that both agree; saving writes both."
+"relation on '%(related_name)s', or remove it here."
+msgstr ""
+"「%(related_name)s」には、このホストに対する別のリレーションが保存されていま"
+"す。両方が一致するように、2つのホストのいずれか一方のリレーションを変更してく"
+"ださい。保存すると、両方に書き込まれます。"
+
+#, fuzzy, python-format
+msgid ""
+"'%(related_name)s' stores a different relation to this host. Saving this "
+"host makes both agree, unless '%(related_name)s' is locked or you cannot "
+"edit it."
 msgstr ""
 "「%(related_name)s」には、このホストに対する別のリレーションが保存されていま"
 "す。両方が一致するように、2つのホストのいずれか一方のリレーションを変更してく"
@@ -1721,6 +1800,26 @@ msgstr ""
 "はツール、およびランダムなセッションID。<br><br>収集対象外：リクエストの内容"
 "やその結果。"
 
+#, fuzzy
+msgid ""
+"<b>Gather all service instances and restrict by overall AWS tags:</b><br>If "
+"overall tags are specified, then all service instances will be filtered by "
+"those tags. Otherwise, all instances will be collected.<br><br><b>Use "
+"explicit AWS service tags and overrule overall AWS tags:</b><br>Specify "
+"explicit tags for these services. The overall tags will be ignored for these "
+"services.<br><br><b>Use explicit service names and ignore overall AWS tags:</"
+"b><br>Use this option to specify explicit names. The overall tags will be "
+"ignored for these services."
+msgstr ""
+"<b>すべてのサービスインスタンスを収集し、タグ全体で制限する：</b><br>タグ全体"
+"が上記で指定されている場合、すべてのサービスインスタンスはそれらのタグでフィ"
+"ルタリングされます。そうでない場合、すべてのインスタンスが収集されます。"
+"<br><br><b>明示的なサービスタグを使用し、タグ全体を上書きする：</b><br>これら"
+"のサービスに明示的なタグを指定します。これらのサービスでは、タグ全体が無視さ"
+"れます<br><br><b>明示的なサービス名を使用し、タグ全体を無視する：</b><br>この"
+"オプションを使用して指定します。これらのサービスでは、タグ全体が無視されま"
+"す。"
+
 msgid ""
 "<b>Gather all service instances and restrict by overall tags:</b><br>If "
 "overall tags are specified above, then all service instances will be "
@@ -1944,6 +2043,18 @@ msgstr ""
 "ます。各サイトは独立してデータを収集・送信するため、ローカル送信エラーを防ぐ"
 "には、ファイアウォールルールが全サイトからのトラフィックを許可していることを"
 "確認してください。</p>"
+
+#, python-format
+msgid ""
+"<p>A style sheet or script below <tt>%(local_dir)s</tt> is served instead of "
+"the shipped file with the same path. Such copies are not updated together "
+"with Checkmk: after an update, an outdated style sheet or script of an older "
+"version is still delivered and may break the user interface. Other local "
+"files, e.g. replaced logos, are not reported.</p><p>Remove the copies you do "
+"not need. To customize the look of the user interface, use a theme of your "
+"own below <tt>%(themes_dir)s</tt> instead of overriding the shipped themes.</"
+"p>"
+msgstr ""
 
 msgid ""
 "<p>By default, each Checkmk site has its own temporary file system (a "
@@ -3632,9 +3743,6 @@ msgstr "許可された接続リクエスト"
 msgid "Accepted connections"
 msgstr "受け入れられた接続"
 
-msgid "Accepted connections per second"
-msgstr "1秒あたりに受け入れられる接続"
-
 msgid "Accepted packages/s"
 msgstr "受け入れられたパッケージ/s"
 
@@ -3703,6 +3811,10 @@ msgstr "アクセスポイントの統計"
 
 msgid "Access points"
 msgstr "アクセスポイント"
+
+#, fuzzy
+msgid "Access points by status"
+msgstr "アクセスポイントの統計"
 
 msgid "Access points/Wireless (MR)"
 msgstr "アクセスポイント/ワイヤレス(MR)"
@@ -6054,6 +6166,10 @@ msgstr "気流センサーで測定された気流の偏差"
 msgid "Airflow levels"
 msgstr "気流レベル"
 
+#, fuzzy
+msgid "Alarm name"
+msgstr "アラートルール名"
+
 msgid "Alarms"
 msgstr "アラーム"
 
@@ -7214,6 +7330,10 @@ msgstr "Amazon Web Services (AWS)"
 msgid "Amazon Web Services (AWS) status"
 msgstr "Amazon Web Services (AWS)ステータス"
 
+#, fuzzy
+msgid "Amazon Web Services (AWS) v2"
+msgstr "Amazon Web Services (AWS)"
+
 msgid "Amount in billed currency"
 msgstr "課金通貨での額"
 
@@ -7770,8 +7890,8 @@ msgid ""
 "Apply the levels for single cores to the averaged instead of the "
 "instantaneous utilizations."
 msgstr ""
-"シングルコアのレベルを、瞬間的な利用率ではなく、平均化されたものに適用します"
-"。"
+"シングルコアのレベルを、瞬間的な利用率ではなく、平均化されたものに適用しま"
+"す。"
 
 msgid ""
 "Apply these levels to clusters that have at least the following number of "
@@ -8252,6 +8372,10 @@ msgstr "Atto Fibrebridge FCポート"
 
 msgid "Attribute"
 msgstr "属性"
+
+#, fuzzy
+msgid "Attribute filter"
+msgstr "属性フィルター"
 
 msgid "Attribute key"
 msgstr "属性キー"
@@ -8772,9 +8896,6 @@ msgstr "平均"
 msgid "Average CPU value over"
 msgstr "CPUの平均値"
 
-msgid "Average Corosync latency"
-msgstr "平均Corosyncレイテンシー"
-
 msgid "Average RPC latency"
 msgstr "平均RPCレイテンシー"
 
@@ -8847,6 +8968,10 @@ msgstr "着信メッセージの平均処理時間"
 
 msgid "Average interval"
 msgstr "平均間隔"
+
+#, fuzzy
+msgid "Average latency"
+msgstr "平均レイテンシ"
 
 msgid "Average latency (ms)"
 msgstr "平均レイテンシ(ミリ秒)"
@@ -9970,9 +10095,6 @@ msgstr "バックアップジョブ"
 msgid "Backup modes"
 msgstr "バックアップモード"
 
-msgid "Backup object name"
-msgstr "バックアップオブジェクト名"
-
 msgid "Backup proxies"
 msgstr "バックアッププロキシ"
 
@@ -10073,9 +10195,6 @@ msgstr "バルーンメモリ使用量"
 
 msgid "Band"
 msgstr "バンド"
-
-msgid "Bandwidth"
-msgstr "帯域幅"
 
 msgid "Bandwidth levels (per second)"
 msgstr "帯域幅レベル(毎秒)"
@@ -10198,9 +10317,6 @@ msgstr "バッテリー電流"
 msgid "Battery levels"
 msgstr "バッテリーレベル"
 
-msgid "Battery temperature"
-msgstr "バッテリー温度"
-
 msgid "Battery time remaining"
 msgstr "バッテリー残量"
 
@@ -10308,6 +10424,10 @@ msgstr "ビットマップの更新"
 
 msgid "Bits"
 msgstr "ビット"
+
+#, fuzzy
+msgid "Bits per octet"
+msgstr "ビット/秒"
 
 msgid "Bits per second"
 msgstr "ビット/秒"
@@ -11631,9 +11751,6 @@ msgstr "CARA"
 msgid "CAdvisor"
 msgstr "cAdvisor"
 
-msgid "CAs to accept"
-msgstr "受け入れるCA"
-
 msgid "CBC-DES"
 msgstr "CBC-DES"
 
@@ -11664,15 +11781,6 @@ msgstr "CIFS レイテンシー"
 msgid "CIFS operations"
 msgstr "CIFS 操作"
 
-msgid "CIFS other data"
-msgstr "CIFS 他データ"
-
-msgid "CIFS other latency"
-msgstr "CIFS その他のレイテンシ"
-
-msgid "CIFS other ops"
-msgstr "CIFS その他のops"
-
 msgid "CIFS read ios"
 msgstr "CIFS 読み取りios"
 
@@ -11681,9 +11789,6 @@ msgstr "CIFS 読み取りレイテンシ"
 
 msgid "CIFS read ops"
 msgstr "CIFS 読み取り ops"
-
-msgid "CIFS read throughput"
-msgstr "CIFS 読み取りスループット"
 
 msgid "CIFS traffic"
 msgstr "CIFS トラフィック"
@@ -11696,9 +11801,6 @@ msgstr "CIFS 書き込みレイテンシ"
 
 msgid "CIFS write ops"
 msgstr "CIFS 書き込みops"
-
-msgid "CIFS write throughput"
-msgstr "CIFS 書き込みスループット"
 
 msgid "CISCO Digital Optical Monitoring (DOM)"
 msgstr "CISCOデジタルオプティカルモニタリング(DOM)"
@@ -11867,6 +11969,10 @@ msgstr "システム空間のCPU時間"
 
 msgid "CPU time in user space"
 msgstr "ユーザースペースのCPU時間"
+
+#, fuzzy
+msgid "CPU time percentage"
+msgstr "CPU(パーセント)"
 
 msgid "CPU time upper levels"
 msgstr "CPU時間の上位レベル"
@@ -12073,9 +12179,6 @@ msgstr "サイトのCRITサービス"
 msgid "CRITICAL"
 msgstr "クリティカル"
 
-msgid "CRT/PEM file"
-msgstr "CRT/PEMファイル"
-
 msgid "CSV file"
 msgstr "CSVファイル"
 
@@ -12109,6 +12212,10 @@ msgstr "非同期チェックのキャッシュ年齢"
 
 msgid "Cache age for background checks"
 msgstr "バックグラウンドチェックのキャッシュ経過時間"
+
+#, fuzzy
+msgid "Cache folder"
+msgstr "フォルダーと一致する"
 
 #, python-format
 msgid "Cache generated %(cache_age)s ago, cache interval: %(cache_interval)s"
@@ -12363,10 +12470,10 @@ msgstr "ジョブを削除できません。ジョブを停止することはで
 msgid "Cannot delete rules that are managed by Quick Setup."
 msgstr "クイックセットアップで管理されているルールは削除できません。"
 
-#, python-format
+#, fuzzy
 msgid ""
 "Cannot delete this customer because the following objects are still assigned "
-"to it: %(references)s."
+"to it:"
 msgstr ""
 "以下のオブジェクトがまだこの顧客に割り当てられているため、この顧客を削除でき"
 "ません：%(references)s。"
@@ -12627,6 +12734,10 @@ msgstr "機能マップのサポート"
 
 msgid "Capabilities supported"
 msgstr "サポートされた機能"
+
+#, fuzzy
+msgid "Capacity and virtual space"
+msgstr "容量使用状況"
 
 msgid "Capacity license consumption"
 msgstr "キャパシティライセンスの使用状況"
@@ -15312,10 +15423,9 @@ msgid ""
 "method, which considers both the new value and the previous average while "
 "applying a weighted factor to each."
 msgstr ""
-"平均化されたシングルコアCPU利用率を計算します。このオプションは、"
-"サブオプション 'シングルコアレベルの適用'または '平均シングルコア利用率の"
-"グラフ'の少なくとも1つが有効になっている場合にのみ効果があることに注意してく"
-"ださい。\n"
+"平均化されたシングルコアCPU利用率を計算します。このオプションは、サブオプショ"
+"ン 'シングルコアレベルの適用'または '平均シングルコア利用率のグラフ'の少なく"
+"とも1つが有効になっている場合にのみ効果があることに注意してください。\n"
 "注意：平均は指数移動平均（EMA）法を使用して計算され、新しい値と前回の平均の両"
 "方を考慮し、それぞれに重み付け係数を適用します。"
 
@@ -18116,8 +18226,9 @@ msgstr "現在の日付"
 msgid "Current disk size"
 msgstr "現在のディスク容量"
 
-msgid "Current disk size %"
-msgstr "現在のディスク容量%"
+#, fuzzy
+msgid "Current disk size percentage"
+msgstr "現在のO2パーセンテージ"
 
 msgid "Current events"
 msgstr "現在のイベント"
@@ -19039,7 +19150,15 @@ msgstr "データポイント属性"
 msgid "Data read"
 msgstr "読み取ったデータ"
 
+#, fuzzy
+msgid "Data read and written"
+msgstr "書き込まれたデータ"
+
 msgid "Data received"
+msgstr "受信データ"
+
+#, fuzzy
+msgid "Data received and sent"
 msgstr "受信データ"
 
 msgid "Data reduction ratio"
@@ -19176,6 +19295,10 @@ msgstr "データベースインスタンス – ステートブレイクダウ�
 
 msgid "Database is being recovered"
 msgstr "データベースが復元されています"
+
+#, fuzzy
+msgid "Database job duration"
+msgstr "データベースポート"
 
 msgid "Database must be recovered"
 msgstr "データベースを回復する必要があります"
@@ -22424,6 +22547,10 @@ msgstr "接頭辞は使用しないでください"
 msgid "Do not use absolute levels"
 msgstr "絶対レベルを使用しないでください"
 
+#, fuzzy
+msgid "Do not use the 'aws:' prefix."
+msgstr "接頭辞は使用しないでください"
+
 msgid "Do not validate TLS certificates"
 msgstr "TLS証明書を検証しないでください"
 
@@ -23860,8 +23987,8 @@ msgstr "電力"
 msgid "Electrical power for devices with only one phase"
 msgstr "単相のデバイスへの電力供給"
 
-#, no-python-format
-msgid "Electrical tension in % of normal value"
+#, fuzzy
+msgid "Electrical tension as percentage of normal value"
 msgstr "電気張力の正常値に対する%割合"
 
 msgid "Electrical voltage"
@@ -26208,41 +26335,20 @@ msgstr "FCP レイテンシ"
 msgid "FCP operations"
 msgstr "FCP 操作"
 
-msgid "FCP other data"
-msgstr "FCPその他のデータ"
-
-msgid "FCP other latency"
-msgstr "FCP その他のレイテンシ"
-
-msgid "FCP other ops"
-msgstr "FCPその他のops"
-
-msgid "FCP read ios"
-msgstr "FCP読み取りios"
-
 msgid "FCP read latency"
 msgstr "ディスク読み取りレイテンシ"
 
 msgid "FCP read ops"
 msgstr "FCP読み取りops"
 
-msgid "FCP read throughput"
-msgstr "FCP 読み取りスループット"
-
 msgid "FCP traffic"
 msgstr "FCPトラフィック"
-
-msgid "FCP write ios"
-msgstr "FCP書き込みios"
 
 msgid "FCP write latency"
 msgstr "FCP書き込みレイテンシ"
 
 msgid "FCP write ops"
 msgstr "FCP書き込みops"
-
-msgid "FCP write throughput"
-msgstr "FCP 書き込みスループット"
 
 msgid "FGPA utilization"
 msgstr "FGPAの利用率"
@@ -26728,9 +26834,6 @@ msgstr "ファンと温度"
 msgid "Fan name"
 msgstr "ファン名"
 
-msgid "Fan rotation speed"
-msgstr "ファンの回転速度"
-
 msgid "Fan speed"
 msgstr "ファン回転速度"
 
@@ -26769,9 +26872,6 @@ msgstr "エージェント出力をフェッチします"
 
 msgid "Fetch all available sub OIDs"
 msgstr "利用可能なすべてのサブOIDを取得します"
-
-msgid "Fetch certificate from server"
-msgstr "サーバーから証明書を取得する"
 
 msgid "Fetch chunked"
 msgstr "チャンクをフェッチ"
@@ -29346,6 +29446,10 @@ msgstr "HTTPリダイレクトURLの上限を超えた"
 msgid "HTTP request header variable"
 msgstr "HTTPリクエストヘッダー変数"
 
+#, fuzzy
+msgid "HTTP requests per second"
+msgstr "1秒あたりの最大HTTPリクエスト数"
+
 msgid "HTTP timings"
 msgstr "HTTPタイミング"
 
@@ -29440,9 +29544,6 @@ msgstr "リアルタイムチェックの処理"
 
 msgid "Handled connections"
 msgstr "処理された接続"
-
-msgid "Handled connections per second"
-msgstr "1秒あたりの処理された接続"
 
 msgid "Handled requests"
 msgstr "処理されたリクエスト"
@@ -30021,9 +30122,8 @@ msgid ""
 "performance reasons CPU averaging will not be applied to to the levels of "
 "single processes."
 msgstr ""
-"ここでは、単一プロセスのCPU利用率のレベルを定義することができます。"
-"パフォーマンス上の理由から、単一プロセスのレベルにはCPUの平均化は適用されませ"
-"ん。"
+"ここでは、単一プロセスのCPU利用率のレベルを定義することができます。パフォーマ"
+"ンス上の理由から、単一プロセスのレベルにはCPUの平均化は適用されません。"
 
 msgid ""
 "Here, you can define levels on the resident memory utilization (in "
@@ -30032,26 +30132,26 @@ msgid ""
 "processes."
 msgstr ""
 "ここでは、単一プロセスの常駐メモリ利用率（総RAMに対する割合）についてのレベル"
-"を定義できます。パフォーマンス上の理由から、単一プロセスのレベルには常駐"
-"メモリ平均化は適用されません。"
+"を定義できます。パフォーマンス上の理由から、単一プロセスのレベルには常駐メモ"
+"リ平均化は適用されません。"
 
 msgid ""
 "Here, you can define levels on the resident memory utilization of single "
 "processes. For performance reasons resident memory averaging will not be "
 "applied to to the levels of single processes."
 msgstr ""
-"ここでは、単一プロセスの常駐メモリ利用率のレベルを定義することができます。"
-"パフォーマンス上の理由から、単一プロセスのレベルには常駐メモリ平均化が適用さ"
-"れません。"
+"ここでは、単一プロセスの常駐メモリ利用率のレベルを定義することができます。パ"
+"フォーマンス上の理由から、単一プロセスのレベルには常駐メモリ平均化が適用され"
+"ません。"
 
 msgid ""
 "Here, you can define levels on the virtual memory utilization of single "
 "processes. For performance reasons virtual memory averaging will not be "
 "applied to to the levels of single processes."
 msgstr ""
-"ここでは、単一プロセスの仮想メモリ利用率に関するレベルを定義できます。"
-"パフォーマンス上の理由から、単一プロセスのレベルには仮想メモリの平均化は適用"
-"されません。"
+"ここでは、単一プロセスの仮想メモリ利用率に関するレベルを定義できます。パ"
+"フォーマンス上の理由から、単一プロセスのレベルには仮想メモリの平均化は適用さ"
+"れません。"
 
 msgid ""
 "Here, you can define the state of the incident in case of an acknowledgment "
@@ -30589,6 +30689,10 @@ msgstr "高(エスカレーションあり)"
 
 msgid "High alerts"
 msgstr "アラートが高い"
+
+#, fuzzy
+msgid "High bandwidth mode"
+msgstr "帯域幅"
 
 msgid "High utilization at "
 msgstr "での高い利用率 "
@@ -31592,6 +31696,10 @@ msgstr "ホスト管理"
 msgid "Host alert"
 msgstr "ホストアラート"
 
+#, fuzzy
+msgid "Host alerts"
+msgstr "ホストアラート"
+
 msgid "Host alias"
 msgstr "ホストエイリアス"
 
@@ -32048,6 +32156,10 @@ msgstr "ホスト通知番号"
 msgid "Host notification period"
 msgstr "ホスト通知期間"
 
+#, fuzzy
+msgid "Host notifications"
+msgstr "テスト通知"
+
 msgid "Host notifications enabled"
 msgstr "ホスト通知が有効"
 
@@ -32251,9 +32363,6 @@ msgstr "ホスト"
 
 msgid "Hosts & Layer"
 msgstr "ホストとレイヤー"
-
-msgid "Hosts & services:"
-msgstr "ホスト&サービスイベント:"
 
 msgid "Hosts : $SHORT_STATE_NAME$"
 msgstr "ホスト : $SHORT_STATE_NAME$"
@@ -36438,6 +36547,10 @@ msgstr "インターフェースFCP"
 msgid "Interface ID"
 msgstr "インターフェースID"
 
+#, fuzzy
+msgid "Interface bandwidth"
+msgstr "インターフェイス id"
+
 msgid "Interface groups"
 msgstr "インターフェイスグループ"
 
@@ -36650,10 +36763,6 @@ msgstr "無効なカタログデータ"
 
 msgid "Invalid certificate"
 msgstr "無効な証明書"
-
-#, python-format
-msgid "Invalid certificate file: %(e)s"
-msgstr "無効な証明書ファイル: %(e)s"
 
 #, python-format
 msgid "Invalid certificate: %(e)s"
@@ -37031,10 +37140,6 @@ msgid ""
 "Invalid time period name. Only the characters a-z, A-Z, 0-9, _ and - are "
 "allowed."
 msgstr "期間名が無効です。文字 a-z, A-Z, 0-9, _ および - のみが許可されます。"
-
-#, python-format
-msgid "Invalid time resolution key \"%(resolution)s\" given"
-msgstr "無効な時間解決キー \"%(resolution)s\" が指定されました"
 
 msgid "Invalid time-specific data"
 msgstr "無効な時間指定データ"
@@ -37637,9 +37742,6 @@ msgstr "ジッター"
 msgid "Job"
 msgstr "ジョブ"
 
-msgid "Job Duration"
-msgstr "ジョブの期間"
-
 msgid "Job ID"
 msgstr "ジョブID"
 
@@ -38123,6 +38225,10 @@ msgstr ""
 
 msgid "LDAP version"
 msgstr "LDAPバージョン"
+
+#, fuzzy
+msgid "LDAP/SAML connections"
+msgstr "SAML 接続"
 
 msgid "LED"
 msgstr "LED"
@@ -39789,12 +39895,14 @@ msgstr "リンクがリセットされます"
 msgid "Link target"
 msgstr "リンク先"
 
+#, fuzzy
 msgid ""
 "Link this host to other monitored hosts. Type and direction say what this "
 "host is to the selected one - the management board of that host, for "
 "instance, or an OS host managed by it. A relation concerns both hosts, so it "
 "is stored on both: it appears here right away when someone records it on the "
-"other host, and adding or removing one here changes that host too."
+"other host, and adding or removing one here changes that host too. The "
+"monitoring shows what the management board stores."
 msgstr ""
 "このホストを、他の監視対象ホストに関連付けます。「タイプ」と「方向」は、この"
 "ホストが選択したホストに対してどのような関係にあるかを示します。例えば、その"
@@ -40227,6 +40335,9 @@ msgstr "ローカルファイル"
 
 msgid "Local files & extensions"
 msgstr "ローカルファイルと拡張子"
+
+msgid "Local files overriding shipped style sheets or scripts"
+msgstr ""
 
 msgid "Local group name"
 msgstr "ローカルグループ名"
@@ -42452,9 +42563,6 @@ msgstr "最大"
 msgid "Maximum %(count)s instances of duration greater than %(duration)s"
 msgstr "最大 %(count)s インスタンス 期間が %(duration)s を超える"
 
-msgid "Maximum Corosync latency"
-msgstr "最大Corosync レイテンシ"
-
 msgid "Maximum HTTP requests per second"
 msgstr "1秒あたりの最大HTTPリクエスト数"
 
@@ -42475,6 +42583,10 @@ msgstr "手動ワークエリアに使用される最大PGA"
 
 msgid "Maximum RAM"
 msgstr "最大RAM"
+
+#, fuzzy
+msgid "Maximum RAM and swap used"
+msgstr "RAM +スワップ使用"
 
 msgid "Maximum accepted age of the reported data in seconds"
 msgstr "報告されたデータの最大許容経過時間(秒単位)"
@@ -42616,6 +42728,9 @@ msgstr "ハートビートパケットの最大予想実行時間"
 #, python-format
 msgid "Maximum image size: %(max_w)dx%(max_h)dpx"
 msgstr "最大画像サイズ: %(max_w)dx%(max_h)dpx"
+
+msgid "Maximum latency"
+msgstr "最大レイテンシ"
 
 msgid "Maximum latency (ms)"
 msgstr "最大レイテンシ(ミリ秒)"
@@ -42782,8 +42897,8 @@ msgid ""
 msgstr ""
 "同時に処理できるデータストリームの最大数です。受信データストリームの数がこの"
 "制限を超えると、それらは破棄されます。値を０に設定すると、この制限は無効にな"
-"ります。この制限を設定すると、データ件数が非常に多い場合に、プロセッサの"
-"リソース利用率が高くなりすぎるのを防ぐのに役立ちます。"
+"ります。この制限を設定すると、データ件数が非常に多い場合に、プロセッサのリ"
+"ソース利用率が高くなりすぎるのを防ぐのに役立ちます。"
 
 msgid "Maximum number of threads"
 msgstr "スレッドの最大数"
@@ -43293,6 +43408,14 @@ msgstr "サービスアラートのメッセージ"
 
 msgid "Message processing"
 msgstr "メッセージ処理"
+
+#, fuzzy
+msgid "Message queue length"
+msgstr "読み取りキュー長"
+
+#, fuzzy
+msgid "Message queue utilization"
+msgstr "キュー利用率のレベル"
 
 msgid "Message rate"
 msgstr "メッセージレート"
@@ -44246,6 +44369,15 @@ msgid "Monitor request metrics using the filter <tt>EntireBucket</tt>"
 msgstr ""
 "フィルタ<tt>EntireBucket</tt>を使用して、リクエストメトリクスを監視する"
 
+#, fuzzy
+msgid "Monitor request metrics using the filter EntireBucket"
+msgstr ""
+"フィルタ<tt>EntireBucket</tt>を使用して、リクエストメトリクスを監視する"
+
+#, fuzzy
+msgid "Monitor service"
+msgstr "監視対象サービス"
+
 msgid "Monitor service limits"
 msgstr "サービス制限を監視する"
 
@@ -44925,15 +45057,6 @@ msgstr "NFS マウント"
 msgid "NFS operations"
 msgstr "NFS操作"
 
-msgid "NFS other data"
-msgstr "NFS その他データ"
-
-msgid "NFS other latency"
-msgstr "NFS その他レイテンシ"
-
-msgid "NFS other ops"
-msgstr "NFSその他 ops"
-
 msgid "NFS read ios"
 msgstr "NFS読み込みios"
 
@@ -44976,18 +45099,6 @@ msgstr "NFSv4レイテンシ"
 msgid "NFSv4 operations"
 msgstr "NFSv4操作"
 
-msgid "NFSv4 other data"
-msgstr "NFSv4その他データ"
-
-msgid "NFSv4 other latency"
-msgstr "NFSv4 その他レイテンシ"
-
-msgid "NFSv4 other ops"
-msgstr "NFSv4その他 ops"
-
-msgid "NFSv4 read ios"
-msgstr "NFSv4読み取りios"
-
 msgid "NFSv4 read latency"
 msgstr "NFSv4 読み取りレイテンシ"
 
@@ -44999,9 +45110,6 @@ msgstr "NFSv4 読み取りスループット"
 
 msgid "NFSv4 traffic"
 msgstr "NFSv4 トラフィック"
-
-msgid "NFSv4 write ios"
-msgstr "NFSv4書き込みios"
 
 msgid "NFSv4 write latency"
 msgstr "NFSv4 書き込みレイテンシ"
@@ -45024,18 +45132,6 @@ msgstr "NFSv4.1 レイテンシ"
 msgid "NFSv4.1 operations"
 msgstr "NFSv4.1の操作"
 
-msgid "NFSv4.1 other data"
-msgstr "NFSv4.1その他データ"
-
-msgid "NFSv4.1 other latency"
-msgstr "NFSv4.1その他レイテンシ"
-
-msgid "NFSv4.1 other ops"
-msgstr "NFSv4.1その他ops"
-
-msgid "NFSv4.1 read ios"
-msgstr "NFSv4.1読み取りios"
-
 msgid "NFSv4.1 read latency"
 msgstr "NFSv4.1 読み取りレイテンシ"
 
@@ -45047,9 +45143,6 @@ msgstr "NFSv4.1 読み取りスループット"
 
 msgid "NFSv4.1 traffic"
 msgstr "NFSv4.1トラフィック"
-
-msgid "NFSv4.1 write ios"
-msgstr "NFSv4.1書込みios"
 
 msgid "NFSv4.1 write latency"
 msgstr "NFSv4.1 書き込みレイテンシ"
@@ -46318,6 +46411,9 @@ msgstr "Iノード レベルなし"
 msgid "No license verification performed yet"
 msgstr "ライセンス認証はまだ行われていない"
 
+msgid "No local files override shipped style sheets or scripts"
+msgstr ""
+
 msgid "No logging"
 msgstr "ロギングなし"
 
@@ -46933,10 +47029,6 @@ msgstr "利用不可"
 
 msgid "Not available duration"
 msgstr "使用不可期間"
-
-#, python-format
-msgid "Not before: %(not_before)s - Not after: %(not_after)s"
-msgstr "開始日: %(not_before)s - 終了日: %(not_after)s"
 
 msgid "Not configured."
 msgstr "構成されていません。"
@@ -47564,9 +47656,6 @@ msgstr "SIP/H323 コールの試行回数"
 msgid "Number of attempted SIP/H323 fax calls"
 msgstr "SIP/H323 ファックス通話の試行回数"
 
-msgid "Number of available file descriptors"
-msgstr "使用可能なファイル記述子の数"
-
 msgid "Number of blocked tasks"
 msgstr "ブロックされたタスクの数"
 
@@ -48089,6 +48178,10 @@ msgstr "停止したPodmanコンテナの数"
 msgid "Number of stopped Podman pods"
 msgstr "停止したPodmanポッドの数"
 
+#, fuzzy
+msgid "Number of streams"
+msgstr "スレッド数"
+
 msgid "Number of stuck tasks"
 msgstr "スタックしたタスクの数"
 
@@ -48130,12 +48223,6 @@ msgstr "未通知アラートの数"
 
 msgid "Number of unassigned shards"
 msgstr "割り当てられていないシャードの数"
-
-msgid "Number of unique inside MAC addresses"
-msgstr "一意の内部MACアドレスの数"
-
-msgid "Number of unique outside MAC addresses"
-msgstr "一意の外部MACアドレスの数"
 
 msgid "Number of unknown alerts"
 msgstr "不明なアラートの数"
@@ -50361,9 +50448,6 @@ msgstr ""
 "保証するものではありません。Checkmkは、不正確な翻訳による不正確な操作について"
 "一切の責任を負いません。 "
 
-msgid "Other latency"
-msgstr "その他の待ち時間"
-
 msgid "Other logs for this service"
 msgstr "このサービスに関する他のログ"
 
@@ -50562,6 +50646,10 @@ msgstr "SNMPデバイスの出力テキストエンコーディング設定"
 
 msgid "Output traffic"
 msgstr "出力トラフィック"
+
+#, fuzzy
+msgid "Output unicast and non-unicast octets"
+msgstr "ユニキャスト以外のオクテットを出力する"
 
 msgid "Output unicast octets"
 msgstr "ユニキャストオクテットを出力します"
@@ -51219,9 +51307,6 @@ msgstr "改ページ"
 msgid "Page cache mapped into userspace with huge pages"
 msgstr "膨大なページを持つユーザー空間にマッピングされたページキャッシュ"
 
-msgid "Page lookups"
-msgstr "ページルックアップ"
-
 msgid "Page not found"
 msgstr "ページが見つかりません"
 
@@ -51251,9 +51336,6 @@ msgstr "ページタイトル"
 
 msgid "Page writes"
 msgstr "ページ書き込み"
-
-msgid "Pagefile installed"
-msgstr "ページファイルがインストールされました"
 
 msgid "Pager"
 msgstr "ページャー"
@@ -51912,6 +51994,10 @@ msgstr "グローバルオブジェクトのデフォルト設定をマップご
 msgid "Percent and time"
 msgstr "パーセントと時間"
 
+#, fuzzy
+msgid "Percent factor"
+msgstr "使用率"
+
 msgid "Percent of OK-nodes"
 msgstr "OKノードの割合"
 
@@ -52431,15 +52517,14 @@ msgid ""
 "behind each value."
 msgstr ""
 "ホストのHW/SWインベントリツリーからホストラベルを取得します。<i>Check_MK HW/"
-"SW Inventory</i>サービスは、実行が成功するたびにラベルを取得し、"
-"サービスディスカバリーがそれらを受け入れるまで、新規、消失、変更されたラベル"
-"をレポートします。ホストラベルを更新する定期的なサービスディスカバリーにより"
-"、それらは自動的に受け入れられます。 同名の検出プラグインのラベルが優先されま"
-"す。パス、キー、列を検索するには、ホストのHW/SWインベントリページを開き、<tt>"
-"Modify表示オプション > 内部ツリーパスを表示</tt>を有効にしてください。これに"
-"より、タイトルの後ろに括弧で囲まれた形式で表示されます（末尾の<tt>*</tt>は"
-"キー列のみを示します）。また、各値の後ろには括弧で囲まれた生の値が表示されま"
-"す。"
+"SW Inventory</i>サービスは、実行が成功するたびにラベルを取得し、サービスディ"
+"スカバリーがそれらを受け入れるまで、新規、消失、変更されたラベルをレポートし"
+"ます。ホストラベルを更新する定期的なサービスディスカバリーにより、それらは自"
+"動的に受け入れられます。 同名の検出プラグインのラベルが優先されます。パス、"
+"キー、列を検索するには、ホストのHW/SWインベントリページを開き、<tt>Modify表示"
+"オプション > 内部ツリーパスを表示</tt>を有効にしてください。これにより、タイ"
+"トルの後ろに括弧で囲まれた形式で表示されます（末尾の<tt>*</tt>はキー列のみを"
+"示します）。また、各値の後ろには括弧で囲まれた生の値が表示されます。"
 
 msgid "Piggyback"
 msgstr "ピギーバック"
@@ -53971,14 +54056,15 @@ msgstr "プライベートIP"
 msgid "Private and shared memory"
 msgstr "プライベートメモリと共有メモリ"
 
+#, fuzzy
+msgid "Private guest memory"
+msgstr "プライベートメモリ"
+
 msgid "Private key"
 msgstr "秘密鍵（Private key）"
 
 msgid "Private key must not be empty"
 msgstr "秘密鍵は空にはできません"
-
-msgid "Private memory"
-msgstr "プライベートメモリ"
 
 msgid "Private memory usage"
 msgstr "プライベートメモリの使用量"
@@ -54247,6 +54333,10 @@ msgstr "不正アクセスからエージェントのデータを保護"
 
 msgid "Protection Domain"
 msgstr "保護ドメイン"
+
+#, fuzzy
+msgid "Protection group name"
+msgstr "ターゲットグループ名"
 
 msgid "Protocol"
 msgstr "プロトコル"
@@ -54712,9 +54802,6 @@ msgstr "キュー"
 
 msgid "Queue Latency"
 msgstr "キューの待ち時間"
-
-msgid "Queue Length"
-msgstr "キューの長さ"
 
 msgid "Queue Name"
 msgstr "キュー名"
@@ -55205,6 +55292,10 @@ msgstr "すべてのホストとフォルダへの読み取りアクセス"
 msgid "Read access to all modules"
 msgstr "すべてのモジュールへの読み取りアクセス"
 
+#, fuzzy
+msgid "Read and write latency"
+msgstr "読み取りおよび書き込みブロック"
+
 msgid "Read and written blocks"
 msgstr "読み取りおよび書き込みブロック"
 
@@ -55396,6 +55487,9 @@ msgstr "理由:%(reason)s"
 
 msgid "Reasons"
 msgstr "理由"
+
+msgid "Reassign or remove them before deleting the customer."
+msgstr ""
 
 msgid "Receipt"
 msgstr "受理"
@@ -56014,11 +56108,11 @@ msgid ""
 "to the groups. A missing, empty or non-matching value picks no label."
 msgstr ""
 "正規表現は、文字列に変換された生の（未加工の）値の中の任意の場所で検索されま"
-"す。例えば <tt>True</tt> や<tt>1073741824</tt>です。それらを<tt>^<tt>と</tt>"
-"$</tt>でアンカー（固定）し、大文字小文字を無視するには先頭に<tt>(?i)</tt>を付"
-"けます。置換を行うと値全体が置き換わります。<tt>\\1</tt>, <tt>\\2</tt>、…は各"
-"グループを参照します。欠落している値、空である、または一致しない値はラベルは"
-"割り当てられません。"
+"す。例えば <tt>True</tt> や<tt>1073741824</tt>です。それらを<tt>^<tt>と</"
+"tt>$</tt>でアンカー（固定）し、大文字小文字を無視するには先頭に<tt>(?i)</tt>"
+"を付けます。置換を行うと値全体が置き換わります。<tt>\\1</tt>, <tt>\\2</tt>、…"
+"は各グループを参照します。欠落している値、空である、または一致しない値はラベ"
+"ルは割り当てられません。"
 
 msgid "Regular expressions for message classification"
 msgstr "メッセージ分類の正規表現"
@@ -57069,9 +57163,6 @@ msgstr "メトリックを要求する"
 msgid "Request rate"
 msgstr "リクエストレート"
 
-msgid "Request too large"
-msgstr "リクエストが大きすぎる"
-
 msgid "Request transfer rate"
 msgstr "リクエスト転送レート"
 
@@ -57117,9 +57208,6 @@ msgstr "処理中のリクエスト"
 msgid "Requests node, cluster and indice data from a Graylog instance."
 msgstr ""
 "Graylogインスタンスにノード、クラスタ、インデックスのデータを要求します。"
-
-msgid "Requests per connection"
-msgstr "接続ごとのリクエスト"
 
 msgid "Requests per second"
 msgstr "1秒あたりのリクエスト数"
@@ -57201,6 +57289,10 @@ msgstr "リセラー"
 
 msgid "Reserved DB instances"
 msgstr "予約済みDBインスタンス"
+
+#, fuzzy
+msgid "Reserved database space"
+msgstr "予約スペース"
 
 msgid "Reserved size"
 msgstr "予約サイズ"
@@ -58491,41 +58583,20 @@ msgstr "SANレイテンシ"
 msgid "SAN operations"
 msgstr "SAN 操作"
 
-msgid "SAN other data"
-msgstr "SAN その他データ"
-
-msgid "SAN other latency"
-msgstr "SAN その他の待ち時間"
-
-msgid "SAN other ops"
-msgstr "SAN ohters ops"
-
-msgid "SAN read ios"
-msgstr "SAN読み取りiOS"
-
 msgid "SAN read latency"
 msgstr "SAN読み取りレイテンシ"
 
 msgid "SAN read ops"
 msgstr "SAN 読み取りops"
 
-msgid "SAN read throughput"
-msgstr "SANの読み取りスループット"
-
 msgid "SAN traffic"
 msgstr "SAN トラフィック"
-
-msgid "SAN write ios"
-msgstr "SAN 書き込みios"
 
 msgid "SAN write latency"
 msgstr "SAN 書き込みレイテンシ"
 
 msgid "SAN write ops"
 msgstr "SAN 書き込みops"
-
-msgid "SAN write throughput"
-msgstr "SAN 書き込みスループット"
 
 msgid "SAP Dialog"
 msgstr "SAPダイアログ"
@@ -59769,6 +59840,10 @@ msgstr "データソースを選択"
 msgid "Select device type"
 msgstr "デバイスタイプを選択します"
 
+#, fuzzy
+msgid "Select direction"
+msgstr "オプション選択"
+
 msgid "Select file"
 msgstr "ファイルを選択"
 
@@ -60036,6 +60111,10 @@ msgstr ""
 
 msgid "Select the contact group that can edit this OAuth2 connection."
 msgstr "この OAuth2 接続を編集できる連絡先グループを選択してください。"
+
+#, fuzzy
+msgid "Select the direction of this relation."
+msgstr "このリレーションが指すホストを選択してください。"
 
 msgid ""
 "Select the folder for the source host. Create a new folder first if needed."
@@ -60577,6 +60656,10 @@ msgid "Service Type"
 msgstr "サービスの種類"
 
 msgid "Service alert"
+msgstr "サービスアラート"
+
+#, fuzzy
+msgid "Service alerts"
 msgstr "サービスアラート"
 
 msgid "Service alternative display name"
@@ -61196,6 +61279,11 @@ msgstr "少なくとも1つのターゲットを設定してください。"
 
 msgid "Set by rule pack"
 msgstr "ルールパックで設定"
+
+msgid ""
+"Set by the dynamic host management connection that created this host. When "
+"present it selects this rule's metrics instead of the attribute lists above."
+msgstr ""
 
 msgid "Set cache age for plug-ins (Linux, Unix)"
 msgstr "プラグインのキャッシュ有効期間を設定する（Linux, Unix）"
@@ -61908,6 +61996,10 @@ msgstr "共有"
 
 msgid "Shared Access Locks"
 msgstr "共有アクセスロック"
+
+#, fuzzy
+msgid "Shared guest memory"
+msgstr "共有メモリ"
 
 msgid "Shared key"
 msgstr "共有キー"
@@ -63134,9 +63226,9 @@ msgid ""
 "check interval for host checks</i> while the host is in soft non-UP state). "
 msgstr ""
 "Smart PINGは、Checkmk Micro Coreを使用する場合のホストチェックのデフォルトの"
-"方法です。コアは、 <i>ホストチェックの通常のチェック間隔</i>(またはホストが"
-"ソフトな非UP状態の場合は<i>ホストチェックの再試行間隔</i>)で構成されたレート"
-"でICMPエコー要求(PING)を送信します。 "
+"方法です。コアは、 <i>ホストチェックの通常のチェック間隔</i>(またはホストがソ"
+"フトな非UP状態の場合は<i>ホストチェックの再試行間隔</i>)で構成されたレートで"
+"ICMPエコー要求(PING)を送信します。 "
 
 msgid "Smarthosts"
 msgstr "スマートホスト"
@@ -63174,8 +63266,9 @@ msgstr "スナップショットリザーブ"
 msgid "Snapshot reserve size"
 msgstr "スナップショットリザーブ サイズ"
 
-msgid "Snapshot reserve used %"
-msgstr "スナップショットリザーブ使用率 %"
+#, fuzzy
+msgid "Snapshot reserve used percentage"
+msgstr "スナップショットリザーブ使用量"
 
 msgid "Snapshot reserve used space"
 msgstr "スナップショットリザーブ使用量"
@@ -63269,8 +63362,8 @@ msgstr ""
 "いくつかのエージェントコマンドやプラグインは、一時ファイルの保存のために環境"
 "変数TMPDIRに従うかもしれません。いくつかの理由により、このパスを変更したい場"
 "合があります。特に、\"noexec \"フラグでマウントされた\"/tmp \"ディレクトリで"
-"は、エージェントのアップデータは動作しません。Checkmk エージェントは、この"
-"カスタムパス上で自動クリーニングを行わないことに注意してください。"
+"は、エージェントのアップデータは動作しません。Checkmk エージェントは、このカ"
+"スタムパス上で自動クリーニングを行わないことに注意してください。"
 
 msgid ""
 "Some agents or agent plug-ins send data not only for the queried host but "
@@ -63294,8 +63387,8 @@ msgstr ""
 "他のホストのデータも\"piggyback\"して送信するものがあります。例えば、vSphere "
 "スペシャルエージェントや SAP R/3 プラグインがそうです。これらのエージェントが"
 "送信するホスト名は、監視設定のホスト名と一致していなければなりません。そうで"
-"ない場合は、このルールでホスト名の変換を定義できます。注意: このルールは"
-"、\"ピグ\"つまりエージェントが動作しているホストに対して設定する必要がありま"
+"ない場合は、このルールでホスト名の変換を定義できます。注意: このルールは、"
+"\"ピグ\"つまりエージェントが動作しているホストに対して設定する必要がありま"
 "す。変換されたピギーバックホストには適用されません。"
 
 msgid ""
@@ -63320,7 +63413,8 @@ msgstr ""
 
 #, python-format
 msgid "Some but not all package types are signed with key '%(key_alias)s'"
-msgstr "すべてのパッケージタイプは、「%(key_alias)s」という鍵で署名されています。"
+msgstr ""
+"すべてのパッケージタイプは、「%(key_alias)s」という鍵で署名されています。"
 
 msgid ""
 "Some devices send texts in non-ASCII characters. Checkmk always assumes "
@@ -65701,6 +65795,10 @@ msgid "State when software packages info is missing"
 msgstr "ソフトウェアパッケージ情報が欠落している場合の状態"
 
 #, fuzzy
+msgid "State when the protection group is disabled"
+msgstr "ジョブが無効な状態にあるときの状態"
+
+#, fuzzy
 msgid "State when the proxy is disabled"
 msgstr "ジョブが無効な状態にあるときの状態"
 
@@ -66061,6 +66159,10 @@ msgstr "ストレージアカウント共有キー"
 msgid "Storage space used"
 msgstr "使用したストレージスペース"
 
+#, fuzzy
+msgid "Storage space used percentage"
+msgstr "サービス状態のパーセンテージ"
+
 msgid "Storage, file systems and files"
 msgstr "ストレージ、ファイルシステム、ファイル"
 
@@ -66135,6 +66237,10 @@ msgstr "ストリーム ルール"
 
 msgid "Streams"
 msgstr "ストリーム"
+
+#, fuzzy
+msgid "Streams CPU utilization"
+msgstr "CPU利用率のレベル"
 
 msgid "Streams pool size"
 msgstr "ストリームプールサイズ"
@@ -72312,24 +72418,24 @@ msgstr "このアクションは検索結果に対して実行することはで
 
 #, fuzzy, python-format
 msgid ""
-"The relation concerns '%(host)s' as well, which you cannot edit. Put the "
-"entry back to save this host."
+"The relation concerns '%(host)s' as well, which you cannot edit. Keep the "
+"relation to save this host."
 msgstr ""
 "この関係は「%(host)s」にも当てはまりますが、こちらは編集できません："
 "%(reason)s このホストを保存するには、エントリを元の状態に戻してください。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The relation concerns '%(host)s' as well, which you cannot edit: %(reason)s "
-"Put the entry back to save this host."
+"Keep the relation to save this host."
 msgstr ""
 "この関係は「%(host)s」にも当てはまりますが、こちらは編集できません："
-"%(reason)s このホストを保存するには、エントリを元の状態に戻してください。"
+"%(reason)s このホストを保存するには、このエントリを削除してください。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The relation concerns '%(host)s' as well, which you cannot edit: %(reason)s "
-"Remove the entry to save this host."
+"Leave the relation out to save this host."
 msgstr ""
 "この関係は「%(host)s」にも当てはまりますが、こちらは編集できません："
 "%(reason)s このホストを保存するには、このエントリを削除してください。"
@@ -72343,7 +72449,14 @@ msgid "The relations of '%(related_name)s' are malformed: %(error)s"
 msgstr "%(site_id)sへのレプリケーションに失敗しました: %(error)s"
 
 #, fuzzy, python-format
-msgid "The relations of this host are malformed: %(error)s"
+msgid ""
+"The relations of host '%(host)s' cannot be read and are left out: %(error)s"
+msgstr "%(site_id)sへのレプリケーションに失敗しました: %(error)s"
+
+#, fuzzy, python-format
+msgid ""
+"The relations of this host are malformed: %(error)s Store valid ones or "
+"remove them."
 msgstr "%(site_id)sへのレプリケーションに失敗しました: %(error)s"
 
 #. weblate-flags: read-only, domain-specific
@@ -79211,9 +79324,6 @@ msgstr "ルールエンジンが消費する時間"
 msgid "Time dependencies"
 msgstr "時差"
 
-msgid "Time difference"
-msgstr "時差"
-
 msgid "Time dispersion (jitter)"
 msgstr "時間分散(ジッター)"
 
@@ -79491,9 +79601,6 @@ msgstr "ゴミ収集にかかった時間％単位"
 
 msgid "Time spent for various page types"
 msgstr "さまざまなページタイプに費やされた時間"
-
-msgid "Time spent in GC"
-msgstr "GCで費やした時間"
 
 msgid "Time spent waiting for Checkmk agent"
 msgstr "Checkmkエージェントの待ち時間"
@@ -80263,10 +80370,6 @@ msgid "Total Index Size"
 msgstr "インデックスの合計サイズ"
 
 #, fuzzy
-msgid "Total JVM virtual memory"
-msgstr "合計仮想メモリ"
-
-#, fuzzy
 msgid "Total Kubernetes containers"
 msgstr "Kubernetes Podコンテナ―"
 
@@ -80297,6 +80400,10 @@ msgstr "合計RAM"
 
 msgid "Total RAM + Swap installed"
 msgstr "合計RAM +インストールされたスワップ"
+
+#, fuzzy
+msgid "Total RAM and swap"
+msgstr "インストールされているRAMの合計"
 
 msgid "Total RUs lower levels"
 msgstr "合計RUの下位レベル"
@@ -80445,6 +80552,10 @@ msgstr "総ホスト数: "
 
 msgid "Total index failure count upper levels"
 msgstr "合計インデックス障害カウントの上位レベル"
+
+#, fuzzy
+msgid "Total input and split output packets"
+msgstr "パケットの総数"
 
 msgid "Total interfaces"
 msgstr "総インターフェイス"
@@ -82550,6 +82661,10 @@ msgid "Traffic overview"
 msgstr "サービスの概要"
 
 #, fuzzy
+msgid "Traffic port"
+msgstr "送信されたトラフィック"
+
+#, fuzzy
 msgid "Traffic trend"
 msgstr "送信されたトラフィック"
 
@@ -82629,6 +82744,10 @@ msgstr "送信された単語"
 
 #, fuzzy
 msgid "Transparent"
+msgstr "輸送ラグ"
+
+#, fuzzy
+msgid "Transparent huge pages"
 msgstr "輸送ラグ"
 
 msgid "Transport Lag"
@@ -82942,6 +83061,10 @@ msgstr "UCWA - アクティブセッション(iPad)"
 
 msgid "UCWA - Active sessions (iPhone)"
 msgstr "UCWA - アクティブセッション(iPhone)"
+
+#, fuzzy
+msgid "UCWA active sessions"
+msgstr "アクティブセッション"
 
 msgid "UDP"
 msgstr "UDP"
@@ -83463,10 +83586,6 @@ msgstr "修正不可能なコードワード"
 msgid "Uncorrectable errors (ID 187)"
 msgstr "修正不能なエラー (ID 187)"
 
-#, fuzzy
-msgid "Uncorrectable harddrive errors"
-msgstr "修正不可能なコードワード"
-
 msgid "Undecided clustered services"
 msgstr "未定のクラスター化されたサービス"
 
@@ -83542,6 +83661,10 @@ msgstr "未処理のトグル操作「%(action)s」。"
 
 msgid "Unhealthy"
 msgstr "不健康"
+
+#, fuzzy
+msgid "Unicast and non-unicast packets"
+msgstr "入力非ユニキャストパケット"
 
 msgid "Unicast packet rates"
 msgstr "ユニキャストのパケットレート"
@@ -84146,6 +84269,10 @@ msgstr "上限絶対レベル"
 
 msgid "Upper fan speed levels"
 msgstr "ファンの上限速度レベル"
+
+#, fuzzy
+msgid "Upper focus range limit"
+msgstr "上限"
 
 msgid "Upper level for GC run rate"
 msgstr "GC実行率の上位レベル"
@@ -86047,6 +86174,14 @@ msgstr "使用済みCPUメモリ"
 msgid "Used memory RSS"
 msgstr "使用済みメモリRSS"
 
+#, fuzzy
+msgid "Used memory percentage"
+msgstr "サービス状態のパーセンテージ"
+
+#, fuzzy
+msgid "Used memory times 100"
+msgstr "使用済みCPUメモリ"
+
 msgid "Used meta data"
 msgstr "使用したメタデータ"
 
@@ -86063,9 +86198,6 @@ msgstr "ログファイルの使用サイズ"
 msgid "Used space"
 msgstr "使用済スペース"
 
-msgid "Used space %"
-msgstr "使用済スペース %"
-
 #, fuzzy
 msgid "Used space in ZFS pools and file systems"
 msgstr "ZFSプールおよびファイルシステムの使用済みスペース"
@@ -86077,6 +86209,10 @@ msgstr "ファイルシステムの使用済みスペース"
 #, fuzzy
 msgid "Used space in file systems via SNMP"
 msgstr "SNMPを介したファイルシステムの使用済みスペース"
+
+#, fuzzy
+msgid "Used space percentage"
+msgstr "サービス状態のパーセンテージ"
 
 msgid "Used storage"
 msgstr "使用済みストレージ"
@@ -86104,6 +86240,14 @@ msgstr "使用済み仮想メモリ（平均）"
 
 msgid "Used virtual memory in percent"
 msgstr "使用済み仮想メモリ（パーセント）"
+
+#, fuzzy
+msgid "Used virtual memory percentage"
+msgstr "使用済み仮想メモリ（パーセント）"
+
+#, fuzzy
+msgid "Used virtual memory percentage (averaged)"
+msgstr "使用済み仮想メモリ（平均）"
 
 msgid "User"
 msgstr "ユーザー"
@@ -86926,6 +87070,10 @@ msgstr "VMToolsアクティベーションステータス"
 msgid "VMalloc address space"
 msgstr "VMallocアドレス空間"
 
+#, fuzzy
+msgid "VMalloc usage and largest free chunk"
+msgstr "最大の空きチャンク"
+
 msgid "VMs / Templates"
 msgstr "VMs /テンプレート"
 
@@ -87010,9 +87158,6 @@ msgstr "から有効"
 msgid "Valid till"
 msgstr "まで有効"
 
-msgid "Valid until"
-msgstr "まで有効"
-
 msgid "Valid until Checkmk version"
 msgstr "Checkmkバージョンまで有効"
 
@@ -87025,9 +87170,6 @@ msgstr "ポート照会時にサーバ証明書を検証する"
 #, fuzzy
 msgid "Validate with custom certificate authority (CA)"
 msgstr "ポート照会時にサーバ証明書を検証する"
-
-msgid "Validity"
-msgstr "有効性"
 
 msgid "Validity of missing data"
 msgstr "欠測データの有効性"
@@ -87177,6 +87319,10 @@ msgid "Veeam Backup & Replication"
 msgstr "アプリケーションを書き換える"
 
 #, fuzzy
+msgid "Veeam Backup & Replication WAN accelerators"
+msgstr "アプリケーションを書き換える"
+
+#, fuzzy
 msgid "Veeam Backup & Replication patches"
 msgstr "アプリケーションを書き換える"
 
@@ -87198,6 +87344,10 @@ msgstr "BI Configurationパック"
 #, fuzzy
 msgid "Veeam: License"
 msgstr "ライセンス"
+
+#, fuzzy
+msgid "Veeam: Protection group"
+msgstr "エージェント保護グループ"
 
 msgid "Veeam: Restore points"
 msgstr "Veeam：リストアポイント"
@@ -92327,12 +92477,6 @@ msgstr ""
 "href=\"%(url)s\">ルール</a>を作成する必要があります。そこで、更新サーバーへの"
 "アクセスデータも指定する必要があります。"
 
-msgid ""
-"You need to enter at least one CA. Otherwise no SSL connection can be made."
-msgstr ""
-"少なくとも1つのCAを入力する必要があります。それ以外の場合、SSL接続を確立でき"
-"ません。"
-
 msgid "You need to provide a \"host\"."
 msgstr "\"ホスト\"を提供する必要があります。"
 
@@ -92779,6 +92923,9 @@ msgstr "ZFSメタデータ"
 msgid "ZFS storage pool status"
 msgstr "ZFSストレージプールのステータス"
 
+msgid "Zero division guard"
+msgstr ""
+
 msgid "Zero padded port ID"
 msgstr "ゼロ詰めされたポートID"
 
@@ -93145,10 +93292,6 @@ msgstr "接続/秒"
 
 msgid "connections"
 msgstr "接続"
-
-#, fuzzy
-msgid "contact groups"
-msgstr "連絡先グループ: "
 
 msgid "contact groups: "
 msgstr "連絡先グループ: "
@@ -93611,10 +93754,6 @@ msgstr[0] "ホスト"
 msgid "host \"%(host_name)s\""
 msgstr "ホスト名: %s"
 
-#, fuzzy
-msgid "host groups"
-msgstr "ホストグループ"
-
 msgid "host name will be ignored when agent_hash is given."
 msgstr "agent_hashが指定されている場合、ホスト名は無視されます。"
 
@@ -93693,41 +93832,20 @@ msgstr "iSCSIレイテンシ"
 msgid "iSCSI operations"
 msgstr "iSCSI操作"
 
-msgid "iSCSI other data"
-msgstr "iSCSI その他のデータ"
-
-msgid "iSCSI other latency"
-msgstr "ISCSI その他のレイテンシ"
-
-msgid "iSCSI other ops"
-msgstr "ISCSI その他 ops"
-
-msgid "iSCSI read IOs"
-msgstr "iSCSI読み込みios"
-
 msgid "iSCSI read latency"
 msgstr "iSCSI読み取りレイテンシ"
 
 msgid "iSCSI read ops"
 msgstr "iSCSI読み込み操作(ops)"
 
-msgid "iSCSI read throughput"
-msgstr "iSCSI読み取りスループット"
-
 msgid "iSCSI traffic"
 msgstr "iSCSIトラフィック"
-
-msgid "iSCSI write IOs"
-msgstr "iSCSI書き込み ios"
 
 msgid "iSCSI write latency"
 msgstr "iSCSI書き込みレイテンシ"
 
 msgid "iSCSI write ops"
 msgstr "iSCSI書き込み ops"
-
-msgid "iSCSI write throughput"
-msgstr "iSCSI書き込みスループット"
 
 msgid "idle"
 msgstr "アイドル"
@@ -94411,10 +94529,6 @@ msgstr "一時停止"
 msgid "pending"
 msgstr "保留中"
 
-#, python-format
-msgid "per %(per_string)s"
-msgstr "%(per_string)s あたり"
-
 msgid "per second"
 msgstr "毎秒"
 
@@ -94648,10 +94762,6 @@ msgstr "シリアルナンバー"
 msgid "service"
 msgid_plural "services"
 msgstr[0] "サービス"
-
-#, fuzzy
-msgid "service groups"
-msgstr "サービスグループ"
 
 msgid "service names"
 msgstr "サービス名"
@@ -95825,8 +95935,11 @@ msgid "Not available on shared dashboards"
 msgstr "共有ダッシュボードでは利用できません"
 
 #, fuzzy
-msgid "Failed to fetch timeline data:"
-msgstr "トップリストのデータ取得に失敗："
+msgid "This widget follows the dashboard time range"
+msgstr "グラフの時間範囲を表示する"
+
+msgid "The bar chart does not support the dashboard time range yet."
+msgstr ""
 
 #, fuzzy
 msgid "Missing needed host and service parameters."
@@ -96320,6 +96433,13 @@ msgid "Add contextual link"
 msgstr "コンテキストヘルプアイコン"
 
 #, fuzzy
+msgid "Target page"
+msgstr "ターゲットエージェント"
+
+msgid "Redirect to the default page defined by Checkmk."
+msgstr ""
+
+#, fuzzy
 msgid "Include current time range"
 msgstr "時間範囲で有効"
 
@@ -96772,12 +96892,6 @@ msgstr "ウィジェットを保存"
 msgid "Add & place widget"
 msgstr "ウィジェットの追加と配置"
 
-msgid "Link content to"
-msgstr "接続のリンク"
-
-msgid "Must select a target"
-msgstr "ターゲットを選択しなければなりません"
-
 msgid "Value must be a valid URL"
 msgstr "値は有効なURLでなければなりません"
 
@@ -97053,6 +97167,9 @@ msgstr "ダッシュボードの表示方法を選択、有効期限を設定、
 msgid "Link settings saved."
 msgstr "リンク設定が保存されました。"
 
+msgid "Validity"
+msgstr "有効性"
+
 msgid "Set expiration date"
 msgstr "有効期限を設定する"
 
@@ -97110,6 +97227,10 @@ msgstr "コンテキストヘルプアイコン"
 
 msgid "Selected state"
 msgstr "選択した状態"
+
+#, fuzzy
+msgid "Site or host, depending on context"
+msgstr "ホストかサイトか、文脈によって異なる"
 
 msgid ""
 "When many hexagons are displayed, they scale to fit into the widget.\n"
@@ -97398,6 +97519,14 @@ msgstr "追加"
 msgid "Enter URL to embed"
 msgstr "埋め込み用URLを入力"
 
+#, fuzzy
+msgid "Include query parameters for"
+msgstr "チェックパラメータが無効です。"
+
+#, fuzzy
+msgid "Dashboard filters"
+msgstr "ダッシュボードフィルター"
+
 msgid "Loading sidebar elements..."
 msgstr "サイドバー要素を読み込み中..."
 
@@ -97551,6 +97680,9 @@ msgstr "アップロードされたファイル"
 msgid "Fetch from server"
 msgstr "RCCリモートサーバーからのフェッチ"
 
+msgid "Fetch certificate from server"
+msgstr "サーバーから証明書を取得する"
+
 #, fuzzy
 msgid "Fetch a certificate first"
 msgstr "サーバーから証明書を取得する"
@@ -97562,6 +97694,9 @@ msgstr "カスタムCA証明書"
 #, fuzzy
 msgid "Fetch"
 msgstr "フェッチ"
+
+msgid "Valid until"
+msgstr "まで有効"
 
 msgid "No certificate fetched yet."
 msgstr "まだ証明書は取得されていません。"
@@ -101452,6 +101587,9 @@ msgstr "%{type} \"%{name}\" を削除しますか？"
 msgid "Percent"
 msgstr "パーセント"
 
+msgid "Bandwidth"
+msgstr "帯域幅"
+
 msgid "Pending"
 msgstr "保留中"
 
@@ -101515,8 +101653,11 @@ msgstr ""
 "完全一致させるには、サービス名を完全に入力する必要があります。一部のみを一致"
 "させる場合は、正規表現に切り替えてください。"
 
-msgid "Only already discovered custom services can be matched."
-msgstr "検出済みのカスタムサービスのみが一致対象となります。"
+msgid ""
+"A regular expression matches from the start of the service name, so begin it "
+"with .* to match anywhere in it. Only already discovered custom services can "
+"be matched."
+msgstr ""
 
 #, fuzzy
 msgid "Failed to search for custom services."
@@ -101555,6 +101696,10 @@ msgid "Failed to create the custom service."
 msgstr "カスタムサービスの作成に失敗しました。"
 
 #, fuzzy
+msgid "Set the custom service configuration name."
+msgstr "カスタムサービス構成の更新"
+
+#, fuzzy
 msgid "Failed to load the custom service."
 msgstr "カスタムサービスの作成に失敗しました。"
 
@@ -101573,10 +101718,6 @@ msgstr "カスタムサービスの作成に失敗しました。"
 #, fuzzy
 msgid "General configuration properties"
 msgstr "設定バンドル・プロパティ"
-
-#, fuzzy
-msgid "Set the custom service configuration name."
-msgstr "カスタムサービス構成の更新"
 
 #, fuzzy
 msgid "Define metric"
@@ -102364,8 +102505,33 @@ msgid "Generate new token"
 msgstr "キーを生成する"
 
 #, fuzzy
+msgid "Still no agent baked for this host."
+msgstr "このホストの更新が有効になります。"
+
+#, fuzzy
+msgid "The check failed. Please try again."
+msgstr "サイドバー要素のロードに失敗しました。"
+
+#, fuzzy
 msgid "Download and install"
 msgstr "ダウンロード済・インストール済のエージェント"
+
+#, fuzzy
+msgid "No agent baked for this host yet"
+msgstr "このホストのベイクドエージェントは利用できません"
+
+msgid ""
+"The download command would fail because the Agent Bakery has no package of "
+"this type for the host. Bake the agents, then check again."
+msgstr ""
+
+#, fuzzy
+msgid "Open Agent Bakery"
+msgstr "エージェントベーカリー"
+
+#, fuzzy
+msgid "Check again"
+msgstr "Checkmkエージェント"
 
 msgid ""
 "To securely fetch the latest agent package via the command line, you must "
@@ -104935,10 +105101,6 @@ msgid "Attribute operator"
 msgstr "設定する属性"
 
 #, fuzzy
-msgid "Attribute filter"
-msgstr "属性フィルター"
-
-#, fuzzy
 msgid "Move between items"
 msgstr "再試行間の遅延"
 
@@ -106457,6 +106619,262 @@ msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
 
+#~ msgid "Accepted connections per second"
+#~ msgstr "1秒あたりに受け入れられる接続"
+
+#~ msgid "Average Corosync latency"
+#~ msgstr "平均Corosyncレイテンシー"
+
+#~ msgid "Backup object name"
+#~ msgstr "バックアップオブジェクト名"
+
+#~ msgid "Battery temperature"
+#~ msgstr "バッテリー温度"
+
+#~ msgid "CAs to accept"
+#~ msgstr "受け入れるCA"
+
+#~ msgid "CIFS other data"
+#~ msgstr "CIFS 他データ"
+
+#~ msgid "CIFS other latency"
+#~ msgstr "CIFS その他のレイテンシ"
+
+#~ msgid "CIFS other ops"
+#~ msgstr "CIFS その他のops"
+
+#~ msgid "CIFS read throughput"
+#~ msgstr "CIFS 読み取りスループット"
+
+#~ msgid "CIFS write throughput"
+#~ msgstr "CIFS 書き込みスループット"
+
+#~ msgid "CRT/PEM file"
+#~ msgstr "CRT/PEMファイル"
+
+#~ msgid "Current disk size %"
+#~ msgstr "現在のディスク容量%"
+
+#~ msgid "FCP other data"
+#~ msgstr "FCPその他のデータ"
+
+#~ msgid "FCP other latency"
+#~ msgstr "FCP その他のレイテンシ"
+
+#~ msgid "FCP other ops"
+#~ msgstr "FCPその他のops"
+
+#~ msgid "FCP read ios"
+#~ msgstr "FCP読み取りios"
+
+#~ msgid "FCP read throughput"
+#~ msgstr "FCP 読み取りスループット"
+
+#~ msgid "FCP write ios"
+#~ msgstr "FCP書き込みios"
+
+#~ msgid "FCP write throughput"
+#~ msgstr "FCP 書き込みスループット"
+
+#~ msgid "Fan rotation speed"
+#~ msgstr "ファンの回転速度"
+
+#~ msgid "Handled connections per second"
+#~ msgstr "1秒あたりの処理された接続"
+
+#~ msgid "Hosts & services:"
+#~ msgstr "ホスト&サービスイベント:"
+
+#, python-format
+#~ msgid "Invalid certificate file: %(e)s"
+#~ msgstr "無効な証明書ファイル: %(e)s"
+
+#, python-format
+#~ msgid "Invalid time resolution key \"%(resolution)s\" given"
+#~ msgstr "無効な時間解決キー \"%(resolution)s\" が指定されました"
+
+#~ msgid "Job Duration"
+#~ msgstr "ジョブの期間"
+
+#~ msgid "Maximum Corosync latency"
+#~ msgstr "最大Corosync レイテンシ"
+
+#~ msgid "NFS other data"
+#~ msgstr "NFS その他データ"
+
+#~ msgid "NFS other latency"
+#~ msgstr "NFS その他レイテンシ"
+
+#~ msgid "NFS other ops"
+#~ msgstr "NFSその他 ops"
+
+#~ msgid "NFSv4 other data"
+#~ msgstr "NFSv4その他データ"
+
+#~ msgid "NFSv4 other latency"
+#~ msgstr "NFSv4 その他レイテンシ"
+
+#~ msgid "NFSv4 other ops"
+#~ msgstr "NFSv4その他 ops"
+
+#~ msgid "NFSv4 read ios"
+#~ msgstr "NFSv4読み取りios"
+
+#~ msgid "NFSv4 write ios"
+#~ msgstr "NFSv4書き込みios"
+
+#~ msgid "NFSv4.1 other data"
+#~ msgstr "NFSv4.1その他データ"
+
+#~ msgid "NFSv4.1 other latency"
+#~ msgstr "NFSv4.1その他レイテンシ"
+
+#~ msgid "NFSv4.1 other ops"
+#~ msgstr "NFSv4.1その他ops"
+
+#~ msgid "NFSv4.1 read ios"
+#~ msgstr "NFSv4.1読み取りios"
+
+#~ msgid "NFSv4.1 write ios"
+#~ msgstr "NFSv4.1書込みios"
+
+#, python-format
+#~ msgid "Not before: %(not_before)s - Not after: %(not_after)s"
+#~ msgstr "開始日: %(not_before)s - 終了日: %(not_after)s"
+
+#~ msgid "Number of available file descriptors"
+#~ msgstr "使用可能なファイル記述子の数"
+
+#~ msgid "Number of unique inside MAC addresses"
+#~ msgstr "一意の内部MACアドレスの数"
+
+#~ msgid "Number of unique outside MAC addresses"
+#~ msgstr "一意の外部MACアドレスの数"
+
+#~ msgid "Other latency"
+#~ msgstr "その他の待ち時間"
+
+#~ msgid "Page lookups"
+#~ msgstr "ページルックアップ"
+
+#~ msgid "Pagefile installed"
+#~ msgstr "ページファイルがインストールされました"
+
+#~ msgid "Queue Length"
+#~ msgstr "キューの長さ"
+
+#~ msgid "Request too large"
+#~ msgstr "リクエストが大きすぎる"
+
+#~ msgid "Requests per connection"
+#~ msgstr "接続ごとのリクエスト"
+
+#~ msgid "SAN other data"
+#~ msgstr "SAN その他データ"
+
+#~ msgid "SAN other latency"
+#~ msgstr "SAN その他の待ち時間"
+
+#~ msgid "SAN other ops"
+#~ msgstr "SAN ohters ops"
+
+#~ msgid "SAN read ios"
+#~ msgstr "SAN読み取りiOS"
+
+#~ msgid "SAN read throughput"
+#~ msgstr "SANの読み取りスループット"
+
+#~ msgid "SAN write ios"
+#~ msgstr "SAN 書き込みios"
+
+#~ msgid "SAN write throughput"
+#~ msgstr "SAN 書き込みスループット"
+
+#~ msgid "Snapshot reserve used %"
+#~ msgstr "スナップショットリザーブ使用率 %"
+
+#, python-format
+#~ msgid ""
+#~ "The relation concerns '%(host)s' as well, which you cannot edit: "
+#~ "%(reason)s Put the entry back to save this host."
+#~ msgstr ""
+#~ "この関係は「%(host)s」にも当てはまりますが、こちらは編集できません："
+#~ "%(reason)s このホストを保存するには、エントリを元の状態に戻してください。"
+
+#~ msgid "Time difference"
+#~ msgstr "時差"
+
+#~ msgid "Time spent in GC"
+#~ msgstr "GCで費やした時間"
+
+#, fuzzy
+#~ msgid "Total JVM virtual memory"
+#~ msgstr "合計仮想メモリ"
+
+#, fuzzy
+#~ msgid "Uncorrectable harddrive errors"
+#~ msgstr "修正不可能なコードワード"
+
+#~ msgid "Used space %"
+#~ msgstr "使用済スペース %"
+
+#~ msgid ""
+#~ "You need to enter at least one CA. Otherwise no SSL connection can be "
+#~ "made."
+#~ msgstr ""
+#~ "少なくとも1つのCAを入力する必要があります。それ以外の場合、SSL接続を確立で"
+#~ "きません。"
+
+#, fuzzy
+#~ msgid "contact groups"
+#~ msgstr "連絡先グループ: "
+
+#, fuzzy
+#~ msgid "host groups"
+#~ msgstr "ホストグループ"
+
+#~ msgid "iSCSI other data"
+#~ msgstr "iSCSI その他のデータ"
+
+#~ msgid "iSCSI other latency"
+#~ msgstr "ISCSI その他のレイテンシ"
+
+#~ msgid "iSCSI other ops"
+#~ msgstr "ISCSI その他 ops"
+
+#~ msgid "iSCSI read IOs"
+#~ msgstr "iSCSI読み込みios"
+
+#~ msgid "iSCSI read throughput"
+#~ msgstr "iSCSI読み取りスループット"
+
+#~ msgid "iSCSI write IOs"
+#~ msgstr "iSCSI書き込み ios"
+
+#~ msgid "iSCSI write throughput"
+#~ msgstr "iSCSI書き込みスループット"
+
+#, python-format
+#~ msgid "per %(per_string)s"
+#~ msgstr "%(per_string)s あたり"
+
+#, fuzzy
+#~ msgid "service groups"
+#~ msgstr "サービスグループ"
+
+#, fuzzy
+#~ msgid "Failed to fetch timeline data:"
+#~ msgstr "トップリストのデータ取得に失敗："
+
+#~ msgid "Link content to"
+#~ msgstr "接続のリンク"
+
+#~ msgid "Must select a target"
+#~ msgstr "ターゲットを選択しなければなりません"
+
+#~ msgid "Only already discovered custom services can be matched."
+#~ msgstr "検出済みのカスタムサービスのみが一致対象となります。"
+
 #, python-format
 #~ msgid "'%(host)s' is locked by Quick setup."
 #~ msgstr "%(host)sはクイックセットアップでロックされています。"
@@ -106549,9 +106967,6 @@ msgstr ""
 
 #~ msgid "Limits"
 #~ msgstr "制限"
-
-#~ msgid "Maximum latency"
-#~ msgstr "最大レイテンシ"
 
 #~ msgid "Maximum number of messages"
 #~ msgstr "メッセージの最大数"
@@ -107758,10 +108173,6 @@ msgstr ""
 
 #~ msgid "Add to ..."
 #~ msgstr "追加…"
-
-#, fuzzy
-#~ msgid "All hosts (experimental)"
-#~ msgstr "OpenTelemetry（実験的）"
 
 #~ msgid "Cannot calculate graph recipes"
 #~ msgstr "グラフレシピを計算できません"
@@ -111258,9 +111669,6 @@ msgstr ""
 #~ "オートコンプリートは、設定済のメトリックバックエンドを持つサイトでのみ利用"
 #~ "可能です。メトリックバックエンドはグローバル設定で有効化できます。"
 
-#~ msgid "Average Latency"
-#~ msgstr "平均レイテンシ"
-
 #~ msgid "Bulk outside of the timeperiod"
 #~ msgstr "期間外の一括"
 
@@ -111331,9 +111739,6 @@ msgstr ""
 
 #~ msgid "IP Address of Hosts"
 #~ msgstr "ホストのIPアドレス"
-
-#~ msgid "Interface id"
-#~ msgstr "インターフェイス id"
 
 #~ msgid "Kubernetes Cluster"
 #~ msgstr "Kubernetesクラスター"
@@ -112099,10 +112504,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Oracle type of authentication"
 #~ msgstr "認証の再試行"
-
-#, fuzzy
-#~ msgid "Show bandwidth"
-#~ msgstr "帯域幅"
 
 #~ msgid "Total commitable memory"
 #~ msgstr "合計コミット可能メモリ"
@@ -113864,9 +114265,6 @@ msgstr ""
 #~ msgid "Oversubscribed"
 #~ msgstr "オーバーサブスクライブ"
 
-#~ msgid "Percent full"
-#~ msgstr "使用率"
-
 #~ msgid "Percent subscribed"
 #~ msgstr "サブスクライブ率"
 
@@ -114505,9 +114903,6 @@ msgstr ""
 #~ msgstr ""
 #~ "変更のアクティブ化エラー。サイトのスナップショットを準備できません。失敗し"
 #~ "たコマンド: %r; StdOut: %r; StdErr: %s"
-
-#~ msgid "Agent Bakery"
-#~ msgstr "エージェントベーカリー"
 
 #~ msgid "B/d"
 #~ msgstr "B/d"
@@ -116229,9 +116624,6 @@ msgstr ""
 
 #~ msgid "Shrinkage"
 #~ msgstr "収縮"
-
-#~ msgid "Total RAM installed"
-#~ msgstr "インストールされているRAMの合計"
 
 #~ msgid "Connect to ACME SBC"
 #~ msgstr "ACME SBCに接続します"

@@ -92,7 +92,7 @@ def test_discovery() -> None:
 
 
 def test_check_mrpe() -> None:
-    assert list(check_mrpe("Bar_Extender", SECTION)) == [
+    assert list(check_mrpe("Bar_Extender", {}, SECTION)) == [
         Result(
             state=State.WARN,
             summary="Bar extender overload 6.012",
@@ -100,14 +100,14 @@ def test_check_mrpe() -> None:
         Metric("bar_load", 6.012),
     ]
 
-    assert list(check_mrpe("Foo_Application", SECTION)) == [
+    assert list(check_mrpe("Foo_Application", {}, SECTION)) == [
         Result(
             state=State.OK,
             summary="Foo server up and running",
         ),
     ]
 
-    assert list(check_mrpe("Mutliliner", SECTION)) == [
+    assert list(check_mrpe("Mutliliner", {}, SECTION)) == [
         Result(
             state=State.UNKNOWN,
             summary="Invalid plug-in status '§$%'. Output is: Output1",
@@ -124,7 +124,7 @@ def test_check_mrpe() -> None:
 
 
 def test_check_invalid_metric() -> None:
-    assert list(check_mrpe("Invalid_Metric", SECTION)) == [
+    assert list(check_mrpe("Invalid_Metric", {}, SECTION)) == [
         Result(
             state=State.OK,
             summary="I would be ok, if it wasn't for the metric",
@@ -146,7 +146,7 @@ def test_check_metric_name_with_invalid_character() -> None:
             cache_info=None,
         )
     }
-    assert list(check_mrpe("Disk", section)) == [
+    assert list(check_mrpe("Disk", {}, section)) == [
         Result(
             state=State.OK,
             summary="DISK OK - free space: / 12483 MB",

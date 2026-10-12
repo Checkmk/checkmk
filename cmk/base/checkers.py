@@ -574,8 +574,11 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
                 rtc_package=self.rtc_package,
                 get_effective_host=self.config_cache.effective_host,
                 snmp_backend=self.config_cache.get_snmp_backend(host_name),
-                parameters=_compute_final_check_parameters(
-                    host_name, service, self.config_cache, self._logger
+                get_parameters=lambda: _compute_final_check_parameters(
+                    host_name,
+                    service,
+                    self.config_cache,
+                    self._logger,
                 ),
             )
 
@@ -845,7 +848,7 @@ def get_aggregated_result(
     plugin: CheckPluginAPI,
     check_function: Callable[..., ServiceCheckResult],
     *,
-    parameters: Mapping[str, object],
+    get_parameters: Callable[[], Mapping[str, object]],
     rtc_package: AgentRawData | None,
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     snmp_backend: SNMPBackendEnum,
@@ -906,9 +909,11 @@ def get_aggregated_result(
         )
 
     item_kw = {} if service.item is None else {"item": service.item}
-    params_kw = {} if plugin.check_default_parameters is None else {"params": parameters}
+    params_kw: dict[str, object] = {}
 
     try:
+        if plugin.check_default_parameters is not None:
+            params_kw["params"] = get_parameters()
         check_result = check_function(**item_kw, **params_kw, **section_kws)
     except MKTimeout:
         raise

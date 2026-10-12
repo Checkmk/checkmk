@@ -53,7 +53,7 @@ if (top != self) {
 }
 
 $(document).ready(function () {
-  $('a:not(.results_button)').click(function (event) {
+  $('a:not(.results_button, [data-cmk_on_click])').click(function (event) {
     event.preventDefault()
     window.location.href = $(this).attr('href') as string
   })

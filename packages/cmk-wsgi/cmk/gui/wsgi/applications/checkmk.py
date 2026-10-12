@@ -22,7 +22,7 @@ from cmk import trace
 from cmk.ccc.exceptions import MKException, MKGeneralException
 from cmk.crypto import MKCryptoException
 from cmk.gui import pages, sites
-from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_current_page_breadcrumb_item
 from cmk.gui.config import active_config
 from cmk.gui.dashboard.page_token_error import page_dashboard_token_invalid
 from cmk.gui.exceptions import (
@@ -107,11 +107,7 @@ def _page_not_found(ctx: pages.PageContext) -> Response:
                         url=None,
                         id=None,
                     ),
-                    BreadcrumbItem(
-                        title=title,
-                        url="javascript:document.location.reload(false)",
-                        id=None,
-                    ),
+                    make_current_page_breadcrumb_item(title),
                 ]
             ),
             debug=ctx.config.debug,

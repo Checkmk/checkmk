@@ -10,7 +10,7 @@ from collections.abc import Collection, Iterable
 
 from cmk.ccc.resulttype import Error, Result
 from cmk.ccc.version import Edition
-from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_current_page_breadcrumb_item
 from cmk.gui.config import Config
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
@@ -111,13 +111,11 @@ class WatoMode[RequestOK](abc.ABC):
         """Return the breadcrumb item for the current mode"""
         # For the currently active mode use the same link as the "page title click"
         if request.get_ascii_input("mode") == self.name():
-            breadcrumb_url = "javascript:window.location.reload(false)"
-        else:
-            breadcrumb_url = self._breadcrumb_url()
+            return make_current_page_breadcrumb_item(self.title(), self.name())
 
         return BreadcrumbItem(
             title=self.title(),
-            url=breadcrumb_url,
+            url=self._breadcrumb_url(),
             id=self.name(),
         )
 

@@ -3,7 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.breadcrumb import Breadcrumb, breadcrumb_to_utm_content, BreadcrumbItem
+import pytest
+from werkzeug.test import create_environ
+
+from cmk.gui.breadcrumb import (
+    Breadcrumb,
+    breadcrumb_to_utm_content,
+    BreadcrumbItem,
+    BreadcrumbRenderer,
+    current_page_url,
+    make_current_page_breadcrumb_item,
+)
+from cmk.gui.http import Request
+from cmk.gui.utils.output_funnel import output_funnel
 
 
 def test_breadcrumb_item_creation() -> None:
@@ -77,3 +89,34 @@ def test_breadcrumb_to_utm_content_empty_without_ids() -> None:
         ]
     )
     assert breadcrumb_to_utm_content(breadcrumb) == ""
+
+
+@pytest.mark.usefixtures("request_context")
+def test_current_page_item_reloads_via_click_action() -> None:
+    with output_funnel.plugged():
+        BreadcrumbRenderer().show(Breadcrumb([make_current_page_breadcrumb_item("Page")]))
+        rendered = output_funnel.drain()
+
+    assert 'data-cmk_on_click="reload_page"' in rendered
+    assert "javascript:" not in rendered
+
+
+def test_current_page_url_leaves_out_posted_form_fields() -> None:
+    request = Request(
+        create_environ(
+            path="/NO_SITE/check_mk/wato.py",
+            query_string="mode=edit_user&_transid=123",
+            method="POST",
+            data={"password": "secret"},
+        )
+    )
+
+    assert current_page_url(request) == "wato.py?mode=edit_user"
+
+
+def test_current_page_url_leaves_out_nameless_query_parameters() -> None:
+    request = Request(
+        create_environ(path="/NO_SITE/check_mk/wato.py", query_string="mode=edit_user&=x")
+    )
+
+    assert current_page_url(request) == "wato.py?mode=edit_user"

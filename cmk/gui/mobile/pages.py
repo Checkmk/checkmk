@@ -12,7 +12,7 @@ from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request, response
 from cmk.gui.i18n import _
@@ -53,7 +53,7 @@ from cmk.web.utils.html import HTML
 from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import makeuri, requested_file_name
 
-HeaderButton = tuple[str, str, str] | tuple[str, str, str, str]
+HeaderButton = tuple[str | ClickAction, str, str] | tuple[str | ClickAction, str, str, str]
 Items = list[tuple[str, str, str]]
 NavigationBar = list[tuple[str, str, str, str]]
 
@@ -87,13 +87,14 @@ def mobile_html_foot() -> None:
     html.close_html()
 
 
-def jqm_header_button(pos: str, url: str, title: str, icon: str = "") -> None:
+def jqm_header_button(pos: str, url: str | ClickAction, title: str, icon: str = "") -> None:
     html.a(
         "",
-        href=url,
+        href="#" if isinstance(url, ClickAction) else url,
         class_="ui-btn-%s" % pos,
         title=title,
         **{"data-direction": "reverse", "data-icon": icon, "data-iconpos": "notext"},
+        **(url.data_attributes() if isinstance(url, ClickAction) else {}),
     )
 
 
@@ -261,7 +262,7 @@ def _page_index(request: Request, config: Config, user_permissions: UserPermissi
     mobile_html_head(title)
     jqm_page_header(
         title,
-        right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),
+        right_button=(ClickAction(action="reload_page"), _("Reload"), "refresh"),
         id_="data",
     )
     items = []
@@ -482,7 +483,7 @@ class MobileViewRenderer(ABCViewRenderer):
             jqm_page_header(
                 title,
                 left_button=home,
-                right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),
+                right_button=(ClickAction(action="reload_page"), _("Reload"), "refresh"),
                 id_="data",
             )
             html.open_div(id_="view_results")

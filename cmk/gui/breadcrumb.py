@@ -12,9 +12,12 @@ from collections.abc import Iterable, MutableSequence
 from typing import NamedTuple, overload, override
 
 import cmk.gui.htmllib.html
+from cmk.gui.htmllib.generator import ClickAction
+from cmk.gui.http import Request, request
 from cmk.shared_typing.main_menu import NavItem
 from cmk.web.utils.html import HTML
 from cmk.web.utils.speaklater import LazyString
+from cmk.web.utils.urls import makeuri_contextless
 
 
 class BreadcrumbItem(NamedTuple):
@@ -24,6 +27,7 @@ class BreadcrumbItem(NamedTuple):
     """Stable, locale-independent identifier for analytics and similar
     consumers that must not depend on the translated title. Pass ``None``
     when no stable id is available."""
+    click_action: ClickAction | None = None
 
 
 class Breadcrumb(MutableSequence[BreadcrumbItem]):
@@ -94,7 +98,13 @@ class BreadcrumbRenderer:
         cmk.gui.htmllib.html.html.open_div(class_="breadcrumb")
 
         for item in breadcrumb:
-            if item.url:
+            if item.url and item.click_action:
+                cmk.gui.htmllib.html.html.a(
+                    HTML.with_escaping(str(item.title)),
+                    href=item.url,
+                    **item.click_action.data_attributes(),
+                )
+            elif item.url:
                 cmk.gui.htmllib.html.html.a(HTML.with_escaping(str(item.title)), href=item.url)
             else:
                 cmk.gui.htmllib.html.html.span(HTML.with_escaping(str(item.title)))
@@ -114,12 +124,33 @@ def make_simple_page_breadcrumb(menu: NavItem, title: str) -> Breadcrumb:
     return breadcrumb
 
 
-def make_current_page_breadcrumb_item(title: str) -> BreadcrumbItem:
-    """Helper to create a breadcrumb link to the current page"""
+def current_page_url(request: Request) -> str:
+    """URL of the current page, built from its query string
+
+    Unlike makeuri, this leaves out POSTed form fields, which may contain secrets.
+    """
+    return makeuri_contextless(
+        request,
+        [
+            (name, value)
+            for name, value in request.args.items(multi=True)
+            if name and not name.startswith("_")
+        ],
+    )
+
+
+def make_current_page_breadcrumb_item(
+    title: str | LazyString, id_: str | None = None
+) -> BreadcrumbItem:
+    """Helper to create a breadcrumb link which reloads the current page
+
+    The URL is used where the click action is not available, e.g. in Vue.
+    """
     return BreadcrumbItem(
         title=title,
-        url="javascript:document.location.reload(false)",
-        id=None,
+        url=current_page_url(request),
+        id=id_,
+        click_action=ClickAction(action="reload_page"),
     )
 
 

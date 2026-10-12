@@ -7,10 +7,10 @@
 from collections.abc import Sequence
 from dataclasses import asdict
 
-from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer, current_page_url
 from cmk.gui.htmllib.debug_vars import debug_vars
 from cmk.gui.htmllib.foldable_container import foldable_container
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.http import Request
 from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
@@ -133,7 +133,7 @@ def show_license_banner(writer: HTMLWriter, user_role_ids: Sequence[str]) -> Non
 
 def _make_default_page_state(
     writer: HTMLWriter,
-    request: Request,  # noqa: ARG001
+    request: Request,
     *,
     browser_reload: float,
 ) -> PageState | None:
@@ -145,7 +145,8 @@ def _make_default_page_state(
         text=writer.render_span("%d" % browser_reload),
         icon_name=StaticIcon(IconNames.trans),
         css_classes=["reload"],
-        url="javascript:document.location.reload()",
+        url=current_page_url(request),
+        click_action=ClickAction(action="reload_page"),
         tooltip_text=_("Automatic page reload in %(browser_reload)d seconds.")
         % {"browser_reload": browser_reload}
         + "\n"

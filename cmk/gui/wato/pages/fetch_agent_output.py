@@ -28,7 +28,7 @@ from cmk.gui.background_job.job import (
     JobTarget,
 )
 from cmk.gui.background_job.wato import ActionHandler, JobRenderer
-from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.breadcrumb import Breadcrumb, make_current_page_breadcrumb_item
 from cmk.gui.config import Config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.header import make_header
@@ -232,13 +232,7 @@ class PageFetchAgentOutput(AgentOutputPage):
 
     def _breadcrumb(self, title: str, user_permissions: UserPermissions) -> Breadcrumb:
         breadcrumb = make_host_breadcrumb(self._request.host.name(), user_permissions)
-        breadcrumb.append(
-            BreadcrumbItem(
-                title=title,
-                url="javascript:document.location.reload(false)",
-                id="fetch_agent_output",
-            )
-        )
+        breadcrumb.append(make_current_page_breadcrumb_item(title, "fetch_agent_output"))
         return breadcrumb
 
     def _action(self, user_permissions: UserPermissions) -> None:

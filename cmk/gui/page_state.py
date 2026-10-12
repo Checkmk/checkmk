@@ -12,6 +12,7 @@ top right of the page.
 
 from dataclasses import dataclass, field
 
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.type_defs import CSSSpec
 from cmk.web.utils.html import HTML
@@ -24,6 +25,7 @@ class PageState:
     icon_name: StaticIcon | None = None
     css_classes: CSSSpec = field(default_factory=list)
     url: str | None = None
+    click_action: ClickAction | None = None
     tooltip_text: str = ""
 
 
@@ -31,7 +33,10 @@ class PageStateRenderer:
     def show(self, page_state: PageState) -> None:
         html.open_div(class_=self._get_css_classes(page_state), title=page_state.tooltip_text)
         if page_state.url:
-            html.open_a(page_state.url)
+            html.open_a(
+                page_state.url,
+                **(page_state.click_action.data_attributes() if page_state.click_action else {}),
+            )
             self._show_content(page_state)
             html.close_a()
         else:

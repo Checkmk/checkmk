@@ -9,10 +9,12 @@ import subprocess
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import IO, Literal
+from typing import Final, IO, Literal
 
 from tests.testlib.site import Site
 from tests.testlib.utils import ServiceInfo
+
+CMK_TRACK_TIMEOUT: Final = 10  # secs
 
 
 @dataclass
@@ -104,7 +106,10 @@ def _timeout(seconds: int, exc: Timeout) -> Iterator[None]:
 
 def _wait_for_piggyback_track_ready(stdout: IO[str]) -> None:
     """Wait for the cmk-broker-test to be ready"""
-    with _timeout(3, Timeout("`cmk-piggyback track` did not start in time")):
+    with _timeout(
+        CMK_TRACK_TIMEOUT,
+        Timeout(f"`cmk-piggyback track` did not start within {CMK_TRACK_TIMEOUT} secs"),
+    ):
         while line := stdout.readline():
             if "Tracking incoming messages" in line:
                 return
@@ -121,7 +126,10 @@ def piggybacked_data_gets_updated(
         _wait_for_piggyback_track_ready(track.stdout)
 
         source_site.schedule_check(hostname_source, "Check_MK")
-        with _timeout(5, Timeout("`cmk-piggyback track` timed out after 5s")):
+        with _timeout(
+            CMK_TRACK_TIMEOUT,
+            Timeout(f"`cmk-piggyback track` timed out after {CMK_TRACK_TIMEOUT} secs"),
+        ):
             while line := track.stdout.readline():
                 if f"{hostname_source} -> {hostname_piggybacked}" in line:
                     return True

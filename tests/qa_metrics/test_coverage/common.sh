@@ -113,6 +113,9 @@ instrumentation_filter() {
 #     match a tag like no-requirements.
 #   * omd/dependency_management:test_licenses: its SBOM data dep builds the Rust
 #     agent controller, which fails to link under instrumentation.
+#   * non-free/packages/cmk-dev-ai/tests/component: it imports no measured
+#     module, and the rules_py runner fails a test that collects no data
+#     (CMK-40567).
 #   * from tests/, only what our test classification calls "package tests":
 #     openapi, agent-plugin-unit and unit. Everything else crosses package
 #     boundaries.
@@ -123,6 +126,7 @@ let t = $all
     except attr("srcs", "-doctest-runner\.py", $all)
     except attr("tags", "[\[ ]requirements[,\]]", $all)
     except //omd/dependency_management:test_licenses
+    except //non-free/packages/cmk-dev-ai/tests/component:component
     except (//tests/... except (//tests/openapi/... + //tests/agent-plugin-unit/... + //tests/unit/...))
 in
 EOF

@@ -10,7 +10,7 @@ import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
-import { cmkAjax } from 'cmk-ui-library/lib/ajax'
+import { AjaxResponseError, cmkAjax } from 'cmk-ui-library/lib/ajax'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
@@ -114,13 +114,19 @@ async function verify(): Promise<void> {
     if (response.status !== 'ok') {
       verifyErrorMessage.value = response.errorMessage
         ? untranslated(response.errorMessage)
-        : _t('Internal error. Please try again or contact Checkmk support.')
+        : _t('Internal error. Please try again.')
       return
     }
     emit('verified')
   } catch (e) {
     console.error('error verifying the trial one time code', e)
-    verifyErrorMessage.value = _t('Unable to reach Checkmk site. Please check that it is started.')
+    // AjaxResponseError happens when the site successfully responds to the request, but with a non-zero exit code.
+    // One such failure is a CSRF token gone stale by a login in another tab, which a
+    // reload fixes.
+    verifyErrorMessage.value =
+      e instanceof AjaxResponseError
+        ? _t('Checkmk could not process the request. Reload the page and try again.')
+        : _t('Unable to reach Checkmk site. Please check that it is started.')
   } finally {
     verifyRequestInFlight.value = false
   }

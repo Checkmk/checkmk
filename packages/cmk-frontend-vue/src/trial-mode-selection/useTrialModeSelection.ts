@@ -11,7 +11,7 @@ import {
 } from 'cmk-shared-typing/typescript/trial_mode_selection_request'
 import { type TrialModeVerificationRequest } from 'cmk-shared-typing/typescript/trial_mode_verification_request'
 import { type TrialModeVerificationResponse } from 'cmk-shared-typing/typescript/trial_mode_verification_response'
-import { cmkAjax } from 'cmk-ui-library/lib/ajax'
+import { AjaxResponseError, cmkAjax } from 'cmk-ui-library/lib/ajax'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { onScopeDispose, ref } from 'vue'
@@ -92,7 +92,7 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
       if (response.status !== 'ok' || !response.salt) {
         errorMessage.value = response.errorMessage
           ? untranslated(response.errorMessage)
-          : _t('Internal error. Please try again or contact Checkmk support.')
+          : _t('Internal error. Please try again.')
         // The service does not say how long its limit lasts; the usual cooldown at least
         // keeps the next request from running straight into it again.
         if (response.errorCode === 'rate_limited') {
@@ -104,7 +104,13 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
       armResendCooldown()
     } catch (e) {
       console.error('error requesting trial verification code', e)
-      errorMessage.value = _t('Unable to reach Checkmk site. Please check that it is started.')
+      // AjaxResponseError happens when the site successfully responds to the request, but with a non-zero exit code.
+      // One such failure is a CSRF token gone stale by a login in another tab, which a
+      // reload fixes.
+      errorMessage.value =
+        e instanceof AjaxResponseError
+          ? _t('Checkmk could not process the request. Reload the page and try again.')
+          : _t('Unable to reach Checkmk site. Please check that it is started.')
     } finally {
       sendRequestInFlight.value = false
     }

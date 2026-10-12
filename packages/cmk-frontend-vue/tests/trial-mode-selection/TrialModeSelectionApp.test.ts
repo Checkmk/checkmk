@@ -127,6 +127,8 @@ const VERIFY_OFFLINE_URL = 'wato.py?mode=licensing_offline_verification'
 const CODE_SENT = 'We sent a 6-digit code to jane.doe@example.com. It expires after 24 hours.'
 const SITE_UNREACHABLE = 'Unable to reach Checkmk site. Please check that it is started.'
 const SITE_ERROR = 'Simulated Failure (as returned by the backend).'
+const INTERNAL_ERROR = 'Internal error. Please try again.'
+const NOT_PROCESSED = 'Checkmk could not process the request. Reload the page and try again.'
 const SAVING_FAILED = 'Saving your selection failed. Please try again.'
 
 let user: UserEvent
@@ -230,6 +232,26 @@ function customerSelection(verificationMode?: VerificationMode): SaveRequest {
 
 function reportErrorForVerification() {
   answerVerificationWith({ status: 'error', errorMessage: SITE_ERROR })
+}
+
+/*
+ * The site's page handler raises, as on an invalid CSRF token or a missing instance ID:
+ * the site answers with an AJAX error.
+ */
+function raiseErrorForVerification() {
+  // The dialog logs the failed request; that log is expected here.
+  vi.spyOn(console, 'error').mockImplementation(() => {})
+  server.use(
+    onVerification(() => HttpResponse.json({ result_code: 1, result: 'nope', severity: 'error' }))
+  )
+}
+
+function reportErrorWithoutMessageForVerification() {
+  server.use(onVerification(() => ajaxResult({ status: 'error', errorMessage: null, salt: null })))
+}
+
+function answerWithoutSaltForVerification() {
+  server.use(onVerification(() => ajaxResult({ status: 'ok', errorMessage: null, salt: null })))
 }
 
 describe('TrialModeSelectionApp', () => {
@@ -703,8 +725,11 @@ describe('TrialModeSelectionApp', () => {
 
     // prettier-ignore
     describe.each([
-      { failure: 'the site cannot be reached', failCodeRequest: makeSiteUnreachableForVerification, reason: SITE_UNREACHABLE },
-      { failure: 'the site reports an error',  failCodeRequest: reportErrorForVerification,         reason: SITE_ERROR }
+      { failure: 'the site cannot be reached',                failCodeRequest: makeSiteUnreachableForVerification,        reason: SITE_UNREACHABLE },
+      { failure: 'the site reports an error',                 failCodeRequest: reportErrorForVerification,                reason: SITE_ERROR },
+      { failure: 'the site reports an error without message', failCodeRequest: reportErrorWithoutMessageForVerification, reason: INTERNAL_ERROR },
+      { failure: 'the site answers without a salt',           failCodeRequest: answerWithoutSaltForVerification,          reason: INTERNAL_ERROR },
+      { failure: 'the site fails to handle the request',      failCodeRequest: raiseErrorForVerification,                 reason: NOT_PROCESSED }
     ])('when $failure', ({ failCodeRequest, reason }) => {
       async function requestCode() {
         failCodeRequest()
@@ -911,6 +936,24 @@ describe('TrialModeSelectionApp', () => {
         await typeCodeOutOfOrder()
 
         expect(verifyButton()).toBeDisabled()
+      })
+    })
+
+    // prettier-ignore
+    describe.each([
+      { failure: 'the site cannot be reached',                failVerify: makeSiteUnreachableForVerification,        reason: SITE_UNREACHABLE },
+      { failure: 'the site reports an error',                 failVerify: reportErrorForVerification,                reason: SITE_ERROR },
+      { failure: 'the site reports an error without message', failVerify: reportErrorWithoutMessageForVerification, reason: INTERNAL_ERROR },
+      { failure: 'the site fails to handle the request',      failVerify: raiseErrorForVerification,                 reason: NOT_PROCESSED }
+    ])('when $failure on verifying', ({ failVerify, reason }) => {
+      it('says why the code was not verified', async () => {
+        renderApp()
+        await reachCodeStep()
+        failVerify()
+
+        await user.type(codeDigits()[0]!, '424242')
+
+        expect(await screen.findByText(reason)).toBeInTheDocument()
       })
     })
   })

@@ -66,8 +66,6 @@ omd/distro
 omd/packages/apache-omd/skel/etc/init.d/apache
 omd/packages/maintenance/logrotate
 omd/packages/maintenance/skel/etc/init.d/crontab
-omd/packages/mk-livestatus/lc
-omd/packages/mk-livestatus/lq
 omd/packages/monitoring-plugins/cmk_password_store.h
 omd/packages/nagios/skel/etc/init.d/nagios
 omd/packages/omd/restart_site_apache

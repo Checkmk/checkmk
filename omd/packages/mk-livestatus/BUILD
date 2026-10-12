@@ -66,5 +66,9 @@ pkg_tar(
 
 sh_library(
     name = "helpers",
-    srcs = ["cmk-monitor-core"],
+    srcs = [
+        "cmk-monitor-core",
+        "lc",
+        "lq",
+    ],
 )

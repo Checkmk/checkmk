@@ -6,7 +6,7 @@
 
 import socket
 import time
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
 from typing import Literal
 
@@ -26,14 +26,27 @@ from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc import resulttype as result
 from cmk.ccc.exceptions import MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.checkerplugin import ConfiguredService
+from cmk.checkengine.checkerplugin import AggregatedResult, ConfiguredService
 from cmk.checkengine.checkresults import ServiceCheckResult, SubmittableServiceCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import HostKey
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
-from cmk.checkengine.parser import HostSections
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
+from cmk.checkengine.parser import AgentRawDataSection, HostSections
+from cmk.checkengine.plugins import (
+    AgentBasedPlugins,
+    CheckPlugin,
+    CheckPluginName,
+    ParsedSectionName,
+    SectionName,
+)
+from cmk.checkengine.sectionparser import (
+    ParsedSectionsResolver,
+    Provider,
+    SectionPlugin,
+    SectionsParser,
+)
 from cmk.checkengine.summarize import SummaryConfig
+from cmk.discover_plugins import PluginLocation
 from cmk.fetchers import (
     AdHocSecrets,
     Mode,
@@ -45,6 +58,7 @@ from cmk.fetchers import (
 from cmk.fetchers.filecache import FileCacheOptions
 from cmk.helper_interface import FetcherType, SourceInfo, SourceType
 from cmk.piggyback.backend import Config as PiggybackConfig
+from cmk.snmplib import SNMPBackendEnum
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.servicename import ServiceName
 from tests.testlib.unit.base_configuration_scenario import Scenario
@@ -383,3 +397,118 @@ def test_cmk_fetcher_reports_missing_ip_instead_of_the_fallback_address(
     assert source.ipaddress is None
     assert source.fetcher_type is FetcherType.NONE
     assert res.is_error()
+
+
+def _make_check_plugin() -> CheckPlugin:
+    return CheckPlugin(
+        name=CheckPluginName("plugin"),
+        sections=[ParsedSectionName("section")],
+        service_name="Service",
+        discovery_function=lambda *args, **kw: iter(()),
+        discovery_default_parameters=None,
+        discovery_ruleset_name=None,
+        discovery_ruleset_type="merged",
+        check_function=lambda *args, **kw: iter(()),
+        check_default_parameters={},
+        check_ruleset_name=None,
+        cluster_check_function=None,
+        location=PluginLocation("not", "relevant"),
+    )
+
+
+def _make_providers(host_name: HostName) -> Mapping[HostKey, Provider]:
+    return {
+        HostKey(host_name, SourceType.HOST): ParsedSectionsResolver(
+            SectionsParser(
+                HostSections[AgentRawDataSection](sections={SectionName("section"): [["data"]]}),
+                host_name=host_name,
+                error_handling=lambda *args, **kw: "error",
+            ),
+            section_plugins={SectionName("section"): SectionPlugin.trivial(SectionName("section"))},
+        )
+    }
+
+
+def _get_aggregated_result(
+    host_name: HostName,
+    service: ConfiguredService,
+    check_function: Callable[..., ServiceCheckResult],
+) -> AggregatedResult:
+    return checkers.get_aggregated_result(
+        host_name,
+        False,
+        cluster_nodes=(),
+        providers=_make_providers(host_name),
+        service=service,
+        plugin=_make_check_plugin(),
+        check_function=check_function,
+        get_parameters=lambda: service.parameters.evaluate(lambda _timeperiod: True),
+        rtc_package=None,
+        get_effective_host=lambda host_name, _service_name, _labels: host_name,
+        snmp_backend=SNMPBackendEnum.CLASSIC,
+    )
+
+
+def _make_service(raw_parameters: object) -> ConfiguredService:
+    return ConfiguredService(
+        check_plugin_name=CheckPluginName("plugin"),
+        item="item",
+        description="Service item",
+        parameters=TimespecificParameters(
+            # Invalid on purpose: rule values are not validated when loaded.
+            [TimespecificParameterSet.from_parameters(raw_parameters)]  # type: ignore[arg-type]
+        ),
+        discovered_parameters={},
+        labels={},
+        discovered_labels={},
+        is_enforced=True,
+    )
+
+
+def test_get_aggregated_result_passes_parameters() -> None:
+    host_name = HostName("host")
+    received: dict[str, object] = {}
+
+    def check_function(**kwargs: object) -> ServiceCheckResult:
+        received.update(kwargs)
+        return SubmittableServiceCheckResult(0, "OK")
+
+    result = _get_aggregated_result(host_name, _make_service({"levels": (1, 2)}), check_function)
+
+    assert result.result == SubmittableServiceCheckResult(0, "OK")
+    assert received["params"] == {"levels": (1, 2)}
+
+
+@pytest.mark.usefixtures("disable_debug")
+@pytest.mark.parametrize(
+    "raw_parameters",
+    [
+        pytest.param(
+            ("process.exe", 1500, 2000, 1000, 1500, 80.0, 90.0),
+            id="legacy tuple",
+        ),
+        pytest.param(["process.exe", 1, 1, 1, 1], id="list"),
+        pytest.param("process.exe", id="string"),
+        pytest.param(
+            {"tp_default_value": {}, "tp_values": [("always", ("process.exe", 1))]},
+            id="time specific value is not a mapping",
+        ),
+    ],
+)
+def test_get_aggregated_result_invalid_parameters_only_affect_service(
+    monkeypatch: MonkeyPatch, raw_parameters: object
+) -> None:
+    host_name = HostName("host")
+    monkeypatch.setattr(checkers, "create_check_crash_dump", lambda *args, **kw: "crash dump")
+
+    calls: list[Mapping[str, object]] = []
+
+    def check_function(**kwargs: object) -> ServiceCheckResult:
+        calls.append(kwargs)
+        return SubmittableServiceCheckResult(0, "OK")
+
+    result = _get_aggregated_result(host_name, _make_service(raw_parameters), check_function)
+
+    assert not calls
+    assert result.data_received
+    assert result.result == SubmittableServiceCheckResult(3, "crash dump")

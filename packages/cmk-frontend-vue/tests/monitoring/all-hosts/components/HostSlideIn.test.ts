@@ -214,6 +214,7 @@ describe('HostSlideIn', () => {
         data: makeHostOverview({
           modes: [
             {
+              id: 'downtime',
               icon_name: 'downtime',
               link: 'view.py?view_name=downtimes_of_host&site=local&host=host-1',
               title: 'In scheduled downtime'
@@ -267,6 +268,7 @@ describe('HostSlideIn', () => {
         data: makeHostOverview({
           modes: [
             {
+              id: 'downtime',
               icon_name: 'downtime',
               link: 'view.py?view_name=downtimes_of_host&site=local&host=host-1',
               title: 'In scheduled downtime'

@@ -33,6 +33,7 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
 }
 
 const DOWNTIME: HostMode = {
+  id: 'downtime',
   icon_name: 'downtime',
   link: 'view.py?view_name=downtimes_of_host&host=web-1',
   title: 'In scheduled downtime'

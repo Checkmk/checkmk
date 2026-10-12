@@ -1,6 +1,7 @@
 setuptools==70.3.0 # See https://github.com/pypa/setuptools/issues/4487#issuecomment-2237487845 for context
 setuptools-scm==4.1.2  # needed by various setup.py
 python-dateutil~=2.9.0  # direct dependency
+tzlocal==5.4.4  # site time zone for recurring downtime rules, same version exchangelib already pins in the lock
 pyyaml==6.0.2  # needed by vcrpy
 vcrpy==8.2.1  # used by various unit tests to mock HTTP transactions in some special agents (only)
 cryptography==43.0.3

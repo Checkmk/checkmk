@@ -1628,15 +1628,6 @@ class CommandScheduleDowntimesForm:
                 start_time = self._custom_start_time()
                 end_time = self._custom_end_time(start_time)
 
-            if recurring_number == 8 and not 1 <= time.localtime(start_time).tm_mday <= 28:
-                raise MKUserError(
-                    None,
-                    _(
-                        "The start of a recurring downtime can only be set for "
-                        "days 1-28 of a month."
-                    ),
-                )
-
             comment = self._comment()
             delayed_duration = self._flexible_option()
             mode = determine_downtime_mode(recurring_number, delayed_duration)

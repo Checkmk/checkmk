@@ -59,9 +59,12 @@ export type WidgetTimeRange = components['schemas']['WidgetTimeRange']
 export type ResolvedLink = components['schemas']['ResolvedLink']
 export type LinkProperties = components['schemas']['LinkProperties']
 export type FilterResult = components['schemas']['FilterResult']
-export type WidgetSource<C> =
-  | { type: 'explicit'; content: C; context: VisualContext }
-  | SavedWidgetContent
+export interface ExplicitWidgetContent<C> {
+  type: 'explicit'
+  content: C
+  context: VisualContext
+}
+export type WidgetSource<C> = ExplicitWidgetContent<C> | SavedWidgetContent
 
 // Specific widget types
 export type EmbeddedViewContent = components['schemas']['EmbeddedViewContent']
@@ -77,8 +80,7 @@ export type ComputedNetworkFlowDonutSlice = components['schemas']['ComputedNetwo
 export type ComputedNetworkFlowDonutResponse =
   components['schemas']['ComputedNetworkFlowDonutResponse']
 export type NetworkFlowKpiStatCardContent = components['schemas']['NetworkFlowKpiStatCardContent']
-export type ComputedNetworkFlowKpiStatCardResponse =
-  components['schemas']['ComputedNetworkFlowKpiStatCardResponse']
+export type ComputedNetworkFlowKpiStatCard = components['schemas']['ComputedNetworkFlowKpiStatCard']
 export type NetworkFlowTrendChartContent = components['schemas']['NetworkFlowTrendChartContent']
 export type ComputedNetworkFlowTrendChartResponse =
   components['schemas']['ComputedNetworkFlowTrendChartResponse']

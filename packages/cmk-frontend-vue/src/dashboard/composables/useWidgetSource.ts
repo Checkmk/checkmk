@@ -6,7 +6,11 @@
 import { type ComputedRef, computed } from 'vue'
 
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
-import type { EffectiveWidgetFilterContext, WidgetSource } from '@/dashboard/types/widget'
+import type {
+  EffectiveWidgetFilterContext,
+  ExplicitWidgetContent,
+  WidgetSource
+} from '@/dashboard/types/widget'
 
 export interface WidgetSourceProps<C> {
   widget_id: string
@@ -28,12 +32,14 @@ export function useWidgetSource<C>(props: WidgetSourceProps<C>): WidgetRequestSo
       headers: { Authorization: `CMK-TOKEN ${cmkToken}` }
     }
   }
+  return { source: computed(() => explicitWidgetSource(props)), headers: {} }
+}
+
+/** The source that sends the widget's own configuration. */
+export function explicitWidgetSource<C>(props: WidgetSourceProps<C>): ExplicitWidgetContent<C> {
   return {
-    source: computed(() => ({
-      type: 'explicit',
-      content: props.content,
-      context: props.effective_filter_context.filters
-    })),
-    headers: {}
+    type: 'explicit',
+    content: props.content,
+    context: props.effective_filter_context.filters
   }
 }

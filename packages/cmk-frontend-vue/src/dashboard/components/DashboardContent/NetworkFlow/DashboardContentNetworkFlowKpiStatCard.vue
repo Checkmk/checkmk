@@ -4,9 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
-import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
-import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { SIFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { computed } from 'vue'
 
@@ -15,13 +13,17 @@ import CmkKpiStatCard, {
   type KpiDeltaConfig,
   type TimestampedSample
 } from '@/dashboard/components/CmkKpiStatCard'
-import type { NetworkFlowKpiStatCardContent } from '@/dashboard/types/widget.ts'
+import { useWidgetData } from '@/dashboard/composables/useWidgetData'
+import { explicitWidgetSource } from '@/dashboard/composables/useWidgetSource'
+import type {
+  ComputedNetworkFlowKpiStatCard,
+  NetworkFlowKpiStatCardContent
+} from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
 import { chartColorCss } from '@/network-flow/colors'
 
-import DashboardContentContainer from '../DashboardContentContainer.vue'
+import WidgetFigureFrame from '../figures/WidgetFigureFrame.vue'
 import type { ContentProps } from '../types.ts'
-import { useNetworkFlowWidgetData } from './useNetworkFlowWidgetData.ts'
 
 const props = defineProps<ContentProps<NetworkFlowKpiStatCardContent>>()
 
@@ -89,79 +91,52 @@ function formatValue(value: number): string {
   return presentation.value.formatter.render(value)
 }
 
-function buildCardData(
-  value: number,
-  previousValue: number,
-  series: TimestampedSample[]
-): CardData {
+function buildCardData(kpi: ComputedNetworkFlowKpiStatCard): CardData {
   // The card renders the value and its unit in different sizes, so the
   // formatter's "801.84 GB" is split at the first space; plain counts
   // ("532") have no unit part.
-  const rendered = presentation.value.formatter.render(value)
+  const rendered = presentation.value.formatter.render(kpi.value)
   const spaceIndex = rendered.indexOf(' ')
   return {
     value: spaceIndex === -1 ? rendered : rendered.slice(0, spaceIndex),
     unit: spaceIndex === -1 ? undefined : rendered.slice(spaceIndex + 1),
-    delta: buildDelta(value, previousValue),
-    series
+    delta: buildDelta(kpi.value, kpi.previous_value),
+    series: kpi.series
   }
 }
 
-const { data, error } = useNetworkFlowWidgetData(
-  () =>
-    dashboardAPI.computeNetworkFlowKpiStatCardData(
-      props.content,
-      props.effective_filter_context.filters
-    ),
-  (response) =>
-    buildCardData(response.value.value, response.value.previous_value, response.value.series),
-  () => ({ filters: props.effective_filter_context.filters, content: props.content })
+const { state, retry } = useWidgetData(
+  () => dashboardAPI.computeNetworkFlowKpiStatCard({ source: explicitWidgetSource(props) }),
+  () => [props.content, props.effective_filter_context],
+  () => props.tick
 )
+
+const card = computed(() => (state.value.kind === 'data' ? buildCardData(state.value.value) : null))
 
 const deltaConfig = computed<KpiDeltaConfig>(() => ({
   show: props.content.show_delta,
-  override: data.value?.delta,
+  override: card.value?.delta,
   fromCaller: true
 }))
 </script>
 
 <template>
-  <DashboardContentContainer
+  <WidgetFigureFrame
     :effective-title="effectiveTitle"
     :general_settings="general_settings"
-    content-overflow="hidden"
+    :state="state"
+    @retry="retry"
   >
-    <div class="db-content-network-flow-kpi-stat-card__wrapper">
-      <div v-if="error" class="db-content-network-flow-kpi-stat-card__error">
-        <CmkAlert :variant="error.variant" :text="untranslated(error.message)" />
-      </div>
-      <CmkLoading v-else-if="data === undefined" />
-      <CmkKpiStatCard
-        v-else
-        :title="effectiveTitle"
-        :value="data.value"
-        :unit="data.unit"
-        :delta="deltaConfig"
-        :format-value="formatValue"
-        :series="data.series"
-        :color="chartColorCss(content.accent)"
-        :spark-height-mode="content.spark_height_mode"
-      />
-    </div>
-  </DashboardContentContainer>
+    <CmkKpiStatCard
+      v-if="card !== null"
+      :title="effectiveTitle"
+      :value="card.value"
+      :unit="card.unit"
+      :delta="deltaConfig"
+      :format-value="formatValue"
+      :series="card.series"
+      :color="chartColorCss(content.accent)"
+      :spark-height-mode="content.spark_height_mode"
+    />
+  </WidgetFigureFrame>
 </template>
-
-<style scoped>
-/* No padding: the card insets its own content and is full-bleed otherwise, so
-   its spark line reaches the widget's edges. */
-.db-content-network-flow-kpi-stat-card__wrapper {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
-
-.db-content-network-flow-kpi-stat-card__error {
-  margin: auto;
-  max-width: 90%;
-}
-</style>

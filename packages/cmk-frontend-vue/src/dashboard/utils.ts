@@ -37,7 +37,7 @@ import type {
   ComputedNetworkFlowAutonomousSystemResponse,
   ComputedNetworkFlowDonutResponse,
   ComputedNetworkFlowHostResponse,
-  ComputedNetworkFlowKpiStatCardResponse,
+  ComputedNetworkFlowKpiStatCard,
   ComputedNetworkFlowTopTableResponse,
   ComputedNetworkFlowTrendChartResponse,
   ComputedSingleMetric,
@@ -45,6 +45,7 @@ import type {
   ComputedWidgetResponse,
   ComputedWidgetSpecResponse,
   EffectiveWidgetFilterContext,
+  ExplicitWidgetContent,
   Gauge,
   GaugeContent,
   HostOrServiceState,
@@ -482,17 +483,13 @@ export const dashboardAPI = {
       })
     )
   },
-  computeNetworkFlowKpiStatCardData: async (
-    content: NetworkFlowKpiStatCardContent,
-    context: VisualContext
-  ): Promise<ComputedNetworkFlowKpiStatCardResponse> => {
+  computeNetworkFlowKpiStatCard: async (body: {
+    source: ExplicitWidgetContent<NetworkFlowKpiStatCardContent>
+  }): Promise<ComputedWidgetResponse<ComputedNetworkFlowKpiStatCard>> => {
     return unwrap(
       await client.POST(
         '/domain-types/dashboard/actions/compute-network-flow-kpi-stat-card/invoke',
-        {
-          ...CONTENT_TYPE_HEADER,
-          body: { content, context }
-        }
+        { ...CONTENT_TYPE_HEADER, body }
       )
     )
   },

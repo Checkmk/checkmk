@@ -405,7 +405,7 @@ test('clearing the mode filter restores the full, unfiltered list', async () => 
   )
 })
 
-test('activating the unhandled-problems quick filter requests the WARN/CRIT, unacked, no-downtime preset', async () => {
+test('activating the unhandled-problems quick filter requests the WARN/CRIT/UNKNOWN, unacked, no-downtime preset', async () => {
   mockServices([makeApiEntry()])
   renderApp()
 
@@ -419,7 +419,7 @@ test('activating the unhandled-problems quick filter requests the WARN/CRIT, una
         filter: {
           type: 'and',
           children: [
-            { type: 'condition', field: 'state', op: 'one_of', value: ['WARN', 'CRIT'] },
+            { type: 'condition', field: 'state', op: 'one_of', value: ['WARN', 'CRIT', 'UNKNOWN'] },
             { type: 'condition', field: 'acknowledged', op: 'eq', value: false },
             { type: 'condition', field: 'in_downtime', op: 'eq', value: false }
           ]
@@ -467,7 +467,7 @@ test('shows a tooltip on the unhandled-problems chip', async () => {
 
   expect(await screen.findByRole('button', { name: 'Unhandled service problems' })).toHaveAttribute(
     'title',
-    'Show only services in a problem state (WARN or CRIT) that are neither acknowledged nor in a scheduled downtime'
+    'Show only services in a problem state (WARN, CRIT or UNKNOWN) that are neither acknowledged nor in a scheduled downtime'
   )
 })
 

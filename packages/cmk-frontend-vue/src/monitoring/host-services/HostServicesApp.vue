@@ -173,7 +173,7 @@ const hostServicesService = new HostServicesService(
       {
         label: _t('Unhandled service problems'),
         tooltip: _t(
-          'Show only services in a problem state (WARN or CRIT) that are neither acknowledged nor in a scheduled downtime'
+          'Show only services in a problem state (WARN, CRIT or UNKNOWN) that are neither acknowledged nor in a scheduled downtime'
         ),
         filter: {
           type: 'and',
@@ -182,7 +182,7 @@ const hostServicesService = new HostServicesService(
               type: 'condition',
               field: 'state',
               op: 'one_of',
-              value: ['WARN', 'CRIT'] as ServiceState[]
+              value: ['WARN', 'CRIT', 'UNKNOWN'] as ServiceState[]
             },
             { type: 'condition', field: 'acknowledged', op: 'eq', value: false },
             { type: 'condition', field: 'in_downtime', op: 'eq', value: false }

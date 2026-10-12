@@ -4,10 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime as dt
+from typing import TypeIs
 
 import pytest
 
 from cmk.gui.dashboard.api import (
+    BaseWidgetContent,
     ExplicitWidgetContent,
     resolve_widget,
     SavedWidgetContent,
@@ -32,8 +34,16 @@ from tests.unit.cmk.gui.helpers.dashboard_widget_resolution_test_helper import (
     WIDGET_ID,
 )
 
-_STATS_TYPES = frozenset({"hoststats"})
 _SAVED = SavedWidgetContent(type="saved", widget_id=WIDGET_ID)
+
+
+_HOST_STATS = HostStatsContent(
+    type="host_stats", contextual_link=ContextualLinkDefault(type="default")
+)
+
+
+def _is_host_stats(content: BaseWidgetContent) -> TypeIs[HostStatsContent]:
+    return isinstance(content, HostStatsContent)
 
 
 def _no_built_in_link(_content: HostStatsContent, _context: VisualContext) -> None:
@@ -43,13 +53,7 @@ def _no_built_in_link(_content: HostStatsContent, _context: VisualContext) -> No
 def _explicit(
     context: dict[str, dict[str, str]] | None = None,
 ) -> ExplicitWidgetContent[HostStatsContent]:
-    return ExplicitWidgetContent(
-        type="explicit",
-        content=HostStatsContent(
-            type="host_stats", contextual_link=ContextualLinkDefault(type="default")
-        ),
-        context=context or {},
-    )
+    return ExplicitWidgetContent(type="explicit", content=_HOST_STATS, context=context or {})
 
 
 def _problem(
@@ -60,7 +64,7 @@ def _problem(
         resolve_widget(
             api_context(dashboard_token() if token else None),
             source,
-            _STATS_TYPES,
+            _is_host_stats,
             _no_built_in_link,
         ),
     ):
@@ -71,7 +75,7 @@ def _problem(
 def _raised_from_the_handler(exception: Exception) -> ProblemException:
     with (
         pytest.raises(ProblemException) as exc_info,
-        resolve_widget(api_context(None), _explicit(), _STATS_TYPES, _no_built_in_link),
+        resolve_widget(api_context(None), _explicit(), _is_host_stats, _no_built_in_link),
     ):
         raise exception
     return exc_info.value
@@ -82,9 +86,9 @@ def test_an_explicit_source_resolves_the_sent_content_and_context() -> None:
     context = {"host": {"host": "my-host"}}
 
     with resolve_widget(
-        api_context(None), _explicit(context), _STATS_TYPES, _no_built_in_link
+        api_context(None), _explicit(context), _is_host_stats, _no_built_in_link
     ) as widget:
-        assert widget.config == {"type": "hoststats"}
+        assert widget.content == _HOST_STATS
         assert widget.context == context
 
 
@@ -93,20 +97,21 @@ def test_the_infos_come_from_the_dashlet_class(monkeypatch: pytest.MonkeyPatch) 
     impersonating(monkeypatch, {WIDGET_ID: dashboard_widget()})
 
     with resolve_widget(
-        api_context(dashboard_token()), _SAVED, _STATS_TYPES, _no_built_in_link
+        api_context(dashboard_token()), _SAVED, _is_host_stats, _no_built_in_link
     ) as widget:
         assert widget.infos == ["host"]
 
 
 @pytest.mark.usefixtures("load_config", "request_context")
-def test_a_saved_source_resolves_the_stored_widget(monkeypatch: pytest.MonkeyPatch) -> None:
-    stored = dashboard_widget(context={"host": {"host": "my-host"}})
-    impersonating(monkeypatch, {WIDGET_ID: stored})
+def test_a_saved_source_resolves_the_content_of_the_stored_widget(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    impersonating(monkeypatch, {WIDGET_ID: dashboard_widget()})
 
     with resolve_widget(
-        api_context(dashboard_token()), _SAVED, _STATS_TYPES, _no_built_in_link
+        api_context(dashboard_token()), _SAVED, _is_host_stats, _no_built_in_link
     ) as widget:
-        assert widget.config == stored
+        assert widget.content == _HOST_STATS
 
 
 @pytest.mark.usefixtures("load_config", "request_context")
@@ -120,7 +125,7 @@ def test_a_saved_source_merges_the_dashboard_context_under_the_widget_context(
     )
 
     with resolve_widget(
-        api_context(dashboard_token()), _SAVED, _STATS_TYPES, _no_built_in_link
+        api_context(dashboard_token()), _SAVED, _is_host_stats, _no_built_in_link
     ) as widget:
         assert widget.context == {"host": {"host": "widget-host"}, "site": {"site": "heute"}}
 
@@ -129,7 +134,7 @@ def test_a_saved_source_merges_the_dashboard_context_under_the_widget_context(
 def test_a_saved_source_queries_as_the_token_issuer(monkeypatch: pytest.MonkeyPatch) -> None:
     impersonating(monkeypatch, {WIDGET_ID: dashboard_widget()})
 
-    with resolve_widget(api_context(dashboard_token()), _SAVED, _STATS_TYPES, _no_built_in_link):
+    with resolve_widget(api_context(dashboard_token()), _SAVED, _is_host_stats, _no_built_in_link):
         assert user.id == ISSUER
 
 
@@ -178,7 +183,7 @@ def test_a_livestatus_error_is_503() -> None:
 def test_an_unmapped_exception_is_not_translated() -> None:
     with (
         pytest.raises(KeyError),
-        resolve_widget(api_context(None), _explicit(), _STATS_TYPES, _no_built_in_link),
+        resolve_widget(api_context(None), _explicit(), _is_host_stats, _no_built_in_link),
     ):
         raise KeyError("unexpected")
 

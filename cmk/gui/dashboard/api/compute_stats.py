@@ -5,7 +5,7 @@
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Annotated, Literal
+from typing import Annotated, Literal, TypeIs
 
 from pydantic import Discriminator
 
@@ -39,6 +39,7 @@ from ._widget_resolution import (
 )
 from .model.link_properties import LinkProperties, ResolvedLink
 from .model.response_model import ComputedWidgetResponse
+from .model.widget_content._base import BaseWidgetContent
 from .model.widget_content.stats import EventStatsContent, HostStatsContent, ServiceStatsContent
 from .model.widget_source import ExplicitWidgetContent, SavedWidgetContent
 
@@ -261,7 +262,10 @@ _STATS_BY_TYPE: Mapping[str, _StatsType] = {
         view_name="ec_events",
     ),
 }
-STATS_TYPES = frozenset(_STATS_BY_TYPE)
+
+
+def _is_stats(content: BaseWidgetContent) -> TypeIs[StatsContent]:
+    return isinstance(content, (HostStatsContent, ServiceStatsContent, EventStatsContent))
 
 
 def _built_in_link(content: StatsContent, _context: VisualContext) -> EffectiveLink:
@@ -274,8 +278,10 @@ def _built_in_link(content: StatsContent, _context: VisualContext) -> EffectiveL
     )
 
 
-def _counted_parts(widget: ResolvedWidget) -> list[tuple[StatsCategory, VisualContext, int]]:
-    stats_type = _STATS_BY_TYPE[widget.config["type"]]
+def _counted_parts(
+    widget: ResolvedWidget[StatsContent],
+) -> list[tuple[StatsCategory, VisualContext, int]]:
+    stats_type = _STATS_BY_TYPE[widget.content.internal_type()]
     filter_headers, only_sites = visuals.get_filter_headers(
         infos=widget.infos, context=widget.context
     )
@@ -294,7 +300,7 @@ def _counted_parts(widget: ResolvedWidget) -> list[tuple[StatsCategory, VisualCo
 
 def compute_stats(api_context: ApiContext, body: StatsRequest) -> ComputedWidgetResponse[Stats]:
     """Compute a host, service or event statistics widget."""
-    with resolve_widget(api_context, body.source, STATS_TYPES, _built_in_link) as widget:
+    with resolve_widget(api_context, body.source, _is_stats, _built_in_link) as widget:
         counted_parts = _counted_parts(widget)
         return ComputedWidgetResponse(
             domainType="widget-compute",

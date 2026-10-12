@@ -79,6 +79,7 @@ def _graph_widget(widget_type: str = "pnpgraph", **extra: object) -> DashletConf
     widget: dict[str, object] = {
         "type": widget_type,
         "timerange": "25h",
+        "graph_id": "cpu_utilization",
         # An explicit site keeps the widget from resolving one over livestatus while it is
         # constructed.
         "context": {

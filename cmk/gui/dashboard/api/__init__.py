@@ -31,14 +31,17 @@ from ._widget_resolution import (
     no_built_in_link,
     PERMISSIONS_LINK_TARGET,
     PERMISSIONS_WIDGET_QUERY,
+    resolve_saved_widget,
     resolve_widget,
     ResolvedWidget,
 )
 from .model.contextual_link import ContextualLinkSpec
 from .model.link_properties import LinkProperties, ResolvedLink
+from .model.widget_content._base import BaseWidgetContent
 from .model.widget_source import ExplicitWidgetContent, SavedWidgetContent, WidgetTimeRange
 
 __all__ = [
+    "BaseWidgetContent",
     "ContextualLinkSpec",
     "DASHBOARD_FAMILY",
     "DashboardConstants",
@@ -65,6 +68,7 @@ __all__ = [
     "make_pending_changes",
     "no_built_in_link",
     "register_endpoints",
+    "resolve_saved_widget",
     "resolve_widget",
     "save_dashboard_to_file",
     "validated_dashboard_token",

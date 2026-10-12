@@ -7,7 +7,7 @@ from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from http import HTTPStatus
-from typing import assert_never
+from typing import assert_never, Protocol, TypeIs
 
 import cmk.web.utils.permission_verification as permissions
 from cmk.ccc.user import UserId
@@ -19,7 +19,7 @@ from cmk.gui.type_defs import SingleInfos, VisualContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.livestatus_client import MKLivestatusException
 
-from ..dashlet import Dashlet, dashlet_registry
+from ..dashlet import dashlet_registry
 from ..exceptions import WidgetRenderError
 from ..token_util import (
     disable_dashboard_token_by_id,
@@ -39,6 +39,7 @@ from .model.contextual_link import (
     resolved_copy,
     VisualLocation,
 )
+from .model.widget_content import content_from_internal
 from .model.widget_content._base import BaseWidgetContent
 from .model.widget_source import ExplicitWidgetContent, SavedWidgetContent
 
@@ -74,12 +75,17 @@ PERMISSIONS_LINK_TARGET = permissions.Optional(
 )
 
 
+class AcceptsContent[C: BaseWidgetContent](Protocol):
+    """Whether an endpoint computes a widget with this content."""
+
+    def __call__(self, content: BaseWidgetContent, /) -> TypeIs[C]: ...
+
+
 @dataclass(frozen=True)
-class ResolvedWidget:
-    config: DashletConfig
+class ResolvedWidget[C: BaseWidgetContent]:
+    content: C
     context: VisualContext
     infos: SingleInfos
-    widget: Dashlet[DashletConfig]
     links: Sequence[EffectiveLink]
 
 
@@ -91,13 +97,33 @@ def no_built_in_link(_content: BaseWidgetContent, _context: VisualContext) -> No
 def resolve_widget[C: BaseWidgetContent](
     api_context: ApiContext,
     source: ExplicitWidgetContent[C] | SavedWidgetContent,
-    accepted_types: frozenset[str],
+    accepts: AcceptsContent[C],
     built_in_link: Callable[[C, VisualContext], EffectiveLink | None],
-) -> Iterator[ResolvedWidget]:
+) -> Iterator[ResolvedWidget[C]]:
     """Resolve the widget a request names, and translate the failures of its computation."""
+    with _translated_failures():
+        if isinstance(source, SavedWidgetContent):
+            with _resolve_saved(api_context, source, accepts) as widget:
+                yield widget
+        else:
+            yield _resolve_explicit(api_context, source, built_in_link)
+
+
+@contextmanager
+def resolve_saved_widget[C: BaseWidgetContent](
+    api_context: ApiContext,
+    source: SavedWidgetContent,
+    accepts: AcceptsContent[C],
+) -> Iterator[ResolvedWidget[C]]:
+    """Resolve a widget of the token's dashboard, and translate the failures of its computation."""
+    with _translated_failures(), _resolve_saved(api_context, source, accepts) as widget:
+        yield widget
+
+
+@contextmanager
+def _translated_failures() -> Iterator[None]:
     try:
-        with _resolve(api_context, source, accepted_types, built_in_link) as widget:
-            yield widget
+        yield
     except (MKMissingDataError, MKUserError, WidgetRenderError) as exc:
         raise ProblemException(
             status=HTTPStatus.NOT_FOUND, title="No data available", detail=str(exc)
@@ -110,32 +136,21 @@ def resolve_widget[C: BaseWidgetContent](
         ) from exc
 
 
-@contextmanager
-def _resolve[C: BaseWidgetContent](
+def _resolve_explicit[C: BaseWidgetContent](
     api_context: ApiContext,
-    source: ExplicitWidgetContent[C] | SavedWidgetContent,
-    accepted_types: frozenset[str],
+    source: ExplicitWidgetContent[C],
     built_in_link: Callable[[C, VisualContext], EffectiveLink | None],
-) -> Iterator[ResolvedWidget]:
-    if isinstance(source, SavedWidgetContent):
-        with _resolve_saved(api_context, source, accepted_types) as resolved:
-            yield resolved
-        return
-
+) -> ResolvedWidget[C]:
     if api_context.token is not None:
         raise ProblemException(
             status=HTTPStatus.FORBIDDEN,
             title="Forbidden",
             detail="A token caller may only name a saved widget.",
         )
-    _check_accepted(source.content.internal_type(), accepted_types)
-    config = source.content.to_internal()
-    widget = _dashlet(config, source.context)
-    yield ResolvedWidget(
-        config=config,
+    return ResolvedWidget(
+        content=source.content,
         context=source.context,
-        infos=widget.infos(),
-        widget=widget,
+        infos=_infos(source.content.to_internal(), source.context),
         links=_effective_links(
             source.content,
             built_in_link(source.content, source.context),
@@ -145,9 +160,11 @@ def _resolve[C: BaseWidgetContent](
 
 
 @contextmanager
-def _resolve_saved(
-    api_context: ApiContext, source: SavedWidgetContent, accepted_types: frozenset[str]
-) -> Iterator[ResolvedWidget]:
+def _resolve_saved[C: BaseWidgetContent](
+    api_context: ApiContext,
+    source: SavedWidgetContent,
+    accepts: AcceptsContent[C],
+) -> Iterator[ResolvedWidget[C]]:
     token, token_details = validated_dashboard_token(api_context.token)
     try:
         with impersonate_dashboard_token_issuer(
@@ -157,13 +174,12 @@ def _resolve_saved(
             config = get_dashboard_widget_by_id(dashboard, source.widget_id)
             if config["type"] not in dashlet_registry:
                 raise InvalidWidgetError(disable_token=True)
-            _check_accepted(config["type"], accepted_types)
+            content = _accepted_content(config, accepts)
             context = visuals.get_merged_context(
                 dashboard.get("context", {}), config.get("context", {})
             )
-            widget = _dashlet(config, context)
             yield ResolvedWidget(
-                config=config, context=context, infos=widget.infos(), widget=widget, links=[]
+                content=content, context=context, infos=_infos(config, context), links=[]
             )
     except InvalidWidgetError as exc:
         if exc.disable_token:
@@ -173,17 +189,18 @@ def _resolve_saved(
         ) from exc
 
 
-def _check_accepted(internal_type: str, accepted_types: frozenset[str]) -> None:
-    if internal_type not in accepted_types:
-        raise ProblemException(
-            status=HTTPStatus.BAD_REQUEST,
-            title="Widget type not supported",
-            detail=f"This endpoint does not compute widgets of the type {internal_type!r}.",
-        )
+def _accepted_content[C: BaseWidgetContent](config: DashletConfig, accepts: AcceptsContent[C]) -> C:
+    if accepts(content := content_from_internal(config)):
+        return content
+    raise ProblemException(
+        status=HTTPStatus.BAD_REQUEST,
+        title="Widget type not supported",
+        detail=f"This endpoint does not compute widgets of the type {config['type']!r}.",
+    )
 
 
-def _dashlet(config: DashletConfig, context: VisualContext) -> Dashlet[DashletConfig]:
-    return dashlet_registry[config["type"]](config, base_context=context)
+def _infos(config: DashletConfig, context: VisualContext) -> SingleInfos:
+    return dashlet_registry[config["type"]](config, base_context=context).infos()
 
 
 def _effective_links(

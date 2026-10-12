@@ -5,6 +5,7 @@
 
 import dataclasses
 from collections.abc import Sequence
+from typing import TypeIs
 
 import pytest
 
@@ -48,7 +49,6 @@ _BUILT_IN = EffectiveLink(
     include_time_range=False,
     show_filter_form=True,
 )
-_TYPES = frozenset({"hoststats", "eventstats"})
 
 _SEARCHHOST = VisualLocation(type="views", name="searchhost", owner=None)
 _INHERITED = ContextualLinkInherited(
@@ -60,6 +60,10 @@ _INHERITED = ContextualLinkInherited(
 )
 
 
+def _is_stats(content: BaseWidgetContent) -> TypeIs[HostStatsContent | EventStatsContent]:
+    return isinstance(content, (HostStatsContent, EventStatsContent))
+
+
 def _linked(
     contextual_link: ContextualLinkSpec[AggregateHostContextFilter],
 ) -> HostStatsContent:
@@ -67,11 +71,11 @@ def _linked(
 
 
 def _links(
-    content: BaseWidgetContent, user_permissions: UserPermissions | None = None
+    content: HostStatsContent | EventStatsContent, user_permissions: UserPermissions | None = None
 ) -> Sequence[EffectiveLink]:
     source = ExplicitWidgetContent(type="explicit", content=content, context={})
     with resolve_widget(
-        api_context(None, user_permissions), source, _TYPES, lambda _content, _context: _BUILT_IN
+        api_context(None, user_permissions), source, _is_stats, lambda _content, _context: _BUILT_IN
     ) as widget:
         return widget.links
 
@@ -134,7 +138,7 @@ def test_the_saved_arm_resolves_no_link(monkeypatch: pytest.MonkeyPatch) -> None
     source = SavedWidgetContent(type="saved", widget_id=WIDGET_ID)
 
     with resolve_widget(
-        api_context(dashboard_token()), source, _TYPES, lambda _content, _context: _BUILT_IN
+        api_context(dashboard_token()), source, _is_stats, lambda _content, _context: _BUILT_IN
     ) as widget:
         assert widget.links == []
 

@@ -13,10 +13,12 @@ without the token going stale.
 """
 
 from http import HTTPStatus
-from typing import cast
 
-from cmk.gui.dashboard.graph_widget_discovery import discover_widget_graphs, GRAPH_WIDGET_TYPES
-from cmk.gui.dashboard.type_defs import CombinedGraphDashletConfig, DashletConfig
+from cmk.gui.dashboard.graph_widget_discovery import (
+    discover_widget_graphs,
+    GraphWidgetContent,
+    is_graph_widget_content,
+)
 from cmk.gui.graphing import get_temperature_unit
 from cmk.gui.graphing.openapi.fetch_graph_data import evaluate_built_graph_to_response
 from cmk.gui.graphing.openapi.models import (
@@ -41,7 +43,7 @@ from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
 
 from ._family import DASHBOARD_FAMILY
-from ._widget_resolution import no_built_in_link, PERMISSIONS_WIDGET_QUERY, resolve_widget
+from ._widget_resolution import PERMISSIONS_WIDGET_QUERY, resolve_saved_widget
 from .model.widget_content.graph import CombinedGraphContent
 from .model.widget_source import SavedWidgetContent
 
@@ -59,24 +61,22 @@ class WidgetGraphFetchRequest:
     )
 
 
-def _combination_mode(widget_config: DashletConfig) -> ApiCombinationMode | None:
+def _combination_mode(content: GraphWidgetContent) -> ApiCombinationMode | None:
     """How a combined graph widget folds its metrics; the other graph types do not combine.
 
     Taken from the widget configuration rather than the request: what the widget shows is the
     dashboard owner's decision, not the visitor's.
     """
-    if widget_config["type"] != CombinedGraphContent.internal_type():
-        return None
-    return cast(CombinedGraphDashletConfig, widget_config)["presentation"]
+    return content.presentation if isinstance(content, CombinedGraphContent) else None
 
 
 def fetch_widget_graph_data_v1(
     api_context: ApiContext, body: WidgetGraphFetchRequest
 ) -> GraphFetchResponse:
     """Fetch the data of a shared dashboard's graph widget over a requested time range"""
-    with resolve_widget(api_context, body.source, GRAPH_WIDGET_TYPES, no_built_in_link) as widget:
+    with resolve_saved_widget(api_context, body.source, is_graph_widget_content) as widget:
         discovered = discover_widget_graphs(
-            widget.config,
+            widget.content.to_internal(),
             widget.context,
             debug=api_context.config.debug,
             user_permissions=api_context.config.user_permissions(),
@@ -94,7 +94,7 @@ def fetch_widget_graph_data_v1(
             discovered.graphs[0].graph,
             requested_time_range=body.requested_time_range,
             consolidation_function=body.consolidation_function,
-            combination_mode=_combination_mode(widget.config),
+            combination_mode=_combination_mode(widget.content),
             temperature_unit=get_temperature_unit(
                 user, api_context.config.default_temperature_unit
             ),

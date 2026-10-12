@@ -118,7 +118,7 @@ export function formFromObject(object: MapElement, defaults: ObjectFormDefaults)
     line_perfdata_label: object.line_perfdata_label ?? 'none',
     line_weather_color: object.line_weather_color ?? false,
     label: {
-      show: object.label?.show ?? true,
+      show: object.label?.show ?? false,
       text: object.label?.text ?? '',
       x: object.label?.x ?? 0,
       y: object.label?.y ?? 0,

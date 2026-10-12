@@ -33,7 +33,7 @@ describe('formFromObject', () => {
       url_target: '_blank',
       graph_time_window: 60
     })
-    expect(form.label).toMatchObject({ show: true, text: '', size: 11, color: '#ffffff' })
+    expect(form.label).toMatchObject({ show: false, text: '', size: 11, color: '#ffffff' })
   })
 
   it("takes the map's stacking default when the object carries no z", () => {

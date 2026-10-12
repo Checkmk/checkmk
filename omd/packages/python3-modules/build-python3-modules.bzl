@@ -97,6 +97,7 @@ build_cmd = """
 
     echo "setuptools==81.0.0" >> $$TMPDIR/constraints.txt
     echo "maturin~=1.11.0" >> $$TMPDIR/constraints.txt
+    echo "poetry-core<2.5" >> $$TMPDIR/constraints.txt
     export PIP_CONSTRAINT="$$TMPDIR/constraints.txt"
 
     {git_ssl_no_verify}\\

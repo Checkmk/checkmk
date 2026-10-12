@@ -172,16 +172,13 @@ ENDPOINT_GET_SERVICE_ACTION_MENU = VersionedEndpoint(
         method="get",
     ),
     permissions=EndpointPermissions(
-        # Declared for the permission tracker: the livestatus row query and get_icons already scope
-        # visibility and gate each action per user, so no permission is required up front. This
-        # mirrors the legacy action menu popup, which is accessible to normal users too.
+        # Declared for the permission tracker: the livestatus row query scopes visibility and
+        # get_icons gates each action per user, so no permission is required up front. This
+        # mirrors the legacy action menu popup, which is accessible to normal users too. Which
+        # permissions are checked depends on the icons registered in the edition.
         required=permissions.Undocumented(
-            permissions.AnyPerm(
-                [
-                    permissions.OkayToIgnorePerm("general.see_all"),
-                    permissions.OkayToIgnorePerm("bi.see_all"),
-                    permissions.OkayToIgnorePerm("mkeventd.seeall"),
-                ]
+            permissions.DynamicRuntimePerm(
+                description="Visibility of each action is gated per user at runtime.",
             )
         )
     ),

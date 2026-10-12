@@ -2035,7 +2035,6 @@ class TestMonitorServiceActionMenu:
 
         assert resp.status_code == HTTPStatus.NOT_FOUND
 
-    @pytest.mark.xfail(reason="Dynamic permissions are not handled", strict=True)
     def test_existing_service_lists_its_actions(
         self,
         clients: ClientRegistry,
@@ -2063,7 +2062,6 @@ class TestMonitorServiceActionMenu:
         assert resp.status_code == HTTPStatus.OK
         assert resp.json["items"]
 
-    @pytest.mark.xfail(reason="Dynamic permissions are not handled", strict=True)
     def test_normal_user_sees_the_actions_of_an_existing_service(
         self,
         clients: ClientRegistry,

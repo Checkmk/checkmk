@@ -95,6 +95,7 @@ from cmk.gui.watolib.config_domain_name import (
     config_domain_registry,
     config_variable_group_registry,
     config_variable_registry,
+    CORE,
 )
 from cmk.gui.watolib.config_sync import replication_path_registry
 from cmk.gui.watolib.groups_io import contact_group_usage_finder_registry
@@ -110,6 +111,7 @@ from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
     NotificationParameter,
 )
+from cmk.gui.watolib.passwords import password_change_effect_registry
 from cmk.gui.watolib.piggyback_hub import distribute_piggyback_hub_configs
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 from cmk.gui.watolib.sample_config import (
@@ -372,6 +374,11 @@ def register(
         livestatus_query=livestatus_query_bare,
     )
     plugins.register()
+    password_change_effect_registry.register(
+        affected_domains_add=[CORE],
+        affected_domains_edit=[CORE],
+        affected_domains_delete=[CORE],
+    )
 
     welcome_card_registry.register(
         WelcomeCardUrl(

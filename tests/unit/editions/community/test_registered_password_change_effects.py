@@ -14,4 +14,4 @@ def test_password_change_effects() -> None:
         password_change_effect_registry.affected_domains_add,
         password_change_effect_registry.affected_domains_edit,
         password_change_effect_registry.affected_domains_delete,
-    ) == ([], [], [])  # FIXME
+    ) == (["check_mk"], ["check_mk"], ["check_mk"])

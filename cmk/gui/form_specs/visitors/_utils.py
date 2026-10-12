@@ -40,14 +40,11 @@ def get_title_and_help_with_optional_macro_support(
     if not macro_support:
         return title_text, help_text
 
-    macros_help_text = (
+    localized_macros_text = ruleset_api_v1.Help(
         "This field supports the use of macros. "
         "The corresponding plug-in replaces the macros with the actual values. "
         "The most common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$."
-    )
-    localized_macros_text = ruleset_api_v1.Help(macros_help_text).localize(
-        translate_to_current_language
-    )
+    ).localize(translate_to_current_language)
     combined_help = f"{help_text} {localized_macros_text}" if help_text else localized_macros_text
 
     return title_text, combined_help

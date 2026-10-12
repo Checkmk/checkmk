@@ -10,6 +10,7 @@
 import http.client
 import json
 import logging
+import threading
 import traceback
 import urllib.parse
 from collections.abc import Callable, Mapping
@@ -597,7 +598,13 @@ def _get_cmk_token(environ: WSGIEnvironment, token_failure_detail: str | None) -
 
 
 class CheckmkRESTAPI(AbstractWSGIApp):
-    __slots__ = ("_versioned_url_map", "_versioned_endpoints", "_versioned_rules", "testing")
+    __slots__ = (
+        "_url_map_lock",
+        "_versioned_url_map",
+        "_versioned_endpoints",
+        "_versioned_rules",
+        "testing",
+    )
 
     def __init__(self, debug: bool = False, testing: bool = False) -> None:
         super().__init__(debug)
@@ -607,6 +614,9 @@ class CheckmkRESTAPI(AbstractWSGIApp):
         self._versioned_url_map: MapByVersion = {}
         self._versioned_endpoints: AdaptedEndpointMapByVersion = {}
         self._versioned_rules: RulesByVersion = {}
+        # The map of a version is built by the first request to it. Concurrent requests run in
+        # threads, and building the map resets the data of the version first.
+        self._url_map_lock = threading.Lock()
 
         self.testing = testing
 
@@ -741,10 +751,12 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             raise NotFound
 
         if self._versioned_url_map.get(requested_version) is None:
-            with tracer.span(f"Building url map for version {requested_version}"):
-                self._versioned_url_map[requested_version] = self._build_versioned_url_map(
-                    requested_version
-                )
+            with self._url_map_lock:
+                if self._versioned_url_map.get(requested_version) is None:
+                    with tracer.span(f"Building url map for version {requested_version}"):
+                        self._versioned_url_map[requested_version] = self._build_versioned_url_map(
+                            requested_version
+                        )
 
         with tracer.span("Bind to environment and parse URL"):
             urls = self._versioned_url_map[requested_version].bind_to_environ(environ)

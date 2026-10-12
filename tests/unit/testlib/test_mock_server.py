@@ -61,3 +61,40 @@ def test_mock_rejects_a_request_its_validator_refuses() -> None:
     answer = endpoints.answer(_post("/verify"))
 
     assert answer.status == HTTPStatus.BAD_REQUEST
+
+
+def test_mock_answers_with_the_responses_in_turn_and_repeats_the_last() -> None:
+    endpoints = MockEndpoints()
+    endpoints.add(
+        _VERIFY,
+        MockResponse(status=HTTPStatus.SERVICE_UNAVAILABLE, body=b"{}"),
+        MockResponse(status=HTTPStatus.OK, body=b"{}"),
+    )
+
+    statuses = [endpoints.answer(_post("/verify")).status for _ in range(3)]
+
+    assert statuses == [HTTPStatus.SERVICE_UNAVAILABLE, HTTPStatus.OK, HTTPStatus.OK]
+
+
+def test_mock_records_every_request_in_order() -> None:
+    endpoints = MockEndpoints()
+    endpoints.add(_VERIFY, MockResponse(status=HTTPStatus.OK, body=b"{}"))
+    known = _post("/verify", b'{"email": "team-ghost@checkmk.com"}')
+    unknown = _post("/unknown")
+
+    endpoints.answer(known)
+    endpoints.answer(unknown)
+
+    assert endpoints.received_requests == [known, unknown]
+
+
+def test_mock_reset_forgets_endpoints_and_requests() -> None:
+    endpoints = MockEndpoints()
+    endpoints.add(_VERIFY, MockResponse(status=HTTPStatus.OK, body=b"{}"))
+    endpoints.answer(_post("/verify"))
+
+    endpoints.reset()
+    answer = endpoints.answer(_post("/verify"))
+
+    assert answer.status == HTTPStatus.NOT_FOUND
+    assert endpoints.received_requests == [_post("/verify")]

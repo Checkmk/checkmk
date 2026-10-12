@@ -5,7 +5,7 @@
 import logging
 import ssl
 import threading
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 from http import HTTPStatus
@@ -66,21 +66,40 @@ class MockAnswer:
 
 
 class MockEndpoints:
-    """The response configured for each endpoint, and the answer it gives to a request.
+    """The responses configured for each endpoint, the answer they give to a request, and
+    the requests answered so far.
 
     No HTTP here: MockHandler reads the request and writes the answer.
     """
 
     def __init__(self) -> None:
-        self._responses: dict[MockEndpoint, MockResponse] = {}
+        self._responses: dict[MockEndpoint, list[MockResponse]] = {}
+        self._received_requests: list[ReceivedRequest] = []
 
-    def add(self, endpoint: MockEndpoint, response: MockResponse) -> None:
-        self._responses[endpoint] = response
+    def add(
+        self, endpoint: MockEndpoint, response: MockResponse, *next_responses: MockResponse
+    ) -> None:
+        """Answer the first request to the endpoint with response, the next ones with
+        next_responses in turn; the last response answers every further request."""
+        self._responses[endpoint] = [response, *next_responses]
+
+    @property
+    def received_requests(self) -> Sequence[ReceivedRequest]:
+        """Every request answered so far, in order, including those to unknown paths."""
+        return list(self._received_requests)
+
+    def reset(self) -> None:
+        """Forget the endpoints and the received requests."""
+        self._responses.clear()
+        self._received_requests.clear()
 
     def answer(self, request: ReceivedRequest) -> MockAnswer:
+        self._received_requests.append(request)
         endpoint = MockEndpoint(method=request.method, path=request.path)
-        if not (response := self._responses.get(endpoint)):
+        if not (responses := self._responses.get(endpoint)):
             return MockAnswer(status=HTTPStatus.NOT_FOUND)
+        # The last response answers every further request.
+        response = responses.pop(0) if len(responses) > 1 else responses[0]
         if response.request_validator is not None:
             try:
                 if not response.request_validator(request.headers, request.body):
@@ -169,6 +188,9 @@ class MockServer:
         url: The full URL of the running server (set after entering context).
         cert_file: Path to the certificate file (only set when using HTTPS).
         key_file: Path to the private key file (only set when using HTTPS).
+        received_requests: Every request received so far, in order, including those to
+            unknown paths. Methods without a handler, such as HEAD, are answered by the
+            base class and not recorded.
 
     Example:
         >>> # HTTP server
@@ -256,5 +278,16 @@ class MockServer:
         self,
         endpoint: MockEndpoint,
         response: MockResponse,
+        *next_responses: MockResponse,
     ) -> None:
-        self.server.endpoints.add(endpoint, response)
+        """Answer the first request to the endpoint with response, the next ones with
+        next_responses in turn; the last response answers every further request."""
+        self.server.endpoints.add(endpoint, response, *next_responses)
+
+    @property
+    def received_requests(self) -> Sequence[ReceivedRequest]:
+        return self.server.endpoints.received_requests
+
+    def reset(self) -> None:
+        """Forget the endpoints and the received requests, keeping the server and its URL."""
+        self.server.endpoints.reset()

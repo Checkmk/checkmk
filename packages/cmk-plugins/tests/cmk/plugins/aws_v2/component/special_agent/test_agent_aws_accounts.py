@@ -5,6 +5,7 @@
 """An agent run over a list of accounts, against the fake STS endpoint."""
 
 import itertools
+import json
 
 import pytest
 
@@ -13,7 +14,7 @@ from cmk.testlib.aws_v2.fake_sts import AssumeRoleCall, FakeSts, SignedRequest, 
 
 ACCOUNTS = ["333333333333", "444444444444"]
 
-LIST_MODE_ARGS = [
+LOGIN_ARGS = [
     "--hostname",
     "aws-org",
     "--piggyback-naming-convention",
@@ -28,8 +29,11 @@ LIST_MODE_ARGS = [
     "eu-central-1",
     "--service",
     "sns",
-    *(arg for account in ACCOUNTS for arg in ("--account", account)),
 ]
+
+
+def _account_args(accounts: list[str]) -> list[str]:
+    return [arg for account in accounts for arg in ("--account", account)]
 
 
 def _sections_by_host(output: str) -> dict[str | None, list[str]]:
@@ -49,7 +53,7 @@ def _list_mode_output(
     fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> dict[str | None, list[str]]:
     monkeypatch.setenv("AWS_ENDPOINT_URL", fake_sts.url)
-    agent_aws_main(parse_arguments(LIST_MODE_ARGS))
+    agent_aws_main(parse_arguments([*LOGIN_ARGS, *_account_args(ACCOUNTS)]))
     return _sections_by_host(capsys.readouterr().out)
 
 
@@ -59,15 +63,19 @@ def test_every_account_writes_to_its_own_host(
     labels = {
         host: lines[lines.index("<<<labels:sep(0)>>>") + 1]
         for host, lines in list_mode_output.items()
+        if host is not None
     }
 
     assert labels == {account: f'{{"cmk/aws/account": "{account}"}}' for account in ACCOUNTS}
 
 
-def test_list_mode_writes_nothing_to_the_rule_host(
+def test_list_mode_writes_only_the_agent_info_to_the_rule_host(
     list_mode_output: dict[str | None, list[str]],
 ) -> None:
-    assert None not in list_mode_output
+    assert list_mode_output[None] == [
+        "<<<aws_v2_agent_info:sep(0)>>>",
+        *(f'{{"status": "ok", "account": "{account}"}}' for account in ACCOUNTS),
+    ]
 
 
 @pytest.mark.usefixtures("list_mode_output")
@@ -96,3 +104,22 @@ def test_each_account_role_is_assumed_right_before_its_account(fake_sts: FakeSts
         f"assume {ACCOUNTS[1]}",
         f"query {ACCOUNTS[1]}",
     ]
+
+
+def test_failed_login_is_a_run_error_in_the_agent_info(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("AWS_ENDPOINT_URL", fake_sts.url)
+    login_args = [
+        arg
+        for arg in LOGIN_ARGS
+        if arg not in ("--access-key-identity", "AKIAHUB", "--secret", "secret")
+    ]
+
+    agent_aws_main(parse_arguments([*login_args, *_account_args(ACCOUNTS)]))
+
+    [header, row] = _sections_by_host(capsys.readouterr().out)[None][-2:]
+    assert (header, set(json.loads(row))) == (
+        "<<<aws_v2_agent_info:sep(0)>>>",
+        {"status", "reason"},
+    )

@@ -24,6 +24,7 @@ from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_optio
 from cmk.plugins.aws_v2.constants import AWS_REGIONS
 from cmk.server_side_programs.v1 import configure_logging, report_agent_crashes, vcrtrace
 
+from .agent_info import AgentInfoRow, write_agent_info
 from .config import (
     AGENT,
     AwsAccessError,
@@ -690,6 +691,7 @@ def agent_aws_main(args: argparse.Namespace) -> int:
         account_ids = credentials.account_ids()
     except AwsAccessError as ae:
         _write_access_error(ae)
+        write_agent_info([AgentInfoRow("error", reason=str(ae))])
         return 0
 
     aws_config = _configure_aws(args)
@@ -710,8 +712,9 @@ def agent_aws_main(args: argparse.Namespace) -> int:
         )
 
     has_exceptions = False
-    try:
-        for account_id in account_ids:
+    agent_info: list[AgentInfoRow] = []
+    for account_id in account_ids:
+        try:
             account = credentials.open_account(account_id)
             has_exceptions |= _run_account(
                 args,
@@ -722,10 +725,14 @@ def agent_aws_main(args: argparse.Namespace) -> int:
                 use_cache,
                 proxy_config,
             )
-    except AwsAccessError as ae:
-        _write_access_error(ae)
-        return 0
+        except AwsAccessError as ae:
+            _write_access_error(ae)
+            write_agent_info([*agent_info, AgentInfoRow("error", account_id, str(ae))])
+            return 0
+        else:
+            agent_info.append(AgentInfoRow("ok", account.id))
 
+    write_agent_info(agent_info)
     return 1 if has_exceptions else 0
 
 

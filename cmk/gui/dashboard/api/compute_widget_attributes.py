@@ -52,9 +52,8 @@ def compute_widget_attributes_v1(
     """Compute widget specification attributes"""
     user.need_permission("general.edit_dashboards")
     widget_config = body.content.to_internal()
-    return ComputedWidgetResponse(
-        domainType="widget-compute",
-        value=ComputedWidgetSpec(
+    return ComputedWidgetResponse.of(
+        ComputedWidgetSpec(
             filter_context=ComputedFilterContext(
                 uses_infos=determine_widget_filter_used_infos(widget_config)
             )

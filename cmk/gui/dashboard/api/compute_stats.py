@@ -302,10 +302,9 @@ def compute_stats(api_context: ApiContext, body: StatsRequest) -> ComputedWidget
     """Compute a host, service or event statistics widget."""
     with resolve_widget(api_context, body.source, _is_stats, _built_in_link) as widget:
         counted_parts = _counted_parts(widget)
-        return ComputedWidgetResponse(
-            domainType="widget-compute",
-            value=Stats(
-                links=[link.to_api() for link in widget.links],
+        return ComputedWidgetResponse.of(
+            Stats(
+                links=widget.links_to_api(),
                 parts=[
                     StatsPart(
                         category=category,

@@ -39,6 +39,7 @@ from .model.contextual_link import (
     resolved_copy,
     VisualLocation,
 )
+from .model.link_properties import ResolvedLink
 from .model.widget_content import content_from_internal
 from .model.widget_content._base import BaseWidgetContent
 from .model.widget_source import ExplicitWidgetContent, SavedWidgetContent
@@ -87,6 +88,10 @@ class ResolvedWidget[C: BaseWidgetContent]:
     context: VisualContext
     infos: SingleInfos
     links: Sequence[EffectiveLink]
+
+    def links_to_api(self) -> list[ResolvedLink]:
+        """The links of the widget in their API representation."""
+        return [link.to_api() for link in self.links]
 
 
 def no_built_in_link(_content: BaseWidgetContent, _context: VisualContext) -> None:

@@ -463,14 +463,12 @@ def get_all_active_filters(view: View) -> list[Filter]:
         # Remove the original host name filter
         use_filters = [f for f in use_filters if f.ident != "host"]
 
-    use_filters = [f for f in use_filters if f.available()]
-
-    for filt in use_filters:
-        # TODO: Clean this up! E.g. make the Filter class implement a default method
-        if hasattr(filt, "derived_columns"):
-            filt.derived_columns(view.row_cells)
-
-    return use_filters
+    # TODO: Clean hasattr up! E.g. make the Filter class implement a default method
+    return [
+        filt.with_derived_columns(view.row_cells) if hasattr(filt, "with_derived_columns") else filt
+        for filt in use_filters
+        if filt.available()
+    ]
 
 
 def _export_view(

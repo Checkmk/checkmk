@@ -117,3 +117,32 @@ def test_spoke_external_id_reaches_every_assume_role_call(fake_sts: FakeSts) -> 
 def test_denied_spoke_role_names_its_account() -> None:
     with pytest.raises(AwsAccessError, match=DENIED_ACCOUNT):
         _spoke_accounts(SpokeAccounts(["333333333333", DENIED_ACCOUNT], "CheckmkMonitoring"))
+
+
+@pytest.mark.parametrize(
+    "global_service_region, partition",
+    [
+        pytest.param("us-east-1", "aws", id="aws"),
+        pytest.param("cn-north-1", "aws-cn", id="china"),
+        pytest.param("us-gov-west-1", "aws-us-gov", id="govcloud"),
+    ],
+)
+def test_spoke_role_arn_uses_the_partition_of_the_region(
+    fake_sts: FakeSts, global_service_region: str, partition: str
+) -> None:
+    AwsCredentials(
+        HubCredentials(AccessKey("AKIAHUB", "secret")),
+        global_service_region,
+        None,
+        SpokeAccounts(["333333333333"], "CheckmkMonitoring"),
+    ).accounts()
+
+    [call] = fake_sts.assume_role_calls
+    assert call.params["RoleArn"] == f"arn:{partition}:iam::333333333333:role/CheckmkMonitoring"
+
+
+def test_spoke_without_external_id_omits_it(fake_sts: FakeSts) -> None:
+    _spoke_accounts(SpokeAccounts(["333333333333"], "CheckmkMonitoring"))
+
+    [call] = fake_sts.assume_role_calls
+    assert "ExternalId" not in call.params

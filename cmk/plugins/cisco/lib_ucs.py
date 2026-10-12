@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import assert_never, Final, Literal
 
-from cmk.agent_based.v2 import any_of, CheckResult, contains, Result, State
+from cmk.agent_based.v2 import any_of, CheckResult, contains, exists, Result, State
 
 DETECT = any_of(
     contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1682"),
@@ -21,6 +21,13 @@ DETECT = any_of(
     contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2492"),
     contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2493"),
     contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.3100"),
+    # Standalone Cisco IMC (CIMC) appliances and newer UCS C-series models --
+    # e.g. SNS-8355-K9 / UCS C225 M8 -- report a sysObjectID that is not on the
+    # whitelist above, so none of the cisco_ucs_* services were discovered even
+    # though the device fully serves the CISCO-UNIFIED-COMPUTING-MIB. Match any
+    # device that exposes the UCS compute rack-unit operability column
+    # (cucsComputeRackUnitOperability) as well.
+    exists(".1.3.6.1.4.1.9.9.719.1.9.35.1.43.*"),
 )
 
 

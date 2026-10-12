@@ -31,10 +31,9 @@ export function useAcknowledgeHostsAction(
     },
     successMessage: (count) =>
       _tn(
-        'Acknowledged the problem for %{count} host',
-        'Acknowledged the problem for %{count} hosts',
-        count,
-        { count }
+        'Acknowledged the problem of the selected host',
+        'Acknowledged the problems of the selected hosts',
+        count
       )
   })
 }

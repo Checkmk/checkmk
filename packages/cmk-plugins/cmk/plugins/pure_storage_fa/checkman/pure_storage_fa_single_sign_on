@@ -1,0 +1,19 @@
+title: Pure Storage FlashArray: Single Sign On
+agents: pure_storage_fa
+catalog: hw/storagehw/pure_storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the sso of a Pure Storage.
+
+ The status is mapped to the following Checkmk state:
+
+ - {OK} SSO Status enabled, or as discovered
+
+ - {Warn} SSO Status changed to 'Disabled'!, not as discovert
+
+ To make this check work you have to configure the related special agent
+ {Pure Storage FlashArray}.
+
+discovery:
+ One service per host is created.

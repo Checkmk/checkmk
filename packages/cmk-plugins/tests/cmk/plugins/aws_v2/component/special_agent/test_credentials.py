@@ -81,7 +81,7 @@ def _spoke_accounts(spokes: SpokeAccounts) -> list[tuple[str, str]]:
     )
     return [
         (account.id, account.session.client("sts").get_caller_identity()["Account"])
-        for account in credentials.accounts()
+        for account in map(credentials.open_account, credentials.account_ids())
     ]
 
 
@@ -100,6 +100,14 @@ def test_spoke_roles_are_assumed_directly_from_the_login(fake_sts: FakeSts) -> N
         ("AKIAHUB", "arn:aws:iam::333333333333:role/CheckmkMonitoring"),
         ("AKIAHUB", "arn:aws:iam::444444444444:role/CheckmkMonitoring"),
     ]
+
+
+def test_listing_the_accounts_assumes_no_account_role(fake_sts: FakeSts) -> None:
+    AwsCredentials(
+        HubCredentials(AccessKey("AKIAHUB", "secret")), "us-east-1", None, SPOKES
+    ).account_ids()
+
+    assert fake_sts.assume_role_calls == []
 
 
 def test_spoke_external_id_reaches_every_assume_role_call(fake_sts: FakeSts) -> None:
@@ -135,7 +143,7 @@ def test_spoke_role_arn_uses_the_partition_of_the_region(
         global_service_region,
         None,
         SpokeAccounts(["333333333333"], "CheckmkMonitoring"),
-    ).accounts()
+    ).open_account("333333333333")
 
     [call] = fake_sts.assume_role_calls
     assert call.params["RoleArn"] == f"arn:{partition}:iam::333333333333:role/CheckmkMonitoring"

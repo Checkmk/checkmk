@@ -103,6 +103,8 @@ class FakeSts:
     url: str = ""
     assume_role_calls: list[AssumeRoleCall] = field(default_factory=list)
     service_requests: list[SignedRequest] = field(default_factory=list)
+    # Both kinds of calls, in the order they arrived.
+    calls: list[AssumeRoleCall | SignedRequest] = field(default_factory=list)
 
 
 def _signed_request(authorization: str) -> SignedRequest:
@@ -127,7 +129,9 @@ def _handler(sts: FakeSts) -> type[BaseHTTPRequestHandler]:
             match params.get("Action"):
                 case "AssumeRole":
                     caller = _signed_request(self.headers["Authorization"]).key_id
-                    sts.assume_role_calls.append(AssumeRoleCall(caller, params))
+                    call = AssumeRoleCall(caller, params)
+                    sts.assume_role_calls.append(call)
+                    sts.calls.append(call)
                     # arn:<partition>:iam::<account>:role/<name>
                     account = params["RoleArn"].split(":")[4]
                     if account == DENIED_ACCOUNT:
@@ -141,7 +145,9 @@ def _handler(sts: FakeSts) -> type[BaseHTTPRequestHandler]:
                     )
                     self._answer(200, _caller_identity_response(account))
                 case _:
-                    sts.service_requests.append(_signed_request(self.headers["Authorization"]))
+                    request = _signed_request(self.headers["Authorization"])
+                    sts.service_requests.append(request)
+                    sts.calls.append(request)
                     self._answer(400, _SERVICE_ERROR_RESPONSE)
 
         do_GET = do_HEAD = do_PUT = do_DELETE = do_POST

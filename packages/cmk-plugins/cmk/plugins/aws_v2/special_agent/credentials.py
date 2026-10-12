@@ -174,7 +174,7 @@ class AwsCredentials:
     def session(self) -> boto3.session.Session:
         """The login (hub) session, built on first use and then reused.
 
-        The sessions of spoke accounts come from accounts().
+        The sessions of spoke accounts come from open_account().
         """
         if self._session is None:
             self._session, self._account_id = _create_hub_session(
@@ -201,13 +201,23 @@ class AwsCredentials:
             raise AwsAccessError(describe_credential_failure(e))
         return account_id
 
-    def accounts(self) -> Sequence[AwsAccount]:
-        """The accounts this run monitors, each with the session to use for all its regions."""
+    def account_ids(self) -> Sequence[str]:
+        """The accounts this run monitors. Raises AwsAccessError if the hub login fails."""
+        hub_account_id = self.account_id()
         if self._spokes is None:
-            return [AwsAccount(self.account_id(), self.session())]
-        return [
-            self._spoke_account(account_id, self._spokes) for account_id in self._spokes.account_ids
-        ]
+            return [hub_account_id]
+        return self._spokes.account_ids
+
+    def open_account(self, account_id: str) -> AwsAccount:
+        """One account of account_ids(), with the session to use for all its regions.
+
+        A spoke role is assumed here, right before its account is monitored. Its
+        credentials last one hour, which a long list of accounts could outlast if every
+        role were assumed at the start of the run.
+        """
+        if self._spokes is None:
+            return AwsAccount(account_id, self.session())
+        return self._spoke_account(account_id, self._spokes)
 
     def _spoke_account(self, account_id: str, spokes: SpokeAccounts) -> AwsAccount:
         try:

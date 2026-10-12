@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final, Literal, override, Protocol, Self
 
@@ -51,6 +51,9 @@ class MatchItemConfigSource(Protocol):
     @property
     def graph_timeranges(self) -> Sequence[GraphTimerange]: ...
 
+    @property
+    def user_localizations(self) -> Mapping[str, Mapping[str, str]]: ...
+
 
 @dataclass(frozen=True)
 class MatchItemConfig:
@@ -65,6 +68,7 @@ class MatchItemConfig:
     # Kept in its serializable form for the job arguments
     tag_config: TagConfigSpec
     graph_timeranges: Sequence[GraphTimerange]
+    user_localizations: Mapping[str, Mapping[str, str]]
 
     @property
     def tags(self) -> TagConfig:
@@ -78,6 +82,7 @@ class MatchItemConfig:
             wato_host_attrs=config.wato_host_attrs,
             tag_config=config.tags.get_dict_format(),
             graph_timeranges=config.graph_timeranges,
+            user_localizations=config.user_localizations,
         )
 
 

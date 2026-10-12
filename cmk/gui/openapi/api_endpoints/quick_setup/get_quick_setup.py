@@ -54,7 +54,7 @@ def get_quick_setup_v1(
     ] = None,
 ) -> QuickSetupResponseModel:
     """Get guided stages or overview stages"""
-    i18n.localize(user.language)
+    i18n.localize(user.language, api_context.config.user_localizations)
     quick_setup = quick_setup_registry.get(quick_setup_id)
     if quick_setup is None:
         raise ProblemException(

@@ -119,7 +119,7 @@ def _serve_entities(data: ConfigurationEntityDescription) -> Response:
 )
 def _create_configuration_entity(params: Mapping[str, Any]) -> Response:
     """Create a configuration entity"""
-    i18n.localize(user.language)
+    i18n.localize(user.language, active_config.user_localizations)
     body = params["body"]
     entity_type = ConfigEntityType(body["entity_type"])
     entity_type_specifier = body["entity_type_specifier"]
@@ -164,7 +164,7 @@ def _create_configuration_entity(params: Mapping[str, Any]) -> Response:
 )
 def _update_configuration_entity(params: Mapping[str, Any]) -> Response:
     """Update an existing configuration entity"""
-    i18n.localize(user.language)
+    i18n.localize(user.language, active_config.user_localizations)
     body = params["body"]
     entity_type = ConfigEntityType(body["entity_type"])
     entity_type_specifier = body["entity_type_specifier"]
@@ -210,7 +210,7 @@ def _update_configuration_entity(params: Mapping[str, Any]) -> Response:
 )
 def _get_configuration_entity_form_spec_schema(params: Mapping[str, Any]) -> Response:
     """Get a configuration entity form spec schema"""
-    i18n.localize(user.language)
+    i18n.localize(user.language, active_config.user_localizations)
     entity_type = ConfigEntityType(params["entity_type"])
     entity_type_specifier = params["entity_type_specifier"]
 

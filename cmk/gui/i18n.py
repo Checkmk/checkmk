@@ -6,7 +6,7 @@
 
 import contextlib
 import gettext as gettext_module
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import NamedTuple, Protocol
 
@@ -32,6 +32,8 @@ from cmk.web.utils.speaklater import LazyString
 class Translation(NamedTuple):
     translation: gettext_module.NullTranslations
     name: str
+    # Localizations of user supplied texts, see _u()
+    user_localizations: Mapping[str, Mapping[str, str]]
 
 
 translation: Translation | None = request_local_attr("translation", Translation)
@@ -142,7 +144,7 @@ def _unlocalize() -> None:
     set_global_var("translation", None)
 
 
-def localize(lang: str) -> None:
+def localize(lang: str, user_localizations: Mapping[str, Mapping[str, str]]) -> None:
     translate_to_current_language.cache_clear()  # type: ignore[attr-defined]
     if lang == "en":
         _unlocalize()
@@ -153,7 +155,14 @@ def localize(lang: str) -> None:
         _unlocalize()
         return
 
-    set_global_var("translation", Translation(translation=gettext_translation, name=lang))
+    set_global_var(
+        "translation",
+        Translation(
+            translation=gettext_translation,
+            name=lang,
+            user_localizations=user_localizations,
+        ),
+    )
     return
 
 
@@ -196,24 +205,13 @@ def _init_language(lang: str) -> gettext_module.NullTranslations | None:
 #   | Users can localize custom strings using the global configuration     |
 #   '----------------------------------------------------------------------'
 
-_user_localizations: dict[str, dict[str, str]] = {}
-
 
 # Localization of user supplied texts
 def _u(text: str) -> str:
-    ldict = _user_localizations.get(text)
-    if ldict:
-        current_language = get_current_language()
-        if current_language == "en":
-            return text
-        return ldict.get(current_language, text)
-
+    # Without a translation the language is english, which shows the texts as they are
+    if translation and (ldict := translation.user_localizations.get(text)):
+        return ldict.get(translation.name, text)
     return translate_to_current_language(text)
-
-
-def set_user_localizations(localizations: dict[str, dict[str, str]]) -> None:
-    _user_localizations.clear()
-    _user_localizations.update(localizations)
 
 
 class SupportsLocalize(Protocol):

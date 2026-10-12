@@ -124,7 +124,10 @@ class LoginPage(Page):
     def page(self, ctx: PageContext) -> None:
         # Initialize the cmk.gui.i18n for the login dialog. This might be
         # overridden later after user login
-        localize(ctx.request.var("lang", ctx.config.default_language))
+        localize(
+            ctx.request.var("lang", ctx.config.default_language),
+            ctx.config.user_localizations,
+        )
 
         self._do_login(ctx.request, ctx.config)
 

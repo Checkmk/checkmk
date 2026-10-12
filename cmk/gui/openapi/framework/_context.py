@@ -105,6 +105,7 @@ class ApiConfig:
     multisite_users: Mapping[str, UserSpec]
     default_user_profile: UserSpec
     user_connections: Sequence[ConfigurableUserConnectionSpec]
+    user_localizations: Mapping[str, Mapping[str, str]]
 
     @classmethod
     def from_config(cls, config: Config) -> Self:
@@ -132,6 +133,7 @@ class ApiConfig:
             multisite_users=config.multisite_users,
             default_user_profile=config.default_user_profile,
             user_connections=config.user_connections,
+            user_localizations=config.user_localizations,
         )
 
     def user_permissions(self) -> UserPermissions:

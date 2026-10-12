@@ -120,7 +120,7 @@ class IndexBuilder:
             )
             pipeline.execute()
 
-        localize(current_language)
+        localize(current_language, config.user_localizations)
 
     @classmethod
     def _add_language_independent_item_generators_to_redis(
@@ -150,7 +150,7 @@ class IndexBuilder:
     ) -> None:
         key_categories_ld = self.key_categories(self.PREFIX_LOCALIZATION_DEPENDENT)
         for language_code, _language_name in get_languages():
-            localize(language_code)
+            localize(language_code, config.user_localizations)
             for match_item_generator in match_item_generators:
                 self._add_match_item_generator_to_redis(
                     match_item_generator,

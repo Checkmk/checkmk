@@ -176,6 +176,7 @@ def run_stage_action_v1(
                 wato_hide_folders_without_read_permissions=api_context.config.wato_hide_folders_without_read_permissions,
                 wato_host_attrs=api_context.config.wato_host_attrs,
                 tags=api_context.config.tags.get_dict_format(),
+                user_localizations=api_context.config.user_localizations,
             )
 
         parameters: dict[str, str] = {"job_id": background_job_id}
@@ -189,7 +190,7 @@ def run_stage_action_v1(
         )
         raise RedirectException(location)
 
-    i18n.localize(language)
+    i18n.localize(language, api_context.config.user_localizations)
     result = verify_custom_validators_and_recap_stage(
         quick_setup=quick_setup,
         stage_index=stage_index,

@@ -45,7 +45,7 @@ def get_stage_structure_v1(
     ] = None,
 ) -> StageStructureModel:
     """Get a Quick setup stage structure"""
-    i18n.localize(user.language)
+    i18n.localize(user.language, api_context.config.user_localizations)
     quick_setup = quick_setup_registry.get(quick_setup_id)
     if quick_setup is None:
         raise ProblemException(

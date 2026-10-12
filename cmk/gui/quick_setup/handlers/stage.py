@@ -374,12 +374,13 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
         wato_hide_folders_without_read_permissions: bool,
         wato_host_attrs: Sequence[CustomHostAttrSpec],
         tags: TagConfigSpec,
+        user_localizations: Mapping[str, Mapping[str, str]],
     ) -> None:
         job_interface.get_logger().debug("Running Quick setup stage action finally")
         with job_interface.gui_context(
             UserPermissions.from_serialized_config(user_permission_config, permission_registry)
         ):
-            localize(self._language)
+            localize(self._language, user_localizations)
             try:
                 self._run_quick_setup_stage_action(
                     job_interface,
@@ -456,6 +457,7 @@ def start_quick_setup_stage_job(
     wato_hide_folders_without_read_permissions: bool,
     wato_host_attrs: Sequence[CustomHostAttrSpec],
     tags: TagConfigSpec,
+    user_localizations: Mapping[str, Mapping[str, str]],
 ) -> str:
     if job_uuid is None:
         job_uuid = str(uuid.uuid4())
@@ -486,6 +488,7 @@ def start_quick_setup_stage_job(
                 wato_hide_folders_without_read_permissions=wato_hide_folders_without_read_permissions,
                 wato_host_attrs=wato_host_attrs,
                 tags=tags,
+                user_localizations=user_localizations,
             ),
         ),
         InitialStatusArgs(
@@ -526,6 +529,7 @@ class QuickSetupStageActionJobArgs(QuickSetupStageActionRemoteArgs, frozen=True)
     wato_hide_folders_without_read_permissions: bool
     wato_host_attrs: Sequence[CustomHostAttrSpec]
     tags: TagConfigSpec
+    user_localizations: Mapping[str, Mapping[str, str]]
 
 
 def quick_setup_stage_action_job_entry_point(
@@ -548,6 +552,7 @@ def quick_setup_stage_action_job_entry_point(
         wato_hide_folders_without_read_permissions=args.wato_hide_folders_without_read_permissions,
         wato_host_attrs=args.wato_host_attrs,
         tags=args.tags,
+        user_localizations=args.user_localizations,
     )
 
 
@@ -655,6 +660,7 @@ class AutomationQuickSetupStageAction(AutomationCommand[QuickSetupStageActionJob
             wato_hide_folders_without_read_permissions=config.wato_hide_folders_without_read_permissions,
             wato_host_attrs=config.wato_host_attrs,
             tags=config.tags.get_dict_format(),
+            user_localizations=config.user_localizations,
         )
 
     @override
@@ -674,6 +680,7 @@ class AutomationQuickSetupStageAction(AutomationCommand[QuickSetupStageActionJob
             wato_hide_folders_without_read_permissions=api_request.wato_hide_folders_without_read_permissions,
             wato_host_attrs=api_request.wato_host_attrs,
             tags=api_request.tags,
+            user_localizations=api_request.user_localizations,
         )
 
 

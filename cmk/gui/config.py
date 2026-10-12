@@ -163,7 +163,6 @@ def initialize() -> Config:
         **_determine_pysaml2_log_level(config.log_levels),
     }
     log.set_log_levels(log_levels)
-    cmk.gui.i18n.set_user_localizations(config.user_localizations)
 
     return config
 

@@ -77,7 +77,7 @@ class UserProfile(Page):
             user.reset_language()
 
         # load the new language
-        localize(user.language)
+        localize(user.language, config.user_localizations)
 
         # Custom attributes
         user_attributes = get_user_attributes(config.wato_user_attrs)

@@ -46,6 +46,7 @@ def test_stage_action_job_args_keep_the_folder_tree_config() -> None:
         wato_hide_folders_without_read_permissions=True,
         wato_host_attrs=_HOST_ATTRS,
         tags=tags.get_dict_format(),
+        user_localizations={},
     )
 
     restored = QuickSetupStageActionJobArgs.model_validate_json(args.model_dump_json())

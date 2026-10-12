@@ -6,7 +6,7 @@
 
 import io
 import threading
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping
 from contextlib import contextmanager, nullcontext
 from logging import getLogger
 from pathlib import Path
@@ -294,11 +294,13 @@ class TestIndexBuilder:
     ) -> None:
         current_lang = "en"
 
-        def localize_with_memory(lang: str) -> None:
+        def localize_with_memory(
+            lang: str, user_localizations: Mapping[str, Mapping[str, str]]
+        ) -> None:
             """Needed to remember currently set language"""
             nonlocal current_lang
             current_lang = lang
-            localize(lang)
+            localize(lang, user_localizations)
 
         monkeypatch.setattr(
             cmk.gui.search._engines._redis,  # noqa: SLF001
@@ -312,7 +314,7 @@ class TestIndexBuilder:
         )
 
         start_lang = "en"
-        localize_with_memory(start_lang)
+        localize_with_memory(start_lang, {})
         index_builder.build_full_index(UserPermissions({}, {}, {}, []), _MATCH_ITEM_CONFIG)
         assert current_lang == start_lang
 

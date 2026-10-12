@@ -139,7 +139,7 @@ def ensure_authentication(handler: pages.PageHandler) -> Callable[[PageContext],
             # Initialize the multisite cmk.gui.i18n. This will be replaced by
             # language settings stored in the user profile after the user
             # has been initialized
-            _localize_request()
+            _localize_request(ctx.config)
 
             # Update the UI theme with the attribute configured by the user.
             # Returns None on first load
@@ -231,10 +231,10 @@ def _handle_not_authenticated(ctx: PageContext) -> Response:
     return response
 
 
-def _localize_request() -> None:
+def _localize_request(config: Config) -> None:
     if user_language := request.get_ascii_input("lang", user.language):
         set_language_cookie(request, response, user_language)
-        cmk.gui.i18n.localize(user_language)
+        cmk.gui.i18n.localize(user_language, config.user_localizations)
 
 
 def handle_unhandled_exception(config: Config) -> Response:

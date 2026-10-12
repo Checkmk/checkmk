@@ -35,7 +35,7 @@ import type {
   Barplot,
   BarplotContent,
   ComputedNetworkFlowAutonomousSystemResponse,
-  ComputedNetworkFlowDonutResponse,
+  ComputedNetworkFlowDonut,
   ComputedNetworkFlowHostResponse,
   ComputedNetworkFlowKpiStatCard,
   ComputedNetworkFlowTopTableResponse,
@@ -472,14 +472,13 @@ export const dashboardAPI = {
       })
     )
   },
-  computeNetworkFlowDonutData: async (
-    content: NetworkFlowDonutContent,
-    context: VisualContext
-  ): Promise<ComputedNetworkFlowDonutResponse> => {
+  computeNetworkFlowDonut: async (body: {
+    source: ExplicitWidgetContent<NetworkFlowDonutContent>
+  }): Promise<ComputedWidgetResponse<ComputedNetworkFlowDonut>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-network-flow-donut/invoke', {
         ...CONTENT_TYPE_HEADER,
-        body: { content, context }
+        body
       })
     )
   },

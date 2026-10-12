@@ -949,14 +949,13 @@ def _convert_to_legacy_text_input(
 
     help_text = _localize_optional(to_convert.help_text, localizer)
     if to_convert.macro_support:
-        macros_help_text = (
+        localized_text = ruleset_api_v1.Help(
             "This field supports the use of macros. "
             "The corresponding plug-in replaces the macros with the actual values. "
             "The most common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$. "
             "To use a custom host attribute, prefix its name with 'HOST_', "
             "e.g. an attribute named 'OWNER' is referenced as $HOST_OWNER$."
-        )
-        localized_text = ruleset_api_v1.Help(macros_help_text).localize(localizer)
+        ).localize(localizer)
         converted_kwargs["help"] = f"{help_text} {localized_text}" if help_text else localized_text
     else:
         converted_kwargs["help"] = help_text
@@ -2633,13 +2632,12 @@ def _convert_to_legacy_text_area(
 
     help_text = _localize_optional(to_convert.help_text, localizer)
     if to_convert.macro_support:
-        macros_help_text = (
+        localized_text = ruleset_api_v1.Help(
             "This field supports the use of macros. "
             "The corresponding plug-in replaces the macros with the actual values. "
             "To use a custom host attribute, prefix its name with 'HOST_', "
             "e.g. an attribute named 'OWNER' is referenced as $HOST_OWNER$."
-        )
-        localized_text = ruleset_api_v1.Help(macros_help_text).localize(localizer)
+        ).localize(localizer)
         converted_kwargs["help"] = f"{help_text} {localized_text}" if help_text else localized_text
     else:
         converted_kwargs["help"] = help_text

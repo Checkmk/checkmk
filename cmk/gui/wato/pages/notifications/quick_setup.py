@@ -1270,7 +1270,7 @@ def notification_method() -> QuickSetupStage:
                     required=True,
                     parameter_form=Integer(
                         title=Title("Max. notifications per bulk"),
-                        unit_symbol="notifications",
+                        unit_symbol=_("notifications"),
                         prefill=DefaultValue(1000),
                         custom_validate=[NumberInRange(min_value=2, max_value=1000)],
                     ),
@@ -1771,7 +1771,7 @@ def sending_conditions() -> QuickSetupStage:
                                                 Integer(
                                                     label=Label("send every"),
                                                     prefill=DefaultValue(5),
-                                                    unit_symbol="notifications",
+                                                    unit_symbol=_("notifications"),
                                                 ),
                                             ],
                                             layout="horizontal",

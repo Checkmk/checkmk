@@ -38,7 +38,7 @@ import type {
   ComputedNetworkFlowDonut,
   ComputedNetworkFlowHostResponse,
   ComputedNetworkFlowKpiStatCard,
-  ComputedNetworkFlowTopTableResponse,
+  ComputedNetworkFlowTopTable,
   ComputedNetworkFlowTrendChartResponse,
   ComputedSingleMetric,
   ComputedTopList,
@@ -461,14 +461,13 @@ export const dashboardAPI = {
       })
     )
   },
-  computeNetworkFlowTopTableData: async (
-    content: NetworkFlowTopTableContent,
-    context: VisualContext
-  ): Promise<ComputedNetworkFlowTopTableResponse> => {
+  computeNetworkFlowTopTable: async (body: {
+    source: ExplicitWidgetContent<NetworkFlowTopTableContent>
+  }): Promise<ComputedWidgetResponse<ComputedNetworkFlowTopTable>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-network-flow-top-table/invoke', {
         ...CONTENT_TYPE_HEADER,
-        body: { content, context }
+        body
       })
     )
   },

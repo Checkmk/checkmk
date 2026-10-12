@@ -4,21 +4,19 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
-import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
-import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, inject } from 'vue'
 
 import CmkRankedTable from '@/dashboard/components/CmkRankedTable'
 import type { RankedTableColumn, RankedTableRow } from '@/dashboard/components/CmkRankedTable'
+import { useWidgetData } from '@/dashboard/composables/useWidgetData'
+import { explicitWidgetSource } from '@/dashboard/composables/useWidgetSource'
 import type { NetworkFlowTopTableContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
 import { chartColorCss } from '@/network-flow/colors'
 import { autonomousSystemSlideInKey, hostSlideInKey } from '@/network-flow/slide-ins/injectionKeys'
 
-import DashboardContentContainer from '../DashboardContentContainer.vue'
+import WidgetFigureFrame from '../figures/WidgetFigureFrame.vue'
 import type { ContentProps } from '../types.ts'
-import { useNetworkFlowWidgetData } from './useNetworkFlowWidgetData.ts'
 
 const props = defineProps<ContentProps<NetworkFlowTopTableContent>>()
 
@@ -26,17 +24,10 @@ const props = defineProps<ContentProps<NetworkFlowTopTableContent>>()
 const openHostSlideIn = inject(hostSlideInKey, null)
 const openAutonomousSystemSlideIn = inject(autonomousSystemSlideInKey, null)
 
-const { data, error } = useNetworkFlowWidgetData(
-  () =>
-    dashboardAPI.computeNetworkFlowTopTableData(
-      props.content,
-      props.effective_filter_context.filters
-    ),
-  (response): { columns: RankedTableColumn[]; rows: RankedTableRow[] } => ({
-    columns: response.value.columns,
-    rows: response.value.rows
-  }),
-  () => ({ filters: props.effective_filter_context.filters, content: props.content })
+const { state, retry } = useWidgetData(
+  () => dashboardAPI.computeNetworkFlowTopTable({ source: explicitWidgetSource(props) }),
+  () => [props.content, props.effective_filter_context],
+  () => props.tick
 )
 
 // The widget's accent values name colors of the chart palette, so the
@@ -51,11 +42,11 @@ function isClickable(columnKey: string): boolean {
   )
 }
 
-const displayColumns = computed<RankedTableColumn[]>(() =>
-  (data.value?.columns ?? []).map((column) =>
+function displayColumns(columns: RankedTableColumn[]): RankedTableColumn[] {
+  return columns.map((column) =>
     isClickable(column.key) ? { ...column, clickable: true } : column
   )
-)
+}
 
 function onCellClick(column: RankedTableColumn, row: RankedTableRow): void {
   const value = String(row[column.key] ?? '')
@@ -72,37 +63,30 @@ function onCellClick(column: RankedTableColumn, row: RankedTableRow): void {
 </script>
 
 <template>
-  <DashboardContentContainer
+  <WidgetFigureFrame
     :effective-title="effectiveTitle"
     :general_settings="general_settings"
-    content-overflow="hidden"
+    :state="state"
+    @retry="retry"
   >
-    <div class="db-content-network-flow-top-table__wrapper">
-      <div v-if="error" class="db-content-network-flow-top-table__error">
-        <CmkAlert :variant="error.variant" :text="untranslated(error.message)" />
+    <template #default="{ value }">
+      <div class="db-content-network-flow-top-table__wrapper">
+        <CmkRankedTable
+          :columns="displayColumns(value.columns)"
+          :rows="value.rows"
+          :bar-color="barColor"
+          @cell-click="onCellClick"
+        />
       </div>
-      <CmkLoading v-else-if="data === undefined" />
-      <CmkRankedTable
-        v-else
-        :columns="displayColumns"
-        :rows="data.rows"
-        :bar-color="barColor"
-        @cell-click="onCellClick"
-      />
-    </div>
-  </DashboardContentContainer>
+    </template>
+  </WidgetFigureFrame>
 </template>
 
 <style scoped>
 .db-content-network-flow-top-table__wrapper {
   display: flex;
-  flex: 1;
-  min-height: 0;
+  box-sizing: border-box;
+  height: 100%;
   padding: var(--spacing);
-}
-
-.db-content-network-flow-top-table__error {
-  margin: auto;
-  max-width: 90%;
 }
 </style>

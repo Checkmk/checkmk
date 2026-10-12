@@ -15,6 +15,7 @@ from cmk.testlib.aws_v2.fake_sts import (
     DENIED_ACCOUNT,
     FakeSts,
     NOT_ENABLED_REGION,
+    SCP_DENIED_ACCOUNT,
     SignedRequest,
     temporary_key_id,
 )
@@ -202,4 +203,17 @@ def test_region_not_enabled_is_not_queried(
 
     assert NOT_ENABLED_REGION not in {
         request.region for request in fake_sts.service_requests if request.service == "sns"
+    }
+
+
+def test_deny_of_a_service_control_policy_is_info_not_error(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    rows = _agent_info(
+        fake_sts, monkeypatch, capsys, [*LOGIN_ARGS, *_account_args([SCP_DENIED_ACCOUNT])]
+    )
+
+    assert {(row["status"], row.get("region")) for row in rows} == {
+        ("ok", None),
+        ("info", "eu-central-1"),
     }

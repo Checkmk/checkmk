@@ -11,6 +11,7 @@ GetCallerIdentity answers with the account of the key: the hub account for any s
 key. Roles in DENIED_ACCOUNT cannot be assumed.
 
 DescribeRegions names NOT_ENABLED_REGION as an opt-in region the account has not enabled.
+Every other call of SCP_DENIED_ACCOUNT is denied by a service control policy.
 
 Tests that also set AWS_ENDPOINT_URL send every other service here, too. The fake
 records who signed such a request and for which region, then answers with an error.
@@ -30,6 +31,7 @@ HUB_ACCOUNT = "111111111111"
 ROLE_ACCOUNT = "222222222222"
 ROLE = "arn:aws:iam::222222222222:role/CheckmkMonitoring"
 DENIED_ACCOUNT = "999999999999"
+SCP_DENIED_ACCOUNT = "555555555555"
 NOT_ENABLED_REGION = "me-central-1"
 
 _ACCESS_DENIED_RESPONSE = """\
@@ -88,6 +90,18 @@ _DESCRIBE_REGIONS_RESPONSE = f"""\
     <item><regionName>{NOT_ENABLED_REGION}</regionName><optInStatus>not-opted-in</optInStatus></item>
   </regionInfo>
 </DescribeRegionsResponse>
+"""
+
+
+_SCP_DENIED_RESPONSE = """\
+<ErrorResponse>
+  <Error>
+    <Type>Sender</Type>
+    <Code>AccessDenied</Code>
+    <Message>Not authorized, with an explicit deny in a service control policy</Message>
+  </Error>
+  <RequestId>6</RequestId>
+</ErrorResponse>
 """
 
 
@@ -162,7 +176,9 @@ def _handler(sts: FakeSts) -> type[BaseHTTPRequestHandler]:
                     request = _signed_request(self.headers["Authorization"])
                     sts.service_requests.append(request)
                     sts.calls.append(request)
-                    if params.get("Action") == "DescribeRegions":
+                    if request.key_id == temporary_key_id(SCP_DENIED_ACCOUNT):
+                        self._answer(403, _SCP_DENIED_RESPONSE)
+                    elif params.get("Action") == "DescribeRegions":
                         self._answer(200, _DESCRIBE_REGIONS_RESPONSE)
                     else:
                         self._answer(400, _SERVICE_ERROR_RESPONSE)

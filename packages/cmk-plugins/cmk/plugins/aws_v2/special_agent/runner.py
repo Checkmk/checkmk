@@ -191,6 +191,13 @@ def datetime_serializer(obj):
 #     '-- ElastiCache
 
 
+def denied_by_scp(error: Exception) -> bool:
+    """Whether AWS refused the call because of a service control policy of the organization."""
+    return isinstance(error, botocore.exceptions.ClientError) and (
+        "service control policy" in error.response.get("Error", {}).get("Message", "")
+    )
+
+
 class AWSSections(abc.ABC):
     def __init__(
         self,
@@ -212,6 +219,9 @@ class AWSSections(abc.ABC):
         self._sections: list[AWSSection] = []
         self.config = config
         self.account_id = account_id
+        # The sections that a service control policy kept from running. They are no error:
+        # the organization chose to deny them.
+        self.denied_by_scp: list[str] = []
 
     def init_sections(
         self,
@@ -283,7 +293,10 @@ class AWSSections(abc.ABC):
                 )
                 if self._debug:
                     raise
-                exceptions.append(e)
+                if denied_by_scp(e):
+                    self.denied_by_scp.append(section.name)
+                else:
+                    exceptions.append(e)
             else:
                 results.setdefault(
                     (section.name, section_result.cache_timestamp, section.cache_interval),

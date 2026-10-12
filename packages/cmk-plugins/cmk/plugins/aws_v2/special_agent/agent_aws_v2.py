@@ -703,6 +703,12 @@ def _run_account(
                 )
                 sections.init_sections(aws_services, region, account_config, s3_limits_distributor)
                 sections.run(use_cache=use_cache)
+                notes += [
+                    AgentInfoRow(
+                        "info", account.id, f"A service control policy denies {name}", region
+                    )
+                    for name in sections.denied_by_scp
+                ]
             except AwsAccessError:
                 raise
             except AssertionError:

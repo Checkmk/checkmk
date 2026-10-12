@@ -4743,9 +4743,9 @@ pyprof2calltree==1.4.5 \
     # via
     #   -c requirements.txt
     #   -r packages/cmk-wsgi/requirements.in
-pysaml2==7.5.0 \
-    --hash=sha256:bc6627cc344476a83c757f440a73fda1369f13b6fda1b4e16bca63ffbabb5318 \
-    --hash=sha256:f36871d4e5ee857c6b85532e942550d2cf90ea4ee943d75eb681044bbc4f54f7
+pysaml2==7.5.5 \
+    --hash=sha256:bd1c3f3667807de61d70d8e5cf32618719d9dc1b91a6d16a291ef7a1eaa52fff \
+    --hash=sha256:c64cfd6c0348c53da1768538733c55ec15b23d1cc0e942564ea546515b45a199
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -5053,12 +5053,6 @@ pytokens==0.4.1 \
     # via
     #   -c requirements.txt
     #   black
-pytz==2026.3.post1 \
-    --hash=sha256:2211d3fcf9a797d3405cac96ac7f61d80e6a644f72a3309607282fe8a2010c5d \
-    --hash=sha256:dd95840dd199baea12d9cc096a1d452caa6596a1c1e4b5f3dbd1541855d5e815
-    # via
-    #   -c requirements.txt
-    #   pysaml2
 pyyaml==6.0.3 \
     --hash=sha256:00c4bdeba853cc34e7dd471f16b4114f4162dc03e6b7afcc2128711f0eca823c \
     --hash=sha256:0150219816b6a1fa26fb4699fb7daa9caf09eb1999f3b70fb6e786805e80375a \

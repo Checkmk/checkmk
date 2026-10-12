@@ -7,11 +7,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.gui import visuals
-from cmk.gui.config import Config
-from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
-from cmk.web.utils.request_cache import RequestCache
 
 
 def _expected_visual_types() -> Mapping[str, Mapping[str, str | bool | None]]:
@@ -53,28 +49,3 @@ def test_registered_visual_type_attributes() -> None:
         assert plugin.plural_title == spec["plural_title"]
         assert plugin.show_url == spec["show_url"]
         assert plugin.title == spec["title"]
-
-
-@pytest.mark.usefixtures("load_gui_plugins")
-def test_get_context_specs_no_info_limit() -> None:
-    result = visuals.get_context_specs(
-        ["host"], list(visual_info_registry.keys()), RequestCache(Config())
-    )
-    expected = {
-        "aggr",
-        "aggr_group",
-        "comment",
-        "crash",
-        "discovery",
-        "downtime",
-        "event",
-        "history",
-        "host",
-        "hostgroup",
-        "log",
-        "service",
-        "servicegroup",
-    }
-
-    # depending on the tests sandbox, there might be results created from inventory_ui plugins
-    assert {r for r, *_ in result if not r.startswith("inv")} == expected

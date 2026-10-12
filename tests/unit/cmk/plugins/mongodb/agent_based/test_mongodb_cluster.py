@@ -72,7 +72,7 @@ SECTION = parse_mongodb_cluster([[json.dumps(_RAW_SECTION)]])
 
 
 def _notice_lines(results: Iterable[object]) -> list[str]:
-    (notice,) = [r for r in results if isinstance(r, Result) and not r.summary]
+    (notice,) = (r for r in results if isinstance(r, Result) and not r.summary)
     return notice.details.splitlines()
 
 

@@ -130,11 +130,11 @@ def test_details_of_sharded_collection_show_distribution_and_unknown_values() ->
         }
     )
 
-    (details,) = [
+    (details,) = (
         r
         for r in check_mongodb_collections("shop.orders", {}, section)
         if isinstance(r, Result) and not r.summary
-    ]
+    )
 
     assert details.details.splitlines() == [
         "Collection",

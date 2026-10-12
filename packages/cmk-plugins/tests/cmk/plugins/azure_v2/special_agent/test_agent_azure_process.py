@@ -332,12 +332,12 @@ def _get_batch_answer(**values: float | None) -> Sequence[Mapping[str, object]]:
     [
         pytest.param(
             [[{"name": {"value": "m"}}], _get_batch_answer(live=1.0, silent=None)],
-            ["live", "no_region"],
+            ["live"],
             id="no host for a resource without metric values",
         ),
         pytest.param(
             [[{"name": {"value": "m"}}], _get_batch_answer(live=0.0, silent=None)],
-            ["live", "no_region"],
+            ["live"],
             id="a zero is a metric value",
         ),
         pytest.param(
@@ -346,28 +346,28 @@ def _get_batch_answer(**values: float | None) -> Sequence[Mapping[str, object]]:
                 _get_batch_answer(live=None, silent=None),
                 _get_batch_answer(live=1.0, silent=None),
             ],
-            ["live", "no_region"],
+            ["live"],
             id="values after the first 20 metric names count",
         ),
         pytest.param(
             [[{"name": {"value": "m"}}], _get_batch_answer(live=1.0)],
-            ["live", "silent", "no_region"],
-            id="host for a resource left out of the answer",
+            ["live"],
+            id="no host for a resource left out of the answer",
         ),
         pytest.param(
             [[]],
-            ["live", "silent", "no_region"],
-            id="hosts for all resources without metric names",
+            [],
+            id="no hosts without metric names",
         ),
         pytest.param(
             [ApiError("denied")],
-            ["live", "silent", "no_region"],
-            id="hosts for all resources when the definitions call fails",
+            [],
+            id="no hosts when the definitions call fails",
         ),
         pytest.param(
             [[{"name": {"value": "m"}}], ApiError("denied")],
-            ["live", "silent", "no_region"],
-            id="hosts for all resources when the getBatch call fails",
+            [],
+            id="no hosts when the getBatch call fails",
         ),
     ],
 )
@@ -400,6 +400,7 @@ async def test_filter_otel_resources_reporting_metrics(
 
     assert [resource.name for resource in kept] == expected_names
     assert len(issues) == len(resources) - len(kept)
+    assert "no_region (t): it has no region" in str(issues.dumpinfo())
 
 
 def _otel_resources(*names: str) -> Sequence[AzureResource]:
@@ -420,31 +421,39 @@ def _otel_resources(*names: str) -> Sequence[AzureResource]:
 
 
 @pytest.mark.parametrize(
-    "first_answers, hours_ago, resources, answers, expected_names",
+    "first_answers, minutes_ago, resources, answers, expected_names",
     [
         pytest.param(
-            [[{"name": {"value": "m"}}], _get_batch_answer(silent=None)],
-            23,
-            _otel_resources("silent"),
             [[{"name": {"value": "m"}}], _get_batch_answer(silent=1.0)],
+            23 * 60,
+            _otel_resources("silent"),
             [],
-            id="an answer of the last day is used again",
-        ),
-        pytest.param(
-            [[{"name": {"value": "m"}}], []],
-            23,
-            _otel_resources("silent"),
-            [[{"name": {"value": "m"}}], _get_batch_answer(silent=None)],
             ["silent"],
-            id="an unknown answer of the last day is used again",
+            id="values of the last day are used again",
         ),
         pytest.param(
-            [[{"name": {"value": "m"}}], _get_batch_answer(silent=None)],
-            25,
-            _otel_resources("silent"),
             [[{"name": {"value": "m"}}], _get_batch_answer(silent=1.0)],
+            25 * 60,
+            _otel_resources("silent"),
+            [[{"name": {"value": "m"}}], _get_batch_answer(silent=None)],
+            [],
+            id="values older than a day are asked again",
+        ),
+        pytest.param(
+            [[{"name": {"value": "m"}}], _get_batch_answer(silent=None)],
+            4,
+            _otel_resources("silent"),
+            [],
+            [],
+            id="no values of the last 5 minutes are used again",
+        ),
+        pytest.param(
+            [[{"name": {"value": "m"}}], _get_batch_answer(silent=None)],
+            6,
+            _otel_resources("silent"),
+            [_get_batch_answer(silent=1.0)],
             ["silent"],
-            id="an answer older than a day is asked again",
+            id="no values older than 5 minutes are asked again with the cached metric names",
         ),
         pytest.param(
             [ApiError("denied")],
@@ -452,35 +461,36 @@ def _otel_resources(*names: str) -> Sequence[AzureResource]:
             _otel_resources("silent"),
             [[{"name": {"value": "m"}}], _get_batch_answer(silent=1.0)],
             ["silent"],
-            id="no answer is asked again",
+            id="the metric names are asked again after a failure",
         ),
         pytest.param(
-            [[{"name": {"value": "m"}}], _get_batch_answer(silent=None)],
-            1,
+            [[{"name": {"value": "m"}}], _get_batch_answer(silent=1.0)],
+            60,
             _otel_resources("silent", "new"),
-            [[{"name": {"value": "m"}}], _get_batch_answer(silent=None, new=1.0)],
-            ["new"],
-            id="a new resource gets its group asked again",
+            [_get_batch_answer(new=1.0)],
+            ["silent", "new"],
+            id="only a new resource is asked",
         ),
     ],
 )
 @pytest.mark.usefixtures("storage_path")
 @pytest.mark.asyncio
-async def test_filter_otel_resources_reporting_metrics_keeps_answers_for_a_day(
+async def test_filter_otel_resources_reporting_metrics_keeps_answers(
     first_answers: Sequence[object],
-    hours_ago: int,
+    minutes_ago: int,
     resources: Sequence[AzureResource],
     answers: Sequence[object],
     expected_names: Sequence[str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     now = datetime.datetime.now(datetime.UTC)
+    first_run = now - datetime.timedelta(minutes=minutes_ago)
     first_run_client = AsyncMock(spec=BaseAsyncApiClient)
     first_run_client.request_async.side_effect = first_answers
     with monkeypatch.context() as patch:
-        patch.setattr(time, "time", lambda: now.timestamp() - hours_ago * 3600)
+        patch.setattr(time, "time", first_run.timestamp)
         await filter_otel_resources_reporting_metrics(
-            first_run_client, _otel_resources("silent"), "sub", "azure_host", now, debug=False
+            first_run_client, _otel_resources("silent"), "sub", "azure_host", first_run, debug=False
         )
     api_client = AsyncMock(spec=BaseAsyncApiClient)
     api_client.request_async.side_effect = answers
@@ -490,6 +500,7 @@ async def test_filter_otel_resources_reporting_metrics_keeps_answers_for_a_day(
     )
 
     assert [resource.name for resource in kept] == expected_names
+    assert api_client.request_async.await_count == len(answers)
 
 
 @pytest.mark.parametrize(

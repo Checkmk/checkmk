@@ -68,7 +68,12 @@ from cmk.plugins.azure_v2.special_agent.azure_metrics import (
     Intervals,
     OPTIONAL_METRICS,
 )
-from cmk.server_side_programs.v1 import configure_logging, report_agent_crashes, vcrtrace
+from cmk.server_side_programs.v1 import (
+    configure_logging,
+    report_agent_crashes,
+    Storage,
+    vcrtrace,
+)
 
 type ResourceId = str
 
@@ -2174,6 +2179,7 @@ def get_otel_identity_labels_section(resource: AzureResource) -> _Section:
 
 _METRICS_REPORT_WINDOW = datetime.timedelta(days=1)
 _METRICS_REPORT_CACHE_INTERVAL = 60 * 60 * 24
+_NO_METRICS_REPORT_CACHE_INTERVAL = 5 * 60
 _METRIC_NAMES_PER_QUERY = 20
 
 
@@ -2203,6 +2209,7 @@ async def _get_resources_reporting_metrics(
     api_client: BaseAsyncApiClient,
     region: str,
     resource_type: str,
+    metric_names: Sequence[str],
     resource_ids: Sequence[str],
     now: datetime.datetime,
 ) -> Mapping[str, bool]:
@@ -2219,10 +2226,6 @@ async def _get_resources_reporting_metrics(
       - False: Azure answered for the resource, but sent no values
       - no key: Azure did not answer for the resource, so it is unknown
     """
-    metric_names = await _get_metric_names(api_client, resource_ids[0])
-    if not metric_names:
-        raise ApiErrorMissingData(f"No metric definitions for {resource_type}")
-
     params = {
         "starttime": (now - _METRICS_REPORT_WINDOW).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "endtime": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -2248,41 +2251,26 @@ async def _get_resources_reporting_metrics(
     return reported
 
 
-class MetricsReportCache(AzureAsyncCache):
-    """Answers of one subscription, region and resource type, kept for a day
+class MetricNamesCache(AzureAsyncCache):
+    """Metric names of one subscription and resource type, kept for a day
 
-    One file per group, "<subscription[:6]>_<region>_<resource_type>_reported"
-    with "/" in the type replaced by "_", for example
-    "4db893_westeurope_Microsoft.Network_publicIPAddresses_reported":
-
-        {"/subscriptions/.../pip-a": true, "/subscriptions/.../pip-b": false,
-         "/subscriptions/.../pip-c": null}
-
-    - true: Azure sent at least one value (0 too) in the last 24 hours, the host is created
-    - false: Azure answered, but all values are empty, no host is created
-    - null: Azure did not answer for the resource (for example, a getBatch query
-      failed), the host is created
-
-    The stored answers are used when they are younger than a day and contain
-    all the requested resources. Otherwise the whole group is asked again and
-    the file is written again. Failed queries are not stored.
+    One file per type, "<subscription[:6]>_<resource_type>_metric_names" with "/" in
+    the type replaced by "_". The names are taken from one resource of the type.
     """
 
     def __init__(
         self,
         *,
         subscription: str,
-        region: str,
         resource_type: str,
         cache_id: str,
         debug: bool = False,
     ) -> None:
-        self._region = region
         self._resource_type = resource_type
         super().__init__(
             host_name=cache_id,
             agent=f"agent_{AGENT}",
-            key=f"{MetricCache.get_cache_key_prefix(resource_type, region, subscription)}_reported",
+            key=f"{subscription[:6]}_{resource_type.replace('/', '_')}_metric_names",
             debug=debug,
         )
 
@@ -2292,29 +2280,85 @@ class MetricsReportCache(AzureAsyncCache):
         return _METRICS_REPORT_CACHE_INTERVAL
 
     @override
-    def get_validity_from_args(self, *args: Any) -> bool:
-        # A resource that is not in the stored answers (a new one) needs the group asked again.
-        resource_ids: Sequence[str] = args[1]
-        if (stored := self._read_storage()) is None:
-            return False
-        try:
-            answered = json.loads(stored[1]).keys()
-        except ValueError:
-            return False
-        return {resource_id.lower() for resource_id in resource_ids} <= answered
-
-    @override
-    async def get_live_data(self, *args: Any) -> Mapping[str, bool | None]:
+    async def get_live_data(self, *args: Any) -> Sequence[str]:
         api_client: BaseAsyncApiClient = args[0]
-        resource_ids: Sequence[str] = args[1]
-        now: datetime.datetime = args[2]
-        reported = await _get_resources_reporting_metrics(
-            api_client, self._region, self._resource_type, resource_ids, now
+        resource_id: str = args[1]
+        if not (metric_names := await _get_metric_names(api_client, resource_id)):
+            raise ApiErrorMissingData(f"No metric definitions for {self._resource_type}")
+        return metric_names
+
+
+class MetricsReportCache:
+    """Answers of one subscription, region and resource type
+
+    One file per group, "<subscription[:6]>_<region>_<resource_type>_reported"
+    with "/" in the type replaced by "_", for example
+    "4db893_westeurope_Microsoft.Network_publicIPAddresses_reported":
+
+        {"/subscriptions/.../pip-a": [true, 1791458622.4],
+         "/subscriptions/.../pip-b": [false, 1791458622.4]}
+
+    The values are: Azure sent metric values for the resource, and the time of the answer.
+    An answer with values is kept for a day. An answer without values is kept for a short
+    time only, so that a resource gets its host soon after Azure has values for it.
+    Failed questions are not kept.
+    """
+
+    def __init__(
+        self, *, subscription: str, region: str, resource_type: str, cache_id: str, debug: bool
+    ) -> None:
+        self._region = region
+        self._resource_type = resource_type
+        self._debug = debug
+        self._metric_names = MetricNamesCache(
+            subscription=subscription, resource_type=resource_type, cache_id=cache_id, debug=debug
         )
-        # Unknown answers are kept too, so that the group is not asked again on each run.
-        return {
-            resource_id.lower(): reported.get(resource_id.lower()) for resource_id in resource_ids
-        }
+        self._storage = Storage(cache_id, f"agent_{AGENT}")
+        self._key = (
+            f"{MetricCache.get_cache_key_prefix(resource_type, region, subscription)}_reported"
+        )
+
+    def _read(self, now: datetime.datetime) -> dict[str, tuple[bool, float]]:
+        try:
+            answers = {}
+            for resource_id, (has_values, answered_at) in json.loads(
+                self._storage.read(self._key, "{}")
+            ).items():
+                max_age = (
+                    _METRICS_REPORT_CACHE_INTERVAL
+                    if has_values
+                    else _NO_METRICS_REPORT_CACHE_INTERVAL
+                )
+                if 0 <= now.timestamp() - answered_at < max_age:
+                    answers[resource_id] = (has_values, answered_at)
+            return answers
+        except AttributeError, TypeError, ValueError:
+            # A file in an old or a wrong format: all resources are asked again.
+            return {}
+
+    async def get_data(
+        self, api_client: BaseAsyncApiClient, resource_ids: Sequence[str], now: datetime.datetime
+    ) -> Mapping[str, bool]:
+        """Return the known answers. Azure is asked only for the resources without an answer."""
+        answers = self._read(now)
+        if unanswered := [r for r in resource_ids if r.lower() not in answers]:
+            try:
+                metric_names = await self._metric_names.get_data(api_client, unanswered[0])
+                reported = await _get_resources_reporting_metrics(
+                    api_client, self._region, self._resource_type, metric_names, unanswered, now
+                )
+            except Exception as exc:
+                if self._debug:
+                    raise
+                LOGGER.warning(
+                    "Cannot tell if %(type)s resources in %(region)s report metrics: %(error)s",
+                    {"type": self._resource_type, "region": self._region, "error": exc},
+                )
+            else:
+                for resource_id, has_values in reported.items():
+                    answers[resource_id] = (has_values, now.timestamp())
+                self._storage.write(self._key, json.dumps(answers))
+        return {resource_id: has_values for resource_id, (has_values, _) in answers.items()}
 
 
 async def filter_otel_resources_reporting_metrics(
@@ -2325,19 +2369,16 @@ async def filter_otel_resources_reporting_metrics(
     now: datetime.datetime,
     debug: bool,
 ) -> tuple[list[AzureResource], IssueCollector]:
-    """Drop the resources that reported no metric values
+    """Drop the resources that reported no metric values in the last 24 hours
 
-    A resource keeps its host when the question cannot be answered.
-    The answers are kept for a day.
+    A resource gets no host when the question cannot be answered.
     """
-    issues = IssueCollector()
     to_ask: defaultdict[tuple[str, str], list[str]] = defaultdict(list)
     for resource in resources:
         if region := resource.info.get("location"):
             to_ask[(resource.info["type"], region)].append(resource.info["id"])
 
-    groups = list(to_ask.items())
-    results = await asyncio.gather(
+    reports = await asyncio.gather(
         *(
             MetricsReportCache(
                 subscription=subscription_id,
@@ -2346,33 +2387,28 @@ async def filter_otel_resources_reporting_metrics(
                 cache_id=cache_id,
                 debug=debug,
             ).get_data(api_client, ids, now)
-            for (resource_type, region), ids in groups
-        ),
-        return_exceptions=True,
+            for (resource_type, region), ids in to_ask.items()
+        )
     )
-    reports: dict[str, bool | None] = {}
-    for ((resource_type, region), _ids), result in zip(groups, results, strict=True):
-        if isinstance(result, BaseException):
-            if debug:
-                raise result
-            LOGGER.warning(
-                "Cannot tell if %(type)s resources in %(region)s report metrics: %(error)s",
-                {"type": resource_type, "region": region, "error": result},
-            )
-            continue
-        reports.update(result)
-
+    answers = {r: has_values for report in reports for r, has_values in report.items()}
+    issues = IssueCollector()
     kept = []
     for resource in resources:
-        if reports.get(resource.info["id"].lower()) is False:
-            issues.add(
-                "info",
-                "OpenTelemetry resources",
-                f"No host for {resource.name} ({resource.info['type']}): "
-                "it reported no metric values in the last 24 hours",
-            )
-        else:
+        resource_id = resource.info["id"].lower()
+        if answers.get(resource_id):
             kept.append(resource)
+            continue
+        if resource_id in answers:
+            reason = "Azure has no metric values for it in the last 24 hours"
+        elif not resource.info.get("location"):
+            reason = "it has no region, so Azure cannot be asked for its metric values"
+        else:
+            reason = "cannot tell if Azure has metric values for it"
+        issues.add(
+            "info",
+            "OpenTelemetry resources",
+            f"No host for {resource.name} ({resource.info['type']}): {reason}",
+        )
     return kept, issues
 
 

@@ -1488,6 +1488,42 @@ describe('MonitoringService', () => {
       service.stopPolling()
     })
 
+    it('shows a quick filter as active when the seed matches its conditions', () => {
+      const filter: FilterNode = {
+        type: 'and',
+        children: [
+          { type: 'condition', field: 'acknowledged', op: 'eq', value: false },
+          { type: 'condition', field: 'in_downtime', op: 'eq', value: false }
+        ]
+      }
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        quickFilters: [{ label: 'Unhandled', filter }],
+        initialFilterState: { filter: structuredClone(filter) }
+      })
+
+      expect(service.filters.quickFilters[0]!.isActive.value).toBe(true)
+
+      service.stopPolling()
+    })
+
+    it('clearAllFilters empties a seeded filter and search rather than returning to them', async () => {
+      const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0, 0))
+      const service = new TestService(fetchBatch, {
+        initialFilterState: {
+          filter: { type: 'condition', field: 'name', op: 'contains', value: 'web' },
+          search: 'web01'
+        }
+      })
+      await vi.advanceTimersByTimeAsync(0)
+
+      service.clearAllFilters()
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(service.filterUrlState.value).toEqual({ filter: undefined, search: '' })
+
+      service.stopPolling()
+    })
+
     it('leaves filter and search at their defaults when no initial filter state is given', () => {
       const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)))
 

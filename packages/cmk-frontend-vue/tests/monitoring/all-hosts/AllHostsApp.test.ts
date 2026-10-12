@@ -138,6 +138,55 @@ test('extends the default sort by the State column when it is shift-clicked', as
   expect(postSpy.mock.lastCall![1].body.sort).toEqual(['name:asc', 'state:desc'])
 })
 
+const UNHANDLED_PROBLEMS_FILTER = {
+  type: 'and',
+  children: [
+    { type: 'condition', field: 'state', op: 'one_of', value: ['DOWN', 'UNREACHABLE'] },
+    { type: 'condition', field: 'acknowledged', op: 'eq', value: false },
+    { type: 'condition', field: 'in_downtime', op: 'eq', value: false }
+  ]
+}
+
+function openWithFilter(filter: object): void {
+  window.history.replaceState(
+    null,
+    '',
+    `/monitor_all_hosts.py?filter=${encodeURIComponent(JSON.stringify(filter))}`
+  )
+}
+
+test('asks for the hosts a link arrived filtered to with its one and only first request', async () => {
+  openWithFilter(UNHANDLED_PROBLEMS_FILTER)
+  mockHosts([makeHost()])
+  renderApp('community')
+
+  await screen.findByText('Total rows: 1')
+
+  expect(postSpy).toHaveBeenCalledTimes(1)
+  expect(postSpy.mock.lastCall![1].body.filter).toEqual(UNHANDLED_PROBLEMS_FILTER)
+})
+
+test('shows the unhandled-problems chip as active when a link arrived with its filter', async () => {
+  openWithFilter(UNHANDLED_PROBLEMS_FILTER)
+  mockHosts([makeHost()])
+  renderApp('community')
+
+  expect(await screen.findByRole('button', { name: 'Unhandled host problems' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
+})
+
+test('resetting all filters drops the filter a link arrived with', async () => {
+  openWithFilter(UNHANDLED_PROBLEMS_FILTER)
+  mockHosts([makeHost()])
+  renderApp('community')
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Reset search and filters' }))
+
+  expect(postSpy.mock.lastCall![1].body.filter).toBeUndefined()
+})
+
 test('never asks for the customer, the API deriving it from the site', async () => {
   mockHosts([makeHost({ customer: 'Customer A' })])
   renderApp('ultimatemt')

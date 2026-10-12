@@ -368,13 +368,8 @@ export abstract class MonitoringService<T> extends ServiceBase {
       this.appliedSearchQuery.value = initialFilterState.search
     }
 
-    this.filters = new FilterStore(quickFilters, this.searchQuery)
-    // Seed before the filterNode watch below exists, so this never fires a spurious
-    // updateFilters() fetch - the scheduled initial fetch already carries this filter.
-    if (initialFilterState?.filter !== undefined) {
-      this.filters.setQueryNode(initialFilterState.filter)
-      this.filterState.value = initialFilterState.filter
-    }
+    this.filters = new FilterStore(quickFilters, this.searchQuery, initialFilterState?.filter)
+    this.filterState.value = initialFilterState?.filter
     this.filterUrlState = computed(() => ({
       filter: this.filterState.value,
       search: this.appliedSearchQuery.value

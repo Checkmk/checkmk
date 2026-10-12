@@ -19,7 +19,12 @@ import { useGraphInteraction } from '../../composables/useGraphInteraction'
 import { hasPlottableData, useGraphNotice, useNoDataNotice } from '../../composables/useGraphNotice'
 import { useGraphVisibility } from '../../composables/useGraphVisibility'
 import type { RequestedTimeRange, TimeRangeCommitKind } from '../../types.ts'
-import { binnedTimeAxis, committedTimeRange, continuousTimeAxis } from '../../utils/timeRange'
+import {
+  binnedTimeAxis,
+  committedTimeRange,
+  continuousTimeAxis,
+  sameRequestedTimeRange
+} from '../../utils/timeRange'
 import GraphBurgerMenu from '../GraphBurgerMenu.vue'
 import GraphTimestamp from '../GraphTimestamp.vue'
 import TimeSeriesGraph, { type GraphOptions, type Size, type TimeRange } from '../TimeSeriesGraph'
@@ -47,6 +52,10 @@ const props = withDefaults(defineProps<GraphFigureProps>(), {
   showMargin: false
 })
 
+const emit = defineEmits<{
+  commitTimeRange: [range: RequestedTimeRange]
+}>()
+
 const graphAreaDiv = ref<HTMLDivElement | null>(null)
 // The renderer draws into this outer figure size and insets the axis/label margins itself, so the
 // figure fills the whole measured graph area; subtracting the margins here would double-count them.
@@ -67,9 +76,13 @@ const plotWidth = computed(() =>
   Math.max(1, Math.round(figureSize.value.width - CANVAS_MARGIN_HORIZONTAL))
 )
 
-// The committed fetch window: the configured range resolved to epochs, or the fixed
-// window a time-zoom or pan requested.
-const requestedTimeRange = ref<RequestedTimeRange>(computeEpochTimeRange(props.timerange))
+const followsHostRange = computed(() => props.requestedTimeRange !== undefined)
+const baseTimeRange = (): RequestedTimeRange =>
+  props.requestedTimeRange === undefined
+    ? computeEpochTimeRange(props.timerange)
+    : { start: props.requestedTimeRange.start, end: props.requestedTimeRange.end }
+
+const requestedTimeRange = ref<RequestedTimeRange>(baseTimeRange())
 const zoomSessionActive = ref(false)
 
 const sourceKey = computed(() =>
@@ -123,20 +136,25 @@ const displayedNotice = computed(
 )
 
 const refresh = () => {
-  requestedTimeRange.value = computeEpochTimeRange(props.timerange)
+  requestedTimeRange.value = baseTimeRange()
 }
 const timer = useTimer(refresh, REFRESH_INTERVAL_MS)
+function startTimer(): void {
+  if (!followsHostRange.value) {
+    timer.start()
+  }
+}
 
 // `start` alone would leave the backoff `reportFailure` scheduled, so stop first: the retry then
 // resumes the normal cadence rather than the penalised one.
 function onRetry(): void {
   reload()
   timer.stop()
-  timer.start()
+  startTimer()
 }
 
 watch(isLoading, (loading) => {
-  if (loading || zoomSessionActive.value) {
+  if (loading || zoomSessionActive.value || followsHostRange.value) {
     return
   }
   if (error.value === null) {
@@ -152,6 +170,7 @@ const onCommittedTimeRange = (range: RequestedTimeRange, kind: TimeRangeCommitKi
   zoomSessionActive.value = true
   requestedTimeRange.value = committedTimeRange(requestedTimeRange.value, range, kind)
   timer.stop()
+  emit('commitTimeRange', requestedTimeRange.value)
 }
 
 const baselineTimeRange = computed<TimeRange | undefined>(() => {
@@ -197,8 +216,23 @@ watch(
     zoomSessionActive.value = false
     abandonInspection()
     refresh()
-    timer.start()
+    startTimer()
   }
+)
+
+watch(
+  () => props.requestedTimeRange,
+  (range) => {
+    if (range === undefined || sameRequestedTimeRange(range, requestedTimeRange.value)) {
+      return
+    }
+    zoomSessionActive.value = false
+    abandonInspection()
+    refresh()
+  },
+  // Synchronous, so the new window is in place before useGraphData reacts to the same tick;
+  // a deferred copy would fetch the old window first and then the new one.
+  { flush: 'sync' }
 )
 
 const {
@@ -218,8 +252,13 @@ const onResetIntent = () => {
     return
   }
   zoomSessionActive.value = false
+  // Following the host, onReset has already committed the reset window, while the prop still
+  // holds the zoomed one until the host echoes it back: refreshing would refetch that first.
+  if (followsHostRange.value) {
+    return
+  }
   refresh()
-  timer.start()
+  startTimer()
 }
 
 // The host's surroundings render the title (e.g. the dashboard widget frame); the graph
@@ -241,7 +280,7 @@ const graphOptions = computed((): GraphOptions => {
 const hasHeader = computed(() => props.showTimestamp || burgerMenuVisible.value)
 
 onMounted(() => {
-  timer.start()
+  startTimer()
 })
 
 onBeforeUnmount(() => {

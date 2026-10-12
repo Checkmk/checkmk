@@ -55,31 +55,46 @@ def test_registered_config_domains() -> None:
     assert registered == sorted(expected_config_domains)
 
 
-def test_password_changes_reach_core_and_ai_control_plane() -> None:
-    edition = cmk_version.edition(paths.omd_root)
-    if edition not in {
+def _password_changes_missing(domain: str, *changes: str) -> list[str]:
+    affected_domains = {
+        "add": password_change_effect_registry.affected_domains_add,
+        "edit": password_change_effect_registry.affected_domains_edit,
+        "delete": password_change_effect_registry.affected_domains_delete,
+    }
+    return [
+        change for change in changes if domain not in [d.ident() for d in affected_domains[change]]
+    ]
+
+
+def test_password_changes_reach_core() -> None:
+    missing = _password_changes_missing("check_mk", "add", "edit", "delete")
+
+    assert missing == []
+
+
+def test_password_changes_reach_ai_control_plane() -> None:
+    if cmk_version.edition(paths.omd_root) not in {
         cmk_version.Edition.PRO,
         cmk_version.Edition.ULTIMATE,
         cmk_version.Edition.ULTIMATEMT,
     }:
-        pytest.skip("only Pro, Ultimate and Ultimate MT register password change effects")
-    otel = (
-        ["otel_collector"]
-        if edition in {cmk_version.Edition.ULTIMATE, cmk_version.Edition.ULTIMATEMT}
-        else []
-    )
+        pytest.skip("Community and Cloud have no AI control plane effect")
 
-    affected = {
-        "add": [d.ident() for d in password_change_effect_registry.affected_domains_add],
-        "edit": [d.ident() for d in password_change_effect_registry.affected_domains_edit],
-        "delete": [d.ident() for d in password_change_effect_registry.affected_domains_delete],
-    }
+    missing = _password_changes_missing("ai-control-plane", "add", "edit", "delete")
 
-    assert affected == {
-        "add": ["check_mk", "ai-control-plane"],
-        "edit": ["check_mk", *otel, "ai-control-plane"],
-        "delete": ["check_mk", *otel, "ai-control-plane"],
-    }
+    assert missing == []
+
+
+def test_password_edits_and_deletions_reach_otel_collector() -> None:
+    if cmk_version.edition(paths.omd_root) not in {
+        cmk_version.Edition.ULTIMATE,
+        cmk_version.Edition.ULTIMATEMT,
+    }:
+        pytest.skip("only Ultimate and Ultimate MT have an OTel collector effect")
+
+    missing = _password_changes_missing("otel_collector", "edit", "delete")
+
+    assert missing == []
 
 
 def test_registered_automation_commands() -> None:

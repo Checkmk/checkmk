@@ -9,31 +9,18 @@ from typing import Annotated, Literal, TypeIs
 
 from pydantic import Discriminator
 
-import cmk.web.utils.permission_verification as permissions
 from cmk.gui import sites, visuals
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.framework import (
-    ApiContext,
-    APIVersion,
-    EndpointBehavior,
-    EndpointDoc,
-    EndpointHandler,
-    EndpointMetadata,
-    EndpointPermissions,
-    VersionedEndpoint,
-)
+from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.type_defs import VisualContext, VisualName
 from cmk.livestatus_client import MKLivestatusNotFoundError
 from cmk.web.utils.speaklater import LazyString
 
+from ._compute_endpoint import widget_compute_endpoint
 from ._contextual_link_encoding import EffectiveLink, link_properties_for, view_link
-from ._family import DASHBOARD_FAMILY
 from ._widget_resolution import (
-    PERMISSIONS_LINK_TARGET,
-    PERMISSIONS_WIDGET_QUERY,
     resolve_widget,
     ResolvedWidget,
 )
@@ -321,17 +308,10 @@ def compute_stats(api_context: ApiContext, body: StatsRequest) -> ComputedWidget
         )
 
 
-ENDPOINT_COMPUTE_STATS = VersionedEndpoint(
-    metadata=EndpointMetadata(
-        path=domain_type_action_href(domain_type="dashboard", action="compute-stats"),
-        link_relation="cmk/compute_stats",
-        method="post",
-    ),
-    permissions=EndpointPermissions(
-        required=permissions.AllPerm([PERMISSIONS_WIDGET_QUERY, PERMISSIONS_LINK_TARGET])
-    ),
-    doc=EndpointDoc(family=DASHBOARD_FAMILY.name),
-    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
-    versions={APIVersion.INTERNAL: EndpointHandler(handler=compute_stats)},
-    allowed_tokens={"dashboard"},
+ENDPOINT_COMPUTE_STATS = widget_compute_endpoint(
+    action="compute-stats",
+    link_relation="cmk/compute_stats",
+    handler=compute_stats,
+    link_targets=True,
+    supported_editions="all",
 )

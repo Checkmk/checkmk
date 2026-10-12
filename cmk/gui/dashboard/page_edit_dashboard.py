@@ -29,6 +29,7 @@ def page_edit_dashboard(ctx: PageContext) -> None:
         ctx.config,
         create_handler=create_dashboard,
         custom_field_handler=dashboard_fields_handler,
+        custom_fields_after_context=True,
         info_handler=dashboard_info_handler,
         help_text_context=_(
             "A dashboard can have an optional context. It can for example be restricted to display "

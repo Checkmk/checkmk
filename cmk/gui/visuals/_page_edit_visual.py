@@ -74,6 +74,7 @@ def page_edit_visual(
     user_permissions: UserPermissions,
     config: Config,
     custom_field_handler=None,
+    custom_fields_after_context: bool = False,
     create_handler=None,
     info_handler=None,
     sub_pages: SubPagesSpec | None = None,
@@ -389,7 +390,7 @@ def page_edit_visual(
         )  # default to "other" (in case of empty string)
         vs_general.render_input("general", visual)
 
-        if custom_field_handler and custom_field_handler.__name__ != "dashboard_fields_handler":
+        if custom_field_handler and not custom_fields_after_context:
             custom_field_handler(visual)
 
         render_context_specs(
@@ -403,7 +404,7 @@ def page_edit_visual(
             help_text=help_text_context,
         )
 
-        if custom_field_handler and custom_field_handler.__name__ == "dashboard_fields_handler":
+        if custom_field_handler and custom_fields_after_context:
             custom_field_handler(visual)
 
         forms.end()

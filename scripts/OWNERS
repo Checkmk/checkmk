@@ -1,5 +1,7 @@
 
 
+per-file bootstrap_container.sh=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file bootstrap_container.sh=set noparent
 per-file decent-output=file:/component_owners/ci_platform/OWNERS_DEFINITION
 per-file decent-output=set noparent
 per-file fake-artifacts=file:/component_owners/ci_platform/OWNERS_DEFINITION

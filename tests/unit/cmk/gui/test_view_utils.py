@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import logging
 from typing import cast
 
 import pytest
@@ -11,7 +12,11 @@ import pytest
 from livestatus import SiteConfigurations
 
 from cmk.gui.http import request
-from cmk.gui.view_utils import determine_must_escape, format_plugin_output
+from cmk.gui.view_utils import (
+    determine_must_escape,
+    format_plugin_output,
+    replace_action_url_macros,
+)
 from cmk.web.utils.html import HTML
 
 
@@ -117,3 +122,63 @@ def test_host_row_without_service_data_uses_host_escaping_option() -> None:
     assert format_plugin_output(
         "<b>OK</b>", request=request, must_escape=False, row=row
     ) == HTML.without_escaping("<b>OK</b>")
+
+
+_ROW = {"host_name": "h1", "host_address": "127.0.0.1"}
+
+
+@pytest.mark.parametrize(
+    "url,expected",
+    [
+        pytest.param("http://wiki/$HOSTNAME$", "http://wiki/h1", id="http"),
+        pytest.param("view.py?host=$HOSTNAME_URL_ENCODED$", "view.py?host=h1", id="relative"),
+        pytest.param("ssh://$HOSTADDRESS$", "ssh://127.0.0.1", id="ssh"),
+        pytest.param("smb://share/$HOSTNAME$", "smb://share/h1", id="other_scheme"),
+        pytest.param(
+            "https://kibana/app?_a=(query:'host.name:\"$HOSTNAME$\"')",
+            "https://kibana/app?_a=(query:'host.name:\"h1\"')",
+            id="quotes_and_parentheses",
+        ),
+        pytest.param(
+            "https://grafana/d/x?var-host={$HOSTNAME$}",
+            "https://grafana/d/x?var-host={h1}",
+            id="braces",
+        ),
+        pytest.param(
+            "onclick:cmk.views.reschedule_check(this, '$HOSTNAME$', '', '', '');",
+            "onclick:cmk.views.reschedule_check(this, 'h1', '', '', '');",
+            id="builtin_onclick_icon",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("request_context", "with_user_login")
+def test_replace_action_url_macros_expands_urls(url: str, expected: str) -> None:
+    assert replace_action_url_macros(url, "host", _ROW) == expected
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        pytest.param("javascript:alert(1)", id="javascript"),
+        pytest.param(" JavaScript:alert('$HOSTNAME$')", id="javascript_mixed_case"),
+        pytest.param("java\tscript:alert(1)", id="javascript_with_tab"),
+        pytest.param("data:text/html,<script>alert(1)</script>", id="data"),
+        pytest.param("VBScript:msgbox(1)", id="vbscript"),
+    ],
+)
+@pytest.mark.usefixtures("request_context", "with_user_login")
+def test_replace_action_url_macros_neutralizes_script_urls(url: str) -> None:
+    assert replace_action_url_macros(url, "host", _ROW) == "#"
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login")
+def test_replace_action_url_macros_logs_script_url_once(caplog: pytest.LogCaptureFixture) -> None:
+    url = "javascript:logged_once('$HOSTNAME$')"
+
+    with caplog.at_level(logging.WARNING, logger="cmk.web"):
+        replace_action_url_macros(url, "host", {"host_name": "h1", "host_address": "127.0.0.1"})
+        replace_action_url_macros(url, "host", {"host_name": "h2", "host_address": "127.0.0.2"})
+
+    assert [r.message for r in caplog.records if "logged_once" in r.message] == [
+        f"Ignoring configured script URL: {url!r}"
+    ]

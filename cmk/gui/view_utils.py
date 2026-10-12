@@ -465,7 +465,27 @@ def transform_action_url(url_spec: tuple[str, str] | str) -> tuple[str, str | No
     return (url_spec, None)
 
 
+# Browsers ignore whitespace and control characters within the scheme
+_IGNORED_IN_SCHEME = dict.fromkeys(range(ord(" ") + 1))
+
+# Rejected configured URLs which were already logged, to log them only once per process
+# instead of for every row on every page load
+_reported_rejected_urls: set[str] = set()
+
+
+def _is_script_url(url: str) -> bool:
+    """URLs which run script when followed, or did so in some browsers"""
+    return (
+        url.translate(_IGNORED_IN_SCHEME).lower().startswith(("javascript:", "data:", "vbscript:"))
+    )
+
+
 def replace_action_url_macros(url: str, what: str, row: Row) -> str:
+    """Expand the macros of a configured URL
+
+    javascript:, data: and vbscript: URLs are replaced by "#". They are blocked by the Content
+    Security Policy or could run script in older browsers.
+    """
     macros = {
         "HOSTNAME": row["host_name"],
         "HOSTADDRESS": row["host_address"],
@@ -477,7 +497,7 @@ def replace_action_url_macros(url: str, what: str, row: Row) -> str:
                 "SERVICEDESC": row["service_description"],
             }
         )
-    return replace_macros_in_str(
+    expanded = replace_macros_in_str(
         url,
         {
             k_mod: v_mod
@@ -488,3 +508,9 @@ def replace_action_url_macros(url: str, what: str, row: Row) -> str:
             )
         },
     )
+    if _is_script_url(expanded):
+        if url not in _reported_rejected_urls:
+            _reported_rejected_urls.add(url)
+            logger.warning("Ignoring configured script URL: %(url)r", {"url": url})
+        return "#"
+    return expanded

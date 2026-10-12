@@ -2035,6 +2035,65 @@ class TestMonitorServiceActionMenu:
 
         assert resp.status_code == HTTPStatus.NOT_FOUND
 
+    @pytest.mark.xfail(reason="Dynamic permissions are not handled", strict=True)
+    def test_existing_service_lists_its_actions(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("services", [_ACTION_MENU_SERVICE_ROW])
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                f"Filter: host_name = {_HOSTNAME}",
+                f"Filter: service_description = {_SERVICE_DESCRIPTION}",
+            ],
+            match_type="loose",
+            sites=[_SITE_ID],
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.service_action_menu(
+                hostname=_HOSTNAME,
+                site_id=_SITE_ID,
+                service_name=_SERVICE_DESCRIPTION,
+                expect_ok=False,
+            )
+
+        assert resp.status_code == HTTPStatus.OK
+        assert resp.json["items"]
+
+    @pytest.mark.xfail(reason="Dynamic permissions are not handled", strict=True)
+    def test_normal_user_sees_the_actions_of_an_existing_service(
+        self,
+        clients: ClientRegistry,
+        with_user: tuple[UserId, str],
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        client = clients.MonitorHosts
+        client.set_credentials(*with_user)
+        mock_livestatus.add_table("services", [_ACTION_MENU_SERVICE_ROW])
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                f"Filter: host_name = {_HOSTNAME}",
+                f"Filter: service_description = {_SERVICE_DESCRIPTION}",
+            ],
+            match_type="loose",
+            sites=[_SITE_ID],
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = client.service_action_menu(
+                hostname=_HOSTNAME,
+                site_id=_SITE_ID,
+                service_name=_SERVICE_DESCRIPTION,
+                expect_ok=False,
+            )
+
+        assert resp.status_code == HTTPStatus.OK
+        assert resp.json["items"]
+
     def test_invalid_credentials(self, clients: ClientRegistry) -> None:
         client = clients.MonitorHosts
         client.set_credentials("foouser", "barpassword")
@@ -2053,6 +2112,28 @@ class TestMonitorServiceActionMenu:
 _SITE_ID = "NO_SITE"
 _HOSTNAME = "heute"
 _SERVICE_DESCRIPTION = "CPU load"
+_ACTION_MENU_SERVICE_ROW = {
+    "host_name": _HOSTNAME,
+    "host_address": "127.0.0.1",
+    "host_filename": "/wato/hosts.mk",
+    "host_check_type": 0,
+    "host_check_command": "check-mk-host-smart",
+    "host_custom_variable_names": [],
+    "host_custom_variable_values": [],
+    "service_host_name": _HOSTNAME,
+    "service_description": _SERVICE_DESCRIPTION,
+    "service_service_description": _SERVICE_DESCRIPTION,
+    "service_check_type": 0,
+    "service_check_command": "check_mk-cpu_loads",
+    "service_active_checks_enabled": 1,
+    "service_pnpgraph_present": 0,
+    "service_action_url_expanded": "",
+    "service_notes_url_expanded": "",
+    "service_custom_variable_names": [],
+    "service_custom_variable_values": [],
+    "service_cached_at": 0,
+    "service_cache_interval": 0,
+}
 _HOST_ALIAS = "Web Server"
 _SERVICE_OVERVIEW_COLUMNS = (
     "description host_name state has_been_checked plugin_output last_check last_state_change "

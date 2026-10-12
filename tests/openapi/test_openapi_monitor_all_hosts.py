@@ -20,6 +20,19 @@ from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 _SITE_ID = "NO_SITE"
+_ACTION_MENU_HOST_ROW = {
+    "host_name": "heute",
+    "host_address": "127.0.0.1",
+    "host_filename": "/wato/hosts.mk",
+    "host_check_type": 0,
+    "host_check_command": "check-mk-host-smart",
+    "host_active_checks_enabled": 1,
+    "host_pnpgraph_present": 0,
+    "host_action_url_expanded": "",
+    "host_notes_url_expanded": "",
+    "host_custom_variable_names": [],
+    "host_custom_variable_values": [],
+}
 
 # NOTE: we are a bit contrained on what we can do with the mock livestatus fixture. For instance
 # limits and the ``Stats`` meta counts are not faithfully reflected by the mock. Therefore, this
@@ -1073,6 +1086,49 @@ class TestMonitorHostActionMenu:
             )
 
         assert resp.status_code == HTTPStatus.NOT_FOUND
+
+    @pytest.mark.xfail(reason="Dynamic permissions are not handled", strict=True)
+    def test_existing_host_lists_its_actions(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", [_ACTION_MENU_HOST_ROW])
+        mock_livestatus.expect_query(
+            ["GET hosts", "Filter: host_name = heute"],
+            match_type="loose",
+            sites=[_SITE_ID],
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.action_menu(
+                hostname="heute", site_id=_SITE_ID, expect_ok=False
+            )
+
+        assert resp.status_code == HTTPStatus.OK
+        assert resp.json["items"]
+
+    @pytest.mark.xfail(reason="Dynamic permissions are not handled", strict=True)
+    def test_normal_user_sees_the_actions_of_an_existing_host(
+        self,
+        clients: ClientRegistry,
+        with_user: tuple[UserId, str],
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        client = clients.MonitorHosts
+        client.set_credentials(*with_user)
+        mock_livestatus.add_table("hosts", [_ACTION_MENU_HOST_ROW])
+        mock_livestatus.expect_query(
+            ["GET hosts", "Filter: host_name = heute"],
+            match_type="loose",
+            sites=[_SITE_ID],
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = client.action_menu(hostname="heute", site_id=_SITE_ID, expect_ok=False)
+
+        assert resp.status_code == HTTPStatus.OK
+        assert resp.json["items"]
 
 
 class TestMonitorHostOverview:

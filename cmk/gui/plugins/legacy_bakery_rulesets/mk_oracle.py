@@ -219,7 +219,7 @@ def _valuespec_agent_config_mk_oracle() -> Dictionary:
             "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system. "
             "Currently not all options are available in all operating systems.<br>"
             "<b>Note:</b> This plug-in cannot be used together with the "
-            "'Oracle databases (Linux, Solaris, AIX, Windows) (Experimental)'. "
+            "'Oracle databases (Experimental)'. "
             "Please configure only one of the two."
         ),
         elements=[

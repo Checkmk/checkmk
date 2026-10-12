@@ -564,7 +564,8 @@ class _RawVSColumnSpecOptional(TypedDict, total=False):
 
 
 class _RawVSColumnSpec(_RawVSColumnSpecOptional):
-    painter_spec: tuple[PainterName, PainterParameters]
+    # None until a column is chosen, e.g. in the ListOf template for "Add column"
+    painter_spec: PainterName | tuple[PainterName, PainterParameters] | None
     column_title: str
 
 
@@ -575,6 +576,13 @@ class _RawVSJoinColumnSpec(_RawVSColumnSpec):
 class _RawVSJoinInvColumnSpec(_RawVSColumnSpecOptional):
     painter_spec: tuple[PainterName, PainterParameters]
     column_title: str
+
+
+type _RawVSColumn = (
+    tuple[Literal["column"], _RawVSColumnSpec]
+    | tuple[Literal["join_column"], _RawVSJoinColumnSpec]
+    | tuple[Literal["join_inv_column"], _RawVSJoinInvColumnSpec]
+)
 
 
 def _view_editor_spec(
@@ -589,40 +597,40 @@ def _view_editor_spec(
     # Note: for ident == "grouping" we always have "column" type,
     # ie. there aren't any "join_column"s.
 
-    def _from_vs(
-        value: (
-            tuple[Literal["column"], _RawVSColumnSpec]
-            | tuple[Literal["join_column"], _RawVSJoinColumnSpec]
-            | tuple[Literal["join_inv_column"], _RawVSJoinInvColumnSpec]
-        ),
-    ) -> ColumnSpec:
+    def _from_vs(value: _RawVSColumn) -> ColumnSpec | _RawVSColumn:
         if value[0] == "column":
-            column_type, inner_value = value
-            return ColumnSpec(
-                _column_type=column_type,
-                name=_get_name(inner_value),
-                parameters=_get_params(inner_value),
-                column_title=inner_value.get("column_title", ""),
-                link_spec=_get_link_spec(inner_value),
-                tooltip=inner_value.get("tooltip"),
-            )
+            return _from_vs_column(value, join_value=None)
 
         if value[0] == "join_column":
-            join_column_type, inner_value = value
-            return ColumnSpec(
-                _column_type=join_column_type,
-                name=_get_name(inner_value),
-                parameters=_get_params(inner_value),
-                join_value=inner_value["join_value"],
-                column_title=inner_value["column_title"],
-                link_spec=_get_link_spec(inner_value),
-                tooltip=inner_value.get("tooltip"),
-            )
+            return _from_vs_column(value, join_value=value[1]["join_value"])
 
         if value[0] == "join_inv_column":
             return _from_vs_join_inv_column(*value)
 
         raise ValueError
+
+    def _from_vs_column(
+        value: (
+            tuple[Literal["column"], _RawVSColumnSpec]
+            | tuple[Literal["join_column"], _RawVSJoinColumnSpec]
+        ),
+        *,
+        join_value: ColumnName | None,
+    ) -> ColumnSpec | _RawVSColumn:
+        column_type, inner_value = value
+        # An unchosen painter stays raw, so that validation reports it at its dropdown
+        if (painter_spec := inner_value["painter_spec"]) is None:
+            return value
+        name, parameters = _split_painter_spec(painter_spec)
+        return ColumnSpec(
+            _column_type=column_type,
+            name=name,
+            parameters=parameters,
+            join_value=join_value,
+            column_title=inner_value.get("column_title", ""),
+            link_spec=_get_link_spec(inner_value),
+            tooltip=inner_value.get("tooltip"),
+        )
 
     def _from_vs_join_inv_column(
         column_type: Literal["join_inv_column"],
@@ -646,25 +654,19 @@ def _view_editor_spec(
             tooltip=inner_value.get("tooltip"),
         )
 
-    def _get_name(value: _RawVSColumnSpec) -> PainterName:
-        return value["painter_spec"][0]
-
-    def _get_params(value: _RawVSColumnSpec) -> PainterParameters:
-        return value["painter_spec"][1]
+    def _split_painter_spec(
+        painter_spec: PainterName | tuple[PainterName, PainterParameters],
+    ) -> tuple[PainterName, PainterParameters]:
+        if isinstance(painter_spec, tuple):
+            return painter_spec
+        return painter_spec, PainterParameters()
 
     def _get_link_spec(value: _RawVSColumnSpec | _RawVSJoinInvColumnSpec) -> VisualLinkSpec | None:
         return None if (ls := value.get("link_spec")) is None else VisualLinkSpec.from_raw(ls)
 
-    def _to_vs(
-        column_spec: ColumnSpec | None,
-    ) -> (
-        tuple[Literal["column"], _RawVSColumnSpec]
-        | tuple[Literal["join_column"], _RawVSJoinColumnSpec]
-        | tuple[Literal["join_inv_column"], _RawVSJoinInvColumnSpec]
-        | None
-    ):
-        if column_spec is None:
-            return None
+    def _to_vs(column_spec: ColumnSpec | _RawVSColumn | None) -> _RawVSColumn | None:
+        if column_spec is None or isinstance(column_spec, tuple):
+            return column_spec
 
         if (column_type := column_spec.column_type) == "column":
             raw_vs = _RawVSColumnSpec(

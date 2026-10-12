@@ -16,8 +16,8 @@ import { firstContextualLinkUrl } from '@/dashboard/lib/contextualLinkUrl'
 import type { ComputedSingleMetric, SingleMetricContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
 
-import WidgetFigureFrame from './figures/WidgetFigureFrame.vue'
-import type { ContentProps } from './types.ts'
+import type { ContentProps } from '../types.ts'
+import WidgetFigureFrame from './WidgetFigureFrame.vue'
 
 const props = defineProps<ContentProps<SingleMetricContent>>()
 const { state, retry } = useRangedComputedWidget(

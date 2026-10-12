@@ -7,7 +7,7 @@ import { fromDate } from '@internationalized/date'
 import { screen, waitFor } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
-import DashboardContentTimelineCount from '@/dashboard/components/DashboardContent/DashboardContentTimelineCount.vue'
+import DashboardContentTimelineCount from '@/dashboard/components/DashboardContent/figures/DashboardContentTimelineCount.vue'
 import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
 import type { TimelineContent, TimelineCount } from '@/dashboard/types/widget'
 

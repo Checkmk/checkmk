@@ -21,8 +21,8 @@ import type {
 } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
 
-import WidgetFigureFrame from './figures/WidgetFigureFrame.vue'
-import type { ContentProps } from './types.ts'
+import type { ContentProps } from '../types.ts'
+import WidgetFigureFrame from './WidgetFigureFrame.vue'
 
 const { _t } = usei18n()
 const props = defineProps<ContentProps<TopListContent>>()

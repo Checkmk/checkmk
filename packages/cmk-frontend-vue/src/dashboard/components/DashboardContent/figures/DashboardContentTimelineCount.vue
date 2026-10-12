@@ -9,8 +9,8 @@ import { useRangedComputedWidget } from '@/dashboard/composables/useComputedWidg
 import type { TimelineContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
 
-import WidgetFigureFrame from './figures/WidgetFigureFrame.vue'
-import type { ContentProps } from './types.ts'
+import type { ContentProps } from '../types.ts'
+import WidgetFigureFrame from './WidgetFigureFrame.vue'
 
 const VALUE_COLOR = 'var(--font-color)'
 

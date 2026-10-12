@@ -7,7 +7,7 @@ import { screen, waitFor } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, h } from 'vue'
 
-import DashboardContentTopList from '@/dashboard/components/DashboardContent/DashboardContentTopList.vue'
+import DashboardContentTopList from '@/dashboard/components/DashboardContent/figures/DashboardContentTopList.vue'
 import { useProvideIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type { ComputedTopList, TopListContent, VisualContext } from '@/dashboard/types/widget'
 

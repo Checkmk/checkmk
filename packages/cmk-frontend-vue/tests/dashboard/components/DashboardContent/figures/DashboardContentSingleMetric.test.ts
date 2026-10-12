@@ -7,7 +7,7 @@ import { fromDate } from '@internationalized/date'
 import { screen, waitFor } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
-import DashboardContentSingleMetric from '@/dashboard/components/DashboardContent/DashboardContentSingleMetric.vue'
+import DashboardContentSingleMetric from '@/dashboard/components/DashboardContent/figures/DashboardContentSingleMetric.vue'
 import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
 import type { ComputedSingleMetric, SingleMetricContent } from '@/dashboard/types/widget'
 

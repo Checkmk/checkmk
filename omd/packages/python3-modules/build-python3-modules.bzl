@@ -186,6 +186,7 @@ build_cmd = """
     export CPPFLAGS="-I$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/include -I$$HOME/$$EXT_DEPS_PATH/{freetds_dir}/freetds/include -I$$HOME/$$EXT_DEPS_PATH/{python_dir}/python/include/python{pyMajMin}/"
     export LDFLAGS="-L$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/lib -L$$HOME/$$EXT_DEPS_PATH/{freetds_dir}/freetds/lib -L$$HOME/$$EXT_DEPS_PATH/{python_dir}/python/lib -Wl,--strip-debug"
     {extra_setup}
+    PIP_INSTALL_STATUS=0
     {git_ssl_no_verify}\\
     $$PYTHON_EXECUTABLE -m pip install \\
      `: dont use precompiled things, build with our build env ` \\
@@ -201,10 +202,11 @@ build_cmd = """
       --use-feature=build-constraint \\
       --build-constraint="{constraints}" \\
       --prefix="$$HOME/$$MODULE_NAME" \\
-      {requirements} 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout" || true
-    # The `|| true` above keeps `set -e` from aborting on pip's exit code before
-    # we get a chance to inspect PIPESTATUS and dump diagnostics below.
-    PIP_INSTALL_STATUS=$${{PIPESTATUS[0]}}
+      {requirements} 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout" || PIP_INSTALL_STATUS=$${{PIPESTATUS[0]}}
+    # The `||` above keeps `set -e` from aborting on pip's exit code before we
+    # get a chance to dump diagnostics below. PIPESTATUS has to be read right
+    # there: Bazel runs genrules with `pipefail`, so a failing pip fails the
+    # pipeline, and any later command (e.g. `|| true`) would overwrite PIPESTATUS.
     if [ "$$PIP_INSTALL_STATUS" -ne 0 ]; then
         # pip/meson swallow the actual subprocess output on failure and only point
         # to a meson-log.txt buried in the (ephemeral) sandbox tmpdir -- e.g. the

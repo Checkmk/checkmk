@@ -82,7 +82,7 @@ class SiteStatus(typing.NamedTuple):
 
 
 def get_site_status() -> SiteStatus:
-    query = Query([Status.num_hosts, Status.num_services]).compile()
+    query = Query([Status.num_hosts, Status.num_services])
 
     connection = LocalConnection()
     response = connection.query(query)

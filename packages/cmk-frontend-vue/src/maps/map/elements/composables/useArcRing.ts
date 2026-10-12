@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 /**
- * When to redraw the ring around a map object's icon, and when to pulse it.
+ * When to redraw the ring around a map object's icon.
  *
  * The drawing itself is ``arcRing``; this is the reactive half — it keeps the
  * overlay SVG in step with the object's state and utilisation, and animates a
@@ -16,7 +16,7 @@ import { type Ref, onMounted, watch } from 'vue'
 
 import { useD3Cleanup } from '@/maps/map/composables/useD3Cleanup'
 
-import { type RingColors, clearPulse, drawRing, startPulse } from './arcRing'
+import { type RingColors, drawRing } from './arcRing'
 
 interface ArcRingOptions {
   svgRef: Ref<SVGSVGElement | null>
@@ -24,8 +24,6 @@ interface ArcRingOptions {
   /** Utilisation to fill, or ``null`` for a plain state ring. */
   pct: Ref<number | null>
   colors: Ref<RingColors>
-  /** Whether the state warrants the attention pulse. */
-  pulsing: Ref<boolean>
   enabled: Ref<boolean>
 }
 
@@ -63,21 +61,6 @@ export function useArcRing(options: ArcRingOptions): void {
         .transition()
         .duration(500)
         .styleTween('fill', () => (progress: number) => fade(progress))
-    },
-    { flush: 'post' }
-  )
-
-  watch(
-    [options.pulsing, () => options.colors.value.state],
-    ([pulsing, color]) => {
-      const svg = ringSvg()
-      if (!svg) {
-        return
-      }
-      clearPulse(svg)
-      if (pulsing) {
-        startPulse(svg, options.iconSize.value, color)
-      }
     },
     { flush: 'post' }
   )

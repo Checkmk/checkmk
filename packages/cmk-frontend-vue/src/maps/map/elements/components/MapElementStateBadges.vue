@@ -70,12 +70,13 @@ defineProps<{ state: ObjectState | undefined }>()
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--dimension-7);
-  height: var(--dimension-7);
+  width: var(--dimension-6);
+  height: var(--dimension-6);
   border-radius: 9999px;
-  box-shadow:
-    0 0 0 2px var(--ux-theme-1),
-    var(--maps-map-view-badge-shadow);
+
+  /* A shadow rather than a ring in the page colour, which reads as a dark blot
+     on the light tiles of a geo map. */
+  box-shadow: 0 1px 3px rgb(0 0 0 / 50%);
 }
 
 .maps-map-element-state-badges__badge--stale {
@@ -100,7 +101,7 @@ defineProps<{ state: ObjectState | undefined }>()
 }
 
 .maps-map-element-state-badges__icon {
-  width: var(--dimension-5);
-  height: var(--dimension-5);
+  width: 10px;
+  height: 10px;
 }
 </style>

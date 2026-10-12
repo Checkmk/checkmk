@@ -5,8 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <!--
 A map object shown as an icon: the operator's own image where one is configured,
-otherwise the state disc. Around it sit the utilisation ring, the state badges
-and, for a BI aggregation, its expanded subtree.
+otherwise the state disc. Around it sit the utilisation ring, the attention
+pulse, the state badges and, for a BI aggregation, its expanded subtree.
 
 A raster image cannot be recoloured, so an object with a custom icon conveys its
 state through a solid ring, a soft glow and a faint tint around the image — a
@@ -18,10 +18,12 @@ import { computed, ref } from 'vue'
 import { useUtilizationRing } from '@/maps/map/elements/composables/useUtilizationRing'
 import type { MapElement, ObjectState } from '@/maps/types/api'
 import { imageAssetUrl } from '@/maps/utils/assetUrl'
+import { isProblemState } from '@/maps/utils/problemState'
 import { stateColorVar } from '@/maps/utils/stateColors'
 
 import AggregationSubtree from './AggregationSubtree.vue'
 import MapElementBrokenImage from './MapElementBrokenImage.vue'
+import MapElementPulse from './MapElementPulse.vue'
 import MapElementStateBadges from './MapElementStateBadges.vue'
 import MapElementStateIcon from './MapElementStateIcon.vue'
 import MapElementUtilizationRing from './MapElementUtilizationRing.vue'
@@ -64,8 +66,23 @@ const stateful = computed(
   () => props.object.type !== 'image' && !UNLIT_STATES.has(props.state?.state ?? 'PENDING')
 )
 
+/**
+ * The NagVis-compatible renderer stays still, as NagVis did. A handled problem
+ * stays still too: its badge already says someone is on it.
+ */
+const pulsing = computed(
+  () =>
+    !props.classic &&
+    stateful.value &&
+    isProblemState(props.state?.state, 'critical') &&
+    !props.state?.acknowledged &&
+    !props.state?.in_downtime
+)
+
+const stateColor = computed(() => stateColorVar(props.state?.state))
+
 const imageStyle = computed(() => ({
-  '--maps-map-element-icon-state': stateColorVar(props.state?.state),
+  '--maps-map-element-icon-state': stateColor.value,
   ...(props.object.type === 'image'
     ? { maxWidth: `${props.iconSize}px`, maxHeight: `${props.iconSize}px` }
     : { width: `${props.iconSize}px`, height: `${props.iconSize}px` })
@@ -105,6 +122,8 @@ const imageStyle = computed(() => ({
     />
 
     <MapElementUtilizationRing v-if="ring.visible.value" :ring="ring" :icon-size="iconSize" />
+
+    <MapElementPulse v-if="pulsing" :icon-size="iconSize" :color="stateColor" />
 
     <MapElementStateBadges v-if="!classic" :state="state" />
 

@@ -30,7 +30,6 @@ import type { RingColors } from './arcRing'
 const RINGLESS_TYPES = new Set(['textbox', 'line', 'host', 'image'])
 /** States that say "no data": nothing to draw a ring around. */
 const RINGLESS_STATES = new Set(['NOT_FOUND', 'NO_PERMISSION'])
-const PULSING_STATES = new Set(['DOWN', 'CRITICAL', 'UNREACHABLE'])
 
 export interface UtilizationRing {
   /** Whether this object gets a ring at all. */
@@ -38,7 +37,6 @@ export interface UtilizationRing {
   /** Utilisation to fill, or ``null`` for a plain state ring. */
   pct: Ref<number | null>
   colors: Ref<RingColors>
-  pulsing: Ref<boolean>
 }
 
 export function useUtilizationRing(source: {
@@ -112,7 +110,6 @@ export function useUtilizationRing(source: {
       state: palette.value.state(stateName.value),
       fill: fill.value,
       track: palette.value.gaugeTrack
-    })),
-    pulsing: computed(() => PULSING_STATES.has(stateName.value))
+    }))
   }
 }

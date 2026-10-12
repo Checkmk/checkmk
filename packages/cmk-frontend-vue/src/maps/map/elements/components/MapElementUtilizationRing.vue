@@ -34,7 +34,6 @@ useArcRing({
   iconSize: computed(() => props.iconSize),
   pct: props.ring.pct,
   colors: props.ring.colors,
-  pulsing: props.ring.pulsing,
   enabled: props.ring.visible
 })
 </script>

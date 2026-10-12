@@ -10,7 +10,7 @@
  * node inside it, so nothing here fights Vue over the DOM. The reactive side —
  * when to draw, with which colours — is ``useArcRing``.
  */
-import { easeBackOut, easeCubicOut, easeQuadInOut } from 'd3-ease'
+import { easeBackOut, easeQuadInOut } from 'd3-ease'
 import { interpolate } from 'd3-interpolate'
 import { type Selection, select } from 'd3-selection'
 import { arc } from 'd3-shape'
@@ -27,7 +27,7 @@ const START_ANGLE = -Math.PI / 2
 export const RING_PAD = 6
 
 export interface RingColors {
-  /** The object's state colour, used by the state ring and the pulse. */
+  /** The object's state colour, used by the state ring. */
   state: string
   /** The filled part of a utilisation arc. */
   fill: string
@@ -41,7 +41,7 @@ interface RingGeometry {
   innerRadius: number
 }
 
-function geometryOf(iconSize: number): RingGeometry {
+export function ringGeometry(iconSize: number): RingGeometry {
   const outerRadius = iconSize / 2 + RING_PAD
   return {
     size: iconSize + RING_PAD * 2,
@@ -89,7 +89,7 @@ export function drawRing(
   pct: number | null,
   colors: RingColors
 ): void {
-  const geometry = geometryOf(iconSize)
+  const geometry = ringGeometry(iconSize)
   const group = ringGroup(svg, geometry)
   const arcGen = arc()
   const radii = { innerRadius: geometry.innerRadius, outerRadius: geometry.outerRadius }
@@ -139,40 +139,4 @@ export function drawRing(
         return arcGen({ ...radii, startAngle: START_ANGLE, endAngle: angle })!
       }
     })
-}
-
-/** Stop and remove the attention pulse, if one is running. */
-export function clearPulse(svg: SVGSVGElement): void {
-  select(svg).select('circle.pulse-ring').interrupt().remove()
-}
-
-/** A circle expanding out of the ring on repeat, for states worth noticing. */
-export function startPulse(svg: SVGSVGElement, iconSize: number, color: string): void {
-  const geometry = geometryOf(iconSize)
-  const group = select(svg).select<SVGGElement>('g.arc-root')
-  if (group.empty()) {
-    return
-  }
-  clearPulse(svg)
-  const pulse = group
-    .append('circle')
-    .attr('class', 'pulse-ring')
-    .attr('cx', 0)
-    .attr('cy', 0)
-    .attr('fill', 'none')
-    .attr('stroke-width', '1.5')
-    .style('stroke', color)
-
-  function step(): void {
-    pulse
-      .attr('r', String(geometry.innerRadius))
-      .attr('opacity', '0.7')
-      .transition()
-      .duration(900)
-      .ease(easeCubicOut)
-      .attr('r', String(geometry.outerRadius + 8))
-      .attr('opacity', '0')
-      .on('end', step)
-  }
-  step()
 }

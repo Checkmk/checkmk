@@ -643,7 +643,6 @@ def test_piggyback_host_removal(
     )
 
 
-@pytest.mark.xfail(reason="CMK-35438 - flakes")
 def test_piggyback_status_file_deletion_transport(
     piggyback_env_two_site_setup: tuple[Site, Site],
 ) -> None:

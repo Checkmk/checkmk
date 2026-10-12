@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { ColumnDef } from '@tanstack/vue-table'
 import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 
 import type { HostApi } from '@/monitoring/shared/api/hosts'
@@ -13,15 +14,24 @@ import {
   type PagedResponse
 } from '@/monitoring/shared/services/MonitoringService'
 
-import { visibleHostFields } from '../columns'
+import { exportedHostColumns, visibleHostFields } from '../columns'
+import { HostExport } from '../export/hostExport'
 
 export interface HostServiceOptions extends MonitoringServiceOptions<HostEntry> {
   /** Fields read on every fetch, whichever columns are shown, for what a row offers. */
   rowFields?: readonly HostOptionalField[]
 }
 
+export class HostsNotLoadedError extends Error {
+  constructor() {
+    super('The hosts of the current query could not be loaded')
+    this.name = 'HostsNotLoadedError'
+  }
+}
+
 export class HostService extends MonitoringService<HostEntry> {
   private readonly rowFields: readonly HostOptionalField[]
+  private readonly columns: readonly ColumnDef<HostEntry>[]
 
   constructor(
     private readonly api: Pick<HostApi, 'fetchHosts'>,
@@ -30,6 +40,18 @@ export class HostService extends MonitoringService<HostEntry> {
   ) {
     super('host-service', shortCutService, options)
     this.rowFields = options.rowFields ?? []
+    this.columns = options.columns ?? []
+  }
+
+  async export(): Promise<HostExport> {
+    await this.settled()
+    if (this.loadFailed.value) {
+      throw new HostsNotLoadedError()
+    }
+    return new HostExport(
+      exportedHostColumns(this.columns, this.columnVisibility.value),
+      this.items.value
+    )
   }
 
   protected async fetchBatch(signal: AbortSignal): Promise<PagedResponse<HostEntry>> {

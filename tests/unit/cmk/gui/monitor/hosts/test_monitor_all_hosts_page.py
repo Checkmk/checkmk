@@ -19,6 +19,7 @@ from cmk.gui.monitor.command import (
 )
 from cmk.gui.monitor.hosts._pages._monitor_all_hosts import (
     _availability_dropdowns,
+    _export_dropdowns,
     MonitorAllHostsPage,
 )
 from cmk.gui.pages import PageContext
@@ -64,3 +65,18 @@ def test_availability_dropdown_hidden_without_permission() -> None:
 @pytest.mark.usefixtures("with_user_login")
 def test_availability_dropdown_shown_with_permission() -> None:
     assert [dropdown.name for dropdown in _availability_dropdowns()] == ["availability"]
+
+
+@pytest.mark.usefixtures("user_without_permissions")
+def test_export_dropdown_hidden_without_permission() -> None:
+    assert _export_dropdowns() == []
+
+
+@pytest.mark.usefixtures("with_user_login")
+def test_export_dropdown_offers_csv_with_permission() -> None:
+    assert [
+        entry.name
+        for dropdown in _export_dropdowns()
+        for topic in dropdown.topics
+        for entry in topic.entries
+    ] == ["export_csv"]

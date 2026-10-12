@@ -14,7 +14,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 
 import AllHostsApp from '@/monitoring/all-hosts/AllHostsApp.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
-import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
+import { ACTION_REFRESH_DELAY_MS, EXPORT_CSV_EVENT } from '@/monitoring/shared/constants'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let postSpy: any
@@ -25,6 +25,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  vi.restoreAllMocks()
   vi.useRealTimers()
   localStorage.clear()
   window.history.replaceState(null, '', '/monitor_all_hosts.py')
@@ -50,11 +51,11 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
   }
 }
 
-function mockHosts(hosts: HostEntry[]): void {
+function mockHosts(hosts: HostEntry[], matched: number = hosts.length): void {
   postSpy.mockResolvedValue({
     data: {
       hosts,
-      meta: { limit: 1000, matched: hosts.length, total: hosts.length, fields: [] }
+      meta: { limit: 1000, matched, total: matched, fields: [] }
     },
     error: undefined,
     response: new Response()
@@ -287,4 +288,90 @@ test('typing letters focuses the first host name containing them', async () => {
       Object.defineProperty(HTMLElement.prototype, 'offsetWidth', offsetWidth)
     }
   }
+})
+
+/*
+ * The Export CSV entry lives in the legacy page menu, which reaches the app through a document
+ * event. jsdom has no object URLs and does not download, so the test records the file name the
+ * download link was clicked with.
+ */
+
+let downloads: string[]
+
+function stubDownloads(): void {
+  downloads = []
+  URL.createObjectURL = vi.fn(() => 'blob:hosts')
+  URL.revokeObjectURL = vi.fn()
+  vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+    this: HTMLAnchorElement
+  ) {
+    downloads.push(this.download)
+  })
+}
+
+async function exportCsv(): Promise<void> {
+  await screen.findByRole('columnheader', { name: 'Host' })
+  await vi.waitUntil(() => postSpy.mock.calls.length > 0)
+  document.dispatchEvent(new Event(EXPORT_CSV_EVENT))
+}
+
+test('says how many hosts were exported when the row limit left some out', async () => {
+  const user = userEvent.setup()
+  stubDownloads()
+  mockHosts([makeHost(), makeHost({ name: 'web-2' })], 3)
+  renderApp('community')
+
+  await exportCsv()
+
+  expect(
+    await screen.findByText('Exported 2 of 3 hosts. Show more hosts to export more.')
+  ).toBeInTheDocument()
+  expect(downloads).toEqual([expect.stringMatching(/^all_hosts-.*\.csv$/)])
+
+  await user.click(screen.getByRole('button', { name: 'Dismiss' }))
+
+  expect(screen.queryByText(/^Exported/)).not.toBeInTheDocument()
+})
+
+test('suggests narrowing the filters when no higher row limit is left', async () => {
+  stubDownloads()
+  mockHosts([makeHost(), makeHost({ name: 'web-2' })], 3)
+  renderApp('community', { limit_tiers: [1000] })
+
+  await exportCsv()
+
+  expect(
+    await screen.findByText('Exported 2 of 3 hosts. Narrow the filters to export all of them.')
+  ).toBeInTheDocument()
+})
+
+test('exports without a note when every matching host is loaded', async () => {
+  stubDownloads()
+  mockHosts([makeHost(), makeHost({ name: 'web-2' })])
+  renderApp('community')
+
+  await exportCsv()
+  await vi.waitUntil(() => downloads.length > 0)
+
+  expect(screen.queryByText(/^Exported/)).not.toBeInTheDocument()
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+})
+
+test('exports nothing and says so when the hosts could not be loaded', async () => {
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+  stubDownloads()
+  postSpy.mockResolvedValue({
+    data: undefined,
+    error: {},
+    response: new Response('', { status: 500, statusText: 'Internal Server Error' })
+  } as never)
+  renderApp('community')
+
+  await exportCsv()
+
+  expect(
+    await screen.findByText('The hosts could not be loaded, so nothing was exported.')
+  ).toBeInTheDocument()
+  expect(downloads).toEqual([])
+  expect(consoleError).toHaveBeenCalled()
 })

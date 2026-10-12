@@ -10,5 +10,7 @@ export const POLL_INTERVAL_MS = 30_000
 
 export const ACTION_REFRESH_DELAY_MS = 1000
 
+export const EXPORT_CSV_EVENT = 'cmk-monitoring-export-csv'
+
 export const ACTION_DATE_TIME_SETTINGS: DateTimePickerSettings = { hourCycle: 24 }
 export const ACTION_PANE_MIN_WIDTH = '520px'

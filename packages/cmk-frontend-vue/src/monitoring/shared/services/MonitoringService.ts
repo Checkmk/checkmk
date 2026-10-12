@@ -291,6 +291,8 @@ export abstract class MonitoringService<T> extends ServiceBase {
   private tickTimer: ReturnType<typeof setInterval> | null = null
   private stopFilterWatch: WatchStopHandle | null = null
   private currentAbort: AbortController | null = null
+  /** Whether the initial fetch or a delayed refresh is still waiting for its timer. */
+  private readonly fetchScheduled: Ref<boolean> = ref(false)
 
   constructor(
     serviceId: string,
@@ -391,7 +393,9 @@ export abstract class MonitoringService<T> extends ServiceBase {
     this.initialFetchTimer = setTimeout(() => {
       this.initialFetchTimer = null
       void this.fetch()
+      this.syncFetchScheduled()
     }, 0)
+    this.syncFetchScheduled()
     this.tickTimer = setInterval(() => {
       this.tick()
     }, 1000)
@@ -421,6 +425,29 @@ export abstract class MonitoringService<T> extends ServiceBase {
   }
 
   protected abstract fetchBatch(signal: AbortSignal): Promise<PagedResponse<T>>
+
+  private syncFetchScheduled(): void {
+    this.fetchScheduled.value = this.initialFetchTimer !== null || this.refreshTimer !== null
+  }
+
+  /**
+   * Resolves once no fetch is in flight or scheduled, so the rows match the current query and
+   * columns, including what a delayed refresh after an action is still to pick up.
+   */
+  async settled(): Promise<void> {
+    const isSettled = (): boolean => this.fetchState.value === 'idle' && !this.fetchScheduled.value
+    if (isSettled()) {
+      return
+    }
+    await new Promise<void>((resolve) => {
+      const stop = watch(isSettled, (done) => {
+        if (done) {
+          stop()
+          resolve()
+        }
+      })
+    })
+  }
 
   onFocusSearch(callback: () => void): void {
     this.pushCallBack('focus-search', callback)
@@ -558,12 +585,15 @@ export abstract class MonitoringService<T> extends ServiceBase {
     }
     if (delayMs <= 0) {
       void this.fetch('background')
+      this.syncFetchScheduled()
       return
     }
     this.refreshTimer = setTimeout(() => {
       this.refreshTimer = null
       void this.fetch('background')
+      this.syncFetchScheduled()
     }, delayMs)
+    this.syncFetchScheduled()
   }
 
   /**
@@ -623,14 +653,24 @@ export abstract class MonitoringService<T> extends ServiceBase {
       clearInterval(this.tickTimer)
       this.tickTimer = null
     }
+    this.syncFetchScheduled()
     if (this.currentAbort !== null) {
       this.currentAbort.abort()
       this.currentAbort = null
     }
   }
 
+  /**
+   * A fetch that was in flight or scheduled never completes once the service is gone, so the
+   * load counts as failed and anyone waiting in {@link settled} is released.
+   */
   destruct(): void {
+    const interrupted = this.fetchState.value !== 'idle' || this.fetchScheduled.value
     this.stopPolling()
+    if (interrupted) {
+      this.loadFailed.value = true
+      this.fetchState.value = 'idle'
+    }
     this.disableShortCuts()
     this.removeCallbacks()
   }

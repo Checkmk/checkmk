@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { MonitoringAllHostsApp } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import { useCmkErrorBoundary } from 'cmk-ui-library/components/CmkErrorBoundary'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -12,7 +13,9 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
 import { useKeyboardHints } from 'cmk-ui-library/lib/keyboardHelp'
 import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
-import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
+import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef, watch } from 'vue'
+
+import { downloadBlob } from '@/lib/downloadBlob'
 
 import { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostEntry, HostRef, HostState } from '@/monitoring/shared/api/types'
@@ -21,7 +24,7 @@ import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTab
 import TypeToFocusIndicator from '@/monitoring/shared/components/TypeToFocusIndicator.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
-import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
+import { ACTION_REFRESH_DELAY_MS, EXPORT_CSV_EVENT } from '@/monitoring/shared/constants'
 import {
   displayOptionsWriter,
   readDisplayOptionsFromUrl,
@@ -66,7 +69,7 @@ import { HostActionMenuApi } from './api/actionMenu'
 import { buildHostColumnPinning, buildHostColumns } from './columns'
 import HostRow from './components/HostRow.vue'
 import HostSlideIn from './components/HostSlideIn.vue'
-import { HostService } from './services/HostService'
+import { HostService, HostsNotLoadedError } from './services/HostService'
 import { HOST_TAB_OVERVIEW } from './slideInTabs'
 
 const { _t, _tn } = usei18n()
@@ -241,11 +244,61 @@ const actionRegistry = createActionRegistry([
   )
 ])
 
+type ExportFeedback = { variant: 'loading' | 'warning' | 'error'; text: TranslatedString }
+
+const exportFeedback = ref<ExportFeedback | null>(null)
+
+const exportCount = new Intl.NumberFormat()
+
+async function onExportCsv(): Promise<void> {
+  exportFeedback.value = { variant: 'loading', text: _t('Exporting hosts…') }
+  try {
+    const file = (await hostService.export()).file('csv')
+    downloadBlob(file.name, file)
+  } catch (error: unknown) {
+    exportFeedback.value = {
+      variant: 'error',
+      text:
+        error instanceof HostsNotLoadedError
+          ? _t('The hosts could not be loaded, so nothing was exported.')
+          : _t('The export failed: %{error}', { error: String(error) })
+    }
+    return
+  }
+  const exported = hostService.items.value.length
+  const matched = hostService.matched.value
+  exportFeedback.value =
+    exported < matched ? { variant: 'warning', text: truncatedExportText(exported, matched) } : null
+}
+
+function truncatedExportText(exported: number, matched: number): TranslatedString {
+  const counts = { exported: exportCount.format(exported), matched: exportCount.format(matched) }
+  const limits = hostService.offeredLimits
+  return limits.indexOf(hostService.requestedLimit.value) < limits.length - 1
+    ? _t('Exported %{exported} of %{matched} hosts. Show more hosts to export more.', counts)
+    : _t(
+        'Exported %{exported} of %{matched} hosts. Narrow the filters to export all of them.',
+        counts
+      )
+}
+
+watch(hostService.fetchState, (state) => {
+  if (state === 'foreground' && exportFeedback.value?.variant !== 'loading') {
+    exportFeedback.value = null
+  }
+})
+
+function onExportCsvEvent(): void {
+  void onExportCsv()
+}
+
 onMounted(() => {
   hostService.onFocusSearch(() => toolbar.value?.focus())
+  document.addEventListener(EXPORT_CSV_EVENT, onExportCsvEvent)
 })
 
 onBeforeUnmount(() => {
+  document.removeEventListener(EXPORT_CSV_EVENT, onExportCsvEvent)
   hostService.destruct()
 })
 
@@ -365,6 +418,23 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :service="hostService"
         :search-placeholder="_t('Search hosts…')"
       />
+      <CmkAlert
+        v-if="exportFeedback?.variant === 'loading'"
+        variant="loading"
+        class="monitoring-all-hosts-app__feedback"
+        :text="exportFeedback.text"
+      />
+      <CmkAlert
+        v-else-if="exportFeedback"
+        :variant="exportFeedback.variant"
+        class="monitoring-all-hosts-app__feedback"
+        :text="exportFeedback.text"
+        :optional-button="{
+          title: _t('Dismiss'),
+          icon: 'cancel',
+          onclick: () => (exportFeedback = null)
+        }"
+      />
       <MonitoringSplitPane
         :service="hostService"
         :actions="actionRegistry"
@@ -435,5 +505,10 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
   height: 100%;
   min-height: 0;
   padding-bottom: var(--spacing);
+}
+
+.monitoring-all-hosts-app__feedback {
+  flex: 0 0 auto;
+  margin: var(--spacing-half) 0 0;
 }
 </style>

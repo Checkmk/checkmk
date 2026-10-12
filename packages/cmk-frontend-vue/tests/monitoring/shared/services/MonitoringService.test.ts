@@ -194,6 +194,16 @@ describe('MonitoringService', () => {
     expect(service.fetchState.value).toBe('idle')
   })
 
+  it('does not report an aborted fetch as failed when stopPolling() runs', async () => {
+    const fetchBatch = vi.fn().mockReturnValue(new Promise(() => {}))
+    const service = new TestService(fetchBatch)
+    await vi.advanceTimersByTimeAsync(0)
+
+    service.stopPolling()
+
+    expect(service.loadFailed.value).toBe(false)
+  })
+
   it('stops polling after stopPolling()', async () => {
     const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0, 0))
     const service = new TestService(fetchBatch)

@@ -27,6 +27,7 @@ from cmk.gui.monitor.command import (
     notification_rules_url,
 )
 from cmk.gui.page_menu import (
+    make_javascript_link,
     make_simple_link,
     PageMenu,
     PageMenuDropdown,
@@ -62,6 +63,8 @@ _PAGE_TITLE = _("All hosts")
 
 _LEGACY_VIEW_NAME = "allhosts"
 _LEGACY_VIEW_PERMISSION = f"view.{_LEGACY_VIEW_NAME}"
+
+_EXPORT_CSV_EVENT = "cmk-monitoring-export-csv"
 
 
 def _row_actions(config: Config) -> list[RowAction]:
@@ -272,9 +275,36 @@ def _availability_dropdowns() -> list[PageMenuDropdown]:
     ]
 
 
+def _export_dropdowns() -> list[PageMenuDropdown]:
+    if not user.may("general.csv_export"):
+        return []
+
+    return [
+        PageMenuDropdown(
+            name="export",
+            title=_("Export"),
+            topics=[
+                PageMenuTopic(
+                    title=_("Data"),
+                    entries=[
+                        PageMenuEntry(
+                            title=_("Export CSV"),
+                            icon_name=StaticIcon(IconNames.download_csv),
+                            item=make_javascript_link(
+                                f"document.dispatchEvent(new CustomEvent('{_EXPORT_CSV_EVENT}'))"
+                            ),
+                            name="export_csv",
+                        )
+                    ],
+                )
+            ],
+        ),
+    ]
+
+
 def _build_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     menu = PageMenu(
-        dropdowns=_availability_dropdowns(),
+        dropdowns=_availability_dropdowns() + _export_dropdowns(),
         breadcrumb=breadcrumb,
     )
 

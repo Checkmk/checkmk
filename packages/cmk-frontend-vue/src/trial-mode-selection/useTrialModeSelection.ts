@@ -77,6 +77,7 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
 
   async function sendCodeRequest(): Promise<void> {
     cancelResendCooldown()
+    emailSalt.value = ''
     sendRequestInFlight.value = true
     errorMessage.value = untranslated('')
     const request: TrialModeVerificationRequest = {

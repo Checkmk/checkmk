@@ -69,6 +69,8 @@ const codeLabelId = useId()
 const code = ref('')
 
 const isComplete = computed(() => code.value.length === DIGIT_COUNT)
+// Without a salt no send has gone through yet, so there is no code to check against.
+const canVerify = computed(() => isComplete.value && emailSalt !== '')
 const canResend = computed(() => resendCooldown <= 0)
 const verifyRequestInFlight = ref(false)
 const verifyErrorMessage = ref(untranslated(''))
@@ -90,7 +92,7 @@ function formatCountdown(seconds: number): string {
  * Verify the one time code.
  */
 async function verify(): Promise<void> {
-  if (!isComplete.value) {
+  if (!canVerify.value) {
     return
   }
   if (verifyRequestInFlight.value) {
@@ -195,7 +197,7 @@ onMounted(() => codeInput.value?.focus())
       >
         {{ _t('Continue without verification') }}
       </CmkButton>
-      <CmkButton variant="success" :disabled="!isComplete || saving" @click="verify">
+      <CmkButton variant="success" :disabled="!canVerify || saving" @click="verify">
         {{ _t('Verify') }}
       </CmkButton>
     </TrialModeSelectionDialogFooter>

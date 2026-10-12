@@ -190,6 +190,23 @@ async function reachCodeStep() {
   await screen.findByRole('button', { name: /^Resend code \(\d:\d\d\)$/ })
 }
 
+/*
+ * Asks for a code to the address, and the send fails: the site answers that no code went
+ * out, as it does when analytics.checkmk.com rejects the send or cannot be reached.
+ * A verify is still answered like the site does.
+ */
+async function failCodeSendTo(address: string) {
+  server.use(
+    onVerification((sent) =>
+      sent.step === 'request'
+        ? ajaxResult({ status: 'error', errorMessage: SITE_ERROR })
+        : answerLikeTheSite(sent)
+    )
+  )
+  await user.type(screen.getByLabelText('Email address'), `${address}{Enter}`)
+  await screen.findByText(SITE_ERROR)
+}
+
 function codeDigits(): HTMLElement[] {
   return screen.getAllByRole('textbox', { name: /^Digit \d of 6$/ })
 }
@@ -847,6 +864,54 @@ describe('TrialModeSelectionApp', () => {
         '2'
       ])
       expect(screen.getByRole('button', { name: 'Verify' })).toBeEnabled()
+    })
+
+    describe('when no code could be sent', () => {
+      it('keeps Verify out of reach', async () => {
+        renderApp()
+        await startTrial()
+        await failCodeSendTo('jane.doe@example.com')
+
+        await typeCodeOutOfOrder()
+
+        expect(verifyButton()).toBeDisabled()
+      })
+
+      it('does not send the code for verification on the sixth digit', async () => {
+        renderApp()
+        await startTrial()
+        await failCodeSendTo('jane.doe@example.com')
+
+        await user.type(codeDigits()[0]!, '424242')
+
+        expect(received.verification.map(({ step }) => step)).toEqual(['request'])
+      })
+
+      it('verifies the code once a resend has gone through', async () => {
+        renderApp()
+        await startTrial()
+        await failCodeSendTo('jane.doe@example.com')
+        server.use(onVerification(answerLikeTheSite))
+        await user.click(resendButton())
+        await screen.findByRole('button', { name: /^Resend code \(\d:\d\d\)$/ })
+
+        await user.type(codeDigits()[0]!, '424242')
+
+        expect(await screen.findByText('Trial verified')).toBeInTheDocument()
+      })
+
+      // The salt of the code sent before belongs to the previous address.
+      it('keeps Verify out of reach after a code went to another address', async () => {
+        renderApp()
+        await reachCodeStep()
+        await user.click(screen.getByRole('button', { name: 'Back' }))
+        await user.clear(screen.getByLabelText('Email address'))
+        await failCodeSendTo('john.doe@example.com')
+
+        await typeCodeOutOfOrder()
+
+        expect(verifyButton()).toBeDisabled()
+      })
     })
   })
 

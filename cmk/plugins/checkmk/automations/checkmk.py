@@ -2599,7 +2599,8 @@ def _automation_get_configuration(
     # that could be too much for the command line
     variable_names = {str(vn) for vn in ast.literal_eval(sys.stdin.read())}
 
-    raw_config = config.load_raw_config(with_conf_d=False)
+    with config.exit_on_config_file_load_error():
+        raw_config = config.load_raw_config(with_conf_d=False)
 
     return GetConfigurationResult(
         {

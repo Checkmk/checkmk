@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Final
 
 import cmk.utils.paths
-from cmk.base.config import load_raw_config
+from cmk.base.config import exit_on_config_file_load_error, load_raw_config
 from cmk.base.diagnostics import (
     ConsoleLogger,
     create_diagnostics_dump_v2,
@@ -107,7 +107,8 @@ def _mode_create_diagnostics_dump(
 ) -> int:
     options = _cli_selection(parsed)
 
-    raw_config = load_raw_config(with_conf_d=True)
+    with exit_on_config_file_load_error():
+        raw_config = load_raw_config(with_conf_d=True)
 
     # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
     catalogue = load_plugin_catalogue(logger=ConsoleLogger())

@@ -8,7 +8,7 @@
 import contextlib
 import copy
 import sys
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
 from types import ModuleType
 from typing import override
@@ -111,6 +111,27 @@ class SetFolderPathDict(SetFolderPathAbstract, dict):
         return super().__setitem__(cluster_name, value)
 
 
+class ConfigFileLoadError(Exception):
+    """A config file could not be executed; the original error is the cause"""
+
+    def __init__(self, path: Path, error: Exception) -> None:
+        super().__init__(f"Cannot read in configuration file {path}: {error}")
+        self.path = path
+
+
+@contextlib.contextmanager
+def exit_on_config_file_load_error() -> Iterator[None]:
+    """Report an unreadable config file and end the process, unless debugging"""
+    try:
+        yield
+    except ConfigFileLoadError as e:
+        if cmk.ccc.debug.enabled():
+            raise
+        if sys.stderr.isatty():
+            console.error(str(e), file=sys.stderr)
+        sys.exit(1)
+
+
 def _load_config_file(file_to_load: Path, into_dict: dict[str, object]) -> None:
     exec(compile(file_to_load.read_text(), file_to_load, "exec"), into_dict, into_dict)  # nosec B102 # BNS:aee528
 
@@ -178,11 +199,7 @@ def load_raw_config(
             host_paths.update(target_context["clusters"].collected_host_paths)
 
         except Exception as e:
-            if cmk.ccc.debug.enabled():
-                raise
-            if sys.stderr.isatty():
-                console.error(f"Cannot read in configuration file {path}: {e}", file=sys.stderr)
-            sys.exit(1)
+            raise ConfigFileLoadError(path, e) from e
 
     # Cleanup helper vars
     for helper_var in helper_vars:

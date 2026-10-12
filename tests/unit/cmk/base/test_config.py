@@ -2792,6 +2792,31 @@ def test_load_raw_config_tracks_the_folder_of_a_written_hosts_mk(wato_folder: Pa
     assert raw_config["host_paths"] == {"host1": "/wato/hosts.mk"}
 
 
+def test_load_raw_config_raises_on_an_unreadable_config_file(main_mk: Path) -> None:
+    main_mk.write_text("raise ValueError('broken')\n")
+
+    with pytest.raises(config.ConfigFileLoadError) as excinfo:
+        config.load_raw_config(with_conf_d=False)
+
+    assert excinfo.value.path == main_mk
+    assert isinstance(excinfo.value.__cause__, ValueError)
+    assert str(excinfo.value) == f"Cannot read in configuration file {main_mk}: broken"
+
+
+@pytest.mark.usefixtures("disable_debug")
+def test_exit_on_config_file_load_error_ends_the_process() -> None:
+    with pytest.raises(SystemExit) as excinfo, config.exit_on_config_file_load_error():
+        raise config.ConfigFileLoadError(Path("main.mk"), ValueError("broken"))
+
+    assert excinfo.value.code == 1
+
+
+@pytest.mark.usefixtures("enable_debug_fixture")
+def test_exit_on_config_file_load_error_reraises_when_debugging() -> None:
+    with pytest.raises(config.ConfigFileLoadError), config.exit_on_config_file_load_error():
+        raise config.ConfigFileLoadError(Path("main.mk"), ValueError("broken"))
+
+
 @pytest.fixture(name="folder_path_test_config")
 def folder_path_test_config_fixture(
     monkeypatch: MonkeyPatch,

@@ -51,7 +51,8 @@ def _mode_automation(
             with (
                 lock_checkmk_configuration(cmk.utils.paths.configuration_lockfile)
                 if automations.wants_configuration_lock(name)
-                else nullcontext()
+                else nullcontext(),
+                config.exit_on_config_file_load_error(),
             ):
                 raw_config = config.load_raw_config(with_conf_d=True)
             automations.update(omd_root, raw_config)

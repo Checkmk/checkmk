@@ -26,7 +26,12 @@ import cmk.checkengine.plugin_backend as agent_based_register
 import cmk.utils
 import cmk.utils.paths
 from cmk import trace
-from cmk.base.config._load_raw import load_raw_config, strip_tag, strip_tags
+from cmk.base.config._load_raw import (
+    exit_on_config_file_load_error,
+    load_raw_config,
+    strip_tag,
+    strip_tags,
+)
 from cmk.base.configlib.agent import make_only_from_config
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.exit_code import make_exit_code_spec
@@ -610,7 +615,8 @@ class LoadingResult:
 
 
 def load(validate_hosts: bool) -> LoadingResult:
-    raw_config = load_raw_config(with_conf_d=True)
+    with exit_on_config_file_load_error():
+        raw_config = load_raw_config(with_conf_d=True)
 
     loading_result = perform_post_config_loading_actions(
         raw_config,

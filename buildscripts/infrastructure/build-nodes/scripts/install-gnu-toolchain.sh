@@ -45,7 +45,8 @@ download_sources() {
     local FILE_NAME="gcc-${GCC_VERSION}-with-prerequisites.tar.gz"
     local MIRROR_BASE_URL=${NEXUS_ARCHIVES_URL}
     local MIRROR_URL=${MIRROR_BASE_URL}$FILE_NAME
-    local MIRROR_CREDENTIALS="${NEXUS_USERNAME}:${NEXUS_PASSWORD}"
+    local MIRROR_CREDENTIALS
+    MIRROR_CREDENTIALS="$(_mirror_credentials)"
     if ! _download_from_mirror "${FILE_NAME}" "${MIRROR_URL}" "${MIRROR_CREDENTIALS}"; then
         log "File not available from ${MIRROR_URL}, creating"
 

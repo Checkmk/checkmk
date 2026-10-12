@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 
 import logging
-import subprocess
 import time
 from collections.abc import Iterator
 from pathlib import Path
@@ -25,21 +24,8 @@ from tests.testlib.common.utils import wait_until
 from tests.testlib.emails import EmailManager
 from tests.testlib.notifications import NotificationTarget
 from tests.testlib.site import Site
-from tests.testlib.utils import run
 
 logger = logging.getLogger(__name__)
-
-
-def _copy_file(
-    src: Path,
-    dst: Path,
-) -> None:
-    """Copy file from src to dst."""
-    try:
-        run(["cp", "-f", str(src), str(dst)], sudo=True)
-    except subprocess.CalledProcessError as exception:
-        exception.add_note(f"Failed to copy '{src}' to '{dst}'!")
-        raise exception
 
 
 def _sent_notifications_last_seven_days(site: Site) -> int:
@@ -58,32 +44,31 @@ def _sent_notifications_last_seven_days(site: Site) -> int:
     return count
 
 
-@pytest.fixture(name="modify_notification_rule", scope="function")
-def _modify_notification_rule(test_site: Site, configured_host: str) -> Iterator[str]:
-    """Modify existing email notification rule to match a specific host.
-
-    * Copy the existing notification rule file to a backup
-    * Modify the notification rule to match a specific host
-    * Restore the original notification rule file after the test execution
-    """
-    hostname = configured_host
-
+@pytest.fixture(name="restore_notification_rules", scope="function")
+def _restore_notification_rules(test_site: Site) -> Iterator[Path]:
+    """Restore the notification rule file after the test execution, even if the test failed."""
     notification_rule_path = test_site.path("etc/check_mk/conf.d/wato/notifications.mk")
-    notification_rule_backup_path = notification_rule_path.parent / "notifications.mk.bak"
-    _copy_file(notification_rule_path, notification_rule_backup_path)
+    original_content = test_site.read_file(notification_rule_path)
 
     try:
-        content = test_site.read_file(notification_rule_path)
-        new_content = content[:-3] + f", 'match_hosts': ['{hostname}']" + content[-3:]
-        test_site.write_file(notification_rule_path, new_content)
-
-        yield hostname
+        yield notification_rule_path
 
     finally:
-        _copy_file(notification_rule_backup_path, notification_rule_path)
-        test_site.delete_file(notification_rule_backup_path)
+        test_site.write_file(notification_rule_path, original_content)
 
 
+@pytest.fixture(name="modify_notification_rule", scope="function")
+def _modify_notification_rule(
+    test_site: Site, configured_host: str, restore_notification_rules: Path
+) -> str:
+    """Modify existing email notification rule to match a specific host."""
+    content = test_site.read_file(restore_notification_rules)
+    new_content = content[:-3] + f", 'match_hosts': ['{configured_host}']" + content[-3:]
+    test_site.write_file(restore_notification_rules, new_content)
+    return configured_host
+
+
+@pytest.mark.usefixtures("restore_notification_rules")
 def test_email_notification_matches_configuration(
     dashboard_page: MainDashboard,
     notification_host: NotificationTarget,
@@ -173,24 +158,6 @@ def test_email_notification_matches_configuration(
         new_page.close()
 
     finally:
-        logger.info("Delete the created rule")
-
-        notification_configuration_page.navigate()
-
-        # The scrollbar interrupts the interaction with rule delete button -> collapse overview
-        notification_configuration_page.collapse_notification_overview(True)
-        # delete the cloned rule.
-        notification_configuration_page.delete_notification_rule(rule_id=1)
-
-        logger.info("Enable the default notification rule")
-        default_notification_rule_page = EditNotificationRule(
-            notification_configuration_page.page,
-            rule_position=0,
-            navigate_to_notification_configuration=False,
-        )
-        default_notification_rule_page.check_disable_rule(False)
-        default_notification_rule_page.apply()
-
         email_manager.clean_emails(expected_notification_subject)
 
 

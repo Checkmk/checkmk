@@ -427,7 +427,7 @@ def _serialize_spec_cached(
         pass
 
     serialized = _serialize_spec(target, url, extension, version)
-    cache_file.write_text(serialized)
+    store.RealIo(cache_file).write(serialized.encode("utf-8"))
     return serialized
 
 

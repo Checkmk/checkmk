@@ -7,6 +7,14 @@ import type * as intl from '@internationalized/date'
 import userEvent, { type UserEvent } from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
 import { type TrialModeSelectionProps } from 'cmk-shared-typing/typescript/trial_mode_selection_props'
+import {
+  type TrialModeSelectionRequest,
+  type VerificationMode
+} from 'cmk-shared-typing/typescript/trial_mode_selection_request'
+import { type TrialModeVerificationRequest } from 'cmk-shared-typing/typescript/trial_mode_verification_request'
+import { type TrialModeVerificationResponse } from 'cmk-shared-typing/typescript/trial_mode_verification_response'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse, http } from 'msw'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import TrialModeSelectionApp from '@/trial-mode-selection/TrialModeSelectionApp.vue'
@@ -20,13 +28,106 @@ vi.mock('@internationalized/date', async (importOriginal) => {
   return { ...actual, getLocalTimeZone: () => zone.current }
 })
 
-const mockCmkAjax = vi.hoisted(() => vi.fn().mockResolvedValue({}))
+const SAVE_ENDPOINT = '*/ajax_save_trial_mode_selection.py'
+const VERIFICATION_ENDPOINT = '*/ajax_send_trial_mode_request.py'
 
-vi.mock('cmk-ui-library/lib/ajax', () => ({
-  cmkAjax: mockCmkAjax
-}))
+type WithCsrfToken<T> = T & { _csrf_token: string }
+type SaveRequest = WithCsrfToken<TrialModeSelectionRequest>
+type VerificationRequest = WithCsrfToken<TrialModeVerificationRequest>
 
+/**
+ * What the dialog sent to the site, per endpoint and in order.
+ *
+ * A request is recorded once it has gone through fetch, not when the dialog starts it.
+ * Checks that nothing (more) was sent rely on user-event's pause after each action being
+ * long enough for a request to arrive; dropping that pause (`delay: null`) would let them
+ * pass without noticing a stray save.
+ */
+const received: { save: SaveRequest[]; verification: VerificationRequest[] } = {
+  save: [],
+  verification: []
+}
+
+/** The JSON body of an AJAX request, as the page handler on the site reads it. */
+async function decode<T>(request: Request): Promise<T> {
+  const form = new URLSearchParams(await request.text())
+  return JSON.parse(form.get('request') ?? '{}') as T
+}
+
+function ajaxResult(result: unknown) {
+  return HttpResponse.json({ result_code: 0, result, severity: 'success' })
+}
+
+/** Records every save before answering it. */
+function onSave(answer: () => Response | Promise<Response>) {
+  return http.post(SAVE_ENDPOINT, async ({ request }) => {
+    received.save.push(await decode<SaveRequest>(request))
+    return answer()
+  })
+}
+
+/** Records every verification request before answering it. */
+function onVerification(answer: (sent: VerificationRequest) => Response) {
+  return http.post(VERIFICATION_ENDPOINT, async ({ request }) => {
+    const sent = await decode<VerificationRequest>(request)
+    received.verification.push(sent)
+    return answer(sent)
+  })
+}
+
+/**
+ * Answers as the site does: a salt only for a sent code, and null for what its
+ * response has no value for.
+ */
+function answerLikeTheSite(sent: VerificationRequest) {
+  return ajaxResult({
+    status: 'ok',
+    errorMessage: null,
+    salt: sent.step === 'request' ? 'fAkE_sAlT' : null
+  })
+}
+
+const server = useMswServer(
+  onSave(() => ajaxResult({})),
+  onVerification(answerLikeTheSite)
+)
+
+/** The site rejects the save, as its page handler does for an invalid one. */
+function rejectSaving() {
+  // The dialog logs the failed save; that log is expected here.
+  vi.spyOn(console, 'error').mockImplementation(() => {})
+  server.use(onSave(() => HttpResponse.json({ result_code: 1, result: 'nope', severity: 'error' })))
+}
+
+/** The save reaches the site but never gets an answer, so it stays in flight. */
+function holdSaving() {
+  server.use(onSave(() => new Promise<never>(() => {})))
+}
+
+function answerVerificationWith(response: Partial<TrialModeVerificationResponse>) {
+  server.use(onVerification(() => ajaxResult(response)))
+}
+
+function makeSiteUnreachableForVerification() {
+  // The dialog logs the failed request; that log is expected here.
+  vi.spyOn(console, 'error').mockImplementation(() => {})
+  server.use(onVerification(() => HttpResponse.error()))
+}
+
+/**
+ * Leaving the page. It is mocked, so the dialog stays rendered either way: whether the
+ * page was left can only be read from this, not from the screen still showing.
+ */
 const mockLocationAssign = vi.fn()
+// The page's own address: fetch resolves the relative AJAX URLs against it.
+const pageHref = window.location.href
+
+const VERIFY_ONLINE_URL = 'wato.py?mode=edit_licensing_settings&online=1'
+const VERIFY_OFFLINE_URL = 'wato.py?mode=licensing_offline_verification'
+const CODE_SENT = 'We sent a 6-digit code to jane.doe@example.com. It expires after 24 hours.'
+const SITE_UNREACHABLE = 'Unable to reach Checkmk site. Please check that it is started.'
+const SITE_ERROR = 'Simulated Failure (as returned by the backend).'
+const SAVING_FAILED = 'Saving your selection failed. Please try again.'
 
 let user: UserEvent
 
@@ -36,8 +137,8 @@ function renderApp(overrides: Partial<TrialModeSelectionProps> = {}) {
       save_url: 'ajax_save_trial_mode_selection.py',
       verification_url: 'ajax_send_trial_mode_request.py',
       logout_url: 'logout.py',
-      verify_online_url: 'wato.py?mode=edit_licensing_settings&online=1',
-      verify_offline_url: 'wato.py?mode=licensing_offline_verification',
+      verify_online_url: VERIFY_ONLINE_URL,
+      verify_offline_url: VERIFY_OFFLINE_URL,
       start_monitoring_url: 'view.py?view_name=allhosts',
       initial_screen: 'choice',
       user_name: 'cmkadmin',
@@ -54,30 +155,43 @@ function renderApp(overrides: Partial<TrialModeSelectionProps> = {}) {
   })
 }
 
+/** A trial end that leaves 26 days, with five minutes to spare for a slow run. */
+function trialEndIn26Days(): number {
+  return Date.now() / 1000 + 26 * 24 * 3600 - 300
+}
+
+/** The cards are links: they navigate, just inside the dialog. */
+function card(title: string): HTMLElement {
+  const literalTitle = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return screen.getByRole('link', { name: new RegExp(`^${literalTitle}`) })
+}
+
 async function startTrial() {
-  await user.click(screen.getByText('Start a trial'))
+  await user.click(card('Start a trial'))
 }
 
 async function goToLicenseVerification() {
-  await user.click(screen.getByText("I'm an existing customer"))
+  await user.click(card("I'm an existing customer"))
 }
 
 function resendButton(): HTMLElement {
   return screen.getByRole('button', { name: /Resend code/ })
 }
 
+function verifyButton(): HTMLElement {
+  return screen.getByRole('button', { name: 'Verify' })
+}
+
+/** Sends a code and waits for the countdown, which starts once the site has answered. */
 async function reachCodeStep() {
-  mockCmkAjax.mockResolvedValue({ status: 'ok', salt: 'fAkE_sAlT' })
   await startTrial()
   await user.type(screen.getByLabelText('Email address'), 'jane.doe@example.com')
   await user.click(screen.getByRole('button', { name: 'Send code' }))
-
-  expect(resendButton()).toHaveTextContent('Resend code (1:00)')
-  expect(resendButton()).toBeDisabled()
+  await screen.findByRole('button', { name: /^Resend code \(\d:\d\d\)$/ })
 }
 
-function codeDigits(): HTMLInputElement[] {
-  return screen.getAllByRole('textbox') as HTMLInputElement[]
+function codeDigits(): HTMLElement[] {
+  return screen.getAllByRole('textbox', { name: /^Digit \d of 6$/ })
 }
 
 /** Fills the last box first, so the code ends up complete without ever auto-submitting. */
@@ -89,12 +203,16 @@ async function typeCodeOutOfOrder() {
   }
 }
 
-function expectCustomerSelectionSaved(verificationMode?: 'online' | 'offline') {
-  expect(mockCmkAjax).toHaveBeenCalledWith('ajax_save_trial_mode_selection.py', {
+function customerSelection(verificationMode?: VerificationMode): SaveRequest {
+  return {
     selection: 'customer',
     ...(verificationMode ? { verification_mode: verificationMode } : {}),
     _csrf_token: 'the-csrf-token'
-  })
+  }
+}
+
+function reportErrorForVerification() {
+  answerVerificationWith({ status: 'error', errorMessage: SITE_ERROR })
 }
 
 describe('TrialModeSelectionApp', () => {
@@ -104,50 +222,61 @@ describe('TrialModeSelectionApp', () => {
     // Without this the long date below follows the machine's locale - 'August 13, 2026'
     // on one agent, '13 August 2026' on the next. The zone is pinned separately, above.
     vi.spyOn(navigator, 'language', 'get').mockReturnValue('en-US')
-    mockCmkAjax.mockClear()
-    mockCmkAjax.mockResolvedValue({})
+    received.save = []
+    received.verification = []
     mockLocationAssign.mockClear()
     document.head.innerHTML = '<meta name="cmk-csrf-token" content="the-csrf-token">'
     Object.defineProperty(window, 'location', {
-      value: { assign: mockLocationAssign },
+      value: { href: pageHref, assign: mockLocationAssign },
       writable: true
     })
   })
 
   it('renders the heading and both options', () => {
     renderApp()
+
     expect(screen.getByText('Welcome to your new Checkmk site')).toBeInTheDocument()
-    expect(screen.getByText('Start a trial')).toBeInTheDocument()
-    expect(screen.getByText("I'm an existing customer")).toBeInTheDocument()
+    expect(card('Start a trial')).toBeInTheDocument()
+    expect(card("I'm an existing customer")).toBeInTheDocument()
   })
 
   it('offers logging out', () => {
     renderApp()
+
     expect(screen.getByText(/Signed in as cmkadmin/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Log out' })).toHaveAttribute('href', 'logout.py')
   })
 
   it('opens the trial branch without recording anything yet', async () => {
     renderApp()
+
     await startTrial()
 
     // The decision is only saved at the end of the branch, so an abandoned dialog
     // reappears on the next admin login instead of quietly opening the gate.
     expect(screen.getByText('Verify your email address')).toBeInTheDocument()
-    expect(mockCmkAjax).not.toHaveBeenCalled()
+    expect(received.save).toEqual([])
     expect(mockLocationAssign).not.toHaveBeenCalled()
   })
 
   it('moves the focus to the heading of the screen it opens', async () => {
     renderApp()
+
     await goToLicenseVerification()
+
     await waitFor(() => {
-      expect(screen.getByText('Verify your license')).toHaveFocus()
+      expect(screen.getByRole('heading', { name: 'Verify your license' })).toHaveFocus()
     })
+  })
+
+  it('gives the focus back to the trial card on Back', async () => {
+    renderApp()
+    await goToLicenseVerification()
 
     await user.click(screen.getByRole('button', { name: 'Back' }))
+
     await waitFor(() => {
-      expect(screen.getByRole('link', { name: /Start a trial/ })).toHaveFocus()
+      expect(card('Start a trial')).toHaveFocus()
     })
   })
 
@@ -161,55 +290,45 @@ describe('TrialModeSelectionApp', () => {
 
     it('replaces the entry choice instead of adding to it', async () => {
       renderApp()
+
       await goToLicenseVerification()
 
       expect(
         screen.getByText('Choose how to validate the license for this site.')
       ).toBeInTheDocument()
-      expect(screen.getByText('Verify online')).toBeInTheDocument()
-      expect(screen.getByText('Verify offline')).toBeInTheDocument()
+      expect(card('Verify online')).toBeInTheDocument()
+      expect(card('Verify offline')).toBeInTheDocument()
       expect(screen.queryByText('Welcome to your new Checkmk site')).not.toBeInTheDocument()
       expect(screen.queryByText('Start a trial')).not.toBeInTheDocument()
     })
 
     it('does not persist the selection yet', async () => {
       renderApp()
+
       await goToLicenseVerification()
 
-      expect(mockCmkAjax).not.toHaveBeenCalled()
+      expect(received.save).toEqual([])
       expect(mockLocationAssign).not.toHaveBeenCalled()
     })
 
-    it('persists the selection and opens the online verification on "Verify online"', async () => {
+    // prettier-ignore
+    it.each([
+      { title: 'Verify online',  mode: 'online',  target: VERIFY_ONLINE_URL },
+      { title: 'Verify offline', mode: 'offline', target: VERIFY_OFFLINE_URL }
+    ] as const)('persists the selection and opens the $mode verification on $title', async ({ title, mode, target }) => {
       renderApp()
       await goToLicenseVerification()
 
-      await user.click(screen.getByText('Verify online'))
+      await user.click(card(title))
 
       await waitFor(() => {
-        expectCustomerSelectionSaved('online')
-        expect(mockLocationAssign).toHaveBeenCalledWith(
-          'wato.py?mode=edit_licensing_settings&online=1'
-        )
-      })
-    })
-
-    it('persists the selection and opens the offline verification on "Verify offline"', async () => {
-      renderApp()
-      await goToLicenseVerification()
-
-      await user.click(screen.getByText('Verify offline'))
-
-      await waitFor(() => {
-        expectCustomerSelectionSaved('offline')
-        expect(mockLocationAssign).toHaveBeenCalledWith(
-          'wato.py?mode=licensing_offline_verification'
-        )
+        expect(received.save).toEqual([customerSelection(mode)])
+        expect(mockLocationAssign).toHaveBeenCalledWith(target)
       })
     })
 
     it('saves the customer selection and shows the pending activation on "Verify later"', async () => {
-      renderApp({ trial_end_timestamp: Date.now() / 1000 + 26 * 24 * 3600 - 300 })
+      renderApp()
       await goToLicenseVerification()
 
       await user.click(screen.getByRole('button', { name: 'Verify later' }))
@@ -217,9 +336,17 @@ describe('TrialModeSelectionApp', () => {
       expect(
         await screen.findByRole('heading', { name: 'License activation pending' })
       ).toBeInTheDocument()
-      expect(screen.getByText('Full features · 26 days left')).toBeInTheDocument()
-      expectCustomerSelectionSaved()
+      expect(received.save).toEqual([customerSelection()])
       expect(mockLocationAssign).not.toHaveBeenCalled()
+    })
+
+    it('shows the days left of the trial while the license activation is pending', async () => {
+      renderApp({ trial_end_timestamp: trialEndIn26Days() })
+      await goToLicenseVerification()
+
+      await user.click(screen.getByRole('button', { name: 'Verify later' }))
+
+      expect(await screen.findByText('Full features · 26 days left')).toBeInTheDocument()
     })
 
     it('leaves for the page it was given on "Start monitoring" without saving again', async () => {
@@ -231,7 +358,7 @@ describe('TrialModeSelectionApp', () => {
       await user.click(screen.getByRole('button', { name: 'Start monitoring' }))
 
       expect(mockLocationAssign).toHaveBeenCalledWith('view.py?view_name=allhosts')
-      expect(mockCmkAjax).toHaveBeenCalledTimes(1)
+      expect(received.save).toHaveLength(1)
     })
 
     it('names the reminder interval of the pending activation', async () => {
@@ -253,16 +380,13 @@ describe('TrialModeSelectionApp', () => {
     })
 
     it('stays on the step and shows an error when saving "Verify later" fails', async () => {
-      vi.spyOn(console, 'error').mockImplementation(() => {})
       renderApp()
       await goToLicenseVerification()
-      mockCmkAjax.mockRejectedValue(new Error('nope'))
+      rejectSaving()
 
       await user.click(screen.getByRole('button', { name: 'Verify later' }))
 
-      expect(
-        await screen.findByText('Saving your selection failed. Please try again.')
-      ).toBeInTheDocument()
+      expect(await screen.findByText(SAVING_FAILED)).toBeInTheDocument()
       expect(screen.getByText('Verify your license')).toBeInTheDocument()
     })
 
@@ -274,17 +398,17 @@ describe('TrialModeSelectionApp', () => {
 
       expect(screen.getByText('Welcome to your new Checkmk site')).toBeInTheDocument()
       expect(screen.queryByText('Verify online')).not.toBeInTheDocument()
-      expect(mockCmkAjax).not.toHaveBeenCalled()
+      expect(received.save).toEqual([])
     })
 
     it('blocks its buttons while a verification is still being saved', async () => {
-      mockCmkAjax.mockReturnValue(new Promise(() => {}))
+      holdSaving()
       renderApp()
       await goToLicenseVerification()
 
-      await user.click(screen.getByText('Verify online'))
+      await user.click(card('Verify online'))
       await waitFor(() => {
-        expect(mockCmkAjax).toHaveBeenCalledTimes(1)
+        expect(received.save).toHaveLength(1)
       })
 
       expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled()
@@ -294,35 +418,28 @@ describe('TrialModeSelectionApp', () => {
     // The cards are not buttons: `disabled` only dims them, and keyboard activation
     // still reaches the callback. The guard on the save is what stops a second one.
     it('ignores a second verification while the first is still being saved', async () => {
-      mockCmkAjax.mockReturnValue(new Promise(() => {}))
+      holdSaving()
       renderApp()
       await goToLicenseVerification()
-
-      await user.click(screen.getByText('Verify online'))
+      await user.click(card('Verify online'))
       await waitFor(() => {
-        expect(mockCmkAjax).toHaveBeenCalledTimes(1)
+        expect(received.save).toHaveLength(1)
       })
 
-      await user.click(screen.getByText('Verify offline'))
+      await user.click(card('Verify offline'))
 
-      expect(mockCmkAjax).toHaveBeenCalledTimes(1)
-      expectCustomerSelectionSaved('online')
+      expect(received.save).toEqual([customerSelection('online')])
     })
 
     it('keeps the user on the step and shows an error when saving fails', async () => {
-      vi.spyOn(console, 'error').mockImplementation(() => {})
       renderApp()
       await goToLicenseVerification()
-      mockCmkAjax.mockRejectedValue(new Error('nope'))
+      rejectSaving()
 
-      await user.click(screen.getByText('Verify online'))
+      await user.click(card('Verify online'))
 
-      await waitFor(() => {
-        expect(
-          screen.getByText('Saving your selection failed. Please try again.')
-        ).toBeInTheDocument()
-      })
-      expect(screen.getByText('Verify offline')).toBeInTheDocument()
+      expect(await screen.findByText(SAVING_FAILED)).toBeInTheDocument()
+      expect(card('Verify offline')).toBeInTheDocument()
       expect(mockLocationAssign).not.toHaveBeenCalled()
     })
   })
@@ -335,6 +452,7 @@ describe('TrialModeSelectionApp', () => {
 
     it('explains the blocked connection instead of asking for an email address', async () => {
       renderApp({ offline: true })
+
       await startTrial()
 
       expect(
@@ -345,6 +463,7 @@ describe('TrialModeSelectionApp', () => {
 
     it('names the domain the page was given', async () => {
       renderApp({ offline: true, verification_domain: 'mock.example.com' })
+
       await startTrial()
 
       expect(
@@ -359,7 +478,7 @@ describe('TrialModeSelectionApp', () => {
       await user.click(screen.getByRole('button', { name: 'Back' }))
 
       expect(screen.getByText('Welcome to your new Checkmk site')).toBeInTheDocument()
-      expect(mockCmkAjax).not.toHaveBeenCalled()
+      expect(received.save).toEqual([])
     })
 
     it('names the reminder interval of the unverified trial', async () => {
@@ -371,21 +490,32 @@ describe('TrialModeSelectionApp', () => {
     })
 
     it('saves the unverified trial and shows it on Continue as offline trial', async () => {
-      renderApp({ offline: true, trial_end_timestamp: Date.now() / 1000 + 26 * 24 * 3600 - 300 })
+      renderApp({ offline: true })
+
       await continueOffline()
 
       expect(await screen.findByRole('heading', { name: 'Unverified trial' })).toBeInTheDocument()
-      expect(screen.getByText('Full features · 26 days left')).toBeInTheDocument()
-      expect(mockCmkAjax).toHaveBeenCalledWith('ajax_save_trial_mode_selection.py', {
-        selection: 'unverified_trial',
-        unverified_reason: 'offline',
-        _csrf_token: 'the-csrf-token'
-      })
+      expect(received.save).toEqual([
+        {
+          selection: 'unverified_trial',
+          unverified_reason: 'offline',
+          _csrf_token: 'the-csrf-token'
+        } satisfies SaveRequest
+      ])
       expect(mockLocationAssign).not.toHaveBeenCalled()
+    })
+
+    it('shows the days left of the unverified trial', async () => {
+      renderApp({ offline: true, trial_end_timestamp: trialEndIn26Days() })
+
+      await continueOffline()
+
+      expect(await screen.findByText('Full features · 26 days left')).toBeInTheDocument()
     })
 
     it('shows no days left once the trial has ended', async () => {
       renderApp({ offline: true, trial_end_timestamp: Date.now() / 1000 - 2 * 24 * 3600 })
+
       await continueOffline()
 
       expect(await screen.findByRole('heading', { name: 'Unverified trial' })).toBeInTheDocument()
@@ -394,6 +524,7 @@ describe('TrialModeSelectionApp', () => {
 
     it('shows at most the trial length as days left', async () => {
       renderApp({ offline: true, trial_end_timestamp: Date.now() / 1000 + 33 * 24 * 3600 })
+
       await continueOffline()
 
       expect(await screen.findByText('Full features · 30 days left')).toBeInTheDocument()
@@ -415,16 +546,16 @@ describe('TrialModeSelectionApp', () => {
       await user.click(screen.getByRole('button', { name: 'Start monitoring' }))
 
       expect(mockLocationAssign).toHaveBeenCalledWith('view.py?view_name=allhosts')
-      expect(mockCmkAjax).toHaveBeenCalledTimes(1)
+      expect(received.save).toHaveLength(1)
     })
 
     it('blocks its buttons while the offline trial is still being saved', async () => {
-      mockCmkAjax.mockReturnValue(new Promise(() => {}))
+      holdSaving()
       renderApp({ offline: true })
 
       await continueOffline()
       await waitFor(() => {
-        expect(mockCmkAjax).toHaveBeenCalledTimes(1)
+        expect(received.save).toHaveLength(1)
       })
 
       expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled()
@@ -432,15 +563,12 @@ describe('TrialModeSelectionApp', () => {
     })
 
     it('stays on the blocked connection and shows an error when saving fails', async () => {
-      vi.spyOn(console, 'error').mockImplementation(() => {})
       renderApp({ offline: true })
-      mockCmkAjax.mockRejectedValue(new Error('nope'))
+      rejectSaving()
 
       await continueOffline()
 
-      expect(
-        await screen.findByText('Saving your selection failed. Please try again.')
-      ).toBeInTheDocument()
+      expect(await screen.findByText(SAVING_FAILED)).toBeInTheDocument()
       expect(
         screen.getByRole('heading', { name: /This site can't reach analytics.checkmk.com/ })
       ).toBeInTheDocument()
@@ -449,6 +577,7 @@ describe('TrialModeSelectionApp', () => {
     it('asks for an email address when the page does not say the site is offline', async () => {
       // The props type has no null, so the whole object is cast.
       renderApp({ offline: null } as unknown as Partial<TrialModeSelectionProps>)
+
       await startTrial()
 
       expect(screen.getByText('Verify your email address')).toBeInTheDocument()
@@ -463,7 +592,7 @@ describe('TrialModeSelectionApp', () => {
       await user.click(screen.getByRole('button', { name: 'Back' }))
 
       expect(screen.getByText('Welcome to your new Checkmk site')).toBeInTheDocument()
-      expect(mockCmkAjax).not.toHaveBeenCalled()
+      expect(received.save).toEqual([])
     })
 
     it('rejects a malformed address instead of advancing', async () => {
@@ -489,125 +618,113 @@ describe('TrialModeSelectionApp', () => {
       expect(screen.queryByText('Enter a valid email address.')).not.toBeInTheDocument()
     })
 
-    it('accepts a well-formed address on Enter', async () => {
-      mockCmkAjax.mockResolvedValue({ status: 'ok', salt: '...' })
+    it('moves on to the code on Enter after a well-formed address', async () => {
       renderApp()
       await startTrial()
 
       await user.type(screen.getByLabelText('Email address'), 'jane.doe@example.com{Enter}')
 
       expect(screen.getByText('Enter your verification code')).toBeInTheDocument()
-      expect(mockCmkAjax).toHaveBeenCalledWith('ajax_send_trial_mode_request.py', {
-        step: 'request',
-        email: 'jane.doe@example.com',
-        _csrf_token: 'the-csrf-token'
+    })
+
+    it('requests a code for the address entered', async () => {
+      renderApp()
+      await startTrial()
+
+      await user.type(screen.getByLabelText('Email address'), 'jane.doe@example.com{Enter}')
+
+      await waitFor(() => {
+        expect(received.verification).toEqual([
+          {
+            step: 'request',
+            email: 'jane.doe@example.com',
+            _csrf_token: 'the-csrf-token'
+          } satisfies VerificationRequest
+        ])
       })
-      expect(resendButton()).toHaveTextContent('Resend code (1:00)')
-      expect(resendButton()).toBeDisabled()
-    })
-
-    it('sets the resend cooldown timer', async () => {
-      mockCmkAjax.mockResolvedValue({ status: 'ok', salt: '...' })
-      renderApp()
-      await startTrial()
-
-      await user.type(screen.getByLabelText('Email address'), 'jane.doe@example.com{Enter}')
-
-      expect(screen.getByText('Enter your verification code')).toBeInTheDocument()
-      expect(resendButton()).toHaveTextContent('Resend code (1:00)')
-      expect(resendButton()).toBeDisabled()
-    })
-
-    it('handles network errors when sending code', async () => {
-      renderApp()
-      vi.spyOn(console, 'error').mockImplementation(() => {})
-      mockCmkAjax.mockRejectedValue(new Error('nope'))
-      await startTrial()
-
-      await user.type(screen.getByLabelText('Email address'), 'jane.doe@example.com{Enter}')
-
-      expect(screen.getByText('Enter your verification code')).toBeInTheDocument()
-      expect(
-        screen.getByText('Unable to reach Checkmk site. Please check that it is started.')
-      ).toBeInTheDocument()
-      expect(resendButton()).toBeEnabled()
-      expect(console.error).toHaveBeenCalledWith(
-        'error requesting trial verification code',
-        new Error('nope')
-      )
-      expect(
-        screen.queryByText(
-          'We sent a 6-digit code to jane.doe@example.com. It expires after 24 hours.'
-        )
-      ).not.toBeInTheDocument()
-    })
-
-    it('handles error responses returned by the backend', async () => {
-      renderApp()
-      mockCmkAjax.mockResolvedValue({
-        status: 'error',
-        errorMessage: 'Simulated Failure (as returned by the backend).'
-      })
-      await startTrial()
-
-      await user.type(screen.getByLabelText('Email address'), 'jane.doe@example.com{Enter}')
-
-      expect(screen.getByText('Enter your verification code')).toBeInTheDocument()
-      expect(
-        screen.getByText('Simulated Failure (as returned by the backend).')
-      ).toBeInTheDocument()
-      expect(resendButton()).toBeEnabled()
-      expect(
-        screen.queryByText(
-          'We sent a 6-digit code to jane.doe@example.com. It expires after 24 hours.'
-        )
-      ).not.toBeInTheDocument()
     })
 
     it('sends the code to the address without the whitespace around it', async () => {
-      mockCmkAjax.mockResolvedValue({ status: 'ok', salt: '...' })
       renderApp()
       await startTrial()
 
       await user.type(screen.getByLabelText('Email address'), '  jane.doe@example.com  ')
       await user.click(screen.getByRole('button', { name: 'Send code' }))
 
-      expect(
-        screen.getByText(
-          'We sent a 6-digit code to jane.doe@example.com. It expires after 24 hours.'
-        )
-      ).toBeInTheDocument()
+      await waitFor(() => {
+        expect(received.verification).toEqual([
+          {
+            step: 'request',
+            email: 'jane.doe@example.com',
+            _csrf_token: 'the-csrf-token'
+          } satisfies VerificationRequest
+        ])
+      })
     })
 
-    it('leaves the newsletter opt-in off, and does not toggle it from its own link', async () => {
+    it('leaves the newsletter opt-in off', async () => {
       renderApp()
+
       await startTrial()
 
-      const optIn = screen.getByRole('checkbox')
-      expect(optIn).toHaveAttribute('aria-checked', 'false')
+      expect(screen.getByRole('checkbox', { name: /email newsletters/ })).not.toBeChecked()
+    })
+
+    it('does not opt in to the newsletter from the unsubscribe link in its label', async () => {
+      renderApp()
+      await startTrial()
 
       // The legal notice below carries an unsubscribe link of its own; this is the one
       // inside the checkbox's label, where a plain click would activate the control as
       // its default action.
-      const optInLink = screen.getByRole('link', {
-        name: 'unsubscribe from the newsletter by email'
-      })
-      await user.click(optInLink)
+      await user.click(
+        screen.getByRole('link', { name: 'unsubscribe from the newsletter by email' })
+      )
 
-      expect(optIn).toHaveAttribute('aria-checked', 'false')
+      expect(screen.getByRole('checkbox', { name: /email newsletters/ })).not.toBeChecked()
+    })
+
+    // prettier-ignore
+    describe.each([
+      { failure: 'the site cannot be reached', failCodeRequest: makeSiteUnreachableForVerification, reason: SITE_UNREACHABLE },
+      { failure: 'the site reports an error',  failCodeRequest: reportErrorForVerification,         reason: SITE_ERROR }
+    ])('when $failure', ({ failCodeRequest, reason }) => {
+      async function requestCode() {
+        failCodeRequest()
+        renderApp()
+        await startTrial()
+        await user.type(screen.getByLabelText('Email address'), 'jane.doe@example.com{Enter}')
+      }
+
+      it('says why no code was sent', async () => {
+        await requestCode()
+
+        expect(await screen.findByText(reason)).toBeInTheDocument()
+      })
+
+      it('offers a resend straight away', async () => {
+        await requestCode()
+        await screen.findByText(reason)
+
+        expect(resendButton()).toBeEnabled()
+      })
+
+      it('does not claim that a code was sent', async () => {
+        await requestCode()
+        await screen.findByText(reason)
+
+        expect(screen.queryByText(CODE_SENT)).not.toBeInTheDocument()
+      })
     })
   })
 
   describe('code step', () => {
     it('names the address the code went to', async () => {
       renderApp()
+
       await reachCodeStep()
 
-      expect(
-        screen.getByText(
-          'We sent a 6-digit code to jane.doe@example.com. It expires after 24 hours.'
-        )
-      ).toBeInTheDocument()
+      expect(screen.getByText(CODE_SENT)).toBeInTheDocument()
     })
 
     it('advances on the sixth digit without a click on Verify', async () => {
@@ -616,18 +733,18 @@ describe('TrialModeSelectionApp', () => {
 
       await user.type(codeDigits()[0]!, '424242')
 
-      expect(screen.getByText('Trial verified')).toBeInTheDocument()
+      expect(await screen.findByText('Trial verified')).toBeInTheDocument()
     })
 
     it('keeps Verify out of reach until the code is complete', async () => {
       renderApp()
       await reachCodeStep()
 
-      expect(screen.getByRole('button', { name: 'Verify' })).toBeDisabled()
+      expect(verifyButton()).toBeDisabled()
 
       await user.type(codeDigits()[0]!, '42424')
 
-      expect(screen.getByRole('button', { name: 'Verify' })).toBeDisabled()
+      expect(verifyButton()).toBeDisabled()
     })
 
     // The boxes submit themselves only when the last one is the box being filled, so a
@@ -639,37 +756,38 @@ describe('TrialModeSelectionApp', () => {
       await typeCodeOutOfOrder()
 
       expect(screen.getByText('Enter your verification code')).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Verify' })).toBeEnabled()
+      expect(verifyButton()).toBeEnabled()
     })
 
-    it('verifies on Enter when the code is completed out of order', async () => {
+    it('verifies the code on Enter when it was completed out of order', async () => {
       renderApp()
       await reachCodeStep()
       await typeCodeOutOfOrder()
 
       await user.type(screen.getByRole('textbox', { name: 'Digit 6 of 6' }), '{Enter}')
 
-      expect(screen.getByText('Trial verified')).toBeInTheDocument()
+      expect(await screen.findByText('Trial verified')).toBeInTheDocument()
     })
 
-    it('sends the verify request', async () => {
+    it('sends the code back with the address and the salt it was issued with', async () => {
       renderApp()
       await reachCodeStep()
-      await typeCodeOutOfOrder()
 
-      await user.type(screen.getByRole('textbox', { name: 'Digit 6 of 6' }), '{Enter}')
+      await user.type(codeDigits()[0]!, '424242')
+      await screen.findByText('Trial verified')
 
-      expect(mockCmkAjax).toHaveBeenCalledWith('ajax_send_trial_mode_request.py', {
+      expect(received.verification.at(-1)).toEqual({
         step: 'verify',
         email: 'jane.doe@example.com',
         salt: 'fAkE_sAlT',
         code: '424242',
         _csrf_token: 'the-csrf-token'
-      })
+      } satisfies VerificationRequest)
     })
 
     it('puts the cursor in the first box, so the code can be typed straight away', async () => {
       renderApp()
+
       await reachCodeStep()
 
       await waitFor(() => {
@@ -677,38 +795,41 @@ describe('TrialModeSelectionApp', () => {
       })
     })
 
-    it('returns to the address on Back, with it still filled in', async () => {
+    it('keeps the address on Back, so the code can be sent again without retyping it', async () => {
       renderApp()
       await reachCodeStep()
 
       await user.click(screen.getByRole('button', { name: 'Back' }))
+      await user.click(screen.getByRole('button', { name: 'Send code' }))
 
-      expect(screen.getByLabelText('Email address')).toHaveValue('jane.doe@example.com')
+      expect(screen.getByText(CODE_SENT)).toBeInTheDocument()
     })
 
-    it('handles continuing without verification in case of backend errors', async () => {
+    it('saves an unverified trial when the user continues without a code after an error', async () => {
+      reportErrorForVerification()
       renderApp()
-      mockCmkAjax.mockResolvedValue({
-        status: 'error',
-        errorMessage: 'Simulated Failure (as returned by the backend).'
-      })
       await startTrial()
       await user.type(screen.getByLabelText('Email address'), 'jane.doe@example.com')
       await user.click(screen.getByRole('button', { name: 'Send code' }))
-      await user.click(screen.getByRole('button', { name: 'Continue without verification' }))
 
-      expect(mockCmkAjax).toHaveBeenCalledWith('ajax_save_trial_mode_selection.py', {
-        selection: 'unverified_trial',
-        unverified_reason: 'code_entry_error',
-        _csrf_token: 'the-csrf-token'
-      })
-      expect(screen.getByRole('heading', { name: 'Unverified trial' })).toBeInTheDocument()
+      await user.click(await screen.findByRole('button', { name: 'Continue without verification' }))
+
+      expect(await screen.findByRole('heading', { name: 'Unverified trial' })).toBeInTheDocument()
+      expect(received.save).toEqual([
+        {
+          selection: 'unverified_trial',
+          unverified_reason: 'code_entry_error',
+          _csrf_token: 'the-csrf-token'
+        } satisfies SaveRequest
+      ])
     })
   })
 
   describe('resend cooldown', () => {
     beforeEach(() => {
-      vi.useFakeTimers()
+      // Only the clock the countdown reads is faked. setTimeout stays real, so the
+      // simulated site still answers and waitFor can poll for it.
+      vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] })
       // Midday, so no test here crosses midnight and resets the daily send limit.
       vi.setSystemTime(Date.UTC(2026, 8, 25, 12, 0, 0))
       // Handing user-event the fake clock rather than letting real elapsed time drive it:
@@ -720,6 +841,13 @@ describe('TrialModeSelectionApp', () => {
     afterEach(() => {
       vi.useRealTimers()
     })
+
+    /** Resends once the cooldown is over, and waits for the site to confirm the new code. */
+    async function resend() {
+      await vi.advanceTimersByTimeAsync(60_000)
+      await user.click(resendButton())
+      await screen.findByRole('button', { name: 'Resend code (1:00)' })
+    }
 
     it('starts counting down from the first send, not from the first resend', async () => {
       renderApp()
@@ -766,7 +894,9 @@ describe('TrialModeSelectionApp', () => {
       await user.click(screen.getByRole('button', { name: 'Send code' }))
 
       // A different address is a different rate-limit key, so it is owed its own cooldown.
-      expect(resendButton()).toHaveTextContent('Resend code (1:00)')
+      await waitFor(() => {
+        expect(resendButton()).toHaveTextContent('Resend code (1:00)')
+      })
     })
 
     it('starts the cooldown over on a resend', async () => {
@@ -776,41 +906,32 @@ describe('TrialModeSelectionApp', () => {
       await vi.advanceTimersByTimeAsync(60_000)
       await user.click(resendButton())
 
-      expect(resendButton()).toHaveTextContent('Resend code (1:00)')
+      await waitFor(() => {
+        expect(resendButton()).toHaveTextContent('Resend code (1:00)')
+      })
     })
-
-    /** Sends 5 codes: the first one plus 4 resends. */
-    async function useUpSends() {
-      for (let resend = 0; resend < 4; resend++) {
-        await vi.advanceTimersByTimeAsync(60_000)
-        await user.click(resendButton())
-      }
-    }
 
     it('still verifies a code already delivered once the send limit is used up', async () => {
       renderApp()
       await reachCodeStep()
-      await useUpSends()
+      // The first send plus four resends use up the five a day.
+      for (let sends = 1; sends < 5; sends++) {
+        await resend()
+      }
 
-      await user.type(codeDigits()[0]!, '42424')
-      expect(screen.getByRole('button', { name: 'Verify' })).toBeDisabled()
-      await user.type(codeDigits()[5]!, '2')
+      await user.type(codeDigits()[0]!, '424242')
 
-      expect(screen.getByText('Trial verified')).toBeInTheDocument()
+      expect(await screen.findByText('Trial verified')).toBeInTheDocument()
     })
 
     it('empties the boxes on a resend, the previous code being dead', async () => {
       renderApp()
       await reachCodeStep()
+      await typeCodeOutOfOrder()
 
-      const digits = () => codeDigits().map((input) => input.value)
-      await user.type(codeDigits()[0]!, '42424')
-      expect(digits()).toEqual(['4', '2', '4', '2', '4', ''])
+      await resend()
 
-      await vi.advanceTimersByTimeAsync(60_000)
-      await user.click(resendButton())
-
-      expect(digits()).toEqual(['', '', '', '', '', ''])
+      expect(verifyButton()).toBeDisabled()
     })
   })
 
@@ -818,13 +939,14 @@ describe('TrialModeSelectionApp', () => {
     async function verifyTrial() {
       await reachCodeStep()
       await user.type(codeDigits()[0]!, '424242')
+      await screen.findByText('Trial verified')
     }
 
     it('names the address, the edition and the end date', async () => {
       renderApp()
+
       await verifyTrial()
 
-      expect(screen.getByText('Trial verified')).toBeInTheDocument()
       expect(
         screen.getByText(
           'This site is now linked to jane.doe@example.com. Your 30-day trial of Checkmk Ultimate runs until August 13, 2026 — after that, the site reverts to the free edition unless you add a license.'
@@ -834,6 +956,7 @@ describe('TrialModeSelectionApp', () => {
 
     it('names the edition the page was given, not one of its own', async () => {
       renderApp({ edition_title: 'Checkmk Cloud' })
+
       await verifyTrial()
 
       expect(screen.getByText(/30-day trial of Checkmk Cloud/)).toBeInTheDocument()
@@ -844,6 +967,7 @@ describe('TrialModeSelectionApp', () => {
     it('names the end date in the timezone of the browser showing it', async () => {
       zone.current = 'Pacific/Auckland'
       renderApp()
+
       await verifyTrial()
 
       expect(screen.getByText(/runs until August 14, 2026/)).toBeInTheDocument()
@@ -851,6 +975,7 @@ describe('TrialModeSelectionApp', () => {
 
     it('offers no way back, the branch being done', async () => {
       renderApp()
+
       await verifyTrial()
 
       expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument()

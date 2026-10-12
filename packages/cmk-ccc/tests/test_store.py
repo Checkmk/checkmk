@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
+import fcntl
 import importlib.machinery
 import importlib.util
 import os
@@ -11,10 +12,10 @@ import queue
 import sys
 import threading
 import time
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
-from types import ModuleType
+from types import FrameType, ModuleType
 from typing import override
 
 import pytest
@@ -384,6 +385,124 @@ def test_release_all_locks(tmp_path: Path) -> None:
     assert all(store.acquire_lock(f) for f in files)
     store.release_all_locks()
     assert all(store.have_lock(f) is False for f in files)
+
+
+class _Interrupt(BaseException):
+    """Stands for an exception raised asynchronously in a thread, like a request timeout"""
+
+
+def _interrupted(call: Callable[[], object], at_step: int) -> bool:
+    """Run the call and raise _Interrupt at the given line or bytecode step of the lock functions
+
+    Returns whether the call was interrupted, i.e. whether the call has that many steps.
+    """
+    locks_file = store.acquire_lock.__code__.co_filename
+    steps = 0
+
+    def count_steps(_frame: FrameType, event: str, _arg: object) -> object:
+        nonlocal steps
+        if event in ("line", "opcode"):
+            steps += 1
+            if steps == at_step:
+                raise _Interrupt
+        return count_steps
+
+    def trace_lock_functions(frame: FrameType, _event: str, _arg: object) -> object:
+        if frame.f_code.co_filename != locks_file:
+            return None
+        frame.f_trace_opcodes = True
+        return count_steps
+
+    previous_trace = sys.gettrace()
+    sys.settrace(trace_lock_functions)  # type: ignore[arg-type]
+    try:
+        call()
+    except _Interrupt:
+        return True
+    finally:
+        sys.settrace(previous_trace)
+    return False
+
+
+def _locked_by_anyone(path: Path) -> bool:
+    fd = os.open(path, os.O_RDONLY)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        return True
+    finally:
+        os.close(fd)
+    return False
+
+
+def test_an_interrupted_acquire_lock_leaves_no_lock_behind(test_file: Path) -> None:
+    step = 1
+    while _interrupted(lambda: store.acquire_lock(test_file), at_step=step):
+        store.release_all_locks()
+        assert not _locked_by_anyone(test_file), f"Lock left behind when interrupted at {step}"
+        step += 1
+
+    store.release_all_locks()
+    assert not _locked_by_anyone(test_file)
+
+
+def test_an_interrupted_acquire_lock_cleans_up_without_release_all_locks(
+    test_file: Path,
+) -> None:
+    step = 1
+    while _interrupted(lambda: store.acquire_lock(test_file), at_step=step):
+        assert not store.have_lock(test_file), f"Lock registered when interrupted at {step}"
+        assert not _locked_by_anyone(test_file), f"Lock left behind when interrupted at {step}"
+        step += 1
+
+    store.release_lock(test_file)
+
+
+def test_an_interrupted_release_lock_leaves_no_lock_behind(test_file: Path) -> None:
+    step = 1
+    while True:
+        store.acquire_lock(test_file)
+        interrupted = _interrupted(lambda: store.release_lock(test_file), at_step=step)
+        store.release_all_locks()
+        assert not _locked_by_anyone(test_file), f"Lock left behind when interrupted at {step}"
+        if not interrupted:
+            break
+        step += 1
+
+
+def test_an_interrupted_release_lock_leaves_a_consistent_lock_without_release_all_locks(
+    test_file: Path,
+) -> None:
+    step = 1
+    while True:
+        store.acquire_lock(test_file)
+        interrupted = _interrupted(lambda: store.release_lock(test_file), at_step=step)
+
+        store.acquire_lock(test_file)
+        assert store.have_lock(test_file), f"Lock not reported when interrupted at {step}"
+        assert _locked_by_anyone(test_file), f"Lock not held when interrupted at {step}"
+        store.release_lock(test_file)
+        assert not store.have_lock(test_file), f"Lock reported when interrupted at {step}"
+        assert not _locked_by_anyone(test_file), f"Lock left behind when interrupted at {step}"
+
+        if not interrupted:
+            break
+        step += 1
+
+
+def test_a_forked_child_releasing_a_lock_leaves_the_lock_of_the_parent(test_file: Path) -> None:
+    store.acquire_lock(test_file)
+    try:
+        if (pid := os.fork()) == 0:
+            try:
+                store.release_all_locks()
+            finally:
+                os._exit(0)
+        os.waitpid(pid, 0)
+
+        assert _locked_by_anyone(test_file)
+    finally:
+        store.release_lock(test_file)
 
 
 class LockTestJob(enum.Enum):

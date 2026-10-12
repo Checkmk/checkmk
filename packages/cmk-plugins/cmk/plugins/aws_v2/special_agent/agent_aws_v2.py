@@ -15,9 +15,10 @@ import argparse
 import logging
 import os
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import NamedTuple
 
+import boto3
 import botocore
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
@@ -304,6 +305,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         "--region",
         dest="regions",
         action="append",
+        default=[],
         help="Regions to use:\n%s" % "\n".join(["%-15s %s" % e for e in AWS_REGIONS]),
     )
     parser.add_argument(
@@ -623,6 +625,38 @@ def _write_access_error(error: AwsAccessError) -> None:
     sys.stdout.write("Exception: %s\n" % error)
 
 
+def regions_not_enabled(
+    session: boto3.session.Session, region: str, config: botocore.config.Config | None
+) -> frozenset[str]:
+    """The opt-in regions that the account of the session has not enabled.
+
+    Empty if AWS does not tell, for example when the role may not call DescribeRegions.
+    Then every configured region is queried, as before.
+    """
+    try:
+        regions = (
+            session.client("ec2", region_name=region, config=config)
+            .describe_regions(AllRegions=True)
+            .get("Regions", [])
+        )
+    except (botocore.exceptions.BotoCoreError, botocore.exceptions.ClientError) as e:
+        LOGGER.info("Cannot tell which regions are enabled: %(error)s", {"error": e})
+        return frozenset()
+    return not_opted_in(regions)
+
+
+def not_opted_in(regions: Sequence[Mapping[str, str]]) -> frozenset[str]:
+    """The regions of a DescribeRegions answer that need an opt-in the account has not given."""
+    return frozenset(
+        region["RegionName"] for region in regions if region.get("OptInStatus") == "not-opted-in"
+    )
+
+
+class AccountRun(NamedTuple):
+    has_exceptions: bool
+    notes: Sequence[AgentInfoRow]
+
+
 def _run_account(
     args: argparse.Namespace,
     account: AwsAccount,
@@ -631,15 +665,26 @@ def _run_account(
     regional_services: Sequence[str],
     use_cache: bool,
     proxy_config: botocore.config.Config | None,
-) -> bool:
-    """Run the sections of one account in every region. Returns whether a section failed."""
+) -> AccountRun:
+    """Run the sections of one account in every region."""
     # Collects the S3 limits across the regions of this account, so it must not be shared.
     s3_limits_distributor = ResultDistributorS3Limits()
+
+    not_enabled = (
+        regions_not_enabled(account.session, args.global_service_region, proxy_config)
+        if regional_services and args.regions
+        else frozenset()
+    )
+    notes = [
+        AgentInfoRow("info", account.id, "Region is not enabled in this account", region)
+        for region in args.regions
+        if region in not_enabled
+    ]
 
     has_exceptions = False
     for aws_services, aws_regions, aws_sections in [
         (global_services, [args.global_service_region], AWSSectionsUSEast),
-        (regional_services, args.regions, AWSSectionsGeneric),
+        (regional_services, [r for r in args.regions if r not in not_enabled], AWSSectionsGeneric),
     ]:
         if not aws_services or not aws_regions:
             continue
@@ -668,7 +713,7 @@ def _run_account(
                 has_exceptions = True
                 if args.debug:
                     raise
-    return has_exceptions
+    return AccountRun(has_exceptions, notes)
 
 
 def agent_aws_main(args: argparse.Namespace) -> int:
@@ -716,7 +761,7 @@ def agent_aws_main(args: argparse.Namespace) -> int:
     for account_id in account_ids:
         try:
             account = credentials.open_account(account_id)
-            has_exceptions |= _run_account(
+            account_run = _run_account(
                 args,
                 account,
                 aws_config.for_account(account.id),
@@ -729,7 +774,8 @@ def agent_aws_main(args: argparse.Namespace) -> int:
             # Only this account is lost. The others still get monitored.
             agent_info.append(AgentInfoRow("error", account_id, str(ae)))
         else:
-            agent_info.append(AgentInfoRow("ok", account.id))
+            has_exceptions |= account_run.has_exceptions
+            agent_info += [AgentInfoRow("ok", account.id), *account_run.notes]
 
     write_agent_info(agent_info)
     return 1 if has_exceptions else 0

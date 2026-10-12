@@ -23,9 +23,10 @@ from typing import Literal
 
 @dataclass(frozen=True)
 class AgentInfoRow:
-    status: Literal["ok", "error"]
+    status: Literal["ok", "error", "info"]
     account: str | None = None
     reason: str | None = None
+    region: str | None = None
 
     def to_json(self) -> str:
         return json.dumps({key: value for key, value in asdict(self).items() if value is not None})

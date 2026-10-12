@@ -10,6 +10,8 @@ AssumeRole hands out a temporary key per account, "ASIA<account id>", and
 GetCallerIdentity answers with the account of the key: the hub account for any static
 key. Roles in DENIED_ACCOUNT cannot be assumed.
 
+DescribeRegions names NOT_ENABLED_REGION as an opt-in region the account has not enabled.
+
 Tests that also set AWS_ENDPOINT_URL send every other service here, too. The fake
 records who signed such a request and for which region, then answers with an error.
 
@@ -28,6 +30,7 @@ HUB_ACCOUNT = "111111111111"
 ROLE_ACCOUNT = "222222222222"
 ROLE = "arn:aws:iam::222222222222:role/CheckmkMonitoring"
 DENIED_ACCOUNT = "999999999999"
+NOT_ENABLED_REGION = "me-central-1"
 
 _ACCESS_DENIED_RESPONSE = """\
 <ErrorResponse xmlns="https://sts.amazonaws.com/doc/2011-06-15/">
@@ -74,6 +77,17 @@ def _caller_identity_response(account: str) -> str:
   </GetCallerIdentityResult>
   <ResponseMetadata><RequestId>2</RequestId></ResponseMetadata>
 </GetCallerIdentityResponse>
+"""
+
+
+_DESCRIBE_REGIONS_RESPONSE = f"""\
+<DescribeRegionsResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
+  <requestId>5</requestId>
+  <regionInfo>
+    <item><regionName>eu-central-1</regionName><optInStatus>opt-in-not-required</optInStatus></item>
+    <item><regionName>{NOT_ENABLED_REGION}</regionName><optInStatus>not-opted-in</optInStatus></item>
+  </regionInfo>
+</DescribeRegionsResponse>
 """
 
 
@@ -148,7 +162,10 @@ def _handler(sts: FakeSts) -> type[BaseHTTPRequestHandler]:
                     request = _signed_request(self.headers["Authorization"])
                     sts.service_requests.append(request)
                     sts.calls.append(request)
-                    self._answer(400, _SERVICE_ERROR_RESPONSE)
+                    if params.get("Action") == "DescribeRegions":
+                        self._answer(200, _DESCRIBE_REGIONS_RESPONSE)
+                    else:
+                        self._answer(400, _SERVICE_ERROR_RESPONSE)
 
         do_GET = do_HEAD = do_PUT = do_DELETE = do_POST
 

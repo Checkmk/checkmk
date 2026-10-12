@@ -112,7 +112,7 @@ def test_one_assume_role_serves_every_region(
 
     assert exit_code == 0
     assert len(fake_sts.assume_role_calls) == 1
-    assert {(r.key_id, r.region) for r in fake_sts.service_requests} == {
+    assert {(r.key_id, r.region) for r in fake_sts.service_requests if r.service == "sns"} == {
         (TEMPORARY_KEY_ID, region) for region in regions
     }
 

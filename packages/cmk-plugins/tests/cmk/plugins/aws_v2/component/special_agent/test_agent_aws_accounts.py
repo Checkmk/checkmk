@@ -14,6 +14,7 @@ from cmk.testlib.aws_v2.fake_sts import (
     AssumeRoleCall,
     DENIED_ACCOUNT,
     FakeSts,
+    NOT_ENABLED_REGION,
     SignedRequest,
     temporary_key_id,
 )
@@ -157,3 +158,48 @@ def test_failed_login_is_a_run_error_in_the_agent_info(
         "<<<aws_v2_agent_info:sep(0)>>>",
         {"status", "reason"},
     )
+
+
+def _agent_info(
+    fake_sts: FakeSts,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    args: list[str],
+) -> list[dict[str, str]]:
+    monkeypatch.setenv("AWS_ENDPOINT_URL", fake_sts.url)
+    agent_aws_main(parse_arguments(args))
+    return [json.loads(line) for line in _sections_by_host(capsys.readouterr().out)[None][1:]]
+
+
+def test_run_without_regions_queries_the_global_services(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    regional = ("--region", "eu-central-1", "--service", "sns")
+    args = [arg for arg in LOGIN_ARGS if arg not in regional]
+
+    rows = _agent_info(
+        fake_sts, monkeypatch, capsys, [*args, "--global-service", "ce", *_account_args(ACCOUNTS)]
+    )
+
+    assert [row["status"] for row in rows] == ["ok", "ok"]
+
+
+def test_region_not_enabled_is_info_for_its_account(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    args = [*LOGIN_ARGS, "--region", NOT_ENABLED_REGION, *_account_args(ACCOUNTS[:1])]
+
+    assert {"account": ACCOUNTS[0], "region": NOT_ENABLED_REGION, "status": "info"}.items() <= (
+        _agent_info(fake_sts, monkeypatch, capsys, args)[1].items()
+    )
+
+
+def test_region_not_enabled_is_not_queried(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    args = [*LOGIN_ARGS, "--region", NOT_ENABLED_REGION, *_account_args(ACCOUNTS[:1])]
+    _agent_info(fake_sts, monkeypatch, capsys, args)
+
+    assert NOT_ENABLED_REGION not in {
+        request.region for request in fake_sts.service_requests if request.service == "sns"
+    }

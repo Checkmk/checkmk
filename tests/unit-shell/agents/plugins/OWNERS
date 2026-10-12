@@ -12,6 +12,8 @@ per-file test_mk_sap_hana*=file:/component_owners/plugins_databases/OWNERS_DEFIN
 per-file test_mk_sap_hana*=set noparent
 per-file test_mk_tsm*=file:/component_owners/plugins_tsm/OWNERS_DEFINITION
 per-file test_mk_tsm*=set noparent
+per-file test_symantec_av*=file:/component_owners/plugins_symantec/OWNERS_DEFINITION
+per-file test_symantec_av*=set noparent
 
 # Please
 #  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead

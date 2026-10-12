@@ -11,7 +11,7 @@ import CmkRankedTable from '@/dashboard/components/CmkRankedTable'
 import type { RankedTableColumn, RankedTableRow } from '@/dashboard/components/CmkRankedTable'
 import { useComputedWidget } from '@/dashboard/composables/useComputedWidget'
 import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
-import { contextualLinkUrl } from '@/dashboard/lib/contextualLinkUrl'
+import { firstContextualLinkUrl } from '@/dashboard/lib/contextualLinkUrl'
 import type {
   ComputedTopList,
   LinkProperties,
@@ -80,12 +80,12 @@ function contextualLink(
   if (props.content.contextual_link.type === 'default') {
     return link(builtInUrl)
   }
-  const resolved = topList.links[0]
-  const cellProperties = properties.links[0]
-  if (resolved === undefined || cellProperties === undefined) {
-    return {}
-  }
-  return link(contextualLinkUrl(resolved, cellProperties, props.effective_filter_context.filters))
+  const url = firstContextualLinkUrl(
+    topList.links,
+    properties,
+    props.effective_filter_context.filters
+  )
+  return url === null ? {} : link(url)
 }
 
 function columns(topList: ComputedTopList): RankedTableColumn[] {

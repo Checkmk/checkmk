@@ -12,7 +12,7 @@ import CmkKpiStatCard, {
   type KpiState
 } from '@/dashboard/components/CmkKpiStatCard'
 import { useRangedComputedWidget } from '@/dashboard/composables/useComputedWidget'
-import { contextualLinkUrl } from '@/dashboard/lib/contextualLinkUrl'
+import { firstContextualLinkUrl } from '@/dashboard/lib/contextualLinkUrl'
 import type { ComputedSingleMetric, SingleMetricContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
 
@@ -27,12 +27,13 @@ const { state, retry } = useRangedComputedWidget(
 )
 
 function href(metric: ComputedSingleMetric): string | undefined {
-  const link = metric.links[0]
-  const properties = metric.link_properties.links[0]
-  if (link === undefined || properties === undefined) {
-    return undefined
-  }
-  return contextualLinkUrl(link, properties, props.effective_filter_context.filters)
+  return (
+    firstContextualLinkUrl(
+      metric.links,
+      metric.link_properties,
+      props.effective_filter_context.filters
+    ) ?? undefined
+  )
 }
 
 function kpiState(metric: ComputedSingleMetric): KpiState | undefined {

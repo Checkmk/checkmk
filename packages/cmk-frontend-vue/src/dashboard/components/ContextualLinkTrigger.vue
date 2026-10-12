@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { contextualLinkUrl } from '@/dashboard/lib/contextualLinkUrl'
+import { firstContextualLinkUrl } from '@/dashboard/lib/contextualLinkUrl'
 import type { LinkProperties, ResolvedLink, VisualContext } from '@/dashboard/types/widget'
 
 const props = defineProps<{
@@ -15,14 +15,9 @@ const props = defineProps<{
   filters: VisualContext
 }>()
 
-const href = computed(() => {
-  const link = props.links[0]
-  const properties = props.linkProperties.links[0]
-  if (link === undefined || properties === undefined) {
-    return null
-  }
-  return contextualLinkUrl(link, properties, props.filters)
-})
+const href = computed(() =>
+  firstContextualLinkUrl(props.links, props.linkProperties, props.filters)
+)
 </script>
 
 <template>

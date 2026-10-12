@@ -3,7 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { FilterResult, ResolvedLink, VisualContext } from '@/dashboard/types/widget'
+import type {
+  FilterResult,
+  LinkProperties,
+  ResolvedLink,
+  VisualContext
+} from '@/dashboard/types/widget'
 
 const PAGE_BY_LOCATION_TYPE: Record<ResolvedLink['location']['type'], [string, string]> = {
   views: ['view.py', 'view_name'],
@@ -38,4 +43,18 @@ export function contextualLinkUrl(
   params.set('filled_in', 'filter')
   params.set('_show_filter_form', link.show_filter_form ? '1' : '0')
   return `${page}?${params.toString()}`
+}
+
+/** The URL of the first contextual link, or null if the widget links nowhere. */
+export function firstContextualLinkUrl(
+  links: ResolvedLink[],
+  linkProperties: LinkProperties,
+  effectiveContext: VisualContext
+): string | null {
+  const link = links[0]
+  const properties = linkProperties.links[0]
+  if (link === undefined || properties === undefined) {
+    return null
+  }
+  return contextualLinkUrl(link, properties, effectiveContext)
 }

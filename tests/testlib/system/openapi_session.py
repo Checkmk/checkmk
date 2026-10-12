@@ -2353,7 +2353,7 @@ class DataBackendAPI(BaseAPI):
     # only, so older sites still serve the old name and answer the new one with 404.
     _DATA_BACKEND_DOMAIN_SINCE = CMKVersion("3.0.0b1")
 
-    def _request(self, site_id: str, config_type: str) -> None:
+    def _request(self, site_id: str, config: Mapping[str, object]) -> None:
         method = (
             self.session.patch
             if self.session.site_version >= self._PATCH_SINCE
@@ -2367,28 +2367,42 @@ class DataBackendAPI(BaseAPI):
         response = method(
             f"domain-types/{domain_type}/actions/update/invoke",
             api_version=APIVersion.INTERNAL,
-            json={
-                "site_id": site_id,
-                "config": {
-                    "type": config_type,
-                },
-            },
+            json={"site_id": site_id, "config": config},
         )
 
         if not response.ok:
             raise UnexpectedResponse.from_response(response)
 
     def disable(self, site_id: str) -> None:
-        self._request(site_id, "disabled")
+        self._request(site_id, {"type": "disabled"})
 
     def enable(self, site_id: str) -> None:
-        self._request(site_id, "enabled")
+        self._request(site_id, {"type": "enabled"})
 
-    def place_features(self, site_id: str, features: Mapping[str, str]) -> None:
+    def open_to_remote_sites(self, site_id: str, address: str) -> None:
+        self._request(
+            site_id,
+            {"type": "enabled", "remote_access": {"type": "enabled", "address": address}},
+        )
+
+    def place_features(
+        self,
+        site_id: str,
+        features: Mapping[str, str],
+        address_seen_by_central: str | None = None,
+    ) -> None:
         response = self.session.patch(
             "domain-types/data_backend/actions/update_feature_placement/invoke",
             api_version=APIVersion.INTERNAL,
-            json={"site_id": site_id, "features": features},
+            json={
+                "site_id": site_id,
+                "features": features,
+                **(
+                    {}
+                    if address_seen_by_central is None
+                    else {"address_seen_by_central": address_seen_by_central}
+                ),
+            },
         )
         if not response.ok:
             raise UnexpectedResponse.from_response(response)

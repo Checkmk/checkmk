@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui import hooks
 from cmk.gui.openapi.endpoints import (
     acknowledgement,
     activate_changes,
@@ -20,6 +21,7 @@ from cmk.gui.openapi.endpoints import (
     time_periods,
     version,
 )
+from cmk.gui.openapi.permission_tracking import permission_checked
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 
 from .api_endpoints import (
@@ -69,6 +71,8 @@ def register(
     versioned_endpoint_registry: VersionedEndpointRegistry,
     endpoint_family_registry: EndpointFamilyRegistry,
 ) -> None:
+    hooks.register_builtin("permission-checked", permission_checked)
+
     # TODO: once all legacy endpoints have been migrated the family registry should happen inside
     #  respective endpoint module
     endpoint_family_registry.register(AGENTS_FAMILY)

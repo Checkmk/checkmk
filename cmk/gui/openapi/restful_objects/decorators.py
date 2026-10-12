@@ -14,12 +14,11 @@ which then has to be dumped into the checkmk.yaml file.
 
 """
 
-import contextlib
 import functools
 import json
 import logging
 import warnings
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from http import HTTPStatus
 from typing import Any, Final, override, TypeVar
 
@@ -29,16 +28,12 @@ from werkzeug.http import parse_options_header
 from cmk import trace
 from cmk.ccc import store
 from cmk.ccc.version import Edition
-from cmk.gui import hooks
 from cmk.gui import http as cmk_http
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUnauthenticatedException
 from cmk.gui.http import HTTPMethod, request
 from cmk.gui.openapi.framework.api_config import APIVersion
-from cmk.gui.openapi.permission_tracking import (
-    enable_permission_tracking,
-    is_permission_tracking_enabled,
-)
+from cmk.gui.openapi.permission_tracking import track_permissions
 from cmk.gui.openapi.restful_objects.api_error import ApiError
 from cmk.gui.openapi.restful_objects.parameters import CONTENT_TYPE
 from cmk.gui.openapi.restful_objects.params import to_schema
@@ -316,7 +311,6 @@ class Endpoint:
         self.wrapped: Callable[[Mapping[str, Any]], cmk_http.Response]
 
         self.permissions_required = permissions_required
-        self._used_permissions: set[str] = set()
 
         # TODO: should maintain set functionality
         self._expected_status_codes = list(
@@ -373,25 +367,14 @@ class Endpoint:
         schema: type[ApiError] = self.error_schemas.get(status_code, ApiError)
         return schema()
 
-    @contextlib.contextmanager
-    def register_permission_tracking(self) -> Iterator[None]:
-        hooks.register_builtin("permission-checked", self._on_permission_checked)
-        try:
-            with enable_permission_tracking():
-                yield
-        finally:
-            hooks.unregister("permission-checked", self._on_permission_checked)
-
-    def _on_permission_checked(self, pname: str) -> None:
+    def _on_permission_checked(self, used_permissions: set[str], pname: str) -> None:
         """Collect all checked permissions during execution
 
         We need to remember this, in oder to later check if the set of required permissions
-        actually fits the declared permission schema.
+        actually fits the declared permission schema. The permissions are collected per request,
+        because the requests to an endpoint may run concurrently.
         """
-        if not is_permission_tracking_enabled():
-            return
-
-        self.remember_checked_permission(pname)
+        used_permissions.add(pname)
         permission_not_declared = (
             self.permissions_required is not None and pname not in self.permissions_required
         )
@@ -406,16 +389,9 @@ class Endpoint:
                     title=f"Required permissions ({pname}) not declared for this endpoint.",
                     detail=f"Endpoint: {self}\n"
                     f"Permission: {pname}\n"
-                    f"Used permission: {self._used_permissions}\n"
+                    f"Used permission: {used_permissions}\n"
                     f"Declared: {self.permissions_required}\n",
                 )
-
-    def remember_checked_permission(self, permission: str) -> None:
-        """Remember that a permission has been required (used)
-
-        The endpoint acts as a storage for triggered permissions under the current run. Once
-        the request has been done, everything is forgotten again."""
-        self._used_permissions.add(permission)
 
     @override
     def __repr__(self) -> str:
@@ -568,7 +544,10 @@ class Endpoint:
                     _params["content_type"] = content_type
 
     def _validate_response(
-        self, response_schema: type[Schema] | None, _params: dict[str, Any]
+        self,
+        response_schema: type[Schema] | None,
+        _params: dict[str, Any],
+        used_permissions: set[str],
     ) -> cmk_http.Response:
         with tracer.span("endpoint-body-call"):
             try:
@@ -610,7 +589,7 @@ class Endpoint:
                 endpoint=str(self),
                 params=_params,
                 permissions_required=self.permissions_required,
-                used_permissions=self._used_permissions,
+                used_permissions=used_permissions,
                 is_testing=is_testing_context,
             )
 
@@ -691,9 +670,16 @@ class Endpoint:
 
         @functools.wraps(self.func)
         def _validating_wrapper(param: Mapping[str, Any]) -> cmk_http.Response:  # type: ignore[misc]
-            # TODO: Better error messages, pointing to the location where variables are missing
+            used_permissions: set[str] = set()
+            with track_permissions(
+                functools.partial(self._on_permission_checked, used_permissions)
+            ):
+                return _validate_and_call(param, used_permissions)
 
-            self._used_permissions = set()
+        def _validate_and_call(
+            param: Mapping[str, Any], used_permissions: set[str]
+        ) -> cmk_http.Response:
+            # TODO: Better error messages, pointing to the location where variables are missing
 
             _params = dict(param)
             del param
@@ -723,7 +709,7 @@ class Endpoint:
             #     # Intentionally generate a crash report.
             #     raise PermissionError(f"Permissions need to be specified for {self}")
 
-            return self._validate_response(response_schema, _params)
+            return self._validate_response(response_schema, _params, used_permissions)
 
         def _wrap_with_wato_lock(func: WrappedFunc) -> WrappedFunc:
             # We need to lock the whole of the validation process, not just the function itself.

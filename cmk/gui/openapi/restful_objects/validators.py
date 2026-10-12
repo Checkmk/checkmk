@@ -26,14 +26,10 @@ from werkzeug.datastructures import MIMEAccept, MultiDict
 from werkzeug.http import parse_options_header
 
 from cmk import trace
-from cmk.gui import hooks
 from cmk.gui import http as cmk_http
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import HTTPMethod, Request
-from cmk.gui.openapi.permission_tracking import (
-    enable_permission_tracking,
-    is_permission_tracking_enabled,
-)
+from cmk.gui.openapi.permission_tracking import track_permissions
 from cmk.gui.openapi.restful_objects.content_decoder import decode
 from cmk.gui.openapi.restful_objects.params import path_parameters
 from cmk.gui.openapi.restful_objects.type_defs import ETagBehaviour, StatusCodeInt
@@ -551,9 +547,6 @@ class PermissionValidator:
 
         def on_permission_checked(pname: str) -> None:
             """Collect all checked permissions during execution"""
-            if not is_permission_tracking_enabled():
-                return
-
             used_permissions.add(pname)
 
             if required_permissions is None or pname not in required_permissions:
@@ -576,12 +569,8 @@ class PermissionValidator:
     @contextlib.contextmanager
     def track_permissions(self) -> Iterator[None]:
         """Track permissions for the duration of the context."""
-        hooks.register_builtin("permission-checked", self._on_permission_checked)
-        try:
-            with enable_permission_tracking():
-                yield
-        finally:
-            hooks.unregister("permission-checked", self._on_permission_checked)
+        with track_permissions(self._on_permission_checked):
+            yield
 
 
 def _filter_profile_headers(arg_dict: ArgDict) -> ArgDict:

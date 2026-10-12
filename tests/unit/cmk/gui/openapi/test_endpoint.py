@@ -13,6 +13,7 @@ smth (needed for endpoint registration in test_openapi_endpoint_decorator_resets
 
 import base64
 import json
+import threading
 from collections.abc import Iterator, Mapping
 from http import HTTPStatus
 from pathlib import Path
@@ -20,8 +21,10 @@ from typing import NoReturn
 from unittest import mock
 
 import pytest
+from flask import Flask
 
 from cmk import fields
+from cmk.ccc.user import UserId
 from cmk.gui import hooks
 from cmk.gui.exceptions import MKAuthException, MKUnauthenticatedException
 from cmk.gui.fields.utils import BaseSchema
@@ -31,7 +34,9 @@ from cmk.gui.openapi.restful_objects.decorators import Endpoint, WrappedEndpoint
 from cmk.gui.openapi.restful_objects.registry import endpoint_registry
 from cmk.gui.openapi.utils import ProblemException, RestAPIResponseGeneralException
 from cmk.utils.local_secrets import SiteInternalSecret
-from tests.testlib.unit.gui.web_test_app import SetConfig, WebTestAppForCMK
+from cmk.web.utils import permission_verification as permissions
+from tests.testlib.unit.gui.common_fixtures import create_aut_user_auth_wsgi_app
+from tests.testlib.unit.gui.web_test_app import CmkTestResponse, SetConfig, WebTestAppForCMK
 from tests.testlib.unit.rest_api_client import ClientRegistry, RestApiClient
 
 TEST_TARGZ_FILE = "H4sIAAAAAAAAA+3OQQrCMBCF4aw9RbyAJDVNzxNooIXgyBjR4xvppuBCN0UK/7eYxzCzeNN8qs9qNuWaGMM7/dC7dS58b3yI3RDbDJ1pe/BnY922tRb3W01qrSlZLklHueaqounj79t9p6ZcitiHaBmPh3+XAQAAAAAAAAAAAAAAAAD87AUCVDjzACgAAA=="
@@ -93,12 +98,14 @@ def install_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
         request_schema=SomeSchema,
         update_config_generation=False,
         skip_locking=True,
+        permissions_required=permissions.Perm("one"),
     )
     def test(param: Mapping[str, object]) -> Response:
         """Smth"""
         body = param["body"]
         assert isinstance(body, dict)
-        hooks.call("permission-checked", body["permission"])
+        if body["permission"]:
+            hooks.call("permission-checked", body["permission"])
         return Response(status=HTTPStatus.NO_CONTENT)
 
     endpoint_registry.register(test)
@@ -161,37 +168,86 @@ def test_openapi_endpoint_decorator_resets_used_permissions(
     test_endpoint: WrappedEndpoint, aut_user_auth_wsgi_app: WebTestAppForCMK
 ) -> None:
     """
-    before this test, the Endpoint._used_permissions set was not cleared
-    between request. so if the endpoint had different code paths with different
-    requested permissions, no error was reported (depending on the order the
-    different code paths were called), although it should have.
-    for example: delete a downtime. if the downtime exists, the permission
-    'action.downtime' was requested, if the downtime did not exist it was not
-    requested.
-    once an existing downtime was deleted, all other calls with non existing
-    downtimes would have passed, but should have raised an error, that the
-    permission "action.downtime" was not requested.
+    The permissions used by a request must not be counted for another request. If the endpoint
+    had different code paths with different requested permissions, no error would be reported
+    (depending on the order the different code paths were called), although it should.
+    For example: delete a downtime. If the downtime exists, the permission
+    'action.downtime' is requested, if the downtime does not exist it is not requested.
     """
 
-    def call(permission: str) -> None:
-        aut_user_auth_wsgi_app.call_method(
+    def call(permission: str, status: int) -> CmkTestResponse:
+        return aut_user_auth_wsgi_app.call_method(
             "post",
             "/NO_SITE/check_mk/api/1.0/unitest-endpoint-test-that-is-not-cleaned-up",
             json.dumps({"permission": permission}),  # params
             {"Accept": "application/json"},  # headers
             content_type="application/json",
-            status=HTTPStatus.NO_CONTENT,
+            status=status,
         )
 
-    # here we create a code path, that requests the permission "one"
-    call("one")
-    # we expect to see this permission in the collection:
-    assert test_endpoint.endpoint._used_permissions == {"one"}  # noqa: SLF001
-    # then we create a code path that requests the permission "two"
-    call("two")
-    # and expect only "two" in the collection, because "one" was requested in
-    # another call. before the fix, both "one" and "two" were in this set.
-    assert test_endpoint.endpoint._used_permissions == {"two"}  # noqa: SLF001
+    # This request uses the declared permission
+    call("one", HTTPStatus.NO_CONTENT)
+    # This request does not use it, which must be reported, although the previous request used it
+    call("", HTTPStatus.INTERNAL_SERVER_ERROR).assert_rest_api_crash()
+
+
+@pytest.fixture(name="concurrent_endpoint")
+def install_concurrent_endpoint(fresh_app_instance: None) -> Iterator[threading.Barrier]:
+    both_requests_running = threading.Barrier(2, timeout=10)
+
+    @Endpoint(
+        path="/concurrent_permission_check",
+        method="post",
+        link_relation="help",
+        output_empty=True,
+        tag_group="Monitoring",
+        request_schema=SomeSchema,
+        update_config_generation=False,
+        skip_locking=True,
+        permissions_required=permissions.Perm("one"),
+    )
+    def test(param: Mapping[str, object]) -> Response:
+        """Smth"""
+        body = param["body"]
+        assert isinstance(body, dict)
+        if body["permission"]:
+            hooks.call("permission-checked", body["permission"])
+        both_requests_running.wait()
+        return Response(status=HTTPStatus.NO_CONTENT)
+
+    endpoint_registry.register(test)
+    yield both_requests_running
+    endpoint_registry.unregister(test)
+
+
+def test_concurrent_requests_track_their_own_permissions(
+    concurrent_endpoint: threading.Barrier,
+    flask_app: Flask,
+    with_automation_user: tuple[UserId, str],
+) -> None:
+    responses: dict[str, CmkTestResponse] = {}
+
+    def call(permission: str) -> None:
+        # A test client can only be used by one thread at a time
+        client = create_aut_user_auth_wsgi_app(WebTestAppForCMK(flask_app), with_automation_user)
+        responses[permission] = client.call_method(
+            "post",
+            "/NO_SITE/check_mk/api/1.0/concurrent_permission_check",
+            json.dumps({"permission": permission}),  # params
+            {"Accept": "application/json"},  # headers
+            content_type="application/json",
+            expect_errors=True,
+        )
+
+    threads = [threading.Thread(target=call, args=(p,)) for p in ("one", "")]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    # The request not using the declared permission must not let the other one fail
+    assert responses["one"].status_code == HTTPStatus.NO_CONTENT
+    responses[""].assert_rest_api_crash()
 
 
 @pytest.fixture(name="test_endpoint_raise_status_code")

@@ -31,6 +31,7 @@ py_library(
     ],
     deps = [
         "//cmk/gui:core_toolkit",
+        requirement("flask"),
     ],
 )
 
@@ -91,6 +92,8 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":permission_tracking",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/openapi/api_endpoints",
         "//cmk/gui/openapi/endpoints",
         "//cmk/gui/openapi/framework",

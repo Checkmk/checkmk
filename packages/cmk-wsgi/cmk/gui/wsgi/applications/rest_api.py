@@ -325,8 +325,7 @@ class LegacyEndpointAdapter(AbstractWSGIApp):
         path_args = environ[ARGS_KEY]
 
         # Create the response
-        with self.endpoint.register_permission_tracking():
-            wsgi_app: Response = self.endpoint.wrapped(ParameterDict(path_args))
+        wsgi_app: Response = self.endpoint.wrapped(ParameterDict(path_args))
 
         _add_checkmk_headers(wsgi_app)
 

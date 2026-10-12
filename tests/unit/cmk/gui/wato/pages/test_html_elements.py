@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import contextvars
 import threading
 
 import pytest
@@ -46,7 +47,10 @@ def test_page_is_closed_despite_a_concurrent_page(flask_app: Flask) -> None:
     with html.output_funnel.plugged():
         with wato_html_page(show_body_end=True):
             wato_html_head(title="Title", breadcrumb=Breadcrumb())
-            thread = threading.Thread(target=other_request)
+            # Like a real concurrent request, start from an empty context, even if Thread.start()
+            # is patched to copy the caller's context (pytest-check does so). Otherwise Flask would
+            # reuse our app context, sharing g with the other request.
+            thread = threading.Thread(target=contextvars.Context().run, args=(other_request,))
             thread.start()
             thread.join()
         output = html.output_funnel.drain()

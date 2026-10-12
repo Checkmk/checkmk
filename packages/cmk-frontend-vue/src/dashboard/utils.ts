@@ -34,12 +34,10 @@ import type {
   AlertOverviewContent,
   Barplot,
   BarplotContent,
-  ComputedNetworkFlowAutonomousSystemResponse,
   ComputedNetworkFlowDonut,
-  ComputedNetworkFlowHostResponse,
   ComputedNetworkFlowKpiStatCard,
   ComputedNetworkFlowTopTable,
-  ComputedNetworkFlowTrendChartResponse,
+  ComputedNetworkFlowTrendChart,
   ComputedSingleMetric,
   ComputedTopList,
   ComputedWidgetResponse,
@@ -67,7 +65,6 @@ import type {
   TimelineContent,
   TimelineCount,
   TopListContent,
-  VisualContext,
   WidgetAvailableInventory,
   WidgetContent,
   WidgetSource,
@@ -491,45 +488,16 @@ export const dashboardAPI = {
       )
     )
   },
-  computeNetworkFlowTrendChartData: async (
-    content: NetworkFlowTrendChartContent,
-    context: VisualContext,
+  computeNetworkFlowTrendChart: async (body: {
+    source: ExplicitWidgetContent<NetworkFlowTrendChartContent>
     // Set once the graph was zoomed or panned; without it the time filter decides the window.
-    requestedTimeRange: { start: number; end: number } | null = null
-  ): Promise<ComputedNetworkFlowTrendChartResponse> => {
+    requested_time_range?: { start: number; end: number }
+  }): Promise<ComputedWidgetResponse<ComputedNetworkFlowTrendChart>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-network-flow-trend-chart/invoke', {
         ...CONTENT_TYPE_HEADER,
-        body: {
-          content,
-          context,
-          ...(requestedTimeRange === null ? {} : { requested_time_range: requestedTimeRange })
-        }
+        body
       })
-    )
-  },
-  computeNetworkFlowHostContext: async (ip: string): Promise<ComputedNetworkFlowHostResponse> => {
-    return unwrap(
-      await client.POST(
-        '/domain-types/dashboard/actions/compute-network-flow-host-context/invoke',
-        {
-          ...CONTENT_TYPE_HEADER,
-          body: { ip }
-        }
-      )
-    )
-  },
-  computeNetworkFlowAutonomousSystemContext: async (
-    asn: number
-  ): Promise<ComputedNetworkFlowAutonomousSystemResponse> => {
-    return unwrap(
-      await client.POST(
-        '/domain-types/dashboard/actions/compute-network-flow-autonomous-system-context/invoke',
-        {
-          ...CONTENT_TYPE_HEADER,
-          body: { asn }
-        }
-      )
     )
   }
 }

@@ -80,18 +80,7 @@ export type ComputedNetworkFlowDonut = components['schemas']['ComputedNetworkFlo
 export type NetworkFlowKpiStatCardContent = components['schemas']['NetworkFlowKpiStatCardContent']
 export type ComputedNetworkFlowKpiStatCard = components['schemas']['ComputedNetworkFlowKpiStatCard']
 export type NetworkFlowTrendChartContent = components['schemas']['NetworkFlowTrendChartContent']
-export type ComputedNetworkFlowTrendChartResponse =
-  components['schemas']['ComputedNetworkFlowTrendChartResponse']
-export type ComputedNetworkFlowHostResponse =
-  components['schemas']['ComputedNetworkFlowHostResponse']
-export type ComputedNetworkFlowHost = components['schemas']['ComputedNetworkFlowHost']
-export type ComputedNetworkFlowAutonomousSystemResponse =
-  components['schemas']['ComputedNetworkFlowAutonomousSystemResponse']
-export type ComputedNetworkFlowAutonomousSystem =
-  components['schemas']['ComputedNetworkFlowAutonomousSystem']
-export type ComputedNetworkFlowHostApplication =
-  components['schemas']['ComputedNetworkFlowHostApplication']
-export type ComputedNetworkFlowHostPeer = components['schemas']['ComputedNetworkFlowHostPeer']
+export type ComputedNetworkFlowTrendChart = components['schemas']['ComputedNetworkFlowTrendChart']
 export type SidebarElementContent = components['schemas']['SidebarElementContent']
 export type PerformanceGraphContent = components['schemas']['PerformanceGraphContent']
 export type SingleTimeseriesContent = components['schemas']['SingleTimeseriesContent']

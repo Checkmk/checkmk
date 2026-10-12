@@ -4,12 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
-import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
-import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { computed, inject, ref, watch } from 'vue'
 
+import { useWidgetData } from '@/dashboard/composables/useWidgetData'
+import { explicitWidgetSource } from '@/dashboard/composables/useWidgetSource'
 import type { NetworkFlowTrendChartContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
 import {
@@ -26,10 +25,9 @@ import {
 } from '@/graphing'
 import { autonomousSystemSlideInKey } from '@/network-flow/slide-ins/injectionKeys'
 
-import DashboardContentContainer from '../DashboardContentContainer.vue'
+import WidgetFigureFrame from '../figures/WidgetFigureFrame.vue'
 import type { ContentProps } from '../types.ts'
 import { trendChartMetrics } from './trendChartMetrics.ts'
-import { useNetworkFlowWidgetData } from './useNetworkFlowWidgetData.ts'
 
 const props = defineProps<ContentProps<NetworkFlowTrendChartContent>>()
 
@@ -65,34 +63,28 @@ watch(
   }
 )
 
-const { data, error } = useNetworkFlowWidgetData(
+const { state, retry } = useWidgetData(
   () =>
-    dashboardAPI.computeNetworkFlowTrendChartData(
-      props.content,
-      props.effective_filter_context.filters,
-      zoomedRange.value
-    ),
-  (response) => ({
-    timeRange: response.value.time_range,
-    series: response.value.series.map((item) => ({
-      name: item.name,
-      dataPoints: item.data_points
-    }))
-  }),
-  () => ({
-    filters: props.effective_filter_context.filters,
-    content: props.content,
-    zoomedRange: zoomedRange.value
-  })
+    dashboardAPI.computeNetworkFlowTrendChart({
+      source: explicitWidgetSource(props),
+      ...(zoomedRange.value === null ? {} : { requested_time_range: zoomedRange.value })
+    }),
+  () => [props.content, props.effective_filter_context, zoomedRange.value],
+  () => props.tick
 )
 
-// Kept out of the fetch transform so switching the display mode restacks the
-// series that are already there instead of waiting for a new response.
+const chart = computed(() => (state.value.kind === 'data' ? state.value.value : null))
+
+// The display mode only restacks the series that are already there, so switching
+// it does not wait for a new response.
 const metrics = computed((): Metric[] =>
-  trendChartMetrics(data.value?.series ?? [], props.content.display_mode)
+  trendChartMetrics(
+    (chart.value?.series ?? []).map((item) => ({ name: item.name, dataPoints: item.data_points })),
+    props.content.display_mode
+  )
 )
 
-const fetchedTimeRange = computed((): TimeRange | undefined => data.value?.timeRange)
+const fetchedTimeRange = computed((): TimeRange | undefined => chart.value?.time_range)
 
 const {
   viewTimeRange,
@@ -164,17 +156,14 @@ const graphOptions = computed(
 </script>
 
 <template>
-  <DashboardContentContainer
+  <WidgetFigureFrame
     :effective-title="effectiveTitle"
     :general_settings="general_settings"
-    content-overflow="hidden"
+    :state="state"
+    @retry="retry"
   >
     <div class="db-content-network-flow-trend-chart__wrapper">
-      <div v-if="error" class="db-content-network-flow-trend-chart__error">
-        <CmkAlert :variant="error.variant" :text="untranslated(error.message)" />
-      </div>
-      <CmkLoading v-else-if="data === undefined" />
-      <template v-else>
+      <template v-if="chart !== null">
         <div ref="graphAreaDiv" class="db-content-network-flow-trend-chart__graph">
           <TimeSeriesGraph
             :view_time_range="viewTimeRange"
@@ -211,15 +200,15 @@ const graphOptions = computed(
         />
       </template>
     </div>
-  </DashboardContentContainer>
+  </WidgetFigureFrame>
 </template>
 
 <style scoped>
 .db-content-network-flow-trend-chart__wrapper {
   display: flex;
-  flex: 1;
+  box-sizing: border-box;
   flex-direction: column;
-  min-height: 0;
+  height: 100%;
   padding: calc(var(--spacing) * 2);
 }
 
@@ -227,10 +216,5 @@ const graphOptions = computed(
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
-}
-
-.db-content-network-flow-trend-chart__error {
-  margin: auto;
-  max-width: 90%;
 }
 </style>

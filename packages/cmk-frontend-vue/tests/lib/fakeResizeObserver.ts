@@ -33,6 +33,9 @@ export class FakeResizeObserver {
 /** Report one content box size for every element that any fake observer observes. */
 export function deliverSize(width: number, height: number): void {
   for (const observer of FakeResizeObserver.instances) {
+    if (observer.observed.size === 0) {
+      continue
+    }
     observer.fire(
       [...observer.observed].map(
         (target) =>

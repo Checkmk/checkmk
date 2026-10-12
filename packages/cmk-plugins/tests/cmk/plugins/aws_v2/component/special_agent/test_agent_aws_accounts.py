@@ -10,7 +10,13 @@ import json
 import pytest
 
 from cmk.plugins.aws_v2.special_agent.agent_aws_v2 import agent_aws_main, parse_arguments
-from cmk.testlib.aws_v2.fake_sts import AssumeRoleCall, FakeSts, SignedRequest, temporary_key_id
+from cmk.testlib.aws_v2.fake_sts import (
+    AssumeRoleCall,
+    DENIED_ACCOUNT,
+    FakeSts,
+    SignedRequest,
+    temporary_key_id,
+)
 
 ACCOUNTS = ["333333333333", "444444444444"]
 
@@ -103,6 +109,34 @@ def test_each_account_role_is_assumed_right_before_its_account(fake_sts: FakeSts
         f"query {ACCOUNTS[0]}",
         f"assume {ACCOUNTS[1]}",
         f"query {ACCOUNTS[1]}",
+    ]
+
+
+@pytest.fixture(name="output_with_unreachable_account")
+def _output_with_unreachable_account(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> dict[str | None, list[str]]:
+    monkeypatch.setenv("AWS_ENDPOINT_URL", fake_sts.url)
+    accounts = [ACCOUNTS[0], DENIED_ACCOUNT, ACCOUNTS[1]]
+    agent_aws_main(parse_arguments([*LOGIN_ARGS, *_account_args(accounts)]))
+    return _sections_by_host(capsys.readouterr().out)
+
+
+def test_unreachable_account_leaves_the_others_complete(
+    output_with_unreachable_account: dict[str | None, list[str]],
+) -> None:
+    assert set(output_with_unreachable_account) == {None, *ACCOUNTS}
+
+
+def test_unreachable_account_is_one_error_in_the_agent_info(
+    output_with_unreachable_account: dict[str | None, list[str]],
+) -> None:
+    rows = [json.loads(line) for line in output_with_unreachable_account[None][1:]]
+
+    assert [(row["status"], row["account"], "reason" in row) for row in rows] == [
+        ("ok", ACCOUNTS[0], False),
+        ("error", DENIED_ACCOUNT, True),
+        ("ok", ACCOUNTS[1], False),
     ]
 
 

@@ -726,9 +726,8 @@ def agent_aws_main(args: argparse.Namespace) -> int:
                 proxy_config,
             )
         except AwsAccessError as ae:
-            _write_access_error(ae)
-            write_agent_info([*agent_info, AgentInfoRow("error", account_id, str(ae))])
-            return 0
+            # Only this account is lost. The others still get monitored.
+            agent_info.append(AgentInfoRow("error", account_id, str(ae)))
         else:
             agent_info.append(AgentInfoRow("ok", account.id))
 

@@ -125,6 +125,7 @@ build_cmd = """
     echo "ninja==1.11.1.1" > $$HOME/constraints.txt
     echo "setuptools<82.0.0" >> $$HOME/constraints.txt
     echo "maturin~=1.11.0" >> $$HOME/constraints.txt
+    echo "poetry-core<2.5" >> $$HOME/constraints.txt
     echo "setuptools_scm<10.0.0" >> $$HOME/constraints.txt
     export PIP_CONSTRAINT="$$HOME/constraints.txt"
 

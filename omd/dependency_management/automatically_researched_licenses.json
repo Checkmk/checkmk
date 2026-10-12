@@ -2309,6 +2309,7 @@
   "pkg:pypi/datamodel-code-generator@0.42.0": "MIT",
   "pkg:pypi/decorator@5.2.1": "BSD-2-Clause",
   "pkg:pypi/dnspython@2.8.0": "ISC",
+  "pkg:pypi/dnspython@2.9.0": "ISC",
   "pkg:pypi/docstring-parser@0.17.0": "MIT",
   "pkg:pypi/docstring-parser@0.18.0": "MIT",
   "pkg:pypi/durationpy@0.10": "MIT",

@@ -193,6 +193,30 @@ class TestCleanupOldConfigs:
         assert (root / "latest").is_symlink()
         assert (root / "serial.mk").exists()
 
+    def test_removal_of_readonly_serial(self, tmp_path: Path) -> None:
+        """Old serials must be removed even if they contain read-only directories.
+
+        The `local` snapshot inside a serial dir preserves the permissions of
+        `$OMD_ROOT/local`, which may be read-only (e.g. distributed setups).
+        """
+        root, _ = self._make_helper_config(tmp_path, serials=[1, 2, 3], latest_serial=3)
+        local = root / "1" / "local"
+        plugins = local / "lib" / "plugins"
+        plugins.mkdir(parents=True)
+        (plugins / "check").touch()
+        unreadable = local / "share"
+        unreadable.mkdir()
+        (unreadable / "file.mk").touch()
+        unreadable.chmod(0o000)
+        for directory in (plugins, local / "lib", local, root / "1"):
+            directory.chmod(0o555)
+
+        cleanup_old_configs(tmp_path)
+
+        assert not (root / "1").exists()
+        assert (root / "2").exists()
+        assert (root / "3").exists()
+
     def test_proper_sorting(self, tmp_path: Path) -> None:
         """Serial directories must be sorted numerically, not lexically."""
         root, _ = self._make_helper_config(tmp_path, serials=[1, 5, 7, 12, 23], latest_serial=23)

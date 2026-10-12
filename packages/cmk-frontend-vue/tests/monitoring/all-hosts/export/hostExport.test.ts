@@ -35,6 +35,10 @@ async function csvOf(hostExport: HostExport): Promise<string> {
   return hostExport.file('csv').text()
 }
 
+async function jsonOf(hostExport: HostExport): Promise<unknown> {
+  return JSON.parse(await hostExport.file('json').text())
+}
+
 describe('HostExport', () => {
   test('writes a header of column ids and one quoted, semicolon separated row per host', async () => {
     const hostExport = new HostExport(
@@ -104,6 +108,89 @@ describe('HostExport', () => {
     const bytes = new Uint8Array(await new HostExport(['name'], []).file('csv').arrayBuffer())
 
     expect([...bytes.slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf])
+  })
+
+  test('writes JSON as a list of rows, the first naming the columns', async () => {
+    const file = new HostExport(['name', 'state'], [makeHost(), makeHost({ name: 'db-1' })]).file(
+      'json'
+    )
+
+    expect([file.type, JSON.parse(await file.text())]).toEqual([
+      'application/json',
+      [
+        ['name', 'state'],
+        ['web-1', 'UP'],
+        ['db-1', 'UP']
+      ]
+    ])
+  })
+
+  test('writes labels and tags as objects and contacts, groups and modes as lists in JSON', async () => {
+    const hostExport = new HostExport(
+      ['labels', 'tags', 'contacts', 'contact_groups', 'groups', 'modes'],
+      [
+        makeHost({
+          labels: {
+            'cmk/site': { value: 'local', source: 'discovered' },
+            note: { value: 'a, b: c', source: 'explicit' }
+          },
+          tags: { snmp_ds: 'no-snmp', address_family: 'ip-v4-only' },
+          contacts: ['zoe', 'anna'],
+          contact_groups: ['all'],
+          groups: ['web', 'linux'],
+          modes: [{ id: 'downtime', icon_name: 'downtime', link: '', title: 'In downtime' }]
+        })
+      ]
+    )
+
+    expect(await jsonOf(hostExport)).toEqual([
+      ['labels', 'tags', 'contacts', 'contact_groups', 'groups', 'modes'],
+      [
+        { 'cmk/site': 'local', note: 'a, b: c' },
+        { address_family: 'ip-v4-only', snmp_ds: 'no-snmp' },
+        ['anna', 'zoe'],
+        ['all'],
+        ['linux', 'web'],
+        ['downtime']
+      ]
+    ])
+  })
+
+  test('sorts the keys of labels and tags in JSON', async () => {
+    const hostExport = new HostExport(
+      ['labels', 'tags'],
+      [
+        makeHost({
+          labels: {
+            note: { value: 'x', source: 'explicit' },
+            'cmk/site': { value: 'local', source: 'discovered' }
+          },
+          tags: { snmp_ds: 'no-snmp', address_family: 'ip-v4-only' }
+        })
+      ]
+    )
+
+    const [, [labels, tags]] = (await jsonOf(hostExport)) as [string[], [object, object]]
+
+    expect([Object.keys(labels), Object.keys(tags)]).toEqual([
+      ['cmk/site', 'note'],
+      ['address_family', 'snmp_ds']
+    ])
+  })
+
+  test('starts a JSON file without a byte order mark', async () => {
+    const bytes = new Uint8Array(await new HostExport(['name'], []).file('json').arrayBuffer())
+
+    expect(bytes[0]).toBe('['.charCodeAt(0))
+  })
+
+  test.each([
+    ['csv', true],
+    ['json', true],
+    ['xml', false],
+    [undefined, false]
+  ])('recognises %s as an export format: %s', (format, known) => {
+    expect(HostExport.isFormat(format)).toBe(known)
   })
 
   test('names the file after the page and the local time of the export', () => {

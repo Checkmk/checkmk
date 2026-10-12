@@ -73,10 +73,10 @@ def test_export_dropdown_hidden_without_permission() -> None:
 
 
 @pytest.mark.usefixtures("with_user_login")
-def test_export_dropdown_offers_csv_with_permission() -> None:
+def test_export_dropdown_offers_csv_and_json_with_permission() -> None:
     assert [
         entry.name
         for dropdown in _export_dropdowns()
         for topic in dropdown.topics
         for entry in topic.entries
-    ] == ["export_csv"]
+    ] == ["export_csv", "export_json"]

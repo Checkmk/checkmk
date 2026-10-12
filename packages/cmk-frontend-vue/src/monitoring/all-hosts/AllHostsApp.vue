@@ -24,7 +24,7 @@ import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTab
 import TypeToFocusIndicator from '@/monitoring/shared/components/TypeToFocusIndicator.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
-import { ACTION_REFRESH_DELAY_MS, EXPORT_CSV_EVENT } from '@/monitoring/shared/constants'
+import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 import {
   displayOptionsWriter,
   readDisplayOptionsFromUrl,
@@ -69,6 +69,7 @@ import { HostActionMenuApi } from './api/actionMenu'
 import { buildHostColumnPinning, buildHostColumns } from './columns'
 import HostRow from './components/HostRow.vue'
 import HostSlideIn from './components/HostSlideIn.vue'
+import { HostExport, type HostExportFormat } from './export/hostExport'
 import { HostService, HostsNotLoadedError } from './services/HostService'
 import { HOST_TAB_OVERVIEW } from './slideInTabs'
 
@@ -250,10 +251,10 @@ const exportFeedback = ref<ExportFeedback | null>(null)
 
 const exportCount = new Intl.NumberFormat()
 
-async function onExportCsv(): Promise<void> {
+async function exportHosts(format: HostExportFormat): Promise<void> {
   exportFeedback.value = { variant: 'loading', text: _t('Exporting hosts…') }
   try {
-    const file = (await hostService.export()).file('csv')
+    const file = (await hostService.export()).file(format)
     downloadBlob(file.name, file)
   } catch (error: unknown) {
     exportFeedback.value = {
@@ -288,17 +289,20 @@ watch(hostService.fetchState, (state) => {
   }
 })
 
-function onExportCsvEvent(): void {
-  void onExportCsv()
+function onExport(event: Event): void {
+  const format: unknown = event instanceof CustomEvent ? event.detail : undefined
+  if (HostExport.isFormat(format)) {
+    void exportHosts(format)
+  }
 }
 
 onMounted(() => {
   hostService.onFocusSearch(() => toolbar.value?.focus())
-  document.addEventListener(EXPORT_CSV_EVENT, onExportCsvEvent)
+  document.addEventListener(props.export_event, onExport)
 })
 
 onBeforeUnmount(() => {
-  document.removeEventListener(EXPORT_CSV_EVENT, onExportCsvEvent)
+  document.removeEventListener(props.export_event, onExport)
   hostService.destruct()
 })
 

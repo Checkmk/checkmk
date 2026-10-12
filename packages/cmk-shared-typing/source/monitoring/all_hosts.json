@@ -19,9 +19,12 @@
     "show_relations": {
       "type": "boolean",
       "default": false
+    },
+    "export_event": {
+      "type": "string"
     }
   },
-  "required": ["user_id", "site", "sites", "edition"],
+  "required": ["user_id", "site", "sites", "edition", "export_event"],
   "$defs": {
     "site": {
       "type": "object",

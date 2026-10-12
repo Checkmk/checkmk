@@ -14,7 +14,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 
 import AllHostsApp from '@/monitoring/all-hosts/AllHostsApp.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
-import { ACTION_REFRESH_DELAY_MS, EXPORT_CSV_EVENT } from '@/monitoring/shared/constants'
+import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let postSpy: any
@@ -62,6 +62,8 @@ function mockHosts(hosts: HostEntry[], matched: number = hosts.length): void {
   } as never)
 }
 
+const EXPORT_EVENT = 'cmk-monitoring-export'
+
 function renderApp(
   edition: MonitoringAllHostsApp['edition'],
   overrides: Partial<MonitoringAllHostsApp> = {}
@@ -73,6 +75,7 @@ function renderApp(
       sites: [{ id: 'local', alias: 'Local site' }],
       edition,
       limit_tiers: [1000, 5000],
+      export_event: EXPORT_EVENT,
       ...overrides
     } satisfies MonitoringAllHostsApp
   })
@@ -312,7 +315,7 @@ function stubDownloads(): void {
 async function exportCsv(): Promise<void> {
   await screen.findByRole('columnheader', { name: 'Host' })
   await vi.waitUntil(() => postSpy.mock.calls.length > 0)
-  document.dispatchEvent(new Event(EXPORT_CSV_EVENT))
+  document.dispatchEvent(new CustomEvent(EXPORT_EVENT, { detail: 'csv' }))
 }
 
 test('says how many hosts were exported when the row limit left some out', async () => {

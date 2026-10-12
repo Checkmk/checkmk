@@ -53,7 +53,29 @@ const COLUMN_VALUES = {
 
 export type HostExportColumn = keyof typeof COLUMN_VALUES
 
-export type HostExportFormat = 'csv'
+type JsonValue = string | string[] | Record<string, string>
+
+function sortedNames(names: string[]): string[] {
+  return [...names].sort((first, second) => first.localeCompare(second))
+}
+
+function sortedObject(entries: [string, string][]): Record<string, string> {
+  return Object.fromEntries(entries.sort(([first], [second]) => first.localeCompare(second)))
+}
+
+const JSON_VALUES: Partial<Record<HostExportColumn, (host: HostEntry) => JsonValue>> = {
+  modes: (host) => (host.modes ?? []).map((mode) => mode.id),
+  labels: (host) =>
+    sortedObject(Object.entries(host.labels ?? {}).map(([key, label]) => [key, label.value])),
+  tags: (host) => sortedObject(Object.entries(host.tags ?? {})),
+  contacts: (host) => sortedNames(host.contacts ?? []),
+  contact_groups: (host) => sortedNames(host.contact_groups ?? []),
+  groups: (host) => sortedNames(host.groups ?? [])
+}
+
+const FORMATS = ['csv', 'json'] as const
+
+export type HostExportFormat = (typeof FORMATS)[number]
 
 export class HostExport {
   constructor(
@@ -65,10 +87,20 @@ export class HostExport {
     return Object.hasOwn(COLUMN_VALUES, id)
   }
 
+  static isFormat(value: unknown): value is HostExportFormat {
+    return FORMATS.some((format) => format === value)
+  }
+
   file(format: HostExportFormat, nowSeconds: number = Date.now() / 1000): File {
-    return new File([CSV_BOM, this.csv()], this.filename(format, nowSeconds), {
-      type: 'text/csv;charset=utf-8'
-    })
+    const name = this.filename(format, nowSeconds)
+    switch (format) {
+      case 'csv':
+        return new File([CSV_BOM, this.csv()], name, { type: 'text/csv;charset=utf-8' })
+      case 'json':
+        return new File([JSON.stringify(this.jsonRows(), null, 1)], name, {
+          type: 'application/json'
+        })
+    }
   }
 
   private csv(): string {
@@ -81,6 +113,15 @@ export class HostExport {
   private filename(format: HostExportFormat, nowSeconds: number): string {
     const stamp = `${renderDate(nowSeconds)}_${renderTimeOfDay(nowSeconds).replaceAll(':', '-')}`
     return `all_hosts-${stamp}.${format}`
+  }
+
+  private jsonRows(): JsonValue[][] {
+    return [
+      [...this.columns],
+      ...this.hosts.map((host) =>
+        this.columns.map((column) => (JSON_VALUES[column] ?? COLUMN_VALUES[column])(host))
+      )
+    ]
   }
 
   private rows(): string[][] {

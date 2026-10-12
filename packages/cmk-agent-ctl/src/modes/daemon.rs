@@ -7,6 +7,7 @@ use crate::config::JSONLoader;
 use crate::misc;
 use crate::modes::registration;
 use crate::modes::{pull, push, renew_certificate};
+use crate::AgentUpdater;
 use anyhow::Result as AnyhowResult;
 use log::{error, info};
 use std::sync::mpsc;
@@ -29,6 +30,7 @@ pub fn daemon(
     pull_config: config::PullConfig,
     client_config: config::ClientConfig,
     updater_registration: config::UpdaterRegistration,
+    agent_updater: AgentUpdater,
 ) -> AnyhowResult<()> {
     register_panic_handler();
     process_pre_configured_connections(
@@ -36,6 +38,7 @@ pub fn daemon(
         &mut registry,
         &client_config,
         updater_registration,
+        agent_updater,
     );
 
     // create channels, 3x TX + 1x RX to "synchronize" thread stops on failure
@@ -75,6 +78,7 @@ fn process_pre_configured_connections(
     registry: &mut config::Registry,
     client_config: &config::ClientConfig,
     updater_registration: config::UpdaterRegistration,
+    agent_updater: AgentUpdater,
 ) {
     match config::PreConfiguredConnections::load(path_pre_configured_connections) {
         Ok(pre_configured) => {
@@ -83,6 +87,7 @@ fn process_pre_configured_connections(
                 client_config,
                 registry,
                 updater_registration,
+                agent_updater,
             ) {
                 error!(
                     "Error while processing pre-configured connections: {}",

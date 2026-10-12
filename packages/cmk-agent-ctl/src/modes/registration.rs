@@ -6,6 +6,7 @@ use crate::config::UpdaterRegistration;
 use crate::constants::CMK_UPDATE_AGENT_CMD;
 use crate::site_spec::Protocol;
 use crate::types::Credentials;
+use crate::AgentUpdater;
 use crate::{
     agent_receiver_api::{self, RegistrationStatusV2},
     certs, config, misc, site_spec, types, version,
@@ -348,6 +349,7 @@ impl config::JSONLoader for ProxyPullData {}
 pub fn register_existing(
     config: &config::RegisterExistingConfig,
     registry: &mut config::Registry,
+    agent_updater: AgentUpdater,
 ) -> AnyhowResult<()> {
     let registration_input = prepare_registration(&config.connection_config, &InteractiveTrust {})?;
     direct_registration(
@@ -362,6 +364,10 @@ pub fn register_existing(
         },
     )?;
     println!("Registration complete.");
+    if matches!(agent_updater, AgentUpdater::Integrated) {
+        info!("Agent updates are handled by the controller, skipping updater registration.");
+        return Ok(());
+    }
 
     maybe_register_updater(
         &config.updater_registration,
@@ -376,6 +382,7 @@ pub fn register_existing(
 pub fn register_new(
     config: &config::RegisterNewConfig,
     registry: &mut config::Registry,
+    agent_updater: AgentUpdater,
 ) -> AnyhowResult<()> {
     let registration_input = prepare_registration(&config.connection_config, &InteractiveTrust {})?;
     let agent_rec_api = &agent_receiver_api::Api {
@@ -393,6 +400,10 @@ pub fn register_new(
     println!(
         "Registration complete. It may take few minutes until the newly created host and its services are visible in the site."
     );
+    if matches!(agent_updater, AgentUpdater::Integrated) {
+        info!("Agent updates are handled by the controller, skipping updater registration.");
+        return Ok(());
+    }
 
     if matches!(config.updater_registration, UpdaterRegistration::Manual) {
         return Ok(());
@@ -415,6 +426,7 @@ pub fn register_pre_configured(
     client_config: &config::ClientConfig,
     registry: &mut config::Registry,
     updater_registration: UpdaterRegistration,
+    agent_updater: AgentUpdater,
 ) -> AnyhowResult<()> {
     _register_pre_configured(
         pre_configured_connections,
@@ -422,6 +434,7 @@ pub fn register_pre_configured(
         registry,
         &RegistrationPreConfiguredImpl {},
         updater_registration,
+        agent_updater,
     )
 }
 
@@ -431,6 +444,7 @@ fn _register_pre_configured(
     registry: &mut config::Registry,
     registration_pre_configured: &impl RegistrationPreConfigured,
     updater_registration: UpdaterRegistration,
+    agent_updater: AgentUpdater,
 ) -> AnyhowResult<()> {
     for (site_id, pre_configured_connection) in pre_configured_connections.connections.iter() {
         if let Err(error) = process_pre_configured_connection(
@@ -441,6 +455,7 @@ fn _register_pre_configured(
             registry,
             registration_pre_configured,
             &updater_registration,
+            agent_updater,
         ) {
             error!(
                 "Error while processing connection {}: {}",
@@ -472,6 +487,7 @@ trait RegistrationPreConfigured {
         &self,
         config: &config::RegisterNewConfig,
         registry: &mut config::Registry,
+        agent_updater: AgentUpdater,
     ) -> AnyhowResult<()>;
 
     fn registration_status_v2(
@@ -489,8 +505,9 @@ impl RegistrationPreConfigured for RegistrationPreConfiguredImpl {
         &self,
         config: &config::RegisterNewConfig,
         registry: &mut config::Registry,
+        agent_updater: AgentUpdater,
     ) -> AnyhowResult<()> {
-        register_new(config, registry)
+        register_new(config, registry, agent_updater)
     }
 
     fn registration_status_v2(
@@ -509,6 +526,9 @@ impl RegistrationPreConfigured for RegistrationPreConfiguredImpl {
     }
 }
 
+// One argument over the limit, carrying the temporary integrated updater flag. Goes away
+// with the flag, so no config struct is introduced for it.
+#[allow(clippy::too_many_arguments)]
 fn process_pre_configured_connection(
     site_id: &site_spec::SiteID,
     pre_configured: &config::PreConfiguredConnection,
@@ -517,6 +537,7 @@ fn process_pre_configured_connection(
     registry: &mut config::Registry,
     registration_pre_configured: &impl RegistrationPreConfigured,
     updater_registration: &UpdaterRegistration,
+    agent_updater: AgentUpdater,
 ) -> AnyhowResult<()> {
     let receiver_port = match pre_configured.port {
         Some(receiver_port) => receiver_port,
@@ -563,7 +584,7 @@ fn process_pre_configured_connection(
         updater_registration.clone(),
     )?;
 
-    registration_pre_configured.register(&registration_config, registry)?;
+    registration_pre_configured.register(&registration_config, registry, agent_updater)?;
     info!("Registered new connection {}", site_id);
 
     Ok(())
@@ -804,7 +825,13 @@ fn find_file_relatively(cmk_update_agent_cmd: &str) -> AnyhowResult<String> {
     Ok(cmk_update_agent_cmd.to_string())
 }
 
-fn get_agent_updater_executable() -> AnyhowResult<String> {
+/// Locate the Python agent updater executable, the one driven as a subprocess.
+///
+/// # Errors
+///
+/// Returns an error if the executable is not found, which also means that this host has
+/// no Python agent updater at all.
+pub(crate) fn get_agent_updater_executable() -> AnyhowResult<String> {
     #[cfg(unix)]
     return find_file_relatively(CMK_UPDATE_AGENT_CMD);
     #[cfg(windows)]
@@ -1304,6 +1331,7 @@ mod tests {
                 &self,
                 config: &config::RegisterNewConfig,
                 registry: &mut config::Registry,
+                _agent_updater: AgentUpdater,
             ) -> AnyhowResult<()> {
                 assert!(config.connection_config.password.is_some());
                 assert!(config.connection_config.root_certificate.is_some());
@@ -1435,6 +1463,7 @@ mod tests {
                     is_registered_at_remote: true
                 },
                 UpdaterRegistration::Manual,
+                AgentUpdater::Python,
             )
             .is_ok());
             test_registry_after_registration(true, &mut r.registry)
@@ -1454,6 +1483,7 @@ mod tests {
                     is_registered_at_remote: true
                 },
                 UpdaterRegistration::Manual,
+                AgentUpdater::Python,
             )
             .is_ok());
             test_registry_after_registration(false, &mut r.registry)
@@ -1494,6 +1524,7 @@ mod tests {
                     is_registered_at_remote: true
                 },
                 UpdaterRegistration::Manual,
+                AgentUpdater::Python,
             )
             .is_ok());
 
@@ -1526,6 +1557,7 @@ mod tests {
                     is_registered_at_remote: false
                 },
                 UpdaterRegistration::Manual,
+                AgentUpdater::Python,
             )
             .is_ok());
 

@@ -376,7 +376,7 @@ class ModeDiagHost(WatoMode):
             html.open_td(class_="icons")
             html.open_div()
             html.static_icon(StaticIcon(IconNames.reload), id_="%s_img" % ident)
-            html.open_a(href="")
+            html.open_a(href="#")
             html.static_icon(
                 StaticIcon(IconNames.reload),
                 title=_("Retry this test"),

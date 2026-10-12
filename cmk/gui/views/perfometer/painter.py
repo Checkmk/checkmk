@@ -70,7 +70,7 @@ def _render_perfometer(
         url = cmk_graph_url(row, "service", request=context.request)
         disabled = False
     else:
-        url = "javascript:void(0)"
+        url = "#"
         disabled = True
 
     return " ".join(classes), context.url_renderer.link_direct(

@@ -328,7 +328,7 @@ class Bookmarks(SidebarSnapin):
         begin_footnote_links()
         link(
             _("Add bookmark"),
-            "javascript:void(0)",
+            "#",
             click_action=ClickAction(action="add_bookmark"),
         )
         link(_("Edit"), "bookmark_lists.py")

@@ -113,11 +113,13 @@
         "reload_page",
         "service_discovery_start",
         "switch_master_state",
+        "switch_site",
         "toggle_all_rows",
         "toggle_inline_help",
         "valuespec_duallist_switch",
         "valuespec_iconselector_toggle",
         "valuespec_list_choice_toggle_all",
+        "virtual_host_tree_enter",
         "waiting_flash_message"
       ]
     },

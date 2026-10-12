@@ -161,7 +161,7 @@ def _paint_icons(
                 onclick = ""
                 if url.startswith("onclick:"):
                     onclick = url[8:]
-                    url = "javascript:void(0)"
+                    url = "#"
 
                 output += HTMLGenerator.render_icon_button(
                     url, icon.title or "", icon.icon_name, onclick=onclick, target=target_frame

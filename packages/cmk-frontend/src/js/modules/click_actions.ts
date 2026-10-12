@@ -25,7 +25,12 @@ import {
 } from '@/modules/popup_menu'
 import { toggle_all_rows } from '@/modules/selection'
 import { start as start_service_discovery } from '@/modules/service_discovery'
-import { add_bookmark, update_vue_snapin_contents } from '@/modules/sidebar'
+import {
+  add_bookmark,
+  switch_site,
+  update_vue_snapin_contents,
+  virtual_host_tree_enter
+} from '@/modules/sidebar'
 import { makeLoadingTransition, makeuri, querySelectorID } from '@/modules/utils'
 import { duallist_switch, iconselector_toggle, list_choice_toggle_all } from '@/modules/valuespecs'
 import { randomize_secret } from '@/modules/wato'
@@ -114,6 +119,7 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
       handler_data: 'snapin_master_control'
     })
   },
+  switch_site: (_element, options) => switch_site(options.url),
   toggle_all_rows: closing_dropdown(() =>
     toggle_all_rows(querySelectorID('main_page_content') ?? undefined)
   ),
@@ -124,6 +130,7 @@ const click_actions: Record<KnownClickAction, ClickAction> = {
     iconselector_toggle(options.varprefix, options.category_name),
   valuespec_list_choice_toggle_all: (_element, options) =>
     list_choice_toggle_all(options.varprefix),
+  virtual_host_tree_enter: (_element, options) => virtual_host_tree_enter(options.path),
   waiting_flash_message: (_element, options) => {
     waiting_flash_message('top_heading', options.message)
     return true

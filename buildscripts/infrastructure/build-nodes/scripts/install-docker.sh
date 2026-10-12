@@ -16,10 +16,11 @@ case "$DISTRO" in
         chmod a+r /etc/apt/keyrings/docker.asc
         echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" >/etc/apt/sources.list.d/docker.list
         apt-get update
-        apt-get install -y docker-ce
+        apt-get install -y docker-ce docker-buildx-plugin
 
         # Test the installation
         docker --version || exit $?
+        docker buildx version || exit $?
         ;;
     *)
         echo "ERROR: Unhandled DISTRO: $DISTRO - docker-ce should only be available in Ubuntu!"

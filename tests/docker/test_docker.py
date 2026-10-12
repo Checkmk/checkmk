@@ -7,6 +7,7 @@
 import contextlib  # noqa: I001, RUF100 # needed for docker vs. tests/docker confusion
 import logging
 import os
+import subprocess
 from http import HTTPStatus
 from pathlib import Path
 from random import randint, sample
@@ -121,9 +122,7 @@ def test_start_execute_custom_command(checkmk: CheckmkApp) -> None:
 
 
 def test_start_with_custom_command(client: docker.DockerClient) -> None:
-    image, _build_logs = build_checkmk(
-        client, CMKPackageInfo(version_from_env(), edition_from_env())
-    )
+    image = build_checkmk(client, CMKPackageInfo(version_from_env(), edition_from_env()))
     output = client.containers.run(
         image=image, detach=False, command=["bash", "-c", "echo 1"]
     ).decode("utf-8")
@@ -159,7 +158,7 @@ def test_build_using_local_deb(
     try:
         os.rename(pkg_path, pkg_path_sav)
         pkg_path.write_bytes(b"")
-        with pytest.raises(docker.errors.BuildError):
+        with pytest.raises(subprocess.CalledProcessError):
             caplog.set_level(logging.CRITICAL)  # avoid error messages in the log
             build_checkmk(client, pkg_info, prepare_pkg=False)
         os.unlink(pkg_path)
@@ -181,7 +180,7 @@ def test_build_using_local_gpg_pubkey(
     try:
         os.rename(key_path, key_path_sav)
         key_path.write_text("")
-        with pytest.raises(docker.errors.BuildError):
+        with pytest.raises(subprocess.CalledProcessError):
             caplog.set_level(logging.CRITICAL)  # avoid error messages in the log
             build_checkmk(client, CMKPackageInfo(version_from_env(), edition_from_env()))
     finally:

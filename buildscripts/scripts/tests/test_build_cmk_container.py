@@ -7,6 +7,8 @@ import argparse
 import gzip
 import importlib
 import io
+import logging
+import os
 import shutil
 import sys
 import tarfile
@@ -41,7 +43,6 @@ class _FakeImages:
         self.push_errors: set[str] = set()
         self.removed: list[str] = []
         self.loaded: list[bytes] = []
-        self.builds: list[dict[str, object]] = []
 
     def add(self, *tags: str) -> _FakeImage:
         image = _FakeImage(list(tags))
@@ -65,13 +66,6 @@ class _FakeImages:
         self.loaded.append(data)
         return [self.add()]
 
-    def build(self, **kwargs: object) -> tuple[_FakeImage, list[dict[str, str]]]:
-        self.builds.append(kwargs)
-        return self.add(str(kwargs["tag"])), [
-            {"stream": "Step 1/3\nStep 2/3\n"},
-            {"aux": "sha256:abc"},
-        ]
-
     def remove(self, image: str) -> None:
         self.removed.append(image)
 
@@ -93,6 +87,23 @@ def fixture_docker_client(monkeypatch: pytest.MonkeyPatch) -> _FakeDockerClient:
     client = _FakeDockerClient()
     monkeypatch.setattr(docker, "from_env", lambda **_kwargs: client)
     return client
+
+
+@pytest.fixture(name="docker_cli")
+def fixture_docker_cli(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """A stand-in for the docker CLI on PATH that records its arguments, one per line.
+    It exits with $FAKE_DOCKER_EXIT_CODE (default 0)."""
+    bin_path = tmp_path / "bin"
+    bin_path.mkdir()
+    calls = tmp_path / "docker-calls"
+    script = bin_path / "docker"
+    script.write_text(
+        f'#!/bin/sh\nprintf "%s\\n" "$@" > "{calls}"\necho "#1 DONE" >&2\n'
+        'exit "${FAKE_DOCKER_EXIT_CODE:-0}"\n'
+    )
+    script.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{bin_path}{os.pathsep}{os.environ['PATH']}")
+    return calls
 
 
 @pytest.fixture(name="script")
@@ -258,30 +269,94 @@ def test_local_image_check_reports_presence(
     assert not script.check_for_local_image(_args(), "2.4.0p2", "", "checkmk")
 
 
+def test_build_runs_buildkit_without_cache_and_attestations(
+    script: ModuleType, docker_client: _FakeDockerClient, docker_cli: Path, tmp_path: Path
+) -> None:
+    docker_path = tmp_path / "docker_image"
+    docker_path.mkdir()
+    docker_client.images.add("checkmk/check-mk-pro:2.4.0p1")
+
+    script.build_tar_gz(_args(no_cache=True), "2.4.0p1", str(docker_path), "checkmk")
+
+    assert docker_cli.read_text().splitlines() == [
+        "buildx",
+        "build",
+        "--load",
+        "--provenance=false",
+        "--progress=plain",
+        "--no-cache",
+        "--build-arg=CMK_VERSION=2.4.0p1",
+        "--build-arg=CMK_EDITION=pro",
+        "--build-arg=IMAGE_CMK_BASE=base-image:1",
+        "--tag=checkmk/check-mk-pro:2.4.0p1",
+        str(docker_path),
+    ]
+
+
+def test_build_uses_the_cache_by_default(
+    script: ModuleType, docker_client: _FakeDockerClient, docker_cli: Path, tmp_path: Path
+) -> None:
+    docker_path = tmp_path / "docker_image"
+    docker_path.mkdir()
+    docker_client.images.add("checkmk/check-mk-pro:2.4.0p1")
+
+    script.build_tar_gz(_args(), "2.4.0p1", str(docker_path), "checkmk")
+
+    assert "--no-cache" not in docker_cli.read_text().splitlines()
+
+
+@pytest.mark.usefixtures("docker_cli")
+def test_build_log_is_logged(
+    script: ModuleType,
+    docker_client: _FakeDockerClient,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    docker_path = tmp_path / "docker_image"
+    docker_path.mkdir()
+    docker_client.images.add("checkmk/check-mk-pro:2.4.0p1")
+    caplog.set_level(logging.DEBUG)
+
+    script.build_tar_gz(_args(), "2.4.0p1", str(docker_path), "checkmk")
+
+    assert "#1 DONE" in caplog.messages
+
+
+@pytest.mark.usefixtures("docker_cli")
 def test_build_writes_image_tarball(
     script: ModuleType, docker_client: _FakeDockerClient, tmp_path: Path
 ) -> None:
     docker_path = tmp_path / "docker_image"
     docker_path.mkdir()
+    docker_client.images.add("checkmk/check-mk-pro:2.4.0p1")
 
-    script.build_tar_gz(_args(no_cache=True), "2.4.0p1", str(docker_path), "checkmk")
+    script.build_tar_gz(_args(), "2.4.0p1", str(docker_path), "checkmk")
 
-    (build,) = docker_client.images.builds
-    assert build["buildargs"] == {
-        "CMK_VERSION": "2.4.0p1",
-        "CMK_EDITION": "pro",
-        "IMAGE_CMK_BASE": "base-image:1",
-    }
-    assert build["nocache"] is True
     with gzip.open(docker_path / "check-mk-pro-docker-2.4.0p1.tar.gz") as tarball:
         assert tarball.read() == b"image checkmk/check-mk-pro:2.4.0p1"
 
 
+@pytest.mark.usefixtures("docker_cli")
+def test_build_failure_is_raised_before_writing_a_tarball(
+    script: ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    docker_path = tmp_path / "docker_image"
+    docker_path.mkdir()
+    monkeypatch.setenv("FAKE_DOCKER_EXIT_CODE", "1")
+
+    with pytest.raises(Exception, match="Failed to execute command 'docker buildx build"):
+        script.build_tar_gz(_args(), "2.4.0p1", str(docker_path), "checkmk")
+
+    assert not (docker_path / "check-mk-pro-docker-2.4.0p1.tar.gz").exists()
+
+
+@pytest.mark.usefixtures("docker_cli")
 def test_build_of_release_candidate_saves_under_release_tag(
     script: ModuleType, docker_client: _FakeDockerClient, tmp_path: Path
 ) -> None:
     docker_path = tmp_path / "docker_image"
     docker_path.mkdir()
+    docker_client.images.add("checkmk/check-mk-pro:2.4.0p1-rc2")
 
     script.build_tar_gz(_args(), "2.4.0p1-rc2", str(docker_path), "checkmk")
 
@@ -300,6 +375,7 @@ def _write_source_artifacts(source_path: Path, architecture: str) -> None:
     (source_path / f"check-mk-pro-2.4.0p1_0.jammy_{architecture}.deb").write_bytes(b"deb")
 
 
+@pytest.mark.usefixtures("docker_cli")
 def test_build_image_prepares_context_and_tags_result(
     script: ModuleType, docker_client: _FakeDockerClient, tmp_path: Path
 ) -> None:
@@ -310,6 +386,7 @@ def test_build_image_prepares_context_and_tags_result(
     _write_source_artifacts(source_path, architecture)
     (tmp_path / "omd/distros").mkdir(parents=True)
     (tmp_path / "omd/distros/UBUNTU_22.04.mk").write_text("OS_PACKAGES += libcap2\n")
+    docker_client.images.add("checkmk/check-mk-pro:2.4.0p1")
 
     script.build_image(_args(source_path=str(source_path)), "", "checkmk", "2.4.0p1")
 

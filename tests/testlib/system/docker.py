@@ -22,7 +22,6 @@ import logging
 import os
 import subprocess
 import tarfile
-from collections.abc import Iterator
 from contextlib import suppress
 from pathlib import Path
 from socket import SocketIO
@@ -51,8 +50,6 @@ from tests.testlib.system.openapi_session import (
 from tests.testlib.system.package_manager import ABCPackageManager
 
 logger = logging.getLogger()
-
-type JSON = dict[str, "JSON"] | list["JSON"] | str | int | float | bool | None
 
 build_path = repo_path() / "docker_image"
 image_prefix = "docker-tests"
@@ -191,7 +188,7 @@ def build_checkmk(
     client: docker.client.DockerClient,
     package_info: CMKPackageInfo,
     prepare_pkg: bool = True,
-) -> tuple[docker.models.images.Image, Iterator[JSON]]:
+) -> docker.models.images.Image:
     """Builds (or reuses) and verifies a docker image for a given Checkmk version.
 
     Args:
@@ -200,8 +197,7 @@ def build_checkmk(
         prepare_pkg (bool, optional): Also pull CMK packages; see prepare_package. Defaults to True.
 
     Returns:
-        tuple[docker.models.images.Image, Iterator[JSON]: the docker image and
-            the docker build logs
+        docker.models.images.Image: the docker image
     """
     prepare_build()
 
@@ -209,43 +205,48 @@ def build_checkmk(
         prepare_package(package_info)
 
     logger.info("Building docker image (or reuse existing): %s", image_name(package_info))
+    buildargs = {
+        "CMK_VERSION": package_info.version.version,
+        "CMK_EDITION": package_info.edition.long,
+        "IMAGE_CMK_BASE": resolve_image_alias("IMAGE_CMK_BASE"),
+    }
     try:
-        image, build_logs = client.images.build(
-            path=build_path.as_posix(),
-            tag=image_name(package_info),
-            buildargs={
-                "CMK_VERSION": package_info.version.version,
-                "CMK_EDITION": package_info.edition.long,
-                "IMAGE_CMK_BASE": resolve_image_alias("IMAGE_CMK_BASE"),
-            },
-            rm=True,
-            forcerm=True,
+        # The Dockerfile needs BuildKit (RUN --mount), which docker-py does not support
+        build = subprocess.run(
+            [
+                "docker",
+                "buildx",
+                "build",
+                # Make the image available to the docker client
+                "--load",
+                # Keep a single image manifest, without an attestation manifest
+                "--provenance=false",
+                "--progress=plain",
+                *(f"--build-arg={key}={value}" for key, value in buildargs.items()),
+                f"--tag={image_name(package_info)}",
+                build_path.as_posix(),
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
         )
-    except docker.errors.BuildError as e:
+    except subprocess.CalledProcessError as e:
         # Log the failure with traceback once, then dump the build log without repeating it.
         logger.exception("Failed to build the Checkmk Docker image")
         logger.error("= Build log ==================")  # noqa: TRY400
-        for entry in e.build_log:
-            if "stream" in entry:
-                logger.error(entry["stream"].rstrip())  # noqa: TRY400
-            elif "errorDetail" not in entry:
-                logger.error("UNEXPECTED FORMAT: %r", entry)  # noqa: TRY400
+        for line in e.stderr.splitlines():
+            logger.error(line)  # noqa: TRY400
         logger.error("= Build log ==================")  # noqa: TRY400
         raise
 
     logger.info("(Set pytest log level to DEBUG (--log-cli-level=DEBUG) to see the build log)")
 
-    for logs_entry in build_logs:
-        if not isinstance(logs_entry, dict):
-            logger.debug("UNEXPECTED FORMAT: %r", logs_entry)
-        elif "stream" in logs_entry and isinstance(logs_entry["stream"], str):
-            logger.debug(logs_entry["stream"].rstrip())
-        elif "aux" in logs_entry:
-            logger.debug(logs_entry["aux"])
-        else:
-            logger.debug("UNEXPECTED FORMAT: %r", logs_entry)
+    for line in build.stderr.splitlines():
+        logger.debug(line)
 
     logger.debug("= Build log ==================")
+
+    image = client.images.get(image_name(package_info))
 
     logger.info("Built image: %s", image.short_id)
     attrs = image.attrs
@@ -283,10 +284,10 @@ def build_checkmk(
             raise AssertionError(f"Image config {key!r} is {config[key]!r}, expected {value!r}")
     if "Healthcheck" not in config:
         raise AssertionError("Image config has no Healthcheck")
-    if (layers := len(attrs["RootFS"]["Layers"])) != 6:
-        raise AssertionError(f"Image has {layers} layers, expected 6")
+    if (layers := len(attrs["RootFS"]["Layers"])) != 5:
+        raise AssertionError(f"Image has {layers} layers, expected 5")
 
-    return image, build_logs
+    return image
 
 
 class CheckmkApp:
@@ -368,7 +369,7 @@ class CheckmkApp:
 
         try:
             if self.package_info.version.version == version_from_env().version:
-                _image, _build_logs = build_checkmk(self.client, self.package_info)
+                _image = build_checkmk(self.client, self.package_info)
             else:
                 # In case the given version is not the current branch version, don't
                 # try to build it. Download it instead!

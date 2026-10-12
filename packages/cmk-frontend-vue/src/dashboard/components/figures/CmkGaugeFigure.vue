@@ -13,8 +13,14 @@ import { arc } from 'd3-shape'
 import { computed, ref } from 'vue'
 
 import ContextualLinkTrigger from '@/dashboard/components/ContextualLinkTrigger.vue'
-import type { Gauge, GaugeStatus, VisualContext } from '@/dashboard/types/widget'
+import type { Gauge, VisualContext } from '@/dashboard/types/widget'
 
+import {
+  HOST_OR_SERVICE_STATE_COLOR,
+  type HostOrServiceStateKind,
+  hostOrServiceStateKind,
+  shortHostOrServiceState
+} from './lib/hostOrServiceState'
 import { valueFontSize } from './lib/valueFontSize'
 
 const props = defineProps<{
@@ -32,24 +38,6 @@ const LABEL_ANGLE = (15 * Math.PI) / 24
 const BIN_COUNT = 40
 const MIN_HISTOGRAM_VALUES = 11
 const STATE_FONT_SIZE = 14
-
-type StateKind = GaugeStatus['state'] | 'PENDING'
-
-const STATE_COLOR: Record<StateKind, string> = {
-  OK: 'var(--color-state-ok)',
-  WARNING: 'var(--color-state-warning)',
-  CRITICAL: 'var(--color-state-critical)',
-  UNKNOWN: 'var(--color-state-unknown)',
-  PENDING: 'var(--color-state-pending)'
-}
-
-const SHORT_STATE: Record<StateKind, string> = {
-  OK: 'OK',
-  WARNING: 'WARN',
-  CRITICAL: 'CRIT',
-  UNKNOWN: 'UNKN',
-  PENDING: 'PEND'
-}
 
 function arcPath(
   innerRadius: number,
@@ -122,12 +110,12 @@ const rangeLabels = computed(() => {
   ]
 })
 
-const stateKind = computed<StateKind | null>(() => {
+const stateKind = computed<HostOrServiceStateKind | null>(() => {
   const status = props.value.status
   if (status === null) {
     return null
   }
-  return status.has_been_checked ? status.state : 'PENDING'
+  return hostOrServiceStateKind(status.state, status.has_been_checked)
 })
 
 const statusBackground = computed(() => {
@@ -210,7 +198,7 @@ function hover(bin: Bin, event: PointerEvent): void {
         v-if="statusBackground && stateKind"
         class="db-cmk-gauge-figure__status-background"
         :d="statusBackground"
-        :fill="STATE_COLOR[stateKind]"
+        :fill="HOST_OR_SERVICE_STATE_COLOR[stateKind]"
         aria-hidden="true"
       />
       <path class="db-cmk-gauge-figure__span" :d="spanPath" aria-hidden="true" />
@@ -273,7 +261,7 @@ function hover(bin: Bin, event: PointerEvent): void {
         :width="STATE_FONT_SIZE * 8"
         :height="STATE_FONT_SIZE * 1.5"
         rx="2"
-        :fill="STATE_COLOR[stateKind]"
+        :fill="HOST_OR_SERVICE_STATE_COLOR[stateKind]"
         aria-hidden="true"
       />
       <text
@@ -282,7 +270,7 @@ function hover(bin: Bin, event: PointerEvent): void {
         :y="STATE_FONT_SIZE * 1.1"
         text-anchor="middle"
       >
-        {{ _t('Service: %{state}', { state: SHORT_STATE[stateKind] }) }}
+        {{ _t('Service: %{state}', { state: shortHostOrServiceState(stateKind) }) }}
       </text>
     </g>
   </svg>

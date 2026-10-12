@@ -7,9 +7,9 @@ import { render, screen } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
 import CmkStateFigure from '@/dashboard/components/figures/CmkStateFigure.vue'
-import type { ObjectState } from '@/dashboard/types/widget'
+import type { HostOrServiceState } from '@/dashboard/types/widget'
 
-const SERVICE_STATE: ObjectState = {
+const SERVICE_STATE: HostOrServiceState = {
   links: [
     {
       title: 'Service',
@@ -34,7 +34,7 @@ const SERVICE_STATE: ObjectState = {
   plugin_output: null
 }
 
-function renderFigure(value: Partial<ObjectState> = {}) {
+function renderFigure(value: Partial<HostOrServiceState> = {}) {
   return render(CmkStateFigure, {
     props: {
       value: { ...SERVICE_STATE, ...value },

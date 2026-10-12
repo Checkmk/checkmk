@@ -7,11 +7,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { BoolPropDef, ListPropDef } from '@ucl/_ucl/types/prop-def'
 
-import type { ObjectState } from '@/dashboard/types/widget'
+import type { HostOrServiceState } from '@/dashboard/types/widget'
 
 import codeExample from './UclCmkStateFigureCodeExample.vue?raw'
 
-type State = ObjectState['state']
+type State = HostOrServiceState['state']
 
 export const panelConfig = {
   state: {
@@ -103,7 +103,7 @@ const LINK: ResolvedLink = {
   show_filter_form: false
 }
 
-const value = computed<ObjectState>(() => ({
+const value = computed<HostOrServiceState>(() => ({
   links: propState.value.linked ? [LINK] : [],
   link_properties: { links: propState.value.linked ? [{}] : [] },
   state: propState.value.state,

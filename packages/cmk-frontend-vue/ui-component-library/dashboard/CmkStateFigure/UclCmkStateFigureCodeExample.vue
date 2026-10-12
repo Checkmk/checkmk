@@ -5,9 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkStateFigure from '@/dashboard/components/figures/CmkStateFigure.vue'
-import type { ObjectState } from '@/dashboard/types/widget'
+import type { HostOrServiceState } from '@/dashboard/types/widget'
 
-const value: ObjectState = {
+const value: HostOrServiceState = {
   links: [],
   link_properties: { links: [] },
   state: 'CRITICAL',

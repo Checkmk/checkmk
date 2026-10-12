@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest'
 
 import DashboardContentState from '@/dashboard/components/DashboardContent/figures/DashboardContentState.vue'
 import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
-import type { ObjectState, StateContent } from '@/dashboard/types/widget'
+import type { HostOrServiceState, StateContent } from '@/dashboard/types/widget'
 
 import {
   renderComputedWidget,
@@ -16,7 +16,7 @@ import {
 } from '@tests/dashboard/computeWidgetEndpoint'
 import { makeContentProps } from '@tests/dashboard/contentProps'
 
-const HOST_STATE: ObjectState = {
+const HOST_STATE: HostOrServiceState = {
   links: [],
   link_properties: { links: [] },
   state: 'DOWN',
@@ -31,7 +31,7 @@ const CONTENT: StateContent = {
   contextual_link: { type: 'default' }
 }
 
-const endpoint = useComputeWidgetEndpoint<ObjectState>('compute-state', () => HOST_STATE)
+const endpoint = useComputeWidgetEndpoint<HostOrServiceState>('compute-state', () => HOST_STATE)
 
 async function renderWidget(props: ContentProps<StateContent> = makeContentProps(CONTENT)) {
   return renderComputedWidget(DashboardContentState, props)

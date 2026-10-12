@@ -47,13 +47,13 @@ import type {
   EffectiveWidgetFilterContext,
   Gauge,
   GaugeContent,
+  HostOrServiceState,
   InventoryAttribute,
   InventoryContent,
   NetworkFlowDonutContent,
   NetworkFlowKpiStatCardContent,
   NetworkFlowTopTableContent,
   NetworkFlowTrendChartContent,
-  ObjectState,
   ResponsiveGridWidgetLayouts,
   SingleMetricContent,
   SiteOverview,
@@ -351,7 +351,7 @@ export const dashboardAPI = {
   computeState: async (
     body: { source: WidgetSource<StateContent> },
     headers: Record<string, string>
-  ): Promise<ComputedWidgetResponse<ObjectState>> => {
+  ): Promise<ComputedWidgetResponse<HostOrServiceState>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-state/invoke', {
         ...CONTENT_TYPE_HEADER,

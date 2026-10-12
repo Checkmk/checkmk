@@ -7,6 +7,7 @@ import { fireEvent, render, screen } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
 import CmkGaugeFigure from '@/dashboard/components/figures/CmkGaugeFigure.vue'
+import CmkStateFigure from '@/dashboard/components/figures/CmkStateFigure.vue'
 import type { Gauge } from '@/dashboard/types/widget'
 
 const GAUGE: Gauge = {
@@ -90,6 +91,35 @@ describe('CmkGaugeFigure', () => {
     renderFigure({ status: { state: 'OK', has_been_checked: false, tint_background: false } })
 
     expect(screen.getByText('Service: PEND')).toBeInTheDocument()
+  })
+
+  it('tints an unchecked service with the pending color of the state figure', () => {
+    const { container: gauge } = renderFigure({
+      status: { state: 'OK', has_been_checked: false, tint_background: true }
+    })
+    const { container: state } = render(CmkStateFigure, {
+      props: {
+        value: {
+          links: [],
+          link_properties: { links: [] },
+          state: 'OK',
+          has_been_checked: false,
+          tint_background: true,
+          plugin_output: null
+        },
+        width: 300,
+        height: 200,
+        filters: {}
+      }
+    })
+
+    const gaugeFill = gauge
+      .querySelector('.db-cmk-gauge-figure__status-background')
+      ?.getAttribute('fill')
+    expect(gaugeFill).toBeTruthy()
+    expect(gaugeFill).toBe(
+      state.querySelector('.db-cmk-state-figure__background')?.getAttribute('fill')
+    )
   })
 
   it('draws one histogram bin per filled share from eleven values on', () => {

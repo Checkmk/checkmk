@@ -4,52 +4,30 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import ContextualLinkTrigger from '@/dashboard/components/ContextualLinkTrigger.vue'
-import type { ObjectState, VisualContext } from '@/dashboard/types/widget'
+import type { HostOrServiceState, VisualContext } from '@/dashboard/types/widget'
 
+import {
+  HOST_OR_SERVICE_STATE_COLOR,
+  hostOrServiceStateKind,
+  shortHostOrServiceState
+} from './lib/hostOrServiceState'
 import { valueFontSize } from './lib/valueFontSize'
 
 const props = defineProps<{
-  value: ObjectState
+  value: HostOrServiceState
   width: number
   height: number
   filters: VisualContext
 }>()
 
-const { _t } = usei18n()
-
 const SUMMARY_MARGIN = 15
 const SUMMARY_FONT_SIZE = 14
 
-type StateKind = ObjectState['state'] | 'PENDING'
-
-const STATE_COLOR: Record<StateKind, string> = {
-  UP: 'var(--color-state-ok)',
-  OK: 'var(--color-state-ok)',
-  WARNING: 'var(--color-state-warning)',
-  DOWN: 'var(--color-state-critical)',
-  CRITICAL: 'var(--color-state-critical)',
-  UNREACHABLE: 'var(--color-state-unknown)',
-  UNKNOWN: 'var(--color-state-unknown)',
-  PENDING: 'rgb(0 170 255)'
-}
-
-const SHORT_STATE: Record<StateKind, string> = {
-  UP: _t('UP'),
-  OK: _t('OK'),
-  WARNING: _t('WARN'),
-  DOWN: _t('DOWN'),
-  CRITICAL: _t('CRIT'),
-  UNREACHABLE: _t('UNREACH'),
-  UNKNOWN: _t('UNKN'),
-  PENDING: _t('PEND')
-}
-
-const stateKind = computed<StateKind>(() =>
-  props.value.has_been_checked ? props.value.state : 'PENDING'
+const stateKind = computed(() =>
+  hostOrServiceStateKind(props.value.state, props.value.has_been_checked)
 )
 
 const fontSizePx = computed(() => `${valueFontSize(props.width, props.height)}px`)
@@ -75,7 +53,7 @@ const summaryBox = computed(() => ({
       class="db-cmk-state-figure__background"
       :width="width"
       :height="height"
-      :fill="STATE_COLOR[stateKind]"
+      :fill="HOST_OR_SERVICE_STATE_COLOR[stateKind]"
       aria-hidden="true"
     />
     <ContextualLinkTrigger
@@ -100,7 +78,7 @@ const summaryBox = computed(() => ({
         text-anchor="middle"
         dominant-baseline="central"
       >
-        {{ SHORT_STATE[stateKind] }}
+        {{ shortHostOrServiceState(stateKind) }}
       </text>
     </ContextualLinkTrigger>
   </svg>

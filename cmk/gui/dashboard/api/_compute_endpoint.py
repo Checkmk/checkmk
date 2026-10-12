@@ -34,8 +34,9 @@ def widget_compute_endpoint[T](
     handler: _ComputeHandler[T],
     link_targets: bool,
     supported_editions: set[Edition] | Literal["all"],
+    shared_dashboards: bool = True,
 ) -> VersionedEndpoint:
-    """The endpoint that computes the data of a widget, also for a dashboard token."""
+    """The endpoint that computes the data of a widget, for a dashboard token if shared."""
     return VersionedEndpoint(
         metadata=EndpointMetadata(
             path=domain_type_action_href(domain_type="dashboard", action=action),
@@ -53,5 +54,5 @@ def widget_compute_endpoint[T](
         ),
         behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
         versions={APIVersion.INTERNAL: EndpointHandler(handler=handler)},
-        allowed_tokens={"dashboard"},
+        allowed_tokens={"dashboard"} if shared_dashboards else set(),
     )

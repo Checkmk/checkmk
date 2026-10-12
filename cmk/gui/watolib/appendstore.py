@@ -106,10 +106,15 @@ class ABCAppendStore[VT](abc.ABC):
             try:
                 yield entries
             finally:
-                with self._path.open("wb"):  # truncate the file
-                    pass
-                for entry in entries:
-                    self.append(entry)
+                # The file is replaced at once. When writing is interrupted, for example by the
+                # request timeout, the file keeps either the previous or the new entries.
+                store.save_bytes_to_file(
+                    self._path,
+                    b"".join(
+                        repr(self._serialize(entry)).encode("utf-8") + self.separator
+                        for entry in entries
+                    ),
+                )
 
 
 @contextmanager

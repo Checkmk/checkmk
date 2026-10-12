@@ -412,15 +412,6 @@ test('a pan fetches the panned window over the requested span', async () => {
   expect({ start, end }).toEqual({ start: 500, end: 500 + 4 * 3600 })
 })
 
-test('a pan reports the panned window to the host', async () => {
-  const { emitted } = renderFigure()
-  await screen.findByTestId('time-series-graph')
-
-  await fireEvent.click(screen.getByTestId('emit-pan'))
-
-  expect(emitted('commitTimeRange')).toEqual([[{ start: 500, end: 500 + 4 * 3600 }]])
-})
-
 test('a reset after a pan re-resolves the configured range', async () => {
   renderFigure()
   await screen.findByTestId('time-series-graph')
@@ -433,38 +424,6 @@ test('a reset after a pan re-resolves the configured range', async () => {
   // The configured range ("last 4 hours") resolves relative to now, far past the panned window.
   const requestedRange = postSpy.mock.calls[2][1].body.requested_time_range
   expect(requestedRange.end).toBeGreaterThan(900)
-})
-
-const requestedWindow = (call: number) => {
-  const { start, end } = postSpy.mock.calls[call][1].body.requested_time_range
-  return { start, end }
-}
-
-test("a host's window replaces the configured range", async () => {
-  renderFigure({ requestedTimeRange: { start: 100, end: 200 } })
-
-  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
-  expect(requestedWindow(0)).toEqual({ start: 100, end: 200 })
-})
-
-test('a new host window is fetched', async () => {
-  const { rerender } = renderFigure({ requestedTimeRange: { start: 100, end: 200 } })
-  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
-
-  await rerender({ requestedTimeRange: { start: 300, end: 400 } })
-
-  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
-  expect(requestedWindow(1)).toEqual({ start: 300, end: 400 })
-})
-
-test("a figure following its host's window runs no refresh timer of its own", async () => {
-  vi.useFakeTimers()
-  renderFigure({ requestedTimeRange: { start: 100, end: 200 } })
-  await vi.advanceTimersByTimeAsync(1)
-
-  await vi.advanceTimersByTimeAsync(REFRESH_INTERVAL_MS)
-
-  expect(postSpy).toHaveBeenCalledTimes(1)
 })
 
 test('a peak zoom outlives the refresh timer re-fetching the same window', async () => {

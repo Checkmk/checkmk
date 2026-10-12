@@ -10,7 +10,6 @@ import type {
   GraphCombinationMode,
   GraphFetchParams
 } from '../../composables/useGraphData'
-import type { RequestedTimeRange } from '../../types'
 import type { BinUnit } from '../TimeSeriesGraph'
 import type { TimerangeModel } from './computeEpochTimeRange'
 
@@ -30,19 +29,13 @@ export type GraphFigureSource =
     }
 
 /**
- * The embedding contract of the self-managed graph figure: the host provides a discovered
- * graph shell (its internal definition) and display options; the figure owns its data fetch,
- * auto-refresh, resizing, and zoom/pan interaction, and only reports the windows that
- * zoom/pan commit.
+ * The embedding contract of the self-managed graph figure: the host provides the data source and
+ * display options; the figure owns its data fetch, auto-refresh, resizing, and zoom/pan
+ * interaction, and emits nothing.
  */
 export interface GraphFigureProps {
   source: GraphFigureSource
   timerange: TimerangeModel
-  /**
-   * The host's own window, which replaces `timerange` while set. The host keeps it current: the
-   * figure then runs no refresh timer of its own.
-   */
-  requestedTimeRange?: RequestedTimeRange | undefined
   combinationMode?: GraphCombinationMode | null
   showLegend?: boolean
   showTimestamp?: boolean

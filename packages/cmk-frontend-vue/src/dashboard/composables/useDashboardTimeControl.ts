@@ -7,11 +7,7 @@ import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import type { ComputedRef, WritableComputedRef } from 'vue'
 
-import {
-  initGlobalRefresh,
-  useGlobalRefresh,
-  useGlobalTimeRange
-} from '@/graphing/GlobalTimePicker/globalTimeState'
+import { initGlobalRefresh, useGlobalRefresh } from '@/graphing/GlobalTimePicker/globalTimeState'
 import { useGlobalTimePickerRange } from '@/graphing/GlobalTimePicker/useGlobalTimePickerRange'
 
 export interface DashboardTimeControl {
@@ -23,23 +19,21 @@ export interface DashboardTimeControl {
 }
 
 export function useDashboardTimeControl(
-  globalTimePicker: GlobalTimePickerProps,
-  live?: boolean
+  globalTimePicker: GlobalTimePickerProps
 ): DashboardTimeControl {
   const { range } = useGlobalTimePickerRange(globalTimePicker.default_time_range)
   const { refreshTick, pauseRefresh } = useGlobalRefresh()
-  const { setActiveTimeRange } = useGlobalTimeRange()
 
   initGlobalRefresh({
     intervalSeconds: globalTimePicker.refresh.interval_seconds,
-    live: live ?? globalTimePicker.refresh.starts_live
+    live: globalTimePicker.refresh.starts_live
   })
 
   return {
     range,
     refreshTick,
     updateTimeRange: (newRange: DateTimeRange) => {
-      setActiveTimeRange(newRange, 'external')
+      range.value = newRange
       pauseRefresh()
     }
   }

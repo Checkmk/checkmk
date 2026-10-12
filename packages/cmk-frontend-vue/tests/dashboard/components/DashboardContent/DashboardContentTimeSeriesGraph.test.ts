@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor } from '@testing-library/vue'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
@@ -33,10 +33,8 @@ vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
       'showMargin',
       'minValueAxisWidth',
       'showBurgerMenu',
-      'addTo',
-      'requestedTimeRange'
+      'addTo'
     ],
-    emits: ['commitTimeRange'],
     template: `<div
       data-testid="graph-figure"
       :data-show-pin="showPin"
@@ -46,11 +44,7 @@ vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
       :data-show-margin="showMargin"
       :data-min-value-axis-width="minValueAxisWidth"
       :data-show-burger-menu="showBurgerMenu"
-      :data-requested-time-range="JSON.stringify(requestedTimeRange)"
-    >{{ source.type === 'definition' ? source.internal : source.key }}<button
-      data-testid="emit-commit-time-range"
-      @click="$emit('commitTimeRange', { start: 1767225600, end: 1767229200 })"
-    /></div>`
+    >{{ source.type === 'definition' ? source.internal : source.key }}</div>`
   }
 }))
 
@@ -347,31 +341,6 @@ describe('createSharedGraphFetcher', () => {
       })
     )
     expect(fetched.timeRange).toEqual({ start: 1_000, end: 2_000, step: 60 })
-  })
-})
-
-describe('the time range of a graph widget', () => {
-  test("is the dashboard's range, not the configured one", async () => {
-    renderWidget()
-
-    const figure = await screen.findByTestId('graph-figure')
-    expect(JSON.parse(figure.getAttribute('data-requested-time-range')!)).toEqual({
-      start: 1767225600,
-      end: 1767229200
-    })
-  })
-})
-
-describe('a time range committed in the graph', () => {
-  test('is reported as the dashboard range, in its time zone', async () => {
-    const { emitted } = renderWidget()
-
-    await fireEvent.click(await screen.findByTestId('emit-commit-time-range'))
-
-    const [[range]] = emitted('updateTimeRange') as [[typeof baseProps.range]]
-    expect(range.from.toAbsoluteString()).toBe('2026-01-01T00:00:00.000Z')
-    expect(range.to.toAbsoluteString()).toBe('2026-01-01T01:00:00.000Z')
-    expect(range.from.timeZone).toBe(baseProps.range.from.timeZone)
   })
 })
 

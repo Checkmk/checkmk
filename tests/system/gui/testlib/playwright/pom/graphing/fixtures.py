@@ -21,7 +21,6 @@ from playwright.sync_api import Page
 from tests.system.gui.testlib.playwright.pom.graphing.dashboard_graph_widget import (
     DashboardGraphWidget,
 )
-from tests.system.gui.testlib.playwright.pom.graphing.global_time_picker import GlobalTimePicker
 from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphSurface
 from tests.system.gui.testlib.playwright.pom.graphing.service_graphs_hover_popup import (
     ServiceGraphsHoverPopup,
@@ -353,14 +352,9 @@ def fixture_scatterplot_widget(
     tests judge, and waiting here would turn a failure to render into a fixture timeout
     instead of a failed assertion naming it.
 
-    The dashboard's time picker drives the widget, and its default window can be younger than
-    the hosts' data, so the picker is set to today: the window the widget is configured with.
-
     Depends on `javascript_errors` so its listener is attached before this navigates.
     """
-    dashboard = LinuxHostsDashboard(dashboard_page.page)
-    GlobalTimePicker(dashboard.main_area).select_quick_range("Today")
-    yield DashboardGraphWidget(dashboard, SCATTERPLOT_WIDGET_TITLE)
+    yield DashboardGraphWidget(LinuxHostsDashboard(dashboard_page.page), SCATTERPLOT_WIDGET_TITLE)
 
 
 def _open_combined_graphs(

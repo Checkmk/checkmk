@@ -654,9 +654,7 @@ def _label_to_package_path(label: str) -> str:
     path = label.lstrip("/")
     if ":" in path:
         path = path.split(":")[0]
-    if path.startswith("omd/"):
-        path = path[len("omd/") :]
-    return path
+    return path.removeprefix("omd/")
 
 
 def _enrich_install_specs(

@@ -27,6 +27,7 @@ This module has two usable profiling middlewares:
 #      before the debugger has a chance to run.
 
 import abc
+import contextlib
 import cProfile
 import dataclasses
 import importlib
@@ -37,6 +38,7 @@ import threading
 import time
 import typing
 import urllib.parse
+from collections.abc import Iterator
 from typing import override
 from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
 
@@ -135,6 +137,69 @@ class ProfileConfigLoader:
         self.mode = mode
 
 
+class _ProfiledRequestsRunAlone:
+    """Lets requests run concurrently by default, but a profiled request runs alone
+
+    cProfile records the calls of all threads of the process, so a profiled request waits for the
+    running requests to end and the other requests wait for the profiled request. Requests which
+    arrive while a profiled request waits, wait as well.
+
+    The bookkeeping is kept by thread, because the request timeout may interrupt a
+    request between its bookkeeping and the cleanup in its finally block.
+    """
+
+    def __init__(self) -> None:
+        self._condition = threading.Condition()
+        self._running: set[int] = set()
+        self._profiled_waiting: set[int] = set()
+        self._profiling: int | None = None
+
+    def _reap_interrupted(self, ident: int) -> None:
+        """Remove stale bookkeeping which an interrupted request of this thread left behind"""
+        if ident in self._running or ident in self._profiled_waiting or self._profiling == ident:
+            self._running.discard(ident)
+            self._profiled_waiting.discard(ident)
+            if self._profiling == ident:
+                self._profiling = None
+            self._condition.notify_all()
+
+    @contextlib.contextmanager
+    def request(self) -> Iterator[None]:
+        ident = threading.get_ident()
+        try:
+            with self._condition:
+                self._reap_interrupted(ident)
+                self._condition.wait_for(
+                    lambda: self._profiling is None and not self._profiled_waiting
+                )
+                self._running.add(ident)
+            yield
+        finally:
+            with self._condition:
+                self._running.discard(ident)
+                self._condition.notify_all()
+
+    @contextlib.contextmanager
+    def profiled_request(self) -> Iterator[None]:
+        ident = threading.get_ident()
+        try:
+            with self._condition:
+                self._reap_interrupted(ident)
+                self._profiled_waiting.add(ident)
+                try:
+                    self._condition.wait_for(lambda: self._profiling is None and not self._running)
+                finally:
+                    self._profiled_waiting.discard(ident)
+                self._profiling = ident
+            yield
+        finally:
+            with self._condition:
+                self._profiled_waiting.discard(ident)
+                if self._profiling == ident:
+                    self._profiling = None
+                self._condition.notify_all()
+
+
 class ProfilingMiddleware(abc.ABC):
     """Base class of profiling middleware.
 
@@ -152,60 +217,64 @@ class ProfilingMiddleware(abc.ABC):
         self.config_loader = config_loader
 
         self._profiler: cProfile.Profile = cProfile.Profile()
-        self._profile_setting: ProfileSetting = config_loader()
-        self._thread_lock = threading.Lock()
+        self._app_lock = threading.Lock()
+        self._concurrency = _ProfiledRequestsRunAlone()
         self._wsgi_app: WSGIApplication | None = None
 
     @abc.abstractmethod
     def load_app(self) -> WSGIApplication:
         raise NotImplementedError
 
+    def _app(self) -> WSGIApplication:
+        # The first requests of a process may arrive concurrently
+        with self._app_lock:
+            if self._wsgi_app is None:
+                self._wsgi_app = self.load_app()
+            return self._wsgi_app
+
     def __call__(
         self,
         environ: WSGIEnvironment,
         start_response: StartResponse,
     ) -> typing.Iterable[bytes]:
-        if not self.should_profile(environ):
+        # The setting is fetched per request and not stored in the middleware, which is shared by
+        # the concurrent requests of the process
+        setting = self.config_loader()
+        if not self.should_profile(setting, environ):
             logger.debug("Won't profile")
-            if self._wsgi_app is None:
-                self._wsgi_app = self.load_app()
-            return self._wsgi_app(environ, start_response)
+            with self._concurrency.request():
+                return self._app()(environ, start_response)
 
-        with self._thread_lock:
-            self._reset_profiler()
+        with self._concurrency.profiled_request():
+            self._reset_profiler(setting)
 
             # ENABLE: Profiling
             start_time = time.monotonic()
             self._profiler.enable()
 
-            if self._wsgi_app is None:
-                self._wsgi_app = self.load_app()
-
             try:
-                response = self._wsgi_app(environ, start_response)
+                response = self._app()(environ, start_response)
             finally:
                 self._profiler.disable()
                 # DISABLE: Profiling
                 duration_ms = (time.monotonic() - start_time) * 1000
-                self._save_profile_data(environ, duration_ms)
+                self._save_profile_data(setting, environ, duration_ms)
 
             return response
 
-    def _reset_profiler(self) -> None:
-        if self._profile_setting.accumulate:
+    def _reset_profiler(self, setting: ProfileSetting) -> None:
+        if setting.accumulate:
             return
 
         logger.debug("Resetting profiler")
         self._profiler = cProfile.Profile()
 
-    def should_profile(self, environ: WSGIEnvironment) -> bool:
-        # Fetch the current configuration.
-        self._profile_setting = self.config_loader()
-
-        if self._profile_setting.mode is True:
+    @staticmethod
+    def should_profile(setting: ProfileSetting, environ: WSGIEnvironment) -> bool:
+        if setting.mode is True:
             logger.debug("Profile mode is True")
             return True
-        if self._profile_setting.mode is False:
+        if setting.mode is False:
             logger.debug("Profile mode is False")
             return False
 
@@ -213,15 +282,17 @@ class ProfilingMiddleware(abc.ABC):
         params = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
         return any(is_truthy_query_value(value) for value in params.get("_profile", ()))
 
-    def _save_profile_data(self, environ: WSGIEnvironment, duration_ms: float) -> None:
+    def _save_profile_data(
+        self, setting: ProfileSetting, environ: WSGIEnvironment, duration_ms: float
+    ) -> None:
         logger.debug("Saving profiling data")
 
-        profile_file = self._profile_setting.profile_file
+        profile_file = setting.profile_file
 
         self._profiler.dump_stats(str(profile_file))
         stats = pstats.Stats(self._profiler)
         conv = pyprof2calltree.CalltreeConverter(stats)
-        with open(self._profile_setting.cachegrind_file, "w") as grind:
+        with open(setting.cachegrind_file, "w") as grind:
             conv.output(grind)
 
         # Also save to the multi-profile store so the request shows up in the GUI.

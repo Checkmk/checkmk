@@ -74,3 +74,42 @@ from utils.postprocess import postprocess
 )
 def test_postprocess_enums(code: str, expected: str) -> None:
     assert postprocess(dedent(code).lstrip()) == dedent(expected).lstrip()
+
+
+def test_postprocess_strips_optional_from_required_member() -> None:
+    code = dedent("""
+        class Dictionary:
+            elements: Optional[Sequence[DictionaryElement]] = field(default_factory=lambda: [])
+    """).lstrip()
+    expected = dedent("""
+        class Dictionary:
+            elements: Sequence[DictionaryElement] = field(default_factory=lambda: [])
+    """).lstrip()
+    assert postprocess(code) == expected
+
+
+def test_postprocess_keeps_optional_of_other_member() -> None:
+    code = dedent("""
+        class Dictionary:
+            title: Optional[str] = None
+    """).lstrip()
+    assert postprocess(code) == code
+
+
+def test_postprocess_keeps_optional_of_same_member_in_other_class() -> None:
+    code = dedent("""
+        class List:
+            elements: Optional[list[Element]] = None
+    """).lstrip()
+    assert postprocess(code) == code
+
+
+def test_postprocess_keeps_optional_of_member_after_its_class() -> None:
+    code = dedent("""
+        class Dictionary:
+            title: str
+
+
+        elements: Optional[list[Element]] = None
+    """).lstrip()
+    assert postprocess(code) == code

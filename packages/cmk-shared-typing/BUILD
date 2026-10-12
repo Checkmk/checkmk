@@ -229,7 +229,10 @@ py_cmk_test(
     name = "unit",
     size = "small",
     srcs = glob(["tests/**/*.py"]),
-    deps = [":cmk_shared_typing_formatter"],
+    deps = [
+        ":cmk_shared_typing_formatter",
+        requirement("datamodel_code_generator"),
+    ],
 )
 
 json2python(

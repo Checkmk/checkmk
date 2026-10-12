@@ -138,8 +138,13 @@ def _load_config_file(file_to_load: Path, into_dict: dict[str, object]) -> None:
 
 def load_raw_config(
     *,
-    with_conf_d: bool,
+    config_files: Iterable[Path] | None = None,
 ) -> Mapping[str, object]:
+    """Execute the config files into a namespace
+
+    `config_files` defaults to all of them: main.mk, everything below
+    conf.d, final.mk and local.mk.
+    """
     target_context = get_default_config()
     helper_vars = {
         "FOLDER_PATH": None,
@@ -158,7 +163,8 @@ def load_raw_config(
     target_context |= helper_vars
 
     host_storage_loaders = get_host_storage_loaders(StorageFormat.PICKLE)
-    for path in get_config_file_paths(with_conf_d):
+    paths = get_config_file_paths(with_conf_d=True) if config_files is None else config_files
+    for path in paths:
         try:
             # Make the config path available as a global variable to be used
             # within the configuration file. The FOLDER_PATH is only used by

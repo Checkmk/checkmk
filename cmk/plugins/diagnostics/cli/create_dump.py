@@ -108,7 +108,7 @@ def _mode_create_diagnostics_dump(
     options = _cli_selection(parsed)
 
     with exit_on_config_file_load_error():
-        raw_config = load_raw_config(with_conf_d=True)
+        raw_config = load_raw_config()
 
     # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
     catalogue = load_plugin_catalogue(logger=ConsoleLogger())

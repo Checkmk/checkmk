@@ -98,6 +98,7 @@ clean = [
   "allnet_ip_sensoric",
   "appdynamics",
   "aws_deprecated",
+  "aws_status",
   "azure",
   "azure_status",
   "bazel",

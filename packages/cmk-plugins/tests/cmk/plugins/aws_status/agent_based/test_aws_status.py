@@ -14,7 +14,7 @@ import polyfactory.factories.pydantic_factory
 import pytest
 
 from cmk.agent_based import v2
-from cmk.plugins.aws_deprecated.agent_based import aws_status
+from cmk.plugins.aws_status.agent_based import aws_status
 
 CURRENT_TIME = datetime.datetime.fromtimestamp(1670000000.0, tz=datetime.UTC)
 

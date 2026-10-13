@@ -25,7 +25,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.aws_deprecated import constants as aws_constants
+from cmk.plugins.aws_status.lib.aws_regions import AWS_REGIONS
 
 
 class TitleType(enum.StrEnum):
@@ -49,7 +49,7 @@ _IGNORE_ENTRIES_OLDER_THAN = datetime.timedelta(days=3)  # Product-Management de
 _NO_ISSUES = Result(
     state=State.OK, summary="No known issues. Details: http://status.aws.amazon.com"
 )
-AWS_REGIONS_MAP: typing.Final = dict(aws_constants.AWS_REGIONS)
+AWS_REGIONS_MAP: typing.Final = dict(AWS_REGIONS)
 
 
 class Entry(pydantic.BaseModel, frozen=True, arbitrary_types_allowed=True):
@@ -71,7 +71,7 @@ class Entry(pydantic.BaseModel, frozen=True, arbitrary_types_allowed=True):
 
     def region(self) -> str:
         id_suffix = self.id_.removeprefix(self.link)
-        for internal_region, display_region in aws_constants.AWS_REGIONS:
+        for internal_region, display_region in AWS_REGIONS:
             if internal_region in id_suffix:
                 return display_region
         # Global is indicated by omitting the region id

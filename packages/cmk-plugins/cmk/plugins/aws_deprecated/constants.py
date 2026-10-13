@@ -18,10 +18,8 @@ from cmk.rulesets.v1 import Title
 
 AWS_REGIONS = [
     # Changes to the right-hand side of this list cause the following user facing changes:
-    # - Incompatible: the service name of the check `aws_status`
     # - Compatible: in the summary of check `aws_elb_summary`
-    # - Compatible: The displayed options in the rules `Amazon Web Services (AWS)` and
-    #   `Amazon Web Services (AWS) Status` are updated.
+    # - Compatible: The displayed options in the rule `Amazon Web Services (AWS)` are updated.
     ("af-south-1", "Africa (Cape Town)"),
     ("ap-east-1", "Asia Pacific (Hong Kong)"),
     ("ap-south-2", "Asia Pacific (Hyderabad)"),

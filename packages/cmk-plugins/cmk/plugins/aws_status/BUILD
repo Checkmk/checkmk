@@ -1,0 +1,41 @@
+load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@rules_shell//shell:sh_library.bzl", "sh_library")
+
+py_library(
+    name = "aws_status",
+    srcs = glob(["**/*.py"]),
+    data = glob([
+        "checkman/*",
+        "libexec/*",
+    ]) + ["py.typed"],
+    imports = ["../../.."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-plugin-apis:server_side_calls",
+        "//packages/cmk-plugin-apis:server_side_programs",
+        requirement("feedparser"),
+        requirement("pydantic"),
+        requirement("requests"),
+    ],
+)
+
+filegroup(
+    name = "agents",
+    srcs = [],
+    visibility = ["//packages/cmk-plugins:__pkg__"],
+)
+
+filegroup(
+    name = "checkman",
+    srcs = glob(["checkman/**/*"]),
+    visibility = ["//packages/cmk-plugins:__pkg__"],
+)
+
+sh_library(
+    name = "libexec",
+    srcs = glob(["libexec/*"]),
+    visibility = ["//packages/cmk-plugins:__pkg__"],
+)

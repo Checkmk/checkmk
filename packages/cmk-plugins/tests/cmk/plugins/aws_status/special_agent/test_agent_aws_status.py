@@ -7,7 +7,7 @@
 import pytest
 import requests
 
-from cmk.plugins.aws_deprecated.special_agent import agent_aws_status
+from cmk.plugins.aws_status.special_agent import agent_aws_status
 
 RSS_STR = """
 <rss version="2.0">

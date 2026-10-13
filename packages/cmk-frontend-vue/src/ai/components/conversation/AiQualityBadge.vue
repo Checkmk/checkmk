@@ -85,14 +85,7 @@ const qualityTooltipOpen = ref<boolean>(false)
             <CmkIcon name="info-circle" size="small" />
           </button>
         </CmkTooltipTrigger>
-        <CmkTooltipContent
-          variant="unstyled"
-          side="top"
-          align="center"
-          as-child
-          :avoid-collisions="true"
-          class="ai-quality-badge__tooltip-popup"
-        >
+        <CmkTooltipContent side="top" align="center" variant="content" :avoid-collisions="true">
           <div class="ai-quality-badge__tooltip-content">
             {{
               _t(
@@ -163,22 +156,10 @@ const qualityTooltipOpen = ref<boolean>(false)
   cursor: pointer;
 }
 
-.ai-quality-badge__tooltip-popup {
-  z-index: var(--z-index-tooltip-offset);
-}
-
 .ai-quality-badge__tooltip-content {
   max-width: 240px;
-  padding: var(--dimension-5);
-  border-radius: var(--border-radius);
-  background-color: var(--default-tooltip-background-color);
-  color: var(--default-tooltip-text-color);
-  font-weight: var(--font-weight-default);
   white-space: normal;
   text-align: left;
-  box-shadow:
-    0 4px 6px rgb(0 0 0 / 10%),
-    0 2px 4px rgb(0 0 0 / 6%);
 }
 
 .ai-quality-badge__ring-badge {

@@ -98,7 +98,10 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
 
 <template>
   <TooltipPortal :disabled="!usePortal">
-    <TooltipContent v-bind="{ ...forwarded, asChild, avoidCollisions }" :class="className">
+    <TooltipContent
+      v-bind="{ ...forwarded, asChild, avoidCollisions }"
+      :class="[className, { 'cmk-tooltip-content__layer': variant !== 'unstyled' }]"
+    >
       <slot v-if="variant === 'unstyled'" />
       <div v-else class="cmk-tooltip-content" :class="propsCva({ variant })">
         <div v-if="title" class="cmk-tooltip-content__title-bar">
@@ -117,6 +120,12 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
     </TooltipContent>
   </TooltipPortal>
 </template>
+
+<style>
+.cmk-tooltip-content__layer {
+  z-index: var(--z-index-tooltip-offset);
+}
+</style>
 
 <style scoped>
 .cmk-tooltip-content {

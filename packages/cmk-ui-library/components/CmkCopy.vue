@@ -68,41 +68,29 @@ const handlePointerDownOutside = () => {
         <slot />
       </CmkTooltipTrigger>
       <CmkTooltipContent
-        variant="unstyled"
         side="top"
         align="center"
-        as-child
+        variant="text"
         :avoid-collisions="true"
         @pointer-down-outside="handlePointerDownOutside"
       >
-        <div class="cmk-copy__tooltip-content" :class="{ 'cmk-copy__error': !!errorMessage }">
+        <span class="cmk-copy__message">
           <CmkIcon :name="errorMessage ? 'cross' : 'checkmark'" variant="inline" size="medium" />
           {{
             errorMessage
               ? _t('Copy to clipboard failed with error: ') + errorMessage
               : copiedTooltipText
           }}
-        </div>
+        </span>
       </CmkTooltipContent>
     </CmkTooltip>
   </CmkTooltipProvider>
 </template>
 
 <style scoped>
-.cmk-copy__tooltip-content {
-  display: flex;
+.cmk-copy__message {
+  display: inline-flex;
   align-items: center;
   gap: var(--spacing);
-  padding: var(--dimension-3) var(--dimension-4);
-  border-radius: var(--border-radius);
-  background-color: var(--code-background-color);
-  color: var(--font-color);
-  white-space: nowrap;
-  position: relative;
-  z-index: var(--z-index-tooltip-offset);
-
-  &.cmk-copy__error {
-    background-color: var(--error-msg-bg-color);
-  }
 }
 </style>

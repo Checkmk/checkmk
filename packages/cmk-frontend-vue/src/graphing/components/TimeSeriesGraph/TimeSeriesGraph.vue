@@ -728,15 +728,13 @@ defineExpose({ showMaxZoomHint })
         <CmkTooltip :open="true">
           <CmkTooltipTrigger as="span" />
           <CmkTooltipContent
-            variant="unstyled"
             :side="maxZoomHintSide"
             :side-offset="MAX_ZOOM_HINT_CURSOR_OFFSET"
             align="start"
+            variant="text"
             :avoid-collisions="false"
           >
-            <div class="graphing-time-series-graph__max-zoom-hint-body" role="status">
-              {{ maxZoomLabel }}
-            </div>
+            <span role="status">{{ maxZoomLabel }}</span>
           </CmkTooltipContent>
         </CmkTooltip>
       </CmkTooltipProvider>
@@ -869,18 +867,6 @@ defineExpose({ showMaxZoomHint })
     position: absolute;
     z-index: 3;
     pointer-events: none;
-  }
-
-  .graphing-time-series-graph__max-zoom-hint-body {
-    box-sizing: border-box;
-    max-width: 260px;
-    padding: var(--dimension-4);
-    background: var(--default-tooltip-background-color);
-    border: var(--border-width-1) solid var(--default-tooltip-text-color);
-    border-radius: var(--border-radius);
-    font-size: var(--font-size-normal);
-    line-height: normal;
-    color: var(--default-tooltip-text-color);
   }
 }
 

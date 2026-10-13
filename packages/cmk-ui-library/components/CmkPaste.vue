@@ -100,22 +100,21 @@ onBeforeUnmount(() => {
             <slot name="trigger" />
           </CmkTooltipTrigger>
           <CmkTooltipContent
-            variant="unstyled"
             side="top"
             align="center"
-            as-child
+            variant="text"
             :avoid-collisions="true"
             @pointer-down-outside="dismissMessage"
             @escape-key-down="dismissMessage"
           >
-            <div class="cmk-paste__tooltip-content" :class="{ 'cmk-paste__error': !!errorMessage }">
+            <span class="cmk-paste__message">
               <CmkIcon
                 :name="errorMessage ? 'cross' : 'checkmark'"
                 variant="inline"
                 size="medium"
               />
               {{ tooltipMessage }}
-            </div>
+            </span>
           </CmkTooltipContent>
         </CmkTooltip>
       </CmkTooltipProvider>
@@ -146,20 +145,9 @@ onBeforeUnmount(() => {
   order: 1;
 }
 
-.cmk-paste__tooltip-content {
-  display: flex;
+.cmk-paste__message {
+  display: inline-flex;
   align-items: center;
   gap: var(--spacing);
-  padding: var(--dimension-3) var(--dimension-4);
-  border-radius: var(--border-radius);
-  background-color: var(--code-background-color);
-  color: var(--font-color);
-  white-space: nowrap;
-  position: relative;
-  z-index: var(--z-index-tooltip-offset);
-
-  &.cmk-paste__error {
-    background-color: var(--error-msg-bg-color);
-  }
 }
 </style>

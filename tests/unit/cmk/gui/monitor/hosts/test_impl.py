@@ -207,6 +207,11 @@ def test_build_query_filter_leaves_out_the_folder_no_title_carries() -> None:
             [("Filter", "contact_groups ~~ web")],
             id="contact groups",
         ),
+        pytest.param(
+            HostOptionalField.GROUPS,
+            [("Filter", "groups ~~ web")],
+            id="host groups",
+        ),
     ],
 )
 def test_build_query_filter_searches_a_shown_list_column(
@@ -872,6 +877,22 @@ def test_fetch_does_not_crash_when_only_the_total_count_was_asked_for() -> None:
 
     assert hosts[0].num_services == 15
     assert hosts[0].num_services_ok is None
+
+
+@pytest.mark.usefixtures("request_context")
+def test_fetch_reads_the_host_groups_when_asked_for() -> None:
+    row = _host_row(groups=["linux", "web"])
+    with expect_single_query("GET hosts", tables={"hosts": [row]}) as live:
+        (host,) = LiveStatusHostRepository(connection=live).fetch(
+            limit=None,
+            query="",
+            sorters=[],
+            filters=HostFilter(""),
+            fields=frozenset({HostOptionalField.GROUPS}),
+            visible_relations=None,
+        )
+
+    assert host.groups == ["linux", "web"]
 
 
 class _SetupHostAccess:

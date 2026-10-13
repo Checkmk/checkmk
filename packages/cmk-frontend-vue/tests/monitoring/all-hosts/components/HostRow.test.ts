@@ -445,6 +445,13 @@ test('renders the contact groups of a host, sorted alphabetically', () => {
   expect(tags.map((tag) => tag.textContent?.trim())).toEqual(['all', 'linux'])
 })
 
+test('renders the host groups of a host, sorted alphabetically', () => {
+  const { container } = mountRow(makeHost({ groups: ['web', 'linux'] }))
+
+  const tags = Array.from(container.querySelectorAll('[data-label-cell-item]'))
+  expect(tags.map((tag) => tag.textContent?.trim())).toEqual(['linux', 'web'])
+})
+
 test('renders the customer of a host', () => {
   mountRow(makeHost({ customer: 'Customer A' }))
 

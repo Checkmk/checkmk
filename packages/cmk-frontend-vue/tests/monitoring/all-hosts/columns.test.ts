@@ -94,6 +94,7 @@ test('the optional columns are offered in the picker, abbreviated headers spelle
     { id: 'tags', label: 'Tags' },
     { id: 'contacts', label: 'Contacts' },
     { id: 'contact_groups', label: 'Contact groups' },
+    { id: 'groups', label: 'Host groups' },
     { id: 'num_services', label: 'All services' },
     { id: 'num_services_ok', label: 'OK' },
     { id: 'num_services_warn', label: 'Warning (Wa)' },
@@ -115,7 +116,8 @@ test('most offered columns are shown on first use, but alias, folder, the timest
     labels: false,
     tags: false,
     contacts: false,
-    contact_groups: false
+    contact_groups: false,
+    groups: false
   })
   expect(service.columnVisibility.value).toEqual(service.defaultColumnVisibility)
 })
@@ -136,6 +138,7 @@ test('the fixed columns keep their position around the optional ones', () => {
     'tags',
     'contacts',
     'contact_groups',
+    'groups',
     'num_services',
     'num_services_ok',
     'num_services_warn',

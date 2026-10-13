@@ -94,6 +94,7 @@ const labels = computed(() => toLabelItems(props.row.labels ?? {}))
 const tags = computed(() => toTagItems(props.row.tags ?? {}))
 const contacts = computed(() => toNameItems(props.row.contacts ?? []))
 const contactGroups = computed(() => toNameItems(props.row.contact_groups ?? []))
+const hostGroups = computed(() => toNameItems(props.row.groups ?? []))
 
 const lastCheck = computed(() =>
   props.row.last_check === undefined
@@ -169,6 +170,7 @@ const lastStateChange = computed(() =>
     :items="contactGroups"
     size="small"
   />
+  <LabelCell v-if="hasColumn('groups')" column-id="groups" :items="hostGroups" size="small" />
 
   <NumberCell
     v-if="hasColumn('num_services')"

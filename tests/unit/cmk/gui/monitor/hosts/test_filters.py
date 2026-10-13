@@ -446,6 +446,12 @@ def test_query_builder_name_choice_prefix_matches_by_regex() -> None:
     assert parse_as_livestatus_filter(condition) == "Filter: contact_groups ~ ^ops"
 
 
+def test_query_builder_name_choice_matches_host_groups() -> None:
+    condition = NameChoiceCondition(type="condition", field="groups", op="one_of", value=["linux"])
+
+    assert parse_as_livestatus_filter(condition) == "Filter: groups >= linux"
+
+
 # `@api_model` classes are plain dataclasses: constructing one directly (as these tests do) never
 # runs the pydantic converters (e.g. `SiteIdConverter.should_exist`) that only fire when a request
 # body is actually parsed - see the openapi-level `test_filters_validation_errors` for that. So this

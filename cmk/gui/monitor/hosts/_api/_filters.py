@@ -48,7 +48,7 @@ type TimestampOp = Literal["lt", "lte", "gt", "gte"]
 
 type LabelField = Literal["labels", "tags"]
 
-type NameListField = Literal["contacts", "contact_groups"]
+type NameListField = Literal["contacts", "contact_groups", "groups"]
 
 type NumericField = Literal[
     "num_services",

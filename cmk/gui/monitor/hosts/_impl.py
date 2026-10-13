@@ -212,6 +212,7 @@ class LiveStatusHostRepository:
                         contact_groups=(
                             list(row["contact_groups"]) if "contact_groups" in row else None
                         ),
+                        groups=list(row["groups"]) if "groups" in row else None,
                         setup_access=(
                             self._setup_access(row["name"], row["filename"])
                             if HostOptionalField.SETUP_ACCESS in fields
@@ -602,6 +603,7 @@ _SEARCHED_FIELDS: Mapping[HostOptionalField, Callable[[str], QueryExpression]] =
     HostOptionalField.CONTACT_GROUPS: lambda query: Hosts.contact_groups.contains(
         query, ignore_case=True
     ),
+    HostOptionalField.GROUPS: lambda query: Hosts.groups.contains(query, ignore_case=True),
 }
 
 
@@ -671,6 +673,7 @@ _OPTIONAL_COLUMNS: Mapping[HostOptionalField, tuple[Column, ...]] = {
     HostOptionalField.TAGS: (Hosts.tags,),
     HostOptionalField.CONTACTS: (Hosts.contacts,),
     HostOptionalField.CONTACT_GROUPS: (Hosts.contact_groups,),
+    HostOptionalField.GROUPS: (Hosts.groups,),
     HostOptionalField.SETUP_ACCESS: (Hosts.filename,),
 }
 

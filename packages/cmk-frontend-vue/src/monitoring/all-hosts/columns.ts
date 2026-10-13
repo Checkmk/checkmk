@@ -57,6 +57,7 @@ const OPTIONAL_FIELD_COLUMNS = [
   'tags',
   'contacts',
   'contact_groups',
+  'groups',
   'num_services',
   'num_services_ok',
   'num_services_warn',
@@ -272,6 +273,15 @@ export function buildHostColumns({
     maxSelected: MAX_FILTER_CHOICES
   }
 
+  const hostGroupsFilter: AutocompleteChoiceFilter<'groups'> = {
+    type: 'autocomplete-choice',
+    field: 'groups',
+    op: 'one_of',
+    suggest: autocompleter('allgroups', { group_type: 'host' }),
+    wildcardOption: true,
+    maxSelected: MAX_FILTER_CHOICES
+  }
+
   const modesFilter: BooleanGroupFilter<HostModeField> = {
     type: 'boolean-group',
     groups: [
@@ -425,6 +435,14 @@ export function buildHostColumns({
       minSize: 100,
       maxSize: 300,
       meta: { hidden: true, filter: contactGroupsFilter }
+    },
+    {
+      accessorKey: 'groups',
+      header: _t('Host groups'),
+      enableSorting: false,
+      minSize: 100,
+      maxSize: 300,
+      meta: { hidden: true, filter: hostGroupsFilter }
     },
     {
       accessorKey: 'num_services',

@@ -165,6 +165,11 @@ class HostEntry:
         example=["all"],
         default_factory=ApiOmitted,
     )
+    groups: list[str] | ApiOmitted = api_field(
+        description="Host groups this host is in. Omitted when it is in none.",
+        example=["linux"],
+        default_factory=ApiOmitted,
+    )
     customer: str | ApiOmitted = api_field(
         description=(
             "Name of the customer the host belongs to, which is the customer of the site "
@@ -237,6 +242,7 @@ class HostEntry:
             tags=included(HostOptionalField.TAGS, host.tags),
             contacts=included(HostOptionalField.CONTACTS, host.contacts),
             contact_groups=included(HostOptionalField.CONTACT_GROUPS, host.contact_groups),
+            groups=included(HostOptionalField.GROUPS, host.groups),
             customer=ApiOmitted() if customer is None else customer,
             modes=build_host_modes(host) or ApiOmitted(),
             legacy_host_status_link=host_view_link("hoststatus", host),
@@ -296,8 +302,8 @@ class HostsRequestBody:
         description=(
             "Search text, matched against the host name, the site, the customer and every "
             "text field asked for through `fields` (alias, address, folder, labels, tags, "
-            "contacts, contact groups). Site and customer are searched whether or not their "
-            "column is shown. Omit or pass empty string to return all hosts."
+            "contacts, contact groups, host groups). Site and customer are searched whether or "
+            "not their column is shown. Omit or pass empty string to return all hosts."
         ),
         example="web-server",
         default_factory=ApiOmitted,

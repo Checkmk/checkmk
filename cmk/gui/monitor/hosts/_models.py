@@ -148,6 +148,7 @@ class Host:
     tags: dict[str, str] | None
     contacts: list[str] | None
     contact_groups: list[str] | None
+    groups: list[str] | None = None
     num_relations: int | None = None
     """How many hosts are related to this one - all the listing shows."""
     relations: tuple[RelatedHost, ...] = ()
@@ -179,6 +180,7 @@ class HostOptionalField(enum.StrEnum):
     TAGS = "tags"
     CONTACTS = "contacts"
     CONTACT_GROUPS = "contact_groups"
+    GROUPS = "groups"
     SETUP_ACCESS = "setup_access"
 
     @classmethod

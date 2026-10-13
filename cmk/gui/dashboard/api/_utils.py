@@ -91,6 +91,7 @@ INTERNAL_TO_API_TYPE_NAME: Mapping[str, str] = {
     "combined_graph": "combined_graph",
     "single_timeseries": "single_timeseries",
     "custom_graph": "custom_graph",
+    "embedded_custom_graph": "embedded_custom_graph",
     "pnpgraph": "performance_graph",
     "inventory": "inventory",
     "barplot": "barplot",
@@ -165,6 +166,10 @@ _PERMISSIONS_GRAPH_WIDGET = permissions.Optional(
             permissions.OkayToIgnorePerm("general.edit_custom_graph"),  # yes, even for reads
             permissions.OkayToIgnorePerm("general.see_user_custom_graph"),
             permissions.OkayToIgnorePerm("general.see_user_graph_tuning"),
+            # checked on save of an embedded custom graph with telemetry metrics data sources
+            permissions.OkayToIgnorePerm(
+                "general.query_telemetry_metrics_from_custom_graph_editor"
+            ),
             # every custom_graph and graph_tuning has their own permission,
             # all of which might be checked (and are optional)
             permissions.PrefixPerm("custom_graph"),

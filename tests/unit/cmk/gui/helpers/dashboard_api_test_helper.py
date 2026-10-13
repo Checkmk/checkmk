@@ -197,6 +197,40 @@ class TestCustomGraphContent:
         )
 
 
+class TestEmbeddedCustomGraphContent:
+    def test_create(self, clients: ClientRegistry) -> None:
+        check_widget_create(
+            clients,
+            {
+                "type": "embedded_custom_graph",
+                "timerange": {"type": "predefined", "value": "last_25_hours"},
+                "graph_render_options": {},
+                "definition": {
+                    "graph_options": {
+                        "unit": {"type": "first_entry_with_unit"},
+                        "explicit_vertical_range": {"type": "auto"},
+                        "omit_zero_metrics": False,
+                    },
+                    "data_sources": [
+                        {
+                            "type": "rrd_metric",
+                            "id": "A",
+                            "title": "$DEFAULT_TITLE$",
+                            "line_type": "line",
+                            "mirrored": False,
+                            "visible": True,
+                            "color": "#111111",
+                            "host_name": "heute",
+                            "service_name": "CPU load",
+                            "metric_name": "load1",
+                            "consolidation": "avg",
+                        }
+                    ],
+                },
+            },
+        )
+
+
 class TestBarplotContent:
     def test_create(self, clients: ClientRegistry) -> None:
         check_widget_create(

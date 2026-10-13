@@ -113,6 +113,13 @@ class CustomGraphDashletConfig(ABCGraphDashletConfig):
     show_legend: NotRequired[bool]
 
 
+class EmbeddedCustomGraphDashletConfig(ABCGraphDashletConfig):
+    # Stored config of the embedded_custom_graph widget. `definition` is the dumped
+    # CustomGraphContentV2 (nonfree/pro), including "version"; community code only passes it
+    # through, the registered pro widget parses and validates it.
+    definition: dict[str, object]
+
+
 class MetricCurrentValue(TypedDict):
     type: Literal["current"]
 

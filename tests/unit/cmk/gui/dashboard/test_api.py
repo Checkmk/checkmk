@@ -15,12 +15,16 @@ from cmk.gui.dashboard import DashletConfig, get_all_dashboards
 from cmk.gui.dashboard.api._utils import INTERNAL_TO_API_TYPE_NAME
 from cmk.gui.dashboard.api.model.constants import RESPONSIVE_GRID_BREAKPOINTS
 from cmk.gui.dashboard.api.model.widget import WidgetTitle
-from cmk.gui.dashboard.api.model.widget_content import _CONTENT_TYPES
+from cmk.gui.dashboard.api.model.widget_content import _CONTENT_TYPES, content_from_internal
 from cmk.gui.dashboard.api.model.widget_content._base import BaseWidgetContent
+from cmk.gui.dashboard.api.model.widget_content.graph import EmbeddedCustomGraphContent
 from cmk.gui.dashboard.api.model.widget_content.network_flow import NetworkFlowDonutContent
 from cmk.gui.dashboard.api.model.widget_content.url import URLContent
 from cmk.gui.dashboard.dashlet.dashlets.custom_url import URLDashletConfig
-from cmk.gui.dashboard.type_defs import NetworkFlowDonutDashletConfig
+from cmk.gui.dashboard.type_defs import (
+    EmbeddedCustomGraphDashletConfig,
+    NetworkFlowDonutDashletConfig,
+)
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec, VisualLinkSpec
@@ -128,6 +132,42 @@ def test_widget_title_url_scheme_validation(
         assert resp.status_code == HTTPStatus.CREATED, (
             f"Expected 201 for {title_url}, got {resp.status_code} {resp.body!r}"
         )
+
+
+def test_create_embedded_custom_graph_widget_is_unsupported(clients: ClientRegistry) -> None:
+    widget = create_widget(
+        {
+            "type": "embedded_custom_graph",
+            "timerange": {"type": "predefined", "value": "last_25_hours"},
+            "definition": {},
+        }
+    )
+
+    resp = clients.DashboardClient.create_relative_grid_dashboard(
+        create_dashboard_payload("test_dashboard", {"test_widget": widget}),
+        expect_ok=False,
+    )
+
+    assert resp.status_code == HTTPStatus.BAD_REQUEST, resp.body
+    assert (
+        resp.json["fields"]["body.widgets.test_widget.content.embedded_custom_graph"]["msg"]
+        == "Value error, Widget is not supported by this edition"
+    )
+
+
+def test_embedded_custom_graph_content_without_its_edition_has_empty_definition() -> None:
+    # e.g. after a downgrade: the stored definition cannot be rendered here, and stays stored
+    config = EmbeddedCustomGraphDashletConfig(
+        type="embedded_custom_graph",
+        timerange="25h",
+        graph_render_options={},
+        definition={"version": 2, "graph_options": {}, "data_sources": []},
+    )
+
+    content = content_from_internal(config)
+
+    assert isinstance(content, EmbeddedCustomGraphContent)
+    assert content.definition == {}
 
 
 @pytest.mark.parametrize("widget_api_model", _CONTENT_TYPES)

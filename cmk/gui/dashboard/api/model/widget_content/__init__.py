@@ -13,6 +13,7 @@ from ._base import BaseWidgetContent
 from .graph import (
     CombinedGraphContent,
     CustomGraphContent,
+    EmbeddedCustomGraphContent,
     PerformanceGraphContent,
     ProblemGraphContent,
     SingleTimeseriesContent,
@@ -77,6 +78,7 @@ type WidgetContent = Annotated[
     | CombinedGraphContent
     | SingleTimeseriesContent
     | CustomGraphContent
+    | EmbeddedCustomGraphContent
     | PerformanceGraphContent
     | BarplotContent
     | GaugeContent
@@ -118,6 +120,7 @@ _CONTENT_TYPES = (
     CombinedGraphContent,
     SingleTimeseriesContent,
     CustomGraphContent,
+    EmbeddedCustomGraphContent,
     PerformanceGraphContent,
     BarplotContent,
     GaugeContent,

@@ -29,6 +29,9 @@ py_library(
     srcs = [
         # compatibility shim for venv entry points
         "cmk/werks/cli.py",
+        "cmk/werks/flavor/cmk/__init__.py",
+        "cmk/werks/flavor/cmk/collect.py",
+        "cmk/werks/flavor/cmk/version.py",
         "cmk/werks/tool/__init__.py",
         "cmk/werks/tool/__main__.py",
         "cmk/werks/tool/cli/__init__.py",
@@ -43,6 +46,8 @@ py_library(
         "cmk/werks/tool/constants.py",
         "cmk/werks/tool/convert.py",
         "cmk/werks/tool/error.py",
+        "cmk/werks/tool/flavor.py",
+        "cmk/werks/tool/flavor_registry.py",
         "cmk/werks/tool/format.py",
         "cmk/werks/tool/load.py",
         "cmk/werks/tool/markup.py",
@@ -50,7 +55,6 @@ py_library(
         "cmk/werks/tool/parse.py",
         "cmk/werks/tool/utils/__init__.py",
         "cmk/werks/tool/utils/__main__.py",
-        "cmk/werks/tool/utils/collect.py",
         "cmk/werks/tool/utils/burn.py",
         "cmk/werks/tool/validate.py",
     ],

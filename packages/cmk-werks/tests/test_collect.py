@@ -10,8 +10,9 @@ from pathlib import Path
 import pytest
 from git.repo import Repo
 
+from cmk.werks.tool.collect import main
+from cmk.werks.tool.flavor_registry import get_flavor
 from cmk.werks.tool.utils.__main__ import main as utils_main
-from cmk.werks.tool.utils.collect import main
 
 from ._werk_files import werk_text
 
@@ -45,11 +46,7 @@ def _commit(repo: Repo, files: Mapping[str, str]) -> str:
 def _collect(
     capsys: pytest.CaptureFixture[str], flavor: str, repo: Repo, branches: Mapping[str, str]
 ) -> dict[str, dict[str, object]]:
-    match flavor:
-        case "cmk" | "cma" | "checkmk_kube_agent" | "cloudmk":
-            main(flavor, Path(repo.working_dir), branches)
-        case _:
-            raise RuntimeError(f"unknown flavor {flavor}")
+    main(get_flavor(flavor), Path(repo.working_dir), branches)
     collected: dict[str, dict[str, object]] = json.loads(capsys.readouterr().out)
     return collected
 

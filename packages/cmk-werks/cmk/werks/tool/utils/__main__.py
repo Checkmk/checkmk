@@ -9,7 +9,9 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from cmk.ccc.version import Version
+from cmk.werks.tool.collect import main as collect
 from cmk.werks.tool.config import RuntimeConfiguration
+from cmk.werks.tool.flavor_registry import FLAVOR_NAMES, get_flavor
 from cmk.werks.tool.models import EditionV2, EditionV3, WerkV3
 from cmk.werks.tool.utils import (
     load_raw_files,
@@ -17,7 +19,6 @@ from cmk.werks.tool.utils import (
     write_precompiled_werks,
 )
 from cmk.werks.tool.utils.burn import main as burn
-from cmk.werks.tool.utils.collect import main as collect
 
 
 def path_dir(value: str) -> Path:
@@ -68,7 +69,7 @@ def main_collect(args: argparse.Namespace) -> None:
     branches = {}
     if args.substitute_branches:
         branches = dict(r.split(":", 1) for r in args.substitute_branches)
-    collect(args.flavor, args.path, branches)
+    collect(get_flavor(args.flavor), args.path, branches)
 
 
 def main_burn(args: argparse.Namespace) -> None:
@@ -97,7 +98,7 @@ def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     )
     # if you want to compile the complete database of all werks, you have to go
     # through all branches and look at all .werks folders there.
-    parser_collect.add_argument("flavor", choices=["cma", "cmk", "checkmk_kube_agent", "cloudmk"])
+    parser_collect.add_argument("flavor", choices=FLAVOR_NAMES)
     parser_collect.add_argument("path", help="path to git repo to read werks from", type=path_dir)
     parser_collect.add_argument(
         "--substitute-branches",

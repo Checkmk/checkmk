@@ -35,7 +35,8 @@ const OPTIONAL_FIELD_COLUMNS = [
   'labels',
   'tags',
   'contacts',
-  'contact_groups'
+  'contact_groups',
+  'groups'
 ] as const satisfies readonly ServiceOptionalField[]
 
 /**
@@ -166,6 +167,15 @@ export function useHostServicesColumns({
     maxSelected: MAX_FILTER_CHOICES
   }
 
+  const serviceGroupsFilter: AutocompleteChoiceFilter<'groups'> = {
+    type: 'autocomplete-choice',
+    field: 'groups',
+    op: 'one_of',
+    suggest: autocompleter('allgroups', { group_type: 'service' }),
+    wildcardOption: true,
+    maxSelected: MAX_FILTER_CHOICES
+  }
+
   const modesFilter: BooleanGroupFilter<ServiceModeField> = {
     type: 'boolean-group',
     groups: [
@@ -282,6 +292,14 @@ export function useHostServicesColumns({
       minSize: 100,
       maxSize: 300,
       meta: { hidden: true, filter: contactGroupsFilter }
+    },
+    {
+      accessorKey: 'groups',
+      header: _t('Service groups'),
+      enableSorting: false,
+      minSize: 100,
+      maxSize: 300,
+      meta: { hidden: true, filter: serviceGroupsFilter }
     },
     {
       accessorKey: 'perfometer',

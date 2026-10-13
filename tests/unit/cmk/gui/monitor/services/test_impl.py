@@ -140,6 +140,22 @@ def test_fetch_reads_optional_columns_only_when_asked_for() -> None:
         )
 
 
+def test_fetch_reads_the_service_groups_when_asked_for() -> None:
+    with expect_single_query(
+        f"GET services\nColumns: {_SERVICES_COLUMNS} groups\n"
+        f"Filter: host_name = {_UNKNOWN_HOSTNAME}\n{_DEFAULT_ORDER_BY}",
+        match_type="ellipsis",
+    ) as live:
+        LiveStatusHostServicesRepository(connection=live).fetch(
+            _UNKNOWN_HOSTNAME,
+            limit=None,
+            query="",
+            sorters=[],
+            filters=ServiceFilter(""),
+            fields=frozenset({ServiceOptionalField.GROUPS}),
+        )
+
+
 def test_count_matched_query_shape() -> None:
     with expect_single_query(
         f"GET services\nStats: state >= 0\n"
@@ -303,6 +319,11 @@ def test_build_query_filter_searches_the_name_and_the_summary() -> None:
             ServiceOptionalField.CONTACT_GROUPS,
             [("Filter", "contact_groups ~~ CPU")],
             id="contact groups",
+        ),
+        pytest.param(
+            ServiceOptionalField.GROUPS,
+            [("Filter", "groups ~~ CPU")],
+            id="service groups",
         ),
     ],
 )

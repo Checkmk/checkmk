@@ -121,6 +121,7 @@ const labels = computed(() => toLabelItems(props.row.labels ?? {}))
 const tags = computed(() => toTagItems(props.row.tags ?? {}))
 const contacts = computed(() => toNameItems(props.row.contacts ?? []))
 const contactGroups = computed(() => toNameItems(props.row.contact_groups ?? []))
+const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
 </script>
 
 <template>
@@ -168,6 +169,7 @@ const contactGroups = computed(() => toNameItems(props.row.contact_groups ?? [])
     :items="contactGroups"
     size="small"
   />
+  <LabelCell v-if="hasColumn('groups')" column-id="groups" :items="serviceGroups" size="small" />
   <PerfometerCell
     v-if="hasColumn('perfometer')"
     column-id="perfometer"

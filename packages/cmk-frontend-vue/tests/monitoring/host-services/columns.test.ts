@@ -61,14 +61,15 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-test('the labels, tags and contact columns start hidden', () => {
+test('the labels, tags, contact and group columns start hidden', () => {
   const service = makeService()
 
   expect(service.defaultColumnVisibility).toEqual({
     labels: false,
     tags: false,
     contacts: false,
-    contact_groups: false
+    contact_groups: false,
+    groups: false
   })
   expect(service.columnVisibility.value).toEqual(service.defaultColumnVisibility)
 })
@@ -78,9 +79,9 @@ test('a table on its defaults asks for none of their fields', () => {
 })
 
 test('a column the user shows asks for its field again', () => {
-  expect(visibleServiceFields({ labels: false, tags: false, contacts: false })).toEqual([
-    'contact_groups'
-  ])
+  expect(
+    visibleServiceFields({ labels: false, tags: false, contacts: false, groups: false })
+  ).toEqual(['contact_groups'])
 })
 
 test('the state column reads as the one in the hosts listing', () => {
@@ -161,7 +162,7 @@ test('the select column is neither rendered nor pinned when no action is permitt
 
 test('the hidden columns stay on offer in the picker', () => {
   expect(makeService().toggleableColumns.map((column) => column.id)).toEqual(
-    expect.arrayContaining(['labels', 'tags', 'contacts', 'contact_groups'])
+    expect.arrayContaining(['labels', 'tags', 'contacts', 'contact_groups', 'groups'])
   )
 })
 

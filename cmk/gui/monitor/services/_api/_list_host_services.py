@@ -125,6 +125,11 @@ class HostServiceEntry:
         example=["all"],
         default_factory=ApiOmitted,
     )
+    groups: list[str] | ApiOmitted = api_field(
+        description="Service groups this service is in. Omitted when it is in none.",
+        example=["databases"],
+        default_factory=ApiOmitted,
+    )
     perfometer: ServicePerfometer | ApiOmitted = api_field(
         description=(
             "Perf-O-Meter of the service's performance data. Omitted when the service reports no "
@@ -157,6 +162,7 @@ class HostServiceEntry:
             contact_groups=service.contact_groups
             if service.contact_groups is not None
             else ApiOmitted(),
+            groups=service.groups if service.groups is not None else ApiOmitted(),
             perfometer=ServicePerfometer.from_perf_data(
                 service.perf_data,
                 service.check_command,
@@ -216,8 +222,8 @@ class ServicesRequestBody:
     ] = api_field(
         description=(
             "Search text, matched against the service name, its summary, and every text field "
-            "asked for through `fields` (labels, tags, contacts, contact_groups). Omit or pass "
-            "empty string to return all services."
+            "asked for through `fields` (labels, tags, contacts, contact_groups, groups). Omit or "
+            "pass empty string to return all services."
         ),
         example="CPU",
         default_factory=ApiOmitted,

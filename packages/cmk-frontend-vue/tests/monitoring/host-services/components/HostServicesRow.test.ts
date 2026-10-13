@@ -80,9 +80,9 @@ test('renders one cell per column', () => {
   const { container } = mountRow(makeService())
 
   // select, state, modes, name, summary, last_state_change, last_check, labels, tags, contacts,
-  // contact_groups, perfometer
+  // contact_groups, groups, perfometer
   const tds = Array.from(container.querySelectorAll('td'))
-  expect(tds).toHaveLength(12)
+  expect(tds).toHaveLength(13)
 })
 
 test('renders last state change before last check, matching the legacy view', () => {
@@ -156,7 +156,7 @@ test('renders no action cell for a page that offers no menu', () => {
   const { container } = mountRow(makeService())
 
   expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument()
-  expect(Array.from(container.querySelectorAll('td'))).toHaveLength(12)
+  expect(Array.from(container.querySelectorAll('td'))).toHaveLength(13)
 })
 
 test('adds the action cell once a page offers the menu', () => {
@@ -165,7 +165,7 @@ test('adds the action cell once a page offers the menu', () => {
   })
 
   expect(screen.getByRole('button', { name: 'More actions' })).toBeInTheDocument()
-  expect(Array.from(container.querySelectorAll('td'))).toHaveLength(13)
+  expect(Array.from(container.querySelectorAll('td'))).toHaveLength(14)
 })
 
 test('loads the menu of its own service, and only once it is opened', async () => {
@@ -233,6 +233,13 @@ test('renders the contact groups of a service, sorted alphabetically', () => {
 
   const tags = Array.from(container.querySelectorAll('[data-label-cell-item]'))
   expect(tags.map((tag) => tag.textContent?.trim())).toEqual(['all', 'linux'])
+})
+
+test('renders the service groups of a service, sorted alphabetically', () => {
+  const { container } = mountRow(makeService({ groups: ['web', 'databases'] }))
+
+  const tags = Array.from(container.querySelectorAll('[data-label-cell-item]'))
+  expect(tags.map((tag) => tag.textContent?.trim())).toEqual(['databases', 'web'])
 })
 
 test('renders the contacts of a service, sorted alphabetically', () => {

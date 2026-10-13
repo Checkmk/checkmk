@@ -109,6 +109,7 @@ class Service:
     tags: dict[str, str] | None
     contacts: list[str] | None
     contact_groups: list[str] | None
+    groups: list[str] | None
 
     @property
     def check_crashed(self) -> bool:
@@ -176,6 +177,7 @@ class ServiceOptionalField(enum.StrEnum):
     TAGS = "tags"
     CONTACTS = "contacts"
     CONTACT_GROUPS = "contact_groups"
+    GROUPS = "groups"
 
     @classmethod
     def options(cls) -> str:

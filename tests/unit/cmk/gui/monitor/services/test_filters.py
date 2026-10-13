@@ -398,6 +398,14 @@ def test_query_builder_name_choice_prefix_matches_by_regex() -> None:
     assert parse_as_livestatus_filter(condition) == "Filter: contact_groups ~ ^ops"
 
 
+def test_query_builder_name_choice_matches_service_groups() -> None:
+    condition = ServiceNameChoiceCondition(
+        type="condition", field="groups", op="one_of", value=["databases"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: groups >= databases"
+
+
 def test_query_builder_nested_conditions() -> None:
     nodes = ServiceAndNode(
         type="and",

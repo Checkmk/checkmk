@@ -148,6 +148,7 @@ class LiveStatusHostServicesRepository:
                         contact_groups=(
                             list(row["contact_groups"]) if "contact_groups" in row else None
                         ),
+                        groups=list(row["groups"]) if "groups" in row else None,
                     )
                     for row in q.iterate(conn)
                 ],
@@ -244,6 +245,7 @@ class LiveStatusHostServicesRepository:
             host_acknowledged=bool(row["host_acknowledged"]),
             host_in_downtime=row["host_scheduled_downtime_depth"] > 0,
             contact_groups=list(row["contact_groups"]),
+            groups=None,
             long_output=_unescape_livestatus_newlines(row["long_plugin_output"]),
             current_attempt=row["current_attempt"],
             max_check_attempts=row["max_check_attempts"],
@@ -295,6 +297,7 @@ _OPTIONAL_COLUMNS: Mapping[ServiceOptionalField, tuple[Column, ...]] = {
     ServiceOptionalField.TAGS: (Services.tags,),
     ServiceOptionalField.CONTACTS: (Services.contacts,),
     ServiceOptionalField.CONTACT_GROUPS: (Services.contact_groups,),
+    ServiceOptionalField.GROUPS: (Services.groups,),
 }
 
 
@@ -394,6 +397,7 @@ _SEARCHED_FIELDS: Mapping[ServiceOptionalField, Callable[[str], QueryExpression]
     ServiceOptionalField.CONTACT_GROUPS: lambda query: Services.contact_groups.contains(
         query, ignore_case=True
     ),
+    ServiceOptionalField.GROUPS: lambda query: Services.groups.contains(query, ignore_case=True),
 }
 
 

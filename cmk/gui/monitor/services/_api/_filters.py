@@ -38,7 +38,7 @@ type ServiceStringOp = Literal["contains", "matches"]
 
 type ServiceLabelField = Literal["labels", "tags"]
 
-type ServiceNameListField = Literal["contacts", "contact_groups"]
+type ServiceNameListField = Literal["contacts", "contact_groups", "groups"]
 
 type ServiceTimestampOp = Literal["lt", "lte", "gt", "gte"]
 

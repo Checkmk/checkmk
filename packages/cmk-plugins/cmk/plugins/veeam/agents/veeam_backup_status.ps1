@@ -248,8 +248,6 @@ try {
 }
 
 catch {
-    $errMsg = $_.Exception.Message
-    $errItem = $_.Exception.ItemName
-    Write-Error "Totally unexpected and unhandled error occured:`n Item: $errItem`n Error Message: $errMsg"
+    Write-Error "Totally unexpected and unhandled error occurred:`n$($_ | Out-String)"
     break
 }

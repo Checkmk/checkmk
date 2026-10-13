@@ -33,12 +33,11 @@ from cmk.graphing_engine import (
     VerticalRangeKind,
 )
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import SizeMM
 from cmk.gui.unit_formatter import Label, NegativeYRange, NotationFormatter, PositiveYRange
 
 from ._drawn_curves import drawn_curves
 from ._graph_display_config import GraphDisplayConfigImage
-from ._graph_png_size import ex_to_inches, legend_height_ex, MM_PER_INCH
+from ._graph_png_size import ex_to_inches, legend_height_ex
 from ._time_axis import compute_time_axis
 from ._user_specific_unit import formatter_from_unit
 
@@ -622,13 +621,13 @@ def _derived_y_axis_unit(graph: EvaluatedGraph) -> Unit | None:
     return next((curve.attributes.unit for curve, _sign in _all_curves_with_sign(graph)), None)
 
 
-def render_png_ex(
+def render_png(
     graph: EvaluatedGraph,
     config: GraphDisplayConfigImage,
     y_axis_unit: Unit | NonConvertibleUnit | None = None,
     *,
     tz: datetime.tzinfo | None = None,
-) -> tuple[bytes, SizeMM, SizeMM]:
+) -> bytes:
     """Render a single evaluated graph to PNG bytes.
 
     ``y_axis_unit`` defaults to this graph's own derived unit (``_derived_y_axis_unit``) - the same
@@ -685,15 +684,4 @@ def render_png_ex(
     buf = io.BytesIO()
     fig.savefig(buf, format="png")
     buf.seek(0)
-    return (buf.read(), width_in * MM_PER_INCH, height_in * MM_PER_INCH)
-
-
-def render_png(
-    graph: EvaluatedGraph,
-    config: GraphDisplayConfigImage,
-    y_axis_unit: Unit | NonConvertibleUnit | None = None,
-    *,
-    tz: datetime.tzinfo | None = None,
-) -> bytes:
-    png_bytes, _, _ = render_png_ex(graph, config, y_axis_unit, tz=tz)
-    return png_bytes
+    return buf.read()

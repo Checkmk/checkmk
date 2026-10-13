@@ -22,11 +22,11 @@ def ex_to_inches(size_ex: float, font_size_pt: float) -> float:
 
 def mm_per_ex(font_size_pt: float) -> SizeMM:
     """The physical size (in mm) GraphDisplayConfigImage.size grows by for each
-    additional "ex", i.e. the exact inverse of the ex->inches->mm conversion render_png_ex
+    additional "ex", i.e. the exact inverse of the ex->inches->mm conversion render_png
     uses internally.
 
     A caller translating a target physical width/height into `size` (ex) before calling
-    render_png*() must use this - not cmk.gui.graphing._graph_display_config.get_mm_per_ex(), a
+    render_png() must use this - not cmk.gui.graphing._graph_display_config.get_mm_per_ex(), a
     differently-calibrated ex convention used to estimate a graph's step from its width -
     or the resulting image will come out a few percent off the intended physical size.
     """
@@ -34,7 +34,7 @@ def mm_per_ex(font_size_pt: float) -> SizeMM:
 
 
 def legend_height_ex(graph: EvaluatedGraph, config: GraphDisplayConfigImage) -> float:
-    """The "ex" height render_png_ex() reserves below the plot for the scalar/rule legend table,
+    """The "ex" height render_png() reserves below the plot for the scalar/rule legend table,
     e.g. 0.0 if there is nothing to show. Depends only on the graph's own curve/rule counts and
     config.show_legend - never on config.size - so it's safe to call before an actual render."""
     n_curves = sum(1 for _drawn in drawn_curves(graph.stacks, graph.lines))
@@ -45,7 +45,7 @@ def legend_height_ex(graph: EvaluatedGraph, config: GraphDisplayConfigImage) -> 
 def compute_png_size_mm(
     graph: EvaluatedGraph, config: GraphDisplayConfigImage
 ) -> tuple[SizeMM, SizeMM]:
-    """The (width_mm, height_mm) render_png_ex() would return for this graph/config, without
+    """The (width_mm, height_mm) of the image render_png() draws for this graph/config, without
     paying for an actual matplotlib render.
 
     Useful for layout/pagination planning that only needs the size a graph will occupy, not its

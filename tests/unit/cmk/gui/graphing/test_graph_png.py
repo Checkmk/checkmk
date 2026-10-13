@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+import struct
 from zoneinfo import ZoneInfo
 
 import matplotlib
@@ -26,7 +27,7 @@ from cmk.graphing_engine import (
 matplotlib.use("Agg")
 from matplotlib.figure import Figure
 
-from cmk.gui.graphing import compute_png_size_mm, GraphDisplayConfigImage, render_png, render_png_ex
+from cmk.gui.graphing import compute_png_size_mm, GraphDisplayConfigImage, render_png
 from cmk.gui.graphing._graph_png import (
     _all_curves_with_sign,
     _derived_y_axis_unit,
@@ -42,10 +43,22 @@ from cmk.gui.graphing._graph_png import (
     _values,
     _vertical_range_bounds,
     _y_axis_limits,
+    DPI,
 )
+from cmk.gui.graphing._graph_png_size import MM_PER_INCH
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _TIME_RANGE = TimeRange(start=0, end=180, step=60)
+
+
+def _size_in_px(png: bytes) -> tuple[int, int]:
+    width, height = struct.unpack(">II", png[16:24])
+    return width, height
+
+
+def _px(size_mm: tuple[float, float]) -> tuple[int, int]:
+    width_mm, height_mm = size_mm
+    return int(width_mm / MM_PER_INCH * DPI), int(height_mm / MM_PER_INCH * DPI)
 
 
 def _curve(title: str, values: list[float | None], *, color: str = "#000000") -> EvaluatedCurve:
@@ -150,7 +163,7 @@ def test_notation_formatter_never_converts_temperature_values() -> None:
     assert formatter.render(10) == "10 °C"
 
 
-def test_render_png_ex_with_a_unit_renders_ticks_and_legend_via_the_formatter() -> None:
+def test_render_png_with_a_unit_renders_ticks_and_legend_via_the_formatter() -> None:
     """End-to-end smoke test: a graph with a Y-axis unit must render without error through the
     render_y_labels()/formatter.render() wiring, not just the plain-numeric fallback path."""
     curve = _curve("m", [1.0, 2.0, 3.0], color="#123456")
@@ -164,7 +177,7 @@ def test_render_png_ex_with_a_unit_renders_ticks_and_legend_via_the_formatter() 
     )
     y_axis_unit = Unit(notation=DecimalNotation("X"), precision=AutoPrecision(2))
 
-    png_bytes, _width_mm, _height_mm = render_png_ex(graph, GraphDisplayConfigImage(), y_axis_unit)
+    png_bytes = render_png(graph, GraphDisplayConfigImage(), y_axis_unit)
 
     assert png_bytes.startswith(b"\x89PNG")
 
@@ -286,8 +299,8 @@ def test_derived_y_axis_unit_is_none_for_a_graph_with_no_curves() -> None:
     assert _derived_y_axis_unit(graph) is None
 
 
-def test_render_png_ex_self_derives_the_y_axis_unit_when_none_is_passed() -> None:
-    """render_png/render_png_ex derive their own axis unit from the evaluated graph by default,
+def test_render_png_self_derives_the_y_axis_unit_when_none_is_passed() -> None:
+    """render_png derives its own axis unit from the evaluated graph by default,
     so only a caller holding the unit the graph names for itself has to pass one."""
     curve = _curve("m", [1.0, 2.0, 3.0])
     graph = EvaluatedGraph(
@@ -299,15 +312,13 @@ def test_render_png_ex_self_derives_the_y_axis_unit_when_none_is_passed() -> Non
         lines=[],
     )
 
-    default_bytes, _width_mm, _height_mm = render_png_ex(graph, GraphDisplayConfigImage())
-    explicit_bytes, _width_mm, _height_mm = render_png_ex(
-        graph, GraphDisplayConfigImage(), _derived_y_axis_unit(graph)
-    )
+    default_bytes = render_png(graph, GraphDisplayConfigImage())
+    explicit_bytes = render_png(graph, GraphDisplayConfigImage(), _derived_y_axis_unit(graph))
 
     assert default_bytes == explicit_bytes
 
 
-def test_compute_png_size_mm_matches_render_png_ex_without_a_legend() -> None:
+def test_the_image_has_the_size_computed_for_it_without_a_legend() -> None:
     curve = _curve("m", [1.0, 2.0, 3.0])
     graph = EvaluatedGraph(
         name="g",
@@ -319,15 +330,12 @@ def test_compute_png_size_mm_matches_render_png_ex_without_a_legend() -> None:
     )
     config = GraphDisplayConfigImage(show_legend=False)
 
-    _png_bytes, width_mm, height_mm = render_png_ex(graph, config)
+    png_bytes = render_png(graph, config)
 
-    assert compute_png_size_mm(graph, config) == (width_mm, height_mm)
+    assert _size_in_px(png_bytes) == _px(compute_png_size_mm(graph, config))
 
 
-def test_compute_png_size_mm_matches_render_png_ex_with_a_legend() -> None:
-    """compute_png_size_mm() must reproduce render_png_ex()'s own legend-table height
-    calculation (based on scalar/rule counts) without actually rendering, so callers can plan
-    layout/pagination without paying for a matplotlib render per graph."""
+def test_the_image_has_the_size_computed_for_it_with_a_legend() -> None:
     curve = _curve("m", [1.0, 2.0, 3.0])
     rule = EvaluatedRule(
         id="crit",
@@ -346,9 +354,9 @@ def test_compute_png_size_mm_matches_render_png_ex_with_a_legend() -> None:
     )
     config = GraphDisplayConfigImage(show_legend=True)
 
-    _png_bytes, width_mm, height_mm = render_png_ex(graph, config)
+    png_bytes = render_png(graph, config)
 
-    assert compute_png_size_mm(graph, config) == (width_mm, height_mm)
+    assert _size_in_px(png_bytes) == _px(compute_png_size_mm(graph, config))
 
 
 def test_values_pads_a_shorter_curve_with_nan_to_match_length() -> None:

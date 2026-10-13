@@ -59,7 +59,7 @@ def test_the_port_is_prefilled_with_the_veeam_default() -> None:
     port_form = rule_spec_special_agent_veeam.parameter_form().elements["port"].parameter_form
     assert isinstance(port_form, Integer)
 
-    assert port_form.prefill == DefaultValue(9419)
+    assert port_form.prefill == DefaultValue(443)
 
 
 def _sections_form() -> MultipleChoice:

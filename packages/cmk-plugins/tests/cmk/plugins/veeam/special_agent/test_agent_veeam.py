@@ -38,7 +38,7 @@ from cmk.plugins.veeam.special_agent.agent_veeam import (
 )
 from cmk.server_side_programs.v1 import Storage
 
-URL = "https://veeam.example.com:9419"
+URL = "https://veeam.example.com:443"
 TOKEN_URL = f"{URL}/api/oauth2/token"
 
 

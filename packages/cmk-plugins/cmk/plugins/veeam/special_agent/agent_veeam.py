@@ -119,7 +119,10 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         parser, long=f"--{PASSWORD_OPTION}", required=True, help="Password of the Veeam user"
     )
     parser.add_argument(
-        "--port", type=int, default=9419, help="Port of the Veeam REST API (default: 9419)"
+        "--port",
+        type=int,
+        default=443,
+        help="Port of the Veeam REST API (default: 443)",
     )
     parser.add_argument(
         "--timeout",

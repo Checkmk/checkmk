@@ -102,8 +102,11 @@ def _parameter_form() -> Dictionary:
                 required=True,
                 parameter_form=Integer(
                     title=Title("TCP port"),
-                    help_text=Help("The port the Veeam REST API listens on."),
-                    prefill=DefaultValue(9419),
+                    help_text=Help(
+                        "The port the Veeam REST API listens on. Veeam Backup & Replication "
+                        "13.1 and later use port 443 by default; earlier versions use port 9419."
+                    ),
+                    prefill=DefaultValue(443),
                     custom_validate=(validators.NetworkPort(),),
                 ),
             ),

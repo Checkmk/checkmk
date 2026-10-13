@@ -4,7 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { nextTick } from 'vue'
 
 import RrdTab from '@/graphing/designer/calculation/components/RrdTab.vue'
 import { DEFAULT_TITLE_MACRO, type GraphItem } from '@/graphing/designer/types'
@@ -209,6 +210,24 @@ test('editing a percentile jumps to the transformation mode', async () => {
       { ids: ['A'], visible: true }
     ]
   ])
+})
+
+test('editing a percentile from the list focuses its metric selection', async () => {
+  const percentileItem = formulaItem('P', {
+    ast: { op: 'percentile', percentile: 90, operand: { op: 'ref', id: 'A' } }
+  })
+  renderTab([...items, percentileItem])
+  await fireEvent.click(screen.getByRole('button', { name: 'Edit P' }))
+  await waitFor(() => expect(screen.getByRole('combobox', { name: 'Metric' })).toHaveFocus())
+})
+
+test('a calculation passed in to edit loads without taking the focus', async () => {
+  render(RrdTab, {
+    props: { editing: 'D', items, nextId: NEXT_ID, nextColor: NEXT_COLOR }
+  })
+  expect(await screen.findByRole('button', { name: 'Calculate & update' })).toBeInTheDocument()
+  await nextTick()
+  expect(document.body).toHaveFocus()
 })
 
 test('previews the next id and color while adding', () => {

@@ -18,7 +18,14 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import useId from 'cmk-ui-library/lib/useId'
 import { computed, nextTick, ref, watch } from 'vue'
 
-import { type Domain, type FormulaDraft, type GraphItem, type ItemId, isFormula } from '../../types'
+import {
+  type Domain,
+  type FormulaDraft,
+  type FormulaItem,
+  type GraphItem,
+  type ItemId,
+  isFormula
+} from '../../types'
 import { type RefVisibility, useCalculationEditor } from '../composables/useCalculationEditor'
 import type { FunctionName, OperatorSymbol } from '../formula'
 import FormulaEditor from './FormulaEditor.vue'
@@ -153,13 +160,15 @@ function onInsertId(id: ItemId): void {
   }
 }
 
-function onEdit(id: ItemId): void {
+function formulaById(id: ItemId): FormulaItem | null {
   const item = items.find((candidate) => candidate.id === id)
-  if (item === undefined || !isFormula(item)) {
-    return
-  }
-  startEdit(item)
-  if (mode.value === 'operations') {
+  return item !== undefined && isFormula(item) ? item : null
+}
+
+function onEdit(id: ItemId): void {
+  const item = formulaById(id)
+  if (item !== null) {
+    startEdit(item)
     void nextTick(focus)
   }
 }
@@ -167,8 +176,9 @@ function onEdit(id: ItemId): void {
 watch(
   () => editing,
   (id) => {
-    if (id !== null) {
-      onEdit(id)
+    const item = id === null ? null : formulaById(id)
+    if (item !== null) {
+      startEdit(item)
     }
   },
   { immediate: true }

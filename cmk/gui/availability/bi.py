@@ -557,8 +557,34 @@ def create_bi_timeline_entry(
 def _compute_node_result_bundle(
     timeline_container: TimelineContainer, bi_manager: BIManager
 ) -> NodeResultBundle:
-    # Convert our status format into that needed by BI
-    status = timeline_container.states
+    bi_manager.status_fetcher.states = _bi_status_info_from_timeline_states(
+        timeline_container.states
+    )
+    compiled_aggregation = timeline_container.aggr_compiled_aggregation
+    branch = timeline_container.aggr_compiled_branch
+    results = compiled_aggregation.compute_branches([branch], bi_manager.status_fetcher)
+
+    if not results:
+        # The aggregation did not find any hosts or services. Return "Not yet monitored"
+        return NodeResultBundle(
+            NodeComputeResult(
+                state=BIState.PENDING,
+                in_downtime=False,
+                acknowledged=False,
+                output=_("Not yet monitored"),
+                in_service_period=True,
+                state_messages={},
+                custom_infos={},
+            ),
+            None,
+            [],
+            None,
+        )
+
+    return results[0]
+
+
+def _bi_status_info_from_timeline_states(status: AVBITimelineStates) -> BIStatusInfo:
     services_by_host: dict[BIHostSpec, dict[str, BIServiceWithFullState]] = {}
     hosts: dict[BIHostSpec, AVBITimelineState] = {}
     for site_host_service, state_output in status.items():
@@ -587,29 +613,7 @@ def _compute_node_result_bundle(
         else:
             hosts[site_host] = state_output
 
-    bi_manager.status_fetcher.states = _compute_status_info(hosts, services_by_host)
-    compiled_aggregation = timeline_container.aggr_compiled_aggregation
-    branch = timeline_container.aggr_compiled_branch
-    results = compiled_aggregation.compute_branches([branch], bi_manager.status_fetcher)
-
-    if not results:
-        # The aggregation did not find any hosts or services. Return "Not yet monitored"
-        return NodeResultBundle(
-            NodeComputeResult(
-                state=BIState.PENDING,
-                in_downtime=False,
-                acknowledged=False,
-                output=_("Not yet monitored"),
-                in_service_period=True,
-                state_messages={},
-                custom_infos={},
-            ),
-            None,
-            [],
-            None,
-        )
-
-    return results[0]
+    return _compute_status_info(hosts, services_by_host)
 
 
 def _compute_status_info(

@@ -2156,7 +2156,7 @@ allows = [
   "cmk.gui",
   "cmk.gui.nonfree.pro.graphing.openapi.models.attribute_filter",
   "cmk.data_backend.gui",
-  "cmk.data_backend.telemetry_metrics.gui",
+  "cmk.data_backend.telemetry_metrics",
   "cmk.otel_collector.gui",
   "cmk.ruleset_matcher.matcher",
   "cmk.shared_typing.aggregation",

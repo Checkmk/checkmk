@@ -122,29 +122,36 @@ test('creating the alert sends its name, service match, conditions and threshold
   ])
 })
 
-test('an alert without thresholds is not created', async () => {
-  const sentBodies = captureCreateRequests()
+test('an alert cannot be created without thresholds, and the step says why', async () => {
   renderApp()
   await completeFirstStep()
 
-  await userEvent.click(await screen.findByRole('button', { name: 'Create alert' }))
-
+  expect(await screen.findByRole('button', { name: 'Create alert' })).toBeDisabled()
   expect(
-    await screen.findByText('Define at least one threshold: upper levels, lower levels or both.')
+    screen.getByText('Define at least one threshold: upper levels, lower levels or both.')
   ).toBeVisible()
-  expect(sentBodies).toEqual([])
 })
 
-test('an alert with incomplete levels is not created', async () => {
-  const sentBodies = captureCreateRequests()
+test('defining a threshold allows creating the alert', async () => {
   renderApp()
   await completeFirstStep()
+
+  await defineUpperLevels('80', '90')
+
+  expect(screen.getByRole('button', { name: 'Create alert' })).toBeEnabled()
+  expect(
+    screen.queryByText('Define at least one threshold: upper levels, lower levels or both.')
+  ).toBeNull()
+})
+
+test('an alert with incomplete levels cannot be created, and the step says why', async () => {
+  renderApp()
+  await completeFirstStep()
+
   await defineUpperLevels('80', '')
 
-  await userEvent.click(screen.getByRole('button', { name: 'Create alert' }))
-
-  expect(await screen.findByText('Fill in the warning and critical levels.')).toBeVisible()
-  expect(sentBodies).toEqual([])
+  expect(screen.getByRole('button', { name: 'Create alert' })).toBeDisabled()
+  expect(screen.getByText('Fill in the warning and critical levels.')).toBeVisible()
 })
 
 test('creating the alert sends the chosen folder', async () => {

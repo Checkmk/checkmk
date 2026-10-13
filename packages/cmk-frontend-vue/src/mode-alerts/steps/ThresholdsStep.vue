@@ -12,7 +12,7 @@ import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { ref } from 'vue'
+import { computed } from 'vue'
 
 import { FormEdit } from '@/form'
 
@@ -33,18 +33,15 @@ const emit = defineEmits<{ create: [] }>()
 
 const model = defineModel<AlertModel>({ required: true })
 
-const problem = ref<TranslatedString | null>(null)
-
-function create(): void {
+const problem = computed<TranslatedString | null>(() => {
   if (!hasThresholds(model.value)) {
-    problem.value = _t('Define at least one threshold: upper levels, lower levels or both.')
-  } else if (!hasCompleteThresholds(model.value)) {
-    problem.value = _t('Fill in the warning and critical levels.')
-  } else {
-    problem.value = null
-    emit('create')
+    return _t('Define at least one threshold: upper levels, lower levels or both.')
   }
-}
+  if (!hasCompleteThresholds(model.value)) {
+    return _t('Fill in the warning and critical levels.')
+  }
+  return null
+})
 </script>
 
 <template>
@@ -59,7 +56,7 @@ function create(): void {
           {{ _t('Set the default levels of the selected custom services.') }}
         </CmkParagraph>
         <FormEdit v-model:data="model.thresholds" :spec="thresholdsSpec" :backend-validation="[]" />
-        <CmkAlert v-if="problem" variant="error" size="small" :text="problem" />
+        <CmkAlert v-if="problem" variant="info" size="small" :text="problem" />
         <CmkAlert v-if="created" variant="success" :text="_t('The alert was created.')" />
         <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />
       </div>
@@ -69,8 +66,8 @@ function create(): void {
       <CmkWizardButton
         type="finish"
         :override-label="_t('Create alert')"
-        :disabled="saving || created"
-        @click="create"
+        :disabled="saving || created || problem !== null"
+        @click="emit('create')"
       />
       <CmkWizardButton type="previous" />
     </template>

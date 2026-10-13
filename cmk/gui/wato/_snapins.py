@@ -97,6 +97,9 @@ def render_wato(config: Config, mini: bool) -> None:
 
 
 def get_wato_menu_items(user_permissions: UserPermissions) -> list[NavItemTopic]:  # noqa: ARG001
+    if not user.may("wato.use"):
+        return []
+
     by_topic: dict[MainModuleTopic, list[NavItemTopicEntry]] = {}
     for module_class in main_module_registry.values():
         module = module_class()
@@ -182,6 +185,11 @@ class SidebarSnapinWATOMini(SidebarSnapin):
     @override
     def allowed_roles(cls) -> list[RoleName]:
         return ["admin", "user"]
+
+    @classmethod
+    @override
+    def may_see(cls, user_permissions: UserPermissions) -> bool:
+        return super().may_see(user_permissions) and user.may("wato.use")
 
     # refresh pending changes, if other user modifies something
     @classmethod

@@ -3,14 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
+from collections.abc import Iterator
 
 import pytest
 
+from cmk.ccc.user import UserId
+from cmk.gui import login
 from cmk.gui.config import Config
 from cmk.gui.main_menu_match_items import MatchItemGeneratorMainMenu
+from cmk.gui.permissions import permission_registry
 from cmk.gui.search.matchers import MatchItem, MatchItemConfig
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.wato._snapins import get_wato_menu_items
+from cmk.gui.wato._snapins import get_wato_menu_items, SidebarSnapinWATOMini
 from cmk.shared_typing.main_menu import NavItemTopic, NavItemTopicEntry
 
 
@@ -106,6 +111,30 @@ def test_unique_wato_menu_item_titels() -> None:
         for entry in main_menu_topic.entries
     ]
     assert len(titles) == len(set(titles))
+
+
+@pytest.fixture(name="user_without_setup")
+def fixture_user_without_setup(
+    load_config: Config, with_user: tuple[UserId, str]
+) -> Iterator[UserPermissions]:
+    roles = copy.deepcopy(load_config.roles)
+    roles["user"]["permissions"] = {**roles["user"].get("permissions", {}), "wato.use": False}
+    user_id = UserId(with_user[0])
+    permissions = UserPermissions(roles, permission_registry, {user_id: ["user"]}, [])
+    with login.TransactionIdContext(user_id, permissions):
+        yield permissions
+
+
+@pytest.mark.usefixtures("request_context")
+def test_setup_menu_is_empty_without_use_setup(user_without_setup: UserPermissions) -> None:
+    assert get_wato_menu_items(user_without_setup) == []
+
+
+@pytest.mark.usefixtures("request_context")
+def test_setup_shortcuts_snapin_is_hidden_without_use_setup(
+    user_without_setup: UserPermissions,
+) -> None:
+    assert not SidebarSnapinWATOMini.may_see(user_without_setup)
 
 
 def test_match_item_generator_setup_menu() -> None:

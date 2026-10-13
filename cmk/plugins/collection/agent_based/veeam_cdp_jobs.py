@@ -51,6 +51,13 @@ class CheckParams(TypedDict):
     age: tuple[float, float]
 
 
+class DiscoveryParams(TypedDict):
+    discover_disabled: bool
+
+
+DEFAULT_DISCOVERY_PARAMETERS = DiscoveryParams(discover_disabled=True)
+
+
 def parse_veeam_cdp_jobs(string_table: StringTable) -> Section:
     def _sanitize_last_sync(last_sync: str) -> float:
         # Some agent outputs may provide lines like:
@@ -73,9 +80,10 @@ agent_section_veeam_cdp_jobs = AgentSection(
 )
 
 
-def discovery_veeam_cdp_jobs(section: Section) -> DiscoveryResult:
-    for name in section:
-        yield Service(item=name)
+def discovery_veeam_cdp_jobs(params: DiscoveryParams, section: Section) -> DiscoveryResult:
+    for name, cdp in section.items():
+        if params["discover_disabled"] or cdp.state is not CDPState.DISABLED:
+            yield Service(item=name)
 
 
 def check_veeam_cdp_jobs(item: str, params: CheckParams, section: Section) -> CheckResult:
@@ -110,6 +118,8 @@ check_plugin_veeam_cdp_jobs = CheckPlugin(
     name="veeam_cdp_jobs",
     service_name="VEEAM CDP Job %s",
     discovery_function=discovery_veeam_cdp_jobs,
+    discovery_ruleset_name="discovery_veeam_cdp_jobs",
+    discovery_default_parameters=DEFAULT_DISCOVERY_PARAMETERS,
     check_function=check_veeam_cdp_jobs,
     check_ruleset_name="veeam_cdp_jobs",
     check_default_parameters=CheckParams(age=(108000, 172800)),

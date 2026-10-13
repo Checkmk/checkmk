@@ -23,7 +23,9 @@ description:
  The defaults are {WARN}: 1 day 6 hours and {CRIT}: 2 days.
 
 discovery:
- One service is created for each CDP job created by the Veeam tool.
+ One service is created for each CDP job created by the Veeam tool, including
+ disabled ones. To leave out disabled jobs, disable this in the rule "Veeam: CDP
+ job discovery".
 
 item:
  The name of the CDP job.

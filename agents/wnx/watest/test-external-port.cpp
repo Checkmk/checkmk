@@ -224,6 +224,24 @@ TEST_F(ExternalPortTestFixture, ReadComponent) {
     EXPECT_EQ(reply_text_, text);
 }
 
+TEST(AsioSessionTest, ReadIpTimeoutKeepsSessionAliveComponent) {
+    asio::io_context io;
+    tcp::acceptor acceptor{io, {asio::ip::make_address("127.0.0.1"), 0}};
+    tcp::socket client{io};
+    client.connect(acceptor.local_endpoint());
+    tcp::socket server{io};
+    acceptor.accept(server);
+
+    auto session = std::make_shared<AsioSession>(std::move(server));
+    const std::weak_ptr<AsioSession> alive = session;
+    session->read_ip();  // the client stays silent: times out
+    session.reset();
+    ASSERT_FALSE(alive.expired());
+
+    io.run();  // the cancelled read's handler
+    EXPECT_TRUE(alive.expired());
+}
+
 class ExternalPortQueueFixture : public ::testing::Test {
 public:
     void TearDown() override { test_port_.shutdownIo(); }

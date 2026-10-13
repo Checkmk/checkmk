@@ -64,10 +64,10 @@ void AsioSession::read_ip() {
         remote_ip_.reset();
     }
     socket_.async_read_some(asio::buffer(data_, kMaxLength - 1),
-                            [this](std::error_code ec, size_t length) {
-                                std::scoped_lock l(data_lock_);
-                                received_ = ec ? 0U : length;
-                                cv_ready_.notify_one();
+                            [self](std::error_code ec, size_t length) {
+                                std::scoped_lock l(self->data_lock_);
+                                self->received_ = ec ? 0U : length;
+                                self->cv_ready_.notify_one();
                             });
     std::unique_lock lk(data_lock_);
     const bool timeout = cv_ready_.wait_until(

@@ -14,7 +14,7 @@ click on an object leads to is the map view's.
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { nextTick, useTemplateRef } from 'vue'
+import { computed, nextTick, useTemplateRef } from 'vue'
 
 import MapPlaceholder from '@/maps/map/components/MapPlaceholder.vue'
 import MapSearch from '@/maps/map/components/MapSearch.vue'
@@ -56,11 +56,21 @@ const emit = defineEmits<{
 const canvas = useTemplateRef<InstanceType<typeof MapCanvas>>('canvas')
 
 /**
+ * NagVis colors the whole page, so a label hanging past the canvas still sits
+ * on the map's color.
+ */
+const areaStyle = computed(() =>
+  props.config?.render_mode === 'nagvis_classic' && props.config.background_color
+    ? { backgroundColor: props.config.background_color }
+    : {}
+)
+
+/**
  * Lock the canvas size after any edit that can grow the content, so the next
  * reload reuses the divisor the editor was working with (see
  * ``MapConfig.canvas_width``). Only the default renderer positions by
- * percentage; the NagVis-compatible one sizes to its background image and needs
- * no lock. The wait lets the sticky extents settle after an addition.
+ * percentage; the NagVis-compatible one starts from its background image's size
+ * and needs no lock. The wait lets the sticky extents settle after an addition.
  */
 async function lockCanvasSize(): Promise<void> {
   if (!props.config || props.config.render_mode === 'nagvis_classic') {
@@ -146,7 +156,7 @@ function onObjectDblclick(object: MapElement, anchor: AnchorRect | null): void {
 </script>
 
 <template>
-  <div class="maps-static-map-view" @click="onAreaClick">
+  <div class="maps-static-map-view" :style="areaStyle" @click="onAreaClick">
     <MapPlaceholder v-if="error" :message="error" variant="error" />
 
     <template v-else-if="config">
@@ -229,10 +239,10 @@ function onObjectDblclick(object: MapElement, anchor: AnchorRect | null): void {
 
 <style scoped>
 /* A block container, not a flex one. The canvas sizes itself: to the pane for
-   the default renderer, to the background image's own pixels for the
-   NagVis-compatible one. As a flex item the latter would be shrunk back to the
-   pane on every layout change — a sidebar toggle or a window resize — instead
-   of overflowing it and scrolling. */
+   the default renderer, to the map's own pixels (the background image and any
+   object beyond it) for the NagVis-compatible one. As a flex item the latter
+   would be shrunk back to the pane on every layout change — a sidebar toggle
+   or a window resize — instead of overflowing it and scrolling. */
 .maps-static-map-view {
   position: relative;
   flex: 1;

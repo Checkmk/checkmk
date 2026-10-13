@@ -90,6 +90,8 @@ export function useCanvasViewport(source: {
   /** The NagVis-compatible renderer. */
   classic: () => boolean
   backgroundUrl: () => string | null
+  /** The background's pixel size, where it is drawn at that size. */
+  backgroundSize: () => Size | null
 }): CanvasViewport {
   const zoom = ref(1)
   const paneSize = ref<Size>({ width: 0, height: 0 })
@@ -230,7 +232,10 @@ export function useCanvasViewport(source: {
     if (config.background_image) {
       base.backgroundImage = `url(${source.backgroundUrl()})`
       base.backgroundRepeat = 'no-repeat'
-      base.backgroundSize = '100% 100%'
+      // Drawn at its own size, the image stays put where objects beyond it
+      // widen the canvas, as on a NagVis page.
+      const native = source.backgroundSize()
+      base.backgroundSize = native ? `${native.width}px ${native.height}px` : '100% 100%'
     }
     return base
   })

@@ -100,11 +100,17 @@ const background = useCanvasBackground({
   sizesToImage: () => classic.value
 })
 
-// The classic renderer draws at the background's own pixel size; every other
-// renderer derives the space from where the objects are.
+const iconSizes = computed(() => ({
+  map: props.config.icon_size,
+  override: props.iconSizeOverride,
+  fallback: settings.settings.value.icon_size
+}))
+
 const extents = useCanvasExtents({
   config: () => props.config,
-  backgroundSize: () => (classic.value ? background.naturalSize.value : null)
+  backgroundSize: () => background.naturalSize.value,
+  iconSizes: () => iconSizes.value,
+  classic: () => classic.value
 })
 
 const { _t } = usei18n()
@@ -117,7 +123,8 @@ const viewport = useCanvasViewport({
   editMode: () => props.editMode,
   preview: () => props.preview === true,
   classic: () => classic.value,
-  backgroundUrl: () => background.url.value
+  backgroundUrl: () => background.url.value,
+  backgroundSize: () => background.naturalSize.value
 })
 
 // The line and label layers draw in display pixels so their strokes and glyphs
@@ -210,12 +217,6 @@ const roving = useRovingFocus({
   nameOf: (object) => objectDisplayName(object, _t),
   root: () => canvas.value
 })
-
-const iconSizes = computed(() => ({
-  map: props.config.icon_size,
-  override: props.iconSizeOverride,
-  fallback: settings.settings.value.icon_size
-}))
 
 const anchors = useCanvasLineAnchors({
   canvas,
@@ -503,6 +504,9 @@ defineExpose({
   inset: 0;
   width: 100%;
   height: 100%;
+
+  /* A caption or arrowhead at the canvas edge hangs past it, as a label does. */
+  overflow: visible;
   pointer-events: none;
 }
 </style>

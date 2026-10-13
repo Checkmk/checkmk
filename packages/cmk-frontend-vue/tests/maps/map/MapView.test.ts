@@ -160,6 +160,31 @@ describe('MapView – map-type dispatch', () => {
   })
 })
 
+describe('MapView – the area around a static map', () => {
+  beforeEach(() => {
+    services = fakeMapsServices()
+    vi.stubGlobal('EventSource', FakeEventSource)
+    services.nav.replace({ view: 'map', name: 'map1' })
+  })
+
+  async function renderedArea(extra: Partial<MapConfig>): Promise<HTMLElement> {
+    opensMap(newMapView('static'), { background_color: '#ffcc00', ...extra })
+    const { container } = renderMap()
+    await expectOnlyRenderer('renderer-static')
+    return container.querySelector<HTMLElement>('.maps-static-map-view')!
+  }
+
+  it('takes the map color in the NagVis-compatible renderer, as a NagVis page does', async () => {
+    const area = await renderedArea({ render_mode: 'nagvis_classic' })
+    expect(area.style.backgroundColor).toBe('rgb(255, 204, 0)')
+  })
+
+  it('keeps the theme around a map in the default renderer', async () => {
+    const area = await renderedArea({ render_mode: 'default' })
+    expect(area.style.backgroundColor).toBe('')
+  })
+})
+
 describe('MapView – loading / error / read-only states', () => {
   beforeEach(() => {
     services = fakeMapsServices()

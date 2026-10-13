@@ -8,8 +8,9 @@
  *
  * Two things need arranging. The URL is cache-busted, because a re-upload keeps
  * the same file name and the browser would otherwise keep showing the old
- * picture. And in the NagVis-compatible renderer the image's own pixel size is
- * the canvas size, so it has to be measured before the canvas can be laid out.
+ * picture. And the NagVis-compatible renderer draws the image at its own pixel
+ * size, which the canvas spans at least, so it has to be measured before the
+ * canvas can be laid out.
  */
 import { type Ref, computed, ref, watch } from 'vue'
 

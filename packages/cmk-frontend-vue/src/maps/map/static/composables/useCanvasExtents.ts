@@ -15,9 +15,19 @@
  * lay the map out exactly as the editor did. It is only ever clamped up, for an
  * object placed beyond it (through the API, say), and then against raw
  * coordinates so the padding below cannot silently re-inflate the stored size.
+ *
+ * Where the renderer draws the background at its own pixel size, the space is
+ * that size and ends no earlier than the last object beyond the image, as NagVis
+ * lets the page grow instead of cutting them off. A stored size plays no part
+ * there.
+ *
+ * The NagVis-compatible renderer draws the canvas at exactly this many pixels,
+ * so a position stays the same pixel however large the space gets. There it
+ * follows every move and resize live, instead of only growing with the map.
  */
 import { type Ref, computed, ref, watch } from 'vue'
 
+import { type IconSizes, objectIconSize } from '@/maps/map/objectIconSize'
 import type { MapConfig, MapElement } from '@/maps/types/api'
 
 /** Room left to the right of and below an object with no size of its own. */
@@ -31,47 +41,90 @@ const GRAPH_HEIGHT = 200
 const MIN_WIDTH = 800
 const MIN_HEIGHT = 600
 
-function rightEdge(object: MapElement): number {
-  return object.x + (object.type === 'graph' ? (object.graph_width ?? GRAPH_WIDTH) : OBJECT_PADDING)
+type Axis = 'x' | 'y'
+
+/** How far an object reaches on ``axis``, a line to its farthest point. */
+function reach(object: MapElement, axis: Axis): number {
+  return axis === 'x'
+    ? Math.max(object.x, object.x2 ?? object.x, object.mid_x ?? object.x)
+    : Math.max(object.y, object.y2 ?? object.y, object.mid_y ?? object.y)
 }
 
-function bottomEdge(object: MapElement): number {
+function edge(object: MapElement, axis: Axis): number {
+  if (object.type !== 'graph') {
+    return reach(object, axis) + OBJECT_PADDING
+  }
   return (
-    object.y + (object.type === 'graph' ? (object.graph_height ?? GRAPH_HEIGHT) : OBJECT_PADDING)
+    reach(object, axis) +
+    (axis === 'x' ? (object.graph_width ?? GRAPH_WIDTH) : (object.graph_height ?? GRAPH_HEIGHT))
+  )
+}
+
+/** How far the object's own box extends from its top-left corner. */
+function span(object: MapElement, axis: Axis, iconSizes: IconSizes): number {
+  switch (object.type) {
+    case 'line':
+      return 0
+    case 'graph':
+      return axis === 'x'
+        ? (object.graph_width ?? GRAPH_WIDTH)
+        : (object.graph_height ?? GRAPH_HEIGHT)
+    case 'textbox':
+      return (axis === 'x' ? object.textbox_width : object.textbox_height) ?? 0
+    default:
+      return objectIconSize(object, iconSizes)
+  }
+}
+
+function extent(
+  objects: MapElement[],
+  axis: Axis,
+  stored: number | null | undefined,
+  background: number | undefined,
+  iconSizes: IconSizes
+): number {
+  if (background !== undefined) {
+    return objects.reduce(
+      (far, object) => Math.max(far, reach(object, axis) + span(object, axis, iconSizes)),
+      background
+    )
+  }
+  if (stored !== null && stored !== undefined) {
+    return objects.reduce((far, object) => Math.max(far, reach(object, axis)), stored)
+  }
+  return objects.reduce(
+    (far, object) => Math.max(far, edge(object, axis)),
+    axis === 'x' ? MIN_WIDTH : MIN_HEIGHT
   )
 }
 
 export interface CanvasExtents {
   /** Width of the coordinate space objects are positioned in. */
-  width: Ref<number>
-  height: Ref<number>
+  width: Readonly<Ref<number>>
+  height: Readonly<Ref<number>>
 }
 
 export function useCanvasExtents(source: {
   config: () => MapConfig
-  /** The background's pixel size, where the renderer sizes the canvas to it. */
+  /** The background's pixel size, where the renderer draws it at that size. */
   backgroundSize: () => { width: number; height: number } | null
+  iconSizes: () => IconSizes
+  /** The NagVis-compatible renderer, which draws the space at its pixel size. */
+  classic: () => boolean
 }): CanvasExtents {
   const derivedWidth = (): number => {
     const config = source.config()
-    const stored = config.canvas_width
-    return stored !== null && stored !== undefined
-      ? config.objects.reduce((widest, object) => Math.max(widest, object.x), stored)
-      : config.objects.reduce((widest, object) => Math.max(widest, rightEdge(object)), MIN_WIDTH)
+    const background = source.backgroundSize()?.width
+    return extent(config.objects, 'x', config.canvas_width, background, source.iconSizes())
   }
   const derivedHeight = (): number => {
     const config = source.config()
-    const stored = config.canvas_height
-    return stored !== null && stored !== undefined
-      ? config.objects.reduce((tallest, object) => Math.max(tallest, object.y), stored)
-      : config.objects.reduce(
-          (tallest, object) => Math.max(tallest, bottomEdge(object)),
-          MIN_HEIGHT
-        )
+    const background = source.backgroundSize()?.height
+    return extent(config.objects, 'y', config.canvas_height, background, source.iconSizes())
   }
 
-  const derivedW = ref(MIN_WIDTH)
-  const derivedH = ref(MIN_HEIGHT)
+  const width = ref(MIN_WIDTH)
+  const height = ref(MIN_HEIGHT)
 
   function set(target: Ref<number>, next: number): void {
     if (target.value !== next) {
@@ -79,25 +132,26 @@ export function useCanvasExtents(source: {
     }
   }
 
-  // A different map starts over; a new object on the same map only ever widens.
+  // A different map or background starts over; a new object on the same map
+  // only ever widens.
   watch(
-    () => source.config(),
+    [() => source.config(), () => source.backgroundSize()],
     () => {
-      set(derivedW, derivedWidth())
-      set(derivedH, derivedHeight())
+      set(width, derivedWidth())
+      set(height, derivedHeight())
     },
     { immediate: true }
   )
   watch(
     () => source.config().objects.length,
     () => {
-      set(derivedW, Math.max(derivedW.value, derivedWidth()))
-      set(derivedH, Math.max(derivedH.value, derivedHeight()))
+      set(width, Math.max(width.value, derivedWidth()))
+      set(height, Math.max(height.value, derivedHeight()))
     }
   )
 
   return {
-    width: computed(() => source.backgroundSize()?.width ?? derivedW.value),
-    height: computed(() => source.backgroundSize()?.height ?? derivedH.value)
+    width: computed(() => (source.classic() ? derivedWidth() : width.value)),
+    height: computed(() => (source.classic() ? derivedHeight() : height.value))
   }
 }

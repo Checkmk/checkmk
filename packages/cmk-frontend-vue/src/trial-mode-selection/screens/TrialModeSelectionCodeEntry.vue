@@ -187,14 +187,17 @@ onMounted(() => codeInput.value?.focus())
       <CmkButton
         variant="optional"
         size="small"
-        :disabled="!canResend || sendRequestInFlight || saving"
+        :disabled="!canResend || sendRequestInFlight || verifyRequestInFlight || saving"
         @click="resend"
       >
         {{ resendLabel }}
       </CmkButton>
     </div>
 
-    <TrialModeSelectionDialogFooter :back-disabled="saving" @back="emit('back')">
+    <TrialModeSelectionDialogFooter
+      :back-disabled="saving || verifyRequestInFlight"
+      @back="emit('back')"
+    >
       <CmkButton
         v-if="errorMessage"
         variant="secondary"
@@ -203,7 +206,12 @@ onMounted(() => codeInput.value?.focus())
       >
         {{ _t('Continue without verification') }}
       </CmkButton>
-      <CmkButton variant="success" :disabled="!canVerify || saving" @click="verify">
+      <CmkButton
+        variant="success"
+        :disabled="!canVerify || saving"
+        :running="verifyRequestInFlight"
+        @click="verify"
+      >
         {{ _t('Verify') }}
       </CmkButton>
     </TrialModeSelectionDialogFooter>

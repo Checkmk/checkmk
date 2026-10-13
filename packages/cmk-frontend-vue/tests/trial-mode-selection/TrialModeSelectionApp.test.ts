@@ -67,7 +67,7 @@ function onSave(answer: () => Response | Promise<Response>) {
 }
 
 /** Records every verification request before answering it. */
-function onVerification(answer: (sent: VerificationRequest) => Response) {
+function onVerification(answer: (sent: VerificationRequest) => Response | Promise<Response>) {
   return http.post(VERIFICATION_ENDPOINT, async ({ request }) => {
     const sent = await decode<VerificationRequest>(request)
     received.verification.push(sent)
@@ -102,6 +102,14 @@ function rejectSaving() {
 /** The save reaches the site but never gets an answer, so it stays in flight. */
 function holdSaving() {
   server.use(onSave(() => new Promise<never>(() => {})))
+}
+
+function holdVerification() {
+  server.use(
+    onVerification((sent) =>
+      sent.step === 'verify' ? new Promise<never>(() => {}) : answerLikeTheSite(sent)
+    )
+  )
 }
 
 function answerVerificationWith(response: Partial<TrialModeVerificationResponse>) {
@@ -847,6 +855,31 @@ describe('TrialModeSelectionApp', () => {
       expect(screen.getByText(CODE_SENT)).toBeInTheDocument()
     })
 
+    it('keeps Back out of reach while the code is being verified', async () => {
+      holdVerification()
+      renderApp()
+      await reachCodeStep()
+
+      await user.type(codeDigits()[0]!, '424242')
+      await waitFor(() => {
+        expect(received.verification.map(({ step }) => step)).toEqual(['request', 'verify'])
+      })
+
+      expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled()
+    })
+
+    it('shows Verify busy while the code is being verified', async () => {
+      holdVerification()
+      renderApp()
+      await reachCodeStep()
+
+      await user.type(codeDigits()[0]!, '424242')
+
+      await waitFor(() => {
+        expect(verifyButton()).toHaveAttribute('aria-busy', 'true')
+      })
+    })
+
     it('saves an unverified trial when the user continues without a code after an error', async () => {
       reportErrorForVerification()
       renderApp()
@@ -1091,6 +1124,20 @@ describe('TrialModeSelectionApp', () => {
       await user.type(codeDigits()[0]!, '424242')
 
       expect(await screen.findByText('Trial verified')).toBeInTheDocument()
+    })
+
+    it('keeps Resend out of reach while the code is being verified', async () => {
+      holdVerification()
+      renderApp()
+      await reachCodeStep()
+      await vi.advanceTimersByTimeAsync(60_000)
+
+      await user.type(codeDigits()[0]!, '424242')
+      await waitFor(() => {
+        expect(received.verification.map(({ step }) => step)).toEqual(['request', 'verify'])
+      })
+
+      expect(resendButton()).toBeDisabled()
     })
 
     it('empties the boxes on a resend, the previous code being dead', async () => {

@@ -11,11 +11,11 @@ load("//:package_versions.bzl", "PYTHON_VERSION_WINDOWS")
 # msi_<key> attribute in //agents/modules/windows:python_cab.bzl -- keep the two sets
 # of names in sync.
 _MSI_SHA256 = {
-    "core": "eff25b160b54a77c5953cf5803fc147a1ced084513265dfefc227583b1355484",
-    "exe": "47f02452bde1f05b4d06fb93841ce380624c882ef75caddd1b1207d1a36bb4d2",
-    "lib": "6d3130114d7f57eaa33d86e8366a669dfc73cfe8df772bef93ce2d9ea799f751",
-    "pip": "1bc9cfa07a92da66335cc7252dfb3d7ca318facd3966fd15574014466cccf37e",
-    "ucrt": "b173e03056eff8798729c602df992c1cc6b724f56465e39bbe1d01afeae1f369",
+    "core": "507599467fafc5e8783961bd76db6e5a206d58bc968f06728c8a3865fc7337af",
+    "exe": "fa39afc12c0778464273167046d7755c93902ecbc2293682724fdb7023f07cca",
+    "lib": "ee15c9b1cd71465a60f7a37cf0528e0446398ff94020c0075514c43ab0655d3f",
+    "pip": "90b1bdae0804309e2b1f71df1652a7551121c6f1095a0c99b4f6eb8d739ab070",
+    "ucrt": "c0dc366e60851d85ea7341672b3041b5faf808149280476f961c7054828421e7",
 }
 
 def _repos_impl(_mctx):

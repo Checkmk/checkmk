@@ -114,10 +114,10 @@ def _answer_graph_image_request(
         return []
 
     num_graphs = request.get_integer_input("num_graphs")
-    graphs = [built.graph for built in itertools.islice(built_graphs, num_graphs)]
+    requested = list(itertools.islice(built_graphs, num_graphs))
     ranges = compute_image_graph_ranges(display_config, start_time, end_time)
     evaluated = evaluate_built_graphs(
-        graphs,
+        [built.graph for built in requested],
         {
             "consolidation_function": ConsolidationFunction.MAX,
             "time_range": TimeRange(
@@ -128,9 +128,11 @@ def _answer_graph_image_request(
     )
 
     return [
-        base64.b64encode(render_png(evaluated_graph, display_config)).decode("ascii")
+        base64.b64encode(
+            render_png(evaluated_graph, display_config, built.resolved_y_axis_unit())
+        ).decode("ascii")
         # Assumes evaluate_built_graphs returns exactly one evaluated graph per input graph -
         # true for template graphs (the only kind this notification path builds above), but not
         # guaranteed for every GraphSpecification kind in general.
-        for _graph, evaluated_graph in zip(graphs, evaluated.graphs, strict=True)
+        for built, evaluated_graph in zip(requested, evaluated.graphs, strict=True)
     ]

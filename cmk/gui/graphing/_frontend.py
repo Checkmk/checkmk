@@ -7,12 +7,10 @@ import json
 import traceback
 from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
-from itertools import chain
 
 from tzlocal import get_localzone_name
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.graphing_engine import Graph, Unit
 from cmk.graphing_engine import HostName as EngineHostName
 from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.gui.config import active_config
@@ -146,19 +144,9 @@ def _add_to(specification: GraphSpecification | None, internal: str) -> AddTo | 
     )
 
 
-def derive_y_axis_unit(graph: Graph) -> Unit | None:
-    return next(
-        chain(
-            (member.attributes.unit for stack in graph.stacks for member in stack.members),
-            (line.curve.attributes.unit for line in graph.lines),
-        ),
-        None,
-    )
-
-
 def _shell_y_axis(built: BuiltGraph, temperature_unit: TemperatureUnit) -> YAxis | None:
     """The axis the shell draws with: what the graph names for itself, else what its curves imply."""
-    unit = built.y_axis_unit if built.y_axis_unit is not None else derive_y_axis_unit(built.graph)
+    unit = built.resolved_y_axis_unit()
     bounds = built.y_axis_bounds()
     if unit is None and bounds is None:
         return None

@@ -351,10 +351,6 @@ def _graph_time_caption(time_range: TimeRange, tz: datetime.tzinfo | None) -> st
     }
 
 
-def _notation_formatter(y_axis_unit: Unit | NonConvertibleUnit | None) -> NotationFormatter | None:
-    return None if y_axis_unit is None else formatter_from_unit(y_axis_unit)
-
-
 def _y_range_for_labels(ax: Axes) -> PositiveYRange | NegativeYRange | None:
     lower, upper = ax.get_ylim()
     if lower >= 0:
@@ -617,22 +613,14 @@ def _plot_legend_table(
         add_marker(marker_x, marker_y(row), region.attributes.color)
 
 
-def _derived_y_axis_unit(graph: EvaluatedGraph) -> Unit | None:
-    return next((curve.attributes.unit for curve, _sign in _all_curves_with_sign(graph)), None)
-
-
 def render_png(
     graph: EvaluatedGraph,
     config: GraphDisplayConfigImage,
-    y_axis_unit: Unit | NonConvertibleUnit | None = None,
+    y_axis_unit: Unit | NonConvertibleUnit | None,
     *,
     tz: datetime.tzinfo | None = None,
 ) -> bytes:
     """Render a single evaluated graph to PNG bytes.
-
-    ``y_axis_unit`` defaults to this graph's own derived unit (``_derived_y_axis_unit``) - the same
-    server-derived unit the Vue graph renders from. Only a caller holding the unit the graph
-    names for itself has to pass one: the evaluated graph does not carry it.
 
     ``tz`` is the timezone the time axis and the graph time are rendered in. It defaults to the
     site's local one; a PNG exported from the browser passes the browser's, the one the Vue
@@ -640,15 +628,13 @@ def render_png(
 
     Pure function - no registries, no Livestatus, no global state.
     """
-    if y_axis_unit is None:
-        y_axis_unit = _derived_y_axis_unit(graph)
     scalars = _graph_scalars(graph)
     is_mirrored = any(sign < 0 for _curve, sign in _all_curves_with_sign(graph))
     lower, upper = _vertical_range_bounds(graph)
     # The legend always lists every rule (e.g. warning/critical), even ones outside the visible
     # Y range; only the drawn horizontal lines are restricted to the in-range subset.
     in_range_rules = _rules_in_range(graph.rules, lower, upper)
-    formatter = _notation_formatter(y_axis_unit)
+    formatter = None if y_axis_unit is None else formatter_from_unit(y_axis_unit)
     show_legend_table = config.show_legend and bool(scalars or graph.rules or graph.regions)
     table_height_ex = legend_height_ex(graph, config)
 

@@ -52,7 +52,6 @@ from cmk.gui.graphing import (
     user_first_day_of_week,
 )
 from cmk.gui.graphing._frontend import (
-    derive_y_axis_unit,
     resolve_default_time_range_seconds,
     value_axis_width_px,
 )
@@ -364,47 +363,6 @@ def test_data_attribute_internal_round_trips_to_the_same_graph() -> None:
     assert result.options.header.title == "My Graph"
     [restored] = community_graph_codec().deserialize_graphs(json.loads(result.internal))
     assert restored == graph
-
-
-def test_derive_y_axis_unit_takes_the_unit_of_the_first_stack_member() -> None:
-    graph = Graph(
-        name="mygraph",
-        title="My Graph",
-        kind="template",
-        stacks=[
-            Stack(
-                members=[
-                    Curve(
-                        quantity=_RRD, attributes=CurveAttributes(title="m", unit=_UNIT, color="#m")
-                    )
-                ],
-                inverse=False,
-            )
-        ],
-    )
-    assert derive_y_axis_unit(graph) == _UNIT
-
-
-def test_derive_y_axis_unit_falls_back_to_a_line_when_there_are_no_stacks() -> None:
-    graph = Graph(
-        name="mygraph",
-        title="My Graph",
-        kind="template",
-        lines=[
-            Line(
-                curve=Curve(
-                    quantity=_RRD, attributes=CurveAttributes(title="l", unit=_UNIT, color="#l")
-                ),
-                inverse=False,
-            )
-        ],
-    )
-    assert derive_y_axis_unit(graph) == _UNIT
-
-
-def test_derive_y_axis_unit_is_none_for_a_graph_with_no_curves() -> None:
-    graph = Graph(name="mygraph", title="Empty", kind="template")
-    assert derive_y_axis_unit(graph) is None
 
 
 def test_value_axis_width_is_sent_in_pixels_only_when_set_explicitly() -> None:

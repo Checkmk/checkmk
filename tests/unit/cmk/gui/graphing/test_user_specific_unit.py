@@ -19,6 +19,7 @@ from cmk.graphing_engine import (
 from cmk.gui.graphing import user_specific_unit, user_specific_unit_from_unit_format
 from cmk.gui.graphing._user_specific_unit import (
     apply_temperature_unit,
+    formatter_from_unit,
     formatter_from_unit_format,
 )
 from cmk.gui.unit_formatter import AutoPrecision as FormatterAutoPrecision
@@ -406,3 +407,11 @@ def test_formatter_from_unit_format_keeps_a_temperature_symbol_as_given() -> Non
         )
     )
     assert formatter == DecimalFormatter(symbol="°C", precision=FormatterAutoPrecision(digits=2))
+
+
+def test_formatter_from_unit_never_converts_temperature_values() -> None:
+    formatter = formatter_from_unit(
+        Unit(notation=DecimalNotation("°C"), precision=AutoPrecision(2))
+    )
+
+    assert formatter.render(10) == "10 °C"

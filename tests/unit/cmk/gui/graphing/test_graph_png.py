@@ -30,12 +30,10 @@ from matplotlib.figure import Figure
 from cmk.gui.graphing import compute_png_size_mm, GraphDisplayConfigImage, render_png
 from cmk.gui.graphing._graph_png import (
     _all_curves_with_sign,
-    _derived_y_axis_unit,
     _fit_time_axis,
     _graph_scalars,
     _graph_time_caption,
     _mirrored_y_labels,
-    _notation_formatter,
     _plot_metrics,
     _plot_stack,
     _rules_in_range,
@@ -46,6 +44,7 @@ from cmk.gui.graphing._graph_png import (
     DPI,
 )
 from cmk.gui.graphing._graph_png_size import MM_PER_INCH
+from cmk.gui.graphing._user_specific_unit import formatter_from_unit
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _TIME_RANGE = TimeRange(start=0, end=180, step=60)
@@ -143,24 +142,9 @@ def test_render_png_produces_bytes_for_an_empty_graph() -> None:
     graph = EvaluatedGraph(
         name="g", title="Empty", time_range=_TIME_RANGE, vertical_range=None, stacks=[], lines=[]
     )
-    png_bytes = render_png(graph, GraphDisplayConfigImage())
+    png_bytes = render_png(graph, GraphDisplayConfigImage(), None)
 
     assert png_bytes.startswith(b"\x89PNG")
-
-
-def test_notation_formatter_is_none_without_a_y_axis() -> None:
-    assert _notation_formatter(None) is None
-
-
-def test_notation_formatter_never_converts_temperature_values() -> None:
-    """The engine fetch does not (yet) convert values for the user's temperature preference, so
-    the PNG renderer must never apply a real conversion formula to a celsius/fahrenheit unit -
-    doing so would mislabel the still-unconverted plotted values."""
-    y_axis_unit = Unit(notation=DecimalNotation("°C"), precision=AutoPrecision(2))
-    formatter = _notation_formatter(y_axis_unit)
-    assert formatter is not None
-    assert formatter.symbol == "°C"
-    assert formatter.render(10) == "10 °C"
 
 
 def test_render_png_with_a_unit_renders_ticks_and_legend_via_the_formatter() -> None:
@@ -208,9 +192,7 @@ def test_mirrored_y_labels_mirrors_positive_text_to_the_negative_side() -> None:
     fig = Figure()
     ax = fig.add_subplot(1, 1, 1)
     ax.set_ylim(-2000, 2000)
-    y_axis_unit = Unit(notation=DecimalNotation("B"), precision=AutoPrecision(2))
-    formatter = _notation_formatter(y_axis_unit)
-    assert formatter is not None
+    formatter = formatter_from_unit(Unit(notation=DecimalNotation("B"), precision=AutoPrecision(2)))
 
     labels = _mirrored_y_labels(ax, formatter, 4.0)
 
@@ -277,47 +259,6 @@ def test_y_axis_limits_are_symmetric_for_a_mirrored_graph() -> None:
     assert _y_axis_limits(2.0, 30.0, is_mirrored=True) == (-30.0, 30.0)
 
 
-def test_derived_y_axis_unit_reads_the_unit_from_the_first_curve() -> None:
-    curve = _curve("m", [1.0])
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=_TIME_RANGE,
-        vertical_range=None,
-        stacks=[EvaluatedStack(members=[curve], inverse=False)],
-        lines=[],
-    )
-
-    assert _derived_y_axis_unit(graph) == _UNIT
-
-
-def test_derived_y_axis_unit_is_none_for_a_graph_with_no_curves() -> None:
-    graph = EvaluatedGraph(
-        name="g", title="Empty", time_range=_TIME_RANGE, vertical_range=None, stacks=[], lines=[]
-    )
-
-    assert _derived_y_axis_unit(graph) is None
-
-
-def test_render_png_self_derives_the_y_axis_unit_when_none_is_passed() -> None:
-    """render_png derives its own axis unit from the evaluated graph by default,
-    so only a caller holding the unit the graph names for itself has to pass one."""
-    curve = _curve("m", [1.0, 2.0, 3.0])
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=_TIME_RANGE,
-        vertical_range=None,
-        stacks=[EvaluatedStack(members=[curve], inverse=False)],
-        lines=[],
-    )
-
-    default_bytes = render_png(graph, GraphDisplayConfigImage())
-    explicit_bytes = render_png(graph, GraphDisplayConfigImage(), _derived_y_axis_unit(graph))
-
-    assert default_bytes == explicit_bytes
-
-
 def test_the_image_has_the_size_computed_for_it_without_a_legend() -> None:
     curve = _curve("m", [1.0, 2.0, 3.0])
     graph = EvaluatedGraph(
@@ -330,7 +271,7 @@ def test_the_image_has_the_size_computed_for_it_without_a_legend() -> None:
     )
     config = GraphDisplayConfigImage(show_legend=False)
 
-    png_bytes = render_png(graph, config)
+    png_bytes = render_png(graph, config, _UNIT)
 
     assert _size_in_px(png_bytes) == _px(compute_png_size_mm(graph, config))
 
@@ -354,7 +295,7 @@ def test_the_image_has_the_size_computed_for_it_with_a_legend() -> None:
     )
     config = GraphDisplayConfigImage(show_legend=True)
 
-    png_bytes = render_png(graph, config)
+    png_bytes = render_png(graph, config, _UNIT)
 
     assert _size_in_px(png_bytes) == _px(compute_png_size_mm(graph, config))
 

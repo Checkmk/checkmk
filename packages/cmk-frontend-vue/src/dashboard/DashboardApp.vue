@@ -77,6 +77,7 @@ import type {
 import { type CloneResult, dashboardAPI, urlHandler } from '@/dashboard/utils.ts'
 import NetworkFlowSlideIns from '@/network-flow/slide-ins/NetworkFlowSlideIns.vue'
 import { useNetworkFlowSlideIns } from '@/network-flow/slide-ins/useNetworkFlowSlideIns'
+import { PageHeader } from '@/page-header'
 
 import CloneSuccessAlert from './components/CloneSuccessAlert.vue'
 import DashboardRefreshControl from './components/DashboardRefreshControl.vue'
@@ -664,55 +665,55 @@ const { range, refreshTick, updateTimeRange } = useDashboardTimeControl(
 <template>
   <CmkErrorBoundary>
     <div ref="dbAppRef" :class="['db-app', { 'db-app--empty': isDashboardEmpty }]">
-      <div class="db-app__header">
-        <div class="db-app__top-bar">
+      <PageHeader class="db-app__header">
+        <template #breadcrumb>
           <DashboardBreadcrumb
             :selected-dashboard="selectedDashboard ?? null"
             :selected-dashboard-breadcrumb="selectedDashboardBreadcrumb"
             :initial-breadcrumb="initial_breadcrumb"
             :runtime-filters="dashboardFilters.runtimeFiltersSearchParams.value"
           />
-
-          <div class="db-app__refresh">
-            <DashboardRefreshControl
-              :default-time-range="global_time_picker.default_time_range"
-              :interval-choices-seconds="global_time_picker.refresh.interval_choices_seconds"
-            />
-          </div>
-        </div>
-
-        <DashboardMenuHeader
-          v-model:is-edit-mode="isDashboardEditingMode"
-          v-model:range="range"
-          :selected-dashboard="selectedDashboard"
-          :is-dashboard-loading="
-            isDashboardLoading ||
-            isCloning ||
-            openDashboardCreationDialog ||
-            openDashboardCloneDialog
-          "
-          :can-edit-dashboard="
-            dashboardsManager.activeDashboard.value?.metadata?.is_editable ?? false
-          "
-          :can-clone-as-responsive="canCloneAsResponsive"
-          :link-user-guide="props.links.user_guide"
-          :public-token="dashboardsManager.activeDashboard.value?.model.public_token ?? null"
-          :is-empty-dashboard="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
-          :runtime-filters="dashboardFilters.runtimeFiltersSearchParams.value"
-          :global-time-picker="global_time_picker"
-          @open-runtime-filter="openRuntimeFilters"
-          @open-filter-settings="openFilterSettings"
-          @open-settings="openDashboardSettings = true"
-          @open-clone-workflow="openCloneWizard()"
-          @open-responsive-clone-workflow="openCloneWizard(DashboardLayout.RESPONSIVE_GRID)"
-          @open-widget-workflow="showAddWidgetDialog()"
-          @open-share-workflow="openDashboardShareDialog = true"
-          @save="saveDashboard"
-          @enter-edit="dashboardsManager.activeDashboard.value && (isDashboardEditingMode = true)"
-          @cancel-edit="cancelEdit"
-          @set-dashboard="handleSelectDashboard"
-        />
-      </div>
+        </template>
+        <template #refresh>
+          <DashboardRefreshControl
+            :default-time-range="global_time_picker.default_time_range"
+            :interval-choices-seconds="global_time_picker.refresh.interval_choices_seconds"
+          />
+        </template>
+        <template #menu>
+          <DashboardMenuHeader
+            v-model:is-edit-mode="isDashboardEditingMode"
+            v-model:range="range"
+            :selected-dashboard="selectedDashboard"
+            :is-dashboard-loading="
+              isDashboardLoading ||
+              isCloning ||
+              openDashboardCreationDialog ||
+              openDashboardCloneDialog
+            "
+            :can-edit-dashboard="
+              dashboardsManager.activeDashboard.value?.metadata?.is_editable ?? false
+            "
+            :can-clone-as-responsive="canCloneAsResponsive"
+            :link-user-guide="props.links.user_guide"
+            :public-token="dashboardsManager.activeDashboard.value?.model.public_token ?? null"
+            :is-empty-dashboard="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
+            :runtime-filters="dashboardFilters.runtimeFiltersSearchParams.value"
+            :global-time-picker="global_time_picker"
+            @open-runtime-filter="openRuntimeFilters"
+            @open-filter-settings="openFilterSettings"
+            @open-settings="openDashboardSettings = true"
+            @open-clone-workflow="openCloneWizard()"
+            @open-responsive-clone-workflow="openCloneWizard(DashboardLayout.RESPONSIVE_GRID)"
+            @open-widget-workflow="showAddWidgetDialog()"
+            @open-share-workflow="openDashboardShareDialog = true"
+            @save="saveDashboard"
+            @enter-edit="dashboardsManager.activeDashboard.value && (isDashboardEditingMode = true)"
+            @cancel-edit="cancelEdit"
+            @set-dashboard="handleSelectDashboard"
+          />
+        </template>
+      </PageHeader>
       <div>
         <CreateDashboardWizard
           v-model:open="openDashboardCreationDialog"
@@ -866,23 +867,6 @@ const { range, refreshTick, updateTimeRange } = useDashboardTimeControl(
 </template>
 
 <style scoped>
-.db-app__top-bar {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--dimension-6);
-}
-
-.db-app__refresh {
-  flex: 0 0 auto;
-  height: 0;
-  overflow: visible;
-  position: relative;
-  top: var(--dimension-7);
-  right: var(--dimension-7);
-  z-index: 3;
-}
-
 .db-app--empty {
   display: flex;
   flex-direction: column;

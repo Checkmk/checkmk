@@ -16,6 +16,8 @@ import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 
+import { PageHeader } from '@/page-header'
+
 import { GlobalRefreshControl } from '../GlobalRefreshControl'
 import { initGlobalRefresh, rollingRange, useGlobalTimeRange } from '../GlobalTimePicker'
 import {
@@ -353,35 +355,34 @@ const saveFailureButtons = computed(() => {
 
 <template>
   <div class="graphing-custom-graph-designer-app">
-    <header class="graphing-custom-graph-designer-app__header">
-      <div class="graphing-custom-graph-designer-app__topbar">
-        <CmkBreadcrumb
-          class="graphing-custom-graph-designer-app__breadcrumb"
-          :items="activeBreadcrumb"
+    <PageHeader class="graphing-custom-graph-designer-app__header">
+      <template #breadcrumb>
+        <CmkBreadcrumb :items="activeBreadcrumb" />
+      </template>
+      <template #refresh>
+        <GlobalRefreshControl
+          last-refresh-position="left"
+          :interval-choices-seconds="props.time_picker.refresh.interval_choices_seconds"
+          @resume="returnToLiveMonitoring"
         />
-        <div class="graphing-custom-graph-designer-app__refresh">
-          <GlobalRefreshControl
-            last-refresh-position="left"
-            :interval-choices-seconds="props.time_picker.refresh.interval_choices_seconds"
-            @resume="returnToLiveMonitoring"
-          />
-        </div>
-      </div>
+      </template>
 
-      <DesignerHeader
-        :selected="selectedGraph"
-        :logged-in-user="logged_in_user"
-        :mode="mode"
-        :is-editable="isEditable"
-        :time-picker="time_picker"
-        :saving="isSaving"
-        @enter-edit="onEnterEdit"
-        @save="void save()"
-        @cancel-edit="onCancelEdit"
-        @graph-change="onGraphChange"
-        @enter-settings="() => (displaySettings = true)"
-      />
-    </header>
+      <template #menu>
+        <DesignerHeader
+          :selected="selectedGraph"
+          :logged-in-user="logged_in_user"
+          :mode="mode"
+          :is-editable="isEditable"
+          :time-picker="time_picker"
+          :saving="isSaving"
+          @enter-edit="onEnterEdit"
+          @save="void save()"
+          @cancel-edit="onCancelEdit"
+          @graph-change="onGraphChange"
+          @enter-settings="() => (displaySettings = true)"
+        />
+      </template>
+    </PageHeader>
 
     <div class="graphing-custom-graph-designer-app__content">
       <CmkAlert
@@ -451,31 +452,6 @@ const saveFailureButtons = computed(() => {
      own. Kept well under the overlay scale so floating content still opens over the header. */
   z-index: 10;
   flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  padding: var(--dimension-6);
-  padding-bottom: 0;
-  background: var(--ux-theme-2);
-  border-bottom: 1px solid var(--border-color-separator);
-}
-
-.graphing-custom-graph-designer-app__topbar {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--dimension-6);
-}
-
-.graphing-custom-graph-designer-app__breadcrumb {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.graphing-custom-graph-designer-app__refresh {
-  flex: 0 0 auto;
-  height: 0;
-  overflow: visible;
-  position: relative;
-  z-index: 1;
 }
 
 .graphing-custom-graph-designer-app__content {

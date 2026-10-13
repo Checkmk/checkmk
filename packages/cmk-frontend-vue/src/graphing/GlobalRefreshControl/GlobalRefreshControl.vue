@@ -176,6 +176,7 @@ const lastRefreshLabel = computed(() => {
 .graphing-global-refresh-control__last-refresh {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  color: var(--font-color-strong);
 }
 
 /* Out of flow: in flow this makes the control taller when the refresh is off, and the host

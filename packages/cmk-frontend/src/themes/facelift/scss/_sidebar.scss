@@ -148,7 +148,8 @@ body.side.main {
   }
 }
 
-#content_area:has(cmk-custom-graph-designer) {
+#content_area:has(cmk-custom-graph-designer),
+#content_area:has(cmk-dashboard) {
   padding-left: 0;
 }
 

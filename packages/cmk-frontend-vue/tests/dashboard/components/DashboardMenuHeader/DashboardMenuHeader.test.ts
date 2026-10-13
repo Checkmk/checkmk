@@ -142,8 +142,8 @@ describe('DashboardMenuHeader', () => {
 
     it('renders Share and Settings dropdowns in view mode', () => {
       renderHeader()
-      expect(screen.getByText('Share')).toBeInTheDocument()
-      expect(screen.getByText('Settings')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Share' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Settings' })).toBeInTheDocument()
     })
   })
 
@@ -152,7 +152,7 @@ describe('DashboardMenuHeader', () => {
       const user = userEvent.setup()
       renderHeader({ canCloneAsResponsive: true })
 
-      await user.click(screen.getByText('Settings'))
+      await user.click(screen.getByRole('button', { name: 'Settings' }))
 
       expect(screen.getByText('Clone as responsive dashboard')).toBeInTheDocument()
     })
@@ -161,7 +161,7 @@ describe('DashboardMenuHeader', () => {
       const user = userEvent.setup()
       renderHeader({ canCloneAsResponsive: false })
 
-      await user.click(screen.getByText('Settings'))
+      await user.click(screen.getByRole('button', { name: 'Settings' }))
 
       expect(screen.getByText('Clone dashboard')).toBeInTheDocument()
       expect(screen.queryByText('Clone as responsive dashboard')).not.toBeInTheDocument()
@@ -171,7 +171,7 @@ describe('DashboardMenuHeader', () => {
   describe('page navigation toggle', () => {
     async function openNavigationToggle(): Promise<HTMLAnchorElement> {
       renderHeader()
-      await fireEvent.click(screen.getByText('Settings'))
+      await fireEvent.click(screen.getByRole('button', { name: 'Settings' }))
       return screen.getByText('Show page navigation').closest('a') as HTMLAnchorElement
     }
 
@@ -200,8 +200,8 @@ describe('DashboardMenuHeader', () => {
 
     it('does not render Share or Settings dropdowns in edit mode', () => {
       renderHeader({ isEditMode: true })
-      expect(screen.queryByText('Share')).not.toBeInTheDocument()
-      expect(screen.queryByText('Settings')).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Share' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Settings' })).not.toBeInTheDocument()
     })
   })
 
@@ -273,7 +273,7 @@ describe('DashboardMenuHeader', () => {
 
     it('calls copyToClipboard when "Copy internal link" is clicked', async () => {
       renderHeader()
-      await fireEvent.click(screen.getByText('Share'))
+      await fireEvent.click(screen.getByRole('button', { name: 'Share' }))
       await waitFor(() => {
         expect(screen.getByText('Copy internal link')).toBeInTheDocument()
       })

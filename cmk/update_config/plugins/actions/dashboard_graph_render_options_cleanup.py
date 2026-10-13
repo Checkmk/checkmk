@@ -14,6 +14,36 @@ from cmk.update_config.plugins.lib.user_profiles import user_directories
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
+def _as_dict(value: object, what: str) -> dict[str, object]:
+    if not isinstance(value, dict):
+        raise TypeError(f"expected {what} to be a dict, got {value!r}")
+    return value
+
+
+def _strip_widget(widget: object) -> dict[str, object]:
+    parsed = _as_dict(widget, "a widget")
+    if "graph_render_options" not in parsed:
+        return parsed
+    render_options = _as_dict(parsed["graph_render_options"], "the graph render options")
+    return parsed | {
+        "graph_render_options": {
+            key: value for key, value in render_options.items() if key != "font_size"
+        }
+    }
+
+
+def _strip_dashboard(dashboard: object) -> dict[str, object]:
+    parsed = _as_dict(dashboard, "a dashboard")
+    widgets = _as_dict(parsed["widgets"], "the widgets of a dashboard")
+    return parsed | {
+        "widgets": {widget_id: _strip_widget(widget) for widget_id, widget in widgets.items()}
+    }
+
+
+def _without_font_size(dashboards: dict[str, object]) -> dict[str, object]:
+    return {name: _strip_dashboard(dashboard) for name, dashboard in dashboards.items()}
+
+
 class RemoveDashboardGraphFontSize(UpdateAction):
     """Drop the font size from the stored graph widgets; nothing reads the key any more."""
 
@@ -40,36 +70,6 @@ class RemoveDashboardGraphFontSize(UpdateAction):
             logger.info(
                 "Removed the font size setting from %(count)d dashboards", {"count": cleaned}
             )
-
-
-def _without_font_size(dashboards: dict[str, object]) -> dict[str, object]:
-    return {name: _strip_dashboard(dashboard) for name, dashboard in dashboards.items()}
-
-
-def _strip_dashboard(dashboard: object) -> dict[str, object]:
-    parsed = _as_dict(dashboard, "a dashboard")
-    widgets = _as_dict(parsed["widgets"], "the widgets of a dashboard")
-    return parsed | {
-        "widgets": {widget_id: _strip_widget(widget) for widget_id, widget in widgets.items()}
-    }
-
-
-def _strip_widget(widget: object) -> dict[str, object]:
-    parsed = _as_dict(widget, "a widget")
-    if "graph_render_options" not in parsed:
-        return parsed
-    render_options = _as_dict(parsed["graph_render_options"], "the graph render options")
-    return parsed | {
-        "graph_render_options": {
-            key: value for key, value in render_options.items() if key != "font_size"
-        }
-    }
-
-
-def _as_dict(value: object, what: str) -> dict[str, object]:
-    if not isinstance(value, dict):
-        raise TypeError(f"expected {what} to be a dict, got {value!r}")
-    return value
 
 
 update_action_registry.register(

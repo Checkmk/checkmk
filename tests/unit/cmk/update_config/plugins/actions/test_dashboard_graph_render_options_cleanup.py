@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.update_config.plugins.actions.dashboard_graph_font_size_cleanup import (
+from cmk.update_config.plugins.actions.dashboard_graph_render_options_cleanup import (
     RemoveDashboardGraphFontSize,
 )
 

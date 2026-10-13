@@ -394,6 +394,7 @@ def parse_winperf_if_get_netadapter(string_table: StringTable) -> SectionExtende
             guid=line[6],
         )
         for line in string_table
+        if len(line) >= 7
     ]
 
 
@@ -545,7 +546,7 @@ def discover_winperf_if(
     section_winperf_if: SectionCounters | None,
     section_winperf_if_teaming: SectionTeaming | None,
     section_winperf_if_extended: SectionExtended | None,
-    section_winperf_if_dhcp: SectionDHPC | None,
+    section_winperf_if_dhcp: SectionDHPC | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if not section_winperf_if:
         return
@@ -624,7 +625,7 @@ def _check_dhcp(
     for dhcp_data in section_dhcp:
         try:
             match = int(dhcp_data["index"]) == int(item)
-        except (KeyError, ValueError):
+        except KeyError, ValueError:
             match = (
                 _normalize_name(
                     dhcp_data["Description"],

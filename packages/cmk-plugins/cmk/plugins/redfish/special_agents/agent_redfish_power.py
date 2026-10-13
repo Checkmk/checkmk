@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
@@ -21,6 +20,7 @@ import logging
 import sys
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from http import HTTPStatus
 from typing import Any, Literal
 
 import urllib3
@@ -34,8 +34,8 @@ from redfish.rest.v1 import (
     ServerDownOrUnreachableError,
 )
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
+from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
 
 __version__ = "3.0.0b1"
 
@@ -122,21 +122,10 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def dropnonascii(input_str):
-    """Drop all non ASCII characters from string"""
-    output_str = ""
-    for i in input_str:
-        num = ord(i)
-        if num >= 0 and num <= 127:
-            output_str = output_str + i
-
-    return output_str
-
-
 def fetch_data(redfishobj, url, component):
     """fetch a single data object from Redfish"""
     response_url = redfishobj.get(url, None)
-    if response_url.status == 200:
+    if response_url.status == HTTPStatus.OK:
         try:
             return response_url.dict
         except JsonDecodingError:
@@ -199,7 +188,7 @@ def fetch_sections(
         section_data = fetch_data(redfishobj, data[section].get("@odata.id"), section)
         if section_data.get("Members@odata.count") == 0:
             continue
-        if "Collection" in section_data.get("@odata.type"):
+        if "Collection" in section_data.get("@odata.type", {}):
             if section_data.get("Members@odata.count", 0) != 0:
                 result = fetch_collection(redfishobj, section_data, section)
                 result_set[section] = result
@@ -234,7 +223,7 @@ def detect_vendor(root_data: Any) -> Vendor:
     if vendor_string == "" and root_data.get("Vendor") is not None:
         vendor_string = root_data.get("Vendor")
 
-    match vendor_string:
+    match vendor_string:  # type: ignore[exhaustive-match]
         case "Hpe" | "Hp":
             manager_data = root_data.get("Oem", {}).get(vendor_string, {}).get("Manager", {})[0]
             if not manager_data:
@@ -276,7 +265,7 @@ def detect_vendor(root_data: Any) -> Vendor:
     return Vendor(name="Generic", version=None, firmware_version=None)
 
 
-def get_information(redfishobj):
+def get_information(redfishobj: HttpClient) -> int:
     """get a the information from the Redfish management interface"""
     base_data = fetch_data(redfishobj, "/redfish/v1", "Base")
 
@@ -284,6 +273,7 @@ def get_information(redfishobj):
 
     manager_url = base_data.get("Managers", {}).get("@odata.id")
     systems_url = base_data.get("PowerEquipment", {}).get("@odata.id")
+    pdu_url = base_data.get("PowerDistribution", {}).get("@odata.id")
 
     manager_data = []
     fw_version = vendor_data.firmware_version
@@ -306,25 +296,39 @@ def get_information(redfishobj):
     sys.stdout.write(f"<<<labels:sep(0)>>>\n{json.dumps(labels)}\n")
 
     # fetch systems
-    if not systems_url:
+    if systems_url:
+        power_equipment = fetch_data(redfishobj, systems_url, "PowerEquipment")
+    else:
+        # Some PDUs (e.g. PANDUIT) don't advertise PowerEquipment but may still serve it.
+        probed = fetch_data(redfishobj, "/redfish/v1/PowerEquipment", "PowerEquipment")
+        power_equipment = None if "error" in probed else probed
+
+    if power_equipment is not None:
+        systems_data = [power_equipment]
+    elif pdu_url:
+        # No PowerEquipment resource exists here, so there is nothing to report
+        # as a system - hence the gated redfish_system output below.
+        systems_data = [{"RackPDUs": {"@odata.id": pdu_url}}]
+    else:
         raise CannotRecover(
             "ERROR: probably not a Redfish power equipment - missing PowerEquipment information"
         )
-    systems_data = [fetch_data(redfishobj, systems_url, "PowerEquipment")]
 
     if manager_data:
         sys.stdout.write("<<<redfish_manager:sep(0)>>>\n")
         sys.stdout.write(f"{json.dumps(manager_data, sort_keys=True)}\n")
 
-    sys.stdout.write("<<<redfish_system:sep(0)>>>\n")
-    sys.stdout.write(f"{json.dumps(systems_data, sort_keys=True)}\n")
+    if power_equipment:
+        sys.stdout.write("<<<redfish_system:sep(0)>>>\n")
+        sys.stdout.write(f"{json.dumps(systems_data, sort_keys=True)}\n")
 
     resulting_sections: tuple[SectionName, ...] = ("RackPDUs",)
     for system in systems_data:
         result = fetch_sections(redfishobj, resulting_sections, system)
         process_result(result)
+        if not (pdu_data := result.get("RackPDUs")):
+            continue
         sub_sections: tuple[SectionName, ...] = ("Mains", "Outlets", "Sensors")
-        pdu_data = result["RackPDUs"]
         if isinstance(pdu_data, list):
             for entry in pdu_data:
                 process_result(fetch_sections(redfishobj, sub_sections, entry))

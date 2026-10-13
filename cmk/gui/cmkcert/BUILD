@@ -6,7 +6,6 @@ py_library(
     srcs = glob(["**/*.py"]),
     imports = ["../../.."],
     visibility = [
-        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],
@@ -19,6 +18,7 @@ py_library(
         "//cmk/utils:paths",
         "//packages/cmk-ccc:site",
         "//packages/cmk-crypto",
+        requirement("cryptography"),
         requirement("python-dateutil"),
     ],
 )

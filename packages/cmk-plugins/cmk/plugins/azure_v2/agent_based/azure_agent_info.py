@@ -15,13 +15,12 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     get_value_store,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.azure_v2.agent_based.lib import AZURE_AGENT_SEPARATOR
 
 
@@ -63,10 +62,6 @@ def parse_azure_agent_info(string_table: StringTable) -> AgentInfo:
     return info
 
 
-def discover_azure_agent_info(section: AgentInfo) -> DiscoveryResult:
-    yield Service()
-
-
 def _check_agent_bailouts(bailouts: list[tuple[int, str]]) -> CheckResult:
     now = time.time()
     value_store = get_value_store()
@@ -81,16 +76,10 @@ def _check_agent_bailouts(bailouts: list[tuple[int, str]]) -> CheckResult:
 
 
 def _check_agent_issues(issues: dict[str, list[dict[str, Any]]], params: Params) -> CheckResult:
-    for type_ in ("warning", "exception"):
-        # The next 8 lines exist solely to make mypy happy.
-        levels: tuple[int, int] | None
-        match type_:
-            case "warning":
-                levels = params["warning_levels"]
-            case "exception":
-                levels = params["exception_levels"]
-            case _:
-                levels = None  # type: ignore[unreachable]
+    for type_, levels in (
+        ("warning", params["warning_levels"]),
+        ("exception", params["exception_levels"]),
+    ):
         count = len(issues.get(type_, ()))
         yield from check_levels_v1(
             count,
@@ -129,7 +118,7 @@ agent_section_azure_v2_agent_info = AgentSection(
 check_plugin_azure_v2_agent_info = CheckPlugin(
     name="azure_v2_agent_info",
     service_name="Azure agent info",
-    discovery_function=discover_azure_agent_info,
+    discovery_function=discover_one_service,
     check_function=check_azure_agent_info,
     check_ruleset_name="azure_v2_agent_info",
     check_default_parameters=DEFAULT_PARAMS,

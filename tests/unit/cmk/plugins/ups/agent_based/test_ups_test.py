@@ -58,7 +58,8 @@ def test_check_ups_test_time_check_negative_elapsed_time() -> None:
     _, result, *_ = check_ups_test(PARAMS, [[["1000"]], [["1", "2000", ""]]])
     assert isinstance(result, Result)
     assert result.state is State.UNKNOWN
-    assert result.summary.startswith("Could not determine time since start of last test")
+    # SUP-29108 device seems to send timestamps that imply that the test was started in the future
+    assert result.summary.startswith("Time since start of last test is a negative time period")
 
 
 def test_ups_test_unknown_test_result() -> None:

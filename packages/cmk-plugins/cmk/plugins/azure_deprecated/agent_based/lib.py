@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 
 import json
@@ -191,7 +190,7 @@ def _parse_resource(resource_data: Sequence[Sequence[str]]) -> Resource | None:
     """
     try:
         resource = json.loads(AZURE_AGENT_SEPARATOR.join(resource_data[0]))
-    except (ValueError, IndexError):
+    except ValueError, IndexError:
         return None
 
     if len(resource_data) < 3:
@@ -342,10 +341,7 @@ def check_resource_metrics(
                 label=metric_data.sustained_label,
             )
 
-        if (
-            metric_data.average_mins_param is not None  # type: ignore[redundant-expr]
-            and (average_mins := params.get(metric_data.average_mins_param)) is not None
-        ):
+        if (average_mins := params.get(metric_data.average_mins_param)) is not None:
             # Even if we alert on the average, we still emit the instantaneous value as a metric.
             yield Metric(metric_data.metric_name, metric.value)
             metric_name = f"{metric_data.metric_name}_average"

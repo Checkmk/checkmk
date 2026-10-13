@@ -24,9 +24,13 @@ Collects metrics from:
 - Buffer pool statistics – logical/physical I/O, waits.
 - SGA memory information – breakdown of shared memory structures.
 - Library cache efficiency – SQL/PLSQL cache lookup and execution performance.
-- PGA statistics – per-PDB or root container memory usage.
+- PGA statistics – memory usage of the container the query runs in.
 */
 
+-- TODO(sk): the sections below carry a
+-- SYS_CONTEXT('USERENV','CON_ID') IN ('0', '1') guard because this file is
+-- executed once per container, while only the PGA statement needs that. Move
+-- the PGA statement into its own section and drop the guards.
 -- === Section 1: System time model (CPU & DB time) ===
 SELECT UPPER(
                DECODE(cdb, 'NO', instance_name, instance_name || '.' || con_name)
@@ -51,8 +55,9 @@ FROM (
                   JOIN v$sys_time_model s
                        ON s.stat_name IN ('DB time', 'DB CPU')
                   JOIN v$database d ON d.cdb = 'NO'
-         ORDER BY stat_name
-     );
+     )
+WHERE SYS_CONTEXT('USERENV','CON_ID') IN ('0', '1')
+ORDER BY stat_name;
 -- === Section 2: Wait class statistics ===
 SELECT UPPER(DECODE(cdb, 'NO', INSTANCE_NAME, INSTANCE_NAME || '.' || con_name)),
        'sys_wait_class',                        -- Label for wait events
@@ -91,8 +96,9 @@ FROM (
          FROM v$instance i
                   JOIN v$database d ON d.cdb = 'NO'
                   JOIN v$system_wait_class s ON s.WAIT_CLASS <> 'Idle'
-         ORDER BY con_name, wait_class
-     );
+     )
+WHERE SYS_CONTEXT('USERENV','CON_ID') IN ('0', '1')
+ORDER BY con_name, wait_class;
 -- === Section 3: Buffer pool statistics ===
 SELECT UPPER(DECODE(d.cdb, 'NO', i.instance_name, i.instance_name || '.CDB$ROOT')),
        'buffer_pool_statistics',
@@ -106,7 +112,8 @@ SELECT UPPER(DECODE(d.cdb, 'NO', i.instance_name, i.instance_name || '.CDB$ROOT'
        b.BUFFER_BUSY_WAIT  -- Contention for buffers
 FROM v$instance i
          JOIN v$buffer_pool_statistics b ON b.con_id = 0
-         JOIN v$database d ON 1 = 1;
+         JOIN v$database d ON 1 = 1
+WHERE SYS_CONTEXT('USERENV','CON_ID') IN ('0', '1');
 -- === Section 4: SGA information ===
 SELECT UPPER(DECODE(d.cdb, 'NO', i.instance_name, i.instance_name || '.CDB$ROOT')),
        'SGA_info',
@@ -114,7 +121,8 @@ SELECT UPPER(DECODE(d.cdb, 'NO', i.instance_name, i.instance_name || '.CDB$ROOT'
        s.bytes  -- Size in bytes
 FROM v$instance i
          JOIN v$sgainfo s ON s.con_id = 0
-         JOIN v$database d ON 1 = 1;
+         JOIN v$database d ON 1 = 1
+WHERE SYS_CONTEXT('USERENV','CON_ID') IN ('0', '1');
 -- === Section 5: Library cache stats ===
 SELECT UPPER(DECODE(d.cdb, 'NO', i.instance_name, i.instance_name || '.CDB$ROOT')),
        'librarycache',
@@ -127,30 +135,32 @@ SELECT UPPER(DECODE(d.cdb, 'NO', i.instance_name, i.instance_name || '.CDB$ROOT'
        b.invalidations                 -- Invalidations
 FROM v$instance i
          JOIN v$librarycache b ON b.con_id = 0
-         JOIN v$database d ON 1 = 1;
+         JOIN v$database d ON 1 = 1
+WHERE SYS_CONTEXT('USERENV','CON_ID') IN ('0', '1');
 -- === Section 6: PGA statistics ===
-SELECT UPPER(DECODE(d.cdb, 'NO', i.instance_name, i.instance_name || '.' || c.name)),
+-- v$pgastat has no v$con_ twin: it only yields a container's rows when the
+-- query runs inside that container. The section is therefore executed once per
+-- container (root plus every matching PDB) and this statement reports whichever
+-- one it currently runs in - the same thing the legacy plugin achieved with
+-- dbms_sql.parse(container => ...).
+SELECT UPPER(DECODE(d.cdb, 'NO',
+                    i.instance_name,
+                    i.instance_name || '.' || SYS_CONTEXT('USERENV', 'CON_NAME'))),
        'PGA_info',
-       p.name,  -- PGA metric (e.g., aggregate PGA auto target, freeable memory)
+       p.name,  -- PGA metric (e.g. aggregate PGA auto target, freeable memory)
        p.value, -- Value
        p.unit   -- Unit of measurement
-FROM v$containers c
-         JOIN v$database d ON 1 = 1
-         JOIN v$instance i ON 1 = 1
-         JOIN v$pgastat p ON p.con_id = c.con_id
-WHERE c.con_id IN (SELECT con_id
-                   FROM v$containers
-                   WHERE c.open_mode LIKE 'READ %' -- Only open/readable PDBs
-                     AND c.name <> 'PDB$SEED'
-                  );
--- === Special case for CDB$ROOT ===
-SELECT UPPER(DECODE(d.cdb, 'NO', i.instance_name, i.instance_name || '.' || c.name)),
-       'PGA_info',
-       p.name,
-       p.value,
-       p.unit
-FROM v$containers c
-         JOIN v$database d ON 1 = 1
-         JOIN v$instance i ON 1 = 1
-         JOIN v$pgastat p ON p.con_id = 0
-WHERE c.name = 'CDB$ROOT'
+FROM v$pgastat p
+         CROSS JOIN v$instance i
+         CROSS JOIN v$database d
+-- CDB$ROOT sees the rows of every container, a PDB only its own. Keep the
+-- instance-wide set in the root - what the legacy plugin reported there - and
+-- whatever a PDB shows of itself.
+--
+-- How much a PDB shows depends on the release, and the predicate covers both
+-- without asking for the version: 23ai keeps per-container rows, so a PDB
+-- reports its own figures (measured: process count 1 against 101 in the root),
+-- while 21c only has con_id 0 and a PDB repeats the instance-wide numbers -
+-- which is what the legacy plugin produced there as well.
+WHERE SYS_CONTEXT('USERENV', 'CON_ID') <> '1'
+   OR p.con_id = 0

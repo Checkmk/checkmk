@@ -12,8 +12,7 @@ def test_winperf_windows_config_with_counters() -> None:
         ("my_section", "12345"),
         ("other_section", "67890"),
     ]
-    result = list(get_winperf_windows_config(conf))
-    assert result == [
+    assert list(get_winperf_windows_config(conf)) == [
         WindowsConfigEntry(
             path=["winperf", "counters"],
             content=[{"12345": "my_section"}, {"67890": "other_section"}],
@@ -22,15 +21,11 @@ def test_winperf_windows_config_with_counters() -> None:
 
 
 def test_winperf_windows_config_empty() -> None:
-    conf: list[tuple[str, str]] = []
-    result = list(get_winperf_windows_config(conf))
-    assert result == []
+    assert list(get_winperf_windows_config([])) == []
 
 
 def test_winperf_windows_config_single_counter() -> None:
-    conf = [("processor", "238")]
-    result = list(get_winperf_windows_config(conf))
-    assert result == [
+    assert list(get_winperf_windows_config([("processor", "238")])) == [
         WindowsConfigEntry(
             path=["winperf", "counters"],
             content=[{"238": "processor"}],

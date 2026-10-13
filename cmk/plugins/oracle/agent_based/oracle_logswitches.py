@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
+import contextlib
 from collections.abc import Mapping
-from typing import Any, assert_never
+from typing import Any
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -18,51 +18,57 @@ from cmk.agent_based.v2 import (
     IgnoreResultsError,
     Result,
     Service,
+    State,
     StringTable,
 )
 
-from .liboracle import (
-    oracle_handle_ora_errors,
-    oracle_handle_ora_errors_discovery,
-)
+from .liboracle import classify_line, Error, is_instance_name, Ok, Parsed
 
 # <<<oracle_logswitches>>>
 # pengt  15
 # hirni  22
 
-
-def discover_oracle_logswitches(section: StringTable) -> DiscoveryResult:
-    oracle_handle_ora_errors_discovery(section)
-    yield from [Service(item=line[0]) for line in section if len(line) == 2]
+type Section = Mapping[str, Parsed[int]]
 
 
-def check_oracle_logswitches(
-    item: str, params: Mapping[str, Any], section: StringTable
-) -> CheckResult:
-    if isinstance(params, tuple):
-        params = {
-            "levels": (params[2], params[3]),
-            "levels_lower": (params[0], params[1]),
-        }
-
-    for line in section:
-        if line[0] == item:
-            err = oracle_handle_ora_errors(line)
-            if err is False:
+def parse_oracle_logswitches(string_table: StringTable) -> Section:
+    counts: dict[str, int] = {}
+    errors: dict[str, str] = {}
+    for line in string_table:
+        match classify_line(line):
+            case str() as message:
+                errors.setdefault(line[0], message)
+            case False:
                 continue
-            elif isinstance(err, Result):
-                yield err
-            elif err is None:
-                pass
-            else:
-                assert_never(err)
+            case None:
+                if len(line) == 2:
+                    with contextlib.suppress(ValueError):
+                        counts.setdefault(line[0], int(line[1]))
 
-            if len(line) != 2:
-                continue
+    parsed: dict[str, Parsed[int]] = {
+        sid: Ok(count) for sid, count in counts.items() if sid not in errors
+    }
+    for sid, message in errors.items():
+        parsed[sid] = Error(message)
+    return parsed
 
+
+def discover_oracle_logswitches(section: Section) -> DiscoveryResult:
+    yield from (Service(item=sid) for sid in section if is_instance_name(sid))
+
+
+def check_oracle_logswitches(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    match section.get(item):
+        case None:
+            # In case of missing information we assume that the login into
+            # the database has failed and we simply skip this check. It won't
+            # switch to UNKNOWN, but will get stale.
+            raise IgnoreResultsError("Login into database failed")
+        case Error(message):
+            yield Result(state=State.UNKNOWN, summary=message)
+        case Ok(logswitches):
             lowarn, locrit = params["levels_lower"]
             warn, crit = params["levels"]
-            logswitches = int(line[1])
             yield from check_levels(
                 logswitches,
                 metric_name="logswitches",
@@ -71,16 +77,6 @@ def check_oracle_logswitches(
                 render_func=str,
                 label="Log switches in the last 60 minutes",
             )
-            return
-
-    # In case of missing information we assume that the login into
-    # the database has failed and we simply skip this check. It won't
-    # switch to UNKNOWN, but will get stale.
-    raise IgnoreResultsError("Login into database failed")
-
-
-def parse_oracle_logswitches(string_table: StringTable) -> StringTable:
-    return string_table
 
 
 agent_section_oracle_logswitches = AgentSection(

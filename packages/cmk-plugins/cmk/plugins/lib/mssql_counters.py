@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
 """
 # There are different types of information. Can we handle them in a
@@ -21,7 +20,7 @@ from typing import Any
 
 from cmk.agent_based.v2 import DiscoveryResult, get_rate, GetRateError, IgnoreResultsError, Service
 
-Counters = dict[str, float]
+Counters = dict[str, int | float]
 Section = dict[tuple[str, str], Counters]
 
 

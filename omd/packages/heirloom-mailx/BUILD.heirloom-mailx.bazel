@@ -1,5 +1,5 @@
 load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
-load("@rules_foreign_cc//foreign_cc:defs.bzl", "make")
+load("@@//bazel/rules:xcomp/foreign_cc.bzl", "make")
 
 dependency_info(
     name = "dependency_info",
@@ -29,6 +29,7 @@ make(
         "bin/mailx",
         "share/man/man1/mailx.1",
     ],
+    platform = "@@//bazel/platforms:x86_64-linux-gcc-hermetic",
     targets = [
         "all",
         "install",

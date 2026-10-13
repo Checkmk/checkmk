@@ -16,7 +16,7 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.restful_objects.constructors import domain_object_collection_href
 from cmk.gui.visuals.filter.api import filter_component_from_internal, FilterComponentModel
@@ -36,14 +36,14 @@ class VisualInfoExtensions:
 
 
 @api_model
-class VisualInfoModel(DomainObjectModel):
-    domainType: Literal["constant"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
+class VisualInfoModel(TitledDomainObjectModel):
+    domainType: Literal["constant"] = api_field(description="The domain type of the object.")
     extensions: VisualInfoExtensions = api_field(description="The configuration of this info.")
 
 
 @api_model
 class VisualInfoCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["constant"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["constant"] = api_field(
         description="The domain type of the objects in the collection"
     )
     value: list[VisualInfoModel] = api_field(description="A list of info objects", example="")
@@ -57,7 +57,7 @@ def list_infos_v1() -> VisualInfoCollectionModel:
         data_source_model = VisualInfoModel(
             id=info_id,
             domainType="constant",
-            title=info.title,
+            title=str(info.title),  # plugins may ignore the str contract
             extensions=VisualInfoExtensions(
                 sort_index=info.sort_index,
                 single_filter=[

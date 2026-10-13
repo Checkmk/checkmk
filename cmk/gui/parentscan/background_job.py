@@ -29,6 +29,7 @@ from cmk.gui.i18n import _
 from cmk.gui.job_scheduler_client import StartupError
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
+from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.watolib import bakery
@@ -41,11 +42,10 @@ from cmk.gui.watolib.check_mk_automations import scan_parents
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
     disk_or_search_base_folder_from_request,
-    disk_or_search_folder_from_request,
     Folder,
-    folder_tree,
     FolderTree,
     Host,
+    HostsAndFoldersConfig,
 )
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
@@ -53,6 +53,7 @@ from cmk.gui.watolib.pending_changes import (
     PendingChangesStore,
 )
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
+from cmk.ruleset_matcher.tags import TagConfig, TagConfigSpec
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.paths import configuration_lockfile
 
@@ -92,18 +93,13 @@ class ParentScanBackgroundJob(BackgroundJob):
     def gui_title(cls) -> str:
         return _("Parent scan")
 
-    def __init__(self) -> None:
+    def __init__(self, *, back_url: str | None = None) -> None:
         super().__init__(self.job_prefix)
+        self._details_back_url = back_url
 
     @override
-    def _back_url(self) -> str:
-        return disk_or_search_folder_from_request(
-            folder_tree(),
-            request.var("folder"),
-            request.get_ascii_input("host"),
-            acting_user=user,
-            request=request,
-        ).url(request)
+    def _back_url(self) -> str | None:
+        return self._details_back_url
 
     def do_execute(
         self,
@@ -111,6 +107,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         tasks: Sequence[ParentScanTask],
         job_interface: BackgroundProcessInterface,
         user_permission_config: UserPermissionSerializableConfig,
+        tree: FolderTree,
         *,
         pprint_value: bool,
         debug: bool,
@@ -122,7 +119,6 @@ class ParentScanBackgroundJob(BackgroundJob):
             self._initialize_statistics()
             self._logger.info("Parent scan started...")
 
-            tree = folder_tree()
             for task in tasks:
                 self._process_task(
                     task,
@@ -460,6 +456,9 @@ def start_parent_scan(
     settings: ParentScanSettings,
     *,
     site_configs: Mapping[SiteId, SiteConfiguration],
+    wato_hide_folders_without_read_permissions: bool,
+    wato_host_attrs: Sequence[CustomHostAttrSpec],
+    tags: TagConfigSpec,
     pprint_value: bool,
     debug: bool,
     use_git: bool,
@@ -479,6 +478,9 @@ def start_parent_scan(
                 ],
                 settings=settings,
                 site_configs=site_configs,
+                wato_hide_folders_without_read_permissions=wato_hide_folders_without_read_permissions,
+                wato_host_attrs=wato_host_attrs,
+                tags=tags,
                 user_permission_config=UserPermissionSerializableConfig.from_global_config(
                     active_config
                 ),
@@ -500,6 +502,9 @@ class ParentScanJobArgs(BaseModel, frozen=True):
     tasks: Sequence[ParentScanTask]
     settings: ParentScanSettings
     site_configs: Mapping[SiteId, SiteConfiguration]
+    wato_hide_folders_without_read_permissions: bool
+    wato_host_attrs: Sequence[CustomHostAttrSpec]
+    tags: TagConfigSpec
     user_permission_config: UserPermissionSerializableConfig
     pprint_value: bool
     debug: bool
@@ -514,6 +519,14 @@ def parent_scan_job_entry_point(
         args.tasks,
         job_interface,
         user_permission_config=args.user_permission_config,
+        tree=FolderTree(
+            config=HostsAndFoldersConfig(
+                wato_hide_folders_without_read_permissions=args.wato_hide_folders_without_read_permissions,
+                wato_host_attrs=args.wato_host_attrs,
+                tags=TagConfig.from_config(args.tags),
+                sites=SiteConfigurations(dict(args.site_configs)),
+            )
+        ),
         pprint_value=args.pprint_value,
         debug=args.debug,
         pending_changes=PendingChanges(

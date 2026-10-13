@@ -6,6 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any
 
 import cmk.utils.paths
@@ -94,7 +95,7 @@ LDAP_CONNECTION_ID_EXISTS = {
     tag_group="Setup",
     path_params=[LDAP_CONNECTION_ID_EXISTS],
     response_schema=LDAPConnectionResponse,
-    error_schemas={404: GETLdapConnection404},
+    error_schemas={HTTPStatus.NOT_FOUND: GETLdapConnection404},
     permissions_required=RO_PERMISSIONS,
     family_name=LDAP_CONNECTION_FAMILY.name,
 )
@@ -123,7 +124,7 @@ def show_ldap_connection(params: Mapping[str, Any]) -> Response:
     permissions_required=RO_PERMISSIONS,
     family_name=LDAP_CONNECTION_FAMILY.name,
 )
-def show_ldap_connections(params: Mapping[str, Any]) -> Response:
+def show_ldap_connections(params: Mapping[str, Any]) -> Response:  # noqa: ARG001
     """Show all LDAP connections"""
     user.need_permission("wato.seeall")
     user.need_permission("wato.users")
@@ -169,7 +170,7 @@ def delete_ldap_connection(params: Mapping[str, Any]) -> Response:
             pending_changes=_pending_changes(active_config, omd_site(), user.id),
         )
 
-    return Response(status=204)
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 
 def _get_affected_sites(connection: ConfigurableUserConnectionSpec) -> list[SiteId]:
@@ -223,7 +224,7 @@ def create_ldap_connection(params: Mapping[str, Any]) -> Response:
     path_params=[LDAP_CONNECTION_ID_EXISTS],
     request_schema=LDAPConnectionConfigUpdateRequest,
     response_schema=LDAPConnectionResponse,
-    error_schemas={404: GETLdapConnection404},
+    error_schemas={HTTPStatus.NOT_FOUND: GETLdapConnection404},
     permissions_required=RW_PERMISSIONS,
     family_name=LDAP_CONNECTION_FAMILY.name,
 )

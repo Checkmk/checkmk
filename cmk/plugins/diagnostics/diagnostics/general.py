@@ -9,7 +9,7 @@ from collections.abc import Iterable
 from datetime import datetime
 from pathlib import PurePosixPath
 
-import cmk.ccc.version as cmk_version
+import cmk.ccc.version_info as cmk_version_info
 from cmk.diagnostics.internal import (
     CollectContext,
     DiagnosticsPlugin,
@@ -40,7 +40,7 @@ diagnostics_plugin_parameters = DiagnosticsPlugin(
 
 
 def _collect_general_info(context: CollectContext) -> Iterable[DumpItem]:
-    version_infos = cmk_version.get_general_version_infos(context.omd_root)
+    version_infos = cmk_version_info.get_general_version_infos(context.omd_root)
     time_obj = datetime.fromtimestamp(version_infos.get("time", 0.0))
     yield DumpItem(
         PurePosixPath("general.json"),

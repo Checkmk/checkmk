@@ -5,8 +5,32 @@
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
 import { useCmkErrorBoundary } from 'cmk-ui-library/components/CmkErrorBoundary'
-import { CmkError } from 'cmk-ui-library/lib/error.ts'
+import { CmkError, CmkNetworkError } from 'cmk-ui-library/lib/error.ts'
+import client from 'cmk-ui-library/lib/rest-api-client/client'
+import { StaleSessionError } from 'cmk-ui-library/lib/staleSession'
 import { defineComponent } from 'vue'
+
+const CRASH_REPORT_URL = '/domain-types/javascript_crash_report/collections/all'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let postSpy: any
+
+beforeEach(() => {
+  postSpy = vi.spyOn(client, 'POST')
+  postSpy.mockResolvedValue({
+    data: {
+      domainType: 'javascript_crash_report',
+      id: 'a-crash-id',
+      links: [],
+      extensions: {
+        crash_type: 'javascript',
+        crash_report_url: 'crash.py?component=javascript&ident=a-crash-id'
+      }
+    },
+    error: undefined,
+    response: new Response(null, { status: 201 })
+  } as never)
+})
 
 test('CmkErrorBoundary shows full stack', async () => {
   class DemoError<T extends Error> extends CmkError<T> {
@@ -76,4 +100,199 @@ test('CmkErrorBoundary shows full stack', async () => {
   screen.getByText('DemoError: internal error handler, but keeps', { exact: false })
   screen.getByText('DemoErrorContext', { exact: false })
   screen.getAllByText('this is a cmk error', { exact: false })
+})
+
+test('CmkErrorBoundary stores the caught error as a crash report', async () => {
+  const testComponent = defineComponent({
+    name: 'DemoComponent',
+    setup() {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      const { CmkErrorBoundary } = useCmkErrorBoundary()
+      function throwError() {
+        throw new RangeError('a crash worth reporting')
+      }
+      return { CmkErrorBoundary, throwError }
+    },
+    template: `
+      <component :is=CmkErrorBoundary>
+        <button @click="throwError()">throw</button>
+      </component>
+    `
+  })
+
+  render(testComponent)
+
+  const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  await fireEvent.click(screen.getByRole<HTMLButtonElement>('button', { name: 'throw' }))
+  consoleSpy.mockRestore()
+
+  expect(postSpy).toHaveBeenCalledTimes(1)
+  const [url, options] = postSpy.mock.calls[0]
+  expect(url).toBe(CRASH_REPORT_URL)
+  expect(options.body.error_name).toBe('RangeError')
+  expect(options.body.error_message).toBe('a crash worth reporting')
+  expect(options.body.component).toBe('DemoComponent')
+  expect(options.body.url).toBe(window.location.href)
+})
+
+test('CmkErrorBoundary links to the crash report it created', async () => {
+  const testComponent = defineComponent({
+    name: 'LinkingComponent',
+    setup() {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      const { CmkErrorBoundary } = useCmkErrorBoundary()
+      function throwError() {
+        throw new RangeError('a crash worth linking')
+      }
+      return { CmkErrorBoundary, throwError }
+    },
+    template: `
+      <component :is=CmkErrorBoundary>
+        <button @click="throwError()">throw</button>
+      </component>
+    `
+  })
+
+  render(testComponent)
+
+  const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  await fireEvent.click(screen.getByRole<HTMLButtonElement>('button', { name: 'throw' }))
+  consoleSpy.mockRestore()
+
+  const link = await screen.findByRole<HTMLAnchorElement>('link', { name: 'Open crash report' })
+  expect(link).toHaveAttribute('href', 'crash.py?component=javascript&ident=a-crash-id')
+  screen.getByText('A crash report has been created', { exact: false })
+})
+
+test('CmkErrorBoundary says so when no crash report could be stored', async () => {
+  postSpy.mockResolvedValue({
+    data: undefined,
+    error: {},
+    response: new Response('', { status: 500, statusText: 'Internal Server Error' })
+  } as never)
+
+  const testComponent = defineComponent({
+    name: 'FailingReportComponent',
+    setup() {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      const { CmkErrorBoundary } = useCmkErrorBoundary()
+      function throwError() {
+        throw new RangeError('a crash that cannot be stored')
+      }
+      return { CmkErrorBoundary, throwError }
+    },
+    template: `
+      <component :is=CmkErrorBoundary>
+        <button @click="throwError()">throw</button>
+      </component>
+    `
+  })
+
+  render(testComponent)
+
+  const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  await fireEvent.click(screen.getByRole<HTMLButtonElement>('button', { name: 'throw' }))
+
+  await screen.findByText('No crash report could be stored for this error.', { exact: false })
+  consoleSpy.mockRestore()
+})
+
+test('CmkErrorBoundary keeps the first error when rendering it fails again', async () => {
+  const failsWhileErrorIsShown = defineComponent({
+    props: { error: { type: Error, default: null } },
+    setup(props) {
+      return () => {
+        if (props.error !== null) {
+          throw new Error('rendering the error failed')
+        }
+        return null
+      }
+    }
+  })
+
+  const testComponent = defineComponent({
+    components: { FailsWhileErrorIsShown: failsWhileErrorIsShown },
+    setup() {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      const { CmkErrorBoundary, error } = useCmkErrorBoundary()
+      function throwError() {
+        throw new Error('the first error')
+      }
+      return { CmkErrorBoundary, error, throwError }
+    },
+    template: `
+      <component :is=CmkErrorBoundary>
+        <button @click="throwError()">throw</button>
+      </component>
+      <FailsWhileErrorIsShown :error="error" />
+    `
+  })
+
+  render(testComponent)
+  const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  await fireEvent.click(screen.getByRole('button', { name: 'throw' }))
+  spy.mockRestore()
+
+  screen.getAllByText('the first error', { exact: false })
+})
+
+function renderThrowingComponent(error: Error) {
+  const testComponent = defineComponent({
+    name: 'ThrowingComponent',
+    setup() {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      const { CmkErrorBoundary } = useCmkErrorBoundary()
+      function throwError() {
+        throw error
+      }
+      return { CmkErrorBoundary, throwError }
+    },
+    template: `
+      <component :is=CmkErrorBoundary>
+        <button @click="throwError()">throw</button>
+      </component>
+    `
+  })
+
+  render(testComponent)
+}
+
+test('CmkErrorBoundary shows a stale session without reporting it', async () => {
+  renderThrowingComponent(new StaleSessionError('ajax_poll.py'))
+
+  await fireEvent.click(screen.getByRole<HTMLButtonElement>('button', { name: 'throw' }))
+
+  await screen.findByText('Your session has expired. Please log in again.')
+  expect(postSpy).not.toHaveBeenCalled()
+})
+
+test('CmkErrorBoundary does not report a stale session wrapped in another error', async () => {
+  renderThrowingComponent(
+    new CmkError('Could not load the data', new StaleSessionError('ajax_poll.py'))
+  )
+
+  await fireEvent.click(screen.getByRole<HTMLButtonElement>('button', { name: 'throw' }))
+
+  await screen.findByText('Could not load the data')
+  expect(postSpy).not.toHaveBeenCalled()
+})
+
+test('CmkErrorBoundary shows a request without response without reporting it', async () => {
+  renderThrowingComponent(new CmkNetworkError(new TypeError('Failed to fetch')))
+
+  await fireEvent.click(screen.getByRole<HTMLButtonElement>('button', { name: 'throw' }))
+
+  await screen.findByText('Failed to fetch')
+  expect(postSpy).not.toHaveBeenCalled()
+})
+
+test('CmkErrorBoundary does not report a request without response wrapped in another error', async () => {
+  renderThrowingComponent(
+    new CmkError('Could not load the data', new CmkNetworkError(new TypeError('Failed to fetch')))
+  )
+
+  await fireEvent.click(screen.getByRole<HTMLButtonElement>('button', { name: 'throw' }))
+
+  await screen.findByText('Could not load the data')
+  expect(postSpy).not.toHaveBeenCalled()
 })

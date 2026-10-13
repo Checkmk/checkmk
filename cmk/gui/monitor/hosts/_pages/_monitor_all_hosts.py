@@ -8,6 +8,7 @@ from typing import override
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
 from cmk.ccc.version import edition
+from cmk.gui import sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.header import make_header
@@ -16,7 +17,15 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
-from cmk.gui.monitor.command import DowntimeRecurrences, MonitorCommands
+from cmk.gui.monitor.command import (
+    acknowledge_defaults,
+    acknowledge_presets_url,
+    downtime_presets,
+    downtime_presets_url,
+    DowntimeRecurrences,
+    MonitorCommands,
+    notification_rules_url,
+)
 from cmk.gui.page_menu import (
     make_simple_link,
     PageMenu,
@@ -27,11 +36,14 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import DynamicIconName, IconNames, StaticIcon, Visual
+from cmk.gui.type_defs import Visual
 from cmk.gui.user_sites import sorted_sites
 from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.monitoring.all_hosts import (
+    AcknowledgeDefaults,
+    DowntimePreset,
     DowntimeRecurrence,
+    DowntimeUntilKeyword,
     Edition,
     MonitoringAction,
     MonitoringAllHostsApp,
@@ -40,9 +52,13 @@ from cmk.shared_typing.monitoring.all_hosts import (
     Site,
 )
 from cmk.utils import paths
+from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
 
-_PAGE_TITLE = _("All hosts (experimental)")
+from .._api._list_hosts import LIMIT_TIERS
+from .._impl import LiveStatusHostRepository
+
+_PAGE_TITLE = _("All hosts")
 
 _LEGACY_VIEW_NAME = "allhosts"
 _LEGACY_VIEW_PERMISSION = f"view.{_LEGACY_VIEW_NAME}"
@@ -89,7 +105,7 @@ def monitor_all_hosts_visual_spec() -> Visual:
         "topic": "overview",
         "title": _PAGE_TITLE,
         "name": "monitor_all_hosts",
-        "sort_index": 21,
+        "sort_index": 20,
         "is_show_more": False,
         "icon": DynamicIconName("folder"),
         "hidden": False,
@@ -103,9 +119,15 @@ def monitor_all_hosts_visual_spec() -> Visual:
 
 
 class MonitorAllHostsPage(Page):
-    def __init__(self, commands: MonitorCommands, recurrences: DowntimeRecurrences) -> None:
+    def __init__(
+        self,
+        commands: MonitorCommands,
+        recurrences: DowntimeRecurrences,
+        teleport_target: str | None = None,
+    ) -> None:
         self._commands = commands
         self._recurrences = recurrences
+        self._teleport_target = teleport_target
 
     @override
     def page(self, ctx: PageContext) -> None:
@@ -130,6 +152,10 @@ class MonitorAllHostsPage(Page):
             user_role_ids=user.role_ids,
         )
 
+        # The option states and durations the dialogs start from, as the settings the panes
+        # link to have them.
+        ack = acknowledge_defaults(ctx.config)
+
         html.vue_component(
             "cmk-monitoring-all-hosts",
             data=asdict(
@@ -142,6 +168,7 @@ class MonitorAllHostsPage(Page):
                         for site_id, alias in sorted_sites(ctx.config.sites)
                     ],
                     edition=Edition(edition(paths.omd_root).short),
+                    header_teleport_target=self._teleport_target,
                     actions=[
                         MonitoringAction(
                             ident=command.ident, title=str(command.title), icon=command.icon
@@ -156,6 +183,31 @@ class MonitorAllHostsPage(Page):
                     ],
                     row_actions=_row_actions(ctx.config),
                     may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
+                    limit_tiers=list(LIMIT_TIERS),
+                    acknowledge_presets_url=acknowledge_presets_url(ctx.config),
+                    acknowledge_defaults=AcknowledgeDefaults(
+                        sticky=ack.sticky,
+                        persistent=ack.persistent,
+                        notify=ack.notify,
+                        expire_seconds=ack.expire_seconds,
+                    ),
+                    downtime_presets=[
+                        DowntimePreset(
+                            title=preset.title,
+                            # A span stays a number; a keyword becomes the generated enum.
+                            end=(
+                                preset.end
+                                if isinstance(preset.end, int)
+                                else DowntimeUntilKeyword(preset.end)
+                            ),
+                        )
+                        for preset in downtime_presets(ctx.config)
+                    ],
+                    notification_rules_url=notification_rules_url(ctx.config),
+                    downtime_presets_url=downtime_presets_url(ctx.config),
+                    show_relations=LiveStatusHostRepository(
+                        connection=sites.live()
+                    ).has_any_relations(),
                     legacy_view_button=MonitoringPageLinkButton(
                         url=makeuri_contextless(
                             ctx.request,

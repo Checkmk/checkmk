@@ -28,13 +28,7 @@ export const panelConfig = {
     title: 'value',
     initialState:
       'example.host.checkmk.com / Filesystem /var/log — long_descriptive_label_that_keeps_going',
-    help: 'The text rendered when content is "text". Line breaks are allowed after spaces, hyphens, underscores and dots.'
-  },
-  hardBreakEvery: {
-    type: 'number' as const,
-    title: 'hardBreakEvery',
-    initialState: 15,
-    help: 'Fallback break opportunity inserted every N characters when no natural separators are available.'
+    help: 'The text rendered when content is "text". Long values wrap at the cell edge.'
   },
   minWidth: {
     type: 'number' as const,
@@ -166,7 +160,6 @@ const currentWidth = computed(() => `${sliderValue.value} px`)
                 v-if="propState.content === 'text'"
                 column-id="cell"
                 :value="propState.value"
-                :hard-break-every="propState.hardBreakEvery"
               />
               <RichTextCell v-else column-id="cell">
                 <CmkTag color="danger" variant="weighted" content="CRIT" size="small" />

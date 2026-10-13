@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import re
 
@@ -21,7 +19,7 @@ from cmk.web.utils.html import HTML
 from tests.unit.cmk.gui.compare_html import compare_html
 
 
-def read_out_simple_table(text):
+def read_out_simple_table(text: str) -> list[list[str]]:
     assert isinstance(text, str)
     # Get the contents of the table as a list of lists
     data = []
@@ -38,7 +36,7 @@ def read_out_simple_table(text):
     return data
 
 
-def read_out_csv(text, separator):
+def read_out_csv(text: str, separator: str) -> list[list[str]]:
     # Get the contents of the table as a list of lists
     data = []
     for row in text.split("\n"):
@@ -138,7 +136,7 @@ def test_context() -> None:
                     table.cell(h, r)
 
         written_text = "".join(output_funnel.drain())
-    data = read_out_simple_table(written_text)
+    data: list[list[str]] | list[tuple[int, ...]] = read_out_simple_table(written_text)
     assert data.pop(0) == header
     data = [tuple(map(int, row)) for row in data if row and row[0]]
     assert data == rows
@@ -164,7 +162,7 @@ def test_action_message() -> None:
     assert thead is not None, "No <thead> found in table output"
 
     thead_children = thead.find_all(recursive=False)
-    assert len(thead_children) == 3, f"Expected only 3 children in <thead>: {thead_children!r}"
+    assert len(thead_children) == 2, f"Expected only 2 children in <thead>: {thead_children!r}"
 
     action_row = thead_children[0]
     assert action_row.name == "tr"
@@ -184,8 +182,9 @@ def test_action_message() -> None:
     assert div is not None, "No action_message_success div found"
     assert div.get_text(strip=True) == message
 
-    assert thead_children[1].name == "script"  # script to remove action message
-    assert thead_children[2].name == "tr"  # normal header row
+    fade_out = action_row.find("div", attrs={"data-cmk_call_ts_function": "fade_out_element"})
+    assert fade_out is not None, "No hook to remove the action message found"
+    assert thead_children[1].name == "tr"  # normal header row
 
 
 @pytest.mark.usefixtures("request_context")
@@ -211,14 +210,14 @@ def test_nesting() -> None:
     assert compare_html(
         written_text,
         """<h3 class="table">  TEST </h3>
-                            <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
+                            <div data-cmk_call_ts_function="update_row_info" data-cmk_call_ts_arguments="{&quot;text&quot;: &quot;1 row&quot;}"></div>
                             <table class="data oddeven">
                             <thead>
                             <tr>  <th>   A  </th>  <th>   B  </th> </tr>
                             </thead>
                             <tr class="data even0">  <td>   1  </td>  <td>
                                 <h3 class="table"> TEST 2</h3>
-                                <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
+                                <div data-cmk_call_ts_function="update_row_info" data-cmk_call_ts_arguments="{&quot;text&quot;: &quot;1 row&quot;}"></div>
                                 <table class="data oddeven">
                                 <thead>
                                 <tr><th>_</th><th>|</th></tr>
@@ -253,14 +252,14 @@ def test_nesting_context() -> None:
     assert compare_html(
         written_text,
         """<h3 class="table">  TEST </h3>
-                            <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
+                            <div data-cmk_call_ts_function="update_row_info" data-cmk_call_ts_arguments="{&quot;text&quot;: &quot;1 row&quot;}"></div>
                             <table class="data oddeven">
                             <thead>
                             <tr>  <th>   A  </th>  <th>   B  </th> </tr>
                             </thead>
                             <tr class="data even0">  <td>   1  </td>  <td>
                                 <h3 class="table"> TEST 2</h3>
-                                <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
+                                <div data-cmk_call_ts_function="update_row_info" data-cmk_call_ts_arguments="{&quot;text&quot;: &quot;1 row&quot;}"></div>
                                 <table class="data oddeven">
                                 <thead>
                                 <tr><th>_</th><th>|</th></tr>
@@ -284,7 +283,7 @@ def test_table_cubical(
     limit: int,
     output_format: str,
 ) -> None:
-    monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda s: None)
+    monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda s: None)  # noqa: ARG005
 
     # Test data
     rows = [(i, i**3) for i in range(10)]
@@ -313,6 +312,7 @@ def test_table_cubical(
 
     # Data assertions
     assert output_format in ["html", "csv"], "Fetch is not yet implemented"
+    data: list[list[str]] | list[tuple[int, ...]]
     if output_format == "html":
         with output_funnel.plugged():
             _render_table()

@@ -17,6 +17,7 @@ from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.config_anonymizer.interface import AnonInterface
 from cmk.config_anonymizer.step import AnonymizeStep
 from cmk.gui.config import Config
+from cmk.gui.utils.host_relations import relations_or_empty
 from cmk.gui.watolib.host_attributes import host_attribute_registry, HostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
     make_folder_tree,
@@ -237,6 +238,11 @@ def _anonymize_host_and_folder_attribute(
             ]
         case "parents":
             return "parents", [anon_interface.get_host(h) for h in attr_value]
+        case "relations":
+            return "relations", [
+                {**link, "host": anon_interface.get_host(link["host"])}
+                for link in relations_or_empty(attr_value)
+            ]
         case "snmp_community":
             return "snmp_community", _anonymize_snmp_credentials(anon_interface, attr_value)
         case "management_address":
@@ -383,7 +389,59 @@ def _anonymize_metrics_association_lookup_rule(
             rule["host_name_template"],
             "metrics_association",
         )
+    if "attribute_filter" in rule:
+        anonymized["attribute_filter"] = _anonymize_metrics_association_wire_filter(
+            anon_interface, rule["attribute_filter"]
+        )
     return anonymized
+
+
+def _anonymize_metrics_association_wire_filter(
+    anon_interface: AnonInterface,
+    node: dict[str, Any],
+) -> object:
+    """Anonymize the attribute names and values of a recursive wire attribute filter."""
+    match node["type"]:
+        case "and":
+            return {
+                "type": "and",
+                "conjuncts": [
+                    _anonymize_metrics_association_wire_filter(anon_interface, conjunct)
+                    for conjunct in node["conjuncts"]
+                ],
+            }
+        case "or":
+            return {
+                "type": "or",
+                "disjuncts": [
+                    _anonymize_metrics_association_wire_filter(anon_interface, disjunct)
+                    for disjunct in node["disjuncts"]
+                ],
+            }
+        case "not":
+            return {
+                "type": "not",
+                "condition": _anonymize_metrics_association_wire_filter(
+                    anon_interface, node["condition"]
+                ),
+            }
+        case _:
+            anonymized: dict[str, Any] = {
+                "type": node["type"],
+                "key": {
+                    "kind": node["key"]["kind"],
+                    "name": anon_interface.get_generic_mapping(
+                        node["key"]["name"],
+                        "metric_association_attr_key",
+                    ),
+                },
+            }
+            if "value" in node:
+                anonymized["value"] = anon_interface.get_generic_mapping(
+                    node["value"],
+                    "metric_association_attr_value",
+                )
+            return anonymized
 
 
 def _anonymize_metrics_association_attribute_filter(
@@ -622,13 +680,13 @@ class HostsSteps(AnonymizeStep):
         logger.warning("Process hosts")
 
         for folder_rel_path, folder in make_folder_tree(active_config).all_folders().items():
-            folder._save_hosts_file(
+            folder._save_hosts_file(  # noqa: SLF001
                 storage_list=[AnonHostsStorage(anon_interface)],
                 pprint_value=False,
                 # The anonymizer runs without a logged-in user.
                 acting_user_id=None,
             )
-            folder._save_folder_attributes(
+            folder._save_folder_attributes(  # noqa: SLF001
                 storage_list=[AnonFolderAttributesStorage(anon_interface)]
             )
 

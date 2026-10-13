@@ -6,6 +6,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 
 import GraphBurgerMenu from '@/graphing/components/GraphBurgerMenu.vue'
+import { BOTTOM_SCREEN_MARGIN } from '@/graphing/components/constants'
 import type { BurgerMenuGroup } from '@/graphing/types'
 
 const GROUPS: BurgerMenuGroup[] = [
@@ -43,16 +44,91 @@ test('clicking the trigger shows the dropdown with group headings and actions', 
   render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
   await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
   expect(screen.getByText('Add to dashboard')).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: 'Dashboard One' })).toBeInTheDocument()
+  expect(screen.getByRole('menuitem', { name: 'Dashboard One' })).toBeInTheDocument()
   expect(screen.getByText('Export')).toBeInTheDocument()
 })
 
 test('clicking an action emits doAction with its onClick and closes the dropdown', async () => {
   const { emitted } = render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
   await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
-  await fireEvent.click(screen.getByRole('button', { name: 'Dashboard One' }))
+  await fireEvent.click(screen.getByRole('menuitem', { name: 'Dashboard One' }))
   expect(emitted().doAction![0]).toEqual([GROUPS[0]!.actions[0]!.onClick])
   expect(screen.queryByText('Dashboard One')).not.toBeInTheDocument()
+})
+
+test('opening the dropdown moves focus to the first action', async () => {
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
+  expect(screen.getByRole('menuitem', { name: 'Dashboard One' })).toHaveFocus()
+})
+
+test('ArrowDown/ArrowUp move focus between actions, wrapping at the ends', async () => {
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
+
+  const dashboardOne = screen.getByRole('menuitem', { name: 'Dashboard One' })
+  const dashboardTwo = screen.getByRole('menuitem', { name: 'Dashboard Two' })
+  const exportAsJson = screen.getByRole('menuitem', { name: 'Export as JSON' })
+
+  await fireEvent.keyDown(dashboardOne, { key: 'ArrowDown' })
+  expect(dashboardTwo).toHaveFocus()
+
+  await fireEvent.keyDown(dashboardTwo, { key: 'ArrowDown' })
+  expect(exportAsJson).toHaveFocus()
+
+  await fireEvent.keyDown(exportAsJson, { key: 'ArrowDown' })
+  expect(dashboardOne).toHaveFocus()
+
+  await fireEvent.keyDown(dashboardOne, { key: 'ArrowUp' })
+  expect(exportAsJson).toHaveFocus()
+})
+
+test('Home/End move focus to the first/last action', async () => {
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
+
+  const dashboardOne = screen.getByRole('menuitem', { name: 'Dashboard One' })
+  const exportAsJson = screen.getByRole('menuitem', { name: 'Export as JSON' })
+
+  await fireEvent.keyDown(dashboardOne, { key: 'End' })
+  expect(exportAsJson).toHaveFocus()
+
+  await fireEvent.keyDown(exportAsJson, { key: 'Home' })
+  expect(dashboardOne).toHaveFocus()
+})
+
+test('ArrowDown on the trigger opens the dropdown and focuses the first action', async () => {
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  await fireEvent.keyDown(screen.getByRole('button', { name: ARIA_LABEL }), { key: 'ArrowDown' })
+  expect(screen.getByRole('menuitem', { name: 'Dashboard One' })).toHaveFocus()
+})
+
+test('ArrowUp on the trigger opens the dropdown and focuses the last action', async () => {
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  await fireEvent.keyDown(screen.getByRole('button', { name: ARIA_LABEL }), { key: 'ArrowUp' })
+  expect(screen.getByRole('menuitem', { name: 'Export as JSON' })).toHaveFocus()
+})
+
+test('choosing an action returns focus to the trigger', async () => {
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  const trigger = screen.getByRole('button', { name: ARIA_LABEL })
+  await fireEvent.click(trigger)
+  await fireEvent.click(screen.getByRole('menuitem', { name: 'Export as JSON' }))
+  expect(trigger).toHaveFocus()
+})
+
+test('names the menu after its trigger', async () => {
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
+  expect(screen.getByRole('menu', { name: ARIA_LABEL })).toBeInTheDocument()
+})
+
+test('escape closes the dropdown and returns focus to the trigger', async () => {
+  render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
+  const trigger = screen.getByRole('button', { name: ARIA_LABEL })
+  await fireEvent.click(trigger)
+  await fireEvent.keyDown(document.body, { key: 'Escape', code: 'Escape' })
+  expect(trigger).toHaveFocus()
 })
 
 test('clicking outside the component closes the dropdown', async () => {
@@ -84,6 +160,43 @@ test('constrains the dropdown height to the remaining viewport space when scroll
     .getByText('Add to dashboard')
     .closest('.graphing-graph-burger-menu__dropdown')
   expect(dropdown).toHaveStyle({ maxHeight: '360px' })
+})
+
+test('flips the dropdown above the trigger when the room below is too cramped', async () => {
+  vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(500)
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+    top: 400,
+    bottom: 480
+  } as DOMRect)
+
+  render(GraphBurgerMenu, { props: { groups: GROUPS, scrollable: true, ariaLabel: ARIA_LABEL } })
+  await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
+
+  const dropdown = screen
+    .getByText('Add to dashboard')
+    .closest('.graphing-graph-burger-menu__dropdown')
+  expect(dropdown).toHaveClass('graphing-graph-burger-menu__dropdown_flipped')
+  expect(dropdown).toHaveStyle({ maxHeight: '360px' })
+})
+
+test('keeps the dropdown inside the space below when neither side has room', async () => {
+  const viewportHeight = 500
+  const triggerBottom = 350
+  const spaceBelow = viewportHeight - triggerBottom
+  vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(viewportHeight)
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+    top: 100,
+    bottom: triggerBottom
+  } as DOMRect)
+
+  render(GraphBurgerMenu, { props: { groups: GROUPS, scrollable: true, ariaLabel: ARIA_LABEL } })
+  await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))
+
+  const dropdown = screen
+    .getByText('Add to dashboard')
+    .closest('.graphing-graph-burger-menu__dropdown')
+  expect(dropdown).not.toHaveClass('graphing-graph-burger-menu__dropdown_flipped')
+  expect(dropdown).toHaveStyle({ maxHeight: `${spaceBelow - BOTTOM_SCREEN_MARGIN}px` })
 })
 
 test('does not constrain the dropdown height when scrollable is disabled', async () => {

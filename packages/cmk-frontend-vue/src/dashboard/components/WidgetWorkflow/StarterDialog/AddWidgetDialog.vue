@@ -5,34 +5,111 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkSlideIn from 'cmk-ui-library/components/CmkSlideIn'
-import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { computed, nextTick } from 'vue'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import CloseButton from '@/dashboard/components/Wizard/components/CloseButton.vue'
+import StepsHeader from '@/dashboard/components/Wizard/components/StepsHeader.vue'
 import WizardStageContainer from '@/dashboard/components/Wizard/components/WizardStageContainer.vue'
 import { DashboardFeatures } from '@/dashboard/types/dashboard'
 
-import type { WorkflowItem } from '../WidgetWorkflowTypes'
+import {
+  type WorkflowCatalog,
+  type WorkflowGroup,
+  type WorkflowItem,
+  isWorkflowGroup
+} from '../WidgetWorkflowTypes'
 import WorkflowListItem from './WorkflowListItem.vue'
 
 const { _t } = usei18n()
 
 export interface AddWidgetDialogProperties {
-  workflowItems: Record<string, WorkflowItem>
+  workflowItems: WorkflowCatalog
   open: boolean
   dashboardFeatures: DashboardFeatures
 }
 
 const props = defineProps<AddWidgetDialogProperties>()
 
-defineEmits(['close', 'select'])
+const activeGroupKey = defineModel<string | null>('activeGroupKey', { required: true })
 
-const isDisabled = (id: string): boolean => {
+const emit = defineEmits<{
+  select: [workflowKey: string]
+  close: []
+}>()
+
+const requiresHigherEdition = (workflowKey: string): boolean => {
   return (
     props.dashboardFeatures === DashboardFeatures.RESTRICTED &&
-    ['custom_graphs', 'hw_sw_inventory', 'alerts_notifications'].includes(id)
+    ['custom_graphs', 'hw_sw_inventory', 'alerts_notifications'].includes(workflowKey)
   )
+}
+
+const isAvailable = (workflowKey: string, workflow: WorkflowItem): boolean =>
+  !requiresHigherEdition(workflowKey) && workflow.unavailableReason === undefined
+
+const activeGroup = computed((): WorkflowGroup | null => {
+  if (activeGroupKey.value === null) {
+    return null
+  }
+  const workflow = props.workflowItems[activeGroupKey.value]
+  return isWorkflowGroup(workflow) ? workflow : null
+})
+
+const visibleWorkflows = computed(
+  (): Record<string, WorkflowItem> => activeGroup.value?.subWorkflows ?? props.workflowItems
+)
+
+type WorkflowRow = InstanceType<typeof WorkflowListItem>
+
+const rowsByWorkflowKey = new Map<string, WorkflowRow>()
+
+function registerRow(workflowKey: string, row: unknown) {
+  if (row) {
+    rowsByWorkflowKey.set(workflowKey, row as WorkflowRow)
+  } else {
+    rowsByWorkflowKey.delete(workflowKey)
+  }
+}
+
+function focusRow(workflowKey: string) {
+  rowsByWorkflowKey.get(workflowKey)?.focus()
+}
+
+function findFirstAvailableWorkflowKey(workflows: Record<string, WorkflowItem>): string | null {
+  for (const [workflowKey, workflow] of Object.entries(workflows)) {
+    if (isAvailable(workflowKey, workflow)) {
+      return workflowKey
+    }
+  }
+  return null
+}
+
+async function enterGroup(groupKey: string, group: WorkflowGroup) {
+  activeGroupKey.value = groupKey
+  await nextTick()
+  const firstAvailableKey = findFirstAvailableWorkflowKey(group.subWorkflows)
+  if (firstAvailableKey !== null) {
+    focusRow(firstAvailableKey)
+  }
+}
+
+async function leaveGroup() {
+  const leftGroupKey = activeGroupKey.value
+  activeGroupKey.value = null
+  await nextTick()
+  if (leftGroupKey !== null) {
+    focusRow(leftGroupKey)
+  }
+}
+
+function selectWorkflow(workflowKey: string, workflow: WorkflowItem) {
+  if (isWorkflowGroup(workflow)) {
+    void enterGroup(workflowKey, workflow)
+    return
+  }
+  emit('select', workflowKey)
 }
 </script>
 
@@ -41,26 +118,30 @@ const isDisabled = (id: string): boolean => {
     :open="props.open"
     :size="'small'"
     :aria-label="_t('Add widget')"
-    @close="$emit('close')"
+    @close="emit('close')"
   >
     <WizardStageContainer>
-      <CmkHeading type="h1">
-        {{ _t('Add widget') }}
-      </CmkHeading>
-      <CloseButton @close="() => $emit('close')" />
+      <StepsHeader
+        :title="activeGroup?.title ?? _t('Add widget')"
+        :hide-back-button="activeGroup === null"
+        @back="leaveGroup"
+      />
+      <CloseButton @close="() => emit('close')" />
 
       <ContentSpacer :dimension="8" />
 
       <div class="db-add-widget-dialog__container">
         <WorkflowListItem
-          v-for="(item, id) in props.workflowItems"
-          :key="id"
-          :title="item.title"
-          :icon="item.icon"
-          :subtitle="item.subtitle"
-          :icon_emblem="item.icon_emblem"
-          :disabled="isDisabled(id)"
-          @select="$emit('select', id)"
+          v-for="(workflow, workflowKey) in visibleWorkflows"
+          :key="workflowKey"
+          :ref="(row) => registerRow(workflowKey, row)"
+          :title="workflow.title"
+          :icon="workflow.icon"
+          :subtitle="workflow.subtitle"
+          :icon_emblem="workflow.icon_emblem"
+          :unavailable-reason="workflow.unavailableReason"
+          :requires-higher-edition="requiresHigherEdition(workflowKey)"
+          @select="selectWorkflow(workflowKey, workflow)"
         />
       </div>
     </WizardStageContainer>

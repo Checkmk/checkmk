@@ -13,6 +13,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-plugin-apis:graphing",
         "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-plugin-apis:rulesets",
         "//packages/cmk-plugin-apis:server_side_calls",
@@ -23,11 +24,8 @@ py_library(
 )
 
 filegroup(
-    name = "agent",
-    srcs = glob(
-        ["agent/**/*"],
-        allow_empty = True,
-    ),
+    name = "agents",
+    srcs = [],
     visibility = ["//packages/cmk-plugins:__pkg__"],
 )
 

@@ -37,7 +37,7 @@ def _decode_oid_octetstring(oid_suffix: str) -> str:
         chars = [int(b) for b in parts[1 : 1 + length]]
         decoded = "".join(chr(c) for c in chars if 32 <= c < 127)
         return decoded if decoded else oid_suffix
-    except (ValueError, IndexError):
+    except ValueError, IndexError:
         return oid_suffix
 
 

@@ -27,8 +27,7 @@ daily_saas: &daily_saas
     - "ubuntu-24.04"
 
 # Builds for those distros will only be available internally for development purpose
-internal_distros: &internal_distros
-    - "ubuntu-25.10"
+internal_distros: &internal_distros []
 
 # Currently, all builds of the cloud (formerly saas) edition should stay completley internal
 internal_editions:
@@ -96,5 +95,4 @@ editions:
 # We currently only need this for the internal_distros as at the point in the pipeline,
 # where we want to exclude the internal distros, we are only using the distro codes and not the
 # distro name anymore.
-distro_to_codename:
-    ubuntu-25.10: "questing"
+distro_to_codename: {}

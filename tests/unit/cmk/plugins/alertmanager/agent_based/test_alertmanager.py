@@ -84,7 +84,7 @@ def test_alertmanager_get_rule_state_remapping(
         severity=alertmanager.Severity.WARNING,
         message="fööbär",
     )
-    assert alertmanager._get_rule_state(rule, params) == status
+    assert alertmanager._get_rule_state(rule, params) == status  # noqa: SLF001
 
 
 #   .--Rules---------------------------------------------------------------.

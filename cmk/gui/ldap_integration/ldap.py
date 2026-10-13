@@ -38,7 +38,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_connection_config_types import ACTIVE_DIR, LDAPUserConnectionConfig
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import (
@@ -49,8 +49,7 @@ from cmk.gui.userdb import (
     sites_with_dangling_login_reference,
     UserConnectionConfigFile,
 )
-from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.doc_references import DocReference
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Age,
@@ -87,7 +86,11 @@ from cmk.gui.watolib.pending_changes import (
     PendingChangesStore,
 )
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
+from cmk.web.utils.csrf_token import check_csrf_token
+from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -264,7 +267,7 @@ class LDAPConnectionValuespec(Dictionary):
                     title=_("Use SSL"),
                     help=_(
                         "Connect to the LDAP server with a SSL encrypted connection. The "
-                        '<a href="wato.py?mode=edit_configvar&site=&varname=trusted_certificate_authorities">trusted '
+                        '<a href="global_settings.py?varname=trusted_certificate_authorities">trusted '
                         "certificates authorities</a> configured in Checkmk will be used to validate the "
                         "certificate provided by the LDAP server."
                     ),
@@ -844,7 +847,7 @@ class ModeEditLDAPConnection(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return None

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Generator, Sequence
@@ -206,6 +205,12 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: \\nAnd: 3'
         >>> id(Hosts.name) == id(Hosts.name.label('id'))
         False
 
+        A query may opt into the site's cache. The header is emitted right after the table
+        line; whether it is honoured is decided per site by the connection (`allow_cache`).
+
+        >>> Query([Hosts.name], cache=True).compile()
+        'GET hosts\\nCache: reload\\nColumns: name'
+
     """
 
     def __init__(
@@ -213,6 +218,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: \\nAnd: 3'
         columns: list[Column],
         filter_expr: QueryExpression = NothingExpression(),
         extra_headers: Sequence[str | LqSafe] = (),
+        cache: bool = False,
     ):
         """A representation of a livestatus query.
 
@@ -228,13 +234,19 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: \\nAnd: 3'
             extra_headers:
                 Additional raw headers (e.g. OrderBy, Limit) appended to the compiled query.
 
+            cache:
+                Emit "Cache: reload" for this query. This expresses the intent that the query
+                tolerates cached, config-derived data. The connection strips the header for
+                sites that do not allow caching.
+
         """
         self.columns = columns
         self.column_names = [col.query_name for col in columns]
         self.filter_expr = filter_expr
         self.extra_headers = [
-            line for h in extra_headers for line in str(h).splitlines() if line.strip()
+            line for h in extra_headers for line in str(h).split("\n") if line.strip()
         ]
+        self.cache = cache
         _tables = {column.table for column in columns}
         if len(_tables) != 1:
             raise ValueError(f"Query doesn't specify a single table: {_tables!r}")
@@ -247,11 +259,16 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: \\nAnd: 3'
         # never be recognised by name, as the runtime arguments are part of it.
         return all(column.type != "blob" for column in self.columns)
 
-    def filter(self, filter_expr: QueryExpression) -> "Query":
+    def filter(self, filter_expr: QueryExpression) -> Query:
         """Apply additional filters to an existing query.
 
         This will return a new `Query` instance. The original one is left untouched."""
-        return Query(self.columns, And(self.filter_expr, filter_expr))
+        return Query(
+            self.columns,
+            And(self.filter_expr, filter_expr),
+            extra_headers=self.extra_headers,
+            cache=self.cache,
+        )
 
     @override
     def __str__(self) -> str:
@@ -546,6 +563,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: \\nAnd: 3'
         _query.extend(self.filter_expr.render())
         parts = [
             "GET %s" % self.table.__tablename__,
+            *(["Cache: reload"] if self.cache else []),
             *[": ".join(line) for line in _query],
             *self.extra_headers,
         ]
@@ -558,7 +576,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: \\nAnd: 3'
     def from_string(
         cls,
         string_query: str,
-    ) -> "Query":
+    ) -> Query:
         """Constructs a Query instance from a string based LiveStatus-Query
 
         Args:
@@ -733,9 +751,12 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: \\nAnd: 3'
         if len(filters) > 1:
             filters = [And(*filters)]
 
+        cache = any(line.strip() == "Cache: reload" for line in lines)
+
         return cls(
             columns=columns,
             filter_expr=filters[0] if filters else NothingExpression(),
+            cache=cache,
         )
 
 

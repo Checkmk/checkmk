@@ -17,8 +17,8 @@ defineProps<{
   <div>
     <CmkHeading type="h3">{{ label }}</CmkHeading>
     <CmkParagraph>
-      This tab's content is only mounted once the tab is activated, and its
-      <code>data</code> is fetched asynchronously by the loader the page supplied.
+      This body is only mounted once it is on show, and its <code>data</code> is fetched
+      asynchronously by the loader the page supplied.
     </CmkParagraph>
     <CmkParagraph v-if="data"> Loaded at: {{ data.loadedAt }} </CmkParagraph>
   </div>

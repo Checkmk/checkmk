@@ -16,18 +16,6 @@ import {
   update_contents
 } from './utils'
 
-// The main iframe is gone, so the sidebar no longer has a sibling frame to
-// observe. ``initialize_sidebar`` used to spawn a 1 Hz interval that polled
-// the content iframe's URL and pushed it onto ``window.parent.history`` via
-// ``replaceState`` to keep the address bar in sync. With each content page
-// now rendering its own URL directly there is nothing to poll, and the
-// helpers (``update_content_location*``, ``is_content_frame_accessible``,
-// ``register_edge_listeners``, ``on_mouse_leave``) have no remaining
-// callers. The Python side still emits ``cmk.sidebar.initialize_sidebar()``
-// after rendering the sidebar; we keep this as a no-op until that callsite
-// is removed.
-export function initialize_sidebar() {}
-
 export function register_event_handlers() {
   window.addEventListener(
     'mousemove',
@@ -275,11 +263,11 @@ function unfold_sidebar() {
 //
 
 // The refresh snapins do reload after a defined amount of time
-let refresh_snapins: string[][] = []
+const refresh_snapins: string[][] = []
 // The restart snapins are notified about the restart of the nagios instance(s)
-let restart_snapins: string[] = []
+const restart_snapins: string[] = []
 // Snapins that only have to be reloaded on demand
-let static_snapins: string[] = []
+const static_snapins: string[] = []
 
 export function add_snapin(name: string) {
   call_ajax('sidebar_ajax_add_snapin.py?name=' + name, {
@@ -426,6 +414,18 @@ export function switch_site(url: string) {
   })
 }
 
+export function virtual_host_tree_changed(field: HTMLSelectElement) {
+  call_ajax('sidebar_ajax_tag_tree.py?tree_id=' + encodeURIComponent(field.value), {
+    response_handler: () => refresh_single_snapin('tag_tree')
+  })
+}
+
+export function virtual_host_tree_enter(path: string) {
+  call_ajax('sidebar_ajax_tag_tree_enter.py?path=' + encodeURIComponent(path), {
+    response_handler: () => refresh_single_snapin('tag_tree')
+  })
+}
+
 export function refresh_single_snapin(name: string) {
   const event = new CustomEvent('sidebar-update-snapin-content', {
     detail: {
@@ -441,7 +441,7 @@ export function refresh_single_snapin(name: string) {
 
 // FIXME: Make this somehow configurable - use the start url?
 let g_last_view = 'dashboard.py?name=main'
-let g_last_folder = ''
+const g_last_folder = ''
 
 // highlight the followed link (when both needed snapins are available)
 function highlight_link(link_obj: HTMLElement, container_id: string) {

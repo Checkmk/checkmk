@@ -4,14 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="type-arg"
 
+import ast
 import typing
 import urllib
 from collections.abc import Iterable
+from http import HTTPStatus
 from typing import Any
 
 import pytest
+from pytest_mock import MockerFixture
 
 from cmk.ccc.site import omd_site
 from cmk.ccc.store import load_mk_file, save_mk_file, save_to_mk_file
@@ -19,6 +21,7 @@ from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.watolib import rulesets
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundleStore
 from cmk.gui.watolib.configuration_bundles import create_config_bundle, CreateBundleEntities
@@ -29,11 +32,19 @@ from cmk.gui.watolib.pending_changes import (
     PendingChangesStore,
 )
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
+from cmk.plugins.openapi_test.rulesets.sample import (
+    ACTIVE_CHECK_RULESET,
+    ACTIVE_CHECK_VALUE_RAW,
+    LEVELS_RULESET,
+    LEVELS_VALUE_RAW,
+    SPECIAL_AGENT_RULESET,
+)
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
-from tests.testlib.gui.web_test_app import SetConfig
-from tests.testlib.rest_api_client import (
+from cmk.utils.password_store import is_ad_hoc_password_id
+from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.testlib.unit.rest_api_client import (
     ClientRegistry,
     Response,
     RestApiClient,
@@ -153,7 +164,9 @@ def site_with_test_folders(clients: ClientRegistry) -> tuple[str, str]:
 
 
 def test_openapi_get_non_existing_rule(clients: ClientRegistry) -> None:
-    clients.Rule.get(rule_id="non_existing_rule_id", expect_ok=False).assert_status_code(404)
+    clients.Rule.get(rule_id="non_existing_rule_id", expect_ok=False).assert_status_code(
+        HTTPStatus.NOT_FOUND
+    )
 
 
 def test_openapi_create_rule_regression(clients: ClientRegistry) -> None:
@@ -164,7 +177,7 @@ def test_openapi_create_rule_regression(clients: ClientRegistry) -> None:
         "mode": ("url", {"uri": "/lala/misite.html", "ssl": "auto", "urlize": True}),
     }"""
     clients.Rule.create(
-        ruleset=RuleGroup.ActiveChecks("http"),
+        ruleset=ACTIVE_CHECK_RULESET,
         value_raw=value_raw,
         conditions={},
         folder="~",
@@ -173,9 +186,9 @@ def test_openapi_create_rule_regression(clients: ClientRegistry) -> None:
 
 
 def test_openapi_value_raw_is_unaltered(clients: ClientRegistry) -> None:
-    value_raw = "{'levels': ('fixed', (10.0, 5.0))}"
+    value_raw = LEVELS_VALUE_RAW
     resp = clients.Rule.create(
-        ruleset=RuleGroup.CheckgroupParameters("memory_percentage_used"),
+        ruleset=LEVELS_RULESET,
         value_raw=value_raw,
         conditions={},
         folder="~",
@@ -185,28 +198,36 @@ def test_openapi_value_raw_is_unaltered(clients: ClientRegistry) -> None:
     assert value_raw == resp2.json["extensions"]["value_raw"]
 
 
-def test_openapi_value_active_check_http(clients: ClientRegistry) -> None:
-    value_raw = """{
-        "name": "Halli-gALLI",
-        "host": {"address": ("direct", "mimi.ch"), "virthost": "mimi.ch"},
-        "mode": (
-            "url",
-            {
-                "uri": "/lala/misite.html",
-                "ssl": "auto",
-                "expect_string": "status:UP",
-                "urlize": True,
-            },
-        ),
-    }"""
+@pytest.mark.parametrize(
+    "password_id, kept",
+    [
+        pytest.param("uuid067408f0-d390-4dcc-ae3c-966f278ace7d", True, id="generated ID"),
+        pytest.param("admin_secret", False, id="ID of the client's choice"),
+    ],
+)
+def test_openapi_explicit_password_keeps_only_generated_ids(
+    clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch, password_id: str, kept: bool
+) -> None:
+    # Saving a rule with secrets updates the merged password file through the cmk binary
+    monkeypatch.setattr(rulesets, "update_merged_password_file", lambda **_: None)
+    value = {
+        "username": "user",
+        "password": ("cmk_postprocessed", "explicit_password", (password_id, "my_secret")),
+    }
     resp = clients.Rule.create(
-        ruleset=RuleGroup.ActiveChecks("http"),
-        value_raw=value_raw,
+        ruleset=SPECIAL_AGENT_RULESET,
+        value_raw=repr(value),
         conditions={},
         folder="~",
         properties={"disabled": False},
     )
-    clients.Rule.get(rule_id=resp.json["id"])
+
+    saved = ast.literal_eval(
+        clients.Rule.get(rule_id=resp.json["id"]).json["extensions"]["value_raw"]
+    )
+    saved_id = saved["password"][2][0]
+    assert (saved_id == password_id) is kept
+    assert is_ad_hoc_password_id(saved_id)
 
 
 def test_openapi_rules_href_escaped(clients: ClientRegistry) -> None:
@@ -232,7 +253,7 @@ def test_openapi_create_rule_failure(clients: ClientRegistry) -> None:
         conditions={},
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     # Its not really important that this text is in the response, just that this call failed.
     # assert "You have not defined any host group yet" in resp.json["detail"]
 
@@ -289,7 +310,7 @@ def test_create_rule_rejects_outdated_form_spec_value(clients: ClientRegistry) -
         conditions={},
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 # A "Periodic service discovery" value using the ancient integer rediscovery mode (0). The
@@ -322,7 +343,7 @@ def test_create_rule_rejects_outdated_legacy_value(clients: ClientRegistry) -> N
         conditions={},
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
     ruleset = clients.Ruleset.get(ruleset_id="periodic_discovery")
     assert ruleset.json["extensions"]["number_of_rules"] == 0
@@ -347,13 +368,61 @@ def test_edit_rule_rejects_outdated_legacy_value(clients: ClientRegistry) -> Non
         conditions={},
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
     # The stored value must be unchanged: still the current-format value, not migrated.
     rules_mk = paths.omd_root / "etc/check_mk/conf.d/wato/rules.mk"
     environ = load_mk_file(rules_mk, default={}, lock=False)
     value = environ["periodic_discovery"][0]["value"]  # type: ignore[index]
     assert "inventory_rediscovery" not in value
+
+
+@pytest.fixture(name="no_snmp_sections")
+def fixture_no_snmp_sections(mocker: MockerFixture) -> None:
+    # Tech debt: validating the section choice of "snmpv3_contexts" runs the
+    # get-section-information automation, which needs a check_mk binary.
+    mocker.patch(
+        "cmk.gui.wato._check_mk_configuration.get_section_information_cached",
+        return_value={},
+    )
+
+
+@pytest.mark.usefixtures("no_snmp_sections")
+def test_create_rule_accepts_the_default_snmpv3_context_as_first_context(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.Rule.create(
+        ruleset="snmpv3_contexts",
+        folder="/",
+        properties={"description": "default and vrf1", "disabled": False},
+        value_raw="(None, ['', 'vrf1'], 'stop_on_timeout')",
+        conditions={},
+    )
+
+    assert resp.json["extensions"]["value_raw"] == "(None, ['', 'vrf1'], 'stop_on_timeout')"
+
+
+@pytest.mark.usefixtures("no_snmp_sections")
+@pytest.mark.parametrize(
+    "contexts",
+    [
+        pytest.param("['vrf1', '']", id="default context not first"),
+        pytest.param("['', 'vrf1', '']", id="default context twice"),
+    ],
+)
+def test_create_rule_rejects_the_default_snmpv3_context_out_of_place(
+    clients: ClientRegistry, contexts: str
+) -> None:
+    resp = clients.Rule.create(
+        ruleset="snmpv3_contexts",
+        folder="/",
+        properties={"description": "misplaced default context", "disabled": False},
+        value_raw=f"(None, {contexts}, 'stop_on_timeout')",
+        conditions={},
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_openapi_list_rules(
@@ -385,14 +454,14 @@ def test_openapi_delete_rule(
         resp.json,
         ".../delete",
         headers={"If-Match": _resp.headers["ETag"]},
-    ).assert_status_code(204)
+    ).assert_status_code(HTTPStatus.NO_CONTENT)
     list_resp = clients.Ruleset.get(ruleset_id=values["ruleset"])
     assert list_resp.json["extensions"]["number_of_rules"] == 0
     api_client.follow_link(
         resp.json,
         ".../delete",
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 @pytest.mark.parametrize("ruleset", ["host_groups", RuleGroup.SpecialAgents("gcp")])
@@ -404,7 +473,7 @@ def test_openapi_show_ruleset(clients: ClientRegistry, ruleset: str) -> None:
 def test_openapi_show_non_existing_ruleset(clients: ClientRegistry) -> None:
     # Request a ruleset that doesn't exist should return a 400 Bad Request.
     resp = clients.Ruleset.get(ruleset_id="non_existing_ruleset", expect_ok=False)
-    resp.assert_status_code(404)
+    resp.assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_openapi_list_rulesets(clients: ClientRegistry) -> None:
@@ -487,7 +556,7 @@ def test_create_rule_old_and_new_label_formats(
         expect_ok=False,
     )
 
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert (
         resp.json["fields"]["body.conditions"]["msg"]
         == "Value error, Please provide the field 'host_labels' OR 'host_label_groups', not both."
@@ -505,7 +574,7 @@ def test_create_rule_missing_operator(clients: ClientRegistry) -> None:
         conditions=conditions,
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_create_rule_missing_match_on(clients: ClientRegistry) -> None:
@@ -519,7 +588,7 @@ def test_create_rule_missing_match_on(clients: ClientRegistry) -> None:
         conditions=conditions,
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_create_rule_empty_match_on_str(clients: ClientRegistry) -> None:
@@ -538,7 +607,7 @@ def test_create_rule_empty_match_on_str(clients: ClientRegistry) -> None:
         conditions=conditions,
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_create_rule_empty_match_on_list_host_name(clients: ClientRegistry) -> None:
@@ -557,7 +626,7 @@ def test_create_rule_empty_match_on_list_host_name(clients: ClientRegistry) -> N
         conditions=conditions,
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert (
         resp.json["fields"]["body.conditions"]["msg"]
         == "Value error, Please add at least one host."
@@ -580,7 +649,7 @@ def test_create_rule_empty_match_on_list_service_description(clients: ClientRegi
         conditions=conditions,
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert (
         resp.json["fields"]["body.conditions"]["msg"]
         == "Value error, Please add at least one service pattern."
@@ -589,9 +658,9 @@ def test_create_rule_empty_match_on_list_service_description(clients: ClientRegi
 
 def test_create_rule_no_conditions_nor_properties(clients: ClientRegistry) -> None:
     resp = clients.Rule.create(
-        ruleset="active_checks:http",
+        ruleset=ACTIVE_CHECK_RULESET,
         folder="/",
-        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+        value_raw=ACTIVE_CHECK_VALUE_RAW,
     )
 
     clients.Rule.get(rule_id=resp.json["id"])
@@ -599,10 +668,10 @@ def test_create_rule_no_conditions_nor_properties(clients: ClientRegistry) -> No
 
 def test_create_rule_no_conditions(clients: ClientRegistry) -> None:
     resp = clients.Rule.create(
-        ruleset="active_checks:http",
+        ruleset=ACTIVE_CHECK_RULESET,
         folder="/",
         properties={},
-        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+        value_raw=ACTIVE_CHECK_VALUE_RAW,
     )
 
     clients.Rule.get(rule_id=resp.json["id"])
@@ -610,10 +679,10 @@ def test_create_rule_no_conditions(clients: ClientRegistry) -> None:
 
 def test_create_rule_no_properties(clients: ClientRegistry) -> None:
     resp = clients.Rule.create(
-        ruleset="active_checks:http",
+        ruleset=ACTIVE_CHECK_RULESET,
         folder="/",
         conditions={},
-        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+        value_raw=ACTIVE_CHECK_VALUE_RAW,
     )
 
     clients.Rule.get(rule_id=resp.json["id"])
@@ -631,27 +700,27 @@ def test_openapi_create_rule_reject_incompatible_value_raw(clients: ClientRegist
 
 def test_openapi_edit_rule_reject_incompatible_value_raw(clients: ClientRegistry) -> None:
     resp = clients.Rule.create(
-        ruleset="active_checks:http",
+        ruleset=ACTIVE_CHECK_RULESET,
         folder="/",
         conditions={},
-        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+        value_raw=ACTIVE_CHECK_VALUE_RAW,
     )
 
     clients.Rule.edit(
         rule_id=resp.json["id"],
         value_raw='{"memory": {"horizon": 90, "levels_upper": ("absolute", (0.5, 1.0)), "period": "24x7"}}',
         expect_ok=False,
-    ).assert_rest_api_crash()
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_openapi_create_rule_label_groups_no_operator(clients: ClientRegistry) -> None:
     clients.Rule.create(
-        ruleset="active_checks:http",
+        ruleset=ACTIVE_CHECK_RULESET,
         folder="/",
         conditions={
             "host_label_groups": [{"label_group": [{"operator": "and", "label": "os:windows"}]}]
         },
-        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+        value_raw=ACTIVE_CHECK_VALUE_RAW,
     )
 
 
@@ -725,14 +794,16 @@ def fixture_locked_rule_id() -> Iterable[str]:
 
 
 def test_openapi_cannot_delete_locked_rule(clients: ClientRegistry, locked_rule_id: str) -> None:
-    resp = clients.Rule.delete(locked_rule_id, expect_ok=False).assert_status_code(400)
+    resp = clients.Rule.delete(locked_rule_id, expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
     assert resp.json["detail"] == "Rules managed by Quick setup cannot be deleted."
 
 
 def test_openapi_cannot_move_locked_rule(clients: ClientRegistry, locked_rule_id: str) -> None:
     resp = clients.Rule.move(
         locked_rule_id, {"position": "top_of_folder", "folder": "/"}, expect_ok=False
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
     assert resp.json["detail"] == "Rules managed by Quick setup cannot be moved."
 
 
@@ -745,7 +816,7 @@ def test_openapi_cannot_move_rule_before_locked_rule(
         rule_resp.json["id"],
         {"position": "before_specific_rule", "rule_id": locked_rule_id},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
     assert move_resp.json["detail"] == "Cannot move before a rule managed by Quick setup."
 
 
@@ -758,14 +829,14 @@ def test_openapi_cannot_change_locked_rule_conditions(
         value_raw=get_resp.json["extensions"]["value_raw"],
         conditions=DEFAULT_CONDITIONS,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
     assert resp.json["detail"] == "Conditions cannot be modified for rules managed by Quick setup."
 
 
 def test_openapi_edit_conditions(clients: ClientRegistry) -> None:
     # test that for rules that are not locked by Quick setup, the conditions can be edited
     resp = clients.Rule.create(
-        ruleset="active_checks:http",
+        ruleset=ACTIVE_CHECK_RULESET,
         folder="/",
         conditions=RuleConditions(
             host_name={
@@ -773,7 +844,7 @@ def test_openapi_edit_conditions(clients: ClientRegistry) -> None:
                 "match_on": ["example.com"],
             }
         ),
-        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+        value_raw=ACTIVE_CHECK_VALUE_RAW,
     )
 
     clients.Rule.edit(
@@ -915,7 +986,7 @@ def test_move_rule_before_locked_rule(clients: ClientRegistry, locked_rule_id: s
         rule_2,
         {"position": "before_specific_rule", "rule_id": locked_rule_id},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
     assert resp.json["detail"] == "Cannot move before a rule managed by Quick setup."
 
 
@@ -924,7 +995,7 @@ def test_move_rule_before_itself_fails(clients: ClientRegistry) -> None:
 
     resp = clients.Rule.move(
         rule, {"position": "before_specific_rule", "rule_id": rule}, expect_ok=False
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
     assert resp.json["detail"] == "You cannot move a rule before/after itself."
 
 
@@ -943,14 +1014,14 @@ def test_edit_rule_does_not_verify_etag(
     with set_config(rest_api_etag_locking=True):
         clients.Rule.request(
             "put", url=f"/objects/rule/{rule_id}", body=body, expect_ok=False
-        ).assert_status_code(200)
+        ).assert_status_code(HTTPStatus.OK)
         clients.Rule.request(
             "put",
             url=f"/objects/rule/{rule_id}",
             body=body,
             headers={"If-Match": "invalid-etag"},
             expect_ok=False,
-        ).assert_status_code(200)
+        ).assert_status_code(HTTPStatus.OK)
 
 
 def test_move_rule_does_not_verify_etag(
@@ -967,14 +1038,14 @@ def test_move_rule_does_not_verify_etag(
             url=f"/objects/rule/{rule_id}/actions/move/invoke",
             body=options,
             expect_ok=False,
-        ).assert_status_code(200)
+        ).assert_status_code(HTTPStatus.OK)
         clients.Rule.request(
             "post",
             url=f"/objects/rule/{rule_id}/actions/move/invoke",
             body=options,
             headers={"If-Match": "invalid-etag"},
             expect_ok=False,
-        ).assert_status_code(200)
+        ).assert_status_code(HTTPStatus.OK)
 
 
 def test_delete_rule_does_not_require_or_verify_etag(
@@ -993,10 +1064,10 @@ def test_delete_rule_does_not_require_or_verify_etag(
             url=f"/objects/rule/{missing}",
             headers={"Accept": "application/json"},
             expect_ok=False,
-        ).assert_status_code(204)
+        ).assert_status_code(HTTPStatus.NO_CONTENT)
         clients.Rule.request(
             "delete",
             url=f"/objects/rule/{invalid}",
             headers={"If-Match": "invalid-etag", "Accept": "application/json"},
             expect_ok=False,
-        ).assert_status_code(204)
+        ).assert_status_code(HTTPStatus.NO_CONTENT)

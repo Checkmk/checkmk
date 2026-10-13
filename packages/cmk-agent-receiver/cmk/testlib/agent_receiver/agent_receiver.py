@@ -3,24 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager, suppress
 from typing import final
 
-import httpx
+import httpx2
 from starlette.types import Receive, Scope, Send
 
 from cmk.agent_receiver.lib.certs import serialize_to_pem
-from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_ISSUER_HEADER, INJECTED_UUID_HEADER
+from cmk.agent_receiver.lib.mtls_auth_validator import (
+    INJECTED_ISSUER_HEADER,
+    INJECTED_SERIAL_HEADER,
+    INJECTED_UUID_HEADER,
+)
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
 from cmk.crypto.keys import PrivateKey
 from cmk.relay_protocols.monitoring_data import MonitoringData
 from cmk.relay_protocols.relays import RelayRegistrationResponse
 from cmk.relay_protocols.tasks import HEADERS, TaskCreateRequest, TaskCreateRequestSpec
 
-from .certs import generate_csr_pair, relay_ca_common_name
+from .certs import generate_csr_pair, relay_ca_common_name, UNREVOKED_SERIAL_NUMBER
 from .relay import random_relay_id
 from .relay_config_generator import RelayConfig
 from .site_mock import User
@@ -34,7 +37,7 @@ class AgentReceiverClient:
     """
 
     def __init__(
-        self, client: httpx.Client, site_name: str, user: User, serial: Serial | None = None
+        self, client: httpx2.Client, site_name: str, user: User, serial: Serial | None = None
     ) -> None:
         self.client = client
         self.site_name = site_name
@@ -46,6 +49,13 @@ class AgentReceiverClient:
         # certificate; here we set the expected value directly since these methods are
         # also used against the in-process TestClient, which never presents a certificate.
         self._relay_issuer_cn = relay_ca_common_name(site_name)
+
+    def _relay_headers(self, relay_id: str) -> dict[str, str]:
+        return {
+            INJECTED_UUID_HEADER: relay_id,
+            INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
+            INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
+        }
 
     @contextmanager
     def with_client_ip(self, client_ip: str = "127.0.0.1", client_port: int = 0) -> Iterator[None]:
@@ -94,7 +104,7 @@ class AgentReceiverClient:
             with suppress(KeyError):
                 del self.client.headers[HEADERS.SERIAL]
 
-    def register_relay(self, relay_id: str, name: str) -> tuple[PrivateKey, httpx.Response]:
+    def register_relay(self, relay_id: str, name: str) -> tuple[PrivateKey, httpx2.Response]:
         priv_key, csr = generate_csr_pair(cn=relay_id)
         return priv_key, self.client.post(
             f"/{self.site_name}/relays/",
@@ -105,7 +115,7 @@ class AgentReceiverClient:
             },
         )
 
-    def register_relay_with_token(self, relay_id: str, name: str, token: str) -> httpx.Response:
+    def register_relay_with_token(self, relay_id: str, name: str, token: str) -> httpx2.Response:
         csr_pair = generate_csr_pair(cn=relay_id)
         return self.client.post(
             f"/{self.site_name}/relays/",
@@ -117,7 +127,7 @@ class AgentReceiverClient:
             },
         )
 
-    def refresh_cert(self, relay_id: str) -> httpx.Response:
+    def refresh_cert(self, relay_id: str) -> httpx2.Response:
         """Refresh the certificate for a relay.
 
         This endpoint allows a relay to request a new certificate by submitting
@@ -128,7 +138,7 @@ class AgentReceiverClient:
             relay_id: The UUID of the relay requesting certificate refresh
 
         Returns:
-            httpx.Response containing RelayRefreshCertResponse with:
+            httpx2.Response containing RelayRefreshCertResponse with:
                 - root_cert: The root CA certificate in PEM format
                 - client_cert: The newly signed client certificate in PEM format
 
@@ -139,16 +149,13 @@ class AgentReceiverClient:
         csr_pair = generate_csr_pair(cn=relay_id)
         return self.client.post(
             f"/{self.site_name}/relays/{relay_id}/csr",
-            headers={
-                INJECTED_UUID_HEADER: relay_id,
-                INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-            },
+            headers=self._relay_headers(relay_id),
             json={
                 "csr": serialize_to_pem(csr_pair[1]),
             },
         )
 
-    def get_relay_status(self, relay_id: str) -> httpx.Response:
+    def get_relay_status(self, relay_id: str) -> httpx2.Response:
         """Get relay status.
 
         This endpoint returns the relay state by comparing local config and CMK API.
@@ -158,7 +165,7 @@ class AgentReceiverClient:
             relay_id: The UUID of the relay to get status for
 
         Returns:
-            httpx.Response containing RelayStatusResponse with:
+            httpx2.Response containing RelayStatusResponse with:
                 - relay_id: The relay's unique identifier
                 - state: The relay's state (CONFIGURED, PENDING_ACTIVATION, PENDING_DELETION)
 
@@ -169,15 +176,12 @@ class AgentReceiverClient:
         """
         return self.client.get(
             f"/{self.site_name}/relays/{relay_id}/status",
-            headers={
-                INJECTED_UUID_HEADER: relay_id,
-                INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-            },
+            headers=self._relay_headers(relay_id),
         )
 
     def push_task(
         self, *, relay_id: str, spec: TaskCreateRequestSpec, site_cn: str
-    ) -> httpx.Response:
+    ) -> httpx2.Response:
         headers = {
             INJECTED_UUID_HEADER: site_cn,
         }
@@ -189,41 +193,35 @@ class AgentReceiverClient:
             ).model_dump(),
         )
 
-    def get_relay_tasks(self, relay_id: str, status: str | None = None) -> httpx.Response:
+    def get_relay_tasks(self, relay_id: str, status: str | None = None) -> httpx2.Response:
         params: dict[str, str] = {}
         if status:
             params = {"status": status}
         return self.client.get(
             f"/{self.site_name}/relays/{relay_id}/tasks",
-            headers={
-                INJECTED_UUID_HEADER: relay_id,
-                INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-            },
+            headers=self._relay_headers(relay_id),
             params=params,
         )
 
     def update_task(
         self, *, relay_id: str, task_id: str, result_type: str, result_payload: str
-    ) -> httpx.Response:
+    ) -> httpx2.Response:
         return self.client.patch(
             f"/{self.site_name}/relays/{relay_id}/tasks/{task_id}",
-            headers={
-                INJECTED_UUID_HEADER: relay_id,
-                INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-            },
+            headers=self._relay_headers(relay_id),
             json={
                 "result_type": result_type,
                 "result_payload": result_payload,
             },
         )
 
-    def get_task(self, *, relay_id: str, task_id: str, site_cn: str) -> httpx.Response:
+    def get_task(self, *, relay_id: str, task_id: str, site_cn: str) -> httpx2.Response:
         return self.client.get(
             f"/{self.site_name}/relays/{relay_id}/tasks/{task_id}",
             headers={INJECTED_UUID_HEADER: site_cn},
         )
 
-    def activate_config(self, site_cn: str) -> httpx.Response:
+    def activate_config(self, site_cn: str) -> httpx2.Response:
         headers = {
             INJECTED_UUID_HEADER: site_cn,
         }
@@ -234,13 +232,10 @@ class AgentReceiverClient:
 
     def forward_monitoring_data(
         self, *, relay_id: str, monitoring_data: MonitoringData
-    ) -> httpx.Response:
+    ) -> httpx2.Response:
         return self.client.post(
             f"/{self.site_name}/relays/{relay_id}/monitoring",
-            headers={
-                INJECTED_UUID_HEADER: relay_id,
-                INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-            },
+            headers=self._relay_headers(relay_id),
             json=monitoring_data.model_dump(mode="json"),
         )
 

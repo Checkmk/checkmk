@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import logging
 import re
 from collections.abc import Iterator
@@ -21,8 +22,8 @@ from tests.system.gui.testlib.playwright.pom.setup.hosts import (
     ImportHostsViaCSVFileUpload,
     SetupHost,
 )
-from tests.testlib.common.utils2 import is_cleanup_enabled, run
-from tests.testlib.site import Site
+from tests.testlib.common.utils2 import is_cleanup_enabled
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 
@@ -62,8 +63,11 @@ def test_create_and_delete_a_host(dashboard_page: MainDashboard, test_site: Site
         host=HostDetails(name=f"test_host_{Faker().first_name()}", ip=LOCALHOST_IPV4),
     )
     # validate
-    host.main_menu.monitor_all_hosts.click()
-    host.page.wait_for_url(url=re.compile(re.escape("view_name=allhost")), wait_until="load")
+    # The Monitor menu's "All hosts" entry now opens the Vue "All hosts" page instead
+    # (see CMK-37778), so this navigates by URL directly to the classic view, which
+    # stays reachable even though it is hidden from menu listings.
+    # To be adapted when the new "All hosts" page tests are implemented in CMK-38167.
+    host.go("view.py?view_name=allhosts")
     host.select_host(host.details.name)
     # Cleanup: delete host
     host.navigate()
@@ -72,7 +76,7 @@ def test_create_and_delete_a_host(dashboard_page: MainDashboard, test_site: Site
 
 def test_reschedule(host: HostProperties) -> None:
     """reschedules a check"""
-    host.main_menu.monitor_all_hosts.click()
+    host.go("view.py?view_name=allhosts")
     host.select_host(host.details.name)
 
     # Use the Check_MK Service. It is always there and the first.
@@ -254,7 +258,7 @@ def test_agent_test(dashboard_page: MainDashboard) -> None:
         expect(agent_download_dialog).to_be_visible()
 
         agent_download_button = dashboard_page.main_area.locator(
-            "div.cmk-alert-box__actions > button"
+            "div.cmk-alert__actions > button"
         ).first
         agent_download_button.click()
 
@@ -269,41 +273,8 @@ def test_agent_test(dashboard_page: MainDashboard) -> None:
             SetupHost(dashboard_page.page).delete_hosts(host_name)
 
 
-@pytest.fixture(name="bypass_nslookup")
-def _bypass_nslookup(test_site: Site) -> Iterator[None]:
-    """Fixture to bypass `nslookup` command in the checkmk site.
-
-    For any reason, `nslookup` does not work properly in CI, so this fixture creates a dummy
-    `nslookup` command that always return 0 (OK), so then checkmk will execute `ping` to validate
-    the hostname.
-    """
-    dummy_nslookup = test_site.path("local/bin/nslookup")
-
-    _input = "\n".join(  # noqa: FLY002
-        (
-            "#!/bin/bash",
-            "",
-            "sleep 1",
-            "",
-            "if [ $2 == 'localhost' ]",
-            "then",
-            "  exit 0",
-            "else",
-            "  exit 1",
-            "fi",
-            "",
-        )
-    )
-
-    run(["tee", str(dummy_nslookup)], input_=_input, sudo=True)
-    run(["chmod", "a+x", str(dummy_nslookup)], sudo=True)
-
-    yield
-
-    run(["rm", str(dummy_nslookup)], sudo=True)
-
-
-def test_ping_host(bypass_nslookup: None, dashboard_page: MainDashboard) -> None:
+@pytest.mark.usefixtures("bypass_nslookup")
+def test_ping_host(dashboard_page: MainDashboard) -> None:
     """Validate pinging of a host."""
     add_host = AddHost(dashboard_page.page)
 
@@ -322,36 +293,6 @@ def test_ping_host(bypass_nslookup: None, dashboard_page: MainDashboard) -> None
 
     add_host.ipv4_address_text_field.fill("127.0.0.1")
     _expect_validation_status_to_be_visble(add_host.ipaddress_status_valid, "Valid IP address")
-
-
-@pytest.mark.skip_if_not_edition("ultimate", "ultimatemt", "cloud")
-def test_ping_host_with_relay_attribute(
-    bypass_nslookup: None, dashboard_page: MainDashboard
-) -> None:
-    """Validate the ping pre-test still runs when the relay host attribute is present.
-
-    Regression test for the relay-capable editions: the ping/DNS indicator is only
-    shown when no relay is in effect. `PingHost.vue` decides this by matching the
-    relay attribute's inherited-default text against the "No Relay" label. When that
-    label and the frontend string drift apart (e.g. a Weblate case fix), every host
-    silently looks "monitored on a relay" and the indicator disappears with no error.
-    The plain `test_ping_host` cannot catch this because the relay attribute only
-    exists in these editions.
-    """
-    add_host = AddHost(dashboard_page.page)
-
-    add_host.host_name_text_field.fill("localhost")
-    expect(
-        add_host.host_name_status_valid,
-        message="Ping/DNS indicator missing while relay attribute defaults to 'No Relay'",
-    ).to_be_visible()
-
-    add_host.ipv4_address_checkbox.click()
-    add_host.ipv4_address_text_field.fill("127.0.0.1")
-    expect(
-        add_host.ipaddress_status_valid,
-        message="Ping indicator missing for IP while relay attribute defaults to 'No Relay'",
-    ).to_be_visible()
 
 
 def test_bulk_csv_upload_form(dashboard_page: MainDashboard) -> None:

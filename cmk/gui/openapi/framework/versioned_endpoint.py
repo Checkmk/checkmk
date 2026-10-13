@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -93,8 +92,9 @@ class EndpointBehavior:
     """When set to True, the decorator will not try to acquire a wato configuration lock,
     which can lead to higher performance of this particular endpoint. WARNING: Do not
     activate this flag when configuration files are changed by the endpoint! This
-    exposes the data to potential race conditions. Use it for endpoints which trigger
-    livestatus commands."""
+    exposes the data to potential race conditions. Use it for non-mutating endpoints,
+    such as those triggering livestatus commands or read-only endpoints that carry a
+    POST body, which must also set `update_config_generation=False`."""
 
     update_config_generation: bool = True
     """Whether to generate a new configuration. All endpoints with methods other than `get`
@@ -206,3 +206,7 @@ class VersionedEndpoint:
     """If an endpoint should be accessible via token authentication, the allowed token types
     need to be specified here. If empty, token authentication is not allowed for this
     endpoint."""
+
+    token_failure_detail: str | None = None
+    """The problem detail sent when a token is unknown, expired or revoked. If None, the
+    generic authentication failure is sent."""

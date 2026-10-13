@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 import abc
 from collections.abc import Sequence
 
-from cmk.gui.painter.v0 import Cell
+from cmk.gui.painter import Cell
 from cmk.gui.type_defs import ColumnName, Rows, SingleInfos, VisualContext
 from cmk.gui.visuals.filter import Filter
 from cmk.livestatus_client import OnlySites

@@ -9,7 +9,7 @@ UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision
 
 metric_mobileiron_devices_total = metrics.Metric(
     name="mobileiron_devices_total",
-    title=Title("Total devices"),
+    title=Title("Total managed devices"),
     unit=UNIT_COUNTER,
     color=metrics.Color.BLACK,
 )

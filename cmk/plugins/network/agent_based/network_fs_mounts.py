@@ -47,7 +47,7 @@ class NetworkFSState(Enum):
 
     @classmethod
     @override
-    def _missing_(cls, value: object) -> "NetworkFSState":
+    def _missing_(cls, value: object) -> NetworkFSState:
         return NetworkFSState.UNKNOWN
 
 

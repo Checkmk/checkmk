@@ -7,6 +7,9 @@
 # mypy: disable-error-code="no-untyped-def"
 
 import datetime
+import html
+import json
+import re
 from collections.abc import Sequence
 from functools import partial
 from pathlib import Path
@@ -15,23 +18,38 @@ from zoneinfo import ZoneInfo
 
 import pytest
 import time_machine
+from werkzeug.test import create_environ
 
+from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import sites
-from cmk.gui.config import active_config
-from cmk.gui.http import request
-from cmk.gui.logged_in import user
-from cmk.gui.painter.v0 import all_painters
-from cmk.gui.painter.v0.painters import _paint_custom_notes
-from cmk.gui.type_defs import ColumnSpec, DynamicIconName, Row
+from cmk.gui.config import active_config, Config
+from cmk.gui.display_options import DisplayOptions
+from cmk.gui.http import Request, request, Response
+from cmk.gui.logged_in import LoggedInUser, user, UserDefaultConfig
+from cmk.gui.painter import all_painters, PainterConfig, PainterContext
+from cmk.gui.painter.helpers import RenderLink
+from cmk.gui.painter.painters import _paint_custom_notes
+from cmk.gui.painter_options import PainterOptions
+from cmk.gui.theme import make_theme
+from cmk.gui.type_defs import ColumnSpec, Row
+from cmk.gui.utils.host_relations import (
+    dump_resolved_relations,
+    RELATIONS_CUSTOM_VARIABLE,
+    ResolvedRelation,
+)
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.page_edit_view import painters_of_datasource
 from cmk.gui.visual_link import render_link_to_view
-from cmk.inventory.structured_data import deserialize_tree
+from cmk.inventory.serialization import deserialize_tree
+from cmk.livestatus_client import SiteConfigurations
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIconName
+from cmk.web.utils.request_cache import RequestCache
+from tests.testlib.unit.fake_site import no_site_configuration
 
 
 @pytest.fixture(name="live")
@@ -349,7 +367,7 @@ def test_registered_painters() -> None:
 
 @pytest.fixture(name="service_painter_idents")
 def fixture_service_painter_names() -> list[str]:
-    return sorted(painters_of_datasource("services", UserPermissions({}, {}, {}, [])).keys())
+    return sorted(painters_of_datasource("services").keys())
 
 
 @pytest.mark.usefixtures("request_context", "patch_theme")
@@ -367,18 +385,121 @@ def test_service_painters(
             _test_painter(painter_ident, live)
 
 
-def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
-    _set_expected_queries(painter_ident, live)
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_host_custom_attributes_leave_out_the_host_relations() -> None:
+    """The relations have a column of their own, which only names hosts the user may see."""
+    (cell,) = _view_of(ColumnSpec(name="host_custom_vars"), "hosts").row_cells
+    relations = dump_resolved_relations(
+        [ResolvedRelation(kind="management", direction="parent", host="hidden-board", site="s")]
+    )
+    row = {"host_custom_variables": {"OWNER": "team-a", RELATIONS_CUSTOM_VARIABLE: relations}}
 
-    name, params = _painter_name_spec(painter_ident)
+    _tdclass, content = cell.render(
+        row,
+        partial(render_link_to_view, request=request, user_permissions=_NO_PERMISSIONS),
+        user,
+    )
 
-    view = View(
+    assert "team-a" in str(content)
+    assert "hidden-board" not in str(content)
+    assert "hidden-board" not in str(cell.render_for_csv_export(row, user))
+    assert "hidden-board" not in str(cell.render_for_json_export(row, user))
+    assert "hidden-board" not in str(cell.painter().group_by(row, cell, cell.painter_context()))
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_svc_pnpgraph_embeds_a_graph_for_a_service_with_metrics(
+    live: MockLiveStatusConnection,
+) -> None:
+    assert _embedded_service_graphs(live, perf_data="x=5", metrics=["x"])
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_svc_pnpgraph_embeds_no_graph_for_a_service_without_perfdata(
+    live: MockLiveStatusConnection,
+) -> None:
+    # Also holds if the painter leaves out the empty graph group altogether.
+    assert _embedded_service_graphs(live, perf_data="", metrics=[]) == []
+
+
+def _embedded_service_graphs(
+    live: MockLiveStatusConnection, *, perf_data: str, metrics: list[str]
+) -> list[object]:
+    """The graphs of every ``cmk-graph-group`` element the service graphs cell renders."""
+    # The engine resolves the metric names with this query, the painter reads the row.
+    live.add_table(
+        "services",
+        [
+            {
+                "host_name": "abc",
+                "description": "Interface 3",
+                "perf_data": perf_data,
+                "metrics": metrics,
+                "check_command": "check_mk-foo",
+            }
+        ],
+    )
+    live.expect_query(
+        "GET services\nColumns: host_name description perf_data metrics check_command\n"
+        "Filter: host_name = abc\nFilter: description = Interface 3\nAnd: 2"
+    )
+    row = {
+        **_service_row(),
+        "service_perf_data": perf_data,
+        "service_metrics": metrics,
+        "service_check_command": "check_mk-foo",
+    }
+    (cell,) = _view_of(ColumnSpec(name="svc_pnpgraph"), "services").row_cells
+
+    with live(expect_status_query=False):
+        _tdclass, content = cell.render(
+            row,
+            partial(render_link_to_view, request=request, user_permissions=_NO_PERMISSIONS),
+            user,
+        )
+
+    return [
+        graph
+        for match in re.finditer(r'<cmk-graph-group data="([^"]*)"', str(content))
+        for graph in json.loads(html.unescape(match.group(1)))["graphs"]
+    ]
+
+
+_NO_PERMISSIONS = UserPermissions({}, {}, {}, [])
+
+
+def _painter_context_of_the_fake_site() -> PainterContext:
+    painter_request = Request(create_environ())
+    return PainterContext(
+        config=PainterConfig.from_config(
+            Config(sites=SiteConfigurations({SiteId("NO_SITE"): no_site_configuration()}))
+        ),
+        request=painter_request,
+        painter_options=PainterOptions(
+            Config(),
+            painter_request,
+            LoggedInUser(
+                None,
+                _NO_PERMISSIONS,
+                defaults=UserDefaultConfig(
+                    users={}, default_language="en", default_show_mode="default"
+                ),
+            ),
+        ),
+        theme=make_theme(validate_choices=False),
+        url_renderer=RenderLink(painter_request, Response(), DisplayOptions()),
+        user_permissions=_NO_PERMISSIONS,
+    )
+
+
+def _view_of(column: ColumnSpec, datasource: str) -> View:
+    return View(
         view_name="",
         view_spec={
             "group_painters": [],
-            "painters": [ColumnSpec(name=name, parameters=params)],
+            "painters": [column],
             "sorters": [],
-            "datasource": "services",
+            "datasource": datasource,
             "browser_reload": 30,
             "column_headers": "pergroup",
             "description": "",
@@ -405,14 +526,23 @@ def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
             "main_menu_search_terms": [],
         },
         context={},
-        user_permissions=(user_permissions := UserPermissions({}, {}, {}, [])),
+        painter_context=_painter_context_of_the_fake_site(),
+        request_cache=RequestCache(Config()),
     )
+
+
+def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
+    _set_expected_queries(painter_ident, live)
+
+    name, params = _painter_name_spec(painter_ident)
+
+    view = _view_of(ColumnSpec(name=name, parameters=params), "services")
 
     row = _service_row()
     for cell in view.row_cells:
         _tdclass, content = cell.render(
             row,
-            partial(render_link_to_view, request=request, user_permissions=user_permissions),
+            partial(render_link_to_view, request=request, user_permissions=_NO_PERMISSIONS),
             user,
         )
         assert isinstance(content, str | HTML)
@@ -1307,9 +1437,10 @@ def _set_expected_queries(painter_ident, live):
             "GET hosts\nColumns: host_name\nLocaltime: 1523811000\nOutputFormat: json\nKeepAlive: on\nResponseHeader: fixed16"
         )
         return
-    if painter_ident in ("service_graphs", "svc_pnpgraph"):
-        # The engine resolves the metric names during the render; the legacy renderer
-        # deferred its fetch to a follow-up AJAX call and so issued no query here.
+    if painter_ident in ("service_graphs", "svc_pnpgraph", "host_graphs", "host_pnpgraph"):
+        # Every graph painter renders through the engine, which resolves the metric names
+        # during the render. The row carries a service_description, so the host painters
+        # address the same service as the service ones.
         live.expect_query(
             "GET services\nColumns: host_name description perf_data metrics check_command\n"
             "Filter: host_name = abc\nFilter: description = Interface 3\nAnd: 2"
@@ -1404,14 +1535,17 @@ def test_paint_custom_notes(
     notes_file: Path,
     row: Row,
     notes: list[str],
-    request_context: None,
 ) -> None:
     notes_dir.mkdir(parents=True)
     with open(notes_file, "w") as f:
         f.write("<hr>".join(notes))
 
     assert notes_file.read_text() == str(
-        _paint_custom_notes(notes_type, row, config=active_config)[1]
+        _paint_custom_notes(
+            notes_type,
+            row,
+            site_configs=SiteConfigurations({SiteId("NO_SITE"): no_site_configuration()}),
+        )[1]
     )
 
 
@@ -1636,7 +1770,6 @@ def test_paint_custom_notes_file_inclusion_and_html_tags(
     service_name: str | None,
     notes_dirs: list[Path],
     notes: list[dict[str, object]],
-    request_context: None,
 ) -> None:
     expected_notes: list[str] = _load_notes_into_files(notes_dirs, notes)
 
@@ -1647,7 +1780,11 @@ def test_paint_custom_notes_file_inclusion_and_html_tags(
         "host_address": "127.0.0.1",
     }
 
-    displayed_custom_notes = _paint_custom_notes(object_type, row, config=active_config)[1]
+    displayed_custom_notes = _paint_custom_notes(
+        object_type,
+        row,
+        site_configs=SiteConfigurations({SiteId("NO_SITE"): no_site_configuration()}),
+    )[1]
     assert isinstance(displayed_custom_notes, HTML)
 
     notes_as_string = str(displayed_custom_notes)

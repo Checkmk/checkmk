@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated, Literal
 
 from cmk.ccc.site import SiteId
@@ -91,7 +92,7 @@ def show_comments_v1(
         )
     except CommentParamException:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Invalid parameter combination",
             detail="You set collection_name to host but the provided filtering parameters will return only service comments.",
         )

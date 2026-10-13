@@ -49,37 +49,37 @@ def _register_hooks() -> None:
     args: Sequence[tuple[str, Callable]] = (
         (
             "userdb-job",
-            lambda: _auth_php._on_userdb_job(
+            lambda: _auth_php._on_userdb_job(  # noqa: SLF001
                 (users := userdb.load_users()), _make_user_permissions(users)
             ),
         ),
         (
             "users-saved",
-            lambda users: _auth_php._create_auth_file(
+            lambda users: _auth_php._create_auth_file(  # noqa: SLF001
                 "users-saved", users, _make_user_permissions(users)
             ),
         ),
         (
             "roles-saved",
-            lambda x: _auth_php._create_auth_file(
+            lambda x: _auth_php._create_auth_file(  # noqa: ARG005, SLF001
                 "roles-saved", (users := userdb.load_users()), _make_user_permissions(users)
             ),
         ),
         (
             "contactgroups-saved",
-            lambda x: _auth_php._create_auth_file(
+            lambda x: _auth_php._create_auth_file(  # noqa: ARG005, SLF001
                 "contactgroups-saved", (users := userdb.load_users()), _make_user_permissions(users)
             ),
         ),
         (
             "activate-changes",
-            lambda x: _auth_php._create_auth_file(
+            lambda x: _auth_php._create_auth_file(  # noqa: ARG005, SLF001
                 "activate-changes", (users := userdb.load_users()), _make_user_permissions(users)
             ),
         ),
         # FIXME: We do some funky monkeypatching in test_tag_config_save(),
         # so the evaluation needs to be delayed. :-/
-        ("tags-saved", lambda x: _hosttags._export_hosttags_to_php(x)),  # noqa: PLW0108
+        ("tags-saved", lambda x: _hosttags._export_hosttags_to_php(x)),  # noqa: PLW0108, SLF001
     )
     for name, func in args:
         hooks.register_builtin(name, func)

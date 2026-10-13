@@ -1,0 +1,181 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping
+
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    equals,
+    OIDEnd,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
+
+# .1.3.6.1.4.1.2604.3.4 2 --> SOPHOS::sophosHwMemoryConsumption     Indicates whether the appliance is consuming excessive memory
+# .1.3.6.1.4.1.2604.3.5 2 --> SOPHOS::sophosHwMemoryStatus          Indicates whether the appliance detects less memory than expected
+# .1.3.6.1.4.1.2604.3.6 0 --> SOPHOS::sophosHwRaid                  Indicates whether the appliance RAID system is operating normally
+# .1.3.6.1.4.1.2604.3.7 2 --> SOPHOS::sophosHwCpuStatus             Indicates whether the appliance CPU is operating normally
+# .1.3.6.1.4.1.2604.3.8 0 --> SOPHOS::sophosHwPowerSupplyLeft       Indicates whether the left power supply is operating normally
+# .1.3.6.1.4.1.2604.3.9 0 --> SOPHOS::sophosHwPowerSupplyRight      Indicates whether the right power supply is operating normally
+# .1.3.6.1.4.1.2604.3.10 0 --> SOPHOS::sophosHwPowerSupplyFanLeft   Indicates whether the left power supply fan is operating normally
+# .1.3.6.1.4.1.2604.3.11 0 --> SOPHOS::sophosHwPowerSupplyFanRight  Indicates whether the left power supply fan is operating normally
+# .1.3.6.1.4.1.2604.3.12 2 --> SOPHOS::sophosHwSystemFan            Indicates whether all fans are operating normally
+# .1.3.6.1.4.1.2604.3.13 2 --> SOPHOS::sophosHwTemperature          Indicates whether the appliance is operating within an acceptable temperature range
+# .1.3.6.1.4.1.2604.3.14 2 --> SOPHOS::sophosHwVoltage              Indicates whether the appliance is operating within normal voltage ranges
+# .1.3.6.1.4.1.2604.3.16 2 --> SOPHOS::sophosHwPowerSupplies        Indicates whether both power supplies are operating normally
+
+sophos_map_oid: Mapping[str, tuple[str, Mapping[str, str]]] = {
+    "4": (
+        "Memory Consumption",
+        {
+            "2": " (the appliance is consuming normal memory)",
+            "3": " (the appliance is consuming inflated memory)",
+            "4": " (the appliance is consuming excessive memory)",
+        },
+    ),
+    "5": (
+        "Memory",
+        {
+            "2": " (the appliance detects memory than expected)",
+            "3": " (the appliance detects less memory than expected)",
+            "4": " (the appliance detects insufficient memory than expected)",
+        },
+    ),
+    "6": (
+        "RAID",
+        {
+            "2": " (the appliance RAID system is operating normally)",
+            "3": " (the appliance RAID system is operating abnormally)",
+            "4": " (the appliance RAID system is operating viciously)",
+        },
+    ),
+    "7": (
+        "CPU Utilization",
+        {
+            "2": " (the appliance CPU is operating normally)",
+            "3": " (the appliance CPU is operating abnormally)",
+            "4": " (the appliance CPU is operating viciously)",
+        },
+    ),
+    "8": (
+        "Power Supply Left",
+        {
+            "2": " (the left power supply is operating normally)",
+            "3": " (the left power supply is operating abnormally)",
+            "4": " (the left power supply is operating viciously)",
+        },
+    ),
+    "9": (
+        "Power Supply Right",
+        {
+            "2": " (the right power supply is operating normally)",
+            "3": " (the right power supply is operating abnormally)",
+            "4": " (the right power supply is operating viciously)",
+        },
+    ),
+    "10": (
+        "Fan Left",
+        {
+            "2": " (the left fan is operating normally)",
+            "3": " (the left fan is operating abnormally)",
+            "4": " (the left fan is operating viciously)",
+        },
+    ),
+    "11": (
+        "Fan Right",
+        {
+            "2": " (the right fan is operating normally)",
+            "3": " (the right fan is operating abnormally)",
+            "4": " (the right fan is operating viciously)",
+        },
+    ),
+    "12": (
+        "Fan Summary",
+        {
+            "2": " (all fans are operating normally)",
+            "3": " (all fans are operating abnormally)",
+            "4": " (all fans are operating viciously)",
+        },
+    ),
+    "13": (
+        "Temperature",
+        {
+            "2": " (the appliance is operating within an acceptable temperature range)",
+            "3": " (the appliance is operating in the margins of an acceptable temperature range)",
+            "4": " (the appliance is operating outside an acceptable temperature range)",
+        },
+    ),
+    "14": (
+        "Power Supply Voltage",
+        {
+            "2": " (the appliance is operating within a normal voltage range)",
+            "3": " (the appliance is operating in the margins of a normal voltage range)",
+            "4": " (the appliance is operating outside of a normal voltage range)",
+        },
+    ),
+    "16": (
+        "Power Supply Summary",
+        {
+            "2": " (both power supplies are operating normally)",
+            "3": " (one or both power supplies are operating abnormally)",
+            "4": " (one or both power supplies are operating viciously)",
+        },
+    ),
+}
+
+
+def discover_sophos(section: StringTable) -> DiscoveryResult:
+    for item_oid, item_state in section:
+        if item_oid in sophos_map_oid and item_state in ["2", "3", "4"]:
+            yield Service(item=sophos_map_oid[item_oid][0])
+
+
+def check_sophos(item: str, section: StringTable) -> CheckResult:
+    sophos_map_state = {
+        "0": (State.UNKNOWN, "unknown"),
+        "1": (State.UNKNOWN, "disabled"),
+        "2": (State.OK, "OK"),
+        "3": (State.WARN, "warn"),
+        "4": (State.CRIT, "error"),
+    }
+    for item_oid, item_state in section:
+        try:
+            item_name, item_info = sophos_map_oid[item_oid]
+        except KeyError:
+            continue
+        if item_name == item:
+            state, state_readable = sophos_map_state[item_state]
+            extra_info = item_info.get(item_state, "")
+            yield Result(state=state, summary=f"Status: {state_readable}{extra_info}")
+            return
+
+
+def parse_sophos(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+snmp_section_sophos = SimpleSNMPSection(
+    name="sophos",
+    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2604"),
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.2604",
+        oids=[OIDEnd(), "3"],
+    ),
+    parse_function=parse_sophos,
+)
+
+
+check_plugin_sophos = CheckPlugin(
+    name="sophos",
+    service_name="%s",
+    discovery_function=discover_sophos,
+    check_function=check_sophos,
+)

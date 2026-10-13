@@ -30,6 +30,7 @@ from ._autocompleters import live_query_to_choices as live_query_to_choices
 from ._breadcrumb import visual_page_breadcrumb as visual_page_breadcrumb
 from ._filter_context import active_context_from_request as active_context_from_request
 from ._filter_context import collect_filters as collect_filters
+from ._filter_context import configured_context_filters as configured_context_filters
 from ._filter_context import context_to_uri_vars as context_to_uri_vars
 from ._filter_context import filters_of_visual as filters_of_visual
 from ._filter_context import get_context_from_uri_vars as get_context_from_uri_vars
@@ -68,6 +69,8 @@ from ._page_edit_visual import render_context_specs as render_context_specs
 from ._page_edit_visual import single_infos_spec as single_infos_spec
 from ._page_list import page_list as page_list
 from ._permissions import declare_visual_permissions as declare_visual_permissions
+from ._search import BuiltinVisualsSearch as BuiltinVisualsSearch
+from ._search import CustomVisualsSearch as CustomVisualsSearch
 from ._site_filters import default_site_filter_heading_info as default_site_filter_heading_info
 from ._site_filters import SiteFilter as SiteFilter
 from ._store import available as available
@@ -82,6 +85,7 @@ from ._store import save as save
 from ._store import TVisual as TVisual
 from ._title import view_title as view_title
 from ._title import visual_title as visual_title
+from ._title import visual_title_without_context as visual_title_without_context
 from .filter import (
     api,
     Filter,
@@ -127,7 +131,7 @@ def register(
     hooks.register_builtin(
         "snapshot-pushed", lambda: store.clear_pickled_files_cache(paths.tmp_dir)
     )
-    hooks.register_builtin("users-saved", lambda x: invalidate_all_caches())
+    hooks.register_builtin("users-saved", lambda x: invalidate_all_caches())  # noqa: ARG005
 
     api.register(
         endpoint_family_registry,

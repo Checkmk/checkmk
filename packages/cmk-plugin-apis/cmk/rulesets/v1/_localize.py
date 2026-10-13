@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Providing means to localize strings"""
 
-from __future__ import annotations
-
 import enum
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field

@@ -43,7 +43,7 @@ snmp_section_artec_temp = SimpleSNMPSection(
 )
 
 
-def discover_artec_temp(section: StringTable) -> DiscoveryResult:
+def discover_artec_temp(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="Disk")
 
 

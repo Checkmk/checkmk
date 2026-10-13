@@ -10,6 +10,7 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariableGroup,
     ConfigVariableGroupRegistry,
 )
+from cmk.web.utils.icons import IconNames
 
 
 def register(config_variable_group_registry: ConfigVariableGroupRegistry) -> None:
@@ -24,30 +25,40 @@ def register(config_variable_group_registry: ConfigVariableGroupRegistry) -> Non
 ConfigVariableGroupNotifications = ConfigVariableGroup(
     title=_l("Notifications"),
     sort_index=15,
+    icon=IconNames.notifications,
+    description=_l("Configures global notification system behavior"),
 )
 
 
 ConfigVariableGroupUserInterface = ConfigVariableGroup(
     title=_l("User interface"),
     sort_index=20,
+    icon=IconNames.ui_component_library,
+    description=_l("Configures broad GUI look, behavior, and performance"),
 )
 
 
 ConfigVariableGroupWATO = ConfigVariableGroup(
     title=_l("Setup"),
     sort_index=25,
+    icon=IconNames.main_setup,
+    description=_l("Configures behavior of the config workflow itself"),
 )
 
 
 ConfigVariableGroupSiteManagement = ConfigVariableGroup(
     title=_l("Site management"),
     sort_index=30,
+    icon=IconNames.sites,
+    description=_l("Configures distributed monitoring and site connection settings"),
 )
 
 
 ConfigVariableGroupSupport = ConfigVariableGroup(
     title=_l("Support"),
     sort_index=80,
+    icon=IconNames.diagnostics,
+    description=_l("Configures support and diagnostics properties"),
 )
 
 
@@ -60,4 +71,14 @@ ConfigVariableGroupDeveloperTools = ConfigVariableGroup(
         "There is a high risk that using these features will break your Checkmk site. "
         "Any changes here will result in your Checkmk site no longer being officially supported."
     ),
+    icon=IconNames.developer_resources,
+    description=_l("Configures internal and experimental developer settings"),
+)
+
+
+ConfigVariableGroupAIFeatures = ConfigVariableGroup(
+    title=_l("AI features"),
+    sort_index=99,
+    icon=IconNames.sparkle,
+    description=_l("Configures the AI assistant and MCP server integration"),
 )

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { CmkSpaceVariants } from 'cmk-ui-library/components/CmkSpace.vue'
 
 import codeExample from './UclCmkSpaceCodeExample.vue?raw'
@@ -13,10 +13,10 @@ export const panelConfig = {
   size: {
     type: 'list' as const,
     title: 'Size',
-    options: [
-      { title: 'Medium', name: 'medium' },
-      { title: 'Small', name: 'small' }
-    ] satisfies Options<CmkSpaceVariants['size']>[],
+    options: listOptions<CmkSpaceVariants['size']>({
+      medium: 'Medium',
+      small: 'Small'
+    }),
     initialState: 'medium' as const
   }
 } satisfies PanelConfigFor<typeof CmkSpace, 'direction'>

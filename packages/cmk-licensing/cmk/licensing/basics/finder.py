@@ -2,6 +2,11 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""License-based import filter installed by ``omd/packages/Python/sitecustomize.py``.
+
+See ``doc/documentation/arch-comp-licensing-feature-filter.rst`` for the rationale
+and the wheel tagging convention (``cmk.features.<option>`` entry-point groups).
+"""
 
 import os
 from collections.abc import Iterable, Sequence

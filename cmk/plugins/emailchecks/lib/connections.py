@@ -5,12 +5,10 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="possibly-undefined"
 
 import abc
 import binascii
 import email
-import email.message
 import email.mime.text
 import email.utils
 import imaplib
@@ -28,20 +26,21 @@ from typing import assert_never, final, Literal, override, Self, TypedDict, Type
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cmk.password_store.v1_unstable import (
+from cmk.password_store.v1 import (
     PasswordStore,
     PasswordStoreError,
 )
-from cmk.password_store.v1_unstable._impl import _read_store_secret
+from cmk.password_store.v1._impl import _read_store_secret
 from cmk.plugins.emailchecks.lib.ac_args import (
     BasicAuth,
+    HTTPProxyConfig,
     MailboxAuth,
     OAuth2,
     OAuth2WithTokens,
     TRXConfig,
 )
 from cmk.plugins.emailchecks.lib.graph_api_client import AuthorityURLs, GraphApiClient
-from cmk.server_side_programs.v1_unstable import Storage
+from cmk.server_side_programs.v1 import Storage
 
 # Isort messes with the type annotation and creates a unused-ignore for the
 # OAUTH2 and OAuth2Credentials imports.
@@ -206,14 +205,14 @@ class EWS(_Connection):
                     break
             if i > 0:  # break loop if at least the 1st lvl subfolder is found in the root folder
                 break
-        subfolder_names = subfolder_names[i:]
+        subfolder_names = subfolder_names[i:]  # type: ignore[possibly-undefined]
 
         # Create new subfolder(s)
         for fname in subfolder_names:
             new_folder = Folder(parent=parent_folder, name=fname)
             new_folder.save()
             parent_folder = new_folder
-        return new_folder
+        return new_folder  # type: ignore[possibly-undefined]
 
     def mails_by_date(
         self,
@@ -307,12 +306,14 @@ class GraphApi(_Connection):
         authority_urls: AuthorityURLs,
         auth: OAuth2WithTokens,
         storage_id: str,
+        proxy: HTTPProxyConfig,
     ) -> None:
         self.authority_urls = authority_urls
         self._resource_url = authority_urls.resource
         self._login_url = authority_urls.login
         self.auth = auth
         self.storage_id = storage_id
+        self.proxy = proxy
         self._base_folder_uri = "me/messages"
         self._connect()
 
@@ -326,10 +327,11 @@ class GraphApi(_Connection):
             secret=self.auth.client_secret,
             authority_urls=self.authority_urls,
             pw_store=PasswordStore(store_secret),
-            pw_store_file=storage._full_dir / "stored_tokens",
+            pw_store_file=storage._full_dir / "stored_tokens",  # noqa: SLF001
             storage=storage,
             initial_access_token=self.auth.initial_access_token,
             initial_refresh_token=self.auth.initial_refresh_token,
+            proxies=self.proxy,
         )
 
     @override
@@ -637,7 +639,7 @@ class IMAP(_Connection):
         ['Gelöscht', 'INBOX', 'OUTBOX']
         """
         pattern = re.compile(r'\((.*?)\) "(.*)" (.*)')
-        mb_list = [_mutf_7_decode(e) for e in folder_list if isinstance(e, bytes)]  # type: ignore[redundant-expr]
+        mb_list = [_mutf_7_decode(e) for e in folder_list]
         return [
             match.group(3).strip('"')
             for mb in mb_list
@@ -918,6 +920,7 @@ def _make_connection(config: TRXConfig, timeout: int) -> POP3 | IMAP | EWS | Gra
                     authority_urls=get_graph_authority_urls(config.authority),
                     auth=config.auth,
                     storage_id=config.auth.storage_id,
+                    proxy=config.proxy,
                 )
 
             case "SMTP":

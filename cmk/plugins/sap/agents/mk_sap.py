@@ -53,7 +53,7 @@ except ImportError:
     pass
 
 if sys.version_info[:2] < (3, 5):  # noqa: UP036
-    RecursionError = RuntimeError
+    RecursionError = RuntimeError  # noqa: A001
 
 # #############################################################################
 
@@ -120,6 +120,7 @@ local_cfg = {
     "loglevel": "warn",
     # "lang": "EN",
     # "host_prefix": "FOOBAR_",
+    # "host_suffix": "_FOOBAR",
 }
 
 # A list of strings, while the string must match the full path to one or
@@ -137,6 +138,9 @@ monitor_paths = [
     "SAP CCMS Monitor Templates/Dialog Overview/*",
 ]
 monitor_types = []  # type: list[str]
+
+# Matches here override monitor_paths.
+exclude_paths = []  # type: list[str]
 config_file = MK_CONFDIR + "/sap.cfg"
 
 cfg = {}  # type: list[dict[Any, Any]] | dict[Any, Any]
@@ -182,7 +186,7 @@ def load_state_file():
                 raise ValueError("unexpected value in state file: %r" % (value,))
             states[key] = value
         return states
-    except (OSError, ValueError, TypeError, SyntaxError, AttributeError):
+    except (OSError, ValueError, TypeError, SyntaxError, AttributeError):  # fmt: skip
         return {}
 
 
@@ -209,6 +213,12 @@ class SapError(Exception):
 
 
 def to_be_monitored(path, toplevel_match=False):
+    # Never shortened for toplevel matching: shortening a subtree rule
+    # would exclude the whole monitor.
+    for rule in exclude_paths:
+        if fnmatch.fnmatch(path, rule):
+            return False
+
     for rule in monitor_paths:
         if toplevel_match and rule.count("/") > 1:
             rule = "/".join(rule.split("/")[:2])
@@ -278,7 +288,7 @@ def mon_tree(conn, cfg_entry, ms_name, mon_name):
             node["PATH"] = ms_name + SEPARATOR + node_path(tree, node)
         except RecursionError:
             raise SapError(
-                (
+                (  # noqa: UP032  # PEP 498 (Literal String Interpolation) is a Python 3.6 feature
                     "Could not calculate path, recursion limit reached. "
                     "Reorganise your SAP data to get past this error. "
                     "Element that causes this: {node}"
@@ -356,7 +366,7 @@ def alert_details(conn, cfg_entry, alert):
     return state, msg
 
 
-def process_alerts(conn, cfg_entry, logs, ms_name, mon_name, node, alerts):
+def process_alerts(conn, cfg_entry, logs, ms_name, mon_name, node, alerts):  # noqa: ARG001
     global state_file_changed
 
     sid = node["MTSYSID"].strip() or "Other"
@@ -495,23 +505,32 @@ def check(pyrfc, cfg_entry):
                     )
                 )
 
+    write_piggyback_data(
+        host_prefix=cfg_entry.get("host_prefix", ""),
+        host_suffix=cfg_entry.get("host_suffix", ""),
+        sap_data=sap_data,
+        logs=logs,
+    )
+
+    logout(conn)
+    conn.close()
+
+
+def write_piggyback_data(*, host_prefix, host_suffix="", sap_data, logs):
     for host, host_sap in sap_data.items():
-        sys.stdout.write("<<<<%s%s>>>>\n" % (cfg_entry.get("host_prefix", ""), host))
+        sys.stdout.write("<<<<%s%s%s>>>>\n" % (host_prefix, host, host_suffix))
         sys.stdout.write("<<<sap:sep(9)>>>\n")
         sys.stdout.write("%s\n" % "\n".join(host_sap))
     sys.stdout.write("<<<<>>>>\n")
 
     for host, host_logs in logs.items():
-        sys.stdout.write("<<<<%s>>>>\n" % host)
+        sys.stdout.write("<<<<%s%s%s>>>>\n" % (host_prefix, host, host_suffix))
         sys.stdout.write("<<<logwatch>>>\n")
         for log, lines in host_logs.items():
             sys.stdout.write("[[[%s]]]\n" % log)
             if lines:
                 sys.stdout.write("\n".join(lines) + "\n")
         sys.stdout.write("<<<<>>>>\n")
-
-    logout(conn)
-    conn.close()
 
 
 def main():

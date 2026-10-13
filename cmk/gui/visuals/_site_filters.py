@@ -12,11 +12,13 @@ from typing import override
 from cmk.ccc.site import SiteId
 from cmk.gui import query_filters
 from cmk.gui.autocompleters import AutocompleterRegistry
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import active_config, Config, RequestCacheConfig
 from cmk.gui.i18n import _, _l
-from cmk.gui.type_defs import Choices, FilterHTTPVariables, Row
-from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.type_defs import FilterHTTPVariables, Row
 from cmk.web.utils.autocompleter_config import AutocompleterConfig
+from cmk.web.utils.choices import Choice
+from cmk.web.utils.request_cache import RequestCache
+from cmk.web.utils.speaklater import LazyString
 
 from .filter import Filter, FilterGroup, FilterRegistry
 from .filter.components import DualList, DynamicDropdown, FilterComponent, StaticText
@@ -85,7 +87,9 @@ class SiteFilter(Filter):
         self._heading_info = heading_info
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield DynamicDropdown(
             id=self.query_filter.request_vars[0],
             autocompleter=AutocompleterConfig(
@@ -95,7 +99,9 @@ class SiteFilter(Filter):
         )
 
     @override
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
+    def heading_info(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> str | None:
         return self._heading_info(value)
 
     @override
@@ -130,7 +136,9 @@ class MultipleSitesFilter(SiteFilter):
         return [x for x in value.get(self.htmlvars[0], "").strip().split("|") if x]
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         if choices := dict(self._site_choices(active_config)):
             yield DualList(
                 id=self.query_filter.request_vars[0],
@@ -145,16 +153,16 @@ def sites_autocompleter(
     value: str,
     params: dict,
     sites_options: Callable[[Config], list[tuple[str, str]]],
-) -> Choices:
+) -> list[Choice]:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices
     """
 
-    choices: Choices = [v for v in sites_options(config) if _matches_id_or_title(value, v)]
+    choices: list[Choice] = [v for v in sites_options(config) if _matches_id_or_title(value, v)]
 
     # This part should not exists as the optional(not enforce) would better be not having the filter at all
     if not params.get("strict"):
-        empty_choice: Choices = [("", "All Sites")]
+        empty_choice: list[Choice] = [("", "All Sites")]
         choices = empty_choice + choices
     return choices
 

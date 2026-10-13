@@ -69,9 +69,7 @@ function discoverPackageRoots(wsPath: string): string[] {
     if (!fs.existsSync(fullBase)) continue
     for (const name of fs.readdirSync(fullBase).sort()) {
       const pkgDir = path.join(fullBase, name)
-      const hasCmk = fs.existsSync(path.join(pkgDir, 'cmk'))
-      const hasPyproject = fs.existsSync(path.join(pkgDir, 'pyproject.toml'))
-      if (hasCmk && hasPyproject) {
+      if (fs.existsSync(path.join(pkgDir, 'cmk'))) {
         roots.push(`${baseDir}/${name}`)
       }
     }
@@ -93,10 +91,9 @@ export function discoverMypyTargets(wsPath: string): string[] {
     const fullBase = path.join(wsPath, baseDir)
     if (!fs.existsSync(fullBase)) continue
     for (const name of fs.readdirSync(fullBase).sort()) {
-      const pkgDir = path.join(fullBase, name)
-      if (!fs.existsSync(path.join(pkgDir, 'pyproject.toml'))) continue
       const cmkRel = `${baseDir}/${name}/cmk`
-      if (fs.existsSync(path.join(wsPath, cmkRel))) targets.push(cmkRel)
+      if (!fs.existsSync(path.join(wsPath, cmkRel))) continue
+      targets.push(cmkRel)
       const testsRel = `${baseDir}/${name}/tests`
       const testsAbs = path.join(wsPath, testsRel)
       // Skip per-package tests dirs that contain __init__.py: they all resolve
@@ -528,7 +525,7 @@ export function registerMypyConfigWatcher(): vscode.Disposable[] {
   disposables.push(watcher)
 
   const packageWatcher = vscode.workspace.createFileSystemWatcher(
-    new vscode.RelativePattern(wsPath, '{packages,non-free/packages}/*/pyproject.toml')
+    new vscode.RelativePattern(wsPath, '{packages,non-free/packages}/*/cmk')
   )
   const refreshOnPackageChange = (): void => {
     applyDynamicMypyTargets(wsPath).catch((err) =>

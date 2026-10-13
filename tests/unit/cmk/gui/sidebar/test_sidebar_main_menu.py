@@ -15,7 +15,12 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
-from cmk.gui.main_menu_types import ConfigurableMainMenuItem, MainMenuItem, MainMenuLinkItem
+from cmk.gui.main_menu_types import (
+    ConfigurableMainMenuItem,
+    MainMenuItem,
+    MainMenuLinkItem,
+    MainMenuToggleItem,
+)
 from cmk.gui.pages import PageContext
 from cmk.gui.sidebar.main_menu import (
     ajax_message_read,
@@ -26,6 +31,8 @@ from cmk.gui.sidebar.main_menu import (
 )
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.shared_typing.main_menu import (
     NavItem,
     NavItemHeader,
@@ -36,6 +43,7 @@ from cmk.shared_typing.main_menu import (
     NavItemType,
     NavItemVueApp,
     NavLinkItem,
+    NavToggleItem,
     NavVueAppIdEnum,
     TopicItemMode,
 )
@@ -43,12 +51,13 @@ from cmk.shared_typing.main_menu import (
 USER_PERMISSIONS = UserPermissions({}, {}, {}, [])
 
 
-@pytest.fixture(name="permissive_user", autouse=True)
+@pytest.fixture(name="permissive_user", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_permissive_user(
-    request_context: None, monkeypatch: pytest.MonkeyPatch
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[None]:
     with monkeypatch.context() as m:
-        m.setattr(user, "may", lambda x: True)
+        m.setattr(user, "may", lambda x: True)  # noqa: ARG005
         yield
 
 
@@ -94,7 +103,7 @@ def _item(
 def _search_item() -> MainMenuItem:
     return _item(
         NavItemIdEnum.search,
-        get_vue_app=lambda req: NavItemVueApp(id=NavVueAppIdEnum.cmk_unified_search),
+        get_vue_app=lambda req: NavItemVueApp(id=NavVueAppIdEnum.cmk_unified_search),  # noqa: ARG005
     )
 
 
@@ -107,7 +116,7 @@ def _creator(monkeypatch: pytest.MonkeyPatch, items: Iterable[object]) -> MainMe
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request)
+    return PageContext(config=config, request=request, transactions=transactions, session=session)
 
 
 def test_a_menu_without_topics_and_without_a_vue_app_is_dropped(
@@ -117,9 +126,10 @@ def test_a_menu_without_topics_and_without_a_vue_app_is_dropped(
     entry that opens nothing."""
     with monkeypatch.context() as m:
         creator = _creator(
-            m, [_search_item(), _item(NavItemIdEnum.setup, get_topics=lambda permissions: [])]
+            m,
+            [_search_item(), _item(NavItemIdEnum.setup, get_topics=lambda permissions: [])],  # noqa: ARG005
         )
-        items = creator._get_menu_items(is_user_nav=False)
+        items = creator._get_menu_items(is_user_nav=False)  # noqa: SLF001
 
     assert [item.id for item in items] == [NavItemIdEnum.search]
 
@@ -132,12 +142,12 @@ def test_a_menu_that_hides_itself_is_dropped(monkeypatch: pytest.MonkeyPatch) ->
                 _search_item(),
                 _item(
                     NavItemIdEnum.setup,
-                    get_topics=lambda permissions: [_topic([_entry("a", "A")])],
+                    get_topics=lambda permissions: [_topic([_entry("a", "A")])],  # noqa: ARG005
                     hide=lambda: True,
                 ),
             ],
         )
-        items = creator._get_menu_items(is_user_nav=False)
+        items = creator._get_menu_items(is_user_nav=False)  # noqa: SLF001
 
     assert [item.id for item in items] == [NavItemIdEnum.search]
 
@@ -153,11 +163,11 @@ def test_a_link_item_becomes_a_nav_link_item(monkeypatch: pytest.MonkeyPatch) ->
                     title=_l("Help"),
                     sort_index=1,
                     shortcut=NavItemShortcut(key="h"),
-                    get_url=lambda req: "help.py",
+                    get_url=lambda req: "help.py",  # noqa: ARG005
                 ),
             ],
         )
-        items = creator._get_menu_items(is_user_nav=False)
+        items = creator._get_menu_items(is_user_nav=False)  # noqa: SLF001
 
     link_item = items[1]
     assert isinstance(link_item, NavLinkItem)
@@ -174,17 +184,17 @@ def test_a_configurable_item_is_resolved_to_its_instance(
         title=_l("Help"),
         sort_index=1,
         shortcut=NavItemShortcut(key="h"),
-        get_item_instance=lambda item, usr: MainMenuLinkItem(
+        get_item_instance=lambda item, usr: MainMenuLinkItem(  # noqa: ARG005
             id=NavItemIdEnum.help,
             title=_l("Help"),
             sort_index=1,
             shortcut=NavItemShortcut(key="h"),
-            get_url=lambda req: "resolved.py",
+            get_url=lambda req: "resolved.py",  # noqa: ARG005
         ),
     )
     with monkeypatch.context() as m:
         creator = _creator(m, [_search_item(), configurable])
-        items = creator._get_menu_items(is_user_nav=False)
+        items = creator._get_menu_items(is_user_nav=False)  # noqa: SLF001
 
     link_item = items[1]
     assert isinstance(link_item, NavLinkItem)
@@ -208,7 +218,7 @@ def test_a_link_item_with_only_a_static_url_loses_it(monkeypatch: pytest.MonkeyP
                 ),
             ],
         )
-        items = creator._get_menu_items(is_user_nav=False)
+        items = creator._get_menu_items(is_user_nav=False)  # noqa: SLF001
 
     link_item = items[1]
     assert isinstance(link_item, NavLinkItem)
@@ -226,15 +236,15 @@ def test_menu_items_are_split_between_the_main_and_the_user_navigation(
                 _item(
                     NavItemIdEnum.user,
                     is_user_nav=True,
-                    get_topics=lambda permissions: [_topic([_entry("a", "A")])],
+                    get_topics=lambda permissions: [_topic([_entry("a", "A")])],  # noqa: ARG005
                 ),
             ],
         )
 
-        assert [item.id for item in creator._get_menu_items(is_user_nav=False)] == [
+        assert [item.id for item in creator._get_menu_items(is_user_nav=False)] == [  # noqa: SLF001
             NavItemIdEnum.search
         ]
-        assert [item.id for item in creator._get_menu_items(is_user_nav=True)] == [
+        assert [item.id for item in creator._get_menu_items(is_user_nav=True)] == [  # noqa: SLF001
             NavItemIdEnum.user
         ]
 
@@ -252,10 +262,10 @@ def test_show_more_is_only_offered_when_a_topic_has_show_more_entries(
     with monkeypatch.context() as m:
         creator = _creator(m, [_search_item()])
 
-        without = creator._get_nav_item_from_main_menu_item(
+        without = creator._get_nav_item_from_main_menu_item(  # noqa: SLF001
             _item(NavItemIdEnum.setup, topics=[plain], header=NavItemHeader())
         )
-        with_ = creator._get_nav_item_from_main_menu_item(
+        with_ = creator._get_nav_item_from_main_menu_item(  # noqa: SLF001
             _item(NavItemIdEnum.setup, topics=[with_show_more], header=NavItemHeader())
         )
 
@@ -268,7 +278,7 @@ def test_show_more_is_only_offered_when_a_topic_has_show_more_entries(
 def test_entries_of_a_topic_are_sorted_by_sort_index(monkeypatch: pytest.MonkeyPatch) -> None:
     with monkeypatch.context() as m:
         creator = _creator(m, [_search_item()])
-        entries = creator._get_entries_of_topic(
+        entries = creator._get_entries_of_topic(  # noqa: SLF001
             _topic([_entry("b", "B", sort_index=2), _entry("a", "A", sort_index=1)])
         )
 
@@ -281,7 +291,7 @@ def test_a_grouping_entry_keeps_its_children_and_loses_its_url(
     """An indented entry is a group heading, not a link - it must not become clickable."""
     with monkeypatch.context() as m:
         creator = _creator(m, [_search_item()])
-        entries = creator._get_entries_of_topic(
+        entries = creator._get_entries_of_topic(  # noqa: SLF001
             _topic(
                 [
                     _entry(
@@ -304,7 +314,7 @@ def test_an_item_entry_keeps_its_url_and_has_no_children(
 ) -> None:
     with monkeypatch.context() as m:
         creator = _creator(m, [_search_item()])
-        entries = creator._get_entries_of_topic(_topic([_entry("a", "A")]))
+        entries = creator._get_entries_of_topic(_topic([_entry("a", "A")]))  # noqa: SLF001
 
     assert entries[0].url == "view.py"
     assert entries[0].mode == TopicItemMode.item
@@ -315,14 +325,14 @@ def test_entries_of_a_topic_without_entries(monkeypatch: pytest.MonkeyPatch) -> 
     with monkeypatch.context() as m:
         creator = _creator(m, [_search_item()])
 
-        assert creator._get_entries_of_topic(_topic([])) == []
+        assert creator._get_entries_of_topic(_topic([])) == []  # noqa: SLF001
 
 
 def test_topics_of_a_menu_without_topics(monkeypatch: pytest.MonkeyPatch) -> None:
     with monkeypatch.context() as m:
         creator = _creator(m, [_search_item()])
 
-        assert creator._get_topics_of_menu(_item(NavItemIdEnum.setup)) == []
+        assert creator._get_topics_of_menu(_item(NavItemIdEnum.setup)) == []  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -340,7 +350,7 @@ def test_only_the_searchable_menus_become_unified_search_providers(
     with monkeypatch.context() as m:
         creator = _creator(m, [_search_item()])
         before = creator.search_config.providers
-        creator._add_unified_searchprovider(_item(menu_id))
+        creator._add_unified_searchprovider(_item(menu_id))  # noqa: SLF001
         after = creator.search_config.providers
 
     if expected_active:
@@ -362,7 +372,7 @@ def test_create_injects_the_search_config_into_the_search_menu(
                 _item(
                     NavItemIdEnum.monitoring,
                     sort_index=5,
-                    get_topics=lambda permissions: [_topic([_entry("a", "A")])],
+                    get_topics=lambda permissions: [_topic([_entry("a", "A")])],  # noqa: ARG005
                 ),
             ],
         )
@@ -383,6 +393,44 @@ def test_create_prefers_the_users_own_start_url(monkeypatch: pytest.MonkeyPatch)
 
     assert config.start.url == (user.start_url or "index.py")
     assert config.start.icon_path == "logo.svg"
+
+
+def _toggle_item(**kwargs: object) -> MainMenuToggleItem:
+    defaults: dict[str, object] = {
+        "id": NavItemIdEnum.ai_assistant,
+        "title": _l("AI Assistant"),
+        "sort_index": 0,
+        "shortcut": NavItemShortcut(key=" ", ctrl=True),
+    }
+    defaults.update(kwargs)
+    return MainMenuToggleItem(**defaults)  # type: ignore[arg-type]
+
+
+def test_create_lists_a_toggle_item_as_a_toggle_and_not_as_a_menu(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    with monkeypatch.context() as m:
+        creator = _creator(m, [_search_item(), _toggle_item(hint=_l("Open the AI assistant"))])
+        config = creator.create(start_url="index.py", home_icon_path=None)
+
+    assert config.toggles == [
+        NavToggleItem(
+            id=NavItemIdEnum.ai_assistant,
+            title="AI Assistant",
+            sort_index=0,
+            shortcut=NavItemShortcut(key=" ", ctrl=True),
+            hint="Open the AI assistant",
+        )
+    ]
+    assert [item.id for item in [*config.main, *config.user]] == [NavItemIdEnum.search]
+
+
+def test_create_drops_a_toggle_item_that_hides_itself(monkeypatch: pytest.MonkeyPatch) -> None:
+    with monkeypatch.context() as m:
+        creator = _creator(m, [_search_item(), _toggle_item(hide=lambda: True)])
+        config = creator.create(start_url="index.py", home_icon_path=None)
+
+    assert config.toggles == []
 
 
 def test_message_read_confirms_the_deletion(

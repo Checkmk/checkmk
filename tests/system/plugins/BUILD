@@ -20,7 +20,7 @@ py_library(
     deps = [
         requirement("pytest"),
         "//tests/system:pkg_marker",
-        "//tests/testlib",
+        "//tests/testlib/system",
     ] + select({
         "//:gpl+nonfree_repo": [
             "//non-free/tests/testlib/system/licensing",

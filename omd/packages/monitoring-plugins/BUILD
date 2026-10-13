@@ -1,8 +1,8 @@
 load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mklink")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:patchelf.bzl", "set_runpath_tree")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 exports_files(
     [
@@ -107,4 +107,37 @@ pkg_tar(
     stamp = 1,
     tags = ["manual"],
     visibility = ["//omd:__pkg__"],
+)
+
+directory_path(
+    name = "check_icmp_file",
+    directory = ":monitoring-plugins_deployable_libexec",
+    path = "check_icmp",
+    tags = ["manual"],
+)
+
+copy_to_directory(
+    name = "check_icmp_copy",
+    srcs = [":check_icmp_file"],
+    root_paths = ["**/monitoring-plugins_deployable_libexec"],
+    tags = ["manual"],
+)
+
+pkg_files(
+    name = "check_icmp_libexec",
+    srcs = [":check_icmp_copy"],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "lib/nagios/plugins/",
+    strip_prefix = "check_icmp_copy",
+    tags = ["manual"],
+)
+
+pkg_tar(
+    name = "check_icmp",
+    srcs = [":check_icmp_libexec"],
+    stamp = 1,
+    tags = ["manual"],
+    visibility = ["//omd/non-free/relay:__pkg__"],
 )

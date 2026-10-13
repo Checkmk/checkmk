@@ -6,19 +6,17 @@
 
 from datetime import datetime, UTC
 from pathlib import Path
-from typing import TypedDict
 
 import pytest
 from pytest_mock import MockerFixture
 
-import omdlib.finalize
-import omdlib.main
-from omdlib.contexts import SiteContext
-
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.store import load_text_from_file
+from cmk.gui.type_defs import GlobalSettings, TrustedCertificateAuthorities
 from cmk.gui.watolib import config_domains
-from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
+from cmk.gui.watolib.config_domains import ConfigDomainCACertificates, ConfigDomainOMD
+from cmk.livestatus_client import SiteConfigurations
+from cmk.utils.certs import cert_dir, initialize_site_ca, initialize_site_certificate, SiteCA
 
 remote1_newer = (
     "-----BEGIN CERTIFICATE-----\n"
@@ -145,9 +143,13 @@ negative_serial_self_generated = (
 )
 
 
-class _CASettings(TypedDict):
-    use_system_wide_cas: bool
-    trusted_cas: list[str]
+def _ca_globals(*, use_system_wide_cas: bool) -> GlobalSettings:
+    return {
+        "trusted_certificate_authorities": {
+            "use_system_wide_cas": use_system_wide_cas,
+            "trusted_cas": [],
+        }
+    }
 
 
 class TestConfigDomainCACertificates:
@@ -215,54 +217,72 @@ class TestConfigDomainCACertificates:
             ),
         ],
     )
-    def test_save_empty(
+    def test_update_trust_stores(
         self,
         mocked_ca_config: ConfigDomainCACertificates,
-        ca_settings: _CASettings,
+        ca_settings: TrustedCertificateAuthorities,
         expected_file_content: str,
     ) -> None:
-        mocked_ca_config.save(
-            {
-                "trusted_certificate_authorities": ca_settings,
-            }
-        )
+        mocked_ca_config.update_trust_stores(ca_settings)
         assert load_text_from_file(mocked_ca_config.trusted_cas_file) == expected_file_content
+
+    def test_settings_change_updates_the_trust_store_from_the_local_site(
+        self,
+        mocked_ca_config: ConfigDomainCACertificates,
+    ) -> None:
+        with mocked_ca_config.settings_change(
+            SiteConfigurations({}),
+            before={omd_site(): _ca_globals(use_system_wide_cas=False)},
+            after={omd_site(): _ca_globals(use_system_wide_cas=True)},
+        ):
+            pass
+        assert load_text_from_file(mocked_ca_config.trusted_cas_file) == (
+            "system_cert_1\nsystem_cert_2"
+        )
+
+    def test_settings_change_leaves_the_trust_store_if_the_local_site_is_unaffected(
+        self,
+        mocked_ca_config: ConfigDomainCACertificates,
+    ) -> None:
+        with mocked_ca_config.settings_change(
+            SiteConfigurations({}),
+            before={
+                omd_site(): _ca_globals(use_system_wide_cas=False),
+                SiteId("remote"): _ca_globals(use_system_wide_cas=False),
+            },
+            after={
+                omd_site(): _ca_globals(use_system_wide_cas=False),
+                SiteId("remote"): _ca_globals(use_system_wide_cas=True),
+            },
+        ):
+            pass
+        assert not mocked_ca_config.trusted_cas_file.exists()
 
     def test_remote_sites_cas(self) -> None:
         longest_validity = datetime(3021, 2, 21, 19, 56, 49, tzinfo=UTC)
 
-        remote_cas = ConfigDomainCACertificates()._remote_sites_cas(
+        remote_cas = ConfigDomainCACertificates()._remote_sites_cas(  # noqa: SLF001
             [remote1_newer, remote1_older, remote2]
         )
         assert list(remote_cas) == [SiteId("heute_remote_1"), SiteId("heute_remote_2")]
 
         assert remote_cas[SiteId("heute_remote_1")].not_valid_after == longest_validity
         # also test changed order:
-        remote_cas = ConfigDomainCACertificates()._remote_sites_cas([remote1_older, remote1_newer])
+        remote_cas = ConfigDomainCACertificates()._remote_sites_cas([remote1_older, remote1_newer])  # noqa: SLF001
         assert remote_cas[SiteId("heute_remote_1")].not_valid_after == longest_validity
 
-    def test_remote_root_ca_in_remote_site_cas(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        site_id = "tested"
-        ca_path = tmp_path / site_id / "etc" / "ssl"
-        ca_path.mkdir(parents=True, exist_ok=True)
-        ca_pem = ca_path / "ca.pem"
-        site_pem = ca_path / "sites" / ("%s.pem" % site_id)
-
-        monkeypatch.setattr(
-            omdlib.finalize,
-            "cert_dir",
-            lambda x: ca_path,
-        )
+    def test_remote_root_ca_in_remote_site_cas(self, tmp_path: Path) -> None:
+        site_id = SiteId("tested")
+        ca_pem = SiteCA.root_ca_path(cert_dir(tmp_path))
+        site_pem = SiteCA.site_certificate_path(cert_dir(tmp_path), site_id)
 
         assert not site_pem.exists()
-        omdlib.finalize.initialize_site_ca(
-            SiteContext(site_id), site_key_size=1024, root_key_size=1024
-        )
+        initialize_site_ca(omd_root=tmp_path, site_id=site_id, key_size=1024)
+        initialize_site_certificate(omd_root=tmp_path, site_id=site_id, key_size=1024)
+        assert site_pem.exists()
 
-        remote_cas = ConfigDomainCACertificates()._remote_sites_cas([ca_pem.read_text()])
-        assert SiteId(site_id) in remote_cas
+        remote_cas = ConfigDomainCACertificates()._remote_sites_cas([ca_pem.read_text()])  # noqa: SLF001
+        assert site_id in remote_cas
 
 
 def test_remote_sites_cas_negative_serials() -> None:
@@ -279,7 +299,7 @@ def test_load_cert_ignores_negative_serials(mocker: MockerFixture) -> None:
     )
 
     assert not list(
-        config_domains.ConfigDomainCACertificates()._load_certs(
+        config_domains.ConfigDomainCACertificates()._load_certs(  # noqa: SLF001
             [negative_serial, negative_serial_self_generated]
         )
     )
@@ -288,3 +308,16 @@ def test_load_cert_ignores_negative_serials(mocker: MockerFixture) -> None:
         "There is a certificate %(subject)r with a negative serial number in the trusted certificate authorities! Ignoring that...",
         {"subject": "CN=Test,O=Internet Widgits Pty Ltd,ST=Some-State,C=DE"},
     )
+
+
+def test_default_globals_reports_fixed_mcp_defaults(mocker: MockerFixture, tmp_path: Path) -> None:
+    """Unlike every other "omd config" setting, whose default_globals() still mirrors
+    whatever site.conf currently holds, the MCP settings have a fixed factory default."""
+    omd_config = ConfigDomainOMD()
+    mocker.patch.object(omd_config, "omd_config_dir", tmp_path)
+    (tmp_path / "site.conf").write_text("CONFIG_MCP_SERVER='on'\nCONFIG_MCP_TRACE_FORWARD='on'\n")
+
+    default_globals = omd_config.default_globals()
+
+    assert default_globals["site_mcp_server"] is False
+    assert default_globals["site_mcp_trace_forward"] is False

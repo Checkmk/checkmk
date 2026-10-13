@@ -50,7 +50,7 @@ def _FixedLevels(
 
 def SimpleLevels(
     spec: _Spec = Float,
-    help: str | None = None,
+    help: str | None = None,  # noqa: A002
     default_levels: tuple[float | int, float | int] = (0.0, 0.0),
     default_value: tuple[float, float] | None = None,
     title: str | None = None,

@@ -15,6 +15,8 @@ from cmk.gui.search._pages import (
     _UNIFIED_SEARCH_LIVESTATUS_ORDER,
     PageUnifiedSearch,
 )
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.shared_typing.unified_search import (
     MessageVariant,
@@ -52,7 +54,7 @@ class TestParseProviderQueryParam:
     def test_provider_is_parsed(
         self, page: PageUnifiedSearch, query_string: str, expected: ProviderName | None
     ) -> None:
-        assert page._parse_provider_query_param(_request(query_string)) == expected
+        assert page._parse_provider_query_param(_request(query_string)) == expected  # noqa: SLF001
 
 
 class TestParseSortQueryParam:
@@ -70,7 +72,7 @@ class TestParseSortQueryParam:
     def test_sort_type_is_parsed(
         self, page: PageUnifiedSearch, query_string: str, expected: SortType | None
     ) -> None:
-        assert page._parse_sort_query_param(_request(query_string)) == expected
+        assert page._parse_sort_query_param(_request(query_string)) == expected  # noqa: SLF001
 
 
 class TestParseDisabledCollapser:
@@ -85,12 +87,12 @@ class TestParseDisabledCollapser:
     def test_collapser_is_disabled_by_absence(
         self, page: PageUnifiedSearch, query_string: str, expected: bool
     ) -> None:
-        assert page._parse_disabled_collapser(_request(query_string)) is expected
+        assert page._parse_disabled_collapser(_request(query_string)) is expected  # noqa: SLF001
 
 
 class TestCollectApiResponseMessages:
     def test_reaching_the_row_limit_is_reported_to_the_user(self, page: PageUnifiedSearch) -> None:
-        messages = page._collect_api_response_messages(_counts(_LIVESTATUS_ENGINE_ROW_LIMIT))
+        messages = page._collect_api_response_messages(_counts(_LIVESTATUS_ENGINE_ROW_LIMIT))  # noqa: SLF001
 
         assert len(messages) == 1
         assert messages[0].message_variant is MessageVariant.info
@@ -106,7 +108,7 @@ class TestCollectApiResponseMessages:
     def test_staying_below_the_row_limit_is_not_reported(
         self, page: PageUnifiedSearch, monitoring: int
     ) -> None:
-        assert page._collect_api_response_messages(_counts(monitoring)) == []
+        assert page._collect_api_response_messages(_counts(monitoring)) == []  # noqa: SLF001
 
 
 _HOST_ROWS = [
@@ -189,7 +191,10 @@ class TestPage:
     @staticmethod
     def _context(config: Config, query_string: str) -> PageContext:
         return PageContext(
-            config=config, request=Request(create_environ(query_string=query_string))
+            config=config,
+            request=Request(create_environ(query_string=query_string)),
+            transactions=transactions,
+            session=session,
         )
 
     def test_a_monitoring_search_is_answered_as_an_api_response(

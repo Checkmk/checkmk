@@ -39,7 +39,7 @@ __version__ = "3.0.0b1"
 ##################
 # developer notes:
 #
-# Support for individual bricklets has to be added in init_device_handlers.
+# Support for individual bricklets has to be added in _DEVICE_HANDLERS.
 #  Currently the bricklets included in the Starter Kit: Server Room Monitoring are
 #  implemented
 
@@ -238,29 +238,17 @@ def display_on_segment(conn, settings, text):
     br.set_segments(segments, settings["segment_display_brightness"], False)
 
 
-def init_device_handlers():
-    device_handlers = {}
-
-    # storing the dev_id is not necessary but may save a little time as otherwise the module
-    # needs to be imported just to find out this id. If the bricklet is present the module
-    # gets imported anyway of course
-    for dev_id, module_name, clazz, handler in [
-        (13, "brick_master", "BrickMaster", print_master),
-        (21, "bricklet_ambient_light", "BrickletAmbientLight", print_ambient_light),
-        (259, "bricklet_ambient_light_v2", "BrickletAmbientLightV2", print_ambient_light_v2),
-        (216, "bricklet_temperature", "BrickletTemperature", print_temperature),
-        (226, "bricklet_ptc", "BrickletPTC", print_temperature_ext),
-        (27, "bricklet_humidity", "BrickletHumidity", print_humidity),
-        (233, "bricklet_motion_detector", "BrickletMotionDetector", print_motion_detector),
-    ]:
-        if dev_id is not None:
-            device_handlers[dev_id] = handler
-        else:
-            module = __import__("tinkerforge." + module_name)  # type: ignore[unreachable]
-            sub_module = module.__dict__[module_name]
-            device_handlers[sub_module.__dict__[clazz].DEVICE_IDENTIFIER] = handler
-
-    return device_handlers
+# The keys are the DEVICE_IDENTIFIERs of the bricklet classes. Hard coding them saves
+# importing the modules just to find out the IDs.
+_DEVICE_HANDLERS = {
+    13: print_master,  # BrickMaster
+    21: print_ambient_light,  # BrickletAmbientLight
+    259: print_ambient_light_v2,  # BrickletAmbientLightV2
+    216: print_temperature,  # BrickletTemperature
+    226: print_temperature_ext,  # BrickletPTC
+    27: print_humidity,  # BrickletHumidity
+    233: print_motion_detector,  # BrickletMotionDetector
+}
 
 
 def enumerate_callback(
@@ -268,12 +256,12 @@ def enumerate_callback(
     device_handlers,
     settings,
     uid,
-    connected_uid,
-    position,
-    hardware_version,
-    firmware_version,
+    connected_uid,  # noqa: ARG001
+    position,  # noqa: ARG001
+    hardware_version,  # noqa: ARG001
+    firmware_version,  # noqa: ARG001
     device_identifier,
-    enumeration_type,
+    enumeration_type,  # noqa: ARG001
 ):
     if device_identifier == 237:
         global segment_display
@@ -282,7 +270,7 @@ def enumerate_callback(
         device_handlers[device_identifier](conn, settings, uid)
 
 
-def read_config(env):
+def read_config(env):  # noqa: ARG001
     settings = DEFAULT_SETTINGS
     cfg_path = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "tinkerforge.cfg")
 
@@ -357,8 +345,6 @@ def main():
     conn = IPConnection()
     conn.connect(settings["host"], settings["port"])
 
-    device_handlers = init_device_handlers()
-
     try:
         sys.stdout.write("<<<tinkerforge:sep(44)>>>\n")
 
@@ -367,7 +353,7 @@ def main():
             lambda uid, connected_uid, position, hardware_version, firmware_version, device_identifier, enumeration_type: (
                 enumerate_callback(
                     conn,
-                    device_handlers,
+                    _DEVICE_HANDLERS,
                     settings,
                     uid,
                     connected_uid,

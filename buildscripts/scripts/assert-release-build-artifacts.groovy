@@ -28,53 +28,61 @@ void main() {
         |===================================================
         """.stripMargin());
 
-    stage("Assert release build artifacts") {
-        inside_container(
-            set_docker_group_id: true,
-            mount_credentials: true,
-            privileged: true,
+    dir("${checkout_dir}") {
+        smart_stage(
+            name: "Assert release build artifacts",
+            condition: true,
+            raiseOnError: false,
         ) {
-            withCredentials([
-                usernamePassword(
-                    credentialsId: 'nexus',
-                    passwordVariable: 'NEXUS_PASSWORD',
-                    usernameVariable: 'NEXUS_USER')]) {
-                withEnv(["PYTHONUNBUFFERED=1"]) {
-                    dir("${checkout_dir}") {
-                        def result = sh(
-                            script: """scripts/run-uvenv \
-                            buildscripts/scripts/assert_build_artifacts.py \
-                            --editions_file "${checkout_dir}/editions.yml" \
-                            assert_build_artifacts \
-                            --version "${cmk_version_rc_aware}" \
-                            --use_case "${use_case}"
-                            """,
-                            returnStatus: true,
-                        );
-
-                        /// Team Donau wants to be explicitly notified about the missing relay image.
-                        /// returnCode == 2 means at least the relay is missing on dockerhub.
-                        if (result == 2 && use_case == "release") {
-                            mail(
-                                to: "team-donau@checkmk.com",
-                                from: "\"CI\" <${env.JENKINS_MAIL}>",
-                                replyTo: "${env.TEAM_CI_MAIL}",
-                                subject: "[Release] Relay image missing on Docker Hub: checkmk/check-mk-relay:${cmk_version}",
-                                body: ("""
-    |The relay image checkmk/check-mk-relay:${cmk_version} is not available on Docker Hub.
-    |
-    |Please get in touch with the release coordinator (see slack channel #release-coordination).
-    |
-    |Build: ${env.BUILD_URL}
-    |""".stripMargin()),
+            inside_container_minimal(safe_branch_name: safe_branch_name) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'nexus',
+                        passwordVariable: 'NEXUS_PASSWORD',
+                        usernameVariable: 'NEXUS_USER')
+                ]) {
+                    withCredentialUsernamePasswordAtLocation(
+                        creds: [
+                            [credentialsId: "cmk-credentials", location: "/etc/.cmk-credentials"]
+                        ]
+                    ) {
+                        withEnv(["PYTHONUNBUFFERED=1"]) {
+                            def result = sh(
+                                script: """python3 \
+                                buildscripts/scripts/assert_build_artifacts.py \
+                                --editions_file "${checkout_dir}/editions.yml" \
+                                assert_build_artifacts \
+                                --version "${cmk_version_rc_aware}" \
+                                --use_case "${use_case}"
+                                """,
+                                returnStatus: true,
                             );
-                        }
-                        if (result != 0) {
-                            error("assert_build_artifacts failed");
+
+                            /// Team Donau wants to be explicitly notified about the missing relay image.
+                            /// returnCode == 2 means at least the relay is missing on dockerhub.
+                            if (result == 2 && use_case == "release") {
+                                mail(
+                                    to: "team-donau@checkmk.com",
+                                    from: "\"CI\" <${env.JENKINS_MAIL}>",
+                                    replyTo: "${env.TEAM_CI_MAIL}",
+                                    subject: "[Release] Relay image missing on Docker Hub: checkmk/check-mk-relay:${cmk_version}",
+                                    body: ("""
+        |The relay image checkmk/check-mk-relay:${cmk_version} is not available on Docker Hub.
+        |
+        |Please get in touch with the release coordinator (see slack channel #release-coordination).
+        |
+        |Build: ${env.BUILD_URL}
+        |""".stripMargin()),
+                                );
+                            }
+
+                            if (result != 0) {
+                                error("assert_build_artifacts failed");
+                            }
                         }
                     }
                 }
-                    }
+            }
         }
     }
 }

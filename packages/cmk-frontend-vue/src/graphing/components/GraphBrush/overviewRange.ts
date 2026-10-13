@@ -4,7 +4,6 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { TimeInterval } from '../../types'
-import type { TimeRange } from '../TimeSeriesGraph'
 
 export function overviewMultiplier(spanSeconds: number): number {
   if (spanSeconds <= 25 * 3600) {
@@ -16,17 +15,11 @@ export function overviewMultiplier(spanSeconds: number): number {
   return 3
 }
 
-function clampExtent(start: number, end: number, now: number, earliest?: number): TimeInterval {
+function clampExtent(start: number, end: number, now: number, earliest = -Infinity): TimeInterval {
   const width = end - start
-  if (end > now) {
-    end = now
-    start = now - width
-  }
-  if (earliest !== undefined && start < earliest) {
-    start = earliest
-    end = earliest + width
-  }
-  return { start, end }
+  const latestStart = now - width
+  const startWithinBounds = Math.max(earliest, Math.min(start, latestStart))
+  return { start: startWithinBounds, end: Math.min(now, startWithinBounds + width) }
 }
 
 function centerExtent(window: TimeInterval, width: number): TimeInterval {
@@ -67,13 +60,4 @@ export function recenterOverviewDomain(
 
 export function overviewStep(start: number, end: number, canvasWidth: number): number {
   return Math.max(60, Math.ceil((end - start) / canvasWidth))
-}
-
-export function overviewTimeRange(
-  committed: TimeRange,
-  nowSeconds: number,
-  canvasWidth: number
-): TimeRange {
-  const { start, end } = overviewDomain(committed, nowSeconds)
-  return { start, end, step: overviewStep(start, end, canvasWidth) }
 }

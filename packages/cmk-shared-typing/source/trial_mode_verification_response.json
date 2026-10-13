@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "trial_mode_verification_response",
+  "properties": {
+    "status": { "title": "RequestStatus", "enum": ["ok", "error"] },
+    "errorMessage": { "title": "ErrorMessage", "type": "string" },
+    "salt": { "title": "Salt", "type": "string" }
+  },
+  "required": ["status"]
+}

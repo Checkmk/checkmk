@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Iterator, Mapping
 from typing import Literal
@@ -55,11 +54,13 @@ def generate_sql_command(
     ]
 
     match params.port:
-        case "explicit", int(value):  # type: ignore[unreachable]
-            args.append(f"--port={value}")
-        case "macro", str(value):  # type: ignore[unreachable]
+        case None:
+            pass
+        case "explicit", port:
+            args.append(f"--port={port}")
+        case "macro", macro:
             # trigger the potential value error here, rather than in every call
-            args.append(f"--port={int(replace_macros(value, host_config.macros))}")
+            args.append(f"--port={int(replace_macros(macro, host_config.macros))}")
 
     if params.procedure and "useprocs" in params.procedure:
         args.append("--procedure")

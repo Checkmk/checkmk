@@ -15,6 +15,7 @@ load(
 load("@openapi_spec_editions//:editions.bzl", "OPENAPI_SPEC_EDITION_GENERATORS")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 load("//bazel/rules:shared_typing_generators.bzl", "json2python", "json2typescript")
 
@@ -32,11 +33,15 @@ SOURCES_COMMON = [
     "create_relay.json",
     "custom_graph_designer.json",
     "dialog.json",
+    "global_settings.json",
     "global_time_picker.json",
     "loading_transition.json",
     "main_menu.json",
+    "maps.json",
+    "mode_create_otel_conf.json",
     "mode_custom_services.json",
     "mode_host.json",
+    "mode_host_relation_detection.json",
     "mode_oauth2_connection.json",
     "monitoring/all_hosts.json",
     "monitoring/host_services.json",
@@ -52,14 +57,18 @@ SOURCES_COMMON = [
     "welcome.json",
     "agent_slideout.json",
     "product_usage_analytics.json",
+    "trial_mode_selection_props.json",
+    "trial_mode_selection_request.json",
+    "trial_mode_verification_request.json",
+    "trial_mode_verification_response.json",
     "two_factor_auth.json",
 ]
 
 SOURCES_SPECIAL_DATACLASSES = [
     "aggregation.json",
     "attribute_filter.json",
+    "consolidation.json",
     "cmk_time_series_graph.json",
-    "graph_designer.json",
     "profiling_flamegraph.json",
     "service_graphs.json",
     "unit_format.json",
@@ -148,6 +157,26 @@ openapi_typescript.openapi_typescript(
         "$(rootpath :openapi_spec_internal)",
         "-o",
         "$(rootpath typescript/openapi_internal.d.ts)",
+        # A request field that carries a default is optional by definition: the
+        # default exists so the client may leave it out. Without this, every such
+        # field is generated as required and callers have to send values the
+        # server would have supplied itself.
+        "--default-non-nullable",
+        "false",
+    ],
+)
+
+# The Maps daemon is a FastAPI app of its own, so its schema comes ready-made
+# from //packages/cmk-maps instead of the GUI spec generator; from here on it
+# takes the same route as the REST API's types.
+openapi_typescript.openapi_typescript(
+    name = "maps_openapi_ts_file",
+    srcs = ["//packages/cmk-maps:openapi_spec"],
+    outs = ["typescript/maps_openapi.d.ts"],
+    args = [
+        "$(rootpath //packages/cmk-maps:openapi_spec)",
+        "-o",
+        "$(rootpath typescript/maps_openapi.d.ts)",
     ],
 )
 
@@ -159,6 +188,7 @@ js_library(
         ":cmk_shared_typing_ts_lib",
         ":empty_index_ts",
         ":generated_ts_files",
+        ":maps_openapi_ts_file",
         ":openapi_internal_ts_file",
     ],
     visibility = ["//packages:__subpackages__"],
@@ -195,6 +225,16 @@ py_library(
     ],
 )
 
+py_cmk_test(
+    name = "unit",
+    size = "small",
+    srcs = glob(["tests/**/*.py"]),
+    deps = [
+        ":cmk_shared_typing_formatter",
+        requirement("datamodel_code_generator"),
+    ],
+)
+
 json2python(
     name = "generated_py_files_special_dataclasses",
     srcs = SOURCES_SPECIAL_DATACLASSES,
@@ -204,7 +244,6 @@ json2python(
         "--use-title-as-name",
         "--use-double-quotes",
         "--use-default",
-        "--use-one-literal-as-default",
         "--custom-file-header-path=$(location :header_py.txt)",
         "--custom-formatters=utils.format",
         "--output-model-type=dataclasses.dataclass",
@@ -259,11 +298,14 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//cmk/nonfree:__subpackages__",
-        "//non-free/packages/cmk-metric-backend:__pkg__",
+        "//non-free/packages/cmk-data-backend:__pkg__",
+        "//non-free/packages/cmk-licensing-nonfree:__pkg__",
         "//non-free/packages/cmk-network-flow:__pkg__",
         "//non-free/packages/cmk-robotmk:__pkg__",
         "//non-free/packages/cmk-telemetry:__pkg__",
+        "//packages/cmk-maps:__pkg__",
         "//packages/cmk-profiling:__pkg__",
+        "//packages/cmk-web/cmk/web/utils:__pkg__",
         "//tests:__subpackages__",
     ],
 )
@@ -327,7 +369,6 @@ alias(
 sh_library(
     name = "helpers",
     srcs = [
-        ".f12",
         "run",
     ],
 )

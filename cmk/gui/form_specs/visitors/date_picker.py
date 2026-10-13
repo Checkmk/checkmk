@@ -31,7 +31,7 @@ class DatePickerVisitor(FormSpecVisitor[DatePicker, _ParsedValueModel, _Fallback
             return InvalidValue(reason=_("Invalid date format"), fallback_value="")
         try:
             dateutil.parser.isoparse(raw_value.value)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             return InvalidValue(
                 reason=_("Invalid date format %(value)s") % {"value": raw_value.value},
                 fallback_value="",

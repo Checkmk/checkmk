@@ -11,7 +11,13 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from cmk import messaging
-from cmk.utils.certs import MessagingTrustedCAs, SiteBrokerCA, SiteBrokerCertificate
+from cmk.ccc.log import CMKFormatter
+from cmk.utils.certs import (
+    issued_certificates_path,
+    MessagingTrustedCAs,
+    SiteBrokerCA,
+    SiteBrokerCertificate,
+)
 
 
 @dataclass(frozen=True)
@@ -33,7 +39,11 @@ def initialize_message_broker_certs(omd_root: Path, site_name: str) -> None:
     site_broker_ca = SiteBrokerCertificate(
         messaging.site_cert_file(omd_root), messaging.site_key_file(omd_root)
     )
-    site_broker_ca.persist(site_broker_ca.create_bundle(site_name, ca_cert_bundle))
+    site_broker_ca.persist(
+        site_broker_ca.create_bundle(
+            site_name, ca_cert_bundle, cert_log=issued_certificates_path(omd_root, "messaging")
+        )
+    )
 
 
 def _parse_arguments(argv: list[str]) -> Arguments:
@@ -53,7 +63,7 @@ def main(argv: list[str] | None = None) -> int:
         argv = sys.argv
     logger = logging.getLogger("cmk-message-broker-certs")
     logger.addHandler(handler := logging.StreamHandler(stream=sys.stdout))
-    handler.setFormatter(logging.Formatter("%(message)s"))
+    handler.setFormatter(CMKFormatter(message_only=True))
     logger.setLevel(logging.INFO)
 
     try:

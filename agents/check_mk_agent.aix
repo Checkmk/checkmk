@@ -596,16 +596,16 @@ section_uptime() {
 
     case ${UPTIME} in
         *:*)
-            HOURS=$(echo "${UPTIME}" | sed -e 's/.*days\{0,1\},//g' -e 's/:.*//g')
-            MINS=$(echo "${UPTIME}" | sed -e 's/.*days\{0,1\},//g' -e 's/.*://g' -e 's/,.*//g')
+            HOURS=$(echo "${UPTIME}" | sed -e 's/.*days\{0,1\},\{0,1\}//g' -e 's/:.*//g')
+            MINS=$(echo "${UPTIME}" | sed -e 's/.*days\{0,1\},\{0,1\}//g' -e 's/.*://g' -e 's/,.*//g')
             ;;
         *hr*)
-            HOURS=$(echo "${UPTIME}" | sed -e 's/hrs\{0,1\},.*//g' -e 's/.*,//g')
+            HOURS=$(echo "${UPTIME}" | sed -e 's/hrs\{0,1\},.*//g' -e 's/.*days\{0,1\},\{0,1\}//g')
             MINS=0
             ;;
         *min*)
             HOURS=0
-            MINS=$(echo "${UPTIME}" | sed -e 's/mins\{0,1\},.*//g' -e 's/.*hrs\{0,1\},//g' -e 's/.*days\{0,1\},//g')
+            MINS=$(echo "${UPTIME}" | sed -e 's/mins\{0,1\},.*//g' -e 's/.*hrs\{0,1\},//g' -e 's/.*days\{0,1\},\{0,1\}//g')
             ;;
         *)
             HOURS="0"
@@ -627,7 +627,12 @@ section_job() {
         # read file names from stdin and write like `head -n -0 -v file`
         while read -r file; do
             printf "==> %s <==\n" "${file##./}"
-            cat "${file}"
+            # Job files are written by the user that ran the job, so their content is not
+            # trusted: a line the server reads as a section, piggyback or job marker would
+            # let that user inject into the agent output (CMK-38538). Escaping the leading
+            # token keeps such a line plain data. Leading blanks are covered as well, since
+            # the server strips them before it looks for the "==>" record separator.
+            sed -e 's/^[[:space:]]*<<</\\&/' -e 's/^[[:space:]]*==>/\\&/' "${file}"
         done
     }
 

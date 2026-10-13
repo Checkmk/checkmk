@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# Agent plugins still need to support Python 3.4
+# ruff: noqa: UP032  # PEP 498 (Literal String Interpolation) is a Python 3.6 feature
+
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
@@ -831,7 +834,13 @@ class PostgresLinux(PostgresBase):
 
     @override
     def run_sql_as_db_user(
-        self, sql_cmd, extra_args="", field_sep=";", quiet=True, rows_only=True, mixed_cmd=False
+        self,
+        sql_cmd,
+        extra_args="",
+        field_sep=";",
+        quiet=True,
+        rows_only=True,
+        mixed_cmd=False,  # noqa: ARG002
     ):
         # type: (str, str, str, bool, bool, bool) -> str
         with tempfile.NamedTemporaryFile(delete=True) as tmp:

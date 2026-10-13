@@ -14,7 +14,7 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
     Tuple,
 )
-from cmk.rulesets.internal.form_specs import SingleChoiceExtended
+from cmk.rulesets.internal.form_specs import CascadingSingleChoiceExtended, SingleChoiceExtended
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     DataSize,
@@ -95,7 +95,7 @@ def _derive_type(value: object, form_spec: FormSpec[Any] | None = None) -> str:
 
 
 def enable_deprecated_alternative(
-    wrapped_form_spec: CascadingSingleChoice,
+    wrapped_form_spec: CascadingSingleChoice | CascadingSingleChoiceExtended,
     match_function: Callable[[Any], int] | None = None,
 ) -> TransformDataForLegacyFormatOrRecomposeFunction:
     # Basic idea:
@@ -115,9 +115,13 @@ def enable_deprecated_alternative(
     # }
     # This can't be waterproof, but it should be sufficient for the most common cases.
 
+    elements = wrapped_form_spec.elements
+    if callable(elements):
+        raise TypeError("Deprecated alternatives are derived from static elements only")
+
     mapping: dict[str, str] = {}
     if not match_function:
-        for element in wrapped_form_spec.elements:
+        for element in elements:
             visitor = get_visitor(
                 element.parameter_form, VisitorOptions(migrate_values=False, mask_values=False)
             )
@@ -128,7 +132,7 @@ def enable_deprecated_alternative(
 
             try:
                 mapping[_derive_type(example_value, element.parameter_form)] = element.name
-            except (_DeriveTypeError, _UnconvertableTypeError):
+            except _DeriveTypeError, _UnconvertableTypeError:
                 # This is the last resort. If we can not derive the type from the form spec
                 # we use transform[Any] as fallback. When reading from disk and no other data matches,
                 # this will be used. If the data can't be parsed by the chosen element, it will
@@ -147,9 +151,9 @@ def enable_deprecated_alternative(
         if match_function is not None:
             # If a match function is provided, use it to determine the correct element
             index = match_function(value)
-            if index < 0 or index >= len(wrapped_form_spec.elements):
+            if index < 0 or index >= len(elements):
                 raise MKGeneralException("Value does not match any alternative")
-            return wrapped_form_spec.elements[index].name, value
+            return elements[index].name, value
 
         try:
             return mapping[_derive_type_from_data(value)], value

@@ -22,6 +22,8 @@ from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
 from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.wato.pages import diagnostics as diagnostics_page
 
@@ -62,7 +64,7 @@ def fixture_fake_discovery(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         diagnostics_page,
         "load_diagnostics_plugins",
-        lambda *args, **kwargs: DiscoveredPlugins(
+        lambda *args, **kwargs: DiscoveredPlugins(  # noqa: ARG005
             errors=(),
             plugins={
                 PluginLocation("cmk.plugins.test.diagnostics.test", p.name): p
@@ -76,11 +78,12 @@ def fixture_fake_discovery(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_vs_diagnostics_builds_from_discovered_plugins() -> None:
     request.set_var("select_site_p_site", "NO_SITE")
     mode = diagnostics_page.ModeDiagnostics(
-        Edition.COMMUNITY, PageContext(config=Config(), request=request)
+        Edition.COMMUNITY,
+        PageContext(config=Config(), request=request, transactions=transactions, session=session),
     )
 
-    valuespec = mode._vs_diagnostics(diagnostics_page._load_plugin_catalogue())
-    elements = dict(valuespec._get_elements())
+    valuespec = mode._vs_diagnostics(diagnostics_page._load_plugin_catalogue())  # noqa: SLF001
+    elements = dict(valuespec._get_elements())  # noqa: SLF001
 
     # one threshold dropdown per discovered topic, sorted by unlocalized title
     topic_keys = [key for key in elements if key.startswith("topic_")]
@@ -102,7 +105,7 @@ def test_vs_diagnostics_omits_always_element_without_always_plugins(
     monkeypatch.setattr(
         diagnostics_page,
         "load_diagnostics_plugins",
-        lambda *args, **kwargs: DiscoveredPlugins(
+        lambda *args, **kwargs: DiscoveredPlugins(  # noqa: ARG005
             errors=(),
             plugins={
                 PluginLocation("cmk.plugins.test.diagnostics.test", "a_low"): _make_plugin(
@@ -113,10 +116,11 @@ def test_vs_diagnostics_omits_always_element_without_always_plugins(
     )
     request.set_var("select_site_p_site", "NO_SITE")
     mode = diagnostics_page.ModeDiagnostics(
-        Edition.COMMUNITY, PageContext(config=Config(), request=request)
+        Edition.COMMUNITY,
+        PageContext(config=Config(), request=request, transactions=transactions, session=session),
     )
 
-    elements = dict(mode._vs_diagnostics(diagnostics_page._load_plugin_catalogue())._get_elements())
+    elements = dict(mode._vs_diagnostics(diagnostics_page._load_plugin_catalogue())._get_elements())  # noqa: SLF001
 
     assert "checkmk_server_host" in elements  # the host field is always offered
     assert "always" not in elements  # no always plugins discovered
@@ -131,9 +135,10 @@ def test_form_submission_resolves_topic_thresholds() -> None:
     request.set_var("diagnostics_p_checkmk_server_host", "myserver")
 
     mode = diagnostics_page.ModeDiagnostics(
-        Edition.COMMUNITY, PageContext(config=Config(), request=request)
+        Edition.COMMUNITY,
+        PageContext(config=Config(), request=request, transactions=transactions, session=session),
     )
-    params = mode._diagnostics_parameters
+    params = mode._diagnostics_parameters  # noqa: SLF001
 
     assert params is not None
     assert params.site == "NO_SITE"

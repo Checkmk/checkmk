@@ -13,8 +13,11 @@ import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
 import {
   type DraftRRDMetricItem,
   type DraftRRDQueryItem,
-  newRrdMetricDraft
+  newRrdMetricDraft,
+  newRrdQueryDraft
 } from '@/graphing/designer/drafts'
+
+import { filterDefinitions } from '../fixtures'
 
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400']
 
@@ -24,7 +27,7 @@ function renderForm(seed: DraftRRDMetricItem | DraftRRDQueryItem) {
   store.replaceAll([seed])
   const harness = defineComponent({
     setup() {
-      useProvideFilterDefinitions({ definitions: {}, groups: {} })
+      useProvideFilterDefinitions({ definitions: filterDefinitions, groups: {} })
       return () => {
         const item = store.items.value.find((candidate) => candidate.id === seed.id)
         return item && (item.type === 'rrd_metric' || item.type === 'rrd_query')
@@ -33,7 +36,9 @@ function renderForm(seed: DraftRRDMetricItem | DraftRRDQueryItem) {
               store,
               hostNameErrors: [],
               serviceNameErrors: [],
-              metricNameErrors: []
+              metricNameErrors: [],
+              hostFilterErrors: [],
+              serviceFilterErrors: []
             })
           : null
       }
@@ -43,21 +48,19 @@ function renderForm(seed: DraftRRDMetricItem | DraftRRDQueryItem) {
   return store
 }
 
-test('toggling to multiple selections converts the row, keeping the metric and consolidation', async () => {
+test('toggling to multiple selections converts the row, keeping only how the line looks', async () => {
   const store = renderForm({
     ...newRrdMetricDraft('A', '#28a2f3'),
+    line_type: 'area',
     host_name: 'h',
     service_name: 's',
     metric_name: 'util',
-    consolidation: 'max'
+    consolidation: 'min'
   })
 
   await fireEvent.click(screen.getByRole('switch'))
 
-  const item = store.items.value[0]!
-  expect(item.type).toBe('rrd_query')
-  expect(item).toMatchObject({ metric_name: 'util', consolidation: 'max', context: {} })
-  expect('color' in item).toBe(false)
+  expect(store.items.value[0]).toEqual({ ...newRrdQueryDraft('A'), line_type: 'area' })
 })
 
 test('toggling back to single selection restores a colored metric row with an empty selection', async () => {
@@ -68,6 +71,6 @@ test('toggling back to single selection restores a colored metric row with an em
 
   const item = store.items.value[0]!
   expect(item.type).toBe('rrd_metric')
-  expect(item).toMatchObject({ metric_name: 'util', host_name: null, service_name: null })
+  expect(item).toMatchObject({ metric_name: null, host_name: null, service_name: null })
   expect('color' in item).toBe(true)
 })

@@ -8,8 +8,6 @@ This registry does interlinking between endpoints without having to know the spe
 
 """
 
-from __future__ import annotations
-
 from collections.abc import Iterator
 from typing import TYPE_CHECKING, TypedDict
 

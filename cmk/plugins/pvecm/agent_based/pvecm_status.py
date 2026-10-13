@@ -70,6 +70,8 @@ def parse_pvecm_status(string_table: StringTable) -> Section:
     parsed = dict[str, str]()
     for line in string_table:
         if len(line) < 2:
+            if line and (message := line[0].strip()):
+                parsed.setdefault("message", message)
             continue
         k = line[0].strip().lower()
         v = ":".join(line[1:]).strip() if k == "date" else " ".join(line[1:]).strip()
@@ -85,6 +87,18 @@ def discover_pvecm_status(section: Section) -> DiscoveryResult:
 def check_pvecm_status(section: Section) -> CheckResult:
     if "cman_tool" in section and "cannot open connection to cman" in section["cman_tool"]:
         yield Result(state=State.CRIT, summary="Cluster management tool: %s" % section["cman_tool"])
+
+    elif missing := [
+        key for key in ("nodes", "quorum", "expected votes", "total votes") if key not in section
+    ]:
+        reason = section.get("error", section.get("message"))
+        yield Result(
+            state=State.CRIT,
+            summary=f"Cluster state unavailable: {reason}"
+            if reason
+            else "Cluster state unavailable",
+            details=f"Missing in agent output: {', '.join(missing)}",
+        )
 
     else:
         name = section.get("cluster name", section.get("quorum provider", "unknown"))

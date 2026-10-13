@@ -1,0 +1,26 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+
+cc_binary(
+    name = "lcab",
+    srcs = [
+        "cdata.c",
+        "cdata.h",
+        "cfile.c",
+        "cfile.h",
+        "cfolder.c",
+        "cfolder.h",
+        "cheader.c",
+        "cheader.h",
+        "checksum.c",
+        "checksum.h",
+        "cstruct.h",
+        "cwrite.c",
+        "cwrite.h",
+        "main.c",
+        "mytypes.h",
+        "warn.c",
+        "warn.h",
+    ],
+    linkopts = ["-Wl,--strip-all"],
+    visibility = ["//visibility:public"],
+)

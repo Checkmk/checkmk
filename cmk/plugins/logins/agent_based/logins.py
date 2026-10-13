@@ -17,10 +17,9 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 Section = int
 
@@ -28,12 +27,8 @@ Section = int
 def parse_logins(string_table: StringTable) -> Section | None:
     try:
         return int(string_table[0][0])
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return None
-
-
-def discover_logins(section: Section) -> DiscoveryResult:
-    yield Service()
 
 
 def check_logins(params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -55,7 +50,7 @@ agent_section_logins = AgentSection(
 check_plugin_logins = CheckPlugin(
     name="logins",
     service_name="Logins",
-    discovery_function=discover_logins,
+    discovery_function=discover_one_service,
     check_function=check_logins,
     check_ruleset_name="logins",
     check_default_parameters={

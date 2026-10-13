@@ -70,7 +70,7 @@ def ceph_check_epoch(id_: str, epoch: float, params: Mapping[str, Any]) -> Check
 #   '----------------------------------------------------------------------'
 
 
-def dont_discover(section: Section) -> DiscoveryResult:
+def dont_discover(section: Section) -> DiscoveryResult:  # noqa: ARG001
     """The plugin was replaced with the new Ceph integration in 2.4.0"""
     yield from ()
 

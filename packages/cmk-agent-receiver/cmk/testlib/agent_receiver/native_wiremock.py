@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Native WireMock process manager - replaces Docker-based WireMock."""
+# ruff: noqa: T201  # It's OK for test/script helpers to print()
 
-from __future__ import annotations
+"""Native WireMock process manager - replaces Docker-based WireMock."""
 
 import contextlib
 import os
@@ -15,10 +15,11 @@ import tempfile
 import time
 from collections.abc import Iterator
 from dataclasses import dataclass
+from http import HTTPStatus
 from pathlib import Path
 from typing import cast
 
-import httpx
+import httpx2
 
 
 def _get_open_port(host: str = "127.0.0.1") -> int:
@@ -57,10 +58,10 @@ def _wait_for_wiremock(base_url: str, timeout: int = 30) -> None:
     start_time = time.monotonic()
     while True:
         try:
-            response = httpx.get(f"{base_url}/__admin/health", timeout=1)
-            if response.status_code == 200:
+            response = httpx2.get(f"{base_url}/__admin/health", timeout=1)
+            if response.status_code == HTTPStatus.OK:
                 return
-        except (httpx.RequestError, httpx.TimeoutException):
+        except httpx2.RequestError, httpx2.TimeoutException:
             pass
 
         if time.monotonic() - start_time > timeout:

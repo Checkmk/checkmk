@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 
 import codeExample from './UclCmkLabelRequiredCodeExample.vue?raw'
 
@@ -13,12 +13,12 @@ export const panelConfig = {
   space: {
     type: 'list' as const,
     title: 'space',
-    options: [
-      { title: 'null', name: '' },
-      { title: 'Before', name: 'before' },
-      { title: 'After', name: 'after' },
-      { title: 'Both', name: 'both' }
-    ] satisfies Options<'' | 'before' | 'after' | 'both'>[],
+    options: listOptions<'' | 'before' | 'after' | 'both'>({
+      '': 'null',
+      before: 'Before',
+      after: 'After',
+      both: 'Both'
+    }),
     initialState: '' as '' | 'before' | 'after' | 'both'
   }
 } satisfies PanelConfigFor<typeof CmkLabelRequired>

@@ -3,40 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 import io
 import logging
-import sys
 import tarfile
 import textwrap
 import traceback
 import uuid
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
-from contextlib import redirect_stderr, redirect_stdout
-from dataclasses import fields
 from datetime import datetime
 from functools import cache
 from pathlib import Path, PurePosixPath
 from typing import Any, Final
 
 import cmk.livestatus_client as livestatus
-import cmk.utils.paths
-from cmk.automations.results import CreateDiagnosticsDumpResult, CreateDiagnosticsDumpV2Result
-from cmk.automations.types import AutomationID
-from cmk.base.automations.automations import Automation, load_config
-from cmk.base.base_app import CheckmkBaseApp
-from cmk.base.config import LoadingResult
-from cmk.base.modes.modes import Mode, Option
 from cmk.ccc import tty
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
 from cmk.ccc.site import get_omd_config, omd_site
 from cmk.diagnostics.engine import (
     DumpSelection,
     load_diagnostics_plugins,
-    resolve_selection,
 )
 from cmk.diagnostics.internal import (
     CollectContext,
@@ -57,232 +44,40 @@ from cmk.utils.log import console, section
 
 # TODO(3.1): delete together with the legacy wire sections below.
 DiagnosticsCLParameters = Sequence[str]
-DiagnosticsModesParameters = dict[str, Any]  # type: ignore[explicit-any]
+
 DiagnosticsOptionalParameters = dict[str, Any]  # type: ignore[explicit-any]
 
 SUFFIX = ".tar.gz"
 
-_CLI_THRESHOLDS: Final[Mapping[str, Sensitivity | None]] = {
-    "off": None,
-    "low": Sensitivity.LOW,
-    "medium": Sensitivity.MEDIUM,
-    "high": Sensitivity.HIGH,
-}
-
-
-def _parse_cli_threshold(raw: str) -> Sensitivity | None:
-    try:
-        return _CLI_THRESHOLDS[raw]
-    except KeyError:
-        raise MKGeneralException(
-            "Invalid sensitivity threshold {!r} (allowed: {})".format(
-                raw, ", ".join(_CLI_THRESHOLDS)
-            )
-        ) from None
-
-
-def _resolve_cli_selection(
-    catalogue: Mapping[str, DiagnosticsPlugin], options: DiagnosticsModesParameters
-) -> DumpSelection:
-    default_threshold = (
-        _parse_cli_threshold(options["all-topics"]) if "all-topics" in options else None
-    )
-    thresholds: dict[Topic, Sensitivity | None] = dict.fromkeys(
-        (plugin.topic for plugin in catalogue.values()), default_threshold
-    )
-
-    selected = set(resolve_selection(catalogue.values(), thresholds))
-    for name in options.get("plugins", "").split(",") if "plugins" in options else []:
-        if name not in catalogue:
-            raise MKGeneralException("Unknown plugin %r (see --list for available plugins)" % name)
-        selected.add(name)
-
-    return DumpSelection(
-        plugins=sorted(selected),
-        checkmk_server_host=options.get("checkmk-server-host", ""),
-    )
-
-
-def _print_available_plugins(catalogue: Mapping[str, DiagnosticsPlugin]) -> None:
-    by_topic: dict[Topic, list[DiagnosticsPlugin]] = {}
-    for plugin in catalogue.values():
-        by_topic.setdefault(plugin.topic, []).append(plugin)
-    for topic in sorted(by_topic, key=lambda t: t.localize(str)):
-        plugins = by_topic[topic]
-        sys.stdout.write(f"{topic.localize(_)}\n")
-        for plugin in sorted(plugins, key=lambda p: p.name):
-            flags = [plugin.sensitivity.name.lower()]
-            if plugin.always:
-                flags.append("always")
-            sys.stdout.write(
-                f"  {plugin.name} ({', '.join(flags)}): {plugin.description.localize(_)}\n"
-            )
-
-
-def _mode_create_diagnostics_dump(app: CheckmkBaseApp, options: DiagnosticsModesParameters) -> None:
-    # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
-    loading_result = load_config(edition=app.edition)
-    catalogue = _load_plugin_catalogue(logger=ConsoleLogger())
-
-    if "list" in options:
-        _print_available_plugins(catalogue)
-        return
-
-    dump = create_diagnostics_dump_v2(
-        app=app,
-        omd_root=cmk.utils.paths.omd_root,
-        diagnostics_dir=cmk.utils.paths.diagnostics_dir,
-        selection=_resolve_cli_selection(catalogue, options),
-        loading_result=loading_result,
-    )
-    logger = ConsoleLogger()
-    logger.section_step("Creating diagnostics dump", verbose=False)
-    if dump.tarfile_created:
-        logger.filepath(
-            dump.tarfile_path.relative_to(cmk.utils.paths.omd_root),
-            verbose=False,
-        )
-    else:
-        logger.message("No dump")
-
-
-mode_create_diagnostics_dump = Mode(
-    long_option="create-diagnostics-dump",
-    handler_function=_mode_create_diagnostics_dump,
-    short_help="Create diagnostics dump",
-    long_help=[
-        (
-            "Create a dump containing information for diagnostic analysis "
-            "in the folder var/check_mk/diagnostics. The dump content is "
-            "provided by discoverable plugins grouped into topics; use --list "
-            "to see what is available on this site. Without any option only "
-            "the always collected plugins are packed."
-        )
-    ],
-    sub_options=[
-        Option(
-            long_option="list",
-            short_help="List the available topics and plugins and exit",
-        ),
-        Option(
-            long_option="all-topics",
-            short_help=(
-                "Select all plugins of all topics up to the given sensitivity threshold "
-                "(off, low, medium or high)"
-            ),
-            argument=True,
-            argument_descr="THRESHOLD",
-        ),
-        Option(
-            long_option="plugins",
-            short_help="Additionally select the given plugins, regardless of topic thresholds",
-            argument=True,
-            argument_descr="NAME,NAME...",
-        ),
-        Option(
-            long_option="checkmk-server-host",
-            short_help=(
-                "The name of the host monitoring the Checkmk server; needed by some plugins"
-            ),
-            argument=True,
-            argument_descr="HOST",
-        ),
-    ],
-)
-
-
-def handler(
-    app: CheckmkBaseApp,
-    args: DiagnosticsCLParameters,
-    plugins: object,
-    loading_result: LoadingResult | None,
-) -> CreateDiagnosticsDumpResult:
-    buf = io.StringIO()
-    with redirect_stdout(buf), redirect_stderr(buf):
-        log.setup_console_logging()
-        dump = create_diagnostics_dump(
-            app=app,
-            omd_root=cmk.utils.paths.omd_root,
-            diagnostics_dir=cmk.utils.paths.diagnostics_dir,
-            parameters=deserialize_cl_parameters(args),
-            loading_result=loading_result,
-        )
-        return CreateDiagnosticsDumpResult(
-            output=buf.getvalue(),
-            tarfile_path=str(dump.tarfile_path),
-            tarfile_created=dump.tarfile_created,
-        )
-
-
-automation_create_diagnostics_dump = Automation(
-    name=AutomationID("create-diagnostics-dump"),
-    handler=handler,
-    result=CreateDiagnosticsDumpResult,
-)
-
-
-def handler_v2(
-    app: CheckmkBaseApp,
-    args: Sequence[str],
-    plugins: object,
-    loading_result: LoadingResult | None,
-) -> CreateDiagnosticsDumpV2Result:
-    buf = io.StringIO()
-    with redirect_stdout(buf), redirect_stderr(buf):
-        log.setup_console_logging()
-        dump = create_diagnostics_dump_v2(
-            app=app,
-            omd_root=cmk.utils.paths.omd_root,
-            diagnostics_dir=cmk.utils.paths.diagnostics_dir,
-            selection=(DumpSelection.deserialize(args[0]) if args else DumpSelection(plugins=())),
-            loading_result=loading_result,
-        )
-        return CreateDiagnosticsDumpV2Result(
-            output=buf.getvalue(),
-            tarfile_path=str(dump.tarfile_path),
-            tarfile_created=dump.tarfile_created,
-        )
-
-
-automation_create_diagnostics_dump_v2 = Automation(
-    name=AutomationID("create-diagnostics-dump-v2"),
-    handler=handler_v2,
-    result=CreateDiagnosticsDumpV2Result,
-)
-
 
 def create_diagnostics_dump(
     *,
-    app: CheckmkBaseApp,
     omd_root: Path,
     diagnostics_dir: Path,
     parameters: DiagnosticsOptionalParameters,
-    loading_result: LoadingResult | None,
+    raw_config: Mapping[str, object],
 ) -> DiagnosticsDump:
     """Create a dump from legacy parameters (old automation wire and current CLI)"""
     selected_names, checkmk_server_host = _legacy_selection(parameters or {})
     return _create_dump(
-        app=app,
         omd_root=omd_root,
         diagnostics_dir=diagnostics_dir,
         selected_names=selected_names,
         checkmk_server_host=checkmk_server_host,
         all_parameters=parameters or {},
         legacy_file_parameters=parameters or {},
-        loading_result=loading_result,
+        raw_config=raw_config,
     )
 
 
 def create_diagnostics_dump_v2(
     *,
-    app: CheckmkBaseApp,
     omd_root: Path,
     diagnostics_dir: Path,
     selection: DumpSelection,
-    loading_result: LoadingResult | None,
+    raw_config: Mapping[str, object],
 ) -> DiagnosticsDump:
     return _create_dump(
-        app=app,
         omd_root=omd_root,
         diagnostics_dir=diagnostics_dir,
         selected_names=set(selection.plugins),
@@ -292,29 +87,25 @@ def create_diagnostics_dump_v2(
             "checkmk_server_host": selection.checkmk_server_host,
         },
         legacy_file_parameters=None,
-        loading_result=loading_result,
+        raw_config=raw_config,
     )
 
 
 def _create_dump(
     *,
-    app: CheckmkBaseApp,
     omd_root: Path,
     diagnostics_dir: Path,
     selected_names: set[str],
     checkmk_server_host: str,
     all_parameters: Mapping[str, object],
     legacy_file_parameters: DiagnosticsOptionalParameters | None,
-    loading_result: LoadingResult | None,
+    raw_config: Mapping[str, object],
 ) -> DiagnosticsDump:
     log.logger.setLevel(logging.INFO)
-    loaded_config = (
-        load_config(edition=app.edition) if loading_result is None else loading_result
-    ).loaded_config
     omd_config = get_omd_config(omd_root)
     logger = ConsoleLogger()
 
-    catalogue = _load_plugin_catalogue(logger=logger)
+    catalogue = load_plugin_catalogue(logger=logger)
     for unknown in sorted(selected_names - set(catalogue)):
         message = f"Plugin '{unknown}' is not available on this site"
         logger.info(message)
@@ -330,7 +121,7 @@ def _create_dump(
         omd_config=omd_config,
         site_id=omd_site(),
         all_parameters=all_parameters,
-        base_config={f.name: getattr(loaded_config, f.name) for f in fields(loaded_config)},
+        base_config=raw_config,
         resolve_checkmk_server_host=_make_host_resolver(checkmk_server_host),
         site_internal_auth_header=lambda: (
             "InternalToken %s" % (SiteInternalSecret().secret.b64_str)
@@ -349,7 +140,7 @@ def _create_dump(
     )
 
 
-def _load_plugin_catalogue(*, logger: ConsoleLogger) -> Mapping[str, DiagnosticsPlugin]:
+def load_plugin_catalogue(*, logger: ConsoleLogger) -> Mapping[str, DiagnosticsPlugin]:
     """All available plugins by name, as discovered on this site"""
     discovered = load_diagnostics_plugins(raise_errors=False)
     for error in discovered.errors:
@@ -450,7 +241,9 @@ OPT_CHECKMK_OVERVIEW = "checkmk-overview"
 OPT_LOCAL_FILES = "local-files"
 OPT_OMD_CONFIG = "omd-config"
 OPT_PERFORMANCE_GRAPHS = "performance-graphs"
-OPT_COMP_METRIC_BACKEND = "metric-backend"
+OPT_COMP_DATA_BACKEND = "data-backend"
+# Legacy spelling of OPT_COMP_DATA_BACKEND, still sent by older central sites
+_LEGACY_OPT_COMP_METRIC_BACKEND = "metric-backend"
 
 _OPTS_WITH_HOST = [
     OPT_PERFORMANCE_GRAPHS,
@@ -461,7 +254,8 @@ _BOOLEAN_CONFIG_OPTS = [
     OPT_APACHE_CONFIG,
     OPT_BI_RUNTIME_DATA,
     OPT_CHECKMK_CRASH_REPORTS,
-    OPT_COMP_METRIC_BACKEND,
+    OPT_COMP_DATA_BACKEND,
+    _LEGACY_OPT_COMP_METRIC_BACKEND,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
 ]
@@ -512,7 +306,8 @@ _LEGACY_BOOLEAN_OPT_TO_PLUGIN: Final = {
     OPT_APACHE_CONFIG: "apache_config",
     OPT_CHECKMK_CRASH_REPORTS: "latest_crash_reports",
     OPT_BI_RUNTIME_DATA: "bi_runtime_data",
-    OPT_COMP_METRIC_BACKEND: "metric_backend_state",
+    OPT_COMP_DATA_BACKEND: "data_backend_state",
+    _LEGACY_OPT_COMP_METRIC_BACKEND: "data_backend_state",
 }
 
 # Legacy options carrying the Checkmk server host and the plugin name they select

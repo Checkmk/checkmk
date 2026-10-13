@@ -21,6 +21,7 @@ import sys
 import time
 from collections.abc import Collection, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
+from http import HTTPStatus
 from typing import Any, Final, Literal, Self
 
 import urllib3
@@ -34,9 +35,9 @@ from redfish.rest.v1 import (
     ServerDownOrUnreachableError,
 )
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.redfish.lib import detect_vendor, REDFISH_SECTIONS, Vendor
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, Storage, vcrtrace
+from cmk.server_side_programs.v1 import report_agent_crashes, Storage, vcrtrace
 
 LOGGER = logging.getLogger(__name__)
 
@@ -46,19 +47,47 @@ AGENT = "redfish"
 
 PASSWORD_OPTION = "password"
 
+# (registry, key) of a MessageId, matched regardless of its version
+_RETRY_LATER_MESSAGES: Final = frozenset(
+    {
+        ("Base", "ServiceTemporarilyUnavailable"),
+        ("iLO", "ResourceNotReadyRetry"),
+        ("HpeCommon", "ResourceNotReadyRetry"),
+    }
+)
+# How long Checkmk may serve a section's last good copy while the device keeps answering
+# it as temporarily unavailable. Our own bound: neither Redfish nor Checkmk defines one.
+_MAX_STALE_AGE: Final = 300
+# sections fetched from the links in another section's entries
+_DEPENDENT_SECTIONS: Final[Mapping[str, Sequence[str]]] = {
+    "Storage": ("Drives", "Volumes"),
+    "SmartStorage": ("ArrayControllers", "HostBusAdapters"),
+    "ArrayControllers": ("LogicalDrives", "PhysicalDrives"),
+    "PowerSubsystem": ("PowerSupplies",),
+}
+
 
 class CannotRecover(RuntimeError):
     pass
 
 
+class TemporarilyUnavailable(CannotRecover):
+    """The device asked us to retry the request later"""
+
+
 def _make_section_header(
-    name: str, separator: str | None, cachetime: int | None, validity: int | None
+    name: str,
+    separator: str | None,
+    cachetime: int | None,
+    validity: int | None,
+    persist_until: int | None = None,
 ) -> str:
     sepstr = f":sep({ord(separator)})" if separator else ""
     # Note: we assume that we always have both cachetime and validity or none.
     # Refactor to ensure this architecturally.
     cachestr = f":cached({cachetime},{validity})" if cachetime and validity else ""
-    return f"<<<{name}{sepstr}{cachestr}>>>"
+    persiststr = f":persist({persist_until})" if persist_until else ""
+    return f"<<<{name}{sepstr}{cachestr}{persiststr}>>>"
 
 
 class ClientSession:
@@ -101,8 +130,9 @@ class RedfishClient:
             self._client.set_session_location(session.location)
             self._client.set_session_key(session.session)
             if (
-                self._client.get("/redfish/v1/SessionService/Sessions", None).status == 200
-                or self._client.get("/redfish/v1/Sessions", None).status == 200
+                self._client.get("/redfish/v1/SessionService/Sessions", None).status
+                == HTTPStatus.OK
+                or self._client.get("/redfish/v1/Sessions", None).status == HTTPStatus.OK
             ):
                 return
             # cleanup old session information
@@ -133,6 +163,8 @@ class RedfishData:
     vendor_data: Vendor | None = None
     section_data: dict[str, Any] = field(default_factory=dict)
     emitted_sections: set[str] = field(default_factory=set)
+    left_out_sections: set[str] = field(default_factory=set)
+    phase_failed: bool = False
     systems_retries: int = 3
     systems_retry_delay: float = 2.0
 
@@ -251,42 +283,94 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def dropnonascii(input_str: str) -> str:
-    """Drop all non ASCII characters from string"""
-    output_str = ""
-    for i in input_str:
-        num = ord(i)
-        if num >= 0 and num <= 127:
-            output_str = output_str + i
+def _error_messages(response: RestResponse) -> Sequence[Mapping[str, object]]:
+    """Message objects of an error response: its @Message.ExtendedInfo, else its code"""
+    try:
+        body = response.dict
+    except JsonDecodingError:
+        return []
+    error = body.get("error") if isinstance(body, Mapping) else None
+    if not isinstance(error, Mapping):
+        return []
+    if isinstance(extended_info := error.get("@Message.ExtendedInfo"), list):
+        return [message for message in extended_info if isinstance(message, Mapping)]
+    return [{"MessageId": error.get("code")}]
 
-    return output_str
+
+def _is_retry_message(message: Mapping[str, object]) -> bool:
+    if not isinstance(message_id := message.get("MessageId"), str):
+        return False
+    parts = message_id.split(".")
+    return len(parts) >= 2 and (parts[0], parts[-1]) in _RETRY_LATER_MESSAGES
+
+
+def _is_temporarily_unavailable(response: RestResponse) -> bool:
+    return response.status == HTTPStatus.SERVICE_UNAVAILABLE or any(
+        _is_retry_message(m) for m in _error_messages(response)
+    )
 
 
 def fetch_data(
     client: RedfishClient, url: str, component: object, timeout: int | None = None
-) -> Any:
-    """fetch a single data object from Redfish"""
+) -> Mapping[str, Any]:
+    """fetch a single data object from Redfish
+
+    Raises TemporarilyUnavailable if the device asks us to retry later.
+    """
     response_url = client.get(url, timeout=timeout) if timeout else client.get(url, None)
-    if response_url.status == 200:
+    if response_url.status == HTTPStatus.OK:
         try:
             return response_url.dict
         except JsonDecodingError:
             return {"error": f"{component} data had a JSON decoding problem\n"}
 
+    if _is_temporarily_unavailable(response_url):
+        raise TemporarilyUnavailable(f"{url} is temporarily unavailable")
     return {"error": f"{component} data could not be fetched\n"}
 
 
+def _drop_unavailable(redfishobj: RedfishData, section: str, exc: TemporarilyUnavailable) -> None:
+    """Leave out a temporarily unavailable section and its dependents, so Checkmk serves their
+    persisted copies"""
+    LOGGER.warning(
+        "redfish: %(exc)s, leaving out section %(section)s", {"exc": exc, "section": section}
+    )
+    _leave_out(redfishobj, section)
+
+
+def _leave_out(redfishobj: RedfishData, section: str) -> None:
+    redfishobj.section_data.pop(section, None)
+    # fetch no further data of it in this run
+    redfishobj.sections.discard(section)
+    redfishobj.left_out_sections.add(section)
+    for dependent in _DEPENDENT_SECTIONS.get(section, ()):
+        _leave_out(redfishobj, dependent)
+
+
 def fetch_collection(
-    client: RedfishClient, data: Mapping[str, Any], component: object
+    client: RedfishClient,
+    data: Mapping[str, Any],
+    component: object,
+    *,
+    unavailable_as_error: bool = False,
 ) -> Sequence[Mapping[str, Any]]:
-    """fetch a whole collection from Redfish data"""
+    """fetch a whole collection from Redfish data
+
+    With `unavailable_as_error`, a temporarily unavailable member becomes an error entry
+    instead of failing the whole collection.
+    """
     member_list = data.get("Members")
     data_list: list = []
     if not member_list:
         return data_list
     for element in member_list:
         if element.get("@odata.id"):
-            element_data = fetch_data(client, element.get("@odata.id"), component)
+            try:
+                element_data = fetch_data(client, element.get("@odata.id"), component)
+            except TemporarilyUnavailable:
+                if not unavailable_as_error:
+                    raise
+                element_data = {"error": f"{component} data is temporarily unavailable\n"}
             data_list.append(element_data)
     return data_list
 
@@ -297,11 +381,11 @@ def fetch_entry(redfishobj: RedfishData, entry: Mapping[str, Any], section: str)
     if "error" in result:
         return redfishobj
     if "Collection" in result.get("@odata.type", "No Data"):
-        result = fetch_collection(redfishobj.redfish_connection, result, section)
+        members = fetch_collection(redfishobj.redfish_connection, result, section)
         if section in redfishobj.section_data:
-            redfishobj.section_data[section].extend(result)
+            redfishobj.section_data[section].extend(members)
         else:
-            redfishobj.section_data.setdefault(section, list(result))
+            redfishobj.section_data.setdefault(section, list(members))
     elif section in redfishobj.section_data:
         redfishobj.section_data[section].append(result)
     else:
@@ -337,12 +421,15 @@ def fetch_list_of_elements(
             else:
                 for entry in fetch_result:
                     fetch_entry(redfishobj, entry, section)
+        except TemporarilyUnavailable as exc:
+            _drop_unavailable(redfishobj, section, exc)
         except Exception:
             if redfishobj.debug:
                 raise
             LOGGER.exception(
                 "redfish: failed fetching list section %(section)s", {"section": section}
             )
+            _leave_out(redfishobj, section)
     return redfishobj
 
 
@@ -383,10 +470,13 @@ def fetch_sections(
                         section_data,
                     ],
                 )
+        except TemporarilyUnavailable as exc:
+            _drop_unavailable(redfishobj, section, exc)
         except Exception:
             if redfishobj.debug:
                 raise
             LOGGER.exception("redfish: failed fetching section %(section)s", {"section": section})
+            _leave_out(redfishobj, section)
     return redfishobj
 
 
@@ -395,10 +485,14 @@ def fetch_hpe_smartstorage(
 ) -> RedfishData:
     """fetch hpe smartstorage sections"""
     storage_link = link_list.get("SmartStorage", None)
-    if storage_link:
-        result = fetch_data(
-            redfishobj.redfish_connection, storage_link["@odata.id"], "SmartStorage"
-        )
+    if storage_link and "SmartStorage" in sections:
+        try:
+            result = fetch_data(
+                redfishobj.redfish_connection, storage_link["@odata.id"], "SmartStorage"
+            )
+        except TemporarilyUnavailable as exc:
+            _drop_unavailable(redfishobj, "SmartStorage", exc)
+            return redfishobj
         storage_links = result["Links"]
         assert not isinstance(storage_links, str)
         storage_sections = [
@@ -440,15 +534,26 @@ def fetch_extra_data(
     return redfishobj
 
 
-def _emit_section(redfishobj: RedfishData, section: str, data: Any) -> None:
+def _is_known_good(data: object) -> bool:
+    """none of the section's entries is an error placeholder"""
+    entries = data if isinstance(data, list) else [data]
+    return not any(isinstance(entry, Mapping) and "error" in entry for entry in entries)
+
+
+def _emit_section(redfishobj: RedfishData, section: str, data: object) -> None:
     """Write one section header + JSON bodies to stdout and flush. No-op if already emitted."""
     if section in redfishobj.emitted_sections:
         return
+    cachetime = redfishobj.cache_timestamp_per_section.get(section)
     section_header = _make_section_header(
         f"redfish_{section.lower()}",
         separator="\0",
-        cachetime=redfishobj.cache_timestamp_per_section.get(section),
+        cachetime=cachetime,
         validity=redfishobj.cache_per_section.get(section),
+        # persist only fresh data without errors: Checkmk serves it if the section is left out
+        persist_until=(
+            None if cachetime or not _is_known_good(data) else int(time.time()) + _MAX_STALE_AGE
+        ),
     )
     content = data if isinstance(data, list) else [data]
     sys.stdout.write(f"{section_header}\n")
@@ -465,14 +570,26 @@ def _emit_pending(redfishobj: RedfishData) -> None:
 
 
 @contextlib.contextmanager
-def _phase(redfishobj: RedfishData, name: str) -> Iterator[None]:
-    """Run a fetch phase. Flush collected sections in `finally`; re-raise only on --debug."""
+def _phase(redfishobj: RedfishData, name: str, section: str | None = None) -> Iterator[None]:
+    """Run a fetch phase. Flush collected sections in `finally`; re-raise only on --debug.
+
+    A phase that fetches a single `section` leaves it out if fetching it fails; any other
+    phase aborts the run if the device is temporarily unavailable.
+    """
     try:
         yield
+    except TemporarilyUnavailable as exc:
+        if section is None:
+            raise
+        _drop_unavailable(redfishobj, section, exc)
     except Exception:
         if redfishobj.debug:
             raise
         LOGGER.exception("redfish: failure during phase %(name)s", {"name": name})
+        if section is None:
+            redfishobj.phase_failed = True
+        else:
+            _leave_out(redfishobj, section)
     finally:
         _emit_pending(redfishobj)
 
@@ -510,8 +627,14 @@ def _fetch_systems(redfishobj: RedfishData, systems_url: str) -> Sequence[Mappin
                 },
             )
             time.sleep(redfishobj.systems_retry_delay)
-        systems_col = fetch_data(redfishobj.redfish_connection, systems_url, "System")
-        systems_data = fetch_collection(redfishobj.redfish_connection, systems_col, "System")
+        try:
+            systems_col = fetch_data(redfishobj.redfish_connection, systems_url, "System")
+        except TemporarilyUnavailable:
+            continue
+        # a system that is not ready yet must not make the others unusable
+        systems_data = fetch_collection(
+            redfishobj.redfish_connection, systems_col, "System", unavailable_as_error=True
+        )
         if not _unusable(systems_col, systems_data):
             return systems_data
 
@@ -525,6 +648,10 @@ def _fetch_systems(redfishobj: RedfishData, systems_url: str) -> Sequence[Mappin
 def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
     """get a the information from the Redfish management interface"""
     load_section_data(storage, redfishobj)
+    requested = set(redfishobj.sections)
+    # PowerSupplies has no selection of its own, it comes with PowerSubsystem
+    if "PowerSubsystem" in requested:
+        requested.add("PowerSupplies")
     redfishobj.base_data = fetch_data(redfishobj.redfish_connection, "/redfish/v1", "Base")
 
     redfishobj.vendor_data = (vendor_data := detect_vendor(redfishobj.base_data))
@@ -537,11 +664,11 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
     # but still serve the endpoints. Try the standard paths before giving up.
     if not systems_url:
         probe = redfishobj.redfish_connection.get("/redfish/v1/Systems", None)
-        if probe.status == 200:
+        if probe.status == HTTPStatus.OK:
             systems_url = "/redfish/v1/Systems"
     if not chassis_url:
         probe = redfishobj.redfish_connection.get("/redfish/v1/Chassis", None)
-        if probe.status == 200:
+        if probe.status == HTTPStatus.OK:
             chassis_url = "/redfish/v1/Chassis"
 
     if not systems_url or not chassis_url:
@@ -596,7 +723,7 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
     else:
         extra_links = []
 
-    with _phase(redfishobj, "firmware-inventory-hp"):
+    with _phase(redfishobj, "firmware-inventory-hp", section="FirmwareInventory"):
         if data_model in ["Hp"] and ("FirmwareInventory" in redfishobj.sections):
             try:
                 res_dir = redfishobj.base_data["Oem"][data_model]["Links"]["ResourceDirectory"][
@@ -647,7 +774,7 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
 
     resulting_sections = list(set(systems_sections).intersection(redfishobj.sections))
     update_service = redfishobj.base_data.get("UpdateService")
-    with _phase(redfishobj, "firmware-inventory"):
+    with _phase(redfishobj, "firmware-inventory", section="FirmwareInventory"):
         if (
             "FirmwareInventory" in resulting_sections
             and isinstance(update_service, Mapping)
@@ -677,8 +804,10 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
                     "".join(firmware_url),
                     "FirmwareDirectory",
                 )
-                firmwares = fetch_collection(redfishobj.redfish_connection, firmware_col, "Manager")
-                redfishobj.section_data.setdefault("FirmwareInventory", list(firmwares))
+                firmware_members = fetch_collection(
+                    redfishobj.redfish_connection, firmware_col, "Manager"
+                )
+                redfishobj.section_data.setdefault("FirmwareInventory", list(firmware_members))
 
     with _phase(redfishobj, "systems"):
         for system in systems_data:
@@ -734,7 +863,7 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
             fetch_sections(redfishobj, resulting_sections, redfishobj.sections, chassis)
 
     # Traverse PowerSubsystem → PowerSupplies (similar to Storage → Drives)
-    with _phase(redfishobj, "powersupplies"):
+    with _phase(redfishobj, "powersupplies", section="PowerSupplies"):
         for ps_entry in redfishobj.section_data.get("PowerSubsystem", []):
             if ps_entry.get("error"):
                 continue
@@ -752,6 +881,11 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
             if members:
                 redfishobj.section_data.setdefault("PowerSupplies", []).extend(members)
 
+    # a section fetched without data is emitted empty, else Checkmk serves its persisted copy;
+    # after a failed phase, missing sections may just not have been fetched
+    if not redfishobj.phase_failed:
+        for section in requested - redfishobj.left_out_sections:
+            redfishobj.section_data.setdefault(section, [])
     _emit_pending(redfishobj)
     store_section_data(storage, redfishobj)
     return 0
@@ -782,7 +916,11 @@ def load_section_data(storage: Storage, redfishobj: RedfishData) -> RedfishData:
     for key, value in redfishobj.cache_per_section.items():
         if (raw := storage.read(key, None)) is None:
             continue
-        store_data = json.loads(raw)
+        try:
+            store_data = json.loads(raw)
+        except json.JSONDecodeError:
+            storage.unset(key)
+            continue
         current_time = int(time.time())
         if store_data["timestamp"] + value < current_time:
             continue

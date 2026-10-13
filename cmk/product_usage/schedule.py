@@ -26,7 +26,7 @@ def get_next_run_ts(file_path: Path) -> datetime | None:
     try:
         with file_path.open("r", encoding="utf-8") as fp:
             return datetime.fromtimestamp(int(fp.read()))
-    except (FileNotFoundError, ValueError):
+    except FileNotFoundError, ValueError:
         return None
 
 

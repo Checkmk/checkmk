@@ -24,7 +24,8 @@ def fixture_discovered_host_labels_dir(tmp_path: Path, monkeypatch: MonkeyPatch)
     return path
 
 
-def test_get_updated_host_label_files(discovered_host_labels_dir: Path) -> None:
+@pytest.mark.usefixtures("discovered_host_labels_dir")
+def test_get_updated_host_label_files() -> None:
     time_1 = 1616655912.123
     time_2 = 1616655912.234
 
@@ -45,7 +46,8 @@ def test_get_updated_host_label_files(discovered_host_labels_dir: Path) -> None:
     assert not get_updated_host_label_files(newer_than=time_2)
 
 
-def test_get_host_labels_entry_of_host(discovered_host_labels_dir: Path) -> None:
+@pytest.mark.usefixtures("discovered_host_labels_dir")
+def test_get_host_labels_entry_of_host() -> None:
     save_updated_host_label_files(
         [
             ("host1.mk", 123, "{'äbc': {'value': '123', 'plugin_name': 'plugin_1'}}\n"),

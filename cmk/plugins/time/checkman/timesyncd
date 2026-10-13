@@ -8,7 +8,17 @@ description:
  agent. It lists the information of the synchronised time server including
  the server address, stratum, offset and jitter. The check gets critical
  if the time offset exceeds a default level, if the stratum is too high or
- other error conditions. It gets UNKNOWN if the time has not yet been
+ other error conditions. The stratum levels default to 10 (warning) / 16
+ (critical). Critical is set to 16 because that is the special NTP value for
+ an unsynchronised clock and thus an actual error, whereas any stratum below
+ it (1 to 15) is a valid, synchronised state. The warning at 10 flags an
+ unusually deep chain to the reference clock: such hops are not an error in
+ themselves, but each one adds latency and reduces accuracy, so a chain that
+ long is bad practice and worth a heads-up. The jitter (the short-term
+ variation of the time synchronisation) is reported as a metric but has no
+ thresholds by default, as it is a stability signal rather than a health
+ metric. Optional jitter levels, independent of the time offset levels, can
+ be configured via the ruleset. It gets UNKNOWN if the time has not yet been
  synchronised. The check logic is shared with the ntp check. On a running
  instance the time is synchronised either using ntp or timesyncd. The agent
  therefore determines the correct service to use and subsequent check.

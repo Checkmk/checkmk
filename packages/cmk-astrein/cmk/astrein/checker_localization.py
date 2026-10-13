@@ -5,8 +5,6 @@
 
 """Checker for localization function calls."""
 
-from __future__ import annotations
-
 import ast
 import re
 from typing import override
@@ -14,7 +12,7 @@ from typing import override
 from cmk.astrein.framework import ASTVisitorChecker
 from cmk.astrein.placeholders import has_positional_placeholder
 
-# Inlined from cmk.utils.escaping to avoid external dependencies
+# Inlined from cmk.web.utils.escaping to avoid external dependencies
 _ALLOWED_TAGS = r"h1|h2|b|tt|i|u|hr|br(?: /)?|nobr(?: /)?|pre|sup|p|li|ul|ol"
 
 #: The gettext family plus the ``cmk.rulesets.v1`` formspec classes, matched by bare

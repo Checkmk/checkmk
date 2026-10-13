@@ -4,12 +4,16 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+
 import type { IconEmblems } from './types'
 
 withDefaults(
   defineProps<{
     emblem: IconEmblems | undefined
     colored?: boolean | undefined
+    /** Accessible name for the emblem. Omit when its meaning is already conveyed elsewhere */
+    ariaLabel?: TranslatedString | undefined
   }>(),
   {
     colored: true
@@ -23,6 +27,9 @@ withDefaults(
     <!-- "emblem" is coming from legacy css -->
     <img
       v-if="emblem"
+      role="img"
+      :aria-label="ariaLabel"
+      :aria-hidden="ariaLabel ? undefined : 'true'"
       :class="[
         'emblem',
         'cmk-icon-emblem__emblem',
@@ -43,7 +50,7 @@ withDefaults(
   width: 68%;
   height: 68%;
   position: absolute;
-  right: 5%;
+  right: -20%;
   bottom: -20%;
 }
 
@@ -57,7 +64,7 @@ $emblems_themed:
   add, api, disable, download, enable, more, pending, refresh, rulesets, search, settings,
   statistic, time, warning;
 
-$emblems: downtime, edit, sign, trans;
+$emblems: burger, downtime, edit, sign, trans;
 
 @each $emblem in $emblems_themed {
   body[data-theme='modern-dark'] {

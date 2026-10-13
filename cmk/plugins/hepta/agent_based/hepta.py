@@ -133,11 +133,11 @@ check_plugin_hepta = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_hepta_time_sync(section: Section) -> DiscoveryResult:
+def discover_hepta_time_sync(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="SyncModuleTimeSyncState")
 
 
-def check_hepta_time_sync(item: str, section: Section) -> CheckResult:
+def check_hepta_time_sync(item: str, section: Section) -> CheckResult:  # noqa: ARG001
     if section["syncmoduletimesyncstate"] == "R":
         yield Result(state=State.OK, summary="Radio synchronous with high precision")
     elif section["syncmoduletimesyncstate"] == "r":
@@ -178,11 +178,11 @@ check_plugin_hepta_syncmoduletimesyncstate = CheckPlugin(
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-def discover_hepta_ntpsysstratum(section: Section) -> DiscoveryResult:
+def discover_hepta_ntpsysstratum(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="ntpSysStratum")
 
 
-def check_hepta_ntpsysstratum(item: str, section: Section) -> CheckResult:
+def check_hepta_ntpsysstratum(item: str, section: Section) -> CheckResult:  # noqa: ARG001
     if section["ntpstratum"] == "1":
         yield Result(state=State.OK, summary="Stratum 1, Primary Reference ")
     elif section["ntpstratum"] == "16":
@@ -219,11 +219,11 @@ check_plugin_hepta_ntpsysstratum = CheckPlugin(
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-def discover_hepta_syncmoduletimelocal(section: Section) -> DiscoveryResult:
+def discover_hepta_syncmoduletimelocal(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="SyncModuleTimeLocal")
 
 
-def check_hepta_syncmoduletimelocal(item: str, section: Section) -> CheckResult:
+def check_hepta_syncmoduletimelocal(item: str, section: Section) -> CheckResult:  # noqa: ARG001
     yield Result(state=State.OK, summary=f"Module Time: {section['syncmoduletimelocal']}")
 
 

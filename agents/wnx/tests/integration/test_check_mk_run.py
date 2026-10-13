@@ -7,19 +7,38 @@
 # mypy: disable-error-code="type-arg"
 
 import ast
+import os
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Final
 
 import pytest
 
-from .utils import CTL_STATUS_LINE, obtain_agent_data, ONLY_FROM_LINE, SECTION_COUNT, YamlDict
+from .utils import (
+    create_legacy_pull_file,
+    CTL_STATUS_LINE,
+    obtain_agent_data,
+    ONLY_FROM_LINE,
+    SECTION_COUNT,
+    YamlDict,
+)
+
+
+@pytest.fixture(name="allow_legacy_pull", scope="module")
+def allow_legacy_pull_fixture(data_dir: Path) -> None:
+    create_legacy_pull_file(data_dir)
 
 
 def _make_config(config: YamlDict, only_from: Sequence[str]) -> YamlDict:
     if only_from:
         config["global"]["only_from"] = only_from
     return config
+
+
+def _expected_ctl_version() -> str:
+    version = os.environ.get("CMK_VERSION")
+    assert version, "Set CMK_VERSION to the version the controller was built with"
+    return version
 
 
 def _get_ctl_status_line(data: Sequence[str]) -> dict[str, str | list | bool]:
@@ -51,6 +70,7 @@ _WMI_SECTIONS: Final = {
 _INTERNAL_SECTIONS: Final = _NOT_WMI_SECTIONS.union(_WMI_SECTIONS)
 
 
+@pytest.mark.usefixtures("allow_legacy_pull")
 @pytest.mark.parametrize(
     "only_from, description",
     [
@@ -63,7 +83,7 @@ def test_check_mk_base(
     default_yaml_config: YamlDict,
     data_dir: Path,
     only_from: list[str],
-    description: str,
+    description: str,  # noqa: ARG001
 ) -> None:
     output = obtain_agent_data(
         _make_config(default_yaml_config, only_from),
@@ -88,8 +108,7 @@ def test_check_mk_base(
 
     # Validate controller status is the expected one.
     ctl_status = _get_ctl_status_line(output)
-    assert isinstance(ctl_status["version"], str)
-    assert ctl_status["version"].startswith("3.")
+    assert ctl_status["version"] == _expected_ctl_version()
     assert ctl_status["agent_socket_operational"] is True
     assert ctl_status["ip_allowlist"] == only_from
     assert ctl_status["allow_legacy_pull"] is True
@@ -102,6 +121,7 @@ def config_no_wmi_fixture(default_yaml_config: YamlDict) -> YamlDict:
     return default_yaml_config
 
 
+@pytest.mark.usefixtures("allow_legacy_pull")
 def test_check_mk_no_wmi(
     main_exe: Path,
     config_no_wmi: YamlDict,

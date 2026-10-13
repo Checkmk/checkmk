@@ -16,9 +16,10 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from types import ModuleType
 
-from cmk.base.config import load, load_all_plugins
-from cmk.ccc import store
+from cmk.base.config import load
+from cmk.ccc import debug, store
 from cmk.ccc.version import edition
+from cmk.checkengine.plugin_backend import load_all_plugins
 from cmk.config_anonymizer.interface import AnonInterface
 from cmk.config_anonymizer.step import AnonymizeStep
 from cmk.gui import main_modules as main_modules
@@ -167,16 +168,12 @@ def main(argv: Sequence[str] | None = None) -> None:
                 lock=True,
             )
 
-            all_plugins = load_all_plugins()
+            all_plugins = load_all_plugins(raise_errors=debug.enabled())
 
             # The builtin host labels are read from the file the LabelManager also uses.
             builtin_host_labels = BuiltinHostLabelsStore(paths.builtin_host_labels_file).load()
 
-            loaded_config_result = load(
-                edition=edition(paths.omd_root),
-                with_conf_d=True,
-                validate_hosts=False,
-            )
+            loaded_config_result = load(validate_hosts=False)
 
             interface = AnonInterface(args.target_dirname, rule_defaults, logger)
             plugins = load_plugins(logger, raise_errors=args.debug)

@@ -5,8 +5,11 @@
 
 from typing import Literal
 
-from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.openapi.framework.model.base_models import DomainObjectModel, LinkableModel
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
+from cmk.gui.openapi.framework.model.base_models import (
+    LinkableModel,
+    TitledDomainObjectModel,
+)
 
 ServiceDiscoveryRunState = Literal["initialized", "running", "finished", "stopped", "exception"]
 
@@ -29,8 +32,8 @@ class ServiceDiscoveryRunExtensionsModel:
 
 
 @api_model
-class ServiceDiscoveryRunModel(DomainObjectModel):
-    domainType: Literal["service_discovery_run"] = api_field(  # type: ignore[mutable-override]
+class ServiceDiscoveryRunModel(TitledDomainObjectModel):
+    domainType: Literal["service_discovery_run"] = api_field(
         description="The domain type of the object"
     )
     extensions: ServiceDiscoveryRunExtensionsModel = api_field(
@@ -62,9 +65,9 @@ class ServiceDiscoveryResultCheckTableValueModel(LinkableModel):
 @api_model
 class ServiceDiscoveryResultHostLabelValueModel:
     value: str = api_field(description="The value of the host label")
-    plugin_name: str | None = api_field(
+    plugin_name: str | ApiOmitted = api_field(
         description="The name of the plugin that discovered the host label",
-        default=None,
+        default_factory=ApiOmitted,
     )
 
 
@@ -85,8 +88,8 @@ class ServiceDiscoveryResultExtensionsModel:
 
 
 @api_model
-class ServiceDiscoveryResultModel(DomainObjectModel):
-    domainType: Literal["service_discovery"] = api_field(  # type: ignore[mutable-override]
+class ServiceDiscoveryResultModel(TitledDomainObjectModel):
+    domainType: Literal["service_discovery"] = api_field(
         description="The domain type of the object"
     )
     extensions: ServiceDiscoveryResultExtensionsModel = api_field(

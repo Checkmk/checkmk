@@ -220,6 +220,7 @@ import lightIconEventConsoleStatusSvg from '~cmk-frontend/themes/facelift/images
 import lightIconEventSvg from '~cmk-frontend/themes/facelift/images/icon_event.svg?url&no-inline'
 import lightIconEventConsoleSvg from '~cmk-frontend/themes/facelift/images/icon_event_console.svg?url&no-inline'
 import lightIconExpandPng from '~cmk-frontend/themes/facelift/images/icon_expand.png?url&no-inline'
+import lightIconExperimentSvg from '~cmk-frontend/themes/facelift/images/icon_experiment.svg?url&no-inline'
 import lightIconExportPng from '~cmk-frontend/themes/facelift/images/icon_export.png?url&no-inline'
 import lightIconExportLinkSvg from '~cmk-frontend/themes/facelift/images/icon_export_link.svg?url&no-inline'
 import lightIconExportRuleSvg from '~cmk-frontend/themes/facelift/images/icon_export_rule.svg?url&no-inline'
@@ -323,6 +324,7 @@ import lightIconMainUserSvg from '~cmk-frontend/themes/facelift/images/icon_main
 import lightIconMainUserActiveSvg from '~cmk-frontend/themes/facelift/images/icon_main_user_active.svg?url&no-inline'
 import lightIconManualSvg from '~cmk-frontend/themes/facelift/images/icon_manual.svg?url&no-inline'
 import lightIconManualActiveSvg from '~cmk-frontend/themes/facelift/images/icon_manual_active.svg?url&no-inline'
+import lightIconMapsSvg from '~cmk-frontend/themes/facelift/images/icon_maps.svg?url&no-inline'
 import lightIconMatrixPng from '~cmk-frontend/themes/facelift/images/icon_matrix.png?url&no-inline'
 import lightIconMenuPng from '~cmk-frontend/themes/facelift/images/icon_menu.png?url&no-inline'
 import lightIconMenuItemCheckedPng from '~cmk-frontend/themes/facelift/images/icon_menu_item_checked.png?url&no-inline'
@@ -421,6 +423,7 @@ import lightIconReloadSvg from '~cmk-frontend/themes/facelift/images/icon_reload
 import lightIconReloadCmkSvg from '~cmk-frontend/themes/facelift/images/icon_reload_cmk.svg?url&no-inline'
 import lightIconReloadsnapinPng from '~cmk-frontend/themes/facelift/images/icon_reloadsnapin.png?url&no-inline'
 import lightIconReloadsnapinLoAltPng from '~cmk-frontend/themes/facelift/images/icon_reloadsnapin_lo_alt.png?url&no-inline'
+import lightIconRemindersSvg from '~cmk-frontend/themes/facelift/images/icon_reminders.svg?url&no-inline'
 import lightIconRenameHostSvg from '~cmk-frontend/themes/facelift/images/icon_rename_host.svg?url&no-inline'
 import lightIconRepl25Png from '~cmk-frontend/themes/facelift/images/icon_repl_25.png?url&no-inline'
 import lightIconRepl50Png from '~cmk-frontend/themes/facelift/images/icon_repl_50.png?url&no-inline'
@@ -489,6 +492,7 @@ import lightIconServicesGreenSvg from '~cmk-frontend/themes/facelift/images/icon
 import lightIconServicesRefreshSvg from '~cmk-frontend/themes/facelift/images/icon_services_refresh.svg?url&no-inline'
 import lightIconServicesStopPng from '~cmk-frontend/themes/facelift/images/icon_services_stop.png?url&no-inline'
 import lightIconServicesTabulaRasaSvg from '~cmk-frontend/themes/facelift/images/icon_services_tabula_rasa.svg?url&no-inline'
+import lightIconShadowPng from '~cmk-frontend/themes/facelift/images/icon_shadow.png?url&no-inline'
 import lightIconShowLessSvg from '~cmk-frontend/themes/facelift/images/icon_show_less.svg?url&no-inline'
 import lightIconShowLessGreenSvg from '~cmk-frontend/themes/facelift/images/icon_show_less_green.svg?url&no-inline'
 import lightIconShowMoreSvg from '~cmk-frontend/themes/facelift/images/icon_show_more.svg?url&no-inline'
@@ -590,6 +594,7 @@ import lightIconTopicVisualizationPng from '~cmk-frontend/themes/facelift/images
 import lightIconTransSvg from '~cmk-frontend/themes/facelift/images/icon_trans.svg?url&no-inline'
 import lightIconTreeClosedSvg from '~cmk-frontend/themes/facelift/images/icon_tree_closed.svg?url&no-inline'
 import lightIconTrustPng from '~cmk-frontend/themes/facelift/images/icon_trust.png?url&no-inline'
+import lightIconUiComponentLibrarySvg from '~cmk-frontend/themes/facelift/images/icon_ui_component_library.svg?url&no-inline'
 import lightIconUnacknowledgeTestPng from '~cmk-frontend/themes/facelift/images/icon_unacknowledge_test.png?url&no-inline'
 import lightIconUnavailableSvg from '~cmk-frontend/themes/facelift/images/icon_unavailable.svg?url&no-inline'
 import lightIconUndecidedServiceSvg from '~cmk-frontend/themes/facelift/images/icon_undecided_service.svg?url&no-inline'
@@ -724,6 +729,7 @@ import darkSpeedometerSvg from '~cmk-frontend/themes/modern-dark/images/speedome
 export const emblems = [
   'add',
   'api',
+  'burger',
   'disable',
   'download',
   'downtime',
@@ -744,7 +750,9 @@ export const emblems = [
 ] as const
 
 export const oneColorIcons = [
+  'ai-assistant',
   'burger-menu',
+  'cancel',
   'changes',
   'check-circle',
   'checkmark',
@@ -780,13 +788,20 @@ export const oneColorIcons = [
   'share',
   'stale',
   'reload',
+  'triangle-up',
   'filter',
   'pause',
   'play',
   'waiting',
-  'more-actions'
+  'more-actions',
+  'open-details',
+  'dash',
+  'arrow-down',
+  'chat-new',
+  'chat-history',
+  'docking'
 ] as const
-export const twoColorIcons = ['aggr', 'experiment'] as const
+export const twoColorIcons = ['aggr', 'experiment', 'columns', 'display-options'] as const
 
 export const iconSizes: Record<IconSizes, number> = {
   xxsmall: 8,
@@ -1036,6 +1051,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   event: lightIconEventSvg,
   'event-console': lightIconEventConsoleSvg,
   expand: lightIconExpandPng,
+  experiment: lightIconExperimentSvg,
   export: lightIconExportPng,
   'export-rule': lightIconExportRuleSvg,
   factoryreset: lightIconFactoryresetPng,
@@ -1127,6 +1143,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   'main-setup-active': lightIconMainSetupActiveSvg,
   'main-user-active': lightIconMainUserActiveSvg,
   'manual-active': lightIconManualActiveSvg,
+  maps: lightIconMapsSvg,
   matrix: lightIconMatrixPng,
   menu: lightIconMenuPng,
   'menu-item-checked': lightIconMenuItemCheckedPng,
@@ -1222,6 +1239,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   reload: lightIconReloadSvg,
   reloadsnapin: lightIconReloadsnapinPng,
   'reloadsnapin-lo-alt': lightIconReloadsnapinLoAltPng,
+  reminders: lightIconRemindersSvg,
   'rename-host': lightIconRenameHostSvg,
   'repl-25': lightIconRepl25Png,
   'repl-50': lightIconRepl50Png,
@@ -1284,6 +1302,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   'services-refresh': lightIconServicesRefreshSvg,
   'services-stop': lightIconServicesStopPng,
   'services-tabula-rasa': lightIconServicesTabulaRasaSvg,
+  shadow: lightIconShadowPng,
   'show-less-green': lightIconShowLessGreenSvg,
   'show-more-green': lightIconShowMoreGreenSvg,
   showbi: lightIconShowbiPng,
@@ -1371,6 +1390,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   trust: lightIconTrustPng,
   twofa: lightIcon2faSvg,
   'twofa-backup-codes': lightIcon2faBackupCodesSvg,
+  'ui-component-library': lightIconUiComponentLibrarySvg,
   'unacknowledge-test': lightIconUnacknowledgeTestPng,
   'undecided-service': lightIconUndecidedServiceSvg,
   undo: lightIconUndoSvg,

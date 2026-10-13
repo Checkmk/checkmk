@@ -102,18 +102,18 @@ class EditDashboards(CmkPage):
         Args:
             dashboard_name: the name of the dashboard to delete.
         """
-        custom_dashboard_link = (
-            self.main_area.locator().get_by_role("link", name=dashboard_name, exact=True).first
+        dashboard_link = self.main_area.locator().get_by_role(
+            "link", name=dashboard_name, exact=True
         )
-        custom_dashboard_row = self.main_area.locator("tr", has=custom_dashboard_link)
-        custom_dashboard_row.get_by_role("link", name="Delete").click()
-        self.main_area.get_confirmation_popup_button("Delete").click()
-        # Deletion triggers a server-side redirect back to this page before the
-        # success message is rendered; wait for that reload to settle so the
-        # assertion below isn't racing the navigation.
-        self.page.wait_for_url(url=re.compile("edit_dashboards.py"), wait_until="load")
+        delete_link = self.main_area.locator().get_by_role("link", name="Delete")
+        deletable_rows = self.main_area.locator("tr", has=dashboard_link).filter(has=delete_link)
+        deletable_rows.first.get_by_role("link", name="Delete").click()
+        self.click_and_wait_for_navigation(
+            self.main_area.get_confirmation_popup_button("Delete"),
+            re.compile(r"edit_dashboards\.py"),
+        )
 
         expect(
-            self.main_area.locator("div.success"),
+            deletable_rows,
             message=f"Dashboard '{dashboard_name}' is not deleted",
-        ).to_have_text("Your dashboard has been deleted.")
+        ).to_have_count(0)

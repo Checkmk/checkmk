@@ -6,6 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 
 import datetime
+import json
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -16,25 +17,22 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 class SectionSnapshots(BaseModel, frozen=True):
     snaptimes: Sequence[int] = Field(alias="snaptimes", default_factory=list)
 
 
-def parse_proxmox_ve_snapshot_age(string_table: StringTable) -> SectionSnapshots:
-    return SectionSnapshots.model_validate_json(string_table[0][0])
-
-
-def discover_single(section: SectionSnapshots) -> DiscoveryResult:
-    yield Service()
+def parse_proxmox_ve_snapshot_age(string_table: StringTable) -> SectionSnapshots | None:
+    if (raw := json.loads(string_table[0][0])) is None:
+        return None
+    return SectionSnapshots.model_validate(raw)
 
 
 def _check_proxmox_ve_snapshot_age_testable(
@@ -87,7 +85,7 @@ agent_section_proxmox_ve_vm_snapshot_age = AgentSection(
 check_plugin_proxmox_ve_vm_snapshot_age = CheckPlugin(
     name="proxmox_ve_vm_snapshot_age",
     service_name="Proxmox VE VM Snapshot age",
-    discovery_function=discover_single,
+    discovery_function=discover_one_service,
     check_function=check_proxmox_ve_snapshot_age,
     check_ruleset_name="proxmox_ve_vm_snapshot_age",
     check_default_parameters={

@@ -1,0 +1,30 @@
+module(
+    name = "psign",
+    version = "0.7.0.cmk.1",
+    bazel_compatibility = [">=7.2.1"],
+    compatibility_level = 1,
+)
+
+bazel_dep(name = "rules_rust", version = "0.74.0")
+
+# Non-root crate_universe repositories cannot be repinned, so the lockfile is
+# shipped with the overlay. See the README next to metadata.json on how to
+# regenerate it.
+crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
+crate.from_cargo(
+    name = "psign_crates",
+    cargo_lockfile = "//:Cargo.lock",
+    lockfile = "//:Cargo.Bazel.lock",
+    manifests = [
+        "//:Cargo.toml",
+        "//crates/psign-authenticode-trust:Cargo.toml",
+        "//crates/psign-azure-kv-rest:Cargo.toml",
+        "//crates/psign-codesigning-rest:Cargo.toml",
+        "//crates/psign-digest-cli:Cargo.toml",
+        "//crates/psign-opc-sign:Cargo.toml",
+        "//crates/psign-portable-core:Cargo.toml",
+        "//crates/psign-sip-digest:Cargo.toml",
+    ],
+    supported_platform_triples = ["x86_64-unknown-linux-gnu"],
+)
+use_repo(crate, "psign_crates")

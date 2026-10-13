@@ -50,6 +50,16 @@ greet();\`
   />
 </template>`
   },
+  collapsible: {
+    type: 'boolean' as const,
+    title: 'Collapsible',
+    initialState: true
+  },
+  wrap: {
+    type: 'boolean' as const,
+    title: 'Wrap long lines',
+    initialState: false
+  },
   width: {
     type: 'list' as const,
     title: 'Width',
@@ -94,6 +104,8 @@ const propState = new PanelStateCreator<typeof CmkCode, 'copyButtonTestId'>().cr
         :title="propState.title"
         :code-text="propState.codeText"
         :width="(propState.width as WidthOption)!"
+        :collapsible="propState.collapsible"
+        :wrap="propState.wrap"
       />
 
       <template #properties>

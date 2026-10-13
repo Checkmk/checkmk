@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
 import threading
 from collections.abc import Generator
+from http import HTTPStatus
 from typing import override
 
 import pytest
@@ -16,7 +16,7 @@ from pytest_mock import MockerFixture
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui import hooks
 from cmk.gui.pages import Page, page_registry, PageContext, PageEndpoint
-from tests.testlib.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 
 @pytest.fixture()
@@ -33,7 +33,7 @@ def reset_hooks() -> Generator[None]:
 @pytest.mark.usefixtures("patch_theme", "reset_hooks")
 def test_flask_request_memoize(wsgi_app: WebTestAppForCMK) -> None:
     @hooks.request_memoize()
-    def cached_function():  # type: ignore[misc]
+    def cached_function() -> datetime.datetime:
         return datetime.datetime.now()
 
     assert len(hooks.hooks) > 0
@@ -42,13 +42,13 @@ def test_flask_request_memoize(wsgi_app: WebTestAppForCMK) -> None:
 
     # Only Checkmk and REST API Blueprint requests trigger the cache eviction.
     resp = wsgi_app.get("/")
-    assert resp.status_code == 404
+    assert resp.status_code == HTTPStatus.NOT_FOUND
 
     assert prev == cached_function()
 
     # After another request, the cache is evicted.
     resp = wsgi_app.get("/NO_SITE/check_mk/login.py")
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     assert prev != cached_function()
 
 
@@ -74,7 +74,7 @@ def test_request_memoize_request_integration(
     mock = mocker.MagicMock()
 
     @hooks.request_memoize()
-    def memoized():  # type: ignore[misc]
+    def memoized() -> object:
         return mock()
 
     class PageClass(Page):
@@ -90,7 +90,7 @@ def test_request_memoize_request_integration(
     page_registry.register(PageEndpoint("my_page", PageClass()))
 
     # Try a first request. Memoization within this request is tested in page() above.
-    logged_in_wsgi_app.get("/NO_SITE/check_mk/my_page.py", status=200)
+    logged_in_wsgi_app.get("/NO_SITE/check_mk/my_page.py", status=HTTPStatus.OK)
 
     # After the request has ended we get the new value
     mock.return_value = 2
@@ -100,7 +100,7 @@ def test_request_memoize_request_integration(
 
     # And now try a second request
     mock.return_value = 1
-    logged_in_wsgi_app.get("/NO_SITE/check_mk/my_page.py", status=200)
+    logged_in_wsgi_app.get("/NO_SITE/check_mk/my_page.py", status=HTTPStatus.OK)
 
     page_registry.unregister("my_page")
 
@@ -172,7 +172,7 @@ def test_threaded_memoize(
 
     page_registry.register(PageEndpoint("my_page", PageClass()))
 
-    logged_in_wsgi_app.get("/NO_SITE/check_mk/my_page.py", status=200)
+    logged_in_wsgi_app.get("/NO_SITE/check_mk/my_page.py", status=HTTPStatus.OK)
     # Note: Even after the get request from the line above, no request end has been called yet
     # Check both event types
     for clear_event in ["request-end", "request-context-exit"]:
@@ -221,7 +221,7 @@ def test_cache_clear_all() -> None:
     cached_function(42)
     other_cached_function(42)
 
-    hooks._thread_cache.cache_clear_all()
+    hooks._thread_cache.cache_clear_all()  # noqa: SLF001
     assert cached_function.cache_info() is None  # type: ignore[attr-defined]
     assert other_cached_function.cache_info() is None  # type: ignore[attr-defined]
 

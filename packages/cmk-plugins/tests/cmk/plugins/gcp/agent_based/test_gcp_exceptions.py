@@ -10,7 +10,7 @@ from dataclasses import dataclass
 import pytest
 
 from cmk.agent_based.v2 import Result, State, StringTable
-from cmk.plugins.gcp.agent_based.gcp_exceptions import _ExceptionSection, check, discover, parse
+from cmk.plugins.gcp.agent_based.gcp_exceptions import _ExceptionSection, check, parse
 
 
 @dataclass(frozen=True)
@@ -163,11 +163,6 @@ EXCEPTIONS = [
 )
 def test_parse_exception(string_table: StringTable, expected_section: _ExceptionSection) -> None:
     assert parse(string_table) == expected_section
-
-
-@pytest.mark.parametrize("exception", EXCEPTIONS)
-def test_discover_exception(exception: GCPException) -> None:
-    assert len(list(discover(exception.section))) == 1
 
 
 @pytest.mark.parametrize("exception", EXCEPTIONS)

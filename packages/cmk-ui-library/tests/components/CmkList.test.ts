@@ -110,3 +110,24 @@ test('CmkList reorders items when dragging and dropping', async () => {
   // (item at index 0 moved to position 2)
   expect(onReorder).toHaveBeenCalledWith([1, 2, 0])
 })
+
+function renderListWithAlignment(alignment: { buttonAlignment?: 'top' | 'center' } = {}) {
+  render(CmkList, {
+    props: {
+      itemsProps: { itemData: ['foo'] },
+      tryDelete: () => true,
+      ...alignment
+    }
+  })
+  return screen.getByRole('listitem').querySelector('.cmk-list-item')
+}
+
+test('CmkList keeps the buttons of an item at its top by default', () => {
+  expect(renderListWithAlignment()).not.toHaveClass('cmk-list-item--buttons-centered')
+})
+
+test('CmkList centers the buttons of an item when asked to', () => {
+  expect(renderListWithAlignment({ buttonAlignment: 'center' })).toHaveClass(
+    'cmk-list-item--buttons-centered'
+  )
+})

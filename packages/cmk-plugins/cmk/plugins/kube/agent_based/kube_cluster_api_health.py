@@ -3,16 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.kube.schemata.section import ClusterDetails
 
 
@@ -20,15 +21,11 @@ def parse(string_table: StringTable) -> ClusterDetails:
     return ClusterDetails.model_validate_json(string_table[0][0])
 
 
-def discovery(section: ClusterDetails) -> DiscoveryResult:
-    yield Service()
-
-
 def check(section: ClusterDetails) -> CheckResult:
     api_health = section.api_health
     name_and_health = [("live", api_health.live), ("ready", api_health.ready)]
     for name, health in name_and_health:
-        if health.status_code == 200:
+        if health.status_code == HTTPStatus.OK:
             yield Result(state=State.OK, summary=name.title())
             continue
         yield Result(state=State.CRIT, summary=f"Not {name}")
@@ -37,7 +34,7 @@ def check(section: ClusterDetails) -> CheckResult:
             notice=f"{name.title()} response:\n{health.response}",
         )
 
-    if not all(h.status_code == 200 for _, h in name_and_health):
+    if not all(h.status_code == HTTPStatus.OK for _, h in name_and_health):
         yield Result(state=State.OK, summary="See service details for more information")
 
 
@@ -50,6 +47,6 @@ agent_section_kube_cluster_details_v1 = AgentSection(
 check_plugin_kube_cluster_api_health = CheckPlugin(
     name="kube_cluster_api_health",
     service_name="Kubernetes API",
-    discovery_function=discovery,
+    discovery_function=discover_one_service,
     check_function=check,
 )

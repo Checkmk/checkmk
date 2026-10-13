@@ -88,7 +88,6 @@ from ._connection import (
     ConnectionId,
     create_client_socket,
     get_optional_timeperiods_active_map,
-    get_rrd_data,
     intercept_queries,
     is_socket_readable,
     livestatus_lql,
@@ -121,6 +120,7 @@ from ._connection import (
     ProxyConfigTcp,
     Query,
     QuerySpecification,
+    QueryTypes,
     quote_dict,
     RRDResponse,
     SAMLAuthenticationEntry,
@@ -135,6 +135,8 @@ from ._connection import (
     UnixSocketDetails,
     UnixSocketInfo,
 )
+from ._rrd import get_rrd_data
+from .expressions import LqUnsafeValueError
 
 __all__ = [
     # Client
@@ -242,6 +244,7 @@ __all__ = [
     "MKLivestatusNotFoundError",
     "MKLivestatusPayloadTooLargeError",
     "MKLivestatusQueryError",
+    "LqUnsafeValueError",
     "MKLivestatusSocketClosed",
     "MKLivestatusSocketError",
     "MKLivestatusTableNotFoundError",
@@ -255,6 +258,7 @@ __all__ = [
     "ProxyConfigTcp",
     "Query",
     "QuerySpecification",
+    "QueryTypes",
     "quote_dict",
     "RRDResponse",
     "SAMLAuthenticationEntry",

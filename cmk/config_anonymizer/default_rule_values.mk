@@ -393,7 +393,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('ibm_mq', [])
 
 agent_config['ibm_mq'] = [
-{'id': '98706833-7a35-4e58-9a5f-e887d678daf3', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '98706833-7a35-4e58-9a5f-e887d678daf3', 'value': {'deployment': ('sync', None), 'only_qm': [], 'skip_qm': [], 'execute_as_another_user': 'default_user'}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['ibm_mq']
 
 
@@ -528,7 +528,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_docker', [])
 
 agent_config['mk_docker'] = [
-{'id': '593ba77e-3a81-4a15-994f-05426e3a4e45', 'value': {'node': [], 'containers': [], 'container_id': 'short'}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '593ba77e-3a81-4a15-994f-05426e3a4e45', 'value': {'deployment': ('sync', None), 'node': [], 'containers': [], 'container_id': 'short', 'base_url': 'unix://var/run/docker.sock', 'persist_period_node_disk_usage': 90}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_docker']
 
 
@@ -582,7 +582,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_jolokia', [])
 
 agent_config['mk_jolokia'] = [
-{'id': 'f75499fe-2ef3-4d30-a6ec-db4cca00ca71', 'value': {'deployment': 'sync'}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'f75499fe-2ef3-4d30-a6ec-db4cca00ca71', 'value': {'deployment': 'sync', 'main_instance': {}, 'instances': []}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_jolokia']
 
 
@@ -609,7 +609,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_mongodb', [])
 
 agent_config['mk_mongodb'] = [
-{'id': '84a130f8-807a-4cb4-bbf4-bbcf04cb7239', 'value': True, 'condition': {}, 'options': {'disabled': False}},
+{'id': '84a130f8-807a-4cb4-bbf4-bbcf04cb7239', 'value': {'deployment': ('sync', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_mongodb']
 
 
@@ -717,7 +717,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_saprouter', [])
 
 agent_config['mk_saprouter'] = [
-{'id': '7370c586-f64e-4660-a3f5-7b21b3c2aea0', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '7370c586-f64e-4660-a3f5-7b21b3c2aea0', 'value': {'deployment': ('sync', None), 'user': '', 'path': ''}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_saprouter']
 
 
@@ -735,7 +735,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_site_object_counts', [])
 
 agent_config['mk_site_object_counts'] = [
-{'id': '0190f9b7-d98b-4ce9-9ae9-e1ef18d8f64d', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '0190f9b7-d98b-4ce9-9ae9-e1ef18d8f64d', 'value': {'deployment': ('sync', None), 'tags': [], 'service_check_commands': [], 'sites': []}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_site_object_counts']
 
 
@@ -933,7 +933,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('smart', [])
 
 agent_config['smart'] = [
-{'id': '204a08f0-6bc8-4bfb-a07f-8583f1cd05dc', 'value': 'smart_posix', 'condition': {}, 'options': {'disabled': False}},
+{'id': '204a08f0-6bc8-4bfb-a07f-8583f1cd05dc', 'value': {'deployment': ('sync', None), 'use_legacy_plugin': False}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['smart']
 
 
@@ -5209,11 +5209,11 @@ checkgroup_parameters['memory_utilization_multiitem'] = [
 
 checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 
-checkgroup_parameters.setdefault('metric_backend_omd', [])
+checkgroup_parameters.setdefault('data_backend_telemetry_metrics_omd', [])
 
-checkgroup_parameters['metric_backend_omd'] = [
+checkgroup_parameters['data_backend_telemetry_metrics_omd'] = [
 {'id': '771ab72f-e651-4c1c-b0ae-9e408df4ae5a', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
-] + checkgroup_parameters['metric_backend_omd']
+] + checkgroup_parameters['data_backend_telemetry_metrics_omd']
 
 
 checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
@@ -7588,7 +7588,7 @@ checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 checkgroup_parameters.setdefault('veeam_cdp_jobs', [])
 
 checkgroup_parameters['veeam_cdp_jobs'] = [
-{'id': '3ef4b142-7fa5-4fa3-aafa-fe95927d6ae9', 'value': {'age': (108000, 172800)}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '3ef4b142-7fa5-4fa3-aafa-fe95927d6ae9', 'value': {'age': ('fixed', (108000.0, 172800.0))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['veeam_cdp_jobs']
 
 
@@ -7597,7 +7597,7 @@ checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 checkgroup_parameters.setdefault('veeam_tapejobs', [])
 
 checkgroup_parameters['veeam_tapejobs'] = [
-{'id': 'ac73039b-b8c6-455c-a4c6-23d670f139f7', 'value': {'levels_upper': (0, 0)}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'ac73039b-b8c6-455c-a4c6-23d670f139f7', 'value': {'levels_upper': ('fixed', (0.0, 0.0))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['veeam_tapejobs']
 
 
@@ -8695,7 +8695,7 @@ service_tag_rules = [
 globals().setdefault('snmp_backend_hosts', [])
 
 snmp_backend_hosts = [
-{'id': '0e05eb2d-f293-4d3c-b47e-97de509bf417', 'value': 'inline', 'condition': {}, 'options': {'disabled': False}},
+{'id': '0e05eb2d-f293-4d3c-b47e-97de509bf417', 'value': 'classic', 'condition': {}, 'options': {'disabled': False}},
 ] + snmp_backend_hosts
 
 
@@ -14829,7 +14829,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('veeam_cdp_jobs', [])
 
 static_checks['veeam_cdp_jobs'] = [
-{'id': '72498fec-2172-40d9-a43f-d7babd8e0600', 'value': ('veeam_cdp_jobs', 'example', {'age': (108000, 172800)}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '72498fec-2172-40d9-a43f-d7babd8e0600', 'value': ('veeam_cdp_jobs', 'example', {'age': ('fixed', (108000.0, 172800.0))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['veeam_cdp_jobs']
 
 
@@ -14838,7 +14838,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('veeam_tapejobs', [])
 
 static_checks['veeam_tapejobs'] = [
-{'id': '2060b07e-8fc4-440f-840c-2ac1bd491d26', 'value': ('veeam_tapejobs', 'example', {'levels_upper': (0, 0)}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '2060b07e-8fc4-440f-840c-2ac1bd491d26', 'value': ('veeam_tapejobs', 'example', {'levels_upper': ('fixed', (0.0, 0.0))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['veeam_tapejobs']
 
 
@@ -15018,7 +15018,7 @@ static_checks = locals().setdefault('static_checks', {})
 static_checks.setdefault('wmic_process', [])
 
 static_checks['wmic_process'] = [
-{'id': '3e5670da-2bfb-4baa-a147-9c3386fa18cc', 'value': ('wmic_process', 'example', ('example.exe', 0, 0, 0, 0, 0.0, 0.0)), 'condition': {}, 'options': {'disabled': False}},
+{'id': '3e5670da-2bfb-4baa-a147-9c3386fa18cc', 'value': ('wmic_process', 'example', {'name': 'example.exe', 'mem_levels': ('no_levels', None), 'page_levels': ('no_levels', None), 'cpu_levels': ('no_levels', None)}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['wmic_process']
 
 

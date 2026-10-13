@@ -13,7 +13,7 @@ import UclMonitoringActionBar from './UclMonitoringActionBar.vue'
 import UclMonitoringPagination from './UclMonitoringPagination.vue'
 import UclRefreshCountdown from './UclRefreshCountdown.vue'
 import UclTableCellBreakpoints from './UclTableCellBreakpoints.vue'
-import UclTableColumnFilters from './UclTableColumnFilters.vue'
+import UclTableColumnFiltersAndSorting from './UclTableColumnFiltersAndSorting.vue'
 import UclActionsCell from './cell/UclActionsCell.vue'
 import UclBaseCell from './cell/UclBaseCell.vue'
 import UclCheckboxCell from './cell/UclCheckboxCell.vue'
@@ -21,8 +21,8 @@ import UclCollapsibleCell from './cell/UclCollapsibleCell.vue'
 import UclColorPickerCell from './cell/UclColorPickerCell.vue'
 import UclDragHandleCell from './cell/UclDragHandleCell.vue'
 import UclDropdownCell from './cell/UclDropdownCell.vue'
+import UclIconCell from './cell/UclIconCell.vue'
 import UclLabelCell from './cell/UclLabelCell.vue'
-import UclModesCell from './cell/UclModesCell.vue'
 import UclNumberCell from './cell/UclNumberCell.vue'
 import UclPerfometerCell from './cell/UclPerfometerCell.vue'
 import UclRichTextCell from './cell/UclRichTextCell.vue'
@@ -40,8 +40,8 @@ export const pages: Array<Folder | Page> = [
     new Page('ColorPickerCell', UclColorPickerCell),
     new Page('DragHandleCell', UclDragHandleCell),
     new Page('DropdownCell', UclDropdownCell),
+    new Page('IconCell', UclIconCell),
     new Page('LabelCell', UclLabelCell),
-    new Page('ModesCell', UclModesCell),
     new Page('NumberCell', UclNumberCell),
     new Page('PerfometerCell', UclPerfometerCell),
     new Page('RichTextCell', UclRichTextCell),
@@ -57,6 +57,6 @@ export const pages: Array<Folder | Page> = [
   new Page('Editable table', UclEditableTable),
   new Page('Table cell breakpoints', UclTableCellBreakpoints),
   new Page('Table column pinning', UclColumnPinning),
-  new Page('Table column filters', UclTableColumnFilters),
+  new Page('Table column filters and sorting', UclTableColumnFiltersAndSorting),
   new Page('Column picker', UclColumnPicker)
 ]

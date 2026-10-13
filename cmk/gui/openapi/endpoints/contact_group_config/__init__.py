@@ -24,6 +24,7 @@ A contact group object can have the following relations present in `links`:
 """
 
 from collections.abc import Iterable, Mapping
+from http import HTTPStatus
 from typing import Any, cast, Literal
 
 from cmk.ccc import version
@@ -84,6 +85,7 @@ from cmk.gui.watolib.groups_io import (
     NothingOrChoices,
     PermittedPath,
 )
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
     PendingChanges,
@@ -279,7 +281,7 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
     response_schema=ContactGroupCollection,
     permissions_required=PERMISSIONS,
 )
-def list_group(params: Mapping[str, Any]) -> Response:
+def list_group(params: Mapping[str, Any]) -> Response:  # noqa: ARG001
     """Show all contact groups"""
     user.need_permission("wato.users")
     collection = [
@@ -314,7 +316,7 @@ def show(params: Mapping[str, Any]) -> Response:
     path_params=[GROUP_NAME_FIELD],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
-    additional_status_codes=[409],
+    additional_status_codes=[HTTPStatus.CONFLICT],
 )
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a contact group"""
@@ -328,6 +330,7 @@ def delete(params: Mapping[str, Any]) -> Response:
             delete_group(
                 name,
                 "contact",
+                tree=make_folder_tree(active_config),
                 pprint_value=active_config.wato_pprint_config,
                 pending_changes=_pending_changes(
                     active_config.sites,
@@ -338,18 +341,18 @@ def delete(params: Mapping[str, Any]) -> Response:
             )
         except GroupInUseException as exc:
             raise ProblemException(
-                status=409,
+                status=HTTPStatus.CONFLICT,
                 title="Group in use problem",
                 detail=str(exc),
             )
         except UnknownGroupException as exc:
             raise ProblemException(
-                status=404,
+                status=HTTPStatus.NOT_FOUND,
                 title="Unknown group problem",
                 detail=str(exc),
             )
 
-    return Response(status=204)
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 
 @Endpoint(
@@ -359,13 +362,14 @@ def delete(params: Mapping[str, Any]) -> Response:
     request_schema=BulkDeleteContactGroup,
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
-    additional_status_codes=[404, 409],
+    additional_status_codes=[HTTPStatus.NOT_FOUND, HTTPStatus.CONFLICT],
 )
 def bulk_delete(params: Mapping[str, Any]) -> Response:
     """Bulk delete contact groups"""
     user.need_permission("wato.edit")
     user.need_permission("wato.users")
     body = params["body"]
+    tree = make_folder_tree(active_config)
     with disable_permission_tracking(), SuperUserContext():
         for group_name in body["entries"]:
             # We need to supress this, because a lot of dashboard permissions are checked for
@@ -374,6 +378,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
                 delete_group(
                     group_name,
                     "contact",
+                    tree=tree,
                     pprint_value=active_config.wato_pprint_config,
                     pending_changes=_pending_changes(
                         active_config.sites,
@@ -384,18 +389,18 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
                 )
             except GroupInUseException as exc:
                 raise ProblemException(
-                    status=409,
+                    status=HTTPStatus.CONFLICT,
                     title="Group in use problem",
                     detail=str(exc),
                 )
             except UnknownGroupException as exc:
                 raise ProblemException(
-                    status=404,
+                    status=HTTPStatus.NOT_FOUND,
                     title="Unknown group problem",
                     detail=str(exc),
                 )
 
-    return Response(status=204)
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 
 @Endpoint(

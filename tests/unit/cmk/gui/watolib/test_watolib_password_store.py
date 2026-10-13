@@ -159,7 +159,7 @@ def test_password_store_filter_usable_entries_not_permitted(
 def test_password_store_filter_usable_entries_shared_with_user_group(
     test_store: PasswordStore, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group2"])
+    monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group2"])  # noqa: ARG005
     assert test_store.filter_usable_entries(test_store.load_for_reading(), user) != {}
 
 
@@ -168,7 +168,7 @@ def test_password_store_filter_usable_entries_shared_with_user_group(
 def test_password_store_filter_usable_entries_owned_by_user_group(
     test_store: PasswordStore, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group1"])
+    monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group1"])  # noqa: ARG005
     assert test_store.filter_usable_entries(test_store.load_for_reading(), user) != {}
 
 
@@ -193,7 +193,7 @@ def test_password_store_filter_editable_entries_not_permitted(
 def test_password_store_filter_editable_entries_shared_with_user_group(
     test_store: PasswordStore, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group2"])
+    monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group2"])  # noqa: ARG005
     assert test_store.filter_editable_entries(test_store.load_for_reading(), user) == {}
 
 
@@ -202,5 +202,5 @@ def test_password_store_filter_editable_entries_shared_with_user_group(
 def test_password_store_filter_editable_entries_owned_by_user_group(
     test_store: PasswordStore, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group1"])
+    monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group1"])  # noqa: ARG005
     assert test_store.filter_editable_entries(test_store.load_for_reading(), user) != {}

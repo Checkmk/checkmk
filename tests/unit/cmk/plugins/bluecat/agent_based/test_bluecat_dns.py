@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.agent_based.v2 import Result, State
 from cmk.plugins.bluecat.agent_based import bluecat_dns
 
 
-def check_bluecat_dns_ok():
+def check_bluecat_dns_ok() -> None:
     assert list(
         bluecat_dns.check_bluecat_dns(
             {
@@ -30,7 +29,7 @@ def check_bluecat_dns_ok():
     ]
 
 
-def check_bluecat_dns_crit():
+def check_bluecat_dns_crit() -> None:
     assert list(
         bluecat_dns.check_bluecat_dns(
             {

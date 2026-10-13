@@ -5,8 +5,6 @@
 
 """End-to-end test of walk.py against a fixture git repo built in tmp_path."""
 
-from __future__ import annotations
-
 import os
 import re
 import subprocess

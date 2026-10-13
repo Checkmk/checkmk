@@ -15,7 +15,11 @@
       "type": "array",
       "items": { "$ref": "#/$defs/site" }
     },
-    "edition": { "$ref": "monitoring/_base.json#/$defs/edition" }
+    "edition": { "$ref": "monitoring/_base.json#/$defs/edition" },
+    "show_relations": {
+      "type": "boolean",
+      "default": false
+    }
   },
   "required": ["user_id", "site", "sites", "edition"],
   "$defs": {

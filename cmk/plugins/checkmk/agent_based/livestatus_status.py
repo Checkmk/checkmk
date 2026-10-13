@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 
 import time
@@ -24,6 +23,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.lib.livestatus_status import LivestatusStatusSection
 
 # Example output from agent:
 # <<<livestatus_status:sep(59)>>>
@@ -32,9 +32,7 @@ from cmk.agent_based.v2 import (
 # accept_passive_host_checks;accept_passive_service_checks;cached_log_messages;check_external_commands;check_host_freshness;check_service_freshness;connections;connections_rate;enable_event_handlers;enable_flap_detection;enable_notifications;execute_host_checks;execute_service_checks;external_command_buffer_max;external_command_buffer_slots;external_command_buffer_usage;external_commands;external_commands_rate;forks;forks_rate;host_checks;host_checks_rate;interval_length;last_command_check;last_log_rotation;livecheck_overflows;livecheck_overflows_rate;livechecks;livechecks_rate;livestatus_active_connections;livestatus_queued_connections;livestatus_threads;livestatus_version;log_messages;log_messages_rate;nagios_pid;neb_callbacks;neb_callbacks_rate;num_hosts;num_services;obsess_over_hosts;obsess_over_services;process_performance_data;program_start;program_version;requests;requests_rate;service_checks;service_checks_rate
 # 1;1;0;1;0;1;231;1.0327125668e-01;1;1;1;1;1;0;32768;0;0;0.0000000000e+00;0;0.0000000000e+00;0;0.0000000000e+00;60;1359471450;0;0;0.0000000000e+00;0;0.0000000000e+00;1;0;20;2013.01.23;0;0.0000000000e+00;15126;15263;6.5307324420e+00;0;0;0;0;1;1359469039;3.2.3;230;1.0327125668e-01;0;0.0000000000e+00
 
-
-type LivestatusSection = Mapping[str, Any]
-
+type LivestatusSslSection = Mapping[str, Mapping[str, str]]
 # Structure of "omd_info" section:
 # {"versions": {...}, "sites": {<site>: {"site": ..., "used_version": ..., "autostart": ...}}}
 type OmdInfoSection = Mapping[str, Mapping[str, Mapping[str, str]]]
@@ -117,7 +115,7 @@ def _site_uses_commercial_edition(section_omd_info: OmdInfoSection, site: str) -
         return False
 
 
-def parse_livestatus_status(string_table: StringTable) -> LivestatusSection:
+def parse_livestatus_status(string_table: StringTable) -> LivestatusStatusSection:
     parsed = dict[str, Any]()
     site, headers = None, None
     for line in string_table:
@@ -141,7 +139,7 @@ agent_section_livestatus_status = AgentSection(
 )
 
 
-def parse_livestatus_ssl_certs(string_table: StringTable) -> LivestatusSection:
+def parse_livestatus_ssl_certs(string_table: StringTable) -> LivestatusSslSection:
     parsed: dict[str, dict[str, str]] = {}
     site = None
     for line in string_table:
@@ -163,9 +161,9 @@ agent_section_livestatus_ssl_certs = AgentSection(
 
 
 def discovery_livestatus_status(
-    section_livestatus_status: LivestatusSection | None,
-    section_livestatus_ssl_certs: LivestatusSection | None,
-    section_omd_info: OmdInfoSection | None,
+    section_livestatus_status: LivestatusStatusSection | None,
+    section_livestatus_ssl_certs: LivestatusSslSection | None,  # noqa: ARG001
+    section_omd_info: OmdInfoSection | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if section_livestatus_status is None:
         return
@@ -177,8 +175,8 @@ def discovery_livestatus_status(
 def check_livestatus_status(
     item: str,
     params: LivestatusStatusParameters,
-    section_livestatus_status: LivestatusSection | None,
-    section_livestatus_ssl_certs: LivestatusSection | None,
+    section_livestatus_status: LivestatusStatusSection | None,
+    section_livestatus_ssl_certs: LivestatusSslSection | None,
     section_omd_info: OmdInfoSection | None,
 ) -> CheckResult:
     # Check Performance counters
@@ -196,14 +194,14 @@ def check_livestatus_status(
 
 
 def _make_levels(raw_days: tuple[float | None, float | None]) -> None | tuple[float, float]:
-    match raw_days:
+    match raw_days:  # type: ignore[exhaustive-match]
         case float(w), float(c):
             return (w * 86400.0, c * 86400.0)
     return None
 
 
 def _check_livestatus_cert(
-    section_livestatus_ssl_certs: LivestatusSection,
+    section_livestatus_ssl_certs: LivestatusSslSection,
     item: str,
     this_time: float,
     params: LivestatusStatusParameters,
@@ -245,10 +243,10 @@ def _check_livestatus_cert(
 def _generate_livestatus_results(
     item: str,
     params: LivestatusStatusParameters,
-    section_livestatus_status: LivestatusSection | None,
-    section_livestatus_ssl_certs: LivestatusSection | None,
+    section_livestatus_status: LivestatusStatusSection | None,
+    section_livestatus_ssl_certs: LivestatusSslSection | None,
     section_omd_info: OmdInfoSection | None,
-    value_store: MutableMapping[str, Any],
+    value_store: MutableMapping[str, Any],  # noqa: ARG001
     this_time: float,
 ) -> CheckResult:
     if section_livestatus_status is None or item not in section_livestatus_status:

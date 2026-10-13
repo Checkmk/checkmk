@@ -24,14 +24,15 @@ const overlayCanvas = ref<HTMLCanvasElement | null>(null)
 // Canvas takes colours as strings, so theme-dependent ones are resolved off the element
 // rather than referenced. Read per draw: the value is only correct once mounted and styled.
 const FOCUS_DOT_STROKE_FALLBACK = '#ffffff'
+const PIN_LINE_STROKE_FALLBACK = '#15d1a0'
 
-function focusDotStroke(): string {
+function resolvedColor(property: string, fallback: string): string {
   const root = overlayRoot.value
   if (!root) {
-    return FOCUS_DOT_STROKE_FALLBACK
+    return fallback
   }
-  const resolved = getComputedStyle(root).getPropertyValue('--graphing-focus-dot-stroke').trim()
-  return resolved === '' ? FOCUS_DOT_STROKE_FALLBACK : resolved
+  const resolved = getComputedStyle(root).getPropertyValue(property).trim()
+  return resolved === '' ? fallback : resolved
 }
 
 function sizeCanvasToDevicePixelRatio(): void {
@@ -62,22 +63,27 @@ function redraw(): void {
   }
   ctx.clearRect(0, 0, props.plotWidth, props.plotHeight)
   if (props.pinX !== null) {
-    drawPinLine(ctx, props.pinX, props.plotHeight)
+    drawPinLine(
+      ctx,
+      props.pinX,
+      props.plotHeight,
+      resolvedColor('--interactive-accent-strong', PIN_LINE_STROKE_FALLBACK)
+    )
   }
   if (props.hoverState) {
     drawCrosshair(ctx, props.hoverState.snapX, props.plotHeight)
     const dots: FocusDot[] = []
     for (const sample of props.hoverState.samples) {
-      if (sample.pixelY !== null) {
+      if (sample.drawnPoint !== null) {
         dots.push({
-          x: props.hoverState.snapX,
-          y: sample.pixelY,
+          x: sample.drawnPoint.x,
+          y: sample.drawnPoint.y,
           color: sample.color,
           closest: sample.isClosest
         })
       }
     }
-    drawFocusDots(ctx, dots, focusDotStroke())
+    drawFocusDots(ctx, dots, resolvedColor('--font-color', FOCUS_DOT_STROKE_FALLBACK))
   }
 }
 
@@ -141,13 +147,5 @@ watch(() => props.pinX, redraw)
   position: absolute;
   top: 0;
   left: 0;
-}
-
-body[data-theme='facelift'] .graphing-overlay-layer {
-  --graphing-focus-dot-stroke: var(--color-conference-grey-100);
-}
-
-body[data-theme='modern-dark'] .graphing-overlay-layer {
-  --graphing-focus-dot-stroke: var(--color-white-100);
 }
 </style>

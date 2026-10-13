@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkTag, { type Colors } from 'cmk-ui-library/components/CmkTag.vue'
+import StateTag, { type StateTagSize, type StateTone } from 'cmk-ui-library/components/StateTag.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
@@ -13,81 +13,93 @@ import type { ServiceState } from '@/monitoring/shared/api/types'
 
 const props = defineProps<{
   state: ServiceState
-  pending?: boolean | undefined
+  stale?: boolean | undefined
+  /** Two-letter labels, for a state column too tight to spell the state out. */
+  abbreviated?: boolean | undefined
   /** Sized to sit inside a line of text rather than to fill the state column. */
   inline?: boolean | undefined
 }>()
 
 const { _t } = usei18n()
 
+const short = computed<boolean>(() => props.abbreviated === true || props.inline === true)
+
+const assertNever = (value: never): never => {
+  throw new Error(`Unhandled service state: ${String(value)}`)
+}
+
 const stateLabel = computed<TranslatedString>(() => {
-  if (props.pending) {
-    return _t('PEND')
-  }
-  switch (props.state) {
+  const state = props.state
+  switch (state) {
     case 'OK':
       return _t('OK')
     case 'WARN':
-      return _t('WARN')
+      return short.value ? _t('WA') : _t('WARNING')
     case 'CRIT':
-      return _t('CRIT')
+      return short.value ? _t('CR') : _t('CRITICAL')
     case 'UNKNOWN':
+      return short.value ? _t('UN') : _t('UNKNOWN')
+    case 'PENDING':
+      return short.value ? _t('PD') : _t('PENDING')
     default:
-      return _t('UNKN')
+      return assertNever(state)
   }
 })
 
-const stateColor = computed<Colors>(() => {
-  if (props.pending) {
-    return 'default'
+const stateTitle = computed<TranslatedString | undefined>(() => {
+  if (!short.value) {
+    return undefined
   }
-  switch (props.state) {
+  const state = props.state
+  switch (state) {
     case 'OK':
-      return 'success'
+      return undefined
+    case 'WARN':
+      return _t('Warning')
+    case 'CRIT':
+      return _t('Critical')
+    case 'UNKNOWN':
+      return _t('Unknown')
+    case 'PENDING':
+      return _t('Pending')
+    default:
+      return assertNever(state)
+  }
+})
+
+const stateTone = computed<StateTone>(() => {
+  const state = props.state
+  switch (state) {
+    case 'OK':
+      return 'ok'
     case 'WARN':
       return 'warning'
     case 'CRIT':
-      return 'danger'
-    default:
+      return 'critical'
+    case 'UNKNOWN':
       return 'unknown'
+    case 'PENDING':
+      return 'pending'
+    default:
+      return assertNever(state)
   }
+})
+
+const tagSize = computed<StateTagSize>(() => {
+  if (props.inline) {
+    return 'inline'
+  }
+  return props.abbreviated ? 'compact' : 'default'
 })
 </script>
 
 <template>
-  <CmkTag
-    class="monitoring-service-state-display"
-    :class="{ 'monitoring-service-state-display--inline': inline }"
-    :color="stateColor"
-    variant="weighted"
-    :content="stateLabel"
-    size="small"
+  <StateTag
+    kind="service"
+    :label="stateLabel"
+    :title="stateTitle"
+    :tone="stateTone"
+    :size="tagSize"
+    :stale="stale"
   />
 </template>
-
-<style scoped>
-.monitoring-service-state-display {
-  --service-state-display-height: 21px;
-  --service-state-display-min-width: 60px;
-
-  margin: 0;
-  display: flex;
-  box-sizing: border-box;
-  height: var(--service-state-display-height);
-  min-width: var(--service-state-display-min-width);
-  align-items: center;
-  justify-content: center;
-}
-
-/*
- * Sized by its own text rather than by the line it sits in: a cell sets a line
- * height for the row, and a flex badge inheriting that grows well past the small
- * tag it is supposed to be.
- */
-.monitoring-service-state-display--inline {
-  display: inline-block;
-  height: auto;
-  min-width: 0;
-  line-height: normal;
-}
-</style>

@@ -831,7 +831,7 @@ def hash_of_dict(dict_: Mapping[str, Any]) -> ETagHash:
 
     """
 
-    def _update(_hash_obj: "hashlib._Hash", _d: Any) -> None:
+    def _update(_hash_obj: hashlib._Hash, _d: Any) -> None:
         if isinstance(_d, list | tuple):
             for value in _d:
                 _update(_hash_obj, value)

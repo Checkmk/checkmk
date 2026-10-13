@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
 import collections
 import time
@@ -212,7 +211,7 @@ def check_apache_status(item: str, params: Mapping[str, Any], section: Section) 
         renderer: Callable[[float], str] | None = None
         if key == "Uptime":
             renderer = render.timespan
-        elif not isinstance(value, float):
+        elif isinstance(value, int):
 
             def renderer(i: float) -> str:
                 return "%d" % int(i)

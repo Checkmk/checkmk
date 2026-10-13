@@ -19,8 +19,8 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.site_config import is_distributed_setup_remote_site
-from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.livestatus_client import SiteConfigurations
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import requested_file_name
 
 
@@ -83,6 +83,18 @@ def _page_menu_entries_related(
             title=_("Edit two-factor authentication"),
             icon_name=StaticIcon(IconNames.topic_2fa),
             item=make_simple_link("user_two_factor_overview.py"),
+            is_shortcut=show_shortcuts,
+        )
+
+    if (
+        page_name != "user_oauth_tokens"
+        and user.may("general.edit_profile")
+        and not must_change_password
+    ):
+        yield PageMenuEntry(
+            title=_("OAuth access tokens"),
+            icon_name=StaticIcon(IconNames.passwords),
+            item=make_simple_link("user_oauth_tokens.py"),
             is_shortcut=show_shortcuts,
         )
 

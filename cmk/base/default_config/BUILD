@@ -16,6 +16,8 @@ py_library(
         "//packages/cmk-check-engine:snmplib",
         "//packages/cmk-check-engine:specs",
         "//packages/cmk-check-engine/cmk/checkengine/discovery",
-        "//packages/cmk-inventory:inventory",
+        "//packages/cmk-events",
+        "//packages/cmk-inventory:label_picker",
+        "//packages/cmk-inventory:model",
     ],
 )

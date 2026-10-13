@@ -1,58 +1,24 @@
-# Use local registry to add local download mirrors
-common --registry="file:///%workspace%/bazel/thirdparty"
-common --registry=https://bcr.bazel.build
+# Bazel configuration of the Checkmk repository
+#
+# Options are grouped by topic into bazel/rc/<topic>.rc, the definitions of the configs used via
+# --config=<name> into bazel/rc/<name>.rc.  Generic options stay in this file.
+#
+#   dependencies.rc  registries, download mirrors, Bzlmod
+#   cache.rc         disk cache, repository contents cache, remote cache
+#   performance.rc   resource usage of the Bazel server
+#   correctness.rc   hermeticity, lockfile and incompatible/migration flags
+#   checkmk.rc       Checkmk specific build settings
+#   ci.rc, debug.rc, iwyu.rc, mypy.rc, deballast.rc  the respective --config
+#
+# The import order matters for options set in more than one file: the last value of a single
+# value option wins, repeatable options keep the order.  Today only the startup --host_jvm_args
+# span files (performance.rc, then correctness.rc); keep that order when moving things around.
 
 # Add git hash to workspace status
 build --workspace_status_command=bazel/tools/workspace_status.sh
 
-# Add mirrors for certain download URLs
-common --downloader_config=bazel_downloader.cfg
-
-# Limit JVM thread pools to match cgroup CPU limit (nproc reports host CPUs, not cgroup)
-# --host_jvm_args is a startup option, see https://bazel.build/run/bazelrc
-startup --host_jvm_args=-XX:ActiveProcessorCount=8
-startup --host_jvm_args=-XX:ParallelGCThreads=4
-startup --host_jvm_args=-XX:ConcGCThreads=2
-
-# enable a local disk cache: this is especially relevant for local builds without an enabled bazel-remote
-common:linux --disk_cache=~/.cache/bazel_disk_cache/
-common:linux --experimental_disk_cache_gc_max_size=100G
-
-# WORKSPACE support is fully removed; everything is defined via Bzlmod (MODULE.bazel)
-common --noenable_workspace
-
-# enable visibility checking for config_settings
-common --incompatible_enforce_config_setting_visibility
-common --incompatible_config_setting_private_default_visibility
-
-# Enable prebuilt protoc toolchain resolution.
-# This will become the default in Bazel 9
-# See: https://blog.aspect.build/bazel-9-protobuf
-common --incompatible_enable_proto_toolchain_resolution
-common --@protobuf//bazel/toolchains:prefer_prebuilt_protoc
-
-# with rules_proto_grpc (5.0.1) we run into
-# >>> Error in resolve_tools: Pass an executable or tools argument to ctx.actions.run
-# without
-common --noincompatible_disallow_ctx_resolve_tools
-
 # default/common bazel args for all commands supporting it
 common --experimental_ui_max_stdouterr_bytes=10000000
-common --remote_cache_async
-common --remote_cache_compression
-# send pings after this time of no read operations on the connection, but only if there is at least one pending gRPC call
-# only with this flag "grpc_keepalive_timeout" is enabled, defaults to 20s
-common --grpc_keepalive_time=10s
-# minimum blob size required to compress/decompress with zstd (1MB)
-common --experimental_remote_cache_compression_threshold=1048576
-common --remote_local_fallback
-common --cycles
-common --@cmk//distro="ubuntu-24.04"
-# Enable Bzlmod for every Bazel command
-common --enable_bzlmod
-# Do not upload artifacts other than from CI, see below, CMK-18656
-common --remote_upload_local_results=false
-common --lockfile_mode=error
 
 # Required for tools using java such as plantuml
 common --java_runtime_version=remotejdk_21
@@ -61,9 +27,6 @@ common --java_language_version=21
 ## For specific commands
 # Always require debug info.
 # common --copt="-g"
-common --flag_alias=cmk_version=@cmk//version
-common --flag_alias=cmk_edition=@cmk//edition
-common --flag_alias=cmk_distro=@cmk//distro
 
 # For some obscure reason, the re2 project made itself valgrind-dirty by default:
 # https://github.com/google/re2/commit/ce6f2884c4b52509fd6c5d12b8f1c40587067784
@@ -73,49 +36,8 @@ common --copt="-DRE2_ON_VALGRIND"
 
 clean --async
 
-# Try with our proxy first and fall back to public proxy when fetching go modules.
-common --repo_env=GOPROXY="https://bazel-registry.lan.checkmk.net/proxy.golang.org/|https://proxy.golang.org|direct"
-
-# Configure gazelle to use the ~/go/pkg/mod folder for downloaded artifacts.
-common --repo_env=GO_REPOSITORY_USE_HOST_MODCACHE=1
-
 # Control test verbosity
 common --test_output=errors
-common --test_summary=short
-
-common:ci --test_summary=terse
-
-# Flags for CI builds
-# Definition of "bazel x --config=ci -- ..."
-## Common
-common:ci --color=no
-common:ci --show_progress_rate_limit=0
-common:ci --show_timestamps
-common:ci --memory_profile=bazel-memory.profile
-common:ci --generate_json_trace_profile
-common:ci --profile=trace_profile.json
-common:ci --//bazel/toolchains/cc/gcc/local:gcc_path=opt
-# the onwards set jobs and CPU limits shall be aligned with the k8s pod limits
-common:ci --jobs=6
-common:ci --loading_phase_threads=4
-# setting local_test_jobs to a value higher than specified at job has no effect
-common:ci --local_test_jobs=6
-common:ci --local_resources=cpu=6
-common:ci --worker_max_instances=6
-common:ci --local_resources=memory=HOST_RAM*.67
-# Enables the experimental local execution scheduling based on CPU load, not estimation of actions one by one.
-common:ci --experimental_cpu_load_scheduling
-# the later flags will override the previous flags
-# upload artifacts only from CI, CMK-18656
-common:ci --remote_upload_local_results=true
-
-common:ci --@cmk//distro=UNSET
-
-# Ship optimized, stripped binaries from CI.
-# Scoped per-target via select() so only the shipped binaries are affected
-# See bazel/cmk/optimize and bazel/cmk/strip.
-common:ci --@cmk//optimize=True
-common:ci --@cmk//strip=True
 
 # For better performance - passes an argument `--skipLibCheck` to *every* spawn of tsc
 common --@aspect_rules_ts//ts:skipLibCheck=always
@@ -123,66 +45,17 @@ common --@aspect_rules_ts//ts:skipLibCheck=always
 # common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 
 ## For specific commands
-# common:ci ...
-# Don't require system python for bootstrapping
-# See: https://github.com/bazelbuild/rules_python/commit/f5b19dce7bc0837396ac03a425cdb9b64643cf61
-# TODO: should be dropped as soon as this becomes the default
-# TODO: this should be the overall default, see discussions in
-# https://tribe29.slack.com/archives/C03PW9280U9/p1728303949973099
-common:ci --@rules_python//python/config_settings:bootstrap_impl=script
-common:ci --noshow_progress
 
-# clean:ci ...
-# run:ci ...
-# test:ci ...
-
-# Flags for Debug builds
-# Definition of "bazel x --config=debug -- ..."
-## Common
-common:debug --announce_rc
-# gRPC errors provide stack trace as well
-common:debug --verbose_failures
-
-## For specific commands
-
-################################################################################
-# Example: bazel build --config=iwyu //non-free/packages/cmc:all
-################################################################################
-common:iwyu --aspects @bazel_iwyu//bazel/iwyu:iwyu.bzl%iwyu_aspect
-common:iwyu --output_groups=report
-common:iwyu --@bazel_iwyu//:iwyu_executable=//bazel/tools:iwyu_bin
-common:iwyu --@bazel_iwyu//:iwyu_opts="--error"
-common:iwyu --@bazel_iwyu//:iwyu_mappings=//bazel/tools:iwyu_mappings
-
-################################################################################
-# Example: bazel build --config=mypy //packages/cmk-agent-based:all
-################################################################################
-common:mypy --aspects //bazel/tools:aspects.bzl%mypy_aspect
-common:mypy --output_groups=mypy
-
-################################################################################
-# Interactive use: `bazel lint //cmk/gui/...`
-# CI example: bazel build --config=deballast //cmk/gui/...
-################################################################################
-common:deballast --aspects //bazel/tools:aspects.bzl%deballast
-common:deballast --output_groups=rules_lint_human,rules_lint_machine
-
-# Turn off automatic capturing of environmental stuff like PATH - those will be set explicitly
-# (see https://blog.aspect.build/bazelrc-flags)
-common --incompatible_strict_action_env
-
-# Set PATH manually (see above) for both action_env and host_action_env
-# Note: in the future PATH might not be needed at all as long as Bazel provides all the tools
-#       currently taken from system. For now we still need `/usr/bin` and `/bin` for stuff like
-#       `git`, etc.
-#       Also note that in some distro specific exceptions we force tools to be located in
-#       `/usr/bin` (by symlinking) when building the build images
-common --enable_platform_specific_config
-common --action_env=GOPROXY
-common:linux --action_env=PATH="/usr/bin:/bin"
-common:linux --host_action_env=PATH="/usr/bin:/bin"
-common:windows --action_env=PATH="c:\\Windows;c:\\Windows\\system32;C:\\Program Files (x86)\\Windows Kits\\10\\App Certification Kit"
-common:windows --host_action_env=PATH="c:\\Windows;c:\\Windows\\system32;C:\\Program Files (x86)\\Windows Kits\\10\\App Certification Kit"
+import %workspace%/bazel/rc/dependencies.rc
+import %workspace%/bazel/rc/cache.rc
+import %workspace%/bazel/rc/performance.rc
+import %workspace%/bazel/rc/correctness.rc
+import %workspace%/bazel/rc/checkmk.rc
+import %workspace%/bazel/rc/ci.rc
+import %workspace%/bazel/rc/debug.rc
+import %workspace%/bazel/rc/iwyu.rc
+import %workspace%/bazel/rc/mypy.rc
+import %workspace%/bazel/rc/deballast.rc
 
 # The remote.bazelrc file contains the secrets for accessing the remote cache and must be added by the corresponding
 # Jenkins job (or a user) in the form of:

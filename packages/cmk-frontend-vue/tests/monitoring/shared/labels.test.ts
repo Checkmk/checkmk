@@ -5,6 +5,7 @@
  */
 import { describe, expect, it } from 'vitest'
 
+import { labelItemText } from '@/monitoring/shared/components/cell/labelCellItem'
 import { labelColor, toLabelItems, toTagItems } from '@/monitoring/shared/labels'
 
 describe('labelColor', () => {
@@ -29,11 +30,20 @@ describe('toLabelItems', () => {
       'cmk/site': { value: 'heute', source: 'ruleset' }
     })
 
-    expect(items.map((item) => [item.text, item.color])).toEqual([
+    expect(items.map((item) => [labelItemText(item), item.color])).toEqual([
       ['cmk/check_plugin: cpu_load', 'discovered'],
       ['cmk/site: heute', 'ruleset'],
       ['owner: platform', 'explicit']
     ])
+  })
+
+  it('keeps the key and the value of each label apart, for the value to stand out', () => {
+    const [item] = toLabelItems({ 'cmk/os_family': { value: 'linux', source: 'discovered' } })
+
+    expect(item && 'keyValue' in item ? item.keyValue : undefined).toEqual({
+      key: 'cmk/os_family',
+      value: 'linux'
+    })
   })
 })
 

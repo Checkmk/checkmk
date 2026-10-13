@@ -15,12 +15,17 @@ import CmkListItem from './CmkListItem.vue'
 
 type ItemProps = { [K in keyof ItemsProps]: UnpackedArray<ItemsProps[K]> }
 
-const { orientation = 'vertical', ...props } = defineProps<{
+const {
+  orientation = 'vertical',
+  buttonAlignment = 'top',
+  ...props
+} = defineProps<{
   itemsProps: ItemsProps
   tryDelete: (index: number) => boolean
   add?: { show: boolean; tryAdd: (index: number) => boolean; label: string }
   dragCallbacks?: { onReorder: (order: number[]) => void } | null
   orientation?: 'vertical' | 'horizontal'
+  buttonAlignment?: 'top' | 'center'
 }>()
 
 const localOrder = ref<number[]>([])
@@ -110,6 +115,7 @@ function getItemVariant(index: number, length: number) {
             <CmkListItem
               :remove-element="() => removeElement(dataIndex)"
               :variant="getItemVariant(listIndex, localOrder.length)"
+              :button-alignment="buttonAlignment"
               :drag-callbacks="dragCallbacks ? { dragStart, dragEnd, dragging } : null"
             >
               <slot name="item-props" v-bind="{ index: dataIndex, ...getItemProps(dataIndex) }" />
@@ -120,7 +126,11 @@ function getItemVariant(index: number, length: number) {
       <template v-else>
         <tr>
           <td v-for="(dataIndex, listIndex) in localOrder" :key="dataIndex" role="listitem">
-            <CmkListItem :button-padding="'8px'" :remove-element="() => removeElement(dataIndex)">
+            <CmkListItem
+              :button-padding="'8px'"
+              :button-alignment="buttonAlignment"
+              :remove-element="() => removeElement(dataIndex)"
+            >
               <slot name="item-props" v-bind="{ index: dataIndex, ...getItemProps(dataIndex) }" />
               <CmkSpace direction="horizontal" />
               <CmkSpace v-if="listIndex !== localOrder.length - 1" direction="horizontal" />

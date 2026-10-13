@@ -17,18 +17,23 @@ import enum
 from collections.abc import Mapping
 from typing import assert_never, Literal, NewType, override, Self
 
+from cmk.gui.utils.host_relations import RelationDirection
 from cmk.ruleset_matcher.labels import LabelSource
 
 type UnixTimestamp = int
 """An instant as whole seconds since the epoch (UTC)."""
 
-type HostStateLabel = Literal["UP", "DOWN", "UNREACHABLE"]
+type HostStateLabel = Literal["UP", "DOWN", "UNREACHABLE", "PENDING"]
 
 
 class HostState(enum.IntEnum):
     UP = 0
     DOWN = 1
     UNREACHABLE = 2
+    # Not a real Livestatus state: assigned to a host that has never been checked, whose raw
+    # `state` column is meaningless (always 0). See ``LiveStatusHostRepository`` for where this
+    # gets constructed instead of the real state.
+    PENDING = 3
 
 
 @dataclasses.dataclass(frozen=True)
@@ -53,6 +58,59 @@ class HostLabelValue:
         return {key: cls(value=value, source=sources[key]) for key, value in values.items()}
 
 
+def _state_label(state: HostState) -> HostStateLabel:
+    match state:
+        case HostState.UP:
+            return "UP"
+        case HostState.DOWN:
+            return "DOWN"
+        case HostState.UNREACHABLE:
+            return "UNREACHABLE"
+        case HostState.PENDING:
+            return "PENDING"
+        case _:
+            assert_never(state)
+
+
+MAX_RESOLVED_RELATIONS = 100
+"""How many related hosts the details of a host show.
+
+Nothing bounds how many relations a host has - a management board collects one per OS host that
+names it - and both the query reading the counterparts' state and the response carrying their
+cards grow with that number.
+"""
+
+
+@dataclasses.dataclass(frozen=True)
+class RelatedHostHealth:
+    """What the monitoring knows about a related host, i.e. what its card can render."""
+
+    state: HostState
+    service_counts: ServiceCounts
+
+    @property
+    def state_label(self) -> HostStateLabel:
+        return _state_label(self.state)
+
+
+@dataclasses.dataclass(frozen=True)
+class RelatedHost:
+    """A monitored host related to the host being shown."""
+
+    name: str
+    kind: str
+    """Id of the kind of relation, as it was stored - see `cmk.gui.utils.host_relation_kinds`."""
+    direction: RelationDirection
+    """The end this host sits at, i.e. what it is to the host being shown."""
+    site_id: str
+    health: RelatedHostHealth | None
+    """`None` when the site monitoring it is not available, so nothing about it is known.
+
+    A relation whose host is gone is left out altogether instead: a reader has to be able to tell
+    "cannot be reached right now" from "there is no board".
+    """
+
+
 @dataclasses.dataclass(frozen=True)
 class Host:
     """A host row.
@@ -66,9 +124,23 @@ class Host:
     address: str | None
     alias: str | None
     site_id: str
-    service_counts: ServiceCounts | None
+    num_services: int | None
+    num_services_ok: int | None
+    num_services_warn: int | None
+    num_services_crit: int | None
+    num_services_unknown: int | None
+    num_services_pending: int | None
     acknowledged: bool
     in_downtime: bool
+    notifications_enabled: bool
+    num_comments: int
+    active_checks_disabled: bool
+    passive_checks_disabled: bool
+    in_notification_period: bool
+    in_service_period: bool
+    in_check_period: bool
+    is_flapping: bool
+    stale: bool
     folder: str | None
     last_check: UnixTimestamp | None
     last_state_change: UnixTimestamp | None
@@ -76,23 +148,18 @@ class Host:
     tags: dict[str, str] | None
     contacts: list[str] | None
     contact_groups: list[str] | None
+    num_relations: int | None = None
+    """How many hosts are related to this one - all the listing shows."""
+    relations: tuple[RelatedHost, ...] = ()
+    """The related hosts themselves, resolved for the overview only."""
+    more_relations: bool = False
+    """Whether the host has relations beyond the ones in `relations`, i.e. the list was cut."""
+    setup_access: bool | None = None
+    """Whether the user may open the host in Setup - None when the caller did not ask."""
 
     @property
     def state_label(self) -> HostStateLabel:
-        match self.state:
-            case HostState.UP:
-                return "UP"
-            case HostState.DOWN:
-                return "DOWN"
-            case HostState.UNREACHABLE:
-                return "UNREACHABLE"
-            case _:
-                assert_never(self.state)
-
-
-@dataclasses.dataclass(frozen=True)
-class HostOverview(Host):
-    customer: str | None
+        return _state_label(self.state)
 
 
 class HostOptionalField(enum.StrEnum):
@@ -104,6 +171,7 @@ class HostOptionalField(enum.StrEnum):
     NUM_SERVICES_CRIT = "num_services_crit"
     NUM_SERVICES_UNKNOWN = "num_services_unknown"
     NUM_SERVICES_PENDING = "num_services_pending"
+    NUM_RELATIONS = "num_relations"
     FOLDER = "folder"
     LAST_CHECK = "last_check"
     LAST_STATE_CHANGE = "last_state_change"
@@ -111,6 +179,7 @@ class HostOptionalField(enum.StrEnum):
     TAGS = "tags"
     CONTACTS = "contacts"
     CONTACT_GROUPS = "contact_groups"
+    SETUP_ACCESS = "setup_access"
 
     @classmethod
     def options(cls) -> str:
@@ -128,6 +197,7 @@ class HostSortColumn(enum.StrEnum):
     NUM_SERVICES_CRIT = "num_services_crit"
     NUM_SERVICES_UNKNOWN = "num_services_unknown"
     NUM_SERVICES_PENDING = "num_services_pending"
+    NUM_RELATIONS = "num_relations"
     FOLDER = "folder"
     SITE_ID = "site_id"
     LAST_CHECK = "last_check"
@@ -181,6 +251,37 @@ class RescheduleTarget:
     site_id: str
     host_name: str
     check_time: dt.datetime
+
+
+class EventClass(enum.IntEnum):
+    """The monitoring log classes making up the event history of a host and its services."""
+
+    STATE = 1
+    NOTIFICATION = 3
+    ALERT_HANDLER = 8
+
+
+@dataclasses.dataclass(frozen=True)
+class Event:
+    """One monitoring log entry, belonging either to a host or to one of its services."""
+
+    time: UnixTimestamp
+    lineno: int
+    type: str
+    state: int
+    state_type: str
+    state_info: str
+    command_name: str
+    plugin_output: str
+    service_name: str | None
+
+    @property
+    def state_information(self) -> str:
+        return self.state_info or self.state_type
+
+    @property
+    def recency(self) -> tuple[UnixTimestamp, int]:
+        return self.time, self.lineno
 
 
 # NOTE: this is intended to indicate that a stringified filter has been properly parsed into a

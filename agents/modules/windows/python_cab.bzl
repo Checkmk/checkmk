@@ -4,29 +4,9 @@
 """Starlark rule that builds the Windows ``python-3.cab`` on Linux.
 
 The CAB has the same shape as the one historically produced by
-``agents/modules/windows/Makefile`` on a Windows build node, but the build
-runs on Linux with no Wine / MSBuild / makecab.exe in the picture, and all
-tools are Bazel-managed:
-
-* ``extract_msi.py`` (pure Python) drives ``msiinfo`` from ``@msitools``
-  and the vendored ``@cabarchive`` to unpack the per-feature MSIs.
-* ``pip_offline.py`` installs the ``win_amd64`` wheels *offline* from the
-  fetch-phase ``@windows_python_wheels`` closure with
-  ``--no-index --find-links`` (cross-platform flags still select win_amd64).
-  It runs under the repo's hermetic CPython (same 3.13 line as the CAB), so
-  pip-written metadata (RECORD bytecode entries) matches the CAB's Python.
-* ``.venv/`` is laid down by hand to match production: interpreter + runtime
-  DLL copies, the stdlib extension modules virtualenv mirrored into
-  ``Scripts/``, the venv launchers from ``Lib/venv/scripts/nt``, generated
-  console-script ``.exe`` wrappers (``make_exe_wrappers.py``), and the
-  activation scripts under ``venv_scripts/``.
-* ``pack_cab.py`` (vendored ``@cabarchive`` writer) produces the cabinet.
-
-The action takes no network: the MSIs come from five ``http_file`` repos and
-the wheels from ``@windows_python_wheels`` (a ``repository_rule`` that downloads
-the sha256-pinned closure at the fetch phase), all declared in ``MODULE.bazel``.
-Refresh the MSI pins via ``agents/modules/windows/refresh_msi_pins.py`` and the
-wheel pins via ``agents/modules/windows/refresh_wheel_pins.py`` on a bump.
+``agents/modules/windows/Makefile`` on a Windows build node, but no
+Wine / MSBuild / makecab.exe is involved: every tool the action runs is a
+Bazel-managed input (see their py_binary targets in BUILD.bazel).
 
 Known deliberate deviations from the historic Windows-built CAB (all dead
 weight with no source in the pinned python.org MSI set):
@@ -43,10 +23,8 @@ weight with no source in the pinned python.org MSI set):
 """
 
 # Stdlib subtrees to strip from the *base* interpreter, ported from
-# agents/modules/windows/clean_environment.cmd (phase 1 + phase 2 cleanups).
-# ``ensurepip`` is in this list because production's CAB ships without it,
-# even though clean_environment.cmd's phase 1 keeps it; phase 2 does
-# ``rd /Q /S Lib\ensurepip`` which removes it.
+# clean_environment.cmd.  ensurepip is stripped because production's CAB
+# ships without it (its phase 2 removes what phase 1 kept).
 _BASE_LIB_STRIP = [
     "test",
     "unittest",
@@ -104,17 +82,65 @@ _UCRT_RUNTIME_GLOBS = [
 # agent's install path on the target host.  See clean_environment.cmd.
 _PYVENV_HOME = "C:\\ProgramData\\checkmk\\agent\\modules\\python-3"
 
-# Interpreter the generated .exe wrappers exec at runtime.  The historic
-# Windows build baked the *build machine's* venv path here, which broke the
-# wrappers on customer hosts; we bake the production path.
+# Interpreter the generated .exe wrappers exec at runtime — the production
+# install path (see make_exe_wrappers.py for why not the build machine's).
 _WRAPPER_SHEBANG = _PYVENV_HOME + "\\.venv\\Scripts\\python.exe"
 
-def _python_version_short(version):
-    # "3.13.13" -> "313"
+def python_version_major_minor(version):
+    # "3.13.14" -> "3.13", the part the cp3xx wheel ABI tag encodes
     parts = version.split(".")
     if len(parts) < 2:
         fail("python_version must be a dotted version like 3.13.13, got %r" % version)
-    return parts[0] + parts[1]
+    return parts[0] + "." + parts[1]
+
+def _python_version_short(version):
+    # "3.13.13" -> "313"
+    return python_version_major_minor(version).replace(".", "")
+
+def _py_platform_transition_impl(_settings, attr):
+    return {
+        "//command_line_option:platforms": str(attr.target_platform),
+        "@rules_python//python/config_settings:python_version": python_version_major_minor(attr.python_version),
+    }
+
+_py_platform_transition = transition(
+    implementation = _py_platform_transition_impl,
+    inputs = [],
+    outputs = [
+        "//command_line_option:platforms",
+        "@rules_python//python/config_settings:python_version",
+    ],
+)
+
+def _py_platform_transition_filegroup_impl(ctx):
+    return [DefaultInfo(
+        files = depset(transitive = [src[DefaultInfo].files for src in ctx.attr.srcs]),
+    )]
+
+py_platform_transition_filegroup = rule(
+    implementation = _py_platform_transition_filegroup_impl,
+    attrs = {
+        "python_version": attr.string(
+            mandatory = True,
+            doc = "CPython version whose major.minor selects the wheel ABI; " +
+                  "a full version is accepted, the patch level is ignored.",
+        ),
+        "srcs": attr.label_list(
+            allow_files = True,
+            cfg = _py_platform_transition,
+        ),
+        "target_platform": attr.label(
+            mandatory = True,
+            doc = "Target platform to transition srcs to.",
+        ),
+        "_allowlist_function_transition": attr.label(
+            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
+        ),
+    },
+    doc = "platform_transition_filegroup that also pins rules_python's " +
+          "python_version flag: a pip.parse hub selects wheels by python " +
+          "version, so the platform alone is not enough.",
+)
 
 def _python_cab_impl(ctx):
     cab = ctx.actions.declare_file(ctx.label.name + ".cab")
@@ -124,12 +150,24 @@ def _python_cab_impl(ctx):
     py_major_minor = ".".join(ctx.attr.python_version.split(".")[:2])  # "3.13"
     py_abi = "cp" + py_short  # "cp313"
 
+    # Derive the name==version install request from the wheel filenames
+    # (PEP 427), so it can never diverge from the fetched closure and every
+    # package installs as explicitly REQUESTED, like the historic pipenv flow.
+    wheel_files = ctx.files.wheels
+    requirements = []
+    for w in wheel_files:
+        segments = w.basename.split("-")
+        if len(segments) < 3 or not w.basename.endswith(".whl"):
+            fail("not a wheel filename: %r" % w.basename)
+        requirements.append("{}=={}".format(segments[0], segments[1]))
+    requirements = sorted(requirements)
+
     # The venv seeds pip (the historic flow's virtualenv did, so customers can
     # `.venv\Scripts\pip install` extra plugin deps); the same pinned wheel
     # also replaces the base interpreter's ensurepip bootstrap.
-    pip_pins = [r for r in ctx.attr.requirements if r.startswith("pip==")]
+    pip_pins = [r for r in requirements if r.startswith("pip==")]
     if len(pip_pins) != 1:
-        fail("requirements must contain exactly one pip== pin, got %r" % ctx.attr.requirements)
+        fail("wheels must contain exactly one pip wheel, got %r" % requirements)
     pip_requirement = pip_pins[0]
 
     # Production-shape 3-line pyvenv.cfg, written as a build input so we
@@ -164,9 +202,8 @@ def _python_cab_impl(ctx):
 
     requirements_args = " ".join([
         '"{}"'.format(req)
-        for req in ctx.attr.requirements
+        for req in requirements
     ])
-    wheel_files = ctx.files.wheels
     wheel_path_args = " ".join(['"$exec_root/{}"'.format(w.path) for w in wheel_files])
     venv_script_files = ctx.files.venv_scripts
     venv_script_args = " ".join(['"$exec_root/{}"'.format(f.path) for f in venv_script_files])
@@ -216,12 +253,10 @@ if [ ! -f "$PY_DIR/python.exe" ] || [ ! -f "$PY_DIR/python{py_short}.dll" ]; the
     exit 1
 fi
 
-# 2. Give the base interpreter its pip.  pip.msi has an empty File table —
-# the python.org installer runs ``python -m ensurepip`` via a CustomAction,
-# which msiextract can't replay.  The historic flow then let pipenv upgrade
-# the bootstrapped pip to the latest release, so we skip the bootstrap and
-# install the pinned pip wheel directly (by name, so pip writes no
-# direct_url.json pointing at build-machine paths).
+# 2. Give the base interpreter its pip.  pip.msi has an empty File table
+# (the python.org installer bootstraps via a CustomAction msiextract can't
+# replay), so install the pinned pip wheel directly — by name, so pip
+# writes no direct_url.json pointing at build-machine paths.
 "$exec_root/{pip_offline}" "$WHEELDIR" install \\
     --no-index \\
     --find-links "$WHEELDIR" \\
@@ -270,17 +305,15 @@ for f in {ucrt_globs}; do
     [ -f "$PY_DIR/$f" ] && cp "$PY_DIR/$f" "$VENV/Scripts/"
 done
 
-# Activation scripts (production paths baked in; see venv_scripts/).
-# The .tmpl suffix only keeps repo formatters/linters away from the
-# shipped-verbatim payloads; strip it on copy.
+# Activation scripts (production paths baked in; see venv_scripts/).  The
+# .tmpl suffix only keeps repo formatters/linters away; strip it on copy.
 for f in {venv_scripts}; do
     cp "$f" "$VENV/Scripts/$(basename "$f" .tmpl)"
 done
 
-# 4. Install the locked closure into .venv/Lib/site-packages using the
-# pinned pip in cross-platform mode, offline.  Every name==version pin is an
-# explicit argument, so each dist-info gets a REQUESTED marker — exactly
-# what the historic pipenv flow produced.
+# 4. Install the locked closure into .venv/Lib/site-packages, offline.
+# Every name==version pin is an explicit argument, so each dist-info gets
+# a REQUESTED marker — exactly what the historic pipenv flow produced.
 "$exec_root/{pip_offline}" "$WHEELDIR" install \\
     --no-index \\
     --find-links "$WHEELDIR" \\
@@ -297,14 +330,14 @@ done
 # writes no REQUESTED.
 rm -f "$VENV/Lib/site-packages"/pip-*.dist-info/REQUESTED
 
-# Console entry points: pip's cross-platform --target install drops POSIX
-# scripts into <target>/bin/.  Production ships distlib .exe launchers in
-# Scripts/ instead — regenerate those, rewrite the RECORD lines that point
-# at bin/, keep the plain-script payloads (pywin32_postinstall.py etc.)
-# like a native Windows install does, and drop the bin/ dir.
+# Console entry points: the cross-platform pip install drops POSIX scripts
+# into <target>/bin/; production ships distlib .exe launchers in Scripts/
+# instead.  Regenerate those, fix up the RECORDs, and drop bin/ (keeping
+# its plain-script payloads like a native Windows install does).
 "$exec_root/{make_exe_wrappers}" \\
     --pip-wheel "$WHEELDIR" \\
     --scripts-dir "$VENV/Scripts" \\
+    --python-major-minor "{py_major_minor}" \\
     --shebang '{wrapper_shebang}' \\
     --fixup-records "$VENV/Lib/site-packages" \\
     --fixup-records "$PY_DIR/Lib/site-packages"
@@ -316,9 +349,8 @@ fi
 # 5. Write the production-shape pyvenv.cfg.
 cp "$exec_root/{pyvenv_cfg}" "$VENV/pyvenv.cfg"
 
-# 6. Strip from the base interpreter what production strips.  See
-# clean_environment.cmd; this list is the union of phase-1 and phase-2
-# cleanups.
+# 6. Strip from the base interpreter what production strips (the union of
+# clean_environment.cmd's phase-1 and phase-2 cleanups).
 for d in {base_lib_strip}; do
     rm -rf "$PY_DIR/Lib/$d"
 done
@@ -329,14 +361,11 @@ done
     # nullglob via 'find -name' so missing files don't fail the loop.
     find . -maxdepth 1 -name "$g" -delete 2>/dev/null || true
 done )
-# NOTE: clean_environment.cmd contains ``del /Q DLLs/*.ico`` and
-# ``del /Q DLLs/*.cat`` but the production reference CAB still ships
-# py.ico, pyc.ico, pyd.ico, and python_lib.cat — the del's forward-slash
-# path apparently no-ops on cmd.exe.  Keep them here to match production.
+# clean_environment.cmd also dels DLLs/*.ico and DLLs/*.cat, but production
+# still ships them (the forward-slash del no-ops on cmd.exe) — keep them.
 rm -f "$PY_DIR/Lib/turtle.py" 2>/dev/null || true
-# The base pip's entry-point scripts land under <target>/bin/ as POSIX
-# scripts; production has no base bin/ (its Scripts/ equivalent is stripped
-# via _ROOT_DIR_STRIP above).
+# The base pip's entry-point scripts land under bin/; production has no
+# base bin/ (its Scripts/ equivalent is stripped via _ROOT_DIR_STRIP above).
 rm -rf "$PY_DIR/Lib/site-packages/bin" 2>/dev/null || true
 
 # Installing by name from --find-links must not leave PEP 610 direct-url
@@ -488,12 +517,8 @@ python_cab = rule(
         ),
         "python_version": attr.string(
             mandatory = True,
-            doc = "Full CPython version (e.g. \"3.13.13\"); must match PYTHON_VERSION_WINDOWS in defines.make.",
-        ),
-        "requirements": attr.string_list(
-            mandatory = True,
-            doc = "Pinned name==version closure (from @windows_python_wheels//:requirements.bzl) " +
-                  "installed into .venv/Lib/site-packages; must include exactly one pip== pin.",
+            doc = "Full CPython version (e.g. \"3.13.13\"); must match PYTHON_VERSION_WINDOWS " +
+                  "in //:package_versions.bzl.",
         ),
         "venv_scripts": attr.label_list(
             allow_files = True,
@@ -502,7 +527,9 @@ python_cab = rule(
         "wheels": attr.label_list(
             allow_files = [".whl"],
             doc = "Pinned win_amd64/cp3xx wheel closure (the @windows_python_wheels " +
-                  "fetch-phase repo) that 'requirements' is installed from offline.",
+                  "pip.parse hub, resolved for the windows platform and the CAB's " +
+                  "python version by py_platform_transition_filegroup) installed " +
+                  "offline into the CAB; must include exactly one pip wheel.",
         ),
     },
 )

@@ -97,7 +97,7 @@ class FormSpecVisitor[FormSpecModel: FormSpec[Any], ParsedValueModel, FallbackDa
     def _validators(self) -> Sequence[Callable[[Any], object]]:
         return compute_validators(self.form_spec)
 
-    def _validate(self, parsed_value: ParsedValueModel) -> list[shared_type_defs.ValidationMessage]:
+    def _validate(self, parsed_value: ParsedValueModel) -> list[shared_type_defs.ValidationMessage]:  # noqa: ARG002
         """Validates the nested values of this form spec"""
         return []
 

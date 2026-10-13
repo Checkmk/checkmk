@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-# ruff: noqa: SLF001  # Private member accessed
-
 
 import itertools
 
@@ -71,7 +69,7 @@ def test_check_if_no_resources() -> None:
     No results expected when section_kube_cpu is missing,
     e.g. if the API server is unreachable or during upgrades.
     """
-    check_result = kube_cpu._check_kube_cpu(
+    check_result = kube_cpu._check_kube_cpu(  # noqa: SLF001
         PARAMS, USAGE_SECTION, None, ALLOCATABLE_RESOURCE_SECTION, 1.0, {}
     )
     assert list(check_result) == []
@@ -79,7 +77,7 @@ def test_check_if_no_resources() -> None:
 
 def test_performance_cpu() -> None:
     check_result = list(
-        kube_cpu._check_kube_cpu(
+        kube_cpu._check_kube_cpu(  # noqa: SLF001
             PARAMS, USAGE_SECTION, RESOURCES_SECTION, ALLOCATABLE_RESOURCE_SECTION, 1.0, {}
         )
     )

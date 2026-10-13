@@ -1,0 +1,115 @@
+# googletest test names excluded when running watest under Wine, on top of
+# the unit tier filter (-*_Simulation:*Component:*ComponentExt:*Flaky from
+# run_tests.ps1): each of these needs a Windows facility Wine does not
+# provide. Verified 2026-07-08: with these exclusions the remaining
+# non-excluded unit-tier tests all pass under Wine.
+
+# Performance counters (HKEY_PERFORMANCE_DATA is empty under Wine)
+CvtTest.WinPerfSection
+PerfCpuLoadTest.GenerationOnTimeout
+SectionPerf.Runner
+WinPerf.IfCounter
+WinPerf.PhyDiskCounter
+WinPerf.TcpConnCounter
+WinPerf.TsCounterByIndex
+WinPerf.TsCounterByName
+WinPerf.TsCounterFull
+Wtools.FindPerfIndexInRegistry
+Wtools.PerfCpuCounter
+Wtools.PerfDiskCounter
+Wtools.PerfTs
+
+# WMI (no functional WMI service under Wine)
+PsTest.GetProcessListFromWmi
+PsTest.GetProcessOwner
+ServiceProcessorTest.DirectCallWmi
+WmiProviderTestFixture.WmiCpu
+WmiWrapperFixture.Enumerating
+WmiWrapperFixture.QueryTableTimeout
+WmiWrapperFixture.Table
+WmiWrapperFixture.TablePostProcess
+
+# Event log (stub implementation under Wine)
+LogWatchEventTest.DumpEventLog
+LogWatchEventTest.GetLastPos
+LogWatchEventTest.RegPresence
+LogWatchEventTest.TestFilterIds
+LogWatchEventTest.TestFilterPattern
+LogWatchEventTest.TestFilterSources
+LogWatchEventTest.TestFilterUsers_DISABLED
+LogWatchEventTest.TestMakeBody
+LogWatchEventTest.TestNotSendAll
+LogWatchEventTest.TestNotSendAllVista
+LogWatchEventTest.TestSkip
+
+# User/group management (NetUserAdd & co. unsupported under Wine)
+Wtools.InternalUsersDbIntegration
+WtoolsUserControl.AddDeleteCheckGroup
+WtoolsUserControl.AddDeleteMembers
+WtoolsUserControl.AddDeleteUser
+WtoolsUserControl.AddDeleteUserToUsers
+
+# Service control manager (no Windows services under Wine)
+Wtools.GetServiceStatus
+
+# Loopback socket delivery differs under Wine
+OnlyFromTest.AllowedIpv6
+OnlyFromTest.LocalAllowed
+OnlyFromTest.LocalAllowedIpv6
+OnlyFromTest.LocalForbidden
+
+# Spawns Windows tools/processes not available under Wine
+CmaTools.GetEnv
+PlayerTest.All
+PluginExecuteFixture.AsyncPluginSingle
+SectionProviderMrpeFixture.RunCachedComponent_DISABLED
+SectionProviderMrpeFixture.RunDefault
+SectionProviderMrpeFixture.RunParallel
+SectionProviders_Integration.W32TimePeers
+SectionProviders_Integration.W32TimeStatus
+Wtools.RunCommandCheck
+WtoolsKillProcFixture.KillProcsByDir
+
+# Firewall COM interface missing under Wine
+FirewallApi.PolicyCtor
+
+# Not Wine: hardcodes Europe/Berlin timezone offsets (fails on any machine in
+# another timezone; a freshly initialized Wine prefix doesn't map $TZ either)
+CheckMkHeader.GetTimezoneOffset
+CheckMkHeader.IsoTime
+
+# Registry: HKLM\...\services\Ntfs is absent in a fresh Wine prefix, so the
+# service's Type/Group values read back as defaults instead of 2 /
+# "Boot File System".
+AgentConfig.GetValueTest
+
+# File locking: StoreFile is expected to FAIL while a spawned process holds the
+# target open, but Wine does not enforce Windows' share/delete locking, so the
+# write succeeds. (Also spawns ping.exe, which Wine may lack.)
+CapTest.StoreFileAgressive
+
+# Volume metadata: Wine's mapped C: drive carries no NTFS volume label, so the
+# label comes back empty.
+DfTest.GetNamesByVolumeIdOnC
+
+# On-disk path casing & stock Windows binaries: GetOsPathWithCase / the *32
+# masks expect the real "C:\Windows\System32\..." casing and the presence of
+# notepad.exe / two taskmgr.exe copies, none of which a Wine prefix reproduces.
+FileInfoTest.FindFileByMask
+FileInfoTest.GetOsPathWithCase
+
+# Resource dirs: Wine ships no aero*.msstyles under c:\windows\Resources.
+FileInfoTest.WindowsResources
+
+# Network adapters: Wine exposes no adapter in the IfOperStatusDown state the
+# test expects.
+Wtools.GetAdapterInfoStore
+
+# Process memory counters: GetCommitCharge returns 0 under Wine.
+Wtools.GetCommitCharge
+
+# Environment-dependent rather than Wine gaps.
+# The first asserts an upper bound of 32 logical CPUs, which the CI containers exceed.
+# The second expects non-zero <<<mem>>> values, which read back as 0 in that container.
+PerfCpuLoadTest.Generation
+SectionProvidersMemFixture.Mem

@@ -2,10 +2,10 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Iterator
+from http import HTTPStatus
 
 from cmk.plugins.kube.agent_handlers.common import (
     AnnotationOption,
@@ -32,7 +32,7 @@ def create_api_sections(
 ) -> Iterator[WriteableSection]:
     is_restricted_node_proxy_permissions = (
         isinstance(api_node.kubelet_health, api.HealthZ)
-        and api_node.kubelet_health.status_code == 403
+        and api_node.kubelet_health.status_code == HTTPStatus.FORBIDDEN
     )
     if not is_restricted_node_proxy_permissions:
         # in some environments node proxy permissions are restricted (such as GKE)

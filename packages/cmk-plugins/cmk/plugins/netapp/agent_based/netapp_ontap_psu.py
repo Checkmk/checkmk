@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
 
 from collections.abc import Mapping
 
@@ -30,9 +29,8 @@ def _get_section_single_instance(section: Section) -> netapp_api.SectionSingleIn
 def parse_netapp_ontap_psu(string_table: StringTable) -> Section:
     return {
         psu.item_name(): psu
-        for line in string_table
-        if (psu := models.ShelfPsuModel.model_validate_json(line[0])) is not None  # type: ignore[redundant-expr]
-        and psu.consider_installed()
+        for psu in (models.ShelfPsuModel.model_validate_json(line[0]) for line in string_table)
+        if psu.consider_installed()
     }
 
 

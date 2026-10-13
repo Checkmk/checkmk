@@ -5,59 +5,23 @@
 
 """Base classes and registry for automation results.
 
-Provides the abstract result type, the serialization wrapper, and the global
-registry that all concrete result modules register into.
+Provides the global registry that all concrete result modules register into.
+The result type itself is cmk.automations.internal.AutomationResult.
 """
 
-from __future__ import annotations
+from typing import override
 
-from abc import ABC, abstractmethod
-from ast import literal_eval
-from dataclasses import astuple, dataclass
-from typing import override, TypeVar
-
-from cmk.ccc import version as cmk_version
+from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.ccc.plugin_registry import Registry
 from cmk.ruleset_matcher.labels import HostLabelValueDict
-
-from ..types import AutomationID
 
 DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]
 
 
-class ResultTypeRegistry(Registry[type["ABCAutomationResult"]]):
+class ResultTypeRegistry(Registry[type[AutomationResult]]):
     @override
-    def plugin_name(self, instance: type[ABCAutomationResult]) -> AutomationID:
+    def plugin_name(self, instance: type[AutomationResult]) -> AutomationID:
         return instance.automation_call()
 
 
 result_type_registry = ResultTypeRegistry()
-
-
-class SerializedResult(str): ...
-
-
-_DeserializedType = TypeVar("_DeserializedType", bound="ABCAutomationResult")
-
-
-@dataclass
-class ABCAutomationResult(ABC):
-    def serialize(
-        self,
-        for_cmk_version: cmk_version.Version,  # used to stay compatible with older central sites
-    ) -> SerializedResult:
-        return self._default_serialize()
-
-    @classmethod
-    def deserialize(
-        cls: type[_DeserializedType],
-        serialized_result: SerializedResult,
-    ) -> _DeserializedType:
-        return cls(*literal_eval(serialized_result))
-
-    @staticmethod
-    @abstractmethod
-    def automation_call() -> AutomationID: ...
-
-    def _default_serialize(self) -> SerializedResult:
-        return SerializedResult(repr(astuple(self)))

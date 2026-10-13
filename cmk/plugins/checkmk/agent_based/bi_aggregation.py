@@ -47,7 +47,7 @@ class Aggregation:
     error_state: int | None = None
     error_output: str | None = None
     custom_output: str | None = None
-    children: list["Aggregation"] = field(default_factory=list)
+    children: list[Aggregation] = field(default_factory=list)
 
 
 @dataclass

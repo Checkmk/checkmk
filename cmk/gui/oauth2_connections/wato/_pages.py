@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import override
+from typing import cast, override
 
 import requests
 
@@ -19,6 +19,27 @@ from cmk.gui.logged_in import user
 from cmk.gui.oauth2_connections.wato._modes import get_oauth2_connection_form_spec
 from cmk.gui.oauth2_connections.watolib.store import extract_password_store_entry
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.utils.http_proxy_config import (
+    EnvironmentProxyConfig,
+    http_proxy_config_from_user_setting,
+    HTTPProxyConfig,
+)
+from cmk.utils.oauth2_connection import OAuth2Proxy
+
+
+def _requests_proxies(proxy: object) -> dict[str, str] | None:
+    """Translate the stored proxy setting into what requests expects."""
+    config: HTTPProxyConfig
+    match proxy:
+        case ("cmk_postprocessed", str(), str()):
+            config = http_proxy_config_from_user_setting(
+                cast(OAuth2Proxy, proxy),
+                ConfigDomainCore().load().get("http_proxies", {}),
+            )
+        case _:
+            config = EnvironmentProxyConfig()
+    return config.to_requests_proxies()
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -77,6 +98,7 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
             "code": result.get("code"),
             "client_secret": client_secret,
         }
+        proxies = _requests_proxies(data.get("proxy"))
         try:
             match authority:
                 case "china":
@@ -85,6 +107,7 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
                         data=post_data,
                         headers={"Content-Type": "application/x-www-form-urlencoded"},
                         timeout=10,
+                        proxies=proxies,
                     )
                 case "global":
                     res = requests.post(
@@ -92,12 +115,21 @@ class PageRequestAndSaveMsGraphAccessToken(AjaxPage):
                         data=post_data,
                         headers={"Content-Type": "application/x-www-form-urlencoded"},
                         timeout=10,
+                        proxies=proxies,
                     )
                 case _:
                     return {"status": "error", "message": "Invalid authority"}
 
         except requests.exceptions.Timeout as timeout_exc:
             return {"status": "error", "message": f"Timeout error: {timeout_exc}"}
+        except requests.exceptions.SSLError as ssl_exc:
+            return {
+                "status": "error",
+                "message": (
+                    f"TLS error: {ssl_exc}. If a TLS inspecting proxy is in use, add its "
+                    "certificate authority under 'Trusted certificate authorities for SSL'."
+                ),
+            }
         except requests.exceptions.ConnectionError as connection_exc:
             return {"status": "error", "message": f"Connection error: {connection_exc}"}
         except Exception as e:

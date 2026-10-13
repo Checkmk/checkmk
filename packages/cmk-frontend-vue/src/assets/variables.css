@@ -14,20 +14,33 @@
   --success-dimmed: rgb(17 188 122);
   --success-dimmed-2: rgb(13 141 91);
   --color-unknown: var(--color-orange-60);
-  --white: rgb(255 255 255);
-  --white-dimmed: rgb(255 255 255 / 50%);
+  --white: var(--color-white-100);
+  --white-dimmed: var(--color-white-50);
   --black: rgb(0 0 0);
   --grey-4-dimmed: rgb(51 51 51 / 80%);
   --error-msg-bg-color: rgb(200 50 50 / 15%);
   --form-readonly-error-bg-color: rgb(252 85 85);
-  --default-help-icon-bg-color: rgb(6 103 193);
-  --default-help-icon-bg-color-hover: rgb(56 133 205);
+  --default-help-icon-bg-color: var(--color-dark-blue-50);
   --default-nav-popup-border-color: rgb(19 211 137);
   --popup-dialog-success: var(--color-corporate-green-50);
   --popup-dialog-warning: var(--color-yellow-50);
   --popup-dialog-danger: var(--color-light-red-50);
   --popup-dialog-info: var(--color-light-blue-50);
-  --border-color-purple: rgb(105 102 229);
+  --border-color-purple: var(--color-purple-60);
+
+  /* Monitoring state palette, mirroring the themes' $color-state-*-background
+     SCSS values. */
+  --color-state-ok: var(--success);
+  --color-state-warning: var(--color-yellow-50);
+
+  /* A literal in the theme SCSS too — the closest palette entry,
+     --color-dark-red-50, is rgb(196 49 49) and would shift the colour. */
+  --color-state-critical: rgb(200 50 50);
+  --color-state-unknown: var(--color-orange-50);
+  --color-state-pending: var(--color-mist-grey-50);
+  --color-state-up: var(--color-state-ok);
+  --color-state-down: var(--color-state-critical);
+  --color-state-unreachable: var(--color-state-unknown);
 
   /* Fonts */
   --font-size-xxlarge: 18px;
@@ -37,6 +50,7 @@
   --font-size-small: 10px;
   --font-size-xsmall: 8px;
   --font-weight-default: 400;
+  --font-weight-medium: 500;
   --font-weight-bold: 700;
 
   /* Spacings */
@@ -55,7 +69,7 @@
 
 @layer theme {
   body[data-theme='facelift'] {
-    /* Base colors */
+    /* Primitives: the ux-theme grey scale the blocks below build on */
     --ux-theme-0: var(--color-daylight-grey-0);
     --ux-theme-1: var(--color-daylight-grey-10);
     --ux-theme-2: var(--color-daylight-grey-20);
@@ -67,52 +81,163 @@
     --ux-theme-8: var(--color-daylight-grey-80);
     --ux-theme-9: var(--color-daylight-grey-90);
     --ux-theme-10: var(--color-daylight-grey-100);
+
+    /* Background */
+    --background-base: var(--ux-theme-0);
+    --background-subtle: var(--ux-theme-2);
+    --background-selected: var(--ux-theme-8);
+    --background-hover: var(--color-daylight-grey-80);
+    --default-bg-color: var(--ux-theme-1);
+    --background-hover-wash: var(--color-conference-grey-10);
+    --background-row-hover: var(--ux-theme-4);
+    --background-row-hover-strong: var(--ux-theme-5);
+    --background-highlight: var(--color-light-blue-0);
+    --background-neutral: var(--color-mid-grey-50);
+    --background-accent-subtle: var(--color-purple-10);
+    --background-control: var(--color-daylight-grey-60);
+    --background-hover-overlay: var(--color-white-50);
+    --background-guide: var(--color-daylight-grey-30);
+    --background-scrim: color-mix(in srgb, var(--color-daylight-grey-50) 50%, transparent);
+    --background-muted: var(--ux-theme-4);
+    --background-row-hover-highlight: var(--color-dark-blue-10);
+
+    /* Text */
+    --font-color: var(--color-conference-grey-100);
+    --font-color-secondary: var(--color-conference-grey-70);
+    --font-color-dimmed: var(--grey-4-dimmed);
+    --font-color-disabled: var(--color-conference-grey-70);
+    --font-underline-color: var(--color-conference-grey-60);
+    --font-color-strong: var(--color-mid-grey-100);
+    --font-color-muted: var(--color-mid-grey-50);
+    --font-color-graphic: rgb(131 131 131);
+    --font-color-on-status: var(--color-midnight-grey-100);
+
+    /* Border */
+    --border-color-subtle: var(--color-mid-grey-10);
+    --border-color-default: var(--color-mid-grey-50);
+    --border-color-strong: var(--color-mid-grey-50);
+    --default-border-color: rgb(234 234 234);
+    --default-border-color-green: var(--color-corporate-green-50);
+    --dashed-border-color: var(--color-mid-grey-20);
+    --border-color-separator: var(--color-mid-grey-10);
+    --border-color-emphasis: var(--color-mid-grey-90);
+    --border-shade-mix: 70%;
+    --border-color-hairline: rgb(0 0 0 / 12%);
+
+    /* Status */
+    --color-warning: rgb(255 208 0);
+    --color-danger: rgb(229 63 63);
+    --status-border-color-info: var(--color-dark-blue-50);
+    --status-border-color-success: var(--color-corporate-green-50);
+    --status-border-color-warning: var(--color-yellow-50);
+    --status-border-color-error: var(--color-dark-red-50);
+    --status-border-color-success-strong: var(--color-corporate-green-70);
+    --status-border-color-warning-strong: var(--color-yellow-70);
+    --status-text-color-error: var(--color-dark-red-50);
+    --status-text-color-success: var(--color-corporate-green-80);
+    --status-text-color-warning: var(--color-yellow-80);
+    --status-text-color-error-strong: var(--color-dark-red-70);
+    --status-text-color-unknown: var(--color-orange-80);
+    --status-text-color-pending: var(--color-mist-grey-70);
+    --status-text-color-success-bright: var(--color-corporate-green-60);
+    --status-text-color-error-bright: var(--color-light-red-60);
+    --status-text-color-unknown-bright: var(--color-orange-60);
+    --status-text-color-warning-bright: var(--color-yellow-60);
+    --status-text-color-success-on-tint: var(--color-corporate-green-70);
+    --status-text-color-error-on-tint: var(--color-light-red-70);
+    --status-text-color-unknown-on-tint: var(--color-orange-70);
+    --status-text-color-downtime: var(--color-light-blue-70);
+    --status-text-color-error-pale: var(--color-light-red-40);
+    --status-icon-color-info: var(--color-dark-blue-80);
+    --status-icon-color-success: var(--color-corporate-green-80);
+    --status-icon-color-warning: var(--color-yellow-80);
+    --status-icon-color-error: var(--color-dark-red-80);
+    --status-background-success: var(--color-corporate-green-0);
+    --status-background-warning: var(--color-yellow-0);
+    --status-background-error: var(--color-dark-red-20);
+    --status-tint-mix: 20%;
+    --status-tint-border-mix: 40%;
+    --status-color-critical: var(--color-dark-red-50);
+    --status-color-info: var(--color-light-blue-50);
+    --status-color-downtime: var(--color-light-blue-50);
+    --status-color-host-down: var(--color-dark-blue-50);
+    --status-color-pending: var(--color-midnight-grey-50);
+    --status-color-ok-muted: rgb(189 189 189);
+    --status-color-neutral: var(--color-mid-grey-30);
+    --status-color-success: var(--color-corporate-green-80);
+    --status-color-warning: var(--color-yellow-60);
+    --status-color-error: var(--color-dark-red-60);
+    --status-color-unknown: var(--color-orange-70);
+    --status-color-pending-subtle: var(--color-mist-grey-80);
+    --status-color-error-bright: var(--color-light-red-50);
+    --status-color-unknown-bright: var(--color-orange-40);
+    --status-color-acknowledged: var(--color-yellow-50);
+    --status-color-flapping: var(--color-purple-50);
+    --status-color-missing: var(--color-brown-50);
+
+    /* Merge into --status-border-color-* if UX agrees to the shift in one theme */
+    --status-outline-color-success: var(--color-corporate-green-70);
+    --status-outline-color-warning: var(--color-yellow-70);
+    --status-outline-color-error: var(--color-dark-red-40);
+
+    /* Interactive */
+    --default-select-hover-color: var(--success);
+    --default-select-focus-color: var(--success-dimmed);
+    --interactive-accent: var(--color-corporate-green-50);
+    --interactive-accent-strong: var(--color-corporate-green-70);
+    --interactive-accent-stronger: var(--color-corporate-green-80);
+    --interactive-accent-strongest: var(--color-corporate-green-80);
+    --interactive-neutral: var(--color-mid-grey-50);
+    --icon-filter-monochrome: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(7500%)
+      hue-rotate(93deg) brightness(0%) contrast(105%);
+    --interactive-icon-color: var(--color-light-blue-20);
+    --interactive-icon-color-secondary: var(--color-corporate-green-70);
+    --interactive-icon-color-inactive: var(--color-mist-grey-60);
+    --interactive-accent-subtle: var(--color-corporate-green-40);
+    --interactive-guide: var(--color-pink-40);
+    --icon-filter-invert: none;
+
+    /* Series */
+    --series-color-1: var(--color-dark-blue-50);
+    --series-color-2: var(--color-corporate-green-50);
+    --series-color-3: var(--color-orange-50);
+    --series-color-4: var(--color-light-red-50);
+    --series-color-5: var(--color-purple-50);
+    --series-color-6: var(--color-cyan-50);
+    --series-color-7: var(--color-brown-50);
+    --series-color-8: var(--color-pink-50);
+
+    /* Component-named variables, to be renamed onto the roles above */
     --color-popup-backdrop: rgb(0 0 0 /50%);
     --color-skeleton: var(--color-conference-grey-10);
     --color-skeleton-shimmer-0: rgb(30 38 46 / 0%);
     --color-skeleton-shimmer-1: rgb(30 38 46 / 2%);
     --color-skeleton-shimmer-2: rgb(30 38 46 / 6%);
-    --color-warning: rgb(255 208 0);
-    --color-danger: rgb(229 63 63);
     --popup-dialog-bg-color: var(--color-daylight-grey-10);
     --popup-dialog-title-color: var(--color-conference-grey-100);
     --popup-dialog-message-color: var(--color-mid-grey-100);
     --menu-entry-disabled: var(--color-midnight-grey-100);
-
-    /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
-
-    /* Fonts */
-    --font-color: var(--color-conference-grey-100);
-    --font-color-dimmed: var(--grey-4-dimmed);
-    --font-color-light-bg: var(--font-color);
-    --font-perfometer-color: var(--color-conference-grey-100);
-
-    /* Colors */
+    --switch-off-bg-color: var(--color-daylight-grey-70);
+    --switch-off-border-color: var(--color-mid-grey-50);
+    --switch-on-border-color: var(--interactive-accent-strong);
+    --switch-on-bg-color: var(--color-corporate-green-50);
+    --switch-thumb-color: var(--color-conference-grey-90);
     --default-nav-bg-color: var(--ux-theme-3);
     --default-nav-border-color: var(--ux-theme-6);
-    --default-submit-button-border-color: var(--success-dimmed);
-    --default-border-color: rgb(234 234 234);
-    --default-bg-color: var(--ux-theme-1);
     --default-form-element-bg-color: var(--ux-theme-5);
-    --default-form-element-bg-color-disabled: var(--ux-theme-6);
     --default-form-element-border-color: var(--color-mid-grey-60);
     --default-form-element-placeholder-color: var(--color-conference-grey-50);
-    --default-select-hover-color: var(--success);
-    --default-select-focus-color: var(--success-dimmed);
-    --default-border-color-green: rgb(21 209 160);
     --default-tooltip-background-color: rgb(233 233 233);
     --default-tooltip-text-color: rgb(17 24 29);
-    --custom-scroll-bar-thumb-border-color: rgb(234 234 234);
     --custom-scroll-bar-thumb-color: rgb(88 88 88);
-    --custom-scroll-bar-backgroud-color: var(--ux-theme-0);
     --default-component-bg-color: rgb(240 240 240);
-    --help-text-bg-color: var(--ux-theme-5);
-    --help-text-font-color: var(--color-conference-grey-100);
     --dropdown-chevron-indicator-color: var(--color-conference-grey-100);
     --default-dialog-bg-color: var(--ux-theme-3);
-    --default-dialog-font-color: var(--font-color);
     --form-element-required-color: var(--success-dimmed-2);
     --input-hover-bg-color: var(--ux-theme-4);
+    --global-settings-row-hover-bg-color: var(--background-row-hover-highlight);
+    --global-settings-topic-subline-color: var(--font-color-strong);
+    --global-settings-variable-color: var(--color-mid-grey-100);
     --code-background-color: var(--color-daylight-grey-50);
     --wizard-progress-bar-background-color: var(--color-daylight-grey-60);
     --wizard-progress-bar-background-badge-color: var(--color-midnight-grey-100);
@@ -123,8 +248,9 @@
     --inline-help-icon-bg: rgb(12 129 238);
     --slide-in-left-part: var(--color-daylight-grey-20);
     --dropdown-arrow-color: var(--color-conference-grey-100);
-    --dashed-border-color: var(--color-mid-grey-20);
+    --sticky-header-border-color: var(--border-color-separator);
     --shared-dashboard-indicator-background: var(--color-daylight-grey-30);
+    --ai-purple: var(--color-purple-60);
 
     /* Form Labels Colors */
     --tag-color: var(--color-cyan-80);
@@ -135,31 +261,18 @@
     --tag-font-color-light: var(--color-white-100);
     --tag-font-color-dark: var(--color-conference-grey-100);
 
-    /* Cmk Toggle Button Group */
-    --toggle-button-group-active-bg-color: var(--ux-theme-10);
-    --toggle-button-group-inactive-bg-color: var(--ux-theme-6);
-    --toggle-button-group-border-color: var(--color-mid-grey-50);
-    --toggle-button-group-active-text-color: var(--color-white-100);
-    --toggle-button-group-inactive-text-color: var(--color-conference-grey-100);
-    --toggle-button-group-disabled-text-color: var(--color-conference-grey-70);
-    --toggle-button-group-hover-bg-color: var(--color-daylight-grey-80);
-
-    /* Cmk Inline Validation */
-    --inline-error-border-color: var(--color-dark-red-50);
-    --inline-error-text-color: var(--color-dark-red-50);
-
     /* Cmk Button Variants */
     --default-button-primary-color: var(--color-corporate-green-50);
-    --button-primary-border-color: var(--color-corporate-green-70);
+    --button-primary-border-color: var(--interactive-accent-strong);
     --button-primary-text-color: var(--black);
     --default-button-secondary-color: var(--ux-theme-6);
-    --button-secondary-border-color: var(--color-corporate-green-70);
+    --button-secondary-border-color: var(--interactive-accent-strong);
     --button-secondary-text-color: var(--black);
     --default-button-optional-color: var(--ux-theme-6);
     --button-optional-border-color: var(--color-mid-grey-50);
     --button-optional-text-color: var(--black);
     --default-button-warning-color: var(--color-yellow-50);
-    --button-warning-border-color: var(--color-yellow-70);
+    --button-warning-border-color: var(--status-border-color-warning-strong);
     --button-warning-text-color: var(--black);
     --default-button-danger-color: var(--color-dark-red-50);
     --button-danger-border-color: var(--color-dark-red-50);
@@ -174,10 +287,10 @@
     /* breadcrumb colors */
     --font-color-breadcrumb-inactive: var(--color-conference-grey-70);
     --font-color-breadcrumb-interactive: var(--color-conference-grey-100);
-    --font-color-breadcrumb-hover: var(--color-corporate-green-70);
+    --font-color-breadcrumb-hover: var(--interactive-accent-strong);
 
     /* Cmk Link colors */
-    --cmk-link-hover-color: var(--color-corporate-green-70);
+    --cmk-link-hover-color: var(--interactive-accent-strong);
 
     /* Cmk Alert Box */
     --cmk-alert-box-error-bg-color: var(--color-dark-red-20);
@@ -185,19 +298,25 @@
     --cmk-alert-box-success-bg-color: var(--color-corporate-green-20);
     --cmk-alert-box-info-bg-color: var(--color-dark-blue-20);
     --cmk-alert-box-loading-bg-color: var(--color-daylight-grey-40);
-    --cmk-alert-box-error-icon-color: var(--color-dark-red-80);
-    --cmk-alert-box-warning-icon-color: var(--color-yellow-80);
-    --cmk-alert-box-success-icon-color: var(--color-corporate-green-80);
-    --cmk-alert-box-info-icon-color: var(--color-dark-blue-80);
-    --cmk-alert-box-text-color: var(--color-mid-grey-100);
+    --cmk-alert-box-text-color: var(--font-color-strong);
+
+    /* Ring depth shading: a ring deepens towards its outer edge. */
+    --ring-shading-color-lift: color-mix(in srgb, var(--black) 28%, transparent);
+    --ring-shading-color-inner: var(--black);
+    --ring-shading-opacity-inner: 0;
+    --ring-shading-color-outer: var(--black);
+    --ring-shading-opacity-outer: 0.13;
 
     /* Keep in sync with $scrollbar-color in the legacy theme
        (packages/cmk-frontend, facelift _variables.scss) */
     --scrollbar-color: var(--color-mid-grey-60);
+
+    /* Interactive */
+    --row-hover-bg-color: var(--color-conference-grey-10);
   }
 
   body[data-theme='modern-dark'] {
-    /* Base colors */
+    /* Primitives: the ux-theme grey scale the blocks below build on */
     --ux-theme-0: var(--color-midnight-grey-100);
     --ux-theme-1: var(--color-midnight-grey-90);
     --ux-theme-2: var(--color-midnight-grey-80);
@@ -209,51 +328,163 @@
     --ux-theme-8: var(--color-midnight-grey-20);
     --ux-theme-9: var(--color-midnight-grey-10);
     --ux-theme-10: var(--color-midnight-grey-0);
+
+    /* Background */
+    --background-base: var(--ux-theme-0);
+    --background-subtle: var(--ux-theme-2);
+    --background-selected: var(--ux-theme-8);
+    --background-hover: var(--color-midnight-grey-50);
+    --default-bg-color: var(--ux-theme-1);
+    --background-hover-wash: var(--color-white-10);
+    --background-row-hover: var(--color-white-10);
+    --background-row-hover-strong: var(--color-white-10);
+    --background-highlight: var(--color-dark-blue-90);
+    --background-neutral: var(--color-mid-grey-50);
+    --background-accent-subtle: var(--color-purple-90);
+    --background-control: var(--color-midnight-grey-60);
+    --background-hover-overlay: var(--color-white-10);
+    --background-guide: var(--color-conference-grey-100);
+    --background-scrim: color-mix(in srgb, var(--color-midnight-grey-90) 50%, transparent);
+    --background-muted: var(--ux-theme-3);
+    --background-row-hover-highlight: var(--color-dark-blue-90);
+
+    /* Text */
+    --font-color: var(--color-white-100);
+    --font-color-secondary: var(--color-white-70);
+    --font-color-dimmed: var(--white-dimmed);
+    --font-color-disabled: var(--color-white-50);
+    --font-underline-color: var(--color-white-60);
+    --font-color-strong: var(--color-mid-grey-0);
+    --font-color-muted: var(--color-mid-grey-50);
+    --font-color-graphic: var(--font-color);
+    --font-color-on-status: var(--color-midnight-grey-100);
+
+    /* Border */
+    --border-color-subtle: var(--color-mid-grey-90);
+    --border-color-default: var(--color-mid-grey-50);
+    --border-color-strong: var(--color-mid-grey-70);
+    --default-border-color: rgb(38 45 52);
+    --default-border-color-green: var(--color-corporate-green-50);
+    --dashed-border-color: var(--color-mid-grey-80);
+    --border-color-separator: var(--color-mid-grey-100);
+    --border-color-emphasis: var(--color-mid-grey-90);
+    --border-shade-mix: 100%;
+    --border-color-hairline: rgb(255 255 255 / 12%);
+
+    /* Status */
+    --color-warning: var(--color-yellow-50);
+    --color-danger: rgb(180 45 45);
+    --status-border-color-info: var(--color-dark-blue-50);
+    --status-border-color-success: var(--color-corporate-green-50);
+    --status-border-color-warning: var(--color-yellow-50);
+    --status-border-color-error: var(--color-dark-red-40);
+    --status-border-color-success-strong: var(--color-corporate-green-50);
+    --status-border-color-warning-strong: var(--color-yellow-50);
+    --status-text-color-error: var(--color-dark-red-30);
+    --status-text-color-success: var(--color-corporate-green-60);
+    --status-text-color-warning: var(--color-yellow-50);
+    --status-text-color-error-strong: var(--color-dark-red-30);
+    --status-text-color-unknown: var(--color-orange-60);
+    --status-text-color-pending: var(--color-mist-grey-40);
+    --status-text-color-success-bright: var(--color-corporate-green-50);
+    --status-text-color-error-bright: var(--color-light-red-40);
+    --status-text-color-unknown-bright: var(--color-orange-40);
+    --status-text-color-warning-bright: var(--color-yellow-50);
+    --status-text-color-success-on-tint: var(--color-corporate-green-50);
+    --status-text-color-error-on-tint: var(--color-light-red-40);
+    --status-text-color-unknown-on-tint: var(--color-orange-40);
+    --status-text-color-downtime: var(--color-light-blue-50);
+    --status-text-color-error-pale: var(--color-light-red-40);
+    --status-icon-color-info: var(--color-dark-blue-20);
+    --status-icon-color-success: var(--color-corporate-green-20);
+    --status-icon-color-warning: var(--color-yellow-20);
+    --status-icon-color-error: var(--color-dark-red-20);
+    --status-background-success: var(--color-corporate-green-100);
+    --status-background-warning: var(--color-yellow-100);
+    --status-background-error: var(--color-dark-red-100);
+    --status-tint-mix: 15%;
+    --status-tint-border-mix: 25%;
+    --status-color-critical: var(--color-dark-red-50);
+    --status-color-info: var(--color-light-blue-50);
+    --status-color-downtime: var(--color-light-blue-50);
+    --status-color-host-down: var(--color-dark-blue-50);
+    --status-color-pending: var(--color-midnight-grey-50);
+    --status-color-ok-muted: rgb(58 69 80);
+    --status-color-neutral: var(--color-mid-grey-30);
+    --status-color-success: var(--color-corporate-green-80);
+    --status-color-warning: var(--color-yellow-60);
+    --status-color-error: var(--color-dark-red-60);
+    --status-color-unknown: var(--color-orange-70);
+    --status-color-pending-subtle: var(--color-mist-grey-80);
+    --status-color-error-bright: var(--color-light-red-50);
+    --status-color-unknown-bright: var(--color-orange-40);
+    --status-color-acknowledged: var(--color-yellow-50);
+    --status-color-flapping: var(--color-purple-50);
+    --status-color-missing: var(--color-brown-50);
+
+    /* Merge into --status-border-color-* if UX agrees to the shift in one theme */
+    --status-outline-color-success: var(--color-corporate-green-70);
+    --status-outline-color-warning: var(--color-yellow-70);
+    --status-outline-color-error: var(--color-dark-red-40);
+
+    /* Interactive */
+    --default-select-hover-color: var(--success);
+    --default-select-focus-color: var(--success-dimmed);
+    --interactive-accent: var(--color-corporate-green-50);
+    --interactive-accent-strong: var(--color-corporate-green-50);
+    --interactive-accent-stronger: var(--color-corporate-green-50);
+    --interactive-accent-strongest: var(--color-corporate-green-80);
+    --interactive-neutral: var(--color-mid-grey-60);
+    --icon-filter-monochrome: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(7500%)
+      hue-rotate(93deg) brightness(105%) contrast(105%);
+    --interactive-icon-color: var(--color-light-blue-20);
+    --interactive-icon-color-secondary: var(--color-corporate-green-70);
+    --interactive-icon-color-inactive: var(--color-mist-grey-60);
+    --interactive-accent-subtle: var(--color-corporate-green-40);
+    --interactive-guide: var(--color-pink-40);
+    --icon-filter-invert: invert(100%);
+
+    /* Series */
+    --series-color-1: var(--color-dark-blue-50);
+    --series-color-2: var(--color-corporate-green-50);
+    --series-color-3: var(--color-orange-50);
+    --series-color-4: var(--color-light-red-50);
+    --series-color-5: var(--color-purple-50);
+    --series-color-6: var(--color-cyan-50);
+    --series-color-7: var(--color-brown-50);
+    --series-color-8: var(--color-pink-50);
+
+    /* Component-named variables, to be renamed onto the roles above */
     --color-popup-backdrop: rgb(0 0 0 /50%);
     --color-skeleton: var(--color-white-0);
     --color-skeleton-shimmer-0: rgb(255 255 255 / 0%);
     --color-skeleton-shimmer-1: rgb(255 255 255 / 2%);
     --color-skeleton-shimmer-2: rgb(255 255 255 / 6%);
-    --color-warning: rgb(255 215 3);
-    --color-danger: rgb(180 45 45);
-    --ux-nav-bg-color: rgb(17 24 29);
     --popup-dialog-bg-color: var(--color-midnight-grey-50);
     --popup-dialog-title-color: var(--color-white-100);
     --popup-dialog-message-color: var(--color-mid-grey-0);
     --menu-entry-disabled: var(--color-white-70);
-
-    /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
-
-    /* Fonts */
-    --font-color: var(--color-white-100);
-    --font-color-dimmed: var(--white-dimmed);
-    --font-color-light-bg: var(--color-mist-grey-100);
-    --font-perfometer-color: var(--color-mid-grey-60);
-
-    /* Colors */
+    --switch-off-bg-color: var(--color-daylight-grey-70);
+    --switch-off-border-color: var(--color-daylight-grey-70);
+    --switch-on-border-color: var(--interactive-accent-strong);
+    --switch-on-bg-color: var(--color-corporate-green-50);
+    --switch-thumb-color: var(--color-conference-grey-90);
     --default-nav-bg-color: rgb(17 24 29);
     --default-nav-border-color: var(--ux-theme-4);
-    --default-border-color: rgb(38 45 52);
-    --default-bg-color: var(--ux-theme-1);
     --default-form-element-bg-color: var(--ux-theme-5);
-    --default-form-element-bg-color-disabled: var(--ux-theme-3);
     --default-form-element-border-color: var(--color-mid-grey-60);
     --default-form-element-placeholder-color: var(--color-white-50);
-    --default-select-hover-color: var(--success);
-    --default-select-focus-color: var(--success-dimmed);
-    --default-border-color-green: rgb(21 209 160);
     --default-tooltip-background-color: rgb(17 24 29);
     --default-tooltip-text-color: var(--white);
-    --custom-scroll-bar-thumb-border-color: var(--ux-theme-5);
-    --custom-scroll-bar-thumb-color: rgb(224 224 228);
-    --custom-scroll-bar-backgroud-color: var(--ux-theme-5);
+    --custom-scroll-bar-thumb-color: var(--color-daylight-grey-50);
     --default-component-bg-color: rgb(46 44 44);
-    --help-text-font-color: var(--color-conference-grey-100);
     --dropdown-chevron-indicator-color: var(--color-white-100);
     --default-dialog-bg-color: var(--ux-theme-5);
-    --default-dialog-font-color: var(--font-color);
     --form-element-required-color: var(--success);
     --input-hover-bg-color: var(--ux-theme-4);
+    --global-settings-row-hover-bg-color: var(--background-row-hover-highlight);
+    --global-settings-topic-subline-color: var(--font-color-strong);
+    --global-settings-variable-color: var(--font-color);
     --code-background-color: var(--ux-theme-0);
     --wizard-progress-bar-background-color: var(--white);
     --wizard-progress-bar-background-badge-color: var(--color-white-100);
@@ -261,11 +492,12 @@
     --even-tr-bg-color: var(--ux-theme-3);
     --odd-tr-bg-color: var(--ux-theme-2);
     --inline-help-text-bg: rgb(17 24 29);
-    --inline-help-icon-bg: rgb(6 103 193);
+    --inline-help-icon-bg: var(--color-dark-blue-50);
     --slide-in-left-part: var(--ux-theme-2);
     --dropdown-arrow-color: var(--color-white-100);
-    --dashed-border-color: var(--color-mid-grey-80);
+    --sticky-header-border-color: var(--border-color-separator);
     --shared-dashboard-indicator-background: var(--color-midnight-grey-100);
+    --ai-purple: var(--color-purple-50);
 
     /* Form Labels Colors */
     --tag-color: var(--color-cyan-80);
@@ -276,31 +508,18 @@
     --tag-font-color-light: var(--color-white-100);
     --tag-font-color-dark: var(--color-conference-grey-100);
 
-    /* Cmk Toggle Button Group */
-    --toggle-button-group-active-bg-color: var(--ux-theme-8);
-    --toggle-button-group-inactive-bg-color: var(--ux-theme-0);
-    --toggle-button-group-border-color: var(--color-mid-grey-60);
-    --toggle-button-group-active-text-color: var(--color-white-100);
-    --toggle-button-group-inactive-text-color: var(--color-white-100);
-    --toggle-button-group-disabled-text-color: var(--color-white-50);
-    --toggle-button-group-hover-bg-color: var(--color-midnight-grey-50);
-
-    /* Cmk Inline Validation */
-    --inline-error-border-color: var(--color-dark-red-40);
-    --inline-error-text-color: var(--color-dark-red-30);
-
     /* Cmk Button Variants */
     --default-button-primary-color: var(--color-corporate-green-50);
-    --button-primary-border-color: var(--color-corporate-green-50);
+    --button-primary-border-color: var(--interactive-accent-strong);
     --button-primary-text-color: var(--black);
     --default-button-secondary-color: var(--ux-theme-0);
-    --button-secondary-border-color: var(--color-corporate-green-50);
+    --button-secondary-border-color: var(--interactive-accent-strong);
     --button-secondary-text-color: var(--color-white-100);
     --default-button-optional-color: var(--ux-theme-0);
     --button-optional-border-color: var(--color-mid-grey-60);
     --button-optional-text-color: var(--color-white-100);
     --default-button-warning-color: var(--color-yellow-50);
-    --button-warning-border-color: var(--color-yellow-50);
+    --button-warning-border-color: var(--status-border-color-warning-strong);
     --button-warning-text-color: var(--black);
     --default-button-danger-color: var(--color-dark-red-50);
     --button-danger-border-color: var(--color-dark-red-40);
@@ -315,10 +534,10 @@
     /* breadcrumb colors */
     --font-color-breadcrumb-inactive: var(--color-white-70);
     --font-color-breadcrumb-interactive: var(--color-white-100);
-    --font-color-breadcrumb-hover: var(--color-corporate-green-50);
+    --font-color-breadcrumb-hover: var(--interactive-accent-strong);
 
     /* Cmk Link colors */
-    --cmk-link-hover-color: var(--color-corporate-green-50);
+    --cmk-link-hover-color: var(--interactive-accent-strong);
 
     /* Cmk Alert Box */
     --cmk-alert-box-error-bg-color: var(--color-dark-red-80);
@@ -326,14 +545,20 @@
     --cmk-alert-box-success-bg-color: var(--color-corporate-green-80);
     --cmk-alert-box-info-bg-color: var(--color-dark-blue-80);
     --cmk-alert-box-loading-bg-color: var(--color-midnight-grey-60);
-    --cmk-alert-box-error-icon-color: var(--color-dark-red-20);
-    --cmk-alert-box-warning-icon-color: var(--color-yellow-20);
-    --cmk-alert-box-success-icon-color: var(--color-corporate-green-20);
-    --cmk-alert-box-info-icon-color: var(--color-dark-blue-20);
-    --cmk-alert-box-text-color: var(--color-mid-grey-0);
+    --cmk-alert-box-text-color: var(--font-color-strong);
+
+    /* Ring depth shading: a light ring on a dark surface catches the light along its inner edge. */
+    --ring-shading-color-lift: color-mix(in srgb, var(--black) 45%, transparent);
+    --ring-shading-color-inner: var(--white);
+    --ring-shading-opacity-inner: 0.09;
+    --ring-shading-color-outer: var(--black);
+    --ring-shading-opacity-outer: 0.1;
 
     /* Keep in sync with $scrollbar-color in the legacy theme
        (packages/cmk-frontend, modern-dark _variables.scss) */
     --scrollbar-color: var(--color-mid-grey-90);
+
+    /* Interactive */
+    --row-hover-bg-color: var(--color-white-10);
   }
 }

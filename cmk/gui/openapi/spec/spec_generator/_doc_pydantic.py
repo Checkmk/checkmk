@@ -9,15 +9,18 @@ import dataclasses
 import hashlib
 import http.client
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 from typing import cast, Literal
 
 from apispec import APISpec
 from pydantic import PydanticInvalidForJsonSchema, TypeAdapter
+from typing_extensions import TypeForm
 
 from cmk.ccc.version import Edition
 from cmk.gui.http import Response
 from cmk.gui.openapi._type_adapter import get_cached_type_adapter
 from cmk.gui.openapi.framework import APIVersion
+from cmk.gui.openapi.framework._utils import get_dataclass_origin, iter_model_fields
 from cmk.gui.openapi.framework.endpoint_model import EndpointModel
 from cmk.gui.openapi.framework.model import api_field
 from cmk.gui.openapi.framework.model.headers import (
@@ -67,7 +70,7 @@ class PydanticSchemaDefinitions:
 
     def get_type(
         self, schema_type: Literal["body", "path", "query", "headers", "response"]
-    ) -> type | None:
+    ) -> TypeForm[object] | None:
         if schema_type == "response":
             return self.model.response_body_type
 
@@ -84,23 +87,23 @@ class PydanticSchemaDefinitions:
         return get_cached_type_adapter(type_)
 
 
-def _extract_body_example(body_type: type | None) -> dict[str, object] | None:
+def _extract_body_example(body_type: object) -> dict[str, object] | None:
     """Extract example values from a dataclass body type's field metadata.
 
     Returns a dict mapping each field's serialization alias (or name) to its
     example value, or None if body_type is None or no fields have examples.
+    A parameterized generic model is walked with its type arguments substituted.
     """
-    if body_type is None or not dataclasses.is_dataclass(body_type):
+    if body_type is None or get_dataclass_origin(body_type) is None:
         return None
+
     result: dict[str, object] = {}
-    for field in dataclasses.fields(body_type):
+    for field, field_type in iter_model_fields(body_type, path="body"):
         key = str(field.metadata.get("alias", field.name))
         if "examples" in field.metadata:
             result[key] = field.metadata["examples"][0]
-        elif dataclasses.is_dataclass(field.type) and isinstance(field.type, type):
-            nested = _extract_body_example(field.type)
-            if nested is not None:
-                result[key] = nested
+        elif (nested := _extract_body_example(field_type)) is not None:
+            result[key] = nested
     return result or None
 
 
@@ -152,7 +155,15 @@ def pydantic_endpoint_to_doc_endpoint(
         permissions_required=endpoint.permissions_required,
         permissions_description=endpoint.permissions_description,
         status_descriptions=endpoint.status_descriptions or {},
-        does_redirects=bool(expected_status_codes & {201, 301, 302, 303}),
+        does_redirects=bool(
+            expected_status_codes
+            & {
+                HTTPStatus.CREATED,
+                HTTPStatus.MOVED_PERMANENTLY,
+                HTTPStatus.FOUND,
+                HTTPStatus.SEE_OTHER,
+            }
+        ),
         supported_editions=endpoint.doc_supported_editions or set(Edition.__members__.values()),
         features_required=endpoint.doc_features_required,
     )
@@ -303,7 +314,9 @@ def _inline_refs(value: object, defs: dict[str, dict[str, object]]) -> None:
             _inline_refs(item, defs)
 
 
-def _get_parameters(location: LocationType, schema: type | None) -> Sequence[OpenAPIParameter]:
+def _get_parameters(
+    location: LocationType, schema: TypeForm[object] | None
+) -> Sequence[OpenAPIParameter]:
     out: list[OpenAPIParameter] = []
     if schema is not None:
         # TypeAdapter: this is only used during spec generation
@@ -318,7 +331,7 @@ def _get_parameters(location: LocationType, schema: type | None) -> Sequence[Ope
             # TODO: this is a workaround and should be cleaned up when we generate the spec manually
             _inline_refs(json_schema, defs)
 
-        assert json_schema["type"] == "object", f"expected dataclass, got: {schema.__name__}"
+        assert json_schema["type"] == "object", f"expected dataclass, got: {schema}"
         required_fields = set(json_schema.get("required", []))
         for name, field in json_schema["properties"].items():
             param: OpenAPIParameter = {
@@ -345,74 +358,112 @@ class PydanticResponses:
 
         # Always include 406
         responses["406"] = PydanticResponses._error_response_path_item(
-            status_descriptions, error_schemas, 406, DefaultStatusCodeDescription.Code406
+            status_descriptions,
+            error_schemas,
+            HTTPStatus.NOT_ACCEPTABLE,
+            DefaultStatusCodeDescription.Code406,
         )
 
         # 3xx responses
-        if 302 in expected_status_codes:
+        if HTTPStatus.FOUND in expected_status_codes:
             responses["302"] = PydanticResponses._path_item(
-                status_descriptions, 302, DefaultStatusCodeDescription.Code302.value
+                status_descriptions, HTTPStatus.FOUND, DefaultStatusCodeDescription.Code302.value
             )
 
-        if 303 in expected_status_codes:
+        if HTTPStatus.SEE_OTHER in expected_status_codes:
             responses["303"] = PydanticResponses._path_item(
-                status_descriptions, 303, DefaultStatusCodeDescription.Code302.value
+                status_descriptions,
+                HTTPStatus.SEE_OTHER,
+                DefaultStatusCodeDescription.Code302.value,
             )
 
         # 4xx responses
-        if 401 in expected_status_codes:
+        if HTTPStatus.UNAUTHORIZED in expected_status_codes:
             responses["401"] = PydanticResponses._error_response_path_item(
-                status_descriptions, error_schemas, 401, DefaultStatusCodeDescription.Code401
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.UNAUTHORIZED,
+                DefaultStatusCodeDescription.Code401,
             )
 
-        if 403 in expected_status_codes:
+        if HTTPStatus.FORBIDDEN in expected_status_codes:
             responses["403"] = PydanticResponses._error_response_path_item(
-                status_descriptions, error_schemas, 403, DefaultStatusCodeDescription.Code403
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.FORBIDDEN,
+                DefaultStatusCodeDescription.Code403,
             )
 
-        if 404 in expected_status_codes:
+        if HTTPStatus.NOT_FOUND in expected_status_codes:
             responses["404"] = PydanticResponses._error_response_path_item(
-                status_descriptions, error_schemas, 404, DefaultStatusCodeDescription.Code404
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.NOT_FOUND,
+                DefaultStatusCodeDescription.Code404,
             )
 
-        if 405 in expected_status_codes:
+        if HTTPStatus.METHOD_NOT_ALLOWED in expected_status_codes:
             responses["405"] = PydanticResponses._error_response_path_item(
-                status_descriptions, error_schemas, 405, DefaultStatusCodeDescription.Code405
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.METHOD_NOT_ALLOWED,
+                DefaultStatusCodeDescription.Code405,
             )
 
-        if 409 in expected_status_codes:
+        if HTTPStatus.CONFLICT in expected_status_codes:
             responses["409"] = PydanticResponses._error_response_path_item(
-                status_descriptions, error_schemas, 409, DefaultStatusCodeDescription.Code409
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.CONFLICT,
+                DefaultStatusCodeDescription.Code409,
             )
 
-        if 400 in expected_status_codes:
+        if HTTPStatus.BAD_REQUEST in expected_status_codes:
             responses["400"] = PydanticResponses._error_response_path_item(
-                status_descriptions, error_schemas, 400, DefaultStatusCodeDescription.Code400
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.BAD_REQUEST,
+                DefaultStatusCodeDescription.Code400,
             )
 
-        if 412 in expected_status_codes:
+        if HTTPStatus.PRECONDITION_FAILED in expected_status_codes:
             responses["412"] = PydanticResponses._error_response_path_item(
-                status_descriptions, error_schemas, 412, DefaultStatusCodeDescription.Code412
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.PRECONDITION_FAILED,
+                DefaultStatusCodeDescription.Code412,
             )
 
-        if 415 in expected_status_codes:
+        if HTTPStatus.UNSUPPORTED_MEDIA_TYPE in expected_status_codes:
             responses["415"] = PydanticResponses._error_response_path_item(
-                status_descriptions, error_schemas, 415, DefaultStatusCodeDescription.Code415
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
+                DefaultStatusCodeDescription.Code415,
             )
 
-        if 422 in expected_status_codes:
+        if HTTPStatus.UNPROCESSABLE_ENTITY in expected_status_codes:
             responses["422"] = PydanticResponses._error_response_path_item(
-                status_descriptions, error_schemas, 422, DefaultStatusCodeDescription.Code422
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.UNPROCESSABLE_ENTITY,
+                DefaultStatusCodeDescription.Code422,
             )
 
-        if 423 in expected_status_codes:
+        if HTTPStatus.LOCKED in expected_status_codes:
             responses["423"] = PydanticResponses._error_response_path_item(
-                status_descriptions, error_schemas, 423, DefaultStatusCodeDescription.Code423
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.LOCKED,
+                DefaultStatusCodeDescription.Code423,
             )
 
-        if 428 in expected_status_codes:
+        if HTTPStatus.PRECONDITION_REQUIRED in expected_status_codes:
             responses["428"] = PydanticResponses._error_response_path_item(
-                status_descriptions, error_schemas, 428, DefaultStatusCodeDescription.Code428
+                status_descriptions,
+                error_schemas,
+                HTTPStatus.PRECONDITION_REQUIRED,
+                DefaultStatusCodeDescription.Code428,
             )
 
         return responses
@@ -429,7 +480,7 @@ class PydanticResponses:
         responses: ResponseType = {}
 
         # 2xx responses
-        if 200 in expected_status_codes:
+        if HTTPStatus.OK in expected_status_codes:
             if content_type is None:
                 raise ValueError("Content-Type must be set for 200 responses.")
             if response_type_adapter:
@@ -448,15 +499,17 @@ class PydanticResponses:
 
             responses["200"] = PydanticResponses._path_item(
                 status_descriptions,
-                200,
+                HTTPStatus.OK,
                 DefaultStatusCodeDescription.Code200.value,
                 content=content,
                 headers=response_headers,
             )
 
-        if 204 in expected_status_codes:
+        if HTTPStatus.NO_CONTENT in expected_status_codes:
             responses["204"] = PydanticResponses._path_item(
-                status_descriptions, 204, DefaultStatusCodeDescription.Code204.value
+                status_descriptions,
+                HTTPStatus.NO_CONTENT,
+                DefaultStatusCodeDescription.Code204.value,
             )
 
         return responses
@@ -528,7 +581,7 @@ def _api_error_schema(
                 (
                     "status",
                     int,
-                    api_field(description="The HTTP status code.", example=status_code),
+                    api_field(description="The HTTP status code.", example=int(status_code)),
                 ),
                 (
                     "detail",
@@ -540,69 +593,71 @@ def _api_error_schema(
                 ),
             ],
             bases=(ApiErrorDataclass,),
+            kw_only=True,
+            frozen=True,
         ),
     )
 
 
 DEFAULT_STATUS_CODE_SCHEMAS = {
-    (406, DefaultStatusCodeDescription.Code406): _api_error_schema(
+    (HTTPStatus.NOT_ACCEPTABLE, DefaultStatusCodeDescription.Code406): _api_error_schema(
         "default",
-        406,
+        HTTPStatus.NOT_ACCEPTABLE,
         DefaultStatusCodeDescription.Code406.value,
     ),
-    (401, DefaultStatusCodeDescription.Code401): _api_error_schema(
+    (HTTPStatus.UNAUTHORIZED, DefaultStatusCodeDescription.Code401): _api_error_schema(
         "default",
-        401,
+        HTTPStatus.UNAUTHORIZED,
         DefaultStatusCodeDescription.Code401.value,
     ),
-    (403, DefaultStatusCodeDescription.Code403): _api_error_schema(
+    (HTTPStatus.FORBIDDEN, DefaultStatusCodeDescription.Code403): _api_error_schema(
         "default",
-        403,
+        HTTPStatus.FORBIDDEN,
         DefaultStatusCodeDescription.Code403.value,
     ),
-    (404, DefaultStatusCodeDescription.Code404): _api_error_schema(
+    (HTTPStatus.NOT_FOUND, DefaultStatusCodeDescription.Code404): _api_error_schema(
         "default",
-        404,
+        HTTPStatus.NOT_FOUND,
         DefaultStatusCodeDescription.Code404.value,
     ),
-    (422, DefaultStatusCodeDescription.Code422): _api_error_schema(
+    (HTTPStatus.UNPROCESSABLE_ENTITY, DefaultStatusCodeDescription.Code422): _api_error_schema(
         "default",
-        422,
+        HTTPStatus.UNPROCESSABLE_ENTITY,
         DefaultStatusCodeDescription.Code422.value,
     ),
-    (423, DefaultStatusCodeDescription.Code423): _api_error_schema(
+    (HTTPStatus.LOCKED, DefaultStatusCodeDescription.Code423): _api_error_schema(
         "default",
-        423,
+        HTTPStatus.LOCKED,
         DefaultStatusCodeDescription.Code423.value,
     ),
-    (405, DefaultStatusCodeDescription.Code405): _api_error_schema(
+    (HTTPStatus.METHOD_NOT_ALLOWED, DefaultStatusCodeDescription.Code405): _api_error_schema(
         "default",
-        405,
+        HTTPStatus.METHOD_NOT_ALLOWED,
         DefaultStatusCodeDescription.Code405.value,
     ),
-    (409, DefaultStatusCodeDescription.Code409): _api_error_schema(
+    (HTTPStatus.CONFLICT, DefaultStatusCodeDescription.Code409): _api_error_schema(
         "default",
-        409,
+        HTTPStatus.CONFLICT,
         DefaultStatusCodeDescription.Code409.value,
     ),
-    (415, DefaultStatusCodeDescription.Code415): _api_error_schema(
+    (HTTPStatus.UNSUPPORTED_MEDIA_TYPE, DefaultStatusCodeDescription.Code415): _api_error_schema(
         "default",
-        415,
+        HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
         DefaultStatusCodeDescription.Code415.value,
     ),
-    (400, DefaultStatusCodeDescription.Code400): _api_error_schema(
+    (HTTPStatus.BAD_REQUEST, DefaultStatusCodeDescription.Code400): _api_error_schema(
         "default",
-        400,
+        HTTPStatus.BAD_REQUEST,
         DefaultStatusCodeDescription.Code400.value,
     ),
-    (412, DefaultStatusCodeDescription.Code412): _api_error_schema(
+    (HTTPStatus.PRECONDITION_FAILED, DefaultStatusCodeDescription.Code412): _api_error_schema(
         "default",
-        412,
+        HTTPStatus.PRECONDITION_FAILED,
         DefaultStatusCodeDescription.Code412.value,
     ),
-    (428, DefaultStatusCodeDescription.Code428): _api_error_schema(
+    (HTTPStatus.PRECONDITION_REQUIRED, DefaultStatusCodeDescription.Code428): _api_error_schema(
         "default",
-        428,
+        HTTPStatus.PRECONDITION_REQUIRED,
         DefaultStatusCodeDescription.Code428.value,
     ),
 }

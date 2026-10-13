@@ -19,19 +19,19 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 
 
 @api_model
-class IconCategoryModel(DomainObjectModel):
-    domainType: Literal["icon_category"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
+class IconCategoryModel(TitledDomainObjectModel):
+    domainType: Literal["icon_category"] = api_field(description="The domain type of the object.")
 
 
 @api_model
 class IconCategoryCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["icon_category"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["icon_category"] = api_field(
         description="The domain type of the objects in the collection",
         example="icon_category",
     )

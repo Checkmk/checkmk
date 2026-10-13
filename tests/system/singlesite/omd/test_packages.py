@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 @dataclass(frozen=True)
@@ -154,6 +155,7 @@ SPECIAL_AGENTS = [
     SpecialAgent("agent_appdynamics"),
     SpecialAgent("agent_aws"),
     SpecialAgent("agent_aws_status"),
+    SpecialAgent("agent_aws_v2"),
     SpecialAgent("agent_azure"),
     SpecialAgent("agent_azure_status"),
     SpecialAgent("agent_azure_v2"),
@@ -181,7 +183,6 @@ SPECIAL_AGENTS = [
     SpecialAgent("agent_jira"),
     SpecialAgent("agent_jolokia"),
     SpecialAgent("agent_kube"),
-    SpecialAgent("agent_custom_query_metric_backend"),
     SpecialAgent("agent_mobileiron"),
     SpecialAgent("agent_mqtt"),
     SpecialAgent("agent_netapp_ontap"),
@@ -194,7 +195,7 @@ SPECIAL_AGENTS = [
     SpecialAgent("agent_redfish"),
     SpecialAgent("agent_redfish_power"),
     SpecialAgent("agent_ruckus_spot"),
-    SpecialAgent("agent_rustik"),
+    SpecialAgent("agent_kube_v2"),
     SpecialAgent("agent_salesforce"),
     SpecialAgent("agent_siemens_plc"),
     SpecialAgent("agent_smb_share"),
@@ -204,6 +205,7 @@ SPECIAL_AGENTS = [
     SpecialAgent("agent_three_par"),
     SpecialAgent("agent_tinkerforge", usage_text="Usage"),
     SpecialAgent("agent_ucs_bladecenter"),
+    SpecialAgent("agent_veeam"),
     SpecialAgent("agent_vnx_quotas"),
     SpecialAgent("agent_vsphere"),
     SpecialAgent("agent_zerto"),
@@ -211,10 +213,6 @@ SPECIAL_AGENTS = [
 
 _SKIPPED_SPECIAL_AGENTS = {
     "agent_acme_sbc",  # has no help option
-}
-
-_ULTIMATE_AGENTS = {
-    "agent_custom_query_metric_backend",
 }
 
 
@@ -242,9 +240,6 @@ def test_monitoring_plugins_can_be_executed(plugin: Plugin, site: Site) -> None:
 )
 def test_special_agents_can_be_executed(agent: SpecialAgent, site: Site) -> None:
     """Validate the plugin's presence and version in the site."""
-    if not site.edition.is_ultimate_edition() and agent.binary_name in _ULTIMATE_AGENTS:
-        pytest.skip(f"{agent.binary_name} is disabled in this edition")
-
     cmd_line = [agent.detect_full_path(site).as_posix(), agent.cmd_line_option]
     process = site.run(cmd_line, check=False)
     assert agent.expected in process.stdout, (
@@ -342,11 +337,12 @@ def test_mk_oracle_exotic_distros(
     # Use `file -k` (keep-going) so all matching magic rules are reported, not just the
     # highest-scored one. Older libmagic (e.g. file 5.41 on Ubuntu 22.04) mis-scores the AIX
     # XCOFF64 binary as "JPEG 2000 image" and would otherwise hide the correct XCOFF match.
+    site_packages = f"lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages"
     process = site.run(
         [
             "file",
             "-k",
-            f"lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle.{distro}",
+            f"{site_packages}/cmk/plugins/oracle/agents/mk-oracle.{distro}",
         ],
         check=False,
     )

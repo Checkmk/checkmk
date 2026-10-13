@@ -8,6 +8,7 @@
 from collections.abc import Callable
 
 import cmk.gui.help
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition
 from cmk.gui import (
     activate_menu,
@@ -16,6 +17,8 @@ from cmk.gui import (
     crash_reporting,
     default_permissions,
     deprecations,
+    experimental_flags,
+    global_settings,
     help_menu,
     hooks,
     inventory,
@@ -25,9 +28,7 @@ from cmk.gui import (
     notifications,
     pagetypes,
     painter_options,
-    prediction,
     product_usage_analytics,
-    release_flags,
     rulespec,
     search_menu,
     user_message,
@@ -47,20 +48,25 @@ from cmk.gui.dashboard import DashletRegistry
 from cmk.gui.dashboard import registration as dashboard_registration
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.form_specs import registration as vue_registration
+from cmk.gui.graphing import registration as graphing_registration
 from cmk.gui.graphing.openapi import register as register_graphing_openapi_endpoints
+from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.monitor.command import downtime_recurrences, monitor_commands
 from cmk.gui.monitor.hosts import registration as monitor_hosts_registration
+from cmk.gui.monitor.hosts._folder import monitor_folders, SetupFolders
 from cmk.gui.monitor.services import registration as monitor_services_registration
+from cmk.gui.monitor.services._page_menu import host_menus
 from cmk.gui.nodevis import nodevis
 from cmk.gui.oauth2_connections.registration import register as register_oauth2_connections
 from cmk.gui.openapi import registration as openapi_registration
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.page_menu_utils import LegacyHostMenus
 from cmk.gui.pages import PageRegistry
 from cmk.gui.pagetypes import registration as pagetypes_registration
-from cmk.gui.painter.v0 import PainterRegistry
+from cmk.gui.painter import PainterRegistry
 from cmk.gui.painter_options import PainterOptionRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.quick_setup import registration as quick_setup_registration
@@ -75,6 +81,7 @@ from cmk.gui.userdb import register_userroles_config_file as register_userroles
 from cmk.gui.userdb import registration as userdb_registration
 from cmk.gui.userdb import UserConnectorRegistry
 from cmk.gui.userdb._user_attribute._registry import UserAttributeRegistry
+from cmk.gui.view_breadcrumbs import make_service_breadcrumb
 from cmk.gui.views import registration as views_registration
 from cmk.gui.views.command import CommandGroupRegistry, CommandRegistry
 from cmk.gui.views.icon import IconRegistry
@@ -106,7 +113,13 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributeTopicRegistry,
 )
 from cmk.gui.watolib.host_rename import RenameHostHookRegistry
-from cmk.gui.watolib.hosts_and_folders import FolderValidatorsRegistry
+from cmk.gui.watolib.hosts_and_folders import (
+    all_folder_title_paths,
+    folder_title_path,
+    folder_tree,
+    FolderValidatorsRegistry,
+    may_read_host,
+)
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
@@ -175,6 +188,7 @@ def register(
     token_authenticated_page_registry: TokenAuthenticatedPageRegistry,
     builtin_pagetype_topic_registry: pagetypes.BuiltinPagetypeTopicRegistry,
     agent_bakery_enabled: bool,
+    monitoring_teleport_target: str | None = None,
 ) -> None:
     hooks.register_thread_cache_cleanup()
     notification_parameter_registry.register_form_spec_plugin = register_plugin
@@ -213,6 +227,7 @@ def register(
         data_source_registry,
         endpoint_family_registry,
         versioned_endpoint_registry,
+        match_item_generator_registry,
     )
     inventory.register(
         config_variable_registry,
@@ -236,15 +251,29 @@ def register(
         autocompleter_registry,
         endpoint_family_registry,
         versioned_endpoint_registry,
+        match_item_generator_registry,
     )
     monitor_commands.use_legacy_source(command_registry)
     downtime_recurrences.use_legacy_source(command_registry)
+    host_menus.use_legacy_source(LegacyHostMenus())
+    # Setup answers about the folders of whoever is asking, so both the tree and the user are read
+    # per call - `user` is the request's, not this wiring's.
+    monitor_folders.use_setup_source(
+        SetupFolders(
+            title_of=lambda path: folder_title_path(folder_tree(), path, user),
+            all_titles=lambda: all_folder_title_paths(folder_tree(), user),
+            may_read_host=lambda host_name, path: may_read_host(
+                folder_tree(), HostName(host_name), path, user
+            ),
+        )
+    )
     monitor_hosts_registration.register(
         endpoint_family_registry,
         versioned_endpoint_registry,
         page_registry,
         monitor_commands,
         downtime_recurrences,
+        monitoring_teleport_target,
     )
     monitor_services_registration.register(
         endpoint_family_registry,
@@ -252,6 +281,9 @@ def register(
         page_registry,
         monitor_commands,
         downtime_recurrences,
+        host_menus,
+        monitoring_teleport_target,
+        lambda host_name: may_read_host(folder_tree(), host_name, None, user),
     )
     crash_reporting.register(
         page_registry,
@@ -326,7 +358,6 @@ def register(
     message.register(page_registry, cron_job_registry)
     cmk.gui.help.register(page_registry)
     main.register(page_registry)
-    prediction.register(page_registry)
     product_usage_analytics.register(
         page_registry,
         permission_registry,
@@ -335,11 +366,11 @@ def register(
         config_variable_group_registry,
         replication_path_registry,
     )
-    release_flags.register(
+    experimental_flags.register(
         config_domain_registry,
         config_variable_registry,
         config_variable_group_registry,
-        replication_path_registry,
+        show_in_global_settings=experimental_flags.global_config.is_development_site(),
     )
     quick_setup_registration.register(
         automation_command_registry,
@@ -400,6 +431,7 @@ def register(
         agent_bakery_enabled,
     )
     welcome.register(page_registry, snapin_registry)
+    global_settings.register(page_registry, match_item_generator_registry)
     search_registration.register(
         page_registry,
         job_registry,
@@ -409,6 +441,7 @@ def register(
         mode_registry, page_registry, main_module_registry, permission_registry
     )
     _pre_21_plugin_api.register()
+    graphing_registration.register_prediction_page(page_registry, make_service_breadcrumb)
     register_graphing_openapi_endpoints(versioned_endpoint_registry, endpoint_family_registry)
 
 

@@ -39,7 +39,7 @@ class ApplianceClient:
             )
             return None
 
-    def get_uplink_statuses(self, id: str) -> Sequence[schema.RawUplinkStatuses]:
+    def get_uplink_statuses(self, id: str) -> Sequence[schema.RawUplinkStatuses]:  # noqa: A002
         try:
             return self._sdk.getOrganizationApplianceUplinkStatuses(id, total_pages="all")
         except APIError as e:
@@ -49,7 +49,7 @@ class ApplianceClient:
             )
             return []
 
-    def get_uplink_usage(self, id: str, /) -> Sequence[schema.RawUplinkUsage]:
+    def get_uplink_usage(self, id: str, /) -> Sequence[schema.RawUplinkUsage]:  # noqa: A002
         try:
             return self._sdk.getOrganizationApplianceUplinksUsageByNetwork(
                 organizationId=id, total_pages="all", timespan=DEFAULT_TIMESPAN
@@ -61,7 +61,7 @@ class ApplianceClient:
             )
             return []
 
-    def get_uplink_vpn_statuses(self, id: str, /) -> Sequence[schema.RawUplinkVpnStatuses]:
+    def get_uplink_vpn_statuses(self, id: str, /) -> Sequence[schema.RawUplinkVpnStatuses]:  # noqa: A002
         try:
             return self._sdk.getOrganizationApplianceVpnStatuses(id, total_pages="all")
         except APIError as e:

@@ -4,11 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import dataclasses
 import enum
@@ -39,8 +36,7 @@ from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.oauth2_connections.recomposer import recompose as recompose_oauth2_connection
 from cmk.gui.oauth2_connections.watolib.store import load_oauth2_connections
 from cmk.gui.rule_specs.types import RuleSpec as APIV1RuleSpec
-from cmk.gui.userdb._user_selection import UserSelection as LegacyUserSelection
-from cmk.gui.utils.doc_references import DocReference
+from cmk.gui.userdb import UserSelection as LegacyUserSelection
 from cmk.gui.valuespec import AjaxDropdownChoice, Transform
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.watolib import config_domains as legacy_config_domains
@@ -63,6 +59,7 @@ from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets import internal as ruleset_api_internal
 from cmk.rulesets import v1 as ruleset_api_v1
 from cmk.rulesets.internal.form_specs import (
+    CascadingSingleChoiceExtended,
     DictionaryExtended,
     ListExtended,
     ListOfStrings,
@@ -79,6 +76,7 @@ from cmk.web.utils.autocompleter_config import (
     AutocompleterConfig,
     ContextAutocompleterConfig,
 )
+from cmk.web.utils.doc_references import DocReference
 
 
 @dataclass(frozen=True)
@@ -236,7 +234,7 @@ def convert_to_legacy_rulespec(
 
 def _convert_to_legacy_check_parameter_rulespec(
     to_convert: ruleset_api_v1.rule_specs.CheckParameters,
-    edition_only: Edition,
+    edition_only: Edition,  # noqa: ARG001
     localizer: Callable[[str], str],
 ) -> CheckParameterRulespecWithItem | CheckParameterRulespecWithoutItem:
     convert_condition = to_convert.condition
@@ -244,9 +242,7 @@ def _convert_to_legacy_check_parameter_rulespec(
         item_spec, item_form_spec = _get_item_spec_maker(convert_condition, localizer)
         return CheckParameterRulespecWithItem(
             check_group_name=to_convert.name,
-            title=(
-                None if to_convert.title is None else partial(to_convert.title.localize, localizer)  # type: ignore[redundant-expr]
-            ),
+            title=partial(to_convert.title.localize, localizer),
             group=_convert_to_legacy_rulespec_group(
                 legacy_rulespec_groups.RulespecGroupMonitoringConfiguration,
                 to_convert.topic,
@@ -280,7 +276,7 @@ def _convert_to_legacy_check_parameter_rulespec(
 
 def _convert_to_legacy_manual_check_parameter_rulespec(
     to_convert: ruleset_api_v1.rule_specs.EnforcedService,
-    edition_only: Edition,
+    edition_only: Edition,  # noqa: ARG001
     localizer: Callable[[str], str],
 ) -> ManualCheckParameterRulespec:
     match to_convert.condition:
@@ -315,7 +311,7 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
             if to_convert.parameter_form is not None
             else None
         ),
-        title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),  # type: ignore[redundant-expr]
+        title=partial(to_convert.title.localize, localizer),
         is_deprecated=False,
         match_type="all",
         item_spec=item_spec,
@@ -393,7 +389,7 @@ def _convert_to_legacy_host_rule_spec_rulespec(
         valuespec=partial(
             convert_to_legacy_valuespec, FormSpecCallable(to_convert.parameter_form), localizer
         ),
-        title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),  # type: ignore[redundant-expr]
+        title=partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
         match_type=_convert_to_legacy_match_type(to_convert),
         doc_references=_get_doc_references(config_scope_prefix(to_convert.name), localizer),
@@ -415,7 +411,7 @@ def _convert_to_legacy_service_rule_spec_rulespec(
         valuespec=partial(
             convert_to_legacy_valuespec, FormSpecCallable(to_convert.parameter_form), localizer
         ),
-        title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),  # type: ignore[redundant-expr]
+        title=partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
         match_type=(
             "dict" if to_convert.eval_type == ruleset_api_v1.rule_specs.EvalType.MERGE else "all"
@@ -656,7 +652,7 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.SingleChoice() | SingleChoiceExtended():
             return _convert_to_legacy_dropdown_choice(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.CascadingSingleChoice():
+        case ruleset_api_v1.form_specs.CascadingSingleChoice() | CascadingSingleChoiceExtended():
             return _convert_to_legacy_cascading_dropdown(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.ServiceState():
@@ -764,7 +760,10 @@ def convert_to_legacy_valuespec(
     if to_convert.migrate is not None:
         migrate_func = (
             allow_empty_value_wrapper(to_convert.migrate)
-            if isinstance(to_convert, ruleset_api_v1.form_specs.CascadingSingleChoice)
+            if isinstance(
+                to_convert,
+                ruleset_api_v1.form_specs.CascadingSingleChoice | CascadingSingleChoiceExtended,
+            )
             else to_convert.migrate
         )
         return legacy_valuespecs.Transform(
@@ -950,12 +949,13 @@ def _convert_to_legacy_text_input(
 
     help_text = _localize_optional(to_convert.help_text, localizer)
     if to_convert.macro_support:
-        macros_help_text = (
+        localized_text = ruleset_api_v1.Help(
             "This field supports the use of macros. "
             "The corresponding plug-in replaces the macros with the actual values. "
-            "The most common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$."
-        )
-        localized_text = ruleset_api_v1.Help(macros_help_text).localize(localizer)
+            "The most common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$. "
+            "To use a custom host attribute, prefix its name with 'HOST_', "
+            "e.g. an attribute named 'OWNER' is referenced as $HOST_OWNER$."
+        ).localize(localizer)
         converted_kwargs["help"] = f"{help_text} {localized_text}" if help_text else localized_text
     else:
         converted_kwargs["help"] = help_text
@@ -1390,16 +1390,17 @@ def _convert_to_legacy_dropdown_choice(
 
 
 def _convert_to_legacy_cascading_dropdown(
-    to_convert: ruleset_api_v1.form_specs.CascadingSingleChoice,
+    to_convert: ruleset_api_v1.form_specs.CascadingSingleChoice | CascadingSingleChoiceExtended,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.CascadingDropdown:
+    elements = to_convert.elements() if callable(to_convert.elements) else to_convert.elements
     legacy_choices = [
         (
             str(element.name),
             element.title.localize(localizer),
             convert_to_legacy_valuespec(element.parameter_form, localizer),
         )
-        for element in to_convert.elements
+        for element in elements
     ]
 
     converted_kwargs: dict[str, Any] = {
@@ -1411,16 +1412,25 @@ def _convert_to_legacy_cascading_dropdown(
         case ruleset_api_v1.form_specs.InputHint():
             converted_kwargs["no_preselect_title"] = to_convert.prefill.value.localize(localizer)
         case ruleset_api_v1.form_specs.DefaultValue():
-            # CascadingSingleChoice.__post_init__ checks that prefill_selection is one of the elements
+            # __post_init__ checks that the prefill selection is one of the static elements,
+            # but dynamic elements may no longer contain it
             default_choice = next(
-                legacy_choice
-                for legacy_choice in legacy_choices
-                if legacy_choice[0] == to_convert.prefill.value
+                (
+                    legacy_choice
+                    for legacy_choice in legacy_choices
+                    if legacy_choice[0] == to_convert.prefill.value
+                ),
+                None,
             )
-            converted_kwargs["default_value"] = (
-                to_convert.prefill.value,
-                default_choice[2].default_value(),
-            )
+            if default_choice is None:
+                converted_kwargs["no_preselect_title"] = ruleset_api_v1.Title(
+                    "Please choose"
+                ).localize(localizer)
+            else:
+                converted_kwargs["default_value"] = (
+                    to_convert.prefill.value,
+                    default_choice[2].default_value(),
+                )
 
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(
@@ -1906,7 +1916,7 @@ LevelsConfigModel = (
 
 
 def _transform_levels_forth(value: object) -> LevelsConfigLegacyModel:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case "no_levels", None:
             return "no_levels", None
         case "fixed", tuple(fixed_levels):
@@ -1976,7 +1986,7 @@ def _convert_to_legacy_levels[NumberT: (int, float)](
             )
         )
 
-    match to_convert.form_spec_template:
+    match to_convert.form_spec_template:  # type: ignore[exhaustive-match]
         case (
             ruleset_api_v1.form_specs.Float()
             | ruleset_api_v1.form_specs.TimeSpan()
@@ -2002,7 +2012,7 @@ def _convert_to_legacy_levels[NumberT: (int, float)](
             title=_localize_optional(to_convert.title, localizer),
             help=_localize_optional(to_convert.help_text, localizer),
             choices=choices,
-            default_value=_make_levels_default_value(to_convert, prefill_value),
+            default_value=_make_levels_default_value(to_convert, prefill_value),  # type: ignore[possibly-undefined]
             # Mypy does not see, to see Literal["..."] as a str
             validate=validate,  # type: ignore[arg-type]
         ),
@@ -2041,7 +2051,7 @@ def _make_levels_default_value[NumberT: (int, float)](
 
 
 def _transform_proxy_forth(value: object) -> tuple[str, str | None]:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case "cmk_postprocessed", "environment_proxy", str():
             return "environment", "environment"
         case "cmk_postprocessed", "no_proxy", str():
@@ -2055,13 +2065,13 @@ def _transform_proxy_forth(value: object) -> tuple[str, str | None]:
 
 
 def _transform_proxy_back(
-    value: tuple[str, str],
+    value: tuple[str, str | None],
 ) -> tuple[
     Literal["cmk_postprocessed"],
     Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
     str,
 ]:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case "environment", "environment":
             return "cmk_postprocessed", "environment_proxy", ""
         case "no_proxy", None:
@@ -2230,7 +2240,7 @@ def _transform_from_legacy_internal_proxy(
         case "environment", "environment":
             return "cmk_postprocessed", "environment_proxy", ""
 
-        case "no_proxy", None:
+        case "no_proxy", _:
             return "cmk_postprocessed", "no_proxy", ""
 
         case "global", str(stored_proxy_id):
@@ -2239,7 +2249,7 @@ def _transform_from_legacy_internal_proxy(
         case "manual", {
             "scheme": str(scheme),
             "proxy_server_name": str(proxy_server_name),
-            "port": int(port),
+            "port": int(port),  # type: ignore[unreachable]
             "auth": {
                 "user": str(user),
                 "password": (
@@ -2270,7 +2280,7 @@ def _transform_from_legacy_internal_proxy(
         case "manual", {
             "scheme": str(scheme),
             "proxy_server_name": str(proxy_server_name),
-            "port": int(port),
+            "port": int(port),  # type: ignore[unreachable]
         }:
             return (
                 "cmk_postprocessed",
@@ -2622,11 +2632,12 @@ def _convert_to_legacy_text_area(
 
     help_text = _localize_optional(to_convert.help_text, localizer)
     if to_convert.macro_support:
-        macros_help_text = (
+        localized_text = ruleset_api_v1.Help(
             "This field supports the use of macros. "
-            "The corresponding plug-in replaces the macros with the actual values."
-        )
-        localized_text = ruleset_api_v1.Help(macros_help_text).localize(localizer)
+            "The corresponding plug-in replaces the macros with the actual values. "
+            "To use a custom host attribute, prefix its name with 'HOST_', "
+            "e.g. an attribute named 'OWNER' is referenced as $HOST_OWNER$."
+        ).localize(localizer)
         converted_kwargs["help"] = f"{help_text} {localized_text}" if help_text else localized_text
     else:
         converted_kwargs["help"] = help_text
@@ -2651,7 +2662,7 @@ def _convert_to_legacy_text_area(
 
 
 def _transform_timeperiod_forth(value: object) -> str | None:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case "cmk_postprocessed", "stored_time_period", str(time_period):
             return time_period
         # time_period is None when adding a new rule

@@ -2,7 +2,6 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -34,3 +33,18 @@ class SearchPermissionsHandlerRegistry(Registry[SearchPermissionsHandlerFactory]
 
 
 search_permissions_handler_registry = SearchPermissionsHandlerRegistry()
+
+
+@dataclass(frozen=True)
+class CategoryPermissionsHandlerFactory:
+    category: str
+    build: Callable[[PageContext], SearchPermissionsHandler]
+
+
+class CategoryPermissionsHandlerRegistry(Registry[CategoryPermissionsHandlerFactory]):
+    @override
+    def plugin_name(self, instance: CategoryPermissionsHandlerFactory) -> str:
+        return instance.category
+
+
+category_permissions_handler_registry = CategoryPermissionsHandlerRegistry()

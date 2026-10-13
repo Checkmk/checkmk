@@ -4,18 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import http.client as http_client
-from collections.abc import Callable
 from typing import override
 
 from pydantic import ValidationError
 
+from cmk.ccc.resulttype import Error, OK
 from cmk.gui.http import request, response
 from cmk.gui.oauth.pages._models import (
     OAuthClientRegistrationErrorResponse,
     OAuthClientRegistrationRequest,
     OAuthClientRegistrationResponse,
 )
-from cmk.gui.oauth.store.client_store import ClientRegistrationLimitExceededError, get_client_store
+from cmk.gui.oauth.store.client_store import get_client_store, RegistryFull
 from cmk.gui.pages import Page, PageContext, PageResult
 
 
@@ -32,9 +32,7 @@ class OAuthClientRegistrationPage(Page):
     """RFC 7591 dynamic client registration endpoint for this site.
 
     Accessed unauthenticated, referenced via the "registration_endpoint" field
-    of the RFC 8414 authorization server metadata document. Returns 404 while
-    no OAuth-consuming feature is enabled for the site (the enabled predicate
-    is injected at registration).
+    of the RFC 8414 authorization server metadata document.
 
     Validates the shape of the submitted client metadata (see
     OAuthClientRegistrationRequest) and persists it via
@@ -45,15 +43,8 @@ class OAuthClientRegistrationPage(Page):
     (JSON error/error_description body), not just a bare status code.
     """
 
-    def __init__(self, enabled: Callable[[], bool]) -> None:
-        self._enabled = enabled
-
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        if not self._enabled():
-            response.status_code = http_client.NOT_FOUND
-            return None
-
         if request.request_method != "POST":
             response.status_code = http_client.METHOD_NOT_ALLOWED
             return None
@@ -66,26 +57,28 @@ class OAuthClientRegistrationPage(Page):
             response.set_data(_registration_error(exc).model_dump_json())
             return None
 
-        try:
-            registration = get_client_store().register(body.redirect_uris, body.client_name)
-        except ClientRegistrationLimitExceededError:
-            response.status_code = http_client.BAD_REQUEST
-            response.set_content_type("application/json")
-            response.set_data(
-                OAuthClientRegistrationErrorResponse(
-                    error="invalid_client_metadata",
-                    error_description="client registration limit reached",
-                ).model_dump_json()
-            )
-            return None
-
-        response.status_code = http_client.CREATED
-        response.set_content_type("application/json")
-        response.set_data(
-            OAuthClientRegistrationResponse(
-                client_id=registration.client_id,
-                redirect_uris=body.redirect_uris,
-                client_name=body.client_name,
-            ).model_dump_json()
-        )
-        return None
+        with get_client_store() as store:
+            match store.register(body.redirect_uris, body.client_name):
+                case Error(RegistryFull()):
+                    response.status_code = http_client.BAD_REQUEST
+                    response.set_content_type("application/json")
+                    response.set_data(
+                        OAuthClientRegistrationErrorResponse(
+                            error="invalid_client_metadata",
+                            error_description="client registration limit reached",
+                        ).model_dump_json()
+                    )
+                    return None
+                case OK(registration):
+                    response.status_code = http_client.CREATED
+                    response.set_content_type("application/json")
+                    response.set_data(
+                        OAuthClientRegistrationResponse(
+                            client_id=registration.client_id,
+                            redirect_uris=body.redirect_uris,
+                            client_name=body.client_name,
+                        ).model_dump_json()
+                    )
+                    return None
+                case _:
+                    assert False

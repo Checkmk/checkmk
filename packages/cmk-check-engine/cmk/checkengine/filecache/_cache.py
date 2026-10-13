@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="type-arg"
 
 """Persisted sections type and store.
 
@@ -47,8 +46,6 @@ Cache hierarchy
     SNMPFileCache *-- SNMPFetcher
 
 """
-
-from __future__ import annotations
 
 import abc
 import enum
@@ -320,10 +317,8 @@ class FileCacheOptions:
     # Is set by the "--cache" command line. This makes the caching logic use
     # cache files that are even older than the max_cachefile_age of the host/mode.
     use_outdated: bool = False
-    # Set by the --no-tcp option from discovery, inventory, inventory as check,
-    # and dump agent.
-    tcp_use_only_cache: bool = False
-    # Currently not (yet) used
+    # Set by the --no-tcp command line option, and by the discovery preview
+    # to prevent fetching.
     # I think this should be a fetcher option: "allow_live_fetching"
     use_only_cache: bool = False
     # Set by the --force option from inventory.

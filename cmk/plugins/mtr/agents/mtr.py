@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 __version__ = "3.0.0b1"
 
@@ -34,9 +32,9 @@ import sys
 import time
 
 try:
-    from typing import Any
+    from typing import Any, Optional, Sequence, Union  # noqa: UP035
 
-    _ = Any  # make ruff happy
+    _ = Any, Optional, Sequence, Union  # make ruff happy
 except ImportError:
     pass
 
@@ -48,16 +46,38 @@ config_dir = mk_confdir + "/mtr.d/*.cfg"
 status_filename = mk_vardir + "/mtr.state"
 report_filepre = mk_vardir + "/mtr.report."
 
+# Trailing marker in the agent output, followed by one field holding whatever mtr
+# wrote instead of a report. It sits behind the hops, where older check plug-ins
+# never look.
+error_marker = "**ERROR**"
+max_error_length = 250
+
 debug = "-d" in sys.argv[2:] or "--debug" in sys.argv[1:]
 
 
+def error_trailer(error):
+    # type: (Optional[str]) -> str
+    """The fields carrying an error behind the hops, empty if there is none."""
+    return "|%s|%s" % (error_marker, error) if error else ""
+
+
+def error_from_trailer(fields):
+    # type: (Sequence[str]) -> Optional[str]
+    """The error out of the fields behind the hops, None if there is none."""
+    if len(fields) >= 2 and fields[0] == error_marker:
+        return fields[1].rstrip("\n") or None
+    return None
+
+
 def ensure_str(s):
+    # type: (Union[bytes, str]) -> str
     if isinstance(s, bytes):
         return s.decode("utf-8")
     return s
 
 
 def read_config():
+    # type: () -> configparser.ConfigParser
     default_options = {
         "type": "icmp",
         "count": "10",
@@ -99,6 +119,7 @@ def read_config():
 # # HOST        |LASTTIME |HOPCOUNT|HOP1|Loss%|Snt|Last|Avg|Best|Wrst|StDev|HOP2|...|HOP8|...|StdDev
 # www.google.com|145122481|8|192.168.1.1|0.0%|10|32.6|3.6|0.3|32.6|10.2|192.168.0.1|...|9.8
 def read_status():
+    # type: () -> dict[str, dict[str, Any]]
     current_status = {}  # type: dict[str, dict[str, Any]]
     if not os.path.exists(status_filename):
         return current_status
@@ -125,14 +146,19 @@ def read_status():
                         "wrst": parts[i * 8 + 9].rstrip(),
                         "stddev": parts[i * 8 + 10].rstrip(),
                     }
+                error = error_from_trailer(parts[hops * 8 + 3 :])
+                if error:
+                    current_status[host]["error"] = error
             except Exception as e:
                 sys.stdout.write(
-                    "*ERROR** (BUG) Could not parse status line: %s, reason: %s\n" % (line, repr(e))
+                    "**ERROR** (BUG) Could not parse status line: %s, reason: %s\n"
+                    % (line, repr(e))
                 )
     return current_status
 
 
 def save_status(current_status):
+    # type: (dict[str, dict[str, Any]]) -> None
     with open(status_filename, "w") as f:
         for host, hostdict in current_status.items():
             hopnum = len(hostdict["hops"].keys())
@@ -150,14 +176,22 @@ def save_status(current_status):
                     hi["wrst"],
                     hi["stddev"],
                 )
-            hoststring = hoststring.rstrip()
+            hoststring = hoststring.rstrip() + error_trailer(hostdict.get("error"))
             f.write("%s\n" % hoststring)
 
 
 _punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.:]+')
 
+# " 1.|-- 129.250.2.147   0.0%   10  325.6 315.5 310.3 325.6   5.0"
+_hopline_re = re.compile(r"^\s*\d+\.")
+
+# Everything mtr prints around the hops: the "Start:"/"HOST:" headers and the
+# continuation lines of a wide report ("|  `|-- 129.250.2.159").
+_noise_re = re.compile(r"^\s*($|Start:|HOST:|\||`)")
+
 
 def host_to_filename(host, delim="-"):
+    # type: (Union[bytes, str], str) -> str
     # Get rid of gibberish chars, stolen from Django
     """Generates an slightly worse ASCII-only slug."""
     return ensure_str(delim).join(
@@ -165,7 +199,18 @@ def host_to_filename(host, delim="-"):
     )
 
 
+def mtr_target(host):
+    # type: (Union[bytes, str]) -> str
+    """Section name minus the part that only distinguishes several runs of one host.
+
+    Everything up to the first space is handed to mtr; host names and IP addresses
+    never contain one, so a section like "example.com (IPv6)" is unambiguous.
+    """
+    return ensure_str(host).split(" ", 1)[0]
+
+
 def check_mtr_pid(pid):
+    # type: (int) -> bool
     """Check for the existence of a unix pid and if the process matches."""
     try:
         os.kill(pid, 0)
@@ -181,7 +226,57 @@ def check_mtr_pid(pid):
         return False  # any error
 
 
+def sanitized_error(lines):
+    # type: (Sequence[str]) -> str
+    """Squeeze what mtr wrote instead of a report into a single output field."""
+    text = " ".join(ensure_str(line).strip() for line in lines if line.strip())
+    text = text.replace("|", "/")
+    if len(text) > max_error_length:
+        text = text[: max_error_length - 3] + "..."
+    return text
+
+
+def parse_report_lines(lines):
+    # type: (Sequence[str]) -> tuple[int, dict[int, dict[str, str]], Optional[str]]
+    """Split a report file into (lasttime, hops, error).
+
+    mtr writes its complaints into the very same file, so anything that is neither a
+    hop nor part of the report layout is the reason why there are no hops.
+    """
+    try:
+        lasttime = int(float(lines[0]))
+    except (IndexError, ValueError):  # fmt: skip
+        return 0, {}, "report has no time stamp"
+
+    hops = {}  # type: dict[int, dict[str, str]]
+    unexpected = []
+    for line in lines[1:]:
+        if not _hopline_re.match(line):
+            if not _noise_re.match(line):
+                unexpected.append(line)
+            continue
+        parts = line.split()
+        if len(parts) < 9:
+            unexpected.append(line)
+            continue
+        hops[len(hops) + 1] = {
+            "hopname": parts[1],
+            "loss": parts[2],
+            "snt": parts[3],
+            "last": parts[4],
+            "avg": parts[5],
+            "best": parts[6],
+            "wrst": parts[7],
+            "stddev": parts[8],
+        }
+
+    if hops:
+        return lasttime, hops, None
+    return lasttime, {}, sanitized_error(unexpected) or "report contains no hop"
+
+
 def parse_report(host, status):
+    # type: (str, dict[str, Any]) -> None
     reportfile = report_filepre + host_to_filename(host)
     if not os.path.exists(reportfile):
         if host not in status:
@@ -222,59 +317,22 @@ def parse_report(host, status):
     # Parse the existing report
     with open(reportfile) as opened_file:
         lines = opened_file.readlines()
-    if len(lines) < 3:
-        sys.stdout.write(
-            "**ERROR** Report file %s has less than 3 lines, "
-            "expecting at least 1 hop! Throwing away invalid report\n" % reportfile
-        )
-        os.unlink(reportfile)
-        if host not in status:
-            # New host
-            status[host] = {"hops": {}, "lasttime": 0}
-        return
-    status[host] = {"hops": {}, "lasttime": 0}
-
-    hopcount = 0
-    status[host]["lasttime"] = int(float(lines.pop(0)))
-    while len(lines) > 0 and not lines[0].startswith("HOST:"):
-        lines.pop(0)
-    if len(lines) < 2:  # Not enough lines
-        return
-    try:
-        lines.pop(0)  # Get rid of HOST: header
-        hopline = re.compile(
-            r"^\s*\d+\."
-        )  # 10.|-- 129.250.2.147   0.0%    10  325.6 315.5 310.3 325.6   5.0
-        for line in lines:
-            if not hopline.match(line):
-                continue  # |  `|-- 129.250.2.159
-            hopcount += 1
-            parts = line.split()
-            if len(parts) < 8:
-                sys.stdout.write(
-                    "**ERROR** Bug parsing host/hop, line has less than 8 parts: %s\n" % line
-                )
-                continue
-            status[host]["hops"][hopcount] = {
-                "hopname": parts[1],
-                "loss": parts[2],
-                "snt": parts[3],
-                "last": parts[4],
-                "avg": parts[5],
-                "best": parts[6],
-                "wrst": parts[7],
-                "stddev": parts[8],
-            }
-    except Exception as e:
-        sys.stdout.write(
-            "**ERROR** Could not parse report file %s, "
-            "tossing away invalid data %s\n" % (reportfile, e)
-        )
-        del status[host]
     os.unlink(reportfile)
+
+    lasttime, hops, error = parse_report_lines(lines)
+    if error is None:
+        status[host] = {"hops": hops, "lasttime": lasttime}
+        return
+
+    # Keep the hops of the last successful run, but say why they are not being
+    # refreshed - reporting them as if nothing happened is what hid the problem.
+    if not status.get(host, {}).get("hops"):
+        status[host] = {"hops": {}, "lasttime": lasttime}
+    status[host]["error"] = error
 
 
 def output_report(host, status):
+    # type: (str, dict[str, Any]) -> None
     hostdict = status.get(host)
     if not hostdict:
         return
@@ -294,10 +352,12 @@ def output_report(host, status):
             hi["wrst"],
             hi["stddev"],
         )
+    hoststring += error_trailer(hostdict.get("error"))
     sys.stdout.write("%s\n" % hoststring)
 
 
 def start_mtr(host, mtr_binary, config, status):
+    # type: (str, str, configparser.ConfigParser, dict[str, Any]) -> None
     options = [mtr_binary, "--report", "--report-wide"]
     pingtype = config.get(host, "type")
     count = config.getint(host, "count")
@@ -373,7 +433,7 @@ def start_mtr(host, mtr_binary, config, status):
         options.append("-m")
         options.append(str(max_hops))
 
-    options.append(str(host))
+    options.append(mtr_target(host))
     if debug:
         sys.stdout.write("Startin MTR: %s\n" % (" ".join(options)))
     reportfile = report_filepre + host_to_filename(host)
@@ -397,6 +457,7 @@ def _is_exe(fpath):
 
 
 def _which(program):
+    # type: (str) -> Optional[str]
     fpath, _fname = os.path.split(program)
     if fpath:
         if _is_exe(program):

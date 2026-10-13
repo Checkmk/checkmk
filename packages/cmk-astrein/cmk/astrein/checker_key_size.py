@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 import ast
 from dataclasses import dataclass
@@ -51,7 +50,7 @@ _RULES: tuple[_KeySizeRule, ...] = (
         attr_name="initialize_site_ca",
         any_receiver=True,
         specific_receiver=None,
-        required_kwargs=("site_key_size", "root_key_size"),
+        required_kwargs=("key_size",),
     ),
     _KeySizeRule(
         func_name=None,

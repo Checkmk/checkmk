@@ -5,20 +5,21 @@
 
 # mypy: disable-error-code="type-arg"
 
-import time
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable
 from typing import override
 
 from cmk.gui import site_config, sites
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, RequestCacheConfig
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import ChoiceMapping, ColumnName, FilterHeader, FilterHTTPVariables
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import DualListChoice, ValueSpec
 from cmk.gui.visuals.filter import Filter, FilterGroup, FilterRegistry
 from cmk.gui.visuals.filter.components import Dropdown, DualList, FilterComponent, StaticText
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.livestatus_client import lq_logic
+from cmk.web.utils.request_cache import RequestCache
+from cmk.web.utils.speaklater import LazyString
+
+from ._folder_titles import FOLDER_TITLES
 
 
 def register(filter_registry: FilterRegistry) -> None:
@@ -82,7 +83,6 @@ class FilterWatoFolder(Filter):
             link_columns=link_columns,
             group=group,
         )
-        self.last_wato_data_update: None | float = None
 
     @override
     def available(self) -> bool:
@@ -93,20 +93,13 @@ class FilterWatoFolder(Filter):
             active_config.sites
         )
 
-    def load_wato_data(self) -> None:
-        self.tree = folder_tree().root_folder()
-        self.path_to_tree: dict[str, str] = {}  # will be filled by self.folder_selection
-        self.selection = list(self.folder_selection(self.tree))
-        self.last_wato_data_update = time.time()
-
-    def check_wato_data_update(self) -> None:
-        if not self.last_wato_data_update or time.time() - self.last_wato_data_update > 5:
-            self.load_wato_data()
-
-    def choices(self) -> ChoiceMapping:
-        self.check_wato_data_update()
+    def choices(self, request_cache: RequestCache[RequestCacheConfig]) -> ChoiceMapping:
         allowed_folders = self._fetch_folders()
-        return {k: v for k, v in self.selection if k in allowed_folders}
+        return {
+            path: title
+            for path, title in request_cache.get(FOLDER_TITLES).selection()
+            if path in allowed_folders
+        }
 
     def _fetch_folders(self) -> set[str]:
         # Note: Setup Folders that the user has not permissions to must not be visible.
@@ -130,48 +123,28 @@ class FilterWatoFolder(Filter):
         return allowed_folders
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield Dropdown(
             id=self.ident,
-            choices=self.choices(),
+            choices=self.choices(request_cache),
             default_value="",  # root folder
         )
 
     @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        self.check_wato_data_update()
         if folder := value.get(self.ident):
             return "Filter: host_filename %s\n" % _wato_folders_to_lq_regex(folder)
         return ""
 
-    # Construct pair-list of ( folder-path, title ) to be used
-    # by the HTML selection box. This also updates self.path_to_tree,
-    # a dictionary from the path to the title, by recursively scanning the
-    # folders
-    def folder_selection(self, folder: Folder, depth: int = 0) -> Iterator[tuple[str, str]]:
-        my_path: str = folder.path()
-        self.path_to_tree[my_path] = folder.title()
-
-        title_prefix = ("\u00a0" * 6 * depth) + "\u2514\u2500 " if depth else ""
-
-        yield (my_path, title_prefix + folder.title())
-
-        for subfolder in sorted(folder.subfolders(), key=lambda x: x.title().lower()):
-            yield from self.folder_selection(subfolder, depth + 1)
-
     @override
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
-        # FIXME: There is a problem with caching data and changing titles of Setup files
-        # Everything is changed correctly but the filter object is stored in the
-        # global multisite_filters var and self.path_to_tree is not refreshed when
-        # rendering this title. Thus the threads might have old information about the
-        # file titles and so on.
-        # The call below needs to use some sort of indicator wether the cache needs
-        # to be renewed or not.
-        self.check_wato_data_update()
+    def heading_info(
+        self, value: FilterHTTPVariables, request_cache: RequestCache[RequestCacheConfig]
+    ) -> str | None:
         current = value.get(self.ident)
         if current and current != "/":
-            return self.path_to_tree.get(current)
+            return request_cache.get(FOLDER_TITLES).title(current)
         return None
 
 
@@ -179,8 +152,8 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
     # Once filters are managed by a valuespec and we get more complex
     # datastuctures beyond FilterHTTPVariable there must be a back&forth
     # for data
-    def valuespec(self) -> ValueSpec:
-        choices = [(name, folder) for name, folder in self.choices().items()]
+    def valuespec(self, request_cache: RequestCache[RequestCacheConfig]) -> ValueSpec:
+        choices = [(name, folder) for name, folder in self.choices(request_cache).items()]
         return DualListChoice(choices=choices, rows=4, enlarge_active=True)
 
     def _to_list(self, value: FilterHTTPVariables) -> list[str]:
@@ -189,14 +162,16 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
         return []
 
     @override
-    def choices(self) -> ChoiceMapping:
+    def choices(self, request_cache: RequestCache[RequestCacheConfig]) -> ChoiceMapping:
         # Drop Main directory represented by empty string, because it means
         # don't filter after any folder due to recursive folder filtering.
-        return {name: folder for name, folder in super().choices().items() if name}
+        return {name: folder for name, folder in super().choices(request_cache).items() if name}
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
-        if choices := self.choices():
+    def components(
+        self, request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
+        if choices := self.choices(request_cache):
             yield DualList(
                 id=self.ident,
                 choices=choices,
@@ -206,24 +181,27 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
 
     @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        self.check_wato_data_update()
         regex_values = list(map(_wato_folders_to_lq_regex, self._to_list(value)))
         return lq_logic("Filter: host_filename", regex_values, "Or")
 
     @override
-    def value(self) -> FilterHTTPVariables:
+    def value(self, request_cache: RequestCache[RequestCacheConfig]) -> FilterHTTPVariables:
         """Returns the current representation of the filter settings from the HTML
         var context. This can be used to persist the filter settings."""
-        return {self.htmlvars[0]: "|".join(self.valuespec().from_html_vars(self.ident))}
+        return {
+            self.htmlvars[0]: "|".join(self.valuespec(request_cache).from_html_vars(self.ident))
+        }
 
     @override
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
-        self.check_wato_data_update()
+    def heading_info(
+        self, value: FilterHTTPVariables, request_cache: RequestCache[RequestCacheConfig]
+    ) -> str | None:
+        folder_titles = request_cache.get(FOLDER_TITLES)
         return ", ".join(
             filter(
                 None,
                 (
-                    self.path_to_tree.get(folder)
+                    folder_titles.title(folder)
                     for folder in self._to_list(value)
                     if folder and folder != "/"
                 ),

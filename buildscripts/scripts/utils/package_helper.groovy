@@ -34,10 +34,6 @@ LinkedHashMap<String, List> directory_sha256sum(directories) {
 
 static LinkedHashMap<String, List> dependency_paths_mapping() {
     return [
-        "build-linux-agent-updater": [
-            "agents",
-            "non-free/packages/cmk-update-agent",
-        ],
         "build-mk-oracle": [
             "packages/mk-oracle",
             "Cargo.toml",
@@ -98,29 +94,6 @@ void provide_agent_binaries(Map args) {
     // and https://review.lan.tribe29.com/c/check_mk/+/67387
     // For now it's nearly JSON like and can be treated as such.
     def upstream_job_details = [
-        "build-linux-agent-updater": [
-            // NOTE: We're stripping of "Testing/..." if present, because
-            //       Windows can't handle long folder names so we take the absolute
-            //       (production) jobs to build our upstream stuff (both Linux and
-            //       Windows for consistency).
-            //       As 'soon' as this problem does not exist anymore we could run
-            //       relatively from 'builders/..'
-            relative_job_name: "${branch_base_folder(false)}/builders/build-linux-agent-updater",
-            /// no Linux agent updaters for community edition..
-            skip: test_binaries_only || fake_artifacts,
-            retry: 1,
-            dependency_paths_hash: all_dependency_paths_hashes["build-linux-agent-updater"],
-            additional_build_params: [],
-            install_cmd: """\
-                # check-mk-agent-*.{deb,rpm}
-                cp *.deb *.rpm ${checkout_dir}/agents/
-                # artifact file flags are not being kept - building a tar would be better..
-                if [ "${args.edition}" != "community" ]; then
-                    echo "edition is ${args.edition} => copy Linux agent updater binary"
-                    install -m 755 -D cmk-update-agent -t ${checkout_dir}/non-free/packages/cmk-update-agent/
-                fi
-                """.stripIndent(),
-        ],
         "build-mk-oracle-aix-solaris": [
             relative_job_name: "${branch_base_folder(false)}/builders/build-mk-oracle-on-aix-and-solaris",
             dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],
@@ -214,6 +187,19 @@ void provide_agent_binaries(Map args) {
                 )
                 """.stripIndent(),
         ],
+        "winagt-build-linux": [
+            // Cross builds the Windows agent artifacts on Linux. Nothing consumes
+            // its outputs yet, it is triggered alongside winagt-build only so that
+            // a change breaking the Linux build fails here. Keyed on the git ref,
+            // not on dependency paths: its Bazel inputs span the whole tree.
+            // Never downloaded: its outputs carry the same file names as
+            // winagt-build's, and must not end up in a package in their place.
+            relative_job_name: "${branch_base_folder(false)}/winagt-build-linux",
+            skip: test_binaries_only || fake_artifacts,
+            retry: 1,
+            additional_build_params: [],
+            fetch_artifacts: false,
+        ],
         "relay-msi": [
             // Windows-built relay MSI. Only the cloud/ultimate/ultimatemt editions ship
             // it (see relay_install_pkg gating in omd/BUILD), so skip the fetch for any
@@ -264,6 +250,8 @@ void provide_agent_binaries(Map args) {
     def stages = upstream_job_details.collectEntries { job_name, details ->
         [("${job_name}".toString()) : {
             def skip = details["skip"];
+            // download and move this job's artifacts unless specified differently
+            def fetch_artifacts = details.fetch_artifacts == null ? true : details.fetch_artifacts.asBoolean();
             def build_instance = null;
 
             if (skip) {
@@ -315,7 +303,7 @@ void provide_agent_binaries(Map args) {
                     ]
                 }
 
-                if (move_artifacts) {
+                if (move_artifacts && fetch_artifacts) {
                     // specify to download artifacts to desired destination
                     this_parameters += [
                         download: true,
@@ -328,7 +316,7 @@ void provide_agent_binaries(Map args) {
 
             smart_stage(
                 name: "Move artifacts around",
-                condition: ! skip && build_instance && move_artifacts,
+                condition: ! skip && build_instance && move_artifacts && fetch_artifacts,
                 raiseOnError: true,
             ) {
                 // prevent "_tmp" directories created by the Jenkins groovy dir() command

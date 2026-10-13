@@ -11,10 +11,13 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.diagnostics.internal import CollectContext, CollectWarning, GeneratedContent
-from cmk.inventory.structured_data import deserialize_tree, InventoryStore, make_meta
+from cmk.inventory.serialization import deserialize_tree
+from cmk.inventory.store import InventoryStore, make_meta
 from cmk.plugins.inventory.diagnostics.checkmk_overview import (
     diagnostics_plugin_checkmk_overview,
 )
+
+from ._logger import null_logger
 
 
 def _make_context(
@@ -31,12 +34,11 @@ def _make_context(
         base_config={},
         resolve_checkmk_server_host=lambda: checkmk_server_host,
         site_internal_auth_header=lambda: "InternalToken deadbeef",
-        log=None,  # type: ignore[arg-type]  # not used
+        log=null_logger(),
     )
 
 
 def test_checkmk_overview_no_inventory_tree(tmp_path: Path) -> None:
-    # A missing tree loads as an empty tree, so the node lookup reports the warning
     with pytest.raises(
         CollectWarning, match="No HW/SW Inventory node 'Software > Applications > Checkmk'"
     ):

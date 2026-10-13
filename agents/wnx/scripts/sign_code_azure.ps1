@@ -47,25 +47,43 @@ $env:AZURE_TENANT_ID = $env:AZURE_ARTIFACT_SIGNING_TENANT_ID
 $env:AZURE_CLIENT_ID = $env:AZURE_ARTIFACT_SIGNING_CLIENT_ID
 $env:AZURE_CLIENT_SECRET = $env:AZURE_ARTIFACT_SIGNING_CLIENT_SECRET
 
+# The timestamp server fails a request now and then, and a build signs dozens of
+# files. signtool leaves the file untouched when it fails, so signing it again is safe.
+$maxAttempts = 3
+
 try {
-    Write-Host "Signing $FilePath with Azure Artifact Signing..."
-    Invoke-ArtifactSigning `
-        -Endpoint              $env:AZURE_ARTIFACT_SIGNING_ENDPOINT `
-        -CodeSigningAccountName $env:AZURE_ARTIFACT_SIGNING_ACCOUNT `
-        -CertificateProfileName $env:AZURE_ARTIFACT_SIGNING_PROFILE `
-        -CorrelationId         $env:AZURE_ARTIFACT_SIGNING_CORRELATION_ID `
-        -Files                 $FilePath `
-        -FileDigest            SHA256 `
-        -TimestampRfc3161      "http://timestamp.acs.microsoft.com" `
-        -TimestampDigest       SHA256 `
-        -ExcludeWorkloadIdentityCredential `
-        -ExcludeManagedIdentityCredential `
-        -ExcludeSharedTokenCacheCredential `
-        -ExcludeVisualStudioCredential `
-        -ExcludeVisualStudioCodeCredential `
-        -ExcludeAzureCliCredential `
-        -ExcludeAzurePowerShellCredential `
-        -ExcludeInteractiveBrowserCredential
+    for ($attempt = 1; ; $attempt++) {
+        Write-Host "Signing $FilePath with Azure Artifact Signing..."
+        try {
+            Invoke-ArtifactSigning `
+                -Endpoint              $env:AZURE_ARTIFACT_SIGNING_ENDPOINT `
+                -CodeSigningAccountName $env:AZURE_ARTIFACT_SIGNING_ACCOUNT `
+                -CertificateProfileName $env:AZURE_ARTIFACT_SIGNING_PROFILE `
+                -CorrelationId         $env:AZURE_ARTIFACT_SIGNING_CORRELATION_ID `
+                -Files                 $FilePath `
+                -FileDigest            SHA256 `
+                -TimestampRfc3161      "http://timestamp.acs.microsoft.com" `
+                -TimestampDigest       SHA256 `
+                -ExcludeWorkloadIdentityCredential `
+                -ExcludeManagedIdentityCredential `
+                -ExcludeSharedTokenCacheCredential `
+                -ExcludeVisualStudioCredential `
+                -ExcludeVisualStudioCodeCredential `
+                -ExcludeAzureCliCredential `
+                -ExcludeAzurePowerShellCredential `
+                -ExcludeInteractiveBrowserCredential
+            break
+        }
+        catch {
+            if ($attempt -ge $maxAttempts) {
+                throw
+            }
+            $delay = 10 * $attempt
+            Write-Warning "Signing $FilePath failed (attempt $attempt of $maxAttempts): $_"
+            Write-Warning "Retrying in $delay s"
+            Start-Sleep -Seconds $delay
+        }
+    }
     Write-Host "Signed: $FilePath"
     # Azure picks the currently active short-lived certificate of the profile;
     # log which one was used so it can be matched against the portal.

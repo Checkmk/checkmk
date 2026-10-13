@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 import re
 from collections.abc import Sequence
@@ -13,12 +12,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 @dataclass(frozen=True)
@@ -41,10 +39,6 @@ def parse(string_table: StringTable) -> _ExceptionSection:
 agent_section_gcp_exceptions = AgentSection(name="gcp_exceptions", parse_function=parse)
 
 
-def discover(section: _ExceptionSection) -> DiscoveryResult:
-    yield Service()
-
-
 def _parse_gcp_links(links_message: str) -> Sequence[str]:
     """
     >>> _parse_gcp_links(" [links {  description: \\"test_description1:\\"  url: \\"test_url1\\"}links {  description: \\"test_description2:\\"  url: \\"test_url2\\"}]")
@@ -65,7 +59,7 @@ def _parse_gcp_links(links_message: str) -> Sequence[str]:
 
 
 def _parse_error_message(exc_type: str, exc_message: str) -> str:
-    match exc_type:
+    match exc_type:  # type: ignore[exhaustive-match]
         case "PermissionDenied" if exc_message.startswith("403 Cloud Asset API"):
             return exc_message.split(" [links {", maxsplit=1)[0]
         case "PermissionDenied" if exc_message.startswith("403 Request denied by Cloud IAM"):
@@ -99,6 +93,6 @@ def check(section: _ExceptionSection) -> CheckResult:
 check_plugin_gcp_exceptions = CheckPlugin(
     name="gcp_exceptions",
     service_name="Exceptions",
-    discovery_function=discover,
+    discovery_function=discover_one_service,
     check_function=check,
 )

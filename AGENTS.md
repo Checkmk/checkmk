@@ -28,6 +28,14 @@ See [BAZEL.md](BAZEL.md) for the full developer command reference.
 - Agent plugins: Python 3.4+ compatible
 - GUI cannot import cmk/base internals (enforced by component isolation)
 
+## Testing
+
+Read [TESTING.md](TESTING.md) before writing, changing, or debugging tests, and
+run its self-check before finishing. It defines the test levels and their
+directories, the flaky-test process, and the core rules: test through the
+public surface, inject dependencies instead of patching Checkmk code, one
+behavior per test.
+
 ## Editions
 
 The codebase supports five editions: `community`, `pro`, `ultimate`,
@@ -56,6 +64,15 @@ contribute them to the marketplace instead.
 ## Commit rules
 
 Before a commit do a sanity check of your changes and run the linters and formatters.
+
+Do not add a `Co-authored-by` trailer to commit messages.
+
+Format every commit message as:
+
+- title line of at most 50 characters,
+- body lines hard-wrapped to at most 72 characters each,
+- the issue key alone on its own trailing line at the end of the body (not in
+  the title, not inline mid-paragraph).
 
 ### Files that must never be committed
 

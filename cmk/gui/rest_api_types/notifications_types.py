@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, cast, ClassVar, Literal, Protocol
@@ -37,6 +35,7 @@ from cmk.events.notify_types import (
     OpsGeniePluginName,
     PagerDutyPluginModel,
     PagerdutyPluginName,
+    PagerDutyWebhookURL,
     PluginNameWithParameters,
     PluginOptions,
     PushoverPluginModel,
@@ -420,7 +419,7 @@ class HTMLMailPlugin:
             "elements": self.info_to_be_displayed_in_the_email_body.to_mk_file_format(),
             "bulk_sort_order": self.sort_order_for_bulk_notifications.to_mk_file_format(),
             "insert_html_section": self.insert_html_section.to_mk_file_format(),
-            "smtp": None if self.smtp is None else self.smtp.to_mk_file_format(),  # type: ignore[redundant-expr]
+            "smtp": self.smtp.to_mk_file_format(),
             "graphs_per_notification": self.graphs_per_notification.to_mk_file_format(),
             "no_floating_graphs": self.no_floating_graphs.to_mk_file_format(),
             "notifications_with_graphs": self.notifications_with_graphs.to_mk_file_format(),
@@ -1182,9 +1181,7 @@ class PagerDutyPlugin:
     disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
     url_prefix_for_links_to_checkmk: CheckboxURLPrefix = field(default_factory=CheckboxURLPrefix)
-    webhook_url: Literal["https://events.pagerduty.com/v2/enqueue"] = (
-        "https://events.pagerduty.com/v2/enqueue"
-    )
+    webhook_url: PagerDutyWebhookURL = "https://events.pagerduty.com/v2/enqueue"
 
     @classmethod
     def from_mk_file_format(cls, pluginparams: PagerDutyPluginModel | None) -> PagerDutyPlugin:
@@ -1203,6 +1200,7 @@ class PagerDutyPlugin:
             url_prefix_for_links_to_checkmk=CheckboxURLPrefix.from_mk_file_format(
                 pluginparams.get("url_prefix"),
             ),
+            webhook_url=pluginparams.get("webhook_url", "https://events.pagerduty.com/v2/enqueue"),
         )
 
     @classmethod
@@ -1222,6 +1220,7 @@ class PagerDutyPlugin:
             url_prefix_for_links_to_checkmk=CheckboxURLPrefix.from_api_request(
                 params["url_prefix_for_links_to_checkmk"]
             ),
+            webhook_url=params.get("webhook_url", "https://events.pagerduty.com/v2/enqueue"),
         )
 
     def api_response(self) -> APINotifyPlugin:
@@ -1233,6 +1232,7 @@ class PagerDutyPlugin:
                     "disable_ssl_cert_verification": self.disable_ssl_cert_verification.api_response(),
                     "http_proxy": self.http_proxy.api_response(),
                     "url_prefix_for_links_to_checkmk": self.url_prefix_for_links_to_checkmk.api_response(),
+                    "webhook_url": self.webhook_url,
                 }
             )
         return APINotifyPlugin(option=self.option, plugin_params=plugin_params)

@@ -16,27 +16,16 @@ logger = logging.getLogger(__name__)
 def test_product_usage_download(dashboard_page: MainDashboard) -> None:
     """Test downloading product usage data as JSON file.
 
-    * Navigate to Global Settings page
-    * Click on Product usage link
-    * Download the usage JSON file
+    * Open the editor of the 'Product usage analytics' setting
+    * Follow its hint to download the usage JSON file
     * Validate the file name and content
     """
     logger.info("Test: Download product usage")
 
-    global_settings = GlobalSettings(dashboard_page.page)
-    global_settings.search_settings("Product usage analytics")
-    global_settings.main_area.locator().get_by_role(
-        "link", name="Product usage analytics", exact=True
-    ).click()
-
-    dashboard_page.page.wait_for_load_state("domcontentloaded")
-    dashboard_page.page.wait_for_load_state("networkidle")
-
-    download_link = global_settings.main_area.locator("a[href*='download_product_usage']")
-    download_link.wait_for(state="visible")
+    editor = GlobalSettings(dashboard_page.page).open_editor("Product usage analytics")
 
     with dashboard_page.page.expect_download() as download_info:
-        download_link.click()
+        editor.container.get_by_role("link", name="download the full JSON report").click()
 
     download = download_info.value
 

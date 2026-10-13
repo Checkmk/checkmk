@@ -47,8 +47,13 @@ def _write_jaeger_ui_port_conf(site_name: str, site_home: Path, config: Config) 
     port = config["TRACE_JAEGER_UI_PORT"]
     apache_content = f"""\
 # Written by TRACE_JAEGER_UI_PORT hook
+# Guard the LoadModule directives against warnings when other hooks load the same modules.
+<IfModule !proxy_module>
 LoadModule proxy_module /omd/sites/{site_name}/lib/apache/modules/mod_proxy.so
+</IfModule>
+<IfModule !proxy_http_module>
 LoadModule proxy_http_module /omd/sites/{site_name}/lib/apache/modules/mod_proxy_http.so
+</IfModule>
 
 ProxyPass "/{site_name}/jaeger" "http://[::1]:{port}/{site_name}/jaeger" retry=0 timeout=120
 ProxyPassReverse "/{site_name}/jaeger"  "http://[::1]:{port}/{site_name}/jaeger"

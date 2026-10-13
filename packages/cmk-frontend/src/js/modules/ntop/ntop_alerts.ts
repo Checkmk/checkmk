@@ -488,7 +488,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
         .on('click', (event: MouseEvent) => {
           const old_offset = parseInt(current_pagination.attr('offset'))
           const delta = d3select(event.target! as HTMLElement).attr('offset')
-          var from = 0
+          let from = 0
 
           const total_entries = this._data.number_of_alerts
 

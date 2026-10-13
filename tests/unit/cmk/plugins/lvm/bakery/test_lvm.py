@@ -5,7 +5,7 @@
 
 from pathlib import Path
 
-from cmk.bakery.v2_unstable import OS, Plugin
+from cmk.bakery.v2 import OS, Plugin
 from cmk.plugins.lvm.bakery.lvm import bakery_plugin_lvm
 
 

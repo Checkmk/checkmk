@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
 
 from typing import Final
 
@@ -67,10 +66,6 @@ def _get_section_no_streams() -> gs.Section:
 @pytest.fixture(name="section", scope="module")
 def _get_section() -> gs.Section:
     return gs.parse_graylog_streams(STRING_TABLE)
-
-
-def test_discover_no_streams_discovers(section_no_streams: gs.Section) -> None:
-    assert list(gs.discovery_graylog_streams(section_no_streams))
 
 
 def test_check_no_streams(section_no_streams: gs.Section) -> None:

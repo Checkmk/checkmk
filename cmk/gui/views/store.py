@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from __future__ import annotations
 
 from typing import Any, Final
 
@@ -67,11 +66,11 @@ class ViewStore:
 
     def __init__(self) -> None:
         user_permissions = UserPermissions.from_config(active_config, permission_registry)
-        self.all: Final = ViewStore._load_all_views()
+        self.all: Final = ViewStore.load_all_views()
         self.permitted: Final = ViewStore._load_permitted_views(self.all, user_permissions)
 
     @staticmethod
-    def _load_all_views() -> AllViewSpecs:
+    def load_all_views() -> AllViewSpecs:
         """Loads all view definitions from disk and returns them"""
         return {
             k: v

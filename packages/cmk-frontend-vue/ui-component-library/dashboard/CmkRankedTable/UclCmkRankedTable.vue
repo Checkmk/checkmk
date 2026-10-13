@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { BoolPropDef, ListPropDef, NumberPropDef } from '@ucl/_ucl/types/prop-def'
 
 import { type RankedTableCellRender } from '@/dashboard/components/CmkRankedTable'
@@ -31,8 +31,32 @@ export const panelConfig = {
   containerHeight: {
     type: 'number' as const,
     title: 'Container height (px)',
-    help: 'Height of the scrollable box around the table. The table keeps its rows at full size and scrolls once they no longer fit.',
+    help: 'Height of the box around the table. The table keeps its rows at full size and scrolls once they no longer fit.',
     initialState: 220
+  },
+  containerWidth: {
+    type: 'number' as const,
+    title: 'Container width (px)',
+    help: 'Width of the box around the table. Text cells truncate before any figure does. Drag the corner of the preview to change it.',
+    initialState: 600
+  },
+  longHostNames: {
+    type: 'boolean' as const,
+    title: 'Long host names',
+    help: 'Uses fully qualified host names instead of IP addresses.',
+    initialState: false
+  },
+  serviceColumn: {
+    type: 'boolean' as const,
+    title: 'Service column',
+    help: 'Adds a second text column.',
+    initialState: false
+  },
+  longColumnTitles: {
+    type: 'boolean' as const,
+    title: 'Long column titles',
+    help: 'Uses column titles longer than their narrowest width, which truncate like the cells.',
+    initialState: false
   },
   rowCount: {
     type: 'number' as const,
@@ -48,12 +72,13 @@ export const panelConfig = {
   valueRender: {
     type: 'list' as const,
     title: 'Value rendering',
-    help: 'Bytes are formatted as SI values, count is right-aligned as-is, text is left-aligned.',
-    options: [
-      { title: 'Bytes', name: 'bytes' },
-      { title: 'Count', name: 'count' },
-      { title: 'Text', name: 'text' }
-    ] satisfies Options<RankedTableCellRender>[],
+    help: 'Bytes are formatted as SI values, count is right-aligned as-is, text is left-aligned, delta draws an arrow along the sign of the value.',
+    options: listOptions<RankedTableCellRender>({
+      bytes: 'Bytes',
+      count: 'Count',
+      text: 'Text',
+      delta: 'Delta'
+    }),
     initialState: 'bytes' as const
   },
   fixedBarRange: {
@@ -88,6 +113,10 @@ export const panelConfig = {
   }
 } satisfies PanelConfigFor<typeof CmkRankedTable, 'rows' | 'columns'> & {
   containerHeight: NumberPropDef
+  containerWidth: NumberPropDef
+  longHostNames: BoolPropDef
+  serviceColumn: BoolPropDef
+  longColumnTitles: BoolPropDef
   rowCount: NumberPropDef
   valueBar: BoolPropDef
   valueRender: ListPropDef<RankedTableCellRender>
@@ -107,7 +136,8 @@ import {
   UclDetailPageComponent,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel
+  UclPropertiesPanel,
+  UclResizablePreview
 } from '@ucl/_ucl/components/detail-page'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import { computed, ref } from 'vue'
@@ -139,6 +169,21 @@ const HOSTS = [
   { host: '10.0.12.44', volume: 1_240_000_000, flows: 11 }
 ]
 
+const LONG_HOST_NAMES = [
+  'node_webshop_i-020818453318b7c7.eu-central-1.compute.internal',
+  'fileserver-01.corp.meridian-retail.com',
+  'web-frontend-01.corp.meridian-retail.com',
+  'app-redis-02.corp.meridian-retail.com',
+  'db-postgres-01.corp.meridian-retail.com',
+  'node_lab_i-0179408522d484ce3.eu-central-1.compute.internal',
+  'app-worker-02.corp.meridian-retail.com',
+  'payment-api-02.corp.meridian-retail.com',
+  'backup-01.corp.meridian-retail.com',
+  'app-worker-01.corp.meridian-retail.com',
+  'db-postgres-02.corp.meridian-retail.com',
+  'localhost'
+]
+
 const ROW_COLORS = [
   'var(--color-light-red-50)',
   'var(--color-orange-50)',
@@ -149,11 +194,21 @@ const ROW_COLORS = [
 const columns = computed<RankedTableColumn[]>(() => [
   {
     key: 'host',
-    title: 'Host',
+    title: propState.value.longColumnTitles ? 'Local host name' : 'Host',
     render: 'text',
     bar: false,
     ...(propState.value.clickableHosts ? { clickable: true } : {})
   },
+  ...(propState.value.serviceColumn
+    ? [
+        {
+          key: 'service',
+          title: propState.value.longColumnTitles ? 'Service description' : 'Service',
+          render: 'text' as const,
+          bar: false
+        }
+      ]
+    : []),
   {
     key: 'volume',
     title: 'Volume',
@@ -165,17 +220,21 @@ const columns = computed<RankedTableColumn[]>(() => [
 ])
 
 const rows = computed<RankedTableRow[]>(() =>
-  HOSTS.slice(0, Math.max(0, propState.value.rowCount)).map((entry, index) => ({
-    host: propState.value.linkedHosts ? { value: entry.host, href: '#' } : entry.host,
-    volume: {
-      value: entry.volume,
-      ...(propState.value.preFormatted
-        ? { formatted: `~${Math.round(entry.volume / 1_000_000_000)} GB` }
-        : {}),
-      ...(propState.value.perRowColor ? { color: ROW_COLORS[index % ROW_COLORS.length]! } : {})
-    },
-    flows: entry.flows
-  }))
+  HOSTS.slice(0, Math.max(0, propState.value.rowCount)).map((entry, index) => {
+    const host = propState.value.longHostNames ? LONG_HOST_NAMES[index]! : entry.host
+    return {
+      host: propState.value.linkedHosts ? { value: host, href: '#' } : host,
+      service: 'Interface 1',
+      volume: {
+        value: entry.volume,
+        ...(propState.value.preFormatted
+          ? { formatted: `~${Math.round(entry.volume / 1_000_000_000)} GB` }
+          : {}),
+        ...(propState.value.perRowColor ? { color: ROW_COLORS[index % ROW_COLORS.length]! } : {})
+      },
+      flows: entry.flows
+    }
+  })
 )
 
 const lastCellClick = ref<string | null>(null)
@@ -191,9 +250,9 @@ function onCellClick(column: RankedTableColumn, row: RankedTableRow): void {
     <UclDetailPageHeader>CmkRankedTable</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <div
-        class="ucl-cmk-ranked-table__container"
-        :style="{ height: `${Math.max(0, propState.containerHeight)}px` }"
+      <UclResizablePreview
+        v-model:width="propState.containerWidth"
+        v-model:height="propState.containerHeight"
       >
         <CmkRankedTable
           :columns="columns"
@@ -201,7 +260,7 @@ function onCellClick(column: RankedTableColumn, row: RankedTableRow): void {
           :bar-color="propState.barColor"
           @cell-click="onCellClick"
         />
-      </div>
+      </UclResizablePreview>
       <CmkParagraph v-if="lastCellClick">Last cellClick: {{ lastCellClick }}</CmkParagraph>
 
       <template #properties>
@@ -214,15 +273,3 @@ function onCellClick(column: RankedTableColumn, row: RankedTableRow): void {
     <UclDetailPageAccessibility :data="[]" />
   </UclDetailPageLayout>
 </template>
-
-<style scoped>
-/* The table sizes itself from its rows, so the box around it is what scrolls. */
-.ucl-cmk-ranked-table__container {
-  /* The preview area centers its children, so claim the full width explicitly --
-     otherwise the box shrinks to the text columns and leaves the bar no room. */
-  width: 100%;
-  overflow: auto;
-  resize: vertical;
-  border: 1px solid var(--ucl-elements-border-color);
-}
-</style>

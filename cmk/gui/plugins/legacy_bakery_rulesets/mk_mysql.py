@@ -17,7 +17,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
-from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.wato import IndividualOrStoredPassword
 from cmk.ruleset_matcher.definition import RuleGroup
 
 
@@ -43,7 +43,7 @@ def _valuespec_agent_config_mk_mysql() -> Alternative:
                                     title=_("User ID"),
                                     default_value="monitoring",
                                 ),
-                                MigrateToIndividualOrStoredPassword(title=_("Password")),
+                                IndividualOrStoredPassword(title=_("Password")),
                             ],
                         ),
                     ),

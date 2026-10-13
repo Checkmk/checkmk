@@ -36,15 +36,17 @@ const props = defineProps<{
   getRowKey: (row: T, index: number) => string | number
   rowHeight?: string
   /**
-   * Expanded state per row key. Each expanded row renders the `#expansion` slot beneath it;
-   * the slot must supply its own `<tr>` element(s).
+   * Whether a row renders the `#expansion` slot beneath it; the slot must supply its own
+   * `<tr>` element(s).
    */
-  expandedRows?: Record<string, boolean>
+  isRowExpanded?: (row: T, index: number) => boolean
   getRowVariant?: (row: T, index: number) => 'error' | null
 }>()
 
 const emit = defineEmits<{
   (event: 'reorder', fromIndex: number, toIndex: number): void
+  /** The row under the pointer, or null once it leaves. Expansion rows are not covered. */
+  (event: 'rowHover', row: T | null): void
 }>()
 
 const rowSelection = defineModel<RowSelectionState>('rowSelection', { default: () => ({}) })
@@ -121,10 +123,6 @@ provide(ROW_DRAG_KEY, {
   }
 })
 
-function isRowExpanded(row: T, index: number): boolean {
-  return props.expandedRows?.[String(props.getRowKey(row, index))] === true
-}
-
 const rowGroups = new Map<string, HTMLElement>()
 
 function registerRowGroup(key: string, element: Element | ComponentPublicInstance | null): void {
@@ -154,7 +152,7 @@ defineExpose({
         />
       </colgroup>
       <MonitoringTableHeader :header-groups="table.getHeaderGroups()" />
-      <tbody v-if="rows.length === 0">
+      <tbody v-if="rows.length === 0 && $slots['empty-state']">
         <tr class="monitoring-editable-table__empty-row">
           <td :colspan="leafColumns.length">
             <slot name="empty-state" />
@@ -175,10 +173,12 @@ defineExpose({
             'monitoring-editable-table__row--no-hover': isDraggingRow,
             'monitoring-editable-table__row--error': getRowVariant?.(row, index) === 'error'
           }"
+          @mouseenter="emit('rowHover', row)"
+          @mouseleave="emit('rowHover', null)"
         >
           <slot name="row" :row="row" :table-row="tableRowAt(index)" :index="index" />
         </tr>
-        <template v-if="isRowExpanded(row, index)">
+        <template v-if="isRowExpanded?.(row, index)">
           <slot name="expansion" :row="row" :table-row="tableRowAt(index)" :index="index" />
         </template>
       </tbody>
@@ -194,12 +194,6 @@ defineExpose({
 <style scoped>
 .monitoring-editable-table {
   width: 100%;
-
-  --monitoring-editable-table-row-error-bg: var(--color-dark-red-20);
-}
-
-body[data-theme='modern-dark'] .monitoring-editable-table {
-  --monitoring-editable-table-row-error-bg: var(--color-dark-red-100);
 }
 
 .monitoring-editable-table__table {
@@ -229,28 +223,14 @@ body[data-theme='modern-dark'] .monitoring-editable-table {
     .monitoring-editable-table__row--error
   ):hover
   :deep(td) {
-  background-color: var(--color-light-blue-0);
-}
-
-body[data-theme='modern-dark']
-  .monitoring-editable-table__row:not(
-    .monitoring-editable-table__row--no-hover,
-    .monitoring-editable-table__row--error
-  ):hover,
-body[data-theme='modern-dark']
-  .monitoring-editable-table__row:not(
-    .monitoring-editable-table__row--no-hover,
-    .monitoring-editable-table__row--error
-  ):hover
-  :deep(td) {
-  background-color: var(--color-dark-blue-90);
+  background-color: var(--background-highlight);
 }
 /* stylelint-enable selector-pseudo-class-no-unknown */
 
 .monitoring-editable-table__row--error,
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 .monitoring-editable-table__row--error :deep(td) {
-  background-color: var(--monitoring-editable-table-row-error-bg);
+  background-color: var(--status-background-error);
 }
 
 .monitoring-editable-table__row-group--dragging {
@@ -259,12 +239,7 @@ body[data-theme='modern-dark']
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 .monitoring-editable-table__row-group--dragging :deep(td) {
-  background-color: var(--color-light-blue-0);
-}
-
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-body[data-theme='modern-dark'] .monitoring-editable-table__row-group--dragging :deep(td) {
-  background-color: var(--color-dark-blue-90);
+  background-color: var(--background-highlight);
 }
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */

@@ -9,32 +9,38 @@ Deploy local changes to a running OMD site in under 5 seconds.
 - A local OMD site -- install one with `cmk-dev-install` / `cmk-dev-install-site` (from the `cmk-dev-site` pipx package)
 - `sudo` access (for the one-time installation of the per-site sudoers rule)
 - Bazel (the project's build system)
+- The repo virtualenv (`make .venv`) -- the launcher always runs the tool on
+  `.venv/bin/python3`, so everyone uses the same interpreter (the tool itself
+  is stdlib-only, but needs Python >= 3.14)
 
 ## Quick Start
 
-The tool is invoked via Bazel:
+The tool is launched directly from the checkout -- deliberately not via
+`bazel run`, so starting a deploy never queues behind other Bazel commands:
 
 ```bash
 # Auto-detect site and deploy changed files
-bazel run //packages/cmk-dev-deploy:cmk-dev-deploy-bin
+./scripts/cmk-dev-deploy.py
 
-# Pass flags after --
-bazel run //packages/cmk-dev-deploy:cmk-dev-deploy-bin -- --site v260
-bazel run //packages/cmk-dev-deploy:cmk-dev-deploy-bin -- --watch
-bazel run //packages/cmk-dev-deploy:cmk-dev-deploy-bin -- --frontend --watch
+# Pass flags directly
+./scripts/cmk-dev-deploy.py --site v260
+./scripts/cmk-dev-deploy.py --watch
+./scripts/cmk-dev-deploy.py --frontend --watch
 ```
 
-You'll likely want a shell alias:
+You'll likely want a shell function so `cdd` works from any directory
+inside a checkout -- like `bazel run` did, it picks the checkout you are
+standing in:
 
 ```bash
-alias cdd='bazel run //packages/cmk-dev-deploy:cmk-dev-deploy-bin --'
+cdd() { "$(git rev-parse --show-toplevel)/scripts/cmk-dev-deploy.py" "$@"; }
 ```
 
-Deploys always build the site's edition: the tool pins `--cmk_edition=<site edition>` on every bazel command it runs, no matter how cdd is invoked. The `bazel run` in the alias is its own bazel command though, and it uses the flag's default value (`community`). When the site has any other edition, each cdd invocation therefore switches the bazel server between two configurations, and every switch discards the analysis cache (a few seconds of re-analysis). This costs time, not correctness. To avoid it, give the alias the edition of the site you deploy to:
-
-```bash
-alias cdd='bazel run //packages/cmk-dev-deploy:cmk-dev-deploy-bin --cmk_edition=pro --'
-```
+(An alias with a hard-coded absolute path works too, but then always
+deploys that one checkout.) The launcher itself deploys the checkout it
+lives in, independent of your current working directory. Deploys always
+build the site's edition: the tool pins `--cmk_edition=<site edition>` on
+every bazel command it runs.
 
 Then:
 
@@ -42,7 +48,7 @@ Then:
 cdd                        # auto-detect site and deploy
 cdd --site v260            # deploy to a specific site
 cdd --watch                # watch for changes and auto-deploy
-cdd --frontend --watch     # full-stack: iBazel HMR + auto-deploy
+cdd --frontend --watch     # full-stack: Vite HMR + auto-deploy
 ```
 
 **Tip: use `-v` to see what the tool is doing.** Verbose mode shows detected site details, per-file change lists, Bazel target resolution, dependency expansion, diff base source, and a timing timeline at the end. Highly recommended when getting started or debugging unexpected behavior:
@@ -154,6 +160,46 @@ A leftover OverlayFS mount from an older cmk-dev-deploy version is detected
 and refused with manual recovery instructions (`umount` plus removal of
 `/var/tmp/cmk-dev-deploy/<site>`).
 
+## A Dedicated Bazel Server
+
+Bazel executes one command at a time per output base. On the checkout's
+default server, every deploy would queue behind whatever `bazel test` or
+`bazel build` you have running -- and block it in return. The tool
+therefore runs all of its Bazel commands (`build`, `run //:deploy-python`,
+`query`, `cquery`, `info`, and the frontend supervisor's rebuilds)
+against a dedicated output base:
+
+```
+~/.cache/cmk-dev-deploy/bazel/<hash of the checkout path>
+```
+
+Deploys and your own Bazel commands run in parallel. What the second
+server costs, and why it is cheap:
+
+- **Disk:** a second output base (several GB once warm). The repo-wide
+  shared disk cache (`--disk_cache` in `.bazelrc`) makes actions built by
+  either server cache hits for the other, so the duplication costs disk,
+  not build time.
+- **RAM:** a second server JVM, bounded to 3 GB.
+- **First deploy:** pays one-time cold analysis and cache-served rebuilds;
+  afterwards the server stays warm. Because the deploy server only ever
+  sees the site edition's configuration, its analysis cache is never
+  discarded by configuration flips.
+
+The deploy server never touches the checkout's `bazel-bin`/`bazel-out`
+convenience symlinks: building commands run with `--symlink_prefix=/`
+(create no symlinks), and artifacts are located via `bazel info` and
+`bazel cquery` instead.
+
+Opt out with `--shared-bazel-server` (or `CDD_SHARED_BAZEL_SERVER=1`) to
+use the checkout's default server, e.g. when disk space is tight.
+`CDD_BAZEL_OUTPUT_BASE` overrides the output base location. To reclaim
+the disk space:
+
+```bash
+bazel --output_base=<path> clean --expunge    # or simply: rm -rf <path>
+```
+
 ## Modes of Operation
 
 ### One-Shot Deploy (default)
@@ -199,29 +245,27 @@ Press Ctrl-C to stop.
 
 ### Frontend Mode
 
-Deploy backend first, then start the iBazel frontend supervisor for hot module replacement.
+Deploy backend first, then start the frontend supervisor for hot module replacement.
 
 ```bash
 cdd --frontend
 ```
 
-Runs a one-shot deploy of all backend changes, then starts `ibazel run //packages/cmk-frontend-vue:vite` as a foreground subprocess. iBazel watches the frontend source tree and triggers Vite rebuilds automatically, providing hot module replacement for Vue/TypeScript files. The tool also writes a site config override (`load_frontend_vue = "inject"`) so the GUI loads frontend assets from the Vite dev server. Press Ctrl-C to stop; the override is removed on shutdown.
+Runs a one-shot deploy of all backend changes, then starts `bazel run //bazel/tools/devserver -- //packages/cmk-frontend-vue:vite` as a foreground subprocess. It watches the frontend sources and those of their dependencies and triggers Vite rebuilds automatically, providing hot module replacement for Vue/TypeScript files. The tool also writes a site config override (`load_frontend_vue = "inject"`) so the GUI loads frontend assets from the Vite dev server. Press Ctrl-C to stop; the override is removed on shutdown.
 
-iBazel is auto-downloaded (v0.28.0) on first use and cached at `~/.cache/cmk-dev-deploy/`.
-
-When `--frontend` is active, the `packages/cmk-frontend-vue` Bazel target is filtered out of regular deploy builds to avoid conflicts with iBazel.
+When `--frontend` is active, the `packages/cmk-frontend-vue` Bazel target is filtered out of regular deploy builds, since the dev server serves it.
 
 ### Combined Mode
 
-The recommended mode for full-stack development: iBazel HMR for frontend, auto-deploy for backend.
+The recommended mode for full-stack development: Vite HMR for frontend, auto-deploy for backend.
 
 ```bash
 cdd --frontend --watch
 ```
 
-Starts the iBazel frontend supervisor after the initial deploy, then enters the watch loop. Backend changes trigger re-deploys while iBazel stays alive and continues to serve frontend changes via HMR.
+Starts the frontend supervisor after the initial deploy, then enters the watch loop. Backend changes trigger re-deploys while the dev server stays alive and continues to serve frontend changes via HMR.
 
-The supervisor is health-checked before each poll cycle and after each deploy cycle. If iBazel crashes, the watch loop stops and prints the last stderr output for diagnostics. If a deploy fails in combined mode, the frontend supervisor is stopped automatically.
+The supervisor is health-checked before each poll cycle and after each deploy cycle. If the dev server crashes, the watch loop stops and prints the last stderr output for diagnostics. If a deploy fails in combined mode, the frontend supervisor is stopped automatically.
 
 ## Site Resolution
 
@@ -242,23 +286,24 @@ echo 'v260' > .site
 
 ### Deploy Flags
 
-| Flag                 | Short | Default     | Description                                                                                                                                                                                                       |
-| -------------------- | ----- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--site NAME`        | `-s`  | auto-detect | Target OMD site name                                                                                                                                                                                              |
-| `--info`             |       |             | Show site info and exit without deploying                                                                                                                                                                         |
-| `--full`             |       |             | Force full deploy: delete and recreate the clone, deploy everything                                                                                                                                               |
-| `--dry-run`          | `-n`  |             | Show deploy plan without executing                                                                                                                                                                                |
-| `--watch`            | `-w`  |             | Watch for changes and auto-deploy                                                                                                                                                                                 |
-| `--frontend`         |       |             | Start iBazel frontend supervisor after deploying                                                                                                                                                                  |
-| `--commit REF`       |       |             | Use a specific commit/branch/tag for change detection instead of the working tree (implies `--full`). Manifest and builds still use the current working tree — check out the ref first to deploy its exact state. |
-| `--verbose`          | `-v`  | 0           | Increase verbosity (`-v` for detailed output)                                                                                                                                                                     |
-| `--jobs N`           | `-j`  | 4           | Max parallel deployment workers                                                                                                                                                                                   |
-| `--no-restart`       |       |             | Deploy files only, skip service restarts                                                                                                                                                                          |
-| `--rebuild-manifest` |       |             | Force manifest regeneration before deploying                                                                                                                                                                      |
-| `--purge`            |       |             | Revert site to original state and remove deploy data, then exit (no deploy)                                                                                                                                       |
-| `--print-setup`      |       |             | Print the admin commands that set up the clone backend, then exit                                                                                                                                                 |
-| `--remove-setup`     |       |             | Remove the clone backend's sudoers rule, then exit                                                                                                                                                                |
-| `--json-errors`      |       |             | On error, output a JSON diagnostic bundle to stdout (for automation)                                                                                                                                              |
+| Flag                    | Short | Default     | Description                                                                                                                                                                                                       |
+| ----------------------- | ----- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--site NAME`           | `-s`  | auto-detect | Target OMD site name                                                                                                                                                                                              |
+| `--info`                |       |             | Show site info and exit without deploying                                                                                                                                                                         |
+| `--full`                |       |             | Force full deploy: delete and recreate the clone, deploy everything                                                                                                                                               |
+| `--dry-run`             | `-n`  |             | Show deploy plan without executing                                                                                                                                                                                |
+| `--watch`               | `-w`  |             | Watch for changes and auto-deploy                                                                                                                                                                                 |
+| `--frontend`            |       |             | Start the Vite dev server with hot module replacement after deploying                                                                                                                                             |
+| `--commit REF`          |       |             | Use a specific commit/branch/tag for change detection instead of the working tree (implies `--full`). Manifest and builds still use the current working tree — check out the ref first to deploy its exact state. |
+| `--verbose`             | `-v`  | 0           | Increase verbosity (`-v` for detailed output)                                                                                                                                                                     |
+| `--jobs N`              | `-j`  | 4           | Max parallel deployment workers                                                                                                                                                                                   |
+| `--no-restart`          |       |             | Deploy files only, skip service restarts                                                                                                                                                                          |
+| `--rebuild-manifest`    |       |             | Force manifest regeneration before deploying                                                                                                                                                                      |
+| `--shared-bazel-server` |       |             | Run bazel commands on the checkout's default server instead of the tool's dedicated one (deploys then queue behind other bazel commands)                                                                          |
+| `--purge`               |       |             | Revert site to original state and remove deploy data, then exit (no deploy)                                                                                                                                       |
+| `--print-setup`         |       |             | Print the admin commands that set up the clone backend, then exit                                                                                                                                                 |
+| `--remove-setup`        |       |             | Remove the clone backend's sudoers rule, then exit                                                                                                                                                                |
+| `--json-errors`         |       |             | On error, output a JSON diagnostic bundle to stdout (for automation)                                                                                                                                              |
 
 ### Flag Combinations
 
@@ -291,6 +336,8 @@ Each deploy cycle follows these stages:
 6. **Parallel execution** -- Run applicable deployers in parallel (up to `--jobs` workers).
 
 7. **Service restart** -- Only restart services affected by the deployers that actually ran. Uses a three-tier resolution: explicit service specs > wheel convention (any wheel triggers `apache:reload`) > config spec annotations. Services are restarted in dependency order.
+
+   After a successful Apache reload or restart, `init-redis` requests a background rebuild of the Setup search index so newly deployed rulesets and menu entries become searchable. Redis keeps running. `--no-restart` skips this refresh along with the service actions.
 
 8. **State save** -- Record the current HEAD commit and per-deployer dirty file hashes for incremental tracking. Partial failures save state only for successful deployers.
 
@@ -347,14 +394,14 @@ It contains:
 
 - **Wheel prefixes** -- the source-tree prefixes covered by wheel deployment, used for step gating, `.py` categorization, coverage warnings, and the service-restart convention. Which wheels get deployed (per edition) is defined in `bazel/rules/deploy.bzl`, not here.
 - **Config specs** -- Config/data directories deployed via `copy_dir`, `install_files`, or `locale_compile` methods. Each spec maps a source prefix to a site destination.
-- **Install specs** -- Compiled artifacts (C++ binaries, Rust binaries, frontend dist bundles) built by Bazel and installed with specific permissions and post-install actions.
+- **Install specs** -- Compiled artifacts (C++ binaries, Rust binaries, frontend dist bundles) built by Bazel and installed with specific permissions and post-install actions. Each spec also records its _input prefixes_: workspace packages in the target's Bazel closure that no wheel, install, or config spec deploys on their own (e.g. `packages/cmk-ui-library/` for the cmk-frontend-vue dist). Changes there categorize, resolve, and deploy through the consuming spec.
 
 ### deploy_specs.toml
 
 The file `cmk/dev_deploy/manifest/deploy_specs.toml` contains:
 
 - **Package specs** -- compiled artifact deploy definitions that have no Bazel representation (binary name, install destination, post-install actions like `setcap`)
-- **Service overrides** -- non-default service restart mappings keyed by Bazel target. Convention: all `py_wheel` targets automatically trigger `apache:reload`; only non-default restarts need explicit entries.
+- **Service overrides** -- non-default service restart mappings keyed by Bazel target. Convention: all `py_wheel` targets automatically trigger `apache:reload`; only non-default restarts need explicit entries. Adding a new `Service` enum member also requires adding it to `SERVICE_RESTART_ORDER` and, if edition-specific, to `EDITION_GATED_SERVICES` in `cmk/dev_deploy/execution/service_manager.py` -- an omission there silently sorts the service last instead of erroring.
 - **Config overrides** -- extra metadata for auto-discovered config specs (includes patterns, `delete_extra`, `file_chmod`, services).
 
 ### Deployer state machine

@@ -33,7 +33,7 @@ export const panelConfig = {
 </script>
 
 <script setup lang="ts">
-import { getLocalTimeZone, now } from '@internationalized/date'
+import { type ZonedDateTime, getLocalTimeZone, now } from '@internationalized/date'
 import {
   PanelStateCreator,
   UclDetailPageCodeExample,
@@ -85,34 +85,32 @@ const settings = computed<DateTimePickerSettings>(() => {
   }
 })
 
+const startOfToday = (): ZonedDateTime =>
+  now(getLocalTimeZone()).set({ hour: 0, minute: 0, second: 0, millisecond: 0 })
+
 const samplePresets: RangePreset[] = [
   {
     id: 'today',
     label: untranslated('Today'),
     getRange: () => {
-      const start = now(getLocalTimeZone()).set({
-        hour: 0,
-        minute: 0,
-        second: 0,
-        millisecond: 0
-      })
+      const start = startOfToday()
       return { from: start, to: start.add({ days: 1 }) }
     }
   },
   {
-    id: 'last-7-days',
-    label: untranslated('Last 7 days'),
+    id: 'yesterday',
+    label: untranslated('Yesterday'),
     getRange: () => {
-      const end = now(getLocalTimeZone())
-      return { from: end.subtract({ days: 7 }), to: end }
+      const start = startOfToday().subtract({ days: 1 })
+      return { from: start, to: start.add({ days: 1 }) }
     }
   },
   {
-    id: 'last-30-days',
-    label: untranslated('Last 30 days'),
+    id: 'this-month',
+    label: untranslated('This month'),
     getRange: () => {
-      const end = now(getLocalTimeZone())
-      return { from: end.subtract({ days: 30 }), to: end }
+      const start = startOfToday().set({ day: 1 })
+      return { from: start, to: start.add({ months: 1 }) }
     }
   }
 ]

@@ -11,6 +11,7 @@ from cmk.gui.watolib.rulesets import Rule, Ruleset
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
 from cmk.gui.watolib.rulespecs import HostRulespec
 from cmk.gui.watolib.sample_config import INVENTORY_PROCESS_DISCOVERY_RULES
+from cmk.plugins.lib.ps import process_matches
 from cmk.update_config.plugins.actions.rulesets_add_ps_discovery import (
     _NEW_DEFAULT_RULE_IDS,
     add_ps_discovery_rules,
@@ -19,6 +20,8 @@ from cmk.update_config.plugins.actions.rulesets_add_ps_discovery import (
     PS_DISCOVERY_RULE_NAME,
     rule_present,
 )
+
+_AI_CONTROL_PLANE_RULE_ID = "11683ac1-4306-47c2-bad5-d117c2fdd1d6"
 
 _PS_DISCOVERY_RULESPEC = HostRulespec(
     name=PS_DISCOVERY_RULE_NAME,
@@ -110,3 +113,43 @@ def test_update_with_all_preexisting_adds_nothing(tree: FolderTree) -> None:
     add_ps_discovery_rules(tree, logging.getLogger(), ruleset)
 
     assert ruleset.num_rules() == len(INVENTORY_PROCESS_DISCOVERY_RULES)
+
+
+def _ai_control_plane_command_line() -> list[str]:
+    return [
+        "python3",
+        "/omd/sites/mysite/bin/uvicorn",
+        "--factory",
+        "--uds",
+        "/omd/sites/mysite/tmp/run/ai-control-plane.sock",
+        "--timeout-graceful-shutdown",
+        "30",
+        "cmk.ai_control_plane.api.app:create_app",
+    ]
+
+
+def test_ai_control_plane_rule_matches_daemon_command_line() -> None:
+    rule = next(
+        r for r in INVENTORY_PROCESS_DISCOVERY_RULES if r["id"] == _AI_CONTROL_PLANE_RULE_ID
+    )
+    match = rule["value"]["match"]
+    assert isinstance(match, str)
+
+    assert process_matches(_ai_control_plane_command_line(), match)
+
+
+def test_ai_control_plane_rule_does_not_overlap_other_rules() -> None:
+    command_line = _ai_control_plane_command_line()
+
+    for rule in INVENTORY_PROCESS_DISCOVERY_RULES:
+        if rule["id"] == _AI_CONTROL_PLANE_RULE_ID:
+            continue
+        match = rule["value"]["match"]
+        assert isinstance(match, str)
+        assert not process_matches(command_line, match), (
+            f"rule {rule['id']!r} unexpectedly also matches the ai-control-plane command line"
+        )
+
+
+def test_ai_control_plane_rule_is_backfilled_on_existing_sites() -> None:
+    assert _AI_CONTROL_PLANE_RULE_ID in _NEW_DEFAULT_RULE_IDS

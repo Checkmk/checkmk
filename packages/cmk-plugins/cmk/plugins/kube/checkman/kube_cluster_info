@@ -5,8 +5,9 @@ license: GPLv2
 distribution: check_mk
 description:
  This check displays general information about the Kubernetes cluster such
- as the configured name. The service is always {OK}. It requires that the
- special agent kube is configured.
+ as the configured name. The service is always {OK}. This check requires that
+ Kubernetes monitoring is configured and that Checkmk can receive data from the
+ in-cluster agent.
 
  Checkmk supports Kubernetes version 1.26, 1.27, 1.28, 1.29, 1.30 and 1.31.
 

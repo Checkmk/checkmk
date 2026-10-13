@@ -1119,7 +1119,6 @@ translation_mem_win = translations.Translation(
             "pagefile_used_avg",
             1048576,
         ),
-        "pagefile_total": translations.ScaleBy(1048576),
     },
 )
 
@@ -1211,10 +1210,8 @@ translation_netapp_ontap_volumes = translations.Translation(
     name="netapp_ontap_volumes",
     check_commands=[translations.PassiveCheck("netapp_ontap_volumes")],
     translations={
-        "cifs_other_latency": translations.ScaleBy(0.001),
         "cifs_read_latency": translations.ScaleBy(0.001),
         "cifs_write_latency": translations.ScaleBy(0.001),
-        "fcp_other_latency": translations.ScaleBy(0.001),
         # single_volume_metrics() emits the latency of the SAN protocols unconverted: in
         # milliseconds for the 7-Mode API, in microseconds for the ONTAP REST API. The
         # difference is corrected here rather than in the check plugin on purpose. A
@@ -1230,16 +1227,12 @@ translation_netapp_ontap_volumes = translations.Translation(
             "fs_growth",
             1048576,
         ),
-        "iscsi_other_latency": translations.ScaleBy(0.001),
         # microseconds, see the fcp latencies above
         "iscsi_read_latency": translations.ScaleBy(1e-06),
         "iscsi_write_latency": translations.ScaleBy(1e-06),
-        "nfs_other_latency": translations.ScaleBy(0.001),
         "nfs_read_latency": translations.ScaleBy(0.001),
         "nfs_write_latency": translations.ScaleBy(0.001),
-        "other_latency": translations.ScaleBy(0.001),
         "read_latency": translations.ScaleBy(0.001),
-        "san_other_latency": translations.ScaleBy(0.001),
         "san_read_latency": translations.ScaleBy(0.001),
         "san_write_latency": translations.ScaleBy(0.001),
         "trend": translations.RenameToAndScaleBy(
@@ -1311,6 +1304,8 @@ translation_openvpn_clients = translations.Translation(
     },
 )
 
+# Since Checkmk 3.0.0 the check plug-in emits database_apply_lag itself. This translation only
+# keeps the RRD history recorded under apply_lag in the graphs and can be removed in a few years.
 translation_oracle_dataguard_stats = translations.Translation(
     name="oracle_dataguard_stats",
     check_commands=[translations.PassiveCheck("oracle_dataguard_stats")],
@@ -1664,22 +1659,6 @@ translation_tcp_tcp_ldap_host_tcp = translations.Translation(
         translations.HostCheckCommand("host-tcp"),
     ],
     translations={"time": translations.RenameTo("response_time")},
-)
-
-translation_tsm_stagingpools = translations.Translation(
-    name="tsm_stagingpools",
-    check_commands=[translations.PassiveCheck("tsm_stagingpools")],
-    translations={
-        "free": translations.RenameTo("tapes_free"),
-        "tapes": translations.RenameTo("tapes_total"),
-        "util": translations.RenameTo("tapes_util"),
-    },
-)
-
-translation_tsm_storagepools = translations.Translation(
-    name="tsm_storagepools",
-    check_commands=[translations.PassiveCheck("tsm_storagepools")],
-    translations={"used": translations.RenameTo("used_space")},
 )
 
 translation_ups_capacity = translations.Translation(

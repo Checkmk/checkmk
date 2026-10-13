@@ -2,6 +2,8 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
+
 from pydantic_core import ErrorDetails
 
 from cmk.gui.dashboard.token_util import (
@@ -52,7 +54,7 @@ def edit_dashboard_token_v1(
                 pending_changes=make_pending_changes(api_context),
             )
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Dashboard token not found",
             detail="No token for this dashboard exists.",
         ) from None

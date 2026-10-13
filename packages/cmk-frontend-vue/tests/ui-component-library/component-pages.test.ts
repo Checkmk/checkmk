@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { render, screen, within } from '@testing-library/vue'
 import UclCmkBadge from '@ucl/components/basic-elements/CmkBadge/UclCmkBadge.vue'
 import UclCmkButton from '@ucl/components/basic-elements/CmkButton/UclCmkButton.vue'
@@ -23,6 +24,7 @@ import UclCmkSlideInDialog from '@ucl/components/content-organization/CmkSlideIn
 import UclCmkTabs from '@ucl/components/content-organization/CmkTabs/UclCmkTabs.vue'
 import UclCmkWizard from '@ucl/components/content-organization/CmkWizard/UclCmkWizard.vue'
 import UclCmkCheckbox from '@ucl/components/form-elements/CmkCheckbox/UclCmkCheckbox.vue'
+import UclCmkChipAutocomplete from '@ucl/components/form-elements/CmkChipAutocomplete/UclCmkChipAutocomplete.vue'
 import UclCmkDeprecatedDateTimePicker from '@ucl/components/form-elements/CmkDeprecatedDateTimePicker/UclCmkDeprecatedDateTimePicker.vue'
 import UclCmkDropdown from '@ucl/components/form-elements/CmkDropdown/UclCmkDropdown.vue'
 import UclCmkDualList from '@ucl/components/form-elements/CmkDualList/UclCmkDualList.vue'
@@ -45,7 +47,7 @@ import UclCmkHeading from '@ucl/components/foundation-elements/typography/UclCmk
 import UclCmkParagraph from '@ucl/components/foundation-elements/typography/UclCmkParagraph.vue'
 import UclArrowDown from '@ucl/components/graphics/ArrowDown/UclArrowDown.vue'
 import UclCmkLinkCard from '@ucl/components/navigation/CmkLinkCard/UclCmkLinkCard.vue'
-import UclCmkAlertBox from '@ucl/components/system-feedback/CmkAlertBox/UclCmkAlertBox.vue'
+import UclCmkAlert from '@ucl/components/system-feedback/CmkAlert/UclCmkAlert.vue'
 import UclCmkCopy from '@ucl/components/system-feedback/CmkCopy/UclCmkCopy.vue'
 import UclCmkErrorBoundary from '@ucl/components/system-feedback/CmkErrorBoundary/UclCmkErrorBoundary.vue'
 import UclCmkHelpText from '@ucl/components/system-feedback/CmkHelpText/UclCmkHelpText.vue'
@@ -69,22 +71,6 @@ vi.mock('msw/browser', () => ({
   setupWorker: () => ({ start: () => Promise.resolve(), stop: () => {} })
 }))
 
-// The REST API client singleton captures globalThis.fetch at import time, before any
-// msw/node server patches it. Re-create it with a lazy fetch so MSW can intercept.
-vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
-  const mod = await importOriginal<Record<string, unknown>>()
-  const createClientImpl = (await import('openapi-fetch')).default
-  return {
-    ...mod,
-    default: createClientImpl({
-      baseUrl: `${location.protocol}//${location.host}/api/internal`,
-      credentials: 'include',
-      headers: { Accept: 'application/json' },
-      fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args)
-    })
-  }
-})
-
 function componentPreview() {
   return screen.getByRole('region', { name: 'component preview' })
 }
@@ -98,6 +84,11 @@ function expectNoRegistryError() {
 test('CmkCheckbox page renders its component', () => {
   render(UclCmkCheckbox, { props: { screenshotMode: false } })
   within(componentPreview()).getByRole('checkbox', { name: 'Enable notifications' })
+})
+
+test('CmkChipAutocomplete page renders its component', () => {
+  render(UclCmkChipAutocomplete, { props: { screenshotMode: false } })
+  within(componentPreview()).getByRole('searchbox')
 })
 
 test('CmkSlideInDropdown page renders its component', async () => {
@@ -153,6 +144,15 @@ test('CmkBadge page renders its component', () => {
 test('CmkButton page renders its component', () => {
   render(UclCmkButton, { props: { screenshotMode: false } })
   within(componentPreview()).getAllByRole('button')
+})
+
+test('CmkButton page shows the label only for the Text variant', async () => {
+  render(UclCmkButton, { props: { screenshotMode: false } })
+
+  await userEvent.click(screen.getByRole('combobox', { name: 'Variant' }))
+  await userEvent.click(await screen.findByRole('option', { name: 'Text' }))
+
+  expect(screen.getByRole('combobox', { name: 'Content' })).toHaveTextContent('Label only')
 })
 
 test('CmkChip page renders its component', () => {
@@ -324,15 +324,15 @@ test('CmkPopup page renders its component', () => {
   within(componentPreview()).getByRole('button', { name: 'Open Popup' })
 })
 
-test('CmkAlertBox page renders its component', () => {
-  render(UclCmkAlertBox, { props: { screenshotMode: false } })
+test('CmkAlert page renders its component', () => {
+  render(UclCmkAlert, { props: { screenshotMode: false } })
   within(componentPreview()).getByRole('heading', { name: 'Alert Heading' })
 })
 
 test('CmkCopyIcon page renders its component', () => {
   render(UclCmkCopy, { props: { screenshotMode: false } })
   const previews = screen.getAllByRole('region', { name: 'component preview' })
-  within(previews[0]!).getByRole('img', { name: 'Copy' })
+  within(previews[0]!).getByRole('button', { name: 'Copy' })
   within(previews[1]!).getByRole('button', { name: 'Copy' })
 })
 

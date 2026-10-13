@@ -12,4 +12,4 @@ from cmk.gui.wato.filters import FilterWatoFolder
 # for the "wato_folder" filter test to pass.
 @pytest.fixture(name="mock_wato_folders")
 def fixture_mock_wato_folders(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(FilterWatoFolder, "_fetch_folders", lambda s: {""})
+    monkeypatch.setattr(FilterWatoFolder, "_fetch_folders", lambda s: {""})  # noqa: ARG005

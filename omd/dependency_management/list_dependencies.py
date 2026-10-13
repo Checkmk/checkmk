@@ -70,6 +70,40 @@ class PackageMetadataAttributes(BaseModel):
         return CpeData.model_validate_json(self.cpe_data_path.read_text()).cpe
 
 
+# rules_python (since 2.1.0) qualifies the purls of the wheels it fetches with
+# `repository_url` and `file_name`.  Those describe the single artifact we happened to
+# download for one platform, not the package itself, so keeping them would split e.g.
+# aiohttp into two components (one from runtime-requirements.txt, one from the SBOM) and
+# make the latter unmatchable against our license and vulnerability data, which is keyed
+# by a bare pkg:pypi/<name>@<version>.
+#
+# We only do this for pypi, where the same name and version really is the same package:
+# the wheels which carry a purl all come from the cmk_requirements hub, whose
+# requirements.txt pins pypi.org, and no requirements file of ours declares a second
+# index.  For other purl types we have no such knowledge, so we leave their qualifiers
+# alone.
+_WHEEL_ARTIFACT_QUALIFIERS = ("file_name", "repository_url")
+
+# gazelle's go_deps qualifies module purls with the go.sum `checksum`.  As with the
+# wheel qualifiers above it describes the artifact rather than the package: a Go module
+# path and version already identify it uniquely, and the checksum is canonical for that
+# pair.  Keeping it would key our license data by the go.sum entry, so regenerating
+# go.sum would invalidate every Go dependency at once - including the ones whose version
+# never changed.
+_GO_MODULE_ARTIFACT_QUALIFIERS = ("checksum",)
+
+
+def _canonical_purl(purl: PUrl) -> PUrl:
+    """Drop qualifiers that describe the downloaded artifact, not the package."""
+    match purl.type_:
+        case "pypi":
+            return purl.without_qualifiers(_WHEEL_ARTIFACT_QUALIFIERS)
+        case "golang":
+            return purl.without_qualifiers(_GO_MODULE_ARTIFACT_QUALIFIERS)
+        case _:
+            return purl
+
+
 class PackageMetadata(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -78,9 +112,10 @@ class PackageMetadata(BaseModel):
     purl: str
 
     def component(self) -> Component:
+        purl = PUrl.from_str(self.purl)
         return Component(
             type_="library",
-            purl=PUrl.from_str(self.purl),
+            purl=_canonical_purl(purl),
             labels=frozenset({self.label}),
             license_info=LicenseInfo(
                 id_=SPDXId(license_data.kind.identifier), text=license_data.read()
@@ -235,7 +270,11 @@ def read_manifests(paths: list[Path]) -> list[Component]:
     components = []
     for path in paths:
         match path:
-            case Path(name="runtime-requirements.txt") | Path(name="requirements.txt"):
+            case (
+                Path(name="runtime-requirements.txt")
+                | Path(name="requirements.txt")
+                | Path(name="requirements-windows.txt")
+            ):
                 parser = RequirementsTxtParser(path)
                 parser.parse()
                 components.extend(parser.components())

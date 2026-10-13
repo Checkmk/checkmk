@@ -1,0 +1,5 @@
+# Flags for debugging, used via "--config=debug"
+
+common:debug --announce_rc
+# gRPC errors provide stack trace as well
+common:debug --verbose_failures

@@ -115,7 +115,7 @@ onBeforeUnmount(() => {
         :href="props.target.url"
         class="result-item-handler"
         :class="{ focus: props.focus, indented: props.indented }"
-        @click="target?.transition && showLoadingTransition(target.transition, props.title)"
+        @click="target?.transition && showLoadingTransition(target.transition, props.title, $event)"
       >
         <div v-if="props.icon" class="result-item-inner-start">
           <div class="result-item-icon">

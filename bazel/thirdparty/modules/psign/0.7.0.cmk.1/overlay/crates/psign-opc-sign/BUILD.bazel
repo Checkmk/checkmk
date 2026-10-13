@@ -1,0 +1,18 @@
+load("@psign_crates//:defs.bzl", "aliases", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_library")
+load("//:psign.bzl", "PSIGN_EDITION", "PSIGN_VERSION")
+
+exports_files(["Cargo.toml"])
+
+rust_library(
+    name = "psign-opc-sign",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = aliases(),
+    crate_name = "psign_opc_sign",
+    edition = PSIGN_EDITION,
+    proc_macro_deps = all_crate_deps(proc_macro = True),
+    version = PSIGN_VERSION,
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps() + [
+    ],
+)

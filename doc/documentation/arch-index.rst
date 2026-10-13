@@ -19,13 +19,14 @@ Topology and interfaces
    arch-comp-omd.rst
    arch-comp-hosts.rst
 
-Ongoing migrations
-==================
+Cross cutting concerns
+======================
 
 .. toctree::
    :maxdepth: 1
 
    arch-migrations.rst
+   arch-licensing-feature-filter.rst
 
 Components
 ==========
@@ -35,8 +36,9 @@ Components
 
    arch-comp-gui.rst
    arch-comp-gui-vue.rst
+   arch-comp-gui-views.rst
    arch-comp-gui-metrics.rst
-   arch-comp-painters-v1.rst
+   arch-comp-host-relations.rst
    arch-comp-apache.rst
    arch-comp-checkengine.rst
    arch-comp-checkengine-keepalive.rst
@@ -52,13 +54,17 @@ Components
    arch-comp-rrd-backend.rst
    arch-comp-rrdcached.rst
    arch-comp-nagvis.rst
+   arch-comp-maps.rst
    arch-comp-crontab.rst
    arch-comp-backup.rst
    arch-comp-agent-receiver.rst
    arch-comp-autoregistration.rst
-   arch-comp-metric-backend.rst
+   arch-comp-data-backend.rst
    arch-comp-otel-monitoring-dcd.rst
    arch-comp-otel-monitoring-custom-query.rst
+   arch-comp-mcp.rst
+   arch-comp-oauth.rst
+   arch-comp-product-usage-analytics.rst
 
    arch-comp-agent-abstract.rst
    arch-comp-agent-linux.rst
@@ -67,6 +73,7 @@ Components
    arch-comp-agent-bakery.rst
    arch-comp-relay.rst
    arch-comp-relay-engine.rst
+   arch-comp-relay-engine-concurrency.rst
    arch-comp-grafana-connector.rst
 
    arch-comp-template.rst

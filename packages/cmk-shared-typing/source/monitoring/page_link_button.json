@@ -4,7 +4,8 @@
   "title": "Monitoring Page Link Button",
   "properties": {
     "url": { "type": "string" },
-    "title": { "type": "string" }
+    "title": { "type": "string" },
+    "teleport_target": { "type": ["string", "null"] }
   },
   "required": ["url", "title"]
 }

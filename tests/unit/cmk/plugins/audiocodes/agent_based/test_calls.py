@@ -20,40 +20,12 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.audiocodes.agent_based.calls import (
     check_audiocodes_calls_testable,
-    discover_audiocodes_calls,
     parse_audiocodes_calls,
 )
 
 
 def test_parse_function() -> None:
     assert parse_audiocodes_calls([[], [["22", "12"]]]) is None
-
-
-@pytest.mark.parametrize(
-    "string_table, num_services",
-    [
-        pytest.param(
-            [[["247", "", "", "0", "0", "88", "94", "12", "12"]]],
-            1,
-            id="Missing active_calls_in and active_calls_out",
-        ),
-        pytest.param(
-            [[["247", "151", "153", "0", "0", "88", "94", "12", "12"]]],
-            1,
-            id="Has all expected OIDs",
-        ),
-        pytest.param([[["", "", "", "", "", "", "94", "", ""]]], 1, id="Has only one expected OID"),
-        # Service still gets yielded in this case, but not rendered because
-        # there are no checks.
-        pytest.param([[["", "", "", "", "", "", "", "", ""]]], 1, id="Missing all expected OIDs"),
-    ],
-)
-def test_audiocodes_discovery_function(
-    string_table: Sequence[StringTable], num_services: int
-) -> None:
-    calls = parse_audiocodes_calls(string_table)
-    assert calls is not None
-    assert len(list(discover_audiocodes_calls(calls))) == num_services
 
 
 @pytest.mark.parametrize(

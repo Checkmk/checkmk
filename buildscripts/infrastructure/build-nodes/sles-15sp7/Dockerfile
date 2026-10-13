@@ -41,7 +41,6 @@ RUN zypper ref -s \
     gmp-devel \
     groff \
     gtk-doc \
-    intltool \
     iproute2 \
     iputils \
     jq \
@@ -64,6 +63,7 @@ RUN zypper ref -s \
     libxml2-devel \
     libxslt-devel \
     libxmlsec1-1 \
+    libzstd-devel \
     netcat-openbsd \
     xmlsec1-devel \
     xmlsec1-openssl-devel \

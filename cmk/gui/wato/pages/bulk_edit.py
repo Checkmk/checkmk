@@ -22,9 +22,9 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
@@ -32,13 +32,14 @@ from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
     all_host_attributes,
     collect_attributes,
+    deprecated_attributes_set_anew,
     sorted_host_attributes,
 )
 from cmk.gui.watolib.hosts_and_folders import (
     disk_or_search_folder_from_request,
     Folder,
-    folder_tree,
     Host,
+    make_folder_tree,
     SearchFolder,
 )
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
@@ -48,7 +49,9 @@ from cmk.gui.watolib.pending_changes import (
     PendingChangesStore,
 )
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.flashed_messages import flash
+from cmk.web.utils.permission_verification import PermissionName
 
 from ._bulk_actions import get_hostnames_from_checkboxes, get_hosts_from_checkboxes
 from ._host_attributes import configure_attributes
@@ -78,7 +81,7 @@ class ModeBulkEdit(WatoMode):
     @override
     def _from_vars(self) -> None:
         self._folder = disk_or_search_folder_from_request(
-            folder_tree(),
+            make_folder_tree(self._ctx.config),
             request.var("folder"),
             request.get_ascii_input("host"),
             acting_user=user,
@@ -97,7 +100,7 @@ class ModeBulkEdit(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return None
@@ -115,8 +118,11 @@ class ModeBulkEdit(WatoMode):
         host_names = get_hostnames_from_checkboxes(self._folder)
         for host_name in host_names:
             host = self._folder.load_host(host_name)
+            attributes = changed_attributes.copy()
+            for name in deprecated_attributes_set_anew(host.attributes, changed_attributes):
+                del attributes[name]  # type: ignore[misc]
             host.update_attributes(
-                changed_attributes,
+                attributes,
                 pprint_value=config.wato_pprint_config,
                 pending_changes=_pending_changes(
                     config=config, local_site=omd_site(), acting_user=user.id
@@ -200,7 +206,7 @@ class ModeBulkCleanup(WatoMode):
     @override
     def _from_vars(self) -> None:
         self._folder = disk_or_search_folder_from_request(
-            folder_tree(),
+            make_folder_tree(self._ctx.config),
             request.var("folder"),
             request.get_ascii_input("host"),
             acting_user=user,
@@ -233,7 +239,7 @@ class ModeBulkCleanup(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return None
@@ -267,7 +273,9 @@ class ModeBulkCleanup(WatoMode):
         self, host_attributes: Mapping[str, ABCHostAttribute]
     ) -> list[str]:
         to_clean = []
-        for attrname in host_attributes:
+        for attrname, attr in host_attributes.items():
+            if not attr.show_in_host_cleanup():
+                continue
             if html.get_checkbox("_clean_" + attrname) is True:
                 to_clean.append(attrname)
         return to_clean

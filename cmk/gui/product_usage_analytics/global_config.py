@@ -3,28 +3,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Final, override
 
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-)
-from cmk.gui.wato._http_proxy import HTTPProxyReference
+from cmk.gui.wato._http_proxy import http_proxy_reference_form_spec
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
+    ActivationContext,
     ConfigDomainName,
     ConfigVariable,
     ConfigVariableGroup,
+    ConfigVariableHint,
     SerializedSettings,
 )
+from cmk.rulesets.v1 import form_specs as fs
+from cmk.rulesets.v1 import Help, Title
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.paths import default_config_dir, omd_root
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames
 
 PRODUCT_USAGE_ANALYTICS_CONFIG_ID: Final[ConfigDomainName] = "product_usage_analytics"
 
@@ -40,6 +41,8 @@ PRODUCT_USAGE_ANALYTICS_CONFIG_FILE_RELATIVE: Final = (
 ConfigVariableGroupProductUsageAnalytics = ConfigVariableGroup(
     title=_l("Product usage analytics"),
     sort_index=100,
+    icon=IconNames.custom_graph,
+    description=_l("Configures consent and config for anonymized usage"),
 )
 
 
@@ -64,7 +67,9 @@ class ConfigDomainProductUsageAnalytics(ABCConfigDomain):
         return []
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         return []
 
     @override
@@ -77,14 +82,9 @@ class ConfigDomainProductUsageAnalytics(ABCConfigDomain):
         }
 
 
-def make_product_usage_analytics_config_variable(
-    hint: Callable[[], HTML] = HTML.empty,
-) -> ConfigVariable:
-    return ConfigVariable(
-        group=ConfigVariableGroupProductUsageAnalytics,
-        primary_domain=ConfigDomainProductUsageAnalytics,
-        ident="product_usage_analytics",
-        domain_hint=HTML.without_escaping(
+def _inspect_data_hint() -> ConfigVariableHint:
+    return ConfigVariableHint(
+        HTML.without_escaping(
             _(
                 "Inspect product usage data: Run <tt>cmk-product-usage --dry-run</tt> as site user, or %(link)s. "
                 "This allows you to review the data locally; it does not enable the feature or transmit any information."
@@ -95,39 +95,55 @@ def make_product_usage_analytics_config_variable(
                     href="download_product_usage.py",
                 )
             }
-        ),
-        hint=hint,
-        valuespec=lambda context: Dictionary(
-            title=_("Product usage analytics"),
-            elements=[
-                (
-                    "enabled",
-                    DropdownChoice(
-                        title=_("Enable product usage analytics"),
-                        help=_(
+        )
+    )
+
+
+def make_product_usage_analytics_config_variable(
+    hints: Callable[[], Sequence[ConfigVariableHint]] = tuple,
+) -> ConfigVariable:
+    return ConfigVariable(
+        group=ConfigVariableGroupProductUsageAnalytics,
+        primary_domain=ConfigDomainProductUsageAnalytics,
+        ident="product_usage_analytics",
+        hints=lambda: [_inspect_data_hint(), *hints()],
+        form_spec=lambda context: fs.Dictionary(  # noqa: ARG005
+            title=Title("Product usage analytics"),
+            elements={
+                "enabled": fs.DictElement(
+                    required=True,
+                    parameter_form=fs.SingleChoice(
+                        title=Title("Enable product usage analytics"),
+                        help_text=Help(
                             "Consent to product usage analytics data collection. "
                             "By default, this is disabled, the user will be asked for consent via pop-up. "
                             "Run <tt>cmk-product-usage --dry-run</tt> in the command line to see a preview of the data."
                         ),
-                        choices=[
-                            (
-                                "enabled",
-                                _("Allow collection and transmission of product usage data"),
+                        elements=[
+                            fs.SingleChoiceElement(
+                                name="enabled",
+                                title=Title(
+                                    "Allow collection and transmission of product usage data"
+                                ),
                             ),
-                            ("disabled", _("Do not collect product usage data")),
-                            ("not_decided", _("Disabled. Reminder scheduled")),
+                            fs.SingleChoiceElement(
+                                name="disabled",
+                                title=Title("Do not collect product usage data"),
+                            ),
+                            fs.SingleChoiceElement(
+                                name="not_decided",
+                                title=Title("Disabled. Reminder scheduled"),
+                            ),
                         ],
-                        html_attrs={"width": "fit-content"},
+                        prefill=fs.DefaultValue("enabled"),
                     ),
                 ),
-                (
-                    "proxy_setting",
-                    HTTPProxyReference(),
+                "proxy_setting": fs.DictElement(
+                    required=True,
+                    parameter_form=http_proxy_reference_form_spec(),
                 ),
-            ],
-            optional_keys=[],
-            default_keys=["enabled", "proxy_setting"],
-            help=_(
+            },
+            help_text=Help(
                 "<p><b>Network configuration: </b>"
                 "To transmit analytics data, ensure your firewall permits outbound traffic to "
                 "<tt>https://analytics.checkmk.com/upload</tt> on port <tt>443</tt>. "

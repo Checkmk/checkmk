@@ -125,7 +125,7 @@ def test_check_https(  # type: ignore[misc]
     value_store = {"https": (1.0, 92112)}
 
     # Act
-    results = list(plugin._check_https(now, value_store, params, section))
+    results = list(plugin._check_https(now, value_store, params, section))  # noqa: SLF001
 
     # Assert
     assert results == expected_results
@@ -175,7 +175,7 @@ def test_check_httpv2(  # type: ignore[misc]
     value_store = {"httpv2": (1.0, 1063170)}
 
     # Act
-    results = list(plugin._check_httpv2(now, value_store, params, section))
+    results = list(plugin._check_httpv2(now, value_store, params, section))  # noqa: SLF001
 
     # Assert
     assert results == expected_results
@@ -225,7 +225,7 @@ def test_check_http(  # type: ignore[misc]
     value_store = {"http": (1.0, 96917)}
 
     # Act
-    results = list(plugin._check_http(now, value_store, params, section))
+    results = list(plugin._check_http(now, value_store, params, section))  # noqa: SLF001
 
     # Assert
     assert results == expected_results
@@ -244,9 +244,9 @@ def test_check_results_newly_discovered(detected_section: SimpleSNMPSection) -> 
     assert section is not None
 
     # Act
-    results_http = list(plugin._check_http(2.0, {}, MISC_DEFAULT_PARAMS, section))
-    results_https = list(plugin._check_https(2.0, {}, MISC_DEFAULT_PARAMS, section))
-    results_httpv2 = list(plugin._check_httpv2(2.0, {}, MISC_DEFAULT_PARAMS, section))
+    results_http = list(plugin._check_http(2.0, {}, MISC_DEFAULT_PARAMS, section))  # noqa: SLF001
+    results_https = list(plugin._check_https(2.0, {}, MISC_DEFAULT_PARAMS, section))  # noqa: SLF001
+    results_httpv2 = list(plugin._check_httpv2(2.0, {}, MISC_DEFAULT_PARAMS, section))  # noqa: SLF001
 
     # Assert
     assert results_http == [Result(state=State.OK, summary="Can't compute rate.")]

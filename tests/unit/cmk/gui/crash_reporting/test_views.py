@@ -7,7 +7,28 @@ import json
 
 import pytest
 
-from cmk.gui.crash_reporting.views import CrashReportsRowTable, PainterCrashException
+from cmk.gui.crash_reporting.views import (
+    _summarize_exception,
+    check_crash_source,
+    cmp_crash_source,
+    crash_exception_row_filter,
+    CrashReportsRowTable,
+    make_crash_exception_painter,
+)
+from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
+from cmk.gui.painter import Cell
+from cmk.gui.type_defs import Row
+from cmk.gui.utils.roles import UserPermissions
+from cmk.livestatus_client.testing import MockLiveStatusConnection
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
+
+BUILT_IN_FILE = "/omd/sites/heute/lib/python3/cmk/base/modes/check_mk.py"
+LOCAL_FILE = "/omd/sites/heute/local/lib/python3/cmk_addons/plugins/acme/agent_based/acme.py"
+OTHER_LOCAL_FILE = "/omd/sites/heute/local/lib/python3/cmk_addons/plugins/zeta/agent_based/z.py"
+
+
+def _traceback_row(*filepaths: str) -> Row:
+    return {"crash_exc_traceback": [(path, 1, "parse", "return int(line)") for path in filepaths]}
 
 
 @pytest.mark.parametrize(
@@ -45,7 +66,7 @@ from cmk.gui.crash_reporting.views import CrashReportsRowTable, PainterCrashExce
     ],
 )
 def test_painter_crash_exception_summarize(exc_type: str, exc_value: str, expected: str) -> None:
-    summary = PainterCrashException.summarize(exc_type, exc_value)
+    summary = _summarize_exception(exc_type, exc_value)
     assert summary == expected
     assert "\n" not in summary
     assert "<" not in summary
@@ -81,3 +102,106 @@ def test_parse_rows_skips_crash_report_with_unreadable_time() -> None:
     )
 
     assert [row["crash_id"] for row in rows] == ["readable"]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_get_crash_report_rows_queries(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    crash_info = json.dumps({"crash_type": "gui", "crash_id": "abc-123"}).encode()
+    mock_livestatus.add_table(
+        "crashreports",
+        [
+            {
+                "id": "abc-123",
+                "component": "gui",
+                "file:crash_info:gui/abc-123/crash.info": crash_info,
+            }
+        ],
+    )
+    with mock_livestatus(expect_status_query=True) as live:
+        live.expect_query("GET crashreports\nColumns: id component")
+        live.expect_query(
+            "GET crashreports\n"
+            "Columns: file:crash_info:gui/abc-123/crash.info\n"
+            "Filter: id = abc-123\n"
+            "ColumnHeaders: off"
+        )
+        rows = list(
+            CrashReportsRowTable().get_crash_report_rows(only_sites=None, filter_headers="")
+        )
+    assert rows == [
+        {
+            "site": "NO_SITE",
+            "crash_id": "abc-123",
+            "crash_type": "gui",
+            "crash_info": crash_info,
+        }
+    ]
+
+
+@pytest.mark.usefixtures("request_context")
+@pytest.mark.parametrize(
+    "user, may_see_exception",
+    [
+        pytest.param(LoggedInSuperUser(), True, id="permitted"),
+        pytest.param(LoggedInNobody(), False, id="not permitted"),
+    ],
+)
+def test_painter_crash_exception_render(user: LoggedInUser, may_see_exception: bool) -> None:
+    cell = Cell(None, None, None, make_painter_context(UserPermissions({}, {}, {}, [])), None)
+    _css, content = make_crash_exception_painter().render(
+        {"crash_exc_type": "ValueError", "crash_exc_value": "secret boom"},
+        cell,
+        user,
+        cell.painter_context(),
+    )
+
+    assert ("secret boom" in str(content)) is may_see_exception
+
+
+@pytest.mark.parametrize(
+    "selection, filepath, expected",
+    [
+        pytest.param("built_in", BUILT_IN_FILE, True, id="built-in keeps built-in crash"),
+        pytest.param("built_in", LOCAL_FILE, False, id="built-in drops extension crash"),
+        pytest.param("extension", BUILT_IN_FILE, False, id="extension drops built-in crash"),
+        pytest.param("extension", LOCAL_FILE, True, id="extension keeps extension crash"),
+        pytest.param("ignore", BUILT_IN_FILE, True, id="ignore keeps built-in crash"),
+        pytest.param("ignore", LOCAL_FILE, True, id="ignore keeps extension crash"),
+    ],
+)
+def test_check_crash_source(selection: str, filepath: str, expected: bool) -> None:
+    assert check_crash_source(selection, _traceback_row(BUILT_IN_FILE, filepath)) is expected
+
+
+@pytest.mark.parametrize(
+    "filtertext, expected",
+    [
+        pytest.param("valueerror: invalid", True, id="match across type and value"),
+        pytest.param("literal", True, id="match in value"),
+        pytest.param("keyerror", False, id="no match"),
+        pytest.param("", True, id="empty filter"),
+    ],
+)
+def test_crash_exception_row_filter(filtertext: str, expected: bool) -> None:
+    keep = crash_exception_row_filter(filtertext, "crash_exception")
+
+    assert keep({"crash_exc_type": "ValueError", "crash_exc_value": "invalid literal"}) is expected
+
+
+def test_cmp_crash_source_sorts_built_in_before_extension() -> None:
+    built_in = _traceback_row(BUILT_IN_FILE)
+    extension = _traceback_row(BUILT_IN_FILE, LOCAL_FILE)
+
+    assert cmp_crash_source("crash_exc_traceback", built_in, extension) < 0
+    assert cmp_crash_source("crash_exc_traceback", extension, built_in) > 0
+
+
+def test_cmp_crash_source_treats_extension_crashes_as_equal() -> None:
+    assert (
+        cmp_crash_source(
+            "crash_exc_traceback", _traceback_row(LOCAL_FILE), _traceback_row(OTHER_LOCAL_FILE)
+        )
+        == 0
+    )

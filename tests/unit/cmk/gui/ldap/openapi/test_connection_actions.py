@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Iterator
+from http import HTTPStatus
 
 import pytest
 from pytest_mock import MockerFixture
@@ -15,11 +16,11 @@ from cmk.gui.user_connection_config_types import (
     LDAPUserConnectionConfig,
 )
 from cmk.gui.userdb import UserConnectionConfigFile
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 # Mocking wato_audit.log as its contents are not used in these tests and accessing it causes flaky results.
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_log_audit_file(mocker: MockerFixture) -> Iterator[None]:
     mocker.patch("cmk.gui.watolib.audit_log.log_audit")
     yield
@@ -49,20 +50,22 @@ def _create_ldap_connection(ldap_id: str) -> None:
     active_config.user_connections = [ldap_config]
 
 
+@pytest.mark.usefixtures("mock_log_audit_file")
 def test_test_non_existing_connection(clients: ClientRegistry) -> None:
     resp = clients.LdapConnection.test_connection("non_existing", expect_ok=False)
-    assert resp.status_code == 404
+    assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
+@pytest.mark.usefixtures("mock_log_audit_file")
 def test_test_connection_returns_structured_results(
     clients: ClientRegistry, mocker: MockerFixture
 ) -> None:
     _create_ldap_connection("LDAP_1")
 
-    def _passing_test(connection: LDAPUserConnector, address: str) -> tuple[bool, str | None]:
+    def _passing_test(connection: LDAPUserConnector, address: str) -> tuple[bool, str | None]:  # noqa: ARG001
         return True, "All fine"
 
-    def _failing_test(connection: LDAPUserConnector, address: str) -> tuple[bool, str | None]:
+    def _failing_test(connection: LDAPUserConnector, address: str) -> tuple[bool, str | None]:  # noqa: ARG001
         return False, "Something is wrong"
 
     mocker.patch(
@@ -86,12 +89,13 @@ def test_test_connection_returns_structured_results(
     }
 
 
+@pytest.mark.usefixtures("mock_log_audit_file")
 def test_test_connection_handles_test_exceptions(
     clients: ClientRegistry, mocker: MockerFixture
 ) -> None:
     _create_ldap_connection("LDAP_1")
 
-    def _raising_test(connection: LDAPUserConnector, address: str) -> tuple[bool, str | None]:
+    def _raising_test(connection: LDAPUserConnector, address: str) -> tuple[bool, str | None]:  # noqa: ARG001
         raise RuntimeError("boom")
 
     mocker.patch(

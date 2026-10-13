@@ -17,7 +17,7 @@ from tests.system.gui.testlib.playwright.helpers import (
     url_suffix_regex,
 )
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 
@@ -118,13 +118,13 @@ class DistributedMonitoring(CmkPage):
         add_site_connection_page.fill_site_connection_form(remote_site)
         add_site_connection_page.save_button.click()
 
-    def open_add_connection_form(self) -> "AddSiteConnection":
+    def open_add_connection_form(self) -> AddSiteConnection:
         """Open the 'Add site connection' form and return its page object."""
         logger.info("Open the 'Add site connection' form")
         self.add_connection_button.click()
         return AddSiteConnection(self.page, navigate_to_page=False)
 
-    def open_edit_connection(self, site_id: str) -> "AddSiteConnection":
+    def open_edit_connection(self, site_id: str) -> AddSiteConnection:
         """Open the edit form of an existing site connection.
 
         The site ID cell links to `wato.py?mode=edit_site&site=<id>`.
@@ -133,7 +133,8 @@ class DistributedMonitoring(CmkPage):
             site_id: The ID of the site connection to edit.
         """
         logger.info("Open the edit form of site connection '%s'", site_id)
-        # Pencil link in the row's Actions column (distinct from `clone=` and `edit_site_globals`).
+        # Pencil link in the row's Actions column (distinct from `clone=` and the
+        # link to the site-specific settings).
         self._get_table_row(site_id).locator(f"a[href*='mode=edit_site&site={site_id}']").click()
         # URL stays SPA-encoded; the page object's validate_page waits on the title instead.
         return AddSiteConnection(self.page, navigate_to_page=False, edit_site_id=site_id)
@@ -215,9 +216,10 @@ class DistributedMonitoring(CmkPage):
         login_page.fill_login_form(credentials)
         login_page.login_button.click()
 
-    def site_specific_global_configuration(self, site_id: str) -> Locator:
-        """Configure the site-specific global settings"""
-        return self.main_area.locator(f"a[href*='mode=edit_site_globals&site={site_id}']")
+    def site_specific_settings_link(self, site_id: str) -> Locator:
+        return self._get_table_row(site_id).get_by_role(
+            "link", name="Site-specific global configuration"
+        )
 
     def is_remote_site_licensed(self, site_id: str) -> bool | None:
         """Check if a remote site is licensed.

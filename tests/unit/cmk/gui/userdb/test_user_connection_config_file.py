@@ -9,8 +9,6 @@ and SAML connection specs must still validate against the current schema when
 they are loaded through ``UserConnectionConfigFile`` — no validation error.
 """
 
-from __future__ import annotations
-
 import pytest
 
 from cmk.gui.user_connection_config_types import (

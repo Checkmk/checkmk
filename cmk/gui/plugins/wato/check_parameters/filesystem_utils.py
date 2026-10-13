@@ -105,12 +105,12 @@ def _get_free_used_dynamic_valuespec(
                 elements=[
                     Integer(
                         title=_("Warning if %(course)s") % {"course": course},
-                        unit=_("MB"),
+                        unit=_("MiB"),
                         minvalue=0 if level_perspective == "used" else 1,
                     ),
                     Integer(
                         title=_("Critical if %(course)s") % {"course": course},
-                        unit=_("MB"),
+                        unit=_("MiB"),
                         minvalue=0 if level_perspective == "used" else 1,
                     ),
                 ],
@@ -350,7 +350,7 @@ def _filesystem_magic_elements() -> list[DictionaryEntry]:
                 title=_("Reference size for magic factor"),
                 default_value=20,
                 minvalue=1,
-                unit=_("GB"),
+                unit=_("GiB"),
             ),
         ),
         (
@@ -426,7 +426,7 @@ def size_trend_elements() -> list[DictionaryEntry]:
         (
             "trend_shrinking_bytes",
             Tuple(
-                title=_("Levels on decreasing trends in MB per time range"),
+                title=_("Levels on decreasing trends in MiB per time range"),
                 elements=[
                     Filesize(title=_("Warning at"), default_value=1 * 1024**3),
                     Filesize(title=_("Critical at"), default_value=4 * 1024**3),

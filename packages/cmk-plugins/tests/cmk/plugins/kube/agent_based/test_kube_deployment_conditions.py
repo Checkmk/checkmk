@@ -6,8 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 
-# ruff: noqa: SLF001  # Private member accessed
-
 
 import json
 from collections.abc import Mapping
@@ -142,7 +140,7 @@ def section(string_table: StringTable) -> DeploymentConditions:
 
 @pytest.fixture
 def check_result(params: Mapping[str, VSResultAge], section: DeploymentConditions) -> CheckResult:
-    return kube_deployment_conditions._check(TIMESTAMP, params, section)
+    return kube_deployment_conditions._check(TIMESTAMP, params, section)  # noqa: SLF001
 
 
 def test_ok_state_mappings_match_conditions() -> None:
@@ -156,11 +154,6 @@ def test_parse(string_table: StringTable) -> None:
     section = kube_deployment_conditions.parse(string_table)
     assert section is not None
     assert len(section.model_dump()) == 3
-
-
-def test_discovery(section: DeploymentConditions) -> None:
-    discovered_services = list(kube_deployment_conditions.discovery(section))
-    assert len(discovered_services) == 1
 
 
 def test_all_ok_check_result(check_result: CheckResult) -> None:

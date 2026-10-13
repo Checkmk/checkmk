@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { WelcomeCards } from 'cmk-shared-typing/typescript/welcome'
 import CmkAccordionStepPanelItem from 'cmk-ui-library/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkLinkCard from 'cmk-ui-library/components/CmkLinkCard'
@@ -59,17 +59,14 @@ const currentStep: Ref<number> = usePersistentRef<number>(
       }}
     </StepParagraph>
 
-    <CmkAlertBox :heading="_t('Before adjusting thresholds')">
-      {{
+    <CmkAlert
+      :heading="_t('Before adjusting thresholds')"
+      :text="
         _t(
-          `Make sure you understand what the monitoring data is telling you.
-          If a service reports a problem, first verify and fix real issues.
-          Thresholds should help detect real problems - not hide them.
-          Poorly tuned thresholds can lead to false alarms, masking of problems,
-          and reduces trust in the monitoring system.`
+          `Make sure you understand what the monitoring data is telling you. If a service reports a problem, first verify and fix real issues. Thresholds should help detect real problems - not hide them. Poorly tuned thresholds can lead to false alarms, masking of problems, and reduces trust in the monitoring system.`
         )
-      }}
-    </CmkAlertBox>
+      "
+    />
 
     <CmkWizard v-model="currentStep" mode="guided">
       <CmkWizardStep :index="0" :is-completed="() => currentStep > 0 || accomplished">

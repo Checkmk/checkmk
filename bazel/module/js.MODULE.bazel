@@ -1,5 +1,5 @@
 node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node", dev_dependency = True)
-node.toolchain(node_version = "22.14.0")
+node.toolchain(node_version = "22.23.1")
 
 pnpm = use_extension("@aspect_rules_js//npm:extensions.bzl", "pnpm", dev_dependency = True)
 pnpm.pnpm(
@@ -23,11 +23,31 @@ npm.npm_translate_lock(
         "//packages/cmk-werk:package.json",
     ],
     npmrc = "//:.npmrc",
+    # Patches are keyed by version: rules_js rejects a key that matches no
+    # package, so an upgrade fails until the patches have been revisited.
+    # patch_args only apply to packages with patches. They are git style, and
+    # without fuzz a patch which does not apply exactly fails, too.
+    patch_args = {"*": [
+        "-p1",
+        "--fuzz=0",
+    ]},
+    patches = {
+        "npm-groovy-lint@18.0.0": [
+            # Carried locally — no upstream PR yet.
+            "//bazel/patches:npm-groovy-lint-multiline-strings.patch",
+            "//bazel/patches:npm-groovy-lint-report-formatting-rules.patch",
+        ],
+    },
     pnpm_lock = ":pnpm-lock.yaml",
     verify_node_modules_ignored = "//:.bazelignore",
 )
 use_repo(npm, "npm")
 
-rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
-rules_ts_ext.deps()
+rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript", dev_dependency = True)
+
+# Pin the compiler explicitly.  Without a version rules_ts hands us whatever its
+# TOOL_VERSIONS happens to end with, the lockfile does not record it, and a
+# ruleset bump silently moves the compiler CI type checks with.  Keep this in
+# sync with the "typescript" devDependency of the frontend packages.
+rules_ts_ext.deps(version = "6.0.3")
 use_repo(rules_ts_ext, "npm_typescript")

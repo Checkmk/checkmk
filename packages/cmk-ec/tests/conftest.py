@@ -119,7 +119,7 @@ def fixture_perfcounters() -> Perfcounters:
 
 
 class RaisingConnection:
-    def query(self, query: str) -> Sequence[Sequence[Any]]:
+    def query(self, query: str) -> Sequence[Sequence[Any]]:  # noqa: ARG002
         raise Exception("no queries allowed")
 
 

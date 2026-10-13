@@ -61,6 +61,12 @@ export interface TextWidgetProps {
   tooltip?: TranslatedString | null
 }
 
+export interface CodeWidgetProps {
+  code: string
+  title: TranslatedString
+  download_filename?: string | null
+}
+
 export interface CompositeWidgetProps {
   /** @property {ComponentSpec[]} items - Widgets being part of the composite element */
   items: ComponentSpec[]
@@ -95,6 +101,7 @@ export interface ConditionalNotificationDialogWidgetProps extends ConditionalNot
 
 type SingleWidgetSpec =
   | TextWidgetProps
+  | CodeWidgetProps
   | NoteTextWidgetProps
   | DialogWidgetProps
   | ListWidgetProps
@@ -102,7 +109,13 @@ type SingleWidgetSpec =
   | FormSpecRecapWidgetProps
 type CompositeWidgetSpec = CollapsibleWidgetProps | ConditionalNotificationStageWidgetProps
 
-type SingleWidgetType = 'text' | 'note_text' | 'list_of_widgets' | 'form_spec' | 'form_spec_recap'
+type SingleWidgetType =
+  | 'text'
+  | 'code'
+  | 'note_text'
+  | 'list_of_widgets'
+  | 'form_spec'
+  | 'form_spec_recap'
 type CompositeWidgetType =
   | 'collapsible'
   | 'conditional_notification_host_event_stage_widget'

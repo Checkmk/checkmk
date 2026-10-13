@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+import re
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import NotRequired, override, Self, TypedDict
+from typing import Final, NotRequired, override, Self, TypedDict
 
-import cmk.ccc.version as cmk_version
+import cmk.ccc.version_info as cmk_version_info
 import cmk.utils.paths
 from cmk.ccc.site import omd_site
 from cmk.crash import (
@@ -26,7 +27,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.utils.mobile import is_mobile
 from cmk.web.utils import escaping
-from cmk.web.utils.urls import makeuri, requested_file_name
+from cmk.web.utils.urls import makeuri, makeuri_contextless, requested_file_name
 
 
 class DashletDetails(TypedDict):
@@ -88,7 +89,7 @@ class GUICrashReport(ABCCrashReport[GUIDetails]):
                 language=get_current_language(),
                 request_method=request.request_method,
             )
-        except (RuntimeError, AttributeError):
+        except RuntimeError, AttributeError:
             # TODO: for the moment we set the request details to unknown, but we should probably
             #  introduce a new crash report type which does not require request details
             request_details = RequestDetails(
@@ -140,6 +141,92 @@ class GUICrashReport(ABCCrashReport[GUIDetails]):
         )
 
 
+class JavascriptDetails(TypedDict):
+    url: str
+    component: str
+    user_agent: str
+    username: str | None
+    language: str
+    context: str
+
+
+class JavascriptCrashReport(ABCCrashReport[JavascriptDetails]):
+    """Crash report for an error caught in the browser by the Checkmk frontend.
+
+    Unlike the other crash types the exception did not happen in this process, so
+    the exception fields are filled from the data the browser reported instead of
+    from the current Python exception context.
+    """
+
+    _V8_FRAME: Final = re.compile(r"^at\s+(?:(?P<function>.*?)\s+)?\((?P<location>.+)\)$")
+    _V8_BARE_FRAME: Final = re.compile(r"^at\s+(?P<location>[^\s()]+)$")
+    _SPIDERMONKEY_FRAME: Final = re.compile(r"^(?P<function>[^@]*)@(?P<location>.+)$")
+    _FRAME_LOCATION: Final = re.compile(r"^(?P<file>.+?):(?P<line>\d+)(?::\d+)?$")
+
+    @classmethod
+    @override
+    def type(cls) -> str:
+        return "javascript"
+
+    @classmethod
+    def from_browser_error(
+        cls,
+        *,
+        version_info: VersionInfo,
+        error_name: str,
+        error_message: str,
+        stack: str,
+        details: JavascriptDetails,
+        crash_report_base_path: Path,
+    ) -> Self:
+        crash_info = cls.make_crash_info(version_info, details)
+        crash_info["exc_type"] = escaping.strip_tags(error_name)
+        crash_info["exc_value"] = escaping.strip_tags(error_message)
+        crash_info["exc_traceback"] = cls.parse_stack(stack)
+        crash_info["local_vars"] = ""
+        return cls(crash_report_base_path=crash_report_base_path, crash_info=crash_info)
+
+    def url(self) -> str:
+        return makeuri_contextless(
+            request,
+            [
+                ("site", str(omd_site())),
+                ("crash_id", self.ident_to_text()),
+            ],
+            filename="crash.py",
+        )
+
+    @classmethod
+    def parse_stack(cls, stack: str) -> Sequence[tuple[str, int, str, str]]:
+        """Turn a browser stack trace into the frame format used by all crash reports.
+
+        Frames the browser reported without a source location, and the leading
+        ``Name: message`` line V8 prepends, have no frame representation and are
+        dropped.
+        """
+        return [
+            frame
+            for line in stack.splitlines()
+            if (frame := cls._parse_frame(line.strip())) is not None
+        ]
+
+    @classmethod
+    def _parse_frame(cls, line: str) -> tuple[str, int, str, str] | None:
+        for pattern in (cls._V8_FRAME, cls._V8_BARE_FRAME, cls._SPIDERMONKEY_FRAME):
+            if (frame := pattern.match(line)) is None:
+                continue
+            if (location := cls._FRAME_LOCATION.match(frame["location"])) is None:
+                continue
+            function = (frame.groupdict().get("function") or "").strip()
+            return (
+                location["file"],
+                int(location["line"]),
+                function or "<anonymous>",
+                line,
+            )
+        return None
+
+
 def handle_exception_as_gui_crash_report(
     details: GUIDetails | None = None,
     plain_error: bool = False,
@@ -174,7 +261,7 @@ def create_gui_crash_report(
     details: GUIDetails | None = None,
 ) -> GUICrashReport:
     crash = GUICrashReport.from_exception(
-        version_info=cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+        version_info=cmk_version_info.get_general_version_infos(cmk.utils.paths.omd_root),
         details=details,
         crash_report_base_path=make_crash_report_base_path(cmk.utils.paths.omd_root),
     )
@@ -183,7 +270,7 @@ def create_gui_crash_report(
 
 
 def _show_crash_dump_message(
-    crash: "GUICrashReport",
+    crash: GUICrashReport,
     plain_text: bool,
     fail_silently: bool,
     show_crash_link: bool | None,

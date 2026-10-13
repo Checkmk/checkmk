@@ -37,6 +37,7 @@ class TestService extends MonitoringService<TestItem> {
 const schema: TableStateSchema = {
   hideable: [],
   sortable: new Set(['name']),
+  defaultSort: [],
   defaultVisibility: {},
   offeredLimits: [1000, 5000]
 }

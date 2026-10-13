@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Checkmk development script to manage Werks"""
 
-# mypy: disable-error-code="comparison-overlap"
-
 import argparse
 import datetime
 import errno
 import getpass
+import logging
 import os
 import shlex
 import subprocess
@@ -33,19 +32,20 @@ from ..config import (
 )
 from ..format import format_as_markdown_werk
 from ..models import EditionV2, EditionV3
-from ..parse import WerkMetadata, WerkV3ParseResult
+from ..parse import WerkMetadata, WerkV2ParseResult, WerkV3ParseResult
 from ..utils import resolve_version
+from .id_log import get_werk_id_logger
 from .id_pool import (
-    add_id_to_stash,
     dump_stash_to_file,
-    load_legacy_stash_from_file,
     load_or_update_stash,
     load_stash_from_file,
     make_paths_object,
     migrate_werk_ids_file,
-    pick_id_from_stash,
     WerkIDsClient,
     write_secret,
+)
+from .id_pool import (
+    Paths as Paths,
 )
 from .in_out_elements import (
     ask_user_if_not_provided,
@@ -61,22 +61,12 @@ from .in_out_elements import (
     TTY_NORMAL,
     TTY_RED,
 )
-from .stash import LegacyStash, Stash
 from .status import collect_status, render_json, render_status
 from .werk import Werk, WerkId
 
 WerkVersion = Literal["v1", "markdown"]
 
 _REDIRECTED_WIDTH = 200
-
-WERK_ID_RANGES = {
-    # start is inclusive, end is exclusive, as it is in range()
-    "cma": [(9_000, 10_000)],
-    "cmk": [(10_000, 1_000_000)],
-    "cloudmk": [(1_000_000, 2_000_000)],
-}
-
-_FIRST_UNSUPPORTED_WERK_ID_FOR_LEGACY_WORKFLOW = 22003
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -150,41 +140,14 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
     parser_grep.set_defaults(func=main_grep)
 
-    # IDS
-    parser_ids = subparsers.add_parser(
-        "ids",
-        help="Show the number of reserved Werk IDs (reserving via 'ids <NR>' is legacy-only, removed start of September 2026)",
-    )
-    parser_ids.add_argument(
-        "count",
-        nargs="?",
-        type=int,
-        help=(
-            "number of Werks to reserve. Only supported with the legacy "
-            "reservation mechanism. From the start of August 2026 on, reserving "
-            "Werk IDs at or above 22003 is rejected; the mechanism will be "
-            "removed entirely at the start of September 2026, after which IDs "
-            "are reserved automatically."
-        ),
-    )
-    parser_ids.add_argument(
-        "-n",
-        "--no-commit",
-        action="store_true",
-        help="do not commit at the end",
-    )
-    parser_ids.add_argument(
-        "--skip-master-branch-check",
-        action="store_true",
-        help=(
-            "The werk tool checks if you are on the master branch, because "
-            "reserving werk ids has to happen in a central place, and this "
-            "place is the master branch. Normally this check is desired, but "
-            "it does not work with some workflows such as when using jj. This "
-            "flag allows you to bypass the check."
-        ),
-    )
-    parser_ids.set_defaults(func=main_fetch_ids)
+    # IDS (removed)
+    parser_ids = subparsers.add_parser("ids", help="[Removed] Please use 'status' instead")
+    # 'count', '--no-commit' and '--json' are only accepted so that invocations from the
+    # days of manual reservation run 'status' instead of failing with an argparse error
+    parser_ids.add_argument("count", nargs="?", type=int, help=argparse.SUPPRESS)
+    parser_ids.add_argument("-n", "--no-commit", action="store_true", help=argparse.SUPPRESS)
+    parser_ids.add_argument("--json", action="store_true", help=argparse.SUPPRESS)
+    parser_ids.set_defaults(func=main_status)
 
     # LIST
     parser_list = subparsers.add_parser("list", help="List Werks")
@@ -386,7 +349,7 @@ def git_modified_files() -> set[WerkId]:
     for line in os.popen("git status --porcelain"):
         if line[0] in "AM" and ".werks/" in line:
             try:
-                wid = line.rsplit("/", 1)[-1].strip()
+                wid = line.rsplit("/", 1)[-1].strip().removesuffix(".md")
                 modified.add(WerkId(int(wid)))
             except Exception:
                 pass
@@ -405,6 +368,16 @@ def load_werk(werk_path: Path) -> Werk:
     parsed = parse_werk(
         file_content=werk_path.read_text(encoding="utf-8"), file_name=werk_path.name
     )
+
+    if "version" not in parsed.metadata:
+        metadata: WerkMetadata = {
+            **parsed.metadata,
+            "version": get_config().current_version,
+        }
+        if isinstance(parsed, WerkV2ParseResult):
+            parsed = WerkV2ParseResult(metadata, parsed.description)
+        else:
+            parsed = WerkV3ParseResult(metadata, parsed.description)
 
     return Werk(
         path=werk_path,
@@ -444,7 +417,7 @@ def git_move(source: Path, destination: Path) -> None:
     subprocess.check_call(["git", "mv", str(source), str(destination)])
 
 
-def git_commit(werk: Werk, custom_files: list[str]) -> None:
+def git_commit(werk: Werk, custom_files: Sequence[str]) -> None:
     title = werk.content.metadata["title"]
     for classid, _classname, prefix in get_config().classes:
         if werk.content.metadata["class"] == classid and prefix:
@@ -453,10 +426,7 @@ def git_commit(werk: Werk, custom_files: list[str]) -> None:
     title = f"{werk.content.metadata['id'].rjust(5, '0')} {title}"
 
     if custom_files:
-        files_to_commit = custom_files
-        default_files = [".werks"]
-        for entry in default_files:
-            files_to_commit.append(f"{git_top_level()}/{entry}")
+        files_to_commit = [*custom_files, f"{git_top_level()}/.werks"]
 
         os.chdir(BASE_DIR)
         cmd = "git commit {} -m {}".format(
@@ -486,6 +456,11 @@ def git_top_level() -> str:
 
 def something_in_git_index() -> bool:
     return any(line[0] == "M" for line in os.popen("git status --porcelain"))
+
+
+def _launcher() -> str:
+    # Bazel runs the tool out of a runfiles tree; the venv entry point does not.
+    return "bazel" if "RUNFILES_DIR" in os.environ else "venv"
 
 
 def list_werk(werk: Werk) -> None:
@@ -520,35 +495,37 @@ def show_werk(werk: Werk) -> None:
     sys.stdout.write(f"\n{werk.content.description}\n")
 
 
+_FilterKey = Literal["edition", "component", "level", "class", "version", "compatible"]
+
+
 def main_list(args: argparse.Namespace, fmt: str) -> None:
     # arguments are tags from state, component and class. Multiple values
     # in one class are orred. Multiple types are anded.
 
     # we os.chdir to the .werks folder quite early on
     # but in this case we need the repo root:
-    rtc = RuntimeConfiguration(Path(".").parent)
+    rtc = RuntimeConfiguration(Path(".."))
 
     werks: list[Werk] = list(load_werks().values())
     versions = sorted({resolve_version(rtc, werk.content.metadata["version"]) for werk in werks})
 
-    filters: dict[str, list[str]] = {}
+    filters: dict[_FilterKey, list[str]] = {}
+    candidates: Sequence[tuple[_FilterKey, Sequence[str]]] = [
+        ("edition", [name for name, _title in get_config().editions]),
+        ("component", [name for name, _title in get_config().all_components()]),
+        ("level", [name for name, _title in get_config().levels]),
+        ("class", [name for name, _title, _prefix in get_config().classes]),
+        ("version", versions),
+        ("compatible", [name for name, _title in get_config().compatible]),
+    ]
 
     for a in args.filter:
         if a == "current":
             a = get_config().current_version
 
         hit = False
-        for tp, values in [
-            ("edition", get_config().editions),
-            ("component", get_config().all_components()),
-            ("level", get_config().levels),
-            ("class", get_config().classes),
-            ("version", versions),
-            ("compatible", get_config().compatible),
-        ]:
-            for v in values:  # type: ignore[attr-defined] # all of them are iterable.
-                if isinstance(v, tuple):
-                    v = v[0]
+        for tp, values in candidates:
+            for v in values:
                 if v.startswith(a):
                     entries = filters.get(tp, [])
                     entries.append(v)
@@ -568,7 +545,7 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:
     for werk in werks:
         skip = False
         for tp, entries in filters.items():
-            value = werk.content.metadata[tp]  # type: ignore[literal-required]
+            value = werk.content.metadata[tp]
             if tp == "edition":
                 with suppress(ValueError):
                     value = EditionV3.from_v2(EditionV2(value)).value
@@ -594,8 +571,7 @@ def output_csv(werks: list[Werk]) -> None:
     def line(*parts: int | str) -> None:
         sys.stdout.write('"' + '";"'.join(map(str, parts)) + '"\n')
 
-    nr = 1
-    for entry in get_config().components:
+    for nr, entry in enumerate(get_config().components, start=1):
         if len(entry) != 2:
             bail_out(f"invalid component {entry!r}")
         name, alias = entry
@@ -607,7 +583,6 @@ def output_csv(werks: list[Werk]) -> None:
             if werk.content.metadata["component"] == name:
                 total_effort += werk_effort(werk)
         line("", f"{nr}. {alias}", "", total_effort)
-        nr += 1
 
         for werk in werks:
             if werk.content.metadata["component"] == name:
@@ -627,13 +602,9 @@ def output_csv(werks: list[Werk]) -> None:
 
 def werk_class(werk: Werk) -> str:
     cl = werk.content.metadata["class"]
-    for entry in get_config().classes:
-        # typing: why would this be? LH: Tuple[str, str, str], RH: str
-        if entry == cl:
-            return cl  # type: ignore[unreachable]
-
-        if entry[0] == cl:
-            return entry[1]
+    for class_id, class_name, _prefix in get_config().classes:
+        if class_id == cl:
+            return class_name
     return cl
 
 
@@ -751,8 +722,11 @@ def main_new(args: argparse.Namespace) -> None:
         sys.stdout.write(TTY_GREEN + WERK_NOTES + TTY_NORMAL)
 
     paths = make_paths_object(Path.home())
-    stash = load_or_update_stash(paths, WerkIDsClient(get_config().werk_ids_server_url))
-    werk_id = pick_id_from_stash(stash, get_config().project)
+    log = get_werk_id_logger(paths.log_file)
+    stash = load_or_update_stash(
+        paths, WerkIDsClient(get_config().werk_ids_server_url), log, _launcher()
+    )
+    werk_id = stash.pick_id()
 
     metadata: WerkMetadata = {}
     metadata["id"] = str(werk_id)
@@ -806,6 +780,14 @@ def main_new(args: argparse.Namespace) -> None:
 
     stash.free_id(werk_id)
     dump_stash_to_file(paths, stash)
+    log.info(
+        "launcher:%(launcher)s, action:new, werk ID:%(werk_id)s, werk file:%(werk_file)s",
+        {
+            "launcher": _launcher(),
+            "werk_id": werk_id,
+            "werk_file": werk_path.resolve(),
+        },
+    )
 
     sys.stdout.write(f"Werk {format_werk_id(werk_id)} saved.\n")
     sys.stderr.write(
@@ -825,9 +807,7 @@ def main_meisterwerk_removed(_args: argparse.Namespace) -> None:
 def get_werk_arg(arg: WerkId | None) -> WerkId:
     wid = get_last_werk() if arg is None else arg
 
-    werk = load_werk(werk_path_by_id(wid))
-    if not werk:
-        bail_out("No such Werk.\n")
+    load_werk(werk_path_by_id(wid))
     save_last_werkid(wid)
     return wid
 
@@ -839,23 +819,24 @@ def main_init() -> None:
         return
 
     paths = make_paths_object(Path.home())
+    log = get_werk_id_logger(paths.log_file)
 
     if paths.secret_file.exists() and werk_ids_client.test_connection(paths.secret_file):
         sys.stdout.write("Everything is fine.\n")
         # The secret is already valid, so migrate any leftover legacy file (e.g. when
         # both a legacy and a new stash file are present) instead of leaving it behind.
         if paths.legacy_stash_file.exists():
-            migrate_werk_ids_file(paths)
+            migrate_werk_ids_file(paths, log, _launcher())
         return
 
     while True:
-        secret = getpass.getpass("Secret: ")
+        secret = getpass.getpass("Secret (Bitwarden: Werk IDs reservation secret): ")
         write_secret(paths.secret_file, secret)
 
         # Only migrate the legacy file once the secret is confirmed correct. A wrong
         # secret leaves the legacy stash untouched, so it stays usable for 'werk create'.
         if werk_ids_client.test_connection(paths.secret_file):
-            migrate_werk_ids_file(paths)
+            migrate_werk_ids_file(paths, log, _launcher())
             break
 
     sys.stdout.write(
@@ -891,7 +872,7 @@ def main_status(args: argparse.Namespace) -> None:
 
 
 def main_blame(args: argparse.Namespace) -> None:
-    wid = get_werk_arg(WerkId(args.id))
+    wid = get_werk_arg(None if args.id is None else WerkId(args.id))
     os.system(f"git blame {werk_path_by_id(wid)}")  # nosec B605 # BNS:a52d7f
 
 
@@ -902,7 +883,7 @@ def main_url(args: argparse.Namespace) -> None:
 
 def main_delete(args: argparse.Namespace) -> None:
     paths = make_paths_object(Path.home())
-
+    log = get_werk_id_logger(paths.log_file)
     for werk_id in [WerkId(i) for i in args.id]:
         if not werk_exists(werk_id):
             bail_out(f"There is no Werk {format_werk_id(werk_id)}.")
@@ -916,8 +897,15 @@ def main_delete(args: argparse.Namespace) -> None:
             continue
         sys.stdout.write(f"Deleted Werk {format_werk_id(werk_id)} ({werk_to_be_removed_title}).\n")
         stash = load_stash_from_file(paths)
-        add_id_to_stash(stash, werk_id, get_config().project)
+        stash.add_ids([werk_id])
         dump_stash_to_file(paths, stash)
+        log.info(
+            "launcher:%(launcher)s, action:delete, werk ID:%(werk_id)s",
+            {
+                "launcher": _launcher(),
+                "werk_id": werk_id,
+            },
+        )
         sys.stdout.write(f"You lucky bastard now own the Werk ID {format_werk_id(werk_id)}.\n")
 
 
@@ -975,6 +963,29 @@ def main_edit(args: argparse.Namespace) -> None:
     save_last_werkid(werkid)
 
 
+def _edit_until_loadable(editor: str, werk_path: Path) -> Werk:
+    initial_werk_text = werk_path.read_text(encoding="utf-8")
+    number_of_lines_in_werk = initial_werk_text.count("\n")
+
+    while True:
+        if os.system(f"bash -c '{editor} +{number_of_lines_in_werk} {werk_path}'") != 0:  # nosec B605 # BNS:a52d7f
+            bail_out("Editor returned error, something is very wrong!")
+
+        try:
+            werk = load_werk(werk_path)
+            cmk_werks_load_werk(file_content=werk.path.read_text(), file_name=werk.path.name)
+            return werk
+        except Exception:
+            sys.stdout.write(initial_werk_text + "\n\n")
+            sys.stdout.write(traceback.format_exc() + "\n\n")
+            sys.stdout.write(
+                "Could not load the Werk, see exception above.\n"
+                "You may copy the initial Werk text above the exception to fix your Werk.\n"
+                "Will reopen the editor, after you acknowledged with enter\n"
+            )
+            input()
+
+
 def edit_werk(werk_path: Path, custom_files: list[str] | None = None, commit: bool = True) -> None:
     if custom_files is None:
         custom_files = []
@@ -989,31 +1000,7 @@ def edit_werk(werk_path: Path, custom_files: list[str] | None = None, commit: bo
     if not editor:
         bail_out("No editor available (please set EDITOR).\n")
 
-    initial_werk_text = werk_path.read_text(encoding="utf-8")
-    number_of_lines_in_werk = initial_werk_text.count("\n")
-    werk = None
-
-    while True:
-        if os.system(f"bash -c '{editor} +{number_of_lines_in_werk} {werk_path}'") != 0:  # nosec B605 # BNS:a52d7f
-            bail_out("Editor returned error, something is very wrong!")
-
-        try:
-            werk = load_werk(werk_path)
-            # validate the werk, to make sure the commit part at the bottom will work
-            cmk_werks_load_werk(file_content=werk.path.read_text(), file_name=werk.path.name)
-            break
-        except Exception:
-            sys.stdout.write(initial_werk_text + "\n\n")
-            sys.stdout.write(traceback.format_exc() + "\n\n")
-            sys.stdout.write(
-                "Could not load the Werk, see exception above.\n"
-                "You may copy the initial Werk text above the exception to fix your Werk.\n"
-                "Will reopen the editor, after you acknowledged with enter\n"
-            )
-            input()
-
-    if werk is None:
-        bail_out("This should not have happened, Werk is None during edit_werk.")
+    werk = _edit_until_loadable(editor, werk_path)
 
     _git_add(werk_path)
     if commit and get_config().create_commit:
@@ -1021,16 +1008,24 @@ def edit_werk(werk_path: Path, custom_files: list[str] | None = None, commit: bo
 
 
 def main_pick(args: argparse.Namespace) -> None:
+    paths = make_paths_object(Path.home())
+    log = get_werk_id_logger(paths.log_file)
     for commit_id in args.commit:
-        werk_cherry_pick(commit_id, args.no_commit, get_werk_file_version())
+        werk_cherry_pick(commit_id, args.no_commit, get_werk_file_version(), log)
 
 
 class WerkToPick(NamedTuple):
+    id: WerkId
     source: Path
     destination: Path
 
 
-def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion) -> None:
+def werk_cherry_pick(
+    commit_id: str,
+    no_commit: bool,
+    werk_version: WerkVersion,
+    log: logging.Logger,
+) -> None:
     # First get the werk_id
     try:
         result = subprocess.run(
@@ -1046,11 +1041,11 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
         filename = Path(line.decode("utf-8"))
         if filename.parent.name == ".werks" and filename.name.removesuffix(".md").isdigit():
             # we os.chdir into the werks folder, so now we can not use the git paths as is
+            werk_id = WerkId(int(filename.name.removesuffix(".md")))
             found_werk_path = WerkToPick(
+                id=werk_id,
                 source=Path(filename.name),
-                destination=get_werk_filename(
-                    WerkId(int(filename.name.removesuffix(".md"))), werk_version
-                ),
+                destination=get_werk_filename(werk_id, werk_version),
             )
 
     if found_werk_path is not None and (
@@ -1083,6 +1078,14 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
         # Change the werk's version before checking the pick return code.
         # Otherwise the dev may forget to change the version
         change_werk_version(found_werk_path.destination, get_config().current_version, werk_version)
+        log.info(
+            "launcher:%(launcher)s, action:pick, werk ID:%(werk_id)s, werk file:%(werk_file)s",
+            {
+                "launcher": _launcher(),
+                "werk_id": found_werk_path.id,
+                "werk_file": found_werk_path.destination.resolve(),
+            },
+        )
         sys.stdout.write(
             f"Changed version of Werk {found_werk_path.destination} "
             f"to {get_config().current_version}.\n"
@@ -1101,124 +1104,8 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
             subprocess.run(["git", "commit", "--no-edit", "--amend"], check=True)
         else:
             sys.stdout.write("We don't commit yet. Here is the status:\n")
-            sys.stdout.write("Please commit with git commit -C '{commit_id}'\n\n")
+            sys.stdout.write(f"Please commit with git commit -C '{commit_id}'\n\n")
             subprocess.run(["git", "status"], check=True)
-
-
-def current_branch() -> str:
-    result = subprocess.run(["git", "branch", "--show-current"], check=True, capture_output=True)
-    return result.stdout.strip().decode("utf-8")
-
-
-def current_repo() -> str:
-    return (
-        list(os.popen("git config --get remote.origin.url"))[0]
-        .strip()
-        .split("@")[-1]
-        .removesuffix(".git")
-    )
-
-
-def _reserve_werk_ids(
-    ranges: list[tuple[int, int]], first_free: int, count: int
-) -> tuple[int, list[WerkId]]:
-    buffer: list[WerkId] = []
-    while ranges:
-        start, end = ranges.pop(0)
-        if first_free > end:
-            # range already complelty exhausted
-            continue
-        if first_free < start:
-            # first_free is not in our range!
-            raise RuntimeError("Configuration error: first_free no in range!")
-        new_first_free = first_free + count
-        if new_first_free < end:
-            return new_first_free, buffer + [WerkId(i) for i in range(first_free, new_first_free)]
-        buffer += [WerkId(i) for i in range(first_free, end)]
-        count -= end - first_free
-        if not ranges:
-            raise RuntimeError(
-                "Not enough ids available, please add a fresh range to WERK_ID_RANGES"
-            )
-        first_free = ranges[0][0]
-
-    raise RuntimeError("could not allocate ids")
-
-
-def _reject_ids_unsupported_by_legacy_workflow(werk_ids: Sequence[WerkId]) -> None:
-    if any(werk_id.id >= _FIRST_UNSUPPORTED_WERK_ID_FOR_LEGACY_WORKFLOW for werk_id in werk_ids):
-        bail_out(
-            "The manual reservation of werk IDs is no longer supported. Please run 'werk init' "
-            "to migrate to the new reservation mechanism, which reserves werk IDs on the fly "
-            "during 'werk new'."
-        )
-
-
-def main_fetch_ids(args: argparse.Namespace) -> None:
-    paths = make_paths_object(Path.home())
-    stash = load_stash_from_file(paths)
-
-    if args.count is None:
-        sys.stdout.write(f"You have {stash.count()} reserved IDs\n")
-        if isinstance(stash, LegacyStash):
-            sys.stdout.write(
-                "\n".join(f"{project}: {len(ids)}" for project, ids in stash.ids_by_project.items())
-            )
-            sys.stdout.write("\n")
-        sys.exit(0)
-
-    if isinstance(stash, Stash):
-        bail_out(
-            "You already converted to the new workflow, there is no need to reserve Werks. "
-            "Go live your happy life and just create Werks."
-        )
-
-    if not args.skip_master_branch_check and (
-        current_branch() != get_config().branch or current_repo() != get_config().repo
-    ):
-        bail_out(
-            f"Werk IDs can only be reserved on the '{get_config().branch}' branch on "
-            f"'{get_config().repo}', not '{current_branch()}' on '{current_repo()}'."
-        )
-
-    # Get the start werk_id to reserve
-    try:
-        with open("first_free", encoding="utf-8") as f:
-            first_free = int(f.read().strip())
-    except (OSError, ValueError) as e:
-        raise RuntimeError("Could not load .werks/first_free") from e
-
-    project = get_config().project
-    if project not in WERK_ID_RANGES:
-        raise RuntimeError(f"project {project} has no Werk ID range")
-    ranges = WERK_ID_RANGES[project].copy()
-
-    new_first_free, fresh_ids = _reserve_werk_ids(ranges, first_free, args.count)
-
-    _reject_ids_unsupported_by_legacy_workflow(fresh_ids)
-
-    stash = load_legacy_stash_from_file(paths)
-    for werk_id in fresh_ids:
-        add_id_to_stash(stash, werk_id, project=project)
-    dump_stash_to_file(paths, stash)
-
-    # Store the new reserved werk ids
-    with open("first_free", "w", encoding="utf-8") as f:
-        f.write(str(new_first_free) + "\n")
-
-    sys.stdout.write(
-        f"Reserved {args.count} additional IDs now. You have {stash.count()} reserved IDs now.\n"
-    )
-
-    if get_config().create_commit and not args.no_commit:
-        if os.system(f"git commit --no-verify -m 'Reserved {args.count} Werk IDS' .") == 0:  # nosec B605 # BNS:a52d7f
-            sys.stdout.write("--> Successfully committed reserved Werk IDS. Please push it soon!\n")
-        else:
-            bail_out("Cannot commit.")
-    else:
-        sys.stdout.write(
-            "--> Reserved Werk IDs. Commit and push it soon, otherwise someone else reserves the same IDs!\n"
-        )
 
 
 def main_preview(args: argparse.Namespace) -> None:

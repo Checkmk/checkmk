@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, Result, Service, State
+from cmk.agent_based.v2 import CheckResult, Result, State
 from cmk.plugins.podman.agent_based.lib import (
     ContainerHealth,
     HealthCheckLog,
@@ -16,7 +16,6 @@ from cmk.plugins.podman.agent_based.lib import (
 )
 from cmk.plugins.podman.agent_based.podman_container_health import (
     check_podman_container_health,
-    discover_podman_container_health,
     Params,
 )
 
@@ -56,10 +55,6 @@ SECTION_NO_HEALTHCHECK = SectionPodmanContainerInspect(
     RestartCount=5,
     Pod="",
 )
-
-
-def test_discover_podman_container_health() -> None:
-    assert list(discover_podman_container_health(SECTION_RUNNING)) == [Service()]
 
 
 @pytest.mark.parametrize(

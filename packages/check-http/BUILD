@@ -1,10 +1,10 @@
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_library", "rust_test", "rust_test_suite")
 load("@site_crates//:defs.bzl", "aliases", "all_crate_deps")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:patchelf.bzl", "set_runpath")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:xcomp/rust.bzl", "rust_binary")
 
 rust_library(
@@ -22,10 +22,11 @@ rust_library(
     aliases = aliases(),
     crate_name = "check_http",
     edition = "2021",
+    link_deps = ["@openssl"],
     proc_macro_deps = all_crate_deps(
         proc_macro = True,
     ),
-    deps = all_crate_deps() + ["@openssl"],
+    deps = all_crate_deps(),
 )
 
 rust_test(
@@ -98,6 +99,7 @@ pkg_tar(
     name = "check_http_tar",
     srcs = [":check_http_pkg"],
     stamp = 1,
+    visibility = ["//omd/non-free/relay:__pkg__"],
 )
 
 rust_doc(
@@ -112,7 +114,6 @@ rust_doc(
 sh_library(
     name = "helpers",
     srcs = [
-        ".f12",
         "run",
     ],
 )

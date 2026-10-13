@@ -3,9 +3,27 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { ResponsiveGridBreakpoint } from '@/dashboard/types/dashboard'
+import type {
+  DashboardResponsiveGridLayout,
+  ResponsiveGridBreakpoint
+} from '@/dashboard/types/dashboard'
 
 import type { ResponsiveGridInternalBreakpoint } from '../types'
+
+export const RESPONSIVE_GRID_ROW_HEIGHT_PX = 24
+export const RESPONSIVE_GRID_MARGIN_PX = 10
+
+export function defaultResponsiveGridLayout(): DashboardResponsiveGridLayout {
+  return {
+    type: 'responsive_grid',
+    layouts: {
+      default: {
+        title: 'Default layout',
+        breakpoints: ['M', 'XL', 'L', 'S', 'XS']
+      }
+    }
+  }
+}
 
 // helper to get entries with correctly typed keys
 export function typedEntries<T extends object>(obj: T): [keyof T, Required<T>[keyof T]][] {

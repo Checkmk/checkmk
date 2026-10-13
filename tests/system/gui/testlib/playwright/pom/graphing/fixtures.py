@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 """Reusable fixtures for the graph E2E suites.
 
-Registered for discovery in ``tests/system/gui/conftest.py``. The saved-surface fixture
-still to be built (forecast) `skip`s until completed by the graph test suites, since
-creating and surfacing it depends on the graph implementation.
+Registered for discovery in ``tests/system/gui/conftest.py``.
 """
 
+import time
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from typing import Final, NamedTuple
@@ -20,17 +21,24 @@ from playwright.sync_api import Page
 from tests.system.gui.testlib.playwright.pom.graphing.dashboard_graph_widget import (
     DashboardGraphWidget,
 )
+from tests.system.gui.testlib.playwright.pom.graphing.global_time_picker import GlobalTimePicker
+from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphSurface
+from tests.system.gui.testlib.playwright.pom.graphing.service_graphs_hover_popup import (
+    ServiceGraphsHoverPopup,
+)
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import ServiceGraphs
 from tests.system.gui.testlib.playwright.pom.monitor.combined_graph import (
     CombinedGraphsServiceSearch,
 )
+from tests.system.gui.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.hosts_dashboard import LinuxHostsDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.service import ServicePage
 from tests.system.gui.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
 from tests.system.gui.testlib.playwright.pom.monitor.services_of_host import ServicesOfHostPage
-from tests.testlib.graphing import InjectedRrd
-from tests.testlib.site import ADMIN_USER, Site
+from tests.system.gui.testlib.playwright.timeouts import TIMEOUT_SLOW_DASHBOARD_LOAD_MS
+from tests.testlib.common.utils2 import is_cleanup_enabled
+from tests.testlib.system.site import ADMIN_USER, Site
 
 # Several multi-series graphs on one page, which the "every graph" and tooltip tests need.
 SERVICE_WITH_GRAPHS = "Memory"
@@ -58,38 +66,6 @@ GRAPH_COLLECTION_SIZE: Final = 2
 def fixture_graph_hosts_with_varying_data(linux_hosts: list[str]) -> list[str]:
     """Hosts whose real agent data yields graphs with varying values."""
     return linux_hosts
-
-
-@pytest.fixture(name="graph_hosts_high_density", scope="module")
-def fixture_graph_hosts_high_density(test_site: Site) -> list[str]:
-    """Monitored hosts/services with high-density graph data.
-
-    For performance/loading/legend/tooltip cases: a graph near the engine's
-    ceiling (~1M points) and/or many series (200+ metrics). `inject_rrd` covers
-    the point-count dimension (it writes one series); the many-series dimension
-    needs a host carrying many real metrics.
-    """
-    pytest.skip("graph_hosts_high_density is scaffolding: seed a high-density monitored service.")
-
-
-@pytest.fixture(name="graph_rrd_with_gaps", scope="module")
-def fixture_graph_rrd_with_gaps(test_site: Site) -> InjectedRrd:
-    """An RRD with missing samples; inject via `graphing.inject_rrd` (GAPS)."""
-    pytest.skip("graph_rrd_with_gaps is scaffolding: bind inject_rrd to a monitored service.")
-
-
-@pytest.fixture(name="graph_rrd_dst_boundary", scope="module")
-def fixture_graph_rrd_dst_boundary(test_site: Site) -> InjectedRrd:
-    """An RRD whose rendered window crosses a DST transition.
-
-    DST is a timezone/window concern, not a data shape: set the user timezone to
-    a DST-observing zone (e.g. Europe/Berlin) and inject `VARYING` data starting
-    at `graphing.DST_FALL_BACK_BERLIN_UTC`, bound to a monitored service.
-    Use the fall-back instant: it makes local 02:00-02:59 occur twice, which is
-    what the "no duplicate X-axis labels" regression (Werk #14830) needs;
-    spring-forward only skips the hour and would not exercise it.
-    """
-    pytest.skip("graph_rrd_dst_boundary is scaffolding: see docstring.")
 
 
 class RrdMetric(NamedTuple):
@@ -150,12 +126,63 @@ def _as_admin_user(test_site: Site) -> Iterator[None]:
         session.headers["Authorization"] = automation_auth
 
 
+class UserGraphPin:
+    """The graph pin the site stores for the user the browser logs in as.
+
+    Read and written as that user: the pin is kept per user, and the site's own session acts
+    as `AUTOMATION_USER`, whose pin the page never shows.
+    """
+
+    def __init__(self, site: Site) -> None:
+        self._site = site
+
+    def read(self) -> int | None:
+        with _as_admin_user(self._site):
+            return self._site.openapi.graph.get_pin()
+
+    def write(self, pin_time: int | None) -> None:
+        with _as_admin_user(self._site):
+            self._site.openapi.graph.set_pin(pin_time)
+
+
+@pytest.fixture(name="admin_graph_pin")
+def fixture_admin_graph_pin(test_site: Site) -> Iterator[UserGraphPin]:
+    """The user's graph pin, cleared before the test and again after it.
+
+    Cleared up front as well: a page reads the pin once, as it opens, and hides its "Add pin"
+    handle over a point that is already pinned. A pin left behind by an aborted run would
+    otherwise decide what the next test gets to click.
+    """
+    graph_pin = UserGraphPin(test_site)
+    graph_pin.write(None)
+    try:
+        yield graph_pin
+    finally:
+        graph_pin.write(None)
+
+
+# Inside every window the service page can open on: its presets all end at the present.
+_STORED_PIN_AGE_SECONDS: Final = 300
+
+
+@pytest.fixture(name="stored_graph_pin")
+def fixture_stored_graph_pin(admin_graph_pin: UserGraphPin) -> int:
+    """A pin stored for the user shortly before the present, ahead of any page being opened."""
+    pin_time = int(time.time()) - _STORED_PIN_AGE_SECONDS
+    admin_graph_pin.write(pin_time)
+    return pin_time
+
+
 @contextmanager
 def _custom_graph(
-    test_site: Site, name: str, title: str, data_sources: Sequence[Mapping[str, object]]
+    test_site: Site,
+    name: str,
+    title: str,
+    data_sources: Sequence[Mapping[str, object]],
+    public: bool = False,
 ) -> Iterator[str]:
     with _as_admin_user(test_site):
-        test_site.openapi.custom_graph.create(name, title, data_sources)
+        test_site.openapi.custom_graph.create(name, title, data_sources, public=public)
     try:
         yield name
     finally:
@@ -173,6 +200,9 @@ def fixture_saved_custom_graph(
 
     Created over the REST API rather than through the designer, so the tests that read a
     saved graph do not fail on a broken designer.
+
+    Published to all users: it is created as the REST admin, but on the cloud edition the
+    browser logs in as a different (SSO) user, who would not see a private graph.
     """
     data_source = test_site.openapi.custom_graph.rrd_metric_data_source(
         "A",
@@ -180,7 +210,9 @@ def fixture_saved_custom_graph(
         rrd_metric_source.service_name,
         rrd_metric_source.metrics[0].name,
     )
-    with _custom_graph(test_site, "e2e_saved_graph", "E2E saved graph", [data_source]) as name:
+    with _custom_graph(
+        test_site, "e2e_saved_graph", "E2E saved graph", [data_source], public=True
+    ) as name:
         yield name
 
 
@@ -292,6 +324,23 @@ def fixture_service_graphs(
     yield open_service_graphs(dashboard_page.page, graph_hosts_with_varying_data[0])
 
 
+@pytest.fixture(name="service_graphs_hover_popup")
+def fixture_service_graphs_hover_popup(
+    dashboard_page: MainDashboard,
+    graph_hosts_with_varying_data: list[str],
+    javascript_errors: list[str],
+    requested_urls: list[str],
+) -> Iterator[ServiceGraphsHoverPopup]:
+    """The graph hover popup off a service's graphs icon on the services-of-host view.
+
+    Depends on `javascript_errors` and `requested_urls` so their listeners are attached
+    before this navigates.
+    """
+    host_name = graph_hosts_with_varying_data[0]
+    services = ServicesOfHostPage(dashboard_page.page, host_name=host_name)
+    yield ServiceGraphsHoverPopup(services, host_name, SERVICE_WITH_GRAPHS)
+
+
 @pytest.fixture(name="scatterplot_widget")
 def fixture_scatterplot_widget(
     dashboard_page: MainDashboard,
@@ -304,9 +353,14 @@ def fixture_scatterplot_widget(
     tests judge, and waiting here would turn a failure to render into a fixture timeout
     instead of a failed assertion naming it.
 
+    The dashboard's time picker drives the widget, and its default window can be younger than
+    the hosts' data, so the picker is set to today: the window the widget is configured with.
+
     Depends on `javascript_errors` so its listener is attached before this navigates.
     """
-    yield DashboardGraphWidget(LinuxHostsDashboard(dashboard_page.page), SCATTERPLOT_WIDGET_TITLE)
+    dashboard = LinuxHostsDashboard(dashboard_page.page)
+    GlobalTimePicker(dashboard.main_area).select_quick_range("Today")
+    yield DashboardGraphWidget(dashboard, SCATTERPLOT_WIDGET_TITLE)
 
 
 def _open_combined_graphs(
@@ -361,4 +415,228 @@ def fixture_combined_graphs_page_all_services(
     """
     yield _open_combined_graphs(
         dashboard_page, host_name=graph_hosts_with_varying_data[0], service_filter=None
+    )
+
+
+# Every `GraphContainment.DASHBOARD_WIDGET` surface, one widget each, on a single dashboard.
+_ACTION_MENU_DASHBOARD_ID: Final = "e2e_action_menu_dashboard"
+_ACTION_MENU_DASHBOARD_TITLE: Final = "E2E action menu dashboard"
+_ACTION_MENU_WIDGET_TIMERANGE: Final = {"type": "graph", "duration": 14400}
+_ACTION_MENU_WIDGET_SIZE: Final = {"width": 40, "height": 20}
+_ACTION_MENU_RENDER_OPTIONS: Final = {"show_controls": True}
+_KNOWN_GOOD_METRIC_NAME: Final = "mem_used"
+
+
+def _preferred_metric_name(metrics: Sequence[RrdMetric]) -> str:
+    for metric in metrics:
+        if metric.name == _KNOWN_GOOD_METRIC_NAME:
+            return metric.name
+    return metrics[0].name
+
+
+def _relative_grid_widget(
+    title: str,
+    content: Mapping[str, object],
+    *,
+    filters: Mapping[str, object] | None = None,
+    y: int,
+) -> dict[str, object]:
+    """One widget of a relative-grid dashboard, stacked in a single column at row `y`."""
+    return {
+        "general_settings": {
+            "title": {"text": title, "render_mode": "with_background"},
+            "render_background": True,
+        },
+        "content": dict(content),
+        "filters": dict(filters or {}),
+        "layout": {
+            "type": "relative_grid",
+            "position": {"x": 1, "y": y},
+            "size": _ACTION_MENU_WIDGET_SIZE,
+        },
+    }
+
+
+def _action_menu_dashboard_id(surface_key: str) -> str:
+    return f"{_ACTION_MENU_DASHBOARD_ID}_{surface_key}"
+
+
+def _action_menu_dashboard_title(surface_title: str) -> str:
+    return f"{_ACTION_MENU_DASHBOARD_TITLE}: {surface_title}"
+
+
+def _action_menu_widget_content(
+    surface_key: str,
+    *,
+    metric_name: str,
+    host_service_filters: Mapping[str, object],
+    saved_custom_graph: str,
+) -> tuple[Mapping[str, object], Mapping[str, object] | None]:
+    """The widget `content` (and `filters`, if any) for one action-menu dashboard surface."""
+    if surface_key == "dashboard_graph_widget":
+        return (
+            {
+                "type": "custom_graph",
+                "timerange": _ACTION_MENU_WIDGET_TIMERANGE,
+                "graph_render_options": _ACTION_MENU_RENDER_OPTIONS,
+                "custom_graph": saved_custom_graph,
+            },
+            None,
+        )
+    if surface_key == "single_timeseries_widget":
+        return (
+            {
+                "type": "single_timeseries",
+                "timerange": _ACTION_MENU_WIDGET_TIMERANGE,
+                "graph_render_options": _ACTION_MENU_RENDER_OPTIONS,
+                "metric": metric_name,
+                "color": "default_metric",
+            },
+            host_service_filters,
+        )
+    if surface_key == "problem_percentage_widget":
+        return (
+            {
+                "type": "problem_graph",
+                "timerange": _ACTION_MENU_WIDGET_TIMERANGE,
+                "graph_render_options": _ACTION_MENU_RENDER_OPTIONS,
+            },
+            None,
+        )
+    if surface_key == "alert_notification_widget":
+        return (
+            {
+                "type": "alert_overview",
+                "time_range": _ACTION_MENU_WIDGET_TIMERANGE,
+                "limit_objects": 10,
+            },
+            None,
+        )
+    if surface_key == "scatterplot_widget":
+        return (
+            {
+                "type": "average_scatterplot",
+                "time_range": _ACTION_MENU_WIDGET_TIMERANGE,
+                "metric": metric_name,
+                "metric_color": "default",
+                "average_color": "default",
+                "median_color": "default",
+            },
+            host_service_filters,
+        )
+    raise ValueError(f"No action-menu widget content is defined for surface {surface_key!r}")
+
+
+@pytest.fixture(name="dashboard_action_menu_surfaces")
+def fixture_dashboard_action_menu_surfaces(
+    surface: GraphSurface,
+    test_site: Site,
+    rrd_metric_source: RrdMetricSource,
+    saved_custom_graph: str,
+) -> Iterator[str]:
+    """A single-widget custom dashboard for one `GraphContainment.DASHBOARD_WIDGET` surface.
+
+    One dashboard per surface, rather than one dashboard shared across all five: sharing one
+    meant every surface's setup had to wait for every *other* surface's widget to finish
+    loading too - including the average-scatterplot widget's mean/median computation over RRD
+    data, by far the slowest of the five, which pushed every surface's setup close to (and,
+    for the scatterplot surface itself, past) the dashboard-load timeout.
+
+    Built directly through the relative-grid dashboard REST endpoint rather than the "Add
+    widget" wizard: two of the five surfaces (`problem_percentage_widget`,
+    `alert_notification_widget`) have no wizard UI to reach at all (they live behind a
+    separate, not-yet-implemented "Alerts & notifications" wizard category), so every
+    widget is created the same uniform way instead of mixing that in with wizard-driven
+    widgets for the rest.
+
+    The widget's title is taken straight from `surface.title` in `graph_surfaces.py`, so a
+    test resolves it with `BaseDashboard.get_widget(surface.title)` without hard-coding the
+    title a second time.
+
+    Yields the dashboard id (for `dashboard.py?name=<id>&owner=<ADMIN_USER>`, since the
+    dashboard is created under `ADMIN_USER` and is private).
+    """
+    host_name, service_name, metrics = rrd_metric_source
+    metric_name = _preferred_metric_name(metrics)
+    content, filters = _action_menu_widget_content(
+        surface.key,
+        metric_name=metric_name,
+        host_service_filters={"host": {"host": host_name}, "service": {"service": service_name}},
+        saved_custom_graph=saved_custom_graph,
+    )
+
+    dashboard_id = _action_menu_dashboard_id(surface.key)
+    payload = {
+        "id": dashboard_id,
+        "general_settings": {
+            "title": {
+                "text": _action_menu_dashboard_title(surface.title),
+                "render": True,
+                "include_context": False,
+            },
+            "description": "",
+            "menu": {
+                "topic": "overview",
+                "sort_index": 99,
+                "search_terms": [],
+                "is_show_more": False,
+            },
+            "visibility": {
+                "hide_in_monitor_menu": False,
+                "hide_in_drop_down_menus": False,
+                "share": "no",
+            },
+        },
+        "filter_context": {
+            "restricted_to_single": [],
+            "filters": {},
+            "mandatory_context_filters": [],
+        },
+        "widgets": {
+            surface.key: _relative_grid_widget(surface.title, content, filters=filters, y=1)
+        },
+        "layout": {"type": "relative_grid"},
+    }
+
+    with _as_admin_user(test_site):
+        test_site.openapi.dashboard.create_relative_grid_dashboard(payload)
+    try:
+        yield dashboard_id
+    finally:
+        if is_cleanup_enabled():
+            with _as_admin_user(test_site):
+                test_site.openapi.dashboard.delete(dashboard_id)
+
+
+@pytest.fixture(name="dashboard_with_action_menu_widgets")
+def fixture_dashboard_with_action_menu_widgets(
+    dashboard_page: MainDashboard,
+    dashboard_action_menu_surfaces: str,
+    surface: GraphSurface,
+    test_site: Site,
+    javascript_errors: list[str],
+) -> CustomDashboard:
+    """The dashboard from `dashboard_action_menu_surfaces`, opened in the browser.
+
+    Navigated to directly by URL rather than through 'Customize > Dashboards', matching the
+    same direct-`goto` pattern other REST/file-seeded dashboard fixtures use.
+
+    Depends on `javascript_errors` so its listener is attached before this navigates.
+    """
+    dashboard_page.page.goto(
+        test_site.internal_url
+        + f"dashboard.py?name={dashboard_action_menu_surfaces}&owner={ADMIN_USER}",
+        wait_until="load",
+    )
+    dashboard_page.page.wait_for_load_state("networkidle")
+    return CustomDashboard(
+        dashboard_page.page,
+        page_title=_action_menu_dashboard_title(surface.title),
+        navigate_to_page=False,
+        # The average-scatterplot widget's mean/median computation over RRD data can push
+        # the initial page render past the default expect timeout, see the docstring of
+        # `fixture_dashboard_action_menu_surfaces` above.
+        dashboard_name_timeout=(
+            TIMEOUT_SLOW_DASHBOARD_LOAD_MS if surface.key == "scatterplot_widget" else None
+        ),
     )

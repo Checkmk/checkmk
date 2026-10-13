@@ -14,32 +14,30 @@ Environment variables VERSION, EDITION, BRANCH affect the package used for
 the test.
 """
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 import argparse
 import logging
 import os
 import sys
 import tempfile
+from collections.abc import Sequence
 from pathlib import Path
 
 # Make the tests.testlib available
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 from tests.testlib.common.repo import current_base_branch_name
-from tests.testlib.script_helpers.dockerized_execution import execute_tests_in_container
-from tests.testlib.version import (
+from tests.testlib.common.version import (
     CMKPackageInfo,
     edition_from_env,
     version_from_env,
 )
+from tests.testlib.system.script_helpers.dockerized_execution import execute_tests_in_container
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(filename)s %(message)s")
 logger = logging.getLogger()
 
 
-def main(raw_args):
+def main(raw_args: Sequence[str]) -> int:
     """Run tests in docker"""
     args, command = _parse_arguments(raw_args)
 
@@ -96,7 +94,7 @@ def _os_environ_get(key: str, default: str) -> str:
     return result
 
 
-def _parse_arguments(args: list[str]) -> tuple[argparse.Namespace, list[str]]:
+def _parse_arguments(args: Sequence[str]) -> tuple[argparse.Namespace, list[str]]:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument(
         "make_target",

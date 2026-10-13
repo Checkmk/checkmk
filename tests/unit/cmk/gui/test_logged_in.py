@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="comparison-overlap"
 
 from collections.abc import Iterator, Sequence
@@ -42,7 +44,7 @@ from cmk.gui.session_context import SuperUserContext, UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.rulesets import may_edit_ruleset
 from cmk.ruleset_matcher.definition import RuleGroup
-from tests.testlib.gui.users import create_and_destroy_user
+from tests.testlib.unit.gui.users import create_and_destroy_user
 
 
 def test_user_context(with_user: tuple[UserId, str]) -> None:
@@ -84,7 +86,7 @@ def test_user_context_nested(with_user: tuple[UserId, str], with_admin: tuple[Us
 
         assert global_user.id == first_user_id
 
-    assert global_user.id is None  # type: ignore[unreachable]
+    assert global_user.id is None
 
 
 def test_user_context_explicit_permissions(with_user: tuple[UserId, str]) -> None:
@@ -118,7 +120,11 @@ def test_user_context_explicit_permissions(with_user: tuple[UserId, str]) -> Non
     ],
 )
 def test_unauthenticated_users(
-    user: LoggedInUser, alias: str, email: str, role_ids: Sequence[str], baserole_id: str
+    user: LoggedInUser,
+    alias: str,
+    email: str,
+    role_ids: Sequence[str],
+    baserole_id: str,
 ) -> None:
     assert user.id is None
     assert user.alias == alias
@@ -269,6 +275,13 @@ def test_logged_in_remote_site_permissions() -> None:
         user.need_permission("any_permission")
 
 
+def test_only_nobody_is_anonymous() -> None:
+    """The CSRF check skips anonymous users, and these three all have no user id."""
+    assert LoggedInNobody().is_anonymous is True
+    assert LoggedInSuperUser().is_anonymous is False
+    assert LoggedInRemoteSite(site_name="site_id").is_anonymous is False
+
+
 MONITORING_USER_CACHED_PROFILE = {
     "alias": "Test user",
     "authorized_sites": ["heute", "heute_slave_1"],
@@ -327,9 +340,8 @@ def fixture_monitoring_user() -> Iterator[LoggedInUser]:
         )
 
 
-def test_may_is_narrowed_by_the_request_authorization(
-    request_context: None, monitoring_user: LoggedInUser
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_may_is_narrowed_by_the_request_authorization(monitoring_user: LoggedInUser) -> None:
     # Assuming "user" role
     assert monitoring_user.may("general.use")
     assert monitoring_user.may("general.act")
@@ -340,9 +352,8 @@ def test_may_is_narrowed_by_the_request_authorization(
     assert not monitoring_user.may("general.act")
 
 
-def test_scope_never_grants_what_roles_deny(
-    request_context: None, monitoring_user: LoggedInUser
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_scope_never_grants_what_roles_deny(monitoring_user: LoggedInUser) -> None:
     """The scope's allow-list is not a grant -- roles still decide."""
     session.authorization = Authorization.from_scopes({ScopeId.READ})
 
@@ -362,7 +373,8 @@ def test_super_user_is_narrowed_by_the_request_authorization() -> None:
         assert not global_user.may("wato.activate")
 
 
-def test_monitoring_user(request_context: None, monitoring_user: LoggedInUser) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_monitoring_user(monitoring_user: LoggedInUser) -> None:
     assert monitoring_user.id == "test"
     assert monitoring_user.alias == "Test user"
     assert monitoring_user.email == "test_user_test@checkmk.com"
@@ -406,9 +418,8 @@ def test_monitoring_user(request_context: None, monitoring_user: LoggedInUser) -
     assert monitoring_user.acknowledged_notifications == timestamp
 
 
-def test_monitoring_user_read_broken_file(
-    request_context: None, monitoring_user: LoggedInUser
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_monitoring_user_read_broken_file(monitoring_user: LoggedInUser) -> None:
     assert monitoring_user.confdir
     with Path(monitoring_user.confdir, "unittest.mk").open("w") as f:
         f.write("%#%#%")
@@ -416,11 +427,9 @@ def test_monitoring_user_read_broken_file(
     assert monitoring_user.load_file("unittest", deflt="xyz") == "xyz"
 
 
+@pytest.mark.usefixtures("request_context")
 def test_monitoring_user_permissions(
-    mocker: MockerFixture,
-    monkeypatch: MonkeyPatch,
-    request_context: None,
-    monitoring_user: LoggedInUser,
+    mocker: MockerFixture, monkeypatch: MonkeyPatch, monitoring_user: LoggedInUser
 ) -> None:
     mocker.patch.object(permissions, "permission_registry")
     with monkeypatch.context() as m:
@@ -480,6 +489,29 @@ def test_monitoring_user_permissions(
 )
 def test_ruleset_permissions_with_commandline_access(varname: str) -> None:
     assert may_edit_ruleset(varname) is False
+
+
+@pytest.mark.parametrize(
+    "permissions, expected",
+    [
+        pytest.param({"wato.rulesets"}, True, id="rulesets"),
+        pytest.param(
+            {"wato.services", "wato.service_discovery_to_ignored"},
+            True,
+            id="services_and_discovery_to_ignored",
+        ),
+        pytest.param({"wato.services"}, False, id="services_only"),
+        pytest.param({"wato.service_discovery_to_ignored"}, False, id="discovery_to_ignored_only"),
+        pytest.param(set(), False, id="none"),
+    ],
+)
+def test_may_edit_ignored_services_ruleset(
+    with_user: tuple[UserId, str], permissions: set[str], expected: bool
+) -> None:
+    with UserContext(
+        with_user[0], UserPermissions({}, {}, {}, []), explicit_permissions=permissions
+    ):
+        assert may_edit_ruleset("ignored_services") is expected
 
 
 @pytest.fixture()

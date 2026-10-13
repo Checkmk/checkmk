@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 
 class RedirectException(Exception):
     """Raise inside an endpoint handler to issue an HTTP redirect.
@@ -11,7 +13,7 @@ class RedirectException(Exception):
     with the given status code and a Location header, bypassing body serialization.
     """
 
-    def __init__(self, location: str, status_code: int = 303) -> None:
+    def __init__(self, location: str, status_code: int = HTTPStatus.SEE_OTHER) -> None:
         self.location = location
         self.status_code = status_code
         super().__init__(location)

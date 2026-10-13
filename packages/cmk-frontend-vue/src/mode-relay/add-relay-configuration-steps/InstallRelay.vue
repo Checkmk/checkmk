@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkCode from 'cmk-ui-library/components/CmkCode.vue'
 import type { CmkWizardStepProps } from 'cmk-ui-library/components/CmkWizard'
 import { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
@@ -56,7 +56,7 @@ const downloadCommand = computed(() => `curl -O ${installScriptUrl.value}`)
           )
         }}
       </CmkParagraph>
-      <CmkAlertBox v-if="insecureProtocolWarning">{{ insecureProtocolWarning }}</CmkAlertBox>
+      <CmkAlert v-if="insecureProtocolWarning" :text="insecureProtocolWarning" />
       <CmkCode
         :code-text="downloadCommand"
         :aria-label="_t('Download relay install script command')"

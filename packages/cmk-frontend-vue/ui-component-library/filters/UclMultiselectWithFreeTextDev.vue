@@ -60,20 +60,19 @@ async function interceptor({ request }: { request: Request }) {
   // autocompleter reports as a bare "unknown error" - hiding the real cause.
   let query = ''
   try {
-    const raw = new URLSearchParams(await request.text()).get('request')
-    query = (raw === null ? '' : (JSON.parse(raw).value ?? '')) as string
+    query = ((await request.json()) as { value?: string }).value ?? ''
   } catch {
     query = ''
   }
   const matching = APPLICATIONS.filter((name) => name.toLowerCase().includes(query.toLowerCase()))
   return HttpResponse.json({
-    result: { choices: matching.map((name) => [name, name]), total: APPLICATIONS.length },
-    result_code: 0,
-    severity: 'success'
+    choices: matching.map((name) => ({ id: name, value: name }))
   })
 }
 
-const { mockLoaded } = useMswWorker([http.post(/ajax_vs_autocomplete\.py/, interceptor)])
+const { mockLoaded } = useMswWorker([
+  http.post('*/api/internal/objects/autocomplete/:ident', interceptor)
+])
 
 defineProps<{ screenshotMode: boolean }>()
 

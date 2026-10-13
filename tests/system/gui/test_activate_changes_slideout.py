@@ -17,7 +17,7 @@ from tests.system.gui.testlib.host_details import AddressFamily, AgentAndApiInte
 from tests.system.gui.testlib.playwright.pom.changes.activate_changes import ActivateChangesSlideout
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.system.gui.testlib.playwright.pom.setup.hosts import AddHost, HostProperties
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,9 @@ def test_activate_changes_slideout_one_change(
 
 @pytest.mark.parametrize("bulk_create_hosts_central_site", [100], indirect=True)
 def test_activate_changes_slideout_bulk_changes(
-    dashboard_page: MainDashboard, test_site: Site, bulk_create_hosts_central_site: None
+    dashboard_page: MainDashboard,
+    test_site: Site,
+    bulk_create_hosts_central_site: None,  # noqa: ARG001
 ) -> None:
     """Check elements of 'Activate changes' slideout with multiple changes on central site"""
     slideout = ActivateChangesSlideout(dashboard_page)
@@ -104,8 +106,8 @@ def test_activate_changes_slideout_distributed_setup(
     dashboard_page: MainDashboard,
     test_site: Site,
     remote_site_wato_disabled: Site,
-    bulk_create_hosts_central_site: None,
-    bulk_create_hosts_remote_site: None,
+    bulk_create_hosts_central_site: None,  # noqa: ARG001
+    bulk_create_hosts_remote_site: None,  # noqa: ARG001
 ) -> None:
     """Check functionality of 'Activate changes' slideout in distributed setup"""
     slideout = ActivateChangesSlideout(dashboard_page)

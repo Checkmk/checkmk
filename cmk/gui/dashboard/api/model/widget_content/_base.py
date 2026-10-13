@@ -9,14 +9,17 @@ from typing import Self
 from pydantic import model_validator
 from pydantic_core import ErrorDetails
 
-from cmk.gui.config import active_config
 from cmk.gui.dashboard import dashlet_registry, DashletConfig
 from cmk.gui.openapi.framework import ApiContext
-from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
-from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import DashboardEmbeddedViewSpec, VisualLinkSpec, VisualName, VisualTypeName
-from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.visuals.type import visual_type_registry
+from cmk.gui.openapi.framework.model import api_model
+from cmk.gui.type_defs import DashboardEmbeddedViewSpec
+
+from ..contextual_link import (
+    AnyContextualLinkSpec,
+    contextual_link_options,
+    ContextualLinkDefault,
+    ContextualLinkOptions,
+)
 
 
 @api_model
@@ -43,12 +46,22 @@ class BaseWidgetContent(ABC):
 
         This will then be merged with the general widget config."""
 
+    def configured_contextual_link(self) -> AnyContextualLinkSpec:
+        """The link the widget configures; the default link for a widget without a link field."""
+        return ContextualLinkDefault(type="default")
+
+    @classmethod
+    def contextual_link_options(cls) -> ContextualLinkOptions | None:
+        """What a link of this widget may be; None for a widget that configures none."""
+        field = cls.__dataclass_fields__.get("contextual_link")
+        return None if field is None else contextual_link_options(field.type)
+
     def iter_validation_errors(
         self,
-        location: tuple[str | int, ...],
-        context: ApiContext,
+        location: tuple[str | int, ...],  # noqa: ARG002
+        context: ApiContext,  # noqa: ARG002
         *,
-        embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
+        embedded_views: Mapping[str, DashboardEmbeddedViewSpec],  # noqa: ARG002
     ) -> Iterable[ErrorDetails]:
         """Run additional validation based on the config.
 
@@ -58,50 +71,3 @@ class BaseWidgetContent(ABC):
         erroneous data in the `loc` of the `ErrorDetails`.
         """
         return []
-
-
-@api_model
-class ApiVisualLink:
-    type: VisualTypeName = api_field(
-        description="The type of the link, e.g. 'views' for a link to another view."
-    )
-    name: VisualName = api_field(description="The name of the linked entity.")
-
-    def __post_init__(self) -> None:
-        visual = visual_type_registry[self.type]()
-        if self.name not in visual.permitted_visuals(
-            visual.visuals(), UserPermissions.from_config(active_config, permission_registry)
-        ):
-            link_type = self.type.title()[:-1]  # remove trailing "s"
-            raise ValueError(
-                f"{link_type} '{self.name}' does not exist or you don't have permission to see it."
-            )
-
-    @classmethod
-    def from_internal(cls, value: VisualLinkSpec | None) -> Self | ApiOmitted:
-        if value is None:
-            return ApiOmitted()
-        return cls(
-            type=value.type_name,
-            name=value.name,
-        )
-
-    @classmethod
-    def from_raw_internal(
-        cls, value: tuple[VisualTypeName, VisualName] | None
-    ) -> Self | ApiOmitted:
-        if value is None:
-            return ApiOmitted()
-        return cls(
-            type=value[0],
-            name=value[1],
-        )
-
-    def to_internal(self) -> VisualLinkSpec:
-        return VisualLinkSpec(
-            type_name=self.type,
-            name=self.name,
-        )
-
-    def to_raw_internal(self) -> tuple[VisualTypeName, VisualName]:
-        return self.type, self.name

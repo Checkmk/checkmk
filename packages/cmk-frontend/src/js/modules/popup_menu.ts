@@ -7,7 +7,6 @@
 //#   | Floating popup menus with content fetched via AJAX calls           |
 //#   '--------------------------------------------------------------------'
 import { call_ajax } from './ajax'
-import type { GraphExportRequest } from './graphs'
 import type { Nullable } from './utils'
 import {
   add_class,
@@ -210,12 +209,7 @@ export function toggle_popup(
 
   // Add the popup to the DOM if required by the method.
   if (['colorpicker', 'ajax'].includes(method.type)) {
-    const { content, menu } = generate_menu(
-      trigger_obj.parentNode as HTMLElement,
-      resizable,
-      trigger_obj,
-      event
-    )
+    const { content, menu } = generate_menu(trigger_obj.parentNode as HTMLElement, resizable, event)
 
     if (method.type === 'colorpicker') {
       const rgb = (trigger_obj.firstChild as HTMLElement).style.backgroundColor
@@ -312,7 +306,6 @@ export function stop_popup_menu_group_switch(trigger: HTMLElement) {
 function generate_menu(
   container: HTMLElement,
   resizable: boolean,
-  trigger: HTMLElement,
   trigger_event: Event | undefined
 ) {
   // Generate the popup menu structure and return the content div
@@ -332,21 +325,7 @@ function generate_menu(
     add_class(menu, 'resizable')
   }
 
-  const portal_root = container.closest('.graph_container') ? document.body : container
-  if (portal_root === document.body) {
-    add_class(menu, 'popup_menu--portal')
-    const mouse_event = trigger_event instanceof MouseEvent ? trigger_event : null
-    const trigger_rect = trigger.getBoundingClientRect()
-    const left = mouse_event ? mouse_event.clientX : trigger_rect.left
-    const top = mouse_event ? mouse_event.clientY : trigger_rect.bottom
-    menu.style.left = `${left}px`
-    menu.style.top = `${top}px`
-    // Reset any previous overflow adjustments before clamping inside the viewport
-    menu.style.right = 'auto'
-    menu.style.bottom = 'auto'
-  }
-
-  portal_root.appendChild(menu)
+  container.appendChild(menu)
   fix_popup_menu_position(trigger_event, menu)
 
   return { content, menu }
@@ -401,21 +380,6 @@ function handle_render_popup_contents(
 
 function fix_popup_menu_position(_event: Event | undefined, menu: HTMLElement) {
   const rect = menu.getBoundingClientRect()
-  if (menu.classList.contains('popup_menu--portal')) {
-    const viewport_width = window.innerWidth || document.documentElement.clientWidth
-    const viewport_height = window.innerHeight || document.documentElement.clientHeight
-    const margin = 15
-    const max_left = Math.max(margin, viewport_width - rect.width - margin)
-    const max_top = Math.max(margin, viewport_height - rect.height - margin)
-    const next_left = Math.min(Math.max(rect.left, margin), max_left)
-    const next_top = Math.min(Math.max(rect.top, margin), max_top)
-    menu.style.left = `${next_left}px`
-    menu.style.top = `${next_top}px`
-    // Ensure stale right/bottom offsets from non-portal positioning do not apply
-    menu.style.right = 'auto'
-    menu.style.bottom = 'auto'
-    return
-  }
 
   // Check whether or not the menu is out of the bottom border
   // -> if so, move the menu up
@@ -486,6 +450,22 @@ export function add_to_visual(visual_type: string, visual_name: string) {
 }
 
 // FIXME: Adapt error handling which has been addded to add_to_visual() in the meantime
+// Stored as popup_data[2]; sent directly as the ?request= parameter to
+// graph_export.py and graph_image.py. Still referenced by name from the "Export as
+// JSON/PNG" page-menu entries in cmk/gui/visuals/_add_to_visual.py, which the graph
+// collection page renders server-side.
+interface GraphExportRequest {
+  specification: object
+  consolidation_function: string
+  time_start: number
+  time_end: number
+}
+
+export function graph_export(page: string) {
+  const request = active_popup.data![2] as GraphExportRequest
+  location.href = page + '.py?request=' + encodeURIComponent(JSON.stringify(request))
+}
+
 export function pagetype_add_to_container(page_type: string, page_name: string) {
   const element_type = active_popup.data![0] // e.g. "pnpgraph"
   // complex JSON struct describing the thing
@@ -523,11 +503,6 @@ export function pagetype_add_to_container(page_type: string, page_name: string) 
       }
     }
   })
-}
-
-export function graph_export(page: string) {
-  const request = active_popup.data![2] as GraphExportRequest
-  location.href = page + '.py?request=' + encodeURIComponent(JSON.stringify(request))
 }
 
 /****************************************

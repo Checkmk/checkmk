@@ -61,7 +61,11 @@ def test_check_cadvisor_if(monkeypatch: MonkeyPatch) -> None:
 
     with time_machine.travel(datetime.datetime.fromtimestamp(1060, tz=ZoneInfo("UTC"))):
         assert list(cadvisor_if.check_cadvisor_if("Summary", SECTION)) == [
-            Result(state=State.OK, summary="[0]"),
+            Result(
+                state=State.OK,
+                summary="[0]",
+                details="Index: 0\nDescription: Summary\nAlias: Summary",
+            ),
             Result(state=State.OK, summary="(up)", details="Operational state: up"),
             Result(state=State.OK, summary="In: 3.00 B/s"),
             Metric("in", 3.0, boundaries=(0.0, None)),

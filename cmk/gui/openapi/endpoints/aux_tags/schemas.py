@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+
+from collections.abc import Mapping
 
 from marshmallow import post_load, ValidationError
 
@@ -31,7 +31,7 @@ class AuxTagID(BaseSchema):
 
 
 class AuxTagTopicField(fields.String):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: object) -> None:
         super().__init__(
             description="Different tags can be grouped in topics to make the visualization and selections in the GUI more comfortable",
             example="Monitoring agents",
@@ -41,7 +41,7 @@ class AuxTagTopicField(fields.String):
 
 
 class AuxTagTitleField(fields.String):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: object) -> None:
         super().__init__(
             description="The title of the Auxiliary tag",
             example="AuxTagExampleTitle",
@@ -51,7 +51,7 @@ class AuxTagTitleField(fields.String):
 
 
 class AuxTagHelpField(fields.String):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: object) -> None:
         super().__init__(
             description="The help of the Auxiliary tag",
             example="AuxTagExampleHelp",
@@ -97,7 +97,11 @@ class AuxTagAttrsUpdate(BaseSchema):
     )
 
     @post_load
-    def verify_at_least_one(self, *args, **kwargs):  # type: ignore[misc]
+    def verify_at_least_one(  # type: ignore[misc]
+        self,
+        *args: Mapping[str, object],
+        **kwargs: object,  # noqa: ARG002
+    ) -> Mapping[str, object]:
         at_least_one_of = {"topic", "title", "help"}
         if not at_least_one_of & set(args[0]):
             raise ValidationError(

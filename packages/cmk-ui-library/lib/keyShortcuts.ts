@@ -4,7 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
-import type { Ref } from 'vue'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { comboLabels, registerKeyboardHelp } from 'cmk-ui-library/lib/keyboardHelp'
 
 import { randomId } from './randomId'
 
@@ -29,6 +30,10 @@ export interface KeyShortcut {
   alt?: boolean | undefined
   preventDefault?: boolean | undefined
   propagate?: boolean | undefined
+  /** Cheat sheet group; "Other" if left out. */
+  scope?: TranslatedString | undefined
+  /** Cheat sheet text; listed as undocumented if left out. */
+  description?: TranslatedString | undefined
 }
 
 export interface KeyShortcutHandler extends KeyShortcutEnsured {
@@ -52,11 +57,69 @@ const MODIFIER_KEYS = new Set([
   'command'
 ])
 
+// Inputs that hold no text, so typing into them means nothing.
+const NON_TEXT_INPUT_TYPES = new Set([
+  'checkbox',
+  'radio',
+  'button',
+  'submit',
+  'reset',
+  'range',
+  'color',
+  'file'
+])
+
+function isTextEntry(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false
+  }
+  if (target.isContentEditable) {
+    return true
+  }
+  if (target instanceof HTMLInputElement) {
+    return !NON_TEXT_INPUT_TYPES.has(target.type)
+  }
+  return target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement
+}
+
+/**
+ * A printable key with no Ctrl or Alt is a character before it is a shortcut, so whoever is
+ * typing gets it. Escape, the arrows and the modified combinations stay with the shortcut,
+ * because a text field is exactly where several of them are meant to work.
+ */
+function isBarePrintable(shortcut: KeyShortcutEnsured): boolean {
+  return !shortcut.ctrl && !shortcut.alt && shortcut.key.every((key) => key.length === 1)
+}
+
+/** Modifiers first, then the keys - the order the cheat sheet shows them in. */
+function shortcutCombo(shortcut: KeyShortcut): string[] {
+  const combo: string[] = []
+  if (shortcut.ctrl) {
+    combo.push('Ctrl')
+  }
+  if (shortcut.shift) {
+    combo.push('Shift')
+  }
+  if (shortcut.alt) {
+    combo.push('Alt')
+  }
+  return combo.concat(shortcut.key)
+}
+
+function pressedKey(e: KeyboardEvent): string {
+  if (e.key === 'Unidentified' && e.code === 'Space') {
+    return ' '
+  }
+  return e.key
+}
+
 export class KeyShortcutService {
   private keyStates: KeyStates = {}
   private handlers: KeyShortcutHandler[] = []
+  private helpUnregisters = new Map<string, () => void>()
   private readonly boundHandleKeyDown: (e: KeyboardEvent) => void
   private readonly boundHandleKeyUp: (e: KeyboardEvent) => void
+  private readonly boundReleaseKeys: () => void
   private iframeObserver: MutationObserver | null = null
 
   constructor(
@@ -66,6 +129,7 @@ export class KeyShortcutService {
   ) {
     this.boundHandleKeyDown = this.handleKeyDown.bind(this)
     this.boundHandleKeyUp = this.handleKeyUp.bind(this)
+    this.boundReleaseKeys = this.releaseKeys.bind(this)
     this.initListeners()
   }
 
@@ -75,10 +139,26 @@ export class KeyShortcutService {
 
     this.handlers.push(shortcut as KeyShortcutHandler)
 
-    return (shortcut as KeyShortcutHandler).id
+    const id = (shortcut as KeyShortcutHandler).id
+    this.helpUnregisters.set(
+      id,
+      registerKeyboardHelp([
+        {
+          kind: 'shortcut',
+          scope: shortcut.scope ?? _t('Other'),
+          combo: shortcutCombo(shortcut),
+          description: shortcut.description
+        }
+      ])
+    )
+    return id
   }
 
   public remove(ids: string[]): void {
+    for (const id of ids) {
+      this.helpUnregisters.get(id)?.()
+      this.helpUnregisters.delete(id)
+    }
     this.handlers = this.handlers
       .map((handler) => {
         if (ids.indexOf(handler.id) >= 0) {
@@ -94,23 +174,12 @@ export class KeyShortcutService {
     this.propagateTo = propagateTo
   }
 
+  public static getShortCutCombo(shortcut: KeyShortcut): string[] {
+    return shortcutCombo(shortcut)
+  }
+
   public static getShortCutInfo(shortcut: KeyShortcut): string {
-    const keys = []
-    if (shortcut.ctrl) {
-      keys.push((_t('Ctrl') as unknown as Ref).value)
-    }
-
-    if (shortcut.shift) {
-      keys.push((_t('Shift') as unknown as Ref).value)
-    }
-
-    if (shortcut.alt) {
-      keys.push((_t('Alt') as unknown as Ref).value)
-    }
-
-    keys.push(shortcut.key.map((k) => k.toUpperCase()))
-
-    return keys.join(' + ')
+    return comboLabels(shortcutCombo(shortcut)).join(' + ')
   }
 
   private ensureShortcut(shortcut: KeyShortcut): KeyShortcutEnsured {
@@ -146,6 +215,7 @@ export class KeyShortcutService {
   private initListeners() {
     this.window.addEventListener('keydown', this.boundHandleKeyDown)
     this.window.addEventListener('keyup', this.boundHandleKeyUp)
+    this.window.addEventListener('blur', this.boundReleaseKeys)
 
     if (this.listenTo) {
       this.observeIframes()
@@ -191,6 +261,7 @@ export class KeyShortcutService {
     try {
       contentWindow.addEventListener('keydown', this.boundHandleKeyDown)
       contentWindow.addEventListener('keyup', this.boundHandleKeyUp)
+      contentWindow.addEventListener('blur', this.boundReleaseKeys)
     } catch {
       return
     }
@@ -219,12 +290,17 @@ export class KeyShortcutService {
   }
 
   private handleKeyDown(e: KeyboardEvent): void {
-    this.setKeyState(e.key, true)
+    this.setKeyState(pressedKey(e), true)
     this.callHandlers(e)
   }
 
   private handleKeyUp(e: KeyboardEvent): void {
-    this.setKeyState(e.key, false)
+    this.setKeyState(pressedKey(e), false)
+  }
+
+  // A window that loses focus gets no keyup for the keys still held, e.g. after alt-tab.
+  private releaseKeys(): void {
+    this.keyStates = {}
   }
 
   private shortcutKeysPressed(keys: string[]): boolean {
@@ -238,7 +314,11 @@ export class KeyShortcutService {
   }
 
   private callHandlers(e: KeyboardEvent): void {
+    const typing = isTextEntry(e.target)
     for (const handler of this.handlers) {
+      if (typing && isBarePrintable(handler)) {
+        continue
+      }
       if (
         e.ctrlKey === handler.ctrl &&
         e.shiftKey === handler.shift &&

@@ -28,18 +28,18 @@ const dragHandlers = inject(ROW_DRAG_KEY, null)
     :column-id="columnId"
     :vertical-align="verticalAlign"
   >
-    <div
+    <button
       v-if="dragHandlers"
+      type="button"
       class="monitoring-drag-handle-cell__handle"
       :aria-label="_t('Drag to reorder')"
-      role="button"
       :draggable="true"
       @dragstart="dragHandlers.dragStart"
       @drag="dragHandlers.drag"
       @dragend="dragHandlers.dragEnd"
     >
       <CmkIcon name="drag" size="small" style="pointer-events: none" />
-    </div>
+    </button>
   </BaseCell>
 </template>
 
@@ -47,6 +47,15 @@ const dragHandlers = inject(ROW_DRAG_KEY, null)
 .monitoring-drag-handle-cell__handle {
   display: inline-flex;
   align-items: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
   cursor: grab;
+
+  &:focus-visible {
+    outline: 1px solid var(--success);
+    outline-offset: 2px;
+  }
 }
 </style>

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -45,12 +44,12 @@ def parse_aix_hacmp_nodes(
             else:
                 get_details = False
 
-        elif "Interfaces" in line[0] and get_details:
+        elif "Interfaces" in line[0] and get_details:  # type: ignore[possibly-undefined]
             network_name = line[3].replace(",", "")
-            parsed[node_name][network_name] = []
+            parsed[node_name][network_name] = []  # type: ignore[possibly-undefined]
 
-        elif "Communication" in line[0] and get_details:
-            parsed[node_name][network_name].append(
+        elif "Communication" in line[0] and get_details:  # type: ignore[possibly-undefined]
+            parsed[node_name][network_name].append(  # type: ignore[possibly-undefined]
                 NetworkInterface(
                     name=line[3].replace(",", ""),
                     attribute=line[5].replace(",", ""),

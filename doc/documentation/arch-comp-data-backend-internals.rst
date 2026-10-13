@@ -1,0 +1,112 @@
+==================================
+Data backend — Internal Components
+==================================
+
+This document describes the internal software components of the data backend.
+For deployment topology, interfaces, and deployment scenarios, see :doc:`arch-comp-data-backend`.
+For the two monitoring channels built on top, see :doc:`arch-comp-otel-monitoring-dcd` and :doc:`arch-comp-otel-monitoring-custom-query`.
+
+Overview
+========
+
+The data backend is self-contained in ``non-free/packages/cmk-data-backend/``. Its telemetry metrics part (query engine, aggregation, consolidation and the related GUI) lives in the subpackage ``cmk/data_backend/telemetry_metrics/``.
+All library code, the query client, schema manager, configuration models, and self-monitoring
+components live there. Consumers such as the DCD special agent, the DCD connector, and the
+telemetry metrics fetcher are implemented separately and interact with the data backend
+only through its published interfaces.
+
+The central dependency for all consumers is the **query client**, which encapsulates all
+read interactions with ClickHouse. Components that need to read from ClickHouse go through it.
+
+Components
+==========
+
+Query Client
+------------
+
+*Location:* ``non-free/packages/cmk-data-backend/cmk/data_backend/telemetry_metrics/query/``
+
+The query client is the single point of access to ClickHouse for all read operations.
+It supports four query types:
+
+* **Instant queries** — temporal aggregation (e.g. rate, delta) over a lookback window ending at a point in time.
+  Used by two special agents: the opinionated monitoring agent (RED metrics on DCD-created hosts) and the custom query agent (user-specified queries).
+* **Range queries** — aggregated values over a time range at fixed step intervals.
+  Called live from the UI when rendering custom graphs.
+* **Latest value aggregations** — the last observed raw sample per series within a lookback window, without temporal aggregation.
+  Used by the DCD special agent for generic per-host metric discovery.
+* **Metadata queries** — series metadata for autocompleters and host discovery.
+
+See :doc:`arch-comp-telemetry-metrics-instant-query` and :doc:`arch-comp-telemetry-metrics-range-query`
+for detailed parameter documentation of the respective query types.
+
+A thin ``RetryingClient`` wrapper (``retrying_client.py``) sits below the query client and
+handles connection setup and exponential-backoff retries on transient ClickHouse errors.
+Both self-hosted and cloud connections are configured here based on the active config.
+
+
+Configuration
+-------------
+
+*Location:* ``non-free/packages/cmk-data-backend/cmk/data_backend/config.py``, ``non-free/packages/cmk-data-backend/cmk/data_backend/gui/_config_domain.py``
+
+The data backend configuration is stored in ``etc/check_mk/data_backend.json`` and
+read at startup by all components that need to connect to ClickHouse. The config is a
+discriminated union of two models:
+
+* ``SerializedConfigSelfHosted`` — address and ports only. The mTLS certificate paths
+  and the server hostname expected by the client depend on the site name and are
+  therefore not stored in the file (it would become stale when the site is renamed);
+  they are derived from the site root when the file is read, yielding the in-memory
+  model ``ConfigDataBackendSelfHosted``.
+* ``ConfigDataBackendCloud`` — address, HTTP port, TLS flag, credentials
+
+The config file is written by the GUI config domain (``_config_domain.py``) when the
+operator enables or reconfigures the data backend in the Checkmk Setup. On activation,
+the config domain also regenerates the ClickHouse XML config and restarts the service.
+
+Schema Manager
+--------------
+
+*Location:* ``non-free/packages/cmk-data-backend/cmk/data_backend/schema_manager/``
+
+The schema manager is a CLI tool that applies versioned DDL migrations to ClickHouse.
+It maintains a revision chain where each revision can be upgraded or downgraded independently.
+It supports a ``--dry-run`` mode for inspecting the queries that would be executed
+without actually running them.
+
+The schema manager is invoked automatically during activation when the data backend
+is enabled or updated via the Checkmk Setup GUI. We also use an OMD update hook to
+ensure the schema is kept up-to-date on a site update. For the cloud deployment it uses
+``ON CLUSTER`` DDL and ``ReplicatedMergeTree`` engines to deploy the schema across
+the ClickHouse cluster.
+
+
+Self-Monitoring
+---------------
+
+*Location:*
+
+* ``non-free/packages/cmk-data-backend/cmk/data_backend/monitor.py``
+* ``non-free/packages/cmk-data-backend/cmk/plugins/data_backend_telemetry_metrics_omd/``
+
+A monitoring script (``monitor.py``) for the Checkmk agent that runs on the site itself and checks the
+health of the ClickHouse instance. It emits a ``<<<data_backend_telemetry_metrics_omd>>>`` agent section
+containing:
+
+* A health ping result (HTTP status or error)
+* The custom metrics count (All distinct active time series excluding ClickHouse internal series)
+
+The accompanying section plugin (``cmk/plugins/data_backend_telemetry_metrics_omd/``) parses this section to
+be used by the corresponding check plugin to create an "OMD ``<site>`` data backend"
+service with configurable thresholds. This channel is only active for self-hosted deployments.
+
+
+Consumers
+=========
+
+The data backend is consumed by several external components that are documented separately:
+
+* The DCD special agent and DCD connector — see :doc:`arch-comp-otel-monitoring-dcd`
+* The telemetry metrics fetcher, for custom services — see :doc:`arch-comp-otel-monitoring-custom-query`
+* The custom graphing feature

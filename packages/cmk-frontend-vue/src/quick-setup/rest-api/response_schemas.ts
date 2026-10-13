@@ -13,6 +13,7 @@ type ValidationMessages = ValidationMessage[]
 interface QuickSetupStageOverviewResponse {
   title: string
   sub_title: string | null
+  is_applicable: boolean
 }
 
 export interface StageErrors {
@@ -56,15 +57,18 @@ interface BackgroundJobException {
 export interface QuickSetupStageActionResponse {
   stage_recap: ComponentSpec[]
   validation_errors: Errors
+  stage_applicability: boolean[]
   background_job_exception: BackgroundJobException | null
 }
 
 export class QuickSetupStageActionErrorValidationResponse {
   validation_errors: Errors
+  stage_applicability: boolean[]
   background_job_exception: BackgroundJobException | null
 
   constructor(data: QuickSetupStageActionResponse) {
     this.validation_errors = data.validation_errors
+    this.stage_applicability = data.stage_applicability
     this.background_job_exception = data.background_job_exception
   }
 }

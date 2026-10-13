@@ -22,7 +22,7 @@ from cmk.plugins.lib.temperature import check_temperature, TempParamType
 # [[[u'26', u'26']], [[u'45', u'15', u'45', u'15']]]
 
 
-def discover_cmc_temp(section: Sequence[StringTable]) -> DiscoveryResult:
+def discover_cmc_temp(section: Sequence[StringTable]) -> DiscoveryResult:  # noqa: ARG001
     # There are always two sensors
     yield Service(item="1")
     yield Service(item="2")

@@ -12,7 +12,6 @@ load("//bazel/rules:replace_string_in_file.bzl", "replace_string_in_file")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
 ])
 
@@ -35,6 +34,7 @@ py_library(
         "cmk/livestatus_client/_api/__init__.py",
         "cmk/livestatus_client/_api/client.py",
         "cmk/livestatus_client/_api/commands.py",
+        "cmk/livestatus_client/_rrd.py",
         "cmk/livestatus_client/expressions.py",
         "cmk/livestatus_client/queries.py",
         "cmk/livestatus_client/testing.py",
@@ -148,7 +148,6 @@ py_wheel(
     name = "cmk-livestatus-client_whl",
     distribution = "cmk-livestatus-client",
     strip_path_prefixes = ["packages/cmk-livestatus-client"],
-    # TODO: VERSION is duplicated in pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [
@@ -173,7 +172,6 @@ py_wheel(
     name = "livestatus_whl",
     distribution = "livestatus",
     strip_path_prefixes = ["packages/cmk-livestatus-client"],
-    # TODO: VERSION is duplicated in pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [
@@ -203,7 +201,6 @@ package_wheel(
 sh_library(
     name = "helpers",
     srcs = [
-        ".f12",
         "run",
     ],
 )

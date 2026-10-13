@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import re
@@ -46,7 +45,7 @@ class CPUInfo(_CPUInfo):
     guest_nice: time spent in niced guest OK, also counted in 1 (nice)
     """
 
-    def __new__(cls, name: str, *values: float | int | str | None) -> "CPUInfo":
+    def __new__(cls, name: str, *values: float | int | str | None) -> CPUInfo:
         # we can assume we have at least one value
         caster = int if values and isinstance(values[0], int) else float
         fillup = (caster(0) for _ in range(10 - len(values)))
@@ -287,7 +286,7 @@ def check_cpu_util_unix(
         util_total = core.util_total
         total_diff = util_total - prev_total
         value_store[key] = util_total
-        total_perc = (100.0 * total_diff / sum_jiffies) * len(cores)
+        total_perc = (100.0 * total_diff / sum_jiffies) * len(cores)  # type: ignore[possibly-undefined]
         summary_cores.append((core.name, total_perc))
 
     yield from check_cpu_util(

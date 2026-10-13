@@ -2,10 +2,10 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from __future__ import annotations
 
 import enum
 from collections.abc import Sequence
+from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Final, NamedTuple, NewType, Self
 
@@ -23,6 +23,11 @@ CONFIG_ARCHIVE_RELATIVE_PATH_CA_FILE: Final = "ssl/ca-certificates.crt"
 
 Timestamp = NewType("Timestamp", float)
 Seconds = NewType("Seconds", float)
+
+
+class ServiceKind(StrEnum):
+    FETCHER = "FETCHER"
+    ACTIVE_CHECK = "ACTIVE_CHECK"
 
 
 class CheckPeriod(NamedTuple):
@@ -46,6 +51,7 @@ class Service(BaseModel):
     name: Annotated[str, Field(description="name of the service in checkmk")]
     command: Annotated[str, Field(description="command for execute, can have routing prefix @cmk")]
     schedule: Annotated[Schedule, Field(description="Service scheduling configuration")]
+    service_kind: ServiceKind = ServiceKind.FETCHER
 
 
 class Host(BaseModel):
@@ -66,11 +72,30 @@ class LogLevel(enum.StrEnum):
     CRITICAL = "CRITICAL"
 
 
+# Default size of the checkhelper pool, which scheduled and ad-hoc active checks
+# share. The single source for this number: the engine's built-in defaults, the
+# relay setup form and REST API on the site, and the relay config writer all
+# import it.
+DEFAULT_NUM_CHECKHELPERS: Final = 5
+
+# Where the relay image installs the active-check binaries. The site writes the
+# check commands relative to it and the relay puts it on the checks' PATH.
+RELAY_ACTIVE_CHECK_PLUGINS_DIR: Final = Path("/opt/check-mk-relay/lib/nagios/plugins")
+
+
 class UserEngineConfig(BaseModel):
     """configuration for relay engine as provided by user config during activation"""
 
     log_level: LogLevel
     num_fetchers: int
+    # Every site version that knows this field writes it, so the default serves
+    # the reader, not the writer: on start-up a relay re-reads the last config the
+    # site pushed, and right after an engine update that file may predate the
+    # field. A field missing there must not make the whole config invalid, or the
+    # engine would fall back to its built-in defaults and drop every host until
+    # the next activation. Fields added later get a default here for the same
+    # reason; do not special-case them in load().
+    num_checkhelpers: int = DEFAULT_NUM_CHECKHELPERS
     hosts: Sequence[Host]
 
 
@@ -80,6 +105,7 @@ class EngineConfig(UserEngineConfig):
     bin_fetcher: Path = Path("/opt/check-mk-relay/bin/fetcher")
     bin_adhoc_fetcher: Path = Path("/opt/check-mk-relay/bin/fetch-ad-hoc")
     num_adhoc_fetchers: int = 4
+    bin_checkhelper: Path = Path("/opt/check-mk-relay/lib/cmc/checkhelper")
     poll_sleep: float = 0.5
     config_cleanup_schedule: float = 60
     host_scheduler_sleep: float = 0.5

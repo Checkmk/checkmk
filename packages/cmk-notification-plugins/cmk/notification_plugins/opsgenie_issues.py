@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="unreachable"
 
 import os
 import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pprint import pformat
-from typing import cast
+from typing import assert_never, cast
 
 import urllib3
 
@@ -44,6 +43,7 @@ from cmk.utils.http_proxy_config import (
     EnvironmentProxyConfig,
     ExplicitProxyConfig,
     NoProxyConfig,
+    redact_proxy_url,
 )
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.paths import trusted_ca_file
@@ -74,7 +74,7 @@ class Connector:
         if host_url is not None:
             conf.host = "%s" % host_url
         if proxy_url is not None:
-            sys.stdout.write(f"Using proxy: {proxy_url}\n")
+            sys.stdout.write(f"Using proxy: {redact_proxy_url(proxy_url)}\n")
             conf.proxy = proxy_url
 
         if ignore_ssl:
@@ -200,7 +200,7 @@ def _get_proxy_url(proxy_setting: str | None, url: str | None) -> str | None:
     if isinstance(proxy, EnvironmentProxyConfig):
         parsed_url = parse_url(url or "https://api.opsgenie.com")
         proxies = get_environ_proxies(parsed_url.url)
-        return proxies.get(parsed_url.scheme)
+        return None if parsed_url.scheme is None else proxies.get(parsed_url.scheme)
 
     if isinstance(proxy, NoProxyConfig):
         return None
@@ -208,8 +208,7 @@ def _get_proxy_url(proxy_setting: str | None, url: str | None) -> str | None:
     if isinstance(proxy, ExplicitProxyConfig):
         return proxy_setting
 
-    sys.stderr.write(f"Unsupported proxy setting: {proxy_setting}\n")
-    sys.exit(2)
+    assert_never(proxy)
 
 
 def _get_connector(context: PluginNotificationContext) -> Connector:

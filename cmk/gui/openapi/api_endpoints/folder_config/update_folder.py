@@ -2,6 +2,9 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
+
+from cmk.gui.openapi.api_endpoints.host_config._utils import reject_deprecated_attributes
 from cmk.gui.openapi.api_endpoints.models.folder_models import FolderModel
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -48,19 +51,22 @@ def update_folder_v1(
         faulty_attributes = []
         for attribute in body.remove_attributes:
             try:
-                # Mypy can not help here with the dynamic key access
+                # FIXME: The typing here is a lie: One can't pretend to still have
+                # HostAttributes in attributes after removing random keys from it.
                 attributes.pop(attribute)  # type: ignore[misc]
             except KeyError:
                 faulty_attributes.append(attribute)
         if faulty_attributes:
             raise ProblemException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="The folder was not updated",
                 detail=(
                     "The following attributes did not exist and could therefore not be removed: "
                     f"{', '.join(faulty_attributes)}"
                 ),
             )
+
+    reject_deprecated_attributes(folder.attributes, attributes)
 
     folder.edit(
         folder.title() if body.title is None else body.title,
@@ -71,7 +77,7 @@ def update_folder_v1(
     )
     return ApiResponse(
         body=serialize_folder(folder, show_hosts=False, api_context=api_context),
-        status_code=200,
+        status_code=HTTPStatus.OK,
         etag=folder_etag(folder),
     )
 

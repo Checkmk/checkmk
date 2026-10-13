@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """A few upgraded Fields which handle some OpenAPI validation internally."""
 
@@ -50,7 +49,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     Host,
     strip_hostname_whitespace_chars,
 )
-from cmk.gui.watolib.passwords import contact_group_choices, password_exists
+from cmk.gui.watolib.passwords import contact_group_choices, load_passwords, password_id_in_use
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import load_tag_config_read_only
 from cmk.licensing.basics.options import OptionName
@@ -215,7 +214,7 @@ class FolderField(base.String):
         if folder_id == "/":
             folder = tree.root_folder()
         elif _ishexdigit(folder_id):
-            folder = tree._by_id(folder_id)
+            folder = tree._by_id(folder_id)  # noqa: SLF001
         else:
             folder_id = cls._normalize_folder(folder_id)
             folder = tree.folder(folder_id[1:])
@@ -231,7 +230,7 @@ class FolderField(base.String):
         try:
             return self.load_folder(x)
         # I added MKGeneralException during a refactoring, but I did not check if it is needed.
-        except (MKException, MKGeneralException):
+        except MKException, MKGeneralException:
             if x:
                 raise self.make_error("not_found", folder_id=x)
         return None
@@ -357,8 +356,8 @@ class ExprSchema(CmkOneOfSchema):
     ) -> object:  # this could be anything, but probably either a QueryExpression, a dict, or a list
         # When being passed in via the query string, we may get the raw JSON string instead of
         # the deserialized dictionary. We need to unpack it ourselves.
-        if isinstance(data, str):
-            try:
+        if isinstance(data, str):  # type: ignore[unreachable]
+            try:  # type: ignore[unreachable]
                 data = json.loads(data)
             except json.decoder.JSONDecodeError as exc:
                 raise ValidationError(
@@ -449,7 +448,7 @@ def column_field(
     required: bool = False,
     mandatory: list[ColumnTypes] | None = None,
     default: list[Column] | None = None,
-) -> "_ListOfColumns":
+) -> _ListOfColumns:
     column_names: list[str] = []
     if mandatory is not None:
         for col in mandatory:
@@ -503,8 +502,8 @@ class _ListOfColumns(base.List):
         columns: list[str] = super()._deserialize(value, attr, data)
         assert isinstance(columns, list), f"Expected a list of column names, got {value!r}"
         for column in reversed(self.mandatory):
-            if isinstance(column, Column):  # noqa: SIM108
-                column_name = column.name
+            if isinstance(column, Column):  # type: ignore[unreachable]  # noqa: SIM108
+                column_name = column.name  # type: ignore[unreachable]
             else:
                 column_name = column
             if column_name not in columns:
@@ -587,12 +586,12 @@ class HostField(base.String):
 
         if host:
             try:
-                host._user_needs_permission("read", user)
+                host._user_needs_permission("read", user)  # noqa: SLF001
             except MKAuthException:
                 raise self.make_error("not_found_or_no_permission", host_name=host.name())
 
             if self._permission_type == "setup_write":
-                host._user_needs_permission("write", user)
+                host._user_needs_permission("write", user)  # noqa: SLF001
 
     @override
     def _deserialize(
@@ -993,6 +992,16 @@ class _CustomerField(base.String):
         )
 
     @override
+    def _validate_missing(self, value: object) -> None:
+        if (
+            value is marshmallow.missing
+            and self._required
+            and version.edition(paths.omd_root) is version.Edition.ULTIMATEMT
+        ):
+            raise self.make_error("required")
+        super()._validate_missing(value)
+
+    @override
     def _validate(self, value: str | None) -> None:
         if version.edition(paths.omd_root) is not version.Edition.ULTIMATEMT:
             raise self.make_error("edition_not_supported")
@@ -1159,11 +1168,10 @@ class PasswordIdent(base.String):
         if pattern.match(value) is None:
             raise self.make_error("pattern", name=value)
 
-        exists = password_exists(value, user)
-        if self._should_exist and not exists:
+        if self._should_exist and value not in load_passwords(user):
             raise self.make_error("should_exist", name=value)
 
-        if not self._should_exist and exists:
+        if not self._should_exist and password_id_in_use(value):
             raise self.make_error("should_not_exist", name=value)
 
 

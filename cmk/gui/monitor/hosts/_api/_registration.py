@@ -7,6 +7,7 @@ from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 
 from ._action_menu import ENDPOINT_GET_HOST_ACTION_MENU
+from ._events import ENDPOINT_GET_HOST_EVENTS
 from ._family import MONITOR_HOSTS_FAMILY
 from ._host_overview import ENDPOINT_GET_HOST_OVERVIEW
 from ._list_hosts import ENDPOINT_LIST_HOSTS
@@ -22,4 +23,5 @@ def register_endpoints(
     versioned_endpoint_registry.register(ENDPOINT_LIST_HOSTS)
     versioned_endpoint_registry.register(ENDPOINT_GET_HOST_OVERVIEW)
     versioned_endpoint_registry.register(ENDPOINT_GET_HOST_ACTION_MENU)
+    versioned_endpoint_registry.register(ENDPOINT_GET_HOST_EVENTS)
     versioned_endpoint_registry.register(ENDPOINT_RESCHEDULE_CHECKS)

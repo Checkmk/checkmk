@@ -55,8 +55,6 @@ test('omits the port for a protocol that has none', () => {
   expect(screen.getByText('10.0.0.5')).toBeInTheDocument()
 })
 
-// StringCell soft-breaks its text with zero-width spaces, so its rendered text
-// node never matches the raw value - the title attribute carries it verbatim.
 test('formats bytes and packets with SI units', () => {
   renderRow()
 

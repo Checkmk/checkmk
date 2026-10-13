@@ -5,14 +5,11 @@
 
 from collections.abc import Callable, Generator, Iterable, Mapping
 from dataclasses import dataclass
-from typing import Any
 
-from cmk.base.config import load_all_plugins
 from cmk.ccc import debug
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import AutochecksStore
-from cmk.checkengine.legacy import LegacyCheckParameters
-from cmk.checkengine.plugin_backend import get_check_plugin
+from cmk.checkengine.plugin_backend import get_check_plugin, load_all_plugins
 from cmk.checkengine.plugins import AutocheckEntry, CheckPlugin, CheckPluginName
 from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
@@ -33,18 +30,15 @@ _ALL_EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS: TDiscoveredItemsTransforms = {
     },
 }
 
-type ParameterTransformer = Callable[  # type: ignore[explicit-any]
-    [Any],  # should be LegacyCheckParameters, but this makes writing transforms cumbersome ...
-    Mapping[str, object],
-]
+type ParameterTransformer = Callable[[Mapping[str, object]], Mapping[str, object]]
 # some autocheck parameters need transformation even though there is no ruleset.
 type TDiscoveredParametersTransforms = Mapping[CheckPluginName, ParameterTransformer]
 
 _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: TDiscoveredParametersTransforms = {
     # cpu_loads no longer discovers any parameters, hence we can just drop them on update
-    CheckPluginName("cpu_loads"): lambda x: {},
+    CheckPluginName("cpu_loads"): lambda x: {},  # noqa: ARG005
     # f5_bigip_pool no longer discovers any parameters after migration to agent_based.v2
-    CheckPluginName("f5_bigip_pool"): lambda x: {},
+    CheckPluginName("f5_bigip_pool"): lambda x: {},  # noqa: ARG005
 }
 
 _ALL_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: TDiscoveredParametersTransforms = {
@@ -54,6 +48,26 @@ _ALL_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: TDiscoveredParametersTransforms 
         for name, transform in _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS.items()
     },
 }
+
+_AUTOMATION_HELPER_STALE_PS_PATTERNS = frozenset(
+    {
+        "~gunicorn:.*automation-helper",
+        "~(.*cmk-automation-helper.*|gunicorn:.*automation-helper)",
+    }
+)
+_AUTOMATION_HELPER_CURRENT_PS_PATTERN = (
+    "~(?:.*cmk-automation-helper.*|gunicorn:.*automation-helper)"
+)
+
+
+def _transform_automation_helper_ps_patterns(
+    item: str, params: Mapping[str, object]
+) -> Mapping[str, object]:
+    if not item.endswith("automation helpers"):
+        return params
+    if params.get("process") not in _AUTOMATION_HELPER_STALE_PS_PATTERNS:
+        return params
+    return {**params, "process": _AUTOMATION_HELPER_CURRENT_PS_PATTERN, "match_groups": ()}
 
 
 @dataclass(frozen=True)
@@ -70,7 +84,7 @@ def rewrite_yielding_errors(tree: FolderTree, *, write: bool) -> Iterable[Rewrit
     to ensure consistency.
     """
     all_rulesets = AllRulesets.load_all_rulesets(tree)
-    plugins = load_all_plugins()
+    plugins = load_all_plugins(raise_errors=debug.enabled())
     for hostname in _autocheck_hosts():
         fixed_autochecks = yield from _get_fixed_autochecks(
             hostname, all_rulesets, plugins.check_plugins
@@ -129,12 +143,16 @@ def _fix_entry(
         _ALL_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS.get(new_plugin_name, lambda x: x)
     )
 
+    parameters = explicit_parameters_transform(entry.parameters)
+    if new_plugin_name == CheckPluginName("ps") and isinstance(parameters, dict):
+        parameters = _transform_automation_helper_ps_patterns(entry.item or "", parameters)
+
     return AutocheckEntry(
         check_plugin_name=new_plugin_name,
         item=explicit_item_transform(entry.item),
         parameters=_transformed_params(
             new_plugin_name,
-            explicit_parameters_transform(entry.parameters),
+            parameters,
             all_rulesets,
             check_plugins,
             hostname,
@@ -143,12 +161,12 @@ def _fix_entry(
     )
 
 
-def _transformed_params[T: LegacyCheckParameters](
+def _transformed_params(
     plugin_name: CheckPluginName,
-    params: T,
+    params: Mapping[str, object],
     all_rulesets: RulesetCollection,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    host: str,
+    host: str,  # noqa: ARG001
 ) -> Mapping[str, object]:
     if (ruleset := _get_ruleset(plugin_name, all_rulesets, check_plugins)) is None:
         if not params:
@@ -186,7 +204,7 @@ def _get_ruleset(
 
 
 def _apply_rulesets_migration(
-    params: LegacyCheckParameters, ruleset: Ruleset, plugin_name: CheckPluginName
+    params: Mapping[str, object], ruleset: Ruleset, plugin_name: CheckPluginName
 ) -> Mapping[str, object]:
     new_params = ruleset.rulespec.valuespec.transform_value(params) if params else {}
 

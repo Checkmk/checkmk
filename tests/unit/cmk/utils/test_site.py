@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.ccc import site
 from cmk.utils.paths import omd_root
 
 
-def test_get_omd_config(patch_omd_site: None) -> None:
+@pytest.mark.usefixtures("patch_omd_site")
+def test_get_omd_config() -> None:
     assert site.get_omd_config(omd_root) == {
         "CONFIG_ADMIN_MAIL": "",
         "CONFIG_AGENT_RECEIVER": "on",
@@ -47,5 +50,6 @@ def test_get_omd_config(patch_omd_site: None) -> None:
     }
 
 
-def test_get_apache_port(patch_omd_site: None) -> None:
+@pytest.mark.usefixtures("patch_omd_site")
+def test_get_apache_port() -> None:
     assert site.get_apache_port(omd_root) == 5002

@@ -36,7 +36,7 @@ def discover_hp_mcs_system(section: StringByteTable) -> DiscoveryResult:
         yield Service(item=name)
 
 
-def check_hp_mcs_system(item: str, section: StringByteTable) -> CheckResult:
+def check_hp_mcs_system(item: str, section: StringByteTable) -> CheckResult:  # noqa: ARG001
     if not section:
         return
     row = section[0]

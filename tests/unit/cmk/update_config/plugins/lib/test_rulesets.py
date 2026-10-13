@@ -103,6 +103,27 @@ def _instantiate_ruleset(
     return ruleset
 
 
+def test_failed_rule_transformation_does_not_log_the_value(
+    tree: FolderTree,
+    rulespec_with_migration: Rulespec,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Rule values may contain secrets"""
+    ruleset = _instantiate_ruleset(
+        tree,
+        rulespec_with_migration.name,
+        {"key": "s3crit"},
+        rulespec=rulespec_with_migration,
+    )
+
+    rulesets_updater.transform_wato_rulesets_params(
+        getLogger(), RulesetCollection({rulespec_with_migration.name: ruleset})
+    )
+
+    assert "Failed to transform rule" in caplog.text
+    assert "s3crit" not in caplog.text
+
+
 @pytest.mark.parametrize(
     ["param_value", "transformed_param_value"],
     [

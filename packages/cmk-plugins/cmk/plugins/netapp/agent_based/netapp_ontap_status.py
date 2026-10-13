@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Sequence
 
@@ -12,12 +10,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.netapp import models
 
 Section = Sequence[models.AlertModel]
@@ -31,7 +28,7 @@ Section = Sequence[models.AlertModel]
 # }
 
 
-def format_alert(alert):
+def format_alert(alert: models.AlertModel) -> str:
     s = alert.name
     if alert.acknowledge:
         s += f", acknowledged by {alert.acknowledger}"
@@ -50,10 +47,6 @@ agent_section_netapp_ontap_status = AgentSection(
     name="netapp_ontap_alerts",
     parse_function=parse_netapp_api_status,
 )
-
-
-def discovery_netapp_ontap_status(section: Section) -> DiscoveryResult:
-    yield Service()
 
 
 def check_netapp_ontap_status(section: Section) -> CheckResult:
@@ -82,6 +75,6 @@ check_plugin_netapp_ontap_status = CheckPlugin(
     name="netapp_ontap_status",
     service_name="Diagnosis Status",
     sections=["netapp_ontap_alerts"],
-    discovery_function=discovery_netapp_ontap_status,
+    discovery_function=discover_one_service,
     check_function=check_netapp_ontap_status,
 )

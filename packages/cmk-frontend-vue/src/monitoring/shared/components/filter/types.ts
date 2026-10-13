@@ -5,7 +5,14 @@
  */
 import type { ConfiguredValues } from 'cmk-ui-library/components/filter'
 
-import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
+import type {
+  ColumnFilterNode,
+  FieldConditionMap,
+  FilterField
+} from '@/monitoring/shared/api/types'
+
+/** What a column is sorted by, in the shape TanStack Table reports and takes. */
+export type SortDirection = false | 'asc' | 'desc'
 
 /** A single checkable value shown in the {@link CheckboxListFilter} dropdown. */
 export interface FilterCheckboxOption {
@@ -32,6 +39,20 @@ export interface StringInputFilter<F extends FilterField = FilterField> {
   type: 'string-input'
   /** API field this filter targets. Used to produce the correct condition node. */
   field: F
+  /**
+   * Turns the plain text field into a chip autocomplete over this source. A
+   * column that knows what values exist (labels, tags, contact groups) offers
+   * them; one that does not stays a free-text field.
+   */
+  suggest?: (query: string) => Promise<string[]>
+  /** Ask `suggest` with an empty query on focus, to seed the list. */
+  suggestWhenEmpty?: boolean
+  /** Pick `key:value` pairs in two steps: first the key, then that key's values. */
+  keyValue?: boolean
+  /** Offer what was typed with a trailing `*` as the first entry. */
+  wildcardOption?: boolean
+  /** Refuse further picks once this many are selected. Unbounded when unset. */
+  maxSelected?: number
 }
 
 /**
@@ -48,6 +69,14 @@ export interface NumericFilter<F extends FilterField = FilterField> {
   field: F
   /** Optional unit suffix shown after the upper-bound field (e.g. "services"). */
   unit?: string
+  /**
+   * What the "At least one" preset matches, shown in place of the range inputs.
+   * A page says what its rows and values are ("hosts with at least one service
+   * in CRIT"); a generic wording stands in when it does not.
+   */
+  anyInfo?: string
+  /** What the "None" preset matches. Counterpart of {@link anyInfo}. */
+  noneInfo?: string
 }
 
 /**
@@ -65,19 +94,38 @@ export interface DateTimeRangeFilter<F extends FilterField = FilterField> {
   field: F
 }
 
-/** A single boolean field shown as a tri-state radio group in a {@link BooleanGroupFilter}. */
+/**
+ * Filter that matches a timestamp field by how long ago it was, rather than by
+ * the instant itself: a number, a unit, and whether the age has to be below the
+ * value, above it, or between two of them.
+ *
+ * The v-model value is a `ColumnFilterNode<F>` of `age` bounds, which state the
+ * age rather than the instant it resolves to. `MonitoringApi` turns them into
+ * the `gte` / `lte` conditions a {@link DateTimeRangeFilter} produces as it
+ * builds each request - a younger-than age is a lower bound on the timestamp,
+ * an older-than age an upper one - so an age filter stays an age however long
+ * the table is left polling.
+ */
+export interface DurationFilter<F extends FilterField = FilterField> {
+  type: 'duration'
+  /** API field this filter targets. Used to produce the correct condition node. */
+  field: F
+}
+
+/** A single boolean field shown as a tri-state toggle button group in a {@link BooleanGroupFilter}. */
 export interface BooleanFilterGroup<F extends FilterField = FilterField> {
   /** Boolean API field this group targets (e.g. `in_downtime`, `acknowledged`). */
   field: F
-  /** Label shown above the group's radio buttons. */
+  /** Title naming the group, shown beside its buttons. */
   title: string
 }
 
 /**
- * Filter that presents one tri-state radio group per boolean field. Each group
- * offers "both" (no condition), "has to be true" and "has to be false". A group
- * left on "both" contributes nothing; the remaining groups produce `eq` boolean
- * conditions that are AND-combined into the column filter node.
+ * Filter that presents one tri-state toggle button group per boolean field.
+ * Each group offers "Any" (no condition), "Yes" (has to be true) and "No" (has
+ * to be false). A group left on "Any" contributes nothing; the remaining groups
+ * produce `eq` boolean conditions that are AND-combined into the column filter
+ * node.
  *
  * The v-model value is a `ColumnFilterNode<F>` so the column filter state stores
  * a typed condition directly — no `filterToNode` translation needed.
@@ -85,6 +133,60 @@ export interface BooleanFilterGroup<F extends FilterField = FilterField> {
 export interface BooleanGroupFilter<F extends FilterField = FilterField> {
   type: 'boolean-group'
   groups: BooleanFilterGroup<F>[]
+}
+
+/**
+ * Filter that presents a {@link CheckboxListFilter}'s fixed list of checkable
+ * values together with one or more boolean flags, each rendered as a
+ * {@link BooleanGroupFilter}-style tri-state toggle button group below the checkbox
+ * list. Used for the state column, whose filter combines the state enum with
+ * orthogonal flags (flapping, stale) that used to live in a separate column.
+ *
+ * The v-model value is a `ColumnFilterNode<F | BF>` — the checkbox list's
+ * `one_of` condition and any active flag `eq` condition(s), AND-combined when
+ * more than one is active.
+ */
+export interface CheckboxListWithFlagsFilter<
+  F extends FilterField = FilterField,
+  BF extends FilterField = FilterField
+> {
+  type: 'checkbox-list-with-flags'
+  /** API field the checkbox list targets. */
+  field: F
+  options: FilterCheckboxOption[]
+  /** Show the inline search field once the option count exceeds this value. */
+  searchThreshold?: number
+  /** Boolean flags shown below the checkbox list, each as a tri-state toggle button group. */
+  flags: BooleanFilterGroup<BF>[]
+}
+
+/**
+ * Filter over the values of a field only the server knows, picked as chips
+ * against one of the registered autocompleters. Its value is a single
+ * set-membership condition, which is what the label, tag and contact-group
+ * conditions accept.
+ */
+export interface AutocompleteChoiceFilter<F extends FilterField = FilterField> {
+  type: 'autocomplete-choice'
+  /** API field this filter targets. Used to produce the correct condition node. */
+  field: F
+  /**
+   * How the picks combine: `all_of` for the key/value fields, where an entry
+   * carries every label or tag it is tagged with and demanding all of them is
+   * what narrows the list; `one_of` for the name lists, where the picks are
+   * alternatives.
+   */
+  op: Extract<FieldConditionMap[F], { op: unknown }>['op']
+  /** Suggestions for what has been typed so far. */
+  suggest: (query: string) => Promise<string[]>
+  /** Ask `suggest` with an empty query on focus, to seed the list. */
+  suggestWhenEmpty?: boolean
+  /** Pick `key:value` pairs in two steps: first the key, then that key's values. */
+  keyValue?: boolean
+  /** Offer what was typed with a trailing `*` as the first entry. */
+  wildcardOption?: boolean
+  /** Refuse further picks once this many are selected. Unbounded when unset. */
+  maxSelected?: number
 }
 
 export interface ColumnVisibilityFilter {
@@ -120,7 +222,10 @@ export type ColumnFilterDefinition<F extends FilterField = FilterField> =
   | StringInputFilter<F>
   | NumericFilter<F>
   | DateTimeRangeFilter<F>
+  | DurationFilter<F>
   | BooleanGroupFilter<F>
+  | CheckboxListWithFlagsFilter<F>
+  | AutocompleteChoiceFilter<F>
   | ColumnVisibilityFilter
   | VisualFilterColumnFilter
 
@@ -131,10 +236,17 @@ export type ColumnFilterDefinition<F extends FilterField = FilterField> =
  * a concrete filter shape — a new filter type extends this one function.
  */
 export function filterFields(filter: ColumnFilterDefinition): FilterField[] {
-  if ('groups' in filter) {
-    return filter.groups.map((group) => group.field)
+  const fields: FilterField[] = []
+  if ('field' in filter) {
+    fields.push(filter.field)
   }
-  return 'field' in filter ? [filter.field] : []
+  if ('groups' in filter) {
+    fields.push(...filter.groups.map((group) => group.field))
+  }
+  if ('flags' in filter) {
+    fields.push(...filter.flags.map((flag) => flag.field))
+  }
+  return fields
 }
 
 /**

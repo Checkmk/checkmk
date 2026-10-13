@@ -28,6 +28,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 # <<<systemd_units>>>
 #   UNIT                                   LOAD   ACTIVE SUB    DESCRIPTION
@@ -294,7 +295,7 @@ class UnitStatus:
     number_of_tasks: int | None = None
 
     @classmethod
-    def from_entry(cls, entry: Sequence[Sequence[str]]) -> "UnitStatus":
+    def from_entry(cls, entry: Sequence[Sequence[str]]) -> UnitStatus:
         # A unit name may itself contain dots (e.g. "hapee-3.2-lb.service"), so strip
         # only the trailing type suffix. Splitting on the first dot would mangle the
         # name and break the match with the `[all]` section (see UnitEntry.try_parse).
@@ -369,7 +370,7 @@ class UnitEntry:
         row: Sequence[str],
         enabled_status: Mapping[str, str],
         status_details: Mapping[str, UnitStatus],
-    ) -> tuple[UnitTypes, "UnitEntry"] | None:
+    ) -> tuple[UnitTypes, UnitEntry] | None:
         if not (name_unit := cls._parse_name_and_unit_type(row[0])):
             return None
         name, unit_type = name_unit
@@ -413,7 +414,7 @@ class UnitEntry:
     @classmethod
     def parse(
         cls, block: Mapping[str, str], uptime_seconds: float
-    ) -> tuple[UnitTypes, "UnitEntry"] | None:
+    ) -> tuple[UnitTypes, UnitEntry] | None:
         unit_id = block.get("Id")
         if not unit_id:
             return None
@@ -848,14 +849,6 @@ check_plugin_systemd_units_sockets = CheckPlugin(
 )
 
 
-def discovery_systemd_units_services_summary(section: Section) -> DiscoveryResult:
-    yield Service()
-
-
-def discovery_systemd_units_sockets_summary(section: Section) -> DiscoveryResult:
-    yield Service()
-
-
 def _services_split(
     services: Iterable[UnitEntry], blacklist: Sequence[str]
 ) -> Mapping[str, list[UnitEntry]]:
@@ -1008,7 +1001,7 @@ CHECK_DEFAULT_PARAMETERS_SUMMARY = {
 check_plugin_systemd_units_services_summary = CheckPlugin(
     name="systemd_units_services_summary",
     sections=["systemd_units"],
-    discovery_function=discovery_systemd_units_services_summary,
+    discovery_function=discover_one_service,
     check_function=check_systemd_units_services_summary,
     check_ruleset_name="systemd_services_summary",
     service_name="Systemd Service Summary",
@@ -1018,7 +1011,7 @@ check_plugin_systemd_units_services_summary = CheckPlugin(
 check_plugin_systemd_units_sockets_summary = CheckPlugin(
     name="systemd_units_sockets_summary",
     sections=["systemd_units"],
-    discovery_function=discovery_systemd_units_sockets_summary,
+    discovery_function=discover_one_service,
     check_function=check_systemd_units_sockets_summary,
     check_ruleset_name="systemd_sockets_summary",
     service_name="Systemd Socket Summary",

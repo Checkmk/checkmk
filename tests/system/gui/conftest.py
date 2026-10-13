@@ -20,38 +20,46 @@ from playwright.sync_api import BrowserContext, Page
 
 from tests.system.gui.testlib.api_helpers import LOCALHOST_IPV4
 from tests.system.gui.testlib.host_details import HostDetails
+from tests.system.gui.testlib.playwright import plugin as playwright_plugin
 from tests.system.gui.testlib.playwright.helpers import CmkCredentials
+from tests.system.gui.testlib.playwright.navigation import navigate_to_page
 from tests.system.gui.testlib.playwright.plugin import PageGetter
 from tests.system.gui.testlib.playwright.pom.customize.edit_dashboard import EditDashboards
 from tests.system.gui.testlib.playwright.pom.graphing.fixtures import (
+    fixture_admin_graph_pin,
     fixture_combined_graphs_page,
     fixture_combined_graphs_page_all_services,
     fixture_custom_graph_for_editing,
+    fixture_dashboard_action_menu_surfaces,
+    fixture_dashboard_with_action_menu_widgets,
     fixture_graph_collection,
-    fixture_graph_hosts_high_density,
     fixture_graph_hosts_with_varying_data,
-    fixture_graph_rrd_dst_boundary,
-    fixture_graph_rrd_with_gaps,
     fixture_javascript_errors,
     fixture_requested_urls,
     fixture_rrd_metric_source,
     fixture_saved_custom_graph,
     fixture_scatterplot_widget,
     fixture_service_graphs,
+    fixture_service_graphs_hover_popup,
+    fixture_stored_graph_pin,
 )
-from tests.system.gui.testlib.playwright.pom.login import LoginPage
 from tests.system.gui.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import DashboardMobile, MainDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.hosts_dashboard import LinuxHostsDashboard
-from tests.system.gui.testlib.playwright.pom.page import CmkPage
 from tests.system.gui.testlib.playwright.pom.setup.fixtures import notification_user
 from tests.system.gui.testlib.playwright.pom.setup.hosts import AddHost, SetupHost
 from tests.system.gui.testlib.playwright.pom.setup.licensing import Licensing
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils2 import is_cleanup_enabled, run
-from tests.testlib.emails import EmailManager
-from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
-from tests.testlib.site import (
+from tests.testlib.pytest_helpers.registration import register_pytest_plugins
+from tests.testlib.system.emails import EmailManager
+from tests.testlib.system.notifications import (
+    create_host,
+    create_notification_host,
+    NotificationTarget,
+)
+from tests.testlib.system.pytest_helpers.calls import exit_pytest_on_exceptions
+from tests.testlib.system.site import (
     ADMIN_USER,
     get_site_factory,
     Site,
@@ -60,25 +68,30 @@ from tests.testlib.site import (
 
 logger = logging.getLogger(__name__)
 
+# `unique` only dedupes within its own Faker, so the whole session has to share one.
+_unique_faker = Faker().unique
+
 
 # Importing the fixtures into this conftest is what registers them with pytest;
 # these lists only keep the imports from being flagged as unused.
 setup_fixtures = [notification_user]
 graphing_fixtures = [
+    fixture_admin_graph_pin,
     fixture_combined_graphs_page,
     fixture_combined_graphs_page_all_services,
     fixture_custom_graph_for_editing,
+    fixture_dashboard_action_menu_surfaces,
+    fixture_dashboard_with_action_menu_widgets,
     fixture_graph_collection,
-    fixture_graph_hosts_high_density,
     fixture_graph_hosts_with_varying_data,
-    fixture_graph_rrd_dst_boundary,
-    fixture_graph_rrd_with_gaps,
     fixture_javascript_errors,
     fixture_requested_urls,
     fixture_rrd_metric_source,
     fixture_saved_custom_graph,
     fixture_scatterplot_widget,
     fixture_service_graphs,
+    fixture_service_graphs_hover_popup,
+    fixture_stored_graph_pin,
 ]
 
 
@@ -107,7 +120,7 @@ def fixture_test_site(request: pytest.FixtureRequest, site_factory: SiteFactory)
         )
 
 
-def _cloud_lifecycle_wrapper(site: Site) -> "AbstractContextManager[None]":
+def _cloud_lifecycle_wrapper(site: Site) -> AbstractContextManager[None]:
     from tests.testlib.system.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
         cloud_environment,
     )
@@ -157,18 +170,17 @@ def fixture_cloned_linux_hosts_dashboard(
     A built-in dashboard takes no widgets of its own, so any test adding one works on a clone.
     """
     linux_hosts_dashboard = LinuxHostsDashboard(dashboard_page.page)
-    linux_hosts_dashboard.clone_dashboard()
+    # Clones sharing the source's title compete for one ID and shadow the built-in.
+    clone_title = f"{linux_hosts_dashboard.page_title} {_unique_faker.first_name()}"
+    linux_hosts_dashboard.clone_dashboard(clone_title, clone_title.lower().replace(" ", "_"))
 
-    cloned_linux_hosts_dashboard = CustomDashboard(
-        linux_hosts_dashboard.page, linux_hosts_dashboard.page_title, navigate_to_page=False
-    )
-
-    yield cloned_linux_hosts_dashboard
-
-    if is_cleanup_enabled():
-        dashboard_page.go("edit_dashboards.py", wait_until="load")
-        edit_dashboards = EditDashboards(dashboard_page.page, navigate_to_page=False)
-        edit_dashboards.delete_dashboard(cloned_linux_hosts_dashboard.page_title)
+    try:
+        yield CustomDashboard(linux_hosts_dashboard.page, clone_title, navigate_to_page=False)
+    finally:
+        if is_cleanup_enabled():
+            dashboard_page.go("edit_dashboards.py", wait_until="load")
+            edit_dashboards = EditDashboards(dashboard_page.page, navigate_to_page=False)
+            edit_dashboards.delete_dashboard(clone_title)
 
 
 @pytest.fixture(name="dashboard_page_mobile")
@@ -183,25 +195,6 @@ def fixture_dashboard_page_mobile(
 def _licensing_page(cmk_page: Page, test_site: Site, credentials: CmkCredentials) -> Licensing:
     """Entrypoint to test browser GUI. Navigates to 'Licensing page'."""
     return navigate_to_page(cmk_page, test_site.internal_url, credentials, Licensing)
-
-
-def navigate_to_page[TCmkPage: CmkPage](
-    page: Page,
-    url: str,
-    credentials: CmkCredentials,
-    page_type: type[TCmkPage],
-) -> TCmkPage:
-    """Navigate to a page.
-
-    Performs a login to Checkmk site, if necessary.
-    """
-    page.goto(url, wait_until="load")
-
-    if "login.py" in page.url:
-        # Log in to the site if not already logged in.
-        LoginPage(page, site_url=url, navigate_to_page=False).login(credentials)
-
-    return page_type(page, navigate_to_page=True)
 
 
 @pytest.fixture(name="new_browser_context_and_page")
@@ -234,7 +227,10 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
     )
 
 
-def pytest_addoption(parser: pytest.Parser) -> None:
+def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginManager) -> None:
+    # The playwright fixtures and options are only wanted for the GUI tests, so this is
+    # the only suite that registers them.
+    register_pytest_plugins(pluginmanager, playwright_plugin)
     parser.addoption(
         "--update-rules",
         action="store_true",
@@ -276,78 +272,83 @@ def _create_hosts_using_data_from_agent_dump(test_site: Site) -> Iterator:
     data_source_dump_path = repo_path() / "tests" / "system" / "gui" / "data"
     faker = Faker()
 
-    logger.info("Create a folder '%s' for dumps inside test site", test_site_dump_path)
-    if not test_site.is_dir(test_site_dump_path):
-        test_site.makedirs(test_site_dump_path)
+    rule_id: str | None = None
+    created_hosts_list: list[str] = []
+    try:
+        logger.info("Create a folder '%s' for dumps inside test site", test_site_dump_path)
+        if not test_site.is_dir(test_site_dump_path):
+            test_site.makedirs(test_site_dump_path)
 
-    logger.info("Create a rule to read agent-output data from file")
-    rule_id = test_site.openapi.rules.create(
-        ruleset_name="datasource_programs",
-        value=f"python3 {test_site_dump_path}/{python_script_name} {test_site_dump_path}/<HOST>",
-    )
+        logger.info("Create a rule to read agent-output data from file")
+        rule_id = test_site.openapi.rules.create(
+            ruleset_name="datasource_programs",
+            value=f"python3 {test_site_dump_path}/{python_script_name} {test_site_dump_path}/<HOST>",
+        )
 
-    assert (
-        run(
-            ["cp", "-f", str(python_script_path), str(test_site_dump_path)],
-            sudo=True,
-        ).returncode
-        == 0
-    ), f"Error copying '{python_script_path}' file"
+        assert (
+            run(
+                ["cp", "-f", str(python_script_path), str(test_site_dump_path)],
+                sudo=True,
+            ).returncode
+            == 0
+        ), f"Error copying '{python_script_path}' file"
 
-    dump_path_to_host_name_dict = defaultdict(list)
+        dump_path_to_host_name_dict = defaultdict(list)
 
-    for dump_path in data_source_dump_path.iterdir():
-        if "linux" in dump_path.name:
-            hosts_count = 3
-        else:
-            hosts_count = 1
-        for _ in range(hosts_count):
-            host_name = faker.unique.hostname()
-            logger.info("Copy a dump to the new folder")
-            assert (
-                run(
-                    ["cp", "-f", str(dump_path), f"{test_site_dump_path}/{host_name}"],
-                    sudo=True,
-                ).returncode
-                == 0
-            ), f"Error copying '{dump_path}' file"
-            dump_path_to_host_name_dict[dump_path.name].append(host_name)
+        for dump_path in data_source_dump_path.iterdir():
+            if "linux" in dump_path.name:  # noqa: SIM108
+                hosts_count = 3
+            else:
+                hosts_count = 1
+            for _ in range(hosts_count):
+                host_name = faker.unique.hostname()
+                logger.info("Copy a dump to the new folder")
+                assert (
+                    run(
+                        ["cp", "-f", str(dump_path), f"{test_site_dump_path}/{host_name}"],
+                        sudo=True,
+                    ).returncode
+                    == 0
+                ), f"Error copying '{dump_path}' file"
+                dump_path_to_host_name_dict[dump_path.name].append(host_name)
 
-    created_hosts_list = [
-        value for sublist in dump_path_to_host_name_dict.values() for value in sublist
-    ]
-    hosts_dict = [
-        {
-            "host_name": host_name,
-            "folder": "/",
-            "attributes": {
-                "ipaddress": LOCALHOST_IPV4,
-                "tag_agent": "cmk-agent",
-            },
-        }
-        for host_name in created_hosts_list
-    ]
+        created_hosts_list = [
+            value for sublist in dump_path_to_host_name_dict.values() for value in sublist
+        ]
+        hosts_dict = [
+            {
+                "host_name": host_name,
+                "folder": "/",
+                "attributes": {
+                    "ipaddress": LOCALHOST_IPV4,
+                    "tag_agent": "cmk-agent",
+                },
+            }
+            for host_name in created_hosts_list
+        ]
 
-    logger.info("Creating hosts...")
-    test_site.openapi.hosts.bulk_create(hosts_dict)
+        logger.info("Creating hosts...")
+        test_site.openapi.hosts.bulk_create(hosts_dict)
 
-    logger.info("Discovering services and waiting for completion...")
-    test_site.openapi.service_discovery.run_bulk_discovery_and_wait_for_completion(
-        created_hosts_list
-    )
-    test_site.openapi.changes.activate_and_wait_for_completion()
-
-    logger.info("Schedule the 'Check_MK' service")
-    for host_name in created_hosts_list:
-        test_site.reschedule_services(host_name, 3, strict=False)
-
-    yield dump_path_to_host_name_dict
-    if is_cleanup_enabled():
-        logger.info("Clean up: delete the host(s) and the rule")
-        test_site.openapi.hosts.bulk_delete(created_hosts_list)
-        test_site.openapi.rules.delete(rule_id)
+        logger.info("Discovering services and waiting for completion...")
+        test_site.openapi.service_discovery.run_bulk_discovery_and_wait_for_completion(
+            created_hosts_list
+        )
         test_site.openapi.changes.activate_and_wait_for_completion()
-        test_site.delete_dir(test_site_dump_path)
+
+        logger.info("Schedule the 'Check_MK' service")
+        for host_name in created_hosts_list:
+            test_site.reschedule_services(host_name, 3, strict=False)
+
+        yield dump_path_to_host_name_dict
+    finally:
+        if is_cleanup_enabled():
+            logger.info("Clean up: delete the host(s) and the rule")
+            test_site.openapi.hosts.bulk_delete(created_hosts_list, ignore_missing=True)
+            if rule_id is not None:
+                test_site.openapi.rules.delete(rule_id)
+            test_site.openapi.changes.activate_and_wait_for_completion()
+            test_site.delete_dir(test_site_dump_path)
 
 
 @pytest.fixture(name="linux_hosts", scope="module")
@@ -360,6 +361,20 @@ def fixture_linux_hosts(agent_dump_hosts: dict[str, list]) -> list[str]:
 def fixture_windows_hosts(agent_dump_hosts: dict[str, list]) -> list[str]:
     """Return the list of windows hosts created using agent dump."""
     return agent_dump_hosts["windows-2.3.0p10"]
+
+
+@pytest.fixture(name="configured_host")
+def fixture_configured_host(test_site: Site) -> Iterator[str]:
+    """Return the name of a host that exists in the configuration, without any agent data."""
+    with create_host(test_site, _unique_faker.hostname()) as host_name:
+        yield host_name
+
+
+@pytest.fixture(name="notification_host")
+def fixture_notification_host(test_site: Site) -> Iterator[NotificationTarget]:
+    """Return a host with a service whose state the test controls."""
+    with create_notification_host(test_site, _unique_faker.hostname()) as notification_host:
+        yield notification_host
 
 
 @pytest.fixture(name="email_manager", scope="session")
@@ -403,14 +418,15 @@ def _create_bulk_hosts(
         for host in hosts_list
     ]
 
-    created_hosts = test_site.openapi.hosts.bulk_create(entries=entries, bake_agent=False)
-    if activate:
+    try:
+        created_hosts = test_site.openapi.hosts.bulk_create(entries=entries, bake_agent=False)
+        if activate:
+            test_site.openapi.changes.activate_and_wait_for_completion()
+
+        yield created_hosts
+    finally:
+        test_site.openapi.hosts.bulk_delete(hosts_list, ignore_missing=True)
         test_site.openapi.changes.activate_and_wait_for_completion()
-
-    yield created_hosts
-
-    test_site.openapi.hosts.bulk_delete([host["id"] for host in created_hosts])
-    test_site.openapi.changes.activate_and_wait_for_completion()
 
 
 @pytest.fixture(name="bulk_create_hosts_central_site")
@@ -437,3 +453,37 @@ def fixture_bulk_create_hosts_remote_site(
         num_hosts = int(request.param)
         activate = False
     yield from _create_bulk_hosts(remote_site_wato_disabled, num_hosts, test_site, activate)
+
+
+@pytest.fixture(name="bypass_nslookup")
+def fixture_bypass_nslookup(test_site: Site) -> Iterator[None]:
+    """Fixture to bypass `nslookup` command in the checkmk site.
+
+    For any reason, `nslookup` does not work properly in CI, so this fixture creates a dummy
+    `nslookup` command that always return 0 (OK), so then checkmk will execute `ping` to validate
+    the hostname.
+    """
+    dummy_nslookup = test_site.path("local/bin/nslookup")
+
+    _input = "\n".join(  # noqa: FLY002
+        (
+            "#!/bin/bash",
+            "",
+            "sleep 1",
+            "",
+            "if [ $2 == 'localhost' ]",
+            "then",
+            "  exit 0",
+            "else",
+            "  exit 1",
+            "fi",
+            "",
+        )
+    )
+
+    run(["tee", str(dummy_nslookup)], input_=_input, sudo=True)
+    run(["chmod", "a+x", str(dummy_nslookup)], sudo=True)
+
+    yield
+
+    run(["rm", str(dummy_nslookup)], sudo=True)

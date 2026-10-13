@@ -6,18 +6,18 @@
 
 Checkmk special agent for Elasticsearch
 """
-# mypy: disable-error-code="possibly-undefined"
 
 import argparse
 import json
 import sys
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 
 import pydantic
 import requests
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
+from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
 
 __version__ = "3.0.0b1"
 
@@ -76,7 +76,7 @@ def agent_elasticsearch_main(args: argparse.Namespace) -> int:
                         raise
                     continue
 
-                if response.status_code != 200:
+                if response.status_code != HTTPStatus.OK:
                     sys.stderr.write(
                         f"Error: HTTP {response.status_code} for {url}: {response.text[:200]}\n"
                     )

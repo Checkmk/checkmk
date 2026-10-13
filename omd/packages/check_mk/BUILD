@@ -1,5 +1,5 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 exports_files([
     "diskspace",
@@ -29,6 +29,7 @@ filegroup(
 pkg_files(
     name = "post_create",
     srcs = [
+        "post-create/00_certs",
         "post-create/01_create-sample-config.py",
         "post-create/02_message-broker-certs",
     ],
@@ -53,6 +54,7 @@ pkg_files(
 pkg_files(
     name = "post_mv",
     srcs = [
+        "scripts/00_certs",
         "scripts/post-mv/01_cmk-post-rename-site",
     ],
     attributes = pkg_attributes(
@@ -64,6 +66,7 @@ pkg_files(
 pkg_files(
     name = "post_cp",
     srcs = [
+        "scripts/00_certs",
         "scripts/post-cp/01_cmk-post-rename-site",
     ],
     attributes = pkg_attributes(
@@ -75,6 +78,7 @@ pkg_files(
 pkg_files(
     name = "post_restore",
     srcs = [
+        "scripts/00_certs",
         "scripts/post-restore/01_cmk-post-rename-site",
     ],
     attributes = pkg_attributes(
@@ -100,12 +104,7 @@ pkg_files(
 
 pkg_files(
     name = "skel_755",
-    srcs = glob(
-        ["skel/etc/init.d/*"],
-        exclude = [
-            "**/.f12",
-        ],
-    ),
+    srcs = glob(["skel/etc/init.d/*"]),
     attributes = pkg_attributes(
         mode = "0755",
     ),
@@ -217,7 +216,9 @@ pkg_tar(
 sh_library(
     name = "omd_packages_check_mk_sh",
     srcs = [
+        "post-create/00_certs",
         "post-create/02_message-broker-certs",
+        "scripts/00_certs",
         "scripts/post-cp/01_cmk-post-rename-site",
         "scripts/post-mv/01_cmk-post-rename-site",
         "scripts/post-restore/01_cmk-post-rename-site",

@@ -3,15 +3,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+from collections.abc import Iterator
+
 import pytest
 
-from cmk.ccc.version import Edition
-from cmk.gui.watolib.config_domain_name import GlobalSettingsContext
-from tests.testlib.unit.gui.config_variable_form_data_test_helper import (
-    make_global_settings_context,
-)
+import cmk.utils.paths
+from cmk.gui.htmllib.html import _load_vue_manifest
 
 
-@pytest.fixture(name="global_settings_context")
-def fixture_global_settings_context() -> GlobalSettingsContext:
-    return make_global_settings_context(Edition.COMMUNITY)
+@pytest.fixture(name="frontend_vue_manifest")
+def fixture_frontend_vue_manifest() -> Iterator[None]:
+    base = cmk.utils.paths.web_dir / "htdocs/cmk-frontend-vue"
+    base.mkdir(parents=True, exist_ok=True)
+    (base / ".manifest.json").write_text(
+        json.dumps(
+            {
+                "src/main.ts": {"file": "main.js"},
+                "src/nav_sidebar.ts": {"file": "nav_sidebar.js"},
+                "src/stage1.ts": {"file": "stage1.js"},
+            }
+        )
+    )
+    _load_vue_manifest.cache_clear()
+    yield
+    _load_vue_manifest.cache_clear()

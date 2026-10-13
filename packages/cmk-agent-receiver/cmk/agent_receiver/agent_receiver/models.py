@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 import re
 import socket
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
+from http import HTTPStatus
 from typing import Literal, override, Self
 
 from fastapi import HTTPException
@@ -134,7 +134,7 @@ class RegistrationWithHNBody(BaseModel, frozen=True):
     def valid_hostname(cls, v: str) -> str:
         if not _is_valid_hostname_or_ip(v):
             raise HTTPException(
-                status_code=400,
+                status_code=HTTPStatus.BAD_REQUEST,
                 detail=f"Invalid host name: '{v}'",
             )
         return v
@@ -151,7 +151,7 @@ class RegisterExistingBody(RegistrationWithHNBody, frozen=True):
     def valid_hostname(v: str) -> str:
         if not _is_valid_hostname_or_ip(v):
             raise HTTPException(
-                status_code=400,
+                status_code=HTTPStatus.BAD_REQUEST,
                 detail=f"Invalid host name: '{v}'",
             )
         return v
@@ -230,3 +230,34 @@ class RegistrationStatusV2ResponseRegistered(BaseModel, frozen=True):
     status: Literal["Registered"] = "Registered"
     hostname: str
     connection_mode: ConnectionMode
+
+
+class LegacyRegistration(BaseModel, frozen=True):
+    host_name: str
+    host_secret: str
+
+
+class UpdateStatusRequest(BaseModel, frozen=True):
+    platform: str
+    installed_aghash: str
+    last_error: str | None = None
+    legacy_registration: LegacyRegistration | None = None
+
+
+class AgentPackageSignature(BaseModel, frozen=True):
+    certificate: str
+    signature: str
+
+
+class TargetAgent(BaseModel, frozen=True):
+    aghash: str
+    signatures: Sequence[AgentPackageSignature]
+
+
+class UpdateStatusResponse(BaseModel, frozen=True):
+    target_agent: TargetAgent | None = None
+
+
+class DownloadRequest(BaseModel, frozen=True):
+    platform: str
+    aghash: str

@@ -3,26 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 import pytest
 
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.shared_typing.configuration_entity import ConfigEntityType
-from tests.testlib.gui.web_test_app import SetConfig
-from tests.testlib.rest_api_client import ClientRegistry, RestApiException
-
-# mypy: disable-error-code="unreachable"
+from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.testlib.unit.rest_api_client import ClientRegistry, RestApiException
 
 # also remove the mypy disable when re enabling the tests
 pytest.skip("Needs to be rewritten with CMK-28417", allow_module_level=True)
 
 
-def test_list_rule_form_specs(clients: ClientRegistry) -> None:
+def test_list_rule_form_specs(clients: ClientRegistry) -> None:  # type: ignore[unreachable]
     resp = clients.ConfigurationEntity.list_configuration_entities(
         entity_type=ConfigEntityType.rule_form_spec,
         entity_type_specifier="special_agents:elasticsearch",
     )
 
-    assert resp.status_code == 200, resp.json
+    assert resp.status_code == HTTPStatus.OK, resp.json
     assert {entry["title"] for entry in resp.json["value"]} == {"Elasticsearch"}
     assert {entry["id"] for entry in resp.json["value"]} == {"special_agents:elasticsearch"}
 
@@ -43,10 +43,10 @@ def test_list_rule_form_specs_without_perm(set_config: SetConfig, clients: Clien
                 entity_type_specifier="special_agents:elasticsearch",
             )
 
-        assert excinfo.value.response.status_code == 403
+        assert excinfo.value.response.status_code == HTTPStatus.FORBIDDEN
         assert excinfo.value.response.json == {
             "title": "Forbidden",
-            "status": 403,
+            "status": HTTPStatus.FORBIDDEN,
             "detail": (
                 "We are sorry, but you lack the permission for this operation."
                 " If you do not like this then please ask your administrator"
@@ -71,10 +71,10 @@ def test_get_rule_form_spec_without_perm(set_config: SetConfig, clients: ClientR
                 entity_type_specifier="special_agents:elasticsearch",
             )
 
-        assert excinfo.value.response.status_code == 403
+        assert excinfo.value.response.status_code == HTTPStatus.FORBIDDEN
         assert excinfo.value.response.json == {
             "title": "Forbidden",
-            "status": 403,
+            "status": HTTPStatus.FORBIDDEN,
             "detail": (
                 "We are sorry, but you lack the permission for this operation."
                 " If you do not like this then please ask your administrator"
@@ -155,7 +155,7 @@ def test_create_rule_form_spec(
         }
     )
 
-    assert resp.status_code == 200, resp.json
+    assert resp.status_code == HTTPStatus.OK, resp.json
     assert resp.json["title"] == "Elasticsearch"
     assert resp.json["id"] == "special_agents:elasticsearch"
 
@@ -242,10 +242,10 @@ def test_create_rule_form_spec_without_perm(
                 }
             )
 
-        assert excinfo.value.response.status_code == 403
+        assert excinfo.value.response.status_code == HTTPStatus.FORBIDDEN
         assert excinfo.value.response.json == {
             "title": "Forbidden",
-            "status": 403,
+            "status": HTTPStatus.FORBIDDEN,
             "detail": (
                 "We are sorry, but you lack the permission for this operation."
                 " If you do not like this then please ask your administrator"
@@ -354,7 +354,7 @@ def test_create_rule_form_spec_cannot_overwrite_existing(
             }
         )
 
-    assert excinfo.value.response.status_code == 409
+    assert excinfo.value.response.status_code == HTTPStatus.CONFLICT
     assert excinfo.value.response.json["title"] == "Rule ID conflict"
     assert excinfo.value.response.json["detail"].startswith("Cannot overwrite the existing rule")
 

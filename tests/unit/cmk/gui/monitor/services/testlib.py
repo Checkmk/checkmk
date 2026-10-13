@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence, Set
+from collections.abc import Iterator, Sequence, Set
+from contextlib import contextmanager
 
 from polyfactory.factories import DataclassFactory
 
+from cmk.ccc.user import UserId
 from cmk.gui.monitor.services._exceptions import ServiceNotFoundError
 from cmk.gui.monitor.services._models import (
     Service,
@@ -17,6 +19,10 @@ from cmk.gui.monitor.services._models import (
 )
 from cmk.gui.monitor.services._repositories import HostServicesRepository
 from cmk.gui.monitor.services._sorting import service_sorter
+from cmk.gui.permissions import permission_registry
+from cmk.gui.role_types import BuiltInUserRole
+from cmk.gui.session_context import UserContext
+from cmk.gui.utils.roles import UserPermissions
 
 KNOWN_HOSTNAME = "web-server-01"
 KNOWN_SITE_ID = "local"
@@ -35,14 +41,20 @@ class ServiceOverviewFactory(DataclassFactory[ServiceOverview]):
 
 
 def get_fake_host_services_repository(
-    *, n_services: int, names: Sequence[str] | None = None
+    *,
+    n_services: int = 0,
+    names: Sequence[str] | None = None,
+    services: Sequence[Service] | None = None,
 ) -> HostServicesRepository:
     class HostServicesFakeRepository:
         def __init__(self) -> None:
-            self._services = [
-                ServiceFactory.build() if names is None else ServiceFactory.build(name=names[i])
-                for i in range(n_services)
-            ]
+            if services is not None:
+                self._services = list(services)
+            else:
+                self._services = [
+                    ServiceFactory.build() if names is None else ServiceFactory.build(name=names[i])
+                    for i in range(n_services)
+                ]
             self._service_overviews = {
                 (KNOWN_SITE_ID, KNOWN_HOSTNAME, s.name): ServiceOverviewFactory.build(
                     site_id=KNOWN_SITE_ID, host_name=KNOWN_HOSTNAME, name=s.name
@@ -63,23 +75,40 @@ def get_fake_host_services_repository(
 
         def fetch(
             self,
-            hostname: str,
+            hostname: str,  # noqa: ARG002
             *,
             limit: int | None,
             query: str,
             sorters: Sequence[ServiceSort],
-            filters: ServiceFilter,
-            fields: Set[ServiceOptionalField] = frozenset(),
+            filters: ServiceFilter,  # noqa: ARG002
+            fields: Set[ServiceOptionalField] = frozenset(),  # noqa: ARG002
         ) -> Sequence[Service]:
             matches = [s for s in self._services if query.lower() in s.name.lower()]
             return sorted(matches, key=service_sorter(sorters))[:limit]
 
-        def count_total(self, hostname: str) -> int:
+        def count_total(self, hostname: str) -> int:  # noqa: ARG002
             return len(self._services)
 
-        def count_matched(self, hostname: str, *, query: str, filters: ServiceFilter) -> int:
+        def count_matched(
+            self,
+            hostname: str,  # noqa: ARG002
+            *,
+            query: str,
+            filters: ServiceFilter,  # noqa: ARG002
+            fields: Set[ServiceOptionalField] = frozenset(),  # noqa: ARG002
+        ) -> int:
             # Not implementing filter matching as we don't need to test a fake implementation of
             # this.
             return len([s for s in self._services if query.lower() in s.name.lower()])
 
     return HostServicesFakeRepository()
+
+
+@contextmanager
+def login_with(permissions: dict[str, bool]) -> Iterator[None]:
+    """A logged-in user whose role spells out exactly these permissions."""
+    role: BuiltInUserRole = {"alias": "Test", "permissions": permissions, "builtin": True}
+    with UserContext(
+        UserId("test"), UserPermissions({"user": role}, permission_registry, {}, ["user"])
+    ):
+        yield

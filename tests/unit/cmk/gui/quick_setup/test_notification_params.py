@@ -8,18 +8,28 @@ from typing import Literal
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.events.notify_types import EventRule, NotificationParameterID, NotificationRuleID
+from cmk.events.notify_types import (
+    AlwaysBulkParameters,
+    EventRule,
+    NotificationParameterID,
+    NotificationRuleID,
+    NotifyBulkType,
+    TimeperiodBulkParameters,
+)
 from cmk.gui.wato.pages.notifications.migrate import (
     migrate_to_event_rule,
     migrate_to_notification_quick_setup_spec,
 )
+from cmk.gui.wato.pages.notifications.quick_setup import validate_at_least_one_event
 from cmk.gui.wato.pages.notifications.quick_setup_types import (
     Method,
     NotificationQuickSetupSpec,
     SpecificEvents,
     TriggeringEvents,
 )
+from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.utils.timeperiod import TimeperiodName
+from tests.unit.cmk.gui.helpers.notification_rule_test_helper import mail_rule
 
 
 def set_specific_triggering_events(
@@ -221,3 +231,156 @@ def test_quick_setup_notifications_transform_to_frontend() -> None:
         trigger_events={"host", "service", "ec"}
     )
     assert migrate_to_notification_quick_setup_spec(event_rule) == quick_setup_params
+
+
+def _do_not_match_ec_alerts_event_rule() -> EventRule:
+    return EventRule(
+        rule_id=NotificationRuleID("uuid4_rule_id"),
+        allow_disable=False,
+        contact_all=False,
+        contact_all_with_email=False,
+        contact_object=False,
+        description="foo",
+        disabled=False,
+        notify_plugin=("mail", NotificationParameterID("parameter_id")),
+        match_ec=False,
+    )
+
+
+def test_do_not_match_ec_alerts_is_editable_in_quick_setup() -> None:
+    triggering_events = migrate_to_notification_quick_setup_spec(
+        _do_not_match_ec_alerts_event_rule()
+    )["triggering_events"]
+
+    assert triggering_events[0] == "specific_events"
+    specific_events = triggering_events[1]
+    assert specific_events == {
+        "host_events": [
+            ("state_change", (-1, 0)),
+            ("state_change", (-1, 1)),
+            ("state_change", (-1, 2)),
+            ("flapping_state", None),
+            ("downtime", None),
+            ("acknowledgement", None),
+            ("alert_handler", "success"),
+            ("alert_handler", "failure"),
+        ],
+        "service_events": [
+            ("state_change", (-1, 0)),
+            ("state_change", (-1, 1)),
+            ("state_change", (-1, 2)),
+            ("state_change", (-1, 3)),
+            ("flapping_state", None),
+            ("downtime", None),
+            ("acknowledgement", None),
+            ("alert_handler", "success"),
+            ("alert_handler", "failure"),
+        ],
+    }
+    validate_at_least_one_event(specific_events)
+
+
+def test_do_not_match_ec_alerts_keeps_excluding_ec_alerts_after_a_round_trip(
+    mocker: MockerFixture,
+) -> None:
+    mocker.patch("cmk.gui.wato.pages.notifications.migrate.uuid4", return_value="uuid4_rule_id")
+    quick_setup_params = set_quick_setup_params(
+        migrate_to_notification_quick_setup_spec(_do_not_match_ec_alerts_event_rule())[
+            "triggering_events"
+        ]
+    )
+
+    event_rule = migrate_to_event_rule(quick_setup_params)
+
+    assert "match_ec" not in event_rule
+    assert event_rule["match_host_event"] == ["?r", "?d", "?u", "f", "s", "x", "as", "af"]
+    assert event_rule["match_service_event"] == [
+        "?r",
+        "?w",
+        "?c",
+        "?u",
+        "f",
+        "s",
+        "x",
+        "as",
+        "af",
+    ]
+
+
+_ALWAYS_BULK = AlwaysBulkParameters(
+    interval=60,
+    count=1000,
+    groupby=["host", "state"],
+    groupby_custom=["MY_MACRO"],
+    bulk_subject="Bulk subject",
+)
+
+
+_TIMEPERIOD_BULK_WITH_OUTSIDE = TimeperiodBulkParameters(
+    timeperiod=TimeperiodName("workhours"),
+    count=10,
+    groupby=["folder"],
+    groupby_custom=["OTHER_MACRO"],
+    bulk_subject="Period subject",
+    bulk_outside=_ALWAYS_BULK,
+)
+_MINIMAL_TIMEPERIOD_BULK = TimeperiodBulkParameters(
+    timeperiod=TimeperiodName("workhours"), count=10, groupby=[]
+)
+
+
+@pytest.mark.parametrize(
+    "bulk",
+    [
+        pytest.param(("always", _ALWAYS_BULK), id="always"),
+        pytest.param(("timeperiod", _TIMEPERIOD_BULK_WITH_OUTSIDE), id="timeperiod-with-outside"),
+        pytest.param(("timeperiod", _MINIMAL_TIMEPERIOD_BULK), id="timeperiod-minimal"),
+    ],
+)
+def test_bulk_settings_survive_a_round_trip(bulk: NotifyBulkType) -> None:
+    rule = mail_rule("plain")
+    rule["bulk"] = bulk
+
+    assert migrate_to_event_rule(migrate_to_notification_quick_setup_spec(rule))["bulk"] == bulk
+
+
+def test_bulk_settings_are_dropped_for_cancelling_rules() -> None:
+    rule = mail_rule("plain")
+    rule["notify_plugin"] = ("mail", None)
+    rule["bulk"] = ("always", _ALWAYS_BULK)
+
+    effect = migrate_to_notification_quick_setup_spec(rule)["notification_method"]
+
+    assert effect == {"notification_effect": ("suppress", ("mail", None))}
+
+
+def test_host_filters_survive_a_round_trip() -> None:
+    rule = mail_rule("plain")
+    rule["match_hosttags"] = {TagGroupID("criticality"): TagID("prod")}
+    rule["match_hostlabels"] = {"os": "linux"}
+    rule["match_hosts"] = ["host1"]
+    rule["match_exclude_hosts"] = ["host2"]
+
+    round_tripped = migrate_to_event_rule(migrate_to_notification_quick_setup_spec(rule))
+
+    assert round_tripped.get("match_hosttags") == {TagGroupID("criticality"): TagID("prod")}
+    assert round_tripped.get("match_hostlabels") == {"os": "linux"}
+    assert round_tripped.get("match_hosts") == ["host1"]
+    assert round_tripped.get("match_exclude_hosts") == ["host2"]
+
+
+def test_explicit_service_level_survives_a_round_trip() -> None:
+    rule = mail_rule("plain")
+    rule["match_sl"] = (10, 10)
+
+    spec = migrate_to_notification_quick_setup_spec(rule)
+
+    assert spec["general_filters"].get("service_level") == ("explicit", 10)
+    assert migrate_to_event_rule(spec).get("match_sl") == (10, 10)
+
+
+def test_rule_for_all_events_sets_no_event_conditions() -> None:
+    event_rule = migrate_to_event_rule(set_quick_setup_params(("all_events", None)))
+
+    assert "match_host_event" not in event_rule
+    assert "match_service_event" not in event_rule

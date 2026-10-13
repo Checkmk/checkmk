@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+import logging
+import os
 import time
 from collections.abc import Mapping, Sequence
 from datetime import datetime
@@ -12,6 +13,7 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
+import time_machine
 
 import livestatus
 
@@ -28,7 +30,9 @@ from cmk.licensing.usage import (
     _parse_extensions,
     _serialize_dump,
     CLOUD_SERVICE_PREFIXES,
+    get_license_usage_report_validity,
     HostsOrServicesCloudCounter,
+    LicenseUsageReportValidity,
     load_raw_license_usage_report,
     LocalLicenseUsageHistory,
     Now,
@@ -51,7 +55,7 @@ def test_try_update_license_usage(omd_root: Path) -> None:
         Now(dt=datetime.fromtimestamp(time.mktime(time.localtime(time.time() * 2))), tz=""),
         instance_id,
         site_hash,
-        lambda *args, **kwargs: LicenseUsageSample(
+        lambda *args, **kwargs: LicenseUsageSample(  # noqa: ARG005
             instance_id=instance_id,
             site_hash=site_hash,
             version="",
@@ -100,7 +104,7 @@ def test_try_update_license_usage_livestatus_socket_error(omd_root: Path) -> Non
             Now(dt=datetime.fromtimestamp(time.mktime(time.localtime(0))), tz=""),
             instance_id,
             site_hash,
-            lambda *args, **kwargs: _mock_livestatus(),
+            lambda *args, **kwargs: _mock_livestatus(),  # noqa: ARG005
             omd_root=omd_root,
         )
     assert (
@@ -126,7 +130,7 @@ def test_try_update_license_usage_livestatus_not_found_error(omd_root: Path) -> 
             Now(dt=datetime.fromtimestamp(time.mktime(time.localtime(0))), tz=""),
             instance_id,
             site_hash,
-            lambda *args, **kwargs: _mock_livestatus(),
+            lambda *args, **kwargs: _mock_livestatus(),  # noqa: ARG005
             omd_root=omd_root,
         )
     assert (
@@ -147,7 +151,7 @@ def test_try_update_license_usage_next_run_ts_not_reached(omd_root: Path) -> Non
         Now(dt=datetime.fromtimestamp(time.mktime(time.localtime(-1))), tz=""),
         instance_id,
         site_hash,
-        lambda *args, **kwargs: LicenseUsageSample(
+        lambda *args, **kwargs: LicenseUsageSample(  # noqa: ARG005
             instance_id=instance_id,
             site_hash=site_hash,
             version="",
@@ -1065,7 +1069,7 @@ def test_history_add_sample() -> None:
 
 
 # This is nowhere near being a unit test of cmk.licensing.
-def test_cloud_service_prefixes_up_to_date():
+def test_cloud_service_prefixes_up_to_date() -> None:
     """Test if there are services that do not begin with the prefix indicating a cloud service based
     on the categorisation in their manpage. Either rename your service to conform to the given
      prefixes, update the prefix list or update the manpage catalog"""
@@ -1166,3 +1170,31 @@ def test_save_load_extensions(expected_extensions: LicenseUsageExtensions, omd_r
 def test_LicenseUsageExtensions_parse(expected_ntop_enabled: bool) -> None:
     extensions = _parse_extensions(LicenseUsageExtensions(ntop=expected_ntop_enabled).for_report())
     assert extensions.ntop is expected_ntop_enabled
+
+
+@pytest.mark.parametrize(
+    "age_in_days, expected_validity",
+    [
+        pytest.param(2, LicenseUsageReportValidity.recent_enough, id="2 days"),
+        pytest.param(3, LicenseUsageReportValidity.older_than_three_days, id="3 days"),
+        pytest.param(59, LicenseUsageReportValidity.older_than_three_days, id="59 days"),
+        pytest.param(60, LicenseUsageReportValidity.older_than_sixty_days, id="60 days"),
+    ],
+)
+def test_get_license_usage_report_validity(
+    omd_root: Path, age_in_days: int, expected_validity: LicenseUsageReportValidity
+) -> None:
+    now = 1_700_000_000
+    report_file_path = get_license_usage_report_file_path(omd_root)
+    report_file_path.parent.mkdir(parents=True)
+    # An empty report makes the function record a new sample instead of checking the age.
+    report_file_path.write_text("non-empty")
+    last_update = now - age_in_days * 86400
+    os.utime(report_file_path, (last_update, last_update))
+
+    with time_machine.travel(now, tick=False):
+        validity = get_license_usage_report_validity(
+            omd_root=omd_root, logger=logging.getLogger(__name__)
+        )
+
+    assert validity is expected_validity

@@ -12,7 +12,7 @@ from omdlib.instance_id import create_instance_id
 def _load_instance_id(site_home: Path) -> UUID | None:
     try:
         return UUID((site_home / "etc/omd/instance_id").read_text())
-    except (FileNotFoundError, ValueError):
+    except FileNotFoundError, ValueError:
         return None
 
 

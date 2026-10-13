@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { renderDate } from 'cmk-ui-library/lib/renderTime'
 import { computed } from 'vue'
 
 import StatusMessage, { type StatusType } from '../StatusMessage.vue'
@@ -57,7 +58,7 @@ const sharedData = computed((): SharingData => {
     }
   }
 
-  const getDate = () => (props.sharedUntil ? props.sharedUntil.toISOString().split('T')[0]! : '')
+  const getDate = () => (props.sharedUntil ? renderDate(props.sharedUntil) : '')
 
   const daysUntilExpired: number = Math.ceil(
     (props.sharedUntil.getTime() - new Date().getTime()) / (1000 * 3600 * 24)

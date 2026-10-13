@@ -3,15 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import json
+from http import HTTPStatus
 
 from cmk.gui.openapi.restful_objects.api_error import ApiError
 from cmk.gui.openapi.utils import EXT, FIELDS, problem
 
 
-def test_openapi_error_response():
+def test_openapi_error_response() -> None:
     fields = FIELDS(
         {
             "entries": {
@@ -41,7 +41,7 @@ def test_openapi_error_response():
 
     problem_response = problem(
         detail="Experienced an error",
-        status=500,
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
         title="Internal Server Error",
         fields=fields,
         ext=EXT({"error_type": "internal_error"}),
@@ -56,7 +56,7 @@ def test_openapi_error_response():
 
     assert dumped["detail"] == "Experienced an error"
     assert dumped["ext"] == {"error_type": "internal_error"}
-    assert dumped["status"] == 500
+    assert dumped["status"] == HTTPStatus.INTERNAL_SERVER_ERROR
     assert dumped["title"] == "Internal Server Error"
     assert dumped["fields"]["entries"]["0"]["attributes"]["_schema"]["locked_by"] == {
         "instance_id": ["Missing data for required field."],

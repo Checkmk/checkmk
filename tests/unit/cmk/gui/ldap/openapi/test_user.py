@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from http import HTTPStatus
+
 import pytest
 
 from cmk.ccc.site import SiteId
@@ -20,7 +22,7 @@ from cmk.gui.user_connection_config_types import (
 from cmk.gui.userdb import get_user_attributes, load_users, UserConnectionConfigFile
 from cmk.gui.watolib.pending_changes import PendingChanges, PendingChangesStore
 from cmk.gui.watolib.users import create_user, default_sites
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 LDAP_CONNECTION_ID = "CMKTest"
 
@@ -67,12 +69,12 @@ def test_edit_ldap_user_with_locked_attributes(clients: ClientRegistry) -> None:
         roles=["admin"],
         expect_ok=False,
         customer=None,
-    ).assert_status_code(403)
+    ).assert_status_code(HTTPStatus.FORBIDDEN)
 
 
 @pytest.mark.xfail(
     strict=True,
-    reason="CMK-37481: an auth_option flips the connector to htpasswd before the "
+    reason="CMK-37519: an auth_option flips the connector to htpasswd before the "
     "locked-attribute guard reads it, so the guard is skipped entirely",
 )
 def test_edit_ldap_user_with_auth_option_must_not_bypass_locked_attributes(
@@ -95,7 +97,7 @@ def test_edit_ldap_user_with_auth_option_must_not_bypass_locked_attributes(
         auth_option={"auth_type": "password", "password": "supersecretpassword123"},
         expect_ok=False,
         customer=None,
-    ).assert_status_code(403)
+    ).assert_status_code(HTTPStatus.FORBIDDEN)
 
     user_spec = load_users()[name]
     assert user_spec["connector"] == LDAP_CONNECTION_ID, (

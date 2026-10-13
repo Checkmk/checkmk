@@ -5,9 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
-
-from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
@@ -22,11 +19,13 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
-from cmk.gui.wato import RulespecGroupActiveChecks
+from cmk.gui.watolib.rulespec_groups import RulespecGroupActiveChecks
 from cmk.ruleset_matcher.definition import RuleGroup
 
 
-def _transform_tuple_format(params: tuple[str, Any]) -> dict:
+def _transform_tuple_format(
+    params: tuple[str, object] | dict[str, object],
+) -> dict[str, object]:
     if isinstance(params, tuple):
         return {
             "name": params[0],

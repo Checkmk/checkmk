@@ -5,7 +5,7 @@
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import Final, override
+from typing import override
 
 import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
 import cmk.utils.paths
@@ -15,17 +15,22 @@ from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.audit_log import log_audit
-from cmk.gui.watolib.config_domain_name import ABCConfigDomain, ConfigDomainName, SerializedSettings
+from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
+    ActivationContext,
+    ConfigDomainName,
+    EVENT_CONSOLE,
+    SerializedSettings,
+)
 from cmk.livestatus_client import ECReload, LivestatusClient
 from cmk.utils.config_warnings import ConfigurationWarnings
-
-EVENT_CONSOLE: Final[ConfigDomainName] = "ec"
 
 
 class ConfigDomainEventConsole(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     in_global_settings = False
+    global_settings_permission = "mkeventd.config"
 
     @classmethod
     @override
@@ -51,7 +56,9 @@ class ConfigDomainEventConsole(ABCConfigDomain):
         return []
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         if getattr(active_config, "mkeventd_enabled", False):
             log_audit(
                 action="mkeventd-activate",

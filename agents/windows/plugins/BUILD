@@ -1,5 +1,5 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 # Sign all PowerShell scripts in the current directory.
 # `build bazel //agents/windows/plugins:all`
@@ -17,11 +17,34 @@ filegroup(
             ".gitattributes",
             ".gitignore",
             "**/OWNERS",
-            ".f12",
         ],
     ),
     tags = ["lint-with-psscriptanalyzer"],
     visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "msi_cmk_plugin_files",
+    srcs = [
+        "//cmk/plugins/collection/agents:mcafee_av_client.bat",
+        "//cmk/plugins/collection/agents:win_dmidecode.bat",
+        "//cmk/plugins/hyperv/agents:hyperv_vms.ps1",
+        "//cmk/plugins/hyperv/agents:hyperv_vms_guestinfos.ps1",
+        "//cmk/plugins/msexch/agents:msexch_dag.ps1",
+        "//cmk/plugins/msexch/agents:msexch_database.ps1",
+        "//cmk/plugins/printer/agents:win_printers.ps1",
+        "//cmk/plugins/tcp/agents:netstat_an.bat",
+        "//cmk/plugins/windows/agents:ad_replication.bat",
+        "//cmk/plugins/windows/agents:win_dhcp_pools.bat",
+        "//cmk/plugins/windows/agents:win_license.bat",
+        "//cmk/plugins/windows/agents:windows_broadcom_bonding.bat",
+        "//cmk/plugins/windows/agents:windows_multipath.ps1",
+        "//cmk/plugins/windows/agents:windows_tasks.ps1",
+        "//cmk/plugins/windows/agents:windows_updates.ps1",
+        "//packages/cmk-plugins/cmk/plugins/tsm:agents/tsm_checks.bat",
+        "//packages/cmk-plugins/cmk/plugins/veeam:agents/veeam_backup_status.ps1",
+    ],
+    visibility = ["//agents/wnx:__pkg__"],
 )
 
 # May contain local file target labels, or cross package labels
@@ -44,7 +67,7 @@ TO_SIGN_SCRIPTS = [
     "//cmk/plugins/nvidia/agents:nvidia_smi.ps1",
     "rds_licenses.ps1",
     "sansymphony.ps1",
-    "//cmk/plugins/veeam/agents:veeam_backup_status.ps1",
+    "//packages/cmk-plugins/cmk/plugins/veeam:agents/veeam_backup_status.ps1",
     "//cmk/plugins/printer/agents:win_printers.ps1",
     "windows_if.ps1",
     "//cmk/plugins/windows/agents:windows_multipath.ps1",
@@ -69,6 +92,17 @@ TO_SIGN_SCRIPTS = [
     )
     for n in TO_SIGN_SCRIPTS
 ]
+
+# Signatures of non-ASCII scripts break on Windows, see the script header.
+sh_test(
+    name = "signed_scripts_are_ascii",
+    size = "small",
+    srcs = ["scripts/check_ascii.sh"],
+    args = ["$(rootpath %s)" % n for n in TO_SIGN_SCRIPTS] + [
+        "$(rootpaths :msi_cmk_plugin_files)",
+    ],
+    data = TO_SIGN_SCRIPTS + [":msi_cmk_plugin_files"],
+)
 
 pkg_tar(
     name = "signed_plugins",
@@ -95,11 +129,4 @@ pkg_tar(
     tags = ["manual"],
     target_compatible_with = ["@platforms//os:windows"],
     visibility = ["//visibility:public"],
-)
-
-sh_library(
-    name = "agents_windows_plugins_sh",
-    srcs = [
-        ".f12",
-    ],
 )

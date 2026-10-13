@@ -25,7 +25,7 @@ class CacheInfo(_CacheInfo):
         *,
         age: float,
         cache_interval: float,
-    ) -> "CacheInfo":
+    ) -> CacheInfo:
         return super().__new__(
             cls,
             age=age,
@@ -37,7 +37,7 @@ class CacheInfo(_CacheInfo):
         )
 
     @classmethod
-    def from_raw(cls, cache_raw: str | None, now: float) -> "CacheInfo | None":
+    def from_raw(cls, cache_raw: str | None, now: float) -> CacheInfo | None:
         """Parse and preprocess cache info
         make sure max(..) will give the oldest/most outdated case
         """

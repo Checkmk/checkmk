@@ -25,7 +25,7 @@ def wato_path() -> Path:
 @pytest.fixture()
 def mock_checkmk_info(mocker: MockerFixture) -> None:
     mocker.patch(
-        "cmk.ccc.version.get_general_version_infos",
+        "cmk.ccc.version_info.get_general_version_infos",
         return_value={"version": "2.2.0", "edition": "pro"},
     )
 

@@ -4,8 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { nextTick, ref } from 'vue'
 
@@ -20,6 +22,7 @@ import FilterOptionEntry from './FilterOptionEntry.vue'
 import { availableFilterOptions } from './QueryOptions'
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Search'), [{ combo: ['Enter'], description: _t('Apply filter') }])
 const searchUtils = getSearchUtils()
 
 const filterOptions = ref<FilterOption[]>(availableFilterOptions)
@@ -144,14 +147,13 @@ function getFilterOptions(): FilterOption[] {
         @keydown.enter.stop="() => handleFilterSelect(opt)"
       ></FilterOptionEntry>
     </ul>
-    <CmkAlertBox
+    <CmkAlert
       v-if="getFilterOptions().length === 0"
       variant="info"
       class="unified-search-filters__suggestions-info not-found"
-    >
-      {{ _t('No filters can be applied to your current search query.') }}
-    </CmkAlertBox>
-    <CmkAlertBox variant="info" class="unified-search-filters__suggestions-info">
+      :text="_t('No filters can be applied to your current search query.')"
+    />
+    <CmkAlertBoxDeprecated variant="info" class="unified-search-filters__suggestions-info">
       {{
         _t(
           'Search with regular expressions for menu entries, hosts, services or host and service groups.'
@@ -160,7 +162,7 @@ function getFilterOptions(): FilterOption[] {
       <br />
 
       {{ _t("Note that for simplicity '*' will be substituted with '.*'.") }}
-    </CmkAlertBox>
+    </CmkAlertBoxDeprecated>
   </div>
 </template>
 

@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 
 # EXAMPLE DATA FROM: WDC SSC-D0128SC-2100
 # <<<smart>>>
@@ -230,15 +228,15 @@ def _parse_nvme_lines(nvme_lines: Iterable[Sequence[str]]) -> Section:
         value = value.replace("%", "").replace(".", "").replace(",", "")
         match field:
             case "Temperature":
-                _set_int_or_zero(disk, key, value.split()[0])
+                _set_int_or_zero(disk, key, value.split()[0])  # type: ignore[possibly-undefined]
             case "Critical Warning":
-                disk[key] = int(value, 16)
+                disk[key] = int(value, 16)  # type: ignore[possibly-undefined]
             case "Data Units Read":
-                disk[key] = int(value.split()[0]) * 512000
+                disk[key] = int(value.split()[0]) * 512000  # type: ignore[possibly-undefined]
             case "Data Units Written":
-                disk[key] = int(value.split()[0]) * 512000
+                disk[key] = int(value.split()[0]) * 512000  # type: ignore[possibly-undefined]
             case _:
-                _set_int_or_zero(disk, key, value)
+                _set_int_or_zero(disk, key, value)  # type: ignore[possibly-undefined]
 
     return nvme_disks
 
@@ -251,7 +249,7 @@ agent_section_smart = AgentSection(
 
 def discover_smart_stats(section: Section) -> DiscoveryResult:
     for disk_name, disk in section.items():
-        # Temperature attribute is handled in the "smart.temp" check plug-in
+        # Temperature attribute is handled in the "smart_temp" check plug-in
         # If Temperature is the only attribute, we don't want to create an empty service for it here
         if not disk or (len(disk) == 1 and DiskAttribute.TEMPERATURE.name in disk):
             continue

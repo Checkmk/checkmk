@@ -3,8 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { CalendarDateTime, type ZonedDateTime, toZoned } from '@internationalized/date'
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time/types.ts'
+import { kioskMode } from 'cmk-ui-library/lib/kiosk'
+import { describe, expect, it, vi } from 'vitest'
 
 import DashboardMenuHeader from '@/dashboard/components/DashboardMenuHeader/DashboardMenuHeader.vue'
 import type { SelectedDashboard } from '@/dashboard/components/DashboardMenuHeader/types'
@@ -12,15 +17,33 @@ import type { DashboardMetadata, DashboardTokenModel } from '@/dashboard/types/d
 import { DashboardOwnerType } from '@/dashboard/types/dashboard'
 import { copyToClipboard, dashboardAPI } from '@/dashboard/utils.ts'
 
+const TZ = 'Europe/Berlin'
+
+const testRange: DateTimeRange = (() => {
+  const to: ZonedDateTime = toZoned(new CalendarDateTime(2026, 3, 10, 12, 0), TZ, 'compatible')
+  return { from: to.subtract({ hours: 4 }), to }
+})()
+
+const testGlobalTimePicker: GlobalTimePickerProps = {
+  custom_time_ranges: [{ title: 'Last 1 hour', total_seconds: 3600 }],
+  default_time_range: 4 * 3600,
+  server_time_zone: TZ,
+  first_day_of_week: null,
+  refresh: {
+    interval_seconds: null,
+    interval_choices_seconds: [30, 60, 90],
+    starts_live: false,
+    reloads_page_content: false
+  }
+}
+
 vi.mock('@/dashboard/utils.ts', () => ({
   copyToClipboard: vi.fn().mockResolvedValue(undefined),
   dashboardAPI: {
     listDashboardMetadata: vi.fn().mockResolvedValue([])
   },
   urlHandler: {
-    isOnIndexPage: vi.fn().mockReturnValue(false),
-    getDashboardUrl: vi.fn().mockReturnValue(new URL('http://localhost/dashboard.py')),
-    getIndexUrl: vi.fn().mockReturnValue(new URL('http://localhost/index.py'))
+    getDashboardUrl: vi.fn().mockReturnValue(new URL('http://localhost/dashboard.py'))
   }
 }))
 
@@ -49,12 +72,15 @@ const activeToken: DashboardTokenModel = {
 interface RenderProps {
   selectedDashboard?: SelectedDashboard | null
   canEditDashboard?: boolean
+  canCloneAsResponsive?: boolean
   linkUserGuide?: string
   isEditMode?: boolean
   publicToken?: DashboardTokenModel | null
   isEmptyDashboard?: boolean
   isDashboardLoading?: boolean
   runtimeFilters?: Record<string, string>
+  globalTimePicker?: GlobalTimePickerProps
+  range?: DateTimeRange
 }
 
 function renderHeader(props: RenderProps = {}) {
@@ -62,20 +88,20 @@ function renderHeader(props: RenderProps = {}) {
     props: {
       selectedDashboard: customDashboard,
       canEditDashboard: true,
+      canCloneAsResponsive: false,
       linkUserGuide: 'https://docs.checkmk.com',
       isEditMode: false,
       publicToken: null,
       isEmptyDashboard: false,
       isDashboardLoading: false,
       runtimeFilters: {},
+      globalTimePicker: testGlobalTimePicker,
+      range: testRange,
+      'onUpdate:range': () => {},
       ...props
     }
   })
 }
-
-beforeEach(() => {
-  vi.clearAllMocks()
-})
 
 describe('DashboardMenuHeader', () => {
   describe('view mode rendering', () => {
@@ -86,12 +112,12 @@ describe('DashboardMenuHeader', () => {
 
     it('renders the Filter button in view mode', () => {
       renderHeader()
-      expect(screen.getByText('Filter')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Filter' })).toBeInTheDocument()
     })
 
     it('does not render Filter button in edit mode', () => {
       renderHeader({ isEditMode: true })
-      expect(screen.queryByText('Filter')).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Filter' })).not.toBeInTheDocument()
     })
 
     it('shows "Edit widgets" for custom editable dashboard', () => {
@@ -121,6 +147,49 @@ describe('DashboardMenuHeader', () => {
     })
   })
 
+  describe('clone as responsive entry', () => {
+    it('offers cloning as a responsive dashboard in the settings menu when possible', async () => {
+      const user = userEvent.setup()
+      renderHeader({ canCloneAsResponsive: true })
+
+      await user.click(screen.getByText('Settings'))
+
+      expect(screen.getByText('Clone as responsive dashboard')).toBeInTheDocument()
+    })
+
+    it('offers only the plain clone in the settings menu when cloning as responsive is not possible', async () => {
+      const user = userEvent.setup()
+      renderHeader({ canCloneAsResponsive: false })
+
+      await user.click(screen.getByText('Settings'))
+
+      expect(screen.getByText('Clone dashboard')).toBeInTheDocument()
+      expect(screen.queryByText('Clone as responsive dashboard')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('page navigation toggle', () => {
+    async function openNavigationToggle(): Promise<HTMLAnchorElement> {
+      renderHeader()
+      await fireEvent.click(screen.getByText('Settings'))
+      return screen.getByText('Show page navigation').closest('a') as HTMLAnchorElement
+    }
+
+    it('shows the toggle as on and links to kiosk mode when the navigation is visible', async () => {
+      vi.spyOn(kioskMode, 'isActive').mockReturnValue(false)
+      const link = await openNavigationToggle()
+      expect(new URL(link.href).searchParams.get('kiosk')).toBe('true')
+      expect(link.querySelector('img')!.src).toContain('icon_toggle_on.svg')
+    })
+
+    it('shows the toggle as off and links out of kiosk mode when the navigation is hidden', async () => {
+      vi.spyOn(kioskMode, 'isActive').mockReturnValue(true)
+      const link = await openNavigationToggle()
+      expect(new URL(link.href).searchParams.has('kiosk')).toBe(false)
+      expect(link.querySelector('img')!.src).toContain('icon_toggle_off.svg')
+    })
+  })
+
   describe('edit mode rendering', () => {
     it('renders Save, Cancel, and Add widget buttons in edit mode', () => {
       renderHeader({ isEditMode: true })
@@ -139,7 +208,7 @@ describe('DashboardMenuHeader', () => {
   describe('emits', () => {
     it('emits open-runtime-filter when Filter button is clicked', async () => {
       const { emitted } = renderHeader()
-      await fireEvent.click(screen.getByText('Filter'))
+      await fireEvent.click(screen.getByRole('button', { name: 'Filter' }))
       expect(emitted()['open-runtime-filter']).toHaveLength(1)
     })
 

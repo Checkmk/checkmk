@@ -77,7 +77,7 @@ class RegexpRewrites(BaseSchema, CheckmkTuple):
     )
 
     @validates_schema
-    def validate_replacement(self, data: Mapping[str, str], **kwargs: object) -> None:  # type: ignore[misc]
+    def validate_replacement(self, data: Mapping[str, str], **kwargs: object) -> None:  # type: ignore[misc]  # noqa: ARG002
         search = re.compile(data["search"])
         replace_groups = list(set(re.findall(r"\\((?:[1-9]|\d\d)+)", data["replace_with"])))
         replace_groups.sort()
@@ -142,10 +142,10 @@ class IPNetworkCIDR(String):
     Traceback (most recent call last):
     ...
     marshmallow.exceptions.ValidationError: {'blah': ["Expected an IP network in CIDR notation like '192.168.0.0/24'"]}
-    >>> schema.dump({"blah": "broken"})
+    >>> schema.dump({"blah": "10"})
     Traceback (most recent call last):
     ...
-    marshmallow.exceptions.ValidationError: Error handling 'broken', expected a tuple of IPv4 address and network size e.g. ('192.168.0.0', 24)
+    marshmallow.exceptions.ValidationError: Error handling '10', expected a tuple of IPv4 address and network size e.g. ('192.168.0.0', 24)
     """
 
     @override
@@ -161,12 +161,12 @@ class IPNetworkCIDR(String):
     @override
     def _serialize(
         self,
-        value: tuple[str, int] | list[str | int],
+        value: object,
         attr: str | None,
         obj: object,
         **kwargs: object,
     ) -> str:
-        if isinstance(value, list | tuple) and len(value) == 2:  # type: ignore[redundant-expr]
+        if isinstance(value, list | tuple) and len(value) == 2:
             return f"{value[0]}/{value[1]}"
         raise ValidationError(
             f"Error handling {value!r}, expected a tuple of IPv4 address and network size e.g. ('192.168.0.0', 24)"
@@ -564,7 +564,7 @@ class NetworkScan(BaseSchema):
     translate_names = Nested(TranslateNames)
 
     @validates_schema
-    def validate_tag_criticality(self, data: dict[str, Any], **kwargs: Any) -> None:  # type: ignore[misc]
+    def validate_tag_criticality(self, data: dict[str, Any], **kwargs: Any) -> None:  # type: ignore[misc]  # noqa: ARG002
         tag_criticality = load_tag_group(TagGroupID("criticality"))
         if tag_criticality is None:
             if "tag_criticality" in data:
@@ -736,11 +736,11 @@ class SNMPCommunity(BaseSchema):
     )
 
     @post_load
-    def to_checkmk_str(self, data: dict[str, str], **kwargs: object) -> str:  # type: ignore[misc]
+    def to_checkmk_str(self, data: dict[str, str], **kwargs: object) -> str:  # type: ignore[misc]  # noqa: ARG002
         return data["community"]
 
     @pre_dump
-    def from_tuple(self, data: object, **kwargs: object) -> dict[str, str] | None:  # type: ignore[misc]
+    def from_tuple(self, data: object, **kwargs: object) -> dict[str, str] | None:  # type: ignore[misc]  # noqa: ARG002
         """
 
         v1 'community'

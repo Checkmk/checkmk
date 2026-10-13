@@ -270,7 +270,7 @@ export class FlowsDashlet extends FigureBase<FlowDashletData> {
         .on('click', (event: MouseEvent) => {
           const old_offset = parseInt(current_pagination.attr('offset'))
           const delta = d3select(event.target! as HTMLElement).attr('offset')
-          var [from, to] = [0, 0]
+          let [from, to] = [0, 0]
 
           const total_entries = this._crossfilter.all().length
 

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Tests for Certificate Signing Requests"""
 
+from pathlib import Path
 from uuid import UUID
 
 import pytest
@@ -36,6 +37,7 @@ def test_sign_csr(
     signing_cert_fixture: str,
     subject_key_fixture: str,
     request: pytest.FixtureRequest,
+    tmp_path: Path,
 ) -> None:
     signing_certificate = request.getfixturevalue(signing_cert_fixture)
     # re-use the keys from our self-signed certs for convenience
@@ -47,7 +49,9 @@ def test_sign_csr(
     )
 
     with time_machine.travel(signing_certificate.certificate.not_valid_before):
-        new_cert = signing_certificate.sign_csr(csr, expiry=relativedelta(days=1))
+        new_cert = signing_certificate.sign_csr(
+            csr, expiry=relativedelta(days=1), cert_log=tmp_path / "issued.jsonl"
+        )
 
     assert new_cert.not_valid_before == signing_certificate.certificate.not_valid_before
     assert (
@@ -83,6 +87,7 @@ def test_csr_serialization() -> None:
 def test_subject_alternative_names(
     self_signed_cert: CertificateWithPrivateKey,
     self_signed_ec_cert: CertificateWithPrivateKey,
+    tmp_path: Path,
 ) -> None:
     """test setting subject alt names either from the CSR or overriding it"""
     subject_key = self_signed_ec_cert.private_key
@@ -99,13 +104,18 @@ def test_subject_alternative_names(
         subject_alternative_names=csr_sans,
     )
 
-    cert1 = self_signed_cert.sign_csr(csr, expiry=relativedelta(days=1))
+    cert1 = self_signed_cert.sign_csr(
+        csr, expiry=relativedelta(days=1), cert_log=tmp_path / "issued.jsonl"
+    )
     assert cert1.subject_alternative_names == csr_sans
 
     override_sans = SubjectAlternativeNames(
         [SAN.uuid(UUID("12345678-1234-5678-1234-567812345678"))]
     )
     cert2 = self_signed_cert.sign_csr(
-        csr, expiry=relativedelta(days=1), subject_alternative_names=override_sans
+        csr,
+        expiry=relativedelta(days=1),
+        subject_alternative_names=override_sans,
+        cert_log=tmp_path / "issued.jsonl",
     )
     assert cert2.subject_alternative_names == override_sans

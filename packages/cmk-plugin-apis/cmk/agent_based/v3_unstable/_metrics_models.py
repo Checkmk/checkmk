@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""The data model of agent sections produced by the metric backend fetcher.
+"""The data model of agent sections produced by the telemetry metrics fetcher.
 
 The fetcher serializes :class:`MetricsRecord` instances into the agent
 output (one JSON document per line), and the check engine deserializes them

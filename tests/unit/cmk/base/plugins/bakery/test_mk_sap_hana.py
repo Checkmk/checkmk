@@ -9,58 +9,38 @@ from cmk.bakery.v1 import OS, Plugin, PluginConfig
 from cmk.base.plugins.bakery.mk_sap_hana import get_mk_sap_hana_files
 
 
-def test_mk_sap_hana_files_user_password() -> None:
-    conf = {"credentials": ("peter", ("password", "abc123"))}
-    result = sorted(get_mk_sap_hana_files(conf), key=repr)
-    expected = sorted(
+def _expected(lines: list[str]) -> list[object]:
+    return sorted(
         [
             Plugin(base_os=OS.LINUX, source=Path("mk_sap_hana")),
             PluginConfig(
                 base_os=OS.LINUX,
-                lines=["USER=peter", "PASSWORD=abc123"],
+                lines=lines,
                 target=Path("sap_hana.cfg"),
                 include_header=True,
             ),
         ],
         key=repr,
     )
-    assert result == expected
+
+
+def test_mk_sap_hana_files_user_password() -> None:
+    conf = {"credentials": ("peter", ("password", "abc123"))}
+    assert sorted(get_mk_sap_hana_files(conf), key=repr) == _expected(
+        ["USER=peter", "PASSWORD=abc123"]
+    )
 
 
 def test_mk_sap_hana_files_userstorekey() -> None:
     conf = {"credentials": "storekey"}
-    result = sorted(get_mk_sap_hana_files(conf), key=repr)
-    expected = sorted(
-        [
-            Plugin(base_os=OS.LINUX, source=Path("mk_sap_hana")),
-            PluginConfig(
-                base_os=OS.LINUX,
-                lines=["USERSTOREKEY=storekey"],
-                target=Path("sap_hana.cfg"),
-                include_header=True,
-            ),
-        ],
-        key=repr,
-    )
-    assert result == expected
+    assert sorted(get_mk_sap_hana_files(conf), key=repr) == _expected(["USERSTOREKEY=storekey"])
 
 
 def test_mk_sap_hana_files_userstorekey_with_runas() -> None:
     conf = {"credentials": "storekey", "runas": "agent"}
-    result = sorted(get_mk_sap_hana_files(conf), key=repr)
-    expected = sorted(
-        [
-            Plugin(base_os=OS.LINUX, source=Path("mk_sap_hana")),
-            PluginConfig(
-                base_os=OS.LINUX,
-                lines=["USERSTOREKEY=storekey", "RUNAS=agent"],
-                target=Path("sap_hana.cfg"),
-                include_header=True,
-            ),
-        ],
-        key=repr,
+    assert sorted(get_mk_sap_hana_files(conf), key=repr) == _expected(
+        ["USERSTOREKEY=storekey", "RUNAS=agent"]
     )
-    assert result == expected
 
 
 def test_mk_sap_hana_files_databases() -> None:
@@ -71,39 +51,17 @@ def test_mk_sap_hana_files_databases() -> None:
         ],
         "credentials_sap_connect": ("peter", ("password", "abc123")),
     }
-    result = sorted(get_mk_sap_hana_files(conf), key=repr)
-    expected = sorted(
+    assert sorted(get_mk_sap_hana_files(conf), key=repr) == _expected(
         [
-            Plugin(base_os=OS.LINUX, source=Path("mk_sap_hana")),
-            PluginConfig(
-                base_os=OS.LINUX,
-                lines=[
-                    "DBS=(sid1,inst1,db1,usr1,pw1, sid2,inst2,db2,,,storekey2)",
-                    "USER_CONNECT=peter",
-                    "PASSWORD_CONNECT=abc123",
-                ],
-                target=Path("sap_hana.cfg"),
-                include_header=True,
-            ),
-        ],
-        key=repr,
+            "DBS=(sid1,inst1,db1,usr1,pw1, sid2,inst2,db2,,,storekey2)",
+            "USER_CONNECT=peter",
+            "PASSWORD_CONNECT=abc123",
+        ]
     )
-    assert result == expected
 
 
 def test_mk_sap_hana_files_with_runas_instance() -> None:
     conf = {"credentials": ("admin", ("password", "secret")), "runas": "instance"}
-    result = sorted(get_mk_sap_hana_files(conf), key=repr)
-    expected = sorted(
-        [
-            Plugin(base_os=OS.LINUX, source=Path("mk_sap_hana")),
-            PluginConfig(
-                base_os=OS.LINUX,
-                lines=["USER=admin", "PASSWORD=secret", "RUNAS=instance"],
-                target=Path("sap_hana.cfg"),
-                include_header=True,
-            ),
-        ],
-        key=repr,
+    assert sorted(get_mk_sap_hana_files(conf), key=repr) == _expected(
+        ["USER=admin", "PASSWORD=secret", "RUNAS=instance"]
     )
-    assert result == expected

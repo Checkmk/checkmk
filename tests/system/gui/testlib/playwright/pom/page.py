@@ -14,7 +14,7 @@ from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID, Keys, LocatorHelper
 from tests.system.gui.testlib.playwright.timeouts import TIMEOUT_EXPECT_CHANGES_MS
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 
@@ -727,7 +727,7 @@ class Sidebar(LocatorHelper):
     def close_add_snapin_sidebar(self) -> None:
         self.page.get_by_role("button", name="Close").click()
 
-    def add_snapin(self, snapin_id: str) -> "Snapin":
+    def add_snapin(self, snapin_id: str) -> Snapin:
         self.open_add_snapin_sidebar()
 
         self.page.get_by_label(f"Add snap-in {snapin_id}").click()
@@ -736,7 +736,7 @@ class Sidebar(LocatorHelper):
 
         return self.snapin(snapin_id)
 
-    def snapin(self, snapin_id: str) -> "Snapin":
+    def snapin(self, snapin_id: str) -> Snapin:
         return self.Snapin(self.locator(f"#snapin_{snapin_id}"))
 
 

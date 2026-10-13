@@ -38,7 +38,7 @@ def werkv1_metadata_to_markdown_werk_metadata(metadata: dict[str, str]) -> dict[
     return metadata
 
 
-def werkv1_to_werkv2(werkv1_content: str, werk_id: int) -> tuple[str, int]:
+def werkv1_to_werkv2(werkv1_content: str, werk_id: int) -> str:
     # try to keep errors in place, so the validation of werkv2 will show errors in werkv1
     parsed = parse_werk_v1(werkv1_content, werk_id)
     metadata = werkv1_metadata_to_markdown_werk_metadata(parsed.metadata)
@@ -72,4 +72,4 @@ def werkv1_to_werkv2(werkv1_content: str, werk_id: int) -> tuple[str, int]:
         yield ""
         yield nowiki_to_markdown(parsed.description)
 
-    return "\n".join(generator()), werk_id
+    return "\n".join(generator())

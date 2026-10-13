@@ -45,7 +45,3 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
     </Suspense>
   </CmkErrorBoundary>
 </template>
-
-<style>
-@import url('./variables.css');
-</style>

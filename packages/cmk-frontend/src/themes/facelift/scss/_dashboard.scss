@@ -25,6 +25,12 @@ body.dashboard {
   }
 }
 
+// Would eat the few pixels of slack that keep the viewport-sized dashboard
+// scrollbar-free, letting a horizontal scrollbar pull in a vertical one.
+#main_page_content:has(div#dashboard) {
+  padding-bottom: 0;
+}
+
 div#dashboard {
   position: relative;
   padding: 0;
@@ -115,13 +121,6 @@ div.dashlet {
     transform: scale(0.8, 0.8);
     transform-origin: center;
   }
-
-  div.graph > div.v_axis_label {
-    position: absolute;
-    top: 50%;
-    left: 10px;
-    transform: rotate(-90deg) translateX(50%);
-  }
 }
 
 div.dashlet > div.title span {
@@ -149,11 +148,6 @@ div.dashlet_inner div.stats {
     border-top: 1px solid $dashlet-stats-border-top-color;
     border-bottom: none;
   }
-}
-
-div.site_overview div.dashlet_inner,
-div.average_scatterplot div.dashlet_inner {
-  overflow: visible;
 }
 
 body.main.dashlet {
@@ -633,25 +627,6 @@ div#dashboard.grid {
   cursor: sw-resize;
 }
 
-.dashlet.pnpgraph .dashlet_inner {
-  color: $font-color;
-  text-align: left;
-  background-color: $dashlet-inner-bg-color;
-}
-
-.dashlet.pnpgraph .graph {
-  border: none;
-  box-shadow: none;
-}
-
-.dashlet.pnpgraph .container {
-  background-color: $dashlet-inner-bg-color;
-}
-
-.dashlet.pnpgraph div.title a {
-  color: $font-color;
-}
-
 svg {
   .title,
   .single_value,
@@ -684,23 +659,6 @@ svg {
       fill: $gauge-single-value-color;
     }
   }
-
-  .inventory {
-    foreignObject > div {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-
-      & > div {
-        width: 100%;
-        font-weight: $font-weight-bold;
-        text-align: center;
-        overflow-wrap: break-word;
-      }
-    }
-  }
 }
 
 svg.renderer {
@@ -718,221 +676,5 @@ svg.renderer {
 div.dashlet.nodata {
   > div.dashlet_inner div.msg {
     padding: 10px;
-  }
-}
-
-div.site_overview,
-div.alert_overview,
-div.eventstats,
-div.hoststats,
-div.servicestats {
-  g.element_box:hover {
-    path + path {
-      fill-opacity: 0.96;
-    }
-  }
-
-  div.tooltip {
-    h3 {
-      margin-top: 2px;
-      margin-bottom: 2px;
-    }
-
-    td.color {
-      width: 10px;
-
-      &.critical {
-        background-color: $hexagon-critical-color;
-      }
-
-      &.unknown {
-        background-color: $hexagon-unknown-color;
-      }
-
-      &.warning {
-        background-color: $color-state-1-background;
-      }
-
-      &.downtime {
-        background-color: $hexagon-downtime-color;
-      }
-
-      &.ok {
-        background-color: $success;
-      }
-    }
-
-    td.count {
-      padding-left: 4px;
-      text-align: right;
-      vertical-align: top;
-    }
-  }
-
-  path.hexagon.hexagon_0 {
-    stroke: $grey-3;
-  }
-
-  path.hexagon {
-    &.critical,
-    &.down {
-      fill: $hexagon-critical-color;
-      fill-opacity: 0.8;
-      stroke: $hexagon-critical-color;
-    }
-
-    &.unknown,
-    &.unreachable {
-      fill: $hexagon-unknown-color;
-      fill-opacity: 0.8;
-      stroke: $hexagon-unknown-color;
-    }
-
-    &.warning {
-      fill: $color-state-1-background;
-      fill-opacity: 0.6;
-      stroke: $color-state-1-background;
-    }
-
-    &.downtime {
-      fill: $hexagon-downtime-color;
-      fill-opacity: 0.6;
-      stroke: $hexagon-downtime-color;
-    }
-
-    &.host_down {
-      fill: $hexagon-host-down-color;
-      fill-opacity: 0.5;
-      stroke: $hexagon-host-down-color;
-    }
-
-    &.ok {
-      fill: $success;
-      fill-opacity: 0.06;
-      stroke: $success;
-      stroke-opacity: 0.9;
-    }
-  }
-
-  g.element_box.host_element path.hexagon,
-  path.hexagon.host_element {
-    fill-opacity: 0.8;
-    stroke-opacity: 0.8;
-
-    &.ok {
-      fill: $host-hexagon-ok-stroke-color;
-      stroke: none;
-
-      + path.up:hover,
-      &:hover + path.up {
-        fill-opacity: 0.6;
-      }
-    }
-
-    &.up {
-      fill: $headline-color;
-      fill-opacity: 0.85;
-      stroke: none;
-    }
-  }
-
-  path.icon_element {
-    fill: $headline-color;
-    stroke-dasharray: 3, 3;
-    stroke: $grey-3;
-  }
-}
-
-div.eventstats,
-div.hoststats,
-div.servicestats {
-  position: relative;
-  display: flex;
-  height: 100%;
-
-  svg,
-  div.stats_table {
-    width: 50%;
-    margin: auto;
-  }
-
-  path.hexagon.empty {
-    fill: $hexagon-empty-color;
-    fill-opacity: $hexagon-empty-fill-opacity;
-    stroke: $hexagon-empty-stroke-color;
-    stroke-opacity: $hexagon-empty-stroke-opacity;
-  }
-
-  div.stats_table {
-    table {
-      border-collapse: collapse;
-    }
-
-    td {
-      padding: 3px 3px 0;
-      vertical-align: top;
-    }
-
-    td:last-child {
-      width: 115px; // aligns the host and service stats tables
-    }
-
-    a {
-      text-decoration: none;
-      cursor: pointer;
-
-      &.box {
-        display: inline-block;
-        width: $spacing-half;
-        height: 14px;
-        padding: 0;
-        background-color: $font-color;
-        border-radius: $theme-border-radius;
-        box-sizing: border-box;
-
-        &.critical {
-          background-color: $hexagon-critical-color;
-          border: 1px solid $label-box-critical-border-color;
-        }
-
-        &.unknown {
-          background-color: $hexagon-unknown-color;
-          border: 1px solid $label-box-unknown-border-color;
-        }
-
-        &.warning {
-          background-color: $color-state-1-background;
-          border: 1px solid $color-state-1-border;
-        }
-
-        &.downtime {
-          background-color: $hexagon-downtime-color;
-          border: 1px solid $label-box-downtime-border-color;
-        }
-
-        &.host_down {
-          background-color: $hexagon-host-down-color;
-          border: 1px solid $label-box-host-down-border-color;
-        }
-
-        &.ok {
-          background-color: $success;
-          border: 1px solid $label-box-ok-border-color;
-        }
-      }
-
-      &.count {
-        float: right;
-      }
-
-      &.count:hover,
-      &.text:hover {
-        color: $font-color-green;
-      }
-    }
-
-    .warning {
-      background-color: transparent;
-    }
   }
 }

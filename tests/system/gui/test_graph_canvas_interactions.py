@@ -10,9 +10,20 @@ import logging
 import pytest
 from playwright.sync_api import expect
 
+from tests.system.gui.testlib.playwright.pom.graphing.fixtures import (
+    open_service_graphs,
+    UserGraphPin,
+)
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import ServiceGraphs
+from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
+from tests.testlib.common.utils import wait_until
 
 logger = logging.getLogger(__name__)
+
+_VALUE_AXIS_RESCALE_TIMEOUT = 10
+
+# Two pixels of a plot a thousand wide: each handle sits on a whole pixel of its own plot.
+_PIN_ALIGNMENT_TOLERANCE = 0.002
 
 
 def _mark_document(graphs: ServiceGraphs) -> None:
@@ -79,20 +90,24 @@ def test_peak_zoom_narrows_the_value_axis_only(
 
     Locality across sibling graphs is covered by composables/zoomSync.test.ts; here the
     point is that the gesture reaches the value axis and stops there.
+
+    A narrow band, not the middle half: outward tick alignment rounds a shallow zoom away.
     """
     panel = service_graphs.panel(0)
     panel.select_peak_zoom()
     time_before = panel.graph.time_axis_label_texts()
-    values_before = panel.graph.value_axis_label_texts()
+    ticks_before = panel.graph.value_axis_ticks()
 
-    panel.graph.drag_down_canvas(0.25, 0.75)
+    panel.graph.drag_down_canvas(0.4, 0.6)
 
     expect(
         panel.graph.value_axis_labels, "The graph rendered no value axis labels at all"
     ).not_to_have_count(0)
-    expect(
-        panel.graph.value_axis_labels, "The peak-zoom drag left the value axis unchanged"
-    ).not_to_have_text(values_before)
+    wait_until(
+        lambda: panel.graph.value_axis_ticks() != ticks_before,
+        timeout=_VALUE_AXIS_RESCALE_TIMEOUT,
+        condition_name="the peak-zoom drag to move the value axis",
+    )
     expect(
         panel.graph.time_axis_labels,
         "A peak zoom moved the time axis, which belongs to the time zoom",
@@ -150,12 +165,14 @@ def test_context_view_drag_shifts_the_window(
         panel.graph.time_axis_labels,
         "Dragging the context view did not move the graph's window",
     ).not_to_have_text(window_before)
+    service_graphs.wait_until_settled()
     bar_before = panel.context_view_bar.bounding_box()
     strip_before = panel.context_view.bounding_box()
     assert bar_before is not None and strip_before is not None
 
     panel.drag_context_view(-0.10)
 
+    service_graphs.wait_until_settled()
     bar_after = panel.context_view_bar.bounding_box()
     strip_after = panel.context_view.bounding_box()
     assert bar_after is not None and strip_after is not None
@@ -168,66 +185,73 @@ def test_context_view_drag_shifts_the_window(
     assert not javascript_errors, f"Uncaught JS errors during the brush drag: {javascript_errors}"
 
 
-def test_returning_to_live_switches_the_refresh_indicator(
-    service_graphs: ServiceGraphs, javascript_errors: list[str]
+def test_pinning_a_point_marks_it_on_every_graph_and_stores_it(
+    dashboard_page: MainDashboard,
+    graph_hosts_with_varying_data: list[str],
+    admin_graph_pin: UserGraphPin,
+    javascript_errors: list[str],
 ) -> None:
-    """The page opens with refresh off, and resuming puts it back on live.
+    """Pinning a point on one graph marks the same instant on every graph and reaches the site.
 
-    The indicator is the page's single answer to "am I looking at data that still moves?",
-    so it has to be readable and reversible without a reload.
+    Each value axis is as wide as its own labels, so the plots start at different x and the
+    handles are compared as a fraction of their plot, not by page x.
     """
+    graphs = open_service_graphs(dashboard_page.page, graph_hosts_with_varying_data[0])
+    panel_count = graphs.panel_count()
+
+    graphs.panel(0).graph.add_pin(0.4)
+
     expect(
-        service_graphs.refresh_indicator, "The page did not open with the refresh turned off"
-    ).to_contain_text("Refresh off")
-
-    service_graphs.resume_refresh_button.click()
-
-    expect(
-        service_graphs.refresh_indicator, "Resuming did not switch the indicator to live"
-    ).to_contain_text("Live refresh")
-    assert not javascript_errors, f"Uncaught JS errors returning to live: {javascript_errors}"
-
-
-@pytest.mark.skip(reason="Test is flaky")
-def test_pin_marks_the_same_point_on_every_graph_and_outlives_a_reload(
-    service_graphs: ServiceGraphs, javascript_errors: list[str]
-) -> None:
-    """Pinning a point on one graph pins it on every graph and outlives a page load."""
-    panels = service_graphs.all_panels()
-
-    panels[0].graph.add_pin(0.4)
-
-    for panel in panels:
-        expect(
-            panel.graph.pin_handle,
-            "A graph shows no pin although a point was pinned on the page",
-        ).to_be_visible()
-    # The panels sit in one column at one width, so the handles' page x is comparable as it is.
-    pin_boxes = [panel.graph.pin_handle.bounding_box() for panel in panels]
-    assert all(box is not None for box in pin_boxes), "A pin handle has no layout box"
-    pin_centres = [box["x"] + box["width"] / 2 for box in pin_boxes if box is not None]
-    for centre in pin_centres[1:]:
-        assert centre == pytest.approx(pin_centres[0], abs=2), (
-            f"The graphs pin different points of their window: {pin_centres}"
-        )
-
-    service_graphs.reload()
-    panels = service_graphs.all_panels()
-
-    for panel in panels:
-        expect(
-            panel.graph.pin_handle,
-            "A graph came back from the reload without the pin the site had stored",
-        ).to_be_visible()
-
-    panels[0].graph.remove_pin()
-
-    for panel in panels:
-        expect(
-            panel.graph.pin_handle,
-            "A graph kept its pin although the pin was removed on the page",
-        ).to_have_count(0)
+        graphs.pin_handles, "A graph shows no pin although a point was pinned on the page"
+    ).to_have_count(panel_count)
+    graphs.wait_until_settled()
+    positions = graphs.pin_positions()
+    assert len(positions) == panel_count, f"A graph lost its pin while being measured: {positions}"
+    assert max(positions) - min(positions) <= _PIN_ALIGNMENT_TOLERANCE, (
+        f"The graphs pin different points of their window: {positions}"
+    )
+    assert admin_graph_pin.read() is not None, (
+        "The site holds no pin although one was set on the page"
+    )
     assert not javascript_errors, f"Uncaught JS errors while pinning: {javascript_errors}"
+
+
+@pytest.mark.usefixtures("stored_graph_pin")
+def test_a_stored_pin_marks_every_graph_when_the_page_opens(
+    dashboard_page: MainDashboard,
+    graph_hosts_with_varying_data: list[str],
+    javascript_errors: list[str],
+) -> None:
+    """A pin the site stores for the user is on every graph as soon as the page opens."""
+    host_name = graph_hosts_with_varying_data[0]
+
+    graphs = open_service_graphs(dashboard_page.page, host_name)
+
+    expect(
+        graphs.pin_handles, "A graph opened without the pin the site stores for the user"
+    ).to_have_count(graphs.panel_count())
+    assert not javascript_errors, f"Uncaught JS errors showing the stored pin: {javascript_errors}"
+
+
+@pytest.mark.usefixtures("stored_graph_pin")
+def test_removing_the_pin_clears_every_graph_and_the_site(
+    dashboard_page: MainDashboard,
+    graph_hosts_with_varying_data: list[str],
+    admin_graph_pin: UserGraphPin,
+    javascript_errors: list[str],
+) -> None:
+    """Removing the pin on one graph takes it off every graph and off the site."""
+    graphs = open_service_graphs(dashboard_page.page, graph_hosts_with_varying_data[0])
+
+    graphs.panel(0).graph.remove_pin()
+
+    expect(
+        graphs.pin_handles, "A graph kept its pin although the pin was removed on the page"
+    ).to_have_count(0)
+    assert admin_graph_pin.read() is None, (
+        "The site kept the pin although it was removed on the page"
+    )
+    assert not javascript_errors, f"Uncaught JS errors removing the pin: {javascript_errors}"
 
 
 def test_canvas_hover_shows_a_tooltip_for_the_resolved_point(

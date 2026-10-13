@@ -49,7 +49,7 @@ def parsed() -> Mapping[str, Mapping[str, object]]:
 
 
 def test_mysql_version_discovery(parsed: Mapping[str, Mapping[str, object]]) -> None:
-    discovery_func = mysql._discover_keys({"version"})
+    discovery_func = mysql._discover_keys({"version"})  # noqa: SLF001
     result = list(discovery_func(parsed))
     assert result == [Service(item="mysql")]
 
@@ -99,7 +99,7 @@ def test_mysql_sessions_check(
 
 
 def test_mysql_connections_discovery(parsed: Mapping[str, Mapping[str, object]]) -> None:
-    discovery_func = mysql._discover_keys(
+    discovery_func = mysql._discover_keys(  # noqa: SLF001
         {"Max_used_connections", "max_connections", "Threads_connected"}
     )
     result = list(discovery_func(parsed))
@@ -137,7 +137,7 @@ def test_mysql_connections_check(parsed: Mapping[str, Mapping[str, object]]) -> 
 
 
 def test_mysql_innodb_io_discovery(parsed: Mapping[str, Mapping[str, object]]) -> None:
-    discovery_func = mysql._discover_keys({"Innodb_data_read"})
+    discovery_func = mysql._discover_keys({"Innodb_data_read"})  # noqa: SLF001
     result = list(discovery_func(parsed))
     assert result == [Service(item="mysql")]
 
@@ -191,7 +191,7 @@ def test_mysql_parse_function() -> None:
 
 
 def test_mysql_version_discovery_empty_section() -> None:
-    discovery_func = mysql._discover_keys({"version"})
+    discovery_func = mysql._discover_keys({"version"})  # noqa: SLF001
     result = list(discovery_func({}))
     assert result == []
 

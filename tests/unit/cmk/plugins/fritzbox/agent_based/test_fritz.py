@@ -164,6 +164,7 @@ def test_discover_fritz_wan_if(
                 Result(
                     state=State.OK,
                     summary="[WAN]",
+                    details="Index: 0\nDescription: WAN\nAlias: WAN",
                 ),
                 Result(
                     state=State.OK,
@@ -194,11 +195,8 @@ def test_discover_fritz_wan_if(
         ),
     ],
 )
-def test_check_fritz_wan_if(
-    section: Section,
-    expected_result: CheckResult,
-    empty_value_store: None,
-) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_fritz_wan_if(section: Section, expected_result: CheckResult) -> None:
     assert (
         list(
             check_fritz_wan_if(

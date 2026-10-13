@@ -1,5 +1,5 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 # The signed Windows agent PowerShell plugins are produced by the Windows
 # signing CI job (`agents/windows/plugins:signed_plugins`) and dropped here as

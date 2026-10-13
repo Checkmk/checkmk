@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from cmk.mkp_tool import Manifest, PackageName, PackagePart, PackageVersion
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 def test_mkp_help(site: Site) -> None:
@@ -42,7 +42,6 @@ def test_mkp_non_existing(site: Site) -> None:
         site.check_output(["mkp", "nubbel"])
 
 
-@pytest.mark.skip(reason="Flaky test: CMK-37895")
 def test_mkp_install_with_legacy_lib_file(site: Site) -> None:
     """We're removing the link local/lib/check_mk -> local/lib/python3/cmk.
 

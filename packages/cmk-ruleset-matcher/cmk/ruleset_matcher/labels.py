@@ -5,8 +5,6 @@
 
 """Helper functions for dealing with Checkmk labels of all kind"""
 
-from __future__ import annotations
-
 import contextlib
 import json
 from abc import ABC, abstractmethod
@@ -173,7 +171,9 @@ class LabelsSerializer:
         return {
             str(key): {
                 "value": str(val["value"]),
-                "plugin_name": str(val["plugin_name"]) if "plugin_name" in val else None,
+                "plugin_name": (
+                    None if (plugin_name := val.get("plugin_name")) is None else str(plugin_name)
+                ),
             }
             for key, val in literal_eval(raw.decode("utf-8")).items()
             if isinstance(val, dict)

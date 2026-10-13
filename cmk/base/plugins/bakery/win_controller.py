@@ -3,30 +3,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import NotRequired, ReadOnly, TypedDict
+from collections.abc import Mapping
+from typing import Literal
+
+from pydantic import BaseModel
 
 from .bakery_api.v1 import register, WindowsConfigEntry, WindowsConfigGenerator
 
 
-class WinControllerConfig(TypedDict):
-    check_controller_access: ReadOnly[bool]
-    force_legacy: ReadOnly[bool]
-    agent_channel: NotRequired[ReadOnly[tuple[str, int | None]]]
+class _Config(BaseModel):
+    check_controller_access: bool = True
+    force_legacy: bool = False
+    agent_channel: tuple[Literal["mailslot"], None] | tuple[Literal["tcp"], int] | None = None
 
 
 def _path_to(entry: str) -> list[str]:
     return ["system", "controller", entry]
 
 
-def get_win_controller_windows_config(conf: WinControllerConfig) -> WindowsConfigGenerator:
-    yield WindowsConfigEntry(
-        path=_path_to("check"), content=conf.get("check_controller_access", True)
-    )
-    yield WindowsConfigEntry(path=_path_to("force_legacy"), content=conf.get("force_legacy", False))
-    if (channel_conf := conf.get("agent_channel")) is not None:
-        kind, value = channel_conf
-        channel_str = "mailslot" if kind == "mailslot" else f"localhost:{value}"
-        yield WindowsConfigEntry(path=_path_to("agent_channel"), content=channel_str)
+def get_win_controller_windows_config(conf: Mapping[str, object]) -> WindowsConfigGenerator:
+    config = _Config.model_validate(conf)
+    yield WindowsConfigEntry(path=_path_to("check"), content=config.check_controller_access)
+    yield WindowsConfigEntry(path=_path_to("force_legacy"), content=config.force_legacy)
+    match config.agent_channel:
+        case None:
+            return
+        case ("mailslot", _):
+            yield WindowsConfigEntry(path=_path_to("agent_channel"), content="mailslot")
+        case ("tcp", port):
+            yield WindowsConfigEntry(path=_path_to("agent_channel"), content=f"localhost:{port}")
 
 
 register.bakery_plugin(

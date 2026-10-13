@@ -60,7 +60,7 @@ class RulePackType(Enum):
     modified_mkp = "modified, packaged"
 
     @staticmethod
-    def type_of(rule_pack: ECRulePack, id_to_mkp: dict[Any, Any]) -> "RulePackType":
+    def type_of(rule_pack: ECRulePack, id_to_mkp: dict[Any, Any]) -> RulePackType:
         """Returns the type of rule pack for a given rule pack ID to MKP mapping."""
         is_proxy = isinstance(rule_pack, MkpRulePackProxy)
         is_packaged = id_to_mkp.get(rule_pack.get("id")) is not None

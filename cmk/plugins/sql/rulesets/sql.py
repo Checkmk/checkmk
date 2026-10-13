@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Mapping
 from typing import Literal
@@ -21,7 +20,7 @@ def _migrate_port_spec(x: object) -> tuple[Literal["explicit"], int] | tuple[Lit
     >>> _migrate_port_spec(("macro", "$MYSQL_PORT$"))
     ('macro', '$MYSQL_PORT$')
     """
-    match x:
+    match x:  # type: ignore[exhaustive-match]
         case "explicit", int(value):
             return "explicit", value
         case "macro", str(value):

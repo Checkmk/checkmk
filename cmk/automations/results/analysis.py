@@ -3,34 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 
 """Host/service introspection and rule-matching results.
 
 Groups all "tell me about this host, service, or rule" query automations
 """
 
-from __future__ import annotations
-
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import override, TypedDict
 
+from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.automations.results._base import (
-    ABCAutomationResult,
     result_type_registry,
-    SerializedResult,
 )
-from cmk.ccc import version as cmk_version
-from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.specs.checkresults import ServiceState
-from cmk.checkengine.specs.parameters import TimespecificParameters
+from cmk.checkengine.specs.parameters import TimespecificParametersPreview
 from cmk.checkengine.submitters import ServiceDetails
 from cmk.ruleset_matcher.labels import Labels, LabelSources
 from cmk.ruleset_matcher.matcher import RulesetName
 from cmk.utils.servicename import Item, ServiceName
-
-from ..types import AutomationID
 
 
 class ServiceInfo(TypedDict, total=False):
@@ -38,28 +30,17 @@ class ServiceInfo(TypedDict, total=False):
     checkgroup: RulesetName
     checktype: str
     item: Item
-    inv_parameters: LegacyCheckParameters
+    inv_parameters: Mapping[str, object]
     factory_settings: Mapping[str, object] | None
-    parameters: TimespecificParameters | LegacyCheckParameters
+    parameters: TimespecificParametersPreview | Mapping[str, object]
     command_line: str
 
 
 @dataclass
-class AnalyseServiceResult(ABCAutomationResult):
+class AnalyseServiceResult(AutomationResult):
     service_info: ServiceInfo
     labels: Labels
     label_sources: LabelSources
-
-    @override
-    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
-        if for_cmk_version >= cmk_version.Version.from_str("2.2.0i1"):
-            return self._default_serialize()
-        previous_serialized: Mapping[str, object] = {
-            **self.service_info,
-            "labels": self.labels,
-            "label_sources": self.label_sources,
-        }
-        return SerializedResult(repr((previous_serialized,)))
 
     @staticmethod
     @override
@@ -71,7 +52,7 @@ result_type_registry.register(AnalyseServiceResult)
 
 
 @dataclass
-class GetServicesLabelsResult(ABCAutomationResult):
+class GetServicesLabelsResult(AutomationResult):
     labels: Mapping[ServiceName, Labels]
 
     @staticmethod
@@ -84,7 +65,7 @@ result_type_registry.register(GetServicesLabelsResult)
 
 
 @dataclass
-class GetServiceNameResult(ABCAutomationResult):
+class GetServiceNameResult(AutomationResult):
     service_name: str
 
     @staticmethod
@@ -97,7 +78,7 @@ result_type_registry.register(GetServiceNameResult)
 
 
 @dataclass
-class AnalyseHostResult(ABCAutomationResult):
+class AnalyseHostResult(AutomationResult):
     labels: Labels
     label_sources: LabelSources
 
@@ -111,7 +92,7 @@ result_type_registry.register(AnalyseHostResult)
 
 
 @dataclass
-class AnalyzeHostRuleMatchesResult(ABCAutomationResult):
+class AnalyzeHostRuleMatchesResult(AutomationResult):
     results: dict[str, list[object]]
 
     @staticmethod
@@ -124,7 +105,7 @@ result_type_registry.register(AnalyzeHostRuleMatchesResult)
 
 
 @dataclass
-class AnalyzeServiceRuleMatchesResult(ABCAutomationResult):
+class AnalyzeServiceRuleMatchesResult(AutomationResult):
     results: dict[str, list[object]]
 
     @staticmethod
@@ -137,7 +118,7 @@ result_type_registry.register(AnalyzeServiceRuleMatchesResult)
 
 
 @dataclass
-class AnalyzeHostRuleEffectivenessResult(ABCAutomationResult):
+class AnalyzeHostRuleEffectivenessResult(AutomationResult):
     results: dict[str, bool]
 
     @staticmethod
@@ -150,7 +131,7 @@ result_type_registry.register(AnalyzeHostRuleEffectivenessResult)
 
 
 @dataclass
-class ActiveCheckResult(ABCAutomationResult):
+class ActiveCheckResult(AutomationResult):
     state: ServiceState | None
     output: ServiceDetails
 
@@ -164,7 +145,7 @@ result_type_registry.register(ActiveCheckResult)
 
 
 @dataclass
-class UnknownCheckParameterRuleSetsResult(ABCAutomationResult):
+class UnknownCheckParameterRuleSetsResult(AutomationResult):
     result: Sequence[str]
 
     @staticmethod

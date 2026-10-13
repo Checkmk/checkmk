@@ -5,12 +5,13 @@
 
 import re
 import uuid
+from http import HTTPStatus
 
 import pytest
 import requests
 
-from tests.testlib.site import Site
-from tests.testlib.web_session import CMKWebSession
+from tests.testlib.system.site import Site
+from tests.testlib.system.web_session import CMKWebSession
 
 
 def test_http_methods(site: Site) -> None:
@@ -22,7 +23,7 @@ def test_http_methods(site: Site) -> None:
     response = requests.request(
         "PROPFIND", site.internal_url, timeout=5, headers={"User-Agent": user_agent}
     )
-    assert response.status_code == 405
+    assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
 
     apache_log_file = site.read_file("var/log/apache/access_log")
     for line in apache_log_file.splitlines():
@@ -35,14 +36,20 @@ def test_http_methods(site: Site) -> None:
 @pytest.mark.parametrize(
     ["size", "status_code"],
     [
-        pytest.param(1024 * 1024 * (100 - 1), 200, id="under_limit"),
-        pytest.param(1024 * 1024 * 100, 413, id="at_limit"),
-        pytest.param(1024 * 1024 * (100 * 10), 413, id="over_limit"),
+        pytest.param(1024 * 1024 * (100 - 1), HTTPStatus.BAD_REQUEST, id="under_limit"),
+        pytest.param(1024 * 1024 * 100, HTTPStatus.REQUEST_ENTITY_TOO_LARGE, id="at_limit"),
+        # Any size above the 100MB limit proves the 413; a much larger payload
+        # OOMed the CI container via requests' in-memory multipart encoding (CMK-39435).
+        pytest.param(1024 * 1024 * (100 + 1), HTTPStatus.REQUEST_ENTITY_TOO_LARGE, id="over_limit"),
     ],
 )
 def test_upload_limit(site: Site, web: CMKWebSession, size: int, status_code: int) -> None:
     """
     Check that the 100MB file size limit is enforced.
+
+    The upload has no "mode" parameter, so under the limit wato.py rejects it as an
+    invalid request (400) rather than processing it -- this only checks that Apache's
+    own body-size limit isn't what rejected it, unlike the 413 for at/over the limit.
     """
 
     file = "a" * size

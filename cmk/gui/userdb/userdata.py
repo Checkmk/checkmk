@@ -20,7 +20,7 @@ from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.utils.object_diff import make_diff
 
 from ._user_attribute import UserAttribute
-from .store import load_users, save_users, update_user
+from .store import load_users, save_users
 
 
 class UserNotFoundError(KeyError): ...
@@ -70,7 +70,7 @@ class UserDataDiff:
     credentials_changed: bool
 
     @classmethod
-    def between(cls, old: "UserData", new: "UserData") -> "UserDataDiff":
+    def between(cls, old: UserData, new: UserData) -> UserDataDiff:
         """Diff two userdata objects."""
         return cls(
             attribute_changes=make_diff(cls._diff_dict(old), cls._diff_dict(new)),
@@ -80,7 +80,7 @@ class UserDataDiff:
         )
 
     @classmethod
-    def _diff_dict(cls, user: "UserData") -> dict[str, object]:
+    def _diff_dict(cls, user: UserData) -> dict[str, object]:
         """Flat representation of the user data to diff on.
 
         - omits MISSING sentinel fields
@@ -415,13 +415,14 @@ class UserDB:
         yield user
 
         users[user_id] = UserData.to_userspec(user)
-        update_user(
-            user_id,
+        save_users(
             users,
             self.custom_user_attributes,
             self.user_connections,
             datetime.now(),
             pprint_value=self.pprint_value,
+            call_users_saved_hook=True,
+            changed_users=[user_id],
         )
 
     def add_user(self, user: UserData) -> None:
@@ -434,13 +435,14 @@ class UserDB:
             raise UserAlreadyExistsError(f"User {user.user_id} already exists")
 
         users[user.user_id] = UserData.to_userspec(user)
-        update_user(
-            user.user_id,
+        save_users(
             users,
             self.custom_user_attributes,
             self.user_connections,
             datetime.now(),
             pprint_value=self.pprint_value,
+            call_users_saved_hook=True,
+            changed_users=[user.user_id],
         )
 
     def delete_users(self, user_ids: Sequence[UserId]) -> Mapping[UserId, UserData]:
@@ -472,5 +474,6 @@ class UserDB:
             datetime.now(),
             pprint_value=self.pprint_value,
             call_users_saved_hook=True,
+            changed_users=list(deleted),
         )
         return deleted

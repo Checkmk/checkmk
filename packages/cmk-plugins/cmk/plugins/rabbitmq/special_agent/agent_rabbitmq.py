@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 """agent_rabbitmq
 
@@ -16,12 +14,14 @@ import argparse
 import json
 import logging
 import sys
+from collections.abc import Sequence
 from typing import Any, NamedTuple
 
 import requests
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option, Secret
+from cmk.server_side_programs.v1 import configure_logging
 
 LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class Section(NamedTuple):
     uri: str
 
 
-def main(argv=None):
+def main(argv: Sequence[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
 
@@ -137,7 +137,7 @@ def main(argv=None):
     return 0
 
 
-def _handle_rabbitmq_connection(args, sections):
+def _handle_rabbitmq_connection(args: argparse.Namespace, sections: Sequence[Section]) -> None:
     url_base = f"{args.proto}://{args.hostname}:{args.port}/api"
     password = resolve_secret_option(args, PASSWORD_OPTION)
 
@@ -152,7 +152,7 @@ def _handle_rabbitmq_connection(args, sections):
         _handle_output(section.name, section_data)
 
 
-def _handle_output(section, section_data):
+def _handle_output(section: str, section_data: Any) -> None:
     # some sections have multiple entries
     multi_sections = ["nodes", "vhosts", "queues"]
 
@@ -186,10 +186,10 @@ def setup_logging(verbosity: int) -> None:
     else:
         logging.disable(logging.CRITICAL)
         lvl = logging.CRITICAL
-    logging.basicConfig(level=lvl, format="%(asctime)s %(levelname)s %(message)s")
+    configure_logging(lvl)
 
 
-def parse_arguments(argv):
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     sections = [
         "cluster",
         "nodes",

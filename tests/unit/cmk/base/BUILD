@@ -15,13 +15,15 @@ py_cmk_test(
     args = [
         "--random-order-bucket=global",
     ],
+    # test_config: the executable finder resolves the real cmk_inv through its libexec dir
+    data = ["//cmk/plugins:libexec"],
     env = {"EDITION": "community"},
     use_project_pytest_config = True,
     visibility = ["//visibility:private"],
     deps = [
+        "//cmk/base:active-check-result",
         "//cmk/plugins",
-        "//tests/testlib/common:empty_config",
-        "//tests/testlib/common:utils",
+        "//packages/cmk-flags",
         "//tests/testlib/unit",
         "//tests/unit:conftest",
         requirement("pytest-mock"),

@@ -1,0 +1,710 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import logging
+from collections.abc import Mapping, Sequence
+
+import pytest
+
+from cmk.ccc.hostaddress import HostName
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs import (
+    DEFAULT_VALUE,
+    get_visitor,
+    RawDiskData,
+    RawFrontendData,
+    VisitorOptions,
+)
+from cmk.gui.form_specs.visitors.single_choice import SingleChoiceVisitor
+from cmk.gui.i18n import _l
+from cmk.gui.utils.host_relation_kinds import (
+    RELATION_KINDS,
+    RelationEnd,
+    RelationKind,
+    SymmetricRelationKind,
+)
+from cmk.gui.utils.host_relations import (
+    RelationDirection,
+    RelationLink,
+    RelationsValue,
+    ResolvedRelation,
+    reverse_direction,
+)
+from cmk.gui.watolib.host_relations import (
+    BothPrimaryRelation,
+    DroppedRelation,
+    host_relations_form_spec,
+    MAX_LISTED_RELATED_HOSTS,
+    PrimaryMissingRelation,
+    RelatedHost,
+    relation_conflicts,
+    RelationConflict,
+    relations_deletion_note,
+    relations_or_user_error,
+    resolve_all_relations,
+    with_links_not_shown,
+)
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
+from tests.unit.cmk.gui.helpers.host_attributes_test_helper import submitted_relation_row
+from tests.unit.cmk.gui.watolib.host_relations_fakes import fake_hosts, FakeHost
+
+_VISITOR_OPTIONS = VisitorOptions(migrate_values=False, mask_values=False)
+
+#: The kinds this version ships plus a symmetric one, so that the dialog can be exercised with a
+#: type that is a real choice and with an end that is none.
+_TWO_KINDS: Mapping[str, RelationKind] = {
+    **RELATION_KINDS,
+    "peering": SymmetricRelationKind(
+        id="peering",
+        title=_l("Peering"),
+        peer=RelationEnd(row=_l("is peer of"), noun=_l("Peer")),
+    ),
+}
+
+
+def _list(kinds: Mapping[str, RelationKind] = RELATION_KINDS) -> shared_type_defs.List:
+    spec, _value = get_visitor(host_relations_form_spec(kinds), _VISITOR_OPTIONS).to_vue(
+        DEFAULT_VALUE
+    )
+    assert isinstance(spec, shared_type_defs.List)
+    return spec
+
+
+def _row(
+    kinds: Mapping[str, RelationKind] = RELATION_KINDS,
+) -> shared_type_defs.CascadingSingleChoice:
+    row = _list(kinds).element_template
+    assert isinstance(row, shared_type_defs.CascadingSingleChoice)
+    return row
+
+
+def _ends(
+    kind: str, kinds: Mapping[str, RelationKind] = RELATION_KINDS
+) -> shared_type_defs.Dictionary:
+    element = next(element for element in _row(kinds).elements if element.name == kind)
+    assert isinstance(element.parameter_form, shared_type_defs.Dictionary)
+    return element.parameter_form
+
+
+def _field(
+    name: str, *, kind: str = "management", kinds: Mapping[str, RelationKind] = RELATION_KINDS
+) -> shared_type_defs.DictionaryElement:
+    return next(element for element in _ends(kind, kinds).elements if element.name == name)
+
+
+def _direction_choice() -> shared_type_defs.SingleChoice:
+    spec = _field("direction").parameter_form
+    assert isinstance(spec, shared_type_defs.SingleChoice)
+    return spec
+
+
+def test_a_row_hangs_direction_and_host_on_the_type() -> None:
+    ends = _ends("management").elements
+    assert [(element.name, element.required) for element in ends] == [
+        ("direction", True),
+        ("host", True),
+    ]
+    assert {element.group.layout for element in ends if element.group} == {
+        shared_type_defs.DictionaryGroupLayout.horizontal
+    }
+    assert all(element.parameter_form.help for element in ends)
+
+
+def test_the_type_sits_in_line_with_its_fields_under_a_title_of_its_own() -> None:
+    row = _row()
+    assert row.layout == shared_type_defs.CascadingSingleChoiceLayout.horizontal
+    assert row.label == "Type"
+    assert row.help
+
+
+def test_the_type_offers_the_kinds_there_are() -> None:
+    assert [element.name for element in _row().elements] == ["management"]
+    assert [element.title for element in _row().elements] == ["Management board"]
+    assert [element.name for element in _row(_TWO_KINDS).elements] == ["management", "peering"]
+
+
+def test_a_new_row_is_of_the_first_kind() -> None:
+    assert _list(_TWO_KINDS).element_default_value[0] == "management"
+
+
+def test_the_direction_reads_as_a_sentence_about_the_host_being_edited() -> None:
+    direction = _direction_choice()
+    assert [element.name for element in direction.elements] == [
+        SingleChoiceVisitor.option_id("parent"),
+        SingleChoiceVisitor.option_id("child"),
+    ]
+    assert [element.title for element in direction.elements] == [
+        "is management board of",
+        "is OS host of",
+    ]
+
+
+def test_the_direction_is_marked_required_at_its_title_like_the_host() -> None:
+    direction = _direction_choice()
+    assert direction.title == "Direction"
+    assert direction.input_hint == "Select direction"
+
+
+def test_a_new_row_leaves_the_direction_to_the_user() -> None:
+    assert _field("direction").default_value is None
+
+
+def test_the_form_asks_for_a_direction_the_row_is_missing() -> None:
+    visitor = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS)
+    messages = visitor.validate(
+        RawFrontendData([submitted_relation_row("management", None, "board")])
+    )
+    assert [message.message for message in messages] == ["Select the direction of this relation."]
+
+
+def test_a_symmetric_kind_has_nothing_to_choose_for_its_direction() -> None:
+    direction = _field("direction", kind="peering", kinds=_TWO_KINDS).parameter_form
+    assert isinstance(direction, shared_type_defs.FixedValue)
+    assert (direction.value, direction.label) == ("symmetric", "is peer of")
+
+
+def test_the_form_round_trips_stored_links() -> None:
+    links: RelationsValue = [
+        {"kind": "management", "direction": "parent", "host": HostName("mgmt1")},
+        {"kind": "management", "direction": "child", "host": HostName("os1")},
+        {"kind": "peering", "direction": "symmetric", "host": HostName("peer")},
+    ]
+    visitor = get_visitor(host_relations_form_spec(_TWO_KINDS), _VISITOR_OPTIONS)
+    assert visitor.validate(RawDiskData(links)) == []
+    assert visitor.to_disk(RawDiskData(links)) == links
+
+
+def test_the_form_leaves_out_a_link_it_cannot_offer_a_row_for() -> None:
+    """A kind of a later version has no type to select, so the dialog cannot show its row. The
+    save carries such a link over, see test_host_attributes_relations."""
+    links: RelationsValue = [
+        {"kind": "peering", "direction": "symmetric", "host": HostName("peer")},
+        {"kind": "management", "direction": "child", "host": HostName("os1")},
+    ]
+    visitor = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS)
+
+    assert visitor.to_disk(RawDiskData(links)) == [
+        {"kind": "management", "direction": "child", "host": HostName("os1")}
+    ]
+
+
+def test_the_save_puts_back_only_what_the_view_did_not_show() -> None:
+    """A link the view did show is the user's to keep or remove, not the save's to restore."""
+    shown: RelationLink = {"kind": "peering", "direction": "symmetric", "host": HostName("peer")}
+    hidden: RelationLink = {"kind": "rack", "direction": "symmetric", "host": HostName("rack")}
+
+    assert with_links_not_shown([], [shown, hidden], kinds=_TWO_KINDS) == [hidden]
+
+
+def test_the_form_stores_the_rows_the_dialog_submits() -> None:
+    rows = RawFrontendData(
+        [
+            submitted_relation_row("management", "parent", "mgmt1"),
+            submitted_relation_row("management", "child", "os1"),
+            submitted_relation_row("peering", "symmetric", "peer"),
+        ]
+    )
+    visitor = get_visitor(host_relations_form_spec(_TWO_KINDS), _VISITOR_OPTIONS)
+    assert visitor.validate(rows) == []
+    assert visitor.to_disk(rows) == [
+        {"kind": "management", "direction": "parent", "host": "mgmt1"},
+        {"kind": "management", "direction": "child", "host": "os1"},
+        {"kind": "peering", "direction": "symmetric", "host": "peer"},
+    ]
+
+
+def test_the_form_asks_for_a_host_the_row_is_missing() -> None:
+    """The dialog submits the empty name the host field defaults to."""
+    visitor = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS)
+    messages = visitor.validate(
+        RawFrontendData([submitted_relation_row("management", "child", "")])
+    )
+    assert [message.message for message in messages] == ["Select the host this relation points to."]
+
+
+def test_the_form_rejects_a_host_name_that_cannot_be_stored() -> None:
+    visitor = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS)
+    messages = visitor.validate(
+        RawFrontendData([submitted_relation_row("management", "child", "no spaces")])
+    )
+    assert [message.message for message in messages] == ["This is not a usable host name."]
+
+
+def test_a_stored_board_half_materializes_on_both_sides() -> None:
+    """A dialog row reads "this host is management board of <other>", and so does the value the
+    core gets - also for a board whose counterpart row was lost."""
+    resolved = resolve_all_relations(
+        fake_hosts(board=[{"kind": "management", "direction": "parent", "host": "srv"}], srv=None)
+    )
+
+    assert resolved[HostName("board")] == [
+        ResolvedRelation(kind="management", direction="parent", host="srv", site="central")
+    ]
+    assert resolved[HostName("srv")] == [
+        ResolvedRelation(kind="management", direction="child", host="board", site="central")
+    ]
+
+
+def test_an_os_half_alone_is_not_materialized(caplog: pytest.LogCaptureFixture) -> None:
+    """The board's half is the primary one; without it the OS host only holds a stale copy."""
+    with caplog.at_level(logging.WARNING, logger="cmk.web.host_relations"):
+        resolved = resolve_all_relations(
+            fake_hosts(
+                srv=[{"kind": "management", "direction": "child", "host": "board"}], board=None
+            )
+        )
+
+    assert resolved == {}
+    assert [record.levelno for record in caplog.records] == [logging.WARNING]
+    assert "'board' does not store it" in caplog.text
+
+
+def test_an_os_half_alone_is_reported_to_the_sites_of_both_hosts() -> None:
+    """Setup shows the relation on the OS host, so its absence in the monitoring needs telling."""
+    all_hosts = {
+        HostName("srv"): FakeHost(
+            "srv", [{"kind": "management", "direction": "child", "host": "board"}], site="site_a"
+        ),
+        HostName("board"): FakeHost("board", None, site="site_b"),
+    }
+    dropped: list[DroppedRelation] = []
+
+    resolve_all_relations(all_hosts, on_dropped=dropped.append)
+
+    assert dropped == [
+        PrimaryMissingRelation(
+            reason="primary_missing", hosts=["srv", "board"], sites=["site_a", "site_b"]
+        )
+    ]
+
+
+def test_resolve_all_relations_carries_the_site_of_the_counterpart() -> None:
+    """Only the central site knows where a host is monitored, so the site travels along."""
+    all_hosts: Mapping[HostName, RelatedHost] = {
+        HostName("board"): FakeHost(
+            "board", [{"kind": "management", "direction": "parent", "host": "os1"}]
+        ),
+        HostName("os1"): FakeHost("os1", site="remote"),
+    }
+
+    resolved = resolve_all_relations(all_hosts)
+
+    assert resolved[HostName("board")] == [
+        ResolvedRelation(kind="management", direction="parent", host="os1", site="remote")
+    ]
+    assert resolved[HostName("os1")] == [
+        ResolvedRelation(kind="management", direction="child", host="board", site="central")
+    ]
+
+
+def test_both_sides_storing_their_half_is_one_logical_link() -> None:
+    """The regular case now that a save writes both halves: no relation is listed twice."""
+    all_hosts = fake_hosts(
+        board=[{"kind": "management", "direction": "parent", "host": "os1"}],
+        os1=[{"kind": "management", "direction": "child", "host": "board"}],
+    )
+
+    resolved = resolve_all_relations(all_hosts)
+
+    assert resolved[HostName("board")] == [
+        ResolvedRelation(kind="management", direction="parent", host="os1", site="central")
+    ]
+    assert resolved[HostName("os1")] == [
+        ResolvedRelation(kind="management", direction="child", host="board", site="central")
+    ]
+
+
+def test_a_link_stored_twice_on_one_host_is_one_relation() -> None:
+    """Saving a host with a repeated link is refused (see relation_conflicts), so this can only
+    come from a hand written "hosts.mk" - the resolution must still not report it twice."""
+    all_hosts = fake_hosts(
+        board=[
+            {"kind": "management", "direction": "parent", "host": "os1"},
+            {"kind": "management", "direction": "parent", "host": "os1"},
+        ],
+        os1=None,
+    )
+
+    resolved = resolve_all_relations(all_hosts)
+
+    assert resolved[HostName("board")] == [
+        ResolvedRelation(kind="management", direction="parent", host="os1", site="central")
+    ]
+
+
+def test_an_os_half_of_a_board_that_cannot_be_read_is_only_reported_as_unreadable() -> None:
+    """Adding the relation on the board would not help; its value needs fixing first."""
+    all_hosts = fake_hosts(
+        srv=[{"kind": "management", "direction": "child", "host": "board"}], board="not a list"
+    )
+    dropped: list[DroppedRelation] = []
+
+    resolve_all_relations(all_hosts, on_dropped=dropped.append)
+
+    assert [entry["reason"] for entry in dropped] == ["unreadable"]
+
+
+def test_two_hosts_both_storing_the_board_half_are_both_dropped() -> None:
+    """Neither half is more right than the other, and showing both would make each host the
+    board of the other. The next save of either host settles the pair."""
+    all_hosts = fake_hosts(
+        board=[{"kind": "management", "direction": "parent", "host": "os1"}],
+        os1=[{"kind": "management", "direction": "parent", "host": "board"}],
+    )
+
+    assert resolve_all_relations(all_hosts) == {}
+
+
+def test_two_hosts_both_storing_the_board_half_are_logged_as_a_warning_once(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    all_hosts = fake_hosts(
+        board=[{"kind": "management", "direction": "parent", "host": "os1"}],
+        os1=[{"kind": "management", "direction": "parent", "host": "board"}],
+    )
+
+    with caplog.at_level(logging.WARNING, logger="cmk.web.host_relations"):
+        resolve_all_relations(all_hosts)
+
+    assert [record.levelno for record in caplog.records] == [logging.WARNING]
+    assert "'board'" in caplog.text
+    assert "'os1'" in caplog.text
+
+
+def test_two_hosts_both_storing_the_board_half_are_reported_to_both_sites() -> None:
+    """The log alone reaches no user: the activation shows the message where the hosts are."""
+    all_hosts = {
+        HostName("board"): FakeHost(
+            "board", [{"kind": "management", "direction": "parent", "host": "os1"}], site="site_a"
+        ),
+        HostName("os1"): FakeHost(
+            "os1", [{"kind": "management", "direction": "parent", "host": "board"}], site="site_b"
+        ),
+    }
+    dropped: list[DroppedRelation] = []
+
+    resolve_all_relations(all_hosts, on_dropped=dropped.append)
+
+    assert dropped == [
+        BothPrimaryRelation(
+            reason="both_primary",
+            hosts=["board", "os1"],
+            sites=["site_a", "site_b"],
+            kind="management",
+            direction="parent",
+        )
+    ]
+
+
+def test_a_malformed_value_is_reported_to_the_site_of_its_host() -> None:
+    all_hosts = {HostName("broken"): FakeHost("broken", "not a list", site="site_a")}
+    dropped: list[DroppedRelation] = []
+
+    resolve_all_relations(all_hosts, on_dropped=dropped.append)
+
+    assert [(entry["reason"], entry["hosts"], entry["sites"]) for entry in dropped] == [
+        ("unreadable", ["broken"], ["site_a"])
+    ]
+
+
+@pytest.mark.parametrize(
+    "relations, reason",
+    [
+        ([{"kind": "management", "direction": "child", "host": "board"}], "self-reference"),
+        (
+            [{"kind": "management", "direction": "child", "host": "ghost"}],
+            "related host does not exist",
+        ),
+    ],
+)
+def test_every_dropped_relation_logs_a_reason(
+    caplog: pytest.LogCaptureFixture, relations: object, reason: str
+) -> None:
+    with caplog.at_level(logging.DEBUG, logger="cmk.web.host_relations"):
+        assert resolve_all_relations(fake_hosts(board=relations)) == {}
+
+    assert reason in caplog.text
+
+
+def test_an_end_this_version_does_not_know_logs_a_reason(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A link written by a later version is skipped by the parser - silently, until here."""
+    with caplog.at_level(logging.DEBUG, logger="cmk.web.host_relations"):
+        assert (
+            resolve_all_relations(
+                fake_hosts(board=[{"kind": "management", "direction": "sideways", "host": "os1"}])
+            )
+            == {}
+        )
+
+    assert "sideways" in caplog.text
+    assert "board" in caplog.text
+
+
+def test_a_kind_this_version_does_not_know_logs_a_reason(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The parser hands the link on - only the kinds this version knows can place it."""
+    with caplog.at_level(logging.DEBUG, logger="cmk.web.host_relations"):
+        assert (
+            resolve_all_relations(
+                fake_hosts(board=[{"kind": "peering", "direction": "symmetric", "host": "os1"}])
+            )
+            == {}
+        )
+
+    assert "peering" in caplog.text
+    assert "board" in caplog.text
+
+
+def test_a_malformed_stored_value_is_logged_as_a_warning(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    with caplog.at_level(logging.WARNING, logger="cmk.web.host_relations"):
+        assert resolve_all_relations(fake_hosts(board="not-a-list")) == {}
+
+    assert "board" in caplog.text
+    assert [record.levelno for record in caplog.records] == [logging.WARNING]
+
+
+def test_resolve_all_relations_skips_self_and_unknown_hosts() -> None:
+    all_hosts = fake_hosts(
+        board=[
+            {"kind": "management", "direction": "parent", "host": "board"},
+            {"kind": "management", "direction": "parent", "host": "ghost"},
+            {"kind": "management", "direction": "parent", "host": "os1"},
+        ],
+        os1=None,
+    )
+    resolved = resolve_all_relations(all_hosts)
+    assert resolved[HostName("board")] == [
+        ResolvedRelation(kind="management", direction="parent", host="os1", site="central")
+    ]
+    assert HostName("ghost") not in resolved
+
+
+def _relation_to(host_name: str, direction: str = "child") -> dict[str, str]:
+    return {"kind": "management", "direction": direction, "host": host_name}
+
+
+def _edit_url(host_name: HostName) -> str:
+    return f"wato.py?mode=edit_host&host={host_name}"
+
+
+@pytest.mark.parametrize(
+    "host_names, expected",
+    [
+        (["h1"], "This host has 1 related host:"),
+        (["h1", "h2"], "This host has 2 related hosts:"),
+    ],
+)
+def test_relations_deletion_note_counts_the_related_hosts(
+    host_names: list[str], expected: str
+) -> None:
+    host = FakeHost("mgmt", [_relation_to(name) for name in host_names])
+    note = relations_deletion_note(host, _edit_url)
+    assert note is not None
+    assert expected in str(note)
+
+
+def test_relations_deletion_note_links_every_related_host_by_name() -> None:
+    host = FakeHost("mgmt", [_relation_to("h2"), _relation_to("h1")])
+    note = relations_deletion_note(host, _edit_url)
+    assert note is not None
+    assert (
+        "<ul>"
+        '<li><a href="wato.py?mode=edit_host&host=h1">h1</a></li>'
+        '<li><a href="wato.py?mode=edit_host&host=h2">h2</a></li>'
+        "</ul>"
+    ) in str(note)
+
+
+def test_relations_deletion_note_warns_with_an_icon() -> None:
+    host = FakeHost("mgmt", [_relation_to("h1")])
+    note = relations_deletion_note(host, _edit_url)
+    assert note is not None
+    assert "confirm_warning_note" in str(note)
+    assert "cmk-static-icon" in str(note)
+
+
+def test_relations_deletion_note_leaves_a_host_without_a_url_unlinked() -> None:
+    host = FakeHost("mgmt", [_relation_to("hidden")])
+    note = relations_deletion_note(host, lambda _host_name: None)
+    assert note is not None
+    assert "<li>hidden</li>" in str(note)
+
+
+def test_relations_deletion_note_is_absent_for_an_unusable_related_host_name() -> None:
+    """A name that cannot be a host name makes the whole value unreadable, markup or not."""
+    host = FakeHost("mgmt", [_relation_to("<script>alert(1)</script>")])
+    assert relations_deletion_note(host, lambda _host_name: None) is None
+
+
+def test_relations_deletion_note_names_the_host_being_deleted() -> None:
+    host = FakeHost("mgmt", [_relation_to("h1")])
+    note = relations_deletion_note(host, _edit_url)
+    assert note is not None
+    assert (
+        "Deleting mgmt removes these relations. The related hosts themselves are not deleted."
+    ) in str(note)
+
+
+def test_relations_deletion_note_counts_each_related_host_once() -> None:
+    host = FakeHost("mgmt", [_relation_to("h1"), _relation_to("h1", "parent")])
+    note = relations_deletion_note(host, _edit_url)
+    assert note is not None
+    assert "This host has 1 related host:" in str(note)
+
+
+def test_relations_deletion_note_lists_the_last_host_that_still_fits() -> None:
+    listed = MAX_LISTED_RELATED_HOSTS
+    host = FakeHost("mgmt", [_relation_to(f"h{index:03d}") for index in range(listed)])
+    note = relations_deletion_note(host, _edit_url)
+    assert note is not None
+    assert str(note).count("<li>") == listed
+    assert "more</li>" not in str(note)
+
+
+def test_relations_deletion_note_counts_the_hosts_it_does_not_list() -> None:
+    listed = MAX_LISTED_RELATED_HOSTS
+    host = FakeHost("mgmt", [_relation_to(f"h{index:03d}") for index in range(listed + 3)])
+    note = relations_deletion_note(host, _edit_url)
+    assert note is not None
+    assert f"This host has {listed + 3} related hosts:" in str(note)
+    assert str(note).count("<li>") == listed + 1
+    assert "<li>and 3 more</li>" in str(note)
+    assert f"h{listed:03d}" not in str(note)
+
+
+@pytest.mark.parametrize("relations", [None, [], "not a list"])
+def test_relations_deletion_note_is_absent_without_own_relations(relations: object) -> None:
+    assert relations_deletion_note(FakeHost("h1", relations), _edit_url) is None
+
+
+@pytest.mark.parametrize(
+    "links",
+    [
+        pytest.param(
+            [{"kind": "management", "direction": "parent", "host": HostName("mgmt1")}],
+            id="a sound link",
+        ),
+        pytest.param(
+            [{"kind": "management", "direction": "parent", "host": HostName("ghost")}],
+            id="a host that is not there - reported by validate_host_relations(), not refused",
+        ),
+        pytest.param(
+            [
+                {"kind": "management", "direction": "parent", "host": HostName("mgmt1")},
+                {"kind": "management", "direction": "parent", "host": HostName("mgmt2")},
+            ],
+            id="the same end towards two hosts",
+        ),
+        pytest.param(
+            [
+                {"kind": "management", "direction": "parent", "host": HostName("mgmt1")},
+                {"kind": "peering", "direction": "symmetric", "host": HostName("mgmt1")},
+            ],
+            id="two relations of different kinds towards the same host",
+        ),
+        pytest.param(
+            [
+                {"kind": "peering", "direction": "parent", "host": HostName("mgmt1")},
+                {"kind": "peering", "direction": "child", "host": HostName("mgmt1")},
+            ],
+            id="a relation of a later version is not this one's to judge",
+        ),
+    ],
+)
+def test_relation_conflicts_accepts(links: Sequence[RelationLink]) -> None:
+    assert relation_conflicts(links, HostName("srv1")) == []
+
+
+def test_a_link_of_a_later_version_to_this_host_itself_is_still_refused() -> None:
+    """Wrong whatever the relation means - and the only thing that can be said about it."""
+    assert relation_conflicts(
+        [{"kind": "peering", "direction": "symmetric", "host": HostName("srv1")}],
+        HostName("srv1"),
+    ) == [RelationConflict(reason="self_link")]
+
+
+@pytest.mark.parametrize(
+    "links, expected",
+    [
+        pytest.param(
+            [{"kind": "management", "direction": "parent", "host": HostName("srv1")}],
+            RelationConflict(reason="self_link"),
+            id="self link",
+        ),
+        pytest.param(
+            [
+                {"kind": "management", "direction": "parent", "host": HostName("mgmt1")},
+                {"kind": "management", "direction": "child", "host": HostName("mgmt1")},
+            ],
+            RelationConflict(
+                reason="contradicting_directions",
+                host=HostName("mgmt1"),
+                kind_id="management",
+            ),
+            id="both ends",
+        ),
+        pytest.param(
+            [
+                {"kind": "management", "direction": "parent", "host": HostName("mgmt1")},
+                {"kind": "management", "direction": "parent", "host": HostName("mgmt1")},
+            ],
+            RelationConflict(reason="duplicate", host=HostName("mgmt1"), kind_id="management"),
+            id="duplicate",
+        ),
+    ],
+)
+def test_relation_conflicts_reports(
+    links: Sequence[RelationLink], expected: RelationConflict
+) -> None:
+    assert relation_conflicts(links, HostName("srv1"))[0] == expected
+
+
+def test_a_contradiction_names_both_ends_of_the_relation() -> None:
+    conflicts = relation_conflicts(
+        [
+            {"kind": "management", "direction": "parent", "host": HostName("other")},
+            {"kind": "management", "direction": "child", "host": HostName("other")},
+        ],
+        HostName("srv1"),
+    )
+
+    assert conflicts[0].message() == (
+        "This host is linked to 'other' both as its 'Management board' and as its 'OS host'. "
+        "A host can only sit at one end of a relation."
+    )
+
+
+@pytest.mark.parametrize(
+    "kind_id, direction",
+    [
+        (kind.id, direction)
+        for kind in RELATION_KINDS.values()
+        for direction in kind.directions()
+        if direction != "symmetric"
+    ],
+)
+def test_every_relation_can_say_what_it_contradicts(
+    kind_id: str, direction: RelationDirection
+) -> None:
+    """An end the report cannot name would only show up as a crash."""
+    conflicts = relation_conflicts(
+        [
+            {"kind": kind_id, "direction": direction, "host": HostName("other")},
+            {"kind": kind_id, "direction": reverse_direction(direction), "host": HostName("other")},
+        ],
+        HostName("srv1"),
+    )
+
+    assert "other" in conflicts[0].message()
+
+
+def test_relations_or_user_error_reports_a_malformed_value() -> None:
+    with pytest.raises(MKUserError, match="malformed"):
+        relations_or_user_error("not-a-list")

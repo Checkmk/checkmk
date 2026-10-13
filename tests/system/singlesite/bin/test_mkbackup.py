@@ -17,9 +17,9 @@ import pytest
 from tests.testlib.common.utils2 import (
     DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU,
 )
-from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
-from tests.testlib.site import Site, SiteFactory
-from tests.testlib.version import edition_from_env
+from tests.testlib.common.version import edition_from_env
+from tests.testlib.system.pytest_helpers.calls import exit_pytest_on_exceptions
+from tests.testlib.system.site import Site, SiteFactory
 
 logger = logging.getLogger(__name__)
 
@@ -427,7 +427,6 @@ def test_mkbackup_simple_backup(site_for_mkbackup_tests: Site) -> None:
     _execute_backup(site_for_mkbackup_tests)
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.usefixtures("test_cfg")
 def test_mkbackup_simple_restore(site_for_mkbackup_tests: Site) -> None:
     backup_id = _execute_backup(site_for_mkbackup_tests)

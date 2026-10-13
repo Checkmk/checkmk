@@ -10,6 +10,8 @@ from cmk.gui.openapi.utils import ProblemException
 
 from .testlib import get_fake_host_repository
 
+pytestmark = pytest.mark.usefixtures("request_context")
+
 
 def test_get_host_overview_success() -> None:
     host_repo = get_fake_host_repository(n_hosts=10)

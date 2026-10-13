@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Iterable, Mapping, Sequence
 from typing import NoReturn
@@ -98,7 +97,7 @@ def test_cluster_allocatable_memory_resource() -> None:
     assert actual == expected
 
 
-def test_cluster_allocatable_cpu_resource():
+def test_cluster_allocatable_cpu_resource() -> None:
     cpu = 2.0
     number_nodes = 3
     status = NodeStatusFactory.build(

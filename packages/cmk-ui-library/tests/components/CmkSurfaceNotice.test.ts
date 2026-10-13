@@ -1,0 +1,99 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+import { fireEvent, render, screen } from '@testing-library/vue'
+import CmkSurfaceNotice, {
+  type CmkSurfaceNoticeVariant
+} from 'cmk-ui-library/components/CmkSurfaceNotice.vue'
+
+const notice = (): HTMLElement | null => document.querySelector('.cmk-surface-notice')
+
+test('states the message for every variant', () => {
+  for (const variant of [
+    'error',
+    'warning',
+    'loading',
+    'info'
+  ] satisfies CmkSurfaceNoticeVariant[]) {
+    const { unmount } = render(CmkSurfaceNotice, {
+      props: { variant, message: `${variant} happened` }
+    })
+
+    expect(screen.getByText(`${variant} happened`), variant).toBeInTheDocument()
+    unmount()
+  }
+})
+
+test('announces an error assertively and the other variants politely', () => {
+  const { unmount } = render(CmkSurfaceNotice, {
+    props: { variant: 'error', message: 'Broken' }
+  })
+  expect(notice()).toHaveAttribute('role', 'alert')
+  unmount()
+
+  const { unmount: unmountLoading } = render(CmkSurfaceNotice, {
+    props: { variant: 'loading', message: 'Loading data …' }
+  })
+  expect(notice()).toHaveAttribute('role', 'status')
+  unmountLoading()
+
+  // A warning too: the data it advises about is on screen and valid, so it does not interrupt.
+  render(CmkSurfaceNotice, { props: { variant: 'warning', message: 'Truncated' } })
+  expect(notice()).toHaveAttribute('role', 'status')
+})
+
+test('offers no retry unless asked for one', () => {
+  render(CmkSurfaceNotice, { props: { variant: 'error', message: 'Broken' } })
+
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
+})
+
+test('emits retry when the action is activated', async () => {
+  const { emitted } = render(CmkSurfaceNotice, {
+    props: { variant: 'error', message: 'Broken', retry: true }
+  })
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+
+  expect(emitted('retry')).toHaveLength(1)
+})
+
+test('renders the description as a second line when given', () => {
+  render(CmkSurfaceNotice, {
+    props: {
+      variant: 'info',
+      message: 'No metrics added',
+      description: 'Add a source to visualize your data'
+    }
+  })
+
+  expect(screen.getByText('No metrics added')).toBeInTheDocument()
+  expect(screen.getByText('Add a source to visualize your data')).toBeInTheDocument()
+})
+
+test('carries no announcing role when the host announces instead', () => {
+  render(CmkSurfaceNotice, {
+    props: { variant: 'error', message: 'Broken', retry: true, silent: true }
+  })
+
+  expect(notice()).not.toHaveAttribute('role')
+  // Silenced, not hidden: the retry is still reachable.
+  expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+})
+
+test('carries the graph glyph for an empty state and the multitone error icon otherwise', () => {
+  const icon = (): Element => notice()!.querySelector('.cmk-surface-notice__icon')!
+
+  const { unmount } = render(CmkSurfaceNotice, {
+    props: { variant: 'info', message: 'No metrics added' }
+  })
+  // The empty state uses the plain purple graph asset, so it is an <img> with that source.
+  expect(icon().getAttribute('src')).toMatch(/graph/)
+  unmount()
+
+  render(CmkSurfaceNotice, { props: { variant: 'error', message: 'Broken' } })
+  // A failure keeps the recoloured multitone icon, which renders as an inline svg instead.
+  expect(icon()).toHaveClass('cmk-multitone-icon')
+})

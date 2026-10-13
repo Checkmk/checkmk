@@ -10,13 +10,16 @@ import dataclasses
 import json
 from collections.abc import Iterator
 from dataclasses import dataclass
-from typing import Annotated, cast, override
+from http import HTTPStatus
+from typing import Annotated, override
 from unittest.mock import MagicMock
 
 import pytest
 from pydantic import PlainSerializer
+from typing_extensions import TypeForm
 from werkzeug.datastructures import ETags, Headers
 
+from cmk.ccc import store
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUnauthenticatedException
 from cmk.gui.logged_in import LoggedInNobody, user
@@ -41,6 +44,7 @@ from cmk.gui.openapi.utils import (
     RestAPIResponseException,
     RestAPIWatoDisabledException,
 )
+from cmk.utils.paths import configuration_lockfile
 from cmk.web.utils.permission_verification import AllPerm, Perm
 from tests.unit.cmk.gui.openapi.framework.factories import (
     RawRequestDataFactory,
@@ -57,6 +61,11 @@ class _TestResponse:
 class _TestResponseOmitted:
     field: int
     omitted: str | ApiOmitted = ApiOmitted()
+
+
+@dataclass
+class _TestGenericResponse[T]:
+    value: list[T]
 
 
 def test_dump_response_empty() -> None:
@@ -81,7 +90,7 @@ def test_dump_response_omitted() -> None:
 def test_dump_response_annotated() -> None:
     result = dump_body(
         _TestResponse(field=123),
-        cast(type[_TestResponse], Annotated[_TestResponse, "foo"]),
+        Annotated[_TestResponse, "foo"],
         is_testing=True,
     )
     assert result == b'{"field":123}'
@@ -94,7 +103,7 @@ def test_dump_response_pydantic_annotated() -> None:
 
     result = dump_body(
         _TestResponse(field=123),
-        cast(type[_TestResponse], Annotated[_TestResponse, PlainSerializer(_serializer)]),
+        Annotated[_TestResponse, PlainSerializer(_serializer)],
         is_testing=True,
     )
     assert result == b'{"custom_name":"246"}'
@@ -110,6 +119,7 @@ type _AliasedResponseWithSerializer = Annotated[
     _TestResponse | _TestResponseB,
     PlainSerializer(lambda x: {"custom": x.field if hasattr(x, "field") else x.name}),
 ]
+type _Identity[T] = T
 
 
 def test_dump_response_union_first_member() -> None:
@@ -124,9 +134,63 @@ def test_dump_response_union_second_member() -> None:
     assert result == b'{"name":"hello"}'
 
 
+def test_dump_response_union_serializes_matching_annotated_member() -> None:
+    result = dump_body(
+        _TestResponseB(name="hello"),
+        _TestResponse | Annotated[_TestResponseB, "foo"],
+        is_testing=True,
+    )
+    assert result == b'{"name":"hello"}'
+
+
+def test_dump_response_union_serializes_matching_generic_member() -> None:
+    result = dump_body(
+        _TestGenericResponse(value=[_TestResponse(field=1)]),
+        _TestGenericResponse[_TestResponse] | _TestResponseB,
+        is_testing=True,
+    )
+    assert result == b'{"value":[{"field":1}]}'
+
+
+def test_dump_response_union_serializes_matching_generic_alias_member() -> None:
+    result = dump_body(
+        _TestResponseB(name="hello"), _TestResponse | _Identity[_TestResponseB], is_testing=True
+    )
+    assert result == b'{"name":"hello"}'
+
+
+def test_dump_response_generic() -> None:
+    result = dump_body(
+        _TestGenericResponse(value=[_TestResponse(field=1)]),
+        _TestGenericResponse[_TestResponse],
+        is_testing=True,
+    )
+    assert result == b'{"value":[{"field":1}]}'
+
+
+def test_dump_response_generic_wrong_type_raises() -> None:
+    with pytest.raises(ValueError, match="should be"):
+        dump_body(object(), _TestGenericResponse[_TestResponse], is_testing=True)
+
+
 def test_dump_response_union_wrong_type_raises() -> None:
     with pytest.raises(ValueError, match="should be"):
         dump_body(object(), _TestResponse | _TestResponseB, is_testing=True)
+
+
+@pytest.mark.parametrize(
+    "body_type",
+    [
+        pytest.param(_TestResponse | Annotated[_TestResponseB, "foo"], id="annotated member"),
+        pytest.param(_TestGenericResponse[_TestResponse] | _TestResponseB, id="generic member"),
+        pytest.param(_TestResponse | _Identity[_TestResponseB], id="generic alias member"),
+    ],
+)
+def test_dump_response_union_with_non_class_member_wrong_type_raises(
+    body_type: TypeForm[object],
+) -> None:
+    with pytest.raises(ValueError, match="should be"):
+        dump_body(object(), body_type, is_testing=True)
 
 
 def test_dump_response_type_alias_union() -> None:
@@ -289,7 +353,7 @@ def test_handle_endpoint_request_empty_handler(permission_validator: PermissionV
         is_testing=False,
     )
 
-    assert response.status_code == 204, response.get_data(as_text=True)
+    assert response.status_code == HTTPStatus.NO_CONTENT, response.get_data(as_text=True)
     assert response.get_data() == b""
     assert dict(response.headers) == {}
 
@@ -317,7 +381,7 @@ def test_handle_endpoint_request_missing_parameters_header(
         )
 
     response = exc_info.value.to_problem()
-    assert response.status_code == 400, response.get_data(as_text=True)
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.get_data(as_text=True)
     response_json = response.get_json()
     assert "headers.header_param" in response_json["detail"]
     assert response_json["fields"]["headers.header_param"]["type"] == "missing"
@@ -348,7 +412,7 @@ def test_handle_endpoint_request_missing_parameters_query(
         )
 
     response = exc_info.value.to_problem()
-    assert response.status_code == 400, response.get_data(as_text=True)
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.get_data(as_text=True)
     response_json = response.get_json()
     assert "query.query_param" in response_json["detail"]
     assert response_json["fields"]["query.query_param"]["type"] == "missing"
@@ -379,7 +443,7 @@ def test_handle_endpoint_request_missing_parameters_path(
         )
 
     response = exc_info.value.to_problem()
-    assert response.status_code == 404, response.get_data(as_text=True)
+    assert response.status_code == HTTPStatus.NOT_FOUND, response.get_data(as_text=True)
     response_json = response.get_json()
     assert "path.path_param" in response_json["detail"]
     assert response_json["fields"]["path.path_param"]["type"] == "missing"
@@ -414,7 +478,7 @@ def test_handle_endpoint_request_missing_parameters_body(
         )
 
     response = exc_info.value.to_problem()
-    assert response.status_code == 400, response.get_data(as_text=True)
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.get_data(as_text=True)
     response_json = response.get_json()
     assert "body.body_field" in response_json["detail"]
     assert response_json["fields"]["body.body_field"]["type"] == "missing"
@@ -456,7 +520,7 @@ def test_handle_endpoint_request_complex_handler(
         is_testing=False,
     )
 
-    assert response.status_code == 200, response.get_data(as_text=True)
+    assert response.status_code == HTTPStatus.OK, response.get_data(as_text=True)
     assert response.get_data() == b'{"body_field":123}'
     assert dict(response.headers) == {
         "Content-Type": "application/json",
@@ -494,9 +558,51 @@ def test_handle_endpoint_request_runs_config_hooks_on_write(
         wato_use_git=wato_use_git,
     )
 
-    assert response.status_code == 204, response.get_data(as_text=True)
+    assert response.status_code == HTTPStatus.NO_CONTENT, response.get_data(as_text=True)
     update_config_generation.assert_called_once_with()
     assert do_git_commit.call_count == expected_git_calls
+
+
+def test_handle_endpoint_request_holds_config_lock_from_handler_through_commit(
+    permission_validator: PermissionValidator,
+) -> None:
+    lock_held: dict[str, bool] = {}
+
+    def _probe(stage: str) -> None:
+        lock_held[stage] = store.have_lock(configuration_lockfile)
+
+    @dataclass
+    class _LockProbe:
+        # Serialization runs right after the handler, so this catches a release before the commit.
+        stage: Annotated[str, PlainSerializer(lambda stage: _probe(stage) or stage)]
+
+    def handler() -> _LockProbe:
+        _probe("handler")
+        return _LockProbe(stage="serialize_response")
+
+    request_endpoint = RequestEndpointFactory.build(
+        method="post",
+        handler=handler,
+        update_config_generation=True,
+        skip_locking=False,
+    )
+    request_data = RawRequestDataFactory.build(
+        headers=Headers({"Accept": request_endpoint.content_type}),
+    )
+
+    handle_endpoint_request(
+        request_endpoint,
+        request_data,
+        _api_context(),
+        permission_validator,
+        update_config_generation=lambda: None,
+        do_git_commit=lambda: _probe("commit"),
+        wato_enabled=True,
+        wato_use_git=True,
+    )
+
+    assert lock_held == {"handler": True, "serialize_response": True, "commit": True}
+    assert not store.have_lock(configuration_lockfile)
 
 
 def test_handle_endpoint_request_skips_config_hooks_for_read(
@@ -553,7 +659,7 @@ def test_handle_endpoint_request_permissions() -> None:
         wato_use_git=False,
         is_testing=False,
     )
-    assert response.status_code == 204, response.get_data(as_text=True)
+    assert response.status_code == HTTPStatus.NO_CONTENT, response.get_data(as_text=True)
 
 
 @pytest.mark.usefixtures("request_context", "with_admin_login")
@@ -635,7 +741,7 @@ def test_handle_endpoint_request_permission_denied_is_forbidden(
         )
 
     response = exc_info.value.to_problem()
-    assert response.status_code == 403, response.get_data(as_text=True)
+    assert response.status_code == HTTPStatus.FORBIDDEN, response.get_data(as_text=True)
     assert "lack the permission" in response.get_json()["detail"]
 
 
@@ -673,7 +779,7 @@ def test_handle_endpoint_with_fields_filter(permission_validator: PermissionVali
 
     def _handler(
         body: _Schema,
-        fields: FieldsFilterType,
+        fields: FieldsFilterType,  # noqa: ARG001
     ) -> _Schema:
         return body
 
@@ -724,7 +830,7 @@ def test_handle_endpoint_output_etag(permission_validator: PermissionValidator) 
     etag = ETag({"key": "value"})
 
     def handler() -> ApiResponse[None]:
-        return ApiResponse(body=None, status_code=204, etag=etag)
+        return ApiResponse(body=None, status_code=HTTPStatus.NO_CONTENT, etag=etag)
 
     request_endpoint = RequestEndpointFactory.build(
         handler=handler, content_type=None, etag="output"
@@ -817,7 +923,7 @@ def test_handle_endpoint_request_union_body_dispatches(
             wato_use_git=False,
             is_testing=False,
         )
-        assert response.status_code == 200, response.get_data(as_text=True)
+        assert response.status_code == HTTPStatus.OK, response.get_data(as_text=True)
         assert response.get_data() == expected
 
 
@@ -847,5 +953,5 @@ def test_handle_endpoint_request_type_alias_body(
         wato_use_git=False,
         is_testing=False,
     )
-    assert response.status_code == 200, response.get_data(as_text=True)
+    assert response.status_code == HTTPStatus.OK, response.get_data(as_text=True)
     assert response.get_data() == b'{"a_field":"world"}'

@@ -79,9 +79,12 @@ RUN apt-get install -y --fix-missing \
     libtool \
     libxml2-dev \
     libxmlsec1-dev \
+    libzstd-dev \
     netcat-openbsd \
     openssh-client \
     patch \
+    # rpm provides rpmbuild, which Bazel uses to build the agent .rpm
+    # (//agents:check-mk-agent-rpm) on every distro, the .deb ones too.
     rpm \
     cpio \
     rpcbind \

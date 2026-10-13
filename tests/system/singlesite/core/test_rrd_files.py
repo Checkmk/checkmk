@@ -9,10 +9,9 @@ from datetime import datetime
 import pytest
 
 from tests.testlib.common.utils import wait_until
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_edition("community")
 def test_rrd_files_creation(site: Site) -> None:
     """Test that RRD files are created for a hosts.

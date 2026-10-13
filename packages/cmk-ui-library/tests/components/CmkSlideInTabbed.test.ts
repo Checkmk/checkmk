@@ -128,6 +128,40 @@ test('opens on the bound tab rather than the first one', async () => {
   expect(loadA).not.toHaveBeenCalled()
 })
 
+test('falls back to the first tab when the bound tab is dropped', async () => {
+  const tabs: SlideInTab[] = [
+    { id: 'a', title: 'A', component: tabBody, load: () => Promise.resolve('a-data') },
+    { id: 'b', title: 'B', component: tabBody, load: () => Promise.resolve('b-data') }
+  ]
+
+  const { rerender } = render(CmkSlideInTabbed, {
+    props: { open: true, tabs, header, activeTabId: 'b' }
+  })
+
+  await screen.findByText('b-data')
+  await rerender({ open: true, tabs, header, activeTabId: undefined })
+
+  await screen.findByText('a-data')
+  expect(screen.getByRole('tab', { name: 'A' })).toHaveAttribute('aria-selected', 'true')
+})
+
+test('falls back to the named default tab when the bound tab is dropped', async () => {
+  const tabs: SlideInTab[] = [
+    { id: 'a', title: 'A', component: tabBody, load: () => Promise.resolve('a-data') },
+    { id: 'b', title: 'B', component: tabBody, load: () => Promise.resolve('b-data') }
+  ]
+
+  const { rerender } = render(CmkSlideInTabbed, {
+    props: { open: true, tabs, header, defaultTabId: 'b', activeTabId: 'a' }
+  })
+
+  await screen.findByText('a-data')
+  await rerender({ open: true, tabs, header, defaultTabId: 'b', activeTabId: undefined })
+
+  await screen.findByText('b-data')
+  expect(screen.getByRole('tab', { name: 'B' })).toHaveAttribute('aria-selected', 'true')
+})
+
 test('follows the bound tab when it changes from outside', async () => {
   const tabs: SlideInTab[] = [
     { id: 'a', title: 'A', component: tabBody, load: () => Promise.resolve('a-data') },
@@ -142,4 +176,62 @@ test('follows the bound tab when it changes from outside', async () => {
   await rerender({ open: true, tabs, header, activeTabId: 'b' })
 
   await screen.findByText('b-data')
+})
+
+test('reloads the active tab when reloadToken changes, without remounting the panel', async () => {
+  const loadA = vi.fn().mockResolvedValue('a-data')
+  const tabs: SlideInTab[] = [{ id: 'a', title: 'A', component: tabBody, load: loadA }]
+
+  const { rerender } = render(CmkSlideInTabbed, {
+    props: { open: true, tabs, header, reloadToken: 0 }
+  })
+
+  await screen.findByText('a-data')
+  expect(loadA).toHaveBeenCalledTimes(1)
+
+  await rerender({ open: true, tabs, header, reloadToken: 1 })
+
+  await screen.findByText('a-data')
+  expect(loadA).toHaveBeenCalledTimes(2)
+  // The dialog itself never toggled open/closed - only the tab content reloaded.
+  expect(screen.getByText('Host')).toBeInTheDocument()
+})
+
+test('leaves an inactive tab’s cache alone until reloadToken changes, then drops it too', async () => {
+  const loadA = vi.fn().mockResolvedValue('a-data')
+  const loadB = vi.fn().mockResolvedValue('b-data')
+  const tabs: SlideInTab[] = [
+    { id: 'a', title: 'A', component: tabBody, load: loadA },
+    { id: 'b', title: 'B', component: tabBody, load: loadB }
+  ]
+
+  const { rerender } = render(CmkSlideInTabbed, {
+    props: { open: true, tabs, header, reloadToken: 0 }
+  })
+  await screen.findByText('a-data')
+  await userEvent.click(screen.getByRole('tab', { name: 'B' }))
+  await screen.findByText('b-data')
+  expect(loadA).toHaveBeenCalledTimes(1)
+
+  // B is the one on screen when the token bumps: only B reloads right away.
+  await rerender({ open: true, tabs, header, reloadToken: 1 })
+  await screen.findByText('b-data')
+  expect(loadB).toHaveBeenCalledTimes(2)
+  expect(loadA).toHaveBeenCalledTimes(1)
+
+  // A's cache was dropped too, so switching back to it reloads it rather than showing the old
+  // data indefinitely.
+  await userEvent.click(screen.getByRole('tab', { name: 'A' }))
+  await screen.findByText('a-data')
+  expect(loadA).toHaveBeenCalledTimes(2)
+})
+
+test('ignores reloadToken while it is left unset', async () => {
+  const loadA = vi.fn().mockResolvedValue('a-data')
+  const tabs: SlideInTab[] = [{ id: 'a', title: 'A', component: tabBody, load: loadA }]
+
+  render(CmkSlideInTabbed, { props: { open: true, tabs, header } })
+
+  await screen.findByText('a-data')
+  expect(loadA).toHaveBeenCalledTimes(1)
 })

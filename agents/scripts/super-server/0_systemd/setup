@@ -70,7 +70,12 @@ _systemd_present() {
 }
 
 _systemd_version() {
-    systemctl --version | sed -n "s/systemd \\([0-9][0-9]*\\).*/\\1/p"
+    version="$(systemctl --version | sed -n "s/systemd \\([0-9][0-9]*\\).*/\\1/p")"
+    # Assume some arbitrary recent enough version if we can't parse the output.
+    # This can happen e.g. in our testing containers where systemctl is
+    # sometimes acutally a symlink to /bin/true, but various tests expect a
+    # systemd nevertheless.
+    printf "%s" "${version:-255}"
 }
 
 _need_ip_access_list() {

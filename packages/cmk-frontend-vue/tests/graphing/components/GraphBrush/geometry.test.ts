@@ -10,6 +10,7 @@ import {
   hitTestMode,
   pxToTime,
   recenter,
+  resizeHandleRects,
   resizeLeft,
   resizeRight,
   timeToPx
@@ -17,6 +18,7 @@ import {
 
 const domain = { start: 0, end: 1000 }
 const track = { left: 0, width: 100 } // 10s per px
+const handleWidth = 8
 
 describe('timeToPx', () => {
   test('maps a domain value linearly onto the track', () => {
@@ -50,36 +52,36 @@ describe('pxToTime', () => {
 describe('hitTestMode', () => {
   const windowLeftPx = 40
   const windowRightPx = 60
-  const handlePx = 5
+  const resizeHandles = resizeHandleRects(windowLeftPx, windowRightPx, handleWidth)
 
-  test('a point within the handle band of the left edge resizes from the left', () => {
-    const px = 41
+  test('a point on the left handle resizes from the left', () => {
+    const onLeftHandle = resizeHandles.leftX + resizeHandles.width / 2
 
-    const mode = hitTestMode(px, windowLeftPx, windowRightPx, handlePx)
+    const mode = hitTestMode(onLeftHandle, windowLeftPx, windowRightPx, resizeHandles)
 
     expect(mode).toBe('resize-l')
   })
 
-  test('a point within the handle band of the right edge resizes from the right', () => {
-    const px = 59
+  test('a point on the right handle resizes from the right', () => {
+    const onRightHandle = resizeHandles.rightX + resizeHandles.width / 2
 
-    const mode = hitTestMode(px, windowLeftPx, windowRightPx, handlePx)
+    const mode = hitTestMode(onRightHandle, windowLeftPx, windowRightPx, resizeHandles)
 
     expect(mode).toBe('resize-r')
   })
 
   test('a point inside the window moves it', () => {
-    const px = 50
+    const insideWindow = (windowLeftPx + windowRightPx) / 2
 
-    const mode = hitTestMode(px, windowLeftPx, windowRightPx, handlePx)
+    const mode = hitTestMode(insideWindow, windowLeftPx, windowRightPx, resizeHandles)
 
     expect(mode).toBe('move')
   })
 
-  test('a point outside the window recenters it', () => {
-    const px = 10
+  test('a point clear of the window and its handles recenters it', () => {
+    const beforeLeftHandle = resizeHandles.leftX - 1
 
-    const mode = hitTestMode(px, windowLeftPx, windowRightPx, handlePx)
+    const mode = hitTestMode(beforeLeftHandle, windowLeftPx, windowRightPx, resizeHandles)
 
     expect(mode).toBe('recenter')
   })

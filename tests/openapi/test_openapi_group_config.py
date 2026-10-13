@@ -5,12 +5,11 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import json
 import random
 import string
+from http import HTTPStatus
 from typing import Any
 
 import pytest
@@ -19,8 +18,8 @@ from pytest import FixtureRequest
 from cmk.ccc import version
 from cmk.gui.openapi.endpoints.contact_group_config.common import APIInventoryPaths
 from cmk.utils import paths
-from tests.testlib.gui.web_test_app import WebTestAppForCMK
-from tests.testlib.rest_api_client import ClientRegistry, GroupConfig
+from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.unit.rest_api_client import ClientRegistry, GroupConfig
 
 ESCAPED_GROUP_NAME_PATTERN = "^(?!\\\\.\\\\.$|\\\\.$)[-a-zA-Z0-9_\\\\.]*\\\\Z"
 _is_managed_edition = version.edition(paths.omd_root) is version.Edition.ULTIMATEMT
@@ -45,7 +44,9 @@ def fixture_group_client(clients: ClientRegistry, group_type: str) -> GroupConfi
 
 
 def test_required_alias_field_create(group_client: GroupConfig) -> None:
-    group_client.create(name="RandleMcMurphy", alias="", expect_ok=False).assert_status_code(400)
+    group_client.create(name="RandleMcMurphy", alias="", expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
 
 
 @pytest.mark.parametrize("group_type", ["host", "contact", "service"])
@@ -59,7 +60,7 @@ def test_openapi_groups(
         "post",
         base + f"/domain-types/{group_type}_group_config/collections/all",
         params=json.dumps(_group_params("Invalid%&name", "Invalid")),
-        status=400,
+        status=HTTPStatus.BAD_REQUEST,
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
@@ -74,7 +75,7 @@ def test_openapi_groups(
         "post",
         base + f"/domain-types/{group_type}_group_config/collections/all",
         params=json.dumps(group),
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
@@ -82,14 +83,14 @@ def test_openapi_groups(
     _ = aut_user_auth_wsgi_app.call_method(
         "get",
         base + f"/domain-types/{group_type}_group_config/collections/all",
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
     )
 
     resp = aut_user_auth_wsgi_app.follow_link(
         resp,
         "self",
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
     )
 
@@ -99,8 +100,8 @@ def test_openapi_groups(
         resp,
         ".../update",
         params=json.dumps(update_group),
-        headers={"If-Match": "foo bar", "Accept": "application/json"},
-        status=412,
+        headers={"If-Match": '"foo bar"', "Accept": "application/json"},
+        status=HTTPStatus.PRECONDITION_FAILED,
         content_type="application/json",
     )
 
@@ -109,7 +110,7 @@ def test_openapi_groups(
         ".../update",
         params=json.dumps(update_group),
         headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
         content_type="application/json",
     )
 
@@ -117,7 +118,7 @@ def test_openapi_groups(
     aut_user_auth_wsgi_app.follow_link(
         resp,
         ".../delete",
-        status=204,
+        status=HTTPStatus.NO_CONTENT,
         headers={"Accept": "application/json"},
         content_type="application/json",
     )
@@ -137,7 +138,7 @@ def test_openapi_bulk_groups(
         base + f"/domain-types/{group_type}_group_config/actions/bulk-create/invoke",
         params=json.dumps({"entries": groups}),
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
         content_type="application/json",
     )
     assert len(resp.json["value"]) == 2
@@ -145,7 +146,7 @@ def test_openapi_bulk_groups(
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + f"/objects/{group_type}_group_config/{groups[0]['name']}",
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
     )
     if _is_managed_edition:
@@ -156,7 +157,7 @@ def test_openapi_bulk_groups(
         base + f"/domain-types/{group_type}_group_config/actions/bulk-create/invoke",
         params=json.dumps({"entries": groups}),
         headers={"Accept": "application/json"},
-        status=400,
+        status=HTTPStatus.BAD_REQUEST,
         content_type="application/json",
     )
 
@@ -176,14 +177,14 @@ def test_openapi_bulk_groups(
         base + f"/domain-types/{group_type}_group_config/actions/bulk-update/invoke",
         params=json.dumps({"entries": update_groups}),
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
         content_type="application/json",
     )
 
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + f"/objects/{group_type}_group_config/{groups[0]['name']}",
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
     )
     if _is_managed_edition:
@@ -204,7 +205,7 @@ def test_openapi_bulk_groups(
         base + f"/domain-types/{group_type}_group_config/actions/bulk-update/invoke",
         params=json.dumps({"entries": partial_update_groups}),
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
         content_type="application/json",
     )
 
@@ -212,7 +213,7 @@ def test_openapi_bulk_groups(
         "get",
         base + f"/objects/{group_type}_group_config/{groups[0]['name']}",
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
     )
     if _is_managed_edition:
         assert resp.json_body["extensions"]["customer"] == "global"
@@ -223,7 +224,7 @@ def test_openapi_bulk_groups(
         base + f"/domain-types/{group_type}_group_config/actions/bulk-delete/invoke",
         params=json.dumps({"entries": [group["name"] for group in groups]}),
         headers={"Accept": "application/json"},
-        status=204,
+        status=HTTPStatus.NO_CONTENT,
         content_type="application/json",
     )
 
@@ -243,7 +244,7 @@ def test_openapi_group_values_are_links(group_client: GroupConfig, group_type: s
     assert response.json["value"][0]["links"][0]["domainType"] == "link"
 
 
-def _random_string(size):
+def _random_string(size: int) -> str:
     return "".join(random.choice(string.ascii_letters + string.digits) for _ in range(size))
 
 
@@ -256,7 +257,7 @@ def test_delete_non_existing_group_types(
     aut_user_auth_wsgi_app.delete(
         base + f"/objects/{group_type}_group_config/I_dont_exist",
         headers={"Accept": "application/json"},
-        status=404,
+        status=HTTPStatus.NOT_FOUND,
         content_type="application/json",
     )
 
@@ -274,7 +275,7 @@ def test_bulk_delete_non_existing_group_types(
         base + f"/domain-types/{group_type}_group_config/actions/bulk-delete/invoke",
         params=json.dumps({"entries": [group["name"] for group in groups]}),
         headers={"Accept": "application/json"},
-        status=404,
+        status=HTTPStatus.NOT_FOUND,
         content_type="application/json",
     )
 
@@ -293,7 +294,7 @@ def test_openapi_bulk_group_schema(
         base + f"/domain-types/{group_type}_group_config/actions/bulk-create/invoke",
         params=json.dumps({"entries": groups}),
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
         content_type="application/json",
     )
     assert set(resp.json["value"][0]) == {
@@ -310,7 +311,7 @@ def test_openapi_bulk_group_schema(
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + f"/domain-types/{group_type}_group_config/collections/all",
-        status=200,
+        status=HTTPStatus.OK,
         headers={"Accept": "application/json"},
     )
     assert set(resp.json["value"][0]) == {
@@ -339,7 +340,7 @@ def test_openapi_bulk_group_schema(
         base + f"/domain-types/{group_type}_group_config/actions/bulk-update/invoke",
         params=json.dumps({"entries": updated_groups}),
         headers={"Accept": "application/json"},
-        status=200,
+        status=HTTPStatus.OK,
         content_type="application/json",
     )
 
@@ -374,7 +375,7 @@ def test_host_group_id_with_newline(
     group_id: str,
 ) -> None:
     resp = clients.HostGroup.create(name=group_id, alias="not_important", expect_ok=False)
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert "does not match pattern" in resp.json["fields"]["body.name"]["msg"]
 
 
@@ -384,7 +385,7 @@ def test_contact_group_id_with_newline(
     group_id: str,
 ) -> None:
     resp = clients.ContactGroup.create(name=group_id, alias="not_important", expect_ok=False)
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert (
         resp.json["fields"]["name"][0]
         == f"{group_id!r} does not match pattern '{ESCAPED_GROUP_NAME_PATTERN}'."
@@ -397,7 +398,7 @@ def test_service_group_id_with_newline(
     group_id: str,
 ) -> None:
     resp = clients.ServiceGroup.create(name=group_id, alias="not_important", expect_ok=False)
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert (
         resp.json["fields"]["name"][0]
         == f"{group_id!r} does not match pattern '{ESCAPED_GROUP_NAME_PATTERN}'."
@@ -414,7 +415,7 @@ def test_group_attributes_required(
         groups=({"name": group_name},),
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     if group_type == "host":
         # migrated to the versioned endpoint framework, which uses pydantic error responses
         assert resp.json["fields"]["body.entries.0.attributes"]["type"] == "missing"
@@ -448,29 +449,29 @@ def test_contact_group_dot_names(
         name="..", alias="not_important", expect_ok=False
     )
 
-    assert contact_group_dot_response.status_code == 400
+    assert contact_group_dot_response.status_code == HTTPStatus.BAD_REQUEST
     assert "name" in contact_group_dot_response.json["fields"]
     assert "name" in contact_group_dot_response.json["detail"]
 
-    assert contact_group_double_dot_response.status_code == 400
+    assert contact_group_double_dot_response.status_code == HTTPStatus.BAD_REQUEST
     assert "name" in contact_group_double_dot_response.json["fields"]
     assert "name" in contact_group_double_dot_response.json["detail"]
 
     # host groups are migrated to the versioned endpoint framework, which uses pydantic
     # error responses with "body." prefixed field names
-    assert host_group_dot_response.status_code == 400
+    assert host_group_dot_response.status_code == HTTPStatus.BAD_REQUEST
     assert "body.name" in host_group_dot_response.json["fields"]
     assert "name" in host_group_dot_response.json["detail"]
 
-    assert host_group_double_dot_response.status_code == 400
+    assert host_group_double_dot_response.status_code == HTTPStatus.BAD_REQUEST
     assert "body.name" in host_group_double_dot_response.json["fields"]
     assert "name" in host_group_double_dot_response.json["detail"]
 
-    assert service_group_dot_response.status_code == 400
+    assert service_group_dot_response.status_code == HTTPStatus.BAD_REQUEST
     assert "name" in service_group_dot_response.json["fields"]
     assert "name" in service_group_dot_response.json["detail"]
 
-    assert service_group_double_dot_response.status_code == 400
+    assert service_group_double_dot_response.status_code == HTTPStatus.BAD_REQUEST
     assert "name" in service_group_double_dot_response.json["fields"]
     assert "name" in service_group_double_dot_response.json["detail"]
 

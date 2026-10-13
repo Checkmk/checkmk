@@ -16,7 +16,7 @@ import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import useId from 'cmk-ui-library/lib/useId'
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 
 import { type Domain, type FormulaDraft, type GraphItem, type ItemId, isFormula } from '../../types'
 import { type RefVisibility, useCalculationEditor } from '../composables/useCalculationEditor'
@@ -30,7 +30,9 @@ import TransformationEditor from './TransformationEditor.vue'
 
 const { _t } = usei18n()
 
-const { items, nextId, nextColor } = defineProps<{
+const { editing, items, nextId, nextColor } = defineProps<{
+  /** Calculation to load into the form; null starts a fresh form. */
+  editing: ItemId | null
   items: readonly GraphItem[]
   /** Id the next added item will get. */
   nextId: ItemId
@@ -57,9 +59,8 @@ const {
   hideSourceMetrics,
   formula,
   transformation,
-  canCommit,
   successAlert,
-  isItemDisabled,
+  itemBlockReason,
   switchMode,
   startEdit,
   insertRef,
@@ -85,7 +86,7 @@ const {
 
 const modeOptions: ToggleButtonOption[] = [
   { label: _t('Operations'), value: 'operations' },
-  { label: _t('Transformation'), value: 'transformation' }
+  { label: _t('Percentile'), value: 'transformation' }
 ]
 
 const calculateLabelVariants = [_t('Calculate & add'), _t('Calculate & update')]
@@ -112,9 +113,14 @@ const alert = computed<SectionAlert | null>(() => {
 })
 
 const formulaEditorRef = ref<InstanceType<typeof FormulaEditor> | null>(null)
+const transformationEditorRef = ref<InstanceType<typeof TransformationEditor> | null>(null)
 
-function focus(): void {
-  formulaEditorRef.value?.focus()
+function focus(options?: FocusOptions): void {
+  if (mode.value === 'operations') {
+    formulaEditorRef.value?.focus(options)
+  } else {
+    transformationEditorRef.value?.focus(options)
+  }
 }
 defineExpose({ focus })
 
@@ -157,6 +163,16 @@ function onEdit(id: ItemId): void {
     void nextTick(focus)
   }
 }
+
+watch(
+  () => editing,
+  (id) => {
+    if (id !== null) {
+      onEdit(id)
+    }
+  },
+  { immediate: true }
+)
 
 function itemActionLabel(id: ItemId): TranslatedString {
   return mode.value === 'operations'
@@ -203,6 +219,7 @@ function itemActionLabel(id: ItemId): TranslatedString {
       />
       <TransformationEditor
         v-else
+        ref="transformationEditorRef"
         v-model:selected-id="selectedId"
         v-model:percentile="percentile"
         class="graphing-rrd-tab__editor"
@@ -210,12 +227,7 @@ function itemActionLabel(id: ItemId): TranslatedString {
         :percentile-options="percentileOptions"
         :errors="transformationErrors"
       />
-      <CmkButton
-        variant="optional"
-        class="graphing-rrd-tab__calculate"
-        :disabled="!canCommit"
-        @click="onCalculate"
-      >
+      <CmkButton variant="optional" class="graphing-rrd-tab__calculate" @click="onCalculate">
         <CmkGhostWidth :variants="calculateLabelVariants">
           <span class="graphing-rrd-tab__calculate-label">{{ calculateLabel }}</span>
         </CmkGhostWidth>
@@ -248,7 +260,7 @@ function itemActionLabel(id: ItemId): TranslatedString {
           :items="items"
           :domain="DOMAIN"
           :action-label="itemActionLabel"
-          :is-item-disabled="isItemDisabled"
+          :item-block-reason="itemBlockReason"
           :alert="alert"
           @insert-id="onInsertId"
           @edit="onEdit"
@@ -264,12 +276,6 @@ function itemActionLabel(id: ItemId): TranslatedString {
 .graphing-rrd-tab {
   display: flex;
   flex-direction: column;
-
-  --graphing-rrd-tab-separator: var(--color-mid-grey-10);
-}
-
-body[data-theme='modern-dark'] .graphing-rrd-tab {
-  --graphing-rrd-tab-separator: var(--color-mid-grey-90);
 }
 
 .graphing-rrd-tab__toggle {
@@ -343,7 +349,7 @@ body[data-theme='modern-dark'] .graphing-rrd-tab {
   flex-direction: column;
   gap: var(--dimension-4);
   padding: var(--dimension-5);
-  border-bottom: 1px solid var(--graphing-rrd-tab-separator);
+  border-bottom: 1px solid var(--border-color-subtle);
 }
 
 .graphing-rrd-tab__list {

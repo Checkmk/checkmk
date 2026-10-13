@@ -135,19 +135,20 @@ build_test(
 genrule(
     name = "test-runtime-dir",
     outs = [
-        "runtimes/plugins/packages/mk-oracle/.marker",
+        "runtimes/plugins/libexec/mk-oracle-v2/oic/.marker",
         # fake client libraries: runtime detection accepts a directory only
         # if it contains one
-        "runtimes/plugins/packages/mk-oracle/libclntsh.so",
-        "runtimes/plugins/packages/mk-oracle/oci.dll",
+        "runtimes/plugins/libexec/mk-oracle-v2/oic/libclntsh.so",
+        "runtimes/plugins/libexec/mk-oracle-v2/oic/oci.dll",
     ],
-    cmd = "mkdir -p $(RULEDIR)/runtimes/plugins/packages/mk-oracle && touch $(OUTS)",
+    cmd = "mkdir -p $(RULEDIR)/runtimes/plugins/libexec/mk-oracle-v2/oic && touch $(OUTS)",
 )
 
 rust_test(
     name = "mk-oracle-lib-test-internal",
     compile_data = [
         "tests/files/not-ora_sql.yml",
+        "tests/files/tns/tnsnames.ora",
         "tests/files/not-yaml.yml",
         "tests/files/test-config.yml",
         "tests/files/test-mini.yml",
@@ -181,14 +182,13 @@ rust_library(
 rust_test_suite(
     name = "mk-oracle-lib-test-external",
     srcs = [
-        "tests/test_mk_oracle_bin.rs",
         "tests/test_ora_discovery.rs",
         "tests/test_ora_no_db.rs",
         "tests/test_ora_with_db.rs",
     ],
     compile_data = [
-        "tests/files/tns/tnsnames.ora",
         "tests/files/not-ora_sql.yml",
+        "tests/files/tns/tnsnames.ora",
         "tests/files/not-yaml.yml",
         "tests/files/test-config.yml",
         "tests/files/test-mini.yml",
@@ -199,13 +199,10 @@ rust_test_suite(
     ]),
     crate_features = ["build_system_bazel"],
     data = [
-        "references/output-multiple.cfg",
-        "references/output-multiple.ps1",
-        "references/output-optional.cfg",
-        "references/output-optional.ps1",
-        "references/output-xe-no-tnsalias.cfg",
         "tests/files/mk_oracle_main.cfg",
-    ] + glob(["tests/files/mk_oracle.d/**"]),
+    ] + glob([
+        "tests/files/mk_oracle.d/**",
+    ]),
     env_inherit = [
         # CI_ORA2_DB_TEST: mandatory reference endpoint. CI_ORA1_DB_TEST:
         # optional second endpoint, included by the endpoint-iterating tests
@@ -227,6 +224,28 @@ rust_test_suite(
     ],
 )
 
+# Tests of the built binary (CLI, config migration): they need neither a
+# database nor an OCI client, so they are not tagged "component" and run
+# with the unit tests in CI.
+rust_test_suite(
+    name = "mk-oracle-bin-test",
+    srcs = ["tests/test_mk_oracle_bin.rs"],
+    crate_features = ["build_system_bazel"],
+    data = [
+        "references/output-multiple.cfg",
+        "references/output-multiple.ps1",
+        "references/output-optional.cfg",
+        "references/output-optional.ps1",
+        "references/output-xe-no-tnsalias.cfg",
+    ] + glob(["tests/files/migration_corpus/**"]),
+    deps = all_crate_deps() + [
+        ":mk-oracle",
+        ":mk-oracle-lib",
+        "@host_crates//:assert_cmd",
+        "@host_crates//:tempfile",
+    ],
+)
+
 rust_doc(
     name = "doc",
     crate = ":mk-oracle-lib",
@@ -240,6 +259,7 @@ rust_test(
     name = "mk-oracle-lib-test-internal-windows",
     compile_data = [
         "tests/files/not-ora_sql.yml",
+        "tests/files/tns/tnsnames.ora",
         "tests/files/not-yaml.yml",
         "tests/files/test-config.yml",
         "tests/files/test-mini.yml",
@@ -260,7 +280,6 @@ rust_wine_test(
 sh_library(
     name = "helpers",
     srcs = [
-        ".f12",
         "cargo_run",
         "db-endpoint.sh",
         "permissions-check-run",

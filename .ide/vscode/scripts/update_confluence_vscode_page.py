@@ -207,12 +207,12 @@ def _api_request(
 ) -> dict[str, object]:
     token = os.environ.get("CONFLUENCE_TOKEN", "")
     if not token:
-        print("ERROR: CONFLUENCE_TOKEN env var is required.", file=sys.stderr)  # noqa: T201
+        print("ERROR: CONFLUENCE_TOKEN env var is required.", file=sys.stderr)  # noqa: T201  # It's OK for scripts to print()
         sys.exit(1)
 
     url = f"{CONFLUENCE_URL.rstrip('/')}{path}"
     if not url.startswith("https://"):
-        print(f"ERROR: refusing non-HTTPS URL: {url}", file=sys.stderr)  # noqa: T201
+        print(f"ERROR: refusing non-HTTPS URL: {url}", file=sys.stderr)  # noqa: T201  # It's OK for scripts to print()
         sys.exit(1)
 
     headers = {
@@ -234,7 +234,7 @@ def _api_request(
             return parsed
     except HTTPError as exc:
         error_body = exc.read().decode()
-        print(f"ERROR: {exc.code} {exc.reason}\n{error_body}", file=sys.stderr)  # noqa: T201
+        print(f"ERROR: {exc.code} {exc.reason}\n{error_body}", file=sys.stderr)  # noqa: T201  # It's OK for scripts to print()
         sys.exit(1)
 
 
@@ -282,13 +282,13 @@ def main() -> None:
     xhtml = _md_to_confluence(md_content)
 
     if args.dry_run:
-        print(xhtml)  # noqa: T201
+        print(xhtml)  # noqa: T201  # It's OK for scripts to print()
         return
 
     version = _get_page_version(PAGE_ID)
     result = _update_page(PAGE_ID, PAGE_TITLE, xhtml, version)
     page_id = result["id"]
-    print(f"Page updated (v{version + 1}): {CONFLUENCE_URL}/pages/viewpage.action?pageId={page_id}")  # noqa: T201
+    print(f"Page updated (v{version + 1}): {CONFLUENCE_URL}/pages/viewpage.action?pageId={page_id}")  # noqa: T201  # It's OK for scripts to print()
 
 
 if __name__ == "__main__":

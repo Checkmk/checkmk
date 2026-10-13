@@ -60,13 +60,13 @@ def _unknown_rule_spec(value: object) -> RuleSpec[object]:
 def test_discovery_parameter_renames_picks_up_registered_rulespec(
     legacy_name: str, new_name: str
 ) -> None:
-    renames = rulesets_updater._discovery_parameter_renames()
+    renames = rulesets_updater._discovery_parameter_renames()  # noqa: SLF001
     assert renames[legacy_name] == new_name
 
 
 @pytest.mark.usefixtures("registered_discovery_rulespec")
 def test_discovery_parameter_renames_skips_unrelated_rulespecs() -> None:
-    renames = rulesets_updater._discovery_parameter_renames()
+    renames = rulesets_updater._discovery_parameter_renames()  # noqa: SLF001
     # All resulting keys must come from rulespecs with the discovery_parameters: prefix
     for old, new in renames.items():
         assert new.startswith(RuleGroup.DiscoveryParameters(""))
@@ -78,7 +78,7 @@ def test_transform_migrates_unknown_inventory_ruleset_to_discovery_parameters(
 ) -> None:
     all_rulesets = RulesetCollection({new_name: Ruleset(new_name, rulespec=discovery_rulespec)})
     folder = tree.root_folder()
-    all_rulesets._unknown_rulesets[folder.path()] = {
+    all_rulesets._unknown_rulesets[folder.path()] = {  # noqa: SLF001
         legacy_name: [_unknown_rule_spec({"mount": "/var"})],
     }
 
@@ -97,7 +97,7 @@ def test_transform_preserves_unrelated_unknown_rulesets(
 ) -> None:
     all_rulesets = RulesetCollection({new_name: Ruleset(new_name, rulespec=discovery_rulespec)})
     folder = tree.root_folder()
-    all_rulesets._unknown_rulesets[folder.path()] = {
+    all_rulesets._unknown_rulesets[folder.path()] = {  # noqa: SLF001
         legacy_name: [_unknown_rule_spec({"mount": "/var"})],
         "some_local_plugin_rules": [_unknown_rule_spec({"foo": 42})],
     }
@@ -116,7 +116,7 @@ def test_transform_is_idempotent_on_already_migrated_configs(
 ) -> None:
     all_rulesets = RulesetCollection({new_name: Ruleset(new_name, rulespec=discovery_rulespec)})
     folder = tree.root_folder()
-    all_rulesets._unknown_rulesets[folder.path()] = {
+    all_rulesets._unknown_rulesets[folder.path()] = {  # noqa: SLF001
         legacy_name: [_unknown_rule_spec({"mount": "/var"})],
     }
 

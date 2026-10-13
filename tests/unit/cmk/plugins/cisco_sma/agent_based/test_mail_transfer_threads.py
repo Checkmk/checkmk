@@ -3,17 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.cisco_sma.agent_based.mail_transfer_threads import (
     _check_mail_transfer_threads,
-    _discover_mail_transfer_threads,
     _parse_mail_transfer_threads,
     Params,
 )
-
-
-def test_discover_mail_transfer_threads() -> None:
-    assert list(_discover_mail_transfer_threads(12)) == [Service()]
 
 
 def test_check_transfer_memory_with_no_levels() -> None:

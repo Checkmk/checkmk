@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.helper_interface import HostKey, SourceType
@@ -19,7 +18,7 @@ def parse(raw: TRAW) -> dict[SectionName, list[list[str]]]:
 
 
 class TestGroupByHost:
-    def test_nothing_noop(self):
+    def test_nothing_noop(self) -> None:
         RAW: TRAW = []
 
         host_sections = HS(parse(RAW))
@@ -27,7 +26,7 @@ class TestGroupByHost:
 
         assert group_by_host([(host_key, host_sections)]) == {host_key: HS({})}
 
-    def test_sections_noop(self):
+    def test_sections_noop(self) -> None:
         RAW = [
             ("section0", "first line\nsectond line"),
             ("section1", "third line\nforth line"),
@@ -38,7 +37,7 @@ class TestGroupByHost:
 
         assert group_by_host([(host_key, host_sections)]) == {host_key: HS(parse(RAW))}
 
-    def test_sections_merge_sources(self):
+    def test_sections_merge_sources(self) -> None:
         RAW_1 = [
             ("section0", "first line\nsectond line"),
             ("section1", "third line\nforth line"),
@@ -59,7 +58,7 @@ class TestGroupByHost:
         assert host_sections_1 == HS(parse(RAW_1))
         assert host_sections_2 == HS(parse(RAW_2))
 
-    def test_piggybacked_raw_noop(self):
+    def test_piggybacked_raw_noop(self) -> None:
         RAW: TRAW = []
         PB = {HostName("piggybacked"): [b"aaa", b"bbb", b"ccc"]}
 
@@ -70,7 +69,7 @@ class TestGroupByHost:
             host_key: HS(parse(RAW), piggybacked_raw_data=PB)
         }
 
-    def test_piggybacked_raw_merge_sources(self):
+    def test_piggybacked_raw_merge_sources(self) -> None:
         host_name = HostName("piggybacked")
         RAW_1: TRAW = []
         PB_1 = [b"aaa", b"bbb", b"ccc"]
@@ -86,7 +85,7 @@ class TestGroupByHost:
             host_key: HS(parse(RAW_1 + RAW_2), piggybacked_raw_data={host_name: PB_1 + PB_2})
         }
 
-    def test_cache_info_noop(self):
+    def test_cache_info_noop(self) -> None:
         RAW: TRAW = []
         CACHE_INFO = {SectionName("aaa"): (1, 2)}
 
@@ -97,7 +96,7 @@ class TestGroupByHost:
             host_key: HS(parse(RAW), cache_info=CACHE_INFO)
         }
 
-    def test_cache_info_last_overwrites_previous_values(self):
+    def test_cache_info_last_overwrites_previous_values(self) -> None:
         section = SectionName("aaa")
         RAW_1: TRAW = []
         CACHE_INFO_1 = {section: (1, 2)}

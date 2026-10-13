@@ -55,6 +55,14 @@ from cmk.diagnostics.internal import redact_passwords_in_content, REDACT_STRING
 
             """,
         ),
+        (
+            3,
+            "conf.d/wato/hosts.mk",
+            """management_snmp_credentials = locals().setdefault('management_snmp_credentials', {})
+management_snmp_credentials.update({'host1': ('authPriv', 'md5', 'username', TESTPW, 'DES', TESTPW), 'host2': TESTPW})
+
+            """,
+        ),
         (1, "mkeventd.d/wato/global.mk", "{'credentials': TESTPW, 'description': ''},"),
         (
             1,
@@ -67,6 +75,11 @@ from cmk.diagnostics.internal import redact_passwords_in_content, REDACT_STRING
             """snmp_communities = [
 {'id': 'e29b75bf-30eb-4e67-baf9-a8a976e11c04', 'value': TESTPW, 'condition': {}, 'options': {'disabled': False}},
 ] + snmp_communities""",
+        ),
+        (
+            1,
+            "network_flow.conf",
+            "-F=clickhouse;127.0.0.1@9000,9004;ntopng;network_flow;TESTPW",
         ),
         (
             1,

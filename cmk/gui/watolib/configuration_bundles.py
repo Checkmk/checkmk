@@ -24,11 +24,13 @@ from cmk.gui.watolib import check_mk_automations
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle, ConfigBundleStore
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, Host
+from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.passwords import load_passwords, remove_password, save_password
 from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Rule, SingleRulesetRecursively
 from cmk.ruleset_matcher.definition import RuleGroupType
 from cmk.ruleset_matcher.matcher import RuleSpec
+from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_DCD, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.password_store import PasswordConfig
 
@@ -86,7 +88,10 @@ def _get_affected_entities(bundle_group: str | None) -> set[Entity]:
             if DCDConnectionHook.domain_definition is not None:
                 entities.add("dcd")
             return entities
-        rule_group_type = RuleGroupType(group_prefix)
+        try:
+            rule_group_type = RuleGroupType(group_prefix)
+        except ValueError:
+            return ALL_ENTITIES
         bundle_domain = bundle_domains().get(rule_group_type, None)
     return {domain.entity for domain in bundle_domain} if bundle_domain else ALL_ENTITIES
 
@@ -172,9 +177,15 @@ class BundleReferences:
     otel_configs: Sequence[tuple[str, OTelCollectorConfigSpec]] | None = None
 
 
-def valid_special_agent_bundle(bundle: BundleReferences) -> bool:
+def valid_special_agent_bundle(bundle: BundleReferences, *, allow_push_agent: bool = False) -> bool:
     host_conditions = bundle.hosts is not None and len(bundle.hosts) == 1
     rule_conditions = bundle.rules is not None and len(bundle.rules) == 1
+    if allow_push_agent and not bundle.rules and bundle.hosts and host_conditions:
+        attributes = bundle.hosts[0].effective_attributes()
+        rule_conditions = (
+            attributes.get("cmk_agent_connection") == HostAgentConnectionMode.PUSH.value
+            and attributes.get("tag_agent") == "cmk-agent"
+        )
     password_conditions = bundle.passwords is None or len(bundle.passwords) == 1
     return host_conditions and rule_conditions and password_conditions
 
@@ -185,13 +196,14 @@ def identify_bundle_references(
     bundle_ids: set[BundleId],
     *,
     acting_user: LoggedInUser,
+    program_id: str,
     rulespecs_hint: set[str] | None = None,
 ) -> Mapping[BundleId, BundleReferences]:
     """Identify the configuration references of the configuration bundles.
 
     NOTE: This may not return all references, as individual entities may not be accessible by the
     current user. (Like passwords)"""
-    bundle_id_finder = _prepare_id_finder(PROGRAM_ID_QUICK_SETUP, bundle_ids)
+    bundle_id_finder = _prepare_id_finder(program_id, bundle_ids)
     affected_entities = _get_affected_entities(bundle_group)
 
     bundle_rule_ids = (
@@ -251,11 +263,14 @@ def identify_single_bundle_references(
     bundle_group: str | None = None,
     *,
     acting_user: LoggedInUser,
+    program_id: str,
 ) -> BundleReferences:
     """Get references for a single bundle.
     If the bundle group is unknown, the bundle will be loaded first."""
     group = bundle_group or read_config_bundle(bundle_id)["group"]
-    references = identify_bundle_references(tree, group, {bundle_id}, acting_user=acting_user)
+    references = identify_bundle_references(
+        tree, group, {bundle_id}, acting_user=acting_user, program_id=program_id
+    )
     return references[bundle_id]
 
 
@@ -295,7 +310,8 @@ def _validate_and_prepare_create_calls(
             _prepare_create_passwords(
                 bundle_ident,
                 entities.passwords,
-                load_passwords(acting_user),
+                # Including the passwords the user may not use, see password_id_in_use()
+                PasswordStore().load_for_reading(),
                 acting_user=acting_user,
                 pprint_value=pprint_value,
                 pending_changes=pending_changes,
@@ -437,7 +453,11 @@ def delete_config_bundle(
         raise MKGeneralException(f'Configuration bundle "{bundle_id}" does not exist.')
 
     references = identify_bundle_references(
-        tree, bundle["group"], {bundle_id}, acting_user=acting_user
+        tree,
+        bundle["group"],
+        {bundle_id},
+        acting_user=acting_user,
+        program_id=bundle["program_id"],
     )[bundle_id]
     # First check permissions for all the needed deletions
     _user_may_delete_config_bundle_objects(

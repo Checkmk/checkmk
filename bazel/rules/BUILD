@@ -1,5 +1,46 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
+
 # The shared runner behind rust_wine_test() (xcomp/rust_wine_test.bzl).
 exports_files(["xcomp/rust-test-wine.sh"])
+
+js_library(
+    name = "vitest_runner",
+    srcs = ["vitest_runner.mjs"],
+    visibility = ["//visibility:public"],
+    deps = ["//:node_modules/vitest"],
+)
+
+# The tool invoked by sign_package.bzl's signing action.
+exports_files(
+    ["sign_package.sh"],
+    visibility = ["//bazel/rules/sign_package_tests:__pkg__"],
+)
+
+# Absolute host paths consumed only by sign_package's own action - never by
+# any other target, and never through --action_env. See sign_package.md.
+string_flag(
+    name = "signing_key_file",
+    build_setting_default = "",
+    visibility = ["//visibility:public"],
+)
+
+string_flag(
+    name = "signing_key_passphrase_file",
+    build_setting_default = "",
+    visibility = ["//visibility:public"],
+)
+
+# Used by sign_package() to mark its targets incompatible until a key is
+# configured (see sign_package.bzl/.md), and by
+# //:agent_package_signing_effectively_disabled to fall back to the unsigned
+# agent .rpm.
+config_setting(
+    name = "signing_key_file_unset",
+    flag_values = {":signing_key_file": ""},
+    visibility = ["//visibility:public"],
+)
 
 py_library(
     name = "runpath_patch",
@@ -27,12 +68,14 @@ py_binary(
     visibility = ["//visibility:public"],
 )
 
-py_test(
-    # uses `unittest` to avoid overhead.
-    name = "console_scripts_gen_test",
+py_cmk_test(
+    name = "unit",
     size = "small",
-    srcs = ["console_scripts_gen_test.py"],
+    srcs = ["console_scripts_gen_test.py"] + glob(["tests/*.py"]),
     imports = ["."],
-    main = "console_scripts_gen_test.py",
-    deps = [":console_scripts_gen"],
+    deps = [
+        ":console_scripts_gen",
+        ":set_runpath_tree",
+        ":set_runpath_whl",
+    ],
 )

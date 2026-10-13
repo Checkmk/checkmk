@@ -34,5 +34,5 @@ def cisco_sensor_item(description: str, sensor_id: str) -> str:
             item += " " + sensor_id
 
         return item.replace("#", " ")
-    except (IndexError, TypeError):
+    except IndexError, TypeError:
         return sensor_id

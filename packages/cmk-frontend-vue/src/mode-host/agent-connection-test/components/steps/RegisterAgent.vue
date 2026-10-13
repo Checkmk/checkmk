@@ -4,31 +4,41 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkCode from 'cmk-ui-library/components/CmkCode.vue'
 import CmkCollapsible from 'cmk-ui-library/components/CmkCollapsible'
 import CmkCollapsibleTitle from 'cmk-ui-library/components/CmkCollapsible/CmkCollapsibleTitle.vue'
 import CmkIndent from 'cmk-ui-library/components/CmkIndent.vue'
-import CmkToggleButtonGroup from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
+import CmkLinkCard from 'cmk-ui-library/components/CmkLinkCard'
 import { CmkWizardButton } from 'cmk-ui-library/components/CmkWizard'
 import CmkWizardStep from 'cmk-ui-library/components/CmkWizard/CmkWizardStep.vue'
-import { getWizardContext } from 'cmk-ui-library/components/CmkWizard/utils.ts'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
-import type { AgentSlideOutTabs } from '../../lib/type_def'
+import {
+  type HostMacros,
+  type TokenValue,
+  isResolved,
+  renderBlocks,
+  requiresToken,
+  substituteMacros
+} from '../../lib/commandTemplate'
+import type { CommandBlock, CommandChoice, RegisterSpec } from '../../lib/types'
+import CommandBlockList from '../CommandBlockList.vue'
 import GenerateToken from '../GenerateToken.vue'
-
-const { _t } = usei18n()
+import ShellToggle from '../ShellToggle.vue'
 
 const props = defineProps<{
   index: number
   isCompleted: () => boolean
-  tab: AgentSlideOutTabs
-  isPushMode: boolean
+  isActive: boolean
+  spec: RegisterSpec
+  macros: HostMacros
+  /** True when no step follows, so this step finishes the wizard. */
+  isLastStep: boolean
   closeButtonTitle: TranslatedString
   hostName: string
   siteId: string
@@ -36,83 +46,157 @@ const props = defineProps<{
   agentReceiverPortIsDefault: boolean
 }>()
 
-const selectedVariantId = defineModel<string>('selectedVariantId', { default: '' })
-const emit = defineEmits(['close'])
-const context = getWizardContext()
-const ott = ref<string | null | Error>(null)
+const shellId = defineModel<string>('shellId', { default: '' })
+const emit = defineEmits<{ close: [] }>()
+
+const { _t } = usei18n()
+
+const ott = ref<TokenValue>(null)
 const collapsibleOpen = ref<boolean>(false)
 
-const activeRegistrationCmd = computed<string | undefined>(() => {
-  const variants = props.tab.registrationCmdVariants
-  if (variants && variants.length > 0) {
-    return variants.find((v) => v.id === selectedVariantId.value)?.cmd ?? variants[0]!.cmd
+/** Commands and resource names in the cluster hint, which are not translated. */
+const kubernetesCheck = {
+  listSecrets: 'kubectl get secrets -n checkmk-monitoring',
+  secret: 'cmk-signed-push-cert',
+  logs: 'kubectl logs -n checkmk-monitoring -l app.kubernetes.io/component=cluster-aggregator'
+}
+
+const variants = computed<CommandChoice[] | null>(() =>
+  props.spec.commands.kind === 'shell-variants' ? props.spec.commands.variants : null
+)
+
+const blocks = computed<CommandBlock[]>(() => {
+  if (props.spec.commands.kind === 'single') {
+    return [props.spec.commands.block]
   }
-  return props.tab.registrationCmd
+  const chosen = variants.value?.find((variant) => variant.id === shellId.value)
+  return (chosen ?? variants.value?.[0])?.blocks ?? []
 })
 
-const regAgentOttCmd = computed(() => {
-  const cmd = activeRegistrationCmd.value
-  if (!cmd) {
-    return ''
-  }
-  if (ott.value && !(ott.value instanceof Error)) {
-    return cmd.replace('--user agent_registration', `--ott 0:${ott.value}`)
-  }
-  return cmd
-})
+const rendered = computed(() => renderBlocks(blocks.value, 'registration', props.macros, ott.value))
 
+/** The same commands without a token, for the registration-user fallback. */
+const untokenised = computed(() => renderBlocks(blocks.value, 'registration', props.macros))
+
+const configCode = computed(() =>
+  props.spec.config === undefined
+    ? ''
+    : substituteMacros(props.spec.config.code.text, 'registration', props.macros)
+)
+
+/** Whether the token command can be shown as it stands. */
+const commandShown = computed(() => isResolved(rendered.value.tokenState))
+
+/**
+ * Registering with the agent_registration user is a legitimate way to finish
+ * this step, so a failed token must not lock the user in - only a token that
+ * has not been generated yet does.
+ */
+/** Whether the registration command needs a token at all. */
+const needsToken = computed(() =>
+  blocks.value.some((b) => requiresToken(b.command, 'registration'))
+)
+
+/**
+ * Latches once a generation attempt failed. Retrying puts the token back to
+ * `missing`, so without the latch the button would lock again while the
+ * fallback command is still on screen.
+ */
+const generationFailed = ref(false)
+
+const tokenFailedWarning = _t(
+  'The registration command is hidden until a token has been generated successfully. You can register with the agent_registration user instead - see "Troubleshooting registration issues" below.'
+)
+
+const waitingForToken = computed(
+  () => !generationFailed.value && rendered.value.tokenState === 'missing'
+)
+
+// A warning that points at the troubleshooting section is useless while that
+// section is folded away.
+watch(
+  () => rendered.value.tokenState,
+  (state) => {
+    if (state === 'failed') {
+      generationFailed.value = true
+      collapsibleOpen.value = true
+    }
+  }
+)
+
+/** Leaving the step backwards discards the attempt along with the token. */
 function reset() {
   ott.value = null
+  generationFailed.value = false
 }
 </script>
+
 <template>
   <CmkWizardStep :index="index" :is-completed="isCompleted">
     <template #header>
       <CmkHeading> {{ _t('Register agent') }}</CmkHeading>
     </template>
     <template #content>
-      <div v-if="context.isSelected(index)">
-        <div v-if="tab.registrationMsg && (tab.registrationCmd || tab.registrationCmdVariants)">
-          <div class="register-heading-row">
-            <CmkParagraph>
-              {{
-                _t(
-                  `Agent registration will establish trust between the Agent Controller
+      <div v-if="isActive">
+        <div class="register-heading-row">
+          <CmkParagraph>
+            {{
+              spec.intro ??
+              _t(
+                `Agent registration will establish trust between the Agent Controller
                     on the host and the Agent Receiver on the Checkmk server.`
-                )
-              }}
-            </CmkParagraph>
-          </div>
-
-          <GenerateToken
-            v-model="ott"
-            token-generation-endpoint-uri="domain-types/agent_registration_token/collections/all"
-            :expires-in-seconds="604800"
-            :token-generation-body="{
-              host: hostName,
-              comment: 'Agent registration token for agent slideout',
-              site_id: siteId
-            }"
-            :description="_t('This requires the generation of a registration token.')"
-          />
-          <template v-if="ott !== null">
-            <CmkToggleButtonGroup
-              v-if="tab.registrationCmdVariants && tab.registrationCmdVariants.length > 1"
-              v-model="selectedVariantId"
-              class="mh-register-agent__shell-toggle"
-              :options="tab.registrationCmdVariants.map((v) => ({ label: v.label, value: v.id }))"
-            />
-            <CmkParagraph>{{ tab.registrationMsg }}</CmkParagraph>
-            <CmkCode :code-text="regAgentOttCmd" class="code" width="fill" />
-            <CmkAlertBox v-if="agentReceiverPortIsDefault" variant="warning" size="small">
-              {{
-                _t(
-                  'The agent receiver port could not be determined from the remote site. The command uses the default port (8000). Adjust the --server port if your site uses a different agent receiver port.'
-                )
-              }}
-            </CmkAlertBox>
-          </template>
+              )
+            }}
+          </CmkParagraph>
         </div>
+
+        <template v-if="spec.config">
+          <CmkLinkCard
+            v-if="spec.config.doc"
+            :title="spec.config.doc.title"
+            :url="spec.config.doc.url"
+            :icon-name="spec.config.doc.icon"
+            :open-in-new-tab="true"
+          />
+          <CmkCode
+            v-bind="spec.config.code.title === undefined ? {} : { title: spec.config.code.title }"
+            :code-text="configCode"
+            class="code"
+            width="fill"
+          />
+        </template>
+
+        <GenerateToken
+          v-if="needsToken"
+          v-model="ott"
+          token-generation-endpoint-uri="domain-types/agent_registration_token/collections/all"
+          :expires-in-seconds="604800"
+          :token-generation-body="{
+            host: hostName,
+            comment: 'Agent registration token for agent slideout',
+            site_id: siteId
+          }"
+          :description="_t('This requires the generation of a registration token.')"
+        />
+        <CmkAlert
+          v-if="rendered.tokenState === 'failed'"
+          variant="warning"
+          :text="tokenFailedWarning"
+        />
+        <template v-if="commandShown">
+          <ShellToggle v-if="variants" v-model="shellId" :choices="variants" />
+          <CmkParagraph>{{ spec.msg }}</CmkParagraph>
+          <CommandBlockList :blocks="rendered.blocks" />
+          <CmkAlert
+            v-if="agentReceiverPortIsDefault"
+            variant="warning"
+            :text="
+              _t(
+                'The agent receiver port could not be determined from the remote site. The command uses the default port (8000). Adjust the --server port if your site uses a different agent receiver port.'
+              )
+            "
+          />
+        </template>
       </div>
       <div v-else>
         <CmkParagraph>
@@ -120,64 +204,90 @@ function reset() {
         </CmkParagraph>
       </div>
 
-      <CmkCollapsibleTitle
-        :open="collapsibleOpen"
-        :title="_t('Troubleshooting registration issues: Authenticate with the registration user')"
-        @toggle-open="collapsibleOpen = !collapsibleOpen"
-      />
-      <CmkCollapsible :open="collapsibleOpen">
-        <CmkIndent>
-          <CmkParagraph>
-            {{
-              _t(`Registration fails if the token cannot be authorized. In this case,
+      <template v-if="spec.troubleshooting === 'registration-user'">
+        <CmkCollapsibleTitle
+          :open="collapsibleOpen"
+          :title="
+            _t('Troubleshooting registration issues: Authenticate with the registration user')
+          "
+          @toggle-open="collapsibleOpen = !collapsibleOpen"
+        />
+        <CmkCollapsible :open="collapsibleOpen">
+          <CmkIndent>
+            <CmkParagraph>
+              {{
+                _t(`Registration fails if the token cannot be authorized. In this case,
               authenticate using the`)
-            }}
-            <b>{{ _t('agent_registration') }}</b>
-            {{ _t(`user instead of the token.`) }}
-          </CmkParagraph>
-          <br />
-          <CmkParagraph>
-            {{
-              _t(
-                `When you run the command in the terminal, you will be prompted for the password of the
+              }}
+              <b>{{ _t('agent_registration') }}</b>
+              {{ _t(`user instead of the token.`) }}
+            </CmkParagraph>
+            <br />
+            <CmkParagraph>
+              {{
+                _t(
+                  `When you run the command in the terminal, you will be prompted for the password of the
                 agent_registration user. Copy the 'Automation secret for machine accounts' from the `
-              )
-            }}
-            <a :href="userSettingsUrl" target="_blank"> {{ _t('agent_registration user') }}</a>
-            {{ _t(`and paste it into the terminal to continue the registration.`) }}
-          </CmkParagraph>
-          <CmkToggleButtonGroup
-            v-if="tab.registrationCmdVariants && tab.registrationCmdVariants.length > 1"
-            v-model="selectedVariantId"
-            class="mh-register-agent__shell-toggle"
-            :options="tab.registrationCmdVariants.map((v) => ({ label: v.label, value: v.id }))"
-          />
-          <CmkCode :code-text="activeRegistrationCmd ?? ''" class="code" width="fill" />
-        </CmkIndent>
-      </CmkCollapsible>
+                )
+              }}
+              <a :href="userSettingsUrl" target="_blank"> {{ _t('agent_registration user') }}</a>
+              {{ _t(`and paste it into the terminal to continue the registration.`) }}
+            </CmkParagraph>
+            <ShellToggle v-if="variants" v-model="shellId" :choices="variants" />
+            <CommandBlockList :blocks="untokenised.blocks" />
+          </CmkIndent>
+        </CmkCollapsible>
+      </template>
+      <template v-else-if="spec.troubleshooting === 'kubernetes-secret'">
+        <CmkCollapsibleTitle
+          :open="collapsibleOpen"
+          :title="
+            _t('Troubleshooting registration issues: Check whether the registration was successful')
+          "
+          @toggle-open="collapsibleOpen = !collapsibleOpen"
+        />
+        <CmkCollapsible :open="collapsibleOpen">
+          <CmkIndent>
+            <CmkParagraph>
+              {{ _t('To check if registration was successful, run') }}
+              <code>{{ kubernetesCheck.listSecrets }}</code>
+              {{ _t('and look for the existence of a secret named') }}
+              <code>{{ kubernetesCheck.secret }}</code
+              >.
+              {{ _t('If this secret does not exist, use') }}
+              <code>{{ kubernetesCheck.logs }}</code>
+              {{ _t('on the cluster-aggregator pod to check for any errors.') }}
+            </CmkParagraph>
+          </CmkIndent>
+        </CmkCollapsible>
+      </template>
     </template>
-    <template v-if="context.isSelected(index)" #actions>
+    <template v-if="isActive" #actions>
       <CmkWizardButton
-        v-if="!isPushMode"
+        v-if="isLastStep"
         type="finish"
         :override-label="closeButtonTitle"
-        :disabled="ott === null"
+        :disabled="waitingForToken"
         icon-name="connection-tests"
         @click="emit('close')"
       />
-      <CmkWizardButton v-else type="next" :disabled="ott === null" />
+      <CmkWizardButton v-else type="next" :disabled="waitingForToken" />
       <CmkWizardButton type="previous" @click="reset" />
     </template>
   </CmkWizardStep>
 </template>
 
 <style scoped>
-.mh-register-agent__panel {
-  max-width: 650px;
+/* stylelint-disable checkmk/vue-bem-naming-convention */
+.code {
+  margin: var(--dimension-5) 0 var(--dimension-7);
+  width: 100%;
 }
 
-.mh-register-agent__shell-toggle {
-  margin-top: var(--dimension-5);
-  margin-bottom: var(--dimension-5);
+.register-heading-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--dimension-4);
 }
 </style>

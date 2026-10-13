@@ -5,12 +5,13 @@
 
 
 import json
+from http import HTTPStatus
 
 import pytest
 import responses
 import time_machine
 
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.plugins.storeonce.special_agent.agent_storeonce4x import (
     agent_storeonce4x_main,
     parse_arguments,
@@ -74,14 +75,14 @@ def _register_rest_responses() -> None:
         responses.POST,
         f"https://{HOST}:{PORT}/pml/login/authenticate",
         json=TOKEN_JSON_FROM_STOREONCE,
-        status=200,
+        status=HTTPStatus.OK,
     )
     for path, payload in _REST_RESPONSES.items():
         responses.add(
             responses.GET,
             f"https://{HOST}:{PORT}{path}",
             json=payload,
-            status=200,
+            status=HTTPStatus.OK,
         )
 
 
@@ -105,13 +106,13 @@ def test_invalid_tokenfile() -> None:  # not sure what this meant to test. There
         responses.POST,
         f"https://{HOST}:{PORT}/pml/login/authenticate",
         json=TOKEN_JSON_FROM_STOREONCE,
-        status=200,
+        status=HTTPStatus.OK,
     )
 
     mysession = StoreOnceOauth2Session(HOST, PORT, "user", Secret("secret"), False)
 
-    assert mysession._json_token["expires_in"] == EXPIRES_IN
-    assert mysession._json_token["expires_in_abs"] == "1988-06-08 17:00:10.000000"
+    assert mysession._json_token["expires_in"] == EXPIRES_IN  # noqa: SLF001
+    assert mysession._json_token["expires_in_abs"] == "1988-06-08 17:00:10.000000"  # noqa: SLF001
 
 
 @time_machine.travel(NOW_SIMULATED, tick=False)
@@ -121,16 +122,18 @@ def test_REST_call() -> None:
         responses.POST,
         f"https://{HOST}:{PORT}/pml/login/authenticate",
         json=TOKEN_JSON_FROM_STOREONCE,
-        status=200,
+        status=HTTPStatus.OK,
     )
-    responses.add(responses.GET, f"https://{HOST}:{PORT}/rest/alerts/", json={}, status=200)
+    responses.add(
+        responses.GET, f"https://{HOST}:{PORT}/rest/alerts/", json={}, status=HTTPStatus.OK
+    )
     responses.add(
         responses.GET,
         f"https://{HOST}:{PORT}/api/v1/data-services/d2d-service/status",
         json={
             "random_answer": "foo-bar",
         },
-        status=200,
+        status=HTTPStatus.OK,
     )
     mysession = StoreOnceOauth2Session(HOST, PORT, "user", Secret("secret"), False)
     resp = mysession.get("/api/v1/data-services/d2d-service/status")

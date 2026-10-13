@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Consolidate tests which validate the interface between Checkmk and `proc`."""
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 def test_access_to_proc(site: Site) -> None:

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.user import UserId
@@ -50,7 +51,7 @@ def _check_and_update_new_alias(
             validate_new_alias(existing_userrole_copy.alias, userrole_edits.new_alias)
         except ValueError as e:
             raise RestAPIRequestGeneralException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Invalid alias",
                 detail=str(e),
             )
@@ -66,7 +67,7 @@ def _check_and_update_new_role_id(
             validate_new_roleid(existing_userrole_copy.name, userrole_edits.new_role_id)
         except ValueError as e:
             raise RestAPIRequestGeneralException(
-                status=400,
+                status=HTTPStatus.BAD_REQUEST,
                 title="Invalid role ID",
                 detail=str(e),
             )

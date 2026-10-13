@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.type_defs import Users, UserSpec
+from cmk.gui.utils.graph_refresh import GRAPH_REFRESH_INTERVALS_SECONDS
 
 from ._check_credentials import (
     check_credentials,
@@ -43,6 +44,7 @@ from ._connector import (
     UserConnectorRegistry,
 )
 from ._find_usage import find_timeperiod_usage_in_notification_rule
+from ._login_timeout import LoginTimeoutStore
 from ._need_to_change_pw import need_to_change_pw
 from ._on_failed_login import on_failed_login
 from ._roles import (
@@ -99,7 +101,6 @@ from .store import (
     write_contacts_and_users_file,
 )
 from .user_attributes import (
-    GRAPH_REFRESH_INTERVALS_SECONDS,
     show_mode_choices,
     validate_start_url,
 )
@@ -144,6 +145,7 @@ __all__ = [
     "is_two_factor_login_enabled",
     "is_valid_user_session",
     "load_connection_config",
+    "LoginTimeoutStore",
     "login_connections_of_other_customer",
     "load_contacts",
     "load_custom_attr",
@@ -182,7 +184,6 @@ __all__ = [
     "user_sync_default_config",
     "UserAttribute",
     "UserAttributeRegistry",
-    "UserConnectionConfig",
     "UserData",
     "UserSyncConfig",
     "UserRole",

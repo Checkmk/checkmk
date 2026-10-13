@@ -372,7 +372,11 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
             interfaces.CHECK_DEFAULT_PARAMETERS,
             SECTION,
             [
-                Result(state=State.OK, summary="[0]"),
+                Result(
+                    state=State.OK,
+                    summary="[0]",
+                    details="Index: 0\nDescription: Network IO\nAlias: Network IO",
+                ),
                 Result(state=State.OK, summary="(up)", details="Operational state: up"),
                 Result(state=State.OK, summary="Speed: unknown"),
                 Result(state=State.OK, summary="In: 646 B/s"),
@@ -395,7 +399,11 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                 subscription="some_hash",
             ),
             [
-                Result(state=State.OK, summary="[0]"),
+                Result(
+                    state=State.OK,
+                    summary="[0]",
+                    details="Index: 0\nDescription: Network IO\nAlias: Network IO",
+                ),
                 Result(state=State.OK, summary="(up)", details="Operational state: up"),
                 Result(state=State.OK, summary="Speed: unknown"),
             ],
@@ -403,11 +411,9 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_azure_vm_network_io(
-    params: Mapping[str, tuple[float, float]],
-    section: Resource,
-    expected_result: CheckResult,
-    empty_value_store: None,
+    params: Mapping[str, tuple[float, float]], section: Resource, expected_result: CheckResult
 ) -> None:
     assert list(check_azure_vm_network_io("Network IO", params, section)) == expected_result
 

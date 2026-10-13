@@ -13,40 +13,55 @@ import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTabl
 import ActionsCell, { type CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import type { CellLink } from '@/monitoring/shared/components/cell/BaseCell.vue'
 import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
+import IconCell from '@/monitoring/shared/components/cell/IconCell.vue'
 import LabelCell from '@/monitoring/shared/components/cell/LabelCell.vue'
-import ModesCell from '@/monitoring/shared/components/cell/ModesCell.vue'
 import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
-import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
+import { MODE_COLUMN_ID, MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
+import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
 import { toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/labels'
+import type { DisplayOptions } from '@/monitoring/shared/types'
 
 const props = withDefaults(
   defineProps<{
     row: HostEntry
     tableRow: Row<HostEntry>
-    // Always-visible inline buttons; their url may contain a {host} placeholder resolved per row.
+    // Inline buttons linking into Setup, shown on a host the user may open there; their url may
+    // contain a {host} placeholder resolved per row.
     rowActions?: CellAction[]
     // Lazy loader for the overflow menu entries of this host.
     loadActionMenu?: ((host: HostRef) => Promise<CellAction[]>) | undefined
+    displayOptions: DisplayOptions
   }>(),
   { rowActions: () => [], loadActionMenu: undefined }
 )
 
 const emit = defineEmits<{
-  (event: 'open', host: HostEntry): void
+  /** `revealRelations` asks the panel to open on the host's relations. */
+  (event: 'open', host: HostEntry, revealRelations?: boolean): void
   (event: 'command', payload: { id: string; target: HostRef }): void
 }>()
 
-const { _t } = usei18n()
+const { _t, _tn } = usei18n()
+
+const relationsLabel = computed(() => {
+  const count = props.row.num_relations ?? 0
+  return _tn(
+    'Show the 1 related host of %{host}',
+    'Show the %{count} related hosts of %{host}',
+    count,
+    { count: String(count), host: props.row.name }
+  )
+})
 
 const SERVICE_COUNT_MIN_WIDTH = 35
 
 const hostRef = computed<HostRef>(() => ({ site_id: props.row.site_id, name: props.row.name }))
 
 const actionButtons = computed<CellAction[]>(() =>
-  props.rowActions.map((action) => ({
+  (props.row.setup_access === true ? props.rowActions : []).map((action) => ({
     ...action,
     url: action.url?.replace('{host}', encodeURIComponent(props.row.name))
   }))
@@ -81,12 +96,14 @@ const contacts = computed(() => toNameItems(props.row.contacts ?? []))
 const contactGroups = computed(() => toNameItems(props.row.contact_groups ?? []))
 
 const lastCheck = computed(() =>
-  props.row.last_check === undefined ? undefined : formatTimestamp(props.row.last_check)
+  props.row.last_check === undefined
+    ? undefined
+    : formatDisplayTimestamp(props.row.last_check, props.displayOptions)
 )
 const lastStateChange = computed(() =>
   props.row.last_state_change === undefined
     ? undefined
-    : formatTimestamp(props.row.last_state_change)
+    : formatDisplayTimestamp(props.row.last_state_change, props.displayOptions)
 )
 </script>
 
@@ -98,8 +115,19 @@ const lastStateChange = computed(() =>
     :model-value="tableRow.getIsSelected()"
     @update:model-value="toggleSelected"
   />
-  <StateCell v-if="hasColumn('state')" column-id="state" :state="row.state" />
-  <ModesCell v-if="hasColumn('modes')" column-id="modes" :modes="row.modes ?? []" />
+  <StateCell
+    v-if="hasColumn('state')"
+    column-id="state"
+    :state="row.state"
+    :flapping="row.is_flapping"
+    :stale="row.stale"
+  />
+  <IconCell
+    v-if="hasColumn(MODE_COLUMN_ID)"
+    :column-id="MODE_COLUMN_ID"
+    :icons="row.modes ?? []"
+    :max-per-row="MODE_ICONS_PER_ROW"
+  />
   <StringCell
     v-if="hasColumn('name')"
     column-id="name"
@@ -107,107 +135,24 @@ const lastStateChange = computed(() =>
     :button="true"
     @click="emit('open', row)"
   />
+  <NumberCell
+    v-if="hasColumn('num_relations')"
+    column-id="num_relations"
+    :value="row.num_relations"
+    :button="!!row.num_relations"
+    :button-label="relationsLabel"
+    blank-when-zero
+    @click="emit('open', row, true)"
+  />
   <StringCell v-if="hasColumn('alias')" column-id="alias" :value="row.alias" />
-  <StringCell v-if="hasColumn('address')" column-id="address" :value="row.address" />
+  <StringCell
+    v-if="hasColumn('address')"
+    column-id="address"
+    :value="row.address"
+    :title-only-when-cut="true"
+  />
   <StringCell v-if="hasColumn('folder')" column-id="folder" :value="row.folder" />
   <StringCell v-if="hasColumn('site_id')" column-id="site_id" :value="row.site_id" />
-  <NumberCell
-    v-if="hasColumn('num_services')"
-    column-id="num_services"
-    :value="row.num_services"
-    :tag-properties="
-      !row.num_services
-        ? undefined
-        : {
-            variant: 'fill',
-            color: 'default',
-            minWidth: SERVICE_COUNT_MIN_WIDTH
-          }
-    "
-    :linked-to="!row.num_services ? undefined : allServicesLink"
-  />
-  <NumberCell
-    v-if="hasColumn('num_services_ok')"
-    column-id="num_services_ok"
-    :value="row.num_services_ok"
-    :tag-properties="
-      !row.num_services_ok
-        ? undefined
-        : {
-            variant: 'weighted',
-            color: 'success',
-            minWidth: SERVICE_COUNT_MIN_WIDTH
-          }
-    "
-    :linked-to="!row.num_services_ok ? undefined : servicesInStateLink('OK')"
-  />
-  <NumberCell
-    v-if="hasColumn('num_services_warn')"
-    column-id="num_services_warn"
-    :value="row.num_services_warn"
-    :tag-properties="
-      !row.num_services_warn
-        ? undefined
-        : {
-            variant: 'weighted',
-            color: 'warning',
-            minWidth: SERVICE_COUNT_MIN_WIDTH
-          }
-    "
-    :linked-to="!row.num_services_warn ? undefined : servicesInStateLink('WARN')"
-  />
-  <NumberCell
-    v-if="hasColumn('num_services_crit')"
-    column-id="num_services_crit"
-    :value="row.num_services_crit"
-    :tag-properties="
-      !row.num_services_crit
-        ? undefined
-        : {
-            variant: 'weighted',
-            color: 'danger',
-            minWidth: SERVICE_COUNT_MIN_WIDTH
-          }
-    "
-    :linked-to="!row.num_services_crit ? undefined : servicesInStateLink('CRIT')"
-  />
-  <NumberCell
-    v-if="hasColumn('num_services_unknown')"
-    column-id="num_services_unknown"
-    :value="row.num_services_unknown"
-    :tag-properties="
-      !row.num_services_unknown
-        ? undefined
-        : {
-            variant: 'weighted',
-            color: 'unknown',
-            minWidth: SERVICE_COUNT_MIN_WIDTH
-          }
-    "
-    :linked-to="!row.num_services_unknown ? undefined : servicesInStateLink('UNKNOWN')"
-  />
-  <NumberCell
-    v-if="hasColumn('num_services_pending')"
-    column-id="num_services_pending"
-    :value="row.num_services_pending"
-    :tag-properties="
-      !row.num_services_pending
-        ? undefined
-        : {
-            variant: 'weighted',
-            color: 'default',
-            minWidth: SERVICE_COUNT_MIN_WIDTH
-          }
-    "
-    :linked-to="
-      !row.num_services_pending
-        ? undefined
-        : {
-            href: `view.py?host=${row.name}&view_name=host_pending`,
-            target: '_top'
-          }
-    "
-  />
 
   <StringCell v-if="hasColumn('last_check')" column-id="last_check" :value="lastCheck" />
   <StringCell
@@ -225,6 +170,74 @@ const lastStateChange = computed(() =>
     size="small"
   />
 
+  <NumberCell
+    v-if="hasColumn('num_services')"
+    column-id="num_services"
+    :value="row.num_services"
+    :highlight="{
+      color: 'default',
+      minWidth: SERVICE_COUNT_MIN_WIDTH,
+      active: !!row.num_services
+    }"
+    :linked-to="!row.num_services ? undefined : allServicesLink"
+  />
+  <NumberCell
+    v-if="hasColumn('num_services_ok')"
+    column-id="num_services_ok"
+    :value="row.num_services_ok"
+    :highlight="{
+      color: 'success',
+      minWidth: SERVICE_COUNT_MIN_WIDTH,
+      active: !!row.num_services_ok
+    }"
+    :linked-to="!row.num_services_ok ? undefined : servicesInStateLink('OK')"
+  />
+  <NumberCell
+    v-if="hasColumn('num_services_warn')"
+    column-id="num_services_warn"
+    :value="row.num_services_warn"
+    :highlight="{
+      color: 'warning',
+      minWidth: SERVICE_COUNT_MIN_WIDTH,
+      active: !!row.num_services_warn
+    }"
+    :linked-to="!row.num_services_warn ? undefined : servicesInStateLink('WARN')"
+  />
+  <NumberCell
+    v-if="hasColumn('num_services_crit')"
+    column-id="num_services_crit"
+    :value="row.num_services_crit"
+    :highlight="{
+      color: 'danger',
+      minWidth: SERVICE_COUNT_MIN_WIDTH,
+      active: !!row.num_services_crit
+    }"
+    :linked-to="!row.num_services_crit ? undefined : servicesInStateLink('CRIT')"
+  />
+  <NumberCell
+    v-if="hasColumn('num_services_unknown')"
+    column-id="num_services_unknown"
+    :value="row.num_services_unknown"
+    :highlight="{
+      color: 'unknown',
+      minWidth: SERVICE_COUNT_MIN_WIDTH,
+      active: !!row.num_services_unknown
+    }"
+    :linked-to="!row.num_services_unknown ? undefined : servicesInStateLink('UNKNOWN')"
+  />
+  <NumberCell
+    v-if="hasColumn('num_services_pending')"
+    column-id="num_services_pending"
+    :value="row.num_services_pending"
+    :highlight="{
+      color: 'pending',
+      minWidth: SERVICE_COUNT_MIN_WIDTH,
+      active: !!row.num_services_pending
+    }"
+    :linked-to="!row.num_services_pending ? undefined : servicesInStateLink('PENDING')"
+  />
+  <StringCell v-if="hasColumn('customer')" column-id="customer" :value="row.customer" />
+
   <ActionsCell
     v-if="(loadActionMenu || actionButtons.length > 0) && hasColumn('actions')"
     column-id="actions"
@@ -234,3 +247,10 @@ const lastStateChange = computed(() =>
     @select="onActionSelect"
   />
 </template>
+
+<style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.monitoring-base-cell {
+  color: var(--font-color-secondary);
+}
+</style>

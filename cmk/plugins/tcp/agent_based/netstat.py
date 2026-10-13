@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 from typing import cast
 
@@ -69,17 +68,15 @@ def parse_connection_state(raw_state: str) -> ConnectionState:
     raise ValueError(f"Unknown connection state {raw_state!r}")
 
 
-def parse_netstat(string_table: StringTable) -> Section:
-    try:
-        is_netstat_format = string_table[1][1].isdecimal()
-    except IndexError:
-        # Assuming that "old" netstat format should precedence
-        is_netstat_format = True
+def _has_port_separator(address: str) -> bool:
+    return ":" in address or "." in address
 
+
+def parse_netstat(string_table: StringTable) -> Section:
     connections = []
     for line in string_table:
         if len(line) == 6:
-            if is_netstat_format:
+            if line[1].isdecimal():
                 proto, _recv_q, _send_q, local, remote, connection_state = line
             else:
                 proto, connection_state, _recv_q, _send_q, local, remote = line
@@ -88,18 +85,23 @@ def parse_netstat(string_table: StringTable) -> Section:
             elif proto.startswith("udp"):
                 proto = "UDP"
                 connection_state = "LISTENING"
-
-        if len(line) == 5:
+            else:
+                continue
+        elif len(line) == 5:
             proto, _recv_q, _send_q, local, remote = line
             proto = "UDP"
             connection_state = "LISTENING"
-
-        if len(line) == 3:
+        elif len(line) == 3:
             # Solaris systems output a different format for udp (3 elements instead 5)
             proto, local, remote = line
             _recv_q, _send_q = "0", "0"
             proto = "UDP"
             connection_state = "LISTENING"
+        else:
+            continue
+
+        if not (_has_port_separator(local) and _has_port_separator(remote)):
+            continue
 
         connections.append(
             Connection(

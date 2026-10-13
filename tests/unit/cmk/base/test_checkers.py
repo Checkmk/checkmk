@@ -4,12 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import socket
 import sys
 import time
-from collections.abc import Iterable, Mapping
-from typing import Literal
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from pathlib import Path
+from typing import Literal, Protocol
 
 import pytest
+from pytest import MonkeyPatch
 
 from cmk.agent_based.prediction_backend import (
     InjectedParameters,
@@ -19,23 +22,52 @@ from cmk.agent_based.prediction_backend import (
 from cmk.agent_based.v1 import Metric, Result, State
 from cmk.agent_based.v3_unstable import Metric as MetricV3Unstable
 from cmk.base import checkers
+from cmk.base.checkers import CMKFetcher
+from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc import resulttype as result
-from cmk.ccc.exceptions import MKTimeout
-from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.checkerplugin import ConfiguredService
-from cmk.checkengine.helper_interface import FetcherType, HostKey, SourceInfo, SourceType
+from cmk.ccc.exceptions import MKTimeout, OnError
+from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.checkerplugin import AggregatedResult, ConfiguredService
+from cmk.checkengine.fetcher_abc import Mode
+from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
+from cmk.checkengine.fetcher_utils.trigger import PlainFetcherTrigger
+from cmk.checkengine.fetchers.snmp import (
+    NoSelectedSNMPSections,
+    SNMPFetcherConfig,
+)
+from cmk.checkengine.filecache import FileCacheOptions
+from cmk.checkengine.helper_interface import (
+    AgentRawData,
+    FetcherType,
+    HostKey,
+    SourceInfo,
+    SourceType,
+)
 from cmk.checkengine.parser import HostSections
-from cmk.checkengine.plugins import CheckPluginName, FinalCheckResult
+from cmk.checkengine.plugins import (
+    AgentBasedPlugins,
+    CheckPlugin,
+    CheckPluginName,
+    FinalCheckResult,
+    ParsedSectionName,
+    SectionName,
+)
+from cmk.checkengine.sectionparser import ParsedSectionsResolver, SectionPlugin, SectionsParser
+from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.checkengine.specs.checkresults import (
+    MetricTuple,
     ServiceCheckResult,
     SubmittableServiceCheckResult,
 )
 from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.summarize import SummaryConfig
+from cmk.discover_plugins import PluginLocation
 from cmk.piggyback.backend import Config as PiggybackConfig
-from cmk.utils.metrics import MetricTuple
+from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.servicename import ServiceName
+from tests.testlib.unit.base_configuration_scenario import Scenario
+from tests.testlib.unit.fake_site import pop_crash_report_file
 
 
 def make_timespecific_params_list(
@@ -54,7 +86,7 @@ def test_predictive_otel_metrics_hack_gate_covers_both_otel_plugins() -> None:
     assert (
         CheckPluginName("otel_metrics"),
         CheckPluginName("otel_azure_metrics"),
-    ) == checkers._PLUGINS_WITH_PREDICTIVE_OTEL_METRICS_HACK
+    ) == checkers._PLUGINS_WITH_PREDICTIVE_OTEL_METRICS_HACK  # noqa: SLF001
 
 
 def test_special_processing_hack_for_predictive_otel_metrics_injects_reference_metric_and_direction() -> (
@@ -73,7 +105,7 @@ def test_special_processing_hack_for_predictive_otel_metrics_injects_reference_m
         )
     }
 
-    result = checkers._special_processing_hack_for_predictive_otel_metrics(params)
+    result = checkers._special_processing_hack_for_predictive_otel_metrics(params)  # noqa: SLF001
 
     assert result == {
         "metrics": (
@@ -92,6 +124,136 @@ def test_special_processing_hack_for_predictive_otel_metrics_injects_reference_m
                     ),
                     "levels_upper": ("fixed", (50.0, 80.0)),
                 }
+            ],
+        )
+    }
+
+
+def test_special_processing_hack_for_predictive_otel_metrics_defaults_missing_levels_lower() -> (
+    None
+):
+    """Regression test for CMK-38135: the otel_azure_metrics ruleset allows configuring only
+    upper levels for a metric, leaving "levels_lower" absent from the parameter dict entirely."""
+    params: Mapping[str, object] = {
+        "metrics": (
+            "multi_metrics",
+            [
+                {
+                    "metric_name": "azure_firewalllatencypng_average",
+                    "levels_upper": (
+                        "cmk_postprocessed",
+                        "predictive_levels",
+                        {"period": "minute"},
+                    ),
+                }
+            ],
+        )
+    }
+
+    result = checkers._special_processing_hack_for_predictive_otel_metrics(params)  # noqa: SLF001
+
+    assert result == {
+        "metrics": (
+            "multi_metrics",
+            [
+                {
+                    "metric_name": "azure_firewalllatencypng_average",
+                    "levels_lower": ("no_levels", None),
+                    "levels_upper": (
+                        "cmk_postprocessed",
+                        "predictive_levels",
+                        {
+                            "period": "minute",
+                            "__reference_metric__": "azure_firewalllatencypng_average",
+                            "__direction__": "upper",
+                        },
+                    ),
+                }
+            ],
+        )
+    }
+
+
+def test_special_processing_hack_for_predictive_otel_metrics_defaults_missing_levels_upper() -> (
+    None
+):
+    params: Mapping[str, object] = {
+        "metrics": (
+            "multi_metrics",
+            [
+                {
+                    "metric_name": "azure_available_memory_bytes_average",
+                    "levels_lower": ("fixed", (10.0, 5.0)),
+                }
+            ],
+        )
+    }
+
+    result = checkers._special_processing_hack_for_predictive_otel_metrics(params)  # noqa: SLF001
+
+    assert result == {
+        "metrics": (
+            "multi_metrics",
+            [
+                {
+                    "metric_name": "azure_available_memory_bytes_average",
+                    "levels_lower": ("fixed", (10.0, 5.0)),
+                    "levels_upper": ("no_levels", None),
+                }
+            ],
+        )
+    }
+
+
+def test_special_processing_hack_for_predictive_otel_metrics_multiple_metrics_missing_levels_lower() -> (
+    None
+):
+    """Reproduces the exact crash payload from CMK-38135's crash report: two metrics, neither
+    configuring a lower level, one with predictive upper levels and one with fixed upper levels."""
+    params: Mapping[str, object] = {
+        "metrics": (
+            "multi_metrics",
+            [
+                {
+                    "metric_name": "azure_firewalllatencypng_average",
+                    "levels_upper": (
+                        "cmk_postprocessed",
+                        "predictive_levels",
+                        {"period": "minute"},
+                    ),
+                },
+                {
+                    "metric_name": "azure_networkrulehit_total",
+                    "levels_upper": ("fixed", (3.0, 5.0)),
+                },
+            ],
+        )
+    }
+
+    result = checkers._special_processing_hack_for_predictive_otel_metrics(params)  # noqa: SLF001
+
+    assert result == {
+        "metrics": (
+            "multi_metrics",
+            [
+                {
+                    "metric_name": "azure_firewalllatencypng_average",
+                    "levels_lower": ("no_levels", None),
+                    "levels_upper": (
+                        "cmk_postprocessed",
+                        "predictive_levels",
+                        {
+                            "period": "minute",
+                            "__reference_metric__": "azure_firewalllatencypng_average",
+                            "__direction__": "upper",
+                        },
+                    ),
+                },
+                {
+                    "metric_name": "azure_networkrulehit_total",
+                    "levels_lower": ("no_levels", None),
+                    "levels_upper": ("fixed", (3.0, 5.0)),
+                },
             ],
         )
     }
@@ -135,7 +297,7 @@ def test_aggregate_result(
     subresults: FinalCheckResult, aggregated_results: ServiceCheckResult
 ) -> None:
     assert (
-        checkers._aggregate_results(checkers._consume_check_results(subresults))
+        checkers._aggregate_results(checkers._consume_check_results(subresults))  # noqa: SLF001
         == aggregated_results
     )
 
@@ -143,12 +305,12 @@ def test_aggregate_result(
 def test_config_cache_get_clustered_service_node_keys_no_cluster() -> None:
     # empty, we have no cluster:
     assert (
-        checkers._get_clustered_service_node_keys(
+        checkers._get_clustered_service_node_keys(  # noqa: SLF001
             HostName("cluster.test"),
             SourceType.HOST,
             make_service("Test Service"),
             cluster_nodes=(),
-            get_effective_host=lambda hn, *args, **kw: hn,
+            get_effective_host=lambda hn, *args, **kw: hn,  # noqa: ARG005
         )
         == []
     )
@@ -159,12 +321,12 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service() -> No
 
     # empty for a node:
     assert (
-        checkers._get_clustered_service_node_keys(
+        checkers._get_clustered_service_node_keys(  # noqa: SLF001
             HostName("node1.test"),
             SourceType.HOST,
             make_service("Test Service"),
             cluster_nodes=(),
-            get_effective_host=lambda hn, *args, **kw: hn,
+            get_effective_host=lambda hn, *args, **kw: hn,  # noqa: ARG005
         )
         == []
     )
@@ -173,12 +335,12 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service() -> No
     assert [
         HostKey(hostname=HostName("node1.test"), source_type=SourceType.HOST),
         HostKey(hostname=HostName("node2.test"), source_type=SourceType.HOST),
-    ] == checkers._get_clustered_service_node_keys(
+    ] == checkers._get_clustered_service_node_keys(  # noqa: SLF001
         cluster_test,
         SourceType.HOST,
         make_service("Test Service"),
         cluster_nodes=[HostName("node1.test"), HostName("node2.test")],
-        get_effective_host=lambda hn, *args, **kw: hn,
+        get_effective_host=lambda hn, *args, **kw: hn,  # noqa: ARG005
     )
 
 
@@ -187,12 +349,12 @@ def test_config_cache_get_clustered_service_node_keys_clustered() -> None:
     node2 = HostName("node2.test")
     cluster = HostName("cluster.test")
 
-    assert checkers._get_clustered_service_node_keys(
+    assert checkers._get_clustered_service_node_keys(  # noqa: SLF001
         cluster,
         SourceType.HOST,
         make_service("Test Service"),
         cluster_nodes=[node1, node2],
-        get_effective_host=lambda hn, *args, **kw: hn,
+        get_effective_host=lambda hn, *args, **kw: hn,  # noqa: ARG005
     ) == [
         HostKey(node1, SourceType.HOST),
         HostKey(node2, SourceType.HOST),
@@ -200,12 +362,12 @@ def test_config_cache_get_clustered_service_node_keys_clustered() -> None:
     assert [
         HostKey(hostname=HostName("node1.test"), source_type=SourceType.HOST),
         HostKey(hostname=HostName("node2.test"), source_type=SourceType.HOST),
-    ] == checkers._get_clustered_service_node_keys(
+    ] == checkers._get_clustered_service_node_keys(  # noqa: SLF001
         cluster,
         SourceType.HOST,
         make_service("Test Unclustered"),
         cluster_nodes=[node1, node2],
-        get_effective_host=lambda hn, *args, **kw: hn,
+        get_effective_host=lambda hn, *args, **kw: hn,  # noqa: ARG005
     )
 
 
@@ -379,7 +541,7 @@ def test_is_preview_injection() -> None:
 
 
 def test_consume_check_results_clamps_inf_levels() -> None:
-    _, perfdata, _ = checkers._consume_check_results(
+    _, perfdata, _ = checkers._consume_check_results(  # noqa: SLF001
         [MetricV3Unstable("m", 1.0, levels=(float("inf"), float("-inf")))]
     )
     assert len(perfdata) == 1
@@ -388,7 +550,7 @@ def test_consume_check_results_clamps_inf_levels() -> None:
 
 
 def test_consume_check_results_clamps_inf_lower_levels() -> None:
-    _, perfdata, _ = checkers._consume_check_results(
+    _, perfdata, _ = checkers._consume_check_results(  # noqa: SLF001
         [
             MetricV3Unstable(
                 "m",
@@ -400,3 +562,141 @@ def test_consume_check_results_clamps_inf_lower_levels() -> None:
     assert len(perfdata) == 1
     assert perfdata[0].warn_lower == sys.float_info.max
     assert perfdata[0].crit_lower == -sys.float_info.max
+
+
+@pytest.mark.usefixtures("patch_omd_site")
+def test_cmk_fetcher_reports_missing_ip_instead_of_the_fallback_address(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """A failed address lookup must not be papered over with a fallback address.
+
+    A tolerant IP lookup answers with ``0.0.0.0`` when it could not resolve the
+    host.  Handing that on to the fetchers points them at the local system, so
+    the fetcher turns it into "no address": the sources that need one report
+    `MISSING_IP`, the sources that do not are unaffected.  See SUP-30417.
+    """
+    testhost = HostName("nodns-host")
+    ts = Scenario()
+    ts.add_host(testhost)  # no explicit address, name does not resolve
+    loading_result = ts.apply(monkeypatch)
+    config_cache = loading_result.config_cache
+    service_name_config = config_cache.make_passive_service_name_config(
+        make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
+    )
+    plugins = AgentBasedPlugins(
+        agent_sections={}, snmp_sections={}, check_plugins={}, inventory_plugins={}, errors=()
+    )
+
+    fetcher = CMKFetcher(
+        config_cache,
+        loading_result.host_tags,
+        get_relay_id=lambda hn: None,  # noqa: ARG005
+        make_trigger=lambda hn: PlainFetcherTrigger(Path("/")),  # noqa: ARG005
+        source_config=config_cache.make_source_config(
+            config_cache.make_service_configurer({}, service_name_config),
+            ip_lookup=lambda *a: HostAddress(""),  # noqa: ARG005
+            service_name_config=service_name_config,
+            enforced_services_table=lambda hn: {},  # noqa: ARG005
+            snmp_fetcher_config=SNMPFetcherConfig(
+                on_error=OnError.RAISE,
+                missing_sys_description=lambda host_name: False,  # noqa: ARG005
+                selected_sections=NoSelectedSNMPSections(),
+                backend_override=None,
+                base_path=Path("/"),
+                relative_stored_walk_path=Path("dev/null"),
+                relative_walk_cache_path=Path("dev/null"),
+                relative_section_cache_path=Path("dev/null"),
+                caching_config=lambda host_name: {},  # noqa: ARG005
+            ),
+        ),
+        plugins=plugins,
+        clusters=loading_result.hosts_config.clusters,
+        default_address_family=lambda *a: socket.AddressFamily.AF_INET,  # noqa: ARG005
+        file_cache_options=FileCacheOptions(),
+        force_snmp_cache_refresh=False,
+        get_ip_stack_config=lambda *a: IPStackConfig.IPv4,  # noqa: ARG005
+        # what a tolerant lookup answers when DNS resolution failed
+        ip_address_of=lambda *a: HostAddress("0.0.0.0"),  # noqa: ARG005
+        ip_address_of_mgmt=lambda *a: None,  # noqa: ARG005
+        mode=Mode.DISCOVERY,
+        simulation_mode=False,
+        secrets_config_relay=AdHocSecrets(path=Path("/pw/relay"), secrets={}),
+        secrets_config_site=StoredSecrets(path=Path("/pw/store"), secrets={}),
+    )
+
+    fetched = fetcher(testhost, ip_address=None)
+
+    agent_sources = [(source, res) for source, res, _snapshot in fetched if source.ident == "agent"]
+    assert len(agent_sources) == 1
+    source, res = agent_sources[0]
+    assert source.ipaddress is None
+    assert source.fetcher_type is FetcherType.NONE
+    assert res.is_error()
+
+
+class _CheckFunction(Protocol):
+    def __call__(self, **kwargs: object) -> ServiceCheckResult: ...
+
+
+def _aggregated_result_of(
+    check_function: _CheckFunction,
+    get_agent_output: Callable[[], AgentRawData | None],
+) -> AggregatedResult:
+    host_name = HostName("testhost")
+    section_name = SectionName("uptime")
+    provider = ParsedSectionsResolver(
+        SectionsParser(
+            HostSections[Mapping[SectionName, Sequence[Sequence[str]]]]({section_name: [["123"]]}),
+            host_name,
+            error_handling=lambda *_args: "",
+        ),
+        section_plugins={section_name: SectionPlugin.trivial(section_name)},
+    )
+    return checkers.get_aggregated_result(
+        host_name,
+        False,
+        cluster_nodes=(),
+        providers={HostKey(host_name, SourceType.HOST): provider},
+        service=make_service("Uptime"),
+        plugin=CheckPlugin(
+            name=CheckPluginName("dummy"),
+            sections=[ParsedSectionName("uptime")],
+            service_name="Uptime",
+            discovery_function=lambda *args, **kw: iter(()),  # noqa: ARG005
+            discovery_default_parameters=None,
+            discovery_ruleset_name=None,
+            discovery_ruleset_type="merged",
+            check_function=lambda *args, **kw: iter(()),  # noqa: ARG005
+            check_default_parameters=None,
+            check_ruleset_name=None,
+            cluster_check_function=None,
+            location=PluginLocation(module="<test>", name="<test>"),
+        ),
+        check_function=check_function,
+        parameters={},
+        get_agent_output=get_agent_output,
+        get_effective_host=lambda host_name, *_args: host_name,
+        snmp_backend=SNMPBackendEnum.CLASSIC,
+    )
+
+
+def _raise(**_kwargs: object) -> ServiceCheckResult:
+    raise ValueError("crash")
+
+
+@pytest.mark.usefixtures("disable_debug", "patch_omd_site")
+def test_crash_report_of_a_check_function_contains_the_agent_output() -> None:
+    _aggregated_result_of(_raise, lambda: AgentRawData(b"<<<uptime>>>\n123\n"))
+
+    assert pop_crash_report_file("check", "agent_output") == b"<<<uptime>>>\n123\n"
+
+
+def test_agent_output_is_not_requested_if_the_check_function_succeeds() -> None:
+    def get_agent_output() -> AgentRawData | None:
+        raise AssertionError("agent output requested")
+
+    aggregated = _aggregated_result_of(
+        lambda **_kwargs: SubmittableServiceCheckResult(0, "OK"), get_agent_output
+    )
+
+    assert aggregated.result == SubmittableServiceCheckResult(0, "OK")

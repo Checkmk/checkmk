@@ -7,9 +7,8 @@
 Network calls are intercepted with `responses`; no real OMD site is needed.
 """
 
-from __future__ import annotations
-
 from collections.abc import Iterator
+from http import HTTPStatus
 from logging import getLogger
 from pathlib import Path
 
@@ -27,7 +26,7 @@ def _write_global_mk(path: Path, **settings: object) -> None:
     path.write_text("\n".join(f"{key} = {value!r}" for key, value in settings.items()))
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _fake_site(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     monkeypatch.setenv("OMD_ROOT", str(tmp_path))
     monkeypatch.setenv("OMD_SITE", "mysite")
@@ -268,7 +267,7 @@ def test_end_to_end_uploads_via_real_run_batch(tmp_path: Path) -> None:
     crash_dir = tmp_path / "var/check_mk/crashes/check/11111111-1111-1111-1111-111111111111"
     crash_dir.mkdir(parents=True)
     (crash_dir / "crash.info").write_bytes(b'{"id": "11111111-1111-1111-1111-111111111111"}')
-    responses.add(responses.POST, _CRASH_URL, body=b"OK abc123", status=200)
+    responses.add(responses.POST, _CRASH_URL, body=b"OK abc123", status=HTTPStatus.OK)
 
     assert cli.main() == 0
     assert len(responses.calls) == 1

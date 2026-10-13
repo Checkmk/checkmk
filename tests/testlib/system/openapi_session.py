@@ -1,0 +1,2704 @@
+#!/usr/bin/env python3
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-any"
+
+"""
+Module Summary:
+    This module implements a REST API client for interacting with the Checkmk system in tests.
+    It extends the requests.Session class to provide custom URL construction, authentication,
+    logging, and error handling tailored to the Checkmk API.
+
+selected objects:
+    - CMKOpenApiSession: A custom session class that manages HTTP requests and responses for
+        Checkmk APIs. It automatically constructs request URLs, sets up authentication, logs
+        request/response details, and handles HTTP redirection.
+    - Exception Classes: Custom exceptions (e.g., RestSessionException, UnexpectedResponse,
+        AuthorizationFailed, NoActiveChanges, Redirect) are defined to handle various error
+        conditions encountered during API interactions.
+    - API Interfaces: Multiple helper classes
+        (e.g., ChangesAPI, UsersAPI, FoldersAPI, HostsAPI, HostGroupsAPI, ServiceDiscoveryAPI)
+        provide domain-specific methods to perform actions such as activating changes, managing
+        users and hosts, and running service discovery. These classes encapsulate the logic
+        required to form, send, and process API requests.
+    - Utility Functions: The module includes utility functions and context managers
+        (e.g., wait_for_completion) to facilitate asynchronous operations by waiting for and
+        processing HTTP redirects associated with long-running tasks.
+
+"""
+
+import itertools
+import json
+import logging
+import pprint
+import time
+import urllib.parse
+from collections.abc import Iterator, Mapping, Sequence
+from contextlib import contextmanager
+from dataclasses import dataclass
+from datetime import datetime, timedelta, UTC
+from enum import StrEnum
+from http import HTTPStatus
+from typing import Any, Final, Literal, NamedTuple, override
+
+import requests
+
+from cmk import trace
+from cmk.gui.http import HTTPMethod
+from cmk.gui.watolib.broker_connections import BrokerConnectionInfo
+from cmk.relay_protocols.relays import (
+    RelayRegistrationRequest,
+    RelayRegistrationResponse,
+    RelayStatusResponse,
+)
+from cmk.relay_protocols.tasks import (
+    FetchAdHocTask,
+    TaskCreateRequest,
+    TaskCreateResponse,
+    TaskListResponse,
+    TaskResponse,
+)
+from cmk.utils.keypair_store import KeyId
+from tests.testlib.common.version import CMKVersion, TypeCMKEdition
+
+logger = logging.getLogger("rest-session")
+tracer = trace.get_tracer()
+
+
+class RestSessionException(Exception):
+    pass
+
+
+class UnexpectedResponse(RestSessionException):
+    @classmethod
+    def from_response(cls, response: requests.Response) -> UnexpectedResponse:
+        if 300 <= response.status_code < 400:
+            text = f"Redirect to {response.headers['Location']}"
+        else:
+            text = response.text or repr(response)
+        return cls(status_code=response.status_code, text=text)
+
+    def __init__(self, status_code: int, text: str) -> None:
+        super().__init__(f"[{status_code}] {text}")
+        self.status_code = status_code
+
+
+class NoActiveChanges(RestSessionException):
+    pass
+
+
+class AuthorizationFailed(RestSessionException):
+    pass
+
+
+class Redirect(RestSessionException):
+    def __init__(self, redirect_url: str) -> None:
+        super().__init__(redirect_url)
+        self.redirect_url = redirect_url
+
+
+class BakingStatus(NamedTuple):
+    state: str
+    started: float
+    exceptions: Sequence[str] = []
+
+
+class User(NamedTuple):
+    title: str
+
+
+class Relay(NamedTuple):
+    id: str
+    alias: str
+    site_id: str
+    num_fetchers: int | None
+    log_level: str | None
+
+
+class APIVersion(StrEnum):
+    V1 = "1.0"
+    INTERNAL = "internal"
+    UNSTABLE = "unstable"
+
+
+class CMKOpenApiSession(requests.Session):
+    def __init__(
+        self,
+        host: str,
+        user: str,
+        password: str,
+        site_version: CMKVersion,
+        site_edition: TypeCMKEdition,
+        port: int = 80,
+        site: str = "heute",
+        api_version: APIVersion = APIVersion.V1,
+    ):
+        super().__init__()
+        self.host = host
+        self.port = port
+        self.site = site
+        self.site_version = site_version
+        self.site_edition = site_edition
+        self.api_version = api_version
+        self.headers["Accept"] = "application/json"
+        self.set_authentication_header(user, password)
+
+        self.changes = ChangesAPI(self)
+        self.global_settings = GlobalSettingsAPI(self)
+        self.users = UsersAPI(self)
+        self.user_role = UserRoleAPI(self)
+        self.folders = FoldersAPI(self)
+        self.hosts = HostsAPI(self)
+        self.host_groups = HostGroupsAPI(self)
+        self.service_groups = ServiceGroupsAPI(self)
+        self.host_tag_groups = HostTagGroupsAPI(self)
+        self.service_discovery = ServiceDiscoveryAPI(self)
+        self.services = ServicesAPI(self)
+        self.inventory = InventoryAPI(self)
+        self.agents = AgentsAPI(self)
+        self.rules = RulesAPI(self)
+        self.rulesets = RulesetsAPI(self)
+        self.broker_connections = BrokerConnectionsAPI(self)
+        self.bi_aggregation = BIAggregationAPI(self)
+        self.sites = SitesAPI(self)
+        self.background_jobs = BackgroundJobsAPI(self)
+        self.dcd = DcdAPI(self)
+        self.ldap_connection = LDAPConnectionAPI(self)
+        self.passwords = PasswordsAPI(self)
+        self.license = LicenseAPI(self)
+        self.downtimes = DowntimesAPI(self)
+        self.otel_collector = OtelCollectorAPI(self)
+        self.event_console = EventConsoleAPI(self)
+        self.saml2 = Saml2API(self)
+        self.relays = RelayAPI(self)
+        self.relay_registration_tokens = RelayRegistrationTokenAPI(self)
+        self.data_backend = DataBackendAPI(self)
+        self.global_settings = GlobalSettingsAPI(self)
+        self.graph = GraphAPI(self)
+        self.custom_graph = CustomGraphAPI(self)
+        self.dashboard = DashboardAPI(self)
+        self.autocomplete = AutocompleteAPI(self)
+
+    def set_authentication_header(self, user: str, password: str) -> None:
+        self.headers["Authorization"] = f"Bearer {user} {password}"
+
+    @contextmanager
+    def acting_as(self, user: str, password: str) -> Iterator[None]:
+        """Send the requests inside the block as `user`, restoring the identity afterwards.
+
+        A site hands this session over to its automation user as soon as that user exists, so a
+        call whose effect is stored per user has to name the one it needs.
+        """
+        previous = self.headers["Authorization"]
+        self.set_authentication_header(user, password)
+        try:
+            yield
+        finally:
+            self.headers["Authorization"] = previous
+
+    @override
+    def get(  # type: ignore[override]
+        self, url: str, api_version: APIVersion | None = None, **kwargs: Any
+    ) -> requests.Response:
+        return self.request("GET", url, api_version=api_version, **kwargs)
+
+    @override
+    def post(  # type: ignore[override]
+        self,
+        url: str,
+        api_version: APIVersion | None = None,
+        data: Any = None,
+        json: Any = None,
+        **kwargs: Any,
+    ) -> requests.Response:
+        return self.request("POST", url, api_version=api_version, data=data, json=json, **kwargs)
+
+    @override
+    def put(  # type: ignore[override]
+        self, url: str, api_version: APIVersion | None = None, data: Any = None, **kwargs: Any
+    ) -> requests.Response:
+        return self.request("PUT", url, api_version=api_version, data=data, **kwargs)
+
+    @override
+    def patch(  # type: ignore[override]
+        self,
+        url: str,
+        api_version: APIVersion | None = None,
+        data: Any = None,
+        json: Any = None,
+        **kwargs: Any,
+    ) -> requests.Response:
+        return self.request("PATCH", url, api_version=api_version, data=data, json=json, **kwargs)
+
+    @override
+    def delete(  # type: ignore[override]
+        self, url: str, api_version: APIVersion | None = None, **kwargs: Any
+    ) -> requests.Response:
+        return self.request("DELETE", url, api_version=api_version, **kwargs)
+
+    @override
+    def request(  # type: ignore[override]
+        self,
+        method: str | bytes,
+        url: str | bytes,
+        *args: Any,
+        api_version: APIVersion | None = None,
+        timeout: float | tuple[float, float] | tuple[float, None] | None = 300.0,
+        **kwargs: Any,
+    ) -> requests.Response:
+        """
+        Suggested method to use a base url with a requests.Session
+        see https://github.com/psf/requests/issues/2554#issuecomment-109341010
+        """
+        assert isinstance(method, str)  # HACK
+        assert isinstance(url, str)  # HACK
+        kwargs["timeout"] = timeout
+
+        if not url.startswith("http://"):
+            url = (
+                f"http://{self.host}:{self.port}/{self.site}/check_mk/api/"
+                f"{api_version or self.api_version}/{url.strip('/')}"
+            )
+
+        logger.debug("> [%s] %s (%s, %s)", method, url, args, kwargs)
+        response = super().request(method, url, *args, **kwargs)
+
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            if (content_type := response.headers.get("content-type")) in (
+                "application/json",
+                "application/json; charset=utf-8",
+                "text/html; charset=utf-8",
+                "application/problem+json",
+            ):
+                logger.debug("< [%s] %s", response.status_code, response.text)
+            else:
+                logger.debug(
+                    "< [%s] Unhandled content type %r (length: %d)",
+                    response.status_code,
+                    content_type,
+                    len(response.content),
+                )
+
+        if response.status_code == HTTPStatus.UNAUTHORIZED:
+            assert isinstance(self.headers["Authorization"], str)  # HACK
+            raise AuthorizationFailed(
+                f"Authorization failed on site {self.site}",
+                response.headers,
+                response.text,
+            )
+
+        return response
+
+    @contextmanager
+    def wait_for_completion(
+        self,
+        timeout: int,
+        http_method_for_redirection: HTTPMethod,
+        operation: str,
+    ) -> Iterator[None]:
+        start = time.time()
+        try:
+            yield None
+        except Redirect as redirect:
+            self._handle_wait_redirect(
+                start,
+                timeout,
+                http_method_for_redirection,
+                operation,
+                redirect.redirect_url
+                if redirect.redirect_url.startswith("http://")
+                else f"http://{self.host}:{self.port}{redirect.redirect_url}",
+            )
+        else:
+            logger.info("Wait for completion finished instantly for %s", operation)
+
+    def _handle_wait_redirect(
+        self,
+        start: float,
+        timeout: int,
+        http_method_for_redirection: HTTPMethod,
+        operation: str,
+        redirect_url: str,
+    ) -> None:
+        response = None
+        for attempt in itertools.count(start=1):
+            if (running_time := time.time() - start) > timeout:
+                msg = (
+                    f"Wait for completion timed out after {running_time}s / {attempt} attempts"
+                    f" for {operation}; URL={redirect_url}!"
+                )
+                if response and response.content:
+                    msg += f"; Last response: {response.status_code}; {response.content!r}"
+                raise TimeoutError(msg)
+
+            logger.debug('Redirecting to "%s %s"...', http_method_for_redirection, redirect_url)
+            try:
+                response = self.request(
+                    method=http_method_for_redirection,
+                    url=redirect_url,
+                    allow_redirects=False,
+                )
+            except requests.exceptions.ConnectionError as exc:
+                # The site's web server may briefly drop connections right after a restart
+                # (e.g. while still warming up). Treat that like any other "not done yet"
+                # response instead of failing the whole operation on a single hiccup.
+                logger.warning(
+                    "Connection error while polling for %s (attempt %d): %s; retrying...",
+                    operation,
+                    attempt,
+                    exc,
+                )
+                time.sleep(0.5)
+                continue
+
+            if response.status_code == HTTPStatus.NO_CONTENT and not response.content:
+                logger.info(
+                    "Wait for completion finished after %0.2fs / %s attempts for %s",
+                    running_time,
+                    attempt,
+                    operation,
+                )
+                return
+
+            if not 300 <= response.status_code < 400:
+                raise UnexpectedResponse.from_response(response)
+
+            time.sleep(0.5)
+
+
+class AgentReceiverApiSession(requests.Session):
+    def __init__(self, openapi_session: CMKOpenApiSession):
+        super().__init__()
+        self._openapi_session = openapi_session
+        self._port: int | None = None
+        self.headers["Authorization"] = self._openapi_session.headers["Authorization"]
+        self.relays = AgentReceiverRelayAPI(self)
+        self.verify = False
+
+    def set_authentication_header_bearer(self, user: str, password: str) -> None:
+        self.headers["Authorization"] = f"Bearer {user} {password}"
+
+    def set_authentication_header_token(self, token: str) -> None:
+        self.headers["Authorization"] = f"CMK-TOKEN {token}"
+
+    @property
+    def port(self) -> int:
+        if self._port is None:
+            self._port = int(
+                self._openapi_session.get(
+                    url="domain-types/internal/actions/discover-receiver/invoke",
+                ).text
+            )
+
+        return self._port
+
+    @property
+    def base_url(self) -> str:
+        return f"https://{self._openapi_session.host}:{self.port}/{self._openapi_session.site}/agent-receiver/"
+
+
+class BaseAPI:
+    def __init__(self, session: CMKOpenApiSession) -> None:
+        self.session = session
+
+    def _post_internal_action(self, url: str, body: Mapping[str, Any]) -> dict[str, Any]:
+        response = self.session.post(url, api_version=APIVersion.INTERNAL, json=body)
+        if not response.ok:
+            raise UnexpectedResponse.from_response(response)
+        parsed = response.json()
+        if not isinstance(parsed, dict):
+            raise UnexpectedResponse(
+                response.status_code, f"expected a JSON object, got {parsed!r}"
+            )
+        return parsed
+
+
+class ARBaseAPI:
+    def __init__(self, session: AgentReceiverApiSession) -> None:
+        self.session = session
+
+
+class ActivateStartResult(NamedTuple):
+    activation_id: str
+    redirect_url: str
+
+
+class ChangesAPI(BaseAPI):
+    def activate(
+        self,
+        sites: list[str] | None = None,
+        force_foreign_changes: bool = False,
+    ) -> ActivateStartResult:
+        def _extract_activation_id_from_url(url: str) -> str:
+            try:
+                path_parts = urllib.parse.urlparse(response.headers["Location"]).path.split("/")
+                return path_parts[path_parts.index("activation_run") + 1]
+            except ValueError, IndexError:
+                raise ValueError(f"Failed to parse activation id from URL: {url}")
+
+        response = self.session.post(
+            "/domain-types/activation_run/actions/activate-changes/invoke",
+            json={
+                "redirect": True,
+                "sites": sites or [],
+                "force_foreign_changes": force_foreign_changes,
+            },
+            headers={"If-Match": "*"},
+            # We want to get the redirect response and handle that below. So don't let requests
+            # handle that for us.
+            allow_redirects=False,
+        )
+
+        if response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+            raise NoActiveChanges  # there are no changes
+
+        if response.status_code not in (HTTPStatus.FOUND, HTTPStatus.SEE_OTHER):
+            raise UnexpectedResponse.from_response(response)
+
+        logger.info(
+            "Activation id: %s",
+            (activation_id := _extract_activation_id_from_url(response.headers["Location"])),
+        )
+        return ActivateStartResult(
+            activation_id=activation_id,
+            redirect_url=response.headers["Location"],
+        )
+
+    def get_pending(self) -> list[dict[str, Any]]:
+        """Returns a list of all changes currently pending."""
+        response = self.session.get("/domain-types/activation_run/collections/pending_changes")
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
+    @tracer.instrument("activate_and_wait_for_completion")
+    def activate_and_wait_for_completion(
+        self,
+        sites: list[str] | None = None,
+        force_foreign_changes: bool = False,
+        timeout: int = 300,  # TODO: revert to 60 seconds once performance is improved.
+        strict: bool = True,
+    ) -> bool:
+        """Activate changes via REST API and wait for completion.
+
+        Returns:
+            * True if changes are activated
+            * False if there are no changes to be activated
+        """
+        pending_changes_ids_before = {_.get("id") for _ in self.get_pending()}
+
+        logger.info("Activate changes and wait %ds for completion...", timeout)
+        activation_id = None
+        try:
+            with self.session.wait_for_completion(timeout, "get", "activate_changes"):
+                try:
+                    start_result = self.activate(sites, force_foreign_changes)
+                except NoActiveChanges:
+                    return False
+                else:
+                    activation_id = start_result.activation_id
+                    raise Redirect(start_result.redirect_url)
+        finally:
+            if activation_id:
+                activation_status = self._get_activation_status_with_retry(activation_id)
+                if "status_per_site" in activation_status["extensions"] and (
+                    not_succeeded_sites := [
+                        status
+                        for status in activation_status["extensions"]["status_per_site"]
+                        if status["state"] != "success"
+                    ]
+                ):
+                    raise RuntimeError(
+                        "Activation of the following sites did not succeed:\n"
+                        f"{pprint.pformat(not_succeeded_sites)}"
+                    )
+                logger.info(
+                    "%s Use `--log-cli-level=DEBUG` for analysis.",
+                    activation_status.get(
+                        "title",
+                        "Activation status: UNKNOWN.",
+                    ),
+                )
+                logger.debug("Activation status: %s", pprint.pformat(activation_status))
+
+        # Suppression for mypy `unreachable` error is added here because this code could be actually
+        # reached. Mypy does not realize that `wait_for_completion` context manager is swallowing
+        # the `Redirect` exception.
+        #
+        # Mypy issue: https://github.com/python/mypy/issues/8766
+        pending_changes_after = self.get_pending()  # type: ignore[unreachable]
+        if strict:
+            if pending_changes_after:
+                raise AssertionError(
+                    f"There are pending changes after activation: {pending_changes_after}"
+                )
+        else:
+            pending_changes_intersection_ids = {
+                _.get("id") for _ in pending_changes_after
+            }.intersection(pending_changes_ids_before)
+            if pending_changes_intersection_ids:
+                raise AssertionError(
+                    "There are pending changes that were not activated: "
+                    f"{[_ for _ in pending_changes_after if _.get('id') in pending_changes_intersection_ids]}"
+                )
+
+        return True
+
+    def get_activation_status(self, activation_id: str) -> dict[str, Any]:
+        response = self.session.get(f"/objects/activation_run/{activation_id}")
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+        json_data: dict[str, Any] = response.json()
+        return json_data
+
+    def _get_activation_status_with_retry(
+        self, activation_id: str, attempts: int = 3, interval: float = 1.0
+    ) -> dict[str, Any]:
+        """Like `get_activation_status`, but tolerates a transient connection error.
+
+        Right after a site restart, a single request can still hit the web server while it is
+        not fully warmed up yet (e.g. a worker process still starting or being replaced). Retry
+        a few times instead of letting that single hiccup fail the whole activation.
+        """
+        for attempt in range(1, attempts + 1):
+            try:
+                return self.get_activation_status(activation_id)
+            except requests.exceptions.ConnectionError as exc:
+                if attempt == attempts:
+                    raise
+                logger.warning(
+                    "Connection error while fetching activation status (attempt %d/%d): %s;"
+                    " retrying...",
+                    attempt,
+                    attempts,
+                    exc,
+                )
+                time.sleep(interval)
+        raise AssertionError("unreachable")
+
+
+@dataclass(frozen=True)
+class GlobalSetting:
+    value: object
+    origin: Literal["factory", "global", "site"]
+    etag: str
+
+
+class GlobalSettingsAPI(BaseAPI):
+    def get(self, varname: str) -> GlobalSetting:
+        response = self.session.get(
+            f"/objects/global_setting/{varname}",
+            api_version=APIVersion.INTERNAL,
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        body = response.json()
+        return GlobalSetting(
+            value=body["value"], origin=body["origin"], etag=response.headers["ETag"]
+        )
+
+    def update(self, varname: str, value: object, etag: str = "*") -> str:
+        """Returns the Etag of the written setting"""
+        response = self.session.put(
+            f"/objects/global_setting/{varname}",
+            api_version=APIVersion.INTERNAL,
+            headers={"If-Match": etag},
+            json={"value": value},
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return response.headers["ETag"]
+
+    def reset(self, varname: str, etag: str = "*") -> None:
+        response = self.session.delete(
+            f"/objects/global_setting/{varname}",
+            api_version=APIVersion.INTERNAL,
+            headers={"If-Match": etag},
+        )
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+
+class UsersAPI(BaseAPI):
+    def create(
+        self,
+        username: str,
+        fullname: str,
+        password: str,
+        email: str,
+        contactgroups: list[str],
+        roles: list[str] | None = None,
+        is_automation_user: bool = False,
+        store_automation_secret: bool = False,
+    ) -> None:
+        if is_automation_user:
+            auth_option: dict[str, str | bool] = {
+                "auth_type": "automation",
+                "secret": password,
+            }
+            if store_automation_secret:
+                # This attribute came during 2.4 development. We use this API for older versions as
+                # well in test-system-update. So we should not set it in all requests!
+                auth_option["store_automation_secret"] = True
+        else:
+            auth_option = {
+                "auth_type": "password",
+                "password": password,
+            }
+
+        body = {
+            "username": username,
+            "fullname": fullname,
+            "auth_option": auth_option,
+            "contact_options": {
+                "email": email,
+            },
+            "contactgroups": contactgroups,
+            "roles": roles or [],
+        }
+        if self.session.site_edition.is_ultimatemt_edition():
+            body["customer"] = "global"
+        response = self.session.post(
+            "domain-types/user_config/collections/all",
+            json=body,
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+    def get_all(self) -> list[User]:
+        response = self.session.get("domain-types/user_config/collections/all")
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return [User(title=user_dict["title"]) for user_dict in response.json()["value"]]
+
+    def get(self, username: str) -> tuple[dict[str, Any], str] | None:
+        """
+        Returns
+            a tuple with the user details and the Etag header if the user was found
+            None if the user was not found
+        """
+        response = self.session.get(f"/objects/user_config/{username}")
+        if response.status_code not in (HTTPStatus.OK, HTTPStatus.NOT_FOUND):
+            raise UnexpectedResponse.from_response(response)
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            return None
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
+
+    def edit(self, username: str, user_spec: Mapping[str, Any], etag: str) -> None:
+        response = self.session.put(
+            f"objects/user_config/{username}",
+            headers={
+                "If-Match": etag,
+            },
+            json=user_spec,
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+    def delete(self, username: str) -> None:
+        response = self.session.delete(f"/objects/user_config/{username}")
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+
+class UserRoleAPI(BaseAPI):
+    """Wrap REST-API interface to interact with `user role`."""
+
+    def create(self, base_role_id: str, new_role_id: str, new_alias: str) -> None:
+        response = self.session.post(
+            "/domain-types/user_role/collections/all",
+            json={"role_id": base_role_id, "new_role_id": new_role_id, "new_alias": new_alias},
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+    def edit_permissions(self, role_id: str, permissions: dict[str, str]) -> None:
+        response = self.session.put(
+            f"/objects/user_role/{role_id}",
+            json={"new_permissions": permissions},
+            headers={"If-Match": "*"},
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+    def delete(self, role_id: str) -> None:
+        response = self.session.delete(f"/objects/user_role/{role_id}")
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+
+class FoldersAPI(BaseAPI):
+    def create(
+        self,
+        folder: str,
+        title: str | None = None,
+        attributes: Mapping[str, Any] | None = None,
+    ) -> None:
+        # Convert folder path delimiters from '/' to '~' for the API
+        folder_path = folder.replace("/", "~")
+        # Ensure we are using the correct prefix
+        folder_path = folder_path if folder_path.startswith("~") else f"~{folder_path}"
+
+        parent_folder, folder_name = folder_path.rsplit("~", 1)
+        parent_folder = parent_folder or "~"
+        response = self.session.post(
+            "/domain-types/folder_config/collections/all",
+            json={
+                "name": folder_name,
+                "title": title if title else folder_name,
+                "parent": parent_folder,
+                "attributes": attributes if attributes else {},
+            },
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+    def get(self, folder: str) -> tuple[dict[Any, str], str] | None:
+        """
+        Returns
+            a tuple with the folder details and the Etag header if the folder was found
+            None if the folder was not found
+        """
+        response = self.session.get(f"/objects/folder_config/{folder.replace('/', '~')}")
+        if response.status_code not in (HTTPStatus.OK, HTTPStatus.NOT_FOUND):
+            raise UnexpectedResponse.from_response(response)
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            return None
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
+
+    def delete(self, folder: str, delete_mode: str = "recursive") -> None:
+        """Delete a folder.
+
+        Args:
+            folder: The path of the folder to delete. Path delimiters should be '/'.
+            delete_mode: Delete policy. Options:
+                - 'recursive': Deletes the folder and all elements it contains (default)
+                - 'abort_on_nonempty': Deletes the folder only if it is empty
+        Raises:
+            UnexpectedResponse: If the delete operation fails
+        """
+        # Convert folder path delimiters from '/' to '~' for the API
+        folder_path = folder.replace("/", "~")
+        # Ensure we are using the correct prefix
+        folder_path = folder_path if folder_path.startswith("~") else f"~{folder_path}"
+        response = self.session.delete(
+            f"/objects/folder_config/{folder_path}", params={"delete_mode": delete_mode}
+        )
+
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+
+class HostsAPI(BaseAPI):
+    def create(
+        self,
+        hostname: str,
+        folder: str = "/",
+        attributes: Mapping[str, Any] | None = None,
+        bake_agent: bool = False,
+    ) -> requests.Response:
+        query_string = "?bake_agent=1" if bake_agent else ""
+        response = self.session.post(
+            f"/domain-types/host_config/collections/all{query_string}",
+            json={"folder": folder, "host_name": hostname, "attributes": attributes or {}},
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def bulk_create(
+        self,
+        entries: list[dict[str, Any]],
+        bake_agent: bool = False,
+        ignore_existing: bool = False,
+    ) -> list[dict[str, Any]]:
+        if ignore_existing:
+            existing_hosts = self.get_all_names()
+            entries = [_ for _ in entries if _.get("host_name") not in existing_hosts]
+        query_string = "?bake_agent=1" if bake_agent else ""
+        response = self.session.post(
+            f"/domain-types/host_config/actions/bulk-create/invoke{query_string}",
+            json={"entries": entries},
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
+    def get(self, hostname: str) -> tuple[dict[str, Any], str] | None:
+        """
+        Returns
+            a tuple with the host details and the Etag header if the host was found
+            None if the host was not found
+        """
+        response = self.session.get(f"/objects/host_config/{hostname}")
+        if response.status_code not in (HTTPStatus.OK, HTTPStatus.NOT_FOUND):
+            raise UnexpectedResponse.from_response(response)
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            return None
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
+
+    def update(
+        self,
+        host_name: str,
+        update_attributes: Mapping[str, object],
+    ) -> None:
+        response = self.session.put(
+            url=f"/objects/host_config/{host_name}",
+            json={"update_attributes": update_attributes},
+            headers={
+                "If-Match": "*",
+                "Content-Type": "application/json",
+            },
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+    def get_all(self) -> list[dict[str, Any]]:
+        response = self.session.get(
+            "/domain-types/host_config/collections/all", params={"include_links": False}
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
+    def get_all_names(
+        self, ignore: list[str] | None = None, allow: list[str] | None = None
+    ) -> list[str]:
+        """Get all host names from the API.
+
+        Args:
+            ignore: List of host names not to be returned, even if found in the system (optional).
+            allow: List of host names to be returned, if found in the system (optional).
+        """
+        return [
+            host_name
+            for host_name in [host["id"] for host in self.get_all()]
+            if (not ignore or host_name not in ignore) and (not allow or host_name in allow)
+        ]
+
+    def delete(self, hostname: str) -> None:
+        response = self.session.delete(f"/objects/host_config/{hostname}")
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+    def bulk_delete(self, hostnames: list[str], ignore_missing: bool = False) -> None:
+        if ignore_missing:
+            existing_hosts = set(self.get_all_names())
+            hostnames = [_ for _ in hostnames if _ in existing_hosts]
+            if not hostnames:
+                return
+        response = self.session.post(
+            "/domain-types/host_config/actions/bulk-delete/invoke",
+            json={"entries": hostnames},
+        )
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+    def rename(self, *, hostname_old: str, hostname_new: str, etag: str) -> None:
+        response = self.session.put(
+            f"/objects/host_config/{hostname_old}/actions/rename/invoke",
+            headers={
+                "If-Match": etag,
+                "Content-Type": "application/json",
+            },
+            json={"new_name": hostname_new},
+            allow_redirects=False,
+        )
+        if 300 <= response.status_code < 400:
+            # rename pending
+            raise Redirect(redirect_url=response.headers["Location"])
+        if not response.status_code == HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+    @tracer.instrument("rename_and_wait_for_completion")
+    def rename_and_wait_for_completion(
+        self,
+        *,
+        hostname_old: str,
+        hostname_new: str,
+        etag: str,
+        timeout: int = 120,
+    ) -> None:
+        logger.info(
+            "Rename host %s to %s and wait %ds for completion...",
+            hostname_old,
+            hostname_new,
+            timeout,
+        )
+        with self.session.wait_for_completion(timeout, "get", "rename_host"):
+            self.rename(hostname_old=hostname_old, hostname_new=hostname_new, etag=etag)
+            if self.get(hostname_new) is None:
+                raise AssertionError(f'Failed to rename host "{hostname_old}" to "{hostname_new}"!')
+
+        response = self.session.background_jobs.show("rename-hosts")
+        if response["extensions"]["status"]["state"] != "finished":
+            raise AssertionError(f"Rename job failed: {response}")
+
+
+class HostGroupsAPI(BaseAPI):
+    def create(self, name: str, alias: str) -> requests.Response:
+        body = {"name": name, "alias": alias}
+        # In the ultimatemt edition every config object belongs to a customer,
+        # so the field is mandatory here.
+        if self.session.site_edition.is_ultimatemt_edition():
+            body["customer"] = "global"
+        response = self.session.post(
+            "/domain-types/host_group_config/collections/all",
+            json=body,
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def get(self, name: str) -> tuple[dict[Any, str], str]:
+        response = self.session.get(f"/objects/host_group_config/{name}")
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
+
+    def delete(self, name: str) -> None:
+        response = self.session.delete(f"/objects/host_group_config/{name}")
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+
+class ServiceGroupsAPI(BaseAPI):
+    def create(self, name: str, alias: str) -> requests.Response:
+        body = {"name": name, "alias": alias}
+        # In the ultimatemt edition every config object belongs to a customer,
+        # so the field is mandatory here.
+        if self.session.site_edition.is_ultimatemt_edition():
+            body["customer"] = "global"
+        response = self.session.post(
+            "/domain-types/service_group_config/collections/all",
+            json=body,
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def delete(self, name: str) -> None:
+        response = self.session.delete(f"/objects/service_group_config/{name}")
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+
+class HostTagGroupsAPI(BaseAPI):
+    def create(self, name: str, title: str, tags: list[dict[str, str]]) -> requests.Response:
+        response = self.session.post(
+            "/domain-types/host_tag_group/collections/all",
+            json={"id": name, "title": title, "tags": tags},
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def get(self, name: str) -> tuple[dict[Any, str], str]:
+        response = self.session.get(f"/objects/host_tag_group/{name}")
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
+
+    def delete(self, name: str) -> None:
+        response = self.session.delete(f"/objects/host_tag_group/{name}")
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+
+class ServiceDiscoveryAPI(BaseAPI):
+    def run_discovery(
+        self,
+        hostname: str,
+        mode: str = "tabula_rasa",
+    ) -> None:
+        response = self.session.post(
+            "/domain-types/service_discovery_run/actions/start/invoke",
+            json={
+                "host_name": hostname,
+                "mode": mode,
+            },
+            # We want to get the redirect response and handle that below. So don't let requests
+            # handle that for us.
+            allow_redirects=False,
+        )
+        if 300 <= response.status_code < 400:
+            raise Redirect(redirect_url=response.headers["Location"])  # activation pending
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+    @tracer.instrument("run_bulk_discovery_and_wait_for_completion")
+    def run_bulk_discovery_and_wait_for_completion(
+        self,
+        hostnames: list[str],
+        monitor_undecided_services: bool = True,
+        remove_vanished_services: bool = False,
+        update_service_labels: bool = False,
+        update_host_labels: bool = True,
+        do_full_scan: bool = True,
+        bulk_size: int = 10,
+        ignore_errors: bool = True,
+    ) -> str:
+        body = {
+            "hostnames": hostnames,
+            "do_full_scan": do_full_scan,
+            "bulk_size": bulk_size,
+            "ignore_errors": ignore_errors,
+        }
+
+        if self.session.site_version >= CMKVersion("2.3.0"):
+            body["options"] = {
+                "monitor_undecided_services": monitor_undecided_services,
+                "remove_vanished_services": remove_vanished_services,
+                "update_service_labels": update_service_labels,
+                "update_host_labels": update_host_labels,
+            }
+        else:
+            body["mode"] = "new"
+
+        response = self.session.post(
+            "/domain-types/discovery_run/actions/bulk-discovery-start/invoke", json=body
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        job_id: str = response.json()["id"]
+        while self.get_bulk_discovery_status(job_id) in (
+            "initialized",
+            "running",
+        ):
+            time.sleep(0.5)
+
+        status = self.get_bulk_discovery_job_status(job_id)
+
+        if status["extensions"]["status"]["state"] != "finished":
+            raise RuntimeError(f"Discovery job {job_id} failed: {status}")
+
+        output = "\n".join(status["extensions"]["status"]["log_info"]["JobProgressUpdate"])
+        if "Traceback (most recent call last)" in output:
+            raise RuntimeError(f"Found traceback in job output: {output}")
+        if "0 failed" not in output:
+            raise RuntimeError(f"Found a failure in job output: {output}")
+
+        return job_id
+
+    def get_bulk_discovery_status(self, job_id: str) -> str:
+        job_status_response = self.get_bulk_discovery_job_status(job_id)
+        status: str = job_status_response["extensions"]["status"]["state"]
+        return status
+
+    def get_bulk_discovery_job_status(self, job_id: str) -> dict[str, Any]:
+        response = self.session.get(f"/objects/background_job/{job_id}")
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+        json_data: dict[str, Any] = response.json()
+        return json_data
+
+    def get_discovery_status(self, hostname: str) -> str:
+        job_status_response = self.get_discovery_job_status(hostname)
+
+        if job_status_response["extensions"]["state"] == "exception":
+            progress_log = job_status_response["extensions"]["logs"]["progress"]
+            raise RuntimeError(f"Job failed with the following output:\n{'\n'.join(progress_log)}")
+
+        status: str = job_status_response["extensions"]["state"]
+        return status
+
+    def get_discovery_job_status(self, hostname: str) -> dict[str, Any]:
+        response = self.session.get(f"/objects/service_discovery_run/{hostname}")
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+        json_data: dict[str, Any] = response.json()
+        return json_data
+
+    @tracer.instrument("run_discovery_and_wait_for_completion")
+    def run_discovery_and_wait_for_completion(
+        self, hostname: str, mode: str = "tabula_rasa", timeout: int = 60
+    ) -> None:
+        with self.session.wait_for_completion(timeout, "get", "discover_services"):
+            self.run_discovery(hostname, mode)
+
+        discovery_status = self.get_discovery_status(hostname)
+        if discovery_status != "finished":
+            raise AssertionError(f"Unexpected service discovery status: {discovery_status}")
+
+    def get_discovery_result(self, hostname: str) -> Mapping[str, object]:
+        response = self.session.get(f"/objects/service_discovery/{hostname}")
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return {str(k): v for k, v in response.json().items()}
+
+    def update_service_phase(
+        self,
+        hostname: str,
+        *,
+        check_type: str,
+        service_item: str | None,
+        target_phase: str,
+    ) -> None:
+        """Move one service of `hostname` into `target_phase`.
+
+        The body params are keyword-only on purpose: three of them are interchangeable strings to a
+        type checker, and transposing two yields a puzzling 400 rather than an error at the call
+        site. Note that an identifier naming no service on the host is answered `204` with nothing
+        written (SERVICE_DISCOVERY_BEHAVIOUR_MATRIX.md §10.19), so a caller that wants evidence of
+        a write has to look for the change itself rather than treat the status code as one.
+        """
+        response = self.session.put(
+            f"/objects/host/{hostname}/actions/update_discovery_phase/invoke",
+            json={
+                "check_type": check_type,
+                "service_item": service_item,
+                "target_phase": target_phase,
+            },
+        )
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+
+class ServicesAPI(BaseAPI):
+    def get_host_services(
+        self, hostname: str, pending: bool | None = None, columns: list[str] | None = None
+    ) -> list[dict[str, Any]]:
+        if pending is not None:
+            if columns is None:
+                columns = ["has_been_checked"]
+            elif "has_been_checked" not in columns:
+                columns.append("has_been_checked")
+        body = {}
+        if columns:
+            body["columns"] = columns
+        response = self.session.post(f"/objects/host/{hostname}/collections/services", json=body)
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        if pending is not None:
+            value = [
+                _
+                for _ in value
+                if _.get("extensions", {}).get("has_been_checked") == int(not pending)
+            ]
+        return value
+
+
+class InventoryAPI(BaseAPI):
+    def get_trees(self, host_names: Sequence[str]) -> dict[str, dict[str, Any]]:
+        """Hosts without an inventory tree are left out."""
+        response = self.session.get(
+            "/domain-types/inventory/collections/all",
+            api_version=APIVersion.UNSTABLE,
+            params={"host_names": list(host_names)},
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return {entry["host_name"]: entry["inventory_tree"] for entry in response.json()["value"]}
+
+
+class AgentsAPI(BaseAPI):
+    def get_baking_status(self) -> BakingStatus:
+        response = self.session.get("/domain-types/agent/actions/baking_status/invoke")
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+        result = response.json()["result"]["value"]
+        return BakingStatus(
+            state=result["state"],
+            started=result["started"],
+            exceptions=result.get("loginfo", {}).get("JobException", []),
+        )
+
+    def sign(self, key_id: KeyId | str, passphrase: str) -> None:
+        response = self.session.post(
+            "/domain-types/agent/actions/sign/invoke",
+            json={"key_id": key_id, "passphrase": passphrase},
+        )
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+
+class RulesAPI(BaseAPI):
+    def create(
+        self,
+        value: object,
+        ruleset_name: str | None = None,
+        folder: str = "/",
+        conditions: dict[str, Any] | None = None,
+        properties: dict[str, Any] | None = None,
+    ) -> str:
+        response = self.session.post(
+            "/domain-types/rule/collections/all",
+            json=(
+                {
+                    "ruleset": ruleset_name,
+                    "folder": folder,
+                    "value_raw": repr(value),
+                    "conditions": conditions or {},
+                    "properties": properties or {"disabled": False},
+                }
+                if ruleset_name
+                else value
+            ),
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        the_id: str = response.json()["id"]
+        return the_id
+
+    def get(self, rule_id: str) -> tuple[dict[Any, str], str] | None:
+        """
+        Returns
+            a tuple with the rule details and the Etag header if the rule_id was found
+            None if the rule_id was not found
+        """
+        response = self.session.get(f"/objects/rule/{rule_id}")
+        if response.status_code not in (HTTPStatus.OK, HTTPStatus.NOT_FOUND):
+            raise UnexpectedResponse.from_response(response)
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            return None
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
+
+    def update(
+        self,
+        rule_id: str,
+        value_raw: object | None = None,
+        properties: dict[str, Any] | None = None,
+        conditions: dict[str, Any] | None = None,
+        etag: str = "*",
+    ) -> None:
+        """Update an existing rule."""
+        update_data: dict[str, Any] = {}
+        if value_raw is not None:
+            update_data["value_raw"] = repr(value_raw)
+        if properties is not None:
+            update_data["properties"] = properties
+        if conditions is not None:
+            update_data["conditions"] = conditions
+
+        response = self.session.put(
+            f"/objects/rule/{rule_id}",
+            json=update_data,
+            headers={"If-Match": etag},
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+    def delete(self, rule_id: str) -> None:
+        response = self.session.delete(f"/objects/rule/{rule_id}")
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+    def get_all(
+        self,
+        ruleset_name: str | None = None,
+        folder: str | None = None,
+        include_extensions: bool = True,
+    ) -> list[dict[str, Any]]:
+        """Get all rules, optionally filtered by ruleset and folder."""
+        params = {}
+        if ruleset_name:
+            params["ruleset_name"] = ruleset_name
+        if folder:
+            params["folder"] = folder
+        if not include_extensions:
+            params["include_extensions"] = "false"
+
+        response = self.session.get(
+            "/domain-types/rule/collections/all",
+            params=params,
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
+    def get_all_names(self, ruleset_name: str) -> list[str]:
+        return [_["id"] for _ in self.get_all(ruleset_name)]
+
+    def move(
+        self,
+        rule_id: str,
+        folder: str,
+    ) -> None:
+        """Move a rule to a different folder."""
+        move_data = {"folder": folder}
+
+        response = self.session.post(
+            f"/objects/rule/{rule_id}/actions/move/invoke",
+            json=move_data,
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+
+class RulesetsAPI(BaseAPI):
+    def get_all(self) -> list[dict[str, Any]]:
+        response = self.session.get(
+            "/domain-types/ruleset/collections/all",
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
+    def get_all_names(self) -> list[str]:
+        return [_["id"] for _ in self.get_all()]
+
+
+class BrokerConnectionsAPI(BaseAPI):
+    def get_all(
+        self,
+    ) -> Sequence[Mapping[str, object]]:
+        response = self.session.get(
+            "/domain-types/broker_connection/collections/all",
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return [{str(k): v for k, v in el.items()} for el in response.json()["value"]]
+
+    def create(self, connection_id: str, *, connecter: str, connectee: str) -> Mapping[str, object]:
+        response = self.session.post(
+            "/domain-types/broker_connection/collections/all",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json={
+                "connection_id": connection_id,
+                "connection_config": BrokerConnectionInfo(
+                    connecter={"site_id": connecter},
+                    connectee={"site_id": connectee},
+                ),
+            },
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return {str(k): v for k, v in response.json().items()}
+
+    def edit(self, connection_id: str, *, connecter: str, connectee: str) -> Mapping[str, object]:
+        response = self.session.put(
+            f"/objects/broker_connection/{connection_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json={
+                "connection_config": BrokerConnectionInfo(
+                    connecter={"site_id": connecter},
+                    connectee={"site_id": connectee},
+                ),
+            },
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return {str(k): v for k, v in response.json().items()}
+
+    def delete(self, connection_id: str) -> None:
+        response = self.session.delete(
+            f"/objects/broker_connection/{connection_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+        )
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+
+class SitesAPI(BaseAPI):
+    def create(self, site_config: dict[str, Any]) -> None:
+        response = self.session.post(
+            "/domain-types/site_connection/collections/all",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json={"site_config": site_config},
+        )
+
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+    def update(self, site_id: str, site_config: dict[str, Any]) -> None:
+        site_config.pop("logged_in", None)
+        response = self.session.put(
+            f"/objects/site_connection/{site_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json={"site_config": site_config},
+        )
+
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+    def show(self, site_id: str) -> dict[str, Any]:
+        response = self.session.get(
+            f"/objects/site_connection/{site_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+        )
+
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+        value: dict[str, Any] = response.json()["extensions"]
+        return value
+
+    def delete(self, site_id: str) -> None:
+        if (
+            response := self.session.post(
+                f"/objects/site_connection/{site_id}/actions/delete/invoke"
+            )
+        ).status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+    def login(self, site_id: str, user: str = "cmkadmin", password: str = "cmk") -> None:
+        response = self.session.post(
+            f"/objects/site_connection/{site_id}/actions/login/invoke",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json={"username": user, "password": password},
+        )
+
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+
+class BackgroundJobsAPI(BaseAPI):
+    def show(self, job_id: str) -> dict[str, Any]:
+        response = self.session.get(
+            f"/objects/background_job/{job_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+        )
+
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+        value: dict[str, Any] = response.json()
+        return value
+
+
+class BIAggregationAPI(BaseAPI):
+    def get(self, aggregation_id: str) -> dict[str, Any]:
+        response = self.session.get(
+            f"/objects/bi_aggregation/{aggregation_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+        )
+
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+        value: dict[str, Any] = response.json()
+        return value
+
+    def update(self, aggregation_id: str, body: dict[str, Any]) -> None:
+        response = self.session.put(
+            f"/objects/bi_aggregation/{aggregation_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json=body,
+        )
+
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+    def delete(self, aggregation_id: str) -> None:
+        response = self.session.delete(
+            f"/objects/bi_aggregation/{aggregation_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+        )
+
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+    def create(self, aggregation_id: str, body: dict[str, Any]) -> None:
+        response = self.session.post(
+            f"/objects/bi_aggregation/{aggregation_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json=body,
+        )
+
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+
+@dataclass(frozen=True, kw_only=True)
+class TelemetryMetricsDCDConnectionAttributeFilter:
+    key: str
+    value: str
+
+
+class DcdAPI(BaseAPI):
+    def create_piggyback_connection(
+        self,
+        dcd_id: str,
+        title: str,
+        comment: str = "",
+        disabled: bool = False,
+        restrict_source_hosts: list[str] | None = None,
+        interval: int = 60,
+        host_attributes: dict[str, object] | None = None,
+        delete_hosts: bool = False,
+        discover_on_creation: bool = True,
+        no_deletion_time_after_init: int = 600,
+        max_cache_age: int = 3600,
+        validity_period: int = 60,
+    ) -> None:
+        """Create a DCD connection via REST API."""
+        resp = self.session.post(
+            "/domain-types/dcd/collections/all",
+            json={
+                "dcd_id": dcd_id,
+                "title": title,
+                "comment": comment,
+                "disabled": disabled,
+                "site": self.session.site,
+                "connector": {
+                    "connector_type": "piggyback",
+                    "restrict_source_hosts": restrict_source_hosts or [],
+                    "interval": interval,
+                    "creation_rules": [
+                        {
+                            "folder_path": "/",
+                            "host_attributes": host_attributes or {},
+                            "delete_hosts": delete_hosts,
+                        }
+                    ],
+                    "discover_on_creation": discover_on_creation,
+                    "no_deletion_time_after_init": no_deletion_time_after_init,
+                    "max_cache_age": max_cache_age,
+                    "validity_period": validity_period,
+                },
+            },
+        )
+        if resp.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(resp)
+
+    def create_telemetry_metrics_connection(
+        self,
+        *,
+        dcd_id: str,
+        title: str,
+        site: str | None = None,
+        interval: int = 60,
+        host_name_template: str,
+        resource_attribute_filters: Sequence[TelemetryMetricsDCDConnectionAttributeFilter] = (),
+        scope_attribute_filters: Sequence[TelemetryMetricsDCDConnectionAttributeFilter] = (),
+        data_point_attribute_filters: Sequence[TelemetryMetricsDCDConnectionAttributeFilter] = (),
+        delete_hosts: bool = False,
+        discover_on_creation: bool = True,
+        validity_period: int = 60,
+        maximum_number_of_hosts: int = 500,
+    ) -> None:
+        """Create a DCD connection via REST API."""
+        response = self.session.post(
+            "domain-types/dcd_telemetry_metrics/collections/all",
+            api_version=APIVersion.INTERNAL,
+            json={
+                "dcd_id": dcd_id,
+                "title": title,
+                "site": site if site else self.session.site,
+                "connector": {
+                    "connector_type": "telemetry_metrics",
+                    "interval": interval,
+                    "host_name_lookup_rules": [
+                        {
+                            "host_name_template": host_name_template,
+                            "resource_attribute_filters": [
+                                {
+                                    "key": attribute_filter.key,
+                                    "value": attribute_filter.value,
+                                }
+                                for attribute_filter in resource_attribute_filters
+                            ],
+                            "scope_attribute_filters": [
+                                {
+                                    "key": attribute_filter.key,
+                                    "value": attribute_filter.value,
+                                }
+                                for attribute_filter in scope_attribute_filters
+                            ],
+                            "data_point_attribute_filters": [
+                                {
+                                    "key": attribute_filter.key,
+                                    "value": attribute_filter.value,
+                                }
+                                for attribute_filter in data_point_attribute_filters
+                            ],
+                        }
+                    ],
+                    "creation_rules": [
+                        {
+                            "folder_path": "/",
+                            "host_attributes": {
+                                "tag_address_family": "no-ip",
+                                "tag_agent": "special-agents",
+                            },
+                            "delete_hosts": delete_hosts,
+                        }
+                    ],
+                    "discover_on_creation": discover_on_creation,
+                    "validity_period": validity_period,
+                    "maximum_number_of_hosts": maximum_number_of_hosts,
+                },
+            },
+        )
+        if not response.ok:
+            raise UnexpectedResponse.from_response(response)
+
+    def get(self, dcd_id: str) -> dict[str, Any] | None:
+        """
+        Returns
+            the DCD details if the dcd_id was found
+            None if the dcd_id was not found
+        """
+        response = self.session.get(f"/objects/dcd/{dcd_id}")
+        if response.status_code not in (HTTPStatus.OK, HTTPStatus.NOT_FOUND):
+            raise UnexpectedResponse.from_response(response)
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            return None
+
+        json_data: dict[str, Any] = response.json()
+        return json_data
+
+    def delete(self, dcd_id: str) -> None:
+        """Delete a DCD connection via REST API."""
+        resp = self.session.delete(f"/objects/dcd/{dcd_id}")
+        if resp.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(resp)
+
+
+class LDAPConnectionAPI(BaseAPI):
+    def create(
+        self,
+        ldap_id: str,
+        user_base_dn: str,
+        user_search_filter: str | None,
+        user_id_attribute: str | None,
+        group_base_dn: str,
+        group_search_filter: str | None,
+        ldap_server: str,
+        bind_dn: str,
+        password: str,
+        create_users: Literal["on_sync", "on_login"] = "on_sync",
+        directory_type: Literal[
+            "active_directory_manual", "open_ldap", "389_directory_server"
+        ] = "active_directory_manual",
+        sync_interval_minutes: int = 1,
+        sync_plugins: dict[str, Any] | None = None,
+    ) -> None:
+        """Create an LDAP connection via REST API.
+
+        ``create_users`` maps to the underlying ``create_only_on_login``
+        connector flag: ``"on_sync"`` (default) provisions LDAP-owned users
+        on every periodic sync; ``"on_login"`` defers creation until an
+        actual LDAP login, which is the right setting when another
+        connector (e.g. SAML) should own newly authenticated users.
+
+        ``directory_type`` selects the connector flavour. ``"open_ldap"`` keys
+        users on ``uid`` (vs Active Directory's ``samaccountname``) — the right
+        choice for an ``inetOrgPerson`` directory whose users must be imported by
+        sync.
+
+        ``sync_plugins`` selects which user attributes the connection copies from
+        LDAP; the default (none) creates a connection that syncs no attribute at
+        all. Pass e.g. ``{"alias": {"state": "enabled", "attribute_to_sync": "cn"}}``
+        for a connection whose sync has an observable effect on the user record.
+        """
+        users = {
+            "user_base_dn": user_base_dn,
+            "search_scope": "search_whole_subtree",
+            "search_filter": {
+                "state": "disabled",
+            },
+            "filter_group": {"state": "disabled"},
+            "user_id_attribute": {
+                "state": "disabled",
+            },
+            "user_id_case": "dont_convert_to_lowercase",
+            "umlauts_in_user_ids": "keep_umlauts",
+            "create_users": create_users,
+        }
+        if user_search_filter:
+            users["search_filter"] = {
+                "state": "enabled",
+                "filter": user_search_filter,
+            }
+        if user_id_attribute:
+            users["user_id_attribute"] = {
+                "state": "enabled",
+                "attribute": user_id_attribute,
+            }
+
+        groups = {
+            "group_base_dn": group_base_dn,
+            "search_scope": "search_whole_subtree",
+            "search_filter": {
+                "state": "disabled",
+            },
+            "member_attribute": {
+                "state": "disabled",
+            },
+        }
+        if group_search_filter:
+            groups["search_filter"] = {
+                "state": "enabled",
+                "filter": group_search_filter,
+            }
+
+        resp = self.session.post(
+            "/domain-types/ldap_connection/collections/all",
+            json={
+                "users": users,
+                "groups": groups,
+                "sync_plugins": sync_plugins or {},
+                "other": {
+                    "sync_interval": {
+                        "days": sync_interval_minutes // (24 * 60),
+                        "hours": (sync_interval_minutes // 60) % 24,
+                        "minutes": sync_interval_minutes % 60,
+                    },
+                },
+                "general_properties": {
+                    "id": ldap_id,
+                    "description": "test ldap connection",
+                    "comment": "",
+                    "documentation_url": "",
+                    "rule_activation": "activated",
+                },
+                "ldap_connection": {
+                    "directory_type": {
+                        "type": directory_type,
+                        "ldap_server": ldap_server,
+                    },
+                    "bind_credentials": {
+                        "state": "enabled",
+                        "type": "explicit",
+                        "bind_dn": bind_dn,
+                        "explicit_password": password,
+                    },
+                    "tcp_port": {
+                        "state": "disabled",
+                    },
+                    "ssl_encryption": "disable_ssl",
+                    "connect_timeout": {
+                        "state": "disabled",
+                    },
+                    "ldap_version": {
+                        "state": "disabled",
+                    },
+                    "page_size": {
+                        "state": "disabled",
+                    },
+                    "response_timeout": {
+                        "state": "disabled",
+                    },
+                    "connection_suffix": {
+                        "state": "disabled",
+                    },
+                },
+            },
+        )
+        if resp.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(resp)
+
+    def delete(self, ldap_id: str) -> None:
+        """Delete an LDAP connection via REST API."""
+        resp = self.session.delete(f"/objects/ldap_connection/{ldap_id}", headers={"If-Match": "*"})
+        if resp.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(resp)
+
+
+class DowntimesAPI(BaseAPI):
+    def get_all(
+        self, host_name: str | None = None, service_description: str | None = None
+    ) -> list[dict[str, Any]]:
+        """List downtimes, optionally narrowed to one host or one of its services."""
+        params: dict[str, str] = {}
+        if host_name is not None:
+            params["host_name"] = host_name
+        if service_description is not None:
+            params["service_description"] = service_description
+        response = self.session.get("/domain-types/downtime/collections/all", params=params)
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return list(response.json()["value"])
+
+    def delete_by_params(
+        self, host_name: str, service_descriptions: list[str] | None = None
+    ) -> None:
+        """Delete a host's own downtimes, or those of the named services on it.
+
+        Addressed by host and service rather than by id, so it also clears what an
+        interrupted earlier run left behind.
+        """
+        body: dict[str, Any] = {"delete_type": "params", "host_name": host_name}
+        if service_descriptions is not None:
+            body["service_descriptions"] = service_descriptions
+        response = self.session.post("/domain-types/downtime/actions/delete/invoke", json=body)
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+
+class PasswordsAPI(BaseAPI):
+    def create(
+        self,
+        ident: str,
+        title: str,
+        comment: str,
+        password: str,
+        owner: str = "admin",
+    ) -> None:
+        """Create a password via REST API."""
+
+        request_data = {
+            "ident": ident,
+            "title": title,
+            "comment": comment,
+            "documentation_url": "localhost",
+            "password": password,
+            "editable_by": owner,
+            "shared": ["all"],
+        }
+        if self.session.site_edition.is_ultimatemt_edition():
+            request_data["customer"] = "global"
+
+        response = self.session.post(
+            "/domain-types/password/collections/all",
+            json=request_data,
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+    def delete(
+        self,
+        ident: str,
+    ) -> None:
+        """Delete a password via REST API."""
+        response = self.session.delete(f"/objects/password/{ident}", headers={"If-Match": "*"})
+
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+    def get_all(self) -> list[dict[str, Any]]:
+        """Get all configured passwords via REST API."""
+        response = self.session.get(
+            "/domain-types/password/collections/all", headers={"Content-Type": "application/json"}
+        )
+
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
+    def exists(self, ident: str) -> bool:
+        """Check if a password exists via REST API."""
+        raw_passwords = self.get_all()
+        return any(pw["id"] == ident for pw in raw_passwords)
+
+
+class LicenseAPI(BaseAPI):
+    def configure(self, settings: Mapping[str, str | Mapping[str, str]]) -> requests.Response:
+        response = self.session.put(
+            "/domain-types/licensing/actions/configure/invoke",
+            json={"settings": settings} if settings else {},
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def download(self) -> requests.Response:
+        response = self.session.get("/domain-types/license_request/actions/download/invoke")
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def upload(self, verification_response: object) -> requests.Response:
+        response = self.session.post(
+            url="/domain-types/license_response/actions/upload/invoke",
+            json=verification_response,
+        )
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def verify(self) -> requests.Response:
+        """Trigger the license verification and receive its results"""
+        response = self.session.post("/domain-types/licensing/actions/verify/invoke")
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+
+class OtelCollectorAPI(BaseAPI):
+    def get_receivers(self, expect_ok: bool = True) -> requests.Response:
+        """Get all OpenTelemetry collector receivers via REST API."""
+        response = self.session.get(
+            "domain-types/otel_collector_config_receivers/collections/all",
+            api_version=APIVersion.INTERNAL,
+        )
+        if expect_ok and response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def get_prom_scrapers(self, expect_ok: bool = True) -> requests.Response:
+        """Get all OpenTelemetry collector prometheus scrapiers via REST API."""
+        response = self.session.get(
+            "domain-types/otel_collector_config_prom_scrape/collections/all",
+            api_version=APIVersion.INTERNAL,
+        )
+        if expect_ok and response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def create_receivers(
+        self,
+        ident: str,
+        site_ids: Sequence[str],
+        title: str,
+        disabled: bool,
+        receiver_protocol_grpc: Mapping[str, Any] | None = None,
+        receiver_protocol_http: Mapping[str, Any] | None = None,
+        expect_ok: bool = True,
+    ) -> requests.Response:
+        """Create an OpenTelemetry collector receivers via REST API."""
+        body = {
+            "id": ident,
+            "disabled": disabled,
+            "site": site_ids,
+            "title": title,
+        }
+        if receiver_protocol_grpc:
+            body["receiver_protocol_grpc"] = receiver_protocol_grpc
+        if receiver_protocol_http:
+            body["receiver_protocol_http"] = receiver_protocol_http
+
+        response = self.session.post(
+            "domain-types/otel_collector_config_receivers/collections/all",
+            api_version=APIVersion.INTERNAL,
+            json=body,
+        )
+        if expect_ok and response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def create_prom_scrape(
+        self,
+        ident: str,
+        site_ids: Sequence[str],
+        title: str,
+        disabled: bool,
+        prometheus_scrape_configs: list[dict[str, Any]] | None = None,
+        expect_ok: bool = True,
+    ) -> requests.Response:
+        """Create an OpenTelemetry collector prometheus scraping config via REST API."""
+        body = {
+            "id": ident,
+            "disabled": disabled,
+            "site": site_ids,
+            "title": title,
+        }
+        if prometheus_scrape_configs:
+            body["prometheus_scrape_configs"] = prometheus_scrape_configs
+
+        response = self.session.post(
+            "domain-types/otel_collector_config_prom_scrape/collections/all",
+            api_version=APIVersion.INTERNAL,
+            json=body,
+        )
+        if expect_ok and response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def edit_receivers(
+        self,
+        ident: str,
+        site_ids: Sequence[str],
+        title: str | None = None,
+        disabled: bool | None = None,
+        receiver_protocol_grpc: dict[str, Any] | None = None,
+        receiver_protocol_http: dict[str, Any] | None = None,
+        expect_ok: bool = True,
+    ) -> requests.Response:
+        """Edit an OpenTelemetry collector receiver via REST API."""
+
+        body: dict[str, Any] = {
+            "id": ident,
+            "disabled": disabled,
+            "site": site_ids,
+            "title": title,
+        }
+
+        if receiver_protocol_grpc:
+            body["receiver_protocol_grpc"] = receiver_protocol_grpc
+        if receiver_protocol_http:
+            body["receiver_protocol_http"] = receiver_protocol_http
+
+        response = self.session.put(
+            f"objects/otel_collector_config_receivers/{ident}",
+            api_version=APIVersion.INTERNAL,
+            json=body,
+            headers={"If-Match": "*"},
+        )
+        if expect_ok and response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def edit_prom_scrape(
+        self,
+        ident: str,
+        site_ids: Sequence[str],
+        title: str | None = None,
+        disabled: bool | None = None,
+        prometheus_scrape_configs: list[dict[str, Any]] | None = None,
+        expect_ok: bool = True,
+    ) -> requests.Response:
+        """Edit an OpenTelemetry collector prometheus scraping via REST API."""
+
+        body: dict[str, Any] = {
+            "id": ident,
+            "disabled": disabled,
+            "site": site_ids,
+            "title": title,
+        }
+
+        if prometheus_scrape_configs:
+            body["prometheus_scrape_configs"] = prometheus_scrape_configs
+
+        response = self.session.put(
+            f"objects/otel_collector_config_prom_scrape/{ident}",
+            api_version=APIVersion.INTERNAL,
+            json=body,
+            headers={"If-Match": "*"},
+        )
+        if expect_ok and response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def delete_receivers(self, ident: str, expect_ok: bool = True) -> requests.Response:
+        """Delete an OpenTelemetry collector receiver via REST API."""
+        response = self.session.delete(
+            f"objects/otel_collector_config_receivers/{ident}",
+            api_version=APIVersion.INTERNAL,
+            headers={"If-Match": "*"},
+        )
+        if expect_ok and response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def delete_prom_scrape(self, ident: str, expect_ok: bool = True) -> requests.Response:
+        """Delete an OpenTelemetry collector prometheus scraping via REST API."""
+        response = self.session.delete(
+            f"objects/otel_collector_config_prom_scrape/{ident}",
+            api_version=APIVersion.INTERNAL,
+            headers={"If-Match": "*"},
+        )
+        if expect_ok and response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def delete_bundle(self, bundle_id: str, expect_ok: bool = True) -> requests.Response:
+        """Delete an OpenTelemetry Quick Setup configuration bundle via REST API."""
+        response = self.session.delete(
+            f"objects/otel_collector_config_bundles/{bundle_id}",
+            api_version=APIVersion.INTERNAL,
+        )
+        if expect_ok and response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def disable(self, site_id: str) -> requests.Response:
+        response = self.session.put(
+            "domain-types/otel_collector/actions/update/invoke",
+            api_version=APIVersion.INTERNAL,
+            json={"site_id": site_id, "activation": {"mode": "disabled"}},
+        )
+        if not response.ok:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def enable(self, site_id: str) -> requests.Response:
+        response = self.session.put(
+            "domain-types/otel_collector/actions/update/invoke",
+            api_version=APIVersion.INTERNAL,
+            json={"site_id": site_id, "activation": {"mode": "enabled"}},
+        )
+        if not response.ok:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+
+class EventConsoleAPI(BaseAPI):
+    def get_all(self) -> list[dict[str, Any]]:
+        response = self.session.get(
+            "/domain-types/event_console/collections/all",
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
+    def archive_events_by_params(self, filters: dict[str, Any]) -> None:
+        """Archive EC events by using 'params' filter type."""
+        body = {"filter_type": "params", "filters": filters}
+        response = self.session.post(
+            url="/domain-types/event_console/actions/delete/invoke", json=body
+        )
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+
+class Saml2API(BaseAPI):
+    def get_all(self) -> list[dict[str, Any]]:
+        response = self.session.get("/domain-types/saml_connection/collections/all")
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+        saml_connections: list[dict[str, Any]] = response.json()["value"]
+        return saml_connections
+
+    def get(self, connection_id: str) -> tuple[dict[str, Any], str]:
+        """Returns a tuple with the connection details and the Etag header"""
+        response = self.session.get(f"/objects/saml_connection/{connection_id}")
+
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+        return (response.json()["extensions"], response.headers["Etag"])
+
+    def create(self, connection_id: str, connection_config: dict[str, Any]) -> dict[str, Any]:
+        connection = {
+            "general_properties": {
+                "id": connection_id,
+                "name": "Test SAML Auth",
+            },
+            "connection_config": connection_config,
+            "security": {
+                "signing_certificate": {"type": "builtin"},
+                "decrypt_auth_certificate": {"type": "builtin"},
+            },
+            "users": {
+                "id_attribute": "user_id",
+            },
+        }
+
+        response = self.session.post(
+            "/domain-types/saml_connection/collections/all",
+            json=connection,
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+        json_data: dict[str, Any] = response.json()
+        return json_data
+
+    def delete(self, connection_id: str, etag: str) -> None:
+        response = self.session.delete(
+            f"/objects/saml_connection/{connection_id}",
+            headers={"If-Match": etag},
+        )
+
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+
+class RelayAPI(BaseAPI):
+    _domain_url = "domain-types/relay/collections/all"
+    _headers = {"Content-Type": "application/json"}
+
+    @staticmethod
+    def _object_url(relay_id: str) -> str:
+        return f"/objects/relay/{relay_id}"
+
+    def create(
+        self,
+        relay_id: str,
+        alias: str,
+        site_id: str,
+        num_fetchers: int = 13,
+        log_level: str = "INFO",
+    ) -> None:
+        response = self.session.post(
+            self._domain_url,
+            api_version=APIVersion.INTERNAL,
+            headers=self._headers,
+            json={
+                "relay_id": relay_id,
+                "alias": alias,
+                "siteid": site_id,
+                "num_fetchers": num_fetchers,
+                "log_level": log_level,
+            },
+        )
+
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+    def get(self, relay_id: str) -> tuple[Relay, str]:
+        response = self.session.get(
+            url=self._object_url(relay_id),
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        response_json = response.json()
+        return Relay(
+            id=relay_id,
+            alias=response_json["extensions"]["alias"],
+            site_id=response_json["extensions"]["siteid"],
+            num_fetchers=response_json["extensions"]["num_fetchers"],
+            log_level=response_json["extensions"]["log_level"],
+        ), response.headers["Etag"]
+
+    def get_all(self) -> list[Relay]:
+        response = self.session.get(url=self._domain_url)
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return [
+            Relay(
+                id=relay_dict["id"],
+                alias=relay_dict["extensions"]["alias"],
+                site_id=relay_dict["extensions"]["siteid"],
+                num_fetchers=relay_dict["extensions"]["num_fetchers"],
+                log_level=relay_dict["extensions"]["log_level"],
+            )
+            for relay_dict in response.json()["value"]
+        ]
+
+    def edit(self, relay: Relay) -> None:
+        response = self.session.put(
+            url=self._object_url(relay.id),
+            json={
+                "alias": relay.alias,
+                "siteid": relay.site_id,
+                "num_fetchers": relay.num_fetchers,
+                "log_level": relay.log_level,
+            },
+            headers={"If-Match": "*"},
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+    def delete(self, relay_id: str, etag: str) -> None:
+        response = self.session.delete(
+            url=self._object_url(relay_id),
+            headers={"If-Match": etag},
+        )
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+
+class RelayRegistrationTokenAPI(BaseAPI):
+    """
+    API for managing relay authentication tokens (for registration).
+    """
+
+    _domain_url = "/domain-types/relay_registration_token/collections/all"
+    _headers = {"Content-Type": "application/json"}
+
+    def create(self, expires_at: datetime | None = None) -> str:
+        expires_at = expires_at or datetime.now(UTC) + timedelta(hours=1)
+        response = self.session.post(
+            url=self._domain_url,
+            headers=self._headers,
+            json={
+                "expires_at": expires_at.isoformat(),
+            },
+        )
+        if response.status_code != HTTPStatus.CREATED:
+            raise UnexpectedResponse.from_response(response)
+
+        return str(response.json()["id"])  # Explicit type case to make mypy happy
+
+
+class DataBackendAPI(BaseAPI):
+    # The endpoint switched from PUT to PATCH on master and was backported to
+    # the 2.5.0 branch after 2.5.0p1 was tagged, so it first ships in 2.5.0p2.
+    # Older sites (used by update tests via the `base_site` fixture) still
+    # register PUT and their Apache config rejects PATCH at the mod_rewrite
+    # layer with 405.
+    _PATCH_SINCE = CMKVersion("2.5.0p2")
+    # The domain type was renamed from `metric_backend` to `data_backend` on master
+    # only, so older sites still serve the old name and answer the new one with 404.
+    _DATA_BACKEND_DOMAIN_SINCE = CMKVersion("3.0.0b1")
+
+    def _request(self, site_id: str, config_type: str) -> None:
+        method = (
+            self.session.patch
+            if self.session.site_version >= self._PATCH_SINCE
+            else self.session.put
+        )
+        domain_type = (
+            "data_backend"
+            if self.session.site_version >= self._DATA_BACKEND_DOMAIN_SINCE
+            else "metric_backend"
+        )
+        response = method(
+            f"domain-types/{domain_type}/actions/update/invoke",
+            api_version=APIVersion.INTERNAL,
+            json={
+                "site_id": site_id,
+                "config": {
+                    "type": config_type,
+                },
+            },
+        )
+
+        if not response.ok:
+            raise UnexpectedResponse.from_response(response)
+
+    def disable(self, site_id: str) -> None:
+        self._request(site_id, "disabled")
+
+    def enable(self, site_id: str) -> None:
+        self._request(site_id, "enabled")
+
+    def place_features(self, site_id: str, features: Mapping[str, str]) -> None:
+        response = self.session.patch(
+            "domain-types/data_backend/actions/update_feature_placement/invoke",
+            api_version=APIVersion.INTERNAL,
+            json={"site_id": site_id, "features": features},
+        )
+        if not response.ok:
+            raise UnexpectedResponse.from_response(response)
+
+    def names_with_types(self, value: str) -> dict[str, list[str]]:
+        """The metric names the backend offers for `value`, each with the types it carries."""
+        response = self._post_internal_action(
+            "domain-types/telemetry_metrics/actions/names_with_types/invoke",
+            {"value": value},
+        )
+        return {
+            str(choice["name"]): [str(metric_type) for metric_type in choice["types"]]
+            for choice in response["choices"]
+        }
+
+
+type Consolidation = Literal["min", "max", "avg"]
+
+
+class GraphAPI(BaseAPI):
+    """The graph discovery and data endpoints of the new graphing engine.
+
+    Only registered at `APIVersion.INTERNAL`. Host metrics are discovered by passing the
+    `_HOST_` sentinel as the service description.
+    """
+
+    def _post(self, action: str, body: Mapping[str, Any]) -> dict[str, Any]:
+        return self._post_internal_action(f"domain-types/graph/actions/{action}/invoke", body)
+
+    def discover_template_graphs(
+        self,
+        host_name: str,
+        service_description: str,
+        graph_id: str | None = None,
+    ) -> dict[str, Any]:
+        return self._post(
+            "discover_template_graphs",
+            {
+                "hostname": host_name,
+                "service_description": service_description,
+                "graph_id": graph_id,
+            },
+        )
+
+    def fetch_data(
+        self,
+        internal: Mapping[str, Any],
+        requested_time_range: Mapping[str, int],
+        consolidation_function: Consolidation,
+    ) -> dict[str, Any]:
+        return self._post(
+            "fetch_data",
+            {
+                # "internal" is a JSON-encoded string on the wire, not a nested object.
+                "internal": json.dumps(internal),
+                "requested_time_range": requested_time_range,
+                "consolidation_function": consolidation_function,
+            },
+        )
+
+    def add_to_container(
+        self,
+        family: str,
+        container_id: str,
+        specification: Mapping[str, object],
+        internal: str,
+    ) -> Mapping[str, object]:
+        """Store one discovered graph in a container page addressed by its pagetype name.
+
+        `internal` is the JSON string the discover actions return, passed on unchanged. A
+        container the acting user does not own is cloned for them first.
+        """
+        return self._post(
+            "add_to_container",
+            {
+                "family": family,
+                "id": container_id,
+                "specification": specification,
+                "internal": internal,
+            },
+        )
+
+    def get_pin(self) -> int | None:
+        """The time pinned for the acting user, None while no point is pinned."""
+        response = self.session.get(
+            "domain-types/graph/actions/get_pin/invoke", api_version=APIVersion.INTERNAL
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        pin_time = response.json()["pin_time"]
+        return None if pin_time is None else int(pin_time)
+
+    def set_pin(self, pin_time: int | None) -> None:
+        """Pin `pin_time` for the acting user; None removes the pin."""
+        response = self.session.post(
+            "domain-types/graph/actions/set_pin/invoke",
+            api_version=APIVersion.INTERNAL,
+            json={"pin_time": pin_time},
+        )
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+
+class AutocompleteAPI(BaseAPI):
+    """The autocompleters backing the GUI's suggestion dropdowns."""
+
+    def metric_titles(self, host_name: str, service_name: str) -> dict[str, str]:
+        """Map each of the service's metric names to the title the GUI offers it under.
+
+        A dropdown suggestion is labelled with the title, never the metric name, so a test
+        driving one has to know both.
+        """
+        response = self._post_internal_action(
+            "objects/autocomplete/monitored_metrics",
+            {
+                "value": "",
+                "parameters": {
+                    "strict": True,
+                    "context": {
+                        "host": {"host": host_name},
+                        "service": {"service": service_name},
+                    },
+                },
+            },
+        )
+        return {choice["id"]: choice["value"] for choice in response["choices"]}
+
+
+class CustomGraphAPI(BaseAPI):
+    """Custom graphs: their lifecycle, plus the data endpoint.
+
+    The data endpoint is also the only way to graph telemetry metrics (OTel) data.
+    """
+
+    # Every field is mandatory in the API model; only the visibility is varied by a caller.
+    _DEFAULT_METADATA: Final[Mapping[str, object]] = {
+        "description": "",
+        "topic": "my_workplace",
+        "sort_index": 99,
+        "hidden": False,
+        "is_show_more": False,
+    }
+    DEFAULT_GRAPH_OPTIONS: Final[Mapping[str, object]] = {
+        "unit": {"type": "first_entry_with_unit"},
+        "explicit_vertical_range": {"type": "auto"},
+        "omit_zero_metrics": False,
+    }
+
+    @staticmethod
+    def rrd_metric_data_source(
+        source_id: str,
+        host_name: str,
+        service_name: str,
+        metric_name: str,
+        color: str = "#28a2f3",
+    ) -> dict[str, object]:
+        """One RRD metric of a monitored service, as the graph's data source."""
+        return {
+            "type": "rrd_metric",
+            "id": source_id,
+            "title": "$DEFAULT_TITLE$",
+            "line_type": "line",
+            "mirrored": False,
+            "visible": True,
+            "color": color,
+            "host_name": host_name,
+            "service_name": service_name,
+            "metric_name": metric_name,
+            "consolidation": "avg",
+        }
+
+    def create(
+        self,
+        name: str,
+        title: str,
+        data_sources: Sequence[Mapping[str, object]] = (),
+        *,
+        public: bool = False,
+    ) -> dict[str, object]:
+        response = self.session.post(
+            "domain-types/custom_graph/collections/all",
+            api_version=APIVersion.UNSTABLE,
+            json={
+                "name": name,
+                "title": title,
+                "metadata": {
+                    **self._DEFAULT_METADATA,
+                    "public": {"type": "all_users"} if public else {"type": "private"},
+                },
+                "content": {
+                    "graph_options": self.DEFAULT_GRAPH_OPTIONS,
+                    "data_sources": data_sources,
+                },
+            },
+        )
+        if not response.ok:
+            raise UnexpectedResponse.from_response(response)
+        parsed = response.json()
+        if not isinstance(parsed, dict):
+            raise UnexpectedResponse(
+                response.status_code, f"expected a JSON object, got {parsed!r}"
+            )
+        return parsed
+
+    def delete(self, name: str) -> None:
+        response = self.session.delete(
+            f"objects/custom_graph/{name}",
+            api_version=APIVersion.UNSTABLE,
+            headers={"If-Match": "*"},
+        )
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+    def fetch_data(
+        self,
+        data_sources: Sequence[Mapping[str, object]],
+        graph_options: Mapping[str, object],
+        requested_time_range: Mapping[str, int],
+        consolidation_function: Consolidation,
+    ) -> dict[str, Any]:
+        return self._post_internal_action(
+            "domain-types/custom_graph/actions/fetch_data/invoke",
+            {
+                "content": {
+                    "graph_options": graph_options,
+                    "data_sources": data_sources,
+                },
+                "requested_time_range": requested_time_range,
+                "consolidation_function": consolidation_function,
+            },
+        )
+
+
+class DashboardAPI(BaseAPI):
+    """Dashboards created through the relative-grid REST model.
+
+    Only registered at ``APIVersion.UNSTABLE``, unlike most of this session's other
+    sub-clients (``INTERNAL``): the endpoint itself has no stable version yet.
+    """
+
+    def create_relative_grid_dashboard(self, body: Mapping[str, Any]) -> dict[str, Any]:
+        response = self.session.post(
+            "domain-types/dashboard_relative_grid/collections/all",
+            api_version=APIVersion.UNSTABLE,
+            json=body,
+        )
+        if response.status_code != HTTPStatus.CREATED:
+            raise UnexpectedResponse.from_response(response)
+        parsed = response.json()
+        if not isinstance(parsed, dict):
+            raise UnexpectedResponse(
+                response.status_code, f"expected a JSON object, got {parsed!r}"
+            )
+        return parsed
+
+    def delete(self, dashboard_id: str) -> None:
+        response = self.session.delete(
+            f"objects/dashboard/{dashboard_id}",
+            api_version=APIVersion.UNSTABLE,
+            headers={"If-Match": "*"},
+        )
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)
+
+
+class AgentReceiverRelayAPI(ARBaseAPI):
+    @property
+    def base_url(self) -> str:
+        return f"https://{self.session._openapi_session.host}:{self.session.port}/{self.session._openapi_session.site}/"  # noqa: SLF001
+
+    def register(self, relay_id: str, alias: str, csr: str) -> RelayRegistrationResponse:
+        body = RelayRegistrationRequest(relay_id=relay_id, alias=alias, csr=csr)
+        response = self.session.post(
+            url=urllib.parse.urljoin(self.base_url, "relays/"),
+            json=body.model_dump(),
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+        return RelayRegistrationResponse.model_validate(response.json())
+
+    def unregister(self, relay_id: str) -> None:
+        response = self.session.delete(
+            url=urllib.parse.urljoin(self.base_url, f"relays/{relay_id}")
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+    def get_status(self, relay_id: str, cert: tuple[str, str] | None) -> RelayStatusResponse:
+        response = self.session.get(
+            url=urllib.parse.urljoin(self.base_url, f"relays/{relay_id}/status"), cert=cert
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return RelayStatusResponse.model_validate(response.json())
+
+    def put_task(self, relay_id: str, task: FetchAdHocTask) -> TaskCreateResponse:
+        response = self.session.post(
+            url=urllib.parse.urljoin(self.base_url, f"relays/{relay_id}/tasks"),
+            json=TaskCreateRequest(spec=task).model_dump(),
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return TaskCreateResponse.model_validate(response.json())
+
+    def get_tasks(self, relay_id: str, cert: tuple[str, str] | None) -> list[TaskResponse]:
+        response = self.session.get(
+            url=urllib.parse.urljoin(self.base_url, f"relays/{relay_id}/tasks"),
+            cert=cert,
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return TaskListResponse.model_validate(response.json()).tasks

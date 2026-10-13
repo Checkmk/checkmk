@@ -1,0 +1,22 @@
+title: Veeam: Backup proxy
+agents: special
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors a backup proxy of a Veeam Backup & Replication server,
+ collected via the Veeam special agent. It reports the proxy type,
+ description, host and its online, disabled and out-of-date states.
+
+ This check is {CRIT} if the proxy is offline, since an unreachable proxy
+ cannot run a backup. It is {WARN} if the proxy's components are out of
+ date. It is {WARN} by default if the proxy is disabled; the state is
+ configurable, since a deliberately disabled proxy is normal in some
+ estates. These three states are evaluated independently: a proxy can be
+ online and disabled, or offline and enabled, at the same time.
+
+discovery:
+ One service is created for each backup proxy reported by the API.
+
+item:
+ The name of the backup proxy.

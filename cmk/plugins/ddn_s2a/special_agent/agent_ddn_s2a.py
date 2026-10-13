@@ -12,7 +12,7 @@ import socket
 import sys
 from collections.abc import Sequence
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 
 # This special agent uses the S2A RCM API. Please refer to the
 # official documentation.

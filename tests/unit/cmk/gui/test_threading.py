@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
+import contextvars
 import threading
 from collections.abc import Iterator
 from multiprocessing.pool import ThreadPool
@@ -80,11 +81,15 @@ def test_threading_error_message(flask_app: flask.Flask) -> None:
     with flask_app.test_request_context(path):
         flask_app.preprocess_request()
 
-        # We run in another thread WITHOUT copying over the request context.
+        # We run in another thread WITHOUT copying over the request context. Start from an empty
+        # context, even if Thread.start() is patched to copy the caller's context (pytest-check
+        # does so).
         with (
             pytest.raises(RuntimeError, match="copy_request_context"),
             reraise_exceptions_from_threads(),
         ):
-            thread = threading.Thread(name="test", target=_run_in_thread, args=("debug",))
+            thread = threading.Thread(
+                name="test", target=contextvars.Context().run, args=(_run_in_thread, "debug")
+            )
             thread.start()
             thread.join()

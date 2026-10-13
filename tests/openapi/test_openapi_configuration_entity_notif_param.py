@@ -6,6 +6,7 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Generator
+from http import HTTPStatus
 from unittest import mock
 
 import pytest
@@ -32,7 +33,7 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 from tests.testlib.common.utils import reset_registries
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 def spec() -> ValueSpecDictionary:
@@ -53,7 +54,7 @@ def form_spec() -> DictionaryExtended:
     )
 
 
-@pytest.fixture(name="registry", autouse=True)
+@pytest.fixture(name="registry", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _registry_fixture(monkeypatch: pytest.MonkeyPatch) -> Generator[NotificationParameterRegistry]:
     notification_parameter_registry = NotificationParameterRegistry()
     notification_parameter_registry.register(
@@ -93,7 +94,7 @@ def test_save_notif_param(clients: ClientRegistry) -> None:
     )
 
     # THEN
-    resp.assert_status_code(200)
+    resp.assert_status_code(HTTPStatus.OK)
     assert resp.json["title"] == "foo"
 
 
@@ -117,7 +118,7 @@ def test_save_configuration_entity_non_admin(
     )
 
     # THEN
-    assert resp.status_code == 403, (
+    assert resp.status_code == HTTPStatus.FORBIDDEN, (
         f"Expected status code 403 for non-admin user, got {resp.status_code}"
     )
 
@@ -199,7 +200,7 @@ def test_update_configuration_entity_non_admin(
     )
 
     # THEN
-    assert resp.status_code == 403, (
+    assert resp.status_code == HTTPStatus.FORBIDDEN, (
         f"Expected status code 403 for non-admin user, got {resp.status_code}"
     )
 
@@ -281,9 +282,8 @@ def test_list_configuration_entities(
     assert resp.json["value"][0]["title"] == "foo"
 
 
-def test_list_configuration_entities_without_permissions(
-    clients: ClientRegistry, registry: NotificationParameterRegistry, with_admin_login: UserId
-) -> None:
+@pytest.mark.usefixtures("registry", "with_admin_login")
+def test_list_configuration_entities_without_permissions(clients: ClientRegistry) -> None:
     # GIVEN
     clients.User.create(
         username="guest_user1",
@@ -301,14 +301,12 @@ def test_list_configuration_entities_without_permissions(
     )
 
     # THEN
-    resp.assert_status_code(403)
+    resp.assert_status_code(HTTPStatus.FORBIDDEN)
     assert resp.json["title"] == "Forbidden"
 
 
 @pytest.mark.usefixtures("with_admin_login")
-def test_get_notif_param(
-    clients: ClientRegistry, registry: NotificationParameterRegistry, with_admin_login: UserId
-) -> None:
+def test_get_notif_param(clients: ClientRegistry, registry: NotificationParameterRegistry) -> None:
     # GIVEN
     entity = save_notification_parameter(
         registry,
@@ -341,7 +339,7 @@ def test_get_notif_param(
 
 @pytest.mark.usefixtures("with_admin_login")
 def test_get_notif_param_without_permissions(
-    clients: ClientRegistry, registry: NotificationParameterRegistry, with_admin_login: UserId
+    clients: ClientRegistry, registry: NotificationParameterRegistry
 ) -> None:
     # GIVEN
     entity = save_notification_parameter(
@@ -374,7 +372,7 @@ def test_get_notif_param_without_permissions(
     )
 
     # THEN
-    resp.assert_status_code(403)
+    resp.assert_status_code(HTTPStatus.FORBIDDEN)
     assert resp.json["title"] == "Forbidden"
 
 
@@ -385,7 +383,7 @@ def test_get_notif_param_throws_404(clients: ClientRegistry) -> None:
     )
 
     # THEN
-    assert resp.status_code == 404
+    assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 def test_get_confguration_entity_fs_schema(clients: ClientRegistry) -> None:

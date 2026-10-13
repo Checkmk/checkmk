@@ -6,7 +6,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
 
 import dataclasses
 import itertools
@@ -33,18 +32,14 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.regex import escape_regex_chars
 from cmk.ccc.version import Edition, edition
 from cmk.gui import hooks
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.form_specs import DEFAULT_VALUE, get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.form_specs.generators.config_host_name import create_config_host_name
 from cmk.gui.form_specs.unstable import (
-    Autocompleter,
-    AutocompleterData,
-    AutocompleterParams,
     BinaryConditionChoices,
     CommentTextArea,
     ConditionChoices,
-    FetchMethod,
     not_empty,
 )
 from cmk.gui.form_specs.unstable.catalog import Catalog, Locked, Topic, TopicElement
@@ -69,7 +64,7 @@ from cmk.gui.watolib.check_mk_automations import (
     analyze_service_rule_matches,
 )
 from cmk.gui.watolib.config_domain_name import CORE
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.pending_changes import (
     Change,
     ChangeScope,
@@ -95,6 +90,12 @@ from cmk.ruleset_matcher.matcher import (
     TagConditionNE,
 )
 from cmk.ruleset_matcher.tags import AuxTag, TagGroup, TagGroupID, TagID
+from cmk.rulesets.internal.form_specs import (
+    Autocompleter,
+    AutocompleterData,
+    AutocompleterParams,
+    FetchMethod,
+)
 from cmk.rulesets.internal.form_specs import (
     ListOfStrings as ListOfStringsAPI,
 )
@@ -137,9 +138,9 @@ from .check_mk_automations import get_services_labels, update_merged_password_fi
 from .hosts_and_folders import (
     Folder,
     folder_preserving_link,
-    folder_tree,
     FolderTree,
     Host,
+    make_folder_tree,
 )
 from .objref import ObjectRef, ObjectRefType
 from .rulespecs import (
@@ -620,16 +621,9 @@ class AllRulesets(RulesetCollection):
         self._load_folder_rulesets(folder)
 
     @staticmethod
-    def load_all_rulesets(tree: FolderTree | None = None) -> AllRulesets:
-        """Load all rules of all folders
-
-        tree defaults to the request-global folder_tree() for callers that must not
-        depend on cmk.gui.watolib.hosts_and_folders directly, e.g. plugin components
-        restricted by the module-layer isolation.
-        """
-        if tree is None:
-            tree = folder_tree()
-        rulesets = RulesetCollection._initialize_rulesets()
+    def load_all_rulesets(tree: FolderTree) -> AllRulesets:
+        """Load all rules of all folders"""
+        rulesets = RulesetCollection._initialize_rulesets()  # noqa: SLF001
         self = AllRulesets(rulesets, tree)
         self._load_rulesets_recursively(tree.root_folder())
         return self
@@ -703,7 +697,7 @@ class SingleRulesetRecursively(RulesetCollection):
     def load_single_ruleset_recursively(
         tree: FolderTree, name: RulesetName
     ) -> SingleRulesetRecursively:
-        rulesets = RulesetCollection._initialize_rulesets(only_varname=name)
+        rulesets = RulesetCollection._initialize_rulesets(only_varname=name)  # noqa: SLF001
         self = SingleRulesetRecursively(rulesets)
         self._load_rulesets_recursively(tree.root_folder(), only_varname=name)
         return self
@@ -721,13 +715,13 @@ class FolderRulesets(RulesetCollection):
 
     @staticmethod
     def load_folder_rulesets(folder: Folder) -> FolderRulesets:
-        rulesets = RulesetCollection._initialize_rulesets()
+        rulesets = RulesetCollection._initialize_rulesets()  # noqa: SLF001
         self = FolderRulesets(rulesets, folder=folder)
         self._load_folder_rulesets(folder)
         return self
 
     def save_folder(self, *, pprint_value: bool, debug: bool) -> None:
-        if RulesetCollection._save_folder(
+        if RulesetCollection._save_folder(  # noqa: SLF001
             self._folder, self._rulesets, self._unknown_rulesets, pprint_value=pprint_value
         ):
             update_merged_password_file(debug=debug)
@@ -791,24 +785,24 @@ class Ruleset:
         except KeyError:
             return []
 
-    def _num_quick_setup_rules(self, folder: Folder) -> int:
-        # the assertion is that all quick setup rules are at the top
+    def _num_bundle_locked_rules(self, folder: Folder) -> int:
+        # the assertion is that all bundle-locked rules are at the top
         folder_rules = self.get_folder_rules(folder)
         for idx, rule in enumerate(folder_rules):
-            if not is_locked_by_quick_setup(rule.locked_by):
+            if not is_locked_by_config_bundle(rule.locked_by):
                 return idx
-        # if we get here either there are no rules or all of them are managed by qs
+        # if we get here either there are no rules or all of them are bundle-locked
         return len(folder_rules)
 
     def get_index_for_move(self, folder: Folder, rule: Rule, target: int) -> int:
-        num_qs_rules = self._num_quick_setup_rules(folder)
-        if is_locked_by_quick_setup(rule.locked_by):
+        num_locked_rules = self._num_bundle_locked_rules(folder)
+        if is_locked_by_config_bundle(rule.locked_by):
             if rule in self.get_folder_rules(folder):
-                return min(num_qs_rules - 1, target)
+                return min(num_locked_rules - 1, target)
 
-            return min(num_qs_rules, target)
+            return min(num_locked_rules, target)
 
-        return max(num_qs_rules, target)
+        return max(num_locked_rules, target)
 
     def prepend_rule(self, folder: Folder, rule: Rule) -> None:
         rules = self._rules.setdefault(folder.path(), [])
@@ -895,8 +889,8 @@ class Ruleset:
 
     def append_rule(self, folder: Folder, rule: Rule) -> int:
         rules = self._rules.setdefault(folder.path(), [])
-        if is_locked_by_quick_setup(rule.locked_by):
-            index = self._num_quick_setup_rules(folder)
+        if is_locked_by_config_bundle(rule.locked_by):
+            index = self._num_bundle_locked_rules(folder)
             rules.insert(index, rule)
         else:
             index = len(rules)
@@ -975,12 +969,7 @@ class Ruleset:
             dictname, subkey = name.split(":")
             varname = f"{dictname}[{subkey!r}]"
 
-            # Self-bootstrap the parent dict via the exec's locals (the
-            # `default` dict the loader passes in). Using locals(), not
-            # globals(), keeps each load call isolated: the cmk.ccc.store
-            # module globals would otherwise carry rules across calls and
-            # cause spurious accumulation.
-            content += f"\n{dictname} = locals().setdefault({dictname!r}, {{}})\n"
+            content += f"\n{store.bootstrap_statement(dictname, '{}')}\n"
             content += f"\n{dictname}.setdefault({subkey!r}, [])\n"
         else:
             varname = name
@@ -2046,11 +2035,17 @@ class EnabledDisabledServicesEditor:
         return None
 
 
-def find_timeperiod_usage_in_host_and_service_rules(time_period_name: str) -> list[TimeperiodUsage]:
+def find_timeperiod_usage_in_rules(time_period_name: str, config: Config) -> list[TimeperiodUsage]:
+    rulesets = AllRulesets.load_all_rulesets(make_folder_tree(config))
+    return _timeperiod_usage_in_host_and_service_rules(
+        rulesets, time_period_name
+    ) + _timeperiod_usage_in_time_specific_parameters(rulesets, time_period_name)
+
+
+def _timeperiod_usage_in_host_and_service_rules(
+    rulesets: AllRulesets, time_period_name: str
+) -> list[TimeperiodUsage]:
     used_in: list[TimeperiodUsage] = []
-    # Gated: registered in timeperiod_usage_finder_registry, which invokes finders with a fixed
-    # (time_period_name) signature and hands them no folder tree.
-    rulesets = AllRulesets.load_all_rulesets(folder_tree())
     for varname, ruleset in rulesets.get_rulesets().items():
         if not isinstance(ruleset.rulespec.value_model, TimeperiodValuespec | TimeSpecific):
             continue
@@ -2077,13 +2072,10 @@ def _get_used_timeperiods(value: dict[str, Any]) -> set[str]:
     return {tp for tp, _params in value.get(TIMESPECIFIC_VALUES_KEY, [])}
 
 
-def find_timeperiod_usage_in_time_specific_parameters(
-    time_period_name: str,
+def _timeperiod_usage_in_time_specific_parameters(
+    rulesets: AllRulesets, time_period_name: str
 ) -> list[TimeperiodUsage]:
     used_in: list[TimeperiodUsage] = []
-    # Gated: registered in timeperiod_usage_finder_registry, which invokes finders with a fixed
-    # (time_period_name) signature and hands them no folder tree.
-    rulesets = AllRulesets.load_all_rulesets(folder_tree())
     for ruleset in rulesets.get_rulesets().values():
         if not isinstance(ruleset.rulespec.value_model, TimeperiodValuespec | TimeSpecific):
             continue
@@ -2130,8 +2122,8 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
         return store.load_mk_file(
             path,
             default={
-                **RulesetCollection._context_helpers(folder),
-                **RulesetCollection._prepare_empty_rulesets(),
+                **RulesetCollection._context_helpers(folder),  # noqa: SLF001
+                **RulesetCollection._prepare_empty_rulesets(),  # noqa: SLF001
             },
             lock=lock,
         )
@@ -2203,7 +2195,10 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
 
 def may_edit_ruleset(varname: str) -> bool:
     if varname == "ignored_services":
-        return user.may("wato.services") or user.may("wato.rulesets")
+        # same effect as disabling via service discovery
+        return user.may("wato.rulesets") or (
+            user.may("wato.services") and user.may("wato.service_discovery_to_ignored")
+        )
     if varname in [
         "custom_checks",
         "datasource_programs",
@@ -2394,7 +2389,7 @@ def _get_cached_tags() -> Sequence[TagGroup | AuxTag]:
     return choices
 
 
-def _get_host_tags_condition_choices() -> dict[str, ConditionGroup]:
+def get_host_tags_condition_choices() -> dict[str, ConditionGroup]:
     choices: dict[str, ConditionGroup] = {}
     for tag in _get_cached_tags():
         match tag:
@@ -2416,13 +2411,14 @@ def _get_host_tags_condition_choices() -> dict[str, ConditionGroup]:
     return choices
 
 
-def _create_explicit_rule_conditions_dict(
+def create_explicit_rule_conditions_dict(
     *,
     tree: FolderTree,
     rule_spec_name: str,
     rule_spec_item: RuleSpecItem | None,
     is_service_rule: bool,
 ) -> DictionaryAPI:
+    """The explicit conditions of a rule, as the rule editor offers them."""
     elements: dict[str, DictElementAPI] = {
         "folder_path": DictElementAPI(
             parameter_form=SingleChoiceExtendedAPI[str](
@@ -2445,7 +2441,7 @@ def _create_explicit_rule_conditions_dict(
                 help_text=Help(
                     "Rule only applies to hosts that meet all of the host tag conditions listed here."
                 ),
-                get_conditions=_get_host_tags_condition_choices,
+                get_conditions=get_host_tags_condition_choices,
                 custom_validate=[
                     not_empty(error_msg=Message("Please add at least one tag condition."))
                 ],
@@ -2463,7 +2459,7 @@ def _create_explicit_rule_conditions_dict(
                                 ident="label",
                                 params=AutocompleterParams(world="core", object_type="host"),
                             ),
-                            fetch_method=FetchMethod.ajax_vs_autocomplete,
+                            fetch_method=FetchMethod.rest_autocomplete,
                         ),
                         custom_validate=[
                             not_empty(error_msg=Message("Please add at least one host label."))
@@ -2522,7 +2518,7 @@ def _create_explicit_rule_conditions_dict(
                         ident="label",
                         params=AutocompleterParams(world="core", object_type="service"),
                     ),
-                    fetch_method=FetchMethod.ajax_vs_autocomplete,
+                    fetch_method=FetchMethod.rest_autocomplete,
                 ),
                 custom_validate=[
                     not_empty(error_msg=Message("Please add at least one service label."))
@@ -2551,7 +2547,7 @@ def _create_rule_conditions_catalog_topic(
                             CascadingSingleChoiceElementAPI(
                                 name="explicit",
                                 title=Title("Explicit conditions"),
-                                parameter_form=_create_explicit_rule_conditions_dict(
+                                parameter_form=create_explicit_rule_conditions_dict(
                                     tree=tree,
                                     rule_spec_name=rule_spec_name,
                                     rule_spec_item=rule_spec_item,

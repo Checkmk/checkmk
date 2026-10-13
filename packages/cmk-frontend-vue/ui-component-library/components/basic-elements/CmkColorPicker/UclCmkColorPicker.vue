@@ -5,9 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script lang="ts">
 import {
-  type Options,
   type PanelConfig,
-  type PanelConfigFor
+  type PanelConfigFor,
+  listOptions
 } from '@ucl/_ucl/components/detail-page'
 import { type Sizes } from 'cmk-ui-library/components/CmkColorPicker.vue'
 
@@ -43,10 +43,10 @@ export const panelConfig = {
   size: {
     type: 'list' as const,
     title: 'Size',
-    options: [
-      { title: 'Small', name: 'small' },
-      { title: 'Large', name: 'large' }
-    ] satisfies Options<Sizes>[],
+    options: listOptions<Sizes>({
+      small: 'Small',
+      large: 'Large'
+    }),
     initialState: 'large' as const
   },
   overlay: {

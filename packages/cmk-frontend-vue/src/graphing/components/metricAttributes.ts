@@ -10,7 +10,7 @@ import {
   ATTRIBUTE_KIND_ORDER,
   type AttributeKind,
   attributeKindLabel
-} from '@/metric-backend/attribute-kind'
+} from '@/telemetry-metrics/attribute-kind'
 
 import type { Metric, MetricMetadata } from './TimeSeriesGraph'
 
@@ -59,8 +59,8 @@ export function groupedAttributes(attributes: MetricAttribute[]): AttributeGroup
     .map(([kind, ofKind]) => ({ kind, attributes: ofKind }))
 }
 
-/** The "Attribute type" column; an unknown kind is named raw rather than dropped. */
-export function attributeTypeLabel(kind: string): string {
+/** The "Attribute kind" column; an unknown kind is named raw rather than dropped. */
+export function attributeKindColumnLabel(kind: string): string {
   return isAttributeKind(kind) ? attributeKindLabel(kind) : kind
 }
 

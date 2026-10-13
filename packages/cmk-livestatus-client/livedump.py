@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 import sys
 import time
@@ -318,7 +317,7 @@ def main() -> None:
         args = parse_arguments(sys.argv)
         (livedump_config if args.config else livedump_state)(args)
     except Exception as e:
-        if args.debug:
+        if args.debug:  # type: ignore[possibly-undefined]
             raise
         bail_out(e)
 

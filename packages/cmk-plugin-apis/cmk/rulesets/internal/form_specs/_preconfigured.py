@@ -10,7 +10,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
-from cmk.rulesets.v1.form_specs._base import FormSpec
+from cmk.rulesets.v1.form_specs import FormSpec
 
 
 class InternalProxySchema(enum.StrEnum):

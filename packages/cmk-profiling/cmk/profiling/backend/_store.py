@@ -17,8 +17,6 @@ between the two writes leaves at most an orphan ``.profile`` (invisible to
 listing; cleaned up by ``enforce_retention``).
 """
 
-from __future__ import annotations
-
 import json
 import logging
 import re

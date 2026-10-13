@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from typing import override
 
-from cmk.gui.type_defs import HTTPVariables
-from cmk.web.utils.urls import urlencode_vars
+from cmk.web.utils.urls import HTTPVariable, urlencode_vars
 
 
 @dataclass
@@ -31,7 +31,7 @@ class MethodAjax(PopupMethod):
     endpoint: str | None
     url_vars: str | None
 
-    def __init__(self, endpoint: str, url_vars: HTTPVariables | None) -> None:
+    def __init__(self, endpoint: str, url_vars: Sequence[HTTPVariable] | None) -> None:
         super().__init__(type="ajax")
         self.endpoint = endpoint if endpoint else None
         self.url_vars = urlencode_vars(url_vars) if url_vars else None

@@ -8,23 +8,22 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import Edition
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb
 from cmk.gui.config import Config
-from cmk.gui.customer import customer_api
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _
 from cmk.gui.pages import PageContext
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.watolib import read_only
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
 from cmk.gui.watolib.mode import mode_registry, WatoMode
+from cmk.gui.watolib.setup_access import ensure_provider_site, ensure_setup_enabled
 from cmk.gui.watolib.sidebar_reload import is_sidebar_reload_needed
 from cmk.utils.paths import configuration_lockfile
 from cmk.web.utils.flashed_messages import get_flashed_messages_with_categories
 
-from .pages._html_elements import initialize_wato_html_head, wato_html_footer, wato_html_head
+from .pages._html_elements import wato_html_head, wato_html_page
 from .pages.not_implemented import ModeNotImplemented
 
 # .
@@ -53,25 +52,13 @@ from .pages.not_implemented import ModeNotImplemented
 
 
 def page_handler(edition: Edition, ctx: PageContext) -> None:
-    initialize_wato_html_head()
-
-    if not ctx.config.wato_enabled:
-        raise MKGeneralException(
-            _(
-                "Setup is disabled. Please set <tt>wato_enabled = True</tt>"
-                " in your <tt>multisite.mk</tt> if you want to use Setup."
-            )
-        )
+    ensure_setup_enabled(ctx.config)
 
     current_mode = request.get_str_input_mandatory("mode")
     # Backup has to be accessible for remote sites, otherwise the user has no
     # chance to configure a backup for remote sites.
-    if (
-        edition is Edition.ULTIMATEMT
-        and not customer_api().is_provider(ctx.config.raw.get("current_customer", "provider"))
-        and not current_mode.startswith(("backup", "edit_backup"))
-    ):
-        raise MKGeneralException(_("Checkmk can only be configured on the managers central site."))
+    if not current_mode.startswith(("backup", "edit_backup")):
+        ensure_provider_site(ctx.config)
 
     mode_instance = mode_registry.get(current_mode, ModeNotImplemented)(edition, ctx)
     mode_instance.ensure_permissions()
@@ -81,12 +68,13 @@ def page_handler(edition: Edition, ctx: PageContext) -> None:
     if display_options.disabled(display_options.N):
         html.add_body_css_class("inline")
 
-    # If we do an action, we acquire an exclusive lock on the complete Setup.
-    if request.has_var("_transid"):
-        with store.lock_checkmk_configuration(configuration_lockfile):
+    with wato_html_page(show_body_end=display_options.enabled(display_options.H)):
+        # If we do an action, we acquire an exclusive lock on the complete Setup.
+        if request.has_var("_transid"):
+            with store.lock_checkmk_configuration(configuration_lockfile):
+                _wato_page_handler(ctx.config, current_mode, mode_instance)
+        else:
             _wato_page_handler(ctx.config, current_mode, mode_instance)
-    else:
-        _wato_page_handler(ctx.config, current_mode, mode_instance)
 
 
 def _wato_page_handler(config: Config, current_mode: str, mode: WatoMode[object]) -> None:
@@ -147,10 +135,10 @@ def _wato_page_handler(config: Config, current_mode: str, mode: WatoMode[object]
             flashed=True,
         )
 
-    # Catch known user-input failures here so the matching wato_html_footer
-    # below still runs. wato_html_head opens `<div class="wato">` (and the
-    # surrounding main_navigation chrome via make_header); only the footer
-    # closes them. A bare-propagating user-input error would hand the
+    # Catch known user-input failures here so wato_html_page still closes the
+    # page. wato_html_head opens `<div class="wato">` (and the surrounding
+    # main_navigation chrome via make_header); only wato_html_page closes
+    # them on a normal exit. A bare-propagating user-input error would hand the
     # response to the WSGI exception renderer, which assumes the page has
     # not been opened yet and would leave .wato (and behind it content_area /
     # main_page_content) unclosed.
@@ -165,5 +153,3 @@ def _wato_page_handler(config: Config, current_mode: str, mode: WatoMode[object]
 
     if is_sidebar_reload_needed():
         html.reload_whole_page()
-
-    wato_html_footer(show_body_end=display_options.enabled(display_options.H))

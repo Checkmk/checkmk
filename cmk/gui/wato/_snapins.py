@@ -31,11 +31,11 @@ from cmk.gui.sidebar import (
     VisualItem,
     VisualMenuItem,
 )
-from cmk.gui.type_defs import Choices, IconNames, RoleName, StaticIcon, ViewSpec
+from cmk.gui.type_defs import RoleName, ViewSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.watolib.activate_changes import ActivateChanges
-from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree
+from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
 from cmk.gui.watolib.main_menu import main_module_registry, MainModuleTopic
 from cmk.shared_typing.main_menu import (
     LoadingTransition as MainMenuLoadingTransition,
@@ -47,6 +47,8 @@ from cmk.shared_typing.main_menu import (
     NavItemTopic,
     NavItemTopicEntry,
 )
+from cmk.web.utils.choices import Choice
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 
 def register(
@@ -94,7 +96,7 @@ def render_wato(config: Config, mini: bool) -> None:
         html.div("", class_="clear")
 
 
-def get_wato_menu_items(user_permissions: UserPermissions) -> list[NavItemTopic]:
+def get_wato_menu_items(user_permissions: UserPermissions) -> list[NavItemTopic]:  # noqa: ARG001
     by_topic: dict[MainModuleTopic, list[NavItemTopicEntry]] = {}
     for module_class in main_module_registry.values():
         module = module_class()
@@ -203,7 +205,7 @@ FolderEntry = TypedDict(
 )
 
 
-def compute_foldertree() -> dict[str, FolderEntry]:
+def compute_foldertree(tree: FolderTree) -> dict[str, FolderEntry]:
     sites.live().set_prepend_site(True)
     query = "GET hosts\nStats: state >= 0\nColumns: filename"
     hosts = sites.live().query(query)
@@ -226,7 +228,6 @@ def compute_foldertree() -> dict[str, FolderEntry]:
     # Now get number of hosts by folder
     # Count all children for each folder
     user_folders: dict[str, FolderEntry] = {}
-    tree = folder_tree()
     for _site, filename, num in sorted(hosts):
         # Remove leading /wato/
         wato_folder_path = filename[6:]
@@ -283,7 +284,7 @@ def render_tree_folder(tree_id: str, folder: FolderEntry, js_func: str) -> None:
     # Suppress indentation for non-emtpy root folder
     if folder[".path"] == "" and is_leaf:
         html.open_ul()  # empty root folder
-    elif folder and folder[".path"] != "":  # type: ignore[redundant-expr]
+    elif folder[".path"] != "":
         html.open_ul(style="padding-left:0px;")
 
     title = HTMLWriter.render_a(
@@ -338,7 +339,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         ):
             html.write_text_permissive(_("Setup is disabled."))
 
-        user_folders = compute_foldertree()
+        user_folders = compute_foldertree(make_folder_tree(config))
 
         #
         # Render link target selection
@@ -367,7 +368,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         ]
 
         topics = make_main_menu(visuals_to_show, user_permissions)
-        topic_choices: Choices = [(topic.title, topic.title) for topic in topics]
+        topic_choices: list[Choice] = [(topic.title, topic.title) for topic in topics]
 
         html.open_table()
         html.open_tr()
@@ -385,12 +386,12 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         html.open_td()
 
         for topic in topics:
-            targets: Choices = []
+            targets: list[Choice] = []
             for item in get_main_menu_items_prefixed_by_segment(topic):
                 if item.url and item.url.startswith("dashboard.py"):
-                    id = "dashboard|" + item.id
+                    id = "dashboard|" + item.id  # noqa: A001
                 else:
-                    id = item.id
+                    id = item.id  # noqa: A001
                 targets.append((id, item.title))
 
             if topic.title.lower() != selected_topic_name.lower():

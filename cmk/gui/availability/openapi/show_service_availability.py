@@ -42,7 +42,7 @@ from .models.response_models import ServiceAvailabilityObject
 
 
 def show_service_availability_v1(
-    api_context: ApiContext,
+    api_context: ApiContext,  # noqa: ARG001
     host_name: Annotated[
         AnnotatedHostName,
         PathParam(
@@ -95,6 +95,8 @@ def show_service_availability_v1(
         include_output=False,
         include_long_output=False,
         avoptions=avoptions,
+        # This endpoint filters by host/service, not by a visual context
+        active_filters=(),
     )
     av_data = compute_availability("service", raw_data, avoptions, load_annotations())
 

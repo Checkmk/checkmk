@@ -11,7 +11,10 @@ import pytest
 
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
-from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
+from cmk.gui.watolib.global_settings import (
+    load_configuration_settings,
+    save_global_settings_raw,
+)
 from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.actions.use_new_service_description import (
@@ -23,12 +26,12 @@ from cmk.update_config.plugins.actions.use_new_service_description import (
 def _setup_global_settings(global_settings_setup: GlobalSettings) -> Generator[None]:
     original_global_settings = load_configuration_settings(full_config=True)
     try:
-        save_global_settings(
+        save_global_settings_raw(
             {**ConfigDomainCACertificates().default_globals(), **global_settings_setup}
         )
         yield
     finally:
-        save_global_settings(
+        save_global_settings_raw(
             {**ConfigDomainCACertificates().default_globals(), **original_global_settings}
         )
 

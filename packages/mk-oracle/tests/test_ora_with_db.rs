@@ -26,8 +26,9 @@ use crate::common::tools::{
     make_endpoint_tns_admin_dir, make_mini_config, make_mini_config_cdb_root,
     make_mini_config_custom_instance, make_mini_config_custom_instance_with_tns_admin,
     make_mini_config_pdb, make_mini_config_pdb_builtin_then_custom,
-    make_mini_config_pdb_custom_then_builtin, make_mini_config_with_sid,
-    platform::add_runtime_to_path, role_spec, ORA_ENDPOINT_ENV_VAR, ORA_ENDPOINT_ENV_VAR_SECONDARY,
+    make_mini_config_pdb_custom_then_builtin, make_mini_config_performance,
+    make_mini_config_with_sid, platform::add_runtime_to_path, role_spec, ORA_ENDPOINT_ENV_VAR,
+    ORA_ENDPOINT_ENV_VAR_SECONDARY,
 };
 use mk_oracle::config::authentication::{AuthType, Authentication, Role, SqlDbEndpoint};
 use mk_oracle::config::defines::defaults::SECTION_SEPARATOR;
@@ -350,7 +351,7 @@ oracle:
             .iter()
             .find(|s| s.is_custom_metric())
             .expect("custom metric must be parsed");
-        let runtime = section::Section::new(custom, 0, config.options());
+        let runtime = section::Section::new(custom, Some(0), config.options());
         let queries = runtime
             .find_queries_with_search_dirs(InstanceNumVersion::from(0), Tenant::All, &[], &[])
             .expect("custom metric sql must yield queries");
@@ -373,6 +374,32 @@ oracle:
             .format("")
             .expect("patched column-name query must execute");
         assert_eq!(rows, vec!["X".to_string()], "dual.dummy always holds 'X'");
+    }
+
+    /// A cell the driver cannot render as a string fails the whole query. The
+    /// section then carries one FAILURE row with this message instead of data
+    /// rows holding an `Error: ...` cell.
+    #[test]
+    fn test_unconvertible_cell_fails_the_query() {
+        add_runtime_to_path();
+        let endpoint = reference_endpoint();
+        let config = make_mini_config(&endpoint);
+        let spot = backend::make_spot(&config.endpoint()).unwrap();
+        let conn = spot.connect(None).unwrap();
+        let query = SqlQuery::new(
+            "select 'a', cursor(select 1 from dual) as nested from dual",
+            &Vec::new(),
+        );
+
+        let error = conn
+            .query_table(&query)
+            .format("|")
+            .expect_err("a REF CURSOR cell must fail the query");
+
+        assert_eq!(
+            error.to_string(),
+            "invalid type conversion from REF CURSOR to string in column NESTED"
+        );
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -1211,15 +1238,34 @@ mod cdb {
                 );
                 assert!(line[0].starts_with(get_sid(endpoint).as_str()));
             });
-            // CMK-37362: if this fails on a supported release, that release needs the
-            // per-PDB execution the legacy plug-in used.
-            let root_prefix = format!("{}.CDB$ROOT|", get_sid(endpoint));
-            assert!(
-                rows.iter()
-                    .any(|r| r.contains("|PGA_info|") && !r.starts_with(&root_prefix)),
-                "no per-PDB PGA_info rows: {rows:?}"
-            );
         }
+    }
+
+    /// CMK-37362: `v$pgastat` yields a container's rows only inside that
+    /// container, so the section has to run once per container. That pass lives
+    /// in the emit pipeline and not in the SQL, hence `generate_data` instead of
+    /// `connect_and_query`, which only ever queries the root.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_performance_pga_info_per_pdb() {
+        add_runtime_to_path();
+        let Ok(endpoint) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR) else {
+            return;
+        };
+        let config = make_mini_config_performance(&endpoint);
+        let env = Env::default();
+        let output = generate_data(&config, &env).await.unwrap().join("\n");
+
+        let root_prefix = format!("{}.CDB$ROOT|", get_sid(&endpoint));
+        if !output.contains(&root_prefix) {
+            // Non-CDB endpoint: there is no container to run the section in.
+            return;
+        }
+        assert!(
+            output
+                .lines()
+                .any(|l| l.contains("|PGA_info|") && !l.starts_with(&root_prefix)),
+            "no per-PDB PGA_info rows: {output}"
+        );
     }
 
     #[test]

@@ -39,7 +39,7 @@ class AgentDownloadTokenMetadata:
 
 @api_model
 class AgentDownloadTokenObjectModel(DomainObjectModel):
-    domainType: Literal["agent_download_token"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["agent_download_token"] = api_field(
         description="The domain type of the object."
     )
     extensions: AgentDownloadTokenMetadata = api_field(description="The metadata of this token.")

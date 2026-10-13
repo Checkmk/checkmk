@@ -15,7 +15,7 @@ class _Params(BaseModel, frozen=True):
     instances: list[str]
 
 
-def command_function(params: _Params, host_config: HostConfig) -> Iterable[SpecialAgentCommand]:
+def command_function(params: _Params, host_config: HostConfig) -> Iterable[SpecialAgentCommand]:  # noqa: ARG001
     args = [
         item
         for instance in params.instances

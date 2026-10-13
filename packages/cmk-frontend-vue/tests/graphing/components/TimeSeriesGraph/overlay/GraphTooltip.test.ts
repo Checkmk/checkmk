@@ -19,7 +19,7 @@ function makeSample(overrides: Partial<HoverSample>): HoverSample {
     color: '#ff0000',
     formattedValue: '42 %',
     attributes: [],
-    pixelY: 10,
+    drawnPoint: { x: 5, y: 10 },
     snapTime: 1000,
     isClosest: false,
     ...overrides
@@ -39,6 +39,7 @@ function makeHoverState(overrides: Partial<HoverState>): HoverState {
     clientY: 205,
     snapX: 5,
     snapTime: 1000,
+    snapInterval: null,
     samples: [makeSample({})],
     ...overrides
   }
@@ -86,23 +87,28 @@ describe('GraphTooltip', () => {
     expect(screen.getByText(/, \d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}/)).toBeInTheDocument()
   })
 
-  test('positions the tooltip beside the viewport cursor coordinates', () => {
-    renderGraphTooltip(makeHoverState({ clientX: 105, clientY: 205 }))
+  test('shows a bin as its start and the clock time of its end', () => {
+    const start = 1781524800
+    const end = start + 3600
 
-    const tooltip = document.querySelector<HTMLElement>('.graphing-graph-tooltip')
-    // jsdom reports a zero-size element, so the position degrades to cursor + offset;
-    // flip and clamp behaviour is covered by the computeTooltipPosition unit tests.
-    expect(tooltip!.style.left).toBe('124px')
-    expect(tooltip!.style.top).toBe('213px')
+    renderGraphTooltip(makeHoverState({ snapTime: start + 1800, snapInterval: { start, end } }))
+
+    expect(screen.getByText(/, \d{4}-\d{2}-\d{2}\s+\d{2}:00:00 – \d{2}:00:00$/)).toBeInTheDocument()
   })
 
-  test('keeps the scoped-style attribute when teleported to the body', () => {
+  test('shows a bin that ends on another day with both dates', () => {
+    const start = 1781526000
+    const end = start + 2 * 86_400
+
+    renderGraphTooltip(makeHoverState({ snapTime: start, snapInterval: { start, end } }))
+
+    expect(screen.getByText(/\d{4}-\d{2}-\d{2}.* – .*\d{4}-\d{2}-\d{2}/)).toBeInTheDocument()
+  })
+
+  test('keeps its scoped style on the content inside the shared tooltip', () => {
     renderGraphTooltip(makeHoverState({}))
 
     const tooltip = document.querySelector<HTMLElement>('.graphing-graph-tooltip')
-    expect(tooltip!.parentElement).toBe(document.body)
-    // Without the scope attribute none of the component's styles would match — the
-    // exact regression the previous reka-ui portal shipped with.
     const attributeNames = Array.from(tooltip!.attributes).map((attribute) => attribute.name)
     expect(attributeNames.some((name) => name.startsWith('data-v-'))).toBe(true)
   })

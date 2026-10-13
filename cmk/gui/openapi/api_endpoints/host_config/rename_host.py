@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.hostaddress import HostName
@@ -26,7 +27,7 @@ from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.watolib.activate_changes import ActivateChanges
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.host_rename import (
     rename_hosts_job_entry_point,
     RenameHostBackgroundJob,
@@ -80,15 +81,15 @@ def rename_host_v1(
     api_context.user.need_permission("wato.rename_hosts")
     if _has_pending_changes(list(api_context.config.sites)):
         raise ProblemException(
-            status=409,
+            status=HTTPStatus.CONFLICT,
             title="Pending changes are present",
             detail="Please activate all pending changes before executing a host rename process",
         )
 
     new_name = body.new_name
-    if is_locked_by_quick_setup(host.locked_by()):
+    if is_locked_by_config_bundle(host.locked_by()):
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title=f'The host "{host.name()}" is locked by Quick setup.',
             detail="Locked hosts cannot be renamed.",
         )
@@ -106,6 +107,9 @@ def rename_host_v1(
                 custom_user_attributes=api_context.config.wato_user_attrs,
                 user_connections=api_context.config.user_connections,
                 user_permission_config=api_context.config.user_permissions().to_serializable_config(),
+                wato_hide_folders_without_read_permissions=api_context.config.wato_hide_folders_without_read_permissions,
+                wato_host_attrs=api_context.config.wato_host_attrs,
+                tags=api_context.config.tags.get_dict_format(),
             ),
         ),
         InitialStatusArgs(
@@ -117,11 +121,13 @@ def rename_host_v1(
         ),
     )
     if result.is_error():
-        raise ProblemException(status=409, title="Conflict", detail=str(result.error))
+        raise ProblemException(
+            status=HTTPStatus.CONFLICT, title="Conflict", detail=str(result.error)
+        )
 
     return ApiResponse(
         body=None,
-        status_code=303,
+        status_code=HTTPStatus.SEE_OTHER,
         headers={
             "Location": path_to_endpoint(
                 family=HOST_CONFIG_FAMILY.name,
@@ -146,17 +152,21 @@ ENDPOINT_RENAME_HOST = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=rename_host_v1,
-            additional_status_codes=[303, 409, 422],
+            additional_status_codes=[
+                HTTPStatus.SEE_OTHER,
+                HTTPStatus.CONFLICT,
+                HTTPStatus.UNPROCESSABLE_ENTITY,
+            ],
             status_descriptions={
-                303: (
+                HTTPStatus.SEE_OTHER: (
                     "The host rename process is still running. Redirecting to the "
                     "'Wait for completion' endpoint"
                 ),
-                409: (
+                HTTPStatus.CONFLICT: (
                     "There are pending changes not yet activated or a rename background job is "
                     "already running."
                 ),
-                422: "The host could not be renamed.",
+                HTTPStatus.UNPROCESSABLE_ENTITY: "The host could not be renamed.",
             },
         )
     },

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping, Sequence
 
@@ -428,7 +426,7 @@ def test_df_discovery_with_parse(
     )
 
 
-def make_test_df_params():
+def make_test_df_params() -> dict[str, object]:
     return {
         "trend_range": 24,
         "show_levels": "onmagic",

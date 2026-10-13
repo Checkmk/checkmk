@@ -13,14 +13,19 @@ The ``add_change`` write path used to persist three flags that the new
   * ``has_been_activated`` (bool, derived at write time) -> dropped
     (recomputed by readers from the change and the current site config)
 
+A record also names its config domains by the ident they had when it was
+written, which the registry no longer knows once a domain has been renamed.
+
 This update action rewrites legacy records in place so that the application
 code can uniformly rely on the new schema.
 """
 
+from collections.abc import Mapping
 from logging import Logger
 from typing import cast, override
 
 from cmk.ccc.site import SiteId
+from cmk.gui.watolib.config_domain_name import config_domain_registry, ConfigDomainName
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.site_changes import SiteChanges
 from cmk.update_config.lib import ExpiryVersion
@@ -32,7 +37,19 @@ _SITE_CHANGES_PREFIX = "replication_changes_"
 _SITE_CHANGES_SUFFIX = ".mk"
 
 
-def _migrate_record(record: dict[str, object]) -> bool:
+def _renamed_idents() -> Mapping[ConfigDomainName, ConfigDomainName]:
+    return {
+        previous_ident: domain.ident()
+        for domain in config_domain_registry.values()
+        for previous_ident in domain.previous_idents()
+        # A domain may declare a previous ident before the rename it prepares for.
+        if previous_ident != domain.ident()
+    }
+
+
+def _migrate_record(
+    record: dict[str, object], renamed_idents: Mapping[ConfigDomainName, ConfigDomainName]
+) -> bool:
     changed = False
 
     if "need_sync" in record:
@@ -58,6 +75,21 @@ def _migrate_record(record: dict[str, object]) -> bool:
         del record["has_been_activated"]
         changed = True
 
+    domains = record.get("domains")
+    if isinstance(domains, list) and any(domain in renamed_idents for domain in domains):
+        record["domains"] = [renamed_idents.get(domain, domain) for domain in domains]
+        changed = True
+
+    domain_settings = record.get("domain_settings")
+    if isinstance(domain_settings, dict) and any(
+        domain in renamed_idents for domain in domain_settings
+    ):
+        record["domain_settings"] = {
+            renamed_idents.get(domain, domain): settings
+            for domain, settings in domain_settings.items()
+        }
+        changed = True
+
     return changed
 
 
@@ -70,6 +102,8 @@ class MigrateSiteChangesSchema(UpdateAction):
         if not site_changes_dir.exists():
             return
 
+        renamed_idents = _renamed_idents()
+
         for path in sorted(site_changes_dir.glob(f"{_SITE_CHANGES_PREFIX}*{_SITE_CHANGES_SUFFIX}")):
             if not path.is_file():
                 continue
@@ -81,7 +115,9 @@ class MigrateSiteChangesSchema(UpdateAction):
 
             with store.mutable_view() as records:
                 migrated = sum(
-                    1 for record in records if _migrate_record(cast("dict[str, object]", record))
+                    1
+                    for record in records
+                    if _migrate_record(cast("dict[str, object]", record), renamed_idents)
                 )
 
             if migrated:

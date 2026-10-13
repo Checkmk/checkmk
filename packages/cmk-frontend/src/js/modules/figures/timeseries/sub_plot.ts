@@ -365,7 +365,7 @@ export class BarPlot extends SubPlot<BarPlotPlotDefinition> {
     bars.exit().remove()
 
     const classes = this.definition!.css_classes || []
-    const bar_spacing = classes.includes('barbar_chart') ? 2 : 4
+    const bar_spacing = 4
     const css_classes = classes.concat('bar').join(' ')
 
     this._bars = bars
@@ -413,7 +413,7 @@ export class BarPlot extends SubPlot<BarPlotPlotDefinition> {
 
 // Renders a single value
 // Per default, the latest timestamp of the given timeline is used
-export class SingleValuePlot extends SubPlot<SingleValuePlotDefinition> {
+class SingleValuePlot extends SubPlot<SingleValuePlotDefinition> {
   override ident() {
     return 'single_value'
   }

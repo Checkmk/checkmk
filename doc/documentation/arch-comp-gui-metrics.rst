@@ -31,20 +31,22 @@ retrieve from RRD the data of the old metric and merge both time series. This
 allows a path to standardize metric-names going forward and clean RRDs columns.
 
 The final step is to display time series. Metrics belonging to a service are
-contextually grouped into specific templates, which provides a better utility to
-the user compared to assigning each metric to individual graphs. Those templates
-are defined as graph recipes and dynamically calculated based on the available
-metrics under the constraints of the service being displayed.
+contextually grouped into graphs, which provides a better utility to the user
+compared to assigning each metric to an individual graph. A graph plug-in
+declares the metrics it draws, and is matched dynamically against the metrics a
+service actually reports.
 
 Architecture
 ============
 
-The metric & graph system although essential is misplaced as a plugin system
-under ``cmk/gui/plugins/metrics/``. Here we define over a dynamically shared
-python dictionaries (global variables/yet more like a static database) the ``Units`` in
-dict ``unit_info``, ``Metrics`` in dict ``metric_info``, check-plugin dependent
-``metric translation`` in dict ``check_metrics`` and finally the ``graph
-recipes`` in dict ``graph_info``.
+Metrics, graphs, Perf-O-Meters and metric translations are declared as plug-ins
+against the ``cmk.graphing`` API (``packages/cmk-plugin-apis``). They are
+discovered per site and evaluated by ``cmk.graphing_engine``
+(``packages/cmk-graphing-engine``), which matches a graph plug-in against the
+available metric names, fetches the time series from RRD and evaluates the
+declared quantities into curves. The engine produces data only; ``cmk/gui``
+renders it - as a Vue component in the browser, or as PNG for notification mails
+and PDF reports.
 
 Risks and technical debts
 =========================

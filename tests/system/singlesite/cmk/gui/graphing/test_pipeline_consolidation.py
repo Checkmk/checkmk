@@ -15,15 +15,15 @@ from typing import NamedTuple
 
 import pytest
 
-from tests.testlib.graphing import (
+from tests.testlib.system.graphing import (
     data_points_of_every_metric,
     GraphDataShape,
     injected_ping_rrds,
     InjectedPingRrd,
     ping_graph_internal,
 )
-from tests.testlib.openapi_session import Consolidation
-from tests.testlib.site import Site
+from tests.testlib.system.openapi_session import Consolidation
+from tests.testlib.system.site import Site
 
 pytestmark = pytest.mark.skip_if_edition("community")
 

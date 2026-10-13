@@ -6,7 +6,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import Dictionary, Integer, NetworkPort, TextInput
-from cmk.gui.wato import RulespecGroupIntegrateOtherServices
+from cmk.gui.watolib.rulespec_groups import RulespecGroupIntegrateOtherServices
 from cmk.ruleset_matcher.definition import RuleGroup
 
 

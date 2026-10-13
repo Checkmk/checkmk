@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
@@ -22,27 +22,26 @@ def get_mk_inotify_files(conf: Sequence) -> FileGenerator:
     )
 
 
-def _get_mk_inotify_config(conf: Sequence) -> Iterable[str]:
+def _get_mk_inotify_config(conf: Sequence) -> Iterator[str]:
     heartbeat_timeout, stats_interval, stats_messages, stats_retention, file_cfg = conf
 
     yield from [
         "[global]",
-        "heartbeat_timeout=%d" % heartbeat_timeout,
-        "write_interval=%d" % stats_interval,
-        "max_messages_per_interval=%d" % stats_messages,
-        "stats_retention=%d" % stats_retention,
+        f"heartbeat_timeout={int(heartbeat_timeout)}",
+        f"write_interval={int(stats_interval)}",
+        f"max_messages_per_interval={int(stats_messages)}",
+        f"stats_retention={int(stats_retention)}",
         "",
     ]
 
     for entry in file_cfg:
         if len(entry) == 2:  # a folder
-            yield "[%s]" % entry[0]
+            yield f"[{entry[0]}]"
         else:
             yield "[{}|{}]".format(entry[0], "|".join(entry[1]))
 
-        operations = entry[-1]
-        for operation in operations:
-            yield "%s=1" % operation
+        for operation in entry[-1]:
+            yield f"{operation}=1"
 
 
 register.bakery_plugin(

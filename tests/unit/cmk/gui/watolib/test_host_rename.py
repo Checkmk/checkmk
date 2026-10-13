@@ -2,6 +2,10 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
+import io
 import logging
 import os
 import shutil
@@ -28,6 +32,32 @@ from cmk.livestatus_client import (
 )
 from cmk.utils.redis import disable_redis
 
+_SITE_CONFIGS = SiteConfigurations(
+    {
+        SiteId("NO_SITE"): SiteConfiguration(
+            id=SiteId("NO_SITE"),
+            alias="Local site NO_SITE",
+            socket=("local", None),
+            disable_wato=True,
+            disabled=False,
+            insecure=False,
+            url_prefix="/NO_SITE/",
+            multisiteurl="",
+            persist=False,
+            replicate_ec=False,
+            replicate_mkps=False,
+            replication=None,
+            timeout=5,
+            user_login=True,
+            proxy=None,
+            user_attribute_sync_connections="all",
+            status_host=None,
+            message_broker_port=5672,
+            is_trusted=False,
+        )
+    }
+)
+
 
 def _noop_pending_changes() -> PendingChanges:
     return PendingChanges(
@@ -39,9 +69,11 @@ def _noop_pending_changes() -> PendingChanges:
     )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def test_env(
-    monkeypatch: MonkeyPatch, with_admin_login: UserId, load_config: None
+    monkeypatch: MonkeyPatch,
+    with_admin_login: UserId,
+    load_config: None,
 ) -> Iterator[None]:
     monkeypatch.setattr(
         check_mk_automations,
@@ -114,6 +146,7 @@ def test_env(
     ],
 )
 @pytest.mark.parametrize("use_subfolder", [True, False])
+@pytest.mark.usefixtures("test_env")
 def test_rename_host(
     use_subfolder: bool,
     hosts_to_create: list[tuple[HostName, HostAttributes, list[HostName] | None]],
@@ -128,24 +161,21 @@ def test_rename_host(
             "",
             logging.getLogger(),
             threading.Event(),
-            lambda x: gui_context(),
+            lambda x: gui_context(),  # noqa: ARG005
             progress_update,
         )
+        tree = folder_tree()
         if use_subfolder:
-            folder = (
-                folder_tree()
-                .root_folder()
-                .create_subfolder(
-                    "some_subfolder",
-                    "Some Subfolder",
-                    {},
-                    pprint_value=False,
-                    pending_changes=_noop_pending_changes(),
-                    acting_user=user,
-                )
+            folder = tree.root_folder().create_subfolder(
+                "some_subfolder",
+                "Some Subfolder",
+                {},
+                pprint_value=False,
+                pending_changes=_noop_pending_changes(),
+                acting_user=user,
             )
         else:
-            folder = folder_tree().root_folder()
+            folder = tree.root_folder()
         folder.create_hosts(
             hosts_to_create,
             pprint_value=False,
@@ -155,33 +185,12 @@ def test_rename_host(
 
         # WHEN
         perform_rename_hosts(
+            tree,
             renamings=[(folder, old, new) for old, new in renamings],
             job_interface=job_interface,
             custom_user_attributes=[],
             user_connections=[],
-            site_configs={
-                SiteId("NO_SITE"): SiteConfiguration(
-                    id=SiteId("NO_SITE"),
-                    alias="Local site NO_SITE",
-                    socket=("local", None),
-                    disable_wato=True,
-                    disabled=False,
-                    insecure=False,
-                    url_prefix="/NO_SITE/",
-                    multisiteurl="",
-                    persist=False,
-                    replicate_ec=False,
-                    replicate_mkps=False,
-                    replication=None,
-                    timeout=5,
-                    user_login=True,
-                    proxy=None,
-                    user_attribute_sync_connections="all",
-                    status_host=None,
-                    message_broker_port=5672,
-                    is_trusted=False,
-                )
-            },
+            site_configs=_SITE_CONFIGS,
             pending_changes=_noop_pending_changes(),
             pprint_value=False,
             use_git=False,
@@ -196,10 +205,68 @@ def test_rename_host(
     # This also caused the bug in the first place: The cluster renaming
     # created its hosts/folders from Hosts.all() which was not affected by
     # the cache invalidation of _rename_host_in_folder as expected.
-    folder._hosts = None
+    folder._hosts = None  # noqa: SLF001
     hosts = folder.hosts()
     assert set(hosts) == expected_hosts
     for cluster, expected_nodes in expected_clusters.items():
         nodes = hosts[HostName(cluster)].cluster_nodes()
         assert nodes is not None
         assert set(nodes) == expected_nodes
+
+
+@pytest.mark.parametrize(
+    "kind",
+    [
+        pytest.param("management", id="known kind"),
+        pytest.param("later", id="kind this version cannot place"),
+    ],
+)
+@pytest.mark.usefixtures("test_env")
+def test_rename_host_rewrites_the_relations_pointing_at_it(kind: str) -> None:
+    """Both halves of a relation are stored, but only the half sitting on the counterpart names
+    the renamed host - so the pass is the same as for a parent definition."""
+    tree = folder_tree()
+    folder = tree.root_folder()
+    folder.create_hosts(
+        [(HostName("os1"), HostAttributes(), None)],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=user,
+    )
+    folder.create_hosts(
+        [
+            (
+                HostName("board"),
+                HostAttributes(
+                    {"relations": [{"kind": kind, "direction": "parent", "host": HostName("os1")}]}
+                ),
+                None,
+            ),
+        ],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=user,
+    )
+
+    perform_rename_hosts(
+        tree,
+        renamings=[(folder, HostName("os1"), HostName("os2"))],
+        job_interface=BackgroundProcessInterface(
+            "",
+            "",
+            logging.getLogger(),
+            threading.Event(),
+            lambda x: gui_context(),  # noqa: ARG005
+            io.StringIO(),
+        ),
+        custom_user_attributes=[],
+        user_connections=[],
+        site_configs=_SITE_CONFIGS,
+        pending_changes=_noop_pending_changes(),
+        pprint_value=False,
+        use_git=False,
+        debug=False,
+    )
+
+    renamed = tree.root_folder().hosts()[HostName("board")]
+    assert renamed.attributes["relations"] == [{"kind": kind, "direction": "parent", "host": "os2"}]

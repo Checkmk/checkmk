@@ -7,9 +7,6 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-# ruff: noqa: ARG001
-# ruff: noqa: SLF001
-
 
 from collections.abc import Callable, Generator
 from typing import Any
@@ -17,6 +14,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service, State
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.agent_based.v3_unstable import Metric as MetricV3Unstable
 from cmk.checkengine.plugin_backend import check_plugins
 from cmk.checkengine.plugin_backend.utils import (
@@ -32,7 +30,7 @@ from cmk.checkengine.plugins import (
 from cmk.discover_plugins import PluginLocation
 
 
-def dummy_generator(section):
+def dummy_generator(section):  # noqa: ARG001
     return
     yield
 
@@ -46,27 +44,27 @@ MINIMAL_CREATION_KWARGS: dict[str, Any] = {
 }
 
 
-def dummy_function(section):
+def dummy_function(section):  # noqa: ARG001
     return
     yield
 
 
-def dummy_function_i(item, section):
+def dummy_function_i(item, section):  # noqa: ARG001
     return
     yield
 
 
-def dummy_function_ip(item, params, quark):
+def dummy_function_ip(item, params, quark):  # noqa: ARG001
     return
     yield
 
 
-def dummy_function_ips(item, params, section):
+def dummy_function_ips(item, params, section):  # noqa: ARG001
     return
     yield
 
 
-def dummy_function_jj(section_jim, section_jill):
+def dummy_function_jj(section_jim, section_jill):  # noqa: ARG001
     return
     yield
 
@@ -81,14 +79,14 @@ def dummy_function_jj(section_jim, section_jill):
         ("", ValueError),
     ],
 )
-def test_invalid_service_name(string: str, exc_ty: type["TypeError"] | type["ValueError"]) -> None:
+def test_invalid_service_name(string: str, exc_ty: type[TypeError] | type[ValueError]) -> None:
     with pytest.raises(exc_ty):
-        check_plugins._validate_service_name(CheckPluginName("test"), string)
+        check_plugins._validate_service_name(CheckPluginName("test"), string)  # noqa: SLF001
 
 
 @pytest.mark.parametrize("string", ["whooop", "foo %s bar"])
 def test_valid_service_name(string: str) -> None:
-    check_plugins._validate_service_name(CheckPluginName("test"), string)
+    check_plugins._validate_service_name(CheckPluginName("test"), string)  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -99,7 +97,7 @@ def test_valid_service_name(string: str) -> None:
     ],
 )
 def test_requires_item(service_name: str, expected: bool) -> None:
-    assert check_plugins._requires_item(service_name) == expected
+    assert check_plugins._requires_item(service_name) == expected  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -168,7 +166,7 @@ def test_validate_function_args(  # type: ignore[misc]
     has_item: bool,
     has_params: bool,
     sections: list[ParsedSectionName],
-    raises: None | type["TypeError"],
+    raises: None | type[TypeError],
 ) -> None:
     if raises is None:
         validate_function_arguments(
@@ -278,7 +276,7 @@ def test_get_registered_check_plugins_mgmt_factory() -> None:
     ],
 )
 def test_check_function_passes_valid_type(value: object) -> None:
-    def check_fn(section: object) -> Generator[object]:
+    def check_fn(section: object) -> Generator[object]:  # noqa: ARG001
         yield value
 
     plugin = check_plugins.create_check_plugin(
@@ -290,7 +288,7 @@ def test_check_function_passes_valid_type(value: object) -> None:
 
 
 def test_check_function_rejects_invalid_type() -> None:
-    def check_fn(section: object) -> Generator[str]:
+    def check_fn(section: object) -> Generator[str]:  # noqa: ARG001
         yield "not a valid type"
 
     plugin = check_plugins.create_check_plugin(
@@ -301,7 +299,7 @@ def test_check_function_rejects_invalid_type() -> None:
 
 
 def test_check_function_empty() -> None:
-    def check_fn(section: object) -> Generator[object]:
+    def check_fn(section: object) -> Generator[object]:  # noqa: ARG001
         return
         yield
 
@@ -312,7 +310,7 @@ def test_check_function_empty() -> None:
 
 
 def test_discovery_function_passes_valid_type() -> None:
-    def disco_fn(section: object) -> Generator[object]:
+    def disco_fn(section: object) -> Generator[object]:  # noqa: ARG001
         yield Service()
 
     plugin = check_plugins.create_check_plugin(
@@ -324,7 +322,7 @@ def test_discovery_function_passes_valid_type() -> None:
 
 
 def test_discovery_function_rejects_invalid_type() -> None:
-    def disco_fn(section: object) -> Generator[str]:
+    def disco_fn(section: object) -> Generator[str]:  # noqa: ARG001
         yield "not a valid type"
 
     plugin = check_plugins.create_check_plugin(
@@ -335,7 +333,7 @@ def test_discovery_function_rejects_invalid_type() -> None:
 
 
 def test_discovery_function_empty() -> None:
-    def disco_fn(section: object) -> Generator[object]:
+    def disco_fn(section: object) -> Generator[object]:  # noqa: ARG001
         return
         yield
 
@@ -343,3 +341,23 @@ def test_discovery_function_empty() -> None:
         **{**MINIMAL_CREATION_KWARGS, "discovery_function": disco_fn}
     )
     assert list(plugin.discovery_function(section=None)) == []
+
+
+def test_discover_one_service_discovers_a_single_service() -> None:
+    plugin = check_plugins.create_check_plugin(
+        **{**MINIMAL_CREATION_KWARGS, "discovery_function": discover_one_service}
+    )
+
+    assert list(plugin.discovery_function(section=None)) == [Service()]
+
+
+def test_discover_one_service_rejects_service_name_with_item() -> None:
+    with pytest.raises(TypeError, match="discover_one_service"):
+        _ = check_plugins.create_check_plugin(
+            **{
+                **MINIMAL_CREATION_KWARGS,
+                "discovery_function": discover_one_service,
+                "check_function": dummy_function_i,
+                "service_name": "Norris Device %s",
+            }
+        )

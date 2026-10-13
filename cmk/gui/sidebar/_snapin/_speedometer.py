@@ -47,7 +47,10 @@ class Speedometer(SidebarSnapin):
         html.canvas("", width=str(snapin_width), height="146", id_="speedometer")
         html.close_div()
 
-        html.javascript("cmk.sidebar.speedometer_show_speed(0, 0, 0);")
+        html.call_ts_function(
+            function_name="speedometer_show_speed",
+            arguments={"last_perc": 0, "program_start": 0, "scheduled_rate": 0},
+        )
 
     @classmethod
     @override
@@ -60,7 +63,7 @@ class Speedometer(SidebarSnapin):
             "sidebar_ajax_speedometer": self._ajax_speedometer,
         }
 
-    def _ajax_speedometer(self, ctx: PageContext) -> None:
+    def _ajax_speedometer(self, ctx: PageContext) -> None:  # noqa: ARG002
         response.set_content_type("application/json")
         try:
             # Try to get values from last call in order to compute

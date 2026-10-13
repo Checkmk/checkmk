@@ -5,9 +5,9 @@
 
 from dataclasses import dataclass
 
+from cmk.rulesets.internal.form_specs import Autocompleter
 from cmk.rulesets.v1 import Label
 from cmk.rulesets.v1.form_specs import FormSpec
-from cmk.shared_typing.vue_formspec_components import Autocompleter
 from cmk.shared_typing.vue_formspec_components import (
     BinaryConditionChoicesValue as BinaryConditionChoicesValue,
 )

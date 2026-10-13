@@ -24,8 +24,8 @@ const MARKERS: &[&[u8]] = &[b"/.cache/bazel/", b"/home/jenkins"];
 pub(crate) fn scan_all<'a>(package: &'a Package) -> Vec<Finding<'a>> {
     package
         .elfs()
-        .into_iter()
-        .filter_map(|(path, _elf)| {
+        .into_keys()
+        .filter_map(|path| {
             let on_disk = package.extracted_path(path)?;
             let strings = scan(&on_disk);
             (!strings.is_empty()).then_some(Finding::EmbeddedBuildPaths { path, strings })

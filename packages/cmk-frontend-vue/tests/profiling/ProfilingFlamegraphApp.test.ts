@@ -5,11 +5,13 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
 
 import ProfilingFlamegraphApp from '@/profiling/ProfilingFlamegraphApp.vue'
 import type { HotspotData, ProfilingFlamegraphData } from '@/profiling/types'
+
+import { FakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 const DATA_URL = 'http://localhost/profile_data.py'
 
@@ -52,23 +54,16 @@ const PAYLOAD: ProfilingFlamegraphData = {
   total_functions: 4
 }
 
-const server = setupServer(http.get(DATA_URL, () => HttpResponse.json(PAYLOAD)))
-
-class ResizeObserverStub {
-  observe(): void {}
-  unobserve(): void {}
-  disconnect(): void {}
-}
+useMswServer(http.get(DATA_URL, () => HttpResponse.json(PAYLOAD)))
 
 beforeAll(() => {
-  server.listen({ onUnhandledRequest: 'error' })
-  vi.stubGlobal('ResizeObserver', ResizeObserverStub)
   Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 600 })
   Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 })
 })
-afterEach(() => server.resetHandlers())
+beforeEach(() => {
+  vi.stubGlobal('ResizeObserver', FakeResizeObserver)
+})
 afterAll(() => {
-  server.close()
   if (originalOffsetHeight) {
     Object.defineProperty(HTMLElement.prototype, 'offsetHeight', originalOffsetHeight)
   }

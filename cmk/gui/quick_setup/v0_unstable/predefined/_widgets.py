@@ -10,6 +10,7 @@ from cmk.gui.fields.definitions import HOST_NAME_REGEXP
 from cmk.gui.form_specs.unstable import id_validators
 from cmk.gui.form_specs.unstable.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.i18n import translate_to_current_language
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     QSHostName,
     QSHostPath,
@@ -21,7 +22,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecWrapper
 from cmk.gui.user_sites import get_configured_site_choices, site_attribute_default_value
 from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore
 from cmk.gui.watolib.form_spec_generators import create_full_path_folder_choice
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
@@ -38,6 +39,8 @@ from cmk.rulesets.v1.form_specs import (
 def unique_id_formspec_wrapper(
     title: Title,
     prefill_template: str = "unique_id",
+    *,
+    help_text: Help | None = None,
 ) -> FormSpecWrapper:
     return FormSpecWrapper(
         id=FormSpecId(UniqueFormSpecIDStr),
@@ -46,6 +49,7 @@ def unique_id_formspec_wrapper(
                 UniqueBundleIDStr: DictElement(
                     parameter_form=String(
                         title=title,
+                        help_text=help_text,
                         field_size=FieldSize.MEDIUM,
                         custom_validate=id_validators(
                             Message("%(title)s is required but not specified.")
@@ -66,6 +70,7 @@ def unique_id_formspec_wrapper(
 
 
 def _host_name_dict_element(
+    tree: FolderTree,
     title: Title = Title("Host name"),
     prefill_template: str = "qs_host",
 ) -> DictElement:
@@ -94,7 +99,7 @@ def _host_name_dict_element(
             prefill=DefaultValue(
                 unique_default_name_suggestion(
                     template=prefill_template,
-                    used_names=set(folder_tree().root_folder().all_hosts_recursively()),
+                    used_names=set(tree.root_folder().all_hosts_recursively()),
                 )
             ),
             help_text=Help(
@@ -106,26 +111,31 @@ def _host_name_dict_element(
     )
 
 
-def _host_path_dict_element(title: Title = Title("Folder")) -> DictElement:
+def _host_path_dict_element(
+    tree: FolderTree, acting_user: LoggedInUser, title: Title = Title("Folder")
+) -> DictElement:
     return DictElement(
         parameter_form=create_full_path_folder_choice(
             title=title,
             help_text=Help("Specify the location where the host will be created."),
             allow_new_folder_creation=True,
+            folder_choices=lambda: tree.folder_choices_fulltitle(acting_user),
         ),
         required=True,
     )
 
 
 def host_name_and_host_path_formspec_wrapper(
+    tree: FolderTree,
+    acting_user: LoggedInUser,
     host_prefill_template: str = "qs_host",
 ) -> FormSpecWrapper:
     return FormSpecWrapper(
         id=FormSpecId("host_data"),
         form_spec=TwoColumnDictionary(
             elements={
-                QSHostName: _host_name_dict_element(prefill_template=host_prefill_template),
-                QSHostPath: _host_path_dict_element(),
+                QSHostName: _host_name_dict_element(tree, prefill_template=host_prefill_template),
+                QSHostPath: _host_path_dict_element(tree, acting_user),
             },
         ),
     )

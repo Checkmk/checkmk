@@ -71,7 +71,7 @@ agent_section_graylog_alerts = AgentSection(
 )
 
 
-def discover_graylog_alerts(section: AlertsInfo) -> DiscoveryResult:
+def discover_graylog_alerts(section: AlertsInfo) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item=None)
 
 

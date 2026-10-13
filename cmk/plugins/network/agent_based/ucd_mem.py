@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping
 from contextlib import suppress
@@ -93,7 +91,7 @@ def parse_ucd_mem(string_table: StringTable) -> Section | None:
     try:
         mem_total = _info_str_to_bytes(row[0])
         mem_avail = _info_str_to_bytes(row[1])
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return None
 
     parsed = Section(

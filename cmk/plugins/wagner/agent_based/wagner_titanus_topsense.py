@@ -25,6 +25,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 Section = Sequence[StringTable]
@@ -96,10 +97,6 @@ def _get_model_data(section: Section) -> list[StringTable]:
 #   .--titanus info--------------------------------------------------------
 
 
-def discover_wagner_titanus_topsense_info(section: Section) -> DiscoveryResult:
-    yield Service()
-
-
 def check_wagner_titanus_topsense_info(section: Section) -> CheckResult:
     parsed = _get_model_data(section)
     message = f"System: {parsed[0][0][0]}"
@@ -127,16 +124,12 @@ check_plugin_wagner_titanus_topsense_info = CheckPlugin(
     name="wagner_titanus_topsense_info",
     service_name="Topsense Info",
     sections=["wagner_titanus_topsense"],
-    discovery_function=discover_wagner_titanus_topsense_info,
+    discovery_function=discover_one_service,
     check_function=check_wagner_titanus_topsense_info,
 )
 
 # .
 #   .--overall status------------------------------------------------------
-
-
-def discover_wagner_titanus_topsense_overall_status(section: Section) -> DiscoveryResult:
-    yield Service()
 
 
 def check_wagner_titanus_topsense_overall_status(section: Section) -> CheckResult:
@@ -152,7 +145,7 @@ check_plugin_wagner_titanus_topsense_overall_status = CheckPlugin(
     name="wagner_titanus_topsense_overall_status",
     service_name="Overall Status",
     sections=["wagner_titanus_topsense"],
-    discovery_function=discover_wagner_titanus_topsense_overall_status,
+    discovery_function=discover_one_service,
     check_function=check_wagner_titanus_topsense_overall_status,
 )
 
@@ -160,7 +153,7 @@ check_plugin_wagner_titanus_topsense_overall_status = CheckPlugin(
 #   .--alarm---------------------------------------------------------------
 
 
-def discover_wagner_titanus_topsense_alarm(section: Section) -> DiscoveryResult:
+def discover_wagner_titanus_topsense_alarm(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="1")
     yield Service(item="2")
 
@@ -206,7 +199,7 @@ check_plugin_wagner_titanus_topsense_alarm = CheckPlugin(
 #   .--smoke percent-------------------------------------------------------
 
 
-def discover_wagner_titanus_topsense_smoke(section: Section) -> DiscoveryResult:
+def discover_wagner_titanus_topsense_smoke(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="1")
     yield Service(item="2")
 
@@ -244,7 +237,7 @@ check_plugin_wagner_titanus_topsense_smoke = CheckPlugin(
 #   .--chamber deviation---------------------------------------------------
 
 
-def discover_wagner_titanus_topsense_chamber_deviation(section: Section) -> DiscoveryResult:
+def discover_wagner_titanus_topsense_chamber_deviation(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="1")
     yield Service(item="2")
 
@@ -278,7 +271,7 @@ check_plugin_wagner_titanus_topsense_chamber_deviation = CheckPlugin(
 #   .--air flow deviation--------------------------------------------------
 
 
-def discover_wagner_titanus_topsense_airflow_deviation(section: Section) -> DiscoveryResult:
+def discover_wagner_titanus_topsense_airflow_deviation(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="1")
     yield Service(item="2")
 
@@ -321,7 +314,7 @@ check_plugin_wagner_titanus_topsense_airflow_deviation = CheckPlugin(
 #   .--air temp------------------------------------------------------------
 
 
-def discover_wagner_titanus_topsense_temp(section: Section) -> DiscoveryResult:
+def discover_wagner_titanus_topsense_temp(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="Ambient 1")
     yield Service(item="Ambient 2")
 

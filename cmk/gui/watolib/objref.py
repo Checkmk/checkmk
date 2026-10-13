@@ -40,7 +40,7 @@ class ObjectRef:
         return serialized
 
     @classmethod
-    def deserialize(cls, serialized: dict[str, Any]) -> "ObjectRef":
+    def deserialize(cls, serialized: dict[str, Any]) -> ObjectRef:
         return cls(
             object_type=ObjectRefType(serialized["object_type"]),
             ident=serialized["ident"],

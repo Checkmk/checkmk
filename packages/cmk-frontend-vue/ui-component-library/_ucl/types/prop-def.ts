@@ -10,6 +10,7 @@ export interface BoolPropDef {
   title: string
   initialState: boolean
   help?: string
+  hiddenWhen?: (state: Record<string, unknown>) => boolean
 }
 
 export interface StringPropDef {
@@ -17,14 +18,22 @@ export interface StringPropDef {
   title: string
   initialState: string
   help?: string
+  hiddenWhen?: (state: Record<string, unknown>) => boolean
+}
+
+export interface ListOption<T extends string = string> {
+  title: string
+  name: NonNullable<T>
+  hiddenWhen?: (state: Record<string, unknown>) => boolean
 }
 
 export interface ListPropDef<T extends string = string> {
   type: 'list'
   title: string
-  options: Array<{ title: string; name: NonNullable<T> }>
+  options: Array<ListOption<T>>
   initialState: T
   help?: string
+  hiddenWhen?: (state: Record<string, unknown>) => boolean
 }
 
 export interface NumberPropDef {
@@ -32,6 +41,7 @@ export interface NumberPropDef {
   title: string
   initialState: number
   help?: string
+  hiddenWhen?: (state: Record<string, unknown>) => boolean
 }
 
 export interface MultilineStringPropDef {
@@ -39,6 +49,7 @@ export interface MultilineStringPropDef {
   title: string
   initialState: string
   help?: string
+  hiddenWhen?: (state: Record<string, unknown>) => boolean
 }
 
 export interface StringArrayPropDef {
@@ -46,6 +57,7 @@ export interface StringArrayPropDef {
   title: string
   initialState: string[]
   help?: string
+  hiddenWhen?: (state: Record<string, unknown>) => boolean
 }
 
 export interface MultiSelectPropDef<T extends string = string> {
@@ -54,6 +66,7 @@ export interface MultiSelectPropDef<T extends string = string> {
   options: Array<{ title: string; name: NonNullable<T> }>
   initialState: T[]
   help?: string
+  hiddenWhen?: (state: Record<string, unknown>) => boolean
 }
 
 export type PropDef =

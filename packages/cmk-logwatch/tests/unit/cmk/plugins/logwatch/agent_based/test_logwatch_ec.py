@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterator, Sequence
@@ -114,11 +113,15 @@ class _LogwatchConfigDummy:
         self.debug = False
 
     def logwatch_rules_all(
-        self, *, host_name: str, plugin: CheckPlugin, logfile: str
+        self,
+        *,
+        host_name: str,  # noqa: ARG002
+        plugin: CheckPlugin,  # noqa: ARG002
+        logfile: str,  # noqa: ARG002
     ) -> Sequence[ParameterLogwatchRules]:
         return ()
 
-    def logwatch_ec_all(self, host_name: str) -> Sequence[ParameterLogwatchEc]:
+    def logwatch_ec_all(self, host_name: str) -> Sequence[ParameterLogwatchEc]:  # noqa: ARG002
         return self._ec_rules
 
 

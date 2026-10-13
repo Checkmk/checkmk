@@ -85,6 +85,9 @@ class TimelineContainer:
         # Can be optional after computation
         self.node_compute_result: NodeComputeResult | None = None
         self.timewarp_state: BITreeState | None = None
+        # Index into self.timeline of the phase the timewarp resolved to. Its start
+        # may differ from the requested timestamp when that falls between two phases.
+        self.timewarp_index: int | None = None
         # Can not be optional after computation
         self.tree_time: AVTimeStamp | None = None
 
@@ -400,6 +403,8 @@ def compute_bi_timelines(
             )
 
     bi_manager = BIManager()
+    # Bundle and timeline index of the phase each container's timewarp resolves to
+    timewarp_candidates: dict[TimelineContainer, tuple[NodeResultBundle, int]] = {}
 
     logger.debug(
         "Computing timelines for range %(time_range)r. %(phase_count)d phases and %(timeline_container_count)d timeline containers",
@@ -439,9 +444,14 @@ def compute_bi_timelines(
 
             timeline_container.node_compute_result = next_node_compute_result
             timeline_container.tree_time = from_time
-            if timewarp == timeline_container.tree_time:
-                timeline_container.timewarp_state = _get_timewarp_state(
-                    result_bundle, timeline_container
+            if timewarp is not None and _is_better_timewarp_phase(
+                from_time, timewarp, timeline_container in timewarp_candidates
+            ):
+                # The span of this phase is appended later on, either by the next phase
+                # of this container or by the final timeline entry below.
+                timewarp_candidates[timeline_container] = (
+                    result_bundle,
+                    len(timeline_container.timeline),
                 )
 
     # Create a final timeline entry to the end of the query interval
@@ -463,11 +473,32 @@ def compute_bi_timelines(
             )
         )
 
+        if (candidate := timewarp_candidates.get(timeline_container)) is not None:
+            timewarp_bundle, timewarp_index = candidate
+            timeline_container.timewarp_state = _get_timewarp_state(
+                timewarp_bundle, timeline_container
+            )
+            timeline_container.timewarp_index = timewarp_index
+
     logger.debug(
         "Timeline generation finished. Computed %(computed_aggregations)d aggregations",
         {"computed_aggregations": computed_aggregations},
     )
     return timeline_containers
+
+
+def _is_better_timewarp_phase(
+    from_time: AVTimeStamp, timewarp: AVTimeStamp, has_candidate: bool
+) -> bool:
+    """Whether the phase starting at `from_time` is the best timewarp match so far.
+
+    The requested timestamp rarely coincides with a phase start, especially after the
+    clamping to a relative availability range, so the timewarp snaps to the phase
+    covering it. Phases are processed in ascending order, hence the last phase starting
+    at or before the timewarp wins. The first phase serves as fallback for a timewarp
+    preceding the timeline.
+    """
+    return not has_candidate or from_time <= timewarp
 
 
 def _get_timewarp_state(

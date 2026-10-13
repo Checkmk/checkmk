@@ -16,7 +16,7 @@ from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
 from cmk.gui.color import parse_color_from_api
 from cmk.gui.unit_formatter import AutoPrecision, StrictPrecision
 
-from ._unit import (
+from ._unit_specification import (
     ConvertibleUnitSpecification,
     DecimalNotation,
     EngineeringScientificNotation,

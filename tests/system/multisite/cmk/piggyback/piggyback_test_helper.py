@@ -3,27 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import signal
 import subprocess
 from collections.abc import Iterator
-from contextlib import contextmanager
-from dataclasses import dataclass
+from contextlib import contextmanager, ExitStack
+from types import FrameType
 from typing import Final, IO, Literal
 
 from tests.testlib.common.utils2 import ServiceInfo
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 CMK_TRACK_TIMEOUT: Final = 30  # secs
 
-
-@dataclass
-class ServiceDiscoveredInfo:
-    host_name: str
-    check_plugin_name: str
-    service_name: str
-    service_item: str
+# "INFO" logs the hub's config receive and save, which is what the config sync tests
+# compare against. "DEBUG" adds every AMQP frame from pika, noisy enough to shift the
+# timing those tests measure.
+PIGGYBACK_HUB_LOG_LEVEL: Final = ""
 
 
 @contextmanager
@@ -96,6 +92,43 @@ def set_omd_config_piggyback_hub(site: Site, value: Literal["on", "off"]) -> Ite
         yield
 
 
+@contextmanager
+def piggyback_hub_log_level(*sites: Site) -> Iterator[None]:
+    """
+    Run the piggyback hub daemons at PIGGYBACK_HUB_LOG_LEVEL, when one is set.
+    The init script starts the daemon without `--log-level`, so at its default (NOTSET)
+    """
+    if not PIGGYBACK_HUB_LOG_LEVEL:
+        yield
+        return
+
+    with ExitStack() as stack:
+        for site in sites:
+            stack.enter_context(_restart_hub_with_log_level(site, PIGGYBACK_HUB_LOG_LEVEL))
+        yield
+
+
+@contextmanager
+def _restart_hub_with_log_level(site: Site, level: str) -> Iterator[None]:
+    site.omd("stop", "piggyback-hub")
+    site.run(
+        [
+            f"{site.root}/bin/cmk-piggyback-hub",
+            f"--log-level={level}",
+            f"{site.root}/tmp/run/piggyback-hub.pid",
+            f"{site.root}/var/log/piggyback-hub.log",
+            str(site.root),
+            site.id,
+        ],
+        check=True,
+    )
+    try:
+        yield
+    finally:
+        site.omd("stop", "piggyback-hub")
+        site.omd("start", "piggyback-hub")
+
+
 class PBTimeoutError(TimeoutError):
     pass
 
@@ -114,7 +147,7 @@ def _timeout(seconds: int, error_msg: str) -> Iterator[None]:
         PBTimeoutError: when `seconds` amount of time has passed.
     """
 
-    def _raise_timeout(signum, frame):
+    def _raise_timeout(signum: int, frame: FrameType | None) -> None:  # noqa: ARG001
         raise PBTimeoutError(error_msg)
 
     alarm_handler = signal.signal(signal.SIGALRM, _raise_timeout)

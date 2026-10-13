@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
 import dataclasses
-from collections.abc import Generator
+from collections.abc import Generator, Mapping
 from typing import Annotated, cast, get_args, Literal, override, Self
 
 from pydantic import BaseModel, Json, model_validator, ValidationError
@@ -24,19 +24,28 @@ from cmk.gui.dashboard.token_util import (
     InvalidWidgetError,
 )
 from cmk.gui.dashboard.type_defs import EmbeddedViewDashletConfig, LinkedViewDashletConfig
+from cmk.gui.dashboard.view_drilldown import (
+    column_drilldown_targets,
+    column_drilldowns,
+    inherited_column_link,
+)
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import Request
+from cmk.gui.http import Request, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.pages import Page, PageContext, PageResult
+from cmk.gui.painter import PainterConfig, PainterContext
+from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.token_auth import AuthToken, DashboardToken
 from cmk.gui.type_defs import (
     AnnotatedUserId,
+    ContextualLinkEntryConfig,
     DashboardEmbeddedViewSpec,
     SingleInfos,
     ViewSpec,
@@ -45,12 +54,17 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.view_renderer import GUIViewRenderer
-from cmk.gui.views.page_edit_view import create_view_from_valuespec, render_view_config
+from cmk.gui.views.page_edit_view import (
+    ColumnDrilldownTarget,
+    create_embedded_view_from_valuespec,
+    render_view_config,
+)
 from cmk.gui.views.page_show_view import get_limit, get_user_sorters, process_view
 from cmk.gui.views.store import get_permitted_views, get_view_by_name
 from cmk.gui.visuals import get_merged_context, get_only_sites_from_context
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.web.utils.escaping import escape_to_html_permissive
+from cmk.web.utils.request_cache import RequestCache
 
 __all__ = [
     "ViewWidgetIFramePage",
@@ -163,8 +177,9 @@ class ViewWidgetIFramePageHelper:
         user_permissions: UserPermissions,
         config: Config,
         *,
+        column_links: Mapping[int, ContextualLinkEntryConfig],
         is_reload: bool,
-        is_debug: bool,
+        is_debug: bool,  # noqa: ARG003
         is_preview: bool = False,
         is_public: bool = False,
     ) -> None:
@@ -174,17 +189,27 @@ class ViewWidgetIFramePageHelper:
             widget_name,
             view_spec,
             context,
-            user_permissions=user_permissions,
+            painter_context=PainterContext(
+                config=PainterConfig.from_config(config),
+                request=request,
+                painter_options=PainterOptions.get_instance(),
+                theme=theme,
+                url_renderer=RenderLink(request, response, display_options),
+                user_permissions=user_permissions,
+            ),
+            request_cache=RequestCache(config),
+            column_drilldowns=column_drilldowns(view_spec, column_links, context, user_permissions),
         )
         view.row_limit = row_limit
         view.only_sites = get_only_sites_from_context(context)
         view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
+        view.allow_browser_reload = False
         with cls._wrapper_context(is_reload, is_preview, is_public):
             process_view(
                 GUIViewRenderer(
                     view,
                     show_buttons=False,
-                    page_menu_dropdowns_callback=lambda x, y, z: None,
+                    page_menu_dropdowns_callback=lambda x, y, z: None,  # noqa: ARG005
                     render_row_limit_warning=(
                         cls._public_dashboard_row_limit_warning if is_public else None
                     ),
@@ -243,6 +268,7 @@ class ViewWidgetIFramePageHelper:
         if is_public:
             html.add_body_css_class("dashboard_public_view")
         html.open_div(id_="dashlet_content_wrapper")
+        html.vue_component("cmk-dashboard-time-follower", data={})
         if is_preview:
             html.open_div(class_="click_shield")
         try:
@@ -252,7 +278,7 @@ class ViewWidgetIFramePageHelper:
                 html.close_div()
             html.close_div()
             if is_public:
-                html.javascript("cmk.dashboard.ignore_public_dashboard_clicks();")
+                html.call_ts_function(function_name="ignore_public_dashboard_clicks")
 
     @staticmethod
     def _public_dashboard_row_limit_warning(limit: int | None, _user_config: LoggedInUser) -> None:
@@ -333,12 +359,13 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
     def unique_widget_name(self) -> str:
         return f"{self.dashboard_owner}_{self.dashboard_name}_{self.widget_id}"
 
-    def load_view_spec(self) -> ViewSpec:
-        """Load the requested view spec, either embedded in the dashboard or a normal view."""
+    def load_view_spec(self) -> tuple[ViewSpec, Mapping[int, ContextualLinkEntryConfig]]:
+        """Load the requested view spec, either embedded in the dashboard or a normal view, with
+        its column links. Only an embedded view has any."""
         if self.embedded_id:
             return self._get_embedded_view_spec(self.embedded_id)
 
-        return self._get_linked_view_spec()
+        return self._get_linked_view_spec(), {}
 
     def _get_linked_view_spec(self) -> ViewSpec:
         if not self.view_name:
@@ -353,7 +380,9 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
 
         return view_spec
 
-    def _get_embedded_view_spec(self, embedded_id: str) -> ViewSpec:
+    def _get_embedded_view_spec(
+        self, embedded_id: str
+    ) -> tuple[ViewSpec, Mapping[int, ContextualLinkEntryConfig]]:
         if not self.dashboard_name:
             raise MKUserError("dashboard", _("No dashboard name provided."))
 
@@ -370,11 +399,12 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
                 % {"dashboard_name": self.dashboard_name},
             ) from None
 
-        return EmbeddedViewSpecManager.get_embedded_view_spec(
+        view_spec = EmbeddedViewSpecManager.get_embedded_view_spec(
             dashboard,
             embedded_id,
             f"{self.dashboard_name}_{embedded_id}",
         )
+        return view_spec, dashboard["embedded_views"][embedded_id].get("column_links", {})
 
     def get_context(self) -> VisualContext:
         return {
@@ -412,7 +442,7 @@ class ViewWidgetIFramePage(Page):
             ctx.request, parameters.unique_widget_name(), display_opts
         )
         try:
-            view_spec = parameters.load_view_spec()
+            view_spec, column_links = parameters.load_view_spec()
         except MKUserError as e:
             # a linked view used by a widget can be (intentionally) deleted,
             # so we need to handle this gracefully so that the rest of the dashboard still works
@@ -446,6 +476,7 @@ class ViewWidgetIFramePage(Page):
             parameters.get_context(),
             user_permissions,
             ctx.config,
+            column_links=column_links,
             is_reload=parameters.is_reload(),
             is_debug=parameters.is_debug(),
             is_preview=parameters.is_preview,
@@ -545,6 +576,8 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
                 context=widget.context,
                 user_permissions=user_permissions,
                 config=ctx.config,
+                # Every drill-down target sits behind a login, so a shared dashboard links nowhere.
+                column_links={},
                 is_reload=parameters.is_reload(),
                 is_debug=False,
                 is_public=True,
@@ -559,34 +592,15 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
         # until we find the right page (shared_dashboard.py), falling back to the current window.
         search_name = f"{SharedDashboardPageComponents.page_name}.py"
         target_url = get_shared_dashboard_url(token.token_id)
-        # we cannot use &, as that will currently be escaped by the html.javascript function
-        # thankfully we can convert it using de morgans law: A && B -> !(!A || !B)
-        html.javascript(
-            f"""
-            let win = window;
-            let found = false;
-            try {{
-                while (!(!win.parent || win.parent === win)) {{
-                    if (!(!win.parent.location || !win.parent.location.href.includes({search_name!r}))) {{
-                        win.parent.location.href = {target_url!r};
-                        found = true;
-                        break;
-                    }}
-                    win = win.parent;
-                }}
-            }} catch (e) {{
-                // Cross-origin access error, stop walking up
-            }}
-            if (!found) {{
-                window.location.href = {target_url!r};
-            }}
-            """
+        html.call_ts_function(
+            function_name="redirect_shared_dashboard",
+            arguments={"search_name": search_name, "target_url": target_url},
         )
         return None
 
 
 class ViewWidgetEditPage(Page):
-    type Mode = Literal["create", "copy", "edit"]
+    type Mode = Literal["create", "copy", "duplicate"]
 
     @dataclasses.dataclass(kw_only=True, slots=True)
     class ConfigurationErrorMessage:
@@ -610,20 +624,23 @@ class ViewWidgetEditPage(Page):
         This reuses the existing view editor, but should only show the view specific fields.
         The page is expected to be used in an iframe, so it should not render any header.
 
-        The page supports three modes:
-            - create: Create a new embedded view from scratch. Requires the datasource and
-                      single_infos query args.
-            - copy: Create a new embedded view by copying an existing view. Requires the view_name
-                    query arg.
-            - edit: Edit an existing embedded view.
+        The page always saves a new embedded view under the given embedded_id, and it refuses
+        an ID that the dashboard already uses. So an edit of a widget cannot overwrite an
+        embedded view that another widget also uses. The mode selects the initial content of
+        the editor:
+            - create: Start from an empty view. Requires the datasource and single_infos query
+                      args.
+            - copy: Start from an existing view. Requires the view_name query arg.
+            - duplicate: Start from an embedded view of the same dashboard. Requires the
+                         source_embedded_id query arg.
 
         In addition, the following query args are always used:
-            - mode: The mode of the editor, one of "create", "copy", "edit".
+            - mode: The mode of the editor, one of "create", "copy", "duplicate".
             - dashboard: The name of the dashboard the view is embedded in.
             - owner: The owner of the dashboard. Must match the logged-in user, unless the user
                      has the `general.edit_foreign_dashboards` permission.
-            - embedded_id: The internal ID of the embedded view in the dashboard. Must be generated
-                           on the client side even for new views.
+            - embedded_id: The internal ID of the new embedded view. Must be generated on the
+                           client side.
 
         The page communicates with the parent window via the JavaScript postMessage function.
         It sends the following messages:
@@ -655,7 +672,7 @@ class ViewWidgetEditPage(Page):
         error = None
         if ctx.request.var("_save"):
             try:
-                self._save(dashboard, embedded_id, view_spec)
+                self._save(dashboard, embedded_id, view_spec, ctx.config)
             except MKUserError as e:
                 error = e
             else:
@@ -691,10 +708,16 @@ class ViewWidgetEditPage(Page):
             html.hidden_field("embedded_id", embedded_id)
             html.hidden_field("datasource", view_spec["datasource"])
             html.hidden_field("single_infos", ",".join(view_spec["single_infos"]))
-            html.hidden_field("mode", "edit" if mode == "edit" else "create")  # copy -> create
+            html.hidden_field("mode", "create")  # copy and duplicate save as create
             html.hidden_field("owner", str(owner))
 
-            render_view_config(view_spec, general_properties=True)
+            render_view_config(
+                view_spec,
+                general_properties=True,
+                allow_browser_reload=False,
+                config=ctx.config,
+                column_drilldowns=self._get_column_drilldowns(ctx.request, dashboard, mode),
+            )
 
         html.close_div()
         html.body_end()
@@ -704,13 +727,23 @@ class ViewWidgetEditPage(Page):
         message: ConfigurationErrorMessage | ValidationErrorMessage | SaveCompletedMessage,
     ) -> None:
         serialized = dataclasses.asdict(message)
-        html.javascript(f"window.parent.postMessage({serialized!r})")
+        html.call_ts_function(
+            function_name="post_message_to_parent", arguments={"message": serialized}
+        )
 
     @staticmethod
-    def _save(dashboard: DashboardConfig, embedded_id: str, view_spec: ViewSpec) -> None:
+    def _save(
+        dashboard: DashboardConfig, embedded_id: str, view_spec: ViewSpec, config: Config
+    ) -> None:
         # first arg is just used for the datasource (so it can't be overwritten)
-        view_spec = create_view_from_valuespec(old_view=view_spec, view=view_spec)
+        view_spec, column_drilldowns = create_embedded_view_from_valuespec(
+            old_view=view_spec, view=view_spec, allow_browser_reload=False, config=config
+        )
         embedded = EmbeddedViewSpecManager.normal_to_embedded_view_spec(view_spec)
+        if column_drilldowns:
+            embedded["column_links"] = {
+                index: inherited_column_link(target) for index, target in column_drilldowns.items()
+            }
         dashboard.setdefault("embedded_views", {})[embedded_id] = embedded
         save_all_dashboards(dashboard["owner"])
         # we don't do the remote site sync here, as this is done when the dashboard is saved
@@ -724,9 +757,9 @@ class ViewWidgetEditPage(Page):
         return cast(ViewWidgetEditPage.Mode, mode)
 
     @staticmethod
-    def _get_owner(request: Request, mode: Mode) -> UserId:
+    def _get_owner(request: Request, mode: Mode) -> UserId:  # noqa: ARG004
         owner_id = request.get_validated_type_input_mandatory(UserId, "owner", user.id)
-        # Applies to all modes (create, copy, edit): editing foreign dashboards
+        # Applies to all modes (create, copy, duplicate): editing foreign dashboards
         # requires the general.edit_foreign_dashboards permission.
         if owner_id != user.id and not user.may("general.edit_foreign_dashboards"):
             raise MKAuthException(
@@ -794,8 +827,12 @@ class ViewWidgetEditPage(Page):
             view_spec["name"] = view_name
             return view_spec
 
-        if mode == "edit":
-            return EmbeddedViewSpecManager.get_embedded_view_spec(dashboard, embedded_id, view_name)
+        if mode == "duplicate":
+            return EmbeddedViewSpecManager.get_embedded_view_spec(
+                dashboard,
+                request.get_ascii_input_mandatory("source_embedded_id"),
+                view_name,
+            )
 
         # create mode
         datasource = self._get_datasource_from_request(request)
@@ -803,6 +840,18 @@ class ViewWidgetEditPage(Page):
         return self._create_new_view_spec(
             dashboard, embedded_id, view_name, datasource, single_infos
         )
+
+    @staticmethod
+    def _get_column_drilldowns(
+        request: Request, dashboard: DashboardConfig, mode: Mode
+    ) -> dict[int, ColumnDrilldownTarget]:
+        # Only a duplicate starts from an embedded view, the one place column links live in.
+        if mode != "duplicate":
+            return {}
+        source = dashboard["embedded_views"][
+            request.get_ascii_input_mandatory("source_embedded_id")
+        ]
+        return column_drilldown_targets(source.get("column_links", {}))
 
     @staticmethod
     def _create_new_view_spec(

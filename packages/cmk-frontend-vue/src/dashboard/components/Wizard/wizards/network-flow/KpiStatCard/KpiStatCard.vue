@@ -58,6 +58,14 @@ const accentOptions: Suggestions = {
   ]
 }
 
+const sparkHeightModeOptions: Suggestions = {
+  type: 'fixed',
+  suggestions: [
+    { name: 'band', title: _t('Band') },
+    { name: 'full', title: _t('Full height') }
+  ]
+}
+
 function getValidWidgetProps(): WidgetProps | null {
   if (handler.validate()) {
     return handler.widgetProps.value
@@ -72,6 +80,8 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
     <DashboardPreviewContent
       widget_id="network-flow-kpi-stat-card-preview"
       :dashboard-key="dashboardKey"
+      :tick="tick"
+      :range="range"
       :general_settings="handler.widgetProps.value.general_settings!"
       :content="handler.widgetProps.value.content!"
       :effective-title="handler.widgetProps.value!.effectiveTitle"
@@ -108,6 +118,16 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
             <CmkCheckbox
               v-model="handler.showDelta.value"
               :label="_t('Show the change versus the previous period')"
+            />
+          </FieldComponent>
+        </TableFormRow>
+        <TableFormRow>
+          <FieldDescription>{{ _t('Sparkline display') }}</FieldDescription>
+          <FieldComponent>
+            <CmkDropdown
+              v-model="handler.sparkHeightMode.value"
+              :options="sparkHeightModeOptions"
+              :label="_t('Sparkline display')"
             />
           </FieldComponent>
         </TableFormRow>

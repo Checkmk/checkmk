@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import re
@@ -125,7 +124,7 @@ def parse_multipath(
                 "uuid": uuid,
                 "state": None,
                 "numpaths": 0,
-                "device": dm_device,
+                "device": dm_device,  # type: ignore[possibly-undefined]
                 "alias": alias if alias else None,
             }
             if uuid is not None:
@@ -141,13 +140,13 @@ def parse_multipath(
                 group["state"] = "".join(line[3:])
             elif len(line) >= 4 and REG_LUN.match(line[1]):
                 luninfo = f"{line[1]}({line[2]})"
-                lun_info.append(luninfo)
+                lun_info.append(luninfo)  # type: ignore[possibly-undefined]
                 state = line[4]
                 if "active" not in state:
-                    broken_paths.append(luninfo)
+                    broken_paths.append(luninfo)  # type: ignore[possibly-undefined]
                 numpaths += 1
                 group["numpaths"] = numpaths
-                paths_info.append(line[2])
+                paths_info.append(line[2])  # type: ignore[possibly-undefined]
 
     return {uuid: multipath.Group(**raw_group) for uuid, raw_group in groups.items()}
 
@@ -163,7 +162,8 @@ agent_section_multipath = AgentSection(
 def discover_multipath(params: Mapping[str, Any], section: multipath.Section) -> DiscoveryResult:
     for uuid, group in section.items():
         yield Service(
-            item=group.alias if group.alias is not None and params.get("use_alias") else uuid
+            item=group.alias if group.alias is not None and params.get("use_alias") else uuid,
+            parameters={"discovered_paths": group.numpaths},
         )
 
 
@@ -216,8 +216,11 @@ def check_multipath(
     state = State.OK
     infotext = f"{num_active} of {num_paths}"
     if not isinstance(levels, tuple):
+        # Services discovered without a stored count fall back to the current total.
         target_levels, alert_level = (
-            (levels, State.CRIT) if levels is not None else (num_paths, State.WARN)
+            (levels, State.CRIT)
+            if levels is not None
+            else (params.get("discovered_paths", num_paths), State.WARN)
         )
         infotext += f" (expected: {target_levels})"
         if num_active < target_levels:

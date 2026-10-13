@@ -18,6 +18,9 @@ TIMEOUT_EXPECT_CHANGES_MS = TIMEOUT_EXPECT_CHANGES * 1000
 ANIMATION_TIMEOUT = 1000  # 750 ms (animation) + 250 ms (buffer)
 # timeout for AI response (mocked routes, so network is instant; allow for rendering overhead)
 TIMEOUT_AI_RESPONSE = 10_000
+# timeout for a dashboard whose initial render blocks on a slow server-side computation
+# (e.g. the average-scatterplot widget's mean/median over RRD data)
+TIMEOUT_SLOW_DASHBOARD_LOAD_MS = 240_000
 
 
 @contextmanager

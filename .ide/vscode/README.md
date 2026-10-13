@@ -120,7 +120,7 @@ The extension monitors build targets and shows their status in the status bar:
 | node_modules       | `node_modules/` missing or out of sync with `pnpm-lock.yaml`                   |
 | mypy config        | `.vscode/.mypy.ini` missing                                                    |
 
-**Auto-refresh triggers:** extension activation, after CMK build tasks complete, source file changes in `packages/cmk-shared-typing/source/`, `packages/cmk-frontend/src/`, the pinned requirements files (`requirements.txt`, `omd/requirements.txt`, `omd/requirements_lock.txt`, `omd/non-free/relay/requirements.txt`), `pnpm-lock.yaml`, and git branch switches (`.git/HEAD`).
+**Auto-refresh triggers:** extension activation, after CMK build tasks complete, source file changes in `packages/cmk-shared-typing/source/`, `packages/cmk-frontend/src/`, the pinned requirements files (`requirements.txt`, `omd/non-free/relay/requirements.txt`), `pnpm-lock.yaml`, and git branch switches (`.git/HEAD`).
 
 Click the status bar item to see stale targets and build commands in a QuickPick. When stale targets exist, a warning banner also appears at the top of the Environment sidebar section with a **Build All Stale** button.
 
@@ -136,7 +136,7 @@ Available via the command palette (F1) or by clicking the status bar. Build comm
 | `Build shared-typing`               | Builds TS and PY types from `cmk-shared-typing` and symlinks the output into `cmk-frontend-vue/node_modules/`.                                                                                             |
 | `Build cmk-frontend`                | Builds `cmk-frontend` (webpack) and symlinks `dist/` into the package directory.                                                                                                                           |
 | `Build cmk-frontend-vue`            | Builds `cmk-frontend-vue` via Bazel.                                                                                                                                                                       |
-| `Run UI Component Library`          | Starts the UI Component Library dev server via `ibazel`.                                                                                                                                                   |
+| `Run UI Component Library`          | Starts the UI Component Library dev server via `//bazel/tools/devserver`.                                                                                                                                  |
 | `Install node_modules`              | Builds the Bazel-pinned pnpm (`@pnpm//:pnpm`) and invokes it directly from the workspace cwd so `node_modules/` lands at the workspace root where ESLint, Prettier and Vitest can resolve their libraries. |
 | `Refresh C++ compile_commands.json` | Builds `bazel_env` and runs `//:refresh_compile_commands` so clangd picks up the latest compiler flags. Only visible when the C++ family is installed.                                                     |
 | `Build All Stale`                   | Builds all targets that are currently stale, in sequence.                                                                                                                                                  |
@@ -188,6 +188,8 @@ Displays all detected OMD sites with live status. Each site header shows:
 Expanding a site shows individual service status with per-service start/stop/restart controls. Services that have logs in the catalog (`cmc`, `apache`, `mkeventd`, `rrdcached`, `redis`, `stunnel`, `liveproxyd`, `dcd`, `rabbitmq`, `jaeger`, `agent-receiver`, `automation-helper`, `piggyback-hub`, `ui-job-scheduler`, `xinetd`, `mknotifyd`) also show a per-service **Logs** button — opens the matching log directly, or a scoped picker if multiple files are mapped (e.g. `apache-logs` + `web.log` + `security.log` for apache).
 
 **Create Site:** If `cmk-dev-site` is installed, a **+** button in the OMD section title bar lets you create new sites. The extension also checks PyPI daily for `cmk-dev-site` updates and prompts to upgrade when a newer version is available.
+
+**Mock Auth Server:** Cloud and SaaS sites authenticate against a fake OIDC provider that `cmk-dev-site` ships as `cmk-dev-site-mock-auth` (it listens on `127.0.0.1:8089`). F1 → `CMK ▸ OMD: Start Mock Auth Server` starts it in a terminal, or reports that it is already running. The extension also starts it on its own when a local cloud/SaaS site exists and the port is silent, and before creating a cloud site — `cmk-dev-install-site` aborts otherwise. Set `cmk.omd.autoStartMockAuth` to `false` to opt out of the automatic start.
 
 **Socket Proxy:** F1 → `CMK ▸ OMD: Socket Proxy` exposes OMD Unix sockets (livestatus, Redis, mkeventd, rrdcached) as TCP ports on localhost via `socat`. This allows external tools (database clients, monitoring dashboards) to connect to site sockets without sudo. Active proxies are shown in the OMD section with their assigned ports.
 
@@ -326,6 +328,7 @@ Supported test rules (auto-discovered from `BUILD` files under `tests/`, `packag
 
 | Rule          | Language | Notes                                                                           |
 | ------------- | -------- | ------------------------------------------------------------------------------- |
+| `py_cmk_test` | Python   | The repo's standard pytest macro — the bulk of the unit and integration tests.  |
 | `py_test`     | Python   | pytest, with `-k` keyword filter via the `Run with -k…` profile.                |
 | `py_doc_test` | Python   | Doctest targets.                                                                |
 | `vitest_test` | TS / Vue | Replaces the standalone Vitest extension — same hermetic version as CI.         |

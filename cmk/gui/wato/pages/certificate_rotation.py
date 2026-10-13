@@ -38,7 +38,7 @@ class CertificateRotationParameters:
     key_size: int
 
     @classmethod
-    def from_request(cls, config: Config, request: Request) -> "CertificateRotationParameters":
+    def from_request(cls, config: Config, request: Request) -> CertificateRotationParameters:
         return cls(
             site_id=request.get_str_input_mandatory("site_id"),
             additional_sans=config.site_subject_alternative_names,

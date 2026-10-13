@@ -5,7 +5,7 @@
  */
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
 import type { Suggestion } from 'cmk-ui-library/components/CmkSuggestions'
-import * as cmkFetch from 'cmk-ui-library/lib/cmkFetch'
+import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { defineComponent, ref } from 'vue'
 
 import ConfigureCollector from '@/mode-otel/otel-configuration-steps/ConfigureCollector.vue'
@@ -17,14 +17,15 @@ import type {
 import type { PasswordConfig } from '@/mode-otel/otel-configuration-steps/password_store_password.types.ts'
 
 function mockPasswordsResponse(passwords: { id: string; title: string }[] = []) {
-  return vi.spyOn(cmkFetch, 'fetchRestAPIDeprecated').mockResolvedValue({
-    raiseForStatus: vi.fn().mockResolvedValue(undefined),
-    json: vi.fn().mockResolvedValue({ value: passwords })
-  } as unknown as cmkFetch.CmkFetchResponse)
+  return vi.spyOn(client, 'GET').mockResolvedValue({
+    data: { value: passwords },
+    error: undefined,
+    response: new Response(null, { status: 200 })
+  } as never)
 }
 
 function mockPasswordsError() {
-  vi.spyOn(cmkFetch, 'fetchRestAPIDeprecated').mockRejectedValue(new Error('Network error'))
+  vi.spyOn(client, 'GET').mockRejectedValue(new Error('Network error'))
 }
 
 function renderComponent(
@@ -115,7 +116,6 @@ function renderComponent(
 describe('ConfigureCollector', () => {
   afterEach(() => {
     cleanup()
-    vi.restoreAllMocks()
   })
 
   describe('default auth method', () => {
@@ -767,7 +767,7 @@ describe('ConfigureCollector', () => {
   })
 
   describe('password creation permission', () => {
-    test('Create button is enabled and no hint is shown when password creation is allowed', async () => {
+    test('Create button is enabled and the quick setup hint is shown when password creation is allowed', async () => {
       mockPasswordsResponse()
       // noAuthAllowed=false makes basicauth the default, so the Create button is rendered
       renderComponent(false, true, true, true, 4317, 4318, true, false, true)
@@ -775,17 +775,23 @@ describe('ConfigureCollector', () => {
       const createButton = await screen.findByRole('button', { name: 'Create' })
       expect(createButton).toBeEnabled()
       expect(
+        screen.getByLabelText('How are passwords created by the quick setup?')
+      ).toBeInTheDocument()
+      expect(
         screen.queryByLabelText('Why is creating a password unavailable?')
       ).not.toBeInTheDocument()
     })
 
-    test('Create button is disabled and a hint is shown when password creation is not allowed', async () => {
+    test('Create button is disabled and the permission hint is shown when password creation is not allowed', async () => {
       mockPasswordsResponse()
       renderComponent(false, true, true, true, 4317, 4318, true, false, false)
 
       const createButton = await screen.findByRole('button', { name: 'Create' })
       expect(createButton).toBeDisabled()
       expect(screen.getByLabelText('Why is creating a password unavailable?')).toBeInTheDocument()
+      expect(
+        screen.queryByLabelText('How are passwords created by the quick setup?')
+      ).not.toBeInTheDocument()
     })
   })
 

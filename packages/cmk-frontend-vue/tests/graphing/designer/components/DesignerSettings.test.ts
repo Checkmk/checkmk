@@ -4,20 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
-import { defineComponent, h } from 'vue'
 
 import type { CustomGraphOptions } from '@/graphing/designer/api'
 import DesignerSettings from '@/graphing/designer/components/DesignerSettings.vue'
-
-// CmkSlideIn uses Radix-Vue DialogPortal, which doesn't work in jsdom.
-vi.mock('cmk-ui-library/components/CmkSlideIn/CmkSlideIn.vue', () => ({
-  default: defineComponent({
-    name: 'CmkSlideIn',
-    setup(_, { slots }) {
-      return () => h('div', { 'data-testid': 'slide-in' }, slots.default?.())
-    }
-  })
-}))
 
 function autoOptions(): CustomGraphOptions {
   return {
@@ -27,8 +16,11 @@ function autoOptions(): CustomGraphOptions {
   }
 }
 
-function renderDesignerSettings(graphOptions: CustomGraphOptions = autoOptions()) {
-  return render(DesignerSettings, { props: { open: true, graphOptions } })
+// The slide-in dialog mounts its content on the open transition, so open starts false.
+async function renderDesignerSettings(graphOptions: CustomGraphOptions = autoOptions()) {
+  const utils = render(DesignerSettings, { props: { open: false, graphOptions } })
+  await utils.rerender({ open: true, graphOptions })
+  return utils
 }
 
 async function selectOption(comboboxName: string, optionName: string): Promise<void> {
@@ -36,8 +28,8 @@ async function selectOption(comboboxName: string, optionName: string): Promise<v
   await fireEvent.click(await screen.findByRole('option', { name: optionName }))
 }
 
-test('renders the settings heading and fields reflecting the supplied options', () => {
-  renderDesignerSettings()
+test('renders the settings heading and fields reflecting the supplied options', async () => {
+  await renderDesignerSettings()
 
   expect(screen.getByRole('heading', { name: 'Custom graph settings' })).toBeInTheDocument()
   expect(screen.getByRole('combobox', { name: 'Unit' })).toBeInTheDocument()
@@ -47,7 +39,7 @@ test('renders the settings heading and fields reflecting the supplied options', 
 
 describe('closing', () => {
   test('clicking Cancel closes the slide-in without emitting updateSettings', async () => {
-    const { emitted } = renderDesignerSettings()
+    const { emitted } = await renderDesignerSettings()
 
     await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
 
@@ -56,9 +48,9 @@ describe('closing', () => {
   })
 
   test('clicking the close icon closes the slide-in', async () => {
-    const { emitted } = renderDesignerSettings()
+    const { emitted } = await renderDesignerSettings()
 
-    await fireEvent.click(screen.getByTestId('icon-x-close-button'))
+    await fireEvent.click(screen.getByRole('button', { name: 'Close' }))
 
     expect(emitted()['update:open']).toEqual([[false]])
   })
@@ -66,7 +58,7 @@ describe('closing', () => {
 
 describe('accepting', () => {
   test('emits updateSettings with the unchanged options when nothing was edited', async () => {
-    const { emitted } = renderDesignerSettings()
+    const { emitted } = await renderDesignerSettings()
 
     await fireEvent.click(screen.getByRole('button', { name: 'Accept' }))
 
@@ -74,7 +66,7 @@ describe('accepting', () => {
   })
 
   test('emits updateSettings with edited values', async () => {
-    const { emitted } = renderDesignerSettings()
+    const { emitted } = await renderDesignerSettings()
 
     await fireEvent.click(screen.getByRole('checkbox', { name: 'Show zero values' }))
     await fireEvent.click(screen.getByRole('button', { name: 'Accept' }))
@@ -85,7 +77,7 @@ describe('accepting', () => {
 
 describe('validation', () => {
   test('blocks accepting invalid rounding digits and shows the error', async () => {
-    const { emitted } = renderDesignerSettings()
+    const { emitted } = await renderDesignerSettings()
 
     await selectOption('Unit', 'Custom')
     await fireEvent.update(screen.getByRole('spinbutton', { name: 'Rounding digits' }), '-1')
@@ -98,7 +90,7 @@ describe('validation', () => {
   })
 
   test('blocks accepting an invalid vertical range and shows both errors', async () => {
-    const { emitted } = renderDesignerSettings()
+    const { emitted } = await renderDesignerSettings()
 
     await selectOption('Explicit range', 'Explicit range')
     await fireEvent.update(screen.getByRole('spinbutton', { name: 'Lower limit' }), '5')
@@ -115,7 +107,7 @@ describe('validation', () => {
   })
 
   test('accepting succeeds and clears the errors once the range is corrected', async () => {
-    const { emitted } = renderDesignerSettings()
+    const { emitted } = await renderDesignerSettings()
 
     await selectOption('Explicit range', 'Explicit range')
     await fireEvent.update(screen.getByRole('spinbutton', { name: 'Lower limit' }), '5')

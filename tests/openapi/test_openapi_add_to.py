@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from http import HTTPStatus
+
+import pytest
 
 from cmk.graphing_engine import (
     AutoPrecision,
@@ -18,9 +21,8 @@ from cmk.graphing_engine import (
     ServiceName,
     Unit,
 )
-from cmk.gui.graphing._engine_dispatch import serialize_graphs
-from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.rest_api_client import ClientRegistry
+from cmk.gui.graphing._graph_dispatch import serialize_graphs
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 _TEMPLATE_SPEC = {
     "graph_type": "template",
@@ -91,9 +93,8 @@ _EMPTY_DASHBOARD = {
 }
 
 
-def test_add_to_visual_stores_the_graph_in_the_dashboard(
-    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
-) -> None:
+@pytest.mark.usefixtures("mock_livestatus")
+def test_add_to_visual_stores_the_graph_in_the_dashboard(clients: ClientRegistry) -> None:
     # mock_livestatus is required because graph widgets want the connected site PIDs; no queries
     # are actually executed.
     clients.DashboardClient.create_relative_grid_dashboard(payload=_EMPTY_DASHBOARD)
@@ -120,7 +121,7 @@ def test_add_to_visual_rejects_views(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
 
-    assert resp.status_code == 400
+    assert resp.status_code == HTTPStatus.BAD_REQUEST
     assert "views" in resp.json["detail"]
 
 
@@ -132,7 +133,7 @@ def test_add_to_visual_rejects_an_unknown_visual_type(clients: ClientRegistry) -
         expect_ok=False,
     )
 
-    assert resp.status_code == 400
+    assert resp.status_code == HTTPStatus.BAD_REQUEST
     assert "does_not_exist" in resp.json["detail"]
 
 
@@ -145,7 +146,7 @@ def test_add_to_container_rejects_an_unknown_container_type(clients: ClientRegis
         expect_ok=False,
     )
 
-    assert resp.status_code == 400
+    assert resp.status_code == HTTPStatus.BAD_REQUEST
     assert "does_not_exist" in resp.json["detail"]
 
 
@@ -157,23 +158,23 @@ def test_add_to_visual_rejects_an_unparseable_specification(clients: ClientRegis
         expect_ok=False,
     )
 
-    assert resp.status_code == 400
+    assert resp.status_code == HTTPStatus.BAD_REQUEST
     assert "specification" in resp.json["detail"]
 
 
 def test_add_to_visual_rejects_a_graph_kind_without_an_add_to_action(
     clients: ClientRegistry,
 ) -> None:
-    # An explicit graph carries its metrics inline and declares no add_visual_type, so there is
+    # A forecast graph is rendered from its own saved page and has no storable form, so there is
     # nothing the backends could store and replay.
     resp = clients.Graph.add_to_visual(
-        specification={"graph_type": "explicit", "metrics": [], "specification": []},
+        specification={"graph_type": "forecast", "id": "my_forecast"},
         family="dashboards",
         target_id="my_dashboard",
         expect_ok=False,
     )
 
-    assert resp.status_code == 400
+    assert resp.status_code == HTTPStatus.BAD_REQUEST
 
 
 def test_add_to_visual_unknown_target_is_404(clients: ClientRegistry) -> None:
@@ -184,4 +185,4 @@ def test_add_to_visual_unknown_target_is_404(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
 
-    assert resp.status_code == 404
+    assert resp.status_code == HTTPStatus.NOT_FOUND

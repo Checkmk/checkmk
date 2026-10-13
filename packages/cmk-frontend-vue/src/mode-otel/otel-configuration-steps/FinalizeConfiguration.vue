@@ -18,10 +18,11 @@ export interface ActionItemStatus {
 </script>
 
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, ref, watch } from 'vue'
 
 import { errorFromUnknown } from './post_save_actions.ts'
@@ -218,16 +219,17 @@ defineExpose({ runActions })
       </li>
     </ul>
 
-    <CmkAlertBox v-if="state === 'running'" variant="loading" size="small">
-      {{ isRollingBack ? _t('Rolling back saved changes...') : runningText }}
-    </CmkAlertBox>
+    <CmkAlert
+      v-if="state === 'running'"
+      variant="loading"
+      size="small"
+      :text="isRollingBack ? _t('Rolling back saved changes...') : untranslated(runningText)"
+    />
     <template v-else-if="state === 'success'">
-      <CmkAlertBox variant="success" size="small">
-        {{ successText }}
-      </CmkAlertBox>
+      <CmkAlert variant="success" size="small" :text="untranslated(successText)" />
       <slot name="success-summary" />
     </template>
-    <CmkAlertBox
+    <CmkAlertBoxDeprecated
       v-else-if="state === 'error'"
       variant="error"
       size="small"
@@ -237,7 +239,7 @@ defineExpose({ runActions })
       <span v-if="revertedOnError" class="mode-otel-finalize-configuration__revert-note">
         {{ _t('Any changes that were already saved have been reverted.') }}
       </span>
-    </CmkAlertBox>
+    </CmkAlertBoxDeprecated>
   </div>
 </template>
 

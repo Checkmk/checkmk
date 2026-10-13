@@ -11,7 +11,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
     "package.json",
 ])
@@ -33,6 +32,7 @@ py_library(
         "cmk/werks/tool/__init__.py",
         "cmk/werks/tool/__main__.py",
         "cmk/werks/tool/cli/__init__.py",
+        "cmk/werks/tool/cli/id_log.py",
         "cmk/werks/tool/cli/id_pool.py",
         "cmk/werks/tool/cli/in_out_elements.py",
         "cmk/werks/tool/cli/stash.py",
@@ -62,6 +62,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:version",
         requirement("gitpython"),
         requirement("lxml"),
@@ -80,16 +81,20 @@ py_doc_test(
 
 py_cmk_test(
     name = "unit",
-    size = "small",
+    # the e2e tests each run the CLI in a subprocess, which does not fit into "small"
+    size = "medium",
     srcs = glob(["tests/**/*.py"]),
+    args = ["--block-network"],
     deps = [
         ":cmk-werk-ids-server",
+        ":site",
         ":tool",
+        ":web",
         requirement("flask"),
         requirement("gitpython"),
+        requirement("lxml"),
         requirement("requests"),
         requirement("rich"),
-        requirement("vcrpy"),
         requirement("pytest-recording"),
     ],
 )
@@ -98,7 +103,6 @@ py_wheel(
     name = "wheel",
     distribution = "cmk-werks",
     strip_path_prefixes = ["packages/cmk-werks"],
-    # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [
@@ -132,6 +136,7 @@ py_library(
     srcs = [
         "cmk/werks/web/__init__.py",
         "cmk/werks/web/_pages.py",
+        "cmk/werks/web/werk_detail.py",
     ],
     imports = ["."],
     visibility = [
@@ -158,6 +163,7 @@ py_library(
     ],
     imports = ["."],
     deps = [
+        "//packages/cmk-ccc:log",
         requirement("flask"),
         requirement("gunicorn"),
         requirement("werkzeug"),
@@ -208,7 +214,6 @@ package_wheel(
 sh_library(
     name = "helpers",
     srcs = [
-        ".f12",
         "run",
     ],
 )

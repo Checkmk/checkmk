@@ -9,6 +9,8 @@ import json
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, MutableSequence, Sequence
 from typing import Any
 
+from cmk.agent_based.v2 import DiscoveryResult, Service
+
 #   .--Parse---------------------------------------------------------------.
 #   |                      ____                                            |
 #   |                     |  _ \ __ _ _ __ ___  ___                        |
@@ -150,10 +152,9 @@ def get_inventory_jolokia_metrics_apps(
     what: str,
     *,
     needed_keys: set[str],
-) -> Callable[[list[list[str]]], Sequence[tuple[str, Mapping[str, object]]]]:
-    def inventory_function(info: list[list[str]]) -> Sequence[tuple[str, Mapping[str, object]]]:
-        inv: list[tuple[str, Mapping[str, object]]] = []
-        parsed = jolokia_metrics_parse(info)
+) -> Callable[[list[list[str]]], DiscoveryResult]:
+    def inventory_function(section: list[list[str]]) -> DiscoveryResult:
+        parsed = jolokia_metrics_parse(section)
 
         # this handles information from BEA, they stack one level
         # higher than the rest.
@@ -164,15 +165,14 @@ def get_inventory_jolokia_metrics_apps(
                         for nk in needed_keys:
                             for servlet in appstate["servlets"]:
                                 if nk in appstate["servlets"][servlet]:
-                                    inv.append((f"{inst} {app} {servlet}", {}))
+                                    yield Service(item=f"{inst} {app} {servlet}")
                                     continue
         # This does the same for tomcat
         for inst, vals in parsed.items():
             for app, appstate in vals.get("apps", {}).items():
                 for nk in needed_keys:
                     if nk in appstate:
-                        inv.append((f"{inst} {app}", {}))
+                        yield Service(item=f"{inst} {app}")
                         continue
-        return inv
 
     return inventory_function

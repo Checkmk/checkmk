@@ -10,6 +10,7 @@ import contextlib
 from ast import literal_eval
 from collections.abc import Callable, Iterator
 from datetime import datetime
+from http import HTTPStatus
 
 import pytest
 
@@ -17,8 +18,8 @@ from cmk.ccc.user import UserId
 from cmk.crypto.totp import TOTP
 from cmk.gui.type_defs import TotpCredential, TwoFactorCredentials
 from cmk.gui.userdb.session import generate_auth_hash
-from tests.testlib.site import ADMIN_USER, Site
-from tests.testlib.web_session import CMKWebSession
+from tests.testlib.system.site import ADMIN_USER, Site
+from tests.testlib.system.web_session import CMKWebSession
 
 
 @pytest.fixture(name="with_automation_user")
@@ -44,16 +45,16 @@ def create_and_delete_automation_user(site: Site) -> Iterator[tuple[str, str]]:
 def test_login_and_logout(site: Site) -> None:
     web = CMKWebSession(site)
 
-    r = web.get("wato.py?mode=globalvars", allow_redirect_to_login=True)
+    r = web.get("global_settings.py", allow_redirect_to_login=True)
     assert "Global settings" not in r.text
 
     web.login()
     site.enforce_non_localized_gui(web)
-    r = web.get("wato.py?mode=globalvars")
+    r = web.get("global_settings.py")
     assert "Global settings" in r.text
 
     web.logout()
-    r = web.get("wato.py?mode=globalvars", allow_redirect_to_login=True)
+    r = web.get("global_settings.py", allow_redirect_to_login=True)
     assert "Global settings" not in r.text
 
 
@@ -194,7 +195,7 @@ def test_human_user_restapi(site: Site) -> None:
             "_username": username,
             "_secret": password,
         },
-        expected_code=401,
+        expected_code=HTTPStatus.UNAUTHORIZED,
     )
     assert not session.is_logged_in()
 
@@ -239,11 +240,14 @@ def test_failed_login_counter_human(site: Site) -> None:
     """test that all authentication methods count towards the failed login attempts"""
     session = CMKWebSession(site)
 
-    with _reset_failed_logins(site, username := ADMIN_USER):
+    with (
+        update_global_config(site, ["lock_on_logon_failures = 10"]),
+        _reset_failed_logins(site, username := ADMIN_USER),
+    ):
         session.get(
             f"/{site.id}/check_mk/api/1.0/version",
             headers={"Authorization": f"Bearer {username} wrong_password"},
-            expected_code=401,
+            expected_code=HTTPStatus.UNAUTHORIZED,
         )
         assert _get_failed_logins(site, username) == 1, (
             "failed attempts increased by login with bearer token"
@@ -252,7 +256,7 @@ def test_failed_login_counter_human(site: Site) -> None:
         session.get(
             f"/{site.id}/check_mk/api/1.0/version",
             auth=(username, "wrong_password"),
-            expected_code=401,
+            expected_code=HTTPStatus.UNAUTHORIZED,
         )
         assert _get_failed_logins(site, username) == 2, (
             "failed attempts increased by login with basic token"
@@ -278,23 +282,25 @@ def test_failed_login_counter_automation(with_automation_user: tuple[str, str], 
     session = CMKWebSession(site)
 
     username, _password = with_automation_user
-    with _reset_failed_logins(site, username):
+    with (
+        update_global_config(site, ["lock_on_logon_failures = 10"]),
+        _reset_failed_logins(site, username),
+    ):
         session.get(
             f"/{site.id}/check_mk/api/1.0/version",
             headers={"Authorization": f"Bearer {username} wrong_password"},
-            expected_code=401,
+            expected_code=HTTPStatus.UNAUTHORIZED,
         )
         assert _get_failed_logins(site, username) == 0
 
         session.get(
             f"/{site.id}/check_mk/api/1.0/version",
             auth=(username, "wrong_password"),
-            expected_code=401,
+            expected_code=HTTPStatus.UNAUTHORIZED,
         )
         assert _get_failed_logins(site, username) == 0
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_edition("cloud")
 def test_local_secret_no_sessions(site: Site) -> None:
     """test authenticated request with the site internal secret
@@ -337,7 +343,7 @@ def test_local_secret_permissions(site: Site) -> None:
             "Authorization": f"InternalToken {b64_token}",
         },
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert isinstance(response.json()["lifetime_in_months"], int)
 
     response = session.get(
@@ -346,7 +352,7 @@ def test_local_secret_permissions(site: Site) -> None:
             "Authorization": f"InternalToken {b64_token}",
         },
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
 
 
 @contextlib.contextmanager
@@ -439,7 +445,7 @@ def test_rest_api_basic_auth_denied_by_auth_config(  # type: ignore[misc] #mypy 
         response = session.get(
             f"/{site.id}/check_mk/api/1.0/version",
             auth=(ADMIN_USER, password),
-            expected_code=401,
+            expected_code=HTTPStatus.UNAUTHORIZED,
         )
         assert not session.is_logged_in()
         assert response.json()["detail"] == expected_error_msg
@@ -482,7 +488,7 @@ def test_rest_api_bearer_auth_denied_by_auth_config(  # type: ignore[misc]
             headers={
                 "Authorization": f"Bearer {ADMIN_USER} {site.admin_password}",
             },
-            expected_code=401,
+            expected_code=HTTPStatus.UNAUTHORIZED,
         )
         assert not session.is_logged_in()
         assert response.json()["detail"] == expected_error_msg
@@ -504,7 +510,7 @@ def test_rest_api_bearer_auth_denied_by_auth_config(  # type: ignore[misc]
             id="password_change_required_valid_user",
         ),
         pytest.param(
-            lambda *args: contextlib.nullcontext(),
+            lambda *args: contextlib.nullcontext(),  # noqa: ARG005
             ["require_two_factor_all_users = True", "auth_by_http_header = 'X-Remote-User'"],
             ADMIN_USER,
             id="2fa_setup_required_valid_user",
@@ -529,7 +535,7 @@ def test_remote_user_denied_by_additional_auth_configs(  # type: ignore[misc]
             headers={
                 "X-Remote-User": user,
             },
-            expected_code=401,
+            expected_code=HTTPStatus.UNAUTHORIZED,
         )
         assert not session.is_logged_in()
 
@@ -542,7 +548,7 @@ def test_remote_user_denied_by_additional_auth_configs(  # type: ignore[misc]
             ["auth_by_http_header = 'X-Remote-User'"],
             "fake_user",
             "Two-factor authentication is required.",
-            200,
+            HTTPStatus.OK,
             id="2fa_auth_required_invalid_user",
         ),
         pytest.param(
@@ -550,15 +556,15 @@ def test_remote_user_denied_by_additional_auth_configs(  # type: ignore[misc]
             ["auth_by_http_header = 'X-Remote-User'"],
             "fake_user",
             "Password change is required.",
-            200,
+            HTTPStatus.OK,
             id="password_change_required_invalid_user",
         ),
         pytest.param(
-            lambda *args: contextlib.nullcontext(),
+            lambda *args: contextlib.nullcontext(),  # noqa: ARG005
             ["require_two_factor_all_users = True", "auth_by_http_header = 'X-Remote-User'"],
             "fake_user",
             "Two-factor setup is required for user.",
-            401,
+            HTTPStatus.UNAUTHORIZED,
             id="2fa_setup_required_invalid_user",
         ),
     ],
@@ -588,7 +594,7 @@ def test_invalid_remote_user_not_denied_by_additional_auth_configs(  # type: ign
             expected_code=expected_code,
         )
         assert not session.is_logged_in()
-        if response.status_code == 401:
+        if response.status_code == HTTPStatus.UNAUTHORIZED:
             assert response.json()["detail"] == expected_error_msg
 
 
@@ -626,7 +632,7 @@ def test_rest_api_access_allowed_by_cookie_without_2fa(site: Site) -> None:
     session.get(
         f"/{site.id}/check_mk/api/1.0/version",
         cookies=_get_site_auth_cookie(site, username),
-        expected_code=200,
+        expected_code=HTTPStatus.OK,
     )
     assert session.is_logged_in()
 
@@ -657,7 +663,7 @@ def test_rest_api_access_denied_by_cookie_without_2fa(site: Site) -> None:
         response = session.get(
             f"/{site.id}/check_mk/api/1.0/version",
             cookies=_get_site_auth_cookie(site, username),
-            expected_code=401,
+            expected_code=HTTPStatus.UNAUTHORIZED,
         )
         assert response.json()["detail"] == "Two-factor authentication is required."
 
@@ -701,14 +707,14 @@ def test_rest_api_access_allowed_by_cookie_2fa(site: Site) -> None:
                 "_totp_code": otp_value,
             },
             allow_redirects=True,
-            expected_code=200,
+            expected_code=HTTPStatus.OK,
         )
 
         # Generated cookie for latest user session should now work.
         session.get(
             f"/{site.id}/check_mk/api/1.0/version",
             cookies=_get_site_auth_cookie(site, username),
-            expected_code=200,
+            expected_code=HTTPStatus.OK,
         )
         assert session.is_logged_in()
 

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 import re
 from collections import Counter
@@ -13,12 +12,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 class Param(TypedDict):
@@ -56,7 +54,7 @@ def parse_zypper(string_table: StringTable) -> Section:
         return Error(firstline)
 
     for line in string_table:
-        match line:
+        match line:  # type: ignore[exhaustive-match]
             case [_, _, _, pt, n] | [_, _, _, pt, n, _] | [_, _, pt, _, _, n, *_]:
                 if (patch_type := pt.strip()) and n.lower().strip() == "needed":
                     patch_types.append(patch_type)
@@ -64,10 +62,6 @@ def parse_zypper(string_table: StringTable) -> Section:
                 locks.append(lock)
 
     return ZypperUpdates(patch_types=patch_types, locks=locks)
-
-
-def discover_zypper(section: Section) -> DiscoveryResult:
-    yield Service()
 
 
 def check_zypper(params: Param, section: Section) -> CheckResult:
@@ -91,7 +85,7 @@ agent_section_zypper = AgentSection(
 check_plugin_zypper = CheckPlugin(
     name="zypper",
     service_name="Zypper Updates",
-    discovery_function=discover_zypper,
+    discovery_function=discover_one_service,
     check_function=check_zypper,
     check_ruleset_name="zypper",
     check_default_parameters=DEFAULT_PARAMS,

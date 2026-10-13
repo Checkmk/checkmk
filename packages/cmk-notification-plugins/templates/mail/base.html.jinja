@@ -90,14 +90,17 @@
                                             <td style="border-bottom: 1px solid #e5e5e5;
                                                        height: 1px;
                                                        line-height: 1px">
-                                                <span style="display:block;width:100%;height:1px;line-height:1px;">&nbsp;</span>
+                                                <span style="display:block;
+                                                             width:100%;
+                                                             height:1px;
+                                                             line-height:1px">&nbsp;</span>
                                             </td>
                                         </tr>
                                         {{ macros.margin_tr() }}
                                     </table>
                                 {% endif %}
                                 {% if bulk_summary %}
-                                    {% include 'bulk.html.jinja' %}
+                                    {% include "bulk.html.jinja" %}
                                 {% else %}
                                     {% if insert %}
                                         <table width="100%"
@@ -114,32 +117,32 @@
                                         </table>
                                     {% endif %}
                                     {% if data.NOTIFICATIONTYPE in ["PROBLEM", "RECOVERY"] %}
-                                        {% include 'summary.html.jinja' %}
+                                        {% include "summary.html.jinja" %}
                                     {% else %}
-                                        {% include 'summary_commands.html.jinja' %}
+                                        {% include "summary_commands.html.jinja" %}
                                     {% endif %}
-                                    {% include 'event_overview.html.jinja' %}
-                                    {% if graphs and 'graph' in elements %}
-                                        {% include 'graph.html.jinja' %}
+                                    {% include "event_overview.html.jinja" %}
+                                    {% if graphs and "graph" in elements %}
+                                        {% include "graph.html.jinja" %}
                                     {% endif %}
                                     {% if elements_without_graph %}
-                                        {% include 'additional.html.jinja' %}
+                                        {% include "additional.html.jinja" %}
                                     {% endif %}
                                     {% if data.PARAMETER_CONTACT_GROUPS and data.HOSTCONTACTGROUPNAMES|default(false) %}
-                                        {% include 'contact_groups.html.jinja' %}
+                                        {% include "contact_groups.html.jinja" %}
                                     {% endif %}
                                     {% if service_notification and data.PARAMETER_SVC_LABELS %}
-                                        {% include 'service_labels.html.jinja' %}
+                                        {% include "service_labels.html.jinja" %}
                                     {% endif %}
                                     {% if data.PARAMETER_HOST_LABELS %}
-                                        {% include 'host_labels.html.jinja' %}
+                                        {% include "host_labels.html.jinja" %}
                                     {% endif %}
                                     {% if data.PARAMETER_HOST_TAGS %}
-                                        {% include 'host_tags.html.jinja' %}
+                                        {% include "host_tags.html.jinja" %}
                                     {% endif %}
                                     {% if href %}{{ macros.view_issue_button(href) }}{% endif %}
                                     {% if data.PARAMETER_NOTIFICATION_RULE %}
-                                        {% include 'matching_rule.html.jinja' %}
+                                        {% include "matching_rule.html.jinja" %}
                                     {% endif %}
                                 {% endif %}
                             </td>

@@ -40,6 +40,8 @@ const widgetProps = computed(() => handler.value.widgetProps)
     v-else
     widget_id="graph-preview"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
     :general_settings="widgetProps.value!.general_settings!"
     :content="widgetProps.value!.content!"
     :effective-title="widgetProps.value!.effectiveTitle"
@@ -92,7 +94,6 @@ const widgetProps = computed(() => handler.value.widgetProps)
       v-model:vertical-axis="handler.verticalAxis.value"
       v-model:vertical-axis-width-mode="handler.verticalAxisWidthMode.value"
       v-model:fixed-vertical-axis-width="handler.fixedVerticalAxisWidth.value"
-      v-model:font-size="handler.fontSize.value"
       v-model:timestamp="handler.timestamp.value"
       v-model:round-margin="handler.roundMargin.value"
       v-model:graph-legend="handler.graphLegend.value"

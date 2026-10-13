@@ -73,7 +73,7 @@
 ' +------------------------------------------------------------------+
 '
 ' This file is part of Check_MK.
-' The official homepage is at http://mathias-kettner.de/check_mk.
+' The official homepage is at https://checkmk.com/.
 '
 ' check_mk is free software;  you can redistribute it and/or modify it
 ' under the  terms of the  GNU General Public License  as published by

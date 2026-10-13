@@ -6,7 +6,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
 ])
 
@@ -44,8 +43,6 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui:html_toolkit",
         "//cmk/gui:page_toolkit",
-        "//cmk/gui/utils",
-        "//cmk/gui/utils:middle",
         "//cmk/gui/watolib",
         "//cmk/utils:paths",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
@@ -82,7 +79,6 @@ py_wheel(
     name = "wheel",
     distribution = "cmk-profiling",
     strip_path_prefixes = ["packages/cmk-profiling"],
-    # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [

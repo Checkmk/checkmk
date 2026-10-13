@@ -4,14 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from http import HTTPStatus
+
 from cmk.gui.config import active_config
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 def test_show_graph_timerange_invalid_index(clients: ClientRegistry) -> None:
     error = (
         clients.GraphTimerange.get(graph_timerange_index=-1, expect_ok=False)
-        .assert_status_code(404)
+        .assert_status_code(HTTPStatus.NOT_FOUND)
         .json
     )
     assert error["detail"] == "These fields have problems: path.index"
@@ -19,7 +21,7 @@ def test_show_graph_timerange_invalid_index(clients: ClientRegistry) -> None:
 
     error = (
         clients.GraphTimerange.get(graph_timerange_index=999, expect_ok=False)
-        .assert_status_code(404)
+        .assert_status_code(HTTPStatus.NOT_FOUND)
         .json
     )
     assert error["detail"] == "The graph timerange with the index 999 does not exists."

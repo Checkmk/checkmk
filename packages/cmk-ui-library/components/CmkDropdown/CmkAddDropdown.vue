@@ -8,6 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { useTemplateRef } from 'vue'
 
 import CmkDropdown from './CmkDropdown.vue'
 import type { ButtonVariants } from './CmkDropdownButton.vue'
@@ -29,10 +30,20 @@ function onSelect(value: string | null): void {
     emit('select', value)
   }
 }
+
+const dropdown = useTemplateRef<InstanceType<typeof CmkDropdown>>('dropdown')
+
+defineExpose({
+  /** Move keyboard focus to the button that opens the dropdown. */
+  focus: (): void => {
+    dropdown.value?.focus()
+  }
+})
 </script>
 
 <template>
   <CmkDropdown
+    ref="dropdown"
     :model-value="null"
     :component-id="componentId"
     :options="options"

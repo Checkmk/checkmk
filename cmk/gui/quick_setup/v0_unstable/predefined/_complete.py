@@ -57,7 +57,6 @@ from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
     _normalize_folder_name,
     Folder,
-    folder_tree,
     FolderTree,
     Host,
 )
@@ -79,7 +78,7 @@ from cmk.gui.watolib.services import (
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.sites import ReplicationStatusFetcher
 from cmk.livestatus_client import SiteConfiguration
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.ruleset_matcher.matcher import RuleConditionsSpec, RuleOptionsSpec, RuleSpec
 from cmk.rulesets.v1.form_specs import Dictionary
@@ -101,7 +100,7 @@ def _sanitize_folder_path(
     """Attempt to get the folder from the folder path. If the folder does not exist, create it.
     Returns the folder object."""
     sanitized_folder_path = normalize_folder_path_str(folder_path)
-    if folder := existing_folder_from_path(sanitized_folder_path):
+    if folder := existing_folder_from_path(tree, sanitized_folder_path):
         return folder
 
     folder = tree.root_folder()
@@ -200,6 +199,7 @@ def create_and_save_special_agent_bundle(
     parameter_form: Dictionary,
     all_stages_form_data: ParsedFormData,
     progress_logger: ProgressLogger,
+    tree: FolderTree,
 ) -> str:
     return _create_and_save_special_agent_bundle(
         special_agent_name=special_agent_name,
@@ -207,6 +207,7 @@ def create_and_save_special_agent_bundle(
         all_stages_form_data=all_stages_form_data,
         collect_params=collect_params_with_defaults_from_form_data,
         progress_logger=progress_logger,
+        tree=tree,
     )
 
 
@@ -216,6 +217,7 @@ def create_and_save_special_agent_bundle_custom_collect_params(
     all_stages_form_data: ParsedFormData,
     custom_collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
     progress_logger: ProgressLogger,
+    tree: FolderTree,
 ) -> str:
     return _create_and_save_special_agent_bundle(
         special_agent_name=special_agent_name,
@@ -223,6 +225,7 @@ def create_and_save_special_agent_bundle_custom_collect_params(
         all_stages_form_data=all_stages_form_data,
         collect_params=custom_collect_params,
         progress_logger=progress_logger,
+        tree=tree,
     )
 
 
@@ -291,6 +294,7 @@ def _create_and_save_special_agent_bundle(
     all_stages_form_data: ParsedFormData,
     collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
     progress_logger: ProgressLogger,
+    tree: FolderTree,
 ) -> str:
     rulespec_name = RuleGroup.SpecialAgents(special_agent_name)
     bundle_id = _find_bundle_id(all_stages_form_data)
@@ -328,7 +332,7 @@ def _create_and_save_special_agent_bundle(
     )
     # TODO: The sanitize function is likely to change once we have a folder FormSpec.
     folder = _sanitize_folder_path(
-        (tree := folder_tree()),
+        tree,
         host_path,
         pprint_value=active_config.wato_pprint_config,
         pending_changes=pending_changes,
@@ -537,7 +541,7 @@ def _run_service_discovery(
         ),
         host=host,
         raise_errors=False,
-        automation_config=LocalAutomationConfig(),
+        automation_config=automation_config,
         user_permission_config=user_permission_config,
         pprint_value=pprint_value,
         debug=debug,

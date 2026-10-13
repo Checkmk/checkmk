@@ -20,6 +20,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
 from cmk.plugins.perle.lib import DETECT_PERLE, perle_check_alarms
 
@@ -76,10 +77,6 @@ _MAP_DIAG_STATES = {
 }
 
 
-def discover_perle_chassis(section: _Section) -> DiscoveryResult:
-    yield Service()
-
-
 def check_perle_chassis(section: _Section) -> CheckResult:
     state, state_readable = _MAP_DIAG_STATES[section.diagnosis_state]
     yield Result(state=state, summary=f"Diagnostic result: {state_readable}")
@@ -89,16 +86,16 @@ def check_perle_chassis(section: _Section) -> CheckResult:
 check_plugin_perle_chassis = CheckPlugin(
     name="perle_chassis",
     service_name="Chassis status",
-    discovery_function=discover_perle_chassis,
+    discovery_function=discover_one_service,
     check_function=check_perle_chassis,
 )
 
 
-def discover_perle_chassis_temp(section: _Section) -> DiscoveryResult:
+def discover_perle_chassis_temp(section: _Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="chassis")
 
 
-def check_perle_chassis_temp(item: str, params: TempParamType, section: _Section) -> CheckResult:
+def check_perle_chassis_temp(item: str, params: TempParamType, section: _Section) -> CheckResult:  # noqa: ARG001
     yield from check_temperature(
         reading=section.temp,
         params=params,

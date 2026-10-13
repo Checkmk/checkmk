@@ -150,7 +150,7 @@ function notAlreadyChosen(suggestion: Suggestion): boolean {
 }
 
 const autocompleter: Autocompleter = {
-  fetch_method: 'ajax_vs_autocomplete',
+  fetch_method: 'rest_autocomplete',
   data: structuredClone(toRaw(props.component.autocompleter))
 }
 </script>

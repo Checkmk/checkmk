@@ -36,7 +36,7 @@ def discover_hp_procurve_cpu(section: StringTable) -> DiscoveryResult:
 def check_hp_procurve_cpu(params: Mapping[str, Any], section: StringTable) -> CheckResult:
     try:
         util = int(section[0][0])
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return
 
     if 0 <= util <= 100:

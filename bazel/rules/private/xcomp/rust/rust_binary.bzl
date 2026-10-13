@@ -1,7 +1,7 @@
 """Cross-compilable rust_binary rule with platform transition support."""
 
 load("@rules_rust//rust:defs.bzl", _rust_binary = "rust_binary")
-load(":private/xcomp/transition.bzl", _transition_platform = "transition_platform")
+load(":private/xcomp/transition.bzl", _HOST_PLATFORM = "HOST_PLATFORM", _transition_platform = "transition_platform")
 
 _rust_binary_transitioned = rule(
     implementation = lambda ctx: ctx.super(),
@@ -12,7 +12,7 @@ _rust_binary_transitioned = rule(
             doc = "Pin a compilation mode (e.g. 'opt'); empty inherits the command line.",
             default = "",
         ),
-        "platform": attr.label(default = "@platforms//host"),
+        "platform": attr.label(default = _HOST_PLATFORM),
     },
 )
 

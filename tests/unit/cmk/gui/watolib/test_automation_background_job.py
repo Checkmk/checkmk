@@ -14,8 +14,8 @@ from typing import override
 
 import pytest
 
-from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
-from cmk.automations.types import AutomationID
+from cmk.automations.internal import AutomationID, AutomationResult
+from cmk.automations.results import ResultTypeRegistry
 from cmk.ccc import store
 from cmk.ccc import version as cmk_version
 from cmk.gui.background_job.job import BackgroundProcessInterface
@@ -29,21 +29,24 @@ from cmk.gui.watolib.automation_background_job import (
     CheckmkAutomationBackgroundJob,
 )
 from cmk.gui.watolib.automations import CheckmkAutomationRequest
+from cmk.livestatus_client import SiteConfigurations
+from cmk.ruleset_matcher.tags import TagConfigSpec
 
 RESULT: object = None
 
 
 @dataclass
-class ResultTest(ABCAutomationResult):
+class ResultTest(AutomationResult):
     field_1: int
     field_2: str | None
 
     @override
-    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
+    def serialize(self, for_cmk_version: str) -> str:
         return (
-            self._default_serialize()
-            if for_cmk_version >= cmk_version.Version.from_str("2.2.0i1")
-            else SerializedResult("i was very different previously")
+            super().serialize(for_cmk_version)
+            if cmk_version.Version.from_str(for_cmk_version)
+            >= cmk_version.Version.from_str("2.2.0i1")
+            else "i was very different previously"
         )
 
     @staticmethod
@@ -54,7 +57,7 @@ class ResultTest(ABCAutomationResult):
 
 class TestCheckmkAutomationBackgroundJob:
     @staticmethod
-    def _mock_save(_path: object, data: object, **kwargs: object) -> None:
+    def _mock_save(_path: object, data: object, **kwargs: object) -> None:  # noqa: ARG004
         global RESULT
         RESULT = data
 
@@ -111,10 +114,9 @@ class TestCheckmkAutomationBackgroundJob:
         "result_type_registry",
         "check_mk_local_automation_serialized",
         "save_text_to_file",
+        "request_context",
     )
-    def test_execute_automation(
-        self, version: str, expected_result: str, request_context: None
-    ) -> None:
+    def test_execute_automation(self, version: str, expected_result: str) -> None:
         """
         Test the most inner logic of the job
 
@@ -124,13 +126,13 @@ class TestCheckmkAutomationBackgroundJob:
         job = CheckmkAutomationBackgroundJob("job_id")
         os.makedirs(job.get_work_dir())
         with open(os.devnull, "w") as progress_update:
-            job._execute_automation(
+            job._execute_automation(  # noqa: SLF001
                 BackgroundProcessInterface(
                     job.get_work_dir(),
                     "job_id",
                     logging.getLogger(),
                     threading.Event(),
-                    lambda x: nullcontext(),
+                    lambda x: nullcontext(),  # noqa: ARG005
                     progress_update,
                 ),
                 api_request,
@@ -179,11 +181,15 @@ class TestCheckmkAutomationBackgroundJob:
                     user_permission_config=UserPermissionSerializableConfig(
                         roles={}, user_roles={}, default_user_profile_roles=[]
                     ),
+                    site_configs=SiteConfigurations({}),
+                    wato_hide_folders_without_read_permissions=False,
+                    wato_host_attrs=[],
+                    tags=TagConfigSpec(tag_groups=[], aux_tags=[]),
                 )
             )
             job = CheckmkAutomationBackgroundJob(job_id)
             job.wait_for_completion(10)
-            job_result = AutomationCheckmkAutomationGetStatus._load_result(
+            job_result = AutomationCheckmkAutomationGetStatus._load_result(  # noqa: SLF001
                 Path(job.get_work_dir()) / "result.mk"
             )
             assert job_result == result

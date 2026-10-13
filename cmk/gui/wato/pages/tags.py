@@ -11,6 +11,7 @@ to hosts and that is the basis of the rules."""
 
 import abc
 from collections.abc import Collection, Sequence
+from http import HTTPStatus
 from typing import cast, override
 
 import cmk.ruleset_matcher.tags
@@ -36,18 +37,10 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageContext
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import (
-    ActionResult,
-    CustomHostAttrSpec,
-    IconNames,
-    PermissionName,
-    StaticIcon,
-)
+from cmk.gui.type_defs import ActionResult, CustomHostAttrSpec
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.confirm_links import make_confirm_delete_link
-from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Dictionary,
@@ -99,8 +92,13 @@ from cmk.gui.watolib.tags import (
 )
 from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
+from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
+from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeuri
 
 from ._tile_menu import TileMenuRenderer
@@ -249,7 +247,7 @@ class ModeTags(ABCTagMode):
             pending_changes=pending_changes,
         )
         if message is False:
-            return FinalizeRequest(code=200)
+            return FinalizeRequest(code=HTTPStatus.OK)
 
         if message:
             self._tag_config.remove_tag_group(del_id)
@@ -299,7 +297,7 @@ class ModeTags(ABCTagMode):
             pending_changes=pending_changes,
         )
         if message is False:
-            return FinalizeRequest(code=200)
+            return FinalizeRequest(code=HTTPStatus.OK)
 
         if message:
             self._tag_config.aux_tag_list.remove(del_id)
@@ -462,6 +460,7 @@ class ModeTags(ABCTagMode):
         )
 
         delete_url = make_confirm_delete_link(
+            i18n=_,
             url=make_action_link(request, [("mode", "tags"), ("_delete", tag_group.id)]),
             title=_("Delete tag group"),
             suffix=tag_group.title,
@@ -510,6 +509,7 @@ class ModeTags(ABCTagMode):
 
         edit_url = folder_preserving_link(request, [("mode", "edit_auxtag"), ("edit", aux_tag.id)])
         delete_url = make_confirm_delete_link(
+            i18n=_,
             url=make_action_link(request, [("mode", "tags"), ("_del_aux", aux_tag.id)]),
             title=_("Delete auxiliary tag"),
             suffix=aux_tag.title,
@@ -668,9 +668,6 @@ class ModeTagUsage(ABCTagMode):
         self._show_tag_group_icons(tag_group)
 
         table.cell(_("Tag group"), _u(tag_group.choice_title))
-        # TODO: This check shouldn't be necessary if we get our types right.
-        if tag.title is None or tag_group.id is None:  # type: ignore[redundant-expr]
-            raise Exception("uninitialized tag/tag group")
         table.cell(_("Tag"), _u(tag.title))
 
         operation = OperationReplaceGroupedTags(
@@ -929,7 +926,7 @@ class ModeEditTagGroup(ABCEditTagMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return redirect(mode_url("tags"))
@@ -997,7 +994,7 @@ class ModeEditTagGroup(ABCEditTagMode):
             pending_changes=pending_changes,
         )
         if message is False:
-            return FinalizeRequest(code=200)
+            return FinalizeRequest(code=HTTPStatus.OK)
 
         update_tag_config(tree, changed_hosttags_config, pprint_value=config.wato_pprint_config)
         pending_changes.add(

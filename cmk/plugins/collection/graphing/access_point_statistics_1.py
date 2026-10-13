@@ -21,7 +21,7 @@ metric_ap_devices_not_responding = metrics.Metric(
 )
 metric_ap_devices_total = metrics.Metric(
     name="ap_devices_total",
-    title=Title("Total devices"),
+    title=Title("Total access point devices"),
     unit=UNIT_COUNTER,
     color=metrics.Color.BLUE,
 )

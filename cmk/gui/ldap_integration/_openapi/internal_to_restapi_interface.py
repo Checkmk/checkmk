@@ -7,7 +7,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, cast, get_args, Literal, TypedDict
@@ -805,11 +804,11 @@ def groups_to_attributes_internal_to_api(
             case "force_authuser":
                 fa = cast(FORCE_AUTH_USER, group["attribute"])
                 api_groups.append(
-                    {  # type: ignore[arg-type,misc]
-                        "group_cn": group["cn"],
-                        "attribute_to_set": "visibility_of_hosts_or_services",
-                        "value": ("show_all" if fa[1] is None else "show_for_user_contacts_only"),  # type: ignore[redundant-expr]
-                    }
+                    APIVisibilityOfHostService(
+                        group_cn=group["cn"],
+                        attribute_to_set="visibility_of_hosts_or_services",
+                        value=("show_all" if fa[1] is None else "show_for_user_contacts_only"),  # type: ignore[redundant-expr]
+                    )
                 )
 
             case _:
@@ -1081,16 +1080,25 @@ class SyncPlugins:
 
         # Custom user attributes can be added here too.
         for k, v in config.items():
-            if k not in ap:
-                ap[k] = sync_attribute_to_internal[v]  # type: ignore[valid-type,misc]
+            if k in ap:
+                continue
+            match v:
+                case {"state": "enabled", "attribute_to_sync": str() as attribute_to_sync}:
+                    ap[k] = sync_attribute_to_internal(
+                        {"state": "enabled", "attribute_to_sync": attribute_to_sync}
+                    )
+                case {"state": "disabled"}:
+                    ap[k] = None
+                case _:
+                    raise ValueError(f"Invalid sync attribute value for {k!r}: {v!r}")
 
         active_plugins = cast(ActivePlugins, {k: v for k, v in ap.items() if v is not None})
         return cls(active_plugins=active_plugins)
 
     def api_response(self) -> APISyncPlugins:
         def checkbox_state(plugin_key: str) -> SYNC_ATTRIBUTE:
-            value = cast(dict, self.active_plugins.get(plugin_key))
-            if value is not None and (attr := value.get("attr")) is not None:  # type: ignore[redundant-expr]
+            value = cast(dict | None, self.active_plugins.get(plugin_key))
+            if value is not None and (attr := value.get("attr")) is not None:
                 return {"state": "enabled", "attribute_to_sync": attr}
             return {"state": "disabled"}
 

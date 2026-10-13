@@ -14,7 +14,6 @@ from types import TracebackType
 from typing import Final, NoReturn, Protocol, Self, TypeVar
 
 import pika
-import pika.adapters.blocking_connection
 import pika.channel
 import pika.spec
 from pika.exceptions import AMQPConnectionError, StreamLostError

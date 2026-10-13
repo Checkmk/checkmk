@@ -9,6 +9,7 @@ from typing import Literal
 import pytest
 
 from cmk.gui.unit_formatter import (
+    _multiples_within,
     _stringify_small_decimal_number,
     AutoPrecision,
     DecimalFormatter,
@@ -18,6 +19,7 @@ from cmk.gui.unit_formatter import (
     NegativeYRange,
     NotationFormatter,
     PositiveYRange,
+    precision_for_spacing,
     SIFormatter,
     StandardScientificFormatter,
     StrictPrecision,
@@ -433,7 +435,6 @@ def test_render_unit_notation(
             NegativeYRange(start=-11.19, end=-2.123),
             "Decimal",
             [
-                Label(-2.0, "-2 u"),
                 Label(-4.0, "-4 u"),
                 Label(-6.0, "-6 u"),
                 Label(-8.0, "-8 u"),
@@ -476,7 +477,6 @@ def test_render_unit_notation(
             NegativeYRange(start=-1.12e5, end=-423),
             "SI",
             [
-                Label(0, "0"),
                 Label(-20000, "-20 ku"),
                 Label(-40000, "-40 ku"),
                 Label(-60000, "-60 ku"),
@@ -521,7 +521,6 @@ def test_render_unit_notation(
             NegativeYRange(start=-0.144, end=-4.432e-4),
             "IEC",
             [
-                Label(0, "0"),
                 Label(-0.02, "-0.02 u"),
                 Label(-0.04, "-0.04 u"),
                 Label(-0.06, "-0.06 u"),
@@ -610,7 +609,6 @@ def test_render_unit_notation(
             NegativeYRange(start=-5e10, end=-1e2),
             "EngineeringScientific",
             [
-                Label(0, "0"),
                 Label(-10000000000, "-10e+9 u"),
                 Label(-20000000000, "-20e+9 u"),
                 Label(-30000000000, "-30e+9 u"),
@@ -707,7 +705,6 @@ def test_render_unit_notation(
             NegativeYRange(start=-10.123, end=-5.11),
             "Time",
             [
-                Label(-5, "-5 s"),
                 Label(-6, "-6 s"),
                 Label(-7, "-7 s"),
                 Label(-8, "-8 s"),
@@ -721,7 +718,6 @@ def test_render_unit_notation(
             NegativeYRange(start=-25552000.123, end=-15552000.123),
             "Time",
             [
-                Label(-15552000, "-180 d"),
                 Label(-17280000, "-200 d"),
                 Label(-19008000, "-220 d"),
                 Label(-20736000, "-240 d"),
@@ -757,18 +753,19 @@ def test_render_y_labels(
         pytest.param(
             PositiveYRange(start=0.00123, end=0.00456),
             [
-                Label(0, "0"),
-                Label(0.001, "0.001 u"),
+                Label(0.0015, "0.0015 u"),
                 Label(0.002, "0.002 u"),
+                Label(0.0025, "0.0025 u"),
                 Label(0.003, "0.003 u"),
+                Label(0.0035, "0.0035 u"),
                 Label(0.004, "0.004 u"),
+                Label(0.0045000000000000005, "0.0045 u"),
             ],
             id="decimal-small",
         ),
         pytest.param(
             PositiveYRange(start=123.456, end=456.789),
             [
-                Label(100, "100 u"),
                 Label(150, "150 u"),
                 Label(200, "200 u"),
                 Label(250, "250 u"),
@@ -782,7 +779,6 @@ def test_render_y_labels(
         pytest.param(
             NegativeYRange(start=-456.789, end=-123.456),
             [
-                Label(-100, "-100 u"),
                 Label(-150, "-150 u"),
                 Label(-200, "-200 u"),
                 Label(-250, "-250 u"),
@@ -817,8 +813,6 @@ def test_render_y_labels_small_range_large_offset() -> None:
         PositiveYRange(start=1.0011975, end=1.2515224999999999),
         5.0,
     ) == [
-        Label(0.9500000000000001, "0.95 s"),
-        Label(1.0, "1 s"),
         Label(1.05, "1.05 s"),
         Label(1.1, "1.1 s"),
         Label(1.1500000000000001, "1.15 s"),
@@ -864,3 +858,184 @@ def test_render_y_labels_small_range_large_offset() -> None:
 )
 def test__stringify_small_decimal_number(value: float, expected: str) -> None:
     assert _stringify_small_decimal_number(value) == expected
+
+
+def test_multiples_within_includes_both_bounds_when_they_are_multiples() -> None:
+    start, end, spacing = 0.19, 0.21, 0.01
+
+    multiples = _multiples_within(start, end, spacing)
+
+    assert multiples == [0.19, 0.2, 0.21]
+
+
+def test_multiples_within_starts_at_the_first_multiple_at_or_above_the_start() -> None:
+    start, end, spacing = 123.456, 456.789, 50
+
+    multiples = _multiples_within(start, end, spacing)
+
+    assert multiples[0] == 150
+
+
+def test_multiples_within_stops_at_the_last_multiple_at_or_below_the_end() -> None:
+    start, end, spacing = 123.456, 456.789, 50
+
+    multiples = _multiples_within(start, end, spacing)
+
+    assert multiples[-1] == 450
+
+
+def test_multiples_within_includes_a_bound_a_floating_point_hair_off_a_multiple() -> None:
+    start, end, spacing = 1.001, 1.005, 0.001
+
+    multiples = _multiples_within(start, end, spacing)
+
+    assert multiples[-1] == pytest.approx(end)
+
+
+def test_precision_for_spacing_adds_the_decimals_a_finer_spacing_needs() -> None:
+    unit_precision = AutoPrecision(digits=2)
+
+    precision = precision_for_spacing(unit_precision, 0.005)
+
+    assert precision == AutoPrecision(digits=3)
+
+
+def test_precision_for_spacing_keeps_the_unit_digits_for_a_coarser_spacing() -> None:
+    unit_precision = AutoPrecision(digits=2)
+
+    precision = precision_for_spacing(unit_precision, 20)
+
+    assert precision == AutoPrecision(digits=2)
+
+
+def test_precision_for_spacing_keeps_a_strict_precision_strict() -> None:
+    unit_precision = StrictPrecision(digits=0)
+
+    precision = precision_for_spacing(unit_precision, 0.5)
+
+    assert precision == StrictPrecision(digits=1)
+
+
+_TIGHT_Y_RANGES = [
+    pytest.param(
+        DecimalFormatter("u", AutoPrecision(digits=2)),
+        PositiveYRange(start=0.19, end=0.21),
+        id="decimal-below-one",
+    ),
+    pytest.param(
+        DecimalFormatter("u", AutoPrecision(digits=2)),
+        PositiveYRange(start=1.19, end=1.21),
+        id="decimal-above-one",
+    ),
+    pytest.param(
+        DecimalFormatter("u", AutoPrecision(digits=2)),
+        PositiveYRange(start=1000.19, end=1000.21),
+        id="decimal-at-a-thousand",
+    ),
+    pytest.param(
+        SIFormatter("u", AutoPrecision(digits=2)),
+        PositiveYRange(start=0.19, end=0.21),
+        id="si-below-one",
+    ),
+    pytest.param(
+        SIFormatter("u", AutoPrecision(digits=2)),
+        PositiveYRange(start=1.19, end=1.21),
+        id="si-above-one",
+    ),
+    pytest.param(
+        TimeFormatter("s", AutoPrecision(digits=2)),
+        PositiveYRange(start=0.19, end=0.21),
+        id="time-below-one",
+    ),
+    pytest.param(
+        TimeFormatter("s", AutoPrecision(digits=2)),
+        PositiveYRange(start=1.19, end=1.21),
+        id="time-above-one",
+    ),
+    # Far from zero the label text carries a prefix or exponent; the precision has to follow the
+    # displayed mantissa, not the raw value.
+    pytest.param(
+        SIFormatter("u", AutoPrecision(digits=2)),
+        PositiveYRange(start=1_190_000, end=1_210_000),
+        id="si-in-the-millions",
+    ),
+    pytest.param(
+        IECFormatter("u", AutoPrecision(digits=2)),
+        PositiveYRange(start=1.19 * 2**20, end=1.21 * 2**20),
+        id="iec-in-the-mebi-range",
+    ),
+    pytest.param(
+        StandardScientificFormatter("u", AutoPrecision(digits=2)),
+        PositiveYRange(start=11_900, end=12_100),
+        id="standard-scientific-in-the-ten-thousands",
+    ),
+    pytest.param(
+        EngineeringScientificFormatter("u", AutoPrecision(digits=2)),
+        PositiveYRange(start=1_190_000, end=1_210_000),
+        id="engineering-scientific-in-the-millions",
+    ),
+]
+
+
+@pytest.mark.parametrize("formatter, y_range", _TIGHT_Y_RANGES)
+def test_render_y_labels_fills_a_tight_range_with_labels_inside_it(
+    formatter: NotationFormatter, y_range: PositiveYRange
+) -> None:
+    labels = formatter.render_y_labels(y_range, target_number_of_labels=4)
+
+    positions = [label.position for label in labels]
+    assert len(positions) >= 2
+    assert min(positions) >= y_range.start
+    assert max(positions) <= y_range.end
+
+
+@pytest.mark.parametrize("formatter, y_range", _TIGHT_Y_RANGES)
+def test_render_y_labels_on_a_tight_range_gives_every_label_its_own_text(
+    formatter: NotationFormatter, y_range: PositiveYRange
+) -> None:
+    labels = formatter.render_y_labels(y_range, target_number_of_labels=4)
+
+    texts = [label.text for label in labels]
+    assert len(set(texts)) == len(texts)
+
+
+def test_render_y_labels_falls_back_to_decimal_steps_below_the_notations_own_atoms() -> None:
+    formatter = TimeFormatter("s", AutoPrecision(digits=2))
+    y_range = PositiveYRange(start=0, end=1.5)
+
+    labels = formatter.render_y_labels(y_range, target_number_of_labels=4)
+
+    assert [label.position for label in labels] == [0, 0.5, 1.0, 1.5]
+
+
+def test_render_y_labels_keeps_a_negative_ranges_labels_inside_the_range() -> None:
+    formatter = DecimalFormatter("u", AutoPrecision(digits=2))
+    y_range = NegativeYRange(start=-10.123, end=-5.11)
+
+    labels = formatter.render_y_labels(y_range, target_number_of_labels=5)
+
+    positions = [label.position for label in labels]
+    assert min(positions) >= y_range.start
+    assert max(positions) <= y_range.end
+
+
+def test_render_at_a_resolution_tells_two_values_one_resolution_apart_even_after_prefixing() -> (
+    None
+):
+    formatter = SIFormatter("B", AutoPrecision(digits=2))
+    resolution = 2_000
+
+    low, high = (formatter.render(value, resolution) for value in (1_196_000, 1_198_000))
+
+    assert low != high
+    assert low.endswith("MB")
+
+
+def test_render_keeps_the_unit_precision_for_a_resolution_the_unit_already_resolves() -> None:
+    formatter = SIFormatter("B", AutoPrecision(digits=2))
+
+    assert formatter.render(1_196_000, 500_000) == formatter.render(1_196_000)
+
+
+def test_render_keeps_the_unit_precision_without_a_resolution() -> None:
+    assert SIFormatter("B", AutoPrecision(digits=2)).render(1_196_000) == "1.2 MB"

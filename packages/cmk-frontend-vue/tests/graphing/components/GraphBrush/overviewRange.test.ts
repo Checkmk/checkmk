@@ -9,7 +9,6 @@ import {
   overviewDomain,
   overviewMultiplier,
   overviewStep,
-  overviewTimeRange,
   recenterOverviewDomain
 } from '@/graphing/components/GraphBrush/overviewRange'
 
@@ -161,20 +160,5 @@ describe('overviewStep', () => {
     const step = overviewStep(0, spanSeconds, canvasWidth)
 
     expect(step).toBe(60)
-  })
-})
-
-describe('overviewTimeRange', () => {
-  const now = 1_000_000
-
-  test('matches overviewDomain and carries a coarse step', () => {
-    const committed = { start: now - DAY, end: now, step: 60 }
-
-    const timeRange = overviewTimeRange(committed, now, 800)
-
-    const domain = overviewDomain(committed, now)
-    expect(timeRange.start).toBe(domain.start)
-    expect(timeRange.end).toBe(domain.end)
-    expect(timeRange.step).toBe(overviewStep(domain.start, domain.end, 800))
   })
 })

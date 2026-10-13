@@ -7,14 +7,17 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//cmk/plugins/checkmk/automations:__pkg__",
     ],
     deps = [
         "//cmk/piggyback:backend",
         "//cmk/utils",
+        "//packages/cmk-ccc:cpu-tracking",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
-        "//packages/cmk-ccc:version",
+        "//packages/cmk-ccc:resulttype",
+        "//packages/cmk-ccc:version-info",
         "//packages/cmk-check-engine:fetcher-protocol",
         "//packages/cmk-check-engine:helper-interface",
         "//packages/cmk-check-engine:snmplib",

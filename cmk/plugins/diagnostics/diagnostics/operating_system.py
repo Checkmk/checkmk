@@ -48,7 +48,7 @@ def _try_to_read(filename: str | Path) -> list[str]:
     try:
         with open(filename) as f:
             return [l.rstrip() for l in f.readlines()]
-    except (PermissionError, FileNotFoundError):
+    except PermissionError, FileNotFoundError:
         return []
 
 

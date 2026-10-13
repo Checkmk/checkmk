@@ -22,6 +22,7 @@ from cmk.agent_based.v2 import (
     Service,
     startswith,
     State,
+    StringTable,
 )
 
 DETECT_UPS_GENERIC = any_of(
@@ -99,6 +100,19 @@ def optional_yes_or_no(value: str) -> bool | None:
     return True if value.strip() == "1" else False if value.strip() == "2" else None
 
 
+def _is_integer(value: str) -> bool:
+    try:
+        int(value)
+    except ValueError:
+        return False
+    return True
+
+
+def parse_ups_voltage(string_table: StringTable) -> StringTable:
+    """Drop phases that do not report a numeric voltage."""
+    return [line for line in string_table if _is_integer(line[1])]
+
+
 def check_ups_in_voltage(
     item: str, params: Mapping[str, Any], section: Sequence[Sequence[str]]
 ) -> CheckResult:
@@ -133,9 +147,9 @@ def check_ups_out_voltage(
 
 
 def discover_ups_capacity(
-    section_ups_battery_capacity: Battery | None,
-    section_ups_on_battery: Battery | None,
-    section_ups_seconds_on_battery: Battery | None,
+    section_ups_battery_capacity: Battery | None,  # noqa: ARG001
+    section_ups_on_battery: Battery | None,  # noqa: ARG001
+    section_ups_seconds_on_battery: Battery | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     yield Service()
 
@@ -188,12 +202,20 @@ def _output_time_remaining(
     # Metric for time left on battery always - check remaining time only when on battery
     ignore_levels = seconds_left == 0 and not on_battery
     if seconds_left is not None:
-        yield from check_levels_v1(
-            seconds_left,
-            metric_name="battery_seconds_remaining",
-            levels_lower=None if ignore_levels else (levels[0] * 60, levels[1] * 60),
-            render_func=render.timespan,
-        )
+        if seconds_left < 0:
+            yield Result(
+                state=State.UNKNOWN,
+                summary=(
+                    f"Device reported an invalid remaining battery time ({seconds_left} seconds)"
+                ),
+            )
+        else:
+            yield from check_levels_v1(
+                seconds_left,
+                metric_name="battery_seconds_remaining",
+                levels_lower=None if ignore_levels else (levels[0] * 60, levels[1] * 60),
+                render_func=render.timespan,
+            )
 
     if not on_battery:
         yield Result(
@@ -227,9 +249,9 @@ def _output_seconds_on_battery(seconds_on_bat: int | None) -> CheckResult:
 
 
 def discover_ups_battery_state(
-    section_ups_battery_warnings: Battery | None,
-    section_ups_on_battery: Battery | None,
-    section_ups_seconds_on_battery: Battery | None,
+    section_ups_battery_warnings: Battery | None,  # noqa: ARG001
+    section_ups_on_battery: Battery | None,  # noqa: ARG001
+    section_ups_seconds_on_battery: Battery | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     yield Service()
 

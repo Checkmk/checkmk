@@ -18,6 +18,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib import df, uptime
 from cmk.plugins.storeonce import lib as storeonce
 
@@ -80,7 +81,7 @@ def discover_storeonce_clusterinfo(section: Section) -> DiscoveryResult:
 
 
 # this seems to be a HaSI plugin
-def check_storeonce_clusterinfo(item: str, section: Section) -> CheckResult:
+def check_storeonce_clusterinfo(item: str, section: Section) -> CheckResult:  # noqa: ARG001
     yield Result(state=State.OK, summary=f"Name: {section['Appliance Name']}")
     yield Result(state=State.OK, summary=f"Serial Number: {section['Serial Number']}")
     yield Result(state=State.OK, summary=f"Version: {section['Software Version']}")
@@ -146,7 +147,7 @@ check_plugin_storeonce_clusterinfo_cluster = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_storeonce_clusterinfo_space(section: Section) -> DiscoveryResult:
+def discover_storeonce_clusterinfo_space(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="Total Capacity")
 
 
@@ -173,10 +174,6 @@ check_plugin_storeonce_clusterinfo_space = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_storeonce_clusterinfo_uptime(section: Section) -> DiscoveryResult:
-    yield Service()
-
-
 def check_storeonce_clusterinfo_uptime(params: Mapping[str, Any], section: Section) -> CheckResult:
     yield from uptime.check(params, uptime.Section(float(section["Uptime Seconds"]), None))
 
@@ -185,7 +182,7 @@ check_plugin_storeonce_clusterinfo_uptime = CheckPlugin(
     name="storeonce_clusterinfo_uptime",
     service_name="Uptime",
     sections=["storeonce_clusterinfo"],
-    discovery_function=discover_storeonce_clusterinfo_uptime,
+    discovery_function=discover_one_service,
     check_function=check_storeonce_clusterinfo_uptime,
     check_ruleset_name="uptime",
     check_default_parameters={},

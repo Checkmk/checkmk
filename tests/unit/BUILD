@@ -19,13 +19,13 @@ py_library(
     ],
     deps = [
         "//cmk/base",
-        "//cmk/utils",
+        "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-licensing",
         "//packages/cmk-livestatus-client:py_livestatus",
-        "//packages/cmk-plugin-apis:agent_based",
-        "//tests/testlib:fake_site",
-        "//tests/testlib/common:repo",
-        requirement("pytest_metadata"),
+        "//tests/testlib/pytest_helpers",
+        "//tests/testlib/unit",
+        requirement("pytest"),
     ],
 )
 
@@ -50,7 +50,7 @@ py_cmk_test(
     use_project_pytest_config = True,
     deps = [
         ":conftest",
-        "//tests/testlib",
+        "//tests/testlib/system",
     ],
 )
 
@@ -64,7 +64,6 @@ py_cmk_test(
     ] + glob(
         include = [
             "cmk/*.py",
-            "cmk/automations/**/*.py",
             "cmk/bi/**/*.py",
             "cmk/diskspace/**/*.py",
             "cmk/fields/**/*.py",
@@ -86,16 +85,18 @@ py_cmk_test(
     deps = [
         ":conftest",
         "//cmk:cmkpasswd",
+        "//cmk/bi",
+        "//cmk/diskspace",
+        "//cmk/fields",
+        "//cmk/piggyback:hub",
         "//cmk/product_usage:product_usage_cli",
         "//cmk/special_agents",
-        "//packages/cmk-ccc:observer",
-        "//packages/cmk-check-engine:fetchers",
-        "//packages/cmk-plugin-apis:agent_based",
-        "//packages/cmk-plugins:lib",
+        "//packages/cmk-messaging",
         requirement("exchangelib"),
         requirement("fakeredis"),
         requirement("feedparser"),
         requirement("google-cloud-monitoring"),
+        requirement("jsonschema"),
         requirement("marshmallow"),
         requirement("polyfactory"),
         requirement("pysmb"),
@@ -108,6 +109,5 @@ py_cmk_test(
         requirement("time-machine"),
         requirement("vcrpy"),
         requirement("werkzeug"),
-        "//tests/testlib/unit",
     ],
 )

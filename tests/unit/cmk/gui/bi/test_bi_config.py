@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping
 
@@ -117,7 +116,7 @@ def test_bi_rule_outermost_transform_to_vs(rest_config: None | Mapping[str, obje
 class ModeBIEditRuleFake(ModeBIEditRule):
     """Fake for testing new bi rule edit"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._rule_id = None
         self._new = True
 
@@ -128,7 +127,7 @@ class ModeBIEditRuleFake(ModeBIEditRule):
 def test_validate_rule_id() -> None:
     edit_rule_mode = ModeBIEditRuleFake()
 
-    edit_rule_mode._validate_rule_id("unique_rule_id")
+    edit_rule_mode._validate_rule_id("unique_rule_id")  # noqa: SLF001
 
     with pytest.raises(MKUserError, match="There is already a rule with the ID <b>networking</b>."):
-        edit_rule_mode._validate_rule_id("networking")
+        edit_rule_mode._validate_rule_id("networking")  # noqa: SLF001

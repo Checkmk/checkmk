@@ -13,7 +13,7 @@ from cmk.crypto import password_hashing as ph
 from cmk.crypto.password import Password
 
 
-@pytest.fixture(autouse=True, scope="module")
+@pytest.fixture(autouse=True, scope="module")  # ruff: ignore[pytest-fixture-autouse]
 def reduce_password_hashing_rounds() -> Iterator[None]:
     """Reduce the number of rounds for hashing with bcrypt to the allowed minimum"""
     with patch.object(ph, "BCRYPT_ROUNDS", 4):

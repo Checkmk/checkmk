@@ -7,7 +7,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Modes for managing timeperiod definitions for the core"""
 
@@ -44,11 +43,9 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.confirm_links import make_confirm_delete_link
-from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.doc_references import DocReference
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -85,6 +82,11 @@ from cmk.utils.timeperiod import (
     TimeperiodName,
     TimeperiodSpec,
 )
+from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
+from cmk.web.utils.doc_references import DocReference
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 
 logger = logging.getLogger(__name__)
 
@@ -292,6 +294,7 @@ class ModeTimeperiods(WatoMode):
         try:
             watolib.timeperiods.delete_timeperiod(
                 TimeperiodName(delname),
+                config=config,
                 pprint_value=config.wato_pprint_config,
                 pending_changes=_pending_changes(
                     config.sites,
@@ -353,6 +356,7 @@ class ModeTimeperiods(WatoMode):
             ],
         )
         delete_url = make_confirm_delete_link(
+            i18n=_,
             url=make_action_link(
                 request,
                 [
@@ -498,7 +502,7 @@ class ModeTimeperiodImportICal(WatoMode):
         ):
             ice = ICalEvent(e)
             if ice.dtstart_dt is None:
-                continue
+                continue  # type: ignore[unreachable]
 
             exceptions = ice.to_timeperiod_exception()
             for dt, timerange in exceptions.items():
@@ -524,8 +528,7 @@ class ModeTimeperiodImportICal(WatoMode):
 
         get_vars["timeperiod_p_exceptions_count"] = "%d" % len(exception_map)
 
-        index = 1
-        for dtstart_str, timeranges in sorted(exception_map.items()):
+        for index, (dtstart_str, timeranges) in enumerate(sorted(exception_map.items()), start=1):
             get_vars["timeperiod_p_exceptions_%d_0" % index] = dtstart_str
             get_vars["timeperiod_p_exceptions_indexof_%d" % index] = "%d" % index
             get_vars["timeperiod_p_exceptions_%d_1_count" % index] = "%d" % len(
@@ -535,8 +538,6 @@ class ModeTimeperiodImportICal(WatoMode):
                 get_vars["timeperiod_p_exceptions_%d_1_%d_from" % (index, n)] = timerange_from
                 get_vars["timeperiod_p_exceptions_%d_1_%d_until" % (index, n)] = timerange_to
                 get_vars["timeperiod_p_exceptions_%d_1_indexof_%d" % (index, n)] = "%d" % index
-
-            index += 1
 
         for var, val in get_vars.items():
             request.set_var(var, val)
@@ -788,7 +789,7 @@ class ModeEditTimeperiod(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return None
@@ -853,7 +854,7 @@ class ModeEditTimeperiod(WatoMode):
     # ]}}
     def _to_valuespec(self, tp_spec: TimeperiodSpec) -> dict:
         if not tp_spec:
-            return {}
+            return {}  # type: ignore[unreachable]
 
         exceptions = []
         for exception_name, time_ranges in tp_spec.items():

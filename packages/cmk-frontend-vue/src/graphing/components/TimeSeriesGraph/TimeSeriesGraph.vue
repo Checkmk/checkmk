@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import { getLocalTimeZone } from '@internationalized/date'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkTooltip, {
@@ -14,31 +15,46 @@ import CmkTooltip, {
 } from 'cmk-ui-library/components/CmkTooltip'
 import ArrowDown from 'cmk-ui-library/components/graphics/ArrowDown.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
+import type { NotationFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 import { scaleLinear, scaleTime } from 'd3-scale'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { drawnBinEdges } from '../../utils/bins'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from '../consolidation'
-import { CANVAS_MARGIN_LEFT, CANVAS_MARGIN_RIGHT, VALUE_LABEL_GUTTER } from '../constants'
-import { measureAxisLabel } from './axes/labelWidth'
+import {
+  CANVAS_MARGIN_LEFT,
+  PLOT_INSET_X,
+  PLOT_INSET_Y,
+  VALUE_AXIS_ROOM_MIN,
+  VALUE_LABEL_TICK_OFFSET
+} from '../constants'
+import { axisLabelFontSize, measureAxisLabel } from './axes/labelWidth'
+import type { ValueRangeMode } from './axes/tickStepping'
 import { computeTimeAxis } from './axes/timeAxis'
-import { computeYDomain } from './axes/valueAxis'
-import { downsampleToColumns, m4 } from './decimation/decimate'
-import type { M4Cache } from './decimation/types'
 import OverlayLayer from './overlay/OverlayLayer.vue'
 import PinHandle from './overlay/PinHandle.vue'
 import { crosshairCentreX, pinLineCentreX } from './overlay/crosshair'
 import { drawData } from './render'
-import { invertBucket } from './render/bucket'
+import {
+  composeSeries,
+  composedValueDomain,
+  createM4CacheStore,
+  hasMirroredMetric
+} from './render/composeSeries'
 import { drawHorizontalLines } from './render/horizontalLines'
-import { computeStackedSeries } from './render/stacked'
+import { drawShadedRegions } from './render/shadedRegions'
 import type { PinPayload, TimeRange, TimeSeriesGraphProps, ZoomPayload } from './types'
 import { useAxes } from './useAxes'
 import { useHover } from './useHover'
 import { usePanGesture } from './usePanGesture'
 import { useZoomGesture } from './useZoomGesture'
 
-const props = defineProps<TimeSeriesGraphProps>()
+const props = withDefaults(defineProps<TimeSeriesGraphProps>(), {
+  showTimeAxis: true,
+  showValueAxis: true
+})
 
 const emit = defineEmits<{
   pan: [{ timeRange: TimeRange }]
@@ -47,18 +63,24 @@ const emit = defineEmits<{
   pinCreate: [PinPayload]
   pinAction: [PinPayload]
   'update:plotLeft': [number]
+  'update:valueResolution': [number | null]
 }>()
 
 const consolidationFn = computed<ConsolidationFn>(
   () => props.consolidationFunction ?? DEFAULT_CONSOLIDATION_FN
 )
 
+const highlightedMetricNames = computed(() => new Set(props.highlightedMetricNames))
+
 const MAX_ZOOM_HINT_DURATION_MS = 1200
 const MAX_ZOOM_HINT_CURSOR_OFFSET = 12
 const maxZoomHintAt = ref<{ x: number; y: number } | null>(null)
 let maxZoomHintTimer: ReturnType<typeof setTimeout> | null = null
 
-function showMaxZoomHint(point: { x: number; y: number }): void {
+// Also the host's to call when a fetch, not a press, hit the floor; then it sits at the centre.
+function showMaxZoomHint(
+  point: { x: number; y: number } = { x: plotWidth.value / 2, y: plotHeight.value / 2 }
+): void {
   maxZoomHintAt.value = point
   if (maxZoomHintTimer !== null) {
     clearTimeout(maxZoomHintTimer)
@@ -69,48 +91,59 @@ function showMaxZoomHint(point: { x: number; y: number }): void {
   }, MAX_ZOOM_HINT_DURATION_MS)
 }
 
-const MARGIN = { top: 4, right: CANVAS_MARGIN_RIGHT, bottom: 24 } as const
 const X_AXIS_BAND_HEIGHT = 20
 // The strip's top edge doubles as the plot's baseline rule, so anything laid over the strip
 // starts below it rather than covering it.
 const X_AXIS_TOP_RULE_HEIGHT = 1
 const PAN_STEP_SIZE = X_AXIS_BAND_HEIGHT - X_AXIS_TOP_RULE_HEIGHT
-const PIN_HANDLE_HEADROOM = 24
 // Bucket count for the M4 cache built on receive (4000 is the default, consider changing
 // if necessary).
 const M4_BUCKETS = 4000
 
 const canvas = ref<HTMLCanvasElement | null>(null)
+const resetButton = ref<InstanceType<typeof CmkButton> | null>(null)
 const axesContainer = ref<SVGGElement | null>(null)
 
 const measureLabel = (text: string): number => measureAxisLabel(text, axesContainer.value)
 
+const panAffordancesVisible = computed(() => props.panEnabled && props.showTimeAxis)
+
 const marginLeft = ref(CANVAS_MARGIN_LEFT)
+const halfAValueLabel = computed(() => Math.ceil(axisLabelFontSize(axesContainer.value) / 2))
+const marginBottom = computed(() => {
+  if (props.showTimeAxis) {
+    return PLOT_INSET_Y + X_AXIS_BAND_HEIGHT
+  }
+  // The value axis' lowest label overhangs the plot's bottom edge by half a line. With no time
+  // axis band beneath it, the frame padding is what has to clear it.
+  const lowestValueLabelOverhang = props.showValueAxis ? halfAValueLabel.value : 0
+  return Math.max(PLOT_INSET_Y, lowestValueLabelOverhang)
+})
 
 // size is the outer figure size; the plot (canvas) area is what remains after
 // subtracting the axis/label margins.
 const figureWidth = computed(() => props.size.width)
 const figureHeight = computed(() => props.size.height)
-const plotWidth = computed(() => figureWidth.value - marginLeft.value - MARGIN.right)
-const plotTop = computed(() => MARGIN.top + (props.pinEnabled ? PIN_HANDLE_HEADROOM : 0))
-const plotHeight = computed(() => figureHeight.value - plotTop.value - MARGIN.bottom)
+const plotWidth = computed(() => figureWidth.value - marginLeft.value - PLOT_INSET_X)
+const plotTop = PLOT_INSET_Y
+const plotHeight = computed(() => figureHeight.value - plotTop - marginBottom.value)
 
 const pinVisible = computed(
   () =>
     props.pinEnabled === true &&
     typeof props.pinTime === 'number' &&
-    props.pinTime >= props.time_range.start &&
-    props.pinTime <= props.time_range.end
+    props.pinTime >= props.view_time_range.start &&
+    props.pinTime <= props.view_time_range.end
 )
 const pinX = computed<number | null>(() => {
   if (!pinVisible.value || typeof props.pinTime !== 'number') {
     return null
   }
-  const span = props.time_range.end - props.time_range.start
+  const span = props.view_time_range.end - props.view_time_range.start
   if (span <= 0) {
     return null
   }
-  return ((props.pinTime - props.time_range.start) / span) * plotWidth.value
+  return ((props.pinTime - props.view_time_range.start) / span) * plotWidth.value
 })
 const pinHandleX = computed<number | null>(() =>
   pinX.value === null ? null : pinLineCentreX(pinX.value)
@@ -122,7 +155,7 @@ const maxZoomHintStyle = computed(() => {
     return {}
   }
   return {
-    top: `${plotTop.value + point.y + MAX_ZOOM_HINT_CURSOR_OFFSET}px`,
+    top: `${plotTop + point.y + MAX_ZOOM_HINT_CURSOR_OFFSET}px`,
     left: `${marginLeft.value + point.x}px`
   }
 })
@@ -134,28 +167,40 @@ const maxZoomHintSide = computed(() =>
 
 // 'iec' notation is 1024-based so its ticks step in binary; every other notation is decimal.
 const yStepping = computed((): 'binary' | 'decimal' =>
-  props.options.y_axis?.unit.notation === 'iec' ? 'binary' : 'decimal'
+  props.options.y_axis?.unit?.notation === 'iec' ? 'binary' : 'decimal'
 )
-const yTickFormatter = computed((): ((value: number) => string) => {
+// The axis unit places the labels, not just their text: renderYLabels steps in the unit's own
+// atoms, so an IEC axis lands on 2 MiB rather than on a decimally round 2 * 10^6 bytes.
+const yFormatter = computed((): NotationFormatter | null => {
   const unit = props.options.y_axis?.unit
-  if (!unit) {
-    return (value: number) => String(value)
-  }
-  const { formatter } = userSpecificUnit(unit, 'celsius')
-  return (value: number) => formatter.render(value)
+  return unit ? userSpecificUnit(unit, 'celsius').formatter : null
 })
+const isMirroredGraph = computed(() => hasMirroredMetric(props.metrics))
+const valueResolution = ref<number | null>(null)
 
 const xScale = scaleTime()
 const yScale = scaleLinear()
 
-const { prepareValueDomain, valueTickLabels, drawValueGrid, drawValueAxis, drawTimeAxis } = useAxes(
+function timeRangeTheValuesSpan(): TimeRange {
+  return props.data_time_range ?? props.view_time_range
+}
+
+const {
+  prepareValueDomain,
+  valueTickLabels,
+  valueResolution: axisValueResolution,
+  drawValueGrid,
+  drawValueAxis,
+  drawTimeAxis
+} = useAxes(
   axesContainer,
   xScale,
   yScale,
   plotWidth,
   plotHeight,
   yStepping,
-  yTickFormatter
+  yFormatter,
+  isMirroredGraph
 )
 
 const {
@@ -167,12 +212,23 @@ const {
   clearHoverAfterDelay
 } = useHover({
   metrics: () => props.metrics,
+  dataTimeRange: () => timeRangeTheValuesSpan(),
   consolidation: () => consolidationFn.value,
+  valueResolution: () => valueResolution.value,
+  axisUnit: () => props.options.y_axis?.unit ?? null,
   plotWidth,
   plotHeight,
   xScale,
   yScale
 })
+
+// Stacked on the pinned sample, the add marker would swallow the remove marker's click.
+const hoverAtPin = computed(
+  () =>
+    pinX.value !== null &&
+    hoverState.value !== null &&
+    Math.round(hoverState.value.snapX) === Math.round(pinX.value)
+)
 
 const {
   selectionBand,
@@ -180,7 +236,7 @@ const {
   onPlotMouseDown: startZoomSelection
 } = useZoomGesture({
   zoomMode: () => props.zoomMode,
-  timeRange: () => props.time_range,
+  timeRange: () => props.view_time_range,
   minTimeRange: () => props.minTimeRange,
   minValueRange: () => props.minValueRange,
   valueRange: () => props.valueRange,
@@ -190,8 +246,9 @@ const {
   xScale,
   yScale,
   plotCoords,
-  onZoom: (payload) => emit('zoom', payload),
-  onZoomRefused: showMaxZoomHint
+  onZoom: onDragZoom,
+  onZoomRefused: showMaxZoomHint,
+  onPlotClick: setPinAtCursor
 })
 
 const {
@@ -204,8 +261,8 @@ const {
   onPanMouseDown,
   panBySteps
 } = usePanGesture({
-  panEnabled: () => props.panEnabled,
-  timeRange: () => props.time_range,
+  panEnabled: () => panAffordancesVisible.value,
+  timeRange: () => props.view_time_range,
   measureLabel,
   plotWidth,
   xScale,
@@ -214,22 +271,7 @@ const {
   onCommit: (timeRange) => emit('pan', { timeRange })
 })
 
-// Rebuilt lazily inside draw() (rather than via its own watch(props.metrics, ...)) so it can
-// never run stale relative to the time_range draw() is about to use: two independent
-// watchers on overlapping-but-different prop sets give no ordering guarantee between them,
-// and a m4Cache built against an old time_range but painted against a new one silently
-// truncates the drawn data partway through the (now wider) axis.
-let m4Cache: M4Cache[] = []
-let m4CacheMetrics: TimeSeriesGraphProps['metrics'] | null = null
-let m4CacheTimeRange: TimeRange | null = null
-function ensureM4Cache(): void {
-  if (m4CacheMetrics === props.metrics && m4CacheTimeRange === props.time_range) {
-    return
-  }
-  m4CacheMetrics = props.metrics
-  m4CacheTimeRange = props.time_range
-  m4Cache = props.metrics.map((metric) => m4(metric.data_points, props.time_range, M4_BUCKETS))
-}
+const m4CacheStore = createM4CacheStore(M4_BUCKETS)
 
 // HiDPI: bitmap sized in physical pixels (cssSize * dpr), CSS size in logical pixels, the
 // ctx transform keeps draw code in CSS-pixel coordinates regardless of DPR.
@@ -243,50 +285,47 @@ function draw(): void {
     return
   }
 
-  ensureM4Cache()
+  const composed = composeSeries({
+    metrics: props.metrics,
+    cache: m4CacheStore.ensure(props.metrics, timeRangeTheValuesSpan()),
+    dataTimeRange: timeRangeTheValuesSpan(),
+    visibleTimeRange: [props.view_time_range.start, props.view_time_range.end],
+    columnCount: Math.max(1, Math.floor(plotWidth.value)),
+    binEdges:
+      props.binUnit === null
+        ? null
+        : drawnBinEdges(props.binUnit, props.view_time_range, plotWidth.value, getLocalTimeZone())
+  })
+  const { paddedBuckets: inverted, stacks } = composed
 
-  const columnCount = Math.max(1, Math.floor(plotWidth.value))
-  const visibleTimeRange: [number, number] = [props.time_range.start, props.time_range.end]
-  const downsampledMetrics = m4Cache.map((cache) =>
-    downsampleToColumns(cache, visibleTimeRange, columnCount)
-  )
-
-  // Inverse mirrors a metric below the baseline; stacking then resolves cumulative bands.
-  const inverted = downsampledMetrics.map((buckets, i) =>
-    props.metrics[i]!.render.inverse ? buckets.map((bucket) => invertBucket(bucket)) : buckets
-  )
-  const stacks = computeStackedSeries(props.metrics, inverted, consolidationFn.value)
-  recordDrawnGeometry(downsampledMetrics, stacks)
+  recordDrawnGeometry(composed.bucketsOnPlot, composed.stacksOnPlot)
 
   xScale
-    .domain([new Date(props.time_range.start * 1000), new Date(props.time_range.end * 1000)])
+    .domain([
+      new Date(props.view_time_range.start * 1000),
+      new Date(props.view_time_range.end * 1000)
+    ])
     .range([0, plotWidth.value])
 
   const xTicks = computeTimeAxis(
-    props.time_range.start,
-    props.time_range.end,
+    props.view_time_range.start,
+    props.view_time_range.end,
     plotWidth.value,
-    props.time_range.step,
     measureLabel
   )
 
-  // Line metrics contribute their drawn extremes; stacked metrics their cumulative band
-  // extents. Forced symmetric around zero when any metric is inverse.
-  const domainBuckets = props.metrics.map((_, i) =>
-    stacks[i]!.kind === 'area-stacked'
-      ? stacks[i]!.bands.map((band) => ({
-          gap: band.gap,
-          minValue: Math.min(band.lower, band.upper),
-          maxValue: Math.max(band.lower, band.upper)
-        }))
-      : inverted[i]!
-  )
-  const anyInverse = props.metrics.some((metric) => metric.render.inverse)
-  const [autoYMin, autoYMax] = computeYDomain(domainBuckets, { symmetric: anyInverse })
+  const [autoYMin, autoYMax] = composedValueDomain(props.metrics, composed, props.shaded_regions)
+
+  const explicitRange = props.options.y_axis?.explicit_range || null
   const [rawYMin, rawYMax] = props.valueRange
     ? [props.valueRange.min, props.valueRange.max]
-    : [autoYMin, autoYMax]
-  prepareValueDomain(rawYMin, rawYMax)
+    : explicitRange
+      ? [explicitRange.min, explicitRange.max]
+      : [autoYMin, autoYMax]
+  const valueRangeMode: ValueRangeMode =
+    explicitRange !== null && props.valueRange === null ? 'explicit' : 'aligned'
+  prepareValueDomain(rawYMin, rawYMax, valueRangeMode)
+  valueResolution.value = axisValueResolution()
   fitMarginToValueLabels()
 
   // Setting width/height resets the 2d context state; setTransform must follow.
@@ -308,13 +347,21 @@ function draw(): void {
     {
       interpolator: props.curveInterpolator ?? 'linear'
     },
-    props.highlightedMetricName
+    highlightedMetricNames.value
   )
 
   drawValueGrid()
-  drawTimeAxis(xTicks)
-  drawValueAxis()
+  drawTimeAxis(xTicks, { showLabels: props.showTimeAxis })
+  drawValueAxis({ showLabels: props.showValueAxis })
   if (axesContainer.value) {
+    drawShadedRegions(
+      axesContainer.value,
+      props.shaded_regions,
+      timeRangeTheValuesSpan(),
+      xScale,
+      yScale,
+      { top: 0, bottom: plotHeight.value }
+    )
     drawHorizontalLines(axesContainer.value, props.horizontal_lines, yScale, plotWidth.value)
   }
 }
@@ -327,11 +374,27 @@ let lastMargin = CANVAS_MARGIN_LEFT
 let refusedLowMargin: number | null = null
 
 // The value axis is drawn into the left margin, so the margin has to hold the widest label
-// the current domain produces. Writing it back grows plotWidth, which redraws once more with
-// the labels the wider plot resolves to; that second pass settles.
+// the current domain produces on top of the frame padding. Writing it back grows plotWidth,
+// which redraws once more with the labels the wider plot resolves to; that second pass settles.
 function fitMarginToValueLabels(): void {
-  const widestLabel = valueTickLabels().reduce((w, l) => Math.max(w, measureLabel(l)), 0)
-  const next = Math.max(CANVAS_MARGIN_LEFT, Math.ceil(widestLabel) + VALUE_LABEL_GUTTER)
+  if (!props.showValueAxis) {
+    // No axis room to reserve, but the frame padding stands so the plot keeps the same
+    // breathing room on both sides.
+    marginLeft.value = PLOT_INSET_X
+    lastMargin = PLOT_INSET_X
+    refusedLowMargin = null
+    return
+  }
+
+  const widestLabel = valueTickLabels().reduce(
+    (widest, label) => Math.max(widest, measureLabel(label)),
+    0
+  )
+  const axisRoom = Math.max(
+    props.minValueAxisWidth ?? VALUE_AXIS_ROOM_MIN,
+    Math.ceil(widestLabel) + VALUE_LABEL_TICK_OFFSET
+  )
+  const next = PLOT_INSET_X + axisRoom
 
   // Holding the high end of a detected flip: ignore the low value that keeps recurring.
   if (next === refusedLowMargin) {
@@ -386,6 +449,15 @@ function onPinAddClick(): void {
     emit('pinCreate', { time: snapTime })
   }
 }
+// The press cleared the hover to keep the crosshair out of a zoom drag, so it is recomputed
+// here for the time to pin.
+function setPinAtCursor(ev: MouseEvent): void {
+  if (props.pinEnabled !== true) {
+    return
+  }
+  onMouseMove(ev)
+  onPinAddClick()
+}
 function onPinActionClick(): void {
   if (typeof props.pinTime === 'number') {
     emit('pinAction', { time: props.pinTime })
@@ -393,6 +465,7 @@ function onPinActionClick(): void {
 }
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Graph'), [{ combo: ['Home'], description: _t('Reset zoom') }])
 const resetLabel = _t('Reset zoom')
 const maxZoomLabel = _t('Maximum zoom reached')
 const panHovered = ref(false)
@@ -411,8 +484,14 @@ const plotAriaLabel = computed<string>(() => {
     .filter((title) => title !== '')
   return metricTitles.length > 0 ? metricTitles.join(', ') : fallbackPlotLabel
 })
+// Hands the keyboard the way back out of the zoom: Enter right after the drag resets it.
+function onDragZoom(payload: ZoomPayload): void {
+  emit('zoom', payload)
+  void nextTick(() => resetButton.value?.focus())
+}
 function onResetClick(): void {
   emit('reset')
+  canvas.value?.focus()
 }
 function onPlotKeydown(ev: KeyboardEvent): void {
   if (ev.key !== 'Home') {
@@ -454,20 +533,27 @@ onBeforeUnmount(() => {
 watch(
   () => [
     props.metrics,
-    props.time_range,
+    props.view_time_range,
     props.valueRange,
     props.size,
     props.consolidationFunction,
     props.curveInterpolator,
+    props.binUnit,
     props.horizontal_lines,
-    props.highlightedMetricName,
-    plotWidth.value
+    props.highlightedMetricNames,
+    plotWidth.value,
+    props.showTimeAxis,
+    props.showValueAxis,
+    props.minValueAxisWidth
   ],
   draw,
   { deep: true }
 )
 
 watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
+watch(valueResolution, (resolution) => emit('update:valueResolution', resolution))
+
+defineExpose({ showMaxZoomHint })
 </script>
 
 <template>
@@ -493,7 +579,7 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
             :x="marginLeft"
             :y="plotTop + plotHeight"
             :width="plotWidth"
-            :height="MARGIN.bottom"
+            :height="marginBottom"
           />
         </clipPath>
       </defs>
@@ -505,6 +591,7 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
         :height="plotHeight"
       />
       <rect
+        v-if="showTimeAxis"
         class="graphing-time-series-graph__axis-band"
         :x="marginLeft"
         :y="plotTop + plotHeight"
@@ -512,7 +599,7 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
         :height="X_AXIS_BAND_HEIGHT"
       />
       <rect
-        v-if="panEnabled && (panHovered || panActive)"
+        v-if="panAffordancesVisible && (panHovered || panActive)"
         class="graphing-time-series-graph__axis-highlight"
         :x="marginLeft"
         :y="plotTop + plotHeight"
@@ -576,22 +663,41 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
         height: `${selectionBand.height}px`
       }"
     />
+    <!-- Ahead of the pan steps in tab order, as it sits above them. -->
+    <CmkButton
+      v-if="inspecting"
+      ref="resetButton"
+      variant="secondary"
+      size="small"
+      class="graphing-time-series-graph__reset"
+      :style="{ top: `${plotTop + 6}px`, right: `${PLOT_INSET_X + 6}px` }"
+      :title="resetLabel"
+      :aria-label="resetLabel"
+      @click="onResetClick"
+    >
+      <CmkIcon
+        name="arrows-swap"
+        class="graphing-time-series-graph__reset-icon"
+        aria-hidden="true"
+      />
+      <span>{{ resetLabel }}</span>
+    </CmkButton>
     <!-- Transparent grab strip over the x-axis labels; arms the pan drag. -->
     <div
-      v-if="panEnabled"
+      v-if="panAffordancesVisible"
       class="graphing-time-series-graph__pan-zone"
       :style="{
         left: `${marginLeft}px`,
         top: `${plotTop + plotHeight}px`,
         width: `${plotWidth}px`,
-        height: `${MARGIN.bottom}px`,
+        height: `${marginBottom}px`,
         cursor: panCursor
       }"
       @mousedown="onPanMouseDown"
       @mouseenter="panHovered = true"
       @mouseleave="panHovered = false"
     />
-    <template v-if="panEnabled">
+    <template v-if="panAffordancesVisible">
       <CmkButton
         v-for="step in PAN_STEPS"
         :key="step.direction"
@@ -612,23 +718,6 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
         <ArrowDown class="graphing-time-series-graph__pan-caret" aria-hidden="true" />
       </CmkButton>
     </template>
-    <CmkButton
-      v-if="inspecting"
-      variant="secondary"
-      size="small"
-      class="graphing-time-series-graph__reset"
-      :style="{ top: `${plotTop + 6}px`, right: `${MARGIN.right + 6}px` }"
-      :title="resetLabel"
-      :aria-label="resetLabel"
-      @click="onResetClick"
-    >
-      <CmkIcon
-        name="arrows-swap"
-        class="graphing-time-series-graph__reset-icon"
-        aria-hidden="true"
-      />
-      <span>{{ resetLabel }}</span>
-    </CmkButton>
     <!-- A zero-size anchor at the cursor; the tooltip lays the hint out beside it. -->
     <div
       v-if="maxZoomHintAt"
@@ -658,7 +747,7 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
       @action="onPinActionClick"
     />
     <PinHandle
-      v-if="pinEnabled && hoverState"
+      v-if="pinEnabled && hoverState && !hoverAtPin"
       variant="add"
       :style="{
         left: `${marginLeft + crosshairCentreX(hoverState.snapX)}px`,
@@ -695,14 +784,14 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
   }
 
   .graphing-time-series-graph__axis-highlight {
-    fill: var(--graphing-interactive-wash);
+    fill: var(--background-hover-wash);
   }
 
   .graphing-time-series-graph__zoom-band {
     position: absolute;
     z-index: 1;
     pointer-events: none;
-    background: color-mix(in srgb, var(--color-corporate-green-50) 20%, transparent);
+    background: color-mix(in srgb, var(--success) 20%, transparent);
   }
 
   .graphing-time-series-graph__pan-zone {
@@ -716,6 +805,7 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
     z-index: 2;
     height: var(--dimension-8);
     gap: var(--dimension-3);
+    font-weight: var(--font-weight-default);
   }
 
   .graphing-time-series-graph__reset-icon {
@@ -729,13 +819,10 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
     position: absolute;
     z-index: 3;
     background-color: var(--ux-theme-0);
-    border-color: var(--toggle-button-group-border-color);
+    border-color: var(--border-color-default);
 
     &:hover {
-      background-image: linear-gradient(
-        var(--graphing-interactive-wash),
-        var(--graphing-interactive-wash)
-      );
+      background-image: linear-gradient(var(--background-hover-wash), var(--background-hover-wash));
     }
 
     /* Fades out the tick labels running up to the button, so none collides with it. */
@@ -793,18 +880,6 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
     font-size: var(--font-size-normal);
     line-height: normal;
     color: var(--default-tooltip-text-color);
-  }
-}
-
-body[data-theme='facelift'] {
-  .graphing-time-series-graph {
-    --graphing-interactive-wash: var(--color-conference-grey-10);
-  }
-}
-
-body[data-theme='modern-dark'] {
-  .graphing-time-series-graph {
-    --graphing-interactive-wash: var(--color-white-10);
   }
 }
 

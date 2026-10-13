@@ -7,8 +7,8 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib.emails import create_notification_user
-from tests.testlib.site import Site
+from tests.testlib.system.emails import create_notification_user
+from tests.testlib.system.site import Site
 
 
 @pytest.fixture(name="notification_user", scope="function")

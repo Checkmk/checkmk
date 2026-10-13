@@ -7,8 +7,6 @@
 
 """Concrete implementation of checkers functionality."""
 
-from __future__ import annotations
-
 import functools
 import logging
 import socket
@@ -99,6 +97,7 @@ from cmk.checkengine.source_abc import (
 from cmk.checkengine.source_builder import SourceBuilder
 from cmk.checkengine.specs.checkresults import (
     ActiveCheckResult,
+    MetricTuple,
     ServiceCheckResult,
     ServiceState,
     state_markers,
@@ -116,8 +115,8 @@ from cmk.utils.ip_lookup import (
     IPLookupOptional,
     IPStackConfig,
 )
-from cmk.utils.metrics import MetricTuple
 from cmk.utils.prediction import make_updated_predictions, MetricRecord, PredictionStore
+from cmk.utils.prediction import Paths as PredictionPaths
 from cmk.utils.servicename import ServiceName
 
 __all__ = [
@@ -376,7 +375,10 @@ class CMKFetcher(FetcherFunction):
         force_snmp_cache_refresh: bool,
         get_ip_stack_config: Callable[[HostName], IPStackConfig],
         ip_address_of: IPLookup,
-        ip_address_of_mandatory: IPLookup,  # slightly different :-| TODO: clean up!!
+        # Strict lookup for the host's own address, raising if it fails.  Discovery
+        # deliberately omits it: a failed lookup must not abort the discovery of the
+        # sources that need no address at all.  Checking and inventory pass it.
+        ip_address_of_mandatory: IPLookup | None = None,
         ip_address_of_mgmt: IPLookupOptional,
         mode: Mode,
         secrets_config_relay: AdHocSecrets | StoredSecrets,
@@ -404,6 +406,23 @@ class CMKFetcher(FetcherFunction):
         self.simulation_mode: Final = simulation_mode
         self.max_cachefile_age: Final = max_cachefile_age
 
+    def _lookup_ip_address(
+        self, host_name: HostName, ip_stack_config: IPStackConfig
+    ) -> HostAddress | None:
+        """Look up the host address.
+
+        The answer may be the unspecified address (``0.0.0.0`` / ``::``): a
+        tolerant `ConfiguredIPLookup` substitutes it for one it failed to
+        obtain, and it can just as well be configured or faked explicitly.
+        Either way it is passed on unchanged -- the consumers of the result
+        recognise it as "no address" and refuse to contact it.
+        """
+        if ip_stack_config is IPStackConfig.NO_IP:
+            return None
+        if self.ip_address_of_mandatory is not None:
+            return self.ip_address_of_mandatory(host_name, self.default_address_family(host_name))
+        return self.ip_address_of(host_name, self.default_address_family(host_name))
+
     @override
     def __call__(
         self, host_name: HostName, *, ip_address: HostAddress | None
@@ -426,15 +445,8 @@ class CMKFetcher(FetcherFunction):
                 (
                     host_name,
                     self.default_address_family(host_name),
-                    (ip_stack_config := self.config_cache.ip_stack_config(host_name)),
-                    ip_address
-                    or (
-                        None
-                        if ip_stack_config is IPStackConfig.NO_IP
-                        else self.ip_address_of_mandatory(
-                            host_name, self.default_address_family(host_name)
-                        )
-                    ),
+                    (ip_stack_config := self.get_ip_stack_config(host_name)),
+                    ip_address or self._lookup_ip_address(host_name, ip_stack_config),
                 )
             ]
         else:
@@ -443,11 +455,7 @@ class CMKFetcher(FetcherFunction):
                     node,
                     self.default_address_family(node),
                     (ip_stack_config := self.get_ip_stack_config(node)),
-                    (
-                        None
-                        if ip_stack_config is IPStackConfig.NO_IP
-                        else self.ip_address_of_mandatory(node, self.default_address_family(node))
-                    ),
+                    self._lookup_ip_address(node, ip_stack_config),
                 )
                 for node in self.clusters[host_name]
             ]
@@ -610,13 +618,15 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
         value_store_manager: ValueStoreManager,
         *,
         clusters: Container[HostName],
-        rtc_package: AgentRawData | None,
+        get_agent_output: Callable[[], AgentRawData | None],
+        omd_root: Path,
     ):
         self.config: Final = config
         self.value_store_manager: Final = value_store_manager
         self.clusters: Final = clusters
-        self.rtc_package: Final = rtc_package
+        self.get_agent_output: Final = get_agent_output
         self.check_plugins: Final = check_plugins
+        self.omd_root: Final = omd_root
 
     @override
     def __getitem__(self, __key: CheckPluginName) -> CheckerPlugin:
@@ -649,11 +659,11 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
                 service=service,
                 plugin=plugin,
                 check_function=check_function,
-                rtc_package=self.rtc_package,
+                get_agent_output=self.get_agent_output,
                 get_effective_host=self.config.effective_host,
                 snmp_backend=self.config.get_snmp_backend(host_name),
                 parameters=_compute_final_check_parameters(
-                    host_name, service, self.config, is_preview
+                    host_name, service, self.config, is_preview, self.omd_root
                 ),
             )
 
@@ -690,6 +700,7 @@ def _make_rrd_data_getter(
             else (
                 livestatus.MKLivestatusSocketError,
                 livestatus.MKLivestatusNotFoundError,
+                livestatus.LqUnsafeValueError,
             )
         ) as e:
             logger.warning("Cannot get historic metrics via Livestatus: %(error)s", {"error": e})
@@ -729,10 +740,14 @@ def _special_processing_hack_for_predictive_otel_metrics(
         case {"metrics": ("multi_metrics", list() as metrics)}:
             for metric in metrics:
                 metric["levels_lower"] = update_predictive_levels(
-                    metric["metric_name"], metric["levels_lower"], "lower"
+                    metric["metric_name"],
+                    metric.get("levels_lower", ("no_levels", None)),
+                    "lower",
                 )
                 metric["levels_upper"] = update_predictive_levels(
-                    metric["metric_name"], metric["levels_upper"], "upper"
+                    metric["metric_name"],
+                    metric.get("levels_upper", ("no_levels", None)),
+                    "upper",
                 )
             return {"metrics": ("multi_metrics", metrics)}
         case _:
@@ -744,6 +759,7 @@ def _compute_final_check_parameters(
     service: ConfiguredService,
     checker_config: CheckerConfig,
     is_preview: bool,
+    omd_root: Path,
 ) -> Parameters:
     params = service.parameters.evaluate(checker_config.timeperiods_active.get)
 
@@ -759,7 +775,9 @@ def _compute_final_check_parameters(
     # We delay every computation until needed.
 
     def make_prediction() -> InjectedParameters:
-        prediction_store = PredictionStore(host_name=host_name, service_name=service.description)
+        prediction_store = PredictionStore(
+            PredictionPaths(omd_root).service_dir(host_name, service.description)
+        )
         # In the past the creation of predictions (and the livestatus query needed)
         # was performed inside the check plug-ins context.
         # We should consider moving this side effect even further up the stack
@@ -996,7 +1014,7 @@ def get_aggregated_result(  # type: ignore[explicit-any]
     check_function: Callable[..., ServiceCheckResult],
     *,
     parameters: Mapping[str, object],
-    rtc_package: AgentRawData | None,
+    get_agent_output: Callable[[], AgentRawData | None],
     get_effective_host: Callable[[HostName, ServiceName, _Labels], HostName],
     snmp_backend: SNMPBackendEnum,
 ) -> AggregatedResult:
@@ -1075,7 +1093,7 @@ def get_aggregated_result(  # type: ignore[explicit-any]
                 is_cluster=is_cluster,
                 is_enforced=service.is_enforced,
                 snmp_backend=snmp_backend,
-                rtc_package=rtc_package,
+                get_agent_output=get_agent_output,
             ),
         )
 

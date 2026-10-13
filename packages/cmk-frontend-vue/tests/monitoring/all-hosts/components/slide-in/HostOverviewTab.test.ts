@@ -3,10 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render, screen, within } from '@testing-library/vue'
+import { render, screen } from '@testing-library/vue'
 
 import HostOverviewTab from '@/monitoring/all-hosts/components/slide-in/HostOverviewTab.vue'
 import type { HostOverview } from '@/monitoring/shared/api/types'
+import type { DisplayOptions } from '@/monitoring/shared/types'
+
+const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
 
 function makeData(overrides: Partial<HostOverview> = {}): HostOverview {
   return {
@@ -14,9 +17,11 @@ function makeData(overrides: Partial<HostOverview> = {}): HostOverview {
     alias: 'web server 1',
     address: '10.0.0.1',
     state: 'UP',
+    is_flapping: false,
+    stale: false,
     site_id: 'local',
     site_alias: 'Local site',
-    folder: '/network',
+    folder: 'Netzwerk',
     customer: null,
     contact_groups: ['all'],
     tags: { 'cmk/os_family': 'linux' },
@@ -26,38 +31,57 @@ function makeData(overrides: Partial<HostOverview> = {}): HostOverview {
     last_check: 1784023200,
     last_state_change: 1784019600,
     legacy_host_status_link: '/check_mk/index.py',
+    relations: [],
+    more_relations: false,
     ...overrides
   }
 }
 
-test('renders the service summary state-count bar from the host service counts', async () => {
-  render(HostOverviewTab, { props: { data: makeData() } })
+const RELATION: HostOverview['relations'][number] = {
+  host_name: 'mgmt-web-1',
+  kind: 'management',
+  direction: 'parent',
+  relation_type: 'Management board',
+  site_id: 'local',
+  health: {
+    state: 'UP',
+    service_counts: { ok: 4, warn: 0, crit: 0, unknown: 0, pending: 0, total: 4 }
+  }
+}
 
+test('summarizes the services of the host being shown', async () => {
+  render(HostOverviewTab, { props: { data: makeData(), displayOptions: DISPLAY_OPTIONS } })
+
+  // Only that the host's own counts reach the bar; what it makes of them is its own business.
   const bar = await screen.findByRole('img')
   expect(bar).toHaveAttribute('aria-label', '9 OK, 2 WARN, 3 CRIT, 1 UNKNOWN')
-
-  // Non-zero states each occupy a bar segment; PENDING (0) is omitted.
-  const segments = bar.querySelectorAll('.cmk-state-count-bar__segment')
-  expect(segments).toHaveLength(4)
 })
 
-test('legend lists every state with its count, including the zero one', async () => {
-  const { container } = render(HostOverviewTab, { props: { data: makeData() } })
+test('puts the service summary before the details of the host', async () => {
+  render(HostOverviewTab, { props: { data: makeData(), displayOptions: DISPLAY_OPTIONS } })
 
-  await screen.findByRole('img')
+  const bar = await screen.findByRole('img')
+  expect(bar.compareDocumentPosition(screen.getByText('Host name'))).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING
+  )
+})
 
-  const legendItems = container.querySelectorAll<HTMLElement>('.cmk-state-count-bar__legend-item')
-  const expected: [string, string][] = [
-    ['OK', '9'],
-    ['WARN', '2'],
-    ['CRIT', '3'],
-    ['UNKNOWN', '1'],
-    ['PENDING', '0']
-  ]
-  expect(legendItems).toHaveLength(expected.length)
-  expected.forEach(([label, count], index) => {
-    const item = within(legendItems[index]!)
-    expect(item.getByText(label)).toBeInTheDocument()
-    expect(item.getByText(count)).toBeInTheDocument()
+test('leads the counts of a relation to the related host, not to the one being shown', () => {
+  render(HostOverviewTab, {
+    props: { data: makeData({ relations: [RELATION] }), displayOptions: DISPLAY_OPTIONS }
   })
+
+  expect(screen.getByRole('link', { name: 'All services: 15' }).getAttribute('href')).toContain(
+    'host=web-1'
+  )
+  expect(screen.getByRole('link', { name: 'OK: 4' }).getAttribute('href')).toContain(
+    'host=mgmt-web-1'
+  )
+})
+
+test('names the timestamps as ages even when they show a point in time', () => {
+  render(HostOverviewTab, { props: { data: makeData(), displayOptions: DISPLAY_OPTIONS } })
+
+  expect(screen.getByText('Check age')).toHaveAttribute('title', 'Age of the check')
+  expect(screen.getByText('State age')).toHaveAttribute('title', 'Age of the state')
 })

@@ -4,9 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ConfiguredFilters, ConfiguredValues } from 'cmk-ui-library/components/filter'
+import { kioskMode } from 'cmk-ui-library/lib/kiosk'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { copyToClipboard as copyToClipboardUtil } from 'cmk-ui-library/lib/utils'
 
+import { defaultResponsiveGridLayout } from '@/dashboard/components/ResponsiveGrid/composables/utils'
 import type {
   BadRequestBody,
   ContentRelativeGrid,
@@ -28,28 +30,49 @@ import type {
 import { DashboardLayout, DashboardOwnerType } from '@/dashboard/types/dashboard.ts'
 import type { ContextFilter, ContextFilters, FilterOrigin } from '@/dashboard/types/filter.ts'
 import type {
+  AlertOverview,
+  AlertOverviewContent,
+  Barplot,
+  BarplotContent,
   ComputedNetworkFlowAutonomousSystemResponse,
   ComputedNetworkFlowDonutResponse,
   ComputedNetworkFlowHostResponse,
   ComputedNetworkFlowKpiStatCardResponse,
   ComputedNetworkFlowTopTableResponse,
   ComputedNetworkFlowTrendChartResponse,
-  ComputedSingleMetricResponse,
-  ComputedTimelineCountResponse,
-  ComputedTopListResponse,
+  ComputedSingleMetric,
+  ComputedTopList,
+  ComputedWidgetResponse,
   ComputedWidgetSpecResponse,
   EffectiveWidgetFilterContext,
+  Gauge,
+  GaugeContent,
+  InventoryAttribute,
+  InventoryContent,
   NetworkFlowDonutContent,
   NetworkFlowKpiStatCardContent,
   NetworkFlowTopTableContent,
   NetworkFlowTrendChartContent,
+  ObjectState,
+  ResponsiveGridWidgetLayouts,
   SingleMetricContent,
+  SiteOverview,
+  SiteOverviewContent,
+  StateContent,
+  StateSummary,
+  StateSummaryContent,
+  Stats,
+  StatsContent,
   TimelineContent,
+  TimelineCount,
   TopListContent,
   VisualContext,
   WidgetAvailableInventory,
-  WidgetContent
+  WidgetContent,
+  WidgetSource,
+  WidgetTimeRange
 } from '@/dashboard/types/widget.ts'
+import type { GraphFetchResponse } from '@/graphing'
 
 import type { ComputeWidgetTitlesRequest, ComputeWidgetTitlesResponse } from './types/api'
 
@@ -202,6 +225,30 @@ export const dashboardAPI = {
       })
     )
   },
+  cloneRelativeAsResponsiveGridDashboard: async (
+    referenceDashboardId: string,
+    referenceDashboardOwner: string,
+    dashboardId: string,
+    generalSettings: DashboardGeneralSettings,
+    widgetLayouts: Record<string, ResponsiveGridWidgetLayouts>
+  ): Promise<ResponsiveGridDashboardDomainObject> => {
+    return unwrap(
+      await client.POST(
+        '/domain-types/dashboard_responsive_grid/actions/clone_from_relative_grid/invoke',
+        {
+          ...CONTENT_TYPE_HEADER,
+          body: {
+            dashboard_id: dashboardId,
+            reference_dashboard_id: referenceDashboardId,
+            reference_dashboard_owner: referenceDashboardOwner,
+            general_settings: generalSettings,
+            layout: defaultResponsiveGridLayout(),
+            widget_layouts: widgetLayouts
+          }
+        }
+      )
+    )
+  },
   getDashboardConstants: async (): Promise<DashboardConstants> => {
     const data = unwrap(await client.GET('/objects/constant/dashboard'))
     return data.extensions
@@ -265,66 +312,151 @@ export const dashboardAPI = {
       })
     )
   },
-  computeTopListData: async (
-    content: TopListContent,
-    context: VisualContext
-  ): Promise<ComputedTopListResponse> => {
+  computeInventory: async (
+    body: { source: WidgetSource<InventoryContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<InventoryAttribute>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-inventory/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeAlertOverview: async (
+    body: { source: WidgetSource<AlertOverviewContent>; time_range: WidgetTimeRange },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<AlertOverview>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-alert-overview/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeSiteOverview: async (
+    body: { source: WidgetSource<SiteOverviewContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<SiteOverview>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-site-overview/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeState: async (
+    body: { source: WidgetSource<StateContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<ObjectState>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-state/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeStateSummary: async (
+    body: { source: WidgetSource<StateSummaryContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<StateSummary>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-state-summary/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeStats: async (
+    body: { source: WidgetSource<StatsContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<Stats>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-stats/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeTopList: async (
+    body: { source: WidgetSource<TopListContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<ComputedTopList>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-top-list/invoke', {
         ...CONTENT_TYPE_HEADER,
-        body: { content, context }
+        headers,
+        body
       })
     )
   },
-  computeSingleMetricData: async (
-    content: SingleMetricContent,
-    context: VisualContext
-  ): Promise<ComputedSingleMetricResponse> => {
+  computeBarplot: async (
+    body: { source: WidgetSource<BarplotContent> },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<Barplot>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-barplot/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeGauge: async (
+    body: { source: WidgetSource<GaugeContent>; time_range: WidgetTimeRange },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<Gauge>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-gauge/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
+  computeSingleMetric: async (
+    body: { source: WidgetSource<SingleMetricContent>; time_range: WidgetTimeRange },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<ComputedSingleMetric>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-single-metric/invoke', {
         ...CONTENT_TYPE_HEADER,
-        body: { content, context }
+        headers,
+        body
       })
     )
   },
-  /**
-   * The same data on a shared (token-authenticated) dashboard. The widget configuration is
-   * deliberately not sent: the endpoint re-reads the named widget from the dashboard the token
-   * was issued for, so a token holder cannot reach anything the dashboard does not show.
-   */
-  computeSharedSingleMetricData: async (
-    widgetId: string,
-    cmkToken: string
-  ): Promise<ComputedSingleMetricResponse> => {
+  computeTimeline: async (
+    body: {
+      source: WidgetSource<TimelineContent>
+      time_range: WidgetTimeRange
+      step: number
+    },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<GraphFetchResponse>> => {
     return unwrap(
-      await client.POST('/domain-types/dashboard/actions/compute-shared-single-metric/invoke', {
+      await client.POST('/domain-types/dashboard/actions/compute-timeline/invoke', {
         ...CONTENT_TYPE_HEADER,
-        headers: { Authorization: `CMK-TOKEN ${cmkToken}` },
-        body: { widget_id: widgetId }
+        headers,
+        body
       })
     )
   },
-  computeTimelineCountData: async (
-    content: TimelineContent,
-    context: VisualContext
-  ): Promise<ComputedTimelineCountResponse> => {
+  computeTimelineCount: async (
+    body: { source: WidgetSource<TimelineContent>; time_range: WidgetTimeRange },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<TimelineCount>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-timeline-count/invoke', {
         ...CONTENT_TYPE_HEADER,
-        body: { content, context }
-      })
-    )
-  },
-  /** The same count on a shared (token-authenticated) dashboard, named by widget as above. */
-  computeSharedTimelineCountData: async (
-    widgetId: string,
-    cmkToken: string
-  ): Promise<ComputedTimelineCountResponse> => {
-    return unwrap(
-      await client.POST('/domain-types/dashboard/actions/compute-shared-timeline-count/invoke', {
-        ...CONTENT_TYPE_HEADER,
-        headers: { Authorization: `CMK-TOKEN ${cmkToken}` },
-        body: { widget_id: widgetId }
+        headers,
+        body
       })
     )
   },
@@ -477,12 +609,17 @@ export const buildWidgetEffectiveFilterContext = (
   }
 }
 
-const FILE_INDEX = '/index.py'
 const FILE_DASHBOARD = '/dashboard.py'
 const FILE_SHARED_DASHBOARD = '/shared_dashboard.py'
 
+const CLONE_RESULT_PARAM = 'clone_result'
+const CLONE_RESULTS = ['cloned', 'cloned_as_responsive'] as const
+export type CloneResult = (typeof CLONE_RESULTS)[number]
+
 export const urlHandler = {
-  /** Construct a dashboard URL with the given name and runtime filters.
+  /** Construct a dashboard URL with the given name and runtime filters. The current
+   * kiosk state is carried over, so navigating between dashboards keeps the main
+   * navigation and sidebar either hidden or in place.
    * @param dashboardKey - The name and owner of the dashboard.
    * @param runtimeFilters - A record of runtime filter key-value pairs.
    * @returns A URL object representing the constructed dashboard URL.
@@ -495,18 +632,7 @@ export const urlHandler = {
     for (const [k, v] of Object.entries(runtimeFilters)) {
       url.searchParams.set(k, v)
     }
-    return url
-  },
-
-  /** Construct an index URL with the given start URL as a query parameter. The index page adds
-   * page navigation and the sidebar.
-   * @param startUrl - The URL to set as the 'start_url' query parameter.
-   * @returns A URL object representing the constructed index URL.
-   */
-  getIndexUrl(startUrl: URL): URL {
-    const url = replaceFileName(window.location.origin + window.location.pathname, FILE_INDEX)
-    url.searchParams.set('start_url', toPathAndSearch(startUrl))
-    return url
+    return kioskMode.withKiosk(url, kioskMode.isActive())
   },
 
   /**
@@ -539,19 +665,10 @@ export const urlHandler = {
   },
 
   /** Update the current URL in the browser's address bar.
-   * If on the index page, updates the `start_url` parameter of the parent window instead.
    * @param url - The new URL to set.
    */
   updateCurrentUrl(url: URL): void {
-    // because most url operations after this work with the current window's URL,
-    // we need to always update this one
     window.history.replaceState({}, '', url.toString())
-    if (urlHandler.isOnIndexPage()) {
-      // updating the parent window's URL is only done so that the user has the correct link
-      const parentUrl = new URL(window.parent.location.href)
-      parentUrl.searchParams.set('start_url', toPathAndSearch(url))
-      window.parent.history.replaceState({}, '', parentUrl.toString())
-    }
   },
 
   pushCurrentUrl(url: URL): void {
@@ -559,17 +676,27 @@ export const urlHandler = {
   },
 
   /** Navigate to a new URL. Adds a proper history entry and loads the page.
-   * If on the index page, navigates the parent window instead.
    * @param url - The dashboard URL to navigate to.
    */
   navigateTo(url: URL): void {
-    if (urlHandler.isOnIndexPage()) {
-      const parentUrl = new URL(window.parent.location.href)
-      parentUrl.searchParams.set('start_url', toPathAndSearch(url))
-      window.parent.location.assign(parentUrl.toString())
-    } else {
-      window.location.assign(url.toString())
-    }
+    window.location.assign(url.toString())
+  },
+
+  withCloneResult(url: URL, cloneResult: CloneResult): URL {
+    const markedUrl = new URL(url)
+    markedUrl.searchParams.set(CLONE_RESULT_PARAM, cloneResult)
+    return markedUrl
+  },
+
+  readCloneResult(url: URL): CloneResult | null {
+    const markedValue = url.searchParams.get(CLONE_RESULT_PARAM)
+    return CLONE_RESULTS.find((cloneResult) => cloneResult === markedValue) ?? null
+  },
+
+  withoutCloneResult(url: URL): URL {
+    const cleanUrl = new URL(url)
+    cleanUrl.searchParams.delete(CLONE_RESULT_PARAM)
+    return cleanUrl
   },
 
   /** Generate a shared dashboard link using the provided public token.
@@ -585,21 +712,9 @@ export const urlHandler = {
     return url.toString()
   },
 
-  /** Check if the dashboard is opened within the index page (has page navigation).
-   * @returns A boolean indicating whether the current page is the index page.
-   */
-  isOnIndexPage(): boolean {
-    const parent = window.parent.location
-    return parent.origin === window.location.origin && parent.pathname.endsWith(FILE_INDEX)
-  },
-
-  /** Reload the page. This will reload the parent page, if it's the index page. */
+  /** Reload the page. */
   reloadPage(): void {
-    if (urlHandler.isOnIndexPage()) {
-      window.parent.location.reload()
-    } else {
-      window.location.reload()
-    }
+    window.location.reload()
   }
 }
 
@@ -610,10 +725,6 @@ function replaceFileName(input: string, newFileName: string): URL {
   const idx = path.lastIndexOf('/')
   url.pathname = idx !== -1 ? path.substring(0, idx) + fileName : fileName
   return url
-}
-
-export function toPathAndSearch(url: URL): string {
-  return url.pathname + url.search
 }
 
 export async function copyToClipboard(text: string): Promise<void> {

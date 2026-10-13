@@ -2,43 +2,49 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from __future__ import annotations
 
 import json
 import secrets
 import sqlite3
-from collections.abc import Collection
+from collections.abc import Collection, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, UTC
 from typing import NewType
 
-from cmk.gui.oauth.store.backend import Backend, shared_connection
+from cmk.ccc.resulttype import Error, OK, Result
+from cmk.gui.oauth.token.backend import Backend, connect, oauth_db_path
 
 _MAX_REGISTERED_CLIENTS = 1000
 
 ClientId = NewType("ClientId", str)
 
 
-class ClientRegistrationLimitExceededError(Exception):
-    pass
-
-
 @dataclass(frozen=True, slots=True)
 class ClientRegistration:
-    """A dynamically registered OAuth client, as persisted to the store."""
+    """An OAuth client, dynamically registered or built in, as persisted to the store."""
 
     client_id: ClientId
     redirect_uris: list[str]
+    # Unauthenticated free text (RFC 7591) -- never render without escaping.
     client_name: str | None
     registered_at: datetime
 
 
+@dataclass(frozen=True, slots=True)
+class RegistryFull:
+    """The client store already holds the maximum number of registrations."""
+
+
 class ClientStore(Backend):
-    def register(self, redirect_uris: list[str], client_name: str | None) -> ClientRegistration:
+    def register(
+        self, redirect_uris: list[str], client_name: str | None
+    ) -> Result[ClientRegistration, RegistryFull]:
+        """The new registration, or RegistryFull if the store already holds the maximum."""
         with self.write_transaction():
             count = self._connection.execute("SELECT COUNT(*) FROM clients").fetchone()[0]
             if count >= _MAX_REGISTERED_CLIENTS:
-                raise ClientRegistrationLimitExceededError
+                return Error(RegistryFull())
 
             registered_at_timestamp = int(datetime.now(UTC).timestamp())
             registration = ClientRegistration(
@@ -59,7 +65,17 @@ class ClientStore(Backend):
                     registered_at_timestamp,
                 ),
             )
-        return registration
+        return OK(registration)
+
+    def ensure_builtin(self, client_id: ClientId, client_name: str) -> None:
+        """Create a client with this fixed id, unless one already exists."""
+        self._connection.execute(
+            """
+            INSERT OR IGNORE INTO clients (client_id, redirect_uris, client_name, registered_at)
+            VALUES (?, '[]', ?, ?)
+            """,
+            (client_id, client_name, int(datetime.now(UTC).timestamp())),
+        )
 
     def get(self, client_id: str) -> ClientRegistration | None:
         row = self._connection.execute(
@@ -99,9 +115,11 @@ class ClientStore(Backend):
         return cursor.rowcount
 
 
-def get_client_store() -> ClientStore:
-    """Get the registered-client store, backed by the shared per-process connection."""
-    return ClientStore(shared_connection())
+@contextmanager
+def get_client_store() -> Iterator[ClientStore]:
+    """Get the registered-client store, on a connection closed at the end of the with block."""
+    with connect(oauth_db_path()) as connection:
+        yield ClientStore(connection)
 
 
 def _row_to_registration(row: sqlite3.Row) -> ClientRegistration:

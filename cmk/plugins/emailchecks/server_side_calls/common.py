@@ -4,11 +4,32 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from typing import assert_never
 
 from cmk.server_side_calls.internal import OAuth2Connection
-from cmk.server_side_calls.v1 import HostConfig, replace_macros, Secret
+from cmk.server_side_calls.v1 import (
+    EnvProxy,
+    HostConfig,
+    NoProxy,
+    replace_macros,
+    Secret,
+    URLProxy,
+)
 
-from .options_models import BasicAuthParameters, FetchingParameters, Oauth2Parameters
+from .options_models import FetchingParameters
+
+
+def proxy_to_args(proxy: URLProxy | EnvProxy | NoProxy, scope: str) -> Sequence[str]:
+    """Serialize the proxy of an OAuth2 connection for the check plug-ins."""
+    match proxy:
+        case URLProxy(url=url):
+            return [f"--{scope}-proxy={url}"]
+        case EnvProxy():
+            return [f"--{scope}-proxy=FROM_ENVIRONMENT"]
+        case NoProxy():
+            return [f"--{scope}-proxy=NO_PROXY"]
+        case other:
+            assert_never(other)
 
 
 def fetching_options_to_args(
@@ -51,22 +72,21 @@ def fetching_options_to_args(
                 "--fetch-tenant-id",
                 oauth2.tenant_id,
             ]
-        case tuple(("basic", BasicAuthParameters() as auth)):  # type: ignore[unreachable]
+            args += proxy_to_args(oauth2.proxy, "fetch")
+        case ("basic", basic_auth):
             args += [
                 "--fetch-username",
-                auth.username,
+                basic_auth.username,
                 "--fetch-password-reference",
-                auth.password,
+                basic_auth.password,
             ]
-        case tuple(("oauth2", Oauth2Parameters() as auth)):  # type: ignore[unreachable]
+        case ("oauth2", oauth2_auth):
             args += [
-                f"--fetch-client-id={auth.client_id}",
+                f"--fetch-client-id={oauth2_auth.client_id}",
                 "--fetch-client-secret-reference",
-                auth.client_secret,
-                f"--fetch-tenant-id={auth.tenant_id}",
+                oauth2_auth.client_secret,
+                f"--fetch-tenant-id={oauth2_auth.tenant_id}",
             ]
-        case _:
-            pass  # type: ignore[unreachable]
 
     if fetch_params.email_address:
         args.append(f"--fetch-email-address={fetch_params.email_address}")

@@ -170,7 +170,7 @@ def print_data(*data: object, file: TextIO | None = None, **kwargs: Any) -> None
     kwargs["sep"] = SEPARATOR
     kwargs["end"] = SEPARATOR
     kwargs["file"] = file
-    print(*data, **kwargs)
+    print(*data, **kwargs)  # noqa: T201  # It's OK for scripts to print()
 
 
 class TypeCliArgs(Namespace):

@@ -67,7 +67,7 @@ class TestAuditLogStore:
         try:
             yield store
         finally:
-            store._path.unlink(missing_ok=True)
+            store._path.unlink(missing_ok=True)  # noqa: SLF001
 
     def test_read_not_existing(self, store: AuditLogStore) -> None:
         assert not store.exists()
@@ -108,7 +108,7 @@ class TestAuditLogStore:
         store.clear()
         assert not list(store.read())
 
-        archive_path = store._path.with_name(store._path.name + time.strftime(".%Y-%m-%d"))
+        archive_path = store._path.with_name(store._path.name + time.strftime(".%Y-%m-%d"))  # noqa: SLF001
         assert archive_path.exists()
 
     def test_clear_produced_archive_file_per_clear(self, store: AuditLogStore) -> None:
@@ -122,7 +122,7 @@ class TestAuditLogStore:
             assert not list(store.read())
 
             for archive_num in range(n + 1):
-                archive_path = store._path.with_name(store._path.name + time.strftime(".%Y-%m-%d"))
+                archive_path = store._path.with_name(store._path.name + time.strftime(".%Y-%m-%d"))  # noqa: SLF001
                 if archive_num != 0:
                     archive_path = archive_path.with_name(
                         archive_path.name + "-%d" % (archive_num + 1)
@@ -138,7 +138,7 @@ class TestSiteChanges:
         try:
             yield store
         finally:
-            store._path.unlink(missing_ok=True)
+            store._path.unlink(missing_ok=True)  # noqa: SLF001
 
     @pytest.fixture(name="entry")
     def fixture_entry(self) -> ChangeSpec:

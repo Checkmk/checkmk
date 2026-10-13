@@ -9,8 +9,6 @@ Flask uses a generic session cookie store which we don't want to implement here 
 simplicity. In case we have such a generic thing, it will be easy to switch to it.
 """
 
-# mypy: disable-error-code="exhaustive-match"
-
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal
@@ -24,7 +22,7 @@ MsgType = Literal["message", "waiting", "warning", "error", "info"]
 
 
 def _parse_valid_msg_type(val: str) -> MsgType:
-    match val:
+    match val:  # type: ignore[exhaustive-match]
         case "message" | "waiting" | "warning" | "error" | "info":
             return val
     return "message"

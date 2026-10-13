@@ -25,7 +25,7 @@ def discover_aruba_aps(section: StringTable) -> DiscoveryResult:
 def check_aruba_aps(section: StringTable) -> CheckResult:
     try:
         connected_aps = int(section[0][0])
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return
 
     yield from check_levels(

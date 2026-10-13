@@ -3,8 +3,6 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { init_callable_ts_functions } from '@/modules/callable_functions'
-
 import { call_ajax } from './ajax'
 import { hide_msg, monitor, show_error, show_message_by_type } from './async_progress'
 import {
@@ -212,7 +210,7 @@ function update(handler_data: ServiceDiscoveryHandlerData, response: AjaxService
   const page_menu_bar = document.getElementById('page_menu_bar')!
   /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
   page_menu_bar.outerHTML = response.page_menu
-  execute_javascript_by_object(page_menu_bar)
+  execute_javascript_by_object(document.getElementById('page_menu_bar')!)
 
   // Set saved values to old value
   document.getElementById('general_display_options')!.replaceWith(menu_display)
@@ -228,7 +226,6 @@ function update(handler_data: ServiceDiscoveryHandlerData, response: AjaxService
   /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
   fixall_container.innerHTML = response.fixall
   execute_javascript_by_object(fixall_container)
-  init_callable_ts_functions(fixall_container)
 
   // Update the content table
   const container = document.getElementById('service_container')!

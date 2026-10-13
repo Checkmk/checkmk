@@ -5,4 +5,4 @@
 
 from cmk.utils.redis import get_redis_client, redis_server_reachable
 
-print(redis_server_reachable(get_redis_client()))
+print(redis_server_reachable(get_redis_client()))  # noqa: T201  # It's OK for test/script helpers to print()

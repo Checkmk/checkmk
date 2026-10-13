@@ -3,27 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 __version__ = "3.0.0b1"
 
+import argparse
+import configparser
 import contextlib
 import os
 import signal
 import sys
 import time
+from collections import namedtuple
 
 try:
-    import configparser
-except ImportError:  # Python 2
-    import ConfigParser as configparser  # type: ignore[import-not-found,no-redef]
-
-try:
+    from collections.abc import Mapping
     from typing import Any
 
-    _ = Any  # type: ignore[explicit-any] # make ruff happy
+    _ = Mapping, Any  # make ruff happy
 except ImportError:
     pass
 
@@ -31,50 +28,59 @@ try:
     # TODO: We should probably ship this package.
     import pyinotify  # type: ignore[import-not-found]
 except ImportError:
-    sys.stderr.write("Error: Python plugin pyinotify is not installed\n")
-    sys.exit(1)
+    pyinotify = None
 
 
-def usage():
-    sys.stdout.write("Usage: mk_inotify [-g]\n")
-    sys.stdout.write("         -g: run in foreground\n\n")
+def parse_arguments(argv):
+    # type: (list[str]) -> argparse.Namespace
+    parser = argparse.ArgumentParser(prog="mk_inotify")
+    parser.add_argument("-g", "--foreground", action="store_true", help="run in foreground")
+    return parser.parse_args(argv)
 
 
-# Available options:
-# -g: run in foreground
-opt_foreground = False
-if len(sys.argv) == 2 and sys.argv[1] == "-g":
-    opt_foreground = True
+DEFAULT_CONFDIR = "/etc/check_mk"
+DEFAULT_VARDIR = "/var/lib/check_mk_agent"
 
-mk_confdir = os.getenv("MK_CONFDIR") or "/etc/check_mk"
-mk_vardir = os.getenv("MK_VARDIR") or "/var/lib/check_mk_agent"
+Paths = namedtuple("Paths", ["config_file", "configured_paths", "pid_file", "vardir"])
 
-config_filename = mk_confdir + "/mk_inotify.cfg"
-configured_paths = mk_vardir + "/mk_inotify.configured"
-pid_filename = mk_vardir + "/mk_inotify.pid"
 
-config = configparser.ConfigParser({})
-if not os.path.exists(config_filename):
-    sys.exit(0)
-config_mtime = os.stat(config_filename).st_mtime
-config.read(config_filename)
+def get_paths(environ):
+    # type: (Mapping[str, str]) -> Paths
+    confdir = environ.get("MK_CONFDIR") or DEFAULT_CONFDIR
+    vardir = environ.get("MK_VARDIR") or DEFAULT_VARDIR
+    return Paths(
+        config_file=confdir + "/mk_inotify.cfg",
+        configured_paths=vardir + "/mk_inotify.configured",
+        pid_file=vardir + "/mk_inotify.pid",
+        vardir=vardir,
+    )
+
 
 # Configurable in Agent Bakery
-heartbeat_timeout = config.getint("global", "heartbeat_timeout")
-write_interval = config.getint("global", "write_interval")
-max_messages_per_interval = config.getint("global", "max_messages_per_interval")
-stats_retention = config.getint("global", "stats_retention")
-config.remove_section("global")
+GlobalSettings = namedtuple(
+    "GlobalSettings",
+    ["heartbeat_timeout", "write_interval", "max_messages_per_interval", "stats_retention"],
+)
 
 
-def output_data():
+def read_global_settings(config):
+    # type: (configparser.ConfigParser) -> GlobalSettings
+    return GlobalSettings(
+        heartbeat_timeout=config.getint("global", "heartbeat_timeout"),
+        write_interval=config.getint("global", "write_interval"),
+        max_messages_per_interval=config.getint("global", "max_messages_per_interval"),
+        stats_retention=config.getint("global", "stats_retention"),
+    )
+
+
+def output_data(vardir, configured_paths, stats_retention, now):
+    # type: (str, str, int, float) -> None
     sys.stdout.write("<<<inotify:sep(9)>>>\n")
     if os.path.exists(configured_paths):
         with open(configured_paths) as opened_conf_paths:
             sys.stdout.write(opened_conf_paths.read())
 
-    now = time.time()
-    for dirpath, _unused_dirnames, filenames in os.walk(mk_vardir):
+    for dirpath, _unused_dirnames, filenames in os.walk(vardir):
         for filename in filenames:
             if filename.startswith("mk_inotify.stats"):
                 try:
@@ -91,28 +97,29 @@ def output_data():
         break
 
 
-# Check if another mk_inotify process is already running
-if os.path.exists(pid_filename):
-    with open(pid_filename) as opened_file:
-        pid_str = opened_file.read()
-    proc_cmdline = "/proc/%s/cmdline" % pid_str
-    # make sure that the process with that ID is still running, else cleanup.
-    if os.path.exists(proc_cmdline):
-        with open(proc_cmdline) as opened_inner_file:
-            cmdline = opened_inner_file.read()
-        # make sure that the process actually belongs to agent plugin command, else cleanup.
-        if "mk_inotify" in cmdline:
-            # Another mk_notify process is already running..
-            # Simply output the current statistics and exit
-            output_data()
+def is_other_instance_running(pid_file, proc_dir="/proc"):
+    # type: (str, str) -> bool
+    """Check if another mk_inotify process is already running
 
-            # The pidfile is also the heartbeat file for the running process
-            os.utime(pid_filename, None)
-            sys.exit(0)
-        else:
-            os.remove(pid_filename)
-    else:
-        os.remove(pid_filename)
+    A pid file that does not belong to a running mk_inotify process is removed.
+    """
+    if not os.path.exists(pid_file):
+        return False
+    with open(pid_file) as opened_file:
+        pid_str = opened_file.read()
+    proc_cmdline = "%s/%s/cmdline" % (proc_dir, pid_str)
+    # make sure that the process with that ID is still running, else cleanup.
+    if not os.path.exists(proc_cmdline):
+        os.remove(pid_file)
+        return False
+    with open(proc_cmdline) as opened_inner_file:
+        cmdline = opened_inner_file.read()
+    # make sure that the process actually belongs to agent plugin command, else cleanup.
+    if "mk_inotify" not in cmdline:
+        os.remove(pid_file)
+        return False
+    return True
+
 
 #   .--Fork----------------------------------------------------------------.
 #   |                         _____          _                             |
@@ -122,9 +129,10 @@ if os.path.exists(pid_filename):
 #   |                        |_|  \___/|_|  |_|\_\                         |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   Reaching this point means that no mk_inotify is currently running
 
-if not opt_foreground:
+
+def daemonize(pid_file):
+    # type: (str) -> None
     try:
         pid = os.fork()
         if pid > 0:
@@ -141,8 +149,10 @@ if not opt_foreground:
         sys.stderr.write("Error forking mk_inotify: %s" % e)
 
     # Save pid of working process.
-    with open(pid_filename, "w") as opened_file:
+    with open(pid_file, "w") as opened_file:
         opened_file.write("%d" % os.getpid())
+
+
 # .
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
@@ -153,13 +163,9 @@ if not opt_foreground:
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-# Computed configuration
-folder_configs = {}  # type: dict[str, dict[str, Any]]  # type: ignore[explicit-any]
-# Data to be written to disk
-output = []  # type: list[str]
 
-
-def get_watched_files():
+def get_watched_files(folder_configs):  # type: ignore[explicit-any]
+    # type: (Mapping[str, dict[str, Any]]) -> set[str]
     files = set()
     for folder, attributes in folder_configs.items():
         for filenames in attributes["monitor_files"].values():
@@ -170,129 +176,168 @@ def get_watched_files():
     return files
 
 
-def wakeup_handler(signum, frame):
-    global output
-    if output:
-        if opt_foreground:
-            sys.stdout.write("%s\n" % "\n".join(output))
-            sys.stdout.write("%s\n" % "\n".join(get_watched_files()))
+class Monitor:
+    """Runtime state of the running plug-in"""
+
+    def __init__(  # type: ignore[explicit-any]
+        self, folder_configs, settings, paths, foreground, watch_manager, config_mtime
+    ):
+        # type: (dict[str, dict[str, Any]], GlobalSettings, Paths, bool, pyinotify.WatchManager, float) -> None
+        self.folder_configs = folder_configs
+        self.settings = settings
+        self.paths = paths
+        self.foreground = foreground
+        self.watch_manager = watch_manager
+        self.config_mtime = config_mtime
+        # Data to be written to disk
+        self.output = []  # type: list[str]
+
+    def flush(self, now):
+        # type: (float) -> None
+        if not self.output:
+            return
+        if self.foreground:
+            sys.stdout.write("%s\n" % "\n".join(self.output))
+            sys.stdout.write("%s\n" % "\n".join(get_watched_files(self.folder_configs)))
         else:
-            filename = "mk_inotify.stats.%d" % time.time()
-            with open("%s/%s" % (mk_vardir, filename), "w") as stats_file:
-                stats_file.write("\n".join(output) + "\n")
-        output = []
+            filename = "mk_inotify.stats.%d" % now
+            with open("%s/%s" % (self.paths.vardir, filename), "w") as stats_file:
+                stats_file.write("\n".join(self.output) + "\n")
+        self.output = []
 
-    # Check if configuration has changed -> restart
-    if config_mtime != os.stat(config_filename).st_mtime:
-        os.execv(__file__, sys.argv)
+    def wakeup(self, signum, frame):  # noqa: ARG002
+        # type: (int, object) -> None
+        self.flush(time.time())
 
-    # Exit on various instances
-    if not opt_foreground:
-        if not os.path.exists(pid_filename):  # pidfile is missing
-            sys.exit(0)
-        if time.time() - os.stat(pid_filename).st_mtime > heartbeat_timeout:  # heartbeat timeout
-            sys.exit(0)
-        with open(pid_filename) as opened_pid_file:
-            if os.getpid() != int(opened_pid_file.read()):  # pidfile differs
+        # Check if configuration has changed -> restart
+        if self.config_mtime != os.stat(self.paths.config_file).st_mtime:
+            os.execv(__file__, sys.argv)
+
+        # Exit on various instances
+        if not self.foreground:
+            if not os.path.exists(self.paths.pid_file):  # pidfile is missing
                 sys.exit(0)
+            if (
+                time.time() - os.stat(self.paths.pid_file).st_mtime
+                > self.settings.heartbeat_timeout
+            ):  # heartbeat timeout
+                sys.exit(0)
+            with open(self.paths.pid_file) as opened_pid_file:
+                if os.getpid() != int(opened_pid_file.read()):  # pidfile differs
+                    sys.exit(0)
 
-    update_watched_folders()
-    signal.alarm(write_interval)
+        self.update_watched_folders()
+        signal.alarm(self.settings.write_interval)
+
+    def handle_event(self, what, event):
+        # type: (str, pyinotify.Event) -> None
+        if event.dir:
+            return  # Only monitor files
+
+        if len(self.output) > self.settings.max_messages_per_interval:
+            last_message = "warning\tMaximum messages reached: %d per %d seconds" % (
+                self.settings.max_messages_per_interval,
+                self.settings.write_interval,
+            )
+            if self.output[-1] != last_message:
+                self.output.append(last_message)
+            return
+
+        path = event.path
+        path_config = self.folder_configs.get(path)
+        if not path_config:
+            return  # shouldn't happen, maybe on subfolders (not supported)
+
+        filename = os.path.basename(event.pathname)
+        if what in path_config["monitor_all"] or filename in path_config["monitor_files"].get(
+            what, []
+        ):
+            line = "%d\t%s\t%s" % (time.time(), what, event.pathname)
+            self.output.append(line)
+            if self.foreground:
+                sys.stdout.write("%s\n" % line)
+
+    def update_watched_folders(self):
+        # type: () -> None
+        for folder, attributes in self.folder_configs.items():
+            if attributes.get("watch_descriptor"):
+                if not self.watch_manager.get_path(attributes["watch_descriptor"].get(folder)):
+                    del attributes["watch_descriptor"]
+            elif os.path.exists(folder):
+                new_wd = self.watch_manager.add_watch(folder, attributes["mask"], rec=True)
+                if new_wd.get(folder) > 0:
+                    attributes["watch_descriptor"] = new_wd
 
 
-def do_output(what, event):
-    if event.dir:
-        return  # Only monitor files
-
-    if len(output) > max_messages_per_interval:
-        last_message = "warning\tMaximum messages reached: %d per %d seconds" % (
-            max_messages_per_interval,
-            write_interval,
-        )
-        if output[-1] != last_message:
-            output.append(last_message)
-        return
-
-    path = event.path
-    path_config = folder_configs.get(path)
-    if not path_config:
-        return  # shouldn't happen, maybe on subfolders (not supported)
-
-    filename = os.path.basename(event.pathname)
-    if what in path_config["monitor_all"] or filename in path_config["monitor_files"].get(what, []):
-        line = "%d\t%s\t%s" % (time.time(), what, event.pathname)
-        if map_events[what][1]:  # Check if filestats are enabled
-            try:
-                stats = os.stat(event.pathname)
-                line += "\t%d\t%d" % (stats.st_size, stats.st_mtime)
-            except Exception:
-                pass
-        output.append(line)
-        if opt_foreground:
-            sys.stdout.write("%s\n" % line)
-
-
-map_events = {
-    # Mode     Mask                        Report_filestats (currently unused)
-    "access": (pyinotify.IN_ACCESS, False),
-    "open": (pyinotify.IN_OPEN, False),
-    "create": (pyinotify.IN_CREATE, False),
-    "delete": (pyinotify.IN_DELETE, False),
-    "modify": (pyinotify.IN_MODIFY, False),
-    "movedto": (pyinotify.IN_MOVED_TO, False),
-    "movedfrom": (pyinotify.IN_MOVED_FROM, False),
-    "moveself": (pyinotify.IN_MOVE_SELF, False),
+# Maps the mode names used in mk_inotify.cfg to the pyinotify mask names
+EVENT_MASK_NAMES = {
+    "access": "IN_ACCESS",
+    "open": "IN_OPEN",
+    "create": "IN_CREATE",
+    "delete": "IN_DELETE",
+    "modify": "IN_MODIFY",
+    "movedto": "IN_MOVED_TO",
+    "movedfrom": "IN_MOVED_FROM",
+    "moveself": "IN_MOVE_SELF",
 }
 
 
-class NotifyEventHandler(pyinotify.ProcessEvent):  # type: ignore[misc]
-    def process_IN_MOVED_TO(self, event):
-        do_output("movedto", event)
-
-    def process_IN_MOVED_FROM(self, event):
-        do_output("movedfrom", event)
-
-    def process_IN_MOVE_SELF(self, event):
-        do_output("moveself", event)
-
-    #    def process_IN_CLOSE_NOWRITE(self, event):
-    #        print "CLOSE_NOWRITE event:", event.pathname
-    #
-    #    def process_IN_CLOSE_WRITE(self, event):
-    #        print "CLOSE_WRITE event:", event.pathname
-
-    def process_IN_CREATE(self, event):
-        do_output("create", event)
-
-    def process_IN_DELETE(self, event):
-        do_output("delete", event)
-
-    def process_IN_MODIFY(self, event):
-        do_output("modify", event)
-
-    def process_IN_OPEN(self, event):
-        do_output("open", event)
+def get_event_masks(inotify_module):
+    # type: (object) -> dict[str, int]
+    return {mode: getattr(inotify_module, name) for mode, name in EVENT_MASK_NAMES.items()}
 
 
-# Watch manager
-wm = pyinotify.WatchManager()
+def make_event_handler_class(inotify_module):  # type: ignore[explicit-any]
+    # type: (Any) -> type
+    """Create the event handler class
+
+    Deferred to call time, as pyinotify may not be importable.
+    """
+
+    # The suppression below is needed because without an actual pyinotify
+    # package available, the superclass is effectively Any.
+    class NotifyEventHandler(inotify_module.ProcessEvent):  # type: ignore[misc]
+        def my_init(self, monitor):
+            # type: (Monitor) -> None
+            self.monitor = monitor
+
+        def process_IN_MOVED_TO(self, event):
+            # type: (pyinotify.Event) -> None
+            self.monitor.handle_event("movedto", event)
+
+        def process_IN_MOVED_FROM(self, event):
+            # type: (pyinotify.Event) -> None
+            self.monitor.handle_event("movedfrom", event)
+
+        def process_IN_MOVE_SELF(self, event):
+            # type: (pyinotify.Event) -> None
+            self.monitor.handle_event("moveself", event)
+
+        def process_IN_CREATE(self, event):
+            # type: (pyinotify.Event) -> None
+            self.monitor.handle_event("create", event)
+
+        def process_IN_DELETE(self, event):
+            # type: (pyinotify.Event) -> None
+            self.monitor.handle_event("delete", event)
+
+        def process_IN_MODIFY(self, event):
+            # type: (pyinotify.Event) -> None
+            self.monitor.handle_event("modify", event)
+
+        def process_IN_OPEN(self, event):
+            # type: (pyinotify.Event) -> None
+            self.monitor.handle_event("open", event)
+
+    return NotifyEventHandler
 
 
-def update_watched_folders():
-    for folder, attributes in folder_configs.items():
-        if attributes.get("watch_descriptor"):
-            if not wm.get_path(attributes["watch_descriptor"].get(folder)):
-                del attributes["watch_descriptor"]
-        elif os.path.exists(folder):
-            new_wd = wm.add_watch(folder, attributes["mask"], rec=True)
-            if new_wd.get(folder) > 0:
-                attributes["watch_descriptor"] = new_wd
-
-
-def main():
-    # Read config
-
+def compute_folder_configs(config, event_masks):  # type: ignore[explicit-any]
+    # type: (configparser.ConfigParser, Mapping[str, int]) -> dict[str, dict[str, Any]]
+    folder_configs = {}  # type: dict[str, dict[str, Any]]  # type: ignore[explicit-any]
     for section in config.sections():
+        if section == "global":
+            continue
         section_tokens = section.split("|")
 
         folder = section_tokens[0]
@@ -308,7 +353,7 @@ def main():
         add_modes = set()
         del_modes = set()
         for key, value in config.items(section):
-            if key in map_events:
+            if key in event_masks:
                 if value == "1":
                     add_modes.add(key)
                 else:
@@ -348,31 +393,73 @@ def main():
         # Determine mask
         attributes["mask"] = 0
         for mode in attributes["modes"]:
-            attributes["mask"] |= map_events[mode][0]
+            attributes["mask"] |= event_masks[mode]
         for mode in attributes["monitor_all"]:
-            attributes["mask"] |= map_events[mode][0]
+            attributes["mask"] |= event_masks[mode]
 
-    update_watched_folders()
+    return folder_configs
+
+
+def main(argv=None):
+    # type: (list[str] | None) -> None
+    opt_foreground = parse_arguments(sys.argv[1:] if argv is None else argv).foreground
+    if pyinotify is None:
+        sys.stderr.write("Error: Python plugin pyinotify is not installed\n")
+        sys.exit(1)
+
+    paths = get_paths(os.environ)
+
+    config = configparser.ConfigParser({})
+    if not os.path.exists(paths.config_file):
+        sys.exit(0)
+    config_mtime = os.stat(paths.config_file).st_mtime
+    config.read(paths.config_file)
+    settings = read_global_settings(config)
+
+    if is_other_instance_running(paths.pid_file):
+        # Another mk_notify process is already running..
+        # Simply output the current statistics and exit
+        output_data(paths.vardir, paths.configured_paths, settings.stats_retention, time.time())
+
+        # The pidfile is also the heartbeat file for the running process
+        os.utime(paths.pid_file, None)
+        sys.exit(0)
+
+    # Reaching this point means that no mk_inotify is currently running
+    if not opt_foreground:
+        daemonize(paths.pid_file)
+
+    folder_configs = compute_folder_configs(config, get_event_masks(pyinotify))
+    monitor = Monitor(
+        folder_configs,
+        settings,
+        paths,
+        opt_foreground,
+        pyinotify.WatchManager(),
+        config_mtime,
+    )
+
+    monitor.update_watched_folders()
     if opt_foreground:
         import pprint
 
         sys.stdout.write(pprint.pformat(folder_configs))
 
     # In the event that new file permissions need to be set, let's clean up.
-    if os.path.exists(configured_paths):
-        os.remove(configured_paths)
+    if os.path.exists(paths.configured_paths):
+        os.remove(paths.configured_paths)
 
     # Save monitored file/folder information specified in mk_inotify.cfg
-    with open(configured_paths, "w") as opened_conf_paths:
-        opened_conf_paths.write("\n".join(get_watched_files()) + "\n")
+    with open(paths.configured_paths, "w") as opened_conf_paths:
+        opened_conf_paths.write("\n".join(get_watched_files(folder_configs)) + "\n")
 
     # Event handler
-    eh = NotifyEventHandler()
-    notifier = pyinotify.Notifier(wm, eh)
+    eh = make_event_handler_class(pyinotify)(monitor=monitor)
+    notifier = pyinotify.Notifier(monitor.watch_manager, eh)
 
     # Wake up every few seconds, check heartbeat and write data to disk
-    signal.signal(signal.SIGALRM, wakeup_handler)
-    signal.alarm(write_interval)
+    signal.signal(signal.SIGALRM, monitor.wakeup)
+    signal.alarm(settings.write_interval)
 
     notifier.loop()
 

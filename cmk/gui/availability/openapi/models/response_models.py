@@ -10,8 +10,8 @@ from cmk.gui.availability.type_defs import AVEntry, AVSpan, AVTimelineRow, AVTim
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
     LinkModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
 from cmk.gui.openapi.restful_objects.constructors import object_href, sub_object_href
@@ -263,8 +263,8 @@ class HostAvailabilityExtension:
 
 
 @api_model
-class HostAvailabilityObject(DomainObjectModel):
-    domainType: Literal["host_availability"] = api_field(  # type: ignore[mutable-override]
+class HostAvailabilityObject(TitledDomainObjectModel):
+    domainType: Literal["host_availability"] = api_field(
         description="The type of the domain object.",
     )
     extensions: HostAvailabilityExtension = api_field(
@@ -285,7 +285,7 @@ class HostAvailabilityObject(DomainObjectModel):
 
 @api_model
 class HostAvailabilityCollection(DomainObjectCollectionModel):
-    domainType: Literal["host_availability"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["host_availability"] = api_field(
         description="The domain type of the objects in the collection.",
     )
     value: list[HostAvailabilityObject] = api_field(
@@ -348,8 +348,8 @@ class ServiceAvailabilityExtension:
 
 
 @api_model
-class ServiceAvailabilityObject(DomainObjectModel):
-    domainType: Literal["service_availability"] = api_field(  # type: ignore[mutable-override]
+class ServiceAvailabilityObject(TitledDomainObjectModel):
+    domainType: Literal["service_availability"] = api_field(
         description="The type of the domain object.",
     )
     extensions: ServiceAvailabilityExtension = api_field(
@@ -376,7 +376,7 @@ class ServiceAvailabilityObject(DomainObjectModel):
 
 @api_model
 class ServiceAvailabilityCollection(DomainObjectCollectionModel):
-    domainType: Literal["service_availability"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["service_availability"] = api_field(
         description="The domain type of the objects in the collection.",
     )
     value: list[ServiceAvailabilityObject] = api_field(

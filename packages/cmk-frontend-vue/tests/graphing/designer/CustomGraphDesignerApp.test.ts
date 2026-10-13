@@ -6,16 +6,19 @@
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import type { CustomGraphDesigner } from 'cmk-shared-typing/typescript/custom_graph_designer'
+import { CmkNetworkError } from 'cmk-ui-library/lib/error'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
-  resetGlobalRefresh,
-  useGlobalRefresh
-} from '@/graphing/GlobalRefreshControl/useGlobalRefresh'
+  resetGlobalTimeState,
+  useGlobalRefresh,
+  useGlobalTimeRange
+} from '@/graphing/GlobalTimePicker/globalTimeState'
 import { durationSeconds, rollingRange } from '@/graphing/GlobalTimePicker/private/timeRange'
-import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/useGlobalTimeRange'
 import CustomGraphDesignerApp from '@/graphing/designer/CustomGraphDesignerApp.vue'
+
+import { filterDefinitions } from './fixtures'
 
 vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
   default: {
@@ -94,13 +97,14 @@ function fetchDataResponse(series: { sourceId: string; points: number[] }[]): un
         },
         color: '#28a2f3'
       },
-      render: { stack: null, inverse: false, hidden: false },
+      render: { shape: 'line', inverse: false, hidden: false },
       data_points: points
     })),
     group_titles: [],
     horizontal_lines: [],
     warnings: [],
-    errors: []
+    errors: [],
+    internal: '{"graphs":[]}'
   }
 }
 
@@ -110,12 +114,20 @@ function metadataCollection(): unknown {
 
 const METADATA_COLLECTION_PATH = '/domain-types/custom_graph_metadata/collections/all'
 
+const CONTEXT_MENU_PATH = '/domain-types/graph/actions/fetch_context_menu/invoke'
+
 const FILTER_DEFINITIONS_PATH = '/domain-types/visual_filter/collections/all'
 const FILTER_GROUPS_PATH = '/domain-types/visual_filter_group/collections/all'
 
 /** The designer app root loads filter definitions once; the query form needs them. */
 function isFilterPath(path: string): boolean {
   return path === FILTER_DEFINITIONS_PATH || path === FILTER_GROUPS_PATH
+}
+
+function filterResponse(path: string): unknown {
+  return okResponse({
+    value: path === FILTER_DEFINITIONS_PATH ? Object.values(filterDefinitions) : []
+  })
 }
 
 function okResponse(data: unknown, etag = '"etag-1"'): unknown {
@@ -150,9 +162,9 @@ const PROPS: CustomGraphDesigner = {
   warning_color: '#ffd000',
   critical_color: '#ff3232',
   logged_in_user: 'me',
-  metric_backend_available: false,
+  telemetry_metrics_available: false,
   create_services_available: true,
-  metric_backend_default_title: '$METRIC_NAME$ - $SERIES_ID$',
+  telemetry_metrics_default_title: '$METRIC_NAME$ - $SERIES_ID$',
   title_macros: [{ source_type: 'rrd_metric', macros: ['$DEFAULT_TITLE$'] }],
   initial_breadcrumb: [
     { title: 'Customize', link: null },
@@ -163,7 +175,12 @@ const PROPS: CustomGraphDesigner = {
     default_time_range: 14400,
     server_time_zone: 'UTC',
     first_day_of_week: null,
-    default_refresh_time: null
+    refresh: {
+      interval_seconds: null,
+      interval_choices_seconds: [30, 60, 90],
+      starts_live: true,
+      reloads_page_content: false
+    }
   }
 }
 
@@ -174,10 +191,17 @@ let postSpy: any
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let putSpy: any
 
-/** GET returns the metadata collection for the selector's list call, the graph for everything else. */
+/** GET returns
+ * an empty list for the burger/context menu calls - they are supplied explicitly where tested,
+ * the metadata collection for the selector's list call, and
+ * the graph for everything else. */
 function mockGraphGet(graph: unknown = graphObject()): void {
   getSpy.mockImplementation((path: string) => {
     if (isFilterPath(path)) {
+      return Promise.resolve(filterResponse(path))
+    }
+    if (path === CONTEXT_MENU_PATH) {
+      // Empty groups: the burger/context menu is only under test where its groups are supplied
       return Promise.resolve(okResponse({ value: [] }))
     }
     return Promise.resolve(
@@ -188,7 +212,7 @@ function mockGraphGet(graph: unknown = graphObject()): void {
 
 beforeEach(() => {
   // Module-level singleton: without this the designer's auto-unpause leaks into later tests.
-  resetGlobalRefresh()
+  resetGlobalTimeState()
   getSpy = vi.spyOn(client, 'GET')
   mockGraphGet()
   postSpy = vi.spyOn(client, 'POST')
@@ -199,7 +223,9 @@ beforeEach(() => {
       group_titles: [],
       horizontal_lines: [],
       warnings: [],
-      errors: []
+      errors: [],
+      // fetch_data returns the serialized graph; addTo needs it non-null for the burger to mount.
+      internal: '{"graphs":[]}'
     })
   )
   putSpy = vi.spyOn(client, 'PUT')
@@ -209,8 +235,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  resetGlobalRefresh()
-  vi.restoreAllMocks()
+  resetGlobalTimeState()
 })
 
 async function renderApp(overrides: Partial<CustomGraphDesigner> = {}) {
@@ -286,6 +311,9 @@ test('a stale graph load does not overwrite a newer selection', async () => {
   let resolveFirst: (value: unknown) => void = () => {}
   getSpy.mockImplementation((path: string, options?: { params?: { path?: { name?: string } } }) => {
     if (isFilterPath(path)) {
+      return Promise.resolve(filterResponse(path))
+    }
+    if (path === CONTEXT_MENU_PATH) {
       return Promise.resolve(okResponse({ value: [] }))
     }
     if (path === METADATA_COLLECTION_PATH) {
@@ -340,7 +368,7 @@ test('a graph served without an ETag fails the load, so no edit can start', asyn
   getSpy.mockImplementation((path: string) =>
     Promise.resolve(
       isFilterPath(path)
-        ? okResponse({ value: [] })
+        ? filterResponse(path)
         : path === METADATA_COLLECTION_PATH
           ? okResponse(metadataCollection())
           : { data: graphObject(), error: undefined, response: new Response(null, { status: 200 }) }
@@ -519,7 +547,7 @@ describe('a failed save', () => {
   }
 
   test('an unreachable server offers a retry that sends again', async () => {
-    putSpy.mockRejectedValue(new TypeError('Failed to fetch'))
+    putSpy.mockRejectedValue(new CmkNetworkError(new TypeError('Failed to fetch')))
     await renderApp()
     await enterEdit()
 
@@ -549,7 +577,7 @@ describe('a failed save', () => {
   })
 
   test('a failure with nothing to add states its message instead of heading an empty box', async () => {
-    putSpy.mockRejectedValue(new TypeError('Failed to fetch'))
+    putSpy.mockRejectedValue(new CmkNetworkError(new TypeError('Failed to fetch')))
     await renderApp()
     await enterEdit()
 
@@ -576,7 +604,7 @@ describe('a failed save', () => {
   })
 
   test('a later blocked save clears the alert of the attempt before it', async () => {
-    putSpy.mockRejectedValue(new TypeError('Failed to fetch'))
+    putSpy.mockRejectedValue(new CmkNetworkError(new TypeError('Failed to fetch')))
     await renderApp()
     await enterEdit()
     await save()
@@ -607,7 +635,12 @@ describe('a failed save', () => {
 })
 
 test('a preferred refresh time is preselected and used by the auto-started refresh', async () => {
-  await renderApp({ time_picker: { ...PROPS.time_picker, default_refresh_time: 90 } })
+  await renderApp({
+    time_picker: {
+      ...PROPS.time_picker,
+      refresh: { ...PROPS.time_picker.refresh, interval_seconds: 90 }
+    }
+  })
 
   expect(useGlobalRefresh().refreshPaused.value).toBe(false)
   expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(90)
@@ -632,7 +665,7 @@ test('resuming the refresh reverts a zoomed range to the configured default', as
 test('a failed graph load offers a retry that reloads the definition', async () => {
   getSpy.mockImplementation((path: string) => {
     if (isFilterPath(path)) {
-      return Promise.resolve(okResponse({ value: [] }))
+      return Promise.resolve(filterResponse(path))
     }
     if (path === METADATA_COLLECTION_PATH) {
       return Promise.resolve(okResponse(metadataCollection()))
@@ -657,7 +690,10 @@ test('a failed filter load offers a retry that reloads only the definitions', as
     if (isFilterPath(path)) {
       return filtersFail
         ? Promise.reject(new Error('filters are gone'))
-        : Promise.resolve(okResponse({ value: [] }))
+        : Promise.resolve(filterResponse(path))
+    }
+    if (path === CONTEXT_MENU_PATH) {
+      return Promise.resolve(okResponse({ value: [] }))
     }
     return Promise.resolve(
       path === METADATA_COLLECTION_PATH
@@ -694,6 +730,9 @@ test('a retry after a failed load still honours an edit deep link', async () => 
   let graphFails = true
   getSpy.mockImplementation((path: string) => {
     if (isFilterPath(path)) {
+      return Promise.resolve(filterResponse(path))
+    }
+    if (path === CONTEXT_MENU_PATH) {
       return Promise.resolve(okResponse({ value: [] }))
     }
     if (path === METADATA_COLLECTION_PATH) {
@@ -723,4 +762,129 @@ test('opens on the metrics tab, so the first step is the one on screen', async (
     'data-state',
     'inactive'
   )
+})
+
+describe('the unsaved-changes guard', () => {
+  function unloadIsGuarded(): boolean {
+    const event = new Event('beforeunload', { cancelable: true })
+    window.dispatchEvent(event)
+    return event.defaultPrevented
+  }
+
+  async function editTheRowTitle(): Promise<void> {
+    await userEvent.click(screen.getByRole('tab', { name: 'Metrics selection' }))
+    await fireEvent.update(await screen.findByLabelText<HTMLInputElement>('Title'), 'changed title')
+  }
+
+  test('stays out of the way while nothing has been changed', async () => {
+    await renderApp()
+    expect(unloadIsGuarded()).toBe(false)
+
+    await enterEdit()
+    await userEvent.click(screen.getByRole('tab', { name: 'Metrics selection' }))
+
+    expect(unloadIsGuarded()).toBe(false)
+  })
+
+  test('holds up the unload once an edit is unsaved', async () => {
+    await renderApp()
+    await enterEdit()
+    await editTheRowTitle()
+
+    await waitFor(() => expect(unloadIsGuarded()).toBe(true))
+  })
+
+  test('lets go again once the edit is saved', async () => {
+    await renderApp()
+    await enterEdit()
+    await editTheRowTitle()
+    await waitFor(() => expect(unloadIsGuarded()).toBe(true))
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByRole('button', { name: 'Edit custom graph' })).toBeInTheDocument()
+    expect(unloadIsGuarded()).toBe(false)
+  })
+
+  test('lets go again once the edit is cancelled', async () => {
+    await renderApp()
+    await enterEdit()
+    await editTheRowTitle()
+    await waitFor(() => expect(unloadIsGuarded()).toBe(true))
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(await screen.findByRole('button', { name: 'Edit custom graph' })).toBeInTheDocument()
+    expect(unloadIsGuarded()).toBe(false)
+  })
+})
+
+describe('the burger (context) menu', () => {
+  // The groups the server returns for add_type "custom_graph" (add-to + export). The menu's own
+  // rendering and its action mechanics are covered by GraphBurgerMenu/GraphPanel; here we only
+  // prove the designer wires a custom_graph menu that shows its entries.
+  function customGraphMenu(): unknown {
+    return {
+      value: [
+        {
+          heading: 'Add to',
+          items: [
+            {
+              label: 'Add to graph collection',
+              ariaLabel: 'Add to graph collection',
+              icon: 'graph',
+              action: { id: 'add_to_container', parameters: ['graph_collection', 'my_collection'] }
+            },
+            {
+              label: 'Add to My dashboard',
+              ariaLabel: 'Add to My dashboard',
+              icon: 'dashboard',
+              action: { id: 'add_to_visual', parameters: ['dashboards', 'my_dashboard'] }
+            }
+          ]
+        },
+        {
+          heading: 'Export',
+          items: [
+            {
+              label: 'Export as PNG',
+              ariaLabel: 'Export as PNG',
+              icon: 'export',
+              action: { id: 'export', parameters: ['graph_image'] }
+            }
+          ]
+        }
+      ]
+    }
+  }
+
+  test('the designer loads a custom_graph menu and shows its entries', async () => {
+    getSpy.mockImplementation((path: string) => {
+      if (isFilterPath(path)) {
+        return Promise.resolve(filterResponse(path))
+      }
+      if (path === METADATA_COLLECTION_PATH) {
+        return Promise.resolve(okResponse(metadataCollection()))
+      }
+      if (path === CONTEXT_MENU_PATH) {
+        return Promise.resolve(okResponse(customGraphMenu()))
+      }
+      return Promise.resolve(okResponse(graphObject()))
+    })
+
+    await renderApp()
+
+    // The menu is loaded for the designer's own graph type ...
+    await waitFor(() =>
+      expect(getSpy).toHaveBeenCalledWith(CONTEXT_MENU_PATH, {
+        params: { query: { add_type: 'custom_graph' } }
+      })
+    )
+
+    // ... and its trigger opens it with the loaded entries.
+    await userEvent.click(await screen.findByRole('button', { name: 'Action menu' }))
+    expect(screen.getByRole('menuitem', { name: 'Add to graph collection' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Add to My dashboard' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Export as PNG' })).toBeInTheDocument()
+  })
 })

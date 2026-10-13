@@ -10,8 +10,8 @@ import subprocess
 import time
 from pathlib import Path
 
-from tests.testlib.agent import get_package_type, wait_for_baking_job
-from tests.testlib.site import Site
+from tests.testlib.system.agent import get_package_type, wait_for_baking_job
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger("composition-tests")
 logger.setLevel(logging.INFO)

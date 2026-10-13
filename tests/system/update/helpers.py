@@ -21,14 +21,14 @@ from tests.testlib.common.utils2 import (
     ServiceInfo,
     version_spec_from_env,
 )
-from tests.testlib.site import Site, SiteFactory
-from tests.testlib.version import (
+from tests.testlib.common.version import (
     CMKPackageInfo,
     CMKVersion,
     edition_from_env,
     get_min_version,
     TypeCMKEdition,
 )
+from tests.testlib.system.site import Site, SiteFactory
 
 MODULE_PATH = Path(__file__).parent.resolve()
 RULES_DIR = MODULE_PATH / "rules"
@@ -110,6 +110,17 @@ def create_site(base_package: CMKPackageInfo) -> Site:
     with ctx:
         site_factory.initialize_site(site, auto_restart_httpd=True)
 
+    return site
+
+
+def install_package(package: CMKPackageInfo, site_id: str) -> Site:
+    """Install a Checkmk package on the host without creating a site.
+
+    Returns the `Site` handle needed to later uninstall it via `cleanup_cmk_package`.
+    """
+    site_factory = _get_site_factory(package)
+    site = site_factory.get_existing_site(site_id, start=False, init_livestatus=False)
+    site.install_cmk()
     return site
 
 
@@ -206,9 +217,9 @@ def cleanup_cmk_package(site: Site, request: pytest.FixtureRequest) -> None:
 
 def check_errors_in_log_files(site: Site) -> None:
     """Assert that there are no unexpected errors in the site log-files"""
-    # Default pattern should be "^.*error.*$"
+    # The CMKFormatter includes the log level (e.g. "ERROR") in every line.
     # TODO: Remove "sigterm" from pattern after CMK-24766 is done
-    content_pattern = "^(?!.*(sigterm)).*error.*$"
+    content_pattern = r"^(?!.*(sigterm)).*(?-i:ERROR).*$"
 
     error_match_dict = parse_files(
         path_name=site.logs_dir,
@@ -294,34 +305,52 @@ class BaseVersions:
     min_version = get_min_version()
     _base_packages: list[CMKPackageInfo] | None = None
 
+    @staticmethod
+    def _read_versions(file_name: str) -> list[str] | None:
+        versions_file = MODULE_PATH / file_name
+        if not versions_file.exists():
+            return None
+        versions: list[str] = json.loads(versions_file.read_text(encoding="utf-8"))
+        return versions
+
+    @classmethod
+    def _version_lists(cls) -> list[list[str]]:
+        """The release-system-maintained version lists, oldest branch first."""
+        previous_branch = cls._read_versions("base_versions_previous_branch.json")
+        if previous_branch is None:
+            previous_branch = cls._read_versions("base_versions.json")
+        if previous_branch is None:
+            raise FileNotFoundError(f"No base versions list found in {MODULE_PATH}")
+        current_branch = cls._read_versions("base_versions_current_branch.json")
+        return [previous_branch] + ([current_branch] if current_branch else [])
+
     @classmethod
     def get_base_packages(cls) -> list[CMKPackageInfo]:
         if cls._base_packages is None:
-            base_versions_pb_file = MODULE_PATH / "base_versions_previous_branch.json"
-            if not base_versions_pb_file.exists():
-                base_versions_pb_file = MODULE_PATH / "base_versions.json"
-
-            base_versions_pb = cls._limit_versions(
-                json.loads(base_versions_pb_file.read_text(encoding="utf-8")), cls.min_version
-            )
-
-            base_versions_cb_file = MODULE_PATH / "base_versions_current_branch.json"
-            base_versions_cb = (
-                cls._limit_versions(
-                    json.loads(base_versions_cb_file.read_text(encoding="utf-8")),
-                    cls.min_version,
-                )
-                if base_versions_cb_file.exists()
-                else []
-            )
-
             cls._base_packages = [
                 CMKPackageInfo(CMKVersion(base_version_str), edition_from_env())
-                for base_version_str in base_versions_pb + base_versions_cb
+                for versions in cls._version_lists()
+                for base_version_str in cls._limit_versions(versions, cls.min_version)
             ]
 
         assert cls._base_packages, "No base packages found for the test!"
         return cls._base_packages
+
+    @classmethod
+    def get_first_release_packages(cls) -> list[CMKPackageInfo]:
+        """The `X.Y.0` release of every listed branch, oldest first.
+
+        Ignores the update minimum: customers may still run a branch's first release.
+        """
+        first_releases = dict.fromkeys(
+            CMKVersion(version_str).semantic
+            for versions in cls._version_lists()
+            for version_str in versions
+        )
+        return [
+            CMKPackageInfo(CMKVersion(version_str), edition_from_env())
+            for version_str in first_releases
+        ]
 
     @classmethod
     def get_latest_base_package(cls) -> CMKPackageInfo:

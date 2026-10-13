@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from http import HTTPStatus
+
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException
@@ -43,7 +45,7 @@ def add_to_container_v1(
     page_type = all_page_types().get(body.family)
     if page_type is None or not issubclass(page_type, OverridableContainer):
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Unknown container type",
             detail=(
                 f"There is no container page type '{body.family}'. "
@@ -52,8 +54,7 @@ def add_to_container_v1(
         )
 
     try:
-        # The target page is always None here; only the sidebar hint carries information.
-        _target_page, sidebar_reload_required = page_type.add_element_via_popup(
+        redirect_url, sidebar_reload_required = page_type.add_element_via_popup(
             body.id,
             addable.add_type,
             {"context": None, "parameters": addable.parameters()},
@@ -62,18 +63,27 @@ def add_to_container_v1(
         )
     except MKAuthException as exc:
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Not allowed to add to this container",
             detail=str(exc),
         ) from exc
     except MKGeneralException as exc:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Container not found",
             detail=str(exc),
         ) from exc
 
-    return AddToContainerResponse(sidebar_reload_required=sidebar_reload_required)
+    if redirect_url is None:
+        raise ProblemException(
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            title="Add-to-container action produced no redirect target",
+            detail=f"The container type '{body.family}' did not report a page to navigate to.",
+        )
+
+    return AddToContainerResponse(
+        redirect_url=redirect_url, sidebar_reload_required=sidebar_reload_required
+    )
 
 
 ENDPOINT_ADD_TO_CONTAINER = VersionedEndpoint(

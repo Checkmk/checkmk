@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import itertools
+from http import HTTPStatus
 from typing import Annotated
 
 from annotated_types import MinLen
@@ -71,7 +72,7 @@ def bulk_delete_host_v1(
             acting_user=api_context.user,
         )
 
-    return ApiResponse(body=None, status_code=204)
+    return ApiResponse(body=None, status_code=HTTPStatus.NO_CONTENT)
 
 
 ENDPOINT_BULK_DELETE_HOST = VersionedEndpoint(

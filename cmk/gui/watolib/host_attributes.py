@@ -10,8 +10,6 @@
 """A host attribute is something that is inherited from folders to
 hosts. Examples are the IP address and the host tags."""
 
-from __future__ import annotations
-
 import abc
 import functools
 import re
@@ -27,7 +25,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.translations import TranslationOptions
 from cmk.ccc.user import UserId
-from cmk.checkengine.snmplib import SNMPCredentials  # astrein: disable=cmk-module-layer-violation
+from cmk.checkengine.snmplib import SNMPCredentials
 from cmk.fields import String
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
@@ -49,7 +47,8 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
-from cmk.gui.type_defs import Choices, CustomHostAttrSpec
+from cmk.gui.type_defs import CustomHostAttrSpec
+from cmk.gui.utils.host_relations import RelationLink
 from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, ValueSpec
 from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.labels import Labels
@@ -58,6 +57,7 @@ from cmk.rulesets.internal.form_specs import SingleChoiceElementExtended, Single
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import BooleanChoice, DefaultValue, FormSpec
 from cmk.rulesets.v1.form_specs import String as StringFormSpec
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.html import HTML
 
 # A host attribute's labels() may return this sentinel as the value for a label
@@ -79,6 +79,7 @@ def register(host_attribute_topic_registry_: HostAttributeTopicRegistry) -> None
     host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_HOST_TAGS)
     host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_NETWORK_SCAN)
     host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_MANAGEMENT_BOARD)
+    host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_RELATIONS)
     host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_CUSTOM_ATTRIBUTES)
     host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_META_DATA)
 
@@ -146,6 +147,9 @@ class MetricsAssociationHostNameLookupRule(TypedDict):
     # host's own name. Resolved into concrete attribute filters at fetch time. A rule without a
     # template selects its series by the attribute filters alone.
     host_name_template: NotRequired[str]
+    # Optional: the recursive wire attribute filter a dynamic host management connection sends.
+    # Takes precedence over the three lists above.
+    attribute_filter: NotRequired[Mapping[str, object]]
 
 
 class MetricsAssociationEnabled(TypedDict):
@@ -180,6 +184,7 @@ class BuiltInHostAttributes(TypedDict, total=False):
         tuple[Literal["enabled"], MetricsAssociationEnabled] | tuple[Literal["disabled"], None]
     )
     parents: Sequence[HostName]
+    relations: Sequence[RelationLink]
     network_scan: NetworkScanSpec
     network_scan_result: NetworkScanResult
     management_address: HostAddress
@@ -224,6 +229,19 @@ class CollectedHostAttributes(HostAttributes):
     edit_url: NotRequired[str]
 
 
+def store_relations(attributes: HostAttributes, links: Sequence[RelationLink]) -> None:
+    """Put the links into the attributes, dropping the attribute if there are none left.
+
+    Writes into ``attributes`` rather than returning a new value - pass a copy if the caller's
+    dictionary has to stay as it was. The links themselves are copied, so that a host never ends
+    up storing a list somebody else still holds.
+    """
+    if links:
+        attributes["relations"] = list(links)
+    else:
+        attributes.pop("relations", None)
+
+
 def mask_attributes(attributes: Mapping[str, object]) -> dict[str, object]:
     """Create a copy of the given attributes and mask credential data"""
 
@@ -252,6 +270,8 @@ class HostAttributeTopic:
     title: str
     """The topics are sorted by this number wherever displayed as a list"""
     sort_index: int
+    """Its attributes can no longer be set on an object that has none of them set yet"""
+    deprecated: bool = False
 
 
 class HostAttributeTopicRegistry(cmk.ccc.plugin_registry.Registry[HostAttributeTopic]):
@@ -259,7 +279,7 @@ class HostAttributeTopicRegistry(cmk.ccc.plugin_registry.Registry[HostAttributeT
     def plugin_name(self, instance: HostAttributeTopic) -> str:
         return instance.ident
 
-    def get_choices(self) -> Choices:
+    def get_choices(self) -> list[Choice]:
         return [(t.ident, t.title) for t in sorted(self.values(), key=lambda e: e.sort_index)]
 
 
@@ -301,6 +321,13 @@ HOST_ATTRIBUTE_TOPIC_MANAGEMENT_BOARD = HostAttributeTopic(
     ident="management_board",
     title=_("Management board"),
     sort_index=50,
+    deprecated=True,
+)
+
+HOST_ATTRIBUTE_TOPIC_RELATIONS = HostAttributeTopic(
+    ident="relations",
+    title=_("Related hosts"),
+    sort_index=55,
 )
 
 HOST_ATTRIBUTE_TOPIC_CUSTOM_ATTRIBUTES = HostAttributeTopic(
@@ -377,7 +404,15 @@ class ABCHostAttribute(abc.ABC):
         request context (e.g. the logged in user)."""
         return None
 
-    def effective_default_value(self, sites: SiteConfigurations) -> Any:
+    def merge_with_stored(self, value: Any, stored_value: Any) -> Any:  # noqa: ARG002
+        """The value to store, given what the form submitted and what the object stores.
+
+        The submitted value replaces the stored one whole. An attribute whose form cannot show
+        all of a stored value overrides this to keep the part the form did not offer - the
+        user cannot have removed what they never saw."""
+        return value
+
+    def effective_default_value(self, sites: SiteConfigurations) -> Any:  # noqa: ARG002
         """Return the default value used when computing effective attributes
 
         In contrast to default_value() this must not depend on request
@@ -387,7 +422,7 @@ class ABCHostAttribute(abc.ABC):
         override this method."""
         return self.default_value()
 
-    def paint(self, value: Any, hostname: HostName) -> tuple[str, str | HTML]:
+    def paint(self, value: Any, hostname: HostName) -> tuple[str, str | HTML]:  # noqa: ARG002
         """Render HTML code displaying a value"""
         return "", str(value)
 
@@ -426,10 +461,20 @@ class ABCHostAttribute(abc.ABC):
         the host cleanup form"""
         return self.editable()
 
+    def show_in_bulk_edit(self) -> bool:
+        """Whether this attribute can be set on many hosts at once.
+
+        An attribute whose value implies a write on some *other* host cannot go through a bulk
+        edit."""
+        return True
+
     def editable(self) -> bool:
         """Whether or not this attribute can be edited using the GUI.
         This makes the attribute a read only attribute in the GUI."""
         return True
+
+    def is_deprecated(self) -> bool:
+        return self.topic().deprecated
 
     def openapi_editable(self) -> bool:
         """If True, this attribute will be editable through the REST API,
@@ -440,6 +485,13 @@ class ABCHostAttribute(abc.ABC):
         """Whether it is allowed that a host has no explicit
         value here (inherited or direct value). An mandatory
         has *no* default value."""
+        return False
+
+    def is_always_active(self) -> bool:
+        """Whether this attribute is shown without the "set explicitly" checkbox.
+
+        An attribute that is neither inherited nor defaulted has nothing to switch off, so its
+        field is always shown and always submitted."""
         return False
 
     def show_inherited_value(self) -> bool:
@@ -486,26 +538,27 @@ class ABCHostAttribute(abc.ABC):
         return (
             (not new or self.show_on_create())
             and (for_what not in ["host", "cluster", "bulk"] or self.show_in_form())
+            and (for_what != "bulk" or self.show_in_bulk_edit())
             and (for_what != "folder" or self.show_in_folder())
             and (for_what != "host_search" or self.show_in_host_search())
         )
 
-    def validate_input(self, value: Any, varprefix: str) -> None:
+    def validate_input(self, value: Any, varprefix: str) -> None:  # noqa: ARG002
         """Check if the value entered by the user is valid.
         This method may raise MKUserError in case of invalid user input."""
         return
 
-    def to_nagios(self, value: Any) -> str | None:
+    def to_nagios(self, value: Any) -> str | None:  # noqa: ARG002
         """If this attribute should be present in Nagios as a host custom
         macro, then the value of that macro should be returned here - otherwise None"""
         return None
 
-    def filter_matches(self, crit: Any, value: Any, hostname: HostName) -> bool:
+    def filter_matches(self, crit: Any, value: Any, hostname: HostName) -> bool:  # noqa: ARG002
         """Checks if the give value matches the search attributes
         that are represented by the current HTML variables."""
         return crit == value
 
-    def get_tag_groups(self, value: Any) -> Mapping[TagGroupID, TagID]:
+    def get_tag_groups(self, value: Any) -> Mapping[TagGroupID, TagID]:  # noqa: ARG002
         """Each attribute may set multiple tag groups for a host
         This is used for calculating the effective host tags when writing the hosts{.mk|.cfg}
 
@@ -515,7 +568,7 @@ class ABCHostAttribute(abc.ABC):
         """
         return {}
 
-    def labels(self, value: Any) -> Labels:
+    def labels(self, value: Any) -> Labels:  # noqa: ARG002
         """Set host labels based on the attribute's value
 
         Returns a set of host labels which are added to the effective explicit host
@@ -532,7 +585,7 @@ class ABCHostAttribute(abc.ABC):
     def is_tag_attribute(self) -> bool:
         return False
 
-    def is_show_more(self, config: Config) -> bool:
+    def is_show_more(self, config: Config) -> bool:  # noqa: ARG002
         """Whether or not this attribute is treated as an element only shown on
         show more button in the GUI"""
         return False
@@ -560,14 +613,52 @@ class HostAttributeRegistry(cmk.ccc.plugin_registry.Registry[type[ABCHostAttribu
         # FIXME: Replace this automatic implementation of sort_index in derived classes without
         # an own implementation by something more sane.
         if instance.sort_index.__code__ is ABCHostAttribute.sort_index.__code__:
-            instance._sort_index = self.__class__._index  # type: ignore[attr-defined]
-            instance.sort_index = classmethod(lambda c: c._sort_index)  # type: ignore[assignment]
-            self.__class__._index += 1
+            instance._sort_index = self.__class__._index  # type: ignore[attr-defined]  # noqa: SLF001
+            instance.sort_index = classmethod(lambda c: c._sort_index)  # type: ignore[assignment]  # noqa: SLF001
+            self.__class__._index += 1  # noqa: SLF001
         else:
-            self.__class__._index = max(instance.sort_index(), self.__class__._index)
+            self.__class__._index = max(instance.sort_index(), self.__class__._index)  # noqa: SLF001
 
 
 host_attribute_registry = HostAttributeRegistry()
+
+
+def _deprecated_topic(name: str) -> str | None:
+    if (attr_class := host_attribute_registry.get(name)) is None:
+        return None
+    attr = attr_class()
+    return attr.topic().ident if attr.is_deprecated() else None
+
+
+def _configured_deprecated_topics(stored: Mapping[str, object]) -> set[str]:
+    # None is "No management board" or empty credentials, which configures nothing
+    return {
+        topic
+        for name, value in stored.items()
+        if value is not None and (topic := _deprecated_topic(name)) is not None
+    }
+
+
+def deprecated_attributes_set_anew(
+    stored: Mapping[str, object], attributes: Mapping[str, object]
+) -> list[str]:
+    """The deprecated attributes that ``attributes`` sets on an object that has none of their topic.
+
+    An object that has one of them set, e.g. a management board, may still complete the rest."""
+    stored_topics = _configured_deprecated_topics(stored)
+    return sorted(
+        name
+        for name, value in attributes.items()
+        if value is not None
+        and (topic := _deprecated_topic(name)) is not None
+        and topic not in stored_topics
+    )
+
+
+def may_set_deprecated_attribute(stored: Mapping[str, object], name: str) -> bool:
+    return (topic := _deprecated_topic(name)) is None or topic in _configured_deprecated_topics(
+        stored
+    )
 
 
 def sorted_host_attributes(host_attributes: Sequence[ABCHostAttribute]) -> list[ABCHostAttribute]:
@@ -602,7 +693,7 @@ def sorted_host_attributes_by_topic(
 ) -> list[ABCHostAttribute]:
     # Hack to sort the address family host tag attribute above the IPv4/v6 addresses
     # TODO: Clean this up by implementing some sort of explicit sorting
-    def sort_host_attributes(a: ABCHostAttribute, b: ABCHostAttribute) -> int:
+    def sort_host_attributes(a: ABCHostAttribute, b: ABCHostAttribute) -> int:  # noqa: ARG001
         if a.name() == "tag_address_family":
             return -1
         return 0
@@ -662,7 +753,7 @@ def declare_host_attribute(
 
     if sort_index is not None:
         attrs["_sort_index"] = sort_index
-        attrs["sort_index"] = classmethod(lambda c: c._sort_index)
+        attrs["sort_index"] = classmethod(lambda c: c._sort_index)  # noqa: SLF001
 
     attrs.update(
         {
@@ -743,15 +834,15 @@ def config_based_tag_group_attributes(
                         else host_attribute_topic_registry[topic_id]
                     ),
                     "topic": lambda self: self._topic,
-                    "show_in_table": lambda self: False,
-                    "show_in_folder": lambda self: True,
-                    "from_config": lambda self: True,
+                    "show_in_table": lambda self: False,  # noqa: ARG005
+                    "show_in_folder": lambda self: True,  # noqa: ARG005
+                    "from_config": lambda self: True,  # noqa: ARG005
                     "openapi_field": lambda self: String(description=self.help()),
                 }
                 | (
                     {
                         "_sort_index": sort_index,
-                        "sort_index": classmethod(lambda c: c._sort_index),
+                        "sort_index": classmethod(lambda c: c._sort_index),  # noqa: SLF001
                     }
                     if (sort_index := _tag_attribute_sort_index(tag_group))
                     else {}
@@ -862,7 +953,7 @@ def config_based_custom_host_attribute_sync_plugins(
             "%sCustomHostAttr" % a.__name__,
             (a,),
             {
-                "from_config": lambda self: True,
+                "from_config": lambda self: True,  # noqa: ARG005
                 "openapi_field": lambda self: String(description=self.help()),
                 # Previous to 1.6 the topic was a the "topic title". Since 1.6
                 # it's the internal ID of the topic. Because referenced topics may
@@ -870,6 +961,8 @@ def config_based_custom_host_attribute_sync_plugins(
                 # in case one is missing.
                 "_topic": _declare_host_attribute_topic(attr["topic"], attr["topic"].title()),
                 "topic": lambda self: self._topic,
+                "_show_in_table": attr["show_in_table"] or False,
+                "show_in_table": lambda self: self._show_in_table,
             },
         )
         attributes[attr["name"]] = final_class()
@@ -921,15 +1014,44 @@ def collect_attributes(
     new: bool,
     do_validate: bool = True,
     varprefix: str = "",
+    stored: HostAttributes | None = None,
 ) -> HostAttributes:
-    """Read attributes from HTML variables"""
+    """Read attributes from HTML variables.
+
+    ``stored`` are the attributes of the object being edited. The result replaces them whole, so
+    an editor of an existing object has to pass them: an attribute its form does not offer is
+    kept as it is stored instead of being read from the request, and an attribute whose form
+    offers only part of a value keeps the rest (see :meth:`ABCHostAttribute.merge_with_stored`).
+    """
     host = HostAttributes()
     for attr in host_attributes.values():
         attrname = attr.name()
         if not request.var(for_what + "_change_%s" % attrname, ""):
             continue
+        if not attr.is_visible(for_what, new):
+            # A form that does not offer an attribute must not be able to set it, whatever the
+            # request says: needs_validation() returns False for exactly these, so a value
+            # slipping through would reach the disk unvalidated. It must not drop it either -
+            # configure_attributes() renders a forced entry for an attribute it only shows
+            # (see "force_entry" there), so the request carries values nobody may edit.
+            if stored is not None and attrname in stored:
+                # Mypy can not help here with the dynamic key
+                host[attrname] = stored[attrname]  # type: ignore[literal-required]
+            continue
+        if (
+            attr.is_deprecated()
+            and for_what not in ("host_search", "bulk")
+            and not may_set_deprecated_attribute(stored or {}, attrname)
+        ):
+            # A bulk edit has no single stored object, its caller filters per host.
+            if stored is not None and attrname in stored:
+                # Mypy can not help here with the dynamic key
+                host[attrname] = stored[attrname]  # type: ignore[literal-required]
+            continue
 
         value = attr.from_html_vars(varprefix)
+        if stored is not None and attrname in stored:
+            value = attr.merge_with_stored(value, stored[attrname])  # type: ignore[literal-required]
 
         if do_validate and attr.needs_validation(for_what, new):
             attr.validate_input(value, varprefix)
@@ -1120,10 +1242,10 @@ class ABCHostAttributeFormSpec(ABCHostAttribute):
         data = read_data_from_frontend(field_id)
         try:
             return visitor.to_disk(data)
-        except MKGeneralException:
-            # The submitted data does not even parse into the form spec's model. The rendered
-            # widget cannot produce that, but a hand-crafted request must yield a user error
-            # instead of a crash report.
+        except MKGeneralException, ValueError:
+            # collect_attributes() reads the form before it validates it, so unusable input has
+            # to come out of here as a user error; otherwise ordinary mis-entry, which the
+            # rendered widget cannot prevent, ends in a crash report.
             raise MKUserError(
                 field_id,
                 " ".join(message.message for message in visitor.validate(data))

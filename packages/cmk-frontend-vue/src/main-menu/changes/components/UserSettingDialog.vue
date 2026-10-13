@@ -4,15 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import { Api } from 'cmk-ui-library/lib/api-client'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { ref, watch } from 'vue'
 
-const { _t } = usei18n()
+import { getCsrfToken } from '@/lib/csrf'
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-declare let global_csrf_token: string
+const { _t } = usei18n()
 
 const props = defineProps<{
   activateChangesUrl: string
@@ -40,7 +40,7 @@ async function setChangesAction(action: 'full_page' | 'slideout') {
   error.value = null
   try {
     await restAPI.put(`ajax_set_change_action.py`, {
-      _csrf_token: encodeURIComponent(global_csrf_token),
+      _csrf_token: encodeURIComponent(getCsrfToken()),
       action
     })
 
@@ -61,7 +61,7 @@ function goToFullPage() {
 }
 </script>
 <template>
-  <CmkAlertBox
+  <CmkAlert
     v-if="!currentChangesAction && !loading"
     :heading="_t('Working with a complex environment?')"
     :main-button="{
@@ -73,16 +73,15 @@ function goToFullPage() {
       onclick: () => setChangesAction('full_page')
     }"
     class="mm-user-setting-dialog"
-  >
-    {{
+    :text="
       _t(
         `In complex environments, activation issues are more common and may require closer review.\n` +
           `The full 'Activation changes' page gives you better visibility before activating.`
       )
-    }}
-  </CmkAlertBox>
-  <CmkAlertBox v-if="loading" variant="loading">{{ _t('Applying user setting...') }}</CmkAlertBox>
-  <CmkAlertBox
+    "
+  />
+  <CmkAlert v-if="loading" variant="loading" :text="_t('Applying user setting...')" />
+  <CmkAlertBoxDeprecated
     v-if="successSlideout"
     variant="success"
     :title="_t('Preference saved.')"
@@ -91,8 +90,8 @@ function goToFullPage() {
     {{ _t("Clicking on 'Changes' will continue to open the quick activation.") }}
     <br />
     {{ _t('You can change this at any time in your profile settings.') }}
-  </CmkAlertBox>
-  <CmkAlertBox
+  </CmkAlertBoxDeprecated>
+  <CmkAlert
     v-if="successFullPage"
     variant="success"
     :heading="_t('Preference saved.')"
@@ -101,15 +100,17 @@ function goToFullPage() {
       onclick: goToFullPage
     }"
     class="mm-user-setting-dialog"
-  >
-    {{
+    :text="
       _t(
         `Clicking on 'Changes' will now open the full 'Activate changes' page.\n` +
           `You can change this at any time in your profile settings.`
       )
-    }}
-  </CmkAlertBox>
-  <CmkAlertBox v-if="error" variant="error" :title="_t('Could not apply user setting.')">
-    {{ error }}
-  </CmkAlertBox>
+    "
+  />
+  <CmkAlert
+    v-if="error"
+    variant="error"
+    :title="_t('Could not apply user setting.')"
+    :text="untranslated(error)"
+  />
 </template>

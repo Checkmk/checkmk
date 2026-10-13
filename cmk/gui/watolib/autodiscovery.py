@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from typing import override
 
 from pydantic import BaseModel
@@ -10,6 +11,7 @@ from pydantic import BaseModel
 import cmk.utils.paths
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
+from cmk.checkengine.auto_queue import AutoQueue
 from cmk.checkengine.discovery import DiscoveryReport as SingleHostDiscoveryResult
 from cmk.gui.background_job.job import (
     BackgroundJob,
@@ -22,9 +24,10 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import AnnotatedUserId
+from cmk.gui.type_defs import AnnotatedUserId, CustomHostAttrSpec
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
+from cmk.gui.watolib import bakery
 from cmk.gui.watolib.audit_log import log_audit, make_audit_log_change_hook
 from cmk.gui.watolib.check_mk_automations import autodiscovery
 from cmk.gui.watolib.config_domain_name import (
@@ -33,7 +36,7 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.config_domain_name import (
     generate_hosts_to_update_settings,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree, HostsAndFoldersConfig
 from cmk.gui.watolib.pending_changes import (
     Change,
     ChangeScope,
@@ -42,7 +45,7 @@ from cmk.gui.watolib.pending_changes import (
     PendingChangesStore,
 )
 from cmk.livestatus_client import SiteConfigurations
-from cmk.utils.auto_queue import AutoQueue
+from cmk.ruleset_matcher.tags import TagConfig, TagConfigSpec
 
 
 class AutodiscoveryBackgroundJob(BackgroundJob):
@@ -82,6 +85,7 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
 
     def execute(
         self,
+        tree: FolderTree,
         job_interface: BackgroundProcessInterface,
         *,
         debug: bool,
@@ -107,7 +111,7 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
         )
 
         for hostname, discovery_result in result.hosts.items():
-            host = folder_tree().host(hostname)
+            host = tree.host(hostname)
             if host is None:
                 continue
 
@@ -144,6 +148,9 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
                 user_id=acting_user,
                 use_git=use_git,
             )
+            bakery.try_bake_agents_on_activation(
+                call_site="Autodiscovery", use_git=use_git, debug=debug
+            )
 
         job_interface.send_result_message(_("Successfully discovered hosts"))
 
@@ -170,6 +177,10 @@ def execute_autodiscovery(config: Config) -> None:
                     use_git=config.wato_use_git,
                     activation_site_configs=activation_sites(config.sites),
                     acting_user=user.id,
+                    site_configs=config.sites,
+                    wato_hide_folders_without_read_permissions=config.wato_hide_folders_without_read_permissions,
+                    wato_host_attrs=config.wato_host_attrs,
+                    tags=config.tags.get_dict_format(),
                 ),
             ),
             InitialStatusArgs(
@@ -189,6 +200,10 @@ class AutoDiscoveryJobArgs(BaseModel, frozen=True):
     use_git: bool
     activation_site_configs: SiteConfigurations
     acting_user: AnnotatedUserId | None
+    site_configs: SiteConfigurations
+    wato_hide_folders_without_read_permissions: bool
+    wato_host_attrs: Sequence[CustomHostAttrSpec]
+    tags: TagConfigSpec
 
 
 def autodiscovery_job_entry_point(
@@ -197,7 +212,17 @@ def autodiscovery_job_entry_point(
     with job_interface.gui_context(
         UserPermissions.from_serialized_config(args.user_permission_config, permission_registry)
     ):
+        # The job acts on the configuration of the request that started it, so the tree is built
+        # from the values that request put into the job arguments.
         AutodiscoveryBackgroundJob().execute(
+            FolderTree(
+                config=HostsAndFoldersConfig(
+                    wato_hide_folders_without_read_permissions=args.wato_hide_folders_without_read_permissions,
+                    wato_host_attrs=args.wato_host_attrs,
+                    tags=TagConfig.from_config(args.tags),
+                    sites=args.site_configs,
+                )
+            ),
             job_interface,
             debug=args.debug,
             use_git=args.use_git,

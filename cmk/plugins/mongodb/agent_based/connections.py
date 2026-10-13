@@ -28,12 +28,14 @@ from cmk.agent_based.v2 import (
 )
 
 
-def discover_mongodb_connections(section: StringTable) -> DiscoveryResult:
+def discover_mongodb_connections(section: StringTable) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="Connections")
 
 
 def check_mongodb_connections(
-    item: str, params: Mapping[str, Any], section: StringTable
+    item: str,  # noqa: ARG001
+    params: Mapping[str, Any],
+    section: StringTable,
 ) -> CheckResult:
     info_dict = {x[0]: x[1] for x in section}
 
@@ -85,7 +87,7 @@ def _is_int(key_list: Sequence[str], info_dict: Mapping[str, object]) -> bool:
     for key in key_list:
         try:
             int(info_dict[key])  # type: ignore[call-overload]
-        except (KeyError, ValueError, TypeError):
+        except KeyError, ValueError, TypeError:
             return False
     return True
 

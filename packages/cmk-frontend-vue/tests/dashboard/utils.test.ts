@@ -9,7 +9,6 @@ import type { DashboardKey } from '@/dashboard/types/dashboard'
 import { urlHandler } from '@/dashboard/utils'
 
 describe('urlHandler', () => {
-  let parentWindow: Window
   let windowLocation: Location
   let windowReplaceState: (data: object, unused: string, url?: string | URL | null) => void
 
@@ -26,25 +25,14 @@ describe('urlHandler', () => {
   }
 
   beforeEach(() => {
-    parentWindow = window.parent
     windowLocation = window.location
     windowReplaceState = window.history.replaceState
 
     window.history.replaceState = vi.fn()
-    Object.defineProperty(window, 'parent', {
-      value: {
-        history: { replaceState: vi.fn() },
-        location: {} as Location
-      }
-    })
     defineLocation(window, 'https://example.com/site/check_mk/dashboard.py?name=foo')
-    defineLocation(window.parent, 'https://example.com/site/check_mk/dashboard.py?name=foo')
   })
 
   afterEach(() => {
-    Object.defineProperty(window, 'parent', {
-      value: parentWindow
-    })
     Object.defineProperty(window, 'location', {
       value: windowLocation
     })
@@ -71,6 +59,11 @@ describe('urlHandler', () => {
       expect(url.pathname).toBe('/site/check_mk/dashboard.py')
       expect(url.searchParams.get('name')).toBe(dashboardKey.name)
       expect(url.searchParams.get('owner')).toBe(dashboardKey.owner)
+    })
+    it('keeps kiosk mode when switching dashboards', () => {
+      defineLocation(window, 'https://example.com/site/check_mk/dashboard.py?name=foo&kiosk=true')
+      const url = urlHandler.getDashboardUrl({ name: 'my_dashboard', owner: 'user' }, {})
+      expect(url.searchParams.get('kiosk')).toBe('true')
     })
   })
 
@@ -103,32 +96,17 @@ describe('urlHandler', () => {
   describe('updateCurrentUrl', () => {
     it('updates the current URL in the browser', () => {
       defineLocation(window, 'https://example.com/site/check_mk/dashboard.py?name=foo')
-      defineLocation(window.parent, 'https://example.com/site/check_mk/dashboard.py?name=foo')
 
       const url = new URL('https://example.com/site/check_mk/dashboard.py?name=foo')
       urlHandler.updateCurrentUrl(url)
 
       expect(window.history.replaceState).toHaveBeenCalledWith({}, '', url.toString())
-      expect(window.parent.history.replaceState).not.toHaveBeenCalled()
-    })
-    it('updates the parent window start_url if on index page', () => {
-      const parentUrl = new URL('https://example.com/site/check_mk/index.py?existingParam=1')
-      parentUrl.searchParams.set('start_url', '/foo/dashboard.py?name=bar')
-      defineLocation(window.parent, parentUrl.toString())
-
-      const url = new URL('https://example.com/site/check_mk/dashboard.py?name=foo')
-      urlHandler.updateCurrentUrl(url)
-
-      expect(window.history.replaceState).toHaveBeenCalledWith({}, '', url.toString())
-      parentUrl.searchParams.set('start_url', url.pathname + url.search)
-      expect(window.parent.history.replaceState).toHaveBeenCalledWith({}, '', parentUrl.toString())
     })
   })
 
   describe('getSharedDashboardLink', () => {
     it('constructs a shareable dashboard link', () => {
       defineLocation(window, 'https://example.com/site/check_mk/dashboard.py?name=foo')
-      defineLocation(window.parent, 'https://example.com/site/check_mk/index.py?start_url=bar.py')
 
       const tokenId = 'abc-123'
       const shareableLink = urlHandler.getSharedDashboardLink(tokenId)
@@ -136,6 +114,31 @@ describe('urlHandler', () => {
       const expected = new URL('https://example.com/site/check_mk/shared_dashboard.py')
       expected.searchParams.set('cmk-token', `0:${tokenId}`)
       expect(shareableLink).toBe(expected.toString())
+    })
+  })
+
+  describe('clone result', () => {
+    const clonedDashboardUrl = new URL(
+      'https://example.com/site/check_mk/dashboard.py?name=my_clone&owner=admin'
+    )
+
+    it.each(['cloned', 'cloned_as_responsive'] as const)(
+      'reads back the %s result a URL was marked with',
+      (cloneResult) => {
+        const markedUrl = urlHandler.withCloneResult(clonedDashboardUrl, cloneResult)
+
+        const readResult = urlHandler.readCloneResult(markedUrl)
+
+        expect(readResult).toBe(cloneResult)
+      }
+    )
+
+    it('reads no clone result once the mark is removed', () => {
+      const markedUrl = urlHandler.withCloneResult(clonedDashboardUrl, 'cloned_as_responsive')
+
+      const cleanUrl = urlHandler.withoutCloneResult(markedUrl)
+
+      expect(urlHandler.readCloneResult(cleanUrl)).toBeNull()
     })
   })
 })

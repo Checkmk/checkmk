@@ -10,34 +10,90 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { nextTick } from 'vue'
 
 import GraphFigure from '@/graphing/components/GraphFigure/GraphFigure.vue'
+import { useGlobalPin } from '@/graphing/composables/useGlobalPin'
 
-// The mock stands in for the view-only renderer: the buttons replay its zoom/pan/reset
+// The mock stands in for the view-only renderer: the buttons replay its zoom/pan/reset/pin
 // intent emits so the tests can drive the figure's interaction wiring.
 vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
   default: {
     inheritAttrs: false,
-    props: ['panEnabled', 'time_range', 'valueRange'],
-    emits: ['zoom', 'pan', 'reset'],
+    props: [
+      'panEnabled',
+      'time_range',
+      'view_time_range',
+      'valueRange',
+      'options',
+      'pinEnabled',
+      'pinTime',
+      'binUnit',
+      'minTimeRange'
+    ],
+    emits: ['zoom', 'pan', 'reset', 'pinCreate', 'pinAction'],
     template: `<div data-testid="time-series-graph">
       <span data-testid="pan-enabled">{{ panEnabled }}</span>
       <span data-testid="value-range">{{ valueRange === null ? 'none' : valueRange.max }}</span>
+      <span data-testid="y-axis">{{ options?.y_axis === null ? 'null' : 'set' }}</span>
+      <span data-testid="y-axis-range">{{ options?.y_axis?.explicit_range?.max ?? 'none' }}</span>
+      <span data-testid="y-axis-unit">{{ options?.y_axis?.unit?.notation ?? 'none' }}</span>
+      <span data-testid="pin-enabled">{{ pinEnabled }}</span>
+      <span data-testid="pin-time">{{ pinTime }}</span>
+      <span data-testid="view-start">{{ view_time_range.start }}</span>
+      <span data-testid="view-end">{{ view_time_range.end }}</span>
+      <span data-testid="bin-unit">{{ binUnit }}</span>
+      <span data-testid="min-time-range">{{ minTimeRange }}</span>
       <button
         data-testid="emit-pan"
         @click="$emit('pan', { timeRange: { start: 500, end: 900, step: 60 } })"
+      />
+      <button
+        data-testid="emit-pan-back-by-a-quarter"
+        @click="
+          $emit('pan', {
+            timeRange: {
+              start: view_time_range.start - (view_time_range.end - view_time_range.start) / 4,
+              end: view_time_range.end - (view_time_range.end - view_time_range.start) / 4,
+              step: 60
+            }
+          })
+        "
       />
       <button
         data-testid="emit-value-zoom"
         @click="$emit('zoom', { timeRange: time_range, valueRange: { min: 0, max: 10 } })"
       />
       <button data-testid="emit-reset" @click="$emit('reset')" />
+      <button data-testid="emit-pin-create" @click="$emit('pinCreate', { time: 1234 })" />
+      <button data-testid="emit-pin-action" @click="$emit('pinAction', { time: 1234 })" />
     </div>`
   }
 }))
+
+// A figure that arms the pin loads and persists it; stubbed to keep these tests off the network.
+vi.mock('@/graphing/composables/useGlobalPin', async () => {
+  const { computed, ref } = await import('vue')
+  const pinTimeState = ref<number | null>(null)
+  const globalPin = {
+    pinTime: computed(() => pinTimeState.value),
+    ensurePinLoaded: vi.fn(),
+    setPin: vi.fn((time: number) => {
+      pinTimeState.value = time
+    }),
+    clearPin: vi.fn(() => {
+      pinTimeState.value = null
+    })
+  }
+  return { useGlobalPin: () => globalPin }
+})
 
 vi.mock('@internationalized/date', async (importOriginal) => {
   const actual = await importOriginal<typeof intl>()
   return { ...actual, getLocalTimeZone: () => 'UTC' }
 })
+
+// Keep the burger menu off the network: the composable would otherwise GET the context menu.
+vi.mock('@/graphing/api/burgerMenu', () => ({
+  loadMenu: vi.fn().mockResolvedValue([])
+}))
 
 const UNIT: components['schemas']['ApiUnitFormat'] = {
   notation: 'decimal',
@@ -53,7 +109,7 @@ const FETCHED = {
   metrics: [
     {
       metadata: { name: 'cpu', title: 'CPU utilization', unit: UNIT, color: '#ff0000' },
-      render: { stack: 'area', inverse: false, hidden: false },
+      render: { shape: 'area', stack: 'area', inverse: false, hidden: false },
       data_points: [1, 2, 3]
     }
   ],
@@ -67,6 +123,8 @@ const FETCHED = {
 let postSpy: any
 
 beforeEach(() => {
+  // The mocked pin is a module-level singleton, so it has to be cleared between tests.
+  useGlobalPin().clearPin()
   postSpy = vi.spyOn(client, 'POST')
   postSpy.mockResolvedValue({
     data: FETCHED,
@@ -76,21 +134,30 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  vi.restoreAllMocks()
   vi.useRealTimers()
 })
 
 const loadingIcon = (): Element | null =>
   document.querySelector('.graphing-graph-figure__loading-icon')
 
+const DEFINITION = '{"graphs": []}'
+
 function renderFigure(props: Record<string, unknown> = {}) {
   return render(GraphFigure, {
     props: {
-      internal: '{"graphs": []}',
+      source: { type: 'definition', internal: DEFINITION },
       timerange: { type: 'age', hours: 4 },
       ...props
     }
   })
+}
+
+function fetchSource(
+  fetch: unknown,
+  key = DEFINITION,
+  binUnit: string | null = null
+): Record<string, unknown> {
+  return { source: { type: 'fetch', key, fetch, binUnit } }
 }
 
 test('holds the loading icon back for a second while the fetch is pending', async () => {
@@ -184,7 +251,7 @@ test("states the response's warnings as advisory, with no retry offered", async 
   renderFigure()
 
   const message = await screen.findByText('The query matched more than 100 time series.')
-  expect(message.closest('.graphing-graph-notice')).toHaveClass('graphing-graph-notice--warning')
+  expect(message.closest('.cmk-surface-notice')).toHaveClass('cmk-surface-notice--warning')
   // A retry would only reproduce the truncation, so none is offered.
   expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
   expect(screen.getByTestId('time-series-graph')).toBeInTheDocument()
@@ -206,7 +273,7 @@ test('states errors and warnings together, at the error severity', async () => {
   const message = await screen.findByText(
     'Metrics backend is unavailable. The query matched more than 100 time series.'
   )
-  expect(message.closest('.graphing-graph-notice')).toHaveClass('graphing-graph-notice--error')
+  expect(message.closest('.cmk-surface-notice')).toHaveClass('cmk-surface-notice--error')
 })
 
 test('fetches the definition via fetch_data with the max consolidation', async () => {
@@ -226,7 +293,7 @@ test('forwards the combination mode to fetch_data', async () => {
   expect(postSpy.mock.calls[0][1].body.combination_mode).toBe('stacked')
 })
 
-test('a provided fetchGraph replaces the default fetch', async () => {
+test('a fetch source replaces the default fetch', async () => {
   const fetchGraph = vi.fn().mockResolvedValue({
     title: FETCHED.title,
     metrics: FETCHED.metrics,
@@ -234,25 +301,124 @@ test('a provided fetchGraph replaces the default fetch', async () => {
     horizontalLines: []
   })
 
-  renderFigure({ fetchGraph })
+  renderFigure(fetchSource(fetchGraph))
 
   expect(await screen.findByTestId('time-series-graph')).toBeInTheDocument()
   expect(postSpy).not.toHaveBeenCalled()
   expect(fetchGraph).toHaveBeenCalledWith(
-    { internal: '{"graphs": []}' },
     expect.objectContaining({ consolidationFunction: 'max', combinationMode: null })
   )
 })
 
-test('a pan fetches the panned window', async () => {
+test('a figure whose points are all null states that there is no data', async () => {
+  const fetchGraph = vi.fn().mockResolvedValue({
+    title: FETCHED.title,
+    metrics: [{ ...FETCHED.metrics[0], data_points: [null, null, null] }],
+    timeRange: FETCHED.time_range,
+    horizontalLines: []
+  })
+
+  renderFigure(fetchSource(fetchGraph))
+
+  expect(await screen.findByText('No data available')).toBeInTheDocument()
+})
+
+test('a pan away from an empty range waits for the new data before calling it empty', async () => {
+  const empty = {
+    title: FETCHED.title,
+    metrics: [{ ...FETCHED.metrics[0], data_points: [null, null, null] }],
+    timeRange: FETCHED.time_range,
+    horizontalLines: []
+  }
+  let resolveSecond: (value: unknown) => void = () => {}
+  const fetchGraph = vi
+    .fn()
+    .mockResolvedValueOnce(empty)
+    .mockImplementationOnce(() => new Promise((resolve) => (resolveSecond = resolve)))
+
+  renderFigure(fetchSource(fetchGraph))
+  expect(await screen.findByText('No data available')).toBeInTheDocument()
+
+  await fireEvent.click(screen.getByTestId('emit-pan'))
+  await waitFor(() => expect(fetchGraph).toHaveBeenCalledTimes(2))
+
+  expect(screen.queryByText('No data available')).not.toBeInTheDocument()
+
+  // Suppressed only while the request is open: an empty answer states it again.
+  resolveSecond(empty)
+  expect(await screen.findByText('No data available')).toBeInTheDocument()
+})
+
+test.each([
+  ['key', (fetch: unknown) => fetchSource(fetch, '{"graphs": ["other"]}')],
+  ['combinationMode', (fetch: unknown) => ({ ...fetchSource(fetch), combinationMode: 'stacked' })]
+])(
+  'a pending refetch after a %s change does not call the new graph empty',
+  async (_name, nextProps) => {
+    const empty = {
+      title: FETCHED.title,
+      metrics: [{ ...FETCHED.metrics[0], data_points: [null, null, null] }],
+      timeRange: FETCHED.time_range,
+      horizontalLines: []
+    }
+    // A prop change drives both the definition watch and the range watch, so the count is not fixed;
+    // every request after the first stays open.
+    const fetchGraph = vi
+      .fn()
+      .mockResolvedValueOnce(empty)
+      .mockImplementation(() => new Promise(() => {}))
+
+    const { rerender } = renderFigure(fetchSource(fetchGraph))
+    expect(await screen.findByText('No data available')).toBeInTheDocument()
+
+    // Same time range, different request: the stale response does not describe it.
+    await rerender({ timerange: { type: 'age', hours: 4 }, ...nextProps(fetchGraph) })
+    await waitFor(() => expect(fetchGraph.mock.calls.length).toBeGreaterThan(1))
+
+    expect(screen.queryByText('No data available')).not.toBeInTheDocument()
+  }
+)
+
+test('states a refetch failure inside the plot it covers', async () => {
+  renderFigure()
+  await screen.findByTestId('time-series-graph')
+
+  postSpy.mockRejectedValue(new Error('gone'))
+  await fireEvent.click(screen.getByTestId('emit-pan'))
+
+  const pill = await screen.findByText('Graph data could not be loaded.')
+  const plot = document.querySelector('.graphing-graph-figure__graph')
+  // The compact legend sits below the plot, so a figure-level notice would ride too low.
+  expect(plot!.contains(pill)).toBe(true)
+})
+
+test('a failed fetch outranks the no-data message', async () => {
+  const fetchGraph = vi.fn().mockRejectedValue(new Error('livestatus is down'))
+
+  renderFigure(fetchSource(fetchGraph))
+
+  expect(await screen.findByText('Graph data could not be loaded.')).toBeInTheDocument()
+  expect(screen.queryByText('No data available')).not.toBeInTheDocument()
+})
+
+test('a pan fetches the panned window over the requested span', async () => {
   renderFigure()
   await screen.findByTestId('time-series-graph')
 
   await fireEvent.click(screen.getByTestId('emit-pan'))
 
   await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
-  const requestedRange = postSpy.mock.calls[1][1].body.requested_time_range
-  expect(requestedRange).toMatchObject({ start: 500, end: 900 })
+  const { start, end } = postSpy.mock.calls[1][1].body.requested_time_range
+  expect({ start, end }).toEqual({ start: 500, end: 500 + 4 * 3600 })
+})
+
+test('a pan reports the panned window to the host', async () => {
+  const { emitted } = renderFigure()
+  await screen.findByTestId('time-series-graph')
+
+  await fireEvent.click(screen.getByTestId('emit-pan'))
+
+  expect(emitted('commitTimeRange')).toEqual([[{ start: 500, end: 500 + 4 * 3600 }]])
 })
 
 test('a reset after a pan re-resolves the configured range', async () => {
@@ -267,6 +433,38 @@ test('a reset after a pan re-resolves the configured range', async () => {
   // The configured range ("last 4 hours") resolves relative to now, far past the panned window.
   const requestedRange = postSpy.mock.calls[2][1].body.requested_time_range
   expect(requestedRange.end).toBeGreaterThan(900)
+})
+
+const requestedWindow = (call: number) => {
+  const { start, end } = postSpy.mock.calls[call][1].body.requested_time_range
+  return { start, end }
+}
+
+test("a host's window replaces the configured range", async () => {
+  renderFigure({ requestedTimeRange: { start: 100, end: 200 } })
+
+  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
+  expect(requestedWindow(0)).toEqual({ start: 100, end: 200 })
+})
+
+test('a new host window is fetched', async () => {
+  const { rerender } = renderFigure({ requestedTimeRange: { start: 100, end: 200 } })
+  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
+
+  await rerender({ requestedTimeRange: { start: 300, end: 400 } })
+
+  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
+  expect(requestedWindow(1)).toEqual({ start: 300, end: 400 })
+})
+
+test("a figure following its host's window runs no refresh timer of its own", async () => {
+  vi.useFakeTimers()
+  renderFigure({ requestedTimeRange: { start: 100, end: 200 } })
+  await vi.advanceTimersByTimeAsync(1)
+
+  await vi.advanceTimersByTimeAsync(REFRESH_INTERVAL_MS)
+
+  expect(postSpy).toHaveBeenCalledTimes(1)
 })
 
 test('a peak zoom outlives the refresh timer re-fetching the same window', async () => {
@@ -326,13 +524,192 @@ test('shows the compact legend only when requested', async () => {
   expect(document.querySelector('.graphing-graph-legend-compact')).not.toBeInTheDocument()
 })
 
-test('shows the burger menu only when requested', async () => {
-  const { unmount } = renderFigure({ showBurgerMenu: true })
+test('shows the burger menu only when requested and there is an add-to target', async () => {
+  const addTo = { type: 'pnpgraph', specification: {}, internal: '{"graphs":[]}' }
+  const first = renderFigure({ showBurgerMenu: true, addTo })
   await screen.findByTestId('time-series-graph')
   expect(document.querySelector('.graphing-graph-burger-menu')).toBeInTheDocument()
-  unmount()
+  first.unmount()
+
+  // Enabled but no add-to target: nothing to act on, so no menu.
+  const second = renderFigure({ showBurgerMenu: true, addTo: null })
+  await screen.findByTestId('time-series-graph')
+  expect(document.querySelector('.graphing-graph-burger-menu')).not.toBeInTheDocument()
+  second.unmount()
 
   renderFigure()
   await screen.findByTestId('time-series-graph')
   expect(document.querySelector('.graphing-graph-burger-menu')).not.toBeInTheDocument()
+})
+
+test('a figure without the pin never arms it', async () => {
+  renderFigure()
+
+  await waitFor(() => expect(screen.getByTestId('time-series-graph')).toBeInTheDocument())
+  expect(screen.getByTestId('pin-enabled')).toHaveTextContent('false')
+  expect(useGlobalPin().ensurePinLoaded).not.toHaveBeenCalled()
+})
+
+test('a pin-enabled figure arms the renderer and loads the persisted pin', async () => {
+  renderFigure({ showPin: true })
+
+  await waitFor(() => expect(screen.getByTestId('time-series-graph')).toBeInTheDocument())
+  expect(screen.getByTestId('pin-enabled')).toHaveTextContent('true')
+  expect(useGlobalPin().ensurePinLoaded).toHaveBeenCalled()
+})
+
+test('a pin placed in the renderer is persisted and handed back to it', async () => {
+  renderFigure({ showPin: true })
+
+  await waitFor(() => expect(screen.getByTestId('time-series-graph')).toBeInTheDocument())
+  await fireEvent.click(screen.getByTestId('emit-pin-create'))
+
+  expect(useGlobalPin().setPin).toHaveBeenCalledWith(1234)
+  expect(screen.getByTestId('pin-time')).toHaveTextContent('1234')
+})
+
+test('acting on the placed pin clears it', async () => {
+  renderFigure({ showPin: true })
+
+  await waitFor(() => expect(screen.getByTestId('time-series-graph')).toBeInTheDocument())
+  await fireEvent.click(screen.getByTestId('emit-pin-create'))
+  await fireEvent.click(screen.getByTestId('emit-pin-action'))
+
+  expect(useGlobalPin().clearPin).toHaveBeenCalled()
+  expect(screen.getByTestId('pin-time')).toBeEmptyDOMElement()
+})
+
+// The marker stands above the graph area. jsdom lays nothing out, so these assert the rules
+// that make the room for it rather than the geometry, which needs a browser.
+describe('room for the pin marker', () => {
+  const header = (): Element | null => document.querySelector('.graphing-graph-figure__header')
+  const figure = (): Element | null => document.querySelector('.graphing-graph-figure')
+
+  test('a header widens its gap so the marker clears it', async () => {
+    renderFigure({ showPin: true, showTimestamp: true })
+
+    await waitFor(() => expect(screen.getByTestId('time-series-graph')).toBeInTheDocument())
+    expect(header()).toHaveClass('graphing-graph-figure__header--pin-gap')
+    expect(figure()).not.toHaveClass('graphing-graph-figure--pin-overhang')
+  })
+
+  test('with no header the figure reserves the overhang itself', async () => {
+    renderFigure({ showPin: true })
+
+    await waitFor(() => expect(screen.getByTestId('time-series-graph')).toBeInTheDocument())
+    expect(header()).not.toBeInTheDocument()
+    expect(figure()).toHaveClass('graphing-graph-figure--pin-overhang')
+  })
+
+  test('a figure without the pin reserves nothing', async () => {
+    renderFigure({ showTimestamp: true })
+
+    await waitFor(() => expect(screen.getByTestId('time-series-graph')).toBeInTheDocument())
+    expect(header()).not.toHaveClass('graphing-graph-figure__header--pin-gap')
+    expect(figure()).not.toHaveClass('graphing-graph-figure--pin-overhang')
+  })
+})
+
+test("merges a unit-less y-axis prop's explicit range with the metric-derived unit", async () => {
+  // The prop carries only the explicit range; the unit must be filled in from the metric.
+  renderFigure({ yAxis: { explicit_range: { min: 1, max: 5 } } })
+  await screen.findByTestId('time-series-graph')
+
+  expect(screen.getByTestId('y-axis')).toHaveTextContent('set')
+  expect(screen.getByTestId('y-axis-range')).toHaveTextContent('5')
+  expect(screen.getByTestId('y-axis-unit')).toHaveTextContent('decimal')
+})
+
+test('omits the y-axis entirely when the prop has no unit and no metric supplies one', async () => {
+  postSpy.mockResolvedValue({
+    data: { ...FETCHED, metrics: [] },
+    error: undefined,
+    response: new Response('{}', { status: 200 })
+  } as never)
+
+  renderFigure({ yAxis: { explicit_range: { min: 1, max: 5 } } })
+  await screen.findByTestId('time-series-graph')
+
+  // No unit from the prop and none from a metric: the guard yields null, not a unit-less axis.
+  expect(screen.getByTestId('y-axis')).toHaveTextContent('null')
+})
+
+describe('a figure of bar metrics', () => {
+  const NOW = Date.parse('2026-01-01T10:37:00Z') / 1000
+  const HOUR = 3600
+
+  const hourlyBars = vi.fn((params: { fetchWindow: { start: number; end: number } }) =>
+    Promise.resolve({
+      title: '',
+      metrics: [
+        {
+          ...FETCHED.metrics[0],
+          render: { shape: 'bar', stack: null, aggregation: 'sum', inverse: false, hidden: false },
+          data_points: [1, 2, 3, 4, 5]
+        }
+      ],
+      timeRange: { start: params.fetchWindow.start, end: params.fetchWindow.end, step: HOUR },
+      horizontalLines: [],
+      shadedRegions: [],
+      errors: [],
+      warnings: []
+    })
+  )
+
+  beforeEach(() => {
+    vi.useFakeTimers({ now: NOW * 1000, toFake: ['Date'] })
+    hourlyBars.mockClear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  function renderBarFigure() {
+    renderFigure({
+      ...fetchSource(hourlyBars, DEFINITION, 'hour'),
+      timerange: { type: 'age', hours: 4 }
+    })
+  }
+
+  test('fetches whole local bins on the step that meets their edges', async () => {
+    renderBarFigure()
+
+    await waitFor(() => expect(hourlyBars).toHaveBeenCalled())
+    expect(hourlyBars.mock.calls[0]![0].fetchWindow).toEqual({
+      start: NOW - 4 * HOUR - 37 * 60,
+      end: NOW + 23 * 60,
+      step: HOUR
+    })
+  })
+
+  test('starts at the bin that holds the requested start and ends in the open bin', async () => {
+    renderBarFigure()
+
+    expect(await screen.findByTestId('view-start')).toHaveTextContent(
+      String(NOW - 4 * HOUR - 37 * 60)
+    )
+    expect(screen.getByTestId('view-end')).toHaveTextContent(String(NOW))
+  })
+
+  test('keeps the requested span when a pan moves the view off a bin edge', async () => {
+    renderBarFigure()
+    await screen.findByTestId('view-start')
+
+    await fireEvent.click(screen.getByTestId('emit-pan-back-by-a-quarter'))
+
+    await waitFor(() => expect(hourlyBars).toHaveBeenCalledTimes(2))
+    expect(hourlyBars.mock.calls[1]![0].fetchWindow).toEqual({
+      start: NOW - 6 * HOUR - 37 * 60,
+      end: NOW - HOUR - 37 * 60,
+      step: HOUR
+    })
+  })
+
+  test('bins the bars by the unit and zooms no deeper than one bin', async () => {
+    renderBarFigure()
+
+    expect(await screen.findByTestId('bin-unit')).toHaveTextContent('hour')
+    expect(screen.getByTestId('min-time-range')).toHaveTextContent(String(HOUR))
+  })
 })

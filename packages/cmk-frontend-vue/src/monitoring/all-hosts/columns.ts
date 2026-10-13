@@ -7,21 +7,39 @@ import type { ColumnDef, ColumnPinningState, VisibilityState } from '@tanstack/v
 import type { Site } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
+import {
+  autocompleter,
+  labelAutocompleter,
+  tagAutocompleter
+} from '@/monitoring/shared/api/autocomplete'
 import type { HostEntry, HostOptionalField, HostState } from '@/monitoring/shared/api/types'
 import type {
+  AutocompleteChoiceFilter,
   BooleanGroupFilter,
   CheckboxListFilter,
+  CheckboxListWithFlagsFilter,
   DateTimeRangeFilter,
   NumericFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
+import { MODE_COLUMN_ID } from '@/monitoring/shared/components/modeColumn'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
 export interface HostColumnOptions {
-  /** Whether to render the row-action column, which needs permitted actions. */
-  includeActions: boolean
+  /**
+   * Whether to offer the row-selection column. Only a user who may run a command on the
+   * selection gets it - without one, ticking a row would lead nowhere.
+   */
+  includeSelect: boolean
+  /**
+   * Whether to offer the customer column. Only hosts monitored by an edition with multi-tenancy
+   * support belong to a customer, so everywhere else the column does not exist at all.
+   */
+  showCustomer: boolean
   /** Configured sites the user is authorized to see, for the site column's filter options. */
   sites: readonly Site[]
+  /** Whether to offer the relations column; set when any visible host carries a relation. */
+  showRelations: boolean
 }
 
 /**
@@ -29,28 +47,47 @@ export interface HostColumnOptions {
  * When hidden, their field is omitted from the API request.
  */
 const OPTIONAL_FIELD_COLUMNS = [
+  'num_relations',
   'alias',
   'address',
   'folder',
-  'num_services',
-  'num_services_ok',
-  'num_services_warn',
-  'num_services_crit',
-  'num_services_unknown',
-  'num_services_pending',
   'last_check',
   'last_state_change',
   'labels',
   'tags',
   'contacts',
-  'contact_groups'
+  'contact_groups',
+  'num_services',
+  'num_services_ok',
+  'num_services_warn',
+  'num_services_crit',
+  'num_services_unknown',
+  'num_services_pending'
 ] as const satisfies readonly HostOptionalField[]
 
 /**
  * Columns the user may hide whose fields are always included in every API
  * response (not declared optional) and therefore never need to be requested.
+ *
+ * The customer is one of them because the API derives it from the site, which every host
+ * carries anyway.
  */
-const ALWAYS_FETCHED_HIDEABLE_COLUMNS = ['site_id'] as const
+const ALWAYS_FETCHED_HIDEABLE_COLUMNS = ['site_id', 'customer'] as const
+
+/** The boolean host fields the Mode column renders as icons and offers as filters. */
+type HostModeField =
+  | 'in_downtime'
+  | 'acknowledged'
+  | 'notifications_enabled'
+  | 'has_comments'
+  | 'active_checks_disabled'
+  | 'passive_checks_disabled'
+  | 'in_notification_period'
+  | 'in_service_period'
+  | 'in_check_period'
+
+/** Picks a column filter offers before it refuses more, per the views-table design. */
+const MAX_FILTER_CHOICES = 8
 
 const HIDEABLE_COLUMN_IDS: ReadonlySet<string> = new Set([
   ...OPTIONAL_FIELD_COLUMNS,
@@ -58,11 +95,18 @@ const HIDEABLE_COLUMN_IDS: ReadonlySet<string> = new Set([
 ])
 
 /**
- * The host optional fields (columns) the table currently shows,
- * to ask the API for those alone.
+ * The host optional fields (columns) the table currently shows, to ask the API for those alone.
+ *
+ * `offeredColumnIds` are the hideable columns this table actually has: a column the table does
+ * not offer at all - the relations column on a setup using no relations - must not have its
+ * field requested either, or the query would read a column nothing renders.
  */
-export function visibleHostFields(visibility: VisibilityState): HostOptionalField[] {
-  return OPTIONAL_FIELD_COLUMNS.filter((field) => visibility[field] !== false)
+export function visibleHostFields(
+  visibility: VisibilityState,
+  offeredColumnIds: readonly string[]
+): HostOptionalField[] {
+  const offered = new Set(offeredColumnIds)
+  return OPTIONAL_FIELD_COLUMNS.filter((field) => offered.has(field) && visibility[field] !== false)
 }
 
 function fixUnlessHideable(column: ColumnDef<HostEntry>): ColumnDef<HostEntry> {
@@ -78,11 +122,11 @@ function fixUnlessHideable(column: ColumnDef<HostEntry>): ColumnDef<HostEntry> {
  * horizontally.
  */
 export function buildHostColumnPinning({
-  includeActions
-}: Pick<HostColumnOptions, 'includeActions'>): ColumnPinningState {
+  includeSelect
+}: Pick<HostColumnOptions, 'includeSelect'>): ColumnPinningState {
   return {
-    left: ['select', 'state', 'modes', 'name'],
-    ...(includeActions ? { right: ['actions'] } : {})
+    left: [...(includeSelect ? ['select'] : []), 'state', MODE_COLUMN_ID, 'name'],
+    right: ['actions']
   }
 }
 
@@ -94,19 +138,26 @@ export function buildHostColumnPinning({
  * which defines the set shown on first use.
  */
 export function buildHostColumns({
-  includeActions,
-  sites
+  includeSelect,
+  showCustomer,
+  sites,
+  showRelations
 }: HostColumnOptions): ColumnDef<HostEntry>[] {
   const { _t } = usei18n()
 
-  const stateFilter: CheckboxListFilter<'state'> = {
-    type: 'checkbox-list',
+  const stateFilter: CheckboxListWithFlagsFilter<'state', 'is_flapping' | 'stale'> = {
+    type: 'checkbox-list-with-flags',
     field: 'state',
     options: [
       { value: 'UP', title: _t('UP') },
       { value: 'DOWN', title: _t('DOWN') },
-      { value: 'UNREACHABLE', title: _t('UNREACH') }
-    ] satisfies { value: HostState; title: string }[]
+      { value: 'UNREACHABLE', title: _t('UNREACH') },
+      { value: 'PENDING', title: _t('PENDING') }
+    ] satisfies { value: HostState; title: string }[],
+    flags: [
+      { field: 'is_flapping', title: _t('Flapping') },
+      { field: 'stale', title: _t('Stale') }
+    ]
   }
 
   const nameFilter: StringInputFilter<'name'> = {
@@ -124,6 +175,11 @@ export function buildHostColumns({
     field: 'address'
   }
 
+  const folderFilter: StringInputFilter<'folder'> = {
+    type: 'string-input',
+    field: 'folder'
+  }
+
   const siteFilter: CheckboxListFilter<'site_id'> = {
     type: 'checkbox-list',
     field: 'site_id',
@@ -132,32 +188,44 @@ export function buildHostColumns({
 
   const totalServicesFilter: NumericFilter<'num_services'> = {
     type: 'numeric',
-    field: 'num_services'
+    field: 'num_services',
+    anyInfo: _t('Shows hosts with at least one service.'),
+    noneInfo: _t('Shows hosts with no services.')
   }
 
   const okServicesFilter: NumericFilter<'num_services_ok'> = {
     type: 'numeric',
-    field: 'num_services_ok'
+    field: 'num_services_ok',
+    anyInfo: _t('Shows hosts with at least one service in OK.'),
+    noneInfo: _t('Shows hosts with no service in OK.')
   }
 
   const warnServicesFilter: NumericFilter<'num_services_warn'> = {
     type: 'numeric',
-    field: 'num_services_warn'
+    field: 'num_services_warn',
+    anyInfo: _t('Shows hosts with at least one service in WARN.'),
+    noneInfo: _t('Shows hosts with no service in WARN.')
   }
 
   const critServicesFilter: NumericFilter<'num_services_crit'> = {
     type: 'numeric',
-    field: 'num_services_crit'
+    field: 'num_services_crit',
+    anyInfo: _t('Shows hosts with at least one service in CRIT.'),
+    noneInfo: _t('Shows hosts with no service in CRIT.')
   }
 
   const unknownServicesFilter: NumericFilter<'num_services_unknown'> = {
     type: 'numeric',
-    field: 'num_services_unknown'
+    field: 'num_services_unknown',
+    anyInfo: _t('Shows hosts with at least one service in UNKNOWN.'),
+    noneInfo: _t('Shows hosts with no service in UNKNOWN.')
   }
 
   const pendingServicesFilter: NumericFilter<'num_services_pending'> = {
     type: 'numeric',
-    field: 'num_services_pending'
+    field: 'num_services_pending',
+    anyInfo: _t('Shows hosts with at least one pending service.'),
+    noneInfo: _t('Shows hosts with no pending service.')
   }
 
   const lastCheckFilter: DateTimeRangeFilter<'last_check'> = {
@@ -170,37 +238,80 @@ export function buildHostColumns({
     field: 'last_state_change'
   }
 
-  const modesFilter: BooleanGroupFilter<'in_downtime' | 'acknowledged'> = {
+  const labelsFilter: AutocompleteChoiceFilter<'labels'> = {
+    type: 'autocomplete-choice',
+    field: 'labels',
+    op: 'all_of',
+    suggest: labelAutocompleter('host'),
+    keyValue: true,
+    wildcardOption: true,
+    maxSelected: MAX_FILTER_CHOICES
+  }
+
+  const tagsFilter: AutocompleteChoiceFilter<'tags'> = {
+    type: 'autocomplete-choice',
+    field: 'tags',
+    op: 'all_of',
+    suggest: tagAutocompleter(),
+    keyValue: true,
+    wildcardOption: true,
+    maxSelected: MAX_FILTER_CHOICES
+  }
+
+  const contactsFilter: StringInputFilter<'contacts'> = {
+    type: 'string-input',
+    field: 'contacts'
+  }
+
+  const contactGroupsFilter: AutocompleteChoiceFilter<'contact_groups'> = {
+    type: 'autocomplete-choice',
+    field: 'contact_groups',
+    op: 'one_of',
+    suggest: autocompleter('allgroups', { group_type: 'contact' }),
+    wildcardOption: true,
+    maxSelected: MAX_FILTER_CHOICES
+  }
+
+  const modesFilter: BooleanGroupFilter<HostModeField> = {
     type: 'boolean-group',
     groups: [
       { field: 'in_downtime', title: _t('In downtime') },
-      { field: 'acknowledged', title: _t('Acknowledged') }
+      { field: 'acknowledged', title: _t('Acknowledged') },
+      { field: 'notifications_enabled', title: _t('Notifications enabled') },
+      { field: 'has_comments', title: _t('Has comments') },
+      { field: 'active_checks_disabled', title: _t('Active checks disabled') },
+      { field: 'passive_checks_disabled', title: _t('Passive checks disabled') },
+      { field: 'in_notification_period', title: _t('In notification period') },
+      { field: 'in_service_period', title: _t('In service period') },
+      { field: 'in_check_period', title: _t('In check period') }
     ]
   }
 
   const columns: ColumnDef<HostEntry>[] = [
-    {
-      id: 'select',
-      header: '',
-      enableSorting: false,
-      minSize: 36,
-      maxSize: 36,
-      meta: { selectColumn: true, justify: 'center' }
-    },
+    ...(includeSelect
+      ? [
+          {
+            id: 'select',
+            header: '',
+            enableSorting: false,
+            minSize: 36,
+            maxSize: 36,
+            meta: { selectColumn: true, justify: 'center' }
+          } satisfies ColumnDef<HostEntry>
+        ]
+      : []),
     {
       accessorKey: 'state',
       header: _t('State'),
       sortDescFirst: true,
-      minSize: 74,
-      maxSize: 100,
+      minSize: 86,
+      maxSize: 131,
       meta: { filter: stateFilter }
     },
     {
-      accessorKey: 'modes',
+      accessorKey: MODE_COLUMN_ID,
       header: _t('Mode'),
       enableSorting: false,
-      minSize: 80,
-      maxSize: 80,
       meta: { justify: 'left', filter: modesFilter }
     },
     {
@@ -210,6 +321,21 @@ export function buildHostColumns({
       minSize: 150,
       meta: { filter: nameFilter }
     },
+    ...(showRelations
+      ? [
+          {
+            accessorKey: 'num_relations',
+            header: _t('Relations'),
+            sortDescFirst: true,
+            minSize: 70,
+            maxSize: 130,
+            meta: {
+              justify: 'right',
+              headerTitle: _t('Number of related hosts')
+            }
+          } satisfies ColumnDef<HostEntry>
+        ]
+      : []),
     {
       accessorKey: 'alias',
       header: _t('Host alias'),
@@ -232,7 +358,7 @@ export function buildHostColumns({
       sortDescFirst: false,
       minSize: 100,
       maxSize: 300,
-      meta: { hidden: true }
+      meta: { filter: folderFilter, hidden: true }
     },
     {
       accessorKey: 'site_id',
@@ -241,6 +367,64 @@ export function buildHostColumns({
       minSize: 100,
       maxSize: 300,
       meta: { filter: siteFilter, hidden: true }
+    },
+    {
+      accessorKey: 'last_check',
+      header: _t('Check age'),
+      sortDescFirst: true,
+      minSize: 120,
+      maxSize: 200,
+      meta: {
+        headerTitle: _t('Age of the check'),
+        hidden: true,
+        justify: 'right',
+        filter: lastCheckFilter
+      }
+    },
+    {
+      accessorKey: 'last_state_change',
+      header: _t('State age'),
+      sortDescFirst: true,
+      minSize: 120,
+      maxSize: 200,
+      meta: {
+        headerTitle: _t('Age of the state'),
+        hidden: true,
+        justify: 'right',
+        filter: lastStateChangeFilter
+      }
+    },
+    {
+      accessorKey: 'labels',
+      header: _t('Labels'),
+      enableSorting: false,
+      minSize: 100,
+      maxSize: 400,
+      meta: { hidden: true, filter: labelsFilter }
+    },
+    {
+      accessorKey: 'tags',
+      header: _t('Tags'),
+      enableSorting: false,
+      minSize: 100,
+      maxSize: 400,
+      meta: { hidden: true, filter: tagsFilter }
+    },
+    {
+      accessorKey: 'contacts',
+      header: _t('Contacts'),
+      enableSorting: false,
+      minSize: 100,
+      maxSize: 300,
+      meta: { hidden: true, filter: contactsFilter }
+    },
+    {
+      accessorKey: 'contact_groups',
+      header: _t('Contact groups'),
+      enableSorting: false,
+      minSize: 100,
+      maxSize: 300,
+      meta: { hidden: true, filter: contactGroupsFilter }
     },
     {
       accessorKey: 'num_services',
@@ -273,7 +457,8 @@ export function buildHostColumns({
       meta: {
         justify: 'right',
         filter: warnServicesFilter,
-        headerTitle: _t('Number of services in warning state')
+        headerTitle: _t('Number of services in warning state'),
+        pickerLabel: _t('Warning (Wa)')
       },
       minSize: 70,
       maxSize: 70
@@ -285,7 +470,8 @@ export function buildHostColumns({
       meta: {
         justify: 'right',
         filter: critServicesFilter,
-        headerTitle: _t('Number of services in critical state')
+        headerTitle: _t('Number of services in critical state'),
+        pickerLabel: _t('Critical (Cr)')
       },
       minSize: 70,
       maxSize: 70
@@ -297,7 +483,8 @@ export function buildHostColumns({
       meta: {
         justify: 'right',
         filter: unknownServicesFilter,
-        headerTitle: _t('Number of services in unknown state')
+        headerTitle: _t('Number of services in unknown state'),
+        pickerLabel: _t('Unknown (Un)')
       },
       minSize: 70,
       maxSize: 70
@@ -309,71 +496,32 @@ export function buildHostColumns({
       meta: {
         justify: 'right',
         filter: pendingServicesFilter,
-        headerTitle: _t('Number of services in pending state')
+        headerTitle: _t('Number of services in pending state'),
+        pickerLabel: _t('Pending (Pd)')
       },
       minSize: 70,
       maxSize: 70
     },
-    {
-      accessorKey: 'last_check',
-      header: _t('Last check'),
-      sortDescFirst: true,
-      minSize: 120,
-      maxSize: 200,
-      meta: { hidden: true, filter: lastCheckFilter }
-    },
-    {
-      accessorKey: 'last_state_change',
-      header: _t('Last state change'),
-      sortDescFirst: true,
-      minSize: 120,
-      maxSize: 200,
-      meta: { hidden: true, filter: lastStateChangeFilter }
-    },
-    {
-      accessorKey: 'labels',
-      header: _t('Labels'),
-      enableSorting: false,
-      minSize: 100,
-      maxSize: 400,
-      meta: { hidden: true }
-    },
-    {
-      accessorKey: 'tags',
-      header: _t('Tags'),
-      enableSorting: false,
-      minSize: 100,
-      maxSize: 400,
-      meta: { hidden: true }
-    },
-    {
-      accessorKey: 'contacts',
-      header: _t('Contacts'),
-      enableSorting: false,
-      minSize: 100,
-      maxSize: 300,
-      meta: { hidden: true }
-    },
-    {
-      accessorKey: 'contact_groups',
-      header: _t('Contact groups'),
-      enableSorting: false,
-      minSize: 100,
-      maxSize: 300,
-      meta: { hidden: true }
-    },
-    ...(includeActions
+    ...(showCustomer
       ? [
           {
-            id: 'actions',
-            header: _t('Actions'),
+            accessorKey: 'customer',
+            header: _t('Customer'),
             enableSorting: false,
-            minSize: 75,
-            maxSize: 75,
-            meta: { justify: 'right' }
+            minSize: 100,
+            maxSize: 300,
+            meta: { hidden: true }
           } satisfies ColumnDef<HostEntry>
         ]
-      : [])
+      : []),
+    {
+      id: 'actions',
+      header: _t('Actions'),
+      enableSorting: false,
+      minSize: 75,
+      maxSize: 75,
+      meta: { justify: 'right' }
+    } satisfies ColumnDef<HostEntry>
   ]
 
   return columns.map(fixUnlessHideable)

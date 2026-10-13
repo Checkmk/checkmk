@@ -2,7 +2,6 @@
 
 load("@aspect_rules_lint//lint:bandit.bzl", "lint_bandit_aspect")
 load("@aspect_rules_lint//lint:clang_tidy.bzl", "lint_clang_tidy_aspect")
-load("@aspect_rules_lint//lint:clippy.bzl", "lint_clippy_aspect")
 load("@aspect_rules_lint//lint:eslint.bzl", "lint_eslint_aspect")
 load("@aspect_rules_lint//lint:groovy.bzl", "lint_groovy_aspect")
 load("@aspect_rules_lint//lint:ruff.bzl", "lint_ruff_aspect")
@@ -14,6 +13,7 @@ load("@rules_mypy//mypy:mypy.bzl", "mypy")
 load("//bazel/tools:lint_astrein.bzl", "lint_astrein_aspect")
 load("//bazel/tools:lint_ps_script_analyzer.bzl", "lint_ps_script_analyzer_aspect")
 load("//bazel/tools:lint_py_import_cycles.bzl", "lint_py_import_cycles_aspect")
+load("//bazel/tools/clippy:clippy.bzl", "lint_clippy_aspect")
 load("//packages/cmk-repo-checks:deballast.bzl", "lint_deballast_aspect")
 load("//packages/cmk-repo-checks:lint_license_header.bzl", "lint_license_header_aspect")
 load("//packages/cmk-repo-checks:lint_python_extensions.bzl", "lint_python_extension_aspect")
@@ -28,33 +28,48 @@ clippy = lint_clippy_aspect(
     config = Label("//:.clippy.toml"),
 )
 
-mypy_aspect = mypy(
-    mypy_cli = Label("@//bazel/tools:mypy_cli"),
-    mypy_ini = Label("@//:pyproject.toml"),
-    # TODO: Re-enable as soon as we have a solution regarding huge execroot folders
-    # Reference: https://tribe29.slack.com/archives/C01UJKY2D7Y/p1773328309307479
-    cache = False,
-    suppression_tags = ["no-mypy"],
-    color = False,
-    # `rules_mypy//mypy:types.bzl` mostly takes care of this but needs help with some packages.
-    types = {
-        pkg: types_pkg
-        for pkg, types_pkg in types.items()
-        if pkg not in [
-            # The types for these are pulled transitively but we don't have/need
-            # the corresponding packages.
-            requirement("awscrt"),
-            requirement("html5lib"),
-            requirement("pika-ts"),
-        ]
-    } | {
-        # `types-pika-ts` wrongfully resolves `pika-ts` instead of `pika`.
-        requirement("pika"): types[requirement("pika-ts")],
-        # Add stubs for 3rd party packages we use
-        requirement("marshmallow-oneofschema"): Label("@//tests/typeshed:marshmallow-oneofschema-stubs"),
-        requirement("pyprof2calltree"): Label("@//tests/typeshed:pyprof2calltree-stubs"),
-    },
-)
+def _mypy_aspect(mypy_ini):
+    """Create a mypy aspect using the given config file.
+
+    Args:
+        mypy_ini: The label of the mypy config file.
+
+    Returns:
+        The mypy aspect.
+    """
+    return mypy(
+        mypy_cli = Label("@//bazel/tools:mypy_cli"),
+        mypy_ini = mypy_ini,
+        # TODO: Re-enable as soon as we have a solution regarding huge execroot folders
+        # Reference: https://tribe29.slack.com/archives/C01UJKY2D7Y/p1773328309307479
+        cache = False,
+        suppression_tags = ["no-mypy"],
+        color = False,
+        # `rules_mypy//mypy:types.bzl` mostly takes care of this but needs help with some packages.
+        types = {
+            pkg: types_pkg
+            for pkg, types_pkg in types.items()
+            if pkg not in [
+                # The types for these are pulled transitively but we don't have/need
+                # the corresponding packages.
+                requirement("awscrt"),
+                requirement("html5lib"),
+                requirement("pika-ts"),
+                requirement("pytz"),
+            ]
+        } | {
+            # `types-pika-ts` wrongfully resolves `pika-ts` instead of `pika`.
+            requirement("pika"): types[requirement("pika-ts")],
+            # Add stubs for 3rd party packages we use
+            requirement("marshmallow-oneofschema"): Label("@//tests/typeshed:marshmallow-oneofschema-stubs"),
+            requirement("pyprof2calltree"): Label("@//tests/typeshed:pyprof2calltree-stubs"),
+        },
+    )
+
+mypy_aspect = _mypy_aspect(Label("@//:pyproject.toml"))
+
+# The same with the config for the GPL code, which doesn't know about the non-free parts.
+mypy_gpl_aspect = _mypy_aspect(Label("@//:mypy-gpl.toml"))
 
 bandit = lint_bandit_aspect(
     binary = Label(":bandit"),
@@ -70,13 +85,15 @@ ruff = lint_ruff_aspect(
 clang_tidy = lint_clang_tidy_aspect(
     binary = Label("@multitool_hub//tools/clang-tidy"),
     global_config = [Label("//:.clang-tidy")],
-    gcc_install_dir = [Label("@gcc-linux-x86_64//:x86_64-buildroot-linux-gnu")],
+    gcc_install_dir = [Label("@gcc_toolchain//:x86_64-checkmk-linux-gnu")],
     # GCC's own builtin headers aren't a safe substitute for clang's resource-dir headers
     # (e.g. its mmintrin.h calls __builtin_ia32_* names Clang doesn't implement), so use
     # Clang's own extracted resource-dir headers instead.
     builtin_include_dir = [Label("@clang-resource-headers")],
+    # Not the opaque :x86_64-checkmk-linux-gnu dir: it collides with all_files in the sandbox.
     deps = [
-        Label("@gcc-linux-x86_64//:x86_64-buildroot-linux-gnu"),
+        Label("@gcc_toolchain//:builtin_headers"),
+        Label("@gcc_toolchain//:linker_builtins"),
         Label("@clang-resource-headers"),
     ],
 )

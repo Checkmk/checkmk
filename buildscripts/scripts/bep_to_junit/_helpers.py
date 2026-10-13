@@ -4,8 +4,6 @@
 
 """Shared helpers: URI reading, label/filename conversion, XML writing."""
 
-from __future__ import annotations
-
 import re
 import sys
 import xml.etree.ElementTree as ET
@@ -62,7 +60,7 @@ def write_xml(root: ET.Element, path: Path) -> None:
     path.write_text(
         '<?xml version="1.0" encoding="utf-8"?>\n' + ET.tostring(root, encoding="unicode") + "\n"
     )
-    print(f"wrote {path}", file=sys.stderr)
+    print(f"wrote {path}", file=sys.stderr)  # noqa: T201  # It's OK for test/script helpers to print()
 
 
 def make_xml(

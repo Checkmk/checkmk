@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Mapping
 
@@ -58,9 +57,9 @@ def parse_hp_msa_system(string_table: StringTable) -> Mapping[str, Mapping[str, 
             system_name = " ".join(line[3:])
             parsed[system_name] = {"item_type": line[0]}
         elif line[2] == "health-numeric":
-            parsed[system_name]["health-numeric"] = line[3]
+            parsed[system_name]["health-numeric"] = line[3]  # type: ignore[possibly-undefined]
         elif line[2] == "health-reason":
-            parsed[system_name]["health-reason"] = " ".join(line[3:])
+            parsed[system_name]["health-reason"] = " ".join(line[3:])  # type: ignore[possibly-undefined]
 
     return parsed
 

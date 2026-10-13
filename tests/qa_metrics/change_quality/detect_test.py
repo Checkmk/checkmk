@@ -9,8 +9,6 @@ Mirrors the heuristic from gerrit 133576 / ``bugfix_kpi_trend.py``: presence
 of *any* test path in the change is enough to mark it as tested.
 """
 
-from __future__ import annotations
-
 import re
 from collections.abc import Iterable
 

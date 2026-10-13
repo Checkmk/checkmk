@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 # <<<jenkins_instance>>>
 # {"quietingDown": false, "nodeDescription": "the master Jenkins node",
@@ -18,12 +17,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 MAP_INSTANCE_STATE = {
     True: "yes",
@@ -55,17 +53,13 @@ agent_section_jenkins_instance = AgentSection(
 )
 
 
-def discover_jenkins_instance(section: JenkinsInstance) -> DiscoveryResult:
-    yield Service()
-
-
-def check_jenkins_instance(params: dict, section: JenkinsInstance) -> CheckResult:
+def check_jenkins_instance(params: dict, section: JenkinsInstance) -> CheckResult:  # noqa: ARG001
     if not section:
         return
 
     if (instance_description := section.get("nodeDescription")) is not None:
         if not isinstance(instance_description, str):
-            instance_description = str(instance_description)
+            instance_description = str(instance_description)  # type: ignore[unreachable]
 
         yield Result(state=State.OK, summary=f"Description: {instance_description.title()}")
 
@@ -87,7 +81,7 @@ def check_jenkins_instance(params: dict, section: JenkinsInstance) -> CheckResul
 check_plugin_jenkins_instance = CheckPlugin(
     name="jenkins_instance",
     service_name="Jenkins Instance",
-    discovery_function=discover_jenkins_instance,
+    discovery_function=discover_one_service,
     check_function=check_jenkins_instance,
     check_default_parameters={},
 )

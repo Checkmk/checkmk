@@ -1,0 +1,8 @@
+[toolchain]
+channel = "1.96.1" # must be in sync with MODULE.bazel
+
+[toolchain.windows]
+targets = ["x86_64-pc-windows-msvc"]
+
+[toolchain.linux]
+targets = ["x86_64-unknown-linux-musl", "x86_64-unknown-linux-gnu"]

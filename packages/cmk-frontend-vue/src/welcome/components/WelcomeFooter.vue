@@ -11,8 +11,7 @@ import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { ref, watch } from 'vue'
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-declare let global_csrf_token: string
+import { getCsrfToken } from '@/lib/csrf'
 
 const props = defineProps<{
   is_start_url: boolean
@@ -36,7 +35,7 @@ const setStartUrl = async (startUrlValue?: string): Promise<void> => {
     const response = await axios.post(url, null, {
       params: {
         name: startUrlValue,
-        _csrf_token: global_csrf_token
+        _csrf_token: getCsrfToken()
       }
     })
 

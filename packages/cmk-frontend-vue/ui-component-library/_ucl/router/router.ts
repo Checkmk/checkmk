@@ -7,11 +7,13 @@ import { roots } from '@ucl/components/'
 import { type RouteLocation, type RouteRecordRaw, createRouter, createWebHistory } from 'vue-router'
 
 import { useNavigation } from '../composables/useNavigation'
+import { usePageStatus } from '../composables/usePageStatus'
 import { type Folder, Page, toSlug } from '../types/page'
 import UclEmpty from '../views/UclEmpty.vue'
 import UclHome from '../views/UclHome.vue'
 
 const { openPathToRoute } = useNavigation()
+const { dismissStatusForPath } = usePageStatus()
 
 function defaultProps(route: RouteLocation): { screenshotMode: boolean } {
   return { screenshotMode: route.query.screenshot === 'true' }
@@ -48,6 +50,10 @@ const router = createRouter({
 router.beforeEach((to) => {
   openPathToRoute(to.path)
   return true
+})
+
+router.afterEach((to) => {
+  dismissStatusForPath(to.path)
 })
 
 export default router

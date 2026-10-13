@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 from typing import override
 
 import cmk.utils.paths
@@ -14,6 +12,7 @@ from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,
     Dictionary,
+    DictionaryModel,
     DropdownChoice,
     DualListChoice,
     ListOf,
@@ -21,7 +20,6 @@ from cmk.gui.valuespec import (
     MonitoringState,
     RegExp,
     TextInput,
-    ValueSpec,
 )
 from cmk.gui.watolib.rulespecs import (
     HostRulespec,
@@ -31,6 +29,7 @@ from cmk.gui.watolib.rulespecs import (
 )
 from cmk.ruleset_matcher.definition import RuleGroup
 
+from . import _label_picker
 from ._valuespecs import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
 
 
@@ -43,6 +42,7 @@ def register(
     rulespec_registry.register(InvParameterInvIf)
     rulespec_registry.register(InvParameterLnxSysctl)
     rulespec_registry.register(InvRetentionIntervals)
+    rulespec_registry.register(InvLabelPicker)
 
 
 class RulespecGroupInventory(RulespecGroup):
@@ -102,6 +102,27 @@ def _valuespec_active_checks_cmk_inv() -> Dictionary:
                 MonitoringState(
                     title=_("State when networking changes are detected"),
                     default_value=0,
+                ),
+            ),
+            (
+                "new_labels",
+                MonitoringState(
+                    title=_("State of picked labels not accepted yet"),
+                    default_value=1,
+                ),
+            ),
+            (
+                "vanished_labels",
+                MonitoringState(
+                    title=_("State of accepted labels no longer picked"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "changed_labels",
+                MonitoringState(
+                    title=_("State of picked labels with a changed value"),
+                    default_value=1,
                 ),
             ),
             (
@@ -310,7 +331,7 @@ InvParameterLnxSysctl = HostRulespec(
 )
 
 
-def _valuespec_inv_retention_intervals() -> ValueSpec:
+def _valuespec_inv_retention_intervals() -> ListOf[DictionaryModel]:
     def vs_choices(title: str) -> CascadingDropdown:
         return CascadingDropdown(
             title=title,
@@ -363,4 +384,12 @@ InvRetentionIntervals = HostRulespec(
     match_type="all",
     name="inv_retention_intervals",
     valuespec=_valuespec_inv_retention_intervals,
+)
+
+
+InvLabelPicker = HostRulespec(
+    group=RulespecGroupInventory,
+    match_type="all",
+    name="inv_label_picker_configs",
+    valuespec=_label_picker.parameter_form,
 )

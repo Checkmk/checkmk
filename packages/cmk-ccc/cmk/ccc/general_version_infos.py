@@ -10,7 +10,7 @@ import os
 import sys
 from pathlib import Path
 
-from .version import get_general_version_infos
+from .version_info import get_general_version_infos
 
 
 def main() -> int:

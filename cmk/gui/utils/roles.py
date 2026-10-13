@@ -17,9 +17,14 @@ from cmk.utils import paths
 
 
 class SupportsUserPermissionConfig(Protocol):
-    roles: dict[str, BuiltInUserRole | CustomUserRole]
-    multisite_users: dict[str, UserSpec]
-    default_user_profile: UserSpec
+    @property
+    def roles(self) -> Mapping[str, BuiltInUserRole | CustomUserRole]: ...
+
+    @property
+    def multisite_users(self) -> Mapping[str, UserSpec]: ...
+
+    @property
+    def default_user_profile(self) -> UserSpec: ...
 
 
 @dataclass(frozen=True)
@@ -33,7 +38,7 @@ class UserPermissionSerializableConfig:
     @classmethod
     def from_global_config(
         cls, config: SupportsUserPermissionConfig
-    ) -> "UserPermissionSerializableConfig":
+    ) -> UserPermissionSerializableConfig:
         return cls(
             roles=config.roles,
             user_roles={user_id: user["roles"] for user_id, user in config.multisite_users.items()},
@@ -59,7 +64,7 @@ class UserPermissions:
     @classmethod
     def from_config(
         cls, config: SupportsUserPermissionConfig, permissions: Mapping[str, Permission]
-    ) -> "UserPermissions":
+    ) -> UserPermissions:
         return cls(
             roles=config.roles,
             permissions=permissions,
@@ -74,7 +79,7 @@ class UserPermissions:
         cls,
         serializable_config: UserPermissionSerializableConfig,
         permissions: Mapping[str, Permission],
-    ) -> "UserPermissions":
+    ) -> UserPermissions:
         return cls(
             roles=serializable_config.roles,
             permissions=permissions,

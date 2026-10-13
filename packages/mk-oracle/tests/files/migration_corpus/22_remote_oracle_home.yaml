@@ -1,0 +1,16 @@
+# WARNING: REMOTE_ORACLE_HOME '/usr/lib/oracle/23/client64' is not supported and is not migrated; the unified plug-in resolves ORACLE_HOME on its own
+# --- Known environment variables defined in legacy config ---
+# DBUSER ***
+# REMOTE_ORACLE_HOME /usr/lib/oracle/23/client64
+# WARNING: REMOTE_ORACLE_HOME '/usr/lib/oracle/23/client64' is not supported and is not migrated; the unified plug-in resolves ORACLE_HOME on its own
+# --- Unified Config ---
+---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+      port: 1521
+    authentication:
+      username: "user"
+      password: "pass"
+      type: standard

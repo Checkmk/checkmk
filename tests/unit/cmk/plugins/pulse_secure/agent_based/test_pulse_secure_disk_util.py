@@ -29,7 +29,7 @@ def test_discover_pulse_secure_disk(
 ) -> None:
     """Test discovery function for pulse_secure_disk_util check."""
     parsed = parse_pulse_secure_disk_util(string_table)
-    if parsed is not None:
+    if parsed is not None:  # noqa: SIM108
         result = list(discover_pulse_secure_disk_util(parsed))
     else:
         result = []

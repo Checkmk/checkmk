@@ -160,8 +160,18 @@ void main() {
             ],
             "minimal-alpine-python-checkmk": [
                 "tag_name": "minimal-alpine-python-checkmk-${safe_branch_name}",
-                "image_alias_name": "IMAGE_PYTHON_3_13",
+                "image_alias_name": "IMAGE_PYTHON_3_14",
                 "docker_file_path": "buildscripts/scripts/Dockerfile",
+            ],
+            // centos:6 is EOL and has no docker_image_aliases entry, hence
+            // base_image instead of image_alias_name. tag_name is fixed
+            // (not branch-suffixed): Bazel references this image by the
+            // "latest" tag (see non-free/packages/cmk-update-agent/BUILD),
+            // which every build of this special image below refreshes.
+            "cmk-update-agent": [
+                "tag_name": "cmk-update-agent-toolchain",
+                "base_image": "${docker_registry_no_http}/centos:6",
+                "docker_file_path": "non-free/packages/cmk-update-agent/Dockerfile",
             ],
         ];
 
@@ -174,7 +184,7 @@ void main() {
                     condition: publish_special_images,
                     raiseOnError: true,
                 ) {
-                    def image_base = resolve_docker_image_alias(details.image_alias_name);
+                    def image_base = details.base_image ?: resolve_docker_image_alias(details.image_alias_name);
                     def docker_build_args = (""
                         + " --build-arg IMAGE_BASE='${image_base}'"
 

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import {
@@ -12,7 +12,7 @@ import {
   type ConfiguredValues,
   type FilterDefinition,
   type Filters,
-  isFullyConfiguredFilter
+  unconfiguredFilters
 } from 'cmk-ui-library/components/filter'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -97,16 +97,10 @@ const serviceRuntimeFilters = computed(() => {
 })
 
 const applyRuntimeFilters = () => {
-  const filters = props.runtimeFilters.getFilters()
-  const notFullyConfigured: string[] = []
-
-  Object.keys(filters).forEach((filterId) => {
-    const filterValues = filters[filterId]!
-    const filterDef = props.filterDefinitions[filterId]
-    if (filterDef && !isFullyConfiguredFilter(filterValues, filterDef)) {
-      notFullyConfigured.push(filterDef.title!)
-    }
-  })
+  const notFullyConfigured = unconfiguredFilters(
+    props.runtimeFilters.getFilters(),
+    props.filterDefinitions
+  ).map((definition) => definition.title!)
 
   if (notFullyConfigured.length > 0) {
     misconfiguredFilters.value = notFullyConfigured
@@ -171,12 +165,12 @@ const handleRemoveFilter = (filterId: string) => {
   />
 
   <div>
-    <CmkAlertBox v-if="misconfiguredFilters.length > 0" variant="error">
+    <CmkAlertBoxDeprecated v-if="misconfiguredFilters.length > 0" variant="error">
       <CmkLabel>
         {{ _t('Please configure the following filters: ') }}
         {{ misconfiguredFilters.join(', ') }}
       </CmkLabel>
-    </CmkAlertBox>
+    </CmkAlertBoxDeprecated>
   </div>
 
   <RuntimeFilterCollection

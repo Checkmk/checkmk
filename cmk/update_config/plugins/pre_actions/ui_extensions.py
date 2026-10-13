@@ -10,7 +10,8 @@ from typing import override
 
 from cmk.ccc import debug
 from cmk.discover_plugins import discover_all_plugins, PluginGroup
-from cmk.graphing.v1 import entry_point_prefixes
+from cmk.graphing.v1 import entry_point_prefixes as entry_point_prefixes_v1
+from cmk.graphing.v2_unstable import entry_point_prefixes as entry_point_prefixes_v2_unstable
 from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.legacy_plugins import remove_failed_plugin
@@ -81,20 +82,20 @@ class PreUpdateUIExtensions(PreUpdateAction):
 
             raise MKUserError(None, "incompatible extension package")
 
-        self._check_graphing_v1_plugin_errors(logger, conflict_mode)
+        self._check_graphing_plugin_errors(logger, conflict_mode)
 
-    def _check_graphing_v1_plugin_errors(self, logger: Logger, conflict_mode: ConflictMode) -> None:
+    def _check_graphing_plugin_errors(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         if not (
             discovered_plugins_errors := discover_all_plugins(
                 PluginGroup.GRAPHING,
-                entry_point_prefixes(),
+                dict(entry_point_prefixes_v1()) | dict(entry_point_prefixes_v2_unstable()),
                 skip_wrong_types=False,
                 raise_errors=debug.enabled(),
             ).errors
         ):
             return
         logger.error(
-            "One or more graphing plugins (using cmk.graphing.v1) failed to load.\n"
+            "One or more graphing plugins failed to load.\n"
             "This can lead to missing graphs or other issues in the UI.\n"
             "It is likely caused by incompatible customizations.\n"
             "These where the errors we encountered:",

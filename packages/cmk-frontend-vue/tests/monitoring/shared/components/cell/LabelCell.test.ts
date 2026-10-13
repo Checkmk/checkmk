@@ -9,7 +9,8 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, defineComponent, h, nextTick, ref } from 'vue'
 
 import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
-import LabelCell, { type LabelCellItem } from '@/monitoring/shared/components/cell/LabelCell.vue'
+import LabelCell from '@/monitoring/shared/components/cell/LabelCell.vue'
+import type { LabelCellItem } from '@/monitoring/shared/components/cell/labelCellItem'
 
 const TAG_WIDTH = 100
 const OVERFLOW_BASE_WIDTH = 20
@@ -28,13 +29,14 @@ function overflowWidth(element: Element): number {
  * non-wrapping row the cell measures in.
  */
 function stubLayout(rowWidth: number): void {
-  Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
-    configurable: true,
-    get(this: HTMLElement) {
-      return this.classList.contains('monitoring-label-cell__row') ? rowWidth : 0
-    }
+  vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(function (
+    this: HTMLElement
+  ) {
+    return this.classList.contains('monitoring-label-cell__row') ? rowWidth : 0
   })
-  HTMLElement.prototype.getBoundingClientRect = function (this: HTMLElement): DOMRect {
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+    this: HTMLElement
+  ): DOMRect {
     const row = this.closest('.monitoring-label-cell__row')
     if (this === row) {
       return { left: 0, right: rowWidth, width: rowWidth } as DOMRect
@@ -49,7 +51,7 @@ function stubLayout(rowWidth: number): void {
     const left = index * TAG_WIDTH
     const width = this.hasAttribute('data-label-cell-overflow') ? overflowWidth(this) : TAG_WIDTH
     return { left, right: left + width, width } as DOMRect
-  }
+  })
 }
 
 function makeItems(count: number): LabelCellItem[] {
@@ -249,4 +251,27 @@ test('measures the entries at the width they want, not one the row has room for'
   for (const tag of visibleTags(container)) {
     expect(tag).toHaveStyle({ maxWidth: 'none' })
   }
+})
+
+test('sets the value of a label in bold, apart from its key', async () => {
+  await mountCell([{ keyValue: { key: 'cmk/os_family', value: 'linux' } }], 500)
+
+  expect(screen.getByText('linux').tagName).toBe('STRONG')
+  expect(screen.getByTitle('cmk/os_family: linux')).toHaveTextContent('cmk/os_family: linux')
+})
+
+test('sets nothing in bold in an entry that is no label', async () => {
+  const { container } = await mountCell([{ text: 'all' as TranslatedString }], 500)
+
+  expect(container.querySelector('strong')).toBeNull()
+  expect(screen.getByText('all')).toBeInTheDocument()
+})
+
+test('keeps the separator of a label with an empty value', async () => {
+  const { container } = await mountCell([{ keyValue: { key: 'cmk/empty', value: '' } }], 500)
+  const [tag] = visibleTags(container)
+
+  expect(tag).toHaveAttribute('title', 'cmk/empty: ')
+  expect(tag).toHaveTextContent('cmk/empty:')
+  expect(tag?.querySelector('strong')).not.toBeNull()
 })

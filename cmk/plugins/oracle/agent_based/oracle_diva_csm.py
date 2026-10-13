@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 # .1.3.6.1.4.1.110901.1.2.1.1.1.2.1       lib status
@@ -84,7 +82,11 @@ def status_result_oracle_diva_csm(reading: str) -> tuple[int, str]:
 
 
 def check_oracle_diva_csm_status(
-    name: str, idx: int, item: str, params: Mapping[str, Any], info: Sequence[StringTable]
+    name: str,
+    idx: int,
+    item: str,
+    params: Mapping[str, Any],  # noqa: ARG001
+    info: Sequence[StringTable],
 ) -> CheckResult:
     for line in info[idx]:
         if len(line) == 2:
@@ -290,7 +292,7 @@ def check_oracle_diva_csm_tapes(
     except IndexError:
         return
 
-    match params["levels_lower"]:
+    match params["levels_lower"]:  # type: ignore[exhaustive-match]
         case None:
             levels_lower: LevelsT = ("no_levels", None)
         case (warn, crit):
@@ -298,7 +300,7 @@ def check_oracle_diva_csm_tapes(
 
     yield from check_levels(
         blank_tapes,
-        levels_lower=levels_lower,
+        levels_lower=levels_lower,  # type: ignore[possibly-undefined]
         metric_name="tapes_free",
         render_func=str,
         label="Blank tapes",

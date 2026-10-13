@@ -8,7 +8,7 @@ import cmk.gui.form_specs.unstable.validators as private_form_specs_validators
 import cmk.rulesets.v1.form_specs.validators as formspec_validators
 from cmk.gui.form_specs.unstable import (
     BinaryConditionChoices,
-    CascadingSingleChoiceExtended,
+    CACertificate,
     Catalog,
     CommentTextArea,
     ConditionChoices,
@@ -49,6 +49,7 @@ from cmk.gui.form_specs.visitors.recomposers import (
     recompose_user_selection,
 )
 from cmk.rulesets.internal.form_specs import (
+    CascadingSingleChoiceExtended,
     DictionaryExtended,
     ListExtended,
     ListOfStrings,
@@ -89,6 +90,7 @@ from .visitors import (
     register_visitor_class,
 )
 from .visitors.boolean_choice import BooleanChoiceVisitor
+from .visitors.ca_certificate import CACertificateVisitor
 from .visitors.cascading_single_choice import CascadingSingleChoiceVisitor
 from .visitors.catalog import CatalogVisitor
 from .visitors.comment_text_area import CommentTextAreaVisitor
@@ -146,6 +148,7 @@ def register_form_specs() -> None:
     register_visitor_class(BooleanChoice, BooleanChoiceVisitor)
     register_visitor_class(MultilineText, MultilineTextVisitor)
     register_visitor_class(CommentTextArea, CommentTextAreaVisitor)
+    register_visitor_class(CACertificate, CACertificateVisitor)
     register_visitor_class(DataSize, DataSizeVisitor)
     register_visitor_class(Catalog, CatalogVisitor)
     register_visitor_class(ListExtended, ListVisitor)

@@ -25,6 +25,10 @@ from tests.system.gui.testlib.playwright.pom.setup.add_rule_periodic_discovery i
 )
 from tests.system.gui.testlib.playwright.pom.setup.cpu_load_value_levels import CPULoadValueLevels
 from tests.system.gui.testlib.playwright.pom.setup.diskstat_value_levels import DiskstatValueLevels
+from tests.system.gui.testlib.playwright.pom.setup.global_settings import (
+    GlobalSettings,
+    SettingEditor,
+)
 from tests.system.gui.testlib.playwright.pom.setup.host_effective_parameters import (
     HostEffectiveParameters,
 )
@@ -39,7 +43,7 @@ from tests.system.gui.testlib.playwright.pom.setup.predictive_level_helpers impo
 from tests.system.gui.testlib.playwright.pom.setup.ruleset import Ruleset
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils2 import is_cleanup_enabled, makedirs
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 
@@ -156,11 +160,9 @@ def fixture_restore_site_state(test_site: Site) -> Iterator[None]:
         yield
 
 
+@pytest.mark.usefixtures("restore_site_state")
 def test_create_rules(
-    test_site: Site,
-    dashboard_page: MainDashboard,
-    pytestconfig: pytest.Config,
-    restore_site_state: None,
+    test_site: Site, dashboard_page: MainDashboard, pytestconfig: pytest.Config
 ) -> None:
     with (
         _write_rules_to_disk(test_site)
@@ -175,23 +177,15 @@ def test_create_rules(
             ),
             navigate=True,
         )
-        dashboard_page.main_area.locator().get_by_role(role="button", name="Add new entry").click()
+        editor = SettingEditor(dashboard_page.page, GlobalSettings.editor_title)
+        editor.wait_until_loaded()
+        editor.container.get_by_role(role="button", name="Add new entry").click()
 
-        # Locator corresponding to (added) elements for 'current settings'.
-        current_setting = (
-            dashboard_page.main_area.locator()
-            .get_by_role("row")
-            .filter(has=dashboard_page.main_area.locator().get_by_title("Current setting"))
-            .locator("td[class='content']")
-        )
-
-        current_setting.get_by_role("textbox").fill("test")
-        current_setting.get_by_role("link", name="Choose another Icon").click()
-        current_setting.get_by_role("link", name="Built-in").click()
-        current_setting.get_by_title("2fa", exact=True).first.click()
-        dashboard_page.click_and_wait(
-            dashboard_page.main_area.get_suggestion("Save"), navigate=True
-        )
+        editor.container.get_by_role("textbox", name="ID").fill("test")
+        editor.container.get_by_role("link", name="Choose another Icon").click()
+        editor.container.get_by_role("link", name="Built-in").click()
+        editor.container.get_by_title("2fa", exact=True).first.click()
+        editor.save()
 
         existing_rules = {
             ruleset_title: len(test_site.openapi.rules.get_all(ruleset.get("id", "")))
@@ -260,6 +254,7 @@ def test_periodic_service_discovery_rule(
     ruleset_page = Ruleset(
         add_periodic_service_discovery_page.page,
         "Periodic service discovery",
+        add_periodic_service_discovery_page.varname,
         navigate_to_page=False,
     )
     ruleset_page.main_area.check_success(ruleset_page.created_new_rule_message)
@@ -289,7 +284,9 @@ def test_periodic_service_discovery_rule(
     ), "Unexpected service discovery period after adding a new rule"
 
     logger.info("Delete the new rule")
-    ruleset_page = Ruleset(effective_parameters_page.page, "Periodic service discovery")
+    ruleset_page = Ruleset(
+        effective_parameters_page.page, "Periodic service discovery", "periodic_discovery"
+    )
     ruleset_page.delete_icon(rule_description).click()
     ruleset_page.delete_button.click()
 
@@ -319,6 +316,7 @@ def test_use_default_periodic_service_discovery_rule(
     ruleset_page = Ruleset(
         dashboard_page.page,
         "Periodic service discovery",
+        "periodic_discovery",
     )
     rules_count = ruleset_page.rule_rows.count()
     assert rules_count == 1, "Unexpected number of rules in the table"
@@ -359,7 +357,10 @@ def test_predictive_levels_with_default_values(
         is_rule_added = True
 
         service_rules_page = Ruleset(
-            dashboard_page.page, disk_io_levels_page.rule_name, navigate_to_page=False
+            dashboard_page.page,
+            disk_io_levels_page.rule_name,
+            disk_io_levels_page.varname,
+            navigate_to_page=False,
         )
         service_rules_page.main_area.check_success(service_rules_page.created_new_rule_message)
         assert service_rules_page.rule_rows.count() == 1, "Unexpected number of rules in the table"
@@ -388,8 +389,7 @@ def test_predictive_levels_with_default_values(
             service_rules_page = Ruleset(
                 dashboard_page.page,
                 disk_io_levels_page.rule_name,
-                disk_io_levels_page.section_name,
-                exact_rule=True,
+                disk_io_levels_page.varname,
             )
             service_rules_page.delete_rule(rule_id=0)
             service_rules_page.activate_changes(test_site)
@@ -446,7 +446,10 @@ def test_predictive_levels_with_custom_values(
         is_rule_added = True
 
         service_rules_page = Ruleset(
-            dashboard_page.page, cpu_load_page.rule_name, navigate_to_page=False
+            dashboard_page.page,
+            cpu_load_page.rule_name,
+            cpu_load_page.varname,
+            navigate_to_page=False,
         )
         service_rules_page.main_area.check_success(service_rules_page.created_new_rule_message)
         assert service_rules_page.rule_rows.count() == 1, "Unexpected number of rules in the table"
@@ -479,8 +482,7 @@ def test_predictive_levels_with_custom_values(
             service_rules_page = Ruleset(
                 dashboard_page.page,
                 cpu_load_page.rule_name,
-                cpu_load_page.section_name,
-                exact_rule=True,
+                cpu_load_page.varname,
             )
             service_rules_page.delete_rule(rule_id=0)
             service_rules_page.activate_changes(test_site)

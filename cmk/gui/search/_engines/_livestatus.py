@@ -6,7 +6,7 @@
 import abc
 import itertools
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from enum import Enum, unique
 from typing import override, Protocol
@@ -19,15 +19,7 @@ from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment, main_menu_registry
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import (
-    HTTPVariables,
-    Row,
-    Rows,
-    SearchQuery,
-    SearchResult,
-    SearchResultsByTopic,
-    ViewName,
-)
+from cmk.gui.type_defs import Row, Rows, SearchQuery, SearchResult, SearchResultsByTopic, ViewName
 from cmk.gui.utils.labels import (
     encode_labels_for_livestatus,
     filter_http_vars_for_simple_label_group,
@@ -40,7 +32,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.livestatus_client.expressions import LqSafe
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.shared_typing.unified_search import ProviderName, UnifiedSearchResultItem
-from cmk.web.utils.urls import makeuri
+from cmk.web.utils.urls import HTTPVariable, makeuri
 
 from ..matchers import ABCMatchPlugin, match_plugin_registry, MatchPluginRegistry
 from ._helpers import transform_legacy_results_to_unified
@@ -60,7 +52,7 @@ LivestatusTable = str
 LivestatusColumn = str
 LivestatusFilterHeaders = str
 UsedFilters = dict[str, list[str]]
-Matches = tuple[str, HTTPVariables] | None
+Matches = tuple[str, list[HTTPVariable]] | None
 
 
 @dataclass
@@ -99,11 +91,11 @@ class IncorrectLabelInputError(MKUserError):
 
 
 class UrlBuilder(Protocol):
-    def __call__(self, addvars: HTTPVariables) -> str: ...
+    def __call__(self, addvars: Sequence[HTTPVariable]) -> str: ...
 
 
 def get_url_builder(request: Request) -> UrlBuilder:
-    def build_url(addvars: HTTPVariables) -> str:
+    def build_url(addvars: Sequence[HTTPVariable]) -> str:
         return makeuri(
             request=request,
             addvars=addvars,
@@ -148,7 +140,7 @@ class ABCQuicksearchConductor(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_search_url_params(self) -> HTTPVariables:
+    def get_search_url_params(self) -> list[HTTPVariable]:
         """Returns the HTTP variables to link to to show the results on a content page"""
         raise NotImplementedError
 
@@ -163,7 +155,7 @@ class ABCQuicksearchConductor(abc.ABC):
         shortname = list(self._used_filters.keys())[0]
         return self._get_plugin_with_shortname(shortname).get_match_topic()
 
-    def _get_plugin_with_shortname(self, name: str) -> "ABCMatchPlugin":
+    def _get_plugin_with_shortname(self, name: str) -> ABCMatchPlugin:
         try:
             return match_plugin_registry[name]
         except KeyError:
@@ -215,7 +207,7 @@ class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
         return len(self._results) > self._row_limit
 
     @override
-    def get_search_url_params(self) -> HTTPVariables:
+    def get_search_url_params(self) -> list[HTTPVariable]:
         """Returns the HTTP variables to link to to show the results on a content page"""
         raise NotImplementedError  # TODO: Implement this
 
@@ -331,7 +323,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
         command_with_limit = "Cache: reload\nLimit: %d\nColumnHeaders: off" % (self._row_limit + 1)
         self._livestatus_command += command_with_limit
 
-    def _get_used_search_plugins(self) -> list["ABCLivestatusMatchPlugin"]:
+    def _get_used_search_plugins(self) -> list[ABCLivestatusMatchPlugin]:
         return [
             plugin
             for plugin in match_plugin_registry.values()
@@ -380,11 +372,11 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
         }.get(self.livestatus_table, [])  # TODO: Is the default correct/necessary?
 
     @override
-    def get_search_url_params(self) -> HTTPVariables:
+    def get_search_url_params(self) -> list[HTTPVariable]:
         exact_match = self.num_rows() == 1
         target_view = self._get_target_view(exact_match=exact_match)
 
-        url_params: HTTPVariables = [
+        url_params: list[HTTPVariable] = [
             ("view_name", target_view),
             ("filled_in", "filter"),
             ("_show_filter_form", "0"),
@@ -428,7 +420,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
         # Feed each row to the filters and let them add additional text/url infos
         for row in self._rows:
             text_tokens: list[tuple[str, str]] = []
-            url_params: HTTPVariables = []
+            url_params: list[HTTPVariable] = []
             skip_site = False
             for name in self._used_filters:
                 plugin = self._get_plugin_with_shortname(name)
@@ -446,7 +438,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
                 url_params.extend(url_filters)
                 text_tokens.append((plugin.name, text))
 
-            url_tokens: HTTPVariables = []
+            url_tokens: list[HTTPVariable] = []
             url_tokens.append(("view_name", target_view))
             url_tokens += url_params
 
@@ -990,7 +982,7 @@ class ServiceStateMatchPlugin(ABCLivestatusMatchPlugin):
         state_filters = (self._get_service_states_from_filter(entry) for entry in raw_used_filters)
         combined_unique_states = sorted(set(itertools.chain.from_iterable(state_filters)))
 
-        url_infos: HTTPVariables = [(f"st{state}", "on") for state in combined_unique_states]
+        url_infos: list[HTTPVariable] = [(f"st{state}", "on") for state in combined_unique_states]
 
         # add support for clicking on an individual filtered service.
         service_field = row["description"] if row else ""
@@ -1164,7 +1156,7 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
             assert hostname is not None  # TODO: Why is this the case? Needed for correct typing.
             return hostname, [(filter_name, hostname)]
 
-        url_infos: HTTPVariables = []
+        url_infos: list[HTTPVariable] = []
         hosttag_to_group_dict = self._get_hosttag_dict()
         auxtag_to_group_dict = self._get_auxtag_dict()
 
@@ -1192,6 +1184,88 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
                 url_infos.append(("host_auxtags_%d" % idx, tag_key))
 
         return "", url_infos
+
+
+class FolderMatchPlugin(ABCLivestatusMatchPlugin):
+    def __init__(self, livestatus_table: LivestatusTable, name: str) -> None:
+        super().__init__(
+            ["hosts", "services"] if livestatus_table == "hosts" else ["services"],
+            livestatus_table,
+            name,
+        )
+        self._supported_views = {"host", "searchhost", "allservices", "searchsvc"}
+
+    @override
+    def get_match_topic(self) -> str:
+        if self._preferred_livestatus_table == "hosts":
+            return _("Host folder")
+        return _("Service folder")
+
+    @override
+    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:
+        return ["filename"] if livestatus_table == "hosts" else ["host_filename"]
+
+    @override
+    def get_livestatus_filters(
+        self, livestatus_table: LivestatusTable, used_filters: UsedFilters
+    ) -> LivestatusFilterHeaders:
+        column = self.get_livestatus_columns(livestatus_table)[0]
+        filter_lines = [
+            f"Filter: {column} ~~ ^/wato/{LqSafe.sanitize(self._to_regex(entry))}[^/]*/"
+            for entry in self._entries(used_filters)
+        ]
+
+        if len(filter_lines) > 1:
+            filter_lines.append("Or: %d" % len(filter_lines))
+
+        return "\n".join(filter_lines)
+
+    @override
+    def get_matches(
+        self,
+        for_view: ViewName,
+        row: Row | None,
+        livestatus_table: LivestatusTable,
+        used_filters: UsedFilters,
+        rows: Rows,
+    ) -> Matches:
+        if for_view not in self._supported_views:
+            return None
+
+        if row:
+            if for_view == "host":
+                hostname = row["name"]
+                return hostname, [("host", hostname)]
+            return self._folder_of(row, livestatus_table), [
+                ("host", row["host_name"]),
+                ("service", row["description"]),
+            ]
+
+        if not (entries := self._entries(used_filters)):
+            return None
+        folder_pattern = self._folder_pattern(entries)
+        return folder_pattern, [("wato_folder", f"{folder_pattern}*")]
+
+    def _entries(self, used_filters: UsedFilters) -> list[str]:
+        return [entry for entry in (e.strip("/") for e in used_filters.get(self.name, [])) if entry]
+
+    @staticmethod
+    def _to_regex(entry: str) -> str:
+        return re.escape(entry).replace(r"\*", ".*")
+
+    @staticmethod
+    def _to_view_folder(entry: str) -> str:
+        return re.escape(entry).replace(r"\.", ".").replace(r"\*", "*")
+
+    def _folder_of(self, row: Row, livestatus_table: LivestatusTable) -> str:
+        path: str = row[self.get_livestatus_columns(livestatus_table)[0]]
+        return path.removeprefix("/wato/").rpartition("/")[0]
+
+    def _folder_pattern(self, entries: list[str]) -> str:
+        view_folders = [self._to_view_folder(entry) for entry in entries]
+        if len(view_folders) == 1:
+            return view_folders[0]
+        return "(%s)" % "|".join(view_folders)
 
 
 class ABCLabelMatchPlugin(ABCLivestatusMatchPlugin):
@@ -1328,6 +1402,8 @@ def register(match_plugin_registry: MatchPluginRegistry) -> None:
     match_plugin_registry.register(HostMatchPlugin(livestatus_field="alias", name="al"))
     match_plugin_registry.register(HostMatchPlugin(livestatus_field="address", name="ad"))
     match_plugin_registry.register(HosttagMatchPlugin())
+    match_plugin_registry.register(FolderMatchPlugin(livestatus_table="hosts", name="hf"))
+    match_plugin_registry.register(FolderMatchPlugin(livestatus_table="services", name="sf"))
     match_plugin_registry.register(HostLabelMatchPlugin())
     match_plugin_registry.register(ServiceLabelMatchPlugin())
     match_plugin_registry.register(MonitorMenuMatchPlugin())

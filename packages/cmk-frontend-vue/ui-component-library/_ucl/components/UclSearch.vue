@@ -8,10 +8,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import { computed, ref, watch } from 'vue'
 
-import { type NavItem, type NavPage, useNavigation } from '../composables/useNavigation'
+import { useNavigation } from '../composables/useNavigation'
 import UclNavPage from './UclNavPage.vue'
 
-const { navTrees } = useNavigation()
+const { allPages } = useNavigation()
 
 const isSearching = defineModel<boolean>('isSearching', { default: false })
 
@@ -20,20 +20,6 @@ const searchQuery = ref('')
 function clearSearch() {
   searchQuery.value = ''
 }
-
-function collectPages(items: NavItem[]): NavPage[] {
-  const pages: NavPage[] = []
-  for (const item of items) {
-    if (item.type === 'page') {
-      pages.push(item)
-    } else {
-      pages.push(...collectPages(item.children))
-    }
-  }
-  return pages
-}
-
-const allPages = navTrees.flatMap((tree) => collectPages(tree.children))
 
 const searchResults = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()

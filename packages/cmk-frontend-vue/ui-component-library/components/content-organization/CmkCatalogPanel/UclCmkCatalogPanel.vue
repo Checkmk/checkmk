@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 
 import codeExample from './UclCmkCatalogPanelCodeExample.vue?raw'
 
@@ -32,13 +32,19 @@ export const panelConfig = {
   variant: {
     type: 'list' as const,
     title: 'Variant',
-    options: [
-      { title: 'Default', name: 'default' },
-      { title: 'Padded', name: 'padded' }
-    ] satisfies Options<CatalogPanelVariant>[],
+    options: listOptions<CatalogPanelVariant>({
+      default: 'Default',
+      padded: 'Padded'
+    }),
     initialState: 'default' as CatalogPanelVariant
   },
-  open: { type: 'boolean' as const, title: 'Open', initialState: true }
+  open: { type: 'boolean' as const, title: 'Open', initialState: true },
+  collapsible: {
+    type: 'boolean' as const,
+    title: 'Collapsible',
+    initialState: true,
+    help: 'When disabled the header loses its arrow and the content stays open.'
+  }
 } satisfies PanelConfigFor<typeof CmkCatalogPanel>
 </script>
 
@@ -72,6 +78,7 @@ const propState = new PanelStateCreator<typeof CmkCatalogPanel>().createRef(pane
         :title="propState.title"
         :variant="propState.variant ?? 'default'"
         :open="propState.open"
+        :collapsible="propState.collapsible"
       >
         This is the collapsible content inside the panel.
       </CmkCatalogPanel>

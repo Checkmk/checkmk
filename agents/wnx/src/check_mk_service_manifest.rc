@@ -1,0 +1,7 @@
+// Embeds ..\check_mk.manifest (requestedExecutionLevel asInvoker + the
+// supportedOS GUIDs) as an application manifest. Resource ID 1 is
+// CREATEPROCESS_MANIFEST_RESOURCE_ID, type 24 is RT_MANIFEST. Kept in its own
+// .rc so the shared check_mk_service.rc stays free of RT_MANIFEST: the MSBuild
+// build embeds the very same manifest through the vcxproj <Manifest> tool, and
+// a second copy there would trip CVT1100 (duplicate resource).
+1 24 "check_mk.manifest"

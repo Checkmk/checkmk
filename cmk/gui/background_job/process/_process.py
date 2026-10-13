@@ -9,8 +9,6 @@
 
 This must not be imported from anywhere outside of the background job process."""
 
-from __future__ import annotations
-
 import logging
 import os
 import threading
@@ -18,7 +16,7 @@ import time
 from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager as ContextManager
 from contextlib import contextmanager, nullcontext
-from logging import Formatter, Logger, StreamHandler
+from logging import Logger, StreamHandler
 from pathlib import Path
 from typing import IO, override
 
@@ -26,6 +24,7 @@ from setproctitle import setthreadtitle
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKTerminate
+from cmk.ccc.log import CMKFormatter
 from cmk.ccc.user import UserId
 from cmk.ccc.version import edition
 from cmk.gui import log
@@ -204,7 +203,7 @@ def _execute_function(
         target.callable(job_interface, target.args)
     except MKTerminate:
         raise
-    except (BackgroundJobTimedOut, BackgroundJobFailure):
+    except BackgroundJobTimedOut, BackgroundJobFailure:
         raise
     except Exception as e:
         crash = create_gui_crash_report()
@@ -238,7 +237,7 @@ def _progress_update_handler(progress_update: IO[str]) -> StreamHandler:
     in stdout (which results in job progress info)"""
     handler = StreamHandler(stream=progress_update)
     handler.addFilter(ThreadLogFilter(threading.current_thread().name))
-    handler.setFormatter(Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"))
+    handler.setFormatter(CMKFormatter(with_process=True))
     return handler
 
 

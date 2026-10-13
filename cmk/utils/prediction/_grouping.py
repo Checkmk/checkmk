@@ -12,6 +12,15 @@ Timegroup = NewType("Timegroup", str)
 
 PeriodName = Literal["wday", "day", "hour", "minute"]
 
+
+def parse_period_name(name: str) -> PeriodName | None:
+    match name:
+        case "wday" | "day" | "hour" | "minute":
+            return name
+        case _:
+            return None
+
+
 _WEEKDAYS = [
     "monday",
     "tuesday",
@@ -26,16 +35,6 @@ _WEEKDAYS = [
 class PeriodInfo(NamedTuple):
     slice: int
     groupby: Callable[[int], tuple[Timegroup, int]]
-
-
-def is_dst(timestamp: float) -> bool:
-    """Check wether a certain time stamp lies with in daylight saving time (DST)"""
-    return bool(time.localtime(timestamp).tm_isdst)
-
-
-def timezone_at(timestamp: float) -> int:
-    """Returns the timezone *including* DST shift at a certain point of time"""
-    return time.altzone if is_dst(timestamp) else time.timezone
 
 
 def _second_of_hour(t: time.struct_time) -> int:
@@ -113,7 +112,7 @@ def time_slices(
     ]
 
 
-@dataclass
+@dataclass(frozen=True)
 class Slice:
     group: Timegroup
     """Name of the group, like 'monday' or '12'"""

@@ -852,7 +852,7 @@ def _add_command(
 
 
 def set_up_logging(verbosity: int) -> None:
-    logging.basicConfig(
+    logging.basicConfig(  # astrein: disable=logging-formatter
         format="%(levelname)s: %(message)s" if verbosity else "%(message)s",
         level={0: logging.WARNING, 1: logging.INFO}.get(verbosity, logging.DEBUG),
     )

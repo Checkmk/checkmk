@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 """mk_logwatch
@@ -131,7 +130,7 @@ def ensure_text_type(s, encoding="utf-8", errors="strict"):
 
 def escaped(char):
     # type: (int) -> str
-    return ensure_text_type("\\x{:02x}".format(char))
+    return ensure_text_type("\\x{:02x}".format(char))  # noqa: UP032  # PEP 498 (Literal String Interpolation) is a Python 3.6 feature
 
 
 if PY_GE_35:
@@ -418,7 +417,7 @@ class State:
         # type: (str) -> dict[str, Any]
         try:
             return ast.literal_eval(line)
-        except (NameError, SyntaxError, ValueError):
+        except (NameError, SyntaxError, ValueError):  # fmt: skip
             # Support status files with the following structure:
             # /var/log/messages|7767698|32455445
             # These were used prior to to 1.7.0i1
@@ -981,7 +980,7 @@ def _compile_continuation_pattern(raw_pattern):
     # type: (str) -> int | re.Pattern
     try:
         return int(raw_pattern)
-    except (ValueError, TypeError):
+    except (ValueError, TypeError):  # fmt: skip
         return re.compile(_search_optimize_raw_pattern(raw_pattern), re.UNICODE)
 
 
@@ -1291,10 +1290,10 @@ def main(argv=None):
         output = itertools.chain(
             output,
             [
-                header,
+                header,  # type: ignore[possibly-undefined]
                 "BATCH: %s\n" % batch_id,
             ],
-            filtered_log_lines,
+            filtered_log_lines,  # type: ignore[possibly-undefined]
         )
 
     process_batches(

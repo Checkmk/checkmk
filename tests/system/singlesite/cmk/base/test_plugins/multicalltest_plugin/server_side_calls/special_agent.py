@@ -17,7 +17,8 @@ from cmk.server_side_calls.v1 import (
 
 
 def _agent_arguments(
-    params: Mapping[str, object], host_config: HostConfig
+    params: Mapping[str, object],  # noqa: ARG001
+    host_config: HostConfig,  # noqa: ARG001
 ) -> Iterator[SpecialAgentCommand]:
     yield SpecialAgentCommand(command_arguments=["--id", "one"])
     yield SpecialAgentCommand(command_arguments=["--id", "two"])

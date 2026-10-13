@@ -58,6 +58,10 @@ pub trait Get {
     fn get_pathbuf(&self, key: &str) -> Option<PathBuf>;
     fn get_string_vector(&self, key: &str, default: &[&str]) -> Vec<String>;
 
+    /// Returns `None` when the key is absent, so an absent list can be
+    /// detected: to inherit a default instead of overriding it with `[]`.
+    fn get_optional_string_vector(&self, key: &str) -> Option<Vec<String>>;
+
     fn get_yaml_vector(&self, key: &str) -> Vec<Yaml>;
 
     fn get_bool(&self, key: &str, default: bool) -> bool {
@@ -119,6 +123,14 @@ impl Get for Yaml {
         } else {
             log::error!("Bad value in {key} {:?} (expected vector)", value);
             vec![]
+        }
+    }
+
+    fn get_optional_string_vector(&self, key: &str) -> Option<Vec<String>> {
+        if self[key].is_badvalue() {
+            None
+        } else {
+            Some(self.get_string_vector(key, &[]))
         }
     }
 
@@ -237,5 +249,24 @@ vector:
         .unwrap();
         let z = yaml[0].get_string_vector("bad", &["1", "", "2"]);
         assert_eq!(z, ["aa", "bb"]);
+    }
+
+    #[test]
+    fn test_get_opt_string_vector() {
+        // Absent key -> None, so a caller can inherit a default instead of overriding.
+        let yaml = load_from_str("some: 1").unwrap();
+        assert_eq!(yaml[0].get_optional_string_vector("bad"), None);
+        // Present list -> Some(parsed).
+        let yaml = load_from_str("bad: [a, '3']").unwrap();
+        assert_eq!(
+            yaml[0].get_optional_string_vector("bad"),
+            Some(vec!["a".to_string(), "3".to_string()])
+        );
+        // Present but empty -> Some(empty): an explicit override, distinct from absent.
+        let yaml = load_from_str("bad: []").unwrap();
+        assert_eq!(
+            yaml[0].get_optional_string_vector("bad"),
+            Some(Vec::<String>::new())
+        );
     }
 }

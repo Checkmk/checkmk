@@ -1,0 +1,9 @@
+{
+  "integrity": "sha256-Bl8sF5O2XyhHHA9xt88SCnBk8o0cRLB8q/SewOl/H8g=",
+  "strip_prefix": "lcab-1.0b12",
+  "url": "http://archlinux.c3sl.ufpr.br/other/lcab/lcab-1.0b12.tar.gz",
+  "overlay": {
+    "BUILD.bazel": "sha256-UjtQ09Ub/KyFktz9LB3FdYLaux3iQeEaz9uwNe091v0=",
+    "MODULE.bazel": "sha256-tqhILoN2LwS3dsKBiTC5qs0lwBgcUjeJ0B2zvh1y3d8="
+  }
+}

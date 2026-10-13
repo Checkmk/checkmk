@@ -22,8 +22,8 @@ from typing import Any, NotRequired, TypedDict
 
 import requests
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import (
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
+from cmk.server_side_programs.v1 import (
     HostnameValidationAdapter,
     report_agent_crashes,
     vcrtrace,
@@ -130,7 +130,9 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
 
 
 def fetch_ha(
-    session_manager: SessionManager, base_url_v2: str, hosts_obj: dict[str, Any]
+    session_manager: SessionManager,
+    base_url_v2: str,
+    hosts_obj: dict[str, Any],  # noqa: ARG001
 ) -> dict[str, Any]:
     try:
         return session_manager.get(f"{base_url_v2}/ha")

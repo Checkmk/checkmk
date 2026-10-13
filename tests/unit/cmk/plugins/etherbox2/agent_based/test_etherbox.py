@@ -2,6 +2,7 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
@@ -190,7 +191,8 @@ def test_check_humidity() -> None:
     }
 
 
-def test_check_temp(empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_temp() -> None:
     section = etherbox.etherbox_convert(
         [
             [["0"]],

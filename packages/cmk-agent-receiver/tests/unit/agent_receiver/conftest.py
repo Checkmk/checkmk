@@ -20,7 +20,7 @@ from cmk.agent_receiver.main import main_app
 from cmk.testlib.agent_receiver.certs import set_up_site_certs
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_umask() -> Iterator[None]:
     """Ensure the unit tests always use the same umask"""
     old_mask = os.umask(0o0007)
@@ -38,7 +38,7 @@ def site_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("OMD_SITE", site_id)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def setup_site_context(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     site_env(monkeypatch, tmp_path)
     get_config.cache_clear()
@@ -49,7 +49,7 @@ def setup_site_context(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     set_up_site_certs(config=config)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def mock_controller_certificate_settings(mocker: MockerFixture) -> None:
     mocker.patch("cmk.agent_receiver.agent_receiver.endpoints.internal_credentials")
     mocker.patch(

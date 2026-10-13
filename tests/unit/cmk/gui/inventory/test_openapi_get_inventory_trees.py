@@ -5,14 +5,16 @@
 
 import urllib.parse
 from collections.abc import Mapping
-from pathlib import Path
+from http import HTTPStatus
+
+import pytest
 
 import cmk.ccc.store
 import cmk.utils.paths
 from cmk.gui.http import HTTPMethod
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.gui.web_test_app import WebTestAppForCMK, WebTestAppRequestHandler
-from tests.testlib.rest_api_client import RequestHandler, Response, RestApiException
+from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK, WebTestAppRequestHandler
+from tests.testlib.unit.rest_api_client import RequestHandler, Response, RestApiException
 
 JSON_HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
 
@@ -67,10 +69,9 @@ class _InventoryClient:
         )
 
 
+@pytest.mark.usefixtures("tmp_path")
 def test_openapi_get_inventory_trees(
-    tmp_path: Path,
-    mock_livestatus: MockLiveStatusConnection,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection, aut_user_auth_wsgi_app: WebTestAppForCMK
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
     live.set_sites(["NO_SITE"])
@@ -108,7 +109,7 @@ def test_openapi_get_inventory_trees(
             WebTestAppRequestHandler(aut_user_auth_wsgi_app),
             "/NO_SITE/check_mk/api/unstable",
         ).get_all(host_names=["hostname1", "hostname2"])
-        resp.assert_status_code(200)
+        resp.assert_status_code(HTTPStatus.OK)
         assert resp.json == {
             "domainType": "inventory",
             "id": "inventory_trees",

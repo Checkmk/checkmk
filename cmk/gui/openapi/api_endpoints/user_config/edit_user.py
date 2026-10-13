@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Annotated, cast
 
 from cmk.ccc.user import UserId
@@ -68,7 +69,7 @@ def edit_user_v1(
         "remove",
     ) and is_distributed_setup_remote_site(api_context.config.sites):
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Not allowed on remote site",
             detail="Changing user credentials is not permitted on remote sites.",
         )
@@ -92,7 +93,7 @@ def edit_user_v1(
             locked_changes = user_locked_attributes.intersection(modified_attrs)
             if locked_changes:
                 raise ProblemException(
-                    status=403,
+                    status=HTTPStatus.FORBIDDEN,
                     title="Attempt to modify locked attributes set by connector",
                     detail=f"Request attempts to modify the following locked attributes: {', '.join(locked_changes)}",
                 )
@@ -110,7 +111,7 @@ def edit_user_v1(
     )
     user_spec = load_user(username)
     return ApiResponse(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         body=serialize_user(username, user_spec),
         etag=user_etag(user_spec),
     )
@@ -126,6 +127,8 @@ ENDPOINT_EDIT_USER = VersionedEndpoint(
     permissions=EndpointPermissions(required=RW_PERMISSIONS),
     doc=EndpointDoc(family=USER_CONFIG_FAMILY.name),
     versions={
-        APIVersion.V1: EndpointHandler(handler=edit_user_v1, additional_status_codes=[403]),
+        APIVersion.V1: EndpointHandler(
+            handler=edit_user_v1, additional_status_codes=[HTTPStatus.FORBIDDEN]
+        ),
     },
 )

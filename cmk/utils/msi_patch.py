@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="unreachable"
 
 import argparse
 import re
@@ -250,6 +249,6 @@ if __name__ == "__main__":
             )
             sys.exit(0 if success else 1)
         case _:
-            sys.stdout.write(f"Invalid mode '{params.mode}'\n")
+            sys.stdout.write(f"Invalid mode '{params.mode}'\n")  # type: ignore[unreachable]
 
     sys.exit(1)

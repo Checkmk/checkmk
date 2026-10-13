@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import { type SkeletonType } from 'cmk-ui-library/components/CmkSkeleton.vue'
 
 import codeExample from './UclCmkSkeletonCodeExample.vue?raw'
@@ -13,21 +13,21 @@ export const panelConfig = {
   type: {
     type: 'list' as const,
     title: 'Skeleton Type',
-    options: [
-      { title: 'Box', name: 'box' },
-      { title: 'H1', name: 'h1' },
-      { title: 'H2', name: 'h2' },
-      { title: 'H3', name: 'h3' },
-      { title: 'Text', name: 'text' },
-      { title: 'Info Text', name: 'info-text' },
-      { title: 'Icon: X-Small', name: 'icon-xsmall' },
-      { title: 'Icon: Small', name: 'icon-small' },
-      { title: 'Icon: Medium', name: 'icon-medium' },
-      { title: 'Icon: Large', name: 'icon-large' },
-      { title: 'Icon: X-Large', name: 'icon-xlarge' },
-      { title: 'Icon: XX-Large', name: 'icon-xxlarge' },
-      { title: 'Icon: XXX-Large', name: 'icon-xxxlarge' }
-    ] satisfies Options<NonNullable<SkeletonType>>[],
+    options: listOptions<NonNullable<SkeletonType>>({
+      box: 'Box',
+      h1: 'H1',
+      h2: 'H2',
+      h3: 'H3',
+      text: 'Text',
+      'info-text': 'Info Text',
+      'icon-xsmall': 'Icon: X-Small',
+      'icon-small': 'Icon: Small',
+      'icon-medium': 'Icon: Medium',
+      'icon-large': 'Icon: Large',
+      'icon-xlarge': 'Icon: X-Large',
+      'icon-xxlarge': 'Icon: XX-Large',
+      'icon-xxxlarge': 'Icon: XXX-Large'
+    }),
     initialState: 'text' as const
   },
   width: {

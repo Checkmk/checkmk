@@ -4,15 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Literal, override
 
-import cmk.ccc.plugin_registry
 import cmk.utils.render
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui import log
@@ -30,10 +27,10 @@ from cmk.gui.permissions import (
     PermissionSection,
     PermissionSectionRegistry,
 )
-from cmk.gui.type_defs import IconNames, StaticIcon
-from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeactionuri, makeuri_contextless
 
 
@@ -238,6 +235,7 @@ class JobRenderer:
         if may_stop:
             html.icon_button(
                 make_confirm_delete_link(
+                    i18n=_,
                     url=makeactionuri(
                         request, transactions.get(), [(ActionHandler.stop_job_var, job_id)]
                     ),
@@ -253,6 +251,7 @@ class JobRenderer:
         if may_delete:
             html.icon_button(
                 make_confirm_delete_link(
+                    i18n=_,
                     url=makeactionuri(
                         request, transactions.get(), [(ActionHandler.delete_job_var, job_id)]
                     ),
@@ -294,8 +293,6 @@ class JobRenderer:
             (_("Thread ID"), str(job_status.pid) or ""),
             (_("Result"), "<br>".join(loginfo["JobResult"])),
         ]:
-            if right is None:
-                continue
             html.open_tr()
             html.th(left)
             html.td(HTML.without_escaping(right))
@@ -448,24 +445,18 @@ class JobRenderer:
 
         # Progress info
         loginfo = job_status.loginfo
-        if loginfo:
-            if job_status.state == background_job.JobStatusStates.EXCEPTION:
-                html.td(
-                    HTMLWriter.render_br().join(loginfo["JobException"]), css="job_last_progress"
-                )
-            else:
-                progress_text = ""
-                if loginfo["JobProgressUpdate"]:
-                    progress_text += "%s" % loginfo["JobProgressUpdate"][-1]
-                html.td(HTML.without_escaping(progress_text), css="job_last_progress")
-
-            html.td(
-                HTML.without_escaping("<br>".join(loginfo["JobResult"])),
-                css="job_result",
-            )
+        if job_status.state == background_job.JobStatusStates.EXCEPTION:
+            html.td(HTMLWriter.render_br().join(loginfo["JobException"]), css="job_last_progress")
         else:
-            html.td("", css="job_last_progress")
-            html.td("", css="job_result")
+            progress_text = ""
+            if loginfo["JobProgressUpdate"]:
+                progress_text += "%s" % loginfo["JobProgressUpdate"][-1]
+            html.td(HTML.without_escaping(progress_text), css="job_last_progress")
+
+        html.td(
+            HTML.without_escaping("<br>".join(loginfo["JobResult"])),
+            css="job_result",
+        )
 
         html.close_tr()
 

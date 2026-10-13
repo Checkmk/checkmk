@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """F5-BIGIP-Cluster Config Sync - SNMP sections and Checks"""
 
 from collections.abc import Mapping, Sequence
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
 from cmk.agent_based.v2 import (
     all_of,
@@ -30,30 +28,32 @@ class NodeState(NamedTuple):
     description: str
 
 
-CONFIG_SYNC_DEFAULT_PARAMETERS = {
-    "0": 3,
-    "1": 0,
-    "2": 1,
-    "3": 0,
-    "4": 2,
-    "5": 2,
-    "6": 2,
-    "7": 1,
-    "8": 2,
-    "9": 2,
+# Config sync status as reported by the device, mapped to the parameter key it is
+# configured under and the name it is reported by.
+CONFIG_SYNC_STATES: Mapping[str, tuple[str, str]] = {
+    "0": ("unknown", "Unknown"),
+    "1": ("syncing", "Syncing"),
+    "2": ("need_manual_sync", "Need Manual Sync"),
+    "3": ("in_sync", "In Sync"),
+    "4": ("sync_failed", "Sync Failed"),
+    "5": ("sync_disconnected", "Sync Disconnected"),
+    "6": ("standalone", "Standalone"),
+    "7": ("awaiting_initial_sync", "Awaiting Initial Sync"),
+    "8": ("incompatible_version", "Incompatible Version"),
+    "9": ("partial_sync", "Partial Sync"),
 }
 
-CONFIG_SYNC_STATE_NAMES = {
-    "0": "Unknown",
-    "1": "Syncing",
-    "2": "Need Manual Sync",
-    "3": "In Sync",
-    "4": "Sync Failed",
-    "5": "Sync Disconnected",
-    "6": "Standalone",
-    "7": "Awaiting Initial Sync",
-    "8": "Incompatible Version",
-    "9": "Partial Sync",
+CONFIG_SYNC_DEFAULT_PARAMETERS: Mapping[str, int] = {
+    "unknown": State.UNKNOWN.value,
+    "syncing": State.OK.value,
+    "need_manual_sync": State.WARN.value,
+    "in_sync": State.OK.value,
+    "sync_failed": State.CRIT.value,
+    "sync_disconnected": State.CRIT.value,
+    "standalone": State.CRIT.value,
+    "awaiting_initial_sync": State.WARN.value,
+    "incompatible_version": State.CRIT.value,
+    "partial_sync": State.CRIT.value,
 }
 
 
@@ -133,7 +133,7 @@ def parse_f5_bigip_config_sync_v11_plus(string_table: Sequence[StringTable]) -> 
 
 
 def check_f5_bigip_config_sync_v11_plus(
-    params: Mapping[str, Any], section: NodeState
+    params: Mapping[str, int], section: NodeState
 ) -> CheckResult:
     """
     >> for r in check_f5_bigip_config_sync_v11_plus(
@@ -142,8 +142,8 @@ def check_f5_bigip_config_sync_v11_plus(
     ...     print(r)
     Result(state=<State.OK: 0>, summary='Node [node1] is standby')
     """
-    status = params[section.state]
-    status_name = CONFIG_SYNC_STATE_NAMES[section.state]
+    param_key, status_name = CONFIG_SYNC_STATES[section.state]
+    status = params.get(param_key, CONFIG_SYNC_DEFAULT_PARAMETERS[param_key])
     infotext = status_name
     if status_name != section.description:
         infotext += " - " + section.description

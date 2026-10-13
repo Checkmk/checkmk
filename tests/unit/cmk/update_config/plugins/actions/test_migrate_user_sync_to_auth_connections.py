@@ -63,11 +63,12 @@ def test_legacy_master_on_central_migrates_to_all_types() -> None:
     assert attr == "all"
 
 
-def test_legacy_master_on_remote_disables_both_fields() -> None:
-    """``"master"`` on a remote = the central syncs, the remote does not —
-    like the explicit "disabled" choice on both fields."""
+def test_legacy_master_on_remote_disables_sync_but_not_authentication() -> None:
+    """``"master"`` on a remote = the central syncs, the remote does not.
+    Only the sync half carries over; login never depended on ``user_sync``,
+    so authentication stays permissive."""
     auth, attr = _derive_new_values("master", is_central_site=False, saml_supported=True)
-    assert auth == "disabled"
+    assert auth == ("all", ["ldap"])
     assert attr == "disabled"
 
 
@@ -82,24 +83,25 @@ def test_legacy_list_migrates_to_plain_lists() -> None:
     assert attr == ["ldap_a", "ldap_b"]
 
 
-def test_legacy_empty_list_disables_both_fields() -> None:
+def test_legacy_empty_list_disables_sync_but_not_authentication() -> None:
+    """An empty explicit list is semantically the "no sync" choice."""
     auth, attr = _derive_new_values(("list", []), is_central_site=True, saml_supported=True)
-    assert auth == "disabled"
+    assert auth == ("all", ["ldap", "saml"])
     assert attr == "disabled"
 
 
-def test_legacy_none_on_central_disables_both_fields() -> None:
+def test_legacy_none_on_central_disables_sync_but_not_authentication() -> None:
     """Explicit ``user_sync = None`` was the legacy "Disable automatic user
-    synchronization" choice; both new fields mirror it as explicitly
-    disabled."""
+    synchronization" choice; it never disabled login (SAML included on the
+    central site)."""
     auth, attr = _derive_new_values(None, is_central_site=True, saml_supported=True)
-    assert auth == "disabled"
+    assert auth == ("all", ["ldap", "saml"])
     assert attr == "disabled"
 
 
-def test_legacy_none_on_remote_disables_both_fields() -> None:
+def test_legacy_none_on_remote_disables_sync_but_not_authentication() -> None:
     auth, attr = _derive_new_values(None, is_central_site=False, saml_supported=True)
-    assert auth == "disabled"
+    assert auth == ("all", ["ldap"])
     assert attr == "disabled"
 
 
@@ -127,6 +129,7 @@ def test_missing_user_sync_key_writes_both_fields_explicitly() -> None:
         ("master", True),
         ("master", False),
         (("list", ["ldap_a", "ldap_b"]), False),
+        (("list", []), True),
         (None, False),
         (_MISSING, True),
         (_MISSING, False),

@@ -111,7 +111,7 @@ def get_cluster_check_function(
 def _cluster_check(
     *,
     clusterization_parameters: Mapping[str, Any],
-    executor: "NodeCheckExecutor",
+    executor: NodeCheckExecutor,
     check_function: Callable,
     cluster_mode: ClusterMode,
     additional_nodes_label: str,

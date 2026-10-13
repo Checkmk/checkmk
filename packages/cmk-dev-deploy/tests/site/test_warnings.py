@@ -4,8 +4,6 @@
 
 """Tests for cmk.dev_deploy.warnings -- branch and edition mismatch detection."""
 
-from __future__ import annotations
-
 import subprocess
 from pathlib import Path
 

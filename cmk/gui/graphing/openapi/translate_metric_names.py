@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.site import SiteId
@@ -10,6 +11,7 @@ from cmk.graphing_engine import HostName, ServiceName
 from cmk.gui.config import active_config
 from cmk.gui.openapi.framework import (
     APIVersion,
+    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -24,8 +26,8 @@ from cmk.gui.openapi.utils import ProblemException
 from cmk.livestatus_client import MKLivestatusException
 from cmk.web.utils import permission_verification as permissions
 
-from .._engine_plugins import registered_translations
-from .._engine_source import RRDFetchMetricNameMapping
+from .._plugins import registered_translations
+from .._source import RRDFetchMetricNameMapping
 from ._family import GRAPH_FAMILY
 from .models import MetricNameMappingResponse
 
@@ -60,13 +62,13 @@ def translate_metric_names_v1(body: TranslateMetricNamesRequest) -> MetricNameMa
         )()
     except MKLivestatusException as exc:
         raise ProblemException(
-            status=503,
+            status=HTTPStatus.SERVICE_UNAVAILABLE,
             title="Monitoring data source unavailable",
             detail=str(exc),
         ) from exc
     except Exception as exc:
         raise ProblemException(
-            status=500,
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
             title="Metric name translation failed",
             detail=f"Failed to translate the metric names: {exc}",
         ) from exc
@@ -101,5 +103,6 @@ ENDPOINT_TRANSLATE_METRIC_NAMES = VersionedEndpoint(
         )
     ),
     doc=EndpointDoc(family=GRAPH_FAMILY.name),
+    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=translate_metric_names_v1)},
 )

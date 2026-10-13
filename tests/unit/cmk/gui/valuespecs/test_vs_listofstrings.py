@@ -4,10 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import pytest
+
 import cmk.gui.valuespec as vs
 from cmk.web.utils.html import HTML
 
-from .utils import expect_validate_failure, expect_validate_success, request_var
+from .utils import (
+    expect_validate_failure,
+    expect_validate_failure_untypeable,
+    expect_validate_success,
+    request_var,
+)
 
 
 class TestListOfStrings:
@@ -26,7 +33,7 @@ class TestListOfStrings:
         expect_validate_failure(
             vs.ListOfStrings(max_entries=1), ["1", "2"], match="You can specify at most 1 entries"
         )
-        expect_validate_failure(  # type: ignore[misc]
+        expect_validate_failure_untypeable(
             vs.ListOfStrings(), 123, match="Expected data type is list, but your type is int."
         )
 
@@ -38,7 +45,8 @@ class TestListOfStrings:
         assert vs.ListOfStrings().value_to_html([]) == ""
         assert vs.ListOfStrings(empty_text="smth").value_to_html([]) == "smth"
 
-    def test_from_html_vars(self, request_context: None) -> None:
+    @pytest.mark.usefixtures("request_context")
+    def test_from_html_vars(self) -> None:
         with request_var(l_0="a", l_4="b", l_9="", l_9999="z", l_smth="smth"):
             assert vs.ListOfStrings().from_html_vars("l") == ["a", "b", "z"]
 

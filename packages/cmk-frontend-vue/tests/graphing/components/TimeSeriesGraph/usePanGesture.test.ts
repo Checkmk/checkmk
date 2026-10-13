@@ -5,14 +5,15 @@
  */
 import { render } from '@testing-library/vue'
 import { scaleLinear, scaleTime } from 'd3-scale'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
 import type { TimeRange } from '@/graphing/components/TimeSeriesGraph/types'
 import { usePanGesture } from '@/graphing/components/TimeSeriesGraph/usePanGesture'
 import { useZoomGesture } from '@/graphing/components/TimeSeriesGraph/useZoomGesture'
 
-const TIME_RANGE: TimeRange = { start: 1_000, end: 2_000, step: 60 }
+// Well inside the navigable axis, so no test below pans into a bound it did not mean to.
+const TIME_RANGE: TimeRange = { start: 1_700_000_000, end: 1_700_001_000, step: 60 }
 const SPAN_SECONDS = 1_000
 const PLOT_WIDTH = 200
 const PLOT_HEIGHT = 100
@@ -132,10 +133,6 @@ function committedRange(onCommit: ReturnType<typeof mountPan>['onCommit']): Time
   expect(onCommit).toHaveBeenCalledTimes(1)
   return onCommit.mock.calls[0]![0] as TimeRange
 }
-
-beforeEach(() => {
-  vi.clearAllMocks()
-})
 
 describe('usePanGesture — the end of the navigable axis', () => {
   function rangeEndingToday(spanSeconds: number): TimeRange {

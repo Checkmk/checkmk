@@ -13,8 +13,6 @@ free, so callers can compute ``has_test`` / ``source_component`` without
 further git calls.
 """
 
-from __future__ import annotations
-
 import logging
 import re
 import subprocess

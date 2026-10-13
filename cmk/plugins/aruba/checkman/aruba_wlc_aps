@@ -1,4 +1,4 @@
-title: Aruba Networks Wireless LAN Controller (WLC): Connected WLAN Accesspoints
+title: Aruba WLAN Controller: Access Point Status
 agents: snmp
 catalog: hw/network/aruba
 license: GPLv2

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
@@ -18,7 +17,7 @@ from cmk.plugins.files.agent_based.filestats import (
 )
 
 
-def test_filestats_2_discovery():
+def test_filestats_2_discovery() -> None:
     """Test discovery of file statistics."""
     # Pattern 5d: System monitoring data (file statistics from agent)
     string_table = [
@@ -48,7 +47,7 @@ def test_filestats_2_discovery():
     assert discovery[0] == Service(item="foo")
 
 
-def test_filestats_2_check():
+def test_filestats_2_check() -> None:
     """Test file statistics check with size threshold violations."""
     # Pattern 5d: System monitoring data
     string_table = [

@@ -9,8 +9,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAgentConfig
-from cmk.server_side_calls.v1._utils import Secret
+from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
 
 
 class _IPMIToolParams(BaseModel, frozen=True):
@@ -56,8 +55,6 @@ def command_function(params: _Params, host_config: HostConfig) -> Iterable[Speci
                 _ipmitool_args(options)
                 if isinstance(options, _IPMIToolParams)
                 else _freeipmi_args(options)
-                if isinstance(options, _FreeIPMIParams)  # type: ignore[redundant-expr]
-                else ()
             ),
         ]
     )

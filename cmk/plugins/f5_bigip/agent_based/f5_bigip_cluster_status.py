@@ -10,14 +10,13 @@ from cmk.agent_based.v2 import (
     all_of,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.f5_bigip.lib import (
     F5_BIGIP,
     F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,
@@ -33,6 +32,18 @@ STATE_NAMES = {
     False: ("standby", "active 1", "active 2", "active"),
 }
 
+# The parameter key each failover status is configured under, indexed by the status code
+# the device reports. See cmk/plugins/f5_bigip/rulesets/cluster_status.py.
+V11_2_STATE_KEYS = ("unknown", "offline", "forced_offline", "standby", "active")
+
+_V11_2_DEFAULT_STATES = (
+    State.UNKNOWN.value,
+    State.CRIT.value,
+    State.CRIT.value,
+    State.OK.value,
+    State.OK.value,
+)
+
 
 def parse_f5_bigip_cluster_status(
     string_table: Sequence[StringTable],
@@ -42,10 +53,6 @@ def parse_f5_bigip_cluster_status(
     4
     """
     return int(string_table[0][0][0]) if string_table[0] else None
-
-
-def discover_f5_bigip_cluster_status(section: NodeState) -> DiscoveryResult:
-    yield Service()
 
 
 def _node_result(
@@ -60,8 +67,11 @@ def _node_result(
     >>> _node_result("", 3, False, {'type': 'active_standby'})
     Result(state=<State.OK: 0>, summary='Node is active')
     """
-    state_mapping_from_params = {int(k): v for k, v in params.get("v11_2_states", {}).items()}
-    state_mapping = {0: 3, 1: 2, 2: 2, 3: 0, 4: 0, **state_mapping_from_params}
+    configured = params.get("v11_2_states", {})
+    state_mapping = {
+        code: configured.get(key, default)
+        for code, (key, default) in enumerate(zip(V11_2_STATE_KEYS, _V11_2_DEFAULT_STATES))
+    }
     return Result(
         state=State(state_mapping[node_state] if is_gt_v11_2 else 0),
         summary="Node %sis %s"
@@ -150,7 +160,7 @@ snmp_section_f5_bigip_cluster_status = SNMPSection(
 check_plugin_f5_bigip_cluster_status = CheckPlugin(
     name="f5_bigip_cluster_status",  # name taken from pre-1.7 plug-in
     service_name="BIG-IP Cluster Status",
-    discovery_function=discover_f5_bigip_cluster_status,
+    discovery_function=discover_one_service,
     check_default_parameters=F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,
     check_ruleset_name="cluster_status",
     check_function=check_f5_bigip_cluster_status,
@@ -185,7 +195,7 @@ snmp_section_f5_bigip_cluster_status_v11_2 = SNMPSection(
 check_plugin_f5_bigip_cluster_status_v11_2 = CheckPlugin(
     name="f5_bigip_cluster_status_v11_2",  # name taken from pre-1.7 plug-in
     service_name="BIG-IP Cluster Status",
-    discovery_function=discover_f5_bigip_cluster_status,
+    discovery_function=discover_one_service,
     check_default_parameters=F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,
     check_ruleset_name="cluster_status",
     check_function=check_f5_bigip_cluster_status_v11_2,
@@ -230,7 +240,7 @@ snmp_section_f5_bigip_vcmpfailover = SNMPSection(
 check_plugin_f5_bigip_vcmpfailover = CheckPlugin(
     name="f5_bigip_vcmpfailover",  # name taken from pre-1.7 plug-in
     service_name="BIG-IP vCMP Guest Failover Status",
-    discovery_function=discover_f5_bigip_cluster_status,
+    discovery_function=discover_one_service,
     check_default_parameters=F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,
     check_ruleset_name="cluster_status",
     check_function=check_f5_bigip_cluster_status_v11_2,

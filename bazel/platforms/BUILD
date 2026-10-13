@@ -29,6 +29,14 @@ platform(
 )
 
 platform(
+    name = "x86_64-windows",
+    constraint_values = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:windows",
+    ],
+)
+
+platform(
     name = "x86_64-windows-msvc",
     constraint_values = [
         ":msvc",
@@ -97,7 +105,7 @@ constraint_value(
     visibility = ["//visibility:public"],
 )
 
-# Config setting using the same constraint_value (hermetic) as Bootlin GCC toolchain
+# Config setting using the same constraint_value (hermetic) as //bazel/toolchains/cc/gcc/hermetic
 # This allows select() statements to detect when hermetic platform is active
 config_setting(
     name = "is_hermetic",

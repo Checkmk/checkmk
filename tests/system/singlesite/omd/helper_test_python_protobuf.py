@@ -17,4 +17,4 @@ serialized = address_book.SerializeToString()
 
 address_book2 = test_pb2.AddressBook()
 address_book2.ParseFromString(serialized)
-print(len(address_book.people))
+print(len(address_book.people))  # noqa: T201  # It's OK for test/script helpers to print()

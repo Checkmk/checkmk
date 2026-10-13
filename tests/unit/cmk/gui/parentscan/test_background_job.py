@@ -2,6 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import pathlib
 import shutil
 from collections.abc import Iterator
@@ -16,6 +19,7 @@ from cmk.automations.results import Gateway, GatewayResult, ScanParentsResult
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.parentscan.background_job import (
     ParentScanBackgroundJob,
@@ -111,6 +115,9 @@ def test_scan_parents_job(
                 is_trusted=False,
             )
         },
+        wato_hide_folders_without_read_permissions=False,
+        wato_host_attrs=[],
+        tags=active_config.tags.get_dict_format(),
         pprint_value=False,
         debug=False,
         use_git=False,

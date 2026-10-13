@@ -480,7 +480,7 @@ def worst_service_state(*states: int, default: int) -> int:
 
 ### Automatic formatting with ruff
 
-The `ruff` configuration file(s), `pyproject.toml`, live in the corresponding directories of the project repository, where `ruff` will pick it up automatically.
+The `ruff` configuration lives in the `pyproject.toml` at the repository root — the single Python tool configuration file for the whole repository.
 `ruff` itself lives in a virtualenv managed by bazel/uv in `check_mk/.venv`.
 To format files, use `bazel run //:format <FILES>`. To check formatting without
 modifying files, use `bazel run //:format.check <FILES>`.
@@ -488,9 +488,6 @@ modifying files, use `bazel run //:format.check <FILES>`.
 Formatting adjusts layout only — it does not sort Python imports. Import sorting
 is handled by linting: run `bazel lint --fix` after formatting if you need
 imports sorted.
-
-_NOTE_: You will also find other `pyproject.toml` files in our codebase (at the time of writing, e.g. under `packges/cmk-*`).
-Those are individual project settings for our own python packages and may differ from the top-level `pyproject.toml`.
 
 #### Manual ruff formatting invocation: Single file
 

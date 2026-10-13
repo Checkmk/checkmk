@@ -199,7 +199,7 @@ check_plugin_ovs_bonding = CheckPlugin(
 )
 
 
-def never_discover(section: bonding.Section) -> DiscoveryResult:
+def never_discover(section: bonding.Section) -> DiscoveryResult:  # noqa: ARG001
     yield from ()
 
 

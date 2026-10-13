@@ -4,15 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
-import logging
 from pathlib import Path
 
 import pytest
 
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.snmp_backend_builder import make_backend
+from cmk.checkengine.snmp_backend_builder import BackendError, make_backend
 from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
-from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.checkengine.snmplib import SNMPBackendEnum, SNMPHostConfig, SNMPVersion
 
 
@@ -43,27 +41,8 @@ def test_factory_snmp_backend_classic(snmp_config: SNMPHostConfig) -> None:
     )
 
 
-def test_factory_snmp_backend_inline_unavailable(
-    snmp_config: SNMPHostConfig,
-    monkeypatch: pytest.MonkeyPatch,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    import cmk.checkengine.snmp_backend_builder as snmp_backend_module
-
-    monkeypatch.setattr(
-        snmp_backend_module,
-        "discover_backends",
-        lambda: {
-            SNMPBackendEnum.CLASSIC: ClassicSNMPBackend,
-            SNMPBackendEnum.STORED_WALK: StoredWalkSNMPBackend,
-        },
-    )
+def test_factory_snmp_backend_inline_unavailable(snmp_config: SNMPHostConfig) -> None:
+    # this package does not ship the inline backend
     snmp_config = dataclasses.replace(snmp_config, snmp_backend=SNMPBackendEnum.INLINE)
-    logger = logging.getLogger()
-    with caplog.at_level(logging.ERROR, logger=logger.name):
-        backend = make_backend(snmp_config)
-    assert isinstance(backend, ClassicSNMPBackend)
-    assert any(
-        record.levelno == logging.ERROR and "Unknown SNMP backend" in record.getMessage()
-        for record in caplog.records
-    )
+    with pytest.raises(BackendError, match="'Inline' SNMP backend is not available"):
+        make_backend(snmp_config)

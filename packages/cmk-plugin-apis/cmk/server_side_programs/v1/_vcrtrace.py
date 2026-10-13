@@ -1,0 +1,129 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import argparse
+import atexit
+import sys
+from collections.abc import Callable, Iterable, Sequence
+from pathlib import Path
+from typing import override
+
+_ALLOWDIR = "tmp/check_mk/debug"
+
+
+def _check_path(filename: str) -> None:
+    """make sure we are only writing/reading traces from tmp/debug"""
+
+    p = Path(filename).resolve()
+    allowed_path = (Path.home() / _ALLOWDIR).resolve()
+    if not p.is_relative_to(allowed_path):
+        raise ValueError(f"Traces can only be stored in {allowed_path}")
+    if not (p_dir := p.parent).is_dir():
+        raise NotADirectoryError(f"Directory {p_dir} does not exist")
+
+
+def vcrtrace(
+    filter_body: Callable[[bytes], bytes] = lambda b: b,
+    filter_query_parameters: Sequence[tuple[str, str | None]] = (),
+    filter_headers: Sequence[tuple[str, str | None]] = (),
+    filter_post_data_parameters: Sequence[tuple[str, str | None]] = (),
+) -> type[argparse.Action]:
+    """Returns the class of an argparse.Action to enter a vcr context
+
+    Provided keyword arguments will be passed to the call of vcrpy.VCR.
+    The minimal change to use vcrtrace in your program is to add this
+    line to your argument parsing:
+
+        parser.add_argument("--vcrtrace", action=vcrtrace())
+
+    If this flag is set to a TRACEFILE, the file will be created and all requests the program
+    sends and their corresponding answers will be recorded in said file.
+    If the file already exists, responses will be replayed from the tracefile. Note that if the
+    program makes requests not covered by the tracefile, those requests will be sent to the server
+    and appended to the tracefile.
+    TRACEFILE must be a file path within the directory `~/tmp/check_mk/debug`.
+    Note that this feature is for debugging purposes only and might change in the future.
+
+    The destination attribute will be set to `True` if the option was specified, the
+    provided default otherwise.
+    """
+
+    class VcrTraceAction[T](argparse.Action):
+        def __init__(
+            self,
+            option_strings: Sequence[str],
+            dest: str,
+            nargs: int | str | None = None,
+            const: T | None = None,
+            default: T | str | None = None,
+            type: Callable[[str], T] | argparse.FileType | None = None,  # noqa: A002
+            choices: Iterable[T] | None = None,
+            required: bool = False,
+            help: str | None = None,  # noqa: A002
+            metavar: str | tuple[str, ...] | None = "TRACEFILE",
+        ):
+            help_part = "" if vcrtrace.__doc__ is None else vcrtrace.__doc__.split("\n\n")[3]
+            help = f"{help_part} {help}" if help else help_part  # noqa: A001
+
+            super().__init__(
+                option_strings=option_strings,
+                dest=dest,
+                nargs=nargs,
+                const=const,
+                default=default,
+                type=type,
+                choices=choices,
+                required=required,
+                help=help,
+                metavar=metavar,
+            )
+
+        @override
+        def __call__(
+            self,
+            parser: argparse.ArgumentParser,
+            namespace: argparse.Namespace,
+            values: str | Sequence[object] | None,
+            option_string: str | None = None,
+        ) -> None:
+            if not isinstance(filename := values, str):
+                return
+
+            if not sys.stdin.isatty():
+                raise argparse.ArgumentError(self, "You need to run this in a tty")
+
+            try:
+                _check_path(filename)
+            except ValueError as exc:
+                raise argparse.ArgumentError(self, str(exc)) from exc
+
+            replay_mode = Path(filename).exists()
+            if replay_mode:
+                sys.stderr.write(
+                    f"WARNING: VCR trace file '{filename}' present. Entering replay mode.\n"
+                )
+
+            import vcr
+            from vcr.request import Request
+
+            def before_record_request(request: Request) -> Request:
+                request.body = filter_body(request.body)
+                return request
+
+            setattr(namespace, self.dest, True)
+            use_cassette = vcr.VCR(  # type: ignore[no-untyped-call,attr-defined]
+                before_record_request=before_record_request,
+                filter_query_parameters=filter_query_parameters,
+                filter_headers=filter_headers,
+                filter_post_data_parameters=filter_post_data_parameters,
+            ).use_cassette
+            global_context = use_cassette(  # type: ignore[no-untyped-call]
+                filename,
+                record_mode="new_episodes" if replay_mode else "once",
+            )
+            atexit.register(global_context.__exit__)
+            global_context.__enter__()
+
+    return VcrTraceAction

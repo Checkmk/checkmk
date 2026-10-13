@@ -15,12 +15,12 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.utils.agent_registration import HostAgentConnectionMode
-from tests.testlib.agent import (
+from tests.testlib.system.agent import (
     controller_connection_json,
     controller_status_json,
     register_controller,
 )
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger("agent-receiver")
 

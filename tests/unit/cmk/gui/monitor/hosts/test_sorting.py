@@ -8,7 +8,13 @@ import functools
 import pytest
 from polyfactory.factories import DataclassFactory
 
-from cmk.gui.monitor.hosts._models import Host, HostSort, HostSortColumn, HostSortDirection
+from cmk.gui.monitor.hosts._models import (
+    Host,
+    HostSort,
+    HostSortColumn,
+    HostSortDirection,
+    HostState,
+)
 from cmk.gui.monitor.hosts._sorting import host_sorter, sort_naturally
 
 
@@ -53,19 +59,16 @@ def test_single_column_sorting() -> None:
 
 def test_multi_column_sorting() -> None:
     hosts = [
-        HostFactory.build(address="127.0.0.1", service_counts={"total": 5}),
-        HostFactory.build(address="127.0.0.2", service_counts={"total": 10}),
-        HostFactory.build(address="127.0.0.1", service_counts={"total": 15}),
+        HostFactory.build(address="127.0.0.1", num_services=5),
+        HostFactory.build(address="127.0.0.2", num_services=10),
+        HostFactory.build(address="127.0.0.1", num_services=15),
     ]
     sorters = [
         HostSort(column=HostSortColumn.ADDRESS, direction=HostSortDirection.ASC),
         HostSort(column=HostSortColumn.NUM_SERVICES, direction=HostSortDirection.DESC),
     ]
 
-    value = [
-        (host.address, None if host.service_counts is None else host.service_counts.total)
-        for host in sorted(hosts, key=host_sorter(sorters))
-    ]
+    value = [(host.address, host.num_services) for host in sorted(hosts, key=host_sorter(sorters))]
     expected = [
         ("127.0.0.1", 15),
         ("127.0.0.1", 5),
@@ -124,6 +127,57 @@ def test_host_sorter_site_id_column() -> None:
         "site1",
         "site2",
         "site10",
+    ]
+
+    assert value == expected
+
+
+def test_host_sorter_relation_count_column() -> None:
+    hosts = [
+        HostFactory.build(name="one", num_relations=1),
+        HostFactory.build(name="none", num_relations=0),
+        HostFactory.build(name="two", num_relations=2),
+    ]
+    sorters = [HostSort(column=HostSortColumn.NUM_RELATIONS, direction=HostSortDirection.DESC)]
+
+    value = [host.name for host in sorted(hosts, key=host_sorter(sorters))]
+
+    assert value == ["two", "one", "none"]
+
+
+_MOST_SEVERE_FIRST = [
+    (HostState.UNREACHABLE, False, False),
+    (HostState.DOWN, False, False),
+    (HostState.DOWN, True, True),
+    (HostState.DOWN, True, False),
+    (HostState.DOWN, False, True),
+    (HostState.PENDING, False, False),
+    (HostState.UP, True, True),
+    (HostState.UP, True, False),
+    (HostState.UP, False, True),
+    (HostState.UP, False, False),
+]
+
+
+@pytest.mark.parametrize(
+    "direction, expected",
+    [
+        pytest.param(HostSortDirection.DESC, _MOST_SEVERE_FIRST, id="most severe first"),
+        pytest.param(HostSortDirection.ASC, _MOST_SEVERE_FIRST[::-1], id="least severe first"),
+    ],
+)
+def test_host_sorter_state_column_orders_by_severity_including_stale_and_flapping(
+    direction: HostSortDirection, expected: list[tuple[HostState, bool, bool]]
+) -> None:
+    hosts = [
+        HostFactory.build(state=state, stale=stale, is_flapping=is_flapping)
+        for state, stale, is_flapping in sorted(_MOST_SEVERE_FIRST, key=repr)
+    ]
+    sorters = [HostSort(column=HostSortColumn.STATE, direction=direction)]
+
+    value = [
+        (host.state, host.stale, host.is_flapping)
+        for host in sorted(hosts, key=host_sorter(sorters))
     ]
 
     assert value == expected
@@ -237,28 +291,29 @@ def test_sort_naturally_sorts_numbers_correctly() -> None:
     assert value == expected
 
 
-def test_sort_naturally_sorts_folders_correctly() -> None:
-    folders = [
-        "/network",
-        "/",
+def test_sort_naturally_sorts_folder_titles_correctly() -> None:
+    """The column shows the titles Setup gives a folder, so that is what gets ordered."""
+    titles = [
+        "Netzwerk",
+        "Main",
         "",
-        "/network/switches",
-        "/orgs",
-        "/orgs/zone10",
-        "/orgs/zone2",
-        "/NETWORK",
+        "Netzwerk / Rechenzentrum 1",
+        "Standorte",
+        "Standorte / Zone 10",
+        "Standorte / Zone 2",
+        "netzwerk",
     ]
 
-    value = sorted(folders, key=functools.cmp_to_key(sort_naturally))
+    value = sorted(titles, key=functools.cmp_to_key(sort_naturally))
     expected = [
         "",
-        "/",
-        "/NETWORK",
-        "/network",
-        "/network/switches",
-        "/orgs",
-        "/orgs/zone2",
-        "/orgs/zone10",
+        "Main",
+        "Netzwerk",
+        "netzwerk",
+        "Netzwerk / Rechenzentrum 1",
+        "Standorte",
+        "Standorte / Zone 2",
+        "Standorte / Zone 10",
     ]
 
     assert value == expected

@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
+from http import HTTPStatus
 
 import pytest
 
@@ -13,8 +13,8 @@ from cmk.ccc import version
 from cmk.gui.openapi.api_endpoints.downtime.models.request_models import _with_defaulted_timezone
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils import paths
-from tests.testlib.gui.web_test_app import SetConfig
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 _is_managed_edition = version.edition(paths.omd_root) is version.Edition.ULTIMATEMT
 
@@ -220,7 +220,7 @@ def test_openapi_schedule_service_downtime_with_non_matching_query(
             start_time="2020-01-01T00:00:00Z",
             end_time="2020-01-02T00:00:00Z",
             expect_ok=False,
-        ).assert_status_code(422)
+        ).assert_status_code(HTTPStatus.UNPROCESSABLE_ENTITY)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -237,7 +237,7 @@ def test_openapi_schedule_host_downtime_with_non_matching_query(
             start_time="2020-01-01T00:00:00Z",
             end_time="2020-01-02T00:00:00Z",
             expect_ok=False,
-        ).assert_status_code(422)
+        ).assert_status_code(HTTPStatus.UNPROCESSABLE_ENTITY)
 
 
 def test_openapi_show_downtimes_with_query(
@@ -537,7 +537,7 @@ def test_openapi_create_service_downtime_with_non_matching_query(
             start_time="2020-01-01T00:00:00Z",
             end_time="2020-01-02T00:00:00Z",
             expect_ok=False,
-        ).assert_status_code(422)
+        ).assert_status_code(HTTPStatus.UNPROCESSABLE_ENTITY)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -940,7 +940,7 @@ def test_openapi_delete_downtime_non_existing_host_group(
         delete_type="hostgroup",
         host_group="non-existent",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
     assert (
         resp.json["fields"]["body.hostgroup.hostgroup_name"]["msg"]
         == "Value error, Group missing: 'non-existent'"
@@ -955,7 +955,7 @@ def test_openapi_delete_downtime_non_existing_service_group(
         delete_type="servicegroup",
         service_group="non-existent",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
     assert (
         resp.json["fields"]["body.servicegroup.servicegroup_name"]["msg"]
         == "Value error, Group missing: 'non-existent'"
@@ -977,7 +977,7 @@ def test_openapi_downtime_non_existing_instance(
             end_time="2020-01-02T00:00:00Z",
             expect_ok=False,
         )
-        resp.assert_status_code(400)
+        resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
     assert resp.json["fields"]["body.host.host_name"]["msg"] == (
         "Value error, Host 'non-existent' is not actively monitored. Is the configuration activated?"
@@ -992,7 +992,7 @@ def test_openapi_downtime_non_existing_groups(clients: ClientRegistry) -> None:
         start_time="2020-01-01T00:00:00Z",
         end_time="2020-01-02T00:00:00Z",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -1068,7 +1068,7 @@ def test_openapi_downtime_invalid_single(
             downtime_id=123,
             site_id="NO_SITE",
             expect_ok=False,
-        ).assert_status_code(404)
+        ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 @pytest.mark.usefixtures("with_host")
@@ -1142,7 +1142,7 @@ def test_openapi_user_in_service_but_not_in_host_contact_group_regression(
 
 
 def test_with_defaulted_timezone() -> None:
-    def _get_local_timezone():
+    def _get_local_timezone() -> datetime.tzinfo:
         return datetime.UTC
 
     assert _with_defaulted_timezone(
@@ -1263,16 +1263,13 @@ def test_openapi_service_description_for_single_downtime(
             assert "service_description" not in resp.json["extensions"]
 
 
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_modify_downtime_without_parameters(
-    clients: ClientRegistry,
-    mock_livestatus: MockLiveStatusConnection,
-) -> None:
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "mock_livestatus")
+def test_openapi_modify_downtime_without_parameters(clients: ClientRegistry) -> None:
     clients.Downtime.modify(
         modify_type="by_id",
         downtime_id="123",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -1591,7 +1588,7 @@ def test_openapi_modify_downtime_delta_minutes_cannot_be_zero(
         downtime_id="123",
         end_time=0,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -1602,7 +1599,7 @@ def test_openapi_modify_downtime_non_existing_host_group(
         modify_type="hostgroup",
         host_group="non-existent",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
     assert (
         resp.json["fields"]["body.hostgroup.hostgroup_name"]["msg"]
         == "Value error, Group missing: 'non-existent'"
@@ -1617,7 +1614,7 @@ def test_openapi_modify_downtime_non_existing_service_group(
         modify_type="servicegroup",
         service_group="non-existent",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
     assert (
         resp.json["fields"]["body.servicegroup.servicegroup_name"]["msg"]
         == "Value error, Group missing: 'non-existent'"

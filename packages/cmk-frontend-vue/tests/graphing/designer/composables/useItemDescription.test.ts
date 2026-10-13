@@ -12,10 +12,10 @@ import { useItemDescription } from '@/graphing/designer/composables/useItemDescr
 import {
   constantItem,
   formulaItem,
-  metricBackendItem,
   rrdMetricItem,
   rrdQueryItem,
-  scalarItem
+  scalarItem,
+  telemetryMetricsItem
 } from '../fixtures'
 
 function mountDescriptions(): ReturnType<typeof useItemDescription> {
@@ -54,9 +54,9 @@ test('describes a constant with its value', () => {
   expect(describeItem(constantItem('K', { value: 42 }))).toBe('Constant 42')
 })
 
-test('describes a metric-backend query by its metric name', () => {
+test('describes an OpenTelemetry metrics query by its metric name', () => {
   const { describeItem } = mountDescriptions()
-  expect(describeItem(metricBackendItem('E'))).toBe('span.latency')
+  expect(describeItem(telemetryMetricsItem('E'))).toBe('span.latency')
 })
 
 test('describes a formula as its expression, never its title', () => {

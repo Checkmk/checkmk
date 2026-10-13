@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="type-arg"
 
 import time
 from collections.abc import Mapping, Sequence
@@ -38,7 +37,7 @@ def saveint(i: str) -> int:
     you can not know whether it is really 0 or something went wrong."""
     try:
         return int(i)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return 0
 
 

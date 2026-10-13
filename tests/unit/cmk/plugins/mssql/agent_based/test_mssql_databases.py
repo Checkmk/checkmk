@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import pytest
 
@@ -17,7 +16,7 @@ from cmk.plugins.mssql.agent_based.mssql_databases import (
 
 
 @pytest.fixture(scope="module", name="section")
-def _get_section():
+def _get_section() -> SectionDatabases:
     return parse_mssql_databases(
         [
             ["MSSQL_MSSQL46", "CorreLog_Report_T", "ONLINE", "FULL", "0", "0"],

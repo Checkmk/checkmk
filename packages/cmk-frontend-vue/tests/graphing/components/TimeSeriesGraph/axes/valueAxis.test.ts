@@ -35,12 +35,20 @@ describe('computeYDomain', () => {
     expect(computeYDomain(allGap)).toEqual([0, 1])
   })
 
-  test('widens a flat domain upward only', () => {
+  test('anchors a flat positive domain at zero and doubles it', () => {
     const metrics = [[bucket(5, 5)]]
 
     const domain = computeYDomain(metrics)
 
-    expect(domain).toEqual([5, 6])
+    expect(domain).toEqual([0, 10])
+  })
+
+  test('anchors a flat negative domain at zero and doubles it', () => {
+    const metrics = [[bucket(-4, -4)]]
+
+    const domain = computeYDomain(metrics)
+
+    expect(domain).toEqual([-8, 0])
   })
 
   test('keeps the floor of a domain flat at zero', () => {
@@ -49,6 +57,16 @@ describe('computeYDomain', () => {
     const domain = computeYDomain(metrics)
 
     expect(domain).toEqual([0, 1])
+  })
+
+  test('spans a flat domain proportionally to its own magnitude', () => {
+    const flatValue = 4.42 * 1024 ** 3
+
+    const [lower, upper] = computeYDomain([[bucket(flatValue, flatValue)]])
+
+    expect(upper - lower).toBeGreaterThanOrEqual(flatValue)
+    expect(lower).toBeLessThanOrEqual(flatValue)
+    expect(upper).toBeGreaterThanOrEqual(flatValue)
   })
 
   test('forces a symmetric domain around zero when flagged', () => {

@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 from .lib import get_service, get_services, Hosts
 

@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup generic="IconName extends CmkMultitoneIconNames" lang="ts">
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
 import { cmkMultitoneIconVariants, oneColorIcons, twoColorIcons } from './icons.constants.ts'
@@ -22,7 +23,10 @@ const props = defineProps<{
   primaryColor: CmkMultitoneIconColor | CustomIconColor
   secondaryColor?: IconName extends OneColorIcons ? never : CmkMultitoneIconColor | CustomIconColor
   size?: IconSizeNames | undefined
+  /** Native tooltip only. Does not affect the accessibility tree — use ariaLabel for that. */
   title?: string | undefined
+  /** Accessible name for the icon. Omit when its meaning is already conveyed elsewhere */
+  ariaLabel?: TranslatedString | undefined
   rotate?: number | undefined
 }>()
 function getTransformRotate(): string {
@@ -78,7 +82,14 @@ const iconSvgByName: Record<string, string> = Object.fromEntries(
   ).map(([path, content]) => [path.replace(/^.*\/icon-(.+)\.svg$/, '$1'), content])
 )
 
-const svg = computed<string | null>(() => iconSvgByName[props.name] ?? null)
+// role="img" on the wrapper should already exclude descendants from the accessibility tree
+// (ARIA's "presentational children" rule), but Firefox still exposes the inline <svg> itself as
+// an unlabeled "graphics-document" node. Hide it explicitly so only the wrapper's role/aria-label
+// is exposed.
+const svg = computed<string | null>(() => {
+  const raw = iconSvgByName[props.name]
+  return raw ? raw.replace('<svg', '<svg aria-hidden="true" focusable="false"') : null
+})
 </script>
 
 <template>
@@ -87,7 +98,10 @@ const svg = computed<string | null>(() => iconSvgByName[props.name] ?? null)
     v-if="svg"
     class="cmk-multitone-icon"
     :class="getColorClasses(props.name)"
+    role="img"
     :title="props.title"
+    :aria-label="props.ariaLabel"
+    :aria-hidden="props.ariaLabel ? undefined : 'true'"
     v-html="svg"
   ></div>
 </template>

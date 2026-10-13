@@ -6,12 +6,8 @@
 from collections.abc import Sequence
 
 from cmk.agent_based.v2 import CheckPlugin, OIDEnd, SNMPSection, SNMPTree, StringTable
-from cmk.plugins.printer.lib import (
-    check_printer_pages_types,
-    DETECT_CANON_HAS_TOTAL,
-    discovery_printer_pages,
-    Section,
-)
+from cmk.agent_based.v3_unstable import discover_one_service
+from cmk.plugins.printer.lib import check_printer_pages_types, DETECT_CANON_HAS_TOTAL, Section
 
 PAGE_CODES = {
     "301": "total",
@@ -55,6 +51,6 @@ snmp_section_canon_pages = SNMPSection(
 check_plugin_canon_pages = CheckPlugin(
     name="canon_pages",
     service_name="Pages",
-    discovery_function=discovery_printer_pages,
+    discovery_function=discover_one_service,
     check_function=check_printer_pages_types,
 )

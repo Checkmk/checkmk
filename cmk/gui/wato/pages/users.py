@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Modes for managing users and contacts"""
 
@@ -13,6 +11,7 @@ import base64
 import time
 import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
+from datetime import datetime
 from typing import cast, Literal, NamedTuple, overload, override, TypedDict
 
 from cmk.ccc.site import omd_site, SiteId
@@ -50,15 +49,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.table import show_row_count, table_element
-from cmk.gui.type_defs import (
-    ActionResult,
-    Choices,
-    CustomUserAttrSpec,
-    IconNames,
-    PermissionName,
-    StaticIcon,
-    UserSpec,
-)
+from cmk.gui.type_defs import ActionResult, CustomUserAttrSpec, UserSpec
 from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.user_sites import activation_sites, get_configured_site_choices
 from cmk.gui.userdb import (
@@ -74,11 +65,9 @@ from cmk.gui.userdb import (
 )
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.userdb.user_sync_job import sync_entry_point, UserSyncArgs, UserSyncBackgroundJob
-from cmk.gui.utils.confirm_links import make_confirm_delete_link
-from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.utils.selection_id import SelectionId
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Alternative,
@@ -114,8 +103,14 @@ from cmk.gui.watolib.users import (
 )
 from cmk.livestatus_client import SiteConfigurations
 from cmk.utils import paths, render
+from cmk.web.utils.choices import Choice
+from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
+from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import flash, get_flashed_messages
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 
 from ._user_security_message import (
@@ -328,7 +323,7 @@ class ModeUsers(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return redirect(self.mode_url())
@@ -576,6 +571,7 @@ class ModeUsers(WatoMode):
             limit=table_row_limit,
         ) as table:
             online_threshold = time.time() - user_online_maxage
+            login_timeout_store = userdb.LoginTimeoutStore()
             for uid, user_spec in sorted(entries, key=lambda x: x[1].get("alias", x[0]).lower()):
                 table.row()
 
@@ -617,6 +613,7 @@ class ModeUsers(WatoMode):
                 user_alias = user_spec.get("alias", "")
                 if self._can_create_and_delete_users:
                     delete_url = make_confirm_delete_link(
+                        i18n=_,
                         url=make_action_link(request, [("mode", "users"), ("_delete", uid)]),
                         title=_("Delete user"),
                         suffix=user_alias,
@@ -662,7 +659,7 @@ class ModeUsers(WatoMode):
                         img_txt = StaticIcon(IconNames.hyphen)
 
                     table.cell(_("Act."))
-                    html.static_icon(img_txt, title=title)
+                    html.static_icon(img_txt, title=title)  # type: ignore[possibly-undefined]
 
                     table.cell(_("Last seen"))
                     if last_seen != 0:
@@ -710,6 +707,10 @@ class ModeUsers(WatoMode):
                 table.cell(_("Authentication"), auth_method)
 
                 table.cell(_("State"), sortable=False)
+                if login_timeout_store.timeout_status(uid, None, datetime.now(), cleanup=False):
+                    html.static_icon(
+                        StaticIcon(IconNames.user_locked), title=_("Temporarily timed out")
+                    )
                 if user_spec.get("locked", False):
                     html.static_icon(
                         StaticIcon(IconNames.user_locked), title=_("The login is currently locked")
@@ -737,7 +738,7 @@ class ModeUsers(WatoMode):
                 if "disable_notifications" in user_spec and isinstance(
                     user_spec["disable_notifications"], bool
                 ):
-                    disable_notifications_opts = {"disable": user_spec["disable_notifications"]}
+                    disable_notifications_opts = {"disable": user_spec["disable_notifications"]}  # type: ignore[unreachable]
                 else:
                     disable_notifications_opts = user_spec.get("disable_notifications", {})
 
@@ -988,6 +989,7 @@ class ModeEditUser(WatoMode):
                 icon_name=StaticIcon(IconNames.twofa),
                 item=make_simple_link(
                     make_confirm_delete_link(
+                        i18n=_,
                         url=make_action_link(
                             request,
                             [
@@ -1009,7 +1011,7 @@ class ModeEditUser(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return redirect(mode_url("users"))
@@ -1377,7 +1379,7 @@ class ModeEditUser(WatoMode):
                 "that is not known to the monitoring. "
                 "This can happen when you forward notifications from the Event Console. "
                 "<br><br>Notification fallback can also configured in the global "
-                'setting <a href="wato.py?mode=edit_configvar&varname=notification_fallback_email">'
+                'setting <a href="global_settings.py?varname=notification_fallback_email">'
                 "Fallback email address for notifications</a>."
             )
         )
@@ -1485,7 +1487,7 @@ class ModeEditUser(WatoMode):
         ],
         custom_user_attr_topics: dict[str, list[tuple[str, UserAttribute]]] | None,
         is_automation: bool,
-        sites: SiteConfigurations,
+        sites: SiteConfigurations,  # noqa: ARG002
         user_permissions: UserPermissions,
     ) -> None:
         forms.header(_("Security"))
@@ -1722,7 +1724,7 @@ class ModeEditUser(WatoMode):
 
 
 def select_language(user_spec: UserSpec, default_language: str) -> None:
-    languages: Choices = [(ident, alias) for (ident, alias) in get_languages()]
+    languages: list[Choice] = [(ident, alias) for (ident, alias) in get_languages()]
     if not languages:
         return
 

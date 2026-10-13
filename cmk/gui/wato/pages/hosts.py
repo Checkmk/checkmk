@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -58,9 +57,8 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.quick_setup.html import quick_setup_duplication_warning, quick_setup_locked_warning
 from cmk.gui.search.matchers import MatchItemGeneratorRegistry
 from cmk.gui.site_config import is_distributed_setup_remote_site, site_is_local
-from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
@@ -95,20 +93,22 @@ from cmk.gui.watolib.check_mk_automations import (
     update_dns_cache,
 )
 from cmk.gui.watolib.config_hostname import ConfigHostname
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.host_attributes import (
     all_host_attributes,
     collect_attributes,
     HostAttributes,
 )
 from cmk.gui.watolib.host_match_item_generator import MatchItemGeneratorHosts
+from cmk.gui.watolib.host_relations import relations_deletion_note
 from cmk.gui.watolib.hosts_and_folders import (
     collect_all_hosts,
     folder_from_request,
     folder_preserving_link,
-    folder_tree,
     FolderTree,
     Host,
+    host_url_resolver,
+    make_folder_tree,
     strip_hostname_whitespace_chars,
     validate_all_hosts,
 )
@@ -136,7 +136,10 @@ from cmk.shared_typing.mode_host import (
 )
 from cmk.utils.agent_registration import HostAgentConnectionMode, UUIDStore
 from cmk.utils.paths import omd_root, uuid_lookup_dir
+from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.flashed_messages import flash
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeactionuri, makeuri_contextless
 
 from ._host_attributes import configure_attributes
@@ -157,9 +160,7 @@ def register(
     page_registry.register(
         PageEndpoint("wato_ajax_agent_receiver_port", PageAjaxAgentReceiverPort())
     )
-    match_item_generator_registry.register(
-        MatchItemGeneratorHosts("hosts", lambda: collect_all_hosts(folder_tree()))
-    )
+    match_item_generator_registry.register(MatchItemGeneratorHosts("hosts", collect_all_hosts))
 
 
 class UpdateDnsCacheLoadingContainer:
@@ -185,12 +186,12 @@ class UpdateDnsCacheLoadingContainer:
 
     @classmethod
     def include_catch_link_script(cls) -> None:
-        html.javascript(
-            f"""
-        document.getElementById('menu_suggestion_{cls.a_tag_id}').addEventListener('click', function (event) {{
-            document.getElementById('{cls.div_load_container_id}').style.display = 'block';
-        }});
-        """
+        html.call_ts_function(
+            function_name="show_element_on_click",
+            arguments={
+                "trigger_id": f"menu_suggestion_{cls.a_tag_id}",
+                "target_id": cls.div_load_container_id,
+            },
         )
 
 
@@ -206,6 +207,7 @@ class ABCHostMode(WatoMode, abc.ABC):
     def _init_host(self) -> Host: ...
 
     def __init__(self, edition: Edition, ctx: PageContext) -> None:
+        self._tree = make_folder_tree(ctx.config)
         self._host = self._init_host()
         self._mode: Literal["edit", "new", "clone", "prefill"] = "edit"
         super().__init__(edition, ctx)
@@ -237,7 +239,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         except MKUserError:
             host_name = None
         if folder_from_request(
-            folder_tree(),
+            self._tree,
             request.var("folder"),
             host_name,
         ).locked_hosts():
@@ -366,7 +368,7 @@ class ABCHostMode(WatoMode, abc.ABC):
     def page(self, config: Config) -> None:
         # Show outcome of host validation. Do not validate new hosts
         errors = None
-        tree = folder_tree()
+        tree = self._tree
         if self._mode == "edit":
             errors = (
                 validate_all_hosts(tree, [self._host.name()]).get(self._host.name(), [])
@@ -444,10 +446,6 @@ class ABCHostMode(WatoMode, abc.ABC):
                             "network issues, or firewall restrictions."
                         ),
                         success_ip_pingable=_("Successfully pinged IP address"),
-                        # Must match the "no relay" label rendered by the relay host
-                        # attribute (cmk/gui/nonfree/ultimate/relay/watolib/attributes.py);
-                        # PingHost.vue matches the inherited-default text against it.
-                        no_relay_label=_("No Relay"),
                     ),
                     form_keys=ModeHostFormKeys(
                         form=form_name,
@@ -475,6 +473,10 @@ class ABCHostMode(WatoMode, abc.ABC):
                         )
                     ],
                     default_relay_id_hash=DropdownChoice.option_id(""),
+                    # Must match the "no relay" label rendered by the relay host attribute
+                    # (cmk/gui/nonfree/ultimate/relay/watolib/attributes.py); PingHost.vue
+                    # and AgentConnectionTest.vue match the inherited-default text against it.
+                    no_relay_label=_("No Relay"),
                     server_per_site=get_server_per_site(config, ModeHostServerPerSite),
                     agent_connection_modes=[
                         ModeHostAgentConnectionMode(
@@ -550,7 +552,7 @@ class ABCHostMode(WatoMode, abc.ABC):
     def _page_form_quick_setup_warning(self) -> None:
         if (
             (locked_by := self._host.locked_by())
-            and is_locked_by_quick_setup(locked_by)
+            and is_locked_by_config_bundle(locked_by)
             and request.get_ascii_input("mode") != "edit_configuration_bundle"
         ):
             quick_setup_locked_warning(locked_by, "host")
@@ -618,7 +620,7 @@ class ModeEditHost(ABCHostMode):
     @override
     def _init_host(self) -> Host:
         hostname = request.get_validated_type_input_mandatory(HostName, self.VAR_HOST)
-        folder = folder_from_request(folder_tree(), request.var("folder"), hostname)
+        folder = folder_from_request(self._tree, request.var("folder"), hostname)
         if not folder.has_host(hostname):
             raise MKUserError(self.VAR_HOST, _("You called this page with an invalid host name."))
         return folder.load_host(hostname)
@@ -662,7 +664,7 @@ class ModeEditHost(ABCHostMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        tree = folder_tree()
+        tree = self._tree
         folder = folder_from_request(
             tree, request.var("folder"), request.get_ascii_input(self.VAR_HOST)
         )
@@ -730,15 +732,17 @@ class ModeEditHost(ABCHostMode):
             )
             return None
 
-        attributes = collect_attributes(
-            all_host_attributes(config.wato_host_attrs, config.tags.get_tag_groups_by_topic()),
-            "host" if not self._is_cluster() else "cluster",
-            new=False,
-        )
         host = tree.host(self._host.name())
         if host is None:
             flash(f"Host {self._host.name()} could not be found.")
             return None
+
+        attributes = collect_attributes(
+            all_host_attributes(config.wato_host_attrs, config.tags.get_tag_groups_by_topic()),
+            "host" if not self._is_cluster() else "cluster",
+            new=False,
+            stored=host.attributes,
+        )
 
         host.edit(
             attributes,
@@ -795,7 +799,7 @@ def page_menu_all_hosts_entries(should_use_dns_cache: bool) -> Iterator[PageMenu
         )
 
 
-def _host_page_menu_hook(host_name: HostName) -> Iterator[PageMenuEntry]:
+def _host_page_menu_hook(host_name: HostName) -> Iterator[PageMenuEntry]:  # noqa: ARG001
     """Overridden in some editions to extend the page menu"""
     yield from []
 
@@ -881,7 +885,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
             ),
         )
 
-    yield make_host_status_link(host_name=host.name(), view_name="hoststatus")
+    yield make_host_status_link(host.folder().tree, host_name=host.name(), view_name="hoststatus")
 
     if user.may("wato.rulesets") and host.is_cluster():
         yield PageMenuEntry(
@@ -897,7 +901,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
     yield from _host_page_menu_hook(host.name())
 
     if mode_name == "edit_host" and not host.locked():
-        locked_by_quick_setup = is_locked_by_quick_setup(host.locked_by())
+        locked_by_quick_setup = is_locked_by_config_bundle(host.locked_by())
         if user.may("wato.rename_hosts") and not locked_by_quick_setup:
             yield PageMenuEntry(
                 title=_("Rename"),
@@ -923,9 +927,13 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
                 icon_name=StaticIcon(IconNames.delete),
                 item=make_simple_link(
                     make_confirm_delete_link(
+                        i18n=_,
                         url=makeactionuri(request, transactions.get(), [("delete", "1")]),
                         title=_("Delete host"),
                         suffix=host.name(),
+                        message=relations_deletion_note(
+                            host, host_url_resolver(host.folder().tree, user)
+                        ),
                     )
                 ),
             )
@@ -943,6 +951,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
                 icon_name=StaticIcon(IconNames.tls, emblem="remove"),
                 item=make_simple_link(
                     make_confirm_delete_link(
+                        i18n=_,
                         url=makeactionuri(
                             request, transactions.get(), [("_remove_tls_registration", "1")]
                         ),
@@ -969,7 +978,7 @@ class CreateHostMode(ABCHostMode):
 
     @classmethod
     @abc.abstractmethod
-    def _init_new_host_object(cls) -> Host:
+    def _init_new_host_object(cls, tree: FolderTree) -> Host:
         raise NotImplementedError
 
     @classmethod
@@ -996,10 +1005,10 @@ class CreateHostMode(ABCHostMode):
         self._clone_source: Host | None = None
         clone_source_name = request.get_ascii_input("clone")
         if not clone_source_name:
-            return self._init_new_host_object()
+            return self._init_new_host_object(self._tree)
 
         folder = folder_from_request(
-            folder_tree(), request.var("folder"), request.get_ascii_input(self.VAR_HOST)
+            self._tree, request.var("folder"), request.get_ascii_input(self.VAR_HOST)
         )
         if not folder.has_host(HostName(clone_source_name)):
             raise MKUserError(self.VAR_HOST, _("You called this page with an invalid host name."))
@@ -1017,8 +1026,12 @@ class CreateHostMode(ABCHostMode):
             ),
         )
 
+        # The clone's counterparts were never told about these relations, so carrying the rows
+        # over would leave every one of them one-sided.
+        host.attributes.pop("relations", None)
+
         # remove the quick setup lock from the clone
-        if is_locked_by_quick_setup(host.locked_by()):
+        if is_locked_by_config_bundle(host.locked_by()):
             host.attributes.pop("locked_by", None)
             host.attributes.pop("locked_attributes", None)
 
@@ -1030,7 +1043,7 @@ class CreateHostMode(ABCHostMode):
         if not transactions.transaction_valid(request):
             return redirect(mode_url("folder"))
 
-        tree = folder_tree()
+        tree = self._tree
         attributes = collect_attributes(
             all_host_attributes(config.wato_host_attrs, config.tags.get_tag_groups_by_topic()),
             self._host_type_name(),
@@ -1042,7 +1055,7 @@ class CreateHostMode(ABCHostMode):
                 request.get_ascii_input_mandatory(self.VAR_HOST)
             )
             hostname = HostName(hostname)
-        except (MKUserError, ValueError):
+        except MKUserError, ValueError:
             hostname = HostName("")
 
         Hostname().validate_value(request.get_ascii_input_mandatory(self.VAR_HOST), self.VAR_HOST)
@@ -1104,7 +1117,7 @@ class CreateHostMode(ABCHostMode):
         if (
             self._clone_source
             and (locked_by := self._clone_source.locked_by())
-            and is_locked_by_quick_setup(locked_by)
+            and is_locked_by_config_bundle(locked_by)
         ):
             quick_setup_duplication_warning(locked_by, "host")
 
@@ -1129,17 +1142,16 @@ class ModeCreateHost(CreateHostMode):
 
     @classmethod
     @override
-    def _init_new_host_object(cls) -> Host:
+    def _init_new_host_object(cls, tree: FolderTree) -> Host:
         try:
             host_name = strip_hostname_whitespace_chars(
                 request.get_ascii_input_mandatory(cls.VAR_HOST)
             )
             host_name = HostName(host_name)
-        except (MKUserError, ValueError):
+        except MKUserError, ValueError:
             host_name = HostName("")
-        tree = folder_tree()
         if prefill := request.get_ascii_input("prefill"):
-            match prefill:
+            match prefill:  # type: ignore[exhaustive-match]
                 case "snmp":
                     return Host(
                         folder=folder_from_request(tree, request.var("folder"), host_name),
@@ -1197,7 +1209,7 @@ class ModeCreateCluster(CreateHostMode):
 
     @classmethod
     @override
-    def _init_new_host_object(cls) -> Host:
+    def _init_new_host_object(cls, tree: FolderTree) -> Host:
         try:
             host_name = strip_hostname_whitespace_chars(
                 request.get_ascii_input_mandatory(cls.VAR_HOST)
@@ -1206,7 +1218,7 @@ class ModeCreateCluster(CreateHostMode):
         except MKUserError:
             host_name = HostName("")
         return Host(
-            folder=folder_from_request(folder_tree(), request.var("folder"), host_name),
+            folder=folder_from_request(tree, request.var("folder"), host_name),
             host_name=host_name,
             attributes={},
             cluster_nodes=[],
@@ -1234,7 +1246,7 @@ class PageAjaxPingHost(AjaxPage):
         )
 
         if cmd == PingHostCmd.PING6 and ":" in ip_or_dns_name:
-            if not HostAddress()._is_valid_ipv6_address(ip_or_dns_name):
+            if not HostAddress()._is_valid_ipv6_address(ip_or_dns_name):  # noqa: SLF001
                 return {
                     "status_code": 99,
                     "message": "Not a valid IPv6 address.",

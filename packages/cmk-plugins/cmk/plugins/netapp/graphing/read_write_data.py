@@ -22,15 +22,15 @@ metric_write_data = metrics.Metric(
 
 graph_read_write_data = graphs.Bidirectional(
     name="read_write_data",
-    title=Title("Traffic"),
+    title=Title("Data read and written"),
     lower=graphs.Graph(
         name="read_write_data_lower",
-        title=Title("Traffic"),
+        title=Title("Data read and written"),
         compound_lines=["read_data"],
     ),
     upper=graphs.Graph(
         name="read_write_data_upper",
-        title=Title("Traffic"),
+        title=Title("Data read and written"),
         compound_lines=["write_data"],
     ),
 )

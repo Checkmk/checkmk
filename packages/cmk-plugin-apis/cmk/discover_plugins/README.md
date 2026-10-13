@@ -51,7 +51,10 @@ The `<variant>` is one of:
 - **`v1`, `v2`, …** — stable public API. Examples:
   `cmk.server_side_calls.v1`, `cmk.agent_based.v2`.
 - **`v1_unstable`, `v2_unstable`, …** — work-in-progress public API.
-  Examples: `cmk.bakery.v2_unstable`, `cmk.inventory_ui.v1_unstable`.
+  Examples: `cmk.agent_based.v3_unstable`, `cmk.graphing.v2_unstable`.
+  Once stabilized, such a variant is renamed to its plain version
+  (e.g. `cmk.bakery.v2_unstable` → `cmk.bakery.v2`) and the old name
+  is kept as a deprecated alias for one major version.
 
 A domain may expose several variants in parallel (e.g.,
 `server_side_calls` ships `internal` and `v1`); the loader can
@@ -124,12 +127,12 @@ cmk_addons/plugins/<family>/<group_value>/<file>.py
 #### Simplest ideal — `cmk/server_side_calls_backend/_loading.py`
 
 ```python
-def load_active_checks(*, raise_errors: bool) -> Mapping[
-    PluginLocation, internal.ActiveCheckConfig | v1.ActiveCheckConfig
-]:
+def load_active_checks(
+    *, raise_errors: bool
+) -> Mapping[PluginLocation, internal.ActiveCheckConfig | v1.ActiveCheckConfig]:
     entry_points = {
         internal.ActiveCheckConfig: internal.entry_point_prefixes()[internal.ActiveCheckConfig],
-        v1.ActiveCheckConfig:       v1.entry_point_prefixes()[v1.ActiveCheckConfig],
+        v1.ActiveCheckConfig: v1.entry_point_prefixes()[v1.ActiveCheckConfig],
     }
     return discover_all_plugins(
         PluginGroup.SERVER_SIDE_CALLS,
@@ -158,10 +161,14 @@ discovered_plugins = discover_all_plugins(
 )
 for location, plugin in discovered_plugins.plugins.items():
     match plugin:
-        case v2.AgentSection():    ...
-        case v2.SNMPSection():     ...
-        case v2.CheckPlugin():     ...
-        case v2.InventoryPlugin(): ...
+        case v2.AgentSection():
+            ...
+        case v2.SNMPSection():
+            ...
+        case v2.CheckPlugin():
+            ...
+        case v2.InventoryPlugin():
+            ...
 ```
 
 The downstream `registered_*` mappings here are built once from the

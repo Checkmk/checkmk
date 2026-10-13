@@ -2,16 +2,27 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# ruff: noqa: T201  # It's OK for scripts to print()
+
 """Recompute SHA256 hashes for the five python.org per-feature MSIs.
 
-Run after bumping ``PYTHON_VERSION_WINDOWS`` in ``defines.make``.
-Prints the ``http_file(...)`` blocks ready to paste into ``MODULE.bazel``.
+Run after bumping ``PYTHON_VERSION_WINDOWS`` in ``package_versions.bzl``.
+Prints the ``_MSI_SHA256`` map ready to paste over the one in
+``//bazel/extensions:python_cab_repositories.bzl``, which derives the URLs from
+``PYTHON_VERSION_WINDOWS`` itself.
+
+The version needs no argument: the ``py_binary`` passes ``PYTHON_VERSION_WINDOWS``
+via ``args``, so the hashes are always fetched for the version the extension will
+actually request.
 
 Usage:
-    python3 agents/modules/windows/refresh_msi_pins.py 3.13.13
-"""
+    bazel run //agents/modules/windows:refresh_msi_pins
 
-from __future__ import annotations
+To see the hashes for a version before committing to it, override:
+
+    bazel run //agents/modules/windows:refresh_msi_pins -- --python-version=3.14.0
+"""
 
 import argparse
 import hashlib
@@ -34,22 +45,20 @@ def fetch_sha256(url: str) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "python_version",
-        help="Full Windows Python version, e.g. 3.13.13",
+        "--python-version",
+        required=True,
+        help="Full Windows Python version, e.g. 3.13.14.  Supplied by the py_binary's "
+        "args from PYTHON_VERSION_WINDOWS; pass it again to override.",
     )
     args = parser.parse_args()
 
-    print(f"# Refreshed for CPython {args.python_version} via {sys.argv[0]}")
-    for name in MSIS:
+    print(f"# sha256 of each per-feature MSI, for PYTHON_VERSION_WINDOWS {args.python_version}.")
+    print("_MSI_SHA256 = {")
+    # Sorted, so the pasted map is already buildifier-clean.
+    for name in sorted(MSIS):
         url = f"https://www.python.org/ftp/python/{args.python_version}/amd64/{name}.msi"
-        sha = fetch_sha256(url)
-        print(
-            f"http_file(\n"
-            f'    name = "python_msi_{name}",\n'
-            f'    sha256 = "{sha}",\n'
-            f'    url = "{url}",\n'
-            f")"
-        )
+        print(f'    "{name}": "{fetch_sha256(url)}",')
+    print("}")
     return 0
 
 

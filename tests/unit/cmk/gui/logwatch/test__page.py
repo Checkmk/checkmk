@@ -8,8 +8,16 @@ from unittest.mock import patch
 
 import pytest
 
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-from cmk.gui.logwatch._page import get_last_chunk, get_worst_chunk, parse_file
+from cmk.gui.logwatch._page import (
+    get_last_chunk,
+    get_logfile_lines,
+    get_worst_chunk,
+    parse_file,
+)
+from cmk.livestatus_client import LqUnsafeValueError
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 HOST = HostName("myhost")
 FILE = "myfile.log"
@@ -27,6 +35,21 @@ def test_parse_file_returns_none_when_file_missing() -> None:
 
 def test_parse_file_empty_file() -> None:
     assert _parse([]) == []
+
+
+# A tab cannot be escaped for the Columns: header (escape_filename only handles spaces), so the
+# typed query builder rejects the file name before any livestatus contact.
+UNSAFE_FILE = "my\tfile.log"
+
+
+def test_parse_file_converts_lq_unsafe_value_error_to_general_exception() -> None:
+    with pytest.raises(MKGeneralException, match="Cannot parse log file"):
+        parse_file(None, HOST, UNSAFE_FILE, hidecontext=False, debug=False)
+
+
+def test_parse_file_reraises_in_debug_mode() -> None:
+    with pytest.raises(LqUnsafeValueError, match="contains whitespace"):
+        parse_file(None, HOST, UNSAFE_FILE, hidecontext=False, debug=True)
 
 
 def test_parse_file_skips_leading_hash_lines() -> None:
@@ -125,3 +148,26 @@ def test_parse_file_debug_reraises_exception() -> None:
         pytest.raises(ValueError),
     ):
         parse_file(None, HOST, FILE, hidecontext=False, debug=True)
+
+
+@pytest.mark.usefixtures("request_context")
+def test_get_logfile_lines_escapes_file_name(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.add_table(
+        "hosts",
+        [
+            {
+                "name": "myhost",
+                "mk_logwatch_file:file:myhost/var/log/my\\sfile.log": b"line one\nline two",
+            }
+        ],
+    )
+    with mock_livestatus(expect_status_query=True) as live:
+        live.expect_query(
+            "GET hosts\n"
+            "Columns: mk_logwatch_file:file:myhost/var/log/my\\sfile.log\n"
+            "Filter: name = myhost\n"
+            "ColumnHeaders: off"
+        )
+        assert get_logfile_lines(None, HOST, "var/log/my file.log") == ["line one", "line two"]

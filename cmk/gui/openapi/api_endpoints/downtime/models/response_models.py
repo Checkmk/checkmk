@@ -12,7 +12,7 @@ from cmk.ccc.site import SiteId
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
 
@@ -83,14 +83,14 @@ class DowntimeExtensionsModel:
 
 
 @api_model
-class DowntimeObjectModel(DomainObjectModel):
-    domainType: Literal["downtime"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
+class DowntimeObjectModel(TitledDomainObjectModel):
+    domainType: Literal["downtime"] = api_field(description="The domain type of the object.")
     extensions: DowntimeExtensionsModel = api_field(description="The attributes of a downtime.")
 
 
 @api_model
 class DowntimeCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["downtime"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["downtime"] = api_field(
         description="The domain type of the objects in the collection."
     )
     value: list[DowntimeObjectModel] = api_field(

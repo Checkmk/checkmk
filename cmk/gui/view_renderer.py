@@ -6,13 +6,11 @@
 import abc
 import collections
 import contextlib
-import json
 import re
 from collections.abc import Callable, Iterator, Sequence
 from typing import Final, override
 
 import cmk.ccc.version as cmk_version
-import cmk.gui.pages
 import cmk.gui.view_utils
 import cmk.utils.paths
 from cmk.gui import sites, visuals, weblib
@@ -22,7 +20,7 @@ from cmk.gui.config import active_config
 from cmk.gui.data_source import row_id
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.graphing._frontend import default_time_range_seconds, render_global_time_picker
+from cmk.gui.graphing import global_time_picker_refresh, render_global_time_picker
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -47,16 +45,7 @@ from cmk.gui.page_menu_entry import toggle_page_menu_entries
 from cmk.gui.page_menu_utils import collect_context_links, get_context_page_menu_dropdowns
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.top_heading import top_heading
-from cmk.gui.type_defs import (
-    HTTPVariables,
-    IconNames,
-    InfoName,
-    Rows,
-    StaticIcon,
-    ViewSpec,
-    VisualContext,
-)
-from cmk.gui.utils.doc_references import DocReference
+from cmk.gui.type_defs import InfoName, Rows, ViewSpec, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.selection_id import SelectionId
@@ -67,8 +56,10 @@ from cmk.gui.views.command import Command, do_actions, get_command_groups, shoul
 from cmk.gui.views.page_ajax_filters import AjaxInitialViewFilters
 from cmk.gui.visuals import view_title
 from cmk.gui.visuals.filter import Filter
+from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.html import HTML
-from cmk.web.utils.urls import makeuri, makeuri_contextless
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.urls import HTTPVariable, makeuri, makeuri_contextless
 
 _NON_DEFAULT_KEYS_TO_IGNORE: Final = frozenset(
     {"_csrf_token", "_active", "_apply", "selection", "filled_in", "view_name", "name"}
@@ -135,6 +126,7 @@ def show_filter_form(view: View, show_filters: list[Filter]) -> None:
         context={f.ident: context.get(f.ident, {}) for f in show_filters if f.available()},
         page_name=view.name,
         reset_ajax_page="ajax_initial_view_filters",
+        request_cache=view.request_cache,
     )
 
 
@@ -226,14 +218,17 @@ class GUIViewRenderer(ABCViewRenderer):
         # html_head, opens <body>, the nav + sidebar, and the #content_area
         # wrapper that ``html.footer`` later closes via ``body_end``.
         if display_options.enabled(display_options.H):
-            MainNavigation.render(active_config, view_title(view_spec, self.view.context))
+            MainNavigation.render(
+                active_config,
+                view_title(view_spec, self.view.context, request_cache=self.view.request_cache),
+            )
 
         if display_options.enabled(display_options.T):
             breadcrumb = view_breadcrumb(self.view)
             top_heading(
                 html,
                 request,
-                view_title(view_spec, self.view.context),
+                view_title(view_spec, self.view.context, request_cache=self.view.request_cache),
                 breadcrumb,
                 page_menu=self._page_menu(rows, show_filters, user_permissions),
                 browser_reload=html.browser_reload,
@@ -242,7 +237,7 @@ class GUIViewRenderer(ABCViewRenderer):
                 user_role_ids=user.role_ids,
             )
             if self.view.renders_engine_graphs:
-                self._render_global_time_picker()
+                self._render_time_picker()
             html.begin_page_content()
 
         has_done_actions = False
@@ -252,15 +247,18 @@ class GUIViewRenderer(ABCViewRenderer):
         # enable_commands = painter_options.painter_option_form_enabled()
         # enable_checkboxes = view.layout.can_display_checkboxes and not checkboxes_enforced
         # selection_enabled = enable_checkboxes if enable_commands else checkboxes_enforced
-        html.javascript(
-            "cmk.selection.set_selection_enabled(%s);" % json.dumps(self.view.checkboxes_displayed)
+        html.call_ts_function(
+            function_name="set_selection_enabled",
+            arguments={"enabled": self.view.checkboxes_displayed},
         )
 
         layout = self.view.layout
 
         # Display the filter form on page rendering in some cases
         if self._should_show_filter_form():
-            html.final_javascript("cmk.page_menu.open_popup('popup_filters');")
+            html.call_ts_function(
+                function_name="open_popup", arguments={"popup_id": "popup_filters"}
+            )
 
         # Actions
         if command_form:
@@ -389,7 +387,7 @@ class GUIViewRenderer(ABCViewRenderer):
                     ),
                 )
                 row_info = "%d/%s" % (len(selected), row_info)
-            html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
+            html.call_ts_function(function_name="update_row_info", arguments={"text": row_info})
 
             # The number of rows might have changed to enable/disable actions and checkboxes
             if self._show_buttons:
@@ -728,7 +726,7 @@ class GUIViewRenderer(ABCViewRenderer):
         )
 
         if display_options.enabled(display_options.E) and user.may("general.edit_views"):
-            url_vars: HTTPVariables = [
+            url_vars: list[HTTPVariable] = [
                 ("back", request.requested_url),
                 ("load_name", self.view.name),
             ]
@@ -812,12 +810,21 @@ class GUIViewRenderer(ABCViewRenderer):
 
             return HTML.without_escaping(output_funnel.drain())
 
-    def _render_global_time_picker(self) -> None:
+    def _render_time_picker(self) -> None:
         if not PainterOptions.get_instance().painter_options_permitted():
             return
+        # The view's own setting, not the `refresh` painter option: that control is not offered
+        # on such a view (see View.painter_options), so a value saved under it is unreachable.
+        # Missing, or 0 for the setting's "off": either way no interval of its own.
+        browser_reload = self.view.spec.get("browser_reload") or None
         render_global_time_picker(
             active_config.graph_timeranges,
-            default_time_range_seconds=default_time_range_seconds(),
+            default_time_range_seconds=self.view.engine_graph_time_range_seconds,
+            refresh=global_time_picker_refresh(
+                interval_seconds=browser_reload,
+                starts_live=browser_reload is not None,
+                reloads_page_content=True,
+            ),
         )
 
     def _extend_help_dropdown(self, menu: PageMenu) -> None:

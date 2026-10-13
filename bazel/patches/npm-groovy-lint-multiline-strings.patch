@@ -1,0 +1,567 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Panne <sven.panne@checkmk.com>
+Date: Tue, 6 Oct 2026 20:48:49 +0200
+Subject: [PATCH] fix(format): leave the content of string literals alone
+
+IndentationComments and IndentationClosingBraces, which run on every
+--format, and the fix of ConsecutiveBlankLines work line by line. They
+took lines inside multi-line strings ("""...""", '''...''', /.../ and
+$/.../$) for code: a line starting with // was indented like a comment,
+a lone } was aligned with a { before it, and blank lines were removed.
+Braces in comments and in multi-line strings also threw off the search
+for the matching brace.
+
+CodeNarc checks ConsecutiveBlankLines, NoTabCharacter and
+TrailingWhitespace line by line, so it reports whitespace in strings,
+too, and fixing it changed the values of the strings. Other fixes, like
+the ones of IfStatementBraces and Indentation, could change strings as
+well.
+
+getLinesInfo() scans the source like the Groovy lexer does, so that
+these fixes know which lines start inside a string or a comment, which
+braces belong to the code, and which parts of a line are string
+content. Violations of the whitespace rules in string content are
+filtered out like the ones disabled by comments, NoTabCharacter only
+replaces the tabs outside of strings, and a fix which would still
+change the value of a string literal is not applied.
+---
+ lib/codenarc-factory.js               |   6 +-
+ lib/filter.js                         |  27 +++-
+ lib/groovy-lint-fix.js                |  33 ++++-
+ lib/rules/ConsecutiveBlankLines.js    |   7 +-
+ lib/rules/IndentationClosingBraces.js |  34 +++--
+ lib/rules/IndentationComments.js      |   9 +-
+ lib/rules/NoTabCharacter.js           |   8 +-
+ lib/utils.js                          | 200 ++++++++++++++++++++++++++
+ 8 files changed, 294 insertions(+), 30 deletions(-)
+
+diff --git a/lib/codenarc-factory.js b/lib/codenarc-factory.js
+index 694f682..436cbcc 100755
+--- a/lib/codenarc-factory.js
++++ b/lib/codenarc-factory.js
+@@ -10,7 +10,7 @@ import * as path from "path";
+ import { getConfigFileName } from "./config.js";
+ import { collectDisabledBlocks, isFilteredError } from "./filter.js";
+ import { getNpmGroovyLintRules } from "./groovy-lint-rules.js";
+-import { evaluateRange, evaluateRangeFromLine, evaluateVariables, getSourceLines, normalizeNewLines } from "./utils.js";
++import { evaluateRange, evaluateRangeFromLine, evaluateVariables, getLinesInfo, getSourceLines, normalizeNewLines } from "./utils.js";
+ import { fileURLToPath } from "url";
+ const __dirname = path.dirname(fileURLToPath(import.meta.url));
+ ////////////////////////////
+@@ -314,6 +314,8 @@ async function parseCodeNarcResult(options, codeNarcBaseDir, codeNarcJsonResult,
+ 
+             // Get groovylint disabled blocks and rules in source comments
+             const disabledBlocks = collectDisabledBlocks(allLines);
++            // Get strings and code in the source, for violations in the content of string literals
++            const linesInfo = getLinesInfo(allLines);
+ 
+             // Browse CodeNarc XML file reported errors
+             for (const violation of fileInfo.violations) {
+@@ -328,7 +330,7 @@ async function parseCodeNarcResult(options, codeNarcBaseDir, codeNarcJsonResult,
+                 errItem.msg = tmpGroovyFileNameReplace ? errItem.msg.replace(tmpGroovyFileNameReplace, "") : errItem.msg;
+ 
+                 // Check if error must be filtered because of comments
+-                if (isFilteredError(errItem, allLines, disabledBlocks)) {
++                if (isFilteredError(errItem, allLines, disabledBlocks, linesInfo)) {
+                     continue;
+                 }
+ 
+diff --git a/lib/filter.js b/lib/filter.js
+index b2c0023..bd3b741 100755
+--- a/lib/filter.js
++++ b/lib/filter.js
+@@ -1,5 +1,25 @@
+ // Filter errors
+ 
++import { isInStringLiteral } from "./utils.js";
++
++// CodeNarc checks these rules line by line, so it reports whitespace in string literals, too. Fixing it would change
++// the values of the strings, so such violations are ignored. CodeNarc reports only the first tab of a file, so its
++// violation is ignored only if there is no tab outside of string literals at all.
++const STRING_CONTENT_VIOLATIONS = {
++    ConsecutiveBlankLines: (allLines, linesInfo, linePos) => linesInfo[linePos].startsInString,
++    NoTabCharacter: (allLines, linesInfo) => allLines.every((line, lineNb) => hasTabsOnlyInStringLiterals(line, linesInfo[lineNb])),
++    TrailingWhitespace: (allLines, linesInfo, linePos) => isInStringLiteral(linesInfo[linePos], allLines[linePos].length - 1),
++};
++
++function hasTabsOnlyInStringLiterals(line, lineInfo) {
++    for (let pos = line.indexOf("\t"); pos > -1; pos = line.indexOf("\t", pos + 1)) {
++        if (!isInStringLiteral(lineInfo, pos)) {
++            return false;
++        }
++    }
++    return true;
++}
++
+ // Parse source to list parts where errors must be ignored
+ function collectDisabledBlocks(allLines) {
+     const disabledBlocks = [];
+@@ -36,7 +56,7 @@ function collectDisabledBlocks(allLines) {
+     });
+ }
+ // Check if an error returned by CodeNarc should be filtered by npm-groovy-lint according to comments instructions
+-function isFilteredError(errItem, allLines, disabledBlocks) {
++function isFilteredError(errItem, allLines, disabledBlocks, linesInfo) {
+     const linePos = errItem.line - 1;
+     const line = allLines[linePos] || "";
+     const ruleName = errItem.rule;
+@@ -58,6 +78,11 @@ function isFilteredError(errItem, allLines, disabledBlocks) {
+     if (checkMatch(lineConfigNextLine, ruleName)) {
+         return true;
+     }
++    // whitespace in the content of string literals
++    const isStringContent = STRING_CONTENT_VIOLATIONS[ruleName];
++    if (isStringContent && linePos >= 0 && linePos < allLines.length && isStringContent(allLines, linesInfo, linePos)) {
++        return true;
++    }
+ 
+     return false;
+ }
+diff --git a/lib/groovy-lint-fix.js b/lib/groovy-lint-fix.js
+index 522eea2..3f84701 100755
+--- a/lib/groovy-lint-fix.js
++++ b/lib/groovy-lint-fix.js
+@@ -6,7 +6,20 @@ const debug = Debug("npm-groovy-lint");
+ const trace = Debug("npm-groovy-lint-trace");
+ import * as os from "os";
+ import { getNpmGroovyLintRules, getFormattingRulesToAlwaysRun } from "./groovy-lint-rules.js";
+-import { evaluateVariables, getSourceLines } from "./utils.js";
++import { evaluateVariables, getLinesInfo, getSourceLines } from "./utils.js";
++
++// The contents of the string literals in source lines, as one string to compare
++function getStringLiterals(allLines) {
++    const linesInfo = getLinesInfo(allLines);
++    return JSON.stringify(linesInfo.flatMap((lineInfo, lineNb) => lineInfo.stringRanges.map(([start, end]) => allLines[lineNb].slice(start, end))));
++}
++
++// Source lines with one line replaced
++function replaceLine(allLines, lineNb, newLine) {
++    const newLines = [...allLines];
++    newLines[lineNb] = newLine;
++    return newLines;
++}
+ 
+ export class NpmGroovyLintFix {
+     options = {};
+@@ -189,6 +202,8 @@ export class NpmGroovyLintFix {
+             Object.keys(this.fixableErrors).map(async (fileNm) => {
+                 // Read file
+                 let allLines = await getSourceLines(this.options.source, fileNm);
++                // No fix may change the value of a string literal
++                const stringLiterals = getStringLiterals(allLines);
+ 
+                 // Process fixes
+                 let fixedInFileNb = 0;
+@@ -207,24 +222,28 @@ export class NpmGroovyLintFix {
+                     // File scope violation
+                     if (fileFixableError.rule.scope === "file") {
+                         const allLinesNew = this.tryApplyFixRule([...allLines], lineNb, fileFixableError, fileNm).slice(); // copy result lines
+-                        if (JSON.stringify(allLinesNew) !== JSON.stringify(allLines)) {
++                        if (JSON.stringify(allLinesNew) === JSON.stringify(allLines)) {
++                            debug(`Skipping ${fileFixableError.ruleName} as no change in file ${fileNm}`);
++                        } else if (getStringLiterals(allLinesNew) !== stringLiterals) {
++                            debug(`Skipping ${fileFixableError.ruleName} as it would change string literals in file ${fileNm}`);
++                        } else {
+                             fixSuccess = true;
+                             this.updateNextErrorsRanges(allLines, allLinesNew, fileFixableError.lineNb, fileNm);
+                             allLines = allLinesNew;
+                             debug(`Fixed ${fileFixableError.ruleName} in file ${fileNm}`);
+-                        } else {
+-                            debug(`Skipping ${fileFixableError.ruleName} as no change in file ${fileNm}`);
+                         }
+                     }
+                     // Line scope violation
+                     else {
+                         const line = allLines[lineNb];
+                         const fixedLine = this.tryApplyFixRule(line, lineNb, fileFixableError, fileNm);
+-                        if (fixedLine !== line) {
++                        if (fixedLine === line) {
++                            debug(`Skipping ${fileFixableError.ruleName} as no change in line: ${line}`);
++                        } else if (getStringLiterals(replaceLine(allLines, lineNb, fixedLine)) !== stringLiterals) {
++                            debug(`Skipping ${fileFixableError.ruleName} as it would change string literals in line: ${line}`);
++                        } else {
+                             fixSuccess = true;
+                             allLines[lineNb] = fixedLine;
+-                        } else {
+-                            debug(`Skipping ${fileFixableError.ruleName} as no change in line: ${line}`);
+                         }
+                     }
+                     // Update lint results
+diff --git a/lib/rules/ConsecutiveBlankLines.js b/lib/rules/ConsecutiveBlankLines.js
+index 736cb97..a4bb060 100755
+--- a/lib/rules/ConsecutiveBlankLines.js
++++ b/lib/rules/ConsecutiveBlankLines.js
+@@ -1,6 +1,6 @@
+ // Consecutive blank lines
+ 
+-import { getVariable } from "../utils.js";
++import { getLinesInfo, getVariable } from "../utils.js";
+ 
+ const rule = {
+     scope: "file",
+@@ -9,12 +9,13 @@ const rule = {
+         type: "function",
+         func: (allLines, variables) => {
+             const lineNumber = getVariable(variables, "lineNb", { mandatory: true });
++            const linesInfo = getLinesInfo(allLines);
+             const newFileLines = [];
+             let prevLine = "none";
+             let pos = 0;
+             for (const line of allLines) {
+-                // Check if previous line is empty: if not do not add line
+-                if (line.trim() === "" && prevLine.trim() === "" && pos >= lineNumber) {
++                // Check if previous line is empty: if not do not add line (unless it is inside a multi-line string)
++                if (line.trim() === "" && prevLine.trim() === "" && pos >= lineNumber && !linesInfo[pos].startsInString) {
+                     pos++;
+                     continue;
+                 }
+diff --git a/lib/rules/IndentationClosingBraces.js b/lib/rules/IndentationClosingBraces.js
+index 29ab76e..1b7dfa2 100755
+--- a/lib/rules/IndentationClosingBraces.js
++++ b/lib/rules/IndentationClosingBraces.js
+@@ -1,4 +1,13 @@
+ // Indentation closing braces
++
++import { getIndentLength, getLinesInfo } from "../utils.js";
++
++// Width of the indentation of a line, with tabs like NoTabCharacter replaces them
++function getIndentWidth(line) {
++    const indent = line.match(/^\s*/)[0];
++    return indent.length + (getIndentLength() - 1) * (indent.match(/\t/g) || []).length;
++}
++
+ const rule = {
+     scope: "file",
+     isCodeNarcRule: false,
+@@ -6,32 +15,33 @@ const rule = {
+         label: "Fix indentation closing braces",
+         type: "function",
+         func: (allLines) => {
++            // Braces inside strings (including multi-line ones) and comments must be ignored
++            const linesInfo = getLinesInfo(allLines);
+             const newFileLines = [];
+             for (let i = 0; i < allLines.length; i++) {
+                 let line = allLines[i] + "";
+-                // Detect closing brace line
+-                if (["}", "})", "});"].includes(line.trim())) {
++                // Detect closing brace line (but not a brace in a multi-line string)
++                if (linesInfo[i].closingBraces > 0 && ["}", "})", "});"].includes(line.trim())) {
+                     // Find indentation of matching brace (CodeNarc Indentation rule does not always work well :/ )
+                     let j = 1;
+                     let matchingLineIndent = null;
+                     let level = 1;
+-                    while ((allLines[i - j] || allLines[i - j] === "") && matchingLineIndent == null) {
+-                        const prevLine = allLines[i - j];
+-                        // Remove content inside quotes (handling escaped quotes) to avoid counting braces inside strings
+-                        const lineWithoutQuotedStuff = prevLine.replace(/(["'])((?:\\.|(?!\1).)*?)\1/g, "");
+-                        const closingBraces = (lineWithoutQuotedStuff.match(/}/g) || []).length;
+-                        const openingBraces = (lineWithoutQuotedStuff.match(/\{/g) || []).length;
+-                        level += closingBraces - openingBraces;
++                    while (i - j >= 0 && matchingLineIndent == null) {
++                        const previousLevel = level;
++                        level += linesInfo[i - j].closingBraces - linesInfo[i - j].openingBraces;
+                         // Use <= 0 to handle lines with more opening than closing braces (e.g., nested inline closures)
+                         if (level <= 0) {
+-                            matchingLineIndent = prevLine.search(/\S/);
++                            // The matching brace is the previousLevel-th last brace which is still open at the end of the line
++                            const anchors = linesInfo[i - j].openBraceAnchors;
++                            const anchor = anchors[Math.max(0, anchors.length - previousLevel)] ?? i - j;
++                            matchingLineIndent = getIndentWidth(allLines[anchor]);
+                             break;
+                         }
+                         j++;
+                     }
+-                    // Set new indentation it on this comment line
++                    // Set new indentation it on this comment line (what follows the brace may be the content of a string)
+                     if (matchingLineIndent || matchingLineIndent === 0) {
+-                        line = (" ".repeat(matchingLineIndent) + line.trimStart()).replace(/\t/g, "");
++                        line = " ".repeat(matchingLineIndent) + line.trimStart();
+                     }
+                 }
+                 newFileLines.push(line);
+diff --git a/lib/rules/IndentationComments.js b/lib/rules/IndentationComments.js
+index d082800..bcdd7d5 100755
+--- a/lib/rules/IndentationComments.js
++++ b/lib/rules/IndentationComments.js
+@@ -1,5 +1,7 @@
+ // Indentation comments
+ 
++import { getLinesInfo } from "../utils.js";
++
+ const rule = {
+     scope: "file",
+     isCodeNarcRule: false,
+@@ -7,16 +9,19 @@ const rule = {
+         label: "Fix indentation",
+         type: "function",
+         func: (allLines) => {
++            // Lines starting with // inside multi-line strings are not comments
++            const linesInfo = getLinesInfo(allLines);
++            const isCommentLine = (lineNb) => linesInfo[lineNb].startsInCode && allLines[lineNb].trimStart().startsWith("//");
+             const newFileLines = [];
+             for (let i = 0; i < allLines.length; i++) {
+                 let line = allLines[i];
+                 // Detect comment line
+-                if (line.trimStart().startsWith("//")) {
++                if (isCommentLine(i)) {
+                     // Find indentation of next line (which is not blank or a comment)
+                     let j = 1;
+                     let nextLineIndent = null;
+                     while (allLines[i + j] && nextLineIndent == null) {
+-                        if (!/^\s*$/.test(allLines[i + j]) && !allLines[i + j].trimStart().startsWith("//")) {
++                        if (!/^\s*$/.test(allLines[i + j]) && !isCommentLine(i + j)) {
+                             nextLineIndent = allLines[i + j].search(/\S/); // find first non blank character
+                         }
+                         j++;
+diff --git a/lib/rules/NoTabCharacter.js b/lib/rules/NoTabCharacter.js
+index e13e7d5..2d832e1 100755
+--- a/lib/rules/NoTabCharacter.js
++++ b/lib/rules/NoTabCharacter.js
+@@ -1,6 +1,6 @@
+ // No tab character
+ 
+-import { getIndentLength } from "../utils.js";
++import { getIndentLength, getLinesInfo, isInStringLiteral } from "../utils.js";
+ 
+ const rule = {
+     scope: "file",
+@@ -8,10 +8,12 @@ const rule = {
+         label: "Replace tabs by spaces in all file",
+         type: "function",
+         func: (allLines) => {
++            // Tabs in string literals are part of their values
++            const linesInfo = getLinesInfo(allLines);
+             const newFileLines = [];
+             const replaceChars = " ".repeat(getIndentLength());
+-            for (const line of allLines) {
+-                newFileLines.push(line.replace(/\t/g, replaceChars));
++            for (let lineNb = 0; lineNb < allLines.length; lineNb++) {
++                newFileLines.push(allLines[lineNb].replace(/\t/g, (tab, pos) => (isInStringLiteral(linesInfo[lineNb], pos) ? tab : replaceChars)));
+             }
+             return newFileLines;
+         },
+diff --git a/lib/utils.js b/lib/utils.js
+index e4ed5d3..63816e5 100755
+--- a/lib/utils.js
++++ b/lib/utils.js
+@@ -212,6 +212,204 @@ function getLastVariableRange(errLine, evaluatedVars, variable, errItem) {
+     return getLastStringRange(errLine, varValue, errItem);
+ }
+ 
++// String literals, the longest opening delimiter first. Only single and double quoted strings end with the line,
++// unless a backslash escapes the line end.
++const STRING_LITERALS = [
++    { open: '"""', close: '"""', escape: /\\.?/y, interpolated: true, multiLine: true },
++    { open: "'''", close: "'''", escape: /\\.?/y, interpolated: false, multiLine: true },
++    { open: "$/", close: "/$", escape: /\$[$/]/y, interpolated: true, multiLine: true },
++    { open: '"', close: '"', escape: /\\.?/y, interpolated: true, multiLine: false },
++    { open: "'", close: "'", escape: /\\.?/y, interpolated: false, multiLine: false },
++];
++const SLASHY_STRING = { open: "/", close: "/", escape: /\\\//y, interpolated: true, multiLine: true };
++// Keywords followed by an expression: a slash after them starts a slashy string, not a division
++const KEYWORDS_BEFORE_EXPRESSION = new Set(["assert", "case", "default", "else", "in", "return", "throw", "yield"]);
++const WORD = /[\p{L}\p{N}_$]+/uy;
++const OPENING_BRACKETS = new Map([
++    [")", "("],
++    ["]", "["],
++    ["}", "{"],
++]);
++
++// Check if the delimiter of a string literal at a position closes it. Like the Groovy lexer, a run of up to five
++// quotes ends a triple quoted string with its last three quotes, e.g. """say "hi""""
++function closesStringLiteral(line, pos, close) {
++    if (!line.startsWith(close, pos)) {
++        return false;
++    }
++    if (close !== '"""' && close !== "'''") {
++        return true;
++    }
++    const quote = close[0];
++    return !(line[pos + 3] === quote && (line[pos + 4] !== quote || line[pos + 5] !== quote));
++}
++
++// Scan source lines like the Groovy lexer does, and return for each line:
++// - startsInCode: false if the line starts inside a string literal or a /* */ comment spanning several lines
++//   (code in the ${} of a string is code)
++// - startsInString: true if the line starts inside a string literal
++// - stringRanges: the [start, end[ ranges of the line which are the content of string literals
++// - openingBraces, closingBraces: number of { and } in code, including the ones delimiting a ${}, but not the ones
++//   in strings and comments
++// - openBraceAnchors: for each opening brace of the line which is still open at its end, the line whose indentation
++//   the matching closing brace takes. That is the line itself, unless the line starts inside a string literal or a
++//   comment, like in """) {. Then it is the line where the statement around the brace starts.
++// This allows line based fixes to leave the content of multi-line strings like """...""" untouched
++function getLinesInfo(allLines, divisions = new Set()) {
++    // Innermost scope last: code, string or comment. Code scopes after the first one are ${} in strings
++    const scopes = [{ kind: "code", brackets: [], slashyAllowed: true, startLine: 0 }];
++    // The innermost scope at the start of each line, and the number of brackets open in it
++    const lineStarts = [];
++    const linesInfo = [];
++
++    // The last line which starts in the code of a scope outside of the brackets open in it, or the line where the
++    // scope starts
++    const statementStartLine = (scope, lineNb) => {
++        let startLine = lineNb;
++        while (startLine > scope.startLine && !(lineStarts[startLine].scope === scope && lineStarts[startLine].brackets <= scope.brackets.length)) {
++            startLine--;
++        }
++        return startLine;
++    };
++
++    for (let lineNb = 0; lineNb < allLines.length; lineNb++) {
++        const line = allLines[lineNb];
++        const lineStartScope = scopes[scopes.length - 1];
++        lineStarts.push({ scope: lineStartScope, brackets: lineStartScope.kind === "code" ? lineStartScope.brackets.length : 0 });
++        const lineInfo = {
++            startsInCode: lineStartScope.kind === "code",
++            startsInString: lineStartScope.kind === "string",
++            stringRanges: [],
++            openingBraces: 0,
++            closingBraces: 0,
++            openBraceAnchors: [],
++        };
++        // Where the content of the current string literal starts in the line, null outside of string literals
++        let stringStart = lineInfo.startsInString ? 0 : null;
++        let escapedLineEnd = false;
++        let pos = 0;
++        while (pos < line.length) {
++            const scope = scopes[scopes.length - 1];
++            if (scope.kind === "comment") {
++                if (line.startsWith("*/", pos)) {
++                    scopes.pop();
++                    pos += 2;
++                } else {
++                    pos++;
++                }
++                continue;
++            }
++            if (scope.kind === "string") {
++                scope.escape.lastIndex = pos;
++                const escape = scope.escape.exec(line);
++                if (escape) {
++                    escapedLineEnd = escape[0] === "\\";
++                    pos += escape[0].length;
++                } else if (scope.interpolated && line.startsWith("${", pos)) {
++                    lineInfo.stringRanges.push([stringStart, pos]);
++                    stringStart = null;
++                    scopes.push({ kind: "code", brackets: [], slashyAllowed: true, inString: true, startLine: lineNb });
++                    lineInfo.openingBraces++;
++                    lineInfo.openBraceAnchors.push(lineNb);
++                    pos += 2;
++                } else if (closesStringLiteral(line, pos, scope.close)) {
++                    lineInfo.stringRanges.push([stringStart, pos]);
++                    stringStart = null;
++                    scopes.pop();
++                    pos += scope.close.length;
++                } else {
++                    pos++;
++                }
++                continue;
++            }
++            // Code
++            const char = line[pos];
++            if (line.startsWith("//", pos)) {
++                break;
++            }
++            if (line.startsWith("/*", pos)) {
++                scopes.push({ kind: "comment", startLine: lineNb });
++                pos += 2;
++                continue;
++            }
++            const startsSlashyString = char === "/" && scope.slashyAllowed && !divisions.has(`${lineNb}:${pos}`);
++            const literal = STRING_LITERALS.find((literal) => line.startsWith(literal.open, pos)) || (startsSlashyString ? SLASHY_STRING : null);
++            if (literal) {
++                scopes.push({ kind: "string", ...literal, startLine: lineNb, startPos: pos });
++                scope.slashyAllowed = false;
++                pos += literal.open.length;
++                stringStart = pos;
++                continue;
++            }
++            WORD.lastIndex = pos;
++            const word = WORD.exec(line);
++            if (word) {
++                scope.slashyAllowed = KEYWORDS_BEFORE_EXPRESSION.has(word[0]);
++                pos += word[0].length;
++                continue;
++            }
++            if (/\s/.test(char)) {
++                pos++;
++                continue;
++            }
++            if (char === "{") {
++                lineInfo.openingBraces++;
++                const inLineStartScope = scope === lineStartScope || scope.startLine === lineNb;
++                lineInfo.openBraceAnchors.push(inLineStartScope ? lineNb : statementStartLine(scope, lineNb));
++            } else if (char === "}") {
++                lineInfo.closingBraces++;
++                lineInfo.openBraceAnchors.pop();
++                if (scope.inString && !scope.brackets.includes("{")) {
++                    // End of ${} in a string
++                    scopes.pop();
++                    pos++;
++                    stringStart = pos;
++                    continue;
++                }
++            }
++            if (char === "(" || char === "[" || char === "{") {
++                scope.brackets.push(char);
++            } else if (OPENING_BRACKETS.has(char)) {
++                // Drop brackets left open inside the closed ones, too
++                const openingBracketPos = scope.brackets.lastIndexOf(OPENING_BRACKETS.get(char));
++                if (openingBracketPos > -1) {
++                    scope.brackets.length = openingBracketPos;
++                }
++            }
++            // After an operand, a slash is a division, otherwise it starts a slashy string
++            const postfixOperator = line.startsWith("++", pos) || line.startsWith("--", pos);
++            scope.slashyAllowed = !postfixOperator && !OPENING_BRACKETS.has(char);
++            pos += postfixOperator ? 2 : 1;
++        }
++        if (stringStart !== null) {
++            lineInfo.stringRanges.push([stringStart, line.length]);
++        }
++        // Recover from single and double quoted strings which are not terminated on their line
++        while (!escapedLineEnd && scopes[scopes.length - 1].kind === "string" && !scopes[scopes.length - 1].multiLine) {
++            scopes.pop();
++        }
++        // Outside of parentheses and brackets a new line ends the statement, so a slash at the start of the next line
++        // starts a slashy string
++        const lineEndScope = scopes[scopes.length - 1];
++        if (lineEndScope.kind === "code" && !["(", "["].includes(lineEndScope.brackets[lineEndScope.brackets.length - 1])) {
++            lineEndScope.slashyAllowed = true;
++        }
++        linesInfo.push(lineInfo);
++    }
++    // Like the Groovy lexer, take the slash for a division if the slashy string it would start does not end
++    const unclosedSlashyString = scopes.find((scope) => scope.open === SLASHY_STRING.open);
++    if (unclosedSlashyString) {
++        const division = `${unclosedSlashyString.startLine}:${unclosedSlashyString.startPos}`;
++        return getLinesInfo(allLines, new Set([...divisions, division]));
++    }
++    return linesInfo;
++}
++
++// Check if a position in a line is in the content of a string literal, see getLinesInfo()
++function isInStringLiteral(lineInfo, pos) {
++    return lineInfo.stringRanges.some(([start, end]) => start <= pos && pos < end);
++}
++
+ // Returns all strings which are not inside braces
+ function getOutOfBracesStrings(str, exclude = []) {
+     let match = false;
+@@ -462,6 +660,7 @@ export {
+     getIndentLength,
+     getLastStringRange,
+     getLastVariableRange,
++    getLinesInfo,
+     getNpmGroovyLintVersion,
+     getOutOfBracesStrings,
+     getSourceLines,
+@@ -470,6 +669,7 @@ export {
+     getVariable,
+     getVariableRange,
+     isErrorInLogLevelScope,
++    isInStringLiteral,
+     isValidCodeLine,
+     moveOpeningBracket,
+     normalizeNewLines,

@@ -11,8 +11,8 @@ from typing import override
 from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import PermissionName
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
+from cmk.web.utils.permission_verification import PermissionName
 
 
 def register(mode_registry: ModeRegistry) -> None:

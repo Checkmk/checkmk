@@ -24,10 +24,10 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.automations import make_automation_config
@@ -43,11 +43,13 @@ from cmk.gui.watolib.bulk_discovery import (
 from cmk.gui.watolib.hosts_and_folders import (
     disk_or_search_folder_from_request,
     Folder,
-    folder_tree,
+    make_folder_tree,
     SearchFolder,
 )
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.livestatus_client import SiteConfigurations
+from cmk.web.utils.csrf_token import check_csrf_token
+from cmk.web.utils.permission_verification import PermissionName
 
 from ._bulk_actions import get_hostnames_from_checkboxes
 
@@ -78,14 +80,14 @@ class ModeBulkDiscovery(WatoMode):
         self._all = bool(request.var("all"))
         self._just_started = False
         self._get_bulk_discovery_params()
-        self._job = BulkDiscoveryBackgroundJob()
         self._folder = disk_or_search_folder_from_request(
-            folder_tree(),
+            make_folder_tree(self._ctx.config),
             request.var("folder"),
             request.get_ascii_input("host"),
             acting_user=user,
             request=request,
         )
+        self._job = BulkDiscoveryBackgroundJob(back_url=self._folder.url(request))
 
     def _get_bulk_discovery_params(self) -> None:
         self._bulk_discovery_params = copy.deepcopy(active_config.bulk_discovery_default_settings)
@@ -136,7 +138,7 @@ class ModeBulkDiscovery(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         user.need_permission("wato.services")
 
@@ -157,6 +159,10 @@ class ModeBulkDiscovery(WatoMode):
                     activation_site_configs=activation_sites(config.sites),
                     local_site=omd_site(),
                     acting_user=user.id,
+                    site_configs=config.sites,
+                    wato_hide_folders_without_read_permissions=config.wato_hide_folders_without_read_permissions,
+                    wato_host_attrs=config.wato_host_attrs,
+                    tags=config.tags.get_dict_format(),
                 )
             ).is_error():
                 raise result.error

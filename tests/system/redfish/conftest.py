@@ -12,10 +12,9 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
-from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
 from cmk.ccc.hostaddress import HostName
-from tests.testlib.site import (
+from tests.testlib.system.site import (
     get_site_factory,
     Site,
     tracing_config_from_env,
@@ -119,11 +118,6 @@ def _unpack_dump(dataset: str, tmpdir: Path) -> Iterator[Path]:
         yield target
     finally:
         shutil.rmtree(target)
-
-
-@pytest.fixture(scope="session", autouse=True)
-def instrument_requests() -> None:
-    RequestsInstrumentor().instrument()
 
 
 @pytest.fixture(scope="session", name="site")

@@ -7,10 +7,12 @@ import json
 import re
 from collections.abc import Iterable, Iterator, Mapping
 
+from ._fetched import ScalarKind
 from ._naming import Service
-from ._quantities import rrd_metric_of, RRDMetric, ScalarKind, ScalarOf
+from ._quantities import rrd_metric_of, RRDMetric, ScalarOf
 from ._quantity import (
     EvaluationContext,
+    fetch_leaves,
     first_value,
     MetricProtocol,
     QuantityProtocol,
@@ -48,7 +50,7 @@ def title_metrics(title: str, drawn_metrics: Iterable[MetricProtocol]) -> Iterat
         return
     for raw in _TITLE_EXPRESSION_PATTERN.findall(title):
         if (quantity := _title_quantity(raw, service)) is not None:
-            yield from quantity.metrics()
+            yield from fetch_leaves(quantity)
 
 
 def _fallback_title(title: str) -> str:
@@ -64,7 +66,7 @@ def evaluate_title(
     for raw in _TITLE_EXPRESSION_PATTERN.findall(title):
         if service is None or (quantity := _title_quantity(raw, service)) is None:
             return _fallback_title(title)
-        value = first_value(quantity.evaluate(context))
+        value = first_value(context.evaluate(quantity))
         if value is None:
             return _fallback_title(title)
         title = title.replace(raw, str(int(value)), 1)

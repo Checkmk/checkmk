@@ -47,15 +47,29 @@ test('CmkNumberRange flags a lower bound above the upper bound', async () => {
   render(CmkNumberRange, { props: { modelValue: { from: 10, to: 3 } } })
 
   expect(
-    await screen.findByText('The lower bound must not exceed the upper bound.')
+    await screen.findByText('Enter a lower bound that does not exceed the upper bound.')
   ).toBeInTheDocument()
+})
+
+test('CmkNumberRange points both bounds at the message that flags them', async () => {
+  render(CmkNumberRange, { props: { modelValue: { from: 10, to: 3 } } })
+  await screen.findByText('Enter a lower bound that does not exceed the upper bound.')
+
+  for (const bound of ['From', 'To']) {
+    const input = screen.getByRole('spinbutton', { name: bound })
+    expect(input).toHaveAttribute('aria-invalid', 'true')
+    const describedBy = input.getAttribute('aria-describedby')
+    expect(document.getElementById(describedBy ?? '')).toHaveTextContent(
+      'Enter a lower bound that does not exceed the upper bound.'
+    )
+  }
 })
 
 test('CmkNumberRange accepts an open upper bound without error', () => {
   render(CmkNumberRange, { props: { modelValue: { from: 1, to: undefined } } })
 
   expect(
-    screen.queryByText('The lower bound must not exceed the upper bound.')
+    screen.queryByText('Enter a lower bound that does not exceed the upper bound.')
   ).not.toBeInTheDocument()
 })
 

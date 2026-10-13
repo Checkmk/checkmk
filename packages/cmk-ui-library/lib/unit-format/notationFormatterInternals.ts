@@ -11,12 +11,9 @@
 
 export const MAX_DIGITS = 5
 
-// Mirrors the lambdas hard-coded into Python's `render` and
-// `render_y_labels` in `cmk/gui/unit_formatter.py`.
-export type AutoPrecisionDigits = (exponent: number, digits: number) => number
+export const MIN_LABELS_PER_AXIS = 2
 
-export const RENDER_AUTO_DIGITS: AutoPrecisionDigits = (exp, d) => Math.max(exp + 1, d)
-export const Y_LABELS_AUTO_DIGITS: AutoPrecisionDigits = (exp, d) => exp + d
+export const ON_MULTIPLE_TOLERANCE = 1e-9
 
 // Python's round() uses banker's rounding (round-half-to-even); JS Math.round
 // rounds half away from zero. The legacy Python TimeFormatter relies on
@@ -182,6 +179,11 @@ export const ONE_MINUTE = 60
 // Atom tables for y-axis label spacing. Mirrors `_BASIC_DECIMAL_ATOMS` and
 // `_BASIC_TIME_ATOMS` in cmk/gui/unit_formatter.py.
 export const BASIC_DECIMAL_ATOMS: number[] = [1, 2, 5, 10, 20, 50]
+
+export function decimalAtoms(span: number): number[] {
+  const factor = pow10(Math.floor(Math.log10(span)) - 1)
+  return BASIC_DECIMAL_ATOMS.map((atom) => atom * factor)
+}
 
 export const BASIC_TIME_ATOMS: number[] = [
   1,

@@ -48,6 +48,7 @@ import { computed, ref } from 'vue'
 import HostRow from '@/monitoring/all-hosts/components/HostRow.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
+import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -122,6 +123,8 @@ const rows: HostEntry[] = [
   {
     name: 'web-server-01',
     state: 'UP',
+    is_flapping: false,
+    stale: false,
     address: '10.0.0.1',
     alias: 'Frontend web server (eu-west)',
     site_id: 'local',
@@ -131,11 +134,14 @@ const rows: HostEntry[] = [
     num_services_crit: 1,
     num_services_unknown: 0,
     num_services_pending: 2,
-    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=web-server-01'
+    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=web-server-01',
+    num_relations: 0
   },
   {
     name: 'db-primary-02',
     state: 'DOWN',
+    is_flapping: false,
+    stale: false,
     address: '10.0.0.27',
     alias: 'Primary database (eu-west)',
     site_id: 'local',
@@ -145,11 +151,14 @@ const rows: HostEntry[] = [
     num_services_crit: 7,
     num_services_unknown: 1,
     num_services_pending: 1,
-    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=db-primary-02'
+    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=db-primary-02',
+    num_relations: 0
   },
   {
     name: 'cache-node-03',
     state: 'UP',
+    is_flapping: false,
+    stale: false,
     address: '10.0.0.51',
     alias: 'Redis cache node',
     site_id: 'local',
@@ -159,11 +168,14 @@ const rows: HostEntry[] = [
     num_services_crit: 0,
     num_services_unknown: 0,
     num_services_pending: 0,
-    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=cache-node-03'
+    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=cache-node-03',
+    num_relations: 0
   },
   {
     name: 'mail-relay-04',
     state: 'UNREACHABLE',
+    is_flapping: false,
+    stale: false,
     address: '10.0.0.88',
     alias: 'Outbound mail relay',
     site_id: 'local',
@@ -173,7 +185,8 @@ const rows: HostEntry[] = [
     num_services_crit: 0,
     num_services_unknown: 2,
     num_services_pending: 0,
-    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=mail-relay-04'
+    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=mail-relay-04',
+    num_relations: 0
   }
 ]
 
@@ -238,7 +251,11 @@ const pinningActive = computed(
             :get-row-key="(row) => `${row.site_id}/${row.name}`"
           >
             <template #row="{ row, tableRow }">
-              <HostRow :row="row" :table-row="tableRow" />
+              <HostRow
+                :row="row"
+                :table-row="tableRow"
+                :display-options="DEFAULT_DISPLAY_OPTIONS"
+              />
             </template>
           </MonitoringTable>
         </div>

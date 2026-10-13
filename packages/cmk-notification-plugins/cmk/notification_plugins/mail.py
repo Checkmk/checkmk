@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 # Argument 1: Full system path to the pnp4nagios index.php for fetching the graphs. Usually auto configured in OMD.
 # Argument 2: HTTP-URL-Prefix to open Multisite. When provided, several links are added to the mail.
@@ -24,8 +23,8 @@ from jinja2 import Environment, FileSystemLoader
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import get_password_from_env_or_context, render_cmk_graphs
 from cmk.utils.mail import (
-    Attachment,
     default_from_address,
+    InlineImageAttachment,
     MailString,
     multipart_mail,
     send_mail_sendmail,
@@ -438,11 +437,11 @@ def send_mail(message: Message, target: str, from_address: str, context: dict[st
 
 def render_performance_graphs(
     context: dict[str, str],
-) -> tuple[list[Attachment], list[str]]:
-    attachments: list[Attachment] = []
+) -> tuple[list[InlineImageAttachment], list[str]]:
+    attachments: list[InlineImageAttachment] = []
     file_names = []
     for graph in render_cmk_graphs(context):
-        attachments.append(Attachment("img", graph.filename, graph.data, "inline"))
+        attachments.append(InlineImageAttachment(name=graph.filename, contents=graph.data))
 
         file_names.append(graph.filename)
 
@@ -455,7 +454,7 @@ def construct_content(
     bulk_summary: list[dict[str, str]] | None = None,
     last_bulk_entry: bool = False,
     notification_number: int = 1,
-) -> tuple[str, str, list[Attachment]]:
+) -> tuple[str, str, list[InlineImageAttachment]]:
     # A list of optional information is configurable via the parameter "elements"
     # (new configuration style)
     # Note: The value PARAMETER_ELEMENTSS is NO TYPO.
@@ -482,7 +481,7 @@ def construct_content(
     )
     content_txt = utils.substitute_context(template_txt, context)
 
-    attachments: list[Attachment] = []
+    attachments: list[InlineImageAttachment] = []
     file_names: list[str] = []
     if "graph" in elements and "ALERTHANDLEROUTPUT" not in context:
         # Add Checkmk graphs
@@ -587,7 +586,7 @@ class EmailContent:
         reply_to: str,
         content_txt: str,
         content_html: str,
-        attachments: Sequence[Attachment],
+        attachments: Sequence[InlineImageAttachment],
     ) -> None:
         self.context = context
         self.mailto = mailto
@@ -645,7 +644,7 @@ class BulkEmailContent(EmailContent):
             attachments += att
             hosts.add(c["HOSTNAME"])
 
-        attachments = _add_template_attachments(escaped_context, attachments)
+        attachments = _add_template_attachments(escaped_context, attachments)  # type: ignore[possibly-undefined]
 
         # TODO: cleanup duplicate code with SingleEmailContent
         # TODO: the context is only needed because of SMPT settings used in send_mail
@@ -734,8 +733,8 @@ class SingleEmailContent(EmailContent):
 
 def _add_template_attachments(
     context: dict[str, str],
-    attachments: list[Attachment],
-) -> list[Attachment]:
+    attachments: list[InlineImageAttachment],
+) -> list[InlineImageAttachment]:
     # always needed
     for icon in [
         "checkmk_logo.png",
@@ -769,9 +768,9 @@ def _add_template_attachments(
     return attachments
 
 
-def attach_file(icon: str) -> Attachment:
+def attach_file(icon: str) -> InlineImageAttachment:
     with open(web_dir / f"htdocs/images/icons/{icon}", "rb") as file:
-        return Attachment(what="img", name=icon, contents=file.read(), how="inline")
+        return InlineImageAttachment(name=icon, contents=file.read())
 
 
 def main() -> NoReturn:

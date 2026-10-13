@@ -12,7 +12,7 @@ from collections.abc import ItemsView, Iterator, KeysView, Mapping, Sequence
 from itertools import chain
 from typing import override
 
-from cmk.gui.config import Config
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.html import html
@@ -20,7 +20,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import FilterHTTPVariables, IconNames, SingleInfos, StaticIcon, VisualContext
+from cmk.gui.type_defs import FilterHTTPVariables, SingleInfos, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.valuespec import (
     ABCPageListOfMultipleGetChoice,
@@ -40,16 +40,18 @@ from cmk.gui.visuals.filter import Filter, filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.livestatus_client import LivestatusTestingError
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.request_cache import RequestCache
 
 
-def FilterChoices(infos: SingleInfos, title: str, help: str) -> DualListChoice:
+def FilterChoices(infos: SingleInfos, title: str, help: str) -> DualListChoice:  # noqa: A002
     """Select names of filters for the given infos"""
 
     def _info_filter_choices(infos: SingleInfos) -> Iterator[tuple[str, str]]:
         for info in infos:
             info_title = visual_info_registry[info]().title
-            for key, filter_ in VisualFilterList.get_choices(info):
-                yield (key, f"{info_title}: {filter_.title()}")
+            for key, filter_ in _sorted_filters_allowed_for_info(info, ()):
+                yield (key, f"{info_title}: {filter_.title}")
 
     return DualListChoice(
         choices=list(_info_filter_choices(infos)),
@@ -69,14 +71,16 @@ class VisualFilter(ValueSpec[FilterHTTPVariables]):
         self,
         *,
         name: str,
+        request_cache: RequestCache[RequestCacheConfig],
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[FilterHTTPVariables] = DEF_VALUE,
         validate: ValueSpecValidateFunc[FilterHTTPVariables] | None = None,
     ):
         self._name = name
         self._filter = filter_registry[name]
+        self._request_cache = request_cache
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
 
     @override
@@ -90,12 +94,12 @@ class VisualFilter(ValueSpec[FilterHTTPVariables]):
     @override
     def render_input(self, varprefix: str, value: FilterHTTPVariables) -> None:
         # A filter can not be used twice on a page, because the varprefix is not used
-        show_filter(self._filter, value)
+        show_filter(self._filter, value, self._request_cache)
 
     @override
     def from_html_vars(self, varprefix: str) -> FilterHTTPVariables:
         # A filter can not be used twice on a page, because the varprefix is not used
-        return self._filter.value()
+        return self._filter.value(self._request_cache)
 
     @override
     def validate_datatype(self, value: FilterHTTPVariables, varprefix: str) -> None:
@@ -127,7 +131,9 @@ class VisualFilter(ValueSpec[FilterHTTPVariables]):
         raise NotImplementedError  # FIXME! Violates LSP!
 
 
-def show_filter(f: Filter, value: FilterHTTPVariables) -> None:
+def show_filter(
+    f: Filter, value: FilterHTTPVariables, request_cache: RequestCache[RequestCacheConfig]
+) -> None:
     html.open_div(class_=["floatfilter", f.ident])
     html.open_div(class_="legend")
     html.span(f.title)
@@ -137,7 +143,7 @@ def show_filter(f: Filter, value: FilterHTTPVariables) -> None:
         html.help(f.description)
     try:
         with output_funnel.plugged():
-            f.display(value)
+            f.display(value, request_cache)
             html.write_html(HTML.without_escaping(output_funnel.drain()))
     except LivestatusTestingError:
         raise
@@ -161,22 +167,16 @@ class VisualFilterList(ListOfMultiple):
     filter is rendered and the user can provide a default value.
     """
 
-    @classmethod
+    @staticmethod
     def get_choices(
-        cls, info: str, ignored_context_choices: Sequence[str] = ()
+        info: str,
+        request_cache: RequestCache[RequestCacheConfig],
+        ignored_context_choices: Sequence[str] = (),
     ) -> Sequence[tuple[str, VisualFilter]]:
-        return sorted(
-            cls._get_filter_specs(info, ignored_context_choices),
-            key=lambda x: (x[1]._filter.sort_index, x[1].title()),
-        )
-
-    @classmethod
-    def _get_filter_specs(
-        cls, info: str, ignored_context_choices: Sequence[str]
-    ) -> Iterator[tuple[str, VisualFilter]]:
-        for fname, filter_ in filters_allowed_for_info(info):
-            if fname not in ignored_context_choices:
-                yield fname, VisualFilter(name=fname, title=filter_.title)
+        return [
+            (fname, VisualFilter(name=fname, request_cache=request_cache, title=filter_.title))
+            for fname, filter_ in _sorted_filters_allowed_for_info(info, ignored_context_choices)
+        ]
 
     def __init__(
         self,
@@ -184,6 +184,8 @@ class VisualFilterList(ListOfMultiple):
         ignored_context_choices: Sequence[str] = (),
         title: str | None = None,
         allow_empty: bool = True,
+        *,
+        request_cache: RequestCache[RequestCacheConfig],
     ) -> None:
         self._filters = filters_allowed_for_infos(info_list)
 
@@ -193,7 +195,7 @@ class VisualFilterList(ListOfMultiple):
         grouped: GroupedListOfMultipleChoices = [
             ListOfMultipleChoiceGroup(
                 title=visual_info_registry[info]().title,
-                choices=self.get_choices(info, ignored_context_choices),
+                choices=self.get_choices(info, request_cache, ignored_context_choices),
             )
             for info in info_list
         ]
@@ -232,9 +234,20 @@ class VisualFilterList(ListOfMultiple):
 
 def filters_allowed_for_info(info: str) -> Iterator[tuple[str, Filter]]:
     """Returns a map of filter names and filter objects that are registered for the given info"""
-    for fname, filt in filter_registry.items():
-        if filt.info is None or info == filt.info:  # type: ignore[redundant-expr]
-            yield fname, filt
+    return ((fname, filt) for fname, filt in filter_registry.items() if info == filt.info)
+
+
+def _sorted_filters_allowed_for_info(
+    info: str, ignored_filters: Sequence[str]
+) -> list[tuple[str, Filter]]:
+    return sorted(
+        (
+            (fname, filter_)
+            for fname, filter_ in filters_allowed_for_info(info)
+            if fname not in ignored_filters
+        ),
+        key=lambda x: (x[1].sort_index, x[1].title),
+    )
 
 
 def filters_allowed_for_infos(info_list: SingleInfos) -> dict[str, Filter]:
@@ -244,11 +257,7 @@ def filters_allowed_for_infos(info_list: SingleInfos) -> dict[str, Filter]:
 
 def filters_exist_for_infos(infos: SingleInfos) -> bool:
     """Returns True if any filter is registered for the given infos"""
-    for _fname, filt in filter_registry.items():
-        for info in infos:
-            if filt.info is None or info == filt.info:  # type: ignore[redundant-expr]
-                return True
-    return False
+    return any(filt.info in infos for filt in filter_registry.values())
 
 
 class VisualFilterListWithAddPopup(VisualFilterList):
@@ -313,8 +322,9 @@ class VisualFilterListWithAddPopup(VisualFilterList):
             html.close_div()
         html.close_div()
         filters_applied = request.get_ascii_input("filled_in") == "filter"
-        html.javascript(
-            f"cmk.valuespecs.listofmultiple_init({json.dumps(varprefix)}, {json.dumps(filters_applied)});"
+        html.call_ts_function(
+            function_name="listofmultiple_init",
+            arguments={"varprefix": varprefix, "was_submitted": filters_applied},
         )
 
 
@@ -326,7 +336,8 @@ class PageAjaxVisualFilterListGetChoice(ABCPageListOfMultipleGetChoice):
         infos = api_request["infos"]
         return [
             ListOfMultipleChoiceGroup(
-                title=visual_info_registry[info]().title, choices=VisualFilterList.get_choices(info)
+                title=visual_info_registry[info]().title,
+                choices=VisualFilterList.get_choices(info, RequestCache(config)),
             )
             for info in infos
         ]

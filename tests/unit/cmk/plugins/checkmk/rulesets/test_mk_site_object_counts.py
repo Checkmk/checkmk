@@ -17,15 +17,25 @@ from cmk.plugins.checkmk.rulesets.mk_site_object_counts import migrate
         ),
         (
             {},
-            {"deployment": ("sync", None)},
+            {"deployment": ("sync", None), "tags": [], "service_check_commands": [], "sites": []},
         ),
         (
             {"tags": ["prod", "test"]},
-            {"deployment": ("sync", None), "tags": ["prod", "test"]},
+            {
+                "deployment": ("sync", None),
+                "tags": ["prod", "test"],
+                "service_check_commands": [],
+                "sites": [],
+            },
         ),
         (
             {"service_check_commands": ["check_mk"]},
-            {"deployment": ("sync", None), "service_check_commands": ["check_mk"]},
+            {
+                "deployment": ("sync", None),
+                "tags": [],
+                "service_check_commands": ["check_mk"],
+                "sites": [],
+            },
         ),
         (
             {
@@ -35,6 +45,7 @@ from cmk.plugins.checkmk.rulesets.mk_site_object_counts import migrate
             {
                 "deployment": ("sync", None),
                 "tags": ["prod"],
+                "service_check_commands": [],
                 "sites": [
                     {"site_name": "site1", "tags": ["tag1"], "service_check_commands": ["cmd1"]}
                 ],

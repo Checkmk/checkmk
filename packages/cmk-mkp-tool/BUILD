@@ -9,7 +9,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
 ])
 
@@ -32,7 +31,6 @@ py_library(
     data = [":py_typed"],
     imports = ["."],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//packages/cmk-ec:__pkg__",
         "//tests:__subpackages__",
@@ -61,7 +59,6 @@ py_wheel(
     name = "wheel",
     distribution = "cmk-mkp-tool",
     strip_path_prefixes = ["packages/cmk-mkp-tool"],
-    # TODO: Duplicated from pyproject.toml
     version = "3.0.0",
     visibility = ["//visibility:public"],
     deps = [
@@ -93,13 +90,6 @@ py_wheel(
     version = "2.0.0",
     visibility = ["//visibility:public"],
     deps = [],
-)
-
-sh_library(
-    name = "helpers",
-    srcs = [
-        ".f12",
-    ],
 )
 
 py_requirements_test(

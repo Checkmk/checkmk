@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Iterable
 
@@ -38,7 +37,7 @@ def check_mail_arguments(
 
 def _forwarding_options_to_args(forward: ForwardingOptions) -> Iterable[str]:
     yield "--forward-ec"
-    match forward.method:
+    match forward.method:  # type: ignore[exhaustive-match]
         case "ec", ("spool" | "spool_local", str(value)):
             yield f"--forward-method=spool:{value}"
         case "ec", (_, str(value)):
@@ -55,7 +54,7 @@ def _forwarding_options_to_args(forward: ForwardingOptions) -> Iterable[str]:
     if forward.host:
         yield f"--forward-host={forward.host}"
 
-    match forward.application:
+    match forward.application:  # type: ignore[exhaustive-match]
         case "spec", configured_app:
             yield f"--forward-app={configured_app}"
 

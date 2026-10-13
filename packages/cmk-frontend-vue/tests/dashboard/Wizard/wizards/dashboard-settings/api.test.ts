@@ -3,64 +3,81 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { describe, expect, it, vi } from 'vitest'
+import { CmkApiError } from 'cmk-ui-library/lib/error'
+import client from 'cmk-ui-library/lib/rest-api-client/client'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   getContactGroups,
   getSites
 } from '@/dashboard/components/Wizard/wizards/dashboard-settings/api'
 
-const mockFetchRestAPI = vi.hoisted(() => vi.fn())
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let getSpy: any
 
-vi.mock('cmk-ui-library/lib/cmkFetch.ts', () => ({
-  fetchRestAPIDeprecated: mockFetchRestAPI
-}))
+function mockCollection(value: Array<{ id: string; title: string }>) {
+  getSpy.mockResolvedValueOnce({
+    data: { value },
+    error: undefined,
+    response: new Response(null, { status: 200 })
+  } as never)
+}
 
-function mockSuccessResponse(data: { value: Array<{ id: string; title: string }> }) {
-  mockFetchRestAPI.mockResolvedValueOnce({
-    raiseForStatus: vi.fn().mockResolvedValue(undefined),
-    json: vi.fn().mockResolvedValue(data)
-  })
+function mockRefusal(status: number) {
+  getSpy.mockResolvedValueOnce({
+    data: undefined,
+    error: { title: 'Forbidden', detail: 'You lack the permission' },
+    response: new Response(null, { status })
+  } as never)
 }
 
 describe('API functions', () => {
-  it('getContactGroups fetches correct URL and maps id to name', async () => {
-    mockSuccessResponse({
-      value: [
-        { id: 'admins', title: 'Administrators' },
-        { id: 'ops', title: 'Operations' }
-      ]
-    })
+  beforeEach(() => {
+    getSpy = vi.spyOn(client, 'GET')
+  })
+
+  it('getContactGroups requests the contact group collection and maps id to name', async () => {
+    mockCollection([
+      { id: 'admins', title: 'Administrators' },
+      { id: 'ops', title: 'Operations' }
+    ])
 
     const result = await getContactGroups()
 
-    expect(mockFetchRestAPI).toHaveBeenCalledWith(
-      'api/unstable/domain-types/contact_group_config/collections/all',
-      'GET'
-    )
+    expect(getSpy).toHaveBeenCalledWith('/domain-types/contact_group_config/collections/all')
     expect(result).toEqual([
       { name: 'admins', title: 'Administrators' },
       { name: 'ops', title: 'Operations' }
     ])
   })
 
-  it('getSites fetches correct URL and maps id to name', async () => {
-    mockSuccessResponse({
-      value: [
-        { id: 'site1', title: 'Production Site' },
-        { id: 'site2', title: 'Staging Site' }
-      ]
-    })
+  it('getSites requests the site connection collection and maps id to name', async () => {
+    mockCollection([
+      { id: 'site1', title: 'Production Site' },
+      { id: 'site2', title: 'Staging Site' }
+    ])
 
     const result = await getSites()
 
-    expect(mockFetchRestAPI).toHaveBeenCalledWith(
-      'api/unstable/domain-types/site_connection/collections/all',
-      'GET'
-    )
+    expect(getSpy).toHaveBeenCalledWith('/domain-types/site_connection/collections/all')
     expect(result).toEqual([
       { name: 'site1', title: 'Production Site' },
       { name: 'site2', title: 'Staging Site' }
     ])
+  })
+
+  // AccessSettings decides whether to disable the contact group and site
+  // options by matching CmkApiError and reading its status. Pin both here, so
+  // a change to what these functions raise cannot pass unnoticed.
+  it('getContactGroups raises a CmkApiError carrying the refused status', async () => {
+    mockRefusal(403)
+
+    await expect(getContactGroups()).rejects.toThrow(CmkApiError)
+  })
+
+  it('getSites reports the refused status on the raised error', async () => {
+    mockRefusal(401)
+
+    await expect(getSites()).rejects.toMatchObject({ statusCode: 401 })
   })
 })

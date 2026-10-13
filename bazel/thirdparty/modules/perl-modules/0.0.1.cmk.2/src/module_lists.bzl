@@ -120,7 +120,7 @@ PERL_MODULES_LIST_2 = {
     },
     "Scalar-List-Utils-1.42.tar.gz": {
         "sha256": "3507f72541f66a2dce850b9b56771e5fccda3d215c52f74946c6e370c0f4a4da",
-        "url": "https://mirror.sobukus.de/files/cpan/Scalar/Scalar-List-Utils-1.42.tar.gz",
+        "url": "https://cpan.metacpan.org/authors/id/P/PE/PEVANS/Scalar-List-Utils-1.42.tar.gz",
     },
     "Sub-Exporter-Progressive-0.001011.tar.gz": {
         "sha256": "0618c6e69c6c0540c41e7560d51981407a6a0768f1330bef6d6ac3c6f1fa7c06",
@@ -228,7 +228,7 @@ PERL_MODULES_LIST_2 = {
     },
     "ExtUtils-CBuilder-0.280220.tar.gz": {
         "sha256": "b99b6a3d0bd1d3b2e4809da52835472f4ff149d81f88d9cc55cdeba80e9b80b3",
-        "url": "https://mirror.sobukus.de/files/cpan/ExtUtils/ExtUtils-CBuilder-0.280220.tar.gz",
+        "url": "https://cpan.metacpan.org/authors/id/A/AM/AMBS/ExtUtils-CBuilder-0.280220.tar.gz",
     },
     "ExtUtils-ParseXS-3.24.tar.gz": {
         "sha256": "30b60b8208fc9b7746ed934b678bb9618a8f28994dae8774548353a7b550371e",

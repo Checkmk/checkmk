@@ -10,6 +10,7 @@ import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { computed, onMounted, ref } from 'vue'
 
 import FilterSelectionActiveIcon from './private/selection/FilterSelectionActiveIcon.vue'
@@ -37,6 +38,10 @@ interface ProcessedFilterCategory {
 }
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Filter selection'), [
+  { combo: ['Enter'], description: _t('Toggle filter') },
+  { combo: [' '], description: _t('Toggle filter') }
+])
 const props = defineProps<Props>()
 const filterGroups = useFilterGroups()
 

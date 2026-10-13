@@ -9,13 +9,15 @@ import pytest
 
 from livestatus import LivestatusResponse, LivestatusRow, OnlySites
 
-import cmk.gui.inventory
-import cmk.gui.utils
 from cmk.ccc.user import UserId
+from cmk.gui.config import Config
 from cmk.gui.type_defs import ViewSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.inventory._data_sources import RowTableInventory, RowTableInventoryHistory
+from cmk.inventory.raw_paths import parse_internal_raw_path
+from cmk.web.utils.request_cache import RequestCache
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 EXPECTED_INV_KEYS = [
     "site",
@@ -85,7 +87,8 @@ def fixture_view() -> View:
         "synthetic_test_view",
         view_spec,
         view_spec.get("context", {}),
-        UserPermissions({}, {}, {}, []),
+        make_painter_context(UserPermissions({}, {}, {}, [])),
+        RequestCache(Config()),
     )
 
 
@@ -119,9 +122,7 @@ class RowTableInventoryHistoryTest2(RowTableInventoryHistory):
 
 @pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory(view: View) -> None:
-    row_table = RowTableInventoryTest1(
-        "invtesttable", cmk.gui.inventory.parse_internal_raw_path(".foo.bar:")
-    )
+    row_table = RowTableInventoryTest1("invtesttable", parse_internal_raw_path(".foo.bar:"))
     rows, _len_rows = row_table.query(view.datasource, [], [], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_KEYS)
@@ -129,9 +130,7 @@ def test_query_row_table_inventory(view: View) -> None:
 
 @pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory_unknown_columns(view: View) -> None:
-    row_table = RowTableInventoryTest1(
-        "invtesttable", cmk.gui.inventory.parse_internal_raw_path(".foo.bar:")
-    )
+    row_table = RowTableInventoryTest1("invtesttable", parse_internal_raw_path(".foo.bar:"))
     rows, _len_rows = row_table.query(view.datasource, [], ["foo"], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_KEYS)
@@ -139,9 +138,7 @@ def test_query_row_table_inventory_unknown_columns(view: View) -> None:
 
 @pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory_add_columns(view: View) -> None:
-    row_table = RowTableInventoryTest2(
-        "invtesttable", cmk.gui.inventory.parse_internal_raw_path(".foo.bar:")
-    )
+    row_table = RowTableInventoryTest2("invtesttable", parse_internal_raw_path(".foo.bar:"))
     rows, _len_rows = row_table.query(view.datasource, [], ["host_foo"], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_KEYS + ["host_foo"])

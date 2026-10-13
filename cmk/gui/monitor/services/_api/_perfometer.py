@@ -7,51 +7,59 @@ from typing import Self
 
 from cmk.gui.config import active_config
 from cmk.gui.graphing import (
-    get_first_matching_perfometer,
+    drawn_segments,
+    DrawnSegment,
+    evaluated_perfometer,
     get_temperature_unit,
-    metrics_from_api,
-    parse_perf_data,
+    perfometer_label,
     perfometers_from_api,
-    translate_metrics,
+    registered_metrics,
+    registered_translations,
 )
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.view_utils import get_themed_perfometer_bg_color
-
-_EMPTY_AT = 0.0
-_FULL_AT = 100.0
 
 
 @api_model
-class ServicePerfometerRange:
-    """Bounds the Perf-O-Meter's value is to be read against."""
+class ServicePerfometerSegment:
+    """One run of a bar, drawn from the bar's left edge in the order the runs are listed."""
 
-    min: float = api_field(description="Value of an entirely empty bar", example=_EMPTY_AT)
-    max: float = api_field(description="Value of an entirely filled bar", example=_FULL_AT)
+    share: float = api_field(
+        description="Share of the bar's width this run covers, in percent", example=42.0
+    )
+    color: str | None = api_field(
+        description="Hex color of the run; null where the bar is left unfilled", example="#ff0000"
+    )
 
 
 @api_model
 class ServicePerfometer:
-    """Perf-O-Meter of a service, flattened into a single filled bar.
+    """Perf-O-Meter of a service.
 
-    The graphing layer projects a service's performance data onto a stack of colored segments;
-    what is exposed here is the share of the bar those segments fill, together with the label and
-    the leading segment's color.
+    The graphing layer projects a service's performance data onto one bar, or onto two stacked
+    ones, each drawn as a sequence of colored runs and the unfilled rest. A bidirectional
+    Perf-O-Meter is a single bar whose two halves grow outwards from its centre.
     """
 
-    value: float = api_field(description="Filled share of the bar", example=42.0)
-    value_range: ServicePerfometerRange = api_field(
-        description="Bounds the value is to be read against"
+    bars: list[list[ServicePerfometerSegment]] = api_field(
+        description=(
+            "Bars to draw, the upper one first. Each bar is the sequence of runs it is drawn "
+            "from, and their shares add up to the full width."
+        ),
+        example=[[{"share": 42.0, "color": "#ff0000"}, {"share": 58.0, "color": None}]],
     )
-    formatted: str = api_field(description="Label rendered on top of the bar", example="42%")
-    color: str = api_field(description="Hex color of the filled part", example="#ff0000")
+    formatted: str = api_field(description="Label rendered on top of the bars", example="42%")
 
     @classmethod
-    def from_perf_data(cls, perf_data: str, check_command: str) -> Self | None:
+    def from_perf_data(
+        cls, perf_data: str, check_command: str, *, host_name: str, service_name: str
+    ) -> Self | None:
         """Build the Perf-O-Meter a service's performance data resolves to, if any."""
         try:
-            return cls._from_perf_data(perf_data, check_command)
+            return cls._from_perf_data(
+                perf_data, check_command, host_name=host_name, service_name=service_name
+            )
         except Exception:
             logger.exception("error rendering perfometer")
             if active_config.debug:
@@ -59,48 +67,43 @@ class ServicePerfometer:
             return None
 
     @classmethod
-    def _from_perf_data(cls, perf_data: str, check_command: str) -> Self | None:
-        if not (perf_data_string := perf_data.strip()):
-            return None
-
-        temperature_unit = get_temperature_unit(user, active_config.default_temperature_unit)
-        parsed_perf_data, parsed_check_command = parse_perf_data(
-            perf_data_string, check_command, debug=active_config.debug
-        )
-        if not parsed_perf_data:
-            return None
-
-        if not (
-            renderer := get_first_matching_perfometer(
-                translate_metrics(
-                    parsed_perf_data,
-                    parsed_check_command,
-                    metrics_from_api,
-                    temperature_unit=temperature_unit,
-                ),
-                metrics_from_api,
-                perfometers_from_api,
+    def _from_perf_data(
+        cls, perf_data: str, check_command: str, *, host_name: str, service_name: str
+    ) -> Self | None:
+        if (
+            evaluated := evaluated_perfometer(
+                perf_data,
+                check_command,
+                host_name=host_name,
+                service_name=service_name,
+                registered_perfometers=perfometers_from_api,
+                registered_metrics=registered_metrics(),
+                registered_translations=registered_translations(),
+                debug=active_config.debug,
             )
-        ):
+        ) is None:
             return None
 
-        if not (stack := renderer.get_stack(temperature_unit)):
-            return None
-
-        return cls._from_segments(stack[0], label=renderer.get_label(temperature_unit))
+        return cls._from_bars(
+            drawn_segments(evaluated),
+            label=perfometer_label(
+                evaluated,
+                get_temperature_unit(user, active_config.default_temperature_unit),
+            ),
+        )
 
     @classmethod
-    def _from_segments(
-        cls, segments: Sequence[tuple[int | float, str]], *, label: str
-    ) -> Self | None:
-        background_color = get_themed_perfometer_bg_color()
-        filled = [(share, color) for share, color in segments if color != background_color]
-        if not filled:
+    def _from_bars(cls, bars: Sequence[Sequence[DrawnSegment]], *, label: str) -> Self | None:
+        if not any(segment.color is not None for bar in bars for segment in bar):
             return None
 
         return cls(
-            value=sum(share for share, _color in filled),
-            value_range=ServicePerfometerRange(min=_EMPTY_AT, max=_FULL_AT),
+            bars=[
+                [
+                    ServicePerfometerSegment(share=segment.share, color=segment.color)
+                    for segment in bar
+                ]
+                for bar in bars
+            ],
             formatted=label,
-            color=filled[0][1],
         )

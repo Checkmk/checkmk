@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+"""Append-only JSON lines files keeping track of the certificates our CAs issue and revoke."""
+
+import json
+from dataclasses import asdict, dataclass, replace
+from datetime import datetime, UTC
+from pathlib import Path
+from typing import Literal, TYPE_CHECKING
+
+from cryptography import x509 as pyca_x509
+
+from .hash import HashAlgorithm
+
+if TYPE_CHECKING:
+    # cmk.crypto.certificate imports this module at runtime, so this import must stay type-only.
+    from .certificate import Certificate  # py-import-cycles: ignore
+
+IssuedCertificatesComponent = Literal["agents", "relays", "messaging", "sites"]
+
+
+def issued_certificates_file(log_dir: Path, component: IssuedCertificatesComponent) -> Path:
+    return log_dir / f"{component}-issued-certificates.jsonl"
+
+
+@dataclass(frozen=True)
+class IssuedCertificateEntry:
+    """One line of an issued certificates file. The field names are the keys used in the file.
+
+    Details that are unknown, for example those of a revoked certificate that was never recorded as
+    issued, are null.
+    """
+
+    ts: str
+    event: Literal["issued", "revoked"]
+    serial: str
+    fp_sha256: str | None
+    issuer_ski: str | None
+    subject: str | None
+    san: dict[str, list[str]] | None
+    not_before: str | None
+    not_after: str | None
+
+    @classmethod
+    def from_certificate(
+        cls, certificate: Certificate, event: Literal["issued"]
+    ) -> IssuedCertificateEntry:
+        issuer_key_id = certificate.authority_key_identifier
+        return cls(
+            ts=_format_timestamp(datetime.now(tz=UTC)),
+            event=event,
+            serial=certificate.serial_number_string.replace(":", ""),
+            fp_sha256=certificate.fingerprint(HashAlgorithm.Sha256).hex(),
+            issuer_ski=None if issuer_key_id is None else issuer_key_id.hex(),
+            subject=certificate.subject.rfc4514_string(),
+            san={"dns": _dns_names(certificate)},
+            not_before=_format_timestamp(certificate.not_valid_before),
+            not_after=_format_timestamp(certificate.not_valid_after),
+        )
+
+    @classmethod
+    def revocation_of_unrecorded_certificate(cls, serial_number: int) -> IssuedCertificateEntry:
+        return cls(
+            ts=_format_timestamp(datetime.now(tz=UTC)),
+            event="revoked",
+            serial=serial_number.to_bytes((serial_number.bit_length() + 7) // 8).hex(),
+            fp_sha256=None,
+            issuer_ski=None,
+            subject=None,
+            san=None,
+            not_before=None,
+            not_after=None,
+        )
+
+    def revoked(self) -> IssuedCertificateEntry:
+        """The same entry, recording that the certificate has just been revoked."""
+        return replace(self, ts=_format_timestamp(datetime.now(tz=UTC)), event="revoked")
+
+    def append_to(self, cert_log: Path) -> None:
+        cert_log.parent.mkdir(parents=True, exist_ok=True)
+        with cert_log.open(mode="a", encoding="utf-8") as issued_certificates:
+            issued_certificates.write(json.dumps(asdict(self)) + "\n")
+
+
+def find_issued_certificate(cert_log: Path, serial_number: int) -> IssuedCertificateEntry | None:
+    if not cert_log.exists():
+        return None
+    with cert_log.open(encoding="utf-8") as certificates:
+        for line in certificates:
+            entry = IssuedCertificateEntry(**json.loads(line))
+            if entry.event == "issued" and int(entry.serial, 16) == serial_number:
+                return entry
+    return None
+
+
+def _format_timestamp(timestamp: datetime) -> str:
+    return timestamp.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _dns_names(certificate: Certificate) -> list[str]:
+    try:
+        sans = certificate.get_extension_for_class(pyca_x509.SubjectAlternativeName).value
+    except pyca_x509.ExtensionNotFound:
+        return []
+    return sans.get_values_for_type(pyca_x509.DNSName)

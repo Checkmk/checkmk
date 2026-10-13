@@ -6,13 +6,9 @@
 import { CalendarDate } from '@internationalized/date'
 import { fireEvent, render, screen } from '@testing-library/vue'
 import DateInput from 'cmk-ui-library/components/date-time/private/input/DateInput.vue'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test } from 'vitest'
 
 import { DMY, MONTH_NAMES_EN } from '../../dateTimeTestFixtures'
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
 
 describe('DateInput', () => {
   test('binds model, re-emits commit', async () => {

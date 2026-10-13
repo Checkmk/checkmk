@@ -80,7 +80,16 @@ fn is_filtered_name(name: &str) -> bool {
 /// Match compiled PDB patterns against discovered PDBs.
 /// Each PDB name is collected only once.
 /// Patterns matching nothing are skipped.
+/// The names come back sorted: neither `V$PDBS` nor the set below has an order
+/// of its own, and the agent output must not reshuffle between runs.
 pub fn resolve_pdb_patterns(patterns: &[Regex], discovered: &Pdbs, instance: &str) -> Vec<PdbName> {
+    if discovered.is_empty() {
+        // A non-CDB, or a CDB whose PDBs are all closed: no pattern can match,
+        // and the implicit `.*` of a per-container section is no misconfiguration
+        // worth a warning per run.
+        log::debug!("No PDBs discovered for instance {instance}, nothing to resolve");
+        return Vec::new();
+    }
     let mut matched = HashSet::new();
     for re in patterns {
         let hits: Vec<_> = discovered
@@ -99,7 +108,9 @@ pub fn resolve_pdb_patterns(patterns: &[Regex], discovered: &Pdbs, instance: &st
         }
         matched.extend(hits);
     }
-    matched.into_iter().map(PdbName::from).collect()
+    let mut resolved: Vec<PdbName> = matched.into_iter().map(PdbName::from).collect();
+    resolved.sort_unstable();
+    resolved
 }
 
 #[cfg(test)]
@@ -182,6 +193,28 @@ mod tests {
             resolve_pdb_patterns(&[exact("PDB1"), exact("PDB1")], &pdbs, "TESTDB"),
             vec![PdbName::from("PDB1")]
         );
+    }
+
+    /// Neither `V$PDBS` nor the match set has an order, so the resolved names
+    /// are sorted and the agent output keeps its row order between runs.
+    #[test]
+    fn test_resolve_returns_sorted_names() {
+        let pdbs = Pdbs::from_names(&["PDB2", "PDB10", "PDB1"]);
+        assert_eq!(
+            resolve_pdb_patterns(&[Regex::new("^PDB.*$").unwrap()], &pdbs, "TESTDB"),
+            vec![
+                PdbName::from("PDB1"),
+                PdbName::from("PDB10"),
+                PdbName::from("PDB2"),
+            ]
+        );
+    }
+
+    /// A non-CDB discovers no PDB at all: the implicit `.*` of a per-container
+    /// section resolves to nothing, without a warning per run.
+    #[test]
+    fn test_resolve_without_discovered_pdbs_is_empty() {
+        assert!(resolve_pdb_patterns(&[exact(".*")], &Pdbs::default(), "TESTDB").is_empty());
     }
 
     #[test]

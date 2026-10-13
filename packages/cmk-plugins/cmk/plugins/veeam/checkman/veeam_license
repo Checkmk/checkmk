@@ -1,0 +1,23 @@
+title: Veeam: License
+agents: special
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the license of a Veeam Backup & Replication server,
+ collected via the Veeam special agent. It reports the license edition,
+ status, expiry, support expiry and consumption.
+
+ This check is {OK} if the license status is {Valid}. It is {CRIT} if the
+ status is {Invalid} or {Expired}. Any other or absent status makes the
+ service {UNKNOWN}.
+
+ {WARN} and {CRIT} levels can be set for the time remaining until the
+ license expires, the time remaining until support expires, and the
+ license consumption. Consumption is reported for whichever of instances,
+ sockets or capacity applies to the license type; the other two are
+ omitted.
+
+discovery:
+ One service is created per host, if the Veeam special agent could read
+ the license.

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 
 # Relevant SNMP OIDs:
@@ -349,7 +348,7 @@ def _calculate_bandwidth(
         except KeyError:
             continue
 
-        match qos_unit:
+        match qos_unit:  # type: ignore[exhaustive-match]
             case _QueueingBandwidthUnits.KBPS:
                 bandwidth = qos_bandwidth * 1000
             case _QueueingBandwidthUnits.PERCENTAGE:
@@ -521,13 +520,13 @@ def check_cisco_qos_(
 
 
 def _compute_thresholds(
-    raw_thresholds: tuple[float, float] | None,
+    raw_thresholds: tuple[float, float] | tuple[int, int] | None,
     bandwidth: float,
     unit: Literal["bit", "byte"],
 ) -> tuple[float, float] | None:
     if not raw_thresholds:
         return None
-    if isinstance(raw_thresholds[0], float) and bandwidth:  # type: ignore[redundant-expr]
+    if isinstance(raw_thresholds[0], float) and bandwidth:
         return bandwidth * raw_thresholds[0] / 100, bandwidth * raw_thresholds[1] / 100
     if isinstance(raw_thresholds[0], int):
         return raw_thresholds if unit == "bit" else (raw_thresholds[0] * 8, raw_thresholds[1] * 8)

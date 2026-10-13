@@ -5,25 +5,17 @@
 
 """Notification-related automation results."""
 
-from __future__ import annotations
-
 from ast import literal_eval
 from dataclasses import asdict, dataclass
 from typing import override, Self
 
-from cmk.automations.results._base import (
-    ABCAutomationResult,
-    result_type_registry,
-    SerializedResult,
-)
-from cmk.ccc import version as cmk_version
+from cmk.automations.internal import AutomationID, AutomationResult
+from cmk.automations.results._base import result_type_registry
 from cmk.events.notify_types import NotifyAnalysisInfo, NotifyBulks
-
-from ..types import AutomationID
 
 
 @dataclass
-class NotificationReplayResult(ABCAutomationResult):
+class NotificationReplayResult(AutomationResult):
     @staticmethod
     @override
     def automation_call() -> AutomationID:
@@ -34,7 +26,7 @@ result_type_registry.register(NotificationReplayResult)
 
 
 @dataclass
-class NotificationAnalyseResult(ABCAutomationResult):
+class NotificationAnalyseResult(AutomationResult):
     result: NotifyAnalysisInfo | None
 
     @staticmethod
@@ -47,7 +39,7 @@ result_type_registry.register(NotificationAnalyseResult)
 
 
 @dataclass
-class NotificationTestResult(ABCAutomationResult):
+class NotificationTestResult(AutomationResult):
     result: NotifyAnalysisInfo | None
 
     @staticmethod
@@ -60,7 +52,7 @@ result_type_registry.register(NotificationTestResult)
 
 
 @dataclass
-class NotificationGetBulksResult(ABCAutomationResult):
+class NotificationGetBulksResult(AutomationResult):
     result: NotifyBulks
 
     @staticmethod
@@ -73,7 +65,7 @@ result_type_registry.register(NotificationGetBulksResult)
 
 
 @dataclass
-class NotifyResult(ABCAutomationResult):
+class NotifyResult(AutomationResult):
     exit_code: int | None
     output: str
 
@@ -84,15 +76,15 @@ class NotifyResult(ABCAutomationResult):
 
     @classmethod
     @override
-    def deserialize(cls, serialized_result: SerializedResult) -> Self:
+    def deserialize(cls, serialized_result: str) -> Self:
         return cls(**literal_eval(serialized_result))
 
     @override
     def serialize(
         self,
-        for_cmk_version: cmk_version.Version,  # used to stay compatible with older central sites
-    ) -> SerializedResult:
-        return SerializedResult(asdict(self))
+        for_cmk_version: str,
+    ) -> str:
+        return str(asdict(self))
 
 
 result_type_registry.register(NotifyResult)

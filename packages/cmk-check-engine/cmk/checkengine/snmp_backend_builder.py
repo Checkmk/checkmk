@@ -4,14 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Home of our open source SNMP backends."""
 
-import logging
 from collections.abc import Mapping
 
 import cmk.checkengine.snmp_backends
+from cmk.checkengine.snmp_backends._utils import BackendError
 from cmk.checkengine.snmplib import SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 from cmk.checkengine.subclass_discovery import discover
 
-logger = logging.getLogger(__name__)
+__all__ = ["BackendError", "discover_backends", "make_backend"]
 
 
 def discover_backends() -> Mapping[SNMPBackendEnum, type[SNMPBackend]]:
@@ -31,14 +31,16 @@ def make_backend(
     *,
     use_cache: bool = False,
 ) -> SNMPBackend:
+    """Create the configured backend.
+
+    We do not fall back to a different backend: either we monitor the way
+    the user configured it, or we fail.
+    """
     backend_type = SNMPBackendEnum.STORED_WALK if use_cache else snmp_config.snmp_backend
-    backends = discover_backends()
     try:
-        backend_cls = backends[backend_type]
-    except KeyError:
-        logger.exception(
-            "Unknown SNMP backend: %(backend_type)s. Using CLASSIC backend as fallback",
-            {"backend_type": backend_type},
-        )
-        backend_cls = backends[SNMPBackendEnum.CLASSIC]
+        backend_cls = discover_backends()[backend_type]
+    except KeyError as exc:
+        raise BackendError(
+            f"The {backend_type.value!r} SNMP backend is not available in this installation"
+        ) from exc
     return backend_cls(snmp_config)

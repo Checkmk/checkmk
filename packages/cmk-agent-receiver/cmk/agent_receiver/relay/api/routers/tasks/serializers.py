@@ -7,6 +7,7 @@ from base64 import b64encode
 from typing import assert_never
 
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
+    ActiveCheckSpec,
     FetchSpec,
     RelayConfigSpec,
     RelayTask,
@@ -26,6 +27,12 @@ class TaskResponseSerializer:
             case FetchSpec():
                 spec = tasks_protocol.FetchAdHocTask(
                     payload=task.spec.payload,
+                    timeout=task.spec.timeout,
+                )
+            case ActiveCheckSpec():
+                spec = tasks_protocol.AdHocActiveCheckTask(
+                    host=task.spec.host,
+                    command=task.spec.command,
                     timeout=task.spec.timeout,
                 )
             case _:  # pragma: no cover

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.graphing_engine import (
     AutoPrecision,
     ConsolidationFunction,
@@ -24,9 +26,14 @@ from cmk.graphing_engine import (
     Sum,
     Unit,
 )
-from cmk.gui.graphing._engine_dispatch import serialize_graphs
+from cmk.gui.graphing._graph_dispatch import serialize_graphs
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
+
+_COARSEST_ARCHIVE_STEP = 6 * 60 * 60
+_RRD_RANGE_WITH_EDGE_NEIGHBOURS = (
+    f"{0 - 2 * _COARSEST_ARCHIVE_STEP}:{60 + _COARSEST_ARCHIVE_STEP}:10"
+)
 
 
 def _comprehensive_graph() -> Graph:
@@ -50,10 +57,10 @@ def _comprehensive_graph() -> Graph:
                 members=[
                     Curve(
                         quantity=Sum(
-                            summands=[
+                            summands=(
                                 rrd,
                                 Constant(2, CurveAttributes(title="c", unit=unit, color="#c")),
-                            ]
+                            )
                         ),
                         attributes=attrs,
                     )
@@ -112,7 +119,7 @@ def test_fetch_graph_data_comprehensive_graph(
         "GET services\nColumns: host_name description perf_data check_command\nFilter: host_name = h\nFilter: description = s\nAnd: 2"
     )
     mock_livestatus.expect_query(
-        "GET services\nColumns: host_name description rrddata:m:m.average:0:60:10\nFilter: host_name = h\nFilter: description = s\nAnd: 2"
+        f"GET services\nColumns: host_name description rrddata:m:m.average:{_RRD_RANGE_WITH_EDGE_NEIGHBOURS}\nFilter: host_name = h\nFilter: description = s\nAnd: 2"
     )
     with mock_livestatus():
         resp = clients.Graph.fetch_data(
@@ -120,16 +127,23 @@ def test_fetch_graph_data_comprehensive_graph(
             requested_time_range={"start": 0, "end": 60, "step": 10},
             consolidation_function="avg",
         )
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     unit = {
         "notation": "decimal",
         "symbol": "X",
         "precision": {"type": "auto", "digits": 2},
-        "convertible": True,
+        # Already converted by the fetch, so the renderer must not convert it again.
+        "convertible": False,
     }
 
     def _metadata(name: str) -> dict[str, object]:
-        return {"name": name, "title": "m", "unit": unit, "color": "#FFFFFF"}
+        return {
+            "name": name,
+            "title": "m",
+            "unit": unit,
+            "color": "#FFFFFF",
+            "attributes": [],
+        }
 
     assert resp.json == {
         # The header reads the evaluated title, so the fetch is what carries it.
@@ -138,17 +152,17 @@ def test_fetch_graph_data_comprehensive_graph(
         "metrics": [
             {
                 "metadata": _metadata("-rrd_metric(h/s/ref)"),
-                "render": {"stack": "stack-0", "inverse": True, "hidden": True},
+                "render": {"shape": "area", "stack": "stack-0", "inverse": True, "hidden": True},
                 "data_points": [None, None, None, None, None, None],
             },
             {
                 "metadata": _metadata("-sum(rrd_metric(h/s/m),constant(2))"),
-                "render": {"stack": "stack-0", "inverse": True, "hidden": False},
+                "render": {"shape": "area", "stack": "stack-0", "inverse": True, "hidden": False},
                 "data_points": [2.0, 2.0, 2.0, 2.0, 2.0, 2.0],
             },
             {
                 "metadata": _metadata("scalar_of(warning,rrd_metric(h/s/m))"),
-                "render": {"stack": None, "inverse": False, "hidden": False},
+                "render": {"shape": "line", "inverse": False, "hidden": False},
                 "data_points": [5.0, 5.0, 5.0, 5.0, 5.0, 5.0],
             },
         ],
@@ -163,6 +177,7 @@ def test_fetch_graph_data_comprehensive_graph(
                 "color": "#FFFFFF",
             }
         ],
+        "shaded_regions": [],
         "warnings": [],
         "errors": [],
     }

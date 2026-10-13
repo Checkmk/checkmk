@@ -7,10 +7,9 @@ import type { SidebarSnapin } from 'cmk-shared-typing/typescript/sidebar'
 import type { AjaxResponse } from 'cmk-ui-library/lib/ajax'
 import { Api, type ApiResponseBody } from 'cmk-ui-library/lib/api-client'
 
-import type { AddSnapinResponse, SidebarSnapinContents } from './type-defs'
+import { getCsrfToken } from '@/lib/csrf'
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-declare let global_csrf_token: string
+import type { AddSnapinResponse, SidebarSnapinContents } from './type-defs'
 
 export class SidebarApiClient extends Api {
   public constructor() {
@@ -22,19 +21,19 @@ export class SidebarApiClient extends Api {
 
   public async getAvailableSidebarSnapins(): Promise<SidebarSnapin[]> {
     return (await this.get(
-      `sidebar_ajax_get_available_snapins.py?_csrf_token=${encodeURIComponent(global_csrf_token)}`
+      `sidebar_ajax_get_available_snapins.py?_csrf_token=${encodeURIComponent(getCsrfToken())}`
     )) as ApiResponseBody<SidebarSnapin[]>
   }
 
   public async addSidebarSnapin(snapin: SidebarSnapin): Promise<AddSnapinResponse> {
     return (await this.post(
-      `sidebar_ajax_add_snapin.py?name=${snapin.name}&_csrf_token=${encodeURIComponent(global_csrf_token)}`
+      `sidebar_ajax_add_snapin.py?name=${snapin.name}&_csrf_token=${encodeURIComponent(getCsrfToken())}`
     )) as ApiResponseBody<AddSnapinResponse>
   }
 
   public async setSidebarSnapinState(name: string, state: 'open' | 'closed' | 'off') {
     return this.post(
-      `sidebar_openclose.py?name=${name}&state=${state}&_csrf_token=${encodeURIComponent(global_csrf_token)}`
+      `sidebar_openclose.py?name=${name}&state=${state}&_csrf_token=${encodeURIComponent(getCsrfToken())}`
     )
   }
 

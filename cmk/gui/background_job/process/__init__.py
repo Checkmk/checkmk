@@ -3,4 +3,5 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from ._executor import ThreadedJobExecutor as ThreadedJobExecutor
 from ._process import run_process as run_process

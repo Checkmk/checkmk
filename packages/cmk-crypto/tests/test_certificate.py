@@ -163,6 +163,17 @@ def test_loading_combined_file_content(self_signed_cert: CertificateWithPrivateK
     )
 
 
+def test_loading_combined_file_content_rejects_mismatching_key(
+    self_signed_cert: CertificateWithPrivateKey,
+) -> None:
+    other_key = PrivateKey.generate_rsa(1024)
+    with pytest.raises(PEMDecodingError, match="do not belong together"):
+        CertificateWithPrivateKey.load_combined_file_content(
+            self_signed_cert.certificate.dump_pem().str + "\n" + other_key.dump_pem(None).str,
+            None,
+        )
+
+
 def test_loading_parts_from_combined_file_content(
     self_signed_cert: CertificateWithPrivateKey,
 ) -> None:

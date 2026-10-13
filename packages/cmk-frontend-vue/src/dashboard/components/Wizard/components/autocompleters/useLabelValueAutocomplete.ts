@@ -13,8 +13,10 @@ import type { LabelValueItem } from '@/dashboard/components/Wizard/types'
 export function useLabelValueAutocomplete(
   model: Ref<LabelValueItem | null>,
   autocompleter: ComputedRef<Autocompleter>
-): { internalValue: Ref<string | null> } {
+): { internalValue: Ref<string | null>; pending: Ref<boolean> } {
   const internalValue = ref<string | null>(model.value?.value ?? null)
+  const pending = ref<boolean>(false)
+  let latestSelectionId = 0
 
   watch(model, (val) => {
     const newValue = val?.value ?? null
@@ -26,20 +28,38 @@ export function useLabelValueAutocomplete(
   watch(
     internalValue,
     async (val) => {
+      const selectionId = ++latestSelectionId
+
       if (val === null) {
         model.value = null
+        pending.value = false
         return
       }
-      const result = await fetchSuggestions(autocompleter.value, val)
-      if (result instanceof Response) {
-        const match = flattenSuggestions(result.choices).find((s) => s.name === val)
-        model.value = { value: val, label: match ? (match.title as string) : val }
-      } else {
-        model.value = { value: val, label: val }
+
+      // Commit before awaiting, so a synchronous validate() cannot see a null model.
+      model.value = { value: val, label: val }
+
+      pending.value = true
+      try {
+        const result = await fetchSuggestions(autocompleter.value, val)
+        // A newer selection has superseded this response.
+        if (selectionId !== latestSelectionId) {
+          return
+        }
+        if (result instanceof Response) {
+          const match = flattenSuggestions(result.choices).find((s) => s.name === val)
+          if (match) {
+            model.value = { value: val, label: match.title as string }
+          }
+        }
+      } finally {
+        if (selectionId === latestSelectionId) {
+          pending.value = false
+        }
       }
     },
     { immediate: true }
   )
 
-  return { internalValue }
+  return { internalValue, pending }
 }

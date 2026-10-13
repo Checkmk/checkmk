@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -19,8 +18,8 @@ from cmk.plugins.kaspersky.agent_based.kaspersky_av_kesl_updates import (
 )
 
 
-@pytest.fixture(scope="module", autouse=True)
-def set_fixed_timezone():
+@pytest.fixture(scope="module")
+def set_fixed_timezone() -> Iterator[None]:
     with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))):
         yield
 
@@ -42,10 +41,12 @@ def set_fixed_timezone():
         ),
     ],
 )
+@pytest.mark.usefixtures("set_fixed_timezone")
 def test_check_kaskpersky_av_client(section: Section, results: Sequence[Result]) -> None:
     assert list(check_kaspersky_av_kesl_updates(section)) == results
 
 
+@pytest.mark.usefixtures("set_fixed_timezone")
 def test_check_kaskpersky_av_client_newer_agent_keys() -> None:
     # Kaspersky Endpoint Security 12.3 for Linux emits "Application databases
     # loaded" instead of "Anti-virus databases loaded" and no longer emits

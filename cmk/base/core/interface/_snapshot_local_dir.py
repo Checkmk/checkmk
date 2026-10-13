@@ -46,7 +46,7 @@ class _DereferenceExternalLinks:
         self.target_path = target_path
         self._external_links = list[tuple[Path, Path]]()
 
-    def collect(self, dir: str, names: Sequence[str]) -> Iterable[str]:
+    def collect(self, dir: str, names: Sequence[str]) -> Iterable[str]:  # noqa: A002
         external_links = self._filter_external_links(dir, names)
         self._external_links.extend(external_links.values())
         return external_links

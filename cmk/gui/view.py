@@ -4,16 +4,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping, Sequence
+from typing import Final
 
 from cmk.ccc.site import SiteId
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, RequestCacheConfig
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.graphing._frontend import renders_engine_graphs
+from cmk.gui.graphing import default_time_range_seconds, stored_time_range_seconds
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0 import all_painters, Cell, JoinCell, Painter
+from cmk.gui.painter import (
+    all_painters,
+    Cell,
+    CellDrilldown,
+    InternalPainter,
+    JoinCell,
+    PainterContext,
+)
 from cmk.gui.type_defs import (
     ColumnSpec,
     FilterName,
@@ -22,11 +30,17 @@ from cmk.gui.type_defs import (
     ViewSpec,
     VisualContext,
 )
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.layout import Layout, layout_registry
 from cmk.gui.views.sort_url import compute_sort_url_parameter
 from cmk.gui.views.sorter import all_sorters, Sorter, SorterEntry
 from cmk.gui.visuals import get_missing_single_infos_group_aware
+from cmk.web.utils.request_cache import RequestCache
+
+# A view carrying one of these is driven by the global time picker rather than the
+# pnp_timerange painter option, and must not auto-reload.
+_ENGINE_GRAPH_PAINTER_IDENTS: Final = frozenset(
+    {"svc_pnpgraph", "service_graphs", "host_pnpgraph", "host_graphs"}
+)
 
 
 class View:
@@ -37,19 +51,26 @@ class View:
         view_name: str,
         view_spec: ViewSpec,
         context: VisualContext,
-        user_permissions: UserPermissions,
+        painter_context: PainterContext,
+        request_cache: RequestCache[RequestCacheConfig],
+        *,
+        column_drilldowns: Mapping[int, CellDrilldown] | None = None,
     ) -> None:
         super().__init__()
         self.name = view_name
         self.spec = view_spec
         self.context: VisualContext = context
+        # Keyed by the index into the spec's painters, which row_cells may skip some of.
+        self._column_drilldowns = column_drilldowns or {}
         self._row_limit: int | None = None
         self._only_sites: list[SiteId] | None = None
         self._user_sorters: list[SorterSpec] | None = None
         self._want_checkboxes: bool = False
         self._warning_messages: list[str] = []
+        self.allow_browser_reload = True
         self.process_tracking = ViewProcessTracking()
-        self.user_permissions = user_permissions
+        self.painter_context = painter_context
+        self.request_cache = request_cache
 
     @property
     def datasource(self) -> ABCDataSource:
@@ -80,7 +101,7 @@ class View:
         cells: list[Cell] = []
         registered_sorters = all_sorters(active_config)
         registered_painters = all_painters(active_config.tags.tag_groups)
-        for e in self.spec["painters"]:
+        for index, e in enumerate(self.spec["painters"]):
             if e.name not in registered_painters:
                 continue
 
@@ -92,7 +113,9 @@ class View:
                             e, registered_sorters, registered_painters
                         ),
                         registered_painters,
-                        self.user_permissions,
+                        self.painter_context,
+                        self.request_cache,
+                        drilldown=self._column_drilldowns.get(index),
                     )
                 )
             elif col_type == "column":
@@ -103,7 +126,9 @@ class View:
                             e, registered_sorters, registered_painters
                         ),
                         registered_painters,
-                        self.user_permissions,
+                        self.painter_context,
+                        self.request_cache,
+                        drilldown=self._column_drilldowns.get(index),
                     )
                 )
             else:
@@ -121,7 +146,8 @@ class View:
                 e,
                 self._compute_sort_url_parameter(e, registered_sorters, registered_painters),
                 registered_painters,
-                self.user_permissions,
+                self.painter_context,
+                self.request_cache,
             )
             for e in self.spec["group_painters"]
             if e.name in registered_painters
@@ -145,7 +171,7 @@ class View:
         self,
         painter: ColumnSpec,
         registered_sorters: Mapping[str, Sorter],
-        registered_painters: Mapping[str, type[Painter]],
+        registered_painters: Mapping[str, InternalPainter],
     ) -> str | None:
         if not self.spec.get("user_sortable", False):
             return None
@@ -159,7 +185,6 @@ class View:
             self._user_sorters or [],
             registered_sorters,
             registered_painters,
-            self.user_permissions,
         )
 
     def _get_sorter_entries(
@@ -269,12 +294,7 @@ class View:
 
         # Mandatory options for all views (if permitted)
         if display_options.enabled(display_options.O):
-            if (
-                display_options.enabled(display_options.R)
-                and user.may("general.view_option_refresh")
-                # Such a view does not auto-reload, so a refresh interval is pointless.
-                and not self.renders_engine_graphs
-            ):
+            if self.reloads_itself and user.may("general.view_option_refresh"):
                 options.add("refresh")
 
             if user.may("general.view_option_columns") and not self.layout.hide_entries_per_row:
@@ -283,11 +303,41 @@ class View:
         return sorted(options)
 
     @property
+    def reloads_itself(self) -> bool:
+        """Whether the page reloads this view on its own interval."""
+        return (
+            self.allow_browser_reload
+            and display_options.enabled(display_options.R)
+            # Such a view refreshes through the global time picker's control: a reload would
+            # re-mount the Vue apps and discard the picker state, and a second control for the
+            # same setting would only disagree with it.
+            and not self.renders_engine_graphs
+        )
+
+    @property
     def renders_engine_graphs(self) -> bool:
         """Whether any of this view's cells paints through the graph engine (Vue)."""
-        return renders_engine_graphs(
-            cell.painter_name() for cell in self.group_cells + self.row_cells
+        return any(
+            cell.painter_name() in _ENGINE_GRAPH_PAINTER_IDENTS
+            for cell in self.group_cells + self.row_cells
         )
+
+    @property
+    def engine_graph_time_range_seconds(self) -> int:
+        """The range the global time picker opens on. It publishes to every graph on the page,
+        so it starts where this view's graph painters render: the first painter configuring
+        "Set default time range" decides, else the user's or the site's default."""
+        for cell in self.group_cells + self.row_cells:
+            if cell.painter_name() not in _ENGINE_GRAPH_PAINTER_IDENTS:
+                continue
+            if (
+                duration := stored_time_range_seconds(
+                    painter_parameters=cell.painter_parameters(),
+                    stored_by_the_view=cell.has_painter_params(),
+                )
+            ) is not None:
+                return duration
+        return default_time_range_seconds()
 
     @property
     def missing_single_infos(self) -> set[FilterName]:

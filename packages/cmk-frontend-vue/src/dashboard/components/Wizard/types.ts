@@ -5,6 +5,7 @@
  */
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import type { Ref } from 'vue'
 
 import type { DashboardKey } from '@/dashboard/types/dashboard'
@@ -33,11 +34,6 @@ export interface ActionButtonIcon extends QuickSetupStageActionIcon {
 
 export type MetricType = 'single' | 'combined'
 
-export interface HostServiceContext {
-  host?: { host: string }
-  service?: { service: string }
-}
-
 export interface UseValidate {
   validate: () => boolean
 }
@@ -59,6 +55,8 @@ export enum ElementSelection {
 }
 
 export interface BaseWidgetProp {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
 }
 
@@ -147,5 +145,3 @@ export type CombinedGraphContentPresentation =
   components['schemas']['CombinedGraphContent']['presentation']
 export type ForStates = components['schemas']['ForStates']
 export type ShowServiceStatusType = components['schemas']['MetricStatusDisplayModel']['type']
-export type InventoryLinkType = components['schemas']['ApiVisualLink']['type']
-export type LinkContentType = components['schemas']['ApiVisualLink']

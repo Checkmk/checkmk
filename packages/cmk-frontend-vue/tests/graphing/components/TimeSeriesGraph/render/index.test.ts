@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ScaleLinear, ScaleTime } from 'd3-scale'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 
 import type { M4Cache } from '@/graphing/components/TimeSeriesGraph/decimation/types'
 import { drawData } from '@/graphing/components/TimeSeriesGraph/render'
@@ -28,12 +28,15 @@ vi.mock('@/graphing/components/TimeSeriesGraph/render/stacked', () => ({
 const drawLineSpy = vi.mocked(drawLine)
 const drawStackedBandSpy = vi.mocked(drawStackedBand)
 
-function makeSeries(kind: StackedSeriesKind): StackedSeries {
-  return { kind, bands: [] }
+function makeSeries(kind: Exclude<StackedSeriesKind, 'bars'>): StackedSeries {
+  return kind === 'line' ? { kind } : { kind, columns: [] }
 }
 
 function makeMetric(name: string, color: string): Metric {
-  return { metadata: { name, color }, render: { stack: null, inverse: false } } as unknown as Metric
+  return {
+    metadata: { name, color },
+    render: { shape: 'line', inverse: false }
+  } as unknown as Metric
 }
 
 const xScale = (() => 0) as unknown as ScaleTime<number, number>
@@ -46,16 +49,12 @@ function makeCtx() {
 }
 
 describe('drawData', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
   test('routes each series to the renderer matching its kind, carrying the metric color', () => {
     const ctx = makeCtx()
     const metrics = [makeMetric('area', '#area00'), makeMetric('line', '#line00')]
     const stacks = [makeSeries('area-stacked'), makeSeries('line')]
 
-    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, null)
+    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, new Set())
 
     expect(drawStackedBandSpy).toHaveBeenCalledTimes(1)
     expect(drawStackedBandSpy.mock.calls[0]![4]).toBe('#area00')
@@ -68,7 +67,7 @@ describe('drawData', () => {
     const metrics = [makeMetric('line', '#line00'), makeMetric('area', '#area00')]
     const stacks = [makeSeries('line'), makeSeries('area-stacked')]
 
-    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, null)
+    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, new Set())
 
     const areaDrawnAt = drawStackedBandSpy.mock.invocationCallOrder[0]!
     const lineDrawnAt = drawLineSpy.mock.invocationCallOrder[0]!
@@ -84,7 +83,7 @@ describe('drawData', () => {
       alphaByColor.set(color, context.globalAlpha)
     })
 
-    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, 'focus')
+    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, new Set(['focus']))
 
     expect(alphaByColor.get('#focus0')).toBe(1)
     expect(alphaByColor.get('#other0')).toBeLessThan(1)
@@ -99,9 +98,33 @@ describe('drawData', () => {
       alphas.push(context.globalAlpha)
     })
 
-    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, null)
+    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, new Set())
 
     expect(alphas).toEqual([1, 1])
+  })
+
+  test('keeps every highlighted metric opaque when a source row resolved to several', () => {
+    const ctx = makeCtx()
+    const metrics = [
+      makeMetric('first', '#first0'),
+      makeMetric('second', '#secon0'),
+      makeMetric('other', '#other0')
+    ]
+    const stacks = [
+      makeSeries('area-stacked'),
+      makeSeries('area-stacked'),
+      makeSeries('area-stacked')
+    ]
+    const alphaByColor = new Map<string, number>()
+    drawStackedBandSpy.mockImplementation((context, _series, _x, _y, color) => {
+      alphaByColor.set(color, context.globalAlpha)
+    })
+
+    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, new Set(['first', 'second']))
+
+    expect(alphaByColor.get('#first0')).toBe(1)
+    expect(alphaByColor.get('#secon0')).toBe(1)
+    expect(alphaByColor.get('#other0')).toBeLessThan(1)
   })
 
   test('restores full opacity after drawing so later draws are unaffected', () => {
@@ -109,7 +132,7 @@ describe('drawData', () => {
     const metrics = [makeMetric('focus', '#focus0'), makeMetric('other', '#other0')]
     const stacks = [makeSeries('area-stacked'), makeSeries('area-stacked')]
 
-    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, 'focus')
+    drawData(ctx, metrics, noBuckets, stacks, xScale, yScale, options, new Set(['focus']))
 
     expect(ctx.globalAlpha).toBe(1)
   })

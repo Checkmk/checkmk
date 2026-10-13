@@ -1,0 +1,66 @@
+Pass the process wrapper to construct_arguments() explicitly
+
+rules_rust 0.71.0 made construct_arguments() decide via
+ctx.executable._process_wrapper whether rustc flags always go into a params
+file, see "Always use param files to handle large rustc commands"
+(https://github.com/bazelbuild/rules_rust/pull/4038).
+
+That attribute only exists on rules_rust's own rules and aspects, but
+construct_arguments() is also reached through the public rust_clippy_action
+API, whose docstring demands that it "should not read ctx.attr".  Aspects
+defined outside of rules_rust, e.g. aspect_rules_lint's clippy aspect (which
+passes its own wrapper around the rules_rust process wrapper), therefore fail
+during analysis with:
+
+    Error: No attribute '_process_wrapper' in executable.
+
+rust_clippy_action() already takes the process wrapper as an explicit
+argument, it just doesn't hand it on, so let it do that.  This keeps the
+params file behavior of PR #4038 for all callers instead of silently
+degrading it to the pre-0.71.0 heuristic for those from outside.
+
+diff --git a/rust/private/rustc.bzl b/rust/private/rustc.bzl
+--- a/rust/private/rustc.bzl
++++ b/rust/private/rustc.bzl
+@@ -984,7 +984,8 @@
+         require_explicit_unstable_features = False,
+         error_format = None,
+         allowed_unstable_rust_features = None,
+-        link_std_dylib = False):
++        link_std_dylib = False,
++        process_wrapper = None):
+     """Builds an Args object containing common rustc flags
+ 
+     Args:
+@@ -1057,6 +1058,9 @@
+         error_format (str, optional): Error format to pass to the `--error-format` command line argument. If set to None, uses the "_error_format" entry in `attr`.
+         allowed_unstable_rust_features (list, optional): List of unstable Rust language features allowed for this target.
+         link_std_dylib (bool): Whether to dynamically link the Rust standard library using `--prefer-dynamic`.
++        process_wrapper (File, optional): The process wrapper which will launch the tool. Defaults to the
++            `_process_wrapper` attribute of the calling rule or aspect, which callers from outside of
++            rules_rust (e.g. via `rust_clippy_action`) don't necessarily have.
+ 
+     Returns:
+         tuple: A tuple of the following items
+@@ -1194,7 +1198,9 @@
+     # Rustc arguments
+     rustc_flags = ctx.actions.args()
+     rustc_flags.set_param_file_format("multiline")
+-    rustc_flags.use_param_file("@%s", use_always = bool(ctx.executable._process_wrapper))
++    if process_wrapper == None:
++        process_wrapper = getattr(ctx.executable, "_process_wrapper", None)
++    rustc_flags.use_param_file("@%s", use_always = bool(process_wrapper))
+     rustc_flags.add_all([(crate_info.root, crate_info.root_path)], map_each = _get_crate_root_path)
+     rustc_flags.add(crate_info.name, format = "--crate-name=%s")
+     rustc_flags.add(crate_info.type, format = "--crate-type=%s")
+diff --git a/rust/private/clippy.bzl b/rust/private/clippy.bzl
+--- a/rust/private/clippy.bzl
++++ b/rust/private/clippy.bzl
+@@ -174,6 +174,7 @@
+         file = ctx.file,
+         toolchain = toolchain,
+         tool_file = clippy_executable,
++        process_wrapper = process_wrapper,
+         cc_toolchain = cc_toolchain,
+         feature_configuration = feature_configuration,
+         crate_info = crate_info,

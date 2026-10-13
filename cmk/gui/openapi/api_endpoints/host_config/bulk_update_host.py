@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import SiteId
+from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -17,14 +18,23 @@ from cmk.gui.openapi.framework import (
     EndpointPermissions,
     VersionedEndpoint,
 )
-from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.converter import HostConverter, TypedPlainValidator
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
-from cmk.gui.watolib.hosts_and_folders import Folder, Host
+from cmk.gui.watolib.host_relations import with_links_not_shown
+from cmk.gui.watolib.hosts_and_folders import (
+    attributes_without,
+    Folder,
+    Host,
+    HostEditResult,
+    RelationMirrorBatch,
+)
 
 from ._family import HOST_CONFIG_FAMILY
 from ._utils import (
     bulk_host_action_response,
+    carry_over_unexposed_attributes,
+    deprecated_attributes_error,
     make_pending_changes,
     PERMISSIONS_UPDATE,
     validate_host_attributes_for_quick_setup,
@@ -73,16 +83,36 @@ def bulk_update_hosts_v1(
         hosts_by_folder.setdefault(update.host.folder(), []).append(update.host)
         updates_by_host_name.setdefault(update.host.name(), []).append(update)
 
+    pending_changes = make_pending_changes(api_context)
+    pprint_value = api_context.config.wato_pprint_config
     for folder, hosts in hosts_by_folder.items():
-        pending_changes: list[tuple[Host, str, list[SiteId]]] = []
+        edits: list[tuple[Host, HostEditResult]] = []
+        mirror = RelationMirrorBatch(folder, acting_user=acting_user)
         for host in hosts:
-            for update in updates_by_host_name[host.name()]:
+            updates = updates_by_host_name[host.name()]
+
+            requested: dict[str, object] = {}
+            for update in updates:
+                if update.attributes:
+                    requested.update(update.attributes.to_internal())
+                if update.update_attributes:
+                    requested.update(update.update_attributes.to_internal())
+            if (error := deprecated_attributes_error(host.attributes, requested)) is not None:
+                failed_hosts[host.name()] = error
+                continue
+
+            stored_relations = host.attributes.get("relations", [])
+            for update in updates:
                 if not validate_host_attributes_for_quick_setup(host, update):
                     failed_hosts[host.name()] = "Host is locked by Quick setup."
                     continue
 
                 attributes = (
-                    update.attributes.to_internal() if update.attributes else host.attributes.copy()
+                    carry_over_unexposed_attributes(
+                        host.attributes, update.attributes.to_internal()
+                    )
+                    if update.attributes
+                    else host.attributes.copy()
                 )
 
                 if update.update_attributes:
@@ -93,14 +123,27 @@ def bulk_update_hosts_v1(
                     remove_attributes_as_set = set(update.remove_attributes)
                     valid_attributes_to_remove = remove_attributes_as_set & set(attributes)
                     faulty_attributes = remove_attributes_as_set - valid_attributes_to_remove
-                    for valid_attribute in valid_attributes_to_remove:
-                        # mypy expects literal keys for typed dicts
-                        del attributes[valid_attribute]  # type: ignore[misc]
+                    attributes = attributes_without(attributes, valid_attributes_to_remove)
 
-                diff, affected_sites = host.apply_edit(
-                    attributes, host.cluster_nodes(), acting_user=acting_user
+                if _states_relations(update):
+                    attributes["relations"] = with_links_not_shown(
+                        attributes.get("relations", []), stored_relations
+                    )
+
+                try:
+                    mirror.need_edit(host, attributes)
+                except (MKUserError, MKAuthException) as e:
+                    failed_hosts[host.name()] = f"Validation failed: {e}"
+                    continue
+
+                edits.append(
+                    (
+                        host,
+                        host.apply_edit(attributes, host.cluster_nodes(), acting_user=acting_user),
+                    )
                 )
-                pending_changes.append((host, diff, affected_sites))
+                # Written before the next host is edited, which may be one of the counterparts.
+                mirror.write()
 
                 if faulty_attributes:
                     failed_hosts[host.name()] = (
@@ -110,17 +153,25 @@ def bulk_update_hosts_v1(
                     succeeded_hosts.append(host)
 
         # skip save if no changes were made, presumably due to quick setup lock
-        if pending_changes:
-            folder.save_hosts(
-                pprint_value=api_context.config.wato_pprint_config,
-                acting_user=acting_user,
-            )
-            for host, diff, affected_sites in pending_changes:
-                host.add_edit_host_change(
-                    diff, affected_sites, pending_changes=make_pending_changes(api_context)
-                )
+        if edits:
+            folder.save_hosts(pprint_value=pprint_value, acting_user=acting_user)
+            for host, edit in edits:
+                host.add_edit_host_change(edit, pending_changes=pending_changes)
+        mirror.save(pprint_value=pprint_value, pending_changes=pending_changes)
 
     return bulk_host_action_response(failed_hosts, succeeded_hosts, api_context=api_context)
+
+
+def _states_relations(update: UpdateHostEntry) -> bool:
+    """Whether the entry sets the relations - a full replacement does by leaving them out."""
+    if not isinstance(update.attributes, ApiOmitted):
+        return True
+    if not isinstance(update.update_attributes, ApiOmitted):
+        return not isinstance(update.update_attributes.relations, ApiOmitted)
+    return (
+        not isinstance(update.remove_attributes, ApiOmitted)
+        and "relations" in update.remove_attributes
+    )
 
 
 ENDPOINT_BULK_UPDATE_HOST = VersionedEndpoint(
@@ -134,7 +185,7 @@ ENDPOINT_BULK_UPDATE_HOST = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=bulk_update_hosts_v1,
-            error_schemas={400: BulkHostActionWithFailedHostsModel},
+            error_schemas={HTTPStatus.BAD_REQUEST: BulkHostActionWithFailedHostsModel},
         )
     },
 )

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
 
 """agent_vnx_quotas
 
@@ -19,7 +18,7 @@ from typing import Any
 
 import paramiko
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 from cmk.utils.paths import omd_root
 
 PASSWORD_OPTION = "password"

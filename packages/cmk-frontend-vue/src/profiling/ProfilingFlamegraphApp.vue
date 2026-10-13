@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkBadge from 'cmk-ui-library/components/CmkBadge.vue'
 import CmkChip from 'cmk-ui-library/components/CmkChip.vue'
 import CmkCollapsible from 'cmk-ui-library/components/CmkCollapsible/CmkCollapsible.vue'
@@ -13,7 +13,7 @@ import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkSkeleton from 'cmk-ui-library/components/CmkSkeleton.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import { cmkFetch } from 'cmk-ui-library/lib/cmkFetch'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { computed, onMounted, ref, watch } from 'vue'
 
@@ -224,9 +224,12 @@ const activeTotalTime = computed(() => {
       </div>
     </div>
 
-    <CmkAlertBox v-else-if="error" variant="error" :heading="_t('Failed to load profile data')">
-      {{ error }}
-    </CmkAlertBox>
+    <CmkAlert
+      v-else-if="error"
+      variant="error"
+      :heading="_t('Failed to load profile data')"
+      :text="untranslated(error)"
+    />
 
     <template v-else>
       <!-- Compact summary bar with collapsible details -->

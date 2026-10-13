@@ -4,13 +4,20 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { AddTo, CmkTimeSeriesGraph } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, computed, readonly, ref, watch } from 'vue'
 
-import type { HorizontalLine, Metric, TimeRange } from '../components/TimeSeriesGraph'
+import { useGlobalRefresh } from '../GlobalTimePicker/globalTimeState'
+import type { HorizontalLine, Metric, ShadedRegion, TimeRange } from '../components/TimeSeriesGraph'
+import {
+  type NavigableBounds,
+  clippedToNavigableTime
+} from '../components/TimeSeriesGraph/interaction/timeBounds'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from '../components/consolidation'
 import type { RequestedTimeRange } from '../types'
+import { type FetchWindowPlanner, planFetchWindowByWidth } from '../utils/timeRange'
 
 // The fetch endpoint only needs the self-contained definition (the graph kind is embedded in
 // `internal`); a caller holding a full render shell additionally contributes its header title to
@@ -26,7 +33,11 @@ export interface ResolvedGraph {
   title: string
   metrics: Metric[]
   timeRange: TimeRange
+  // Not recoverable from `timeRange`: the fetch widens the window by its edge neighbours and the
+  // backend answers on its own storage grid.
+  requestedTimeRange: RequestedTimeRange
   horizontalLines: HorizontalLine[]
+  shadedRegions: ShadedRegion[]
   // The add-to type the context menu is assembled for and the specification its actions replay;
   // absent for graphs that offer no add-to action.
   addTo?: AddTo | null | undefined
@@ -35,10 +46,17 @@ export interface ResolvedGraph {
 
 /** What a data source is asked to fetch, beyond the graph definition itself. */
 export interface GraphFetchParams {
-  requestedTimeRange: { start: number; end: number; step: number }
+  fetchWindow: { start: number; end: number; step: number }
   consolidationFunction: ConsolidationFn
   combinationMode: GraphCombinationMode | null
 }
+
+interface CurrentRequest {
+  fetchWindow: GraphFetchParams['fetchWindow']
+  requestedTimeRange: RequestedTimeRange
+}
+
+export type GraphFetchResponse = components['schemas']['GraphFetchResponse']
 
 export interface FetchedGraph {
   // The evaluated title: a plug-in's title expression (e.g. the number of CPU cores) is only
@@ -47,6 +65,7 @@ export interface FetchedGraph {
   metrics: Metric[]
   timeRange: TimeRange
   horizontalLines: HorizontalLine[]
+  shadedRegions: ShadedRegion[]
   // Non-fatal per-metric problems the fetch reported alongside whatever data did resolve. Carried
   // through so a source that hit one is stated rather than rendering as a silently missing curve.
   errors: string[]
@@ -66,50 +85,51 @@ export type GraphDataFetcher = (
   params: GraphFetchParams
 ) => Promise<FetchedGraph>
 
-export const fetchGraphDataByDefinition: GraphDataFetcher = async (definition, params) => {
-  const fetched = unwrap(
-    await client.POST('/domain-types/graph/actions/fetch_data/invoke', {
-      params: { header: { 'Content-Type': 'application/json' } },
-      body: {
-        internal: definition.internal,
-        requested_time_range: params.requestedTimeRange,
-        consolidation_function: params.consolidationFunction,
-        combination_mode: params.combinationMode
-      }
-    })
-  )
+/** The graph a fetch endpoint answers, in the shape the graph hosts draw. */
+export function fetchedGraphOf(fetched: GraphFetchResponse): FetchedGraph {
   return {
     title: fetched.title,
     metrics: fetched.metrics,
     timeRange: fetched.time_range,
     horizontalLines: fetched.horizontal_lines,
+    shadedRegions: fetched.shaded_regions,
     errors: fetched.errors,
     warnings: fetched.warnings
   }
 }
 
-// The renderer decimates to one M4 bucket per plotted column (TimeSeriesGraph.vue) and draws into a
-// DPR-scaled bitmap, so a single sample per column collapses each bucket's min/max and loses the
-// detail between samples. Requesting several samples per column keeps that detail. RRD serves this
-// for free — RRDConsolidate never returns finer than the RRA step — while query backends honour the
-// step literally, bounding a request at ~4x the plotted width in points.
-const SAMPLES_PER_PLOTTED_COLUMN = 4
-
-function computeStep(start: number, end: number, canvasWidth: number): number {
-  return Math.max(60, Math.ceil((end - start) / (canvasWidth * SAMPLES_PER_PLOTTED_COLUMN)))
-}
+export const fetchGraphDataByDefinition: GraphDataFetcher = async (definition, params) =>
+  fetchedGraphOf(
+    unwrap(
+      await client.POST('/domain-types/graph/actions/fetch_data/invoke', {
+        params: { header: { 'Content-Type': 'application/json' } },
+        body: {
+          internal: definition.internal,
+          requested_time_range: params.fetchWindow,
+          consolidation_function: params.consolidationFunction,
+          combination_mode: params.combinationMode
+        }
+      })
+    )
+  )
 
 // Graph discovery (matching templates to a service) happens backend-only: the caller already
 // receives the self-contained `internal` definitions via the initial page props
 // (see build_template_graphs -> to_cmk_time_series_graph in cmk/gui/views/graph.py). This
 // composable only re-fetches evaluated data for those definitions as the requested range changes.
+export interface GraphDataOptions {
+  getFetchBounds?: () => NavigableBounds
+  fetchGraph?: GraphDataFetcher
+  planFetchWindow?: FetchWindowPlanner
+}
+
 export function useGraphData(
   getGraphs: () => GraphDataDefinition[],
   getRequestedTimeRange: () => RequestedTimeRange,
   getCanvasWidth: () => number,
   getConsolidationFnPerGraph: () => ConsolidationFn[],
   getCombinationMode: () => GraphCombinationMode | null = () => null,
-  fetchGraph: GraphDataFetcher = fetchGraphDataByDefinition
+  options: GraphDataOptions = {}
 ): {
   graphs: Readonly<Ref<ResolvedGraph[]>>
   isLoading: Readonly<Ref<boolean>>
@@ -119,6 +139,9 @@ export function useGraphData(
   warnings: Readonly<Ref<readonly string[]>>
   reload: () => void
 } {
+  const fetchGraph = options.fetchGraph ?? fetchGraphDataByDefinition
+  const planFetchWindow = options.planFetchWindow ?? planFetchWindowByWidth
+
   const graphsRef = ref<ResolvedGraph[]>([])
   const errorRef = ref<string | null>(null)
   const diagnosticsPerGraphRef = ref<{ errors: string[]; warnings: string[] }[]>([])
@@ -142,7 +165,7 @@ export function useGraphData(
   }
 
   // Step of the most recently requested load; a resize only re-fetches when the
-  // width-derived step actually changes.
+  // planned step actually changes.
   let lastRequestedStep: number | null = null
 
   let loadToken = 0
@@ -163,20 +186,25 @@ export function useGraphData(
     return Number.isFinite(canvasWidth) && canvasWidth > 0
   }
 
-  function currentRequest(): { requestedTimeRange: GraphFetchParams['requestedTimeRange'] } {
+  function currentRequest(): CurrentRequest {
     const range = getRequestedTimeRange()
-    const step = computeStep(range.start, range.end, getCanvasWidth())
-    lastRequestedStep = step
-    return { requestedTimeRange: { start: range.start, end: range.end, step } }
+    const window = planFetchWindow(range, getCanvasWidth())
+    lastRequestedStep = window.step
+    const requestedTimeRange = { start: range.start, end: range.end }
+    const bounds = options.getFetchBounds?.()
+    return {
+      fetchWindow: bounds === undefined ? window : clippedToNavigableTime(window, bounds),
+      requestedTimeRange
+    }
   }
 
   async function fetchOne(
     definition: GraphDataDefinition,
     index: number,
-    requestedTimeRange: GraphFetchParams['requestedTimeRange']
+    request: CurrentRequest
   ): Promise<ResolvedEntry> {
     const fetched = await fetchGraph(definition, {
-      requestedTimeRange,
+      fetchWindow: request.fetchWindow,
       consolidationFunction: getConsolidationFnPerGraph()[index] ?? DEFAULT_CONSOLIDATION_FN,
       combinationMode: getCombinationMode()
     })
@@ -185,7 +213,9 @@ export function useGraphData(
         title: fetched.title || (definition.options?.header.title ?? ''),
         metrics: fetched.metrics,
         timeRange: fetched.timeRange,
+        requestedTimeRange: request.requestedTimeRange,
         horizontalLines: fetched.horizontalLines,
+        shadedRegions: fetched.shadedRegions,
         addTo: definition.add_to,
         internal: definition.internal
       },
@@ -208,9 +238,9 @@ export function useGraphData(
     loadsInFlight.value += 1
 
     try {
-      const { requestedTimeRange } = currentRequest()
+      const request = currentRequest()
       const resolved = await Promise.all(
-        definitions.map((definition, index) => fetchOne(definition, index, requestedTimeRange))
+        definitions.map((definition, index) => fetchOne(definition, index, request))
       )
       if (tokenOwningAllSlots !== token) {
         return
@@ -252,8 +282,7 @@ export function useGraphData(
     loadsInFlight.value += 1
 
     try {
-      const { requestedTimeRange } = currentRequest()
-      const entry = await fetchOne(definition, index, requestedTimeRange)
+      const entry = await fetchOne(definition, index, currentRequest())
       if (tokenOwningSlot[index] !== token) {
         return
       }
@@ -271,10 +300,24 @@ export function useGraphData(
     }
   }
 
-  watch([getGraphs, getRequestedTimeRange], () => void loadAllGraphs(), {
-    immediate: true,
-    deep: true
-  })
+  const { refreshTick, contentReloadPending } = useGlobalRefresh()
+
+  // Outside the watch: a graph mounting during a content reload - a hover preview, say - still
+  // has to render something.
+  void loadAllGraphs()
+
+  // The tick re-fetches even when the window did not move, keeping a calendar range (Today, This
+  // week) live. A content reload is about to unmount this owner, so nobody would draw its fetch.
+  watch(
+    [getGraphs, getRequestedTimeRange, refreshTick],
+    () => {
+      if (contentReloadPending()) {
+        return
+      }
+      void loadAllGraphs()
+    },
+    { deep: true }
+  )
 
   const snapshotConsolidationFnPerGraph = (): ConsolidationFn[] => [...getConsolidationFnPerGraph()]
   watch(snapshotConsolidationFnPerGraph, (current, previous) => {
@@ -298,8 +341,7 @@ export function useGraphData(
       void loadAllGraphs()
       return
     }
-    const range = getRequestedTimeRange()
-    if (computeStep(range.start, range.end, width) !== lastRequestedStep) {
+    if (planFetchWindow(getRequestedTimeRange(), width).step !== lastRequestedStep) {
       debouncedLoadAllGraphs()
     }
   })

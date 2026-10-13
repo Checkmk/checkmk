@@ -3,28 +3,46 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
+<script lang="ts">
+export const SERVICE_OVERVIEW_TAB_ID = 'overview'
+export const SERVICE_GRAPHS_TAB_ID = 'service_graphs'
+</script>
+
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
+import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import CmkSlideInTabbed, { type SlideInTab } from 'cmk-ui-library/components/CmkSlideInTabbed'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, markRaw, ref, watch } from 'vue'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { computed, markRaw, onUnmounted, ref, watch } from 'vue'
 
+import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
+import EventHistoryApp from '@/monitoring/events/EventHistoryApp.vue'
+import { fetchEvents } from '@/monitoring/events/api'
+import { ServiceGraphsApi } from '@/monitoring/host-services/api/graphs'
 import { HostServicesApi } from '@/monitoring/host-services/api/services'
 import type { HostRef, HostServiceEntry, ServiceOverview } from '@/monitoring/shared/api/types'
 import ActionFeedback, {
   type ActionFeedback as ActionFeedbackResult
 } from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import MonitoringActionPane from '@/monitoring/shared/components/action/MonitoringActionPane.vue'
+import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
 import SlideInActions from '@/monitoring/shared/components/slide-in/SlideInActions.vue'
+import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 import { useSlideInActions } from '@/monitoring/shared/services/useSlideInActions'
+import type { DisplayOptions } from '@/monitoring/shared/types'
 
 import ServiceAiExplainButton from './slide-in/ServiceAiExplainButton.vue'
+import ServiceGraphsSkeleton from './slide-in/ServiceGraphsSkeleton.vue'
+import ServiceGraphsTab, { type ServiceGraphs } from './slide-in/ServiceGraphsTab.vue'
 import ServiceOverviewSkeleton from './slide-in/ServiceOverviewSkeleton.vue'
 import ServiceOverviewTab from './slide-in/ServiceOverviewTab.vue'
-import ServiceSlideInHeader from './slide-in/ServiceSlideInHeader.vue'
+import ServiceSlideInHeader, {
+  type ServiceHeaderSubject
+} from './slide-in/ServiceSlideInHeader.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -40,6 +58,7 @@ const props = withDefaults(
     loadActionMenu?: ((service: string) => Promise<CellAction[]>) | undefined
     /** The tab on show, as a `v-model:activeTabId`; forwarded to the panel. */
     activeTabId?: string | undefined
+    displayOptions: DisplayOptions
   }>(),
   {
     aiExplain: false,
@@ -59,6 +78,7 @@ const emit = defineEmits<{
 const { _t } = usei18n()
 
 const servicesApi = new HostServicesApi()
+const graphsApi = new ServiceGraphsApi()
 
 const open = computed(() => props.service !== null)
 
@@ -67,11 +87,91 @@ const open = computed(() => props.service !== null)
 const overview = ref<ServiceOverview | null>(null)
 
 // Only the actions the user may run and that this page actually implements reach the buttons.
+// Rescheduling is the one action that is not offered on every service: what it does, and whether
+// it can be done at all, is decided per service by the backend. A service it cannot be done for
+// gets no button here - the row's action menu is where the refusal is spelled out.
 const slideInActions = computed(() =>
-  props.permittedActions.filter((action) => action.id in props.actions)
+  props.permittedActions
+    .filter((action) => action.id in props.actions)
+    .flatMap((action) => {
+      if (action.id !== RESCHEDULE_ACTION_ID) {
+        return [action]
+      }
+      const offer = props.service?.reschedule
+      if (offer === undefined || offer.target === undefined) {
+        return []
+      }
+      return [
+        {
+          ...action,
+          label: offer.label as TranslatedString,
+          icon: offer.icon_name as SimpleIcons
+        }
+      ]
+    })
 )
 
 const targets = computed<string[]>(() => (props.service ? [props.service.name] : []))
+
+// A byproduct of the agent-based check reschedules the service that fetches the data, not itself.
+function actionTargets(actionId: string): string[] {
+  const redirect = actionId === RESCHEDULE_ACTION_ID ? props.service?.reschedule?.target : undefined
+  return redirect === undefined ? targets.value : [redirect]
+}
+
+const displayService = computed<ServiceHeaderSubject | null>(() => {
+  if (!props.service) {
+    return null
+  }
+  const loaded = overview.value
+  if (!loaded) {
+    return props.service
+  }
+  return {
+    name: props.service.name,
+    state: loaded.state,
+    is_flapping: loaded.is_flapping,
+    stale: loaded.stale,
+    modes: loaded.modes
+  }
+})
+
+const reloadToken = ref(0)
+
+let reloadTimer: ReturnType<typeof setTimeout> | null = null
+
+onUnmounted(() => {
+  if (reloadTimer !== null) {
+    clearTimeout(reloadTimer)
+  }
+})
+
+function onActionPerformed(result: ActionFeedbackResult): void {
+  // The header sits outside the tabbed body, so it needs its own reload - unless the Overview
+  // tab is active (or none has been picked yet, which defaults to it), since reloadToken then
+  // reloads it via this same loadOverview() already.
+  if (result.variant === 'success' && props.service) {
+    if (reloadTimer !== null) {
+      clearTimeout(reloadTimer)
+    }
+    const description = props.service.name
+    // Scheduling a downtime or acknowledging a problem sends an external command to the core
+    // and returns before the core has necessarily applied it, so an immediate reload can still
+    // show the pre-action state. Delayed like the table's own post-action refresh, for the same
+    // reason.
+    reloadTimer = setTimeout(() => {
+      reloadTimer = null
+      if (props.service?.name !== description) {
+        return
+      }
+      reloadToken.value++
+      if (props.activeTabId !== undefined && props.activeTabId !== SERVICE_OVERVIEW_TAB_ID) {
+        loadOverview(description).catch(() => {})
+      }
+    }, ACTION_REFRESH_DELAY_MS)
+  }
+  emit('performed', result)
+}
 
 const {
   activeActionId,
@@ -83,9 +183,9 @@ const {
   applyFeedback
 } = useSlideInActions<string>(
   () => props.actions,
-  targets,
+  actionTargets,
   () => props.service,
-  (result) => emit('performed', result)
+  onActionPerformed
 )
 
 watch(
@@ -105,6 +205,21 @@ async function loadOverview(description: string): Promise<ServiceOverview> {
   return loaded
 }
 
+// The link out lives on the overview, which the first tab loads; a reader landing straight on
+// the graphs tab from a URL has none yet, so it is loaded here rather than assumed.
+async function loadGraphs(description: string): Promise<ServiceGraphs> {
+  const [discovered, loaded] = await Promise.all([
+    graphsApi.discover(props.host, description),
+    overview.value ?? loadOverview(description)
+  ])
+  return {
+    graphs: discovered.graphs,
+    noDataMessage: discovered.noDataMessage,
+    errorMessage: discovered.errorMessage,
+    graphsLink: loaded.legacy_service_graphs_link
+  }
+}
+
 // Same shape as the host slide-in: link-only actions rendered as icon buttons in the header.
 const inlineActions = computed<CellAction[]>(() => {
   const loaded = overview.value
@@ -114,15 +229,15 @@ const inlineActions = computed<CellAction[]>(() => {
   const actions: CellAction[] = [
     {
       id: 'show_service',
-      label: _t('Show details of service %{name}', { name: loaded.name }),
-      icon: 'services',
+      label: _t('Show service details'),
+      icon: { name: 'services', color: 'services', emblem: 'burger' },
       url: loaded.legacy_service_status_link
     }
   ]
   if (loaded.legacy_service_parameters_link !== null) {
     actions.push({
       id: 'show_parameters',
-      label: _t('Parameters of this service'),
+      label: _t('Show service parameters'),
       icon: 'rulesets',
       url: loaded.legacy_service_parameters_link
     })
@@ -146,11 +261,27 @@ const tabs = computed<SlideInTab[]>(() => {
   }
   return [
     {
-      id: 'overview',
+      id: SERVICE_OVERVIEW_TAB_ID,
       title: _t('Overview'),
       component: markRaw(ServiceOverviewTab),
       skeleton: markRaw(ServiceOverviewSkeleton),
+      props: { displayOptions: props.displayOptions },
       load: () => loadOverview(service.name)
+    },
+    {
+      id: 'history',
+      title: _t('History'),
+      component: markRaw(EventHistoryApp),
+      skeleton: markRaw(TableSkeleton),
+      props: { subject: 'service' },
+      load: () => fetchEvents(props.host, service.name)
+    },
+    {
+      id: SERVICE_GRAPHS_TAB_ID,
+      title: _t('Service graphs'),
+      component: markRaw(ServiceGraphsTab),
+      skeleton: markRaw(ServiceGraphsSkeleton),
+      load: () => loadGraphs(service.name)
     }
   ]
 })
@@ -158,13 +289,14 @@ const tabs = computed<SlideInTab[]>(() => {
 
 <template>
   <!--
-    Keyed on the service so picking another row while the panel is open remounts the tabs.
+    Keyed on the service, so picking another row while the panel is open remounts the tabs:
     CmkSlideInTabbed only drops its cached tab data when `open` flips, which never happens here.
   -->
   <CmkSlideInTabbed
     :key="service?.name ?? ''"
     :open="open"
     :tabs="tabs"
+    :reload-token="reloadToken"
     :override-active="activeActionId !== null"
     :active-tab-id="activeTabId"
     :header="{ title: _t('Service details'), closeButton: true }"
@@ -173,20 +305,24 @@ const tabs = computed<SlideInTab[]>(() => {
   >
     <template #above-tabs>
       <ServiceSlideInHeader
-        v-if="service"
-        :service="service"
-        :modes="overview?.modes ?? []"
+        v-if="displayService"
+        :service="displayService"
         :actions="inlineActions"
         :load-action-menu="actionMenuLoader"
       />
-      <ServiceAiExplainButton v-if="aiExplain && overview" :overview="overview" />
     </template>
-    <template v-if="slideInActions.length" #actions>
-      <SlideInActions
-        :actions="slideInActions"
-        :running-action-id="runningActionId"
-        @select="openAction"
-      />
+    <template v-if="slideInActions.length || (aiExplain && overview)" #actions>
+      <div class="monitoring-service-slide-in__actions">
+        <SlideInActions
+          v-if="slideInActions.length"
+          :actions="slideInActions"
+          :running-action-id="runningActionId"
+          @select="openAction"
+        />
+        <div v-if="aiExplain && overview" class="monitoring-service-slide-in__ai-explain">
+          <ServiceAiExplainButton :overview="overview" />
+        </div>
+      </div>
       <ActionFeedback
         v-if="feedback"
         v-model:open="feedbackOpen"
@@ -214,6 +350,16 @@ const tabs = computed<SlideInTab[]>(() => {
 </template>
 
 <style scoped>
+.monitoring-service-slide-in__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
+}
+
+.monitoring-service-slide-in__ai-explain {
+  display: flex;
+}
+
 .monitoring-service-slide-in__feedback {
   margin-top: var(--spacing);
 }

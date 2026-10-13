@@ -84,7 +84,7 @@ TREND_DEFAULT_PARAMS: Mapping[str, Any] = {
 }
 
 MAGIC_FACTOR_DEFAULT_PARAMS: Mapping[str, Any] = {
-    "magic_normsize": 20,  # Standard size if 20 GB
+    "magic_normsize": 20,  # Standard size is 20 GiB
     "levels_low": (50.0, 60.0),  # Never move warn level below 50% due to magic factor
 }
 
@@ -173,16 +173,16 @@ def _adjust_levels(
 
     Example:
 
-    reference size: 20GB
+    reference size: 20 GiB
     threshold: 80%
 
     Filesystem size    MF 1    MF 0.9    MF 0.5
-    10GB               80%     79%       72%
-    20GB               80%     80%       80%
-    50GB               80%     82%       87%
+    10 GiB             80%     79%       72%
+    20 GiB             80%     80%       80%
+    50 GiB             80%     82%       87%
 
 
-    Please run df_magic_factor.py for more examples.
+    Please run doc/treasures/magic_levels.py for more examples.
     """
 
     relative_size = filesystem_size / reference_size
@@ -331,10 +331,10 @@ def _ungrouped_mountpoints_and_groups(
 
 
 def get_filesystem_levels(
-    filesystem_size_gb: float,
+    filesystem_size_gib: float,
     params: Mapping[str, Any],
 ) -> FilesystemLevels:
-    filesystem_size = Bytes(int(filesystem_size_gb * 1024 * 1024 * 1024))
+    filesystem_size = Bytes(int(filesystem_size_gib * 1024 * 1024 * 1024))
 
     filesystem_levels = _parse_filesystem_levels(params["levels"], filesystem_size)
 
@@ -643,15 +643,14 @@ def df_check_filesystem_list(
         metric_name: str, info: dict[str, dict[str, float | None]], mountpoints_group: list[str]
     ) -> float | None:
         """Calculate sum of named values for matching mount points"""
-        try:
-            # If we have a None, sum will throw a TypeError which we catch...
-            return sum(
-                block_info[metric_name]  # type: ignore[misc]
-                for (mp, block_info) in info.items()  #
-                if mp in mountpoints_group
-            )
-        except TypeError:
-            return None
+        the_sum = 0.0
+        for mp, block_info in info.items():
+            if mp not in mountpoints_group:
+                continue
+            if (value := block_info[metric_name]) is None:
+                return None
+            the_sum += value
+        return the_sum
 
     # Translate lists of tuples into convenient dicts
     blocks_info = {

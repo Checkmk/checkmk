@@ -36,7 +36,7 @@ ASSET_TYPE = gcp.AssetType("compute.googleapis.com/Disk")
 
 
 def discover(
-    section_gcp_service_gce_storage: gcp.Section | None,
+    section_gcp_service_gce_storage: gcp.Section | None,  # noqa: ARG001
     section_gcp_assets: gcp.AssetSection | None,
 ) -> DiscoveryResult:
     assets = gcp.validate_asset_section(section_gcp_assets, "gce_storage")

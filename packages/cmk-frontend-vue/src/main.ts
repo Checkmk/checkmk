@@ -5,28 +5,32 @@
  */
 import DynamicIconApp from 'cmk-ui-library/components/CmkIcon/CmkDynamicIcon/DynamicIconApp.vue'
 import IconApp from 'cmk-ui-library/components/CmkIcon/IconApp.vue'
-import RnbwApp from 'cmk-ui-library/components/graphics/RnbwApp.vue'
 import initCmkUi from 'cmk-ui-library/lib/initCmkUi'
+
+import '@/lib/keyboard-cheat-sheet/keyboardCheatSheet'
 
 import { FormApp } from '@/form'
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
 
 import '@/assets/variables.css'
-import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
-import { registerGraphDesignerFormComponents } from '@/graph-designer/registerFormComponents'
+import MapsApp from '@/maps/MapsApp.vue'
+import ModeHostRelationDetectionApp from '@/mode-host-relation-detection/ModeHostRelationDetectionApp.vue'
 import ModeHostApp from '@/mode-host/ModeHostApp.vue'
 import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
+import { registerCustomQueryFormComponents } from '@/telemetry-metrics-custom-query/registerFormComponents'
 import { translationLoader } from '@/translationLoader'
 
 import AiExplainThisIssueApp from './ai/AiExplainButtonApp.vue'
 import Dashboard from './dashboard/DashboardApp.vue'
 import SharedDashboard from './dashboard/DashboardSharedApp.vue'
+import DashboardTimeFollowerApp from './dashboard/DashboardTimeFollowerApp.vue'
 import DateTimePickerApp from './date-time-picker/CmkDateTimePickerApp.vue'
 import DialogApp from './dialog/DialogApp.vue'
+import GlobalSettingsApp from './global-settings/GlobalSettingsApp.vue'
 import { GlobalTimePickerApp } from './graphing/GlobalTimePicker'
 import GraphGroup from './graphing/components/GraphGroup.vue'
 import CustomGraphDesignerApp from './graphing/designer/CustomGraphDesignerApp.vue'
-import { registerMetricBackendFormComponents } from './metric-backend/registerFormComponents'
+import AlertWizardApp from './mode-alerts/AlertWizardApp.vue'
 import CustomServicesWizardApp from './mode-custom-services/CustomServicesWizardApp.vue'
 import ModeCreateOAuth2ConnectionApp from './mode-oauth2-connection/ModeCreateOAuth2ConnectionApp.vue'
 import ModeRedirectOAuth2ConnectionAppCopy from './mode-oauth2-connection/ModeRedirectOAuth2ConnectionApp.vue'
@@ -45,6 +49,8 @@ import ProfilingFlamegraphApp from './profiling/ProfilingFlamegraphApp.vue'
 import ProfilingProfilesListApp from './profiling/ProfilingProfilesListApp.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
 import AgentDownload from './setup/AgentDownloadApp.vue'
+import { registerTelemetryMetricsFormComponents } from './telemetry-metrics/registerFormComponents'
+import TrialModeSelectionApp from './trial-mode-selection/TrialModeSelectionApp.vue'
 import TwoFactorAuthApp from './two-factor-auth/TwoFactorAuthApp.vue'
 import WebAuthnRegisterButtonApp from './two-factor-auth/WebAuthnRegisterButtonApp.vue'
 import UnifiedSearchApp from './unified-search/UnifiedSearchApp.vue'
@@ -55,21 +61,24 @@ import WelcomeSnapin from './welcome/components/snapin/WelcomeSnapin.vue'
 const { defineCmkComponent } = initCmkUi({ translationLoader })
 
 initializeComponentRegistry()
-registerGraphDesignerFormComponents()
+registerCustomQueryFormComponents()
 registerOAuth2ConnectionFormComponents()
-registerMetricBackendFormComponents()
+registerTelemetryMetricsFormComponents()
 
+defineCmkComponent('cmk-maps', MapsApp, { appprops: { fullPage: true } })
 defineCmkComponent('cmk-form-spec', FormApp)
 defineCmkComponent('cmk-quick-setup', QuickSetup)
 defineCmkComponent('cmk-dashboard', Dashboard)
 defineCmkComponent('cmk-shared-dashboard', SharedDashboard)
+defineCmkComponent('cmk-dashboard-time-follower', DashboardTimeFollowerApp)
 defineCmkComponent('cmk-notification-overview', NotificationOverview)
 defineCmkComponent('cmk-agent-download', AgentDownload)
 defineCmkComponent('cmk-notification-parameters-overview', NotificationParametersOverviewApp)
-defineCmkComponent('cmk-graph-designer', GraphDesignerApp)
 defineCmkComponent('cmk-mode-host', ModeHostApp)
+defineCmkComponent('cmk-mode-host-relation-detection', ModeHostRelationDetectionApp)
 defineCmkComponent('cmk-mode-create-otel-conf', ModeCreateOTelConfApp)
 defineCmkComponent('cmk-mode-create-prometheus-conf', ModeCreatePrometheusConfApp)
+defineCmkComponent('cmk-mode-create-alert', AlertWizardApp)
 defineCmkComponent('cmk-mode-custom-services', CustomServicesWizardApp)
 defineCmkComponent('cmk-mode-create-relay', ModeCreateRelayApp)
 defineCmkComponent('cmk-mode-create-oauth2-connection', ModeCreateOAuth2ConnectionApp)
@@ -82,7 +91,7 @@ defineCmkComponent('cmk-network-flow-explorer', FlowExplorerApp)
 defineCmkComponent('cmk-unified-search', UnifiedSearchApp)
 defineCmkComponent('cmk-welcome', WelcomeApp)
 defineCmkComponent('cmk-welcome-snapin', WelcomeSnapin)
-defineCmkComponent('cmk-rnbw', RnbwApp, { pure: true })
+defineCmkComponent('cmk-global-settings', GlobalSettingsApp)
 defineCmkComponent('cmk-ai-explain-button', AiExplainThisIssueApp)
 defineCmkComponent('cmk-dialog', DialogApp)
 defineCmkComponent('cmk-dynamic-icon', DynamicIconApp, { pure: true })
@@ -91,6 +100,7 @@ defineCmkComponent('cmk-static-icon', IconApp, { pure: true })
 defineCmkComponent('cmk-two-factor-authentication', TwoFactorAuthApp)
 defineCmkComponent('cmk-webauthn-register-button', WebAuthnRegisterButtonApp)
 defineCmkComponent('cmk-product-usage-analytics', ProductUsageAnalyticsApp)
+defineCmkComponent('cmk-trial-mode-selection', TrialModeSelectionApp)
 defineCmkComponent('cmk-date-time-picker', DateTimePickerApp)
 defineCmkComponent('cmk-global-time-picker', GlobalTimePickerApp)
 defineCmkComponent('cmk-graph-group', GraphGroup)

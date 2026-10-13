@@ -20,8 +20,8 @@ from typing import Any
 
 import requests
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
+from cmk.server_side_programs.v1 import configure_logging, report_agent_crashes, vcrtrace
 
 __version__ = "3.0.0b1"
 
@@ -190,14 +190,10 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
 
 
 def set_up_logging(verbosity: int) -> None:
-    fmt = "%(levelname)s: %(message)s"
     if verbosity >= 2:
-        fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s %(message)s"
-        lvl = logging.DEBUG
+        configure_logging(logging.DEBUG)
     else:
-        lvl = logging.INFO if verbosity else logging.WARNING
-
-    logging.basicConfig(level=lvl, format=fmt)
+        configure_logging(logging.INFO if verbosity else logging.WARNING)
 
 
 class CouchbaseClient:
@@ -222,7 +218,7 @@ class CouchbaseClient:
         try:
             response = self._session.get(uri, timeout=self._timeout)
             response.raise_for_status()
-        except (requests.ConnectionError, requests.HTTPError):
+        except requests.ConnectionError, requests.HTTPError:
             LOGGER.warning("%(uri)r could not be reached", {"uri": uri})
             raise
 
@@ -336,7 +332,7 @@ def fetch_bucket_data(
     for bucket in buckets:
         try:
             response = client.get_bucket(bucket)
-        except (ValueError, KeyError, requests.ConnectionError, requests.HTTPError):
+        except ValueError, KeyError, requests.ConnectionError, requests.HTTPError:
             if debug:
                 raise
             continue
@@ -400,7 +396,7 @@ def couchbase_main(args: argparse.Namespace) -> int:
 
     try:
         sections_node(client)
-    except (ValueError, requests.ConnectionError, requests.HTTPError):
+    except ValueError, requests.ConnectionError, requests.HTTPError:
         if args.debug:
             raise
         return 1

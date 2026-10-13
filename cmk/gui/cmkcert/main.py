@@ -11,6 +11,7 @@ If cmk-cert is run interactively in 'rotate' mode, the GUI functionality is impo
 
 import argparse
 import os
+import re
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -18,30 +19,49 @@ from typing import Literal
 
 import cmk.utils.paths
 from cmk.ccc.site import omd_site, SiteId
+from cmk.crypto.certificate import serial_number_string
+from cmk.crypto.issued_certificates import IssuedCertificatesComponent
 from cmk.utils.certs import (
     agent_root_ca_path,
     cert_dir,
+    crl_path,
     initialize_agent_ca,
+    initialize_relay_ca,
     initialize_site_ca,
     initialize_site_certificate,
+    issued_certificates_path,
+    RelaysCA,
+    revoke_certificate,
     SiteCA,
 )
 
 from .cmkcert_rotate import (
     finalize_rotate_site_ca_certificate,
+    rotate_agent_ca_certificate,
     rotate_site_certificate,
     start_rotate_site_ca_certificate,
 )
 
 CertificateType = Literal["site", "site-ca", "agent-ca"]
+IssuingCA = Literal["agent-ca", "relay-ca"]
+
+
+def _parse_serial_number(value: str) -> int:
+    if not re.fullmatch("[0-9a-fA-F]+", digits := value.replace(":", "")):
+        raise argparse.ArgumentTypeError(f"'{value}' is not a hexadecimal serial number.")
+    return int(digits, 16)
+
+
+# The relay CA is created upon site creation, but cannot be rotated (yet).
+InitCertificateType = CertificateType | Literal["relay-ca"]
 
 
 def _parse_args(args: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="""
-Utility to initialize and rotate Checkmk certificates.
+Utility to initialize, rotate and revoke Checkmk certificates.
 
-The utility supports two modes of operation: 'init' and 'rotate'.
+The utility supports three modes of operation: 'init', 'rotate' and 'revoke'.
 See '%(prog)s <mode> --help' for more information about each mode.
 """
     )
@@ -57,8 +77,15 @@ It is intended for internal use during site creation.
     )
     mode_init.add_argument(
         "target_certificate",
-        choices=["site", "site-ca", "agent-ca"],
+        choices=["site", "site-ca", "agent-ca", "relay-ca"],
         help="Specify which certificate to create.",
+    )
+    mode_init.add_argument(
+        "--if-missing",
+        dest="if_missing",
+        action="store_true",
+        default=False,
+        help="Exit successfully instead of failing if the certificate already exists.",
     )
 
     mode_rotate = modes.add_parser(
@@ -87,12 +114,24 @@ In a distributed monitoring setup, the rotation should be run from the central s
 that remote sites' trust stores are updated automatically.
 Warning: following the Site CA certificate rotation, all agents will need to be manually \
 re-registered to trust the updated certificate.
+
+'agent-ca' certificate: The agent signing CA certificate can be rotated directly. The current CA \
+is kept alongside the new one, so that already registered agents stay trusted and can renew their \
+certificate with the new CA. Use '--ca-pem' to install your own CA instead of a generated one. \
+Since the agent receiver authorizes registered agents by the common name of their certificate's \
+issuer, the provided CA has to have the same common name as the current one. Use '--force' to \
+install a CA with a different common name anyway, which requires registering all agents again. \
+The provided CA also has to be a currently valid CA certificate that carries subject and \
+authority key identifiers and a key of at least RSA 2048 bits or an equivalent elliptic curve \
+key.
+Once no agent uses a certificate issued by the previous CA anymore, delete it from \
+'etc/ssl/agents' and reload the agent receiver to drop it from the trusted certificate store.
 """,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     mode_rotate.add_argument(
         "target_certificate",
-        choices=["site", "site-ca"],
+        choices=["site", "site-ca", "agent-ca"],
         help="Specify which certificate to rotate.",
     )
 
@@ -102,7 +141,7 @@ re-registered to trust the updated certificate.
         default=None,
         help=(
             "Specify the expiry time in days. "
-            "The default expiry time is 10 years for both 'site-ca' and 'site' certificates."
+            "The default expiry time is 10 years for all certificate types."
         ),
     )
 
@@ -111,6 +150,28 @@ re-registered to trust the updated certificate.
         dest="remote_site",
         type=str,
         help=("Specify the remote site id for which you want to rotate the certificate."),
+    )
+    mode_rotate.add_argument(
+        "--ca-pem",
+        dest="ca_pem",
+        type=Path,
+        default=None,
+        help=(
+            "'agent-ca' certificate only -- "
+            "Install the CA from the given PEM file instead of generating a new CA. The file has "
+            "to contain both the CA certificate and its unencrypted private key."
+        ),
+    )
+    mode_rotate.add_argument(
+        "--force",
+        action="store_true",
+        default=False,
+        help=(
+            "'agent-ca' certificate only -- "
+            "Install the CA given by '--ca-pem' even if its common name differs from the current "
+            "CA's. The agent receiver will then reject all registered agents until they are "
+            "registered again."
+        ),
     )
     mode_rotate.add_argument(
         "--finalize",
@@ -122,13 +183,41 @@ re-registered to trust the updated certificate.
         ),
     )
 
+    mode_revoke = modes.add_parser(
+        "revoke",
+        help="Revoke a certificate issued by one of the site's CAs.",
+        description="""
+The 'revoke' mode adds the serial number of a certificate to the certificate revocation list \
+(CRL) of the CA that issued it. Each CA has its own CRL, stored next to its certificate, which is \
+created if it does not exist yet. The revocation is also recorded in the certificate log of the CA \
+in 'var/log'. Certificates that are not recorded as issued there, for example because they were \
+issued before the log was introduced, can be revoked all the same.
+
+A revoked certificate is refused the next time its owner establishes a connection. \
+Connections that are already established are not terminated.
+""",
+    )
+    mode_revoke.add_argument(
+        "issuing_ca",
+        choices=["agent-ca", "relay-ca"],
+        help="Specify the CA that issued the certificate to revoke.",
+    )
+    mode_revoke.add_argument(
+        "serial_number",
+        type=_parse_serial_number,
+        help=(
+            "Serial number of the certificate to revoke, in hexadecimal notation, with or "
+            "without colons (e.g. '65:2e:18:0f' or '652e180f')."
+        ),
+    )
+
     return parser.parse_args(args)
 
 
 def _certificate_path(
     omd_root: Path,
     site_id: SiteId,
-    target_certificate: CertificateType,
+    target_certificate: InitCertificateType,
 ) -> Path:
     match target_certificate:
         case "site":
@@ -137,15 +226,20 @@ def _certificate_path(
             return SiteCA.root_ca_path(cert_dir=cert_dir(omd_root))
         case "agent-ca":
             return agent_root_ca_path(site_root_dir=omd_root)
+        case "relay-ca":
+            return RelaysCA.root_ca_path(cert_dir=cert_dir(omd_root))
 
 
 def _run_init(
     omd_root: Path,
     site_id: SiteId,
-    target_certificate: CertificateType,
+    target_certificate: InitCertificateType,
     key_size: int | None = None,
+    if_missing: bool = False,
 ) -> None:
     if _certificate_path(omd_root, site_id, target_certificate).exists():
+        if if_missing:
+            return
         raise ValueError(f"Certificate '{target_certificate}' for site '{site_id}' already exists.")
 
     match target_certificate:
@@ -155,6 +249,8 @@ def _run_init(
             initialize_agent_ca(site_id=site_id, omd_root=omd_root, key_size=key_size)
         case "site":
             initialize_site_certificate(site_id=site_id, omd_root=omd_root, key_size=key_size)
+        case "relay-ca":
+            initialize_relay_ca(site_id=site_id, omd_root=omd_root, key_size=key_size)
 
 
 def _run_rotate(
@@ -163,6 +259,8 @@ def _run_rotate(
     target_certificate: CertificateType,
     expiry: int | None,
     finalize: bool,
+    ca_pem: Path | None = None,
+    force: bool = False,
 ) -> None:
 
     if (
@@ -195,8 +293,53 @@ def _run_rotate(
                 key_size=4096,
             )
         case "agent-ca":
-            sys.stdout.write("cmk-cert: Rotating the 'agent-ca' certificate is not supported.\n")
-            sys.exit(1)
+            rotate_agent_ca_certificate(
+                omd_root=omd_root,
+                site_id=site_id,
+                expiry=expiry,
+                key_size=4096,
+                ca_pem=ca_pem,
+                force=force,
+            )
+
+
+def _issuing_ca_file(omd_root: Path, site_id: SiteId, issuing_ca: IssuingCA) -> Path:
+    match issuing_ca:
+        case "agent-ca":
+            return _certificate_path(omd_root, site_id, issuing_ca)
+        case "relay-ca":
+            return RelaysCA.root_ca_path(cert_dir=cert_dir(omd_root))
+
+
+def _issued_certificates_component(issuing_ca: IssuingCA) -> IssuedCertificatesComponent:
+    match issuing_ca:
+        case "agent-ca":
+            return "agents"
+        case "relay-ca":
+            return "relays"
+
+
+def _run_revoke(
+    omd_root: Path,
+    site_id: SiteId,
+    issuing_ca: IssuingCA,
+    serial_number: int,
+) -> None:
+    ca_path = _issuing_ca_file(omd_root, site_id, issuing_ca)
+    if not ca_path.exists():
+        raise ValueError(f"The '{issuing_ca}' CA is not available at '{ca_path}'.")
+
+    cert_log = issued_certificates_path(omd_root, _issued_certificates_component(issuing_ca))
+    issued = revoke_certificate(ca_path, serial_number, cert_log)
+    sys.stdout.write(
+        f"The certificate with serial number {serial_number_string(serial_number)} is revoked "
+        f"in '{crl_path(ca_path)}'.\n"
+    )
+    if issued is None:
+        sys.stdout.write(
+            f"Note: no certificate with this serial number is recorded as issued in '{cert_log}'. "
+            "Check the serial number if you did not expect this.\n"
+        )
 
 
 def main(args: Sequence[str] | None = None) -> int:
@@ -215,6 +358,7 @@ def main(args: Sequence[str] | None = None) -> int:
                 cmk.utils.paths.omd_root,
                 SiteId(site_id),
                 parsed_args.target_certificate,
+                if_missing=parsed_args.if_missing,
             )
 
         elif parsed_args.mode == "rotate":
@@ -230,6 +374,23 @@ def main(args: Sequence[str] | None = None) -> int:
                 )
                 return -1
 
+            if parsed_args.target_certificate == "agent-ca":
+                if parsed_args.remote_site:
+                    sys.stderr.write(
+                        "cmk-cert: --remote-site cannot be used when rotating the 'agent-ca' certificate.\n"
+                    )
+                    return -1
+            elif parsed_args.ca_pem is not None:
+                sys.stderr.write(
+                    "cmk-cert: --ca-pem can only be used when rotating the 'agent-ca' certificate.\n"
+                )
+                return -1
+            elif parsed_args.force:
+                sys.stderr.write(
+                    "cmk-cert: --force can only be used when rotating the 'agent-ca' certificate.\n"
+                )
+                return -1
+
             target_site = SiteId(parsed_args.remote_site or site_id)
             _run_rotate(
                 cmk.utils.paths.omd_root,
@@ -237,6 +398,16 @@ def main(args: Sequence[str] | None = None) -> int:
                 parsed_args.target_certificate,
                 parsed_args.expiry,
                 parsed_args.finalize,
+                parsed_args.ca_pem,
+                parsed_args.force,
+            )
+
+        elif parsed_args.mode == "revoke":
+            _run_revoke(
+                cmk.utils.paths.omd_root,
+                SiteId(site_id),
+                parsed_args.issuing_ca,
+                parsed_args.serial_number,
             )
 
         else:

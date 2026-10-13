@@ -55,7 +55,7 @@ def cmp_string_list(column: ColumnName, r1: Row, r2: Row) -> int:
     return cmp_insensitive_string(v1, v2)
 
 
-def cmp_custom_variable(r1: Row, r2: Row, key: str, cmp_func: SorterFunction) -> int:
+def cmp_custom_variable(r1: Row, r2: Row, key: str, cmp_func: SorterFunction) -> int:  # noqa: ARG001
     return (_get_custom_var(r1, key) > _get_custom_var(r2, key)) - (
         _get_custom_var(r1, key) < _get_custom_var(r2, key)
     )

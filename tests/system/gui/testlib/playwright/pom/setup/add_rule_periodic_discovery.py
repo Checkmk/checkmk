@@ -23,10 +23,11 @@ class AddRulePeriodicServiceDiscovery(CmkPage):
     """
 
     rule_name = "Periodic service discovery"
+    varname = "periodic_discovery"
 
     @override
     def navigate(self) -> None:
-        service_rules_page = Ruleset(self.page, self.rule_name)
+        service_rules_page = Ruleset(self.page, self.rule_name, self.varname)
         logger.info("Navigate to 'Add rule: %s' page", self.rule_name)
         service_rules_page.add_rule_button.click()
         self.page.wait_for_url(

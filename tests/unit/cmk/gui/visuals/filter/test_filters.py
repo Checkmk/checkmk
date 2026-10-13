@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
 from collections.abc import Sequence
@@ -18,13 +18,15 @@ from pytest_mock import MockerFixture
 
 import cmk.ruleset_matcher.tags
 from cmk.gui.bi import _filters as bi_filters
+from cmk.gui.config import Config
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.visuals import _filters as filters
 from cmk.gui.visuals.filter import filter_registry
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.gui.web_test_app import SetConfig
-from tests.testlib.unit.gui.filter_table_test_helper import (
+from cmk.web.utils.request_cache import RequestCache
+from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.unit.cmk.gui.helpers.filter_table_test_helper import (
     filter_inv_table_tests,
     filter_table_tests,
     FilterTableTest,
@@ -32,7 +34,9 @@ from tests.testlib.unit.gui.filter_table_test_helper import (
 
 
 @pytest.fixture(name="live")
-def fixture_livestatus_test_config(mock_livestatus, mock_wato_folders):
+def fixture_livestatus_test_config(
+    mock_livestatus: MockLiveStatusConnection, mock_wato_folders: None
+) -> MockLiveStatusConnection:
     live = mock_livestatus
     live.add_table(
         "hostgroups",
@@ -111,8 +115,9 @@ def fixture_livestatus_test_config(mock_livestatus, mock_wato_folders):
 
 # In general filters should not affect livestatus query in case there is no variable set for them
 @pytest.mark.parametrize("filter_ident", filter_registry.keys())
+@pytest.mark.usefixtures("request_context")
 def test_filters_filter_with_empty_request(
-    filter_ident: str, live: MockLiveStatusConnection, request_context: None
+    filter_ident: str, live: MockLiveStatusConnection
 ) -> None:
     if filter_ident == "hostgroupvisibility":
         expected_filter = "Filter: hostgroup_num_hosts > 0\n"
@@ -197,6 +202,12 @@ filter_tests = [
         ident="event_facility",
         request_vars=[("event_facility", "0")],
         expected_filters="Filter: event_facility = 0\n",
+    ),
+    # Testing base class EventHostQuery
+    FilterTest(
+        ident="event_host",
+        request_vars=[("event_host", "myhost")],
+        expected_filters=("Filter: event_host = myhost\nFilter: event_core_host = myhost\nOr: 2\n"),
     ),
     # Testing base class FilterNagiosFlag, FilterOption
     FilterTest(
@@ -467,7 +478,56 @@ filter_tests = [
             ("hst_service_level_lower", "10"),
             ("hst_service_level_upper", "20"),
         ],
-        expected_filters=("Filter: host_custom_variable_names >= EC_SL\n"),
+        expected_filters=(
+            "Filter: host_custom_variables = EC_SL 10\n"
+            "Filter: host_custom_variables = EC_SL 20\n"
+            "Or: 2\n"
+        ),
+    ),
+    FilterTest(
+        ident="hst_service_level",
+        request_vars=[("hst_service_level_lower", "30")],
+        expected_filters=("Filter: host_custom_variables = EC_SL 30\n"),
+    ),
+    FilterTest(
+        ident="hst_service_level",
+        request_vars=[("hst_service_level_upper", "0")],
+        expected_filters=("Filter: host_custom_variables = EC_SL 0\n"),
+    ),
+    FilterTest(
+        ident="hst_service_level",
+        request_vars=[
+            ("hst_service_level_lower", "30"),
+            ("hst_service_level_upper", "10"),
+        ],
+        expected_filters=("Or: 0\n"),
+    ),
+    FilterTest(
+        ident="hst_service_level",
+        request_vars=[("hst_service_level_lower", "not-a-number")],
+        expected_filters="",
+    ),
+    FilterTest(
+        ident="hst_service_level",
+        request_vars=[
+            ("hst_service_level_lower", "not-a-number"),
+            ("hst_service_level_upper", "20"),
+        ],
+        expected_filters="",
+    ),
+    FilterTest(
+        ident="svc_service_level",
+        request_vars=[
+            ("svc_service_level_lower", "0"),
+            ("svc_service_level_upper", "30"),
+        ],
+        expected_filters=(
+            "Filter: service_custom_variables = EC_SL 0\n"
+            "Filter: service_custom_variables = EC_SL 10\n"
+            "Filter: service_custom_variables = EC_SL 20\n"
+            "Filter: service_custom_variables = EC_SL 30\n"
+            "Or: 4\n"
+        ),
     ),
     FilterTest(
         ident="log_class",
@@ -595,12 +655,13 @@ filter_tests = [
 ]
 
 
-def filter_test_id(t):
+def filter_test_id(t: FilterTest) -> str:
     return t.ident + ":" + ",".join(["=".join(p) for p in t.request_vars])
 
 
 @pytest.mark.parametrize("test", filter_tests, ids=filter_test_id)
-def test_filters_filter(test: FilterTest, set_config: SetConfig, request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_filters_filter(test: FilterTest, set_config: SetConfig) -> None:
     with (
         set_config(
             wato_host_attrs=[
@@ -611,14 +672,13 @@ def test_filters_filter(test: FilterTest, set_config: SetConfig, request_context
         time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, tzinfo=ZoneInfo("UTC"))),
     ):
         filt = filter_registry[test.ident]
-        filter_vars = dict(filt.value())  # Default empty vars, exhaustive
+        filter_vars = dict(filt.value(RequestCache(Config())))  # Default empty vars, exhaustive
         filter_vars.update(dict(test.request_vars))
         assert filt.filter(filter_vars) == test.expected_filters
 
 
-def test_custom_attribute_filter_without_the_value_variable(
-    set_config: SetConfig, request_context: None
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_custom_attribute_filter_without_the_value_variable(set_config: SetConfig) -> None:
     # A stored context that carries only the attribute name and no value key at all,
     # as opposed to a value key holding an empty string. Both mean "any value".
     with set_config(custom_service_attributes={"bla": {"title": "Bla"}}):
@@ -631,8 +691,10 @@ def test_custom_attribute_filter_without_the_value_variable(
 
 
 @pytest.mark.parametrize("test", filter_table_tests)
+@pytest.mark.usefixtures("request_context")
 def test_filters_filter_table(  # type: ignore[misc]
-    test: FilterTableTest, monkeypatch: pytest.MonkeyPatch, request_context: None
+    test: FilterTableTest,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # Skip deployment_has_agent in community edition - needs bakery
     if test.ident == "deployment_has_agent":
@@ -656,17 +718,41 @@ def test_filters_filter_inv_table(test: FilterTableTest) -> None:  # type: ignor
 
 
 # Filter form is not really checked. Only checking that no exception occurs
-def test_filters_display_with_empty_request(
-    live: MockLiveStatusConnection, request_context: None, patch_theme: None
-) -> None:
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_filters_display_with_empty_request(live: MockLiveStatusConnection) -> None:
     with live:
         for filt in filter_registry.values():
             with output_funnel.plugged():
                 _set_expected_queries(filt.ident, live)
-                filt.display(dict.fromkeys(filt.htmlvars, ""))
+                filt.display(dict.fromkeys(filt.htmlvars, ""), RequestCache(Config()))
 
 
-def _set_expected_queries(filt_ident, live):
+# fmt: off
+@pytest.mark.parametrize(
+    "ident, expected_line_breaks",
+    [
+        pytest.param("log_state", 1, id="host and service states on separate rows"),
+        pytest.param("hostsgroups_having_problems", 1, id="service and host problems on separate rows"),
+        pytest.param("host_address", 1, id="match options below the address"),
+        pytest.param("aggr_assumed_state", 1, id="unset assumed state below the states"),
+        pytest.param("host_auxtags", 2, id="one row per aux tag"),
+        pytest.param("aggr_state", 0, id="hidden component adds no row"),
+        pytest.param("aggregation_types", 0, id="horizontal group stays on one row"),
+    ],
+)
+# fmt: on
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_filter_display_puts_top_level_components_on_separate_rows(
+    ident: str, expected_line_breaks: int
+) -> None:
+    with output_funnel.plugged():
+        filter_registry[ident].display({}, RequestCache(Config()))
+        html_output = output_funnel.drain()
+
+    assert html_output.count("<br") == expected_line_breaks
+
+
+def _set_expected_queries(filt_ident: str, live: MockLiveStatusConnection) -> None:
     if filt_ident in ["hostgroups"]:
         live.expect_query("GET hostgroups\nCache: reload\nColumns: name alias\n")
         return

@@ -48,6 +48,13 @@ class HostServicesRepository(Protocol):
         """Count the total services of a host in your environment."""
         ...
 
-    def count_matched(self, hostname: str, *, query: str, filters: ServiceFilter) -> int:
+    def count_matched(
+        self,
+        hostname: str,
+        *,
+        query: str,
+        filters: ServiceFilter,
+        fields: Set[ServiceOptionalField],
+    ) -> int:
         """Count the services of a host matching the given criteria."""
         ...

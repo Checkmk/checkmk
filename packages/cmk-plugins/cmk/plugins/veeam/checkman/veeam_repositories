@@ -1,0 +1,26 @@
+title: Veeam: Backup repository
+agents: special
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors a backup repository of a Veeam Backup & Replication
+ server, collected via the Veeam special agent. It reports the repository's
+ used space, and, in the details, its host, path and description.
+
+ This check is {CRIT} if the repository is offline; no further checks are
+ done in that case. It is {WARN} if the repository is out of date. The
+ used space is evaluated like any other filesystem, and its {WARN} and {CRIT}
+ levels are configured with the rule "File systems (used space and growth)".
+
+ This check does not report capacity for a scale-out repository itself,
+ since a scale-out repository has no capacity of its own; capacity lives on
+ its extents, each of which is discovered as its own repository service.
+
+discovery:
+ One service is created for each backup repository and each scale-out
+ repository extent reported by the API.
+
+item:
+ The repository type (or, for a scale-out repository extent, its extent
+ type) followed by the repository name.

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 """This module collects code which helps with testing Checkmk.
@@ -13,8 +12,6 @@ For code to be admitted to this module, it should itself be tested thoroughly, s
 have any friction during testing with these helpers themselves.
 
 """
-
-from __future__ import annotations
 
 import collections
 import datetime as dt
@@ -485,14 +482,15 @@ def execute_query(
     # If the columns are explicitly asked for, we get the columns here.
     query_columns = _column_of_query(query) or []
 
-    columns: list[ColumnName] = query_columns
-    if table and not query_columns:
+    reducers = _stats_reducers(query)
+    columns: list[ColumnName] = list(query_columns)
+    if reducers:
+        columns += [f"stats_{count}" for count in range(1, len(reducers) + 1)]
+    elif table and not query_columns:
         # Otherwise, we figure out the columns from the table store.
         for entry in tables[table].get(site_name, []):
-            columns[:] = sorted(entry.keys())
+            columns = sorted(entry.keys())
             break
-    else:
-        columns = query_columns
 
     # If neither table nor columns can't be deduced, we default to an empty response.
     result = []
@@ -505,12 +503,13 @@ def execute_query(
 
         # Filtering and Aggregating
         filtered_dicts = evaluate_filter(query, tables[table].get(site_name, []))
-        result_dicts = evaluate_stats(query, query_columns, filtered_dicts)
+        result_dicts = _aggregate(reducers, query_columns, filtered_dicts)
+        row_columns = query_columns if reducers else columns
 
         # Flatten the result for serialization.
         for entry in result_dicts:
             row = []
-            for col in columns:
+            for col in row_columns:
                 try:
                     row.append(entry[col])
                 except KeyError as exc:
@@ -518,9 +517,10 @@ def execute_query(
                         f"Column '{col}' not in result. Add to test-data or fix query."
                     ) from exc
 
-            for col in sorted(entry.keys()):
-                if col.startswith("stat_"):
-                    row.append(entry[col])
+            for col in sorted(
+                (key for key in entry if key.startswith("stat_")), key=lambda key: int(key[5:])
+            ):
+                row.append(entry[col])
             result.append(row)
 
     return result, columns
@@ -555,7 +555,7 @@ def pick_header(query: str, header_name: str, default: str | None = None) -> str
     Returns:
         The header value.
     """
-    for line in query.splitlines():
+    for line in query.split("\n"):
         if line.startswith(header_name):
             return line.split(": ", 1)[1]
 
@@ -585,7 +585,7 @@ def remove_headers(query: str, headers: list[str]) -> str:
 
     """
     result = []
-    for line in query.splitlines():
+    for line in query.split("\n"):
         header = line.split(": ", 1)[0]
         if header in headers:
             continue
@@ -855,8 +855,8 @@ def _compare(expected: str, query: str, match_type: MatchType) -> bool:
     if match_type == "loose":
         # FIXME: Too loose, needs to be more strict.
         #   "GET hosts" also matches "GET hosts\nColumns: ..." which should not be possible.
-        string_lines = query.splitlines()
-        for line in expected.splitlines():
+        string_lines = query.split("\n")
+        for line in expected.split("\n"):
             if line not in string_lines:
                 result = False
                 break
@@ -907,19 +907,29 @@ def evaluate_stats(query: str, columns: list[ColumnName], result: ResultList) ->
             >>> evaluate_stats("Stats: state > 0", [], [{'state': 1}, {'state': 2}, {'state': 1}])
             [{'stat_1': 3}]
 
-        Multiple counting directives are evaluated independently
+        Multiple counting directives are evaluated independently, into one row
 
             >>> evaluate_stats("Stats: state > 0\\nStats: state >= 2", [],
             ...                [{'state': 1}, {'state': 2}, {'state': 1}])
-            [{'stat_1': 3}, {'stat_2': 1}]
+            [{'stat_1': 3, 'stat_2': 1}]
 
-        Combinations of counting directives are not yet implemented
+        Combinators replace the counting directives they combine
 
             >>> evaluate_stats("Stats: state > 0\\nStats: state != 2\\nStatsAnd: 2", [],
             ...                [{'state': 1}, {'state': 2}, {'state': 1}])
+            [{'stat_1': 2}]
+
+            >>> evaluate_stats("Stats: state = 0\\nStats: state = 2\\nStatsOr: 2\\nStats: state = 1",
+            ...                [], [{'state': 0}, {'state': 2}, {'state': 1}])
+            [{'stat_1': 2, 'stat_2': 1}]
+
+        Only counting directives combine
+
+            >>> evaluate_stats("Stats: sum state\\nStats: state = 0\\nStatsAnd: 2", [],
+            ...                [{'state': 0}])
             Traceback (most recent call last):
             ...
-            cmk.livestatus_client._connection.LivestatusTestingError: Stats combinators are not yet implemented!
+            cmk.livestatus_client._connection.LivestatusTestingError: Stats combinators combine counting directives only.
 
         Non-contiguous results don't throw the grouper off-track.
 
@@ -946,30 +956,63 @@ def evaluate_stats(query: str, columns: list[ColumnName], result: ResultList) ->
         A grouped result set.
 
     """
-    reducers = []
-    for line in query.splitlines():
-        if line.startswith("Stats: "):
-            reducers.append(make_reducer_func(line))
-        elif line.startswith(("StatsAnd: ", "StatsOr: ", "StatsNegate: ")):
-            raise LivestatusTestingError("Stats combinators are not yet implemented!")
+    return _aggregate(_stats_reducers(query), columns, result)
 
+
+def _aggregate(
+    reducers: list[ReduceFunc], columns: list[ColumnName], result: ResultList
+) -> ResultList:
     if not reducers:
         return result
 
     def key_func(entry: Mapping[str, Any]) -> tuple:
         return tuple((field, entry[field]) for field in columns)
 
-    aggregated = []
-    if columns:
-        # We group by all distinct field values explicitly referenced in Columns:
-        for key, group in itertools.groupby(sorted(result, key=key_func), key=key_func):
-            group_list = list(group)
-            for count, reducer in enumerate(reducers, start=1):
-                aggregated.append({**dict(key), f"stat_{count}": reducer(group_list)})
-    else:
-        for count, reducer in enumerate(reducers, start=1):
-            aggregated.append({f"stat_{count}": reducer(result)})
-    return aggregated
+    def stats_of(group: list[ResultEntry]) -> dict[str, Any]:
+        return {f"stat_{count}": reducer(group) for count, reducer in enumerate(reducers, start=1)}
+
+    if not columns:
+        return [stats_of(result)]
+    # We group by all distinct field values explicitly referenced in Columns:
+    return [
+        {**dict(key), **stats_of(list(group))}
+        for key, group in itertools.groupby(sorted(result, key=key_func), key=key_func)
+    ]
+
+
+def _stats_reducers(query: str) -> list[ReduceFunc]:
+    """One reducer per Stats column, after the combinators have folded their operands."""
+    stack: list[ReduceFunc] = []
+    for line in query.split("\n"):
+        if line.startswith("Stats: "):
+            stack.append(make_reducer_func(line))
+        elif line.startswith(("StatsAnd: ", "StatsOr: ")):
+            combinator, operand_count = line.split(": ", 1)
+            operands = [_counting_operand(stack.pop()) for _ in range(int(operand_count))]
+            stack.append(_combined(all if combinator == "StatsAnd" else any, operands))
+        elif line.startswith("StatsNegate:"):
+            raise LivestatusTestingError("StatsNegate is not yet implemented!")
+    return stack
+
+
+class _CountingColumn:
+    def __init__(self, predicate: FilterKeyFunc) -> None:
+        self.predicate = predicate
+
+    def __call__(self, result: list[ResultEntry]) -> int:
+        return sum(self.predicate(entry) for entry in result)
+
+
+def _combined(
+    combine: Callable[[Iterable[bool]], bool], operands: list[FilterKeyFunc]
+) -> _CountingColumn:
+    return _CountingColumn(lambda entry: combine(operand(entry) for operand in operands))
+
+
+def _counting_operand(column: ReduceFunc) -> FilterKeyFunc:
+    if not isinstance(column, _CountingColumn):
+        raise LivestatusTestingError("Stats combinators combine counting directives only.")
+    return column.predicate
 
 
 def make_reducer_func(line: str) -> ReduceFunc:
@@ -1016,7 +1059,7 @@ def make_reducer_func(line: str) -> ReduceFunc:
     elif len(parts) == 3:
         # Build a counting function
         field_name, op, value = parts
-        func = _reducer(sum, _comparison_function(field_name, op, [value]))
+        func = _CountingColumn(_comparison_function(field_name, op, [value]))
     else:
         raise LivestatusTestingError(f"Unknown Stats line: {line}")
 
@@ -1074,7 +1117,7 @@ def evaluate_filter(query: str, result: ResultList) -> ResultList:
 
     """
     filters = []
-    for line in query.splitlines():
+    for line in query.split("\n"):
         if line.startswith("Filter:"):
             filters.append(make_filter_func(line))
         elif line.startswith(("And:", "Or:")):
@@ -1198,6 +1241,7 @@ def match_regexp(string_: str, regexp: str) -> bool:
 
 OPERATORS: dict[str, OperatorFunc] = {
     "=": cast_down(operator.eq),
+    "!=": cast_down(operator.ne),
     ">": cast_down(operator.gt),
     "<": cast_down(operator.lt),
     ">=": cast_down(operator.ge),
@@ -1206,6 +1250,12 @@ OPERATORS: dict[str, OperatorFunc] = {
     "~~": operator.contains,
 }
 """A dict of all implemented comparison operators."""
+
+LIST_OPERATORS: dict[str, OperatorFunc] = {
+    ">=": lambda values, value: value in values,
+    "<": lambda values, value: value not in values,
+}
+"""The comparison operators with their own meaning on a list column: contains, lacks."""
 
 
 def make_filter_func(line: str) -> FilterKeyFunc:
@@ -1305,7 +1355,10 @@ def _comparison_function(field_name: str, op: Operator, value: list[Any]) -> Fil
     """
 
     def _apply_op(entry: ResultEntry) -> bool:
-        return OPERATORS[op](entry[field_name], *value)
+        field_value = entry[field_name]
+        if isinstance(field_value, list) and op in LIST_OPERATORS:
+            return LIST_OPERATORS[op](field_value, *value)
+        return OPERATORS[op](field_value, *value)
 
     return _apply_op
 
@@ -1329,7 +1382,7 @@ def _column_of_query(query: str) -> list[ColumnName] | None:
         >>> _column_of_query('GET hosts\\nFilter: name = foo')
 
     """
-    for line in query.splitlines():
+    for line in query.split("\n"):
         if line.startswith("Columns:"):
             return line[8:].split()  # len("Columns:") == 8
 
@@ -1357,7 +1410,7 @@ def _table_of_query(query: str) -> TableName | None:
         >>> _table_of_query("GET\\n")
 
     """
-    lines = query.splitlines()
+    lines = query.split("\n")
     if lines and lines[0].startswith("GET "):
         return lines[0].split(None, 1)[1]
 
@@ -1387,7 +1440,7 @@ def _unpack_headers(query: str) -> dict[str, str]:
 
     """
     unpacked = {}
-    for header in query.splitlines():
+    for header in query.split("\n"):
         if header.startswith("GET "):
             continue
         if ": " not in header:
@@ -1423,6 +1476,7 @@ def expect_single_query(
     query: str = "",
     match_type: MatchType = "loose",
     expect_status_query: bool = False,
+    tables: Mapping[TableName, ResultList] | None = None,
 ) -> Iterator[MultiSiteConnection]:
     """A simplified testing context manager.
 
@@ -1437,6 +1491,11 @@ def expect_single_query(
             If the query of the status table (which Checkmk does when calling cmk.gui.sites.live())
             should be expected. Defaults to False.
 
+        tables:
+            Row data to seed before the query runs, replacing the default table data (for the
+            first configured site only; other sites stay empty). Use this when a test needs to
+            assert on values computed from the response rather than just the query text.
+
     Returns:
         A context manager.
 
@@ -1447,6 +1506,8 @@ def expect_single_query(
 
     """
     with mock_livestatus_communication() as mock_live:
+        for table_name, table_data in (tables or {}).items():
+            mock_live.add_table(table_name, table_data)
         if query:
             mock_live.expect_query(query, match_type=match_type)
         with mock_live(expect_status_query):

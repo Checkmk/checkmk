@@ -35,13 +35,13 @@ from datetime import datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.proxmox_ve.lib.node_storages import SectionNodeStorages, StorageLink
 from cmk.plugins.proxmox_ve.lib.replication import Replication, SectionReplication
 from cmk.plugins.proxmox_ve.lib.vm_info import LockState, SectionVMInfo
 from cmk.plugins.proxmox_ve.special_agent.libbackups import fetch_backup_data
 from cmk.plugins.proxmox_ve.special_agent.libproxmox import CannotRecover, ProxmoxVeAPI
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
 
 __version__ = "3.0.0b1"
 

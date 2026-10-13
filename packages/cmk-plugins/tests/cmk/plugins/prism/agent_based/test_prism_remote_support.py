@@ -58,6 +58,33 @@ def test_discovery_prism_remote_support(  # type: ignore[misc]
             ],
             id="If tunnel state is different from expected state the check is WARN.",
         ),
+        pytest.param(
+            # Newer Prism versions report "enable" as a plain flag.
+            {"tunnel_state": False},
+            {
+                "enable": False,
+                "remote_support_enabled": False,
+                "remote_tunnel_enabled": False,
+                "status": "disabled",
+            },
+            [
+                Result(state=State.OK, summary="Remote Tunnel is disabled"),
+            ],
+            id="The tunnel state is also read from a plain flag.",
+        ),
+        pytest.param(
+            {"tunnel_state": True},
+            {
+                "enable": True,
+                "remote_support_enabled": True,
+                "remote_tunnel_enabled": True,
+                "status": "enabled",
+            },
+            [
+                Result(state=State.OK, summary="Remote Tunnel is enabled"),
+            ],
+            id="An enabled tunnel is also read from a plain flag.",
+        ),
     ],
 )
 def test_check_prism_remote_support(  # type: ignore[misc]

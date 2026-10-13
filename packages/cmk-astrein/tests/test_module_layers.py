@@ -139,9 +139,9 @@ def test_component_for_cmk_ccc(make_checker: _MakeChecker) -> None:
     assert checker.component == Component("cmk.ccc")
 
 
-def test_component_for_explicit_mapping_bin_check_mk(make_checker: _MakeChecker) -> None:
-    checker = make_checker("bin/check_mk.py")
-    assert checker.component == Component("cmk.cli")
+def test_component_for_explicit_mapping_diskspace(make_checker: _MakeChecker) -> None:
+    checker = make_checker("omd/packages/maintenance/diskspace.py")
+    assert checker.component == Component("cmk.diskspace")
 
 
 def test_component_for_file_without_component(make_checker: _MakeChecker) -> None:
@@ -231,7 +231,7 @@ def test_clean_plugin_allowed_imports(make_checker: _MakeChecker) -> None:
     source_code = """from cmk.agent_based.v2 import AgentSection
 from cmk.rulesets.v1 import form_specs
 """
-    checker = make_checker("cmk/plugins/aws/agent_based/test_check.py", source_code)
+    checker = make_checker("cmk/plugins/aws_deprecated/agent_based/test_check.py", source_code)
     tree = ast.parse(source_code)
     errors = checker.check(tree)
 
@@ -240,7 +240,7 @@ from cmk.rulesets.v1 import form_specs
 
 def test_clean_plugin_disallowed_import_from_utils(make_checker: _MakeChecker) -> None:
     source_code = "from cmk.utils.paths import omd_root"
-    checker = make_checker("cmk/plugins/aws/agent_based/test_check.py", source_code)
+    checker = make_checker("cmk/plugins/aws_deprecated/agent_based/test_check.py", source_code)
     tree = ast.parse(source_code)
     errors = checker.check(tree)
 
@@ -382,10 +382,10 @@ def test_top_level_tests_non_cmk_subdir_excluded(make_checker: _MakeChecker) -> 
 
 
 def test_non_free_top_level_tests_excluded(make_checker: _MakeChecker) -> None:
-    source_code = """from cmk.metric_backend.config import Foo
-from cmk.testlib.metric_backend.data import bar
+    source_code = """from cmk.data_backend.config import Foo
+from cmk.testlib.data_backend.telemetry_metrics.data import bar
 """
-    checker = make_checker("non-free/tests/system/metric_backend/test_ttl.py", source_code)
+    checker = make_checker("non-free/tests/system/data_backend/test_ttl.py", source_code)
     tree = ast.parse(source_code)
     errors = checker.check(tree)
 

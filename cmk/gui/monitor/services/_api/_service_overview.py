@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated, Self
 
 from cmk.ccc.site import SiteId
@@ -47,7 +48,19 @@ class ServiceOverviewResponse:
         description="Name of the host this service belongs to", example="web-server-01"
     )
     site_id: str = api_field(description="Site ID", example="local")
-    state: ServiceStateLabel = api_field(description="Service state", example="OK")
+    state: ServiceStateLabel = api_field(
+        description=(
+            "Service state. 'PENDING' means the service has never been checked, i.e. its state "
+            "is still pending the first check result"
+        ),
+        example="OK",
+    )
+    is_flapping: bool = api_field(
+        description="Whether the service state is flapping", example=False
+    )
+    stale: bool = api_field(
+        description="Whether the service hasn't been checked recently enough", example=False
+    )
     modes: list[ServiceModeInfo] = api_field(
         description=(
             "Active service modes (e.g. scheduled downtime, acknowledgement, disabled "
@@ -57,7 +70,13 @@ class ServiceOverviewResponse:
         example=[],
     )
     host_alias: str = api_field(description="Alias of the host", example="Web Server")
-    host_state: HostStateLabel = api_field(description="State of the host", example="UP")
+    host_state: HostStateLabel = api_field(
+        description=(
+            "State of the host. 'PENDING' means the host has never been checked, i.e. its state "
+            "is still pending the first check result"
+        ),
+        example="UP",
+    )
     host_modes: list[ServiceModeInfo] = api_field(
         description=(
             "Active modes of the host the service runs on, rendered as linked icons next to its "
@@ -80,6 +99,12 @@ class ServiceOverviewResponse:
         ),
         example="wato.py?mode=object_parameters&host=web-server-01&service=CPU+utilization",
     )
+    legacy_service_graphs_link: str = api_field(
+        description="URL to the legacy view holding this service's graphs",
+        example=(
+            "view.py?view_name=service_graphs&site=local&host=web-server-01&service=CPU+utilization"
+        ),
+    )
     contact_groups: list[str] = api_field(
         description="Contact groups responsible for this service",
         example=["all"],
@@ -90,8 +115,8 @@ class ServiceOverviewResponse:
     )
     long_output: str = api_field(
         description=(
-            "The remaining check plugin output below the summary. Empty when the plugin produces "
-            "no details. Can span many lines, so the frontend renders it collapsed."
+            "The remaining check plugin output below the summary, one line per detail. Empty "
+            "when the plugin produces no details."
         ),
         example="15 min load: 0.01 (per core: 0.01)",
     )
@@ -139,6 +164,8 @@ class ServiceOverviewResponse:
             host_name=service.host_name,
             site_id=service.site_id,
             state=service.state_label,
+            is_flapping=service.is_flapping,
+            stale=service.stale,
             modes=build_service_modes(service),
             host_alias=service.host_alias,
             host_state=service.host_state_label,
@@ -148,6 +175,7 @@ class ServiceOverviewResponse:
             legacy_service_parameters_link=(
                 service_parameters_link(service) if may_see_parameters else None
             ),
+            legacy_service_graphs_link=service_view_link("service_graphs", service),
             contact_groups=read(service.contact_groups, "contact_groups"),
             summary=service.summary,
             long_output=service.long_output,
@@ -203,7 +231,7 @@ def _handle_get_service_overview(
         )
     except ServiceNotFoundError:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="The requested service was not found",
             detail=(
                 f"The service {service_name!r} of host {hostname!r} was not found on site "
@@ -230,6 +258,7 @@ ENDPOINT_GET_SERVICE_OVERVIEW = VersionedEndpoint(
                     permissions.OkayToIgnorePerm("bi.see_all"),
                     permissions.OkayToIgnorePerm("mkeventd.seeall"),
                     permissions.OkayToIgnorePerm("wato.rulesets"),
+                    permissions.OkayToIgnorePerm("general.see_crash_reports"),
                 ]
             )
         )

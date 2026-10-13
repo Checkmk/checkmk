@@ -36,7 +36,8 @@ def touch_profile_files(profile_dir: Path, file_times: datetime) -> None:
         os.utime(path, (timestamp, timestamp))
 
 
-def test_cleanup_user_profiles_keep_recently_updated(user_id: UserId) -> None:
+@pytest.mark.usefixtures("user_id")
+def test_cleanup_user_profiles_keep_recently_updated() -> None:
     now = datetime.now()
     profile_dir = create_new_profile_dir([Path("bla")])
     touch_profile_files(profile_dir, now - timedelta(days=10))
@@ -44,7 +45,8 @@ def test_cleanup_user_profiles_keep_recently_updated(user_id: UserId) -> None:
     assert profile_dir.exists()
 
 
-def test_cleanup_user_profiles_remove_empty(user_id: UserId) -> None:
+@pytest.mark.usefixtures("user_id")
+def test_cleanup_user_profiles_remove_empty() -> None:
     now = datetime.now()
     profile_dir = create_new_profile_dir([])
     touch_profile_files(profile_dir, now - timedelta(days=10))
@@ -52,7 +54,8 @@ def test_cleanup_user_profiles_remove_empty(user_id: UserId) -> None:
     assert not profile_dir.exists()
 
 
-def test_cleanup_user_profiles_remove_abandoned(user_id: UserId) -> None:
+@pytest.mark.usefixtures("user_id")
+def test_cleanup_user_profiles_remove_abandoned() -> None:
     now = datetime.now()
     profile_dir = create_new_profile_dir([Path("bla")])
     touch_profile_files(profile_dir, now - timedelta(days=50))

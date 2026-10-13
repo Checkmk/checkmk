@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.server_side_calls import internal, v1
 from cmk.server_side_calls_backend.config_processing import (
     BackendProxy,
+    BackendProxyAuth,
     GlobalProxiesWithLookup,
     OAuth2Connection,
     process_configuration_to_parameters,
@@ -20,7 +21,7 @@ def test_process_configuration_to_parameter_password_stored() -> None:
         params={"password": ("cmk_postprocessed", "stored_password", ("my_secret_id", ""))},
         global_proxies_with_lookup=GlobalProxiesWithLookup(
             global_proxies={},
-            password_lookup=lambda x: None,
+            password_lookup=lambda x: None,  # noqa: ARG005
         ),
         oauth2_connections={},
         usage_hint="test",
@@ -39,7 +40,7 @@ def test_process_configuration_to_parameter_password_explicit() -> None:
         },
         global_proxies_with_lookup=GlobalProxiesWithLookup(
             global_proxies={},
-            password_lookup=lambda x: None,
+            password_lookup=lambda x: None,  # noqa: ARG005
         ),
         oauth2_connections={},
         usage_hint="test",
@@ -56,7 +57,7 @@ def test_process_configuration_to_parameter_no_proxy_v1() -> None:
         params={"proxy": ("cmk_postprocessed", "no_proxy", "")},
         global_proxies_with_lookup=GlobalProxiesWithLookup(
             global_proxies={},
-            password_lookup=lambda x: None,
+            password_lookup=lambda x: None,  # noqa: ARG005
         ),
         oauth2_connections={},
         usage_hint="test",
@@ -72,7 +73,8 @@ def test_process_configuration_to_parameter_env_proxy_v1() -> None:
     assert process_configuration_to_parameters(
         params={"proxy": ("cmk_postprocessed", "environment_proxy", "")},
         global_proxies_with_lookup=GlobalProxiesWithLookup(
-            global_proxies={}, password_lookup=lambda x: None
+            global_proxies={},
+            password_lookup=lambda x: None,  # noqa: ARG005
         ),
         oauth2_connections={},
         usage_hint="test",
@@ -89,7 +91,7 @@ def test_process_configuration_to_parameter_explicit_proxy_v1() -> None:
         params={"proxy": ("cmk_postprocessed", "explicit_proxy", "hurray.com")},
         global_proxies_with_lookup=GlobalProxiesWithLookup(
             global_proxies={},
-            password_lookup=lambda x: None,
+            password_lookup=lambda x: None,  # noqa: ARG005
         ),
         oauth2_connections={},
         usage_hint="test",
@@ -112,7 +114,7 @@ def test_process_configuration_to_parameter_global_proxy_ok_v1() -> None:
                     port=3128,
                 ),
             },
-            password_lookup=lambda x: None,
+            password_lookup=lambda x: None,  # noqa: ARG005
         ),
         oauth2_connections={},
         usage_hint="test",
@@ -124,12 +126,37 @@ def test_process_configuration_to_parameter_global_proxy_ok_v1() -> None:
     )
 
 
+def test_global_proxy_credentials_are_encoded_in_the_url() -> None:
+    assert process_configuration_to_parameters(
+        params={"proxy": ("cmk_postprocessed", "stored_proxy", "my_global_proxy")},
+        global_proxies_with_lookup=GlobalProxiesWithLookup(
+            global_proxies={
+                "my_global_proxy": BackendProxy(
+                    scheme="http",
+                    proxy_server_name="proxy.example.com",
+                    port=3128,
+                    auth=BackendProxyAuth(
+                        user="us:er",
+                        password=("cmk_postprocessed", "explicit_password", ("uuid1", "p@ss%")),
+                    ),
+                ),
+            },
+            password_lookup=lambda x: None,  # noqa: ARG005
+        ),
+        oauth2_connections={},
+        usage_hint="test",
+        is_internal=False,
+    ).value == {
+        "proxy": v1.URLProxy("url_proxy", "http://us%3Aer:p%40ss%25@proxy.example.com:3128")
+    }
+
+
 def test_process_configuration_to_parameter_global_proxy_missing_v1() -> None:
     assert process_configuration_to_parameters(
         params={"proxy": ("cmk_postprocessed", "stored_proxy", "my_global_proxy")},
         global_proxies_with_lookup=GlobalProxiesWithLookup(
             global_proxies={},
-            password_lookup=lambda x: None,
+            password_lookup=lambda x: None,  # noqa: ARG005
         ),
         oauth2_connections={},
         usage_hint="test",
@@ -146,7 +173,7 @@ def test_process_configuration_to_parameter_no_proxy_internal() -> None:
         params={"proxy": ("cmk_postprocessed", "no_proxy", "")},
         global_proxies_with_lookup=GlobalProxiesWithLookup(
             global_proxies={},
-            password_lookup=lambda x: None,
+            password_lookup=lambda x: None,  # noqa: ARG005
         ),
         oauth2_connections={},
         usage_hint="test",
@@ -163,7 +190,7 @@ def test_process_configuration_to_parameter_env_proxy_internal() -> None:
         params={"proxy": ("cmk_postprocessed", "environment_proxy", "")},
         global_proxies_with_lookup=GlobalProxiesWithLookup(
             global_proxies={},
-            password_lookup=lambda x: None,
+            password_lookup=lambda x: None,  # noqa: ARG005
         ),
         oauth2_connections={},
         usage_hint="test",
@@ -186,7 +213,7 @@ def test_process_configuration_to_parameter_explicit_proxy_internal() -> None:
         },
         global_proxies_with_lookup=GlobalProxiesWithLookup(
             global_proxies={},
-            password_lookup=lambda x: None,
+            password_lookup=lambda x: None,  # noqa: ARG005
         ),
         oauth2_connections={},
         usage_hint="test",
@@ -213,7 +240,7 @@ def test_process_configuration_to_parameter_global_proxy_ok_internal() -> None:
                     port=3128,
                 ),
             },
-            password_lookup=lambda x: None,
+            password_lookup=lambda x: None,  # noqa: ARG005
         ),
         oauth2_connections={},
         usage_hint="test",
@@ -237,7 +264,7 @@ def test_process_configuration_to_parameter_global_proxy_missing_internal() -> N
         params={"proxy": ("cmk_postprocessed", "stored_proxy", "my_global_proxy")},
         global_proxies_with_lookup=GlobalProxiesWithLookup(
             global_proxies={},
-            password_lookup=lambda x: None,
+            password_lookup=lambda x: None,  # noqa: ARG005
         ),
         oauth2_connections={},
         usage_hint="test",
@@ -254,7 +281,7 @@ def test_process_configuration_to_parameter_oauth2_connection() -> None:
         params={"auth": ("cmk_postprocessed", "oauth2_connection", "my_oauth2_connection")},
         global_proxies_with_lookup=GlobalProxiesWithLookup(
             global_proxies={},
-            password_lookup=lambda x: None,
+            password_lookup=lambda x: None,  # noqa: ARG005
         ),
         oauth2_connections={
             "my_oauth2_connection": OAuth2Connection(

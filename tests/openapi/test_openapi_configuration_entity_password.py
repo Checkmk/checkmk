@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Iterable, Iterator
+from http import HTTPStatus
 
 import pytest
 
@@ -11,7 +14,7 @@ from cmk.gui.form_specs.visitors._utils import option_id
 from cmk.gui.watolib import password_store
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 from cmk.utils.password_store import lookup, password_store_path, PasswordConfig
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 @pytest.fixture
@@ -24,9 +27,11 @@ def mock_update_passwords_merged_file(monkeypatch: pytest.MonkeyPatch) -> Iterab
     yield
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def create_password_test_environment(
-    with_admin_login: None, load_config: None, clients: ClientRegistry
+    with_admin_login: None,
+    load_config: None,
+    clients: ClientRegistry,
 ) -> Iterator[None]:
     clients.ContactGroup.create(
         name="protected",
@@ -54,7 +59,7 @@ def test_list_passwords_without_permissions(clients: ClientRegistry) -> None:
     )
 
     # THEN
-    assert resp.status_code == 403
+    assert resp.status_code == HTTPStatus.FORBIDDEN
     assert resp.json["title"] == "Forbidden"
 
 
@@ -97,7 +102,7 @@ def test_list_passwords_with_permissions(clients: ClientRegistry) -> None:
     )
 
     # THEN
-    assert resp.status_code == 200
+    assert resp.status_code == HTTPStatus.OK
     titles = {entry["title"] for entry in resp.json["value"]}
     assert titles == {"Protected title"}
 
@@ -161,7 +166,7 @@ def test_create_password_without_permissions(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
     # THEN
-    assert resp.status_code == 403
+    assert resp.status_code == HTTPStatus.FORBIDDEN
     assert resp.json["title"] == "Forbidden"
     assert "We are sorry, but you lack the permission for this operation" in resp.json["detail"]
     with pytest.raises(ValueError):
@@ -202,7 +207,7 @@ def test_create_password_with_permissions(clients: ClientRegistry) -> None:
     )
 
     # THEN
-    assert resp.status_code == 200, resp.json
+    assert resp.status_code == HTTPStatus.OK, resp.json
     assert resp.json["title"] == "My protected test password"
     assert (
         lookup(password_store_path(), "test_protected_password_id")
@@ -237,7 +242,7 @@ def test_create_password_as_admin(clients: ClientRegistry, with_admin: tuple[str
     )
 
     # THEN
-    assert resp.status_code == 200, resp.json
+    assert resp.status_code == HTTPStatus.OK, resp.json
     assert resp.json["title"] == "My admin test password"
     assert (
         lookup(password_store_path(), "test_admin_password_id") == "my-very-secret-admin-password"
@@ -290,12 +295,64 @@ def test_cannot_overwrite_existing_password(
     )
 
     # THEN
-    assert resp.status_code == 422, resp.json
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, resp.json
     assert (
         "This ID is already in use. Please choose another one."
         in resp.json["ext"]["validation_errors"][0]["message"]
     )
     assert lookup(password_store_path(), "existing_password_id") == "PasswordCannotBeOverwritten"
+
+
+@pytest.mark.usefixtures("mock_update_passwords_merged_file")
+def test_cannot_overwrite_a_password_the_user_cannot_see(clients: ClientRegistry) -> None:
+    # GIVEN
+    password_store.PasswordStore().save(
+        {
+            "admin_password_id": PasswordConfig(
+                title="Admin title",
+                comment="",
+                docu_url="",
+                password="PasswordCannotBeOverwritten",
+                owned_by=None,
+                shared_with=[],
+            ),
+        },
+        pprint_value=False,
+    )
+    clients.User.create(
+        username="normal_user",
+        fullname="normal_user_alias",
+        contactgroups=["protected"],
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+        roles=["user"],
+    )
+    clients.ConfigurationEntity.set_credentials("normal_user", "supersecretish")
+
+    # WHEN
+    resp = clients.ConfigurationEntity.create_configuration_entity(
+        {
+            "entity_type": ConfigEntityType.passwordstore_password.value,
+            "entity_type_specifier": "xyz",
+            "data": {
+                "general_props": {
+                    "id": "admin_password_id",
+                    "title": "My test password overwrite attempt",
+                    "comment": "",
+                    "docu_url": "",
+                },
+                "password_props": {
+                    "password": ["wont-be-able-to-save-this", False],
+                    "owned_by": ("contact_group", option_id("protected")),
+                    "share_with": [],
+                },
+            },
+        },
+        expect_ok=False,
+    )
+
+    # THEN
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, resp.json
+    assert lookup(password_store_path(), "admin_password_id") == "PasswordCannotBeOverwritten"
 
 
 @pytest.mark.usefixtures("mock_update_passwords_merged_file")
@@ -339,7 +396,7 @@ def test_create_password_existing_passwords_still_exist(
     )
 
     # THEN
-    assert resp.status_code == 200, resp.json
+    assert resp.status_code == HTTPStatus.OK, resp.json
     assert resp.json["title"] == "My admin test password"
     assert (
         lookup(password_store_path(), "test_admin_password_id") == "my-very-secret-admin-password"

@@ -12,7 +12,7 @@ from cmk.gui.graphing.openapi.models import (
     BurgerMenuItem,
 )
 from cmk.gui.page_menu import PageMenuDropdown, PageMenuEntry, PageMenuLink
-from cmk.gui.type_defs import StaticIcon
+from cmk.web.utils.icons import StaticIcon
 
 BURGER_MENU_ACTIONS: frozenset[BurgerMenuActionType] = frozenset(get_args(BurgerMenuActionType))
 

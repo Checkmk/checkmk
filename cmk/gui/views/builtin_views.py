@@ -17,7 +17,6 @@ from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.i18n import _l
 from cmk.gui.type_defs import (
     ColumnSpec,
-    DynamicIconName,
     PainterParameters,
     SorterSpec,
     ViewName,
@@ -26,6 +25,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group
 from cmk.utils import paths
+from cmk.web.utils.icons import DynamicIconName
 
 builtin_views: dict[ViewName, ViewSpec] = {}
 
@@ -94,7 +94,10 @@ builtin_views.update(
                 "Overall state of all hosts, with counts of services in the various states."
             ),
             "group_painters": [ColumnSpec(name="sitealias")],
-            "hidden": False,
+            # Superseded by the "All hosts" Vue page (monitor_all_hosts.py) in the menu.
+            # Kept reachable (not removed) for existing links, e.g. breadcrumbs, WATO
+            # folder/tag-tree drill-downs, and the "return to classic view" button.
+            "hidden": True,
             "hidebutton": False,
             "layout": "table",
             "mustsearch": False,
@@ -5773,17 +5776,8 @@ builtin_views["it_efficiency_servers_cpumem_windows"] = {
             column_title="CPU cores",
         ),
         ColumnSpec(
-            name="svc_metrics_hist",
-            parameters=PainterParameters(
-                metric="mem_total",
-                rrd_consolidation="average",
-                time_range=("age", 31536000),
-                aggregation="avg",
-                column_title="Memory installed (last 365d)",
-                uuid="34a13b2c-4b41-4315-a1e9-804d2770ce67",
-            ),
-            link_spec=VisualLinkSpec(type_name="views", name="service"),
-            join_value="Memory",
+            name="inv_hardware_memory_total_ram_usable",
+            column_title="Memory installed",
         ),
     ],
     "add_context_to_title": False,
@@ -6188,7 +6182,9 @@ class BuiltinViewExtenderRegistry(Registry[BuiltinViewExtender]):
 
 
 def noop_builtin_view_extender(
-    views: Mapping[ViewName, ViewSpec], data_source_registry: DataSourceRegistry, config: Config
+    views: Mapping[ViewName, ViewSpec],
+    data_source_registry: DataSourceRegistry,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
 ) -> dict[ViewName, ViewSpec]:
     return {**views}
 

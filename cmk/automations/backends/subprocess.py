@@ -17,7 +17,7 @@ from cmk.automations.backends._base import (
     AutomationExecutor,
     LocalAutomationResult,
 )
-from cmk.automations.types import AutomationID
+from cmk.automations.internal import AutomationID
 from cmk.utils.log import VERBOSE
 
 logger = logging.getLogger(__name__)

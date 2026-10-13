@@ -1,10 +1,6 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
+load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
-
-exports_files(
-    ["cli.py"],
-    visibility = ["//bin:__pkg__"],
-)
 
 py_library(
     name = "product_usage",
@@ -19,7 +15,8 @@ py_library(
     ],
     deps = [
         "//cmk/utils",
-        "//packages/cmk-ccc:version",
+        "//packages/cmk-ccc:log",
+        "//packages/cmk-ccc:version-info",
         "//packages/cmk-livestatus-client",
         requirement("requests"),
         requirement("werkzeug"),
@@ -35,6 +32,22 @@ py_library(
         "//cmk/base/config",
         "//cmk/product_usage",
         "//cmk/utils:paths",
-        "//packages/cmk-ccc:version",
     ],
+)
+
+py_binary(
+    name = "manifest_generator",
+    testonly = True,
+    srcs = ["manifest.py"],
+    main = "manifest.py",
+    deps = [":product_usage"],
+)
+
+run_binary(
+    name = "manifest",
+    testonly = True,
+    outs = ["manifest.json"],
+    args = ["$(execpath manifest.json)"],
+    tool = ":manifest_generator",
+    visibility = ["//visibility:public"],
 )

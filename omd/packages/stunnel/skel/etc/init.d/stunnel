@@ -46,7 +46,12 @@ case "$1" in
             rm -f $PIDFILE
         fi
 
-        $DAEMON $CONFIG_FILE && echo OK || echo Error
+        if $DAEMON $CONFIG_FILE; then
+            echo OK
+        else
+            echo Error
+            exit 1
+        fi
         ;;
 
     stop)

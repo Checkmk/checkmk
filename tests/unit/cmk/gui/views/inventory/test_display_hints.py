@@ -3,22 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
 
 import datetime
 from collections.abc import Callable
 
 import pytest
 
-import cmk.gui.inventory
-import cmk.gui.utils
-from cmk.gui.inventory._tree import InventoryPath, TreeSource
 from cmk.gui.inventory.filters import (
     FilterInvText,
 )
+from cmk.gui.views.inventory import inv_display_hints, NodeDisplayHint, TableWithView
 from cmk.gui.views.inventory._display_hints import (
     _cmp_inv_generic,
     _decorate_sort_function,
+    _make_title_function,
     _PaintBool,
     _PaintChoice,
     _PaintNumber,
@@ -30,34 +28,32 @@ from cmk.gui.views.inventory._display_hints import (
     AttributeDisplayHint,
     ColumnDisplayHint,
     DisplayHints,
-    inv_display_hints,
-    NodeDisplayHint,
     Table,
-    TableWithView,
     TDStyles,
 )
 from cmk.gui.views.inventory._paint_functions import (
     inv_paint_generic,
 )
-from cmk.inventory.structured_data import SDKey, SDNodeName, SDPath
-from cmk.inventory_ui.v1_unstable import AgeNotation as AgeNotationFromAPI
-from cmk.inventory_ui.v1_unstable import Alignment as AlignmentFromAPI
-from cmk.inventory_ui.v1_unstable import BackgroundColor as BackgroundColorFromAPI
-from cmk.inventory_ui.v1_unstable import BoolField as BoolFieldFromAPI
-from cmk.inventory_ui.v1_unstable import ChoiceField as ChoiceFieldFromAPI
-from cmk.inventory_ui.v1_unstable import DecimalNotation as DecimalNotationFromAPI
-from cmk.inventory_ui.v1_unstable import IECNotation as IECNotationFromAPI
-from cmk.inventory_ui.v1_unstable import Label as LabelFromAPI
-from cmk.inventory_ui.v1_unstable import LabelColor as LabelColorFromAPI
-from cmk.inventory_ui.v1_unstable import NumberField as NumberFieldFromAPI
-from cmk.inventory_ui.v1_unstable import SINotation as SINotationFromAPI
-from cmk.inventory_ui.v1_unstable import (
+from cmk.inventory.raw_paths import InventoryPath, parse_internal_raw_path, TreeSource
+from cmk.inventory.trees import SDKey, SDNodeName, SDPath, SDValue
+from cmk.inventory_ui.v1 import AgeNotation as AgeNotationFromAPI
+from cmk.inventory_ui.v1 import Alignment as AlignmentFromAPI
+from cmk.inventory_ui.v1 import BackgroundColor as BackgroundColorFromAPI
+from cmk.inventory_ui.v1 import BoolField as BoolFieldFromAPI
+from cmk.inventory_ui.v1 import ChoiceField as ChoiceFieldFromAPI
+from cmk.inventory_ui.v1 import DecimalNotation as DecimalNotationFromAPI
+from cmk.inventory_ui.v1 import IECNotation as IECNotationFromAPI
+from cmk.inventory_ui.v1 import Label as LabelFromAPI
+from cmk.inventory_ui.v1 import LabelColor as LabelColorFromAPI
+from cmk.inventory_ui.v1 import NumberField as NumberFieldFromAPI
+from cmk.inventory_ui.v1 import SINotation as SINotationFromAPI
+from cmk.inventory_ui.v1 import (
     StandardScientificNotation as StandardScientificNotationFromAPI,
 )
-from cmk.inventory_ui.v1_unstable import TextField as TextFieldFromAPI
-from cmk.inventory_ui.v1_unstable import TimeNotation as TimeNotationFromAPI
-from cmk.inventory_ui.v1_unstable import Title as TitleFromAPI
-from cmk.inventory_ui.v1_unstable import Unit as UnitFromAPI
+from cmk.inventory_ui.v1 import TextField as TextFieldFromAPI
+from cmk.inventory_ui.v1 import TimeNotation as TimeNotationFromAPI
+from cmk.inventory_ui.v1 import Title as TitleFromAPI
+from cmk.inventory_ui.v1 import Unit as UnitFromAPI
 
 
 @pytest.mark.parametrize(
@@ -71,8 +67,17 @@ from cmk.inventory_ui.v1_unstable import Unit as UnitFromAPI
         (0, 1, -1),
     ],
 )
-def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
+def test__cmp_inv_generic(val_a: SDValue, val_b: SDValue, result: int) -> None:
     assert _decorate_sort_function(_cmp_inv_generic)(val_a, val_b) == result
+
+
+def test__cmp_inv_generic_compares_strings() -> None:
+    assert _decorate_sort_function(_cmp_inv_generic)("a", "b") == -1
+
+
+def test__cmp_inv_generic_rejects_mixed_types() -> None:
+    with pytest.raises(TypeError):
+        _decorate_sort_function(_cmp_inv_generic)("a", 1)
 
 
 @pytest.mark.parametrize(
@@ -189,9 +194,7 @@ def test_get_node_hint_returns_registered_hint_verbatim() -> None:
 def test_make_node_displayhint_from_hint(
     raw_path: str, expected_node_hint: NodeDisplayHint
 ) -> None:
-    node_hint = inv_display_hints.get_node_hint(
-        cmk.gui.inventory.parse_internal_raw_path(raw_path).path
-    )
+    node_hint = inv_display_hints.get_node_hint(parse_internal_raw_path(raw_path).path)
 
     assert node_hint.name == "_".join(("inv",) + node_hint.path)
     assert node_hint.icon == expected_node_hint.icon
@@ -261,7 +264,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
     ],
 )
 def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDisplayHint) -> None:
-    inventory_path = cmk.gui.inventory.parse_internal_raw_path(raw_path)
+    inventory_path = parse_internal_raw_path(raw_path)
     hint = inv_display_hints.get_node_hint(inventory_path.path).get_column_hint(
         inventory_path.key or ""
     )
@@ -385,7 +388,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
 def test_make_attribute_displayhint_from_hint(
     raw_path: str, expected: AttributeDisplayHint
 ) -> None:
-    inventory_path = cmk.gui.inventory.parse_internal_raw_path(raw_path)
+    inventory_path = parse_internal_raw_path(raw_path)
     hint = inv_display_hints.get_node_hint(inventory_path.path).get_attribute_hint(
         inventory_path.key or ""
     )
@@ -586,6 +589,53 @@ def test_render_choice() -> None:
     )
 
 
+def _styled_choice_field() -> ChoiceFieldFromAPI[int]:
+    return ChoiceFieldFromAPI(
+        TitleFromAPI("A title"),
+        mapping={1: LabelFromAPI("One")},
+        style=lambda _: [LabelColorFromAPI.PINK, BackgroundColorFromAPI.BLUE],
+    )
+
+
+def test_render_choice_styles_a_mapped_value() -> None:
+    assert _PaintChoice(_styled_choice_field())(123, 1) == (
+        TDStyles(
+            css_class="",
+            text_align="center",
+            background_color="#28a2f3",
+            color="#ec48b6",
+            prevent_line_break=False,
+        ),
+        "One",
+    )
+
+
+def test_render_choice_does_not_style_an_unmapped_value() -> None:
+    assert _PaintChoice(_styled_choice_field())(123, 2) == (
+        TDStyles(
+            css_class="",
+            text_align="center",
+            background_color="",
+            color="",
+            prevent_line_break=False,
+        ),
+        "<2> (No such value)",
+    )
+
+
+def test_render_choice_does_not_style_a_value_of_another_type() -> None:
+    assert _PaintChoice(_styled_choice_field())(123, "1") == (
+        TDStyles(
+            css_class="",
+            text_align="center",
+            background_color="",
+            color="",
+            prevent_line_break=False,
+        ),
+        "<1> (No such value)",
+    )
+
+
 def test_sort_text() -> None:
     text_field = TextFieldFromAPI(TitleFromAPI("A title"), sort_key=int)
     assert _decorate_sort_function(_SortFunctionText(text_field))("1", "2") == -1
@@ -602,3 +652,15 @@ def test_sort_choice() -> None:
     )
     assert _decorate_sort_function(_SortFunctionChoice(choice_field))(1, 2) == 1
     assert _decorate_sort_function(_SortFunctionChoice(choice_field))(2, 1) == -1
+
+
+def test__make_title_function_of_a_callable_legacy_title() -> None:
+    assert _make_title_function({"title": lambda word: f"<{word}>"})("key") == "<key>"
+
+
+def test__make_title_function_of_a_plain_legacy_title() -> None:
+    assert _make_title_function({"title": "Title"})("key") == "Title"
+
+
+def test__make_title_function_without_a_legacy_title() -> None:
+    assert _make_title_function({})("some_key") == "Some Key"

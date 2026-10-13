@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 """Tests for clearing inherited host labels via the LABEL_CLEAR_VALUE sentinel.
 
 A child folder or host can override a label set by a parent folder back to
@@ -39,7 +41,7 @@ from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.labels import Labels
 
 
-@pytest.mark.usefixtures("clearing_attribute")
+@pytest.mark.usefixtures("clearing_attribute", "test_env")
 def test_child_clears_inherited_label() -> None:
     """A subfolder set to "off" removes the relay label inherited from its parent."""
     root = folder_tree().root_folder()
@@ -72,7 +74,7 @@ def test_child_clears_inherited_label() -> None:
     assert "test/relay_monitored" not in labels
 
 
-@pytest.mark.usefixtures("clearing_attribute")
+@pytest.mark.usefixtures("clearing_attribute", "test_env")
 def test_grandchild_reenables_after_clear() -> None:
     """A deeper folder can re-enable the label after an intermediate folder cleared it."""
     root = folder_tree().root_folder()
@@ -113,7 +115,7 @@ def test_grandchild_reenables_after_clear() -> None:
     assert labels["test/relay_monitored"] == "yes"
 
 
-@pytest.mark.usefixtures("clearing_attribute")
+@pytest.mark.usefixtures("clearing_attribute", "test_env")
 def test_inherited_relay_label_without_override() -> None:
     """A host with no override inherits the parent folder's relay label unchanged."""
     root = folder_tree().root_folder()
@@ -168,7 +170,7 @@ class _ClearingTestAttribute(ABCHostAttributeValueSpec):
         return {"test/relay": LABEL_CLEAR_VALUE, "test/relay_monitored": LABEL_CLEAR_VALUE}
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def test_env(with_admin_login: UserId, load_config: None) -> Iterator[None]:
     # Provide an application context and start from clean folder/host caches.
     tree = folder_tree()

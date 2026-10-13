@@ -3,22 +3,16 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { CalendarDate } from '@internationalized/date'
-import * as intl from '@internationalized/date'
+import { CalendarDate, resetLocalTimeZone, setLocalTimeZone } from '@internationalized/date'
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render } from '@testing-library/vue'
 import DateCalendar from 'cmk-ui-library/components/date-time/private/calendar/DateCalendar.vue'
 import type { CalendarSelection } from 'cmk-ui-library/components/date-time/private/calendar/types'
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import { TZ_BERLIN, makeSettings } from '../../dateTimeTestFixtures'
 import { lastValue, selectDropdownOption } from '../../pickerTestHarness'
-
-vi.mock('@internationalized/date', async (importOriginal) => {
-  const actual = await importOriginal<typeof intl>()
-  return { ...actual, today: vi.fn(actual.today), getLocalTimeZone: vi.fn(actual.getLocalTimeZone) }
-})
 
 const BASE_PROPS = {
   settings: makeSettings({ firstDayOfWeek: 0 }),
@@ -80,12 +74,13 @@ async function pressOnDay(view: ReturnType<typeof mountSingle>, date: CalendarDa
 
 beforeEach(() => {
   vi.spyOn(navigator, 'language', 'get').mockReturnValue('en-US')
-  vi.mocked(intl.today).mockReturnValue(new CalendarDate(2026, 6, 10))
-  vi.mocked(intl.getLocalTimeZone).mockReturnValue(TZ_BERLIN)
+  vi.setSystemTime(new Date('2026-06-10T12:00:00Z'))
+  setLocalTimeZone(TZ_BERLIN)
 })
 
 afterEach(() => {
-  vi.restoreAllMocks()
+  vi.useRealTimers()
+  resetLocalTimeZone()
 })
 
 describe('DateCalendar selection', () => {

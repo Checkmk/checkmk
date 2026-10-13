@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from unittest.mock import Mock
 
 import fastapi
@@ -47,7 +48,7 @@ def test_localhost_only_validation() -> None:
     mock_request = create_mock_request("192.168.1.100")
     with pytest.raises(HTTPException) as exc_info:
         validate_localhost_authorization(mock_request)
-    assert exc_info.value.status_code == 403
+    assert exc_info.value.status_code == HTTPStatus.FORBIDDEN
     assert (
         "Access denied: Request must originate from localhost (client: 192.168.1.100)"
         in exc_info.value.detail
@@ -57,7 +58,7 @@ def test_localhost_only_validation() -> None:
     mock_request = create_mock_request("2001:db8::1")
     with pytest.raises(HTTPException) as exc_info:
         validate_localhost_authorization(mock_request)
-    assert exc_info.value.status_code == 403
+    assert exc_info.value.status_code == HTTPStatus.FORBIDDEN
     assert (
         "Access denied: Request must originate from localhost (client: 2001:db8::1)"
         in exc_info.value.detail
@@ -68,7 +69,7 @@ def test_localhost_only_validation() -> None:
     mock_request.client = None
     with pytest.raises(HTTPException) as exc_info:
         validate_localhost_authorization(mock_request)
-    assert exc_info.value.status_code == 403
+    assert exc_info.value.status_code == HTTPStatus.FORBIDDEN
     assert (
         "Access denied: Request must originate from localhost (client: unknown)"
         in exc_info.value.detail

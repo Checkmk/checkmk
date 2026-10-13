@@ -47,7 +47,8 @@ def test_discover_stulz_temp() -> None:
     ]
 
 
-def test_check_stulz_temp_ok(_patch_value_store: None) -> None:
+@pytest.mark.usefixtures("_patch_value_store")
+def test_check_stulz_temp_ok() -> None:
     section = parse_stulz_temp(_STRING_TABLE)
     results = list(check_stulz_temp("unit air 1-1", {"levels": (25.0, 28.0)}, section))
     assert any(
@@ -56,12 +57,14 @@ def test_check_stulz_temp_ok(_patch_value_store: None) -> None:
     assert any(isinstance(r, Metric) and r.name == "temp" and r.value == 22.0 for r in results)
 
 
-def test_check_stulz_temp_crit(_patch_value_store: None) -> None:
+@pytest.mark.usefixtures("_patch_value_store")
+def test_check_stulz_temp_crit() -> None:
     section = {"unit air 1-1": 30.0}
     results = list(check_stulz_temp("unit air 1-1", {"levels": (25.0, 28.0)}, section))
     assert any(isinstance(r, Result) and r.state is State.CRIT for r in results)
 
 
-def test_check_stulz_temp_missing_item(_patch_value_store: None) -> None:
+@pytest.mark.usefixtures("_patch_value_store")
+def test_check_stulz_temp_missing_item() -> None:
     section = parse_stulz_temp(_STRING_TABLE)
     assert list(check_stulz_temp("does-not-exist", {"levels": (25.0, 28.0)}, section)) == []

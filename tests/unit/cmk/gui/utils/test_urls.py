@@ -3,21 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 from werkzeug.test import create_environ
 
 from cmk.gui.http import Request
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import HTTPVariables
-from cmk.gui.utils.doc_references import (
-    doc_reference_url,
-    DocReference,
-    DocReferenceUtm,
-    get_docs_base_url,
-)
+from cmk.gui.utils.doc_reference_urls import doc_reference_url, get_docs_base_url
 from cmk.web.exceptions import MKNotFound
+from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
 from cmk.web.utils.urls import (
     add_kiosk_to_url,
+    HTTPVariable,
     is_kiosk_request,
     makeuri_contextless,
     requested_file_name,
@@ -42,7 +40,7 @@ from cmk.web.utils.urls import (
         ([("a", None)], "a="),
     ],
 )
-def test_urlencode_vars(inp: HTTPVariables, out: str) -> None:
+def test_urlencode_vars(inp: Sequence[HTTPVariable], out: str) -> None:
     assert urlencode_vars(inp) == out
 
 
@@ -64,20 +62,21 @@ def test_urlencode(inp: str | None, out: str) -> None:
     assert urlencode(inp) == out
 
 
-def test_empty_doc_reference(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_empty_doc_reference() -> None:
     utm = DocReferenceUtm(campaign="help_menu", content="test")
     url = doc_reference_url(user.language, utm)
     assert url.startswith(f"{get_docs_base_url(user.language)}?")
 
 
-def test_doc_references(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_doc_references() -> None:
     utm = DocReferenceUtm(campaign="help_menu", content="test")
     assert [doc_reference_url(user.language, utm, r) for r in DocReference]
 
 
-def test_doc_reference_url_encodes_special_characters_in_content(
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_doc_reference_url_encodes_special_characters_in_content() -> None:
     """A content value with `&` or non-ASCII must not corrupt the query string."""
     utm = DocReferenceUtm(campaign="help_menu", content="hosts & services")
     url = doc_reference_url(user.language, utm)
@@ -87,7 +86,8 @@ def test_doc_reference_url_encodes_special_characters_in_content(
     assert "content=hosts & services" not in url
 
 
-def test_doc_reference_url_term_includes_patch_level(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_doc_reference_url_term_includes_patch_level() -> None:
     """utm_term must include the patch level (e.g. 2.3.0p1_pro), not just 2.3.0_pro."""
     from cmk.ccc.version import __version__, Version
 

@@ -31,6 +31,7 @@ from ._core import OverridableInstances as OverridableInstances
 from ._core import OverridableModel as OverridableModel
 from ._core import page_menu_add_to_topics as page_menu_add_to_topics
 from ._core import page_type as page_type
+from ._core import PageDeserializationError as PageDeserializationError
 from ._core import PageMode as PageMode
 from ._core import PageRenderer as PageRenderer
 from ._core import PageRendererConfig as PageRendererConfig

@@ -15,7 +15,6 @@ This module does the following operations
 """
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import os
@@ -33,7 +32,6 @@ import cmk.ccc.debug
 from cmk.ccc import tty
 from cmk.ccc.hostaddress import HostName
 from cmk.utils.log import console
-from cmk.utils.metrics import MetricName
 from cmk.utils.misc import pnp_cleanup
 
 from ._config import RRDConfig, RRDObjectConfig
@@ -113,7 +111,7 @@ def _get_rrd_conf(
     return rrd_format, rra_config, _Seconds(step), _RRDHeartbeat(RRD_HEARTBEAT)
 
 
-def _read_existing_metrics(info_file_path: Path) -> list[MetricName]:
+def _read_existing_metrics(info_file_path: Path) -> list[str]:
     metrics = _parse_cmc_rrd_info(info_file_path)["metrics"]
     if not isinstance(metrics, list):
         raise TypeError
@@ -540,7 +538,7 @@ class RRDConverter:
             xml_file = self._rrd_paths.pnp_xml_storage(self._hostname, servicedesc).path(".xml")
             if xml_file is not None:
                 _fixup_pnp_xml_file(xml_file)
-            os.remove(old_rrd_path)
+            os.remove(old_rrd_path)  # type: ignore[possibly-undefined]
             console.verbose(f"    deleted {old_rrd_path}")
 
     def _convert_cmc_rrd_of(
@@ -575,7 +573,7 @@ class RRDConverter:
         old_rrd_path: Path,
         *,
         new_rrd_path: Path,
-        old_ds_name: MetricName,
+        old_ds_name: str,
         new_rrdconf: _RRDFileConfig,
     ) -> bool | None:
         if not os.path.exists(old_rrd_path):
@@ -619,9 +617,7 @@ class RRDConverter:
             raise Exception(f"Error on running rrdtool create {' '.join(args)}: {e}")
         return True
 
-    def _get_old_rrd_config(
-        self, rrd_file_path: Path, old_ds_name: MetricName
-    ) -> _RRDFileConfig | None:
+    def _get_old_rrd_config(self, rrd_file_path: Path, old_ds_name: str) -> _RRDFileConfig | None:
         old_config_raw = self._rrd_interface.info(str(rrd_file_path))
         rra_defs: dict = {}
         heartbeat = None

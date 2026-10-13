@@ -4,8 +4,20 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+export type CellHighlightColor =
+  | 'default'
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'unknown'
+  | 'pending'
+
 export interface CellHighlight {
-  type: 'inline' | 'outline' | 'full'
-  color: 'default' | 'success' | 'warning' | 'danger' | 'info'
+  color: CellHighlightColor
   minWidth?: number | undefined
+  /**
+   * Set to false to keep the highlight's layout (accent bar space, minWidth) for alignment
+   * purposes, without showing its color — e.g. a zero count next to non-zero, colored counts.
+   */
+  active?: boolean | undefined
 }

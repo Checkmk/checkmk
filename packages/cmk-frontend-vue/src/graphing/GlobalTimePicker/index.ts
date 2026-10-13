@@ -6,8 +6,14 @@
 export { default as GlobalTimePicker } from './GlobalTimePicker.vue'
 export { default as GlobalTimePickerApp } from './GlobalTimePickerApp.vue'
 
-export { useGlobalTimeRange } from './useGlobalTimeRange'
-export type { ActiveTimeRange, GlobalTimeRange } from './useGlobalTimeRange'
+export { useGlobalTimePickerRange } from './useGlobalTimePickerRange'
+export { initGlobalRefresh, useGlobalRefresh, useGlobalTimeRange } from './globalTimeState'
+export type {
+  ActiveTimeRange,
+  GlobalRefresh,
+  GlobalTimeRange,
+  RefreshStrategy
+} from './globalTimeState'
 
 export { rollingRange } from './private/timeRange'
 

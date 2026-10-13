@@ -12,9 +12,14 @@ from urllib.parse import quote
 import requests
 from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
-from pydantic import BaseModel, UUID4
+from pydantic import BaseModel, UUID4, ValidationError
 
-from cmk.agent_receiver.agent_receiver.models import ConnectionMode
+from cmk.agent_receiver.agent_receiver.models import (
+    ConnectionMode,
+    DownloadRequest,
+    UpdateStatusRequest,
+    UpdateStatusResponse,
+)
 from cmk.agent_receiver.lib.auth import B64SiteInternalSecret
 from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.log import logger
@@ -112,6 +117,23 @@ def _forward_put_token(
         headers={
             "Authorization": f"CMK-TOKEN {token}",
             "Accept": "application/json",
+        },
+        json=json_body,
+        timeout=30,
+    )
+
+
+def _forward_post_internal(
+    endpoint: str,
+    site_internal_secret: B64SiteInternalSecret,
+    json_body: dict[str, object],
+    accept: str,
+) -> requests.Response:
+    return requests.post(
+        f"{_local_internal_rest_api_url()}/{endpoint}",
+        headers={
+            "Authorization": f"InternalToken {site_internal_secret}",
+            "Accept": accept,
         },
         json=json_body,
         timeout=30,
@@ -301,6 +323,60 @@ def cmk_edition(credentials: HTTPBasicCredentials) -> CMKEdition:
     )
     _verify_response(response, HTTPStatus.OK)
     return CMKEdition[response.json()["edition"]]
+
+
+@log_http_exception
+def deployment_status(
+    site_internal_secret: B64SiteInternalSecret,
+    host_name: str,
+    uuid: UUID4,
+    status_request: UpdateStatusRequest,
+) -> UpdateStatusResponse:
+    response = _forward_post_internal(
+        f"objects/agent_deployment_internal/{_url_encode_hostname(host_name)}/actions/status/invoke",
+        site_internal_secret,
+        {**status_request.model_dump(exclude_none=True), "uuid": str(uuid)},
+        "application/json",
+    )
+    _verify_agent_update_response(response)
+    return UpdateStatusResponse.model_validate(response.json())
+
+
+@log_http_exception
+def deployment_download(
+    site_internal_secret: B64SiteInternalSecret,
+    host_name: str,
+    uuid: UUID4,
+    download_request: DownloadRequest,
+) -> bytes:
+    response = _forward_post_internal(
+        f"objects/agent_deployment_internal/{_url_encode_hostname(host_name)}/actions/download/invoke",
+        site_internal_secret,
+        {**download_request.model_dump(), "uuid": str(uuid)},
+        "application/octet-stream",
+    )
+    _verify_agent_update_response(response)
+    return response.content
+
+
+def _verify_agent_update_response(response: requests.Response) -> None:
+    if response.status_code == HTTPStatus.NOT_FOUND and _matched_no_endpoint(response):
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_IMPLEMENTED,
+            detail="This site offers no agent updates.",
+        )
+    _verify_response(response, HTTPStatus.OK)
+
+
+def _matched_no_endpoint(response: requests.Response) -> bool:
+    # The REST API titles a URL that matches no endpoint with the bare status phrase, which is
+    # what a Community site answers, as it has no agent deployment endpoints. The endpoints give
+    # their own 404s a title of their own.
+    try:
+        title = _RestApiErrorDescr.model_validate_json(response.text).title
+    except ValidationError:
+        return True
+    return title == HTTPStatus.NOT_FOUND.phrase
 
 
 def _verify_response(

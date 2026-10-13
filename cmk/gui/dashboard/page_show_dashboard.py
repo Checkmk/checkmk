@@ -13,6 +13,7 @@ from typing import Literal
 
 import cmk.ccc.version as cmk_version
 from cmk.gui import hooks, visuals
+from cmk.gui.dashboard.global_time_picker_options import get_global_time_picker_props
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
@@ -23,14 +24,16 @@ from cmk.gui.ntop import ntop_connection
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import VisualTypeName
-from cmk.gui.utils.doc_references import doc_reference_url, DocReference, DocReferenceUtm
+from cmk.gui.utils.doc_reference_urls import doc_reference_url
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals import visual_page_breadcrumb
 from cmk.gui.visuals._filter_context import requested_context_from_request
 from cmk.gui.watolib.config_domain_name import config_domain_registry, ConfigDomainRegistry
 from cmk.licensing.registry import get_licensing_user_effect
 from cmk.utils import paths
+from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
 from cmk.web.utils.html import HTML
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import makeuri_contextless
 
 from .breadcrumb import dashboard_breadcrumb, EvaluatedBreadcrumbItem
@@ -82,11 +85,14 @@ def page_dashboard_app(ctx: PageContext) -> None:
     else:
         permitted_dashboards = get_permitted_dashboards()
         board = load_dashboard(permitted_dashboards, name)
-        requested_context = requested_context_from_request(["host", "service"])
+        request_cache = RequestCache(ctx.config)
+        requested_context = requested_context_from_request(["host", "service"], request_cache)
 
-        board_context = visuals.active_context_from_request(["host", "service"], board["context"])
+        board_context = visuals.active_context_from_request(
+            ["host", "service"], board["context"], request_cache
+        )
         board["context"] = board_context
-        title = visuals.visual_title("dashboard", board, board_context)
+        title = visuals.visual_title("dashboard", board, board_context, request_cache=request_cache)
         user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         # some dashboards have more complicated context requirements when loaded, these are
         # constructed when clicking on a linking dashboard which means that this will (for now
@@ -154,6 +160,7 @@ def page_dashboard_app(ctx: PageContext) -> None:
             "publish_to_sites": user.may("general.publish_dashboards_to_sites"),
         },
         "logged_in_user": user.id,
+        "global_time_picker": asdict(get_global_time_picker_props(ctx.config)),
     }
 
     html.vue_component("cmk-dashboard", data=page_properties)

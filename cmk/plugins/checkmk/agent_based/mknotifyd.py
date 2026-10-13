@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 # Example output from agent:
@@ -126,7 +125,7 @@ def _parse_site_data(
         _, version = _get_varname_value(data[starting_index + 1][0])
         _, value = _get_varname_value(data[starting_index + 2][0])
         updated = int(value.split()[0])
-    except (NoLineToParse, IndexError):
+    except NoLineToParse, IndexError:
         # spooler in error
         version = updated = None
 
@@ -170,7 +169,7 @@ def _get_spool(index: int, data: list[list[str]]) -> tuple[int, Spool]:
     def _split_parse_date(value: str) -> int | None:
         try:
             return int(value.split(maxsplit=1)[0])
-        except (ValueError, IndexError):
+        except ValueError, IndexError:
             return None
 
     keys = ["Count", "Oldest", "Youngest"]
@@ -193,7 +192,7 @@ def parse_mknotifyd(
 ) -> MkNotifySection:
     try:
         timestamp, data = float(string_table[0][0]), string_table[1:]
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         timestamp, data = time.time(), string_table
 
     sites: dict[str, Site] = {}
@@ -223,13 +222,13 @@ def parse_mknotifyd(
             if varname == "Site":
                 connected_site = value.split(" (")[0]
             elif varname == "Spool":
-                index, site_entry.spools[value] = _get_spool(index, data)
+                index, site_entry.spools[value] = _get_spool(index, data)  # type: ignore[possibly-undefined]
             elif varname == "Connection":
                 index, connection = _get_connection(index, data)
                 # for "mknotifyd.connection_v2"
-                site_entry.connections_v2[connected_site] = connection
+                site_entry.connections_v2[connected_site] = connection  # type: ignore[possibly-undefined]
                 # keep the "mknotifyd.connection" services working
-                site_entry.connections[value] = connection
+                site_entry.connections[value] = connection  # type: ignore[possibly-undefined]
 
         index += 1
 
@@ -363,7 +362,7 @@ check_plugin_mknotifyd = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_mknotifyd_connection(section: MkNotifySection) -> DiscoveryResult:
+def discover_mknotifyd_connection(section: MkNotifySection) -> DiscoveryResult:  # noqa: ARG001
     # deprecated, do not discover anything
     return
     yield

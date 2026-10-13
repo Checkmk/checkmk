@@ -11,16 +11,13 @@ const { currentTheme } = useTheme()
 const isLegacyCssEnabled = ref(true)
 
 async function setCss(enabled: boolean, theme: string) {
-  let url: string = ''
-
-  if (enabled) {
-    url = (await import(`~cmk-frontend/themes/${theme}/theme.css?url`)).default
+  const stylesheet = document.getElementById('cmk-theming-stylesheet') as HTMLLinkElement | null
+  if (!stylesheet) {
+    return
   }
-
-  const stylesheet = document.getElementById('cmk-theming-stylesheet') as HTMLLinkElement
-  if (stylesheet) {
-    stylesheet.href = url
-  }
+  stylesheet.href = enabled
+    ? (await import(`~cmk-frontend/themes/${theme}/theme.css?url`)).default
+    : ''
 }
 
 let initialized = false

@@ -7,15 +7,14 @@
 
 """Check_MK base specific code of the crash reporting"""
 
-import contextlib
 import json
 import traceback
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Literal, override, TypedDict
 
 import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
+import cmk.ccc.version_info as cmk_version_info
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.helper_interface import AgentRawData
@@ -27,7 +26,6 @@ from cmk.crash import (
     CrashReportStore,
     make_crash_report_base_path,
 )
-from cmk.piggyback.backend import get_messages_for
 from cmk.utils.servicename import ServiceName
 
 _MAX_SECTION_CONTENT_BYTES = 1024 * 1024  # 1 MB
@@ -49,7 +47,7 @@ def create_section_crash_dump(
     section_name: SectionName,
     section_content: Sequence[object],
     host_name: HostName,
-    rtc_package: AgentRawData | None,
+    get_agent_output: Callable[[], AgentRawData | None],
 ) -> str:
     """Create a crash dump from an exception raised in a parse or host label function"""
 
@@ -58,14 +56,14 @@ def create_section_crash_dump(
         crash = SectionCrashReport(
             crash_report_base_path=make_crash_report_base_path(cmk.utils.paths.omd_root),
             crash_info=SectionCrashReport.make_crash_info(
-                cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+                cmk_version_info.get_general_version_infos(cmk.utils.paths.omd_root),
                 details={
                     "section_name": str(section_name),
                     "section_content": _truncate_section_content(section_content),
                     "host_name": host_name,
                 },
             ),
-            agent_output=_read_agent_output(host_name) if rtc_package is None else rtc_package,
+            agent_output=get_agent_output(),
         )
         CrashReportStore().save(crash)
         return f"{text} - please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
@@ -84,7 +82,7 @@ def create_check_crash_dump(
     is_cluster: bool,
     is_enforced: bool,
     snmp_backend: SNMPBackendEnum,
-    rtc_package: AgentRawData | None,
+    get_agent_output: Callable[[], AgentRawData | None],
 ) -> str:
     """Create a crash dump from an exception occurred during check execution
 
@@ -97,7 +95,7 @@ def create_check_crash_dump(
         crash = CheckCrashReport(
             crash_report_base_path=make_crash_report_base_path(cmk.utils.paths.omd_root),
             crash_info=CheckCrashReport.make_crash_info(
-                cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+                cmk_version_info.get_general_version_infos(cmk.utils.paths.omd_root),
                 CheckDetails(
                     check_output=text,
                     host=host_name,
@@ -110,7 +108,7 @@ def create_check_crash_dump(
                     **plugin_kwargs,  # type: ignore[typeddict-item]
                 ),
             ),
-            agent_output=_read_agent_output(host_name) if rtc_package is None else rtc_package,
+            agent_output=get_agent_output(),
         )
         CrashReportStore().save(crash)
         text += " (Crash-ID: %s)" % crash.ident_to_text()
@@ -175,18 +173,3 @@ class CheckCrashReport(CrashReportWithAgentOutput[CheckDetails]):
     @override
     def type() -> Literal["check"]:
         return "check"
-
-
-def _read_agent_output(hostname: HostName) -> AgentRawData | None:
-    agent_outputs = []
-
-    cache_path = cmk.utils.paths.tcp_cache_dir / hostname
-    with contextlib.suppress(OSError):
-        agent_outputs.append(cache_path.read_bytes())
-
-    # Note: this is not quite what the fetcher does :(
-    agent_outputs.extend(r.raw_data for r in get_messages_for(hostname, cmk.utils.paths.omd_root))
-
-    if agent_outputs:
-        return AgentRawData(b"\n".join(agent_outputs))
-    return None

@@ -1,6 +1,6 @@
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 run_binary(
     name = "run_werks_precompile_community",
@@ -8,7 +8,7 @@ run_binary(
     outs = ["werks_precompiled_community"],
     args = [
         "precompile",
-        "$(location //:werks_group)",
+        "$(location //:werks_group)/werks",
         "--filter-by-edition",
         "community",
         "$(location werks_precompiled_community)",
@@ -23,7 +23,7 @@ run_binary(
     outs = ["werks_precompiled_pro"],
     args = [
         "precompile",
-        "$(location //:werks_group)",
+        "$(location //:werks_group)/werks",
         "--filter-by-edition",
         "pro",
         "$(location werks_precompiled_pro)",
@@ -38,7 +38,7 @@ run_binary(
     outs = ["werks_precompiled_ultimate"],
     args = [
         "precompile",
-        "$(location //:werks_group)",
+        "$(location //:werks_group)/werks",
         "--filter-by-edition",
         "ultimate",
         "$(location werks_precompiled_ultimate)",
@@ -53,7 +53,7 @@ run_binary(
     outs = ["werks_precompiled_cloud"],
     args = [
         "precompile",
-        "$(location //:werks_group)",
+        "$(location //:werks_group)/werks",
         "--filter-by-edition",
         "cloud",
         "$(location werks_precompiled_cloud)",
@@ -68,7 +68,7 @@ run_binary(
     outs = ["werks_precompiled_ultimatemt"],
     args = [
         "precompile",
-        "$(location //:werks_group)",
+        "$(location //:werks_group)/werks",
         "--filter-by-edition",
         "ultimatemt",
         "$(location werks_precompiled_ultimatemt)",

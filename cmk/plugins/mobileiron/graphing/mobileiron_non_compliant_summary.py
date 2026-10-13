@@ -9,7 +9,7 @@ UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 
 metric_mobileiron_non_compliant_summary = metrics.Metric(
     name="mobileiron_non_compliant_summary",
-    title=Title("Non-compliant devices"),
+    title=Title("Non-compliant devices percentage"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.LIGHT_BLUE,
 )

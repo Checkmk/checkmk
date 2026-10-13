@@ -4,23 +4,19 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import usei18n from 'cmk-ui-library/lib/i18n'
-
-const { _t } = usei18n()
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { type MaybeRefOrGetter, toValue } from 'vue'
 
 interface DisabledTooltipWrapperProps {
   disabled: boolean
+  tooltip?: MaybeRefOrGetter<TranslatedString> | undefined
 }
 
 const props = defineProps<DisabledTooltipWrapperProps>()
 </script>
 
 <template>
-  <span
-    v-if="props.disabled"
-    class="db-disabled-tooltip-wrapper"
-    :title="_t('Available in Checkmk Pro or higher.')"
-  >
+  <span v-if="props.disabled" class="db-disabled-tooltip-wrapper" :title="toValue(props.tooltip)">
     <slot />
   </span>
   <slot v-else />

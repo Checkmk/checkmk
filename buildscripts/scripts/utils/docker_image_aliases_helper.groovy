@@ -19,12 +19,16 @@ docker_image_from_alias = { alias_name ->
 }
 
 docker_reference_image = { ->
-    dir("${checkout_dir}") {
-        docker.withRegistry(DOCKER_REGISTRY, "nexus") {
-            return docker.image(
-                cmd_output("VERBOSE=1 PULL_BASE_IMAGE=1 ${checkout_dir}/defines/dev-images/reference-image-id")
-            );
-        }
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+
+    def safe_branch_name = versioning.safe_branch_name();
+
+    def container_name = "testing-ubuntu-22.04-checkmk-${safe_branch_name}";
+
+    docker.withRegistry(DOCKER_REGISTRY, "nexus") {
+        def image = docker.image("${docker_registry_no_http}/${container_name}:latest-with-docker");
+        image.pull();
+        return image;
     }
 }
 
@@ -191,7 +195,7 @@ inside_container_minimal = { Map arg1=[:], Closure arg2 ->
     if (kubernetes_inherit_from == "UNSET") {
         def run_args_str = "-v ${checkout_dir}:/checkmk";
         def image_name = "minimal-alpine-checkmk-ci-${args.get('safe_branch_name', 'BRANCH')}:latest";
-        def base_image = resolve_docker_image_alias("IMAGE_PYTHON_3_13");
+        def base_image = resolve_docker_image_alias("IMAGE_PYTHON_3_14");
         def dockerfile = "${checkout_dir}/buildscripts/scripts/Dockerfile";
         def docker_build_args = "--build-arg IMAGE_BASE=${base_image} -f ${dockerfile} .";
 
@@ -210,6 +214,20 @@ inside_container_minimal = { Map arg1=[:], Closure arg2 ->
         // because this results in an invalid branch name.
         // The pod templates uses - instead.
         def container_name_suffix = safe_branch_name.replace(".", "-");
+
+        // during a release the might be a VERSION specified, this minimal container does not support custom builds like "XXX-v2-5-0p13-rc3"
+        def branch_version = versioning.get_branch_version(checkout_dir);
+
+        // this is only required as "master" is called "stable branch + 0.1.0"
+        if (! versioning.branch_name_is_branch_version("${checkout_dir}")) {
+            branch_version = "master";
+        }
+
+        if (params.VERSION && safe_branch_name != branch_version) {
+            print("inside_container_minimal image name 'minimal-alpine-python-checkmk-${container_name_suffix}' is not supported, ");
+            container_name_suffix = branch_version.replace(".", "-");
+            println("falling back to 'minimal-alpine-python-checkmk-${container_name_suffix}'");
+        }
 
         container("minimal-alpine-python-checkmk-${container_name_suffix}") {
             println("'inside_container_minimal' is using k8s container 'minimal-alpine-python-checkmk-${container_name_suffix}'");

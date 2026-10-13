@@ -72,6 +72,7 @@ $tag-changed-color-light: $color-orange-50;
 $font-family-default: 'Inter', Verdana, Arial, Helvetica, sans-serif;
 $font-family-monospace: monospace, sans-serif;
 $font-family-courier: courier, monospace;
+$font-feature-settings-default: 'cv05' 1;
 
 $font-color-white: $white;
 $font-color-black: $black;
@@ -97,6 +98,8 @@ $bi-missing-element-bright: rgb(174, 25, 159);
 $bi-new-element-bright: rgb(6, 103, 193);
 $bi-missing-element-dim: rgb(79, 4, 71);
 $bi-new-element-dim: rgb(6, 61, 113);
+$bi-changed-element-bright: rgb(191, 116, 12);
+$bi-changed-element-dim: rgb(87, 52, 4);
 
 // -----------------------------------------------------------------------------
 // Spacings

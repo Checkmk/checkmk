@@ -11,15 +11,14 @@ from typing import TypedDict
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     IgnoreResultsError,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.synology import lib as synology
 
 
@@ -51,7 +50,7 @@ class Section:
     status: int
 
     @classmethod
-    def from_row(cls, row: Sequence[str]) -> "Section":
+    def from_row(cls, row: Sequence[str]) -> Section:
         return cls(version=row[0], status=int(row[1]))
 
 
@@ -79,10 +78,6 @@ snmp_section_synology_update = SimpleSNMPSection(
 )
 
 
-def discovery(section: Section) -> DiscoveryResult:
-    yield Service()
-
-
 def check(params: Params, section: Section) -> CheckResult:
     status = Status(section.status)
     state = State.UNKNOWN
@@ -105,7 +100,7 @@ check_plugin_synology_update = CheckPlugin(
     name="synology_update",
     sections=["synology_update"],
     service_name="Update",
-    discovery_function=discovery,
+    discovery_function=discover_one_service,
     check_function=check,
     check_ruleset_name="synology_update",
     check_default_parameters=Params(

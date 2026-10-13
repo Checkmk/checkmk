@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { Sizes } from 'cmk-ui-library/components/progress/CmkProgressbar.vue'
 
 import codeExample from './UclCmkProgressbarCodeExample.vue?raw'
@@ -20,11 +20,11 @@ export const panelConfig = {
   size: {
     type: 'list' as const,
     title: 'Size',
-    options: [
-      { title: 'Small', name: 'small' },
-      { title: 'Medium', name: 'medium' },
-      { title: 'Large', name: 'large' }
-    ] satisfies Options<NonNullable<Sizes>>[],
+    options: listOptions<NonNullable<Sizes>>({
+      small: 'Small',
+      medium: 'Medium',
+      large: 'Large'
+    }),
     initialState: 'medium' as const
   },
   label: { type: 'boolean' as const, title: 'label', initialState: true }

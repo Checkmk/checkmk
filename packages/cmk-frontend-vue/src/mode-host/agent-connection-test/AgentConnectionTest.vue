@@ -10,7 +10,8 @@ import {
   type ModeHostServerPerSite,
   type ModeHostSite
 } from 'cmk-shared-typing/typescript/mode_host'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
@@ -58,6 +59,7 @@ interface Props {
   relaySelectElement: HTMLSelectElement | null
   relayDefaultElement: HTMLDivElement | null
   defaultRelayIdHash: string
+  noRelayLabel: string
   cmkAgentConnectionModeDefaultElement: HTMLDivElement | null
   cmkAgentConnectionModeInputButtonElement: HTMLInputElement | null
   sites: Array<ModeHostSite>
@@ -83,7 +85,7 @@ function checkRelay(): boolean {
     (props.relayInputButtonElement.checked === true &&
       props.relaySelectElement.value !== props.defaultRelayIdHash) ||
     (props.relayInputButtonElement.checked === false &&
-      !props.relayDefaultElement.textContent?.includes('No relay'))
+      !props.relayDefaultElement.textContent?.includes(props.noRelayLabel))
   )
 }
 
@@ -577,11 +579,20 @@ const showSettings = ref(false)
         </div>
       </span>
 
-      <CmkAlertBox v-if="isLoading" variant="loading" size="small" class="loading-container">
-        {{ _t('Testing agent connection ...') }}
-      </CmkAlertBox>
+      <CmkAlert
+        v-if="isLoading"
+        variant="loading"
+        size="small"
+        class="loading-container"
+        :text="_t('Testing agent connection ...')"
+      />
 
-      <CmkAlertBox v-if="isSuccess" variant="success" size="small" class="success-container">
+      <CmkAlertBoxDeprecated
+        v-if="isSuccess"
+        variant="success"
+        size="small"
+        class="success-container"
+      >
         {{ _t('Successfully connected to agent.') }}
         <span class="success-button-container">
           <a href="#" @click.prevent="startAjax">{{ _t('Re-test agent connection') }}</a>
@@ -600,9 +611,9 @@ const showSettings = ref(false)
             <CmkInput :id="agentPortId" v-model="agentPort" type="number" />
           </div>
         </span>
-      </CmkAlertBox>
+      </CmkAlertBoxDeprecated>
 
-      <CmkAlertBox
+      <CmkAlertBoxDeprecated
         v-if="isError"
         variant="warning"
         size="small"
@@ -650,7 +661,7 @@ const showSettings = ref(false)
             </div>
           </span>
         </div>
-      </CmkAlertBox>
+      </CmkAlertBoxDeprecated>
     </template>
 
     <CmkSlideInDialog
@@ -672,6 +683,9 @@ const showSettings = ref(false)
         :agent-registration-cmds="agentSlideout.agent_registration_cmds"
         :agent-status-cmds="agentSlideout.agent_status_cmds"
         :legacy-agent-url="agentSlideout.legacy_agent_url"
+        :kubernetes-helm-command="agentSlideout.kubernetes_helm_command"
+        :kubernetes-values="agentSlideout.kubernetes_values"
+        :kubernetes-doc-url="agentSlideout.kubernetes_doc_url"
         :save-host="agentSlideout.save_host"
         :host-exists="agentSlideout.host_exists ?? false"
         :setup-error="setupErrorActive"
@@ -680,6 +694,7 @@ const showSettings = ref(false)
         :is-push-mode="isPushMode"
         :user-settings-url="agentSlideout.user_settings_url"
         :unbaked-fallback="agentSlideout.unbaked_fallback ?? null"
+        :bakery-url="agentSlideout.bakery_url"
         @close="onClose"
       />
     </CmkSlideInDialog>

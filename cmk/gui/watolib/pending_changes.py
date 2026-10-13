@@ -15,10 +15,10 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.search import index as search_index
 from cmk.gui.utils.misc import gen_id
-from cmk.gui.utils.speaklater import LazyString
 from cmk.livestatus_client import SiteConfigurations
 from cmk.web.utils import escaping
 from cmk.web.utils.html import HTML
+from cmk.web.utils.speaklater import LazyString
 
 from .config_domain_name import ConfigDomainName, SerializedSettings
 from .objref import ObjectRef
@@ -52,6 +52,7 @@ class Change:
 class _ScopeKind(Enum):
     ALL_ACTIVATION_SITES = "all_activation_sites"
     EXPLICIT_SITES = "explicit_sites"
+    EXPLICIT_SITES_AND_LOCAL_SITE = "explicit_sites_and_local_site"
     LOCAL_SITE = "local_site"
 
 
@@ -65,6 +66,7 @@ class ChangeScope:
     * :meth:`sites` - a caller-specified set, intersected with the
       activation sites at record time. If the intersection drops sites, the
       local site is added so the change is still logged somewhere.
+    * :meth:`sites_and_local_site` - like :meth:`sites`, plus the local site.
     * :meth:`local_site` - only the local site.
     """
 
@@ -72,15 +74,21 @@ class ChangeScope:
     explicit_sites: frozenset[SiteId] = frozenset()
 
     @classmethod
-    def all_activation_sites(cls) -> "ChangeScope":
+    def all_activation_sites(cls) -> ChangeScope:
         return cls(kind=_ScopeKind.ALL_ACTIVATION_SITES)
 
     @classmethod
-    def sites(cls, site_ids: Iterable[SiteId]) -> "ChangeScope":
+    def sites(cls, site_ids: Iterable[SiteId]) -> ChangeScope:
         return cls(kind=_ScopeKind.EXPLICIT_SITES, explicit_sites=frozenset(site_ids))
 
     @classmethod
-    def local_site(cls) -> "ChangeScope":
+    def sites_and_local_site(cls, site_ids: Iterable[SiteId]) -> ChangeScope:
+        return cls(
+            kind=_ScopeKind.EXPLICIT_SITES_AND_LOCAL_SITE, explicit_sites=frozenset(site_ids)
+        )
+
+    @classmethod
+    def local_site(cls) -> ChangeScope:
         return cls(kind=_ScopeKind.LOCAL_SITE)
 
 
@@ -171,6 +179,8 @@ class PendingChanges:
         if scope.kind is _ScopeKind.LOCAL_SITE:
             return frozenset({self._local_site})
         intersected = scope.explicit_sites & valid
+        if scope.kind is _ScopeKind.EXPLICIT_SITES_AND_LOCAL_SITE:
+            return intersected | {self._local_site}
         if len(intersected) != len(scope.explicit_sites):
             # A caller-supplied site was filtered out (e.g. a remote site
             # name that the local instance does not know). Make sure the

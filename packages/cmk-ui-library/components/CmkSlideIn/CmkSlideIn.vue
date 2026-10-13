@@ -5,6 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
+import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { provideFloatingTarget } from 'cmk-ui-library/lib/useFloatingTarget'
 import { DialogContent, DialogPortal, DialogRoot } from 'reka-ui'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
@@ -16,6 +18,7 @@ import { useSlideInStack } from './useSlideInStack'
 const slideInVariants = cva('', {
   variants: {
     size: {
+      large: 'cmk-slide-in--size-large',
       medium: 'cmk-slide-in--size-medium',
       small: 'cmk-slide-in--size-small'
     },
@@ -32,7 +35,7 @@ const slideInVariants = cva('', {
 
 export type SlideInVariants = VariantProps<typeof slideInVariants>
 
-export type Focusable = { focus: () => void }
+export type Focusable = { focus: (options?: FocusOptions) => void }
 
 export interface CmkSlideInProps {
   open: boolean
@@ -46,6 +49,9 @@ export interface CmkSlideInProps {
 const props = defineProps<CmkSlideInProps>()
 const emit = defineEmits(['close'])
 const dialogContentRef = ref<InstanceType<typeof DialogContent>>()
+
+const { _t } = usei18n()
+useWidgetKeys(_t('Slide-in'), [{ combo: ['Escape'], description: _t('Close') }])
 
 provideFloatingTarget(() => dialogContentRef.value?.$el as HTMLElement | undefined)
 
@@ -71,7 +77,7 @@ watch(
       await nextTick(() => {
         const target = props.initialFocusTarget ?? dialogContentRef.value?.$el
         if (target && typeof (target as Partial<Focusable>).focus === 'function') {
-          ;(target as Focusable).focus()
+          ;(target as Focusable).focus({ focusVisible: false, preventScroll: true })
         }
       })
     }
@@ -96,7 +102,6 @@ onBeforeUnmount(() => {
         :force-mount="true"
         @escape-key-down="emit('close')"
         @open-auto-focus.prevent
-        @close-auto-focus.prevent
       >
         <slot />
       </DialogContent>
@@ -117,6 +122,7 @@ onBeforeUnmount(() => {
   bottom: 0;
   border-left: 4px solid var(--default-border-color-green);
   background: var(--default-bg-color);
+  box-sizing: border-box;
 
   &:focus,
   &:focus-visible {
@@ -126,6 +132,11 @@ onBeforeUnmount(() => {
 
   &.cmk-slide-in--size-small {
     max-width: 768px;
+  }
+
+  &.cmk-slide-in--size-large {
+    width: calc(100% - var(--dimension-6));
+    max-width: calc(100% - var(--dimension-6));
   }
 
   &.cmk-slide-in--border-green {
@@ -141,11 +152,19 @@ onBeforeUnmount(() => {
   }
 
   &[data-state='closed'] {
-    animation: cmk-slide-in__container-hide 0.2s ease-in-out;
+    animation: cmk-slide-in__container-hide 0.2s ease-in-out forwards;
   }
 }
 
-/* Cannot use var() here, see https://drafts.csswg.org/css-env-1/ */
+/* Any non-default (non-medium) size needs the container class selector in front to be specific
+   enough to override the above width/max-width stylings.
+   Cannot use var() here, see https://drafts.csswg.org/css-env-1/ */
+@media screen and (width >= 1440px) {
+  .cmk-slide-in__container.cmk-slide-in--size-large {
+    max-width: calc(1440px - var(--dimension-6));
+  }
+}
+
 @media screen and (width <= 1024px) {
   .cmk-slide-in--size-medium {
     width: 100%;
@@ -154,7 +173,7 @@ onBeforeUnmount(() => {
 }
 
 @media screen and (width <= 768px) {
-  .cmk-slide-in--size-small {
+  .cmk-slide-in__container.cmk-slide-in--size-small {
     width: 100%;
     max-width: 100%;
   }
@@ -179,6 +198,7 @@ onBeforeUnmount(() => {
   }
 
   to {
+    visibility: hidden;
     opacity: 0;
     transform: translate(50%, 0%);
   }

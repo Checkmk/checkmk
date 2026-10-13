@@ -4,8 +4,6 @@
 
 """Custom exception hierarchy for cmk-dev-deploy."""
 
-from __future__ import annotations
-
 from typing import override
 
 
@@ -54,10 +52,6 @@ class WheelDeployError(DeployError):
 
 class FrontendError(DeployError):
     """Raised when the frontend dev server (Vite) fails to start or stop."""
-
-
-class IBazelError(DeployError):
-    """Raised when iBazel binary management fails."""
 
 
 class ManifestBuildError(DeployError):

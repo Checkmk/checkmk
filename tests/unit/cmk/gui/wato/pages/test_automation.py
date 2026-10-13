@@ -6,16 +6,18 @@
 import ast
 from collections.abc import Sequence
 from dataclasses import dataclass
+from http import HTTPStatus
 from typing import override
 
 import pytest
 from flask import Flask
 
 import cmk.ccc.version as cmk_version
-from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
-from cmk.automations.types import AutomationID
+from cmk.automations.internal import AutomationID, AutomationResult
+from cmk.automations.results import ResultTypeRegistry
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request, response
 from cmk.gui.wato.pages import automation
@@ -25,16 +27,17 @@ from cmk.utils.local_secrets import DistributedSetupSecret
 
 
 @dataclass
-class ResultTest(ABCAutomationResult):
+class ResultTest(AutomationResult):
     field_1: tuple[int, int]
     field_2: str | None
 
     @override
-    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
+    def serialize(self, for_cmk_version: str) -> str:
         return (
-            self._default_serialize()
-            if for_cmk_version >= cmk_version.Version.from_str("3.0.0b1")
-            else SerializedResult(repr((self.field_1,)))
+            super().serialize(for_cmk_version)
+            if cmk_version.Version.from_str(for_cmk_version)
+            >= cmk_version.Version.from_str("3.0.0b1")
+            else repr((self.field_1,))
         )
 
     @staticmethod
@@ -73,7 +76,7 @@ class TestPageAutomation:
 
     @pytest.fixture(name="patch_edition")
     def patch_edition_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(cmk_version, "edition", lambda *args, **kw: cmk_version.Edition.PRO)
+        monkeypatch.setattr(cmk_version, "edition", lambda *args, **kw: cmk_version.Edition.PRO)  # noqa: ARG005
 
     @pytest.fixture(name="fix_secret_checking")
     def patch_distributed_setup_secret(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -82,7 +85,7 @@ class TestPageAutomation:
         )
 
     @pytest.fixture(name="setup_request")
-    def setup_request_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def setup_request_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:  # noqa: ARG002
         request.set_var("secret", "secret")
         request.set_var("command", "checkmk-automation")
         request.set_var("automation", "test")
@@ -108,7 +111,9 @@ class TestPageAutomation:
                 "headers",
                 {"x-checkmk-version": cmk_version.__version__, "x-checkmk-edition": "cee"},
             )
-            automation.PageAutomation(test_edition)._execute_cmk_automation(debug=False)
+            automation.PageAutomation(test_edition)._execute_cmk_automation(  # noqa: SLF001
+                Config(), debug=False
+            )
             assert response.get_data() == b"((1, 2), 'this field was not sent by version N-1')"
 
     @pytest.mark.usefixtures(
@@ -128,7 +133,9 @@ class TestPageAutomation:
                 "headers",
                 {"x-checkmk-version": "2.4.0p13", "x-checkmk-edition": "cee"},
             )
-            automation.PageAutomation(test_edition)._execute_cmk_automation(debug=False)
+            automation.PageAutomation(test_edition)._execute_cmk_automation(  # noqa: SLF001
+                Config(), debug=False
+            )
             assert response.get_data() == b"((1, 2),)"
 
     @pytest.mark.usefixtures(
@@ -149,7 +156,7 @@ class TestPageAutomation:
                 {"x-checkmk-version": "2.4.0b1", "x-checkmk-edition": "cee"},
             )
             with pytest.raises(MKGeneralException, match="not compatible"):
-                automation.PageAutomation(test_edition)._handle_http_request()
+                automation.PageAutomation(test_edition)._handle_http_request()  # noqa: SLF001
 
     @pytest.mark.parametrize(
         "incomp_version",
@@ -179,7 +186,7 @@ class TestPageAutomation:
                 {"x-checkmk-version": incomp_version, "x-checkmk-edition": "cee"},
             )
             with pytest.raises(MKGeneralException, match="not compatible"):
-                automation.PageAutomation(test_edition)._handle_http_request()
+                automation.PageAutomation(test_edition)._handle_http_request()  # noqa: SLF001
 
     @pytest.mark.usefixtures(
         "request_context",
@@ -187,7 +194,7 @@ class TestPageAutomation:
     )
     def test_no_secret(self) -> None:
         with pytest.raises(MKAuthException):
-            automation.PageAutomation._authenticate()
+            automation.PageAutomation._authenticate()  # noqa: SLF001
 
     @pytest.mark.usefixtures(
         "request_context",
@@ -197,7 +204,7 @@ class TestPageAutomation:
     def test_wrong_secret(self) -> None:
         request.set_var("secret", "wrong")
         with pytest.raises(MKAuthException):
-            automation.PageAutomation._authenticate()
+            automation.PageAutomation._authenticate()  # noqa: SLF001
 
     @pytest.mark.usefixtures(
         "request_context",
@@ -206,7 +213,7 @@ class TestPageAutomation:
     )
     def test_correct_secret(self) -> None:
         request.set_var("secret", "secret")
-        automation.PageAutomation._authenticate()
+        automation.PageAutomation._authenticate()  # noqa: SLF001
 
 
 def test_automation_login(
@@ -227,11 +234,11 @@ def test_automation_login(
                 "_origtarget": origtarget,
             },
         )
-        assert login_resp.status_code == 302
+        assert login_resp.status_code == HTTPStatus.FOUND
         assert login_resp.location == origtarget
 
         resp = client.get(f"/NO_SITE/check_mk/{origtarget}")
-        assert resp.status_code == 200
+        assert resp.status_code == HTTPStatus.OK
         assert ast.literal_eval(resp.text) == {
             "version": cmk_version.__version__,
             "edition_short": test_edition.short,

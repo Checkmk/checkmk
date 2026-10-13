@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+
+from collections.abc import Mapping, Sequence, Set
 
 import pytest
 
@@ -45,9 +46,12 @@ def test_empty_search(bi_searcher: BISearcher) -> None:
         ),
     ],
 )
-def test_fixed_argument_search(  # type: ignore[misc]
-    config, num_expected_keys, expected_total_length, bi_searcher_with_sample_config
-):
+def test_fixed_argument_search(
+    config: Sequence[Mapping[str, str | Sequence[str]]],
+    num_expected_keys: int,
+    expected_total_length: int,
+    bi_searcher_with_sample_config: BISearcher,
+) -> None:
     schema_config = BIFixedArgumentsSearch.schema()().dump({"arguments": config})
     search = BIFixedArgumentsSearch(schema_config)
     results = search.execute({}, bi_searcher_with_sample_config)
@@ -70,9 +74,12 @@ def test_fixed_argument_search(  # type: ignore[misc]
         pytest.param("wrongfolder", set(), id="Match no host"),
     ],
 )
-def test_host_folder_search(  # type: ignore[misc]
-    search_class, bi_searcher_with_sample_config, folder_name, expected_hostnames
-):
+def test_host_folder_search(
+    search_class: type[BIHostSearch] | type[BIServiceSearch],
+    bi_searcher_with_sample_config: BISearcher,
+    folder_name: str,
+    expected_hostnames: Set[str],
+) -> None:
     schema_config = search_class.schema()().dump({"conditions": {"host_folder": folder_name}})
     search = search_class(schema_config)
     results = search.execute({}, bi_searcher_with_sample_config)
@@ -174,9 +181,12 @@ def test_host_search(
         ("Interface", "heute_clone", 4),
     ],
 )
-def test_service_search(  # type: ignore[misc]
-    service_regex, host_regex, expected_matches, bi_searcher_with_sample_config
-):
+def test_service_search(
+    service_regex: str,
+    host_regex: str,
+    expected_matches: int,
+    bi_searcher_with_sample_config: BISearcher,
+) -> None:
     schema_config = BIServiceSearch.schema()().dump(
         {
             "conditions": {

@@ -3,6 +3,7 @@ load("@rules_python//python:defs.bzl", "py_library")
 
 py_library(
     name = "wnx-agent-integration-python-tests",
+    testonly = True,
     srcs = [
         "__init__.py",
         "conftest.py",
@@ -13,8 +14,8 @@ py_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "//agents/wnx/tests/testlib:wnx-agent-python-testlib",
         requirement("pytest"),
-        requirement("telnetlib3"),
         requirement("pyyaml"),
     ],
 )

@@ -55,6 +55,7 @@ def expected_output_engine():
     return repeat(re_str)
 
 
-def test_section_winperf(request, testconfig, expected_output, actual_output, testfile) -> None:
+@pytest.mark.usefixtures("testconfig")
+def test_section_winperf(request, expected_output, actual_output, testfile) -> None:  # type: ignore[misc]
     # request.node.name gives test name
     local_test(expected_output, actual_output, testfile, request.node.name)

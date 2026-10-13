@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 """Wrapper from marshmallow based NetApp-Python-Library pydantic Checkmk-NetApp-Protocol
@@ -410,16 +408,16 @@ class Version(BaseModel):
     major: int
     minor: int
 
-    def _tuple(self):
+    def _tuple(self) -> tuple[int, int, int]:
         return (self.generation, self.major, self.minor)
 
     # minimum set of used comparison methods
-    def __lt__(self, other):
+    def __lt__(self, other: object) -> bool:
         if not isinstance(other, Version):
             return NotImplemented
         return self._tuple() < other._tuple()
 
-    def __ge__(self, other):
+    def __ge__(self, other: object) -> bool:
         if not isinstance(other, Version):
             return NotImplemented
         return self._tuple() >= other._tuple()
@@ -474,8 +472,9 @@ class NodeModel(BaseModel):
     system_id: str
     cpu_processor: str | None = None  # default None inherited from old NetApp API logic
 
-    processor_utilization: float
-    processor_utilization_timestamp: datetime.datetime  # provided in ISO 8601 format
+    # ONTAP leaves out the "metric" object for some nodes
+    processor_utilization: float | None = None
+    processor_utilization_timestamp: datetime.datetime | None = None  # provided in ISO 8601 format
     date: datetime.datetime | None = None
 
 

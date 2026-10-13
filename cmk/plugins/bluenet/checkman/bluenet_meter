@@ -1,4 +1,4 @@
-title: Bachmann Bluenet Monitored Power Line Connectors: Voltage, Current and Power
+title: Bachmann Bluenet: Monitored PLC Voltage, Current and Power
 agents: snmp
 catalog: hw/environment/bachmann
 license: GPLv2

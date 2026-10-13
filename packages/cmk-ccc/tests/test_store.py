@@ -289,6 +289,23 @@ def test_save_to_mk_file_list_loads_without_preseeding(tmp_path: Path) -> None:
     assert actual == {"x": [1, 2, 3]}
 
 
+def test_bootstrap_statement_defines_a_missing_variable() -> None:
+    namespace: dict[str, object] = {}
+
+    exec(store.bootstrap_statement("x", "{}"), namespace, namespace)  # nosec B102
+
+    assert namespace["x"] == {}
+
+
+def test_bootstrap_statement_keeps_a_predefined_object() -> None:
+    predefined: list[int] = [1]
+    namespace: dict[str, object] = {"x": predefined}
+
+    exec(store.bootstrap_statement("x", "[]"), namespace, namespace)  # nosec B102
+
+    assert namespace["x"] is predefined
+
+
 def test_acquire_lock_not_existing(tmp_path: Path) -> None:
     assert store.acquire_lock(tmp_path / "asd") is True
 

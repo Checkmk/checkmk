@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping
 
@@ -78,7 +77,7 @@ def _migrate_required_status(value: object, default_status: Mapping[str, int]) -
     return default_status
 
 
-def _parameter_rulespec_proxmox_ve_node_info():
+def _parameter_rulespec_proxmox_ve_node_info() -> Dictionary:
     return Dictionary(
         migrate=_migrate_ruleset,
         elements={

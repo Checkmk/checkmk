@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.agent_based.v3_unstable._checking_classes import Metric
+from cmk.agent_based.v3_unstable import Metric
 
 
 def test_metric_name_empty_raises() -> None:

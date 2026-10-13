@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 
 """On-disk persistence and periodic cleanup of crash reports in the local site.
 
@@ -61,7 +60,7 @@ def _uuid_crash_dirs(type_dir: Path) -> Iterator[Path]:
     for p in type_dir.iterdir():
         try:
             uuid.UUID(str(p.name))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             continue
         if p.is_dir():
             yield p

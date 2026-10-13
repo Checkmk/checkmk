@@ -17,8 +17,11 @@ Decorative only; GraphGroup owns the announcement for assistive tech.
 import CmkSkeleton from 'cmk-ui-library/components/CmkSkeleton.vue'
 import { computed } from 'vue'
 
+// Matches GraphHeader's single row: its 20px controls plus its 8px padding above and below.
+const headerHeight = '36px'
+
 // Matches GraphBrush's own HEIGHT, which it derives from its track and label geometry.
-const brushHeight = '71px'
+const brushHeight = '66px'
 
 // An estimate of a typical legend, roughly a header plus five rows. The real one grows with the
 // metric count, which is not known until the data arrives.
@@ -98,16 +101,21 @@ const rootStyle = computed(() => ({
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-double);
-  margin-bottom: var(--spacing-double);
+  height: v-bind(headerHeight);
+  margin-bottom: var(--dimension-3);
 }
 
 .graphing-graph-skeleton__brush {
   height: v-bind(brushHeight);
-  margin-top: calc(var(--spacing) * 2);
+  margin-top: var(--dimension-4);
 }
 
 .graphing-graph-skeleton__legend {
   height: v-bind(legendHeight);
-  margin-top: calc(var(--spacing) * 2);
+  margin-top: var(--spacing-double);
+}
+
+.graphing-graph-skeleton__brush + .graphing-graph-skeleton__legend {
+  margin-top: var(--spacing);
 }
 </style>

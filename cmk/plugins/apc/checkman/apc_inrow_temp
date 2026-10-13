@@ -10,11 +10,15 @@ description:
 
  The service goes {WARN}/{CRIT} if the temperature is higher than these levels.
 
- This check uses the PowerNet-MIB.
+ This check uses the PowerNet-MIB. It reads the airIRRC objects of older
+ InRow units as well as the generic cooling unit status tables of newer
+ units (e.g. InRow ACRC301S), which do not provide the airIRRC objects
+ anymore.
 
 item:
- The current mode of the check (i.e. RackInlet, Supply Air, Return Air, Entering Fluid, Leaving Fluid).
+ The name of the sensor, e.g. Rack Inlet, Supply Air, Return Air, Entering Fluid,
+ Leaving Fluid. Newer units report the sensor names of their status tables, e.g.
+ Rack Inlet 1, Unit Maximum Rack Inlet, Entering Chilled Water.
 
 discovery:
- One service is created for each temperature sensor:
- Entering/Leaving Fluid, Supply/Return Air, Rack Inlet
+ One service is created for each temperature sensor.

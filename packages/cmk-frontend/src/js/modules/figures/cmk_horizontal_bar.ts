@@ -142,7 +142,7 @@ export class HorizontalBarFigure extends FigureBase<BarplotFigureData> {
 
     const tickcount = Math.max(2, Math.ceil(this.plot_size.width / 85))
     // @ts-ignore
-    let x_domain: [number, number] = [0, max(points, (d) => d.value)]
+    const x_domain: [number, number] = [0, max(points, (d) => d.value)]
 
     const [min_val, max_val, step] = partitionableDomain(
       x_domain,

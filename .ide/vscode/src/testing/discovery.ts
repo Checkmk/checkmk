@@ -12,7 +12,11 @@ import { CC_TEST_RULE_REGEX } from './runners/cc'
 import { PY_DOC_TEST_RULE_REGEX } from './runners/pydoctest'
 import { PY_TEST_RULE_REGEX } from './runners/pytest'
 import { RUST_TEST_RULE_REGEX } from './runners/rust'
-import { VITEST_TEST_RULE_REGEX } from './runners/vitest'
+import {
+  VITEST_TEST_RULE_REGEX,
+  VUE_PACKAGE_RULE_REGEX,
+  VUE_PACKAGE_TEST_NAME
+} from './runners/vitest'
 import type { DiscoveredTarget, RuleKind } from './types'
 
 const SKIP_DIR_NAMES = [
@@ -32,10 +36,11 @@ const SKIP_DIR_NAMES = [
 
 export const DISCOVERY_ROOTS = ['tests', 'packages', 'non-free/packages', '.ide']
 
-const RULE_DEFS: Array<{ regex: RegExp; kind: RuleKind }> = [
+const RULE_DEFS: Array<{ regex: RegExp; kind: RuleKind; name?: string }> = [
   { regex: PY_TEST_RULE_REGEX, kind: 'py_test' },
   { regex: PY_DOC_TEST_RULE_REGEX, kind: 'py_doc_test' },
   { regex: VITEST_TEST_RULE_REGEX, kind: 'vitest_test' },
+  { regex: VUE_PACKAGE_RULE_REGEX, kind: 'vitest_test', name: VUE_PACKAGE_TEST_NAME },
   { regex: RUST_TEST_RULE_REGEX, kind: 'rust_test' },
   { regex: CC_TEST_RULE_REGEX, kind: 'cc_test' }
 ]
@@ -91,11 +96,11 @@ async function parseBuildForTargets(
   }
   const pkg = path.relative(wsPath, path.dirname(buildPath))
   const out: DiscoveredTarget[] = []
-  for (const { regex, kind } of RULE_DEFS) {
+  for (const { regex, kind, name } of RULE_DEFS) {
     regex.lastIndex = 0
     let m: RegExpExecArray | null
     while ((m = regex.exec(content)) !== null) {
-      out.push({ label: `//${pkg}:${m[1]}`, kind })
+      out.push({ label: `//${pkg}:${name ?? m[1]}`, kind })
     }
   }
   return out

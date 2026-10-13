@@ -11,12 +11,11 @@ from pathlib import Path
 import pydantic
 import pytest
 
-from cmk.mkp_tool import PackageError, PackageName, PackagePart, PackageVersion
+from cmk.mkp_tool import Manifest, PackageError, PackageName, PackagePart, PackageVersion
 from cmk.mkp_tool._mkp import (
     extract_manifest,
     extract_manifest_optionally,
     extract_manifests,
-    Manifest,
     read_manifest_optionally,
 )
 

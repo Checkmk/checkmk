@@ -3,16 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from typing import NamedTuple, Protocol
 
-from cmk.gui.config import Config
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.http import Request
 from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import Dictionary
+from cmk.web.utils.request_cache import RequestCache
+from cmk.web.utils.speaklater import LazyString, LazyText
 
 
 class SorterProtocol(Protocol):
@@ -24,6 +24,7 @@ class SorterProtocol(Protocol):
         parameters: Mapping[str, object] | None,
         config: Config,
         request: Request,
+        request_cache: RequestCache[RequestCacheConfig],
     ) -> int:
         """The function cmp does the actual sorting. During sorting it
         will be called with two data rows as arguments and must
@@ -55,7 +56,7 @@ class Sorter:
     def __init__(
         self,
         ident: str,
-        title: str | LazyString,
+        title: str | LazyString | LazyText,
         columns: Sequence[ColumnName],
         sort_function: SorterProtocol,
         load_inv: bool = False,
@@ -71,11 +72,21 @@ class Sorter:
         return str(self._title)
 
 
+_SORTER_IDENT_KEYS = ("ident", "uuid", "metric")
+
+
+def sorter_parameter_ident(parameters: Mapping[str, object]) -> str | None:
+    for key in _SORTER_IDENT_KEYS:
+        if key in parameters:
+            return str(value) if (value := parameters[key]) else None
+    return None
+
+
 class ParameterizedSorter(Sorter):
     def __init__(
         self,
         ident: str,
-        title: str | LazyString,
+        title: str | LazyString | LazyText,
         columns: Sequence[ColumnName],
         sort_function: SorterProtocol,
         parameter_valuespec: Callable[[Config, Sequence[ColumnSpec]], Dictionary],

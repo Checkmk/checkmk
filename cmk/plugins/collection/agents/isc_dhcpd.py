@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
 
 __version__ = "3.0.0b1"
 
@@ -44,7 +43,7 @@ def parse_config(filename):
                 regex_result = re.search(r'include\s+"(.*)"', line)
                 if regex_result:
                     included_file = regex_result.group(1)
-                parse_config(included_file)
+                parse_config(included_file)  # type: ignore[possibly-undefined]
             elif line.startswith("range"):
                 sys.stdout.write(line[5:].strip("\t ;") + "\n")
 

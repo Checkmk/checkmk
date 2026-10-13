@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 import abc
 import time
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import total_ordering
 from typing import Literal, override
@@ -29,16 +28,19 @@ from cmk.gui.pages import PageContext
 from cmk.gui.theme import Theme
 from cmk.gui.theme.current_theme import theme as gui_theme
 from cmk.gui.utils.user_errors import user_errors
-from cmk.inventory.structured_data import (
-    HistoryStore,
-    ImmutableAttributes,
+from cmk.inventory.delta import (
     ImmutableDeltaAttributes,
     ImmutableDeltaTable,
     ImmutableDeltaTree,
+    SDDeltaValue,
+)
+from cmk.inventory.history import HistoryStore
+from cmk.inventory.raw_paths import parse_internal_raw_path
+from cmk.inventory.trees import (
+    ImmutableAttributes,
     ImmutableTable,
     ImmutableTree,
     RetentionInterval,
-    SDDeltaValue,
     SDKey,
     SDPath,
     SDRowIdent,
@@ -52,6 +54,7 @@ from ._display_hints import (
     inv_display_hints,
     NodeDisplayHint,
     PaintFunctionFromAPI,
+    PaintResultFromAPI,
     TableWithView,
 )
 
@@ -126,9 +129,7 @@ class SDItem:
                 html_values=[html_value],
             )
 
-        valid_until = self.retention_interval.cached_at + self.retention_interval.cache_interval
-        keep_until = valid_until + self.retention_interval.retention_interval
-        if now > keep_until:
+        if now > self.retention_interval.keep_until:
             return TDSpec(
                 css_classes=(
                     [td_styles.css_class, "inactive_cell"]
@@ -152,7 +153,7 @@ class SDItem:
                 ],
             )
 
-        if now > valid_until:
+        if now > self.retention_interval.valid_until:
             return TDSpec(
                 css_classes=(
                     [td_styles.css_class, "inactive_cell"]
@@ -173,7 +174,9 @@ class SDItem:
                             "provided_at": cmk.utils.render.date_and_time(
                                 self.retention_interval.cached_at
                             ),
-                            "valid_until": cmk.utils.render.date_and_time(keep_until),
+                            "valid_until": cmk.utils.render.date_and_time(
+                                self.retention_interval.valid_until
+                            ),
                         },
                         css=["muted_text"],
                     )
@@ -251,6 +254,25 @@ class _SDDeltaItem:
         raise NotImplementedError
 
 
+def _paint_value(paint_function: PaintFunctionFromAPI) -> PaintFunctionFromAPI:
+    return paint_function
+
+
+def _paint_value_and_raw_value(paint_function: PaintFunctionFromAPI) -> PaintFunctionFromAPI:
+    def _paint(now: float, value: SDValue) -> PaintResultFromAPI:
+        td_styles, rendered_value = paint_function(now, value)
+        if not rendered_value:
+            return td_styles, rendered_value
+        return (
+            td_styles,
+            HTML.with_escaping(rendered_value)
+            + " "
+            + HTMLWriter.render_span(f"({value})", css="muted_text"),
+        )
+
+    return _paint
+
+
 @dataclass(frozen=True, kw_only=True)
 class _Column:
     key: SDKey
@@ -272,6 +294,7 @@ class _MinType:
 @dataclass(frozen=True)
 class _ABCItemsSorter(abc.ABC):
     hint: NodeDisplayHint
+    decorate_paint_function: Callable[[PaintFunctionFromAPI], PaintFunctionFromAPI]
 
     def _make_columns(
         self, keys: Iterable[SDKey], key_columns: Sequence[SDKey]
@@ -282,7 +305,7 @@ class _ABCItemsSorter(abc.ABC):
             _Column(
                 key=c,
                 title=h.title,
-                paint_function=h.paint_function,
+                paint_function=self.decorate_paint_function(h.paint_function),
                 key_info=f"{c}*" if c in key_columns else c,
             )
             for c in (
@@ -309,7 +332,7 @@ class _SDItemsSorter(_ABCItemsSorter):
                 title=h.title,
                 value=self.attributes.pairs[k],
                 retention_interval=self.attributes.retentions.get(k),
-                paint_function=h.paint_function,
+                paint_function=self.decorate_paint_function(h.paint_function),
                 icon_path_svc_problems=self.icon_path_svc_problems,
             )
             for k in sorted_keys
@@ -354,13 +377,6 @@ class _SDItemsSorter(_ABCItemsSorter):
         )
 
 
-def _delta_value_has_change(delta_value: SDDeltaValue) -> bool:
-    return (
-        not (delta_value.old is None and delta_value.new is None)
-        and delta_value.old != delta_value.new
-    )
-
-
 @dataclass(frozen=True)
 class _SDDeltaItemsSorter(_ABCItemsSorter):
     attributes: ImmutableDeltaAttributes
@@ -376,16 +392,16 @@ class _SDDeltaItemsSorter(_ABCItemsSorter):
                 title=h.title,
                 old=self.attributes.pairs[k].old,
                 new=self.attributes.pairs[k].new,
-                paint_function=h.paint_function,
+                paint_function=self.decorate_paint_function(h.paint_function),
             )
             for k in sorted_keys
-            if (v := self.attributes.pairs.get(k)) is not None and _delta_value_has_change(v)
+            if (v := self.attributes.pairs.get(k)) is not None and v.old != v.new
             for h in (self.hint.get_attribute_hint(k),)
         ]
 
     def _filter_delta_row_keys(self) -> Iterator[SDKey]:
         for row in self.table.rows:
-            if any(_delta_value_has_change(delta_value) for delta_value in row.values()):
+            if any(v.old != v.new for v in row.values()):
                 yield from row
 
     def sort_rows(self) -> tuple[Sequence[_Column], Sequence[Sequence[_SDDeltaItem]]]:
@@ -421,7 +437,7 @@ class _SDDeltaItemsSorter(_ABCItemsSorter):
                         _sanitize(r.get(c.key) or SDDeltaValue(old=None, new=None)) for c in columns
                     ),
                 )
-                if any(_delta_value_has_change(delta_value) for delta_value in row.values())
+                if any(v.old != v.new for v in row.values())
             ],
         )
 
@@ -484,7 +500,7 @@ def ajax_inv_render_tree(ctx: PageContext) -> None:
         theme=gui_theme,
         request=http_request,
         show_internal_tree_paths=show_internal_tree_paths,
-    ).show(time.time(), tree.get_tree(inventory.parse_internal_raw_path(raw_path).path), tree_id)
+    ).show(time.time(), tree.get_tree(parse_internal_raw_path(raw_path).path), tree_id)
 
 
 def _replace_title_placeholders(hint: NodeDisplayHint, path: SDPath) -> str:
@@ -512,6 +528,9 @@ class TreeRenderer:
         self._theme = theme
         self._request = request
         self._show_internal_tree_paths = show_internal_tree_paths
+        self._decorate_paint_function = (
+            _paint_value_and_raw_value if show_internal_tree_paths else _paint_value
+        )
 
     def _get_header(self, title: str, key_info: str) -> HTML:
         header = HTML.with_escaping(title)
@@ -625,10 +644,12 @@ class TreeRenderer:
 
         sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem]
         sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]]
+        columns: Sequence[_Column]
         match tree:
             case ImmutableTree():
                 items_sorter = _SDItemsSorter(
                     hint,
+                    self._decorate_paint_function,
                     self._theme.detect_icon_path("svc_problems", "icon_"),
                     tree.attributes,
                     tree.table,
@@ -638,6 +659,7 @@ class TreeRenderer:
             case ImmutableDeltaTree():
                 delta_items_sorter = _SDDeltaItemsSorter(
                     hint,
+                    self._decorate_paint_function,
                     tree.attributes,
                     tree.table,
                 )

@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     TableRow,
 )
 from cmk.plugins.oracle.agent_based import oracle_tablespaces
-from cmk.plugins.oracle.agent_based.liboracle import OraErrors, SectionTableSpaces
+from cmk.plugins.oracle.agent_based.liboracle import Error, Ok
 from cmk.plugins.oracle.agent_based.oracle_tablespaces import inventorize_oracle_tablespaces
 from tests.unit.cmk.plugins.oracle.agent_based.utils_inventory import sort_inventory_result
 
@@ -174,192 +174,204 @@ STRING_TABLE = [
     ],
 ]
 
-Section: SectionTableSpaces = {
-    "error_sids": {"ORA-bar": OraErrors(["ORA-bar", "some", "data"])},
-    "tablespaces": {
-        ("CLUSTER", "FOO"): {
-            "amount_missing_filenames": 0,
-            "autoextensible": True,
-            "datafiles": [
-                {
-                    "autoextensible": True,
-                    "block_size": 8192,
-                    "file_online_status": "TEMP",
-                    "free_space": 7738490880,
-                    "increment_size": 209715200,
-                    "max_size": 20971520000,
-                    "name": "/oracle/PRD/sapdata/sapdata3/temp_3/temp.data3",
-                    "size": 18874368000,
-                    "status": "ONLINE",
-                    "ts_status": "ONLINE",
-                    "ts_type": "TEMPORARY",
-                    "used_size": 18873319424,
-                },
-                {
-                    "autoextensible": True,
-                    "block_size": 8192,
-                    "file_online_status": "TEMP",
-                    "free_space": 7738490880,
-                    "increment_size": 209715200,
-                    "max_size": 20971520000,
-                    "name": "/oracle/PRD/sapdata/sapdata3/temp_4/temp.data5",
-                    "size": 18874368000,
-                    "status": "ONLINE",
-                    "ts_status": "ONLINE",
-                    "ts_type": "TEMPORARY",
-                    "used_size": 18873319424,
-                },
-            ],
-            "db_version": 0,
-            "status": "ONLINE",
-            "type": "TEMPORARY",
-        },
-        ("PRD", "PSAPTEMP"): {
-            "amount_missing_filenames": 1,
-            "autoextensible": True,
-            "datafiles": [
-                {
-                    "autoextensible": False,
-                    "block_size": 8192,
-                    "file_online_status": "TEMP",
-                    "free_space": 7733248000,
-                    "increment_size": 209715200,
-                    "max_size": 20971520000,
-                    "name": "",
-                    "size": 18874368000,
-                    "status": "ONLINE",
-                    "ts_status": "ONLINE",
-                    "ts_type": "TEMPORARY",
-                    "used_size": 18873319424,
-                },
-                {
-                    "autoextensible": True,
-                    "block_size": 8192,
-                    "file_online_status": "TEMP",
-                    "free_space": 7755268096,
-                    "increment_size": 209715200,
-                    "max_size": 20971520000,
-                    "name": "/oracle/PRD/sapdata/sapdata2/temp_2/temp.data2",
-                    "size": 18874368000,
-                    "status": "ONLINE",
-                    "ts_status": "ONLINE",
-                    "ts_type": "TEMPORARY",
-                    "used_size": 18873319424,
-                },
-                {
-                    "autoextensible": True,
-                    "block_size": 8192,
-                    "file_online_status": "TEMP",
-                    "free_space": 7738490880,
-                    "increment_size": 209715200,
-                    "max_size": 20971520000,
-                    "name": "/oracle/PRD/sapdata/sapdata3/temp_3/temp.data3",
-                    "size": 18874368000,
-                    "status": "ONLINE",
-                    "ts_status": "ONLINE",
-                    "ts_type": "TEMPORARY",
-                    "used_size": 18873319424,
-                },
-                {
-                    "autoextensible": True,
-                    "block_size": 8192,
-                    "file_online_status": "TEMP",
-                    "free_space": 7733248000,
-                    "increment_size": 209715200,
-                    "max_size": 20971520000,
-                    "name": "/oracle/PRD/sapdata/sapdata4/temp_4/temp.data4",
-                    "size": 18874368000,
-                    "status": "ONLINE",
-                    "ts_status": "ONLINE",
-                    "ts_type": "TEMPORARY",
-                    "used_size": 18873319424,
-                },
-            ],
-            "db_version": 0,
-            "status": "ONLINE",
-            "type": "TEMPORARY",
-        },
-        ("PPD", "FOO"): {
-            "amount_missing_filenames": 0,
-            "autoextensible": True,
-            "datafiles": [
-                {
-                    "autoextensible": True,
-                    "block_size": 8192,
-                    "file_online_status": "OFFLINE",
-                    "free_space": 7733248000,
-                    "increment_size": 209715200,
-                    "max_size": 20971520000,
-                    "name": "/oracle/PPD/sapdata/sapdata4/temp_5/temp.data5",
-                    "size": 18874368000,
-                    "status": "ONLINE",
-                    "ts_status": "ONLINE",
-                    "ts_type": "TEMPORARY",
-                    "used_size": 18873319424,
-                }
-            ],
-            "db_version": 0,
-            "status": "ONLINE",
-            "type": "TEMPORARY",
-        },
-        ("PIMSWA", "TEMP"): {
-            "amount_missing_filenames": 0,
-            "autoextensible": True,
-            "datafiles": [
-                {
-                    "autoextensible": True,
-                    "block_size": 8192,
-                    "file_online_status": "ONLINE",
-                    "free_space": 565182464,
-                    "increment_size": 655360,
-                    "max_size": 34359721984,
-                    "name": "+DATA/PIMSWA/TEMPFILE/temp.307.1025296289",
-                    "size": 741343232,
-                    "status": "ONLINE",
-                    "ts_status": "ONLINE",
-                    "ts_type": "TEMPORARY",
-                    "used_size": 740294656,
-                }
-            ],
-            "db_version": 12,
-            "status": "ONLINE",
-            "type": "TEMPORARY",
-        },
-        ("PIMSWA2", "FOO"): {
-            "amount_missing_filenames": 0,
-            "autoextensible": False,
-            "datafiles": [
-                {
-                    "autoextensible": False,
-                    "block_size": 8192,
-                    "file_online_status": "ONLINE",
-                    "free_space": 565182464,
-                    "increment_size": 655360,
-                    "max_size": 34359721984,
-                    "name": "+DATA/PIMSWA/TEMPFILE/temp.307.1025296289",
-                    "size": 741343232,
-                    "status": "ONLINE",
-                    "ts_status": "ONLINE",
-                    "ts_type": "TEMPORARY",
-                    "used_size": 740294656,
-                }
-            ],
-            "db_version": 12,
-            "status": "ONLINE",
-            "type": "TEMPORARY",
-        },
-    },
+SECTION: oracle_tablespaces.Section = {
+    "CLUSTER": Ok(
+        {
+            "FOO": {
+                "amount_missing_filenames": 0,
+                "autoextensible": True,
+                "datafiles": [
+                    {
+                        "autoextensible": True,
+                        "block_size": 8192,
+                        "file_online_status": "TEMP",
+                        "free_space": 7738490880,
+                        "increment_size": 209715200,
+                        "max_size": 20971520000,
+                        "name": "/oracle/PRD/sapdata/sapdata3/temp_3/temp.data3",
+                        "size": 18874368000,
+                        "status": "ONLINE",
+                        "ts_status": "ONLINE",
+                        "ts_type": "TEMPORARY",
+                        "used_size": 18873319424,
+                    },
+                    {
+                        "autoextensible": True,
+                        "block_size": 8192,
+                        "file_online_status": "TEMP",
+                        "free_space": 7738490880,
+                        "increment_size": 209715200,
+                        "max_size": 20971520000,
+                        "name": "/oracle/PRD/sapdata/sapdata3/temp_4/temp.data5",
+                        "size": 18874368000,
+                        "status": "ONLINE",
+                        "ts_status": "ONLINE",
+                        "ts_type": "TEMPORARY",
+                        "used_size": 18873319424,
+                    },
+                ],
+                "db_version": 0,
+                "status": "ONLINE",
+                "type": "TEMPORARY",
+            }
+        }
+    ),
+    "PRD": Ok(
+        {
+            "PSAPTEMP": {
+                "amount_missing_filenames": 1,
+                "autoextensible": True,
+                "datafiles": [
+                    {
+                        "autoextensible": False,
+                        "block_size": 8192,
+                        "file_online_status": "TEMP",
+                        "free_space": 7733248000,
+                        "increment_size": 209715200,
+                        "max_size": 20971520000,
+                        "name": "",
+                        "size": 18874368000,
+                        "status": "ONLINE",
+                        "ts_status": "ONLINE",
+                        "ts_type": "TEMPORARY",
+                        "used_size": 18873319424,
+                    },
+                    {
+                        "autoextensible": True,
+                        "block_size": 8192,
+                        "file_online_status": "TEMP",
+                        "free_space": 7755268096,
+                        "increment_size": 209715200,
+                        "max_size": 20971520000,
+                        "name": "/oracle/PRD/sapdata/sapdata2/temp_2/temp.data2",
+                        "size": 18874368000,
+                        "status": "ONLINE",
+                        "ts_status": "ONLINE",
+                        "ts_type": "TEMPORARY",
+                        "used_size": 18873319424,
+                    },
+                    {
+                        "autoextensible": True,
+                        "block_size": 8192,
+                        "file_online_status": "TEMP",
+                        "free_space": 7738490880,
+                        "increment_size": 209715200,
+                        "max_size": 20971520000,
+                        "name": "/oracle/PRD/sapdata/sapdata3/temp_3/temp.data3",
+                        "size": 18874368000,
+                        "status": "ONLINE",
+                        "ts_status": "ONLINE",
+                        "ts_type": "TEMPORARY",
+                        "used_size": 18873319424,
+                    },
+                    {
+                        "autoextensible": True,
+                        "block_size": 8192,
+                        "file_online_status": "TEMP",
+                        "free_space": 7733248000,
+                        "increment_size": 209715200,
+                        "max_size": 20971520000,
+                        "name": "/oracle/PRD/sapdata/sapdata4/temp_4/temp.data4",
+                        "size": 18874368000,
+                        "status": "ONLINE",
+                        "ts_status": "ONLINE",
+                        "ts_type": "TEMPORARY",
+                        "used_size": 18873319424,
+                    },
+                ],
+                "db_version": 0,
+                "status": "ONLINE",
+                "type": "TEMPORARY",
+            }
+        }
+    ),
+    "PPD": Ok(
+        {
+            "FOO": {
+                "amount_missing_filenames": 0,
+                "autoextensible": True,
+                "datafiles": [
+                    {
+                        "autoextensible": True,
+                        "block_size": 8192,
+                        "file_online_status": "OFFLINE",
+                        "free_space": 7733248000,
+                        "increment_size": 209715200,
+                        "max_size": 20971520000,
+                        "name": "/oracle/PPD/sapdata/sapdata4/temp_5/temp.data5",
+                        "size": 18874368000,
+                        "status": "ONLINE",
+                        "ts_status": "ONLINE",
+                        "ts_type": "TEMPORARY",
+                        "used_size": 18873319424,
+                    }
+                ],
+                "db_version": 0,
+                "status": "ONLINE",
+                "type": "TEMPORARY",
+            }
+        }
+    ),
+    "PIMSWA": Ok(
+        {
+            "TEMP": {
+                "amount_missing_filenames": 0,
+                "autoextensible": True,
+                "datafiles": [
+                    {
+                        "autoextensible": True,
+                        "block_size": 8192,
+                        "file_online_status": "ONLINE",
+                        "free_space": 565182464,
+                        "increment_size": 655360,
+                        "max_size": 34359721984,
+                        "name": "+DATA/PIMSWA/TEMPFILE/temp.307.1025296289",
+                        "size": 741343232,
+                        "status": "ONLINE",
+                        "ts_status": "ONLINE",
+                        "ts_type": "TEMPORARY",
+                        "used_size": 740294656,
+                    }
+                ],
+                "db_version": 12,
+                "status": "ONLINE",
+                "type": "TEMPORARY",
+            }
+        }
+    ),
+    "PIMSWA2": Ok(
+        {
+            "FOO": {
+                "amount_missing_filenames": 0,
+                "autoextensible": False,
+                "datafiles": [
+                    {
+                        "autoextensible": False,
+                        "block_size": 8192,
+                        "file_online_status": "ONLINE",
+                        "free_space": 565182464,
+                        "increment_size": 655360,
+                        "max_size": 34359721984,
+                        "name": "+DATA/PIMSWA/TEMPFILE/temp.307.1025296289",
+                        "size": 741343232,
+                        "status": "ONLINE",
+                        "ts_status": "ONLINE",
+                        "ts_type": "TEMPORARY",
+                        "used_size": 740294656,
+                    }
+                ],
+                "db_version": 12,
+                "status": "ONLINE",
+                "type": "TEMPORARY",
+            }
+        }
+    ),
+    "ORA-bar": Error('Found error in agent output "ORA-bar some data"'),
 }
 
 
 def test_parse() -> None:
-    actual_section = oracle_tablespaces.parse_oracle_tablespaces(STRING_TABLE)
-    actual_tablespaces = actual_section["tablespaces"]
-    actual_error_sid = actual_section["error_sids"]["ORA-bar"]
-    expected_error_sids = Section["error_sids"]["ORA-bar"]
-    assert actual_tablespaces == Section["tablespaces"]
-    assert actual_error_sid.error_text == expected_error_sids.error_text
-    assert actual_error_sid.error_severity == expected_error_sids.error_severity
+    assert oracle_tablespaces.parse_oracle_tablespaces(STRING_TABLE) == SECTION
 
 
 def test_discovery() -> None:
@@ -369,7 +381,7 @@ def test_discovery() -> None:
         Service(item="PPD.FOO", parameters={"autoextend": True}, labels=[]),
         Service(item="PIMSWA.TEMP", parameters={"autoextend": True}, labels=[]),
         Service(item="PIMSWA2.FOO", parameters={"autoextend": False}, labels=[]),
-    ] == list(oracle_tablespaces.discovery_oracle_tablespaces(Section))
+    ] == list(oracle_tablespaces.discovery_oracle_tablespaces(SECTION))
 
 
 @pytest.mark.parametrize(
@@ -560,7 +572,7 @@ def test_check(item: str, params: Mapping[str, object], expected: CheckResult) -
         oracle_tablespaces.check_oracle_tablespaces(
             item,
             (params),
-            Section,
+            SECTION,
         )
     )
 
@@ -571,18 +583,20 @@ def test_check_raises() -> None:
             oracle_tablespaces.check_oracle_tablespaces(
                 "item.not.sent",
                 {},
-                Section,
+                SECTION,
             )
         )
 
 
 def test_check_cluster() -> None:
-    section2 = copy.deepcopy(Section)
+    section2 = copy.deepcopy(SECTION)
     # Throw away one datafile in order for the cluster check to choose the node
     # with the longer datafile list
-    section2["tablespaces"][("CLUSTER", "FOO")]["datafiles"].pop()
+    cluster = section2["CLUSTER"]
+    assert isinstance(cluster, Ok)
+    cluster.value["FOO"]["datafiles"].pop()
 
-    node_section = {"node1": section2, "node2": Section}
+    node_section = {"node1": SECTION, "node2": section2}
 
     assert [
         Result(
@@ -617,53 +631,55 @@ def test_check_cluster() -> None:
     )
 
 
-InvSection: SectionTableSpaces = {
-    "error_sids": {"ORA-bar": OraErrors(["ORA-bar", "some", "data"])},
-    "tablespaces": {
-        ("CLUSTER", "FOO"): {
-            "amount_missing_filenames": 0,
-            "autoextensible": True,
-            "datafiles": [
-                {
-                    "autoextensible": True,
-                    "block_size": 8192,
-                    "file_online_status": "TEMP",
-                    "free_space": 7738490880,
-                    "increment_size": 209715200,
-                    "max_size": 20971520000,
-                    "name": "/oracle/PRD/sapdata/sapdata3/temp_3/temp.data3",
-                    "size": 18874368000,
-                    "status": "ONLINE",
-                    "ts_status": "ONLINE",
-                    "ts_type": "TEMPORARY",
-                    "used_size": 18873319424,
-                },
-                {
-                    "autoextensible": True,
-                    "block_size": 8192,
-                    "file_online_status": "TEMP",
-                    "free_space": 7738490880,
-                    "increment_size": 209715200,
-                    "max_size": 20971520000,
-                    "name": "/oracle/PRD/sapdata/sapdata3/temp_4/temp.data5",
-                    "size": 18874368000,
-                    "status": "ONLINE",
-                    "ts_status": "ONLINE",
-                    "ts_type": "TEMPORARY",
-                    "used_size": 18873319424,
-                },
-            ],
-            "db_version": 0,
-            "status": "ONLINE",
-            "type": "TEMPORARY",
-        },
-    },
+INV_SECTION: oracle_tablespaces.Section = {
+    "CLUSTER": Ok(
+        {
+            "FOO": {
+                "amount_missing_filenames": 0,
+                "autoextensible": True,
+                "datafiles": [
+                    {
+                        "autoextensible": True,
+                        "block_size": 8192,
+                        "file_online_status": "TEMP",
+                        "free_space": 7738490880,
+                        "increment_size": 209715200,
+                        "max_size": 20971520000,
+                        "name": "/oracle/PRD/sapdata/sapdata3/temp_3/temp.data3",
+                        "size": 18874368000,
+                        "status": "ONLINE",
+                        "ts_status": "ONLINE",
+                        "ts_type": "TEMPORARY",
+                        "used_size": 18873319424,
+                    },
+                    {
+                        "autoextensible": True,
+                        "block_size": 8192,
+                        "file_online_status": "TEMP",
+                        "free_space": 7738490880,
+                        "increment_size": 209715200,
+                        "max_size": 20971520000,
+                        "name": "/oracle/PRD/sapdata/sapdata3/temp_4/temp.data5",
+                        "size": 18874368000,
+                        "status": "ONLINE",
+                        "ts_status": "ONLINE",
+                        "ts_type": "TEMPORARY",
+                        "used_size": 18873319424,
+                    },
+                ],
+                "db_version": 0,
+                "status": "ONLINE",
+                "type": "TEMPORARY",
+            }
+        }
+    ),
+    "ORA-bar": Error('Found error in agent output "ORA-bar some data"'),
 }
 
 
 def test_inventory() -> None:
     assert sort_inventory_result(
-        inventorize_oracle_tablespaces(InvSection)
+        inventorize_oracle_tablespaces(INV_SECTION)
     ) == sort_inventory_result(
         [
             TableRow(
@@ -762,3 +778,70 @@ def test_undo_table_spaces__sup_11158() -> None:
             state=State.WARN, summary="Space left: 9.98 GiB (warn/crit below 10.00 GiB/1.00 GiB)"
         ),
     ]
+
+
+def test_discovery_skips_failure_row() -> None:
+    section = oracle_tablespaces.parse_oracle_tablespaces(
+        [["FREE", "FAILURE", "ORA-00942: table or view does not exist"]]
+    )
+    assert not list(oracle_tablespaces.discovery_oracle_tablespaces(section))
+
+
+def test_check_surfaces_failure() -> None:
+    section = oracle_tablespaces.parse_oracle_tablespaces(
+        [["FREE", "FAILURE", "ORA-00942: table or view does not exist"]]
+    )
+    assert list(oracle_tablespaces.check_oracle_tablespaces("FREE.SYSTEM", {}, section)) == [
+        Result(state=State.UNKNOWN, summary="ORA-00942: table or view does not exist")
+    ]
+
+
+def test_check_surfaces_failure_of_a_pdb() -> None:
+    section = oracle_tablespaces.parse_oracle_tablespaces(
+        [["FREE.PDB1", "FAILURE", "ORA-00942: table or view does not exist"]]
+    )
+    assert list(oracle_tablespaces.check_oracle_tablespaces("FREE.PDB1.SYSTEM", {}, section)) == [
+        Result(state=State.UNKNOWN, summary="ORA-00942: table or view does not exist")
+    ]
+
+
+def test_failure_row_wins_over_data_rows() -> None:
+    section = oracle_tablespaces.parse_oracle_tablespaces(
+        [STRING_TABLE[3], ["PRD", "FAILURE", "ORA-00942: table or view does not exist"]]
+    )
+    assert list(oracle_tablespaces.check_oracle_tablespaces("PRD.PSAPTEMP", {}, section)) == [
+        Result(state=State.UNKNOWN, summary="ORA-00942: table or view does not exist")
+    ]
+
+
+def test_inventory_skips_failure_row() -> None:
+    section = oracle_tablespaces.parse_oracle_tablespaces(
+        [["FREE", "FAILURE", "ORA-00942: table or view does not exist"]]
+    )
+    assert not list(inventorize_oracle_tablespaces(section))
+
+
+def test_cluster_check_prefers_data_over_the_error_of_another_node() -> None:
+    error_node = oracle_tablespaces.parse_oracle_tablespaces(
+        [["CLUSTER", "FAILURE", "ORA-00942: table or view does not exist"]]
+    )
+    results = list(
+        oracle_tablespaces.cluster_check_oracle_tablespaces(
+            "CLUSTER.FOO",
+            dict(oracle_tablespaces.ORACLE_TABLESPACES_DEFAULTS),
+            {"node1": error_node, "node2": SECTION},
+        )
+    )
+    assert isinstance(results[0], Result)
+    assert results[0].state is State.OK
+
+
+def test_cluster_check_reports_the_error_when_no_node_has_data() -> None:
+    error_node = oracle_tablespaces.parse_oracle_tablespaces(
+        [["CLUSTER", "FAILURE", "ORA-00942: table or view does not exist"]]
+    )
+    assert list(
+        oracle_tablespaces.cluster_check_oracle_tablespaces(
+            "CLUSTER.FOO", {}, {"node1": error_node, "node2": None}
+        )
+    ) == [Result(state=State.UNKNOWN, summary="ORA-00942: table or view does not exist")]

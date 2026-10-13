@@ -5,7 +5,6 @@
 
 from collections.abc import Callable, Mapping, Sequence
 
-from cmk.ccc.site import SiteId
 from cmk.gui.form_specs.unstable.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
@@ -26,6 +25,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetupActionMode,
     QuickSetupBackgroundAction,
     QuickSetupBackgroundStageAction,
+    QuickSetupContext,
     QuickSetupStage,
     QuickSetupStageAction,
 )
@@ -44,12 +44,12 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Text,
     Widget,
 )
-from cmk.gui.utils.doc_references import doc_reference_url, DocReference, DocReferenceUtm
-from cmk.livestatus_client import SiteConfiguration
+from cmk.gui.utils.doc_reference_urls import doc_reference_url
 from cmk.plugins.gcp.rulesets import gcp  # astrein: disable=cmk-module-layer-violation
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Dictionary
+from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
 
 NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
 PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")
@@ -141,8 +141,10 @@ def configure_host() -> QuickSetupStage:
     return QuickSetupStage(
         title=_("Configure host"),
         sub_title=_("Name your host and define the folder path"),
-        configure_components=[
-            widgets.host_name_and_host_path_formspec_wrapper(host_prefill_template="gcp"),
+        configure_components=lambda ctx: [
+            widgets.host_name_and_host_path_formspec_wrapper(
+                ctx.tree, ctx.user, host_prefill_template="gcp"
+            ),
             widgets.site_formspec_wrapper(),
         ],
         actions=[
@@ -161,7 +163,7 @@ def configure_host() -> QuickSetupStage:
     )
 
 
-def _configure() -> Sequence[Widget]:
+def _configure(_ctx: QuickSetupContext) -> Sequence[Widget]:
     return [
         FormSpecWrapper(
             id=FormSpecId("configure_services_to_monitor"),
@@ -243,8 +245,7 @@ def recap_found_services(
     _stage_index: StageIndex,
     parsed_data: ParsedFormData,
     progress_logger: ProgressLogger,
-    site_configs: Mapping[SiteId, SiteConfiguration],
-    debug: bool,
+    ctx: QuickSetupContext,
 ) -> Sequence[Widget]:
     service_discovery_result = utils.get_service_discovery_preview(
         rulespec_name=RuleGroup.SpecialAgents("gcp"),
@@ -252,8 +253,8 @@ def recap_found_services(
         parameter_form=gcp.form_spec(),
         collect_params=gcp_collect_params,
         progress_logger=progress_logger,
-        site_configs=site_configs,
-        debug=debug,
+        site_configs=ctx.site_configs,
+        debug=ctx.debug,
     )
     gcp_service_interest = ServiceInterest("gcp_.*", "services")
     filtered_groups_of_services, _other_services = utils.group_services_by_interest(
@@ -289,7 +290,7 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
                 id=ActionId("skip_configuration_test"),
                 custom_validators=[],
                 recap=[
-                    lambda _a, _b, parsed_data, *args, **kargs: _save_and_activate_recap(
+                    lambda _a, _b, parsed_data, *args, **kargs: _save_and_activate_recap(  # noqa: ARG005
                         _("Skipped the configuration test."), parsed_data
                     )
                 ],
@@ -305,8 +306,7 @@ def action(
     mode: QuickSetupActionMode,
     progress_logger: ProgressLogger,
     _object_id: str | None,
-    use_git: bool,
-    pprint_value: bool,
+    ctx: QuickSetupContext,
 ) -> str:
     match mode:
         case QuickSetupActionMode.SAVE:
@@ -316,6 +316,7 @@ def action(
                 all_stages_form_data=all_stages_form_data,
                 custom_collect_params=gcp_collect_params,
                 progress_logger=progress_logger,
+                tree=ctx.tree,
             )
         case QuickSetupActionMode.EDIT:
             raise ValueError("Edit mode not supported")

@@ -7,10 +7,15 @@
 
 import logging
 
-from playwright.sync_api import FloatRect, Locator, Page
+from playwright.sync_api import expect, FloatRect, Locator, Page, Response
 
 from tests.system.gui.testlib.playwright.pom.graphing.global_time_picker import GlobalTimePicker
-from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import GraphAccessor
+from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import (
+    ACTION_MENU_BUTTON_NAME,
+    ACTION_MENU_DROPDOWN_SELECTOR,
+    GraphAccessor,
+    SURFACE_NOTICE_ERROR_SELECTOR,
+)
 from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphContainment
 from tests.system.gui.testlib.playwright.pom.monitor.service import ServicePage
 from tests.system.gui.testlib.playwright.pom.page import MainArea
@@ -18,8 +23,17 @@ from tests.system.gui.testlib.playwright.pom.page import MainArea
 logger = logging.getLogger(__name__)
 
 # The gestures listen on window mousemove, so a single jump from press to release never
-# updates the preview.
+# updates the preview. They address viewport coordinates too, so a target below the fold is
+# scrolled in before its box is read.
 _DRAG_STEPS = 12
+
+_ADD_PIN_LABEL = "Add pin"
+_REMOVE_PIN_LABEL = "Remove pin"
+
+
+def _is_pin_stored(response: Response) -> bool:
+    """Whether `response` answers the page's request to store or clear the pin."""
+    return response.request.method == "POST" and "/graph/actions/set_pin/invoke" in response.url
 
 
 def _point_in(box: FloatRect, x_fraction: float, y_fraction: float) -> tuple[float, float]:
@@ -83,12 +97,12 @@ class TimeSeriesGraph:
     @property
     def add_pin_handle(self) -> Locator:
         """The handle the hover offers above the plot for pinning the hovered point."""
-        return self.root.get_by_role("button", name="Add pin")
+        return self.root.get_by_role("button", name=_ADD_PIN_LABEL)
 
     @property
     def pin_handle(self) -> Locator:
         """The handle sitting on the pinned point; it is also the control that removes it."""
-        return self.root.get_by_role("button", name="Remove pin")
+        return self.root.get_by_role("button", name=_REMOVE_PIN_LABEL)
 
     @property
     def tooltip(self) -> Locator:
@@ -122,16 +136,28 @@ class TimeSeriesGraph:
 
     @property
     def value_axis_labels(self) -> Locator:
-        """The y-axis tick labels; they change whenever the value domain moves."""
+        """The y-axis tick labels."""
         return self.root.locator(".graphing-time-series-graph__y-axis text")
+
+    def value_axis_ticks(self) -> list[list[str]]:
+        """Each value tick as [label, offset]: what it reads and where d3 put it.
+
+        Either half alone can stay equal across a narrowing - round labels stay round, and
+        the offsets are a grid of n intervals that stays at n. One call, because d3 drops
+        the exiting ticks and a per-element read waits out the timeout on a vanished one.
+        """
+        ticks = self.root.locator(".graphing-time-series-graph__y-axis .tick")
+        state: list[list[str]] = ticks.evaluate_all(
+            "ticks => ticks.map((tick) => "
+            "[tick.textContent ?? '', tick.getAttribute('transform') ?? ''])"
+        )
+        return state
 
     def time_axis_label_texts(self) -> list[str]:
         return _axis_label_texts(self.time_axis_labels)
 
-    def value_axis_label_texts(self) -> list[str]:
-        return _axis_label_texts(self.value_axis_labels)
-
     def _canvas_box(self) -> FloatRect:
+        self.canvas.scroll_into_view_if_needed()
         box = self.canvas.bounding_box()
         assert box is not None, "The graph canvas has no layout box; is the graph rendered?"
         return box
@@ -150,6 +176,7 @@ class TimeSeriesGraph:
 
     def drag_axis_strip(self, from_fraction: float, to_fraction: float) -> None:
         """Grab the x-axis strip and pull it sideways, panning the window."""
+        self.axis_grab_strip.scroll_into_view_if_needed()
         box = self.axis_grab_strip.bounding_box()
         assert box is not None, "The x-axis grab strip has no layout box; is panning enabled?"
         logger.info("Panning the axis strip from %s to %s", from_fraction, to_fraction)
@@ -160,13 +187,18 @@ class TimeSeriesGraph:
         self.page.mouse.move(*_point_in(box, x_fraction, y_fraction))
 
     def add_pin(self, x_fraction: float = 0.5) -> None:
-        """Hover the plot and pin the point the hover resolved."""
+        """Hover the plot and pin the point the hover resolved, waiting for the site to store it.
+
+        The page posts the pin without waiting for the answer, so a navigation right after
+        the click can cut the request off before the site has the pin.
+        """
         logger.info("Pinning the point at %s of the plot width", x_fraction)
         self.hover_canvas(x_fraction)
-        self.add_pin_handle.click()
+        with self.page.expect_response(_is_pin_stored):
+            self.add_pin_handle.click()
 
     def remove_pin(self) -> None:
-        """Click the handle on the pinned point.
+        """Click the handle on the pinned point, waiting for the site to drop the pin.
 
         Pinning the hovered point leaves the hover's own handle stacked on the pin's, so the
         pointer has to leave the plot and the hover lapse before the pin's handle is the one
@@ -174,7 +206,8 @@ class TimeSeriesGraph:
         """
         self.root.hover(position={"x": 0, "y": 0})
         self.add_pin_handle.wait_for(state="detached")
-        self.pin_handle.click()
+        with self.page.expect_response(_is_pin_stored):
+            self.pin_handle.click()
 
 
 class GraphPanel:
@@ -189,6 +222,7 @@ class GraphPanel:
     def __init__(self, root: Locator, page: Page, document: MainArea) -> None:
         self.root = root
         self.page = page
+        self._document = document
         self.graph = TimeSeriesGraph(root.locator(".graphing-time-series-graph"), page, document)
 
     @property
@@ -201,12 +235,46 @@ class GraphPanel:
         return self.header.locator(".graphing-graph-title")
 
     @property
+    def _values_and_time_group(self) -> Locator:
+        """The header's first group containing the consolidation function selector (the "Data
+        aggregation" dropdown) and the time information (date/time and resolution).
+        """
+        return self.header.get_by_role(
+            role="group", name="Data aggregation and time information", exact=True
+        )
+
+    @property
+    def consolidation_control(self) -> Locator:
+        """The header's consolidation function selector (the "Data aggregation" dropdown).
+
+        Present only when the panel was told to show it; its shown text is the currently
+        selected function.
+        """
+        return self._values_and_time_group.get_by_role(
+            "combobox", name="Data aggregation", exact=True
+        )
+
+    def select_consolidation(self, option_label: str) -> None:
+        """Open the consolidation dropdown and pick the option shown as `option_label`."""
+        logger.info("Selecting the consolidation function '%s'", option_label)
+        self.consolidation_control.click()
+        options = self._document.locator(".cmk-suggestions")
+        expect(
+            options, f"The consolidation dropdown did not open to offer {option_label!r}"
+        ).to_be_visible()
+        option = options.get_by_role("option", name=option_label, exact=True)
+        expect(
+            option, f"The consolidation dropdown offered no {option_label!r} option"
+        ).to_be_visible()
+        option.click()
+
+    @property
     def resolution_note(self) -> Locator:
         return self.root.locator(".graphing-graph-header__resolution")
 
     @property
     def timestamp(self) -> Locator:
-        """The drawn window, e.g. ``for 2026-08-06 — 2026-08-07, resolution: 5 min``.
+        """The drawn window, e.g. ``Resolution 5 min 2026-08-06 — 2026-08-07``.
 
         Collapses to a single date whenever the window stays within one day. Not the
         ``.graphing-graph-timestamp`` of `GraphTimestamp.vue`: that one belongs to the
@@ -224,6 +292,16 @@ class GraphPanel:
         return self.root.locator(".graphing-graph-legend")
 
     @property
+    def action_menu_button(self) -> Locator:
+        """The panel's action-menu (burger menu) trigger button, if any."""
+        return self.header.get_by_role("button", name=ACTION_MENU_BUTTON_NAME, exact=True)
+
+    def open_action_menu(self) -> Locator:
+        """Open the action menu and return the locator of its dropdown."""
+        self.action_menu_button.click()
+        return self.root.locator(ACTION_MENU_DROPDOWN_SELECTOR)
+
+    @property
     def context_view(self) -> Locator:
         """The brush strip below the plot (the context view)."""
         return self.root.locator(".graphing-graph-brush")
@@ -239,6 +317,7 @@ class GraphPanel:
 
     def drag_context_view(self, offset_fraction: float) -> None:
         """Drag the context view's bar sideways by a fraction of the strip's width."""
+        self.context_view_bar.scroll_into_view_if_needed()
         bar_box = self.context_view_bar.bounding_box()
         strip_box = self.context_view.bounding_box()
         assert bar_box is not None and strip_box is not None, (
@@ -274,6 +353,20 @@ class ServiceGraphs:
         """Every graph the engine rendered, matched through the shared accessor."""
         return self._accessor.graph_root(GraphContainment.PAGE_DIRECT)
 
+    @property
+    def group(self) -> Locator:
+        return self._accessor.engine_graph_group(GraphContainment.PAGE_DIRECT)
+
+    def wait_until_settled(self) -> None:
+        """Wait for the panels to be back on the range they were asked for.
+
+        A refetching panel is drawn against the range its data covers, a step wider, so
+        geometry read across the switch is not comparable.
+        """
+        expect(self.group, "The graphs never stopped fetching").to_have_attribute(
+            "aria-busy", "false"
+        )
+
     def panel(self, index: int = 0) -> GraphPanel:
         return GraphPanel(self.panels.nth(index), self.page, self._main_area)
 
@@ -299,7 +392,7 @@ class ServiceGraphs:
         Scoped to the group, not to a panel: a first load that produced no panel at all
         puts its notice outside every panel.
         """
-        return self._main_area.locator(".graphing-graph-notice--error")
+        return self._main_area.locator(SURFACE_NOTICE_ERROR_SELECTOR)
 
     def panel_count(self) -> int:
         # ``.count()`` does not auto-wait, so this is only correct once
@@ -309,6 +402,33 @@ class ServiceGraphs:
 
     def all_panels(self) -> list[GraphPanel]:
         return [self.panel(index) for index in range(self.panel_count())]
+
+    @property
+    def pin_handles(self) -> Locator:
+        """The pin's handle on every panel drawing one; one locator, so a count spans the page."""
+        return self.panels.get_by_role("button", name=_REMOVE_PIN_LABEL)
+
+    def pin_positions(self) -> list[float]:
+        """Where each panel drawing a pin puts it, as a fraction of its plot width.
+
+        A fraction rather than the page x: each value axis is as wide as its own labels, so
+        the plots start at different x while marking the same instant. Read in one call, so a
+        refetch settling between two reads cannot move a panel under the ruler.
+        """
+        positions: list[float] = self.panels.evaluate_all(
+            "(panels, label) => panels.flatMap((panel) => {"
+            '  const handle = panel.querySelector(`button[aria-label="${label}"]`);'
+            "  const plot = panel.querySelector("
+            "    '.graphing-time-series-graph canvas[role=\"img\"]'"
+            "  );"
+            "  if (!handle || !plot) { return []; }"
+            "  const handleBox = handle.getBoundingClientRect();"
+            "  const plotBox = plot.getBoundingClientRect();"
+            "  return [(handleBox.x + handleBox.width / 2 - plotBox.x) / plotBox.width];"
+            "})",
+            _REMOVE_PIN_LABEL,
+        )
+        return positions
 
     @property
     def time_picker(self) -> GlobalTimePicker:

@@ -12,8 +12,8 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_form_submit_link, make_simple_link, PageMenuEntry
-from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.watolib.hosts_and_folders import Folder, Host, SearchFolder
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 # URL variable flag passed from the folder view to the host_action_menu ajax endpoint.
 HOST_ACTION_MENU_IDENT = "show_parentscan_link"

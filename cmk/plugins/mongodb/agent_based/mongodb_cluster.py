@@ -44,7 +44,9 @@ def discover_mongodb_cluster_databases(section: Section) -> DiscoveryResult:
 
 
 def check_mongodb_cluster_databases(
-    item: str, params: Mapping[str, Any], section: Section
+    item: str,
+    params: Mapping[str, Any],  # noqa: ARG001
+    section: Section,
 ) -> CheckResult:
     """
     checks:
@@ -366,7 +368,7 @@ def _mongodb_cluster_split_namespace(namespace: str) -> tuple[str, str]:
             return names[0], names[1]
         if len(names) > 0:
             return names[0], ""
-    except (ValueError, AttributeError):
+    except ValueError, AttributeError:
         pass
     raise ValueError(f"error parsing namespace {namespace}")
 

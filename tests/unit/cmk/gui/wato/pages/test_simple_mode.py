@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Sequence
 from os import devnull
@@ -18,6 +16,8 @@ from cmk.ccc.version import Edition
 from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import Dictionary, DictionaryEntry, TextInput
 from cmk.gui.wato.pages._simple_modes import SimpleEditMode, SimpleModeType
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
@@ -110,13 +110,9 @@ class SomeEditMode(SimpleEditMode[SomeSpec]):
         pytest.param(True, "clone", True, id="Clone"),
     ],
 )
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "monkeypatch")
 def test_page_form_render_entry_valuespec(
-    new: bool,
-    clone: str | None,
-    expected_form: bool,
-    monkeypatch: pytest.MonkeyPatch,
-    test_edition: Edition,
+    new: bool, clone: str | None, expected_form: bool, test_edition: Edition
 ) -> None:
     mode_type = SomeModeType()
     store = SomeStore(
@@ -131,13 +127,16 @@ def test_page_form_render_entry_valuespec(
     )
 
     mode = SomeEditMode(
-        test_edition, PageContext(config=Config(), request=request), mode_type, store
+        test_edition,
+        PageContext(config=Config(), request=request, transactions=transactions, session=session),
+        mode_type,
+        store,
     )
-    mode._entry = store._value
-    mode._new = new
-    mode._clone = clone
-    mode._page_form_render_entry_valuespec()
+    mode._entry = store._value  # noqa: SLF001
+    mode._new = new  # noqa: SLF001
+    mode._clone = clone  # noqa: SLF001
+    mode._page_form_render_entry_valuespec()  # noqa: SLF001
 
     vs_mock = mode.valuespec()
     assert vs_mock.render_input.call_count == 1  # type: ignore[attr-defined]
-    assert vs_mock.render_input.call_args[0][1] == (store._value if expected_form else {})  # type: ignore[attr-defined,typeddict-item]
+    assert vs_mock.render_input.call_args[0][1] == (store._value if expected_form else {})  # type: ignore[attr-defined,typeddict-item]  # noqa: SLF001

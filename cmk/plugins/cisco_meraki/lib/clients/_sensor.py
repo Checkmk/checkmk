@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 from collections.abc import Sequence
 from typing import Protocol
@@ -24,7 +23,7 @@ class SensorClient:
     def __init__(self, sdk: SensorSDK) -> None:
         self._sdk = sdk
 
-    def get_sensor_readings(self, id: str, /) -> Sequence[schema.RawSensorReadings]:
+    def get_sensor_readings(self, id: str, /) -> Sequence[schema.RawSensorReadings]:  # noqa: A002
         try:
             return self._sdk.getOrganizationSensorReadingsLatest(id, total_pages="all")
         except APIError as e:

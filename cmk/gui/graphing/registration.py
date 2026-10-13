@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+from cmk.ccc.version import Edition
+from cmk.gui.autocompleters import AutocompleterRegistry
+from cmk.gui.form_specs.unstable import MetricExtended
+from cmk.gui.form_specs.visitors import register_visitor_class
+from cmk.gui.pages import PageEndpoint, PageRegistry
+from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
+
+from ._autocompleter import monitored_metrics_autocompleter
+from ._graph_codec import community_graph_codec, GraphCodec
+from ._graph_dispatch import graph_dispatcher_registry, GraphDispatcherRegistry
+from ._graph_specification import graph_specification_registry
+from ._graph_templates import template_graph_dispatcher, TemplateGraphSpecification
+from ._metric_visitor import MetricVisitor
+from ._notification_graph_images import AjaxGraphImagesForNotifications
+from ._prediction_graphs import prediction_graph_dispatcher
+from ._prediction_page import PredictionPage, ServiceBreadcrumbFunc
+from ._settings import ConfigVariableGraphTimeranges
+from ._telemetry_metrics_registry import (
+    telemetry_metrics_backend_registry,
+    TelemetryMetricsBackend,
+)
+from ._valuespecs import LivestatusQueryFunc, PageVsAutocomplete
+
+
+def _register_graph_dispatchers(registry: GraphDispatcherRegistry, codec: GraphCodec) -> None:
+    # Every graph kind of the edition is registered with that one codec.
+    registry.register(template_graph_dispatcher(codec))
+    registry.register(prediction_graph_dispatcher(codec))
+
+
+def register(
+    edition: Edition,  # noqa: ARG001
+    page_registry: PageRegistry,
+    config_variable_registry: ConfigVariableRegistry,
+    autocompleter_registry: AutocompleterRegistry,
+    livestatus_query: LivestatusQueryFunc,
+) -> None:
+    page_registry.register(PageEndpoint("ajax_graph_images", AjaxGraphImagesForNotifications()))
+    page_registry.register(PageEndpoint("ajax_vs_unit_resolver", PageVsAutocomplete()))
+
+    config_variable_registry.register(ConfigVariableGraphTimeranges)
+
+    autocompleter_registry.register_autocompleter(
+        "monitored_metrics", monitored_metrics_autocompleter(livestatus_query)
+    )
+
+    graph_specification_registry.register(TemplateGraphSpecification)
+
+    _register_graph_dispatchers(graph_dispatcher_registry, community_graph_codec())
+
+    telemetry_metrics_backend_registry.register(TelemetryMetricsBackend())
+
+    register_visitor_class(MetricExtended, MetricVisitor)
+
+
+def register_prediction_page(
+    page_registry: PageRegistry, make_service_breadcrumb: ServiceBreadcrumbFunc
+) -> None:
+    page_registry.register(
+        PageEndpoint("prediction_graph", PredictionPage(make_service_breadcrumb))
+    )

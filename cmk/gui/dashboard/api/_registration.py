@@ -7,6 +7,7 @@ from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegist
 
 from ._family import DASHBOARD_FAMILY
 from .clone_relative_dashboard import ENDPOINT_CLONE_AS_RELATIVE_GRID_DASHBOARD
+from .compute_stats import ENDPOINT_COMPUTE_STATS
 from .compute_widget_attributes import ENDPOINT_COMPUTE_WIDGET_ATTRIBUTES
 from .compute_widget_titles import ENDPOINT_COMPUTE_WIDGET_TITLES
 from .create_relative_grid_dashboard import ENDPOINT_CREATE_RELATIVE_GRID_DASHBOARD
@@ -37,6 +38,7 @@ def register_endpoints(
     versioned_endpoint_registry.register(ENDPOINT_COMPUTE_WIDGET_ATTRIBUTES)
     versioned_endpoint_registry.register(ENDPOINT_COMPUTE_WIDGET_TITLES)
     versioned_endpoint_registry.register(ENDPOINT_FETCH_WIDGET_GRAPH_DATA)
+    versioned_endpoint_registry.register(ENDPOINT_COMPUTE_STATS)
     versioned_endpoint_registry.register(ENDPOINT_LIST_DASHBOARD_METADATA)
     versioned_endpoint_registry.register(ENDPOINT_CLONE_AS_RELATIVE_GRID_DASHBOARD)
     versioned_endpoint_registry.register(ENDPOINT_CREATE_DASHBOARD_TOKEN)

@@ -3,20 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     render,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.cisco.lib_ucs import DETECT, MAP_OPERABILITY
 
 # comNET GmbH, Fabian Binder - 2018-05-07
@@ -37,10 +35,6 @@ map_luntype = {
     "8": (0, "stripeParityStripe"),
     "9": (0, "stripeDualParityStripe"),
 }
-
-
-def discover_cisco_ucs_lun(section: StringTable) -> DiscoveryResult:
-    yield Service()
 
 
 def check_cisco_ucs_lun(section: StringTable) -> CheckResult:
@@ -73,6 +67,6 @@ snmp_section_cisco_ucs_lun = SimpleSNMPSection(
 check_plugin_cisco_ucs_lun = CheckPlugin(
     name="cisco_ucs_lun",
     service_name="LUN",
-    discovery_function=discover_cisco_ucs_lun,
+    discovery_function=discover_one_service,
     check_function=check_cisco_ucs_lun,
 )

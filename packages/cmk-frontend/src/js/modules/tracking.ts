@@ -15,7 +15,7 @@ import {
   repeatUrlsTable
 } from './tracking_database'
 
-export const currentUrl = window.location.pathname + window.location.search
+const currentUrl = window.location.pathname + window.location.search
 
 export async function activate_tracking(url: string, startTime: number, backendDuration: number) {
   // Expected to be called once all resources have been loaded.
@@ -123,8 +123,8 @@ function isMouseoverMutation(mutationRecords: MutationRecord[]): boolean {
   for (const mutation of mutationRecords) {
     if (mutation.target instanceof HTMLElement) {
       const className = mutation.target.className
-      // Ignore mouseovers over the graph in index.py
-      if (className == 'graph' || className == 'hover_menu') {
+      // Ignore mouseovers over the hover menu in index.py
+      if (className == 'hover_menu') {
         return true
       }
     }

@@ -36,6 +36,7 @@ def test_ui_theme_registration() -> None:
             site_neutral_var_dir=site_neutral_path(var_dir),
             configured_sites=SiteConfigurations({}),
             configured_graph_timeranges=[],
+            folder_choices=lambda: [("", "Main")],
         )
     )
     assert isinstance(form_spec, SingleChoiceExtended)
@@ -64,6 +65,7 @@ def test_ui_theme_default_value() -> None:
                 site_neutral_var_dir=site_neutral_path(var_dir),
                 configured_sites=SiteConfigurations({}),
                 configured_graph_timeranges=[],
+                folder_choices=lambda: [("", "Main")],
             )
         )
         assert isinstance(form_spec, SingleChoiceExtended)
@@ -87,6 +89,7 @@ DUMMY_CONTEXT = GlobalSettingsContext(
     site_neutral_var_dir=Path(""),
     configured_sites=SiteConfigurations({}),
     configured_graph_timeranges=[],
+    folder_choices=lambda: [("", "Main")],
 )
 
 

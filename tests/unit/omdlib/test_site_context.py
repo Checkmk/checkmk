@@ -20,7 +20,7 @@ def test_site_context() -> None:
 
 
 def test_site_context_replacements(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(os, "readlink", lambda x: "../2025.11.04.pro")
+    monkeypatch.setattr(os, "readlink", lambda x: "../2025.11.04.pro")  # noqa: ARG005
     site = SiteContext("dingeling")
     replacements = site.replacements()
 

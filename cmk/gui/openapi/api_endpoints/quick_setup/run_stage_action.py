@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Annotated, cast
 
 from cmk.ccc.site import SiteId
@@ -32,11 +33,17 @@ from cmk.gui.quick_setup.handlers.stage import (
     validate_stage_formspecs,
     verify_custom_validators_and_recap_stage,
 )
-from cmk.gui.quick_setup.handlers.utils import form_spec_parse
+from cmk.gui.quick_setup.handlers.utils import (
+    form_spec_parse,
+    stage_applicability_and_form_data,
+)
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
 from cmk.gui.quick_setup.v0_unstable.predefined._common import find_id_in_form_data
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupBackgroundStageAction
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    QuickSetupBackgroundStageAction,
+    QuickSetupContext,
+)
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ActionId,
     QuickSetupId,
@@ -78,7 +85,7 @@ def run_stage_action_v1(
     quick_setup = quick_setup_registry.get(quick_setup_id)
     if quick_setup is None:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Quick setup not found",
             detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
         )
@@ -92,7 +99,7 @@ def run_stage_action_v1(
         user.may(perm) for perm in stage_action.permissions
     ):
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Action not allowed",
             detail=(
                 f"Action with id '{stage_action_id}' requires "
@@ -100,11 +107,14 @@ def run_stage_action_v1(
             ),
         )
 
+    ctx = QuickSetupContext.from_config(api_context.config, api_context.user)
     built_stages = [stage() for stage in quick_setup.stages[: stage_index + 1]]
-    form_spec_map = build_formspec_map_from_stages(built_stages)
-    stages_raw_formspecs = [
-        RawFormData(cast(Mapping[FormSpecId, object], stage.form_data)) for stage in body.stages
-    ]
+    form_spec_map = build_formspec_map_from_stages(built_stages, ctx)
+    stage_applicability, stages_raw_formspecs = stage_applicability_and_form_data(
+        quick_setup.stages,
+        [RawFormData(cast(Mapping[FormSpecId, object], stage.form_data)) for stage in body.stages],
+        form_spec_map,
+    )
     errors = validate_stage_formspecs(
         stage_index=stage_index,
         stages_raw_formspecs=stages_raw_formspecs,
@@ -115,9 +125,10 @@ def run_stage_action_v1(
             body=QuickSetupStageActionResponseModel(
                 stage_recap=[],
                 validation_errors=_convert_validation_errors(errors),
+                stage_applicability=stage_applicability,
                 background_job_exception=None,
             ),
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
         )
 
     user_permission_config = UserPermissionSerializableConfig(
@@ -158,6 +169,13 @@ def run_stage_action_v1(
                 language=language,
                 user_permission_config=user_permission_config,
                 job_uuid=None,
+                site_configs=api_context.config.sites,
+                debug=api_context.config.debug,
+                use_git=api_context.config.wato_use_git,
+                pprint_value=api_context.config.wato_pprint_config,
+                wato_hide_folders_without_read_permissions=api_context.config.wato_hide_folders_without_read_permissions,
+                wato_host_attrs=api_context.config.wato_host_attrs,
+                tags=api_context.config.tags.get_dict_format(),
             )
 
         parameters: dict[str, str] = {"job_id": background_job_id}
@@ -180,10 +198,9 @@ def run_stage_action_v1(
         form_spec_map=form_spec_map,
         built_stages=built_stages,
         progress_logger=None,
-        site_configs=api_context.config.sites,
-        debug=api_context.config.debug,
+        ctx=ctx,
     )
-    status_code = 200 if result.validation_errors is None else 400
+    status_code = HTTPStatus.OK if result.validation_errors is None else HTTPStatus.BAD_REQUEST
     return ApiResponse(
         body=convert_stage_action_response(result),
         status_code=status_code,
@@ -203,7 +220,7 @@ ENDPOINT_RUN_STAGE_ACTION = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=run_stage_action_v1,
-            additional_status_codes=[303, 403],
+            additional_status_codes=[HTTPStatus.SEE_OTHER, HTTPStatus.FORBIDDEN],
         )
     },
 )

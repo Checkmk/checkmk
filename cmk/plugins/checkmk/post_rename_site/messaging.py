@@ -32,7 +32,7 @@ from cmk.post_rename_site.internal import (
 from cmk.utils import paths
 
 
-def update_broker_config(old_site_id: SiteId, new_site_id: SiteId, logger: Logger) -> None:
+def update_broker_config(old_site_id: SiteId, new_site_id: SiteId, logger: Logger) -> None:  # noqa: ARG001
     """
     Cleanup broker certificates of the renamed site and of the replicated sites
     so that they can be re-created at the next changes activation.

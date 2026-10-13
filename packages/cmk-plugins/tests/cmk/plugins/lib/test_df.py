@@ -6,7 +6,6 @@
 # mypy: disable-error-code="explicit-any"
 
 # TODO: test the interface, not the private members
-# ruff: noqa: SLF001
 
 
 from collections.abc import Iterable, Mapping, Sequence
@@ -720,7 +719,7 @@ def test_get_filesystem_levels_magic_factor(  # type: ignore[misc]
     ],
 )
 def test__check_summary_text(filesystem_levels: df.FilesystemLevels, summary: str) -> None:
-    assert df._check_summary_text(filesystem_levels) == summary
+    assert df._check_summary_text(filesystem_levels) == summary  # noqa: SLF001
 
 
 @pytest.mark.parametrize("allocatable_fs", [0, -1])

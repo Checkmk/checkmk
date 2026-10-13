@@ -30,15 +30,19 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import PageContext
 from cmk.gui.pagetypes import page_menu_add_to_topics
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import Choices, IconNames, StaticIcon, VisualContext
-from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.type_defs import ADD_TO_GRAPH_TYPES, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
 from cmk.gui.valuespec import AjaxDropdownChoice
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.utils import paths
+from cmk.web.utils.choices import Choice
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.request_cache import RequestCache
 
 
 def ajax_popup_add(ctx: PageContext) -> None:
@@ -109,7 +113,7 @@ def page_menu_dropdown_add_to_visual(
         )
 
     if (
-        add_type in ("pnpgraph", "custom_graph", "combined_graph")
+        add_type in ADD_TO_GRAPH_TYPES
         and cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY
     ):
         visual_topics.append(
@@ -170,7 +174,7 @@ class CreateInfoModel(BaseModel):
 
 
 def ajax_add_visual(ctx: PageContext) -> None:
-    check_csrf_token()
+    check_csrf_token(session, request, i18n=_)
     visual_type_name = request.get_str_input_mandatory("visual_type")  # dashboards / views / ...
     try:
         visual_type = visual_type_registry[visual_type_name]()
@@ -191,10 +195,11 @@ def ajax_add_visual(ctx: PageContext) -> None:
         create_info.context,
         create_info.params,
         UserPermissions.from_config(ctx.config, permission_registry),
+        RequestCache(ctx.config),
     )
 
 
-def page_menu_topic_add_to(visual_type: str, name: str, source_type: str) -> list[PageMenuTopic]:
+def page_menu_topic_add_to(visual_type: str, name: str, source_type: str) -> list[PageMenuTopic]:  # noqa: ARG001
     entries: list[PageMenuEntry] = []
     if visual_type != "availability":
         entries = [
@@ -234,7 +239,11 @@ def page_menu_topic_add_to(visual_type: str, name: str, source_type: str) -> lis
     ]
 
 
-def add_to_dashboard_choices_autocompleter(config: Config, value: str, params: dict) -> Choices:
+def add_to_dashboard_choices_autocompleter(
+    config: Config,
+    value: str,
+    params: dict,  # noqa: ARG001
+) -> list[Choice]:
     return get_visual_choices(
         visual_type_name="dashboards",
         value=value,
@@ -244,10 +253,10 @@ def add_to_dashboard_choices_autocompleter(config: Config, value: str, params: d
 
 def get_visual_choices(
     visual_type_name: str, value: str, user_permissions: UserPermissions
-) -> Choices:
+) -> list[Choice]:
     validate_regex(value, varname=None)
     match_pattern = re.compile(value, re.IGNORECASE)
-    matching_visuals: Choices = []
+    matching_visuals: list[Choice] = []
     visual_type = visual_type_registry[visual_type_name]()
     for entry in visual_type.page_menu_add_to_entries("unknown", user_permissions):
         if entry.name is not None and match_pattern.search(entry.title) is not None:

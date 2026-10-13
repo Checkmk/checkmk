@@ -13,11 +13,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.ups.lib import check_ups_out_voltage, DETECT_UPS_GENERIC
-
-
-def parse_ups_out_voltage(string_table: StringTable) -> StringTable:
-    return string_table
+from cmk.plugins.ups.lib import check_ups_out_voltage, DETECT_UPS_GENERIC, parse_ups_voltage
 
 
 def discover_ups_out_voltage(section: StringTable) -> DiscoveryResult:
@@ -31,7 +27,7 @@ snmp_section_ups_out_voltage = SimpleSNMPSection(
         base=".1.3.6.1.2.1.33.1.4.4.1",
         oids=[OIDEnd(), "2"],
     ),
-    parse_function=parse_ups_out_voltage,
+    parse_function=parse_ups_voltage,
 )
 
 

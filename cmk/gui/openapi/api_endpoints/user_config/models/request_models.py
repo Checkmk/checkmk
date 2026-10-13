@@ -26,6 +26,7 @@ from cmk.gui.openapi.framework.model.converter import (
 )
 from cmk.gui.openapi.framework.model.dynamic_fields import WithDynamicFields
 from cmk.gui.openapi.framework.model.restrict_editions import after_validator_for_customer_field
+from cmk.gui.type_defs import DismissableWarning
 from cmk.gui.userdb import all_user_attributes
 
 from .._utils import (
@@ -354,7 +355,7 @@ class CreateTimePickerModel:
         description="The first day of the week in the calendar. 'browser_locale' derives it from "
         "the browser's language settings.",
         example="monday",
-        default="browser_locale",
+        default="monday",
     )
     default_time_range: _TimeRangeOption = api_field(
         description="The time range the picker preselects.",
@@ -803,13 +804,7 @@ class UpdateUserModel(WithDynamicFields):
 
 @api_model
 class UserDismissWarningModel:
-    warning: Literal[
-        "notification_fallback",
-        "immediate_slideout_change",
-        "changes-info",
-        "agent_slideout",
-        "automatic_crash_report_upload",
-    ] = api_field(
+    warning: DismissableWarning = api_field(
         description="The warning to be dismissed.",
         example="notification_fallback",
     )

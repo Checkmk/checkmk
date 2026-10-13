@@ -6,32 +6,29 @@
 
 """Launches automation helper application for processing automation commands."""
 
-import multiprocessing
 import os
 import signal
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 
 from fastapi import FastAPI
 from setproctitle import setproctitle
 
-import cmk.ccc.version as cmk_version
+from cmk.automations.engine import Automations, discover_automations
+from cmk.automations.helper import (
+    Cache,
+    config_from_disk_or_default_config,
+    configure_tracer,
+    make_application,
+    run_server,
+    run_watcher,
+)
 from cmk.automations.logging import LoggingManager
 from cmk.base import config
-from cmk.base.automations.automations import Automations, discover_automations
-from cmk.base.config import ConfigCache
 from cmk.ccc.daemon import daemonize, pid_file_lock
-from cmk.ccc.hostaddress import Hosts
-from cmk.utils.caching import cache_manager
 from cmk.utils.paths import omd_root
 from cmk.utils.redis import get_redis_client
-
-from ._app import make_application
-from ._cache import Cache
-from ._config import config_from_disk_or_default_config
-from ._server import run as run_server
-from ._tracer import configure_tracer
-from ._watcher import run as run_watcher
 
 _RELATIVE_RUN_DIRECTORY = Path("tmp", "run")
 _RELATIVE_LOG_DIRECTORY = Path("var", "log", "automation-helper")
@@ -63,7 +60,7 @@ def _main() -> int:
     if config.server_config.num_workers == 1:
         # In single-worker mode, uvicorn re-raises captured signals after shutting down the server.
         # We need to catch the re-raised SIGTERM signal to exit cleanly.
-        signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))
+        signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))  # noqa: ARG005
 
     log_manager = LoggingManager()
     with (
@@ -104,42 +101,16 @@ def _application() -> FastAPI:
         # uvicorn will spawn subprocesses in this case, so we need to re-initialize
         setproctitle("cmk-automation-helper[worker]")
         os.unsetenv("LANG")
-        # When running in a uvicorn worker launched via multiprocessing (n_workers > 1), the global
-        # multiprocessing start method is set to "spawn" by the uvicorn multiprocessing code (could be
-        # unintentional). We have automation calls that rely on "fork" as the start method.
-        _reset_global_multiprocessing_start_method_to_platform_default()
         configure_tracer(omd_root)
 
     return make_application(
-        edition=cmk_version.edition(omd_root),
-        engine=Automations(plugins=discover_automations()),
+        omd_root=omd_root,
+        engine=Automations(discover_automations()),
         cache=Cache.setup(client=get_redis_client()),
         config=config,
         reload_config=_reload_automation_config,
-        clear_caches_before_each_call=_clear_caches_before_each_call,
     )
 
 
-def _reset_global_multiprocessing_start_method_to_platform_default() -> None:
-    multiprocessing.set_start_method(None, force=True)
-    multiprocessing.get_start_method(allow_none=False)
-
-
-def _reload_automation_config() -> config.LoadingResult:
-    cache_manager.clear()
-    return config.load(
-        cmk_version.edition(omd_root),
-        validate_hosts=False,
-    )
-
-
-def _clear_caches_before_each_call(config_cache: ConfigCache, hosts_config: Hosts) -> None:
-    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
-        {
-            hn
-            for hn in set(hosts_config.hosts).union(hosts_config.clusters)
-            if config_cache.is_active(hn) and config_cache.is_online(hn)
-        }
-    )
-    config_cache.ruleset_matcher.ruleset_optimizer.clear_caches()
-    config_cache.ruleset_matcher.ruleset_optimizer.clear_ruleset_caches()
+def _reload_automation_config() -> Mapping[str, object]:
+    return config.load_raw_config(with_conf_d=True)

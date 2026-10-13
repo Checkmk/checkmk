@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 import sys
 from collections.abc import Callable, MutableMapping
 from dataclasses import dataclass
+from http import HTTPStatus
 from typing import NoReturn, Self
 
 import requests
@@ -163,14 +163,14 @@ def _send_func_trb140(context: Context) -> int:
 
         response.raise_for_status()
 
-        if response.status_code != 200 or not response.content.startswith(b"OK\n"):
+        if response.status_code != HTTPStatus.OK or not response.content.startswith(b"OK\n"):
             sys.stderr.write(
                 f"Error Status: {response.status_code} Details: {response.content!r}\n"
             )
             return 2
 
     except requests.exceptions.HTTPError as e:
-        sys.stderr.write(f"HTTPError sending SMS: {e}, {response.content!r}\n")
+        sys.stderr.write(f"HTTPError sending SMS: {e}, {response.content!r}\n")  # type: ignore[possibly-undefined]
         return 2
 
     except Exception as e:
@@ -216,7 +216,7 @@ def _trb140_api(context: Context) -> int:
         )
         sms_response.raise_for_status()
 
-        if sms_response.json().get("success") is True and sms_response.status_code == 200:
+        if sms_response.json().get("success") is True and sms_response.status_code == HTTPStatus.OK:
             sys.stdout.write("Notification successfully sent via sms.\n")
             return 0
 

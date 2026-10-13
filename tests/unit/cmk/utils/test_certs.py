@@ -6,6 +6,7 @@
 from datetime import datetime, UTC
 from ipaddress import ip_address, ip_network
 from pathlib import Path
+from stat import S_IMODE
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -18,6 +19,18 @@ from cmk.crypto.certificate import Certificate, CertificatePEM, CertificateWithP
 from cmk.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
 from cmk.crypto.x509 import SAN, SubjectAlternativeNames, X509Name
 from cmk.utils.certs import CN_TEMPLATE, CustomerBrokerCA, RelaysCA, RootCA, SiteCA
+
+SITE_ID = SiteId("test_site")
+
+
+@pytest.fixture(name="ca")
+def fixture_ca(tmp_path: Path) -> SiteCA:
+    ca_path = tmp_path / "site" / "etc" / "ssl"
+    return SiteCA.load_or_create(
+        site_id=SITE_ID,
+        certificate_directory=ca_path,
+        key_size=1024,
+    )
 
 
 @pytest.fixture(name="ca_cert_files")
@@ -179,17 +192,17 @@ def test_create_root_ca_and_key(tmp_path: Path) -> None:
     assert ca.certificate.public_key == ca.private_key.public_key
 
     # check extensions
-    assert ca.certificate._cert.extensions.get_extension_for_class(
+    assert ca.certificate._cert.extensions.get_extension_for_class(  # noqa: SLF001
         x509.SubjectKeyIdentifier
-    ).value == x509.SubjectKeyIdentifier.from_public_key(ca.certificate.public_key._key), (
+    ).value == x509.SubjectKeyIdentifier.from_public_key(ca.certificate.public_key._key), (  # noqa: SLF001
         "subject key identifier is set and corresponds to the cert's public key"
     )
 
-    assert ca.certificate._cert.extensions.get_extension_for_class(
+    assert ca.certificate._cert.extensions.get_extension_for_class(  # noqa: SLF001
         x509.BasicConstraints
     ).value == x509.BasicConstraints(ca=True, path_length=0), "is a CA certificate"
 
-    assert ca.certificate._cert.extensions.get_extension_for_class(
+    assert ca.certificate._cert.extensions.get_extension_for_class(  # noqa: SLF001
         x509.KeyUsage
     ).value == x509.KeyUsage(
         digital_signature=False,
@@ -205,11 +218,11 @@ def test_create_root_ca_and_key(tmp_path: Path) -> None:
 
     assert filename.exists()
     loaded = RootCA.load(filename)
-    assert loaded.certificate._cert == ca.certificate._cert
+    assert loaded.certificate._cert == ca.certificate._cert  # noqa: SLF001
     assert _rsa_private_keys_equal(loaded.private_key, ca.private_key)
 
 
-def test_sign_csr_with_local_ca() -> None:
+def test_sign_csr_with_local_ca(tmp_path: Path) -> None:
     # To test that 'sign_csr' sets the issuer correctly (regression), make a longer chain:
     # "peters_mom" -> "peter" (RootCA instance) -> "peters_daughter" (via sign_csr)
     #
@@ -251,6 +264,7 @@ MC4CAQAwBQYDK2VwBCIEIK/fWo6sKC4PDigGfEntUd/o8KKs76Hsi03su4QhpZox
             subject_alternative_names=alt_names,
             expiry=relativedelta(days=100),
             key_size=1024,
+            cert_log=tmp_path / "issued.jsonl",
         )
 
     assert str(daughter_cert.not_valid_before) == "1987-12-30 19:48:41+00:00"
@@ -262,6 +276,46 @@ MC4CAQAwBQYDK2VwBCIEIK/fWo6sKC4PDigGfEntUd/o8KKs76Hsi03su4QhpZox
     assert daughter_cert.common_name == "peters_daughter", "subject CN is the daughter"
     assert daughter_cert.subject_alternative_names == alt_names, "subject alt name is the daughter"
     assert daughter_cert.issuer == peter_cert.subject, "issuer is peter"
+
+
+def test_initialize(ca: SiteCA) -> None:
+    assert isinstance(ca.root_ca.certificate.common_name, str)
+    assert ca.root_ca.certificate.common_name.startswith(f"Site '{SITE_ID}' local CA")
+    assert ca.root_ca.certificate.public_key == ca.root_ca.private_key.public_key
+
+
+def _file_permissions_is_660(path: Path) -> bool:
+    return oct(S_IMODE(path.stat().st_mode)) == "0o660"
+
+
+def test_create_site_certificate(ca: SiteCA) -> None:
+    assert not ca.site_certificate_exists(ca.cert_dir, SITE_ID)
+
+    ca.create_site_certificate(
+        SITE_ID,
+        additional_sans=["checkmk.testing.local", "127.0.0.1"],
+        key_size=1024,
+    )
+    assert ca.site_certificate_exists(ca.cert_dir, SITE_ID)
+    assert _file_permissions_is_660(ca.site_certificate_path(ca.cert_dir, SITE_ID))
+
+    mixed_pem = ca.site_certificate_path(ca.cert_dir, SITE_ID).read_bytes()
+    certificate = Certificate.load_pem(CertificatePEM(mixed_pem))
+    private_key = PrivateKey.load_pem(PlaintextPrivateKeyPEM(mixed_pem), None)
+
+    assert certificate.common_name == str(SITE_ID)
+    assert certificate.public_key == private_key.public_key
+    certificate.verify_is_signed_by(ca.root_ca.certificate)
+
+    expected_sans = [
+        SAN.dns_name("test_site"),
+        SAN.dns_name("checkmk.testing.local"),
+        SAN.checkmk_site(SiteId("test_site")),
+        SAN.ip_address(ip_address("127.0.0.1")),
+    ]
+    assert sorted(certificate.subject_alternative_names or [], key=str) == sorted(
+        expected_sans, key=str
+    )
 
 
 def test_site_certificate_alternative_names(ca_cert_files: Path) -> None:
@@ -291,7 +345,7 @@ def test_relays_ca_create_and_load(tmp_path: Path) -> None:
     cert_dir = tmp_path / "etc" / "ssl"
     relays_ca = RelaysCA.create(cert_dir=cert_dir, site_id=SiteId("relay"), key_size=1024)
 
-    relays_ca_path = RelaysCA._ca_file(cert_dir)
+    relays_ca_path = RelaysCA.root_ca_path(cert_dir)
     assert relays_ca_path == cert_dir / "relays" / "ca.pem"
     assert relays_ca_path.is_file()
 

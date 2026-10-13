@@ -29,12 +29,12 @@ pkg_files(
 pkg_files(
     name = "webconf_snapin",
     srcs = [
-        "webconf_snapin.py",
+        ":omd_appliance_py",
     ],
     attributes = pkg_attributes(
         mode = "0644",
     ),
-    prefix = "lib/python3.13/site-packages/cmk/gui/plugins/sidebar",
+    prefix = "lib/python3.14/site-packages/cmk/gui/plugins/sidebar",
     tags = ["manual"],
 )
 

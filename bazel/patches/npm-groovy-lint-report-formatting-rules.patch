@@ -1,0 +1,200 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sven Panne <sven.panne@checkmk.com>
+Date: Wed, 7 Oct 2026 08:50:14 +0200
+Subject: [PATCH] feat(lint): report the changes of the formatting rules to
+ always run
+
+--format always runs IndentationClosingBraces and IndentationComments,
+which exist only in npm-groovy-lint. Linting never reported them, so a
+file could pass linting with the format configuration although --format
+changed it.
+
+If these rules are enabled in the configuration, linting now reports
+the lines which they change when --format applies them to a file
+without other violations. Like --format, this ignores disable comments.
+
+Rules which exist only in npm-groovy-lint are no longer passed to
+CodeNarc, which rejects them as unknown.
+---
+ lib/codenarc-factory.js               | 40 +++++++++++++++++++++++----
+ lib/groovy-lint-fix.js                | 28 +++++++++++++++++++
+ lib/groovy-lint-rules.js              |  6 +++-
+ lib/rules/IndentationClosingBraces.js |  1 +
+ lib/rules/IndentationComments.js      |  1 +
+ 5 files changed, 69 insertions(+), 7 deletions(-)
+
+diff --git a/lib/codenarc-factory.js b/lib/codenarc-factory.js
+index 436cbcc..cfd6612 100644
+--- a/lib/codenarc-factory.js
++++ b/lib/codenarc-factory.js
+@@ -9,7 +9,8 @@ import * as os from "os";
+ import * as path from "path";
+ import { getConfigFileName } from "./config.js";
+ import { collectDisabledBlocks, isFilteredError } from "./filter.js";
+-import { getNpmGroovyLintRules } from "./groovy-lint-rules.js";
++import { getFormattingRulesToAlwaysRunChanges } from "./groovy-lint-fix.js";
++import { getFormattingRulesToAlwaysRun, getNpmGroovyLintRules } from "./groovy-lint-rules.js";
+ import { evaluateRange, evaluateRangeFromLine, evaluateVariables, getLinesInfo, getSourceLines, normalizeNewLines } from "./utils.js";
+ import { fileURLToPath } from "url";
+ const __dirname = path.dirname(fileURLToPath(import.meta.url));
+@@ -316,9 +317,11 @@ async function parseCodeNarcResult(options, codeNarcBaseDir, codeNarcJsonResult,
+             const disabledBlocks = collectDisabledBlocks(allLines);
+             // Get strings and code in the source, for violations in the content of string literals
+             const linesInfo = getLinesInfo(allLines);
++            // Get the lines which the formatting rules to always run would change
++            const formattingViolations = await getFormattingRulesToAlwaysRunViolations(allLines, options.rules);
+ 
+             // Browse CodeNarc XML file reported errors
+-            for (const violation of fileInfo.violations) {
++            for (const violation of [...fileInfo.violations, ...formattingViolations]) {
+                 const errItem = {
+                     id: errId,
+                     line: violation.lineNumber ? parseInt(violation.lineNumber, 10) : 0,
+@@ -329,8 +332,9 @@ async function parseCodeNarcResult(options, codeNarcBaseDir, codeNarcJsonResult,
+                 };
+                 errItem.msg = tmpGroovyFileNameReplace ? errItem.msg.replace(tmpGroovyFileNameReplace, "") : errItem.msg;
+ 
+-                // Check if error must be filtered because of comments
+-                if (isFilteredError(errItem, allLines, disabledBlocks, linesInfo)) {
++                // Check if error must be filtered because of comments (except for the formatting rules to always run, which
++                // --format applies in spite of comments)
++                if (!formattingViolations.includes(violation) && isFilteredError(errItem, allLines, disabledBlocks, linesInfo)) {
+                     continue;
+                 }
+ 
+@@ -461,6 +465,7 @@ async function buildRuleSets(options) {
+     }
+     // Rules from config file, only if rulesets has not been sent as argument
+     if ((ruleSetsDef.length === 0 || options.rulesetsoverridetype === "appendConfig") && options.rules) {
++        const npmGroovyLintRules = await getNpmGroovyLintRules();
+         for (const ruleName of Object.keys(options.rules)) {
+             let ruleDef = options.rules[ruleName];
+             // If rule has been overridden in argument, set it on top of config file properties
+@@ -474,8 +479,8 @@ async function buildRuleSets(options) {
+                           ? ruleFromRuleSetsArg
+                           : ruleDef;
+             }
+-            // Add in the list of rules to test , except if it is disabled
+-            if (!(ruleDef === "off" || ruleDef.disabled === true || ruleDef.enabled === false)) {
++            // Add in the list of rules to test , except if it is disabled or exists only in npm-groovy-lint
++            if (isEnabledRule(ruleDef) && npmGroovyLintRules[ruleName]?.isCodeNarcRule !== false) {
+                 const codeNarcRule = buildCodeNarcRule(ruleName, ruleDef);
+                 if (ruleFromRuleSetsArgPos > -1) {
+                     ruleSetsDef[ruleFromRuleSetsArgPos] = codeNarcRule;
+@@ -532,6 +537,29 @@ function getCodeNarcPriorityCode(ruleFromConfig) {
+     return null;
+ }
+ 
++// Check if a rule is enabled in the configuration
++function isEnabledRule(ruleFromConfig) {
++    return ruleFromConfig != null && !(ruleFromConfig === "off" || ruleFromConfig.disabled === true || ruleFromConfig.enabled === false);
++}
++
++// Violations like the ones returned by CodeNarc for the lines which the formatting rules to always run would change.
++// These rules exist only in npm-groovy-lint, and are reported if they are enabled in the configuration (as info by default)
++async function getFormattingRulesToAlwaysRunViolations(allLines, rules = {}) {
++    if (!getFormattingRulesToAlwaysRun().some((ruleName) => isEnabledRule(rules[ruleName]))) {
++        return [];
++    }
++    const npmGroovyLintRules = await getNpmGroovyLintRules();
++    const changes = await getFormattingRulesToAlwaysRunChanges(allLines);
++    return changes
++        .filter((change) => isEnabledRule(rules[change.ruleName]))
++        .map((change) => ({
++            lineNumber: change.line,
++            ruleName: change.ruleName,
++            priority: getCodeNarcPriorityCode(rules[change.ruleName]) || 3,
++            message: npmGroovyLintRules[change.ruleName].message,
++        }));
++}
++
+ function directoryExists(resolvedPath) {
+     try {
+         return fs.statSync(resolvedPath).isDirectory();
+diff --git a/lib/groovy-lint-fix.js b/lib/groovy-lint-fix.js
+index 3f84701..a4158d4 100644
+--- a/lib/groovy-lint-fix.js
++++ b/lib/groovy-lint-fix.js
+@@ -21,6 +21,34 @@ function replaceLine(allLines, lineNb, newLine) {
+     return newLines;
+ }
+ 
++// The changes of the formatting rules to always run, applied like fixErrors() applies them when there is nothing else
++// to fix: one { ruleName, line } per line which a rule changes, line numbers starting at 1
++export async function getFormattingRulesToAlwaysRunChanges(allLines) {
++    const npmGroovyLintRules = await getNpmGroovyLintRules();
++    const stringLiterals = getStringLiterals(allLines);
++    const ruleNames = [...getFormattingRulesToAlwaysRun()].sort((a, b) => npmGroovyLintRules[a].priority - npmGroovyLintRules[b].priority);
++    const changes = [];
++    for (const ruleName of ruleNames) {
++        let allLinesNew;
++        try {
++            allLinesNew = npmGroovyLintRules[ruleName].fix.func([...allLines]);
++        } catch (e) {
++            debug(e.message);
++            continue;
++        }
++        if (getStringLiterals(allLinesNew) !== stringLiterals) {
++            continue;
++        }
++        for (let lineNb = 0; lineNb < Math.max(allLines.length, allLinesNew.length); lineNb++) {
++            if (allLinesNew[lineNb] !== allLines[lineNb]) {
++                changes.push({ ruleName, line: lineNb + 1 });
++            }
++        }
++        allLines = allLinesNew;
++    }
++    return changes;
++}
++
+ export class NpmGroovyLintFix {
+     options = {};
+ 
+diff --git a/lib/groovy-lint-rules.js b/lib/groovy-lint-rules.js
+index ff903d6..bb46e16 100644
+--- a/lib/groovy-lint-rules.js
++++ b/lib/groovy-lint-rules.js
+@@ -10,6 +10,9 @@
+         // add isCodeNarcRule: false if the rule is not part of CodeNarc list of supported rules ( but triggered by another rule with trigger property)
+         isCodeNarcRule: false, // default: true
+ 
++        // Message of the violations of a formatting rule to always run, for the lines which its fix would change
++        message: "The line is not formatted",
++
+         // If the fix rule must be run only once by file, set unitary = true
+         unitary: false,
+ 
+@@ -157,7 +160,8 @@ const rulesFixPriorityOrder = [
+ ];
+ 
+ // CodeNarc formatting fix rules are triggered after CodeNarc returns violations
+-// Non-CodeNarc formatting fix rules (existing only in npm-groovy-lint) must be run always
++// Non-CodeNarc formatting fix rules (existing only in npm-groovy-lint) must be run always. If they are enabled in the
++// configuration, lint reports the lines which they would change as violations
+ const formatRulesToAlwaysRun = ["IndentationClosingBraces", "IndentationComments"];
+ 
+ const __dirname = path.dirname(fileURLToPath(import.meta.url));
+diff --git a/lib/rules/IndentationClosingBraces.js b/lib/rules/IndentationClosingBraces.js
+index 1b7dfa2..afa773e 100644
+--- a/lib/rules/IndentationClosingBraces.js
++++ b/lib/rules/IndentationClosingBraces.js
+@@ -11,6 +11,7 @@ function getIndentWidth(line) {
+ const rule = {
+     scope: "file",
+     isCodeNarcRule: false,
++    message: "The closing brace is not indented like the line of its opening brace",
+     fix: {
+         label: "Fix indentation closing braces",
+         type: "function",
+diff --git a/lib/rules/IndentationComments.js b/lib/rules/IndentationComments.js
+index bcdd7d5..a7bae3c 100644
+--- a/lib/rules/IndentationComments.js
++++ b/lib/rules/IndentationComments.js
+@@ -5,6 +5,7 @@ import { getLinesInfo } from "../utils.js";
+ const rule = {
+     scope: "file",
+     isCodeNarcRule: false,
++    message: "The comment is not indented like the code after it",
+     fix: {
+         label: "Fix indentation",
+         type: "function",

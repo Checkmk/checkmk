@@ -521,17 +521,20 @@ def _valuespec_signature_keys() -> MultipleChoiceExtended:
             "being created <a href='%(url)s' target='_blank'>here</a>."
         )
         % {"url": "wato.py?mode=signature_keys"},
-        elements=[
-            MultipleChoiceElementExtended(
-                name=key.certificate,
-                title=Title("%(alias)s") % {"alias": key.alias},
-            )
-            for key in sorted(
-                _make_agent_sign_keypair_store().load().values(), key=lambda k: k.alias
-            )
-        ],
+        # The keys are loaded lazily, since they may change while the form spec is cached
+        elements=_signature_key_elements,
         custom_validate=(_validate_signature_keys,),
     )
+
+
+def _signature_key_elements() -> list[MultipleChoiceElementExtended]:
+    return [
+        MultipleChoiceElementExtended(
+            name=key.certificate,
+            title=Title("%(alias)s") % {"alias": key.alias},
+        )
+        for key in sorted(_make_agent_sign_keypair_store().load().values(), key=lambda k: k.alias)
+    ]
 
 
 def _make_agent_sign_keypair_store() -> KeypairStore:

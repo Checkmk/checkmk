@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
+import json
+from dataclasses import asdict
+from datetime import date
 from pathlib import Path
 from unittest.mock import patch
 
@@ -15,14 +15,17 @@ from pytest_mock import MockerFixture
 from livestatus import SiteConfigurations
 
 from cmk.ccc.site import SiteId
+from cmk.crypto.certificate import CertificateRevocationList, CertificateRevocationListPEM
+from cmk.crypto.issued_certificates import IssuedCertificateEntry
 from cmk.gui.cmkcert.main import (
     _certificate_path,
     _run_init,
+    _run_revoke,
     _run_rotate,
-    CertificateType,
+    InitCertificateType,
 )
 from cmk.gui.config import Config
-from cmk.utils.certs import cert_dir, SiteCA
+from cmk.utils.certs import cert_dir, crl_path, issued_certificates_path, RootCA, SiteCA
 
 
 @pytest.fixture(name="omd_root")
@@ -30,11 +33,11 @@ def fixture_omd_root(tmp_path: Path) -> Path:
     return tmp_path / "test_root"
 
 
-def _site_id():
-    return "test_site"
+def _site_id() -> SiteId:
+    return SiteId("test_site")
 
 
-def _dummy_certificate():
+def _dummy_certificate() -> str:
     return """-----BEGIN CERTIFICATE-----
 MIICRjCCAa+gAwIBAgIUIzp8u+4nxaYgZwyOUGJS8j/4yUAwDQYJKoZIhvcNAQEN
 BQAwOzEdMBsGA1UEAwwUU2l0ZSAndjI1MCcgbG9jYWwgQ0ExGjAYBgNVBAoMEUNo
@@ -52,7 +55,7 @@ eGAPlxJ2poGukdPO/ae6pEDcwK7zz6nA2PxmvcAZmm5/BAlxA7NYjJaXG/TPcOBh
 -----END CERTIFICATE-----"""
 
 
-def _dummy_key():
+def _dummy_key() -> str:
     return """-----BEGIN PRIVATE KEY-----
 MIICeAIBADANBgkqhkiG9w0BAQEFAASCAmIwggJeAgEAAoGBAMn1UiDKNT3B/woi
 OEqV0nDpoZf6RND98UsFVf7QmzYnsRoSCKulFpJOmLLJqcZWnNhPPR+sAuFrOMC9
@@ -75,7 +78,7 @@ def _dummy_cert_with_key() -> str:
     return f"{_dummy_key()}\n{_dummy_certificate()}"
 
 
-def _create_dummy(omd_root: Path, target_certificate: CertificateType) -> Path:
+def _create_dummy(omd_root: Path, target_certificate: InitCertificateType) -> Path:
     cert_path = _certificate_path(
         omd_root=omd_root,
         site_id=_site_id(),
@@ -106,7 +109,7 @@ def fixture_agent_ca(omd_root: Path) -> Path:
     return agent_ca_path
 
 
-def _test_init(omd_root: Path, target_cert: CertificateType) -> None:
+def _test_init(omd_root: Path, target_cert: InitCertificateType) -> None:
     site_id = _site_id()
     cert_path = _certificate_path(
         omd_root=omd_root,
@@ -131,13 +134,15 @@ def _test_init(omd_root: Path, target_cert: CertificateType) -> None:
     [
         "site-ca",
         "agent-ca",
+        "relay-ca",
     ],
 )
-def test_init_cas(omd_root: Path, target_cert: CertificateType) -> None:
+def test_init_cas(omd_root: Path, target_cert: InitCertificateType) -> None:
     _test_init(omd_root, target_cert)
 
 
-def test_init_site(site_ca: Path, omd_root: Path) -> None:
+@pytest.mark.usefixtures("site_ca")
+def test_init_site(omd_root: Path) -> None:
     _create_dummy(omd_root, "site-ca")
     _test_init(omd_root, "site")
 
@@ -147,11 +152,12 @@ def test_init_site(site_ca: Path, omd_root: Path) -> None:
     [
         "site-ca",
         "agent-ca",
+        "relay-ca",
         "site",
     ],
 )
 def test_init_cert_does_not_replace_existing(
-    omd_root: Path, target_certificate: CertificateType
+    omd_root: Path, target_certificate: InitCertificateType
 ) -> None:
     _create_dummy(omd_root, target_certificate)
 
@@ -164,7 +170,33 @@ def test_init_cert_does_not_replace_existing(
         )
 
 
-def test_rotate_site(mocker: MockerFixture, omd_root: Path, site_ca: Path) -> None:
+@pytest.mark.parametrize(
+    "target_certificate",
+    [
+        "site-ca",
+        "agent-ca",
+        "relay-ca",
+        "site",
+    ],
+)
+def test_init_if_missing_keeps_existing(
+    omd_root: Path, target_certificate: InitCertificateType
+) -> None:
+    cert_path = _create_dummy(omd_root, target_certificate)
+
+    _run_init(
+        omd_root=omd_root,
+        site_id=_site_id(),
+        target_certificate=target_certificate,
+        key_size=1024,
+        if_missing=True,
+    )
+
+    assert cert_path.read_text() == _dummy_cert_with_key()
+
+
+@pytest.mark.usefixtures("site_ca")
+def test_rotate_site(mocker: MockerFixture, omd_root: Path) -> None:
     _mock_site_and_config(mocker)
     _create_dummy(omd_root, "site-ca")
     _create_dummy(omd_root, "site")
@@ -244,11 +276,8 @@ def _mock_site_and_config(mocker: MockerFixture) -> None:
     ]
 
 
-def test_rotate_site_ca(
-    mocker: MockerFixture,
-    omd_root: Path,
-    site_ca: Path,
-) -> None:
+@pytest.mark.usefixtures("site_ca")
+def test_rotate_site_ca(mocker: MockerFixture, omd_root: Path) -> None:
     _mock_site_and_config(mocker)
 
     with (
@@ -279,3 +308,179 @@ def test_rotate_site_ca(
     )
 
     assert "BEGIN CERTIFICATE" in SiteCA.root_ca_path(cert_dir(omd_root)).read_text()
+
+
+def test_rotate_agent_ca(omd_root: Path, agent_ca: Path) -> None:
+    with patch("cmk.gui.cmkcert.cmkcert_rotate._reload_agent_receiver") as mock_reload:
+        _run_rotate(
+            omd_root=omd_root,
+            site_id=_site_id(),
+            target_certificate="agent-ca",
+            expiry=90,
+            finalize=False,
+        )
+        mock_reload.assert_called_once()
+
+    retired_ca = agent_ca.with_name(f"{date.today().isoformat()}_ca_old.pem")
+    assert retired_ca.read_text() == _dummy_cert_with_key()
+    assert "BEGIN CERTIFICATE" in agent_ca.read_text()
+    assert agent_ca.read_text() != _dummy_cert_with_key()
+
+    with pytest.raises(ValueError):
+        _run_rotate(
+            omd_root=omd_root,
+            site_id=_site_id(),
+            target_certificate="agent-ca",
+            expiry=90,
+            finalize=False,
+        )
+
+
+def _dummy_common_name() -> str:
+    return "Site 'v250' local CA"
+
+
+def _provided_ca_file(
+    tmp_path: Path, common_name: str, key_size: int = 2048
+) -> tuple[RootCA, Path]:
+    """Create a CA in a single PEM file, as a user would provide it."""
+    ca_pem = tmp_path / "provided_ca.pem"
+    return RootCA.create(path=ca_pem, name=common_name, key_size=key_size), ca_pem
+
+
+def test_rotate_agent_ca_with_provided_ca(omd_root: Path, agent_ca: Path, tmp_path: Path) -> None:
+    provided_ca, ca_pem = _provided_ca_file(tmp_path, _dummy_common_name())
+
+    with patch("cmk.gui.cmkcert.cmkcert_rotate._reload_agent_receiver"):
+        _run_rotate(
+            omd_root=omd_root,
+            site_id=_site_id(),
+            target_certificate="agent-ca",
+            expiry=90,
+            finalize=False,
+            ca_pem=ca_pem,
+        )
+
+    assert agent_ca.read_text() == (
+        provided_ca.private_key.dump_pem(password=None).str + provided_ca.certificate.dump_pem().str
+    )
+
+
+def test_rotate_agent_ca_rejects_provided_ca_with_another_common_name(
+    omd_root: Path, agent_ca: Path, tmp_path: Path
+) -> None:
+    _, ca_pem = _provided_ca_file(tmp_path, "DummyCA")
+
+    with pytest.raises(ValueError, match=_dummy_common_name()):
+        _run_rotate(
+            omd_root=omd_root,
+            site_id=_site_id(),
+            target_certificate="agent-ca",
+            expiry=90,
+            finalize=False,
+            ca_pem=ca_pem,
+        )
+
+    assert agent_ca.read_text() == _dummy_cert_with_key()
+
+
+@pytest.mark.parametrize(
+    "ca_pem_content, expected_error",
+    [
+        pytest.param(_dummy_certificate(), "Could not find private key", id="key missing"),
+        pytest.param(_dummy_key(), "Could not find certificate", id="certificate missing"),
+        pytest.param(
+            f"{_dummy_certificate()}\nnot a private key",
+            "Could not find private key",
+            id="invalid key",
+        ),
+    ],
+)
+def test_rotate_agent_ca_keeps_current_ca_if_provided_ca_is_incomplete(
+    omd_root: Path,
+    agent_ca: Path,
+    tmp_path: Path,
+    ca_pem_content: str,
+    expected_error: str,
+) -> None:
+    (ca_pem := tmp_path / "custom_ca.pem").write_text(ca_pem_content)
+
+    with pytest.raises(ValueError, match=expected_error):
+        _run_rotate(
+            omd_root=omd_root,
+            site_id=_site_id(),
+            target_certificate="agent-ca",
+            expiry=90,
+            finalize=False,
+            ca_pem=ca_pem,
+        )
+
+    assert agent_ca.read_text() == _dummy_cert_with_key()
+
+
+def test_rotate_agent_ca_rejects_provided_ca_with_a_weak_key(
+    omd_root: Path, agent_ca: Path, tmp_path: Path
+) -> None:
+    _, ca_pem = _provided_ca_file(tmp_path, _dummy_common_name(), key_size=1024)
+
+    with pytest.raises(ValueError, match="too weak"):
+        _run_rotate(
+            omd_root=omd_root,
+            site_id=_site_id(),
+            target_certificate="agent-ca",
+            expiry=90,
+            finalize=False,
+            ca_pem=ca_pem,
+        )
+
+    assert agent_ca.read_text() == _dummy_cert_with_key()
+
+
+def _revoked_serial_numbers(ca_path: Path) -> list[int]:
+    crl = CertificateRevocationList.load_pem(
+        CertificateRevocationListPEM(crl_path(ca_path).read_bytes())
+    )
+    return [revoked.serial_number for revoked in crl.revoked_certificates]
+
+
+def _agent_certificate_log(omd_root: Path) -> Path:
+    return issued_certificates_path(omd_root, "agents")
+
+
+def _record_issued_certificate(omd_root: Path, serial_number: int) -> IssuedCertificateEntry:
+    entry = IssuedCertificateEntry(
+        ts="2026-09-16T12:00:00Z",
+        event="issued",
+        serial=f"{serial_number:02x}",
+        fp_sha256="d0f1a2",
+        issuer_ski="8411",
+        subject="CN=my agent",
+        san={"dns": ["my-agent"]},
+        not_before="2026-09-16T12:00:00Z",
+        not_after="2036-09-16T12:00:00Z",
+    )
+    entry.append_to(_agent_certificate_log(omd_root))
+    return entry
+
+
+def test_revoke_adds_the_serial_number_to_the_crl_and_records_the_revocation(
+    omd_root: Path, agent_ca: Path
+) -> None:
+    issued = _record_issued_certificate(omd_root, 0xAB)
+
+    _run_revoke(omd_root, _site_id(), "agent-ca", 0xAB)
+
+    assert _revoked_serial_numbers(agent_ca) == [0xAB]
+    revocation = json.loads(_agent_certificate_log(omd_root).read_text().splitlines()[-1])
+    assert revocation == asdict(issued) | {"event": "revoked", "ts": revocation["ts"]}
+    assert revocation["ts"] != issued.ts
+
+
+def test_revoke_certificate_that_is_not_recorded_as_issued(omd_root: Path, agent_ca: Path) -> None:
+    _run_revoke(omd_root, _site_id(), "agent-ca", 0xAB)
+
+    assert _revoked_serial_numbers(agent_ca) == [0xAB]
+    revocation = json.loads(_agent_certificate_log(omd_root).read_text().splitlines()[-1])
+    assert revocation["event"] == "revoked"
+    assert revocation["serial"] == "ab"
+    assert revocation["subject"] is None

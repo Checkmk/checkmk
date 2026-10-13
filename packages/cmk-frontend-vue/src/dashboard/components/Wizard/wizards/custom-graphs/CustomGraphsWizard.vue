@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
@@ -34,6 +35,8 @@ import StageContents from './stage1/StageContents.vue'
 const { _t } = usei18n()
 
 interface CustomGraphsWizardProps {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
   contextFilters: ContextFilters
   editWidgetSpec: WidgetSpec | null
@@ -92,6 +95,8 @@ const contextConfiguredFilters = computed((): ConfiguredFilters => {
       <Suspense>
         <StageContents
           :dashboard-key="dashboardKey"
+          :tick="tick"
+          :range="range"
           :filters="contextConfiguredFilters"
           :edit-widget-spec="props.editWidgetSpec || null"
           @add-widget="

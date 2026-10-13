@@ -251,7 +251,7 @@ _OLD_SERVICE_DESCRIPTIONS: Mapping[str, Callable[[Item], tuple[ServiceName, Item
     "aix_memory": lambda item: ("Memory used", item),
     # While using the old description, don't append the item, even when discovered
     # with the new check which creates an item.
-    "barracuda_mailqueues": lambda item: ("Mail Queue", None),
+    "barracuda_mailqueues": lambda item: ("Mail Queue", None),  # noqa: ARG005
     "brocade_sys_mem": lambda item: ("Memory used", item),
     "casa_cpu_temp": lambda item: ("Temperature %s", item),
     "cisco_asa_failover": lambda item: ("Cluster Status", item),
@@ -268,7 +268,7 @@ _OLD_SERVICE_DESCRIPTIONS: Mapping[str, Callable[[Item], tuple[ServiceName, Item
     "df_netapp": lambda item: ("fs_%s", item),
     "df_netapp32": lambda item: ("fs_%s", item),
     "docker_container_mem": lambda item: ("Memory used", item),
-    "enterasys_temp": lambda item: ("Temperature", None),
+    "enterasys_temp": lambda item: ("Temperature", None),  # noqa: ARG005
     "esx_vsphere_datastores": lambda item: ("fs_%s", item),
     "esx_vsphere_hostsystem_mem_usage": lambda item: ("Memory used", item),
     "esx_vsphere_hostsystem_mem_usage_cluster": lambda item: ("Memory usage", item),
@@ -287,11 +287,11 @@ _OLD_SERVICE_DESCRIPTIONS: Mapping[str, Callable[[Item], tuple[ServiceName, Item
     "ibm_svc_systemstats_disk_latency": lambda item: ("IBM SVC Latency %s Total", item),
     "ibm_svc_systemstats_iops": lambda item: ("IBM SVC IOPS %s Total", item),
     "innovaphone_mem": lambda item: ("Memory used", item),
-    "innovaphone_temp": lambda item: ("Temperature", None),
+    "innovaphone_temp": lambda item: ("Temperature", None),  # noqa: ARG005
     "juniper_mem": lambda item: ("Memory Utilization %s", item),
     "juniper_screenos_mem": lambda item: ("Memory used", item),
     "juniper_trpz_mem": lambda item: ("Memory used", item),
-    "liebert_bat_temp": lambda item: ("Battery Temp", None),
+    "liebert_bat_temp": lambda item: ("Battery Temp", None),  # noqa: ARG005
     "logwatch": lambda item: ("LOG %s", item),
     "logwatch_groups": lambda item: ("LOG %s", item),
     "megaraid_bbu": lambda item: ("RAID Adapter/BBU %s", item),
@@ -302,7 +302,7 @@ _OLD_SERVICE_DESCRIPTIONS: Mapping[str, Callable[[Item], tuple[ServiceName, Item
     "mknotifyd": lambda item: ("Notification Spooler %s", item),
     "mknotifyd_connection": lambda item: ("Notification Connection %s", item),
     "mssql_backup": lambda item: ("%s Backup", item),
-    "mssql_blocked_sessions": lambda item: ("MSSQL Blocked Sessions", None),
+    "mssql_blocked_sessions": lambda item: ("MSSQL Blocked Sessions", None),  # noqa: ARG005
     "mssql_counters_cache_hits": lambda item: ("%s", item),
     "mssql_counters_file_sizes": lambda item: ("%s File Sizes", item),
     "mssql_counters_locks": lambda item: ("%s Locks", item),
@@ -318,13 +318,13 @@ _OLD_SERVICE_DESCRIPTIONS: Mapping[str, Callable[[Item], tuple[ServiceName, Item
     "netapp_ontap_volumes": _get_old_netapp_volume_description,
     "netapp_ontap_snapshots": _get_old_netapp_snapshot_volume_description,
     "netscaler_mem": lambda item: ("Memory used", item),
-    "nullmailer_mailq": lambda item: ("Nullmailer Queue", None),
+    "nullmailer_mailq": lambda item: ("Nullmailer Queue", None),  # noqa: ARG005
     "nvidia_temp": lambda item: ("Temperature NVIDIA %s", item),
     "postfix_mailq": lambda item: (
         ("Postfix Queue", None) if item == "default" else ("Postfix Queue %s", item)
     ),
     "ps": lambda item: ("proc_%s", item),
-    "qmail_stats": lambda item: ("Qmail Queue", None),
+    "qmail_stats": lambda item: ("Qmail Queue", None),  # noqa: ARG005
     "raritan_emx": lambda item: ("Rack %s", item),
     "raritan_pdu_inlet": lambda item: ("Input Phase %s", item),
     "services": lambda item: ("service_%s", item),
@@ -336,8 +336,8 @@ _OLD_SERVICE_DESCRIPTIONS: Mapping[str, Callable[[Item], tuple[ServiceName, Item
     "vms_diskstat_df": lambda item: ("fs_%s", item),
     "wmic_process": lambda item: ("proc_%s", item),
     "zfsget": lambda item: ("fs_%s", item),
-    "prism_alerts": lambda item: ("Prism Alerts", None),
+    "prism_alerts": lambda item: ("Prism Alerts", None),  # noqa: ARG005
     "prism_containers": lambda item: ("Containers %s", item),
-    "prism_info": lambda item: ("Prism Cluster", None),
+    "prism_info": lambda item: ("Prism Cluster", None),  # noqa: ARG005
     "prism_storage_pools": lambda item: ("Storage Pool %s", item),
 }

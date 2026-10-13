@@ -9,7 +9,8 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.utils.doc_references import doc_reference_url, DocReference, DocReferenceUtm
+from cmk.gui.utils.doc_reference_urls import doc_reference_url
+from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
 
 
 def validate_regex(value: str, varname: str | None) -> None:

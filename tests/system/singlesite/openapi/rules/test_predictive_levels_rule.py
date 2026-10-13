@@ -36,21 +36,21 @@ from tests.system.singlesite.openapi.rules.helpers import (
     TestRuleConfig,
     verify_rule_conversion,
 )
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="module")
 def setup_test_environment_fixture(site: Site) -> Generator:
     """Set up and tear down test environment with a folder and a host.."""
     with setup_test_environment(site=site, hostname=HOSTNAME, folder=FOLDER_PATH):
         yield
 
 
-@pytest.mark.xfail(reason="CMK-29702: Flake")
 @pytest.mark.skip_if_edition("cloud")
 @pytest.mark.parametrize("config", PERIOD_CONFIGS)
+@pytest.mark.usefixtures("setup_test_environment_fixture")
 def test_predictive_levels_periods(site: Site, config: TestRuleConfig) -> None:
     """Test different period types for predictive levels."""
     logger.info("Testing: %s (period=%s)", config.description, config.period)
@@ -73,6 +73,7 @@ def test_predictive_levels_periods(site: Site, config: TestRuleConfig) -> None:
 
 @pytest.mark.skip_if_edition("cloud")
 @pytest.mark.parametrize("config", LEVEL_CONFIGS)
+@pytest.mark.usefixtures("setup_test_environment_fixture")
 def test_predictive_levels_types(site: Site, config: LevelConfig) -> None:
     """Test different level types for predictive levels (absolute, relative, stdev)."""
     logger.info("Testing: %s for %s", config.description, config.metric)
@@ -94,6 +95,7 @@ def test_predictive_levels_types(site: Site, config: LevelConfig) -> None:
 
 @pytest.mark.skip_if_edition("cloud")
 @pytest.mark.parametrize("config", BOUND_CONFIGS)
+@pytest.mark.usefixtures("setup_test_environment_fixture")
 def test_predictive_levels_bounds(site: Site, config: BoundConfig) -> None:
     """Test predictive levels with different bound configurations."""
     logger.info("Testing: %s", config.description)
@@ -113,8 +115,8 @@ def test_predictive_levels_bounds(site: Site, config: BoundConfig) -> None:
         logger.info("Successfully tested %s", config.description)
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_edition("cloud")
+@pytest.mark.usefixtures("setup_test_environment_fixture")
 def test_update_predictive_levels_rule(site: Site) -> None:
     """Test updating predictive levels rules via REST API."""
     logger.info("Testing: Update predictive levels rule")
@@ -191,6 +193,7 @@ def test_update_predictive_levels_rule(site: Site) -> None:
 
 
 @pytest.mark.skip_if_edition("cloud")
+@pytest.mark.usefixtures("setup_test_environment_fixture")
 def test_multiple_disk_metrics_predictive_levels(site: Site) -> None:
     """Test predictive levels for multiple disk metrics in one rule."""
     logger.info("Testing: Multiple disk metrics with predictive levels")
@@ -266,6 +269,7 @@ def test_multiple_disk_metrics_predictive_levels(site: Site) -> None:
 
 
 @pytest.mark.skip_if_edition("cloud")
+@pytest.mark.usefixtures("setup_test_environment_fixture")
 def test_fixed_to_predictive_conversion(site: Site) -> None:
     """Test converting between fixed levels and predictive levels using RulesAPI::update method."""
     logger.info("Testing: Conversion between fixed and predictive levels")

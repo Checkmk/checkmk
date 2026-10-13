@@ -8,14 +8,15 @@
 from collections.abc import Mapping
 from functools import partial
 
-from cmk.gui.config import Config
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
-from cmk.gui.painter.v0.helpers import get_tag_groups, tag_choices_for_group
-from cmk.gui.painter.v0.host_tag_painters import HashableTagGroups
+from cmk.gui.painter.helpers import get_tag_groups, tag_choices_for_group
+from cmk.gui.painter.host_tag_painters import HashableTagGroups
 from cmk.gui.type_defs import Row
 from cmk.ruleset_matcher.tags import TagGroup
+from cmk.web.utils.request_cache import RequestCache
 
 from .base import Sorter
 
@@ -38,9 +39,10 @@ def _cmp_host_tag(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
     tag_group: TagGroup,
 ) -> int:
     host_tag_1 = _get_tag_group_value(r1, "host", tag_group)

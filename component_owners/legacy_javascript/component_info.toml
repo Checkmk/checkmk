@@ -3,6 +3,7 @@ display_name = "Legacy Javascript"
 previous_name = "UI - Legacy"
 has_support_component = true
 members_required = 1
+tier = 4
 description = """
 The look and browser-side behavior of the older, classic parts of the Checkmk
 web interface.

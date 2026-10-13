@@ -49,7 +49,7 @@ def parse_liebert_temp_air(string_table: Sequence[StringTable]) -> ParsedSection
 
 def discover_liebert_temp_air(
     section_liebert_temp_air: ParsedSection | None,
-    section_liebert_system: SystemSection | None,
+    section_liebert_system: SystemSection | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if not section_liebert_temp_air:
         return

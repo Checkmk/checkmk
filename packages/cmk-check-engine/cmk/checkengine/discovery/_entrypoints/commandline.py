@@ -15,24 +15,30 @@ import cmk.utils.paths
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, OnError
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.discovery._autochecks import AutochecksStore
+from cmk.checkengine.discovery._autochecks import AutochecksConfig, AutochecksStore
+from cmk.checkengine.discovery._autodiscovery import (
+    DiscoveryReport,
+    get_host_services_by_host_name,
+    get_post_discovery_autocheck_services,
+)
 from cmk.checkengine.discovery._discover.host_labels import discover_host_labels, HostLabelPlugin
 from cmk.checkengine.discovery._discover.services import (
-    analyse_services,
     discover_services,
     find_plugins,
 )
-from cmk.checkengine.discovery.types import QualifiedDiscovery
+from cmk.checkengine.discovery._utils.filters import ServiceFilters
+from cmk.checkengine.discovery.types import DiscoverySettings, QualifiedDiscovery
 from cmk.checkengine.fetcher_abc import FetcherFunction
 from cmk.checkengine.helper_interface import HostKey
 from cmk.checkengine.parser import group_by_host, ParserFunction
-from cmk.checkengine.plugins import CheckPluginName, DiscoveryPlugin, SectionName
+from cmk.checkengine.plugins import CheckPluginName, DiscoveryPlugin, SectionName, ServiceID
 from cmk.checkengine.sectionparser import (
     make_providers,
     Provider,
     SectionPlugin,
     store_piggybacked_sections,
 )
+from cmk.inventory.label_picker import InventorizedHostLabelsStore
 from cmk.ruleset_matcher.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
 
@@ -50,27 +56,50 @@ def commandline_discovery(
     host_label_plugins: Mapping[SectionName, HostLabelPlugin],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     run_plugin_names: Container[CheckPluginName],
-    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
+    autochecks_config: AutochecksConfig,
+    enforced_services: Container[ServiceID],
     arg_only_new: bool,
     only_host_labels: bool = False,
     on_error: OnError,
     autochecks_dir: Path,
     discovered_host_labels_dir: Path,
-) -> None:
+    inventorized_host_labels_dir: Path,
+) -> bool:
     """Implementing cmk -I and cmk -II
 
     This is directly called from the main option parsing code.
     The list of hostnames is already prepared by the main code.
     If it is empty then we use all hosts and switch to using cache files.
+
+    Returns whether the discovery succeeded.  A discovery that aborted counts
+    as failure, and so does one where a data source could not be contacted.
+    A failed source says nothing about its services, so they must not be taken
+    for vanished: for such a host '-II' falls back to '-I', adding what the
+    other sources found and removing or changing nothing.  Neither aborts the
+    discovery of the remaining hosts, but the caller needs to know to set a
+    meaningful exit code.
     """
     section.section_begin(host_name)
+    failed_sources: list[str] = []
     try:
         fetched = fetcher(host_name, ip_address=None)
         host_sections = parser((f[0], f[1]) for f in fetched)
+        for source, host_section in host_sections:
+            if host_section.is_error():
+                failed_sources.append(f"[{source.ident}] {host_section.error}")
+                section.section_error(failed_sources[-1])
         host_sections_by_host = group_by_host(
             ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok())
         )
         store_piggybacked_sections(host_sections_by_host, cmk.utils.paths.omd_root)
+        only_new = arg_only_new or bool(failed_sources)
+        if only_new and not arg_only_new:
+            console.warning(
+                tty.format_warning(
+                    f"{host_name}: Some data sources failed,"
+                    " only adding new services and host labels"
+                )
+            )
         providers = make_providers(
             host_sections_by_host,
             section_plugins,
@@ -83,21 +112,27 @@ def commandline_discovery(
             providers=providers,
             plugins=plugins,
             run_plugin_names=run_plugin_names,
-            ignore_plugin=ignore_plugin,
-            only_new=arg_only_new,
-            load_labels=arg_only_new,
+            autochecks_config=autochecks_config,
+            enforced_services=enforced_services,
+            only_new=only_new,
+            load_labels=only_new,
+            keep_vanished_host_labels=bool(failed_sources),
             only_host_labels=only_host_labels,
             on_error=on_error,
             autochecks_dir=autochecks_dir,
             discovered_host_labels_dir=discovered_host_labels_dir,
+            inventorized_host_labels_dir=inventorized_host_labels_dir,
         )
 
     except Exception as e:
         if cmk.ccc.debug.enabled():
             raise
         section.section_error("%s" % e)
+        return False
     finally:
         cmk.ccc.cleanup.cleanup_globals()
+
+    return not failed_sources
 
 
 def _commandline_discovery_on_host(
@@ -108,13 +143,16 @@ def _commandline_discovery_on_host(
     providers: Mapping[HostKey, Provider],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     run_plugin_names: Container[CheckPluginName],
-    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
+    autochecks_config: AutochecksConfig,
+    enforced_services: Container[ServiceID],
     only_new: bool,
     load_labels: bool,
+    keep_vanished_host_labels: bool,
     only_host_labels: bool,
     on_error: OnError,
     autochecks_dir: Path,
     discovered_host_labels_dir: Path,
+    inventorized_host_labels_dir: Path,
 ) -> None:
     section.section_step("Analyse discovered host labels")
 
@@ -125,11 +163,22 @@ def _commandline_discovery_on_host(
             else ()
         ),
         current=discover_host_labels(
-            real_host_name, host_label_plugins, providers=providers, on_error=on_error
+            real_host_name,
+            host_label_plugins,
+            providers=providers,
+            on_error=on_error,
+            inventorized_host_labels=InventorizedHostLabelsStore(
+                real_host_name, inventorized_host_labels_dir
+            ).load(),
         ),
     )
 
-    DiscoveredHostLabelsStore(real_host_name, discovered_host_labels_dir).save(host_labels.present)
+    DiscoveredHostLabelsStore(real_host_name, discovered_host_labels_dir).save(
+        # A label may have vanished only because its data source failed.
+        [*host_labels.present, *host_labels.vanished]
+        if keep_vanished_host_labels
+        else host_labels.present
+    )
     if host_labels.new or host_labels.vanished:  # add 'changed' once it exists.
         # Rulesets for service discovery can match based on the hosts labels.
         # The ruleset matcher does not properly handle the case where the host labels
@@ -155,20 +204,15 @@ def _commandline_discovery_on_host(
             if plugin_name in run_plugin_names
         ],
     )
-    skip = {plugin_name for plugin_name in candidates if ignore_plugin(real_host_name, plugin_name)}
 
     section.section_step("Executing discovery plugins (%d)" % len(candidates))
     console.debug(f"  Trying discovery with: {', '.join(str(n) for n in candidates)}")
     # The host name must be set for the host_name() calls commonly used to determine the
     # host name for get_host_values{_merged,} calls in the legacy checks.
-
-    for plugin_name in skip:
-        console.debug(f"  Skip ignored check plug-in name {plugin_name!r}")
-
     try:
         discovered_services = discover_services(
             real_host_name,
-            candidates - skip,
+            candidates,
             providers=providers,
             plugins=plugins,
             on_error=on_error,
@@ -176,20 +220,51 @@ def _commandline_discovery_on_host(
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
-    service_result = analyse_services(
-        existing_services=autocheck_store.read(),
-        discovered_services=discovered_services,
+    # Route through the same transition-table layer the other discovery entrypoints use, so
+    # disabled services, disabled checks and enforced-service shadowing are applied consistently
+    # (werk 22108).  '-I' (only_new) only adds new services and keeps everything else, '-II'
+    # additionally drops vanished services and adopts changed parameters/labels.
+    services_by_transition = get_host_services_by_host_name(
+        real_host_name,
+        existing_services={real_host_name: autocheck_store.read()},
+        discovered_services={real_host_name: discovered_services},
+        is_cluster=False,
+        cluster_nodes=(),
+        autochecks_config=autochecks_config,
+        enforced_services=enforced_services,
         run_plugin_names=run_plugin_names,
-        forget_existing=not only_new,
-        keep_vanished=only_new,
-    )
-    autocheck_store.write(service_result.present)
+    )[real_host_name]
 
-    new_per_plugin = Counter(s.check_plugin_name for s in service_result.new)
+    discovery_report = DiscoveryReport()
+    post_discovery_services = get_post_discovery_autocheck_services(
+        real_host_name,
+        services_by_transition,
+        ServiceFilters.accept_all(),
+        discovery_report,
+        autochecks_config.service_description,
+        DiscoverySettings(
+            update_host_labels=False,
+            add_new_services=True,
+            remove_vanished_services=not only_new,
+            update_changed_service_labels=not only_new,
+            update_changed_service_parameters=not only_new,
+        ),
+        keep_clustered_vanished_services=True,
+    )
+    autocheck_store.write([s.service.newer for s in post_discovery_services.values()])
+
+    new_per_plugin = Counter(
+        entry.service.newer.check_plugin_name for entry in services_by_transition.get("new", [])
+    )
     for name, count in sorted(new_per_plugin.items()):
         console.verbose(f"{tty.green}{tty.bold}{count:>3}{tty.normal} {name}")
 
-    count = len(service_result.new) if service_result.new else ("no new" if only_new else "no")
+    # '-I' reports how many services were newly added, while '-II' rediscovers from scratch and
+    # reports the total number of services now present.
+    if only_new:
+        count = discovery_report.services.new if discovery_report.services.new else "no new"
+    else:
+        count = len(post_discovery_services) if post_discovery_services else "no"
     section.section_success(f"Found {count} services")
 
     for result in itertools.chain.from_iterable(

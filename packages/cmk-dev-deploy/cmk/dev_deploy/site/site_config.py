@@ -21,8 +21,6 @@ Lifecycle:
     3. Detect stale ``.mk`` files from previous crashes via PID file
 """
 
-from __future__ import annotations
-
 import os
 from pathlib import Path
 
@@ -122,7 +120,7 @@ def is_stale_override(mk_path: Path, pid_file: Path, site_name: str) -> bool:
 
     Args:
         mk_path: Path to the override ``.mk`` file.
-        pid_file: Path to the iBazel PID file.
+        pid_file: Path to the frontend dev server's PID file.
         site_name: OMD site name, e.g. ``'v260'``.
 
     Returns:
@@ -138,7 +136,7 @@ def is_stale_override(mk_path: Path, pid_file: Path, site_name: str) -> bool:
         pid = int(pid_file.read_text().strip())
         os.kill(pid, 0)  # Check if process is alive (signal 0 = no-op probe)
         return False  # Process alive -> not stale (another instance running)
-    except (ProcessLookupError, PermissionError, ValueError, OSError):
+    except ProcessLookupError, PermissionError, ValueError, OSError:
         return True  # Process dead or PID invalid -> stale
 
 

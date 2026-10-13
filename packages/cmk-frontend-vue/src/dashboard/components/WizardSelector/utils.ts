@@ -22,7 +22,7 @@ export function widgetTypeToSelectorMatcher(
     }
 
     case 'custom_graph': {
-      return 'custom_graphs'
+      return 'link_custom_graph'
     }
 
     case 'linked_view':
@@ -84,4 +84,14 @@ export function widgetTypeToSelectorMatcher(
       )
     }
   }
+}
+
+export function wizardSlideInSize(wizard: string): 'small' | 'medium' | 'large' {
+  if (['other', 'ntop', 'network_flow'].includes(wizard)) {
+    return 'small'
+  }
+  if (wizard === 'views') {
+    return 'large'
+  }
+  return 'medium'
 }

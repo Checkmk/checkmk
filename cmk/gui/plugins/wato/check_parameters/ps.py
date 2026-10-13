@@ -6,7 +6,6 @@
 # mypy: disable-error-code="type-arg"
 
 import re
-from collections.abc import Mapping
 from typing import Literal
 
 from cmk.gui.exceptions import MKUserError
@@ -34,7 +33,6 @@ from cmk.gui.valuespec import (
     Labels,
     ListChoice,
     ListOf,
-    Migrate,
     MonitoringState,
     Percentage,
     RegExp,
@@ -600,23 +598,16 @@ def _item_spec_ps() -> TextInput:
     )
 
 
-def _drop_icon_key(p: Mapping[str, object]) -> dict[str, object]:
-    return {k: v for k, v in p.items() if k != "icon"}
-
-
-def _parameter_valuespec_ps() -> Migrate:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=process_level_elements(),
-            ignored_keys=[
-                "process",
-                "match_groups",
-                "user",
-                "cgroup",
-            ],
-            required_keys=["cpu_rescale_max"],
-        ),
-        migrate=_drop_icon_key,
+def _parameter_valuespec_ps() -> Dictionary:
+    return Dictionary(
+        elements=process_level_elements(),
+        ignored_keys=[
+            "process",
+            "match_groups",
+            "user",
+            "cgroup",
+        ],
+        required_keys=["cpu_rescale_max"],
     )
 
 
@@ -646,18 +637,15 @@ def _manual_item_spec_ps() -> TextInput:
     )
 
 
-def _manual_parameter_valuespec_ps() -> Migrate:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                ("process", process_match_options()),
-                ("user", user_match_options()),
-            ]
-            + process_level_elements(),
-            ignored_keys=["match_groups"],
-            required_keys=["cpu_rescale_max"],
-        ),
-        migrate=_drop_icon_key,
+def _manual_parameter_valuespec_ps() -> Dictionary:
+    return Dictionary(
+        elements=[
+            ("process", process_match_options()),
+            ("user", user_match_options()),
+        ]
+        + process_level_elements(),
+        ignored_keys=["match_groups"],
+        required_keys=["cpu_rescale_max"],
     )
 
 
@@ -724,21 +712,18 @@ def _valuespec_inventory_processes_rules() -> Dictionary:
             ),
             (
                 "default_params",
-                Migrate(
-                    valuespec=Dictionary(
-                        title=_("Default parameters for detected services"),
-                        help=_(
-                            "Here, you can select default parameters that are being set "
-                            "for detected services. Note: the preferred way for setting parameters is to use "
-                            'the rule set <a href="wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset"> State and count of processes</a> instead. '
-                            "A change there will immediately be active, while a change in this rule "
-                            "requires a re-discovery of the services."
-                        ),
-                        elements=process_level_elements(),
-                        ignored_keys=["match_groups"],
-                        required_keys=["cpu_rescale_max"],
+                Dictionary(
+                    title=_("Default parameters for detected services"),
+                    help=_(
+                        "Here, you can select default parameters that are being set "
+                        "for detected services. Note: the preferred way for setting parameters is to use "
+                        'the rule set <a href="wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset"> State and count of processes</a> instead. '
+                        "A change there will immediately be active, while a change in this rule "
+                        "requires a re-discovery of the services."
                     ),
-                    migrate=_drop_icon_key,
+                    elements=process_level_elements(),
+                    ignored_keys=["match_groups"],
+                    required_keys=["cpu_rescale_max"],
                 ),
             ),
         ],

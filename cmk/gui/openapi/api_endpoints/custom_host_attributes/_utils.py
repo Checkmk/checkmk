@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from http import HTTPStatus
 from typing import Final
 
 from cmk.gui.openapi.api_endpoints.custom_host_attributes.models.response_models import (
@@ -64,7 +65,7 @@ def find_attr_or_raise(name: str, lock: bool) -> tuple[CustomHostAttrSpec, Custo
     all_attrs = load_custom_attrs_from_mk_file(lock=lock)
     if (attr := next((a for a in all_attrs["host"] if a["name"] == name), None)) is None:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="The requested custom host attribute was not found",
             detail=f"There is no custom host attribute with the name {name!r}",
         )

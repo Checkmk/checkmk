@@ -24,7 +24,9 @@ def _match_params(connection: Connection, params: Mapping[str, object]) -> bool:
 
 
 def check_netstat_generic(
-    item: str | None, params: Mapping[str, object], section: Section
+    item: str | None,  # noqa: ARG001
+    params: Mapping[str, object],
+    section: Section,
 ) -> CheckResult:
     yield from check_levels(
         value=sum(_match_params(connection, params) for connection in section),
@@ -34,7 +36,7 @@ def check_netstat_generic(
     )
 
 
-def discover_netstat_never(section: Section) -> DiscoveryResult:
+def discover_netstat_never(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield from ()  # can only be enforced
 
 

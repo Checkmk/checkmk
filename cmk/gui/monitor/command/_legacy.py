@@ -13,7 +13,7 @@ holding plain attributes satisfies these without any adapter on the legacy side.
 from collections.abc import Callable, Iterable, Sequence
 from typing import Protocol
 
-from cmk.gui.utils.speaklater import LazyString
+from cmk.web.utils.speaklater import LazyString
 
 
 class LegacyPermission(Protocol):

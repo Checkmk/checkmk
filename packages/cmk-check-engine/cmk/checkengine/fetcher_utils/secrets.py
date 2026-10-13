@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Self
 
 from cmk.ccc.store import save_bytes_to_file
-from cmk.password_store.v1_unstable import get_store_secret, PasswordStore, Secret
+from cmk.password_store.v1 import get_store_secret, PasswordStore, Secret
 
 __all__ = [
     "FetcherSecrets",

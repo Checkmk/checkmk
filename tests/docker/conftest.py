@@ -4,17 +4,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import logging
+import logging  # noqa: I001, RUF100 # needed for docker vs. tests/docker confusion
 from collections.abc import Iterator
 from random import randint
 
 import docker
 import pytest
 
-from tests.testlib.docker import CheckmkApp
-from tests.testlib.version import version_from_env
+from tests.testlib.common.version import version_from_env
+from tests.testlib.pytest_helpers import diagnostics, registration
+from tests.testlib.system.docker import CheckmkApp
 
 logger = logging.getLogger()
+
+
+def pytest_addoption(parser: pytest.Parser, pluginmanager: pytest.PytestPluginManager) -> None:  # noqa: ARG001
+    registration.register_pytest_plugins(pluginmanager, diagnostics)
 
 
 @pytest.fixture(name="client", scope="session")

@@ -36,8 +36,8 @@ agent_section_kube_resource_quota_performance_memory_v1 = AgentSection(
 
 
 def discovery_kube_resource_quota_memory(
-    section_kube_resource_quota_performance_memory: PerformanceUsage | None,
-    section_kube_resource_quota_memory_resources: HardResourceRequirement | None,
+    section_kube_resource_quota_performance_memory: PerformanceUsage | None,  # noqa: ARG001
+    section_kube_resource_quota_memory_resources: HardResourceRequirement | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     yield Service()
 

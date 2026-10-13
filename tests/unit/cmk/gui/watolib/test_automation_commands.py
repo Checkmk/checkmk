@@ -19,7 +19,7 @@ def test_parse_omd_status() -> None:
         "npcd 5"
     )
 
-    assert AutomationPing()._parse_omd_status(raw_status=raw_status) == {
+    assert AutomationPing()._parse_omd_status(raw_status=raw_status) == {  # noqa: SLF001
         "jaeger": 5,
         "agent-receiver": 0,
         "mkeventd": 0,

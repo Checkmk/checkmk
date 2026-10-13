@@ -13,15 +13,14 @@ from typing import override
 import cmk.utils.paths
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.session import session
 from cmk.utils.encryption import fetch_certificate_details
-from cmk.web.utils.html import HTML
+from cmk.web.utils.csrf_token import check_csrf_token
 
 from .definitions import (
     GroupedListOfMultipleChoices,
@@ -38,7 +37,7 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("ajax_popup_icon_selector", ajax_popup_icon_selector))
 
 
-def ajax_popup_icon_selector(ctx: PageContext) -> None:
+def ajax_popup_icon_selector(ctx: PageContext) -> None:  # noqa: ARG001
     """AJAX API call for rendering the icon selector"""
     varprefix = request.get_ascii_input_mandatory("varprefix")
     value = request.var("value")
@@ -70,7 +69,7 @@ class ABCPageListOfMultipleGetChoice(AjaxPage, abc.ABC):
 class AjaxFetchCA(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
         user.need_permission("general.server_side_requests")
 
         try:
@@ -100,20 +99,15 @@ class AjaxFetchCA(AjaxPage):
             except Exception:
                 raise MKUserError(None, _("Failed to decode certificate data"))
 
-            def row(key: str, value: str) -> HTML:
-                return HTMLWriter.render_tr(
-                    HTMLWriter.render_td(key) + HTMLWriter.render_td(value), class_="data"
-                )
-
-            summary = HTMLWriter.render_table(
-                row(_("Issued to"), cert.issued_to)
-                + row(_("Issued by"), cert.issued_by)
-                + row(_("Valid from"), cert.valid_from)
-                + row(_("Valid until"), cert.valid_till)
-                + row(_("Fingerprint"), cert.digest_sha256),
-                class_="data",
-            )
-
-            return {"summary": summary, "cert_pem": cert_pem}
+            return {
+                "details": {
+                    "issued_to": cert.issued_to,
+                    "issued_by": cert.issued_by,
+                    "valid_from": cert.valid_from,
+                    "valid_till": cert.valid_till,
+                    "digest_sha256": cert.digest_sha256,
+                },
+                "cert_pem": cert_pem,
+            }
 
         raise MKUserError(None, _("Found no CA"))

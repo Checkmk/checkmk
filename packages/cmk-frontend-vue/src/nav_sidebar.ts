@@ -4,11 +4,14 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 // Dedicated entry point for the page chrome that is present on (nearly) every
-// page: the main navigation, the sidebar and the loading transition. Keeping
-// these in their own small bundle decouples them from the large `main.ts`
-// bundle, so they can be registered and become interactive without waiting for
-// the heavy content apps (dashboard, forms, ...) to download and execute.
+// page: the main navigation, the sidebar, the AI assistant panel and the loading
+// transition. Keeping these in their own small bundle decouples them from the
+// large `main.ts` bundle, so they can be registered and become interactive
+// without waiting for the heavy content apps (dashboard, forms, ...) to download
+// and execute.
 import initCmkUi from 'cmk-ui-library/lib/initCmkUi'
+
+import { registerNonFreeComponent } from '@/lib/web-component/registerNonFreeComponent'
 
 import '@/assets/variables.css'
 import { translationLoader } from '@/translationLoader'
@@ -23,3 +26,9 @@ const { defineCmkComponent } = initCmkUi({ translationLoader })
 defineCmkComponent('cmk-main-menu', MainMenuApp)
 defineCmkComponent('cmk-sidebar', SidebarApp)
 defineCmkComponent('cmk-loading-transition', LoadingTransition, { appprops: { fullPage: true } })
+
+registerNonFreeComponent(
+  defineCmkComponent,
+  'cmk-ai-assistant-panel',
+  import.meta.glob('./nonfree/ai/AiAssistantPanelApp.vue', { eager: true })
+)

@@ -6,13 +6,17 @@
 # mypy: disable-error-code="type-arg"
 
 import abc
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 
+from cmk.gui.config import RequestCacheConfig
 from cmk.gui.http import Request
 from cmk.gui.page_menu import PageMenuEntry
-from cmk.gui.type_defs import Choices, HTTPVariables, Rows, SingleInfos, Visual, VisualContext
+from cmk.gui.type_defs import Rows, SingleInfos, Visual, VisualContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import get_labels
+from cmk.web.utils.choices import Choice
+from cmk.web.utils.request_cache import RequestCache
+from cmk.web.utils.urls import HTTPVariable
 
 
 class VisualType(abc.ABC):
@@ -63,6 +67,7 @@ class VisualType(abc.ABC):
         context: VisualContext | None,
         parameters: dict,
         user_permissions: UserPermissions,
+        request_cache: RequestCache[RequestCacheConfig],
     ) -> None:
         """The function to handle adding the given visual to the given visual of this type"""
         raise NotImplementedError
@@ -84,7 +89,7 @@ class VisualType(abc.ABC):
         """Get the permitted visuals of this type"""
         raise NotImplementedError
 
-    def choices(self, visuals: dict, user_permissions: UserPermissions) -> Choices:
+    def choices(self, visuals: dict, user_permissions: UserPermissions) -> list[Choice]:
         return [
             (k, v["title"]) for k, v in self.permitted_visuals(visuals, user_permissions).items()
         ]
@@ -94,7 +99,7 @@ class VisualType(abc.ABC):
         linking_view_single_infos: SingleInfos,
         linking_view_rows: Rows,
         visual: Visual,
-        context_vars: HTTPVariables,
+        context_vars: Sequence[HTTPVariable],  # noqa: ARG002
     ) -> bool:
         """Dynamically show/hide links to other visuals (e.g. reports, dashboards, views) from views
 

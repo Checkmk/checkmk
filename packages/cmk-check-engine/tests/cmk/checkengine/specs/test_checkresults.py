@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
 
 
 class TestActiveCheckResult:
     @staticmethod
-    def test_as_text_short():
+    def test_as_text_short() -> None:
         assert (
             ActiveCheckResult(
                 state=1, summary="Make sure this has no trailing newlines and the like"
@@ -19,7 +18,7 @@ class TestActiveCheckResult:
         )
 
     @staticmethod
-    def test_as_text_full():
+    def test_as_text_full() -> None:
         assert (
             ActiveCheckResult(
                 state=2,
@@ -31,7 +30,7 @@ class TestActiveCheckResult:
         )
 
     @staticmethod
-    def test_as_text_sane():
+    def test_as_text_sane() -> None:
         assert (
             ActiveCheckResult(
                 state=2,

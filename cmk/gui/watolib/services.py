@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
 
 import ast
 import dataclasses
@@ -31,11 +29,11 @@ from pydantic import BaseModel
 
 from cmk import trace
 from cmk.automations.results import (
-    SerializedResult,
     ServiceDiscoveryPreviewResult,
     SetAutochecksInput,
     SourceResult,
 )
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.store import ObjectStore, TextSerializer
 from cmk.ccc.version import __version__, Version
@@ -70,7 +68,7 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.config_domain_name import (
     generate_hosts_to_update_settings,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import FolderTree, Host
 from cmk.gui.watolib.pending_changes import (
     Change,
     ChangeScope,
@@ -151,6 +149,11 @@ class UpdateType(enum.Enum):
     MONITORED = "unchanged"
     IGNORED = "ignored"
     REMOVED = "removed"
+
+
+#: The `table_target` values that name a command a caller may ask for: the four states a service can be *moved to*.
+#: Every other `DiscoveryState` is a classification the discovery run produces, not a target.
+COMMAND_TARGETS: Final[frozenset[str]] = frozenset(update_type.value for update_type in UpdateType)
 
 
 class DiscoveryResult(NamedTuple):
@@ -271,6 +274,16 @@ class Discovery:
         selected_services: Container[tuple[str, Item]],
         user_need_permission: Callable[[str], None],
     ) -> None:
+        if update_target is not None and update_target not in COMMAND_TARGETS:
+            # A target that is not a command cannot be applied to any service: no `_case_*` handler
+            # writes for it, so `compute_discovery_transition` would silently drop the service from
+            # the rebuilt autochecks (CMK-38588). The REST endpoint rejects these with a 400 before
+            # reaching here; this guard is the domain-level backstop that keeps the transition from
+            # ever deleting a service in the name of moving it.
+            raise MKGeneralException(
+                f"{update_target!r} is not a service discovery command; "
+                f"expected one of {sorted(COMMAND_TARGETS)}"
+            )
         self._host = host
         self._action = action
         self._update_source = update_source
@@ -296,7 +309,7 @@ class Discovery:
         automation_config: LocalAutomationConfig | RemoteAutomationConfig,
         pprint_value: bool,
         debug: bool,
-        use_git: bool,
+        use_git: bool,  # noqa: ARG002
         pending_changes: PendingChanges,
     ) -> None:
         if (
@@ -433,7 +446,7 @@ class Discovery:
 
     def _verify_permissions(self, table_target: str, entry: CheckPreviewEntry) -> None:
         if entry.check_source != table_target:
-            match table_target:
+            match table_target:  # type: ignore[exhaustive-match]
                 case DiscoveryState.UNDECIDED:
                     self.user_need_permission("wato.service_discovery_to_undecided")
                 case (
@@ -458,7 +471,7 @@ class Discovery:
             entry.old_labels,
         )
         if entry.check_source != table_target:
-            match table_target:
+            match table_target:  # type: ignore[exhaustive-match]
                 case (
                     DiscoveryState.MONITORED
                     | DiscoveryState.CHANGED
@@ -550,20 +563,23 @@ class Discovery:
         ):
             if entry.check_source == DiscoveryState.VANISHED:
                 return DiscoveryState.REMOVED
-            if entry.check_source == DiscoveryState.IGNORED:
-                return DiscoveryState.IGNORED
+            if entry.check_source in (DiscoveryState.IGNORED, DiscoveryState.CLUSTERED_IGNORED):
+                return entry.check_source
             # entry.check_source in [DiscoveryState.MONITORED, DiscoveryState.UNDECIDED]
             return DiscoveryState.MONITORED
 
-        if self._action == DiscoveryAction.UPDATE_SERVICE_LABELS and self._update_target:
-            if entry.check_source == DiscoveryState.IGNORED:
-                return DiscoveryState.IGNORED
-            return self._update_target
-
-        if self._action == DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS and self._update_target:
-            if entry.check_source == DiscoveryState.IGNORED:
-                return DiscoveryState.IGNORED
-            return self._update_target
+        if self._action in (
+            DiscoveryAction.UPDATE_SERVICE_LABELS,
+            DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS,
+        ):
+            # Refresh the discovered values of services that are already monitored
+            # (CMK-38599). `clustered_old` is included because when the action targets
+            # a cluster, the node autochecks are rebuilt from the node tables processed
+            # alongside the cluster table, so the node row must be retargeted or the
+            # refresh never reaches the node's file.
+            if entry.check_source in (DiscoveryState.CHANGED, DiscoveryState.CLUSTERED_OLD):
+                return DiscoveryState.MONITORED
+            return entry.check_source
 
         if not self._update_target:
             return entry.check_source
@@ -662,6 +678,7 @@ def perform_fix_all(
         tracer.span("perform_fix_all", attributes={"cmk.host_name": str(host.name())}),
     ):
         _perform_update_host_labels(
+            host.folder().tree,
             discovery_result.labels_by_host,
             automation_config=automation_config,
             debug=debug,
@@ -711,6 +728,7 @@ def perform_host_label_discovery(
     """Handle update host labels discovery action"""
     with _service_discovery_context(host, pprint_value=pprint_value):
         _perform_update_host_labels(
+            host.folder().tree,
             discovery_result.labels_by_host,
             automation_config=automation_config,
             debug=debug,
@@ -869,6 +887,7 @@ def initial_discovery_result(
 
 
 def _perform_update_host_labels(
+    tree: FolderTree,
     labels_by_nodes: Mapping[HostName, Sequence[HostLabel]],
     *,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
@@ -876,7 +895,7 @@ def _perform_update_host_labels(
     pending_changes: PendingChanges,
 ) -> None:
     for host_name, host_labels in labels_by_nodes.items():
-        if (host := folder_tree().host(host_name)) is None:
+        if (host := tree.host(host_name)) is None:
             raise ValueError(f"no such host: {host_name!r}")
 
         message = _("Updated discovered host labels of '%(host_name)s' with %(count)d labels") % {
@@ -907,7 +926,7 @@ def _apply_state_change(
     add_disabled_rule: set[str],
     remove_disabled_rule: set[str],
 ) -> None:
-    match table_source:
+    match table_source:  # type: ignore[exhaustive-match]
         case DiscoveryState.UNDECIDED:
             _case_undecided(
                 table_target,
@@ -1103,7 +1122,8 @@ def _case_clustered(
     # We just display the clustered service state (OLD, NEW, VANISHED).
     # But if the user wants to disable the service on the host, this is what we do.
     # Ideally, there would be no service discovery on the cluster hosts at all.
-    if table_target != DiscoveryState.IGNORED:
+    # Disabled clustered services are not written either, like disabled services (CMK-33299).
+    if table_target not in (DiscoveryState.IGNORED, DiscoveryState.CLUSTERED_IGNORED):
         autochecks_to_save[key] = value
         saved_services.add(descr)
 
@@ -1168,7 +1188,7 @@ def get_check_table(
     user_permission_config: UserPermissionSerializableConfig,
     raise_errors: bool,
     debug: bool,
-    use_git: bool,
+    use_git: bool,  # noqa: ARG001
     pending_changes: PendingChanges,
 ) -> DiscoveryResult:
     """Gathers the check table using a background job
@@ -1215,7 +1235,7 @@ def get_check_table(
             debug=debug,
         )
 
-    sync_changes_before_remote_automation(host.site_id(), debug)
+    sync_changes_before_remote_automation(host.folder().tree, host.site_id(), debug)
 
     return DiscoveryResult.deserialize(
         str(
@@ -1346,17 +1366,15 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         )
 
     def _store_last_preview(self, result: ServiceDiscoveryPreviewResult) -> None:
-        self._preview_store.write_obj(result.serialize(Version.from_str(__version__)))
+        self._preview_store.write_obj(result.serialize(__version__))
 
     def _load_last_preview(self) -> tuple[int, ServiceDiscoveryPreviewResult] | None:
         try:
             return (
                 int(self._preview_store.path.stat().st_mtime),
-                ServiceDiscoveryPreviewResult.deserialize(
-                    SerializedResult(self._preview_store.read_obj(default=""))
-                ),
+                ServiceDiscoveryPreviewResult.deserialize(self._preview_store.read_obj(default="")),
             )
-        except (FileNotFoundError, ValueError):
+        except FileNotFoundError, ValueError:
             return None
         finally:
             self._preview_store.path.unlink(missing_ok=True)

@@ -9,8 +9,13 @@ const mockCookie = vitest.fn()
 
 beforeAll(() => {
   Object.defineProperty(document, 'cookie', {
-    get: mockCookie
+    get: mockCookie,
+    configurable: true
   })
+})
+
+afterAll(() => {
+  Reflect.deleteProperty(document, 'cookie')
 })
 
 beforeEach(() => {

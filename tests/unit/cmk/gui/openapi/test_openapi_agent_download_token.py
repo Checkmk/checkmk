@@ -12,12 +12,16 @@ download and registration.
 
 import datetime as dt
 from collections.abc import Iterator
+from http import HTTPStatus
+from pathlib import Path
 
 import pytest
 
 from livestatus import NetworkSocketDetails, SiteConfiguration
 
 from cmk.ccc.site import SiteId
+from cmk.gui.agent_download import DOWNLOAD_TOKEN_FAILURE_DETAIL
+from cmk.gui.agent_download._utils import packed_agent_path_linux_deb
 from cmk.gui.token_auth import (
     AgentDownloadToken,
     AgentRegistrationToken,
@@ -25,8 +29,8 @@ from cmk.gui.token_auth import (
 )
 from cmk.gui.token_auth._store import InvalidToken
 from cmk.utils.automation_config import RemoteAutomationConfig
-from tests.testlib.gui.web_test_app import SetConfig
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.gui.web_test_app import CmkTestResponse, SetConfig, WebTestAppForCMK
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 REMOTE_SITE = SiteId("remote_site")
 UNCONNECTED_SITE = SiteId("unconnected")
@@ -107,20 +111,27 @@ def _distributed_sites(set_config: SetConfig) -> Iterator[None]:
 
 
 class TestCreateAgentDownloadToken:
+    # `distributed_sites` patches the config inside the request context that
+    # `clients` establishes, so it has to stay a parameter: a `usefixtures`
+    # mark would set it up before there is a request context.
     def test_no_site_id_creates_locally(
-        self, clients: ClientRegistry, distributed_sites: None
+        self,
+        clients: ClientRegistry,
+        distributed_sites: None,  # noqa: ARG002
     ) -> None:
         resp = clients.Agent.create_download_token()
-        resp.assert_status_code(201)
+        resp.assert_status_code(HTTPStatus.CREATED)
         token_id = resp.json["id"]
         stored = get_token_store().verify(f"0:{token_id}", now=dt.datetime.now(dt.UTC))
         assert isinstance(stored.details, AgentDownloadToken)
 
     def test_local_site_id_creates_locally(
-        self, clients: ClientRegistry, distributed_sites: None
+        self,
+        clients: ClientRegistry,
+        distributed_sites: None,  # noqa: ARG002
     ) -> None:
         resp = clients.Agent.create_download_token(body={"site_id": "NO_SITE"})
-        resp.assert_status_code(201)
+        resp.assert_status_code(HTTPStatus.CREATED)
         token_id = resp.json["id"]
         stored = get_token_store().verify(f"0:{token_id}", now=dt.datetime.now(dt.UTC))
         assert isinstance(stored.details, AgentDownloadToken)
@@ -128,7 +139,7 @@ class TestCreateAgentDownloadToken:
     def test_remote_site_id_forwards(
         self,
         clients: ClientRegistry,
-        distributed_sites: None,
+        distributed_sites: None,  # noqa: ARG002
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         captured: dict[str, object] = {}
@@ -139,7 +150,7 @@ class TestCreateAgentDownloadToken:
             automation_config: RemoteAutomationConfig,
             command: str,
             vars_: list[tuple[str, str]],
-            debug: bool,
+            debug: bool,  # noqa: ARG001
         ) -> dict[str, str | None]:
             captured["site_id"] = automation_config.site_id
             captured["command"] = command
@@ -157,7 +168,7 @@ class TestCreateAgentDownloadToken:
 
         resp = clients.Agent.create_download_token(body={"site_id": REMOTE_SITE})
 
-        resp.assert_status_code(201)
+        resp.assert_status_code(HTTPStatus.CREATED)
         assert resp.json["id"] == "forwarded-token-id"
         assert resp.json["extensions"]["expires_at"].startswith("2026-05-04")
         assert captured["site_id"] == REMOTE_SITE
@@ -168,22 +179,85 @@ class TestCreateAgentDownloadToken:
             get_token_store().verify(f"0:{resp.json['id']}", now=dt.datetime.now(dt.UTC))
 
     def test_unknown_site_id_returns_400(
-        self, clients: ClientRegistry, distributed_sites: None
+        self,
+        clients: ClientRegistry,
+        distributed_sites: None,  # noqa: ARG002
     ) -> None:
         resp = clients.Agent.create_download_token(
             body={"site_id": "does_not_exist"}, expect_ok=False
         )
-        resp.assert_status_code(400)
+        resp.assert_status_code(HTTPStatus.BAD_REQUEST)
         assert "does_not_exist" in resp.json["detail"]
 
     def test_remote_without_login_returns_502(
-        self, clients: ClientRegistry, distributed_sites: None
+        self,
+        clients: ClientRegistry,
+        distributed_sites: None,  # noqa: ARG002
     ) -> None:
         resp = clients.Agent.create_download_token(
             body={"site_id": UNCONNECTED_SITE}, expect_ok=False
         )
-        resp.assert_status_code(502)
+        resp.assert_status_code(HTTPStatus.BAD_GATEWAY)
         assert "not logged" in resp.json["detail"].lower()
+
+
+# ---------------------------------------------------------------------------
+# download_agent_by_token
+# ---------------------------------------------------------------------------
+
+
+def _download_via_token(
+    wsgi_app: WebTestAppForCMK, user_provided_token: str, status: int
+) -> CmkTestResponse:
+    return wsgi_app.call_method(
+        "get",
+        "/NO_SITE/check_mk/api/internal/domain-types/agent/actions/download_by_token"
+        "/invoke?os_type=linux_deb",
+        headers={
+            "Accept": "application/octet-stream",
+            "Authorization": f"CMK-TOKEN {user_provided_token}",
+        },
+        status=status,
+    )
+
+
+def _ship_deb_package(content: bytes) -> None:
+    packed_agent_path_linux_deb().write_bytes(content)
+
+
+@pytest.fixture(name="empty_agents_dir")
+def _empty_agents_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setattr("cmk.utils.paths.agents_dir", tmp_path)
+
+
+@pytest.mark.usefixtures("empty_agents_dir")
+class TestDownloadAgentByToken:
+    def test_missing_package_keeps_the_token(
+        self, clients: ClientRegistry, wsgi_app: WebTestAppForCMK
+    ) -> None:
+        token_id = clients.Agent.create_download_token().json["id"]
+        _download_via_token(wsgi_app, f"0:{token_id}", HTTPStatus.NOT_FOUND)
+        _ship_deb_package(b"deb package")
+
+        resp = _download_via_token(wsgi_app, f"0:{token_id}", HTTPStatus.OK)
+
+        assert resp.body == b"deb package"
+
+    def test_used_token_explains_it_is_used_up(
+        self, clients: ClientRegistry, wsgi_app: WebTestAppForCMK
+    ) -> None:
+        _ship_deb_package(b"deb package")
+        token_id = clients.Agent.create_download_token().json["id"]
+        _download_via_token(wsgi_app, f"0:{token_id}", HTTPStatus.OK)
+
+        resp = _download_via_token(wsgi_app, f"0:{token_id}", HTTPStatus.UNAUTHORIZED)
+
+        assert resp.json["detail"] == DOWNLOAD_TOKEN_FAILURE_DETAIL
+
+    def test_unparsable_token_gets_the_generic_failure(self, wsgi_app: WebTestAppForCMK) -> None:
+        resp = _download_via_token(wsgi_app, "garbage", HTTPStatus.UNAUTHORIZED)
+
+        assert resp.json["detail"] == "Token invalid"
 
 
 # ---------------------------------------------------------------------------
@@ -192,26 +266,21 @@ class TestCreateAgentDownloadToken:
 
 
 class TestCreateAgentRegistrationToken:
-    @pytest.mark.usefixtures("with_host")
-    def test_no_site_id_creates_locally(
-        self, clients: ClientRegistry, distributed_sites: None
-    ) -> None:
+    @pytest.mark.usefixtures("with_host", "distributed_sites")
+    def test_no_site_id_creates_locally(self, clients: ClientRegistry) -> None:
         resp = clients.Agent.create_registration_token(
             body={"host": "heute", "comment": "from test"}
         )
-        resp.assert_status_code(201)
+        resp.assert_status_code(HTTPStatus.CREATED)
         token_id = resp.json["id"]
         stored = get_token_store().verify(f"0:{token_id}", now=dt.datetime.now(dt.UTC))
         assert isinstance(stored.details, AgentRegistrationToken)
         assert stored.details.host_name == "heute"
         assert stored.details.comment == "from test"
 
-    @pytest.mark.usefixtures("with_host")
+    @pytest.mark.usefixtures("with_host", "distributed_sites")
     def test_remote_site_id_forwards(
-        self,
-        clients: ClientRegistry,
-        distributed_sites: None,
-        monkeypatch: pytest.MonkeyPatch,
+        self, clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         captured: dict[str, object] = {}
 
@@ -220,7 +289,7 @@ class TestCreateAgentRegistrationToken:
             automation_config: RemoteAutomationConfig,
             command: str,
             vars_: list[tuple[str, str]],
-            debug: bool,
+            debug: bool,  # noqa: ARG001
         ) -> dict[str, str | None]:
             captured["site_id"] = automation_config.site_id
             captured["command"] = command
@@ -240,7 +309,7 @@ class TestCreateAgentRegistrationToken:
             body={"host": "heute", "comment": "remote", "site_id": REMOTE_SITE}
         )
 
-        resp.assert_status_code(201)
+        resp.assert_status_code(HTTPStatus.CREATED)
         assert resp.json["id"] == "forwarded-reg-token"
         assert resp.json["extensions"]["host_name"] == "heute"
         assert resp.json["extensions"]["comment"] == "remote"
@@ -250,13 +319,11 @@ class TestCreateAgentRegistrationToken:
         assert '"host_name":"heute"' in str(captured["request"])
         assert '"connection_mode":"pull-agent"' in str(captured["request"])
 
-    @pytest.mark.usefixtures("with_host")
-    def test_unknown_site_id_returns_400(
-        self, clients: ClientRegistry, distributed_sites: None
-    ) -> None:
+    @pytest.mark.usefixtures("with_host", "distributed_sites")
+    def test_unknown_site_id_returns_400(self, clients: ClientRegistry) -> None:
         resp = clients.Agent.create_registration_token(
             body={"host": "heute", "comment": "x", "site_id": "does_not_exist"},
             expect_ok=False,
         )
-        resp.assert_status_code(400)
+        resp.assert_status_code(HTTPStatus.BAD_REQUEST)
         assert "does_not_exist" in resp.json["detail"]

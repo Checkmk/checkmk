@@ -8,6 +8,27 @@ use http::StatusCode;
 use reqwest::header::AUTHORIZATION;
 use serde::{Deserialize, Serialize};
 use serde_with::DisplayFromStr;
+use std::time::Duration;
+
+// Timeouts of the agent update calls. Set explicitly because the default of the
+// blocking reqwest client is 30 seconds and the code says so nowhere.
+//
+// The values differ from the legacy updater's because the 120 seconds of
+// `cmk_update_agent` are an inactivity timeout: 120 seconds without a single
+// byte. That never bounds a transfer as a whole, so a slow download simply takes
+// as long as it takes. The blocking reqwest client offers no inactivity timeout,
+// only a cap on total wall-clock time, so each value here has to be a budget for
+// the whole call.
+
+/// Cap for the agent update status request.
+///
+/// Very small JSON objects to send/recv: time to outlast a TLS handshake and a bit busy site.
+const UPDATE_STATUS_TIMEOUT: Duration = Duration::from_secs(30);
+
+/// Cap for the agent package download.
+///
+/// 300 is approximately 30 MB at 100 kB/s.
+const AGENT_DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(300);
 
 #[derive(Serialize)]
 struct RenewCertificateBody {
@@ -84,6 +105,86 @@ pub struct RegistrationStatusV2ResponseRegistered {
 #[derive(Deserialize)]
 struct ErrorResponse {
     pub detail: String,
+}
+
+/// What the host tells the site about its agent. The site keeps no state about
+/// the host beyond this, so every field is reported on every check.
+///
+/// Borrows its fields: the body is a view of the updater's artifacts, assembled
+/// for one request.
+#[derive(Serialize)]
+pub struct UpdateStatusBody<'a> {
+    /// Target platform of the installed package, for example "linux_deb".
+    pub platform: &'a str,
+
+    /// Hash of the installed agent package.
+    pub installed_aghash: &'a types::AgentHash,
+
+    /// Error of the last update attempt, which the site quotes back in its
+    /// deployment views.
+    pub last_error: Option<&'a str>,
+}
+
+/// One signature of the offered agent package.
+#[derive(Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct AgentSignature {
+    /// PEM-encoded certificate of the signing key.
+    pub certificate: String,
+
+    /// Base64-encoded signature of the package.
+    pub signature: String,
+}
+
+/// The agent package the site has for this host.
+#[derive(Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct TargetAgent {
+    /// Hash of the package the site would deliver.
+    pub aghash: types::AgentHash,
+
+    /// Signatures to verify a downloaded package against. A site that signs
+    /// nothing may leave the field out altogether.
+    #[serde(default)]
+    pub signatures: Vec<AgentSignature>,
+}
+
+/// What the site answers a status request with.
+#[derive(Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct UpdateStatusResponse {
+    /// The package offered to this host, absent if the site has none. Carrying
+    /// the hash and its signatures together keeps a package without a hash,
+    /// or a hash without the signatures that belong to it, unrepresentable.
+    pub target_agent: Option<TargetAgent>,
+}
+
+/// Which package to fetch. The site serves the one it named in the status.
+#[derive(Serialize)]
+pub struct AgentDownloadBody<'a> {
+    /// Target platform of the installed package, for example "linux_deb".
+    pub platform: &'a str,
+
+    /// Hash of the package to fetch.
+    pub aghash: &'a types::AgentHash,
+}
+
+pub trait AgentUpdate {
+    /// Report what is installed and learn which package the site would deliver.
+    ///
+    /// The client certificate of `connection` authenticates the host; the site
+    /// resolves its UUID to a host name. There is no further credential.
+    fn update_status(
+        &self,
+        base_url: &reqwest::Url,
+        connection: &config::TrustedConnection,
+        body: &UpdateStatusBody<'_>,
+    ) -> AnyhowResult<UpdateStatusResponse>;
+
+    /// Fetch the agent package itself, unverified.
+    fn download_agent(
+        &self,
+        base_url: &reqwest::Url,
+        connection: &config::TrustedConnection,
+        body: &AgentDownloadBody<'_>,
+    ) -> AnyhowResult<Vec<u8>>;
 }
 
 pub trait Registration {
@@ -192,6 +293,21 @@ impl Api {
                 }
             ),
         }
+    }
+
+    /// The body of a response that is not JSON, for example an agent package.
+    fn response_bytes(response: reqwest::blocking::Response) -> AnyhowResult<Vec<u8>> {
+        let status = response.status();
+        if status != StatusCode::OK {
+            bail!(Api::error_response_description(
+                status,
+                response.text().ok()
+            ))
+        }
+        Ok(response
+            .bytes()
+            .context("Failed to obtain response body")?
+            .to_vec())
     }
 
     fn check_response_204(response: reqwest::blocking::Response) -> AnyhowResult<()> {
@@ -407,6 +523,51 @@ impl RegistrationStatusV2 for Api {
     }
 }
 
+impl AgentUpdate for Api {
+    fn update_status(
+        &self,
+        base_url: &reqwest::Url,
+        connection: &config::TrustedConnection,
+        body: &UpdateStatusBody<'_>,
+    ) -> AnyhowResult<UpdateStatusResponse> {
+        Self::deserialize_json_response(
+            certs::client(
+                Some(connection.tls_handshake_credentials()?),
+                self.use_proxy,
+            )?
+            .post(Self::endpoint_url(
+                base_url,
+                &["agent_update", "status", &connection.uuid.to_string()],
+            )?)
+            .timeout(UPDATE_STATUS_TIMEOUT)
+            .json(body)
+            .send()?,
+            |body| serde_json::from_str::<UpdateStatusResponse>(body),
+        )
+    }
+
+    fn download_agent(
+        &self,
+        base_url: &reqwest::Url,
+        connection: &config::TrustedConnection,
+        body: &AgentDownloadBody<'_>,
+    ) -> AnyhowResult<Vec<u8>> {
+        Self::response_bytes(
+            certs::client(
+                Some(connection.tls_handshake_credentials()?),
+                self.use_proxy,
+            )?
+            .post(Self::endpoint_url(
+                base_url,
+                &["agent_update", "agent", &connection.uuid.to_string()],
+            )?)
+            .timeout(AGENT_DOWNLOAD_TIMEOUT)
+            .json(body)
+            .send()?,
+        )
+    }
+}
+
 #[cfg(test)]
 mod test_api {
     use super::*;
@@ -422,6 +583,110 @@ mod test_api {
             .to_string(),
             "https://my_server:7766/site2/agent-receiver/some/endpoint"
         );
+    }
+
+    const AGENT_HASH: &str = "0123456789abcdef";
+
+    #[test]
+    fn test_update_status_body_serialization() {
+        assert_eq!(
+            serde_json::to_string(&UpdateStatusBody {
+                platform: "linux_deb",
+                installed_aghash: &AGENT_HASH.parse().unwrap(),
+                last_error: Some("boom"),
+            })
+            .unwrap(),
+            r#"{"platform":"linux_deb","installed_aghash":"0123456789abcdef","last_error":"boom"}"#
+        );
+    }
+
+    #[test]
+    fn test_agent_download_body_serialization() {
+        assert_eq!(
+            serde_json::to_string(&AgentDownloadBody {
+                platform: "linux_deb",
+                aghash: &AGENT_HASH.parse().unwrap(),
+            })
+            .unwrap(),
+            r#"{"platform":"linux_deb","aghash":"0123456789abcdef"}"#
+        );
+    }
+
+    #[test]
+    fn test_response_bytes_ok() {
+        assert_eq!(
+            Api::response_bytes(reqwest::blocking::Response::from(
+                http::Response::builder()
+                    .status(StatusCode::OK)
+                    .body("a package")
+                    .unwrap(),
+            ))
+            .unwrap(),
+            b"a package"
+        );
+    }
+
+    #[test]
+    fn test_response_bytes_error() {
+        assert_eq!(
+            Api::response_bytes(reqwest::blocking::Response::from(
+                http::Response::builder()
+                    .status(StatusCode::NOT_FOUND)
+                    .body("{\"detail\": \"No such agent\"}")
+                    .unwrap(),
+            ))
+            .unwrap_err()
+            .to_string(),
+            "Request failed with code 404 Not Found: No such agent"
+        );
+    }
+
+    #[test]
+    fn test_update_status_response_deserialization() {
+        let response = serde_json::from_str::<UpdateStatusResponse>(
+            r#"{"target_agent": {"aghash": "0123456789abcdef",
+                "signatures": [{"certificate": "CERT", "signature": "c2ln"}]}}"#,
+        )
+        .unwrap();
+
+        let target_agent = response.target_agent.unwrap();
+        assert_eq!(target_agent.aghash.as_str(), AGENT_HASH);
+        assert_eq!(
+            target_agent.signatures,
+            [AgentSignature {
+                certificate: String::from("CERT"),
+                signature: String::from("c2ln"),
+            }]
+        );
+    }
+
+    /// A site that signs nothing may leave the signatures out entirely.
+    #[test]
+    fn test_update_status_response_of_an_unsigned_package() {
+        let response = serde_json::from_str::<UpdateStatusResponse>(
+            r#"{"target_agent": {"aghash": "0123456789abcdef"}}"#,
+        )
+        .unwrap();
+
+        assert!(response.target_agent.unwrap().signatures.is_empty());
+    }
+
+    /// A site with nothing to offer leaves the target agent out entirely.
+    #[test]
+    fn test_update_status_response_without_a_package() {
+        let response = serde_json::from_str::<UpdateStatusResponse>(r#"{}"#).unwrap();
+
+        assert!(response.target_agent.is_none());
+    }
+
+    /// The target hash becomes the name of a file handed to a privileged
+    /// process, so a response carrying something else is not a status at all.
+    #[test]
+    fn test_update_status_response_rejects_a_target_hash_that_is_not_one() {
+        assert!(serde_json::from_str::<UpdateStatusResponse>(
+            r#"{"target_agent": {"aghash": "../../etc/passwd"}}"#,
+        )
+        .is_err());
     }
 
     #[test]

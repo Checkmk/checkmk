@@ -17,7 +17,7 @@ import { useResolvedDateTimeSettings } from './useResolvedDateTimeSettings'
 
 const { durationSeconds, timeZone } = defineProps<{
   /** Length of the range ending "now", in seconds (e.g. last 4 hours -> 14400). */
-  durationSeconds: number
+  durationSeconds: number | null
   timeZone?: string
 }>()
 
@@ -25,12 +25,14 @@ const open = ref(false)
 const settings = useResolvedDateTimeSettings(undefined, () => timeZone)
 // Re-reads the clock each minute while open, so the range stays current on a long hover.
 const now = useNowTicker(open)
-const rangeText = computed(() => formatRelativeTimeRange(now.value, durationSeconds, settings))
+const rangeText = computed(() =>
+  durationSeconds === null ? null : formatRelativeTimeRange(now.value, durationSeconds, settings)
+)
 </script>
 
 <template>
   <CmkTooltipProvider>
-    <CmkTooltip :open="open" @update:open="open = $event">
+    <CmkTooltip :open="!!rangeText && open" @update:open="open = $event">
       <!-- as-child: the default slot must be a single element (the chip / chip select). -->
       <CmkTooltipTrigger as-child>
         <slot />

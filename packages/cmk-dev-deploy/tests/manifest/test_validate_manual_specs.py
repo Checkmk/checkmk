@@ -4,8 +4,6 @@
 
 """Unit tests for _validate_manual_specs."""
 
-from __future__ import annotations
-
 import os
 from pathlib import Path
 
@@ -82,6 +80,53 @@ def test_cmk_mcp_wheel_restarts_the_mcp_server_daemon() -> None:
     assert mcp is not None, "no [[service]] entry for the cmk-mcp wheel"
     assert mcp["services"] == ["mcp-server:restart"]
     assert Service("mcp-server") is Service.MCP_SERVER
+
+
+def test_cmk_ai_control_plane_wheel_restarts_the_ai_control_plane_daemon() -> None:
+    """Deploying the cmk-ai-control-plane wheel restarts the ai-control-plane daemon.
+
+    The daemon imports cmk.ai_control_plane once at startup, so a reinstalled wheel
+    is only picked up after a restart.
+    """
+    repo_root = _workspace_root()
+    if repo_root is None:
+        pytest.skip("workspace root not accessible (sandbox run)")
+    if not (repo_root / "non-free").is_dir():
+        pytest.skip("cmk-ai-control-plane is a non-free package; not present in this checkout")
+
+    manual = _load_specs_from_toml(specs_path(), is_nonfree_checkout=True)
+    ai_control_plane = next(
+        (
+            s
+            for s in manual["service_specs"]
+            if s["package_target"] == "//non-free/packages/cmk-ai-control-plane:wheel"
+        ),
+        None,
+    )
+
+    assert ai_control_plane is not None, "no [[service]] entry for the cmk-ai-control-plane wheel"
+    assert ai_control_plane["services"] == ["ai-control-plane:restart"]
+    assert Service("ai-control-plane") is Service.AI_CONTROL_PLANE
+
+
+def test_cmk_maps_wheel_restarts_the_daemon_and_reloads_apache() -> None:
+    """Deploying the cmk-maps wheel must hit both consumers of that wheel.
+
+    It carries the standalone daemon (cmk.maps.backend, imported once at
+    startup) *and* the GUI/REST code apache serves (cmk.maps.gui,
+    cmk.maps.rest_api).  Since explicit entries replace the wheel-convention
+    default, dropping apache:reload here would leave apache on stale Maps code.
+    """
+    manual = _load_specs_from_toml(specs_path(), is_nonfree_checkout=False)
+    maps = next(
+        (s for s in manual["service_specs"] if s["package_target"] == "//packages/cmk-maps:wheel"),
+        None,
+    )
+
+    assert maps is not None, "no [[service]] entry for the cmk-maps wheel"
+    assert maps["services"] == ["maps:restart", "apache:reload"]
+    assert Service("maps") is Service.MAPS
+    assert maps["source_prefix"] == "packages/cmk-maps"
 
 
 def test_frontend_vue_dist_reloads_apache() -> None:

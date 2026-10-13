@@ -3,41 +3,43 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import json
 from collections.abc import Mapping
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_mock import MockerFixture
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.kube.agent_based import kube_node_container_count
+from cmk.plugins.kube.agent_based.kube_node_container_count import KubeContainersLevelsUpperLower
 from cmk.plugins.kube.schemata.section import ContainerCount
 
 
 @pytest.fixture
-def running():
+def running() -> int:
     return 8
 
 
 @pytest.fixture
-def waiting():
+def waiting() -> int:
     return 1
 
 
 @pytest.fixture
-def terminated():
+def terminated() -> int:
     return 0
 
 
 @pytest.fixture
-def string_table(running, waiting, terminated):
+def string_table(running: int, waiting: int, terminated: int) -> StringTable:
     return [[json.dumps({"running": running, "waiting": waiting, "terminated": terminated})]]
 
 
 @pytest.fixture
-def section(string_table):
+def section(string_table: StringTable) -> ContainerCount:
     return kube_node_container_count.parse(string_table)
 
 
@@ -52,7 +54,7 @@ def test_register_check_plugin_calls() -> None:
     check_plugin = kube_node_container_count.check_plugin_kube_node_container_count
     assert check_plugin.name == "kube_node_container_count"
     assert check_plugin.service_name == "Containers"
-    assert check_plugin.discovery_function == kube_node_container_count.discovery
+    assert check_plugin.discovery_function is discover_one_service
     assert check_plugin.check_function == kube_node_container_count.check
     assert check_plugin.check_default_parameters == {}
     assert check_plugin.check_ruleset_name == "kube_node_container_count"
@@ -65,13 +67,8 @@ def test_parse(string_table: StringTable, running: int, waiting: int, terminated
     assert section.terminated == terminated
 
 
-def test_discovery_returns_an_iterable(string_table: StringTable) -> None:
-    parsed = kube_node_container_count.parse(string_table)
-    assert list(kube_node_container_count.discovery(parsed))
-
-
 @pytest.fixture
-def params():
+def params() -> KubeContainersLevelsUpperLower:
     return {
         "running_upper": ("levels", (10, 15)),
         "running_lower": ("levels", (5, 2)),
@@ -85,7 +82,7 @@ def params():
 
 
 @pytest.fixture
-def check_result(section, params):
+def check_result(section: ContainerCount, params: KubeContainersLevelsUpperLower) -> CheckResult:
     return kube_node_container_count.check(params, section)
 
 
@@ -113,7 +110,7 @@ def test_check_all_metrics_values(check_result: CheckResult, section: ContainerC
 
 
 @pytest.fixture
-def check_levels(mocker, autouse=True):
+def check_levels(mocker: MockerFixture, autouse: bool = True) -> MagicMock:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     return mocker.spy(kube_node_container_count, "check_levels_v1")
 
 

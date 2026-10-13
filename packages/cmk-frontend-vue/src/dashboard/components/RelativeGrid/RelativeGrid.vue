@@ -4,7 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
@@ -65,12 +66,14 @@ const emit = defineEmits<{
   'widget:edit': [widgetId: string]
   'widget:delete': [widgetId: string]
   'widget:clone': [widgetId: string, newWidgetLayout: WidgetLayout]
+  'widget:updateTimeRange': [widgetId: string, range: DateTimeRange]
 }>()
 
 const dashboard = ref<HTMLElement | null>(null)
 
 const {
   dashboardState,
+  getMeasuredLayout,
   getAbsoluteLayout,
   getLayoutZIndex,
   getAnchorPosition,
@@ -188,16 +191,19 @@ watch(enterMissingRuntimeFiltersAction, async () => {
   await nextTick()
   setDashboardLayout()
 })
+
+defineExpose({
+  getMeasuredLayout
+})
 </script>
 
 <template>
   <div>
-    <CmkAlertBox
+    <CmkAlert
       v-if="enterMissingRuntimeFiltersAction !== null"
       class="db-relative-grid__missing-filters-dialog"
-    >
-      {{ _t('Runtime filters are required to load data.') }}
-    </CmkAlertBox>
+      :text="_t('Runtime filters are required to load data.')"
+    />
     <div id="dashboard" ref="dashboard" class="dashboard dashboard_main">
       <div
         v-for="spec of contentProps"
@@ -228,6 +234,7 @@ watch(enterMissingRuntimeFiltersAction, async () => {
           @click:edit="$emit('widget:edit', spec.widget_id)"
           @click:delete="$emit('widget:delete', spec.widget_id)"
           @click:clone="cloneRelativeGridWidget(spec.widget_id)"
+          @update-time-range="$emit('widget:updateTimeRange', spec.widget_id, $event)"
         />
       </div>
     </div>

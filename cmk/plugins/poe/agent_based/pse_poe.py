@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
 )
 
 # TODO: migrate pse_poe to packages/cmk-plugins and update this import to cmk.plugins.lib.poe
-from cmk.plugins.poe.lib import check_poe_data, PoeStatus, PoeValues
+from cmk.plugins.poe.lib import check_poe_data, poe_status_from_device, PoeValues
 
 # We fetch the following columns from SNMP:
 # 2 pethMainPsePower (The nominal power of the PSE expressed in Watts)
@@ -50,7 +50,7 @@ def parse_pse_poe(string_table: StringTable) -> Section:
         poe_dict[str(oid_end)] = PoeValues(
             poe_max=int(poe_max),
             poe_used=int(poe_used),
-            poe_status=PoeStatus(int(pse_op_status)),
+            poe_status=poe_status_from_device(int(pse_op_status)),
             poe_status_detail=None,
         )
     return poe_dict

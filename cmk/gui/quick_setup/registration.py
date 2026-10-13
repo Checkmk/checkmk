@@ -10,6 +10,7 @@ from cmk.gui.watolib.mode import ModeRegistry
 
 from . import _modes
 from .config_setups import register as register_config_setups
+from .config_setups.kubernetes.bootstrap import AutomationKubernetesPushRegistration
 from .handlers.setup import QuickSetupActionBackgroundJob
 from .handlers.stage import (
     AutomationQuickSetupStageAction,
@@ -30,6 +31,7 @@ def register(
     _modes.register(main_module_topic_registry, main_module_registry, mode_registry)
     automation_command_registry.register(AutomationQuickSetupStageAction)
     automation_command_registry.register(AutomationQuickSetupStageActionResult)
+    automation_command_registry.register(AutomationKubernetesPushRegistration)
     register_config_setups(quick_setup_registry)
     job_registry.register(QuickSetupStageActionBackgroundJob)
     job_registry.register(QuickSetupActionBackgroundJob)

@@ -5,6 +5,7 @@
 
 import logging
 from collections.abc import Iterator
+from http import HTTPStatus
 from pathlib import Path
 
 import pytest
@@ -49,26 +50,26 @@ def _auth(secret: str = _SECRET) -> dict[str, str]:
 
 def test_health_needs_no_auth(client: FlaskClient) -> None:
     response = client.get("/")
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.get_json() == {"status": "ok"}
 
 
 def test_connect_with_valid_secret(client: FlaskClient) -> None:
     response = client.get("/v1/connect", headers=_auth())
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.get_json() == {"status": "ok"}
 
 
 def test_connect_without_auth_returns_json_401(client: FlaskClient) -> None:
     response = client.get("/v1/connect")
-    assert response.status_code == 401
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
     assert response.is_json
     assert response.get_json() == {"error": "Invalid or missing authorization."}
 
 
 def test_connect_with_wrong_secret_returns_json_401(client: FlaskClient) -> None:
     response = client.get("/v1/connect", headers=_auth("wrong"))
-    assert response.status_code == 401
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
     assert response.get_json() == {"error": "Invalid or missing authorization."}
 
 
@@ -81,7 +82,7 @@ def test_reserve_tops_up_to_the_maximum(client: FlaskClient) -> None:
     # With 3 IDs held locally, the server hands out the remaining 11 - 3 = 8,
     # starting right after the seeded counter value.
     response = client.post("/v1/reserve", headers=_auth(), json={"local_werk_ids_count": 3})
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     reserved = response.get_json()["reserved_werk_ids"]
     assert reserved == list(range(_START + 1, _START + 9))
     assert len(reserved) == 8
@@ -91,19 +92,19 @@ def test_reserve_keeps_ten_after_one_is_consumed(client: FlaskClient) -> None:
     # A client already holding 10 still receives exactly 1 more, so `werk new`
     # can consume one and remain at 10.
     response = client.post("/v1/reserve", headers=_auth(), json={"local_werk_ids_count": 10})
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert len(response.get_json()["reserved_werk_ids"]) == 1
 
 
 def test_reserve_when_already_at_max_returns_empty(client: FlaskClient) -> None:
     response = client.post("/v1/reserve", headers=_auth(), json={"local_werk_ids_count": 11})
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.get_json() == {"reserved_werk_ids": []}
 
 
 def test_reserve_when_above_max_returns_empty(client: FlaskClient) -> None:
     response = client.post("/v1/reserve", headers=_auth(), json={"local_werk_ids_count": 25})
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response.get_json() == {"reserved_werk_ids": []}
 
 
@@ -129,7 +130,7 @@ def test_reserve_rejects_bad_input_with_json_400(
     client: FlaskClient, payload: dict[str, object]
 ) -> None:
     response = client.post("/v1/reserve", headers=_auth(), json=payload)
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response.get_json() == {
         "error": "Field 'local_werk_ids_count' must be a non-negative integer."
     }
@@ -137,7 +138,7 @@ def test_reserve_rejects_bad_input_with_json_400(
 
 def test_reserve_without_auth_returns_json_401(client: FlaskClient) -> None:
     response = client.post("/v1/reserve", json={"local_werk_ids_count": 0})
-    assert response.status_code == 401
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
     assert response.get_json() == {"error": "Invalid or missing authorization."}
 
 
@@ -155,11 +156,11 @@ def test_reserve_ids_are_monotonic_across_requests(client: FlaskClient) -> None:
 
 
 def test_secret_rotation_takes_effect_immediately(client: FlaskClient, secret_file: Path) -> None:
-    assert client.get("/v1/connect", headers=_auth()).status_code == 200
+    assert client.get("/v1/connect", headers=_auth()).status_code == HTTPStatus.OK
     secret_file.write_text("rotated", encoding="utf-8")
     # The old secret is now rejected and the new one accepted without restart.
-    assert client.get("/v1/connect", headers=_auth()).status_code == 401
-    assert client.get("/v1/connect", headers=_auth("rotated")).status_code == 200
+    assert client.get("/v1/connect", headers=_auth()).status_code == HTTPStatus.UNAUTHORIZED
+    assert client.get("/v1/connect", headers=_auth("rotated")).status_code == HTTPStatus.OK
 
 
 def test_reserve_logs_client_and_ids(client: FlaskClient, caplog: pytest.LogCaptureFixture) -> None:

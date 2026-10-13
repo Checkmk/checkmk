@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from http import HTTPStatus
 from unittest.mock import MagicMock
 
 import pytest
@@ -27,7 +27,7 @@ from cmk.gui.watolib.site_changes import SiteChanges
 from cmk.gui.watolib.sites import SitesConfigFile
 from cmk.livestatus_client import SAMLAuthenticationEntry, SiteConfiguration
 from cmk.utils import paths
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry, Response
 
 DOMAIN_TYPE = "site_connection"
 
@@ -57,13 +57,35 @@ def test_get_a_site_connection(clients: ClientRegistry) -> None:
 
 
 def test_get_site_connection_that_doesnt_exist(clients: ClientRegistry) -> None:
-    clients.SiteManagement.get(site_id="NON_SITE", expect_ok=False).assert_status_code(404)
+    clients.SiteManagement.get(site_id="NON_SITE", expect_ok=False).assert_status_code(
+        HTTPStatus.NOT_FOUND
+    )
 
 
 def test_get_site_connections(clients: ClientRegistry) -> None:
     resp = clients.SiteManagement.get_all()
     assert resp.json["domainType"] == DOMAIN_TYPE
     assert resp.json["value"][0]["id"] == "NO_SITE"
+
+
+def test_get_site_connections_expose_authentication_connections(
+    clients: ClientRegistry,
+) -> None:
+    """A listed site carries `authentication_connections` too (werk 18500).
+
+    The werk names the collection endpoint as gaining the key, but
+    `test_get_site_connections` only pins the envelope -- nothing asserted that a
+    listed site actually carries the key.
+    """
+    config, site_id = _default_config_with_site_id()
+    config["configuration_connection"]["authentication_connections"] = {"type": "disabled"}
+    clients.SiteManagement.create(site_config=config)
+
+    listed = {site["id"]: site for site in clients.SiteManagement.get_all().json["value"]}
+    assert site_id in listed, listed.keys()
+    assert listed[site_id]["extensions"]["configuration_connection"][
+        "authentication_connections"
+    ] == {"type": "disabled"}
 
 
 def test_login_replication_enabled(
@@ -75,15 +97,15 @@ def test_login_replication_enabled(
     monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.do_site_login",
-        lambda site_id, username, password, debug: "watosecret",
+        lambda site_id, username, password, debug: "watosecret",  # noqa: ARG005
     )
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.trigger_remote_certs_creation",
-        lambda site_id, settings, force, debug: None,
+        lambda site_id, settings, force, debug: None,  # noqa: ARG005
     )
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.distribute_license_to_remotes",
-        lambda logger, remote_automation_configs: None,
+        lambda logger, remote_automation_configs: None,  # noqa: ARG005
     )
 
     clients.SiteManagement.login(
@@ -138,21 +160,21 @@ def test_login_replication_disabled(
     monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.do_site_login",
-        lambda site_id, username, password, debug: "watosecret",
+        lambda site_id, username, password, debug: "watosecret",  # noqa: ARG005
     )
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.trigger_remote_certs_creation",
-        lambda site_id, settings, force, debug: None,
+        lambda site_id, settings, force, debug: None,  # noqa: ARG005
     )
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.distribute_license_to_remotes",
-        lambda logger, remote_automation_configs: None,
+        lambda logger, remote_automation_configs: None,  # noqa: ARG005
     )
 
     # TODO fix this.  We shouldn't return a 500 on login failure
     clients.SiteManagement.login(
         site_id=remote_site_id, username="cmkadmin", password="cmk", expect_ok=False
-    ).assert_status_code(500)
+    ).assert_status_code(HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
 def test_login_site_doesnt_exist(
@@ -165,7 +187,7 @@ def test_login_site_doesnt_exist(
         username="cmkadmin",
         password="cmk",
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_login_site_problem(
@@ -175,7 +197,7 @@ def test_login_site_problem(
     monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
 
     class MockLoginException:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: object, **kwargs: object) -> None:  # noqa: ARG002
             raise Exception("There was a problem logging in.")
 
     monkeypatch.setattr(
@@ -187,7 +209,7 @@ def test_login_site_problem(
         username="cmkadmin",
         password="cmk",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_logout_site(clients: ClientRegistry) -> None:
@@ -198,7 +220,7 @@ def test_logout_site_that_doesnt_exist(clients: ClientRegistry) -> None:
     clients.SiteManagement.logout(
         site_id="NO_EXIST_SITE",
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_delete_site_connection(clients: ClientRegistry) -> None:
@@ -212,7 +234,7 @@ def test_delete_site_connection_problem(
     monkeypatch: MonkeyPatch,
 ) -> None:
     class MockDeleteException:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: object, **kwargs: object) -> None:  # noqa: ARG002
             raise MKUserError(varname=None, message="There was a problem deleting that site.")
 
     monkeypatch.setattr(
@@ -224,7 +246,7 @@ def test_delete_site_connection_problem(
     clients.SiteManagement.delete(
         site_id=site_id,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_create_site_connection(clients: ClientRegistry) -> None:
@@ -244,6 +266,27 @@ def test_create_site_connection_records_pending_change_for_new_site(
     )
 
 
+@pytest.mark.parametrize(
+    "site_id",
+    [
+        pytest.param("site-1", id="dash"),
+        pytest.param("1site", id="leading_digit"),
+        pytest.param("a" * 17, id="too_long"),
+        pytest.param("remote\n", id="trailing_newline"),
+    ],
+)
+def test_create_site_connection_with_invalid_site_id(
+    clients: ClientRegistry,
+    site_id: str,
+) -> None:
+    config = _default_config()
+    config["basic_settings"]["site_id"] = site_id
+    clients.SiteManagement.create(
+        site_config=config,
+        expect_ok=False,
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
+
+
 def test_create_site_connection_that_already_exists(
     clients: ClientRegistry,
 ) -> None:
@@ -251,7 +294,7 @@ def test_create_site_connection_that_already_exists(
     clients.SiteManagement.create(
         site_config=_default_config(),
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 keys_to_remove = ("basic_settings", "status_connection", "configuration_connection")
@@ -263,11 +306,66 @@ def test_create_site_connection_missing_config(
     key: str,
 ) -> None:
     config = _default_config()
+    # NOTE: The whole test is very questionable from a typing perspecitve: Even if we make the type
+    # of `key` stricter via a `Literal`, things are incorrect: The key/value pairs we remove are
+    # required, so the whole typing is a lie here.
     config.pop(key)  # type: ignore[misc]
     clients.SiteManagement.create(
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
+
+
+AUTHENTICATION_CONNECTIONS_FIELD = (
+    "body.site_config.configuration_connection.authentication_connections"
+)
+
+
+def _assert_authentication_connections_missing(resp: Response) -> None:
+    fields = resp.json["fields"]
+    assert AUTHENTICATION_CONNECTIONS_FIELD in fields, fields
+    assert fields[AUTHENTICATION_CONNECTIONS_FIELD]["type"] == "missing", fields
+
+
+def test_create_site_connection_requires_authentication_connections(
+    clients: ClientRegistry,
+) -> None:
+    """`authentication_connections` is required with no default (werk 18500).
+
+    The site schema was changed in place rather than behind a new endpoint, so a
+    client written before the werk must be rejected rather than silently given a
+    default for which connections may log in on the site.
+    """
+    config = _default_config()
+    del config["configuration_connection"]["authentication_connections"]
+    _assert_authentication_connections_missing(
+        clients.SiteManagement.create(
+            site_config=config,
+            expect_ok=False,
+        ).assert_status_code(HTTPStatus.BAD_REQUEST)
+    )
+
+
+def test_update_site_connection_requires_authentication_connections(
+    clients: ClientRegistry,
+) -> None:
+    """`authentication_connections` is required with no default (werk 18500).
+
+    A PUT replaces the whole site config, so a client written before the werk
+    cannot omit `authentication_connections` and keep the site's stored value --
+    there is no partial-update path.
+    """
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+
+    del config["configuration_connection"]["authentication_connections"]
+    _assert_authentication_connections_missing(
+        clients.SiteManagement.update(
+            site_id=site_id,
+            site_config=config,
+            expect_ok=False,
+        ).assert_status_code(HTTPStatus.BAD_REQUEST)
+    )
 
 
 def test_create_then_get_site_connection(clients: ClientRegistry) -> None:
@@ -300,13 +398,27 @@ def test_update_site_connection(clients: ClientRegistry) -> None:
     assert extensions == config
 
 
+def test_update_site_connection_ignores_site_id_from_body(clients: ClientRegistry) -> None:
+    """The site ID from the path wins, the one in the request body is ignored."""
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+
+    config["basic_settings"]["site_id"] = "NO_SITE"
+    resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
+
+    assert resp.json["id"] == site_id
+    assert resp.json["extensions"]["basic_settings"]["site_id"] == site_id
+    stored = clients.SiteManagement.get(site_id=site_id)
+    assert stored.json["extensions"]["basic_settings"]["site_id"] == site_id
+
+
 def test_update_site_connection_that_doesnt_exist(
     clients: ClientRegistry,
 ) -> None:
     config, site_id = _default_config_with_site_id()
     clients.SiteManagement.update(
         site_id=site_id, site_config=config, expect_ok=False
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_update_site_connection_alias(clients: ClientRegistry) -> None:
@@ -397,7 +509,7 @@ def test_update_site_connection_status_connection_400(
         site_id=site_id,
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 proxy_test_data_200: list[Proxy] = [
@@ -547,7 +659,7 @@ def test_update_site_connection_proxy_400(
         site_id=site_id,
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_update_site_connection_user_sync(clients: ClientRegistry) -> None:
@@ -639,6 +751,27 @@ def test_update_site_connection_authentication_connections(clients: ClientRegist
     assert stored["authentication_connections"] == [("ldap", "LDAP_1")]
 
 
+def test_create_site_connection_authentication_connections_disabled(
+    clients: ClientRegistry,
+) -> None:
+    """`authentication_connections` can forbid LDAP and SAML login on a site (werk 18500).
+
+    The stored value has to stay the bare `"disabled"` string rather than an empty
+    list -- only that string resolves to no connection at all, which
+    tests/unit/cmk/gui/userdb/test_authentication_connections.py pins.
+    """
+    config, site_id = _default_config_with_site_id()
+    config["configuration_connection"]["authentication_connections"] = {"type": "disabled"}
+    clients.SiteManagement.create(site_config=config)
+
+    extensions = clients.SiteManagement.get(site_id=site_id).json["extensions"]
+    extensions.pop("logged_in", None)
+    assert extensions == config
+
+    stored = SitesConfigFile().load_for_reading()[SiteId(site_id)]
+    assert stored["authentication_connections"] == "disabled"
+
+
 @pytest.mark.parametrize(
     "authentication_connections",
     [
@@ -658,7 +791,7 @@ def test_update_site_connection_empty_authentication_connections_400(
         site_id=site_id,
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @pytest.fixture(name="saml_connection")
@@ -669,10 +802,8 @@ def _saml_connection(monkeypatch: MonkeyPatch) -> None:
     )
 
 
-def test_site_connection_saml_authentication_connection_round_trip(
-    clients: ClientRegistry,
-    saml_connection: None,
-) -> None:
+@pytest.mark.usefixtures("saml_connection")
+def test_site_connection_saml_authentication_connection_round_trip(clients: ClientRegistry) -> None:
     config, site_id = _default_config_with_site_id()
     remote_site_url = config["configuration_connection"]["url_of_remote_site"]
     clients.SiteManagement.create(site_config=config)
@@ -716,9 +847,9 @@ def test_site_connection_saml_authentication_connection_round_trip(
     ]
 
 
+@pytest.mark.usefixtures("saml_connection")
 def test_update_site_connection_unknown_saml_authentication_connection_400(
     clients: ClientRegistry,
-    saml_connection: None,
 ) -> None:
     config, site_id = _default_config_with_site_id()
     clients.SiteManagement.create(site_config=config)
@@ -730,12 +861,12 @@ def test_update_site_connection_unknown_saml_authentication_connection_400(
         site_id=site_id,
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
+@pytest.mark.usefixtures("saml_connection")
 def test_update_site_connection_saml_authentication_connection_needs_global_permission_403(
     clients: ClientRegistry,
-    saml_connection: None,
 ) -> None:
     """Holding "wato.sites" alone must not reveal which SAML connections exist."""
     config, site_id = _default_config_with_site_id()
@@ -758,7 +889,7 @@ def test_update_site_connection_saml_authentication_connection_needs_global_perm
             "connections": [{"type": "saml", "connection_id": saml_id}],
         }
         resp = clients.SiteManagement.update(site_id=site_id, site_config=config, expect_ok=False)
-        resp.assert_status_code(403)
+        resp.assert_status_code(HTTPStatus.FORBIDDEN)
         details.append(resp.json["detail"])
     assert details[0] == details[1]
 
@@ -829,7 +960,7 @@ def test_update_site_connection_user_sync_no_permission_does_not_leak_ldap_exist
             "ldap_connections": [ldap_id],
         }
         resp = clients.SiteManagement.update(site_id=site_id, site_config=config, expect_ok=False)
-        resp.assert_status_code(403)
+        resp.assert_status_code(HTTPStatus.FORBIDDEN)
         details.append(resp.json["detail"])
     assert details[0] == details[1]
 
@@ -848,7 +979,7 @@ def test_update_site_connection_user_sync_with_ldap_connections_400(
         site_id=site_id,
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 config_cnx_test_data_200: list[ConfigurationConnection] = [
@@ -982,7 +1113,7 @@ def test_update_configuration_connection_400(  # type: ignore[misc]
         site_id=site_id,
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_update_status_host_200(clients: ClientRegistry) -> None:
@@ -1014,7 +1145,7 @@ def test_update_status_host_400(clients: ClientRegistry, data: StatusHost) -> No
         site_id=site_id,
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 url_of_remote_site_test_data_200: list[str] = [
@@ -1059,7 +1190,7 @@ def test_update_url_of_remote_site_400(
         site_id=site_id,
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_update_url_prefix_200(clients: ClientRegistry) -> None:
@@ -1080,7 +1211,7 @@ def test_update_url_prefix_400(clients: ClientRegistry) -> None:
         site_id=site_id,
         site_config=config,
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_post_site_config_customer_field(clients: ClientRegistry) -> None:
@@ -1089,12 +1220,16 @@ def test_post_site_config_customer_field(clients: ClientRegistry) -> None:
         r = clients.SiteManagement.create(site_config=config)
         assert "customer" in r.json["extensions"]["basic_settings"]
         del config["basic_settings"]["customer"]
-        clients.SiteManagement.create(site_config=config, expect_ok=False).assert_status_code(400)
+        clients.SiteManagement.create(site_config=config, expect_ok=False).assert_status_code(
+            HTTPStatus.BAD_REQUEST
+        )
     else:
         r = clients.SiteManagement.create(site_config=config)
         assert "customer" not in r.json["extensions"]["basic_settings"]
         config["basic_settings"].update({"customer": "provider"})
-        clients.SiteManagement.create(site_config=config, expect_ok=False).assert_status_code(400)
+        clients.SiteManagement.create(site_config=config, expect_ok=False).assert_status_code(
+            HTTPStatus.BAD_REQUEST
+        )
 
 
 def test_validation_layer_min_config(clients: ClientRegistry) -> None:
@@ -1148,11 +1283,11 @@ def test_remote_site_logged_in(clients: ClientRegistry, monkeypatch: MonkeyPatch
     monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.do_site_login",
-        lambda site_id, username, password, debug: "watosecret",
+        lambda site_id, username, password, debug: "watosecret",  # noqa: ARG005
     )
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.trigger_remote_certs_creation",
-        lambda site_id, settings, force, debug: None,
+        lambda site_id, settings, force, debug: None,  # noqa: ARG005
     )
     config, site_id = _default_config_with_site_id()
     clients.SiteManagement.create(site_config=config)

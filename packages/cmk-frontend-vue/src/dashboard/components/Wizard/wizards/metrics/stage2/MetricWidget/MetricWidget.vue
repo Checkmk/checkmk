@@ -7,12 +7,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkIndent from 'cmk-ui-library/components/CmkIndent.vue'
+import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
-import GraphTimeRange from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
+import TimeRangeSource from '@/dashboard/components/TimeRange/TimeRangeSource.vue'
 import DataRangeInput from '@/dashboard/components/Wizard/components/DataRangeInput/DataRangeInput.vue'
 import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/FieldComponent.vue'
 import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
@@ -43,6 +44,8 @@ const widgetProps = computed(() => handler.value.widgetProps)
   <DashboardPreviewContent
     widget_id="gauge-preview"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
     :general_settings="widgetProps.value!.general_settings!"
     :content="widgetProps.value!.content!"
     :effective-title="widgetProps.value!.effectiveTitle"
@@ -73,7 +76,10 @@ const widgetProps = computed(() => handler.value.widgetProps)
             "
           />
           <CmkIndent v-if="handler.timeRangeType.value === 'window'">
-            <GraphTimeRange v-model:selected-timerange="handler.timeRange.value" />
+            <TimeRangeSource
+              v-model:follow-dashboard="handler.followDashboardTimeRange.value"
+              v-model:selected-timerange="handler.timeRange.value"
+            />
           </CmkIndent>
         </FieldComponent>
       </TableFormRow>
@@ -115,6 +121,33 @@ const widgetProps = computed(() => handler.value.widgetProps)
             v-model:enabled="handler.showServiceStatusEnabled.value"
             v-model:show-service-status="handler.showServiceStatus.value"
             v-model:show-service-status-selection="handler.showServiceStatusSelection.value"
+          />
+        </FieldComponent>
+      </TableFormRow>
+
+      <TableFormRow>
+        <FieldDescription>{{ _t('Change indicator') }}</FieldDescription>
+        <FieldComponent>
+          <CmkCheckbox
+            v-model="handler.showDelta.value"
+            :label="_t('Show the change versus the average of the displayed window')"
+          />
+        </FieldComponent>
+      </TableFormRow>
+
+      <TableFormRow>
+        <FieldDescription>{{ _t('Sparkline display') }}</FieldDescription>
+        <FieldComponent>
+          <CmkDropdown
+            v-model="handler.sparkHeightMode.value"
+            :options="{
+              type: 'fixed',
+              suggestions: [
+                { name: 'band', title: _t('Band') },
+                { name: 'full', title: _t('Full height') }
+              ]
+            }"
+            :label="_t('Sparkline display')"
           />
         </FieldComponent>
       </TableFormRow>

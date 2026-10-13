@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-import json
 import traceback
 from collections.abc import Collection, Iterator
 from typing import override
@@ -28,11 +27,13 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
-from cmk.gui.type_defs import ActionResult, DynamicIcon, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.wato import MainModuleTopicMaintenance
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeuri_contextless
 
 
@@ -183,9 +184,9 @@ class ModeBackgroundJobDetails(WatoMode):
         if job.is_active():
             html.div(html.render_message(_("Loading...")), id_="async_progress_msg")
             html.div("", id_="status_container")
-            html.javascript(
-                "cmk.background_job.start('ajax_background_job_details.py', %s)"
-                % json.dumps(job_id)
+            html.call_ts_function(
+                function_name="background_job_start",
+                arguments={"update_url": "ajax_background_job_details.py", "job_id": job_id},
             )
         else:
             job_snapshot: BackgroundStatusSnapshot | None = _get_job_snaphot(job)

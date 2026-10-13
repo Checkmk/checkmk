@@ -3,15 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="comparison-overlap"
 
-from __future__ import annotations
 
 import time
 from ast import literal_eval
 from base64 import b64encode
 from collections.abc import Callable, Generator, Iterator
 from datetime import datetime, timedelta, UTC
+from http import HTTPStatus
 from http.cookies import SimpleCookie
 from typing import Literal
 
@@ -23,10 +25,11 @@ from werkzeug.test import create_environ
 from cmk.ccc.user import UserId
 from cmk.gui import auth, http, login
 from cmk.gui.config import active_config
+from cmk.gui.exceptions import MKInsufficientScope
 from cmk.gui.http import request
 from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
 from cmk.gui.oauth.store.client_store import get_client_store
-from cmk.gui.oauth.store.token_store import get_token_store
+from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.scopes import DEFAULT_SCOPE, ScopeId
 from cmk.gui.session import session
 from cmk.gui.type_defs import (
@@ -46,9 +49,8 @@ from cmk.gui.userdb.store import load_custom_attr, save_custom_attr, save_two_fa
 from cmk.gui.utils.misc import saveint
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.wsgi.app import application_and_request_context
-from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.gui.users import create_and_destroy_user
-from tests.testlib.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.unit.gui.users import create_and_destroy_user
+from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 
 # copied from testlib.
@@ -88,9 +90,8 @@ def fixture_user_id(with_user: tuple[UserId, str]) -> UserId:
     return with_user[0]
 
 
-def test_login_two_factor_redirect(
-    wsgi_app: WebTestAppForCMK, request_context: None, patch_theme: None
-) -> None:
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_login_two_factor_redirect(wsgi_app: WebTestAppForCMK) -> None:
     auth_struct: WebAuthnCredential = {
         "credential_id": "Yaddayadda!",
         "registered_at": 0,
@@ -106,25 +107,23 @@ def test_login_two_factor_redirect(
     }
     with create_and_destroy_user(custom_attrs=custom_attrs, config=active_config) as user_tuple:
         resp = wsgi_app.login(user_tuple[0], user_tuple[1])
-        assert resp.status_code == 302
+        assert resp.status_code == HTTPStatus.FOUND
         assert resp.location.startswith("user_login_two_factor.py")
 
 
-def test_login_forced_password_change(
-    wsgi_app: WebTestAppForCMK, request_context: None, patch_theme: None
-) -> None:
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_login_forced_password_change(wsgi_app: WebTestAppForCMK) -> None:
     custom_attrs: UserSpec = {
         "enforce_pw_change": True,
     }
     with create_and_destroy_user(custom_attrs=custom_attrs, config=active_config) as user_tuple:
         resp = wsgi_app.login(user_tuple[0], user_tuple[1])
-        assert resp.status_code == 302
+        assert resp.status_code == HTTPStatus.FOUND
         assert resp.location.startswith("user_change_pw.py")
 
 
-def test_login_two_factor_has_precedence_over_password_change(
-    wsgi_app: WebTestAppForCMK, request_context: None, patch_theme: None
-) -> None:
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_login_two_factor_has_precedence_over_password_change(wsgi_app: WebTestAppForCMK) -> None:
     auth_struct: WebAuthnCredential = {
         "credential_id": "Yaddayadda!",
         "registered_at": 0,
@@ -141,16 +140,12 @@ def test_login_two_factor_has_precedence_over_password_change(
     }
     with create_and_destroy_user(custom_attrs=custom_attrs, config=active_config) as user_tuple:
         resp = wsgi_app.login(user_tuple[0], user_tuple[1])
-        assert resp.status_code == 302
+        assert resp.status_code == HTTPStatus.FOUND
         assert resp.location.startswith("user_login_two_factor.py")
 
 
-def test_login_with_cookies(
-    wsgi_app: WebTestAppForCMK,
-    with_user: tuple[UserId, str],
-    mock_livestatus: MockLiveStatusConnection,
-    patch_theme: None,
-) -> None:
+@pytest.mark.usefixtures("mock_livestatus", "patch_theme")
+def test_login_with_cookies(wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str]) -> None:
     # We will be redirected to the login page
     response = wsgi_app.get("/NO_SITE/check_mk/")
     login_page_url = response.location
@@ -158,7 +153,7 @@ def test_login_with_cookies(
 
     # We see if we can access the login page.
     response = wsgi_app.get(login_page_url)
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
 
     # We try to log in
     response = wsgi_app.post(
@@ -170,10 +165,10 @@ def test_login_with_cookies(
     # index.py now redirects to the user's start URL (dashboard.py by default)
     # rather than rendering the historic frameset / iframe page.
     response = wsgi_app.get("/NO_SITE/check_mk/index.py")
-    assert response.status_code == 302
+    assert response.status_code == HTTPStatus.FOUND
 
     test_environ = create_environ("/NO_SITE/", method="GET")
-    wsgi_app._add_cookies_to_wsgi(test_environ)
+    wsgi_app._add_cookies_to_wsgi(test_environ)  # noqa: SLF001
 
     # request context with cookie yields a user
     assert session.user.id == with_user[0]
@@ -195,16 +190,20 @@ def test_login_with_bearer_token(with_user: tuple[UserId, str], flask_app: flask
 
 def test_login_with_oauth_token(with_user: tuple[UserId, str], flask_app: flask.Flask) -> None:
     username, _ = with_user
-    client_id = get_client_store().register(["https://client.example/callback"], None).client_id
-    token = get_token_store().issue_token(
-        username,
-        expires_at=datetime.now(UTC) + timedelta(minutes=5),
-        resource=None,
-        scope=DEFAULT_SCOPE,
-        client_id=client_id,
-    )
+    with get_client_store() as clients:
+        registration = clients.register(["https://client.example/callback"], None)
+    assert registration.is_ok()
+    with get_token_store() as tokens:
+        token = tokens.issue_token(
+            username,
+            expires_at=datetime.now(UTC) + timedelta(minutes=5),
+            resource=None,
+            scope=DEFAULT_SCOPE,
+            client_id=registration.ok.client_id,
+        )
+    assert token.is_ok()
     with flask_app.test_request_context(
-        "/", method="GET", headers={"Authorization": f"Bearer {token}"}
+        "/", method="GET", headers={"Authorization": f"Bearer {token.ok}"}
     ):
         assert type(session.user) is LoggedInUser
         assert session.user.id == username
@@ -223,16 +222,20 @@ def test_read_scoped_oauth_token_narrows_what_the_user_may_do(
     was only granted read, so the intersection denies it.
     """
     username, _ = with_user
-    client_id = get_client_store().register(["https://client.example/callback"], None).client_id
-    token = get_token_store().issue_token(
-        username,
-        expires_at=datetime.now(UTC) + timedelta(minutes=5),
-        resource=None,
-        scope=DEFAULT_SCOPE,
-        client_id=client_id,
-    )
+    with get_client_store() as clients:
+        registration = clients.register(["https://client.example/callback"], None)
+    assert registration.is_ok()
+    with get_token_store() as tokens:
+        token = tokens.issue_token(
+            username,
+            expires_at=datetime.now(UTC) + timedelta(minutes=5),
+            resource=None,
+            scope=DEFAULT_SCOPE,
+            client_id=registration.ok.client_id,
+        )
+    assert token.is_ok()
     with flask_app.test_request_context(
-        "/", method="GET", headers={"Authorization": f"Bearer {token}"}
+        "/", method="GET", headers={"Authorization": f"Bearer {token.ok}"}
     ):
         assert session.user.may("general.use")
         assert not session.user.may("general.act")
@@ -242,16 +245,20 @@ def test_write_scoped_oauth_token_leaves_the_users_permissions_alone(
     with_user: tuple[UserId, str], flask_app: flask.Flask
 ) -> None:
     username, _ = with_user
-    client_id = get_client_store().register(["https://client.example/callback"], None).client_id
-    token = get_token_store().issue_token(
-        username,
-        expires_at=datetime.now(UTC) + timedelta(minutes=5),
-        resource=None,
-        scope=frozenset({ScopeId.WRITE}),
-        client_id=client_id,
-    )
+    with get_client_store() as clients:
+        registration = clients.register(["https://client.example/callback"], None)
+    assert registration.is_ok()
+    with get_token_store() as tokens:
+        token = tokens.issue_token(
+            username,
+            expires_at=datetime.now(UTC) + timedelta(minutes=5),
+            resource=None,
+            scope=frozenset({ScopeId.WRITE}),
+            client_id=registration.ok.client_id,
+        )
+    assert token.is_ok()
     with flask_app.test_request_context(
-        "/", method="GET", headers={"Authorization": f"Bearer {token}"}
+        "/", method="GET", headers={"Authorization": f"Bearer {token.ok}"}
     ):
         assert session.user.may("general.act")
 
@@ -261,14 +268,19 @@ def _legacy_bearer_header(username: UserId, password: str) -> str:
 
 
 def _oauth_bearer_header(username: UserId, password: str) -> str:
-    client_id = get_client_store().register(["https://client.example/callback"], None).client_id
-    return "Bearer " + get_token_store().issue_token(
-        username,
-        expires_at=datetime.now(UTC) + timedelta(minutes=5),
-        resource=None,
-        scope=DEFAULT_SCOPE,
-        client_id=client_id,
-    )
+    with get_client_store() as clients:
+        registration = clients.register(["https://client.example/callback"], None)
+    assert registration.is_ok()
+    with get_token_store() as tokens:
+        token = tokens.issue_token(
+            username,
+            expires_at=datetime.now(UTC) + timedelta(minutes=5),
+            resource=None,
+            scope=DEFAULT_SCOPE,
+            client_id=registration.ok.client_id,
+        )
+    assert token.is_ok()
+    return "Bearer " + token.ok
 
 
 @pytest.mark.parametrize("make_header", [_legacy_bearer_header, _oauth_bearer_header])
@@ -293,6 +305,35 @@ def test_token_auth_is_not_exchangeable_for_a_session_cookie(
     assert not load_session_infos(username)
 
 
+def test_scope_denial_fails_explicitly(
+    with_user: tuple[UserId, str], flask_app: flask.Flask
+) -> None:
+    """Check that permission denial based on the token's scope fails with MKInsufficientScope."""
+    username, _ = with_user
+    with get_client_store() as clients:
+        registration = clients.register(["https://client.example/callback"], None)
+    assert registration.is_ok()
+    with get_token_store() as tokens:
+        token = tokens.issue_token(
+            username,
+            expires_at=datetime.now(UTC) + timedelta(minutes=5),
+            resource=None,
+            scope=DEFAULT_SCOPE,
+            client_id=registration.ok.client_id,
+        )
+    assert token.is_ok()
+
+    with (
+        flask_app.test_request_context(
+            "/",
+            method="GET",
+            headers={"Authorization": f"Bearer {token.ok}"},
+        ),
+        pytest.raises(MKInsufficientScope),
+    ):
+        session.user.need_permission("general.act")
+
+
 def test_login_with_invalid_oauth_bearer_token(flask_app: flask.Flask) -> None:
     with flask_app.test_request_context(
         "/", method="GET", headers={"Authorization": "Bearer not-a-real-token"}
@@ -304,18 +345,22 @@ def test_login_with_expired_oauth_bearer_token(
     with_user: tuple[UserId, str], flask_app: flask.Flask
 ) -> None:
     username, _ = with_user
-    client_id = get_client_store().register(["https://client.example/callback"], None).client_id
-    token = get_token_store().issue_token(
-        username,
-        expires_at=datetime.now(UTC) + timedelta(minutes=5),
-        resource=None,
-        scope=DEFAULT_SCOPE,
-        client_id=client_id,
-    )
+    with get_client_store() as clients:
+        registration = clients.register(["https://client.example/callback"], None)
+    assert registration.is_ok()
+    with get_token_store() as tokens:
+        token = tokens.issue_token(
+            username,
+            expires_at=datetime.now(UTC) + timedelta(minutes=5),
+            resource=None,
+            scope=DEFAULT_SCOPE,
+            client_id=registration.ok.client_id,
+        )
+    assert token.is_ok()
     with (
         time_machine.travel(datetime.now(UTC) + timedelta(minutes=10)),
         flask_app.test_request_context(
-            "/", method="GET", headers={"Authorization": f"Bearer {token}"}
+            "/", method="GET", headers={"Authorization": f"Bearer {token.ok}"}
         ),
     ):
         assert isinstance(session.user, LoggedInNobody)
@@ -354,7 +399,8 @@ def test_authenticate_success(flask_app: flask.Flask, user_id: UserId) -> None:
     assert user.id is None  # type: ignore[unreachable]
 
 
-def test_authenticate_fails(flask_app: flask.Flask, with_user: UserId) -> None:
+@pytest.mark.usefixtures("with_user")
+def test_authenticate_fails(flask_app: flask.Flask) -> None:
     assert user.id is None
 
     with (
@@ -451,7 +497,7 @@ def test_web_server_auth_session(flask_app: flask.Flask, user_id: UserId) -> Non
                 assert user.id == user_id
                 assert session.user.id == user.id  # type: ignore[unreachable]
 
-        with flask_app.request_context(create_environ()):  # type: ignore[unreachable]
+        with flask_app.request_context(create_environ()):
             flask_app.preprocess_request()
             assert user.id is None
 
@@ -518,9 +564,8 @@ def _validate_check_and_process_file_complete(expected_state: str) -> bool:
         ),
     ],
 )
+@pytest.mark.usefixtures("user_login", "auth_request")
 def test_check_and_update_two_factor_auth(
-    user_login: WebTestAppForCMK,
-    auth_request: http.Request,
     two_factor_creds: TwoFactorCredentials,
     expected_state_two_factor_setting: bool,
     expected_state: str,
@@ -568,11 +613,9 @@ def _validate_pw_change_file_saved(expected_password_change_setting: int) -> boo
         ),
     ],
 )
+@pytest.mark.usefixtures("user_login", "auth_request")
 def test_check_and_update_password_change(
-    user_login: WebTestAppForCMK,
-    auth_request: http.Request,
-    expected_password_change_setting: int,
-    expected_state: str,
+    expected_password_change_setting: int, expected_state: str
 ) -> None:
     try:
         session.logout()
@@ -803,9 +846,8 @@ def simplified_auth_check_false() -> bool:
         ),
     ],
 )
+@pytest.mark.usefixtures("user_login", "auth_request")
 def test_state_transition_flow_logic(
-    user_login: WebTestAppForCMK,
-    auth_request: http.Request,
     two_fa_auth_needed: Callable[[], bool],
     two_fa_setup_needed: Callable[[], bool],
     pw_changed_needed: Callable[[], bool],
@@ -842,10 +884,8 @@ def test_state_transition_flow_logic(
         session.logout()
 
 
-def test_state_transition_invalid_state(
-    user_login: WebTestAppForCMK,
-    auth_request: http.Request,
-) -> None:
+@pytest.mark.usefixtures("user_login", "auth_request")
+def test_state_transition_invalid_state() -> None:
     try:
         session.logout()
         assert session.session_info.session_state == "credentials_needed"

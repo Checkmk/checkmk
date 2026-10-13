@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from collections.abc import Mapping, Sequence
 
 import pytest
@@ -59,6 +60,24 @@ def test_parse_fjdarye_ca_ports(
     parse_result: Mapping[str, Mapping[str, float | str]],
 ) -> None:
     assert parse_fjdarye_ca_ports(string_table) == parse_result
+
+
+def test_parse_fjdarye_ca_ports_ignores_empty_rows() -> None:
+    # One of the two fetched SNMP tables answers with a single row of empty values.
+    assert parse_fjdarye_ca_ports(
+        [
+            [["", "", "", "", "", ""]],
+            [["0", "11", "14", "22", "7", "1"]],
+        ]
+    ) == {
+        "0": {
+            "mode": "CA",
+            "read_ios": 14.0,
+            "read_throughput": 7.0 * 1024**2,
+            "write_ios": 22.0,
+            "write_throughput": 1.0 * 1024**2,
+        },
+    }
 
 
 @pytest.mark.parametrize(
@@ -268,10 +287,7 @@ def test_discover_fjdarye_ca_ports(
     ],
 )
 def test_check_fjdarye_ca_ports(
-    item: str,
-    section: Mapping[str, Mapping[str, float | str]],
-    check_result_showing_mode: Result,
-    empty_value_store: None,
+    item: str, section: Mapping[str, Mapping[str, float | str]], check_result_showing_mode: Result
 ) -> None:
     check_result = list(check_fjdarye_ca_ports(item=item, params={}, section=section))
     assert check_result[0] == check_result_showing_mode

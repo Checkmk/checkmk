@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
 
 import abc
 import enum
@@ -196,55 +194,89 @@ class StandardHostsStorage(ABCHostsStorage[str]):
         self, file_path: Path, data: HostsStorageData, value_formatter: Callable[[Any], str]
     ) -> None:
         out = io.StringIO()
+        bootstrapped: set[str] = set()
+
+        def bootstrap(varname: str, empty: Literal["{}", "[]"]) -> None:
+            """Define the variable before it is first extended
+
+            The file extends its variables in place, so it must define each one
+            unless the loader predefined it (see cmk.ccc.store.bootstrap_statement).
+            """
+            if varname in bootstrapped:
+                return
+            bootstrapped.add(varname)
+            out.write(f"{store.bootstrap_statement(varname, empty)}\n")
+
         contact_groups = data.contact_groups
         if contact_groups["hosts"]:
-            out.write("\nhost_contactgroups += %s\n\n" % (value_formatter(contact_groups["hosts"])))
+            out.write("\n")
+            bootstrap("host_contactgroups", "[]")
+            out.write("host_contactgroups += %s\n\n" % (value_formatter(contact_groups["hosts"])))
         if contact_groups["services"]:
+            out.write("\n")
+            bootstrap("service_contactgroups", "[]")
             out.write(
-                "\nservice_contactgroups += %s\n\n" % (value_formatter(contact_groups["services"]))
+                "service_contactgroups += %s\n\n" % (value_formatter(contact_groups["services"]))
             )
 
         if data.all_hosts:
+            bootstrap("all_hosts", "[]")
             out.write("all_hosts += %s\n" % value_formatter(data.all_hosts))
 
         if data.clusters:
-            out.write("\nclusters.update(%s)\n" % value_formatter(data.clusters))
+            out.write("\n")
+            bootstrap("clusters", "{}")
+            out.write("clusters.update(%s)\n" % value_formatter(data.clusters))
 
         if data.host_tags:
-            out.write("\nhost_tags.update(%s)\n" % (value_formatter(data.host_tags)))
+            out.write("\n")
+            bootstrap("host_tags", "{}")
+            out.write("host_tags.update(%s)\n" % (value_formatter(data.host_tags)))
         if data.host_labels:
-            out.write("\nhost_labels.update(%s)\n" % (value_formatter(data.host_labels)))
+            out.write("\n")
+            bootstrap("host_labels", "{}")
+            out.write("host_labels.update(%s)\n" % (value_formatter(data.host_labels)))
 
         for cmk_base_varname, dictionary in data.attributes.items():
             if dictionary:
                 out.write("\n# %s\n" % cmk_base_varname)
+                bootstrap(cmk_base_varname, "{}")
                 out.write("%s.update(" % cmk_base_varname)
                 out.write(value_formatter(dictionary))
                 out.write(")\n")
 
         for custom_varname, macro_list in data.custom_macros.items():
             out.write("\n# Settings for %s\n" % custom_varname)
+            bootstrap("extra_host_conf", "{}")
             out.write("extra_host_conf.setdefault(%r, []).extend(\n" % custom_varname)
             out.write("  %s)\n" % value_formatter(macro_list))
 
         for varname, entries in data.explicit_host_conf.items():
             if len(entries) > 0:
                 out.write("\n# Explicit settings for %s\n" % varname)
+                bootstrap("explicit_host_conf", "{}")
                 out.write("explicit_host_conf.setdefault(%r, {})\n" % varname)
                 out.write(f"explicit_host_conf['{varname}'].update({entries!r})\n")
 
         if folder_host_contactgroups := contact_groups["folder_hosts"]:
             for group in folder_host_contactgroups:
-                out.write("\nhost_contactgroups.insert(0, %r)\n" % group)
+                out.write("\n")
+                bootstrap("host_contactgroups", "[]")
+                out.write("host_contactgroups.insert(0, %r)\n" % group)
 
         if folder_service_contactgroups := contact_groups["folder_services"]:
             for group in folder_service_contactgroups:
-                out.write("\nservice_contactgroups.insert(0, %r)\n" % group)
+                out.write("\n")
+                bootstrap("service_contactgroups", "[]")
+                out.write("service_contactgroups.insert(0, %r)\n" % group)
 
         # TODO: discuss. cmk.base also parses host_attributes. ipaddresses, mgmtboard, etc.
-        out.write("\n# Host attributes (needed for WATO)")
-        out.write("\nhost_attributes.update(%s)\n" % value_formatter(data.host_attributes))
-        out.write("\nfolder_attributes.update(%s)\n" % value_formatter(data.folder_attributes))
+        out.write("\n# Host attributes (needed for WATO)\n")
+        bootstrap("host_attributes", "{}")
+        out.write("host_attributes.update(%s)\n" % value_formatter(data.host_attributes))
+        out.write("\n")
+        bootstrap("folder_attributes", "{}")
+        out.write("folder_attributes.update(%s)\n" % value_formatter(data.folder_attributes))
 
         # final
         store.save_text_to_file(file_path, host_storage_fileheader() + out.getvalue())
@@ -342,7 +374,7 @@ class ABCHostsStorageLoader[THostsReadData](abc.ABC):
     def file_exists(self, file_path: Path) -> bool:
         return self._storage.exists(file_path)
 
-    def file_valid(self, file_path: Path) -> bool:
+    def file_valid(self, file_path: Path) -> bool:  # noqa: ARG002
         return True
 
     def read_and_apply(self, file_path: Path, global_dict: dict[str, Any]) -> bool:
@@ -378,10 +410,14 @@ class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
     def apply(self, data: HostsData, global_dict: dict[str, Any]) -> bool:
         """Integrates HostsData from PickleHostsStorage/RawHostsStorage into the global_dict"""
 
+        # The variables are created if the namespace lacks them, so the data
+        # can be applied to any namespace, including an empty one. If they are
+        # present, the existing objects are extended in place.
+
         # List based settings, append based
         # TODO: all_hosts can be computed out of host_attributes.keys() -> remove?
         if all_hosts := data["all_hosts"]:
-            global_dict["all_hosts"].extend(all_hosts)
+            global_dict.setdefault("all_hosts", []).extend(all_hosts)
 
         cgs = data["contact_groups"]
         for name, global_key in [
@@ -389,18 +425,19 @@ class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
             ("services", "service_contactgroups"),
         ]:
             if new_cgs := cgs[name]:
-                global_dict[global_key].extend(new_cgs)
+                global_dict.setdefault(global_key, []).extend(new_cgs)
 
         for name, global_key in [
             ("folder_hosts", "host_contactgroups"),
             ("folder_services", "service_contactgroups"),
         ]:
+            global_cgs = global_dict.setdefault(global_key, [])
             if new_cgs := cgs[name]:
-                global_dict[global_key].extend(new_cgs)
-            new_cgs.extend(global_dict[global_key])
+                global_cgs.extend(new_cgs)
+            new_cgs.extend(global_cgs)
             # Do not replace the list reference (in case some outer instance already uses it)
-            global_dict[global_key].clear()
-            global_dict[global_key].extend(new_cgs)
+            global_cgs.clear()
+            global_cgs.extend(new_cgs)
 
         # dict-based settings with {key: value}
         for key in [
@@ -416,11 +453,13 @@ class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
             "host_attributes",
             "folder_attributes",
         ]:
-            global_dict[key].update(data.get(key, {}))
+            global_dict.setdefault(key, {}).update(data.get(key, {}))
 
         # dict-based setting with {key: {another_key: value}}
         for explicit_name, values in data.get("explicit_host_conf", {}).items():
-            global_dict["explicit_host_conf"].setdefault(explicit_name, {}).update(values)
+            global_dict.setdefault("explicit_host_conf", {}).setdefault(explicit_name, {}).update(
+                values
+            )
 
         # "attributes" are moved to global scope
         # 'attributes': {'ipaddresses': {'test': '1.2.3.4'}}
@@ -432,7 +471,7 @@ class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
 
         # Custom macros are moved into extra_host_conf
         for key, values in data["custom_macros"].items():
-            global_dict["extra_host_conf"].setdefault(key, []).extend(values)
+            global_dict.setdefault("extra_host_conf", {}).setdefault(key, []).extend(values)
 
         global_dict["_lock"] = data["locked_hosts"]
         return True
@@ -468,7 +507,7 @@ def get_all_storage_readers() -> list[ABCHostsStorage]:
 
 
 def get_storage_format(format_option: object) -> StorageFormat:
-    match format_option:
+    match format_option:  # type: ignore[exhaustive-match]
         case None:
             return StorageFormat.PICKLE
         case StorageFormat() as already_parsed:

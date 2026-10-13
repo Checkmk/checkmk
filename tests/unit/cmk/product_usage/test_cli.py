@@ -122,7 +122,7 @@ def test_upload_resolves_proxy_and_transmits(monkeypatch: pytest.MonkeyPatch) ->
 
 def test_parse_args_cron_enables_all_phases() -> None:
     assert product_usage_cli.parse_args(["--cron"]) == product_usage_cli.ProductUsageRequest(
-        collect=True, store=True, upload=True, schedule=True
+        collect=True, store=True, upload=True, schedule=True, write_to_stdout=False
     )
 
 

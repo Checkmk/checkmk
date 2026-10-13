@@ -152,13 +152,13 @@ def test_make_filter_empty_dict_raises() -> None:
 
 
 def test_make_filter() -> None:
-    assert isinstance(make_filter(this_is="included"), fields_filter._Included)
-    assert isinstance(make_filter(this_is="excluded"), fields_filter._Excluded)
+    assert isinstance(make_filter(this_is="included"), fields_filter._Included)  # noqa: SLF001
+    assert isinstance(make_filter(this_is="excluded"), fields_filter._Excluded)  # noqa: SLF001
 
     include_filter = make_filter(include={"field": make_filter(this_is="included")})
-    assert isinstance(include_filter, fields_filter._IncludeFields)
+    assert isinstance(include_filter, fields_filter._IncludeFields)  # noqa: SLF001
     assert repr(include_filter) == repr(parse_fields_filter("(field)"))
 
     exclude_filter = make_filter(exclude={"field": make_filter(this_is="excluded")})
-    assert isinstance(exclude_filter, fields_filter._ExcludeFields)
+    assert isinstance(exclude_filter, fields_filter._ExcludeFields)  # noqa: SLF001
     assert repr(exclude_filter) == repr(parse_fields_filter("!(field)"))

@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 __version__ = "3.0.0b1"
 
 # Monitors FTP backup spaces of plesk domains.
@@ -21,14 +17,19 @@ import time
 from ftplib import FTP  # nosec B402 # BNS:97f639
 
 try:
-    from typing import Any
+    from typing import Any, Mapping  # noqa: UP035
 
-    _ = Any  # make ruff happy
+    # We can't fix this as long as MySQLdb is not a dev dependency
+    Connection = Any  # type: ignore[explicit-any]
+    Domains = Mapping[object, Mapping[str, str]]
+
+    _ = Mapping, Any  # make ruff happy
 except ImportError:
     pass
 
 
 def connect():
+    # type: () -> Connection
     try:
         import MySQLdb  # type: ignore[import-untyped]
     except ImportError as e:
@@ -52,11 +53,12 @@ def connect():
 
 
 def get_domains(db):
+    # type: (Connection) -> Domains
     cursor = db.cursor()
     cursor2 = db.cursor()
 
     cursor.execute("SELECT id, name FROM domains")
-    domain_collection = {}
+    domain_collection = {}  # type: dict[object, dict[str, str]]
     for this_domain_id, this_domain in cursor.fetchall():
         cursor2.execute(
             "SELECT param, value FROM BackupsSettings WHERE id = %s AND type = 'domain'",
@@ -71,6 +73,7 @@ def get_domains(db):
 
 
 def main():
+    # type: () -> None
     db = connect()
 
     # 1. Virtual Hosts / Domains auflisten
@@ -122,6 +125,7 @@ def main():
 
             # Get total size of all files on FTP
             def get_size(ftp_conn, base_dir, l=None):
+                # type: (FTP, str, str | None) -> int
                 if l and l.split()[-1] in [".", ".."]:
                     return 0
 

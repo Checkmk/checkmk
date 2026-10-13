@@ -10,16 +10,12 @@ from cmk.base.plugins.bakery.win_agent_disabled_sections import (
 
 
 def test_win_agent_disabled_sections_windows_config() -> None:
-    conf = "check_mk logwatch"
-    result = list(get_win_agent_disabled_sections_windows_config(conf))
-    assert result == [
-        WindowsGlobalConfigEntry(name="disabled_sections", content="check_mk logwatch"),
+    assert list(get_win_agent_disabled_sections_windows_config(["check_mk", "logwatch"])) == [
+        WindowsGlobalConfigEntry(name="disabled_sections", content=["check_mk", "logwatch"]),
     ]
 
 
 def test_win_agent_disabled_sections_windows_config_empty() -> None:
-    conf = ""
-    result = list(get_win_agent_disabled_sections_windows_config(conf))
-    assert result == [
-        WindowsGlobalConfigEntry(name="disabled_sections", content=""),
+    assert list(get_win_agent_disabled_sections_windows_config([])) == [
+        WindowsGlobalConfigEntry(name="disabled_sections", content=[]),
     ]

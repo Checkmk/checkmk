@@ -12,6 +12,7 @@ from typing import override
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import edition
+from cmk.gui.config import Config
 from cmk.gui.groups import GroupSpec
 from cmk.gui.hooks import request_memoize
 from cmk.gui.type_defs import UserSpec
@@ -81,6 +82,15 @@ class ABCCustomerAPI(ABC):
     @classmethod
     @abstractmethod
     def is_provider(cls, customer_id: CustomerIdOrGlobal) -> bool: ...
+
+    @classmethod
+    @abstractmethod
+    def current_customer(cls, config: Config) -> CustomerIdOrGlobal:
+        """The customer this site serves.
+
+        Editions without multi-tenancy know no customers, so their site is
+        scoped globally.
+        """
 
     @classmethod
     @abstractmethod
@@ -165,6 +175,11 @@ class CustomerAPIStub(ABCCustomerAPI):
 
     @classmethod
     @override
+    def current_customer(cls, config: Config) -> CustomerIdOrGlobal:
+        return SCOPE_GLOBAL
+
+    @classmethod
+    @override
     def is_current_customer(cls, customer_id: CustomerIdOrGlobal) -> bool:
         return False
 
@@ -182,6 +197,17 @@ class CustomerAPIStub(ABCCustomerAPI):
 @request_memoize()
 def customer_api() -> ABCCustomerAPI:
     return customer_api_registry[str(edition(paths.omd_root))]
+
+
+def is_provider_site(config: Config) -> bool:
+    """Whether the local site may configure Checkmk, rather than serving a single customer.
+
+    Editions without multi-tenancy have no customers to serve: their customer
+    API scopes the site globally, and every site is a provider site.
+    """
+    api = customer_api()
+    site_customer = api.current_customer(config)
+    return api.is_global(site_customer) or api.is_provider(site_customer)
 
 
 class CustomerAPIRegistry(Registry[ABCCustomerAPI]):

@@ -12,6 +12,7 @@ where it will later be redeemed.
 """
 
 import datetime as dt
+from http import HTTPStatus
 from typing import Annotated, override, Self
 
 from dateutil.relativedelta import relativedelta
@@ -155,7 +156,7 @@ def forward_token_create(
         )
     except (MKAutomationException, MKGeneralException) as exc:
         raise ProblemException(
-            status=502,
+            status=HTTPStatus.BAD_GATEWAY,
             title="Could not create token on remote site",
             detail=_(
                 'Token creation on site "%(site_id)s" failed: %(exc)s. Make sure the central site '

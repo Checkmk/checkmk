@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 
 import codeExample from './UclCmkTooltipCodeExample.vue?raw'
 
@@ -41,22 +41,22 @@ export const panelConfig = {
   side: {
     type: 'list' as const,
     title: 'Side',
-    options: [
-      { title: 'Top', name: 'top' },
-      { title: 'Right', name: 'right' },
-      { title: 'Bottom', name: 'bottom' },
-      { title: 'Left', name: 'left' }
-    ] satisfies Options<SideOptions>[],
+    options: listOptions<SideOptions>({
+      top: 'Top',
+      right: 'Right',
+      bottom: 'Bottom',
+      left: 'Left'
+    }),
     initialState: 'top' as SideOptions
   },
   align: {
     type: 'list' as const,
     title: 'Align',
-    options: [
-      { title: 'Start', name: 'start' },
-      { title: 'Center', name: 'center' },
-      { title: 'End', name: 'end' }
-    ] satisfies Options<AlignOptions>[],
+    options: listOptions<AlignOptions>({
+      start: 'Start',
+      center: 'Center',
+      end: 'End'
+    }),
     initialState: 'center' as AlignOptions
   }
 } satisfies PanelConfigFor<typeof CmkTooltip> &

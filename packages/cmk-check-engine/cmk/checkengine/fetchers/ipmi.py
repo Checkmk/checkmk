@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 import errno
 import logging
@@ -223,7 +221,7 @@ class IPMIFetcher(Fetcher[AgentRawData, IPMIFetcherParams]):
         import pyghmi.ipmi.private.session as ipmi_session  # type: ignore[import-untyped,unused-ignore] # nosec B415 # BNS:7c4e91
 
         assert ipmi_session.iothread is not None
-        ipmi_session.iothread.join()
+        ipmi_session.iothread.join()  # type: ignore[unreachable]
         ipmi_session.iothread = None
         ipmi_session.iothreadready = False
         ipmi_session.iothreadwaiters.clear()

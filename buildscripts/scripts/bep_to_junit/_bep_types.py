@@ -8,8 +8,6 @@ https://github.com/bazelbuild/bazel/blob/master/src/main/java/com/google/devtool
 
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Self, TypedDict
 

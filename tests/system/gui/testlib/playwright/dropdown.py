@@ -79,3 +79,8 @@ class DropdownHelper[TDropdownOptions: DropdownOptions]:
             self.__dropdown_box,
             message=f"Option '{expected_value}' not set in '{self.__dropdown_name}' dropdown",
         ).to_have_text(expected_value)
+        # Passes immediately for dropdowns that never set the attribute.
+        expect(
+            self.__dropdown_box,
+            message=f"Dropdown '{self.__dropdown_name}' still resolving the selected option",
+        ).not_to_have_attribute("aria-busy", "true")

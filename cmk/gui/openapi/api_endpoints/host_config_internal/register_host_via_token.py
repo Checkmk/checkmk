@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from datetime import datetime, UTC
+from http import HTTPStatus
 from typing import Annotated
 from uuid import UUID
 
@@ -51,19 +52,19 @@ def register_host_via_token_v1(
     """
     if not api_context.token:
         raise ProblemException(
-            status=401,
+            status=HTTPStatus.UNAUTHORIZED,
             title="Authentication required",
             detail="This endpoint requires token authentication.",
         )
     if not isinstance(api_context.token.details, AgentRegistrationToken):
         raise ProblemException(
-            status=401,
+            status=HTTPStatus.UNAUTHORIZED,
             title="Authentication required",
             detail="Incorrect token provided. Please provide a token for agent registration.",
         )
     if api_context.token.details.host_name != host_name:
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Forbidden",
             detail="The token was issued for a different host.",
         )
@@ -82,7 +83,7 @@ def register_host_via_token_v1(
 
 def _token_already_used() -> ProblemException:
     return ProblemException(
-        status=403,
+        status=HTTPStatus.FORBIDDEN,
         title="Token already used",
         detail="This token has already been used to register this host. "
         "Please issue a new token to register again.",

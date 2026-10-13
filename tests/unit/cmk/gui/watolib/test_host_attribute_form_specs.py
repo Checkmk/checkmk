@@ -13,7 +13,7 @@ from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeValueSpec,
     all_host_attributes,
 )
-from tests.testlib.unit.gui.host_attributes_test_helper import (
+from tests.unit.cmk.gui.helpers.host_attributes_test_helper import (
     assert_cases_cover_form_spec_attributes,
     assert_form_spec_attribute_lifecycle,
     assert_form_spec_attribute_rejects,
@@ -110,7 +110,7 @@ def test_show_in_table_attributes_are_paintable_as_plain_text() -> None:
 
 
 @pytest.fixture(name="form_spec_attribute")
-def _fixture_form_spec_attributes(load_config: object) -> dict[str, ABCHostAttributeFormSpec]:
+def _fixture_form_spec_attributes(load_config: object) -> dict[str, ABCHostAttributeFormSpec]:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     return form_spec_attributes()
 
 
@@ -143,10 +143,12 @@ def test_form_spec_value_behavior(
 def test_form_spec_accepted_value_survives_edit_page(
     form_spec_attribute: dict[str, ABCHostAttributeFormSpec],
     attr_name: str,
-    case: Case,
+    case: CasePass,
 ) -> None:
     """Render -> submit -> parse: an accepted value comes back off the page unchanged."""
-    assert_form_spec_attribute_lifecycle(form_spec_attribute[attr_name], case.value)
+    assert_form_spec_attribute_lifecycle(
+        form_spec_attribute[attr_name], case.value, case.submitted_value
+    )
 
 
 @pytest.mark.usefixtures("request_context")

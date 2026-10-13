@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Sequence
 
@@ -40,7 +39,7 @@ _DEFAULT_PARAMETERS_ORACLE_CRS_RES = {"number_of_nodes_not_in_target_state": (1,
 
 
 @pytest.fixture(name="string_table")
-def fixture_string_table():
+def fixture_string_table() -> StringTable:
     agent_output = """nodename|crsnode
 csslocal|NAME=ora.cluster_interconnect.haip
 csslocal|TYPE=ora.haip.type

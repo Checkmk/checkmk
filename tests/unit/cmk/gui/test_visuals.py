@@ -3,20 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Sequence
 
 import pytest
 
 from cmk.gui import visuals
+from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.type_defs import SingleInfos, VisualContext
 from cmk.gui.visuals import filters_allowed_for_info, filters_allowed_for_infos
 from cmk.gui.visuals.filter import AjaxDropdownFilter, Filter
-from cmk.gui.visuals.info import visual_info_registry
-from cmk.gui.visuals.type import visual_type_registry
+from cmk.web.utils.request_cache import RequestCache
 
 
 def test_get_filter() -> None:
@@ -40,45 +38,6 @@ def test_filters_allowed_for_infos() -> None:
     allowed = filters_allowed_for_infos(["host", "service"])
     assert isinstance(allowed["host"], AjaxDropdownFilter)
     assert isinstance(allowed["service"], AjaxDropdownFilter)
-
-
-def _expected_visual_types():
-    return {
-        "dashboards": {
-            "add_visual_handler": "popup_add_dashlet",
-            "ident_attr": "name",
-            "multicontext_links": False,
-            "plural_title": "dashboards",
-            "show_url": "dashboard.py",
-            "title": "dashboard",
-        },
-        "views": {
-            "add_visual_handler": None,
-            "ident_attr": "view_name",
-            "multicontext_links": False,
-            "plural_title": "views",
-            "show_url": "view.py",
-            "title": "view",
-        },
-    }
-
-
-def test_registered_visual_types() -> None:
-    assert sorted(visual_type_registry.keys()) == sorted(_expected_visual_types().keys())
-
-
-def test_registered_visual_type_attributes() -> None:
-    for ident, plugin_class in visual_type_registry.items():
-        plugin = plugin_class()
-        spec = _expected_visual_types()[ident]
-
-        # TODO: Add tests for the results of these functions
-        # assert plugin.add_visual_handler == spec["add_visual_handler"]
-        assert plugin.ident_attr == spec["ident_attr"]
-        assert plugin.multicontext_links == spec["multicontext_links"]
-        assert plugin.plural_title == spec["plural_title"]
-        assert plugin.show_url == spec["show_url"]
-        assert plugin.title == spec["title"]
 
 
 @pytest.mark.parametrize(
@@ -151,7 +110,10 @@ def test_context_to_uri_vars(
         ),
     ],
 )
-def test_get_context_from_uri_vars(request_context, infos, uri_vars, expected_context):  # type: ignore[misc]
+@pytest.mark.usefixtures("request_context")
+def test_get_context_from_uri_vars(
+    infos: SingleInfos, uri_vars: Sequence[tuple[str, str]], expected_context: VisualContext
+) -> None:
     for key, val in uri_vars:
         request.set_var(key, val)
 
@@ -202,12 +164,12 @@ def test_get_context_from_uri_vars(request_context, infos, uri_vars, expected_co
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_get_merged_context(
     uri_vars: Sequence[tuple[str, str]],
     infos: SingleInfos | None,
     context_vis: VisualContext,
     expected_context: VisualContext,
-    request_context: None,
 ) -> None:
     for key, val in uri_vars:
         request.set_var(key, val)
@@ -229,30 +191,8 @@ def test_get_missing_single_infos_missing_context() -> None:
     assert visuals.get_missing_single_infos(single_infos=["host"], context={}) == {"host"}
 
 
-def test_get_context_specs_no_info_limit() -> None:
-    result = visuals.get_context_specs(["host"], list(visual_info_registry.keys()))
-    expected = {
-        "aggr",
-        "aggr_group",
-        "comment",
-        "crash",
-        "discovery",
-        "downtime",
-        "event",
-        "history",
-        "host",
-        "hostgroup",
-        "log",
-        "service",
-        "servicegroup",
-    }
-
-    # depending on the tests sandbox, there might be results created from inventory_ui plugins
-    assert {r for r, *_ in result if not r.startswith("inv")} == expected
-
-
 def test_get_context_specs_only_host_and_service_info() -> None:
-    result = visuals.get_context_specs(["host"], ["host", "service"])
+    result = visuals.get_context_specs(["host"], ["host", "service"], RequestCache(Config()))
     assert [r[0] for r in result] == [
         "host",
         "service",

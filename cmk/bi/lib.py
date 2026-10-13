@@ -6,9 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 import enum
 from abc import ABC, abstractmethod
@@ -379,7 +377,7 @@ def replace_macros(
         return replace_macros_in_list(pattern, macros)
     if isinstance(pattern, dict):
         return replace_macros_in_dict(pattern, macros)
-    return NoReturn
+    return NoReturn  # type: ignore[unreachable]
 
 
 def replace_macros_in_tuple(
@@ -488,7 +486,9 @@ CompiledNodeKind = Literal[
 
 @dataclass(frozen=True)
 class FrozenMarker:
-    status: Literal["missing", "new", "ok", "parent"]
+    status: Literal["missing", "new", "ok", "parent", "changed"]
+    # What exactly was reconfigured, for "changed". Rendered next to the node.
+    details: str = ""
 
 
 @dataclass(frozen=True)
@@ -511,7 +511,7 @@ class ABCBICompiledNode(ABC):
         """Sets branch comparison result info"""
         self._frozen_marker = frozen_marker
 
-    def get_identifiers(self, parent_id: tuple, used_ids: set[tuple]) -> list[NodeIdentifierInfo]:
+    def get_identifiers(self, parent_id: tuple, used_ids: set[tuple]) -> list[NodeIdentifierInfo]:  # noqa: ARG002
         return []
 
     @classmethod
@@ -569,7 +569,7 @@ class ABCBICompiledNode(ABC):
 
 
 class ABCBIAction(ABC):
-    def __init__(self, action_config: ActionSerialized) -> None:
+    def __init__(self, action_config: ActionSerialized) -> None:  # noqa: ARG002
         super().__init__()
 
     @classmethod
@@ -632,7 +632,7 @@ bi_action_registry = BIActionRegistry()
 
 
 class ABCBISearch(ABC):
-    def __init__(self, search_config: SearchSerialized) -> None:
+    def __init__(self, search_config: SearchSerialized) -> None:  # noqa: ARG002
         super().__init__()
 
     @classmethod
@@ -681,7 +681,7 @@ bi_search_registry = BISearchRegistry()
 
 
 class ABCBIAggregationFunction(ABC):
-    def __init__(self, aggr_function_config: AggregationFunctionSerialized) -> None:
+    def __init__(self, aggr_function_config: AggregationFunctionSerialized) -> None:  # noqa: ARG002
         super().__init__()
 
     @classmethod

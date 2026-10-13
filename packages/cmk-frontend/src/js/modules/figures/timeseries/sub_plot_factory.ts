@@ -5,7 +5,7 @@
  */
 import type { SubPlot } from './sub_plot'
 
-export type SubplotConstructor = new (plotDefinition: any) => SubPlot
+type SubplotConstructor = new (plotDefinition: any) => SubPlot
 
 export class SubPlotFactory {
   _plot_types: Record<string, SubplotConstructor>

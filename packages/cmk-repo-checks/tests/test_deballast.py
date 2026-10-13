@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 import ast
 import json
@@ -24,6 +23,7 @@ from cmk.repo_checks.deballast import (
     load_dep_info,
     load_target_spec,
     main,
+    module_roots,
     parse_python_source,
     resolve_imports_root,
     sarif_report,
@@ -31,7 +31,6 @@ from cmk.repo_checks.deballast import (
     SrcFile,
     stale_keeps,
     TargetSpec,
-    uses_plugin_discovery_api,
 )
 
 
@@ -60,8 +59,7 @@ def test_candidate_modules_for_path_imports_dot() -> None:
     # Workspace root is always also a candidate.
     modules = candidate_modules_for_path(
         "packages/cmk-ccc/cmk/ccc/store/__init__.py",
-        imports=["."],
-        package="packages/cmk-ccc",
+        module_roots("packages/cmk-ccc", ["."]),
     )
     assert "cmk.ccc.store" in modules
     assert "packages.cmk-ccc.cmk.ccc.store" in modules
@@ -71,8 +69,7 @@ def test_candidate_modules_for_path_imports_up_levels() -> None:
     # `imports = ["../../.."]` is the pattern that the naive path-only approach missed.
     modules = candidate_modules_for_path(
         "packages/cmk-plugins/cmk/plugins/lib/fan.py",
-        imports=["../../.."],
-        package="packages/cmk-plugins/cmk/plugins/lib",
+        module_roots("packages/cmk-plugins/cmk/plugins/lib", ["../../.."]),
     )
     assert "cmk.plugins.lib.fan" in modules
     # Workspace-root resolution always included too.
@@ -85,8 +82,7 @@ def test_candidate_modules_for_path_imports_dot_workspace_fallback() -> None:
     # workspace root. Both must be candidates.
     modules = candidate_modules_for_path(
         "agents/plugins/mk_podman.py",
-        imports=["."],
-        package="agents/plugins",
+        module_roots("agents/plugins", ["."]),
     )
     assert "mk_podman" in modules
     assert "agents.plugins.mk_podman" in modules
@@ -96,8 +92,7 @@ def test_candidate_modules_for_path_no_imports_uses_workspace_root() -> None:
     # With no imports attribute, file path is the module path directly.
     modules = candidate_modules_for_path(
         "cmk/gui/nagvis/__init__.py",
-        imports=[],
-        package="cmk/gui/nagvis",
+        module_roots("cmk/gui/nagvis", []),
     )
     assert modules == {"cmk.gui.nagvis"}
 
@@ -105,15 +100,14 @@ def test_candidate_modules_for_path_no_imports_uses_workspace_root() -> None:
 def test_candidate_modules_for_path_init_drops_init_suffix() -> None:
     modules = candidate_modules_for_path(
         "pkg/foo/__init__.py",
-        imports=["."],
-        package="pkg",
+        module_roots("pkg", ["."]),
     )
     assert "foo" in modules
     assert "foo.__init__" not in modules
 
 
 def test_candidate_modules_for_path_non_py_file_returns_empty() -> None:
-    assert candidate_modules_for_path("pkg/BUILD", imports=["."], package="pkg") == set()
+    assert candidate_modules_for_path("pkg/BUILD", module_roots("pkg", ["."])) == set()
 
 
 def test_parse_python_source_valid_file(tmp_path: Path) -> None:
@@ -142,29 +136,29 @@ def test_imports_in_tree_from_import_yields_module_and_attribute() -> None:
     assert imports_in_tree(ast.parse("from cmk.gui import foo")) == {"cmk.gui", "cmk.gui.foo"}
 
 
+def test_imports_in_tree_star_import_yields_only_the_module() -> None:
+    # A star import names no child; what it binds is decided by the package's
+    # __init__.py, which is not visible here.
+    assert imports_in_tree(ast.parse("from cmk.gui import *")) == {"cmk.gui"}
+
+
 def test_imports_in_tree_relative_import_resolved_against_containing_package() -> None:
     # `cmk/gui/htmllib/generator.py` (pkg = cmk.gui.htmllib) does
-    # `from .tag_rendering import X` — resolves to `cmk.gui.htmllib.tag_rendering`.
+    # `from .tag_rendering import X` - resolves to `cmk.gui.htmllib.tag_rendering`.
     assert imports_in_tree(
         ast.parse("from .tag_rendering import X"), containing_packages=["cmk.gui.htmllib"]
-    ) == {
-        "cmk.gui.htmllib.tag_rendering",
-        "cmk.gui.htmllib.tag_rendering.X",
-    }
+    ) == {"cmk.gui.htmllib.tag_rendering", "cmk.gui.htmllib.tag_rendering.X"}
 
 
 def test_imports_in_tree_dotdot_relative_import() -> None:
-    # `from ..utils import X` at pkg `cmk.gui.htmllib` → `cmk.gui.utils.X`.
+    # `from ..utils import X` at pkg `cmk.gui.htmllib` -> `cmk.gui.utils.X`.
     assert imports_in_tree(
         ast.parse("from ..utils import X"), containing_packages=["cmk.gui.htmllib"]
-    ) == {
-        "cmk.gui.utils",
-        "cmk.gui.utils.X",
-    }
+    ) == {"cmk.gui.utils", "cmk.gui.utils.X"}
 
 
 def test_imports_in_tree_relative_import_without_containing_package_is_dropped() -> None:
-    assert imports_in_tree(ast.parse("from . import sibling")) == set()
+    assert imports_in_tree(ast.parse("from . import sibling")) == frozenset()
 
 
 def test_imports_in_tree_mixed_imports() -> None:
@@ -177,57 +171,73 @@ def test_imports_in_tree_mixed_imports() -> None:
     }
 
 
-def test_uses_plugin_discovery_api_name_call() -> None:
-    assert uses_plugin_discovery_api(ast.parse("load_plugins()"))
-
-
-def test_uses_plugin_discovery_api_attribute_call() -> None:
-    assert uses_plugin_discovery_api(ast.parse("import pkgutil\npkgutil.iter_modules(paths)"))
-
-
-def test_uses_plugin_discovery_api_import_alias() -> None:
-    assert uses_plugin_discovery_api(ast.parse("from importlib.metadata import entry_points"))
-
-
-def test_uses_plugin_discovery_api_string_literal_does_not_match() -> None:
-    # The names must appear as code, not as data — otherwise this checker
-    # would exempt its own sources, which hold the name list as strings.
-    assert not uses_plugin_discovery_api(ast.parse('NAMES = {"load_plugins", "iter_modules"}'))
-
-
-def test_uses_plugin_discovery_api_plain_code_does_not_match() -> None:
-    assert not uses_plugin_discovery_api(ast.parse("import os\n\nos.getcwd()"))
-
-
 def test_dep_is_used_exact_module_match() -> None:
-    assert dep_is_used({"cmk.ccc.debug"}, {"cmk.ccc.debug"})
+    assert dep_is_used({"cmk.ccc.debug"}, imports_in_tree(ast.parse("import cmk.ccc.debug")))
 
 
 def test_dep_is_used_from_import_with_attribute() -> None:
-    assert dep_is_used({"cmk.ccc.debug"}, {"cmk.ccc", "cmk.ccc.debug"})
+    assert dep_is_used({"cmk.ccc.debug"}, imports_in_tree(ast.parse("from cmk.ccc import debug")))
 
 
 def test_dep_is_used_submodule_import_matches_parent_package_dep() -> None:
-    assert dep_is_used({"cmk.gui.foo"}, {"cmk.gui.foo.bar"})
+    assert dep_is_used({"cmk.gui.foo"}, imports_in_tree(ast.parse("import cmk.gui.foo.bar")))
 
 
 def test_dep_is_used_prefix_must_be_proper() -> None:
-    assert not dep_is_used({"cmk.gui.foo"}, {"cmk.gui.foobar"})
+    assert not dep_is_used({"cmk.gui.foo"}, imports_in_tree(ast.parse("import cmk.gui.foobar")))
 
 
-def test_dep_is_used_dep_module_under_imported_namespace() -> None:
-    # `//cmk/gui/plugins/views:views` has no __init__.py at its namespace root,
-    # only `icons/utils.py` etc. Consumers `import cmk.gui.plugins.views`
-    # (the implicit namespace); the dep's deeper module should still count.
-    assert dep_is_used({"cmk.gui.plugins.views.icons.utils"}, {"cmk.gui.plugins.views"})
+def test_dep_is_used_naming_a_package_does_not_reach_the_modules_inside_it() -> None:
+    # Whether `import cmk.gui.plugins.views` reaches `...views.icons.utils` is
+    # decided by that package's __init__.py - content of a dep, not visible
+    # here. A dep used only that way needs a deballast-keep tag on its
+    # consumers.
+    assert not dep_is_used(
+        {"cmk.gui.plugins.views.icons.utils"},
+        imports_in_tree(ast.parse("import cmk.gui.plugins.views")),
+    )
+
+
+def test_dep_is_used_from_import_does_not_reach_below_the_named_child() -> None:
+    assert not dep_is_used(
+        {"cmk.gui.plugins.views.icons.utils"},
+        imports_in_tree(ast.parse("from cmk.gui.plugins import views")),
+    )
+
+
+def test_dep_is_used_star_import_does_not_reach_modules_below_the_package() -> None:
+    assert not dep_is_used(
+        {"cmk.gui.plugins.views.icons.utils"},
+        imports_in_tree(ast.parse("from cmk.gui.plugins.views import *")),
+    )
+
+
+def test_dep_is_used_edition_module_inside_a_shared_package_is_not_credited() -> None:
+    # `//cmk/base/nonfree:ultimate` globs one module into the `cmc` package that
+    # `//cmk/base/nonfree:pro` owns. Consumers of `cmc` must not credit the
+    # edition target for it.
+    assert not dep_is_used(
+        {"cmk.base.nonfree.cmc.ultimate.relay_config"},
+        imports_in_tree(ast.parse("from cmk.base.nonfree import cmc")),
+    )
+
+
+def test_dep_is_used_from_import_reaches_only_the_named_child() -> None:
+    # `from cmk import trace` names `cmk` only to reach `cmk.trace` - neither the
+    # siblings under `cmk.` nor the modules under `cmk.trace.` follow from it.
+    imports = imports_in_tree(ast.parse("from cmk import trace"))
+    assert dep_is_used({"cmk.trace"}, imports)
+    assert not dep_is_used({"cmk.trace.export"}, imports)
+    assert not dep_is_used({"cmk.utils.paths"}, imports)
+    assert not dep_is_used({"cmk.base.configlib.loaded_config"}, imports)
 
 
 def test_dep_is_used_no_overlap_returns_false() -> None:
-    assert not dep_is_used({"unrelated.module"}, {"cmk.gui.foo"})
+    assert not dep_is_used({"unrelated.module"}, imports_in_tree(ast.parse("import cmk.gui.foo")))
 
 
 def test_dep_is_used_empty_dep_modules_returns_false() -> None:
-    assert not dep_is_used(set(), {"cmk.gui.foo"})
+    assert not dep_is_used(set(), imports_in_tree(ast.parse("import cmk.gui.foo")))
 
 
 def test_is_namespace_shim_pure_init_target() -> None:
@@ -392,6 +402,28 @@ def _app_spec(tmp_path: Path, app_src: str) -> TargetSpec:
     )
 
 
+def _test_spec(tmp_path: Path, conftest_src: str, test_src: str) -> TargetSpec:
+    """A py_test target in the shape pytest targets have: conftest.py plus tests."""
+    (tmp_path / "pkg").mkdir(exist_ok=True)
+    conftest = tmp_path / "pkg" / "conftest.py"
+    conftest.write_text(conftest_src)
+    test = tmp_path / "pkg" / "test_app.py"
+    test.write_text(test_src)
+    return TargetSpec(
+        label="//pkg:app_test",
+        package="pkg",
+        imports=["."],
+        src_attr_labels=["//pkg:conftest.py", "//pkg:test_app.py"],
+        srcs=[
+            SrcFile("pkg/conftest.py", str(conftest), True),
+            SrcFile("pkg/test_app.py", str(test), True),
+        ],
+        dep_attr_labels=[],
+        dep_json_paths=[],
+        keep_deps=[],
+    )
+
+
 def test_flags_a_dep_whose_modules_are_never_imported(tmp_path: Path) -> None:
     spec = _app_spec(tmp_path, "import os\n")
     assert analyze_spec(spec, [_dep_lib()]) == ["//dep:lib"]
@@ -400,6 +432,40 @@ def test_flags_a_dep_whose_modules_are_never_imported(tmp_path: Path) -> None:
 def test_does_not_flag_a_dep_whose_module_is_imported(tmp_path: Path) -> None:
     spec = _app_spec(tmp_path, "import dep.lib\n")
     assert analyze_spec(spec, [_dep_lib()]) == []
+
+
+def test_does_not_flag_a_dep_importable_only_under_the_consumer_root(tmp_path: Path) -> None:
+    # `//bazel/rules:console_scripts_gen_test` shape: the dep declares no
+    # `imports`, so under its own roots its src is `pkg.tool`. The consumer's
+    # `imports = ["."]` puts `pkg` on PYTHONPATH, making `tool` the name the
+    # consumer actually imports. That root counts for the dep's srcs too.
+    dep = DepInfo(label="//pkg:tool", package="pkg", imports=[], srcs=["pkg/tool.py"])
+    spec = _app_spec(tmp_path, "from tool import main\n")
+    assert analyze_spec(spec, [dep]) == []
+
+
+def test_flags_a_dep_the_consumer_root_does_not_reach_either(tmp_path: Path) -> None:
+    dep = DepInfo(label="//pkg:tool", package="pkg", imports=[], srcs=["pkg/tool.py"])
+    spec = _app_spec(tmp_path, "import os\n")
+    assert analyze_spec(spec, [dep]) == ["//pkg:tool"]
+
+
+def test_flags_a_dep_only_the_bare_parent_of_a_from_import_reaches(tmp_path: Path) -> None:
+    # `from dep import other` names `dep` only to reach `dep.other`; it must not
+    # keep `//dep:lib` (which provides `dep.lib`) alive.
+    spec = _app_spec(tmp_path, "from dep import other\n")
+    assert analyze_spec(spec, [_dep_lib()]) == ["//dep:lib"]
+
+
+def test_flags_a_dep_only_reachable_through_a_star_import_of_its_package(
+    tmp_path: Path,
+) -> None:
+    # `from dep.lib import *` binds whatever `dep/lib/__init__.py` re-exports.
+    # If that includes `impl`, the dep belongs in the deps of whichever target
+    # owns that __init__.py, not in the consumer's.
+    nested = DepInfo(label="//dep:nested", package="dep", imports=["."], srcs=["dep/lib/impl.py"])
+    spec = _app_spec(tmp_path, "from dep.lib import *\n")
+    assert analyze_spec(spec, [nested]) == ["//dep:nested"]
 
 
 def test_does_not_flag_a_namespace_shim_dep(tmp_path: Path) -> None:
@@ -442,28 +508,16 @@ def test_does_not_flag_a_dep_whose_generated_src_the_target_lists(tmp_path: Path
     assert analyze_spec(spec, [gen]) == []
 
 
-def test_reports_nothing_when_the_target_discovers_plugins_at_runtime(tmp_path: Path) -> None:
-    # The target loads plugins dynamically, so its real deps are invisible to
-    # import analysis; flagging any of them would be wrong.
-    spec = _app_spec(tmp_path, "import os\n\nload_plugins()\n")
+def test_does_not_flag_a_dep_a_conftest_src_imports(tmp_path: Path) -> None:
+    # A conftest is unanalyzable as a dep, not as an analysis root: pytest
+    # loads it by filename, but its own imports are evidence like any other.
+    spec = _test_spec(tmp_path, conftest_src="import dep.lib\n", test_src="import os\n")
     assert analyze_spec(spec, [_dep_lib()]) == []
 
 
-def test_reports_nothing_for_a_conftest_target(tmp_path: Path) -> None:
-    (tmp_path / "pkg").mkdir()
-    conftest = tmp_path / "pkg" / "conftest.py"
-    conftest.write_text("import dep.lib\n")
-    spec = TargetSpec(
-        label="//pkg:conftest",
-        package="pkg",
-        imports=["."],
-        src_attr_labels=["//pkg:conftest.py"],
-        srcs=[SrcFile("pkg/conftest.py", str(conftest), True)],
-        dep_attr_labels=[],
-        dep_json_paths=[],
-        keep_deps=[],
-    )
-    assert analyze_spec(spec, [_dep_lib()]) == []
+def test_flags_an_unused_dep_of_a_target_shipping_a_conftest(tmp_path: Path) -> None:
+    spec = _test_spec(tmp_path, conftest_src="import os\n", test_src="import os\n")
+    assert analyze_spec(spec, [_dep_lib()]) == ["//dep:lib"]
 
 
 def test_reports_nothing_when_all_srcs_are_generated() -> None:

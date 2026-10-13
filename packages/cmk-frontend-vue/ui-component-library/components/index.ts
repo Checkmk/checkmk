@@ -12,10 +12,11 @@ import { pages as formSpecPages } from '../form'
 import UclBreakpoints from '../foundations/Breakpoints/UclBreakpoints.vue'
 import UclColors from '../foundations/Colors/UclColors.vue'
 import UclIcons from '../foundations/Icons/UclIcons.vue'
+import { pages as globalSettingsPages } from '../global-settings'
 import { pages as graphingPages } from '../graphing'
-import { pages as metricBackendPages } from '../metric-backend'
 import { pages as monitoringPages } from '../monitoring'
 import { pages as networkFlowPages } from '../network-flow'
+import { pages as telemetryMetricsPages } from '../telemetry-metrics'
 import { pages as twoFactorAuthPages } from '../two-factor-authentication'
 import UclCmkBadge from './basic-elements/CmkBadge/UclCmkBadge.vue'
 import UclCmkButton from './basic-elements/CmkButton/UclCmkButton.vue'
@@ -23,6 +24,7 @@ import UclCmkChip from './basic-elements/CmkChip/UclCmkChip.vue'
 import UclCmkCode from './basic-elements/CmkCode/UclCmkCode.vue'
 import UclCmkColorPicker from './basic-elements/CmkColorPicker/UclCmkColorPicker.vue'
 import UclCmkIconButton from './basic-elements/CmkIconButton/UclCmkIconButton.vue'
+import UclCmkIconLink from './basic-elements/CmkIconLink/UclCmkIconLink.vue'
 import UclCmkInlineButton from './basic-elements/CmkInlineButton/UclCmkInlineButton.vue'
 import UclCmkLabeledSwitch from './basic-elements/CmkLabeledSwitch/UclCmkLabeledSwitch.vue'
 import UclCmkLink from './basic-elements/CmkLink/UclCmkLink.vue'
@@ -33,6 +35,7 @@ import UclCmkAccordionStepPanel from './content-organization/CmkAccordionStepPan
 import UclCmkCatalogPanel from './content-organization/CmkCatalogPanel/UclCmkCatalogPanel.vue'
 import UclCmkCollapsible from './content-organization/CmkCollapsible/UclCmkCollapsible.vue'
 import UclCmkFlyout from './content-organization/CmkFlyout/UclCmkFlyout.vue'
+import UclCmkResizeHandle from './content-organization/CmkResizeHandle/UclCmkResizeHandle.vue'
 import UclCmkScrollContainer from './content-organization/CmkScrollContainer/UclCmkScrollContainer.vue'
 import UclCmkSlideIn from './content-organization/CmkSlideIn/UclCmkSlideIn.vue'
 import UclCmkSlideInDialog from './content-organization/CmkSlideInDialog/UclCmkSlideInDialog.vue'
@@ -42,6 +45,7 @@ import UclCmkTabs from './content-organization/CmkTabs/UclCmkTabs.vue'
 import UclCmkWizard from './content-organization/CmkWizard/UclCmkWizard.vue'
 import UclCmkAddDropdown from './form-elements/CmkAddDropdown/UclCmkAddDropdown.vue'
 import UclCmkCheckbox from './form-elements/CmkCheckbox/UclCmkCheckbox.vue'
+import UclCmkChipAutocomplete from './form-elements/CmkChipAutocomplete/UclCmkChipAutocomplete.vue'
 import UclCmkChipSelect from './form-elements/CmkChipSelect/UclCmkChipSelect.vue'
 import UclCmkDeprecatedDateTimePicker from './form-elements/CmkDeprecatedDateTimePicker/UclCmkDeprecatedDateTimePicker.vue'
 import UclCmkDropdown from './form-elements/CmkDropdown/UclCmkDropdown.vue'
@@ -78,7 +82,8 @@ import UclCmkParagraph from './foundation-elements/typography/UclCmkParagraph.vu
 import UclArrowDown from './graphics/ArrowDown/UclArrowDown.vue'
 import UclCmkBreadcrumb from './navigation/CmkBreadcrumb/UclCmkBreadcrumb.vue'
 import UclCmkLinkCard from './navigation/CmkLinkCard/UclCmkLinkCard.vue'
-import UclCmkAlertBox from './system-feedback/CmkAlertBox/UclCmkAlertBox.vue'
+import UclCmkAlert from './system-feedback/CmkAlert/UclCmkAlert.vue'
+import UclCmkAsyncContent from './system-feedback/CmkAsyncContent/UclCmkAsyncContent.vue'
 import UclCmkCopy from './system-feedback/CmkCopy/UclCmkCopy.vue'
 import UclCmkErrorBoundary from './system-feedback/CmkErrorBoundary/UclCmkErrorBoundary.vue'
 import UclCmkHelpText from './system-feedback/CmkHelpText/UclCmkHelpText.vue'
@@ -86,11 +91,14 @@ import UclCmkInlineValidation from './system-feedback/CmkInlineValidation/UclCmk
 import UclCmkLoading from './system-feedback/CmkLoading/UclCmkLoading.vue'
 import UclCmkPaste from './system-feedback/CmkPaste/UclCmkPaste.vue'
 import UclCmkPerfometer from './system-feedback/CmkPerfometer/UclCmkPerfometer.vue'
+import UclCmkPointerTooltip from './system-feedback/CmkPointerTooltip/UclCmkPointerTooltip.vue'
 import UclCmkPopup from './system-feedback/CmkPopup/UclCmkPopup.vue'
 import UclCmkPopupDialog from './system-feedback/CmkPopupDialog/UclCmkPopupDialog.vue'
 import UclCmkSkeleton from './system-feedback/CmkSkeleton/UclCmkSkeleton.vue'
 import UclCmkStateCountBar from './system-feedback/CmkStateCountBar/UclCmkStateCountBar.vue'
+import UclCmkSurfaceNotice from './system-feedback/CmkSurfaceNotice/UclCmkSurfaceNotice.vue'
 import UclCmkTooltip from './system-feedback/CmkTooltip/UclCmkTooltip.vue'
+import UclStateTag from './system-feedback/StateTag/UclStateTag.vue'
 import UclCmkProgressCircle from './system-feedback/progress/UclCmkProgressCircle.vue'
 import UclCmkProgressbar from './system-feedback/progress/UclCmkProgressbar.vue'
 
@@ -98,6 +106,7 @@ const basicElementsPages = [
   new Page('CmkBadge', UclCmkBadge),
   new Page('CmkButton', UclCmkButton),
   new Page('CmkIconButton', UclCmkIconButton),
+  new Page('CmkIconLink', UclCmkIconLink),
   new Page('CmkInlineButton', UclCmkInlineButton),
   new Page('CmkChip', UclCmkChip),
   new Page('CmkCode', UclCmkCode),
@@ -115,6 +124,7 @@ const contentOrganizationPages = [
   new Page('CmkCatalogPanel', UclCmkCatalogPanel),
   new Page('CmkCollapsible', UclCmkCollapsible),
   new Page('CmkFlyout', UclCmkFlyout),
+  new Page('CmkResizeHandle', UclCmkResizeHandle),
   new Page('CmkScrollContainer', UclCmkScrollContainer),
   new Page('CmkSlideIn', UclCmkSlideIn),
   new Page('CmkSlideInDialog', UclCmkSlideInDialog),
@@ -126,6 +136,7 @@ const contentOrganizationPages = [
 const formElementsPages = [
   new Page('CmkAddDropdown', UclCmkAddDropdown),
   new Page('CmkCheckbox', UclCmkCheckbox),
+  new Page('CmkChipAutocomplete', UclCmkChipAutocomplete),
   new Page('CmkChipSelect', UclCmkChipSelect),
   new Page('CmkDeprecatedDateTimePicker', UclCmkDeprecatedDateTimePicker),
   new Page('CmkDropdown', UclCmkDropdown),
@@ -182,7 +193,8 @@ const navigationPages = [
 ]
 
 const systemFeedbackPages = [
-  new Page('CmkAlertBox', UclCmkAlertBox),
+  new Page('CmkAlert', UclCmkAlert),
+  new Page('CmkAsyncContent', UclCmkAsyncContent),
   new Page('CmkCopy', UclCmkCopy),
   new Page('CmkErrorBoundary', UclCmkErrorBoundary),
   new Page('CmkHelpText', UclCmkHelpText),
@@ -192,12 +204,15 @@ const systemFeedbackPages = [
   new Page('CmkPerfometer', UclCmkPerfometer),
   new Page('CmkPopup', UclCmkPopup),
   new Page('CmkPopupDialog', UclCmkPopupDialog),
+  new Page('CmkPointerTooltip', UclCmkPointerTooltip),
   new Folder('Progress', [
     new Page('CmkProgressbar', UclCmkProgressbar),
     new Page('CmkProgressCircle', UclCmkProgressCircle)
   ]),
   new Page('CmkSkeleton', UclCmkSkeleton),
   new Page('CmkStateCountBar', UclCmkStateCountBar),
+  new Page('CmkSurfaceNotice', UclCmkSurfaceNotice),
+  new Page('StateTag', UclStateTag),
   new Page('CmkTooltip', UclCmkTooltip)
 ]
 export const roots = [
@@ -220,8 +235,9 @@ export const roots = [
     new Folder('Dashboards', dashboardPages),
     new Folder('Filters', filtersPages),
     new Folder('Form Spec Elements', formSpecPages),
+    new Folder('Global settings', globalSettingsPages),
     new Folder('Graphing', graphingPages),
-    new Folder('Metric backend', metricBackendPages),
+    new Folder('Telemetry metrics', telemetryMetricsPages),
     new Folder('Monitoring', monitoringPages),
     new Folder('Network flow', networkFlowPages),
     new Folder('Two Factor Authentication', twoFactorAuthPages)

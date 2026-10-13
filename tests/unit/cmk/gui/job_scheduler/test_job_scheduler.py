@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import threading
 from datetime import datetime, timedelta, UTC
 
@@ -18,7 +20,8 @@ def reraise_exception(exc: Exception) -> str:
     raise exc
 
 
-def test_run_scheduled_jobs(load_plugins: None) -> None:
+@pytest.mark.usefixtures("load_plugins")
+def test_run_scheduled_jobs() -> None:
     called = {
         "job1": 0,
         "job2": 0,
@@ -27,12 +30,12 @@ def test_run_scheduled_jobs(load_plugins: None) -> None:
     jobs = [
         CronJob[Config](
             name="job1",
-            callable=lambda config: called.update({"job1": called["job1"] + 1}),
+            callable=lambda config: called.update({"job1": called["job1"] + 1}),  # noqa: ARG005
             interval=timedelta(minutes=1),
         ),
         CronJob[Config](
             name="job2",
-            callable=lambda config: called.update({"job2": called["job2"] + 1}),
+            callable=lambda config: called.update({"job2": called["job2"] + 1}),  # noqa: ARG005
             interval=timedelta(minutes=5),
         ),
     ]
@@ -62,13 +65,14 @@ def test_run_scheduled_jobs(load_plugins: None) -> None:
     assert state.job_executions == {"job1": 3, "job2": 2}
 
 
-def test_run_scheduled_jobs_in_thread(load_plugins: None) -> None:
+@pytest.mark.usefixtures("load_plugins")
+def test_run_scheduled_jobs_in_thread() -> None:
     called = threading.Event()
     state = SchedulerState()
     jobs = [
         CronJob[Config](
             name="threaded_job",
-            callable=lambda config: called.set(),
+            callable=lambda config: called.set(),  # noqa: ARG005
             run_in_thread=True,
             interval=timedelta(minutes=5),
         ),

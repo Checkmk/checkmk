@@ -19,7 +19,9 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
-from cmk.gui.type_defs import Choices, CustomHostAttrSpec
+from cmk.gui.type_defs import CustomHostAttrSpec
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.bulk_import import (
     _attribute_choices,
     _detect_attribute,
@@ -34,6 +36,7 @@ from cmk.gui.watolib.host_attributes import all_host_attributes
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.ruleset_matcher.tags import TagGroup
+from cmk.web.utils.choices import Choice
 
 
 def _noop_pending_changes() -> PendingChanges:
@@ -46,7 +49,7 @@ def _noop_pending_changes() -> PendingChanges:
     )
 
 
-def attr_choices_with_tag_groups_and_host_attrs(tag_groups: Sequence[TagGroup]) -> Choices:
+def attr_choices_with_tag_groups_and_host_attrs(tag_groups: Sequence[TagGroup]) -> list[Choice]:
     host_attrs = [
         CustomHostAttrSpec(
             add_custom_macro=False,
@@ -196,13 +199,16 @@ def test_bulk_import_csv_parsing(
     host_attributes = all_host_attributes(
         active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
     )
-    mode_bulk_import = ModeBulkImport(test_edition, PageContext(config=Config(), request=request))
+    mode_bulk_import = ModeBulkImport(
+        test_edition,
+        PageContext(config=Config(), request=request, transactions=transactions, session=session),
+    )
     request.set_var("attribute_0", "host_name")
     request.set_var("attribute_1", "ipaddress")
 
     # Mock here is pretty unavoidable because of the use of nested function definitions
     with mock.patch("cmk.gui.wato.pages.bulk_import.ModeBulkImport._delete_csv_file"):
-        mode_bulk_import._import(
+        mode_bulk_import._import(  # noqa: SLF001
             folder_tree(),
             csv_bulk_import,
             host_attributes,
@@ -417,7 +423,7 @@ def test_host_rows_to_bulk_exceptions(
 def test_determine_dialect(sample: str, delimiter: str, expected_delimeter: str) -> None:
     handle = StringIO(sample)
     assert (
-        CSVBulkImport(handle=handle, has_title_line=False, delimiter=delimiter)._dialect.delimiter
+        CSVBulkImport(handle=handle, has_title_line=False, delimiter=delimiter)._dialect.delimiter  # noqa: SLF001
         == expected_delimeter
     )
 

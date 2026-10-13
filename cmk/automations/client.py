@@ -21,12 +21,12 @@ from pathlib import Path
 
 import requests
 
+from cmk.automations.internal import AutomationID
 from cmk.automations.models.helper import (
     AUTOMATION_HELPER_BASE_URL,
     AUTOMATION_HELPER_SOCKET_RELATIVE_PATH,
     AutomationPayload,
 )
-from cmk.automations.types import AutomationID
 from cmk.utils.unixsocket_http import make_session
 
 

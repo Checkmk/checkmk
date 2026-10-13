@@ -220,6 +220,34 @@ describe('useUrlSync', () => {
     scope.stop()
   })
 
+  it('applies one navigation once, however many events the browser fires for it', () => {
+    const applied: Array<Record<string, string>> = []
+    const fragment = ref<Record<string, string | null>>({ host: 'web01' })
+    const { urlSync, navigateTo } = makeUrlSync(`${PATHNAME}#host=web01`)
+    const scope = effectScope()
+
+    scope.run(() => {
+      useUrlSync(
+        [
+          {
+            ...makeWriter('slide-in', ['host'], fragment),
+            target: 'hash',
+            history: 'push',
+            apply: (params) => applied.push(params)
+          }
+        ],
+        { urlSync }
+      )
+    })
+
+    navigateTo(PATHNAME)
+    navigateTo(PATHNAME)
+
+    expect(applied).toEqual([{}])
+
+    scope.stop()
+  })
+
   it('stops listening for navigation once its scope is gone', () => {
     const applied: Array<Record<string, string>> = []
     const fragment = ref<Record<string, string | null>>({})

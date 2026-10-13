@@ -7,17 +7,14 @@
 # mypy: disable-error-code="type-arg"
 
 """
-The things in this module specify the old Check_MK (<- see? Old!) check API
+Helpers from the old Check_MK check API
 
 +---------------------------------------------------------------------------+
 |             THIS API IS OLD, AND NO LONGER MAINTAINED.                    |
 |                                                                           |
-| Plugins programmed against this API are only considered, if they reside   |
-| in the checks_dir (share/check_mk/checks).                                |
-|                                                                           |
-|       !!   Files in the local hierarchy are NOT CONSIDERED     !!         |
-|                                                                           |
-| This implies that these plugins can not be distributed in an MKP!         |
+| Plugins programmed against the old check API are not loaded anymore.      |
+| The helpers in this module are only kept for plugins that have been       |
+| migrated to the new API but still rely on them.                           |
 |                                                                           |
 | All new plugins should be programmed against the new API, please refer to |
 | the online user manual for details!                                       |
@@ -26,35 +23,17 @@ The things in this module specify the old Check_MK (<- see? Old!) check API
 
 """
 
-from collections.abc import Callable, Generator, Iterable, Mapping
-from dataclasses import dataclass
+from collections.abc import Callable, Generator
 from typing import Any
 
 from cmk.agent_based import v1 as _v1
-from cmk.agent_based.v2 import (
-    DiscoveryResult,
-    IgnoreResults,
-    Metric,
-    Result,
-    SNMPDetectSpecification,
-    SNMPTree,
-)
 
 __all__ = [
     "check_levels",
-    "LegacyCheckDefinition",
     "LegacyCheckResult",
-    "LegacyDiscoveryResult",
     "LegacyResult",
-    "LegacyService",
     "STATE_MARKERS",
 ]
-
-_DiscoveredParameters = Mapping | tuple | str | None
-
-
-_DiscoveryFunctionLegacy = Callable[..., None | Iterable[tuple[str | None, _DiscoveredParameters]]]
-_DiscoveryFunctionV2Compliant = Callable[..., DiscoveryResult]
 
 _OptNumber = None | int | float
 
@@ -78,35 +57,11 @@ LegacyResult = (
 )
 
 
-_CheckFunctionLegacy = Callable[
-    ...,
-    None | LegacyResult | Iterable[LegacyResult] | Generator[LegacyResult],
-]
-_CheckFunctionV2Compliant = Callable[..., Generator[Result | Metric | IgnoreResults]]
-
-
-@dataclass(frozen=True, kw_only=True)
-class LegacyCheckDefinition:
-    name: str
-    detect: SNMPDetectSpecification | None = None
-    fetch: list[SNMPTree] | SNMPTree | None = None
-    sections: list[str] | None = None
-    check_function: _CheckFunctionV2Compliant | _CheckFunctionLegacy | None = None
-    discovery_function: _DiscoveryFunctionV2Compliant | _DiscoveryFunctionLegacy | None = None
-    parse_function: Callable[[list], object] | None = None
-    check_ruleset_name: str | None = None
-    check_default_parameters: Mapping[str, Any] | None = None
-    service_name: str | None = None
-
-
 STATE_MARKERS = ("", "(!)", "(!!)", "(?)")
 
 _Levels = tuple  # Has length 2 or 4
 
 LegacyCheckResult = Generator[LegacyResult]
-
-LegacyService = tuple[str | None, Mapping[str, object]]
-LegacyDiscoveryResult = Iterable[LegacyService]
 
 
 def _normalize_levels(levels: _Levels) -> _Levels:

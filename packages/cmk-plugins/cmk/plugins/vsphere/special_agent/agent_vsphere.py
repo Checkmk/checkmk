@@ -21,6 +21,7 @@ import sys
 import time
 from collections import Counter
 from collections.abc import Callable, Iterator, Mapping, Sequence
+from http import HTTPStatus
 from typing import Any
 from xml.dom import minicompat, minidom
 
@@ -29,12 +30,12 @@ import requests
 import urllib3
 from defusedxml.minidom import parseString
 
-from cmk.password_store.v1_unstable import (
+from cmk.password_store.v1 import (
     parser_add_secret_option,
     resolve_secret_option,
     Secret,
 )
-from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, Storage, vcrtrace
+from cmk.server_side_programs.v1 import HostnameValidationAdapter, Storage, vcrtrace
 
 #   .--defines-------------------------------------------------------------.
 #   |                      _       __ _                                    |
@@ -1233,7 +1234,7 @@ class ESXConnection:
         finally:
             auth["password"] = "*****"
 
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             raise SystemExit(
                 f"Cannot login to vSphere Server (reason: [{response.status_code}] {response.reason}). "
                 "Please check the credentials."
@@ -1324,7 +1325,7 @@ def fetch_extra_interface_counters(connection: ESXConnection, opt: argparse.Name
         bandwidth = get_pattern("</driver><linkSpeed><speedMb>(.*?)</speedMb>", bandwidth_block)
         try:
             net_extra_info.append(f"net.bandwidth|{device}|{int(bandwidth[0]) * 1000000}|bytes")
-        except (ValueError, IndexError):
+        except ValueError, IndexError:
             net_extra_info.append("net.state|%s|2|state" % device)
         else:
             net_extra_info.append("net.state|%s|1|state" % device)
@@ -1746,7 +1747,7 @@ def get_systemtime(connection: ESXConnection, debug: bool) -> float | None:
     try:
         response = connection.query_server("systemtime")
         raw_systime = get_pattern("<returnval>(.*)</returnval>", response)[0]
-    except (IndexError, Exception):
+    except IndexError, Exception:
         if debug:
             raise
         return None

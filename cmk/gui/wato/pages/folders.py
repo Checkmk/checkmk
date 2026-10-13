@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 """Modes for managing folders"""
@@ -52,24 +51,15 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.quick_setup.html import quick_setup_source_cell
 from cmk.gui.table import show_row_count, Table, table_element
-from cmk.gui.type_defs import (
-    ActionResult,
-    Choices,
-    HTTPVariables,
-    IconNames,
-    PermissionName,
-    StaticIcon,
-)
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.confirm_links import make_confirm_delete_link
-from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.doc_references import DocReference, YouTubeReference
 from cmk.gui.utils.loading_transition import loading_transition_onclick, LoadingTransition
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.rendering import set_inpage_search_result_info
 from cmk.gui.utils.selection_id import SelectionId
+from cmk.gui.utils.session import session
 from cmk.gui.utils.sort import natural_sort
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
@@ -85,7 +75,7 @@ from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.check_mk_automations import delete_hosts
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
@@ -93,17 +83,19 @@ from cmk.gui.watolib.host_attributes import (
     collect_attributes,
     HostAttributes,
 )
+from cmk.gui.watolib.host_relations import relations_deletion_note
 from cmk.gui.watolib.hosts_and_folders import (
     disk_or_search_folder_from_request,
     find_available_folder_name,
     Folder,
     folder_from_request,
     folder_preserving_link,
-    folder_tree,
     FolderTree,
     Host,
     host_action_menu_registry,
+    host_url_resolver,
     make_action_link,
+    make_folder_tree,
     SearchFolder,
 )
 from cmk.gui.watolib.main_menu import MenuItem
@@ -119,10 +111,16 @@ from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
+from cmk.web.utils.choices import Choice
+from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
+from cmk.web.utils.doc_references import DocReference, YouTubeReference
 from cmk.web.utils.escaping import escape_to_html_permissive
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
-from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
+from cmk.web.utils.urls import HTTPVariable, makeactionuri, makeuri, makeuri_contextless
 
 from ._bulk_actions import get_hostnames_from_checkboxes
 from ._host_attributes import configure_attributes
@@ -136,6 +134,7 @@ TagsOrLabels = TypeVar("TagsOrLabels", Mapping[TagGroupID, TagID], Labels)
 class FolderMenuLocation(StrEnum):
     IN_FOLDER = auto()
     SELECTED_HOSTS = auto()
+    RELATED = auto()
 
 
 @dataclass(frozen=True)
@@ -196,11 +195,11 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     )
 
 
-def wato_folder_choices_autocompleter(config: Config, value: str, params: dict) -> Choices:
+def wato_folder_choices_autocompleter(config: Config, value: str, params: dict) -> list[Choice]:  # noqa: ARG001
     validate_regex(value, varname=None)
     match_pattern = re.compile(value, re.IGNORECASE)
-    matching_folders: Choices = []
-    for path, name in folder_tree().folder_choices_fulltitle(user):
+    matching_folders: list[Choice] = []
+    for path, name in make_folder_tree(config).folder_choices_fulltitle(user):
         if match_pattern.search(name) is not None:
             # select2 omits empty strings ("") as option therefore the path of the Main folder is
             # replaced by a placeholder
@@ -241,7 +240,7 @@ class ModeFolder(WatoMode):
             host_name = request.get_ascii_input("host")
         except MKUserError:
             host_name = None
-        self._tree = folder_tree()
+        self._tree = make_folder_tree(ctx.config)
         self._folder = disk_or_search_folder_from_request(
             self._tree, request.var("folder"), host_name, acting_user=user, request=request
         )
@@ -643,6 +642,9 @@ class ModeFolder(WatoMode):
                 ),
             )
 
+        for entry in folder_menu_entry_registry.by_location(FolderMenuLocation.RELATED):
+            yield from entry.func(self._folder)
+
     def _page_menu_entries_search(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Search hosts"),
@@ -670,7 +672,7 @@ class ModeFolder(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if request.var("_search"):  # just commit to search form
             return None
@@ -685,6 +687,7 @@ class ModeFolder(WatoMode):
             if transactions.check_transaction(request):
                 self._folder.delete_subfolder(
                     request.get_ascii_input_mandatory("_delete_folder"),
+                    pprint_value=config.wato_pprint_config,
                     pending_changes=_pending_changes(
                         config=config, local_site=omd_site(), acting_user=user.id
                     ),
@@ -944,14 +947,14 @@ class ModeFolder(WatoMode):
             for name in sorted_subfolder_names:
                 subfolder = subfolders_dict[name]
                 if searched_folder is not None:
-                    if not match_regex.search(subfolder.title()):
+                    if not match_regex.search(subfolder.title()):  # type: ignore[possibly-undefined]
                         continue
-                    search_results += 1
+                    search_results += 1  # type: ignore[possibly-undefined]
 
                 self._show_subfolder(subfolder, show_file_names=show_file_names)
 
             if searched_folder is not None:
-                set_inpage_search_result_info(search_results)
+                set_inpage_search_result_info(search_results)  # type: ignore[possibly-undefined]
 
             html.close_div()
             html.open_div(
@@ -1045,6 +1048,7 @@ class ModeFolder(WatoMode):
 
         html.icon_button(
             make_confirm_delete_link(
+                i18n=_,
                 url=make_action_link(
                     request, [("mode", "folder"), ("_delete_folder", subfolder.name())]
                 ),
@@ -1379,16 +1383,25 @@ class ModeFolder(WatoMode):
                 self._show_move_to_folder_action(host)
 
             if host.permissions.may("write", user):
+                delete_host_notes: list[HTML] = []
+                if relations_note := relations_deletion_note(
+                    host, host_url_resolver(host.folder().tree, user)
+                ):
+                    delete_host_notes.append(relations_note)
+                if self._host_known_in_monitoring(host.name()):
+                    delete_host_notes.append(
+                        HTML.without_escaping(
+                            _(
+                                "This change must be activated via <a href='https://docs.checkmk."
+                                "com/latest/en/wato.html#activate_changes' target='_blank'>Activ"
+                                "ate changes</a> before it becomes effective in monitoring."
+                            )
+                        )
+                    )
                 delete_host_options: dict[str, str | dict[str, str]] = (
                     confirmed_form_submit_options(
                         title=_("Delete host"),
-                        message=_(
-                            "This change must be activated via <a href='https://docs.checkmk.com"
-                            "/latest/en/wato.html#activate_changes' target='_blank'>Activate cha"
-                            "nges</a> before it becomes effective in monitoring."
-                        )
-                        if self._host_known_in_monitoring(host.name())
-                        else None,
+                        message=HTML.without_escaping("<br><br>").join(delete_host_notes) or None,
                         confirm_text=_("Yes, delete host"),
                         cancel_text=_("No, keep host"),
                         suffix=host.name(),
@@ -1414,7 +1427,7 @@ class ModeFolder(WatoMode):
     def _show_host_actions_menu(self, host: Host) -> None:
         action_menu_show_flags: list[str] = []
         if not host.locked() and user.may("wato.manage_hosts"):
-            if not is_locked_by_quick_setup(host.locked_by()):
+            if not is_locked_by_config_bundle(host.locked_by()):
                 action_menu_show_flags.append("show_delete_link")
 
             if user.may("wato.clone_hosts"):
@@ -1428,7 +1441,7 @@ class ModeFolder(WatoMode):
                 action_menu_show_flags.append(entry.ident)
 
         if action_menu_show_flags:
-            url_vars: HTTPVariables = [
+            url_vars: list[HTTPVariable] = [
                 ("hostname", host.name()),
                 *[(flag_name, True) for flag_name in action_menu_show_flags],
             ]
@@ -1495,7 +1508,7 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
     def page(self, ctx: PageContext) -> PageResult:
         html.span(self._move_title())
 
-        choices = self._get_choices(folder_tree())
+        choices = self._get_choices(make_folder_tree(ctx.config))
         if not choices:
             html.write_text_permissive(_("No valid target folder."))
             return None
@@ -1514,8 +1527,8 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
             return _("Move this host to:")
         return _("Move this folder to:")
 
-    def _get_choices(self, tree: FolderTree) -> Choices:
-        choices: Choices = [
+    def _get_choices(self, tree: FolderTree) -> list[Choice]:
+        choices: list[Choice] = [
             ("@", _("(select target folder)")),
         ]
 
@@ -1543,7 +1556,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
     def __init__(self, edition: Edition, ctx: PageContext, is_new: bool) -> None:
         super().__init__(edition, ctx)
         self._is_new = is_new
-        self._tree = folder_tree()
+        self._tree = make_folder_tree(ctx.config)
         self._folder = self._init_folder()
 
     @abc.abstractmethod
@@ -1567,7 +1580,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
         is_enabled = (
             self._is_new
             or not folder_from_request(
-                folder_tree(), request.var("folder"), request.get_ascii_input("host")
+                self._tree, request.var("folder"), request.get_ascii_input("host")
             ).locked()
         )
 
@@ -1588,7 +1601,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if (backfolder := request.var("backfolder")) is not None:
             # Edit icon on subfolder preview should bring user back to parent folder
@@ -1609,6 +1622,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
             all_host_attributes(config.wato_host_attrs, config.tags.get_tag_groups_by_topic()),
             "folder",
             new=self._is_new,
+            stored=None if self._is_new else self._folder.attributes,
         )
         self._save(
             title,
@@ -1803,7 +1817,7 @@ class ModeCreateFolder(ABCFolderMode):
 class PageAjaxSetFoldertree(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
         api_request = ctx.request.get_request()
         user.save_file("foldertree", (api_request.get("topic"), api_request.get("target")))
 

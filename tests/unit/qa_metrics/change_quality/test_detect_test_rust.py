@@ -5,8 +5,6 @@
 
 """End-to-end test of detect_test_rust.py against fixture git repos in tmp_path."""
 
-from __future__ import annotations
-
 import os
 import subprocess
 from pathlib import Path

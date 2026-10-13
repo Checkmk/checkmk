@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 
 // Reuse the shared notation formatters for the two adaptive-unit cases (bytes
@@ -20,7 +21,7 @@ const { formatter: durationFormatter } = userSpecificUnit(
 
 export function formatTimestamp(ts: string): string {
   const d = new Date(ts)
-  return isNaN(d.getTime()) ? ts : d.toLocaleString()
+  return isNaN(d.getTime()) ? ts : renderDateAndTime(d)
 }
 
 export function formatFileSize(bytes: number): string {

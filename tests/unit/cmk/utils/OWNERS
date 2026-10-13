@@ -2,6 +2,8 @@
 
 per-file test_notify.py=file:/component_owners/notifications/OWNERS_DEFINITION
 per-file test_notify.py=set noparent
+per-file test_host_storage.py=file:/component_owners/ui_setup/OWNERS_DEFINITION
+per-file test_host_storage.py=set noparent
 
 # Please
 #  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead

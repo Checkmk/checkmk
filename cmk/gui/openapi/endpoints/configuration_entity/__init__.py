@@ -13,10 +13,12 @@ Which entities can be configured like this is defined by the configuration entit
 
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict
+from http import HTTPStatus
 from typing import Any
 
 from cmk import fields
 from cmk.ccc.site import omd_site
+from cmk.gui import i18n
 from cmk.gui.config import active_config
 from cmk.gui.form_specs import FormSpecValidationError
 from cmk.gui.http import Response
@@ -87,7 +89,7 @@ def _serve_validations(data: Sequence[shared_type_defs.ValidationMessage]) -> Re
         node.setdefault("", []).append(val.message)
 
     return problem(
-        422,
+        HTTPStatus.UNPROCESSABLE_ENTITY,
         "Validation error.",
         fields=FIELDS(error_fields),
         ext=EXT({"validation_errors": [asdict(val) for val in data]}),
@@ -111,12 +113,13 @@ def _serve_entities(data: ConfigurationEntityDescription) -> Response:
     "cmk/create",
     tag_group="Checkmk Internal",
     method="post",
-    additional_status_codes=[403, 422],
+    additional_status_codes=[HTTPStatus.FORBIDDEN, HTTPStatus.UNPROCESSABLE_ENTITY],
     request_schema=CreateConfigurationEntity,
     response_schema=EditConfigurationEntityResponse,
 )
 def _create_configuration_entity(params: Mapping[str, Any]) -> Response:
     """Create a configuration entity"""
+    i18n.localize(user.language)
     body = params["body"]
     entity_type = ConfigEntityType(body["entity_type"])
     entity_type_specifier = body["entity_type_specifier"]
@@ -155,12 +158,13 @@ def _create_configuration_entity(params: Mapping[str, Any]) -> Response:
     ".../update",
     tag_group="Checkmk Internal",
     method="put",
-    additional_status_codes=[403, 422],
+    additional_status_codes=[HTTPStatus.FORBIDDEN, HTTPStatus.UNPROCESSABLE_ENTITY],
     request_schema=UpdateConfigurationEntity,
     response_schema=EditConfigurationEntityResponse,
 )
 def _update_configuration_entity(params: Mapping[str, Any]) -> Response:
     """Update an existing configuration entity"""
+    i18n.localize(user.language)
     body = params["body"]
     entity_type = ConfigEntityType(body["entity_type"])
     entity_type_specifier = body["entity_type_specifier"]
@@ -201,11 +205,12 @@ def _update_configuration_entity(params: Mapping[str, Any]) -> Response:
     path_params=[ENTITY_TYPE],
     query_params=[ENTITY_TYPE_SPECIFIER_FIELD],
     method="get",
-    additional_status_codes=[403],
+    additional_status_codes=[HTTPStatus.FORBIDDEN],
     response_schema=response_schemas.DomainObject,
 )
 def _get_configuration_entity_form_spec_schema(params: Mapping[str, Any]) -> Response:
     """Get a configuration entity form spec schema"""
+    i18n.localize(user.language)
     entity_type = ConfigEntityType(params["entity_type"])
     entity_type_specifier = params["entity_type_specifier"]
 

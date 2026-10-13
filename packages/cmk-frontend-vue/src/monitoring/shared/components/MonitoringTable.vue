@@ -14,6 +14,8 @@ import {
   useVueTable
 } from '@tanstack/vue-table'
 import { useVirtualizer } from '@tanstack/vue-virtual'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { type ComponentPublicInstance, computed, inject, nextTick, provide, ref, watch } from 'vue'
 
@@ -24,6 +26,7 @@ import {
   COLUMN_LAYOUT_KEY,
   type ColumnJustify,
   type ColumnLayoutInfo,
+  type HeaderFitWidths,
   MONITORING_SERVICE,
   TABLE_BORDER_SPACING,
   TABLE_BORDER_SPACING_PX,
@@ -44,6 +47,7 @@ const props = defineProps<{
    */
   fetchState: FetchState
   hasLoaded?: boolean
+  loadFailed?: boolean
   columns: ColumnDef<T>[]
   filterState: ColumnFiltersState
   getRowKey?: (row: T, index: number) => string | number
@@ -52,13 +56,24 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (event: 'update:filterState', value: ColumnFiltersState): void
+  (event: 'retry'): void
 }>()
+
+const { _t } = usei18n()
 
 const monitoringService = inject(MONITORING_SERVICE, null)
 const showSkeleton = computed(() => !props.hasLoaded || props.fetchState === 'foreground')
-const showEmptyState = computed(() => props.hasLoaded && props.rows.length === 0)
+const showEmptyState = computed(
+  () => props.hasLoaded && props.rows.length === 0 && props.loadFailed !== true
+)
 
 const rowSelection = defineModel<RowSelectionState>('rowSelection', { default: () => ({}) })
+
+// The select column is the switch: a caller that does not offer one - because the user may run no
+// command on a selection - gets no selectable rows either, not even programmatically.
+const selectionEnabled = computed(() =>
+  props.columns.some((column) => column.meta?.selectColumn === true)
+)
 
 const table = useVueTable({
   // Server-side sort/filter — we bypass getRowModel() and slot rows directly.
@@ -86,7 +101,9 @@ const table = useVueTable({
     }
   },
   enableColumnPinning: true,
-  enableRowSelection: true,
+  get enableRowSelection() {
+    return selectionEnabled.value
+  },
   manualSorting: true,
   manualFiltering: true,
   // Filter values are opaque ColumnFilterNode objects resolved server-side, so
@@ -159,15 +176,24 @@ interface ColumnMetric {
   justify: ColumnJustify
 }
 
+// Reported by the header for the columns that must not cut their label.
+const headerFitWidths = ref<HeaderFitWidths>({})
+
 const columnMetrics = computed<ColumnMetric[]>(() =>
-  table.getVisibleLeafColumns().map((column) => ({
-    id: column.id,
-    min: column.columnDef.minSize ?? DEFAULT_COLUMN_MIN_SIZE,
-    max: column.columnDef.maxSize ?? DEFAULT_COLUMN_MAX_SIZE,
-    isLeftPinned: column.getIsPinned() === 'left',
-    isRightPinned: column.getIsPinned() === 'right',
-    justify: column.columnDef.meta?.justify ?? 'left'
-  }))
+  table.getVisibleLeafColumns().map((column) => {
+    const min = Math.max(
+      column.columnDef.minSize ?? DEFAULT_COLUMN_MIN_SIZE,
+      headerFitWidths.value[column.id] ?? 0
+    )
+    return {
+      id: column.id,
+      min,
+      max: Math.max(column.columnDef.maxSize ?? DEFAULT_COLUMN_MAX_SIZE, min),
+      isLeftPinned: column.getIsPinned() === 'left',
+      isRightPinned: column.getIsPinned() === 'right',
+      justify: column.columnDef.meta?.justify ?? 'left'
+    }
+  })
 )
 
 const totalMinWidth = computed(() =>
@@ -376,12 +402,24 @@ function tableRowAt(index: number): Row<T> {
 
 <template>
   <div ref="wrapperRef" class="monitoring-table" :aria-busy="fetchState !== 'idle'">
+    <CmkAlert
+      v-if="loadFailed"
+      class="monitoring-table__load-error"
+      variant="error"
+      :heading="_t('Could not load the results')"
+      :main-button="{ title: _t('Retry'), onclick: () => emit('retry') }"
+      :text="_t('Check whether the site is reachable, then retry.')"
+    />
     <TableSkeleton v-if="showSkeleton"></TableSkeleton>
     <table v-else class="monitoring-table__table">
       <colgroup v-if="pinningEnabled">
         <col v-for="entry in columnLayout" :key="entry.id" :style="{ width: `${entry.width}px` }" />
       </colgroup>
-      <MonitoringTableHeader :header-groups="table.getHeaderGroups()" :disabled="showEmptyState" />
+      <MonitoringTableHeader
+        :header-groups="table.getHeaderGroups()"
+        :disabled="showEmptyState"
+        @fit-widths="headerFitWidths = $event"
+      />
       <tbody>
         <tr v-if="showEmptyState">
           <td :colspan="columnLayout.length" class="monitoring-table__empty-cell">
@@ -424,6 +462,10 @@ function tableRowAt(index: number): Row<T> {
   overflow: auto;
 }
 
+.monitoring-table__load-error {
+  margin: 0 0 var(--dimension-4);
+}
+
 .monitoring-table__table {
   width: v-bind(tableWidth);
   table-layout: fixed;
@@ -443,13 +485,7 @@ function tableRowAt(index: number): Row<T> {
 .monitoring-table__row:hover,
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 .monitoring-table__row:hover :deep(td) {
-  background-color: var(--color-dark-blue-90);
-}
-
-body[data-theme='facelift'] .monitoring-table__row:hover,
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-body[data-theme='facelift'] .monitoring-table__row:hover :deep(td) {
-  background-color: var(--color-light-blue-0);
+  background-color: var(--background-row-hover-highlight);
 }
 
 .monitoring-table__spacer {

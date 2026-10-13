@@ -5,7 +5,6 @@
 """These functions implement a web service with that a master can call
 automation functions on slaves,"""
 
-# mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -17,12 +16,11 @@ from datetime import datetime
 from typing import override
 
 import cmk.ccc.version as cmk_version
-import cmk.gui.utils
 import cmk.gui.watolib.utils as watolib_utils
 import cmk.utils.paths
 from cmk import trace
-from cmk.automations.results import result_type_registry, SerializedResult
-from cmk.automations.types import AutomationID
+from cmk.automations.internal import AutomationID
+from cmk.automations.results import result_type_registry
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
@@ -51,7 +49,7 @@ from cmk.gui.watolib.automations import (
     MKAutomationException,
     verify_request_compatibility,
 )
-from cmk.gui.watolib.hosts_and_folders import collect_all_hosts, folder_tree
+from cmk.gui.watolib.hosts_and_folders import collect_all_hosts, make_folder_tree
 from cmk.utils.local_secrets import DistributedSetupSecret
 from cmk.utils.paths import configuration_lockfile
 
@@ -191,7 +189,7 @@ class PageAutomation(AjaxPage):
         with tracer.span(f"_execute_automation[{self._command}]"):
             # TODO: Refactor these two calls to also use the automation_command_registry
             if self._command == "checkmk-automation":
-                self._execute_cmk_automation(debug=config.debug)
+                self._execute_cmk_automation(config, debug=config.debug)
                 return
             if self._command == "push-profile":
                 self._execute_push_profile(
@@ -212,16 +210,16 @@ class PageAutomation(AjaxPage):
     @staticmethod
     def _format_cmk_automation_result(
         *,
-        serialized_result: SerializedResult,
+        serialized_result: str,
         cmk_command: AutomationID,
         cmdline_cmd: Iterable[str],
         debug: bool,
-    ) -> SerializedResult:
+    ) -> str:
         try:
             return (
                 result_type_registry[cmk_command]
                 .deserialize(serialized_result)
-                .serialize(cmk_version_of_remote_automation_source(request))
+                .serialize(str(cmk_version_of_remote_automation_source(request)))
             )
         except SyntaxError as e:
             msg = get_local_automation_failure_message(
@@ -233,7 +231,7 @@ class PageAutomation(AjaxPage):
             )
             raise MKAutomationException(msg)
 
-    def _execute_cmk_automation(self, *, debug: bool) -> None:
+    def _execute_cmk_automation(self, config: Config, *, debug: bool) -> None:
         cmk_command = AutomationID(request.get_str_input_mandatory("automation"))
         args = watolib_utils.mk_eval(request.get_str_input_mandatory("arguments"))
         indata = watolib_utils.mk_eval(request.get_str_input_mandatory("indata"))
@@ -246,12 +244,12 @@ class PageAutomation(AjaxPage):
             stdin_data=stdin_data,
             timeout=timeout,
             debug=debug,
-            collect_all_hosts=lambda: collect_all_hosts(folder_tree()),
+            collect_all_hosts=lambda: collect_all_hosts(make_folder_tree(config)),
         )
         # Don't use write_text() here (not needed, because no HTML document is rendered)
         response.set_data(
             self._format_cmk_automation_result(
-                serialized_result=SerializedResult(serialized_result),
+                serialized_result=serialized_result,
                 cmk_command=cmk_command,
                 cmdline_cmd=cmdline_cmd,
                 debug=debug,
@@ -304,7 +302,7 @@ class PageAutomation(AjaxPage):
 
         our_id = omd_site()
 
-        if our_id is not None and our_id != site_id:  # type: ignore[redundant-expr]
+        if our_id != site_id:
             raise MKGeneralException(
                 _(
                     "Site ID mismatch. Our ID is '%(our_id)s', but you are saying we are '%(site_id)s'."
@@ -325,6 +323,7 @@ class PageAutomation(AjaxPage):
             now=datetime.now(),
             pprint_value=pprint_value,
             call_users_saved_hook=True,
+            changed_users=[user_id],
         )
 
         return True

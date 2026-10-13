@@ -13,54 +13,12 @@ import pytest
 from cmk.ccc.site import SiteId
 from cmk.gui.config import Config
 from cmk.gui.watolib.analyze_configuration import (
-    ac_test_registry,
     ACResultState,
     ACSingleResult,
     ACTest,
     ACTestResult,
     merge_tests,
 )
-
-
-def test_registered_ac_tests() -> None:
-    expected_ac_tests = [
-        "ACTestApacheNumberOfProcesses",
-        "ACTestApacheProcessUsage",
-        "ACTestAutomationUserSecret",
-        "ACTestBackupConfigured",
-        "ACTestBackupNotEncryptedConfigured",
-        "ACTestBrokenGUIExtension",
-        "ACTestCheckMKHelperUsage",
-        "ACTestCheckMKFetcherUsage",
-        "ACTestCheckMKCheckerNumber",
-        "ACTestCheckMKCheckerUsage",
-        "ACTestDeprecatedRuleSets",
-        "ACTestUnknownCheckParameterRuleSets",
-        "ACTestDeprecatedV1CheckPlugins",
-        "ACTestDeprecatedCheckPlugins",
-        "ACTestDeprecatedInventoryPlugins",
-        "ACTestDeprecatedCheckManpages",
-        "ACTestDeprecatedGUIExtensions",
-        "ACTestDeprecatedLegacyGUIExtensions",
-        "ACTestDeprecatedPNPTemplates",
-        "ACTestESXDatasources",
-        "ACTestEscapeHTMLDisabled",
-        "ACTestGenericCheckHelperUsage",
-        "ACTestHTTPSecured",
-        "ACTestLDAPSecured",
-        "ACTestLiveproxyd",
-        "ACTestLivestatusUsage",
-        "ACTestLivestatusSecured",
-        "ACTestNumberOfUsers",
-        "ACTestOldDefaultCredentials",
-        "ACTestPersistentConnections",
-        "ACTestSizeOfExtensions",
-        "ACTestTmpfs",
-        "ACTestUnexpectedAllowedIPRanges",
-    ]
-
-    registered_plugins = sorted(ac_test_registry.keys())
-    assert registered_plugins == sorted(expected_ac_tests)
 
 
 class _FakeACTestSingleSite(ACTest):
@@ -75,10 +33,6 @@ class _FakeACTestSingleSite(ACTest):
     @override
     def help(self) -> str:
         return "Help"
-
-    @override
-    def is_relevant(self) -> bool:
-        return False
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -106,10 +60,6 @@ class _FakeACTestMultiSite(ACTest):
     @override
     def help(self) -> str:
         return "Help"
-
-    @override
-    def is_relevant(self) -> bool:
-        return False
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:

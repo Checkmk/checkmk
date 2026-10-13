@@ -11,6 +11,7 @@
 
 import socket
 from collections.abc import Collection, Iterable, Sequence
+from http import HTTPStatus
 from typing import Any, override
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -37,15 +38,10 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import PageContext
-from cmk.gui.type_defs import (
-    ActionResult,
-    IconNames,
-    PermissionName,
-    StaticIcon,
-)
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
+from cmk.gui.utils.session import session
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Checkbox,
@@ -61,7 +57,7 @@ from cmk.gui.wato.pages._html_elements import wato_html_head
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.activate_changes import ActivateChanges
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.host_rename import (
     rename_hosts_job_entry_point,
     RenameHostBackgroundJob,
@@ -71,13 +67,16 @@ from cmk.gui.watolib.host_rename import (
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
-    folder_tree,
     FolderTree,
+    make_folder_tree,
     validate_host_uniqueness,
 )
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -147,12 +146,12 @@ class ModeBulkRenameHost(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         renaming_config = self._vs_renaming_config().from_html_vars("")
         self._vs_renaming_config().validate_value(renaming_config, "")
         try:
-            renamings = self._collect_host_renamings(folder_tree(), renaming_config)
+            renamings = self._collect_host_renamings(make_folder_tree(config), renaming_config)
         except HostRenamingException as e:
             flash(e.message)
             return None
@@ -201,6 +200,9 @@ class ModeBulkRenameHost(WatoMode):
                             pprint_value=config.wato_pprint_config,
                             use_git=config.wato_use_git,
                             debug=config.debug,
+                            wato_hide_folders_without_read_permissions=config.wato_hide_folders_without_read_permissions,
+                            wato_host_attrs=config.wato_host_attrs,
+                            tags=config.tags.get_dict_format(),
                         ),
                     ),
                     InitialStatusArgs(
@@ -216,7 +218,7 @@ class ModeBulkRenameHost(WatoMode):
 
             return redirect(host_renaming_job.detail_url())
         if c is False:  # not yet confirmed
-            return FinalizeRequest(code=200)
+            return FinalizeRequest(code=HTTPStatus.OK)
         return None  # browser reload
 
     @staticmethod
@@ -244,7 +246,7 @@ class ModeBulkRenameHost(WatoMode):
             except ValueError:
                 invalid_names.add(new_name)
 
-            if (host := folder.host(old_name)) and is_locked_by_quick_setup(host.locked_by()):
+            if (host := folder.host(old_name)) and is_locked_by_config_bundle(host.locked_by()):
                 locked_by_quick_setup.add(old_name)
 
         warning = ""
@@ -477,7 +479,7 @@ class ModeRenameHost(WatoMode):
     def _from_vars(self) -> None:
         host_name = request.get_validated_type_input_mandatory(HostName, "host")
 
-        self._tree = folder_tree()
+        self._tree = make_folder_tree(self._ctx.config)
         folder = folder_from_request(self._tree, request.var("folder"), host_name)
         if not folder.has_host(host_name):
             raise MKUserError("host", _("You called this page with an invalid host name."))
@@ -548,7 +550,7 @@ class ModeRenameHost(WatoMode):
                 )
                 % {"renamed_host_site": renamed_host_site},
             )
-        if is_locked_by_quick_setup(self._host.locked_by()):
+        if is_locked_by_config_bundle(self._host.locked_by()):
             raise MKUserError(
                 "host",
                 _('You cannot rename host "%(host_name)s", because it is managed by Quick Setup.')
@@ -580,6 +582,9 @@ class ModeRenameHost(WatoMode):
                         pprint_value=config.wato_pprint_config,
                         use_git=config.wato_use_git,
                         debug=config.debug,
+                        wato_hide_folders_without_read_permissions=config.wato_hide_folders_without_read_permissions,
+                        wato_host_attrs=config.wato_host_attrs,
+                        tags=config.tags.get_dict_format(),
                     ),
                 ),
                 InitialStatusArgs(

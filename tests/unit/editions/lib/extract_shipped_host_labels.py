@@ -132,7 +132,7 @@ class _TextSection:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(header={self.header}, lines={self.lines})"
 
-    def subsections(self) -> Sequence["_TextSection"]:
+    def subsections(self) -> Sequence[_TextSection]:
         """Split up the body in subsections"""
 
         subsections = []

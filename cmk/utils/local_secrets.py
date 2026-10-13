@@ -60,6 +60,15 @@ class SiteInternalSecret(LocalSecret):
         return self.secret.compare(other)
 
 
+class LoginTimeoutSecret(LocalSecret):
+    """Used to anonymise client IPs (HMAC-SHA256) stored in the login timeout data file"""
+
+    @property
+    @override
+    def path(self) -> Path:
+        return paths.var_dir / "login_timeout.secret"
+
+
 class AutomationUserSecret:
     """An automation user's login secret
 

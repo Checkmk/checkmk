@@ -6,7 +6,6 @@ py_library(
     srcs = ["types.py"],
     imports = ["../../.."],
     visibility = [
-        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],
@@ -20,12 +19,10 @@ py_library(
     srcs = ["loader.py"],
     imports = ["../../.."],
     visibility = [
-        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui/rule_specs:compatibility",
         "//cmk/gui/rule_specs:types",
         "//packages/cmk-ccc:version",
         "//packages/cmk-plugin-apis:discover_plugins",
@@ -39,10 +36,10 @@ py_library(
     imports = ["../../.."],
     visibility = [
         "//cmk:__subpackages__",
+        "//packages/cmk-maps:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
-        ":compatibility",
         ":types",
         "//cmk/gui:agent",
         "//cmk/gui:core_toolkit",
@@ -52,8 +49,6 @@ py_library(
         "//cmk/gui/oauth2_connections",
         "//cmk/gui/oauth2_connections:watolib_store",
         "//cmk/gui/userdb",
-        "//cmk/gui/utils",
-        "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
         "//cmk/gui/watolib",
         "//cmk/utils",
@@ -61,21 +56,6 @@ py_library(
         "//packages/cmk-ccc:version",
         "//packages/cmk-plugin-apis:rulesets",
         "//packages/cmk-web/cmk/web/utils",
-    ],
-)
-
-py_library(
-    name = "compatibility",
-    srcs = ["compatibility.py"],
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        "//cmk/gui/form_specs",
-        "//cmk/gui/rule_specs:types",
-        "//packages/cmk-plugin-apis:rulesets",
     ],
 )
 

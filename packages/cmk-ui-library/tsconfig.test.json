@@ -1,17 +1,34 @@
 {
   "extends": "./tsconfig.vue-base.json",
-  "include": ["env.d.ts", "weaki18nString.d.ts", "lib/**/*", "components/**/*", "tests/**/*"],
+  "include": [
+    "env.d.ts",
+    "weaki18nString.d.ts",
+    "lib/**/*",
+    "components/**/*",
+    "tests/**/*",
+    "vitest.shared-setup.ts",
+    "vitest.shared.ts",
+    "vitest.msw.ts"
+  ],
   // i18nString.ts strongly types TranslatedString; tests use the weak variant
   // mapped in via weaki18nString.d.ts below.
   "exclude": ["lib/i18nString.ts"],
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo",
     "types": ["vitest/globals", "@testing-library/jest-dom"],
-    "baseUrl": ".",
     "paths": {
       "cmk-ui-library/lib/i18nString": ["./weaki18nString.d.ts"],
       "cmk-ui-library/*": ["./*"],
-      "*": ["./node_modules/*", "../../bazel-bin/packages/cmk-ui-library/node_modules/*"]
+      "*": [
+        // @types/* first: "Bundler" resolution resolves a typeless
+        // package to its .js and stops, so the @types package would
+        // never be reached if it came second. "node" resolution used
+        // to fail on the .js and fall through on its own.
+        "./node_modules/@types/*",
+        "./node_modules/*",
+        "../../bazel-bin/packages/cmk-ui-library/node_modules/@types/*",
+        "../../bazel-bin/packages/cmk-ui-library/node_modules/*"
+      ]
     }
   }
 }

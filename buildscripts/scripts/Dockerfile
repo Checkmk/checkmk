@@ -1,5 +1,5 @@
 # docker build \
-# --build-arg IMAGE_BASE=$(buildscripts/docker_image_aliases/resolve.py IMAGE_PYTHON_3_13) \
+# --build-arg IMAGE_BASE=$(buildscripts/docker_image_aliases/resolve.py IMAGE_PYTHON_3_14) \
 # --tag minimal-alpine-checkmk-ci-master \
 # -f buildscripts/scripts/Dockerfile .
 #
@@ -12,7 +12,7 @@
 
 ARG IMAGE_BASE
 FROM ${IMAGE_BASE}
-# above image is python:3.13-alpine3.23
+# above image is python:3.14-alpine3.23
 # docker inspect -f "{{ .Size }}" minimal-alpine-checkmk-ci-master:latest
 # 136MB (136684737)
 # bash is required to be used in Jenkins with image.inside(), requires +3MB
@@ -23,9 +23,10 @@ FROM ${IMAGE_BASE}
 # to get "sort --zero-terminated" and "grep --binary-files=", requires +2MB
 # rsync is required to upload artifacts to tstbuilds, requires +1MB
 # openssh is required to login with rsync to remote servers, requires +5MB
+# curl is required to upload artifacts to Nexus, requires +1MB
 # cache removal saves 3MB
 RUN apk update && \
-    apk add bash git make coreutils grep rsync openssh jq && \
+    apk add bash git make coreutils grep rsync openssh jq curl && \
     rm -rf /var/cache/apk/*
 
 # install checkmk-dev-tools to run ci-artifacts

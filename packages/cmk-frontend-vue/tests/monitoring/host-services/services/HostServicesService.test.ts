@@ -6,7 +6,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HostServicesService } from '@/monitoring/host-services/services/HostServicesService'
-import type { HostRef, HostServiceEntry, HostServicesResponse } from '@/monitoring/shared/api/types'
+import type {
+  HostEntry,
+  HostRef,
+  HostServiceEntry,
+  HostServicesResponse
+} from '@/monitoring/shared/api/types'
 import { DEFAULT_BATCH_SIZE } from '@/monitoring/shared/constants'
 
 import { makeKeyShortcutService } from '../../shared/services/testHelpers'
@@ -24,10 +29,24 @@ function makeServicesResponse(
   }
 }
 
+function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
+  return {
+    name: HOST.name,
+    state: 'UP',
+    is_flapping: false,
+    stale: false,
+    site_id: HOST.site_id,
+    legacy_host_status_link: 'view.py?view_name=hoststatus',
+    ...overrides
+  }
+}
+
 function makeService(overrides: Partial<HostServiceEntry> = {}): HostServiceEntry {
   return {
     name: 'CPU load',
     state: 'OK',
+    is_flapping: false,
+    stale: false,
     summary: 'OK - 15 min load: 0.5',
     last_check: 1783942710,
     last_state_change: 1783942740,
@@ -35,11 +54,19 @@ function makeService(overrides: Partial<HostServiceEntry> = {}): HostServiceEntr
   }
 }
 
+function makeFetchHost() {
+  return vi.fn(
+    async (_host: HostRef, _signal?: AbortSignal): Promise<HostEntry | null> => makeHost()
+  )
+}
+
 describe('HostServicesService', () => {
   let service: HostServicesService | null = null
+  let fetchHost: ReturnType<typeof makeFetchHost>
 
   beforeEach(() => {
     vi.useFakeTimers()
+    fetchHost = makeFetchHost()
   })
 
   afterEach(() => {
@@ -51,7 +78,12 @@ describe('HostServicesService', () => {
   it('calls api.fetchServices on construction and populates items/counts', async () => {
     const entry = makeService()
     const fetchServices = vi.fn().mockResolvedValue(makeServicesResponse([entry], 1, 10))
-    service = new HostServicesService({ fetchServices }, HOST, makeKeyShortcutService())
+    service = new HostServicesService(
+      { fetchServices },
+      { fetchHost },
+      HOST,
+      makeKeyShortcutService()
+    )
 
     await vi.advanceTimersByTimeAsync(0)
 
@@ -64,7 +96,12 @@ describe('HostServicesService', () => {
 
   it('requests the services of the host it was built for', async () => {
     const fetchServices = vi.fn().mockResolvedValue(makeServicesResponse([], 0, 0))
-    service = new HostServicesService({ fetchServices }, HOST, makeKeyShortcutService())
+    service = new HostServicesService(
+      { fetchServices },
+      { fetchHost },
+      HOST,
+      makeKeyShortcutService()
+    )
 
     await vi.advanceTimersByTimeAsync(0)
 
@@ -83,7 +120,12 @@ describe('HostServicesService', () => {
 
   it('passes sort state to api.fetchServices after updateSort is called', async () => {
     const fetchServices = vi.fn().mockResolvedValue(makeServicesResponse([], 0, 0))
-    service = new HostServicesService({ fetchServices }, HOST, makeKeyShortcutService())
+    service = new HostServicesService(
+      { fetchServices },
+      { fetchHost },
+      HOST,
+      makeKeyShortcutService()
+    )
 
     await vi.advanceTimersByTimeAsync(0)
 
@@ -105,7 +147,12 @@ describe('HostServicesService', () => {
 
   it('passes the search query to api.fetchServices after updateSearch is called', async () => {
     const fetchServices = vi.fn().mockResolvedValue(makeServicesResponse([], 0, 0))
-    service = new HostServicesService({ fetchServices }, HOST, makeKeyShortcutService())
+    service = new HostServicesService(
+      { fetchServices },
+      { fetchHost },
+      HOST,
+      makeKeyShortcutService()
+    )
 
     await vi.advanceTimersByTimeAsync(0)
 
@@ -123,5 +170,40 @@ describe('HostServicesService', () => {
       },
       expect.any(AbortSignal)
     )
+  })
+
+  it('reads the host alongside the services', async () => {
+    const fetchServices = vi.fn().mockResolvedValue(makeServicesResponse([], 0, 0))
+    service = new HostServicesService(
+      { fetchServices },
+      { fetchHost },
+      HOST,
+      makeKeyShortcutService()
+    )
+
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(fetchHost).toHaveBeenCalledWith(HOST, expect.any(AbortSignal))
+    expect(service.hostEntry.value).toEqual(makeHost())
+  })
+
+  it('re-reads the host on every refresh, so its state follows the table', async () => {
+    const fetchServices = vi.fn().mockResolvedValue(makeServicesResponse([], 0, 0))
+    fetchHost.mockResolvedValueOnce(makeHost({ state: 'UP' }))
+    fetchHost.mockResolvedValueOnce(makeHost({ state: 'DOWN' }))
+    service = new HostServicesService(
+      { fetchServices },
+      { fetchHost },
+      HOST,
+      makeKeyShortcutService()
+    )
+
+    await vi.advanceTimersByTimeAsync(0)
+    expect(service.hostEntry.value?.state).toBe('UP')
+
+    service.refresh()
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(service.hostEntry.value?.state).toBe('DOWN')
   })
 })

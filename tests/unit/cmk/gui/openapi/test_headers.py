@@ -4,12 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from http import HTTPStatus
+
+import pytest
+
 import cmk.ccc.version as cmk_version
 from cmk.utils import paths
-from tests.testlib.gui.web_test_app import CmkTestResponse, WebTestAppForCMK
+from tests.testlib.unit.gui.web_test_app import CmkTestResponse, WebTestAppForCMK
 
 
-def _get_version(app: WebTestAppForCMK, status: int = 200) -> CmkTestResponse:
+def _get_version(app: WebTestAppForCMK, status: int = HTTPStatus.OK) -> CmkTestResponse:
     return app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/version",
@@ -30,12 +34,11 @@ def test_headers_exposed(
     assert resp.headers["x-checkmk-version"] == cmk_version.__version__
 
 
-def test_headers_not_exposed_for_unauthorized_users(
-    wsgi_app: WebTestAppForCMK, request_context: None
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_headers_not_exposed_for_unauthorized_users(wsgi_app: WebTestAppForCMK) -> None:
     resp = _get_version(
         wsgi_app,
-        status=401,
+        status=HTTPStatus.UNAUTHORIZED,
     )
     assert "x-checkmk-edition" not in resp.headers
     assert "x-checkmk-version" not in resp.headers

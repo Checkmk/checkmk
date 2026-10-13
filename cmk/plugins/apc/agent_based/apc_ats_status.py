@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="unreachable"
 
 from collections.abc import Mapping
 
@@ -38,7 +36,7 @@ def parse_apc_ats_status(info: StringTable) -> Status | None:
 
 
 def discover_apc_ats_status(section: Status) -> DiscoveryResult:
-    if section and section.selected_source:  # type: ignore[redundant-expr]
+    if section.selected_source:
         yield Service(parameters={"power_source": section.selected_source.value})
 
 
@@ -79,9 +77,9 @@ def check_apc_ats_status(params: Mapping[str, object], section: Status) -> Check
         yield Result(state=State.CRIT, summary="exceeded output current threshold")
 
     for powersource in section.powersources:
-        if powersource is None:
-            continue
         match powersource.status:
+            case PowerSupplyStatus.OK:
+                pass
             case PowerSupplyStatus.Failure:
                 yield Result(state=State.CRIT, summary=f"{powersource.name} power supply failed")
             case PowerSupplyStatus.NotAvailable:

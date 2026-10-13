@@ -5,9 +5,6 @@
 """Is executed in container from git top level as working directory to install
 the desired Checkmk version"""
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 import argparse
 import logging
 import os
@@ -20,12 +17,12 @@ import requests
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 
-from tests.testlib.package_manager import ABCPackageManager
-from tests.testlib.version import (
+from tests.testlib.common.version import (
     CMKPackageInfo,
     edition_from_env,
     version_from_env,
 )
+from tests.testlib.system.package_manager import ABCPackageManager
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(filename)s %(message)s")
 logger = logging.getLogger()
@@ -36,7 +33,7 @@ CMK_INSTALL_ERROR = 22
 
 
 class InstallCmkArgs(argparse.Namespace):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.uninstall: bool = False
 
@@ -54,7 +51,7 @@ def parse_args() -> tuple[InstallCmkArgs, list[str]]:
     return parser.parse_known_args(namespace=InstallCmkArgs())
 
 
-def main():
+def main() -> int:
     args, _ = parse_args()
     operation = "uninstall" if args.uninstall else "install"
 

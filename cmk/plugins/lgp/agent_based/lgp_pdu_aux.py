@@ -76,7 +76,7 @@ def savefloat(f: str) -> float:
     you can not know whether it is really 0.0 or something went wrong."""
     try:
         return float(f)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return 0.0
 
 
@@ -89,7 +89,7 @@ def saveint(i: str) -> int:
     you can not know whether it is really 0 or something went wrong."""
     try:
         return int(i)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return 0
 
 

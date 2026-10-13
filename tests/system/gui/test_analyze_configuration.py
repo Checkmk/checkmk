@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from collections.abc import Iterator
 
 import pytest
@@ -10,7 +11,7 @@ from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashbo
 from tests.system.gui.testlib.playwright.pom.setup.analyze_configuration import (
     AnalyzeConfiguration,
 )
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 EXPECTED_CHECKS = [
     "Broken GUI extensions",
@@ -74,9 +75,8 @@ def simulate_deprecations(test_site: Site) -> Iterator[None]:
 
 
 @pytest.mark.skip(reason="CMK-27392; investigating root-cause.")
-def test_analyze_configuration_page(
-    dashboard_page: MainDashboard, simulate_deprecations: None
-) -> None:
+@pytest.mark.usefixtures("simulate_deprecations")
+def test_analyze_configuration_page(dashboard_page: MainDashboard) -> None:
     """Test 'Analyze configuration' page when 'Deprecations' file-based checks are triggered.
 
     1. Trigger 'Deprecations' file-based checks by adding fake files in the specified locations.

@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -56,7 +55,7 @@ common_section = parse_hitachi_hnas_volume(RAW_DATA)
 
 
 @pytest.fixture(name="value_store_patch")
-def value_store_fixture(monkeypatch):
+def value_store_fixture(monkeypatch: pytest.MonkeyPatch) -> Iterator[dict[str, object]]:
     """Patch value store for the trend and delta calculations."""
     value_store_patched = {
         "1072 mount_id3.delta": [2_000_000, 30_000_000],

@@ -12,6 +12,12 @@ bazel run :vite [-- <ARGS>]
 bazel run :vitest [-- <ARGS>]
 ```
 
+To reproduce an order-dependent test failure:
+
+```sh
+bazel test :unit-test --test_sharding_strategy=disabled --test_arg=--project=shared --test_arg=--maxWorkers=1 --test_arg=--sequence.shuffle --test_arg=--sequence.seed=<n> --test_arg=--bail=1
+```
+
 ## IDE Support
 
 It's non trivial to set up bazel in such a way that js tooling will have
@@ -27,22 +33,20 @@ bazel run -- @pnpm//:pnpm --dir $PWD install --frozen-lockfile
 
 ## Trying out changes in a site
 
-### f12
+### cmk-dev-deploy
 
-f12 is working, but is using the production ready build process and
-therefore not super fast (currently six seconds)
+`./scripts/cmk-dev-deploy.py` deploys the production build to a local site,
+see `packages/cmk-dev-deploy/README.md`.
 
 ### Dev server
 
 To combine both the vite auto hot reload and the site, the proxy feature of the
 vite dev server is used.
 
-To watch file changes across the bazelized components, you need to use
-`ibazel` instead of `bazel`.
+To watch file changes across the bazelized components, run the dev server
+through `//bazel/tools/devserver`.
 
-* download https://github.com/bazelbuild/bazel-watcher/releases/latest/download/ibazel_linux_amd64
-  and add it to your path
-* run `ibazel run :vite`
+* run `bazel run //bazel/tools/devserver -- //packages/cmk-frontend-vue:vite`
 * surf to `http://localhost:5173/<yoursite>/check_mk/` (tailing slash is
   important, otherwise checkmk will redirect to a url without the port)
 * enable "Inject cmk-frontend-vue files via vite client" in "User Interface"
@@ -64,7 +68,7 @@ persist, reach out to Team Bug.
 
 To try our reusable components outside a checkmk site, you can
 
-* run `ibazel run :vite -- --config vite.config.ucl.ts`
+* run `bazel run //bazel/tools/devserver -- //packages/cmk-frontend-vue:vite -- --config vite.config.ucl.ts`
 * surf to `http://localhost:5174/`
 
 or
@@ -74,6 +78,25 @@ or
 The hosted UI component library is built from the master branch daily. It can also
 be manually deployed by triggering the "Build and deploy ui-component-library"
 jenkins job.
+
+### Navigation status chips
+
+A page in the UCL sidebar navigation can carry an optional status chip.
+
+**When you add a UCL page or notably change one, set its status.** Declare it
+on the page's `new Page(...)` definition, which lives in the `index.ts` of its
+area (e.g. `ui-component-library/components/index.ts` or
+`ui-component-library/form/index.ts`):
+
+```ts
+new Page('CmkFoo', UclCmkFoo, { status: 'new', statusSince: '2026-07-30' })
+```
+
+Supported statuses:
+
+* `new` — recently added page; the chip disappears once the user opens the page
+* `updated` — notably changed page; same dismissal behavior as `new`
+* `deprecated` — stays visible until the status is removed from the page definition
 
 ### AI tooling (MCP server)
 

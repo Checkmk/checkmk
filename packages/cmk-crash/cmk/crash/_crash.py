@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 
 """This module contains functions that can be used in all Checkmk components
 to produce crash reports in a generic format which can then be sent to Checkmk
@@ -28,6 +27,10 @@ from cmk.ccc.version_info import VersionInfo, VersionInfoBase
 SENSITIVE_KEYWORDS = ["token", "secret", "pass", "key"]
 
 REDACTED_STRING: Final = "redacted"
+
+# Ends the PEM header of every private key format (PKCS#8, encrypted or not, and the
+# legacy RSA, EC and DSA ones), and nothing that is public, such as a certificate.
+_PEM_PRIVATE_KEY_MARKER: Final = "PRIVATE KEY-----"
 
 CRASH_INFO_VERSION: Final = 2
 """Current version of the crash.info on-disk format.
@@ -197,10 +200,7 @@ def _get_generic_crash_info[TDetails](
     version_info: VersionInfo,
     details: TDetails,
 ) -> CrashInfo[TDetails]:
-    """Produces the crash info data structure.
-
-    The top level keys of the crash info dict are standardized and need
-    to be set for all crash reports."""
+    """Produces the crash info data structure from the current exception context."""
     exc_type, exc_value, _ = sys.exc_info()
 
     tb_list = list(
@@ -209,6 +209,33 @@ def _get_generic_crash_info[TDetails](
         )
     )
 
+    return build_crash_info(
+        type_name=type_name,
+        version_info=version_info,
+        details=details,
+        exc_type=exc_type.__name__ if exc_type else None,
+        exc_value=str(exc_value),
+        tb_list=[tuple(e) for e in tb_list],
+        local_vars=_get_local_vars_of_last_exception(),
+        crash_id=str(uuid.uuid1()),
+    )
+
+
+def build_crash_info[TDetails](
+    *,
+    type_name: str,
+    version_info: VersionInfo,
+    details: TDetails,
+    exc_type: str | None,
+    exc_value: str,
+    tb_list: Sequence[tuple[str, int, str, str]],
+    local_vars: Mapping[str, object] | None,
+    crash_id: str,
+) -> CrashInfo[TDetails]:
+    """Produces the crash info data structure.
+
+    The top level keys of the crash info dict are standardized and need
+    to be set for all crash reports."""
     # TODO: The typing gets *really* chaotic here, hence the cast. :-P
     modified_details = details
     if isinstance(details, Mapping) and "vars" in details:
@@ -222,12 +249,12 @@ def _get_generic_crash_info[TDetails](
 
     return CrashInfo(
         crash_info_version=CRASH_INFO_VERSION,
-        id=str(uuid.uuid1()),
+        id=crash_id,
         crash_type=type_name,
-        exc_type=exc_type.__name__ if exc_type else None,
-        exc_value=str(exc_value),
-        exc_traceback=[tuple(e) for e in tb_list],
-        local_vars=_get_local_vars_of_last_exception(),
+        exc_type=exc_type,
+        exc_value=exc_value,
+        exc_traceback=list(tb_list),
+        local_vars="" if local_vars is None else _encode_local_vars(local_vars),
         details=modified_details,
         core=version_info["core"],
         python_version=version_info["python_version"],
@@ -239,18 +266,23 @@ def _get_generic_crash_info[TDetails](
     )
 
 
-def _get_local_vars_of_last_exception() -> str:
+def _get_local_vars_of_last_exception() -> Mapping[str, object] | None:
     try:
-        local_vars = format_var_for_export(inspect.trace()[-1][0].f_locals, maxdepth=5)
+        return inspect.trace()[-1][0].f_locals
     except IndexError:
         # inspect.trace() returns [] when called outside an active exception handler,
         # making [-1] raise IndexError.
-        return ""
+        return None
 
+
+def _encode_local_vars(local_vars: Mapping[str, object]) -> str:
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
     return base64.b64encode(
-        _truncate_str(pprint.pformat(local_vars), max_size=5 * 1024 * 1024).encode("utf-8")
+        _truncate_str(
+            pprint.pformat(format_var_for_export(local_vars, maxdepth=5)),
+            max_size=5 * 1024 * 1024,
+        ).encode("utf-8")
     ).decode()
 
 
@@ -294,22 +326,31 @@ def format_var_for_export(val: object, maxdepth: int = 4, maxsize: int = 1024 * 
                 format_var_for_export(item, maxdepth - 1, maxsize=maxsize) for item in val
             )
 
-        # Check and limit size
+        # A private key is redacted by its value, as the variable holding it can have
+        # any name.
         case str():
+            if _PEM_PRIVATE_KEY_MARKER in val:
+                return REDACTED_STRING
             return _truncate_str(val, maxsize)
+
+        case bytes():
+            if _PEM_PRIVATE_KEY_MARKER.encode() in val:
+                return REDACTED_STRING
+            return val
 
         # Preserve JSON-safe scalars as-is; pprint.pformat() handles them without calling
         # any user-defined __repr__.
-        case None | bool() | int() | float() | bytes():
+        case None | bool() | int() | float():
             return val
 
         case _:
             # Convert unknown objects to a safe string representation so that a later
             # pprint.pformat() call cannot crash on a broken __repr__ implementation.
             try:
-                return repr(val)
+                text = repr(val)
             except Exception:
                 return f"<{type(val).__name__} (repr raised an exception)>"
+            return REDACTED_STRING if _PEM_PRIVATE_KEY_MARKER in text else text
 
 
 def _key_indicates_sensitivity(key: object) -> bool:

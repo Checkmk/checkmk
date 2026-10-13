@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.gui import help_menu
 from cmk.gui.main_menu import MainMenuRegistry
 
 
-def test_unack_incomp_werks_button_links_to_filtered_werks(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_unack_incomp_werks_button_links_to_filtered_werks() -> None:
     registry = MainMenuRegistry()
     help_menu.register(
         registry,

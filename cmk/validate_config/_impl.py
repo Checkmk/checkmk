@@ -13,7 +13,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from cmk.ccc import tty
 from cmk.gui.validation_utils import ConfigValidationError
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
+from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree
 from cmk.gui.watolib.rulesets import FolderRulesets, InvalidRuleException
 from cmk.gui.watolib.simple_config_file import config_file_registry
 from cmk.gui.watolib.timeperiods import load_timeperiods
@@ -37,7 +37,7 @@ class ValidationResult:
     logs_invalid: list[str]
 
 
-def validate_mk_files() -> ValidationResult:
+def validate_mk_files(tree: FolderTree) -> ValidationResult:
     """
     NOTE: This function needs to be called within an application context.
 
@@ -71,7 +71,7 @@ def validate_mk_files() -> ValidationResult:
     # No performance impact - only called during cmk-update-config
     rule_validator = TypeAdapter(RuleSpec)  # astrein: disable=pydantic-type-adapter
     for folder_path, validate_result, has_failure in _validate_folder_ruleset_rules(
-        folder_tree().root_folder(), rule_validator
+        tree.root_folder(), rule_validator
     ):
         message = _file_format(f"{folder_path}/rules.mk") + validate_result
         if has_failure:

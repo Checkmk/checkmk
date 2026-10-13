@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
-from enum import StrEnum
 from re import Pattern
-from typing import Literal, override
+from typing import override
 
 from playwright.sync_api import expect, Locator
 
@@ -20,13 +19,6 @@ from tests.system.gui.testlib.playwright.pom.sidebar.runtime_filters_sidebar imp
 )
 
 logger = logging.getLogger(__name__)
-
-
-class SummarywidgetType(StrEnum):
-    """Types of summary widgets."""
-
-    HOST = "Host state summary"
-    SERVICE = "Service state summary"
 
 
 class BaseDashboard(CmkPage):
@@ -51,16 +43,12 @@ class BaseDashboard(CmkPage):
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
 
-    def check_selected_dashboard_name(self) -> None:
+    def check_selected_dashboard_name(self, timeout: float | None = None) -> None:
         """Check that the dashboard selector has the expected placeholder text."""
         expect(
             self.dashboard_selector,
-            message=(
-                "The dashboard selector does not contain the expected dashboard name."
-                f" Expected: '{self.page_title}';"
-                f" actual value: '{self.dashboard_selector.get_attribute('placeholder')}'"
-            ),
-        ).to_have_attribute("placeholder", self.page_title)
+            message="The dashboard selector does not contain the expected dashboard name.",
+        ).to_have_attribute("placeholder", self.page_title, timeout=timeout)
 
     @property
     def dashboard_container(self) -> Locator:
@@ -111,20 +99,25 @@ class BaseDashboard(CmkPage):
             message=f"'{button_name}' button of the dashboard top menu is not present",
         ).to_be_visible()
 
-    def clone_dashboard(self, automatic_unique_id: bool = True) -> None:
-        """Clone a dashboard creating a customized copy"""
+    def clone_dashboard(self, title: str, unique_id: str) -> None:
+        """Clone a dashboard into a customized copy named `title` with ID `unique_id`.
+
+        The ID is set explicitly because a generated one gets a numeric suffix once the
+        ID is taken, leaving the caller unable to tell which dashboard it got.
+
+        Args:
+            title: the title of the clone.
+            unique_id: the ID of the clone. Must be snake case.
+        """
         self.get_menu_button("Clone").click()
         clone_dashboard_sidebar = CloneDashboardSidebar(self.page)
+        clone_dashboard_sidebar.name_input.fill(title)
+        clone_dashboard_sidebar.fill_unique_id(unique_id)
 
-        if automatic_unique_id:
-            clone_dashboard_sidebar.automatic_unique_id_checkbox.check()
-            clone_dashboard_sidebar.expect_auto_generated_unique_id_to_be_populated(
-                self.page_title.lower().replace(" ", "_")
-            )
-        else:
-            raise NotImplementedError("Custom unique id is not yet implemented")
-
-        clone_dashboard_sidebar.clone_button.click()
+        self.click_and_wait_for_navigation(
+            clone_dashboard_sidebar.clone_button,
+            re.compile(rf"dashboard\.py\?name={re.escape(unique_id)}(?:&|$)"),
+        )
 
     def get_widget(self, widget_title: str) -> Locator:
         """Get the Locator of the widget with the given title.
@@ -214,18 +207,19 @@ class BaseDashboard(CmkPage):
     def delete_widget_button(self, widget_title: str) -> Locator:
         return self.get_widget(widget_title).get_by_role("button", name="Delete widget")
 
-    def get_chart_widget_hexagon(
-        self, widget_title: str, *, status: Literal["ok", "downtime", "unknown", "critical"] = "ok"
-    ) -> Locator:
-        return self.get_widget(widget_title).locator(f"path.hexagon.{status}")
+    def get_chart_widget_hexagon(self, widget_title: str) -> Locator:
+        return self.get_widget(widget_title).get_by_role("img", name=re.compile(r"^(Up|OK): \d+$"))
 
     def get_chart_widget_total_value(self, widget_title: str) -> int:
-        widget = self.get_widget(widget_title)
-        total_count = widget.get_by_role("row", name="Total").locator("a.count")
+        total_link = self.get_widget(widget_title).get_by_role(
+            "link", name=re.compile(r"^\d+ Total$")
+        )
         expect(
-            total_count, message=f"Total count of chart widget '{widget_title}' is not shown"
-        ).to_have_text(re.compile(r"\d+"))
-        return int(total_count.inner_text())
+            total_link, message=f"Total count of chart widget '{widget_title}' is not shown"
+        ).to_be_visible()
+        match = re.search(r"\d+", total_link.text_content() or "")
+        assert match, f"Total count of chart widget '{widget_title}' is not a number"
+        return int(match.group())
 
 
 class MainDashboard(BaseDashboard):

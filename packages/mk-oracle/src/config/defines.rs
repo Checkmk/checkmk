@@ -54,6 +54,8 @@ pub mod keys {
     pub const ENGINE: &str = "engine";
 
     pub const SECTIONS: &str = "sections";
+    pub const EXCLUDED_SECTIONS: &str = "excluded_sections";
+    pub const TARGET_ID: &str = "target_id";
     pub const CUSTOM_METRICS: &str = "custom_metrics";
     pub const SQL: &str = "sql";
     pub const SQL_PARAMS: &str = "sql_params";
@@ -63,6 +65,8 @@ pub mod keys {
     pub const IS_ASYNC: &str = "is_async";
     pub const DISABLED: &str = "disabled";
     pub const SEP: &str = "sep";
+    pub const HEADER_NAME: &str = "header_name";
+    pub const HEADER_SEP: &str = "header_sep";
     pub const AFFINITY: &str = "affinity";
 
     pub const PIGGYBACK_HOST: &str = "piggyback_host";

@@ -9,11 +9,10 @@ from tempfile import mkdtemp
 import pytest
 
 from tests.system.singlesite.mkp import lib
-from tests.testlib.site import Site
-from tests.testlib.web_session import CMKWebSession
+from tests.testlib.system.site import Site
+from tests.testlib.system.web_session import CMKWebSession
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_edition("cloud")
 def test_site_availability_after_mkp_removal(site: Site, web: CMKWebSession) -> None:
     """

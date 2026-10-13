@@ -3,22 +3,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG002
-
 import datetime
 import logging
 import time
-from collections.abc import Mapping
+from collections.abc import Container, Mapping
 from io import StringIO
 from typing import override
 from zoneinfo import ZoneInfo
 
+import pytest
 import time_machine
 
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.discovery._autochecks import AutocheckServiceWithNodes
-from cmk.checkengine.discovery._autodiscovery import _may_rediscover, get_host_services_by_host_name
-from cmk.checkengine.discovery._utils.filters import RediscoveryParameters
+from cmk.checkengine.discovery import (
+    AutocheckServiceWithNodes,
+    get_host_services_by_host_name,
+    RediscoveryParameters,
+)
+from cmk.checkengine.discovery._autodiscovery import (
+    _may_rediscover,
+    _node_service_source,
+    BasicTransition,
+    Transition,
+)
 from cmk.checkengine.discovery.types import DiscoveredItem
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 
@@ -75,19 +82,19 @@ class _AutochecksConfigDummy:
     def __init__(self, *, effective_host: HostName) -> None:
         self._effective_host = effective_host
 
-    def ignore_plugin(self, hn: HostName, plugin: CheckPluginName) -> bool:
+    def ignore_plugin(self, hn: HostName, plugin: CheckPluginName) -> bool:  # noqa: ARG002
         return False
 
-    def ignore_service(self, hn: HostName, entry: AutocheckEntry) -> bool:
+    def ignore_service(self, hn: HostName, entry: AutocheckEntry) -> bool:  # noqa: ARG002
         return False
 
-    def effective_host(self, host_name: HostName, entry: AutocheckEntry) -> HostName:
+    def effective_host(self, host_name: HostName, entry: AutocheckEntry) -> HostName:  # noqa: ARG002
         return self._effective_host
 
-    def service_description(self, host_name: HostName, entry: AutocheckEntry) -> str:
+    def service_description(self, host_name: HostName, entry: AutocheckEntry) -> str:  # noqa: ARG002
         return f"{entry.check_plugin_name} / {entry.item}"
 
-    def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Mapping[str, str]:
+    def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Mapping[str, str]:  # noqa: ARG002
         return {}
 
 
@@ -101,6 +108,18 @@ class _AutochecksConfigIgnoreAll(_AutochecksConfigDummy):
     @override
     def ignore_service(self, hn: HostName, entry: AutocheckEntry) -> bool:
         return True
+
+
+class _AutochecksConfigIgnoreOn(_AutochecksConfigDummy):
+    """AutochecksConfig where a disabled rule matches every service on the given hosts."""
+
+    def __init__(self, *, effective_host: HostName, ignored_on: Container[HostName]) -> None:
+        super().__init__(effective_host=effective_host)
+        self._ignored_on = ignored_on
+
+    @override
+    def ignore_service(self, hn: HostName, entry: AutocheckEntry) -> bool:
+        return hn in self._ignored_on
 
 
 def test_get_host_services_by_host_name_vanished_on_node() -> None:
@@ -459,6 +478,58 @@ def test_get_host_services_by_host_name_move_mutiple_nodes_and_autochecks() -> N
     }
 
 
+@pytest.mark.parametrize(
+    "ignored_on, expected",
+    [
+        pytest.param((NODE_1, CLUSTER), "clustered_ignored", id="rule matches both"),
+        pytest.param((CLUSTER,), "clustered_ignored", id="rule matches the cluster only"),
+        pytest.param((NODE_1,), "clustered_old", id="rule matches the node only"),
+    ],
+)
+def test_clustered_service_on_the_node_is_disabled_by_the_clusters_rule(
+    ignored_on: tuple[HostName, ...], expected: Transition
+) -> None:
+    assert set(
+        get_host_services_by_host_name(
+            NODE_1,
+            existing_services={NODE_1: [AUTOCHECK_1A]},
+            discovered_services={NODE_1: [AUTOCHECK_1A]},
+            is_cluster=False,
+            cluster_nodes=(),
+            autochecks_config=_AutochecksConfigIgnoreOn(
+                effective_host=CLUSTER, ignored_on=ignored_on
+            ),
+            enforced_services={},
+        )[NODE_1]
+    ) == {expected}
+
+
+@pytest.mark.parametrize(
+    "ignored_on, expected",
+    [
+        pytest.param((NODE_1, CLUSTER), "ignored", id="rule matches both"),
+        pytest.param((CLUSTER,), "ignored", id="rule matches the cluster only"),
+        pytest.param((NODE_1,), "unchanged", id="rule matches the node only"),
+    ],
+)
+def test_clustered_service_on_the_cluster_is_disabled_by_the_clusters_rule(
+    ignored_on: tuple[HostName, ...], expected: Transition
+) -> None:
+    assert set(
+        get_host_services_by_host_name(
+            CLUSTER,
+            existing_services={NODE_1: [AUTOCHECK_1A]},
+            discovered_services={NODE_1: [AUTOCHECK_1A]},
+            is_cluster=True,
+            cluster_nodes=(NODE_1,),
+            autochecks_config=_AutochecksConfigIgnoreOn(
+                effective_host=CLUSTER, ignored_on=ignored_on
+            ),
+            enforced_services={},
+        )[CLUSTER]
+    ) == {expected}
+
+
 def _setup_buffered_logging() -> StringIO:
     logger = logging.getLogger("cmk")
     buffer = StringIO()
@@ -514,3 +585,102 @@ def test_may_rediscover_relies_on_time_zone_when_allowing() -> None:
             is True
         )
     assert buffer.getvalue().strip("\n").split("\n") == [""]
+
+
+_BASIC_TRANSITIONS: tuple[BasicTransition, ...] = ("new", "unchanged", "changed", "vanished")
+
+
+def _classify(
+    host_name: HostName,
+    *,
+    check_source: BasicTransition,
+    service_ignored_on: Container[HostName] = (),
+    plugin_ignored_on: Container[HostName] = (),
+) -> Transition:
+    """Classify one service of `CLUSTER`, as seen from `host_name`.
+
+    `service_ignored_on` / `plugin_ignored_on` are the hosts a *Disabled services* resp. plugin
+    rule matches on -- which host the classifier consults is itself part of the behaviour under
+    test.
+    """
+    return _node_service_source(
+        host_name,
+        AUTOCHECK_1A,
+        ignore_service=lambda host_name, _entry: host_name in service_ignored_on,
+        ignore_plugin=lambda host_name, _plugin_name: host_name in plugin_ignored_on,
+        check_source=check_source,
+        cluster_name=CLUSTER,
+    )
+
+
+def test_node_service_source_emits_every_transition() -> None:
+    """Characterization of the classifier's whole output space.
+
+    `clustered_ignored` had no producer from `692c918bf86` (2021-02-05) until CMK-38591: an early
+    `return "ignored"` had replaced a mutate-then-prefix, silently reverting werk 7128. See
+    `packages/cmk-check-engine/docs/SERVICE_DISCOVERY_BEHAVIOUR_MATRIX.md` §2.1 and §10.13.
+    """
+    produced = {
+        _classify(
+            host_name,
+            check_source=check_source,
+            service_ignored_on=(CLUSTER, NODE_1) if service_ignored else (),
+            plugin_ignored_on=(CLUSTER, NODE_1) if plugin_ignored else (),
+        )
+        for host_name in (CLUSTER, NODE_1)
+        for check_source in _BASIC_TRANSITIONS
+        for service_ignored in (True, False)
+        for plugin_ignored in (True, False)
+    }
+
+    assert produced == {
+        "new",
+        "unchanged",
+        "changed",
+        "vanished",
+        "ignored",
+        "clustered_new",
+        "clustered_old",
+        "clustered_vanished",
+        "clustered_ignored",
+    }
+
+
+@pytest.mark.parametrize("check_source", ["new", "unchanged", "changed"])
+def test_clustered_service_is_only_disabled_by_a_rule_matching_the_cluster(
+    check_source: BasicTransition,
+) -> None:
+    """For a node row the classifier consults the rule on the **cluster**, not on the node.
+
+    The cluster owns the service, so the cluster's rules decide whether it is disabled; a rule
+    matching only the node has no effect (CMK-38591).
+    """
+    assert _classify(NODE_1, check_source=check_source, service_ignored_on=(NODE_1,)) not in (
+        "ignored",
+        "clustered_ignored",
+    )
+    assert (
+        _classify(NODE_1, check_source=check_source, service_ignored_on=(CLUSTER,))
+        == "clustered_ignored"
+    )
+
+
+@pytest.mark.parametrize("host_name", [CLUSTER, NODE_1])
+def test_node_service_source_never_turns_a_vanished_service_into_ignored(
+    host_name: HostName,
+) -> None:
+    """A service absent from the agent output stays `vanished`, disabled-services rule or not.
+
+    Intended behaviour, not characterization: this is the classifier-side reason why `vanished`
+    admits no `disable` command -- the state the command would produce is one the classifier never
+    assigns to a not-discovered service. See the behaviour matrix §11.3 and §10.16.
+    """
+    assert (
+        _classify(
+            host_name,
+            check_source="vanished",
+            service_ignored_on=(CLUSTER, NODE_1),
+            plugin_ignored_on=(CLUSTER, NODE_1),
+        )
+        != "ignored"
+    )

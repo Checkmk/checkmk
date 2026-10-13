@@ -7,8 +7,8 @@ from collections.abc import Sequence
 from typing import Literal
 
 from cmk.gui.htmllib.html import html
-from cmk.gui.type_defs import StaticIcon
 from cmk.gui.watolib.main_menu import MenuItem
+from cmk.web.utils.icons import StaticIcon
 
 
 class TileMenuRenderer:
@@ -31,9 +31,7 @@ class TileMenuRenderer:
             if not item.may_see():
                 continue
 
-            html.open_a(
-                href=item.get_url(), onfocus="if (this.blur) this.blur();", class_=self._tile_size
-            )
+            html.open_a(href=item.get_url(), class_=self._tile_size)
             if isinstance(item.icon, StaticIcon):
                 html.static_icon(item.icon, title=item.title)
             else:

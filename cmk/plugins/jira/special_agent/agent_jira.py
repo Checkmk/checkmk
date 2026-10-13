@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
 
 """agent_jira
 
@@ -22,7 +21,8 @@ from jira import JIRA
 from jira.exceptions import JIRAError
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
+from cmk.server_side_programs.v1 import configure_logging
 
 LOGGER = logging.getLogger(__name__)
 
@@ -245,7 +245,7 @@ def setup_logging(verbosity: int) -> None:
     else:
         logging.disable(logging.CRITICAL)
         lvl = logging.CRITICAL
-    logging.basicConfig(level=lvl, format="%(asctime)s %(levelname)s %(message)s")
+    configure_logging(lvl)
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -276,7 +276,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--project-workflows-project", nargs=1, action="append", help="The full project name"
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--project-workflows-workflows",
         nargs="+",
         action="append",

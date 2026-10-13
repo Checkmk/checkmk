@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.gui.openapi.framework import (
@@ -37,7 +38,7 @@ def edit_quick_setup_v1(
             example="8558f956-3e45-4c4f-bd02-e88da17c99dd",
         ),
     ],
-    search: Annotated[
+    search: Annotated[  # noqa: ARG001
         str | None,
         QueryParam(
             description="Optional search query to preserve when redirecting after save",
@@ -68,7 +69,12 @@ ENDPOINT_EDIT_QUICK_SETUP = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=edit_quick_setup_v1,
-            additional_status_codes=[201, 303, 403, 429],
+            additional_status_codes=[
+                HTTPStatus.CREATED,
+                HTTPStatus.SEE_OTHER,
+                HTTPStatus.FORBIDDEN,
+                HTTPStatus.TOO_MANY_REQUESTS,
+            ],
         )
     },
 )

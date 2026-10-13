@@ -6,6 +6,7 @@
 import type { CmkTimeSeriesGraph, Size } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 
+import type { BinUnit } from '../../utils/bins'
 import type { ConsolidationFn } from '../consolidation'
 import type { ZoomMode } from './interaction/selection'
 
@@ -21,9 +22,15 @@ export type {
 // REST API, not the data-less render shell, so these mirror that endpoint's response models.
 export type Metric = components['schemas']['ApiMetric']
 export type MetricMetadata = components['schemas']['ApiMetricMetadata']
-export type MetricRender = components['schemas']['ApiMetricRender']
+export type MetricRender = Metric['render']
+export type LineRender = components['schemas']['ApiLineRender']
+export type AreaRender = components['schemas']['ApiAreaRender']
+export type BarRender = components['schemas']['ApiBarRender']
 export type HorizontalLine = components['schemas']['ApiHorizontalLine']
+export type ShadedRegion = components['schemas']['ApiShadedRegion']
 export type TimeRange = components['schemas']['ApiTimeRange']
+
+export type { BinUnit }
 
 export type LineInterpolator = 'linear' | 'monotoneX' | 'basis'
 export type SizeMode = Size['mode']
@@ -50,20 +57,27 @@ export interface PinPayload {
 }
 
 export interface TimeSeriesGraphProps extends Pick<CmkTimeSeriesGraph, 'size' | 'options'> {
-  time_range: TimeRange
+  view_time_range: TimeRange
+  data_time_range?: TimeRange | undefined
   metrics: Metric[]
   horizontal_lines: HorizontalLine[]
+  shaded_regions: ShadedRegion[]
   consolidationFunction?: ConsolidationFn
   curveInterpolator?: LineInterpolator
+  /** The unit bar metrics are binned by; null while the graph holds no bar metric. */
+  binUnit: BinUnit | null
   valueRange: ValueRange | null
   zoomMode: ZoomMode
   minTimeRange: number | null
   minValueRange: number | null
   atMinTimeZoom?: boolean
+  showTimeAxis?: boolean
+  showValueAxis?: boolean
+  minValueAxisWidth?: number | undefined
   inspecting: boolean
   panEnabled: boolean
   zoomEnabled: boolean
   pinEnabled?: boolean
-  highlightedMetricName: string | null
+  highlightedMetricNames: string[]
   pinTime?: number | null
 }

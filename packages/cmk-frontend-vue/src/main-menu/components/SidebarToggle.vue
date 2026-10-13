@@ -10,6 +10,7 @@ import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon
 import type { CmkMultitoneIconColor } from 'cmk-ui-library/components/CmkIcon/types'
 import CmkKeyboardKey from 'cmk-ui-library/components/CmkKeyboardKey.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { comboKey, highlightCombo, highlightedCombo } from 'cmk-ui-library/lib/keyboardHelp'
 import { computed } from 'vue'
 
 import { getInjectedMainMenu } from '@/main-menu/provider/main-menu'
@@ -27,6 +28,9 @@ const shortCut: NavItemShortcut = {
   ctrl: true
 }
 
+const combo = mainMenu.getNavShortCutCombo(shortCut)
+const highlighted = computed(() => highlightedCombo.value === comboKey(combo))
+
 const color = computed<CmkMultitoneIconColor>(() => {
   return (SidebarService.isActive() ? 'success' : 'font') as CmkMultitoneIconColor
 })
@@ -41,6 +45,8 @@ const color = computed<CmkMultitoneIconColor>(() => {
       'mm-sidebar-toggle__li--small': hideItemTitle
     }"
     :title="_t('Toggle sidebar')"
+    @mouseenter="highlightCombo(combo)"
+    @mouseleave="highlightCombo(null)"
   >
     <a href="#" @click.prevent="SidebarService.toggle()">
       <CmkMultitoneIcon
@@ -54,6 +60,7 @@ const color = computed<CmkMultitoneIconColor>(() => {
         :keyboard-key="mainMenu.getNavShortCutInfo(shortCut)"
         size="small"
         class="mm-sidebar-toggle__key-hint"
+        :class="{ 'mm-sidebar-toggle__key-hint--highlighted': highlighted }"
       />
       <span v-if="!hideItemTitle">{{ _t('Sidebar') }}</span>
     </a>
@@ -92,6 +99,10 @@ const color = computed<CmkMultitoneIconColor>(() => {
       left: 35px;
       white-space: nowrap;
       z-index: +1;
+    }
+
+    .mm-sidebar-toggle__key-hint--highlighted {
+      outline: 2px solid var(--success);
     }
   }
 

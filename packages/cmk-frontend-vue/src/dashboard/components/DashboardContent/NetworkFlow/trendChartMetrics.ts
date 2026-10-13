@@ -5,6 +5,7 @@
  */
 import type { NetworkFlowTrendChartContent } from '@/dashboard/types/widget.ts'
 import type { Metric } from '@/graphing'
+import { CATEGORICAL_PALETTE, chartColorHex } from '@/network-flow/colors'
 
 /**
  * The series values are throughput, rendered in the mockups' unit style
@@ -18,21 +19,8 @@ const THROUGHPUT_UNIT: Metric['metadata']['unit'] = {
   convertible: false
 }
 
-/**
- * The renderer paints on a canvas, so the series colors have to be literals
- * rather than the CSS custom properties the other network flow widgets use.
- * These are the theme-independent `-50` palette entries, in the order the flow
- * monitoring mockups ask for (green first, then the cooler/warmer accents).
- */
-const SERIES_COLORS = [
-  '#15d1a0', // corporate green
-  '#28a2f3', // light blue
-  '#ffd703', // yellow
-  '#ec48b6', // pink
-  '#ff8400', // orange
-  '#8380ff', // purple
-  '#ed3b3b' // light red
-]
+// The renderer paints on a canvas, so it cannot resolve CSS custom properties.
+const SERIES_COLORS = CATEGORICAL_PALETTE.map(chartColorHex)
 
 /** One shared stack id stacks every series into cumulative bands. */
 const STACK_ID = 'network-flow-trend'
@@ -45,7 +33,7 @@ export interface TrendChartSeries {
 /**
  * The trend chart's series as the graph engine's metrics: palette colors cycled
  * by rank, and the display mode expressed as the stack every series shares -
- * no stack id at all draws them as separate lines instead.
+ * the lines mode draws them as separate lines instead.
  */
 export function trendChartMetrics(
   series: TrendChartSeries[],
@@ -56,13 +44,13 @@ export function trendChartMetrics(
       name: item.name,
       title: item.name,
       unit: THROUGHPUT_UNIT,
-      color: SERIES_COLORS[index % SERIES_COLORS.length]!
+      color: SERIES_COLORS[index % SERIES_COLORS.length]!,
+      attributes: []
     },
-    render: {
-      stack: displayMode === 'stacked_area' ? STACK_ID : null,
-      inverse: false,
-      hidden: false
-    },
+    render:
+      displayMode === 'stacked_area'
+        ? { shape: 'area', stack: STACK_ID, inverse: false, hidden: false }
+        : { shape: 'line', inverse: false, hidden: false },
     data_points: item.dataPoints
   }))
 }

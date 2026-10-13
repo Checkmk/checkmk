@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# Agent plugins still need to support Python 3.4
+# ruff: noqa: UP032  # PEP 498 (Literal String Interpolation) is a Python 3.6 feature
+
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -738,7 +741,7 @@ def read_statefile(state_file):
     try:
         with open(state_file) as state_fd:
             last_timestamp = int(state_fd.read())
-    except (OSError, ValueError):
+    except (OSError, ValueError):  # fmt: skip
         return None, True
 
     if time.localtime(last_timestamp).tm_year >= 2015:
@@ -760,7 +763,7 @@ def update_statefile(state_file, startup_warnings):
     try:
         with open(state_file, "w") as state_fd:
             state_fd.write("%d" % timestamp)
-    except (OSError, TypeError):
+    except (OSError, TypeError):  # fmt: skip
         # TypeError: timestamp was None, but at least ctime is updated.
         pass
 

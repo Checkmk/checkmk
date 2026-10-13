@@ -8,8 +8,10 @@ import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, ref, watch } from 'vue'
 
 import type { GraphTimerange } from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
-import type { TimerangeModel } from '@/dashboard/components/TimeRange/types'
-import { useTimeRange } from '@/dashboard/components/TimeRange/useTimeRange'
+import {
+  type TimeRangeSourceModel,
+  useTimeRangeSource
+} from '@/dashboard/components/TimeRange/useTimeRangeSource'
 import {
   type DataRangeType,
   useDataRangeInput
@@ -31,13 +33,18 @@ import type { WidgetSpec } from '@/dashboard/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard/utils'
 
 const CONTENT_TYPE = 'single_metric'
+type SparkHeightMode = NonNullable<SingleMetricContent['spark_height_mode']>
+
 export interface UseMetric extends UseWidgetHandler, UseWidgetVisualizationOptions {
   timeRangeType: Ref<TimeRangeType>
+  followDashboardTimeRange: Ref<boolean>
   timeRange: Ref<GraphTimerange>
   displayRangeLimits: Ref<boolean>
   showServiceStatusEnabled: Ref<boolean>
   showServiceStatus: Ref<ShowServiceStatusType>
   showServiceStatusSelection: Ref<ForStates>
+  sparkHeightMode: Ref<SparkHeightMode>
+  showDelta: Ref<boolean>
 
   dataRangeType: Ref<DataRangeType>
   dataRangeSymbol: Ref<string>
@@ -60,9 +67,13 @@ export const useMetric = async (
   const timeRangeType = ref<TimeRangeType>(
     currentContent?.time_range === 'current' ? 'current' : 'window'
   )
-  const currentTimerange: TimerangeModel | null =
+  const currentWindow: TimeRangeSourceModel | null =
     currentContent?.time_range === 'current' ? null : currentContent?.time_range?.window || null
-  const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(currentTimerange)
+  const {
+    followDashboard: followDashboardTimeRange,
+    timeRange,
+    widgetProps: generateTimeRangeProps
+  } = useTimeRangeSource(currentWindow)
   const displayRangeLimits = ref<boolean>(currentContent?.show_display_range_limits ?? true)
   const showServiceStatusEnabled = ref<boolean>(!!currentContent?.status_display)
   const showServiceStatus = ref<ShowServiceStatusType>(
@@ -71,6 +82,8 @@ export const useMetric = async (
   const showServiceStatusSelection = ref<ForStates>(
     currentContent?.status_display?.for_states ?? 'all'
   )
+  const sparkHeightMode = ref<SparkHeightMode>(currentContent?.spark_height_mode ?? 'full')
+  const showDelta = ref<boolean>(currentContent?.show_delta ?? true)
 
   const {
     type: dataRangeType,
@@ -105,6 +118,8 @@ export const useMetric = async (
       metric: metric,
       display_range: dataRangeProps.value,
       show_display_range_limits: displayRangeLimits.value,
+      spark_height_mode: sparkHeightMode.value,
+      show_delta: showDelta.value,
       time_range:
         timeRangeType.value === 'current'
           ? 'current'
@@ -151,12 +166,15 @@ export const useMetric = async (
   watch(
     [
       timeRangeType,
+      followDashboardTimeRange,
       timeRange,
       dataRangeType,
       dataRangeProps,
       showServiceStatusEnabled,
       showServiceStatus,
       showServiceStatusSelection,
+      sparkHeightMode,
+      showDelta,
       widgetGeneralSettings
     ],
     useDebounceFn(() => {
@@ -169,6 +187,7 @@ export const useMetric = async (
 
   return {
     timeRangeType,
+    followDashboardTimeRange,
     timeRange,
     dataRangeType,
     dataRangeSymbol,
@@ -178,6 +197,8 @@ export const useMetric = async (
     showServiceStatusEnabled,
     showServiceStatus,
     showServiceStatusSelection,
+    sparkHeightMode,
+    showDelta,
 
     title,
     showTitle,

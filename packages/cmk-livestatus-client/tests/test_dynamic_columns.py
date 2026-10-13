@@ -5,12 +5,31 @@
 
 import pytest
 
-from cmk.livestatus_client.expressions import And, LqSafe
+from cmk.livestatus_client.expressions import And, LqSafe, LqUnsafeValueError
 from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables.crashreports import Crashreports
 from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.livestatus_client.tables.services import Services
-from cmk.livestatus_client.types import Column
+from cmk.livestatus_client.types import Column, escape_filename
+
+
+class TestEscapeFilename:
+    def test_space_is_escaped(self) -> None:
+        assert escape_filename("var/log/my file.log") == "var/log/my\\sfile.log"
+
+    def test_backslash_is_escaped(self) -> None:
+        assert escape_filename("back\\slash") == "back\\\\slash"
+
+    def test_backslash_is_escaped_before_space(self) -> None:
+        assert escape_filename("a\\ b") == "a\\\\\\sb"
+
+    def test_plain_filename_is_unchanged(self) -> None:
+        assert escape_filename("var/log/messages") == "var/log/messages"
+
+    def test_newline_is_not_escaped_and_rejected_by_dynamic(self) -> None:
+        escaped = escape_filename("evil\nFilter: name = injected")
+        with pytest.raises(LqUnsafeValueError, match="Invalid Livestatus Query string"):
+            Hosts.mk_logwatch_file.dynamic("file", f"myhost/{escaped}")
 
 
 class TestDynamic:
@@ -33,16 +52,26 @@ class TestDynamic:
         with pytest.raises(ValueError, match="requires at least one argument"):
             Services.prediction_file.dynamic("file")
 
+    def test_escaped_filename_is_accepted(self) -> None:
+        column = Hosts.mk_logwatch_file.dynamic(
+            "file", f"myhost/{escape_filename('var/log/my file.log')}"
+        )
+        assert column.name == "mk_logwatch_file:file:myhost/var/log/my\\sfile.log"
+
+    def test_unescaped_filename_is_rejected(self) -> None:
+        with pytest.raises(LqUnsafeValueError, match="contains whitespace"):
+            Hosts.mk_logwatch_file.dynamic("file", "myhost/var/log/my file.log")
+
     def test_rejects_newline_injection(self) -> None:
-        with pytest.raises(ValueError, match="Invalid Livestatus Query string"):
+        with pytest.raises(LqUnsafeValueError, match="Invalid Livestatus Query string"):
             Services.prediction_file.dynamic("file", "path\nFilter: host_name = injected")
 
     def test_rejects_whitespace_in_arguments(self) -> None:
-        with pytest.raises(ValueError, match="contains whitespace"):
+        with pytest.raises(LqUnsafeValueError, match="contains whitespace"):
             Services.prediction_file.dynamic("file", "path another_column")
 
     def test_rejects_whitespace_in_title(self) -> None:
-        with pytest.raises(ValueError, match="contains whitespace"):
+        with pytest.raises(LqUnsafeValueError, match="contains whitespace"):
             Services.prediction_file.dynamic("fi le", "path")
 
     def test_rejects_colon_in_title(self) -> None:

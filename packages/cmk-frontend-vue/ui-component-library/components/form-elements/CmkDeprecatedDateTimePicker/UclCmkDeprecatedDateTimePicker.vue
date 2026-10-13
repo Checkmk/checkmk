@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 
 import codeExample from './UclCmkDeprecatedDateTimePickerCodeExample.vue?raw'
 
@@ -37,11 +37,11 @@ export const panelConfig = {
   mode: {
     type: 'list' as const,
     title: 'Mode',
-    options: [
-      { title: 'DateTime', name: 'datetime' },
-      { title: 'Date', name: 'date' },
-      { title: 'Time', name: 'time' }
-    ] satisfies Options<Mode>[],
+    options: listOptions<Mode>({
+      datetime: 'DateTime',
+      date: 'Date',
+      time: 'Time'
+    }),
     initialState: 'datetime' as Mode
   },
   suffix: {

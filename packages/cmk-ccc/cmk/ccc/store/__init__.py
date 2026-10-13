@@ -17,7 +17,7 @@ from collections.abc import Mapping
 from contextlib import AbstractContextManager, nullcontext
 from pathlib import Path
 from threading import Lock
-from typing import Any, final, TYPE_CHECKING
+from typing import Any, final, Literal, TYPE_CHECKING
 
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.ccc.i18n import _
@@ -50,6 +50,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "activation_lock",
+    "bootstrap_statement",
     "BytesSerializer",
     "DimSerializer",
     "FileIo",
@@ -139,7 +140,7 @@ def load_mk_file(path: Path, *, default: Mapping[str, object], lock: bool) -> Ma
             exec(compile(path.read_bytes(), path, "exec"), globals(), default)  # nosec B102 # BNS:aee528
         except FileNotFoundError:
             pass
-        except (MKTerminate, MKTimeout):
+        except MKTerminate, MKTimeout:
             raise
         except Exception as e:
             # TODO: How to handle debug mode or logging?
@@ -176,22 +177,28 @@ def save_to_mk_file(
 ) -> None:
     fmt = pprint.pformat if pprint_value else repr
 
-    # Self-bootstrap `key` into the exec's locals so the file loads against
-    # `default={}` — symmetric with `Ruleset.format_raw_value`. Using locals()
-    # (not globals()) keeps each call isolated from process-wide module
-    # globals that would otherwise accumulate across loads.
     if isinstance(value, Mapping):
-        content = (
-            f"{key} = locals().setdefault({key!r}, {{}})\n"  #
-            f"{key}.update({fmt(dict(value))})"
-        )
+        content = f"{bootstrap_statement(key, '{}')}\n{key}.update({fmt(dict(value))})"
     else:
-        content = (
-            f"{key} = locals().setdefault({key!r}, [])\n"  #
-            f"{key} += {fmt(list(value))}"
-        )
+        content = f"{bootstrap_statement(key, '[]')}\n{key} += {fmt(list(value))}"
 
     save_mk_file(path, content)
+
+
+def bootstrap_statement(varname: str, empty: Literal["{}", "[]"]) -> str:
+    """The statement that lets a .mk file extend `varname` without it being predefined
+
+    Exec-style .mk files extend their variables in place (`x.update(...)`,
+    `x += [...]`). The statement defines `varname` as `empty` unless the
+    loader predefined it, in which case the predefined object is kept, so
+    the file loads both against `default={}` and against a pre-seeded
+    namespace.
+
+    The lookup goes through locals(), not globals(): the locals are the
+    per-call `default` dict the loader passes to exec, while globals() would
+    be this module's namespace, shared by all loads in the process.
+    """
+    return f"{varname} = locals().setdefault({varname!r}, {empty})"
 
 
 # .
@@ -215,7 +222,7 @@ def load_object_from_file(path: Path, *, default: Any, lock: bool = False) -> An
     ):
         try:
             return ObjectStore(path, serializer=DimSerializer()).read_obj(default=default)
-        except (SyntaxError, ValueError):
+        except SyntaxError, ValueError:
             logger.warning("Failed to deserialize %(path)s, returning default", {"path": path})
             return default
 
@@ -310,7 +317,7 @@ def try_load_file_from_pickle_cache(
         if pickle_path.stat().st_mtime > path.stat().st_mtime:
             # Use pickled version since this file is newer and therefore valid
             return load_object_from_pickle_file(pickle_path, default=default)
-    except (FileNotFoundError, pickle.UnpicklingError):
+    except FileNotFoundError, pickle.UnpicklingError:
         pass
 
     # Scenarios depending on lock

@@ -5,9 +5,8 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from math import ceil
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckResult
@@ -15,6 +14,7 @@ from cmk.agent_based.v2 import get_rate, get_value_store
 from cmk.plugins.windows.agent_based.libwmi import (
     get_wmi_time,
     required_tables_missing,
+    WMIInvalidFrequencyError,
     WMISection,
     WMITable,
 )
@@ -125,13 +125,15 @@ def inventory_wmi_table_total(
 
 # to make wato rules simpler, levels are allowed to be passed as tuples if the level
 # specifies the upper limit
-def get_levels_quadruple(params: tuple | dict[str, tuple] | None) -> tuple | None:
+def get_levels_quadruple(
+    params: tuple | Mapping[str, Sequence[float | None]] | None,
+) -> tuple | None:
     if params is None:
         return (None, None, None, None)
-    if isinstance(params, tuple):
+    if not isinstance(params, Mapping):
         return (params[0], params[1], None, None)
-    upper = params.get("upper") or (None, None)
-    lower = params.get("lower") or (None, None)
+    upper = tuple(params.get("upper") or (None, None))
+    lower = tuple(params.get("lower") or (None, None))
     return upper + lower
 
 
@@ -143,11 +145,6 @@ def wmi_yield_raw_persec(
     perfvar: str | None,
     levels: tuple | dict[str, tuple] | None = None,
 ) -> LegacyCheckResult:
-    if table is None:
-        # This case may be when a check was discovered with a table which subsequently disappeared again.
-        # We expect to get `None` in this case.
-        return
-
     if row == "":
         row = 0
 
@@ -157,10 +154,16 @@ def wmi_yield_raw_persec(
     except KeyError:
         return
 
+    try:
+        sample_time = get_wmi_time(table, row)
+    except WMIInvalidFrequencyError as exc:
+        yield 3, f"{infoname}: cannot compute a rate, {exc}"
+        return
+
     value_per_sec = get_rate(
         get_value_store(),
         f"{column}_{table.name}",
-        get_wmi_time(table, row),
+        sample_time,
         int(value),
         raise_overflow=True,
     )

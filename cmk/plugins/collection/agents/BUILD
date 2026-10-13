@@ -13,7 +13,11 @@ py_library(
 )
 
 exports_files(
-    ["iis_app_pool_state.ps1"],
+    [
+        "iis_app_pool_state.ps1",
+        "mcafee_av_client.bat",
+        "win_dmidecode.bat",
+    ],
     visibility = ["//agents/windows/plugins:__pkg__"],
 )
 

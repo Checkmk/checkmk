@@ -12,7 +12,6 @@ from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.type_defs import Choices
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
@@ -33,6 +32,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato import MigrateToIndividualOrStoredPassword
 from cmk.ruleset_matcher.definition import RuleGroup
+from cmk.web.utils.choices import Choice
 
 _SectionMode = Literal["sync", "async"] | None
 _Sections = list[tuple[str, DropdownChoice[_SectionMode]]]
@@ -44,7 +44,7 @@ _SYSTEM_DATABASES: Final[tuple[str, str, str, str]] = ("model", "master", "msdb"
 def _sections_selector() -> _Sections:
     dict_elements: _Sections = []
     for name, value, title in _mssql_sections_info():
-        choices: Choices = [("sync", _("Run synchronously"))]
+        choices: list[Choice] = [("sync", _("Run synchronously"))]
         if name not in ["instance"]:
             choices += [
                 ("async", _("Run asynchronously and cached")),

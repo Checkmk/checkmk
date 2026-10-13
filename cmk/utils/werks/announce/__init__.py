@@ -29,7 +29,7 @@ class SimpleWerk(NamedTuple):
     url: str
 
     @classmethod
-    def from_werk(cls, werk: WerkV3) -> "SimpleWerk":
+    def from_werk(cls, werk: WerkV3) -> SimpleWerk:
         prefix = ""
         if werk.class_ == Class.FIX:
             prefix = "FIX: "

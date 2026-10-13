@@ -5,18 +5,7 @@
 
 import pytest
 
-from cmk.ccc.version import Edition
-from cmk.gui import main_modules
-from cmk.gui.views.inventory._display_hints import inv_display_hints
-
-
-@pytest.fixture(scope="module", autouse=True)
-def _load_gui_plugins() -> None:
-    """Run the gui edition's full plug-in registration chain so the inv-UI
-    registry is populated with the production set the snapshots assert on.
-    """
-    main_modules.register(Edition.COMMUNITY)
-
+from cmk.gui.views.inventory import inv_display_hints
 
 _KNOWN_ATTRIBUTES_KEY_ORDERS = {
     ("networking", "interfaces"): [
@@ -151,6 +140,19 @@ _KNOWN_ATTRIBUTES_KEY_ORDERS = {
     ],
     ("software", "applications", "proxmox_ve", "metadata"): ["object", "provider", "name", "node"],
     ("software", "applications", "proxmox_ve", "cluster"): ["cluster"],
+    ("software", "applications", "veeam", "backup_server"): [
+        "name",
+        "build_version",
+        "platform",
+        "database_vendor",
+        "sql_server_edition",
+        "sql_server_version",
+        "vbr_id",
+        "database_schema_version",
+        "database_content_version",
+        "is_registered",
+        "registration_expiration_date",
+    ],
     ("software", "applications", "mobileiron"): ["partition_name", "registration_state"],
     ("software", "applications", "citrix", "controller"): ["controller_version"],
     ("software", "applications", "citrix", "vm"): [
@@ -844,6 +846,16 @@ _KNOWN_COLUMNS_KEY_ORDERS = {
         "is_bound_to_template",
         "url",
     ],
+    ("software", "applications", "veeam", "patches"): ["name"],
+    ("software", "applications", "veeam", "wan_accelerators"): [
+        "name",
+        "description",
+        "traffic_port",
+        "streams_count",
+        "high_bandwidth_mode_enabled",
+        "cache_folder",
+        "cache_size",
+    ],
     ("software", "applications", "cisco_meraki", "organisations"): [
         "org_id",
         "org_name",
@@ -855,6 +867,7 @@ _KNOWN_COLUMNS_KEY_ORDERS = {
 }
 
 
+@pytest.mark.usefixtures("load_gui_plugins")
 def test_related_display_hints() -> None:
     all_paths = [h.path for h in inv_display_hints]
     for hint in inv_display_hints:

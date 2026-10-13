@@ -11,15 +11,15 @@ from collections.abc import Iterator, MutableMapping, Sequence
 import pytest
 
 from cmk.automations import results
-from cmk.automations.results import SerializedResult, SetAutochecksInput
+from cmk.automations.results import SetAutochecksInput
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.discovery import DiscoveryReport, DiscoverySettings
-from cmk.checkengine.discovery._autochecks import AutochecksSerializer
+from cmk.checkengine.discovery import AutochecksSerializer, DiscoveryReport, DiscoverySettings
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
+from cmk.diagnostics.automation_types import CreateDiagnosticsDumpResult
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.utils.servicename import ServiceName
 from tests.testlib.common.utils2 import get_standard_linux_agent_output
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 
@@ -141,7 +141,7 @@ def _execute_automation(
         assert p.stdout == expect_stdout, error_msg
 
     if parse_data:
-        return results.result_type_registry[cmd].deserialize(SerializedResult(p.stdout))
+        return results.result_type_registry[cmd].deserialize(p.stdout)
 
     return None
 
@@ -168,7 +168,6 @@ def test_automation_discovery_no_host(site: Site) -> None:
     assert p.returncode == 1
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.usefixtures("test_cfg")
 def test_automation_discovery_single_host(site: Site) -> None:
     result = _execute_automation(
@@ -339,12 +338,7 @@ def test_automation_discovery_preview_not_existing_host(site: Site) -> None:
         site,
         "service-discovery-preview",
         args=["xxx-not-existing-host."],
-        expect_stderr_pattern=(
-            r"Failed to lookup IPv4 address of xxx-not-existing-host. "
-            r"via DNS: (\[Errno -2\] Name or service not known"
-            r"|\[Errno -3\] Temporary failure in name resolution"
-            r"|\[Errno -5\] No address associated with hostname)\n"
-        ),
+        expect_stderr_pattern=r"Unknown host: xxx-not-existing-host\.\n",
         expect_stdout="",
         expect_exit_code=1,
         parse_data=False,
@@ -544,6 +538,39 @@ def test_automation_get_agent_output(site: Site) -> None:
     assert result.success is True
 
 
+@pytest.mark.usefixtures("test_cfg")
+def test_automation_get_agent_output_cached(site: Site) -> None:
+    agent_output_file = "var/check_mk/agent_output/modes-test-host"
+
+    def get_agent_output(*options: str) -> bytes:
+        result = _execute_automation(
+            site,
+            "get-agent-output",
+            args=["modes-test-host", "agent", *options],
+        )
+        assert isinstance(result, results.GetAgentOutputResult)
+        return bytes(result.raw_agent_data)
+
+    # The core's own checks of this host write the same cache file. Stop service checks, so
+    # that only this test writes it. A check already running is done before the first fetch is.
+    site.stop_active_services()
+    try:
+        # A regular fetch populates the cache
+        assert b"<<<uptime>>>" in get_agent_output()
+
+        site.write_file(agent_output_file, "<<<cmk_test_changed_agent_output>>>\nfoo\n")
+        cached = get_agent_output("@cached")
+        assert b"<<<uptime>>>" in cached
+        assert b"<<<cmk_test_changed_agent_output>>>" not in cached
+
+        fresh = get_agent_output()
+        assert b"<<<cmk_test_changed_agent_output>>>" in fresh
+        assert b"<<<uptime>>>" not in fresh
+    finally:
+        site.write_file(agent_output_file, get_standard_linux_agent_output())
+        site.start_active_services()
+
+
 def test_automation_get_agent_output_unknown_host(site: Site) -> None:
     result = _execute_automation(
         site,
@@ -668,7 +695,7 @@ def test_automation_create_diagnostics_dump(
     site: Site, additional_options: list[str] | None
 ) -> None:
     result = _execute_automation(site, "create-diagnostics-dump", additional_options)
-    assert isinstance(result, results.CreateDiagnosticsDumpResult)
+    assert isinstance(result, CreateDiagnosticsDumpResult)
     assert "+ COLLECT DIAGNOSTICS INFORMATION" in result.output
     assert result.tarfile_path.endswith(".tar.gz")
     assert "var/check_mk/diagnostics" in result.tarfile_path

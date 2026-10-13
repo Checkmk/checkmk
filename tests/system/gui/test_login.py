@@ -18,7 +18,7 @@ from tests.system.gui.testlib.playwright.helpers import CmkCredentials
 from tests.system.gui.testlib.playwright.pom.login import LoginPage
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import ProblemDashboard
 from tests.testlib.common.utils2 import is_containerized
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 @pytest.fixture(name="tmp_path_module", scope="module")
@@ -120,11 +120,11 @@ def test_redirected_to_desired_page(
 
 
 @pytest.mark.skipif(not is_containerized(), reason="Only to be run in a container")
+@pytest.mark.usefixtures("ldap_connection")
 def test_ldap_user_login_success(
     new_browser_context_and_page: tuple[BrowserContext, Page],
     test_site: Site,
     valid_ldap_credentials: CmkCredentials,
-    ldap_connection: None,
 ) -> None:
     """Test login with valid LDAP user credentials.
 
@@ -139,11 +139,11 @@ def test_ldap_user_login_success(
 
 
 @pytest.mark.skipif(not is_containerized(), reason="Only to be run in a container")
+@pytest.mark.usefixtures("ldap_connection")
 def test_ldap_user_login_failed(
     new_browser_context_and_page: tuple[BrowserContext, Page],
     test_site: Site,
     invalid_ldap_credentials: CmkCredentials,
-    ldap_connection: None,
 ) -> None:
     """Test login with invalid LDAP user credentials.
 

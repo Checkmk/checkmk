@@ -16,13 +16,15 @@ from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.inventory._tree import get_history, InventoryPath, load_tree
-from cmk.gui.painter.v0 import Cell
+from cmk.gui.inventory._tree import get_history, load_tree
+from cmk.gui.painter import Cell
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.visuals import get_livestatus_filter_headers
 from cmk.gui.visuals.filter import Filter
-from cmk.inventory.structured_data import HistoryStore, RetentionInterval, SDValue
+from cmk.inventory.history import HistoryStore
+from cmk.inventory.raw_paths import InventoryPath
+from cmk.inventory.trees import RetentionInterval, SDValue
 from cmk.livestatus_client import LivestatusResponse, OnlySites
 
 
@@ -116,11 +118,11 @@ class RowTableInventory(ABCRowTable):
         if not (self._info_names and (info_name := self._info_names[0])):
             return
 
-        host_name = hostrow.get("host_name")
+        raw_host_name = hostrow["host_name"]
         try:
             table_rows = (
                 load_tree(
-                    host_name=host_name,
+                    host_name=HostName(raw_host_name),
                     raw_status_data_tree=hostrow.get("host_structured_status", b""),
                 )
                 .get_tree(self._inventory_path.path)
@@ -136,7 +138,7 @@ class RowTableInventory(ABCRowTable):
                         "Cannot load HW/SW inventory tree of host %(host_name)s."
                         " Please remove the corrupted file."
                     )
-                    % {"host_name": host_name},
+                    % {"host_name": raw_host_name},
                 )
             )
             return
@@ -156,7 +158,7 @@ class RowTableInventoryHistory(ABCRowTable):
 
     @override
     def _get_rows(self, hostrow: Row) -> Iterable[Row]:
-        hostname: HostName = hostrow["host_name"]
+        hostname = HostName(hostrow["host_name"])
         history, corrupted_history_files = get_history(
             HistoryStore(cmk.utils.paths.omd_root),
             hostname,

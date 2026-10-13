@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
-
 
 def worst_service_state(*states: int, default: int) -> int:
     """Return the 'worst' aggregation of all states
@@ -43,10 +41,6 @@ def worst_service_state(*states: int, default: int) -> int:
 
     """
     return 2 if 2 in states else max(states, default=default)
-
-
-def section_name_of(check_plugin_name: str) -> str:
-    return check_plugin_name.split(".", maxsplit=1)[0]
 
 
 def maincheckify(subcheck_name: str) -> str:

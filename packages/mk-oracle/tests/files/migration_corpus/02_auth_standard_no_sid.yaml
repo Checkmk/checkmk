@@ -1,0 +1,14 @@
+# --- Known environment variables defined in legacy config ---
+# DBUSER ***
+# --- Unified Config ---
+---
+oracle:
+  main:
+    connection:
+      hostname: 10.201.4.215
+      port: 1521
+    authentication:
+      username: "sys"
+      password: "secret"
+      type: standard
+      role: sysdba

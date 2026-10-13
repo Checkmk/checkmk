@@ -71,9 +71,9 @@ def test_register_versioned_endpoint(endpoint_family: str) -> None:
     test_registry.register(endpoint)
 
     endpoint_key = (endpoint_family, endpoint.metadata.link_relation)
-    assert len(test_registry._versions) == 2
-    assert endpoint_key in test_registry._versions[APIVersion.V1]
-    assert endpoint_key in test_registry._versions[APIVersion.UNSTABLE]
+    assert len(test_registry._versions) == 2  # noqa: SLF001
+    assert endpoint_key in test_registry._versions[APIVersion.V1]  # noqa: SLF001
+    assert endpoint_key in test_registry._versions[APIVersion.UNSTABLE]  # noqa: SLF001
 
 
 def test_invalid_double_registration(endpoint_family: str) -> None:

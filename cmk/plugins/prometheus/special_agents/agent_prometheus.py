@@ -3,12 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """agent_prometheus
 
@@ -23,6 +20,7 @@ import sys
 import traceback
 from collections import defaultdict, OrderedDict
 from collections.abc import Callable, Iterator, Mapping, Sequence
+from http import HTTPStatus
 from typing import Any
 
 import requests
@@ -73,7 +71,7 @@ def parse_pod_name(labels: dict[str, str], prepend_namespace: bool = False) -> s
 
 
 class CAdvisorExporter:
-    def __init__(self, api_client: "PrometheusAPI", options: Mapping[str, Any]) -> None:
+    def __init__(self, api_client: PrometheusAPI, options: Mapping[str, Any]) -> None:
         self.api_client = api_client
         self.container_name_option = options.get("container_id", "short")
         self.pod_containers: dict[str, list[str]] = {}
@@ -486,7 +484,7 @@ class PrometheusServer:
     its own status and the connected scrape targets
     """
 
-    def __init__(self, api_client: "PrometheusAPI") -> None:
+    def __init__(self, api_client: PrometheusAPI) -> None:
         self.api_client = api_client
 
     def build_info(self) -> dict[str, Any]:
@@ -516,7 +514,10 @@ class PrometheusServer:
             endpoint_result = self.api_client.query_static_endpoint("status/buildinfo")
             return [json.loads(endpoint_result.content)["data"]["version"]]
         except requests.exceptions.HTTPError as e:  # This endpoint is only available from v2.14
-            if e.response is None or e.response.status_code not in (404, 405):
+            if e.response is None or e.response.status_code not in (
+                HTTPStatus.NOT_FOUND,
+                HTTPStatus.METHOD_NOT_ALLOWED,
+            ):
                 raise e
 
         promql_result = self.api_client.perform_multi_result_promql("prometheus_build_info")
@@ -712,7 +713,7 @@ class PiggybackGroup:
             self._elements[element_name] = PiggybackHost()
         return self._elements[element_name]
 
-    def join(self, section_name: str, pairs: Mapping[str, dict[str, Any]]) -> "PiggybackGroup":
+    def join(self, section_name: str, pairs: Mapping[str, dict[str, Any]]) -> PiggybackGroup:
         for element_name, data in pairs.items():
             section = self.get(element_name).get(section_name)
             section.insert(data)
@@ -733,7 +734,7 @@ class ApiData:
     Server & the Prometheus Exporters
     """
 
-    def __init__(self, api_client: "PrometheusAPI", exporter_options: dict) -> None:
+    def __init__(self, api_client: PrometheusAPI, exporter_options: dict) -> None:
         self.api_client = api_client
         self.prometheus_server = PrometheusServer(api_client)
         if "cadvisor" in exporter_options:

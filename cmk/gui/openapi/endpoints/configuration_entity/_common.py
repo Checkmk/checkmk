@@ -6,6 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any, assert_never
 
 from cmk import fields
@@ -68,7 +69,7 @@ def list_endpoint_decorator(
         tag_group="Checkmk Internal",
         path_params=[ENTITY_TYPE_SPECIFIER_FIELD],
         method="get",
-        additional_status_codes=[403],
+        additional_status_codes=[HTTPStatus.FORBIDDEN],
         response_schema=response_schema,
     )
 
@@ -113,7 +114,7 @@ def get_endpoint_decorator(entity_type: ConfigEntityType) -> Endpoint:
         tag_group="Checkmk Internal",
         path_params=[ENTITY_ID_FIELD],
         method="get",
-        additional_status_codes=[403],
+        additional_status_codes=[HTTPStatus.FORBIDDEN],
         response_schema=response_schemas.DomainObject,
     )
 
@@ -129,7 +130,9 @@ def serve_configuration_entity(
         entity = get_configuration_entity(entity_type, entity_id, user)
     except KeyError:
         return problem(
-            404, title="Not found", detail=f"Configuration entity {entity_id} not found."
+            HTTPStatus.NOT_FOUND,
+            title="Not found",
+            detail=f"Configuration entity {entity_id} not found.",
         )
 
     return serve_json(

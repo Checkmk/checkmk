@@ -10,14 +10,21 @@ import { CmkTimeRangeTooltip } from 'cmk-ui-library/components/date-time'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
+import { usePresetOverflow } from '@/lib/usePresetOverflow'
+
 import TimeRangeChip from './TimeRangeChip.vue'
 import type { CustomPreset } from './useCustomPresets.ts'
-import { usePresetOverflow } from './usePresetOverflow.ts'
 
-const props = defineProps<{
-  presets: CustomPreset[]
-  activePresetId: string | null
-}>()
+const props = withDefaults(
+  defineProps<{
+    presets: CustomPreset[]
+    activePresetId: string | null
+    includeCustomEntry?: boolean
+    /** `condensed` drops the chips and offers every preset from the dropdown alone. */
+    variant?: 'extended' | 'condensed'
+  }>(),
+  { includeCustomEntry: false, variant: 'extended' }
+)
 
 const emit = defineEmits<{ apply: [preset: CustomPreset] }>()
 
@@ -26,75 +33,116 @@ const { _t } = usei18n()
 const rootRef = ref<HTMLElement | null>(null)
 const measureRef = ref<HTMLElement | null>(null)
 const overflowMeasureRef = ref<HTMLElement | null>(null)
+const trailingMeasureRef = ref<HTMLElement | null>(null)
+
+const customPreset = computed<CustomPreset>(() => ({
+  id: null,
+  label: _t('Custom range'),
+  totalSeconds: 0
+}))
+const allPresets = computed<CustomPreset[]>(() =>
+  props.includeCustomEntry ? [...props.presets, customPreset.value] : props.presets
+)
 
 const { visiblePresets, overflowPresets, hasOverflow } = usePresetOverflow(
-  { rootRef, measureRef, overflowMeasureRef },
-  () => props.presets
+  { rootRef, measureRef, overflowMeasureRef, trailingMeasureRef },
+  () => allPresets.value
 )
 
 // The measure replica only needs the trigger width, so it carries no options.
 const EMPTY_OPTIONS: Suggestions = { type: 'fixed', suggestions: [] }
 
-const presetById = computed(() => new Map(props.presets.map((preset) => [preset.id, preset])))
+const isCondensed = computed(() => props.variant === 'condensed')
+const selectPresets = computed(() => (isCondensed.value ? allPresets.value : overflowPresets.value))
+
+const presetById = computed(() => new Map(allPresets.value.map((preset) => [preset.id, preset])))
+
+// CmkSuggestions treats a `null` name as unselectable, so the "Custom" entry (id `null`) needs a
+// real sentinel name inside the overflow control; translate at that boundary only.
+const CUSTOM_OPTION_NAME = '__custom__'
+const toSuggestionName = (id: string | null): string => id ?? CUSTOM_OPTION_NAME
+const toPresetId = (name: string | null): string | null =>
+  name === CUSTOM_OPTION_NAME ? null : name
 
 const overflowOptions = computed<Suggestions>(() => ({
   type: 'fixed',
-  suggestions: overflowPresets.value.map((preset) => ({ name: preset.id, title: preset.label }))
+  suggestions: selectPresets.value.map((preset) => ({
+    name: toSuggestionName(preset.id),
+    title: preset.label
+  }))
 }))
 
-const overflowSelectedId = computed(() =>
-  overflowPresets.value.some((preset) => preset.id === props.activePresetId)
-    ? props.activePresetId
-    : null
-)
+const overflowSelectedId = computed(() => {
+  const active = selectPresets.value.find((preset) => preset.id === props.activePresetId)
+  return active ? toSuggestionName(active.id) : null
+})
 
-function onOverflowSelect(id: string | null): void {
-  const preset = id === null ? undefined : presetById.value.get(id)
+function onOverflowSelect(name: string | null): void {
+  if (name === null) {
+    return
+  }
+  const preset = presetById.value.get(toPresetId(name))
   if (preset) {
     emit('apply', preset)
   }
 }
 
-function durationFor(id: string | null): number {
-  return id === null ? 0 : (presetById.value.get(id)?.totalSeconds ?? 0)
+function durationFor(name: string | null): number | null {
+  return presetById.value.get(toPresetId(name))?.totalSeconds ?? null
 }
 </script>
 
 <template>
   <div ref="rootRef" class="graphing-dynamic-presets">
-    <!-- Off-screen measurement layer driving the overflow fit. -->
-    <div ref="measureRef" class="graphing-dynamic-presets__measure" aria-hidden="true" inert>
-      <TimeRangeChip v-for="preset in presets" :key="preset.id" :selected="false">
-        {{ preset.label }}
-      </TimeRangeChip>
-      <div ref="overflowMeasureRef">
-        <CmkChipSelect
-          :model-value="null"
-          :options="EMPTY_OPTIONS"
-          :label="_t('More time ranges')"
-          :input-hint="_t('More ranges')"
-          static-label
-        />
+    <div
+      v-if="!isCondensed"
+      class="graphing-dynamic-presets__measure-clip"
+      aria-hidden="true"
+      inert
+    >
+      <div ref="measureRef" class="graphing-dynamic-presets__measure">
+        <TimeRangeChip
+          v-for="preset in allPresets"
+          :key="preset.id ?? '__custom__'"
+          :selected="false"
+        >
+          {{ preset.label }}
+        </TimeRangeChip>
+        <div ref="overflowMeasureRef">
+          <CmkChipSelect
+            :model-value="null"
+            :options="EMPTY_OPTIONS"
+            :label="_t('More time ranges')"
+            :input-hint="_t('More ranges')"
+            static-label
+          />
+        </div>
+
+        <div v-if="$slots.trailing" ref="trailingMeasureRef">
+          <slot name="trailing" />
+        </div>
       </div>
     </div>
 
-    <CmkTimeRangeTooltip
-      v-for="preset in visiblePresets"
-      :key="preset.id"
-      :duration-seconds="preset.totalSeconds"
-    >
-      <TimeRangeChip :selected="activePresetId === preset.id" @click="emit('apply', preset)">
-        {{ preset.label }}
-      </TimeRangeChip>
-    </CmkTimeRangeTooltip>
+    <template v-if="!isCondensed">
+      <CmkTimeRangeTooltip
+        v-for="preset in visiblePresets"
+        :key="preset.id ?? '__custom__'"
+        :duration-seconds="preset.totalSeconds || null"
+      >
+        <TimeRangeChip :selected="activePresetId === preset.id" @click="emit('apply', preset)">
+          {{ preset.label }}
+        </TimeRangeChip>
+      </CmkTimeRangeTooltip>
+    </template>
 
-    <div v-if="hasOverflow" class="graphing-dynamic-presets__overflow">
+    <div v-if="isCondensed || hasOverflow" class="graphing-dynamic-presets__overflow">
       <CmkChipSelect
         :model-value="overflowSelectedId"
         :options="overflowOptions"
-        :label="_t('More time ranges')"
-        :input-hint="_t('More ranges')"
-        static-label
+        :label="isCondensed ? _t('Time ranges') : _t('More time ranges')"
+        :input-hint="isCondensed ? _t('Time range') : _t('More ranges')"
+        :static-label="!isCondensed"
         @update:model-value="onOverflowSelect"
       >
         <template #option="{ suggestion }">
@@ -103,6 +151,10 @@ function durationFor(id: string | null): number {
           </CmkTimeRangeTooltip>
         </template>
       </CmkChipSelect>
+    </div>
+
+    <div v-if="$slots.trailing" class="graphing-dynamic-presets__trailing">
+      <slot name="trailing" />
     </div>
   </div>
 </template>
@@ -119,17 +171,24 @@ function durationFor(id: string | null): number {
   gap: var(--dimension-3);
 }
 
-.graphing-dynamic-presets__measure {
+.graphing-dynamic-presets__measure-clip {
   position: absolute;
-  visibility: hidden;
+  width: 0;
+  height: 0;
+  overflow: clip;
+}
+
+.graphing-dynamic-presets__measure {
   display: flex;
-  flex-wrap: nowrap;
+  width: max-content;
   gap: var(--dimension-3);
-  white-space: nowrap;
-  pointer-events: none;
 }
 
 .graphing-dynamic-presets__overflow {
+  flex: 0 0 auto;
+}
+
+.graphing-dynamic-presets__trailing {
   flex: 0 0 auto;
 }
 </style>

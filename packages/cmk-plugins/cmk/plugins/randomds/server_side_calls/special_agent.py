@@ -14,7 +14,7 @@ class Params(BaseModel):
     random: None
 
 
-def command_function(params: Params, host_config: HostConfig) -> Iterable[SpecialAgentCommand]:
+def command_function(params: Params, host_config: HostConfig) -> Iterable[SpecialAgentCommand]:  # noqa: ARG001
     yield SpecialAgentCommand(command_arguments=[host_config.name])
 
 

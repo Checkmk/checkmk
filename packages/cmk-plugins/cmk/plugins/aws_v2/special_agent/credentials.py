@@ -1,0 +1,215 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="no-untyped-call"
+
+"""How the agent logs in to AWS.
+
+The agent logs in once per run as the "hub": with an access key or with the boto3
+default credential chain, optionally followed by one AssumeRole into a role whose
+account is then monitored.
+
+To monitor several accounts, the hub assumes a "spoke" role of the same name in each of
+them. Every spoke is exactly one AssumeRole away from the login identity: an assumed role
+cannot be combined with spokes, because that would chain roles.
+"""
+
+from collections.abc import Sequence
+from dataclasses import dataclass
+
+import boto3
+import botocore
+
+from .config import AwsAccessError, describe_credential_failure
+
+
+@dataclass(frozen=True)
+class AccessKey:
+    key_id: str
+    secret: str
+
+
+@dataclass(frozen=True)
+class DefaultCredentials:
+    """The boto3 default credential chain.
+
+    Environment variables, the ~/.aws files of the site user, and the instance profile
+    or EKS Pod Identity when Checkmk runs on AWS. Checkmk stores no secret.
+    """
+
+
+@dataclass(frozen=True)
+class AssumedRole:
+    """The role the login assumes right away. Its account is the one monitored."""
+
+    arn: str
+    external_id: str | None = None
+
+
+@dataclass(frozen=True)
+class HubCredentials:
+    login: AccessKey | DefaultCredentials
+    role: AssumedRole | None = None
+    session_name: str = "checkmk"
+
+
+@dataclass(frozen=True)
+class SpokeAccounts:
+    account_ids: Sequence[str]
+    role_name: str
+    external_id: str | None = None
+
+
+def role_session_name(site: str | None) -> str:
+    """The RoleSessionName of every AssumeRole call. CloudTrail shows it to the customer.
+
+    Site IDs only use letters, digits and underscores, which AWS accepts here.
+    """
+    return f"checkmk-{site}" if site else "checkmk"
+
+
+def _login_session(login: AccessKey | DefaultCredentials, region: str) -> boto3.session.Session:
+    # Reads the shared config, so a bad AWS_PROFILE or config file raises a BotoCoreError
+    # here. The callers build the session inside their own try.
+    match login:
+        case AccessKey(key_id=key_id, secret=secret):
+            return boto3.session.Session(
+                aws_access_key_id=key_id,
+                aws_secret_access_key=secret,
+                region_name=region,
+            )
+        case DefaultCredentials():
+            return boto3.session.Session(region_name=region)
+
+
+def _assume_role(
+    session: boto3.session.Session,
+    role_arn: str,
+    external_id: str | None,
+    session_name: str,
+    region: str,
+    config: botocore.config.Config | None,
+) -> boto3.session.Session:
+    assumed_role_object = session.client("sts", config=config).assume_role(
+        RoleArn=role_arn,
+        RoleSessionName=session_name,
+        **({"ExternalId": external_id} if external_id else {}),
+    )
+    credentials = assumed_role_object["Credentials"]
+    return boto3.session.Session(
+        aws_access_key_id=credentials["AccessKeyId"],
+        aws_secret_access_key=credentials["SecretAccessKey"],
+        aws_session_token=credentials["SessionToken"],
+        region_name=region,
+    )
+
+
+def _create_hub_session(
+    hub: HubCredentials, region: str, config: botocore.config.Config | None
+) -> boto3.session.Session:
+    if hub.role is None:
+        return _login_session(hub.login, region)
+    try:
+        return _assume_role(
+            _login_session(hub.login, region),
+            hub.role.arn,
+            hub.role.external_id,
+            hub.session_name,
+            region,
+            config,
+        )
+    except Exception as e:
+        raise AwsAccessError(describe_credential_failure(e))
+
+
+@dataclass(frozen=True)
+class AwsAccount:
+    id: str
+    session: boto3.session.Session
+
+
+class AwsCredentials:
+    """Owns the credentials for one agent run.
+
+    One base session is built, and every region shares it. Credentials are therefore
+    resolved once per run instead of once per region. That costs nothing with a static
+    access key, but with AssumeRole it is one STS call instead of N, and with the boto3
+    credential provider chain it is one provider lookup instead of N. A
+    `credential_process` or IAM Roles Anywhere setup pays a subprocess or a signed HTTPS
+    round trip for each of those lookups.
+
+    The base session is pinned to the global service region. Clients override the region
+    individually, so a shared session does not force a shared region. Keeping the base
+    session in the configured global region also keeps the AssumeRole STS call inside the
+    partition being monitored, which is what us-gov-* and cn-* setups need.
+    """
+
+    def __init__(
+        self,
+        hub: HubCredentials,
+        global_service_region: str,
+        proxy_config: botocore.config.Config | None,
+        spokes: SpokeAccounts | None = None,
+    ) -> None:
+        if hub.role is not None and spokes is not None:
+            raise ValueError("An assumed role cannot be combined with spoke accounts")
+        self._hub = hub
+        self._spokes = spokes
+        self._global_service_region = global_service_region
+        self._proxy_config = proxy_config
+        self._session: boto3.session.Session | None = None
+        self._account_id: str | None = None
+
+    def session(self) -> boto3.session.Session:
+        """The single session of this run, built on first use and then reused."""
+        if self._session is None:
+            self._session = _create_hub_session(
+                self._hub, self._global_service_region, self._proxy_config
+            )
+        return self._session
+
+    def account_id(self) -> str:
+        """The account the credentials belong to. One STS call per run, then cached."""
+        if self._account_id is None:
+            try:
+                # The session is built inside the try on purpose. It does not resolve
+                # credentials, but it does read the shared config, so a missing
+                # AWS_PROFILE or an unparsable config file raises here rather than at the
+                # client call below.
+                self._account_id = (
+                    self.session()
+                    .client("sts", config=self._proxy_config)
+                    .get_caller_identity()["Account"]
+                )
+            except (botocore.exceptions.BotoCoreError, botocore.exceptions.ClientError) as e:
+                # BotoCoreError covers every client-side failure, including all the
+                # credential ones. ClientError is not a BotoCoreError, so it stays listed.
+                raise AwsAccessError(describe_credential_failure(e))
+        return self._account_id
+
+    def accounts(self) -> Sequence[AwsAccount]:
+        """The accounts this run monitors, each with the session to use for all its regions."""
+        if self._spokes is None:
+            return [AwsAccount(self.account_id(), self.session())]
+        return [
+            self._spoke_account(account_id, self._spokes) for account_id in self._spokes.account_ids
+        ]
+
+    def _spoke_account(self, account_id: str, spokes: SpokeAccounts) -> AwsAccount:
+        try:
+            # Without an assumed role, session() is the login identity itself.
+            login = self.session()
+            partition = login.get_partition_for_region(self._global_service_region)
+            session = _assume_role(
+                login,
+                f"arn:{partition}:iam::{account_id}:role/{spokes.role_name}",
+                spokes.external_id,
+                self._hub.session_name,
+                self._global_service_region,
+                self._proxy_config,
+            )
+        except Exception as e:
+            raise AwsAccessError(f"Account {account_id}: {describe_credential_failure(e)}")
+        return AwsAccount(account_id, session)

@@ -6,13 +6,22 @@
 import pytest
 
 from cmk.ccc.user import UserId
+from cmk.gui.config import Config
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.store import get_all_views
+from cmk.web.utils.request_cache import RequestCache
+from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
 
 
 @pytest.fixture(name="view")
-def view_fixture(request_context: None) -> View:
+def view_fixture(request_context: None) -> View:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     view_name = "allhosts"
     view_spec = get_all_views()[(UserId.builtin(), view_name)].copy()
-    return View(view_name, view_spec, view_spec.get("context", {}), UserPermissions({}, {}, {}, []))
+    return View(
+        view_name,
+        view_spec,
+        view_spec.get("context", {}),
+        make_painter_context(UserPermissions({}, {}, {}, [])),
+        RequestCache(Config()),
+    )

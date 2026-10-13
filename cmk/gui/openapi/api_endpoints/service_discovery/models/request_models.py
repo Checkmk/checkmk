@@ -59,6 +59,29 @@ class UpdateDiscoveryPhaseModel:
         "undecided",
         "vanished",
     ] = api_field(
+        description="The target phase of the service. Only `monitored`, `undecided`, `ignored` "
+        "and `removed` name a transition the service can be moved to; every other value is "
+        "rejected with a 400.",
+        example="monitored",
+    )
+
+
+@api_model
+class UpdateDiscoveryPhaseModelUnstable:
+    check_type: str = api_field(
+        description="The name of the check which this service uses.",
+        example="df",
+    )
+    service_item: str | None = api_field(
+        description="The value uniquely identifying the service on a given host.",
+        example="/home",
+    )
+    target_phase: Literal[
+        "monitored",
+        "undecided",
+        "ignored",
+        "removed",
+    ] = api_field(
         description="The target phase of the service.",
         example="monitored",
     )

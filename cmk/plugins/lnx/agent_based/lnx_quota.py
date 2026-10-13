@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="type-arg"
 
 # [[[usr:/home]]]
@@ -149,7 +148,7 @@ def lnx_quota_limit_check(quota: Quota, filesys_mode: QuotasType) -> Iterable[Re
     (result,) = check_levels_v1(
         value=quota.used, levels_upper=(quota.soft, quota.hard), notice_only=True
     )
-    match result.state:
+    match result.state:  # type: ignore[exhaustive-match]
         case State.OK:
             yield Result(state=State.OK, notice=f"{filesys_mode.name} {quota.exceeded_no_limit()}")
         case State.WARN:

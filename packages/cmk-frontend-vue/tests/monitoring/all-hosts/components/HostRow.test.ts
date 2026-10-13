@@ -5,19 +5,29 @@
  */
 import type { Row } from '@tanstack/vue-table'
 import { fireEvent, render, screen } from '@testing-library/vue'
+import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { defineComponent, h } from 'vue'
 
+import { buildHostColumns } from '@/monitoring/all-hosts/columns'
 import HostRow from '@/monitoring/all-hosts/components/HostRow.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
-import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
+import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
+import { columnId } from '@/monitoring/shared/tableState/schema'
+import type { DisplayOptions } from '@/monitoring/shared/types'
+
+// 'abs' keeps assertions comparable to plain `renderDateAndTime`, independent of how old
+// a fixture's timestamp happens to be relative to the real clock the test runs under.
+const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
 
 function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
   return {
     name: 'web-1',
     state: 'UP',
+    is_flapping: false,
+    stale: false,
     address: '10.0.0.1',
     alias: 'web server 1',
-    folder: '/network',
+    folder: 'Netzwerk / Rechenzentrum 1',
     site_id: 'local',
     num_services: 6,
     num_services_ok: 5,
@@ -28,6 +38,7 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
     last_check: 1783942710,
     last_state_change: 1783942740,
     legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=web-1',
+    num_relations: 0,
     ...overrides
   }
 }
@@ -40,22 +51,52 @@ function makeTableRow(overrides: Partial<Row<HostEntry>> = {}): Row<HostEntry> {
   } as unknown as Row<HostEntry>
 }
 
-function mountRow(row: HostEntry, tableRow: Row<HostEntry> = makeTableRow()) {
+interface RowActionProps {
+  rowActions?: CellAction[]
+  loadActionMenu?: () => Promise<CellAction[]>
+}
+
+function mountRow(
+  row: HostEntry,
+  tableRow: Row<HostEntry> = makeTableRow(),
+  actionProps: RowActionProps = {}
+) {
   return render(
     defineComponent({
       components: { HostRow },
       render() {
-        return h('table', [h('tbody', [h('tr', [h(HostRow, { row, tableRow })])])])
+        return h('table', [
+          h('tbody', [
+            h('tr', [
+              h(HostRow, { row, tableRow, displayOptions: DISPLAY_OPTIONS, ...actionProps })
+            ])
+          ])
+        ])
       }
     })
   )
 }
 
+const EDIT_HOST: CellAction = {
+  id: 'edit',
+  label: 'Edit host' as CellAction['label'],
+  icon: 'edit',
+  url: 'wato.py?mode=edit_host&host={host}'
+}
+
 test('renders host name and ip in their cells', () => {
-  mountRow(makeHost())
+  mountRow(makeHost({ address: 'fe80::1' }))
 
   expect(screen.getByTitle('web-1')).toBeInTheDocument()
-  expect(screen.getByTitle('10.0.0.1')).toBeInTheDocument()
+  expect(screen.getByText('fe80::1')).toBeInTheDocument()
+})
+
+test('repeats no ip address on hover that the cell shows in full', async () => {
+  mountRow(makeHost({ address: 'fe80::1' }))
+
+  await fireEvent.mouseEnter(screen.getByText('fe80::1'))
+
+  expect(screen.queryByTitle('fe80::1')).not.toBeInTheDocument()
 })
 
 test('renders alias, folder and formatted timestamps in their cells', () => {
@@ -63,9 +104,9 @@ test('renders alias, folder and formatted timestamps in their cells', () => {
   mountRow(host)
 
   expect(screen.getByTitle('web server 1')).toBeInTheDocument()
-  expect(screen.getByTitle('/network')).toBeInTheDocument()
-  expect(screen.getByTitle(formatTimestamp(host.last_check!))).toBeInTheDocument()
-  expect(screen.getByTitle(formatTimestamp(host.last_state_change!))).toBeInTheDocument()
+  expect(screen.getByTitle('Netzwerk / Rechenzentrum 1')).toBeInTheDocument()
+  expect(screen.getByTitle(renderDateAndTime(host.last_check!))).toBeInTheDocument()
+  expect(screen.getByTitle(renderDateAndTime(host.last_state_change!))).toBeInTheDocument()
 })
 
 test('emits open with the host when the name cell button is clicked', async () => {
@@ -76,7 +117,16 @@ test('emits open with the host when the name cell button is clicked', async () =
       components: { HostRow },
       render() {
         return h('table', [
-          h('tbody', [h('tr', [h(HostRow, { row: host, tableRow: makeTableRow(), onOpen })])])
+          h('tbody', [
+            h('tr', [
+              h(HostRow, {
+                row: host,
+                tableRow: makeTableRow(),
+                displayOptions: DISPLAY_OPTIONS,
+                onOpen
+              })
+            ])
+          ])
         ])
       }
     })
@@ -91,7 +141,7 @@ test('emits open with the host when the name cell button is clicked', async () =
 test('renders state badge with success color for state UP', () => {
   const { container } = mountRow(makeHost({ state: 'UP' }))
 
-  const stateTag = container.querySelector('.cmk-tag--color-success')
+  const stateTag = container.querySelector('.cmk-state-tag--ok')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('UP')
 })
@@ -99,7 +149,7 @@ test('renders state badge with success color for state UP', () => {
 test('renders state badge with danger color for state DOWN', () => {
   const { container } = mountRow(makeHost({ state: 'DOWN' }))
 
-  const stateTag = container.querySelector('.cmk-tag--color-danger')
+  const stateTag = container.querySelector('.cmk-state-tag--critical')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('DOWN')
 })
@@ -107,10 +157,51 @@ test('renders state badge with danger color for state DOWN', () => {
 test('renders state badge with unknown color for state UNREACHABLE', () => {
   const { container } = mountRow(makeHost({ state: 'UNREACHABLE' }))
 
-  const stateTag = container.querySelector('.cmk-tag--color-unknown')
+  const stateTag = container.querySelector('.cmk-state-tag--unknown')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('UNREACH')
 })
+
+test('renders the state badge as pending for a host that has never been checked', () => {
+  mountRow(makeHost({ state: 'PENDING' }))
+
+  expect(screen.getByText('PENDING')).toBeInTheDocument()
+  expect(screen.queryByText('DOWN')).not.toBeInTheDocument()
+})
+
+test('renders the flapping icon next to the state badge for a flapping host', () => {
+  mountRow(makeHost({ is_flapping: true }))
+
+  expect(screen.getByTitle('Flapping')).toBeInTheDocument()
+})
+
+test('renders the stale icon next to the state badge for a stale host', () => {
+  mountRow(makeHost({ stale: true }))
+
+  expect(screen.getByTitle('Stale')).toBeInTheDocument()
+})
+
+test('renders neither icon for a host that is not flapping nor stale', () => {
+  mountRow(makeHost())
+
+  expect(screen.queryByTitle('Flapping')).not.toBeInTheDocument()
+  expect(screen.queryByTitle('Stale')).not.toBeInTheDocument()
+})
+
+const SERVICE_COUNT_COLUMNS = [
+  'num_services',
+  'num_services_ok',
+  'num_services_warn',
+  'num_services_crit',
+  'num_services_unknown',
+  'num_services_pending'
+] as const
+
+function cell(container: Element, columnId: string): HTMLElement {
+  const td = container.querySelector<HTMLElement>(`td[data-column-id="${columnId}"]`)
+  expect(td, `no cell for column ${columnId}`).not.toBeNull()
+  return td!
+}
 
 test('renders one cell per service state with its count', () => {
   const { container } = mountRow(
@@ -124,21 +215,42 @@ test('renders one cell per service state with its count', () => {
     })
   )
 
+  const counts = SERVICE_COUNT_COLUMNS.map((id) => cell(container, id).textContent?.trim())
+  expect(counts).toEqual(['15', '1', '2', '3', '4', '5'])
+})
+
+test('renders its cells in the order the columns are defined in', () => {
+  const { container } = mountRow(makeHost(), makeTableRow(), {
+    loadActionMenu: () => Promise.resolve([])
+  })
+
+  const rendered = Array.from(container.querySelectorAll('td')).map((td) => td.dataset['columnId'])
+  const defined = buildHostColumns({
+    includeSelect: true,
+    showCustomer: true,
+    sites: [],
+    showRelations: true
+  }).map(columnId)
+
+  expect(rendered).toEqual(defined)
+})
+
+test('renders the host detail columns before the service count columns', () => {
+  const host = makeHost()
+  const { container } = mountRow(host)
+
   const tds = Array.from(container.querySelectorAll('td'))
-  // select, state, modes, name, alias, address, folder, site_id, total, ok, warn, crit, unknown,
-  // pending, last_check, last_state_change, labels, tags, contacts, contact_groups
-  expect(tds).toHaveLength(20)
-  expect(tds[8]).toHaveTextContent('15')
-  expect(tds[9]).toHaveTextContent('1')
-  expect(tds[10]).toHaveTextContent('2')
-  expect(tds[11]).toHaveTextContent('3')
-  expect(tds[12]).toHaveTextContent('4')
-  expect(tds[13]).toHaveTextContent('5')
+  const lastCheckIndex = tds.findIndex(
+    (td) => td.querySelector(`[title="${renderDateAndTime(host.last_check!)}"]`) !== null
+  )
+  const numServicesIndex = tds.findIndex((td) => td.textContent?.trim() === '6')
+
+  expect(lastCheckIndex).toBeGreaterThanOrEqual(0)
+  expect(numServicesIndex).toBeGreaterThan(lastCheckIndex)
 })
 
 function serviceCountLinks(container: Element): Array<HTMLAnchorElement | null> {
-  const tds = Array.from(container.querySelectorAll('td'))
-  return tds.slice(8, 14).map((td) => td.querySelector('a'))
+  return SERVICE_COUNT_COLUMNS.map((id) => cell(container, id).querySelector('a'))
 }
 
 function filterParam(link: HTMLAnchorElement | null | undefined): string | null {
@@ -164,7 +276,7 @@ test('links every service count to the services of that host', () => {
     })
   )
 
-  for (const link of serviceCountLinks(container).slice(0, 5)) {
+  for (const link of serviceCountLinks(container)) {
     expect(link).toHaveAttribute('target', '_top')
     expect(link!.getAttribute('href')).toContain('monitor_host_services.py?host=web-1&site=local')
   }
@@ -182,19 +294,13 @@ test('narrows each service count link to the state that column counts', () => {
     })
   )
 
-  const [total, ok, warn, crit, unknown] = serviceCountLinks(container)
+  const [total, ok, warn, crit, unknown, pending] = serviceCountLinks(container)
   expect(filterParam(total)).toBeNull()
   expect(filterParam(ok)).toBe(stateFilter('OK'))
   expect(filterParam(warn)).toBe(stateFilter('WARN'))
   expect(filterParam(crit)).toBe(stateFilter('CRIT'))
   expect(filterParam(unknown)).toBe(stateFilter('UNKNOWN'))
-})
-
-test('keeps the pending count on the legacy view, which alone knows that state', () => {
-  const { container } = mountRow(makeHost({ num_services_pending: 5 }))
-
-  const pending = serviceCountLinks(container)[5]
-  expect(pending).toHaveAttribute('href', 'view.py?host=web-1&view_name=host_pending')
+  expect(filterParam(pending)).toBe(stateFilter('PENDING'))
 })
 
 test('links no service count a host has none of', () => {
@@ -227,6 +333,64 @@ test('reflects the selected state from the tanstack row', () => {
 
   const checkbox = container.querySelector('.cmk-checkbox__button')!
   expect(checkbox).toHaveAttribute('aria-checked', 'true')
+})
+
+test('renders the relation count in the cell following the host name', () => {
+  const { container } = mountRow(makeHost({ num_relations: 2 }))
+
+  expect(cell(container, 'num_relations')).toHaveTextContent('2')
+  expect(cell(container, 'num_relations').querySelector('button')).not.toBeNull()
+})
+
+test('names the relation count button, whose number alone says nothing about it', () => {
+  const { container } = mountRow(makeHost({ name: 'web-01', num_relations: 2 }))
+
+  expect(cell(container, 'num_relations').querySelector('button')).toHaveAccessibleName(
+    'Show the 2 related hosts of web-01'
+  )
+})
+
+test('names the button of a host with a single relation in the singular', () => {
+  const { container } = mountRow(makeHost({ name: 'web-01', num_relations: 1 }))
+
+  expect(cell(container, 'num_relations').querySelector('button')).toHaveAccessibleName(
+    'Show the 1 related host of web-01'
+  )
+})
+
+test('leaves the relation cell of a host without relations empty and unclickable', () => {
+  const { container } = mountRow(makeHost({ num_relations: 0 }))
+
+  expect(cell(container, 'num_relations').textContent?.trim()).toBe('')
+  expect(cell(container, 'num_relations').querySelector('button')).toBeNull()
+})
+
+test('emits open asking for the relations when the relation count is clicked', async () => {
+  const host = makeHost({ num_relations: 2 })
+  const onOpen = vi.fn()
+  const { container } = render(
+    defineComponent({
+      components: { HostRow },
+      render() {
+        return h('table', [
+          h('tbody', [
+            h('tr', [
+              h(HostRow, {
+                row: host,
+                tableRow: makeTableRow(),
+                displayOptions: DISPLAY_OPTIONS,
+                onOpen
+              })
+            ])
+          ])
+        ])
+      }
+    })
+  )
+
+  await fireEvent.click(cell(container, 'num_relations').querySelector('button')!)
+
+  expect(onOpen).toHaveBeenCalledWith(host, true)
 })
 
 test('renders the zero counts as well — one badge per service state column', () => {
@@ -279,4 +443,31 @@ test('renders the contact groups of a host, sorted alphabetically', () => {
 
   const tags = Array.from(container.querySelectorAll('[data-label-cell-item]'))
   expect(tags.map((tag) => tag.textContent?.trim())).toEqual(['all', 'linux'])
+})
+
+test('renders the customer of a host', () => {
+  mountRow(makeHost({ customer: 'Customer A' }))
+
+  expect(screen.getByText('Customer A')).toBeInTheDocument()
+})
+
+test('offers the Setup links on a host the user may open in Setup', () => {
+  mountRow(makeHost({ setup_access: true }), makeTableRow(), { rowActions: [EDIT_HOST] })
+
+  expect(screen.getByRole('link', { name: 'Edit host' })).toHaveAttribute(
+    'href',
+    'wato.py?mode=edit_host&host=web-1'
+  )
+})
+
+test.each<{ overrides: Partial<HostEntry>; case: string }>([
+  { overrides: { setup_access: false }, case: 'restricted to other contact groups' },
+  { overrides: {}, case: 'not asked about' }
+])('offers no Setup link on a host $case', ({ overrides }) => {
+  mountRow(makeHost(overrides), makeTableRow(), {
+    rowActions: [EDIT_HOST],
+    loadActionMenu: () => Promise.resolve([])
+  })
+
+  expect(screen.queryByRole('link', { name: 'Edit host' })).not.toBeInTheDocument()
 })

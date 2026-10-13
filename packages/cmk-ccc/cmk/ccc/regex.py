@@ -23,6 +23,10 @@ REGEX_GENERIC_IDENTIFIER: Final = f"^[{REGEX_GENERIC_IDENTIFIER_CHARS}]+$"
 # Start with a char, and no dots
 REGEX_ID: Final = r"^[^\d\W][-\w]*$"
 
+# A site ID has to be usable as an OMD site name (`omd create`).
+# \Z instead of $, so that a trailing newline is not accepted.
+SITE_ID_PATTERN: Final = r"^[a-zA-Z_][a-zA-Z_0-9]{0,15}\Z"
+
 # URL CHARS
 # See https://www.ietf.org/rfc/rfc3986.txt
 _URL_UNRESERVED_CHARS: Final = re.escape("-.~")

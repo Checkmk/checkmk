@@ -55,8 +55,6 @@ def _load_user_scripts_from(directory: Path) -> NotificationUserScripts:
     scripts: NotificationUserScripts = {}
     if os.path.exists(adir):
         for entry in os.listdir(adir):
-            if entry == ".f12":
-                continue
             path = adir + "/" + entry
             if os.path.isfile(path) and os.access(path, os.X_OK):
                 info: UserScriptInfo = {"title": entry, "bulk": False}

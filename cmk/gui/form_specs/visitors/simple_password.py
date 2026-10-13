@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 
 import base64
@@ -21,7 +20,7 @@ from ._type_defs import DefaultValue, IncomingData, InvalidValue, RawDiskData
 from ._utils import (
     compute_validators,
     get_title_and_help,
-    optional_validation,
+    run_validators,
 )
 from .validators import build_vue_validators
 
@@ -80,9 +79,8 @@ class SimplePasswordVisitor(FormSpecVisitor[SimplePassword, _ParsedValueModel, _
         self, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
         return [
-            shared_type_defs.ValidationMessage(location=[], message=x, replacement_value="")
-            for x in optional_validation(self._validators(), parsed_value)
-            if x is not None  # type: ignore[redundant-expr]
+            shared_type_defs.ValidationMessage(location=[], message=msg, replacement_value="")
+            for msg in run_validators(self._validators(), parsed_value)
         ]
 
     @override

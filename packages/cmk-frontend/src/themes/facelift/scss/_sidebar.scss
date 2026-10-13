@@ -23,6 +23,7 @@ body.side {
   margin: 0;
   overflow: hidden;
   font-family: $font-family-default;
+  font-feature-settings: $font-feature-settings-default;
   font-weight: $font-weight-default;
   background: $navigation-bg-color;
 
@@ -148,6 +149,12 @@ body.side.main {
 }
 
 #content_area:has(cmk-custom-graph-designer) {
+  padding-left: 0;
+}
+
+#content_area:has(cmk-monitoring-all-hosts),
+#content_area:has(cmk-monitoring-host-services),
+#content_area:has(cmk-global-settings) {
   padding-left: 0;
 }
 

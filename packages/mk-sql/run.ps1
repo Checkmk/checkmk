@@ -24,7 +24,7 @@ $package_name = Split-Path -Path (Get-Location) -Leaf
 
 $exe_name = "$package_name.exe"
 $work_dir = "$pwd"
-$cargo_toolchain = "1.94.1" # to be in sync with rust toolchain/bazel/etc
+$cargo_toolchain = "1.96.1" # to be in sync with rust toolchain/bazel/etc
 $cargo_target = "x86_64-pc-windows-msvc"
 
 $packBuild = $false
@@ -235,6 +235,9 @@ try {
         }
         # TODO(timi): move it to CI
         .\tests\files\ci-scripts\manage-test-registry-set.ps1 --reinstall 2.5.0
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Loading the test registry failed." -ErrorAction Stop
+        }
         Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target "--" "--test-threads=4"
     }
     if ($packDoc) {

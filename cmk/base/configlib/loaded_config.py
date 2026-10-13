@@ -16,7 +16,6 @@ from typing import (
 )
 
 import cmk.ruleset_matcher.tags
-import cmk.utils
 from cmk.base.default_config.cmc import (
     CMCAuthorization,
     CMCGraphiteConnection,
@@ -36,7 +35,8 @@ from cmk.events.notify_types import (
     NotificationPluginNameStr,
     NotifyPluginParamsDict,
 )
-from cmk.inventory.structured_data import RawIntervalFromConfig
+from cmk.inventory.label_picker import LabelPickerRuleValue
+from cmk.inventory.trees import RawIntervalFromConfig
 from cmk.rrd import RRDObjectConfig
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.matcher import RuleSpec
@@ -108,6 +108,7 @@ class BaseConfig:  # type: ignore[explicit-any]
     agent_encryption: Sequence[RuleSpec[str | None]]
     agent_exclude_sections: Sequence[RuleSpec[dict[str, str]]]
     telemetry_custom_service: Sequence[RuleSpec[Mapping[str, object]]]
+    metrics_identity_routing: Sequence[RuleSpec[Mapping[str, object]]]
     cmc_real_time_checks: RealTimeChecks | None
     snmp_check_interval: list[
         RuleSpec[
@@ -115,7 +116,6 @@ class BaseConfig:  # type: ignore[explicit-any]
         ]
     ]
     apply_bake_revision: bool
-    bake_agents_on_restart: bool
     agent_bakery_logging: int | None
     is_distributed_setup_remote_site: bool
     simulation_mode: bool
@@ -210,7 +210,7 @@ class BaseConfig:  # type: ignore[explicit-any]
     delay_precompile: bool
     default_host_group: str
     extra_nagios_conf: str
-    contacts: dict[ContactName, Contact]
+    contacts: Mapping[ContactName, Contact]
     define_contactgroups: Mapping[str, str]
     define_hostgroups: Mapping[str, str]
     define_servicegroups: Mapping[str, str]
@@ -245,6 +245,7 @@ class BaseConfig:  # type: ignore[explicit-any]
     notification_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
     inv_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
     inv_retention_intervals: Sequence[RuleSpec[Sequence[RawIntervalFromConfig]]]
+    inv_label_picker_configs: Sequence[RuleSpec[LabelPickerRuleValue]]
     periodic_discovery: Sequence[RuleSpec[Any]]
     check_mk_exit_status: Sequence[RuleSpec[Any]]
     ping_levels: Sequence[RuleSpec[Any]]

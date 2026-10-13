@@ -8,9 +8,10 @@ from contextlib import AbstractContextManager
 
 import pytest
 
-from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
-from tests.testlib.site import get_site_factory, Site, SiteFactory
-from tests.testlib.web_session import CMKWebSession
+from tests.testlib.pytest_helpers import flake_reporter, registration
+from tests.testlib.system.pytest_helpers.calls import exit_pytest_on_exceptions
+from tests.testlib.system.site import get_site_factory, Site, SiteFactory
+from tests.testlib.system.web_session import CMKWebSession
 
 from .event_console import CMKEventConsole
 
@@ -43,7 +44,7 @@ def get_site(site_factory: SiteFactory, request: pytest.FixtureRequest) -> Itera
         )
 
 
-def _cloud_lifecycle_wrapper(site: Site) -> "AbstractContextManager[None]":
+def _cloud_lifecycle_wrapper(site: Site) -> AbstractContextManager[None]:
     from tests.testlib.system.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
         cloud_environment,
     )
@@ -65,3 +66,18 @@ def fixture_web(site: Site) -> CMKWebSession:
 @pytest.fixture(scope="session")
 def ec(site: Site) -> CMKEventConsole:
     return CMKEventConsole(site)
+
+
+@pytest.fixture(name="fake_sendmail")
+def fixture_fake_sendmail(site: Site) -> Iterator[None]:
+    """Spool mail locally instead of trying to reach a real mail transmission agent."""
+    site.write_file("local/bin/sendmail", '#!/bin/bash\nset -e\necho "sendmail called with: $@"\n')
+    try:
+        site.run(["chmod", "0775", site.path("local/bin/sendmail").as_posix()])
+        yield
+    finally:
+        site.delete_file("local/bin/sendmail")
+
+
+def pytest_addoption(pluginmanager: pytest.PytestPluginManager) -> None:
+    registration.register_pytest_plugins(pluginmanager, flake_reporter)

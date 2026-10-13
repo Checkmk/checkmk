@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 from pydantic import BaseModel
 
-from cmk.automations.types import AutomationID
+from cmk.automations.internal import AutomationID
 
 # Location of the automation helper's unix socket, relative to OMD_ROOT.
 AUTOMATION_HELPER_SOCKET_RELATIVE_PATH = "tmp/run/automation-helper.sock"

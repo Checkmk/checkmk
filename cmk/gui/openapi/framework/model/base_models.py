@@ -67,7 +67,7 @@ class LinkModel:
         # these might have to be changed to a dataclass but let's see
         parameters: dict[str, str] | None = None,
         body_params: dict[str, str | None] | None = None,
-    ) -> "LinkModel":
+    ) -> LinkModel:
         link_obj = link_rel(
             rel=rel,
             href=href,
@@ -125,6 +125,24 @@ class DomainObjectModel(LinkableModel):
     )
     title: str | ApiOmitted = api_field(
         default_factory=ApiOmitted,
+        title="Title",
+        description="A human readable title of this object. Can be used for user interfaces.",
+        example="My Host",
+    )
+
+
+@api_model
+class TitledDomainObjectModel(DomainObjectModel):
+    """A domain object whose endpoints always supply a title.
+
+    Not every domain object has one: a registration token or a metadata
+    collection has nothing meaningful to show. Those keep using
+    ``DomainObjectModel``, where the title stays optional. Endpoints that do
+    always set a title use this model instead, so the generated schema marks
+    the field required and consumers need no fallback.
+    """
+
+    title: str = api_field(
         title="Title",
         description="A human readable title of this object. Can be used for user interfaces.",
         example="My Host",

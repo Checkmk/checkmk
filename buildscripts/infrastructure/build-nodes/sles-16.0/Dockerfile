@@ -35,7 +35,6 @@ RUN zypper ref -s && \
         git \
         gmp-devel \
         groff \
-        intltool \
         iproute2 \
         iputils \
         jq \
@@ -51,6 +50,7 @@ RUN zypper ref -s && \
         libltdl7 \
         libmariadb-devel \
         libopenssl-devel \
+        libopenssl3 \
         libpcap-devel \
         libpng16-devel \
         libtiff-devel \
@@ -59,6 +59,7 @@ RUN zypper ref -s && \
         libxml2-devel \
         libxmlsec1-1 \
         libxslt-devel \
+        libzstd-devel \
         make \
         mariadb-client \
         mpfr-devel \

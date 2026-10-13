@@ -48,7 +48,7 @@ def _instantiate_ruleset(
     ["rulesets", "n_expected_warnings"],
     [
         pytest.param(
-            lambda edition: {
+            lambda edition: {  # noqa: ARG005
                 "logwatch_rules": {
                     "reclassify_patterns": [
                         ("C", "\\\\x\\\\y\\\\z", "some comment"),

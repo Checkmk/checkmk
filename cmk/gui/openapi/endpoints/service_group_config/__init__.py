@@ -22,6 +22,7 @@ A service group object can have the following relations present in `links`:
 """
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any
 
 from cmk.ccc import version
@@ -62,6 +63,7 @@ from cmk.gui.watolib import groups
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.groups import GroupInUseException, UnknownGroupException
 from cmk.gui.watolib.groups_io import load_service_group_information
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
     PendingChanges,
@@ -158,7 +160,7 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
     response_schema=ServiceGroupCollection,
     permissions_required=PERMISSIONS,
 )
-def list_groups(params: Mapping[str, Any]) -> Response:
+def list_groups(params: Mapping[str, Any]) -> Response:  # noqa: ARG001
     """Show all service groups"""
     user.need_permission("wato.groups")
     collection = build_group_list(load_service_group_information())
@@ -189,7 +191,7 @@ def show_group(params: Mapping[str, Any]) -> Response:
     path_params=[GROUP_NAME_FIELD],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
-    additional_status_codes=[409],
+    additional_status_codes=[HTTPStatus.CONFLICT],
 )
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a service group"""
@@ -200,6 +202,7 @@ def delete(params: Mapping[str, Any]) -> Response:
         groups.delete_group(
             name,
             group_type="service",
+            tree=make_folder_tree(active_config),
             pprint_value=active_config.wato_pprint_config,
             pending_changes=_pending_changes(
                 active_config.sites,
@@ -210,18 +213,18 @@ def delete(params: Mapping[str, Any]) -> Response:
         )
     except GroupInUseException as exc:
         raise ProblemException(
-            status=409,
+            status=HTTPStatus.CONFLICT,
             title="Group in use problem",
             detail=str(exc),
         )
     except UnknownGroupException as exc:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Unknown group problem",
             detail=str(exc),
         )
 
-    return Response(status=204)
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 
 @Endpoint(
@@ -231,18 +234,20 @@ def delete(params: Mapping[str, Any]) -> Response:
     request_schema=BulkDeleteServiceGroup,
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
-    additional_status_codes=[404, 409],
+    additional_status_codes=[HTTPStatus.NOT_FOUND, HTTPStatus.CONFLICT],
 )
 def bulk_delete(params: Mapping[str, Any]) -> Response:
     """Bulk delete service groups"""
     user.need_permission("wato.edit")
     user.need_permission("wato.groups")
     body = params["body"]
+    tree = make_folder_tree(active_config)
     for group_name in body["entries"]:
         try:
             groups.delete_group(
                 group_name,
                 group_type="service",
+                tree=tree,
                 pprint_value=active_config.wato_pprint_config,
                 pending_changes=_pending_changes(
                     active_config.sites,
@@ -253,18 +258,18 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
             )
         except GroupInUseException as exc:
             raise ProblemException(
-                status=409,
+                status=HTTPStatus.CONFLICT,
                 title="Group in use problem",
                 detail=str(exc),
             )
         except UnknownGroupException as exc:
             raise ProblemException(
-                status=404,
+                status=HTTPStatus.NOT_FOUND,
                 title="Unknown group problem",
                 detail=str(exc),
             )
 
-    return Response(status=204)
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 
 @Endpoint(

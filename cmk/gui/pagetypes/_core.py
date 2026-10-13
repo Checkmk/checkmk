@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 # TODO:
 # - The classes here mix two things:
@@ -20,7 +18,6 @@
 #   per type to the page_types dictionary. Or add some management object
 #   for this
 
-from __future__ import annotations
 
 import abc
 import copy
@@ -82,22 +79,10 @@ from cmk.gui.permissions import (
     permission_section_registry,
 )
 from cmk.gui.table import init_rowselect, Table, table_element
-from cmk.gui.type_defs import (
-    AnnotatedUserId,
-    DynamicIcon,
-    DynamicIconName,
-    HTTPVariables,
-    IconNames,
-    PermissionName,
-    StaticIcon,
-    Visual,
-    VisualPublic,
-)
+from cmk.gui.type_defs import AnnotatedUserId, Visual, VisualPublic
 from cmk.gui.user_sites import get_configured_site_choices
-from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.roles import is_user_with_publish_permissions, UserPermissions
 from cmk.gui.utils.selection_id import SelectionId
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.validate import validate_id
@@ -126,9 +111,13 @@ from cmk.shared_typing.main_menu import (
     NavItemTopic,
     NavItemTopicEntry,
 )
+from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.flashed_messages import flash, get_flashed_messages
 from cmk.web.utils.html import HTML
-from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
+from cmk.web.utils.speaklater import LazyString
+from cmk.web.utils.urls import HTTPVariable, makeactionuri, makeuri, makeuri_contextless
 
 SubPagesSpec = list[tuple[str, str, StaticIcon]]
 PagetypePhrase = Literal["title", "title_plural", "add_to", "clone", "create", "edit", "new"]
@@ -150,6 +139,14 @@ class BaseConfig:
     name: str
     title: str
     description: str = ""
+
+
+class PageDeserializationError(Exception):
+    """Raised by ``deserialize`` for stored content the page type cannot read.
+
+    ``load`` skips such a page and logs it, so one unreadable page does not keep every other page
+    of every user from loading.
+    """
 
 
 class OverridableModel(BaseModel):
@@ -267,7 +264,9 @@ class Base[T_BaseConfig: BaseConfig](abc.ABC):
 
     @classmethod
     def parameters(
-        cls, mode: PageMode, user_permissions: UserPermissions
+        cls,
+        mode: PageMode,  # noqa: ARG003
+        user_permissions: UserPermissions,  # noqa: ARG003
     ) -> list[tuple[str, list[tuple[float, str, ValueSpec]]]]:
         """Defines the parameter to be configurable by the user when editing this object
 
@@ -353,6 +352,11 @@ class Base[T_BaseConfig: BaseConfig](abc.ABC):
     def type_is_show_more(cls) -> bool:
         """Whether or not this page type should be treated as element in the
         navigation only shown on show more button"""
+        return False
+
+    @classmethod
+    def type_is_experimental(cls) -> bool:
+        """Whether or not this page type is marked as experimental in the Customize menu"""
         return False
 
     @classmethod
@@ -500,6 +504,11 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
         )
 
     @classmethod
+    def default_content(cls) -> Mapping[str, object]:
+        """The content a newly created page starts with, before its own editor fills it in."""
+        return {}
+
+    @classmethod
     @override
     def parameters(
         cls, mode: PageMode, user_permissions: UserPermissions
@@ -602,7 +611,9 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
         return self.is_mine() and user.may("general.edit_" + self.type_name())
 
     def render_title(
-        self, instances: OverridableInstances[Self], user_permissions: UserPermissions
+        self,
+        instances: OverridableInstances[Self],  # noqa: ARG002
+        user_permissions: UserPermissions,  # noqa: ARG002
     ) -> str | HTML:
         return _u(self.title())
 
@@ -673,7 +684,7 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
         return user.may("general.edit_foreign_%s" % self.type_name())
 
     def edit_url(self) -> str:
-        http_vars: HTTPVariables = [("load_name", self.name())]
+        http_vars: list[HTTPVariable] = [("load_name", self.name())]
         if not self.is_mine():
             http_vars.append(("owner", self.owner()))
 
@@ -692,7 +703,7 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
         )
 
     def delete_url(self) -> str:
-        add_vars: HTTPVariables = [("_delete", self.name())]
+        add_vars: list[HTTPVariable] = [("_delete", self.name())]
         if not self.is_mine():
             add_vars.append(("_owner", self.owner()))
 
@@ -703,6 +714,7 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
             confirm_message += "<br>" + _("Owner: %(owner)s") % {"owner": self.owner()}
 
         return make_confirm_delete_link(
+            i18n=_,
             url=makeactionuri(request, transactions.get(), add_vars),
             title=_("Delete %(title)s") % {"title": self.phrase("title").lower()},
             suffix=self.title(),
@@ -915,7 +927,7 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
                 except SyntaxError as e:
                     raise MKGeneralException(
                         _("Cannot load %(type_name)s from %(path)s: %(error)s")
-                        % {"type_name": cls.type_name(), "path": path, "error": e}
+                        % {"type_name": cls.type_name(), "path": path, "error": e}  # type: ignore[possibly-undefined]
                     )
 
         return page_dicts_by_instance_id
@@ -933,7 +945,7 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
         for (user_id, name), raw_page_dict in cls.load_raw().items():
             try:
                 instance = cls.deserialize(raw_page_dict)
-            except ValidationError:
+            except ValidationError, PageDeserializationError:
                 logger.exception(
                     "Skipping invalid %(type_name)s %(name)r of user %(user_id)r",
                     {"type_name": cls.type_name(), "name": name, "user_id": user_id},
@@ -1135,7 +1147,9 @@ class ListPage[T: Overridable](Page):
                 else:
                     self._show_table(instances, scope_instances, user_permissions, deletable=False)
 
-        html.javascript("cmk.page_menu.check_menu_entry_by_checkboxes('delete')")
+        html.call_ts_function(
+            function_name="check_menu_entry_by_checkboxes", arguments={"id": "delete"}
+        )
         html.footer()
 
     @classmethod
@@ -1222,7 +1236,7 @@ class ListPage[T: Overridable](Page):
                 table.cell(_("Actions"), css=["buttons visuals"])
 
                 # View
-                if isinstance(instance, PageRenderer):
+                if isinstance(instance, PageRenderer) and instance.list_shows_view_button():
                     html.icon_button(instance.view_url(), _("View"), self._type.type_icon())
 
                 # Edit
@@ -1402,7 +1416,7 @@ class EditPage[T_OverridableConfig: OverridableConfig, T: Overridable](Page):
                 if page_dict["public"] is None:
                     page_dict["public"] = False
             else:
-                page_dict = new_page_dict
+                page_dict = {**self._type.default_content(), **new_page_dict}
                 page_dict["owner"] = str(user.id)  # because is not in vs elements
 
             if not user_errors:
@@ -1671,7 +1685,7 @@ def _page_menu_entries_save(
     sub_pages: SubPagesSpec,
     dropdown_name: str,
     type_title: str,
-    type_title_plural: str,
+    type_title_plural: str,  # noqa: ARG001
     form_name: str,
 ) -> Iterator[PageMenuEntry]:
     """Provide the different "save" buttons"""
@@ -1843,9 +1857,6 @@ class OverridableContainer[T_OverridableContainerConfig: OverridableContainerCon
             ctx.config,
         )
         # Redirect user to tha page this displays the thing we just added to
-        if target_page and not isinstance(target_page, str):
-            target_page = target_page.page_url()
-
         response.set_content_type("text/plain")
         response.set_data(f"{target_page or ''}\n{'true' if need_sidebar_reload else 'false'}")
 
@@ -1854,10 +1865,10 @@ class OverridableContainer[T_OverridableContainerConfig: OverridableContainerCon
     def add_element_via_popup(
         cls,
         page_name: str,
-        element_type: str,
+        element_type: str,  # noqa: ARG003
         create_info: ElementSpec,
         user_permissions: UserPermissions,
-        config: Config,
+        config: Config,  # noqa: ARG003
     ) -> tuple[str | None, bool]:
         cls.need_overriding_permission("edit")
 
@@ -1878,9 +1889,12 @@ class OverridableContainer[T_OverridableContainerConfig: OverridableContainerCon
         page.add_element(create_info)  # can be overridden
         assert user.id is not None
         cls.save_user_instances(instances, user_permissions, user.id)
-        return None, need_sidebar_reload
-        # With a redirect directly to the page afterwards do it like this:
-        # return page, need_sidebar_reload
+        # The add_to_container REST endpoint (cmk.gui.graphing.openapi.add_to_container) treats
+        # redirect_url as mandatory and 500s if it comes back None. Every OverridableContainer it
+        # can currently reach (GraphCollection, CustomGraphPage) is a PageRenderer, so this branch
+        # is not taken in practice - test_all_add_to_containers_are_page_renderers pins that down.
+        redirect_url = page.page_url() if isinstance(page, PageRenderer) else None
+        return redirect_url, need_sidebar_reload
 
     def elements(self) -> Sequence[ElementSpec]:
         return self.config.elements
@@ -2068,10 +2082,15 @@ class PageRenderer[T_PageRendererConfig: PageRendererConfig](
         )
 
     def view_url(self) -> str:
-        http_vars: HTTPVariables = [(self.ident_attr(), self.name())]
+        http_vars: list[HTTPVariable] = [(self.ident_attr(), self.name())]
         if not self.is_mine():
             http_vars.append(("owner", self.owner()))
         return makeuri_contextless(request, http_vars, filename="%s.py" % self.type_name())
+
+    @classmethod
+    def list_shows_view_button(cls) -> bool:
+        """Whether the list row offers a "View" button next to the linked title."""
+        return True
 
     @override
     def render_title(
@@ -2487,7 +2506,7 @@ def _no_bi_aggregate_active() -> bool:
 # .
 
 
-def _customize_menu_topics(user_permissions: UserPermissions) -> list[NavItemTopic]:
+def _customize_menu_topics(user_permissions: UserPermissions) -> list[NavItemTopic]:  # noqa: ARG001
     general_entries: list[NavItemTopicEntry] = []
     monitoring_entries: list[NavItemTopicEntry] = []
     graph_entries: list[NavItemTopicEntry] = []
@@ -2533,9 +2552,13 @@ def _customize_menu_topics(user_permissions: UserPermissions) -> list[NavItemTop
         if not user.may(f"general.edit_{page_type_.type_name()}"):
             continue
 
+        title = page_type_.phrase("title_plural")
+        if page_type_.type_is_experimental():
+            title = _("%(title)s (experimental)") % {"title": title}
+
         item = NavItemTopicEntry(
             id=page_type_.type_name(),
-            title=page_type_.phrase("title_plural"),
+            title=title,
             url="%ss.py" % page_type_.type_name(),
             sort_index=40 + (index * 10),
             is_show_more=False,
@@ -2619,10 +2642,10 @@ class CustomizePermissionsHandler:
     def build(cls, ctx: PageContext) -> Self:
         return cls(UserPermissions.from_config(ctx.config, permission_registry))
 
-    def may_see_category(self, category: str) -> bool:
+    def may_see_category(self, category: str) -> bool:  # noqa: ARG002
         return not hide_customize_menu()
 
-    def get_visibility_check(self, category: str) -> Callable[[str], bool]:
+    def get_visibility_check(self, category: str) -> Callable[[str], bool]:  # noqa: ARG002
         visible_urls = {
             main_menu_item.url
             for main_menu_topic in _customize_menu_topics(self._user_permissions)

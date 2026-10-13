@@ -38,7 +38,7 @@ from .models.response_models import HostAvailabilityCollection, HostAvailability
 
 
 def list_host_availability_v1(
-    api_context: ApiContext,
+    api_context: ApiContext,  # noqa: ARG001
     time_range_from: Annotated[
         dt.datetime,
         AwareDatetime,
@@ -77,6 +77,8 @@ def list_host_availability_v1(
         include_output=False,
         include_long_output=False,
         avoptions=avoptions,
+        # This endpoint filters by host/service, not by a visual context
+        active_filters=(),
     )
     av_data = compute_availability("host", raw_data, avoptions, load_annotations())
 

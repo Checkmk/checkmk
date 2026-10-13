@@ -19,7 +19,7 @@ const isCompleted = computed(() => props.index < props.currentStage)
 <template>
   <CmkWizardStep :index="index" :is-completed="() => isCompleted">
     <template #header>
-      <QuickSetupStageHeader :title="title" :sub_title="sub_title" :is-completed="isCompleted" />
+      <QuickSetupStageHeader :title="title" :sub-title="sub_title" :is-completed="isCompleted" />
     </template>
     <template #content>
       <QuickSetupStageContent
@@ -34,9 +34,16 @@ const isCompleted = computed(() => props.index < props.currentStage)
       />
     </template>
     <template #recap>
-      <div>
+      <div class="qs-stage__recap">
         <component :is="recapContent" v-if="!!recapContent" />
       </div>
     </template>
   </CmkWizardStep>
 </template>
+
+<style scoped>
+.qs-stage__recap {
+  width: 100%;
+  min-width: 0;
+}
+</style>

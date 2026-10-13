@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
 
 import abc
@@ -32,14 +31,15 @@ from cmk.ccc.store import locked
 from cmk.ccc.user import UserId
 from cmk.gui import sites, visuals
 from cmk.gui.breadcrumb import make_current_page_breadcrumb_item, make_topic_breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import active_config, Config, RequestCacheConfig
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.data_source import data_source_registry
+from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.header import make_header
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import Request, request
+from cmk.gui.http import Request, request, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -82,19 +82,12 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, Page, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.painter import PainterConfig, PainterContext
+from cmk.gui.painter.helpers import RenderLink
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import (
-    ColumnSpec,
-    DynamicIcon,
-    DynamicIconName,
-    IconNames,
-    PainterParameters,
-    Row,
-    StaticIcon,
-    Visual,
-    VisualLinkSpec,
-)
+from cmk.gui.type_defs import ColumnSpec, PainterParameters, Row, Visual, VisualLinkSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.icon import Icon, IconConfig, IconRegistry
@@ -104,6 +97,8 @@ from cmk.gui.views.store import get_all_views, get_permitted_views, multisite_bu
 from cmk.gui.visuals import get_livestatus_filter_headers
 from cmk.gui.visuals.filter import Filter, FilterRegistry
 from cmk.ruleset_matcher.tags import TagID
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import makeuri_contextless
 
 
@@ -140,12 +135,12 @@ def register(
 
 
 def _render_network_topology_icon(
-    what: Literal["host", "service"],
+    what: Literal["host", "service"],  # noqa: ARG001
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> tuple[StaticIcon | DynamicIcon, str, str] | None:
     # Only show this icon if topology data is available
     files = glob.glob("data_*.json", root_dir=topology_data_dir / "default")
@@ -256,8 +251,6 @@ class _RequestVars:
 
 
 class ABCTopologyPage(Page):
-    _instance_name = "node_instance"
-
     @classmethod
     @abc.abstractmethod
     def visual_spec(cls) -> Visual:
@@ -268,11 +261,14 @@ class ABCTopologyPage(Page):
         """Determines the hosts to be shown"""
         user.need_permission("general.parent_child_topology")
         reqvars = _RequestVars.from_request(ctx.request)
+        request_cache = RequestCache(ctx.config)
 
         self.make_ui_components(
-            UserPermissions.from_config(ctx.config, permission_registry), ctx.config
+            UserPermissions.from_config(ctx.config, permission_registry), ctx.config, request_cache
         )
         self.show_topology(
+            config=ctx.config,
+            request_cache=request_cache,
             site_id=reqvars.site_id,
             layout=reqvars.layout,
             query_hash=reqvars.query_hash,
@@ -280,7 +276,12 @@ class ABCTopologyPage(Page):
         )
         html.footer()
 
-    def make_ui_components(self, user_permissions: UserPermissions, config: Config) -> None:
+    def make_ui_components(
+        self,
+        user_permissions: UserPermissions,
+        config: Config,
+        request_cache: RequestCache[RequestCacheConfig],
+    ) -> None:
         visual_spec = self.visual_spec()
         title = str(visual_spec["title"])
         breadcrumb = make_topic_breadcrumb(
@@ -289,7 +290,12 @@ class ABCTopologyPage(Page):
         )
         breadcrumb.append(make_current_page_breadcrumb_item(str(visual_spec["title"])))
         page_menu = PageMenu(breadcrumb=breadcrumb)
-        self._extend_display_dropdown(menu=page_menu, page_name=visual_spec["name"])
+        self._extend_display_dropdown(
+            menu=page_menu,
+            page_name=visual_spec["name"],
+            config=config,
+            request_cache=request_cache,
+        )
         make_header(
             html,
             title=title,
@@ -309,6 +315,8 @@ class ABCTopologyPage(Page):
     def show_topology(
         self,
         *,
+        config: Config,
+        request_cache: RequestCache[RequestCacheConfig],
         site_id: SiteId | None,
         layout: str | None,
         query_hash: str | None,
@@ -317,6 +325,8 @@ class ABCTopologyPage(Page):
         div_id = "node_visualization"
         html.div("", id_=div_id)
         topology_configuration = get_topology_configuration(
+            config=config,
+            request_cache=request_cache,
             topology_type=self.visual_spec()["name"],
             topology_frontend_configuration=topology_frontend_configuration,
             layout=layout,
@@ -327,22 +337,29 @@ class ABCTopologyPage(Page):
             site_id=site_id,
             query_hash=query_hash,
         )
-        html.javascript(
-            f"{self._instance_name} = new cmk.nodevis.TopologyVisualization({json.dumps(div_id)},"
-            f"{json.dumps(topology_configuration.type)},"
-            f"{json.dumps(frontend_texts.get_texts())}"
-            f");"
+        html.call_ts_function(
+            function_name="show_topology",
+            arguments={
+                "div_id": div_id,
+                "topology_type": topology_configuration.type,
+                "translations": frontend_texts.get_texts(),
+                "data": result,
+            },
         )
-
-        html.javascript(f"{self._instance_name}.show_topology({json.dumps(result)})")
 
     @classmethod
     @abc.abstractmethod
     def get_default_overlays_config(cls) -> OverlaysConfig:
         pass
 
-    def _extend_display_dropdown(self, menu: PageMenu, page_name: str) -> None:
-        context, _show_filters = _get_topology_context_and_filters()
+    def _extend_display_dropdown(
+        self,
+        menu: PageMenu,
+        page_name: str,
+        config: Config,
+        request_cache: RequestCache[RequestCacheConfig],
+    ) -> None:
+        context, _show_filters = _get_topology_context_and_filters(config, request_cache)
         display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
 
         display_dropdown.topics.insert(
@@ -359,6 +376,7 @@ class ABCTopologyPage(Page):
                                 context=context,
                                 page_name=page_name,
                                 reset_ajax_page="ajax_initial_topology_filters",
+                                request_cache=request_cache,
                             )
                         ),
                         name="filters",
@@ -464,8 +482,8 @@ class NetworkTopologyPage(ABCTopologyPage):
 
 class AjaxInitialTopologyFilters(ABCAjaxInitialFilters):
     @override
-    def _get_context(self, page_name: str) -> dict:
-        _view, show_filters = _get_topology_context_and_filters()
+    def _get_context(self, page_name: str, request_cache: RequestCache[RequestCacheConfig]) -> dict:
+        _view, show_filters = _get_topology_context_and_filters(active_config, request_cache)
         return {f.ident: {} for f in show_filters if f.available()}
 
 
@@ -483,6 +501,8 @@ class AjaxFetchTopology(AjaxPage):
                 default_overlays = ParentChildTopologyPage.get_default_overlays_config()
 
         topology_configuration = get_topology_configuration(
+            config=ctx.config,
+            request_cache=RequestCache(ctx.config),
             topology_type=reqvars.topology_type,
             topology_frontend_configuration=reqvars.topology_frontend_configuration,
             layout=reqvars.layout,
@@ -578,7 +598,7 @@ class ABCTopologyNodeDataGenerator:
             self._current_mesh_depth += 1
         return previous_border_nodes
 
-    def _grow_continue_nodes(self, border_nodes: set[str]) -> None:
+    def _grow_continue_nodes(self, border_nodes: set[str]) -> None:  # noqa: ARG002
         growth_continue_nodes = set(self._topology_configuration.frontend.growth_continue_nodes)
         while growth_continue_nodes:
             adjacent_nodes = set()
@@ -1679,7 +1699,7 @@ def _register_builtin_views() -> None:
     )
 
 
-def cleanup_topology_layouts(config: Config) -> None:
+def cleanup_topology_layouts(config: Config) -> None:  # noqa: ARG001
     """Topology layouts are currently restricted to a maximum number of 10000"""
     topology_configs_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1737,16 +1757,18 @@ def _create_filter_configuration_from_hash(
 
 def get_topology_configuration(
     *,
+    config: Config,
+    request_cache: RequestCache[RequestCacheConfig],
     topology_type: str,
     topology_frontend_configuration: str | None,
     layout: str | None,
     default_overlays: OverlaysConfig,
 ) -> TopologyConfiguration:
-    topology_filters = _get_topology_settings_from_filters()
+    topology_filters = _get_topology_settings_from_filters(request_cache)
     mesh_depth = int(topology_filters["topology_mesh_depth"])
     max_nodes = int(topology_filters["topology_max_nodes"])
     filter_configuration = TopologyFilterConfiguration(
-        mesh_depth=mesh_depth, max_nodes=max_nodes, query=_get_query_string()
+        mesh_depth=mesh_depth, max_nodes=max_nodes, query=_get_query_string(config, request_cache)
     )
     # Check if the request includes a frontend_configuration -> AJAX request
     frontend_configuration = (
@@ -1827,20 +1849,24 @@ def _get_default_layout(style: Literal["hierarchy", "radial"] = "hierarchy") -> 
     return default_layout
 
 
-def _get_topology_settings_from_filters() -> dict[str, str]:
+def _get_topology_settings_from_filters(
+    request_cache: RequestCache[RequestCacheConfig],
+) -> dict[str, str]:
     topology_values: dict[str, str] = {}
     for filter_class in (FilterTopologyMaxNodes, FilterTopologyMeshDepth):
         filter_instance = filter_class()
-        value = filter_instance.value()
+        value = filter_instance.value(request_cache)
         if not value[filter_instance.ident].isdigit():
             value = {filter_instance.ident: filter_instance.range_config.default}
         topology_values.update(value)
     return topology_values
 
 
-def _get_query_string() -> str:
+def _get_query_string(config: Config, request_cache: RequestCache[RequestCacheConfig]) -> str:
     # Determine hosts from filters
-    filter_headers = "".join(get_livestatus_filter_headers(*_get_topology_context_and_filters()))
+    filter_headers = "".join(
+        get_livestatus_filter_headers(*_get_topology_context_and_filters(config, request_cache))
+    )
     query = "GET hosts\nColumns: name"
     if filter_headers:
         query += "\n%s" % filter_headers
@@ -2070,7 +2096,9 @@ def _convert_to_sort_tuple(name: str) -> tuple:
     return tuple(map(try_int, re.split(r"(\d+)", name)))
 
 
-def _get_topology_context_and_filters() -> tuple[Mapping[str, Mapping[str, str]], list[Filter]]:
+def _get_topology_context_and_filters(
+    config: Config, request_cache: RequestCache[RequestCacheConfig]
+) -> tuple[Mapping[str, Mapping[str, str]], list[Filter]]:
     view_name = "topology_filters"
     view_spec = visuals.get_permissioned_visual(
         view_name,
@@ -2081,11 +2109,21 @@ def _get_topology_context_and_filters() -> tuple[Mapping[str, Mapping[str, str]]
     )
 
     datasource = data_source_registry[view_spec["datasource"]]()
-    context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
+    context = visuals.active_context_from_request(
+        datasource.infos, view_spec["context"], request_cache
+    )
     view = View(
         view_name,
         view_spec,
         context,
-        UserPermissions.from_config(active_config, permission_registry),
+        PainterContext(
+            config=PainterConfig.from_config(config),
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+            theme=theme,
+            url_renderer=RenderLink(request, response, display_options),
+            user_permissions=UserPermissions.from_config(config, permission_registry),
+        ),
+        request_cache,
     )
     return context, visuals.visible_filters_of_visual(view.spec, get_all_active_filters(view))

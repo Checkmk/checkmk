@@ -7,6 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Annotated, get_args, get_origin
 
+from typing_extensions import TypeForm
 from werkzeug.http import parse_options_header
 
 
@@ -20,7 +21,7 @@ class ContentTypeConverter:
     function: Callable[[bytes, str], object]
 
 
-def get_converter_annotation(t: type) -> ContentTypeConverter | None:
+def get_converter_annotation(t: TypeForm[object]) -> ContentTypeConverter | None:
     """Return the first `ContentTypeConverter` annotation for the given type.
 
     This function only looks at the outermost type and does not recurse into nested types.
@@ -34,7 +35,7 @@ def get_converter_annotation(t: type) -> ContentTypeConverter | None:
     return None
 
 
-def convert_request_body(body_model: type, content_type: str, body: bytes) -> object:
+def convert_request_body(body_model: TypeForm[object], content_type: str, body: bytes) -> object:
     """Convert the `body` into the correct type based on the requests `content_type`.
 
     In most cases, this means decoding a JSON body into a dict. A custom converter can be specified

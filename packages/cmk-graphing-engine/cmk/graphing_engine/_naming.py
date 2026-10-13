@@ -4,28 +4,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
-from typing import NewType, Self
+from typing import NewType
 
 HostName = NewType("HostName", str)
 ServiceName = NewType("ServiceName", str)
+MetricName = NewType("MetricName", str)
 SiteID = NewType("SiteID", str)
 
 
-class MetricName(str):
-    # A metric name normalised to PNP4Nagios format: a str subclass whose construction is a projection
-    # (non-injective). The raw name is pnp-cleaned, so a name carrying spaces / ":" / "/" / "\" / NUL is
-    # mapped to its canonical RRD identifier.
-    def __new__(cls, text: str) -> Self:
-        # An embedded null byte is mapped to "_" like the other path-hostile chars: it would otherwise
-        # make open() raise "ValueError: embedded null byte" when the RRD is created.
-        return super().__new__(
-            cls,
-            text.replace(" ", "_")
-            .replace(":", "_")
-            .replace("/", "_")
-            .replace("\\", "_")
-            .replace("\x00", "_"),
-        )
+def rrd_metric_name(text: str) -> MetricName:
+    return MetricName(
+        text.replace(" ", "_")
+        .replace(":", "_")
+        .replace("/", "_")
+        .replace("\\", "_")
+        .replace("\x00", "_")
+    )
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -3,10 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
+    EndpointBehavior,
     EndpointDoc,
     EndpointHandler,
     EndpointMetadata,
@@ -20,8 +24,12 @@ from cmk.gui.openapi.utils import ProblemException
 from cmk.livestatus_client import MKLivestatusException
 from cmk.web.utils import permission_verification as permissions
 
-from .._engine_template_graphs import discover_template_graphs
-from .._graph_templates import TemplateGraphSpecification
+from .._graph_templates import (
+    discover_template_graphs,
+    MKGraphMixedUnitsError,
+    TemplateGraphSpecification,
+)
+from .._user_specific_unit import get_temperature_unit
 from ._family import GRAPH_FAMILY
 from .models import GraphsDiscoverResponse
 
@@ -51,6 +59,7 @@ class TemplateGraphsDiscoverRequest:
 
 
 def discover_template_graphs_v1(
+    api_context: ApiContext,
     body: TemplateGraphsDiscoverRequest,
 ) -> GraphsDiscoverResponse:
     """Discover the data-less template graph definitions of a service"""
@@ -66,18 +75,27 @@ def discover_template_graphs_v1(
         )
     except MKLivestatusException as exc:
         raise ProblemException(
-            status=503,
+            status=HTTPStatus.SERVICE_UNAVAILABLE,
             title="Monitoring data source unavailable",
+            detail=str(exc),
+        ) from exc
+    except MKGraphMixedUnitsError as exc:
+        raise ProblemException(
+            status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            title="Graph cannot be built",
             detail=str(exc),
         ) from exc
     except Exception as exc:
         raise ProblemException(
-            status=500,
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
             title="Graph discovery failed",
             detail=f"Failed to discover graphs: {exc}",
         ) from exc
 
-    return GraphsDiscoverResponse.from_discovered(discovered)
+    return GraphsDiscoverResponse.from_discovered(
+        discovered,
+        get_temperature_unit(api_context.user, api_context.config.default_temperature_unit),
+    )
 
 
 ENDPOINT_DISCOVER_TEMPLATE_GRAPHS = VersionedEndpoint(
@@ -98,5 +116,6 @@ ENDPOINT_DISCOVER_TEMPLATE_GRAPHS = VersionedEndpoint(
         )
     ),
     doc=EndpointDoc(family=GRAPH_FAMILY.name),
+    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=discover_template_graphs_v1)},
 )

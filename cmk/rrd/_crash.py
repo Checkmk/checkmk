@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from typing import override
 
-from cmk.ccc.version import get_general_version_infos
+from cmk.ccc.version_info import get_general_version_infos
 from cmk.crash import (
     ABCCrashReport,
     BaseDetails,

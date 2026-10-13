@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="unreachable"
 
 from itertools import count
 
@@ -104,11 +103,11 @@ def _mocked_container_info_from_state(
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_kube_pod_status_no_issues_in_containers(
     section_kube_pod_containers: PodContainers | None,
     section_kube_pod_lifecycle: PodLifeCycle | None,
     expected_result: CheckResult,
-    empty_value_store: None,
 ) -> None:
     """
     Tested Pods have a single container which is configured correctly and in a good state.
@@ -171,11 +170,11 @@ def test_check_kube_pod_status_no_issues_in_containers(
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_kube_pod_status_failing_container(
     section_kube_pod_containers: PodContainers | None,
     section_kube_pod_lifecycle: PodLifeCycle | None,
     expected_result: CheckResult,
-    empty_value_store: None,
 ) -> None:
     """
     Tested Pods with a single failing or misconfigured container.
@@ -264,11 +263,11 @@ def test_check_kube_pod_status_failing_container(
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_kube_pod_status_multiple_issues(
     section_kube_pod_containers: PodContainers | None,
     section_kube_pod_lifecycle: PodLifeCycle | None,
     expected_result: CheckResult,
-    empty_value_store: None,
 ) -> None:
     """
     Tested Pods have two containers with different issues, which are then summarized into a
@@ -369,12 +368,12 @@ def test_check_alert_if_pending_too_long() -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_kube_pod_status_init_container_broken(
     section_kube_pod_init_containers: PodContainers,
     section_kube_pod_containers: PodContainers,
     section_kube_pod_lifecycle: PodLifeCycle | None,
     expected_result: str,
-    empty_value_store: None,
 ) -> None:
     """
     Tested Pods has a failing init-container.
@@ -408,43 +407,26 @@ def test_check_alert_resets() -> None:
     )
 
     expectations = (
-        (
-            State.OK,
-            "0 seconds",
-            None,
-        ),
+        (State.OK, "0 seconds"),
         (
             State.WARN,
             "1 minute 0 seconds (warn/crit at 1 minute 0 seconds/2 minutes 0 seconds)",
-            None,
         ),
-        (
-            State.OK,
-            "0 seconds",
-            None,
-        ),
-        (
-            State.OK,
-            "0 seconds",
-            None,
-        ),
+        (State.OK, "0 seconds"),
+        (State.OK, "0 seconds"),
     )
 
     for time, expected, section_kube_pod_lifecycle in zip(
         count(0.1, 60.1), expectations, pod_cycles
     ):
-        expected_state, expected_summary, expected_notice = expected
+        expected_state, expected_summary = expected
         summary_result, *notice = _check_kube_pod_status(
             time, value_store, params, section_kube_pod_containers, None, section_kube_pod_lifecycle
         )
         assert isinstance(summary_result, Result)
         assert summary_result.state == expected_state
         assert summary_result.summary.endswith(expected_summary)
-        if expected_notice is None:
-            assert notice == []
-        else:
-            assert isinstance(notice[0], Result)
-            assert expected_notice == notice[0].details
+        assert notice == []
 
 
 def test_check_group_timer() -> None:
@@ -504,7 +486,8 @@ def test_check_group_timer() -> None:
             assert expected_notice == notice[0].details
 
 
-def test_check_group_order_matters(empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_group_order_matters() -> None:
     params = kube_pod_status.Params(
         groups=[
             ("no_levels", [".*"]),

@@ -1,0 +1,11 @@
+###ROOT###/var/log/maps/*.log {
+	missingok
+	rotate 7
+	compress
+	delaycompress
+	notifempty
+	create 640 ###SITE### ###SITE###
+	postrotate
+		###ROOT###/etc/init.d/maps logrotate
+	endscript
+}

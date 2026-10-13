@@ -13,7 +13,7 @@ from cmk.plugins.lib import diskstat
 class ParagraphParser:
     headline: str
 
-    def __init__(self, hp: "HeadlineParser") -> None:
+    def __init__(self, hp: HeadlineParser) -> None:
         hp.register_parser(self)
 
     def parse(self, line: list[str]) -> None:

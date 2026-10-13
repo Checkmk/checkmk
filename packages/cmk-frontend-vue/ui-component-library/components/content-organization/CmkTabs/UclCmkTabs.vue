@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 
 import codeExample from './UclCmkTabsCodeExample.vue?raw'
 
@@ -33,14 +33,14 @@ export const panelConfig = {
   modelValue: {
     type: 'list' as const,
     title: 'Active Tab',
-    options: [
-      { title: 'Search', name: 'tab-1' },
-      { title: 'Information', name: 'tab-2' },
-      { title: 'Disabled', name: 'tab-3' }
-    ] satisfies Options<TabId>[],
+    options: listOptions<TabId>({
+      'tab-1': 'Search',
+      'tab-2': 'Information',
+      'tab-3': 'Disabled'
+    }),
     initialState: 'tab-1' as TabId
   }
-} satisfies PanelConfigFor<typeof CmkTabs>
+} satisfies PanelConfigFor<typeof CmkTabs, 'unmountOnHide'>
 </script>
 
 <script setup lang="ts">
@@ -60,7 +60,7 @@ import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = new PanelStateCreator<typeof CmkTabs>().createRef(panelConfig)
+const propState = new PanelStateCreator<typeof CmkTabs, 'unmountOnHide'>().createRef(panelConfig)
 </script>
 
 <template>
@@ -77,6 +77,7 @@ const propState = new PanelStateCreator<typeof CmkTabs>().createRef(panelConfig)
           <CmkTab id="tab-3" :disabled="true" class="ucl-cmk-tabs"
             ><CmkIcon name="close" /> Disabled</CmkTab
           >
+          <CmkTab id="tab-4" variant="error" class="ucl-cmk-tabs">Error</CmkTab>
         </template>
 
         <template #tab-contents>
@@ -91,6 +92,10 @@ const propState = new PanelStateCreator<typeof CmkTabs>().createRef(panelConfig)
           <CmkTabContent id="tab-3">
             <CmkHeading type="h3">Disabled</CmkHeading>
             <CmkParagraph>This content is not accessible.</CmkParagraph>
+          </CmkTabContent>
+          <CmkTabContent id="tab-4">
+            <CmkHeading type="h3">Error</CmkHeading>
+            <CmkParagraph>A tab whose content has validation errors.</CmkParagraph>
           </CmkTabContent>
         </template>
       </CmkTabs>
@@ -118,7 +123,7 @@ const propState = new PanelStateCreator<typeof CmkTabs>().createRef(panelConfig)
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   > .cmk-icon {
-    margin-right: 16px;
+    margin-right: var(--dimension-3);
   }
 }
 

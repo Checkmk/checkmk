@@ -5,12 +5,12 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import asyncio
 import logging
 from collections.abc import Callable, Mapping, MutableMapping
+from http import HTTPStatus
 from typing import Literal, NamedTuple, override
 
 import aiohttp
@@ -157,7 +157,7 @@ class BaseAsyncApiClient:
     def _update_ratelimit(self, response: aiohttp.ClientResponse) -> None:
         try:
             new_value = int(response.headers["x-ms-ratelimit-remaining-subscription-reads"])
-        except (KeyError, ValueError, TypeError):
+        except KeyError, ValueError, TypeError:
             return
         self._ratelimit = min(self._ratelimit, new_value)
 
@@ -180,7 +180,7 @@ class BaseAsyncApiClient:
                 timeout=aiohttp.ClientTimeout(total=30),
             )
 
-        return session
+        return session  # type: ignore[possibly-undefined]
 
     async def __aenter__(self):
         if self._session is None or self._session.closed:
@@ -235,7 +235,7 @@ class BaseAsyncApiClient:
         raise_for_rate_limit = kwargs.pop("raise_for_rate_limit", False)
         response = await get_response()
         for cool_off_interval in (5, 10):
-            if response.status != 429:
+            if response.status != HTTPStatus.TOO_MANY_REQUESTS:
                 break
             if raise_for_rate_limit:
                 raise RateLimitException(

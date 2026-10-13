@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 import abc
 from collections.abc import Callable, Mapping, Sequence, Sized
@@ -13,6 +12,7 @@ from typing import Self
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.filecache import MaxAge
+from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.tags import ComputedDataSources
 
 from ._abc import Source
@@ -28,6 +28,7 @@ class SourceContext:
     """
 
     host_name: HostName
+    host_labels: Labels
     ipaddress: HostAddress | None
     computed_datasources: ComputedDataSources
     max_age_agent: MaxAge
@@ -37,6 +38,10 @@ class SourceContext:
     metrics_association: str | None
     check_mk_check_interval: float
     telemetry_custom_service: Callable[[HostName], Sequence[Mapping[str, object]]]
+    # Resolves the host's "OpenTelemetry data routing via identity labels" rule value,
+    # uninterpreted; an empty mapping means that no rule matched. Like the ruleset above
+    # it is carried unresolved, so hosts whose sources never ask do not pay for the match.
+    metrics_identity_routing: Callable[[HostName], Mapping[str, object]]
 
 
 class OptionalSource[TRawData: Sized](Source[TRawData], abc.ABC):

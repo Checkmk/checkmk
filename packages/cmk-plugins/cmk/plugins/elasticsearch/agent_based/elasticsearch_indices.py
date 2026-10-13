@@ -71,15 +71,21 @@ def parse_elasticsearch_indices(string_table: StringTable) -> _Section:
         # or custom) format we silently drop the section rather than crashing.
         return {}
     return {
-        index_name: _ElasticIndex(
-            count=index_response.primaries.docs.count,
-            size=index_response.total.store.size_in_bytes,
-        )
-        for index_name, index_response in (
-            (index_name, _IndexResponse.model_validate(raw_dict))
-            for index_name, raw_dict in raw_indices.items()
-        )
+        index_name: index
+        for index_name, raw_dict in raw_indices.items()
+        if (index := _parse_index(raw_dict)) is not None
     }
+
+
+def _parse_index(raw_dict: object) -> _ElasticIndex | None:
+    try:
+        index_response = _IndexResponse.model_validate(raw_dict)
+    except pydantic.ValidationError:
+        return None
+    return _ElasticIndex(
+        count=index_response.primaries.docs.count,
+        size=index_response.total.store.size_in_bytes,
+    )
 
 
 agent_section_elasticsearch_indices = AgentSection(

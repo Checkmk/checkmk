@@ -30,10 +30,6 @@ pub struct Args {
     /// Sends log to stderr.
     #[arg(short = 'l', long)]
     pub display_log: bool,
-    /// Prints important variables and other environment information into the log file: MK_LIBDIR, MK_CONFDIR, temp dir, lo dir, log level
-    #[arg(long)]
-    pub print_info: bool,
-
     /// Use custom log dir
     #[arg(long)]
     pub log_dir: Option<PathBuf>,

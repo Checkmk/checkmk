@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 import abc
 import logging
@@ -44,6 +43,7 @@ from cmk.livestatus_client import SiteConfiguration
 from cmk.utils import paths
 from cmk.utils.automation_config import RemoteAutomationConfig
 from cmk.utils.certs import (
+    issued_certificates_path,
     LocalBrokerCertificate,
     MessagingTrustedCAs,
     SiteBrokerCA,
@@ -136,6 +136,7 @@ class DefaultBrokerCertificateSync(BrokerCertificateSync):
             csr,
             relativedelta(years=2),
             SubjectAlternativeNames([SAN.dns_name(csr.subject.common_name)]),
+            cert_log=issued_certificates_path(paths.omd_root, "messaging"),
         )
 
         remote_broker_certs = messaging.BrokerCertificates(
@@ -187,7 +188,7 @@ def ask_remote_csr(
         debug=debug,
     )
 
-    match raw_response:
+    match raw_response:  # type: ignore[exhaustive-match]
         case {"csr": bytes(raw_csr)}:
             return load_pem_x509_csr(raw_csr)
 
@@ -199,7 +200,9 @@ def broker_certs_created(site_id: SiteId) -> bool:
 
 
 def create_remote_broker_certs(
-    signing_ca_bundle: PersistedCertificateWithPrivateKey, site_id: SiteId, site: SiteConfiguration
+    signing_ca_bundle: PersistedCertificateWithPrivateKey,
+    site_id: SiteId,
+    site: SiteConfiguration,  # noqa: ARG001
 ) -> messaging.BrokerCertificates:
     """
     Create a new certificate with private key for the broker of a remote site.
@@ -208,7 +211,9 @@ def create_remote_broker_certs(
     site_broker_certificate = SiteBrokerCertificate(
         messaging.site_cert_file(paths.omd_root), messaging.site_key_file(paths.omd_root)
     )
-    site_certificate_bundle = site_broker_certificate.create_bundle(site_id, signing_ca_bundle)
+    site_certificate_bundle = site_broker_certificate.create_bundle(
+        site_id, signing_ca_bundle, cert_log=issued_certificates_path(paths.omd_root, "messaging")
+    )
 
     return messaging.BrokerCertificates(
         cert=site_certificate_bundle.certificate.dump_pem().bytes,
@@ -285,7 +290,11 @@ def _create_message_broker_certs() -> CertificateWithPrivateKey:
         messaging.site_cert_file(paths.omd_root), messaging.site_key_file(paths.omd_root)
     )
     site_broker_certificate.persist(
-        bundle := site_broker_certificate.create_bundle(omd_site(), issuer=ca_bundle)
+        bundle := site_broker_certificate.create_bundle(
+            omd_site(),
+            issuer=ca_bundle,
+            cert_log=issued_certificates_path(paths.omd_root, "messaging"),
+        )
     )
 
     return bundle

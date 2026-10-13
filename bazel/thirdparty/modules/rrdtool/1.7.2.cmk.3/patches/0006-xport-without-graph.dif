@@ -1,0 +1,313 @@
+Build xport without the graph subsystem.
+
+rrd_xport.c is implemented on top of the graph engine, so upstream ties
+it to --disable-rrd_graph and thus to Cairo/Pango.  Guard only the
+drawing half with HAVE_RRD_GRAPH and keep the data engine (data_fetch,
+data_calc, print_calc, vdef_*, rrd_graph_script) unconditional, so that
+xport survives a build without Cairo/Pango.  See also
+0007-config-disable_rrd_graph.dif, which turns HAVE_RRD_GRAPH off.
+
+diff --git a/bindings/python/rrdtoolmodule.c b/bindings/python/rrdtoolmodule.c
+index 248afd41..6dbce993 100644
+--- a/bindings/python/rrdtoolmodule.c
++++ b/bindings/python/rrdtoolmodule.c
+@@ -673,6 +673,8 @@ _rrdtool_graphv(PyObject *Py_UNUSED(self), PyObject *args)
+     return ret;
+ }
+ 
++#endif /* HAVE_RRD_GRAPH */
++
+ static char _rrdtool_xport__doc__[] = "Dictionary representation of data " \
+   "stored in RRDs.\n\n\
+   Usage: xport(args..)\n\
+@@ -779,8 +781,6 @@ _rrdtool_xport(PyObject *Py_UNUSED(self), PyObject *args)
+     return ret;
+ }
+ 
+-#endif /* HAVE_RRD_GRAPH */
+-
+ static char _rrdtool_list__doc__[] = "List RRDs in storage.\n\n" \
+   "Usage: list(args..)\n\
+   Arguments:\n\n\
+@@ -1411,9 +1411,9 @@ static PyMethodDef rrdtool_methods[] = {
+      METH_VARARGS, _rrdtool_graph__doc__},
+     {"graphv", (PyCFunction)_rrdtool_graphv,
+      METH_VARARGS, _rrdtool_graphv__doc__},
++#endif
+     {"xport", (PyCFunction)_rrdtool_xport,
+      METH_VARARGS, _rrdtool_xport__doc__},
+-#endif
+     {"list", (PyCFunction)_rrdtool_list,
+      METH_VARARGS, _rrdtool_list__doc__},
+     {"tune", (PyCFunction)_rrdtool_tune,
+diff --git a/src/rrd_gfx.c b/src/rrd_gfx.c
+index dc5ea04a..4580bbff 100644
+--- a/src/rrd_gfx.c
++++ b/src/rrd_gfx.c
+@@ -23,6 +23,8 @@
+ #include "unused.h"
+ 
+ 
++#ifdef HAVE_RRD_GRAPH
++
+ /* create a new line */
+ void gfx_line(
+     image_desc_t *im,
+@@ -315,6 +317,8 @@ void gfx_text(
+ 
+ }
+ 
++#endif                          /* HAVE_RRD_GRAPH */
++
+ /* convert color */
+ struct gfx_color_t gfx_hex_to_col(
+     long unsigned int color)
+@@ -328,6 +332,8 @@ struct gfx_color_t gfx_hex_to_col(
+     return gfx_color;
+ }
+ 
++#ifdef HAVE_RRD_GRAPH
++
+ /* gridfit_lines */
+ 
+ void gfx_line_fit(
+@@ -368,3 +374,5 @@ void gfx_area_fit(
+     *y = ceil(*y);
+     cairo_device_to_user(cr, x, y);
+ }
++
++#endif                          /* HAVE_RRD_GRAPH */
+diff --git a/src/rrd_graph.c b/src/rrd_graph.c
+index d21415e7..25855949 100644
+--- a/src/rrd_graph.c
++++ b/src/rrd_graph.c
+@@ -401,7 +401,10 @@ int im_free(
+     image_desc_t *im)
+ {
+     unsigned long i, ii;
++
++#ifdef HAVE_RRD_GRAPH
+     cairo_status_t status = (cairo_status_t) 0;
++#endif
+ 
+     if (im == NULL)
+         return 0;
+@@ -439,6 +442,7 @@ int im_free(
+     }
+     free(im->gdes);
+ 
++#ifdef HAVE_RRD_GRAPH
+     if (im->init_mode == IMAGE_INIT_CAIRO) {
+     for (i = 0; i < DIM(text_prop);i++){
+         pango_font_description_free(im->text_prop[i].font_desc);
+@@ -471,6 +475,7 @@ int im_free(
+     }
+     mutex_unlock(im->fontmap_mutex);
+     }
++#endif                  /* HAVE_RRD_GRAPH */
+ 
+ 	if (im->ylegend)
+ 		free(im->ylegend);
+@@ -686,6 +691,8 @@ void expand_range(
+ }
+ 
+ 
++#ifdef HAVE_RRD_GRAPH
++
+ void apply_gridfit(
+     image_desc_t *im)
+ {
+@@ -761,6 +768,8 @@ void apply_gridfit(
+     }
+ }
+ 
++#endif                  /* HAVE_RRD_GRAPH */
++
+ /* reduce data reimplementation by Alex */
+ 
+ int rrd_reduce_data(
+@@ -2074,6 +2083,8 @@ int print_calc(
+ 
+ 
+ 
++#ifdef HAVE_RRD_GRAPH
++
+ /* place legends with color spots */
+ int leg_place(
+     image_desc_t *im,
+@@ -4447,6 +4458,8 @@ int graph_paint_xy(
+   return -1;
+ }
+ 
++#endif                  /* HAVE_RRD_GRAPH */
++
+ /*****************************************************
+  * graph stuff
+  *****************************************************/
+@@ -4533,6 +4546,8 @@ int scan_for_col(
+     return inp;
+ }
+ 
++#ifdef HAVE_RRD_GRAPH
++
+ /* Now just a wrapper around rrd_graph_v */
+ int rrd_graph(
+     int argc,
+@@ -4722,15 +4737,19 @@ rrd_set_font_desc (
+     };
+ }
+ 
++#endif                  /* HAVE_RRD_GRAPH */
++
+ void rrd_graph_init(
+     image_desc_t *im,
+     enum image_init_en init_mode)
+ {
+     unsigned int i;
++#ifdef HAVE_RRD_GRAPH
+     char     *deffont = getenv("RRD_DEFAULT_FONT");
+     static PangoFontMap *fontmap = NULL;
+     static mutex_t fontmap_mutex = MUTEX_INITIALIZER;
+     PangoContext *context;
++#endif
+ 
+     /* zero the whole structure first */
+     memset(im,0,sizeof(image_desc_t));
+@@ -4752,7 +4771,9 @@ void rrd_graph_init(
+     im->forceleftspace = 0;
+     im->gdes_c = 0;
+     im->gdes = NULL;
++#ifdef HAVE_RRD_GRAPH
+     im->graph_antialias = CAIRO_ANTIALIAS_GRAY;
++#endif
+     im->grid_dash_off = 1;
+     im->grid_dash_on = 1;
+     im->gridfit = 1;
+@@ -4814,6 +4835,7 @@ void rrd_graph_init(
+     im->init_mode = init_mode;
+     im->last_tabwidth = -1;
+ 
++#ifdef HAVE_RRD_GRAPH
+     if (init_mode == IMAGE_INIT_CAIRO) {
+         im->font_options = cairo_font_options_create();
+     im->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 10, 10);
+@@ -4855,6 +4877,7 @@ void rrd_graph_init(
+ 
+     mutex_unlock(im->fontmap_mutex);
+     }
++#endif                  /* HAVE_RRD_GRAPH */
+ 
+     for (i = 0; i < DIM(graph_col); i++)
+         im->graph_col[i] = graph_col[i];
+@@ -4863,6 +4886,8 @@ void rrd_graph_init(
+ }
+ 
+ 
++#ifdef HAVE_RRD_GRAPH
++
+ void rrd_graph_options(
+     int argc,
+     char *argv[],
+@@ -5514,6 +5539,8 @@ void rrd_graph_options(
+     im->step = max((long) im->step, (im->end - im->start) / im->xsize);
+ }
+ 
++#endif                  /* HAVE_RRD_GRAPH */
++
+ int rrd_graph_color(
+     image_desc_t
+     *im,
+diff --git a/src/rrd_graph.h b/src/rrd_graph.h
+index a2f4faa4..1c03f5e8 100644
+--- a/src/rrd_graph.h
++++ b/src/rrd_graph.h
+@@ -9,6 +9,7 @@
+    so load this early */
+ #include "rrd_config.h"
+ 
++#ifdef HAVE_RRD_GRAPH
+ #include <cairo.h>
+ #ifdef CAIRO_HAS_PDF_SURFACE
+ #include <cairo-pdf.h>
+@@ -21,6 +22,7 @@
+ #endif
+ 
+ #include <pango/pangocairo.h>
++#endif                  /* HAVE_RRD_GRAPH */
+ 
+ 
+ #include "rrd_tool.h"
+@@ -149,7 +151,11 @@ char* checkUnusedValues(parsedargs_t*);
+ typedef struct text_prop_t {
+     double    size;
+     char      font[1024];
++#ifdef HAVE_RRD_GRAPH
+     PangoFontDescription *font_desc;
++#else
++    void     *font_desc;    /* unused without Cairo/Pango */
++#endif
+ } text_prop_t;
+ 
+ 
+@@ -342,11 +348,21 @@ typedef struct image_desc_t {
+     long      prt_c;    /* number of print elements */
+     long      gdes_c;   /* number of graphics elements */
+     graph_desc_t *gdes; /* points to an array of graph elements */
++#ifdef HAVE_RRD_GRAPH
+     cairo_surface_t *surface;   /* graphics library */
+     cairo_t  *cr;       /* drawing context */
+     cairo_font_options_t *font_options; /* cairo font options */
+     cairo_antialias_t graph_antialias;  /* antialiasing for the graph */
+     PangoLayout *layout; /* the pango layout we use for writing fonts */
++#else
++    /* unused without Cairo/Pango, but kept so the struct layout does not
++       depend on the build configuration */
++    void     *surface;
++    void     *cr;
++    void     *font_options;
++    int       graph_antialias;
++    void     *layout;
++#endif
+     rrd_info_t *grinfo; /* root pointer to extra graph info */
+     rrd_info_t *grinfo_current; /* pointing to current entry */
+     GHashTable* gdef_map;  /* a map of all *def gdef entries for quick access */
+@@ -566,6 +582,8 @@ void      gfx_close_path(
+     image_desc_t *im);
+ 
+ 
++#ifdef HAVE_RRD_GRAPH
++
+ /* create a text node */
+ void      gfx_text(
+     image_desc_t *im,
+@@ -595,6 +613,8 @@ double    gfx_get_text_height(
+     double tabwidth,
+     char *text);
+ 
++#endif                  /* HAVE_RRD_GRAPH */
++
+ 
+ /* convert color */
+ gfx_color_t gfx_hex_to_col(
+diff --git a/src/rrd_tool.c b/src/rrd_tool.c
+index bbf458be..3da33a71 100644
+--- a/src/rrd_tool.c
++++ b/src/rrd_tool.c
+@@ -762,7 +762,6 @@ static int HandleInputLine(
+             free(data);
+         }
+     } else if (strcmp("xport", argv[1]) == 0) {
+-#ifdef HAVE_RRD_GRAPH
+       time_t    start, end;
+       unsigned long step, col_cnt;
+       rrd_value_t *data;
+@@ -770,9 +769,6 @@ static int HandleInputLine(
+       rrd_xport
+ 	(argc - 1, &argv[1], NULL, &start, &end, &step, &col_cnt,
+ 	 &legend_v, &data);
+-#else
+-        rrd_set_error("the instance of rrdtool has been compiled without graphics");
+-#endif
+     } else if (strcmp("graph", argv[1]) == 0) {
+ #ifdef HAVE_RRD_GRAPH
+         char    **calcpr;

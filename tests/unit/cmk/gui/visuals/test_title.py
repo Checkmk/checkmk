@@ -5,13 +5,34 @@
 
 from typing import cast
 
+import pytest
+
+from cmk.gui.config import Config
 from cmk.gui.type_defs import Visual
-from cmk.gui.visuals import visual_title
+from cmk.gui.visuals import visual_title, visual_title_without_context
+from cmk.web.utils.request_cache import RequestCache
 
 # A saved visual from before the "Context information" option existed, so it carries no
 # add_context_to_title key
 VISUAL_WITHOUT_ADD_CONTEXT_TO_TITLE = cast(Visual, {"title": "My view", "single_infos": []})
 
 
-def test_visual_title_without_add_context_to_title(request_context: None) -> None:
-    assert visual_title("view", VISUAL_WITHOUT_ADD_CONTEXT_TO_TITLE, {}) == "My view"
+@pytest.mark.usefixtures("request_context")
+def test_visual_title_without_add_context_to_title() -> None:
+    assert (
+        visual_title(
+            "view", VISUAL_WITHOUT_ADD_CONTEXT_TO_TITLE, {}, request_cache=RequestCache(Config())
+        )
+        == "My view"
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_a_visual_titled_without_its_context_names_only_the_site() -> None:
+    visual = cast(
+        Visual,
+        {"title": "Hosts of $SITE$", "single_infos": [], "add_context_to_title": True},
+    )
+    context = {"site": {"site": "mysite"}, "hostregex": {"host_regex": "web"}}
+
+    assert visual_title_without_context(visual, context) == "Hosts of mysite"

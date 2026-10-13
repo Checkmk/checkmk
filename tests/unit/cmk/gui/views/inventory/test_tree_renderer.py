@@ -3,36 +3,38 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.gui.inventory._tree import InventoryPath, TreeSource
+import cmk.utils.render
 from cmk.gui.inventory.filters import FilterInvText
+from cmk.gui.views.inventory import NodeDisplayHint
 from cmk.gui.views.inventory._display_hints import (
     _wrap_paint_function,
     AttributeDisplayHint,
     ColumnDisplayHint,
-    NodeDisplayHint,
     Table,
 )
 from cmk.gui.views.inventory._paint_functions import inv_paint_generic
 from cmk.gui.views.inventory._tree_renderer import (
+    _paint_value,
+    _paint_value_and_raw_value,
     _replace_title_placeholders,
     _SDDeltaItem,
     _SDDeltaItemsSorter,
     _SDItemsSorter,
     SDItem,
 )
-from cmk.inventory.structured_data import (
+from cmk.inventory.delta import ImmutableDeltaAttributes, ImmutableDeltaTable, SDDeltaValue
+from cmk.inventory.raw_paths import InventoryPath, TreeSource
+from cmk.inventory.trees import (
     ImmutableAttributes,
-    ImmutableDeltaAttributes,
-    ImmutableDeltaTable,
     ImmutableTable,
     RetentionInterval,
-    SDDeltaValue,
     SDKey,
     SDPath,
+    SDValue,
 )
 
 
@@ -169,6 +171,7 @@ def test_sort_table_rows_displayhint(
                 }
             ),
         ),
+        _paint_value,
         "",
         ImmutableAttributes(),
         table,
@@ -466,6 +469,7 @@ def test_sort_delta_table_rows_displayhint(
                 }
             ),
         ),
+        _paint_value,
         ImmutableDeltaAttributes(),
         delta_table,
     )
@@ -550,7 +554,7 @@ def test_sort_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_a",
                         title="",
@@ -568,7 +572,7 @@ def test_sort_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_b",
                         title="",
@@ -586,7 +590,7 @@ def test_sort_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_d",
                         title="",
@@ -604,7 +608,7 @@ def test_sort_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_c",
                         title="",
@@ -619,6 +623,7 @@ def test_sort_attributes_pairs_displayhint(
             },
             table=Table(columns={}),
         ),
+        _paint_value,
         "",
         attributes,
         ImmutableTable(),
@@ -691,7 +696,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_a",
                         title="",
@@ -709,7 +714,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_b",
                         title="",
@@ -727,7 +732,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_d",
                         title="",
@@ -745,7 +750,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     short_title="",
                     long_title="",
                     paint_function=_wrap_paint_function(inv_paint_generic),
-                    sort_function=lambda *args: 0,
+                    sort_function=lambda *args: 0,  # noqa: ARG005
                     filter=FilterInvText(
                         ident="inv_c",
                         title="",
@@ -760,6 +765,7 @@ def test_sort_delta_attributes_pairs_displayhint(
             },
             table=Table(columns={}),
         ),
+        _paint_value,
         delta_attributes,
         ImmutableDeltaTable(),
     )
@@ -808,3 +814,67 @@ def test__replace_title_placeholders(
         )
         == expected_title
     )
+
+
+def test_td_spec_tooltip_names_the_validity() -> None:
+    item = SDItem(
+        key=SDKey("key"),
+        title="Title",
+        value="value",
+        retention_interval=RetentionInterval(100, 20, 3, "previous"),
+        paint_function=_wrap_paint_function(inv_paint_generic),
+        icon_path_svc_problems="",
+    )
+    assert cmk.utils.render.date_and_time(120) in str(item.compute_td_spec(121).html_values[0])
+
+
+_EMPTY_NODE_HINT = NodeDisplayHint(
+    name="inv",
+    path=(),
+    icon="",
+    title="",
+    short_title="",
+    long_title="",
+    attributes={},
+    table=Table(columns={}),
+)
+
+
+def _painted_attributes(pairs: Mapping[SDKey, SDValue]) -> Sequence[str]:
+    return [
+        str(item.compute_td_spec(0).html_values[0])
+        for item in _SDItemsSorter(
+            _EMPTY_NODE_HINT,
+            _paint_value_and_raw_value,
+            "",
+            ImmutableAttributes(pairs=pairs),
+            ImmutableTable(),
+        ).sort_pairs()
+    ]
+
+
+def test_raw_values_follow_the_painted_values() -> None:
+    assert _painted_attributes({SDKey("enabled"): True, SDKey("ratio"): 1.5}) == [
+        'Yes <span class="muted_text">(True)</span>',
+        '1.50 <span class="muted_text">(1.5)</span>',
+    ]
+
+
+def test_raw_value_is_left_out_if_nothing_is_painted() -> None:
+    assert _painted_attributes({SDKey("empty"): ""}) == [""]
+
+
+def test_raw_values_follow_both_sides_of_a_change() -> None:
+    assert [
+        str(html_value)
+        for item in _SDDeltaItemsSorter(
+            _EMPTY_NODE_HINT,
+            _paint_value_and_raw_value,
+            ImmutableDeltaAttributes(pairs={SDKey("ratio"): SDDeltaValue(old=1.5, new=2.0)}),
+            ImmutableDeltaTable(),
+        ).sort_pairs()
+        for html_value in item.compute_td_spec(0).html_values
+    ] == [
+        '<span class="invold">1.50 <span class="muted_text">(1.5)</span></span>',
+        '<span class="invnew">2.00 <span class="muted_text">(2.0)</span></span>',
+    ]

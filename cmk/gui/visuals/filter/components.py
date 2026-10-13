@@ -10,9 +10,10 @@ from typing import Literal, override
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.query_filters import AllLabelGroupsQuery
-from cmk.gui.type_defs import ChoiceMapping, Choices, FilterHTTPVariables
+from cmk.gui.type_defs import ChoiceMapping, FilterHTTPVariables
 from cmk.gui.valuespec import DualListChoice, LabelGroups
 from cmk.web.utils.autocompleter_config import AutocompleterConfig
+from cmk.web.utils.choices import Choice
 
 
 @dataclass(kw_only=True, slots=True)
@@ -26,11 +27,15 @@ class BaseComponent(ABC):
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
         pass
 
+    @abstractmethod
+    def is_configured(self, current_values: FilterHTTPVariables) -> bool:
+        """Whether this component holds a value the filter can use."""
+
 
 @dataclass(kw_only=True, slots=True)
 class HorizontalGroup(BaseComponent):
     component_type: Literal["horizontal_group"] = "horizontal_group"
-    components: list["FilterComponent"]
+    components: list[FilterComponent]
 
     def __post_init__(self) -> None:
         if not self.components:
@@ -43,6 +48,10 @@ class HorizontalGroup(BaseComponent):
             html.open_nobr()
             component.render_html(filter_id, current_values)
             html.close_nobr()
+
+    @override
+    def is_configured(self, current_values: FilterHTTPVariables) -> bool:
+        return all(component.is_configured(current_values) for component in self.components)
 
 
 @dataclass(kw_only=True, slots=True)
@@ -75,6 +84,10 @@ class Dropdown(BaseComponent):
         if self.label:
             html.close_nobr()
 
+    @override
+    def is_configured(self, current_values: FilterHTTPVariables) -> bool:
+        return current_values.get(self.id, "") != "" or "" in self.choices
+
 
 @dataclass(kw_only=True, slots=True)
 class DynamicDropdown(BaseComponent):
@@ -98,9 +111,14 @@ class DynamicDropdown(BaseComponent):
         )
 
         if self.has_validation:
-            html.javascript(
-                f"cmk.valuespecs.init_on_change_validation('{self.id}', '{filter_id}');"
+            html.call_ts_function(
+                function_name="init_on_change_validation",
+                arguments={"varname": self.id, "filter_ident": filter_id},
             )
+
+    @override
+    def is_configured(self, current_values: FilterHTTPVariables) -> bool:
+        return current_values.get(self.id, "") != ""
 
 
 @dataclass(kw_only=True, slots=True)
@@ -114,6 +132,10 @@ class Checkbox(BaseComponent):
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
         current_value = bool(current_values.get(self.id, self.default_value))
         html.checkbox(self.id, deflt=current_value, label=self.label)
+
+    @override
+    def is_configured(self, current_values: FilterHTTPVariables) -> bool:
+        return True
 
 
 @dataclass(kw_only=True, slots=True)
@@ -144,6 +166,10 @@ class CheckboxGroup(BaseComponent):
             html.checkbox(var, bool(current_values.get(var, checkbox_default)), label=text)
         html.end_checkbox_group()
 
+    @override
+    def is_configured(self, current_values: FilterHTTPVariables) -> bool:
+        return True
+
 
 @dataclass(kw_only=True, slots=True)
 class TextInput(BaseComponent):
@@ -160,6 +186,10 @@ class TextInput(BaseComponent):
         html.text_input(varname=self.id, default_value=current_values.get(self.id, ""))
         if self.suffix:
             html.write_text_permissive(self.suffix)
+
+    @override
+    def is_configured(self, current_values: FilterHTTPVariables) -> bool:
+        return current_values.get(self.id, "") != ""
 
 
 @dataclass(kw_only=True, slots=True)
@@ -195,6 +225,10 @@ class MultiselectWithFreeText(BaseComponent):
             html.write_text_permissive(self.label)
         html.text_input(varname=self.id, default_value=current_values.get(self.id, ""))
 
+    @override
+    def is_configured(self, current_values: FilterHTTPVariables) -> bool:
+        return True
+
 
 @dataclass(kw_only=True, slots=True)
 class RadioButton(BaseComponent):
@@ -219,6 +253,10 @@ class RadioButton(BaseComponent):
         for state, text in self.choices.items():
             html.radiobutton(self.id, state, pick == state, text + " &nbsp; ")
         html.end_radio_group()
+
+    @override
+    def is_configured(self, current_values: FilterHTTPVariables) -> bool:
+        return True
 
 
 @dataclass(kw_only=True, slots=True)
@@ -255,24 +293,25 @@ class Slider(BaseComponent):
         html.open_table()
         html.tr("", id_=self.id, css=["range_input"])
         html.close_table()
-        html.javascript(
-            "cmk.nodevis.utils.render_input_range(cmk.d3.select(%s), %s, %s)"
-            % (
-                json.dumps(f"#{self.id}"),
-                json.dumps(
-                    {
-                        "id": self.id,
-                        "title": "",
-                        "step": self.step,
-                        "min": self.min_value,
-                        "max": self.max_value,
-                        "default_value": self.default_value,
-                    },
-                ),
-                json.dumps(actual_value),
-            ),
-            data_cmk_execute_after_replace="",
+        html.call_ts_function(
+            function_name="render_input_range",
+            arguments={
+                "selector": f"#{self.id}",
+                "range_options": {
+                    "id": self.id,
+                    "title": "",
+                    "step": self.step,
+                    "min": self.min_value,
+                    "max": self.max_value,
+                    "default_value": self.default_value,
+                },
+                "value": actual_value,
+            },
         )
+
+    @override
+    def is_configured(self, current_values: FilterHTTPVariables) -> bool:
+        return True
 
 
 @dataclass(kw_only=True, slots=True)
@@ -286,6 +325,10 @@ class StaticText(BaseComponent):
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
         html.write_text_permissive(self.text)
 
+    @override
+    def is_configured(self, current_values: FilterHTTPVariables) -> bool:
+        return True
+
 
 @dataclass(kw_only=True, slots=True)
 class Hidden(BaseComponent):
@@ -296,6 +339,10 @@ class Hidden(BaseComponent):
     @override
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
         html.hidden_field(self.id, self.value, add_var=True)
+
+    @override
+    def is_configured(self, current_values: FilterHTTPVariables) -> bool:
+        return True
 
 
 @dataclass(kw_only=True, slots=True)
@@ -315,6 +362,10 @@ class DualList(BaseComponent):
         selected = current_values.get(self.id, "").split("|")
         DualListChoice(choices=choices, rows=4, enlarge_active=True).render_input(self.id, selected)
 
+    @override
+    def is_configured(self, current_values: FilterHTTPVariables) -> bool:
+        return True
+
 
 @dataclass(kw_only=True, slots=True)
 class LabelGroupFilterComponent(BaseComponent):
@@ -330,6 +381,10 @@ class LabelGroupFilterComponent(BaseComponent):
             self.id,
             AllLabelGroupsQuery(object_type=self.object_type).parse_value(current_values),
         )
+
+    @override
+    def is_configured(self, current_values: FilterHTTPVariables) -> bool:
+        return True
 
 
 @dataclass(kw_only=True, slots=True)
@@ -348,7 +403,7 @@ class TagFilterComponent(BaseComponent):
 
     @override
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
-        operators: Choices = [
+        operators: list[Choice] = [
             ("is", "="),
             ("isnot", "≠"),
         ]
@@ -414,6 +469,10 @@ class TagFilterComponent(BaseComponent):
             html.close_td()
             html.close_tr()
         html.close_table()
+
+    @override
+    def is_configured(self, current_values: FilterHTTPVariables) -> bool:
+        return True
 
 
 type FilterComponent = (

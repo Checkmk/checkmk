@@ -37,7 +37,7 @@ class BackupExclusions:
     logs: bool
 
     @classmethod
-    def from_options(cls, options: CommandOptions) -> "BackupExclusions":
+    def from_options(cls, options: CommandOptions) -> BackupExclusions:
         if "no-past" in options:
             return cls(rrds=False, agents=False, logs=False)
         return cls(
@@ -47,7 +47,7 @@ class BackupExclusions:
         )
 
     @classmethod
-    def from_args(cls, args: Backup) -> "BackupExclusions":
+    def from_args(cls, args: Backup) -> BackupExclusions:
         return cls(rrds=args.rrds, agents=args.agents, logs=args.logs)
 
 

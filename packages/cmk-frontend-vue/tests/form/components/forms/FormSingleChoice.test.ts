@@ -52,7 +52,32 @@ test('FormSingleChoice renders something when noting is selected', () => {
   const element = screen.getByLabelText<HTMLInputElement>('fooLabel')
 
   expect(element).toHaveAccessibleName('fooLabel')
-  expect(element).toHaveTextContent('some input hint(required)')
+  expect(element).toHaveTextContent('some input hint')
+})
+
+test('FormSingleChoice marks required next to its label', () => {
+  const { container } = render(FormSingleChoice, {
+    props: {
+      spec,
+      data: null,
+      backendValidation: []
+    }
+  })
+
+  expect(screen.getByLabelText<HTMLInputElement>('fooLabel')).toHaveTextContent(/^some input hint$/)
+  expect(container.querySelector('label')).toHaveTextContent(/^fooLabel\s*\(required\)$/)
+})
+
+test('FormSingleChoice marks required in the dropdown without label and title', () => {
+  render(FormSingleChoice, {
+    props: {
+      spec: { ...spec, label: null, title: '' },
+      data: null,
+      backendValidation: []
+    }
+  })
+
+  expect(screen.getByRole('combobox')).toHaveTextContent('some input hint(required)')
 })
 
 test('FormSingleChoice updates data', async () => {

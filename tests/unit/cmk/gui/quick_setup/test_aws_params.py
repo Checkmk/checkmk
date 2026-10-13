@@ -5,7 +5,7 @@
 
 
 from cmk.gui.quick_setup.config_setups.aws.stages import aws_transform_to_disk
-from cmk.plugins.aws.server_side_calls.aws_agent_call import special_agent_aws
+from cmk.plugins.aws_deprecated.server_side_calls.aws_agent_call import special_agent_aws
 from cmk.server_side_calls.v1 import HostConfig, Secret
 
 QUICK_SETUP_PARAMS = {

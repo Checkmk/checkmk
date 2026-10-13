@@ -20,7 +20,6 @@ py_library(
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/openapi/shared_endpoint_families",
         "//cmk/gui/token_auth",
-        "//cmk/gui/utils:middle",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:registries",
         "//cmk/utils",

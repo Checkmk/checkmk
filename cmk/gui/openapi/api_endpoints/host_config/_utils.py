@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from collections.abc import Callable, Iterable, Sequence
-from typing import get_type_hints
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from http import HTTPStatus
+from typing import Final, get_type_hints
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site
@@ -21,8 +22,8 @@ from cmk.gui.openapi.restful_objects import constructors
 from cmk.gui.openapi.utils import EXT, ProblemException
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
-from cmk.gui.watolib.host_attributes import HostAttributes
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
+from cmk.gui.watolib.host_attributes import deprecated_attributes_set_anew, HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
@@ -40,7 +41,7 @@ from .models.response_models import (
 
 
 class AgentLinkHook:
-    create_links: Callable[[HostName], list[LinkModel]] = lambda h: []
+    create_links: Callable[[HostName], list[LinkModel]] = lambda h: []  # noqa: ARG005
 
 
 def make_pending_changes(api_context: ApiContext) -> PendingChanges:
@@ -191,7 +192,7 @@ def host_etag(host: Host) -> ETag:
 
 
 def validate_host_attributes_for_quick_setup(host: Host, body: UpdateHost) -> bool:
-    if not is_locked_by_quick_setup(host.locked_by()):
+    if not is_locked_by_config_bundle(host.locked_by()):
         return True
 
     locked_attributes: Sequence[str] = host.attributes.get("locked_attributes", [])
@@ -236,7 +237,7 @@ def bulk_host_action_response(
         success_bytes = json_dump_without_omitted(HostConfigCollectionModel, host_collection)
         success_dict = json.loads(success_bytes)
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Some actions failed",
             detail=f"Some of the actions were performed but the following were faulty and "
             f"were skipped: {', '.join(failed_hosts)}.",
@@ -249,3 +250,40 @@ def bulk_host_action_response(
         )
 
     return host_collection
+
+
+#: Attributes the API does not model. A full replacement of "attributes" has to carry them over,
+#: or the request would silently drop configuration it never saw.
+UNEXPOSED_HOST_ATTRIBUTES: Final = ("meta_data",)
+
+
+def carry_over_unexposed_attributes(
+    stored: HostAttributes, attributes: HostAttributes
+) -> HostAttributes:
+    """A copy of a replacement value with the attributes the API cannot express put back in."""
+    carried = attributes.copy()
+    for name in UNEXPOSED_HOST_ATTRIBUTES:
+        if name in stored:
+            carried[name] = stored[name]
+    return carried
+
+
+def deprecated_attributes_error(
+    stored: Mapping[str, object], attributes: Mapping[str, object]
+) -> str | None:
+    if deprecated := deprecated_attributes_set_anew(stored, attributes):
+        return (
+            "The following attributes are deprecated and can only be changed, completed or "
+            "removed on hosts and folders that already have one of them set: "
+            f"{', '.join(deprecated)}"
+        )
+    return None
+
+
+def reject_deprecated_attributes(
+    stored: Mapping[str, object], attributes: Mapping[str, object]
+) -> None:
+    if (error := deprecated_attributes_error(stored, attributes)) is not None:
+        raise ProblemException(
+            status=HTTPStatus.BAD_REQUEST, title="Deprecated attributes cannot be set", detail=error
+        )

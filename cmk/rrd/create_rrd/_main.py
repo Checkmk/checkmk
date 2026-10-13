@@ -15,7 +15,7 @@ from .. import RRDConfig, RRDCreator, RRDInterface, RRDPaths
 
 
 # register SIGINT handler for consistent CTRL+C handling
-def _handle_keepalive_interrupt(signum: int, frame: FrameType | None) -> NoReturn:
+def _handle_keepalive_interrupt(signum: int, frame: FrameType | None) -> NoReturn:  # noqa: ARG001
     raise MKTerminate
 
 

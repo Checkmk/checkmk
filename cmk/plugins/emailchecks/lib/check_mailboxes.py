@@ -52,7 +52,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
         help="number of mails above which the check will become critical",
     )
 
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--mailbox",
         type=str,
         nargs="+",

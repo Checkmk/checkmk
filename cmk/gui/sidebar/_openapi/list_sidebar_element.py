@@ -17,8 +17,8 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
     LinkModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.sidebar._openapi.endpoint_family import SIDEBAR_ELEMENT_FAMILY
@@ -27,13 +27,13 @@ from cmk.web.utils import permission_verification as permissions
 
 
 @api_model
-class SidebarElementModel(DomainObjectModel):
-    domainType: Literal["constant"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
+class SidebarElementModel(TitledDomainObjectModel):
+    domainType: Literal["constant"] = api_field(description="The domain type of the object.")
 
 
 @api_model
 class SidebarElementModelCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["constant"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["constant"] = api_field(
         description="The domain type of the objects in the collection"
     )
     value: list[SidebarElementModel] = api_field(

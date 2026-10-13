@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
+from cmk.plugins.fireeye.lib import DETECT
+
+# .1.3.6.1.4.1.25597.11.5.1.10.0 1
+# .1.3.6.1.4.1.25597.11.5.1.11.0 1
+# .1.3.6.1.4.1.25597.11.5.1.12.0 1
+
+
+def check_fireeye_lic_active(section: StringTable) -> CheckResult:
+    product, content, support = section[0]
+    for feature, value in [("Product", product), ("Content", content), ("Support", support)]:
+        if value == "1":
+            yield Result(state=State.OK, summary=f"{feature} license active")
+        else:
+            yield Result(state=State.CRIT, summary=f"{feature} license not active")
+
+
+def parse_fireeye_lic_active(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+def discover_fireeye_lic_active(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
+
+
+snmp_section_fireeye_lic_active = SimpleSNMPSection(
+    name="fireeye_lic_active",
+    parse_function=parse_fireeye_lic_active,
+    detect=DETECT,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.25597.11.5.1",
+        oids=["10", "11", "12"],
+    ),
+)
+
+
+check_plugin_fireeye_lic_active = CheckPlugin(
+    name="fireeye_lic_active",
+    service_name="Active Licenses",
+    discovery_function=discover_fireeye_lic_active,
+    check_function=check_fireeye_lic_active,
+)

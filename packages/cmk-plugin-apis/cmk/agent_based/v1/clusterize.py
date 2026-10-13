@@ -13,8 +13,10 @@ from ._checking_classes import Metric as _Metric
 from ._checking_classes import Result as _Result
 from ._checking_classes import State as _State
 
+type _Marker = _Literal["", "(!)", "(!!)", "(?)"]
 
-def _state_marker(state: _State) -> _Literal["", "(!)", "(!!)", "(?)"]:
+
+def _state_marker(state: _State) -> _Marker:
     match state:
         case _State.OK:
             return ""

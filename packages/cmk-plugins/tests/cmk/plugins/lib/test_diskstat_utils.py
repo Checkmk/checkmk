@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import datetime
 import time
-from collections.abc import Iterable, Mapping, MutableMapping
+from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -92,7 +91,9 @@ SECTION: Mapping[str, Mapping] = {
         ),
     ],
 )
-def test_discovery_diskstat_generic(params, section, exp_res) -> None:  # type: ignore[misc]
+def test_discovery_diskstat_generic(  # type: ignore[misc]
+    params: Sequence[Mapping[str, Any]], section: Iterable[str], exp_res: Sequence[Service]
+) -> None:
     assert list(diskstat.discovery_diskstat_generic(params, section)) == exp_res
 
 
@@ -117,11 +118,11 @@ DISK = {
 
 
 def _compute_rates_single_disk(
-    disk,
-    value_store,
-    value_store_suffix=".",
-):
-    disk_w_rates = {}
+    disk: diskstat.Disk,
+    value_store: MutableMapping[str, Any],
+    value_store_suffix: str = ".",
+) -> diskstat.Disk:
+    disk_w_rates: dict[str, float] = {}
     raise_ignore_res_error = False
     now = time.time()
 

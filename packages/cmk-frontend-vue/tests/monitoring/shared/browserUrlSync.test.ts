@@ -3,15 +3,11 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { browserUrlSync } from '@/monitoring/shared/browserUrlSync'
 
 describe('browserUrlSync', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   it('reads the current pathname/search/hash from window.location', () => {
     const original = window.location
     Object.defineProperty(window, 'location', {
@@ -26,6 +22,34 @@ describe('browserUrlSync', () => {
     })
 
     Object.defineProperty(window, 'location', { value: original, configurable: true })
+  })
+
+  it('reports a hand-edited fragment, which fires hashchange rather than popstate', () => {
+    const listener = vi.fn()
+    const unsubscribe = browserUrlSync.onNavigate(listener)
+
+    window.dispatchEvent(new HashChangeEvent('hashchange'))
+
+    expect(listener).toHaveBeenCalledTimes(1)
+
+    unsubscribe()
+    window.dispatchEvent(new HashChangeEvent('hashchange'))
+
+    expect(listener).toHaveBeenCalledTimes(1)
+  })
+
+  it('reports a history walk', () => {
+    const listener = vi.fn()
+    const unsubscribe = browserUrlSync.onNavigate(listener)
+
+    window.dispatchEvent(new PopStateEvent('popstate'))
+
+    expect(listener).toHaveBeenCalledTimes(1)
+
+    unsubscribe()
+    window.dispatchEvent(new PopStateEvent('popstate'))
+
+    expect(listener).toHaveBeenCalledTimes(1)
   })
 
   it('writes via history.replaceState, never pushState, forwarding the current history state', () => {

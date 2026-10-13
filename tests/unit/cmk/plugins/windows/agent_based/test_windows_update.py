@@ -8,7 +8,7 @@ from typing import Final
 import pytest
 from pytest_mock.plugin import MockerFixture
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.windows.agent_based import windows_updates
 
 SECTION_OK: Final = windows_updates.Section(
@@ -65,10 +65,6 @@ def test_parse_windows_updates_failed() -> None:
         windows_updates.parse_windows_updates([x.split() for x in OUTPUT_FAILED.splitlines()[1:]])
         == SECTION_FAILED
     )
-
-
-def test_discover_windows_updates() -> None:
-    assert list(windows_updates.discover(section=SECTION_OK)) == [Service()]
 
 
 def test_check_windows_updates_ok() -> None:

@@ -5,12 +5,18 @@
 
 
 import base64
+import contextlib
+import errno
 import json
+import socket
+import ssl
+import tempfile
 from pathlib import Path
 
 import pytest
+import requests
 
-from cmk.server_side_programs.v1_unstable import report_agent_crashes
+from cmk.server_side_programs.v1 import report_agent_crashes
 
 TEST_AGENT = "test_agent"
 TEST_HOST = "test_host"
@@ -88,6 +94,52 @@ def test_no_crash_reported_return(fixed_path: Path, exitcode: int) -> None:
     assert not list(fixed_path.iterdir())
 
 
+@pytest.mark.parametrize(
+    "cause",
+    [
+        pytest.param(
+            socket.gaierror(-3, "Temporary failure in name resolution"), id="name-resolution"
+        ),
+        pytest.param(ConnectionRefusedError(111, "Connection refused"), id="connection-refused"),
+        pytest.param(TimeoutError("timed out"), id="timeout"),
+        pytest.param(ssl.SSLCertVerificationError("certificate verify failed"), id="tls"),
+    ],
+)
+def test_no_crash_reported_for_network_error(
+    fixed_path: Path, capsys: pytest.CaptureFixture[str], cause: OSError
+) -> None:
+    @report_agent_crashes("smith", "3.14.15p92")
+    def main() -> int:
+        raise requests.ConnectionError("Max retries exceeded") from cause
+
+    assert main() == 1
+    assert not list(fixed_path.iterdir())
+    assert capsys.readouterr().err.endswith("Failed: Max retries exceeded\n")
+
+
+def test_crash_reported_for_non_network_os_error(fixed_path: Path) -> None:
+    @report_agent_crashes("smith", "3.14.15p92")
+    def main() -> int:
+        raise RuntimeError("cannot load config") from FileNotFoundError(2, "No such file")
+
+    _ = main()
+
+    assert len(list((fixed_path / "agent").iterdir())) == 1
+
+
+def test_crash_reported_for_bug_while_handling_network_error(fixed_path: Path) -> None:
+    @report_agent_crashes("smith", "3.14.15p92")
+    def main() -> int:
+        try:
+            raise ConnectionRefusedError(111, "Connection refused")
+        except OSError:
+            raise KeyError("fallback")
+
+    _ = main()
+
+    assert len(list((fixed_path / "agent").iterdir())) == 1
+
+
 def test_type_info_preserved() -> None:
     @report_agent_crashes("smith", "3.14.15p92")
     def main(_a: str) -> int:
@@ -112,3 +164,36 @@ def test_crash_report_masks_secrets(fixed_path: Path) -> None:
     assert (
         local_vars == b"{'_moo': {'foo': 'bar', 'passphrase': 'redacted'}, '_secret': 'redacted'}"
     )
+
+
+def test_an_interrupted_write_leaves_no_crash_info(
+    monkeypatch: pytest.MonkeyPatch, fixed_path: Path
+) -> None:
+    """crash.info marks the directory complete, so a half-written one would pass for whole."""
+    real_named_temp_file = tempfile.NamedTemporaryFile
+    wrote = []
+
+    def fail_half_way(*args: object, **kwargs: object) -> object:
+        handle = real_named_temp_file(*args, **kwargs)  # type: ignore[call-overload]
+        real_write = handle.write
+
+        def half_a_write(data: str) -> int:
+            wrote.append(data)
+            real_write(data[: len(data) // 2])
+            raise OSError(errno.EIO, "Input/output error")
+
+        handle.write = half_a_write
+        return handle
+
+    monkeypatch.setattr(tempfile, "NamedTemporaryFile", fail_half_way)
+
+    @report_agent_crashes("smith", "3.14.15p92")
+    def main() -> int:
+        raise ValueError("test exception")
+
+    with contextlib.suppress(OSError):
+        main()
+
+    assert wrote, "the interrupted-write path was never taken"
+    (crash_dir,) = (fixed_path / "agent").iterdir()
+    assert list(crash_dir.iterdir()) == []

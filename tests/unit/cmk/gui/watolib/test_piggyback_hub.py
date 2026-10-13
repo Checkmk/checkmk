@@ -98,6 +98,14 @@ def test_update_sites_with_hub_config() -> None:
             pytest.raises(MKUserError),
             id="only_remote_site_enabled",
         ),
+        pytest.param(
+            {
+                "central_site": {},
+                "remote_site_1": {"site_piggyback_hub": True},
+            },
+            does_not_raise(),
+            id="setting_unavailable_on_the_central_site",
+        ),
     ],
 )
 def test_validate_piggyback_hub_config(

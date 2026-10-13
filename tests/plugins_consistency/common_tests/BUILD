@@ -3,13 +3,13 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
     name = "common_tests",
+    testonly = True,
     srcs = glob(["**/*.py"]),
+    imports = ["../../.."],
     visibility = ["//tests/plugins_consistency:__subpackages__"],
     deps = [
-        "//cmk/gui:general_pages",
         "//cmk/gui/dashboard",
         "//cmk/gui/graphing",
-        "//cmk/legacy_checks",
         "//cmk/plugins",
         "//cmk/server_side_calls_backend",
         "//cmk/utils",

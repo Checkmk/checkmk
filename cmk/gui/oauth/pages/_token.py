@@ -8,16 +8,16 @@ import hashlib
 import hmac
 import http.client as http_client
 import re
-from collections.abc import Callable
 from datetime import datetime, timedelta, UTC
 from typing import Literal, override
 
+from cmk.ccc.resulttype import Error, OK
 from cmk.ccc.user import UserId
 from cmk.gui.http import request, response
 from cmk.gui.log import logger
 from cmk.gui.oauth.pages._models import OAuthTokenErrorResponse, OAuthTokenResponse
 from cmk.gui.oauth.store._auth_code_store import AuthCodeStore
-from cmk.gui.oauth.store.token_store import get_token_store, UnknownClientError
+from cmk.gui.oauth.token.token_store import get_token_store, UnknownClient
 from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.scopes import format_scopes, parse_scopes
 from cmk.gui.utils.security_log_events import OAuthTokenFailureEvent
@@ -49,7 +49,7 @@ def _error(error: _TokenError) -> None:
     """RFC 6749 section 5.2 error response: HTTP 400 with a JSON body."""
     response.status_code = http_client.BAD_REQUEST
     response.set_content_type("application/json")
-    response.set_data(OAuthTokenErrorResponse(error=error).model_dump_json(exclude_none=True))
+    response.set_data(OAuthTokenErrorResponse(error=error).model_dump_json())
 
 
 def _matches_challenge(code_verifier: str, code_challenge: str) -> bool:
@@ -69,9 +69,7 @@ class OAuthTokenPage(Page):
     """RFC 6749 section 3.2 token endpoint for this site.
 
     Accessed unauthenticated, referenced via the "token_endpoint" field of the
-    RFC 8414 authorization server metadata document. Returns 404 while no
-    OAuth-consuming feature is enabled for the site (the enabled predicate is
-    injected at registration).
+    RFC 8414 authorization server metadata document.
 
     The request shape is validated (POST, form encoding, grant_type, required
     parameters, code_verifier syntax), authorization codes are redeemed
@@ -85,18 +83,11 @@ class OAuthTokenPage(Page):
     here instead of on its first rejected write.
     Rejections follow the RFC 6749 section 5.2 error format. The returned
     access token is a real, store-backed token issued for the record's user
-    (see cmk.gui.oauth.store.token_store).
+    (see cmk.gui.oauth.token.token_store).
     """
-
-    def __init__(self, enabled: Callable[[], bool]) -> None:
-        self._enabled = enabled
 
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        if not self._enabled():
-            response.status_code = http_client.NOT_FOUND
-            return None
-
         # RFC 6749 section 5.1/5.2: token endpoint responses carry tokens or
         # error details and MUST NOT be cached. Set up front to cover every
         # exit path below.
@@ -196,25 +187,27 @@ class OAuthTokenPage(Page):
         # scopes into the AuthCodeStore ourselves. If it still goes wrong it's not a user error.
         granted_scopes = parse_scopes(record.scope)
 
-        try:
-            access_token = get_token_store().issue_token(
+        with get_token_store() as store:
+            match store.issue_token(
                 UserId(record.user_id),
                 expires_at=datetime.now(UTC) + _ACCESS_TOKEN_TTL,
                 resource=record.resource,
                 scope=granted_scopes,
                 client_id=record.client_id,
-            )
-        except UnknownClientError:
-            # The client was deleted after the code was issued. Its grants
-            # died with it (tokens.client_id is ON DELETE CASCADE), so the
-            # code must not become a token either.
-            _error("invalid_grant")
-            return None
-
-        response.set_content_type("application/json")
-        response.set_data(
-            OAuthTokenResponse(
-                access_token=access_token, scope=format_scopes(granted_scopes)
-            ).model_dump_json()
-        )
-        return None
+            ):
+                case Error(UnknownClient()):
+                    # The client was deleted after the code was issued. Its grants
+                    # died with it (tokens.client_id is ON DELETE CASCADE), so the
+                    # code must not become a token either.
+                    _error("invalid_grant")
+                    return None
+                case OK(access_token):
+                    response.set_content_type("application/json")
+                    response.set_data(
+                        OAuthTokenResponse(
+                            access_token=access_token, scope=format_scopes(granted_scopes)
+                        ).model_dump_json()
+                    )
+                    return None
+                case _:
+                    assert False

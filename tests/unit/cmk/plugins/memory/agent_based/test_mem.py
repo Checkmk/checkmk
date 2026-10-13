@@ -5,9 +5,9 @@
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Attributes, StringTable
 from cmk.plugins.lib.memory import SectionMem
-from cmk.plugins.memory.agent_based.mem import parse_proc_meminfo_bytes
+from cmk.plugins.memory.agent_based.mem import inventorize_mem, parse_proc_meminfo_bytes
 
 
 @pytest.mark.parametrize(
@@ -109,3 +109,29 @@ from cmk.plugins.memory.agent_based.mem import parse_proc_meminfo_bytes
 )
 def test_cpu_threads_regression(section: StringTable, parsed: SectionMem | None) -> None:
     assert parsed == parse_proc_meminfo_bytes(section)
+
+
+def test_windows_section_is_inventorized_as_installed_ram() -> None:
+    section = parse_proc_meminfo_bytes(
+        [
+            ["MemTotal:", "16777216", "kB"],
+            ["MemFree:", "8388608", "kB"],
+            ["SwapTotal:", "2097152", "kB"],
+            ["SwapFree:", "2097152", "kB"],
+            ["PageTotal:", "18874368", "kB"],
+            ["PageFree:", "10485760", "kB"],
+            ["VirtualTotal:", "137438953344", "kB"],
+            ["VirtualFree:", "137438429056", "kB"],
+        ]
+    )
+    assert section is not None
+
+    assert list(inventorize_mem(section)) == [
+        Attributes(
+            path=["hardware", "memory"],
+            inventory_attributes={
+                "total_ram_usable": 17179869184,
+                "total_swap": 2147483648,
+            },
+        )
+    ]

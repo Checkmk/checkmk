@@ -23,6 +23,7 @@ py_library(
         "//cmk/gui/valuespec",
         "//packages/cmk-ccc:plugin-registry",
         requirement("pydantic"),
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 

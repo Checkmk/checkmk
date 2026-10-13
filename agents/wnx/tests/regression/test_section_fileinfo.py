@@ -150,9 +150,12 @@ def use_testfiles():
             shutil.rmtree(d)
 
 
-@pytest.mark.usefixtures("use_testfiles")
+@pytest.mark.usefixtures("use_testfiles", "testconfig")
 def test_section_fileinfo(  # type: ignore[misc]
-    request, testconfig, expected_output: Sequence[str] | None, actual_output, testfile
+    request,
+    expected_output: Sequence[str] | None,
+    actual_output,
+    testfile,
 ) -> None:
     # request.node.name gives test name
     local_test(expected_output, actual_output, testfile, request.node.name)

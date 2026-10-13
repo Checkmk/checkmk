@@ -4,36 +4,33 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
-from ast import literal_eval
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import override
 
+from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.automations.results import (
-    ABCAutomationResult,
     DiagSpecialAgentHostConfig,
     DiagSpecialAgentInput,
     Gateway,
     GatewayResult,
     NotifyResult,
     ScanParentsResult,
-    SerializedResult,
     ServiceDiscoveryPreviewResult,
     ServiceDiscoveryResult,
 )
-from cmk.automations.types import AutomationID
 from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.checkengine.discovery import DiscoveryReport as SingleHostDiscoveryResult
 from cmk.checkengine.plugins import SectionName
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.ruleset_matcher.labels import HostLabel
 from cmk.utils.ip_lookup import IPStackConfig
 
 
 @dataclass
-class AutomationResultTest(ABCAutomationResult):
+class AutomationResultTest(AutomationResult):
     a: int
     b: str
     c: bool
@@ -61,7 +58,7 @@ def test_serialization() -> None:
         },
     )
     assert automation_res_test == AutomationResultTest.deserialize(
-        automation_res_test.serialize(cmk_version.Version.from_str(cmk_version.__version__))
+        automation_res_test.serialize(cmk_version.__version__)
     )
 
 
@@ -73,28 +70,8 @@ class TestDiscoveryResult:
 
     def test_serialization(self) -> None:
         assert ServiceDiscoveryResult.deserialize(
-            ServiceDiscoveryResult(self.HOSTS).serialize(
-                cmk_version.Version.from_str(cmk_version.__version__)
-            )
+            ServiceDiscoveryResult(self.HOSTS).serialize(cmk_version.__version__)
         ) == ServiceDiscoveryResult(self.HOSTS)
-
-    def test_serialization_to_past(self) -> None:
-        assert literal_eval(
-            ServiceDiscoveryResult(self.HOSTS).serialize(cmk_version.Version.from_str("2.4.0p1"))
-        )["host_1"] == {
-            "self_new": 0,
-            "self_changed": 0,
-            "self_removed": 0,
-            "self_kept": 0,
-            "self_new_host_labels": 0,
-            "self_total_host_labels": 0,
-            "clustered_ignored": 0,
-            "clustered_new": 0,
-            "clustered_old": 0,
-            "clustered_vanished": 0,
-            "error_text": None,
-            "diff_text": None,
-        }
 
 
 class TestTryDiscoveryResult:
@@ -130,15 +107,13 @@ class TestTryDiscoveryResult:
             config_warnings=["Don't leave your luggage unattended."],
         )
         assert (
-            ServiceDiscoveryPreviewResult.deserialize(
-                result.serialize(cmk_version.Version.from_str(cmk_version.__version__))
-            )
+            ServiceDiscoveryPreviewResult.deserialize(result.serialize(cmk_version.__version__))
             == result
         )
 
 
 class TestScanParentsResult:
-    SERIALIZED_RESULT = SerializedResult("([((None, '108.170.228.254', None), 'gateway', 0, '')],)")
+    SERIALIZED_RESULT = "([((None, '108.170.228.254', None), 'gateway', 0, '')],)"
 
     DESERIALIZED_RESULT = ScanParentsResult(
         results=[
@@ -154,9 +129,7 @@ class TestScanParentsResult:
     def test_serialization_roundtrip(self) -> None:
         assert (
             ScanParentsResult.deserialize(
-                self.DESERIALIZED_RESULT.serialize(
-                    cmk_version.Version.from_str(cmk_version.__version__)
-                )
+                self.DESERIALIZED_RESULT.serialize(cmk_version.__version__)
             )
             == self.DESERIALIZED_RESULT
         )
@@ -230,7 +203,5 @@ class TestDiagSpecialAgentInput:
 
 def test_notify_result_serialization() -> None:
     original = NotifyResult(exit_code=0, output="All good!")
-    deserialized = NotifyResult.deserialize(
-        original.serialize(cmk_version.Version.from_str(cmk_version.__version__))
-    )
+    deserialized = NotifyResult.deserialize(original.serialize(cmk_version.__version__))
     assert original == deserialized

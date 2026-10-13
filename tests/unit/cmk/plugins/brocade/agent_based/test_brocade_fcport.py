@@ -306,7 +306,7 @@ def test_discovery_idx(section_idx: bf.Section) -> None:
 
 def test_check_idx(section_idx: bf.Section) -> None:
     assert list(
-        bf._check_brocade_fcport(
+        bf._check_brocade_fcport(  # noqa: SLF001
             "44 ISL port44",
             {
                 "assumed_speed": 2.0,
@@ -361,7 +361,7 @@ def test_check_with_if64() -> None:
     section = bf.parse_brocade_fcport(_STRING_TABLE_WITH_IF64)
     assert section
     assert list(
-        bf._check_brocade_fcport(
+        bf._check_brocade_fcport(  # noqa: SLF001
             "00 VSP01_1A",
             {
                 "rxcrcs": (3.0, 20.0),
@@ -431,7 +431,7 @@ def _get_check_result(section: bf.Section, item: str) -> list[IgnoreResults | Me
             # TODO: there is something wrong with the plugin.
             # it take 10 test-cycles until all rates are valid.
             _ = list(
-                bf._check_brocade_fcport(
+                bf._check_brocade_fcport(  # noqa: SLF001
                     item=item,
                     params={},
                     section=section,
@@ -441,7 +441,7 @@ def _get_check_result(section: bf.Section, item: str) -> list[IgnoreResults | Me
             )
 
     return list(
-        bf._check_brocade_fcport(
+        bf._check_brocade_fcport(  # noqa: SLF001
             item=item,
             params={},
             section=section,

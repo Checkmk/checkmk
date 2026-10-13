@@ -8,7 +8,9 @@ import { describe, expect, test } from 'vitest'
 import type { M4Bucket } from '@/graphing/components/TimeSeriesGraph/decimation/types'
 import {
   bucketAnchorTime,
+  consolidatedSampleTime,
   invertBucket,
+  keptSamples,
   selectConsolidatedValue
 } from '@/graphing/components/TimeSeriesGraph/render/bucket'
 
@@ -80,6 +82,65 @@ describe('bucketAnchorTime', () => {
     const gapBucket = makeBucket({ gap: true })
 
     expect(Number.isNaN(bucketAnchorTime(gapBucket))).toBe(true)
+  })
+})
+
+describe('keptSamples', () => {
+  test('lists the first, the extremes and the last sample in time order', () => {
+    const bucket = makeBucket({
+      firstValueTime: 0,
+      firstValue: 3,
+      maxValueTime: 2,
+      maxValue: 9,
+      minValueTime: 5,
+      minValue: 1,
+      lastValueTime: 9,
+      lastValue: 4
+    })
+
+    const samples = keptSamples(bucket)
+
+    expect(samples).toEqual([
+      { time: bucket.firstValueTime, value: bucket.firstValue },
+      { time: bucket.maxValueTime, value: bucket.maxValue },
+      { time: bucket.minValueTime, value: bucket.minValue },
+      { time: bucket.lastValueTime, value: bucket.lastValue }
+    ])
+  })
+
+  test('a sample that is both an extreme and the last is listed once', () => {
+    const bucket = makeBucket({ maxValueTime: 9, maxValue: 9, lastValueTime: 9, lastValue: 9 })
+
+    const samples = keptSamples(bucket)
+
+    expect(samples.filter((sample) => sample.time === bucket.lastValueTime)).toHaveLength(1)
+  })
+
+  test('a gap bucket keeps no samples', () => {
+    const gapBucket = makeBucket({ gap: true })
+
+    expect(keptSamples(gapBucket)).toEqual([])
+  })
+})
+
+describe('consolidatedSampleTime', () => {
+  test('min and max are reported at the time their sample was taken', () => {
+    const bucket = makeBucket({ minValueTime: 3, maxValueTime: 7 })
+
+    expect(consolidatedSampleTime(bucket, 'min')).toBe(3)
+    expect(consolidatedSampleTime(bucket, 'max')).toBe(7)
+  })
+
+  test('avg belongs to no sample and keeps the anchor', () => {
+    const bucket = makeBucket({ firstValueTime: 10, lastValueTime: 30 })
+
+    expect(consolidatedSampleTime(bucket, 'avg')).toBe(20)
+  })
+
+  test('is NaN for a gap bucket, which has no drawn point', () => {
+    const gapBucket = makeBucket({ gap: true })
+
+    expect(Number.isNaN(consolidatedSampleTime(gapBucket, 'max'))).toBe(true)
   })
 })
 

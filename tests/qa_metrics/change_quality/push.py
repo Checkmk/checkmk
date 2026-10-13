@@ -16,15 +16,13 @@ Run as a module to keep absolute imports working::
     python -m tests.qa_metrics.change_quality.push --repo <path> --branch <name>
 """
 
-from __future__ import annotations
-
 import argparse
 import csv
 import dataclasses
 import json
 import logging
 import sys
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import date, datetime
 from pathlib import Path
 from typing import Final, TextIO
@@ -35,6 +33,7 @@ from tests.qa_metrics.change_quality import components, detect_test, detect_test
 from tests.qa_metrics.change_quality.repo import read_branch_version
 from tests.qa_metrics.change_quality.rows import CHANGE_TESTED, ChangeTestedRow
 from tests.qa_metrics.change_quality.state import read_watermark
+from tests.qa_metrics.components import OwnershipUnavailableError
 from tests.qa_metrics.db import MetabasePostgres
 
 logger = logging.getLogger(__name__)
@@ -201,7 +200,7 @@ def build_row(
     werk_add: walk.WerkAdd,
     werks_index: dict[int, WerkV3],
     allowed_classes: set[Class],
-    component_map: dict[str, str | None],
+    component_map: Mapping[str, str | None],
 ) -> ChangeTestedRow | None:
     werk = werks_index.get(werk_add.werk_id)
     if werk is None or werk.class_ not in allowed_classes:
@@ -266,7 +265,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         for path in event.commit.files_changed
         if not detect_test.is_test_path(path)
     }
-    component_map = components.lookup_components(unique_paths, args.repo)
+    try:
+        component_map = components.lookup_components(unique_paths, args.repo)
+    except OwnershipUnavailableError:
+        logger.exception("Not pushing any row")
+        return 1
 
     total = len(events)
     rows: list[ChangeTestedRow] = []

@@ -5,30 +5,52 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { MonitoringHostServicesApp } from 'cmk-shared-typing/typescript/monitoring/host_services'
-import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
+import { useCmkErrorBoundary } from 'cmk-ui-library/components/CmkErrorBoundary'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
-import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
-import { onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
+import { useKeyboardHints } from 'cmk-ui-library/lib/keyboardHelp'
+import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
+import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
+import { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostRef, HostServiceEntry, ServiceState } from '@/monitoring/shared/api/types'
+import DisplayOptionsPane from '@/monitoring/shared/components/DisplayOptionsPane.vue'
+import HostHeader from '@/monitoring/shared/components/HostHeader.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
+import TypeToFocusIndicator from '@/monitoring/shared/components/TypeToFocusIndicator.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
-import QuickFilterChip from '@/monitoring/shared/components/filter/QuickFilterChip.vue'
+import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
+import {
+  displayOptionsWriter,
+  readDisplayOptionsFromUrl,
+  seedDisplayOptions
+} from '@/monitoring/shared/displayOptionsState/urlState'
+import { filterTimestampsAsShown } from '@/monitoring/shared/timestampFilters'
+import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 
+import MonitoringHeaderActions from '../shared/components/MonitoringHeaderActions.vue'
 import MonitoringLegacyViewButton from '../shared/components/MonitoringLegacyViewButton.vue'
 import MonitoringSplitPane from '../shared/components/MonitoringSplitPane.vue'
 import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
-import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
+import MonitoringToolbar from '../shared/components/MonitoringToolbar.vue'
 import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
+import { acknowledgeDefaults } from '../shared/components/action/actions/acknowledge'
 import { RESCHEDULE_ACTION_ID } from '../shared/components/action/actions/reschedule'
+import { downtimePresets } from '../shared/components/action/actions/scheduleDowntime'
 import { createActionRegistry } from '../shared/components/action/registry'
 import { buildFilterUrlSchema } from '../shared/filterState/schema'
 import { filterStateWriter, readFilterUrlState } from '../shared/filterState/urlState'
-import { buildColumnStorageKey } from '../shared/services/MonitoringService'
+import { tableKeyboardHints } from '../shared/keyboardHints'
+import {
+  buildColumnStorageKey,
+  buildDisplayOptionsStorageKey,
+  sanitizeDisplayOptions
+} from '../shared/services/MonitoringService'
+import { buildTableStateSchema } from '../shared/tableState/schema'
+import { readTableStateFromUrl, tableStateWriter } from '../shared/tableState/urlState'
 import {
   type SlideInUrlDescriptor,
   exactPattern,
@@ -36,17 +58,30 @@ import {
   slideInWriter
 } from '../shared/urlState/slideInState'
 import { useUrlSync } from '../shared/urlState/useUrlSync'
+import { useContextMenuKey } from '../shared/useContextMenuKey'
+import { useFallbackKeys } from '../shared/useFallbackKeys'
+import { useTypeToFocus } from '../shared/useTypeToFocus'
 import { useAcknowledgeServicesAction } from './actions/acknowledgeServices'
 import { useRescheduleServicesAction } from './actions/rescheduleServices'
 import { useScheduleServiceDowntimeAction } from './actions/scheduleServiceDowntime'
+import { requestAiExplanation } from './aiExplain'
 import { ServiceActionMenuApi } from './api/actionMenu'
 import { HostServicesApi } from './api/services'
-import { buildHostServicesColumnPinning, useHostServicesColumns } from './columns'
+import {
+  buildHostServicesColumnPinning,
+  uncapNameWithoutSummary,
+  useHostServicesColumns
+} from './columns'
 import HostServicesRow from './components/HostServicesRow.vue'
-import ServiceSlideIn from './components/ServiceSlideIn.vue'
+import ServiceSlideIn, { SERVICE_GRAPHS_TAB_ID } from './components/ServiceSlideIn.vue'
 import { HostServicesService } from './services/HostServicesService'
 
 const { _t, _tn } = usei18n()
+
+useKeyboardHints(_t('Host services'), [
+  ...tableKeyboardHints(),
+  _t('Press [Enter] on a service name to open its details')
+])
 
 const props = defineProps<MonitoringHostServicesApp>()
 
@@ -69,46 +104,62 @@ const rowActionButtons: CellAction[] = (props.row_actions ?? []).map((action) =>
 
 const actionMenuApi = new ServiceActionMenuApi()
 
-// Command entries the row dropdown runs immediately with their default values, acting on that
-// single service. Only actions that are safe without user input belong here — form-based ones
-// (acknowledge, downtime) carry essential input and go through the action pane instead. They
-// carry no url, so ActionsCell emits `select`.
+// Actions the action bar runs immediately with their default values when exactly one service is
+// selected. Only actions that are safe without user input belong here — form-based ones
+// (acknowledge, downtime) carry essential input and go through the action pane instead.
 const IMMEDIATE_ROW_COMMAND_IDS: readonly string[] = [RESCHEDULE_ACTION_ID]
 
-const rowCommands: CellAction[] = serviceActions.filter((action) =>
-  IMMEDIATE_ROW_COMMAND_IDS.includes(action.id)
-)
+// What rescheduling a single service means differs per service - its label, its icon and even
+// which service the command acts on - so the row builds that entry from what the backend says
+// about the service it shows. All the page knows is whether the user may reschedule at all.
+const mayReschedule = serviceActions.some((action) => action.id === RESCHEDULE_ACTION_ID)
 
-// The immediate commands followed by the fetched legacy action-menu links (graphs, log file
-// viewer, custom actions, ...), read when the menu is opened.
+// The legacy action-menu links (graphs, log file viewer, custom actions, ...), read when the
+// menu is opened.
 async function loadActionMenu(service: string): Promise<CellAction[]> {
   const items = await actionMenuApi.fetchActionMenu(host, service)
-  return [
-    ...rowCommands,
-    ...items.map((item) => ({
-      id: `${item.title}|${item.url}`,
-      label: item.title as TranslatedString,
-      icon: item.icon_name as SimpleIcons,
-      url: item.url,
-      target: item.target
-    }))
-  ]
+  return items.map((item) => ({
+    id: `${item.title}|${item.url}`,
+    label: item.title as TranslatedString,
+    icon: item.icon_name as SimpleIcons,
+    url: item.url,
+    target: item.target
+  }))
 }
 
-const columns = useHostServicesColumns()
-const columnPinning = buildHostServicesColumnPinning()
+// Checkboxes only make sense where the selection can be acted on, so the permitted-action list
+// that decides the action bar decides the select column too.
+const mayActOnSelection = serviceActions.length > 0
+
+const aiExplain = props.ai_explain ?? false
+
+const columns = useHostServicesColumns({
+  includeSelect: mayActOnSelection,
+  inlineActions: rowActionButtons.length + (aiExplain ? 1 : 0)
+})
+const columnPinning = buildHostServicesColumnPinning({ includeSelect: mayActOnSelection })
+
+const schema = buildTableStateSchema({
+  columns,
+  limitTiers: props.limit_tiers,
+  mayRemoveLimit: props.may_ignore_hard_limit ?? false
+})
+const initialState = readTableStateFromUrl(window.location.search, schema)
 
 const filterSchema = buildFilterUrlSchema(columns)
 const initialFilterState = readFilterUrlState(window.location.search, filterSchema)
 
 const servicesApi = new HostServicesApi()
+const hostApi = new HostApi()
 
 const hostServicesService = new HostServicesService(
   servicesApi,
+  hostApi,
   host,
   getKeyShortcutServiceInstance(),
   {
     pollIntervalMs: props.poll_interval_ms,
+    tableStateSchema: schema,
     columnStorageKey: buildColumnStorageKey({
       view: 'host-services',
       site: props.site,
@@ -116,12 +167,13 @@ const hostServicesService = new HostServicesService(
       edition: props.edition
     }),
     columns,
+    initialState,
     initialFilterState,
     quickFilters: [
       {
-        label: _t('Unhandled problems'),
+        label: _t('Unhandled service problems'),
         tooltip: _t(
-          'Show only services in a problem state (WARN or CRIT) that are neither acknowledged nor in a scheduled downtime'
+          'Show only services in a problem state (WARN, CRIT or UNKNOWN) that are neither acknowledged nor in a scheduled downtime'
         ),
         filter: {
           type: 'and',
@@ -130,7 +182,7 @@ const hostServicesService = new HostServicesService(
               type: 'condition',
               field: 'state',
               op: 'one_of',
-              value: ['WARN', 'CRIT'] as ServiceState[]
+              value: ['WARN', 'CRIT', 'UNKNOWN'] as ServiceState[]
             },
             { type: 'condition', field: 'acknowledged', op: 'eq', value: false },
             { type: 'condition', field: 'in_downtime', op: 'eq', value: false }
@@ -141,16 +193,57 @@ const hostServicesService = new HostServicesService(
   }
 )
 
+const modeColumnSize = useModeColumnWidth(() => hostServicesService.items.value)
+const initialDisplayOptions = readDisplayOptionsFromUrl(window.location.search)
+const displayOptions = usePersistentRef(
+  buildDisplayOptionsStorageKey({
+    view: 'host-services',
+    site: props.site,
+    userId: props.user_id,
+    edition: props.edition
+  }),
+  DEFAULT_DISPLAY_OPTIONS,
+  (stored) => seedDisplayOptions(initialDisplayOptions, sanitizeDisplayOptions(stored))
+)
+
+const tableColumns = computed(() =>
+  sizeModeColumn(
+    filterTimestampsAsShown(
+      uncapNameWithoutSummary(columns, hostServicesService.columnVisibility.value),
+      displayOptions.value.timestampFormat
+    ),
+    modeColumnSize.value
+  )
+)
+
 const actionRegistry = createActionRegistry<string>([
-  useAcknowledgeServicesAction(host),
+  useAcknowledgeServicesAction(
+    host,
+    {
+      presetsUrl: props.acknowledge_presets_url ?? null,
+      notificationRulesUrl: props.notification_rules_url ?? null
+    },
+    acknowledgeDefaults(props.acknowledge_defaults)
+  ),
   useRescheduleServicesAction(host),
-  useScheduleServiceDowntimeAction(host, props.downtime_recurrences ?? [])
+  useScheduleServiceDowntimeAction(
+    host,
+    props.downtime_recurrences ?? [],
+    downtimePresets(props.downtime_presets),
+    props.downtime_presets_url ?? null
+  )
 ])
 
-const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
+const toolbar = useTemplateRef<{ focus: () => void }>('toolbar')
+
+const root = useTemplateRef<HTMLElement>('root')
+
+const typeToFocus = useTypeToFocus(root)
+useFallbackKeys(root, () => root.value?.querySelector<HTMLElement>('.monitoring-table'))
+useContextMenuKey(root)
 
 onMounted(() => {
-  hostServicesService.onFocusSearch(() => searchInput.value?.focus())
+  hostServicesService.onFocusSearch(() => toolbar.value?.focus())
 })
 
 onBeforeUnmount(() => {
@@ -171,6 +264,11 @@ function openSlideIn(service: HostServiceEntry): void {
     hostServicesService.beginAutoPause()
   }
   slideInService.value = service
+}
+
+function openServiceGraphs(service: HostServiceEntry): void {
+  slideInTabId.value = SERVICE_GRAPHS_TAB_ID
+  openSlideIn(service)
 }
 
 function closeSlideIn(): void {
@@ -203,7 +301,9 @@ const SERVICE_SLIDE_IN: SlideInUrlDescriptor<HostServiceEntry, string> = {
 }
 
 useUrlSync([
+  tableStateWriter(hostServicesService, schema),
   filterStateWriter(hostServicesService),
+  displayOptionsWriter(displayOptions),
   slideInWriter({
     descriptor: SERVICE_SLIDE_IN,
     service: hostServicesService,
@@ -219,8 +319,40 @@ function serviceRef(row: HostServiceEntry): string {
   return row.name
 }
 
+// As in the slide-in: a byproduct of the agent-based check reschedules the host's "Check_MK"
+// service, and a service that cannot be rescheduled at all is left out.
+function serviceActionTargets(rows: HostServiceEntry[], actionId: string): string[] {
+  if (actionId !== RESCHEDULE_ACTION_ID) {
+    return rows.map(serviceRef)
+  }
+  return [...new Set(rows.flatMap((row) => row.reschedule?.target ?? []))]
+}
+
 function serviceSelectionLabel(count: number): TranslatedString {
-  return _tn('%{count} service selected', '%{count} services selected', count, { count })
+  return _tn('Selected service: %{count}', 'Selected services: %{count}', count, { count })
+}
+
+function serviceCountsLabel(selected: number, total: number): TranslatedString {
+  return _tn(
+    'Selected service: %{selected} | Total services: %{total}',
+    'Selected services: %{selected} | Total services: %{total}',
+    selected,
+    { selected, total }
+  )
+}
+
+function explainService(service: HostServiceEntry): void {
+  const hostEntry = hostServicesService.hostEntry.value
+  if (hostEntry === null) {
+    return
+  }
+  requestAiExplanation({
+    hostName: host.name,
+    hostState: hostEntry.state,
+    serviceName: service.name,
+    serviceState: service.state,
+    stale: service.stale
+  })
 }
 
 function onActionPerformed(result: ActionFeedbackResult): void {
@@ -228,130 +360,104 @@ function onActionPerformed(result: ActionFeedbackResult): void {
     hostServicesService.refresh(ACTION_REFRESH_DELAY_MS)
   }
 }
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { CmkErrorBoundary } = useCmkErrorBoundary()
 </script>
 
 <template>
-  <MonitoringSurveyLink url="https://survey.checkmk.com/index.php/852195?lang=en" />
-  <MonitoringLegacyViewButton
-    v-if="legacy_view_button"
-    :title="legacy_view_button.title"
-    :url="legacy_view_button.url"
-  />
-  <div class="monitoring-host-services-app">
-    <div class="monitoring-host-services-app__header">
-      <div class="monitoring-host-services-app__toolbar">
-        <CmkSearchInput
-          ref="searchInput"
-          v-model="hostServicesService.searchQuery.value"
-          class="monitoring-host-services-app__search"
-          :placeholder="_t('Search services…')"
-          @search="hostServicesService.updateSearch($event)"
-          @focusin="hostServicesService.beginAutoPause()"
-          @focusout="hostServicesService.endAutoPause()"
-        />
-        <div class="monitoring-host-services-app__quick-filters">
-          <QuickFilterChip
-            v-for="chip in hostServicesService.filters.quickFilters"
-            :key="chip.label"
-            :label="chip.label"
-            :tooltip="chip.tooltip"
-            :active="chip.isActive.value"
-            @activate="hostServicesService.activateQuickFilter(chip)"
-            @deactivate="hostServicesService.deactivateQuickFilter(chip)"
+  <CmkErrorBoundary>
+    <MonitoringHeaderActions :teleport-target="header_teleport_target">
+      <MonitoringSurveyLink url="https://survey.checkmk.com/index.php/852195?lang=en" />
+      <MonitoringLegacyViewButton
+        v-if="legacy_view_button"
+        :title="legacy_view_button.title"
+        :url="legacy_view_button.url"
+      />
+    </MonitoringHeaderActions>
+    <div ref="root" class="monitoring-host-services-app">
+      <MonitoringToolbar
+        ref="toolbar"
+        :service="hostServicesService"
+        :search-placeholder="_t('Search services…')"
+      >
+        <template v-if="hostServicesService.hostEntry.value" #subject>
+          <HostHeader :host="hostServicesService.hostEntry.value" :url="host_url" />
+        </template>
+      </MonitoringToolbar>
+      <MonitoringSplitPane
+        :service="hostServicesService"
+        :actions="actionRegistry"
+        :bulk-actions="serviceActions"
+        :columns="tableColumns"
+        :column-pinning="columnPinning"
+        :get-row-key="rowKey"
+        :get-action-target="serviceRef"
+        :get-action-targets="serviceActionTargets"
+        :immediate-action-ids="IMMEDIATE_ROW_COMMAND_IDS"
+        :selection-label="serviceSelectionLabel"
+        :actions-label="_t('Actions for selected services')"
+        :counts-label="serviceCountsLabel"
+        @performed="onActionPerformed"
+      >
+        <template #row="{ row, tableRow, onCommand }">
+          <HostServicesRow
+            :row="row"
+            :table-row="tableRow"
+            :row-actions="rowActionButtons"
+            :may-reschedule="mayReschedule"
+            :load-action-menu="loadActionMenu"
+            :display-options="displayOptions"
+            :ai-explain="aiExplain && hostServicesService.hostEntry.value !== null"
+            @open="openSlideIn"
+            @open-graphs="openServiceGraphs"
+            @command="onCommand"
+            @explain="explainService"
           />
-        </div>
-        <CmkButton variant="text" size="small" @click="hostServicesService.clearAllFilters()">
-          {{ _t('Reset all filters') }}
-        </CmkButton>
-      </div>
-      <div class="monitoring-host-services-app__header-end">
-        <RefreshCountdown
-          :remaining="hostServicesService.secondsRemaining.value"
-          :interval="hostServicesService.pollIntervalSeconds"
-          :paused="hostServicesService.paused.value"
-          :manual-paused="hostServicesService.manualPaused.value"
-          size="small"
-          @toggle="hostServicesService.togglePause()"
-        />
-      </div>
+        </template>
+        <template #display-options="{ close }">
+          <DisplayOptionsPane
+            :model-value="displayOptions"
+            @submit="
+              (value) => {
+                displayOptions = value
+                close()
+              }
+            "
+            @cancel="close"
+          />
+        </template>
+      </MonitoringSplitPane>
+      <ServiceSlideIn
+        v-model:active-tab-id="slideInTabId"
+        :display-options="displayOptions"
+        :service="slideInService"
+        :host="host"
+        :ai-explain="aiExplain"
+        :actions="actionRegistry"
+        :permitted-actions="serviceActions"
+        :load-action-menu="loadActionMenu"
+        @close="closeSlideIn"
+        @performed="onActionPerformed"
+      />
+      <TypeToFocusIndicator
+        :buffer="typeToFocus.buffer.value"
+        :index="typeToFocus.index.value"
+        :count="typeToFocus.count.value"
+      />
     </div>
-    <MonitoringSplitPane
-      :service="hostServicesService"
-      :actions="actionRegistry"
-      :bulk-actions="serviceActions"
-      :columns="columns"
-      :column-pinning="columnPinning"
-      :get-row-key="rowKey"
-      :get-action-target="serviceRef"
-      :immediate-action-ids="IMMEDIATE_ROW_COMMAND_IDS"
-      :selection-label="serviceSelectionLabel"
-      :actions-label="_t('Actions for selected services')"
-      @performed="onActionPerformed"
-    >
-      <template #row="{ row, tableRow, onCommand }">
-        <HostServicesRow
-          :row="row"
-          :table-row="tableRow"
-          :row-actions="rowActionButtons"
-          :load-action-menu="loadActionMenu"
-          @open="openSlideIn"
-          @command="onCommand"
-        />
-      </template>
-    </MonitoringSplitPane>
-    <ServiceSlideIn
-      v-model:active-tab-id="slideInTabId"
-      :service="slideInService"
-      :host="host"
-      :ai-explain="props.ai_explain ?? false"
-      :actions="actionRegistry"
-      :permitted-actions="serviceActions"
-      :load-action-menu="loadActionMenu"
-      @close="closeSlideIn"
-      @performed="onActionPerformed"
-    />
-  </div>
+  </CmkErrorBoundary>
 </template>
 
 <style scoped>
 .monitoring-host-services-app {
+  position: relative;
+  overflow-x: auto;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
   padding-bottom: var(--spacing);
-  padding-right: var(--spacing);
-}
-
-.monitoring-host-services-app__header {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.monitoring-host-services-app__toolbar {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing);
-}
-
-.monitoring-host-services-app__header-end {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: var(--spacing);
-}
-
-.monitoring-host-services-app__search {
-  flex: 1;
-  max-width: 360px;
-}
-
-.monitoring-host-services-app__quick-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--dimension-4);
 }
 </style>

@@ -9,7 +9,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
 ])
 
@@ -73,13 +72,6 @@ package_wheel(
     name = "pkg_tar",
     visibility = ["//visibility:public"],
     whl = "wheel",
-)
-
-sh_library(
-    name = "helpers",
-    srcs = [
-        ".f12",
-    ],
 )
 
 py_requirements_test(

@@ -5,47 +5,64 @@
  */
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import type { TitleMacroGroup } from 'cmk-shared-typing/typescript/custom_graph_designer'
+import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
 import { type MockInstance, vi } from 'vitest'
-import { defineComponent } from 'vue'
+import { defineComponent, h } from 'vue'
 
+import type { Metric } from '@/graphing/components/TimeSeriesGraph'
 import MetricsTable from '@/graphing/designer/components/MetricsTable.vue'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
 import { useValidationMessages } from '@/graphing/designer/composables/useValidationMessages'
 import {
   type DesignerItem,
   newConstantDraft,
-  newMetricBackendDraft,
   newRrdMetricDraft,
-  newScalarDraft
+  newRrdQueryDraft,
+  newScalarDraft,
+  newTelemetryMetricsDraft
 } from '@/graphing/designer/drafts'
 import type { ItemId } from '@/graphing/designer/types'
 import { type RowField, type RowIssue, validateDesign } from '@/graphing/designer/validation'
 
-import { constantItem, formulaItem, metricBackendItem, rrdMetricItem } from '../fixtures'
+import {
+  constantItem,
+  filterDefinitions,
+  formulaItem,
+  rrdMetricItem,
+  telemetryMetricsItem
+} from '../fixtures'
 
-vi.mock('@/graphing/designer/components/MetricBackendRuleSlideIn.vue', () => ({
+vi.mock('@/mode-custom-services/CreateCustomServiceSlideIn.vue', () => ({
   default: {
-    props: ['open', 'item', 'defaultTitle'],
+    props: ['open', 'initial'],
     emits: ['close'],
     template: `<div
-      data-testid="metric-backend-rule-slidein"
-      :data-item-id="item?.id"
-      :data-default-title="defaultTitle"
+      data-testid="create-custom-service-slidein"
+      :data-metric-name="initial?.metricName"
+      :data-service-name="initial?.serviceName"
     ></div>`
   }
 }))
 
-afterEach(() => {
-  vi.restoreAllMocks()
-})
-
-const ADD_RULE_LABEL = 'Add rule: Metric backend (Custom query)'
+const CREATE_SERVICE_LABEL = 'Create custom service'
+const EDIT_CALCULATION_LABEL = 'Edit calculation'
 
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400', '#ec48b6', '#ffd703']
 const THRESHOLDS = { warning: '#ffd000', critical: '#ff3232' }
 const TITLE_MACROS: TitleMacroGroup[] = [
   { source_type: 'rrd_metric', macros: ['$DEFAULT_TITLE$', '$METRIC_NAME$'] }
 ]
+
+/** Whether the add-source dropdown took the focus while the spy was installed. */
+function focusedAddSource(focus: MockInstance): boolean {
+  return focus.mock.contexts.includes(screen.getByRole('combobox', { name: 'Add source' }))
+}
+
+/** Confirms the delete dialog with its `button`. */
+async function confirmDelete(button: 'Delete' | 'Delete all' = 'Delete'): Promise<void> {
+  const dialog = await screen.findByRole('dialog')
+  await fireEvent.click(within(dialog).getByRole('button', { name: button }))
+}
 
 /** Waits for the row group holding `id` to have been scrolled into view. */
 async function expectScrolledToRow(scrollIntoView: MockInstance, id: string): Promise<void> {
@@ -58,26 +75,72 @@ async function expectScrolledToRow(scrollIntoView: MockInstance, id: string): Pr
 
 function renderTable(
   seed: DesignerItem[] = [],
-  metricBackendAvailable = true,
+  telemetryMetricsAvailable = true,
   createServicesAvailable = true,
-  { issuesByRow = new Map<ItemId, RowIssue[]>(), resolvedTitles = new Map<ItemId, string>() } = {}
+  {
+    issuesByRow = new Map<ItemId, RowIssue[]>(),
+    resolvedTitles = new Map<ItemId, string>(),
+    metricsBySource = new Map<ItemId, Metric[]>()
+  } = {}
 ) {
+  const hoverMetrics = vi.fn()
   const store = useGraphItems(PALETTE)
   store.replaceAll(seed)
-  const utils = render(MetricsTable, {
-    props: {
-      store,
-      thresholds: THRESHOLDS,
-      metricBackendAvailable,
-      createServicesAvailable,
-      metricBackendDefaultTitle: '$METRIC_NAME$ - $SERIES_ID$',
-      titleMacros: TITLE_MACROS,
-      issuesByRow,
-      resolvedTitles
+  const harness = defineComponent({
+    setup() {
+      useProvideFilterDefinitions({ definitions: filterDefinitions, groups: {} })
+      return () =>
+        h(MetricsTable, {
+          store,
+          thresholds: THRESHOLDS,
+          telemetryMetricsAvailable,
+          createServicesAvailable,
+          telemetryMetricsDefaultTitle: '$METRIC_NAME$ - $SERIES_ID$',
+          titleMacros: TITLE_MACROS,
+          issuesByRow,
+          resolvedTitles,
+          metricsBySource,
+          onHoverMetrics: hoverMetrics
+        })
     }
   })
-  return { store, ...utils }
+  const utils = render(harness)
+  return { store, hoverMetrics, ...utils }
 }
+
+test('a table without sources is header and footer only', () => {
+  const { container } = renderTable()
+
+  expect(container.querySelector('thead')).toBeInTheDocument()
+  expect(container.querySelector('tfoot')).toBeInTheDocument()
+  expect(container.querySelector('tbody')).not.toBeInTheDocument()
+})
+
+test('the add-source dropdown takes the focus when the table opens without sources', () => {
+  const focus = vi.spyOn(window.HTMLElement.prototype, 'focus')
+  renderTable()
+
+  expect(focusedAddSource(focus)).toBe(true)
+})
+
+test('the add-source dropdown leaves the focus alone when the table opens with sources', () => {
+  const focus = vi.spyOn(window.HTMLElement.prototype, 'focus')
+  renderTable([rrdMetricItem('A')])
+
+  expect(focusedAddSource(focus)).toBe(false)
+})
+
+test('deleting the last source does not pull the focus to the add-source dropdown', async () => {
+  const focus = vi.spyOn(window.HTMLElement.prototype, 'focus')
+  const { store } = renderTable([rrdMetricItem('A')])
+  await fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+
+  expect(await screen.findByText('Delete metric A?')).toBeInTheDocument()
+  await confirmDelete()
+
+  expect(store.items.value).toHaveLength(0)
+  expect(focusedAddSource(focus)).toBe(false)
+})
 
 test('adding a source appends an auto-expanded draft row', async () => {
   const { store } = renderTable([rrdMetricItem('A')])
@@ -130,12 +193,27 @@ test('adding a service reference line opens the scalar form', async () => {
   expect(await screen.findByRole('combobox', { name: 'Threshold type' })).toBeInTheDocument()
 })
 
-test('deleting an unreferenced row needs no confirmation', async () => {
-  const { store } = renderTable([rrdMetricItem('A')])
-  await fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+test('deleting an unreferenced row asks by its display name', async () => {
+  const { store } = renderTable([rrdMetricItem('A'), constantItem('B')], true, true, {
+    resolvedTitles: new Map([['A', 'CPU load']])
+  })
+  const [deleteA] = screen.getAllByRole('button', { name: 'Delete' })
+  await fireEvent.click(deleteA!)
 
-  expect(store.items.value).toHaveLength(0)
-  expect(screen.queryByText('Delete A?')).not.toBeInTheDocument()
+  expect(await screen.findByText('Delete metric CPU load?')).toBeInTheDocument()
+  expect(store.items.value).toHaveLength(2)
+
+  await confirmDelete()
+  expect(store.items.value.map((item) => item.id)).toEqual(['B'])
+})
+
+test('cancelling the delete keeps the row', async () => {
+  const { store } = renderTable([rrdMetricItem('A'), constantItem('B')])
+  const [deleteA] = screen.getAllByRole('button', { name: 'Delete' })
+  await fireEvent.click(deleteA!)
+  await fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }))
+
+  expect(store.items.value).toHaveLength(2)
 })
 
 test('deleting a referenced row asks and cascades to its dependents', async () => {
@@ -146,10 +224,11 @@ test('deleting a referenced row asks and cascades to its dependents', async () =
   const [deleteA] = screen.getAllByRole('button', { name: 'Delete' })
   await fireEvent.click(deleteA!)
 
-  expect(await screen.findByText('Delete A?')).toBeInTheDocument()
+  expect(await screen.findByText('Delete metric A?')).toBeInTheDocument()
+  expect(screen.getByText('B = A')).toBeInTheDocument()
   expect(store.items.value).toHaveLength(2)
 
-  await fireEvent.click(screen.getByRole('button', { name: 'Delete all' }))
+  await confirmDelete()
   expect(store.items.value).toHaveLength(0)
 })
 
@@ -159,6 +238,7 @@ test('selecting rows reveals the bulk actions; bulk clone copies and clears the 
 
   const [selectA] = screen.getAllByLabelText('Select row')
   await fireEvent.click(selectA!)
+  expect(screen.getByText('Selected rows: 1')).toBeInTheDocument()
 
   await fireEvent.click(screen.getByRole('button', { name: 'Clone selected sources' }))
   expect(store.items.value.map((item) => item.id)).toEqual(['A', 'C', 'B'])
@@ -174,7 +254,19 @@ test('bulk delete of a referenced row routes through the confirmation', async ()
   await fireEvent.click(selectA!)
   await fireEvent.click(screen.getByRole('button', { name: 'Delete selected sources' }))
 
-  await fireEvent.click(await screen.findByRole('button', { name: 'Delete all' }))
+  await confirmDelete()
+  expect(store.items.value).toHaveLength(0)
+})
+
+test('bulk delete of every row asks to delete all', async () => {
+  const { store } = renderTable([rrdMetricItem('A'), constantItem('B')])
+  for (const select of screen.getAllByLabelText('Select row')) {
+    await fireEvent.click(select)
+  }
+  await fireEvent.click(screen.getByRole('button', { name: 'Delete selected sources' }))
+
+  expect(await screen.findByText('Delete all metrics?')).toBeInTheDocument()
+  await confirmDelete('Delete all')
   expect(store.items.value).toHaveLength(0)
 })
 
@@ -191,6 +283,21 @@ test('a selected row deleted outside the table drops out of the bulk actions', a
       screen.queryByRole('button', { name: 'Delete selected sources' })
     ).not.toBeInTheDocument()
   })
+})
+
+test('a row reusing the id of a selected row is not selected itself', async () => {
+  const { store } = renderTable([rrdMetricItem('A'), constantItem('B')])
+  const selects = () => screen.getAllByLabelText('Select row')
+  await fireEvent.click(selects()[1]!)
+  expect(screen.getByText('Selected rows: 1')).toBeInTheDocument()
+
+  store.remove('B')
+  await waitFor(() => expect(selects()).toHaveLength(1))
+  store.addItem((id) => constantItem(id))
+  await waitFor(() => expect(selects()).toHaveLength(2))
+
+  expect(screen.queryByText('Selected rows: 1')).not.toBeInTheDocument()
+  expect(selects()[1]!).not.toBeChecked()
 })
 
 test('title edits patch the row', async () => {
@@ -214,31 +321,40 @@ test('the display name falls back to the stored title of an unresolved row', () 
   expect(screen.getByText('Raw title')).toBeInTheDocument()
 })
 
+test('a telemetry_metrics row explains its automatic colors instead of offering a picker', () => {
+  renderTable([telemetryMetricsItem('A')])
+
+  const row = screen.getByRole('checkbox', { name: 'Select row' }).closest('tr')!
+
+  expect(row.querySelector('input[type=color]')).toBeNull()
+  within(row).getByRole('img', { name: /Colors are assigned automatically/ })
+})
+
 test('a formula row expands to the read-only formula form', async () => {
   renderTable([formulaItem('A', { ast: { op: 'num', value: 5 } })])
   await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
   expect(await screen.findByText(/= 5/)).toBeInTheDocument()
 })
 
-test('a metric_backend row expands to the metric backend form', async () => {
-  renderTable([metricBackendItem('A')])
+test('a telemetry_metrics row expands to the telemetry metrics form', async () => {
+  renderTable([telemetryMetricsItem('A')])
   await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
-  expect(await screen.findByText('Consolidation')).toBeInTheDocument()
+  expect(await screen.findByText('Then consolidate by')).toBeInTheDocument()
 })
 
-test('the metric backend source is offered only when the feature is available', async () => {
+test('the telemetry metrics source is offered only when the feature is available', async () => {
   renderTable([], false)
   await fireEvent.click(screen.getByRole('combobox', { name: 'Add source' }))
   expect(screen.queryByRole('option', { name: 'Metrics backend' })).not.toBeInTheDocument()
 })
 
-test('adding a metric backend source opens its form', async () => {
+test('adding a telemetry metrics source opens its form', async () => {
   const { store } = renderTable([], true)
   await fireEvent.click(screen.getByRole('combobox', { name: 'Add source' }))
   await fireEvent.click(await screen.findByRole('option', { name: 'Metrics backend' }))
 
-  expect(store.items.value[0]).toMatchObject({ type: 'metric_backend', metric_name: null })
-  expect(await screen.findByText('Consolidation')).toBeInTheDocument()
+  expect(store.items.value[0]).toMatchObject({ type: 'telemetry_metrics', metric_name: null })
+  expect(await screen.findByText('Then consolidate by')).toBeInTheDocument()
 })
 
 test('the title column header exposes the rendered macro help', async () => {
@@ -249,40 +365,50 @@ test('the title column header exposes the rendered macro help', async () => {
   expect(tooltip).toHaveTextContent('Checkmk RRD (single): $DEFAULT_TITLE$, $METRIC_NAME$')
 })
 
-test('a complete metric_backend row offers the add-rule action', () => {
-  renderTable([metricBackendItem('A')])
-  expect(screen.getByRole('button', { name: ADD_RULE_LABEL })).toBeInTheDocument()
+test('a complete telemetry_metrics row offers the create-custom-service action', () => {
+  renderTable([telemetryMetricsItem('A')])
+  expect(screen.getByRole('button', { name: CREATE_SERVICE_LABEL })).toBeInTheDocument()
 })
 
-test('the add-rule action is absent on non metric_backend rows', () => {
+test('the create-custom-service action is absent on non telemetry_metrics rows', () => {
   renderTable([rrdMetricItem('A')])
-  expect(screen.queryByRole('button', { name: ADD_RULE_LABEL })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: CREATE_SERVICE_LABEL })).not.toBeInTheDocument()
 })
 
-test('the add-rule action is absent while the metric_backend query is incomplete', () => {
-  renderTable([newMetricBackendDraft('A')])
-  expect(screen.queryByRole('button', { name: ADD_RULE_LABEL })).not.toBeInTheDocument()
+test('the create-custom-service action is absent while the telemetry_metrics query is incomplete', () => {
+  renderTable([newTelemetryMetricsDraft('A')])
+  expect(screen.queryByRole('button', { name: CREATE_SERVICE_LABEL })).not.toBeInTheDocument()
 })
 
-test('the add-rule action is absent when the metric backend is unavailable', () => {
-  renderTable([metricBackendItem('A')], false)
-  expect(screen.queryByRole('button', { name: ADD_RULE_LABEL })).not.toBeInTheDocument()
+test('the create-custom-service action is absent when telemetry metrics are unavailable', () => {
+  renderTable([telemetryMetricsItem('A')], false)
+  expect(screen.queryByRole('button', { name: CREATE_SERVICE_LABEL })).not.toBeInTheDocument()
 })
 
-test('the add-rule action is absent when creating services is unavailable', () => {
-  renderTable([metricBackendItem('A')], true, false)
-  expect(screen.queryByRole('button', { name: ADD_RULE_LABEL })).not.toBeInTheDocument()
+test('the create-custom-service action is absent when creating services is unavailable', () => {
+  renderTable([telemetryMetricsItem('A')], true, false)
+  expect(screen.queryByRole('button', { name: CREATE_SERVICE_LABEL })).not.toBeInTheDocument()
 })
 
-test('clicking the add-rule action opens the rule slide-in for that row', async () => {
-  renderTable([metricBackendItem('A')])
-  expect(screen.queryByTestId('metric-backend-rule-slidein')).not.toBeInTheDocument()
+test('clicking the create-custom-service action opens the slide-in prefilled from that row', async () => {
+  renderTable([telemetryMetricsItem('A', { title: '$DEFAULT_TITLE$' })])
+  expect(screen.queryByTestId('create-custom-service-slidein')).not.toBeInTheDocument()
 
-  await fireEvent.click(screen.getByRole('button', { name: ADD_RULE_LABEL }))
+  await fireEvent.click(screen.getByRole('button', { name: CREATE_SERVICE_LABEL }))
 
-  const slideIn = await screen.findByTestId('metric-backend-rule-slidein')
-  expect(slideIn).toHaveAttribute('data-item-id', 'A')
-  expect(slideIn).toHaveAttribute('data-default-title', '$METRIC_NAME$ - $SERIES_ID$')
+  const slideIn = await screen.findByTestId('create-custom-service-slidein')
+  expect(slideIn).toHaveAttribute('data-metric-name', 'span.latency')
+  expect(slideIn).toHaveAttribute('data-service-name', '$METRIC_NAME$ - $SERIES_ID$')
+})
+
+test('a calculation row offers the edit-calculation action', () => {
+  renderTable([rrdMetricItem('A'), formulaItem('B')])
+  expect(screen.getByRole('button', { name: EDIT_CALCULATION_LABEL })).toBeInTheDocument()
+})
+
+test('the edit-calculation action is absent on source rows', () => {
+  renderTable([rrdMetricItem('A'), telemetryMetricsItem('B')])
+  expect(screen.queryByRole('button', { name: EDIT_CALCULATION_LABEL })).not.toBeInTheDocument()
 })
 
 describe('a blocked row', () => {
@@ -291,11 +417,12 @@ describe('a blocked row', () => {
     'Constant line': { ...newConstantDraft('A', '#28a2f3'), title: '' },
     'Service reference line': { ...newScalarDraft('A', '#28a2f3'), title: '' },
     'Metrics backend': {
-      ...newMetricBackendDraft('A'),
+      ...newTelemetryMetricsDraft('A'),
       title: '',
       consolidation_function: { type: 'gauge_last', lookback_seconds: 0 }
     },
-    'Calculated metric': formulaItem('A', { title: '', ast: { op: 'ref', id: 'Z' } })
+    'Calculated metric': formulaItem('A', { title: '', ast: { op: 'ref', id: 'Z' } }),
+    'Checkmk RRD query': { ...newRrdQueryDraft('A'), title: '' }
   }
 
   function messagesOf(issues: readonly RowIssue[]): string[] {
@@ -323,7 +450,7 @@ describe('a blocked row', () => {
   test.each(Object.entries(BLOCKED_ROWS))(
     '%s states each blocker on the field it belongs to',
     async (_kind, row) => {
-      const issues = validateDesign([row])
+      const issues = validateDesign([row], filterDefinitions)
       const expected = tally(messagesOf(issues))
       renderTable([row], true, true, { issuesByRow: new Map([[row.id, issues]]) })
 
@@ -338,7 +465,7 @@ describe('a blocked row', () => {
 
   test('is marked beside its title, not in the id column', () => {
     const row = newRrdMetricDraft('A', '#28a2f3')
-    const issues = validateDesign([row])
+    const issues = validateDesign([row], filterDefinitions)
     renderTable([row], true, true, { issuesByRow: new Map([[row.id, issues]]) })
 
     const marker = screen.getByLabelText('Source A prevents saving')
@@ -347,16 +474,139 @@ describe('a blocked row', () => {
   })
 
   test('the rows above block on every field there is', () => {
-    const issues = Object.values(BLOCKED_ROWS).flatMap((row) => validateDesign([row]))
+    const issues = Object.values(BLOCKED_ROWS).flatMap((row) =>
+      validateDesign([row], filterDefinitions)
+    )
     const allFields: Record<RowField, true> = {
       title: true,
       host_name: true,
       service_name: true,
       metric_name: true,
+      host_filter: true,
+      service_filter: true,
       value: true,
       consolidation_function: true,
       ast: true
     }
     expect(new Set(issues.map((issue) => issue.field))).toEqual(new Set(Object.keys(allFields)))
   })
+})
+
+test('three metrics are three rows, and deleting one drops only that row', async () => {
+  const { store } = renderTable([
+    rrdMetricItem('A', { title: 'First' }),
+    rrdMetricItem('B', { title: 'Second' }),
+    rrdMetricItem('C', { title: 'Third' })
+  ])
+  expect(screen.getAllByLabelText('Select row')).toHaveLength(3)
+
+  const [, deleteSecond] = screen.getAllByRole('button', { name: 'Delete' })
+  await fireEvent.click(deleteSecond!)
+  await confirmDelete()
+
+  expect(store.items.value.map((item) => item.id)).toEqual(['A', 'C'])
+  expect(screen.getAllByLabelText('Select row')).toHaveLength(2)
+})
+
+function previewMetric(name: string): Metric {
+  return {
+    metadata: {
+      name,
+      title: name,
+      unit: {
+        notation: 'decimal',
+        symbol: '',
+        precision: { type: 'auto', digits: 2 },
+        convertible: false
+      },
+      color: '#28a2f3',
+      attributes: []
+    },
+    render: { shape: 'line', inverse: false, hidden: false },
+    data_points: [1]
+  }
+}
+
+test('an expanded telemetry_metrics row previews the series its query resolved to', async () => {
+  renderTable([telemetryMetricsItem('A')], true, true, {
+    metricsBySource: new Map([['A', [previewMetric('first'), previewMetric('second')]]])
+  })
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
+
+  expect(await screen.findByText('Metrics preview')).toBeInTheDocument()
+  expect(screen.getByText('first')).toBeInTheDocument()
+  expect(screen.getByText('second')).toBeInTheDocument()
+})
+
+test('a telemetry_metrics row whose query resolved to nothing shows no preview', async () => {
+  renderTable([telemetryMetricsItem('A')])
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
+
+  expect(await screen.findByText('Then consolidate by')).toBeInTheDocument()
+  expect(screen.queryByText('Metrics preview')).not.toBeInTheDocument()
+})
+
+test('an rrd row keeps its form free of a metrics preview', async () => {
+  renderTable([rrdMetricItem('A')], true, true, {
+    metricsBySource: new Map([['A', [previewMetric('first')]]])
+  })
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
+
+  expect(screen.queryByText('Metrics preview')).not.toBeInTheDocument()
+})
+
+test('hovering a source row highlights every series it resolved to', async () => {
+  const { hoverMetrics } = renderTable([telemetryMetricsItem('A')], true, true, {
+    metricsBySource: new Map([['A', [previewMetric('first'), previewMetric('second')]]])
+  })
+
+  await fireEvent.mouseEnter(
+    screen.getAllByRole('checkbox', { name: 'Select row' })[0]!.closest('tr')!
+  )
+
+  expect(hoverMetrics).toHaveBeenCalledWith(['first', 'second'])
+})
+
+test('leaving a source row clears the highlight', async () => {
+  const { hoverMetrics } = renderTable([telemetryMetricsItem('A')], true, true, {
+    metricsBySource: new Map([['A', [previewMetric('first')]]])
+  })
+
+  await fireEvent.mouseLeave(
+    screen.getAllByRole('checkbox', { name: 'Select row' })[0]!.closest('tr')!
+  )
+
+  expect(hoverMetrics).toHaveBeenCalledWith([])
+})
+
+test('hovering a hidden source row highlights nothing, since its lines are not drawn', async () => {
+  const { hoverMetrics } = renderTable(
+    [telemetryMetricsItem('A', { visible: false })],
+    true,
+    true,
+    {
+      metricsBySource: new Map([['A', [previewMetric('first')]]])
+    }
+  )
+
+  await fireEvent.mouseEnter(
+    screen.getAllByRole('checkbox', { name: 'Select row' })[0]!.closest('tr')!
+  )
+
+  expect(hoverMetrics).toHaveBeenCalledWith([])
+})
+
+test('hovering a previewed series highlights that line alone', async () => {
+  const { hoverMetrics } = renderTable([telemetryMetricsItem('A')], true, true, {
+    metricsBySource: new Map([['A', [previewMetric('first'), previewMetric('second')]]])
+  })
+  await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
+  await screen.findByText('Metrics preview')
+
+  await fireEvent.mouseEnter(screen.getByText('second').closest('tr')!)
+
+  expect(hoverMetrics).toHaveBeenLastCalledWith(['second'])
 })

@@ -28,7 +28,8 @@ description:
 
  Currently, this check does not have inodes support.
 
- The check requires that the special agent kube is configured.
+ This check requires that Kubernetes monitoring is configured and that Checkmk can receive
+ data from the in-cluster agent.
 
 discovery:
  One service is created per Persistent Volume Claim for the respective Kubernetes object.

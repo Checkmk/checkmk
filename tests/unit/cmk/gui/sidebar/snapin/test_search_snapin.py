@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import dataclasses
 from collections.abc import Iterator
 
@@ -24,19 +26,22 @@ from cmk.gui.sidebar._snapin._search import (
 )
 from cmk.gui.type_defs import SearchResult
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 
 
-@pytest.fixture(name="permissive_user", autouse=True)
+@pytest.fixture(name="permissive_user", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_permissive_user(
-    request_context: None, monkeypatch: pytest.MonkeyPatch
+    request_context: None,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[None]:
     with monkeypatch.context() as m:
-        m.setattr(user, "may", lambda x: True)
+        m.setattr(user, "may", lambda x: True)  # noqa: ARG005
         yield
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request)
+    return PageContext(config=config, request=request, transactions=transactions, session=session)
 
 
 @pytest.mark.parametrize(
@@ -69,7 +74,8 @@ def test_show_renders_and_registers_the_search_field(load_config: Config) -> Non
         rendered = output_funnel.drain()
 
     assert 'id="mk_side_search_field"' in rendered
-    assert "cmk.quicksearch.register_search_field('mk_side_search_field');" in rendered
+    assert 'data-cmk_call_ts_function="register_search_field"' in rendered
+    assert "mk_side_search_field" in rendered
     assert "cmk.quicksearch.on_search_click();" in rendered
 
 
@@ -80,8 +86,8 @@ def test_build_quicksearch_manager_takes_the_limits_from_the_config(load_config:
 
     manager = _build_quicksearch_manager_from_context(_page_context(config))
 
-    assert manager._row_limit == 42
-    assert list(manager._search_order) == [("h", "continue")]
+    assert manager._row_limit == 42  # noqa: SLF001
+    assert list(manager._search_order) == [("h", "continue")]  # noqa: SLF001
 
 
 def test_render_results_hides_the_topic_for_a_single_match_group() -> None:
@@ -151,13 +157,13 @@ def test_ajax_search_ignores_a_blank_query(load_config: Config) -> None:
     request.set_var("q", "   ")
 
     with output_funnel.plugged():
-        QuicksearchSnapin()._ajax_search(_page_context(load_config))
+        QuicksearchSnapin()._ajax_search(_page_context(load_config))  # noqa: SLF001
         assert output_funnel.drain() == ""
 
 
 def test_ajax_search_ignores_a_missing_query(load_config: Config) -> None:
     with output_funnel.plugged():
-        QuicksearchSnapin()._ajax_search(_page_context(load_config))
+        QuicksearchSnapin()._ajax_search(_page_context(load_config))  # noqa: SLF001
         assert output_funnel.drain() == ""
 
 
@@ -173,7 +179,7 @@ def _ajax_search(
         m.setattr(
             SnapinQuicksearchManager,
             "determine_search_objects",
-            lambda self, query, permissions: search_objects if search_objects is not None else [],
+            lambda self, query, permissions: search_objects if search_objects is not None else [],  # noqa: ARG005
         )
 
         def _conduct(self: SnapinQuicksearchManager, objects: object) -> None:
@@ -184,10 +190,10 @@ def _ajax_search(
         m.setattr(
             SnapinQuicksearchManager,
             "evaluate_results",
-            lambda self, objects: iter([("Hosts", [SearchResult(title="heute", url="view.py")])]),
+            lambda self, objects: iter([("Hosts", [SearchResult(title="heute", url="view.py")])]),  # noqa: ARG005
         )
         with output_funnel.plugged():
-            QuicksearchSnapin()._ajax_search(_page_context(config))
+            QuicksearchSnapin()._ajax_search(_page_context(config))  # noqa: SLF001
             return output_funnel.drain()
 
 
@@ -283,7 +289,7 @@ def test_search_open_ignores_a_blank_query(load_config: Config) -> None:
     """No query means no redirect - the user stays where they are."""
     request.set_var("q", "  ")
 
-    QuicksearchSnapin()._page_search_open(_page_context(load_config))
+    QuicksearchSnapin()._page_search_open(_page_context(load_config))  # noqa: SLF001
 
 
 def test_search_open_redirects_to_the_generated_view(
@@ -294,9 +300,9 @@ def test_search_open_redirects_to_the_generated_view(
         m.setattr(
             SnapinQuicksearchManager,
             "generate_search_url",
-            lambda self, query, permissions: "view.py?view_name=allhosts",
+            lambda self, query, permissions: "view.py?view_name=allhosts",  # noqa: ARG005
         )
         with pytest.raises(HTTPRedirect) as redirect:
-            QuicksearchSnapin()._page_search_open(_page_context(load_config))
+            QuicksearchSnapin()._page_search_open(_page_context(load_config))  # noqa: SLF001
 
     assert redirect.value.url == "view.py?view_name=allhosts"

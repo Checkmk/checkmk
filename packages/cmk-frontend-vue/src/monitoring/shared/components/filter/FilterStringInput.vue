@@ -5,46 +5,105 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts" generic="F extends FilterField">
+import CmkChipAutocomplete from 'cmk-ui-library/components/CmkChipAutocomplete.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
-import { ref } from 'vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
+import { computed, ref } from 'vue'
 
 import type { ColumnFilterNode, FilterField } from '../../api/types'
 import type { StringInputFilter } from './types'
 
+const { _t } = usei18n()
+
 const props = defineProps<{ definition: StringInputFilter<F> }>()
 
 const model = defineModel<ColumnFilterNode<F> | undefined>({ default: undefined })
+
 function extractValues(node: ColumnFilterNode<F> | undefined): string {
   if (!node || node.type !== 'condition') {
     return ''
   }
   return typeof node.value === 'string' ? node.value : ''
 }
+
 const value = ref<string>(extractValues(model.value))
+
+function containsNode(text: string): ColumnFilterNode<F> {
+  return {
+    type: 'condition',
+    field: props.definition.field,
+    op: 'contains',
+    value: text
+  } as ColumnFilterNode<F>
+}
 
 function createFilterNode(raw: string | undefined): void {
   const trimmed = (raw ?? '').trim()
-  if (trimmed === '') {
-    model.value = undefined
-  } else {
-    model.value = {
-      type: 'condition',
-      field: props.definition.field,
-      op: 'contains',
-      value: trimmed
-    } as ColumnFilterNode<F>
-  }
+  model.value = trimmed === '' ? undefined : containsNode(trimmed)
 }
+
+// One picked value is a "contains" of it; several are an "or" of one each, so a
+// column whose values are known reads the same to the API as a typed-in one.
+const selected = computed<string[]>({
+  get() {
+    const node = model.value
+    if (!node) {
+      return []
+    }
+    if (node.type === 'or') {
+      return node.children.map((child) => extractValues(child as ColumnFilterNode<F>))
+    }
+    const single = extractValues(node)
+    return single === '' ? [] : [single]
+  },
+  set(values: string[]) {
+    const kept = values.filter((entry) => entry.trim() !== '')
+    if (kept.length === 0) {
+      model.value = undefined
+      return
+    }
+    if (kept.length === 1) {
+      createFilterNode(kept[0])
+      return
+    }
+    model.value = {
+      type: 'or',
+      children: kept.map((entry) => containsNode(entry))
+    }
+  }
+})
 </script>
 
 <template>
   <div class="monitoring-filter-string-input__container">
-    <CmkInput v-model="value" field-size="medium" @update:model-value="createFilterNode($event)" />
+    <CmkChipAutocomplete
+      v-if="definition.suggest"
+      v-model="selected"
+      :suggest="definition.suggest"
+      :suggest-when-empty="definition.suggestWhenEmpty"
+      :key-value="definition.keyValue"
+      :wildcard-option="definition.wildcardOption"
+      :max-selected="definition.maxSelected"
+    />
+    <CmkInput
+      v-else
+      v-model="value"
+      class="monitoring-filter-string-input__element"
+      field-size="medium"
+      :placeholder="_t('Contains ...')"
+      :aria-label="_t('Value')"
+      @update:model-value="createFilterNode($event)"
+    />
   </div>
 </template>
 
 <style scoped>
 .monitoring-filter-string-input__container {
-  margin: 4px 2px;
+  margin: 0 var(--dimension-5) var(--dimension-4) var(--dimension-5);
+
+  /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+  :deep(.monitoring-filter-string-input__element) {
+    width: 100%;
+  }
 }
 </style>

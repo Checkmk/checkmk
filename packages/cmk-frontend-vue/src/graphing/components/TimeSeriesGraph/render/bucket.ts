@@ -5,12 +5,26 @@
  */
 import type { ConsolidationFn } from '../../consolidation'
 import type { M4Bucket } from '../decimation/types'
+import type { TimeValuePoint } from './polyline'
 
-// The time a bucket is drawn at: the midpoint of the samples it holds, not the centre of the
-// column it occupies. A sample wider than one column stays a single point that way, so the
-// curve connects sample-to-sample instead of stepping across the columns the sample covers.
 export function bucketAnchorTime(bucket: M4Bucket): number {
   return bucket.gap ? NaN : (bucket.firstValueTime + bucket.lastValueTime) / 2
+}
+
+// Where a consolidated value belongs on the time axis: `min`/`max` are single samples with a
+// time of their own, an average is no sample and keeps the anchor. See `useHover.drawnTime`.
+export function consolidatedSampleTime(bucket: M4Bucket, consolidation: ConsolidationFn): number {
+  if (bucket.gap || bucket.sampleCount === 0) {
+    return NaN
+  }
+  switch (consolidation) {
+    case 'min':
+      return bucket.minValueTime
+    case 'max':
+      return bucket.maxValueTime
+    case 'avg':
+      return bucketAnchorTime(bucket)
+  }
 }
 
 export function selectConsolidatedValue(bucket: M4Bucket, consolidation: ConsolidationFn): number {
@@ -41,4 +55,19 @@ export function invertBucket(bucket: M4Bucket): M4Bucket {
     lastValue: -bucket.lastValue,
     valueSum: -bucket.valueSum
   }
+}
+
+export function keptSamples(bucket: M4Bucket): TimeValuePoint[] {
+  if (bucket.gap) {
+    return []
+  }
+  const valueBySampleTime = new Map<number, number>([
+    [bucket.firstValueTime, bucket.firstValue],
+    [bucket.minValueTime, bucket.minValue],
+    [bucket.maxValueTime, bucket.maxValue],
+    [bucket.lastValueTime, bucket.lastValue]
+  ])
+  return [...valueBySampleTime]
+    .map(([time, value]) => ({ time, value }))
+    .sort((earlier, later) => earlier.time - later.time)
 }

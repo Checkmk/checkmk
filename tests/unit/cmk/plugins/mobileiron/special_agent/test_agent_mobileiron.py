@@ -7,13 +7,14 @@
 
 import argparse
 import json
+from http import HTTPStatus
 from pathlib import Path
 
 import pytest
 import requests
 import responses
 
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.plugins.mobileiron.special_agent.agent_mobileiron import agent_mobileiron_main
 
 URL1 = "https://example.com/api/v1/device?rows=200&start=0&dmPartitionId=103881"
@@ -42,7 +43,7 @@ def test_agent_output_2_partitions(capsys: pytest.CaptureFixture[str]) -> None:
             responses.GET,
             u,
             json=json.loads(r),
-            status=200,
+            status=HTTPStatus.OK,
         )
 
     args = argparse.Namespace(
@@ -90,7 +91,7 @@ def test_agent_output_regexes(capsys: pytest.CaptureFixture[str]) -> None:
             responses.GET,
             u,
             json=json.loads(r),
-            status=200,
+            status=HTTPStatus.OK,
         )
 
     args = argparse.Namespace(
@@ -117,6 +118,30 @@ def test_agent_output_regexes(capsys: pytest.CaptureFixture[str]) -> None:
 
     # does not fit the regex
     assert "device_duplication" not in captured.out
+
+
+@responses.activate
+def test_agent_handles_connection_error(capsys: pytest.CaptureFixture) -> None:
+    args = argparse.Namespace(
+        hostname="agent_mobileiron",
+        key_fields=("entityName",),
+        android_regex=["foo"],
+        ios_regex=["foo"],
+        other_regex=["foo"],
+        username="",
+        password=Secret(""),
+        partition=["test"],
+        proxy=None,
+        debug=False,
+    )
+    responses.get(
+        f"https://{args.hostname}/api/v1/device",
+        body=requests.exceptions.ConnectionError("Failed to resolve 'agent_mobileiron'"),
+    )
+
+    return_code = agent_mobileiron_main(args)
+    assert return_code == 1
+    assert "ConnectionError" in capsys.readouterr().err
 
 
 @pytest.mark.parametrize(

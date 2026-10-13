@@ -187,7 +187,7 @@ export function get_bounding_rect_of_rotated_vertices(
   return get_bounding_rect(rotated_vertices)
 }
 
-export function update_browser_url(updated_params: { [name: string]: string }) {
+function update_browser_url(updated_params: { [name: string]: string }) {
   // @ts-ignore
   const current_url = new URL(window.location)
   for (const [key, value] of Object.entries(updated_params)) {

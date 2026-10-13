@@ -53,7 +53,7 @@ def discover_hpe_3par_system(section: HPE3ParSystem) -> DiscoveryResult:
         yield Service(item=section.name)
 
 
-def check_hpe_3par_system(item: str, section: HPE3ParSystem) -> CheckResult:
+def check_hpe_3par_system(item: str, section: HPE3ParSystem) -> CheckResult:  # noqa: ARG001
     yield Result(
         state=State.OK,
         summary=f"Model: {section.model}, Version: {section.system_version}, Serial number: {section.serial_number}, Online nodes: {len(section.online_nodes)}/{len(section.cluster_nodes)}",

@@ -11,12 +11,7 @@ from io import StringIO
 
 import pytest
 
-from cmk.automations.results import ABCAutomationResult
-from cmk.base.automations.check_mk import (
-    automation_analyze_host_rule_matches,
-    automation_analyze_service_rule_matches,
-)
-from cmk.base.community_app import make_app
+from cmk.automations.internal import AutomationResult
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
@@ -27,9 +22,14 @@ from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChan
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
 from cmk.livestatus_client import SiteConfigurations
+from cmk.plugins.checkmk.automations.checkmk import (
+    automation_analyze_host_rule_matches,
+    automation_analyze_service_rule_matches,
+)
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.utils.paths import default_config_dir
+from tests.testlib.unit.automations import make_common_state
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
@@ -49,16 +49,21 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
     with a direct call to the automation"""
 
     def analyze_with_matcher(
-        h: HostName, r: Sequence[Sequence[RuleSpec]], *, debug: bool
-    ) -> ABCAutomationResult:
+        h: HostName,
+        r: Sequence[Sequence[RuleSpec]],
+        *,
+        debug: bool,  # noqa: ARG001
+    ) -> AutomationResult:
         ts = Scenario()
         ts.add_host(HostName("ding"))
         ts.add_host(HostName("dong"))
-        ts.apply(monkeypatch)
+        loading_result = ts.apply(monkeypatch)
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
-            return automation_analyze_host_rule_matches.handler(make_app(), [h], None, None)
+            return automation_analyze_host_rule_matches.handler(
+                make_common_state(loading_result), [h]
+            )
 
     monkeypatch.setattr(rulesets, "analyze_host_rule_matches", analyze_with_matcher)
 
@@ -175,16 +180,16 @@ def fixture_mock_analyze_service_rule_matches_automation(monkeypatch: pytest.Mon
         service_labels: Labels,
         rules: Sequence[Sequence[RuleSpec]],
         *,
-        debug: bool,
-    ) -> ABCAutomationResult:
+        debug: bool,  # noqa: ARG001
+    ) -> AutomationResult:
         ts = Scenario()
         ts.add_host(HostName("ding"))
-        ts.apply(monkeypatch)
+        loading_result = ts.apply(monkeypatch)
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr((rules, service_labels))))
             return automation_analyze_service_rule_matches.handler(
-                make_app(), [host_name, service_or_item], None, None
+                make_common_state(loading_result), [host_name, service_or_item]
             )
 
     monkeypatch.setattr(rulesets, "analyze_service_rule_matches", analyze_with_matcher)
@@ -297,10 +302,10 @@ def test_predefined_conditions_allows_id_with_dash(
     monkeypatch.setattr(
         PredefinedConditionStore,
         "choices",
-        lambda self: [("my-condition-1", "My condition")],
+        lambda self: [("my-condition-1", "My condition")],  # noqa: ARG005
     )
 
-    rulesets._create_rule_conditions_catalog_topic(
+    rulesets._create_rule_conditions_catalog_topic(  # noqa: SLF001
         locked_conditions=None,
         tree=FolderTree(config=HostsAndFoldersConfig.from_config(active_config)),
         rule_spec_name="only_hosts",

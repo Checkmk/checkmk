@@ -23,7 +23,7 @@ def family_libexec_dir(module_name: str) -> Path:
     Example:
       `family_libexec_dir("cmk.plugins.checkmk.server_side_calls.cmk_inv")`
       will return something like
-      `/.../lib/python3.13/site-packages/cmk/plugins/checkmk/libexec',
+      `/.../lib/pythonX.YZ/site-packages/cmk/plugins/checkmk/libexec',
       depending on the `__file__` attribute of the module.
 
     """

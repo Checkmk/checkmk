@@ -121,11 +121,15 @@ class _LogwatchConfigDummy:
         self.debug = False
 
     def logwatch_rules_all(
-        self, *, host_name: str, plugin: CheckPlugin, logfile: str
+        self,
+        *,
+        host_name: str,  # noqa: ARG002
+        plugin: CheckPlugin,  # noqa: ARG002
+        logfile: str,  # noqa: ARG002
     ) -> Sequence[ParameterLogwatchRules]:
         return ()
 
-    def logwatch_ec_all(self, host_name: str) -> Sequence[ParameterLogwatchEc]:
+    def logwatch_ec_all(self, host_name: str) -> Sequence[ParameterLogwatchEc]:  # noqa: ARG002
         return self._ec_all
 
 
@@ -346,7 +350,8 @@ def test_logwatch_discover_single_restrict() -> None:
         ]
 
 
-def test_logwatch_discover_single_groups(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.usefixtures("monkeypatch")
+def test_logwatch_discover_single_groups() -> None:
     params = [
         logwatch_.ParameterLogwatchGroups(
             grouping_patterns=[
@@ -362,7 +367,8 @@ def test_logwatch_discover_single_groups(monkeypatch: pytest.MonkeyPatch) -> Non
         ]
 
 
-def test_logwatch_discover_groups(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.usefixtures("monkeypatch")
+def test_logwatch_discover_groups() -> None:
     params = [
         logwatch_.ParameterLogwatchGroups(
             grouping_patterns=[

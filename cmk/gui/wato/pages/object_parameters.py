@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="type-arg"
 
 """Mode for displaying and modifying the rule based host and service
@@ -31,7 +29,6 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuEntry, PageMenuTopic
-from cmk.gui.type_defs import PermissionName
 from cmk.gui.valuespec import Tuple, ValueSpecText
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.automations import (
@@ -42,8 +39,8 @@ from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
     folder_preserving_link,
-    folder_tree,
     Host,
+    make_folder_tree,
 )
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
@@ -62,6 +59,7 @@ from cmk.ruleset_matcher.labels import Labels, LabelSources
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.servicename import Item
 from cmk.web.utils.html import HTML
+from cmk.web.utils.permission_verification import PermissionName
 
 from ._status_links import make_service_status_link
 from .rulesets import render_value_model_readonly
@@ -96,7 +94,8 @@ class ModeObjectParameters(WatoMode):
     @override
     def _from_vars(self) -> None:
         self._hostname = request.get_validated_type_input_mandatory(HostName, "host")
-        host = folder_from_request(folder_tree(), request.var("folder"), self._hostname).host(
+        self._tree = make_folder_tree(self._ctx.config)
+        host = folder_from_request(self._tree, request.var("folder"), self._hostname).host(
             self._hostname
         )
         if host is None:
@@ -148,7 +147,7 @@ class ModeObjectParameters(WatoMode):
 
     @override
     def page(self, config: Config) -> None:
-        all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
+        all_rulesets = AllRulesets.load_all_rulesets(self._tree)
         for_host: bool = not self._service
 
         # Object type specific detail information
@@ -360,7 +359,7 @@ class ModeObjectParameters(WatoMode):
             _("Determined by discovery"),
             "",
             False,
-            rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"]),
+            rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"]),  # noqa: SLF001
         )
         render_labels()
 
@@ -376,9 +375,7 @@ class ModeObjectParameters(WatoMode):
     ) -> None:
         checkgroup = serviceinfo["checkgroup"]
         rulespec = rulespec_registry.get("static_checks:" + checkgroup)
-        if rulespec is None or (
-            rulespec_allow_list is not None and not rulespec_allow_list.is_visible(rulespec.name)  # type: ignore[redundant-expr]
-        ):
+        if rulespec is None or not rulespec_allow_list.is_visible(rulespec.name):
             html.write_text_permissive(_("This check is not configurable via Setup"))
             return
 
@@ -403,7 +400,7 @@ class ModeObjectParameters(WatoMode):
         )
         assert isinstance(rulespec.valuespec, Tuple)
         html.write_text_permissive(
-            rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"])
+            rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"])  # noqa: SLF001
         )
         html.close_td()
         html.close_tr()
@@ -416,7 +413,7 @@ class ModeObjectParameters(WatoMode):
         all_rulesets: AllRulesets,
         rulespec_allow_list: RulespecAllowList | AllowAll,
         service_result: AnalyseServiceResult,
-        render_labels: Callable[[], None],
+        render_labels: Callable[[], None],  # noqa: ARG002
         *,
         debug: bool,
     ) -> None:
@@ -499,8 +496,8 @@ class ModeObjectParameters(WatoMode):
     def _get_custom_check_origin_rule(
         self,
         ruleset: Ruleset,
-        hostname: str,
-        svc_desc: str,
+        hostname: str,  # noqa: ARG002
+        svc_desc: str,  # noqa: ARG002
         service_result: AnalyseServiceResult,
         *,
         debug: bool,
@@ -713,7 +710,7 @@ class ModeObjectParameters(WatoMode):
 
 
 def _get_irrelevant_rulesets(service: str | None) -> Container[str]:
-    match service:
+    match service:  # type: ignore[exhaustive-match]
         case "Check_MK Discovery":
             return {
                 # These two are not considered for the discovery service.

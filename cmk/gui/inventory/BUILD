@@ -22,7 +22,6 @@ py_library(
         "//cmk/gui/openapi/framework:types",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/userdb",
-        "//cmk/gui/utils:base",
         "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
         "//cmk/gui/views:components",

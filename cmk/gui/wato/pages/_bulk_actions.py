@@ -17,7 +17,7 @@ from cmk.gui.watolib.hosts_and_folders import Folder, Host, SearchFolder
 def get_hostnames_from_checkboxes(
     folder: Folder | SearchFolder,
     filterfunc: Callable[[Host], bool] | None = None,
-    deflt: bool = False,
+    deflt: bool = False,  # noqa: ARG001
 ) -> Sequence[HostName]:
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""

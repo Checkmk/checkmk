@@ -11,6 +11,7 @@ import 'select2'
 import Swal from 'sweetalert2'
 
 import { call_ajax } from './ajax'
+import { getCsrfToken } from './csrf'
 import type { CMKAjaxReponse, RequireConfirmation } from './types'
 import { add_class, prevent_default_events, remove_class } from './utils'
 import { initialize_autocompleters, toggle_label_row_opacity } from './valuespecs'
@@ -365,6 +366,20 @@ export function textinput_enter_submit(event: KeyboardEvent, submit: string): bo
   }
 }
 
+export function confirm_dialog_form_submit(
+  dialog_options: any,
+  form_id: string,
+  cancel_url: string,
+  deny_handler: null | (() => void) = null
+) {
+  confirm_dialog(
+    dialog_options,
+    () => (document.getElementById(form_id) as HTMLFormElement).submit(),
+    () => (location.href = cancel_url),
+    deny_handler
+  )
+}
+
 // Helper function to display nice popup confirm dialogs
 export function confirm_dialog(
   optional_args: any,
@@ -418,7 +433,7 @@ export function confirm_dialog(
     customClass: custom_class_args
   }
 
-  if (!!post_confirm_waiting_text) {
+  if (post_confirm_waiting_text) {
     const current_confirm_handler = confirm_handler ?? (() => {})
     confirm_handler = () => {
       waiting_flash_message('page_menu_popups', post_confirm_waiting_text)
@@ -484,7 +499,7 @@ export function confirm_link(
       const csrf_token_input = Object.assign(document.createElement('input'), {
         type: 'hidden',
         name: '_csrf_token',
-        value: global_csrf_token
+        value: getCsrfToken()
       })
 
       form.appendChild(csrf_token_input)

@@ -449,9 +449,7 @@ class TCPSource(Source[AgentRawData]):
             relative_path_template=os.path.join(self._file_cache_path_relative, self.host_name),
             max_age=self._max_age,
             simulation=simulation,
-            use_only_cache=(
-                file_cache_options.tcp_use_only_cache or file_cache_options.use_only_cache
-            ),
+            use_only_cache=file_cache_options.use_only_cache,
             file_cache_mode=file_cache_options.file_cache_mode(),
         )
 

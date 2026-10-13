@@ -12,9 +12,9 @@ import sys
 from collections.abc import Sequence
 from contextlib import suppress
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.jolokia.agents import mk_jolokia
-from cmk.server_side_programs.v1_unstable import vcrtrace
+from cmk.server_side_programs.v1 import vcrtrace
 
 __version__ = "3.0.0b1"
 
@@ -40,9 +40,9 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         required=False,
     )
 
-    opts_with_help: list[tuple[str, str | None | float, str]] = [
-        (key, default, help_[0])  # type: ignore[misc]
-        for key, default, *help_ in mk_jolokia.DEFAULT_CONFIG_TUPLES
+    opts_with_help: list[tuple[str, object, str]] = [
+        (key, default, help_)
+        for key, default, help_ in mk_jolokia.DEFAULT_CONFIG_TUPLES
         if help_ and key != mk_jolokia.PASSWORD_OPTION
     ]
 

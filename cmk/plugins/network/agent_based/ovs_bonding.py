@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from cmk.agent_based.v2 import AgentSection, StringTable
 from cmk.plugins.network import lib_bonding as bonding
@@ -20,8 +19,10 @@ def parse_ovs_bonding(string_table: StringTable) -> bonding.Section:
     last_interface: str | None = None
 
     for line in string_table:
-        match line:
-            case ["active slave"] if current_bond and last_interface:
+        match line:  # type: ignore[exhaustive-match]
+            # Open vSwitch renamed `slave` to `member`, see
+            # https://github.com/openvswitch/ovs/blob/main/NEWS
+            case ["active slave" | "active member"] if current_bond and last_interface:
                 bonds[current_bond]["active"] = last_interface
 
             case [raw_bond] if raw_bond.startswith("[") and raw_bond.endswith("]"):
@@ -29,7 +30,7 @@ def parse_ovs_bonding(string_table: StringTable) -> bonding.Section:
                 bonds[current_bond] = {}
                 last_interface = None  # reset when handling new bond section
 
-            case [key, value] if current_bond and key.startswith("slave"):
+            case [key, value] if current_bond and key.startswith(("slave ", "member ")):
                 _, eth = key.split()
                 stripped_status = value.strip()
                 status = "up" if stripped_status == "enabled" else stripped_status

@@ -35,19 +35,9 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import (
-    ActionResult,
-    Choices,
-    CustomAttrSpec,
-    CustomHostAttrSpec,
-    CustomUserAttrSpec,
-    IconNames,
-    PermissionName,
-    StaticIcon,
-)
+from cmk.gui.type_defs import ActionResult, CustomAttrSpec, CustomHostAttrSpec, CustomUserAttrSpec
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes
-from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import CORE
@@ -74,6 +64,10 @@ from cmk.gui.watolib.pending_changes import (
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.users import remove_custom_attribute_from_all_users, user_features_registry
 from cmk.livestatus_client import SiteConfigurations
+from cmk.web.utils.choices import Choice
+from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 
 
@@ -84,7 +78,7 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeCustomHostAttrs)
 
 
-def custom_attr_types() -> Choices:
+def custom_attr_types() -> list[Choice]:
     return [
         ("TextAscii", _("Simple Text")),
     ]
@@ -121,7 +115,7 @@ class ModeEditCustomAttr[T: CustomAttrSpec](WatoMode):
 
     @property
     @abc.abstractmethod
-    def _topics(self) -> Choices:
+    def _topics(self) -> list[Choice]:
         raise NotImplementedError
 
     @property
@@ -350,7 +344,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr[CustomUserAttrSpec]):
 
     @property
     @override
-    def _topics(self) -> Choices:
+    def _topics(self) -> list[Choice]:
         return [
             ("ident", _("Identity")),
             ("security", _("Security")),
@@ -457,7 +451,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr[CustomHostAttrSpec]):
 
     @property
     @override
-    def _topics(self) -> Choices:
+    def _topics(self) -> list[Choice]:
         return host_attribute_topic_registry.get_choices()
 
     @property
@@ -656,6 +650,7 @@ class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
                     [("mode", "edit_%s_attr" % self._type), ("edit", custom_attr["name"])],
                 )
                 delete_url = make_confirm_delete_link(
+                    i18n=_,
                     url=makeactionuri(
                         request, transactions.get(), [("_delete", custom_attr["name"])]
                     ),

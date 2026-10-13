@@ -6,7 +6,12 @@
     "hide_item_title": { "type": "boolean", "default": false },
     "start": { "$ref": "#/$defs/start_item" },
     "main": { "$ref": "#/$defs/nav_items" },
-    "user": { "$ref": "#/$defs/nav_items" }
+    "user": { "$ref": "#/$defs/nav_items" },
+    "toggles": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/nav_toggle_item" },
+      "default": []
+    }
   },
   "required": ["start", "main", "user"],
   "$defs": {
@@ -64,6 +69,13 @@
         "type": { "type": "string", "const": "link" },
         "url": { "type": "string" },
         "target": { "type": "string" }
+      }
+    },
+    "nav_toggle_item": {
+      "allOf": [{ "$ref": "#/$defs/nav_base_item" }],
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "const": "toggle" }
       }
     },
     "nav_item_topic": {
@@ -182,7 +194,17 @@
       "required": ["mode"]
     },
     "nav_item_id_enum": {
-      "enum": ["search", "monitoring", "customize", "setup", "changes", "saas", "help", "user"]
+      "enum": [
+        "search",
+        "monitoring",
+        "customize",
+        "setup",
+        "changes",
+        "saas",
+        "help",
+        "user",
+        "ai_assistant"
+      ]
     },
     "nav_vue_app_id_enum": {
       "enum": ["cmk-activate-changes", "cmk-unified-search"]
@@ -203,7 +225,7 @@
       "enum": ["item", "multilevel", "indented"]
     },
     "nav_item_type": {
-      "enum": ["item", "link", "configurable"]
+      "enum": ["item", "link", "configurable", "toggle"]
     }
   }
 }

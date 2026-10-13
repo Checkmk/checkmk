@@ -44,17 +44,10 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import (
-    ActionResult,
-    Choices,
-    CustomHostAttrSpec,
-    IconNames,
-    PermissionName,
-    StaticIcon,
-)
+from cmk.gui.type_defs import ActionResult, CustomHostAttrSpec
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.selection_id import SelectionId
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Checkbox,
@@ -72,8 +65,8 @@ from cmk.gui.watolib.host_attributes import ABCHostAttribute, all_host_attribute
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
-    folder_tree,
     FolderTree,
+    make_folder_tree,
     strip_hostname_whitespace_chars,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
@@ -84,8 +77,12 @@ from cmk.gui.watolib.pending_changes import (
 )
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.ruleset_matcher.tags import TagGroup
+from cmk.web.utils.choices import Choice
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.escaping import escape_to_html_permissive
 from cmk.web.utils.flashed_messages import flash
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 
 ImportTuple = tuple[HostName, HostAttributes, None]
 
@@ -120,7 +117,7 @@ def _prevent_reused_attr_names(attr_names: Sequence[str | None]) -> None:
 def _attribute_choices(
     tag_groups: Sequence[TagGroup],
     custom_host_attrs: Sequence[CustomHostAttrSpec],
-) -> Choices:
+) -> list[Choice]:
     attributes = [
         (None, _("(please select)")),
         ("-", _("Don't import")),
@@ -144,9 +141,9 @@ def _attribute_choices(
     return attributes
 
 
-def _detect_attribute(attributes: Choices, header: str) -> str:
+def _detect_attribute(attributes: Sequence[Choice], header: str) -> str:
     """
-    Given a 'Choices' of possible host attributes, and assuming there is a
+    Given the possible host attributes as choices, and assuming there is a
     title line in the CSV, try to match the given title (for a particular
     column) with the attribute key most likely related to it.
     """
@@ -453,7 +450,7 @@ class ModeBulkImport(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if transactions.transaction_valid(request):
             if request.has_var("_do_upload"):
@@ -465,7 +462,7 @@ class ModeBulkImport(WatoMode):
 
             if request.var("_do_import"):
                 return self._import(
-                    folder_tree(),
+                    make_folder_tree(config),
                     csv_bulk_import,
                     host_attributes=all_host_attributes(
                         config.wato_host_attrs, config.tags.get_tag_groups_by_topic()
@@ -647,7 +644,7 @@ class ModeBulkImport(WatoMode):
                 index += len(batch)
                 # First column is host_name. Add all of them.
                 imported_hosts.extend(map(operator.itemgetter(0), batch))
-            except (MKAuthException, MKUserError, MKGeneralException):
+            except MKAuthException, MKUserError, MKGeneralException:
                 # We fall back to individual imports to determine the precise location of the error
                 for entry in batch:
                     try:

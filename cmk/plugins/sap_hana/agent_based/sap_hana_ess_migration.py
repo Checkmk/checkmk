@@ -58,7 +58,7 @@ def parse_sap_hana_ess_migration(string_table: StringTable) -> Section:
                 )
                 timestamp_str = datetime.datetime.strftime(timestamp, "%Y-%m-%d %H:%M:%S")
                 parsed[sid_instance]["timestamp"] = timestamp_str
-            except (ValueError, IndexError):
+            except ValueError, IndexError:
                 pass
 
     return parsed

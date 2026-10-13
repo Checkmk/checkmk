@@ -72,7 +72,7 @@ def create_ipmi_parameters() -> form_specs.Dictionary:
 
 def SNMPCredentials(
     title: str | None = None,
-    help: ValueSpecHelp | None = None,
+    help: ValueSpecHelp | None = None,  # noqa: A002
     only_v3: bool = False,
     default_value: str | None = "public",
     allow_none: bool = False,

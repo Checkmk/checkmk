@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This file provides an abstraction of the internal MKP structure"""
 
-from __future__ import annotations
-
 import ast
 import enum
 import logging
@@ -115,7 +113,7 @@ def manifest_template(
 def read_manifest_optionally(manifest_path: Path) -> Manifest | None:
     try:
         return Manifest.parse_python_string(manifest_path.read_text())
-    except (OSError, SyntaxError, TypeError, ValueError, ValidationError):
+    except OSError, SyntaxError, TypeError, ValueError, ValidationError:
         _logger.exception(
             "[%(manifest_path)s]: Failed to read package manifest",
             {"manifest_path": manifest_path},

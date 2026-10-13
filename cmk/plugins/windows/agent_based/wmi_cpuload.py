@@ -12,12 +12,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     get_average,
     get_value_store,
-    Service,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.lib.cpu import Load, ProcessorType
 from cmk.plugins.lib.cpu import Section as CPUSection
 from cmk.plugins.lib.cpu_load import check_cpu_load, CPULoadParams
@@ -51,18 +50,18 @@ def parse_wmi_cpuload(string_table: StringTable) -> Section | None:
         load = wmi_tables["system_perf"].get(0, "ProcessorQueueLength")
         timestamp = get_wmi_time(wmi_tables["system_perf"], 0, raise_on_timeout=True)
         computer_system = wmi_tables["computer_system"]
-    except (KeyError, WMIQueryTimeoutError):
+    except KeyError, WMIQueryTimeoutError:
         return None
     assert load
 
     try:
         n_cores = computer_system.get(0, "NumberOfLogicalProcessors", raise_on_timeout=True)
         processor_type = ProcessorType.logical
-    except (KeyError, WMIQueryTimeoutError):
+    except KeyError, WMIQueryTimeoutError:
         try:
             n_cores = computer_system.get(0, "NumberOfProcessors", raise_on_timeout=True)
             processor_type = ProcessorType.physical
-        except (KeyError, WMIQueryTimeoutError):
+        except KeyError, WMIQueryTimeoutError:
             return None
 
     # NumberOfLogicalProcessors can be an empty string, not sure why
@@ -81,10 +80,6 @@ agent_section_wmi_cpuload = AgentSection(
     name="wmi_cpuload",
     parse_function=parse_wmi_cpuload,
 )
-
-
-def discover_wmi_cpuload(section: Section) -> DiscoveryResult:
-    yield Service()
 
 
 def _handle_time_counter_resets(
@@ -147,7 +142,7 @@ def check_wmi_cpuload(
 
 check_plugin_wmi_cpuload = CheckPlugin(
     name="wmi_cpuload",
-    discovery_function=discover_wmi_cpuload,
+    discovery_function=discover_one_service,
     check_function=check_wmi_cpuload,
     service_name="Processor Queue",
     check_default_parameters={

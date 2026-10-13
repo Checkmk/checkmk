@@ -8,13 +8,19 @@ import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 
 import { buildHostColumns } from '@/monitoring/all-hosts/columns'
-import { useHostServicesColumns, visibleServiceFields } from '@/monitoring/host-services/columns'
+import {
+  buildHostServicesColumnPinning,
+  uncapNameWithoutSummary,
+  useHostServicesColumns,
+  visibleServiceFields
+} from '@/monitoring/host-services/columns'
 import type { HostServiceEntry } from '@/monitoring/shared/api/types'
 import {
   MonitoringService,
   type PagedResponse
 } from '@/monitoring/shared/services/MonitoringService'
-import { columnId } from '@/monitoring/shared/tableState/schema'
+import { buildTableStateSchema, columnId } from '@/monitoring/shared/tableState/schema'
+import type { TableStateSchema } from '@/monitoring/shared/tableState/types'
 
 import { makeKeyShortcutService, makeResponse } from '../shared/services/testHelpers'
 
@@ -28,10 +34,23 @@ class ServiceColumnService extends MonitoringService<HostServiceEntry> {
   }
 }
 
+function serviceColumns(includeSelect = true): ColumnDef<HostServiceEntry>[] {
+  return useHostServicesColumns({ includeSelect })
+}
+
 function makeService() {
-  const service = new ServiceColumnService(useHostServicesColumns(), makeKeyShortcutService())
+  const service = new ServiceColumnService(serviceColumns(), makeKeyShortcutService())
   service.stopPolling()
   return service
+}
+
+/** The display vocabulary the picker and the URL codec read off the columns. */
+function schemaOf(includeSelect: boolean): TableStateSchema {
+  return buildTableStateSchema({
+    columns: serviceColumns(includeSelect),
+    limitTiers: [1000],
+    mayRemoveLimit: false
+  })
 }
 
 beforeEach(() => {
@@ -75,13 +94,121 @@ test('the state column reads as the one in the hosts listing', () => {
     }
   }
 
-  expect(stateOf(useHostServicesColumns() as ColumnDef<never>[])).toEqual(
-    stateOf(buildHostColumns({ includeActions: true, sites: [] }) as ColumnDef<never>[])
+  expect(stateOf(serviceColumns() as ColumnDef<never>[])).toEqual(
+    stateOf(
+      buildHostColumns({
+        includeSelect: true,
+        showCustomer: false,
+        sites: [],
+        showRelations: false
+      }) as ColumnDef<never>[]
+    )
   )
+})
+
+test('the state column filter offers the state checkboxes plus flapping/stale flags', () => {
+  const stateColumn = serviceColumns().find(
+    (column) => columnId(column as ColumnDef<never>) === 'state'
+  )
+
+  expect(stateColumn?.meta?.filter).toEqual({
+    type: 'checkbox-list-with-flags',
+    field: 'state',
+    options: [
+      { value: 'OK', title: 'OK' },
+      { value: 'WARN', title: 'WARN' },
+      { value: 'CRIT', title: 'CRIT' },
+      { value: 'UNKNOWN', title: 'UNKNOWN' },
+      { value: 'PENDING', title: 'PENDING' }
+    ],
+    flags: [
+      { field: 'is_flapping', title: 'Flapping' },
+      { field: 'stale', title: 'Stale' }
+    ]
+  })
+})
+
+test('the mode column filter no longer offers flapping, which moved to the state column', () => {
+  const modesColumn = serviceColumns().find(
+    (column) => columnId(column as ColumnDef<never>) === 'modes'
+  )
+
+  expect(modesColumn?.meta?.filter).toEqual({
+    type: 'boolean-group',
+    groups: [
+      { field: 'in_downtime', title: 'In downtime' },
+      { field: 'acknowledged', title: 'Acknowledged' },
+      { field: 'notifications_enabled', title: 'Notifications enabled' },
+      { field: 'has_comments', title: 'Has comments' },
+      { field: 'active_checks_disabled', title: 'Active checks disabled' },
+      { field: 'passive_checks_disabled', title: 'Passive checks disabled' },
+      { field: 'in_notification_period', title: 'In notification period' },
+      { field: 'in_service_period', title: 'In service period' },
+      { field: 'in_check_period', title: 'In check period' },
+      { field: 'check_crashed', title: 'Check crashed' }
+    ]
+  })
+})
+
+test('the select column is neither rendered nor pinned when no action is permitted', () => {
+  expect(serviceColumns(false).map(columnId)).not.toContain('select')
+  expect(buildHostServicesColumnPinning({ includeSelect: false }).left).toEqual([
+    'state',
+    'modes',
+    'name'
+  ])
 })
 
 test('the hidden columns stay on offer in the picker', () => {
   expect(makeService().toggleableColumns.map((column) => column.id)).toEqual(
     expect.arrayContaining(['labels', 'tags', 'contacts', 'contact_groups'])
   )
+})
+
+test('the select column adds itself without disturbing the other columns', () => {
+  // Two users of the same table, one permitted to act on a selection and one not,
+  // must see tables that differ in nothing but that column.
+  const ids = (includeSelect: boolean) =>
+    serviceColumns(includeSelect).map((column) => columnId(column as ColumnDef<never>))
+
+  expect(ids(true).filter((id) => id !== 'select')).toEqual(ids(false))
+  expect(schemaOf(true).hideable).toEqual(schemaOf(false).hideable)
+  expect(schemaOf(true).sortable).toEqual(schemaOf(false).sortable)
+})
+
+test('the select column is never on offer in the picker', () => {
+  expect(schemaOf(true).hideable).not.toContain('select')
+  expect(makeService().toggleableColumns.map((column) => column.id)).not.toContain('select')
+})
+
+function nameColumn(columns: ColumnDef<HostServiceEntry>[]): ColumnDef<HostServiceEntry> {
+  return columns.find((column) => columnId(column) === 'name')!
+}
+
+test('the service name keeps its cap while the summary takes the spare width', () => {
+  const columns = uncapNameWithoutSummary(serviceColumns(), {})
+
+  expect(nameColumn(columns).maxSize).toBe(350)
+})
+
+test('the service name takes the spare width once the summary is hidden', () => {
+  const columns = uncapNameWithoutSummary(serviceColumns(), { summary: false })
+
+  expect(nameColumn(columns).maxSize).toBeUndefined()
+  expect(nameColumn(columns).minSize).toBe(150)
+})
+
+test('the actions column widens by one button width per inline action', () => {
+  const actionsSize = (inlineActions: number) =>
+    useHostServicesColumns({ includeSelect: true, inlineActions }).find(
+      (column) => columnId(column) === 'actions'
+    )!.minSize!
+
+  expect(actionsSize(2) - actionsSize(1)).toBe(actionsSize(1) - actionsSize(0))
+  expect(actionsSize(1)).toBeGreaterThan(actionsSize(0))
+})
+
+test('last state change comes before last check, matching the legacy view', () => {
+  const ids = serviceColumns().map((column) => columnId(column as ColumnDef<never>))
+  expect(ids.indexOf('last_state_change')).toBeLessThan(ids.indexOf('last_check'))
 })

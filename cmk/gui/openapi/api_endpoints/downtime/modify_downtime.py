@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime as dt
+from http import HTTPStatus
 from typing import Annotated, assert_never
 
 from pydantic import Discriminator
@@ -99,7 +100,7 @@ def modify_downtime_v1(
     end_time = _resolve_end_time(body.end_time)
     if end_time is None and comment is None:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="No modification specified",
             detail="You must specify at least one field to modify",
         )
@@ -113,7 +114,7 @@ def modify_downtime_v1(
         comment=comment,
     )
 
-    return ApiResponse(body=None, status_code=204)
+    return ApiResponse(body=None, status_code=HTTPStatus.NO_CONTENT)
 
 
 ENDPOINT_MODIFY_DOWNTIME = VersionedEndpoint(
@@ -130,7 +131,7 @@ ENDPOINT_MODIFY_DOWNTIME = VersionedEndpoint(
         APIVersion.V1: EndpointHandler(
             handler=modify_downtime_v1,
             status_descriptions={
-                204: "Update downtimes commands have been sent to Livestatus. "
+                HTTPStatus.NO_CONTENT: "Update downtimes commands have been sent to Livestatus. "
                 + LIVESTATUS_GENERIC_EXPLANATION
             },
         )

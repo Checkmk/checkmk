@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
 
 import datetime
@@ -13,6 +14,7 @@ import random
 import string
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
+from http import HTTPStatus
 from typing import Any, cast, get_args
 from unittest.mock import MagicMock, patch
 
@@ -55,8 +57,8 @@ from cmk.gui.watolib.pending_changes import PendingChanges, PendingChangesStore
 from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import create_user, default_sites, edit_user
 from cmk.utils import paths
-from tests.testlib.gui.web_test_app import SetConfig
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 def _test_pending_changes() -> PendingChanges:
@@ -265,7 +267,7 @@ def test_openapi_user_config(
     assert len(collection_resp.json["value"]) == 2
 
     clients.User.delete(username=name)
-    clients.User.get(username=name, expect_ok=False).assert_status_code(404)
+    clients.User.get(username=name, expect_ok=False).assert_status_code(HTTPStatus.NOT_FOUND)
 
     collection_resp = clients.User.get_all()
     assert len(collection_resp.json["value"]) == 1
@@ -426,7 +428,10 @@ def fixture_password_policy(set_config: SetConfig) -> Iterator[None]:
     ],
 )
 def test_openapi_create_user_password_failures(
-    clients: ClientRegistry, with_password_policy: None, password: str, reason: str
+    clients: ClientRegistry,
+    with_password_policy: None,
+    password: str,
+    reason: str,
 ) -> None:
     """Test that invalid passwords are denied and handled gracefully"""
 
@@ -439,7 +444,9 @@ def test_openapi_create_user_password_failures(
         }
     )
 
-    response = clients.User.create(**user_detail, expect_ok=False).assert_status_code(400)
+    response = clients.User.create(**user_detail, expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
 
     assert reason in response.json["detail"]
 
@@ -460,7 +467,7 @@ def test_openapi_automation_enforce_pw_change(clients: ClientRegistry) -> None:
     )
 
     response = clients.User.create(**user_detail, expect_ok=False)
-    response.assert_status_code(400)
+    response.assert_status_code(HTTPStatus.BAD_REQUEST)
 
     assert (
         "Unexpected keyword argument"
@@ -481,7 +488,7 @@ def test_openapi_incomplete_auth_options(clients: ClientRegistry, auth_type: str
         }
     )
 
-    clients.User.create(**user_detail, expect_ok=False).assert_status_code(400)
+    clients.User.create(**user_detail, expect_ok=False).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_openapi_user_internal_auth_handling(
@@ -490,7 +497,7 @@ def test_openapi_user_internal_auth_handling(
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.userdb.htpasswd.hash_password",
-        lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
+        lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",  # noqa: ARG005
     )
 
     name = UserId("foo")
@@ -705,7 +712,7 @@ def test_openapi_user_update_contact_options(clients: ClientRegistry) -> None:
 
     clients.User.edit(
         username=username, contact_options={"fallback_contact": True}, expect_ok=False
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     resp = clients.User.get(username=username)
 
@@ -745,7 +752,7 @@ def test_openapi_user_update_fails_because_alias_and_field_set(clients: ClientRe
         username=username,
         interface_options={"mega_menu_icons": "entry", "main_menu_icons": "topic"},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 # TODO: DEPRECATED(18295) remove "mega_menu_icons"
@@ -770,11 +777,12 @@ def test_openapi_user_create_fails_because_alias_and_field_set(
             pager_address="",
             language="en",
             expect_ok=False,
-        ).assert_status_code(400)
+        ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_openapi_user_disable_notifications(
-    clients: ClientRegistry, monkeypatch: MonkeyPatch
+    clients: ClientRegistry,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     username = "cmkuser"
 
@@ -800,7 +808,7 @@ def test_show_all_users_with_no_email(clients: ClientRegistry, monkeypatch: Monk
     # We remove all the contact information to mimic the no email case
     monkeypatch.setattr(
         "cmk.gui.userdb.store.load_contacts",
-        lambda *args, **kwargs: {},
+        lambda *args, **kwargs: {},  # noqa: ARG005
     )
 
     resp = clients.User.get_all()
@@ -809,7 +817,8 @@ def test_show_all_users_with_no_email(clients: ClientRegistry, monkeypatch: Monk
 
 
 def test_user_enforce_password_change_option(
-    clients: ClientRegistry, monkeypatch: MonkeyPatch
+    clients: ClientRegistry,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     username = "cmkuser"
 
@@ -837,7 +846,8 @@ def test_user_enforce_password_change_option(
 
 
 def test_response_schema_compatible_with_request_schema(
-    clients: ClientRegistry, monkeypatch: MonkeyPatch
+    clients: ClientRegistry,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     username = "cmkuser"
 
@@ -911,7 +921,8 @@ def _load_internal_attributes(username: UserId) -> dict[str, Any]:
 
 
 def test_openapi_new_user_with_cloned_role(
-    clients: ClientRegistry, monkeypatch: MonkeyPatch
+    clients: ClientRegistry,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     cloned_role: UserRole = clone_role(RoleID("admin"), pprint_value=False)
     username = f"new_user_with_role_{cloned_role.name}"
@@ -936,7 +947,7 @@ def test_openapi_new_user_with_non_existing_role(clients: ClientRegistry) -> Non
         fullname=f"NewUser_{userrole}",
         roles=[userrole],
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @contextmanager
@@ -1042,7 +1053,8 @@ def test_edit_custom_attributes_of_user(_mock: None, clients: ClientRegistry) ->
 
 
 def test_create_user_with_non_existing_custom_attribute(
-    clients: ClientRegistry, monkeypatch: MonkeyPatch
+    clients: ClientRegistry,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     result = clients.User.create(
         username="cmkuser",
@@ -1060,7 +1072,7 @@ def test_create_user_with_non_existing_custom_attribute(
         expect_ok=False,
     )
 
-    assert result.json["status"] == 400
+    assert result.json["status"] == HTTPStatus.BAD_REQUEST
     assert "Unknown Attribute: 'i_do_not'" in result.json["fields"]["body"]["msg"]
 
 
@@ -1074,7 +1086,7 @@ def test_create_user_with_non_existing_custom_attribute(
 def test_user_with_invalid_id(clients: ClientRegistry, username: str) -> None:
     clients.User.create(
         username=username, fullname="Invalid name", expect_ok=False
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_openapi_edit_non_existing_user_regression(clients: ClientRegistry) -> None:
@@ -1082,7 +1094,7 @@ def test_openapi_edit_non_existing_user_regression(clients: ClientRegistry) -> N
         username="i_do_not_exists",
         fullname="I hopefully won't crash the site!",
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_openapi_all_authorized_sites(clients: ClientRegistry) -> None:
@@ -1172,7 +1184,7 @@ def test_user_without_permission_cant_interrogate_if_user_exists(clients: Client
         auth_option={"auth_type": "password", "password": "supersecretish2"},
         expect_ok=False,
     )
-    resp1.assert_status_code(403)
+    resp1.assert_status_code(HTTPStatus.FORBIDDEN)
     assert (
         resp1.json["detail"]
         == "We are sorry, but you lack the permission for this operation. If you do not like this then please ask your administrator to provide you with the following permission: '<b>User management</b>'."
@@ -1185,7 +1197,7 @@ def test_user_without_permission_cant_interrogate_if_user_exists(clients: Client
         authorized_sites=["all"],
         expect_ok=False,
     )
-    resp2.assert_status_code(403)
+    resp2.assert_status_code(HTTPStatus.FORBIDDEN)
     assert (
         resp2.json["detail"]
         == "We are sorry, but you lack the permission for this operation. If you do not like this then please ask your administrator to provide you with the following permission: '<b>User management</b>'."
@@ -1196,7 +1208,7 @@ def test_user_without_permission_cant_interrogate_if_user_exists(clients: Client
         username="user1",
         expect_ok=False,
     )
-    resp3.assert_status_code(403)
+    resp3.assert_status_code(HTTPStatus.FORBIDDEN)
     assert (
         resp3.json["detail"]
         == "We are sorry, but you lack the permission for this operation. If you do not like this then please ask your administrator to provide you with the following permission: '<b>User management</b>'."
@@ -1225,7 +1237,7 @@ def test_get_unknown_user(clients: ClientRegistry) -> None:
     clients.User.get(
         username="userA",
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_create_user_with_contact_group(clients: ClientRegistry) -> None:
@@ -1236,7 +1248,7 @@ def test_create_user_with_contact_group(clients: ClientRegistry) -> None:
         contactgroups=["group_non_existent"],
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
     resp = clients.User.create(
         username="user",
@@ -1329,26 +1341,26 @@ def test_openapi_create_user_edit_start_url(clients: ClientRegistry) -> None:
 @pytest.mark.parametrize(
     "field_value, expected_status_code",
     [
-        ("slideout_ask", 200),
-        ("slideout", 200),
-        ("full_page", 200),
-        ("invalid", 400),
+        ("slideout_ask", HTTPStatus.OK),
+        ("slideout", HTTPStatus.OK),
+        ("full_page", HTTPStatus.OK),
+        ("invalid", HTTPStatus.BAD_REQUEST),
     ],
 )
 def test_user_navbar_changes_action_param(
     clients: ClientRegistry,
     field_value: str,
-    expected_status_code: int,
+    expected_status_code: HTTPStatus,
 ) -> None:
     resp = clients.User.create(
         username=_random_string(10),
         fullname="KPECYCq79E",
         interface_options={"navbar_changes_action": field_value},
-        expect_ok=expected_status_code == 200,
+        expect_ok=expected_status_code == HTTPStatus.OK,
     )
     resp.assert_status_code(expected_status_code)
 
-    if expected_status_code == 200:
+    if expected_status_code == HTTPStatus.OK:
         assert resp.json["extensions"]["interface_options"]["navbar_changes_action"] == field_value
 
 
@@ -1404,13 +1416,13 @@ def test_openapi_time_picker_preferences_use_default_round_trip(
             }
         },
     ).json["extensions"]["interface_options"]["time_picker"]
-    # Stored as an explicit None, and reported as the sentinel forms rather than omitted.
+    # The "use default" forms are reported rather than omitted.
     assert extensions["start_of_week"] == "browser_locale"
     assert extensions["default_time_range"] == {"option": "default"}
     assert extensions["default_refresh_time"] == {"option": "default"}
 
     internal_attributes = _load_internal_attributes(UserId(username))
-    assert internal_attributes["start_of_week"] is None
+    assert internal_attributes["start_of_week"] == "browser_locale"
     assert internal_attributes["graph_default_time_range"] is None
     assert internal_attributes["graph_default_refresh_time"] is None
 
@@ -1466,13 +1478,12 @@ def test_openapi_edit_user_should_not_modify_time_picker_preferences(
 def test_openapi_time_picker_preferences_default_for_fresh_user(
     clients: ClientRegistry,
 ) -> None:
-    # User creation fills in every registered attribute (explicit None, like
-    # contextual_help_icon), so even a fresh user reports the "use default" sentinels.
+    # User creation fills in every registered attribute, so nothing here is omitted.
     extensions = clients.User.create(
         username="time_picker_fresh_user",
         fullname="Time Picker User",
     ).json["extensions"]["interface_options"]["time_picker"]
-    assert extensions["start_of_week"] == "browser_locale"
+    assert extensions["start_of_week"] == "monday"
     assert extensions["default_time_range"] == {"option": "default"}
     assert extensions["default_refresh_time"] == {"option": "default"}
 
@@ -1541,23 +1552,23 @@ def test_start_of_week_round_trips(clients: ClientRegistry) -> None:
 @pytest.mark.parametrize(
     "start_of_week, expected_status_code",
     [
-        ("monday", 200),
-        ("browser_locale", 200),
+        ("monday", HTTPStatus.OK),
+        ("browser_locale", HTTPStatus.OK),
         # Not a weekday the schema offers; the picker has no way to render it.
-        ("funday", 400),
+        ("funday", HTTPStatus.BAD_REQUEST),
         # A weekday, but the schema deliberately offers only the three the GUI does.
-        ("tuesday", 400),
+        ("tuesday", HTTPStatus.BAD_REQUEST),
     ],
 )
 def test_invalid_start_of_week_is_rejected(
-    clients: ClientRegistry, start_of_week: str, expected_status_code: int
+    clients: ClientRegistry, start_of_week: str, expected_status_code: HTTPStatus
 ) -> None:
     """An unsupported start-of-week is refused rather than stored."""
     resp = clients.User.create(
         username=_random_string(10),
         fullname="Time Picker User",
         interface_options={"time_picker": {"start_of_week": start_of_week}},
-        expect_ok=expected_status_code == 200,
+        expect_ok=expected_status_code == HTTPStatus.OK,
     )
     resp.assert_status_code(expected_status_code)
 

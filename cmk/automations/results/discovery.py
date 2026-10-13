@@ -9,19 +9,16 @@ Groups all types that revolve around discovering services/host-labels and
 managing autochecks, including the shared DiscoveryReport serialization helpers.
 """
 
-from __future__ import annotations
-
 import json
 from ast import literal_eval
-from collections.abc import Container, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
 from typing import override, Self
 
+from cmk.automations.internal import AutomationID, AutomationResult
 from cmk.automations.results._base import (
-    ABCAutomationResult,
     DiscoveredHostLabelsDict,
     result_type_registry,
-    SerializedResult,
 )
 from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import HostName
@@ -31,33 +28,9 @@ from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.ruleset_matcher.labels import HostLabel
 from cmk.utils.servicename import ServiceName
 
-from ..types import AutomationID
-
 # Worst state and rendered plug-in output of a single data source. This is a lossy
 # projection of an ActiveCheckResult (summary/details/metrics collapsed via as_text()).
 type SourceResult = tuple[ServiceState, str]
-
-
-def _serialize_discovery_report(
-    report: DiscoveryReport, for_cmk_version: cmk_version.Version
-) -> Mapping[str, object]:
-    if for_cmk_version >= cmk_version.Version.from_str("2.5.0b1"):
-        return asdict(report)
-
-    return {
-        "self_new": report.services.new,
-        "self_changed": report.services.changed,
-        "self_removed": report.services.removed,
-        "self_kept": report.services.kept,
-        "self_new_host_labels": report.host_labels.new,
-        "self_total_host_labels": report.host_labels.total,
-        "clustered_new": report.clustered_new,
-        "clustered_old": report.clustered_old,
-        "clustered_vanished": report.clustered_vanished,
-        "clustered_ignored": report.clustered_ignored,
-        "error_text": report.error_text,
-        "diff_text": report.diff_text,
-    }
 
 
 def _as_int(value: object) -> int:
@@ -90,13 +63,11 @@ def _deserialize_discovery_report(
 
 
 @dataclass
-class ServiceDiscoveryResult(ABCAutomationResult):
+class ServiceDiscoveryResult(AutomationResult):
     hosts: Mapping[HostName, DiscoveryReport]
 
-    def _to_dict(
-        self, for_cmk_version: cmk_version.Version
-    ) -> Mapping[HostName, Mapping[str, object]]:
-        return {k: _serialize_discovery_report(v, for_cmk_version) for k, v in self.hosts.items()}
+    def _to_dict(self) -> Mapping[HostName, Mapping[str, object]]:
+        return {k: asdict(v) for k, v in self.hosts.items()}
 
     @staticmethod
     def _from_dict(
@@ -105,12 +76,12 @@ class ServiceDiscoveryResult(ABCAutomationResult):
         return {k: _deserialize_discovery_report(v) for k, v in serialized.items()}
 
     @override
-    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
-        return SerializedResult(repr(self._to_dict(for_cmk_version)))
+    def serialize(self, for_cmk_version: str) -> str:
+        return repr(self._to_dict())
 
     @classmethod
     @override
-    def deserialize(cls, serialized_result: SerializedResult) -> ServiceDiscoveryResult:
+    def deserialize(cls, serialized_result: str) -> ServiceDiscoveryResult:
         return cls(cls._from_dict(literal_eval(serialized_result)))
 
     @staticmethod
@@ -123,7 +94,7 @@ result_type_registry.register(ServiceDiscoveryResult)
 
 
 @dataclass
-class ServiceDiscoveryPreviewResult(ABCAutomationResult):
+class ServiceDiscoveryPreviewResult(AutomationResult):
     output: str
     check_table: Sequence[CheckPreviewEntry]
     nodes_check_table: Mapping[HostName, Sequence[CheckPreviewEntry]]
@@ -136,41 +107,30 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
     config_warnings: Sequence[str]
 
     @override
-    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
+    def serialize(self, for_cmk_version: str) -> str:
+        version = cmk_version.Version.from_str(for_cmk_version)
         # Before 3.0.0b1 source_results was a Mapping keyed by source ident. The
         # ident is no longer available here; emit synthetic keys so an older peer's
         # value-only consumers keep working.
         source_results: Mapping[int, SourceResult] | Sequence[SourceResult] = (
             dict(enumerate(self.source_results))
-            if for_cmk_version < cmk_version.Version.from_str("3.0.0b1")
+            if version < cmk_version.Version.from_str("3.0.0b1")
             else self.source_results
         )
-        if for_cmk_version < cmk_version.Version.from_str("2.5.0b1"):
-            return self._serialize_as_dict(source_results, skip_keys={"config_warnings"})
-        return self._serialize_as_dict(source_results, skip_keys=())
-
-    def _serialize_as_dict(
-        self,
-        source_results: Mapping[int, SourceResult] | Sequence[SourceResult],
-        skip_keys: Container[str],
-    ) -> SerializedResult:
-        raw = asdict(self)
-        return SerializedResult(
-            repr(
-                {
-                    **{k: v for k, v in raw.items() if k not in skip_keys},
-                    "labels_by_host": {
-                        str(host_name): [label.serialize() for label in labels]
-                        for host_name, labels in self.labels_by_host.items()
-                    },
-                    "source_results": source_results,
-                }
-            )
+        return repr(
+            {
+                **asdict(self),
+                "labels_by_host": {
+                    str(host_name): [label.serialize() for label in labels]
+                    for host_name, labels in self.labels_by_host.items()
+                },
+                "source_results": source_results,
+            }
         )
 
     @classmethod
     @override
-    def deserialize(cls, serialized_result: SerializedResult) -> ServiceDiscoveryPreviewResult:
+    def deserialize(cls, serialized_result: str) -> ServiceDiscoveryPreviewResult:
         raw = literal_eval(serialized_result)
         return cls(
             output=raw["output"],
@@ -219,14 +179,12 @@ result_type_registry.register(SpecialAgentDiscoveryPreviewResult)
 
 
 @dataclass
-class AutodiscoveryResult(ABCAutomationResult):
+class AutodiscoveryResult(AutomationResult):
     hosts: Mapping[HostName, DiscoveryReport]
     changes_activated: bool
 
-    def _hosts_to_dict(
-        self, for_cmk_version: cmk_version.Version
-    ) -> Mapping[HostName, Mapping[str, object]]:
-        return {k: _serialize_discovery_report(v, for_cmk_version) for k, v in self.hosts.items()}
+    def _hosts_to_dict(self) -> Mapping[HostName, Mapping[str, object]]:
+        return {k: asdict(v) for k, v in self.hosts.items()}
 
     @staticmethod
     def _hosts_from_dict(
@@ -235,14 +193,12 @@ class AutodiscoveryResult(ABCAutomationResult):
         return {k: _deserialize_discovery_report(v) for k, v in serialized.items()}
 
     @override
-    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
-        return SerializedResult(
-            repr((self._hosts_to_dict(for_cmk_version), self.changes_activated))
-        )
+    def serialize(self, for_cmk_version: str) -> str:
+        return repr((self._hosts_to_dict(), self.changes_activated))
 
     @classmethod
     @override
-    def deserialize(cls, serialized_result: SerializedResult) -> Self:
+    def deserialize(cls, serialized_result: str) -> Self:
         hosts, changes_activated = literal_eval(serialized_result)
         return cls(cls._hosts_from_dict(hosts), changes_activated)
 
@@ -256,7 +212,7 @@ result_type_registry.register(AutodiscoveryResult)
 
 
 @dataclass
-class SetAutochecksV2Result(ABCAutomationResult):
+class SetAutochecksV2Result(AutomationResult):
     @staticmethod
     @override
     def automation_call() -> AutomationID:
@@ -307,7 +263,7 @@ class SetAutochecksInput:
 
 
 @dataclass
-class UpdateHostLabelsResult(ABCAutomationResult):
+class UpdateHostLabelsResult(AutomationResult):
     @staticmethod
     @override
     def automation_call() -> AutomationID:

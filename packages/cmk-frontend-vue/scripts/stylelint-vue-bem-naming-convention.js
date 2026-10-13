@@ -53,9 +53,10 @@ const patternMap = {
   cmk: 'src/components/',
   db: 'src/dashboard/',
   qs: 'src/quick-setup/',
-  gd: 'src/graph-designer/',
+  tmcq: 'src/telemetry-metrics-custom-query/',
   mm: 'src/main-menu/',
-  mh: 'src/mode-host/'
+  mh: 'src/mode-host/',
+  maps: 'src/maps/'
 }
 
 function normalize(relativePath) {
@@ -68,6 +69,7 @@ function normalize(relativePath) {
 }
 
 function getPrefix(relativePath) {
+  relativePath = relativePath.replace('src/nonfree/', 'src/')
   const folderName = relativePath.split('/')[1]
   for (let [key, value] of Object.entries(patternMap)) {
     if (relativePath.startsWith(value)) {

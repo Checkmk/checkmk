@@ -322,6 +322,7 @@ class PushUserProfilesToSite(AutomationCommand[PushUserProfilesRequest]):
             now=datetime.now(),
             pprint_value=api_request.pprint_value,
             call_users_saved_hook=True,
+            changed_users=list(user_profiles.keys()),
         )
 
         if visuals_by_user:

@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { staticAssertNever } from 'cmk-ui-library/lib/typeUtils'
 import { computed, useTemplateRef } from 'vue'
 
@@ -18,6 +19,7 @@ import UnifiedSearchOperatorSelect from './UnifiedSearchOperatorSelect.vue'
 import UnifiedSearchProviderSelect from './filter/SearchProvider.vue'
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Search'), [{ combo: ['Enter'], description: _t('Run search') }])
 
 const searchUtils = getSearchUtils()
 const searchInput = useTemplateRef('unified-search-input')

@@ -8,8 +8,6 @@ Checkmk special agent for monitoring Cisco Meraki.
 """
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
-
 import argparse
 import json
 import sys
@@ -17,8 +15,8 @@ from collections import defaultdict
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
+from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
 
 from .clients import MerakiClient
 from .config import get_meraki_dashboard, MerakiConfig
@@ -396,7 +394,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument("--cache-networks", type=float, default=36000.0)  # 10 hours
     parser.add_argument("--cache-wireless", type=float, default=1800.0)  # 30 mins
 
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--sections",
         nargs="+",
         choices=OPTIONAL_SECTIONS_CHOICES,
@@ -404,7 +402,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="Optional sections to be collected.",
     )
 
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--orgs",
         nargs="+",
         default=[],

@@ -3,17 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import json
+from collections.abc import Callable
+from http import HTTPStatus
 from pathlib import Path
 from unittest import mock
 
 import pytest
 
-from cmk.plugins.bazel.lib.agent import agent_bazel_cache_main, parse_arguments
+from cmk.plugins.bazel.lib.agent import agent_bazel_cache_main, parse_arguments, VersionCache
+from cmk.server_side_programs.v1 import Storage
 
 METRICS_RESPONSE = """# HELP bazel_remote_azblob_cache_hits The total number of azblob backend cache hits
 # TYPE bazel_remote_azblob_cache_hits counter
@@ -179,21 +179,21 @@ def patched_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None
 
 class MockResponse:
     text = METRICS_RESPONSE
-    status_code = 200
+    status_code = HTTPStatus.OK
     content = "non-empty"
 
-    def __init__(self, json_response):
+    def __init__(self, json_response: dict[str, object] | list[object]) -> None:
         self._response = json_response
 
     @staticmethod
-    def raise_for_status():
+    def raise_for_status() -> None:
         pass
 
-    def json(self) -> dict[str, object]:
+    def json(self) -> dict[str, object] | list[object]:
         return self._response
 
 
-def default_requests_mock_get(url, **kwargs):
+def default_requests_mock_get(url: str, **kwargs: object) -> MockResponse:  # noqa: ARG001
     if "tags" in url:
         return MockResponse(
             [
@@ -260,7 +260,7 @@ def test_parse_all_arguments() -> None:
 @mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
 def test_bazel_cache_agent_output_has_bazel_cache_status_section(
     capsys: pytest.CaptureFixture[str],
-    patched_environment: None,
+    patched_environment: None,  # noqa: ARG001
 ) -> None:
     arg_list = [
         "--host",
@@ -286,7 +286,7 @@ def test_bazel_cache_agent_output_has_bazel_cache_status_section(
 @mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
 def test_bazel_cache_agent_output_has_bazel_cache_version_section(
     capsys: pytest.CaptureFixture[str],
-    patched_environment: None,
+    patched_environment: None,  # noqa: ARG001
 ) -> None:
     arg_list = [
         "--host",
@@ -302,7 +302,7 @@ def test_bazel_cache_agent_output_has_bazel_cache_version_section(
 @mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
 def test_bazel_cache_agent_output_has_correct_current_version(
     capsys: pytest.CaptureFixture[str],
-    patched_environment: None,
+    patched_environment: None,  # noqa: ARG001
 ) -> None:
     arg_list = [
         "--host",
@@ -320,7 +320,7 @@ def test_bazel_cache_agent_output_has_correct_current_version(
 @mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
 def test_bazel_cache_agent_output_has_patch_version(
     capsys: pytest.CaptureFixture[str],
-    patched_environment: None,
+    patched_environment: None,  # noqa: ARG001
 ) -> None:
     arg_list = [
         "--host",
@@ -338,7 +338,7 @@ def test_bazel_cache_agent_output_has_patch_version(
 @mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
 def test_bazel_cache_agent_output_has_no_major_version(
     capsys: pytest.CaptureFixture[str],
-    patched_environment: None,
+    patched_environment: None,  # noqa: ARG001
 ) -> None:
     arg_list = [
         "--host",
@@ -356,7 +356,7 @@ def test_bazel_cache_agent_output_has_no_major_version(
 @mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
 def test_bazel_cache_agent_output_has_no_minor_version(
     capsys: pytest.CaptureFixture[str],
-    patched_environment: None,
+    patched_environment: None,  # noqa: ARG001
 ) -> None:
     arg_list = [
         "--host",
@@ -371,7 +371,7 @@ def test_bazel_cache_agent_output_has_no_minor_version(
     assert data["latest"]["minor"] is None
 
 
-def only_one_version_mock_get(url, **kwargs):
+def only_one_version_mock_get(url: str, **kwargs: object) -> MockResponse:  # noqa: ARG001
     if "tags" in url:
         return MockResponse(
             [
@@ -400,7 +400,7 @@ def only_one_version_mock_get(url, **kwargs):
 @mock.patch("cmk.plugins.bazel.lib.agent.requests.get", only_one_version_mock_get)
 def test_bazel_cache_agent_output_has_no_latest_versions(
     capsys: pytest.CaptureFixture[str],
-    patched_environment: None,
+    patched_environment: None,  # noqa: ARG001
 ) -> None:
     arg_list = [
         "--host",
@@ -418,7 +418,7 @@ def test_bazel_cache_agent_output_has_no_latest_versions(
     assert data["latest"]["patch"] is None
 
 
-def no_version_mock_get(url, **kwargs):
+def no_version_mock_get(url: str, **kwargs: object) -> MockResponse:  # noqa: ARG001
     if "tags" in url:
         return MockResponse([])
     return MockResponse(
@@ -438,7 +438,7 @@ def no_version_mock_get(url, **kwargs):
 @mock.patch("cmk.plugins.bazel.lib.agent.requests.get", no_version_mock_get)
 def test_bazel_cache_agent_output_has_no_version_section(
     capsys: pytest.CaptureFixture[str],
-    patched_environment: None,
+    patched_environment: None,  # noqa: ARG001
 ) -> None:
     arg_list = [
         "--host",
@@ -451,10 +451,45 @@ def test_bazel_cache_agent_output_has_no_version_section(
     assert "<<<bazel_cache_version:sep(0)>>>" not in output
 
 
+@pytest.mark.parametrize(
+    "corrupt",
+    [
+        pytest.param(lambda text: text + "]}", id="trailing-data"),
+        pytest.param(lambda _: "not json", id="invalid-json"),
+        pytest.param(lambda _: "[]", id="wrong-type-expects-object"),
+        pytest.param(lambda _: "{}", id="missing-internal-cache-keys"),
+    ],
+)
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
+def test_corrupted_version_cache_handling(
+    tmp_path: Path,
+    corrupt: Callable[[str], str],
+    caplog: pytest.LogCaptureFixture,
+    patched_environment: None,  # noqa: ARG001
+) -> None:
+    tags_url = "https://bazel-remote.tld/tags"
+    commit = "c5bf6e13938aa89923c637b5a4f01c2203a3c9f8"
+    version_cache = VersionCache(Storage("test_agent", "test_host"), ttl=60)
+    first_call = version_cache.get_or_update(tags_url, commit)
+    for entry in tmp_path.rglob("*"):
+        if entry.is_file():
+            entry.write_text(corrupt(entry.read_text()))
+
+    # corrupted entry is treated as a miss and refetched
+    second_call = version_cache.get_or_update(tags_url, commit)
+    assert first_call and second_call
+    assert second_call.timestamp > first_call.timestamp
+
+    # check that warning was logged
+    [record] = caplog.records
+    assert record.levelname == "WARNING"
+    assert record.getMessage().startswith("Discarding corrupted version cache")
+
+
 @mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
 def test_bazel_cache_agent_output_has_bazel_cache_metrics_section(
     capsys: pytest.CaptureFixture[str],
-    patched_environment: None,
+    patched_environment: None,  # noqa: ARG001
 ) -> None:
     arg_list = [
         "--host",
@@ -494,7 +529,7 @@ def test_bazel_cache_agent_output_has_bazel_cache_metrics_section(
 @mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
 def test_bazel_cache_agent_output_has_bazel_cache_metrics_go_section(
     capsys: pytest.CaptureFixture[str],
-    patched_environment: None,
+    patched_environment: None,  # noqa: ARG001
 ) -> None:
     arg_list = [
         "--host",
@@ -536,7 +571,7 @@ def test_bazel_cache_agent_output_has_bazel_cache_metrics_go_section(
 @mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
 def test_bazel_cache_agent_output_has_bazel_cache_metrics_grpc_section(
     capsys: pytest.CaptureFixture[str],
-    patched_environment: None,
+    patched_environment: None,  # noqa: ARG001
 ) -> None:
     arg_list = [
         "--host",
@@ -633,7 +668,7 @@ def test_bazel_cache_agent_output_has_bazel_cache_metrics_grpc_section(
 @mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
 def test_bazel_cache_agent_output_has_bazel_cache_metrics_http(
     capsys: pytest.CaptureFixture[str],
-    patched_environment: None,
+    patched_environment: None,  # noqa: ARG001
 ) -> None:
     arg_list = [
         "--host",

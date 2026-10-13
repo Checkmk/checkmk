@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Iterable
 from pathlib import Path
@@ -12,12 +11,14 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
-from cmk.bakery.v2_unstable import BakeryPlugin, OS, Plugin, PluginConfig
+from cmk.bakery.v2 import BakeryPlugin, OS, Plugin, PluginConfig
 
 
 class _Config(BaseModel):
     deployment: tuple[Literal["do_not_deploy", "sync", "cached"], float | None]
-    instances_settings: dict[str, Any] | None = None
+    instances_settings: (
+        tuple[Literal["no_config"], None] | tuple[Literal["settings"], dict[str, Any]]
+    ) = ("no_config", None)
 
 
 def get_mk_postgres_files(conf: _Config) -> Iterable[Plugin | PluginConfig]:
@@ -29,15 +30,23 @@ def get_mk_postgres_files(conf: _Config) -> Iterable[Plugin | PluginConfig]:
     for current_os in (OS.LINUX, OS.WINDOWS):
         yield Plugin(base_os=current_os, source=Path("mk_postgres.py"), interval=interval)
 
-        if conf.instances_settings is None:
+        if (instances_settings := _configured_settings(conf)) is None:
             continue
 
         yield PluginConfig(
             base_os=current_os,
-            lines=list(_get_mk_postgres_config(conf.instances_settings, current_os)),
+            lines=list(_get_mk_postgres_config(instances_settings, current_os)),
             target=Path("postgres.cfg"),
             include_header=True,
         )
+
+
+def _configured_settings(conf: _Config) -> dict[str, Any] | None:
+    match conf.instances_settings:
+        case ("no_config", _):
+            return None
+        case ("settings", instances_settings):
+            return instances_settings
 
 
 def _get_mk_postgres_config(instances_settings: dict[str, Any], os: OS) -> Iterable[str]:
@@ -54,7 +63,7 @@ def _get_mk_postgres_config(instances_settings: dict[str, Any], os: OS) -> Itera
     for instance in instances_settings["instances"]:
         yield "INSTANCE={env}{sep}{un}{sep}{pg}{sep}{name}".format(
             env=instance["instance_env_filepath"],
-            sep=sep,
+            sep=sep,  # type: ignore[possibly-undefined]
             un=instance["instance_username"],
             pg=instance["instance_pgpass_filepath"],
             name=instance["instance_name"],

@@ -31,6 +31,10 @@ test('falls back to a character split for a single over-long word', () => {
   expect(text.endsWith('c')).toBe(true)
 })
 
+test('falls back to a character split when no whole-word split fits', () => {
+  expect(middleTruncate('supercalifragilistic is long', fitsWithin(10))).toBe('super…long')
+})
+
 test('shrinks to the bare ellipsis when nothing fits', () => {
   expect(middleTruncate('alpha beta gamma', () => false)).toBe('…')
 })

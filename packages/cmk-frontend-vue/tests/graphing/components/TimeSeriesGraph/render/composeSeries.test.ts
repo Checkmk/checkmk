@@ -1,0 +1,257 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+import { describe, expect, test } from 'vitest'
+
+import {
+  composeSeries,
+  composedValueDomain,
+  createM4CacheStore,
+  withoutOffPlotNeighbours
+} from '@/graphing/components/TimeSeriesGraph/render/composeSeries'
+import type {
+  StackedColumn,
+  StackedSeries
+} from '@/graphing/components/TimeSeriesGraph/render/stacked'
+import type { Metric, ShadedRegion, TimeRange } from '@/graphing/components/TimeSeriesGraph/types'
+
+const STEP = 10
+const DATA_RANGE: TimeRange = { start: 0, end: 100, step: STEP }
+const COLUMNS = 10
+const M4_BUCKETS = 4000
+
+function makeMetric(
+  dataPoints: (number | null)[],
+  {
+    stack = null,
+    inverse = false,
+    hidden = false
+  }: { stack?: string | null; inverse?: boolean; hidden?: boolean } = {}
+): Metric {
+  return {
+    data_points: dataPoints,
+    render:
+      stack === null
+        ? { shape: 'line', inverse, hidden }
+        : { shape: 'area', stack, inverse, hidden },
+    metadata: { name: 'm', color: '#3366cc' }
+  } as unknown as Metric
+}
+
+function compose(
+  metrics: Metric[],
+  dataRange: TimeRange = DATA_RANGE,
+  visibleTimeRange: [number, number] = [dataRange.start, dataRange.end]
+) {
+  const cache = createM4CacheStore(M4_BUCKETS).ensure(metrics, dataRange)
+  return composeSeries({
+    metrics,
+    cache,
+    dataTimeRange: dataRange,
+    visibleTimeRange,
+    columnCount: COLUMNS,
+    binEdges: null
+  })
+}
+
+const finiteValues = (values: number[]): number[] =>
+  values.filter((value) => Number.isFinite(value))
+
+function columnsOf(series: StackedSeries): StackedColumn[] {
+  if (series.kind !== 'area-stacked') {
+    throw new Error('expected an area series')
+  }
+  return series.columns
+}
+
+describe('composeSeries', () => {
+  test('flanks the on-plot buckets with one off-plot neighbour on each side', () => {
+    const composed = compose([makeMetric([1, 2, 3])])
+
+    expect(composed.paddedBuckets[0]).toHaveLength(composed.bucketsOnPlot[0]!.length + 2)
+    expect(withoutOffPlotNeighbours(composed.paddedBuckets[0]!)).toEqual(composed.bucketsOnPlot[0])
+  })
+
+  test('the on-plot stacks drop the flanking neighbours the padded stacks carry', () => {
+    const composed = compose([makeMetric([1, 2, 3], { stack: 'g1' })])
+
+    expect(columnsOf(composed.stacksOnPlot[0]!)).toEqual(
+      withoutOffPlotNeighbours(columnsOf(composed.stacks[0]!))
+    )
+  })
+
+  test('mirrors an inverse metric below the baseline', () => {
+    const values = [1, 2, 3]
+
+    const upright = compose([makeMetric(values)])
+    const mirrored = compose([makeMetric(values, { inverse: true })])
+
+    const peakOf = (composed: ReturnType<typeof compose>) =>
+      Math.max(...finiteValues(composed.paddedBuckets[0]!.map((bucket) => bucket.maxValue)))
+    const troughOf = (composed: ReturnType<typeof compose>) =>
+      Math.min(...finiteValues(composed.paddedBuckets[0]!.map((bucket) => bucket.minValue)))
+
+    expect(troughOf(mirrored)).toBe(-peakOf(upright))
+  })
+
+  test('keeps hidden stack references in the composition so they still raise the stack base', () => {
+    const baseline = 10
+    const member = 4
+    const composed = compose([
+      makeMetric([baseline], { stack: 'g1', hidden: true }),
+      makeMetric([member], { stack: 'g1' })
+    ])
+
+    const memberVertices = columnsOf(composed.stacksOnPlot[1]!).flatMap((column) => column.vertices)
+    expect(memberVertices.length).toBeGreaterThan(0)
+    for (const vertex of memberVertices) {
+      expect(vertex.lower).toBe(baseline)
+      expect(vertex.upper).toBe(baseline + member)
+    }
+  })
+})
+
+describe('composedValueDomain', () => {
+  test('a line metric contributes its own extremes rather than a baseline at zero', () => {
+    const values = [40, 50, 60]
+    const metrics = [makeMetric(values)]
+
+    const [yMin, yMax] = composedValueDomain(metrics, compose(metrics))
+
+    expect(yMin).toBe(Math.min(...values))
+    expect(yMax).toBe(Math.max(...values))
+  })
+
+  test('stacked metrics contribute the cumulative extent of the group, not their own', () => {
+    const base = 3
+    const layer = 5
+    const metrics = [makeMetric([base], { stack: 'g1' }), makeMetric([layer], { stack: 'g1' })]
+
+    const [yMin, yMax] = composedValueDomain(metrics, compose(metrics))
+
+    expect(yMin).toBe(0)
+    expect(yMax).toBe(base + layer)
+  })
+
+  test('a bar series reaches down to zero', () => {
+    const bars: Metric = {
+      ...makeMetric([40, 40, 60, 60]),
+      render: { shape: 'bar', stack: null, aggregation: 'sum', inverse: false, hidden: false }
+    }
+    const fourSteps = { start: 0, end: 4 * STEP, step: STEP }
+    const cache = createM4CacheStore(M4_BUCKETS).ensure([bars], fourSteps)
+
+    const composed = composeSeries({
+      metrics: [bars],
+      cache,
+      dataTimeRange: fourSteps,
+      visibleTimeRange: [0, 4 * STEP],
+      columnCount: COLUMNS,
+      binEdges: [0, 2 * STEP, 4 * STEP]
+    })
+
+    expect(composedValueDomain([bars], composed)).toEqual([0, 120])
+  })
+
+  test('a hidden stack reference does not drag the domain down to zero', () => {
+    const baseline = 10
+    const member = 4
+    const metrics = [
+      makeMetric([baseline], { stack: 'g1', hidden: true }),
+      makeMetric([member], { stack: 'g1' })
+    ]
+
+    const [yMin, yMax] = composedValueDomain(metrics, compose(metrics))
+
+    expect(yMin).toBe(baseline)
+    expect(yMax).toBe(baseline + member)
+  })
+
+  test('a region bound beyond every metric still fits inside the domain', () => {
+    const metrics = [makeMetric([10, 10])]
+    const region: ShadedRegion = {
+      name: 'region-0',
+      title: 'Critical area',
+      color: '#ff0000',
+      data_points: { lower: [40, 40], upper: [50, 50] }
+    }
+
+    const [, yMax] = composedValueDomain(metrics, compose(metrics), [region])
+
+    expect(yMax).toBeGreaterThanOrEqual(50)
+  })
+
+  test.each([
+    ['a line', null, [20, 80]],
+    ['an area down to its base', 'g1', [0, 80]]
+  ])('spans %s as drawn across a window narrower than one step', (_kind, stack, drawnExtent) => {
+    const fallingFromOneHundredToZeroAcrossTheThirdStep = [100, 100, 0, 0]
+    const metrics = [makeMetric(fallingFromOneHundredToZeroAcrossTheThirdStep, { stack })]
+    const fourSamples = { start: 0, end: 4 * STEP, step: STEP }
+    const insideTheThirdStep: [number, number] = [2 * STEP + 2, 2 * STEP + 8]
+
+    const domain = composedValueDomain(metrics, compose(metrics, fourSamples, insideTheThirdStep))
+
+    expect(domain).toEqual(drawnExtent)
+  })
+
+  test('a flat positive series anchors its floor at zero rather than at the data', () => {
+    const flat = 7
+    const metrics = [makeMetric([flat, flat, flat])]
+
+    const [yMin, yMax] = composedValueDomain(metrics, compose(metrics))
+
+    expect(yMin).toBe(0)
+    expect(yMax).toBeGreaterThan(flat)
+  })
+
+  test('a graph of only mirrored metrics mirrors its extent below zero instead of centring on it', () => {
+    const nearestToZero = 8
+    const furthestFromZero = 9
+    const metrics = [makeMetric([nearestToZero, furthestFromZero], { inverse: true })]
+
+    const [yMin, yMax] = composedValueDomain(metrics, compose(metrics))
+
+    expect(yMin).toBe(-furthestFromZero)
+    expect(yMax).toBe(-nearestToZero)
+  })
+
+  // The mirrored side peaks higher than the upright one, so a domain centred on anything but the
+  // mirrored extent would leave its curve outside the plot.
+  test('mixing mirrored and unmirrored metrics centres the domain on zero', () => {
+    const mirroredPeak = 9
+    const uprightPeak = 2
+    const metrics = [makeMetric([1, mirroredPeak], { inverse: true }), makeMetric([1, uprightPeak])]
+
+    const [yMin, yMax] = composedValueDomain(metrics, compose(metrics))
+
+    expect(yMin).toBe(-yMax)
+    expect(yMax).toBeGreaterThanOrEqual(mirroredPeak)
+  })
+})
+
+describe('createM4CacheStore', () => {
+  test('reuses the decimation while the metrics and their range are unchanged', () => {
+    const store = createM4CacheStore(M4_BUCKETS)
+    const metrics = [makeMetric([1, 2, 3])]
+
+    expect(store.ensure(metrics, DATA_RANGE)).toBe(store.ensure(metrics, DATA_RANGE))
+  })
+
+  test('re-decimates when the metrics change', () => {
+    const store = createM4CacheStore(M4_BUCKETS)
+    const first = store.ensure([makeMetric([1, 2, 3])], DATA_RANGE)
+
+    expect(store.ensure([makeMetric([4, 5, 6])], DATA_RANGE)).not.toBe(first)
+  })
+
+  test('re-decimates when the same metrics are placed on another range', () => {
+    const store = createM4CacheStore(M4_BUCKETS)
+    const metrics = [makeMetric([1, 2, 3])]
+    const first = store.ensure(metrics, DATA_RANGE)
+
+    expect(store.ensure(metrics, { start: 500, end: 600, step: STEP })).not.toBe(first)
+  })
+})

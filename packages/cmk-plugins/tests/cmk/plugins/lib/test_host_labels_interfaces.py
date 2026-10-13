@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 from collections.abc import Iterable
-from pathlib import Path
 
 import pytest
 
@@ -302,15 +300,3 @@ def test_host_labels_if(
     assert list(host_labels_if(section)) == list(expected_result), (
         f"in param {request.node.callspec.id}"
     )
-
-
-if __name__ == "__main__":
-    # Please keep these lines - they make TDD easy and have no effect on normal test runs.
-    # Just set _PYTEST_RAISES=1 and run this file from your IDE and dive into the code.
-    source_file_path = (
-        (base := (test_file := Path(__file__)).parents[4])
-        / test_file.parent.relative_to(base / "tests")
-        / test_file.name[5:]
-    ).as_posix()
-    assert pytest.main(["--doctest-modules", source_file_path]) in {0, 5}
-    pytest.main(["-vvsx", *sys.argv[1:], __file__])

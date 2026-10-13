@@ -10,6 +10,7 @@ from ._detect import SNMPDetectSpec as SNMPDetectSpec
 from ._getoid import get_single_oid as get_single_oid
 from ._parse import parse_oid_range_config as parse_oid_range_config
 from ._table import get_snmp_table as get_snmp_table
+from ._table import serialize_snmp_raw_data as serialize_snmp_raw_data
 from ._table import SNMPDecodedString as SNMPDecodedString
 from ._table import SNMPRawData as SNMPRawData
 from ._table import SNMPRawDataElem as SNMPRawDataElem
@@ -40,4 +41,5 @@ from ._typedefs import SNMPVersion as SNMPVersion
 from ._typedefs import SpecialColumn as SpecialColumn
 from ._walk import oids_to_walk as oids_to_walk
 from ._walk import SNMPRowInfoForStoredWalk as SNMPRowInfoForStoredWalk
+from ._walk import walk_all_contexts_for_export as walk_all_contexts_for_export
 from ._walk import walk_for_export as walk_for_export

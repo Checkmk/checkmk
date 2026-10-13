@@ -1,5 +1,5 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 CHECK_MK_LANGUAGES = [
     "de",
@@ -45,7 +45,6 @@ pkg_tar(
 sh_library(
     name = "locale_sh",
     srcs = [
-        ".f12",
         "compile_mo_files",
         "output_pot_file",
     ],

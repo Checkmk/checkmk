@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="unreachable"
-
-from __future__ import annotations
 
 import contextlib
 import gettext as gettext_module
@@ -16,7 +13,7 @@ from typing import NamedTuple, Protocol
 import cmk.utils.paths
 from cmk.gui.ctx_stack import global_var, request_local_attr, set_global_var
 from cmk.gui.hooks import request_memoize
-from cmk.gui.utils.speaklater import LazyString
+from cmk.web.utils.speaklater import LazyString
 
 # .
 #   .--Gettext i18n--------------------------------------------------------.
@@ -37,7 +34,7 @@ class Translation(NamedTuple):
     name: str
 
 
-translation = request_local_attr("translation", Translation)
+translation: Translation | None = request_local_attr("translation", Translation)
 
 
 @request_memoize()

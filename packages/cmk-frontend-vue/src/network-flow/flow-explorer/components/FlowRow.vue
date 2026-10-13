@@ -5,12 +5,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { renderTimeOfDay } from 'cmk-ui-library/lib/renderTime'
 import { computed, inject } from 'vue'
 
 import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 
-import { formatBytes, formatCount, formatTimeOfDay } from '../../format'
+import { formatBytes, formatCount } from '../../format'
 import type { FlowEntry } from '../api/flows'
 import FlowEndpointCell from './FlowEndpointCell.vue'
 
@@ -43,7 +44,7 @@ const direction = computed(() => DIRECTION_TITLES[props.row.direction])
   <StringCell
     v-if="hasColumn('first_seen')"
     column-id="first_seen"
-    :value="formatTimeOfDay(row.first_seen)"
+    :value="renderTimeOfDay(row.first_seen)"
     no-wrap
   />
   <FlowEndpointCell
@@ -97,7 +98,7 @@ const direction = computed(() => DIRECTION_TITLES[props.row.direction])
   <StringCell
     v-if="hasColumn('last_seen')"
     column-id="last_seen"
-    :value="formatTimeOfDay(row.last_seen)"
+    :value="renderTimeOfDay(row.last_seen)"
     no-wrap
   />
 </template>

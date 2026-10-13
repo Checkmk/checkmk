@@ -13,7 +13,7 @@ import BaseCell from '@/monitoring/shared/components/cell/BaseCell.vue'
       <tr>
         <BaseCell
           :linked-to="{ href: 'https://checkmk.com', target: '_self' }"
-          :highlight="{ type: 'inline', color: 'success' }"
+          :highlight="{ color: 'success' }"
         >
           host-01.example.com
         </BaseCell>

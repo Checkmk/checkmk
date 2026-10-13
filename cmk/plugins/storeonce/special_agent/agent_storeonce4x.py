@@ -19,6 +19,7 @@ import json
 import logging
 import sys
 from collections.abc import Callable, Generator, Sequence
+from http import HTTPStatus
 from types import GeneratorType
 from typing import Any, TypedDict
 
@@ -26,8 +27,8 @@ import urllib3
 from oauthlib.oauth2 import LegacyApplicationClient
 from requests_oauthlib import OAuth2Session  # type: ignore[attr-defined]
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option, Secret
+from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
 
 AnyGenerator = Generator[Any]
 ResultFn = Callable[..., AnyGenerator]
@@ -113,7 +114,7 @@ class StoreOnceOauth2Session:
         dt_expires_in_earlier = dt.timedelta(0, expires_in_earlier)
         return dt.datetime.strftime(now + dt_expires_in - dt_expires_in_earlier, self._dt_fmt)
 
-    def get(self, path: str, parameters: StringMap | None = None) -> Any:
+    def get(self, path: str, parameters: StringMap | None = None) -> Any:  # noqa: ARG002
         url = f"https://{self._host}:{self._port}{path}"
         resp = self._oauth_session.request(
             method="GET",
@@ -121,7 +122,7 @@ class StoreOnceOauth2Session:
             url=url,
             verify=self._verify_ssl,
         )
-        if resp.status_code != 200:
+        if resp.status_code != HTTPStatus.OK:
             LOGGER.warning(
                 "Call to %(url)s returned HTTP %(status_code)s.",
                 {"url": url, "status_code": resp.status_code},

@@ -61,7 +61,7 @@ def after_validator_for_customer_field(
     required_if_supported: bool = False,
     allow_global: bool = True,
 ) -> None:
-    RestrictEditions(
+    RestrictEditions(  # noqa: SLF001
         supported_editions={Edition.ULTIMATEMT},
         required_if_supported=required_if_supported,
         which_field="customer",

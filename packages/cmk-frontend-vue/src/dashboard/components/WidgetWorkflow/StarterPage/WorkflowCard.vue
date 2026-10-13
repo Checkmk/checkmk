@@ -8,31 +8,40 @@ import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkIconEmblem from 'cmk-ui-library/components/CmkIcon/CmkIconEmblem.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
+import { computed } from 'vue'
 
 import DisabledTooltipWrapper from '../DisabledTooltipWrapper.vue'
 import type { WorkflowItem } from '../WidgetWorkflowTypes'
 
 interface WorkflowCardProps extends WorkflowItem {
-  disabled?: boolean
+  requiresHigherEdition?: boolean
 }
 
 const props = defineProps<WorkflowCardProps>()
 
+const { _t } = usei18n()
+
 const emit = defineEmits(['select'])
 
+const disabledReason = computed(() =>
+  props.requiresHigherEdition ? _t('Available in Checkmk Pro or higher.') : props.unavailableReason
+)
+const isDisabled = computed(() => disabledReason.value !== undefined)
+
 const doSelect = () => {
-  if (!props.disabled) {
+  if (!isDisabled.value) {
     emit('select')
   }
 }
 </script>
 
 <template>
-  <DisabledTooltipWrapper :disabled="!!disabled">
+  <DisabledTooltipWrapper :disabled="isDisabled" :tooltip="disabledReason">
     <a
       href="#"
       class="db-workflow-card"
-      :class="{ 'db-workflow-card__disabled': disabled }"
+      :class="{ 'db-workflow-card__disabled': isDisabled }"
       @click.prevent="doSelect"
     >
       <CmkIconEmblem :emblem="icon_emblem"><CmkIcon :name="icon" size="xxlarge" /></CmkIconEmblem>

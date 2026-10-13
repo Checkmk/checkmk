@@ -11,21 +11,15 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0 import Cell
+from cmk.gui.painter import Cell
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.type_defs import (
-    ColumnSpec,
-    DynamicIconName,
-    Rows,
-    SorterSpec,
-    ViewSpec,
-    VisualLinkSpec,
-)
+from cmk.gui.type_defs import ColumnSpec, Rows, SorterSpec, ViewSpec, VisualLinkSpec
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.layout import Layout, make_link_renderer
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIconName
 
 #   .--Views---------------------------------------------------------------.
 #   |                    __     ___                                        |
@@ -925,10 +919,10 @@ multisite_builtin_views.update(
 def render_mobile_table(
     rows: Rows,
     view: ViewSpec,
-    group_cells: Sequence[Cell],
+    group_cells: Sequence[Cell],  # noqa: ARG001
     cells: Sequence[Cell],
     num_columns: int,
-    show_checkboxes: bool,
+    show_checkboxes: bool,  # noqa: ARG001
     user_permissions: UserPermissions,
 ) -> None:
     if not is_mobile(request, response):
@@ -947,7 +941,7 @@ def render_mobile_table(
         html.open_tr()
         n = 0
         for cell in cells:
-            cell.paint_as_header()
+            cell.paint_as_header(html)
         html.close_tr()
 
     link_renderer = make_link_renderer(request, user_permissions)
@@ -966,10 +960,12 @@ def render_mobile_table(
             else:
                 colspan = None
 
-            cell.paint(row, link_renderer, user=user, colspan=colspan)
+            cell.paint(row, link_renderer, user=user, writer=html, colspan=colspan)
         html.close_tr()
     html.close_table()
-    html.javascript('$("table.mobile a").attr("data-ajax", "false");')
+    html.call_ts_function(
+        function_name="mobile_disable_ajax_links", arguments={"selector": "table.mobile a"}
+    )
 
 
 class LayoutMobileTable(Layout):
@@ -1006,11 +1002,11 @@ class LayoutMobileTable(Layout):
 
 def render_mobile_list(
     rows: Rows,
-    view: ViewSpec,
-    group_cells: Sequence[Cell],
+    view: ViewSpec,  # noqa: ARG001
+    group_cells: Sequence[Cell],  # noqa: ARG001
     cells: Sequence[Cell],
     num_columns: int,
-    show_checkboxes: bool,
+    show_checkboxes: bool,  # noqa: ARG001
     user_permissions: UserPermissions,
 ) -> None:
     if not is_mobile(request, response):
@@ -1050,14 +1046,16 @@ def render_mobile_list(
                     rendered_class, rendered_content = rendered_cell
                     assert isinstance(rendered_content, str | HTML)
                     html.open_p(class_="ui-li-desc")
-                    cell.paint_as_header()
+                    cell.paint_as_header(html)
                     html.write_text_permissive(": ")
                     html.span(rendered_content, class_=rendered_class)
                     html.close_p()
 
         html.close_li()
     html.close_ul()
-    html.javascript('$("ul.mobilelist a").attr("data-ajax", "false");')
+    html.call_ts_function(
+        function_name="mobile_disable_ajax_links", arguments={"selector": "ul.mobilelist a"}
+    )
 
 
 class LayoutMobileList(Layout):
@@ -1094,11 +1092,11 @@ class LayoutMobileList(Layout):
 
 def render_mobile_dataset(
     rows: Rows,
-    view: ViewSpec,
-    group_cells: Sequence[Cell],
+    view: ViewSpec,  # noqa: ARG001
+    group_cells: Sequence[Cell],  # noqa: ARG001
     cells: Sequence[Cell],
-    num_columns: int,
-    show_checkboxes: bool,
+    num_columns: int,  # noqa: ARG001
+    show_checkboxes: bool,  # noqa: ARG001
     user_permissions: UserPermissions,
 ) -> None:
     if not is_mobile(request, response):
@@ -1122,14 +1120,11 @@ def render_mobile_dataset(
             html.close_tr()
 
             html.open_tr(class_="data")
-            cell.paint(row, link_renderer, user=user)
+            cell.paint(row, link_renderer, user=user, writer=html)
             html.close_tr()
 
         html.close_table()
-    html.javascript(
-        '$("table.dataset > tbody > tr.data > td").addClass("ui-shadow").not(".state").addClass("nonstatus");\n'
-        '$("table.dataset > tbody > tr.data a").attr("data-ajax", "false");\n'
-    )
+    html.call_ts_function(function_name="mobile_dataset_table_init")
 
 
 class LayoutMobileDataset(Layout):

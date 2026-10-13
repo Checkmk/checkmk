@@ -51,21 +51,23 @@ table.hostmatrix {
 }
 
 /*
- * Hosts snapin
+ * NagVis maps snapin
  */
-.snapin table.allhosts {
+div.snapin table.allhosts,
+div.sidebar-snapin__container table.allhosts {
   width: 100%;
 
   td {
-    width: 50%;
     padding: 0;
 
     div.statebullet {
-      margin-bottom: 2px;
+      position: static;
+      vertical-align: middle;
     }
 
     a.link {
       padding: 2px 2px 2px $spacing-half;
+      vertical-align: middle;
     }
   }
 }
@@ -233,7 +235,9 @@ div#snapin_tactical_overview {
 }
 
 div.snapin.more table.tacticaloverview th span.more,
-div.snapin.less table.tacticaloverview th span.less {
+div.snapin.less table.tacticaloverview th span.less,
+.sidebar-snapin__content-wrapper > .more table.tacticaloverview th span.more,
+.sidebar-snapin__content-wrapper > div:not(.more) table.tacticaloverview th span.less {
   display: inline;
 }
 
@@ -409,7 +413,8 @@ div.spacertop {
   }
 }
 
-#snapin_container_admin.less li.sidebar.show_more_mode {
+#snapin_container_admin.less li.sidebar.show_more_mode,
+.sidebar-snapin__content-wrapper > div:not(.more) li.sidebar.show_more_mode {
   display: none;
 }
 

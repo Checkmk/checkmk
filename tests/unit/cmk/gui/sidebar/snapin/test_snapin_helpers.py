@@ -32,20 +32,22 @@ from cmk.gui.sidebar._snapin._helpers import (
     write_snapin_exception,
 )
 from cmk.gui.sites import SiteStatus
-from cmk.gui.type_defs import DynamicIconName, IconNames, StaticIcon, Visual
+from cmk.gui.type_defs import Visual
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.main_menu import LoadingTransition as SharedLoadingTransition
 from cmk.shared_typing.main_menu import NavItemTopic, NavItemTopicEntry, TopicItemMode
+from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
 
 
-@pytest.fixture(name="rendering_user", autouse=True)
+@pytest.fixture(name="rendering_user", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_rendering_user(
-    request_context: None, monkeypatch: pytest.MonkeyPatch
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[None]:
     with monkeypatch.context() as m:
         m.setattr(user, "confdir", Path(""))
-        m.setattr(user, "may", lambda x: True)
+        m.setattr(user, "may", lambda x: True)  # noqa: ARG005
         yield
 
 
@@ -226,7 +228,7 @@ def _site_choice(
 ) -> tuple[list[SiteId] | None, str]:
     with monkeypatch.context() as m:
         m.setattr(_helpers, "states", lambda: states)
-        m.setattr(user, "load_file", lambda *args, **kwargs: stored)
+        m.setattr(user, "load_file", lambda *args, **kwargs: stored)  # noqa: ARG005
         with output_funnel.plugged():
             only_sites = snapin_site_choice("performance", choices)
             return only_sites, output_funnel.drain()
@@ -388,7 +390,12 @@ def _single_entry(visuals: list[VisualMenuItem]) -> NavItemTopicEntry:
         pytest.param("reports", "monthly", "report.py?name=monthly", id="reports"),
         pytest.param("pages", "wato", "wato.py", id="pages_get_a_py_suffix"),
         pytest.param("pages", "wato.py", "wato.py", id="pages_keep_an_existing_py_suffix"),
-        pytest.param("custom_graph", "cpu", "custom_graph.py?name=cpu", id="custom_graph"),
+        pytest.param(
+            "custom_graph",
+            "cpu",
+            "custom_graph.py?name=cpu&owner=",
+            id="custom_graph_carries_the_owner",
+        ),
         pytest.param(
             "graph_collection", "cpu", "graph_collection.py?name=cpu", id="graph_collection"
         ),
@@ -399,6 +406,23 @@ def test_make_main_menu_builds_the_url_per_visual_type(
     visual_type_name: VisualMenuItemType, name: str, expected_url: str
 ) -> None:
     entry = _single_entry([VisualMenuItem(visual_type_name, VisualItem(name, _visual()))])
+
+    assert entry.url == expected_url
+
+
+@pytest.mark.parametrize(
+    "visual_type_name,expected_url",
+    [
+        pytest.param("dashboards", "dashboard.py?name=cpu&owner=harri", id="dashboards"),
+        pytest.param("custom_graph", "custom_graph.py?name=cpu&owner=harri", id="custom_graph"),
+    ],
+)
+def test_make_main_menu_builds_the_url_of_a_visual_owned_by_a_user(
+    visual_type_name: VisualMenuItemType, expected_url: str
+) -> None:
+    entry = _single_entry(
+        [VisualMenuItem(visual_type_name, VisualItem("cpu", _visual(owner=UserId("harri"))))]
+    )
 
     assert entry.url == expected_url
 

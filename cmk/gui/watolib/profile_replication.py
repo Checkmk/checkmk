@@ -147,7 +147,7 @@ class ProfileReplicationArgs(BaseModel, frozen=True):
     wato_use_git: bool
 
 
-def _make_pending_changes(args: "ProfileReplicationArgs") -> PendingChanges:
+def _make_pending_changes(args: ProfileReplicationArgs) -> PendingChanges:
     return PendingChanges(
         activation_sites=args.activation_site_configs,
         local_site=args.local_site,

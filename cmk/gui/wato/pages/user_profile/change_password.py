@@ -25,13 +25,13 @@ from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.session import session
 from cmk.gui.site_config import is_distributed_setup_remote_site
-from cmk.gui.userdb import get_user_attributes, UserAttribute
-from cmk.gui.userdb._connections import get_connection
+from cmk.gui.userdb import get_connection, get_user_attributes, UserAttribute
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
+from cmk.gui.verify_requirements import verify_requirements
 from cmk.gui.wato.pages._user_security_message import (
     SecurityNotificationEvent,
     send_security_message,
@@ -47,7 +47,6 @@ from cmk.web.utils.flashed_messages import flash, get_flashed_messages
 from cmk.web.utils.urls import makeuri_contextless
 
 from .page_menu import user_profile_page_menu
-from .verify_requirements import verify_requirements
 
 
 def register(edition: Edition, page_registry: PageRegistry) -> None:
@@ -115,6 +114,7 @@ class UserChangePasswordPage(Page):
                 config.user_connections,
                 now,
                 config.default_user_profile,
+                time_based_lock_out_enabled=False,
                 pprint_value=config.wato_pprint_config,
                 debug=config.debug,
             )
@@ -156,6 +156,7 @@ class UserChangePasswordPage(Page):
             now=now,
             pprint_value=config.wato_pprint_config,
             call_users_saved_hook=True,
+            changed_users=[user.id],
         )
         connection_id = user_spec.get("connector", None)
         connection = get_connection(connection_id)
@@ -201,6 +202,7 @@ class UserChangePasswordPage(Page):
             title=title,
             breadcrumb=breadcrumb,
             page_menu=user_profile_page_menu(self._edition, ctx.config.sites, breadcrumb),
+            show_main_navigation=session.session_info.session_state == "logged_in",
             debug=ctx.config.debug,
             lang=user.language,
             inject_js_profiling_code=ctx.config.inject_js_profiling_code,

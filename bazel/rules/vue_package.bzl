@@ -44,8 +44,8 @@ Package file conventions (all at the package root):
 
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
-load("@npm//:vitest/package_json.bzl", vitest_bin = "bin")
 load("@npm//:vue-tsc/package_json.bzl", vue_tsc_bin = "bin")
+load("//bazel/rules:vitest_test.bzl", "vitest_test")
 
 # Tooling that lives in the root package.json and is needed inside every
 # package's type-check / vitest sandbox.
@@ -65,6 +65,9 @@ _SRC_EXCLUDES = [
     "tests/**",
     "node_modules/**",
     "vite.config.ts",
+    "vitest.shared.ts",
+    "vitest.shared-setup.ts",
+    "vitest.msw.ts",
     "eslint.config.mjs",
 ]
 
@@ -147,6 +150,12 @@ def vue_package(name, deps = [], test_deps = []):
     )
 
     js_library(
+        name = "vitest_isolated",
+        srcs = native.glob(["vitest.isolated.json"], allow_empty = True),
+        visibility = ["//visibility:private"],
+    )
+
+    js_library(
         name = "eslintrc",
         srcs = ["eslint.config.mjs"] + native.glob(
             # Shared eslint building blocks a package may export (eslint.shared.mjs).
@@ -156,7 +165,10 @@ def vue_package(name, deps = [], test_deps = []):
         ),
         tags = ["no-lint"],
         visibility = ["//visibility:public"],
-        deps = [":pkg"],
+        deps = [
+            ":pkg",
+            ":vitest_isolated",
+        ],
     )
 
     native.filegroup(
@@ -180,15 +192,19 @@ def vue_package(name, deps = [], test_deps = []):
         include_types = True,
     )
 
+    js_library(
+        name = "test_ts",
+        srcs = native.glob(["tests/**/*.ts"], allow_empty = True),
+        visibility = ["//visibility:private"],
+    )
+
     _test_data = [
         ":pkg",
         ":_stylelint_test_srcs",
-    ] + native.glob(
-        ["tests/**/*.ts"],
-        allow_empty = True,
-    ) + [
+        ":test_ts",
         "tsconfig.test.json",
         "vite.config.ts",
+        ":vitest_isolated",
     ] + _ROOT_TOOLING + test_deps
 
     vue_tsc_bin.vue_tsc_test(
@@ -202,12 +218,8 @@ def vue_package(name, deps = [], test_deps = []):
         include_types = True,
     )
 
-    vitest_bin.vitest_test(
+    vitest_test(
         name = "unit-test",
-        args = [
-            "--configLoader=runner",
-            "run",
-        ],
-        chdir = native.package_name(),
         data = _test_data,
+        shard_count = 4,
     )

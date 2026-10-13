@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from http import HTTPStatus
+
 import pytest
 import responses
 
@@ -38,7 +40,7 @@ def test_wrong_arguments(capsys: pytest.CaptureFixture[str]) -> None:
 
 @pytest.mark.usefixtures("accept_requests")
 @responses.activate
-@pytest.mark.parametrize("return_code", [200])
+@pytest.mark.parametrize("return_code", [HTTPStatus.OK])
 def test_agent_output(capsys: pytest.CaptureFixture[str]) -> None:
     main(["--debug", "--hostname", HOST, "--user", AUTH[0], "--password", AUTH[1]])
     assert capsys.readouterr() == (
@@ -56,7 +58,7 @@ def test_agent_output(capsys: pytest.CaptureFixture[str]) -> None:
 
 @pytest.mark.usefixtures("accept_requests")
 @responses.activate
-@pytest.mark.parametrize("return_code", [401])
+@pytest.mark.parametrize("return_code", [HTTPStatus.UNAUTHORIZED])
 def test_missing_credentials(capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit):
         main(["--hostname", HOST])

@@ -9,4 +9,17 @@ import CmkPerfometer from 'cmk-ui-library/components/CmkPerfometer.vue'
 
 <template>
   <CmkPerfometer :value="75" :value-range="[0, 100]" formatted="75 %" color="green" />
+  <CmkPerfometer
+    :bars="[
+      [
+        { share: 70, color: 'green' },
+        { share: 30, color: null }
+      ],
+      [
+        { share: 35, color: 'orange' },
+        { share: 65, color: null }
+      ]
+    ]"
+    formatted="70 % / 35 %"
+  />
 </template>

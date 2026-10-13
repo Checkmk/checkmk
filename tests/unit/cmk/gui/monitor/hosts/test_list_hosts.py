@@ -2,9 +2,26 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.gui.monitor.hosts._api._list_hosts import _handle_list_hosts
 
-from .testlib import get_fake_host_repository
+import json
+from http import HTTPStatus
+
+import pytest
+
+import cmk.utils.paths
+from cmk.gui.monitor.hosts._api._list_hosts import _handle_list_hosts
+from cmk.gui.monitor.hosts._models import HostOptionalField, HostState
+from cmk.gui.openapi.framework.model import ApiOmitted
+from cmk.livestatus_client.testing import MockLiveStatusConnection
+from tests.testlib.unit.gui.setup_git_test_helper import (
+    init_setup_git_repo,
+    setup_git_commit_subjects,
+)
+from tests.testlib.unit.gui.web_test_app import SetConfig, WebTestAppForCMK
+
+from .testlib import get_fake_host_repository, HostFactory
+
+pytestmark = pytest.mark.usefixtures("request_context")
 
 
 def test_handle_list_hosts_limit_handling() -> None:
@@ -32,4 +49,54 @@ def test_handle_list_hosts_state_label_conversion() -> None:
     response = _handle_list_hosts(host_repo, host_repo.count_total())
     host_states = [host.state for host in response.hosts]
 
-    assert all(state in {"UP", "DOWN", "UNREACHABLE"} for state in host_states)
+    assert all(state in {"UP", "DOWN", "UNREACHABLE", "PENDING"} for state in host_states)
+
+
+def test_handle_list_hosts_pending_state_round_trips() -> None:
+    hosts = [
+        HostFactory.build(name="pending-host", state=HostState.PENDING),
+        HostFactory.build(name="checked-host", state=HostState.UP),
+    ]
+    host_repo = get_fake_host_repository(hosts=hosts)
+    response = _handle_list_hosts(host_repo, host_repo.count_total())
+
+    state_by_name = {host.name: host.state for host in response.hosts}
+    assert state_by_name == {"pending-host": "PENDING", "checked-host": "UP"}
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_list_hosts_does_not_commit_the_setup_git_repo(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+    set_config: SetConfig,
+) -> None:
+    config_dir = cmk.utils.paths.default_config_dir
+    init_setup_git_repo(config_dir)
+    mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"], match_type="loose")
+    mock_livestatus.expect_query(["GET hosts"], match_type="loose")
+
+    with set_config(wato_use_git=True), mock_livestatus:
+        resp = aut_user_auth_wsgi_app.post(
+            "/NO_SITE/check_mk/api/internal/monitor/hosts",
+            params=json.dumps({}),
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+        )
+
+    assert resp.status_code == HTTPStatus.OK, resp.text
+    assert setup_git_commit_subjects(config_dir) == ["Initialized GIT for Checkmk"]
+
+
+def test_handle_list_hosts_keeps_a_hidden_service_count_column_independent() -> None:
+    """A count field that wasn't asked for must be omitted without blanking out the others."""
+    hosts = [HostFactory.build(num_services_ok=5, num_services=None)]
+    host_repo = get_fake_host_repository(hosts=hosts)
+
+    response = _handle_list_hosts(
+        host_repo,
+        host_repo.count_total(),
+        fields=frozenset({HostOptionalField.NUM_SERVICES_OK}),
+    )
+
+    host = response.hosts[0]
+    assert host.num_services_ok == 5
+    assert isinstance(host.num_services, ApiOmitted)

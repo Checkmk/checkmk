@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping
@@ -39,7 +38,9 @@ from cmk.gui.fields import (
     TagGroupIDField,
 )
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.openapi.endpoints.notification_rules.request_example import (
+from cmk.gui.openapi.endpoints.notification_rules.common import (
+    EVENT_CONSOLE_ALERTS_DESCRIPTION,
+    EVENT_CONSOLE_MATCH_TYPE_DESCRIPTION,
     notification_rule_request_example,
 )
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
@@ -89,13 +90,18 @@ class EventConsoleAlertAttrsResponse(BaseSchema):
 class EventConsoleAlertsResponse(CheckboxOutput):
     match_type = fields.String(
         enum=["match_only_event_console_alerts", "do_not_match_event_console_alerts"],
-        example="match_only_event_console_events",
-        description="",
+        example="match_only_event_console_alerts",
+        description=EVENT_CONSOLE_MATCH_TYPE_DESCRIPTION,
     )
     values = fields.Nested(EventConsoleAlertAttrsResponse)
 
     @post_dump
-    def _post_dump(self, data, many, **kwargs):  # type: ignore[misc]
+    def _post_dump(  # type: ignore[misc]
+        self,
+        data: dict[str, Any],
+        many: bool,  # noqa: ARG002
+        **kwargs: Any,  # noqa: ARG002
+    ) -> dict[str, Any]:
         if data.get("values") == {}:
             del data["values"]
         return data
@@ -218,8 +224,8 @@ class TagGroupSelectorOutput(OneOfSchema):
     type_field_remove = False
 
     @override
-    def get_obj_type(self, obj):
-        operator = obj.get("operator")
+    def get_obj_type(self, obj: Any) -> str:
+        operator: str = obj.get("operator")
         if operator in self.type_schemas:
             return operator
 
@@ -235,8 +241,8 @@ class TagTypeSelectorOutput(OneOfSchema):
     type_field_remove = False
 
     @override
-    def get_obj_type(self, obj):
-        tag_type = obj.get("tag_type")
+    def get_obj_type(self, obj: Any) -> str:
+        tag_type: str = obj.get("tag_type")
         if tag_type in self.type_schemas:
             return tag_type
 
@@ -568,9 +574,19 @@ URL_PREFIX_FOR_LINKS_TO_CHECKMK_RESPONSE = fields.Nested(
 )
 
 
+class HttpProxyPassword(ExplicitOrStoreOptions):
+    store_id = PasswordStoreIDField()
+    password = fields.String(example="password")
+
+
+class HttpProxyAuth(BaseSchema):
+    user = fields.String(example="proxy_user")
+    password = fields.Nested(HttpProxyPassword)
+
+
 class HttpProxy(BaseSchema):
     option = fields.String(
-        enum=["no_proxy", "environment", "url", "global"],
+        enum=["no_proxy", "environment", "url", "global", "manual"],
         example="no_proxy",
     )
     url = fields.String(
@@ -579,6 +595,14 @@ class HttpProxy(BaseSchema):
     global_proxy_id = GlobalHTTPProxyField(
         presence="should_exist",
     )
+    scheme = fields.String(example="http")
+    proxy_server_name = fields.String(example="proxy.example.com")
+    port = fields.Integer(
+        example=3128,
+        description="The port of the proxy server. 0 means that the proxy URL this proxy was "
+        "converted from had no valid port, and the proxy has to be fixed.",
+    )
+    auth = fields.Nested(HttpProxyAuth)
 
 
 class HttpProxyValue(CheckboxOutput):
@@ -824,6 +848,14 @@ class PagerDutyPluginResponse(PluginName):
     disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
     url_prefix_for_links_to_checkmk = URL_PREFIX_FOR_LINKS_TO_CHECKMK_RESPONSE
     http_proxy = HTTP_PROXY_RESPONSE
+    webhook_url = fields.String(
+        enum=[
+            "https://events.pagerduty.com/v2/enqueue",
+            "https://events.eu.pagerduty.com/v2/enqueue",
+        ],
+        description="PagerDuty Events API v2 endpoint matching the account region.",
+        example="https://events.pagerduty.com/v2/enqueue",
+    )
 
 
 # PushOver ----------------------------------------------------------
@@ -1234,7 +1266,10 @@ class ConditionsAttributes(BaseSchema):
     restrict_to_notification_numbers = fields.Nested(CheckboxRestrictNotificationNumbersOutput)
     throttle_periodic_notifications = fields.Nested(CheckboxThrottlePeriodicNotifcationsOuput)
     match_notification_comment = fields.Nested(CheckboxWithStrValueOutput)
-    event_console_alerts = fields.Nested(MatchEventConsoleAlertsResponse)
+    event_console_alerts = fields.Nested(
+        MatchEventConsoleAlertsResponse,
+        description=EVENT_CONSOLE_ALERTS_DESCRIPTION,
+    )
 
 
 class NotificationRuleAttributes(BaseSchema):

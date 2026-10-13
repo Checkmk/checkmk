@@ -37,7 +37,7 @@ const sizes: IconSizeNames[] = ['xsmall', 'small', 'medium', 'large', 'xlarge', 
       <CmkIconButton name="main-help" size="medium" title="plain" />
       <span>plain </span>
 
-      <CmkIconButton name="main-help" variant="inline" size="medium" title="plain" />
+      <CmkIconButton name="main-help" variant="inline" size="medium" title="inline" />
       <span>inline </span>
     </dd>
 

@@ -4,14 +4,14 @@
 
 """Unit tests for the pip-based wheel deployer."""
 
-from __future__ import annotations
-
+import sys
 from pathlib import Path
 from subprocess import CompletedProcess
 from unittest.mock import patch
 
 import pytest
 
+from cmk.dev_deploy.core.bazel import OUTPUT_BASE_ENV, SHARED_SERVER_ENV
 from cmk.dev_deploy.deployers import wheel_deployer
 from cmk.dev_deploy.deployers.wheel_deployer import _uv_cache_env
 from cmk.dev_deploy.errors import WheelDeployError
@@ -131,7 +131,11 @@ class TestHasWheelChanges:
 
 
 class TestDeployWheels:
-    def test_invokes_deploy_python_for_site_edition(self, tmp_path: Path) -> None:
+    def test_invokes_deploy_python_for_site_edition(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv(OUTPUT_BASE_ENV, "/ob")
+        monkeypatch.delenv(SHARED_SERVER_ENV, raising=False)
         site = _site(tmp_path, Edition.ULTIMATE)
         completed = CompletedProcess(
             args=[],
@@ -145,7 +149,8 @@ class TestDeployWheels:
             result = wheel_deployer.deploy_wheels(Path("/repo"), site)
 
         cmd = run.call_args.args[0]
-        assert cmd[:3] == ["bazel", "run", "--noshow_progress"]
+        assert cmd[:2] == ["bazel", "--output_base=/ob"]
+        assert cmd.index("run") < cmd.index("--noshow_progress")
         assert wheel_deployer.DEPLOY_PYTHON_TARGET in cmd
         assert "--cmk_edition=ultimate" in cmd
         assert cmd[-2:] == ["--", str(site.root)]
@@ -154,15 +159,20 @@ class TestDeployWheels:
 
     def test_legacy_site_layout_rejected(self, tmp_path: Path) -> None:
         site = _site(tmp_path)
-        (site.root / "lib" / "python3").mkdir(parents=True)
+        (site.root / "lib" / f"python{sys.version_info.major}").mkdir(parents=True)
         with pytest.raises(WheelDeployError, match="legacy"):
             wheel_deployer.deploy_wheels(Path("/repo"), site)
 
     def test_symlinked_lib_python3_accepted(self, tmp_path: Path) -> None:
         site = _site(tmp_path)
-        site_packages = site.root / "lib" / "python3.13" / "site-packages"
+        site_packages = (
+            site.root
+            / "lib"
+            / f"python{sys.version_info.major}.{sys.version_info.minor}"
+            / "site-packages"
+        )
         site_packages.mkdir(parents=True)
-        (site.root / "lib" / "python3").symlink_to(site_packages)
+        (site.root / "lib" / f"python{sys.version_info.major}").symlink_to(site_packages)
         completed = CompletedProcess(args=[], returncode=0, stdout="", stderr="")
         with patch.object(wheel_deployer, "run_checked", return_value=completed):
             result = wheel_deployer.deploy_wheels(Path("/repo"), site)

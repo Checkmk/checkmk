@@ -40,7 +40,7 @@ class ChassisIdSubType(Enum):
 
     @classmethod
     @override
-    def _missing_(cls, value: object) -> "ChassisIdSubType":
+    def _missing_(cls, value: object) -> ChassisIdSubType:
         return cls.UNKNOWN
 
 
@@ -52,7 +52,7 @@ class IfType(Enum):
 
     @classmethod
     @override
-    def _missing_(cls, value: object) -> "IfType":
+    def _missing_(cls, value: object) -> IfType:
         return cls.UNKNOWN
 
 
@@ -81,7 +81,7 @@ class LldpGlobal(BaseModel, frozen=True):
                 cap_supported,
                 cap_enabled,
             ) = lldp_global_info[0]
-        except (ValueError, IndexError):
+        except ValueError, IndexError:
             return None
         else:
             return cls(

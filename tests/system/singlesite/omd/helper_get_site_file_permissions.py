@@ -23,4 +23,4 @@ def iter_dir(path: Path) -> Iterator[tuple[int, Path]]:
 
 
 site_dir = cmk.utils.paths.omd_root
-print([(m, str(p.relative_to(site_dir))) for m, p in iter_dir(site_dir)])
+print([(m, str(p.relative_to(site_dir))) for m, p in iter_dir(site_dir)])  # noqa: T201  # It's OK for test/script helpers to print()

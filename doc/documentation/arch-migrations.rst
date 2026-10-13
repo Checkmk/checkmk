@@ -15,26 +15,13 @@ Each migration is labeled with one of these phases:
 * **starting** — the new mechanism exists, but adoption has barely begun
 * **in progress** — both mechanisms are in active use, migration is ongoing
 * **mostly done** — the new mechanism is the default, legacy remnants are being removed
+* **stale** — the new mechanism is still desired but currently not actively worked on
 
-Last reviewed: July 2026.
+Last reviewed: September 2026.
 
 If you own one of these migrations, please keep its section up to date and remove it once the migration is complete.
 If you come across this document and find it outdated or incomplete, feel free to take action.
 If in doubt, reach out to Moritz Kiemer.
-
-Check plugin API: legacy checks to ``agent_based.v2``
-=====================================================
-
-:Phase: mostly done
-:Owner: Respective plugin components / Lead: General "Plugins" component
-:Old: dict-based legacy check plugins in ``cmk/legacy_checks/``
-:New: ``cmk.agent_based.v2`` plugins in ``cmk/plugins/<family>/agent_based/``
-:References: ``doc/treasures/migration_helpers/legacy_checks/instruction.md`` (migration recipe and tooling)
-
-The legacy check API is untyped and predates the structured ``Service``/``Result``/``Metric`` model, making plugins hard to test and validate.
-A few hundred legacy checks remain; they are converted with a semi-automated two-commit process.
-
-This migration is meant to be finished by the end of Q3/2026.
 
 Bakery plugin API: ``bakery_api.v1`` to ``cmk.bakery``
 ======================================================
@@ -47,7 +34,7 @@ Bakery plugin API: ``bakery_api.v1`` to ``cmk.bakery``
 
 The old bakery API lives in the ``cmk.base`` tree and is tied to the monolith, and its import location no longer matches the current edition naming.
 The current API is a proper plugin-API package, and bakery plugins move next to the family that owns them (around 30 families are already there).
-The old API is being replaced by ``cmk.bakery.v2_unstable`` and is intended to be removed with Checkmk 2.7 (see Werk #18600).
+The old API is being replaced by ``cmk.bakery.v2`` and is intended to be removed with Checkmk 2.7 (see Werk #18600).
 
 This migration is meant to be finished before the 3.0 release.
 
@@ -74,6 +61,7 @@ Rulesets and GUI forms: ValueSpec to FormSpec
 
 ValueSpecs mix data model, validation and HTML rendering in one class, which ties every form to the legacy server-side GUI.
 FormSpecs are declarative and frontend-agnostic, so forms can be rendered by the new Vue frontend, and ruleset definitions become part of the stable plugin API.
+This includes the check parameters. Next step here: Clean up ownership.
 
 Plugin registration: registries to discovery
 ============================================
@@ -82,10 +70,11 @@ Plugin registration: registries to discovery
 :Owner: Respective component owners. Potentially driven by architectural requirements.
 :Old: plugins push themselves into mutable registry singletons at import time
 :New: plugins are inert module-level objects under ``cmk/plugins/<family>/<group>/``, collected by namespace scanning
-:References: ``packages/cmk-plugin-apis/cmk/discover_plugins/README.md`` (also lists half-migrated domains: modes, automations, post-rename-site plugins)
+:References: ``packages/cmk-plugin-apis/cmk/discover_plugins/README.md`` (also lists half-migrated domains: modes, automation plugins)
 
 Registries are import-order-dependent global state with silent failure modes.
 Discovery returns an immutable mapping with explicit errors, and backend and plugin code share only a small per-domain API package.
+Next steps: finalize CLI commands ("modes"), tackle update-config.
 
 Frontend: Python-rendered pages to Vue 3
 ========================================
@@ -96,23 +85,9 @@ Frontend: Python-rendered pages to Vue 3
 :New: Vue 3 + TypeScript components in ``packages/cmk-frontend-vue``, with backend/frontend types kept in sync via ``packages/cmk-shared-typing``
 :References: ``packages/cmk-frontend-vue/README.md`` and :doc:`arch-comp-gui-vue`
 
-Server-side HTML generation with inline JavaScript is hard to type check,
-test and reuse. New UI is built as Vue components against a shared typed
-contract; current focus areas are FormSpec rendering and the new monitoring
-pages ("mon-pages").
-
-View painters: v0 to v1
-=======================
-
-:Phase: in progress
-:Owner: Component "UI Monitoring"
-:Old: ``cmk.gui.painter.v0`` painters (``abc.ABC`` subclasses that emit HTML directly)
-:New: ``cmk.gui.painter.v1`` painters (frozen, generic dataclasses with separate HTML/CSV/JSON formatters)
-:References: ``cmk/gui/painter/v1/painter_lib.py`` and the ``PainterAdapter`` bridge in ``cmk/gui/painter/v0/base.py``
-
-The v0 painter base class couples data lookup and HTML rendering and is untyped over the row data it formats.
-The v1 painters are declarative dataclasses parametrized over their data type, with dedicated formatters per output format, so the same painter can render HTML, CSV and JSON without ad-hoc string handling.
-v1 painters are wrapped by ``PainterAdapter`` in ``cmk/gui/painter/v0/base.py`` so they run in code that still expects the v0 interface.
+Server-side HTML generation with inline JavaScript is hard to type check, test and reuse.
+New UI is built as Vue components against a shared typed contract.
+Current focus areas are FormSpec rendering and the new monitoring pages ("mon-pages").
 
 GUI: global proxies to explicit dependencies
 ============================================
@@ -133,7 +108,7 @@ The migration replaces this implicit global state with explicit dependency passi
 GUI: centralize the ``FolderTree`` computation
 ==============================================
 
-:Phase: starting
+:Phase: in progress
 :Owner: Lars Michelsen
 :Old: ``folder_tree()`` builds a ``FolderTree`` from ``active_config`` on first use and memoizes it on the request-global ``g.folder_tree``
 :New: the ``FolderTree`` is computed once, high up in the call stack, and passed down explicitly as a parameter
@@ -145,7 +120,7 @@ Computing the ``FolderTree`` once at a well-defined point and passing it down as
 GUI: ``WatoMode`` lifecycle as an explicit sequence of calls
 ============================================================
 
-:Phase: starting
+:Phase: stale
 :Owner: Component "UI Setup"
 :Old: ``WatoMode`` parses request variables in ``__init__`` (``_from_vars``), then ``page_menu``, ``action`` and ``page`` are dispatched as independent methods that each receive only ``config``
 :New: ``from_vars``, ``page_menu``, ``action`` and ``page`` form an explicit sequence, so state computed in one step can be handed to the next
@@ -154,25 +129,10 @@ GUI: ``WatoMode`` lifecycle as an explicit sequence of calls
 Because a ``WatoMode`` does its request parsing in the constructor and its remaining phases are separate method calls with no shared, passed-through state, there is no clean way to compute something once (for example a ``FolderTree``) and use it across ``page_menu``, ``action`` and ``page`` without falling back to request globals.
 Turning the lifecycle into an explicit sequence of calls lets each step receive the objects the previous step produced, which is a prerequisite for passing dependencies like ``FolderTree`` in explicitly rather than reaching for ``g``.
 
-GUI: dissolve ``cmk/gui/plugins``
-=================================
-
-:Phase: in progress
-:Owner: Respective component owners
-:Old: GUI plugins and shared plugin utilities under ``cmk/gui/plugins/`` (``bi``, ``dashboard``, ``sidebar``, ``views``, ``visuals``, ``wato``, ``legacy_bakery_rulesets``), plus ``cmk.gui.plugins.*`` namespaces kept as compatibility shims
-:New: plugins live next to the feature that owns them and are collected by discovery; shared code moves to a proper module rather than a ``plugins`` namespace
-:References: ``cmk/gui/plugins/``; see also the *Plugin registration: registries to discovery* and *ValueSpec to FormSpec* migrations
-
-``cmk/gui/plugins/`` is a historical catch-all: it mixes actual plugins with shared GUI internals, and the ``cmk.gui.plugins.*`` import paths are still referenced from several hundred modules — many only as compatibility namespaces that were kept when code moved elsewhere.
-Two threads run here:
-
-* Migrate our own remaining plugins out of ``cmk/gui/plugins/`` to their owning feature and the discovery mechanism.
-* Decide whether the old ``cmk.gui.plugins.*`` namespaces kept for compatibility can be dropped, and remove them where they can.
-
 Tests: fixture-based suites to feature- and scope-based classification
 ======================================================================
 
-:Phase: starting
+:Phase: in progress
 :Owner: Moritz Kiemer
 :Old: top-level ``tests/`` suites grouped by the fixture they happen to use (``tests/integration``, ``tests/composition``, ``tests/gui_e2e``, ``tests/integration_redfish``, ...)
 :New: tests classified by *scope* (static analysis, package, integration, system level) and, within the system level, organized by *feature* rather than fixture
@@ -187,29 +147,6 @@ The target layout classifies every test by scope and groups system level tests b
 
 All system level suites now live under ``tests/system/`` (for example ``tests/system/redfish/``, moved out of ``tests/integration_redfish/``, ``tests/system/singlesite/``, the former ``tests/integration/``, and ``tests/system/multisite/``, the former ``tests/composition/``).
 What is still outstanding is the grouping *within* ``tests/system/``: ``singlesite``, ``multisite``, ``gui``, ``gui_crawl``, ``update`` and ``plugins`` are transitional, fixture-named buckets to be dissolved into feature directories.
-
-Tooling: Make to Bazel
-===========================
-
-:Phase: mostly done
-:Owner: Team CI
-:Old: Makefiles and ad-hoc scripts; direct ``pytest``/``ruff``/``mypy`` calls
-:New: Bazel as the primary build system for builds, unit tests, linting, formatting and type checking
-:References: ``BAZEL.md`` in the repository root
-
-Bazel provides hermetic, cacheable and parallel builds with a uniform, edition-aware interface across all languages in the repository.
-Integration, composition and GUI end-to-end tests as well as parts of the OMD packaging still run via Make.
-
-Centralized ``bin/BUILD`` to self-contained CLI entry points
-============================================================
-
-:Phase: in progress
-:Owner: Moritz Kiemer.
-:Old: shipped ``bin/`` entry points aggregated centrally in ``bin/BUILD`` via ``//bin:pkg_tar``, even when the source lives under ``cmk/``
-:New: ``bin/`` in the repo does not exist. Each package declares its shipped own entry points via the ``entry_points`` argument to the ``py_wheel`` rule.
-:References: 35b24d32b5e4559a999e3dfba489e289477d94d5
-
-Next step here is migrate the remaining elements in ``bin/``.
 
 Monolith decomposition: dissolve global ``BaseConfig`` and ``ConfigCache``
 ==========================================================================

@@ -110,6 +110,42 @@ const PREDEFINED_ASYNC_SECTIONS: [&str; 6] = [
     names::ASM_DISK_GROUP,
 ];
 
+/// Sections that have to be queried inside every container, not only in the
+/// root.
+///
+/// They read a view with no `v$con_` twin - `v$pgastat` in `performance` above
+/// all - which yields a container's rows only when the query runs inside that
+/// container. The legacy plugin reached the same result by re-parsing the
+/// statement per container with `dbms_sql.parse(container => ...)`.
+///
+/// Listed sections default to [`ALL_PDBS_PATTERN`] when the configuration names
+/// no `pdbs` of its own, so the per-container pass needs no configuration. An
+/// explicit `pdbs` in the configuration still wins.
+///
+// TODO(sk): split the per-container statements out of `performance` into a
+// section of their own (an extra `.sql` plus `header_name: oracle_performance`,
+// so the agent output is unchanged). Today the whole section repeats per
+// container and only its PGA statement needs to: the other five are held back
+// by a `SYS_CONTEXT('USERENV','CON_ID') IN ('0', '1')` guard in
+// `sqls/performance.0.all.sql` and run to no effect once per PDB - 5 round
+// trips per PDB per run, negligible with two PDBs and not with twenty. Drop
+// those guards when the split lands, they become dead weight.
+const PER_PDB_SECTIONS: [&str; 1] = [names::PERFORMANCE];
+
+/// Matches every PDB discovered at runtime.
+const ALL_PDBS_PATTERN: &str = ".*";
+
+/// The `pdbs` patterns a section runs with: what the configuration asked for,
+/// or every PDB when the section needs a per-container pass and the
+/// configuration is silent.
+fn default_pdb_patterns(name: &str, configured: Vec<String>) -> Vec<String> {
+    if configured.is_empty() && PER_PDB_SECTIONS.contains(&name) {
+        vec![ALL_PDBS_PATTERN.to_string()]
+    } else {
+        configured
+    }
+}
+
 impl SectionAffinity {
     pub fn from_text<T: AsRef<str>>(s: T) -> Self {
         match s.as_ref().to_lowercase().as_str() {
@@ -124,6 +160,38 @@ impl SectionAffinity {
     }
 }
 
+/// User-defined agent section header of a section entry, from the
+/// `header_name:`/`header_sep:` keys.
+///
+/// `name` is the complete section name and is emitted verbatim, without the
+/// `oracle_` prefix the built-in sections carry. `sep` is optional: a header
+/// without it leaves the separator at the agent default.
+///
+/// `sep` is the ASCII code of the separator, the value the header announces, so
+/// that no character has to be narrowed to a byte on the way out.
+#[derive(PartialEq, Debug, Clone)]
+pub struct CustomHeader {
+    name: String,
+    sep: Option<u8>,
+}
+
+impl CustomHeader {
+    pub fn new<S: Into<String>>(name: S, sep: Option<u8>) -> Self {
+        Self {
+            name: name.into(),
+            sep,
+        }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn sep(&self) -> Option<u8> {
+        self.sep
+    }
+}
+
 pub struct SectionBuilder {
     name: String,
     sep: char,
@@ -135,6 +203,7 @@ pub struct SectionBuilder {
     affinity: SectionAffinity,
     item_value: Option<ItemValue>, // [PROD|locks]
     pdb_patterns: Vec<String>,
+    custom_header: Option<CustomHeader>,
 }
 
 impl SectionBuilder {
@@ -155,6 +224,7 @@ impl SectionBuilder {
                 .unwrap_or(SectionAffinity::Db),
             item_value: None,
             pdb_patterns: Vec::new(),
+            custom_header: None,
         }
     }
     pub fn sep(mut self, sep: Option<char>) -> Self {
@@ -204,6 +274,11 @@ impl SectionBuilder {
         self
     }
 
+    pub fn set_custom_header(mut self, header: CustomHeader) -> Self {
+        self.custom_header = Some(header);
+        self
+    }
+
     pub fn build(self) -> Section {
         let (name, sep) = if self.item_value.is_some() {
             (
@@ -213,6 +288,9 @@ impl SectionBuilder {
         } else {
             (self.name, self.sep)
         };
+        // A custom metric is renamed to `custom_metric` above, so it never picks
+        // the per-container default up - only a predefined section can.
+        let pdb_patterns = default_pdb_patterns(&name, self.pdb_patterns);
         Section {
             name: SectionName::from(name),
             sep,
@@ -228,7 +306,8 @@ impl SectionBuilder {
             path: self.path,
             affinity: self.affinity,
             item_value: self.item_value,
-            pdb_patterns: self.pdb_patterns,
+            pdb_patterns,
+            custom_header: self.custom_header,
         }
     }
 }
@@ -244,6 +323,7 @@ pub struct Section {
     affinity: SectionAffinity,
     item_value: Option<ItemValue>, // part of [SID|item_value]
     pdb_patterns: Vec<String>,
+    custom_header: Option<CustomHeader>,
 }
 
 impl Section {
@@ -285,6 +365,10 @@ impl Section {
 
     pub fn affinity(&self) -> &SectionAffinity {
         &self.affinity
+    }
+
+    pub fn custom_header(&self) -> Option<&CustomHeader> {
+        self.custom_header.as_ref()
     }
 
     pub fn is_allowed(&self, filter: SectionFilter) -> bool {
@@ -383,6 +467,9 @@ impl Section {
         if !pdbs.is_empty() {
             builder = builder.set_pdb_patterns(pdbs);
         }
+        if let Some(header) = parse_custom_header(name, yaml) {
+            builder = builder.set_custom_header(header);
+        }
         if yaml.get_optional_bool(keys::DISABLED) == Some(true) {
             builder = builder.set_disabled();
         }
@@ -391,6 +478,80 @@ impl Section {
         }
         builder.set_affinity(affinity).build()
     }
+}
+
+/// Whether `name` is a section name the Checkmk site accepts.
+fn is_valid_section_name(name: &str) -> bool {
+    !name.is_empty() && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+}
+
+/// Drop the header of every `sections:` entry that carries one.
+fn strip_custom_headers(mut sections: Vec<Section>) -> Vec<Section> {
+    for section in &mut sections {
+        if section.custom_header.take().is_some() {
+            log::warn!(
+                "{}: '{}'/'{}' are supported for a '{}' entry only, ignoring them",
+                section.name(),
+                keys::HEADER_NAME,
+                keys::HEADER_SEP,
+                keys::CUSTOM_METRICS
+            );
+        }
+    }
+    sections
+}
+
+/// Parse the `header_name:`/`header_sep:` pair of a `custom_metrics` entry.
+///
+/// `header_sep:` alone is dropped: it can only be applied to a section name of
+/// one's own, the built-in headers keep their own separator.
+fn parse_custom_header(name: &str, yaml: &Yaml) -> Option<CustomHeader> {
+    let raw_sep = yaml.get(keys::HEADER_SEP);
+    let Some(header_name) = yaml.get_string(keys::HEADER_NAME) else {
+        if !raw_sep.is_badvalue() {
+            log::warn!(
+                "{name}: '{}' without '{}' has no effect, ignoring it",
+                keys::HEADER_SEP,
+                keys::HEADER_NAME
+            );
+        }
+        return None;
+    };
+    if !is_valid_section_name(&header_name) {
+        log::error!(
+            "{name}: '{}' value '{header_name}' is not a valid section name, only ASCII letters, digits and '_' are allowed, ignoring it",
+            keys::HEADER_NAME
+        );
+        return None;
+    }
+    Some(CustomHeader::new(
+        header_name,
+        parse_header_sep(name, raw_sep),
+    ))
+}
+
+/// The separator of a `header_sep:` value: the ASCII code of the character.
+fn parse_header_sep(name: &str, yaml: &Yaml) -> Option<u8> {
+    if yaml.is_badvalue() {
+        return None;
+    }
+    let sep = as_ascii_code(yaml);
+    if sep.is_none() {
+        log::error!(
+            "{name}: '{}' value {yaml:?} is not an ASCII code, write the number of the separator (e.g. 124 for '|'), ignoring it",
+            keys::HEADER_SEP
+        );
+    }
+    sep
+}
+
+/// An ASCII code from a YAML scalar, written as a number (`124`) or as a string
+/// holding one (`"124"`).
+fn as_ascii_code(yaml: &Yaml) -> Option<u8> {
+    yaml.as_i64()
+        .or_else(|| yaml.as_str()?.trim().parse::<i64>().ok())
+        .and_then(|code| u8::try_from(code).ok())
+        .filter(u8::is_ascii)
 }
 
 /// Parse the `sql_params` mapping of a section entry into
@@ -451,6 +612,7 @@ impl Sections {
                 default.custom_metrics_cache_age()
             });
         let mut sections = Sections::get_sections(yaml.get(keys::SECTIONS), None, None)
+            .map(strip_custom_headers)
             .unwrap_or_else(|| {
                 log::debug!("Using default sections");
                 default.sections().clone()
@@ -805,6 +967,43 @@ sections:
         assert_eq!(section.path(), Some(Path::new("queries/foo.sql")));
     }
 
+    /// A section that must be queried inside every container defaults to all
+    /// PDBs, so the per-container pass needs no configuration.
+    #[test]
+    fn test_per_pdb_section_defaults_to_all_pdbs() {
+        assert_eq!(
+            Section::new(names::PERFORMANCE).pdb_patterns(),
+            &[ALL_PDBS_PATTERN.to_string()]
+        );
+    }
+
+    /// Every other predefined section stays root-only.
+    #[test]
+    fn test_other_sections_have_no_pdb_patterns() {
+        for name in PREDEFINED_SECTIONS
+            .iter()
+            .filter(|n| **n != names::PERFORMANCE)
+        {
+            assert!(
+                Section::new(*name).pdb_patterns().is_empty(),
+                "{name} must not run per container"
+            );
+        }
+    }
+
+    /// An explicit `pdbs` wins over the default.
+    #[test]
+    fn test_configured_pdbs_win_over_default() {
+        let yaml = create_yaml(
+            r#"
+- performance:
+    pdbs: ["PDB1"]
+"#,
+        );
+        let section = Section::from_yaml(&yaml[0]).unwrap();
+        assert_eq!(section.pdb_patterns(), &["PDB1".to_string()]);
+    }
+
     #[test]
     fn test_pdbs_parsed_from_yaml() {
         const SOURCE: &str = r#"
@@ -939,6 +1138,143 @@ custom_metrics:
             custom[0].sql_params(),
             &[("parameter_2".to_string(), "ok".to_string())]
         );
+    }
+
+    #[test]
+    fn test_custom_metric_header_name_and_sep_parsed() {
+        const SOURCE: &str = r#"
+custom_metrics:
+  - myscn:
+      sql: "select 'a|b' from dual"
+      header_name: my_section
+      header_sep: 124
+"#;
+        let custom = parse_custom_metrics(SOURCE);
+        let header = custom[0].custom_header().expect("header_name parsed");
+        assert_eq!(header.name(), "my_section");
+        assert_eq!(header.sep(), Some(b'|'));
+        // The section itself keeps its custom-metric identity: it is still
+        // addressed as `sql` by `excluded_sections` and keyed by its item.
+        assert_eq!(custom[0].name().as_str(), names::CUSTOM_METRIC);
+        assert_eq!(custom[0].item_value().unwrap().as_str(), "myscn");
+    }
+
+    #[test]
+    fn test_custom_metric_header_name_without_sep_parsed() {
+        const SOURCE: &str = r#"
+custom_metrics:
+  - myscn:
+      sql: "select 1 from dual"
+      header_name: my_section
+"#;
+        let custom = parse_custom_metrics(SOURCE);
+        let header = custom[0].custom_header().expect("header_name parsed");
+        assert_eq!(header.name(), "my_section");
+        assert_eq!(header.sep(), None);
+    }
+
+    #[test]
+    fn test_custom_metric_header_sep_without_name_ignored() {
+        const SOURCE: &str = r#"
+custom_metrics:
+  - myscn:
+      sql: "select 1 from dual"
+      header_sep: 124
+"#;
+        assert!(parse_custom_metrics(SOURCE)[0].custom_header().is_none());
+    }
+
+    #[test]
+    fn test_custom_metric_invalid_header_name_ignored() {
+        for bad in ["\"\"", "\"my section\"", "\"my:section\"", "\"a>>>b\""] {
+            let source = format!(
+                r#"
+custom_metrics:
+  - myscn:
+      sql: "select 1 from dual"
+      header_name: {bad}
+"#
+            );
+            assert!(
+                parse_custom_metrics(&source)[0].custom_header().is_none(),
+                "header_name {bad} must be rejected"
+            );
+        }
+    }
+
+    #[test]
+    fn test_custom_metric_valid_header_name_accepted() {
+        for good in ["my_section", "MySection2", "_2", "oracle_sql"] {
+            let source = format!(
+                r#"
+custom_metrics:
+  - myscn:
+      sql: "select 1 from dual"
+      header_name: {good}
+"#
+            );
+            let custom = parse_custom_metrics(&source);
+            let header = custom[0]
+                .custom_header()
+                .unwrap_or_else(|| panic!("header_name {good} must be accepted"));
+            assert_eq!(header.name(), good);
+        }
+    }
+
+    fn parse_header_sep_of(value: &str) -> Option<u8> {
+        let source = format!(
+            r#"
+custom_metrics:
+  - myscn:
+      sql: "select 1 from dual"
+      header_name: my_section
+      header_sep: {value}
+"#
+        );
+        parse_custom_metrics(&source)[0]
+            .custom_header()
+            .expect("header_name parsed")
+            .sep()
+    }
+
+    #[test]
+    fn test_custom_metric_header_sep_takes_an_ascii_code() {
+        // The value is the code, exactly as the header announces it, and YAML
+        // has nothing left to guess: quoted or not, a number means that number.
+        assert_eq!(parse_header_sep_of("124"), Some(b'|'));
+        assert_eq!(parse_header_sep_of("\"124\""), Some(b'|'));
+        assert_eq!(parse_header_sep_of("9"), Some(b'\t'));
+        assert_eq!(parse_header_sep_of("0"), Some(0));
+    }
+
+    #[test]
+    fn test_custom_metric_invalid_header_sep_ignored() {
+        // A literal separator is not a code, a code outside ASCII has no
+        // character the site would split on: the header stays bare instead of
+        // announcing something else than what was meant.
+        for bad in ["\"|\"", "\"→\"", "128", "8364", "-1", "12.4", "\"\"", "[1]"] {
+            assert_eq!(
+                parse_header_sep_of(bad),
+                None,
+                "header_sep {bad} must be rejected"
+            );
+        }
+    }
+
+    #[test]
+    fn test_predefined_section_header_keys_ignored() {
+        // Only a custom metric may name its own agent section: renaming a
+        // built-in one would just hide its data from the check plugin behind it.
+        const SOURCE: &str = r#"
+sections:
+  - instance:
+      header_name: my_section
+      header_sep: 124
+"#;
+        let s = Sections::from_yaml(&create_yaml(SOURCE), &Sections::default()).unwrap();
+        let instance = &s.sections()[0];
+        assert_eq!(instance.name().as_str(), names::INSTANCE);
+        assert!(instance.custom_header().is_none());
     }
 
     #[test]

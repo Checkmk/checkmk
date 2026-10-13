@@ -7,6 +7,7 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from http import HTTPStatus
 
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.form_specs import (
@@ -57,7 +58,7 @@ def rule_form_spec_title(name: str) -> str:
 def _get_rule_spec_and_form_spec(
     rule_identifier: RuleIdentifier,
     tree: FolderTree,
-    user: LoggedInUser,
+    user: LoggedInUser,  # noqa: ARG001
 ) -> tuple[Rulespec, FormSpec]:
     rule_spec = _get_rule_spec(rule_identifier.name)
 
@@ -131,7 +132,7 @@ def save_rule_form_spec_from_slidein_schema(
         pass
     else:
         raise RestAPIRequestGeneralException(
-            status=409,
+            status=HTTPStatus.CONFLICT,
             title="Rule ID conflict",
             detail=f"Cannot overwrite the existing rule {rule_id!r}",
         )

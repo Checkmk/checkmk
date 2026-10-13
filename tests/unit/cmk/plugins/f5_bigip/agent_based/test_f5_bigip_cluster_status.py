@@ -56,7 +56,13 @@ def test_check_f5_bigip_cluster_status(
             (
                 {
                     "type": "active_standby",
-                    "v11_2_states": {"0": 2, "1": 2, "2": 2, "3": 2, "4": 0},
+                    "v11_2_states": {
+                        "unknown": 2,
+                        "offline": 2,
+                        "forced_offline": 2,
+                        "standby": 2,
+                        "active": 0,
+                    },
                 },
                 4,
             ),

@@ -1,5 +1,6 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
@@ -8,7 +9,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
 ])
 
@@ -85,6 +85,13 @@ py_library(
 py_library(
     name = "i18n",
     srcs = ["cmk/ccc/i18n.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
+    name = "log",
+    srcs = ["cmk/ccc/log.py"],
     imports = ["."],
     visibility = ["//visibility:public"],
 )
@@ -174,16 +181,9 @@ py_library(
 
 py_library(
     name = "version",
-    srcs = [
-        "cmk/ccc/general_version_infos.py",
-        "cmk/ccc/version.py",
-    ],
+    srcs = ["cmk/ccc/version.py"],
     imports = ["."],
     visibility = ["//visibility:public"],
-    deps = [
-        "site",
-        "version-info",
-    ],
 )
 
 py_library(
@@ -191,6 +191,20 @@ py_library(
     srcs = ["cmk/ccc/version_info.py"],
     imports = ["."],
     visibility = ["//visibility:public"],
+    deps = [
+        "site",
+        "version",
+    ],
+)
+
+py_library(
+    name = "general-version-infos",
+    srcs = ["cmk/ccc/general_version_infos.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "version-info",
+    ],
 )
 
 py_library(
@@ -220,6 +234,7 @@ _ALL = [
     "hostaddress",
     "i18n",
     "inotify",
+    "log",
     "observer",
     "plugin-registry",
     "profile",
@@ -234,6 +249,7 @@ _ALL = [
     "user",
     "version",
     "version-info",
+    "general-version-infos",
 ]
 
 py_doc_test(
@@ -377,6 +393,18 @@ py_cmk_test(
     ],
 )
 
+py_cmk_test(
+    name = "log-tests",
+    size = "small",
+    srcs = [
+        "tests/test_log.py",
+    ],
+    deps = [
+        "log",
+        requirement("time-machine"),
+    ],
+)
+
 py_library(
     name = "wheel_only_files",
     srcs = ["cmk/ccc/__init__.py"],
@@ -389,7 +417,6 @@ py_wheel(
     distribution = "cmk-ccc",
     entry_points = {"console_scripts": ["cmk-general-version-infos = cmk.ccc.general_version_infos:main"]},
     strip_path_prefixes = ["packages/cmk-ccc"],
-    # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = _ALL + [":wheel_only_files"],
@@ -404,13 +431,6 @@ package_wheel(
     name = "pkg_tar",
     visibility = ["//visibility:public"],
     whl = "wheel",
-)
-
-sh_library(
-    name = "helpers",
-    srcs = [
-        ".f12",
-    ],
 )
 
 py_requirements_test(

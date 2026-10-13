@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
 
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
@@ -210,8 +209,8 @@ snmp_section_audiocodes_leds = SNMPSection(
 
 
 def discover_audiocodes_leds(
-    section_audiocodes_module_names: Mapping[str, str] | None,
-    section_audiocodes_leds: LEDResults | None,
+    section_audiocodes_module_names: Mapping[str, str] | None,  # noqa: ARG001
+    section_audiocodes_leds: LEDResults | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     yield Service()
 

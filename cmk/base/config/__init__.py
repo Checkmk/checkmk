@@ -10,8 +10,6 @@ from ._impl import ConfigCache as ConfigCache
 from ._impl import CoreObjectsConfig as CoreObjectsConfig
 from ._impl import EnforcedServicesTable as EnforcedServicesTable
 from ._impl import FilterMode as FilterMode
-from ._impl import get_config_file_paths as get_config_file_paths
-from ._impl import get_default_config as get_default_config
 from ._impl import get_relay_id as get_relay_id
 from ._impl import get_ssc_host_config as get_ssc_host_config
 from ._impl import handle_ip_lookup_failure as handle_ip_lookup_failure
@@ -21,14 +19,15 @@ from ._impl import HostgroupName as HostgroupName
 from ._impl import IgnoredActiveServices as IgnoredActiveServices
 from ._impl import iter_skipped_services_warnings as iter_skipped_services_warnings
 from ._impl import load as load
-from ._impl import load_all_plugins as load_all_plugins
-from ._impl import load_and_convert_legacy_checks as load_and_convert_legacy_checks
 from ._impl import load_resource_cfg_macros as load_resource_cfg_macros
 from ._impl import LoadingResult as LoadingResult
+from ._impl import make_base_config as make_base_config
 from ._impl import make_clustering_config as make_clustering_config
 from ._impl import make_host_tags as make_host_tags
 from ._impl import make_hosts_config as make_hosts_config
+from ._impl import make_loading_result as make_loading_result
 from ._impl import make_parser_config as make_parser_config
+from ._impl import make_ruleset_matcher as make_ruleset_matcher
 from ._impl import ObjectAttributes as ObjectAttributes
 from ._impl import ObjectMacros as ObjectMacros
 from ._impl import parse_hostname_list as parse_hostname_list
@@ -38,3 +37,6 @@ from ._impl import SERVICE_RETRY_INTERVAL as SERVICE_RETRY_INTERVAL
 from ._impl import ServiceDependsOn as ServiceDependsOn
 from ._impl import ServicegroupName as ServicegroupName
 from ._impl import SMARTPING_CHECK_INTERVAL as SMARTPING_CHECK_INTERVAL
+from ._load_raw import get_config_file_paths as get_config_file_paths
+from ._load_raw import get_default_config as get_default_config
+from ._load_raw import load_raw_config as load_raw_config

@@ -19,9 +19,12 @@ from collections.abc import Callable, Iterator
 import pytest
 from playwright._impl._api_structures import StorageState
 from playwright.sync_api import BrowserContext, expect, Page
+from playwright.sync_api import TimeoutError as PWTimeoutError
 from pytest_playwright import CreateContextCallback
 
 from tests.system.gui.testlib.playwright.timeouts import TIMEOUT_EXPECT_CHANGES
+from tests.testlib.common.utils2 import is_containerized
+from tests.testlib.pytest_helpers.diagnostics import add_process_snapshot
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +84,7 @@ def fixture_browser_storage_stage() -> StorageState:
     return StorageState()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def get_new_page(pytestconfig: pytest.Config) -> PageGetter:
     """Return a callable that creates a new page with the specified timeout."""
     timeout_value = pytestconfig.getoption(CLI_ARGUMENT_GUI_TIMEOUT) * 1000
@@ -114,21 +117,6 @@ def cmk_page(
     yield get_new_page(context)
 
     browser_storage_state.update(context.storage_state())
-
-
-# Making test result information available in fixtures
-# https://docs.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
-# NOTE: hookimpl is poorly typed, so the decorator effectively removes the types from the decorated function!
-@pytest.hookimpl(tryfirst=True, hookwrapper=True)
-def pytest_runtest_makereport(item: t.Any) -> t.Generator[None, t.Any]:  # type: ignore[misc]
-    """Set a report attribute for each phase of a pytest test execution call.
-
-    Phases can be "setup", "call", "teardown.
-    """
-    # execute all other hooks to obtain the report object
-    outcome = yield
-    rep = outcome.get_result()
-    setattr(item, "rep_" + rep.when, rep)
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -178,3 +166,15 @@ def pytest_sessionstart(session: pytest.Session) -> None:
                 _DEST_TRACING,
                 "retain-on-failure",
             )
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_exception_interact(
+    node: pytest.Item | pytest.Collector,
+    call: pytest.CallInfo[object],
+    report: pytest.CollectReport | pytest.TestReport,
+) -> None:
+    """Show what kept the host busy when playwright ran into a timeout."""
+    if (excinfo := call.excinfo) and excinfo.type is PWTimeoutError:
+        add_process_snapshot(excinfo.value, sudo=is_containerized())
+        report.longrepr = node.repr_failure(excinfo)

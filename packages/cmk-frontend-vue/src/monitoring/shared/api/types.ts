@@ -36,6 +36,15 @@ export type HostMode = components['schemas']['ModeInfo']
 
 export type ServiceMode = components['schemas']['ServiceModeInfo']
 
+export type EventIcon = components['schemas']['EventIcon']
+
+/** An icon rendered with its title as tooltip, hyperlinked only when it carries a link. */
+export interface MonitoringIcon {
+  icon_name: string
+  title: string
+  link?: string | undefined
+}
+
 export type Perfometer = components['schemas']['ServicePerfometer']
 
 export type HostLabelValue = components['schemas']['HostLabelValue']
@@ -59,9 +68,11 @@ export interface ServiceRef {
   description: string
 }
 
-export type HostState = components['schemas']['HostState']
+export type HostState = components['schemas']['HostStateLabel']
 
 export type ServiceState = components['schemas']['ServiceStateLabel']
+
+export type ServiceCounts = components['schemas']['ServiceCounts']
 
 export type HostsPageMeta = components['schemas']['HostsPageMeta']
 
@@ -119,6 +130,23 @@ export type FilterNode =
   | { type: 'or'; children: FilterNode[] }
   | { type: 'not'; child: FilterNode }
   | ConditionNode
+  | AgeCondition
+
+/**
+ * A bound on how long ago a timestamp field was, rather than on the instant itself.
+ *
+ * The API knows absolute timestamps only, so this is the one node shape the frontend carries
+ * that no generated schema defines. `MonitoringApi` resolves it against the clock while it
+ * builds each request, which is what keeps "less than five minutes ago" asking for the age the
+ * user entered instead of re-sending the window that age meant when they applied it.
+ */
+export interface AgeCondition<F extends FilterField = FilterField> {
+  type: 'age'
+  field: F
+  /** `younger_than` caps the age - a lower bound on the timestamp; `older_than` floors it. */
+  op: 'younger_than' | 'older_than'
+  seconds: number
+}
 
 /** A single column funnel's tree: conditions restricted to one field, `F`. */
 export type ColumnFilterNode<F extends FilterField> =
@@ -126,3 +154,4 @@ export type ColumnFilterNode<F extends FilterField> =
   | { type: 'or'; children: ColumnFilterNode<F>[] }
   | { type: 'not'; child: ColumnFilterNode<F> }
   | FieldConditionMap[F]
+  | AgeCondition<F>

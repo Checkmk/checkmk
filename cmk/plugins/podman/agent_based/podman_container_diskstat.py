@@ -20,13 +20,15 @@ from .lib import SectionPodmanContainerStats
 
 
 def discover_podman_container_diskstat(
-    section: SectionPodmanContainerStats,
+    section: SectionPodmanContainerStats,  # noqa: ARG001
 ) -> DiscoveryResult:
     yield Service(item="SUMMARY")
 
 
 def check_podman_container_diskstat(
-    item: str, params: Mapping[str, object], section: SectionPodmanContainerStats
+    item: str,  # noqa: ARG001
+    params: Mapping[str, object],
+    section: SectionPodmanContainerStats,
 ) -> CheckResult:
     yield from _check_diskstat_testable(
         params=params,

@@ -9,11 +9,12 @@ from typing import Literal
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import DynamicIcon, IconNames, Row, StaticIcon
+from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.icon import Icon, IconConfig, IconRegistry
 from cmk.ruleset_matcher.tags import TagID
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
 
 from ._compiler import is_part_of_aggregation
@@ -31,10 +32,10 @@ def register(
 def _render_aggregations_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> None | IconSpec | HTML | tuple[IconSpec, str] | tuple[IconSpec, str, str]:
     # Link to aggregations of the host/service
     # When precompile on demand is enabled, this icon is displayed for all hosts/services
@@ -72,10 +73,10 @@ AggregationsIcon = Icon(
 def _render_aggregation_icon(
     what: Literal["host", "service"],
     row: Row,
-    tags: Sequence[TagID],
-    custom_vars: Mapping[str, str],
-    user_permissions: UserPermissions,
-    icon_config: IconConfig,
+    tags: Sequence[TagID],  # noqa: ARG001
+    custom_vars: Mapping[str, str],  # noqa: ARG001
+    user_permissions: UserPermissions,  # noqa: ARG001
+    icon_config: IconConfig,  # noqa: ARG001
 ) -> None | IconSpec | HTML | tuple[IconSpec, str] | tuple[IconSpec, str, str]:
     is_bi_aggr_check = row.get("service_check_command", "").startswith("check_mk-bi_aggregation")
 

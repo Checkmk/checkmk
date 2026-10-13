@@ -20,6 +20,8 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
   return {
     name: 'host-1',
     state: 'UP',
+    is_flapping: false,
+    stale: false,
     address: '10.0.0.1',
     alias: 'host 1',
     site_id: 'local',
@@ -30,6 +32,7 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
     num_services_unknown: 0,
     num_services_pending: 0,
     legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=host-1',
+    num_relations: 0,
     ...overrides
   }
 }
@@ -75,7 +78,7 @@ describe('HostService', () => {
         limit: DEFAULT_BATCH_SIZE,
         sort: [{ id: 'name', desc: false }],
         searchQuery: '',
-        fields: visibleHostFields({})
+        fields: []
       },
       expect.any(AbortSignal)
     )
@@ -91,7 +94,12 @@ describe('HostService', () => {
     await vi.advanceTimersByTimeAsync(0)
 
     expect(fetchHosts).toHaveBeenLastCalledWith(
-      { limit: DEFAULT_BATCH_SIZE, sort: [], searchQuery: 'web01', fields: visibleHostFields({}) },
+      {
+        limit: DEFAULT_BATCH_SIZE,
+        sort: [],
+        searchQuery: 'web01',
+        fields: []
+      },
       expect.any(AbortSignal)
     )
   })
@@ -111,7 +119,12 @@ describe('HostService', () => {
     await vi.advanceTimersByTimeAsync(0)
 
     expect(fetchHosts).toHaveBeenLastCalledWith(
-      { limit: DEFAULT_BATCH_SIZE, sort: [], searchQuery: 'web01', fields: visibleHostFields({}) },
+      {
+        limit: DEFAULT_BATCH_SIZE,
+        sort: [],
+        searchQuery: 'web01',
+        fields: []
+      },
       expect.any(AbortSignal)
     )
   })
@@ -133,7 +146,25 @@ describe('HostService', () => {
       await vi.advanceTimersByTimeAsync(0)
 
       expect(fetchHosts).toHaveBeenLastCalledWith(
-        expect.objectContaining({ fields: visibleHostFields({ address: false }) }),
+        expect.objectContaining({ fields: visibleHostFields({ address: false }, ['address']) }),
+        expect.any(AbortSignal)
+      )
+    })
+
+    it('reads the fields a row needs whichever columns are shown', async () => {
+      const fetchHosts = vi.fn().mockResolvedValue(makeHostsResponse([], 0, 0))
+      service = new HostService({ fetchHosts }, makeKeyShortcutService(), {
+        columns: [...COLUMNS],
+        rowFields: ['setup_access']
+      })
+      await vi.advanceTimersByTimeAsync(0)
+
+      service.updateColumnVisibility({ address: false })
+      service.updateSearch('web01')
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(fetchHosts).toHaveBeenLastCalledWith(
+        expect.objectContaining({ fields: ['setup_access'] }),
         expect.any(AbortSignal)
       )
     })
@@ -151,7 +182,7 @@ describe('HostService', () => {
 
       expect(fetchHosts).toHaveBeenCalledTimes(2)
       expect(fetchHosts).toHaveBeenLastCalledWith(
-        expect.objectContaining({ fields: visibleHostFields({}) }),
+        expect.objectContaining({ fields: visibleHostFields({}, ['address']) }),
         expect.any(AbortSignal)
       )
     })

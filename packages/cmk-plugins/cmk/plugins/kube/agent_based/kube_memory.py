@@ -51,10 +51,10 @@ agent_section_kube_performance_memory_swap_v1 = AgentSection(
 
 
 def discovery_kube_memory(
-    section_kube_performance_memory: PerformanceUsage | None,
-    section_kube_memory_resources: Resources | None,
-    section_kube_allocatable_memory_resource: AllocatableResource | None,
-    section_kube_performance_memory_swap: PerformanceUsage | None,
+    section_kube_performance_memory: PerformanceUsage | None,  # noqa: ARG001
+    section_kube_memory_resources: Resources | None,  # noqa: ARG001
+    section_kube_allocatable_memory_resource: AllocatableResource | None,  # noqa: ARG001
+    section_kube_performance_memory_swap: PerformanceUsage | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     yield Service()
 

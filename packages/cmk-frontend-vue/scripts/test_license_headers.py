@@ -33,7 +33,6 @@ FILES_IGNORED = {
     Path(".editorconfig"),
     Path("eslint.config.mjs"),
     Path("gettext.config.js"),
-    Path(".f12"),
     Path(".gitignore"),
     Path(".gitattributes"),
     Path(".prettierignore"),
@@ -45,12 +44,11 @@ FILES_IGNORED = {
     Path("ui-component-library/index.html"),
     Path("env.d.ts"),
     Path("ui-component-library/public/mockServiceWorker.js"),  # auto generated
-    Path("cmk-frontend-vue.txt"),  # generated inside CI
 }
 
 ENTERPRISE_LICENSED_FILES_FORM_SPECS = {
-    Path("src/form/private/forms/FormDCDMetricBackendFilter.vue"),
-    Path("src/form/private/forms/FormMetricBackendCustomQuery.vue"),
+    Path("src/telemetry-metrics/FormDCDTelemetryMetricsFilter.vue"),
+    Path("src/telemetry-metrics-custom-query/FormTelemetryMetricsCustomQuery.vue"),
 }
 
 ROOT_FOLDERS_IGNORED = {
@@ -130,8 +128,9 @@ def check(suffix: str, abs_path: Path, rel_path: Path) -> bool:
         return CHECKER[suffix].check(
             abs_path,
             HEADER_CEE
-            if rel_path.is_relative_to(Path("src/graph-designer"))
-            or rel_path.is_relative_to(Path("src/metric-backend"))
+            if "nonfree" in rel_path.parts
+            or rel_path.is_relative_to(Path("src/telemetry-metrics-custom-query"))
+            or rel_path.is_relative_to(Path("src/telemetry-metrics"))
             or rel_path in ENTERPRISE_LICENSED_FILES_FORM_SPECS
             else HEADER,
         )

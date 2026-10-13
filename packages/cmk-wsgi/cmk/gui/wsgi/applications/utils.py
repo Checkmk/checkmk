@@ -2,7 +2,6 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from __future__ import annotations
 
 import abc
 import functools
@@ -24,13 +23,14 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInRemoteSite, LoggedInSuperUser, user
 from cmk.gui.pages import get_page_handler, PageContext
 from cmk.gui.permissions import permission_registry
+from cmk.gui.post_auth_gates import post_auth_gate_redirect_url
 from cmk.gui.session import session
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.utils.language_cookie import set_language_cookie
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.user_frontend_settings_cookie import set_user_frontend_config_cookie
 from cmk.gui.wsgi.type_defs import WSGIResponse
+from cmk.web.utils.language_cookie import set_language_cookie
 from cmk.web.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
+from cmk.web.utils.user_frontend_settings_cookie import set_user_frontend_config_cookie
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.
@@ -112,6 +112,20 @@ def ensure_authentication(handler: pages.PageHandler) -> Callable[[PageContext],
                         )
                 case _:
                     pass
+
+            # Feature gates (e.g. the trial mode selection) may take over the
+            # GUI of interactive users once the session is fully established.
+            if (
+                session.session_info.session_state == "logged_in"
+                and not session.user.automation_user
+                and (
+                    gate_url := post_auth_gate_redirect_url(
+                        ctx.config, requested_file_name(request)
+                    )
+                )
+                is not None
+            ):
+                raise HTTPRedirect(gate_url)
 
             # When displaying the crash report message, the user authentication context
             # has already been left. We need to preserve this information to be able to

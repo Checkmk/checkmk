@@ -1,4 +1,4 @@
-set noparent
+set noparent  # don't inherit owners information from parent folders
 file:/component_owners/plugins_active_checks_monitoring_plugins/OWNERS_DEFINITION
 
 # Please

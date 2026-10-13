@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
 import time
 from collections.abc import Mapping
@@ -125,7 +124,7 @@ agent_section_netapp_ontap_fc_interfaces_counters = AgentSection(
 
 def discovery_netapp_ontap_fcp(
     section_netapp_ontap_fc_ports: FcPortsSection | None,
-    section_netapp_ontap_fc_interfaces_counters: FcInterfacesCountersSection | None,
+    section_netapp_ontap_fc_interfaces_counters: FcInterfacesCountersSection | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if not section_netapp_ontap_fc_ports:
         return
@@ -222,9 +221,6 @@ def _io_bytes_results(
             continue
 
         value = get_rate(value_store, f"{item}.{what}", now, counter_val, raise_overflow=True)
-        if value is None:
-            continue
-
         if isinstance(levels, PredictiveLevels):
             yield from check_levels_predictive(
                 value=value,
@@ -245,7 +241,9 @@ def _io_bytes_results(
 
 
 def _io_ops_results(
-    item: str, params: Mapping[str, Any], fcp_if: Mapping[str, int | float]
+    item: str,
+    params: Mapping[str, Any],  # noqa: ARG001
+    fcp_if: Mapping[str, int | float],
 ) -> CheckResult:
     now = fcp_if["now"]
     value_store = get_value_store()
@@ -257,9 +255,6 @@ def _io_ops_results(
             continue
 
         value = get_rate(value_store, f"{item}.{what}", now, counter_val, raise_overflow=True)
-        if value is None:
-            continue
-
         yield from check_levels_v1(
             value=value, metric_name=what, render_func=str, label=descr, notice_only=True
         )

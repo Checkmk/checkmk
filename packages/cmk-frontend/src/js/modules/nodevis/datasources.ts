@@ -80,7 +80,7 @@ export class DatasourceManager {
 }
 
 // Abstract base class for all datasources
-export class AbstractDatasource extends Object {
+class AbstractDatasource extends Object {
   _enabled = false
   _supports_regular_updates = true
   _update_interval = 30

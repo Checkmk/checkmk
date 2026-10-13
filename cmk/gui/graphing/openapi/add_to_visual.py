@@ -4,12 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from http import HTTPStatus
+
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.graphing.openapi._add_to import AddableGraph
 from cmk.gui.graphing.openapi._family import GRAPH_FAMILY
-from cmk.gui.graphing.openapi.models import AddToRequest
-from cmk.gui.http import request
+from cmk.gui.graphing.openapi.models import AddToRequest, AddToVisualResponse
+from cmk.gui.http import request, response
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -23,18 +25,19 @@ from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.web.utils import permission_verification as permissions
+from cmk.web.utils.request_cache import RequestCache
 
 # Views are a registered visual type but cannot hold a graph: their add_visual_handler is a no-op
 # and they offer no add-to entries. Accepting them would report success while storing nothing.
 _GRAPH_TARGET_VISUAL_TYPES = ("dashboards", "reports")
 
 
-def add_to_visual_v1(api_context: ApiContext, body: AddToRequest) -> None:
+def add_to_visual_v1(api_context: ApiContext, body: AddToRequest) -> AddToVisualResponse:
     """Add a graph to a visual container"""
     addable = AddableGraph.parse(body.specification)
     if body.family not in _GRAPH_TARGET_VISUAL_TYPES:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Cannot add a graph to this visual type",
             detail=(
                 f"Graphs cannot be added to '{body.family}'. Supported visual types: "
@@ -45,7 +48,7 @@ def add_to_visual_v1(api_context: ApiContext, body: AddToRequest) -> None:
         visual_type = visual_type_registry[body.family]()
     except KeyError:
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Unknown visual type",
             detail=(
                 f"There is no visual type '{body.family}'. Known types: "
@@ -62,19 +65,31 @@ def add_to_visual_v1(api_context: ApiContext, body: AddToRequest) -> None:
             None,
             addable.parameters(),
             api_context.config.user_permissions(),
+            RequestCache(api_context.config),
         )
     except MKAuthException as exc:
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Not allowed to add to this visual",
             detail=str(exc),
         ) from exc
     except (MKUserError, MKGeneralException) as exc:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Visual not found",
             detail=str(exc),
         ) from exc
+
+    # add_visual_handler reports success by writing "OK <url>" into the shared response object,
+    # a leftover from the legacy AJAX handler it was written for (cmk.gui.visuals.ajax_add_visual).
+    reported = response.get_data(as_text=True)
+    if not reported.startswith("OK "):
+        raise ProblemException(
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            title="Add-to-visual action produced no redirect target",
+            detail=f"Unexpected response from the visual type handler: {reported!r}",
+        )
+    return AddToVisualResponse(redirect_url=reported.removeprefix("OK "))
 
 
 ENDPOINT_ADD_TO_VISUAL = VersionedEndpoint(
@@ -82,8 +97,6 @@ ENDPOINT_ADD_TO_VISUAL = VersionedEndpoint(
         path=domain_type_action_href("graph", "add_to_visual"),
         link_relation=".../action-param",
         method="post",
-        # No response model: add_visual_handler reports nothing back, unlike the container side.
-        content_type=None,
     ),
     permissions=EndpointPermissions(
         # Which permission applies depends on the visual type the caller targets.

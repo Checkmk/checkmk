@@ -5,12 +5,13 @@
 import json
 import logging
 from collections.abc import Generator, Iterator
+from http import HTTPStatus
 from pathlib import Path
 
 import pytest
 
-from tests.testlib.mock_server import MockEndpoint, MockMethod, MockResponse, MockServer
-from tests.testlib.site import Site
+from tests.testlib.system.mock_server import MockEndpoint, MockMethod, MockResponse, MockServer
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ def default_cfg(site: Site) -> Generator[None]:
         site.openapi.changes.activate_and_wait_for_completion()
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def cleanup_product_usage_data(site: Site) -> Iterator[None]:
     yield
     # Delete product usage directory if it exists
@@ -110,7 +111,7 @@ def run_product_usage_upload(site: Site, mock_url: str) -> None:
     assert result.wait() == 0, f"Product usage upload failed: {result.stderr}"
 
 
-def validate_product_usage_request(headers: dict[str, str], body: bytes) -> bool:
+def validate_product_usage_request(headers: dict[str, str], body: bytes) -> bool:  # noqa: ARG001
     """Validate that the product usage request contains required metadata and data."""
     data = json.loads(body)
     assert "metadata" in data, "Missing metadata in request"
@@ -199,7 +200,9 @@ def test_successful_https_product_usage_data_transmission(
     mock_https_server.add_endpoint(
         MockEndpoint(method=MockMethod.POST, path="/upload"),
         MockResponse(
-            status=200, body=b'{"status": "ok"}', request_validator=validate_product_usage_request
+            status=HTTPStatus.OK,
+            body=b'{"status": "ok"}',
+            request_validator=validate_product_usage_request,
         ),
     )
 
@@ -227,7 +230,9 @@ def test_unsuccessful_https_product_usage_data_transmission(
 
     mock_https_server.add_endpoint(
         MockEndpoint(method=MockMethod.POST, path="/upload"),
-        MockResponse(status=500, body=b'{"error": "Internal server error"}'),
+        MockResponse(
+            status=HTTPStatus.INTERNAL_SERVER_ERROR, body=b'{"error": "Internal server error"}'
+        ),
     )
 
     run_product_usage_upload(site, f"{mock_https_server.url}/upload")

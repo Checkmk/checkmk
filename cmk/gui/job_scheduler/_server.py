@@ -12,6 +12,8 @@ import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from cmk.ccc.log import CMKFormatter
+
 
 class ServerConfig(BaseModel, frozen=True):
     unix_socket: Path
@@ -19,7 +21,7 @@ class ServerConfig(BaseModel, frozen=True):
     error_log: Path
 
 
-def default_config(omd_root: Path, run_path: Path, log_path: Path) -> ServerConfig:
+def default_config(omd_root: Path, run_path: Path, log_path: Path) -> ServerConfig:  # noqa: ARG001
     return ServerConfig(
         unix_socket=run_path / "ui-job-scheduler.sock",
         access_log=log_path / "access.log",
@@ -39,13 +41,12 @@ def run_server(config: ServerConfig, app: FastAPI, logger: Logger) -> None:
                     "disable_existing_loggers": False,
                     "formatters": {
                         "default": {
-                            "()": "uvicorn.logging.DefaultFormatter",
-                            "fmt": "%(asctime)s [%(levelno)s] [%(process)d/%(threadName)s] %(message)s",
-                            "use_colors": None,
+                            "()": CMKFormatter,
+                            "with_process": True,
+                            "with_thread": True,
                         },
                         "access": {
-                            "()": "uvicorn.logging.AccessFormatter",
-                            "fmt": "%(asctime)s %(message)s",
+                            "()": CMKFormatter,
                         },
                     },
                     "handlers": {

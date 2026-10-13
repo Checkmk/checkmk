@@ -263,6 +263,16 @@ describe('useDashboardGeneralSettings Composable', () => {
       const builtSettings = settings.buildSettings()
       expect(builtSettings.visibility.hide_in_monitor_menu).toBe(true)
     })
+    it('should keep the dropdown visibility of the initial settings', async () => {
+      const initialSettings: DashboardGeneralSettings = {
+        title: { text: 'Dashboard', render: true, include_context: false },
+        menu: { topic: 'other', sort_index: 99, is_show_more: false, search_terms: [] },
+        visibility: { hide_in_monitor_menu: false, hide_in_drop_down_menus: true, share: 'no' }
+      }
+      const settings = await useDashboardGeneralSettings('nobody', initialSettings, 'dashboard')
+      const builtSettings = settings.buildSettings()
+      expect(builtSettings.visibility.hide_in_drop_down_menus).toBe(true)
+    })
   })
   describe('Complete Validation Flow', () => {
     it('should return false when validation fails', async () => {

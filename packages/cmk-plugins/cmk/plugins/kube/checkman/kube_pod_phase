@@ -8,6 +8,7 @@ description:
  where the Pod is in its lifecycle. The service always displays an {OK} state regardless of the
  current phase.
 
- It requires that the special agent kube is configured.
+ This check requires that Kubernetes monitoring is configured and that Checkmk can receive
+ data from the in-cluster agent.
 discovery:
  One service is created for each Pod.

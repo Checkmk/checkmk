@@ -27,6 +27,7 @@ const spec = computed(() => {
     validators: [],
     label: 'some label',
     layout: layout.value,
+    button_group_size: 'medium',
     input_hint: '',
     no_elements_text: '',
     elements: [
@@ -72,6 +73,7 @@ const spec = computed(() => {
           input_hint: 'nestedChoiceInputHint',
           field_size: 'small',
           layout: nestedLayout.value,
+          button_group_size: 'medium',
           no_elements_text: '',
           elements: [
             {

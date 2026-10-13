@@ -16,7 +16,7 @@ export interface TopPeerProtocol {
   traffic_hr: string
 }
 
-export interface NtopTabData {
+interface NtopTabData {
   ntop_link: string
 }
 

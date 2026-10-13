@@ -3,12 +3,16 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { isWarningDismissed, persistWarningDismissal } from 'cmk-ui-library/lib/userConfig'
+import {
+  type DismissableWarning,
+  isWarningDismissed,
+  persistWarningDismissal
+} from 'cmk-ui-library/lib/userConfig'
 import { onMounted, ref } from 'vue'
 
 import usePersistentRef from './usePersistentRef'
 
-export function useDismissDialog(key: string | undefined) {
+export function useDismissDialog(key: DismissableWarning | undefined) {
   const isShown = key ? usePersistentRef(key, false, (v) => v as boolean, 'session') : ref(true)
 
   onMounted(() => {

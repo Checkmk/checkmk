@@ -7,28 +7,12 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.alcatel.agent_based import alcatel_timetra_cpu
 from cmk.plugins.alcatel.agent_based.alcatel_timetra_cpu import (
     check_alcatel_timetra_cpu,
-    discover_alcatel_timetra_cpu,
     parse_alcatel_timetra_cpu,
 )
-
-
-@pytest.mark.parametrize(
-    "string_table, expected_discoveries",
-    [
-        ([["92"]], [Service()]),
-    ],
-)
-def test_discover_alcatel_timetra_cpu(
-    string_table: StringTable, expected_discoveries: list[Service]
-) -> None:
-    parsed = parse_alcatel_timetra_cpu(string_table)
-    assert parsed is not None
-    result = list(discover_alcatel_timetra_cpu(parsed))
-    assert result == expected_discoveries
 
 
 @pytest.mark.parametrize(

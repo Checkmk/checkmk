@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+from http import HTTPStatus
 
 import pytest
 
@@ -22,8 +25,8 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.watolib import activate_changes
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.gui.web_test_app import SetConfig
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.gui.web_test_app import SetConfig
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 def test_get_bi_packs(clients: ClientRegistry) -> None:
@@ -37,7 +40,7 @@ def test_get_bi_rule_non_existing_id(clients: ClientRegistry) -> None:
     clients.BiRule.get(
         rule_id="abc",
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_get_bi_aggregation_non_existing_id(
@@ -46,7 +49,7 @@ def test_get_bi_aggregation_non_existing_id(
     clients.BiAggregation.get(
         aggregation_id="abc",
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_get_bi_pack(clients: ClientRegistry) -> None:
@@ -130,10 +133,10 @@ def test_bi_rule(clients: ClientRegistry) -> None:
 
     # try delete a rule, another rule is dependent on
     response = clients.BiRule.delete(rule_id="some_rule", expect_ok=False)
-    response.assert_status_code(409)
+    response.assert_status_code(HTTPStatus.CONFLICT)
     assert response.json == {
         "detail": "You cannot delete this rule: it is still used by other rules.",
-        "status": 409,
+        "status": HTTPStatus.CONFLICT,
         "title": "Conflict",
     }
 
@@ -144,7 +147,9 @@ def test_bi_rule(clients: ClientRegistry) -> None:
     clients.BiRule.delete(rule_id="some_rule", expect_ok=False)
 
     # delete non existing rule
-    clients.BiRule.delete(rule_id="some_rule", expect_ok=False).assert_status_code(404)
+    clients.BiRule.delete(rule_id="some_rule", expect_ok=False).assert_status_code(
+        HTTPStatus.NOT_FOUND
+    )
 
 
 def _rule_body(rule_id: str, pack_id: str) -> dict:
@@ -198,11 +203,13 @@ def test_delete_bi_rule_denied_for_non_contact_user(
 
     # Switch to the non-admin user: the rule is in a pack they may not use -> 404.
     clients.BiRule.set_credentials(*with_automation_user_not_admin)
-    clients.BiRule.delete(rule_id="private_rule", expect_ok=False).assert_status_code(404)
+    clients.BiRule.delete(rule_id="private_rule", expect_ok=False).assert_status_code(
+        HTTPStatus.NOT_FOUND
+    )
 
     # Switch back to admin and verify the rule was not deleted.
     clients.BiRule.set_credentials(*with_automation_user)
-    clients.BiRule.get(rule_id="private_rule").assert_status_code(200)
+    clients.BiRule.get(rule_id="private_rule").assert_status_code(HTTPStatus.OK)
 
 
 def test_delete_bi_rule_allowed_for_contact_user(
@@ -222,7 +229,7 @@ def test_delete_bi_rule_allowed_for_contact_user(
     clients.BiRule.create(rule_id="public_rule", body=_rule_body("public_rule", "public_pack"))
 
     clients.BiRule.set_credentials(*with_automation_user_not_admin)
-    clients.BiRule.delete(rule_id="public_rule").assert_status_code(204)
+    clients.BiRule.delete(rule_id="public_rule").assert_status_code(HTTPStatus.NO_CONTENT)
 
 
 def test_bi_aggregation(clients: ClientRegistry) -> None:
@@ -276,7 +283,7 @@ def test_bi_aggregation(clients: ClientRegistry) -> None:
     clients.BiAggregation.delete(
         aggregation_id="some_aggregation",
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_modify_bi_aggregation(clients: ClientRegistry) -> None:
@@ -316,13 +323,13 @@ def test_clone_bi_aggregation(clients: ClientRegistry) -> None:
     # Check invalid POST request on existing id
     clients.BiAggregation.create(
         aggregation_id=aggr_id, body=aggr, expect_ok=False
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
     # Check invalid PUT request on new id
     clone_id = "cloned_aggregation"
     clients.BiAggregation.edit(
         aggregation_id=clone_id, body=aggr, expect_ok=False
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
     # Save config under different id
     clients.BiAggregation.create(aggregation_id=clone_id, body=aggr)
@@ -345,7 +352,7 @@ def test_clone_bi_rule(clients: ClientRegistry) -> None:
         rule_id=rule_id,
         body=rule,
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
     # Check invalid PUT request on new id
     clone_id = "applications_clone"
@@ -353,7 +360,7 @@ def test_clone_bi_rule(clients: ClientRegistry) -> None:
         rule_id=clone_id,
         body=rule,
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
     # Save config under different id
     clients.BiRule.create(
@@ -380,7 +387,7 @@ def test_clone_bi_pack(clients: ClientRegistry) -> None:
         pack_id=pack_id,
         body=new_data,
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
     # Check valid PUT request on existing id
     clients.BiPack.edit(
@@ -400,7 +407,7 @@ def test_clone_bi_pack(clients: ClientRegistry) -> None:
         pack_id=clone_id,
         body=new_data,
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
     # Save config under different id
     clients.BiPack.create(
@@ -442,21 +449,21 @@ def test_delete_pack(clients: ClientRegistry) -> None:
     clients.BiPack.get(
         pack_id="test_pack",
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_delete_pack_forbidden(clients: ClientRegistry) -> None:
     clients.BiPack.delete(
         pack_id="default",
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_delete_non_existent_pack(clients: ClientRegistry) -> None:
     clients.BiPack.delete(
         pack_id="i-do-not-exist",
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 _AGGREGATION_TITLE = "Host heute"
@@ -524,7 +531,7 @@ def test_get_aggregation_state_not_yet_compiled(
     clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
-    counter_path = BIAggregationPacks._num_enabled_aggregations_path()
+    counter_path = BIAggregationPacks._num_enabled_aggregations_path()  # noqa: SLF001
     counter_path.parent.mkdir(parents=True, exist_ok=True)
     counter_path.write_text("1")
 
@@ -537,7 +544,7 @@ def test_get_aggregation_state_not_yet_compiled(
     finally:
         counter_path.unlink()
 
-    resp.assert_status_code(503)
+    resp.assert_status_code(HTTPStatus.SERVICE_UNAVAILABLE)
 
 
 @pytest.mark.parametrize("wato_enabled", [True, False])
@@ -608,10 +615,9 @@ def test_get_aggregation_state_filter_names_no_match(
 
 
 @pytest.mark.parametrize("wato_enabled", [True, False])
+@pytest.mark.usefixtures("mock_livestatus")
 def test_post_bi_pack_creating_contact_groups_regression(
-    clients: ClientRegistry,
-    mock_livestatus: MockLiveStatusConnection,
-    wato_enabled: bool,
+    clients: ClientRegistry, wato_enabled: bool
 ) -> None:
     contact_group = "i_should_never_exists"
 
@@ -619,20 +625,20 @@ def test_post_bi_pack_creating_contact_groups_regression(
     clients.ContactGroup.get(
         group_id=contact_group,
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
     # try to create it indirectly through posting it in a BI Pack,  unsuccessfully
     clients.BiPack.create(
         pack_id="testpack",
         body={"title": "my_cool_pack", "contact_groups": [contact_group], "public": False},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     # Make sure it still does not exist
     clients.ContactGroup.get(
         group_id=contact_group,
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 @pytest.mark.parametrize("wato_enabled", [True, False])
@@ -645,12 +651,12 @@ def test_get_aggregation_state_should_not_update_config_generation(
     live: MockLiveStatusConnection = mock_livestatus
     live.set_sites(["NO_SITE"])
 
-    generation_before_calling_endpoint = activate_changes._get_current_config_generation()
+    generation_before_calling_endpoint = activate_changes._get_current_config_generation()  # noqa: SLF001
 
     with live(expect_status_query=False), set_config(wato_enabled=wato_enabled):
         clients.BiAggregation.get_aggregation_state_post(body={"filter_names": ["Host heute"]})
 
-    generation_after_calling_endpoint = activate_changes._get_current_config_generation()
+    generation_after_calling_endpoint = activate_changes._get_current_config_generation()  # noqa: SLF001
 
     assert generation_before_calling_endpoint == generation_after_calling_endpoint
 
@@ -699,7 +705,7 @@ def test_create_bi_aggregation_invalid_pack_id(clients: ClientRegistry) -> None:
 
     assert resp.json == {
         "title": "Not Found",
-        "status": 404,
+        "status": HTTPStatus.NOT_FOUND,
         "detail": "Unknown bi_pack: non-existing-pack-id",
     }
 

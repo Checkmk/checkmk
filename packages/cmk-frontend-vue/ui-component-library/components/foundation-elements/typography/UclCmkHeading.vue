@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { BoolPropDef, MultilineStringPropDef } from '@ucl/_ucl/types/prop-def'
 import { type HeadingType } from 'cmk-ui-library/components/typography/CmkHeading.vue'
 
@@ -14,12 +14,12 @@ export const panelConfig = {
   type: {
     type: 'list' as const,
     title: 'type',
-    options: [
-      { title: 'H1', name: 'h1' },
-      { title: 'H2', name: 'h2' },
-      { title: 'H3', name: 'h3' },
-      { title: 'H4', name: 'h4' }
-    ] satisfies Options<HeadingType>[],
+    options: listOptions<HeadingType>({
+      h1: 'H1',
+      h2: 'H2',
+      h3: 'H3',
+      h4: 'H4'
+    }),
     initialState: 'h1' as NonNullable<HeadingType>
   },
   text: {

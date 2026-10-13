@@ -12,15 +12,15 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ruleset_matcher.definition import RuleGroup
-from tests.testlib.agent import (
+from tests.testlib.common.utils2 import ServiceInfo
+from tests.testlib.system.agent import (
     agent_controller_daemon,
     download_and_install_agent_package,
     register_controller,
     wait_for_agent_cache_omd_status,
     wait_until_host_receives_data,
 )
-from tests.testlib.common.utils2 import ServiceInfo
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +105,6 @@ def _host_services(
         site.activate_changes_and_wait_for_core_reload()
 
 
-@pytest.mark.medium_test_chain
 def test_checks_sanity(host_services: dict[str, ServiceInfo]) -> None:
     """Assert sanity of the discovered checks.
 

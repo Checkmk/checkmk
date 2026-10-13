@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterable, Sequence
@@ -82,6 +81,6 @@ def parse_virtual_volumes(map_label: dict, virtual_volumes: Iterable, quotas: It
             avail_mb = size_mb - int(usage) / 1048576.0
             parsed[volume] = (size_mb, avail_mb)
         else:
-            parsed[volume] = (None, None)
+            parsed[volume] = (None, None)  # type: ignore[possibly-undefined]
 
     return parsed

@@ -11,8 +11,6 @@ all saves substantial CPU resources as opposed to running Checkmk
 in adhoc mode (about 75%).
 """
 
-# mypy: disable-error-code="type-arg"
-
 import enum
 import itertools
 import os
@@ -35,7 +33,6 @@ from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     CheckPlugin,
     InventoryPlugin,
-    LegacyPluginLocation,
     SectionPlugin,
     ServiceID,
 )
@@ -172,7 +169,7 @@ def dump_precompiled_hostcheck(
     verify_site_python: bool = True,
     precompile_mode: PrecompileMode,
 ) -> str:
-    locations, legacy_checks_to_load = _make_needed_plugins_locations(
+    locations = _make_needed_plugins_locations(
         hosts_config,
         config_cache,
         passive_service_name_config,
@@ -222,7 +219,13 @@ def dump_precompiled_hostcheck(
         dst=str(HostCheckStore.host_check_file_path(config_path, hostname)),
         verify_site_python=verify_site_python,
         locations=locations,
-        checks_to_load=legacy_checks_to_load,
+        disabled_service_ids=_get_disabled_service_ids(
+            config_cache,
+            passive_service_name_config,
+            enforced_services_table,
+            hostname,
+            plugins,
+        ),
         ipaddresses=needed_ipaddresses,
         ipv6addresses=needed_ipv6addresses,
         hostname=hostname,
@@ -247,10 +250,7 @@ def _make_needed_plugins_locations(
     ],
     hostname: HostName,
     plugins: AgentBasedPlugins,
-) -> tuple[  # we need `list` for the weird template replacement technique
-    list[PluginLocation],
-    list[str],
-]:
+) -> list[PluginLocation]:  # we need `list` for the weird template replacement technique
     needed_agent_based_plugins = _get_needed_plugins(
         config_cache, passive_service_name_config, enforced_services_table, hostname, plugins
     )
@@ -273,13 +273,8 @@ def _make_needed_plugins_locations(
         sections=itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
     ).values()
 
-    return (
-        _get_needed_agent_based_locations(
-            itertools.chain(needed_agent_based_sections, needed_agent_based_plugins)
-        ),
-        _get_needed_legacy_check_files(
-            itertools.chain(needed_agent_based_sections, needed_agent_based_plugins),
-        ),
+    return _get_needed_agent_based_locations(
+        itertools.chain(needed_agent_based_sections, needed_agent_based_plugins)
     )
 
 
@@ -322,14 +317,39 @@ def _get_needed_plugins(
     ]
 
 
-def _get_needed_legacy_check_files(
-    # Note: we don't *have* any InventoryPlugins that match the condition below, but
-    # it's easier to type it like this.
-    plugins: Iterable[SectionPlugin | CheckPlugin | InventoryPlugin],
-) -> list[str]:
-    return sorted(
-        {p.location.file_name for p in plugins if isinstance(p.location, LegacyPluginLocation)}
-    )
+def _get_disabled_service_ids(
+    config_cache: ConfigCache,
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
+    enforced_services_table: Callable[
+        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
+    ],
+    host_name: HostName,
+    agent_based_plugins: AgentBasedPlugins,
+) -> list[ServiceID]:
+    """Determine the services excluded by the "Disabled services" ruleset.
+
+    The host check must not compute results for these: they have no counterpart
+    in the core configuration, so nagios would log a warning for every result it
+    cannot assign.  It cannot determine them itself, because we only ship the
+    plug-ins needed for the services it is supposed to check (see
+    `_get_needed_plugins`), and the ruleset matches on the service name, which is
+    not available without the plug-in.
+    """
+    return [
+        # Same table as in `_get_needed_plugins`, so that we report exactly
+        # those services whose plug-ins we are about to leave out.
+        service.id()
+        for service in config_cache.check_table(
+            host_name,
+            agent_based_plugins.check_plugins,
+            config_cache.make_service_configurer(
+                agent_based_plugins.check_plugins, passive_service_name_config
+            ),
+            passive_service_name_config,
+            enforced_services_table,
+            filter_mode=FilterMode.INCLUDE_CLUSTERED,
+        ).ignored_services
+    ]
 
 
 def _get_needed_agent_based_locations(

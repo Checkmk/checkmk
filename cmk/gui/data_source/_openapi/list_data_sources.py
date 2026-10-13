@@ -17,7 +17,7 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.restful_objects.constructors import domain_object_collection_href
 
@@ -30,8 +30,8 @@ class DataSourceExtensions:
 
 
 @api_model
-class DataSourceModel(DomainObjectModel):
-    domainType: Literal["constant"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
+class DataSourceModel(TitledDomainObjectModel):
+    domainType: Literal["constant"] = api_field(description="The domain type of the object.")
     extensions: DataSourceExtensions = api_field(
         description="The configuration of this data source."
     )
@@ -39,7 +39,7 @@ class DataSourceModel(DomainObjectModel):
 
 @api_model
 class DataSourceCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["constant"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["constant"] = api_field(
         description="The domain type of the objects in the collection"
     )
     value: list[DataSourceModel] = api_field(description="A list of host objects", example="")
@@ -53,7 +53,7 @@ def list_data_sources_v1() -> DataSourceCollectionModel:
         data_source_model = DataSourceModel(
             id=data_source_id,
             domainType="constant",
-            title=data_source.title,
+            title=str(data_source.title),  # plugins may ignore the str contract
             extensions=DataSourceExtensions(infos=list(data_source.infos)),
             links=[],
         )

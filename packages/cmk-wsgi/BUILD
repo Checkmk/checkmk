@@ -7,7 +7,6 @@ load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
-    "pyproject.toml",
     "requirements.in",
 ])
 
@@ -18,7 +17,6 @@ py_library(
     ) + ["cmk/gui/wsgi/applications/index.wsgi"],
     imports = ["."],
     visibility = [
-        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//non-free/packages/cmk-agent-registration-extended:__pkg__",
         "//omd/packages/check_mk:__pkg__",
@@ -51,6 +49,7 @@ py_library(
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-ccc:version-info",
         "//packages/cmk-crypto",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-profiling:gui",
@@ -78,7 +77,6 @@ py_wheel(
     name = "wheel",
     distribution = "cmk-wsgi",
     strip_path_prefixes = ["packages/cmk-wsgi"],
-    # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [
@@ -97,13 +95,6 @@ package_wheel(
     name = "pkg_tar",
     visibility = ["//visibility:public"],
     whl = "wheel",
-)
-
-sh_library(
-    name = "f12",
-    srcs = [
-        "cmk/gui/wsgi/.f12",
-    ],
 )
 
 py_requirements_test(

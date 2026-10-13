@@ -32,6 +32,13 @@ Example::
 
     Metric("temperature", 42.0, levels=(80, 90), lower_levels=(5, 0))
 
+Added discovery function :func:`discover_one_service`
+*****************************************************
+
+Plug-ins that subscribe to a single section and always monitor exactly one service
+no longer have to write a discovery function that ignores its section and yields a
+single :class:`Service`. They can use this one instead.
+
 """
 
 from collections.abc import Callable as _Callable
@@ -123,6 +130,17 @@ from ._naming import validate_name as _validate_name
 type _DiscoveryFunction = _Callable[..., DiscoveryResult]
 type CheckResult = _Iterable[IgnoreResults | Metric | Result]
 type _CheckFunction = _Callable[..., CheckResult]
+
+
+def discover_one_service(section: object) -> DiscoveryResult:  # noqa: ARG001
+    """Discover a single service, regardless of the section's content
+
+    This is a ready-made :attr:`CheckPlugin.discovery_function` for the common case of a
+    plug-in that subscribes to a single section and always monitors exactly one service.
+    The discovered service has no item, so the plug-in's `service_name` must not contain
+    a '%s'.
+    """
+    yield Service()
 
 
 @_dataclass(frozen=True, kw_only=True)
@@ -238,6 +256,7 @@ __all__ = [
     "NoLevelsT",
     "PredictiveLevelsT",
     "clusterize",
+    "discover_one_service",
     "get_average",
     "get_rate",
     "get_value_store",

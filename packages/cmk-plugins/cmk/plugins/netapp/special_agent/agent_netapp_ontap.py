@@ -6,7 +6,6 @@
 # attr-defined: netapp_ontap switched to a lazy loading scheme via apipkg which hides
 # all useful information from mypy. :-/ See
 # https://library.netapp.com/ecmdocs/ECMLP3364865/html/index.html#9181-library-updates
-# mypy: disable-error-code="attr-defined"
 
 """agent_netapp_ontap
 
@@ -19,6 +18,7 @@ import sys
 from collections import defaultdict
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from enum import Enum
+from http import HTTPStatus
 from typing import Final, override
 
 import urllib3
@@ -28,9 +28,9 @@ from netapp_ontap.host_connection import HostConnection
 from netapp_ontap.resource import Resource
 from pydantic import BaseModel
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 from cmk.plugins.netapp import models
-from cmk.server_side_programs.v1_unstable import (
+from cmk.server_side_programs.v1 import (
     HostnameValidationAdapter,
     report_agent_crashes,
     vcrtrace,
@@ -120,7 +120,7 @@ def safe_write_section(
     try:
         write_section(section_name, generator, logger)
     except NetAppRestError as exc:
-        if exc.status_code == 401:
+        if exc.status_code == HTTPStatus.UNAUTHORIZED:
             raise
         logger.exception("Section '%(section_name)s' failed", {"section_name": section_name})
         _write_error(section_name, str(exc))
@@ -150,7 +150,7 @@ def _collect_netapp_resource_volume(
         "space.snapshot.reserve_percent",
     )
 
-    yield from NetAppResource.Volume.get_collection(
+    yield from NetAppResource.Volume.get_collection(  # type: ignore[attr-defined]
         connection=connection,
         is_constituent=is_constituent,
         fields=",".join(field_query),
@@ -195,7 +195,7 @@ def fetch_s3_buckets(
         "size",
         "logical_used_size",
     )
-    for element in NetAppResource.S3Bucket.get_collection(
+    for element in NetAppResource.S3Bucket.get_collection(  # type: ignore[attr-defined]
         connection=connection,
         fields=",".join(field_query),
     ):
@@ -302,7 +302,7 @@ def fetch_volumes_counters(
 
         volume_id = f"*:{volume.svm_name}:{volume.name}:{volume.uuid}"
 
-        for element in NetAppResource.CounterRow.get_collection(
+        for element in NetAppResource.CounterRow.get_collection(  # type: ignore[attr-defined]
             "volume",
             id=volume_id,
             connection=connection,
@@ -367,7 +367,7 @@ def fetch_disks(connection: HostConnection) -> Iterable[models.DiskModel]:
 
     yield from (
         models.DiskModel.model_validate(element.to_dict())
-        for element in NetAppResource.Disk.get_collection(
+        for element in NetAppResource.Disk.get_collection(  # type: ignore[attr-defined]
             connection=connection, fields=",".join(field_query)
         )
     )
@@ -384,7 +384,7 @@ def fetch_luns(connection: HostConnection) -> Iterable[models.LunModel]:
         "location.volume.name",
     )
 
-    for element in NetAppResource.Lun.get_collection(
+    for element in NetAppResource.Lun.get_collection(  # type: ignore[attr-defined]
         connection=connection, fields=",".join(field_query)
     ):
         element_data = element.to_dict()
@@ -411,7 +411,7 @@ def _root_aggregate_ids(connection: HostConnection, args: argparse.Namespace) ->
             timeout=args.timeout,
         )
         records = response.json().get("records", [])
-    except (NetAppRestError, OSError, ValueError):
+    except NetAppRestError, OSError, ValueError:
         # ASA r2 systems do not support
         # the "uuid" field on this passthrough (the request fails)
         return set()
@@ -430,7 +430,7 @@ def _aggregates_ids(connection: HostConnection, args: argparse.Namespace) -> Col
     """
     uuids = {
         aggregate.to_dict()["uuid"]
-        for aggregate in NetAppResource.Aggregate.get_collection(
+        for aggregate in NetAppResource.Aggregate.get_collection(  # type: ignore[attr-defined]
             connection=connection, fields="uuid"
         )
     }
@@ -448,7 +448,7 @@ def fetch_aggr(
 
     aggregates = _aggregates_ids(connection, args)
     for aggr_uuid in aggregates:
-        resource = NetAppResource.Aggregate(uuid=aggr_uuid)
+        resource = NetAppResource.Aggregate(uuid=aggr_uuid)  # type: ignore[attr-defined]
         try:
             resource.get(fields=",".join(field_query))
         except NetAppRestError:
@@ -467,7 +467,7 @@ def fetch_vs_status(connection: HostConnection) -> Iterable[models.SvmModel]:
 
     yield from (
         models.SvmModel.model_validate(element.to_dict())
-        for element in NetAppResource.Svm.get_collection(
+        for element in NetAppResource.Svm.get_collection(  # type: ignore[attr-defined]
             connection=connection, fields=",".join(field_query)
         )
     )
@@ -479,7 +479,7 @@ def _fetch_node_ha_partner_names(
     """Return the HA (storage failover) partner node names indexed by node name."""
     partner_names_by_node: dict[str, tuple[str, ...] | None] = {}
 
-    for element in NetAppResource.Node.get_collection(
+    for element in NetAppResource.Node.get_collection(  # type: ignore[attr-defined]
         connection=connection,
         fields="name,ha.partners.name",
     ):
@@ -511,7 +511,7 @@ def fetch_interfaces(
     )
 
     interfaces: list[models.IpInterfaceModel] = []
-    for element in NetAppResource.IpInterface.get_collection(
+    for element in NetAppResource.IpInterface.get_collection(  # type: ignore[attr-defined]
         connection=connection, fields=",".join(field_query)
     ):
         element_data = element.to_dict()
@@ -559,7 +559,7 @@ def fetch_ports(connection: HostConnection) -> Iterable[models.PortModel]:
         "broadcast_domain.name",
     )
 
-    for element in NetAppResource.Port.get_collection(
+    for element in NetAppResource.Port.get_collection(  # type: ignore[attr-defined]
         connection=connection, fields=",".join(field_query)
     ):
         element_data = element.to_dict()
@@ -599,7 +599,7 @@ def fetch_interfaces_counters(
     interface_lookup = {f"{interface.node_name}:{interface.name}" for interface in interfaces}
 
     # Use bulk query with wildcard to fetch all LIF counters in a single API call
-    for element in NetAppResource.CounterRow.get_collection(
+    for element in NetAppResource.CounterRow.get_collection(  # type: ignore[attr-defined]
         "lif",
         id="*",
         connection=connection,
@@ -647,10 +647,11 @@ def fetch_nodes(connection: HostConnection) -> Iterable[models.NodeModel]:
         "date",
     )
 
-    for element in NetAppResource.Node.get_collection(
+    for element in NetAppResource.Node.get_collection(  # type: ignore[attr-defined]
         connection=connection, fields=",".join(field_query)
     ):
         element_data = element.to_dict()
+        metric = element_data.get("metric", {})
 
         yield models.NodeModel(
             name=element_data["name"],
@@ -663,8 +664,8 @@ def fetch_nodes(connection: HostConnection) -> Iterable[models.NodeModel]:
             serial_number=element_data["serial_number"],
             system_id=element_data["system_id"],
             cpu_processor=element_data.get("controller", {}).get("cpu", {}).get("processor"),
-            processor_utilization=element_data["metric"]["processor_utilization"],
-            processor_utilization_timestamp=element_data["metric"]["timestamp"],
+            processor_utilization=metric.get("processor_utilization"),
+            processor_utilization_timestamp=metric.get("timestamp"),
             date=element_data.get("date"),
         )
 
@@ -680,7 +681,7 @@ def fetch_fans(
     if oldest_version >= models.Version(generation=9, major=13, minor=1):
         field_query.append("fans.installed")
 
-    for element in NetAppResource.Shelf.get_collection(
+    for element in NetAppResource.Shelf.get_collection(  # type: ignore[attr-defined]
         connection=connection, fields=",".join(field_query)
     ):
         element_data = element.to_dict()
@@ -704,7 +705,7 @@ def fetch_psu(connection: HostConnection) -> Iterable[models.ShelfPsuModel]:
         "frus.installed",
     )
 
-    for element in NetAppResource.Shelf.get_collection(
+    for element in NetAppResource.Shelf.get_collection(  # type: ignore[attr-defined]
         connection=connection, fields=",".join(field_query)
     ):
         element_data = element.to_dict()
@@ -738,7 +739,7 @@ def fetch_temperatures(
     if oldest_version >= models.Version(generation=9, major=13, minor=1):
         field_query.append("temperature_sensors.installed")
 
-    for element in NetAppResource.Shelf.get_collection(
+    for element in NetAppResource.Shelf.get_collection(  # type: ignore[attr-defined]
         connection=connection, fields=",".join(field_query)
     ):
         element_data = element.to_dict()
@@ -860,7 +861,7 @@ def fetch_vs_traffic_counters(
     }
 
     for key, values in query_data.items():
-        for element in NetAppResource.CounterRow.get_collection(
+        for element in NetAppResource.CounterRow.get_collection(  # type: ignore[attr-defined]
             key,
             connection=connection,
             fields="properties,counters",
@@ -900,7 +901,7 @@ def fetch_fc_interfaces_counters(
     }
 
     for key, values in query_data.items():
-        for element in NetAppResource.CounterRow.get_collection(
+        for element in NetAppResource.CounterRow.get_collection(  # type: ignore[attr-defined]
             key,
             connection=connection,
             fields="properties,counters",
@@ -946,7 +947,7 @@ def fetch_environment(connection: HostConnection) -> Iterable[models.Environment
         "value_units",
     )
 
-    for element in NetAppResource.Sensors.get_collection(
+    for element in NetAppResource.Sensors.get_collection(  # type: ignore[attr-defined]
         connection=connection,
         fields=",".join(field_query),
         type="thermal|fan|voltage|current",
@@ -965,7 +966,7 @@ def fetch_environment(connection: HostConnection) -> Iterable[models.Environment
             value_units=element_data.get("value_units"),
         )
 
-    for element in NetAppResource.Sensors.get_collection(
+    for element in NetAppResource.Sensors.get_collection(  # type: ignore[attr-defined]
         connection=connection, fields=",".join(field_query), type="discrete"
     ):
         element_data = element.to_dict()
@@ -990,7 +991,7 @@ def fetch_qtree_quota(
         "users",
     )
 
-    for element in NetAppResource.QuotaReport.get_collection(
+    for element in NetAppResource.QuotaReport.get_collection(  # type: ignore[attr-defined]
         connection=connection, fields=",".join(field_query), type="tree"
     ):
         element_data = element.to_dict()
@@ -1019,7 +1020,7 @@ def fetch_snapmirror(
         "destination.svm.name",
     )
 
-    for element in NetAppResource.SnapmirrorRelationship.get_collection(
+    for element in NetAppResource.SnapmirrorRelationship.get_collection(  # type: ignore[attr-defined]
         connection=connection, fields=",".join(field_query)
     ):
         element_data = element.to_dict()
@@ -1049,7 +1050,7 @@ def fetch_fc_ports(connection: HostConnection) -> Iterable[models.FcPortModel]:
         "fabric.connected_speed",
     )
 
-    for element in NetAppResource.FcPort.get_collection(
+    for element in NetAppResource.FcPort.get_collection(  # type: ignore[attr-defined]
         connection=connection, fields=",".join(field_query)
     ):
         element_data = element.to_dict()
@@ -1082,7 +1083,7 @@ def _pick_oldest_node_version(nodes: Iterable[models.NodeModel]) -> models.Versi
 
 def get_version_from_cluster(connection: HostConnection) -> models.Version:
     field_query = ("version",)
-    cluster = NetAppResource.Cluster(connection=connection)
+    cluster = NetAppResource.Cluster(connection=connection)  # type: ignore[attr-defined]
     cluster.get(fields=",".join(field_query))
     # when the cluster has more than one node, the cluster version is equivalent
     # to the lowest of generation, major, and minor versions on all nodes
@@ -1114,7 +1115,7 @@ def get_nodes(
                     logger.exception("Failed to get version from cluster endpoint")
                     _write_error("node", str(cluster_exc))
         except NetAppRestError as exc:
-            if exc.status_code == 401:
+            if exc.status_code == HTTPStatus.UNAUTHORIZED:
                 raise
             logger.exception("Failed to fetch nodes")
             _write_error("node", str(exc))
@@ -1143,7 +1144,7 @@ def write_sections(
         try:
             volumes = list(fetch_volumes(connection))
         except NetAppRestError as exc:
-            if exc.status_code == 401:
+            if exc.status_code == HTTPStatus.UNAUTHORIZED:
                 raise
             logger.exception("Failed to fetch volumes")
             _write_error("volumes", str(exc))
@@ -1183,7 +1184,7 @@ def write_sections(
         try:
             interfaces = list(fetch_interfaces(connection, logger))
         except NetAppRestError as exc:
-            if exc.status_code == 401:
+            if exc.status_code == HTTPStatus.UNAUTHORIZED:
                 raise
             logger.exception("Failed to fetch interfaces")
             _write_error("if", str(exc))
@@ -1274,7 +1275,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
             "to each individual subquery. (Default is %(default)s seconds)"
         ),
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--fetched-resources",
         type=FetchedResource,
         nargs="+",
@@ -1348,7 +1349,7 @@ def agent_netapp_main(args: argparse.Namespace) -> int:
         try:
             write_sections(connection, logger, args)
         except NetAppRestError as exc:
-            if exc.status_code == 401:
+            if exc.status_code == HTTPStatus.UNAUTHORIZED:
                 sys.stderr.write("Authentication failed. Please check the credentials.\n")
                 return 1
             raise exc

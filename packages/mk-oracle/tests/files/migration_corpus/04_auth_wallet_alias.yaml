@@ -1,0 +1,12 @@
+# --- Known environment variables defined in legacy config ---
+# DBUSER ***
+# --- Unified Config ---
+---
+oracle:
+  main:
+    authentication:
+      username: ""
+      password: ""
+      type: wallet
+    instances:
+      - alias: WALLET_ALIAS

@@ -24,7 +24,7 @@ Section = Mapping[str, int]
 def parse_liebert_bat_temp(string_table: StringTable) -> Section:
     try:
         return {"Battery": int(string_table[0][0])}
-    except (ValueError, IndexError):
+    except ValueError, IndexError:
         return {}
 
 

@@ -11,9 +11,11 @@ from typing import Any, Literal
 
 from cmk.rulesets.v1.form_specs import FormSpec
 
+TupleLayout = Literal["vertical", "horizontal", "horizontal_titles_top", "float"]
+
 
 @dataclass(frozen=True, kw_only=True)
 class Tuple(FormSpec[tuple[object, ...]]):
     elements: Sequence[FormSpec[Any]]
-    layout: Literal["vertical", "horizontal", "horizontal_titles_top", "float"] = "vertical"
+    layout: TupleLayout = "vertical"
     show_titles: bool = True

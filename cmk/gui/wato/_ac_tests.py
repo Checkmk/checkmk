@@ -20,13 +20,10 @@ from cmk.backup.gui.handler import BackupConfig
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.ccc.version import __version__
-from cmk.crypto.password import Password
 from cmk.gui import userdb
 from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
-from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.site_config import (
     distributed_setup_remote_sites,
@@ -34,40 +31,29 @@ from cmk.gui.site_config import (
     is_distributed_setup_remote_site,
 )
 from cmk.gui.type_defs import Users
-from cmk.gui.userdb import get_user_attributes, htpasswd
-from cmk.gui.utils.doc_references import (
-    doc_reference_url,
-    DocReference,
-    DocReferenceUtm,
-    werk_reference_url,
-    WerkReference,
-)
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.analyze_configuration import (
+    ABCACTestPluginAPIs,
     ACResultState,
     ACSingleResult,
     ACTest,
     ACTestCategories,
     ACTestRegistry,
-    compute_deprecation_result,
     try_relative_site_path,
 )
 from cmk.gui.watolib.check_mk_automations import find_unknown_check_parameter_rule_sets
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
-from cmk.gui.watolib.rulesets import AllRulesets, Rule, SingleRulesetRecursively
+from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
+from cmk.gui.watolib.rulesets import AllRulesets, SingleRulesetRecursively
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.livestatus_client import LocalConnection, SiteConfiguration, SiteConfigurations
 from cmk.ruleset_matcher.definition import RuleGroup, RuleGroupType
 from cmk.utils.paths import (
-    local_agent_based_plugins_dir,
-    local_checks_dir,
     local_gui_plugins_dir,
-    local_inventory_dir,
-    local_legacy_check_manpages_dir,
     local_pnp_templates_dir,
     local_web_dir,
+    web_dir,
 )
 
 # Disable python warnings in background job output or logs like "Unverified
@@ -83,7 +69,6 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestLivestatusSecured)
     ac_test_registry.register(ACTestNumberOfUsers)
     ac_test_registry.register(ACTestHTTPSecured)
-    ac_test_registry.register(ACTestOldDefaultCredentials)
     ac_test_registry.register(ACTestBackupConfigured)
     ac_test_registry.register(ACTestBackupNotEncryptedConfigured)
     ac_test_registry.register(ACTestEscapeHTMLDisabled)
@@ -95,19 +80,19 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestGenericCheckHelperUsage)
     ac_test_registry.register(ACTestSizeOfExtensions)
     ac_test_registry.register(ACTestBrokenGUIExtension)
-    ac_test_registry.register(ACTestESXDatasources)
     ac_test_registry.register(ACTestDeprecatedRuleSets)
     ac_test_registry.register(ACTestUnknownCheckParameterRuleSets)
-    ac_test_registry.register(ACTestDeprecatedV1CheckPlugins)
-    ac_test_registry.register(ACTestDeprecatedCheckPlugins)
-    ac_test_registry.register(ACTestDeprecatedInventoryPlugins)
-    ac_test_registry.register(ACTestDeprecatedCheckManpages)
     ac_test_registry.register(ACTestDeprecatedGUIExtensions)
     ac_test_registry.register(ACTestDeprecatedLegacyGUIExtensions)
     ac_test_registry.register(ACTestDeprecatedPNPTemplates)
+    ac_test_registry.register(ACTestSpecialAgentsAPI)
+    ac_test_registry.register(ACTestPasswordStoreAPI)
+    ac_test_registry.register(ACTestHaSIAPI)
+    ac_test_registry.register(ACTestBakeryAPI)
     ac_test_registry.register(ACTestUnexpectedAllowedIPRanges)
     ac_test_registry.register(ACTestCheckMKCheckerNumber)
     ac_test_registry.register(ACTestAutomationUserSecret)
+    ac_test_registry.register(ACTestShadowedWebFiles)
 
 
 class ACTestPersistentConnections(ACTest):
@@ -134,16 +119,11 @@ class ACTestPersistentConnections(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        # This check is only executed on the central instance of multisite setups
-        return len(active_config.sites) > 1
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        yield from (
-            self._check_site(site_id, active_config.sites[site_id])
-            for site_id in active_config.sites
-        )
+        # This check is only executed on the central instance of multisite setups
+        if len(config.sites) <= 1:
+            return
+        yield from (self._check_site(site_id, config.sites[site_id]) for site_id in config.sites)
 
     def _check_site(self, site_id: SiteId, site_config: SiteConfiguration) -> ACSingleResult:
         persist = site_config.get("persist", False)
@@ -197,15 +177,11 @@ class ACTestLiveproxyd(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        # This check is only executed on the central instance of multisite setups
-        return len(active_config.sites) > 1
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        yield from (
-            self._check_site(site_id, active_config.sites) for site_id in active_config.sites
-        )
+        # This check is only executed on the central instance of multisite setups
+        if len(config.sites) <= 1:
+            return
+        yield from (self._check_site(site_id, config.sites) for site_id in config.sites)
 
     def _check_site(self, site_id: SiteId, site_configs: SiteConfigurations) -> ACSingleResult:
         if _site_is_using_livestatus_proxy(site_id):
@@ -256,10 +232,6 @@ class ACTestLivestatusUsage(ACTest):
             "Consider increasing the number of parallel Livestatus connections or track down "
             "the clients to check whether or not you can reduce the usage somehow.</p>"
         )
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -329,10 +301,6 @@ class ACTestTmpfs(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if self._tmpfs_mounted(site_id):
             yield ACSingleResult(
@@ -383,25 +351,15 @@ class ACTestLivestatusSecured(ACTest):
             "gathered in one site to the central site. Since Checkmk 1.6, it is natively "
             "possible and highly recommended to encrypt this Livestatus traffic.</p> "
             "<p>This can be enabled using the global setting "
-            '<a href="wato.py?mode=edit_configvar&varname=site_livestatus_tcp">Access to Livestatus via TCP</a>. Before enabling this, you should ensure that all your Livestatus clients '
+            '<a href="global_settings.py?varname=site_livestatus_tcp">Access to Livestatus via TCP</a>. Before enabling this, you should ensure that all your Livestatus clients '
             "are able to handle the SSL encrypted Livestatus communication. Have a look at "
             '<a href="werk.py?werk=7017">Werk #7017</a> for further information.</p>'
         )
 
     @override
-    def is_relevant(self) -> bool:
-        cfg = ConfigDomainOMD().default_globals()
-        return bool(cfg["site_livestatus_tcp"])
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         cfg = ConfigDomainOMD().default_globals()
         if not cfg["site_livestatus_tcp"]:
-            yield ACSingleResult(
-                state=ACResultState.OK,
-                text=_("Livestatus network traffic is encrypted"),
-                site_id=site_id,
-            )
             return
 
         if not cfg["site_livestatus_tcp"]["tls"]:
@@ -430,10 +388,6 @@ class ACTestNumberOfUsers(ACTest):
             "Please review the filter configuration of the LDAP sync. Maybe you can "
             "decrease the sync scope to get a smaller number of users.</p>"
         )
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -486,10 +440,6 @@ class ACTestHTTPSecured(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if request.is_ssl_request:
             yield ACSingleResult(
@@ -501,62 +451,6 @@ class ACTestHTTPSecured(ACTest):
             yield ACSingleResult(
                 state=ACResultState.WARN,
                 text=_("Site is using plain HTTP. Consider enabling HTTPS."),
-                site_id=site_id,
-            )
-
-
-class ACTestOldDefaultCredentials(ACTest):
-    @override
-    def category(self) -> str:
-        return ACTestCategories.security
-
-    @override
-    def title(self) -> str:
-        return _("Default credentials")
-
-    @override
-    def help(self) -> str:
-        return _(
-            "In versions prior to version 1.4.0 the first administrative user of the "
-            "site was named <tt>omdadmin</tt> with the standard password <tt>omd</tt>. "
-            "This test warns you in case the site uses these standard credentials. "
-            "It is highly recommended to change this password."
-        )
-
-    @override
-    def is_relevant(self) -> bool:
-        return userdb.user_exists(UserId("omdadmin"))
-
-    @override
-    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        if (
-            htpasswd.HtpasswdUserConnector(
-                {
-                    "type": "htpasswd",
-                    "id": "htpasswd",
-                    "disabled": False,
-                }
-            ).check_credentials(
-                UserId("omdadmin"),
-                Password("omd"),
-                get_user_attributes(config.wato_user_attrs),
-                config.user_connections,
-                config.default_user_profile,
-            )
-            == "omdadmin"
-        ):
-            yield ACSingleResult(
-                state=ACResultState.CRIT,
-                text=_(
-                    "Found <tt>omdadmin</tt> with default password. "
-                    "It is highly recommended to change this password."
-                ),
-                site_id=site_id,
-            )
-        else:
-            yield ACSingleResult(
-                state=ACResultState.OK,
-                text=_("Found <tt>omdadmin</tt> using custom password."),
                 site_id=site_id,
             )
 
@@ -582,10 +476,6 @@ class ACTestBackupConfigured(ACTest):
             "Similarly, third-party backup solutions may fail to capture a "
             "consistent state."
         )
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -622,10 +512,6 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
             "already be secure enough without extra backup encryption. But in "
             "some cases it may be a good idea to store the backup encrypted."
         )
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -669,10 +555,6 @@ class ACTestEscapeHTMLDisabled(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if not self._get_effective_global_setting(site_id, config, "escape_plugin_output"):
             yield ACSingleResult(
@@ -686,7 +568,7 @@ class ACTestEscapeHTMLDisabled(ACTest):
                 % {
                     "service_url": "wato.py?mode=edit_ruleset&varname=extra_service_conf:_ESCAPE_PLUGIN_OUTPUT",
                     "host_url": "wato.py?mode=edit_ruleset&varname=extra_host_conf:_ESCAPE_PLUGIN_OUTPUT",
-                    "global_url": "wato.py?mode=edit_configvar&varname=escape_plugin_output",
+                    "global_url": "global_settings.py?varname=escape_plugin_output",
                 },
                 site_id=site_id,
             )
@@ -694,7 +576,7 @@ class ACTestEscapeHTMLDisabled(ACTest):
             yield ACSingleResult(
                 state=ACResultState.OK,
                 text=_('Escaping is <a href="%(url)s">enabled globally</a>')
-                % {"url": "wato.py?mode=edit_configvar&varname=escape_plugin_output"},
+                % {"url": "global_settings.py?varname=escape_plugin_output"},
                 site_id=site_id,
             )
 
@@ -749,7 +631,7 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
             "<p>Please note that this value is only a rough estimation, because the memory "
             "usage of the Apache processes may vary with the requests being processed.</p>"
             "<p>Possible actions:<ul>"
-            '<li>Change the <a href="wato.py?mode=edit_configvar&varname=apache_process_tuning">number of Apache processes</a></li>'
+            '<li>Change the <a href="global_settings.py?varname=apache_process_tuning">number of Apache processes</a></li>'
             "</ul>"
             "</p>"
             "<p>Once you have verified your settings, you can acknowledge this test. The "
@@ -757,10 +639,6 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
             "the required memory needed by the Apache processes."
             "</p>"
         )
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
@@ -790,7 +668,7 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
             pid_file = cmk.utils.paths.omd_root / "tmp/apache/run/apache.pid"
             with pid_file.open(encoding="utf-8") as f:
                 ppid = int(f.read())
-        except (OSError, ValueError):
+        except OSError, ValueError:
             raise MKGeneralException(_("Failed to read the Apache process ID"))
 
         sizes = []
@@ -851,10 +729,6 @@ class ACTestApacheProcessUsage(ABCACApacheTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         total_slots = self._get_maximum_number_of_processes()
         open_slots = self._get_number_of_idle_processes()
@@ -902,7 +776,7 @@ class ACTestCheckMKHelperUsage(ACTest):
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
             '<li>Check which checks / plug-ins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
-            '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_fetcher_helpers">number of Checkmk helpers</a></li>'
+            '<li>Increase the <a href="global_settings.py?varname=cmc_fetcher_helpers">number of Checkmk helpers</a></li>'
             "</ul>"
             "</p>"
             "<p>But you need to be careful that you don't configure too many Checkmk "
@@ -914,11 +788,9 @@ class ACTestCheckMKHelperUsage(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return self._uses_microcore()
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not self._uses_microcore():
+            return
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_checker average_latency_checker\n"
@@ -970,7 +842,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
             '<li>Check which checks / plug-ins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
-            '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_fetcher_helpers">number of Checkmk fetchers</a></li>'
+            '<li>Increase the <a href="global_settings.py?varname=cmc_fetcher_helpers">number of Checkmk fetchers</a></li>'
             "</ul>"
             "</p>"
             "<p>But you need to be careful that you don't configure too many Checkmk "
@@ -981,11 +853,9 @@ class ACTestCheckMKFetcherUsage(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return self._uses_microcore()
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not self._uses_microcore():
+            return
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_fetcher average_latency_fetcher\n"
@@ -1051,7 +921,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
             '<li>Check which checks / plug-ins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
-            '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_checker_helpers">number of Checkmk checkers</a></li>'
+            '<li>Increase the <a href="global_settings.py?varname=cmc_checker_helpers">number of Checkmk checkers</a></li>'
             "</ul>"
             "</p>"
             "<p>But you need to be careful that you don't configure too many Checkmk "
@@ -1063,11 +933,9 @@ class ACTestCheckMKCheckerUsage(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return self._uses_microcore()
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not self._uses_microcore():
+            return
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_checker average_latency_fetcher\n"
@@ -1132,17 +1000,15 @@ class ACTestGenericCheckHelperUsage(ACTest):
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
             '<li>Check which checks / plug-ins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
-            '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_check_helpers">number of check helpers</a></li>'
+            '<li>Increase the <a href="global_settings.py?varname=cmc_check_helpers">number of check helpers</a></li>'
             "</ul>"
             "</p>"
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return self._uses_microcore()
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not self._uses_microcore():
+            return
         local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_generic average_latency_generic\n"
@@ -1196,12 +1062,6 @@ class ACTestSizeOfExtensions(ACTest):
             "all the extensions.</p>"
         )
 
-    @override
-    def is_relevant(self) -> bool:
-        return has_distributed_setup_remote_sites(active_config.sites) and self._replicates_mkps(
-            active_config.sites
-        )
-
     def _replicates_mkps(self, site_configs: SiteConfigurations) -> bool:
         return any(
             site.get("replicate_mkps")
@@ -1210,6 +1070,10 @@ class ACTestSizeOfExtensions(ACTest):
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not has_distributed_setup_remote_sites(config.sites) or not self._replicates_mkps(
+            config.sites
+        ):
+            return
         size = self._size_of_extensions()
         state = ACResultState.CRIT if size > 100 * 1024 * 1024 else ACResultState.OK
 
@@ -1244,10 +1108,6 @@ class ACTestBrokenGUIExtension(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         from cmk.gui.legacy_plugins import get_failed_plugins
 
@@ -1266,55 +1126,6 @@ class ACTestBrokenGUIExtension(ACTest):
                 % {"gui_part": gui_part, "plugin_file": plugin_file, "error": error},
                 site_id=site_id,
                 path=plugin_filepath,
-            )
-
-
-class ACTestESXDatasources(ACTest):
-    @override
-    def category(self) -> str:
-        return ACTestCategories.deprecations
-
-    @override
-    def title(self) -> str:
-        return _("The Checkmk agent is queried via the ESX data source program")
-
-    @override
-    def help(self) -> str:
-        return _(
-            "The Checkmk agent is queried via the data source program for ESX systems. This option will be deleted in a future release. Please configure the host to contact the Checkmk agent and the configured data source programs instead."
-        )
-
-    def _get_rules(self) -> list[tuple[Folder, int, Rule]]:
-        collection = SingleRulesetRecursively.load_single_ruleset_recursively(
-            folder_tree(), RuleGroup.SpecialAgents("vsphere")
-        )
-
-        ruleset = collection.get(RuleGroup.SpecialAgents("vsphere"))
-        return ruleset.get_rules()
-
-    @override
-    def is_relevant(self) -> bool:
-        return bool(self._get_rules())
-
-    @override
-    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        all_rules_ok = True
-        for folder, rule_index, rule in self._get_rules():
-            vsphere_queries_agent = rule.value.get("direct") in ["agent", "hostsystem_agent"]
-            if vsphere_queries_agent:
-                all_rules_ok = False
-                yield ACSingleResult(
-                    state=ACResultState.CRIT,
-                    text=_("Rule %(nr)d in Folder %(folder)s is affected")
-                    % {"nr": rule_index + 1, "folder": folder.title()},
-                    site_id=site_id,
-                )
-
-        if all_rules_ok:
-            yield ACSingleResult(
-                state=ACResultState.OK,
-                text=_("No configured rules are affected"),
-                site_id=site_id,
             )
 
 
@@ -1337,10 +1148,6 @@ class ACTestDeprecatedRuleSets(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         unknown_check_parameter_rule_sets = [
             f"{RuleGroupType.CHECKGROUP_PARAMETERS.value}:{r}"
@@ -1348,7 +1155,7 @@ class ACTestDeprecatedRuleSets(ACTest):
         ]
         if deprecated_rule_sets := [
             r
-            for r in AllRulesets.load_all_rulesets(folder_tree()).get_rulesets().values()
+            for r in AllRulesets.load_all_rulesets(make_folder_tree(config)).get_rulesets().values()
             if r.is_deprecated()
             and r.num_rules()
             and r.name not in unknown_check_parameter_rule_sets
@@ -1394,10 +1201,6 @@ class ACTestUnknownCheckParameterRuleSets(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if rule_sets := find_unknown_check_parameter_rule_sets(debug=active_config.debug).result:
             for rule_set in rule_sets:
@@ -1420,219 +1223,81 @@ class ACTestUnknownCheckParameterRuleSets(ACTest):
         )
 
 
-class ACTestDeprecatedV1CheckPlugins(ACTest):
+class ACTestShadowedWebFiles(ACTest):
+    _MAX_LISTED = 10
+    _CHECKED_SUFFIXES = frozenset({".css", ".js"})
+
+    def __init__(
+        self,
+        local_htdocs: Path = local_web_dir / "htdocs",
+        shipped_htdocs: Path = web_dir / "htdocs",
+    ) -> None:
+        self._local_htdocs = local_htdocs
+        self._shipped_htdocs = shipped_htdocs
+
     @override
     def category(self) -> str:
-        return ACTestCategories.deprecations
+        return ACTestCategories.reliability
 
     @override
     def title(self) -> str:
-        return _("Deprecated check plug-ins (v1)")
+        return _("Local files overriding shipped style sheets or scripts")
 
     @override
     def help(self) -> str:
         return _(
-            "The check plug-in API for plug-ins in <tt>%(plugins_dir)s</tt> is removed."
-            " Plug-in files in this folder are ignored."
-            " Please migrate the plug-ins to the new API."
-            " More information can be found in"
-            " <a href='%(werk_url)s'>%(werk_ref)s</a> and our"
-            " <a href='%(guide_url)s'>User Guide</a>."
+            "<p>A style sheet or script below <tt>%(local_dir)s</tt> is served instead of the"
+            " shipped file with the same path. Such copies are not updated together with"
+            " Checkmk: after an update, an outdated style sheet or script of an older version"
+            " is still delivered and may break the user interface. Other local files, e.g."
+            " replaced logos, are not reported.</p>"
+            "<p>Remove the copies you do not need. To customize the look of the user"
+            " interface, use a theme of your own below <tt>%(themes_dir)s</tt> instead of"
+            " overriding the shipped themes.</p>"
         ) % {
-            "plugins_dir": "/".join(local_agent_based_plugins_dir.parts[-4:]),
-            "werk_url": werk_reference_url(WerkReference.DECOMMISSION_V1_API),
-            "werk_ref": WerkReference.DECOMMISSION_V1_API.ref(),
-            "guide_url": doc_reference_url(
-                user.language,
-                DocReferenceUtm(campaign="error_help", content="setup.deprecated_v1_plugins"),
-                DocReference.DEVEL_CHECK_PLUGINS,
-            ),
+            "local_dir": self._local_htdocs,
+            "themes_dir": self._local_htdocs / "themes",
         }
 
-    def _get_files(self) -> Sequence[Path]:
-        try:
-            return list(local_agent_based_plugins_dir.rglob("*.py"))
-        except FileNotFoundError:
-            return ()
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
-
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        if plugin_files := self._get_files():
-            for plugin_filepath in plugin_files:
-                yield compute_deprecation_result(
-                    version=__version__,
-                    deprecated_version="2.3.0",
-                    removed_version="2.4.0",
-                    title_entity=_("Check plug-in"),
-                    title_api="v1",
-                    site_id=site_id,
-                    path=plugin_filepath,
-                )
+        if not (shadowing := self._shadowing_files()):
+            yield ACSingleResult(
+                state=ACResultState.OK,
+                text=_("No local files override shipped style sheets or scripts"),
+                site_id=site_id,
+            )
             return
 
+        listed = ", ".join(str(p) for p in shadowing[: self._MAX_LISTED])
+        if (unlisted := len(shadowing) - self._MAX_LISTED) > 0:
+            listed = _("%(files)s and %(count)d more") % {"files": listed, "count": unlisted}
         yield ACSingleResult(
-            state=ACResultState.OK,
-            text=_("No check plug-ins using the deprecated API (v1)"),
+            state=ACResultState.WARN,
+            text=ungettext(
+                "%(count)d local file below %(local_dir)s overrides a shipped style sheet or"
+                " script and may be outdated: %(files)s",
+                "%(count)d local files below %(local_dir)s override shipped style sheets or"
+                " scripts and may be outdated: %(files)s",
+                len(shadowing),
+            )
+            % {
+                "count": len(shadowing),
+                "local_dir": try_relative_site_path(site_id, self._local_htdocs),
+                "files": listed,
+            },
             site_id=site_id,
         )
 
-
-class ACTestDeprecatedCheckPlugins(ACTest):
-    @override
-    def category(self) -> str:
-        return ACTestCategories.deprecations
-
-    @override
-    def title(self) -> str:
-        return _("Deprecated check plug-ins (legacy)")
-
-    @override
-    def help(self) -> str:
-        return _(
-            "The check plug-in API for plug-ins in <tt>%(plugins_dir)s</tt> is deprecated."
-            " Plug-in files in this folder are still considered, but the API they are using may change at any time without notice."
-            " Please migrate the plug-ins to the new API."
-            " More information can be found in our <a href='%(guide_url)s'>User Guide</a>."
-        ) % {
-            "plugins_dir": "/".join(local_checks_dir.parts[-4:]),
-            "guide_url": doc_reference_url(
-                user.language,
-                DocReferenceUtm(campaign="error_help", content="setup.deprecated_plugins"),
-                DocReference.DEVEL_CHECK_PLUGINS,
-            ),
-        }
-
-    def _get_files(self) -> Sequence[Path]:
-        try:
-            return list(local_checks_dir.iterdir())
-        except FileNotFoundError:
-            return []
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
-    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        if files := self._get_files():
-            for plugin_filepath in files:
-                yield compute_deprecation_result(
-                    version=__version__,
-                    deprecated_version="2.3.0",
-                    removed_version="2.4.0",
-                    title_entity=_("Check plug-in"),
-                    title_api=_("legacy"),
-                    site_id=site_id,
-                    path=plugin_filepath,
-                )
-            return
-
-        yield ACSingleResult(
-            state=ACResultState.OK,
-            text=_("No check plug-ins using the deprecated API"),
-            site_id=site_id,
-        )
-
-
-class ACTestDeprecatedInventoryPlugins(ACTest):
-    @override
-    def category(self) -> str:
-        return ACTestCategories.deprecations
-
-    @override
-    def title(self) -> str:
-        return _("Deprecated HW/SW inventory plug-ins")
-
-    @override
-    def help(self) -> str:
-        return _(
-            "The old inventory plug-in API has been removed in Checkmk version 2.2."
-            " Plug-in files in <tt>'%(plugins_dir)s'</tt> are ignored."
-            " Please migrate the plug-ins to the new API."
-        ) % {"plugins_dir": str(local_inventory_dir)}
-
-    def _get_files(self) -> Sequence[Path]:
-        try:
-            return list(local_inventory_dir.iterdir())
-        except FileNotFoundError:
-            return []
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
-    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        if files := self._get_files():
-            for plugin_filepath in files:
-                yield compute_deprecation_result(
-                    version=__version__,
-                    deprecated_version="2.1.0",
-                    removed_version="2.2.0",
-                    title_entity=_("HW/SW inventory plug-in"),
-                    title_api=_("legacy"),
-                    site_id=site_id,
-                    path=plugin_filepath,
-                )
-            return
-
-        yield ACSingleResult(
-            state=ACResultState.OK,
-            text=_("No HW/SW inventory plug-ins using the deprecated API"),
-            site_id=site_id,
-        )
-
-
-class ACTestDeprecatedCheckManpages(ACTest):
-    @override
-    def category(self) -> str:
-        return ACTestCategories.deprecations
-
-    @override
-    def title(self) -> str:
-        return _("Deprecated check manual pages")
-
-    @override
-    def help(self) -> str:
-        return _(
-            "Check manual pages in <tt>'%(manpages_dir)s'</tt> are marked as "
-            "'deprecated' and will be ignored in future Checkmk versions "
-            "(official deprecation timeline not decided yet)."
-        ) % {"manpages_dir": str(local_legacy_check_manpages_dir)}
-
-    def _get_files(self) -> Sequence[Path]:
-        try:
-            return list(local_legacy_check_manpages_dir.iterdir())
-        except FileNotFoundError:
-            return []
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
-    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        if files := self._get_files():
-            for plugin_filepath in files:
-                yield compute_deprecation_result(
-                    version=__version__,
-                    deprecated_version="2.3.0",
-                    removed_version="2.4.0",
-                    title_entity=_("Check manual page"),
-                    title_api=_("legacy"),
-                    site_id=site_id,
-                    path=plugin_filepath,
-                )
-            return
-
-        yield ACSingleResult(
-            state=ACResultState.OK,
-            text=_("No check manual pages using the deprecated API"),
-            site_id=site_id,
+    def _shadowing_files(self) -> Sequence[Path]:
+        return sorted(
+            rel_path
+            for path in self._local_htdocs.rglob("*")
+            if path.suffix in self._CHECKED_SUFFIXES
+            and path.is_file()
+            and (
+                self._shipped_htdocs / (rel_path := path.relative_to(self._local_htdocs))
+            ).is_file()
         )
 
 
@@ -1667,10 +1332,6 @@ class ACTestDeprecatedGUIExtensions(ACTest):
             return []
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if files := self._get_files():
             for plugin_filepath in files:
@@ -1699,42 +1360,6 @@ class ACTestDeprecatedGUIExtensions(ACTest):
         )
 
 
-def _compute_deprecation_result_of_views_plugin(
-    site_id: SiteId, plugin_filepath: Path
-) -> ACSingleResult:
-    with plugin_filepath.open() as fp:
-        content = fp.read()
-    if "inventory_displayhints.update(" in content:
-        return compute_deprecation_result(
-            version=__version__,
-            deprecated_version="3.0.0",
-            removed_version="3.1.0",
-            title_entity=(
-                _("HW/SW inventory display hints in %(plugin_name)r")
-                % {"plugin_name": plugin_filepath.parent.name}
-            ),
-            title_api=_("legacy"),
-            site_id=site_id,
-            path=plugin_filepath,
-        )
-    return ACSingleResult(
-        state=ACResultState.WARN,
-        text=(
-            _(
-                "Legacy GUI extension in %(plugin_name)r uses an API which is "
-                "marked as deprecated and may not work anymore due "
-                "to unknown imports or objects (file: %(file)s)."
-            )
-            % {
-                "plugin_name": plugin_filepath.parent.name,
-                "file": try_relative_site_path(site_id, plugin_filepath),
-            }
-        ),
-        site_id=site_id,
-        path=plugin_filepath,
-    )
-
-
 class ACTestDeprecatedLegacyGUIExtensions(ACTest):
     @override
     def category(self) -> str:
@@ -1759,42 +1384,12 @@ class ACTestDeprecatedLegacyGUIExtensions(ACTest):
             return []
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if files := self._get_files():
             for plugin_filepath in files:
                 match plugin_filepath.parent.name:
-                    case "metrics" | "perfometer":
-                        yield compute_deprecation_result(
-                            version=__version__,
-                            deprecated_version="2.3.0",
-                            removed_version="2.4.0",
-                            title_entity=(
-                                _("Legacy GUI extension in %(plugin_name)r")
-                                % {"plugin_name": plugin_filepath.parent.name}
-                            ),
-                            title_api=_("legacy"),
-                            site_id=site_id,
-                            path=plugin_filepath,
-                        )
-                    case "wato":
-                        yield compute_deprecation_result(
-                            version=__version__,
-                            deprecated_version="2.4.0",
-                            removed_version="2.5.0",
-                            title_entity=(
-                                _("Legacy GUI extension in %(plugin_name)r")
-                                % {"plugin_name": plugin_filepath.parent.name}
-                            ),
-                            title_api=_("legacy"),
-                            site_id=site_id,
-                            path=plugin_filepath,
-                        )
-                    case "views":
-                        yield _compute_deprecation_result_of_views_plugin(site_id, plugin_filepath)
+                    case "metrics" | "perfometer" | "wato":
+                        pass  # We've been warning for those for long enough now.
                     case _:
                         yield ACSingleResult(
                             state=ACResultState.WARN,
@@ -1846,10 +1441,6 @@ class ACTestDeprecatedPNPTemplates(ACTest):
             return []
 
     @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if files := self._get_files():
             for plugin_filepath in files:
@@ -1874,6 +1465,140 @@ class ACTestDeprecatedPNPTemplates(ACTest):
         )
 
 
+class ACTestSpecialAgentsAPI(ABCACTestPluginAPIs):
+    @property
+    @override
+    def api_name(self) -> str:
+        return _("Special agents API 'cmk.special_agents'")
+
+    @property
+    @override
+    def successor(self) -> str:
+        return "cmk.server_side_programs.v1"
+
+    @property
+    @override
+    def deprecated_version(self) -> str:
+        return "3.0.0"
+
+    @property
+    @override
+    def removed_version(self) -> str:
+        return "3.1.0"
+
+    @property
+    @override
+    def import_paths(self) -> tuple[str, ...]:
+        return ("cmk.special_agents",)
+
+    @property
+    @override
+    def content_patterns(self) -> tuple[str, ...]:
+        return ()
+
+
+class ACTestPasswordStoreAPI(ABCACTestPluginAPIs):
+    @property
+    @override
+    def api_name(self) -> str:
+        return _("Password store utils 'cmk.utils.password_store'")
+
+    @property
+    @override
+    def successor(self) -> str:
+        return "cmk.password_store.v1"
+
+    @property
+    @override
+    def deprecated_version(self) -> str:
+        return "3.0.0"
+
+    @property
+    @override
+    def removed_version(self) -> str:
+        return "3.1.0"
+
+    @property
+    @override
+    def import_paths(self) -> tuple[str, ...]:
+        return ("cmk.utils.password_store",)
+
+    @property
+    @override
+    def content_patterns(self) -> tuple[str, ...]:
+        return ()
+
+
+class ACTestHaSIAPI(ABCACTestPluginAPIs):
+    @property
+    @override
+    def api_name(self) -> str:
+        return _("HW/SW inventory display hints")
+
+    @property
+    @override
+    def successor(self) -> str:
+        return "cmk.inventory_ui.v1"
+
+    @property
+    @override
+    def deprecated_version(self) -> str:
+        return "3.0.0"
+
+    @property
+    @override
+    def removed_version(self) -> str:
+        return "3.1.0"
+
+    @property
+    @override
+    def import_paths(self) -> tuple[str, ...]:
+        return ()
+
+    @property
+    @override
+    def content_patterns(self) -> tuple[str, ...]:
+        return ("inventory_displayhints.update",)
+
+
+class ACTestBakeryAPI(ABCACTestPluginAPIs):
+    @property
+    @override
+    def api_name(self) -> str:
+        return _("Bakery API v1")
+
+    @property
+    @override
+    def successor(self) -> str:
+        return "cmk.bakery.v2"
+
+    @property
+    @override
+    def deprecated_version(self) -> str:
+        return "3.0.0"
+
+    @property
+    @override
+    def removed_version(self) -> str:
+        return "3.1.0"
+
+    @property
+    @override
+    def import_paths(self) -> tuple[str, ...]:
+        return (
+            "cmk.bakery.v1",
+            # Please do NOT rename 'cee': It's the legacy path for bakery plug-ins.
+            "cmk.base.cee.plugins.bakery.bakery_api",
+            "cmk.base.plugins.bakery.bakery_api",
+            ".bakery_api",
+        )
+
+    @property
+    @override
+    def content_patterns(self) -> tuple[str, ...]:
+        return ()
+
+
 def _site_is_using_livestatus_proxy(site_id: SiteId) -> bool:
     site_configs = site_management_registry["site_management"].load_sites()
     return site_configs[site_id].get("proxy") is not None
@@ -1895,20 +1620,8 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return bool(self._get_rules())
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        rules = self._get_rules()
-        if not rules:
-            yield ACSingleResult(
-                state=ACResultState.OK,
-                text=_(
-                    "No rule set <b>State in case of restricted address mismatch</b> is configured"
-                ),
-                site_id=site_id,
-            )
+        if not (rules := self._get_rules(make_folder_tree(config))):
             return
 
         for folder_title, rule_state in rules:
@@ -1918,9 +1631,9 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
                 site_id=site_id,
             )
 
-    def _get_rules(self) -> list[tuple[str, str]]:
+    def _get_rules(self, tree: FolderTree) -> list[tuple[str, str]]:
         ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(
-            folder_tree(), RuleGroup.CheckgroupParameters("agent_update")
+            tree, RuleGroup.CheckgroupParameters("agent_update")
         ).get(RuleGroup.CheckgroupParameters("agent_update"))
         state_map = {0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKNOWN"}
         return [
@@ -1950,11 +1663,9 @@ class ACTestCheckMKCheckerNumber(ACTest):
         )
 
     @override
-    def is_relevant(self) -> bool:
-        return self._uses_microcore()
-
-    @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if not self._uses_microcore():
+            return
         try:
             num_cpu = multiprocessing.cpu_count()
         except NotImplementedError:
@@ -2013,10 +1724,6 @@ class ACTestAutomationUserSecret(ACTest):
             "We do not recommend to store the secret for automation users with high privileges."
         )
 
-    @override
-    def is_relevant(self) -> bool:
-        return not is_distributed_setup_remote_site(active_config.sites)
-
     @staticmethod
     def get_flagged_users(
         user_permissions: UserPermissions, user_db: Users
@@ -2034,6 +1741,8 @@ class ACTestAutomationUserSecret(ACTest):
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        if is_distributed_setup_remote_site(config.sites):
+            return
         flagged_users = self.get_flagged_users(
             UserPermissions.from_config(config, permission_registry),
             userdb.load_users(),

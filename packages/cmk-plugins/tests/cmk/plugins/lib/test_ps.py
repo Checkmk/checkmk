@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
 
 import time
 from collections.abc import Iterable, Mapping, Sequence
@@ -238,7 +237,7 @@ PROCESSES = [
     ],
 )
 def test_format_process_list(
-    processes: "ps.ProcessAggregator", formatted_list: str, html_flag: bool
+    processes: ps.ProcessAggregator, formatted_list: str, html_flag: bool
 ) -> None:
     assert ps.format_process_list(processes, html_flag) == formatted_list
 

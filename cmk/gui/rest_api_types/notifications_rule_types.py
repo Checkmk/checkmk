@@ -4,17 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
-from typing import cast, Literal, NotRequired, Required, TypedDict
+from typing import cast, Literal, NotRequired, Required, Self, TypedDict
 
 import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
 from cmk.events.notify_types import (
@@ -33,6 +28,8 @@ from cmk.events.notify_types import (
     EmailBodyElementsType,
     EmailFromOrTo,
     EventConsoleOption,
+    ExplicitProxyAuthSpec,
+    ExplicitProxySpec,
     GroupbyType,
     HostEventType,
     IlertPluginName,
@@ -58,6 +55,7 @@ from cmk.events.notify_types import (
     OpsGeniePriorityPValueType,
     OpsGeniePriorityStrType,
     PagerdutyPluginName,
+    PagerDutyWebhookURL,
     PluginOptions,
     ProxyUrl,
     PushoverPluginName,
@@ -76,6 +74,7 @@ from cmk.events.notify_types import (
     SoundType,
     SpectrumPluginName,
     SplunkPluginName,
+    StructuredExplicitProxy,
     SyncDeliverySMTP,
     SysLogFacilityIntType,
     SysLogFacilityStrType,
@@ -100,6 +99,7 @@ from cmk.ruleset_matcher.matcher import (
     TagConditionOR,
 )
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
+from cmk.rulesets.internal.form_specs import parse_proxy_url
 from cmk.utils import password_store
 
 CheckboxState = Literal["enabled", "disabled"]
@@ -1328,12 +1328,12 @@ class CheckboxURLPrefix:
             case None:
                 return CheckboxURLPrefixAPIValueType(state="disabled")
 
-            case ("automatic_http", None):
+            case ("automatic_http", _):
                 return CheckboxURLPrefixAPIValueType(
                     state="enabled",
                     value={"option": "automatic", "schema": "http"},
                 )
-            case ("automatic_https", None):
+            case ("automatic_https", _):
                 return CheckboxURLPrefixAPIValueType(
                     state="enabled",
                     value={"option": "automatic", "schema": "https"},
@@ -1375,8 +1375,82 @@ class HttpProxyAPIGlobal(TypedDict):
     global_proxy_id: str
 
 
+class HttpProxyAPIAuth(TypedDict):
+    user: str
+    password: API_Password
+
+
+class HttpProxyAPIManual(TypedDict):
+    option: Literal["manual"]
+    scheme: str
+    proxy_server_name: str
+    port: int
+    auth: NotRequired[HttpProxyAPIAuth]
+
+
 class HttpProxyAPIValueType(CheckboxStateType, total=False):
-    value: HttpProxyAPINoProxy | HttpProxyAPIEnvironment | HttpProxyAPIUrl | HttpProxyAPIGlobal
+    value: (
+        HttpProxyAPINoProxy
+        | HttpProxyAPIEnvironment
+        | HttpProxyAPIUrl
+        | HttpProxyAPIGlobal
+        | HttpProxyAPIManual
+    )
+
+
+def _explicit_proxy_from_url(url: str) -> StructuredExplicitProxy:
+    if (parsed := parse_proxy_url(url)) is None:
+        # The request schema rejects such URLs
+        raise ValueError("The proxy URL cannot be converted into a manual proxy configuration")
+
+    proxy_config = ExplicitProxySpec(
+        scheme=parsed.proxy["scheme"],
+        proxy_server_name=parsed.proxy["proxy_server_name"],
+        port=parsed.proxy["port"],
+    )
+    if parsed.credentials is not None:
+        user, password = parsed.credentials
+        proxy_config["auth"] = ExplicitProxyAuthSpec(
+            user=user,
+            password=(
+                "cmk_postprocessed",
+                "explicit_password",
+                (password_store.ad_hoc_password_id(), password),
+            ),
+        )
+    return "cmk_postprocessed", "explicit_proxy", proxy_config
+
+
+def _explicit_proxy_from_manual(manual: HttpProxyAPIManual) -> StructuredExplicitProxy:
+    proxy_config = ExplicitProxySpec(
+        scheme=manual["scheme"],
+        proxy_server_name=manual["proxy_server_name"],
+        port=manual["port"],
+    )
+    if (auth := manual.get("auth")) is not None:
+        password = APICheckmkPassword_FromPassword.from_api_request(auth["password"])
+        assert password.checkmk_password is not None
+        proxy_config["auth"] = ExplicitProxyAuthSpec(
+            user=auth["user"], password=password.checkmk_password
+        )
+    return "cmk_postprocessed", "explicit_proxy", proxy_config
+
+
+def _manual_from_explicit_proxy(proxy_config: ExplicitProxySpec) -> HttpProxyAPIManual:
+    manual = HttpProxyAPIManual(
+        option="manual",
+        scheme=proxy_config["scheme"],
+        proxy_server_name=proxy_config["proxy_server_name"],
+        port=proxy_config["port"],
+    )
+    if (auth := proxy_config.get("auth")) is not None:
+        manual["auth"] = HttpProxyAPIAuth(
+            user=auth["user"],
+            password=APICheckmkPassword_FromPassword.from_mk_file_format(
+                auth["password"]
+            ).api_response(),
+        )
+    return manual
 
 
 @dataclass
@@ -1394,7 +1468,10 @@ class CheckboxHttpProxy:
                 return cls(value=("cmk_postprocessed", "no_proxy", ""))
 
             case {"state": "enabled", "value": {"option": "url", "url": str() as url}}:
-                return cls(value=("cmk_postprocessed", "explicit_proxy", url))
+                return cls(value=_explicit_proxy_from_url(url))
+
+            case {"state": "enabled", "value": {"option": "manual"} as manual}:
+                return cls(value=_explicit_proxy_from_manual(cast(HttpProxyAPIManual, manual)))
 
             case {
                 "state": "enabled",
@@ -1414,18 +1491,17 @@ class CheckboxHttpProxy:
         if self.value is None:
             return r
 
-        _, option, value = self.value
-        if option == "no_proxy":
-            r["value"] = {"option": "no_proxy"}
-
-        if option == "environment_proxy":
-            r["value"] = {"option": "environment"}
-
-        if option == "explicit_proxy":
-            r["value"] = {"option": "url", "url": value}
-
-        if option == "stored_proxy":
-            r["value"] = {"option": "global", "global_proxy_id": value}
+        match self.value:
+            case (_, "no_proxy", _):
+                r["value"] = {"option": "no_proxy"}
+            case (_, "environment_proxy", _):
+                r["value"] = {"option": "environment"}
+            case (_, "explicit_proxy", str() as url):
+                r["value"] = {"option": "url", "url": url}
+            case (_, "explicit_proxy", proxy_config):
+                r["value"] = _manual_from_explicit_proxy(proxy_config)
+            case (_, "stored_proxy", global_proxy_id):
+                r["value"] = {"option": "global", "global_proxy_id": global_proxy_id}
 
         return r
 
@@ -1888,9 +1964,6 @@ class ManagementType:
         return MgmtTypeIncidentAPI(option="incident", params=incident_params)
 
     def to_mk_file_format(self) -> MgmtTypeCaseType | MgmtTypeIncidentType | None:
-        if self.mgmt_type is None:
-            return None
-
         if self.mgmt_type == "case":
             r_case = {
                 "host_short_desc": self.host_short_desc.to_mk_file_format(),
@@ -2169,7 +2242,7 @@ class BulkOutsideTimePeriod:
         return r
 
     @classmethod
-    def disabled(cls):
+    def disabled(cls) -> Self:
         return cls(
             state="disabled",
             subject_for_bulk_notifications=CheckboxWithStrValue(),
@@ -2961,6 +3034,7 @@ class API_PagerDutyData(TypedDict, total=False):
     disable_ssl_cert_verification: CheckboxStateType
     http_proxy: HttpProxyAPIValueType
     url_prefix_for_links_to_checkmk: CheckboxURLPrefixAPIValueType
+    webhook_url: PagerDutyWebhookURL
 
 
 class API_PushOverData(TypedDict, total=False):

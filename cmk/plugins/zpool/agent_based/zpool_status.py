@@ -114,12 +114,12 @@ def parse_zpool_status(
 
 
 def discover_zpool_status(section: Section) -> DiscoveryResult:
-    if not section or section.message == "No pools available":  # type: ignore[redundant-expr]
+    if section.message == "No pools available":
         return
     yield Service()
 
 
-def check_zpool_status(params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_zpool_status(params: Mapping[str, Any], section: Section) -> CheckResult:  # noqa: ARG001
     state: State = State.OK
     messages: list[str] = []
 

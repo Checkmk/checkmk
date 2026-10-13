@@ -57,7 +57,7 @@ def parse_prism_host_networks_pure(
 ) -> interfaces.Section[interfaces.InterfaceWithRates]:
     try:
         data = pydantic.TypeAdapter(list[RawData]).validate_json(string_table[0][0])
-    except (IndexError, json.decoder.JSONDecodeError, pydantic.ValidationError):
+    except IndexError, json.decoder.JSONDecodeError, pydantic.ValidationError:
         return []
 
     def generator() -> Iterable[InterfaceElement]:

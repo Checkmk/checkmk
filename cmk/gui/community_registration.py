@@ -25,8 +25,8 @@ from cmk.gui.dashboard import (
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.features import Features as GuiFeatures
 from cmk.gui.features import features_registry
-from cmk.gui.graphing import community_registration as graphing_community_registration
-from cmk.gui.graphing_main import PageHostServiceGraphPopup
+from cmk.gui.graphing import PageHostServiceGraphPopup
+from cmk.gui.graphing import registration as graphing_registration
 from cmk.gui.help_menu import (
     default_about_checkmk_entries,
     default_developer_entries,
@@ -47,7 +47,7 @@ from cmk.gui.openapi import (
 from cmk.gui.openapi.endpoints import metric as metric_endpoint
 from cmk.gui.pages import page_registry, PageEndpoint
 from cmk.gui.pagetypes import builtin_pagetype_topic_registry
-from cmk.gui.painter.v0 import painter_registry
+from cmk.gui.painter import painter_registry
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.parentscan.register import register as parentscan_register
 from cmk.gui.permissions import permission_registry, permission_section_registry
@@ -130,10 +130,10 @@ def register_pages() -> None:
 
 
 def register_painters() -> None:
-    painter_registry.register(graph.PainterServiceGraphs)
-    painter_registry.register(graph.PainterHostGraphs)
-    painter_registry.register(graph.PainterSvcPnpgraph)
-    painter_registry.register(graph.PainterHostPnpgraph)
+    painter_registry.register(graph.make_service_graphs_painter())
+    painter_registry.register(graph.make_host_graphs_painter())
+    painter_registry.register(graph.make_svc_pnpgraph_painter())
+    painter_registry.register(graph.make_host_pnpgraph_painter())
 
 
 def register(
@@ -321,7 +321,6 @@ def register(
         main_module_registry,
     )
     mkeventd_registration.register(
-        edition=edition,
         permission_section_registry=permission_section_registry,
         permission_registry=permission_registry,
         data_source_registry=data_source_registry,
@@ -348,6 +347,7 @@ def register(
         endpoint_family_registry=endpoint_family_registry,
         replication_path_registry=replication_path_registry,
         builtin_pagetype_topic_registry=builtin_pagetype_topic_registry,
+        page_registry=page_registry,
         save_active_config=save_active_config,
     )
     custom_icons_register(
@@ -364,7 +364,7 @@ def register(
     )
     agent_commands.register(agent_commands_registry)
 
-    graphing_community_registration.register(
+    graphing_registration.register(
         edition,
         page_registry,
         config_variable_registry,

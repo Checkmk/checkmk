@@ -4,15 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All core related things like direct communication with the running core"""
 
-# mypy: disable-error-code="type-arg"
-
 import os
 import shutil
 import socket
 import sys
 from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
-from pathlib import Path
+from dataclasses import fields
 from typing import Literal
 
 import cmk.ccc.debug
@@ -20,21 +18,27 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk import trace
 from cmk.base.config import ConfigCache, CoreObjectsConfig
+from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
 from cmk.ccc import config_path
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.store import activation_lock
+from cmk.ccc.version import Edition
+from cmk.checkengine.checker_helper_config import make_packed_config_writer
 from cmk.checkengine.checkerplugin import ConfiguredService
+from cmk.checkengine.fetcher_utils.trigger import FetcherTriggerFactory
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 from cmk.core_client import CoreAction, CoreClient
+from cmk.licensing.basics.paths import get_licensed_state_file_path
+from cmk.licensing.handler import LicensingHandler
+from cmk.monitoring_config.internal import IntermediateMonitoringConfig, MonitoringConfigBuilder
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.tags import HostTags
 from cmk.utils import config_warnings, ip_lookup
 from cmk.utils.log import console
 from cmk.utils.servicename import ServiceName
 
-from ._base_core import MonitoringCore
 from ._snapshot_local_dir import snapshot_local_dir
 from ._snapshot_trusted_cas import snapshot_trusted_cas
 
@@ -44,15 +48,16 @@ tracer = trace.get_tracer()
 type _LockingMode = Literal["abort", "wait"] | None
 
 
-def do_reload(
+def build_and_activate_monitoring_config(
+    action: CoreAction,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     hosts_config: Hosts,
     host_tags: HostTags,
     final_service_name_config: Callable[
-        [HostName, ServiceName, Callable[[HostName], Mapping[str, str]]], ServiceName
+        [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
     ],
-    passive_service_name_config: Callable[[HostName, ServiceID, str | None], str],
+    passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     enforced_services_table: Callable[
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
@@ -62,71 +67,19 @@ def do_reload(
     ],
     ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     ip_address_of_mgmt: ip_lookup.IPLookupOptional,
-    core: MonitoringCore,
+    core: MonitoringConfigBuilder,
+    core_client: CoreClient,
     plugins: AgentBasedPlugins,
     *,
-    hosts_to_update: set[HostName] | None,
-    service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],
-    locking_mode: _LockingMode,
-    duplicates: Sequence[HostName],
-    bake_on_restart: Callable[[], None],
-    notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
-    checker_config_writer: Callable[[Path], None],
-) -> None:
-    do_restart(
-        config_cache,
-        core_objects_config,
-        hosts_config,
-        host_tags,
-        final_service_name_config,
-        passive_service_name_config,
-        enforced_services_table,
-        get_ip_stack_config,
-        default_address_family,
-        ip_address_of,
-        ip_address_of_mgmt,
-        core,
-        plugins,
-        action=CoreAction.RELOAD,
-        hosts_to_update=hosts_to_update,
-        service_depends_on=service_depends_on,
-        locking_mode=locking_mode,
-        duplicates=duplicates,
-        bake_on_restart=bake_on_restart,
-        notify_relay=notify_relay,
-        checker_config_writer=checker_config_writer,
-    )
-
-
-def do_restart(
-    config_cache: ConfigCache,
-    core_objects_config: CoreObjectsConfig,
-    host_config: Hosts,
-    host_tags: HostTags,
-    final_service_name_config: Callable[
-        [HostName, ServiceName, Callable[[HostName], Mapping[str, str]]], ServiceName
-    ],
-    passive_service_name_config: Callable[[HostName, ServiceID, str | None], str],
-    enforced_services_table: Callable[
-        [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
-    ],
-    get_ip_stack_config: Callable[[HostName], ip_lookup.IPStackConfig],
-    default_address_family: Callable[
-        [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
-    ],
-    ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
-    ip_address_of_mgmt: ip_lookup.IPLookupOptional,
-    core: MonitoringCore,
-    plugins: AgentBasedPlugins,
-    *,
-    action: CoreAction = CoreAction.RESTART,
     hosts_to_update: set[HostName] | None = None,
-    service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],
+    service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
-    bake_on_restart: Callable[[], None],
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
-    checker_config_writer: Callable[[Path], None],
+    licensing_handler_factory: Callable[[], LicensingHandler],
+    edition: Edition,
+    loaded_config: BaseConfig,
+    make_fetcher_trigger: FetcherTriggerFactory,
 ) -> None:
     try:
         with activation_lock(
@@ -134,9 +87,10 @@ def do_restart(
         ):
             do_create_config(
                 core=core,
+                core_client=core_client,
                 config_cache=config_cache,
                 core_objects_config=core_objects_config,
-                hosts_config=host_config,
+                hosts_config=hosts_config,
                 host_tags=host_tags,
                 final_service_name_config=final_service_name_config,
                 passive_service_name_config=passive_service_name_config,
@@ -149,11 +103,13 @@ def do_restart(
                 hosts_to_update=hosts_to_update,
                 service_depends_on=service_depends_on,
                 duplicates=duplicates,
-                bake_on_restart=bake_on_restart,
                 notify_relay=notify_relay,
-                checker_config_writer=checker_config_writer,
+                licensing_handler_factory=licensing_handler_factory,
+                edition=edition,
+                loaded_config=loaded_config,
+                make_fetcher_trigger=make_fetcher_trigger,
             )
-            core.core_client.run(action, log=_print)
+            core_client.run(action, log=_print)
 
     except Exception as e:
         if cmk.ccc.debug.enabled():
@@ -162,7 +118,8 @@ def do_restart(
 
 
 def do_create_config(
-    core: MonitoringCore,
+    core: MonitoringConfigBuilder,
+    core_client: CoreClient,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     hosts_config: Hosts,
@@ -185,9 +142,11 @@ def do_create_config(
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     *,
     duplicates: Collection[HostName],
-    bake_on_restart: Callable[[], None],
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
-    checker_config_writer: Callable[[Path], None],
+    licensing_handler_factory: Callable[[], LicensingHandler],
+    edition: Edition,
+    loaded_config: BaseConfig,
+    make_fetcher_trigger: FetcherTriggerFactory,
 ) -> None:
     """Creating the monitoring core configuration and additional files
 
@@ -196,7 +155,7 @@ def do_create_config(
     """
     with suppress(IOError):
         sys.stdout.write(
-            "Generating configuration for core (type %s)...\n" % core.name(),
+            "Generating configuration for core (type %s)...\n" % core.name,
         )
         sys.stdout.flush()
 
@@ -204,12 +163,13 @@ def do_create_config(
         with tracer.span(
             "create_core_config",
             attributes={
-                "cmk.core_config.core": core.name(),
+                "cmk.core_config.core": core.name,
                 "cmk.core_config.core_config.hosts_to_update": repr(hosts_to_update),
             },
         ):
             _create_active_config(
                 core,
+                core_client,
                 config_cache,
                 core_objects_config,
                 hosts_config,
@@ -225,15 +185,15 @@ def do_create_config(
                 hosts_to_update=hosts_to_update,
                 service_depends_on=service_depends_on,
                 duplicates=duplicates,
-                checker_config_writer=checker_config_writer,
+                licensing_handler_factory=licensing_handler_factory,
+                edition=edition,
+                loaded_config=loaded_config,
+                make_fetcher_trigger=make_fetcher_trigger,
             )
     except Exception as e:
         if cmk.ccc.debug.enabled():
             raise
         raise MKGeneralException("Error creating configuration: %s" % e)
-
-    with tracer.span("bake_on_restart"):
-        bake_on_restart()
 
     with tracer.span("announce_new_serial"):
         notify_relay(config_warnings.warn)
@@ -282,7 +242,8 @@ def _backup_objects_file(core_client: CoreClient) -> Iterator[None]:
 # we create below to indicate that the configuration is ready to be used.
 # Everything that should be in it must be created before creating that link.
 def _create_active_config(
-    core: MonitoringCore,
+    core: MonitoringConfigBuilder,
+    core_client: CoreClient,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     hosts_config: Hosts,
@@ -305,7 +266,10 @@ def _create_active_config(
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     *,
     duplicates: Collection[HostName],
-    checker_config_writer: Callable[[Path], None],
+    licensing_handler_factory: Callable[[], LicensingHandler],
+    edition: Edition,
+    loaded_config: BaseConfig,
+    make_fetcher_trigger: FetcherTriggerFactory,
 ) -> None:
     config_warnings.initialize()
 
@@ -318,41 +282,97 @@ def _create_active_config(
         cmk.utils.password_store.pending_secrets_path_site(),
     )
 
+    config_builders = _make_config_builders(core)
+
     with (
         config_path.create(cmk.utils.paths.omd_root) as config_creation_context,
-        _backup_objects_file(core.core_client),
+        _backup_objects_file(core_client),
     ):
-        snapshot_local_dir(cmk.utils.paths.local_root, config_creation_context.path_created)
-        snapshot_trusted_cas(cmk.utils.paths.trusted_ca_file, config_creation_context.path_created)
-
-        checker_config_writer(config_creation_context.path_created)
-
-        core.create_config(
-            config_creation_context,
-            config_cache,
-            core_objects_config,
-            hosts_config,
-            host_tags,
-            final_service_name_config,
-            passive_service_name_config,
-            enforced_services_table,
-            plugins,
-            get_ip_stack_config,
-            default_address_family,
-            ip_address_of,
-            ip_address_of_mgmt,
-            hosts_to_update=hosts_to_update,
-            service_depends_on=service_depends_on,
+        intermediate_config = IntermediateMonitoringConfig(
+            edition=edition,
+            make_fetcher_trigger=make_fetcher_trigger,
+            config_creation_context=config_creation_context,
             passwords=passwords,
-        )
-        cmk.utils.password_store.save(
-            {k: s.reveal() for k, s in passwords.items()},
-            cmk.utils.password_store.active_secrets_path_site(
-                RELATIVE_PATH_SECRETS, config_creation_context.path_created
-            ),
+            licensing_handler=licensing_handler_factory(),
+            config_cache=config_cache,
+            core_objects_config=core_objects_config,
+            hosts_config=hosts_config,
+            host_tags=host_tags,
+            plugins=plugins,
+            hosts_to_update=hosts_to_update,
+            loaded_config=loaded_config,
+            final_service_name_config=final_service_name_config,
+            passive_service_name_config=passive_service_name_config,
+            enforced_services_table=enforced_services_table,
+            get_ip_stack_config=get_ip_stack_config,
+            default_address_family=default_address_family,
+            ip_address_of=ip_address_of,
+            ip_address_of_mgmt=ip_address_of_mgmt,
+            service_depends_on=service_depends_on,
         )
 
-    core.core_client.cleanup_old_configs()
+        for builder in config_builders:
+            builder.build(intermediate_config)
+
+    core_client.cleanup_old_configs()
+
+
+def _make_config_builders(
+    core: MonitoringConfigBuilder,
+) -> Sequence[MonitoringConfigBuilder]:
+    """Everything that goes into one activation, in the order it is created.
+
+    The monitoring core is one builder among others. The engine does not know what
+    any of them writes -- only that they all write into the same config directory,
+    and in which order.
+    """
+    return (
+        MonitoringConfigBuilder(
+            name="local_dir",
+            build=lambda intermediate_config: snapshot_local_dir(
+                cmk.utils.paths.local_root, intermediate_config.config_creation_context.path_created
+            ),
+        ),
+        MonitoringConfigBuilder(
+            name="trusted_cas",
+            build=lambda intermediate_config: snapshot_trusted_cas(
+                cmk.utils.paths.trusted_ca_file,
+                intermediate_config.config_creation_context.path_created,
+            ),
+        ),
+        MonitoringConfigBuilder(name="checker_config", build=_write_checker_config),
+        MonitoringConfigBuilder(
+            name="licensed_state",
+            build=lambda intermediate_config: (
+                intermediate_config.licensing_handler.persist_licensed_state(
+                    get_licensed_state_file_path(cmk.utils.paths.omd_root)
+                )
+            ),
+        ),
+        core,
+        MonitoringConfigBuilder(name="active_secrets", build=_save_active_secrets),
+    )
+
+
+def _write_checker_config(intermediate_config: IntermediateMonitoringConfig) -> None:
+    make_packed_config_writer(
+        {
+            f.name: getattr(intermediate_config.loaded_config, f.name)
+            for f in fields(intermediate_config.loaded_config)
+        },
+        intermediate_config.hosts_config,
+        is_online=intermediate_config.config_cache.is_online,
+        is_active=intermediate_config.config_cache.is_active,
+    )(intermediate_config.config_creation_context.path_created)
+
+
+def _save_active_secrets(intermediate_config: IntermediateMonitoringConfig) -> None:
+    cmk.utils.password_store.save(
+        {k: s.reveal() for k, s in intermediate_config.passwords.items()},
+        cmk.utils.password_store.active_secrets_path_site(
+            RELATIVE_PATH_SECRETS, intermediate_config.config_creation_context.path_created
+        ),
+    )
 
 
 def _verify_non_duplicate_hosts(duplicates: Collection[HostName]) -> None:

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 
 import enum
@@ -33,7 +31,17 @@ from ipaddress import (
     IPv6Interface,
     IPv6Network,
 )
-from typing import Any, assert_never, Final, Literal, override, ParamSpec, Protocol, TypedDict
+from typing import (
+    Any,
+    assert_never,
+    Final,
+    Literal,
+    override,
+    ParamSpec,
+    Protocol,
+    Self,
+    TypedDict,
+)
 
 import pydantic
 
@@ -63,6 +71,7 @@ class ConditionsForLabels(TypedDict, total=False):
     match_index: list[str]
     match_alias: list[str]
     match_desc: list[str]
+    match_name: list[str]
 
 
 class LabelsConditions(TypedDict, total=False):
@@ -163,7 +172,7 @@ class AugmentedIPInterface:
         )
 
     @staticmethod
-    def from_ip_address(address: str) -> "AugmentedIPv4Interface | AugmentedIPv6Interface":
+    def from_ip_address(address: str) -> AugmentedIPv4Interface | AugmentedIPv6Interface:
         """Same as `ipaddress.ip_address()
         >>> AugmentedIPInterface.from_ip_address("12.13.14.15/16")
         AugmentedIPv4Interface('12.13.14.15/16')
@@ -177,7 +186,7 @@ class AugmentedIPInterface:
                 assert_never(unexpected)
 
     @property
-    def is_broadcast(self: "AugmentedIPInterface.IPInterfaceLike") -> bool:
+    def is_broadcast(self: AugmentedIPInterface.IPInterfaceLike) -> bool:
         """
         >>> AugmentedIPv4Interface("1.2.3.255/24").is_broadcast
         True
@@ -190,7 +199,7 @@ class AugmentedIPInterface:
         ) and (self.ip.compressed == self.network.broadcast_address.compressed)
 
     @property
-    def is_ula(self: "AugmentedIPInterface.IPInterfaceLike") -> bool:
+    def is_ula(self: AugmentedIPInterface.IPInterfaceLike) -> bool:
         """Returns whether address is inside the unique local address (ULA) network
         >>> AugmentedIPv6Interface("fddf:d584:190e:49b5:0:ff:fe00:fc10/64").is_ula
         True
@@ -206,7 +215,7 @@ class AugmentedIPv4Interface(AugmentedIPInterface, IPv4Interface):
         IPv4Interface.__init__(self, interface)
 
     @staticmethod
-    def from_ip_addr_line(line: Sequence[str]) -> "AugmentedIPv4Interface":
+    def from_ip_addr_line(line: Sequence[str]) -> AugmentedIPv4Interface:
         return AugmentedIPv4Interface(line[0])
 
 
@@ -216,7 +225,7 @@ class AugmentedIPv6Interface(AugmentedIPInterface, IPv6Interface):
         IPv6Interface.__init__(self, interface)
 
     @staticmethod
-    def from_ip_addr_line(line: Sequence[str]) -> "AugmentedIPv6Interface":
+    def from_ip_addr_line(line: Sequence[str]) -> AugmentedIPv6Interface:
         return AugmentedIPv6Interface(
             line[0], is_temporary="temporary" in line and "dynamic" in line
         )
@@ -236,7 +245,7 @@ class IPNetworkAdapter:
 
 
 def _to_item_appearance(value: str) -> _ItemAppearance:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case "index" | "descr" | "alias" | "name":
             return value
     raise ValueError(f"Invalid item appearance: {value}")
@@ -381,7 +390,7 @@ class InterfaceWithRates:
         iface_counters: InterfaceWithCounters,
         *,
         value_store: MutableMapping[str, object],
-    ) -> "InterfaceWithRates":
+    ) -> InterfaceWithRates:
         return cls(
             iface_counters.attributes,
             *cls._compute_rates(
@@ -534,7 +543,7 @@ class Average:
     value: float
     backlog: int
 
-    def __add__(self, other: "Average") -> "Average":
+    def __add__(self, other: Average) -> Average:
         if self.backlog == other.backlog:
             return Average(
                 value=self.value + other.value,
@@ -548,7 +557,7 @@ class RateWithAverage:
     rate: float
     average: Average | None
 
-    def __add__(self, other: "RateWithAverage") -> "RateWithAverage":
+    def __add__(self, other: RateWithAverage) -> RateWithAverage:
         return RateWithAverage(
             rate=self.rate + other.rate,
             average=(
@@ -577,7 +586,7 @@ class RatesWithAverages:
     out_err: RateWithAverage | None = None
     total_octets: RateWithAverage | None = None
 
-    def __add__(self, other: "RatesWithAverages") -> "RatesWithAverages":
+    def __add__(self, other: RatesWithAverages) -> RatesWithAverages:
         return RatesWithAverages(
             **{
                 field.name: (
@@ -612,7 +621,7 @@ class InterfaceWithRatesAndAverages:
         *,
         value_store: MutableMapping[str, object],
         params: Mapping[str, Any],
-    ) -> "InterfaceWithRatesAndAverages":
+    ) -> InterfaceWithRatesAndAverages:
         iface_rates = (
             iface
             if isinstance(iface, InterfaceWithRates)
@@ -778,22 +787,15 @@ class InterfaceWithRatesAndAverages:
             )
         return RateWithAverage(
             rate=rate,
-            average=(
-                Average(
-                    value=average,
-                    backlog=averaging_params.backlog_minutes,
-                )
-                if (  # type: ignore[redundant-expr]
-                    average := get_average(
-                        value_store=averaging_params.value_store,
-                        key=averaging_params.value_store_key,
-                        time=averaging_params.timestamp,
-                        value=rate,
-                        backlog_minutes=averaging_params.backlog_minutes,
-                    )
-                )
-                is not None
-                else None
+            average=Average(
+                value=get_average(
+                    value_store=averaging_params.value_store,
+                    key=averaging_params.value_store_key,
+                    time=averaging_params.timestamp,
+                    value=rate,
+                    backlog_minutes=averaging_params.backlog_minutes,
+                ),
+                backlog=averaging_params.backlog_minutes,
             ),
         )
 
@@ -819,7 +821,7 @@ type Section[TInterfaceType: (InterfaceWithCounters, InterfaceWithRates)] = Sequ
 def saveint(i: Any) -> int:
     try:
         return int(i)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return 0
 
 
@@ -853,7 +855,7 @@ def cleanup_if_strings(s: str) -> str:
 def tryint(x: Any) -> Any:
     try:
         return int(x)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return x
 
 
@@ -1120,16 +1122,35 @@ def _finalize_bandwidth_levels(
 
 
 @dataclass(frozen=True)
+class UsedBandwidth:
+    percentage: float | None
+    speed_known: bool
+
+    @classmethod
+    def from_traffic(
+        cls,
+        traffic: RateWithAverage | None,
+        speed: float | None,
+    ) -> Self:
+        if not speed:
+            return cls(percentage=None, speed_known=False)
+        if traffic is None:
+            return cls(percentage=None, speed_known=True)
+        filtered_traffic = traffic.average.value if traffic.average else traffic.rate
+        return cls(percentage=100.0 * filtered_traffic / speed, speed_known=True)
+
+
+@dataclass(frozen=True)
 class PercentualPacketLevels:
     levels: tuple[float, float]
     min_traffic: float | None = None
 
-    def evaluate(self, used_bandwidth_perc: float | None) -> tuple[tuple[float, float] | None, str]:
-        if (
-            self.min_traffic is None
-            or used_bandwidth_perc is None
-            or used_bandwidth_perc >= self.min_traffic
-        ):
+    def evaluate(self, used_bandwidth: UsedBandwidth) -> tuple[tuple[float, float] | None, str]:
+        if self.min_traffic is None:
+            return self.levels, ""
+        if not used_bandwidth.speed_known:
+            return None, " (levels not applied, operating speed unknown)"
+        if used_bandwidth.percentage is None or used_bandwidth.percentage >= self.min_traffic:
             return self.levels, ""
         rendered_min_traffic = _render_floating_point(self.min_traffic, precision=2, unit="%")
         return None, f" (levels not applied, used bandwidth below {rendered_min_traffic})"
@@ -1183,7 +1204,7 @@ def _compute_item[TInterfaceType: (InterfaceWithCounters, InterfaceWithRates)](
     section: Section[TInterfaceType],
     pad_portnumbers: bool,
 ) -> ItemInfo:
-    match configured_item_appearance:
+    match configured_item_appearance:  # type: ignore[exhaustive-match]
         case "descr":
             if attributes.descr:
                 return ItemInfo(
@@ -1225,6 +1246,7 @@ def _check_single_matching_conditions(
     match_index = matching_conditions.get("match_index")
     match_alias = matching_conditions.get("match_alias")
     match_desc = matching_conditions.get("match_desc")
+    match_name = matching_conditions.get("match_name")
     porttypes = matching_conditions.get("porttypes")
     if porttypes is not None:
         porttypes = porttypes[:]
@@ -1236,6 +1258,7 @@ def _check_single_matching_conditions(
         check_regex_match_conditions(attributes.index, match_index)
         and check_regex_match_conditions(attributes.alias, match_alias)
         and check_regex_match_conditions(attributes.descr, match_desc)
+        and check_regex_match_conditions(attributes.name, match_name)
         and (porttypes is None or attributes.type in porttypes)
         and (portstates is None or attributes.oper_status in portstates)
         and (
@@ -1390,7 +1413,7 @@ def discover_interfaces[TInterfaceType: (InterfaceWithCounters, InterfaceWithRat
 
             try:
                 index_as_item = int(item) == int(interface.attributes.index)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 index_as_item = False
 
             labels = {}
@@ -1406,6 +1429,9 @@ def discover_interfaces[TInterfaceType: (InterfaceWithCounters, InterfaceWithRat
                         )
                         and check_regex_match_conditions(
                             interface.attributes.descr, conditions.get("match_desc")
+                        )
+                        and check_regex_match_conditions(
+                            interface.attributes.name, conditions.get("match_name")
                         )
                     ):
                         for k, v in labels_condition.get("labels", {}).items():
@@ -1974,6 +2000,44 @@ def check_single_interface(  # type: ignore[misc]
         )
 
 
+_APPEARANCE_DESCRIPTIONS: Final[Mapping[str, str]] = {
+    "index": "index (ifIndex)",
+    "descr": "description (ifDescr)",
+    "alias": "alias (ifAlias)",
+    "name": "name (ifName)",
+}
+
+_NOT_SET: Final = "not set"
+
+
+def _interface_identification(
+    *,
+    params: Mapping[str, Any],
+    attributes: Attributes,
+) -> str:
+    """Spell out which device field holds which value, for the details view.
+
+    The summary only shows a bare value such as "[tun0]", from which users cannot tell
+    whether that is the description or the alias, nor whether the device populates the
+    other fields at all. Without that they cannot write a targeted discovery rule to
+    switch the item naming.
+    """
+    lines = [
+        f"Index: {attributes.index or _NOT_SET}",
+        f"Description: {attributes.descr or _NOT_SET}",
+        f"Alias: {attributes.alias or _NOT_SET}",
+    ]
+    if attributes.name:
+        lines.append(f"Name: {attributes.name}")
+    if appearance := params.get("item_appearance"):
+        lines.append(
+            f"Service item based on: {_APPEARANCE_DESCRIPTIONS.get(appearance, appearance)}"
+        )
+    if attributes.node is not None:
+        lines.append(f"Node: {attributes.node}")
+    return "\n".join(lines)
+
+
 def _interface_name(
     *,
     group_name: str | None,
@@ -2025,10 +2089,19 @@ def _interface_name(
         else:
             info_interface = "On %s" % attributes.node
 
+    identification = _interface_identification(params=params, attributes=attributes)
+
     if info_interface:
         yield Result(
             state=State.OK,
             summary=info_interface,
+            details=identification,
+        )
+    else:
+        # nothing worth showing in the summary, but the details view still benefits
+        yield Result(
+            state=State.OK,
+            notice=identification,
         )
 
 
@@ -2363,7 +2436,7 @@ def _output_packet_rates(
             rates.out_err,
         ),
     ]:
-        used_bandwidth_perc = _used_bandwidth_perc(traffic, speed)
+        used_bandwidth = UsedBandwidth.from_traffic(traffic, speed)
         all_pacrate = _sum_optional_floats(
             urate.rate if urate else None,
             nurate.rate if nurate else None,
@@ -2441,15 +2514,8 @@ def _output_packet_rates(
                 display_name=display_name,
                 metric_name=metric_name,
                 reference_rate=reference_rate,
-                used_bandwidth_perc=used_bandwidth_perc,
+                used_bandwidth=used_bandwidth,
             )
-
-
-def _used_bandwidth_perc(traffic: RateWithAverage | None, speed: float | None) -> float | None:
-    if traffic is None or not speed:
-        return None
-    filtered_traffic = traffic.average.value if traffic.average else traffic.rate
-    return 100.0 * filtered_traffic / speed
 
 
 def _check_single_packet_rate(
@@ -2461,7 +2527,7 @@ def _check_single_packet_rate(
     display_name: str,
     metric_name: str,
     reference_rate: float | None,
-    used_bandwidth_perc: float | None,
+    used_bandwidth: UsedBandwidth,
 ) -> CheckResult:
     # Further calculation now precedes with average value,
     # if requested.
@@ -2484,7 +2550,7 @@ def _check_single_packet_rate(
     else:
         if reference_rate is None:
             return
-        active_levels, note = perc_levels.evaluate(used_bandwidth_perc)
+        active_levels, note = perc_levels.evaluate(used_bandwidth)
         # Note: A rate of 0% for a pacrate of 0 is mathematically incorrect,
         # but it yields the best information for the "no packets" case in the check output.
         perc_value = 0 if reference_rate == 0 else rate_check * 100 / reference_rate

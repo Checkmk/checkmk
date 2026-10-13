@@ -25,8 +25,8 @@ from smb.base import NotConnectedError, ProtocolError, SharedFile
 from smb.smb_structs import OperationFailure
 from smb.SMBConnection import SMBConnection
 
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
-from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option, Secret
+from cmk.server_side_programs.v1 import report_agent_crashes, vcrtrace
 
 LOGGER = logging.getLogger(__name__)
 
@@ -119,7 +119,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         help="Password of user used to connect to the shares",
     )
 
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--patterns",
         type=str,
         nargs="*",
@@ -250,7 +250,7 @@ def connect(
     try:
         LOGGER.debug("Connecting to %(ip_address)s on port 445", {"ip_address": ip_address})
         success = conn.connect(ip_address, 445)
-    except (OSError, NotConnectedError):
+    except OSError, NotConnectedError:
         raise SMBShareAgentError(
             "Could not connect to the remote host. Check your ip address and remote name."
         )

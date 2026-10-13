@@ -53,7 +53,7 @@ class _FakeLivestatusEngine:
     def __init__(self) -> None:
         self._results = _generate_fake_result_items(ProviderName.monitoring)
 
-    def search(self, query: str, *, provider: ProviderName) -> list[UnifiedSearchResultItem]:
+    def search(self, query: str, *, provider: ProviderName) -> list[UnifiedSearchResultItem]:  # noqa: ARG002
         return [item for item in self._results if query in item.title]
 
 

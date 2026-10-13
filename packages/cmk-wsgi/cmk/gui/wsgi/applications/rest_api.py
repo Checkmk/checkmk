@@ -3,12 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
 
-from __future__ import annotations
 
 import http.client
 import json
@@ -18,6 +15,7 @@ import urllib.parse
 from collections.abc import Callable, Mapping
 from datetime import datetime, UTC
 from hashlib import sha256
+from http import HTTPStatus
 from pathlib import Path
 from typing import Any, Literal, NotRequired, override, TYPE_CHECKING, TypedDict
 from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
@@ -28,6 +26,7 @@ from werkzeug.exceptions import HTTPException, NotFound
 from werkzeug.routing import Map, Rule, Submount
 
 import cmk.ccc.version as cmk_version
+import cmk.ccc.version_info as cmk_version_info
 from cmk import trace
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKException, MKGeneralException
@@ -41,7 +40,12 @@ from cmk.crash import (
 from cmk.crypto import MKCryptoException
 from cmk.gui import session
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
+from cmk.gui.exceptions import (
+    MKAuthException,
+    MKHTTPException,
+    MKUnauthenticatedException,
+    MKUserError,
+)
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, user
 from cmk.gui.openapi.framework import ApiContext, RawRequestData
@@ -61,13 +65,19 @@ from cmk.gui.openapi.utils import (
     GeneralRestAPIException,
     problem,
     ProblemException,
+    RestAPIForbiddenException,
     RestAPIPermissionException,
     RestAPIRequestGeneralException,
     RestAPIResponseGeneralException,
 )
 from cmk.gui.openapi.versioned_endpoint_map import discover_endpoints
 from cmk.gui.site_config import enabled_sites
-from cmk.gui.token_auth import AuthToken, parse_token_and_validate
+from cmk.gui.token_auth import (
+    AuthToken,
+    MKTokenExpiredOrRevokedException,
+    MKUnknownTokenException,
+    parse_token_and_validate,
+)
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
 from cmk.gui.wsgi.applications.utils import AbstractWSGIApp
@@ -98,7 +108,7 @@ ARGS_KEY = "CHECK_MK_REST_API_ARGS"
 logger = logging.getLogger("cmk.gui.wsgi.rest_api")
 
 EXCEPTION_STATUS: dict[type[Exception], int] = {
-    MKUserError: 400,
+    MKUserError: HTTPStatus.BAD_REQUEST,
 }
 
 PathArgs = Mapping[str, Any]
@@ -149,7 +159,7 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
     crash = APICrashReport(
         crash_report_base_path=make_crash_report_base_path(paths.omd_root),
         crash_info=APICrashReport.make_crash_info(
-            cmk_version.get_general_version_infos(paths.omd_root), details
+            cmk_version_info.get_general_version_infos(paths.omd_root), details
         ),
     )
     CrashReportStore().save(crash)
@@ -192,7 +202,7 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
         )
 
     return problem(
-        status=500,
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
         title="Internal Server Error",
         detail=f"{crash.crash_info['exc_type']}: {crash_msg}. Crash report generated. Please submit.",
         ext=ext_info,
@@ -387,9 +397,9 @@ def _serve_spec(
         case "json":
             content_type = "application/json"
 
-    response = Response(status=200)
+    response = Response(status=HTTPStatus.OK)
     response.data = _serialize_spec_cached(target, url, extension, version)
-    response.content_type = content_type
+    response.content_type = content_type  # type: ignore[possibly-undefined]
     response.freeze()
     return response
 
@@ -536,7 +546,7 @@ class ServeSwaggerUI(AbstractWSGIApp):
 
 def _ensure_authenticated() -> None:
     session.session.persistent = False
-    if session.session.user is None or isinstance(session.session.user, LoggedInNobody):  # type: ignore[redundant-expr]
+    if isinstance(session.session.user, LoggedInNobody):
         # As a user we want the most specific error messages. Due to the errors being
         # generated at the start of the request, where it isn't clear if Checkmk or RESTAPI
         # will take the request, we need to store them and emit them to the user afterwards.
@@ -568,17 +578,22 @@ type RulesByVersion = dict[APIVersion, list[Rule]]
 type MapByVersion = dict[APIVersion, Map]
 
 
-def _get_cmk_token(environ: WSGIEnvironment) -> AuthToken | None:
+def _get_cmk_token(environ: WSGIEnvironment, token_failure_detail: str | None) -> AuthToken | None:
     if not (
         (auth_header := environ.get("HTTP_AUTHORIZATION", ""))
         and auth_header.startswith("CMK-TOKEN ")
     ):
         return None
-    return parse_token_and_validate(
-        auth_header.removeprefix("CMK-TOKEN ").strip(),
-        request.remote_addr,
-        datetime.now(tz=UTC),
-    )
+    try:
+        return parse_token_and_validate(
+            auth_header.removeprefix("CMK-TOKEN ").strip(),
+            request.remote_addr,
+            datetime.now(tz=UTC),
+        )
+    except (MKUnknownTokenException, MKTokenExpiredOrRevokedException) as exc:
+        if token_failure_detail is None:
+            raise
+        raise MKUnauthenticatedException(token_failure_detail) from exc
 
 
 class CheckmkRESTAPI(AbstractWSGIApp):
@@ -760,8 +775,13 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             # function at setup-time.
             environ[ARGS_KEY] = path_args
 
+            token_failure_detail = (
+                wsgi_endpoint.endpoint.token_failure_detail
+                if isinstance(wsgi_endpoint, VersionedEndpointAdapter)
+                else None
+            )
             if (
-                (token := _get_cmk_token(environ))
+                (token := _get_cmk_token(environ, token_failure_detail))
                 and isinstance(wsgi_endpoint, VersionedEndpointAdapter)
                 and token.details.type_ in wsgi_endpoint.endpoint.allowed_tokens
             ):
@@ -773,13 +793,18 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             # the header methods.
             _ensure_authenticated()
 
-            # A Checmk Reserved endpoint can only be accessed with the site secret
+            # A Checmk Reserved endpoint can only be accessed with the site secret. The caller is
+            # authenticated at this point and merely lacks the rights for this endpoint, so this
+            # is forbidden (403), not unauthorized (401).
             if (
                 isinstance(wsgi_endpoint, LegacyEndpointAdapter)
                 and wsgi_endpoint.endpoint.internal_user_only
                 and not isinstance(session.session.user, LoggedInSuperUser)
             ):
-                raise MKAuthException("This endpoint is reserved for Checkmk.")
+                raise RestAPIForbiddenException(
+                    title=HTTPStatus.FORBIDDEN.phrase,
+                    detail="This endpoint is reserved for Checkmk.",
+                )
 
             return wsgi_endpoint(environ, start_response)
 
@@ -816,7 +841,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             if self.debug and not self.testing:
                 raise
             response = problem(
-                status=EXCEPTION_STATUS.get(type(exc), 500),
+                status=EXCEPTION_STATUS.get(type(exc), HTTPStatus.INTERNAL_SERVER_ERROR),
                 title="An exception occurred.",
                 detail=str(exc),
             )

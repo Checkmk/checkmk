@@ -55,14 +55,13 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     LevelsT,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 from .w32time_lib import before_parens, in_parens, parse_float, parse_hex, parse_int
 
@@ -171,10 +170,6 @@ agent_section_w32time_status = AgentSection(
 )
 
 
-def discover_w32time_status(section: QueryStatus) -> DiscoveryResult:
-    yield Service()
-
-
 def _sync_result_to_check_result(state_params: StateParams, result: int) -> CheckResult:
     match result:
         case 0:
@@ -205,7 +200,10 @@ def _sync_result_to_check_result(state_params: StateParams, result: int) -> Chec
 
 def check_w32time_status(params: Params, section: QueryStatus | ErrorStatus) -> CheckResult:
     if isinstance(section, ErrorStatus):
-        yield Result(state=State.WARN, summary=section.error)
+        yield Result(
+            state=State.WARN,
+            summary=section.error or "Windows time service reported an error without a message",
+        )
         return
 
     # Parameter merging is not a deep merge, so merge states against defaults.
@@ -272,7 +270,7 @@ def check_w32time_status(params: Params, section: QueryStatus | ErrorStatus) -> 
 check_plugin_w32time_status = CheckPlugin(
     name="w32time_status",
     service_name="Windows time service",
-    discovery_function=discover_w32time_status,
+    discovery_function=discover_one_service,
     check_ruleset_name="w32time_status",
     check_default_parameters=DEFAULT_PARAMS,
     check_function=check_w32time_status,

@@ -4,15 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
+import ArrowDown from 'cmk-ui-library/components/graphics/ArrowDown.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import useId from 'cmk-ui-library/lib/useId'
-import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
-import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { computed, ref } from 'vue'
 
 import MetricAttributesTable from '../MetricAttributesTable.vue'
-import type { HorizontalLine, Metric } from '../TimeSeriesGraph'
+import type { HorizontalLine, Metric, ShadedRegion, UnitFormat } from '../TimeSeriesGraph'
 import {
   CONSOLIDATION_FUNCTIONS,
   type ConsolidationFn,
@@ -20,12 +19,12 @@ import {
   useConsolidationFunctionLabels
 } from '../consolidation'
 import { attributesOf, hasAttributes } from '../metricAttributes'
+import { orderMetricsTopToBottom } from '../metricOrder'
 import GraphLegendEyeButton from './GraphLegendEyeButton.vue'
 import {
   type MetricStats,
   metricStats as computeMetricStats,
   horizontalLineValue,
-  orderMetricsForLegend,
   withNameToggled
 } from './legendUtils'
 
@@ -39,24 +38,31 @@ const props = withDefaults(
   defineProps<{
     metrics: Metric[]
     horizontalLines?: HorizontalLine[]
+    shadedRegions?: ShadedRegion[]
     consolidationFn?: ConsolidationFn
     hiddenMetricNames?: string[]
     hiddenLineNames?: string[]
     fillHeight?: boolean
+    valueResolution?: number | null
+    /** The unit the graph labels its value axis in; null leaves each metric in its own unit. */
+    axisUnit?: UnitFormat | null
   }>(),
   {
     horizontalLines: () => [],
+    shadedRegions: () => [],
     consolidationFn: DEFAULT_CONSOLIDATION_FN,
     hiddenMetricNames: () => [],
     hiddenLineNames: () => [],
-    fillHeight: false
+    fillHeight: false,
+    valueResolution: null,
+    axisUnit: null
   }
 )
 
 const emit = defineEmits<{
   'update:hiddenMetricNames': [value: string[]]
   'update:hiddenLineNames': [value: string[]]
-  hoverMetric: [metricName: string | null]
+  hoverMetrics: [names: string[]]
 }>()
 
 const visibleCount = computed(() => props.metrics.length - props.hiddenMetricNames.length)
@@ -72,25 +78,32 @@ const visibilityLabel = computed(() =>
 // Counts threshold lines too: 5 metrics plus 2 thresholds scrolls where 7 metrics would.
 const VISIBLE_ITEM_BUDGET = 7
 const ROW_HEIGHT_PX = 24
+// The space on either side of the divider under the header and the one above the footer.
+const DIVIDER_GAP_PX = 12
+const HEADER_ROW_HEIGHT_PX = 40 + DIVIDER_GAP_PX
 const rowHeight = `${ROW_HEIGHT_PX}px`
+const headerRowHeight = `${HEADER_ROW_HEIGHT_PX}px`
+const dividerGap = `${DIVIDER_GAP_PX}px`
 
-const metricsMaxHeight = computed(() => {
+const hasFooter = computed(() => props.horizontalLines.length > 0 || props.shadedRegions.length > 0)
+
+const scrollMaxHeight = computed(() => {
   if (props.fillHeight) {
     return 'none'
   }
   const rowsForMetrics = Math.max(1, VISIBLE_ITEM_BUDGET - props.horizontalLines.length)
-  return `${rowsForMetrics * ROW_HEIGHT_PX}px`
+  const visibleRows = rowsForMetrics + props.horizontalLines.length
+  const footerDividerHeight = hasFooter.value ? 2 * DIVIDER_GAP_PX : 0
+  return `${HEADER_ROW_HEIGHT_PX + visibleRows * ROW_HEIGHT_PX + footerDividerHeight}px`
 })
 
-const displayMetrics = computed(() => orderMetricsForLegend(props.metrics))
-const allHidden = computed(
-  () =>
-    props.metrics.length > 0 &&
-    props.metrics.every((m) => props.hiddenMetricNames.includes(m.metadata.name))
+const displayMetrics = computed(() => orderMetricsTopToBottom(props.metrics))
+const anyMetricHidden = computed(() =>
+  props.metrics.some((m) => props.hiddenMetricNames.includes(m.metadata.name))
 )
 
 function toggleAll() {
-  if (allHidden.value) {
+  if (anyMetricHidden.value) {
     emit('update:hiddenMetricNames', [])
   } else {
     emit(
@@ -103,7 +116,7 @@ function toggleAll() {
 const metricStats = computed((): Map<string, MetricStats> => {
   const map = new Map<string, MetricStats>()
   for (const m of props.metrics) {
-    map.set(m.metadata.name, computeMetricStats(m))
+    map.set(m.metadata.name, computeMetricStats(m, props.valueResolution, props.axisUnit))
   }
   return map
 })
@@ -130,108 +143,56 @@ function toggleMetric(name: string) {
 function toggleLine(name: string) {
   emit('update:hiddenLineNames', withNameToggled(props.hiddenLineNames, name))
 }
-
-const metricsTableRef = useTemplateRef<HTMLTableElement>('metricsTable')
-const scrollContainerRef = computed(() => metricsTableRef.value?.parentElement ?? null)
-const metricsScrollable = ref(false)
-
-function updateScrollable() {
-  const el = scrollContainerRef.value
-  metricsScrollable.value = el ? el.scrollHeight > el.clientHeight : false
-}
-
-const { observe } = useResizeObserver(updateScrollable)
-observe(metricsTableRef)
-observe(scrollContainerRef)
-
-onMounted(async () => {
-  await nextTick()
-  updateScrollable()
-})
-
-watch(
-  () => props.metrics.length,
-  async () => {
-    await nextTick()
-    updateScrollable()
-  }
-)
 </script>
 
 <template>
   <div
     class="graphing-graph-legend"
     :class="{ 'graphing-graph-legend--fill': fillHeight }"
-    :style="{ '--legend-row-height': rowHeight }"
+    :style="{
+      '--legend-row-height': rowHeight,
+      '--legend-header-height': headerRowHeight,
+      '--legend-divider-gap': dividerGap
+    }"
   >
-    <!-- Table 1: fixed header row -->
-    <table class="graphing-graph-legend__table">
-      <colgroup>
-        <col class="graphing-graph-legend__col--eye" />
-        <col class="graphing-graph-legend__col--swatch" />
-        <col />
-        <col class="graphing-graph-legend__col--stat" />
-        <col class="graphing-graph-legend__col--stat" />
-        <col class="graphing-graph-legend__col--stat" />
-        <col class="graphing-graph-legend__col--stat" />
-      </colgroup>
-      <thead>
-        <tr
-          class="graphing-graph-legend__header-row"
-          :class="{ 'graphing-graph-legend__padded-row': metricsScrollable }"
-        >
-          <th class="graphing-graph-legend__header--eye">
-            <GraphLegendEyeButton
-              :hidden="allHidden"
-              :title="allHidden ? _t('Show all') : _t('Hide all')"
-              @toggle="toggleAll"
-            />
-          </th>
-          <th colspan="2">
-            <div class="graphing-graph-legend__header-meta">
-              <button
-                class="graphing-graph-legend__metric-count-btn"
-                :title="allHidden ? _t('Show all metrics') : _t('Hide all metrics')"
-                @click="toggleAll"
-              >
-                {{ visibilityLabel }}
-              </button>
-            </div>
-          </th>
-          <th
-            v-for="consolidationFunction in CONSOLIDATION_FUNCTIONS"
-            :key="consolidationFunction"
-            class="graphing-graph-legend__consolidation-function-th"
-          >
-            {{ consolidationFunctionLabels[consolidationFunction] }}
-          </th>
-          <th class="graphing-graph-legend__last-header">
-            {{ _t('Last') }}
-          </th>
-        </tr>
-      </thead>
-    </table>
-
-    <!-- Table 2: metric rows — scrollable -->
     <CmkScrollContainer
-      class="graphing-graph-legend__rows-scroll"
-      :max-height="metricsMaxHeight"
+      class="graphing-graph-legend__scroll"
+      :max-height="scrollMaxHeight"
       height="auto"
-      :style="{ overflowX: 'hidden' }"
     >
-      <table
-        ref="metricsTable"
-        class="graphing-graph-legend__table graphing-graph-legend__table-metrics"
-      >
-        <colgroup>
-          <col class="graphing-graph-legend__col--eye" />
-          <col class="graphing-graph-legend__col--swatch" />
-          <col />
-          <col class="graphing-graph-legend__col--stat" />
-          <col class="graphing-graph-legend__col--stat" />
-          <col class="graphing-graph-legend__col--stat" />
-          <col class="graphing-graph-legend__col--stat" />
-        </colgroup>
+      <table class="graphing-graph-legend__table">
+        <thead>
+          <tr class="graphing-graph-legend__header-row">
+            <th class="graphing-graph-legend__header--eye">
+              <GraphLegendEyeButton
+                :hidden="anyMetricHidden"
+                :title="anyMetricHidden ? _t('Show all') : _t('Hide all')"
+                @toggle="toggleAll"
+              />
+            </th>
+            <th>
+              <div class="graphing-graph-legend__header-meta">
+                <button
+                  class="graphing-graph-legend__metric-count-btn"
+                  :title="anyMetricHidden ? _t('Show all metrics') : _t('Hide all metrics')"
+                  @click="toggleAll"
+                >
+                  {{ visibilityLabel }}
+                </button>
+              </div>
+            </th>
+            <th
+              v-for="consolidationFunction in CONSOLIDATION_FUNCTIONS"
+              :key="consolidationFunction"
+              class="graphing-graph-legend__header--stat"
+            >
+              {{ consolidationFunctionLabels[consolidationFunction] }}
+            </th>
+            <th class="graphing-graph-legend__header--stat">
+              {{ _t('Last') }}
+            </th>
+          </tr>
+        </thead>
         <tbody>
           <template v-for="(m, index) in displayMetrics" :key="m.metadata.name">
             <tr
@@ -239,8 +200,8 @@ watch(
               :class="{
                 'graphing-graph-legend__row--hidden': hiddenMetricNames.includes(m.metadata.name)
               }"
-              @mouseenter="$emit('hoverMetric', m.metadata.name)"
-              @mouseleave="$emit('hoverMetric', null)"
+              @mouseenter="$emit('hoverMetrics', [m.metadata.name])"
+              @mouseleave="$emit('hoverMetrics', [])"
             >
               <td class="graphing-graph-legend__cell--eye">
                 <GraphLegendEyeButton
@@ -249,27 +210,30 @@ watch(
                   @toggle="toggleMetric(m.metadata.name)"
                 />
               </td>
-              <td class="graphing-graph-legend__cell--swatch">
-                <span
-                  class="graphing-graph-legend__swatch"
-                  :style="{ background: m.metadata.color }"
-                />
-              </td>
               <td class="graphing-graph-legend__name">
-                <span class="graphing-graph-legend__title" :title="m.metadata.title">
-                  {{ m.metadata.title }}
-                </span>
-                <CmkIconButton
-                  v-if="hasAttributes(m)"
-                  class="graphing-graph-legend__attributes-toggle"
-                  :name="showsAttributes(m) ? 'chevron-up' : 'chevron-down'"
-                  primary-color="font"
-                  size="small"
-                  :aria-expanded="showsAttributes(m)"
-                  :aria-controls="attributesId(index)"
-                  :aria-label="_t('Toggle attributes of %{metric}', { metric: m.metadata.title })"
-                  @click="toggleAttributes(m.metadata.name)"
-                />
+                <div class="graphing-graph-legend__name-content">
+                  <span
+                    class="graphing-graph-legend__swatch"
+                    :style="{ background: m.metadata.color }"
+                  />
+                  <span class="graphing-graph-legend__title" :title="m.metadata.title">
+                    {{ m.metadata.title }}
+                  </span>
+                  <button
+                    v-if="hasAttributes(m)"
+                    type="button"
+                    class="graphing-graph-legend__attributes-toggle"
+                    :class="{
+                      'graphing-graph-legend__attributes-toggle--expanded': showsAttributes(m)
+                    }"
+                    :aria-expanded="showsAttributes(m)"
+                    :aria-controls="attributesId(index)"
+                    :aria-label="_t('Toggle attributes of %{metric}', { metric: m.metadata.title })"
+                    @click="toggleAttributes(m.metadata.name)"
+                  >
+                    <ArrowDown />
+                  </button>
+                </div>
               </td>
               <td class="graphing-graph-legend__stat">
                 {{ metricStats.get(m.metadata.name)?.min }}
@@ -285,70 +249,77 @@ watch(
               </td>
             </tr>
             <tr v-if="showsAttributes(m)">
-              <td :id="attributesId(index)" colspan="7" class="graphing-graph-legend__attributes">
+              <td :id="attributesId(index)" colspan="6" class="graphing-graph-legend__attributes">
                 <MetricAttributesTable :attributes="attributesOf(m)" />
               </td>
             </tr>
           </template>
         </tbody>
+        <tfoot v-if="hasFooter">
+          <tr
+            v-for="line in horizontalLines"
+            :key="line.name"
+            class="graphing-graph-legend__row graphing-graph-legend__line-row"
+            :class="{
+              'graphing-graph-legend__row--hidden': hiddenLineNames.includes(line.name)
+            }"
+          >
+            <td class="graphing-graph-legend__cell--eye">
+              <GraphLegendEyeButton
+                :hidden="hiddenLineNames.includes(line.name)"
+                :aria-label="line.title"
+                @toggle="toggleLine(line.name)"
+              />
+            </td>
+            <td class="graphing-graph-legend__name">
+              <div class="graphing-graph-legend__name-content">
+                <span class="graphing-graph-legend__swatch" :style="{ background: line.color }" />
+                <span class="graphing-graph-legend__title" :title="line.title">
+                  {{ line.title }}
+                </span>
+              </div>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="graphing-graph-legend__stat">
+              {{ horizontalLineValue(line, valueResolution, axisUnit) }}
+            </td>
+          </tr>
+          <tr
+            v-for="region in shadedRegions"
+            :key="region.name"
+            class="graphing-graph-legend__row graphing-graph-legend__line-row"
+          >
+            <td class="graphing-graph-legend__cell--eye"></td>
+            <td class="graphing-graph-legend__name">
+              <div class="graphing-graph-legend__name-content">
+                <span class="graphing-graph-legend__swatch" :style="{ background: region.color }" />
+                <span class="graphing-graph-legend__title" :title="region.title">
+                  {{ region.title }}
+                </span>
+              </div>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+        </tfoot>
       </table>
     </CmkScrollContainer>
-
-    <!-- Table 3: horizontal lines — not scrollable, only rendered when lines are present -->
-    <table
-      v-if="horizontalLines.length > 0"
-      class="graphing-graph-legend__table graphing-graph-legend__lines-table"
-    >
-      <colgroup>
-        <col class="graphing-graph-legend__col--eye" />
-        <col class="graphing-graph-legend__col--swatch" />
-        <col />
-        <col class="graphing-graph-legend__col--stat" />
-        <col class="graphing-graph-legend__col--stat" />
-        <col class="graphing-graph-legend__col--stat" />
-        <col class="graphing-graph-legend__col--stat" />
-      </colgroup>
-      <tbody>
-        <tr
-          v-for="line in horizontalLines"
-          :key="line.name"
-          class="graphing-graph-legend__row"
-          :class="{
-            'graphing-graph-legend__row--hidden': hiddenLineNames.includes(line.name),
-            'graphing-graph-legend__padded-row': metricsScrollable
-          }"
-        >
-          <td class="graphing-graph-legend__cell--eye">
-            <GraphLegendEyeButton
-              :hidden="hiddenLineNames.includes(line.name)"
-              :aria-label="line.title"
-              @toggle="toggleLine(line.name)"
-            />
-          </td>
-          <td class="graphing-graph-legend__cell--swatch">
-            <span class="graphing-graph-legend__swatch" :style="{ background: line.color }" />
-          </td>
-          <td class="graphing-graph-legend__name">{{ line.title }}</td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td class="graphing-graph-legend__stat">
-            {{ horizontalLineValue(line) }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
   </div>
 </template>
 
 <style scoped lang="scss">
 .graphing-graph-legend {
-  --swatch-gap: var(--dimension-4);
   --swatch-width: 4px;
+  --legend-title-min-width: 10em;
 
   box-sizing: border-box;
   padding: var(--dimension-5);
   background: var(--ux-theme-2);
+  border-radius: var(--border-radius);
   font-size: var(--font-size-normal);
   color: var(--font-color);
   width: 100%;
@@ -360,11 +331,7 @@ watch(
   flex: 0 1 auto;
   min-height: 0;
 
-  > .graphing-graph-legend__table {
-    flex-shrink: 0;
-  }
-
-  .graphing-graph-legend__rows-scroll {
+  .graphing-graph-legend__scroll {
     flex: 1 1 auto;
     min-height: 0;
   }
@@ -372,7 +339,6 @@ watch(
 
 .graphing-graph-legend__table {
   border-collapse: collapse;
-  table-layout: fixed;
   width: 100%;
 
   th,
@@ -380,36 +346,25 @@ watch(
     padding: 2px;
     vertical-align: middle;
   }
-
-  .graphing-graph-legend__padded-row th,
-  .graphing-graph-legend__padded-row td {
-    padding-right: var(--spacing);
-  }
-}
-
-.graphing-graph-legend__table-metrics {
-  margin-right: var(--spacing);
-}
-
-// Column widths — col 3 (name) gets no explicit width and fills remaining space
-.graphing-graph-legend__col--eye {
-  width: 20px;
-}
-.graphing-graph-legend__col--swatch {
-  width: calc(var(--swatch-gap) + var(--swatch-width));
-}
-.graphing-graph-legend__col--stat {
-  width: 64px;
 }
 
 .graphing-graph-legend__header-row {
-  border-bottom: 1px solid var(--ux-theme-6);
+  height: var(--legend-header-height);
 
   th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
     padding-top: var(--dimension-3);
-    padding-bottom: var(--dimension-5);
+    padding-bottom: calc(2 * var(--legend-divider-gap));
     text-align: right;
     font-weight: normal;
+    white-space: nowrap;
+    color: var(--font-color);
+    background: var(--ux-theme-2);
+    box-shadow:
+      inset 0 calc(-1 * var(--legend-divider-gap)) 0 var(--ux-theme-2),
+      inset 0 calc(-1 * var(--legend-divider-gap) - 1px) 0 var(--ux-theme-6);
   }
 }
 
@@ -420,13 +375,12 @@ watch(
 }
 
 .graphing-graph-legend__metric-count-btn {
-  font-weight: var(--font-weight-bold);
+  font-weight: inherit;
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
   color: var(--font-color);
-  text-decoration: underline;
   font-size: inherit;
 
   &:hover {
@@ -434,26 +388,35 @@ watch(
   }
 }
 
-.graphing-graph-legend__lines-table {
-  border-top: 1px solid var(--ux-theme-6);
-  padding-top: 8px;
-  background: var(--ux-theme-3);
-}
-
 .graphing-graph-legend__row {
   height: var(--legend-row-height);
 
-  &:hover {
-    background: var(--graphing-legend-row-hover);
+  &:hover td {
+    background: var(--background-row-hover);
   }
 
   &--hidden .graphing-graph-legend__name,
   &--hidden .graphing-graph-legend__stat {
-    color: var(--graphing-legend-hidden-color);
+    color: var(--font-color-secondary);
   }
 }
 
-/* The eye button fills its column exactly, so with no cell padding the swatch cell's own
+.graphing-graph-legend__line-row td {
+  position: sticky;
+  bottom: 0;
+  background: var(--ux-theme-2);
+}
+
+/* Background-coloured shadows keep the row hover off the gaps around the divider. */
+.graphing-graph-legend__line-row:first-child td {
+  padding-top: calc(2 * var(--legend-divider-gap) + 2px);
+  box-shadow:
+    inset 0 var(--legend-divider-gap) 0 var(--ux-theme-2),
+    inset 0 calc(var(--legend-divider-gap) + 1px) 0 var(--ux-theme-6),
+    inset 0 calc(2 * var(--legend-divider-gap)) 0 var(--ux-theme-2);
+}
+
+/* The eye button fills its column exactly, so with no cell padding the name cell's own
    padding is the gap between the two. The element qualifier beats the table's blanket rule. */
 .graphing-graph-legend th.graphing-graph-legend__header--eye,
 .graphing-graph-legend td.graphing-graph-legend__cell--eye {
@@ -462,28 +425,28 @@ watch(
   text-align: center;
 }
 
-.graphing-graph-legend td.graphing-graph-legend__cell--swatch {
-  padding-left: var(--swatch-gap);
-  padding-right: 0;
-  text-align: left;
-}
-
 .graphing-graph-legend :deep(.graphing-graph-legend-eye-button) {
   margin: 0 auto;
 }
 
-.graphing-graph-legend__swatch {
-  display: inline-block;
-  width: var(--swatch-width);
-  height: 16px;
-  border-radius: var(--border-radius-half);
+.graphing-graph-legend td.graphing-graph-legend__name {
+  width: 100%;
+  min-width: var(--legend-title-min-width);
+  padding-left: var(--dimension-4);
 }
 
-.graphing-graph-legend__name {
-  padding-left: var(--dimension-4);
+.graphing-graph-legend__name-content {
   display: flex;
   align-items: center;
   gap: var(--dimension-3);
+  contain: inline-size;
+}
+
+.graphing-graph-legend__swatch {
+  flex: 0 0 auto;
+  width: var(--swatch-width);
+  height: 16px;
+  border-radius: var(--border-radius-half);
 }
 
 /* The title, not its cell, is what ellipsises, so the toggle stays visible next to it. */
@@ -497,6 +460,19 @@ watch(
 
 .graphing-graph-legend__attributes-toggle {
   flex: 0 0 auto;
+  display: flex;
+  width: var(--dimension-4);
+  height: var(--dimension-3);
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.graphing-graph-legend__attributes-toggle--expanded {
+  transform: rotate(180deg);
 }
 
 .graphing-graph-legend td.graphing-graph-legend__attributes {
@@ -504,18 +480,19 @@ watch(
   background: var(--ux-theme-3);
 }
 
+.graphing-graph-legend th.graphing-graph-legend__header--stat,
 .graphing-graph-legend td.graphing-graph-legend__stat {
+  padding-left: var(--dimension-7);
   text-align: right;
+  white-space: nowrap;
+}
+
+.graphing-graph-legend td.graphing-graph-legend__stat {
   font-variant-numeric: tabular-nums;
 }
 
-body[data-theme='facelift'] .graphing-graph-legend {
-  --graphing-legend-hidden-color: var(--color-conference-grey-70);
-  --graphing-legend-row-hover: var(--ux-theme-4);
-}
-
-body[data-theme='modern-dark'] .graphing-graph-legend {
-  --graphing-legend-hidden-color: var(--color-white-70);
-  --graphing-legend-row-hover: var(--color-white-10);
+/* Unqualified, so the hidden row's colour still wins. */
+.graphing-graph-legend__stat {
+  color: var(--font-color-strong);
 }
 </style>

@@ -10,7 +10,6 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path
-from xml.sax.saxutils import escape
 
 
 @dataclass(frozen=True)
@@ -26,7 +25,7 @@ MYPY_ERROR_RE = re.compile(
     r"^(?P<file>[^:]+):(?P<line>\d+):(?P<column>\d+): (?P<kind>error|note|warning): (?P<msg>.*)$"
 )
 
-STDOUT_SUFFIX: int = ".mypy_stdout"
+STDOUT_SUFFIX = ".mypy_stdout"
 
 
 def parse_mypy_output(lines: Iterable[str]) -> Iterator[MypyErrorLine]:
@@ -58,7 +57,7 @@ def make_testsuite(
     suite = ET.Element(
         "testsuite",
         {
-            "name": escape(target_name),
+            "name": target_name,
             "tests": "0",
             "failures": "0",
             "errors": "0",
@@ -98,10 +97,10 @@ def make_testsuite(
                 "failure",
                 {
                     "type": error.kind,
-                    "message": escape(error.message),
+                    "message": error.message,
                 },
             )
-            failure.text = escape(f"{error.file}:{error.line}:{error.column}: {error.message}")
+            failure.text = f"{error.file}:{error.line}:{error.column}: {error.message}"
 
     suite.set("tests", str(tests))
     suite.set("failures", str(failures))

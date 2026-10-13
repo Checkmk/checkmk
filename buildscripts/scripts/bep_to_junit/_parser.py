@@ -4,8 +4,6 @@
 
 """BEP parsing: extract failed builds, failed tests, and action stderr URIs."""
 
-from __future__ import annotations
-
 import json
 from collections.abc import Iterable
 

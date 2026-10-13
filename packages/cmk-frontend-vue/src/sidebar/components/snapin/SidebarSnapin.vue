@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkCollapsible from 'cmk-ui-library/components/CmkCollapsible/CmkCollapsible.vue'
 import CmkCollapsibleTitle from 'cmk-ui-library/components/CmkCollapsible/CmkCollapsibleTitle.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
@@ -86,9 +86,7 @@ async function onToggle() {
         <CmkSkeleton v-if="!snapinContent && snapinContent !== ''" class="sidebar-snapin__skel" />
         <!-- eslint-disable vue/no-v-html-->
         <template v-else>
-          <CmkAlertBox v-if="snapinContent === ''" variant="info">
-            {{ _t('No data recieved') }}
-          </CmkAlertBox>
+          <CmkAlert v-if="snapinContent === ''" variant="info" :text="_t('No data recieved')" />
           <div
             v-else
             ref="snapin-content"
@@ -134,6 +132,14 @@ async function onToggle() {
     margin-bottom: var(--dimension-3);
     display: flex;
     flex-direction: column;
+
+    /* stylelint-disable selector-pseudo-class-no-unknown */
+    :deep(input),
+    :deep(textarea),
+    :deep(select) {
+      cursor: auto;
+    }
+    /* stylelint-enable selector-pseudo-class-no-unknown */
 
     .sidebar-snapin__delete {
       opacity: 0;

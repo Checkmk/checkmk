@@ -1,17 +1,16 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files(
     [
         "dev-requirements.in",
-        "pyproject.toml",
         "requirements.in",
     ],
 )
@@ -31,7 +30,6 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
-        "//packages/cmk-ccc:cleanup",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
@@ -116,7 +114,7 @@ py_library(
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:resulttype",
         "//packages/cmk-ccc:store",
-        "//packages/cmk-ccc:version",
+        "//packages/cmk-ccc:version-info",
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:password_store",
     ],
@@ -152,6 +150,7 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//cmk/plugins:__subpackages__",
         "//non-free/packages/cmk-telemetry:__pkg__",
         "//packages/cmk-check-engine:__pkg__",
     ],
@@ -233,6 +232,7 @@ py_library(
 py_library(
     name = "lib",
     srcs = [
+        "cmk/checkengine/auto_queue.py",
         "cmk/checkengine/submitters.py",
         "cmk/checkengine/summarize.py",
         "cmk/checkengine/value_store.py",
@@ -373,6 +373,7 @@ py_cmk_test(
     name = "lib-tests",
     size = "small",
     srcs = [
+        "tests/cmk/checkengine/test_auto_queue.py",
         "tests/cmk/checkengine/test_submitters.py",
         "tests/cmk/checkengine/test_summarizers.py",
         "tests/cmk/checkengine/test_value_store.py",
@@ -451,7 +452,6 @@ py_wheel(
     name = "wheel_fetchers",
     distribution = "cmk-check-engine-fetchers",
     strip_path_prefixes = ["packages/cmk-check-engine"],
-    # Keep in sync with pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [
@@ -468,7 +468,6 @@ py_wheel(
     name = "wheel_plugins",
     distribution = "cmk-check-engine-plugins",
     strip_path_prefixes = ["packages/cmk-check-engine"],
-    # Keep in sync with pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [
@@ -482,7 +481,6 @@ py_wheel(
     name = "wheel_checkers",
     distribution = "cmk-check-engine-checkers",
     strip_path_prefixes = ["packages/cmk-check-engine"],
-    # Keep in sync with pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [
@@ -533,13 +531,6 @@ pkg_tar(
         ":wheel_checkers_pkg",
         ":wheel_fetchers_pkg",
         ":wheel_plugins_pkg",
-    ],
-)
-
-sh_library(
-    name = "helpers",
-    srcs = [
-        ".f12",
     ],
 )
 

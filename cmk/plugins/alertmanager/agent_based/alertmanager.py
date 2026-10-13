@@ -40,7 +40,7 @@ class Severity(StrEnum):
 
     @classmethod
     @override
-    def _missing_(cls, value: object) -> "Severity":
+    def _missing_(cls, value: object) -> Severity:
         return Severity.NA
 
 
@@ -268,7 +268,7 @@ check_plugin_alertmanager_groups = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discovery_alertmanager_summary(params: DiscoveryParams, section: Section) -> DiscoveryResult:
+def discovery_alertmanager_summary(params: DiscoveryParams, section: Section) -> DiscoveryResult:  # noqa: ARG001
     if params.get("summary_service"):
         yield Service()
 

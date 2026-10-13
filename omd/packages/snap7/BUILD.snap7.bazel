@@ -1,5 +1,5 @@
 load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
-load("@rules_foreign_cc//foreign_cc:defs.bzl", "make")
+load("@@//bazel/rules:xcomp/foreign_cc.bzl", "make")
 
 dependency_info(
     name = "dependency_info",
@@ -29,6 +29,15 @@ make(
         "-j4",
         "-C build/unix -f x86_64_linux.mk",
         "LibInstall=$INSTALLDIR",
+        # build/unix/common.mk and x86_64_linux.mk (vendored) hard-assign
+        # CXX/CXXFLAGS/SharedObjectLinkerName with Makefile ':=', beating
+        # rules_foreign_cc's exported environment variables. -e restores
+        # environment precedence for CXX/CXXFLAGS, but not for
+        # SharedObjectLinkerName, which is overridden directly via make's
+        # $(CXX), single-quoted so the shell doesn't run it as a command
+        # substitution.
+        "-e",
+        "SharedObjectLinkerName='$(CXX) -shared -fPIC'",
     ],
     lib_source = ":all_srcs",
     linkopts = ["-Wl,--strip-all"],
@@ -36,6 +45,7 @@ make(
     out_shared_libs = [
         "libsnap7.so",
     ],
+    platform = "@@//bazel/platforms:x86_64-linux-gcc-hermetic",
     visibility = ["//visibility:public"],
 )
 

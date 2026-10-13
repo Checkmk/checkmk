@@ -22,13 +22,13 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.host_attributes import HostAttributes
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request, folder_tree
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request, make_folder_tree
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
@@ -37,6 +37,7 @@ from cmk.gui.watolib.pending_changes import (
 )
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.web.utils.flashed_messages import flash
+from cmk.web.utils.permission_verification import PermissionName
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -72,7 +73,7 @@ class ModeRandomHosts(WatoMode):
     @override
     def action(self, config: Config) -> ActionResult:
         folder = folder_from_request(
-            folder_tree(), request.var("folder"), request.get_ascii_input("host")
+            make_folder_tree(config), request.var("folder"), request.get_ascii_input("host")
         )
         if not transactions.check_transaction(request):
             return redirect(mode_url("folder", folder=folder.path()))

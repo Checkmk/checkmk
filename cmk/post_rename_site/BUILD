@@ -29,7 +29,6 @@ py_library(
     ],
     imports = ["../.."],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],
@@ -37,6 +36,7 @@ py_library(
         "//cmk/utils",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:i18n",
+        "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:site",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-plugin-apis:post_rename_site",

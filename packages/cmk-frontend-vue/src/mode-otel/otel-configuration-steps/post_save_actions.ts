@@ -3,8 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { CmkFetchError, fetchRestAPIDeprecated } from 'cmk-ui-library/lib/cmkFetch.ts'
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
+import { CmkApiError } from 'cmk-ui-library/lib/error'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
 import { configEntityAPI } from '@/form/configuration_entity'
 
@@ -17,7 +19,7 @@ const { _t } = usei18n()
  * Several REST API object DELETE endpoints enforce ETag locking: a DELETE
  * without an `If-Match` header is rejected with 428 Precondition Required. This
  * covers the standard password and folder endpoints as well as the internal
- * OTel collector receiver, Prometheus scrape config, and DCD metric backend
+ * OTel collector receiver, Prometheus scrape config, and DCD telemetry metrics
  * endpoints. We send the star tag rather than a captured ETag because the Quick
  * Setup mutates these records after creating them — the configuration bundle
  * stamps `locked_by` on them, which is part of the hashed state — so an ETag
@@ -27,12 +29,7 @@ const { _t } = usei18n()
  */
 const IF_MATCH_ANY = { 'If-Match': '*' }
 
-const OTEL_RECEIVERS_COLLECTION =
-  'api/internal/domain-types/otel_collector_config_receivers/collections/all'
-const PROM_SCRAPE_COLLECTION =
-  'api/internal/domain-types/otel_collector_config_prom_scrape/collections/all'
-const OTEL_BUNDLES_COLLECTION =
-  'api/internal/domain-types/otel_collector_config_bundles/collections/all'
+const CONTENT_TYPE_JSON = { 'Content-Type': 'application/json' } as const
 
 /**
  * Context handed to each post-save action. Holds values collected by the
@@ -80,10 +77,10 @@ export interface PostSaveAction {
 }
 
 export function errorFromUnknown(err: unknown, fallbackTitle: string): PostSaveError {
-  // Only CmkFetchError carries a useful server-side detail; every other
+  // Only CmkApiError carries a useful server-side detail; every other
   // failure (network error, JS throw, …) shows the title alone.
-  if (err instanceof CmkFetchError) {
-    // CmkFetchError.message is `"${httpStatusPhrase}: ${apiDetail}"` — strip
+  if (err instanceof CmkApiError) {
+    // CmkApiError.message is `"${httpStatusPhrase}: ${apiDetail}"` — strip
     // the HTTP phrase and keep only the REST API detail sentence.
     const colonIndex = err.message.indexOf(': ')
     const detail = colonIndex > 0 ? err.message.slice(colonIndex + 2) : err.message
@@ -98,28 +95,44 @@ export function errorFromUnknown(err: unknown, fallbackTitle: string): PostSaveE
  * before any mutation is made.
  */
 async function isCollectorEnabled(siteId: string): Promise<boolean> {
-  const response = await fetchRestAPIDeprecated(
-    `api/internal/domain-types/otel_collector/actions/get/invoke?site_id=${encodeURIComponent(siteId)}`,
-    'GET'
+  const body = unwrap(
+    await client.GET('/domain-types/otel_collector/actions/get/invoke', {
+      params: { query: { site_id: siteId } }
+    })
   )
-  await response.raiseForStatus()
-  const body = (await response.json()) as { activation: { mode: string } }
   return body.activation.mode === 'enabled'
 }
 
-/**
- * Returns whether the metric backend is currently enabled for a site.
- * Throws on network or server errors so the calling action can fail cleanly
- * before any mutation is made.
- */
-async function isMetricBackendEnabled(siteId: string): Promise<boolean> {
-  const response = await fetchRestAPIDeprecated(
-    `api/internal/domain-types/metric_backend/actions/get/invoke?site_id=${encodeURIComponent(siteId)}`,
-    'GET'
+type DataBackendStatus = components['schemas']['_DataBackendStatus']
+
+/** Throws on network or server errors so the caller aborts before mutating. */
+async function getDataBackendStatus(siteId: string): Promise<DataBackendStatus> {
+  return unwrap(
+    await client.GET('/domain-types/data_backend/actions/get/invoke', {
+      params: { query: { site_id: siteId } }
+    })
   )
-  await response.raiseForStatus()
-  const body = (await response.json()) as { type: string }
-  return body.type === 'enabled'
+}
+
+async function setLocalDataBackendInstance(
+  siteId: string,
+  type: 'enabled' | 'disabled'
+): Promise<void> {
+  unwrap(
+    await client.PATCH('/domain-types/data_backend/actions/update/invoke', {
+      params: { header: CONTENT_TYPE_JSON },
+      body: { site_id: siteId, config: { type } }
+    })
+  )
+}
+
+async function placeTelemetry(siteId: string, location: 'local' | 'disabled'): Promise<void> {
+  unwrap(
+    await client.PATCH('/domain-types/data_backend/actions/update_feature_placement/invoke', {
+      params: { header: CONTENT_TYPE_JSON },
+      body: { site_id: siteId, features: { telemetry: location } }
+    })
+  )
 }
 
 /**
@@ -132,31 +145,32 @@ async function isMetricBackendEnabled(siteId: string): Promise<boolean> {
 async function createTelemetryFolderAction(): Promise<PostSaveResult> {
   const deleteFolder = async () => {
     // The folder_config DELETE endpoint enforces ETag locking — see IF_MATCH_ANY.
-    await fetchRestAPIDeprecated(
-      'api/1.0/objects/folder_config/~telemetry',
-      'DELETE',
-      undefined,
-      IF_MATCH_ANY
-    )
+    // Unlike the other ETag-locked DELETEs this one does not declare If-Match in
+    // the spec, so it is sent as a plain request header rather than a typed param.
+    await client.DELETE('/objects/folder_config/{folder}', {
+      params: { path: { folder: '~telemetry' } },
+      headers: IF_MATCH_ANY
+    })
   }
   try {
-    const response = await fetchRestAPIDeprecated(
-      'api/1.0/domain-types/folder_config/collections/all',
-      'POST',
-      { title: 'Telemetry', parent: '/', name: 'telemetry' }
-    )
-    if (response.status >= 200 && response.status <= 299) {
+    const result = await client.POST('/domain-types/folder_config/collections/all', {
+      params: { header: CONTENT_TYPE_JSON },
+      body: { title: 'Telemetry', parent: '/', name: 'telemetry' }
+    })
+    if (result.response.status >= 200 && result.response.status <= 299) {
       return { ok: true, rollback: deleteFolder }
     }
     // POST failed — the folder may already exist. Check the actual state
     // instead of parsing the error body.
-    const check = await fetchRestAPIDeprecated('api/1.0/objects/folder_config/~telemetry', 'GET')
-    if (check.status === 200) {
+    const check = await client.GET('/objects/folder_config/{folder}', {
+      params: { path: { folder: '~telemetry' } }
+    })
+    if (check.response.status === 200) {
       // Pre-existing folder: succeed, but without a rollback so we never delete
       // a folder this run did not create.
       return { ok: true }
     }
-    await response.raiseForStatus()
+    unwrap(result)
     return { ok: true }
   } catch (err) {
     return errorFromUnknown(err, _t('Could not create the Telemetry hosts folder'))
@@ -166,42 +180,38 @@ async function createTelemetryFolderAction(): Promise<PostSaveResult> {
 async function createDCDConnector(ctx: PostSaveContext): Promise<PostSaveResult> {
   try {
     const dcdId = `quick_setup_${ctx.configName}`
-    const response = await fetchRestAPIDeprecated(
-      'api/internal/domain-types/dcd_metric_backend/collections/all',
-      'POST',
-      {
+    const result = await client.POST('/domain-types/dcd_telemetry_metrics/collections/all', {
+      params: { header: CONTENT_TYPE_JSON },
+      body: {
         title: ctx.configName,
         site: ctx.siteId,
         dcd_id: dcdId,
         connector: {
-          connector_type: 'metric_backend',
+          connector_type: 'telemetry_metrics',
           host_name_lookup_rules: [{ host_name_template: '$RESOURCE_ATTR.service.name$' }],
           creation_rules: [{ folder_path: '/telemetry', delete_hosts: true }]
         }
       }
-    )
-    if (response.status === 409) {
+    })
+    if (result.response.status === 409) {
       return { ok: true }
     }
-    await response.raiseForStatus()
+    unwrap(result)
     return {
       ok: true,
       rollback: async () => {
-        // The dcd_metric_backend DELETE endpoint enforces ETag locking — see IF_MATCH_ANY.
-        await fetchRestAPIDeprecated(
-          `api/internal/objects/dcd_metric_backend/${encodeURIComponent(dcdId)}`,
-          'DELETE',
-          undefined,
-          IF_MATCH_ANY
-        )
+        // The dcd_telemetry_metrics DELETE endpoint enforces ETag locking — see IF_MATCH_ANY.
+        await client.DELETE('/objects/dcd_telemetry_metrics/{dcd_id}', {
+          params: { header: IF_MATCH_ANY, path: { dcd_id: dcdId } }
+        })
       }
     }
   } catch (err) {
-    return errorFromUnknown(err, _t('Could not create the metric backend connector'))
+    return errorFromUnknown(err, _t('Could not create the telemetry metrics connector'))
   }
 }
 /**
- * Action: create the "Telemetry" DCD metric backend connector.
+ * Action: create the "Telemetry" DCD telemetry metrics connector.
  *
  * Uses `service.name` as the hostname resource attribute and creates hosts in
  * the "/telemetry" folder (created by createTelemetryFolderAction). The DCD ID
@@ -254,26 +264,22 @@ export const enableCollectorAction: PostSaveAction = {
   execute: async (ctx) => {
     try {
       const wasEnabled = await isCollectorEnabled(ctx.siteId)
-      const response = await fetchRestAPIDeprecated(
-        'api/internal/domain-types/otel_collector/actions/update/invoke',
-        'PUT',
-        {
-          site_id: ctx.siteId,
-          activation: { mode: 'enabled' }
-        }
+      unwrap(
+        await client.PUT('/domain-types/otel_collector/actions/update/invoke', {
+          params: { header: CONTENT_TYPE_JSON },
+          body: { site_id: ctx.siteId, activation: { mode: 'enabled' } }
+        })
       )
-      await response.raiseForStatus()
       if (wasEnabled) {
         return { ok: true }
       }
       return {
         ok: true,
         rollback: async () => {
-          await fetchRestAPIDeprecated(
-            'api/internal/domain-types/otel_collector/actions/update/invoke',
-            'PUT',
-            { site_id: ctx.siteId, activation: { mode: 'disabled' } }
-          )
+          await client.PUT('/domain-types/otel_collector/actions/update/invoke', {
+            params: { header: CONTENT_TYPE_JSON },
+            body: { site_id: ctx.siteId, activation: { mode: 'disabled' } }
+          })
         }
       }
     } catch (err) {
@@ -283,74 +289,59 @@ export const enableCollectorAction: PostSaveAction = {
 }
 
 /**
- * Action: enable the metric backend (ClickHouse) for the selected site.
+ * Action: store the selected site's telemetry metrics in a data backend.
  *
- * Checks the current metric backend state first so that rollback only disables
- * it if it was disabled before this save operation — preventing an unintended
- * side-effect on an already-enabled metric backend.
+ * Enables the local instance (ClickHouse) and places telemetry on it, unless
+ * the site already stores telemetry locally or on the central site. Rollback
+ * reverts only what this run changed.
  */
-export const enableMetricBackendAction: PostSaveAction = {
-  key: 'enableMetricBackend',
-  label: () => _t('Metric backend connection'),
+export const enableDataBackendAction: PostSaveAction = {
+  key: 'enableDataBackend',
+  label: () => _t('Data backend connection'),
   execute: async (ctx) => {
     try {
-      const wasEnabled = await isMetricBackendEnabled(ctx.siteId)
-      const response = await fetchRestAPIDeprecated(
-        'api/internal/domain-types/metric_backend/actions/update/invoke',
-        'PATCH',
-        {
-          site_id: ctx.siteId,
-          config: { type: 'enabled' }
-        }
-      )
-      await response.raiseForStatus()
-      if (wasEnabled) {
+      const status = await getDataBackendStatus(ctx.siteId)
+      if (status.features.telemetry !== 'disabled') {
         return { ok: true }
+      }
+      const enablesInstance = status.type === 'disabled'
+      if (enablesInstance) {
+        await setLocalDataBackendInstance(ctx.siteId, 'enabled')
+      }
+      try {
+        await placeTelemetry(ctx.siteId, 'local')
+      } catch (err) {
+        // The state machine only rolls back actions that succeeded.
+        if (enablesInstance) {
+          await setLocalDataBackendInstance(ctx.siteId, 'disabled')
+        }
+        throw err
       }
       return {
         ok: true,
         rollback: async () => {
-          await fetchRestAPIDeprecated(
-            'api/internal/domain-types/metric_backend/actions/update/invoke',
-            'PATCH',
-            { site_id: ctx.siteId, config: { type: 'disabled' } }
-          )
+          await placeTelemetry(ctx.siteId, 'disabled')
+          if (enablesInstance) {
+            await setLocalDataBackendInstance(ctx.siteId, 'disabled')
+          }
         }
       }
     } catch (err) {
-      return errorFromUnknown(err, _t('Could not enable the metric backend'))
+      return errorFromUnknown(err, _t('Could not enable the data backend'))
     }
   }
 }
 
 /**
- * REST body shape for the `otel_collector_config_receivers` POST. The same URL
- * serves both the ultimate and cloud editions — the server picks the right
- * handler by edition, and only the body shape differs (cloud has no
- * address/port/encryption/event_console, only auth).
+ * REST body shape for the `otel_collector_config_receivers` POST. Every edition
+ * shares one schema; cloud rejects the socket address, encryption, event console
+ * and the `none` authentication, so the wizard only sends them where it collects
+ * them (see `OTelReceiverProtocolInput.extended`).
  */
-type OTelAuthBody =
-  | { type: 'none' }
-  | {
-      type: 'basicauth'
-      userlist: { username: string; password: { type: 'store'; value: string } }[]
-    }
-
-type OTelSocketAddressBody =
-  | { type: 'default_ipv4' }
-  | { type: 'default_ipv6' }
-  | { type: 'custom'; address: string; port: number }
-
-type OTelEndpointBody =
-  | { auth: OTelAuthBody }
-  | {
-      auth: OTelAuthBody
-      socket_address: OTelSocketAddressBody
-      encryption: boolean
-      event_console: { host_name_resource_attribute_key: string } | null
-    }
-
-type OTelProtocolConfigBody = { endpoint: OTelEndpointBody }
+type OTelReceiverBody = components['schemas']['OTelCollectorReceiverRequestSpec']
+type OTelProtocolConfigBody = components['schemas']['OTelCollectorProtocolConfig']
+type OTelAuthBody = components['schemas']['OTelEndpoint']['auth']
+type OTelSocketAddressBody = components['schemas']['SocketAddressModel']
 
 /**
  * Auth payload the wizard hands to the create action. Discriminated on
@@ -414,7 +405,7 @@ function buildAuthBody(auth: OTelAuthInput): OTelAuthBody {
 }
 
 // Mirrors the server's `SocketAddressDefault | SocketAddressCustom`
-// discriminator (non-free/cmk-otel-collector/.../full/_models.py): default
+// discriminator (non-free/cmk-otel-collector/.../base/_receiver_models.py): default
 // modes only carry the type; custom carries an explicit address + port. The
 // input shape encodes this invariant — no runtime guards needed here.
 function buildSocketAddressBody(socketAddress: OTelSocketAddressInput): OTelSocketAddressBody {
@@ -452,12 +443,9 @@ function buildProtocolBody(input: OTelReceiverProtocolInput): OTelProtocolConfig
 function deletePasswords(ids: readonly string[]): Promise<unknown> {
   return Promise.all(
     ids.map((id) =>
-      fetchRestAPIDeprecated(
-        `api/1.0/objects/password/${encodeURIComponent(id)}`,
-        'DELETE',
-        undefined,
-        IF_MATCH_ANY
-      )
+      client.DELETE('/objects/password/{name}', {
+        params: { header: IF_MATCH_ANY, path: { name: id } }
+      })
     )
   )
 }
@@ -507,20 +495,21 @@ async function saveReceiverPasswords(
 
 /**
  * Builds the `otel_collector_config_receivers` POST body. The wizard's single
- * configuration name doubles as both the id and the Overview display title.
+ * configuration name doubles as both the id and the Overview display title. A
+ * protocol key is omitted entirely when the user did not configure that tab.
  */
-function buildReceiverBody(input: OTelReceiverConfigInput): Record<string, unknown> {
-  const body: Record<string, unknown> = {
+function buildReceiverBody(input: OTelReceiverConfigInput): OTelReceiverBody {
+  const body: OTelReceiverBody = {
     id: input.id,
     title: input.id,
     disabled: false,
     site: [input.siteId]
   }
   if (input.grpc) {
-    body['receiver_protocol_grpc'] = buildProtocolBody(input.grpc)
+    body.receiver_protocol_grpc = buildProtocolBody(input.grpc)
   }
   if (input.http) {
-    body['receiver_protocol_http'] = buildProtocolBody(input.http)
+    body.receiver_protocol_http = buildProtocolBody(input.http)
   }
   return body
 }
@@ -533,7 +522,7 @@ function buildReceiverBody(input: OTelReceiverConfigInput): Record<string, unkno
  * Hits the `otel_collector_config_receivers/collections/all` POST endpoint,
  * which is dispatched server-side to the ultimate or cloud handler based on
  * the active edition. If the POST fails the FinalizeConfiguration state
- * machine stops before the collector/metric-backend activation runs — that
+ * machine stops before the collector/data-backend activation runs — that
  * is required by the "cannot finish if config creation fails" criterion.
  */
 export function createOTelReceiverConfigAction(input: OTelReceiverConfigInput): PostSaveAction {
@@ -547,22 +536,19 @@ export function createOTelReceiverConfigAction(input: OTelReceiverConfigInput): 
       }
       const { createdIds } = saved
       try {
-        const response = await fetchRestAPIDeprecated(
-          OTEL_RECEIVERS_COLLECTION,
-          'POST',
-          buildReceiverBody(input)
+        unwrap(
+          await client.POST('/domain-types/otel_collector_config_receivers/collections/all', {
+            params: { header: CONTENT_TYPE_JSON },
+            body: buildReceiverBody(input)
+          })
         )
-        await response.raiseForStatus()
         return {
           ok: true,
           rollback: async () => {
             // The receiver DELETE endpoint enforces ETag locking — see IF_MATCH_ANY.
-            await fetchRestAPIDeprecated(
-              `api/internal/objects/otel_collector_config_receivers/${encodeURIComponent(input.id)}`,
-              'DELETE',
-              undefined,
-              IF_MATCH_ANY
-            )
+            await client.DELETE('/objects/otel_collector_config_receivers/{config_id}', {
+              params: { header: IF_MATCH_ANY, path: { config_id: input.id } }
+            })
             await deletePasswords(createdIds)
           }
         }
@@ -622,18 +608,19 @@ export function createPrometheusScrapeConfigAction(
         ]
       }
       try {
-        const response = await fetchRestAPIDeprecated(PROM_SCRAPE_COLLECTION, 'POST', body)
-        await response.raiseForStatus()
+        unwrap(
+          await client.POST('/domain-types/otel_collector_config_prom_scrape/collections/all', {
+            params: { header: CONTENT_TYPE_JSON },
+            body
+          })
+        )
         return {
           ok: true,
           rollback: async () => {
             // The prom-scrape DELETE endpoint enforces ETag locking — see IF_MATCH_ANY.
-            await fetchRestAPIDeprecated(
-              `api/internal/objects/otel_collector_config_prom_scrape/${encodeURIComponent(input.id)}`,
-              'DELETE',
-              undefined,
-              IF_MATCH_ANY
-            )
+            await client.DELETE('/objects/otel_collector_config_prom_scrape/{config_id}', {
+              params: { header: IF_MATCH_ANY, path: { config_id: input.id } }
+            })
           }
         }
       } catch (err) {
@@ -662,26 +649,28 @@ export function createOTelBundleAction(input: OTelBundleInput): PostSaveAction {
     hidden: true,
     execute: async () => {
       try {
-        const response = await fetchRestAPIDeprecated(OTEL_BUNDLES_COLLECTION, 'POST', {
-          title: input.configName,
-          site: input.siteId,
-          otel_config_id: input.configName,
-          dcd_connection_id: `quick_setup_${input.configName}`,
-          password_ids: input.passwordIds
-        })
-        await response.raiseForStatus()
-        const body = (await response.json()) as { extensions?: { bundle_id?: string } }
-        const bundleId = body.extensions?.bundle_id
+        const body = unwrap(
+          await client.POST('/domain-types/otel_collector_config_bundles/collections/all', {
+            params: { header: CONTENT_TYPE_JSON },
+            body: {
+              title: input.configName,
+              site: input.siteId,
+              otel_config_id: input.configName,
+              dcd_connection_id: `quick_setup_${input.configName}`,
+              password_ids: input.passwordIds
+            }
+          })
+        )
+        const bundleId = body.extensions.bundle_id
         if (!bundleId) {
           return { ok: true }
         }
         return {
           ok: true,
           rollback: async () => {
-            await fetchRestAPIDeprecated(
-              `api/internal/objects/otel_collector_config_bundles/${encodeURIComponent(bundleId)}`,
-              'DELETE'
-            )
+            await client.DELETE('/objects/otel_collector_config_bundles/{bundle_id}', {
+              params: { path: { bundle_id: bundleId } }
+            })
           }
         }
       } catch (err) {
@@ -700,7 +689,7 @@ export function createOTelBundleAction(input: OTelBundleInput): PostSaveAction {
  */
 export const POST_SAVE_ACTIONS: readonly PostSaveAction[] = [
   enableCollectorAction,
-  enableMetricBackendAction,
+  enableDataBackendAction,
   createDCDConnectorAction
 ]
 
@@ -715,7 +704,7 @@ export function buildPrometheusFinalizeActions(
 ): readonly PostSaveAction[] {
   return [
     enableCollectorAction,
-    enableMetricBackendAction,
+    enableDataBackendAction,
     createPrometheusScrapeConfigAction(input),
     createDCDConnectorAction,
     createOTelBundleAction({ configName: input.id, siteId: input.siteId, passwordIds: [] })

@@ -12,6 +12,7 @@ import pytest
 from cmk.gui.search._routing import CompositePermissionsHandler
 from cmk.gui.search.matchers import (
     ABCMatchItemGenerator,
+    MatchItemConfig,
     MatchItemGeneratorRegistry,
     MatchItems,
 )
@@ -21,7 +22,9 @@ from cmk.shared_typing.unified_search import ProviderName
 
 class _FakeGenerator(ABCMatchItemGenerator):
     @override
-    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
+    def generate_match_items(
+        self, user_permissions: UserPermissions, _config: MatchItemConfig
+    ) -> MatchItems:
         yield from ()
 
     @staticmethod
@@ -40,10 +43,10 @@ class _FakeHandler:
         self._may_see = may_see
         self._visible = visible
 
-    def may_see_category(self, category: str) -> bool:
+    def may_see_category(self, category: str) -> bool:  # noqa: ARG002
         return self._may_see
 
-    def get_visibility_check(self, category: str) -> Callable[[str], bool]:
+    def get_visibility_check(self, category: str) -> Callable[[str], bool]:  # noqa: ARG002
         return lambda _url: self._visible
 
 
@@ -114,6 +117,28 @@ class TestCompositePermissionsHandler:
         composite = CompositePermissionsHandler(
             registry,
             {ProviderName.setup: _FakeHandler()},
+        )
+        assert composite.may_see_category("nope") is False
+        assert composite.get_visibility_check("nope")("url") is False
+
+    def test_category_handler_takes_precedence_over_provider_handler(
+        self, registry: MatchItemGeneratorRegistry
+    ) -> None:
+        composite = CompositePermissionsHandler(
+            registry,
+            {ProviderName.customize: _FakeHandler(may_see=True, visible=True)},
+            {"customize": _FakeHandler(may_see=False, visible=False)},
+        )
+        assert composite.may_see_category("customize") is False
+        assert composite.get_visibility_check("customize")("url") is False
+
+    def test_category_handler_of_unknown_category_is_ignored(
+        self, registry: MatchItemGeneratorRegistry
+    ) -> None:
+        composite = CompositePermissionsHandler(
+            registry,
+            {ProviderName.setup: _FakeHandler()},
+            {"nope": _FakeHandler()},
         )
         assert composite.may_see_category("nope") is False
         assert composite.get_visibility_check("nope")("url") is False

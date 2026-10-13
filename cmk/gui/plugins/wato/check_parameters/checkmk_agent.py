@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import datetime
+
 from cmk.ccc.version import parse_check_mk_version
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -13,13 +15,16 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import (
+    AbsoluteDate,
     Age,
     CascadingDropdown,
     Dictionary,
     FixedValue,
-    Migrate,
+    Hostname,
+    ListOf,
     MonitoringState,
     RegExp,
+    SetupSiteChoice,
     TextInput,
     Tuple,
 )
@@ -28,35 +33,8 @@ from cmk.gui.valuespec import (
 def _validate_version(value: str, varprefix: str) -> None:
     try:
         parse_check_mk_version(value)
-    except (ValueError, TypeError, KeyError):
+    except ValueError, TypeError, KeyError:
         raise MKUserError(varprefix, _("Can't parse version %(value)r") % {"value": value})
-
-
-def _migrate_version_spec(
-    param: str | tuple[str, str] | tuple[str, dict[str, str]],
-) -> tuple[str, dict[str, str]]:
-    """
-    >>> _migrate_version_spec(('at_least', {'build': '1.1.1'}))
-    ('at_least', {'build': '1.1.1'})
-    >>> _migrate_version_spec(("specific", "2.1.0b2"))
-    ('specific', {'literal': '2.1.0b2'})
-    >>> _migrate_version_spec("1.2.3")
-    ('specific', {'literal': '1.2.3'})
-    >>> _migrate_version_spec("site")
-    ('site', {})
-    >>> _migrate_version_spec("ignore")
-    ('ignore', {})
-
-    """
-    if isinstance(param, tuple):
-        type_, spec = param
-        if isinstance(spec, dict):
-            return type_, spec
-        return "specific", {"literal": str(spec)}
-
-    if param in ("ignore", "site"):
-        return param, {}
-    return "specific", {"literal": param}
 
 
 def _parameter_valuespec_checkmk_agent() -> Dictionary:
@@ -69,66 +47,61 @@ def _parameter_valuespec_checkmk_agent() -> Dictionary:
         elements=[
             (
                 "agent_version",
-                Migrate(
-                    valuespec=CascadingDropdown(
-                        title=_("Check version of Checkmk agent"),
-                        help=_(
-                            "Here, you can make sure that all of your Checkmk agents are running"
-                            " one specific version. Agents running"
-                            " a different version return a non-OK state."
-                        ),
-                        choices=[
-                            (
-                                "ignore",
-                                _("Ignore the version"),
-                                FixedValue(value={}, totext=""),
-                            ),
-                            (
-                                "site",
-                                _("Same version as the monitoring site"),
-                                FixedValue(value={}, totext=""),
-                            ),
-                            (
-                                "specific",
-                                _("Specific version"),
-                                Dictionary(
-                                    elements=[
-                                        (
-                                            "literal",
-                                            TextInput(allow_empty=False, title=_("Expected")),
-                                        ),
-                                    ],
-                                    optional_keys=[],
-                                ),
-                            ),
-                            (
-                                "at_least",
-                                _("At least"),
-                                Dictionary(
-                                    elements=[
-                                        (
-                                            "release",
-                                            TextInput(
-                                                title=_("Official Release version"),
-                                                allow_empty=False,
-                                            ),
-                                        ),
-                                        (
-                                            "daily_build",
-                                            TextInput(
-                                                title=_("Daily build"),
-                                                allow_empty=False,
-                                            ),
-                                        ),
-                                    ]
-                                ),
-                            ),
-                        ],
-                        default_value=("ignore", {}),
+                CascadingDropdown(
+                    title=_("Check version of Checkmk agent"),
+                    help=_(
+                        "Here, you can make sure that all of your Checkmk agents are running"
+                        " one specific version. Agents running"
+                        " a different version return a non-OK state."
                     ),
-                    # In the past, this was a OptionalDropdownChoice() which values could be strings:
-                    # ignore, site or a custom string representing a version number.
-                    migrate=_migrate_version_spec,
+                    choices=[
+                        (
+                            "ignore",
+                            _("Ignore the version"),
+                            FixedValue(value={}, totext=""),
+                        ),
+                        (
+                            "site",
+                            _("Same version as the monitoring site"),
+                            FixedValue(value={}, totext=""),
+                        ),
+                        (
+                            "specific",
+                            _("Specific version"),
+                            Dictionary(
+                                elements=[
+                                    (
+                                        "literal",
+                                        TextInput(allow_empty=False, title=_("Expected")),
+                                    ),
+                                ],
+                                optional_keys=[],
+                            ),
+                        ),
+                        (
+                            "at_least",
+                            _("At least"),
+                            Dictionary(
+                                elements=[
+                                    (
+                                        "release",
+                                        TextInput(
+                                            title=_("Official Release version"),
+                                            allow_empty=False,
+                                        ),
+                                    ),
+                                    (
+                                        "daily_build",
+                                        TextInput(
+                                            title=_("Daily build"),
+                                            allow_empty=False,
+                                        ),
+                                    ),
+                                ]
+                            ),
+                        ),
+                    ],
+                    default_value=("ignore", {}),
                 ),
             ),
             (
@@ -191,6 +164,21 @@ def _parameter_valuespec_checkmk_agent() -> Dictionary:
                         "This is only relevant when agent updates are globally enabled."
                         " Otherwise, configured host conditions are not tested and won't yield"
                         " an error message."
+                    ),
+                    default_value=1,
+                ),
+            ),
+            (
+                "updater_host_name_mismatch",
+                MonitoringState(
+                    title=_("State in case of host name mismatch with the agent updater"),
+                    help=_(
+                        "The agent updater is registered with one site under one host name."
+                        " This state is used when that host name differs from the name of the"
+                        " host in Checkmk. A host that is monitored by several sites may have a"
+                        " different name on each site. On the sites that do not serve the agent"
+                        " updates of such a host, set this state to <i>OK</i>. The mismatch is"
+                        " then only shown in the service details."
                     ),
                     default_value=1,
                 ),
@@ -285,6 +273,94 @@ def _parameter_valuespec_checkmk_agent() -> Dictionary:
                         "with the required versions specified in '%(section)s' and from the duplicates check."
                     )
                     % {"section": _("Local checks: versions")},
+                ),
+            ),
+            (
+                "trusted_cas",
+                ListOf(
+                    valuespec=Dictionary(
+                        elements=[
+                            (
+                                "fingerprint",
+                                TextInput(
+                                    title=_("SHA-256 fingerprint"),
+                                    size=70,
+                                    allow_empty=False,
+                                    regex=r"([0-9A-Fa-f]{2}:){31}[0-9A-Fa-f]{2}$|[0-9A-Fa-f]{64}$",
+                                    regex_error=_(
+                                        "This is not a SHA-256 fingerprint "
+                                        "(expected 64 hexadecimal digits, colons are optional)"
+                                    ),
+                                ),
+                            ),
+                            (
+                                "site",
+                                SetupSiteChoice(
+                                    title=_("Required for the connection with site"),
+                                    help=_(
+                                        "The agent controller trusts CAs per connection, so every "
+                                        "CA has to be tied to a site: it must be trusted by the "
+                                        "controller's connection with the site you select here. "
+                                        "Hosts that have no connection with this site are not "
+                                        "affected, which lets you list the CAs of all your sites "
+                                        "in a single rule."
+                                    ),
+                                ),
+                            ),
+                            (
+                                "hostname",
+                                Hostname(
+                                    title=_("Match host name"),
+                                    help=_(
+                                        "Only require the certificate to be trusted for "
+                                        "to this specific host. Leave unchecked to require all "
+                                        "connections with the above site name to trust the "
+                                        "certificate."
+                                    ),
+                                ),
+                            ),
+                            (
+                                "trusted_from",
+                                AbsoluteDate(
+                                    title=_("Required from"),
+                                    label=datetime.now().astimezone().tzname(),
+                                    help=_(
+                                        "Until this date, the CA may be missing from the trust "
+                                        "store without affecting the service state. If you leave "
+                                        "this empty, the CA must be trusted right away."
+                                    ),
+                                ),
+                            ),
+                        ],
+                        optional_keys=["trusted_from", "hostname"],
+                    ),
+                    title=_("Expected trusted CAs of the agent controller"),
+                    help=_(
+                        "Specify the SHA-256 fingerprints of the CAs that the agent controller "
+                        "must trust, each of them together with the site whose connection has to "
+                        "trust it. The service returns a non-OK state if any of these CAs is not "
+                        "trusted, unless its <i>Required from</i> date is still in the future. CAs "
+                        "trusted by the controller but not listed here are ignored. The "
+                        "fingerprints the controller reports, grouped by connection, can be found "
+                        "in the details of this service and in the output of "
+                        "<tt>cmk-agent-ctl status</tt>. If needed, a certificate's fingerprint can "
+                        "be obtained using "
+                        "<tt>openssl x509 -in your_certificate.crt -noout -fingerprint -sha256</tt>."
+                    ),
+                    add_label=_("Add CA"),
+                    allow_empty=False,
+                ),
+            ),
+            (
+                "trusted_cas_mismatch",
+                MonitoringState(
+                    title=_("State in case of a CA not trusted by the agent controller"),
+                    help=_(
+                        "This state is used when a CA configured under <i>Expected trusted CAs of "
+                        "the agent controller</i> is missing from the trust store of the "
+                        "controller's connection with the corresponding site."
+                    ),
+                    default_value=2,
                 ),
             ),
             (

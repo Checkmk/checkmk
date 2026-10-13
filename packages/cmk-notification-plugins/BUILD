@@ -2,15 +2,14 @@ load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
 ])
 
@@ -24,6 +23,8 @@ py_library(
     ],
     deps = [
         "//cmk/utils",
+        "//packages/cmk-events",
+        "//packages/cmk-web/cmk/web/utils",
         requirement("jinja2"),
         requirement("opsgenie-sdk"),
         requirement("requests"),
@@ -31,16 +32,35 @@ py_library(
     ],
 )
 
+py_library(
+    name = "testlib",
+    testonly = True,
+    srcs = glob(["cmk/testlib/notification_plugins/**/*.py"]),
+    imports = ["."],
+    visibility = [
+        "//non-free/packages/cmk-notification-plugins-nonfree:__pkg__",
+        "//packages/cmk-notification-plugins:__pkg__",
+    ],
+    deps = [requirement("pytest")],
+)
+
 py_cmk_test(
     name = "unit",
     size = "small",
     srcs = glob(["tests/**/*.py"]),
     data = glob(["templates/mail/*"]),
+    tags = [
+        "deballast-keep=//packages/cmk-notification-plugins:notification_scripts_lib",  # notifications.sms is run via runpy
+    ],
     deps = [
         ":cmk-notification-plugins",
+        ":notification_scripts_lib",
+        ":testlib",
         requirement("pytest-mock"),
         requirement("jinja2"),
         requirement("requests"),
+        requirement("responses"),
+        requirement("urllib3"),
     ],
 )
 
@@ -121,13 +141,6 @@ pkg_tar(
     stamp = 1,
     visibility = ["//omd:__pkg__"],
     deps = [":wheel_pkg"],
-)
-
-sh_library(
-    name = "helpers",
-    srcs = [
-        ".f12",
-    ],
 )
 
 py_requirements_test(

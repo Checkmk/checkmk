@@ -1,0 +1,26 @@
+# --- Known environment variables defined in legacy config ---
+# CACHE_MAXAGE 600
+# DBUSER ***
+# REMOTE_INSTANCE_DROPIN ***
+# --- Unified Config ---
+---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+      port: 1521
+    authentication:
+      username: "main_user"
+      password: "main_pw"
+      type: standard
+    instances:
+      - sid: DROPIN
+        connection:
+          hostname: drophost
+          port: 1521
+        authentication:
+          username: "drop_user"
+          password: "drop_pw"
+          type: standard
+          role: sysdba
+    cache_age: 600

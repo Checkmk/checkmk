@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
@@ -16,10 +15,9 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2 import Result, State
 from cmk.plugins.ucs_bladecenter.agent_based.ucs_c_rack_server_faultinst import (
     check_ucs_c_rack_server_faultinst,
-    discover_ucs_c_rack_server_faultinst,
     parse_ucs_c_rack_server_faultinst,
 )
 
@@ -164,22 +162,6 @@ def test_parse_ucs_c_rack_server_faultinst_single_fault() -> None:
     assert parsed["Affected DN"] == ["rack-unit-1/psu-2"]
 
 
-def test_discover_ucs_c_rack_server_faultinst(parsed_data: dict[str, list[str]]) -> None:
-    """Test discovery of UCS fault instance service."""
-    items = list(discover_ucs_c_rack_server_faultinst(parsed_data))
-
-    assert len(items) == 1
-    assert items[0] == Service()
-
-
-def test_discover_ucs_c_rack_server_faultinst_empty_data() -> None:
-    """Test discovery with empty data."""
-    items = list(discover_ucs_c_rack_server_faultinst({}))
-
-    assert len(items) == 1
-    assert items[0] == Service()
-
-
 def test_check_ucs_c_rack_server_faultinst_multiple_severities(
     parsed_data: dict[str, list[str]],
 ) -> None:
@@ -291,20 +273,7 @@ def test_check_ucs_c_rack_server_faultinst_critical_present() -> None:
     ]
 
 
-def test_ucs_c_rack_server_faultinst_discovery():
-    """Test discovery of UCS rack server fault instances."""
-    # Pattern 3: Empty special agent data (no faults)
-    string_table: list[list[str]] = []
-
-    parsed = parse_ucs_c_rack_server_faultinst(string_table)
-    result = list(discover_ucs_c_rack_server_faultinst(parsed))
-
-    # Should always discover one service with no item
-    assert len(result) == 1
-    assert result[0] == Service()
-
-
-def test_ucs_c_rack_server_faultinst_no_faults():
+def test_ucs_c_rack_server_faultinst_no_faults() -> None:
     """Test check with no fault instances found."""
     # Pattern 3: Empty special agent data
     string_table: list[list[str]] = []
@@ -317,7 +286,7 @@ def test_ucs_c_rack_server_faultinst_no_faults():
     assert result[0] == Result(state=State.OK, summary="No fault instances found")
 
 
-def test_ucs_c_rack_server_faultinst_critical_fault():
+def test_ucs_c_rack_server_faultinst_critical_fault() -> None:
     """Test check with critical fault instance."""
     # Pattern 3: Special agent data with critical fault
     string_table = [
@@ -342,7 +311,7 @@ def test_ucs_c_rack_server_faultinst_critical_fault():
     ]
 
 
-def test_ucs_c_rack_server_faultinst_major_fault():
+def test_ucs_c_rack_server_faultinst_major_fault() -> None:
     """Test check with major fault instance."""
     # Pattern 3: Special agent data with major fault
     string_table = [
@@ -367,7 +336,7 @@ def test_ucs_c_rack_server_faultinst_major_fault():
     ]
 
 
-def test_ucs_c_rack_server_faultinst_info_fault():
+def test_ucs_c_rack_server_faultinst_info_fault() -> None:
     """Test check with info level fault instance."""
     # Pattern 3: Special agent data with info fault
     string_table = [
@@ -392,7 +361,7 @@ def test_ucs_c_rack_server_faultinst_info_fault():
     ]
 
 
-def test_ucs_c_rack_server_faultinst_multiple_faults():
+def test_ucs_c_rack_server_faultinst_multiple_faults() -> None:
     """Test check with multiple fault instances of different severities."""
     # Pattern 3: Special agent data with multiple faults
     string_table = [
@@ -444,7 +413,7 @@ def test_ucs_c_rack_server_faultinst_multiple_faults():
     ]
 
 
-def test_ucs_c_rack_server_faultinst_unknown_severity():
+def test_ucs_c_rack_server_faultinst_unknown_severity() -> None:
     """Test check with unknown severity fault instance."""
     # Pattern 3: Special agent data with unknown severity
     string_table = [

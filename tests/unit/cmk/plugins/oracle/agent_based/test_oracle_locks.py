@@ -271,16 +271,6 @@ def test_discovery() -> None:
         Service(item="TUX12C"),
         Service(item="newdb"),
         Service(item="newdb1"),
-        Service(item="newdb1"),
-        Service(item="newdb1"),
-        Service(item="newdb1"),
-        Service(item="newdb1"),
-        Service(item="newdb1"),
-        Service(item="newdb1"),
-        Service(item="newdb1"),
-        Service(item="newdb1"),
-        Service(item="newdb1"),
-        Service(item="newdb1"),
     ]
 
 
@@ -315,3 +305,16 @@ def test_check_too_many_locks() -> None:
             summary="more then 10 locks existing!",
         )
     ]
+
+
+_FAILURE = [["orcl", "FAILURE", "ORA-00942: table or view does not exist"]]
+
+
+def test_discovery_failure_row() -> None:
+    assert list(discover_oracle_locks(parse_oracle_locks(_FAILURE))) == [Service(item="orcl")]
+
+
+def test_check_surfaces_failure() -> None:
+    assert list(
+        check_oracle_locks("orcl", {"levels": (1800, 3600)}, parse_oracle_locks(_FAILURE))
+    ) == [Result(state=State.UNKNOWN, summary="ORA-00942: table or view does not exist")]

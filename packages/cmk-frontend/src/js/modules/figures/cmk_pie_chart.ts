@@ -15,7 +15,7 @@ export interface PieChartData {
   value: number
 }
 
-export interface PieChartConfig extends FigureData<PieChartData> {
+interface PieChartConfig extends FigureData<PieChartData> {
   title: string
   title_url: string
 }

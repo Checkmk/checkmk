@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 # Example output from agent:
 # <<<hyperv_vm_ram:cached(1750083965,120)>>>
@@ -27,41 +26,41 @@ def mb_to_kb(a: int) -> int:
     return a * 1024**2
 
 
-def test_parse_hyperv_vm_ram_with_empty_string_table_raises_error():
+def test_parse_hyperv_vm_ram_with_empty_string_table_raises_error() -> None:
     with pytest.raises(IndexError):
         parse_hyperv_vm_ram([[]])
 
 
-def test_parse_hyperv_vm_ram_with_bad_string_table_raises_error():
+def test_parse_hyperv_vm_ram_with_bad_string_table_raises_error() -> None:
     with pytest.raises(KeyError):
         parse_hyperv_vm_ram([["bad", "bad"]])
 
 
-def test_parse_hyperv_vm_ram_with_minimum_payload_parses_correctly():
+def test_parse_hyperv_vm_ram_with_minimum_payload_parses_correctly() -> None:
     result = parse_hyperv_vm_ram([["config.hardware.AssignedRAM", "1024"]])
     assert result.assigned_ram == 1024
 
 
-def test_parse_hyperv_vm_ram_without_payload_type_is_dynamic_not_set():
+def test_parse_hyperv_vm_ram_without_payload_type_is_dynamic_not_set() -> None:
     result = parse_hyperv_vm_ram([["config.hardware.AssignedRAM", "1024"]])
     assert not result.is_dynamic
 
 
-def test_parse_hyperv_vm_ram_with_static_payload_type_is_dynamic_not_set():
+def test_parse_hyperv_vm_ram_with_static_payload_type_is_dynamic_not_set() -> None:
     result = parse_hyperv_vm_ram(
         [["config.hardware.AssignedRAM", "1024"], ["config.hardware.RAMType", "static"]]
     )
     assert not result.is_dynamic
 
 
-def test_parse_hyperv_vm_ram_with_dynamic_payload_type_is_dynamic_set():
+def test_parse_hyperv_vm_ram_with_dynamic_payload_type_is_dynamic_set() -> None:
     result = parse_hyperv_vm_ram(
         [["config.hardware.AssignedRAM", "1024"], ["config.hardware.RAMType", "dynamic"]]
     )
     assert result.is_dynamic
 
 
-def test_parse_hyperv_vm_ram_with_complete_payload_parses_correctly():
+def test_parse_hyperv_vm_ram_with_complete_payload_parses_correctly() -> None:
     result = parse_hyperv_vm_ram(
         [
             ["config.hardware.AssignedRAM", "1024"],
@@ -81,7 +80,7 @@ def test_parse_hyperv_vm_ram_with_complete_payload_parses_correctly():
     assert result.is_dynamic
 
 
-def test_check_hyperv_vm_ram_with_demand_has_correct_state_and_summary():
+def test_check_hyperv_vm_ram_with_demand_has_correct_state_and_summary() -> None:
     sample_section = Section(
         is_dynamic=True,
         assigned_ram=mb_to_kb(4096),
@@ -101,7 +100,9 @@ def test_check_hyperv_vm_ram_with_demand_has_correct_state_and_summary():
     assert Result(state=State.OK, summary="Demand: 4.00 GiB") in results
 
 
-def test_check_hyperv_vm_ram_without_demand_memory_has_correct_current_and_no_demand_value():
+def test_check_hyperv_vm_ram_without_demand_memory_has_correct_current_and_no_demand_value() -> (
+    None
+):
     sample_section = Section(
         is_dynamic=False,
         assigned_ram=mb_to_kb(1024),
@@ -124,7 +125,7 @@ def test_check_hyperv_vm_ram_without_demand_memory_has_correct_current_and_no_de
     assert demand is None
 
 
-def test_check_hyperv_vm_ram_has_correct_details():
+def test_check_hyperv_vm_ram_has_correct_details() -> None:
     sample_section = Section(
         is_dynamic=True,
         assigned_ram=mb_to_kb(4096),
@@ -147,7 +148,7 @@ def test_check_hyperv_vm_ram_has_correct_details():
     assert Result(state=State.OK, notice="Dynamic memory Enabled: True") in results
 
 
-def test_check_hyperv_vm_ram_is_ok_when_no_rules_configured():
+def test_check_hyperv_vm_ram_is_ok_when_no_rules_configured() -> None:
     sample_section = Section(
         is_dynamic=True,
         assigned_ram=mb_to_kb(4096),
@@ -166,7 +167,7 @@ def test_check_hyperv_vm_ram_is_ok_when_no_rules_configured():
     assert Result(state=State.OK, summary="Current RAM: 4.00 GiB") in results
 
 
-def test_check_hyperv_vm_ram_is_crit_when_current_ram_above_crit_percentage():
+def test_check_hyperv_vm_ram_is_crit_when_current_ram_above_crit_percentage() -> None:
     sample_section = Section(
         is_dynamic=True,
         assigned_ram=mb_to_kb(4096),
@@ -188,7 +189,7 @@ def test_check_hyperv_vm_ram_is_crit_when_current_ram_above_crit_percentage():
     )
 
 
-def test_check_hyperv_vm_ram_is_warn_when_current_ram_above_warn_percentage():
+def test_check_hyperv_vm_ram_is_warn_when_current_ram_above_warn_percentage() -> None:
     sample_section = Section(
         is_dynamic=True,
         assigned_ram=mb_to_kb(4096),
@@ -210,7 +211,7 @@ def test_check_hyperv_vm_ram_is_warn_when_current_ram_above_warn_percentage():
     )
 
 
-def test_check_hyperv_vm_ram_is_crit_when_current_ram_below_warn_percentage():
+def test_check_hyperv_vm_ram_is_crit_when_current_ram_below_warn_percentage() -> None:
     sample_section = Section(
         is_dynamic=True,
         assigned_ram=mb_to_kb(63),
@@ -234,7 +235,7 @@ def test_check_hyperv_vm_ram_is_crit_when_current_ram_below_warn_percentage():
     )
 
 
-def test_check_hyperv_vm_ram_is_crit_when_current_ram_below_crit_percentage():
+def test_check_hyperv_vm_ram_is_crit_when_current_ram_below_crit_percentage() -> None:
     sample_section = Section(
         is_dynamic=True,
         assigned_ram=mb_to_kb(31),
@@ -258,7 +259,7 @@ def test_check_hyperv_vm_ram_is_crit_when_current_ram_below_crit_percentage():
     )
 
 
-def test_check_hyperv_vm_ram_state_is_ok_when_demand_check_is_disabled():
+def test_check_hyperv_vm_ram_state_is_ok_when_demand_check_is_disabled() -> None:
     sample_section = Section(
         is_dynamic=True,
         assigned_ram=mb_to_kb(31),
@@ -277,7 +278,7 @@ def test_check_hyperv_vm_ram_state_is_ok_when_demand_check_is_disabled():
     assert Result(state=State.OK, summary="Demand: 1.00 GiB") in results
 
 
-def test_check_hyperv_vm_ram_state_is_ok_when_demand_check_is_enabled_and_demand_is_lower():
+def test_check_hyperv_vm_ram_state_is_ok_when_demand_check_is_enabled_and_demand_is_lower() -> None:
     sample_section = Section(
         is_dynamic=True,
         assigned_ram=mb_to_kb(2048),
@@ -296,7 +297,9 @@ def test_check_hyperv_vm_ram_state_is_ok_when_demand_check_is_enabled_and_demand
     assert Result(state=State.OK, summary="Demand: 1.00 GiB") in results
 
 
-def test_check_hyperv_vm_ram_state_is_warn_when_demand_check_is_enabled_and_demand_is_higher():
+def test_check_hyperv_vm_ram_state_is_warn_when_demand_check_is_enabled_and_demand_is_higher() -> (
+    None
+):
     sample_section = Section(
         is_dynamic=True,
         assigned_ram=mb_to_kb(2048),

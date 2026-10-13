@@ -19,7 +19,13 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import cmp_version
-from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
+from cmk.gui.type_defs import (
+    FilterHeader,
+    FilterHTTPVariables,
+    Row,
+    Rows,
+    VisualContext,
+)
 from cmk.gui.utils.labels import (
     encode_label_groups_for_livestatus,
     encode_labels_for_livestatus,
@@ -55,7 +61,7 @@ class Query:
     ):
         self.ident = ident
         self.request_vars = request_vars
-        self.livestatus_query = livestatus_query or (lambda x: "")
+        self.livestatus_query = livestatus_query or (lambda x: "")  # noqa: ARG005
         self.rows_filter = rows_filter or (lambda _ctx, rows: rows)
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
@@ -548,6 +554,25 @@ class HostnameOrAliasQuery(TextQuery):
         )
 
 
+class EventHostQuery(TextQuery):
+    def __init__(self) -> None:
+        super().__init__(ident="event_host", column="event_host", op="=")
+        self.link_columns = ["event_host", "event_core_host"]
+
+    @override
+    def _filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        # The Event Console stores the host name as it arrived in "event_host" and the
+        # canonical name from the monitoring in "event_core_host". A trap sender is often
+        # only known by its IP address, so match either of them.
+        host = livestatus.lqencode(value[self.request_vars[0]])
+
+        return lq_logic(
+            "Filter:",
+            [f"event_host {self.op} {host}", f"event_core_host {self.op} {host}"],
+            "Or",
+        )
+
+
 class OptEventEffectiveContactgroupQuery(TextQuery):
     def __init__(self) -> None:
         super().__init__(
@@ -657,6 +682,26 @@ class MultipleQuery(TextQuery):
         joiner = "And" if negate else "Or"
 
         return lq_logic(f"Filter: {self.column} {negate}{self.op}", self.selection(value), joiner)
+
+    @override
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        """Apply this filter to rows that Livestatus did not filter for us
+
+        Rows without the column are none of our business and are kept: the caller did not
+        ask for this column, or it does not exist in its table (BI aggregations).
+        """
+        if self.op != ">=":
+            # ">=" is Livestatus' "contains" on a list column. Other operators compare the
+            # column as a whole, which this implementation does not cover.
+            return rows
+        if not (selection := set(self.selection(context.get(self.ident, {})))):
+            return rows
+        negate = bool(self._negate_symbol(context.get(self.ident, {})))
+        return [
+            row
+            for row in rows
+            if self.column not in row or bool(set(row[self.column]) & selection) is not negate
+        ]
 
 
 class AllLabelGroupsQuery(Query):

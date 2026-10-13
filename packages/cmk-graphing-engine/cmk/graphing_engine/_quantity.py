@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 from cmk.graphing.v1 import metrics as metrics_v1
 
@@ -31,6 +30,17 @@ def _last_present[T](values: Iterable[T | None]) -> T | None:
 class EvaluationContext:
     time_range: TimeRange
     fetched: Mapping[MetricProtocol, Sequence[FetchedData]] = field(default_factory=dict)
+    _results: dict[QuantityProtocol, Sequence[EvaluatedQuantity]] = field(
+        default_factory=dict, init=False, compare=False, repr=False
+    )
+
+    def evaluate(self, quantity: QuantityProtocol) -> Sequence[EvaluatedQuantity]:
+        """The quantity's results, evaluated at most once per context."""
+        if (results := self._results.get(quantity)) is not None:
+            return results
+        results = quantity.evaluate(self)
+        self._results[quantity] = results
+        return results
 
     def fetched_of(self, metric: MetricProtocol) -> Sequence[FetchedData]:
         return self.fetched.get(metric, ())
@@ -57,12 +67,16 @@ def first_value(results: Sequence[EvaluatedQuantity]) -> float | None:
     return results[0].value if results else None
 
 
-class QuantityProtocol(Protocol):
+# Every quantity is hashable by value: the evaluation keys the data it holds per quantity by
+# the quantity itself.
+class QuantityProtocol(Hashable, Protocol):
     def kind(self) -> str: ...
 
     def ident(self) -> str: ...
 
-    def metrics(self) -> Iterable[MetricProtocol]: ...
+    # The quantities this one is computed from, empty for a leaf. A quantity that several parents
+    # share is one node of a graph: a walk over it has to see it once, not once per path.
+    def children(self) -> Sequence[QuantityProtocol]: ...
 
     # A quantity evaluates to a sequence of curves: empty when absent, one for an ordinary quantity,
     # and several when a fan-out leaf (e.g. a query matching many services) expands into one curve
@@ -77,10 +91,48 @@ class QuantityProtocol(Protocol):
     ) -> CurveAttributes | None: ...
 
 
-# The leaves a graph fetches data for: the keys of EvaluationContext.fetched and the elements
-# QuantityProtocol.metrics() yields. A metric is a quantity that draws itself, identified by its
-# metric_name - that is what sets it apart from an expression node. It must be hashable: the
-# evaluation context keys its fetched data by the metric leaf.
-class MetricProtocol(QuantityProtocol, Hashable, Protocol):
+@runtime_checkable
+class FanOutQuantity(Protocol):
+    """A quantity drawing one curve per matched series, unless aggregation_kind reduces them."""
+
+    @property
+    def aggregation_kind(self) -> object | None: ...
+
+
+# The leaves a graph fetches data for: the keys of EvaluationContext.fetched and what a walk over
+# a quantity collects. A metric is a quantity that draws itself, identified by its metric_name -
+# that is what sets it apart from an expression node, which names children instead.
+@runtime_checkable
+class MetricProtocol(QuantityProtocol, Protocol):
     @property
     def metric_name(self) -> MetricName: ...
+
+
+def fetch_leaves(quantity: QuantityProtocol) -> Sequence[MetricProtocol]:
+    """The fetch leaves the quantity reaches, each once, in the order they first appear."""
+    leaves: list[MetricProtocol] = []
+    walked: set[QuantityProtocol] = set()
+    stack = [quantity]
+    while stack:
+        node = stack.pop()
+        if node in walked:
+            continue
+        walked.add(node)
+        if children := node.children():
+            stack.extend(reversed(children))
+        elif isinstance(node, MetricProtocol):
+            leaves.append(node)
+    return leaves
+
+
+# What a drawable is bounded by: a plain number, or a quantity to be evaluated.
+type Bound = int | float | QuantityProtocol
+
+
+@dataclass(frozen=True, kw_only=True)
+class Curve:
+    """A quantity dressed for drawing: what to evaluate, and how to title, scale and colour it."""
+
+    quantity: QuantityProtocol
+    attributes: CurveAttributes
+    source_id: str | None = None

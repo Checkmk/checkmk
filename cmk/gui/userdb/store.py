@@ -8,7 +8,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
 
 import ast
 import copy
@@ -20,7 +19,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, cast, Literal
 
-import cmk.gui.pages
 import cmk.utils.paths
 from cmk.ccc.store import (
     acquire_lock,
@@ -89,7 +87,7 @@ def load_custom_attr[T](
         try:
             with open(attr_path) as file_object:
                 result = file_object.read()
-        except (FileNotFoundError, OSError):
+        except FileNotFoundError, OSError:
             return None
     return None if result == "" else parser(result.strip())
 
@@ -389,8 +387,12 @@ def _update_users(
     all_users_with_custom_macros = _add_custom_macro_attributes(user_attributes, all_users)
 
     _save_auth_serials(all_users_with_custom_macros)
+    # Deleted users may be passed as changed; their profile directories are
+    # removed by _cleanup_old_user_profiles below.
     changed_users_with_custom_macros = {
-        changed_user: all_users_with_custom_macros[changed_user] for changed_user in changed_users
+        changed_user: all_users_with_custom_macros[changed_user]
+        for changed_user in changed_users
+        if changed_user in all_users_with_custom_macros
     }
     # profiles are saved per user, so we need to save the changed users only
     _save_user_profiles(changed_users_with_custom_macros, user_attributes, now)
@@ -416,35 +418,16 @@ def save_users(
     now: datetime,
     pprint_value: bool,
     call_users_saved_hook: bool,
+    changed_users: list[UserId] | Literal["all"] = "all",
 ) -> None:
     _update_users(
-        list(profiles.keys()),
+        changed_users if changed_users != "all" else list(profiles.keys()),
         profiles,
         user_attributes,
         user_connections,
         now=now,
         pprint_value=pprint_value,
         call_users_saved_hook=call_users_saved_hook,
-    )
-
-
-def update_user(
-    changed_user: UserId,
-    all_users: Users,
-    user_attributes: Sequence[tuple[str, UserAttribute]],
-    user_connections: Sequence[UserConnectionConfig],
-    now: datetime,
-    *,
-    pprint_value: bool,
-) -> None:
-    _update_users(
-        [changed_user],
-        all_users,
-        user_attributes,
-        user_connections,
-        now=now,
-        pprint_value=pprint_value,
-        call_users_saved_hook=True,
     )
 
 
@@ -622,7 +605,7 @@ def write_contacts_and_users_file(
                     False,
                 ),
             )
-            for (id, user) in updated_profiles.items()
+            for (id, user) in updated_profiles.items()  # noqa: A001
         ]
     )
 
@@ -750,7 +733,8 @@ def create_cmk_automation_user(
 ) -> None:
     secret = Password.random(24)
     users = load_users(lock=True)
-    users[UserId(name)] = {
+    user_id = UserId(name)
+    users[user_id] = {
         "alias": alias,
         "contactgroups": [],
         "automation_secret": secret.raw,
@@ -773,6 +757,7 @@ def create_cmk_automation_user(
         now=now,
         pprint_value=pprint_value,
         call_users_saved_hook=True,
+        changed_users=[user_id],
     )
 
 

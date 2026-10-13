@@ -142,11 +142,9 @@ RESULT_CHECK = [
 @pytest.mark.parametrize(
     "string_table, discovered, results", list(zip(AGENT_INFO, RESULT_DISCOVERY, RESULT_CHECK))
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_functions_perfdata(
-    string_table: StringTable,
-    discovered: Sequence[Service],
-    results: CheckResult,
-    empty_value_store: None,
+    string_table: StringTable, discovered: Sequence[Service], results: CheckResult
 ) -> None:
     section = lnx_thermal.parse_lnx_thermal(string_table)
     for service, result in zip(discovered, results):
@@ -278,8 +276,9 @@ def test_parse_and_discovery_function_2_no_item(line: list[str]) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("empty_value_store")
 def test_check_functions_perfdata_2(
-    line: list[str], item: str, result: list[Metric | Result], empty_value_store: None
+    line: list[str], item: str, result: list[Metric | Result]
 ) -> None:
     section = lnx_thermal.parse_lnx_thermal([line])
     assert list(lnx_thermal.check_lnx_thermal(item, {}, section)) == result

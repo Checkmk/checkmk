@@ -12,13 +12,14 @@ conditions defined in the file COPYING, which is part of this source code packag
  * Python-rendered form via `document.getElementById` in onMounted. A future
  * refactor would move the upload to a REST endpoint and own the <input> here.
  */
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkBadge from 'cmk-ui-library/components/CmkBadge.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
+import CmkIconLink from 'cmk-ui-library/components/CmkIconLink.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
@@ -158,7 +159,7 @@ onMounted(() => {
   // The <form> and <input type="file"> are rendered by the Python side; their
   // ids come through as props to keep the contract explicit. If either is
   // missing, the upload UI is non-functional — surface it both in the
-  // console (for developers) and as a visible CmkAlertBox (for admins).
+  // console (for developers) and as a visible CmkAlert (for admins).
   fileInputRef.value = document.getElementById(props.upload_input_id) as HTMLInputElement | null
   uploadFormRef.value = document.getElementById(props.upload_form_id) as HTMLFormElement | null
   if (fileInputRef.value === null || uploadFormRef.value === null) {
@@ -177,16 +178,22 @@ onUnmounted(() => {
 
 <template>
   <div class="profiling-profiles-list-app">
-    <CmkAlertBox v-if="uploadFormMissing" variant="error" :heading="_t('Upload is unavailable')">
-      {{
+    <CmkAlert
+      v-if="uploadFormMissing"
+      variant="error"
+      :heading="_t('Upload is unavailable')"
+      :text="
         _t(
           'The upload form was not rendered by the page. Reload the page; if the error persists the performance-profiles feature may be misconfigured.'
         )
-      }}
-    </CmkAlertBox>
-    <CmkAlertBox v-if="props.upload_error" variant="error" :heading="_t('Upload failed')">
-      {{ props.upload_error }}
-    </CmkAlertBox>
+      "
+    />
+    <CmkAlert
+      v-if="props.upload_error"
+      variant="error"
+      :heading="_t('Upload failed')"
+      :text="untranslated(props.upload_error)"
+    />
     <!-- Upload: full drop zone when empty, compact bar when profiles exist -->
     <div
       v-if="props.profiles.length === 0"
@@ -403,30 +410,27 @@ onUnmounted(() => {
             {{ p.duration_ms !== null ? formatMs(p.duration_ms) : '—' }}
           </td>
           <td class="profiling-profiles-list-app__col-actions">
-            <a
+            <CmkIconLink
+              name="view"
+              size="small"
               :href="p.flamegraph_url"
               :title="_t('View flamegraph')"
               :aria-label="_t('View flamegraph')"
-              class="profiling-profiles-list-app__icon-link"
-            >
-              <CmkIcon name="view" size="small" />
-            </a>
-            <a
+            />
+            <CmkIconLink
+              name="download"
+              size="small"
               :href="p.download_url"
               :title="_t('Download .profile')"
               :aria-label="_t('Download .profile')"
-              class="profiling-profiles-list-app__icon-link"
-            >
-              <CmkIcon name="download" size="small" />
-            </a>
-            <a
+            />
+            <CmkIconLink
+              name="delete"
+              size="small"
               :href="p.delete_url"
               :title="_t('Delete')"
               :aria-label="_t('Delete profile')"
-              class="profiling-profiles-list-app__icon-link"
-            >
-              <CmkIcon name="delete" size="small" />
-            </a>
+            />
           </td>
         </tr>
       </tbody>
@@ -664,25 +668,6 @@ onUnmounted(() => {
 }
 
 .profiling-profiles-list-app__sort-btn:focus-visible {
-  outline: var(--border-width-1) solid var(--color-dark-blue-50);
-  outline-offset: var(--spacing-half);
-}
-
-.profiling-profiles-list-app__icon-link {
-  display: inline-flex;
-  align-items: center;
-  margin: 0 var(--spacing-half);
-  text-decoration: none;
-  opacity: 0.6;
-  transition: opacity 0.15s;
-}
-
-.profiling-profiles-list-app__icon-link:hover,
-.profiling-profiles-list-app__icon-link:focus-visible {
-  opacity: 1;
-}
-
-.profiling-profiles-list-app__icon-link:focus-visible {
   outline: var(--border-width-1) solid var(--color-dark-blue-50);
   outline-offset: var(--spacing-half);
 }

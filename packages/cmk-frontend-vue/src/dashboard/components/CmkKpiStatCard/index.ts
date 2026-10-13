@@ -8,8 +8,13 @@ import CmkKpiStatCard from './CmkKpiStatCard.vue'
 export default CmkKpiStatCard
 export type {
   CmkKpiStatCardProps,
-  DeltaSemantics,
+  ComparisonBasis,
+  KpiDelta,
+  KpiDeltaConfig,
   KpiRangeLimits,
   KpiState,
-  KpiStateSeverity
+  KpiStateSeverity,
+  KpiValueRange,
+  SparkHeightMode,
+  TimestampedSample
 } from './types'

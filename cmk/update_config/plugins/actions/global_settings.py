@@ -12,9 +12,9 @@ from cmk.ccc.site import omd_site
 from cmk.ccc.version import edition
 from cmk.gui.config import active_config, Config
 from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
+from cmk.gui.logged_in import LoggedInSuperUser, LoggedInUser
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.wato.pages.global_settings import make_global_settings_context
 from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
     filter_unknown_settings,
@@ -23,27 +23,30 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
     load_site_global_settings,
-    save_global_settings,
-    save_site_global_settings,
+    make_global_settings_context,
+    save_global_settings_raw,
+    save_site_global_settings_raw,
 )
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.sites import site_globals_editable, site_management_registry
-from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils.log import VERBOSE
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
-_RENAMED_GLOBALS: Sequence[tuple[str, str, Mapping[object, object]]] = []
+_RENAMED_GLOBALS: Sequence[tuple[str, str, Mapping[object, object]]] = [
+    ("metric_backend", "data_backend", {}),
+]
 _REMOVED_OPTIONS: Sequence[str] = []
 
 
 class UpdateGlobalSettings(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
-        _update_installation_wide_global_settings(logger, active_config)
-        _update_site_specific_global_settings(logger, active_config)
-        _update_remote_site_specific_global_settings(logger, active_config)
+        acting_user = LoggedInSuperUser()
+        _update_installation_wide_global_settings(logger, active_config, acting_user)
+        _update_site_specific_global_settings(logger, active_config, acting_user)
+        _update_remote_site_specific_global_settings(logger, active_config, acting_user)
 
 
 update_action_registry.register(
@@ -59,14 +62,16 @@ update_action_registry.register(
 def _update_installation_wide_global_settings(
     logger: Logger,
     ui_config: Config,
+    acting_user: LoggedInUser,
 ) -> None:
     """Update the globals.mk of the local site"""
-    save_global_settings(
+    save_global_settings_raw(
         update_global_config(
             logger,
             # Load full config (with undefined settings)
             load_configuration_settings(full_config=True),
             ui_config,
+            acting_user,
         ),
     )
 
@@ -74,15 +79,17 @@ def _update_installation_wide_global_settings(
 def _update_site_specific_global_settings(
     logger: Logger,
     ui_config: Config,
+    acting_user: LoggedInUser,
 ) -> None:
     """Update the sitespecific.mk of the local site (which is a remote site)"""
     if not is_distributed_setup_remote_site(ui_config.sites):
         return
-    save_site_global_settings(
+    save_site_global_settings_raw(
         update_global_config(
             logger,
             load_site_global_settings(),
             ui_config,
+            acting_user,
         )
     )
 
@@ -90,6 +97,7 @@ def _update_site_specific_global_settings(
 def _update_remote_site_specific_global_settings(
     logger: Logger,
     ui_config: Config,
+    acting_user: LoggedInUser,
 ) -> None:
     """Update the site specific global settings in the central site configuration"""
     site_mgmt = site_management_registry["site_management"]
@@ -101,6 +109,7 @@ def _update_remote_site_specific_global_settings(
                     logger,
                     site_spec.setdefault("globals", {}),
                     ui_config,
+                    acting_user,
                 )
             )
     site_mgmt.save_sites(
@@ -118,13 +127,14 @@ def update_global_config(
     logger: Logger,
     global_settings: GlobalSettings,
     ui_config: Config,
+    acting_user: LoggedInUser,
 ) -> GlobalSettings:
     new_settings = _remove_options(logger, global_settings, _REMOVED_OPTIONS)
     new_settings = _update_renamed_global_config_vars(
         logger,
         new_settings,
     )
-    new_settings = _transform_global_config_values(new_settings, ui_config)
+    new_settings = _transform_global_config_values(new_settings, ui_config, acting_user)
     return _normalize_user_icons_and_actions(logger, new_settings)
 
 
@@ -208,26 +218,33 @@ def _transform_global_config_value(
     global_settings_var: str,
     global_settings_val: object,
     ui_config: Config,
+    acting_user: LoggedInUser,
 ) -> object:
     try:
         config_variable = config_variable_registry[global_settings_var]
     except KeyError:
         return global_settings_val
-    context = make_global_settings_context(edition(cmk.utils.paths.omd_root), omd_site(), ui_config)
-    value_model = config_variable.value_model(context)
-    if isinstance(value_model, FormSpec):
-        return migrate_form_spec_disk_value(value_model, global_settings_val)
-    return value_model.transform_value(global_settings_val)
+    context = make_global_settings_context(
+        edition(cmk.utils.paths.omd_root),
+        omd_site(),
+        sites=ui_config.sites,
+        graph_timeranges=ui_config.graph_timeranges,
+        folder_choices=lambda: make_folder_tree(ui_config).folder_choices_fulltitle(acting_user),
+    )
+    return migrate_form_spec_disk_value(config_variable.value_model(context), global_settings_val)
 
 
 def _transform_global_config_values(
     global_settings: GlobalSettings,
     ui_config: Config,
+    acting_user: LoggedInUser,
 ) -> GlobalSettings:
     return {
         **global_settings,
         **{
-            config_var: _transform_global_config_value(config_var, config_val, ui_config)
+            config_var: _transform_global_config_value(
+                config_var, config_val, ui_config, acting_user
+            )
             for config_var, config_val in global_settings.items()
             if config_var not in UNREGISTERED_SETTINGS
         },

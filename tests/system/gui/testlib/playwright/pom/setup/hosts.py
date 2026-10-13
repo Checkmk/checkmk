@@ -13,7 +13,7 @@ from tests.system.gui.testlib.api_helpers import LOCALHOST_IPV4
 from tests.system.gui.testlib.host_details import HostDetails
 from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 
@@ -256,6 +256,18 @@ class AddHost(CmkPage):
     @property
     def agent_and_api_integration_dropdown_button(self) -> Locator:
         return self.main_area.locator("div#attr_entry_tag_agent >> b")
+
+    @property
+    def test_agent_connection_button(self) -> Locator:
+        return self.main_area.locator("button.agent-test-button").filter(
+            has_text="Test agent connection"
+        )
+
+    @property
+    def install_and_register_agent_button(self) -> Locator:
+        return self.main_area.locator("button.agent-test-button").filter(
+            has_text="Install & register agent"
+        )
 
     @property
     def snmp_checkbox(self) -> Locator:

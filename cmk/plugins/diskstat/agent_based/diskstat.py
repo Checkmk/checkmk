@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 
 # <<<diskstat>>>
@@ -275,7 +274,7 @@ def diskstat_extract_name_info(
             case "[device_wwn]":
                 phase = "device_wwn"
             case _:
-                match phase:
+                match phase:  # type: ignore[exhaustive-match]
                     case "info":
                         if len(line) == 1:
                             timestamp = int(line[0])

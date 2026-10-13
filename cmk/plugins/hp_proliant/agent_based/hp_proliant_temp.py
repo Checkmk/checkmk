@@ -52,7 +52,7 @@ Section = Sequence[Sequence[str]]
 
 
 def parse_hp_proliant_temp(string_table: StringTable) -> Section:
-    return string_table
+    return [line for line in string_table if line[0] and line[1]]
 
 
 def _format_hp_proliant_name(line: Sequence[str]) -> str:

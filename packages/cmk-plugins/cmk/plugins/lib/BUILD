@@ -9,15 +9,13 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-plugin-apis:graphing",
     ],
 )
 
 filegroup(
-    name = "agent",
-    srcs = glob(
-        ["agent/**/*"],
-        allow_empty = True,
-    ),
+    name = "agents",
+    srcs = [],
     visibility = ["//packages/cmk-plugins:__pkg__"],
 )
 

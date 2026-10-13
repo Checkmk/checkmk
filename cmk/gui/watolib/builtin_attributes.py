@@ -31,9 +31,17 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
 )
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.site_config import has_distributed_setup_remote_sites, is_distributed_setup_remote_site
-from cmk.gui.type_defs import Choices
+from cmk.gui.utils.host_relation_kinds import known_relations, RELATION_KINDS
+from cmk.gui.utils.host_relations import (
+    parse_relations_value,
+    referenced_host_names,
+    relation_key,
+    RelationDirection,
+    RelationLink,
+    reverse_direction,
+)
 from cmk.gui.valuespec import (
     AbsoluteDate,
     Age,
@@ -68,6 +76,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.attributes import create_ipmi_parameters, IPMIParameters, SNMPCredentials
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.host_attributes import (
+    ABCHostAttributeFormSpec,
     ABCHostAttributeNagiosText,
     ABCHostAttributeValueSpec,
     all_host_attributes,
@@ -78,10 +87,17 @@ from cmk.gui.watolib.host_attributes import (
     HOST_ATTRIBUTE_TOPIC_MONITORING_DATASOURCES,
     HOST_ATTRIBUTE_TOPIC_NETWORK_ADDRESS,
     HOST_ATTRIBUTE_TOPIC_NETWORK_SCAN,
+    HOST_ATTRIBUTE_TOPIC_RELATIONS,
     HostAttributeTopic,
     sorted_host_attributes,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
+from cmk.gui.watolib.host_relations import (
+    host_relations_form_spec,
+    relation_conflicts,
+    relations_or_user_error,
+    with_links_not_shown,
+)
+from cmk.gui.watolib.hosts_and_folders import Host, plan_relation_mirror
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.translation import HostnameTranslation
 from cmk.livestatus_client import SiteConfigurations
@@ -99,6 +115,7 @@ from cmk.rulesets.v1.form_specs import (
     MonitoredHost,
     String,
 )
+from cmk.web.utils.choices import Choice
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import urlencode_vars
 
@@ -618,6 +635,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
 
 
 def validate_host_parents(host: Host) -> None:
+    tree = host.folder().tree
     for parent_name in host.parents():
         if parent_name == host.name():
             raise MKUserError(
@@ -625,7 +643,7 @@ def validate_host_parents(host: Host) -> None:
                 _("You configured the host to be its own parent, which is not allowed."),
             )
 
-        parent = folder_tree().host(parent_name)
+        parent = tree.host(parent_name)
         if not parent:
             raise MKUserError(
                 None,
@@ -647,6 +665,129 @@ def validate_host_parents(host: Host) -> None:
                     "host_site": host.site_id(),
                 },
             )
+
+
+def validate_host_relations(host: Host, *, acting_user: LoggedInUser) -> None:
+    """Report whatever is still wrong with the relations this host stores.
+
+    A counterpart can be deleted, contradict this half or lack its own - a hand written
+    "hosts.mk", or a locked host the cleanup after a deletion could not write - long after the
+    link was stored. Rejecting any of it on save would leave the host unsavable until someone
+    else cleans up, so the save only refuses what it introduces itself and the rest is reported
+    like a missing parent. Saving the host holding the primary half (see
+    :attr:`MirrorEntry.from_primary`) settles the pair, as far as the user may write the other
+    one; the report says whether the monitoring shows the relation and where to settle it.
+
+    Only a user who may see every host is told about a counterpart that is missing. For anyone
+    else a missing one and one they may not see are left alone alike: what either is reported
+    with would tell whether the host exists, and the user could do nothing about it anyway.
+    """
+    links = relations_or_user_error(host.attributes.get("relations", []))
+
+    tree = host.folder().tree
+    counterparts: dict[HostName, Host] = {}
+    for related_name in sorted(referenced_host_names(links)):
+        counterpart = tree.host(related_name)
+        if counterpart is not None and counterpart.permissions.may("read", acting_user):
+            counterparts[related_name] = counterpart
+        elif acting_user.may("wato.see_all_folders"):
+            raise MKUserError(
+                None,
+                _("You defined the non-existing host '%(related_name)s' as a related host.")
+                % {"related_name": related_name},
+            )
+
+    for conflict in relation_conflicts(links, host.name()):
+        raise MKUserError(None, conflict.message())
+
+    # Known kinds only: what a later version wrote is not for this one to judge. Sets, since a
+    # duplicated row is the counterpart's own conflict.
+    known = known_relations(links)
+    for related_name, mirror in plan_relation_mirror(host.name(), (), known).items():
+        if related_name not in counterparts:
+            continue
+        try:
+            stored_about = _known_relations_by_counterpart(counterparts[related_name])
+        except ValueError as exc:
+            raise MKUserError(
+                None,
+                _("The relations of '%(related_name)s' are malformed: %(error)s")
+                % {"related_name": related_name, "error": exc},
+            ) from exc
+        stored = stored_about.get(host.name(), frozenset())
+        if stored == set(map(relation_key, mirror.links)):
+            continue
+        own = [link for link in known if link["host"] == related_name]
+        if not stored:
+            if mirror.from_primary:
+                message = _(
+                    "'%(related_name)s' does not store its half of the relation to this host. "
+                    "The monitoring shows the relation anyway. Saving this host stores it on "
+                    "'%(related_name)s' too, unless '%(related_name)s' is locked or you cannot "
+                    "edit it."
+                )
+            else:
+                message = _(
+                    "'%(related_name)s' does not store this relation, so the monitoring does not "
+                    "show it. Add it on '%(related_name)s', or remove it here."
+                )
+            raise MKUserError(None, message % {"related_name": related_name})
+        for link in own:
+            # Both hosts at the same end. A symmetric end is the one both share anyway.
+            if (
+                link["direction"] != "symmetric"
+                and (link["kind"], link["direction"], host.name()) in stored
+            ):
+                kind = RELATION_KINDS[link["kind"]]
+                if mirror.from_primary:
+                    message = _(
+                        "'%(related_name)s' also stores itself as '%(end)s' of this host, so the "
+                        "monitoring shows neither relation. Saving keeps this host as "
+                        "'%(end)s' and makes '%(related_name)s' its '%(other_end)s', unless "
+                        "'%(related_name)s' is locked or you cannot edit it."
+                    )
+                else:
+                    message = _(
+                        "'%(related_name)s' also stores itself as '%(end)s' of this host, so the "
+                        "monitoring shows neither relation. Add the relation on the host that is "
+                        "the '%(other_end)s'."
+                    )
+                raise MKUserError(
+                    None,
+                    message
+                    % {
+                        "related_name": related_name,
+                        "end": kind.end(link["direction"]).noun,
+                        "other_end": kind.end(reverse_direction(link["direction"])).noun,
+                    },
+                )
+        if mirror.from_primary:
+            message = _(
+                "'%(related_name)s' stores a different relation to this host. Saving this "
+                "host makes both agree, unless '%(related_name)s' is locked or you cannot edit it."
+            )
+        else:
+            message = _(
+                "'%(related_name)s' stores a different relation to this host. Change the relation "
+                "on '%(related_name)s', or remove it here."
+            )
+        raise MKUserError(None, message % {"related_name": related_name})
+
+
+@hooks.request_memoize()
+def _known_relations_by_counterpart(
+    host: Host,
+) -> Mapping[HostName, frozenset[tuple[str, RelationDirection, HostName]]]:
+    """What ``host`` stores about each host it links to, of the kinds this version places.
+
+    Raises ``ValueError`` for a value that cannot be read: that is the counterpart's fault to
+    report, not a half it does not store. Once per request: the folder list validates every
+    host in it, and each asks the same board.
+    """
+    by_counterpart: dict[HostName, set[tuple[str, RelationDirection, HostName]]] = {}
+    for link in known_relations(parse_relations_value(host.attributes.get("relations", []))):
+        by_counterpart.setdefault(link["host"], set()).add(relation_key(link))
+    return {other: frozenset(keys) for other, keys in by_counterpart.items()}
 
 
 @hooks.request_memoize()
@@ -1243,7 +1384,7 @@ class IPMICredentials(Alternative):
         orientation: Literal["horizontal", "vertical"] = "vertical",
         # ValueSpec
         title: str | None = None,
-        help: ValueSpecHelp | None = None,
+        help: ValueSpecHelp | None = None,  # noqa: A002
         default_value: ValueSpecDefault[AlternativeModel] = DEF_VALUE,
         validate: ValueSpecValidateFunc[AlternativeModel] | None = None,
     ):
@@ -1311,6 +1452,87 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
             description="IPMI credentials",
             required=False,
             allow_none=True,
+        )
+
+
+class HostAttributeRelations(ABCHostAttributeFormSpec):
+    """Relations between a host and other hosts, such as its management board.
+
+    Stored in ``hosts.mk`` on both hosts of a relation, but exported to the monitoring core
+    elsewhere - see :mod:`cmk.gui.watolib.host_relations_export`.
+    """
+
+    @override
+    def name(self) -> str:
+        return "relations"
+
+    @override
+    def topic(self) -> HostAttributeTopic:
+        return HOST_ATTRIBUTE_TOPIC_RELATIONS
+
+    @classmethod
+    @override
+    def sort_index(cls) -> int:
+        return 220
+
+    @override
+    def show_in_table(self) -> bool:
+        return False
+
+    @override
+    def show_in_folder(self) -> bool:
+        return False
+
+    @override
+    def show_in_host_search(self) -> bool:
+        return False
+
+    @override
+    def show_inherited_value(self) -> bool:
+        return False
+
+    @override
+    def show_in_bulk_edit(self) -> bool:
+        """One value for a whole selection would pile every host of it onto the same counterpart,
+        rewriting that host's folder once per selected host - and a refusal halfway through would
+        leave the selection half applied."""
+        return False
+
+    @override
+    def show_in_host_cleanup(self) -> bool:
+        """It would save the folder of each related host once per selected host, and leave the
+        selection half applied if one write is refused."""
+        return False
+
+    @override
+    def is_always_active(self) -> bool:
+        """Relations are neither inherited nor defaulted, so there is nothing to switch off."""
+        return True
+
+    @override
+    def openapi_editable(self) -> bool:
+        """The host endpoints of the REST API model the attribute themselves; as a generic
+        attribute it would be offered where one value applies to many hosts."""
+        return False
+
+    @override
+    def form_spec(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
+        return host_relations_form_spec()
+
+    @override
+    def merge_with_stored(self, value: object, stored_value: object) -> list[RelationLink]:
+        """The form has no row for a link of a kind this version cannot place, so it is kept."""
+        return with_links_not_shown(value, stored_value)
+
+    @override
+    def openapi_field(self) -> Field:
+        """Required of every attribute, but nothing reads this one: the host schemas list their
+        fields by hand."""
+        return fields.List(
+            fields.Dict(),
+            description="Relations between this host and other hosts, such as its "
+            "management board.",
+            required=False,
         )
 
 
@@ -1563,7 +1785,7 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
         )
 
 
-def _host_attribute_choices() -> Choices:
+def _host_attribute_choices() -> list[Choice]:
     return [
         (a.name(), a.title())
         for a in sorted_host_attributes(

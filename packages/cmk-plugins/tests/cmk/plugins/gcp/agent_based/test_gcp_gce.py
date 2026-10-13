@@ -2,6 +2,7 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State
@@ -47,13 +48,18 @@ NETWORK_SECTION = [
 ]
 
 
-def test_network_check(empty_value_store: None) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_network_check() -> None:
     section = gcp.parse_piggyback(NETWORK_SECTION)
     params = CHECK_DEFAULT_PARAMETERS
     item = "nic0"
     results = list(check_network(item, params, section))
     assert results == [
-        Result(state=State.OK, summary="[0]"),
+        Result(
+            state=State.OK,
+            summary="[0]",
+            details="Index: 0\nDescription: nic0\nAlias: nic0",
+        ),
         Result(state=State.OK, summary="(up)", details="Operational state: up"),
         Result(state=State.OK, summary="Speed: unknown"),
         Result(state=State.OK, summary="In: 385 B/s"),

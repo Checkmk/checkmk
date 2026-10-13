@@ -52,7 +52,6 @@ from .host_attributes import (
 )
 from .hosts_and_folders import (
     Folder,
-    folder_tree,
     FolderTree,
     Host,
     make_folder_tree,
@@ -64,6 +63,7 @@ NetworkScanFoundHosts = list[tuple[HostName, HostAddress]]
 
 class NetworkScanRequest(NamedTuple):
     folder_path: str
+    tree: FolderTree
 
 
 def execute_network_scan_job(config: Config) -> None:
@@ -254,12 +254,14 @@ class AutomationNetworkScan(AutomationCommand[NetworkScanRequest]):
         folder_path = request.var("folder")
         if folder_path is None:
             raise MKGeneralException(_("Folder path is missing"))
-        return NetworkScanRequest(folder_path=folder_path)
+        return NetworkScanRequest(folder_path=folder_path, tree=make_folder_tree(config))
 
     @override
     def execute(self, api_request: NetworkScanRequest) -> list[tuple[HostName, HostAddress]]:
-        folder = (tree := folder_tree()).folder(api_request.folder_path)
-        return _do_network_scan(folder, _known_ip_addresses(list(tree.all_hosts().values())))
+        folder = api_request.tree.folder(api_request.folder_path)
+        return _do_network_scan(
+            folder, _known_ip_addresses(list(api_request.tree.all_hosts().values()))
+        )
 
 
 def register(

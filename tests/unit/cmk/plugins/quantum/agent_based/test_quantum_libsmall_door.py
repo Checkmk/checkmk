@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import pytest
 
@@ -24,7 +23,7 @@ def test_parse_quantum_libsmall_door(string_table: StringTable, expected: _Secti
     assert expected == (parse_quantum_libsmall_door(string_table))
 
 
-def test_discovery_quantum_libsmall_door():
+def test_discovery_quantum_libsmall_door() -> None:
     assert [Service(item=None, parameters=None)] == list(discovery_quantum_libsmall_door(None))
 
 

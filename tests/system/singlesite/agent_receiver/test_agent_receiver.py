@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 import ssl
 import uuid
 from http import HTTPStatus
@@ -16,8 +17,8 @@ from dateutil.relativedelta import relativedelta
 from cmk.crypto.certificate import CertificateSigningRequest, CertificateWithPrivateKey
 from cmk.crypto.keys import PrivateKey
 from cmk.crypto.x509 import SAN, SubjectAlternativeNames, X509Name
-from tests.testlib.site import Site
-from tests.testlib.tls import CMKTLSError, tls_connect
+from tests.testlib.system.site import Site
+from tests.testlib.system.tls import CMKTLSError, tls_connect
 
 
 # Copied from tests/unit/agent_receiver/certs.py to make cmk-agent-receiver/tests self contained
@@ -99,6 +100,7 @@ def paired_keypair_fixture(
                 csr,
                 relativedelta(months=12),
                 SubjectAlternativeNames([SAN.dns_name(uuid_)]),
+                cert_log=Path(os.devnull),
             )
             .dump_pem()
             .str
@@ -122,7 +124,7 @@ def test_failing_pairing_no_uuid(agent_receiver_url: str, site: Site) -> None:
         json={"csr": csr.dump_pem().str},
         verify=False,
     )
-    assert agent_receiver_response.status_code == 400
+    assert agent_receiver_response.status_code == HTTPStatus.BAD_REQUEST
 
 
 @pytest.mark.skip_if_faked_artifacts
@@ -155,7 +157,7 @@ def test_register_existing_non_existing(
         },
         verify=False,
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json()["detail"] == "Host non-existing does not exist."
 
     response = requests.post(
@@ -168,7 +170,7 @@ def test_register_existing_non_existing(
         },
         verify=False,
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 @pytest.mark.skip_if_faked_artifacts
@@ -187,7 +189,7 @@ def test_register_with_hostname_non_existing(
         },
         verify=False,
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json()["detail"] == "Host non-existing does not exist."
 
     response = requests.post(
@@ -199,7 +201,7 @@ def test_register_with_hostname_non_existing(
         },
         verify=False,
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 UNSUPPORTED_VERSIONS = (ssl.TLSVersion.SSLv3, ssl.TLSVersion.TLSv1, ssl.TLSVersion.TLSv1_1)
@@ -237,7 +239,8 @@ def test_supported_tls_versions(
 
 
 @pytest.mark.skip_if_faked_artifacts
-def test_all_TLS_versions_tested(site: Site, agent_receiver_port: int, site_ca: Path) -> None:
+@pytest.mark.usefixtures("site", "agent_receiver_port", "site_ca")
+def test_all_TLS_versions_tested() -> None:
     """Ensure the above tests cover all TLS versions."""
     all_versions = {
         version

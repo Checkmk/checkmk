@@ -328,7 +328,7 @@ async fn test_validate_all_instances_remote() {
             .unwrap();
         assert!(is.len() >= 3, "we need at least 3 instances to check");
         for i in is {
-            match i.create_client(&cfg.endpoint(), None).await {
+            match i.create_client(&cfg.endpoint(), None, None).await {
                 Ok(mut c) => {
                     validate_all(&i, &mut c, &cfg.endpoint()).await;
                 }
@@ -474,6 +474,7 @@ async fn validate_table_spaces(
             &databases,
             find_known_query(sqls::Id::TableSpaces, &Edition::Normal).unwrap(),
             ' ',
+            &Edition::Normal,
         )
         .await;
     let lines: Vec<&str> = result.split('\n').collect();
@@ -536,6 +537,7 @@ async fn validate_transaction_logs(
             &databases,
             find_known_query(sqls::Id::TransactionLogs, &Edition::Normal).unwrap(),
             '|',
+            &Edition::Normal,
         )
         .await;
 
@@ -572,6 +574,7 @@ async fn validate_datafiles(instance: &SqlInstance, client: &mut UniClient, endp
             &databases,
             find_known_query(sqls::Id::Datafiles, &Edition::Normal).unwrap(),
             '|',
+            &Edition::Normal,
         )
         .await;
 
@@ -818,7 +821,7 @@ mssql:
         .unwrap();
 
         for i in is {
-            let c = i.create_client(&ms_sql.endpoint(), None).await;
+            let c = i.create_client(&ms_sql.endpoint(), None, None).await;
             match c {
                 Ok(mut c) => assert!(
                     tools::run_get_version(&mut c).await.is_some()
@@ -1730,6 +1733,7 @@ async fn test_odbc_high_level() {
             &Endpoint::new(&Authentication::default(), &c),
             None,
             &instance_name,
+            None,
             None,
         )
         .await

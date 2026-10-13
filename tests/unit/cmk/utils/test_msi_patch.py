@@ -61,7 +61,7 @@ def fixture_work_file(conf_dir: Path) -> Path:
 def test_parse_command_line() -> None:
     try:
         params = msi_patch.parse_command_line(["/path/to/executable", "win_ver", "msi", "param"])
-        assert params == msi_patch._Parameters(
+        assert params == msi_patch._Parameters(  # noqa: SLF001
             mode="win_ver",
             file_name=Path("msi"),
             mode_parameter="param",
@@ -71,7 +71,7 @@ def test_parse_command_line() -> None:
 
     try:
         params = msi_patch.parse_command_line(["/path/to/executable", "code", "msi"])
-        assert params == msi_patch._Parameters(
+        assert params == msi_patch._Parameters(  # noqa: SLF001
             mode="code",
             file_name=Path("msi"),
             mode_parameter="",
@@ -87,12 +87,14 @@ def test_parse_command_line_invalid() -> None:
         msi_patch.parse_command_line(["/path/to/executable", "1033", "msi", "a", "b"])
 
 
-def test_critical_consts(conf_dir: Path) -> None:
+@pytest.mark.usefixtures("conf_dir")
+def test_critical_consts() -> None:
     assert msi_patch.MSI_PACKAGE_CODE_OFFSET == 20
     assert msi_patch.MSI_PACKAGE_CODE_MARKER == "x64;1033"
 
 
-def test_low_level_api(conf_dir: Path, state_file: Path) -> None:
+@pytest.mark.usefixtures("conf_dir")
+def test_low_level_api(state_file: Path) -> None:
     assert msi_patch.generate_uuid() != msi_patch.generate_uuid()
     assert len(msi_patch.generate_uuid()) == 38
     msi_patch.write_state_file(state_file, 12, "12")
@@ -110,13 +112,9 @@ def test_validate_content(work_content: bytes) -> None:
         ("trashy", False, -1),
     ],
 )
+@pytest.mark.usefixtures("work_content")
 def test_patch_package_code_with_state(
-    work_file: Path,
-    work_content: bytes,
-    state_file: Path,
-    old_code: str,
-    success: bool,
-    loc: int,
+    work_file: Path, state_file: Path, old_code: str, success: bool, loc: int
 ) -> None:
     uuid = msi_patch.generate_uuid()
     assert (

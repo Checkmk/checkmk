@@ -17,7 +17,7 @@ SECTION_ELEMENTS = "initialized", "hasnetwork", "scheduled", "containersready", 
 
 
 def test_parameter_valuespec_returns_a_dictionary() -> None:
-    parameters = kube_pod_conditions._parameter_valuespec()
+    parameters = kube_pod_conditions._parameter_valuespec()  # noqa: SLF001
     assert isinstance(parameters, Dictionary)
 
 
@@ -26,8 +26,8 @@ def test_parameter_valuespec_has_element_for_section_element(
     section_element: str,
 ) -> None:
     expected_title = section_element
-    parameters = kube_pod_conditions._parameter_valuespec()
-    assert any(title == expected_title for title, _ in parameters._elements())
+    parameters = kube_pod_conditions._parameter_valuespec()  # noqa: SLF001
+    assert any(title == expected_title for title, _ in parameters._elements())  # noqa: SLF001
 
 
 @pytest.fixture
@@ -44,7 +44,7 @@ def test_rulespec_registry_match_type(rulespec: ManualCheckParameterRulespec) ->
 
 
 def test_rulespec_registry_parameter_valuespec(rulespec: ManualCheckParameterRulespec) -> None:
-    assert rulespec._parameter_valuespec == kube_pod_conditions._parameter_valuespec
+    assert rulespec._parameter_valuespec == kube_pod_conditions._parameter_valuespec  # noqa: SLF001
 
 
 def test_rulespec_registry_title(rulespec: ManualCheckParameterRulespec) -> None:

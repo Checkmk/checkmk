@@ -78,7 +78,7 @@ def check_netapp_ontap_snapshots(
     item: str,
     params: Mapping[str, Any],
     section_netapp_ontap_volumes: VolumesSection | None,
-    section_netapp_ontap_vs_status: SvmSection | None,
+    section_netapp_ontap_vs_status: SvmSection | None,  # noqa: ARG001
 ) -> CheckResult:
     if not section_netapp_ontap_volumes:
         return

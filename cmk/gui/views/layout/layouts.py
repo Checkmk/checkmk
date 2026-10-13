@@ -5,9 +5,7 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import abc
 import re
@@ -22,8 +20,8 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import ContentDispositionType, Request, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0 import Cell, EmptyCell
-from cmk.gui.painter.v1.helpers import is_stale
+from cmk.gui.painter import Cell, EmptyCell
+from cmk.gui.painter.helpers import is_stale
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.theme.current_theme import theme
@@ -121,7 +119,7 @@ class LayoutSingleDataset(Layout):
                     html.td(cell.title(use_short=False), class_="left")
 
                 for row in thispart:
-                    cell.paint(row, link_renderer, user=user)
+                    cell.paint(row, link_renderer, user=user, writer=html)
 
                 if len(thispart) < num_columns:
                     html.td(
@@ -160,7 +158,7 @@ class GroupedBoxesLayout(Layout):
                 last_group = this_group
                 current_group: list[tuple[str, Row]] = []
                 groups.append((this_group, current_group))
-            current_group.append((row_id(view["datasource"], row), row))
+            current_group.append((row_id(view["datasource"], row), row))  # type: ignore[possibly-undefined]
 
         columns: list[list[tuple[Hashable, list[tuple[str, Row]]]]] = []
 
@@ -220,7 +218,7 @@ class GroupedBoxesLayout(Layout):
             # state = row.get("service_state", row.get("aggr_state"))
             state = saveint(row.get("service_state"))
             if state is None:
-                state = saveint(row.get("host_state", 0))
+                state = saveint(row.get("host_state", 0))  # type: ignore[unreachable]
                 if state > 0:
                     state += 1  # 1 is critical for hosts
 
@@ -257,7 +255,7 @@ class GroupedBoxesLayout(Layout):
                 render_checkbox_td(view, row, num_cells)
 
             for cell in cells:
-                cell.paint(row, link_renderer, user=user)
+                cell.paint(row, link_renderer, user=user, writer=html)
 
             html.close_tr()
 
@@ -283,7 +281,7 @@ class GroupedBoxesLayout(Layout):
         for cell in group_cells:
             if painted:
                 html.td(",&nbsp;")
-            painted = cell.paint(first_row, link_renderer, user=user)
+            painted = cell.paint(first_row, link_renderer, user=user, writer=html)
         html.close_tr()
         html.close_thead()
         html.close_table()
@@ -293,7 +291,7 @@ class GroupedBoxesLayout(Layout):
         if show_checkboxes:
             render_group_checkbox_th()
         for cell in cells:
-            cell.paint_as_header()
+            cell.paint_as_header(html)
             html.write_text_permissive("\n")
         html.close_tr()
 
@@ -515,7 +513,7 @@ class LayoutTiled(Layout):
                     for cell in group_cells:
                         if painted:
                             html.td(",&nbsp;")
-                        painted = cell.paint(row, link_renderer, user=user)
+                        painted = cell.paint(row, link_renderer, user=user, writer=html)
 
                     html.close_tr()
                     html.close_table()
@@ -693,7 +691,7 @@ class LayoutTable(Layout):
                         for cell in group_cells:
                             if painted:
                                 html.td(",&nbsp;")
-                            painted = cell.paint(row, link_renderer, user=user)
+                            painted = cell.paint(row, link_renderer, user=user, writer=html)
 
                         html.close_tr()
                         html.close_table()
@@ -765,7 +763,7 @@ class LayoutTable(Layout):
                 render_checkbox_td(view, row, num_cells)
 
             for cell in cells:
-                cell.paint(row, link_renderer, user=user)
+                cell.paint(row, link_renderer, user=user, writer=html)
 
             column += 1
 
@@ -793,7 +791,7 @@ class LayoutTable(Layout):
                     html.th("")
 
             for cell in cells:
-                cell.paint_as_header()
+                cell.paint_as_header(html)
 
             if n < num_columns:
                 html.td("", class_="gap")

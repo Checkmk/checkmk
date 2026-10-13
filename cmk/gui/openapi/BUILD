@@ -8,6 +8,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
+        "//packages/cmk-maps:__pkg__",
         "//packages/cmk-wsgi:__pkg__",
         "//tests:__subpackages__",
     ],
@@ -96,12 +97,5 @@ py_library(
         "//cmk/gui/openapi/framework:core",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/openapi/shared_endpoint_families",
-    ],
-)
-
-sh_library(
-    name = "f12",
-    srcs = [
-        ".f12",
     ],
 )

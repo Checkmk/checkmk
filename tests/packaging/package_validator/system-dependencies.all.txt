@@ -44,3 +44,4 @@ libxcb.so
 libxml2.so
 libxslt.so
 libz.so
+libzstd.so

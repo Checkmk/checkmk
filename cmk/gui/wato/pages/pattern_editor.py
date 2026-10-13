@@ -32,11 +32,11 @@ from cmk.gui.page_menu import (
 from cmk.gui.search.matchers import (
     ABCMatchItemGenerator,
     MatchItem,
+    MatchItemConfig,
     MatchItemGeneratorRegistry,
     MatchItems,
 )
 from cmk.gui.table import Foldable, table_element
-from cmk.gui.type_defs import IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.wato.pages.rulesets import ModeEditRuleset
 from cmk.gui.watolib.automations import (
@@ -51,7 +51,7 @@ from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.hosts_and_folders import (
     folder_from_request,
     folder_preserving_link,
-    folder_tree,
+    make_folder_tree,
 )
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulesets import Rule, rules_grouped_by_folder, SingleRulesetRecursively
@@ -59,6 +59,8 @@ from cmk.gui.watolib.utils import mk_repr
 from cmk.livestatus_client import SiteConfiguration
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeuri_contextless
 
 
@@ -125,7 +127,7 @@ class ModePatternEditor(WatoMode):
         self._item = request.get_str_input_mandatory("file", "")
         self._match_txt = request.get_str_input_mandatory("match", "")
 
-        self._tree = folder_tree()
+        self._tree = make_folder_tree(self._ctx.config)
         self._host = folder_from_request(self._tree, request.var("folder"), self._hostname).host(
             self._hostname
         )
@@ -238,7 +240,7 @@ class ModePatternEditor(WatoMode):
         self, *, site_configs: Mapping[SiteId, SiteConfiguration], debug: bool
     ) -> None:
         ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(
-            folder_tree(), "logwatch_rules"
+            self._tree, "logwatch_rules"
         ).get("logwatch_rules")
 
         html.h3(_("Log file patterns"))
@@ -425,7 +427,9 @@ class ModePatternEditor(WatoMode):
 
 class MatchItemGeneratorLogfilePatternAnalyzer(ABCMatchItemGenerator):
     @override
-    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
+    def generate_match_items(
+        self, user_permissions: UserPermissions, _config: MatchItemConfig
+    ) -> MatchItems:
         title = ModePatternEditor.title_pattern_analyzer()
         yield MatchItem(
             title=title,

@@ -3,11 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Modes for services and discovery"""
 
@@ -59,14 +56,12 @@ from cmk.gui.page_menu_entry import disable_page_menu_entry, enable_page_menu_en
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.permissions import permission_registry
 from cmk.gui.table import Foldable, Table, table_element
-from cmk.gui.type_defs import HTTPVariables, IconNames, PermissionName, StaticIcon
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.view_utils import format_plugin_output, LabelRenderType, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
@@ -83,9 +78,9 @@ from cmk.gui.watolib.check_mk_automations import active_check
 from cmk.gui.watolib.hosts_and_folders import (
     folder_from_request,
     folder_preserving_link,
-    folder_tree,
     FolderTree,
     Host,
+    make_folder_tree,
 )
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.pending_changes import (
@@ -134,9 +129,13 @@ from cmk.utils.html import get_html_state_marker
 from cmk.utils.paths import omd_root
 from cmk.utils.servicename import Item
 from cmk.utils.statename import short_service_state_name
+from cmk.web.utils.csrf_token import check_csrf_token
+from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import MsgType
 from cmk.web.utils.html import HTML
-from cmk.web.utils.urls import makeuri_contextless
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
+from cmk.web.utils.urls import HTTPVariable, makeuri_contextless
 
 from ._status_links import make_host_status_link
 
@@ -224,7 +223,9 @@ class ModeDiscovery(WatoMode):
     @override
     def _from_vars(self) -> None:
         self._host = folder_from_request(
-            folder_tree(), request.var("folder"), request.get_ascii_input("host")
+            make_folder_tree(self._ctx.config),
+            request.var("folder"),
+            request.get_ascii_input("host"),
         ).load_host(request.get_validated_type_input_mandatory(HostName, "host"))
 
         self._host.permissions.need_permission("read", user)
@@ -272,13 +273,13 @@ class ModeDiscovery(WatoMode):
         self._async_progress_msg_container()
         self._container("service", True)
 
-        html.javascript(
-            "cmk.service_discovery.start(%s, %s, %s)"
-            % (
-                json.dumps(self._host.name()),
-                json.dumps(self._host.folder().path()),
-                json.dumps(self._options._asdict()),
-            )
+        html.call_ts_function(
+            function_name="service_discovery_start",
+            arguments={
+                "host_name": self._host.name(),
+                "folder_path": self._host.folder().path(),
+                "discovery_options": self._options._asdict(),
+            },
         )
 
     def _container(self, name: str, hidden: bool = False) -> None:
@@ -336,7 +337,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand[_AutomationServiceDiscover
         action = DiscoveryAction(options["action"])
         raise_errors = not options["ignore_errors"]
 
-        self._check_permissions(folder_tree(), host_name)
+        self._check_permissions(make_folder_tree(config), host_name)
 
         return _AutomationServiceDiscoveryRequest(
             host_name=host_name,
@@ -381,7 +382,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
         user.need_permission("wato.hosts")
 
         try:
@@ -393,7 +394,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         # Make Folder() be able to detect the current folder correctly
         request.set_var("folder", api_request.folder_path)
 
-        folder = folder_tree().folder(api_request.folder_path)
+        folder = make_folder_tree(ctx.config).folder(api_request.folder_path)
         host = folder.host(api_request.host_name)
         if not host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
@@ -647,7 +648,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     pending_changes=pending_changes,
                 )
             case DiscoveryAction.UPDATE_SERVICES:
-                discovery_result = perform_service_discovery(
+                discovery_result = perform_service_discovery(  # type: ignore[unreachable]
                     action=action,
                     discovery_result=discovery_result,
                     update_source=None,
@@ -904,7 +905,7 @@ class DiscoveryPageRenderer:
             # Colored overall state field
             html.open_div(class_="state_bar state%s" % overall_state)
             html.open_span()
-            match overall_state:
+            match overall_state:  # type: ignore[exhaustive-match]
                 case 0:
                     html.static_icon(StaticIcon(IconNames.check))
                 case 1:
@@ -1086,7 +1087,7 @@ class DiscoveryPageRenderer:
         messages = []
         for current_table, num in changed_entry.current_tables_with_count.items():
             use_plural = num > 1 or len(changed_entry.current_tables_with_count) > 1
-            match current_table:
+            match current_table:  # type: ignore[exhaustive-match]
                 case DiscoveryState.UNDECIDED:
                     messages.append(
                         _(
@@ -1236,7 +1237,7 @@ class DiscoveryPageRenderer:
 
     def _show_fix_all(self, discovery_result: DiscoveryResult) -> None:
         if not discovery_result:
-            return
+            return  # type: ignore[unreachable]
 
         if not user.may("wato.services"):
             return
@@ -1375,7 +1376,7 @@ class DiscoveryPageRenderer:
         if not user.may("wato.services"):
             return
 
-        match table_source:
+        match table_source:  # type: ignore[exhaustive-match]
             case DiscoveryState.MONITORED | DiscoveryState.CHANGED:
                 if has_modification_specific_permissions(UpdateType.UNDECIDED):
                     self._enable_bulk_button(table_source, DiscoveryState.UNDECIDED)
@@ -1616,16 +1617,16 @@ class DiscoveryPageRenderer:
             html.render_static_icon(StaticIcon(IconNames.reload), css_classes=["reloading"]),
             id_=div_id,
         )
-        html.javascript(
-            "cmk.service_discovery.register_delayed_active_check(%s, %s, %s, %s, %s, %s);"
-            % (
-                json.dumps(self._host.site_id() or ""),
-                json.dumps(self._host.folder().path()),
-                json.dumps(self._host.name()),
-                json.dumps(entry.check_plugin_name),
-                json.dumps(entry.item),
-                json.dumps(div_id),
-            )
+        html.call_ts_function(
+            function_name="register_delayed_active_check",
+            arguments={
+                "site": self._host.site_id() or "",
+                "folder_path": self._host.folder().path(),
+                "hostname": self._host.name(),
+                "checktype": entry.check_plugin_name,
+                "item": entry.item,
+                "divid": div_id,
+            },
         )
 
     def _show_check_parameters(self, entry: CheckPreviewEntry, *, debug: bool) -> None:
@@ -1735,7 +1736,7 @@ class DiscoveryPageRenderer:
         checkbox_name = checkbox_id(entry.check_plugin_name, entry.item)
 
         num_buttons = 0
-        match entry.check_source:
+        match entry.check_source:  # type: ignore[exhaustive-match]
             case DiscoveryState.CHANGED:
                 if has_modification_specific_permissions(UpdateType.MONITORED):
                     html.icon_button(
@@ -1874,7 +1875,9 @@ class DiscoveryPageRenderer:
             html.empty_icon()
             num_buttons += 1
 
-    def _action_menu_url_vars(self, checkbox_name: str, entry: CheckPreviewEntry) -> HTTPVariables:
+    def _action_menu_url_vars(
+        self, checkbox_name: str, entry: CheckPreviewEntry
+    ) -> list[HTTPVariable]:
         return [
             ("checkboxname", checkbox_name),
             ("hostname", self._host.name()),
@@ -2202,15 +2205,15 @@ class DiscoveryPageRenderer:
 
 
 class ModeAjaxExecuteCheck(AjaxPage):
-    def _handle_http_request(self, sites: SiteConfigurations) -> None:
+    def _handle_http_request(self, tree: FolderTree, sites: SiteConfigurations) -> None:
         self._site = SiteId(request.get_ascii_input_mandatory("site"))
         if self._site not in sites:
             raise MKUserError("site", _("You called this page with an invalid site."))
 
         self._host_name = request.get_validated_type_input_mandatory(HostName, "host")
-        self._host = folder_from_request(
-            folder_tree(), request.var("folder"), self._host_name
-        ).host(self._host_name)
+        self._host = folder_from_request(tree, request.var("folder"), self._host_name).host(
+            self._host_name
+        )
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
         self._host.permissions.need_permission("read", user)
@@ -2222,8 +2225,8 @@ class ModeAjaxExecuteCheck(AjaxPage):
 
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        self._handle_http_request(ctx.config.sites)
-        check_csrf_token()
+        self._handle_http_request(make_folder_tree(ctx.config), ctx.config.sites)
+        check_csrf_token(session, request, i18n=_)
         try:
             active_check_result = active_check(
                 make_automation_config(ctx.config.sites[self._site]),
@@ -2327,7 +2330,7 @@ def _page_menu_host_entries(host: Host) -> Iterator[PageMenuEntry]:
             ),
         )
 
-    yield make_host_status_link(host_name=host.name(), view_name="hoststatus")
+    yield make_host_status_link(host.folder().tree, host_name=host.name(), view_name="hoststatus")
 
     if user.may("wato.auditlog"):
         yield PageMenuEntry(
@@ -2731,14 +2734,10 @@ def _start_js_call(
     return f"cmk.service_discovery.start({params})"
 
 
-def ajax_popup_service_action_menu(ctx: PageContext) -> None:
-    checkbox_name = request.get_ascii_input_mandatory("checkboxname")
+def ajax_popup_service_action_menu(ctx: PageContext) -> None:  # noqa: ARG001
+    request.get_ascii_input_mandatory("checkboxname")
     hostname = request.get_validated_type_input_mandatory(HostName, "hostname")
     entry = CheckPreviewEntry(*json.loads(request.get_ascii_input_mandatory("entry")))
-    if checkbox_name is None or hostname is None:  # type: ignore[redundant-expr]
-        html.show_error(_("Cannot render drop-down: Missing required information"))
-        return
-
     html.open_a(href=DiscoveryPageRenderer.rulesets_button_link(entry.description, hostname))
     html.static_icon(StaticIcon(IconNames.rulesets))
     html.write_text_permissive(_("View and edit the parameters for this service"))

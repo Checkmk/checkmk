@@ -37,17 +37,17 @@ def migrate(value: object) -> Mapping[str, object]:
             if isinstance(interval, (int, float)) and interval > 60
             else ("sync", None)
         )
-        result: dict[str, object] = {"deployment": deployment}
-        for key in (
-            "node",
-            "containers",
-            "container_id",
-            "base_url",
-            "persist_period_node_disk_usage",
-        ):
-            if key in value:
-                result[key] = value[key]
-        return result
+        # Old rule ("first matching rule wins"): make all parameters explicit so that merging
+        # with other rules does not change the outcome. The fill values are the agent plug-in's
+        # built-in defaults.
+        return {
+            "deployment": deployment,
+            "node": value.get("node", []),
+            "containers": value.get("containers", []),
+            "container_id": value.get("container_id", "short"),
+            "base_url": value.get("base_url", "unix://var/run/docker.sock"),
+            "persist_period_node_disk_usage": value.get("persist_period_node_disk_usage", 90),
+        }
     raise ValueError(f"Unexpected value: {value!r}")
 
 

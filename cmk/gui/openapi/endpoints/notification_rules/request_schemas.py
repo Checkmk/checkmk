@@ -49,12 +49,15 @@ from cmk.gui.fields import (
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.form_specs.unstable import LegacyValueSpec
-from cmk.gui.openapi.endpoints.notification_rules.request_example import (
+from cmk.gui.openapi.endpoints.notification_rules.common import (
+    EVENT_CONSOLE_ALERTS_DESCRIPTION,
+    EVENT_CONSOLE_MATCH_TYPE_DESCRIPTION,
     notification_rule_request_example,
 )
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.tags import load_tag_group
 from cmk.gui.watolib.user_scripts import user_script_choices
+from cmk.rulesets.internal.form_specs import InternalProxySchema, parse_proxy_url
 from cmk.rulesets.v1.form_specs import Dictionary
 from cmk.rulesets.v1.rule_specs import NotificationParameters
 from cmk.utils import paths
@@ -259,16 +262,99 @@ class CheckboxWithListOfStr(Checkbox):
 
 class HttpProxy(BaseSchema):
     option = fields.String(
-        enum=["no_proxy", "environment", "url", "global"],
+        enum=["no_proxy", "environment", "url", "global", "manual"],
         required=True,
         example="",
     )
+
+
+def _validate_proxy_url(url: object) -> None:
+    # A URL that cannot be converted would be stored as it is, with its credentials in plain
+    # text, so it is rejected
+    if not isinstance(url, str) or parse_proxy_url(url) is None:
+        raise ValidationError(
+            "The proxy URL cannot be converted into a manual proxy configuration. "
+            "Please use the option 'manual'."
+        )
 
 
 class HttpProxyUrl(HttpProxy):
     url = fields.String(
         required=True,
         example="http://example_proxy",
+        validate=_validate_proxy_url,
+        description="Deprecated: use the option 'manual' instead. The URL is converted into a "
+        "manual proxy configuration. Credentials in the URL are saved as an explicit password. "
+        "A URL that cannot be converted is rejected.",
+    )
+
+
+class HttpProxyPasswordOption(BaseSchema):
+    option = fields.String(
+        enum=["store", "explicit"],
+        required=True,
+        example="store",
+    )
+
+
+class HttpProxyStoredPassword(HttpProxyPasswordOption):
+    store_id = PasswordStoreIDField(
+        presence="should_exist",
+        required=True,
+    )
+
+
+class HttpProxyExplicitPassword(HttpProxyPasswordOption):
+    password = fields.String(
+        required=True,
+        example="password",
+    )
+
+
+class HttpProxyPasswordSelector(OptionOneOfSchema):
+    type_schemas = {  # type: ignore[mutable-override]
+        "explicit": HttpProxyExplicitPassword,
+        "store": HttpProxyStoredPassword,
+    }
+
+
+class HttpProxyAuth(BaseSchema):
+    user = fields.String(
+        required=True,
+        minLength=1,
+        example="proxy_user",
+        description="The user name for the proxy authentication.",
+    )
+    password = fields.Nested(
+        HttpProxyPasswordSelector,
+        required=True,
+        description="The password for the proxy authentication, either from the password store "
+        "or explicitly configured.",
+    )
+
+
+class HttpProxyManual(HttpProxy):
+    scheme = fields.String(
+        enum=[schema.value for schema in InternalProxySchema],
+        required=True,
+        example="http",
+    )
+    proxy_server_name = fields.String(
+        required=True,
+        minLength=1,
+        example="proxy.example.com",
+        description="The name or IP address of the proxy server.",
+    )
+    port = fields.Integer(
+        required=True,
+        minimum=1,
+        maximum=65535,
+        example=3128,
+    )
+    auth = fields.Nested(
+        HttpProxyAuth,
+        required=False,
+        description="The authentication for the proxy, if required.",
     )
 
 
@@ -287,6 +373,7 @@ class HttpProxyOptions(OneOfSchema):
         "environment": HttpProxy,
         "url": HttpProxyUrl,
         "global": HttpProxyGlobal,
+        "manual": HttpProxyManual,
     }
 
 
@@ -720,8 +807,8 @@ class EventConsoleAlertAttributesBase(BaseSchema):
     match_type = fields.String(
         enum=["match_only_event_console_alerts", "do_not_match_event_console_alerts"],
         required=True,
-        example="match_only_event_console_events",
-        description="",
+        example="match_only_event_console_alerts",
+        description=EVENT_CONSOLE_MATCH_TYPE_DESCRIPTION,
     )
 
 
@@ -822,7 +909,6 @@ class CheckboxEventConsoleAlerts(Checkbox):
     value = fields.Nested(
         MatchTypeSelector,
         required=True,
-        description="The Event Console can have events create notifications in Check_MK. These notifications will be processed by the rule based notification system of Check_MK. This matching option helps you distinguishing and also gives you access to special event fields",
     )
 
 
@@ -1764,6 +1850,18 @@ class PagerDutyPluginCreate(BaseSchema):
     disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
     url_prefix_for_links_to_checkmk = URL_PREFIX_FOR_LINKS_TO_CHECKMK_CREATE
     http_proxy = HTTP_PROXY_CREATE
+    webhook_url = fields.String(
+        enum=[
+            "https://events.pagerduty.com/v2/enqueue",
+            "https://events.eu.pagerduty.com/v2/enqueue",
+        ],
+        load_default="https://events.pagerduty.com/v2/enqueue",
+        description=(
+            "PagerDuty Events API v2 endpoint to post incidents to. Pick the URL "
+            "matching the PagerDuty region (US or EU) your account belongs to."
+        ),
+        example="https://events.pagerduty.com/v2/enqueue",
+    )
 
 
 # PushOver ----------------------------------------------------------
@@ -2463,7 +2561,7 @@ class CustomPlugin(BaseSchema):
     )
 
     @pre_load
-    def _pre_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]
+    def _pre_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]  # noqa: ARG002
         return {k: v for k, v in data.items() if k in self.fields}
 
     @post_load(pass_original=True)
@@ -2923,6 +3021,7 @@ class RuleConditions(BaseSchema):
     event_console_alerts = fields.Nested(
         EventConsoleAlertCheckbox,
         load_default=lambda: {"state": "disabled"},
+        description=EVENT_CONSOLE_ALERTS_DESCRIPTION,
     )
 
 

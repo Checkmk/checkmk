@@ -3,14 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
 """Common operations for API endpoints."""
-
-from __future__ import annotations
 
 import contextlib
 import dataclasses
@@ -18,10 +15,10 @@ import http.client
 import json
 import logging
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from typing import Any, Literal, NoReturn, Self
+from http import HTTPStatus
+from typing import Any, Literal, Self
 from urllib import parse
 
-import pydantic
 from marshmallow import fields as ma_fields
 from marshmallow import Schema, ValidationError
 from pydantic_core import ErrorDetails
@@ -97,7 +94,6 @@ class ContentTypeValidator:
             and has_schema
             and content_type_ == "application/json"
             and "charset" in options
-            and options["charset"] is not None  # type: ignore[redundant-expr]
             and options["charset"].lower() != "utf-8"
         ):
             # but there are options.
@@ -191,7 +187,7 @@ class PathParamsValidator:
     @staticmethod
     def _schema_validation_exception(error_messages: list | dict) -> RestAPIPathValidationException:
         return RestAPIPathValidationException(
-            title=http.client.responses[404],
+            title=HTTPStatus.NOT_FOUND.phrase,
             detail=f"These fields have problems: {_format_fields(error_messages)}",
             fields=FIELDS(
                 error_messages if isinstance(error_messages, dict) else {"exc": error_messages},
@@ -201,7 +197,7 @@ class PathParamsValidator:
     @staticmethod
     def _auth_validation_exception(message: str) -> RestAPIForbiddenException:
         return RestAPIForbiddenException(
-            title=http.client.responses[403],
+            title=HTTPStatus.FORBIDDEN.phrase,
             detail=message,
         )
 
@@ -234,7 +230,7 @@ class QueryParamsValidator:
         error_messages: dict | list,
     ) -> RestAPIQueryPathValidationException:
         return RestAPIQueryPathValidationException(
-            title=http.client.responses[400],
+            title=HTTPStatus.BAD_REQUEST.phrase,
             detail=f"These fields have problems: {_format_fields(error_messages)}",
             fields=FIELDS(
                 error_messages if isinstance(error_messages, dict) else {"exc": error_messages},
@@ -244,7 +240,7 @@ class QueryParamsValidator:
     @staticmethod
     def _auth_validation_exception(message: str) -> RestAPIForbiddenException:
         return RestAPIForbiddenException(
-            title=http.client.responses[403],
+            title=HTTPStatus.FORBIDDEN.phrase,
             detail=message,
         )
 
@@ -258,7 +254,7 @@ class RequestDataValidator:
     ) -> RestAPIRequestDataValidationException:
         """Create a request data validation exception with consistent formatting"""
         return RestAPIRequestDataValidationException(
-            title=http.client.responses[400],
+            title=HTTPStatus.BAD_REQUEST.phrase,
             detail=f"These fields have problems: {_format_fields(error_messages)}",
             fields=FIELDS(
                 error_messages if isinstance(error_messages, dict) else {"exc": error_messages},
@@ -268,7 +264,7 @@ class RequestDataValidator:
     @staticmethod
     def _auth_exception(exc_detail: str) -> RestAPIForbiddenException:
         return RestAPIForbiddenException(
-            title=http.client.responses[403],
+            title=HTTPStatus.FORBIDDEN.phrase,
             detail=exc_detail,
         )
 
@@ -293,22 +289,17 @@ class RequestDataValidator:
         return ".".join(str(loc) for loc in location)
 
     @staticmethod
-    def raise_formatted_pydantic_error(
-        validation_error: pydantic.ValidationError,
-        status_code: Literal[400, 401, 403, 404, 406, 415] = 400,
-    ) -> NoReturn:
-        """Convert a Pydantic validation error to a RestAPIRequestDataValidationException."""
-        # the context may contain the actual exception, which is usually not serializable
-        # the msg contains the exception details, which is hopefully enough to understand the issue
-        raise RequestDataValidator.format_error_details(
-            status_code=status_code,
-            errors=validation_error.errors(include_context=False),
-        ) from validation_error
-
-    @staticmethod
     def format_error_details(
         errors: Iterable[ErrorDetails],
-        status_code: Literal[400, 401, 403, 404, 406, 409, 415] = 400,
+        status_code: Literal[
+            HTTPStatus.BAD_REQUEST,
+            HTTPStatus.UNAUTHORIZED,
+            HTTPStatus.FORBIDDEN,
+            HTTPStatus.NOT_FOUND,
+            HTTPStatus.NOT_ACCEPTABLE,
+            HTTPStatus.CONFLICT,
+            HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
+        ] = HTTPStatus.BAD_REQUEST,
     ) -> RestAPIRequestGeneralException:
         """Create a RestAPIRequestGeneralException from error details."""
         error_dict = {
@@ -339,7 +330,7 @@ class HeaderValidator:
     @staticmethod
     def _schema_validation_exception(error_messages: Any) -> RestAPIHeaderSchemaValidationException:
         return RestAPIHeaderSchemaValidationException(
-            title=http.client.responses[400],
+            title=HTTPStatus.BAD_REQUEST.phrase,
             detail=f"These fields have problems: {_format_fields(error_messages)}",
             fields=FIELDS(
                 error_messages if isinstance(error_messages, dict) else {"exc": error_messages},
@@ -426,7 +417,7 @@ class ResponseValidator:
                 ext=EXT({"data_sent": str(response.data)}),
             )
 
-        if response.status_code == 204:
+        if response.status_code == HTTPStatus.NO_CONTENT:
             del response.content_type
 
         if response.status_code not in expected_status_codes:

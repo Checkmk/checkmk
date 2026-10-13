@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="unreachable"
 
 import time
 
@@ -11,13 +10,13 @@ import cmk.utils.render
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.ifaceoper import interface_oper_state_name, interface_port_types
-from cmk.inventory.structured_data import SDValue
+from cmk.inventory.trees import SDValue
 from cmk.web.utils.escaping import escape_text
 
 from .registry import InvPaintFunction, InvPaintFunctions, PaintResult
 
 
-def register(inv_paint_funtions: InvPaintFunctions) -> None:
+def register(inv_paint_functions: InvPaintFunctions) -> None:
     for paint_function in [
         inv_paint_generic,
         inv_paint_hz,
@@ -48,8 +47,8 @@ def register(inv_paint_funtions: InvPaintFunctions) -> None:
         inv_paint_service_status,
     ]:
         # Do no overwrite paint functions from plugins
-        if paint_function.__name__ not in inv_paint_funtions:
-            inv_paint_funtions.register(
+        if paint_function.__name__ not in inv_paint_functions:
+            inv_paint_functions.register(
                 InvPaintFunction(name=paint_function.__name__, func=paint_function)
             )
 
@@ -57,12 +56,12 @@ def register(inv_paint_funtions: InvPaintFunctions) -> None:
 def inv_paint_generic(value: SDValue) -> PaintResult:
     if value == "" or value is None:
         return "", ""
+    if isinstance(value, bool):
+        return "", _("Yes") if value else _("No")
     if isinstance(value, float):
         return "number", "%.2f" % value
     if isinstance(value, int):
         return "number", "%d" % value
-    if isinstance(value, bool):
-        return "", _("Yes") if value else _("No")
     return "", escape_text("%s" % value)
 
 

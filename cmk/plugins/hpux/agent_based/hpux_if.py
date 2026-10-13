@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 import time
 
@@ -53,21 +52,21 @@ def parse_hpux_if(
         right = right.strip()
 
         if left == "PPA Number":
-            iface.attributes.index = right
+            iface.attributes.index = right  # type: ignore[possibly-undefined]
         elif left == "Interface Name":
-            iface.attributes.descr = iface.attributes.alias = right
+            iface.attributes.descr = iface.attributes.alias = right  # type: ignore[possibly-undefined]
         elif left == "Speed":
-            iface.attributes.speed = hpux_parse_speed(right)
+            iface.attributes.speed = hpux_parse_speed(right)  # type: ignore[possibly-undefined]
         elif left == "Operation Status":
-            iface.attributes.oper_status = hpux_parse_operstatus(right)
+            iface.attributes.oper_status = hpux_parse_operstatus(right)  # type: ignore[possibly-undefined]
         elif left == "Station Address":
             h = right[2:]
-            iface.attributes.phys_address = "".join(
+            iface.attributes.phys_address = "".join(  # type: ignore[possibly-undefined]
                 [chr(int(x + y, 16)) for (x, y) in zip(h[::2], h[1::2])]
             )
         elif left in _HPUX_FIELDS_TO_IF_FIELDS:
             setattr(
-                iface.counters,
+                iface.counters,  # type: ignore[possibly-undefined]
                 _HPUX_FIELDS_TO_IF_FIELDS[left],
                 interfaces.saveint(right),
             )

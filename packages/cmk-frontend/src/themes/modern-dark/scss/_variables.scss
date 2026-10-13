@@ -109,9 +109,11 @@ $dashlet-body-bg-color: $ux-theme-2;
 
 $td-gap-bg-color: $ux-theme-2;
 
-$td-text-overflow: ellipsis;
+$graph-page-header-bg-color: $color-midnight-grey-80;
+$graph-page-menu-bar-bg-color: $color-midnight-grey-90;
+$graph-page-header-border-color: $color-mid-grey-100;
 
-$graph-legend-th-border-bottom: 1px solid $grey-1;
+$td-text-overflow: ellipsis;
 
 $dashlet-stats-border-top-color: $grey-5;
 
@@ -182,11 +184,8 @@ $dashlet-inner-bg-color: $ux-theme-2;
 
 $bar-fill-color: rgb(60, 194, 255);
 $bar-hover-fill-color: rgb(60, 194, 255);
-$barbar-fill-color: rgb(14, 58, 99);
-$barbar-hover-fill-color: rgb(14, 58, 99);
 
 $dc-graph-color-0: $success;
-$scatterdot-hilite-color: $yellow;
 
 /* TODO:  move variables defined for the UX project to the correct place */
 $popup-shadow-color: rgba($black, 0.1);
@@ -214,32 +213,9 @@ $dashlet-editor-controls-color: rgb(78, 93, 105);
 $dark-image-invert: invert(100%);
 $ntop-protocol-painter-padding-top: 4px;
 // =============================
-// The main dashboard shows the hosts and services stats dashlets right next to the total host and
-// service problems graphs. Therefore, we should keep the colors in sync.
-// metrics counterpart: cmk_hosts_down, cmk_services_critical
-$hexagon-critical-color: $color-dark-red-50;
-$label-box-critical-border-color: $color-dark-red-40;
-// metrics counterpart: cmk_hosts_unreachable, cmk_services_unknown
-$hexagon-unknown-color: $color-orange-50;
-$label-box-unknown-border-color: $color-orange-50;
-// metrics counterpart: cmk_hosts_in_downtime, cmk_services_in_downtime
-$hexagon-downtime-color: $color-light-blue-50;
-$label-box-downtime-border-color: $color-light-blue-50;
-// metrics counterpart: cmk_services_on_down_hosts
-$hexagon-host-down-color: $color-dark-blue-50;
-$label-box-host-down-border-color: $color-dark-blue-40;
-
-$label-box-ok-border-color: $color-corporate-green-50;
-// =============================
-$hexagon-empty-color: $white;
-$hexagon-empty-fill-opacity: 0.03;
-$hexagon-empty-stroke-color: $white;
-$hexagon-empty-stroke-opacity: 0.1;
-$host-hexagon-ok-stroke-color: rgb(58, 69, 80);
 $bi-box-border-color: $darkgrey;
 $icons-popup-active-color: $darkgrey;
 $dashlet-figures-grid-color: rgb(128, 151, 177);
-$scatterplot-hilite-color: rgb(70, 130, 180);
 $gauge-span-color: $ux-theme-5;
 $gauge-single-value-color: $font-color;
 $inactive-opacity: 0.6;

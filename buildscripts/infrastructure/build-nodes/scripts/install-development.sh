@@ -57,7 +57,7 @@ install_basic_tools() {
         "doxygen"        # to be able to create docs in the unlikely event
         "gawk"           # TBC
         "git"            # git is used by install-[bazel, cmake, patchelf, protobuf-cpp].sh
-        "gnupg"          # "apt-key" used by install-docker
+        "gnupg"          # "gpg --dearmor" used by install-packer.sh
         "lsb-release"    # lsb is used by install-[clang, docker, packer].sh
         "make"           # don't forget your towel when you're taveling :)
         "sudo"           # some make calls require sudo

@@ -28,7 +28,7 @@ def disabled_versioned(endpoint: VersionedEndpoint, detail: str) -> VersionedEnd
     for version, handler in endpoint.versions.items():
 
         @functools.wraps(handler.handler)
-        def _stub(*args: Any, **kwargs: Any) -> Any:  # type: ignore[misc]
+        def _stub(*args: Any, **kwargs: Any) -> Any:  # type: ignore[misc]  # noqa: ARG001
             raise RestAPIForbiddenException(
                 title="Feature not available",
                 detail=detail,

@@ -8,13 +8,14 @@
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Callable, Mapping
+from http import HTTPStatus
 
 import pytest
 
 from cmk.graphing_engine import HostName, MetricName, Service, ServiceName
 from cmk.gui.graphing.openapi import translate_metric_names as endpoint_module
 from cmk.livestatus_client import MKLivestatusSocketError
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 # The CPU utilization check reports the raw perf-data name "wait", which the collection
 # plug-in renames to the metric "io_wait".
@@ -107,7 +108,7 @@ def test_translate_metric_names_of_a_site_the_user_may_not_see_is_rejected(
         expect_ok=False,
     )
 
-    assert resp.status_code == 400
+    assert resp.status_code == HTTPStatus.BAD_REQUEST
 
 
 def test_translate_metric_names_livestatus_failure_is_503(
@@ -127,5 +128,5 @@ def test_translate_metric_names_livestatus_failure_is_503(
         hostname="my-host", service_description="CPU utilization", expect_ok=False
     )
 
-    assert resp.status_code == 503
+    assert resp.status_code == HTTPStatus.SERVICE_UNAVAILABLE
     assert "connection refused" in resp.json["detail"]

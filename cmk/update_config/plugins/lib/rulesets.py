@@ -28,16 +28,32 @@ from cmk.ruleset_matcher.tags import TagGroupID
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.log import VERBOSE
 
-REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {}
+# 3.0: metric backend -> data backend / telemetry metrics
+REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
+    "checkgroup_parameters:custom_query_metric_backend_monitoring": (
+        "checkgroup_parameters:telemetry_custom_service_monitoring"
+    ),
+    "static_checks:custom_query_metric_backend_monitoring": (
+        "static_checks:telemetry_custom_service_monitoring"
+    ),
+    "checkgroup_parameters:telemetry_metrics_custom_query_monitoring": (
+        "checkgroup_parameters:telemetry_custom_service_monitoring"
+    ),
+    "static_checks:telemetry_metrics_custom_query_monitoring": (
+        "static_checks:telemetry_custom_service_monitoring"
+    ),
+    "checkgroup_parameters:metric_backend_omd": (
+        "checkgroup_parameters:data_backend_telemetry_metrics_omd"
+    ),
+    "static_checks:metric_backend_omd": "static_checks:data_backend_telemetry_metrics_omd",
+}
 
 RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {}
 
-DEPRECATED_RULESET_PATTERNS = (re.compile("^agent_simulator$"),)
+DEPRECATED_RULESET_PATTERNS: Sequence[re.Pattern] = ()
 
 # Rulesets that have been removed without previous deprecation
-REMOVED_RULESETS: Iterable[RulesetName] = {
-    "special_agents:otel"  #  2.4 -> 2.5
-}
+REMOVED_RULESETS: Iterable[RulesetName] = ()
 
 SKIP_ACTION: Final = {
     # the valid choices for this ruleset are user-dependent (SLAs) and not even an admin can
@@ -61,6 +77,10 @@ SKIP_PREACTION: Final = SKIP_ACTION | {
     # * the rule validation with the replaced ruleset will happen after the replacing anyway again
     # see cmk.update_config.plugins.actions.rulesets._validate_rule_values
     *{ruleset for ruleset in REPLACED_RULESETS if ruleset.startswith("static_checks:")},
+    # Same situation, without a rename: the parameters are still a positional tuple until
+    # the migrate_wmic_process_params action rewrites them, and that runs after this
+    # pre-action. Validating them here can only ever fail.
+    RuleGroup.StaticChecks("wmic_process"),
 }
 
 
@@ -296,13 +316,14 @@ def transform_wato_rulesets_params(
                 if raise_errors:
                     raise
                 logger.exception(
+                    # The value is not logged, since it may contain secrets
                     "ERROR: Failed to transform rule: (Ruleset: %(ruleset_name)s, "
-                    "Folder: %(folder)s, Rule: %(rule_index)d, Value: %(value)s",
+                    "Folder: %(folder)s, Rule: %(rule_index)d, ID: %(rule_id)s",
                     {
                         "ruleset_name": ruleset.name,
                         "folder": folder.path(),
                         "rule_index": folder_index,
-                        "value": rule.value,
+                        "rule_id": rule.id,
                     },
                 )
     return migrated_rulesets
@@ -362,13 +383,14 @@ def transform_remove_null_host_tag_conditions_from_rulesets(
                 if raise_errors:
                     raise
                 logger.exception(
+                    # The value is not logged, since it may contain secrets
                     "ERROR: Failed to transform rule: (Ruleset: %(ruleset_name)s, "
-                    "Folder: %(folder)s, Rule: %(rule_index)d, Value: %(value)s",
+                    "Folder: %(folder)s, Rule: %(rule_index)d, ID: %(rule_id)s",
                     {
                         "ruleset_name": ruleset.name,
                         "folder": folder.path(),
                         "rule_index": folder_index,
-                        "value": old_rule.value,
+                        "rule_id": old_rule.id,
                     },
                 )
     return migrated_rulesets

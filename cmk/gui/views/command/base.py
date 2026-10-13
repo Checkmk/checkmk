@@ -13,11 +13,12 @@ from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.page_menu import PageMenuVue
 from cmk.gui.permissions import Permission
-from cmk.gui.type_defs import DynamicIconName, Row, Rows
-from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.type_defs import Row, Rows
 from cmk.livestatus_client import Command as LivestatusCommand
 from cmk.livestatus_client import LivestatusClient
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIconName
+from cmk.web.utils.speaklater import LazyString
 
 from .group import CommandGroup
 
@@ -34,7 +35,7 @@ class CommandConfirmDialogOptions:
     confirm_button: LazyString
     cancel_button: LazyString
     deny_button: LazyString | None = None
-    deny_js_function: str | None = None
+    deny_popup_id: str | None = None
 
 
 CommandActionResult = (
@@ -53,7 +54,7 @@ class Command:
         tables: Sequence[str],
         render: Callable[[str], None],
         action: Callable[
-            ["Command", Literal["HOST", "SVC"], str, Row, int, Rows], CommandActionResult
+            [Command, Literal["HOST", "SVC"], str, Row, int, Rows], CommandActionResult
         ],
         group: type[CommandGroup],
         confirm_button: LazyString | Callable[[], LazyString],
@@ -62,7 +63,7 @@ class Command:
         confirm_dialog_icon_class: Callable[[], Literal["question", "warning"]] | None = None,
         cancel_button: LazyString = _l("Cancel"),
         deny_button: LazyString | None = None,
-        deny_js_function: str | None = None,
+        deny_popup_id: str | None = None,
         affected_output_cb: Callable[[int, Literal["HOST", "SVC"]], HTML] | None = None,
         icon_name: DynamicIconName = DynamicIconName("commands"),
         is_show_more: bool = False,
@@ -80,7 +81,7 @@ class Command:
         self._confirm_title = confirm_title
         self.cancel_button = cancel_button
         self.deny_button = deny_button
-        self.deny_js_function = deny_js_function
+        self.deny_popup_id = deny_popup_id
         self.permission = permission
         self.tables = tables
         self.render = render
@@ -135,7 +136,7 @@ class Command:
             self.confirm_button() if callable(self.confirm_button) else self.confirm_button,
             self.cancel_button,
             self.deny_button,
-            self.deny_js_function,
+            self.deny_popup_id,
         )
 
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
@@ -162,7 +163,9 @@ class Command:
         )
 
     def user_confirm_options(
-        self, len_rows: int, cmdtag: Literal["HOST", "SVC"]
+        self,
+        len_rows: int,  # noqa: ARG002
+        cmdtag: Literal["HOST", "SVC"],  # noqa: ARG002
     ) -> list[tuple[str, str]]:
         return [(_("Confirm"), "_do_confirm")]
 

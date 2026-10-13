@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
-from __future__ import annotations
+# mypy: disable-error-code="explicit-any"
+
 
 import typing
 from collections.abc import Iterator
@@ -19,7 +18,7 @@ from pytest_mock import MockerFixture
 from werkzeug.test import create_environ
 
 import cmk.gui.watolib.password_store
-import cmk.utils.paths
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import http, login
@@ -28,7 +27,7 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
 from cmk.livestatus_client.testing import mock_livestatus_communication, MockLiveStatusConnection
 from cmk.utils.redis import disable_redis
-from tests.testlib.gui.common_fixtures import (
+from tests.testlib.unit.gui.common_fixtures import (
     create_aut_user_auth_wsgi_app,
     create_flask_app,
     create_test_hosts,
@@ -39,17 +38,23 @@ from tests.testlib.gui.common_fixtures import (
     perform_load_config,
     perform_load_plugins,
     RemoteAutomation,
+    run_background_jobs_in_threads,
     set_config_context,
     suppress_remote_automation_calls_patches,
     validate_background_job_annotation,
 )
-from tests.testlib.gui.users import create_and_destroy_user
-from tests.testlib.gui.web_test_app import (
+from tests.testlib.unit.gui.distributed_setup import running_on_a_remote_site
+from tests.testlib.unit.gui.users import create_and_destroy_user
+from tests.testlib.unit.gui.web_test_app import (
     SetConfig,
     WebTestAppForCMK,
     WebTestAppRequestHandler,
 )
-from tests.testlib.rest_api_client import ClientRegistry, get_client_registry
+from tests.testlib.unit.rest_api_client import ClientRegistry, get_client_registry
+
+# The shared test bodies assert on behalf of the tests that call them and are imported
+# by the test modules of every edition, so they need the rewrite the test modules get.
+pytest.register_assert_rewrite("tests.unit.cmk.gui.helpers")
 
 
 @pytest.fixture
@@ -61,7 +66,7 @@ def mock_password_file_regeneration(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def deactivate_redis(request: pytest.FixtureRequest) -> Iterator[None]:
     """Disable redis for all GUI unit tests by default
 
@@ -86,17 +91,17 @@ def allow_redis() -> None:
     """Opt-out of the deactivate_redis fixture (see there)"""
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def disable_automation_helper(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("_CMK_AUTOMATIONS_FORCE_CLI_INTERFACE", "1")
 
 
-@pytest.fixture(autouse=True)
-def execute_background_jobs_without_job_scheduler(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("_CMK_BG_JOBS_WITHOUT_JOB_SCHEDULER", "1")
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+def execute_background_jobs_without_job_scheduler() -> Iterator[None]:
+    yield from run_background_jobs_in_threads()
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def gui_cleanup_after_test(
     mocker: MockerFixture,
 ) -> Iterator[None]:
@@ -139,21 +144,11 @@ def set_config_fixture() -> SetConfig:
 
 @pytest.fixture(name="remote_site")
 def fixture_remote_site() -> Iterator[None]:
-    """Make the code believe it runs on a distributed-setup remote site."""
-    cmk.utils.paths.check_mk_config_dir.mkdir(parents=True, exist_ok=True)
-    distr_wato_mk = cmk.utils.paths.check_mk_config_dir / "distributed_wato.mk"
-    previous = distr_wato_mk.read_bytes() if distr_wato_mk.exists() else None
-    distr_wato_mk.write_text("is_distributed_setup_remote_site = True\n")
-    try:
+    with running_on_a_remote_site():
         yield
-    finally:
-        if previous is None:
-            distr_wato_mk.unlink(missing_ok=True)
-        else:
-            distr_wato_mk.write_bytes(previous)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def load_plugins(test_edition: Edition) -> None:
     perform_load_plugins(test_edition)
 
@@ -210,7 +205,7 @@ def allow_background_jobs() -> None:
     return
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fail_on_unannotated_background_job_start(
     request: pytest.FixtureRequest, mocker: MockerFixture
 ) -> None:
@@ -221,7 +216,7 @@ def fail_on_unannotated_background_job_start(
 def fixture_suppress_bake_agents_in_background(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(
         "cmk.gui.watolib.bakery.try_bake_agents_for_hosts",
-        side_effect=lambda *args, **kw: None,
+        side_effect=lambda *args, **kw: None,  # noqa: ARG005
     )
 
 
@@ -284,9 +279,9 @@ def aut_user_auth_wsgi_app(
 
 @pytest.fixture()
 def with_host(
-    request_context,
-    with_admin_login,
-):
+    request_context: None,
+    with_admin_login: UserId,
+) -> Iterator[list[HostName]]:
     yield from create_test_hosts()
 
 

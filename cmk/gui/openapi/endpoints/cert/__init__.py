@@ -11,6 +11,7 @@ Checkmk uses TLS certificates to secure agent communication.
 """
 
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any
 
 from cryptography import x509
@@ -32,7 +33,14 @@ from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.utils.certs import agent_root_ca_path, cert_dir, CertManagementEvent, RootCA, SiteCA
+from cmk.utils.certs import (
+    agent_root_ca_path,
+    cert_dir,
+    CertManagementEvent,
+    issued_certificates_path,
+    RootCA,
+    SiteCA,
+)
 from cmk.utils.paths import omd_root
 from cmk.utils.security_event import log_security_event
 from cmk.web.utils import permission_verification as permissions
@@ -77,6 +85,7 @@ def _serialized_signed_cert(csr: x509.CertificateSigningRequest) -> str:
             months=config.active_config.agent_controller_certificates["lifetime_in_months"]
         ),
         subject_alternative_names=SubjectAlternativeNames([SAN.dns_name(csr_.subject.common_name)]),
+        cert_log=issued_certificates_path(omd_root, "agents"),
     )
     log_security_event(
         CertManagementEvent(
@@ -95,18 +104,18 @@ def _serialized_signed_cert(csr: x509.CertificateSigningRequest) -> str:
     "cmk/show",
     method="get",
     tag_group="Checkmk Internal",
-    additional_status_codes=[403],
+    additional_status_codes=[HTTPStatus.FORBIDDEN],
     status_descriptions={
-        403: _403_STATUS_DESCRIPTION,
+        HTTPStatus.FORBIDDEN: _403_STATUS_DESCRIPTION,
     },
     permissions_required=permissions.Perm("general.agent_pairing"),
     response_schema=X509PEM,
 )
-def root_cert(param: Mapping[str, object]) -> Response:
+def root_cert(param: Mapping[str, object]) -> Response:  # noqa: ARG001
     """X.509 PEM-encoded root certificate"""
     if not _user_is_authorized():
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Unauthorized",
             detail=_403_STATUS_DESCRIPTION,
         )
@@ -122,9 +131,9 @@ def root_cert(param: Mapping[str, object]) -> Response:
     "cmk/sign",
     method="post",
     tag_group="Checkmk Internal",
-    additional_status_codes=[403],
+    additional_status_codes=[HTTPStatus.FORBIDDEN],
     status_descriptions={
-        403: _403_STATUS_DESCRIPTION,
+        HTTPStatus.FORBIDDEN: _403_STATUS_DESCRIPTION,
     },
     request_schema=X509ReqPEMUUID,
     response_schema=X509PEM,
@@ -134,7 +143,7 @@ def make_certificate(param: Mapping[str, Any]) -> Response:  # type: ignore[expl
     """X.509 PEM-encoded Certificate Signing Requests (CSRs)"""
     if not _user_is_authorized():
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Unauthorized",
             detail=_403_STATUS_DESCRIPTION,
         )
@@ -150,9 +159,9 @@ def make_certificate(param: Mapping[str, Any]) -> Response:  # type: ignore[expl
     "cmk/global_config",
     method="get",
     tag_group="Checkmk Internal",
-    additional_status_codes=[403],
+    additional_status_codes=[HTTPStatus.FORBIDDEN],
     status_descriptions={
-        403: "Unauthorized to read the global settings",
+        HTTPStatus.FORBIDDEN: "Unauthorized to read the global settings",
     },
     response_schema=AgentControllerCertificateSettings,
     permissions_required=permissions.AnyPerm(
@@ -162,11 +171,11 @@ def make_certificate(param: Mapping[str, Any]) -> Response:  # type: ignore[expl
         ],
     ),
 )
-def agent_controller_certificates_settings(param: object) -> Response:
+def agent_controller_certificates_settings(param: object) -> Response:  # noqa: ARG001
     """Show agent controller certificate settings"""
     if not (user.may("wato.seeall") or user.may("wato.global")):
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Unauthorized",
             detail="Unauthorized to read the global settings",
         )

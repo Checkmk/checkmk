@@ -37,19 +37,21 @@ snmp_section_arbor_pravail_drop_rate = SimpleSNMPSection(
 )
 
 
-def discover_arbor_drop_rate(section: int) -> DiscoveryResult:
+def discover_arbor_drop_rate(section: int) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="Overrun")
 
 
 def check_arbor_drop_rate(
-    item: Literal["Overrun"], params: Mapping[str, Any], section: int
+    item: Literal["Overrun"],  # noqa: ARG001
+    params: Mapping[str, Any],
+    section: int,
 ) -> CheckResult:
     yield from check_levels_v1(
         section,
         metric_name="if_in_pkts",
         levels_lower=params.get("levels_lower"),
         levels_upper=params.get("levels"),
-        render_func=lambda x: "%.1f pps",
+        render_func=lambda x: "%.1f pps",  # noqa: ARG005
     )
 
 

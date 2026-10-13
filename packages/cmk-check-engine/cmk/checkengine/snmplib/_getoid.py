@@ -6,7 +6,6 @@
 import logging
 from contextlib import suppress
 
-import cmk.ccc.cleanup
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException
 

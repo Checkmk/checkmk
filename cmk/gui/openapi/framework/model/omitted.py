@@ -17,12 +17,12 @@ default value. For serializing the response, the `json_dump_without_omitted` fun
 to remove the `ApiOmitted` values from the response body.
 """
 
-import types
-from typing import cast, ClassVar, Literal, NoReturn, override, Self, TypeAliasType
+from typing import ClassVar, Literal, NoReturn, override, Self
 
 from pydantic import GetCoreSchemaHandler, GetJsonSchemaHandler
-from pydantic_core import CoreSchema, PydanticOmit
+from pydantic_core import CoreSchema, ErrorDetails, PydanticOmit
 from pydantic_core.core_schema import is_instance_schema
+from typing_extensions import TypeForm
 
 from cmk.gui.openapi._type_adapter import get_cached_type_adapter
 
@@ -38,7 +38,7 @@ class ApiOmitted:
     """
 
     __slots__ = ()
-    _instance: ClassVar["ApiOmitted | None"] = None
+    _instance: ClassVar[ApiOmitted | None] = None
 
     @classmethod
     def __get_pydantic_core_schema__(
@@ -52,7 +52,7 @@ class ApiOmitted:
     ) -> NoReturn:
         raise PydanticOmit
 
-    def __new__(cls, *args: object, **kwargs: object) -> "ApiOmitted":
+    def __new__(cls, *args: object, **kwargs: object) -> ApiOmitted:  # noqa: ARG004
         # Singleton pattern to ensure only one instance of ApiOmitted exists
         if cls._instance is None:
             cls._instance = super().__new__(cls)
@@ -66,7 +66,7 @@ class ApiOmitted:
         return False
 
     @staticmethod
-    def to_optional[T](value: "T | ApiOmitted") -> T | None:
+    def to_optional[T](value: T | ApiOmitted) -> T | None:
         """Convert a value to None if it is ApiOmitted, otherwise return the value."""
         if isinstance(value, ApiOmitted):
             return None
@@ -80,11 +80,8 @@ class ApiOmitted:
         return value
 
 
-# TODO(PEP-747): once TypeForm lands, replace `type | TypeAliasType | types.UnionType` with
-#   `TypeForm[T]` restore `json_dump_without_omitted` to its original generic form:
-#   `json_dump_without_omitted[T](instance_type: TypeForm[T], instance: T) -> bytes`
 def json_dump_without_omitted(
-    instance_type: type | TypeAliasType | types.UnionType,
+    instance_type: TypeForm[object],
     instance: object,
     *,
     is_testing: bool = False,
@@ -92,7 +89,8 @@ def json_dump_without_omitted(
     """Serialize the given dataclass instance to JSON, removing omitted fields.
 
     Args:
-        instance_type: The class of the `instance` - will be used to create a `TypeAdapter`.
+        instance_type: The declared type of `instance`, e.g. a class, a union or a type alias - will
+            be used to create a `TypeAdapter`.
         instance: The data to be serialized, must be an instance of `instance_type`.
         is_testing: Will perform round-trip validation to ensure proper serialization.
 
@@ -101,10 +99,39 @@ def json_dump_without_omitted(
           Other fields *must not* use defaults. This is checked for API models in a test.
     """
     # This will be called at most once per REST-API request
-    # cast: get_cached_type_adapter is generic (type[T] → TypeAdapter[T]) for concrete callers;
-    # type[object] is the safe upper bound for the broader inputs this function accepts.
-    adapter = get_cached_type_adapter(cast(type[object], instance_type))
+    adapter = get_cached_type_adapter(instance_type)
     # TODO: Rework how we deal with omitted values once pydantic supports either `PydanticOmit`
     #       in serializers or implements `exclude_if`
     # NOTE: keep in sync with CheckmkGenerateJsonSchema.encode_default for correct schemas
     return adapter.dump_json(instance, by_alias=True, exclude_defaults=True, round_trip=is_testing)
+
+
+def drop_omitted_union_errors(errors: list[ErrorDetails]) -> list[ErrorDetails]:
+    """Clean the validation errors of `X | ApiOmitted` fields.
+
+    A value in a request is never an `ApiOmitted` instance, so pydantic reports every invalid
+    omittable field once per union branch, each under a location that carries the branch label.
+    Drop the `ApiOmitted` branch error and, when only one branch remains, its label, so the
+    location is the path of the field the client sent.
+    """
+    omitted_label = f"is-instance[{ApiOmitted.__name__}]"
+    union_locs = {error["loc"][:-1] for error in errors if error["loc"][-1:] == (omitted_label,)}
+    if not union_locs:
+        return errors
+
+    cleaned = [error for error in errors if error["loc"][-1:] != (omitted_label,)]
+    # Strip inner labels first, so the outer prefixes still match the locations of nested
+    # omittable fields.
+    for prefix in sorted(union_locs, key=len, reverse=True):
+        depth = len(prefix)
+        in_union = [
+            error
+            for error in cleaned
+            if error["loc"][:depth] == prefix and len(error["loc"]) > depth
+        ]
+        if len({error["loc"][depth] for error in in_union}) != 1:
+            # several failing branches stay apart through their labels, like in any other union
+            continue
+        for error in in_union:
+            error["loc"] = error["loc"][:depth] + error["loc"][depth + 1 :]
+    return cleaned

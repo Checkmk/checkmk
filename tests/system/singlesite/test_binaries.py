@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 @dataclass(frozen=True)
@@ -122,7 +122,6 @@ REPO_SCRIPTS: Sequence[RepoScript] = [
 ]
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.parametrize(
     "binary",
     (pytest.param(b, id=b.name) for b in ALL_SITE_BINARIES),

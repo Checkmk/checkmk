@@ -13,13 +13,14 @@ from cmk.ccc.site import SiteId
 from cmk.gui import site_config, sites, user_sites
 from cmk.gui.config import Config
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
-from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.livestatus_client import (
     DisableEventHandlers,
@@ -36,6 +37,7 @@ from cmk.livestatus_client import (
     StopExecutingHostChecks,
     StopExecutingServiceChecks,
 )
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.urls import makeuri_contextless
 
 from ._base import PageHandlers, SidebarSnapin
@@ -167,14 +169,6 @@ class MasterControlSnapin(SidebarSnapin):
                 ],
                 filename="switch_master_state.py",
             )
-            onclick = (
-                """cmk.ajax.call_ajax('%s', {
-            method: "POST",
-            response_handler: cmk.sidebar.update_vue_snapin_contents,
-            handler_data: 'snapin_master_control',
-            })"""
-                % url
-            )
 
             html.open_tr()
             html.td(title, class_="left")
@@ -183,7 +177,7 @@ class MasterControlSnapin(SidebarSnapin):
                 enabled=colvalue,
                 help_txt=_("Switch '%(title)s' to '%(state)s'")
                 % {"title": title, "state": _("off") if colvalue else _("on")},
-                onclick=onclick,
+                click_action=ClickAction(action="switch_master_state", arguments={"url": url}),
                 class_=["large"],
             )
             html.close_td()
@@ -203,7 +197,7 @@ class MasterControlSnapin(SidebarSnapin):
         }
 
     def _ajax_switch_masterstate(self, ctx: PageContext) -> None:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
         response.set_content_type("text/plain")
 
         if not user.may("sidesnap.master_control"):

@@ -3,23 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from abc import ABC
+from collections.abc import Iterable, Mapping
 from typing import Annotated, Literal, override, Self
 
 from pydantic import Discriminator
+from pydantic_core import ErrorDetails
 
+from cmk.gui.dashboard.event_bar_chart_window import exceeds_event_bar_chart_span
 from cmk.gui.dashboard.type_defs import (
+    DashboardWindow,
     EventBarChartDashletConfig,
     EventBarChartRenderBarChart,
     EventBarChartRenderMode,
     EventBarChartRenderSimpleNumber,
+    FixedWindow,
 )
 from cmk.gui.fields.attributes import MappingConverter
+from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.common_fields import timerange_from_internal, TimerangeModel
+from cmk.gui.type_defs import DashboardEmbeddedViewSpec
+from cmk.gui.valuespec import Timerange
 
 from ._base import BaseWidgetContent
 
 type TimeResolution = Literal["hour", "day"]
+type TimelineWindow = Literal["dashboard"] | TimerangeModel
 _RESOLUTION_CONVERTER = MappingConverter[TimeResolution, Literal["h", "d"]](
     {
         "hour": "h",
@@ -27,11 +36,28 @@ _RESOLUTION_CONVERTER = MappingConverter[TimeResolution, Literal["h", "d"]](
     }
 )
 
+TIMELINE_SPAN_ERROR = "The time range must not span more than two years."
+
+
+_WINDOW_DESCRIPTION = "The time range to count over, or `dashboard` to follow the dashboard."
+
+
+def _window_to_internal(window: TimelineWindow) -> DashboardWindow | FixedWindow:
+    if window == "dashboard":
+        return DashboardWindow(type="dashboard")
+    return FixedWindow(type="range", window=window.to_internal())
+
+
+def _window_from_internal(window: DashboardWindow | FixedWindow) -> TimelineWindow:
+    if window["type"] == "dashboard":
+        return "dashboard"
+    return timerange_from_internal(window["window"])
+
 
 @api_model
 class BarChartRenderMode:
     type: Literal["bar_chart"] = api_field(description="Renders a bar chart.")
-    time_range: TimerangeModel = api_field(description="The time range for the bar chart.")
+    time_range: TimelineWindow = api_field(description=_WINDOW_DESCRIPTION)
     time_resolution: TimeResolution = api_field(
         description="Select a time period over which the alerts or notifications are added up"
     )
@@ -40,7 +66,7 @@ class BarChartRenderMode:
     def from_internal(cls, config: EventBarChartRenderBarChart) -> Self:
         return cls(
             type="bar_chart",
-            time_range=timerange_from_internal(config["time_range"]),
+            time_range=_window_from_internal(config["time_range"]),
             time_resolution=_RESOLUTION_CONVERTER.from_checkmk(config["time_resolution"]),
         )
 
@@ -48,7 +74,7 @@ class BarChartRenderMode:
         return (
             "bar_chart",
             EventBarChartRenderBarChart(
-                time_range=self.time_range.to_internal(),
+                time_range=_window_to_internal(self.time_range),
                 time_resolution=_RESOLUTION_CONVERTER.to_checkmk(self.time_resolution),
             ),
         )
@@ -57,13 +83,13 @@ class BarChartRenderMode:
 @api_model
 class SimpleNumberRenderMode:
     type: Literal["simple_number"] = api_field(description="Renders a simple number.")
-    time_range: TimerangeModel = api_field(description="The time range for the simple number.")
+    time_range: TimelineWindow = api_field(description=_WINDOW_DESCRIPTION)
 
     def to_internal(self) -> EventBarChartRenderMode:
         return (
             "simple_number",
             EventBarChartRenderSimpleNumber(
-                time_range=self.time_range.to_internal(),
+                time_range=_window_to_internal(self.time_range),
             ),
         )
 
@@ -83,7 +109,7 @@ def _render_mode_from_internal(
         case ("simple_number", config):
             return SimpleNumberRenderMode(
                 type="simple_number",
-                time_range=timerange_from_internal(config["time_range"]),
+                time_range=_window_from_internal(config["time_range"]),
             )
         case x:
             # TODO: change to `assert_never` once mypy can handle it correctly
@@ -98,6 +124,27 @@ class _BaseTimelineContent(BaseWidgetContent, ABC):
     log_target: Literal["both", "host", "service"] = api_field(
         description="Defines which log target to use for the timeline.",
     )
+
+    @override
+    def iter_validation_errors(
+        self,
+        location: tuple[str | int, ...],
+        context: ApiContext,
+        *,
+        embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
+    ) -> Iterable[ErrorDetails]:
+        window = self.render_mode.time_range
+        if window == "dashboard":
+            return
+        stored = window.to_internal()
+        start, end = Timerange.compute_range(stored).range
+        if exceeds_event_bar_chart_span(start, end):
+            yield ErrorDetails(
+                type="value_error",
+                msg=TIMELINE_SPAN_ERROR,
+                loc=location + ("render_mode", "time_range"),
+                input=stored,
+            )
 
     @override
     def to_internal(self) -> EventBarChartDashletConfig:

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
-from typing import overload, override
+from typing import override
 
 from playwright.sync_api import expect, Locator
 
@@ -62,32 +62,21 @@ class NotificationConfiguration(CmkPage):
         """
         return self.main_area.get_confirmation_popup_button("clone & edit")
 
-    @overload
-    def _notification_rule_row(self, rule_id: str) -> Locator: ...
-
-    @overload
-    def _notification_rule_row(self, rule_id: int) -> Locator: ...
-
     def _notification_rule_row(self, rule_id: str | int) -> Locator:
         """Return a locator for the specific notification rule row.
 
         The rule can be identified by rule position, providing an integer input for this function
         or by rule description, providing a string input for this function.
         """
-        if isinstance(rule_id, str):
-            rule_row_locator = self.main_area.locator(
-                f"table[class*='data'] >> tr:has(td:text-is('{rule_id}'))"
-            )
-        elif isinstance(rule_id, int):
-            rule_row_locator = self.main_area.locator(
-                f"tr[class*='data']:has(td[class*='narrow']:text-is('{rule_id}'))"
-            )
-        else:
-            raise TypeError(
-                f"Unsupported rule_id type: {type(rule_id)}",
-                "Expected 'str' (rule description) or 'int' (rule position)!",
-            )
-        return rule_row_locator
+        match rule_id:
+            case str():
+                return self.main_area.locator(
+                    f"table[class*='data'] >> tr:has(td:text-is('{rule_id}'))"
+                )
+            case int():
+                return self.main_area.locator(
+                    f"tr[class*='data']:has(td[class*='narrow']:text-is('{rule_id}'))"
+                )
 
     def notification_rule_edit_button(self, rule_id: int | str) -> Locator:
         return self._notification_rule_row(rule_id).get_by_title("Edit this notification rule")
@@ -135,24 +124,24 @@ class NotificationConfiguration(CmkPage):
     def get_total_sent_notifications_count(self) -> int:
         stat_count = self._get_notification_stat_count("Total sent notifications")
         expect(stat_count, message="'Total sent notifications' count is not shown").to_have_text(
-            re.compile(r"^\d+$")
+            re.compile(r"^\s*\d+\s*$")
         )
         return int(stat_count.inner_text())
 
     def check_total_sent_notifications_has_changed(self, previous_count: int) -> None:
         locator = self._get_notification_stat_count("Total sent notifications")
-        expect(locator).not_to_have_text(re.compile(rf"^{previous_count}$"))
+        expect(locator).not_to_have_text(re.compile(rf"^\s*{previous_count}\s*$"))
 
     def get_failed_notifications_count(self) -> int:
         stat_count = self._get_notification_stat_count("Failed notifications")
         expect(stat_count, message="'Failed notifications' count is not shown").to_have_text(
-            re.compile(r"^\d+$")
+            re.compile(r"^\s*\d+\s*$")
         )
         return int(stat_count.inner_text())
 
     def check_failed_notifications_has_not_changed(self, previous_count: int) -> None:
         locator = self._get_notification_stat_count("Failed notifications")
-        expect(locator).to_have_text(re.compile(rf"^\s{previous_count}$"))
+        expect(locator).to_have_text(re.compile(rf"^\s*{previous_count}\s*$"))
 
     def rule_conditions(self, rule_number: int = 0) -> Locator:
         return self._notification_rule_row(rule_number).locator("td.rule_conditions")

@@ -5,9 +5,7 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 import contextlib
 import json
@@ -27,13 +25,13 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import key_num_split
-from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.rendering import set_inpage_search_result_info
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.web.utils import escaping
 from cmk.web.utils.escaping import escape_to_html_permissive
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri, requested_file_name
 
 
@@ -90,7 +88,7 @@ def table_element(
     omit_headers: bool = False,
     omit_update_header: bool = False,
     empty_text: str | None = None,
-    help: str | None = None,
+    help: str | None = None,  # noqa: A002
     css: str | None = None,
     isopen: bool = True,
     *,
@@ -121,8 +119,8 @@ def table_element(
         try:
             yield table
         finally:
-            table._finish_previous()
-            table._end()
+            table._finish_previous()  # noqa: SLF001
+            table._end()  # noqa: SLF001
 
 
 # .
@@ -158,7 +156,7 @@ class Table:
         omit_headers: bool = False,
         omit_update_header: bool = False,
         empty_text: str | None = None,
-        help: str | None = None,
+        help: str | None = None,  # noqa: A002
         css: str | None = None,
         isopen: bool = True,
         *,
@@ -271,7 +269,7 @@ class Table:
                 self.options["collect_headers"] = True
             elif self.options["collect_headers"] is True:
                 self.options["collect_headers"] = "finished"
-        elif not collect_headers and self.options["collect_headers"] is True:  # type: ignore[redundant-expr]
+        elif self.options["collect_headers"] is True:
             self.options["collect_headers"] = False
 
         self.limit_reached = False if self.limit is None else len(self.rows) > self.limit
@@ -480,7 +478,7 @@ class Table:
                 if len(rows) == 1
                 else _("%(num_rows_unlimited)d rows") % {"num_rows_unlimited": num_rows_unlimited}
             )
-            html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
+            html.call_ts_function(function_name="update_row_info", arguments={"text": row_info})
 
         if request.var("search") is not None:
             set_inpage_search_result_info(len(rows))
@@ -547,7 +545,7 @@ class Table:
 
             if isinstance(row.css, list):
                 class_.extend([c for c in row.css if c is not None])  # type: ignore[redundant-expr]
-            elif row.css is not None:
+            elif row.css is not None:  # type: ignore[unreachable]
                 class_.append(row.css)
 
             html.open_tr(
@@ -568,7 +566,7 @@ class Table:
 
         html.close_table()
 
-    def _get_num_cols(self, rows: TableRows) -> int:
+    def _get_num_cols(self, rows: TableRows) -> int:  # noqa: ARG002
         if self.headers:
             return len(self.headers)
         if self.rows:
@@ -630,23 +628,12 @@ class Table:
             html.render_div(None, class_="icon") + HTML.with_escaping(self.action_message),
             class_=f"action_message action_message_{self.action_message_type}",
         )
+        html.call_ts_function(
+            function_name="fade_out_element",
+            arguments={"element_id": message_id, "delay_ms": 5000, "selector": ".action_message"},
+        )
         html.close_th()
         html.close_tr()
-        html.javascript(
-            f"""
-            setTimeout(function() {{
-                const msgRow = document.getElementById({json.dumps(message_id)});
-                if (msgRow) {{
-                    const msgDiv = msgRow.querySelector('.action_message');
-                    if (msgDiv) {{
-                        msgDiv.style.transition = "opacity 1s ease-in";
-                        msgDiv.style.opacity = "0";
-                    }}
-                    setTimeout(function() {{ msgRow?.remove(); }}, 1000);
-                }}
-            }}, 5000);
-            """
-        )
 
     def _render_headers(
         self, actions_enabled: bool, actions_visible: bool, empty_columns: list[bool]
@@ -668,7 +655,7 @@ class Table:
                 header_title = header.title
 
             if not isinstance(header.css, list):
-                css_class: CSSSpec = [header.css]
+                css_class: CSSSpec = [header.css]  # type: ignore[unreachable]
             else:
                 css_class = header.css
 
@@ -740,7 +727,7 @@ def _filter_rows(rows: TableRows, search_term: str) -> TableRows:
 
         for cell in row.cells:
             # Filter out buttons
-            if cell.css is not None and any("buttons" in css.split() for css in cell.css):  # type: ignore[redundant-expr]
+            if any("buttons" in css.split() for css in cell.css):
                 continue
 
             cell_string = str(cell.content)
@@ -796,7 +783,9 @@ def init_rowselect(selection_key: str) -> None:
         "selection_id": selection_id,
         "selected_rows": selected,
     }
-    html.javascript("cmk.selection.init_rowselect(%s);" % (json.dumps(selection_properties)))
+    html.call_ts_function(
+        function_name="init_rowselect", arguments={"properties": selection_properties}
+    )
 
 
 def show_row_count(
@@ -809,6 +798,6 @@ def show_row_count(
     Needs empty div "row_id" set before the table.
     """
     row_info = "%d %s" % (row_count, row_info)
-    html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
+    html.call_ts_function(function_name="update_row_info", arguments={"text": row_info})
     if selection_id is not None:
         init_rowselect(selection_id)

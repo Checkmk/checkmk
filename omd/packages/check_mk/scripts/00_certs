@@ -1,0 +1,8 @@
+#!/bin/bash
+# A copied, moved or restored site carries the certificates of its origin, all but the site
+# certificate, which is issued for the new site name.
+set -e
+cmk-cert init --if-missing site-ca
+cmk-cert init --if-missing site
+cmk-cert init --if-missing agent-ca
+cmk-cert init --if-missing relay-ca

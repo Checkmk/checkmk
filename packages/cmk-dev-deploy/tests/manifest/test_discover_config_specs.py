@@ -6,8 +6,6 @@
 
 """Unit tests for _discover_config_specs grouping behavior."""
 
-from __future__ import annotations
-
 from pathlib import Path
 from typing import Any
 

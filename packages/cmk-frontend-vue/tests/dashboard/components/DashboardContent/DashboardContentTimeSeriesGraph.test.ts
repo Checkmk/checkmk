@@ -3,9 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render, screen, waitFor } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
 import DashboardContentTimeSeriesGraph from '@/dashboard/components/DashboardContent/DashboardContentTimeSeriesGraph.vue'
@@ -15,22 +15,42 @@ import { useProvideSharedWidgetGraphs } from '@/dashboard/composables/useSharedW
 import type { SharedWidgetGraphs } from '@/dashboard/types/page.ts'
 import type { CustomGraphContent } from '@/dashboard/types/widget.ts'
 
+import { makeContentProps } from '@tests/dashboard/contentProps'
+
 // The figure owns its own data fetch; stubbing it keeps these tests on the discovery step and on
 // which fetch function the widget hands it.
 vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
   default: {
     props: [
-      'internal',
+      'source',
       'timerange',
       'combinationMode',
       'showLegend',
       'showTimestamp',
-      'fetchGraph'
+      'showPin',
+      'showTimeAxis',
+      'showValueAxis',
+      'showMargin',
+      'minValueAxisWidth',
+      'showBurgerMenu',
+      'addTo',
+      'requestedTimeRange'
     ],
+    emits: ['commitTimeRange'],
     template: `<div
       data-testid="graph-figure"
-      :data-has-fetch-graph="fetchGraph !== undefined"
-    >{{ internal }}</div>`
+      :data-show-pin="showPin"
+      :data-source-type="source.type"
+      :data-show-time-axis="showTimeAxis"
+      :data-show-value-axis="showValueAxis"
+      :data-show-margin="showMargin"
+      :data-min-value-axis-width="minValueAxisWidth"
+      :data-show-burger-menu="showBurgerMenu"
+      :data-requested-time-range="JSON.stringify(requestedTimeRange)"
+    >{{ source.type === 'definition' ? source.internal : source.key }}<button
+      data-testid="emit-commit-time-range"
+      @click="$emit('commitTimeRange', { start: 1767225600, end: 1767229200 })"
+    /></div>`
   }
 }))
 
@@ -41,17 +61,14 @@ const CUSTOM_GRAPH_CONTENT: CustomGraphContent = {
   graph_render_options: { show_legend: true, show_graph_time: false }
 }
 
-const baseProps = {
+const baseProps = makeContentProps(CUSTOM_GRAPH_CONTENT, {
   widget_id: 'w1',
   general_settings: {
-    title: { text: 'My graph', render_mode: 'with_background' as const },
+    title: { text: 'My graph', render_mode: 'with_background' },
     render_background: true
   },
-  content: CUSTOM_GRAPH_CONTENT,
-  effectiveTitle: 'My graph',
-  effective_filter_context: { uses_infos: [], filters: {}, context: {} },
-  dashboardKey: { owner: 'cmkadmin', name: 'main' }
-}
+  effectiveTitle: 'My graph'
+})
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let postSpy: any
@@ -63,10 +80,6 @@ beforeEach(() => {
     error: undefined,
     response: new Response('{}', { status: 200 })
   } as never)
-})
-
-afterEach(() => {
-  vi.restoreAllMocks()
 })
 
 function renderWidget(props: Record<string, unknown> = {}) {
@@ -134,24 +147,118 @@ describe('custom graph widget', () => {
   })
 })
 
+describe('graph render options', () => {
+  test('passes the configured axis visibility on to the figure', async () => {
+    renderWidget({
+      content: {
+        ...CUSTOM_GRAPH_CONTENT,
+        graph_render_options: { show_time_axis: false, show_vertical_axis: false }
+      }
+    })
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-show-time-axis')).toBe('false')
+    expect(figure.getAttribute('data-show-value-axis')).toBe('false')
+  })
+
+  test('converts an absolute vertical axis width to pixels', async () => {
+    renderWidget({
+      content: {
+        ...CUSTOM_GRAPH_CONTENT,
+        graph_render_options: { vertical_axis_width: 30 }
+      }
+    })
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-min-value-axis-width')).toBe('40')
+  })
+
+  test("leaves the renderer's own width for a fixed vertical axis", async () => {
+    renderWidget({
+      content: {
+        ...CUSTOM_GRAPH_CONTENT,
+        graph_render_options: { vertical_axis_width: 'fixed' }
+      }
+    })
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-min-value-axis-width')).toBeNull()
+  })
+
+  test('shows both axes when the widget stores no axis options', async () => {
+    renderWidget({
+      content: { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { show_legend: true } }
+    })
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-show-time-axis')).toBe('true')
+    expect(figure.getAttribute('data-show-value-axis')).toBe('true')
+  })
+
+  test('a stored margin option insets the figure', async () => {
+    const marginRequested = { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { show_margin: true } }
+
+    renderWidget({ content: marginRequested })
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-show-margin')).toBe('true')
+  })
+
+  test('a widget storing no margin option leaves the figure flush', async () => {
+    const marginUnset = { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { show_legend: true } }
+
+    renderWidget({ content: marginUnset })
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-show-margin')).toBe('false')
+  })
+})
+
 const CMK_TOKEN = '0:the-token'
 
-function renderInSharedDashboard(widgetGraphs: Record<string, SharedWidgetGraphs>) {
+function renderInSharedDashboard(
+  widgetGraphs: Record<string, SharedWidgetGraphs>,
+  props: Record<string, unknown> = {}
+) {
   const wrapper = defineComponent({
     setup() {
       useProvideCmkToken(CMK_TOKEN)
       useProvideSharedWidgetGraphs(widgetGraphs)
-      return () => h(DashboardContentTimeSeriesGraph, baseProps as never)
+      return () => h(DashboardContentTimeSeriesGraph, { ...baseProps, ...props } as never)
     }
   })
   return render(wrapper)
+}
+
+// A shell an interactive dashboard would offer the burger menu for.
+const ADDABLE_SHELL = {
+  internal: '{"graphs": []}',
+  title: 'My graph',
+  name: 'my_graph',
+  add_to_specification: { graph_type: 'custom', id: 'my_graph' },
+  add_type: 'custom_graph',
+  y_axis: null
+}
+
+const BURGER_ENABLED = {
+  ...CUSTOM_GRAPH_CONTENT,
+  graph_render_options: { ...CUSTOM_GRAPH_CONTENT.graph_render_options, show_controls: true }
 }
 
 describe('graph widget on a shared dashboard', () => {
   test('renders the pre-discovered shell without discovering itself', async () => {
     renderInSharedDashboard({
       w1: {
-        graphs: [{ internal: '{"graphs": []}', title: 'My graph', add_to_specification: null }],
+        graphs: [
+          {
+            internal: '{"graphs": []}',
+            title: 'My graph',
+            name: 'my_graph',
+            add_to_specification: null,
+            add_type: null,
+            y_axis: null
+          }
+        ],
         no_data_message: null
       }
     })
@@ -184,13 +291,22 @@ describe('graph widget on a shared dashboard', () => {
   test('hands the figure a fetch function instead of letting it fetch by definition', async () => {
     renderInSharedDashboard({
       w1: {
-        graphs: [{ internal: '{"graphs": []}', title: 'My graph', add_to_specification: null }],
+        graphs: [
+          {
+            internal: '{"graphs": []}',
+            title: 'My graph',
+            name: 'my_graph',
+            add_to_specification: null,
+            add_type: null,
+            y_axis: null
+          }
+        ],
         no_data_message: null
       }
     })
 
     const figure = await screen.findByTestId('graph-figure')
-    expect(figure.getAttribute('data-has-fetch-graph')).toBe('true')
+    expect(figure.getAttribute('data-source-type')).toBe('fetch')
   })
 })
 
@@ -209,14 +325,14 @@ describe('createSharedGraphFetcher', () => {
       response: new Response('{}', { status: 200 })
     } as never)
 
-    const fetched = await createSharedGraphFetcher('w1', CMK_TOKEN)(
-      { internal: '{"graphs": []}' },
-      {
-        requestedTimeRange: { start: 1_000, end: 2_000, step: 60 },
-        consolidationFunction: 'max',
-        combinationMode: null
-      }
-    )
+    const fetched = await createSharedGraphFetcher(
+      'w1',
+      CMK_TOKEN
+    )({
+      fetchWindow: { start: 1_000, end: 2_000, step: 60 },
+      consolidationFunction: 'max',
+      combinationMode: null
+    })
 
     // The body is matched exactly: the graph definition must not be part of it.
     expect(postSpy).toHaveBeenCalledWith(
@@ -224,12 +340,82 @@ describe('createSharedGraphFetcher', () => {
       expect.objectContaining({
         headers: { Authorization: `CMK-TOKEN ${CMK_TOKEN}` },
         body: {
-          widget_id: 'w1',
+          source: { type: 'saved', widget_id: 'w1' },
           requested_time_range: { start: 1_000, end: 2_000, step: 60 },
           consolidation_function: 'max'
         }
       })
     )
     expect(fetched.timeRange).toEqual({ start: 1_000, end: 2_000, step: 60 })
+  })
+})
+
+describe('the time range of a graph widget', () => {
+  test("is the dashboard's range, not the configured one", async () => {
+    renderWidget()
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(JSON.parse(figure.getAttribute('data-requested-time-range')!)).toEqual({
+      start: 1767225600,
+      end: 1767229200
+    })
+  })
+})
+
+describe('a time range committed in the graph', () => {
+  test('is reported as the dashboard range, in its time zone', async () => {
+    const { emitted } = renderWidget()
+
+    await fireEvent.click(await screen.findByTestId('emit-commit-time-range'))
+
+    const [[range]] = emitted('updateTimeRange') as [[typeof baseProps.range]]
+    expect(range.from.toAbsoluteString()).toBe('2026-01-01T00:00:00.000Z')
+    expect(range.to.toAbsoluteString()).toBe('2026-01-01T01:00:00.000Z')
+    expect(range.from.timeZone).toBe(baseProps.range.from.timeZone)
+  })
+})
+
+describe('the widget pin', () => {
+  const pinOf = async (): Promise<string | null> =>
+    (await screen.findByTestId('graph-figure')).getAttribute('data-show-pin')
+
+  test('is armed by default, matching the wizard default', async () => {
+    renderWidget()
+
+    expect(await pinOf()).toBe('true')
+  })
+
+  // A preview is a thumbnail, not something to interact with.
+  test('is never armed in the widget preview', async () => {
+    renderWidget({ isPreview: true })
+
+    expect(await pinOf()).toBe('false')
+  })
+})
+
+describe('the burger menu of a graph widget', () => {
+  test('is offered on an interactive dashboard when the widget asks for it', async () => {
+    postSpy.mockResolvedValue({
+      data: { graphs: [ADDABLE_SHELL], no_data_message: null },
+      error: undefined,
+      response: new Response('{}', { status: 200 })
+    } as never)
+
+    renderWidget({ content: BURGER_ENABLED })
+
+    const figure = await screen.findByTestId('graph-figure')
+    await waitFor(() => expect(figure.getAttribute('data-show-burger-menu')).toBe('true'))
+  })
+
+  test('is never offered on a shared dashboard, even with an add-to target', async () => {
+    renderInSharedDashboard(
+      { w1: { graphs: [ADDABLE_SHELL], no_data_message: null } },
+      {
+        content: BURGER_ENABLED
+      }
+    )
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-show-burger-menu')).toBe('false')
   })
 })

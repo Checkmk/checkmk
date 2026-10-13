@@ -1,7 +1,12 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
-package(default_visibility = [":__subpackages__"])
+# The maps suite still builds on this one's browser fixtures and page-object
+# base; see tests/system/README-test-suite-organization.md.
+package(default_visibility = [
+    ":__subpackages__",
+    "//tests/system/maps:__subpackages__",
+])
 
 py_library(
     name = "gui",
@@ -18,6 +23,9 @@ py_library(
     }),
     imports = ["../../.."],
     deps = [
+        "//packages/cmk-plugins/cmk/plugins/aws_deprecated",
+        "//packages/cmk-plugins/cmk/plugins/azure_v2",
+        "//packages/cmk-plugins/cmk/plugins/gcp",
         requirement("playwright"),
         requirement("pytest"),
         requirement("requests"),
@@ -26,15 +34,16 @@ py_library(
         requirement("pytest_playwright"),
         requirement("clickhouse_connect"),
         "//tests/system:pkg_marker",
-        "//tests/testlib",
-        "//tests/testlib/common:repo",
-        "//tests/testlib/common:utils",
+        "//tests/testlib/common",
+        "//tests/testlib/pytest_helpers",
+        "//tests/testlib/system",
     ] + select({
         "//:gpl+nonfree_repo": [
-            "//non-free/tests/testlib/system:metric_backend",
-            "//non-free/tests/testlib/system:opentelemetry",
+            "//cmk/gui/nonfree/pro",
+            "//non-free/tests/testlib/system:data_backend",
             "//non-free/tests/testlib/system/cloud",
             "//non-free/tests/testlib/system/licensing",
+            "//packages/cmk-wsgi",
         ],
         "//:gpl_repo": [],
     }),

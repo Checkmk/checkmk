@@ -217,7 +217,7 @@ export class LayoutTopology {
   }
 }
 
-export class GenericNetworkLayer extends DynamicToggleableLayer {
+class GenericNetworkLayer extends DynamicToggleableLayer {
   _ident = 'network'
   _name = 'network'
 
@@ -630,7 +630,7 @@ class NetworkLink extends AbstractLink {
   }
 }
 
-export class HostServiceLink extends NetworkLink {
+class HostServiceLink extends NetworkLink {
   override class_name(): string {
     return 'host2service'
   }
@@ -650,7 +650,7 @@ export class HostServiceLink extends NetworkLink {
   }
 }
 
-export class HostHostLink extends NetworkLink {
+class HostHostLink extends NetworkLink {
   override class_name() {
     return 'host2host'
   }
@@ -670,7 +670,7 @@ export class HostHostLink extends NetworkLink {
   }
 }
 
-export class ServiceServiceLink extends NetworkLink {
+class ServiceServiceLink extends NetworkLink {
   override class_name() {
     return 'service2service'
   }

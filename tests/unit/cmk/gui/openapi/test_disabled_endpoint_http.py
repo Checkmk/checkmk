@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 from collections.abc import Iterator, Mapping
+from http import HTTPStatus
 
 import pytest
 
@@ -22,7 +25,7 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
 from cmk.gui.openapi.restful_objects.decorators import Endpoint, WrappedEndpoint
 from cmk.gui.openapi.restful_objects.disabled_endpoint import disabled_legacy
 from cmk.gui.openapi.restful_objects.registry import endpoint_registry
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 _DETAIL = "The Agent bakery is not available with your license"
 
@@ -39,7 +42,7 @@ def create_disabled_legacy_stub(fresh_app_instance: None) -> Iterator[WrappedEnd
         skip_locking=True,
     )
     def _real(param: Mapping[str, object]) -> Response:
-        return Response(status=204)
+        return Response(status=HTTPStatus.NO_CONTENT)
 
     stub = disabled_legacy(_real, _DETAIL)
     endpoint_registry.register(stub)
@@ -69,23 +72,19 @@ def create_disabled_versioned_stub(fresh_app_instance: None) -> Iterator[Version
     versioned_endpoint_registry.unregister(stub)
 
 
-def test_disabled_legacy_stub_returns_403(
-    disabled_legacy_stub: WrappedEndpoint,
-    clients: ClientRegistry,
-) -> None:
+@pytest.mark.usefixtures("disabled_legacy_stub")
+def test_disabled_legacy_stub_returns_403(clients: ClientRegistry) -> None:
     resp = clients.DisabledEndpointStub.get_legacy(expect_ok=False)
-    resp.assert_status_code(403)
+    resp.assert_status_code(HTTPStatus.FORBIDDEN)
     assert resp.json["title"] == "Feature not available"
     assert resp.json["detail"] == _DETAIL
-    assert resp.json["status"] == 403
+    assert resp.json["status"] == HTTPStatus.FORBIDDEN
 
 
-def test_disabled_versioned_stub_returns_403(
-    disabled_versioned_stub: VersionedEndpoint,
-    clients: ClientRegistry,
-) -> None:
+@pytest.mark.usefixtures("disabled_versioned_stub")
+def test_disabled_versioned_stub_returns_403(clients: ClientRegistry) -> None:
     resp = clients.DisabledEndpointStub.get_versioned(expect_ok=False)
-    resp.assert_status_code(403)
+    resp.assert_status_code(HTTPStatus.FORBIDDEN)
     assert resp.json["title"] == "Feature not available"
     assert resp.json["detail"] == _DETAIL
-    assert resp.json["status"] == 403
+    assert resp.json["status"] == HTTPStatus.FORBIDDEN

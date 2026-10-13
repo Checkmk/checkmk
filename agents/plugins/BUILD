@@ -15,7 +15,6 @@ filegroup(
             "__init__.py",
             "BUILD",
             "OWNERS",
-            ".f12",
             "Makefile",
         ],
     ),
@@ -52,7 +51,6 @@ py_library(
 sh_library(
     name = "agents_plugins_sh",
     srcs = [
-        ".f12",
         "asmcmd.sh",
         "hpux_lunstats",
         "hpux_statgrab",
@@ -75,7 +73,6 @@ sh_library(
         "mk_sap_hana",
         "mk_scaleio",
         "mk_site_object_counts",
-        "mk_tsm",
         "runas",
         "zorp",
         "//agents/cfg_examples:agents_cfg_examples_sh",

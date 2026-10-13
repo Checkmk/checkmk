@@ -4,6 +4,3 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 export { default as GlobalRefreshControl } from './GlobalRefreshControl.vue'
-
-export { seedRefreshIntervalSeconds, useGlobalRefresh } from './useGlobalRefresh'
-export type { GlobalRefresh } from './useGlobalRefresh'

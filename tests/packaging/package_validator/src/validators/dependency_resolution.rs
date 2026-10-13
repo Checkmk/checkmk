@@ -268,7 +268,7 @@ pub(crate) fn scan_findings<'a>(deps: &ReportDependencies<'a>) -> Vec<Finding<'a
             }
             // Deterministic order: the map is a HashMap keyed by dependency name.
             missing.sort_unstable();
-            errors.sort_by(|(a, _), (b, _)| a.cmp(b));
+            errors.sort_by_key(|(a, _)| *a);
 
             let mut findings: Vec<Finding<'a>> = Vec::new();
             if !missing.is_empty() {

@@ -49,8 +49,6 @@ test('exposes focus method that focuses the anchor', async () => {
     template: `<CmkLink ref="componentRef" href="/foo">Focus me</CmkLink>`
   })
   render(testComponent)
-  const link = screen.getByRole('link')
-  link.focus = vi.fn()
   componentRef.value?.focus()
-  expect(link.focus).toHaveBeenCalled()
+  expect(screen.getByRole('link')).toHaveFocus()
 })

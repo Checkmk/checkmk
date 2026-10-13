@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Iterable, Sequence
 from typing import Literal
@@ -79,7 +78,7 @@ def _usage_endpoint(
 ) -> list[str]:
     args = ["--prometheus-endpoint" if prefix == "prometheus" else "--cluster-collector-endpoint"]
     args.append(params.endpoint_v2)
-    match params.proxy:
+    match params.proxy:  # type: ignore[exhaustive-match]
         case URLProxy(url=url):
             args += ["--usage-proxy", url]
         case EnvProxy():
@@ -101,7 +100,7 @@ def command_function(params: Params, host_config: HostConfig) -> Iterable[Specia
     args.append("--monitored-objects")
     args.extend(params.monitored_objects)
 
-    match params.namespaces:
+    match params.namespaces:  # type: ignore[exhaustive-match]
         case ("namespace_include_patterns", namespace_patterns):
             for namespace_pattern in namespace_patterns:
                 args.extend(["--namespace-include-pattern", namespace_pattern])
@@ -112,21 +111,23 @@ def command_function(params: Params, host_config: HostConfig) -> Iterable[Specia
     match params.cluster_resource_aggregation:
         case None:
             args.extend(["--cluster-aggregation-exclude-node-roles", "control-plane", "infra"])
-        case ("cluster_aggregation_include_all_nodes", None):  # type: ignore[unreachable]
+        case ("cluster_aggregation_include_all_nodes", _):
             args.append("--cluster-aggregation-include-all-nodes")
-        case ("cluster_aggregation_exclude_node_roles", list(excluded_roles)):
+        case ("cluster_aggregation_exclude_node_roles", excluded_roles):
             args.append("--cluster-aggregation-exclude-node-roles")
             args.extend(excluded_roles)
 
     match params.import_annotations:
-        case ("include_annotations_as_host_labels", None):  # type: ignore[unreachable]
+        case None:
+            pass
+        case ("include_annotations_as_host_labels", _):
             args.append("--include-annotations-as-host-labels")
-        case ("include_matching_annotations_as_host_labels", str(labels_param)):
+        case ("include_matching_annotations_as_host_labels", labels_param):
             args.append("--include-matching-annotations-as-host-labels")
             args.append(labels_param)
 
     args.extend(["--api-server-endpoint", params.kubernetes_api_server.endpoint_v2])
-    match params.kubernetes_api_server.proxy:
+    match params.kubernetes_api_server.proxy:  # type: ignore[exhaustive-match]
         case URLProxy(url=url):
             args += ["--api-server-proxy", url]
         case EnvProxy():

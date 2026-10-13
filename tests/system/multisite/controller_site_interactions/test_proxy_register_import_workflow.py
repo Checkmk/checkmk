@@ -9,9 +9,9 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-from tests.testlib.agent import wait_until_host_has_services, wait_until_host_receives_data
 from tests.testlib.common.utils2 import run
-from tests.testlib.site import Site
+from tests.testlib.system.agent import wait_until_host_has_services, wait_until_host_receives_data
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 

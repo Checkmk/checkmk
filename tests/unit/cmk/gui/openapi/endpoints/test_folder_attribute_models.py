@@ -6,15 +6,20 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from cmk.ccc.version import Edition
+from cmk.gui.config import Config
+from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.openapi.api_endpoints.models.folder_attribute_models import BaseFolderAttributeModel
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.licensing.basics.options import OptionName
+from tests.testlib.unit.gui.validation_context import make_validation_context
 
 
 def test_parents_validator(sample_host: str) -> None:
     result = TypeAdapter(  # astrein: disable=pydantic-type-adapter
         BaseFolderAttributeModel
-    ).validate_python({"parents": [sample_host]})
+    ).validate_python(
+        {"parents": [sample_host]}, context=make_validation_context(Config(), LoggedInNobody())
+    )
     assert result.parents == [sample_host]
 
 

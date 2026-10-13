@@ -150,7 +150,7 @@ def test_macro_mapping_from_context(
 def test_get_title_macros_from_single_infos(
     single_infos: SingleInfos, result: Sequence[str]
 ) -> None:
-    assert list(title_macros._get_title_macros_from_single_infos(single_infos)) == result
+    assert list(title_macros._get_title_macros_from_single_infos(single_infos)) == result  # noqa: SLF001
 
 
 @pytest.mark.parametrize(

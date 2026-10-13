@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import fcntl
 import getopt
@@ -17,12 +15,14 @@ import time
 import traceback
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager, suppress
+from datetime import datetime
 from pathlib import Path
 from typing import NamedTuple, NoReturn
 
 import cmk.ccc.version as cmk_version
 from cmk.backup.utils.config import Config
 from cmk.backup.utils.job import Job
+from cmk.backup.utils.schedule import next_schedule
 from cmk.backup.utils.targets import TargetId
 from cmk.backup.utils.targets.aws_s3_bucket import (
     S3Target,
@@ -50,7 +50,7 @@ from cmk.ccc.exceptions import (
     MKGeneralException,
     MKTerminate,
 )
-from cmk.utils import render, schedule
+from cmk.utils import render
 
 ################
 # Utility Code #
@@ -234,7 +234,9 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
         "Another backup or restore is already running.",
     ):
         state = backup_state(job)
-        save_next_run(job, state)
+        state.update_and_save(
+            next_schedule=next_schedule(job.config["schedule"], after=datetime.now())
+        )
 
         if "background" in opts:
             daemon.daemonize()
@@ -292,24 +294,6 @@ def load_job(local_job_id: str, config: Config) -> Job:
 def globalize_job_id(local_job_id: str) -> str:
     parts = [SITE_BACKUP_MARKER, hostname(), current_site_id(), local_job_id]
     return "-".join(p.replace("-", "+") for p in parts)
-
-
-def save_next_run(job: Job, state: State) -> None:
-    schedule_cfg = job.config["schedule"]
-    if not schedule_cfg:
-        next_schedule: str | float | None = None
-
-    elif schedule_cfg["disabled"]:
-        next_schedule = "disabled"
-
-    else:
-        # find the next time of all configured times
-        times = []
-        for timespec in schedule_cfg["timeofday"]:
-            times.append(schedule.next_scheduled_time(schedule_cfg["period"], timespec))
-        next_schedule = min(times)
-
-    state.update_and_save(next_schedule=next_schedule)
 
 
 def cleanup_backup_job_states() -> None:
@@ -528,7 +512,7 @@ opt_verbose = 0
 opt_debug = False
 
 
-def parse_arguments():
+def parse_arguments() -> tuple[Mode, list[str], list[tuple[str, str]], list[tuple[str, str]]]:
     global opt_verbose, opt_debug
     short_options = "h"
     long_options = ["help", "version", "verbose", "debug"]

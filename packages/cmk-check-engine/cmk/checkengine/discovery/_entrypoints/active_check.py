@@ -15,6 +15,7 @@ from typing import Literal
 import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
+from cmk.checkengine.auto_queue import AutoQueue
 from cmk.checkengine.discovery._autochecks import (
     AutochecksConfig,
     AutocheckServiceWithNodes,
@@ -28,6 +29,7 @@ from cmk.checkengine.discovery._discover.host_labels import (
     analyse_cluster_labels,
     discover_host_labels,
     HostLabelPlugin,
+    is_inventorized,
 )
 from cmk.checkengine.discovery._utils.filters import ServiceFilter, ServiceFilters
 from cmk.checkengine.discovery._utils.params import DiscoveryCheckParameters
@@ -50,7 +52,6 @@ from cmk.checkengine.snmplib import SNMPRawData
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.checkengine.summarize import SummarizerFunction
 from cmk.ruleset_matcher.labels import HostLabel
-from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.servicename import ServiceName
 
 __all__ = ["execute_check_discovery"]
@@ -87,6 +88,10 @@ class _Transition(enum.Enum):
                 )
             )
         )
+
+
+def _discovered_by_plugins(labels: Sequence[HostLabel]) -> Sequence[HostLabel]:
+    return [label for label in labels if not is_inventorized(label)]
 
 
 def execute_check_discovery(
@@ -138,22 +143,25 @@ def execute_check_discovery(
                     host_label_plugins,
                     providers=providers,
                     on_error=OnError.RAISE,
+                    inventorized_host_labels={},
                 )
                 for node_name in cluster_nodes
             },
             existing_host_labels={
-                node_name: read_discovered_host_labels(node_name) for node_name in cluster_nodes
+                node_name: _discovered_by_plugins(read_discovered_host_labels(node_name))
+                for node_name in cluster_nodes
             },
         )
 
     else:
         host_labels = QualifiedDiscovery[HostLabel](
-            preexisting=read_discovered_host_labels(host_name),
+            preexisting=_discovered_by_plugins(read_discovered_host_labels(host_name)),
             current=discover_host_labels(
                 host_name,
                 host_label_plugins,
                 providers=providers,
                 on_error=OnError.RAISE,
+                inventorized_host_labels={},
             ),
         )
 

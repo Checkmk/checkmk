@@ -16,12 +16,16 @@ import { computed } from 'vue'
 
 import AgentSlideOut from '@/mode-host/agent-connection-test/components/AgentSlideOut.vue'
 
-import type { AgentSlideOutTabs } from '../lib/type_def'
+import type { HostMacros } from '../lib/commandTemplate'
+import { buildFlavours } from '../lib/flavours'
 
 const props = defineProps<{
   allAgentsUrl: string
   userSettingsUrl: string
   legacyAgentUrl: string | undefined
+  kubernetesHelmCommand: string
+  kubernetesValues: string
+  kubernetesDocUrl: string
   hostName: string
   siteId: string
   siteServer: string
@@ -37,16 +41,17 @@ const props = defineProps<{
   agentInstalled: boolean
   isPushMode: boolean
   unbakedFallback: UnbakedFallback | null
+  bakeryUrl?: string | undefined
 }>()
 
 const { _t } = usei18n()
 
-const legacyInstallTitle = _t('Install the legacy Checkmk agent')
 const emit = defineEmits(['close'])
 const close = () => {
   emit('close')
 }
 
+/** The agent receiver is reached at the site host, on its own port. */
 function registrationServer(): string {
   let host: string
   if (props.siteServer) {
@@ -61,183 +66,31 @@ function registrationServer(): string {
   return `${host}:${props.agentReceiverPort}`
 }
 
-function replaceMacros(cmd: string | undefined, isRegistration: boolean) {
-  if (!cmd) {
-    return ''
-  }
+const macros = computed<HostMacros>(() => ({
+  hostName: props.hostName,
+  siteId: props.siteId,
+  downloadServer: props.siteServer || `${window.location.protocol}//${window.location.host}`,
+  registrationServer: registrationServer()
+}))
 
-  cmd = cmd.replace(/{{HOSTNAME}}/g, props.hostName ?? '').replace(/{{SITE}}/g, props.siteId ?? '')
-  if (isRegistration) {
-    return cmd.replace(/{{SERVER}}/g, registrationServer())
-  }
-
-  return cmd.replace(
-    /{{SERVER}}/g,
-    props.siteServer || `${window.location.protocol}//${window.location.host}`
-  )
-}
-
-const linuxUnbakedFallback = computed<UnbakedFallback | undefined>(() =>
-  props.unbakedFallback === null
-    ? undefined
-    : {
-        intro: props.unbakedFallback.intro,
-        commands: props.unbakedFallback.commands.map((cmd) => replaceMacros(cmd, false))
-      }
+const flavours = computed(() =>
+  buildFlavours({
+    installCmds: props.agentInstallCmds,
+    registrationCmds: props.agentRegistrationCmds,
+    statusCmds: props.agentStatusCmds,
+    legacyAgentUrl: props.legacyAgentUrl,
+    unbakedFallback: props.unbakedFallback,
+    bakeryUrl: props.hostExists ? props.bakeryUrl : undefined,
+    // The Kubernetes agent can only push, so a pull-mode host gets no such flavour.
+    kubernetes: props.isPushMode
+      ? {
+          helmCommand: props.kubernetesHelmCommand,
+          values: props.kubernetesValues,
+          docUrl: props.kubernetesDocUrl
+        }
+      : null
+  })
 )
-
-const tabs = computed<AgentSlideOutTabs[]>(() => [
-  {
-    id: 'windows',
-    title: _t('Windows'),
-    installMsg: _t(
-      'Run these commands on your Windows host to download and install the Checkmk agent. Please make sure to run these commands with sufficient permissions (e.g. "Run as Administrator")'
-    ),
-    installDownloadCmd: replaceMacros(props.agentInstallCmds.windows_download, false),
-    installCmd: replaceMacros(props.agentInstallCmds.windows, false),
-    installCmdVariants: [
-      {
-        id: 'powershell',
-        label: 'PowerShell',
-        downloadCmd: replaceMacros(props.agentInstallCmds.windows_download_powershell, false),
-        installCmd: replaceMacros(props.agentInstallCmds.windows_powershell, false)
-      },
-      {
-        id: 'cmd',
-        label: 'Command Prompt',
-        downloadCmd: replaceMacros(props.agentInstallCmds.windows_download, false),
-        installCmd: replaceMacros(props.agentInstallCmds.windows, false)
-      }
-    ],
-    registrationMsg: _t(
-      'After you have installed the agent, run this command on your Windows host to register the Checkmk agent controller. Please make sure to run this command with sufficient permissions (e.g. "Run as Administrator").'
-    ),
-    registrationCmd: replaceMacros(props.agentRegistrationCmds.windows, true),
-    registrationCmdVariants: [
-      {
-        id: 'powershell',
-        label: 'PowerShell',
-        cmd: replaceMacros(props.agentRegistrationCmds.windows_powershell, true)
-      },
-      {
-        id: 'cmd',
-        label: 'Command Prompt',
-        cmd: replaceMacros(props.agentRegistrationCmds.windows, true)
-      }
-    ],
-    statusCmd: props.agentStatusCmds.windows,
-    statusCmdVariants: [
-      {
-        id: 'powershell',
-        label: 'PowerShell',
-        cmd: props.agentStatusCmds.windows_powershell ?? props.agentStatusCmds.windows
-      },
-      {
-        id: 'cmd',
-        label: 'Command Prompt',
-        cmd: props.agentStatusCmds.windows
-      }
-    ]
-  },
-  {
-    id: 'linux',
-    title: _t('Linux'),
-    installUrl: props.legacyAgentUrl
-      ? {
-          title: legacyInstallTitle,
-          url: props.legacyAgentUrl,
-          msg: _t(
-            'If you want to install the Checkmk agent on Linux, please read how to install the legacy agent'
-          ),
-          icon: 'learning-guide'
-        }
-      : undefined,
-    unbakedFallback: linuxUnbakedFallback.value,
-    registrationMsg: _t(
-      'After you have installed the agent, run this command on your Linux host to register the Checkmk agent controller.'
-    ),
-    registrationCmd: replaceMacros(props.agentRegistrationCmds.linux, true),
-    statusCmd: props.agentStatusCmds.linux,
-    subTabs: [
-      {
-        id: 'deb',
-        label: 'DEB',
-        installMsg: _t(
-          'Run this command on your Linux host to download and install the Checkmk agent.'
-        ),
-        installCmd: replaceMacros(props.agentInstallCmds.linux_deb, false)
-      },
-      {
-        id: 'rpm',
-        label: 'RPM',
-        installMsg: _t(
-          'Run this command on your Linux host to download and install the Checkmk agent.'
-        ),
-        installCmd: replaceMacros(props.agentInstallCmds.linux_rpm, false)
-      },
-      {
-        id: 'tgz',
-        label: 'TGZ',
-        installMsg: _t(
-          'Run these commands on your Linux host to download and install the Checkmk agent.'
-        ),
-        downloadCmd: replaceMacros(props.agentInstallCmds.linux_tgz_download, false),
-        installWarning: _t(
-          'This command extracts files directly into the root directory (/). Make sure you are executing this command on the correct host.'
-        ),
-        installCmd: replaceMacros(props.agentInstallCmds.linux_tgz_extract, false)
-      }
-    ]
-  },
-  {
-    id: 'solaris',
-    title: _t('Solaris'),
-    installMsg: _t('Run this command on your Solaris host to download the Checkmk agent.'),
-    installCmd: replaceMacros(props.agentInstallCmds.solaris, false),
-    installUrl: props.legacyAgentUrl
-      ? {
-          title: legacyInstallTitle,
-          url: props.legacyAgentUrl,
-          msg: _t(
-            'If you want to install the Checkmk agent on Solaris, please read how to install the legacy agent'
-          ),
-          icon: 'learning-guide'
-        }
-      : undefined,
-    registrationMsg: _t(
-      'After you have installed the agent, run this command on your Solaris host to register the Checkmk agent.'
-    ),
-    registrationCmd: replaceMacros(props.agentRegistrationCmds.solaris, true),
-    statusCmd: props.agentStatusCmds.solaris
-  },
-  {
-    id: 'aix',
-    title: _t('AIX'),
-    installMsg: _t(
-      'Run these commands on your AIX host to download and install the Checkmk agent.'
-    ),
-    installWarning: _t(
-      'This command extracts files directly into the root directory (/). Make sure you are executing this command on the correct host.'
-    ),
-    installDownloadCmd: replaceMacros(props.agentInstallCmds.aix_download, false),
-    installCmd: replaceMacros(props.agentInstallCmds.aix_extract, false),
-    installUrl: props.legacyAgentUrl
-      ? {
-          title: legacyInstallTitle,
-          url: props.legacyAgentUrl,
-          msg: _t(
-            'If you want to install the Checkmk agent on AIX, please read how to install the legacy agent'
-          ),
-          icon: 'learning-guide'
-        }
-      : undefined,
-    registrationMsg: _t(
-      'After you have installed the agent, run this command on your AIX host to register the Checkmk agent controller.'
-    ),
-    registrationCmd: replaceMacros(props.agentRegistrationCmds.aix, true),
-    statusCmd: props.agentStatusCmds.aix
-  }
-])
 </script>
 
 <template>
@@ -248,7 +101,8 @@ const tabs = computed<AgentSlideOutTabs[]>(() => [
            This agent acts as a small program that collects data about the systems state, such as how much storage is used or the CPU load.`
       )
     "
-    :tabs="tabs"
+    :flavours="flavours"
+    :macros="macros"
     :all-agents-url="allAgentsUrl"
     :user-settings-url="userSettingsUrl"
     :close-button-title="closeButtonTitle"

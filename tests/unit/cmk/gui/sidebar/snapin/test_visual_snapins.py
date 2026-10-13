@@ -28,16 +28,19 @@ from cmk.gui.sidebar._snapin._views import (
 from cmk.gui.type_defs import Visual
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.session import session
+from cmk.gui.utils.transaction_manager import transactions
 
 USER_PERMISSIONS = UserPermissions({}, {}, {}, [])
 
 
-@pytest.fixture(name="permissive_user", autouse=True)
+@pytest.fixture(name="permissive_user", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_permissive_user(
-    request_context: None, monkeypatch: pytest.MonkeyPatch
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[None]:
     with monkeypatch.context() as m:
-        m.setattr(user, "may", lambda x: True)
+        m.setattr(user, "may", lambda x: True)  # noqa: ARG005
         yield
 
 
@@ -65,7 +68,7 @@ def _visual(name: str, title: str, *, topic: str = "overview") -> Visual:
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request)
+    return PageContext(config=config, request=request, transactions=transactions, session=session)
 
 
 def test_views_metadata() -> None:
@@ -114,7 +117,7 @@ def test_view_menu_items_skips_the_hardcoded_pages_without_the_permission(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     with monkeypatch.context() as m:
-        m.setattr(user, "may", lambda x: False)
+        m.setattr(user, "may", lambda x: False)  # noqa: ARG005
         m.setattr("cmk.gui.sidebar._snapin._views.get_permitted_views", dict)
         m.setattr("cmk.gui.sidebar._snapin._views.get_permitted_dashboards", dict)
         items = view_menu_items(USER_PERMISSIONS)
@@ -207,7 +210,7 @@ def test_dashboard_menu_items_are_grouped_into_topics(monkeypatch: pytest.Monkey
             "cmk.gui.sidebar._snapin._dashboards.get_permitted_dashboards",
             lambda: {"main": _visual("main", "Main dashboard")},
         )
-        topics = Dashboards()._get_dashboard_menu_items(USER_PERMISSIONS)
+        topics = Dashboards()._get_dashboard_menu_items(USER_PERMISSIONS)  # noqa: SLF001
 
     assert "main" in {entry.id for topic in topics for entry in topic.entries}
 

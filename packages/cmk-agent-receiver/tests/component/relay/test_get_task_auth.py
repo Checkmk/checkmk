@@ -5,8 +5,6 @@
 
 """Tests for get-task endpoint authorization (localhost + CN validation)."""
 
-from __future__ import annotations
-
 import uuid
 from http import HTTPStatus
 

@@ -4,10 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { CalendarDateTime, type ZonedDateTime, toZoned } from '@internationalized/date'
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, within } from '@testing-library/vue'
 import type { CustomGraphTimeRange } from 'cmk-shared-typing/typescript/global_time_picker'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { defineComponent, h, shallowRef } from 'vue'
 
 import GlobalTimePicker from '@/graphing/GlobalTimePicker/GlobalTimePicker.vue'
@@ -48,7 +49,10 @@ function renderPicker(
  * Feeds emitted ranges back into the model, so a range the test applies by hand reaches the
  * trigger. `renderPicker` deliberately does not, keeping the other tests' props fixed.
  */
-function renderControlledPicker(modelValue: DateTimeRange) {
+function renderControlledPicker(
+  modelValue: DateTimeRange,
+  variant: 'extended' | 'condensed' = 'extended'
+) {
   const model = shallowRef(modelValue)
   const view = render(
     defineComponent({
@@ -58,6 +62,7 @@ function renderControlledPicker(modelValue: DateTimeRange) {
             customTimeRanges: CUSTOM_RANGES,
             serverTimeZone: TZ,
             firstDayOfWeek: null,
+            variant,
             modelValue: model.value,
             'onUpdate:modelValue': (value: DateTimeRange) => {
               model.value = value
@@ -115,10 +120,6 @@ function triggerText(container: Element): string {
 }
 
 describe('GlobalTimePicker', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   test('renders a chip per configured custom range', () => {
     const { chip } = renderPicker(rangeOfSeconds(99))
     expect(chip('Last 4 hours')).toBeInTheDocument()
@@ -173,6 +174,8 @@ describe('GlobalTimePicker', () => {
   )
 
   test('the chips are exactly the configured ranges, in configured order', () => {
+    // The extended (default) variant already shows a "Custom time range" chip on the trigger,
+    // so DynamicPresets does not get its own trailing Custom entry.
     const { container } = renderPicker(rangeOfSeconds(99))
     expect(presetChipNames(container)).toEqual(['Last 4 hours', 'Last 25 hours'])
   })
@@ -219,22 +222,18 @@ describe('GlobalTimePicker', () => {
     expect(screen.getByText(/^Timezone: /)).toHaveTextContent(/UTC/)
   })
 
-  test.each([
-    { locale: 'de-DE', segments: 2 },
-    { locale: 'en-US', segments: 3 }
-  ])(
-    'the $locale time input names each segment and marks the meridiem when it has one',
-    async ({ locale, segments }) => {
-      mockLocale(locale)
-      const { container } = renderPicker(rangeOfSeconds(99))
-      await openFlyout(container)
+  // 24-hour whatever the locale is, so no meridiem segment and no AM/PM in the summary.
+  test.each(['de-DE', 'en-US'])('the %s time input names its two segments', async (locale) => {
+    mockLocale(locale)
+    const { container } = renderPicker(rangeOfSeconds(99))
+    await openFlyout(container)
 
-      const time = within(screen.getByRole('group', { name: 'From time' }))
-      expect(time.getByRole('spinbutton', { name: 'Hours' })).toBeInTheDocument()
-      expect(time.getByRole('spinbutton', { name: 'Minutes' })).toBeInTheDocument()
-      expect(time.getAllByRole('spinbutton')).toHaveLength(segments)
-    }
-  )
+    const time = within(screen.getByRole('group', { name: 'From time' }))
+    expect(time.getByRole('spinbutton', { name: 'Hours' })).toBeInTheDocument()
+    expect(time.getByRole('spinbutton', { name: 'Minutes' })).toBeInTheDocument()
+    expect(time.getAllByRole('spinbutton')).toHaveLength(2)
+    expect(triggerText(container)).not.toMatch(/[AP]M/)
+  })
 
   test.each([
     { locale: 'de-DE', expected: 'Montag' },
@@ -258,5 +257,28 @@ describe('GlobalTimePicker', () => {
 
     const grid = (await screen.findAllByRole('grid'))[0]!
     expect(within(grid).getAllByRole('columnheader')[0]!).toHaveAccessibleName('Sonntag')
+  })
+
+  test('condensed: applying a quick range closes the flyout', async () => {
+    const view = renderControlledPicker(rollingRange(4 * 3600), 'condensed')
+    await openFlyout(view.container)
+
+    await fireEvent.click(screen.getByRole('radio', { name: 'Today' }))
+    await fireEvent.click(screen.getByRole('button', { name: 'Apply' }))
+
+    expect(view.currentModel().from.hour).toBe(0)
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  test('condensed: the custom entry opens the flyout and keeps the current range', async () => {
+    const user = userEvent.setup()
+    const initial = rollingRange(4 * 3600)
+    const view = renderControlledPicker(initial, 'condensed')
+
+    await user.click(screen.getByRole('combobox', { name: 'Time ranges' }))
+    await user.click(await screen.findByRole('option', { name: 'Custom range' }))
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+    expect(view.currentModel()).toBe(initial)
   })
 })

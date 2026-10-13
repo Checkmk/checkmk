@@ -9,6 +9,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
+        "//packages/cmk-maps:__pkg__",
         "//packages/cmk-wsgi:__pkg__",
         "//tests:__subpackages__",
     ],
@@ -30,6 +31,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
+        "//packages/cmk-maps:__pkg__",
         "//packages/cmk-wsgi:__pkg__",
         "//tests:__subpackages__",
     ],
@@ -43,11 +45,9 @@ py_library(
         "//cmk/gui/openapi:permission_tracking",
         "//cmk/gui/openapi:utils",
         "//cmk/gui/openapi/framework:api_config",
-        "//cmk/gui/utils:middle",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",
         "//cmk/gui/watolib:timeperiods",
-        "//cmk/utils",
         "//packages/cmk-ccc:regex",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",

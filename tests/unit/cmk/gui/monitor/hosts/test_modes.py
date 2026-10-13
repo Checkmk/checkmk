@@ -6,14 +6,27 @@ from cmk.gui.monitor.hosts._api._modes import build_host_modes
 
 from .testlib import HostFactory
 
+# The factory randomises every field, so a test that asserts on one mode has to pin all the
+# others to the value that keeps their icon away.
+_NO_MODES = {
+    "in_downtime": False,
+    "acknowledged": False,
+    "notifications_enabled": True,
+    "num_comments": 0,
+    "active_checks_disabled": False,
+    "passive_checks_disabled": False,
+    "in_notification_period": True,
+    "in_service_period": True,
+    "in_check_period": True,
+}
+
 
 def test_build_host_modes_none() -> None:
-    host = HostFactory.build(in_downtime=False, acknowledged=False)
-    assert build_host_modes(host) == []
+    assert build_host_modes(HostFactory.build(**_NO_MODES)) == []
 
 
 def test_build_host_modes_downtime() -> None:
-    host = HostFactory.build(in_downtime=True, acknowledged=False)
+    host = HostFactory.build(**_NO_MODES | {"in_downtime": True})
     modes = build_host_modes(host)
 
     assert [mode.icon_name for mode in modes] == ["downtime"]
@@ -22,12 +35,93 @@ def test_build_host_modes_downtime() -> None:
 
 
 def test_build_host_modes_acknowledged() -> None:
-    host = HostFactory.build(in_downtime=False, acknowledged=True)
+    host = HostFactory.build(**_NO_MODES | {"acknowledged": True})
 
     assert [mode.icon_name for mode in build_host_modes(host)] == ["ack"]
 
 
-def test_build_host_modes_downtime_and_acknowledged() -> None:
-    host = HostFactory.build(in_downtime=True, acknowledged=True)
+def test_build_host_modes_notifications_disabled() -> None:
+    host = HostFactory.build(**_NO_MODES | {"notifications_enabled": False})
 
-    assert [mode.icon_name for mode in build_host_modes(host)] == ["downtime", "ack"]
+    assert [mode.icon_name for mode in build_host_modes(host)] == ["notif-disabled"]
+
+
+def test_build_host_modes_comments() -> None:
+    host = HostFactory.build(**_NO_MODES | {"num_comments": 2})
+    modes = build_host_modes(host)
+
+    assert [mode.icon_name for mode in modes] == ["comment"]
+    assert "comments_of_host" in modes[0].link
+    assert modes[0].title == "This host has 2 comments"
+
+
+def test_build_host_modes_active_checks_disabled() -> None:
+    host = HostFactory.build(**_NO_MODES | {"active_checks_disabled": True})
+
+    assert [mode.icon_name for mode in build_host_modes(host)] == ["disabled"]
+
+
+def test_build_host_modes_passive_checks_disabled() -> None:
+    host = HostFactory.build(**_NO_MODES | {"passive_checks_disabled": True})
+
+    assert [mode.icon_name for mode in build_host_modes(host)] == ["npassive"]
+
+
+def test_build_host_modes_out_of_notification_period() -> None:
+    host = HostFactory.build(**_NO_MODES | {"in_notification_period": False})
+
+    assert [mode.icon_name for mode in build_host_modes(host)] == ["outofnot"]
+
+
+def test_build_host_modes_out_of_service_period() -> None:
+    host = HostFactory.build(**_NO_MODES | {"in_service_period": False})
+
+    assert [mode.icon_name for mode in build_host_modes(host)] == ["outof-serviceperiod"]
+
+
+def test_build_host_modes_not_currently_checked() -> None:
+    host = HostFactory.build(**_NO_MODES | {"in_check_period": False})
+
+    assert [mode.icon_name for mode in build_host_modes(host)] == ["pause"]
+
+
+def test_build_host_modes_all_modes() -> None:
+    host = HostFactory.build(
+        in_downtime=True,
+        acknowledged=True,
+        notifications_enabled=False,
+        num_comments=1,
+        active_checks_disabled=True,
+        passive_checks_disabled=True,
+        in_notification_period=False,
+        in_service_period=False,
+        in_check_period=False,
+    )
+
+    assert [mode.icon_name for mode in build_host_modes(host)] == [
+        "downtime",
+        "ack",
+        "notif-disabled",
+        "comment",
+        "disabled",
+        "npassive",
+        "outofnot",
+        "outof-serviceperiod",
+        "pause",
+    ]
+
+
+def test_build_host_modes_state_icons_link_nowhere() -> None:
+    host = HostFactory.build(
+        in_downtime=False,
+        num_comments=0,
+        acknowledged=True,
+        notifications_enabled=False,
+        active_checks_disabled=True,
+        passive_checks_disabled=True,
+        in_notification_period=False,
+        in_service_period=False,
+        in_check_period=False,
+    )
+
+    assert {mode.link for mode in build_host_modes(host)} == {""}

@@ -5,18 +5,19 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { TwoFactorAuth } from 'cmk-shared-typing/typescript/two_factor_auth'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, nextTick, onMounted, ref } from 'vue'
 
+import OtpInput from '@/otp-input/OtpInput.vue'
+
 import TwoFactorAuthBackupInput from './components/TwoFactorAuthBackupInput.vue'
 import TwoFactorAuthHeader from './components/TwoFactorAuthHeader.vue'
 import TwoFactorAuthLinks from './components/TwoFactorAuthLinks.vue'
-import TwoFactorAuthOtpInput from './components/TwoFactorAuthOtpInput.vue'
 import TwoFactorEnabledMethods from './components/TwoFactorEnabledMethods.vue'
 import type { AuthMode } from './twoFactorAuth'
-import { completeWebAuthnLogin, verifyCode } from './twoFactorAuthService'
+import { AuthFailureError, completeWebAuthnLogin, verifyCode } from './twoFactorAuthService'
 import type { WebAuthnMessage } from './webauthn'
 
 const { _t } = usei18n()
@@ -46,7 +47,7 @@ const backupCode = ref('')
 const isSubmitting = ref(false)
 const message = ref<Message | null>(null)
 
-const otpInputRef = ref<InstanceType<typeof TwoFactorAuthOtpInput> | null>(null)
+const otpInputRef = ref<InstanceType<typeof OtpInput> | null>(null)
 const backupCodeInputRef = ref<InstanceType<typeof TwoFactorAuthBackupInput> | null>(null)
 
 const activeMethods = Object.entries(props.availableMethods)
@@ -165,14 +166,21 @@ async function handleSubmit() {
       const redirectUrl = response.redirect || originTarget.value
       window.location.href = redirectUrl
     }
-  } catch {
+  } catch (error: unknown) {
     isSubmitting.value = false
-    message.value = buildMessage()
+    message.value = buildMessage(error)
     await clearAndRefocus()
   }
 }
 
-function buildMessage(): Message {
+function buildMessage(error: unknown): Message {
+  if (error instanceof AuthFailureError && error.reason !== 'invalid_code') {
+    return {
+      title: error.message,
+      lines: [],
+      type: 'error'
+    }
+  }
   switch (currentMode.value) {
     case 'totp_credentials':
       return {
@@ -231,8 +239,8 @@ async function clearAndRefocus() {
       @switch-mode="switchMode"
     />
 
-    <div v-if="currentMode === 'totp_credentials'">
-      <TwoFactorAuthOtpInput
+    <div v-if="currentMode === 'totp_credentials'" class="two-factor-auth-app__otp">
+      <OtpInput
         ref="otpInputRef"
         v-model="otpCode"
         :disabled="isSubmitting"
@@ -250,11 +258,11 @@ async function clearAndRefocus() {
       />
     </div>
 
-    <CmkAlertBox v-if="message" :variant="messageVariant" :heading="message.title">
+    <CmkAlertBoxDeprecated v-if="message" :variant="messageVariant" :heading="message.title">
       <p v-for="(line, index) in message.lines" :key="index">
         {{ line }}
       </p>
-    </CmkAlertBox>
+    </CmkAlertBoxDeprecated>
 
     <CmkButton
       v-if="currentMode !== 'webauthn_credentials' && currentMode !== 'multipleEnabled'"
@@ -288,6 +296,12 @@ async function clearAndRefocus() {
   display: flex;
   flex-direction: column;
   color: var(--font-color);
+}
+
+/* Spacing the code input used to carry itself, before it moved into the library. */
+.two-factor-auth-app__otp {
+  padding-top: var(--dimension-5);
+  padding-bottom: var(--dimension-8);
 }
 
 .two-factor-auth-app__button {

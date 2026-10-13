@@ -28,41 +28,41 @@ from cmk.plugins.lib import uptime
 class Clients(NamedTuple):
     # $SYS/broker/clients/connected
     # The number of currently connected clients.
-    connected: int
+    connected: int | None
     # $SYS/broker/clients/maximum
     # The maximum number of clients that have been connected to the broker at the same time.
-    maximum: int
+    maximum: int | None
     # $SYS/broker/clients/total
     # The total number of active and inactive clients currently connected and registered on the
     # broker.
-    total: int
+    total: int | None
 
 
 class MessageCounters(NamedTuple):
     # $SYS/broker/bytes/received
     # The total number of bytes received since the broker started.
-    bytes_received_total: int
+    bytes_received_total: int | None
     # $SYS/broker/bytes/sent
     # The total number of bytes sent since the broker started.
-    bytes_sent_total: int
+    bytes_sent_total: int | None
     # $SYS/broker/messages/received
     # The total number of messages of any type received since the broker started.
-    messages_received_total: int
+    messages_received_total: int | None
     # $SYS/broker/messages/sent
     # The total number of messages of any type sent since the broker started.
-    messages_sent_total: int
+    messages_sent_total: int | None
     # $SYS/broker/messages/publish/received
     # The total number of PUBLISH messages received since the broker started.
-    publish_messages_received_total: int
+    publish_messages_received_total: int | None
     # $SYS/broker/messages/publish/sent
     # The total number of PUBLISH messages sent since the broker started.
-    publish_messages_sent_total: int
+    publish_messages_sent_total: int | None
     # $SYS/broker/bytes/received
     # The total number of bytes related to PUBLISH messages received since the broker started.
-    publish_bytes_received_total: int
+    publish_bytes_received_total: int | None
     # $SYS/broker/bytes/sent
     # The total number of bytes sent related to PUBLISH messages since the broker started.
-    publish_bytes_sent_total: int
+    publish_bytes_sent_total: int | None
 
 
 class Messages(NamedTuple):
@@ -70,19 +70,19 @@ class Messages(NamedTuple):
 
     # $SYS/broker/load/connections/1min
     # The 1 minute moving average of the number of CONNECT packets received by the broker.
-    connect_messages_received_rate: float
+    connect_messages_received_rate: float | None
 
     # $SYS/broker/retained messages/count
     # The total number of retained messages active on the broker.
-    retained_messages_count: int
+    retained_messages_count: int | None
     # $SYS/broker/store/messages/bytes
     # The number of bytes currently held by message payloads in the message store. This includes
     # retained messages and messages queued for durable clients.
-    stored_messages_bytes: int
+    stored_messages_bytes: int | None
     # $SYS/broker/store/messages/count
     # The number of messages currently held in the message store. This includes retained messages
     # and messages queued for durable clients
-    stored_messages_count: int
+    stored_messages_count: int | None
 
 
 class Statistics(NamedTuple):
@@ -94,28 +94,28 @@ class Statistics(NamedTuple):
     # $SYS/broker/version
     version: str
     # $SYS/broker/uptime
-    uptime: int
+    uptime: int | None
 
     # $SYS/broker/load/sockets/1min
     # The 1 minute moving average of the number of socket connections opened to the broker over
     # different time intervals.
-    socket_connections_opened_rate: float
+    socket_connections_opened_rate: float | None
     # $SYS/broker/subscriptions/count
     # The total number of subscriptions active on the broker.
-    subscriptions: int
+    subscriptions: int | None
 
     clients: Clients
     messages: Messages
 
 
 def parse_mqtt(string_table: StringTable) -> Mapping[str, Statistics]:
-    def parse_uptime(value: str) -> int:
+    def parse_uptime(value: str) -> int | None:
         """
         >>> parse_uptime("11 days 16 hours 10 minutes 11 seconds")
-        0
+        1008611
         """
         if not value:
-            return 0
+            return None
 
         try:
             scales = {
@@ -137,17 +137,17 @@ def parse_mqtt(string_table: StringTable) -> Mapping[str, Statistics]:
         """
         return next((raw[t] for t in search_topics if t in raw), "")
 
-    def parse_int(raw: Mapping[str, str], search_topics: Sequence[str]) -> int:
+    def parse_int(raw: Mapping[str, str], search_topics: Sequence[str]) -> int | None:
         try:
             return int(get_first(raw, search_topics))
         except ValueError:
-            return 0
+            return None
 
-    def parse_float(raw: Mapping[str, str], search_topics: Sequence[str]) -> float:
+    def parse_float(raw: Mapping[str, str], search_topics: Sequence[str]) -> float | None:
         try:
             return float(get_first(raw, search_topics))
         except ValueError:
-            return 0.0
+            return None
 
     return {
         str(instance_id): Statistics(
@@ -210,7 +210,7 @@ def discovery_mqtt_broker(section: Mapping[str, Statistics]) -> DiscoveryResult:
     yield from (
         Service(item=instance_id)
         for instance_id, stats in section.items()
-        if (stats.socket_connections_opened_rate or stats.subscriptions)
+        if stats.socket_connections_opened_rate is not None or stats.subscriptions is not None
     )
 
 
@@ -219,12 +219,12 @@ def check_mqtt_broker(item: str, section: Mapping[str, Statistics]) -> CheckResu
     if stats is None:
         return
 
-    if stats.subscriptions:
+    if stats.subscriptions is not None:
         yield from check_levels_v1(
             stats.subscriptions, metric_name="subscriptions", label="Subscriptions", render_func=str
         )
 
-    if connections_opened_rate := stats.socket_connections_opened_rate:
+    if (connections_opened_rate := stats.socket_connections_opened_rate) is not None:
         connections_opened_per_sec = connections_opened_rate / 60
         yield from check_message_rate(
             "connections_opened_received_rate", connections_opened_per_sec
@@ -241,7 +241,11 @@ check_plugin_mqtt_broker = CheckPlugin(
 
 
 def discovery_mqtt_uptime(section: Mapping[str, Statistics]) -> DiscoveryResult:
-    yield from (Service(item=instance_id) for instance_id, stats in section.items() if stats.uptime)
+    yield from (
+        Service(item=instance_id)
+        for instance_id, stats in section.items()
+        if stats.uptime is not None
+    )
 
 
 def check_mqtt_uptime(item: str, section: Mapping[str, Statistics]) -> CheckResult:
@@ -249,7 +253,7 @@ def check_mqtt_uptime(item: str, section: Mapping[str, Statistics]) -> CheckResu
     if stats is None:
         return
 
-    if stats.uptime:
+    if stats.uptime is not None:
         yield from uptime.check(params={}, section=uptime.Section(float(stats.uptime), None))
 
 
@@ -263,17 +267,19 @@ check_plugin_mqtt_uptime = CheckPlugin(
 
 
 def discovery_mqtt_messages(section: Mapping[str, Statistics]) -> DiscoveryResult:
-    """Discover instances which report at least one of the supported values. We only look at the
-    "received". Assuming the "sent" are also there or not there."""
+    """Discover instances which report at least one of the supported values"""
     yield from (
         Service(item=instance_id)
         for instance_id, stats in section.items()
-        if (
-            any(stats.messages.counters)
-            or stats.messages.connect_messages_received_rate
-            or stats.messages.retained_messages_count
-            or stats.messages.stored_messages_bytes
-            or stats.messages.stored_messages_bytes
+        if any(
+            value is not None
+            for value in (
+                *stats.messages.counters,
+                stats.messages.connect_messages_received_rate,
+                stats.messages.retained_messages_count,
+                stats.messages.stored_messages_bytes,
+                stats.messages.stored_messages_count,
+            )
         )
     )
 
@@ -284,7 +290,7 @@ def check_mqtt_messages(item: str, section: Mapping[str, Statistics]) -> CheckRe
         return
     messages = stats.messages
 
-    if messages.retained_messages_count:
+    if messages.retained_messages_count is not None:
         yield from check_levels_v1(
             messages.retained_messages_count,
             metric_name="retained_messages",
@@ -292,7 +298,7 @@ def check_mqtt_messages(item: str, section: Mapping[str, Statistics]) -> CheckRe
             render_func=str,
         )
 
-    if messages.stored_messages_count:
+    if messages.stored_messages_count is not None:
         yield from check_levels_v1(
             messages.stored_messages_count,
             metric_name="stored_messages",
@@ -300,7 +306,7 @@ def check_mqtt_messages(item: str, section: Mapping[str, Statistics]) -> CheckRe
             render_func=str,
         )
 
-    if messages.stored_messages_bytes:
+    if messages.stored_messages_bytes is not None:
         yield from check_levels_v1(
             messages.stored_messages_bytes,
             metric_name="stored_messages_bytes",
@@ -308,7 +314,7 @@ def check_mqtt_messages(item: str, section: Mapping[str, Statistics]) -> CheckRe
             render_func=render.bytes,
         )
 
-    if connect_messages_rate := messages.connect_messages_received_rate:
+    if (connect_messages_rate := messages.connect_messages_received_rate) is not None:
         connect_messages_per_sec = connect_messages_rate / 60
         yield from check_message_rate("connect_messages_received_rate", connect_messages_per_sec)
 
@@ -316,7 +322,7 @@ def check_mqtt_messages(item: str, section: Mapping[str, Statistics]) -> CheckRe
     now = time.time()
 
     for k, v in sorted(messages.counters._asdict().items()):
-        if not v:
+        if v is None:
             continue
 
         try:
@@ -355,7 +361,9 @@ check_plugin_mqtt_messages = CheckPlugin(
 def discovery_mqtt_clients(section: Mapping[str, Statistics]) -> DiscoveryResult:
     """Discover instances which report at least one of the supported values"""
     yield from (
-        Service(item=instance_id) for instance_id, stats in section.items() if any(stats.clients)
+        Service(item=instance_id)
+        for instance_id, stats in section.items()
+        if any(value is not None for value in stats.clients)
     )
 
 
@@ -365,7 +373,7 @@ def check_mqtt_clients(item: str, section: Mapping[str, Statistics]) -> CheckRes
         return
     clients = stats.clients
 
-    if clients.connected:
+    if clients.connected is not None:
         yield from check_levels_v1(
             clients.connected,
             metric_name="clients_connected",
@@ -373,7 +381,7 @@ def check_mqtt_clients(item: str, section: Mapping[str, Statistics]) -> CheckRes
             render_func=str,
         )
 
-    if clients.maximum:
+    if clients.maximum is not None:
         yield from check_levels_v1(
             clients.maximum,
             metric_name="clients_maximum",
@@ -381,7 +389,7 @@ def check_mqtt_clients(item: str, section: Mapping[str, Statistics]) -> CheckRes
             render_func=str,
         )
 
-    if clients.total:
+    if clients.total is not None:
         yield from check_levels_v1(
             clients.total, metric_name="clients_total", label="Total connected", render_func=str
         )

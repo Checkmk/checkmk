@@ -3,19 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="type-arg"
 
 """Verify or find out a hosts agent related configuration"""
 
-import json
 from collections.abc import Collection
 from typing import NotRequired, override, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import omd_site
-from cmk.checkengine.snmplib import SNMPCredentials  # astrein: disable=cmk-module-layer-violation
+from cmk.checkengine.snmplib import SNMPCredentials
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
@@ -32,9 +30,9 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
-from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Dictionary, FixedValue, Float, Integer, Password
@@ -48,7 +46,7 @@ from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
     folder_from_request,
     folder_preserving_link,
-    folder_tree,
+    make_folder_tree,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.pending_changes import (
@@ -58,7 +56,10 @@ from cmk.gui.watolib.pending_changes import (
 )
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.flashed_messages import flash
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 
 SNMPv3NoAuthNoPriv = tuple[str, str]
 SNMPv3AuthNoPriv = tuple[str, str, str, str]
@@ -108,7 +109,7 @@ class ModeDiagHost(WatoMode):
     @override
     def _from_vars(self) -> None:
         self._hostname = request.get_validated_type_input_mandatory(HostName, "host")
-        self._tree = folder_tree()
+        self._tree = make_folder_tree(self._ctx.config)
         self._host = folder_from_request(
             self._tree, request.var("folder"), self._hostname
         ).load_host(self._hostname)
@@ -174,7 +175,7 @@ class ModeDiagHost(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return None
@@ -254,12 +255,12 @@ class ModeDiagHost(WatoMode):
         html.open_table()
         html.open_tr()
         html.open_td()
-        all_rulesets = AllRulesets.load_all_rulesets(folder_tree())
+        all_rulesets = AllRulesets.load_all_rulesets(self._tree)
         agent_ports_ruleset = all_rulesets.get("agent_ports")
         tcp_connect_timeouts_ruleset = all_rulesets.get("tcp_connect_timeouts")
         snmp_timing_ruleset = all_rulesets.get("snmp_timing")
         agent_port: int | None = None
-        match agent_ports_ruleset.analyse_ruleset(
+        match agent_ports_ruleset.analyse_ruleset(  # type: ignore[exhaustive-match]
             hostname=self._hostname,
             svc_desc_or_item=None,
             svc_desc=None,
@@ -270,7 +271,7 @@ class ModeDiagHost(WatoMode):
                 pass
 
         tcp_connect_timeout: float | None = None
-        match tcp_connect_timeouts_ruleset.analyse_ruleset(
+        match tcp_connect_timeouts_ruleset.analyse_ruleset(  # type: ignore[exhaustive-match]
             hostname=self._hostname,
             svc_desc_or_item=None,
             svc_desc=None,
@@ -281,7 +282,7 @@ class ModeDiagHost(WatoMode):
                 pass
 
         snmp_timing: dict[str, int] = {}
-        match snmp_timing_ruleset.analyse_ruleset(
+        match snmp_timing_ruleset.analyse_ruleset(  # type: ignore[exhaustive-match]
             hostname=self._hostname,
             svc_desc_or_item=None,
             svc_desc=None,
@@ -334,7 +335,10 @@ class ModeDiagHost(WatoMode):
             # When clicking "Save & Test" on the "Edit host" page, this will be set
             # to immediately execute the tests using the just saved settings
             if request.has_var("_start_on_load"):
-                html.final_javascript("cmk.page_menu.form_submit('diag_host', '_save');")
+                html.call_ts_function(
+                    function_name="form_submit",
+                    arguments={"form_name": "diag_host", "button_name": "_save"},
+                )
 
             html.hidden_fields()
 
@@ -388,13 +392,13 @@ class ModeDiagHost(WatoMode):
 
             html.close_tr()
             html.close_table()
-            html.javascript(
-                "cmk.host_diagnose.start_test(%s, %s, %s)"
-                % (
-                    json.dumps(ident),
-                    json.dumps(self._hostname),
-                    json.dumps(transactions.fresh_transid()),
-                )
+            html.call_ts_function(
+                function_name="host_diagnose_start_test",
+                arguments={
+                    "ident": ident,
+                    "hostname": self._hostname,
+                    "transid": transactions.fresh_transid(),
+                },
             )
 
 
@@ -539,7 +543,7 @@ def _vs_rules(
 class PageAjaxDiagHost(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
         if not user.may("wato.diag_host"):
             raise MKAuthException(_("You are not permitted to perform this action."))
 
@@ -552,7 +556,7 @@ class PageAjaxDiagHost(AjaxPage):
         if not hostname:
             raise MKGeneralException(_("The host name is missing."))
 
-        host = folder_tree().host(hostname)
+        host = make_folder_tree(ctx.config).host(hostname)
 
         if not host:
             raise MKGeneralException(_("The given host does not exist."))

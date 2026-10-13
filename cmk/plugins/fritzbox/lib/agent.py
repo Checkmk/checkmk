@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="possibly-undefined"
 
 # This agent uses UPNP API calls to the FRITZ!Box to gather information
 # about connection configuration and status.
@@ -38,11 +36,12 @@ import pprint
 import re
 import sys
 from collections.abc import Iterator, Mapping, Sequence
+from http import HTTPStatus
 from typing import Final
 
 import requests
 
-from cmk.server_side_programs.v1_unstable import vcrtrace
+from cmk.server_side_programs.v1 import configure_logging, vcrtrace
 
 LOGGER = logging.getLogger(__name__)
 
@@ -113,10 +112,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
 
 
 def setup_logging(verbose: bool) -> None:
-    logging.basicConfig(
-        level=logging.DEBUG if verbose else logging.ERROR,
-        format="%(levelname)s: %(message)s",
-    )
+    configure_logging(logging.DEBUG if verbose else logging.ERROR)
 
 
 class FritzConnection:
@@ -160,7 +156,7 @@ def _get_response(
         response.raise_for_status()
         return response
     except requests.exceptions.HTTPError:
-        if response.status_code != 500:
+        if response.status_code != HTTPStatus.INTERNAL_SERVER_ERROR:  # type: ignore[possibly-undefined]
             raise
 
     # old URL can not be found, select other base url in the hope that the other
@@ -199,7 +195,7 @@ def _get_query_responses(connection: FritzConnection, debug: bool) -> Iterator[U
         except requests.exceptions.ConnectionError as exc:
             sys.stderr.write(f"{exc}\n")
             raise
-        except (ValueError, requests.exceptions.HTTPError):
+        except ValueError, requests.exceptions.HTTPError:
             if debug:
                 raise
             continue

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 import json
 from collections.abc import Collection, Iterable, Sequence
@@ -70,7 +69,7 @@ class Failure(BaseModel):
 
     def to_human_readable(self) -> Iterable[str]:
         for field_name, field_value in dict(self).items():
-            match field_value:
+            match field_value:  # type: ignore[exhaustive-match]
                 case str():
                     yield f"{field_name.title()}: {field_value}"
                 case FailureMessage():

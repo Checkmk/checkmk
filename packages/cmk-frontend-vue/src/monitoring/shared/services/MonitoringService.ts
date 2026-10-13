@@ -9,7 +9,7 @@ import type {
   SortingState,
   VisibilityState
 } from '@tanstack/vue-table'
-import { untranslated } from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 import { ServiceBase } from 'cmk-ui-library/lib/service/base'
 import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
@@ -37,7 +37,13 @@ import {
   computeDefaultVisibility
 } from '@/monitoring/shared/tableState/schema'
 import type { TableState, TableStateSchema } from '@/monitoring/shared/tableState/types'
-import type { RequestedLimit } from '@/monitoring/shared/types'
+import {
+  DEFAULT_DISPLAY_OPTIONS,
+  type DateFormatId,
+  type DisplayOptions,
+  type RequestedLimit,
+  type TimestampFormatId
+} from '@/monitoring/shared/types'
 
 import { FilterStore, type QuickFilter, type QuickFilterConfig } from './FilterStore'
 import { useColumnFilterBridge } from './useColumnFilterBridge'
@@ -122,6 +128,50 @@ export function buildColumnStorageKey({ view, site, userId, edition }: ColumnSto
   return `monitoring-${view}-columns-${site}-${userId}-${edition}`
 }
 
+const DATE_FORMAT_IDS: readonly DateFormatId[] = [
+  '%Y-%m-%d',
+  '%d.%m.%Y',
+  '%m/%d/%Y',
+  '%d.%m.',
+  '%m/%d'
+]
+const TIMESTAMP_FORMAT_IDS: readonly TimestampFormatId[] = ['mixed', 'abs', 'rel', 'both', 'epoch']
+
+/**
+ * Key a view's "Modify display options" choice is stored under. Same shape as
+ * {@link buildColumnStorageKey}: per view/site/user/edition, so e.g. "Services of host"
+ * and "All hosts" don't affect each other.
+ */
+export function buildDisplayOptionsStorageKey({
+  view,
+  site,
+  userId,
+  edition
+}: ColumnStorageScope): string {
+  return `monitoring-${view}-display-options-${site}-${userId}-${edition}`
+}
+
+/**
+ * Rebuilds display options from what browser storage holds, falling back to the
+ * default for anything that isn't one of the offered choices - e.g. storage predating
+ * a since-removed format, or corrupted content.
+ */
+export function sanitizeDisplayOptions(stored: unknown): DisplayOptions {
+  if (stored === null || typeof stored !== 'object') {
+    return DEFAULT_DISPLAY_OPTIONS
+  }
+  const entries = stored as Record<string, unknown>
+  const dateFormat = DATE_FORMAT_IDS.includes(entries['dateFormat'] as DateFormatId)
+    ? (entries['dateFormat'] as DateFormatId)
+    : DEFAULT_DISPLAY_OPTIONS.dateFormat
+  const timestampFormat = TIMESTAMP_FORMAT_IDS.includes(
+    entries['timestampFormat'] as TimestampFormatId
+  )
+    ? (entries['timestampFormat'] as TimestampFormatId)
+    : DEFAULT_DISPLAY_OPTIONS.timestampFormat
+  return { dateFormat, timestampFormat }
+}
+
 /**
  * Rebuild a visibility state from what browser storage holds, keeping only
  * decisions that still mean something: an id that is no longer offered has been
@@ -165,7 +215,10 @@ export abstract class MonitoringService<T> extends ServiceBase {
   /** The kind of fetch currently in flight, or `'idle'`. */
   readonly fetchState: Ref<FetchState> = ref('idle')
   readonly hasLoaded: Ref<boolean> = ref(false)
+  readonly loadFailed: Ref<boolean> = ref(false)
   readonly sortState: Ref<SortingState> = ref<SortingState>([])
+  /** Sort the listing starts with and returns to once the user clears theirs. */
+  private readonly defaultSort: SortingState
   readonly searchQuery: Ref<string> = ref('')
   /**
    * `searchQuery` updates on every key stroke; this only changes when a search is actually
@@ -187,7 +240,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
   readonly filterUrlState: ComputedRef<FilterUrlState>
 
   readonly toggleableColumns: ToggleableColumn[]
-  private readonly hideableColumnIds: string[]
+  protected readonly hideableColumnIds: string[]
   readonly columnVisibility: Ref<VisibilityState>
   readonly defaultColumnVisibility: VisibilityState
   /** The table's non-filter display state, for a URL sync to watch. */
@@ -299,9 +352,8 @@ export abstract class MonitoringService<T> extends ServiceBase {
       this.applyLimit(initialState.limit)
     }
 
-    if (initialState?.sort !== undefined) {
-      this.sortState.value = initialState.sort
-    }
+    this.defaultSort = tableStateSchema?.defaultSort ?? []
+    this.sortState.value = initialState?.sort ?? [...this.defaultSort]
 
     this.tableState = computed(() => ({
       cols: columnIdsFromVisibility(this.columnVisibility.value, this.hideableColumnIds),
@@ -379,12 +431,16 @@ export abstract class MonitoringService<T> extends ServiceBase {
   }
 
   private initShortCuts(): void {
-    this.registerShortCut({ key: ['/'], preventDefault: true }, () => this.focusSearch())
+    const { _t } = usei18n()
+    this.registerShortCut(
+      { key: ['/'], preventDefault: true, scope: _t('Table'), description: _t('Focus search') },
+      () => this.focusSearch()
+    )
     this.enableShortCuts()
   }
 
   updateSort(sortState: SortingState): void {
-    this.sortState.value = sortState
+    this.sortState.value = sortState.length === 0 ? [...this.defaultSort] : sortState
     this.offset.value = 0
     void this.fetch()
   }
@@ -483,6 +539,10 @@ export abstract class MonitoringService<T> extends ServiceBase {
     }
     this.applyLimit(value)
     this.offset.value = 0
+    void this.fetch()
+  }
+
+  retry(): void {
     void this.fetch()
   }
 
@@ -585,6 +645,9 @@ export abstract class MonitoringService<T> extends ServiceBase {
 
     this.secondsRemaining.value = this.pollIntervalSeconds
     this.fetchState.value = kind
+    if (kind === 'foreground') {
+      this.loadFailed.value = false
+    }
     const searchQueryForFetch = this.appliedSearchQuery.value
     try {
       const response = await this.fetchBatch(abort.signal)
@@ -603,10 +666,12 @@ export abstract class MonitoringService<T> extends ServiceBase {
         this.maxOffset.value = response.meta.maxOffset
       }
       this.committedSearchQuery.value = searchQueryForFetch
+      this.loadFailed.value = false
     } catch (error: unknown) {
       if (this.currentAbort !== abort) {
         return
       }
+      this.loadFailed.value = true
       console.error('MonitoringService: fetchBatch failed', error)
     } finally {
       if (this.currentAbort === abort) {

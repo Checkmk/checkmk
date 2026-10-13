@@ -29,6 +29,7 @@ def page_edit_dashboard(ctx: PageContext) -> None:
         ctx.config,
         create_handler=create_dashboard,
         custom_field_handler=dashboard_fields_handler,
+        custom_fields_after_context=True,
         info_handler=dashboard_info_handler,
         help_text_context=_(
             "A dashboard can have an optional context. It can for example be restricted to display "
@@ -38,7 +39,7 @@ def page_edit_dashboard(ctx: PageContext) -> None:
     )
 
 
-def dashboard_info_handler(visual: DashboardConfig) -> SingleInfos:
+def dashboard_info_handler(visual: DashboardConfig) -> SingleInfos:  # noqa: ARG001
     # We could use all available infos here, but there is a lot of normally unused stuff. For better
     # usability reduce the list to the (assumed) relevant used ones.
     return ["host", "service"]

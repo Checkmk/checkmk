@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import type { CmkWizardStepProps } from 'cmk-ui-library/components/CmkWizard'
 import { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
@@ -13,7 +13,7 @@ import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import useId from 'cmk-ui-library/lib/useId'
 import { computed, ref } from 'vue'
 
@@ -90,16 +90,20 @@ async function validate(): Promise<boolean> {
           :external-errors="aliasErrors"
         />
       </div>
-      <CmkAlertBox v-for="warning in aliasWarnings" :key="warning" variant="warning">
-        {{ warning }}
-      </CmkAlertBox>
-      <CmkAlertBox variant="info">
-        {{
+      <CmkAlert
+        v-for="warning in aliasWarnings"
+        :key="warning"
+        variant="warning"
+        :text="untranslated(warning)"
+      />
+      <CmkAlert
+        variant="info"
+        :text="
           _t(
             'This alias will be used to identify your Relay. It will automatically be inserted into the command shown in the next steps.'
           )
-        }}
-      </CmkAlertBox>
+        "
+      />
     </template>
 
     <template #actions>

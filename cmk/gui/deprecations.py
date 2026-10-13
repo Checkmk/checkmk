@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="unreachable"
 
 import abc
 import datetime
@@ -371,11 +370,6 @@ def _find_ac_test_result_problems(
                 match ac_test_result.test_id:
                     case (
                         "ACTestUnknownCheckParameterRuleSets"
-                        | "ACTestDeprecatedV1CheckPlugins"
-                        | "ACTestDeprecatedCheckPlugins"
-                        | "ACTestDeprecatedInventoryPlugins"
-                        | "ACTestDeprecatedBakeryPlugins"
-                        | "ACTestDeprecatedCheckManpages"
                         | "ACTestDeprecatedGUIExtensions"
                         | "ACTestDeprecatedLegacyGUIExtensions"
                         | "ACTestDeprecatedPNPTemplates"
@@ -407,8 +401,6 @@ def _filter_notifiable_users(
     users: Users, user_permissions: UserPermissions
 ) -> Iterator[_NotifiableUser]:
     for user_id, user_spec in users.items():
-        if user_id is None:
-            continue
         notification_categories = []
         if user_permissions.user_may(user_id, "wato.manage_mkps"):
             notification_categories.append(_NotificationCategory.manage_mkps)

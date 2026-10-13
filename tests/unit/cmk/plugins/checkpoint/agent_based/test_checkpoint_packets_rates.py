@@ -45,7 +45,8 @@ def warm_value_store_fixture(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 
 
 @time_machine.travel(_NOW, tick=False)
-def test_check_reports_a_rate_per_counter(warm_value_store: None) -> None:
+@pytest.mark.usefixtures("warm_value_store")
+def test_check_reports_a_rate_per_counter() -> None:
     parsed = checkpoint_packets.parse_checkpoint_packets(_SECOND_POLL)
 
     assert list(checkpoint_packets.check_checkpoint_packets(PARAMS, parsed)) == [
@@ -65,7 +66,8 @@ def test_check_reports_a_rate_per_counter(warm_value_store: None) -> None:
 
 
 @time_machine.travel(_NOW, tick=False)
-def test_check_crosses_the_configured_levels(warm_value_store: None) -> None:
+@pytest.mark.usefixtures("warm_value_store")
+def test_check_crosses_the_configured_levels() -> None:
     parsed = checkpoint_packets.parse_checkpoint_packets(
         [[["9000120", "180", "210", "4"]], [["0", "60"]]]
     )

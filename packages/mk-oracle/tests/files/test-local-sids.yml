@@ -1,0 +1,43 @@
+#
+# YOU MUST SET $CI_ORA_TEST_PASSWORD ENVIRONMENT VARIABLE TO USE THIS FILE
+#
+# This template is designed to check spawning and auto-detection.
+# It uses aliases from tnsnames.ora to connect to the database instances
+# homeless process processes auto-detected instances
+---
+oracle:
+  main: # mandatory, to be used if no specific config
+    connection: # mandatory
+      hostname: localhost
+    authentication: # mandatory
+      username: system
+      password: $CI_ORA_TEST_PASSWORD # or CI_ORA2_DB_TEST_PASSWORD
+      type: standard
+# VARIANT 1: Just aliases
+    discovery:
+      detect: no
+    sections:
+      - processes:
+    instances:
+      - alias: LISTENER19 # from tnsnames.ora SID19
+      - alias: LISTENER23 # from tnsnames.ora SID23
+
+# VARIANT 2: Aliases with excluded and autodetect
+    _discovery:
+      detect: yes
+      exclude: [SID19, SID23] # you have to exclude those SIDs if detect is yes(your alias points on the same SID)
+                              # and your homeless process will try to connect
+    _sections:
+      - processes:
+    _instances:
+      - alias: LISTENER19 # from tnsnames.ora SID19
+      - alias: LISTENER23 # from tnsnames.ora SID23
+
+# VARIANT 3: Alias with excluded SID fornm the alias + Autodetected
+    __discovery:
+      detect: yes
+      exclude: [SID19] # you have to exclude SID - your alias points on the same SID
+    __sections:
+      - processes:
+    __instances:
+      - alias: LISTENER19 # from tnsnames.ora SID19

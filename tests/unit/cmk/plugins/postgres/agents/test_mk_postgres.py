@@ -15,6 +15,13 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from cmk.plugins.postgres.agents import mk_postgres
 
+if sys.version_info >= (3, 12):  # noqa: UP036
+    from typing import override
+else:
+
+    def override(func):
+        return func
+
 #   .--defines-------------------------------------------------------------.
 #   |                      _       __ _                                    |
 #   |                   __| | ___ / _(_)_ __   ___  ___                    |
@@ -53,7 +60,7 @@ VALID_CONFIG_WITH_PG_BINARY_PATH = [
 
 
 class TestNotImplementedOS:
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
     def is_not_implemented_os(self, monkeypatch: MonkeyPatch) -> None:
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", False)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", False)
@@ -68,7 +75,7 @@ class TestNotImplementedOS:
 
 
 class TestLinux:
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
     def is_linux(self, monkeypatch: MonkeyPatch) -> None:
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", False)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", True)
@@ -186,8 +193,8 @@ class TestLinux:
     def test_factory_with_instance(  # type: ignore[misc]
         self,
         mock_Popen,
-        mock_isfile,
-        monkeypatch,
+        mock_isfile,  # noqa: ARG002
+        monkeypatch,  # noqa: ARG002
     ):
         instance = {
             "pg_database": "mydb",
@@ -226,7 +233,7 @@ class TestLinux:
     def test_run_sql_as_db_user_su_options_precede_user(  # type: ignore[misc]
         self,
         mock_Popen: Mock,
-        mock_isfile: Mock,
+        mock_isfile: Mock,  # noqa: ARG002
     ) -> None:
         process_mock = Mock()
         process_mock.configure_mock(**{"communicate.return_value": (b"", None), "returncode": 0})
@@ -252,7 +259,7 @@ class TestLinux:
     def test_get_instances(  # type: ignore[misc]
         self,
         mock_Popen,
-        monkeypatch,
+        monkeypatch,  # noqa: ARG002
     ):
         instance = {
             "pg_database": "mydb",
@@ -361,7 +368,7 @@ class TestLinux:
 
     def test_parse_INSTANCE_value(self) -> None:
         # Legacy format, deprecated in Werk 16016, but kept around to not force updating the configuration.
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/db2.env:USER_NAME:/PATH/TO/.pgpass", SEP_LINUX
         )
         expected = ("/home/postgres/db2.env", "USER_NAME", "/PATH/TO/.pgpass", "db2")
@@ -369,7 +376,7 @@ class TestLinux:
 
         # Legacy format, deprecated in Werk 16016, but kept around to not force updating the configuration.
         # This is a weird edge case, that was broken in 2.1.0p30 and 2.2.0p4 .
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/.env:USER_NAME:/PATH/TO/.pgpass", SEP_LINUX
         )
         expected = ("/home/postgres/.env", "USER_NAME", "/PATH/TO/.pgpass", "")
@@ -377,14 +384,14 @@ class TestLinux:
 
         # Bad configuration, we keep this around to migrate users from old to new config format
         # But instance_name should really empty, or we should disallow this
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/db2.env:USER_NAME:/PATH/TO/.pgpass:", SEP_LINUX
         )
         expected = ("/home/postgres/db2.env", "USER_NAME", "/PATH/TO/.pgpass", "db2")
         assert got == expected
 
         # Correct configuration
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/db2.env:USER_NAME:/PATH/TO/.pgpass:hi", SEP_LINUX
         )
         expected = ("/home/postgres/db2.env", "USER_NAME", "/PATH/TO/.pgpass", "hi")
@@ -392,7 +399,7 @@ class TestLinux:
 
 
 class TestWindows:
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
     def is_windows(self, monkeypatch: MonkeyPatch) -> None:
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", True)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", False)
@@ -548,7 +555,7 @@ class TestWindows:
 
     def test_parse_INSTANCE_value(self) -> None:
         # Legacy format, deprecated in Werk 16016, but kept around to not force updating the configuration.
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/db2.env|USER_NAME|/PATH/TO/.pgpass", SEP_WINDOWS
         )
         expected = ("/home/postgres/db2.env", "USER_NAME", "/PATH/TO/.pgpass", "db2")
@@ -556,7 +563,7 @@ class TestWindows:
 
         # Legacy format, deprecated in Werk 16016, but kept around to not force updating the configuration.
         # This is a weird edge case, that was broken in 2.1.0p30 and 2.2.0p4 .
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/.env|USER_NAME|/PATH/TO/.pgpass", SEP_WINDOWS
         )
         expected = ("/home/postgres/.env", "USER_NAME", "/PATH/TO/.pgpass", "")
@@ -564,20 +571,20 @@ class TestWindows:
 
         # Bad configuration, we keep this around to migrate users from old to new config format
         # But instance_name should really empty, or we should disallow this
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/db2.env|USER_NAME|/PATH/TO/.pgpass|", SEP_WINDOWS
         )
         expected = ("/home/postgres/db2.env", "USER_NAME", "/PATH/TO/.pgpass", "db2")
         assert got == expected
 
         # Correct configuration
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/db2.env|USER_NAME|/PATH/TO/.pgpass|hi", SEP_WINDOWS
         )
         expected = ("/home/postgres/db2.env", "USER_NAME", "/PATH/TO/.pgpass", "hi")
         assert got == expected
         # Legacy format, deprecated in Werk 16016, but kept around to not force updating the configuration.
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/db2.env|USER_NAME|/PATH/TO/.pgpass", SEP_WINDOWS
         )
         expected = ("/home/postgres/db2.env", "USER_NAME", "/PATH/TO/.pgpass", "db2")
@@ -585,7 +592,7 @@ class TestWindows:
 
         # Legacy format, deprecated in Werk 16016, but kept around to not force updating the configuration.
         # This is a weird edge case, that was broken in 2.1.0p30 and 2.2.0p4 .
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/.env|USER_NAME|/PATH/TO/.pgpass", SEP_WINDOWS
         )
         expected = ("/home/postgres/.env", "USER_NAME", "/PATH/TO/.pgpass", "")
@@ -593,14 +600,14 @@ class TestWindows:
 
         # Bad configuration, we keep this around to migrate users from old to new config format
         # But instance_name should really empty, or we should disallow this
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/db2.env|USER_NAME|/PATH/TO/.pgpass|", SEP_WINDOWS
         )
         expected = ("/home/postgres/db2.env", "USER_NAME", "/PATH/TO/.pgpass", "db2")
         assert got == expected
 
         # Correct configuration
-        got = mk_postgres._parse_INSTANCE_value(
+        got = mk_postgres._parse_INSTANCE_value(  # noqa: SLF001
             "/home/postgres/db2.env|USER_NAME|/PATH/TO/.pgpass|hi", SEP_WINDOWS
         )
         expected = ("/home/postgres/db2.env", "USER_NAME", "/PATH/TO/.pgpass", "hi")
@@ -676,3 +683,145 @@ def test_parse_env_file_parser(tmp_path):
         None,
         "",
     )
+
+
+_HEALTHY_SERVER_ANSWERS = {
+    "SELECT datname FROM pg_database": "postgres\nshop",
+    "SHOW server_version": "15.2 (Debian 15.2-1.pgdg110+1)",
+    "SELECT version()": "PostgreSQL 15.2 on x86_64-pc-linux-gnu",
+    "count(*) FROM pg_stat_activity": "f 1",
+}
+
+
+class _ScriptedPostgresLinux(mk_postgres.PostgresLinux):
+    """Replaces the calls to psql and ps with canned answers and records the queries sent"""
+
+    def __init__(self, answers):
+        # type: (dict[str, str]) -> None
+        self.answers = answers
+        self.queries = []  # type: list[str]
+        super().__init__(
+            "postgres",
+            "/usr/lib/postgresql/15/bin/psql",
+            {
+                "name": "main",
+                "pg_user": "postgres",
+                "pg_port": "5432",
+                "pg_host": "",
+                "pg_database": "postgres",
+                "pg_version": "15",
+            },
+            [],
+        )
+
+    @override
+    def run_sql_as_db_user(self, sql_cmd, *_args, **_kwargs):
+        # type: (str, object, object) -> str
+        self.queries.append(sql_cmd)
+        for query_part, answer in self.answers.items():
+            if query_part in sql_cmd:
+                return answer
+        return ""
+
+    @override
+    def get_instances(self):
+        # type: () -> str
+        return "1234 /usr/lib/postgresql/15/bin/postgres -D /var/lib/postgresql/15/main"
+
+
+def _section_headers(output):
+    # type: (str) -> list[str]
+    return [line for line in output.splitlines() if line.startswith("<<<")]
+
+
+def test_all_sections_are_written_for_reachable_server(capsys):
+    # type: (pytest.CaptureFixture[str]) -> None
+    _ScriptedPostgresLinux(_HEALTHY_SERVER_ANSWERS).execute_all_queries()
+
+    assert _section_headers(capsys.readouterr().out) == [
+        "<<<postgres_instances>>>",
+        "<<<postgres_sessions>>>",
+        "<<<postgres_stat_database:sep(59)>>>",
+        "<<<postgres_locks:sep(59)>>>",
+        "<<<postgres_query_duration:sep(59)>>>",
+        "<<<postgres_connections:sep(59)>>>",
+        "<<<postgres_stats:sep(59)>>>",
+        "<<<postgres_version:sep(1)>>>",
+        "<<<postgres_conn_time>>>",
+        "<<<postgres_bloat:sep(59)>>>",
+    ]
+
+
+def test_database_dependent_sections_are_skipped_without_server_version(capsys):
+    # type: (pytest.CaptureFixture[str]) -> None
+    answers = dict(_HEALTHY_SERVER_ANSWERS)
+    del answers["SHOW server_version"]
+
+    _ScriptedPostgresLinux(answers).execute_all_queries()
+
+    assert _section_headers(capsys.readouterr().out) == [
+        "<<<postgres_instances>>>",
+        "<<<postgres_stat_database:sep(59)>>>",
+        "<<<postgres_version:sep(1)>>>",
+        "<<<postgres_conn_time>>>",
+    ]
+
+
+def test_database_list_is_written_into_instance_sections(capsys):
+    # type: (pytest.CaptureFixture[str]) -> None
+    _ScriptedPostgresLinux(_HEALTHY_SERVER_ANSWERS).execute_all_queries()
+
+    assert "[[[main]]]\n[databases_start]\npostgres\nshop\n[databases_end]\n" in (
+        capsys.readouterr().out
+    )
+
+
+@pytest.mark.parametrize("query_part", ["pg_stat_get_last_vacuum_time", "totalwastedbytes"])
+def test_per_database_queries_connect_to_every_database(query_part: str) -> None:
+    postgres = _ScriptedPostgresLinux(_HEALTHY_SERVER_ANSWERS)
+
+    postgres.execute_all_queries()
+
+    (query,) = [q for q in postgres.queries if query_part in q]
+    assert "\\c postgres\n" in query
+    assert "\\c shop\n" in query
+
+
+def test_missing_idle_sessions_line_is_reported_as_zero() -> None:
+    postgres = _ScriptedPostgresLinux(_HEALTHY_SERVER_ANSWERS)
+
+    assert postgres.get_sessions("state", "'idle'") == "f 1\nt 0"
+
+
+def test_server_version_is_reduced_to_major_and_minor() -> None:
+    postgres = _ScriptedPostgresLinux({"SHOW server_version": "12.6.4"})
+
+    assert postgres.get_server_version() == 12.6
+
+
+def test_empty_server_version_is_an_error() -> None:
+    postgres = _ScriptedPostgresLinux({})
+
+    with pytest.raises(mk_postgres.PostgresPsqlError):
+        postgres.get_server_version()
+
+
+@pytest.mark.parametrize(
+    "version, expected",
+    [
+        pytest.param(9.3, ("state", "'idle'"), id="current"),
+        pytest.param(9.2, ("current_query", "'<IDLE>'"), id="legacy"),
+    ],
+)
+def test_idle_condition_depends_on_server_version(version, expected):
+    # type: (float, tuple[str, str]) -> None
+    assert _ScriptedPostgresLinux({}).get_condition_vars(version) == expected
+
+
+def test_connection_time_is_taken_from_the_version_query() -> None:
+    postgres = _ScriptedPostgresLinux(_HEALTHY_SERVER_ANSWERS)
+
+    postgres.get_version()
+    postgres.get_connection_time()
+
+    assert len([q for q in postgres.queries if "SELECT version()" in q]) == 1

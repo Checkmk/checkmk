@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: T201  # It's OK for scripts to print()
+
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import abc
 import argparse
@@ -48,6 +49,12 @@ def parse_arguments() -> argparse.Namespace:
         required=True,
         choices=CloudPublisher.CLOUD_TYPES,
     )
+
+    # Parse only cloud-type first to use that to define the mandatory args onwards without a subparser
+    cloud_type, _ = parser.parse_known_args()
+    cloud_is_aws = cloud_type.cloud_type == "aws"
+    cloud_is_azure = cloud_type.cloud_type == "azure"
+
     parser.add_argument(
         "--new-version",
         help="The new version which will be used for the update",
@@ -70,25 +77,25 @@ def parse_arguments() -> argparse.Namespace:
         "--marketplace-scanner-arn",
         help="The arn of an aws role which can access our ami images",
         action="store",
-        required=True,
+        required=cloud_is_aws,
     )
     parser.add_argument(
         "--product-id",
         help="The product id of the product which should receive a new version",
         action="store",
-        required=True,
+        required=cloud_is_aws,
     )
     parser.add_argument(
         "--azure-subscription-id",
         help="Azure's subscription id",
         action="store",
-        required=True,
+        required=cloud_is_azure,
     )
     parser.add_argument(
         "--azure-resource-group",
         help="Azure's resource group",
         action="store",
-        required=True,
+        required=cloud_is_azure,
     )
     return parser.parse_args()
 
@@ -105,7 +112,7 @@ class CloudPublisher(abc.ABC):
         self.image_name = image_name
 
     @abc.abstractmethod
-    async def publish(self): ...
+    async def publish(self) -> None: ...
 
     @staticmethod
     def build_release_notes_url(version: str) -> str:
@@ -316,7 +323,7 @@ class AzurePublisher(CloudPublisher):
         assert isinstance(version.base, _BaseVersion)
         return f"{version.base.major}.{version.base.minor}.{version.release.value}"
 
-    async def build_gallery_image(self):
+    async def build_gallery_image(self) -> None:
         image_id = self.get_azure_image_id()
         print(f"Creating new gallery image from {self.version=} by using {image_id=}")
         self.update_succesful(
@@ -349,7 +356,7 @@ class AzurePublisher(CloudPublisher):
         )
 
     @override
-    async def publish(self):
+    async def publish(self) -> None:
         """
         Azure's update process has 2 steps:
         * first, we need to create a gallery image from the VM image which was pushed by packer

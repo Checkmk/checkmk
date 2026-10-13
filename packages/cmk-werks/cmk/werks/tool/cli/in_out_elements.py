@@ -42,6 +42,7 @@ else:
     TTY_WHITE = ""
     TTY_BG_RED = ""
     TTY_BG_GREEN = ""
+    TTY_BG_YELLOW = ""
     TTY_BG_BLUE = ""
     TTY_BG_MAGENTA = ""
     TTY_BG_CYAN = ""

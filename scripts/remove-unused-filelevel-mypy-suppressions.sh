@@ -9,6 +9,9 @@
 #
 # Run from repo root.
 #
+#
+
+set -o pipefail
 
 TMPFILE="$(mktemp)"
 
@@ -36,14 +39,18 @@ remove_suppression() {
     echo "Removing '# mypy: disable-error-code=\"${st}\"'"
     # shellcheck disable=SC2046  # we want word splitting here
     sed -i "/# mypy: disable-error-code=\"${st}\"/d" $(list_files_with_suppression "${st}")
-    echo "Changed files: $(git df | wc -l)"
+    # quick and dirty hack to avoid running into a loop below
+    git checkout -- packages/cmk-shared-typing/header_py.txt
+    echo "Changed files: $(git ls-files --modified | wc --lines)"
 
     # Run linters and restore failures
-    while ! run_mypy &>"${TMPFILE}"; do
+    while ! run_mypy 2>&1 | tee "${TMPFILE}"; do
         echo "Checking failing files back out"
-        # shellcheck disable=SC2046  # we want word splitting here
-        git checkout $(extract_failed_files "${TMPFILE}" "${st}")
-        echo "Changed files: $(git df | wc -l)"
+        # check them out individually, to avoid looping forever upon files unknown to git (like bazel artifacts)
+        for f in $(extract_failed_files "${TMPFILE}" "${st}"); do
+            git checkout "${f}"
+        done
+        echo "Changed files: $(git ls-files --modified | wc --lines)"
     done
     # we're removing lines before the imports. This is 'reformatting':
     bazel lint --fix //...

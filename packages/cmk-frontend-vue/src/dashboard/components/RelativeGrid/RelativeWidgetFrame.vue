@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
@@ -38,6 +39,7 @@ const emit = defineEmits<{
   (e: 'click:delete'): void
   (e: 'toggle:sizing', dimension: 'width' | 'height'): void
   (e: 'update:anchorPosition', position: ANCHOR_POSITION): void
+  (e: 'updateTimeRange', range: DateTimeRange): void
 }>()
 
 const containerStyle = computed(() => ({
@@ -88,7 +90,10 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
   >
     <div :style="{ position: 'relative', height: '100%', width: '100%' }">
       <MissingFiltersMsg :effective-filter-context="contentProps.effective_filter_context">
-        <DashboardContent v-bind="contentProps" />
+        <DashboardContent
+          v-bind="contentProps"
+          @update-time-range="emit('updateTimeRange', $event)"
+        />
       </MissingFiltersMsg>
 
       <div
@@ -199,58 +204,27 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
 /* Not applying the dimension variables because this is unique to the relative grid implementation */
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-[data-theme='facelift'] .db-widget-theme {
-  --resize-border-color: var(--color-corporate-green-80);
-
+.db-relative-grid-frame.db-widget-theme {
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .anchor-label-color {
-    color: var(--color-corporate-green-80);
+    color: var(--interactive-accent-stronger);
   }
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .anchor-icon--selected {
-    background-color: var(--color-corporate-green-50);
-    border: 1px solid var(--color-corporate-green-80);
+    background-color: var(--interactive-accent);
+    border: 1px solid var(--interactive-accent-stronger);
   }
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .anchor-icon--unselected {
-    background-color: var(--color-mid-grey-50);
-    border: 1px solid var(--color-mid-grey-50);
+    background-color: var(--interactive-neutral);
+    border: 1px solid var(--interactive-neutral);
   }
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .control-button-color {
-    filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(7500%) hue-rotate(93deg)
-      brightness(0%) contrast(105%);
-  }
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-[data-theme='modern-dark'] .db-widget-theme {
-  --resize-border-color: var(--color-corporate-green-50);
-
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  .anchor-label-color {
-    color: var(--color-corporate-green-50);
-  }
-
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  .anchor-icon--selected {
-    background-color: var(--color-corporate-green-50);
-    border: 1px solid var(--color-corporate-green-50);
-  }
-
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  .anchor-icon--unselected {
-    background-color: var(--color-mid-grey-60);
-    border: 1px solid var(--color-mid-grey-60);
-  }
-
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  .control-button-color {
-    filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(7500%) hue-rotate(93deg)
-      brightness(105%) contrast(105%);
+    filter: var(--icon-filter-monochrome);
   }
 }
 
@@ -291,7 +265,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
   left: 0;
   width: 6px;
   height: 100%;
-  border-left: var(--dimension-1) dashed var(--resize-border-color);
+  border-left: var(--dimension-1) dashed var(--interactive-accent-stronger);
   cursor: ew-resize;
 }
 
@@ -301,7 +275,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
   right: 0;
   width: 6px;
   height: 100%;
-  border-right: var(--dimension-1) dashed var(--resize-border-color);
+  border-right: var(--dimension-1) dashed var(--interactive-accent-stronger);
   cursor: ew-resize;
 }
 
@@ -311,7 +285,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
   left: 0;
   width: 100%;
   height: 6px;
-  border-top: var(--dimension-1) dashed var(--resize-border-color);
+  border-top: var(--dimension-1) dashed var(--interactive-accent-stronger);
   cursor: ns-resize;
 }
 
@@ -321,7 +295,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
   left: 0;
   width: 100%;
   height: 6px;
-  border-bottom: var(--dimension-1) dashed var(--resize-border-color);
+  border-bottom: var(--dimension-1) dashed var(--interactive-accent-stronger);
   cursor: ns-resize;
 }
 

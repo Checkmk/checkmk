@@ -1,6 +1,6 @@
 
 
-per-file arch-comp-gui-metrics.rst=file:/component_owners/performance_data_and_metrics/OWNERS_DEFINITION
+per-file arch-comp-gui-metrics.rst=file:/component_owners/graphing_and_metrics/OWNERS_DEFINITION
 per-file arch-comp-gui-metrics.rst=set noparent
 per-file arch-comp-kube*=file:/component_owners/plugins_kube/OWNERS_DEFINITION
 per-file arch-comp-kube*=set noparent

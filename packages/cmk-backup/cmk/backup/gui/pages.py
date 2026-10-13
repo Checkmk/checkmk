@@ -18,9 +18,9 @@ from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
-from cmk.gui.type_defs import PermissionName
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
+from cmk.web.utils.permission_verification import PermissionName
 
 
 def register(edition: Edition, page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:

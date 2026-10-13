@@ -5,27 +5,29 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import { getLocalTimeZone } from '@internationalized/date'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { type Ref, computed, ref, watch } from 'vue'
+import { type Ref, computed, onMounted, ref, watch } from 'vue'
 
-import { loadMenu } from '../api/burgerMenu'
+import { useBurgerMenu } from '../composables/useBurgerMenu'
 import { useGraphInteraction } from '../composables/useGraphInteraction'
+import { hasPlottableData } from '../composables/useGraphNotice'
 import { useGraphVisibility } from '../composables/useGraphVisibility'
 import type {
-  BurgerMenuCallable,
-  BurgerMenuGroup,
   GraphPanelEmits,
   GraphPanelProps,
   RequestedTimeRange,
+  TimeInterval,
   TimeRange,
   TimeRangeCommitKind
 } from '../types.ts'
+import { binnedTimeAxis, committedTimeRange, continuousTimeAxis } from '../utils/timeRange'
 import GraphBrush from './GraphBrush/GraphBrush.vue'
 import TimeSeriesGraph, { type ZoomPayload } from './TimeSeriesGraph'
 import { deriveYAxis } from './TimeSeriesGraph/yAxis'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from './consolidation'
-import { CANVAS_MARGIN_LEFT, CANVAS_MARGIN_RIGHT, MIN_ZOOM_TIME_RANGE_SECONDS } from './constants'
+import { CANVAS_MARGIN_LEFT, MIN_ZOOM_TIME_RANGE_SECONDS, PLOT_INSET_X } from './constants'
 import GraphHeader from './header/GraphHeader.vue'
 import GraphLegend from './legend/GraphLegend.vue'
 
@@ -33,7 +35,9 @@ const { _t } = usei18n()
 
 const props = withDefaults(defineProps<GraphPanelProps>(), {
   figureHeight: 300,
-  legendPosition: 'bottom'
+  legendPosition: 'bottom',
+  showTimeAxis: true,
+  showValueAxis: true
 })
 
 const emit = defineEmits<GraphPanelEmits>()
@@ -43,15 +47,29 @@ const emit = defineEmits<GraphPanelEmits>()
 // curves at all and nothing reads it.
 const NOMINAL_STEP_SECONDS = 60
 
-// The window the frame is drawn over: what the data covers once fetched, and until then what was
-// asked for, so a panel with nothing to plot still draws its axes rather than empty space.
-const frameTimeRange = computed<TimeRange>(
-  () => props.dataTimeRange ?? { ...props.requestedTimeRange, step: NOMINAL_STEP_SECONDS }
+const timeAxis = computed(() =>
+  props.binUnit === undefined
+    ? continuousTimeAxis()
+    : binnedTimeAxis(props.binUnit, getLocalTimeZone())
+)
+
+const baselineTimeRange = computed<TimeRange>(() => {
+  if (!props.dataTimeRange) {
+    return { ...props.requestedTimeRange, step: NOMINAL_STEP_SECONDS }
+  }
+  return props.awaitingData
+    ? props.dataTimeRange
+    : timeAxis.value.drawnTimeRange(props.requestedTimeRange, props.dataTimeRange)
+})
+
+const headerTimeRange = computed<TimeRange | undefined>(() =>
+  props.dataTimeRange ? baselineTimeRange.value : undefined
 )
 
 const {
   viewTimeRange,
   viewValueRange,
+  transientTimeRange,
   inspectionActive,
   zoomMode,
   pinTime,
@@ -59,17 +77,24 @@ const {
   onPan,
   onBrush,
   onReset,
-  abandonInspection,
+  onRangeChange,
   onPinCreate,
   clearPin
 } = useGraphInteraction(
-  () => frameTimeRange.value, // getBaseline
+  () => baselineTimeRange.value, // getBaseline
   () => props.interaction.pin === 'enabled', // getShowPin
   () => props.requestedTimeRange, // getRequestedTimeRange
   updateTimeRange // onTimeRangeCommit
 )
 
-watch(() => props.timePickerRequests, abandonInspection)
+watch(
+  () => props.rangeChange,
+  (change) => {
+    if (change) {
+      onRangeChange(change, props.panelKey)
+    }
+  }
+)
 
 function onZoomIntent(payload: ZoomPayload): void {
   emit('inspect')
@@ -88,8 +113,8 @@ function onBrushIntent(range: RequestedTimeRange, kind: TimeRangeCommitKind): vo
 
 const hiddenMetricNames = defineModel<string[]>('hiddenMetricNames', { default: () => [] })
 const hiddenLineNames = defineModel<string[]>('hiddenLineNames', { default: () => [] })
-const highlightedMetricName = defineModel<string | null>('highlightedMetricName', {
-  default: null
+const highlightedMetricNames = defineModel<string[]>('highlightedMetricNames', {
+  default: () => []
 })
 const consolidationFn = defineModel<ConsolidationFn>('consolidationFn', {
   default: DEFAULT_CONSOLIDATION_FN
@@ -97,14 +122,17 @@ const consolidationFn = defineModel<ConsolidationFn>('consolidationFn', {
 const { visibleMetrics, visibleHorizontalLines } = useGraphVisibility(
   () => props.metrics,
   () => props.horizontalLines ?? [],
-  { hiddenMetricNames, hiddenLineNames, highlightedMetricName }
+  { hiddenMetricNames, hiddenLineNames, highlightedMetricNames }
+)
+
+const { visibleMetrics: visibleBrushMetrics } = useGraphVisibility(
+  () => props.brushSnapshot?.data.metrics ?? [],
+  () => [],
+  { hiddenMetricNames }
 )
 
 function updateTimeRange(val: RequestedTimeRange, kind: TimeRangeCommitKind) {
-  // The served window is a storage step wider; adopting its span would grow it on every pan.
-  const asked = props.requestedTimeRange
-  const end = kind === 'translated_timerange' ? val.start + (asked.end - asked.start) : val.end
-  emit('update:requestedTimeRange', { start: val.start, end }, kind)
+  emit('update:requestedTimeRange', committedTimeRange(props.requestedTimeRange, val, kind), kind)
 }
 
 // Backend-hidden metrics (stack references, render.hidden) are structural: they feed the
@@ -112,49 +140,53 @@ function updateTimeRange(val: RequestedTimeRange, kind: TimeRangeCommitKind) {
 const legendMetrics = computed(() => props.metrics.filter((metric) => !metric.render.hidden))
 const anyMetricShown = computed(() => visibleMetrics.value.some((metric) => !metric.render.hidden))
 
+const requestedSpan = computed(() => props.requestedTimeRange.end - props.requestedTimeRange.start)
+
+// The served range while it is what the panel draws; nothing while a fetch is out.
+const servedOnScreen = computed(() => (props.awaitingData ? undefined : props.dataTimeRange))
+
+// Read off the data on screen only: the fetch out may answer finer than the window before it.
+const zoomFloor = computed(() => timeAxis.value.zoomFloor(servedOnScreen.value))
+
 // Time zoom clamps the *requested* window at the floor, so that is the range which reaches it;
 // the served window stays a step wider and would never compare equal.
-const atMinTimeZoom = computed(
-  () => props.requestedTimeRange.end - props.requestedTimeRange.start <= MIN_ZOOM_TIME_RANGE_SECONDS
+const atMinTimeZoom = computed(() => requestedSpan.value <= zoomFloor.value)
+
+const minTimeRange = computed(() =>
+  timeAxis.value.minSpan(MIN_ZOOM_TIME_RANGE_SECONDS, servedOnScreen.value)
 )
 
-const yAxis = computed(() => deriveYAxis(props.metrics))
+const graphRenderer = ref<InstanceType<typeof TimeSeriesGraph> | null>(null)
 
-// The add-to target is what the burger menu exists for, so it carries everything the actions
-// need: the type the menu is assembled for, the specification most of them replay and the built
-// graph a custom graph stores.
-const addTo = computed(() => props.addTo ?? null)
-const showBurgerMenu = computed(
-  () => addTo.value !== null && props.interaction.burger === 'enabled'
-)
-const burgerMenuGroups = ref<BurgerMenuGroup[]>([])
-
-const initialAddTo = addTo.value
-if (showBurgerMenu.value && initialAddTo !== null) {
-  loadMenu(initialAddTo.type)
-    .then((groups) => {
-      burgerMenuGroups.value = groups
-    })
-    .catch((err) => {
-      throw new Error(`Failed to load menu for add type "${initialAddTo.type}": ${err.message}`)
-    })
-}
-
-const triggerBurgerMenuAction = async (onClick: BurgerMenuCallable) => {
-  const target = addTo.value
-  if (target === null) {
-    throw new Error('A burger menu action needs the add-to target the menu was assembled for')
+// A landing fetch can be what reveals the floor, with no gesture to refuse; stated once on entering.
+let floorAnnounced = false
+function announceFloorOnLanding(): void {
+  if (servedOnScreen.value === undefined || props.interaction.zoom !== 'enabled') {
+    return
   }
-  // The export builds its request around the displayed range, so every action is handed the graph
-  // as the backends address it.
-  await onClick({
-    specification: target.specification,
-    internal: target.internal,
-    timeStart: props.requestedTimeRange.start,
-    timeEnd: props.requestedTimeRange.end,
-    consolidationFunction: consolidationFn.value
-  })
+  if (!atMinTimeZoom.value) {
+    floorAnnounced = false
+    return
+  }
+  if (!floorAnnounced) {
+    floorAnnounced = true
+    graphRenderer.value?.showMaxZoomHint()
+  }
 }
+watch(servedOnScreen, announceFloorOnLanding, { flush: 'post' })
+onMounted(announceFloorOnLanding)
+
+const effectiveYAxis = computed(() => deriveYAxis(props.metrics, props.yAxis ?? null))
+
+// The add-to target is what the burger menu exists for; the shared composable loads the menu for
+// its type and hands each action the graph as the backends address it.
+const { showBurgerMenu, burgerMenuGroups, triggerBurgerMenuAction } = useBurgerMenu(
+  () => props.addTo,
+  () => props.interaction.burger === 'enabled',
+  () => props.requestedTimeRange,
+  () => consolidationFn.value,
+  () => viewValueRange.value
+)
 
 const zoomControlsEnabled: Ref<boolean> = computed(
   () => props.interaction.zoom === 'enabled' || props.interaction.panning === 'enabled'
@@ -169,14 +201,32 @@ const showGraphHeader: Ref<boolean> = computed(
     props.showConsolidation
 )
 
+// Not `viewTimeRange`: that is what the curves are drawn against, which during a refetch is
+// still the range the previous data covered.
+const brushWindow = computed<TimeInterval | undefined>(
+  () => transientTimeRange.value ?? props.brushSnapshot?.window
+)
+
 // The renderer sizes its own value-axis margin to the labels it draws; the brush track mirrors
 // it so the strip stays under the plot.
 const plotLeft = ref(CANVAS_MARGIN_LEFT)
-const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVAS_MARGIN_RIGHT)
+const valueResolution = ref<number | null>(null)
+watch(valueResolution, (resolution) => emit('update:valueResolution', resolution))
+const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_INSET_X)
+
+const legendAlignedWithPlot = computed(() =>
+  props.legendPosition === 'bottom'
+    ? { marginLeft: `${plotLeft.value}px`, width: `calc(100% - ${plotLeft.value}px)` }
+    : undefined
+)
 </script>
 
 <template>
-  <div class="graphing-graph-panel" :style="{ width: `${figureWidth}px` }">
+  <div
+    class="graphing-graph-panel"
+    :class="{ 'graphing-graph-panel--hover-graph': isHoverGraph }"
+    :style="{ width: `${figureWidth}px` }"
+  >
     <div
       class="graphing-graph-panel__container"
       :class="{ 'graphing-graph-panel__container--legend-right': legendPosition === 'right' }"
@@ -187,16 +237,15 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVA
           v-model:zoom-mode="zoomMode"
           v-model:consolidation-fn="consolidationFn"
           class="graphing-graph-panel__header"
-          :class="{ 'graphing-graph-panel__header--compact': headerIsCompact }"
           :title="title"
           :show-title="showTitle"
-          :time-range="dataTimeRange"
+          :time-range="headerTimeRange"
           :show-timestamp="showTimestamp"
           :show-controls="zoomControlsEnabled"
           :show-consolidation="showConsolidation"
           :show-burger-menu="showBurgerMenu"
           :burger-menu-groups="burgerMenuGroups"
-          :is-compact="headerIsCompact"
+          :is-hover-graph="isHoverGraph"
           @do-action="triggerBurgerMenuAction"
         />
 
@@ -205,15 +254,22 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVA
           :class="{ 'graphing-graph-panel__plot--inert': !anyMetricShown }"
         >
           <TimeSeriesGraph
-            :time_range="viewTimeRange"
+            ref="graphRenderer"
+            :view_time_range="viewTimeRange"
+            :data_time_range="dataTimeRange"
             :metrics="visibleMetrics"
             :horizontal_lines="visibleHorizontalLines"
+            :shaded_regions="shadedRegions ?? []"
             :value-range="viewValueRange"
             :zoom-mode="zoomMode"
             :size="{ width: figureWidth, height: figureHeight, mode: 'fixed' }"
-            :min-time-range="MIN_ZOOM_TIME_RANGE_SECONDS"
+            :bin-unit="timeAxis.binUnit"
+            :min-time-range="minTimeRange"
             :at-min-time-zoom="atMinTimeZoom"
             :min-value-range="null"
+            :show-time-axis="showTimeAxis"
+            :show-value-axis="showValueAxis"
+            :min-value-axis-width="minValueAxisWidth"
             :consolidation-function="consolidationFn"
             :inspecting="inspectionActive"
             :pan-enabled="interaction.panning === 'enabled'"
@@ -223,10 +279,10 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVA
               header: { title: title ?? null, show_graph_time: false },
               name: title ?? '',
               x_axis: null,
-              y_axis: yAxis,
+              y_axis: effectiveYAxis,
               font_size_pt: 10
             }"
-            :highlighted-metric-name="highlightedMetricName"
+            :highlighted-metric-names="highlightedMetricNames"
             :pin-time="pinTime"
             @zoom="onZoomIntent"
             @pan="onPanIntent"
@@ -234,23 +290,26 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVA
             @pin-create="onPinCreate"
             @pin-action="clearPin"
             @update:plot-left="plotLeft = $event"
+            @update:value-resolution="valueResolution = $event"
           />
-          <CmkAlertBox
-            v-if="dataTimeRange && !anyMetricShown"
+          <CmkAlert
+            v-if="dataTimeRange && hasPlottableData(metrics) && !anyMetricShown"
             class="graphing-graph-panel__empty-state"
             variant="info"
-          >
-            {{ _t('All metrics are hidden') }}
-          </CmkAlertBox>
+            :text="_t('All metrics are hidden')"
+          />
+          <slot name="notice" />
         </div>
 
         <GraphBrush
-          v-if="interaction.brush === 'enabled' && overview && dataTimeRange"
+          v-if="interaction.brush === 'enabled' && brushSnapshot && brushWindow && dataTimeRange"
           class="graphing-graph-panel__brush"
-          :metrics="overview.metrics"
-          :domain="overview.timeRange"
-          :window="viewTimeRange"
-          :min-span="null"
+          :metrics="visibleBrushMetrics"
+          :domain="brushSnapshot.drawnDomain"
+          :data-domain="brushSnapshot.data.dataTimeRange"
+          :window="brushWindow"
+          :min-span="minTimeRange"
+          :bin-unit="timeAxis.binUnit"
           :width="figureWidth"
           :plot-left="plotLeft"
           :plot-width="brushPlotWidth"
@@ -261,34 +320,32 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVA
       <GraphLegend
         v-if="showLegend"
         class="graphing-graph-panel__legend"
+        :class="{ 'graphing-graph-panel__legend--below-brush': interaction.brush === 'enabled' }"
+        :style="legendAlignedWithPlot"
         :metrics="legendMetrics"
         :horizontal-lines="horizontalLines ?? []"
+        :shaded-regions="shadedRegions ?? []"
         :consolidation-fn="consolidationFn"
         :hidden-metric-names="hiddenMetricNames"
         :hidden-line-names="hiddenLineNames"
+        :value-resolution="valueResolution"
+        :axis-unit="effectiveYAxis?.unit ?? null"
         @update:hidden-metric-names="hiddenMetricNames = $event"
         @update:hidden-line-names="hiddenLineNames = $event"
-        @hover-metric="highlightedMetricName = $event"
+        @hover-metrics="highlightedMetricNames = $event"
       />
     </div>
   </div>
 </template>
 
 <style scoped lang="scss">
-// Transparent and borderless by default.
-// A context (e.g. the graph icon hover; _graphs.scss) defines these css variables and by that
-// handles background and border color of the panel.
-.graphing-graph-panel {
-  background-color: var(--cmk-graph-panel-bg, transparent);
-  border: var(--cmk-graph-panel-border, none);
+.graphing-graph-panel--hover-graph {
+  background-color: var(--ux-theme-5);
+  border: 1px solid var(--border-color-emphasis);
 }
 
 .graphing-graph-panel__header {
   margin-bottom: var(--dimension-3);
-}
-
-.graphing-graph-panel__header--compact {
-  margin: var(--spacing-half) var(--spacing);
 }
 
 .graphing-graph-panel__container--legend-right {
@@ -302,12 +359,9 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVA
   min-width: 0;
 }
 
-// Visible gap separating the graph from the navigator brush, matching the legend's spacing.
-// (CmkTimeSeriesGraph now shrink-wraps its full figure, so the graph's x-axis no longer
-// overflows into this space — this margin is a clean gap, not overflow compensation.)
 .graphing-graph-panel__brush {
   display: block;
-  margin-top: calc(var(--spacing) * 2);
+  margin-top: var(--dimension-4);
 }
 
 .graphing-graph-panel__plot {
@@ -319,6 +373,7 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVA
 }
 
 .graphing-graph-panel__empty-state {
+  pointer-events: none;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -328,7 +383,11 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVA
 }
 
 .graphing-graph-panel__legend {
-  margin-top: calc(var(--spacing) * 2);
+  margin-top: var(--spacing-double);
+
+  &--below-brush {
+    margin-top: var(--spacing);
+  }
 
   .graphing-graph-panel__container--legend-right & {
     width: 480px;

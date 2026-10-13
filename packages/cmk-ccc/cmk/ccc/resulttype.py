@@ -18,22 +18,12 @@ See Also:
 
 """
 
-from __future__ import annotations
-
 import abc
 from collections.abc import Callable, Iterable
-from typing import Final, final, Generic, NoReturn, override, TypeVar
-
-__all__ = ["Result", "OK", "Error"]
-
-T_co = TypeVar("T_co", covariant=True)
-U_co = TypeVar("U_co", covariant=True)
-E_co = TypeVar("E_co", covariant=True)
-F_co = TypeVar("F_co", covariant=True)
+from typing import Final, final, NoReturn, override
 
 
-# FIXME, should be Result[T_co, E_co](abc.ABC) but that changes the covariance behavior mypy detects in the children
-class Result(Generic[T_co, E_co], abc.ABC):  # noqa: UP046
+class Result[T, E](abc.ABC):
     """Type/interface to the Result type.
 
     See Also:
@@ -58,39 +48,38 @@ class Result(Generic[T_co, E_co], abc.ABC):  # noqa: UP046
         return not self == other
 
     @abc.abstractmethod
-    def __lt__(self, other: Result[T_co, E_co]) -> bool:
+    def __lt__(self, other: object) -> bool:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def __gt__(self, other: Result[T_co, E_co]) -> bool:
+    def __gt__(self, other: object) -> bool:
         raise NotImplementedError
 
-    def __le__(self, other: Result[T_co, E_co]) -> bool:
+    def __le__(self, other: object) -> bool:
         return self < other or self == other
 
-    def __ge__(self, other: Result[T_co, E_co]) -> bool:
+    def __ge__(self, other: object) -> bool:
         return self > other or self == other
 
     @abc.abstractmethod
-    def __iter__(self) -> Iterable[T_co]:
+    def __iter__(self) -> Iterable[T]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def iter_error(self) -> Iterable[E_co]:
+    def iter_error(self) -> Iterable[E]:
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
-    def ok(self) -> T_co:
+    def ok(self) -> T:
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
-    def error(self) -> E_co:
+    def error(self) -> E:
         raise NotImplementedError
 
-    # FIXME: Why do we need this? "Cannot use a covariant type variable as a parameter"
-    def value(self, default: T_co) -> T_co:  # type: ignore[misc]
+    def value[U](self, default: U) -> U | T:
         return default if self.is_error() else self.ok
 
     @abc.abstractmethod
@@ -102,49 +91,31 @@ class Result(Generic[T_co, E_co], abc.ABC):  # noqa: UP046
         raise NotImplementedError
 
     @abc.abstractmethod
-    def as_optional(self) -> T_co | None:
-        raise NotImplementedError
-
-    def flatten(self) -> Result[T_co, E_co]:
-        return self.join()
-
-    @abc.abstractmethod
-    def bind(self, func: Callable[[T_co], Result[U_co, E_co]]) -> Result[U_co, E_co]:
+    def as_optional(self) -> T | None:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def join(self) -> Result[T_co, E_co]:
+    def map[U](self, func: Callable[[T], U]) -> Result[U, E]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def map(self, func: Callable[[T_co], U_co]) -> Result[U_co, E_co]:
+    def map_error[F](self, func: Callable[[E], F]) -> Result[T, F]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def map_error(self, func: Callable[[E_co], F_co]) -> Result[T_co, F_co]:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def fold(
-        self,
-        *,
-        ok: Callable[[T_co], U_co],
-        error: Callable[[E_co], U_co],
-    ) -> U_co:
+    def fold[U](self, *, ok: Callable[[T], U], error: Callable[[E], U]) -> U:
         raise NotImplementedError
 
 
 @final
-class OK(Result[T_co, E_co]):
+class OK[T, E](Result[T, E]):
     """A successful computation."""
 
     __match_args__ = ("_ok",)
     __slots__ = ["_ok"]
 
-    def __init__(self, ok: T_co) -> None:
-        if isinstance(ok, Error):
-            raise TypeError(ok)
-        self._ok: Final[T_co] = ok
+    def __init__(self, ok: T) -> None:
+        self._ok: Final[T] = ok
 
     @override
     def __repr__(self) -> str:
@@ -158,37 +129,31 @@ class OK(Result[T_co, E_co]):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        return self.ok == other.ok if isinstance(other, OK) else False
+        return isinstance(other, OK) and self.ok == other.ok
 
     @override
-    def __lt__(self, other: Result[T_co, E_co]) -> bool:
+    def __lt__(self, other: object) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        if isinstance(other, Error):
-            return True
-        assert isinstance(other, OK)
-        return bool(self.ok < other.ok)
+        return isinstance(other, Error) or bool(self.ok < other.ok)
 
     @override
-    def __gt__(self, other: Result[T_co, E_co]) -> bool:
+    def __gt__(self, other: object) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        if isinstance(other, Error):
-            return False
-        assert isinstance(other, OK)
-        return bool(self.ok > other.ok)
+        return not isinstance(other, Error) and bool(self.ok > other.ok)
 
     @override
-    def __iter__(self) -> Iterable[T_co]:
+    def __iter__(self) -> Iterable[T]:
         return iter((self.ok,))
 
     @override
-    def iter_error(self) -> Iterable[E_co]:
+    def iter_error(self) -> Iterable[E]:
         return iter(())
 
     @property
     @override
-    def ok(self) -> T_co:
+    def ok(self) -> T:
         return self._ok
 
     @property
@@ -205,46 +170,31 @@ class OK(Result[T_co, E_co]):
         return False
 
     @override
-    def as_optional(self) -> T_co:
+    def as_optional(self) -> T:
         return self.ok
 
     @override
-    def bind(self, func: Callable[[T_co], Result[U_co, E_co]]) -> Result[U_co, E_co]:
-        return func(self.join().ok)
+    def map[U](self, func: Callable[[T], U]) -> OK[U, E]:
+        return OK(func(self.ok))
 
     @override
-    def join(self) -> OK[T_co, E_co]:
-        return self.ok.join() if isinstance(self.ok, OK) else self
+    def map_error[F](self, func: Callable[[E], F]) -> OK[T, F]:
+        return OK(self.ok)
 
     @override
-    def map(self, func: Callable[[T_co], U_co]) -> OK[U_co, E_co]:
-        return OK(func(self.join().ok))
-
-    @override
-    def map_error(self, func: Callable[[E_co], F_co]) -> OK[T_co, F_co]:
-        return OK(self.join().ok)
-
-    @override
-    def fold(
-        self,
-        *,
-        ok: Callable[[T_co], U_co],
-        error: Callable[[E_co], U_co],
-    ) -> U_co:
-        return ok(self.join().ok)
+    def fold[U](self, *, ok: Callable[[T], U], error: Callable[[E], U]) -> U:
+        return ok(self.ok)
 
 
 @final
-class Error(Result[T_co, E_co]):
+class Error[T, E](Result[T, E]):
     """A failed computation."""
 
     __match_args__ = ("_error",)
     __slots__ = ["_error"]
 
-    def __init__(self, error: E_co) -> None:
-        if isinstance(error, OK):
-            raise TypeError(error)
-        self._error: Final[E_co] = error
+    def __init__(self, error: E) -> None:
+        self._error: Final[E] = error
 
     @override
     def __repr__(self) -> str:
@@ -258,32 +208,26 @@ class Error(Result[T_co, E_co]):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        return self.error == other.error if isinstance(other, Error) else False
+        return isinstance(other, Error) and self.error == other.error
 
     @override
-    def __lt__(self, other: Result[T_co, E_co]) -> bool:
+    def __lt__(self, other: object) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        if isinstance(other, OK):
-            return False
-        assert isinstance(other, Error)
-        return bool(self._error < other._error)
+        return not isinstance(other, OK) and bool(self.error < other.error)
 
     @override
-    def __gt__(self, other: Result[T_co, E_co]) -> bool:
+    def __gt__(self, other: object) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        if isinstance(other, OK):
-            return True
-        assert isinstance(other, Error)
-        return bool(self._error > other._error)
+        return isinstance(other, OK) or bool(self.error > other.error)
 
     @override
-    def __iter__(self) -> Iterable[T_co]:
+    def __iter__(self) -> Iterable[T]:
         return iter(())
 
     @override
-    def iter_error(self) -> Iterable[E_co]:
+    def iter_error(self) -> Iterable[E]:
         return iter((self.error,))
 
     @property
@@ -293,7 +237,7 @@ class Error(Result[T_co, E_co]):
 
     @property
     @override
-    def error(self) -> E_co:
+    def error(self) -> E:
         return self._error
 
     @override
@@ -309,29 +253,22 @@ class Error(Result[T_co, E_co]):
         return None
 
     @override
-    def bind(
-        self,
-        func: Callable[[T_co], Result[U_co, E_co]],
-    ) -> Result[U_co, E_co]:
-        return Error(self.join().error)
+    def map[U](self, func: Callable[[T], U]) -> Error[U, E]:
+        return Error(self.error)
 
     @override
-    def join(self) -> Error[T_co, E_co]:
-        return self.error.join() if isinstance(self.error, Error) else self
+    def map_error[F](self, func: Callable[[E], F]) -> Error[T, F]:
+        return Error(func(self.error))
 
     @override
-    def map(self, func: Callable[[T_co], U_co]) -> Error[U_co, E_co]:
-        return Error(self.join().error)
+    def fold[U](self, *, ok: Callable[[T], U], error: Callable[[E], U]) -> U:
+        return error(self.error)
 
-    @override
-    def map_error(self, func: Callable[[E_co], F_co]) -> Error[T_co, F_co]:
-        return Error(func(self.join().error))
 
-    @override
-    def fold(
-        self,
-        *,
-        ok: Callable[[T_co], U_co],
-        error: Callable[[E_co], U_co],
-    ) -> U_co:
-        return error(self.join().error)
+# We need a free-standing function, using a method for this would make Result[T, E] invariant in E.
+def bind[T, E, U](result: Result[T, E], func: Callable[[T], Result[U, E]]) -> Result[U, E]:
+    return result.fold(ok=func, error=Error)
+
+
+def join[T, E](result: Result[Result[T, E], E]) -> Result[T, E]:
+    return bind(result, lambda v: v)

@@ -50,13 +50,11 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import Foldable, table_element
-from cmk.gui.type_defs import ActionResult, Choices, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes, UserRole
-from cmk.gui.utils.confirm_links import make_confirm_delete_link
-from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.roles import builtin_role_id_from_str
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
@@ -73,7 +71,13 @@ from cmk.gui.watolib.pending_changes import (
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.userroles import RoleID
 from cmk.livestatus_client import SiteConfigurations
+from cmk.web.utils.choices import Choice
+from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
+from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeactionuri, makeuri_contextless
 
 
@@ -192,6 +196,7 @@ class ModeRoles(WatoMode):
                 )
                 clone_url = make_action_link(request, [("mode", "roles"), ("_clone", role.name)])
                 delete_url = make_confirm_delete_link(
+                    i18n=_,
                     url=make_action_link(request, [("mode", "roles"), ("_delete", role.name)]),
                     title=_("Delete role #%(nr)d") % {"nr": nr},
                     suffix=role.alias,
@@ -306,7 +311,7 @@ class ModeRoleTwoFactor(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
         if request.var("_action") != "confirm":
             return None
         if request.get_ascii_input_mandatory("two_factor_enforce") != "enforce":
@@ -384,7 +389,7 @@ class ModeEditRole(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if html.form_submitted("search"):
             return None
@@ -500,7 +505,7 @@ class ModeEditRole(WatoMode):
                     "based on."
                 )
             )
-            role_choices: Choices = [
+            role_choices: list[Choice] = [
                 (r.name, r.alias) for r in userroles.get_all_roles().values() if r.builtin
             ]
             default = "user" if self._role.basedon is None else self._role.basedon
@@ -544,7 +549,7 @@ class ModeEditRole(WatoMode):
                 pvalue = self._role.permissions.get(perm.name)
                 def_value = base_role_id in perm.defaults
 
-                choices: Choices = [
+                choices: list[Choice] = [
                     ("yes", _("yes")),
                     ("no", _("no")),
                     (

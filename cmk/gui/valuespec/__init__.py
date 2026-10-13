@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from .definitions import (
-    _CAorCAChain,
     AbsoluteDate,
     AbsoluteDirname,
     Age,
@@ -87,7 +86,6 @@ from .definitions import (
     ListChoiceModel,
     ListOf,
     ListOfAndOrNotDropdownValue,
-    ListOfCAs,
     ListOfModel,
     ListOfMultiple,
     ListOfMultipleChoiceGroup,
@@ -165,7 +163,6 @@ __all__ = [
     "AndOrNotDropdownValue",
     "AutoTimestamp",
     "Bounds",
-    "_CAorCAChain",
     "CascadingDropdown",
     "CascadingDropdownChoice",
     "CascadingDropdownChoiceIdent",
@@ -239,7 +236,6 @@ __all__ = [
     "ListChoiceModel",
     "ListOf",
     "ListOfAndOrNotDropdownValue",
-    "ListOfCAs",
     "ListOfModel",
     "ListOfMultiple",
     "ListOfMultipleChoiceGroup",

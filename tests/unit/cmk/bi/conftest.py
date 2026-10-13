@@ -31,9 +31,9 @@ def fs(tmp_path: Path) -> BIFileSystem:
 
 
 def mock_query_callback(
-    query: Query,
-    only_sites: list[SiteId] | None = None,
-    fetch_full_data: bool = False,
+    query: Query,  # noqa: ARG001
+    only_sites: list[SiteId] | None = None,  # noqa: ARG001
+    fetch_full_data: bool = False,  # noqa: ARG001
 ) -> LivestatusResponse:
     return LivestatusResponse([])
 

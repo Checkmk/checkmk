@@ -6,8 +6,9 @@
 
 import pytest
 
+from cmk.gui.config import Config
 from cmk.gui.main_menu_match_items import MatchItemGeneratorMainMenu
-from cmk.gui.search.matchers import MatchItem
+from cmk.gui.search.matchers import MatchItem, MatchItemConfig
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.wato._snapins import get_wato_menu_items
 from cmk.shared_typing.main_menu import NavItemTopic, NavItemTopicEntry
@@ -32,7 +33,7 @@ def expected_items() -> dict[str, list[str]]:
         ],
         "general": [
             "rule_search",
-            "globalvars",
+            "global_settings.py",
             "read_only",
             "predefined_conditions",
             "timeperiods",
@@ -62,6 +63,7 @@ def expected_items() -> dict[str, list[str]]:
             "wato.py?mode=edit_configuration_bundles&varname=special_agents%3Agcp",
             "wato.py?mode=edit_configuration_bundles&varname=special_agents%3Aazure_v2",
             "wato.py?mode=edit_configuration_bundles&varname=special_agents%3Aproxmox_ve",
+            "wato.py?mode=edit_configuration_bundles&varname=special_agents%3Akube_v2",
         ],
         "services": [
             "wato.py?group=monconf&mode=rulesets",
@@ -110,7 +112,7 @@ def test_match_item_generator_setup_menu() -> None:
         MatchItemGeneratorMainMenu(
             "setup",
             provider="setup",
-            topic_generator=lambda p: [
+            topic_generator=lambda p: [  # noqa: ARG005
                 NavItemTopic(
                     id="topic",
                     title="Topic",
@@ -122,7 +124,9 @@ def test_match_item_generator_setup_menu() -> None:
                 )
             ],
             topic="Setup",
-        ).generate_match_items(UserPermissions({}, {}, {}, []))
+        ).generate_match_items(
+            UserPermissions({}, {}, {}, []), MatchItemConfig.from_config(Config())
+        )
     ) == [
         MatchItem(title="Item 1", topic="Setup", url="url 1", match_texts=["item 1"]),
         MatchItem(title="Item 2", topic="Setup", url="url 2", match_texts=["item 2"]),

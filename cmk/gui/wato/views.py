@@ -5,71 +5,56 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Mapping, Sequence
-from typing import Any, override
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.gui.config import Config
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.http import Request
-from cmk.gui.i18n import _, _l
+from cmk.gui.i18n import _l
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.painter.v0 import Cell, Painter
-from cmk.gui.type_defs import ColumnName, Row, SorterName
+from cmk.gui.painter import Cell, InternalPainter, PainterContext
+from cmk.gui.type_defs import Row
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.sorter import Sorter
-from cmk.gui.watolib.hosts_and_folders import (
-    folder_tree,
-    get_folder_title_path,
-    get_folder_title_path_with_links,
-)
 from cmk.web.utils.html import HTML
+from cmk.web.utils.request_cache import RequestCache
+
+from ._folder_titles import FOLDER_TITLES
 
 
-class PainterHostFilename(Painter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "host_filename"
+def _render_host_filename(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return ("tt", row["host_filename"])
 
-    @override
-    def title(self, cell: Cell) -> str:
-        return _("Checkmk config file name")
 
-    @override
-    def short_title(self, cell: Cell) -> str:
-        return _("File name")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["host_filename"]
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return ("tt", row["host_filename"])
+def make_host_filename_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="host_filename",
+        title=_l("Checkmk config file name"),
+        short_title=_l("File name"),
+        columns=["host_filename"],
+        render=_render_host_filename,
+    )
 
 
 # TODO: Extremely bad idea ahead! The return type depends on a combination of
 # the values of how and with_links. :-P
-def get_wato_folder(row: Row, how: str, with_links: bool = True, *, request: Request) -> str | HTML:
+def get_wato_folder(
+    row: Row,
+    how: str,
+    with_links: bool = True,
+    *,
+    request: Request,
+    request_cache: RequestCache[RequestCacheConfig],
+) -> str | HTML:
     filename = row["host_filename"]
     if not filename.startswith("/wato/") or not filename.endswith("/hosts.mk"):
         return ""
     wato_path = filename[6:-9]
-    try:
-        title_path: list[str] | list[HTML] = (
-            get_folder_title_path_with_links(folder_tree(), wato_path)
-            if with_links
-            else get_folder_title_path(folder_tree(), wato_path)
-        )
-    except MKGeneralException:
-        # happens when a path can not be resolved using the local Setup.
-        # e.g. when having an independent site with different folder
-        # hierarchy added to the GUI.
-        # Display the raw path rather than the exception text.
-        title_path = wato_path.split("/")
-    except Exception as e:
-        return "%s" % e
+    title_path = request_cache.get(FOLDER_TITLES).title_path(wato_path, with_links)
+    if isinstance(title_path, str):
+        return title_path
 
     if how == "plain":
         return title_path[-1]
@@ -85,122 +70,95 @@ def get_wato_folder(row: Row, how: str, with_links: bool = True, *, request: Req
     return HTML.without_escaping(" / ").join(title_path[depth:])
 
 
-def paint_wato_folder(row: Row, how: str, *, request: Request) -> CellSpec:
-    return "", get_wato_folder(row, how, request=request)
+def paint_wato_folder(
+    row: Row, how: str, *, request: Request, request_cache: RequestCache[RequestCacheConfig]
+) -> CellSpec:
+    return "", get_wato_folder(row, how, request=request, request_cache=request_cache)
 
 
-class PainterWatoFolderAbs(Painter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "wato_folder_abs"
-
-    @override
-    def title(self, cell: Cell) -> str:
-        return _("Folder - complete path")
-
-    @override
-    def short_title(self, cell: Cell) -> str:
-        return _("Folder")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["host_filename"]
-
-    @property
-    @override
-    def sorter(self) -> SorterName:
-        return "wato_folder_abs"
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return paint_wato_folder(row, "abs", request=self.request)
+def _render_wato_folder_abs(
+    row: Row, cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_wato_folder(row, "abs", request=context.request, request_cache=cell.request_cache)
 
 
-class PainterWatoFolderRel(Painter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "wato_folder_rel"
-
-    @override
-    def title(self, cell: Cell) -> str:
-        return _("Folder - relative path")
-
-    @override
-    def short_title(self, cell: Cell) -> str:
-        return _("Folder")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["host_filename"]
-
-    @property
-    @override
-    def sorter(self) -> SorterName:
-        return "wato_folder_rel"
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return paint_wato_folder(row, "rel", request=self.request)
+def make_wato_folder_abs_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="wato_folder_abs",
+        title=_l("Folder - complete path"),
+        short_title=_l("Folder"),
+        columns=["host_filename"],
+        sorter="wato_folder_abs",
+        render=_render_wato_folder_abs,
+    )
 
 
-class PainterWatoFolderPlain(Painter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "wato_folder_plain"
-
-    @override
-    def title(self, cell: Cell) -> str:
-        return _("Folder - just folder name")
-
-    @override
-    def short_title(self, cell: Cell) -> str:
-        return _("Folder")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["host_filename"]
-
-    @property
-    @override
-    def sorter(self) -> SorterName:
-        return "wato_folder_plain"
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return paint_wato_folder(row, "plain", request=self.request)
+def _render_wato_folder_rel(
+    row: Row, cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_wato_folder(row, "rel", request=context.request, request_cache=cell.request_cache)
 
 
-def cmp_wato_folder(r1: Row, r2: Row, how: str, *, request: Request) -> int:
+def make_wato_folder_rel_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="wato_folder_rel",
+        title=_l("Folder - relative path"),
+        short_title=_l("Folder"),
+        columns=["host_filename"],
+        sorter="wato_folder_rel",
+        render=_render_wato_folder_rel,
+    )
+
+
+def _render_wato_folder_plain(
+    row: Row, cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_wato_folder(
+        row, "plain", request=context.request, request_cache=cell.request_cache
+    )
+
+
+def make_wato_folder_plain_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="wato_folder_plain",
+        title=_l("Folder - just folder name"),
+        short_title=_l("Folder"),
+        columns=["host_filename"],
+        sorter="wato_folder_plain",
+        render=_render_wato_folder_plain,
+    )
+
+
+def cmp_wato_folder(
+    r1: Row, r2: Row, how: str, *, request: Request, request_cache: RequestCache[RequestCacheConfig]
+) -> int:
     return (
-        _get_wato_folder_text(r1, how, request=request)
-        > _get_wato_folder_text(r2, how, request=request)
+        _get_wato_folder_text(r1, how, request=request, request_cache=request_cache)
+        > _get_wato_folder_text(r2, how, request=request, request_cache=request_cache)
     ) - (
-        _get_wato_folder_text(r1, how, request=request)
-        < _get_wato_folder_text(r2, how, request=request)
+        _get_wato_folder_text(r1, how, request=request, request_cache=request_cache)
+        < _get_wato_folder_text(r2, how, request=request, request_cache=request_cache)
     )
 
 
 # NOTE: The funny str() call is only necessary because of the broken typing of
 # get_wato_folder().
-def _get_wato_folder_text(r: Row, how: str, *, request: Request) -> str:
-    return str(get_wato_folder(r, how, False, request=request))
+def _get_wato_folder_text(
+    r: Row, how: str, *, request: Request, request_cache: RequestCache[RequestCacheConfig]
+) -> str:
+    return str(get_wato_folder(r, how, False, request=request, request_cache=request_cache))
 
 
 def _sort_wato_folder_abs(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
-    config: Config,
+    parameters: Mapping[str, Any] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
     request: Request,
+    request_cache: RequestCache[RequestCacheConfig],
 ) -> int:
-    return cmp_wato_folder(r1, r2, "abs", request=request)
+    return cmp_wato_folder(r1, r2, "abs", request=request, request_cache=request_cache)
 
 
 SorterWatoFolderAbs = Sorter(
@@ -215,11 +173,12 @@ def _sort_wato_folder_rel(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
-    config: Config,
+    parameters: Mapping[str, Any] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
     request: Request,
+    request_cache: RequestCache[RequestCacheConfig],
 ) -> int:
-    return cmp_wato_folder(r1, r2, "rel", request=request)
+    return cmp_wato_folder(r1, r2, "rel", request=request, request_cache=request_cache)
 
 
 SorterWatoFolderRel = Sorter(
@@ -234,11 +193,12 @@ def _sort_wato_folder_plain(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, Any] | None,
-    config: Config,
+    parameters: Mapping[str, Any] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
     request: Request,
+    request_cache: RequestCache[RequestCacheConfig],
 ) -> int:
-    return cmp_wato_folder(r1, r2, "plain", request=request)
+    return cmp_wato_folder(r1, r2, "plain", request=request, request_cache=request_cache)
 
 
 SorterWatoFolderPlain = Sorter(

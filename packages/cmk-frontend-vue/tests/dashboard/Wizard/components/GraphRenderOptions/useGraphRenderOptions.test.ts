@@ -15,7 +15,6 @@ describe('useGraphRenderOptions', () => {
       expect(opts.verticalAxis.value).toBe(true)
       expect(opts.verticalAxisWidthMode.value).toBe('fixed')
       expect(opts.fixedVerticalAxisWidth.value).toBe(8)
-      expect(opts.fontSize.value).toBe(8)
       expect(opts.timestamp.value).toBe(false)
       expect(opts.roundMargin.value).toBe(false)
       expect(opts.graphLegend.value).toBe(false)
@@ -31,7 +30,6 @@ describe('useGraphRenderOptions', () => {
         show_time_axis: false,
         show_vertical_axis: false,
         vertical_axis_width: 42,
-        font_size_pt: 12,
         show_graph_time: true,
         show_margin: true,
         show_legend: true,
@@ -43,7 +41,6 @@ describe('useGraphRenderOptions', () => {
       expect(opts.verticalAxis.value).toBe(false)
       expect(opts.verticalAxisWidthMode.value).toBe('absolute')
       expect(opts.fixedVerticalAxisWidth.value).toBe(42)
-      expect(opts.fontSize.value).toBe(12)
       expect(opts.timestamp.value).toBe(true)
       expect(opts.roundMargin.value).toBe(true)
       expect(opts.graphLegend.value).toBe(true)
@@ -77,7 +74,6 @@ describe('useGraphRenderOptions', () => {
         show_time_axis: true,
         show_vertical_axis: true,
         vertical_axis_width: 'fixed',
-        font_size_pt: 8,
         show_graph_time: false,
         show_margin: false,
         show_legend: false,
@@ -101,11 +97,9 @@ describe('useGraphRenderOptions', () => {
       const opts = useGraphRenderOptions()
 
       opts.horizontalAxis.value = false
-      opts.fontSize.value = 14
       opts.graphLegend.value = true
 
       expect(opts.graphRenderOptions.value.show_time_axis).toBe(false)
-      expect(opts.graphRenderOptions.value.font_size_pt).toBe(14)
       expect(opts.graphRenderOptions.value.show_legend).toBe(true)
     })
 

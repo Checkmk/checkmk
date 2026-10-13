@@ -10,6 +10,5 @@ py_library(
     ],
     deps = [
         requirement("requests"),
-        requirement("types-requests"),
     ],
 )

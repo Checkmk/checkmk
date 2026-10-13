@@ -9,7 +9,10 @@ py_library(
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
         "//cmk/config_anonymizer:__pkg__",
+        "//cmk/monitoring_config:__subpackages__",
+        "//cmk/plugins/checkmk/automations:__pkg__",
         "//non-free/packages/cmk-bakery:__pkg__",
+        "//non-free/packages/cmk-plugins-nonfree:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -25,6 +28,7 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/checking",
         "//packages/cmk-check-engine/cmk/checkengine/discovery",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-events",
         "//packages/cmk-logwatch:config",
         "//packages/cmk-plugin-apis:agent_based",
     ],

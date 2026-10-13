@@ -84,6 +84,7 @@ class EndpointDefinition:
     behavior: EndpointBehavior
     removed_in_version: APIVersion | None
     allowed_tokens: set[TokenType] = field(default_factory=set)
+    token_failure_detail: str | None = None
 
     @property
     def ident(self) -> str:
@@ -157,6 +158,7 @@ class VersionedEndpointRegistry:
             behavior=endpoint.behavior,
             removed_in_version=endpoint.removed_in_version,
             allowed_tokens=endpoint.allowed_tokens,
+            token_failure_detail=endpoint.token_failure_detail,
         )
 
     @staticmethod

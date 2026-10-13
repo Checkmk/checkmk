@@ -5,7 +5,6 @@
 
 """Show a list of all visuals of a given type with actions to delete/clone/edit"""
 
-import json
 from collections.abc import Callable, Iterable
 
 from cmk.ccc.user import UserId
@@ -27,23 +26,17 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pagetypes import customize_page_menu
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import (
-    HTTPVariables,
-    IconNames,
-    StaticIcon,
-    VisualName,
-    VisualPublic,
-    VisualTypeName,
-)
-from cmk.gui.utils.confirm_links import make_confirm_delete_link, make_confirm_link
-from cmk.gui.utils.doc_references import DocReference
+from cmk.gui.type_defs import VisualName, VisualPublic, VisualTypeName
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.gui.watolib.profile_replication import start_profile_replication_job
 from cmk.mkp_tool import PackageName
+from cmk.web.utils.confirm_links import make_confirm_delete_link, make_confirm_link
+from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import flash, get_flashed_messages
-from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless, urlencode
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.urls import HTTPVariable, makeactionuri, makeuri, makeuri_contextless, urlencode
 
 from ._breadcrumb import visual_page_breadcrumb
 from ._store import (
@@ -167,7 +160,9 @@ def page_list(
                 config=config,
             )
             flash(_("Your %(title)s has been deleted.") % {"title": visual_type.title})
-            html.final_javascript("cmk.utils.navigate_to_page(%s)" % json.dumps(html.request.path))
+            html.call_ts_function(
+                function_name="navigate_to_page", arguments={"url": html.request.path}
+            )
         except MKUserError as e:
             html.user_error(e)
 
@@ -193,7 +188,7 @@ def page_list(
                     owner == user.id
                     or (owner != UserId.builtin() and user.may("general.edit_foreign_%s" % what))
                 ) and not is_packaged:
-                    edit_vars: HTTPVariables
+                    edit_vars: list[HTTPVariable]
                     if what == "dashboards":
                         edit_vars = [
                             ("mode", "edit_settings"),
@@ -272,13 +267,14 @@ def page_list(
                     and (owner == user.id or user.may("general.delete_foreign_%s" % what))
                     and not is_packaged
                 ):
-                    add_vars: HTTPVariables = [("_delete", visual_name)]
+                    add_vars: list[HTTPVariable] = [("_delete", visual_name)]
                     confirm_message = _("ID: %(visual_name)s") % {"visual_name": visual_name}
                     if owner != user.id:
                         add_vars.append(("_user_id", owner))
                         confirm_message += "<br>" + _("Owner: %(owner)s") % {"owner": owner}
                     html.icon_button(
                         make_confirm_delete_link(
+                            i18n=_,
                             url=makeactionuri(request, transactions.get(), add_vars),
                             title=_("Delete %(title)s") % {"title": visual_type.title},
                             suffix=str(visual["title"]),
@@ -356,6 +352,7 @@ def _render_extension_package_icons(
     """Render icons needed for extension package handling of visuals"""
     if not is_packaged:
         export_url = make_confirm_link(
+            i18n=_,
             url=makeuri_contextless(
                 request,
                 [
@@ -394,6 +391,7 @@ def _render_extension_package_icons(
 
     if not (mkp_name := installed_packages.get(visual_name)):
         delete_url = make_confirm_delete_link(
+            i18n=_,
             url=makeuri_contextless(
                 request,
                 [

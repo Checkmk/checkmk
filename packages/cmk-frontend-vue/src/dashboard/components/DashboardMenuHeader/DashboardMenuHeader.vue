@@ -5,10 +5,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import axios from 'axios'
+import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker.ts'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
-import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time/types.ts'
+import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { kioskMode } from 'cmk-ui-library/lib/kiosk'
 import { computed, ref } from 'vue'
+
+import { getCsrfToken } from '@/lib/csrf'
 
 import {
   type DashboardMetadata,
@@ -16,6 +21,7 @@ import {
   type DashboardTokenModel
 } from '@/dashboard/types/dashboard.ts'
 import { copyToClipboard, urlHandler } from '@/dashboard/utils.ts'
+import GlobalTimePicker from '@/graphing/GlobalTimePicker/GlobalTimePicker.vue'
 
 import DashboardSelector from './DashboardSelector.vue'
 import DropdownMenu from './DropdownMenu.vue'
@@ -26,12 +32,14 @@ import type { SelectedDashboard } from './types'
 interface Props {
   selectedDashboard: SelectedDashboard | null
   canEditDashboard: boolean
+  canCloneAsResponsive: boolean
   linkUserGuide: string
   isEditMode: boolean
   publicToken: DashboardTokenModel | null
   isEmptyDashboard: boolean
   isDashboardLoading: boolean
   runtimeFilters: Record<string, string>
+  globalTimePicker: GlobalTimePickerProps
 }
 
 const { _t } = usei18n()
@@ -43,6 +51,7 @@ const emit = defineEmits<{
   'open-filter-settings': []
   'open-settings': []
   'open-clone-workflow': []
+  'open-responsive-clone-workflow': []
   'open-share-workflow': []
   'open-widget-workflow': []
   save: []
@@ -50,6 +59,8 @@ const emit = defineEmits<{
   'cancel-edit': []
   'set-dashboard': [dashboard: DashboardMetadata]
 }>()
+
+const range = defineModel<DateTimeRange>('range', { required: true })
 
 const showDashboardDropdown = ref(false)
 
@@ -86,8 +97,7 @@ const setStartUrl = async (): Promise<void> => {
       params: {
         name: dashboard.name,
         owner: dashboard.owner,
-        // @ts-expect-error  TODO change if something is implemented to use CSRF token
-        _csrf_token: global_csrf_token
+        _csrf_token: getCsrfToken()
       }
     })
 
@@ -103,16 +113,14 @@ const setStartUrl = async (): Promise<void> => {
   }
 }
 
-const navigationToggleIcon = urlHandler.isOnIndexPage() ? 'toggle-on' : 'toggle-off'
+const isKioskMode = kioskMode.isActive()
+const navigationToggleIcon = isKioskMode ? 'toggle-off' : 'toggle-on'
 const navigationToggleLink = computed(() => {
   if (!props.selectedDashboard) {
     return '' // dropdown is disabled when no dashboard is selected, so this doesn't matter
   }
   const dashboardUrl = urlHandler.getDashboardUrl(props.selectedDashboard, props.runtimeFilters)
-  if (urlHandler.isOnIndexPage()) {
-    return dashboardUrl.toString()
-  }
-  return urlHandler.getIndexUrl(dashboardUrl).toString()
+  return kioskMode.toggled(dashboardUrl).toString()
 })
 
 const isBuiltInDashboard = computed(
@@ -135,31 +143,36 @@ const copyInternalDashboardLink = async (): Promise<void> => {
 </script>
 
 <template>
-  <div class="dashboard-menu-header" role="toolbar" :aria-label="_t('Dashboard menu')">
-    <div class="left-section">
-      <div class="dashboard-title">
-        <CmkLabel class="dashboard-label">{{ _t('Dashboard') }}</CmkLabel>
-      </div>
-
-      <div class="selection-section">
-        <DashboardSelector
-          :selected-dashboard="props.selectedDashboard"
-          :disabled="props.isDashboardLoading || props.isEditMode"
-          @dashboard-change="handleDashboardChange"
-        />
-
-        <MenuButton
-          v-if="!isEditMode"
-          :disabled="isInteractionDisabled"
-          @click="emit('open-runtime-filter')"
-        >
-          <CmkIcon name="filter" size="large" />
-          <span>{{ _t('Filter') }}</span>
-        </MenuButton>
-      </div>
+  <div class="db-menu-header" role="toolbar" :aria-label="_t('Dashboard menu')">
+    <div class="db-menu-header__left">
+      <CmkHeading>{{ _t('Dashboard') }}</CmkHeading>
+      <DashboardSelector
+        :selected-dashboard="props.selectedDashboard"
+        :disabled="props.isDashboardLoading || props.isEditMode"
+        @dashboard-change="handleDashboardChange"
+      />
     </div>
-
-    <div class="actions-section">
+    <div class="db-menu-header__center">
+      <template v-if="!isEditMode">
+        <GlobalTimePicker
+          v-model="range"
+          class="db-menu-header__time-picker"
+          :custom-time-ranges="props.globalTimePicker.custom_time_ranges"
+          :server-time-zone="props.globalTimePicker.server_time_zone"
+          :first-day-of-week="props.globalTimePicker.first_day_of_week"
+          :disabled="isInteractionDisabled"
+          variant="condensed"
+        >
+          <template #trailing>
+            <MenuButton :disabled="isInteractionDisabled" @click="emit('open-runtime-filter')">
+              <CmkIcon name="filter" size="large" />
+              <span>{{ _t('Filter') }}</span>
+            </MenuButton>
+          </template>
+        </GlobalTimePicker>
+      </template>
+    </div>
+    <div class="db-menu-header__right">
       <template v-if="!isEditMode">
         <SharingStatus
           v-if="canEditDashboard && !isBuiltInDashboard"
@@ -169,7 +182,7 @@ const copyInternalDashboardLink = async (): Promise<void> => {
         />
 
         <DropdownMenu
-          :icon="{ name: 'share', primaryColor: '--db-dashboard-menu-header-share-icon-color' }"
+          :icon="{ name: 'share', primaryColor: '--interactive-accent-strong' }"
           :label="_t('Share')"
           :disabled="isInteractionDisabled"
           :options="[
@@ -214,6 +227,11 @@ const copyInternalDashboardLink = async (): Promise<void> => {
             },
             { label: _t('Clone dashboard'), action: () => emit('open-clone-workflow') },
             {
+              label: _t('Clone as responsive dashboard'),
+              action: () => emit('open-responsive-clone-workflow'),
+              hidden: !canCloneAsResponsive
+            },
+            {
               label: _t('Dashboard user guide'),
               url: linkUserGuide,
               target: '_blank',
@@ -223,7 +241,6 @@ const copyInternalDashboardLink = async (): Promise<void> => {
             {
               label: _t('Show page navigation'),
               url: navigationToggleLink,
-              target: '_top',
               icon: navigationToggleIcon
             }
           ]"
@@ -271,66 +288,48 @@ const copyInternalDashboardLink = async (): Promise<void> => {
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.dashboard-menu-header {
+.db-menu-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-flow: row nowrap;
+  align-items: stretch;
+  gap: var(--dimension-4);
+  padding: 0 var(--dimension-4);
   background-color: transparent;
-  color: var(--font-color);
-  padding: var(--dimension-4);
-  font-size: var(--font-size-large);
-  min-height: 48px;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.left-section {
+.db-menu-header__left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--dimension-4);
+  padding-top: var(--dimension-4);
+  flex: 0 0 auto;
+}
+
+.db-menu-header__center {
   display: flex;
   align-items: center;
   gap: var(--dimension-4);
-  flex: 1;
-
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  .selection-section {
-    display: flex;
-    align-items: center;
-    gap: var(--dimension-4);
-  }
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.dashboard-title {
+.db-menu-header__right {
   display: flex;
   align-items: center;
-  gap: var(--dimension-4);
+  padding-top: var(--dimension-8);
+  gap: var(--dimension-3);
+  flex: 0 0 auto;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.dashboard-label {
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-xxlarge);
+.db-menu-header__time-picker {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .no-underline {
   text-decoration: none !important;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.actions-section {
-  display: flex;
-  align-items: center;
-  gap: var(--dimension-3);
-  flex: 1;
-  justify-content: flex-end;
-
-  body[data-theme='modern-dark'] & {
-    --db-dashboard-menu-header-share-icon-color: var(--color-corporate-green-50);
-  }
-
-  body[data-theme='facelift'] & {
-    --db-dashboard-menu-header-share-icon-color: var(--color-corporate-green-70);
-  }
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

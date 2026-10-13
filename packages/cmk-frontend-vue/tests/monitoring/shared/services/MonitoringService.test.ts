@@ -14,7 +14,9 @@ import {
   MonitoringService,
   type MonitoringServiceOptions,
   type PagedResponse,
-  buildColumnStorageKey
+  buildColumnStorageKey,
+  buildDisplayOptionsStorageKey,
+  sanitizeDisplayOptions
 } from '@/monitoring/shared/services/MonitoringService'
 import type { TableStateSchema } from '@/monitoring/shared/tableState/types'
 
@@ -96,6 +98,37 @@ describe('MonitoringService', () => {
     expect(service.hasLoaded.value).toBe(false)
     await vi.advanceTimersByTimeAsync(0)
     expect(service.hasLoaded.value).toBe(true)
+
+    service.stopPolling()
+    consoleErrorSpy.mockRestore()
+  })
+
+  it('reports a failed fetch instead of passing it off as an empty result', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const fetchBatch = vi.fn().mockRejectedValue(new Error('boom'))
+    const service = new TestService(fetchBatch)
+
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(service.loadFailed.value).toBe(true)
+
+    service.stopPolling()
+    consoleErrorSpy.mockRestore()
+  })
+
+  it('drops the failure report once a retry brings rows back', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const fetchBatch = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('boom'))
+      .mockResolvedValue(makeResponse([{ id: 'a', value: 1 }], 1, 1))
+    const service = new TestService(fetchBatch)
+    await vi.advanceTimersByTimeAsync(0)
+
+    service.retry()
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(service.loadFailed.value).toBe(false)
 
     service.stopPolling()
     consoleErrorSpy.mockRestore()
@@ -809,6 +842,34 @@ describe('MonitoringService', () => {
       service.stopPolling()
     })
 
+    it('keeps the ordering and the rows when the column carrying it is hidden', async () => {
+      // Hiding a column drops neither the ordering it carries nor the listing it
+      // produced: the sort survives untouched and nothing is asked of the server,
+      // so the rows cannot silently come back in another order.
+      const rows = [
+        { id: 'b', value: 2 },
+        { id: 'a', value: 1 }
+      ]
+      const fetchBatch = vi.fn().mockResolvedValue(makeResponse(rows, 2, 2))
+      const service = new TestService(fetchBatch, {
+        columns: [{ accessorKey: 'value', header: 'Value' }]
+      })
+
+      await vi.advanceTimersByTimeAsync(0)
+      service.updateSort([{ id: 'value', desc: true }])
+      await vi.advanceTimersByTimeAsync(0)
+      expect(fetchBatch).toHaveBeenCalledTimes(2)
+
+      service.updateColumnVisibility({ value: false })
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(service.sortState.value).toEqual([{ id: 'value', desc: true }])
+      expect(service.items.value).toEqual(rows)
+      expect(fetchBatch).toHaveBeenCalledTimes(2)
+
+      service.stopPolling()
+    })
+
     it('refetches when a column is hidden under a search, which no longer searches it', async () => {
       const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0, 0))
       const service = new TestService(fetchBatch, {
@@ -1217,6 +1278,7 @@ describe('MonitoringService', () => {
       const tableStateSchema: TableStateSchema = {
         hideable: ['value'],
         sortable: new Set(['value']),
+        defaultSort: [],
         defaultVisibility: { value: false },
         offeredLimits: [42, 99]
       }
@@ -1241,6 +1303,7 @@ describe('MonitoringService', () => {
       const tableStateSchema: TableStateSchema = {
         hideable: ['phantom'],
         sortable: new Set(),
+        defaultSort: [],
         defaultVisibility: {},
         offeredLimits: [1000]
       }
@@ -1250,6 +1313,88 @@ describe('MonitoringService', () => {
       })
 
       expect(service.toggleableColumns).toEqual([{ id: 'phantom', label: 'phantom' }])
+
+      service.stopPolling()
+    })
+  })
+
+  describe('default sort', () => {
+    const tableStateSchema: TableStateSchema = {
+      hideable: [],
+      sortable: new Set(['name', 'value']),
+      defaultSort: [{ id: 'name', desc: false }],
+      defaultVisibility: {},
+      offeredLimits: [1000]
+    }
+
+    it('starts with the default sort when no initial sort is given', () => {
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        tableStateSchema
+      })
+
+      expect(service.sortState.value).toEqual([{ id: 'name', desc: false }])
+
+      service.stopPolling()
+    })
+
+    it('returns to the default sort and fetches with it once the user clears theirs', async () => {
+      const fetchedWith: SortingState[] = []
+      const service: TestService = new TestService(
+        vi.fn().mockImplementation(() => {
+          fetchedWith.push(service.sortState.value)
+          return Promise.resolve(makeResponse([], 0, 0))
+        }),
+        { tableStateSchema, initialState: { sort: [{ id: 'value', desc: true }] } }
+      )
+      await vi.advanceTimersByTimeAsync(0)
+
+      service.updateSort([])
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(fetchedWith).toEqual([[{ id: 'value', desc: true }], [{ id: 'name', desc: false }]])
+
+      service.stopPolling()
+    })
+
+    it('extends the default sort by a column added to it', () => {
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        tableStateSchema
+      })
+
+      service.updateSort([
+        { id: 'name', desc: false },
+        { id: 'value', desc: true }
+      ])
+
+      expect(service.sortState.value).toEqual([
+        { id: 'name', desc: false },
+        { id: 'value', desc: true }
+      ])
+
+      service.stopPolling()
+    })
+
+    it('keeps the default sort when it is picked again', () => {
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        tableStateSchema
+      })
+
+      service.updateSort([{ id: 'name', desc: false }])
+
+      expect(service.sortState.value).toEqual([{ id: 'name', desc: false }])
+
+      service.stopPolling()
+    })
+
+    it('leaves the listing unsorted once cleared when there is no default sort', () => {
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        tableStateSchema: { ...tableStateSchema, defaultSort: [] },
+        initialState: { sort: [{ id: 'value', desc: true }] }
+      })
+
+      service.updateSort([])
+
+      expect(service.sortState.value).toEqual([])
 
       service.stopPolling()
     })
@@ -1379,6 +1524,40 @@ describe('MonitoringService', () => {
       resolveFetch(makeResponse([], 0, 0))
       await vi.advanceTimersByTimeAsync(0)
       service.stopPolling()
+    })
+  })
+})
+
+describe('display options storage', () => {
+  it('keys a choice by view, site, user and edition', () => {
+    expect(
+      buildDisplayOptionsStorageKey({
+        view: 'all-hosts',
+        site: 'heute',
+        userId: 'harri',
+        edition: 'community'
+      })
+    ).toBe('monitoring-all-hosts-display-options-heute-harri-community')
+  })
+
+  it('restores a stored choice', () => {
+    expect(sanitizeDisplayOptions({ dateFormat: '%d.%m.%Y', timestampFormat: 'abs' })).toEqual({
+      dateFormat: '%d.%m.%Y',
+      timestampFormat: 'abs'
+    })
+  })
+
+  it('falls back to the default date format when storage holds one that is no longer offered', () => {
+    expect(sanitizeDisplayOptions({ dateFormat: 'yyyy/mm/dd', timestampFormat: 'abs' })).toEqual({
+      dateFormat: '%Y-%m-%d',
+      timestampFormat: 'abs'
+    })
+  })
+
+  it('falls back to the defaults when storage holds something unusable', () => {
+    expect(sanitizeDisplayOptions(['abs'])).toEqual({
+      dateFormat: '%Y-%m-%d',
+      timestampFormat: 'mixed'
     })
   })
 })

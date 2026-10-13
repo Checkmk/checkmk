@@ -13,7 +13,7 @@ from cmk.gui.log import logger
 from .store import load_users
 
 
-def execute_user_profile_cleanup_job(config: Config) -> None:
+def execute_user_profile_cleanup_job(config: Config) -> None:  # noqa: ARG001
     """This function is called by the GUI cron job once a minute.
 
     Errors are logged to var/log/web.log."""

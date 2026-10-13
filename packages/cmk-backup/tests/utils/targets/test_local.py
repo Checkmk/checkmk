@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from pathlib import Path
 
@@ -15,7 +14,7 @@ from cmk.ccc.exceptions import MKGeneralException
 
 
 class TestLocalTarget:
-    def test_check_ready_ok(self):
+    def test_check_ready_ok(self) -> None:
         LocalTarget(
             TargetId(""),
             {
@@ -46,7 +45,7 @@ class TestLocalTarget:
         expected_error_msg: str,
     ) -> None:
         monkeypatch.setattr("os.getcwd", lambda: "/test")
-        monkeypatch.setattr("os.path.islink", lambda x: False)
+        monkeypatch.setattr("os.path.islink", lambda x: False)  # noqa: ARG005
         with pytest.raises(
             MKGeneralException,
             match=expected_error_msg,

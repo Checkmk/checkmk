@@ -8,6 +8,7 @@ import { type UnifiedSearchResultItem } from 'cmk-shared-typing/typescript/unifi
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { immediateWatch } from 'cmk-ui-library/lib/watch'
 import { ref } from 'vue'
 
@@ -17,6 +18,7 @@ import { HistoryEntry } from '@/unified-search/lib/searchHistory'
 import { getSearchUtils } from '@/unified-search/providers/search-utils'
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Search'), [{ combo: ['Enter'], description: _t('Open entry') }])
 
 const recentlyViewed = ref<HistoryEntry[]>([])
 

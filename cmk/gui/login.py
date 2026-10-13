@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
-
-from __future__ import annotations
 
 import contextlib
 import http.client
@@ -192,6 +189,7 @@ class LoginPage(Page):
                 config.user_connections,
                 (now := datetime.now()),
                 config.default_user_profile,
+                time_based_lock_out_enabled=config.time_based_lock_out_enabled,
                 pprint_value=config.wato_pprint_config,
                 debug=config.debug,
             ):
@@ -255,9 +253,17 @@ class LoginPage(Page):
                 config.user_connections,
                 now=now,
                 lock_on_logon_failures=config.lock_on_logon_failures,
+                time_based_lock_out_enabled=config.time_based_lock_out_enabled,
                 log_logon_failures=config.log_logon_failures,
                 pprint_value=config.wato_pprint_config,
             )
+            if config.time_based_lock_out_enabled and userdb.LoginTimeoutStore().timeout_status(
+                username, request.remote_ip, now
+            ):
+                raise MKUserError(self._password_varname, _("User is timed out"))
+            user_spec = userdb.load_user(username)
+            if user_spec and userdb.user_locked(username, user_spec):
+                raise MKUserError(self._password_varname, _("User is locked"))
             raise MKUserError(self._password_varname, self._default_login_error_msg)
 
         except MKUserError as e:

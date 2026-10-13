@@ -3,14 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-// Ported from cmk/gui/graphing/_artwork.py::_compute_graph_t_axis: the label-format bands, the
-// candidate step ladder and the calendar-aligned tick positions all follow the backend. The
-// timezone is injected (rather than read from the ambient local zone) so the axis is deterministic
-// and testable across zones.
-//
-// One deliberate divergence: the backend estimates how many labels fit from a per-format character
-// budget expressed in ex, calibrated against its fixed 11px-per-ex layout grid. Here the label
-// widths are measured instead, so tick density follows the text that is really drawn.
+// The timezone is injected (rather than read from the ambient local zone) so the axis is
+// deterministic and testable across zones. Label widths are measured, so tick density follows the
+// text that is really drawn.
 import {
   type ZonedDateTime,
   fromAbsolute,
@@ -18,17 +13,18 @@ import {
   startOfMonth,
   startOfWeek
 } from '@internationalized/date'
+import { renderDate } from 'cmk-ui-library/lib/renderTime'
 
-import { isoDate, pad2, shortWeekday } from '@/graphing/utils/timeFormat'
+import { pad2, shortWeekday } from '@/graphing/utils/timeFormat'
 
 import type { TimeRange } from '../types'
 
-export function timestampAt(timeRange: TimeRange, i: number): number {
-  return timeRange.start + i * timeRange.step
+export function timestampAt(timeRange: TimeRange, valueIndex: number): number {
+  return timeRange.start + (valueIndex + 1) * timeRange.step
 }
 
-export function sampleCount(timeRange: TimeRange): number {
-  return Math.round((timeRange.end - timeRange.start) / timeRange.step) + 1
+export function indexOfValueCovering(timeRange: TimeRange, time: number): number {
+  return Math.ceil((time - timeRange.start) / timeRange.step) - 1
 }
 
 const SECONDS_PER_DAY = 86_400
@@ -111,7 +107,7 @@ function formatLabel(format: string, zdt: ZonedDateTime): string {
     case '%m-%d':
       return `${pad2(zdt.month)}-${pad2(zdt.day)}`
     default:
-      return isoDate(zdt)
+      return renderDate(zdt.toDate(), zdt.timeZone)
   }
 }
 
@@ -191,26 +187,25 @@ function selectTickProducer(
   return (start, end) => monthsProducer(start, end, 96)
 }
 
+// Ticks cover the whole drawn window. The legacy axis trimmed a step off either end to drop the
+// RRD's padding samples from the fetched range; the drawn window carries none, so the same trim
+// would leave its first and last sample untickable, which at a coarse step is most of the plot.
 export function computeTimeAxis(
   startTime: number,
   endTime: number,
   plotWidth: number,
-  step: number,
   measureLabel: MeasureLabel,
   timeZone: string = getLocalTimeZone()
 ): TimeAxisTick[] {
-  const secondsPerPixel = (endTime - startTime) / Math.max(plotWidth, 1)
-  const positionToX = (position: number): number => (position - startTime) / secondsPerPixel
-
-  const firstTickTime = startTime + step
-  const lastTickTime = endTime - step
-  const timeRange = lastTickTime - firstTickTime
+  const timeRange = endTime - startTime
   if (timeRange <= 0) {
     return []
   }
+  const secondsPerPixel = timeRange / Math.max(plotWidth, 1)
+  const positionToX = (position: number): number => (position - startTime) / secondsPerPixel
 
-  const startZoned = fromAbsolute(firstTickTime * 1000, timeZone)
-  const endZoned = fromAbsolute(lastTickTime * 1000, timeZone)
+  const startZoned = fromAbsolute(startTime * 1000, timeZone)
+  const endZoned = fromAbsolute(endTime * 1000, timeZone)
   const timeRangeDays = timeRange / SECONDS_PER_DAY
 
   const labelling = pickLabelling(startZoned, endZoned, timeRangeDays)

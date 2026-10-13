@@ -21,13 +21,9 @@ from cmk.gui.search.quicksearch import (
     get_url_builder,
     IncorrectLabelInputError,
 )
-from cmk.gui.type_defs import (
-    IconNames,
-    SearchQuery,
-    SearchResultsByTopic,
-    StaticIcon,
-)
+from cmk.gui.type_defs import SearchQuery, SearchResultsByTopic
 from cmk.gui.utils.roles import UserPermissions
+from cmk.web.utils.icons import IconNames, StaticIcon
 
 from ._base import PageHandlers, SidebarSnapin
 from ._quicksearch_manager import SnapinQuicksearchManager, TooManyRowsError
@@ -60,8 +56,8 @@ class QuicksearchSnapin(SidebarSnapin):
             "Interactive search field for direct access to monitoring instances (hosts, services, "
             "host and service groups).<br>You can use the following filters: <i>h:</i> Host,<br> "
             "<i>s:</i> Service, <i>hg:</i> Host group, <i>sg:</i> Service group,<br><i>ad:</i> "
-            "Address, <i>al:</i> Alias, <i>tg:</i> Host tag, <i>hl:</i> Host label, <i>sl:</i> "
-            "Service label"
+            "Address, <i>al:</i> Alias, <i>tg:</i> Host tag, <i>hf:</i> Host folder, <i>sf:</i> "
+            "Service folder, <i>hl:</i> Host label, <i>sl:</i> Service label"
         )
 
     @override
@@ -77,7 +73,7 @@ class QuicksearchSnapin(SidebarSnapin):
         )
         html.close_div()
         html.div("", id_="mk_side_clear")
-        html.javascript(f"cmk.quicksearch.register_search_field('{id_}');")
+        html.call_ts_function(function_name="register_search_field", arguments={"field": id_})
 
     @override
     def page_handlers(self) -> PageHandlers:

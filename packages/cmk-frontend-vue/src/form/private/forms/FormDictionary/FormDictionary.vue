@@ -19,6 +19,7 @@ import { computed, ref, watch } from 'vue'
 import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
 import FormHelp from '@/form/private/FormHelp.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
+import { helpAtTitle } from '@/form/private/rendersHelpItself'
 import { rendersRequiredLabelItself } from '@/form/private/requiredValidator'
 import { type ValidationMessages, groupNestedValidations } from '@/form/private/validation'
 
@@ -112,10 +113,7 @@ const componentId = useId()
         <td class="form-dictionary__dictleft">
           <div v-if="!!group.title" class="form-dictionary__group-title">{{ group?.title }}</div>
           <FormHelp v-if="group.help" :help="group.help" />
-          <div
-            class="form-dictionary__group-elems"
-            :class="dictionaryVariants({ group_layout: group.layout })"
-          >
+          <div :class="dictionaryVariants({ group_layout: group.layout })">
             <template
               v-for="dict_element in group.elems"
               :key="`${componentId}.${dict_element.dict_config.name}`"
@@ -123,6 +121,12 @@ const componentId = useId()
               <div
                 v-if="!dict_element.dict_config.render_only"
                 class="form-dictionary__group_elem"
+                :class="{
+                  'form-dictionary__group_elem--horizontal':
+                    dict_element.dict_config.required &&
+                    !!dict_element.dict_config.group &&
+                    group.layout === 'horizontal'
+                }"
                 role="group"
                 :aria-label="dict_element.dict_config.parameter_form.title"
               >
@@ -133,13 +137,7 @@ const componentId = useId()
                 <template v-if="titleRequired(dict_element.dict_config)">
                   <CmkLabel
                     v-if="dict_element.dict_config.required"
-                    :class="{
-                      'form-dictionary__required-without-indent': !indentRequired(
-                        dict_element.dict_config,
-                        group.layout
-                      )
-                    }"
-                    :help="untranslated(dict_element.dict_config.parameter_form.help)"
+                    :help="untranslated(helpAtTitle(dict_element.dict_config.parameter_form))"
                   >
                     <CmkHtml :html="dict_element.dict_config.parameter_form.title" /><FormRequired
                       v-if="!rendersRequiredLabelItself(dict_element.dict_config.parameter_form)"
@@ -157,7 +155,11 @@ const componentId = useId()
                         : 'both'
                     "
                     :label="untranslated(dict_element.dict_config.parameter_form.title)"
-                    :help="untranslated(dict_element.dict_config.parameter_form.help)"
+                    :help="
+                      untranslated(
+                        helpAtTitle(dict_element.dict_config.parameter_form, dict_element.is_active)
+                      )
+                    "
                     @update:model-value="
                       toggleElement(data, spec.elements, dict_element.dict_config.name)
                     "
@@ -205,21 +207,19 @@ tr:first-of-type > td > .form-dictionary__group-title {
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.form-dictionary__group_elem--horizontal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 tr:last-of-type > td > div > .form-dictionary__group_elem:last-of-type {
   margin-bottom: 0;
 }
 
-.form-dictionary__required-without-indent {
-  display: inline-block;
-  margin-bottom: var(--spacing-half);
-}
-
-.form-dictionary__group-elems {
-  flex-direction: row;
-  gap: 0.5em;
-}
-
 .form-dictionary--horizontal-groups {
   display: flex;
+  gap: var(--dimension-4);
 }
 </style>

@@ -42,7 +42,7 @@ def test_parse_proxmox_ve_snapshot_age(data: str, expected: SectionSnapshots) ->
     ],
 )
 def test_check_proxmox_ve_snapshot_age_no_snapshot(
-    now: int | float,
+    now: int | float,  # noqa: ARG001
     params: Mapping[str, object],
     section: SectionSnapshots,
     expected: Sequence[IgnoreResults | Metric | Result],
@@ -124,3 +124,7 @@ def test_check_proxmox_ve_snapshot_age_with_snapshot(  # type: ignore[misc]
         list(_check_proxmox_ve_snapshot_age_testable(100_000, params, section_data.snaptimes))
         == expected_result
     )
+
+
+def test_parse_proxmox_ve_snapshot_age_without_snapshot_data() -> None:
+    assert parse_proxmox_ve_snapshot_age([["null"]]) is None

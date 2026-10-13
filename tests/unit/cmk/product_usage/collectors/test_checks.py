@@ -155,7 +155,7 @@ def test_get_services(
 ) -> None:
     local_connection.query.return_value = livestatus_response
 
-    data = checks_collector._get_services(local_connection)
+    data = checks_collector._get_services(local_connection)  # noqa: SLF001
 
     assert data == expected_data
 
@@ -164,7 +164,7 @@ def test_get_services(
 def test_get_services_unexpected_result_or_column(local_connection: MockType) -> None:
     local_connection.query.return_value = [[0]]
     with pytest.raises(ServicesInfoLengthError):
-        checks_collector._get_services(local_connection)
+        checks_collector._get_services(local_connection)  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -208,7 +208,7 @@ def test_get_disabled_services(
 ) -> None:
     local_connection.query.return_value = livestatus_response
 
-    data = checks_collector._get_disabled_services(local_connection)
+    data = checks_collector._get_disabled_services(local_connection)  # noqa: SLF001
 
     assert data == expected_data
 

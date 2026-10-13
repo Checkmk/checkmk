@@ -3,16 +3,11 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import * as intl from '@internationalized/date'
+import { resetLocalTimeZone, setLocalTimeZone } from '@internationalized/date'
 import type { DateTimeSettings } from 'cmk-ui-library/components/date-time/types'
 import { useResolvedDateTimeSettings } from 'cmk-ui-library/components/date-time/useResolvedDateTimeSettings'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { ref } from 'vue'
-
-vi.mock('@internationalized/date', async (importOriginal) => {
-  const actual = await importOriginal<typeof intl>()
-  return { ...actual, getLocalTimeZone: vi.fn(actual.getLocalTimeZone) }
-})
 
 const mockLocale = (locale: string): void => {
   vi.spyOn(navigator, 'language', 'get').mockReturnValue(locale)
@@ -25,7 +20,7 @@ const mockResolvedOptions = (options: Partial<Intl.ResolvedDateTimeFormatOptions
 }
 
 afterEach(() => {
-  vi.restoreAllMocks()
+  resetLocalTimeZone()
 })
 
 describe('useResolvedDateTimeSettings — hourCycle', () => {
@@ -171,7 +166,7 @@ describe('useResolvedDateTimeSettings — weekendDays & timeZone', () => {
     expect(useResolvedDateTimeSettings(undefined, () => 'Asia/Tokyo').timeZone).toBe('Asia/Tokyo')
   })
   test('timeZone default', () => {
-    vi.mocked(intl.getLocalTimeZone).mockReturnValue('Europe/Berlin')
+    setLocalTimeZone('Europe/Berlin')
     expect(useResolvedDateTimeSettings().timeZone).toBe('Europe/Berlin')
   })
 })

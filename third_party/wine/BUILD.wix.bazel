@@ -1,0 +1,22 @@
+# BUILD file injected into the @wix3 repository.
+
+filegroup(
+    name = "binaries",
+    srcs = glob(
+        ["**"],
+        exclude = ["BUILD.bazel"],
+    ),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "candle",
+    srcs = ["candle.exe"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "light",
+    srcs = ["light.exe"],
+    visibility = ["//visibility:public"],
+)

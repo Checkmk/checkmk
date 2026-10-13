@@ -6,8 +6,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
-# ruff: noqa: SLF001  # Private member accessed
-
 
 from polyfactory.factories.pydantic_factory import ModelFactory
 
@@ -59,7 +57,7 @@ def test_group_metadata_by_node() -> None:
     node_name = "node"
     node_collector_machine = node_collector_metadata(CollectorType.MACHINE_SECTIONS, node_name)
     node_collector_container = node_collector_metadata(CollectorType.CONTAINER_METRICS, node_name)
-    grouped_metadata = agent_kube._group_metadata_by_node(
+    grouped_metadata = agent_kube._group_metadata_by_node(  # noqa: SLF001
         [node_collector_machine, node_collector_container]
     )
     assert len(grouped_metadata) == 1
@@ -70,7 +68,7 @@ def test_identify_unsupported_node_collector_components_with_invalid_version() -
     version = 2
     component = node_component(Version(str(version)))
     node_metadata = NodeMetadataFactory.build(components={component.name: component})
-    invalid_nodes = agent_kube._identify_unsupported_node_collector_components(
+    invalid_nodes = agent_kube._identify_unsupported_node_collector_components(  # noqa: SLF001
         [node_metadata], supported_max_major_version=version - 1
     )
     assert len(invalid_nodes) == 1

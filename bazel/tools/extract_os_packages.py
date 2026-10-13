@@ -2,7 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-#!/usr/bin/env python3
+
 """
 This tool extracts the OS dependencies form our *.mk distros files and writes them into a file
 readable by deb / rpm packaging tools.
@@ -19,7 +19,7 @@ def strip_comment(s: str) -> str:
 
 def main() -> int:
     if len(sys.argv) != 4:
-        print("usage: extract_os_packages.py <input.mk> <output.txt> <separator>", file=sys.stderr)
+        print("usage: extract_os_packages.py <input.mk> <output.txt> <separator>", file=sys.stderr)  # noqa: T201  # It's OK for scripts to print()
         return 2
 
     in_path, out_path, sep = sys.argv[1], sys.argv[2], sys.argv[3]

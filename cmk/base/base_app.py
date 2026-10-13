@@ -3,21 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from cmk.base.configlib.loaded_config import BaseConfig
-from cmk.base.core.interface import MonitoringCore
-from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.version import Edition
 from cmk.checkengine.fetcher_utils.trigger import FetcherTriggerFactory
-from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.checkengine.snmplib import SNMPPluginStore
+from cmk.core_client import CoreClient
 from cmk.licensing.handler import LicensingHandler
-from cmk.ruleset_matcher.labels import LabelManager
-from cmk.ruleset_matcher.matcher import RulesetMatcher
-
-from .config import ConfigCache, LoadingResult
+from cmk.monitoring_config.internal import MonitoringConfigBuilder
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -28,18 +22,6 @@ class CheckmkBaseApp:
     """
 
     edition: Edition
-    make_bake_on_restart: Callable[[LoadingResult, Sequence[HostAddress]], Callable[[], None]]
-    create_core: Callable[
-        [
-            Edition,
-            RulesetMatcher,
-            LabelManager,
-            BaseConfig,
-            SNMPPluginStore,
-            ConfigCache,
-            AgentBasedPlugins,
-        ],
-        MonitoringCore,
-    ]
+    create_core: Callable[[BaseConfig], tuple[MonitoringConfigBuilder, CoreClient]]
     licensing_handler_factory: Callable[[], LicensingHandler]
     make_fetcher_trigger: FetcherTriggerFactory

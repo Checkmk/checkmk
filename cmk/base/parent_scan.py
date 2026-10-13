@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import os
@@ -158,7 +157,7 @@ def scan_parents_of(
         if len(lines) == 0:
             if cmk.ccc.debug.enabled():
                 raise MKGeneralException(
-                    "Cannot execute %s. Is traceroute installed? Are you root?" % command
+                    "Cannot execute %s. Is traceroute installed? Are you root?" % command  # type: ignore[possibly-undefined]
                 )
             dot(tty.red, "!")
             continue

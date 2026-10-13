@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
 import time
 from collections.abc import Generator
@@ -22,7 +22,7 @@ def fixture_transaction_ids() -> list[str]:
 
 @pytest.fixture(name="tm")
 def fixture_tm(transaction_ids: list[str]) -> Generator[TransactionManager]:
-    def transids(lock=False):
+    def transids(lock: bool = False) -> list[str]:
         return transaction_ids
 
     def save_transids(transids: list[str]) -> None:
@@ -38,13 +38,13 @@ def test_request_context_integration() -> None:
 
 
 def test_transaction_new_id(tm: TransactionManager) -> None:
-    assert tm._new_transids == []
+    assert tm._new_transids == []  # noqa: SLF001
     trans_id = tm.get()
     assert isinstance(trans_id, str)
-    assert tm._new_transids == [trans_id]
+    assert tm._new_transids == [trans_id]  # noqa: SLF001
 
 
-@pytest.mark.usefixtures("mocker")
+@pytest.mark.usefixtures("mocker", "request_context")
 @pytest.mark.parametrize(
     "transid,ignore_transids,result,is_existing",
     [
@@ -69,12 +69,11 @@ def test_transaction_valid(
     ignore_transids: bool,
     result: bool,
     is_existing: bool,
-    request_context: None,
 ) -> None:
-    assert tm._ignore_transids is False
+    assert tm._ignore_transids is False  # noqa: SLF001
     if ignore_transids:
         tm.ignore()
-        assert tm._ignore_transids is True
+        assert tm._ignore_transids is True  # noqa: SLF001
 
     if transid is not None:
         transid = transid.replace("%time%", str(int(time.time())))
@@ -89,17 +88,14 @@ def test_transaction_valid(
     assert tm.transaction_valid(request) == result
 
 
-@pytest.mark.usefixtures("monkeypatch")
-def test_check_transaction_invalid(tm: TransactionManager, request_context: None) -> None:
+@pytest.mark.usefixtures("monkeypatch", "request_context")
+def test_check_transaction_invalid(tm: TransactionManager) -> None:
     assert tm.check_transaction(request) is False
 
 
-@pytest.mark.usefixtures("monkeypatch")
+@pytest.mark.usefixtures("monkeypatch", "request_context")
 def test_check_transaction_valid(
-    transaction_ids: list[str],
-    tm: TransactionManager,
-    mocker: MockerFixture,
-    request_context: None,
+    transaction_ids: list[str], tm: TransactionManager, mocker: MockerFixture
 ) -> None:
     valid_transid = "%d/abc" % time.time()
     request.set_var("_transid", valid_transid)
@@ -110,12 +106,8 @@ def test_check_transaction_valid(
     invalidate.assert_called_once_with(valid_transid)
 
 
-@pytest.mark.usefixtures("monkeypatch")
-def test_check_transaction_automation(
-    tm: TransactionManager,
-    mocker: MockerFixture,
-    request_context: None,
-) -> None:
+@pytest.mark.usefixtures("monkeypatch", "request_context")
+def test_check_transaction_automation(tm: TransactionManager, mocker: MockerFixture) -> None:
     tm.ignore()
     request.set_var("_transid", "-1")
 

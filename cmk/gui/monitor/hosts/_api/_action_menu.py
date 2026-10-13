@@ -11,6 +11,7 @@ so any registered host icon (HW/SW inventory, notes, custom actions, ...) shows 
 automatically and stays permission-gated, exactly like in the legacy view.
 """
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.site import SiteId
@@ -35,13 +36,14 @@ from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import DynamicIcon, Row, StaticIcon
+from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import replace_action_url_macros, transform_action_url
 from cmk.gui.views.icon.base import IconConfig
 from cmk.gui.views.icon.entries import get_icons, IconEntry, query_icon_row
 from cmk.livestatus_client import MKLivestatusNotFoundError
 from cmk.web.utils import permission_verification as permissions
+from cmk.web.utils.icons import DynamicIcon, StaticIcon
 
 from ._family import MONITOR_HOSTS_FAMILY
 
@@ -115,7 +117,7 @@ def get_host_action_menu(
         row = query_icon_row("host", hostname, site_id)
     except MKLivestatusNotFoundError:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="The requested host was not found",
             detail=f"The host {hostname!r} was not found on site {site_id!r}",
         ) from None

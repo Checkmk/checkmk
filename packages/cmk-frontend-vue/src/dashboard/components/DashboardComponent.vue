@@ -5,13 +5,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { useCmkErrorBoundary } from 'cmk-ui-library/components/CmkErrorBoundary'
-import { computed } from 'vue'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
+import { computed, ref } from 'vue'
 
 import type {
   ContentProps,
   ContentPropsRecord
 } from '@/dashboard/components/DashboardContent/types'
 import RelativeGrid from '@/dashboard/components/RelativeGrid/RelativeGrid.vue'
+import type { MeasuredRelativeGridLayout } from '@/dashboard/components/RelativeGrid/types'
 import ResponsiveGrid from '@/dashboard/components/ResponsiveGrid/ResponsiveGrid.vue'
 import { squashFilters } from '@/dashboard/components/Wizard/components/FiltersRecap/utils'
 import type { DashboardFilters } from '@/dashboard/composables/useDashboardFilters'
@@ -27,6 +29,8 @@ import type {
 import type { WidgetLayout } from '@/dashboard/types/widget'
 
 interface DashboardProps {
+  tick: number
+  range: DateTimeRange
   dashboardKey: DashboardKey
   baseFilters: DashboardFilters['baseFilters']
   widgetCores: DashboardWidgets['widgetCores']
@@ -44,6 +48,7 @@ defineEmits<{
   'widget:edit': [widgetId: string]
   'widget:delete': [widgetId: string]
   'widget:clone': [oldWidgetId: string, newLayout: WidgetLayout]
+  'widget:updateTimeRange': [widgetId: string, range: DateTimeRange]
 }>()
 
 const widgetContentProps = computed<ContentPropsRecord>(() => {
@@ -67,10 +72,19 @@ const widgetContentProps = computed<ContentPropsRecord>(() => {
         restricted_to_single: widgetConstants.filter_context.restricted_to_single,
         filters: squashFilters(props.baseFilters.value, widget.filter_context.filters)
       },
-      dashboardKey: props.dashboardKey
+      dashboardKey: props.dashboardKey,
+      tick: props.tick,
+      range: props.range
     }
   }
   return record
+})
+
+const relativeGrid = ref<InstanceType<typeof RelativeGrid> | null>(null)
+
+defineExpose({
+  getRelativeGridMeasurement: (): MeasuredRelativeGridLayout | null =>
+    relativeGrid.value?.getMeasuredLayout() ?? null
 })
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -89,9 +103,13 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
       @widget:edit="$emit('widget:edit', $event)"
       @widget:delete="$emit('widget:delete', $event)"
       @widget:clone="(oldWidgetId, newLayout) => $emit('widget:clone', oldWidgetId, newLayout)"
+      @widget:update-time-range="
+        (widgetId, range) => $emit('widget:updateTimeRange', widgetId, range)
+      "
     />
     <RelativeGrid
       v-else-if="dashboard.content.layout.type === 'relative_grid'"
+      ref="relativeGrid"
       v-model:content="dashboard.content as ContentRelativeGrid"
       :content-props="widgetContentProps"
       :updated-widget-render-keys="updatedWidgetRenderKeys.value"
@@ -99,6 +117,9 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
       @widget:edit="$emit('widget:edit', $event)"
       @widget:delete="$emit('widget:delete', $event)"
       @widget:clone="(oldWidgetId, newLayout) => $emit('widget:clone', oldWidgetId, newLayout)"
+      @widget:update-time-range="
+        (widgetId, range) => $emit('widget:updateTimeRange', widgetId, range)
+      "
     />
   </CmkErrorBoundary>
 </template>

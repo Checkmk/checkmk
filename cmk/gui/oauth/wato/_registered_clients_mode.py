@@ -23,14 +23,17 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
-from cmk.gui.utils.confirm_links import make_confirm_delete_link
-from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.type_defs import ActionResult
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.utils import render
+from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.flashed_messages import flash
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -90,12 +93,13 @@ class ModeRegisteredOAuthClients(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
         if not transactions.check_transaction(request):
             return redirect(self.mode_url())
 
         if delete_client := request.get_ascii_input("_delete"):
-            deleted = get_client_store().delete([delete_client])
+            with get_client_store() as store:
+                deleted = store.delete([delete_client])
             if deleted:
                 flash(_("Deleted the client."))
             return redirect(self.mode_url())
@@ -106,7 +110,8 @@ class ModeRegisteredOAuthClients(WatoMode):
                 for varname, _value in request.itervars(prefix="_c_client_")
                 if html.get_checkbox(varname)
             ]
-            deleted = get_client_store().delete(selected)
+            with get_client_store() as store:
+                deleted = store.delete(selected)
             if deleted:
                 flash(_("Deleted %(n)d clients.") % {"n": deleted})
             return redirect(self.mode_url())
@@ -115,9 +120,14 @@ class ModeRegisteredOAuthClients(WatoMode):
 
     @override
     def page(self, config: Config) -> None:
+        # Read before emitting any HTML, so an unusable store shows as an error
+        # message instead of a half-rendered table.
+        with get_client_store() as store:
+            clients = store.list()
+
         with html.form_context("bulk_delete_form", method="POST"):
             with table_element("oauth_registered_clients", limit=config.table_row_limit) as table:
-                for client in get_client_store().list():
+                for client in clients:
                     table.row()
                     table.cell(
                         html.render_input(
@@ -134,6 +144,7 @@ class ModeRegisteredOAuthClients(WatoMode):
 
                     table.cell(_("Actions"), css=["buttons"])
                     delete_url = make_confirm_delete_link(
+                        i18n=_,
                         url=make_action_link(
                             request, [("mode", self.name()), ("_delete", client.client_id)]
                         ),

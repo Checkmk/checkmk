@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: SLF001  # Private member accessed
-
 import ssl
 
 import pytest
@@ -109,7 +107,7 @@ def test_prometheus__from_result(
     result: query.HTTPResult, expected_details: str, expected_type: section.ResultType
 ) -> None:
     # Act
-    type_, details = section.PrometheusResult._from_result(result)
+    type_, details = section.PrometheusResult._from_result(result)  # noqa: SLF001
 
     # Assert
     assert details == expected_details

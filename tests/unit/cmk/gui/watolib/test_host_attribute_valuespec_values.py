@@ -232,7 +232,7 @@ def _value_spec_attributes() -> dict[str, ABCHostAttributeValueSpec]:
 
 @pytest.fixture(name="value_spec_attributes")
 def _fixture_value_spec_attributes(
-    load_config: object,
+    load_config: object,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
 ) -> dict[str, ABCHostAttributeValueSpec]:
     return _value_spec_attributes()
 

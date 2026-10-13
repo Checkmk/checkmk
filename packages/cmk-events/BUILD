@@ -1,6 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
-load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
@@ -9,7 +8,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
 ])
 
@@ -34,7 +32,6 @@ py_library(
         "//packages/cmk-ccc:store",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-ruleset-matcher",
-        requirement("pydantic"),
     ],
 )
 
@@ -57,7 +54,6 @@ py_wheel(
     name = "wheel",
     distribution = "cmk-events",
     strip_path_prefixes = ["packages/cmk-events"],
-    # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [
@@ -85,7 +81,6 @@ package_wheel(
 sh_library(
     name = "helpers",
     srcs = [
-        ".f12",
         "run",
     ],
 )

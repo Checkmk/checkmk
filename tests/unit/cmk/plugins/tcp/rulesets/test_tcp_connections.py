@@ -41,7 +41,7 @@ def test_rule_spec_tcp_connections(  # type: ignore[misc]
 
     # FYI: We want to test the validation of the specific rule content, not the generic check-plugin
     # selection. Hence, we inject the dict of possible elements.
-    valuespec._elements[0].get_elements = lambda: {"netstat": None}  # type: ignore[attr-defined]
+    valuespec._elements[0].get_elements = lambda: {"netstat": None}  # type: ignore[attr-defined]  # noqa: SLF001
 
     valuespec.validate_datatype(value, "")
     valuespec.validate_value(value, "")

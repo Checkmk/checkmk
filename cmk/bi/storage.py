@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from __future__ import annotations
-
 import ast
 import pickle
 import re
@@ -97,6 +95,15 @@ class FrozenAggregationStore:
             self.fs_var.frozen_aggregations
             / generate_identifier(aggregation_id)
             / generate_identifier(branch_title)
+        )
+
+    def get_branch_path_of(self, frozen_aggregation: BICompiledAggregation) -> Path:
+        """Path of the snapshot a frozen aggregation was loaded from."""
+        if (frozen_info := frozen_aggregation.frozen_info) is None:
+            raise ValueError(f"Aggregation {frozen_aggregation.id!r} is not frozen")
+        return self.get_branch_path(
+            aggregation_id=frozen_info.based_on_aggregation_id,
+            branch_title=frozen_info.based_on_branch_title,
         )
 
 

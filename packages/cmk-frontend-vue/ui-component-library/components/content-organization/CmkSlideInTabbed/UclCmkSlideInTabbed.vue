@@ -4,13 +4,19 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { BoolPropDef, StringPropDef } from '@ucl/_ucl/types/prop-def'
 import type { SlideInVariants } from 'cmk-ui-library/components/CmkSlideIn'
 
 import codeExample from './UclCmkSlideInTabbedCodeExample.vue?raw'
 
-type OmittedProps = 'tabs' | 'header' | 'defaultTabId' | 'activeTabId' | 'overrideActive'
+type OmittedProps =
+  | 'tabs'
+  | 'header'
+  | 'defaultTabId'
+  | 'activeTabId'
+  | 'overrideActive'
+  | 'reloadToken'
 type CmkSlideInTabbedDemoProps = PanelConfigFor<typeof CmkSlideInTabbed, OmittedProps> & {
   title: StringPropDef
   showCloseButton: BoolPropDef
@@ -48,19 +54,20 @@ export const panelConfig = {
   size: {
     type: 'list' as const,
     title: 'Size',
-    options: [
-      { title: 'Medium', name: 'medium' },
-      { title: 'Small', name: 'small' }
-    ] satisfies Options<SlideInVariants['size']>[],
+    options: listOptions<SlideInVariants['size']>({
+      large: 'Large',
+      medium: 'Medium',
+      small: 'Small'
+    }),
     initialState: 'medium' as const
   },
   borderColor: {
     type: 'list' as const,
     title: 'Border Color',
-    options: [
-      { title: 'Default', name: 'default' },
-      { title: 'Purple', name: 'purple' }
-    ] satisfies Options<SlideInVariants['borderColor']>[],
+    options: listOptions<SlideInVariants['borderColor']>({
+      default: 'Default',
+      purple: 'Purple'
+    }),
     initialState: 'default' as const
   }
 } satisfies CmkSlideInTabbedDemoProps

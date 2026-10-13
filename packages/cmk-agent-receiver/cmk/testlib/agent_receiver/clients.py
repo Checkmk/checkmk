@@ -3,19 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
 from typing import final
 
-import httpx
+import httpx2
 from fastapi.testclient import TestClient
 from starlette.types import Receive, Scope, Send
 
 from cmk.agent_receiver.lib.certs import serialize_to_pem
-from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_ISSUER_HEADER, INJECTED_UUID_HEADER
+from cmk.agent_receiver.lib.mtls_auth_validator import (
+    INJECTED_ISSUER_HEADER,
+    INJECTED_SERIAL_HEADER,
+    INJECTED_UUID_HEADER,
+)
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial, TaskID
 from cmk.relay_protocols.monitoring_data import MonitoringData
 from cmk.relay_protocols.tasks import (
@@ -27,7 +30,7 @@ from cmk.relay_protocols.tasks import (
     TaskListResponse,
 )
 
-from .certs import generate_csr_pair, relay_ca_common_name
+from .certs import generate_csr_pair, relay_ca_common_name, UNREVOKED_SERIAL_NUMBER
 from .relay_config_generator import RelayConfig
 from .site_mock import User
 
@@ -40,9 +43,9 @@ class RelayRegistrationClient:
         self.fastAPI_client = http
         self.site_name = site_name
 
-    def register_with_user(self, relay_id: str, alias: str, user: User) -> httpx.Response:
+    def register_with_user(self, relay_id: str, alias: str, user: User) -> httpx2.Response:
         csr_pair = generate_csr_pair(cn=relay_id)
-        return self.fastAPI_client.post(  # type: ignore[no-any-return]
+        return self.fastAPI_client.post(
             f"/{self.site_name}/relays/",
             headers={"Authorization": user.bearer},
             json={
@@ -52,9 +55,9 @@ class RelayRegistrationClient:
             },
         )
 
-    def register_with_token(self, relay_id: str, alias: str, token: str) -> httpx.Response:
+    def register_with_token(self, relay_id: str, alias: str, token: str) -> httpx2.Response:
         csr_pair = generate_csr_pair(cn=relay_id)
-        return self.fastAPI_client.post(  # type: ignore[no-any-return]
+        return self.fastAPI_client.post(
             f"/{self.site_name}/relays/",
             headers={"Authorization": f"CMK-TOKEN {token}"},
             json={
@@ -91,39 +94,41 @@ class RelayClient:
         # used against the in-process TestClient, which never presents a certificate.
         self._relay_issuer_cn = relay_ca_common_name(site_name)
 
-    def refresh_cert(self) -> httpx.Response:
+    def _identity_headers(self) -> dict[str, str]:
+        return {
+            INJECTED_UUID_HEADER: self.identity_cn,
+            INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
+            INJECTED_SERIAL_HEADER: UNREVOKED_SERIAL_NUMBER,
+        }
+
+    def refresh_cert(self) -> httpx2.Response:
         csr_pair = generate_csr_pair(cn=self.relay_id)
-        return self.fastAPI_client.post(  # type: ignore[no-any-return]
+        return self.fastAPI_client.post(
             f"/{self.site_name}/relays/{self.relay_id}/csr",
-            headers={
-                INJECTED_UUID_HEADER: self.identity_cn,
-                INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-            },
+            headers=self._identity_headers(),
             json={
                 "csr": serialize_to_pem(csr_pair[1]),
             },
         )
 
-    def get_status(self) -> httpx.Response:
-        return self.fastAPI_client.get(  # type: ignore[no-any-return]
+    def get_status(self) -> httpx2.Response:
+        return self.fastAPI_client.get(
             f"/{self.site_name}/relays/{self.relay_id}/status",
-            headers={
-                INJECTED_UUID_HEADER: self.identity_cn,
-                INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-            },
+            headers=self._identity_headers(),
         )
 
-    def get_tasks(self, status: str | None = None) -> httpx.Response:
-        headers = {
-            INJECTED_UUID_HEADER: self.identity_cn,
-            INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-        }
+    def get_tasks(
+        self, status: str | None = None, if_none_match: str | None = None
+    ) -> httpx2.Response:
+        headers = self._identity_headers()
         if self._serial:
             headers[HEADERS.SERIAL] = str(self._serial)
+        if if_none_match:
+            headers["If-None-Match"] = if_none_match
         params: dict[str, str] = {}
         if status:
             params = {"status": status}
-        return self.fastAPI_client.get(  # type: ignore[no-any-return]
+        return self.fastAPI_client.get(
             f"/{self.site_name}/relays/{self.relay_id}/tasks",
             headers=headers,
             params=params,
@@ -134,14 +139,11 @@ class RelayClient:
         assert response.status_code == HTTPStatus.OK, response.text
         return TaskListResponse.model_validate(response.json())
 
-    def update_task(self, task_id: str, result_type: str, result_payload: str) -> httpx.Response:
-        headers = {
-            INJECTED_UUID_HEADER: self.identity_cn,
-            INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-        }
+    def update_task(self, task_id: str, result_type: str, result_payload: str) -> httpx2.Response:
+        headers = self._identity_headers()
         if self._serial:
             headers[HEADERS.SERIAL] = str(self._serial)
-        return self.fastAPI_client.patch(  # type: ignore[no-any-return]
+        return self.fastAPI_client.patch(
             f"/{self.site_name}/relays/{self.relay_id}/tasks/{task_id}",
             headers=headers,
             json={
@@ -150,17 +152,21 @@ class RelayClient:
             },
         )
 
-    def forward_monitoring_data(self, monitoring_data: MonitoringData) -> httpx.Response:
-        headers = {
-            INJECTED_UUID_HEADER: self.identity_cn,
-            INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
-        }
+    def forward_monitoring_data(self, monitoring_data: MonitoringData) -> httpx2.Response:
+        headers = self._identity_headers()
         if self._serial:
             headers[HEADERS.SERIAL] = str(self._serial)
-        return self.fastAPI_client.post(  # type: ignore[no-any-return]
+        return self.fastAPI_client.post(
             f"/{self.site_name}/relays/{self.relay_id}/monitoring",
             headers=headers,
             json=monitoring_data.model_dump(mode="json"),
+        )
+
+    def submit_crash(self, crash_type: str, crash_id: str, archive: bytes) -> httpx2.Response:
+        return self.fastAPI_client.post(
+            f"/{self.site_name}/relays/{self.relay_id}/crashes/{crash_type}/{crash_id}",
+            headers=self._identity_headers(),
+            content=archive,
         )
 
     def apply_config(self, push: RelayConfig) -> None:
@@ -184,9 +190,9 @@ class SiteClient:
         self.cn = cn if cn is not None else site_name
         self.source_ip = source_ip
 
-    def push_task(self, relay_id: str, spec: TaskCreateRequestSpec) -> httpx.Response:
+    def push_task(self, relay_id: str, spec: TaskCreateRequestSpec) -> httpx2.Response:
         with _with_client_ip(self.fastAPI_client, self.source_ip):
-            return self.fastAPI_client.post(  # type: ignore[no-any-return]
+            return self.fastAPI_client.post(
                 f"/{self.site_name}/relays/{relay_id}/tasks",
                 headers={INJECTED_UUID_HEADER: self.cn},
                 json=TaskCreateRequest(
@@ -199,16 +205,16 @@ class SiteClient:
         assert response.status_code == HTTPStatus.OK, response.text
         return TaskCreateResponse.model_validate(response.json())
 
-    def get_task(self, relay_id: str, task_id: str) -> httpx.Response:
+    def get_task(self, relay_id: str, task_id: str) -> httpx2.Response:
         with _with_client_ip(self.fastAPI_client, self.source_ip):
-            return self.fastAPI_client.get(  # type: ignore[no-any-return]
+            return self.fastAPI_client.get(
                 f"/{self.site_name}/relays/{relay_id}/tasks/{task_id}",
                 headers={INJECTED_UUID_HEADER: self.cn},
             )
 
-    def activate_config(self) -> httpx.Response:
+    def activate_config(self) -> httpx2.Response:
         with _with_client_ip(self.fastAPI_client, self.source_ip):
-            return self.fastAPI_client.post(  # type: ignore[no-any-return]
+            return self.fastAPI_client.post(
                 f"/{self.site_name}/relays/activate-config",
                 headers={INJECTED_UUID_HEADER: self.cn},
             )
@@ -231,7 +237,7 @@ def _with_client_ip(
     such as localhost_only_dependency which requires requests from 127.0.0.1.
     """
     original_transport = http._transport  # noqa: SLF001
-    original_app = original_transport.app
+    original_app = original_transport.app  # type: ignore[attr-defined]
     client_tuple = (client_ip, client_port)
 
     async def client_ip_wrapper(scope: Scope, receive: Receive, send: Send) -> None:
@@ -239,8 +245,8 @@ def _with_client_ip(
             scope["client"] = client_tuple
         await original_app(scope, receive, send)
 
-    original_transport.app = client_ip_wrapper
+    original_transport.app = client_ip_wrapper  # type: ignore[attr-defined]
     try:
         yield
     finally:
-        original_transport.app = original_app
+        original_transport.app = original_app  # type: ignore[attr-defined]

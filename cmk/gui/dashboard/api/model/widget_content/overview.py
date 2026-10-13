@@ -4,10 +4,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Literal, override, Self
 
-from cmk.gui.dashboard.type_defs import AlertOverviewDashletConfig, SiteOverviewDashletConfig
+from cmk.gui.dashboard.type_defs import (
+    AlertOverviewDashletConfig,
+    DashboardWindow,
+    FixedWindow,
+    SiteOverviewDashletConfig,
+)
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import timerange_from_internal, TimerangeModel
 
+from ..context_filters import AGGREGATE_HOST_FILTER_ADAPTER, AggregateHostContextFilter
+from ..contextual_link import (
+    AnyContextualLinkSpec,
+    contextual_link_from_internal,
+    contextual_link_to_internal,
+    ContextualLinkSpec,
+)
 from ._base import BaseWidgetContent
 
 
@@ -16,8 +28,11 @@ class AlertOverviewContent(BaseWidgetContent):
     type: Literal["alert_overview"] = api_field(
         description="Displays hosts and services producing the most notifications"
     )
-    time_range: TimerangeModel = api_field(
-        description="The time range for which the alert overview is displayed.",
+    time_range: Literal["dashboard"] | TimerangeModel = api_field(
+        description=(
+            "The time range for which the alert overview is displayed, or `dashboard` to follow"
+            " the dashboard."
+        ),
     )
     limit_objects: int | ApiOmitted = api_field(
         description="The maximum number of objects to display in the alert overview.",
@@ -31,9 +46,14 @@ class AlertOverviewContent(BaseWidgetContent):
 
     @classmethod
     def from_internal(cls, config: AlertOverviewDashletConfig) -> Self:
+        window = config["time_range"]
         return cls(
             type="alert_overview",
-            time_range=timerange_from_internal(config["time_range"]),
+            time_range=(
+                "dashboard"
+                if window["type"] == "dashboard"
+                else timerange_from_internal(window["window"])
+            ),
             limit_objects=config.get("limit_objects", ApiOmitted()),
         )
 
@@ -41,7 +61,11 @@ class AlertOverviewContent(BaseWidgetContent):
     def to_internal(self) -> AlertOverviewDashletConfig:
         config = AlertOverviewDashletConfig(
             type=self.internal_type(),
-            time_range=self.time_range.to_internal(),
+            time_range=(
+                DashboardWindow(type="dashboard")
+                if self.time_range == "dashboard"
+                else FixedWindow(type="range", window=self.time_range.to_internal())
+            ),
         )
         if not isinstance(self.limit_objects, ApiOmitted):
             config["limit_objects"] = self.limit_objects
@@ -62,11 +86,18 @@ class SiteOverviewContent(BaseWidgetContent):
     hexagon_size: Literal["default", "large"] = api_field(
         description="Defines the size of the hexagons in the widget.",
     )
+    contextual_link: ContextualLinkSpec[AggregateHostContextFilter] = api_field(
+        description="Where a click on a site or a host leads."
+    )
 
     @classmethod
     @override
     def internal_type(cls) -> str:
         return "site_overview"
+
+    @override
+    def configured_contextual_link(self) -> AnyContextualLinkSpec:
+        return self.contextual_link
 
     @classmethod
     def from_internal(cls, config: SiteOverviewDashletConfig) -> Self:
@@ -74,6 +105,9 @@ class SiteOverviewContent(BaseWidgetContent):
             type="site_overview",
             dataset=config.get("dataset") or "via_context",
             hexagon_size=config.get("box_scale") or "default",
+            contextual_link=contextual_link_from_internal(
+                config.get("contextual_link"), AGGREGATE_HOST_FILTER_ADAPTER
+            ),
         )
 
     @override
@@ -84,4 +118,6 @@ class SiteOverviewContent(BaseWidgetContent):
         )
         if self.dataset != "via_context":
             config["dataset"] = self.dataset
+        if (link := contextual_link_to_internal(self.contextual_link)) is not None:
+            config["contextual_link"] = link
         return config

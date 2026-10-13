@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import MutableMapping, Sequence
@@ -19,7 +18,7 @@ from cmk.plugins.network.agent_based.ucd_diskio import (
 
 
 @pytest.fixture(name="string_table")
-def snmp_section():
+def snmp_section() -> Sequence[StringTable]:
     return [
         [
             ["1", "ram0", "0", "0", "0", "0"],

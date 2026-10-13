@@ -58,6 +58,7 @@ RUN yum -y makecache \
     libtool-ltdl-devel \
     libuuid-devel \
     libxml2-devel \
+    libzstd-devel \
     mariadb-devel \
     mpfr-devel \
     nc \
@@ -80,6 +81,7 @@ RUN yum -y makecache \
     readline-devel \
     rpcbind \
     rpm-build \
+    rpm-sign \
     rsync \
     samba-client \
     sqlite-devel \

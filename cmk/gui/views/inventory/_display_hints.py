@@ -3,14 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
-
-from __future__ import annotations
-
-import abc
 from collections.abc import (
     Callable,
     Iterable,
@@ -19,11 +11,10 @@ from collections.abc import (
     Sequence,
 )
 from dataclasses import dataclass, field
-from typing import assert_never, Literal, override
+from typing import assert_never, Literal, overload
 
 import cmk.ccc.debug
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
-from cmk.gui import inventory
 from cmk.gui.color import Color, parse_color_from_api
 from cmk.gui.i18n import _, _l
 from cmk.gui.ifaceoper import interface_oper_states, interface_port_types
@@ -48,7 +39,6 @@ from cmk.gui.inventory.filters import (
     FilterInvTextWithSortKey,
 )
 from cmk.gui.log import logger
-from cmk.gui.type_defs import DynamicIconName
 from cmk.gui.unit_formatter import AutoPrecision as AutoPrecisionFormatter
 from cmk.gui.unit_formatter import (
     DecimalFormatter,
@@ -59,44 +49,48 @@ from cmk.gui.unit_formatter import (
     TimeFormatter,
 )
 from cmk.gui.unit_formatter import StrictPrecision as StrictPrecisionFormatter
-from cmk.inventory.structured_data import SDKey, SDNodeName, SDPath, SDValue
-from cmk.inventory_ui.v1_unstable import AgeNotation as AgeNotationFromAPI
-from cmk.inventory_ui.v1_unstable import Alignment as AlignmentFromAPI
-from cmk.inventory_ui.v1_unstable import AutoPrecision as AutoPrecisionFromAPI
-from cmk.inventory_ui.v1_unstable import BackgroundColor as BackgroundColorFromAPI
-from cmk.inventory_ui.v1_unstable import BoolField as BoolFieldFromAPI
-from cmk.inventory_ui.v1_unstable import ChoiceField as ChoiceFieldFromAPI
-from cmk.inventory_ui.v1_unstable import DecimalNotation as DecimalNotationFromAPI
-from cmk.inventory_ui.v1_unstable import (
+from cmk.inventory.raw_paths import InventoryPath, parse_internal_raw_path, TreeSource
+from cmk.inventory.trees import SDKey, SDNodeName, SDPath, SDValue
+from cmk.inventory_ui.v1 import AgeNotation as AgeNotationFromAPI
+from cmk.inventory_ui.v1 import Alignment as AlignmentFromAPI
+from cmk.inventory_ui.v1 import AutoPrecision as AutoPrecisionFromAPI
+from cmk.inventory_ui.v1 import BackgroundColor as BackgroundColorFromAPI
+from cmk.inventory_ui.v1 import BoolField as BoolFieldFromAPI
+from cmk.inventory_ui.v1 import ChoiceField as ChoiceFieldFromAPI
+from cmk.inventory_ui.v1 import DecimalNotation as DecimalNotationFromAPI
+from cmk.inventory_ui.v1 import (
     EngineeringScientificNotation as EngineeringScientificNotationFromAPI,
 )
-from cmk.inventory_ui.v1_unstable import entry_point_prefixes
-from cmk.inventory_ui.v1_unstable import IECNotation as IECNotationFromAPI
-from cmk.inventory_ui.v1_unstable import Label as LabelFromAPI
-from cmk.inventory_ui.v1_unstable import LabelColor as LabelColorFromAPI
-from cmk.inventory_ui.v1_unstable import Node as NodeFromAPI
-from cmk.inventory_ui.v1_unstable import NumberField as NumberFieldFromAPI
-from cmk.inventory_ui.v1_unstable import SINotation as SINotationFromAPI
-from cmk.inventory_ui.v1_unstable import (
+from cmk.inventory_ui.v1 import entry_point_prefixes
+from cmk.inventory_ui.v1 import IECNotation as IECNotationFromAPI
+from cmk.inventory_ui.v1 import Label as LabelFromAPI
+from cmk.inventory_ui.v1 import LabelColor as LabelColorFromAPI
+from cmk.inventory_ui.v1 import Node as NodeFromAPI
+from cmk.inventory_ui.v1 import NumberField as NumberFieldFromAPI
+from cmk.inventory_ui.v1 import SINotation as SINotationFromAPI
+from cmk.inventory_ui.v1 import (
     StandardScientificNotation as StandardScientificNotationFromAPI,
 )
-from cmk.inventory_ui.v1_unstable import StrictPrecision as StrictPrecisionFromAPI
-from cmk.inventory_ui.v1_unstable import TextField as TextFieldFromAPI
-from cmk.inventory_ui.v1_unstable import TimeNotation as TimeNotationFromAPI
-from cmk.inventory_ui.v1_unstable import Title as TitleFromAPI
-from cmk.inventory_ui.v1_unstable import Unit as UnitFromAPI
+from cmk.inventory_ui.v1 import StrictPrecision as StrictPrecisionFromAPI
+from cmk.inventory_ui.v1 import TextField as TextFieldFromAPI
+from cmk.inventory_ui.v1 import TimeNotation as TimeNotationFromAPI
+from cmk.inventory_ui.v1 import Title as TitleFromAPI
+from cmk.inventory_ui.v1 import Unit as UnitFromAPI
 from cmk.web.utils.html import HTML
-
-__all__ = ["SDPath"]
+from cmk.web.utils.icons import DynamicIconName
 
 from ._paint_functions import inv_paint_generic
 from .registry import (
-    inv_paint_funtions,
+    inv_paint_functions,
     InventoryHintSpec,
-    InvValue,
     PaintFunction,
     SortFunction,
 )
+
+# The value type of a choice field is constrained to these three, so this is the whole set.
+# Keep it in step with OrderedAttributes and OrderedColumns in cmk.inventory_ui.v1.
+type _AnyChoiceField = ChoiceFieldFromAPI[int] | ChoiceFieldFromAPI[float] | ChoiceFieldFromAPI[str]
+type _AnyField = BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | _AnyChoiceField
 
 
 def load_inventory_ui_plugins() -> DiscoveredPlugins[NodeFromAPI]:
@@ -159,7 +153,7 @@ PaintFunctionFromAPI = Callable[[float, SDValue], PaintResultFromAPI]
 
 
 def _wrap_paint_function(paint_function: PaintFunction) -> PaintFunctionFromAPI:
-    def _wrap(now: float, value: SDValue) -> PaintResultFromAPI:
+    def _wrap(_now: float, value: SDValue) -> PaintResultFromAPI:
         css_class, rendered_value = paint_function(value)
         return (
             TDStyles(
@@ -326,8 +320,25 @@ class _PaintText:
         )
 
 
+type _Styles = Iterable[AlignmentFromAPI | BackgroundColorFromAPI | LabelColorFromAPI]
+
+
+@overload
+def _style_of(field: ChoiceFieldFromAPI[int], value: object) -> _Styles: ...
+@overload
+def _style_of(field: ChoiceFieldFromAPI[float], value: object) -> _Styles: ...
+@overload
+def _style_of(field: ChoiceFieldFromAPI[str], value: object) -> _Styles: ...
+def _style_of[T: (int, float, str)](field: ChoiceFieldFromAPI[T], value: object) -> _Styles:
+    return next((field.style(key) for key in field.mapping if key == value), ())
+
+
+def _label_of(field: _AnyChoiceField, value: object) -> LabelFromAPI | str | None:
+    return next((label for key, label in field.mapping.items() if key == value), None)
+
+
 class _PaintChoice:
-    def __init__(self, field_from_api: ChoiceFieldFromAPI) -> None:
+    def __init__(self, field_from_api: _AnyChoiceField) -> None:
         self._field = field_from_api
 
     @property
@@ -339,20 +350,20 @@ class _PaintChoice:
             return _wrap_paint_function(inv_paint_generic)(now, value)
         return (
             _compute_td_styles(
-                self._field.style(value),
+                _style_of(self._field, value),
                 self.default_alignment,
                 prevent_line_break=False,
             ),
             (
                 f"<{value}> (%s)" % _("No such value")
-                if (rendered := self._field.mapping.get(value)) is None
+                if (rendered := _label_of(self._field, value)) is None
                 else _make_str(rendered)
             ),
         )
 
 
 def _make_paint_function(
-    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+    field_from_api: _AnyField,
 ) -> PaintFunctionFromAPI:
     match field_from_api:
         case BoolFieldFromAPI():
@@ -371,12 +382,12 @@ class _SortFunctionText:
     def __init__(self, text_field: TextFieldFromAPI) -> None:
         self._text_field = text_field
 
-    def __call__(self, val_a: InvValue, val_b: InvValue) -> int:
+    def __call__(self, val_a: SDValue, val_b: SDValue) -> int:
         if not isinstance(val_a, str):
             raise TypeError(val_a)
 
         if not isinstance(val_b, str):
-            raise TypeError(val_a)
+            raise TypeError(val_b)
 
         if self._text_field.sort_key is None:
             return (val_a > val_b) - (val_a < val_b)
@@ -387,10 +398,10 @@ class _SortFunctionText:
 
 
 class _SortFunctionChoice:
-    def __init__(self, choice_field: ChoiceFieldFromAPI) -> None:
+    def __init__(self, choice_field: _AnyChoiceField) -> None:
         self._choice_field = choice_field
 
-    def __call__(self, val_a: InvValue, val_b: InvValue) -> int:
+    def __call__(self, val_a: SDValue, val_b: SDValue) -> int:
         keys = list(self._choice_field.mapping)
 
         if val_a in keys:
@@ -407,7 +418,7 @@ class _SortFunctionChoice:
 
 
 def _make_sort_function(
-    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+    field_from_api: _AnyField,
 ) -> SortFunction:
     match field_from_api:
         case BoolFieldFromAPI():
@@ -486,11 +497,11 @@ def _get_unit_choices_from_number_field(
 
 
 def _make_attribute_filter(
-    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+    field_from_api: _AnyField,
     *,
     filter_ident: str,
     long_title: str,
-    inventory_path: inventory.InventoryPath,
+    inventory_path: InventoryPath,
 ) -> FilterInvBool | FilterInvFloat | FilterInvText | FilterInvChoice | FilterInvTextWithSortKey:
     match field_from_api:
         case BoolFieldFromAPI():
@@ -526,8 +537,7 @@ def _make_attribute_filter(
             return FilterInvChoice(
                 ident=filter_ident,
                 title=long_title,
-                inventory_path=inventory_path,
-                options=[(k, _make_str(v)) for k, v in field_from_api.mapping.items()],
+                options=[(str(k), _make_str(v)) for k, v in field_from_api.mapping.items()],
                 is_show_more=True,
             )
         case other:
@@ -539,7 +549,7 @@ def _parse_attr_field_from_api(
     node_ident: str,
     node_title: str,
     key: str,
-    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+    field_from_api: _AnyField,
 ) -> AttributeDisplayHint:
     name = _make_attr_name(node_ident, key)
     title = _make_str(field_from_api.title)
@@ -555,9 +565,9 @@ def _parse_attr_field_from_api(
             field_from_api,
             filter_ident=name,
             long_title=long_title,
-            inventory_path=inventory.InventoryPath(
+            inventory_path=InventoryPath(
                 path=path,
-                source=inventory.TreeSource.attributes,
+                source=TreeSource.attributes,
                 key=SDKey(key),
             ),
         ),
@@ -566,8 +576,7 @@ def _parse_attr_field_from_api(
 
 def _parse_col_field_from_api(
     node_title: str,
-    key: str,
-    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+    field_from_api: _AnyField,
 ) -> ColumnDisplayHint:
     title = _make_str(field_from_api.title)
     return ColumnDisplayHint(
@@ -583,7 +592,7 @@ def _is_choice(len_mapping: int) -> bool:
 
 
 def _make_column_filter(
-    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+    field_from_api: _AnyField,
     *,
     table_view_name: str,
     filter_ident: str,
@@ -642,7 +651,7 @@ def _make_column_filter(
                     inv_info=table_view_name,
                     ident=filter_ident,
                     title=long_title,
-                    options=[(k, _make_str(v)) for k, v in field_from_api.mapping.items()],
+                    options=[(str(k), _make_str(v)) for k, v in field_from_api.mapping.items()],
                 )
             return FilterInvtableDualChoice(
                 inv_info=table_view_name,
@@ -658,7 +667,7 @@ def _parse_col_field_of_view_from_api(
     table_view_name: str,
     node_title: str,
     key: str,
-    field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+    field_from_api: _AnyField,
 ) -> ColumnDisplayHintOfView:
     name = _make_col_name(table_view_name, key)
     title = _make_str(field_from_api.title)
@@ -688,8 +697,7 @@ def _parse_node_from_api(node: NodeFromAPI) -> NodeDisplayHint:
     if node.table.view is None:
         table = Table(
             columns={
-                SDKey(k): _parse_col_field_from_api(title, k, v)
-                for k, v in node.table.columns.items()
+                SDKey(k): _parse_col_field_from_api(title, v) for k, v in node.table.columns.items()
             },
         )
     else:
@@ -733,17 +741,17 @@ def _get_related_legacy_hints(
 ) -> Mapping[SDPath, _RelatedLegacyHints]:
     related_legacy_hints_by_path: dict[SDPath, _RelatedLegacyHints] = {}
     for raw_path, legacy_hint in legacy_hints.items():
-        inventory_path = inventory.parse_internal_raw_path(raw_path)
+        inventory_path = parse_internal_raw_path(raw_path)
         related_legacy_hints = related_legacy_hints_by_path.setdefault(
             inventory_path.path,
             _RelatedLegacyHints(),
         )
 
-        if inventory_path.source == inventory.TreeSource.node:
+        if inventory_path.source == TreeSource.node:
             related_legacy_hints.for_node.update(legacy_hint)
             continue
 
-        if inventory_path.source == inventory.TreeSource.table:
+        if inventory_path.source == TreeSource.table:
             if inventory_path.key:
                 related_legacy_hints.by_column.setdefault(inventory_path.key, legacy_hint)
                 continue
@@ -751,7 +759,7 @@ def _get_related_legacy_hints(
             related_legacy_hints.for_table.update(legacy_hint)
             continue
 
-        if inventory_path.source == inventory.TreeSource.attributes and inventory_path.key:  # type: ignore[redundant-expr]
+        if inventory_path.key:
             related_legacy_hints.by_key.setdefault(inventory_path.key, legacy_hint)
             continue
 
@@ -765,8 +773,8 @@ def _get_paint_function(legacy_hint: InventoryHintSpec) -> tuple[str, PaintFunct
     # FIXME At the moment  we need it to get tdclass: Clean this up one day.
     if "paint" in legacy_hint:
         data_type = legacy_hint["paint"]
-        return data_type, inv_paint_funtions[PAINT_FUNCTION_NAME_PREFIX + data_type]["func"]
-    return "str", inv_paint_funtions["inv_paint_generic"]["func"]
+        return data_type, inv_paint_functions[PAINT_FUNCTION_NAME_PREFIX + data_type]["func"]
+    return "str", inv_paint_functions["inv_paint_generic"]["func"]
 
 
 def _make_sort_function_of_legacy_hint(legacy_hint: InventoryHintSpec) -> SortFunction:
@@ -774,20 +782,24 @@ def _make_sort_function_of_legacy_hint(legacy_hint: InventoryHintSpec) -> SortFu
 
 
 def _decorate_sort_function(sort_function: SortFunction) -> SortFunction:
-    def wrapper(val_a: InvValue | None, val_b: InvValue | None) -> int:
+    def wrapper(val_a: SDValue, val_b: SDValue) -> int:
         if val_a is None:
             return 0 if val_b is None else -1
 
         if val_b is None:
-            return 0 if val_a is None else 1  # type: ignore[redundant-expr]
+            return 1
 
         return sort_function(val_a, val_b)
 
     return wrapper
 
 
-def _cmp_inv_generic(val_a: InvValue, val_b: InvValue) -> int:
-    return (val_a > val_b) - (val_a < val_b)
+def _cmp_inv_generic(val_a: SDValue, val_b: SDValue) -> int:
+    if isinstance(val_a, str) and isinstance(val_b, str):
+        return (val_a > val_b) - (val_a < val_b)
+    if isinstance(val_a, int | float) and isinstance(val_b, int | float):
+        return (val_a > val_b) - (val_a < val_b)
+    raise TypeError(val_a, val_b)
 
 
 def _make_title_function(legacy_hint: InventoryHintSpec) -> Callable[[str], str]:
@@ -798,7 +810,7 @@ def _make_title_function(legacy_hint: InventoryHintSpec) -> Callable[[str], str]
         # TODO Do we still need this?
         return title
 
-    return lambda word: str(title)
+    return lambda _word: str(title)
 
 
 def _make_long_title(parent_title: str, title: str) -> str:
@@ -880,9 +892,9 @@ def _get_unit_choices_from_legacy_data_type(data_type: str) -> Mapping[str, Filt
 def _make_attribute_filter_from_legacy_hint(
     *, path: SDPath, key: str, data_type: str, filter_ident: str, title: str, is_show_more: bool
 ) -> FilterInvText | FilterInvBool | FilterInvFloat:
-    inventory_path = inventory.InventoryPath(
+    inventory_path = InventoryPath(
         path=path,
-        source=inventory.TreeSource.attributes,
+        source=TreeSource.attributes,
         key=SDKey(key),
     )
     match data_type:
@@ -1102,7 +1114,8 @@ def _parse_col_filter_from_legacy(
                 ident=filter_ident,
                 title=title,
             )
-    raise TypeError(filter_class)
+        case _:
+            raise TypeError(filter_class)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1252,7 +1265,7 @@ class NodeDisplayHint:
                 short_title=title,
                 long_title=long_title,
                 paint_function=_wrap_paint_function(
-                    inv_paint_funtions["inv_paint_generic"]["func"]
+                    inv_paint_functions["inv_paint_generic"]["func"]
                 ),
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter=_make_attribute_filter_from_legacy_hint(
@@ -1275,7 +1288,7 @@ class NodeDisplayHint:
                 short_title=title,
                 long_title=_make_long_title(self.title if self.path else "", title),
                 paint_function=_wrap_paint_function(
-                    inv_paint_funtions["inv_paint_generic"]["func"]
+                    inv_paint_functions["inv_paint_generic"]["func"]
                 ),
             )
 
@@ -1409,7 +1422,7 @@ class DisplayHints:
     def get_node_hint(self, path: SDPath) -> NodeDisplayHint:
         if not path:
             return self._nodes_by_path[()]
-        if (abc_path := self._find_abc_path(path)) in self._nodes_by_path:
+        if (abc_path := self._find_abc_path(path)) is not None:
             return self._nodes_by_path[abc_path]
         title = path[-1].replace("_", " ").title()
         return NodeDisplayHint(
@@ -1428,211 +1441,6 @@ class DisplayHints:
 
 
 inv_display_hints = DisplayHints()
-
-
-@dataclass(frozen=True, kw_only=True)
-class FilterMigration(abc.ABC):
-    name: str
-
-    @abc.abstractmethod
-    def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]: ...
-
-
-@dataclass(frozen=True, kw_only=True)
-class FilterMigrationScale(FilterMigration):
-    prefix: Literal["M"]
-
-    @override
-    def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
-        migrated = {}
-        for direction in ("from", "until"):
-            if filter_value := filter_vars.get(f"{self.name}_{direction}"):
-                migrated[f"{self.name}_{direction}"] = filter_value
-                migrated[f"{self.name}_{direction}_prefix"] = self.prefix
-        return migrated
-
-
-@dataclass(frozen=True, kw_only=True)
-class FilterMigrationTime(FilterMigration):
-    prefix: Literal["d"]
-
-    @override
-    def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
-        migrated = {}
-        for direction in ("from", "until"):
-            if (filter_value := filter_vars.get(f"{self.name}_{direction}_days")) is None:
-                filter_value = filter_vars.get(f"{self.name}_{direction}")
-            if filter_value:
-                migrated[f"{self.name}_{direction}"] = filter_value
-                migrated[f"{self.name}_{direction}_prefix"] = self.prefix
-        return migrated
-
-
-@dataclass(frozen=True, kw_only=True)
-class FilterMigrationChoice(FilterMigration):
-    choices: Sequence[int | float | str]
-
-    @override
-    def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
-        # FilterInvtableAdminStatus
-        match filter_vars.get(self.name):
-            case "1":
-                migrated = {f"{self.name}_{c}": "" for c in self.choices}
-                migrated[f"{self.name}_1"] = "on"
-                return migrated
-            case "2":
-                migrated = {f"{self.name}_{c}": "" for c in self.choices}
-                migrated[f"{self.name}_2"] = "on"
-                return migrated
-            case "-1":
-                # legacy ignore
-                return {f"{self.name}_{c}": "on" for c in self.choices}
-            case _:
-                # FilterInvtableOperStatus
-                return {
-                    f"{self.name}_{c}": filter_vars.get(f"{self.name}_{c}", "")
-                    for c in self.choices
-                }
-
-
-@dataclass(frozen=True, kw_only=True)
-class FilterMigrationBool(FilterMigration):
-    @override
-    def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
-        # FilterInvtableAvailable
-        match filter_vars.get(self.name):
-            case "yes":
-                return {f"{self.name}_True": "on", f"{self.name}_False": ""}
-            case "no":
-                return {f"{self.name}_True": "", f"{self.name}_False": "on"}
-            case "":
-                # legacy ignore
-                return {f"{self.name}_{c}": "on" for c in (True, False)}
-            case _:
-                return {
-                    f"{self.name}_{c}": filter_vars.get(f"{self.name}_{c}", "")
-                    for c in (True, False)
-                }
-
-
-@dataclass(frozen=True, kw_only=True)
-class FilterMigrationBoolIs(FilterMigration):
-    @override
-    def __call__(self, filter_vars: Mapping[str, str]) -> Mapping[str, str]:
-        # FilterInvBool
-        match filter_vars.get(f"is_{self.name}"):
-            case "1":
-                return {f"{self.name}_True": "on", f"{self.name}_False": ""}
-            case "0":
-                return {f"{self.name}_True": "", f"{self.name}_False": "on"}
-            case "-1":
-                # legacy ignore
-                return {f"{self.name}_{c}": "on" for c in (True, False)}
-            case _:
-                return {
-                    f"{self.name}_{c}": filter_vars.get(f"{self.name}_{c}", "")
-                    for c in (True, False)
-                }
-
-
-def find_non_canonical_filters(
-    plugins: DiscoveredPlugins[NodeFromAPI], legacy_hints: Mapping[str, InventoryHintSpec]
-) -> Mapping[str, FilterMigration]:
-    filters: dict[str, FilterMigration] = {
-        # "bytes"
-        "inv_hardware_cpu_cache_size": FilterMigrationScale(
-            name="inv_hardware_cpu_cache_size", prefix="M"
-        ),
-        # "bytes_rounded"
-        "inv_hardware_memory_total_ram_usable": FilterMigrationScale(
-            name="inv_hardware_memory_total_ram_usable", prefix="M"
-        ),
-        "inv_hardware_memory_total_swap": FilterMigrationScale(
-            name="inv_hardware_memory_total_swap", prefix="M"
-        ),
-        "inv_hardware_memory_total_vmalloc": FilterMigrationScale(
-            name="inv_hardware_memory_total_vmalloc", prefix="M"
-        ),
-        # "hz"
-        "inv_hardware_cpu_bus_speed": FilterMigrationScale(
-            name="inv_hardware_cpu_bus_speed", prefix="M"
-        ),
-        "inv_hardware_cpu_max_speed": FilterMigrationScale(
-            name="inv_hardware_cpu_max_speed", prefix="M"
-        ),
-        #
-        "invinterface_last_change": FilterMigrationTime(
-            name="invinterface_last_change", prefix="d"
-        ),
-    }
-
-    for node in sorted(plugins.plugins.values(), key=lambda n: len(n.path)):
-        if node.table.view is None:
-            continue
-        for key, field_from_api in node.table.columns.items():
-            name = f"{node.table.view.name}_{key}"
-            if (
-                isinstance(field_from_api, NumberFieldFromAPI)
-                and isinstance(field_from_api.render, UnitFromAPI)
-                and isinstance(field_from_api.render.notation, AgeNotationFromAPI)
-            ):
-                filters.setdefault(name, FilterMigrationTime(name=name, prefix="d"))
-
-            elif isinstance(field_from_api, ChoiceFieldFromAPI) and _is_choice(
-                len(field_from_api.mapping)
-            ):
-                filters.setdefault(
-                    name,
-                    FilterMigrationChoice(
-                        name=name,
-                        choices=list(field_from_api.mapping),
-                    ),
-                )
-
-            elif isinstance(field_from_api, BoolFieldFromAPI):
-                filters.setdefault(name, FilterMigrationBool(name=name))
-
-    for raw_path, legacy_hint in legacy_hints.items():
-        inv_path = inventory.parse_internal_raw_path(raw_path)
-        if not inv_path.key:
-            continue
-        if inv_path.source == inventory.TreeSource.attributes:
-            name = "_".join(["inv"] + [str(e) for e in inv_path.path] + [str(inv_path.key)])
-            match legacy_hint.get("paint"):
-                case "bytes" | "bytes_rounded":
-                    filters[name] = FilterMigrationScale(name=name, prefix="M")
-                case "hz":
-                    filters[name] = FilterMigrationScale(name=name, prefix="M")
-                case "bool":
-                    filters.setdefault(name, FilterMigrationBoolIs(name=name))
-        if (
-            inv_path.source == inventory.TreeSource.table
-            and (view_name := legacy_hint.get("view"))
-            and (legacy_filter := legacy_hint.get("filter"))
-        ):
-            name = f"{_parse_view_name(view_name)}_{inv_path.key}"
-            match legacy_filter.__class__.__name__:
-                case "FilterInvtableOperStatus":
-                    filters.setdefault(
-                        name,
-                        FilterMigrationChoice(
-                            name=name,
-                            choices=["1", "2", "3", "4", "5", "6", "7"],
-                        ),
-                    )
-                case "FilterInvtableAdminStatus":
-                    filters.setdefault(
-                        name,
-                        FilterMigrationChoice(
-                            name=name,
-                            choices=["1", "2"],
-                        ),
-                    )
-                case "FilterInvtableAvailable":
-                    filters.setdefault(name, FilterMigrationBool(name=name))
-                case "FilterInvtableTimestampAsAge":
-                    filters.setdefault(name, FilterMigrationTime(name=name, prefix="d"))
-    return filters
 
 
 def register_display_hints(

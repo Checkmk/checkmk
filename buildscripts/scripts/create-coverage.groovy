@@ -25,7 +25,7 @@ void main() {
 export POSTGRES_HOST="dev-kpi.lan.checkmk.net"
 export POSTGRES_PORT=5432
 export POSTGRES_DB=metabase
-tests/qa_metrics/test_coverage/main.sh --run --generate-html --upload-totals --upload-per-module""",
+tests/qa_metrics/test_coverage/repository.sh --run --generate-html --upload-totals --upload-per-module""",
                 container_name: container_name,
                 disable_hot_cache: true,
             ]);
@@ -39,9 +39,10 @@ tests/qa_metrics/test_coverage/main.sh --run --generate-html --upload-totals --u
         ) {
             container(container_name) {
                 withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
+                    // html/. instead of html/*: the glob skips dot-prefixed .ide folders
                     sh("""
                         scp -r -o StrictHostKeyChecking=accept-new -i ${RELEASE_KEY} \
-                        results/test_coverage_html/* ${DEV_DOCS_URL}/test_coverage
+                        results/test_coverage/repository/html/. ${DEV_DOCS_URL}/test_coverage
                     """);
                 }
             }

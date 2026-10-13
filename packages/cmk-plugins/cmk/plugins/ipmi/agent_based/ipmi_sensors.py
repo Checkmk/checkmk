@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Mapping
@@ -74,7 +73,7 @@ def parse_ipmi_sensors(string_table: StringTable) -> ipmi_utils.Section:
             ipmi_utils.Sensor(status_txt=status_from_text.txt, unit=""),
         )
 
-        match reading_levels_and_more:
+        match reading_levels_and_more:  # type: ignore[exhaustive-match]
             case [reading_levels]:
                 if "(" in reading_levels:
                     # 339 Voltage_3.3VCC 3.33_V_(NA/NA) [OK]

@@ -11,7 +11,8 @@ import cmk.utils.paths
 from cmk.agent_based.prediction_backend import PredictionInfo
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.utils.prediction import PredictionData, PredictionStore
+from cmk.utils.prediction import iter_prediction_files, PredictionData
+from cmk.utils.prediction import Paths as PredictionPaths
 
 
 class RemoveUnreadablePredictions(UpdateAction):
@@ -25,22 +26,16 @@ class RemoveUnreadablePredictions(UpdateAction):
 
     @override
     def __call__(self, logger: Logger) -> None:
-        self.cleanup_unreadable_files(cmk.utils.paths.predictions_dir)
+        self.cleanup_unreadable_files(PredictionPaths(cmk.utils.paths.omd_root).predictions_dir)
 
     @staticmethod
     def cleanup_unreadable_files(path: Path) -> None:
-        for info_file in path.rglob(f"*{PredictionStore.INFO_FILE_SUFFIX}"):
-            # It may happen that e.g. hostnames have a ".info" suffix, too. This leads to
-            # directories match the pattern. We have to skip those.
-            if info_file.is_dir():
-                continue
-            data_file = info_file.with_suffix(PredictionStore.DATA_FILE_SUFFIX)
+        for files in iter_prediction_files(path):
             try:
-                _ = PredictionInfo.model_validate_json(info_file.read_text())
-                _ = PredictionData.model_validate_json(data_file.read_text())
-            except (ValueError, FileNotFoundError):
-                info_file.unlink(missing_ok=True)
-                data_file.unlink(missing_ok=True)
+                _ = PredictionInfo.model_validate_json(files.info.read_text())
+                _ = PredictionData.model_validate_json(files.data.read_text())
+            except ValueError, FileNotFoundError:
+                files.unlink()
 
 
 update_action_registry.register(

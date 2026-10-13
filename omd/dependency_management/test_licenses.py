@@ -73,5 +73,5 @@ def test_licenses_are_spdx_compliant(
             offenders[purl] = license_
 
     assert not offenders, "Some researched licenses are not SPDX compliant:\n" + "\n".join(
-        f"  - {purl.purl_str}: {license_}" for purl, license_ in offenders.items()
+        f"  - {purl.purl_str()}: {license_}" for purl, license_ in offenders.items()
     )

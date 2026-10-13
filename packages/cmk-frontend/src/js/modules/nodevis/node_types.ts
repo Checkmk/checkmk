@@ -212,7 +212,7 @@ export class TopologyNode extends AbstractGUINode {
   }
 }
 
-export class TopologyMeshRoot extends TopologyNode {
+class TopologyMeshRoot extends TopologyNode {
   constructor(world: NodevisWorld, node: NodevisNode) {
     super(world, node)
     this._has_quickinfo = false
@@ -256,7 +256,7 @@ function _toggle_stop_growth(nodevis_node: NodevisNode): boolean {
   return growth_settings.growth_forbidden
 }
 
-export class TopologyCentralNode extends TopologyNode {
+class TopologyCentralNode extends TopologyNode {
   constructor(world: NodevisWorld, node: NodevisNode) {
     super(world, node)
     this.radius = 30
@@ -286,7 +286,7 @@ export class TopologyCentralNode extends TopologyNode {
   }
 }
 
-export class TopologySiteNode extends TopologyNode {
+class TopologySiteNode extends TopologyNode {
   constructor(world: NodevisWorld, node: NodevisNode) {
     super(world, node)
     this.radius = 16
@@ -319,7 +319,7 @@ export class TopologySiteNode extends TopologyNode {
   }
 }
 
-export class BILeafNode extends AbstractGUINode implements TypeWithName {
+class BILeafNode extends AbstractGUINode implements TypeWithName {
   constructor(world: NodevisWorld, node: NodevisNode) {
     super(world, node)
     this.radius = 9
@@ -385,7 +385,7 @@ export class BILeafNode extends AbstractGUINode implements TypeWithName {
   }
 }
 
-export class BIAggregatorNode extends AbstractGUINode {
+class BIAggregatorNode extends AbstractGUINode {
   constructor(world: NodevisWorld, node: NodevisNode) {
     super(world, node)
     this.radius = 12

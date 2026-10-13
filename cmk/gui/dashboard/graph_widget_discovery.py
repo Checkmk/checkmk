@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final, Protocol, runtime_checkable
+from typing import Final, Protocol, runtime_checkable, TypeIs
 
-from cmk.gui.graphing._engine_discovery import DiscoveredGraphs
+from cmk.gui.graphing import DiscoveredGraphs
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.utils.roles import UserPermissions
 
+from .api.model.widget_content._base import BaseWidgetContent
 from .api.model.widget_content.graph import (
     CombinedGraphContent,
     CustomGraphContent,
@@ -24,16 +25,29 @@ from .type_defs import DashletConfig
 # The widget types the client-side graph rendering covers, by internal (stored) type name. Must
 # stay in step with the types DashboardContent.vue routes to the client-side graph widget: a type
 # missing here has no pre-discovered shell on a shared dashboard and cannot render.
-GRAPH_WIDGET_TYPES: Final = frozenset(
-    {
-        AverageScatterplotContent.internal_type(),
-        CombinedGraphContent.internal_type(),
-        CustomGraphContent.internal_type(),
-        PerformanceGraphContent.internal_type(),
-        ProblemGraphContent.internal_type(),
-        SingleTimeseriesContent.internal_type(),
-    }
+_GRAPH_WIDGET_CONTENTS: Final = (
+    AverageScatterplotContent,
+    CombinedGraphContent,
+    CustomGraphContent,
+    PerformanceGraphContent,
+    ProblemGraphContent,
+    SingleTimeseriesContent,
 )
+GRAPH_WIDGET_TYPES: Final = frozenset(content.internal_type() for content in _GRAPH_WIDGET_CONTENTS)
+
+type GraphWidgetContent = (
+    AverageScatterplotContent
+    | CombinedGraphContent
+    | CustomGraphContent
+    | PerformanceGraphContent
+    | ProblemGraphContent
+    | SingleTimeseriesContent
+)
+
+
+def is_graph_widget_content(content: BaseWidgetContent) -> TypeIs[GraphWidgetContent]:
+    """Whether the client-side graph rendering covers the widget."""
+    return isinstance(content, _GRAPH_WIDGET_CONTENTS)
 
 
 @runtime_checkable

@@ -52,9 +52,9 @@ pub mod platform {
             .map(PathBuf::from)
             .unwrap_or_else(|_| base_root.join("runtimes"))
             .join("plugins")
-            .join("packages")
+            .join("libexec")
             .join(RUNTIME_SUB_DIR)
-            .join("runtime")
+            .join("oic")
     }
 
     pub fn clean_path() -> String {
@@ -404,6 +404,39 @@ oracle:
     custom_metrics:
       - container_identity:
           sql: "SELECT SYS_CONTEXT('USERENV', 'CON_NAME') FROM DUAL"
+"#,
+        user = endpoint.user,
+        pwd = endpoint.pwd,
+        role = role_spec(&endpoint.role),
+        host = endpoint.host,
+        port = endpoint.port,
+        service = endpoint.service_name,
+    );
+    Config::from_string(config_str).unwrap().unwrap()
+}
+
+/// Only the `performance` section, which runs once per container: its PGA
+/// statement yields a container's rows only inside that container (CMK-37362).
+pub fn make_mini_config_performance(endpoint: &SqlDbEndpoint) -> Config {
+    let config_str = format!(
+        r#"
+---
+oracle:
+  main:
+    authentication:
+       username: "{user}"
+       password: "{pwd}"
+       type: standard
+       role: "{role}"
+    connection:
+       hostname: {host}
+       port: {port}
+       timeout: 15
+       service_name: {service}
+    discovery:
+       detect: no
+    sections:
+       - performance:
 "#,
         user = endpoint.user,
         pwd = endpoint.pwd,

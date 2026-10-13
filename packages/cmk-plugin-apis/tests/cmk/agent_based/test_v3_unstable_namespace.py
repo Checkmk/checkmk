@@ -9,7 +9,7 @@
 |                                                         |
 | The extend of the Check API is well documented, and the |
 | result of careful negotiation. It should not be changed |
-| light heartedly!                                        |
+| light heartedly and MUST NOT BE CHANGED ONCE RELEASED!  |
 +---------------------------------------------------------+
 """
 
@@ -83,6 +83,7 @@ def test_v3_unstable() -> None:
         "LevelsT",
         "clusterize",
         "contains",
+        "discover_one_service",
         "endswith",
         "equals",
         "exists",

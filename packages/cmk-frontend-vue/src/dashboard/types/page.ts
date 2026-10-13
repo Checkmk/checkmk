@@ -6,6 +6,8 @@
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import type { BreadcrumbItem } from 'cmk-ui-library/components/CmkBreadcrumb'
 
+import type { GlobalTimePickerProps } from '@/graphing/GlobalTimePicker'
+
 import type {
   DashboardConstants,
   DashboardFeatures,
@@ -56,6 +58,7 @@ export interface DashboardPageProperties {
   }
   permissions: DashboardPermissions
   logged_in_user: string
+  global_time_picker: GlobalTimePickerProps
 }
 
 /**
@@ -80,4 +83,5 @@ export interface SharedDashboardPageProperties {
   dashboard_constants: DashboardConstants
   url_params: FilterHTTPVars
   token_value: string
+  default_time_range: number
 }

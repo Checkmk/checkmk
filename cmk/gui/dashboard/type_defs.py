@@ -8,6 +8,8 @@ from typing import Literal, NewType, NotRequired, TypedDict
 
 from cmk.gui.type_defs import (
     ColumnSpec,
+    ContextualLinkEntryConfig,
+    ContextualLinkLocationConfig,
     DashboardEmbeddedViewSpec,
     FilterName,
     GraphPresentation,
@@ -17,9 +19,9 @@ from cmk.gui.type_defs import (
     SorterSpec,
     Visual,
     VisualContext,
-    VisualName,
-    VisualTypeName,
 )
+from cmk.gui.type_defs import ContextFilterConfig as ContextFilterConfig
+from cmk.gui.type_defs import ContextualLinkTargetType as ContextualLinkTargetType
 from cmk.gui.valuespec import HostStateValue, MonitoringStateValue, TimerangeValue
 
 DashboardName = str
@@ -39,6 +41,29 @@ type ResponsiveGridBreakpoint = Literal["XS", "S", "M", "L", "XL"]
 class DashletSizeAndPosition(TypedDict):
     size: DashletSize
     position: DashletPosition
+
+
+class ContextualLinkNoneConfig(TypedDict):
+    type: Literal["none"]
+
+
+class ContextualLinkInheritedConfig(TypedDict):
+    type: Literal["inherited"]
+    location: ContextualLinkLocationConfig
+    include_context: bool
+    include_time_range: bool
+    show_filter_form: bool
+
+
+class ContextualLinkCustomConfig(TypedDict):
+    type: Literal["custom"]
+    links: list[ContextualLinkEntryConfig]
+
+
+# A widget in `default` mode stores no link key, so `default` has no persisted form.
+type ContextualLinkConfig = (
+    ContextualLinkNoneConfig | ContextualLinkInheritedConfig | ContextualLinkCustomConfig
+)
 
 
 class _DashletConfigMandatory(TypedDict):
@@ -87,12 +112,28 @@ class CustomGraphDashletConfig(ABCGraphDashletConfig):
     show_legend: NotRequired[bool]
 
 
-class MetricTimeRangeParameters(TypedDict):
+class MetricCurrentValue(TypedDict):
+    type: Literal["current"]
+
+
+class FixedWindow(TypedDict):
+    type: Literal["range"]
     window: TimerangeValue
+
+
+class DashboardWindow(TypedDict):
+    type: Literal["dashboard"]
+
+
+class MetricFixedWindow(FixedWindow):
     rrd_consolidation: Literal["average", "min", "max"]
 
 
-type MetricTimeRange = Literal["current"] | tuple[Literal["range"], MetricTimeRangeParameters]
+class MetricDashboardWindow(DashboardWindow):
+    rrd_consolidation: Literal["average", "min", "max"]
+
+
+type MetricTimeRange = MetricCurrentValue | MetricFixedWindow | MetricDashboardWindow
 type MetricDisplayRangeFixed = tuple[Literal["fixed"], tuple[str, tuple[float, float]]]
 type MetricDisplayRangeWithAutomatic = MetricDisplayRangeFixed | Literal["automatic"]
 type StatusDisplay = None | tuple[Literal["background"], Literal["all", "not_ok"]]
@@ -105,6 +146,7 @@ class SingleMetricDashletConfig(DashletConfig):
 
 class BarplotDashletConfig(SingleMetricDashletConfig):
     display_range: MetricDisplayRangeWithAutomatic
+    contextual_link: NotRequired[ContextualLinkConfig]
 
 
 class GaugeDashletConfig(SingleMetricDashletConfig):
@@ -113,11 +155,16 @@ class GaugeDashletConfig(SingleMetricDashletConfig):
     status_display: StatusDisplayWithText
 
 
+SingleMetricSparkHeightMode = Literal["band", "full"]
+
+
 class SingleGraphDashletConfig(SingleMetricDashletConfig):
     display_range: MetricDisplayRangeWithAutomatic  # TODO: remove once the old setup page is gone
     toggle_range_display: bool  # TODO: remove once the old setup page is gone
     time_range: MetricTimeRange
     status_display: StatusDisplayWithText
+    spark_height_mode: NotRequired[SingleMetricSparkHeightMode]
+    show_delta: NotRequired[bool]
 
 
 class AverageScatterplotDashletConfig(DashletConfig):
@@ -139,6 +186,7 @@ class TopListDashletConfig(DashletConfig):
     display_range: MetricDisplayRangeWithAutomatic
     ranking_order: Literal["high", "low"]
     limit_to: int
+    contextual_link: NotRequired[ContextualLinkNoneConfig | ContextualLinkInheritedConfig]
 
 
 NetworkFlowTopTableDimension = Literal[
@@ -154,11 +202,16 @@ class NetworkFlowTopTableDashletConfig(DashletConfig):
 
 
 NetworkFlowDonutDimension = Literal["applications", "protocols"]
+NetworkFlowDonutLegendMode = Literal["table", "compact"]
 
 
 class NetworkFlowDonutDashletConfig(DashletConfig):
     dimension: NetworkFlowDonutDimension
     limit_to: int
+    # Absent from every donut stored before the legend became configurable.
+    legend_mode: NotRequired[NetworkFlowDonutLegendMode]
+    # Absent from every donut stored before the comparison existed.
+    show_delta: NotRequired[bool]
 
 
 NetworkFlowKpiStatCardMetric = Literal[
@@ -174,10 +227,14 @@ NetworkFlowKpiStatCardMetric = Literal[
 ]
 
 
+NetworkFlowKpiStatCardSparkHeightMode = Literal["band", "full"]
+
+
 class NetworkFlowKpiStatCardDashletConfig(DashletConfig):
     metric: NetworkFlowKpiStatCardMetric
     accent: NetworkFlowAccent
     show_delta: bool
+    spark_height_mode: NotRequired[NetworkFlowKpiStatCardSparkHeightMode]
 
 
 NetworkFlowTrendChartDimension = Literal["applications", "autonomous_systems", "total_bandwidth"]
@@ -191,9 +248,14 @@ class NetworkFlowTrendChartDashletConfig(DashletConfig):
     show_legend: bool
 
 
+class StatsDashletConfig(DashletConfig):
+    contextual_link: NotRequired[ContextualLinkConfig]
+
+
 class StateDashletConfig(DashletConfig):
     status_display: StatusDisplay
     show_summary: Literal["not_ok"] | None
+    contextual_link: NotRequired[ContextualLinkConfig]
 
 
 class HostStateSummaryDashletConfig(DashletConfig):
@@ -206,26 +268,27 @@ class ServiceStateSummaryDashletConfig(DashletConfig):
 
 class InventoryDashletConfig(DashletConfig):
     inventory_path: str
-    link_spec: NotRequired[tuple[VisualTypeName, VisualName]]
+    contextual_link: NotRequired[ContextualLinkConfig]
 
 
 class AlertOverviewDashletConfig(DashletConfig):
-    time_range: TimerangeValue
+    time_range: DashboardWindow | FixedWindow
     limit_objects: NotRequired[int]
 
 
 class SiteOverviewDashletConfig(DashletConfig):
     dataset: NotRequired[Literal["hosts", "sites"]]
     box_scale: NotRequired[Literal["default", "large"]]
+    contextual_link: NotRequired[ContextualLinkConfig]
 
 
 class EventBarChartRenderBarChart(TypedDict):
-    time_range: TimerangeValue
+    time_range: DashboardWindow | FixedWindow
     time_resolution: Literal["h", "d"]
 
 
 class EventBarChartRenderSimpleNumber(TypedDict):
-    time_range: TimerangeValue
+    time_range: DashboardWindow | FixedWindow
 
 
 type EventBarChartRenderMode = (

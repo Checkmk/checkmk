@@ -9,7 +9,12 @@ import pytest
 import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
 
-from .utils import expect_validate_failure, expect_validate_success, request_var
+from .utils import (
+    expect_validate_failure,
+    expect_validate_failure_untypeable,
+    expect_validate_success,
+    request_var,
+)
 
 
 def get_cascading_dropdown(
@@ -52,7 +57,8 @@ class TestCascadingDropDown:
         # valuespec. this was not the case in the previous implementation.
         assert get_cascading_dropdown().mask((20, 2222)) == (20, "******")
 
-    def test_from_html_vars(self, request_context: None) -> None:
+    @pytest.mark.usefixtures("request_context")
+    def test_from_html_vars(self) -> None:
         with request_var(c_sel="0", c_0="smth"):
             assert get_cascading_dropdown().from_html_vars("c") == ("long", "smth")
         with request_var(c_sel="1"):
@@ -62,12 +68,12 @@ class TestCascadingDropDown:
 
     def test_validate(self) -> None:
         expect_validate_success(get_cascading_dropdown(), "none2")
-        expect_validate_failure(  # type: ignore[misc]
+        expect_validate_failure_untypeable(
             get_cascading_dropdown(),
             ("long", "2", None),
             match="If value is a tuple it has to have length of two.",
         )
-        expect_validate_failure(  # type: ignore[misc]
+        expect_validate_failure_untypeable(
             get_cascading_dropdown(),
             ("none1", "2", None),
             match="If value is a tuple it has to have length of two.",

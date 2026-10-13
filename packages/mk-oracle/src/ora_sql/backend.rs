@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::config::defines::defaults::SECTION_SEPARATOR;
 use crate::config::ora_sql::{CustomInstance, Piggyback};
 use crate::config::{
     authentication::{AuthType, Authentication, Role},
@@ -65,7 +66,7 @@ impl OraDbEngine for StdEngine {
             .context("Target is not defined")?;
         // An ASM instance is reached with the `asm_*` credentials from the config.
         let auth = target.connection_auth();
-        log::info!(
+        log::debug!(
             "Connection string: {}, asm {}, auth type {:?}",
             connection_string,
             target.is_asm(),
@@ -123,10 +124,10 @@ impl OraDbEngine for StdEngine {
                 })
                 .collect::<Vec<(&str, &dyn ToSql)>>();
 
-            Ok(conn
-                .query_named(query.as_str(), x.as_slice())?
-                .map(|row| row_to_vector(&row))
-                .collect::<Vec<Vec<String>>>())
+            collect_rows(
+                conn.query_named(query.as_str(), x.as_slice())?
+                    .map(row_to_vector),
+            )
         }
 
         let result = _query_table(self.connection.as_ref(), query);
@@ -157,21 +158,42 @@ impl Clone for Box<dyn OraDbEngine + Send + Sync> {
     }
 }
 
-fn row_to_vector(row: &oracle::Result<oracle::Row>) -> Vec<String> {
-    if let Ok(r) = row {
-        r.sql_values()
-            .iter()
-            .map(|val| {
-                if val.is_null().unwrap_or(false) {
-                    "".to_string()
-                } else {
-                    String::from_sql(val).unwrap_or_else(|e| format!("Error: {}", e))
-                }
-            })
-            .collect::<Vec<String>>()
-    } else {
-        vec![format!("Error: {}", row.as_ref().err().unwrap())]
+/// Collects mapped rows, aborting on the first row error.
+///
+/// `collect` into a `Result` short-circuits: it stops pulling the iterator at the
+/// first `Err`, so a driver that re-yields a mid-fetch error (e.g. ORA-01476 after
+/// N rows) cannot spin CPU or grow memory without bound. The error is logged and
+/// returned, surfacing as a FAILURE row.
+fn collect_rows(rows: impl Iterator<Item = Result<Vec<String>>>) -> Result<Vec<Vec<String>>> {
+    rows.collect::<Result<Vec<Vec<String>>>>()
+        .inspect_err(|e| log::error!("Stopping section query after a row fetch error: {e:#}"))
+}
+
+/// Converts one fetched row to its string cells.
+///
+/// A row-level fetch error and a cell the driver cannot render as a string
+/// (a REF CURSOR, for example) both fail the whole query. The caller stops
+/// and the section carries one FAILURE row instead of data rows with an
+/// `Error: ...` cell. Stopping also matters for fetch errors, which the
+/// driver can re-yield indefinitely.
+fn row_to_vector(row: oracle::Result<oracle::Row>) -> Result<Vec<String>> {
+    // Propagate the raw driver error (no `.context`): its Display carries the
+    // ORA-xxxxx text, which the section surfaces as the FAILURE reason.
+    let row = row?;
+    row.sql_values()
+        .iter()
+        .zip(row.column_info())
+        .map(|(value, column)| cell_to_string(value, column.name()))
+        .collect()
+}
+
+/// NULL becomes the empty string. The column name goes into the error so
+/// the FAILURE row names the offending column of a user-supplied query.
+fn cell_to_string(value: &oracle::SqlValue, column_name: &str) -> Result<String> {
+    if value.is_null()? {
+        return Ok(String::new());
     }
+    String::from_sql(value).map_err(|e| anyhow::anyhow!("{e} in column {column_name}"))
 }
 
 fn _to_privilege(role: &Role) -> Privilege {
@@ -281,7 +303,12 @@ impl Clone for Spot<Closed> {
 
 impl Spot<Closed> {
     pub fn connect(mut self, use_instance: Option<&InstanceName>) -> Result<Spot<Opened>> {
-        log::info!("Connecting to {:?}", self.target);
+        log::info!(
+            "Connecting to {} at {}:{}",
+            self.target.display_name(),
+            self.target.host,
+            self.target.port.0
+        );
         let connect_timer = PerfTimer::start("connection", Label::Inline);
         self.engine.connect(&self.target, use_instance)?;
 
@@ -328,6 +355,17 @@ impl QueryResult {
         let result: Vec<String> = self.0?.into_iter().flatten().collect();
         Ok(result)
     }
+}
+
+/// Collapse `|` (`SECTION_SEPARATOR`) and line breaks to spaces and drop the
+/// driver's "OCI Error: " marker, so the message survives transport as one
+/// `<sid>|FAILURE|<message>` row.
+pub(crate) fn sanitize_failure_message(message: &str) -> String {
+    message
+        .replace("OCI Error: ", "")
+        .replace(['\r', '\n', SECTION_SEPARATOR], " ")
+        .trim()
+        .to_string()
 }
 
 impl Spot<Opened> {
@@ -725,5 +763,33 @@ oracle:
         let rows = vec![vec!["a".to_string(), "b".to_string(), "c".to_string()]];
         let lines = QueryResult(Ok(rows)).format("|").unwrap();
         assert_eq!(lines, vec!["a|b|c".to_string()]);
+    }
+
+    #[test]
+    fn test_collect_rows_stops_at_first_error_without_draining() {
+        use std::cell::Cell;
+        // Ok, Ok, then Err on every further pull - mimics a driver that re-yields a
+        // mid-fetch error instead of ending. If collect_rows drained instead of
+        // short-circuiting, this iterator never returns None and the test hangs.
+        let pulls = Cell::new(0usize);
+        let rows = std::iter::from_fn(|| {
+            let n = pulls.get();
+            pulls.set(n + 1);
+            Some(if n < 2 {
+                Ok(vec![format!("row{n}")])
+            } else {
+                Err(anyhow::anyhow!("ORA-01476: divisor is equal to zero"))
+            })
+        });
+
+        let result = collect_rows(rows);
+
+        assert!(result.is_err());
+        assert_eq!(
+            pulls.get(),
+            3,
+            "must stop right after the first error, not drain"
+        );
+        assert!(result.unwrap_err().to_string().contains("ORA-01476"));
     }
 }

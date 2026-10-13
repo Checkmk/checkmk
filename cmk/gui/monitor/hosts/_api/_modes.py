@@ -2,9 +2,8 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.gui.i18n import _
-from cmk.gui.openapi.framework.model._api_field import api_field
-from cmk.gui.openapi.framework.model._api_model import api_model
+from cmk.gui.i18n import _, ungettext
+from cmk.gui.openapi.framework.model import api_field, api_model
 
 from .._models import Host
 from ._urls import host_view_link
@@ -14,7 +13,7 @@ from ._urls import host_view_link
 class ModeInfo:
     icon_name: str = api_field(description="Icon to render for this mode", example="downtime")
     link: str = api_field(
-        description="URL the mode icon links to",
+        description="URL the mode icon links to, empty for a mode without a view of its own",
         example="view.py?view_name=downtimes_of_host&host=web-server-01",
     )
     title: str = api_field(
@@ -36,8 +35,69 @@ def build_host_modes(host: Host) -> list[ModeInfo]:
         modes.append(
             ModeInfo(
                 icon_name="ack",
-                link=host_view_link("host", host),
+                link="",
                 title=_("Problem acknowledged"),
+            )
+        )
+    if not host.notifications_enabled:
+        modes.append(
+            ModeInfo(
+                icon_name="notif-disabled",
+                link="",
+                title=_("Notifications are disabled for this host"),
+            )
+        )
+    if host.num_comments:
+        modes.append(
+            ModeInfo(
+                icon_name="comment",
+                link=host_view_link("comments_of_host", host),
+                title=ungettext(
+                    "This host has %(count)d comment",
+                    "This host has %(count)d comments",
+                    host.num_comments,
+                )
+                % {"count": host.num_comments},
+            )
+        )
+    if host.active_checks_disabled:
+        modes.append(
+            ModeInfo(
+                icon_name="disabled",
+                link="",
+                title=_("Active checks have been manually disabled for this host"),
+            )
+        )
+    if host.passive_checks_disabled:
+        modes.append(
+            ModeInfo(
+                icon_name="npassive",
+                link="",
+                title=_("Passive checks have been manually disabled for this host"),
+            )
+        )
+    if not host.in_notification_period:
+        modes.append(
+            ModeInfo(
+                icon_name="outofnot",
+                link="",
+                title=_("Out of notification period"),
+            )
+        )
+    if not host.in_service_period:
+        modes.append(
+            ModeInfo(
+                icon_name="outof-serviceperiod",
+                link="",
+                title=_("Out of service period"),
+            )
+        )
+    if not host.in_check_period:
+        modes.append(
+            ModeInfo(
+                icon_name="pause",
+                link="",
+                title=_("This host is currently not being checked"),
             )
         )
     return modes

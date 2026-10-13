@@ -743,15 +743,21 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
             mc_.LoadDefault();
         }
 
-        auto controller_params = OptionallyStartAgentController(1000ms);
-
-        ON_OUT_OF_SCOPE(ac::KillAgentController());
+        // The controller reads 'allow-legacy-pull' exactly once, at its
+        // startup. The artifacts must therefore exist before it is spawned,
+        // otherwise a fresh installation leaves it with neither a registration
+        // nor the marker and it keeps the pull port closed until the service is
+        // restarted.
         if (cap_installed) {
             ac::CreateArtifacts(fs::path{tools::win::GetSomeSystemFolder(
                                     FOLDERID_ProgramData)} /
                                     ac::kCmkAgentUninstall,
-                                controller_params.has_value());
+                                ac::IsRunController(cfg::GetLoadedConfig()));
         }
+
+        auto controller_params = OptionallyStartAgentController(1000ms);
+
+        ON_OUT_OF_SCOPE(ac::KillAgentController());
 
         auto to_load = is_service
                            ? cfg::extensions::GetAll(cfg::GetLoadedConfig())

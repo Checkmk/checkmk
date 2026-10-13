@@ -31,7 +31,7 @@ def test_returns_false_when_edition_is_not_ultimatemt(
     # Even with a remote-site marker present, a non-ULTIMATEMT edition short-circuits.
     (config_dir / "distributed_wato.mk").write_text("is_distributed_setup_remote_site = True\n")
 
-    assert cmk_update_agent._is_ultimatemt_remote_site() is False
+    assert cmk_update_agent._is_ultimatemt_remote_site() is False  # noqa: SLF001
 
 
 def test_returns_false_when_distributed_wato_file_is_missing(
@@ -40,7 +40,7 @@ def test_returns_false_when_distributed_wato_file_is_missing(
     _set_edition(monkeypatch, Edition.ULTIMATEMT)
     assert not (config_dir / "distributed_wato.mk").exists()
 
-    assert cmk_update_agent._is_ultimatemt_remote_site() is False
+    assert cmk_update_agent._is_ultimatemt_remote_site() is False  # noqa: SLF001
 
 
 def test_returns_false_when_distributed_wato_file_is_empty(
@@ -49,7 +49,7 @@ def test_returns_false_when_distributed_wato_file_is_empty(
     _set_edition(monkeypatch, Edition.ULTIMATEMT)
     (config_dir / "distributed_wato.mk").write_text("")
 
-    assert cmk_update_agent._is_ultimatemt_remote_site() is False
+    assert cmk_update_agent._is_ultimatemt_remote_site() is False  # noqa: SLF001
 
 
 def test_returns_true_when_is_distributed_setup_remote_site_flag_set(
@@ -58,7 +58,7 @@ def test_returns_true_when_is_distributed_setup_remote_site_flag_set(
     _set_edition(monkeypatch, Edition.ULTIMATEMT)
     (config_dir / "distributed_wato.mk").write_text("is_distributed_setup_remote_site = True\n")
 
-    assert cmk_update_agent._is_ultimatemt_remote_site() is True
+    assert cmk_update_agent._is_ultimatemt_remote_site() is True  # noqa: SLF001
 
 
 def test_returns_true_when_legacy_is_wato_slave_site_flag_set(
@@ -68,7 +68,7 @@ def test_returns_true_when_legacy_is_wato_slave_site_flag_set(
     _set_edition(monkeypatch, Edition.ULTIMATEMT)
     (config_dir / "distributed_wato.mk").write_text("is_wato_slave_site = True\n")
 
-    assert cmk_update_agent._is_ultimatemt_remote_site() is True
+    assert cmk_update_agent._is_ultimatemt_remote_site() is True  # noqa: SLF001
 
 
 def test_returns_false_when_remote_site_flags_are_false(
@@ -79,7 +79,7 @@ def test_returns_false_when_remote_site_flags_are_false(
         "is_distributed_setup_remote_site = False\nis_wato_slave_site = False\n"
     )
 
-    assert cmk_update_agent._is_ultimatemt_remote_site() is False
+    assert cmk_update_agent._is_ultimatemt_remote_site() is False  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -102,4 +102,4 @@ def test_returns_false_when_remote_site_flags_are_false(
     ],
 )
 def test_migrate_edition(value: object, expected: str) -> None:
-    assert cmk_update_agent._migrate_edition(value) == expected
+    assert cmk_update_agent._migrate_edition(value) == expected  # noqa: SLF001

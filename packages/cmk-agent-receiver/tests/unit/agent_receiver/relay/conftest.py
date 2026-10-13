@@ -8,7 +8,7 @@ from datetime import datetime, UTC
 from http import HTTPStatus
 from pathlib import Path
 
-import httpx
+import httpx2
 import pytest
 from pydantic import SecretStr
 
@@ -39,11 +39,11 @@ from cmk.agent_receiver.relay.lib.site_auth import SecretAuth
 from cmk.testlib.agent_receiver.relay import random_relay_id
 
 
-def create_relay_mock_transport() -> httpx.MockTransport:
+def create_relay_mock_transport() -> httpx2.MockTransport:
     """Create a stateful mock transport for relay operations."""
     registered_relays: set[str] = set()
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(request: httpx2.Request) -> httpx2.Response:
         # Create relay
         if request.method == "POST" and request.url.path.endswith(
             "/domain-types/relay/collections/all"
@@ -51,26 +51,26 @@ def create_relay_mock_transport() -> httpx.MockTransport:
             request_data = json.loads(request.content)
             relay_id = request_data["relay_id"]
             registered_relays.add(relay_id)
-            return httpx.Response(HTTPStatus.OK, json={"id": relay_id})
+            return httpx2.Response(HTTPStatus.OK, json={"id": relay_id})
 
         # Check relay exists
         if request.method == "GET" and "/objects/relay/" in request.url.path:
             relay_id = request.url.path.split("/")[-1]
             if relay_id in registered_relays:
-                return httpx.Response(HTTPStatus.OK, json={"id": relay_id})
-            return httpx.Response(HTTPStatus.NOT_FOUND, json={"error": "Relay not found"})
+                return httpx2.Response(HTTPStatus.OK, json={"id": relay_id})
+            return httpx2.Response(HTTPStatus.NOT_FOUND, json={"error": "Relay not found"})
 
         # List relays
         if request.method == "GET" and request.url.path.endswith(
             "/domain-types/relay/collections/all"
         ):
             items = [{"id": relay_id} for relay_id in registered_relays]
-            return httpx.Response(HTTPStatus.OK, json={"value": items})
+            return httpx2.Response(HTTPStatus.OK, json={"value": items})
 
         # Unhandled request
-        return httpx.Response(HTTPStatus.NOT_FOUND, json={"error": "Endpoint not found"})
+        return httpx2.Response(HTTPStatus.NOT_FOUND, json={"error": "Endpoint not found"})
 
-    return httpx.MockTransport(handler)
+    return httpx2.MockTransport(handler)
 
 
 @pytest.fixture
@@ -92,15 +92,15 @@ def test_user() -> SecretAuth:
 
 
 @pytest.fixture()
-def _relay_mock_transport() -> httpx.MockTransport:
+def _relay_mock_transport() -> httpx2.MockTransport:
     """Shared mock transport so both clients see the same relay state."""
     return create_relay_mock_transport()
 
 
 @pytest.fixture()
-def site_api_client(_relay_mock_transport: httpx.MockTransport) -> Iterator[httpx.Client]:
-    """Provides an httpx.Client configured for the site API (v1)."""
-    client = httpx.Client(
+def site_api_client(_relay_mock_transport: httpx2.MockTransport) -> Iterator[httpx2.Client]:
+    """Provides an httpx2.Client configured for the site API (v1)."""
+    client = httpx2.Client(
         base_url="http://test.com/test/check_mk/api/1.0",
         headers={"Content-Type": "application/json"},
         transport=_relay_mock_transport,
@@ -110,9 +110,9 @@ def site_api_client(_relay_mock_transport: httpx.MockTransport) -> Iterator[http
 
 
 @pytest.fixture()
-def internal_api_client(_relay_mock_transport: httpx.MockTransport) -> Iterator[httpx.Client]:
-    """Provides an httpx.Client configured for the internal API."""
-    client = httpx.Client(
+def internal_api_client(_relay_mock_transport: httpx2.MockTransport) -> Iterator[httpx2.Client]:
+    """Provides an httpx2.Client configured for the internal API."""
+    client = httpx2.Client(
         base_url="http://test.com/test/check_mk/api/internal",
         headers={"Content-Type": "application/json"},
         transport=_relay_mock_transport,
@@ -123,7 +123,7 @@ def internal_api_client(_relay_mock_transport: httpx.MockTransport) -> Iterator[
 
 @pytest.fixture()
 def relays_repository(
-    site_api_client: httpx.Client, internal_api_client: httpx.Client, site_context: Config
+    site_api_client: httpx2.Client, internal_api_client: httpx2.Client, site_context: Config
 ) -> Iterator[RelaysRepository]:
     """Provides a RelaysRepository with mock transport for testing."""
     repository = RelaysRepository(

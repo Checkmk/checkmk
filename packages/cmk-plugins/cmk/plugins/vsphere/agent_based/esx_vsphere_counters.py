@@ -275,7 +275,7 @@ def _max_latency(latencies: SubSectionCounter) -> int | None:
 
 
 def check_esx_vsphere_counters_diskio(
-    item: str,
+    item: str,  # noqa: ARG001
     params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:

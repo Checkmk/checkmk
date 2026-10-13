@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Iterator, Mapping, Sequence
 from enum import StrEnum
@@ -177,7 +176,8 @@ def _proxy_args(proxy: EnvProxy | URLProxy | NoProxy) -> Iterator[str | Secret]:
                     raise ValueError(f"Unknown proxy auth settings: {auth}")
 
         case _:
-            raise ValueError(f"Unknown proxy configuration: {proxy}")
+            # The value is not part of the message, since it may contain credentials
+            raise ValueError(f"Unknown proxy configuration of type {type(proxy).__name__}")
 
 
 def _command_arguments(endpoint: CertEndpoint, host_config: HostConfig) -> Iterator[str | Secret]:
@@ -205,7 +205,7 @@ def _command_arguments(endpoint: CertEndpoint, host_config: HostConfig) -> Itera
 
 
 def _response_time_args(response_time: FloatLevels) -> Iterator[str]:
-    match response_time:
+    match response_time:  # type: ignore[exhaustive-match]
         case (LevelsType.FIXED, (float(warn), float(crit))):
             yield "--response-time"
             yield f"{round(warn, 3)}"
@@ -223,7 +223,7 @@ def _validity_args(validity: Certificate) -> Iterator[str]:
 
 
 def _remaining_args(remaining: FloatLevels) -> Iterator[str]:
-    match remaining:
+    match remaining:  # type: ignore[exhaustive-match]
         case (LevelsType.FIXED, (float(warn), float(crit))):
             yield "--not-after"
             yield f"{int(round(warn))}"

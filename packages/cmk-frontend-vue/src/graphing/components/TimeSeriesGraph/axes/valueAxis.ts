@@ -4,14 +4,13 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 // Value-axis (y) domain computation: the value extent the y-axis must cover, derived from the
-// buckets that will be drawn. computeYDomain mirrors the backend's _compute_v_axis_min_max in
-// cmk/gui/graphing/rendering/_artwork.py (faithful to its min/max and symmetric handling).
+// buckets that will be drawn.
 
 export interface DomainFlags {
   symmetric?: boolean
 }
 
-interface DomainBucket {
+export interface DomainBucket {
   gap: boolean
   minValue: number
   maxValue: number
@@ -45,9 +44,10 @@ export function computeYDomain(
     return [-bound, bound]
   }
   if (yMin === yMax) {
-    // A flat series widens upward only, so a graph flat at zero keeps its floor at zero
-    // instead of dipping into a negative range its data can never reach.
-    return [yMin, yMax + 1]
+    if (yMin === 0) {
+      return [0, 1]
+    }
+    return yMin > 0 ? [0, 2 * yMin] : [2 * yMin, 0]
   }
   return [yMin, yMax]
 }

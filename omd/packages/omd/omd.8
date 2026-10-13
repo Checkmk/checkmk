@@ -24,24 +24,23 @@ omd \- admin interface for OMD, the Open Monitoring Distribution
 .RI ]
 .SH DESCRIPTION
 .B OMD - the Open Monitoring Distribution
-is something really new. OMD bundles existing open source software to
-ease the installation procedure of Nagios and many important add-ons
-like NagVis, PNP4Nagios, rrdtool, nagios-plugins, Check_MK,
-MK Livestatus, Dokuwiki, check_nrpe and others.
+bundles Checkmk together with the software it depends on into a
+single package.
 
 .B OMD
 supports:
 
 - multiple versions of OMD installed in parallel
 .br
-- multiple instances of Nagios running in parallel (so called "sites")
+- multiple monitoring sites running in parallel
 
 .PP
 .\" TeX users may be more comfortable with the \fB<whatever>\fP and
 .\" \fI<whatever>\fP escape sequences to invoke bold face and italics,
 .\" respectively.
 \fBomd\fP is the administration interface for creating and maintaining
-sites within OMD - the open monitoring distribution.
+sites. Use it to start, stop and check the status of each site's
+services.
 .SH COMMANDS
 .TP
 .B omd help
@@ -413,7 +412,7 @@ Creates a gzipped backup tarball (.tar.gz) containing the whole site. When execu
 this command as root, you need to specify the name of the site, otherwise your current
 site will be used.
 
-This command does not backup data from the \fBmetric backend\fP. Restoring the \metric backend\fP
+This command does not backup data from the \fBdata backend\fP. Restoring the \fBdata backend\fP
 to an older state causes false alarms. The restore command will leave the data in
 \fBvar/clickhouse-server\fP unchanged.
 

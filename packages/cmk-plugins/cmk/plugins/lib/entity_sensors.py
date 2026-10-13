@@ -124,12 +124,14 @@ def parse_entity_sensors(
     ) in string_table[1]:
         if sensor_type_nr in sensor_types_ignore:
             continue
+        if (sensor_type_info := ENTITY_SENSOR_TYPES.get(sensor_type_nr)) is None:
+            continue
         # Some devices such as Palo Alto Network series 3000 support
         # the ENTITY-MIB including sensor/entity names.
         # Others (e.g. Palo Alto Networks Series 200) do not support
         # this MIB, thus we use OID as item instead
         sensor_name = _reformat_sensor_name(sensor_names.get(oid_end, oid_end))
-        sensor_type, default_unit = ENTITY_SENSOR_TYPES[sensor_type_nr]
+        sensor_type, default_unit = sensor_type_info
         section.setdefault(sensor_type, {})[sensor_name] = EntitySensor(
             name=sensor_name,
             reading=(

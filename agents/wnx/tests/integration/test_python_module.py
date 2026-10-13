@@ -2,12 +2,12 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import shutil
 from pathlib import Path
 
 import pytest
 
-from .conftest import YieldFixture
 from .utils import (
     CMK_UPDATER_CHECKMK_PY,
     CMK_UPDATER_PY,
@@ -16,6 +16,7 @@ from .utils import (
     run_agent,
     unpack_modules,
     YamlDict,
+    YieldFixture,
 )
 
 
@@ -30,13 +31,9 @@ def copy_cmk_updater(source_dir: Path, target_dir: Path) -> None:
     shutil.copy(source_dir / CMK_UPDATER_PY, target_dir / CMK_UPDATER_CHECKMK_PY)
 
 
+@pytest.mark.usefixtures("unpack")
 def test_python_module(
-    main_exe: Path,
-    default_yaml_config: YamlDict,
-    unpack: object,
-    module_dir: Path,
-    data_dir: Path,
-    repo_root: Path,
+    main_exe: Path, default_yaml_config: YamlDict, module_dir: Path, data_dir: Path, repo_root: Path
 ) -> None:
     assert postinstall_module(module_dir) == 0
     assert (module_dir / "DLLs").exists()

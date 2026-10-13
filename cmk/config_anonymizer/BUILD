@@ -12,8 +12,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/base:app",
-        "//cmk/base:base-app",
         "//cmk/base/config",
         "//cmk/base/configlib",
         "//cmk/gui:app",
@@ -25,6 +23,7 @@ py_library(
         "//cmk/gui/watolib:groups_io",
         "//cmk/utils",
         "//cmk/utils:redis",
+        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
@@ -33,12 +32,5 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-wsgi",
-    ],
-)
-
-sh_library(
-    name = "f12",
-    srcs = [
-        ".f12",
     ],
 )

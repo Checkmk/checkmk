@@ -38,7 +38,7 @@ def parse_ra3s_internal_section_temperature(string_table: StringTable) -> Intern
             temp_fahrenheit=float(tempf) / 100.0 if tempf else None,
             temp_celsius=float(tempc) / 100.0 if tempc else None,
         )
-    except (ValueError, IndexError):
+    except ValueError, IndexError:
         return None
 
 
@@ -234,7 +234,7 @@ def discovery_ra3s_humidity(section: DigitalSection) -> DiscoveryResult:
 
 
 def check_ra3s_humidity(
-    item: str,
+    item: str,  # noqa: ARG001
     params: CheckParams,
     section: DigitalSection,
 ) -> CheckResult:
@@ -261,7 +261,7 @@ def discovery_ra3s_voltage(section: DigitalSection) -> DiscoveryResult:
 
 
 def check_ra3s_voltage(
-    item: str,
+    item: str,  # noqa: ARG001
     params: Mapping[str, object],
     section: DigitalSection,
 ) -> CheckResult:
@@ -296,7 +296,7 @@ def discovery_ra3s_power(section: DigitalSection) -> DiscoveryResult:
 
 
 def check_ra3s_power(
-    item: str,
+    item: str,  # noqa: ARG001
     params: Mapping[str, object],
     section: DigitalSection,
 ) -> CheckResult:

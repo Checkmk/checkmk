@@ -105,7 +105,9 @@ def get_statuses(resource: Resource) -> Iterator[tuple[str, VMStatus]]:
 
 
 def check_azure_virtual_machine(
-    item: str, params: Mapping[str, int], section: Resource
+    item: str,  # noqa: ARG001
+    params: Mapping[str, int],
+    section: Resource,
 ) -> CheckResult:
     statuses = dict(get_statuses(section))
 

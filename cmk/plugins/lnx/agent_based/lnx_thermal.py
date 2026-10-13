@@ -89,7 +89,7 @@ def _get_thermal_info(
         try:
             unscaled_temp = int(line[temp_idx])
             return dict(zip(header, line[:temp_idx])), unscaled_temp, line[temp_idx + 1 :]
-        except (IndexError, ValueError):
+        except IndexError, ValueError:
             pass
     return None
 
@@ -111,7 +111,7 @@ def _get_trip_points(factor: float, raw_trip_points: Sequence[str]) -> Mapping[s
             for tp_name, tp_value in dict(zip(trip_point_keys, trip_point_values)).items()
             if tp_value > 0
         }
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return {}
 
 
@@ -156,7 +156,7 @@ def _get_levels(data: Thermal) -> tuple[float, float] | None:
         return None if crit is None else (crit, crit)
 
     if crit is None:
-        return None if warn is None else (warn, warn)  # type: ignore[redundant-expr]
+        return (warn, warn)
 
     return (warn, crit)
 

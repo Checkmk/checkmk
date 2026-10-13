@@ -17,7 +17,8 @@
 use assert_cmd::Command;
 use mk_oracle::config::merge::{merge_configs, MergedConfig};
 use mk_oracle::config::OracleConfig;
-use mk_oracle::setup::CLIENT_LIB_NAME;
+use mk_oracle::ora_sql::detect::parse_tns_names_ora;
+use mk_oracle::setup::{CLIENT_LIB_NAME, RUNTIME_PATH_ENV_VAR};
 use mk_oracle::version::VERSION;
 use std::ffi::OsString;
 use std::fs;
@@ -71,7 +72,6 @@ fn test_help() {
     for expected in [
         "-v, --verbose",
         "-l, --display-log",
-        "--print-info",
         "--log-dir",
         "--temp-dir",
         "--state-dir",
@@ -145,9 +145,9 @@ fn test_generate_plugins() {
         .args(["-g", env.plugins_dir.to_str().unwrap()])
         .assert()
         .success();
-    let sync_content = fs::read_to_string(env.plugins_dir.join("oracle_unified_sync.ps1"))
+    let sync_content = fs::read_to_string(env.plugins_dir.join("mk-oracle-v2_sync.ps1"))
         .expect("sync plugin missing");
-    let async_content = fs::read_to_string(env.plugins_dir.join("oracle_unified_async.ps1"))
+    let async_content = fs::read_to_string(env.plugins_dir.join("mk-oracle-v2_async.ps1"))
         .expect("async plugin missing");
     assert!(!sync_content.is_empty(), "sync plugin empty");
     assert!(!async_content.is_empty(), "async plugin empty");
@@ -164,8 +164,8 @@ fn test_generate_plugins() {
         .args(["-g", env.plugins_dir.to_str().unwrap()])
         .assert()
         .success();
-    let sync_path = env.plugins_dir.join("oracle_unified_sync");
-    let async_path = env.plugins_dir.join("600").join("oracle_unified_async");
+    let sync_path = env.plugins_dir.join("mk-oracle-v2_sync");
+    let async_path = env.plugins_dir.join("600").join("mk-oracle-v2_async");
     let sync_content = fs::read_to_string(&sync_path).expect("sync plugin missing");
     let async_content = fs::read_to_string(&async_path).expect("async plugin missing");
     assert!(!sync_content.is_empty(), "sync plugin empty");
@@ -185,13 +185,14 @@ fn test_generate_plugins() {
     );
 }
 
+/// The environment report needs no flag of its own, only debug verbosity.
 #[test]
-fn test_print_info() {
+fn test_environment_info_is_logged_at_debug() {
     let env = setup_test_env();
     let output = run_bin()
         .args(["-c", env.config.to_str().unwrap()])
-        .args(["--print-info", "-l"])
-        .output() // exit code varies: no Oracle runtime on Linux → exit 1
+        .args(["-l", "-v"])
+        .output() // exit code varies: no Oracle runtime on Linux -> exit 1
         .unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();
     for expected in [
@@ -203,7 +204,7 @@ fn test_print_info() {
     ] {
         assert!(
             stderr.contains(expected),
-            "Missing in --print-info output: {expected}"
+            "Missing in environment info: {expected}"
         );
     }
 }
@@ -212,15 +213,10 @@ fn test_print_info() {
 fn test_find_runtime_reports_environment() {
     let env = setup_test_env();
     // factory runtime layout under MK_LIBDIR:
-    // plugins/packages/mk-oracle on Unix, + /runtime on Windows
+    // plugins/libexec/mk-oracle-v2/oic
     let lib_dir = tempfile::tempdir().unwrap();
-    let package_dir = lib_dir.path().join("plugins/packages/mk-oracle");
-    fs::create_dir_all(package_dir.join("runtime")).unwrap();
-    let expected_dir = if cfg!(windows) {
-        package_dir.join("runtime")
-    } else {
-        package_dir
-    };
+    let expected_dir = lib_dir.path().join("plugins/libexec/mk-oracle-v2/oic");
+    fs::create_dir_all(&expected_dir).unwrap();
     // runtime detection requires the client library to be present
     fs::File::create(expected_dir.join(CLIENT_LIB_NAME)).unwrap();
 
@@ -233,11 +229,7 @@ fn test_find_runtime_reports_environment() {
         .unwrap();
     assert!(output.status.success(), "--find-runtime must succeed");
     let stdout = String::from_utf8(output.stdout).unwrap();
-    let path_var = if cfg!(windows) {
-        "PATH"
-    } else {
-        "LD_LIBRARY_PATH"
-    };
+    let path_var = RUNTIME_PATH_ENV_VAR;
     let first_line = stdout.lines().next().unwrap_or_default();
     assert!(
         first_line.starts_with(&format!("{path_var}={}", expected_dir.display())),
@@ -406,7 +398,7 @@ oracle:
     .unwrap();
 
     // User config in the runtime dir overrides cache_age.
-    let runtime_dir = lib_dir.join("plugins/packages/mk-oracle");
+    let runtime_dir = lib_dir.join("plugins/libexec/mk-oracle-v2");
     fs::create_dir_all(&runtime_dir).unwrap();
     fs::write(
         runtime_dir.join("mk-oracle.user.yml"),
@@ -427,11 +419,11 @@ oracle:
 
     // The async plugin lands in the overridden cache_age subdir, not the default.
     assert!(
-        out.join("123").join("oracle_unified_async").is_file(),
+        out.join("123").join("mk-oracle-v2_async").is_file(),
         "async plugin should use the overridden cache_age (123)"
     );
     assert!(
-        !out.join("600").join("oracle_unified_async").exists(),
+        !out.join("600").join("mk-oracle-v2_async").exists(),
         "async plugin must not use the default cache_age (600)"
     );
 
@@ -739,20 +731,21 @@ fn test_migrate_reference_config_connection_and_auth() {
         "must have at least 2 instances from DBUSER_XE1 + DBUSER_XE2"
     );
 
-    // DBUSER_XE1: sid=XE1, alias=oooo, inherits main connection; its "/" username
-    // migrates to external/wallet auth (empty username), not the main credentials.
+    // DBUSER_XE1 inherits the main connection, and its "/" username migrates to
+    // external/wallet auth (empty username), not the main credentials.
+    //
+    // Both references name the instance by an alias, but not the same one: the
+    // .cfg carries an explicit TNSALIAS (`/:::::oooo`), while the .ps1 array has
+    // no sixth field, so the SID stands in as the alias - wallet auth resolves
+    // its SEPS credential through the alias, not through host and port.
     #[cfg(not(windows))]
+    let alias_of_xe1 = "oooo";
+    #[cfg(windows)]
+    let alias_of_xe1 = "XE1";
     let xe1_inst = instances
         .iter()
-        .find(|i| i.alias().as_ref().map(|a| a.to_string()).as_deref() == Some("oooo"))
-        .expect("DBUSER_XE1 instance with alias oooo");
-    #[cfg(windows)]
-    let xe1_inst = instances
-        .iter()
-        .find(|i| i.standalone_sid().map(|s| s.to_string()).as_deref() == Some("XE1"))
-        .expect("DBUSER_XE1 instance with sid XE1");
-    #[cfg(windows)]
-    assert!(xe1_inst.alias().is_none());
+        .find(|i| i.alias().as_ref().map(|a| a.to_string()).as_deref() == Some(alias_of_xe1))
+        .unwrap_or_else(|| panic!("DBUSER_XE1 instance with alias {alias_of_xe1}"));
 
     assert_eq!(
         xe1_inst.conn().hostname().to_string(),
@@ -1219,6 +1212,82 @@ missing () {{
     );
 }
 
+/// A `SQLS_PARAMETERS` written across several lines, as in the legacy
+/// documentation, must still be seen by the migration: the parameters cannot be
+/// migrated, so every section using them has to be reported.
+// windows ps1 legacy plugin doesn't support custom SQL sections
+#[cfg(not(windows))]
+#[test]
+fn test_migrate_warns_on_multiline_custom_sql_parameters() {
+    let tmp = tempfile::tempdir().unwrap();
+    let dir = tmp.path();
+    fs::write(dir.join("invalid_objects.sql"), "SELECT * FROM dual\n").unwrap();
+
+    let dir_str = dir.to_str().unwrap();
+    let cfg = dir.join("mk_oracle.cfg");
+    fs::write(
+        &cfg,
+        format!(
+            r#"DBUSER='user:pass'
+VAR_IFILE="/tmp/ifile.txt"
+SQLS_SECTIONS="multiline plain"
+multiline () {{
+    SQLS_DIR="{dir_str}"
+    SQLS_SQL="invalid_objects.sql"
+    SQLS_PARAMETERS="
+        DEFINE VAR_IFILE = \"${{VAR_IFILE}}\"
+    "
+}}
+plain () {{
+    SQLS_DIR="{dir_str}"
+    SQLS_SQL="invalid_objects.sql"
+}}
+"#
+        ),
+    )
+    .unwrap();
+
+    let output = run_bin().args(["-M", cfg.to_str().unwrap()]).ok().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        stdout.contains("# WARNING: multiline: SQLS_PARAMETERS is not supported"),
+        "got: {stdout}"
+    );
+    assert!(
+        !stdout.contains("# WARNING: plain:"),
+        "a section without SQLS_PARAMETERS must not warn, got: {stdout}"
+    );
+    // the value is folded into one line, so its continuation lines cannot be
+    // mistaken for further variables
+    let extracted = stdout
+        .lines()
+        .find(|l| l.starts_with("# SQLS.multiline.SQLS_PARAMETERS "))
+        .unwrap_or_else(|| panic!("SQLS_PARAMETERS not extracted, got: {stdout}"));
+    assert!(
+        extracted.contains(r#"DEFINE VAR_IFILE = "/tmp/ifile.txt""#),
+        "the whole value belongs to one line, got: {extracted}"
+    );
+    assert!(
+        !stdout.contains("# DEFINE "),
+        "a continuation line must not become a variable of its own, got: {stdout}"
+    );
+    let config = mk_oracle::config::OracleConfig::load_str(&stdout)
+        .expect("migrated output must be valid YAML");
+    let ora = config.ora_sql().expect("must have oracle config");
+    let mut metrics: Vec<String> = ora
+        .all_sections()
+        .iter()
+        .filter(|s| s.is_custom_metric())
+        .map(|s| s.item_value().unwrap().as_str().to_string())
+        .collect();
+    metrics.sort();
+    assert_eq!(
+        metrics,
+        ["multiline", "plain"],
+        "the sections are migrated regardless"
+    );
+}
+
 #[test]
 fn test_migrate_reference_config_discovery() {
     let cfg = legacy_cfg_path();
@@ -1237,11 +1306,9 @@ fn test_migrate_reference_config_discovery() {
     );
     let mut exclude = discovery.exclude().clone();
     exclude.sort();
-    assert_eq!(
-        exclude,
-        &["AAA", "BBB", "XE2"],
-        "exclude must match SKIP_SIDS + EXCLUDE_*=ALL"
-    );
+    // EXCLUDE_AAA / EXCLUDE_BBB name sections, not instances, so they must not
+    // reach the instance-level exclude list.
+    assert_eq!(exclude, &["XE2"], "exclude must match SKIP_SIDS only");
 }
 
 #[test]
@@ -1276,8 +1343,9 @@ fn test_migrate_reference_config_sections() {
     use SectionKind::{Async, Sync};
     let expected: &[(&str, SectionKind, SectionAffinity)] = &[
         ("asm_diskgroup", Async, Asm),
+        ("asm_instance", Sync, Asm),
         ("dataguard_stats", Sync, Db),
-        ("instance", Sync, All),
+        ("instance", Sync, Db),
         ("jobs", Async, Db),
         ("locks", Sync, Db),
         ("logswitches", Sync, Db),
@@ -1381,6 +1449,161 @@ fn test_migrate_optional_config_threads() {
         7,
         "MAX_TASKS=7 must set threads to 7"
     );
+}
+
+// The corpus consists of shell-syntax legacy configs, so it only runs on
+// non-Windows targets (the ps1 dialect is covered by the reference tests
+// above).
+#[cfg(not(windows))]
+mod migration_corpus {
+    use super::*;
+    use std::path::{Path, PathBuf};
+
+    /// Resolve `tests/files/migration_corpus` for both Bazel (cwd is the
+    /// runfiles root) and cargo (cwd is the crate).
+    fn corpus_dir() -> PathBuf {
+        let runfiles = std::env::current_dir()
+            .unwrap()
+            .join("packages/mk-oracle/tests/files/migration_corpus");
+        if runfiles.is_dir() {
+            runfiles
+        } else {
+            PathBuf::from("tests/files/migration_corpus")
+        }
+    }
+
+    /// Normalize migrator output for the golden-file comparison: drop the
+    /// timestamped `Converted from` header and sort the extracted-variables
+    /// block, whose order is not deterministic (HashMap iteration).
+    fn normalize_output(stdout: &str) -> String {
+        const ENV_HEADER: &str = "# --- Known environment variables defined in legacy config ---";
+        let mut out: Vec<&str> = Vec::new();
+        let mut env_block: Vec<&str> = Vec::new();
+        let mut in_env = false;
+        for line in stdout.lines() {
+            if line.starts_with("# --- Converted from ") {
+                continue;
+            }
+            if line == ENV_HEADER {
+                in_env = true;
+                out.push(line);
+                continue;
+            }
+            if in_env {
+                if line.starts_with("# ")
+                    && !line.starts_with("# WARNING:")
+                    && !line.starts_with("# ---")
+                {
+                    env_block.push(line);
+                    continue;
+                }
+                env_block.sort_unstable();
+                out.append(&mut env_block);
+                in_env = false;
+            }
+            out.push(line);
+        }
+        out.join("\n") + "\n"
+    }
+
+    /// Runs one corpus case and returns its failures (empty = passed), so
+    /// one broken case does not shadow the results of the others.
+    fn run_corpus_case(
+        name: &str,
+        cfg: &Path,
+        golden: &Path,
+        mk_oracle_d: Option<&Path>,
+    ) -> Vec<String> {
+        let mut cmd = run_bin();
+        // dynamic SQLS_SIDS expressions read variables the legacy plugin
+        // sets at runtime; drop them so the expansion does not depend on
+        // the environment the test runs in
+        cmd.env_remove("ORACLE_SID").env_remove("SIDS");
+        cmd.args(["-M", cfg.to_str().unwrap()]);
+        if let Some(dir) = mk_oracle_d {
+            cmd.args(["--migrate-subdir", dir.to_str().unwrap()]);
+        }
+        let output = match cmd.ok() {
+            Ok(output) => output,
+            Err(e) => return vec![format!("{name}: migration failed: {e}")],
+        };
+        let stdout = String::from_utf8(output.stdout).unwrap();
+        let normalized = normalize_output(&stdout);
+
+        // Regenerate the golden files instead of comparing. Cargo only —
+        // under Bazel the writes end up in the sandbox and are lost:
+        //   MK_ORACLE_UPDATE_CORPUS=1 cargo test --test test_mk_oracle_bin migration_corpus
+        if std::env::var_os("MK_ORACLE_UPDATE_CORPUS").is_some() {
+            fs::write(golden, &normalized).unwrap();
+            return Vec::new();
+        }
+
+        let mut failures = Vec::new();
+        // the migrated config must stay loadable by the plugin itself
+        match mk_oracle::config::OracleConfig::load_str(&stdout) {
+            Ok(config) if config.ora_sql().is_some() => {}
+            Ok(_) => failures.push(format!("{name}: migrated output has no oracle config")),
+            Err(e) => failures.push(format!("{name}: migrated output does not load: {e}")),
+        }
+        let expected = fs::read_to_string(golden).unwrap_or_else(|e| {
+            panic!("{name}: cannot read golden file {}: {e}", golden.display())
+        });
+        if normalized != expected {
+            failures.push(format!(
+                "{name}: migrated output differs from {}",
+                golden.file_name().unwrap().to_str().unwrap()
+            ));
+            eprintln!("--- {name}: expected ---\n{expected}--- {name}: got ---\n{normalized}");
+        }
+        failures
+    }
+
+    /// CMK-38008: input corpus — pairs of a representative legacy config
+    /// and the expected migrator output, one case per migration-bug
+    /// dimension (auth variants, remote instances, SQLS_* combinations,
+    /// formatting quirks, mk_oracle.d multi-file). See
+    /// tests/files/migration_corpus/README.md.
+    #[test]
+    fn test_migrate_input_corpus() {
+        let dir = corpus_dir();
+        let mut entries: Vec<_> = fs::read_dir(&dir)
+            .unwrap()
+            .map(|e| e.unwrap().path())
+            .collect();
+        entries.sort();
+
+        let mut cases = 0;
+        let mut failures = Vec::new();
+        for entry in entries {
+            let name = entry.file_name().unwrap().to_str().unwrap().to_string();
+            if entry.is_dir() {
+                let subdir = entry.join("mk_oracle.d");
+                failures.extend(run_corpus_case(
+                    &name,
+                    &entry.join("main.cfg"),
+                    &entry.join("expected.yaml"),
+                    subdir.is_dir().then_some(subdir.as_path()),
+                ));
+            } else if entry.extension().is_some_and(|ext| ext == "cfg") {
+                failures.extend(run_corpus_case(
+                    &name,
+                    &entry,
+                    &entry.with_extension("yaml"),
+                    None,
+                ));
+            } else {
+                continue; // README.md and the golden .yaml files
+            }
+            cases += 1;
+        }
+        assert!(cases >= 13, "corpus incomplete: only {cases} cases found");
+        assert!(
+            failures.is_empty(),
+            "{} corpus case(s) failed:\n  {}",
+            failures.len(),
+            failures.join("\n  ")
+        );
+    }
 }
 
 #[test]
@@ -1505,4 +1728,85 @@ fn test_merge_configs_none_when_both_missing() {
     )
     .unwrap();
     assert!(merged.config.is_none());
+}
+
+/// `tnsnames.ora` aliases are read from disk, and an `IFILE` include is followed:
+/// its aliases are appended after the ones of the including file, while `IFILE`
+/// itself is no alias. A relative include resolves against the including file.
+#[test]
+fn test_parse_tns_names_ora_follows_ifile() {
+    let tmp = tempfile::tempdir().unwrap();
+    let main = tmp.path().join("tnsnames.ora");
+    std::fs::write(
+        &main,
+        "IFILE = included.ora\nOWN = (ADDRESS = (HOST = own.example.net)(PORT = 1521))\n",
+    )
+    .unwrap();
+    std::fs::write(
+        tmp.path().join("included.ora"),
+        "FROM_INCLUDE = (ADDRESS = (HOST = inc.example.net)(PORT = 1522))\n",
+    )
+    .unwrap();
+
+    let entries = parse_tns_names_ora(&main).expect("the written file must be readable");
+
+    assert_eq!(
+        entries
+            .iter()
+            .map(|e| (
+                e.alias.to_string(),
+                e.host_name.as_ref().map(ToString::to_string),
+                e.port.as_ref().map(|p| p.value()),
+            ))
+            .collect::<Vec<_>>(),
+        vec![
+            (
+                "OWN".to_string(),
+                Some("own.example.net".to_string()),
+                Some(1521)
+            ),
+            (
+                "FROM_INCLUDE".to_string(),
+                Some("inc.example.net".to_string()),
+                Some(1522)
+            ),
+        ]
+    );
+}
+
+/// Two files including each other must terminate: the depth budget stops the
+/// recursion instead of exhausting the stack. Each pass adds the aliases it
+/// finds, so the result is bounded but non-empty.
+#[test]
+fn test_parse_tns_names_ora_stops_on_an_ifile_cycle() {
+    let tmp = tempfile::tempdir().unwrap();
+    let first = tmp.path().join("first.ora");
+    let second = tmp.path().join("second.ora");
+    std::fs::write(
+        &first,
+        "IFILE = second.ora\nFIRST = (ADDRESS = (HOST = first.example.net)(PORT = 1521))\n",
+    )
+    .unwrap();
+    std::fs::write(
+        &second,
+        "IFILE = first.ora\nSECOND = (ADDRESS = (HOST = second.example.net)(PORT = 1522))\n",
+    )
+    .unwrap();
+
+    // Returning at all is the assertion: an unbounded walk would never get here.
+    let entries = parse_tns_names_ora(&first).expect("the written file must be readable");
+
+    let names: Vec<String> = entries.iter().map(|e| e.alias.to_string()).collect();
+    assert!(
+        names.len() > 1 && names.len() < 32,
+        "the cycle must be cut, not walked forever: {names:?}"
+    );
+    assert_eq!(
+        names[0], "FIRST",
+        "the including file comes first: {names:?}"
+    );
+    assert!(
+        names.iter().all(|n| n == "FIRST" || n == "SECOND"),
+        "only the two aliases of the cycle may appear: {names:?}"
+    );
 }

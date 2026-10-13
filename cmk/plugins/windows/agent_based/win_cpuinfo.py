@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from dataclasses import asdict, dataclass
 
@@ -35,7 +34,7 @@ def _parse_speed(v: str) -> float | None:  # into Hz (float)
     if not v or v == "Unknown":
         return None
 
-    match v.split()[:2]:
+    match v.split()[:2]:  # type: ignore[exhaustive-match]
         case [value, "GHz"]:
             return float(value) * 1000.0**3
         case [value] | [value, "MHz"]:
@@ -57,8 +56,8 @@ def _parse_voltage(v: str) -> float | None:
 def parse_win_cpuinfo(string_table: StringTable) -> _Section:
     section = _Section()
 
-    for key, value in ((k.strip(), v.strip()) for k, v in string_table):
-        match key:
+    for key, value in ((k.strip(), ":".join(v).strip()) for k, *v in string_table if v):
+        match key:  # type: ignore[exhaustive-match]
             case "NumberOfCores":
                 if value:
                     section.cores_per_cpu = int(value)

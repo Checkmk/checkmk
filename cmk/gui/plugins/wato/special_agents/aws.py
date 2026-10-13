@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 from collections.abc import Container, Iterable, Sequence
 from typing import Literal, TypeVar
@@ -14,7 +12,6 @@ import cmk.utils.paths
 from cmk.ccc.version import Edition, edition
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -33,17 +30,22 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.valuespec.definitions import RegExp
-from cmk.gui.wato import IndividualOrStoredPassword, RulespecGroupVMCloudContainer
+from cmk.gui.wato import IndividualOrStoredPassword
+from cmk.gui.watolib.rulespec_groups import RulespecGroupVMCloudContainer
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
-from cmk.plugins.aws.lib import aws_region_to_monitor  # astrein: disable=cmk-module-layer-violation
+from cmk.plugins.aws_deprecated.lib import (  # astrein: disable=cmk-module-layer-violation
+    aws_region_to_monitor,
+)
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets.v1.form_specs import migrate_to_password
+from cmk.web.utils.doc_references import DocReference
 
 ServicesValueSpec = list[tuple[str, ValueSpec]]
 
 
 def _unmigrate_password(
-    model: tuple[
+    model: tuple[Literal["password", "store"], str]
+    | tuple[
         Literal["cmk_postprocessed"],
         Literal["explicit_password", "stored_password"],
         tuple[str, str],
@@ -60,7 +62,8 @@ def _unmigrate_password(
         case "cmk_postprocessed", "stored_password", (str(password_store_id), str(_password)):
             return "store", password_store_id
 
-    raise TypeError(f"Could not migrate {model!r} to Password.")
+    # The value is not part of the message, since it may contain credentials
+    raise TypeError(f"Could not migrate a value of type {type(model).__name__} to Password.")
 
 
 def _vs_v1_ssc_password(title: str, allow_empty: bool) -> ValueSpec:

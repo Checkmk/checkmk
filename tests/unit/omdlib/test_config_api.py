@@ -8,8 +8,10 @@ import pytest
 
 from omdlib import main
 from omdlib.config_api import (
+    Error,
     ip_address_list_has_error,
     ip_listen_address_has_error,
+    join_errors,
     network_port_has_error,
 )
 from omdlib.system_apache import apache_TCP_addr_has_error
@@ -37,7 +39,7 @@ from omdlib.system_apache import apache_TCP_addr_has_error
     ],
 )
 def test__error_from_config_choice_accept_value(value: str) -> None:
-    assert main._error_from_config_choice(ip_address_list_has_error, value) is None
+    assert main._error_from_config_choice(ip_address_list_has_error, value) is None  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -70,7 +72,7 @@ def test__error_from_config_choice_accept_value(value: str) -> None:
     ],
 )
 def test__error_from_config_choice_reject_value(value: str) -> None:
-    assert main._error_from_config_choice(ip_address_list_has_error, value) is not None
+    assert main._error_from_config_choice(ip_address_list_has_error, value) is not None  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -85,7 +87,7 @@ def test__error_from_config_choice_reject_value(value: str) -> None:
     ],
 )
 def test__ok_from_apache_tcp_addr_has_error(value: str) -> None:
-    assert main._error_from_config_choice(apache_TCP_addr_has_error, value) is None
+    assert main._error_from_config_choice(apache_TCP_addr_has_error, value) is None  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -110,7 +112,7 @@ def test__ok_from_apache_tcp_addr_has_error(value: str) -> None:
     ],
 )
 def test__error_from_apache_tcp_addr_has_error(value: str, message: str) -> None:
-    result = main._error_from_config_choice(apache_TCP_addr_has_error, value)
+    result = main._error_from_config_choice(apache_TCP_addr_has_error, value)  # noqa: SLF001
     assert result is not None
     assert result.endswith(message)
 
@@ -137,7 +139,7 @@ def test__error_from_apache_tcp_addr_has_error(value: str, message: str) -> None
     ],
 )
 def test__error_from_config_choice_listen_address_accept_value(value: str) -> None:
-    assert main._error_from_config_choice(ip_listen_address_has_error, value) is None
+    assert main._error_from_config_choice(ip_listen_address_has_error, value) is None  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -162,14 +164,26 @@ def test__error_from_config_choice_listen_address_accept_value(value: str) -> No
     ],
 )
 def test__error_from_config_choice_listen_address_has_error(value: str, message: str) -> None:
-    result = main._error_from_config_choice(ip_listen_address_has_error, value)
+    result = main._error_from_config_choice(ip_listen_address_has_error, value)  # noqa: SLF001
     assert result is not None
     assert result.endswith(message)
 
 
 def test__error_from_config_choice_network_port() -> None:
-    assert main._error_from_config_choice(network_port_has_error, "1024") is None
-    assert main._error_from_config_choice(network_port_has_error, "65535") is None
-    assert main._error_from_config_choice(network_port_has_error, "22") == "Invalid port number"
-    assert main._error_from_config_choice(network_port_has_error, "65536") == "Invalid port number"
-    assert main._error_from_config_choice(network_port_has_error, "") == "Invalid port number"
+    assert main._error_from_config_choice(network_port_has_error, "1024") is None  # noqa: SLF001
+    assert main._error_from_config_choice(network_port_has_error, "65535") is None  # noqa: SLF001
+    assert main._error_from_config_choice(network_port_has_error, "22") == "Invalid port number"  # noqa: SLF001
+    assert main._error_from_config_choice(network_port_has_error, "65536") == "Invalid port number"  # noqa: SLF001
+    assert main._error_from_config_choice(network_port_has_error, "") == "Invalid port number"  # noqa: SLF001
+
+
+def test_join_errors_without_arguments() -> None:
+    assert join_errors() is None
+
+
+def test_join_errors_keeps_the_only_error() -> None:
+    assert join_errors(Error("Boom.")) == "Boom."
+
+
+def test_join_errors_separates_by_newline() -> None:
+    assert join_errors(Error("Boom."), Error("Bang.")) == "Boom.\nBang."

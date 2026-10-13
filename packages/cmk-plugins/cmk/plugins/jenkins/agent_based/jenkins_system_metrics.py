@@ -54,7 +54,7 @@ def parse_jenkins_system_metrics(string_table: StringTable) -> Section:
     return parsed
 
 
-def discover_jenkins_metrics_service(section: Section) -> DiscoveryResult:
+def discover_jenkins_metrics_service(section: Section) -> DiscoveryResult:  # noqa: ARG001
     yield Service(item="HTTP Requests")
     yield Service(item="Memory")
     yield Service(item="Threads")

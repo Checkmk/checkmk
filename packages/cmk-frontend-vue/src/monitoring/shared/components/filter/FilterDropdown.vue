@@ -14,36 +14,55 @@ this shell.
 
 Edits are staged in a `draft` that is snapshotted from the committed model when
 the popover opens. The mounted filter component binds to that draft, so toggling
-options never touches the committed model directly. Only "Apply" commits the
-draft (closing the popover and updating the table); "Cancel", Escape and
-click-outside discard the draft, leaving the model at the state it had on open.
+options never touches the committed model directly. "Apply" commits the draft
+(closing the popover and updating the table), and so do picking a sort
+direction and pressing Enter in a text, number or date field; "Cancel", Escape
+and click-outside discard the draft, leaving the model at the state it had on
+open.
 -->
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
+import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { provideFloatingTarget } from 'cmk-ui-library/lib/useFloatingTarget'
-import { type Component, computed, inject, nextTick, onBeforeUnmount, ref } from 'vue'
+import useId from 'cmk-ui-library/lib/useId'
+import {
+  type CSSProperties,
+  type Component,
+  computed,
+  inject,
+  nextTick,
+  onBeforeUnmount,
+  ref
+} from 'vue'
 
 import type { FilterField } from '@/monitoring/shared/api/types'
 
 import { MONITORING_SERVICE } from '../MonitoringTableContext'
+import FilterAutocompleteChoice from './FilterAutocompleteChoice.vue'
 import FilterBooleanGroup from './FilterBooleanGroup.vue'
 import FilterCheckboxList from './FilterCheckboxList.vue'
+import FilterCheckboxListWithFlags from './FilterCheckboxListWithFlags.vue'
 import FilterColumnVisibility from './FilterColumnVisibility.vue'
 import FilterDateTimeRange from './FilterDateTimeRange.vue'
+import FilterDuration from './FilterDuration.vue'
 import FilterNumeric from './FilterNumeric.vue'
 import FilterStringInput from './FilterStringInput.vue'
 import FilterVisualFilter from './FilterVisualFilter.vue'
-import type { ColumnFilterDefinition, ColumnFilterValue } from './types'
+import type { ColumnFilterDefinition, ColumnFilterValue, SortDirection } from './types'
 
 const FILTER_COMPONENTS: Record<ColumnFilterDefinition['type'], Component> = {
   'checkbox-list': FilterCheckboxList,
+  'checkbox-list-with-flags': FilterCheckboxListWithFlags,
   'string-input': FilterStringInput,
   numeric: FilterNumeric,
   'date-time-range': FilterDateTimeRange,
+  duration: FilterDuration,
   'boolean-group': FilterBooleanGroup,
+  'autocomplete-choice': FilterAutocompleteChoice,
   'column-visibility': FilterColumnVisibility,
   'visual-filter': FilterVisualFilter
 }
@@ -53,11 +72,31 @@ const props = defineProps<{
   /** Human-readable column name, used for the accessible popover label. */
   label: string
   clearLabel?: string
+  /** Title of the filter section, shown opposite the clear button. */
+  heading?: string
+  /**
+   * Selector of the ancestor the panel lines up with, resolved with `closest`.
+   * Unset, the panel lines up with the trigger itself.
+   */
+  anchor?: string
+  /** Offer the column's sort directions above the filter. */
+  sortable?: boolean
+  /**
+   * Labels of the columns the table is already sorted by ahead of this one.
+   * Non-empty, the panel also offers to extend that sort by this column.
+   */
+  extendsSortOf?: string[]
 }>()
 
 const model = defineModel<ColumnFilterValue<FilterField> | undefined>({ default: undefined })
 
+const sort = defineModel<SortDirection>('sort', { default: false })
+
+const extendedSort = defineModel<SortDirection>('extendedSort', { default: false })
+
 const { _t } = usei18n()
+useWidgetKeys(_t('Filter'), [{ combo: ['ArrowDown'], description: _t('Open filter') }])
+const panelId = useId()
 
 const vClickOutside = useClickOutside()
 const shortcuts = getKeyShortcutServiceInstance()
@@ -67,7 +106,7 @@ const monitoringService = inject(MONITORING_SERVICE, null)
 
 const isOpen = ref(false)
 const flipUp = ref(false)
-const flipLeft = ref(false)
+const alignment = ref<CSSProperties>({})
 // Swallow the click-outside fired by the same click that opened the popover.
 const suppressNextClickOutside = ref(false)
 // Whether the press behind the current click started within the funnel.
@@ -84,7 +123,13 @@ const draftKey = ref(0)
 
 const isValid = ref(true)
 
+// A filter type whose input is only judged once the user commits - an age span,
+// say - exposes `validate`. Apply asks it before writing the draft back, and a
+// refusal keeps the popover open on the error it has just revealed.
+const content = ref<{ validate?: () => boolean } | null>(null)
+
 const panel = ref<HTMLElement | null>(null)
+const body = ref<HTMLElement | null>(null)
 const trigger = ref<HTMLElement | null>(null)
 
 // A filter component may mount floating content of its own (a CmkDropdown's
@@ -95,6 +140,33 @@ const trigger = ref<HTMLElement | null>(null)
 provideFloatingTarget(() => panel.value ?? undefined)
 
 const isActive = computed(() => model.value !== undefined)
+
+const sortOptions = computed<{ direction: SortDirection; label: string }[]>(() => [
+  { direction: 'asc', label: _t('Sort ascending') },
+  { direction: 'desc', label: _t('Sort descending') },
+  { direction: false, label: _t('No sorting / default sorting') }
+])
+
+const extendSortOptions = computed<{ direction: SortDirection; label: string }[]>(() =>
+  sortOptions.value.filter((option) => option.direction !== false)
+)
+
+const canExtendSort = computed(() => (props.extendsSortOf ?? []).length > 0)
+
+const extendSortHeading = computed(() =>
+  _t('Extend active sorting of %{columns} by', {
+    columns: (props.extendsSortOf ?? []).map((label) => `"${label}"`).join(', ')
+  })
+)
+
+const sortHeadingId = useId()
+const extendSortHeadingId = useId()
+
+function isSortMarked(direction: SortDirection): boolean {
+  return direction === false
+    ? sort.value === false && extendedSort.value === false
+    : sort.value === direction
+}
 
 const filterComponent = computed(() => FILTER_COMPONENTS[props.definition.type])
 
@@ -115,7 +187,7 @@ function open(): void {
   document.addEventListener('pointerdown', onPointerDown, true)
   void nextTick(() => {
     positionPanel()
-    focusRow(0)
+    focusFilter()
   })
 }
 
@@ -139,12 +211,41 @@ function toggle(): void {
   }
 }
 
+/** ArrowDown on the trigger opens the panel, like any dropdown; inside it the rows own the arrows. */
+function onTriggerKeydown(event: KeyboardEvent): void {
+  if (
+    event.key !== 'ArrowDown' ||
+    isOpen.value ||
+    event.ctrlKey ||
+    event.altKey ||
+    event.metaKey ||
+    event.shiftKey
+  ) {
+    return
+  }
+  event.preventDefault()
+  open()
+}
+
 function apply(): void {
   if (!isValid.value) {
     return
   }
+  if (content.value?.validate && !content.value.validate()) {
+    return
+  }
   model.value = draft.value
   close()
+}
+
+function pickSort(direction: SortDirection): void {
+  sort.value = direction
+  apply()
+}
+
+function pickExtendedSort(direction: SortDirection): void {
+  extendedSort.value = direction
+  apply()
 }
 
 function cancel(): void {
@@ -155,6 +256,40 @@ function clear(): void {
   draft.value = undefined
   isValid.value = true
   draftKey.value += 1
+  // The remount replaces the field the user was typing in, and the click has
+  // moved focus to the Clear button, so hand it back to the fresh filter.
+  void nextTick(focusFilter)
+}
+
+// Enter in a typed-in field applies, as in any form. Search fields are left
+// out: they narrow a list of options or suggestions, so Enter there belongs to
+// that search. So are keys a control has already claimed, and the Enter that
+// confirms an IME candidate (Safari reports it as keyCode 229, not composing).
+const TEXT_INPUT_TYPES = new Set([
+  'text',
+  'number',
+  'email',
+  'url',
+  'tel',
+  'password',
+  'date',
+  'time',
+  'datetime-local'
+])
+
+function onBodyEnter(event: KeyboardEvent): void {
+  const target = event.target
+  if (
+    event.defaultPrevented ||
+    event.isComposing ||
+    event.keyCode === 229 ||
+    !(target instanceof HTMLInputElement) ||
+    !TEXT_INPUT_TYPES.has(target.type)
+  ) {
+    return
+  }
+  event.preventDefault()
+  apply()
 }
 
 // Floating content inside the panel typically unmounts on the very click that
@@ -185,20 +320,34 @@ function positionPanel(): void {
   const triggerRect = triggerEl.getBoundingClientRect()
   const spaceBelow = window.innerHeight - triggerRect.bottom
   flipUp.value = spaceBelow < panelEl.offsetHeight && triggerRect.top > spaceBelow
-  const clipLeft = clippingLeft(triggerEl)
-  flipLeft.value = triggerRect.right - clipLeft >= panelEl.offsetWidth
+
+  const anchorRect = anchorElement(triggerEl).getBoundingClientRect()
+  const clipping = clippingBounds(triggerEl)
+  const alignLeft = Math.max(anchorRect.left, clipping.left)
+  const alignRight = Math.min(anchorRect.right, clipping.right)
+  const overflowsRight = alignLeft + panelEl.offsetWidth > clipping.right
+  const fitsLeftwards = alignRight - clipping.left >= panelEl.offsetWidth
+  alignment.value =
+    overflowsRight && fitsLeftwards
+      ? { left: 'auto', right: `${triggerRect.right - alignRight}px` }
+      : { left: `${alignLeft - triggerRect.left}px`, right: 'auto' }
 }
 
-function clippingLeft(el: HTMLElement): number {
+function anchorElement(el: HTMLElement): HTMLElement {
+  return props.anchor === undefined ? el : (el.closest<HTMLElement>(props.anchor) ?? el)
+}
+
+function clippingBounds(el: HTMLElement): { left: number; right: number } {
   let node: HTMLElement | null = el.parentElement
   while (node) {
     const overflowX = getComputedStyle(node).overflowX
     if (overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'hidden') {
-      return node.getBoundingClientRect().left
+      const rect = node.getBoundingClientRect()
+      return { left: rect.left, right: rect.right }
     }
     node = node.parentElement
   }
-  return 0
+  return { left: 0, right: window.innerWidth }
 }
 
 // The focusable rows are whatever the mounted filter component renders (search
@@ -219,6 +368,15 @@ function focusRow(index: number): void {
   items[clamped]?.focus()
 }
 
+function focusFilter(): void {
+  const first = body.value?.querySelector<HTMLElement>('input, button')
+  if (first) {
+    first.focus()
+  } else {
+    focusRow(0)
+  }
+}
+
 function moveFocus(delta: number): void {
   const items = focusables()
   if (items.length === 0) {
@@ -232,24 +390,31 @@ function moveFocus(delta: number): void {
   focusRow(current + delta)
 }
 
-// Filter types whose input owns the vertical arrow keys (e.g. a number field's
-// native increment/decrement). For these the dropdown must not hijack ArrowUp /
-// ArrowDown for row navigation; Tab still moves between rows.
+// Filter types whose input owns the vertical arrow keys: numeric and date-time
+// fields use them for native increment/decrement, so the dropdown must not
+// hijack ArrowUp/ArrowDown for row navigation there.
 const ARROW_NAV_DISABLED_TYPES = new Set<ColumnFilterDefinition['type']>([
   'numeric',
-  'boolean-group',
-  'date-time-range'
+  'date-time-range',
+  'duration'
 ])
 
 function registerShortcuts(): void {
   if (shortcutIds.length > 0) {
     return
   }
-  shortcutIds = [shortcuts.on({ key: ['Escape'] }, close)]
+  const scope = _t('Filter')
+  shortcutIds = [shortcuts.on({ key: ['Escape'], scope, description: _t('Close filter') }, close)]
   if (!ARROW_NAV_DISABLED_TYPES.has(props.definition.type)) {
     shortcutIds.push(
-      shortcuts.on({ key: ['ArrowDown'], preventDefault: true }, () => moveFocus(1)),
-      shortcuts.on({ key: ['ArrowUp'], preventDefault: true }, () => moveFocus(-1))
+      shortcuts.on(
+        { key: ['ArrowDown'], preventDefault: true, scope, description: _t('Next row') },
+        () => moveFocus(1)
+      ),
+      shortcuts.on(
+        { key: ['ArrowUp'], preventDefault: true, scope, description: _t('Previous row') },
+        () => moveFocus(-1)
+      )
     )
   }
 }
@@ -285,41 +450,122 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <span ref="trigger" class="monitoring-filter-dropdown">
-    <slot name="trigger" :toggle="toggle" :is-open="isOpen" :is-active="isActive" />
+  <span ref="trigger" class="monitoring-filter-dropdown" @keydown="onTriggerKeydown">
+    <slot
+      name="trigger"
+      :toggle="toggle"
+      :is-open="isOpen"
+      :is-active="isActive"
+      :panel-id="panelId"
+    />
 
     <div
       v-if="isOpen"
+      :id="panelId"
       ref="panel"
       v-click-outside="onClickOutside"
       class="monitoring-filter-dropdown__panel"
-      :class="{
-        'monitoring-filter-dropdown__panel--up': flipUp,
-        'monitoring-filter-dropdown__panel--left': flipLeft
-      }"
+      :class="{ 'monitoring-filter-dropdown__panel--up': flipUp }"
+      :style="alignment"
       role="group"
       :aria-label="`Filter ${label}`"
       @focusout="onFocusOut"
     >
-      <div class="monitoring-filter-dropdown__content">
-        <CmkButton
-          variant="text"
-          size="small"
-          class="monitoring-filter-dropdown__clear"
-          @click="clear"
+      <div v-if="sortable" class="monitoring-filter-dropdown__sort">
+        <div
+          class="monitoring-filter-dropdown__sort-group"
+          role="group"
+          :aria-labelledby="sortHeadingId"
         >
-          {{ props.clearLabel ?? _t('Clear') }}
-        </CmkButton>
+          <span :id="sortHeadingId" class="monitoring-filter-dropdown__sort-heading">{{
+            _t('Sort by this column')
+          }}</span>
+          <button
+            v-for="option in sortOptions"
+            :key="String(option.direction)"
+            type="button"
+            class="monitoring-filter-dropdown__sort-option"
+            :aria-pressed="isSortMarked(option.direction)"
+            @click="pickSort(option.direction)"
+          >
+            <CmkMultitoneIcon
+              v-if="option.direction !== false"
+              name="arrow-down"
+              :rotate="option.direction === 'asc' ? 180 : 0"
+              primary-color="font"
+              aria-hidden="true"
+              size="xsmall"
+            />
+            <span
+              v-else
+              class="monitoring-filter-dropdown__sort-option-spacer"
+              aria-hidden="true"
+            ></span>
+            {{ option.label }}
+            <span
+              v-if="isSortMarked(option.direction)"
+              class="monitoring-filter-dropdown__sort-marker"
+              aria-hidden="true"
+            ></span>
+          </button>
+        </div>
+        <div
+          v-if="canExtendSort"
+          class="monitoring-filter-dropdown__sort-group"
+          role="group"
+          :aria-labelledby="extendSortHeadingId"
+        >
+          <span :id="extendSortHeadingId" class="monitoring-filter-dropdown__sort-heading">{{
+            extendSortHeading
+          }}</span>
+          <button
+            v-for="option in extendSortOptions"
+            :key="String(option.direction)"
+            type="button"
+            class="monitoring-filter-dropdown__sort-option"
+            :aria-pressed="extendedSort === option.direction"
+            @click="pickExtendedSort(option.direction)"
+          >
+            <CmkMultitoneIcon
+              name="arrow-down"
+              :rotate="option.direction === 'asc' ? 180 : 0"
+              primary-color="font"
+              aria-hidden="true"
+              size="xsmall"
+            />
+            {{ option.label }}
+            <span
+              v-if="extendedSort === option.direction"
+              class="monitoring-filter-dropdown__sort-marker"
+              aria-hidden="true"
+            ></span>
+          </button>
+        </div>
+      </div>
 
-        <hr class="monitoring-filter-dropdown__content-row-separator" />
+      <div class="monitoring-filter-dropdown__content">
+        <div class="monitoring-filter-dropdown__content-header">
+          <span v-if="heading" class="monitoring-filter-dropdown__heading">{{ heading }}</span>
+          <CmkButton
+            variant="text"
+            size="small"
+            class="monitoring-filter-dropdown__clear"
+            @click="clear"
+          >
+            {{ props.clearLabel ?? _t('Clear') }}
+          </CmkButton>
+        </div>
 
-        <component
-          :is="filterComponent"
-          :key="draftKey"
-          v-model="draft"
-          :definition="definition"
-          @update:valid="isValid = $event"
-        />
+        <div ref="body" @keydown.enter="onBodyEnter">
+          <component
+            :is="filterComponent"
+            :key="draftKey"
+            ref="content"
+            v-model="draft"
+            :definition="definition"
+            @update:valid="isValid = $event"
+          />
+        </div>
       </div>
 
       <div class="monitoring-filter-dropdown__footer">
@@ -346,30 +592,81 @@ onBeforeUnmount(() => {
   z-index: var(--z-index-dropdown-offset, 100);
   box-sizing: border-box;
   width: max-content;
-  min-width: 180px;
+  min-width: 330px;
   max-width: min(90vw, 32rem);
   background: var(--ux-theme-1);
   border: 1px solid var(--ux-theme-4);
   border-radius: 4px;
   box-shadow: 0 4px 12px rgb(0 0 0 / 25%);
+  font-weight: var(--font-weight-default);
+  text-align: left;
+  white-space: normal;
+}
+
+.monitoring-filter-dropdown__sort {
+  display: flex;
+  flex-direction: column;
+  padding: var(--dimension-3) 0;
+  border-bottom: 1px solid var(--ux-theme-4);
+}
+
+.monitoring-filter-dropdown__sort-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.monitoring-filter-dropdown__sort-heading {
+  padding: var(--dimension-3) var(--dimension-5);
+  font-weight: var(--font-weight-bold);
+}
+
+.monitoring-filter-dropdown__sort-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-5);
+  padding: var(--dimension-3) var(--dimension-5);
+  background: transparent;
+  border: none;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 0;
+  line-height: 20px;
+
+  &:hover {
+    background-color: var(--ux-theme-3);
+  }
+}
+
+.monitoring-filter-dropdown__sort-option-spacer {
+  width: 10px;
+}
+
+.monitoring-filter-dropdown__sort-marker {
+  width: var(--dimension-3);
+  height: var(--dimension-3);
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--success);
 }
 
 .monitoring-filter-dropdown__content {
-  width: calc(100% - 2 * var(--dimension-2));
-  margin: var(--dimension-2);
-}
-
-.monitoring-filter-dropdown__clear {
-  margin: var(--dimension-3);
-  float: right;
-}
-
-.monitoring-filter-dropdown__content-row-separator {
   width: 100%;
-  height: var(--dimension-1);
-  border: 0;
-  background-color: var(--ux-theme-4);
-  margin: var(--dimension-2) 0;
+}
+
+.monitoring-filter-dropdown__content-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dimension-4);
+  padding: var(--dimension-4) var(--dimension-5);
+}
+
+.monitoring-filter-dropdown__heading {
+  font-weight: var(--font-weight-bold);
 }
 
 .monitoring-filter-dropdown__panel--up {
@@ -379,18 +676,12 @@ onBeforeUnmount(() => {
   margin-bottom: var(--dimension-2);
 }
 
-.monitoring-filter-dropdown__panel--left {
-  left: auto;
-  right: 0;
-}
-
 .monitoring-filter-dropdown__footer {
   display: flex;
   gap: var(--dimension-4);
   justify-content: flex-end;
-  margin-top: var(--dimension-2);
-  padding: var(--dimension-4) var(--dimension-3);
-  border-top: 1px solid var(--ux-theme-4);
+  padding: var(--dimension-4) var(--dimension-5);
   align-items: center;
+  border-top: 1px solid var(--ux-theme-4);
 }
 </style>

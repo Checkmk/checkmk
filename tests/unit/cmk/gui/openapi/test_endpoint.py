@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
 
 """
@@ -12,8 +13,10 @@ smth (needed for endpoint registration in test_openapi_endpoint_decorator_resets
 
 import base64
 import json
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
+from http import HTTPStatus
 from pathlib import Path
+from typing import NoReturn
 from unittest import mock
 
 import pytest
@@ -28,8 +31,8 @@ from cmk.gui.openapi.restful_objects.decorators import Endpoint, WrappedEndpoint
 from cmk.gui.openapi.restful_objects.registry import endpoint_registry
 from cmk.gui.openapi.utils import ProblemException, RestAPIResponseGeneralException
 from cmk.utils.local_secrets import SiteInternalSecret
-from tests.testlib.gui.web_test_app import SetConfig, WebTestAppForCMK
-from tests.testlib.rest_api_client import ClientRegistry, RestApiClient
+from tests.testlib.unit.gui.web_test_app import SetConfig, WebTestAppForCMK
+from tests.testlib.unit.rest_api_client import ClientRegistry, RestApiClient
 
 TEST_TARGZ_FILE = "H4sIAAAAAAAAA+3OQQrCMBCF4aw9RbyAJDVNzxNooIXgyBjR4xvppuBCN0UK/7eYxzCzeNN8qs9qNuWaGMM7/dC7dS58b3yI3RDbDJ1pe/BnY922tRb3W01qrSlZLklHueaqounj79t9p6ZcitiHaBmPh3+XAQAAAAAAAAAAAAAAAAD87AUCVDjzACgAAA=="
 
@@ -38,11 +41,11 @@ def test_openapi_accept_header_missing(aut_user_auth_wsgi_app: WebTestAppForCMK)
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        status=406,
+        status=HTTPStatus.NOT_ACCEPTABLE,
     )
     assert resp.json == {
         "detail": "Please specify an Accept Header.",
-        "status": 406,
+        "status": HTTPStatus.NOT_ACCEPTABLE,
         "title": "Not Acceptable",
     }
 
@@ -53,7 +56,7 @@ def test_openapi_accept_header_matches(aut_user_auth_wsgi_app: WebTestAppForCMK)
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         {},  # params
         {"Accept": "application/json"},  # headers
-        status=200,
+        status=HTTPStatus.OK,
     )
     assert resp.json["value"] == []
 
@@ -64,13 +67,13 @@ def test_openapi_accept_header_invalid(aut_user_auth_wsgi_app: WebTestAppForCMK)
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         {},  # params
         {"Accept": "asd-asd-asd"},  # headers
-        status=406,
+        status=HTTPStatus.NOT_ACCEPTABLE,
     )
     assert resp.json == {
         "detail": "Can not send a response with the content type specified in the "
         "'Accept' Header. Accept Header: asd-asd-asd. Supported content "
         "types: [application/json]",
-        "status": 406,
+        "status": HTTPStatus.NOT_ACCEPTABLE,
         "title": "Not Acceptable",
     }
 
@@ -80,7 +83,7 @@ class SomeSchema(BaseSchema):
 
 
 @pytest.fixture(name="test_endpoint")
-def install_endpoint(fresh_app_instance):
+def install_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/unitest-endpoint-test-that-is-not-cleaned-up",
         method="post",
@@ -96,7 +99,7 @@ def install_endpoint(fresh_app_instance):
         body = param["body"]
         assert isinstance(body, dict)
         hooks.call("permission-checked", body["permission"])
-        return Response(status=204)
+        return Response(status=HTTPStatus.NO_CONTENT)
 
     endpoint_registry.register(test)
 
@@ -106,7 +109,7 @@ def install_endpoint(fresh_app_instance):
 
 
 @pytest.fixture(name="test_multiple_accept_endpoint")
-def install_multi_accept_endpoint(fresh_app_instance):
+def install_multi_accept_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/test_multiple_content_types",
         method="post",
@@ -123,7 +126,7 @@ def install_multi_accept_endpoint(fresh_app_instance):
         response = Response()
         response.set_content_type("application/json")
         response.set_data(json.dumps({"permission": param.get("content_type")}))
-        response.status_code = 200
+        response.status_code = HTTPStatus.OK
         return response
 
     endpoint_registry.register(multiaccept_test)
@@ -135,7 +138,7 @@ def install_multi_accept_endpoint(fresh_app_instance):
 
 # This looks like a good template for a test
 @pytest.fixture(name="test_internal_endpoint")
-def install_reserved_endpoint(fresh_app_instance):
+def install_reserved_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/i_am_reserved",
         method="get",
@@ -145,7 +148,7 @@ def install_reserved_endpoint(fresh_app_instance):
         internal_user_only=True,
     )
     def reserved_test(param: Mapping[str, object]) -> Response:
-        return Response(status=204)
+        return Response(status=HTTPStatus.NO_CONTENT)
 
     endpoint_registry.register(reserved_test)
 
@@ -177,22 +180,22 @@ def test_openapi_endpoint_decorator_resets_used_permissions(
             json.dumps({"permission": permission}),  # params
             {"Accept": "application/json"},  # headers
             content_type="application/json",
-            status=204,
+            status=HTTPStatus.NO_CONTENT,
         )
 
     # here we create a code path, that requests the permission "one"
     call("one")
     # we expect to see this permission in the collection:
-    assert test_endpoint.endpoint._used_permissions == {"one"}
+    assert test_endpoint.endpoint._used_permissions == {"one"}  # noqa: SLF001
     # then we create a code path that requests the permission "two"
     call("two")
     # and expect only "two" in the collection, because "one" was requested in
     # another call. before the fix, both "one" and "two" were in this set.
-    assert test_endpoint.endpoint._used_permissions == {"two"}
+    assert test_endpoint.endpoint._used_permissions == {"two"}  # noqa: SLF001
 
 
 @pytest.fixture(name="test_endpoint_raise_status_code")
-def install_endpoint_raise(fresh_app_instance):
+def install_endpoint_raise(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/raise_exception",
         method="get",
@@ -204,7 +207,7 @@ def install_endpoint_raise(fresh_app_instance):
     )
     def test(param: Mapping[str, object]) -> Response:
         """Smth"""
-        raise ProblemException(418, "short", "long")
+        raise ProblemException(HTTPStatus.IM_A_TEAPOT, "short", "long")
 
     endpoint_registry.register(test)
     yield test
@@ -213,7 +216,7 @@ def install_endpoint_raise(fresh_app_instance):
 
 
 @pytest.fixture(name="test_endpoint_accept_parameter")
-def accept_parameter_endpoint(fresh_app_instance):
+def accept_parameter_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/test_accept_parameter",
         method="post",
@@ -226,7 +229,7 @@ def accept_parameter_endpoint(fresh_app_instance):
     )
     def test(param: Mapping[str, object]) -> Response:
         """Smth"""
-        return Response(status=204)
+        return Response(status=HTTPStatus.NO_CONTENT)
 
     endpoint_registry.register(test)
     yield test
@@ -234,8 +237,9 @@ def accept_parameter_endpoint(fresh_app_instance):
     endpoint_registry.unregister(test)
 
 
+@pytest.mark.usefixtures("test_endpoint_raise_status_code")
 def test_openapi_endpoint_decorator_catches_status_code_exceptions(
-    test_endpoint_raise_status_code: WrappedEndpoint, aut_user_auth_wsgi_app: WebTestAppForCMK
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     """
     before this test, the Endpoint did not check for exceptions that change the
@@ -247,7 +251,7 @@ def test_openapi_endpoint_decorator_catches_status_code_exceptions(
         "/NO_SITE/check_mk/api/1.0/raise_exception",
         "",
         {"Accept": "application/json"},  # headers
-        status=500,
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
     )
     response.assert_rest_api_crash()
     assert response.json["title"] == "Internal Server Error"
@@ -255,7 +259,11 @@ def test_openapi_endpoint_decorator_catches_status_code_exceptions(
     exc = response.json["ext"]["details"]["rest_api_exception"]
     assert exc["description"] == "Unexpected status code returned: 418"
     assert exc["detail"] == "Endpoint gui.openapi.test_endpoint.test"
-    assert set(exc["ext"]["The following status codes are allowed for this endpoint"]) == {406, 204}
+    assert set(exc["ext"]["The following status codes are allowed for this endpoint"]) == {
+        HTTPStatus.UNAUTHORIZED,
+        HTTPStatus.NOT_ACCEPTABLE,
+        HTTPStatus.NO_CONTENT,
+    }
 
 
 # ========= PATH Validation Tests =========
@@ -263,7 +271,7 @@ def test_path_validation_exception(base: str, aut_user_auth_wsgi_app: WebTestApp
     resp = aut_user_auth_wsgi_app.get(
         url=f"{base}/objects/event_console/abc",
         headers={"Accept": "application/json"},
-        status=404,
+        status=HTTPStatus.NOT_FOUND,
     )
     assert resp.json["title"] == "Not Found"
     assert resp.json["detail"] == "These fields have problems: path.event_id, query.site_id"
@@ -285,7 +293,7 @@ def test_non_matching_content_type_exception(
         url=f"{base}/domain-types/time_period/collections/all",
         headers={"Accept": "application/json", "Content-Type": "text"},
         params=json.dumps(test_data),
-        status=415,
+        status=HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
     )
     assert resp.json["title"] == "Content type not valid for this endpoint."
     assert resp.json["detail"] == "Content-Type 'text' not supported for this endpoint."
@@ -307,7 +315,7 @@ def test_content_type_with_invalid_charset(
             "Content-Type": "application/json; charset=not-utf-8",
         },
         params=json.dumps(test_data),
-        status=415,
+        status=HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
     )
     assert resp.json["title"] == "Content type not valid for this endpoint."
     assert (
@@ -327,7 +335,7 @@ def test_non_supported_accept_header(base: str, aut_user_auth_wsgi_app: WebTestA
         url=f"{base}/domain-types/time_period/collections/all",
         headers={"Accept": "something_else", "Content-Type": "application/json"},
         params=json.dumps(test_data),
-        status=406,
+        status=HTTPStatus.NOT_ACCEPTABLE,
     )
     assert resp.json["title"] == "Not Acceptable"
     assert (
@@ -349,7 +357,7 @@ def test_wato_disabled_exception(clients: ClientRegistry, set_config: SetConfig)
             tag_data=test_data,
             expect_ok=False,
         )
-    resp.assert_status_code(403)
+    resp.assert_status_code(HTTPStatus.FORBIDDEN)
     assert resp.json["title"] == "Forbidden: Setup is disabled"
     assert (
         resp.json["detail"]
@@ -359,7 +367,7 @@ def test_wato_disabled_exception(clients: ClientRegistry, set_config: SetConfig)
 
 # ========= Permission Validation =========
 def test_permission_exception(clients: ClientRegistry) -> None:
-    def validate(*args, **kwargs):
+    def validate(*args: object, **kwargs: object) -> bool:
         return False
 
     with mock.patch("cmk.web.utils.permission_verification.BasePerm.validate", validate):
@@ -382,7 +390,7 @@ def test_permission_exception(clients: ClientRegistry) -> None:
 
 
 @pytest.fixture(name="test_endpoint_raise_auth_exception")
-def install_endpoint_raise_auth_exception(fresh_app_instance):
+def install_endpoint_raise_auth_exception(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/raise_auth_exception",
         method="get",
@@ -402,8 +410,8 @@ def install_endpoint_raise_auth_exception(fresh_app_instance):
     endpoint_registry.unregister(test)
 
 
+@pytest.mark.usefixtures("test_endpoint_raise_auth_exception")
 def test_openapi_endpoint_permission_denied_is_forbidden(
-    test_endpoint_raise_auth_exception: WrappedEndpoint,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     """A failed permission check of an authenticated user must result in a 403, not a 401."""
@@ -412,14 +420,16 @@ def test_openapi_endpoint_permission_denied_is_forbidden(
         "/NO_SITE/check_mk/api/1.0/raise_auth_exception",
         "",
         {"Accept": "application/json"},
-        status=403,
+        status=HTTPStatus.FORBIDDEN,
     )
     assert resp.json["title"] == "Forbidden"
     assert resp.json["detail"] == "We are sorry, but you lack the permission for this operation."
 
 
 @pytest.fixture(name="test_endpoint_raise_unauthenticated_exception")
-def install_endpoint_raise_unauthenticated_exception(fresh_app_instance):
+def install_endpoint_raise_unauthenticated_exception(
+    fresh_app_instance: None,
+) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/raise_unauthenticated_exception",
         method="get",
@@ -439,8 +449,8 @@ def install_endpoint_raise_unauthenticated_exception(fresh_app_instance):
     endpoint_registry.unregister(test)
 
 
+@pytest.mark.usefixtures("test_endpoint_raise_unauthenticated_exception")
 def test_openapi_endpoint_unauthenticated_stays_unauthorized(
-    test_endpoint_raise_unauthenticated_exception: WrappedEndpoint,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     """Missing authentication must not be remapped to a 403."""
@@ -449,7 +459,7 @@ def test_openapi_endpoint_unauthenticated_stays_unauthorized(
         "/NO_SITE/check_mk/api/1.0/raise_unauthenticated_exception",
         "",
         {"Accept": "application/json"},
-        status=401,
+        status=HTTPStatus.UNAUTHORIZED,
     )
     assert resp.json["detail"] == "You are not authenticated."
 
@@ -460,18 +470,18 @@ def test_openapi_endpoint_unauthenticated_stays_unauthorized(
 def test_audit_log_permission_denied_is_forbidden(
     clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(LoggedInUser, "may", lambda self, permission_name: False)
+    monkeypatch.setattr(LoggedInUser, "_may_by_roles", lambda self, permission_name: False)  # noqa: ARG005
     resp = clients.AuditLog.get_all(date="2017-07-21", expect_ok=False)
-    resp.assert_status_code(403)
+    resp.assert_status_code(HTTPStatus.FORBIDDEN)
     assert "lack the permission" in resp.json["detail"]
 
 
 def test_pending_changes_permission_denied_is_forbidden(
     clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(LoggedInUser, "may", lambda self, permission_name: False)
+    monkeypatch.setattr(LoggedInUser, "_may_by_roles", lambda self, permission_name: False)  # noqa: ARG005
     resp = clients.ActivateChanges.list_pending_changes(expect_ok=False)
-    resp.assert_status_code(403)
+    resp.assert_status_code(HTTPStatus.FORBIDDEN)
     assert "lack the permission" in resp.json["detail"]
 
 
@@ -480,8 +490,10 @@ def test_crash_report_with_post(clients: ClientRegistry, monkeypatch: pytest.Mon
     exc_title = "The Wizard of Oz (1939)"
     exc_detail = "Toto, I've a feeling we're not in Kansas anymore."
 
-    def raise_an_exception():
-        raise RestAPIResponseGeneralException(status=500, title=exc_title, detail=exc_detail)
+    def raise_an_exception() -> NoReturn:
+        raise RestAPIResponseGeneralException(
+            status=HTTPStatus.INTERNAL_SERVER_ERROR, title=exc_title, detail=exc_detail
+        )
 
     monkeypatch.setattr(
         "cmk.gui.openapi.endpoints.aux_tags.load_tag_config",
@@ -535,16 +547,14 @@ def test_crash_report_with_post(clients: ClientRegistry, monkeypatch: pytest.Mon
 
 
 # ========= Accept parameter related Tests =========
-def test_invalid_content_type(
-    test_endpoint_accept_parameter: WrappedEndpoint,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-) -> None:
+@pytest.mark.usefixtures("test_endpoint_accept_parameter")
+def test_invalid_content_type(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     response = aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/test_accept_parameter",
         "",
         {"Accept": "application/json", "content-type": "application/i-do-not-exist"},  # headers
-        status=415,
+        status=HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
     )
 
     assert response.json["title"] == "Content type not valid for this endpoint."
@@ -561,34 +571,29 @@ def test_invalid_content_type(
         "I am not a .tar.gz file",
     ],
 )
-def test_invalid_payload(
-    test_endpoint_accept_parameter: WrappedEndpoint,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    payload: str,
-) -> None:
+@pytest.mark.usefixtures("test_endpoint_accept_parameter")
+def test_invalid_payload(aut_user_auth_wsgi_app: WebTestAppForCMK, payload: str) -> None:
     response = aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/test_accept_parameter",
         payload,
         {"Accept": "application/json", "content-type": "application/gzip"},  # headers
-        status=400,
+        status=HTTPStatus.BAD_REQUEST,
     )
 
     assert response.json["title"] == "Bad Request"
     assert response.json["detail"] == "Payload is not a valid .tar.gz file"
 
 
-def test_valid_gzip_file(
-    test_endpoint_accept_parameter: WrappedEndpoint,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-) -> None:
+@pytest.mark.usefixtures("test_endpoint_accept_parameter")
+def test_valid_gzip_file(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     payload = base64.b64decode(TEST_TARGZ_FILE)
     aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/test_accept_parameter",
         payload,
         {"Accept": "application/json", "content-type": "application/gzip"},  # headers
-        status=204,
+        status=HTTPStatus.NO_CONTENT,
     )
 
 
@@ -599,27 +604,25 @@ def test_valid_gzip_file(
         ("application/gzip", base64.b64decode(TEST_TARGZ_FILE)),
     ],
 )
+@pytest.mark.usefixtures("test_multiple_accept_endpoint")
 def test_endpoint_accept_multiple_types(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    test_multiple_accept_endpoint: WrappedEndpoint,
-    content_type: str,
-    payload: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK, content_type: str, payload: str
 ) -> None:
     res = aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/test_multiple_content_types",
         payload,
         {"Accept": "application/json", "Content-type": content_type},
-        status=200,
+        status=HTTPStatus.OK,
     )
 
     assert res.json["permission"] == content_type
 
 
 # ========= Authorization of reserved endpoint validation =========
+@pytest.mark.usefixtures("test_internal_endpoint")
 def test_reserved_endpoint_auth(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    test_internal_endpoint: WrappedEndpoint,
     api_client: RestApiClient,
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -629,9 +632,10 @@ def test_reserved_endpoint_auth(
         "/NO_SITE/check_mk/api/1.0/i_am_reserved",
         "",
         {"Accept": "application/json"},
-        status=401,
+        status=HTTPStatus.FORBIDDEN,
     )
 
+    assert res.json["title"] == "Forbidden"
     assert res.json["detail"] == "This endpoint is reserved for Checkmk."
 
     mocked_secret_path = tmp_path / "siteinternal.secret"
@@ -647,4 +651,4 @@ def test_reserved_endpoint_auth(
         },
     )
 
-    assert res_.status_code == 204
+    assert res_.status_code == HTTPStatus.NO_CONTENT

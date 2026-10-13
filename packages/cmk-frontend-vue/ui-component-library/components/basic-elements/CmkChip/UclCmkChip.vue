@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import { type Colors, type Sizes, type Variants } from 'cmk-ui-library/components/CmkChip.vue'
 
 import codeExample from './UclCmkChipCodeExample.vue?raw'
@@ -28,37 +28,37 @@ export const panelConfig = {
   size: {
     type: 'list' as const,
     title: 'Size',
-    options: [
-      { title: 'Small', name: 'small' },
-      { title: 'Medium', name: 'medium' },
-      { title: 'Large', name: 'large' }
-    ] satisfies Options<Sizes>[],
+    options: listOptions<Sizes>({
+      small: 'Small',
+      medium: 'Medium',
+      large: 'Large'
+    }),
     initialState: 'medium' as const
   },
   color: {
     type: 'list' as const,
     title: 'Color',
-    options: [
-      { title: 'Success(Green)', name: 'success' },
-      { title: 'Hosts (Blue)', name: 'hosts' },
-      { title: 'Info (Blue)', name: 'info' },
-      { title: 'Warning (Yellow)', name: 'warning' },
-      { title: 'Services (Yellow)', name: 'services' },
-      { title: 'Danger (Red)', name: 'danger' },
-      { title: 'Customization (Pink)', name: 'customization' },
-      { title: 'Others (Grey)', name: 'others' },
-      { title: 'Users (Purple)', name: 'users' },
-      { title: 'Special Agents (Cyan)', name: 'specialAgents' }
-    ] satisfies Options<Colors>[],
+    options: listOptions<Colors>({
+      success: 'Success(Green)',
+      hosts: 'Hosts (Blue)',
+      info: 'Info (Blue)',
+      warning: 'Warning (Yellow)',
+      services: 'Services (Yellow)',
+      danger: 'Danger (Red)',
+      customization: 'Customization (Pink)',
+      others: 'Others (Grey)',
+      users: 'Users (Purple)',
+      specialAgents: 'Special Agents (Cyan)'
+    }),
     initialState: 'success' as const
   },
   variant: {
     type: 'list' as const,
     title: 'Variant',
-    options: [
-      { title: 'Fill', name: 'fill' },
-      { title: 'Outline', name: 'outline' }
-    ] satisfies Options<Variants>[],
+    options: listOptions<Variants>({
+      fill: 'Fill',
+      outline: 'Outline'
+    }),
     initialState: 'fill' as const
   },
   asDiv: {

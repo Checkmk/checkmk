@@ -9,7 +9,7 @@ UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision
 
 metric_requests = metrics.Metric(
     name="requests",
-    title=Title("Requests per second"),
+    title=Title("Requests"),
     unit=UNIT_COUNTER,
     color=metrics.Color.CYAN,
 )

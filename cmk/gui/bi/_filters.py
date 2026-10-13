@@ -10,10 +10,10 @@ from typing import override
 
 from cmk.ccc.regex import RegexFutureWarning
 from cmk.gui import query_filters
+from cmk.gui.config import RequestCacheConfig
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.visuals.filter import Filter, FilterOption, FilterRegistry
 from cmk.gui.visuals.filter.components import (
@@ -24,6 +24,8 @@ from cmk.gui.visuals.filter.components import (
     HorizontalGroup,
     TextInput,
 )
+from cmk.web.utils.request_cache import RequestCache
+from cmk.web.utils.speaklater import LazyString
 
 from ._compiler import is_part_of_aggregation
 from ._packs import aggregation_group_choices, get_aggregation_group_trees
@@ -99,7 +101,7 @@ def register(filter_registry: FilterRegistry) -> None:
             info="service",
             query_filter=query_filters.TristateQuery(
                 ident="aggr_service_used",
-                filter_code=lambda x: "",
+                filter_code=lambda x: "",  # noqa: ARG005
                 filter_row=bi_aggr_service_used,
             ),
             is_show_more=True,
@@ -129,7 +131,9 @@ class _FilterAggrGroup(Filter):
         return {self.htmlvars[0]: row[self.column]}
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         choices = {
             "": "",
         }
@@ -148,7 +152,9 @@ class _FilterAggrGroup(Filter):
         return rows
 
     @override
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
+    def heading_info(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> str | None:
         return value.get(self.htmlvars[0])
 
 
@@ -169,14 +175,18 @@ class _FilterAggrGroupTree(Filter):
         return {self.htmlvars[0]: row[self.column]}
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield Dropdown(
             id=self.htmlvars[0],
             choices=self._options(),
         )
 
     @override
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
+    def heading_info(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> str | None:
         return value.get(self.htmlvars[0])
 
     @staticmethod
@@ -216,16 +226,22 @@ class _BIFrozenAggregations(Filter):
         return ""
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
-        yield Checkbox(
-            id=self.htmlvars[0],
-            label=_("Show frozen"),
-            default_value=True,
-        )
-        yield Checkbox(
-            id=self.htmlvars[1],
-            label=_("Show dynamic"),
-            default_value=True,
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
+        yield HorizontalGroup(
+            components=[
+                Checkbox(
+                    id=self.htmlvars[0],
+                    label=_("Show frozen"),
+                    default_value=True,
+                ),
+                Checkbox(
+                    id=self.htmlvars[1],
+                    label=_("Show dynamic"),
+                    default_value=True,
+                ),
+            ]
         )
 
     @override
@@ -281,11 +297,15 @@ class BITextFilter(Filter):
         return {self.htmlvars[0]: row[self.column]}
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield TextInput(id=self.htmlvars[0])
 
     @override
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
+    def heading_info(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> str | None:
         return value.get(self.htmlvars[0])
 
     @override
@@ -330,11 +350,15 @@ class _FilterAggrHosts(Filter):
         )
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield TextInput(id=self.htmlvars[1])
 
     @override
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
+    def heading_info(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> str | None:
         return value.get(self.htmlvars[1])
 
     def find_host(self, host: str, hostlist: Sequence[tuple[str, str]]) -> bool:
@@ -373,12 +397,16 @@ class _FilterAggrService(Filter):
         )
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield TextInput(id=self.htmlvars[1], label=_("Host") + ": ")
         yield TextInput(id=self.htmlvars[2], label=_("Service") + ": ")
 
     @override
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
+    def heading_info(
+        self, value: FilterHTTPVariables, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> str | None:
         return value.get(self.htmlvars[1], "") + " / " + value.get(self.htmlvars[2], "")
 
     @override
@@ -419,7 +447,9 @@ class BIStatusFilter(Filter):
         return value.get(self.prefix + "_filled", "")
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         yield Hidden(id=self.prefix + "_filled", value="1")
         yield HorizontalGroup(
             components=[

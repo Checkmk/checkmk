@@ -7,18 +7,21 @@
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import check_icmp_params, HostRulespec, rulespec_registry
+from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Checkbox,
     Dictionary,
     DictionaryEntry,
+    Float,
     Hostname,
     Integer,
+    Percentage,
     TextInput,
+    Tuple,
     ValueSpec,
 )
-from cmk.gui.wato import RulespecGroupActiveChecks
+from cmk.gui.watolib.rulespec_groups import RulespecGroupActiveChecks
 from cmk.ruleset_matcher.definition import RuleGroup
 
 
@@ -102,13 +105,64 @@ def _valuespec_active_checks_icmp() -> ValueSpec:
                 minvalue=1,
             ),
         ),
+        (
+            "rta",
+            Tuple(
+                title=_("Round trip average"),
+                elements=[
+                    Float(title=_("Warning if above"), unit="ms", default_value=200.0),
+                    Float(title=_("Critical if above"), unit="ms", default_value=500.0),
+                ],
+            ),
+        ),
+        (
+            "loss",
+            Tuple(
+                title=_("Packet loss"),
+                help=_(
+                    "When the percentage of lost packets is equal or greater then "
+                    "this level, then the according state is triggered. The default for critical "
+                    "is 100%. That means that the check is only critical if <b>all</b> packets "
+                    "are lost."
+                ),
+                elements=[
+                    Percentage(title=_("Warning at"), default_value=80.0),
+                    Percentage(title=_("Critical at"), default_value=100.0),
+                ],
+            ),
+        ),
+        (
+            "packets",
+            Integer(
+                title=_("Number of packets"),
+                help=_(
+                    "Number ICMP echo request packets to send to the target host on each "
+                    "check execution. All packets are sent directly on check execution. Afterwards "
+                    "the check waits for the incoming packets."
+                ),
+                minvalue=1,
+                maxvalue=20,
+                default_value=5,
+            ),
+        ),
+        (
+            "timeout",
+            Integer(
+                title=_("Total timeout of check"),
+                help=_(
+                    "After this time (in seconds) the check is aborted, regardless "
+                    "of how many packets have been received yet."
+                ),
+                minvalue=1,
+            ),
+        ),
     ]
     return Dictionary(
         title=_("Check hosts with ping (ICMP echo request)"),
         help=_(
             "This rule set allows you to configure explicit ping monitoring of hosts. Usually a ping is being used as a host check, so this is not necessary. There are some situations, however, where this can be useful. One of them is when using the Checkmk Micro Core with Smart Ping and you want to track metrics of the ping to some hosts, nevertheless."
         ),
-        elements=elements + check_icmp_params(),
+        elements=elements,
     )
 
 

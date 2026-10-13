@@ -9,27 +9,11 @@ import type {
   SingleChoiceEditable,
   ValidationMessage
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
 
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
 import FormSingleChoiceEditable from '@/form/private/forms/FormSingleChoiceEditable/FormSingleChoiceEditable.vue'
-
-// The default client singleton captures `globalThis.fetch` at import time, before
-// server.listen() patches it. Re-create it with a lazy fetch wrapper so MSW can intercept.
-vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
-  const mod = await importOriginal<Record<string, unknown>>()
-  const createClientImpl = (await import('openapi-fetch')).default
-  return {
-    ...mod,
-    default: createClientImpl({
-      baseUrl: `${location.protocol}//${location.host}/api/internal`,
-      credentials: 'include',
-      headers: { Accept: 'application/json' },
-      fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args)
-    })
-  }
-})
 
 initializeComponentRegistry()
 
@@ -46,7 +30,7 @@ const mockSchema: Dictionary = {
 
 const BASE = `${location.protocol}//${location.host}/api/internal`
 
-const server = setupServer(
+const server = useMswServer(
   http.get(`${BASE}/domain-types/notification_parameter/collections/:entity_type_specifier`, () =>
     HttpResponse.json({
       value: [
@@ -65,11 +49,8 @@ const server = setupServer(
   )
 )
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }))
-afterAll(() => server.close())
 afterEach(() => {
   cleanup()
-  server.resetHandlers()
 })
 
 function makeSpec(overrides: Partial<SingleChoiceEditable> = {}): SingleChoiceEditable {
@@ -117,6 +98,27 @@ test('loads entities and shows no-elements text when none available', async () =
 test('uses inputHint as dropdown placeholder', async () => {
   renderComponent({ spec: makeSpec({ input_hint: 'Pick a parameter...' }) })
   await screen.findByLabelText('Pick a parameter...')
+})
+
+test('dropdown opened while entities are still loading shows them once loaded', async () => {
+  let releaseListEntities: () => void = () => {}
+  const gate = new Promise<void>((resolve) => {
+    releaseListEntities = resolve
+  })
+  server.use(
+    http.get(
+      `${BASE}/domain-types/notification_parameter/collections/:entity_type_specifier`,
+      async () => {
+        await gate
+        return HttpResponse.json({ value: [{ id: 'entity-1', title: 'Entity One' }] })
+      }
+    )
+  )
+  renderComponent()
+  await fireEvent.click(screen.getByRole('combobox', { name: 'Select entity' }))
+  await screen.findByText('Loading…')
+  releaseListEntities()
+  await screen.findByRole('option', { name: 'Entity One' })
 })
 
 test('opens slide-in with readable new title when clicking create', async () => {

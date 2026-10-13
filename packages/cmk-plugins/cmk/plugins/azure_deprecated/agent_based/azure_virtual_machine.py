@@ -253,7 +253,9 @@ def discover_azure_vm_cpu_utilization(section: Section) -> DiscoveryResult:
 
 
 def check_azure_vm_cpu_utilization(
-    item: str, params: Mapping[str, tuple[float, float]], section: Section
+    item: str,  # noqa: ARG001
+    params: Mapping[str, tuple[float, float]],
+    section: Section,
 ) -> CheckResult:
     yield from create_check_metrics_function_single(
         [

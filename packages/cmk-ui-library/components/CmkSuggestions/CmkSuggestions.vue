@@ -7,11 +7,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkHtml from 'cmk-ui-library/components/CmkHtml.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
+import { CmkTooltipProvider } from 'cmk-ui-library/components/CmkTooltip'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { useDebounceRef } from 'cmk-ui-library/lib/useDebounce'
 import { immediateWatch } from 'cmk-ui-library/lib/watch'
 import { type Ref, computed, nextTick, ref, useTemplateRef } from 'vue'
 
+import SuggestionTooltip from './SuggestionTooltip.vue'
 import { ErrorResponse, type Suggestion, WarningResponse } from './suggestions'
 import {
   NoSelection,
@@ -21,9 +24,20 @@ import {
   isSectioned
 } from './types'
 
-type DisplaySection = Omit<Section, 'title'> & { title: Section['title'] | null }
+// `source` is the caller's section, reported on selection; null when not sectioned.
+type DisplaySection = Omit<Section, 'title'> & {
+  title: Section['title'] | null
+  source: Section | null
+}
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Suggestions'), [
+  { combo: ['Enter'], description: _t('Pick suggestion') },
+  { combo: ['Tab'], description: _t('Pick suggestion') },
+  { combo: ['Escape'], description: _t('Close') },
+  { combo: ['ArrowDown'], description: _t('Move through suggestions') },
+  { combo: ['ArrowUp'], description: _t('Move through suggestions') }
+])
 
 const {
   selectedSuggestion,
@@ -47,7 +61,7 @@ const showFilter = computed<boolean>(() => {
 })
 
 const emit = defineEmits<{
-  'select-suggestion': [Suggestion | null]
+  'select-suggestion': [Suggestion | null, Section | null]
   'request-close-suggestions': []
   blur: []
 }>()
@@ -91,20 +105,12 @@ function findSuggestionAsIndex(
   if (suggestion === null) {
     return null
   }
-  const currentElement = suggestions
-    .map((suggestion, index) => ({
-      name: suggestion.name,
-      index: index
-    }))
-    .find(({ name }) => suggestion.name === name)
-  if (currentElement === undefined) {
-    return null
-  }
-  return currentElement.index
+  const index = suggestions.indexOf(suggestion)
+  return index === -1 ? null : index
 }
 
 function asSingleSection(suggestions: Array<Suggestion>): Array<DisplaySection> {
-  return suggestions.length > 0 ? [{ title: null, suggestions }] : []
+  return suggestions.length > 0 ? [{ title: null, suggestions, source: null }] : []
 }
 
 function buildSectionedDisplaySections(
@@ -115,20 +121,17 @@ function buildSectionedDisplaySections(
   const lowerCaseQuery = query.toLowerCase()
   const survivingSections = sections
     .map((section) => ({
-      title: section.title,
+      source: section,
       suggestions: doFilter
         ? section.suggestions.filter((s) => s.title.toLowerCase().includes(lowerCaseQuery))
         : section.suggestions
     }))
     .filter((section) => section.suggestions.length > 0)
 
-  if (survivingSections.length <= 1) {
-    return asSingleSection(survivingSections[0]?.suggestions ?? [])
-  }
-
-  return survivingSections.map((section) => ({
-    title: section.title.trim() !== '' ? section.title : null,
-    suggestions: section.suggestions
+  return survivingSections.map(({ source, suggestions }) => ({
+    source,
+    suggestions,
+    title: survivingSections.length > 1 && source.title.trim() !== '' ? source.title : null
   }))
 }
 
@@ -291,16 +294,20 @@ function onKeyEnter(event: InputEvent): void {
   selectSuggestion(activeSuggestion.value)
 }
 
-function selectSuggestion(suggestion: Suggestion | null) {
-  if (suggestion && suggestion.name === null) {
+function selectSuggestion(suggestion: Suggestion) {
+  if (suggestion.name === null) {
     // do not select non-selectable elements
     return
   }
-  if (suggestion && suggestion.name === selectedSuggestion.getName()) {
+  const source =
+    displaySections.value.find((section) => section.suggestions.includes(suggestion))?.source ??
+    null
+  // A name can recur across sections, so only short-circuit when unsectioned, where names are unique.
+  if (source === null && suggestion.name === selectedSuggestion.getName()) {
     emit('request-close-suggestions')
     return
   }
-  emit('select-suggestion', suggestion)
+  emit('select-suggestion', suggestion, source)
 }
 
 function setSiblingOrFirstActive(offset: number) {
@@ -387,79 +394,86 @@ defineExpose({
         @keydown.escape.prevent="emit('blur')"
       />
     </span>
-    <CmkScrollContainer class="cmk-suggestions__scroll" :max-height="maxHeight">
-      <li v-if="error" class="cmk-suggestions--error"><CmkHtml :html="error" /></li>
-      <li v-if="warning" class="cmk-suggestions--warning"><CmkHtml :html="warning" /></li>
-      <!-- eslint-disable vue/valid-v-for vue/require-v-for-key since the index in suggestionRefs does not get correctly updated when using the suggestion name as key -->
-      <template v-for="(section, sIdx) in displaySections">
-        <li
-          v-if="section.title !== null"
-          :key="`h-${sIdx}`"
-          class="cmk-suggestions__section-header"
-          role="heading"
-          aria-level="3"
-          :aria-label="section.title"
-          tabindex="-1"
-          @mousedown.prevent
-        >
-          {{ section.title }}
-        </li>
-        <li
-          v-for="suggestion in section.suggestions"
-          ref="suggestionRefs"
-          tabindex="-1"
-          :role="role"
-          :aria-label="suggestion.title"
-          :aria-selected="
-            markSelected && suggestion.name !== null
-              ? suggestion.name === selectedSuggestion.getName()
-              : undefined
-          "
-          :class="{
-            selectable: suggestion.name !== null,
-            selected: suggestion.name === activeSuggestion?.name,
-            'cmk-suggestions__item--in-section': section.title !== null,
-            'cmk-suggestions__item--markable': markSelected
-          }"
-          @click="selectSuggestion(suggestion)"
-        >
-          <span class="cmk-suggestions__option">
-            <slot name="option" :suggestion="suggestion">
-              <template v-for="render in [getRowRender(suggestion)]">
-                <template v-if="render.kind === 'title-match'">
-                  <span>{{ render.parts.before }}</span
-                  ><mark>{{ render.parts.match }}</mark
-                  ><span>{{ render.parts.after }}</span>
-                </template>
-                <template v-else-if="render.kind === 'name-match'"
-                  >{{ suggestion.title
-                  }}<span class="cmk-suggestions__name-match">
-                    ({{ render.nameParts.before }}<mark>{{ render.nameParts.match }}</mark
-                    >{{ render.nameParts.after }})</span
-                  >
-                </template>
-                <template v-else>{{ suggestion.title }}</template>
-              </template>
-            </slot>
-          </span>
-          <CmkIcon
-            v-if="
-              markSelected &&
-              suggestion.name !== null &&
-              suggestion.name === selectedSuggestion.getName()
+    <CmkTooltipProvider>
+      <CmkScrollContainer class="cmk-suggestions__scroll" :max-height="maxHeight">
+        <li v-if="error" class="cmk-suggestions--error"><CmkHtml :html="error" /></li>
+        <li v-if="warning" class="cmk-suggestions--warning"><CmkHtml :html="warning" /></li>
+        <!-- eslint-disable vue/valid-v-for vue/require-v-for-key since the index in suggestionRefs does not get correctly updated when using the suggestion name as key -->
+        <template v-for="(section, sIdx) in displaySections">
+          <li
+            v-if="section.title !== null"
+            :key="`h-${sIdx}`"
+            class="cmk-suggestions__section-header"
+            role="heading"
+            aria-level="3"
+            :aria-label="section.title"
+            tabindex="-1"
+            @mousedown.prevent
+          >
+            {{ section.title }}
+          </li>
+          <li
+            v-for="suggestion in section.suggestions"
+            ref="suggestionRefs"
+            tabindex="-1"
+            class="cmk-suggestions__item"
+            :role="role"
+            :aria-label="suggestion.title"
+            :aria-selected="
+              markSelected && suggestion.name !== null
+                ? suggestion.name === selectedSuggestion.getName()
+                : undefined
             "
-            name="checkmark-bare"
-            size="small"
-            aria-hidden="true"
-            class="cmk-suggestions__selected-mark"
-          />
+            :class="{
+              selectable: suggestion.name !== null,
+              selected: suggestion === activeSuggestion,
+              'cmk-suggestions__item--in-section': section.title !== null,
+              'cmk-suggestions__item--markable': markSelected
+            }"
+            @click="selectSuggestion(suggestion)"
+          >
+            <SuggestionTooltip :text="suggestion.tooltip">
+              <span class="cmk-suggestions__row">
+                <span class="cmk-suggestions__option">
+                  <slot name="option" :suggestion="suggestion">
+                    <template v-for="render in [getRowRender(suggestion)]">
+                      <template v-if="render.kind === 'title-match'">
+                        <span>{{ render.parts.before }}</span
+                        ><mark>{{ render.parts.match }}</mark
+                        ><span>{{ render.parts.after }}</span>
+                      </template>
+                      <template v-else-if="render.kind === 'name-match'"
+                        >{{ suggestion.title
+                        }}<span class="cmk-suggestions__name-match">
+                          ({{ render.nameParts.before }}<mark>{{ render.nameParts.match }}</mark
+                          >{{ render.nameParts.after }})</span
+                        >
+                      </template>
+                      <template v-else>{{ suggestion.title }}</template>
+                    </template>
+                  </slot>
+                </span>
+                <CmkIcon
+                  v-if="
+                    markSelected &&
+                    suggestion.name !== null &&
+                    suggestion.name === selectedSuggestion.getName()
+                  "
+                  name="checkmark-bare"
+                  size="small"
+                  aria-hidden="true"
+                  class="cmk-suggestions__selected-mark"
+                />
+              </span>
+            </SuggestionTooltip>
+          </li>
+        </template>
+        <!-- eslint-enable vue/valid-v-for vue/require-v-for-key -->
+        <li v-if="filteredSuggestions.length === 0 && noResultsHint !== ''">
+          {{ noResultsHint }}
         </li>
-      </template>
-      <!-- eslint-enable vue/valid-v-for vue/require-v-for-key -->
-      <li v-if="filteredSuggestions.length === 0 && noResultsHint !== ''">
-        {{ noResultsHint }}
-      </li>
-    </CmkScrollContainer>
+      </CmkScrollContainer>
+    </CmkTooltipProvider>
   </ul>
 </template>
 
@@ -550,11 +564,23 @@ defineExpose({
 
       &:hover {
         color: var(--cmk-suggestions-item-active-color, var(--default-select-hover-color));
-        background-color: var(--cmk-suggestions-item-hover-background, transparent);
+        background-color: var(
+          --cmk-suggestions-item-hover-background,
+          var(--cmk-suggestions-item-hover-default)
+        );
       }
     }
 
-    &.cmk-suggestions__item--markable {
+    &.cmk-suggestions__item {
+      padding: 0;
+    }
+
+    .cmk-suggestions__row {
+      display: block;
+      padding: 6px;
+    }
+
+    &.cmk-suggestions__item--markable .cmk-suggestions__row {
       display: flex;
       align-items: center;
     }
@@ -566,7 +592,7 @@ defineExpose({
       min-width: 0;
     }
 
-    &.cmk-suggestions__item--in-section {
+    &.cmk-suggestions__item--in-section .cmk-suggestions__row {
       padding-left: 18px;
     }
 
@@ -592,6 +618,14 @@ defineExpose({
 .cmk-suggestions--error,
 .cmk-suggestions--warning {
   width: fit-content;
+}
+
+body[data-theme='facelift'] .cmk-suggestions {
+  --cmk-suggestions-item-hover-default: var(--color-conference-grey-10);
+}
+
+body[data-theme='modern-dark'] .cmk-suggestions {
+  --cmk-suggestions-item-hover-default: var(--color-white-10);
 }
 
 /* checkmark-bare ships a dark stroke with no dark-theme variant; tint it so it reads as

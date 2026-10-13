@@ -10,24 +10,10 @@ from typing import NamedTuple, Protocol
 
 from pydantic import BaseModel
 
-from ._artifacts import AgentFileLocator, BaseFileContainer
 from ._constants import LogicalPath
 from ._types import AgentConfig
 
 _DEFAULT_AGENT = "default"
-
-_UNIX_FILE_PERMISSIONS: Mapping[LogicalPath, int] = {
-    LogicalPath.AGENT: 0o640,
-    LogicalPath.BIN: 0o755,
-    LogicalPath.CONFIG: 0o640,
-    LogicalPath.ETC: 0o644,
-    LogicalPath.HOME: 0o640,
-    LogicalPath.LIB: 0o640,
-    LogicalPath.LOCAL: 0o750,
-    LogicalPath.PLUGINS: 0o755,
-    LogicalPath.ROOT: 0o640,
-    LogicalPath.VAR: 0o640,
-}
 
 
 class AgentControllerTargetArch(Enum):
@@ -68,7 +54,7 @@ class SingleDirectoryConfig(BaseModel, frozen=True):
     def get_tmpdir(self) -> str | None:
         return self.tmpdir
 
-    def get_keeper(self) -> "UnixSingleDirectoryKeeper":
+    def get_keeper(self) -> UnixSingleDirectoryKeeper:
         return UnixSingleDirectoryKeeper(self.installation_directory, _DEFAULT_AGENT)
 
 
@@ -98,7 +84,7 @@ class AgentPathsConfig(BaseModel, frozen=True):
     def get_tmpdir(self) -> str | None:
         return self.tmp
 
-    def get_keeper(self) -> "UnixMultipleDirectoryKeeper":
+    def get_keeper(self) -> UnixMultipleDirectoryKeeper:
         return UnixMultipleDirectoryKeeper(self)
 
 
@@ -107,18 +93,11 @@ class DirectoryConfig(Protocol):
 
     def get_tmpdir(self) -> str | None: ...
 
-    def get_keeper(self) -> "UnixAgentPathsKeeper": ...
+    def get_keeper(self) -> UnixAgentPathsKeeper: ...
 
 
 class UnixAgentPathsKeeper(Protocol):
     def make_package_structure(self, root_path: Path) -> None: ...
-
-    def process_file_container(
-        self,
-        file_container: BaseFileContainer,
-        pkg_root: Path,
-        locator: AgentFileLocator,
-    ) -> None: ...
 
     def get_base_folders(self) -> Iterable[Path]: ...
 
@@ -151,16 +130,6 @@ class UnixMultipleDirectoryKeeper:
         (root_path / relative_path(self._agent_paths.var) / "cache").mkdir(exist_ok=True)
         (root_path / relative_path(self._agent_paths.var) / "spool").mkdir(exist_ok=True)
         (root_path / relative_path(self._agent_paths.var) / "log").mkdir(exist_ok=True)
-
-    def process_file_container(
-        self, file_container: BaseFileContainer, pkg_root: Path, locator: AgentFileLocator
-    ) -> None:
-        file_container.place(
-            pkg_root,
-            locator,
-            self.get_target_path(file_container.logical_path).relative_to("/"),
-            _UNIX_FILE_PERMISSIONS[file_container.logical_path],
-        )
 
     def get_base_folders(self) -> Iterable[Path]:
         return (
@@ -227,19 +196,6 @@ class UnixSingleDirectoryKeeper:
             mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True, parents=True
         )
 
-    def process_file_container(
-        self,
-        file_container: BaseFileContainer,
-        pkg_root: Path,
-        locator: AgentFileLocator,
-    ) -> None:
-        file_container.place(
-            pkg_root,
-            locator,
-            self.get_target_path(file_container.logical_path).relative_to("/"),
-            _UNIX_FILE_PERMISSIONS[file_container.logical_path],
-        )
-
     def get_target_path(self, logical_path: LogicalPath) -> Path:
         match logical_path:
             case LogicalPath.ETC:
@@ -251,28 +207,6 @@ class UnixSingleDirectoryKeeper:
 
     def get_base_folders(self) -> Iterable[Path]:
         return ("/" / self._install_dir,)
-
-
-_WINDOWS_TARGET_LOCATIONS: Mapping[LogicalPath, str] = {
-    LogicalPath.AGENT: "",
-    LogicalPath.BIN: "bin",
-    LogicalPath.CONFIG: "config",
-    LogicalPath.ETC: "",
-    LogicalPath.HOME: "",
-    LogicalPath.LIB: "",
-    LogicalPath.LOCAL: "local",
-    LogicalPath.PLUGINS: "plugins",
-    LogicalPath.ROOT: "",
-    LogicalPath.VAR: "",
-}
-
-
-def process_windows_file_container(
-    file_container: BaseFileContainer, pkg_root: Path, locator: AgentFileLocator
-) -> None:
-    file_container.place(
-        pkg_root, locator, Path(_WINDOWS_TARGET_LOCATIONS[file_container.logical_path]), 0
-    )
 
 
 class TargetPathsProvider:

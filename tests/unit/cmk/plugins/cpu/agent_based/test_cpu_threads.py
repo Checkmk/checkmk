@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+
+from collections.abc import Mapping
 
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
 from cmk.plugins.cpu.agent_based.cpu import parse_cpu
-from cmk.plugins.cpu.agent_based.cpu_threads import check_cpu_threads, discover_cpu_threads
+from cmk.plugins.cpu.agent_based.cpu_threads import check_cpu_threads, discover_cpu_threads, Params
 from cmk.plugins.lib.cpu import Load, ProcessorType, Section, Threads
 
 
@@ -96,10 +97,10 @@ def test_cpu_threads_regression(info: StringTable, check_result: CheckResult) ->
         ),
     ],
 )
-def test_relative_but_no_absolute_levels(  # type: ignore[misc]
-    params,
-    levels,
-):
+def test_relative_but_no_absolute_levels(
+    params: Params,
+    levels: Mapping[str, tuple[float | None, float | None]],
+) -> None:
     section = parse_cpu(STRING_TABLE_RELATIVE)
     assert section
     found_levels = {}
@@ -109,7 +110,7 @@ def test_relative_but_no_absolute_levels(  # type: ignore[misc]
     assert found_levels == levels
 
 
-def test_parse_missing_thread_info():
+def test_parse_missing_thread_info() -> None:
     # thread info can be missing on an AIX system:
     # $ ps -eo thcount | awk '{SUM+=$1} END {print SUM}'
     #   ps: 0509-001 There is not enough memory available now.

@@ -9,10 +9,9 @@ import json
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from typing import Literal, override
 
-import cmk.livestatus_client as livestatus
 from cmk.crash import read_occurrences
 from cmk.gui import query_filters
-from cmk.gui.config import Config
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.data_source import (
     ABCDataSource,
     DataSourceLivestatus,
@@ -21,12 +20,11 @@ from cmk.gui.data_source import (
     RowTableLivestatus,
 )
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
 from cmk.gui.http import request as active_request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.painter.v0 import Cell, Painter
+from cmk.gui.painter import Cell, InternalPainter, PainterContext
 from cmk.gui.painter_options import paint_age
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
@@ -50,11 +48,13 @@ from cmk.livestatus_client import (
     DeleteCrashReport,
     MKLivestatusNotFoundError,
     OnlySites,
-    Query,
-    QuerySpecification,
 )
+from cmk.livestatus_client.queries import Query
+from cmk.livestatus_client.tables.crashreports import Crashreports
+from cmk.livestatus_client.types import escape_filename
 from cmk.web.utils import escaping
 from cmk.web.utils.html import HTML
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import makeuri_contextless
 
 from .helpers import local_files_involved_in_crash
@@ -127,7 +127,7 @@ class CrashReportsRowTable(RowTableLivestatus):
 
             try:
                 occurrences = read_occurrences(crash_info_raw)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 continue  # skip crash infos with an unreadable time
 
             row = {
@@ -154,23 +154,23 @@ class CrashReportsRowTable(RowTableLivestatus):
 
     def get_crash_report_rows(
         self, only_sites: OnlySites, filter_headers: str
-    ) -> Iterator[dict[str, str]]:
+    ) -> Iterator[dict[str, str | bytes]]:
         # First fetch the information that is needed to query for the dynamic columns (crash_info,
         # ...)
         for crash_info in self._get_crash_report_info(only_sites, filter_headers):
             file_path = "/".join([crash_info["crash_type"], crash_info["crash_id"]])
 
             headers = ["site", "crash_info"]
-            columns = ["file:crash_info:%s/crash.info" % livestatus.lqencode(file_path)]
 
             try:
                 raw_row = query_row(
                     Query(
-                        QuerySpecification(
-                            table="crashreports",
-                            columns=columns,
-                            headers="Filter: id = %s" % livestatus.lqencode(crash_info["crash_id"]),
-                        )
+                        [
+                            Crashreports.file.dynamic(
+                                "crash_info", escape_filename(f"{file_path}/crash.info")
+                            )
+                        ],
+                        Crashreports.id == crash_info["crash_id"],
                     ),
                     only_sites=only_sites,
                     limit=None,
@@ -179,19 +179,17 @@ class CrashReportsRowTable(RowTableLivestatus):
             except MKLivestatusNotFoundError:
                 continue
 
-            crash_info.update(dict(zip(headers, raw_row)))
-            yield crash_info
+            row: dict[str, str | bytes] = dict(crash_info)
+            row.update(dict(zip(headers, raw_row)))
+            yield row
 
     def _get_crash_report_info(
         self, only_sites: OnlySites, filter_headers: str | None = None
     ) -> Iterator[dict[str, str]]:
         rows = query_livestatus(
             Query(
-                QuerySpecification(
-                    table="crashreports",
-                    columns=["id", "component"],
-                    headers=filter_headers or "",
-                )
+                [Crashreports.id, Crashreports.component],
+                extra_headers=[filter_headers] if filter_headers else (),
             ),
             only_sites=only_sites,
             limit=None,
@@ -202,191 +200,140 @@ class CrashReportsRowTable(RowTableLivestatus):
         return (dict(zip(columns, r)) for r in rows)
 
 
-class PainterCrashIdent(Painter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "crash_ident"
-
-    @override
-    def title(self, cell: Cell) -> str:
-        return _("Crash ident")
-
-    @override
-    def short_title(self, cell: Cell) -> str:
-        return _("ID")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_id"]
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        url = makeuri_contextless(
-            self.request,
-            [
-                ("crash_id", row["crash_id"]),
-                ("site", row["site"]),
-            ],
-            filename="crash.py",
-        )
-        return None, HTMLWriter.render_a(row["crash_id"], href=url)
+def _render_crash_ident(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    url = makeuri_contextless(
+        context.request,
+        [
+            ("crash_id", row["crash_id"]),
+            ("site", row["site"]),
+        ],
+        filename="crash.py",
+    )
+    return None, HTMLWriter.render_a(row["crash_id"], href=url)
 
 
-class PainterCrashType(Painter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "crash_type"
-
-    @override
-    def title(self, cell: Cell) -> str:
-        return _("Crash type")
-
-    @override
-    def short_title(self, cell: Cell) -> str:
-        return _("Type")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_type"]
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return None, row["crash_type"]
+def make_crash_ident_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="crash_ident",
+        title=_l("Crash ident"),
+        short_title=_l("ID"),
+        columns=["crash_id"],
+        render=_render_crash_ident,
+    )
 
 
-class PainterCrashSource(Painter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "crash_source"
-
-    @override
-    def title(self, cell: Cell) -> str:
-        return _("Crash source")
-
-    @override
-    def short_title(self, cell: Cell) -> str:
-        return _("Source")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_exc_traceback"]
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return (
-            None,
-            (
-                _("Extension")
-                if local_files_involved_in_crash(row["crash_exc_traceback"])
-                else _("Built-in")
-            ),
-        )
+def _render_crash_type(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return None, row["crash_type"]
 
 
-class PainterCrashTime(Painter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "crash_time"
-
-    @override
-    def title(self, cell: Cell) -> str:
-        return _("Crash time")
-
-    @override
-    def short_title(self, cell: Cell) -> str:
-        return _("Time")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_time"]
-
-    @property
-    @override
-    def painter_options(self) -> list[str]:
-        return ["ts_format", "ts_date"]
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return paint_age(
-            row["crash_time"],
-            has_been_checked=True,
-            bold_if_younger_than=3600,
-            request=self.request,
-            painter_options=self._painter_options,
-        )
+def make_crash_type_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="crash_type",
+        title=_l("Crash type"),
+        short_title=_l("Type"),
+        columns=["crash_type"],
+        render=_render_crash_type,
+    )
 
 
-class PainterCrashVersion(Painter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "crash_version"
-
-    @override
-    def title(self, cell: Cell) -> str:
-        return _("Crash Checkmk version")
-
-    @override
-    def short_title(self, cell: Cell) -> str:
-        return _("Version")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_version"]
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return None, row["crash_version"]
+def _render_crash_source(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return (
+        None,
+        (
+            _("Extension")
+            if local_files_involved_in_crash(row["crash_exc_traceback"])
+            else _("Built-in")
+        ),
+    )
 
 
-class PainterCrashException(Painter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "crash_exception"
+def make_crash_source_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="crash_source",
+        title=_l("Crash source"),
+        short_title=_l("Source"),
+        columns=["crash_exc_traceback"],
+        render=_render_crash_source,
+    )
 
-    @override
-    def title(self, cell: Cell) -> str:
-        return _("Crash exception")
 
-    @override
-    def short_title(self, cell: Cell) -> str:
-        return _("Exc.")
+def _render_crash_time(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    return paint_age(
+        row["crash_time"],
+        has_been_checked=True,
+        bold_if_younger_than=3600,
+        request=context.request,
+        painter_options=context.painter_options,
+    )
 
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_exc_type", "crash_exc_value"]
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        if not user.may("general.see_crash_reports"):
-            return None, _("Insufficient permissions to view exception details.")
-        return None, self.summarize(row["crash_exc_type"], row["crash_exc_value"])
+def make_crash_time_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="crash_time",
+        title=_l("Crash time"),
+        short_title=_l("Time"),
+        columns=["crash_time"],
+        painter_options=["ts_format", "ts_date"],
+        render=_render_crash_time,
+    )
 
-    @staticmethod
-    def summarize(exc_type: str, exc_value: str) -> str:
-        plain_value = escaping.strip_tags(exc_value)
-        first_line = next((line.strip() for line in plain_value.splitlines() if line.strip()), "")
-        return f"{exc_type}: {first_line}"
+
+def _render_crash_version(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return None, row["crash_version"]
+
+
+def make_crash_version_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="crash_version",
+        title=_l("Crash Checkmk version"),
+        short_title=_l("Version"),
+        columns=["crash_version"],
+        render=_render_crash_version,
+    )
+
+
+def _summarize_exception(exc_type: str, exc_value: str) -> str:
+    plain_value = escaping.strip_tags(exc_value)
+    first_line = next((line.strip() for line in plain_value.splitlines() if line.strip()), "")
+    return f"{exc_type}: {first_line}"
+
+
+def _render_crash_exception(
+    row: Row, _cell: Cell, user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    if not user.may("general.see_crash_reports"):
+        return None, _("Insufficient permissions to view exception details.")
+    return None, _summarize_exception(row["crash_exc_type"], row["crash_exc_value"])
+
+
+def make_crash_exception_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="crash_exception",
+        title=_l("Crash exception"),
+        short_title=_l("Exc."),
+        columns=["crash_exc_type", "crash_exc_value"],
+        render=_render_crash_exception,
+    )
 
 
 def _sort_crash_time(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_simple_number("crash_time", r1, r2)
 
@@ -411,7 +358,8 @@ PermissionActionDeleteCrashReport = permission_registry.register(
 
 
 def command_delete_crash_report_affected(
-    len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    len_action_rows: int,
+    cmdtag: Literal["HOST", "SVC"],  # noqa: ARG001
 ) -> HTML:
     return HTML.without_escaping(
         _("Affected %(object_type)s: %(count)s")
@@ -426,19 +374,12 @@ def command_delete_crash_report_affected(
     )
 
 
-def command_delete_crash_report_render(what: str) -> None:
-    html.open_div(class_="group")
-    html.button("_delete_crash_reports", _("Delete"), cssclass="hot")
-    html.button("_cancel", _("Cancel"))
-    html.close_div()
-
-
 def command_delete_crash_report_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
-    spec: str,
+    spec: str,  # noqa: ARG001
     row: dict,
-    row_index: int,
+    row_index: int,  # noqa: ARG001
     action_rows: Rows,
 ) -> CommandActionResult:
     if active_request.has_var("_delete_crash_reports"):
@@ -455,140 +396,110 @@ CommandDeleteCrashReports = Command(
     permission=PermissionActionDeleteCrashReport,
     group=CommandGroupVarious,
     tables=["crash"],
-    render=command_delete_crash_report_render,
+    show_command_form=False,
+    render=lambda _unused: None,
     action=command_delete_crash_report_action,
     affected_output_cb=command_delete_crash_report_affected,
 )
 
 
-class PainterCrashHost(Painter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "crash_host"
+def _render_crash_host(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    if not row.get("crash_host"):
+        return None, ""
 
-    @override
-    def title(self, cell: Cell) -> str:
-        return _("Crash host")
-
-    @override
-    def short_title(self, cell: Cell) -> str:
-        return _("Host")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_host"]
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        if not row.get("crash_host"):
-            return None, ""
-
-        url = makeuri_contextless(
-            self.request,
-            [
-                ("host", row["crash_host"]),
-                ("site", row["site"]),
-                ("view_name", "host"),
-            ],
-            filename="view.py",
-        )
-        return None, HTMLWriter.render_a(row["crash_host"], href=url)
+    url = makeuri_contextless(
+        context.request,
+        [
+            ("host", row["crash_host"]),
+            ("site", row["site"]),
+            ("view_name", "host"),
+        ],
+        filename="view.py",
+    )
+    return None, HTMLWriter.render_a(row["crash_host"], href=url)
 
 
-class PainterCrashItem(Painter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "crash_item"
-
-    @override
-    def title(self, cell: Cell) -> str:
-        return _("Crash service item")
-
-    @override
-    def short_title(self, cell: Cell) -> str:
-        return _("Item")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_item"]
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return None, row.get("crash_item", "")
+def make_crash_host_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="crash_host",
+        title=_l("Crash host"),
+        short_title=_l("Host"),
+        columns=["crash_host"],
+        render=_render_crash_host,
+    )
 
 
-class PainterCrashCheckType(Painter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "crash_check_type"
-
-    @override
-    def title(self, cell: Cell) -> str:
-        return _("Crash check type")
-
-    @override
-    def short_title(self, cell: Cell) -> str:
-        return _("Check")
-
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_check_type"]
-
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return None, row.get("crash_check_type", "")
+def _render_crash_item(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return None, row.get("crash_item", "")
 
 
-class PainterCrashServiceName(Painter):
-    @property
-    @override
-    def ident(self) -> str:
-        return "crash_service_name"
+def make_crash_item_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="crash_item",
+        title=_l("Crash service item"),
+        short_title=_l("Item"),
+        columns=["crash_item"],
+        render=_render_crash_item,
+    )
 
-    @override
-    def title(self, cell: Cell) -> str:
-        return _("Crash service name")
 
-    @override
-    def short_title(self, cell: Cell) -> str:
-        return _("Service")
+def _render_crash_check_type(
+    row: Row, _cell: Cell, _user: LoggedInUser, _context: PainterContext
+) -> CellSpec:
+    return None, row.get("crash_check_type", "")
 
-    @property
-    @override
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_service_name"]
 
-    @override
-    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        if not row.get("crash_service_name"):
-            return None, ""
+def make_crash_check_type_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="crash_check_type",
+        title=_l("Crash check type"),
+        short_title=_l("Check"),
+        columns=["crash_check_type"],
+        render=_render_crash_check_type,
+    )
 
-        url = makeuri_contextless(
-            self.request,
-            [
-                ("host", row["crash_host"]),
-                ("site", row["site"]),
-                ("view_name", "service"),
-                ("service", row["crash_service_name"]),
-            ],
-            filename="view.py",
-        )
-        return None, HTMLWriter.render_a(row["crash_service_name"], href=url)
+
+def _render_crash_service_name(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    if not row.get("crash_service_name"):
+        return None, ""
+
+    url = makeuri_contextless(
+        context.request,
+        [
+            ("host", row["crash_host"]),
+            ("site", row["site"]),
+            ("view_name", "service"),
+            ("service", row["crash_service_name"]),
+        ],
+        filename="view.py",
+    )
+    return None, HTMLWriter.render_a(row["crash_service_name"], href=url)
+
+
+def make_crash_service_name_painter() -> InternalPainter:
+    return InternalPainter(
+        ident="crash_service_name",
+        title=_l("Crash service name"),
+        short_title=_l("Service"),
+        columns=["crash_service_name"],
+        render=_render_crash_service_name,
+    )
 
 
 def _sort_crash_host(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_host", r1, r2)
 
@@ -605,9 +516,10 @@ def _sort_crash_item(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_item", r1, r2)
 
@@ -624,9 +536,10 @@ def _sort_crash_check_type(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_check_type", r1, r2)
 
@@ -643,9 +556,10 @@ def _sort_crash_service_name(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_service_name", r1, r2)
 
@@ -668,9 +582,10 @@ def _sort_crash_exception(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_simple_string_columns(["crash_exception", "crash_exc_value"], r1, r2)
 
@@ -687,9 +602,10 @@ def _sort_crash_ident(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_id", r1, r2)
 
@@ -703,18 +619,19 @@ SorterCrashIdent = Sorter(
 
 
 def cmp_crash_source(column: ColumnName, r1: Row, r2: Row) -> int:
-    v1 = str(local_files_involved_in_crash(r1.get(column, [])))
-    v2 = str(local_files_involved_in_crash(r2.get(column, [])))
-    return cmp_insensitive_string(v1, v2)
+    v1 = bool(local_files_involved_in_crash(r1.get(column, [])))
+    v2 = bool(local_files_involved_in_crash(r2.get(column, [])))
+    return (v1 > v2) - (v1 < v2)
 
 
 def _sort_crash_source(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_crash_source("crash_exc_traceback", r1, r2)
 
@@ -731,9 +648,10 @@ def _sort_crash_type(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_type", r1, r2)
 
@@ -750,9 +668,10 @@ def _sort_crash_version(
     r1: Row,
     r2: Row,
     *,
-    parameters: Mapping[str, object] | None,
-    config: Config,
-    request: Request,
+    parameters: Mapping[str, object] | None,  # noqa: ARG001
+    config: Config,  # noqa: ARG001
+    request: Request,  # noqa: ARG001
+    request_cache: RequestCache[RequestCacheConfig],  # noqa: ARG001
 ) -> int:
     return cmp_simple_string("crash_version", r1, r2)
 
@@ -822,12 +741,14 @@ FilterCrashException.query_filter = query_filters.TableTextQuery(
 
 
 def check_crash_source(selection: str, row: Row) -> bool:
-    is_extension = local_files_involved_in_crash(row["crash_exc_traceback"])
-
-    if selection == "built_in" and is_extension:
-        return False
-
-    return selection != "extension" or bool(is_extension)
+    is_extension = bool(local_files_involved_in_crash(row["crash_exc_traceback"]))
+    match selection:
+        case "built_in":
+            return not is_extension
+        case "extension":
+            return is_extension
+        case _:
+            return True
 
 
 FilterCrashSource = FilterOption(
@@ -841,7 +762,7 @@ FilterCrashSource = FilterOption(
             ("extension", _("Extension")),
             ("ignore", _("(ignore)")),
         ],
-        filter_code=lambda x: "",
+        filter_code=lambda x: "",  # noqa: ARG005
         filter_row=check_crash_source,
     ),
 )

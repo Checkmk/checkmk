@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Literal
@@ -135,7 +134,7 @@ def _commands_function(
         args.append("--disable-cert-verification")
     # the authentication parameters must come last because they are parsed by subparsers that
     # consume all remaining arguments (and throw errors if they don't recognize them)
-    match params.auth_basic:
+    match params.auth_basic:  # type: ignore[exhaustive-match]
         case ("auth_login", AuthLogin(username=username, password=password)):  # type: ignore[unreachable]
             args += [
                 "auth_login",

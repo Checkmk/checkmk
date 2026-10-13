@@ -1,8 +1,12 @@
 load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
-exports_files(["requirements.in"])
+exports_files([
+    "cmk-dev-deploy.py",
+    "requirements.in",
+])
 
 sh_binary(
     name = "in_bazel",
@@ -26,11 +30,19 @@ sh_library(
     name = "scripts_sh",
     srcs = [
         "check-current-commit",
+        "check_no_py_test.sh",
+        "check_requirements_test_coverage.sh",
+        "cmk-generate-api-spec",
         "create_cognito_config_cloud.sh",
+        "decent-output",
+        "deploy-python",
         "fake-artifacts",
         "find-python-files",
         "find-shell-files",
+        "install-iwyu.sh",
+        "remove-unused-filelevel-mypy-suppressions.sh",
         "run-in-docker.sh",
+        "run-iwyu",
         "run-mypy",
         "run-unittests",
         "run-uvenv",
@@ -61,4 +73,12 @@ py_requirements_test(
         ":decent_output",
     ],
     requirements_in = "requirements.in",
+)
+
+py_cmk_test(
+    name = "unit",
+    size = "small",
+    srcs = glob(["tests/*.py"]),
+    imports = ["."],
+    deps = [":sarif_preparse"],
 )

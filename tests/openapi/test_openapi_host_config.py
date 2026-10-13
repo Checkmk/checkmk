@@ -3,12 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 
 import contextlib
 import datetime
 from collections.abc import Iterator, Sequence
+from http import HTTPStatus
 from typing import Any, Literal
 from unittest.mock import MagicMock
 
@@ -18,11 +20,11 @@ from pytest_mock import MockerFixture
 
 from cmk.automations.results import DeleteHostsResult
 from cmk.ccc import version
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.openapi.endpoints._common.host_attribute_schemas import (
     BaseHostAttribute,
     BaseHostTagGroup,
@@ -30,6 +32,7 @@ from cmk.gui.openapi.endpoints._common.host_attribute_schemas import (
 from cmk.gui.openapi.framework import APIVersion
 from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.user_sites import activation_sites
+from cmk.gui.utils.host_relations import RelationLink
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundleStore
@@ -50,8 +53,7 @@ from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.ruleset_matcher.tags import BuiltinTagConfig
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
-from tests.testlib.gui.web_test_app import WebTestAppForCMK
-from tests.testlib.rest_api_client import ClientRegistry, RestApiException
+from tests.testlib.unit.rest_api_client import ClientRegistry, RestApiException
 
 EDITIONS_ULTIMATE_PLUS = {
     version.Edition.ULTIMATEMT,
@@ -71,6 +73,23 @@ def _field_errors(fields: dict[str, Any], field_name: str) -> list[dict[str, Any
         for detail in fields.values()
         if field_name in detail["loc"] and detail["type"] != "is_instance_of"
     ]
+
+
+def _create_host_with_management_board(attributes: HostAttributes) -> None:
+    """Management board attributes can no longer be set anew through the API, only where a host
+    already has them - so these hosts are created the way they were before the deprecation."""
+    folder_tree().root_folder().create_hosts(
+        [(HostName("heute"), attributes, None)],
+        pprint_value=False,
+        pending_changes=PendingChanges(
+            activation_sites=activation_sites(active_config.sites),
+            local_site=omd_site(),
+            acting_user=user.id,
+            store=PendingChangesStore(),
+            hooks=(),
+        ),
+        acting_user=user,
+    )
 
 
 @pytest.fixture()
@@ -113,8 +132,8 @@ def quick_setup_config_bundle() -> Iterator[tuple[BundleId, str]]:
 
 def test_openapi_missing_host(clients: ClientRegistry) -> None:
     resp = clients.HostConfig.get("foobar", expect_ok=False)
-    resp.assert_status_code(404)
-    assert resp.json["status"] == 404
+    resp.assert_status_code(HTTPStatus.NOT_FOUND)
+    assert resp.json["status"] == HTTPStatus.NOT_FOUND
     assert "not found" in str(resp.json).lower()
 
 
@@ -124,21 +143,21 @@ def test_openapi_cluster_host(clients: ClientRegistry) -> None:
     clients.HostConfig.create_cluster(host_name="bazfoo", nodes=["foobar"])
     clients.HostConfig.create(
         host_name="foobaz", attributes={"ipv6address": "xxx.myfritz.net"}
-    ).assert_status_code(200)
+    ).assert_status_code(HTTPStatus.OK)
 
-    clients.HostConfig.get("bazfoozle", expect_ok=False).assert_status_code(404)
+    clients.HostConfig.get("bazfoozle", expect_ok=False).assert_status_code(HTTPStatus.NOT_FOUND)
     clients.HostConfig.get("bazfoo")
 
     clients.HostConfig.edit_property(
         "bazfoo", "nodes", {"nodes": ["not_existing"]}, expect_ok=False
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
     clients.HostConfig.edit_property(
         "bazfoo", "nodes", {"nodes": ["example.com", "bazfoo"]}, expect_ok=False
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     clients.HostConfig.edit_property(
         "bazfoo", "nodes", {"nodes": ["example.com"]}
-    ).assert_status_code(200)
+    ).assert_status_code(HTTPStatus.OK)
 
     resp = clients.HostConfig.get("bazfoo")
     assert resp.json["extensions"]["cluster_nodes"] == ["example.com"]
@@ -180,7 +199,7 @@ def test_openapi_add_host_bake_agent_rejected_without_feature(
         bake_agent=True,
         expect_ok=False,
         api_version=APIVersion.UNSTABLE,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_openapi_add_host_with_attributes(clients: ClientRegistry) -> None:
@@ -195,7 +214,7 @@ def test_openapi_add_host_with_attributes(clients: ClientRegistry) -> None:
             },
             "locked_attributes": ["alias"],
         },
-    ).assert_status_code(200)
+    ).assert_status_code(HTTPStatus.OK)
 
     api_attributes = response.json["extensions"]["attributes"]
     assert api_attributes["alias"] == "ALIAS"
@@ -207,7 +226,7 @@ def test_openapi_add_host_with_attributes(clients: ClientRegistry) -> None:
     assert api_attributes["locked_attributes"] == ["alias"]
 
     # Ensure that the attributes were stored as expected
-    hosts_config = folder_tree().root_folder()._load_hosts_file()
+    hosts_config = folder_tree().root_folder()._load_hosts_file()  # noqa: SLF001
     assert hosts_config is not None
     assert hosts_config["host_attributes"]["foobar"]["locked_attributes"] == ["alias"]
     assert hosts_config["host_attributes"]["foobar"]["locked_by"] == (
@@ -231,7 +250,7 @@ def test_openapi_bulk_add_hosts_with_attributes(clients: ClientRegistry) -> None
                 "attributes": {"ipaddress": "127.0.0.2", "site": "NO_SITE"},
             },
         ]
-    ).assert_status_code(200)
+    ).assert_status_code(HTTPStatus.OK)
     assert len(response.json["value"]) == 2
 
     clients.HostConfig.bulk_edit(
@@ -248,7 +267,7 @@ def test_openapi_bulk_add_hosts_with_attributes(clients: ClientRegistry) -> None
                 },
             },
         ]
-    ).assert_status_code(200)
+    ).assert_status_code(HTTPStatus.OK)
 
     # verify attribute ipaddress is set corretly
     response = clients.HostConfig.get(host_name="ding")
@@ -276,7 +295,9 @@ def test_openapi_add_cluster_bake_agent_parameter(
     suppress_bake_agents_in_background: MagicMock,
     clients: ClientRegistry,
 ) -> None:
-    clients.HostConfig.create(host_name="foobar", bake_agent=bake_agent).assert_status_code(200)
+    clients.HostConfig.create(host_name="foobar", bake_agent=bake_agent).assert_status_code(
+        HTTPStatus.OK
+    )
 
     if called:
         suppress_bake_agents_in_background.assert_called_once_with(["foobar"], debug=False)
@@ -286,7 +307,7 @@ def test_openapi_add_cluster_bake_agent_parameter(
 
     clients.HostConfig.create_cluster(
         host_name="bazfoo", nodes=["foobar"], bake_agent=bake_agent
-    ).assert_status_code(200)
+    ).assert_status_code(HTTPStatus.OK)
 
     if called:
         suppress_bake_agents_in_background.assert_called_once_with(["bazfoo"], debug=False)
@@ -341,13 +362,13 @@ def test_openapi_hosts(
     monkeypatch: pytest.MonkeyPatch,
     clients: ClientRegistry,
 ) -> None:
-    resp = clients.HostConfig.create(host_name="foobar").assert_status_code(200)
+    resp = clients.HostConfig.create(host_name="foobar").assert_status_code(HTTPStatus.OK)
 
     assert isinstance(resp.json["extensions"]["attributes"]["meta_data"]["created_at"], str)
     assert isinstance(resp.json["extensions"]["attributes"]["meta_data"]["updated_at"], str)
 
     resp = clients.HostConfig.follow_link(resp.json, "self")
-    resp.assert_status_code(200)
+    resp.assert_status_code(HTTPStatus.OK)
 
     attributes = {
         "ipaddress": "127.0.0.1",
@@ -376,7 +397,7 @@ def test_openapi_hosts(
         extra_params={"update_attributes": {"alias": "bar"}},
         headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
     )
-    resp.assert_status_code(200)
+    resp.assert_status_code(HTTPStatus.OK)
     assert resp.json["extensions"]["attributes"]["alias"] == "bar"
 
     resp = clients.HostConfig.follow_link(
@@ -392,7 +413,7 @@ def test_openapi_hosts(
     assert "alias" not in resp.json["extensions"]["attributes"]
 
     # make sure changes are written to disk:
-    clients.HostConfig.follow_link(resp.json, "self").assert_status_code(200)
+    clients.HostConfig.follow_link(resp.json, "self").assert_status_code(HTTPStatus.OK)
     assert list(resp.json["extensions"]["attributes"].items()) >= list(
         {"ipaddress": "127.0.0.1"}.items()
     )
@@ -404,13 +425,15 @@ def test_openapi_hosts(
         extra_params={"attributes": {"foobaz": "bar"}},
         headers={"If-Match": resp.headers["ETag"]},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     monkeypatch.setattr(
         "cmk.gui.openapi.api_endpoints.host_config.delete_host.delete_hosts",
-        lambda *args, **kwargs: DeleteHostsResult(),
+        lambda *args, **kwargs: DeleteHostsResult(),  # noqa: ARG005
     )
-    clients.HostConfig.follow_link(resp.json, ".../delete").assert_status_code(204)
+    clients.HostConfig.follow_link(resp.json, ".../delete").assert_status_code(
+        HTTPStatus.NO_CONTENT
+    )
 
 
 def test_openapi_host_update_after_move(
@@ -468,7 +491,7 @@ def test_openapi_bulk_hosts(
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.openapi.api_endpoints.host_config.bulk_delete_host.delete_hosts",
-        lambda *args, **kwargs: DeleteHostsResult(),
+        lambda *args, **kwargs: DeleteHostsResult(),  # noqa: ARG005
     )
 
     resp = clients.HostConfig.bulk_create(
@@ -519,7 +542,7 @@ def test_openapi_bulk_hosts(
     clients.HostConfig.bulk_edit(
         entries=[{"host_name": "foobar", "attributes": {"foobaz": "bar"}}],
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     # delete host with bulk delete
     clients.HostConfig.bulk_delete(entries=["foobar", "sample"])
@@ -532,14 +555,15 @@ def test_openapi_bulk_simple(clients: ClientRegistry) -> None:
     )
 
 
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_bulk_with_failed(
-    clients: ClientRegistry,
-    base: str,
-    monkeypatch: pytest.MonkeyPatch,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-) -> None:
-    def _raise(_self, _host_name, _attributes, *, acting_user):
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "base", "aut_user_auth_wsgi_app")
+def test_openapi_bulk_with_failed(clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch) -> None:
+    def _raise(
+        _self: Folder,
+        _host_name: HostName,
+        _attributes: HostAttributes,
+        *,
+        acting_user: LoggedInUser,
+    ) -> HostAttributes:
         if _host_name == "foobar":
             raise MKUserError(None, "fail")
         return _attributes
@@ -555,7 +579,7 @@ def test_openapi_bulk_with_failed(
             {"host_name": "example.com", "folder": "/", "attributes": {}},
         ],
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     assert resp.json["ext"]["failed_hosts"] == {"foobar": "Validation failed: fail"}
     assert [e["id"] for e in resp.json["ext"]["succeeded_hosts"]["value"]] == ["example.com"]
@@ -661,7 +685,7 @@ def test_openapi_host_custom_attributes(clients: ClientRegistry) -> None:
         host_name="example.com",
         attributes={"meta_data": "bar"},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     # Unknown custom attribute
     clients.HostConfig.get(
@@ -672,7 +696,7 @@ def test_openapi_host_custom_attributes(clients: ClientRegistry) -> None:
         host_name="example.com",
         attributes={"foo2": "bar"},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @pytest.mark.usefixtures("with_host")
@@ -711,7 +735,9 @@ def test_host_collection_fields(clients: ClientRegistry) -> None:
 
 
 def test_host_collection_invalid_fields(clients: ClientRegistry) -> None:
-    clients.HostConfig.get_all(fields="invalid_filter", expect_ok=False).assert_status_code(400)
+    clients.HostConfig.get_all(fields="invalid_filter", expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
 
 
 @pytest.mark.usefixtures("with_host")
@@ -735,7 +761,7 @@ def test_openapi_host_rename(
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.openapi.api_endpoints.host_config.rename_host._has_pending_changes",
-        lambda x: False,
+        lambda x: False,  # noqa: ARG005
     )
     automation = mocker.patch("cmk.gui.watolib.host_rename.rename_hosts")
 
@@ -746,7 +772,7 @@ def test_openapi_host_rename(
     clients.HostConfig.rename(
         host_name="foobar",
         new_name="foobaz",
-    ).assert_status_code(204)
+    ).assert_status_code(HTTPStatus.NO_CONTENT)
     automation.assert_called_once()
 
 
@@ -767,7 +793,7 @@ def test_openapi_host_rename_ignores_if_match_etag(clients: ClientRegistry) -> N
         expect_ok=False,
         follow_redirects=False,
     )
-    resp.assert_status_code(409)
+    resp.assert_status_code(HTTPStatus.CONFLICT)
 
 
 def test_openapi_host_rename_wait_for_completion_without_job(
@@ -775,7 +801,7 @@ def test_openapi_host_rename_wait_for_completion_without_job(
 ) -> None:
     clients.HostConfig.rename_wait_for_completion(
         expect_ok=False, follow_redirects=False
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -785,7 +811,7 @@ def test_openapi_host_rename_error_on_not_existing_host(
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.openapi.api_endpoints.host_config.rename_host._has_pending_changes",
-        lambda x: False,
+        lambda x: False,  # noqa: ARG005
     )
 
     clients.HostConfig.create(
@@ -808,7 +834,7 @@ def test_openapi_host_rename_on_invalid_hostname(
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.openapi.api_endpoints.host_config.rename_host._has_pending_changes",
-        lambda x: False,
+        lambda x: False,  # noqa: ARG005
     )
 
     clients.HostConfig.create(
@@ -820,7 +846,7 @@ def test_openapi_host_rename_on_invalid_hostname(
         host_name="foobar",
         new_name="foobar",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -831,7 +857,7 @@ def test_openapi_host_rename_locked_by_quick_setup(
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.openapi.api_endpoints.host_config.rename_host._has_pending_changes",
-        lambda x: False,
+        lambda x: False,  # noqa: ARG005
     )
 
     bundle_id, program_id = quick_setup_config_bundle
@@ -850,14 +876,12 @@ def test_openapi_host_rename_locked_by_quick_setup(
         host_name="foobar",
         new_name="foobar123",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "monkeypatch")
 def test_openapi_host_delete_locked_by_quick_setup(
-    clients: ClientRegistry,
-    quick_setup_config_bundle: tuple[BundleId, str],
-    monkeypatch: pytest.MonkeyPatch,
+    clients: ClientRegistry, quick_setup_config_bundle: tuple[BundleId, str]
 ) -> None:
     bundle_id, program_id = quick_setup_config_bundle
     clients.HostConfig.create(
@@ -874,14 +898,12 @@ def test_openapi_host_delete_locked_by_quick_setup(
     clients.HostConfig.delete(
         host_name="foobar",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "monkeypatch")
 def test_openapi_host_update_locked_by_quick_setup(
-    clients: ClientRegistry,
-    quick_setup_config_bundle: tuple[BundleId, str],
-    monkeypatch: pytest.MonkeyPatch,
+    clients: ClientRegistry, quick_setup_config_bundle: tuple[BundleId, str]
 ) -> None:
     bundle_id, program_id = quick_setup_config_bundle
     clients.HostConfig.create(
@@ -901,19 +923,19 @@ def test_openapi_host_update_locked_by_quick_setup(
         host_name="foobar",
         attributes={"tag_address_family": "no-ip"},  # should fail because we remove the lock
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     clients.HostConfig.edit(
         host_name="foobar",
         update_attributes={"tag_address_family": "ip-v4-only"},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     clients.HostConfig.edit(
         host_name="foobar",
         remove_attributes=["tag_address_family"],
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -951,7 +973,7 @@ def test_openapi_host_rename_with_pending_activate_changes(
         host_name="foobar",
         new_name="foobaz",
         expect_ok=False,
-    ).assert_status_code(409)
+    ).assert_status_code(HTTPStatus.CONFLICT)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -992,7 +1014,7 @@ def test_openapi_host_move_to_non_valid_folder(clients: ClientRegistry) -> None:
         host_name="TestHost1",
         target_folder="/folder-that-does-not-exist",
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -1001,7 +1023,7 @@ def test_openapi_host_move_of_non_existing_host(clients: ClientRegistry) -> None
         host_name="foobaz",
         target_folder="/",
         expect_ok=False,
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -1016,7 +1038,7 @@ def test_openapi_host_update_invalid(clients: ClientRegistry) -> None:
         update_attributes={"ipaddress": "192.168.0.123"},
         remove_attributes=["tag_foobar"],
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_openapi_create_host_with_contact_group(clients: ClientRegistry) -> None:
@@ -1040,10 +1062,8 @@ def test_openapi_create_host_with_contact_group(clients: ClientRegistry) -> None
     )
 
 
-def test_openapi_host_with_custom_attributes(
-    clients: ClientRegistry,
-    custom_host_attribute_basic_topic: None,
-) -> None:
+@pytest.mark.usefixtures("custom_host_attribute_basic_topic")
+def test_openapi_host_with_custom_attributes(clients: ClientRegistry) -> None:
     resp = clients.HostConfig.create(
         host_name="example.com",
         attributes={
@@ -1092,14 +1112,14 @@ def test_openapi_host_with_invalid_labels(clients: ClientRegistry) -> None:
         host_name="example.com",
         attributes={"labels": {"label": ["invalid_label_entry", "another_one"]}},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
     clients.HostConfig.create(
         folder="/",
         host_name="example.com",
         attributes={"labels": {"la:bel": "value"}},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_openapi_host_with_multi_colon_label_value(clients: ClientRegistry) -> None:
@@ -1119,7 +1139,7 @@ def test_openapi_host_non_existent_site(clients: ClientRegistry) -> None:
         attributes={"site": non_existing_site_name},
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     errors = _field_errors(resp.json["fields"], "site")
     assert [e["type"] for e in errors] == ["value_error"]
     assert non_existing_site_name in errors[0]["msg"]
@@ -1142,16 +1162,16 @@ def test_openapi_host_with_invalid_snmp_community_option(
         host_name="example.com",
         attributes={"snmp_community": {"type": "v1_v2_community"}},
         expect_ok=False,
-    ).assert_status_code(400)
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_openapi_all_hosts_with_non_existing_site(
     clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def mock_all_hosts_recursively(_cls):
+    def mock_all_hosts_recursively(_cls: Folder) -> dict[HostName, Host]:
         return {
-            "foo": Host(
+            HostName("foo"): Host(
                 folder=folder_tree().root_folder(),
                 host_name=HostName("foo"),
                 attributes=HostAttributes({"site": SiteId("a_non_existing_site")}),
@@ -1167,7 +1187,7 @@ def test_openapi_host_with_non_existing_site(
     clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def mock_host(self, _hostname):
+    def mock_host(self: FolderTree, _hostname: HostName) -> Host:
         return Host(
             folder=folder_tree().root_folder(),
             host_name=HostName("foo"),
@@ -1196,7 +1216,7 @@ def test_openapi_host_config_attributes_as_string_crash_regression(
         attributes=attributes,
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
 
     errors = _field_errors(resp.json["fields"], "attributes")
     assert any(e["type"] == "value_error" for e in errors), errors
@@ -1225,9 +1245,9 @@ def test_openapi_host_config_ipmi_credentials_empty(
             "management_ipmi_credentials": None,
             "management_snmp_community": None,
         },
-    ).assert_status_code(200)
+    ).assert_status_code(HTTPStatus.OK)
     resp = clients.HostConfig.get("heute")
-    resp.assert_status_code(200)
+    resp.assert_status_code(HTTPStatus.OK)
     assert resp.json["extensions"]["attributes"]["management_ipmi_credentials"] is None
     assert resp.json["extensions"]["attributes"]["management_snmp_community"] is None
 
@@ -1242,9 +1262,9 @@ def test_openapi_host_config_snmp_v1_v2_community_redacted_on_get(
         attributes={
             "snmp_community": {"type": "v1_v2_community", "community": "super-secret"},
         },
-    ).assert_status_code(200)
+    ).assert_status_code(HTTPStatus.OK)
 
-    resp = clients.HostConfig.get("heute").assert_status_code(200)
+    resp = clients.HostConfig.get("heute").assert_status_code(HTTPStatus.OK)
     snmp = resp.json["extensions"]["attributes"]["snmp_community"]
     assert snmp == {"type": "v1_v2_community"}
     assert "community" not in snmp
@@ -1265,9 +1285,9 @@ def test_openapi_host_config_snmpv3_auth_no_priv_password_redacted_on_get(
                 "auth_password": "auth-secret-1",
             },
         },
-    ).assert_status_code(200)
+    ).assert_status_code(HTTPStatus.OK)
 
-    resp = clients.HostConfig.get("heute").assert_status_code(200)
+    resp = clients.HostConfig.get("heute").assert_status_code(HTTPStatus.OK)
     snmp = resp.json["extensions"]["attributes"]["snmp_community"]
     assert snmp == {
         "type": "v3_auth_no_privacy",
@@ -1294,9 +1314,9 @@ def test_openapi_host_config_snmpv3_auth_priv_passwords_redacted_on_get(
                 "privacy_password": "priv-secret-1",
             },
         },
-    ).assert_status_code(200)
+    ).assert_status_code(HTTPStatus.OK)
 
-    resp = clients.HostConfig.get("heute").assert_status_code(200)
+    resp = clients.HostConfig.get("heute").assert_status_code(HTTPStatus.OK)
     snmp = resp.json["extensions"]["attributes"]["snmp_community"]
     assert snmp == {
         "type": "v3_auth_privacy",
@@ -1308,47 +1328,46 @@ def test_openapi_host_config_snmpv3_auth_priv_passwords_redacted_on_get(
     assert "privacy_password" not in snmp
 
 
+@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_openapi_host_config_ipmi_password_redacted_on_get(
     clients: ClientRegistry,
 ) -> None:
     """The stored IPMI password must never be returned on GET responses."""
-    clients.HostConfig.create(
-        folder="/",
-        host_name="heute",
-        attributes={
-            "management_protocol": "ipmi",
-            "management_address": "127.0.0.1",
-            "management_ipmi_credentials": {
-                "username": "ipmi-user",
-                "password": "ipmi-secret",
-            },
-        },
-    ).assert_status_code(200)
+    _create_host_with_management_board(
+        HostAttributes(
+            {
+                "management_protocol": "ipmi",
+                "management_address": HostAddress("127.0.0.1"),
+                "management_ipmi_credentials": {
+                    "username": "ipmi-user",
+                    "password": "ipmi-secret",
+                },
+            }
+        )
+    )
 
-    resp = clients.HostConfig.get("heute").assert_status_code(200)
+    resp = clients.HostConfig.get("heute").assert_status_code(HTTPStatus.OK)
     ipmi = resp.json["extensions"]["attributes"]["management_ipmi_credentials"]
     assert ipmi == {"username": "ipmi-user"}
     assert "password" not in ipmi
 
 
+@pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_openapi_host_config_management_snmp_community_redacted_on_get(
     clients: ClientRegistry,
 ) -> None:
     """Management-board SNMP credentials must redact secrets on GET responses."""
-    clients.HostConfig.create(
-        folder="/",
-        host_name="heute",
-        attributes={
-            "management_protocol": "snmp",
-            "management_address": "127.0.0.1",
-            "management_snmp_community": {
-                "type": "v1_v2_community",
-                "community": "mgmt-secret",
-            },
-        },
-    ).assert_status_code(200)
+    _create_host_with_management_board(
+        HostAttributes(
+            {
+                "management_protocol": "snmp",
+                "management_address": HostAddress("127.0.0.1"),
+                "management_snmp_community": "mgmt-secret",
+            }
+        )
+    )
 
-    resp = clients.HostConfig.get("heute").assert_status_code(200)
+    resp = clients.HostConfig.get("heute").assert_status_code(HTTPStatus.OK)
     snmp = resp.json["extensions"]["attributes"]["management_snmp_community"]
     assert snmp == {"type": "v1_v2_community"}
     assert "community" not in snmp
@@ -1379,14 +1398,14 @@ def test_openapi_host_config_redacted_snmp_credentials_roundtrip_no_500(
             },
         },
         api_version=APIVersion.UNSTABLE,
-    ).assert_status_code(200)
+    ).assert_status_code(HTTPStatus.OK)
 
     get_resp = clients.HostConfig.request(
         "get",
         url="/objects/host_config/heute",
         api_version=APIVersion.UNSTABLE,
     )
-    get_resp.assert_status_code(200)
+    get_resp.assert_status_code(HTTPStatus.OK)
     redacted_snmp = get_resp.json["extensions"]["attributes"]["snmp_community"]
 
     edit_resp = clients.HostConfig.request(
@@ -1397,7 +1416,7 @@ def test_openapi_host_config_redacted_snmp_credentials_roundtrip_no_500(
         api_version=APIVersion.UNSTABLE,
         expect_ok=False,
     )
-    assert edit_resp.status_code != 500, (
+    assert edit_resp.status_code != HTTPStatus.INTERNAL_SERVER_ERROR, (
         f"Round-tripping redacted snmp_community returned 500: {edit_resp.json}"
     )
 
@@ -1427,7 +1446,7 @@ def test_openapi_host_config_show_host_disregards_contact_groups(
 
     clients.Host.set_credentials("unable_to_see_host", "supersecretish")
 
-    clients.HostConfig.get("heute", expect_ok=False).assert_status_code(404)
+    clients.HostConfig.get("heute", expect_ok=False).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 @pytest.mark.parametrize("api_version", [APIVersion.V1, APIVersion.UNSTABLE])
@@ -1460,7 +1479,7 @@ def test_show_host_accessible_to_folder_contact(
         url="/objects/host_config/restricted_host",
         api_version=api_version,
     )
-    resp.assert_status_code(200)
+    resp.assert_status_code(HTTPStatus.OK)
     assert resp.json["id"] == "restricted_host"
 
 
@@ -1496,7 +1515,7 @@ def test_show_host_inaccessible_to_non_folder_contact(
         api_version=api_version,
         expect_ok=False,
     )
-    resp.assert_status_code(404)
+    resp.assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 @pytest.mark.usefixtures("with_host")
@@ -1524,7 +1543,7 @@ def test_show_host_requires_permission_cmk_25482(
         api_version=api_version,
         expect_ok=False,
     )
-    resp.assert_status_code(404)
+    resp.assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 @pytest.mark.parametrize("api_version", [APIVersion.V1, APIVersion.UNSTABLE])
@@ -1560,7 +1579,7 @@ def test_update_host_accessible_to_folder_contact(
         api_version=api_version,
         headers={"If-Match": "*"},
     )
-    resp.assert_status_code(200)
+    resp.assert_status_code(HTTPStatus.OK)
 
 
 @pytest.mark.parametrize("api_version", [APIVersion.V1, APIVersion.UNSTABLE])
@@ -1597,7 +1616,7 @@ def test_update_host_inaccessible_to_non_folder_contact(
         headers={"If-Match": "*"},
         expect_ok=False,
     )
-    resp.assert_status_code(404)
+    resp.assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_update_host_v1_unifies_404_for_missing_and_forbidden(
@@ -1640,8 +1659,8 @@ def test_update_host_v1_unifies_404_for_missing_and_forbidden(
         headers={"If-Match": "*"},
         expect_ok=False,
     )
-    resp_existing.assert_status_code(404)
-    resp_missing.assert_status_code(404)
+    resp_existing.assert_status_code(HTTPStatus.NOT_FOUND)
+    resp_missing.assert_status_code(HTTPStatus.NOT_FOUND)
     assert resp_existing.json["detail"] == resp_missing.json["detail"]
     assert resp_existing.json["title"] == resp_missing.json["title"]
 
@@ -1673,17 +1692,17 @@ def test_update_host_denied_for_user_without_permissions(
         headers={"If-Match": "*"},
         expect_ok=False,
     )
-    resp.assert_status_code(404)
+    resp.assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 @pytest.mark.usefixtures("with_host")
 @pytest.mark.parametrize(
     "roles, pw_attempt, expected_existing, expected_missing",
     [
-        ([], "correctpassword", 404, 404),
-        ([], "wrong", 401, 401),
-        (["admin"], "correctpassword", 200, 404),
-        (["admin"], "wrong", 401, 401),
+        ([], "correctpassword", HTTPStatus.NOT_FOUND, HTTPStatus.NOT_FOUND),
+        ([], "wrong", HTTPStatus.UNAUTHORIZED, HTTPStatus.UNAUTHORIZED),
+        (["admin"], "correctpassword", HTTPStatus.OK, HTTPStatus.NOT_FOUND),
+        (["admin"], "wrong", HTTPStatus.UNAUTHORIZED, HTTPStatus.UNAUTHORIZED),
     ],
 )
 def test_show_host_permission_enforcement(
@@ -1850,7 +1869,7 @@ def test_move_to_folder_with_different_contact_group(clients: ClientRegistry) ->
         expect_ok=False,
     )
 
-    resp.assert_status_code(403)
+    resp.assert_status_code(HTTPStatus.FORBIDDEN)
     assert resp.json["title"] == "Permission denied"
     assert resp.json["detail"] == "You lack the permissions to move host TestHost1 to ~Folder2."
 
@@ -1908,7 +1927,7 @@ def test_move_from_folder_with_different_contact_group(clients: ClientRegistry) 
         expect_ok=False,
     )
 
-    resp.assert_status_code(403)
+    resp.assert_status_code(HTTPStatus.FORBIDDEN)
     assert resp.json["title"] == "Permission denied"
     assert resp.json["detail"] == "You lack the permissions to move host TestHost1 to ~Folder2."
 
@@ -1982,7 +2001,7 @@ def test_move_host_to_the_same_folder(clients: ClientRegistry) -> None:
         target_folder="/Folder1",
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     resp.json["title"] = "Invalid move action"
 
 
@@ -2052,8 +2071,9 @@ def test_openapi_host_config_correct_contactgroup_default(
 
 
 @time_machine.travel(datetime.datetime.fromisoformat("2022-11-05T00:00:00+00:00"), tick=False)
+@pytest.mark.usefixtures("test_edition")
 def test_openapi_host_config_effective_attributes_includes_all_host_attributes_regression(
-    clients: ClientRegistry, with_admin: tuple[str, str], test_edition: version.Edition
+    clients: ClientRegistry, with_admin: tuple[str, str]
 ) -> None:
     username, password = with_admin
     clients.HostConfig.set_credentials(username, password)
@@ -2106,6 +2126,7 @@ def test_openapi_host_config_effective_attributes_includes_all_host_attributes_r
             "state": "running",
         },
         "parents": [],
+        "relations": [],
         "site": "NO_SITE",
         "snmp_community": None,
         "tag_address_family": "ip-v4-only",
@@ -2136,7 +2157,7 @@ def test_openapi_only_one_edit_action(clients: ClientRegistry) -> None:
         etag=None,
         expect_ok=False,
     )
-    resp1.assert_status_code(400)
+    resp1.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert expected_error_msg in str(resp1.json)
 
     resp2 = clients.HostConfig.edit(
@@ -2146,7 +2167,7 @@ def test_openapi_only_one_edit_action(clients: ClientRegistry) -> None:
         etag=None,
         expect_ok=False,
     )
-    resp2.assert_status_code(400)
+    resp2.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert expected_error_msg in str(resp2.json)
 
     resp3 = clients.HostConfig.edit(
@@ -2156,7 +2177,7 @@ def test_openapi_only_one_edit_action(clients: ClientRegistry) -> None:
         etag=None,
         expect_ok=False,
     )
-    resp3.assert_status_code(400)
+    resp3.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert expected_error_msg in str(resp3.json)
 
     resp4 = clients.HostConfig.edit(
@@ -2166,7 +2187,7 @@ def test_openapi_only_one_edit_action(clients: ClientRegistry) -> None:
         etag=None,
         expect_ok=False,
     )
-    resp4.assert_status_code(400)
+    resp4.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert expected_error_msg in str(resp4.json)
 
 
@@ -2189,7 +2210,7 @@ def test_create_host_with_newline_in_the_name(
         attributes={"ipaddress": "192.168.0.123"},
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert "invalid host address" in str(resp.json["fields"])
 
 
@@ -2200,13 +2221,13 @@ def test_create_host_with_too_long_of_a_name(
         host_name=255 * "a",
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert "host address too long" in str(resp.json["fields"])
 
 
 def test_bulk_delete_no_entries(clients: ClientRegistry) -> None:
     r = clients.HostConfig.bulk_delete(entries=[], expect_ok=False)
-    r.assert_status_code(400)
+    r.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert any(e["type"] == "too_short" for e in _field_errors(r.json["fields"], "entries")), (
         r.json["fields"]
     )
@@ -2255,7 +2276,7 @@ def test_update_host_parent_must_exist(clients: ClientRegistry) -> None:
         update_attributes={"parents": ["non-existent"]},
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     errors = _field_errors(resp.json["fields"], "parents")
     assert any(e["type"] == "value_error" and "Host not found" in e["msg"] for e in errors), errors
 
@@ -2267,7 +2288,7 @@ def test_update_host_parent_must_be_list_of_strings(clients: ClientRegistry) -> 
         update_attributes={"parents": "wrong-type"},
         expect_ok=False,
     )
-    resp.assert_status_code(400)
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     errors = _field_errors(resp.json["fields"], "parents")
     assert any(e["type"] == "sequence_str" for e in errors), errors
 
@@ -2280,7 +2301,7 @@ def test_openapi_create_host_in_folder_with_umlaut(clients: ClientRegistry) -> N
         title=folder_name,
     )
     response = clients.HostConfig.create(host_name="host1", folder=f"~{folder_name}")
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
 
 
 def test_openapi_list_hosts_with_include_links(clients: ClientRegistry) -> None:
@@ -2318,12 +2339,348 @@ class TestHostsFilters:
         assert not resp.json["value"]
 
 
+_BOARD_OF_OS1 = {"kind": "management", "direction": "parent", "host": "os1"}
+_OS_HOST_OF_BOARD = {"kind": "management", "direction": "child", "host": "board"}
+
+
+def _create_board_of_os1(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(host_name="os1", folder="/")
+    clients.HostConfig.create(
+        host_name="board", folder="/", attributes={"alias": "before", "relations": [_BOARD_OF_OS1]}
+    )
+
+
+def _host_attributes(clients: ClientRegistry, host_name: str) -> dict[str, Any]:
+    attributes: dict[str, Any] = clients.HostConfig.get(host_name=host_name).json["extensions"][
+        "attributes"
+    ]
+    return attributes
+
+
+def test_openapi_host_relations_are_shown(clients: ClientRegistry) -> None:
+    _create_board_of_os1(clients)
+
+    assert _host_attributes(clients, "board")["relations"] == [_BOARD_OF_OS1]
+
+
+def test_openapi_host_relations_are_written_to_the_related_host_on_create(
+    clients: ClientRegistry,
+) -> None:
+    _create_board_of_os1(clients)
+
+    assert _host_attributes(clients, "os1")["relations"] == [_OS_HOST_OF_BOARD]
+
+
+def test_openapi_host_relations_are_written_to_the_related_host_on_bulk_create(
+    clients: ClientRegistry,
+) -> None:
+    clients.HostConfig.create(host_name="os1", folder="/")
+
+    clients.HostConfig.bulk_create(
+        entries=[
+            {"host_name": "board", "folder": "/", "attributes": {"relations": [_BOARD_OF_OS1]}}
+        ]
+    )
+
+    assert _host_attributes(clients, "os1")["relations"] == [_OS_HOST_OF_BOARD]
+
+
+def test_openapi_host_relations_refused_by_bulk_create_leave_the_other_hosts_created(
+    clients: ClientRegistry,
+) -> None:
+    """The related host has to exist already: one created in the same request does not yet."""
+    resp = clients.HostConfig.bulk_create(
+        entries=[
+            {"host_name": "os1", "folder": "/"},
+            {"host_name": "board", "folder": "/", "attributes": {"relations": [_BOARD_OF_OS1]}},
+        ],
+        expect_ok=False,
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
+
+    assert set(resp.json["ext"]["failed_hosts"]) == {"board"}
+    assert "relations" not in _host_attributes(clients, "os1")
+
+
+def test_openapi_host_relations_left_empty_are_accepted_by_bulk_create(
+    clients: ClientRegistry,
+) -> None:
+    clients.HostConfig.bulk_create(
+        entries=[{"host_name": "board", "folder": "/", "attributes": {"relations": []}}]
+    )
+
+    assert "relations" not in _host_attributes(clients, "board")
+
+
+def test_openapi_host_relations_are_written_to_the_related_host_on_update(
+    clients: ClientRegistry,
+) -> None:
+    clients.HostConfig.create(host_name="os1", folder="/")
+    clients.HostConfig.create(host_name="board", folder="/")
+
+    clients.HostConfig.edit(host_name="os1", update_attributes={"relations": [_OS_HOST_OF_BOARD]})
+
+    assert _host_attributes(clients, "board")["relations"] == [_BOARD_OF_OS1]
+
+
+def test_openapi_host_relations_removed_from_a_host_are_removed_from_the_related_host(
+    clients: ClientRegistry,
+) -> None:
+    _create_board_of_os1(clients)
+
+    clients.HostConfig.edit(host_name="board", remove_attributes=["relations"])
+
+    assert "relations" not in _host_attributes(clients, "os1")
+
+
+def test_openapi_host_relations_not_named_in_a_full_replacement_are_removed(
+    clients: ClientRegistry,
+) -> None:
+    _create_board_of_os1(clients)
+
+    clients.HostConfig.edit(host_name="board", attributes={"alias": "after"})
+
+    assert "relations" not in _host_attributes(clients, "os1")
+
+
+def _break_relations_of_board(clients: ClientRegistry) -> None:
+    """Written in Setup directly, as by a manual edit of hosts.mk: the API refuses such a value."""
+    clients.HostConfig.create(host_name="board", folder="/")
+    board = folder_tree().load_host(HostName("board"))
+    board.attributes["relations"] = "not-a-list"  # type: ignore[typeddict-item]
+    board.folder().save_hosts(pprint_value=False, acting_user=user)
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_openapi_host_relations_malformed_refuse_an_update_naming_the_way_out(
+    clients: ClientRegistry,
+) -> None:
+    _break_relations_of_board(clients)
+
+    resp = clients.HostConfig.edit(
+        host_name="board", update_attributes={"alias": "after"}, expect_ok=False
+    )
+
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
+    assert "Store valid ones or remove them." in resp.json["detail"]
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_openapi_host_relations_malformed_are_replaced_by_removing_them(
+    clients: ClientRegistry,
+) -> None:
+    _break_relations_of_board(clients)
+
+    clients.HostConfig.edit(host_name="board", remove_attributes=["relations"])
+
+    assert "relations" not in _host_attributes(clients, "board")
+
+
+_LATER_OF_OS1: RelationLink = {"kind": "later", "direction": "parent", "host": HostName("os1")}
+
+
+def _create_heute_with_a_later_kind(clients: ClientRegistry) -> None:
+    """Created in Setup directly: the API refuses a kind this version cannot place."""
+    clients.HostConfig.create(host_name="os1", folder="/")
+    clients.HostConfig.create(host_name="os2", folder="/")
+    _create_host_with_management_board(
+        HostAttributes(
+            {
+                "relations": [
+                    _LATER_OF_OS1,
+                    {"kind": "management", "direction": "parent", "host": HostName("os2")},
+                ]
+            }
+        )
+    )
+
+
+def _stored_relations_of_heute() -> object:
+    return folder_tree().load_host(HostName("heute")).attributes["relations"]
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_openapi_host_relations_of_a_kind_the_api_does_not_show_are_not_shown(
+    clients: ClientRegistry,
+) -> None:
+    _create_heute_with_a_later_kind(clients)
+
+    assert _host_attributes(clients, "heute")["relations"] == [
+        {"kind": "management", "direction": "parent", "host": "os2"}
+    ]
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_openapi_host_relations_of_a_kind_the_api_does_not_show_survive_a_full_replacement(
+    clients: ClientRegistry,
+) -> None:
+    """A later version may have written them; the request cannot have meant to remove them."""
+    _create_heute_with_a_later_kind(clients)
+
+    clients.HostConfig.edit(host_name="heute", attributes={"alias": "after"})
+
+    assert _stored_relations_of_heute() == [_LATER_OF_OS1]
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_openapi_host_relations_of_a_kind_the_api_does_not_show_survive_an_update(
+    clients: ClientRegistry,
+) -> None:
+    _create_heute_with_a_later_kind(clients)
+
+    clients.HostConfig.edit(host_name="heute", update_attributes={"relations": []})
+
+    assert _stored_relations_of_heute() == [_LATER_OF_OS1]
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_openapi_host_relations_of_a_kind_the_api_does_not_show_survive_removing_relations(
+    clients: ClientRegistry,
+) -> None:
+    _create_heute_with_a_later_kind(clients)
+
+    clients.HostConfig.edit(host_name="heute", remove_attributes=["relations"])
+
+    assert _stored_relations_of_heute() == [_LATER_OF_OS1]
+    assert "relations" not in _host_attributes(clients, "os2")
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_openapi_host_relations_removed_with_other_attributes_keep_the_kinds_not_shown(
+    clients: ClientRegistry,
+) -> None:
+    _create_heute_with_a_later_kind(clients)
+    clients.HostConfig.edit(host_name="heute", update_attributes={"alias": "before"})
+
+    clients.HostConfig.edit(host_name="heute", remove_attributes=["relations", "alias"])
+
+    assert _stored_relations_of_heute() == [_LATER_OF_OS1]
+    assert "alias" not in _host_attributes(clients, "heute")
+    assert "relations" not in _host_attributes(clients, "os2")
+
+
+@pytest.mark.parametrize(
+    "relation",
+    [
+        pytest.param({"kind": "unknown", "direction": "parent", "host": "os1"}, id="unknown kind"),
+        pytest.param(
+            {"kind": "management", "direction": "symmetric", "host": "os1"},
+            id="direction not of the kind",
+        ),
+        pytest.param(
+            {"kind": "management", "direction": "parent", "host": "missing"}, id="missing host"
+        ),
+    ],
+)
+def test_openapi_host_relations_that_cannot_be_mirrored_are_refused(
+    clients: ClientRegistry, relation: dict[str, str]
+) -> None:
+    clients.HostConfig.create(host_name="os1", folder="/")
+
+    clients.HostConfig.create(
+        host_name="board", folder="/", attributes={"relations": [relation]}, expect_ok=False
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
+
+
+def test_openapi_host_relations_removed_by_bulk_update_are_removed_from_the_related_host(
+    clients: ClientRegistry,
+) -> None:
+    _create_board_of_os1(clients)
+
+    clients.HostConfig.bulk_edit(
+        entries=[{"host_name": "board", "remove_attributes": ["relations"]}]
+    )
+
+    assert "relations" not in _host_attributes(clients, "os1")
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_openapi_host_relations_of_a_kind_the_api_does_not_show_survive_removing_them_in_bulk(
+    clients: ClientRegistry,
+) -> None:
+    _create_heute_with_a_later_kind(clients)
+
+    clients.HostConfig.bulk_edit(
+        entries=[{"host_name": "heute", "remove_attributes": ["relations"]}]
+    )
+
+    assert _stored_relations_of_heute() == [_LATER_OF_OS1]
+    assert "relations" not in _host_attributes(clients, "os2")
+
+
+def test_openapi_host_relations_refused_by_bulk_update_leave_only_that_host_alone(
+    clients: ClientRegistry,
+) -> None:
+    _create_board_of_os1(clients)
+    clients.HostConfig.create(host_name="os2", folder="/")
+    missing_board = {"kind": "management", "direction": "child", "host": "missing"}
+
+    resp = clients.HostConfig.bulk_edit(
+        entries=[
+            {"host_name": "os2", "update_attributes": {"relations": [missing_board]}},
+            {"host_name": "board", "update_attributes": {"alias": "after"}},
+        ],
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
+    assert list(resp.json["ext"]["failed_hosts"]) == ["os2"]
+    assert "relations" not in _host_attributes(clients, "os2")
+    assert _host_attributes(clients, "board")["alias"] == "after"
+
+
+def test_openapi_host_relations_restated_unchanged_in_bulk_are_accepted(
+    clients: ClientRegistry,
+) -> None:
+    _create_board_of_os1(clients)
+
+    clients.HostConfig.bulk_edit(
+        entries=[
+            {
+                "host_name": "board",
+                "update_attributes": {"alias": "after", "relations": [_BOARD_OF_OS1]},
+            }
+        ]
+    )
+
+    assert _host_attributes(clients, "board")["alias"] == "after"
+
+
+def test_openapi_host_relations_added_by_bulk_update_are_written_to_the_related_host(
+    clients: ClientRegistry,
+) -> None:
+    _create_board_of_os1(clients)
+    clients.HostConfig.create(host_name="os2", folder="/")
+    board_of_os2 = {"kind": "management", "direction": "parent", "host": "os2"}
+
+    clients.HostConfig.bulk_edit(
+        entries=[
+            {
+                "host_name": "board",
+                "update_attributes": {"relations": [_BOARD_OF_OS1, board_of_os2]},
+            }
+        ]
+    )
+
+    assert _host_attributes(clients, "os2")["relations"] == [_OS_HOST_OF_BOARD]
+
+
+def test_openapi_host_relations_not_named_in_a_full_replacement_in_bulk_are_removed(
+    clients: ClientRegistry,
+) -> None:
+    _create_board_of_os1(clients)
+
+    clients.HostConfig.bulk_edit(entries=[{"host_name": "board", "attributes": {"alias": "after"}}])
+
+    assert "relations" not in _host_attributes(clients, "os1")
+
+
 def test_openapi_built_in_host_attributes_in_sync() -> None:
     known_exceptions = [
         "meta_data",
         "network_scan_result",
         "bake_agent_package",
         "cmk_agent_connection",
+        "relations",
     ]
 
     assert set(BuiltInHostAttributes.__annotations__) == set(
@@ -2352,7 +2709,7 @@ class TestHostConfigWithRelayAttribute:
                 host_name="host_with_relay",
                 attributes={"relay": "relay1"},
             )
-        assert excinfo.value.response.status_code == 400
+        assert excinfo.value.response.status_code == HTTPStatus.BAD_REQUEST
 
     def test_update_host_relay_attribute(self, clients: ClientRegistry) -> None:
         clients.HostConfig.create(host_name="host_to_update_relay")
@@ -2362,4 +2719,87 @@ class TestHostConfigWithRelayAttribute:
                 attributes={"relay": "relay1"},
                 etag=None,
             )
-        assert excinfo.value.response.status_code == 400
+        assert excinfo.value.response.status_code == HTTPStatus.BAD_REQUEST
+
+
+def test_openapi_host_config_refuses_a_new_management_board(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.HostConfig.create(
+        folder="/",
+        host_name="heute",
+        attributes={"management_protocol": "snmp"},
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
+    assert "management_protocol" in resp.json["detail"]
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_host_config_refuses_a_management_board_on_an_existing_host(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.HostConfig.edit(
+        host_name="heute",
+        update_attributes={"management_address": "127.0.0.1"},
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
+    assert "management_address" in resp.json["detail"]
+
+
+@pytest.mark.parametrize(
+    "name, value",
+    [
+        pytest.param("management_protocol", "ipmi", id="changed"),
+        pytest.param("management_address", "127.0.0.1", id="completed"),
+    ],
+)
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_openapi_host_config_edits_an_existing_management_board(
+    clients: ClientRegistry, name: str, value: str
+) -> None:
+    _create_host_with_management_board(HostAttributes({"management_protocol": "snmp"}))
+
+    clients.HostConfig.edit(host_name="heute", update_attributes={name: value}).assert_status_code(
+        HTTPStatus.OK
+    )
+
+    resp = clients.HostConfig.get("heute")
+    assert resp.json["extensions"]["attributes"][name] == value
+
+
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_openapi_host_config_removes_an_existing_management_board(
+    clients: ClientRegistry,
+) -> None:
+    _create_host_with_management_board(HostAttributes({"management_protocol": "snmp"}))
+
+    clients.HostConfig.edit(
+        host_name="heute", remove_attributes=["management_protocol"]
+    ).assert_status_code(HTTPStatus.OK)
+
+    resp = clients.HostConfig.get("heute")
+    assert "management_protocol" not in resp.json["extensions"]["attributes"]
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_host_config_bulk_update_refuses_a_new_management_board_as_a_whole(
+    clients: ClientRegistry,
+) -> None:
+    """A host with several entries is refused before any of them is applied."""
+    resp = clients.HostConfig.bulk_edit(
+        entries=[
+            {"host_name": "heute", "update_attributes": {"alias": "changed"}},
+            {"host_name": "heute", "update_attributes": {"management_address": "127.0.0.1"}},
+        ],
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
+    assert "heute" in resp.json["ext"]["failed_hosts"]
+    assert clients.HostConfig.get("heute").json["extensions"]["attributes"].get("alias") != (
+        "changed"
+    )

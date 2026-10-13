@@ -3,16 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.painter.v0 import PainterRegistry
+from cmk.gui.painter import PainterRegistry
 
 from ..sorter import SorterRegistry
-from .painter import PainterPerfometer
-from .sorter import SorterPerfometer
+from .painter import make_perfometer_painter
+from .sorter import sorter_perfometer
 
 
 def register(sorter_registry: SorterRegistry, painter_registry: PainterRegistry) -> None:
-    sorter_registry.register(SorterPerfometer)
-    painter_registry.register(PainterPerfometer)
+    sorter_registry.register(sorter_perfometer())
+    painter_registry.register(make_perfometer_painter())
 
 
 __all__ = [

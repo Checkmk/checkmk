@@ -7,7 +7,11 @@ import { render } from '@testing-library/vue'
 import { defineComponent, nextTick, ref } from 'vue'
 
 import type { CustomGraphOptions } from '@/graphing/designer/api'
-import { useCustomGraphOptions } from '@/graphing/designer/composables/useCustomGraphOptions'
+import {
+  type DataFieldErrors,
+  type ValidationResult,
+  useCustomGraphOptions
+} from '@/graphing/designer/composables/useCustomGraphOptions'
 
 function autoOptions(): CustomGraphOptions {
   return {
@@ -46,16 +50,25 @@ function mountComposableWithGetter(getGraphOptions: () => CustomGraphOptions) {
   return api
 }
 
+function expectValid(result: ValidationResult): CustomGraphOptions {
+  if (!result.isValid) {
+    throw new Error('expected the options to validate')
+  }
+  return result.graphOptions
+}
+
+function expectInvalid(result: ValidationResult): DataFieldErrors {
+  if (result.isValid) {
+    throw new Error('expected the options to fail the validation')
+  }
+  return result.errors
+}
+
 test('reset restores the original graph options', () => {
   const api = mountComposable(autoOptions())
   api.unitType.value = 'custom'
   api.reset()
-  expect(api.graphOptions.value).toEqual(autoOptions())
-})
-
-test('graphOptions is populated from the supplied custom graph settings', () => {
-  const api = mountComposable(autoOptions())
-  expect(api.graphOptions.value).toEqual(autoOptions())
+  expect(expectValid(api.validate())).toEqual(autoOptions())
 })
 
 describe('unitType', () => {
@@ -67,7 +80,7 @@ describe('unitType', () => {
   test('switching to custom installs default notation and precision', () => {
     const api = mountComposable(autoOptions())
     api.unitType.value = 'custom'
-    expect(api.graphOptions.value?.unit).toEqual({
+    expect(expectValid(api.validate()).unit).toEqual({
       type: 'custom',
       notation: { notation: 'decimal', symbol: '' },
       precision: { type: 'auto', digits: 2 }
@@ -77,7 +90,7 @@ describe('unitType', () => {
   test('switching back to first_entry_with_unit drops the custom notation', () => {
     const api = mountComposable(customUnitOptions())
     api.unitType.value = 'first_entry_with_unit'
-    expect(api.graphOptions.value?.unit).toEqual({ type: 'first_entry_with_unit' })
+    expect(expectValid(api.validate()).unit).toEqual({ type: 'first_entry_with_unit' })
   })
 })
 
@@ -97,7 +110,7 @@ describe('notation', () => {
   test('switching to time drops the symbol', () => {
     const api = mountComposable(customUnitOptions())
     api.notation.value = 'time'
-    expect(api.graphOptions.value?.unit).toMatchObject({ notation: { notation: 'time' } })
+    expect(expectValid(api.validate()).unit).toMatchObject({ notation: { notation: 'time' } })
     expect(api.symbol.value).toBe('')
   })
 
@@ -203,7 +216,7 @@ describe('verticalRangeType', () => {
   test('switching to fixed installs default lower/upper bounds', () => {
     const api = mountComposable(autoOptions())
     api.verticalRangeType.value = 'fixed'
-    expect(api.graphOptions.value?.explicit_vertical_range).toEqual({
+    expect(expectValid(api.validate()).explicit_vertical_range).toEqual({
       type: 'fixed',
       lower: 0,
       upper: 1
@@ -213,7 +226,7 @@ describe('verticalRangeType', () => {
   test('switching back to auto drops the bounds', () => {
     const api = mountComposable(customUnitOptions())
     api.verticalRangeType.value = 'auto'
-    expect(api.graphOptions.value?.explicit_vertical_range).toEqual({ type: 'auto' })
+    expect(expectValid(api.validate()).explicit_vertical_range).toEqual({ type: 'auto' })
   })
 })
 
@@ -246,31 +259,11 @@ describe('lowerVerticalRange / upperVerticalRange', () => {
     expect(api.upperVerticalRange.value).toBeNull()
   })
 
-  test('clearing a fixed bound writes null into the underlying graph options, not 0/1', () => {
-    const api = mountComposable(customUnitOptions())
-    api.lowerVerticalRange.value = null
-    api.upperVerticalRange.value = null
-    expect(api.graphOptions.value?.explicit_vertical_range).toEqual({
-      type: 'fixed',
-      lower: null,
-      upper: null
-    })
-  })
-
   test('clearing only the lower bound leaves the upper bound untouched', () => {
     const api = mountComposable(customUnitOptions())
     api.lowerVerticalRange.value = null
     expect(api.lowerVerticalRange.value).toBeNull()
     expect(api.upperVerticalRange.value).toBe(10)
-  })
-
-  test('loads a pre-existing null bound from the source data as-is', () => {
-    const api = mountComposable({
-      ...customUnitOptions(),
-      explicit_vertical_range: { type: 'fixed', lower: null, upper: null }
-    })
-    expect(api.lowerVerticalRange.value).toBeNull()
-    expect(api.upperVerticalRange.value).toBeNull()
   })
 
   test('setting a value after it was null replaces the null', () => {
@@ -306,21 +299,21 @@ describe('showZeroValues', () => {
   test('setting it updates omit_zero_metrics accordingly', () => {
     const api = mountComposable(autoOptions())
     api.showZeroValues.value = false
-    expect(api.graphOptions.value?.omit_zero_metrics).toBe(true)
+    expect(expectValid(api.validate()).omit_zero_metrics).toBe(true)
     api.showZeroValues.value = true
-    expect(api.graphOptions.value?.omit_zero_metrics).toBe(false)
+    expect(expectValid(api.validate()).omit_zero_metrics).toBe(false)
   })
 })
 
 describe('validate', () => {
-  test('is valid for well-formed auto options', () => {
+  test('hands back well-formed auto options unchanged', () => {
     const api = mountComposable(autoOptions())
-    expect(api.validate().isValid).toBe(true)
+    expect(expectValid(api.validate())).toEqual(autoOptions())
   })
 
-  test('is valid for well-formed custom/fixed options', () => {
+  test('hands back well-formed custom/fixed options unchanged', () => {
     const api = mountComposable(customUnitOptions())
-    expect(api.validate().isValid).toBe(true)
+    expect(expectValid(api.validate())).toEqual(customUnitOptions())
   })
 
   test('flags missing rounding digits when the unit is custom', () => {
@@ -337,25 +330,62 @@ describe('validate', () => {
     } as unknown as CustomGraphOptions
     const api = mountComposable(options)
     expect(api.roundingDigits.value).toBeUndefined()
-    const { isValid, errors } = api.validate()
-    expect(isValid).toBe(false)
-    expect(errors.precision_digits).toBeDefined()
+    expect(expectInvalid(api.validate()).precision_digits).toBeDefined()
   })
 
   test('flags negative rounding digits when the unit is custom', () => {
     const api = mountComposable(customUnitOptions())
     api.roundingDigits.value = -1
-    const { isValid, errors } = api.validate()
-    expect(isValid).toBe(false)
-    expect(errors.precision_digits).toBeDefined()
+    expect(expectInvalid(api.validate()).precision_digits).toBeDefined()
+  })
+
+  test.each([
+    { cleared: 'lower', flagged: 'lower_range', kept: 'upper_range' },
+    { cleared: 'upper', flagged: 'upper_range', kept: 'lower_range' }
+  ] as const)(
+    'flags a fixed range whose $cleared limit is cleared',
+    ({ cleared, flagged, kept }) => {
+      // A stored range names both of its edges and the preview draws none with an open end, so the
+      // form refuses it here rather than letting the fetch and the save fail.
+      const api = mountComposable(customUnitOptions())
+      if (cleared === 'lower') {
+        api.lowerVerticalRange.value = null
+      } else {
+        api.upperVerticalRange.value = null
+      }
+      const errors = expectInvalid(api.validate())
+      expect(errors[flagged]).toBeDefined()
+      expect(errors[kept]).toBeUndefined()
+    }
+  )
+
+  test('flags a fixed range with neither limit set', () => {
+    const api = mountComposable(customUnitOptions())
+    api.lowerVerticalRange.value = null
+    api.upperVerticalRange.value = null
+    const errors = expectInvalid(api.validate())
+    expect(errors.lower_range).toBeDefined()
+    expect(errors.upper_range).toBeDefined()
+  })
+
+  test('hands back the edited options once they are valid', () => {
+    const api = mountComposable(customUnitOptions())
+    api.lowerVerticalRange.value = -20
+    api.upperVerticalRange.value = 20
+
+    // The payload is what the API takes: the draft's nullable edges are numbers by now.
+    expect(expectValid(api.validate()).explicit_vertical_range).toEqual({
+      type: 'fixed',
+      lower: -20,
+      upper: 20
+    })
   })
 
   test('flags a fixed range with lower equal to upper', () => {
     const api = mountComposable(customUnitOptions())
     api.lowerVerticalRange.value = 5
     api.upperVerticalRange.value = 5
-    const { isValid, errors } = api.validate()
-    expect(isValid).toBe(false)
+    const errors = expectInvalid(api.validate())
     expect(errors.lower_range).toBeDefined()
     expect(errors.upper_range).toBeDefined()
   })
@@ -385,8 +415,7 @@ describe('reactivity to the underlying source', () => {
     source.value = customUnitOptions()
     await nextTick()
 
-    expect(api.graphOptions.value).toEqual(customUnitOptions())
-    expect(api.unitType.value).toBe('custom')
+    expect(expectValid(api.validate())).toEqual(customUnitOptions())
   })
 
   test('picks up in-place mutations of the graph options object', async () => {
@@ -399,18 +428,18 @@ describe('reactivity to the underlying source', () => {
     expect(api.showZeroValues.value).toBe(false)
   })
 
-  test('picks up a bound being replaced with null from the source', async () => {
+  test('picks up a bound being replaced from the source', async () => {
     const source = ref<CustomGraphOptions>(customUnitOptions())
     const api = mountComposableWithGetter(() => source.value)
     expect(api.lowerVerticalRange.value).toBe(-5)
 
     source.value = {
       ...customUnitOptions(),
-      explicit_vertical_range: { type: 'fixed', lower: null, upper: 10 }
+      explicit_vertical_range: { type: 'fixed', lower: -20, upper: 10 }
     }
     await nextTick()
 
-    expect(api.lowerVerticalRange.value).toBeNull()
+    expect(api.lowerVerticalRange.value).toBe(-20)
     expect(api.upperVerticalRange.value).toBe(10)
   })
 })

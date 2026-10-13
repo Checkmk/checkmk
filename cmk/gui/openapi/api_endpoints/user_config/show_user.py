@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.ccc.user import UserId
@@ -35,7 +36,7 @@ def show_user_v1(
     user.need_permission("wato.users")
     user_spec = load_user(username)
     return ApiResponse(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         body=serialize_user(username, user_spec),
         etag=user_etag(user_spec),
     )

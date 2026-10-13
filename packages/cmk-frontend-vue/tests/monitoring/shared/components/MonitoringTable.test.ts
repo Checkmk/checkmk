@@ -7,10 +7,11 @@ import type {
   ColumnDef,
   ColumnFiltersState,
   SortingState,
+  Row as TableRow,
   VisibilityState
 } from '@tanstack/vue-table'
 import userEvent from '@testing-library/user-event'
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, within } from '@testing-library/vue'
 import { type Ref, defineComponent, h, inject, nextTick, provide, ref } from 'vue'
 
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
@@ -19,6 +20,8 @@ import {
   MONITORING_SERVICE
 } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { FetchState, MonitoringService } from '@/monitoring/shared/services/MonitoringService'
+
+import { FakeResizeObserver } from '@tests/lib/fakeResizeObserver'
 
 const originalOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
 const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
@@ -61,6 +64,12 @@ const COLUMNS: ColumnDef<Row>[] = [
   { id: 'actions', header: 'Actions', enableSorting: false }
 ]
 
+/** The same table as {@link COLUMNS}, plus the column that turns row selection on. */
+const COLUMNS_WITH_SELECT: ColumnDef<Row>[] = [
+  { id: 'select', header: '', enableSorting: false, meta: { selectColumn: true } },
+  ...COLUMNS
+]
+
 function makeRows(count: number): Row[] {
   return Array.from({ length: count }, (_, i) => ({
     id: `row-${i}`,
@@ -80,7 +89,9 @@ function makeMockService(
       onSortUpdate(newSort)
     }),
     columnVisibility,
-    rowToReveal: ref<Row | null>(null)
+    rowToReveal: ref<Row | null>(null),
+    beginAutoPause: vi.fn(),
+    endAutoPause: vi.fn()
   }
 }
 
@@ -88,7 +99,18 @@ const layoutProbe = defineComponent({
   setup() {
     const columns = inject(COLUMN_LAYOUT_KEY, null)
     return () =>
-      h('td', { 'data-testid': 'layout-probe' }, [...(columns?.value.keys() ?? [])].join(','))
+      h(
+        'td',
+        {
+          'data-testid': 'layout-probe',
+          'data-widths': JSON.stringify(
+            Object.fromEntries(
+              [...(columns?.value.entries() ?? [])].map(([id, info]) => [id, info.width])
+            )
+          )
+        },
+        [...(columns?.value.keys() ?? [])].join(',')
+      )
   }
 })
 
@@ -96,10 +118,20 @@ function probedLayout(): string {
   return screen.getAllByTestId('layout-probe')[0]!.textContent ?? ''
 }
 
+function probedWidth(columnId: string): number | null {
+  const widths = JSON.parse(
+    screen.getAllByTestId('layout-probe')[0]!.dataset.widths ?? '{}'
+  ) as Record<string, number | null>
+  return widths[columnId] ?? null
+}
+
 function mountTable(overrides: {
   rows?: Row[]
+  columns?: ColumnDef<Row>[]
   fetchState?: FetchState
   hasLoaded?: boolean
+  loadFailed?: boolean
+  onRetry?: () => void
   sortState?: SortingState
   filterState?: ColumnFiltersState
   columnVisibility?: Ref<VisibilityState>
@@ -108,8 +140,11 @@ function mountTable(overrides: {
   getRowKey?: (row: Row, index: number) => string | number
 }) {
   const rows = overrides.rows ?? makeRows(3)
+  const columns = overrides.columns ?? COLUMNS
   const fetchState = overrides.fetchState ?? 'idle'
   const hasLoaded = overrides.hasLoaded ?? true
+  const loadFailed = overrides.loadFailed ?? false
+  const onRetry = overrides.onRetry ?? (() => {})
   const filterState = overrides.filterState ?? []
   const onFilterUpdate = overrides.onFilterUpdate ?? (() => {})
   const getRowKey = overrides.getRowKey
@@ -126,7 +161,17 @@ function mountTable(overrides: {
         components: { MonitoringTable },
         setup() {
           provide(MONITORING_SERVICE, mockService as unknown as MonitoringService<unknown>)
-          return { rows, fetchState, hasLoaded, filterState, onFilterUpdate, getRowKey }
+          return {
+            rows,
+            columns,
+            fetchState,
+            hasLoaded,
+            loadFailed,
+            onRetry,
+            filterState,
+            onFilterUpdate,
+            getRowKey
+          }
         },
         render() {
           return h(
@@ -135,14 +180,25 @@ function mountTable(overrides: {
               rows: this.rows,
               fetchState: this.fetchState,
               hasLoaded: this.hasLoaded,
-              columns: COLUMNS,
+              loadFailed: this.loadFailed,
+              columns: this.columns,
               filterState: this.filterState,
               ...(this.getRowKey ? { getRowKey: this.getRowKey } : {}),
-              'onUpdate:filterState': this.onFilterUpdate
+              'onUpdate:filterState': this.onFilterUpdate,
+              onRetry: this.onRetry
             },
             {
-              row: ({ row, index }: { row: Row; index: number }) => [
+              row: ({
+                row,
+                index,
+                tableRow
+              }: {
+                row: Row
+                index: number
+                tableRow: TableRow<Row>
+              }) => [
                 h('td', { 'data-testid': `row-${row.id}` }, `${index}:${row.name}`),
+                h('td', { 'data-testid': `can-select-${row.id}` }, String(tableRow.getCanSelect())),
                 h(layoutProbe)
               ],
               'empty-state': () => h('div', { 'data-testid': 'empty-state' }, 'nothing here')
@@ -203,6 +259,167 @@ test('aria-sort reflects the active sort direction', () => {
     'descending'
   )
   expect(screen.getByRole('columnheader', { name: 'Name' })).toHaveAttribute('aria-sort', 'none')
+})
+
+async function pickSortDirection(column: string, direction: string): Promise<void> {
+  const user = userEvent.setup()
+  await user.click(screen.getByRole('button', { name: `Filter ${column}` }))
+  await user.click(screen.getByRole('button', { name: direction }))
+}
+
+test('the column panel sorts the column ascending', async () => {
+  const onSortUpdate = vi.fn()
+  mountTable({ onSortUpdate })
+
+  await pickSortDirection('Name', 'Sort ascending')
+
+  expect(onSortUpdate).toHaveBeenCalledTimes(1)
+  expect(onSortUpdate.mock.calls[0]![0]).toEqual([{ id: 'name', desc: false }])
+})
+
+test('the column panel sorts the column descending', async () => {
+  const onSortUpdate = vi.fn()
+  mountTable({ onSortUpdate })
+
+  await pickSortDirection('Name', 'Sort descending')
+
+  expect(onSortUpdate).toHaveBeenCalledTimes(1)
+  expect(onSortUpdate.mock.calls[0]![0]).toEqual([{ id: 'name', desc: true }])
+})
+
+test('the column panel drops only its own column out of a multi-column sort', async () => {
+  const onSortUpdate = vi.fn()
+  mountTable({
+    sortState: [
+      { id: 'name', desc: true },
+      { id: 'state', desc: false }
+    ],
+    onSortUpdate
+  })
+
+  await pickSortDirection('Name', 'No sorting / default sorting')
+
+  expect(onSortUpdate).toHaveBeenCalledTimes(1)
+  expect(onSortUpdate.mock.calls[0]![0]).toEqual([{ id: 'state', desc: false }])
+})
+
+test('the column panel marks the direction the column is sorted by', async () => {
+  const user = userEvent.setup()
+  mountTable({ sortState: [{ id: 'name', desc: true }] })
+
+  await user.click(screen.getByRole('button', { name: 'Filter Name' }))
+
+  expect(screen.getByRole('button', { name: 'Sort descending' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
+  expect(screen.getByRole('button', { name: 'Sort ascending' })).toHaveAttribute(
+    'aria-pressed',
+    'false'
+  )
+})
+
+async function pickInPanelSection(column: string, section: string, direction: string) {
+  const user = userEvent.setup()
+  await user.click(screen.getByRole('button', { name: `Filter ${column}` }))
+  const group = screen.getByRole('group', { name: section })
+  await user.click(within(group).getByRole('button', { name: direction }))
+}
+
+test('the column panel extends the active sort by its column', async () => {
+  const onSortUpdate = vi.fn()
+  mountTable({ sortState: [{ id: 'name', desc: false }], onSortUpdate })
+
+  await pickInPanelSection('State', 'Extend active sorting of "Name" by', 'Sort descending')
+
+  expect(onSortUpdate).toHaveBeenCalledTimes(1)
+  expect(onSortUpdate.mock.calls[0]![0]).toEqual([
+    { id: 'name', desc: false },
+    { id: 'state', desc: true }
+  ])
+})
+
+test('the column panel offers no extension while nothing else is sorted', async () => {
+  const user = userEvent.setup()
+  mountTable({ sortState: [{ id: 'name', desc: false }] })
+
+  await user.click(screen.getByRole('button', { name: 'Filter Name' }))
+
+  expect(screen.queryByRole('group', { name: /Extend active sorting/ })).not.toBeInTheDocument()
+})
+
+test('the column panel marks the direction a column extends the sort by', async () => {
+  const user = userEvent.setup()
+  mountTable({
+    sortState: [
+      { id: 'name', desc: false },
+      { id: 'state', desc: true }
+    ]
+  })
+
+  await user.click(screen.getByRole('button', { name: 'Filter State' }))
+
+  const extend = screen.getByRole('group', { name: 'Extend active sorting of "Name" by' })
+  expect(within(extend).getByRole('button', { name: 'Sort descending' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
+  const own = screen.getByRole('group', { name: 'Sort by this column' })
+  expect(within(own).getByRole('button', { name: 'No sorting / default sorting' })).toHaveAttribute(
+    'aria-pressed',
+    'false'
+  )
+})
+
+test('sorting by a column that extends the sort makes it the only sort', async () => {
+  const onSortUpdate = vi.fn()
+  mountTable({
+    sortState: [
+      { id: 'name', desc: false },
+      { id: 'state', desc: true }
+    ],
+    onSortUpdate
+  })
+
+  await pickInPanelSection('State', 'Sort by this column', 'Sort ascending')
+
+  expect(onSortUpdate.mock.calls[0]![0]).toEqual([{ id: 'state', desc: false }])
+})
+
+test('turning the primary sort column around keeps the columns extending it', async () => {
+  const onSortUpdate = vi.fn()
+  mountTable({
+    sortState: [
+      { id: 'name', desc: true },
+      { id: 'state', desc: false }
+    ],
+    onSortUpdate
+  })
+
+  await pickInPanelSection('Name', 'Sort by this column', 'Sort ascending')
+
+  expect(onSortUpdate.mock.calls[0]![0]).toEqual([
+    { id: 'name', desc: false },
+    { id: 'state', desc: false }
+  ])
+})
+
+test('headers number the sort order once more than one column sorts', () => {
+  mountTable({
+    sortState: [
+      { id: 'state', desc: true },
+      { id: 'name', desc: false }
+    ]
+  })
+
+  expect(screen.getByRole('button', { name: 'State' })).toHaveTextContent(/^State\s*1$/)
+  expect(screen.getByRole('button', { name: 'Name' })).toHaveTextContent(/^Name\s*2$/)
+})
+
+test('headers do not number a single-column sort', () => {
+  mountTable({ sortState: [{ id: 'name', desc: false }] })
+
+  expect(screen.getByRole('button', { name: 'Name' })).toHaveTextContent(/^Name$/)
 })
 
 test('aria-busy is true while a fetch is in flight', () => {
@@ -273,6 +490,27 @@ test('uses getRowKey for row keying when provided', async () => {
 
   expect(screen.getByTestId('row-row-0')).toBeInTheDocument()
   expect(screen.getByTestId('row-row-1')).toBeInTheDocument()
+})
+
+test('says the results could not be loaded when the fetch failed', () => {
+  mountTable({ rows: [], hasLoaded: true, loadFailed: true })
+
+  expect(screen.getByRole('alert')).toHaveTextContent('Could not load the results')
+})
+
+test('does not pass a failed fetch off as an empty result', () => {
+  mountTable({ rows: [], hasLoaded: true, loadFailed: true })
+
+  expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument()
+})
+
+test('offers a retry for a failed fetch', async () => {
+  const onRetry = vi.fn()
+  mountTable({ rows: [], hasLoaded: true, loadFailed: true, onRetry })
+
+  await userEvent.click(screen.getByRole('button', { name: 'Retry' }))
+
+  expect(onRetry).toHaveBeenCalledOnce()
 })
 
 test('renders the empty-state slot when there are no rows and not loading', () => {
@@ -377,4 +615,151 @@ test('consumes a reveal request for a row it does not list, rather than holding 
   await flushVirtualizer()
 
   expect(mockService.rowToReveal.value).toBeNull()
+})
+
+/*
+ * The select column is the switch for row selection: a table without it belongs to a user who may
+ * run no command, and must not offer a selection at all - not even to a programmatic caller.
+ */
+
+test('offers no row selection while no column declares itself the select column', async () => {
+  mountTable({})
+  await flushVirtualizer()
+
+  expect(screen.queryByRole('checkbox', { name: 'Select all rows' })).not.toBeInTheDocument()
+  expect(screen.getByTestId('can-select-row-0')).toHaveTextContent('false')
+})
+
+test('offers row selection once a column declares itself the select column', async () => {
+  mountTable({ columns: COLUMNS_WITH_SELECT })
+  await flushVirtualizer()
+
+  expect(screen.getByRole('checkbox', { name: 'Select all rows' })).toBeInTheDocument()
+  expect(screen.getByTestId('can-select-row-0')).toHaveTextContent('true')
+})
+
+test('the select-all hit area carries a native tooltip, since the checkbox itself cannot', async () => {
+  const { container } = mountTable({ columns: COLUMNS_WITH_SELECT })
+  await flushVirtualizer()
+
+  // The checkbox has `pointer-events: none` here (see .monitoring-table-header__select
+  // :deep(.cmk-checkbox__container)), so a title on it would never be hovered.
+  expect(container.querySelector('.monitoring-table-header__select')).toHaveAttribute(
+    'title',
+    'Select all rows'
+  )
+})
+
+test('a header label that fits shows no tooltip repeating it', async () => {
+  const user = userEvent.setup()
+  mountTable({})
+
+  const header = screen.getByRole('button', { name: 'Name' })
+  await user.hover(header)
+
+  expect(header).not.toHaveAttribute('title')
+})
+
+test('a truncated header label shows its full text as a tooltip', async () => {
+  const user = userEvent.setup()
+  mountTable({})
+
+  const header = screen.getByRole('button', { name: 'Name' })
+  const label = header.querySelector('.monitoring-table-header__label')!
+  Object.defineProperty(label, 'scrollWidth', { configurable: true, value: 120 })
+  Object.defineProperty(label, 'clientWidth', { configurable: true, value: 40 })
+  await user.hover(header)
+
+  expect(header).toHaveAttribute('title', 'Name')
+})
+
+describe('a column that fits its header', () => {
+  const FIT_COLUMNS: ColumnDef<Row>[] = [
+    { id: 'mode', header: 'Mode', enableSorting: false, minSize: 56, meta: { fitHeader: true } },
+    { id: 'actions', header: 'Actions', enableSorting: false, minSize: 56 }
+  ]
+
+  // jsdom does no layout: every header cell is 60px wide, of which its label gets 20px,
+  // while the label's text needs `textWidth`.
+  let textWidth: number
+
+  function resizeHeader(): void {
+    const thead = document.querySelector('thead')!
+    FakeResizeObserver.instances.find((observer) => observer.observed.has(thead))!.fire()
+  }
+
+  beforeEach(() => {
+    textWidth = 50
+    vi.stubGlobal('ResizeObserver', FakeResizeObserver)
+    const elementRect = HTMLElement.prototype.getBoundingClientRect
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement
+    ) {
+      if (this.tagName === 'TH') {
+        return { width: 60 } as DOMRect
+      }
+      if (this.classList.contains('monitoring-table-header__label')) {
+        return { width: 20 } as DOMRect
+      }
+      return elementRect.call(this)
+    })
+    vi.spyOn(document, 'createRange').mockReturnValue({
+      selectNodeContents: () => {},
+      getBoundingClientRect: () => ({ width: textWidth }) as DOMRect
+    } as unknown as Range)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+    FakeResizeObserver.instances = []
+  })
+
+  test('grows past its minimum width when its label would be cut', async () => {
+    mountTable({ columns: FIT_COLUMNS })
+    await nextTick()
+
+    expect(probedWidth('mode')).toBe(90)
+  })
+
+  test('leaves the columns that do not fit their header at their minimum width', async () => {
+    mountTable({ columns: FIT_COLUMNS })
+    await nextTick()
+
+    expect(probedWidth('actions')).toBe(56)
+  })
+
+  test('measures its header again once the header resizes', async () => {
+    mountTable({ columns: FIT_COLUMNS })
+    await nextTick()
+
+    textWidth = 70
+    resizeHeader()
+    await nextTick()
+
+    expect(probedWidth('mode')).toBe(110)
+  })
+
+  test('still fits its header when it is shown again after being hidden', async () => {
+    const columnVisibility = ref<VisibilityState>({})
+    mountTable({ columns: FIT_COLUMNS, columnVisibility })
+    await nextTick()
+
+    columnVisibility.value = { mode: false }
+    await nextTick()
+    resizeHeader()
+    columnVisibility.value = {}
+    await nextTick()
+
+    expect(probedWidth('mode')).toBe(90)
+  })
+
+  test('is not widened when its header can be sorted', async () => {
+    mountTable({
+      columns: [{ ...FIT_COLUMNS[0]!, accessorKey: 'name', enableSorting: true }, FIT_COLUMNS[1]!]
+    })
+    await nextTick()
+
+    expect(probedWidth('mode')).toBe(56)
+  })
 })

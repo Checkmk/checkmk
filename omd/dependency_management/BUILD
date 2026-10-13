@@ -2,7 +2,7 @@ load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load(":dependency_management.bzl", "bill_of_materials", "dependency_list")
 
@@ -67,6 +67,34 @@ py_cmk_test(
 )
 
 py_cmk_test(
+    name = "test_cyclonedx",
+    srcs = [
+        "cyclonedx.py",
+        "test_cyclonedx.py",
+    ],
+    imports = ["."],
+    deps = [
+        requirement("pydantic"),
+    ],
+)
+
+py_cmk_test(
+    name = "test_list_dependencies",
+    srcs = [
+        "cyclonedx.py",
+        "list_dependencies.py",
+        "pnpm_parser.py",
+        "test_list_dependencies.py",
+    ],
+    imports = ["."],
+    deps = [
+        requirement("pydantic"),
+        requirement("pyyaml"),
+        requirement("toml"),
+    ],
+)
+
+py_cmk_test(
     name = "test_manual_dep_manifest",
     srcs = [
         "cyclonedx.py",
@@ -124,6 +152,7 @@ dependency_list(
         "//:Cargo.lock",
         "//:pnpm-lock.yaml",
         "//:runtime-requirements.txt",
+        "//agents/modules/windows:requirements-windows.txt",
         "manual_dependency_manifest.yml",
     ],
     sbom_target = "//omd:deps_packages_base",

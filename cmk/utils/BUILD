@@ -18,7 +18,6 @@ py_library(
     name = "paths",
     srcs = ["paths.py"],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -29,10 +28,27 @@ py_library(
 )
 
 py_library(
+    name = "security_event",
+    srcs = [
+        "jsontype.py",
+        "security_event.py",
+    ],
+    visibility = [
+        "//bin:__subpackages__",
+        "//cmk:__subpackages__",
+        "//non-free/packages:__subpackages__",
+        "//non-free/tests:__subpackages__",
+        "//omd/packages:__subpackages__",
+        "//packages:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [":paths"],
+)
+
+py_library(
     name = "man_pages",
     srcs = ["man_pages.py"],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -52,7 +68,6 @@ py_library(
     name = "encryption",
     srcs = ["encryption.py"],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -74,7 +89,6 @@ py_library(
         "msi_patch.py",
     ],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -95,7 +109,6 @@ py_library(
         "redis.py",
     ],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -114,7 +127,6 @@ py_library(
     name = "unixsocket_http",
     srcs = ["unixsocket_http.py"],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -136,7 +148,6 @@ py_library(
         "//cmk/utils/werks/announce/templates:j2_templates",
     ],
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/tests:__subpackages__",
@@ -162,11 +173,13 @@ py_library(
             "**/nonfree/**",
             "caching_redis.py",
             "encryption.py",
+            "jsontype.py",
             "man_pages.py",
             "msi_engine.py",
             "msi_patch.py",
             "paths.py",
             "redis.py",
+            "security_event.py",
             "unixsocket_http.py",
             "werks/**",
         ],
@@ -176,52 +189,47 @@ py_library(
     # Don't introduce new dependencies over there!
     # The ones listed here are just the sad status quo
     visibility = [
-        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages/cmk-agent-registration-extended:__subpackages__",
         "//non-free/packages/cmk-bakery:__subpackages__",
+        "//non-free/packages/cmk-data-backend:__subpackages__",
         "//non-free/packages/cmk-dcd:__subpackages__",
         "//non-free/packages/cmk-licensing-nonfree:__subpackages__",
         "//non-free/packages/cmk-liveproxyd:__subpackages__",
-        "//non-free/packages/cmk-metric-backend:__subpackages__",
         "//non-free/packages/cmk-network-flow:__subpackages__",
         "//non-free/packages/cmk-notification-plugins-nonfree:__subpackages__",
+        "//non-free/packages/cmk-plugins-nonfree:__subpackages__",
         "//non-free/packages/cmk-robotmk:__subpackages__",
         "//non-free/packages/cmk-telemetry:__subpackages__",
         "//non-free/tests:__subpackages__",
         "//omd/packages:__subpackages__",
         "//packages/cmk-backup:__subpackages__",
         "//packages/cmk-check-engine:__subpackages__",
+        "//packages/cmk-maps:__subpackages__",
         "//packages/cmk-notification-plugins:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [
-        ":man_pages",
         ":paths",
         "//packages/cmk-ccc:config-path",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:i18n",
-        "//packages/cmk-ccc:plugin-registry",
-        "//packages/cmk-ccc:regex",
+        "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:tty",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",
-        "//packages/cmk-events",
-        "//packages/cmk-licensing",
-        "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-ruleset-matcher",
-        "//packages/cmk-trace",
-        "//packages/cmk-web",
         requirement("cryptography"),
         requirement("pydantic"),
         requirement("python-dateutil"),
+        ":security_event",
     ],
 )
 
@@ -278,9 +286,15 @@ py_library(
     ],
 )
 
+py_library(
+    name = "werks_bin_lib",
+    srcs = ["werks/__main__.py"],
+    deps = [":werks"],
+)
+
 py_binary(
     name = "werks_bin",
-    srcs = ["werks/__main__.py"],
+    srcs = [":werks_bin_lib"],
     tags = ["manual"],
     visibility = ["//visibility:public"],
     deps = [":werks"],

@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkHtml from 'cmk-ui-library/components/CmkHtml.vue'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkSpace from 'cmk-ui-library/components/CmkSpace.vue'
+import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import useId from 'cmk-ui-library/lib/useId'
@@ -30,7 +31,11 @@ const {
   label?: TranslatedString
   /**
    * Accessible name for the checkbox to be used when no visible `label` is rendered
-   * (e.g. a row-select checkbox in a table).
+   * (e.g. a row-select checkbox in a table). Rendered as a real, visually-hidden
+   * `<label>` associated with the checkbox rather than as an `aria-label` attribute,
+   * so assistive tech that relies on content-based naming finds an actual label - and
+   * so the name isn't given twice over (once as an attribute, once as DOM text) to
+   * tooling that reads both. Ignored when `label` or the `label` slot is used.
    */
   ariaLabel?: TranslatedString
   labelPosition?: 'left' | 'right'
@@ -40,6 +45,22 @@ const {
   disabled?: boolean
   dots?: boolean
   allowIndeterminate?: AllowIndeterminate
+}>()
+
+defineSlots<{
+  /**
+   * Replaces the `label` text inside the `<label>`, for a label that needs markup rather
+   * than a string. It becomes the checkbox's accessible name, so keep it to phrasing
+   * content; anything interactive in here has to stop its own click from reaching the
+   * label, or it toggles the checkbox as well.
+   */
+  label?: () => unknown
+  /**
+   * Content belonging to the checkbox, rendered under the label and aligned with it - a
+   * dependent input, a hint. It sits outside the `<label>`, so it neither joins the
+   * accessible name nor toggles the checkbox when clicked.
+   */
+  default?: () => unknown
 }>()
 
 const id = useId()
@@ -57,7 +78,8 @@ const hasValidationErrors = computed(() => {
         'cmk-checkbox__pad-top': padding !== 'bottom',
         'cmk-checkbox__pad-bottom': padding !== 'top',
         'cmk-checkbox__disabled': disabled,
-        'cmk-checkbox--label-left': labelPosition === 'left'
+        'cmk-checkbox--label-left': labelPosition === 'left',
+        'cmk-checkbox--stacked': !!$slots.default
       }"
     >
       <CheckboxRoot
@@ -66,22 +88,40 @@ const hasValidationErrors = computed(() => {
         class="cmk-checkbox__button"
         :class="{ 'cmk-checkbox__button--error': hasValidationErrors }"
         :disabled="disabled"
-        :aria-label="ariaLabel"
       >
-        <CheckboxIndicator class="cmk-checkbox__indicator">
+        <CheckboxIndicator class="cmk-checkbox__indicator" aria-hidden="true">
           <span v-if="value === 'indeterminate'" class="cmk-checkbox__dash" />
-          <svg v-else version="1.1" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+          <svg
+            v-else
+            version="1.1"
+            viewBox="0 0 18 18"
+            xmlns="http://www.w3.org/2000/svg"
+            focusable="false"
+          >
             <g transform="rotate(45,9,9)">
               <path d="m18.5 6.5v5h-7v7h-5v-7h-7v-5h7v-7h5v7z" fill="currentcolor" />
             </g>
           </svg>
         </CheckboxIndicator>
       </CheckboxRoot>
-      <template v-if="label">
+      <CmkLabel v-if="ariaLabel && !label && !$slots.label" :for="id">
+        <CmkVisuallyHidden :text="ariaLabel" />
+      </CmkLabel>
+      <template v-if="label || $slots.label || $slots.default">
         <CmkSpace :size="'small'" />
-        <CmkLabel :for="id" :help="help" :dots="dots" :grow="labelPosition === 'left'">
-          <CmkHtml class="cmk-checkbox__label" :html="label" /> </CmkLabel
-      ></template>
+        <div class="cmk-checkbox__column">
+          <CmkLabel
+            v-if="label || $slots.label"
+            :for="id"
+            :help="help"
+            :dots="dots"
+            :grow="labelPosition === 'left'"
+          >
+            <slot name="label"><CmkHtml class="cmk-checkbox__label" :html="label" /></slot>
+          </CmkLabel>
+          <div v-if="$slots.default" class="cmk-checkbox__extra"><slot /></div>
+        </div>
+      </template>
       <CmkInlineValidation :validation="externalErrors"></CmkInlineValidation>
     </div>
   </span>
@@ -107,6 +147,21 @@ span {
 
   &.cmk-checkbox__pad-bottom {
     padding-bottom: 2px;
+  }
+
+  /* Stacks the label and any slotted content, so the latter lines up with the label text
+     rather than with the box. */
+  .cmk-checkbox__column {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: var(--dimension-3);
+  }
+
+  /* Only where content stacks: put the box on the first line instead of centring it
+     against a column taller than itself. Callers passing just a label keep the centring. */
+  &.cmk-checkbox--stacked {
+    align-items: flex-start;
   }
 
   .cmk-checkbox__label {
@@ -180,7 +235,7 @@ span {
   }
 
   &.cmk-checkbox__button--error {
-    border: 1px solid var(--inline-error-border-color);
+    border: 1px solid var(--status-border-color-error);
   }
 
   &:focus-visible {

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from livestatus import LivestatusRow
 
 from cmk.bi.lib import NodeComputeResult
@@ -11,6 +13,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.availability.bi import (
     _bi_span_from_statehist_row,
+    _is_better_timewarp_phase,
     _limit_reached_for_any_site,
     create_bi_timeline_entry,
     reclassify_bi_rows,
@@ -105,3 +108,17 @@ def test_reclassify_bi_rows_splits_span_on_downtime_annotation() -> None:
         (1500, 2000, 0),
     ]
     assert all(s["duration"] == s["until"] - s["from"] for s in new_spans)
+
+
+@pytest.mark.parametrize(
+    "from_time, has_candidate, expected",
+    [
+        pytest.param(500, False, True, id="first phase is the fallback"),
+        pytest.param(5000, False, True, id="first phase wins even after the timewarp"),
+        pytest.param(1000, True, True, id="phase starting on the timewarp"),
+        pytest.param(999, True, True, id="phase starting before the timewarp"),
+        pytest.param(1001, True, False, id="phase starting after the timewarp"),
+    ],
+)
+def test_is_better_timewarp_phase(from_time: int, has_candidate: bool, expected: bool) -> None:
+    assert _is_better_timewarp_phase(from_time, 1000, has_candidate) is expected

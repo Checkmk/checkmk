@@ -4,13 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import { Api } from 'cmk-ui-library/lib/api-client'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { computed, ref, watch } from 'vue'
 
 export interface IAgentTokenGenerationResponseExtensions {
@@ -48,17 +50,17 @@ const ottGenerating = ref(false)
 const ottGenerated = ref(false)
 const ottError = ref<Error | null>(null)
 const ottExpiry = ref<Date | null>(null)
-const noOTT = ref(false)
+const regenerationError = ref<Error | null>(null)
 
 watch(ott, (newValue) => {
   if (newValue === null) {
     ottGenerated.value = false
     ottError.value = null
     ottExpiry.value = null
+    regenerationError.value = null
   }
 })
 const api = new Api('api/internal/', [['Content-Type', 'application/json']])
-const tokenGenerationBody = ref<IAgentTokenGenerationRequestBody>(props.tokenGenerationBody)
 
 const validityText = computed<TranslatedString | null>(() => {
   const s = props.expiresInSeconds
@@ -82,20 +84,34 @@ const validityText = computed<TranslatedString | null>(() => {
   return _t('This token remains valid for %{duration}.', { duration: unit }) as TranslatedString
 })
 
-async function generateOTT() {
-  noOTT.value = false
-  ottGenerating.value = true
+const successText = computed<TranslatedString>(() =>
+  props.showValidityText && validityText.value
+    ? validityText.value
+    : untranslated(
+        `${_t('Successfully generated one-time token')} ${_t('(Expires: %{date})', { date: ottExpiry.value ? renderDateAndTime(ottExpiry.value) : _t('never') })}`
+      )
+)
 
-  if (props.expiresInSeconds) {
-    const ottExpiryDate = new Date()
-    ottExpiryDate.setSeconds(ottExpiryDate.getSeconds() + props.expiresInSeconds)
-    tokenGenerationBody.value.expires_at = ottExpiryDate
+/** The `watch(ott)` above resets the rest when the value goes back to null. */
+function retry() {
+  ott.value = null
+}
+
+async function generateOTT() {
+  ottGenerating.value = true
+  regenerationError.value = null
+
+  const body: IAgentTokenGenerationRequestBody = {
+    ...props.tokenGenerationBody,
+    ...(props.expiresInSeconds
+      ? { expires_at: new Date(Date.now() + props.expiresInSeconds * 1000) }
+      : {})
   }
 
   try {
     const res = (await api.post(
       props.tokenGenerationEndpointUri,
-      props.tokenGenerationBody
+      body
     )) as IAgentTokenGenerationResponse
 
     ott.value = res.id
@@ -105,7 +121,11 @@ async function generateOTT() {
       ottExpiry.value = new Date(res.extensions.expires_at)
     }
   } catch (e) {
-    ott.value = ottError.value = e as Error
+    if (typeof ott.value === 'string') {
+      regenerationError.value = e as Error
+    } else {
+      ott.value = ottError.value = e as Error
+    }
   } finally {
     ottGenerating.value = false
     ottGenerated.value = true
@@ -127,20 +147,39 @@ async function generateOTT() {
       {{ _t('Generate one-time token') }}
     </CmkButton>
 
-    <CmkAlertBox v-else variant="loading">{{ _t('Generating one-time token') }}</CmkAlertBox>
+    <CmkAlert v-else variant="loading" :text="_t('Generating one-time token')" />
   </template>
   <template v-else>
-    <CmkAlertBox v-if="ottError" variant="error">{{
-      _t(`Error generating one-time token: ${ottError.message}`)
-    }}</CmkAlertBox>
+    <template v-if="ottError">
+      <CmkAlert
+        variant="error"
+        :text="_t('Error generating one-time token: %{message}', { message: ottError.message })"
+      />
+      <!-- `ottGenerated` stays true after a failure, so without this there is
+           no way back to the generate button. -->
+      <CmkButton variant="secondary" class="mh-generate-token__button" @click="retry">
+        <CmkIcon name="reload" class="mh-generate-token__icon" />
+        {{ _t('Try again') }}
+      </CmkButton>
+    </template>
     <template v-else>
-      <CmkAlertBox variant="success">
-        <template v-if="showValidityText && validityText">{{ validityText }}</template>
-        <template v-else>
-          {{ _t('Successfully generated one-time token') }}
-          {{ _t(`(Expires: ${ottExpiry?.toLocaleString() || 'never'})`) }}
-        </template>
-      </CmkAlertBox>
+      <CmkAlert variant="success" :text="successText" />
+      <CmkAlert
+        v-if="regenerationError"
+        variant="error"
+        :text="
+          _t('Error generating one-time token: %{message}', { message: regenerationError.message })
+        "
+      />
+      <CmkButton
+        variant="secondary"
+        class="mh-generate-token__button"
+        :running="ottGenerating"
+        @click="generateOTT"
+      >
+        <CmkIcon name="reload" class="mh-generate-token__icon" />
+        {{ _t('Generate new token') }}
+      </CmkButton>
     </template>
   </template>
 </template>

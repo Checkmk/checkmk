@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import ip_address_family_element
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, ListOf, TextInput, Tuple
-from cmk.gui.wato import RulespecGroupActiveChecks
+from cmk.gui.watolib.rulespec_groups import RulespecGroupActiveChecks
 from cmk.ruleset_matcher.definition import RuleGroup
 
 

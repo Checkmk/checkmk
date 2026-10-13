@@ -2,7 +2,6 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from datetime import datetime
@@ -20,6 +19,7 @@ class HEADERS(StrEnum):
 class _TaskType(StrEnum):
     RELAY_CONFIG = "RELAY_CONFIG"
     FETCH_AD_HOC = "FETCH_AD_HOC"
+    AD_HOC_ACTIVE_CHECK = "AD_HOC_ACTIVE_CHECK"
 
 
 class TaskStatus(StrEnum):
@@ -44,6 +44,18 @@ class FetchAdHocTask(BaseModel):
     type: Literal[_TaskType.FETCH_AD_HOC] = _TaskType.FETCH_AD_HOC
 
 
+class AdHocActiveCheckTask(BaseModel):
+    host: str
+    command: str
+    timeout: float = Field(
+        title="Active check timeout",
+        description="Active check timeout for tasks in seconds",
+        default=60.0,
+        ge=0,
+    )
+    type: Literal[_TaskType.AD_HOC_ACTIVE_CHECK] = _TaskType.AD_HOC_ACTIVE_CHECK
+
+
 class RelayConfigTask(BaseModel, frozen=True):
     serial: int
     tar_data: Base64Bytes = Field(
@@ -54,10 +66,10 @@ class RelayConfigTask(BaseModel, frozen=True):
 
 
 # Only the tasks that can be created via create task API endpoint
-TaskCreateRequestSpec = FetchAdHocTask
+TaskCreateRequestSpec = FetchAdHocTask | AdHocActiveCheckTask
 
 # Any task that can be stored in the backend
-TaskResponseSpec = FetchAdHocTask | RelayConfigTask
+TaskResponseSpec = FetchAdHocTask | RelayConfigTask | AdHocActiveCheckTask
 
 
 class TaskCreateRequest(BaseModel, frozen=True):

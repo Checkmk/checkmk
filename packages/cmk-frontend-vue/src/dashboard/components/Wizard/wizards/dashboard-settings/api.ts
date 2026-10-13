@@ -4,31 +4,16 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { DualListElement } from 'cmk-ui-library/components/CmkDualList'
-import { fetchRestAPIDeprecated } from 'cmk-ui-library/lib/cmkFetch.ts'
-
-const API_ROOT = 'api/unstable'
-
-interface ResponseValueType {
-  title: string
-  id: string
-}
-
-const _getData = async (url: string): Promise<DualListElement[]> => {
-  const response = await fetchRestAPIDeprecated(url, 'GET')
-  await response.raiseForStatus()
-  const data = await response.json()
-  return data.value.map((contactGroup: ResponseValueType) => ({
-    name: contactGroup.id,
-    title: contactGroup.title
-  }))
-}
+import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
 export const getSites = async (): Promise<DualListElement[]> => {
-  const url = `${API_ROOT}/domain-types/site_connection/collections/all`
-  return _getData(url)
+  const data = unwrap(await client.GET('/domain-types/site_connection/collections/all'))
+  return data.value.map((entry) => ({ name: entry.id!, title: entry.title }))
 }
 
+// The contact group endpoint is still a Marshmallow one, so its title stays
+// optional in the generated type even though it is always set.
 export const getContactGroups = async (): Promise<DualListElement[]> => {
-  const url = `${API_ROOT}/domain-types/contact_group_config/collections/all`
-  return _getData(url)
+  const data = unwrap(await client.GET('/domain-types/contact_group_config/collections/all'))
+  return (data.value ?? []).map((entry) => ({ name: entry.id!, title: entry.title! }))
 }

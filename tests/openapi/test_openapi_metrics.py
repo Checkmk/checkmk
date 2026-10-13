@@ -4,13 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from http import HTTPStatus
 
 import pytest
 
 from cmk.gui.graphing import GraphConsolidationFunction
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.gui.web_test_app import WebTestAppForCMK
-from tests.testlib.rest_api_client import RestApiClient
+from cmk.plugins.openapi_test.graphing.sample import GRAPH_NAME, METRIC_NAME, METRIC_TITLE
+from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.unit.rest_api_client import RestApiClient
 
 GRAPH_ENDPOINT_GET = "/NO_SITE/check_mk/api/1.0/domain-types/metric/actions/get/invoke"
 COLOR_HEX = "#6fc1f7"
@@ -28,13 +30,13 @@ def test_openapi_get_graph_graph(
         "services",
         [
             {
-                "check_command": "check_mk-cpu_loads",
-                "service_description": "CPU load",
+                "check_command": "check_mk-openapi_test",
+                "description": "CPU load",
                 "host_name": "heute",
                 "metrics": [
-                    "load1"
+                    METRIC_NAME
                 ],  # please don't add another metric, it might make the test non-deterministic
-                "perf_data": "load1=2.22;;;0;8",
+                "perf_data": f"{METRIC_NAME}=2.22;;;0;8",
             }
         ],
     )
@@ -43,24 +45,31 @@ def test_openapi_get_graph_graph(
         "GET hosts\nColumns: name\nFilter: name = heute"
     )
     mock_livestatus.expect_query(
-        "GET services\nColumns: perf_data metrics check_command\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
+        "GET services\nColumns: host_name description perf_data metrics check_command\n"
+        "Filter: host_name = heute\nFilter: description = CPU load\nAnd: 2\n"
     )
     mock_livestatus.expect_query(
-        f"GET services\nColumns: rrddata:load1:load1.{consolidation_function}:0:30:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
+        "GET services\nColumns: host_name description perf_data check_command\n"
+        "Filter: host_name = heute\nFilter: description = CPU load\nAnd: 2\n"
+    )
+    mock_livestatus.expect_query(
+        "GET services\nColumns: host_name description "
+        f"rrddata:{METRIC_NAME}:{METRIC_NAME}.{consolidation_function}:0:30:60\n"
+        "Filter: host_name = heute\nFilter: description = CPU load\nAnd: 2\n"
     )
     with mock_livestatus():
         resp = aut_user_auth_wsgi_app.post(
             url=GRAPH_ENDPOINT_GET,
             content_type="application/json",
             headers={"Accept": "application/json"},
-            status=200,
+            status=HTTPStatus.OK,
             params=json.dumps(
                 {
                     "site": "NO_SITE",
                     "host_name": "heute",
                     "service_description": "CPU load",
                     "type": "predefined_graph",
-                    "graph_id": "cpu_load",
+                    "graph_id": GRAPH_NAME,
                     "time_range": {"start": "1970-01-01T00:00:00Z", "end": "1970-01-01T00:00:30Z"},
                     "reduce": consolidation_function,
                 }
@@ -70,15 +79,47 @@ def test_openapi_get_graph_graph(
         "metrics": [
             {
                 "color": COLOR_HEX,
-                "line_type": "stack",
-                "data_points": [None],
-                "title": "CPU load average of last minute",
+                "line_type": "area",
+                "data_points": [],
+                "title": METRIC_TITLE,
             }
         ],
         "step": 60,
         "time_range": {"start": "1970-01-01T00:00:00+00:00", "end": "1970-01-01T00:00:30+00:00"},
     }
     assert resp.json == expected
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_get_graph_unknown_graph_id_is_a_bad_request(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.set_sites(["NO_SITE"])
+    mock_livestatus.expect_query(
+        # hostfield with should_be_monitored=True
+        "GET hosts\nColumns: name\nFilter: name = heute"
+    )
+    with mock_livestatus():
+        resp = aut_user_auth_wsgi_app.post(
+            url=GRAPH_ENDPOINT_GET,
+            content_type="application/json",
+            headers={"Accept": "application/json"},
+            status=HTTPStatus.BAD_REQUEST,
+            params=json.dumps(
+                {
+                    "site": "NO_SITE",
+                    "host_name": "heute",
+                    "service_description": "CPU load",
+                    "type": "predefined_graph",
+                    "graph_id": "does_not_exist",
+                    "time_range": {"start": "1970-01-01T00:00:00Z", "end": "1970-01-01T00:00:30Z"},
+                    "reduce": "max",
+                }
+            ),
+        )
+
+    assert "does_not_exist" in resp.json["detail"]
 
 
 @pytest.mark.usefixtures("with_host")
@@ -93,11 +134,11 @@ def test_openapi_get_graph_metric(
         "services",
         [
             {
-                "check_command": "check_mk-cpu_loads",
-                "service_description": "CPU load",
+                "check_command": "check_mk-openapi_test",
+                "description": "CPU load",
                 "host_name": "heute",
-                "metrics": ["load1"],
-                "perf_data": "load1=2.22;;;0;8",
+                "metrics": [METRIC_NAME],
+                "perf_data": f"{METRIC_NAME}=2.22;;;0;8",
             }
         ],
     )
@@ -106,23 +147,30 @@ def test_openapi_get_graph_metric(
         "GET hosts\nColumns: name\nFilter: name = heute"
     )
     mock_livestatus.expect_query(
-        "GET services\nColumns: perf_data metrics check_command\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
+        "GET services\nColumns: host_name description perf_data metrics check_command\n"
+        "Filter: host_name = heute\nFilter: description = CPU load\nAnd: 2\n"
     )
     mock_livestatus.expect_query(
-        f"GET services\nColumns: rrddata:load1:load1.{consolidation_function}:1:2:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
+        "GET services\nColumns: host_name description perf_data check_command\n"
+        "Filter: host_name = heute\nFilter: description = CPU load\nAnd: 2\n"
+    )
+    mock_livestatus.expect_query(
+        f"GET services\nColumns: host_name description "
+        f"rrddata:{METRIC_NAME}:{METRIC_NAME}.{consolidation_function}:1:2:60\n"
+        "Filter: host_name = heute\nFilter: description = CPU load\nAnd: 2\n"
     )
     with mock_livestatus():
         resp = aut_user_auth_wsgi_app.post(
             url=GRAPH_ENDPOINT_GET,
             content_type="application/json",
             headers={"Accept": "application/json"},
-            status=200,
+            status=HTTPStatus.OK,
             params=json.dumps(
                 {
                     "site": "NO_SITE",
                     "host_name": "heute",
                     "service_description": "CPU load",
-                    "metric_id": "load1",
+                    "metric_id": METRIC_NAME,
                     "type": "single_metric",
                     "time_range": {"start": "1970-01-01T00:00:01Z", "end": "1970-01-01T00:00:02Z"},
                     "reduce": consolidation_function,
@@ -134,8 +182,8 @@ def test_openapi_get_graph_metric(
             {
                 "color": COLOR_HEX,
                 "line_type": "area",
-                "data_points": [None],
-                "title": "CPU load average of last minute",
+                "data_points": [],
+                "title": METRIC_TITLE,
             }
         ],
         "step": 60,
@@ -156,11 +204,11 @@ def test_openapi_get_graph_metric_without_site(
         "services",
         [
             {
-                "check_command": "check_mk-cpu_loads",
-                "service_description": "CPU load",
+                "check_command": "check_mk-openapi_test",
+                "description": "CPU load",
                 "host_name": "heute",
-                "metrics": ["load1"],
-                "perf_data": "load1=2.22;;;0;8",
+                "metrics": [METRIC_NAME],
+                "perf_data": f"{METRIC_NAME}=2.22;;;0;8",
             }
         ],
     )
@@ -169,16 +217,23 @@ def test_openapi_get_graph_metric_without_site(
         "GET hosts\nColumns: name\nFilter: name = heute"
     )
     mock_livestatus.expect_query(
-        "GET services\nColumns: perf_data metrics check_command\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
+        "GET services\nColumns: host_name description perf_data metrics check_command\n"
+        "Filter: host_name = heute\nFilter: description = CPU load\nAnd: 2\n"
     )
     mock_livestatus.expect_query(
-        f"GET services\nColumns: rrddata:load1:load1.{consolidation_function}:1:2:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
+        "GET services\nColumns: host_name description perf_data check_command\n"
+        "Filter: host_name = heute\nFilter: description = CPU load\nAnd: 2\n"
+    )
+    mock_livestatus.expect_query(
+        f"GET services\nColumns: host_name description "
+        f"rrddata:{METRIC_NAME}:{METRIC_NAME}.{consolidation_function}:1:2:60\n"
+        "Filter: host_name = heute\nFilter: description = CPU load\nAnd: 2\n"
     )
     with mock_livestatus():
         resp = api_client.get_graph(
             host_name="heute",
             service_description="CPU load",
-            graph_or_metric_id="load1",
+            graph_or_metric_id=METRIC_NAME,
             type_="single_metric",
             time_range={"start": "1970-01-01T00:00:01Z", "end": "1970-01-01T00:00:02Z"},
             reduce=consolidation_function,
@@ -188,8 +243,8 @@ def test_openapi_get_graph_metric_without_site(
             {
                 "color": COLOR_HEX,
                 "line_type": "area",
-                "data_points": [None],
-                "title": "CPU load average of last minute",
+                "data_points": [],
+                "title": METRIC_TITLE,
             }
         ],
         "step": 60,

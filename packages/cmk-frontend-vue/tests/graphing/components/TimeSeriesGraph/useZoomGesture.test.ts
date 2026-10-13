@@ -31,6 +31,7 @@ function mountGesture(mode: ZoomMode, options: GestureOptions = {}) {
   const timeRange = options.timeRange ?? DEFAULT_TIME_RANGE
   const onZoom = vi.fn()
   const onZoomRefused = vi.fn()
+  const onPlotClick = vi.fn()
   const xScale = scaleTime()
     .domain([new Date(timeRange.start * 1000), new Date(timeRange.end * 1000)])
     .range([0, 200])
@@ -51,13 +52,14 @@ function mountGesture(mode: ZoomMode, options: GestureOptions = {}) {
         yScale,
         plotCoords: (ev: MouseEvent) => ({ x: ev.clientX, y: ev.clientY }),
         onZoom,
-        onZoomRefused
+        onZoomRefused,
+        onPlotClick
       })
       return () => h('div')
     }
   })
   render(harness)
-  return { api, onZoom, onZoomRefused }
+  return { api, onZoom, onZoomRefused, onPlotClick }
 }
 
 function drag(
@@ -69,7 +71,7 @@ function drag(
     new MouseEvent('mousedown', { button: 0, clientX: from[0], clientY: from[1] })
   )
   window.dispatchEvent(new MouseEvent('mousemove', { clientX: to[0], clientY: to[1] }))
-  window.dispatchEvent(new MouseEvent('mouseup'))
+  window.dispatchEvent(new MouseEvent('mouseup', { clientX: to[0], clientY: to[1] }))
 }
 
 describe('useZoomGesture', () => {
@@ -89,10 +91,10 @@ describe('useZoomGesture', () => {
 
     expect(api.selectionBand.value).toBeNull()
 
-    window.dispatchEvent(new MouseEvent('mouseup'))
+    window.dispatchEvent(new MouseEvent('mouseup', { clientX: 120, clientY: 60 }))
   })
 
-  test('a refusal is reported once on press, not again on release', () => {
+  test('a refusal is reported once', () => {
     const { api, onZoomRefused } = mountGesture('time', { atTimeFloor: true })
 
     drag(api, [40, 25], [90, 70])
@@ -156,7 +158,7 @@ describe('useZoomGesture', () => {
 
     expect(api.plotCursor.value).toBe('zoom-in')
 
-    window.dispatchEvent(new MouseEvent('mouseup'))
+    window.dispatchEvent(new MouseEvent('mouseup', { clientX: 40, clientY: 25 }))
     expect(api.plotCursor.value).toBe('ew-resize')
   })
 
@@ -179,7 +181,7 @@ describe('useZoomGesture', () => {
 
     expect(api.selectionBand.value).toEqual({ x: 40, y: 0, width: 80, height: 100 })
 
-    window.dispatchEvent(new MouseEvent('mouseup'))
+    window.dispatchEvent(new MouseEvent('mouseup', { clientX: 120, clientY: 80 }))
   })
 
   test('a horizontal drag past the threshold emits a time-range zoom', () => {
@@ -202,11 +204,29 @@ describe('useZoomGesture', () => {
   })
 
   test('a sub-threshold drag is treated as a click and emits nothing', () => {
-    const { api, onZoom } = mountGesture('time')
+    const { api, onZoom, onPlotClick } = mountGesture('time')
 
     drag(api, [40, 30], [42, 30])
 
     expect(onZoom).not.toHaveBeenCalled()
+    expect(onPlotClick).toHaveBeenCalledTimes(1)
+  })
+
+  test('a drag past the threshold is a zoom, not a click', () => {
+    const { api, onPlotClick } = mountGesture('time')
+
+    drag(api, [40, 30], [120, 30])
+
+    expect(onPlotClick).not.toHaveBeenCalled()
+  })
+
+  test('a sub-threshold press in value mode reports a click on the vertical axis', () => {
+    const { api, onZoom, onPlotClick } = mountGesture('value')
+
+    drag(api, [40, 30], [40, 32])
+
+    expect(onZoom).not.toHaveBeenCalled()
+    expect(onPlotClick).toHaveBeenCalledTimes(1)
   })
 
   test('a diagonal drag in time mode narrows the time range and leaves Y auto-scaled', () => {
@@ -288,13 +308,45 @@ describe('useZoomGesture — minimum span', () => {
     expect(onZoom).toHaveBeenCalledWith({ timeRange: { start: 1495, end: 1555, step: 60 } })
   })
 
+  test('a click at the zoom floor still reports, though no band was armed', () => {
+    const { api, onZoom, onPlotClick } = mountGesture('time', { atTimeFloor: true })
+
+    drag(api, [80, 30], [81, 30])
+
+    expect(onZoom).not.toHaveBeenCalled()
+    expect(onPlotClick).toHaveBeenCalledTimes(1)
+  })
+
+  // The refusal answers an attempted zoom, which a click at the floor is not.
+  test('a click at the zoom floor is not refused', () => {
+    const { api, onZoomRefused } = mountGesture('time', { atTimeFloor: true })
+
+    drag(api, [80, 30], [81, 30])
+
+    expect(onZoomRefused).not.toHaveBeenCalled()
+  })
+
+  // A release needs no preceding move, so the gesture is classified on the releasing event.
+  test('a press and release far apart is a zoom even with no move between them', () => {
+    const { api, onZoom, onPlotClick } = mountGesture('time')
+
+    api.onPlotMouseDown(new MouseEvent('mousedown', { button: 0, clientX: 40, clientY: 30 }))
+    window.dispatchEvent(new MouseEvent('mouseup', { clientX: 120, clientY: 30 }))
+
+    expect(onPlotClick).not.toHaveBeenCalled()
+    expect(onZoom).toHaveBeenCalledTimes(1)
+  })
+
   test('a further zoom is refused once time zoom is at its floor, not re-applied', () => {
-    const { api, onZoom, onZoomRefused } = mountGesture('time', { atTimeFloor: true })
+    const { api, onZoom, onZoomRefused, onPlotClick } = mountGesture('time', {
+      atTimeFloor: true
+    })
 
     drag(api, [80, 30], [120, 30])
 
     expect(onZoom).not.toHaveBeenCalled()
     expect(onZoomRefused).toHaveBeenCalledTimes(1)
+    expect(onPlotClick).not.toHaveBeenCalled()
   })
 
   // The served window is snapped to the data step, so it stays wider than the floor even at

@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { AddTo } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import CmkHtml from 'cmk-ui-library/components/CmkHtml.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
@@ -20,9 +21,16 @@ import type {
   CustomGraphContent,
   PerformanceGraphContent,
   ProblemGraphContent,
-  SingleTimeseriesContent
+  SingleTimeseriesContent,
+  WidgetEmitTimeRange
 } from '@/dashboard/types/widget.ts'
-import { GraphFigure } from '@/graphing'
+import {
+  GraphFigure,
+  type GraphFigureSource,
+  type RequestedTimeRange,
+  toDateTimeRange,
+  toRequestedTimeRange
+} from '@/graphing'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
 import { createSharedGraphFetcher } from './sharedGraphFetcher.ts'
@@ -42,6 +50,13 @@ const props =
       | CustomGraphContent
     >
   >()
+const emit = defineEmits<WidgetEmitTimeRange>()
+
+const dashboardTimeRange = computed(() => toRequestedTimeRange(props.range))
+
+function onCommitTimeRange(range: RequestedTimeRange): void {
+  emit('updateTimeRange', toDateTimeRange(range, props.range.from.timeZone))
+}
 
 const shell = ref<DiscoveredGraph | null>(null)
 const errorMessage = ref<string | null>(null)
@@ -52,9 +67,20 @@ const isDiscovering = ref<boolean>(true)
 // backend discovers the shells at page render and the data is fetched per widget instead.
 const cmkToken = useInjectCmkToken()
 const sharedWidgetGraphs = useInjectSharedWidgetGraphs()
-const fetchGraph = computed(() =>
-  cmkToken === undefined ? undefined : createSharedGraphFetcher(props.widget_id, cmkToken)
-)
+const figureSource = computed<GraphFigureSource | null>(() => {
+  if (shell.value === null) {
+    return null
+  }
+  const internal = shell.value.internal
+  return cmkToken === undefined
+    ? { type: 'definition', internal }
+    : {
+        type: 'fetch',
+        key: internal,
+        fetch: createSharedGraphFetcher(props.widget_id, cmkToken),
+        binUnit: null
+      }
+})
 
 const singleContext = computed(() => {
   const filters = props.effective_filter_context.filters
@@ -70,6 +96,8 @@ let requestCounter = 0
 
 // Mirrors the legacy SingleTimeseriesDashlet._metric_color mapping.
 const DEFAULT_THEME_COLOR = '#008EFF'
+
+const PX_PER_PT = 96 / 72
 
 const resolveTimeseriesColor = (color: SingleTimeseriesContent['color']): string | null => {
   if (color === 'default_metric') {
@@ -269,10 +297,46 @@ const timerange = computed(() => {
 })
 const showLegend = computed(() => graphRenderOptions.value?.show_legend ?? false)
 const showTimestamp = computed(() => graphRenderOptions.value?.show_graph_time ?? false)
+const showPin = computed(
+  () => props.isPreview !== true && (graphRenderOptions.value?.show_pin ?? true)
+)
+const showTimeAxis = computed(() => graphRenderOptions.value?.show_time_axis ?? true)
+const showValueAxis = computed(() => graphRenderOptions.value?.show_vertical_axis ?? true)
+const showMargin = computed(() => graphRenderOptions.value?.show_margin ?? false)
+// A fixed axis keeps the renderer's own default width.
+const valueAxisWidth = computed(() => {
+  const configuredWidth = graphRenderOptions.value?.vertical_axis_width
+  return typeof configuredWidth === 'number' ? configuredWidth * PX_PER_PT : undefined
+})
 const combinationMode = computed(() => {
   const content = props.content
   return content.type === 'combined_graph' ? content.presentation : null
 })
+
+// The burger menu's add-to target: the discovery shell carries the add type and specification,
+// which the actions replay, plus the built graph they store. Null for graph kinds that offer no
+// add-to.
+const addTo = computed<AddTo | null>(() => {
+  const discovered = shell.value
+  if (
+    discovered === null ||
+    discovered.add_type === null ||
+    discovered.add_to_specification === null
+  ) {
+    return null
+  }
+  return {
+    type: discovered.add_type,
+    specification: discovered.add_to_specification,
+    internal: discovered.internal
+  }
+})
+const showBurgerMenu = computed(
+  () =>
+    sharedWidgetGraphs === undefined &&
+    (graphRenderOptions.value?.show_controls ?? false) &&
+    addTo.value !== null
+)
 
 onMounted(() => {
   if (sharedWidgetGraphs === undefined) {
@@ -309,13 +373,22 @@ onMounted(() => {
         <CmkHtml :html="noDataMessage" />
       </div>
       <GraphFigure
-        v-else-if="shell"
-        :internal="shell.internal"
+        v-else-if="shell && figureSource"
+        :source="figureSource"
+        :y-axis="shell.y_axis"
         :timerange="timerange"
+        :requested-time-range="dashboardTimeRange"
         :combination-mode="combinationMode"
         :show-legend="showLegend"
         :show-timestamp="showTimestamp"
-        :fetch-graph="fetchGraph"
+        :show-pin="showPin"
+        :show-time-axis="showTimeAxis"
+        :show-value-axis="showValueAxis"
+        :show-margin="showMargin"
+        :min-value-axis-width="valueAxisWidth"
+        :show-burger-menu="showBurgerMenu"
+        :add-to="addTo"
+        @commit-time-range="onCommitTimeRange"
       />
     </div>
   </DashboardContentContainer>

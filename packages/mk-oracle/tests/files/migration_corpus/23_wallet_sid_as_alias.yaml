@@ -1,0 +1,23 @@
+# WARNING: wallet authentication without TNSALIAS: the SID is written out as 'alias: XE'. Verify that it resolves in tnsnames.ora, the legacy tnsping check is not migrated
+# --- Known environment variables defined in legacy config ---
+# DBUSER ***
+# DBUSER_XE ***
+# WARNING: wallet authentication without TNSALIAS: the SID is written out as 'alias: XE'. Verify that it resolves in tnsnames.ora, the legacy tnsping check is not migrated
+# --- Unified Config ---
+---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+      port: 1521
+    authentication:
+      username: "user"
+      password: "pass"
+      type: standard
+    instances:
+      - sid: XE
+        alias: XE
+        authentication:
+          username: ""
+          password: ""
+          type: wallet

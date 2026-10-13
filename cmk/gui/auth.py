@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 import base64
 import binascii
@@ -31,7 +29,9 @@ from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.oauth.store.token_store import get_token_store, looks_like_token, TokenRecord
+from cmk.gui.oauth.token.active_token import active_token
+from cmk.gui.oauth.token.backend import StoreUnavailableError
+from cmk.gui.oauth.token.token_store import looks_like_token, TokenRecord
 from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.type_defs import AuthType, CustomUserAttrSpec, UserSpec
@@ -204,7 +204,7 @@ def _check_auth_by_custom_http_header(config: Config) -> UserId | None:
     return None
 
 
-def _check_auth_by_remote_user(config: Config) -> UserId | None:
+def _check_auth_by_remote_user(config: Config) -> UserId | None:  # noqa: ARG001
     """Try to get the authenticated user from the HTTP request
 
     The user may have configured (basic) authentication by the web server. In
@@ -213,7 +213,7 @@ def _check_auth_by_remote_user(config: Config) -> UserId | None:
     WARNING: This way of authentication does NOT verify any credentials!
     """
     if (username := request.remote_user) is None:
-        return None
+        return None  # type: ignore[unreachable]
 
     user_id = _try_user_id(username)
     if userdb.user_exists(user_id):
@@ -227,6 +227,7 @@ def _check_auth_by_header(
     parse_token: Callable[[str], tuple[str, str]],
     custom_user_attributes: Sequence[CustomUserAttrSpec],
     lock_on_logon_failures: int | None,
+    time_based_lock_out_enabled: bool,
     log_logon_failures: bool,
     default_user_profile: UserSpec,
     user_connections: Sequence[UserConnectionConfig],
@@ -261,6 +262,7 @@ def _check_auth_by_header(
         user_attributes,
         user_connections,
         default_user_profile,
+        time_based_lock_out_enabled=time_based_lock_out_enabled,
         pprint_value=pprint_value,
         debug=debug,
     ):
@@ -274,6 +276,7 @@ def _check_auth_by_header(
         user_connections,
         now=datetime.now(),
         lock_on_logon_failures=lock_on_logon_failures,
+        time_based_lock_out_enabled=time_based_lock_out_enabled,
         log_logon_failures=log_logon_failures,
         pprint_value=pprint_value,
     )
@@ -298,6 +301,7 @@ def _check_auth_by_basic_header(config: Config) -> UserId | None:
             _parse_basic_auth_token,
             config.wato_user_attrs,
             config.lock_on_logon_failures,
+            config.time_based_lock_out_enabled,
             config.log_logon_failures,
             config.default_user_profile,
             config.user_connections,
@@ -350,15 +354,14 @@ def _check_oauth_access_token(token: str) -> TokenRecord | None:
         still exists and isn't locked
         None otherwise
     """
-    record = get_token_store().get_by_token(token)
-    if record is None or not record.is_valid():
+    # Authentication runs inside the Flask session interface, before the
+    # request handling that would otherwise turn an unavailable store into a
+    # 503 (see StoreUnavailableError) -- a token this site cannot check
+    # authenticates nobody instead.
+    try:
+        return active_token(token)
+    except StoreUnavailableError:
         return None
-
-    user_id = record.user_id
-    if not userdb.user_exists(user_id) or userdb.user_locked(user_id, load_user(user_id)):
-        return None
-
-    return record
 
 
 def _get_bearer_token() -> str | None:
@@ -373,7 +376,7 @@ def _is_oauth_shaped(token: str) -> bool:
     return " " not in token and looks_like_token(token)
 
 
-def _check_auth_by_oauth_token(config: Config) -> Credential | None:
+def _check_auth_by_oauth_token(config: Config) -> Credential | None:  # noqa: ARG001
     """Authenticate via an OAuth-issued access token in the Bearer header.
 
     Returns:
@@ -415,6 +418,7 @@ def _check_auth_by_bearer_header(config: Config) -> UserId | None:
         _parse_bearer_token,
         config.wato_user_attrs,
         config.lock_on_logon_failures,
+        config.time_based_lock_out_enabled,
         config.log_logon_failures,
         config.default_user_profile,
         config.user_connections,
@@ -423,7 +427,7 @@ def _check_auth_by_bearer_header(config: Config) -> UserId | None:
     )
 
 
-def _check_internal_token(config: Config) -> SiteInternalPseudoUser | None:
+def _check_internal_token(config: Config) -> SiteInternalPseudoUser | None:  # noqa: ARG001
     if not (auth_header := request.environ.get("HTTP_AUTHORIZATION", "")).startswith(
         "InternalToken "
     ):
@@ -543,6 +547,7 @@ def _verify_user_login(
     user_connections: Sequence[UserConnectionConfig],
     default_user_profile: UserSpec,
     *,
+    time_based_lock_out_enabled: bool,
     pprint_value: bool,
     debug: bool,
 ) -> bool:
@@ -560,6 +565,7 @@ def _verify_user_login(
                 user_connections,
                 datetime.now(),
                 default_user_profile,
+                time_based_lock_out_enabled=time_based_lock_out_enabled,
                 pprint_value=pprint_value,
                 debug=debug,
             )

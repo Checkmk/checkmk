@@ -4,7 +4,6 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTabs'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -174,31 +173,13 @@ const hasVisibilityErrors = computed(() => sortIndexError.value.length > 0)
       <CmkTabs v-model="openedTab">
         <template #tabs>
           <CmkTab id="general" :variant="hasGeneralErrors ? 'error' : undefined">
-            <CmkIcon
-              v-if="hasGeneralErrors"
-              name="inline-error"
-              variant="inline"
-              size="large"
-              class="db-settings-wizard__error-icon"
-            />{{ _t('General') }}
+            {{ _t('General') }}
           </CmkTab>
           <CmkTab id="access" :variant="hasAccessErrors ? 'error' : undefined">
-            <CmkIcon
-              v-if="hasAccessErrors"
-              name="inline-error"
-              variant="inline"
-              size="large"
-              class="db-settings-wizard__error-icon"
-            />{{ _t('Access') }}
+            {{ _t('Access') }}
           </CmkTab>
           <CmkTab id="visibility" :variant="hasVisibilityErrors ? 'error' : undefined">
-            <CmkIcon
-              v-if="hasVisibilityErrors"
-              name="inline-error"
-              variant="inline"
-              size="large"
-              class="db-settings-wizard__error-icon"
-            />{{ _t('Visibility') }}</CmkTab
+            {{ _t('Visibility') }}</CmkTab
           >
         </template>
         <template #tab-contents>
@@ -257,9 +238,5 @@ const hasVisibilityErrors = computed(() => sortIndexError.value.length > 0)
 
 .db-settings-wizard__box {
   background-color: var(--ux-theme-2);
-}
-
-.db-settings-wizard__error-icon {
-  padding-top: var(--dimension-1);
 }
 </style>

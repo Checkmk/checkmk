@@ -12,6 +12,7 @@ import {
   type ConfiguredFilters,
   useProvideFilterDefinitions
 } from 'cmk-ui-library/components/filter'
+import { kioskMode } from 'cmk-ui-library/lib/kiosk'
 import { randomId } from 'cmk-ui-library/lib/randomId'
 import {
   computed,
@@ -34,12 +35,17 @@ import { offsetInitialPosition } from '@/dashboard/components/RelativeGrid/utils
 import { createWidgetLayout } from '@/dashboard/components/ResponsiveGrid/composables/useResponsiveGridLayout'
 import AddWidgetDialog from '@/dashboard/components/WidgetWorkflow/StarterDialog/AddWidgetDialog.vue'
 import AddWidgetPage from '@/dashboard/components/WidgetWorkflow/StarterPage/AddWidgetPage.vue'
-import { getDashboardWidgetWorkflows } from '@/dashboard/components/WidgetWorkflow/WidgetWorkflowTypes'
+import {
+  findParentWorkflowKey,
+  getDashboardWidgetWorkflows,
+  isWorkflowGroup
+} from '@/dashboard/components/WidgetWorkflow/WidgetWorkflowTypes'
 import CloneDashboardWizard from '@/dashboard/components/Wizard/CloneDashboardWizard.vue'
 import CreateDashboardWizard from '@/dashboard/components/Wizard/CreateDashboardWizard.vue'
 import WizardSelector from '@/dashboard/components/WizardSelector/WizardSelector.vue'
 import { widgetTypeToSelectorMatcher } from '@/dashboard/components/WizardSelector/utils.ts'
 import { useDashboardFilters } from '@/dashboard/composables/useDashboardFilters.ts'
+import { useDashboardTimeControl } from '@/dashboard/composables/useDashboardTimeControl'
 import { useDashboardVisualTitle } from '@/dashboard/composables/useDashboardVisualTitle.ts'
 import { useDashboardWidgets } from '@/dashboard/composables/useDashboardWidgets.ts'
 import { useDashboardsManager } from '@/dashboard/composables/useDashboardsManager.ts'
@@ -47,7 +53,9 @@ import { useProvideDashboardConstants } from '@/dashboard/composables/useProvide
 import { useProvideMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction.ts'
 import { useProvideVisualInfos } from '@/dashboard/composables/useProvideVisualInfos'
 import { useComputeWidgetTitles } from '@/dashboard/composables/useWidgetTitles'
+import { buildMigratedWidgetLayouts } from '@/dashboard/dashboardMigration.ts'
 import {
+  type ContentRelativeGrid,
   type ContentResponsiveGrid,
   type DashboardGeneralSettings,
   type DashboardKey,
@@ -59,17 +67,19 @@ import { RuntimeFilterMode } from '@/dashboard/types/filter.ts'
 import { urlParamsKey } from '@/dashboard/types/injectionKeys.ts'
 import type { DashboardPageProperties } from '@/dashboard/types/page.ts'
 import type {
+  ResponsiveGridWidgetLayouts,
   WidgetContent,
   WidgetFilterContext,
   WidgetGeneralSettings,
   WidgetLayout,
   WidgetSpec
 } from '@/dashboard/types/widget'
-import { dashboardAPI, urlHandler } from '@/dashboard/utils.ts'
+import { type CloneResult, dashboardAPI, urlHandler } from '@/dashboard/utils.ts'
 import NetworkFlowSlideIns from '@/network-flow/slide-ins/NetworkFlowSlideIns.vue'
 import { useNetworkFlowSlideIns } from '@/network-flow/slide-ins/useNetworkFlowSlideIns'
 
 import CloneSuccessAlert from './components/CloneSuccessAlert.vue'
+import DashboardRefreshControl from './components/DashboardRefreshControl.vue'
 import DashboardSettingsWizard from './components/Wizard/DashboardSettingsWizard.vue'
 import DashboardSharingWizard from './components/Wizard/wizards/dashboard-sharing/DashboardSharingWizard.vue'
 
@@ -79,14 +89,17 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 const props = defineProps<DashboardPageProperties>()
 
 const dbAppRef = ref<HTMLElement | null>(null)
+const dashboardComponent = ref<InstanceType<typeof DashboardComponent> | null>(null)
 const isDashboardLoading = ref(false)
 const loadingError = ref<Error | null>(null)
 const isDashboardEditingMode = ref(props.mode === 'edit_layout' && !!props.dashboard)
 const openDashboardFilterSettings = ref(false)
 const openDashboardSettings = ref(props.mode === 'edit_settings')
 const openAddWidgetDialog = ref(false)
+const addWidgetDialogGroupKey = ref<string | null>(null)
 const openDashboardCreationDialog = ref(props.mode === 'create')
 const openDashboardCloneDialog = ref(props.mode === 'clone')
+const cloneWizardPreselectedLayout = ref<DashboardLayout | undefined>(undefined)
 const isCloning = ref(false)
 const openDashboardShareDialog = ref(false)
 const openWizard = ref(false)
@@ -94,6 +107,7 @@ const selectedWizard = ref('')
 const widgetToEdit = ref<string | null>(null)
 const selectedDashboardBreadcrumb = ref<BreadcrumbItem[] | null>(null)
 const showCloneSuccessAlert = ref(false)
+const clonedAsResponsive = ref(false)
 
 watch(showCloneSuccessAlert, async () => {
   await nextTick()
@@ -144,12 +158,12 @@ onBeforeMount(async () => {
       openDashboardFilterSettings.value = true
     }
 
-    const cloneSuccess = new URLSearchParams(window.location.search).get('clone_success')
-    if (cloneSuccess === '1') {
+    const currentUrl = new URL(window.location.href)
+    const cloneResult = urlHandler.readCloneResult(currentUrl)
+    if (cloneResult !== null) {
+      clonedAsResponsive.value = cloneResult === 'cloned_as_responsive'
       showCloneSuccessAlert.value = true
-      const cleanUrl = new URL(window.location.href)
-      cleanUrl.searchParams.delete('clone_success')
-      urlHandler.updateCurrentUrl(cleanUrl)
+      urlHandler.updateCurrentUrl(urlHandler.withoutCloneResult(currentUrl))
     }
   }
 })
@@ -235,14 +249,13 @@ const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
   isDashboardEditingMode.value = false
   showCloneSuccessAlert.value = false
 
-  // Reset runtime filters when switching dashboards via dropdown
-  dashboardFilters.handleResetRuntimeFilters()
-
   const key: DashboardKey = {
     name: dashboard.name,
     owner: dashboard.owner || '' // built-in conversion: null -> ""
   }
   await setAsActiveDashboard(key, dashboard.layout_type as DashboardLayout)
+  // After the load, otherwise the title computation runs once for the dashboard we left
+  dashboardFilters.handleResetRuntimeFilters()
   selectedDashboardBreadcrumb.value =
     dashboardsManager.activeDashboard.value?.metadata?.display?.topic?.breadcrumb ?? null
   urlHandler.pushCurrentUrl(urlHandler.getDashboardUrl(key, {}))
@@ -272,17 +285,21 @@ const dashboardVisualTitle = useDashboardVisualTitle(
 )
 
 watch(dashboardVisualTitle, (newTitle) => {
-  // We only set the title for the current document. If we're inside the index page,
-  // the tabs title will be correctly updated via initialize_sidebar() periodically.
+  // We only set the title for the current document.
   document.title = newTitle
 })
+
+const showAddWidgetDialog = (groupKey: string | null = null) => {
+  addWidgetDialogGroupKey.value = groupKey
+  openAddWidgetDialog.value = true
+}
 
 const handleWizardSelectorGoBack = () => {
   // when editing, do not go back to widget type selection (and clear the edit state)
   if (widgetToEdit.value) {
     widgetToEdit.value = null
   } else {
-    openAddWidgetDialog.value = true
+    showAddWidgetDialog(findParentWorkflowKey(dashboardWidgetWorkflows, selectedWizard.value))
   }
   openWizard.value = false
 }
@@ -293,12 +310,16 @@ const handleWizardClose = () => {
   openAddWidgetDialog.value = false
 }
 
-const handleAddWidget = (widgetIdent: string) => {
+const selectWorkflow = (workflowKey: string) => {
   if (!dashboardsManager.isInitialized.value) {
     throw new Error('Dashboard not yet initialized.')
   }
+  if (isWorkflowGroup(dashboardWidgetWorkflows[workflowKey])) {
+    showAddWidgetDialog(workflowKey)
+    return
+  }
   openAddWidgetDialog.value = false
-  selectedWizard.value = widgetIdent
+  selectedWizard.value = workflowKey
   openWizard.value = true
 }
 
@@ -458,6 +479,16 @@ const cloneDashboard = async (
   if (!key) {
     throw new Error('No active dashboard to clone from')
   }
+
+  const sourceContent = dashboardsManager.activeDashboard.value!.model.content
+  let migratedWidgetLayouts: Record<string, ResponsiveGridWidgetLayouts> | null = null
+  if (sourceContent.layout.type === 'relative_grid' && layout === DashboardLayout.RESPONSIVE_GRID) {
+    migratedWidgetLayouts = migrateRelativeGridWidgetLayouts(sourceContent as ContentRelativeGrid)
+    if (migratedWidgetLayouts === null) {
+      return
+    }
+  }
+
   openDashboardCloneDialog.value = false
   isCloning.value = true
   loadingError.value = null
@@ -465,7 +496,16 @@ const cloneDashboard = async (
   let newKey: DashboardKey
   try {
     let newOwner
-    if (layout === DashboardLayout.RELATIVE_GRID) {
+    if (migratedWidgetLayouts !== null) {
+      const response = await dashboardAPI.cloneRelativeAsResponsiveGridDashboard(
+        key.name,
+        key.owner,
+        dashboardId,
+        generalSettings,
+        migratedWidgetLayouts
+      )
+      newOwner = response.extensions.owner
+    } else if (layout === DashboardLayout.RELATIVE_GRID) {
       const response = await dashboardAPI.cloneAsRelativeGridDashboard(
         key.name,
         key.owner,
@@ -493,10 +533,40 @@ const cloneDashboard = async (
     return
   }
 
-  const cloneUrl = urlHandler.getDashboardUrl(newKey, {})
-  cloneUrl.searchParams.set('clone_success', '1')
-  urlHandler.navigateTo(cloneUrl)
+  const cloneResult: CloneResult =
+    migratedWidgetLayouts === null ? 'cloned' : 'cloned_as_responsive'
+  urlHandler.navigateTo(
+    urlHandler.withCloneResult(urlHandler.getDashboardUrl(newKey, {}), cloneResult)
+  )
 }
+
+function migrateRelativeGridWidgetLayouts(
+  relativeContent: ContentRelativeGrid
+): Record<string, ResponsiveGridWidgetLayouts> | null {
+  if (isDashboardEmpty.value) {
+    return {}
+  }
+  const measurement = dashboardComponent.value?.getRelativeGridMeasurement() ?? null
+  if (measurement === null) {
+    return null
+  }
+  return buildMigratedWidgetLayouts(
+    measurement,
+    relativeContent,
+    dashboardsManager.constants.value!
+  )
+}
+
+const openCloneWizard = (preselectedLayout?: DashboardLayout) => {
+  cloneWizardPreselectedLayout.value = preselectedLayout
+  openDashboardCloneDialog.value = true
+}
+
+const canCloneAsResponsive = computed(
+  () =>
+    dashboardsManager.activeDashboard.value?.model.content.layout.type === 'relative_grid' &&
+    props.available_layouts.includes(DashboardLayout.RESPONSIVE_GRID)
+)
 
 const dashboardHasFilters = computed(
   () =>
@@ -571,7 +641,7 @@ const updateDashboardSettings = async (
     dashboardFilters.runtimeFiltersSearchParams.value
   )
   urlHandler.updateCurrentUrl(updatedDashboardUrl)
-  if (urlHandler.isOnIndexPage()) {
+  if (!kioskMode.isActive()) {
     urlHandler.reloadPage()
   }
 }
@@ -584,20 +654,36 @@ const reviewFilters = () => {
   openDashboardShareDialog.value = false
   openDashboardFilterSettings.value = true
 }
+
+const { range, refreshTick, updateTimeRange } = useDashboardTimeControl(
+  props.global_time_picker,
+  true
+)
 </script>
 
 <template>
   <CmkErrorBoundary>
     <div ref="dbAppRef" :class="['db-app', { 'db-app--empty': isDashboardEmpty }]">
       <div class="db-app__header">
-        <DashboardBreadcrumb
-          :selected-dashboard="selectedDashboard ?? null"
-          :selected-dashboard-breadcrumb="selectedDashboardBreadcrumb"
-          :initial-breadcrumb="initial_breadcrumb"
-          :runtime-filters="dashboardFilters.runtimeFiltersSearchParams.value"
-        />
+        <div class="db-app__top-bar">
+          <DashboardBreadcrumb
+            :selected-dashboard="selectedDashboard ?? null"
+            :selected-dashboard-breadcrumb="selectedDashboardBreadcrumb"
+            :initial-breadcrumb="initial_breadcrumb"
+            :runtime-filters="dashboardFilters.runtimeFiltersSearchParams.value"
+          />
+
+          <div class="db-app__refresh">
+            <DashboardRefreshControl
+              :default-time-range="global_time_picker.default_time_range"
+              :interval-choices-seconds="global_time_picker.refresh.interval_choices_seconds"
+            />
+          </div>
+        </div>
+
         <DashboardMenuHeader
           v-model:is-edit-mode="isDashboardEditingMode"
+          v-model:range="range"
           :selected-dashboard="selectedDashboard"
           :is-dashboard-loading="
             isDashboardLoading ||
@@ -608,15 +694,18 @@ const reviewFilters = () => {
           :can-edit-dashboard="
             dashboardsManager.activeDashboard.value?.metadata?.is_editable ?? false
           "
+          :can-clone-as-responsive="canCloneAsResponsive"
           :link-user-guide="props.links.user_guide"
           :public-token="dashboardsManager.activeDashboard.value?.model.public_token ?? null"
           :is-empty-dashboard="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
           :runtime-filters="dashboardFilters.runtimeFiltersSearchParams.value"
+          :global-time-picker="global_time_picker"
           @open-runtime-filter="openRuntimeFilters"
           @open-filter-settings="openFilterSettings"
           @open-settings="openDashboardSettings = true"
-          @open-clone-workflow="openDashboardCloneDialog = true"
-          @open-widget-workflow="openAddWidgetDialog = true"
+          @open-clone-workflow="openCloneWizard()"
+          @open-responsive-clone-workflow="openCloneWizard(DashboardLayout.RESPONSIVE_GRID)"
+          @open-widget-workflow="showAddWidgetDialog()"
           @open-share-workflow="openDashboardShareDialog = true"
           @save="saveDashboard"
           @enter-edit="dashboardsManager.activeDashboard.value && (isDashboardEditingMode = true)"
@@ -651,6 +740,7 @@ const reviewFilters = () => {
           "
           :reference-dashboard-type="dashboardsManager.activeDashboard.value!.model.type"
           :logged-in-user="logged_in_user"
+          :preselected-layout="cloneWizardPreselectedLayout"
           @clone-dashboard="(...args) => cloneDashboard(...args)"
           @cancel-clone="openDashboardCloneDialog = false"
         />
@@ -667,9 +757,10 @@ const reviewFilters = () => {
         />
         <AddWidgetDialog
           v-model:open="openAddWidgetDialog"
+          v-model:active-group-key="addWidgetDialogGroupKey"
           :workflow-items="dashboardWidgetWorkflows"
           :dashboard-features="available_features.dashboard_features"
-          @select="handleAddWidget"
+          @select="selectWorkflow"
           @close="openAddWidgetDialog = false"
         />
         <WizardSelector
@@ -677,6 +768,8 @@ const reviewFilters = () => {
           :is-open="openWizard"
           :selected-wizard="selectedWizard"
           :dashboard-key="dashboardsManager.activeDashboardKey.value!"
+          :tick="refreshTick"
+          :range="range"
           :context-filters="dashboardFilters.contextFilters.value || {}"
           :edit-widget-spec="getWidgetSpecToEdit(widgetToEdit ?? null)"
           :edit-widget-id="widgetToEdit"
@@ -726,16 +819,18 @@ const reviewFilters = () => {
           <CloneSuccessAlert
             v-model:open="showCloneSuccessAlert"
             :has-filters="dashboardHasFilters"
+            :cloned-as-responsive="clonedAsResponsive"
             @edit-filters="openDashboardFilterSettings = true"
           />
           <AddWidgetPage
             v-if="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
             :workflow-items="dashboardWidgetWorkflows"
             :dashboard-features="available_features.dashboard_features"
-            @select="handleAddWidget"
+            @select="selectWorkflow"
           />
           <DashboardComponent
             v-else-if="dashboardsManager.isInitialized.value"
+            ref="dashboardComponent"
             :key="`${dashboardsManager.activeDashboardKey.value?.owner}-${dashboardsManager.activeDashboardKey.value?.name}`"
             v-model:dashboard="dashboardsManager.activeDashboard.value!.model"
             :dashboard-key="dashboardsManager.activeDashboardKey.value!"
@@ -744,9 +839,12 @@ const reviewFilters = () => {
             :updated-widget-render-keys="dashboardWidgets.updatedWidgetRenderKeys"
             :widget-titles="widgetTitles"
             :is-editing="isDashboardEditingMode"
+            :tick="refreshTick"
+            :range="range"
             @widget:edit="editWidget($event)"
             @widget:delete="dashboardWidgets.deleteWidget($event)"
             @widget:clone="(oldWidgetId, newLayout) => cloneWidget(oldWidgetId, newLayout)"
+            @widget:update-time-range="(_widgetId, newRange) => updateTimeRange(newRange)"
           />
         </template>
         <template v-else>
@@ -768,6 +866,23 @@ const reviewFilters = () => {
 </template>
 
 <style scoped>
+.db-app__top-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--dimension-6);
+}
+
+.db-app__refresh {
+  flex: 0 0 auto;
+  height: 0;
+  overflow: visible;
+  position: relative;
+  top: var(--dimension-7);
+  right: var(--dimension-7);
+  z-index: 3;
+}
+
 .db-app--empty {
   display: flex;
   flex-direction: column;

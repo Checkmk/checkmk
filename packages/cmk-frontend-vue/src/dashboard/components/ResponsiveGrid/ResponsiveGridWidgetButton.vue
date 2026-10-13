@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import type { OneColorIcons } from 'cmk-ui-library/components/CmkIcon/types'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 defineProps<{
   iconName: OneColorIcons
@@ -24,6 +25,7 @@ defineEmits<{
         class="db-responsive-grid-widget-button__icon"
         :name="iconName"
         :title="title"
+        :aria-label="title as TranslatedString"
         :primary-color="{ custom: 'var(--db-rgw-button-color)' }"
         size="xlarge"
       />
@@ -41,22 +43,11 @@ defineEmits<{
   border: none;
   border-radius: 0;
   cursor: pointer;
-  background: var(--color-daylight-grey-60);
-}
-
-body[data-theme='modern-dark'] .db-responsive-grid-widget-button__button {
-  background: var(--color-midnight-grey-60);
+  background: var(--background-control);
 }
 
 .db-responsive-grid-widget-button__icon {
-  --db-rgw-button-normal-color: var(--color-conference-grey-70);
-  --db-rgw-button-hover-color: var(--color-conference-grey-100);
-  --db-rgw-button-color: var(--db-rgw-button-normal-color);
-}
-
-body[data-theme='modern-dark'] .db-responsive-grid-widget-button__icon {
-  --db-rgw-button-normal-color: var(--color-white-70);
-  --db-rgw-button-hover-color: var(--color-white-100);
+  --db-rgw-button-color: var(--font-color-secondary);
 }
 
 .db-responsive-grid-widget-button__highlight {
@@ -66,18 +57,12 @@ body[data-theme='modern-dark'] .db-responsive-grid-widget-button__icon {
   align-items: center;
   justify-content: center;
 
-  --db-rgw-button-bg-hover-color: var(--color-white-50);
-
   &:hover {
-    background-color: var(--db-rgw-button-bg-hover-color);
+    background-color: var(--background-hover-overlay);
 
     & > .db-responsive-grid-widget-button__icon {
-      --db-rgw-button-color: var(--db-rgw-button-hover-color);
+      --db-rgw-button-color: var(--font-color);
     }
   }
-}
-
-body[data-theme='modern-dark'] .db-responsive-grid-widget-button__highlight {
-  --db-rgw-button-bg-hover-color: var(--color-white-10);
 }
 </style>

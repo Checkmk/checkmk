@@ -9,12 +9,17 @@ import CmkList from 'cmk-ui-library/components/CmkList'
 import { type Suggestion } from 'cmk-ui-library/components/CmkSuggestions'
 import FormAutocompleter from 'cmk-ui-library/components/FormAutocompleter/FormAutocompleter.vue'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { nextTick, onBeforeUpdate, ref, watch } from 'vue'
 
 import FormLabel from '@/form/private/FormLabel.vue'
 import { type ValidationMessages, useValidation } from '@/form/private/validation'
 
 import FormLabelsLabel from './FormLabelsLabel.vue'
+
+const { _t } = usei18n()
+useWidgetKeys(_t('Labels'), [{ combo: ['Enter'], description: _t('Add label') }])
 
 type StringMapping = Record<string, string>
 

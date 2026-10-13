@@ -3,16 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="unreachable"
-
-from __future__ import annotations
 
 import functools
 import http.client as http_client
 import json
 import traceback
 from collections.abc import Callable
+from http import HTTPStatus
 from typing import override
 from wsgiref.types import StartResponse, WSGIEnvironment
 
@@ -40,12 +37,15 @@ from cmk.gui.exceptions import (
     MKUserError,
 )
 from cmk.gui.header import make_header
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, Response, response
+from cmk.gui.http import LEGACY_CONTENT_SECURITY_POLICY, request, Response, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
+from cmk.gui.session import session
 from cmk.gui.token_auth import handle_token_page, MKTokenExpiredOrRevokedException
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wsgi.applications.utils import (
     AbstractWSGIApp,
     ensure_authentication,
@@ -133,7 +133,8 @@ def _render_exception(ctx: pages.PageContext, e: Exception, title: str) -> Respo
     status_code: int | None = e.status if isinstance(e, MKHTTPException) else None
     if _is_ajax_request():
         return _json_error_response(
-            f"{title}: {e}" if title else str(e), status_code=status_code if status_code else 200
+            f"{title}: {e}" if title else str(e),
+            status_code=status_code if status_code else HTTPStatus.OK,
         )
 
     if plain_error():
@@ -146,29 +147,41 @@ def _render_exception(ctx: pages.PageContext, e: Exception, title: str) -> Respo
         )
 
     if not fail_silently():
-        make_header(
-            html,
-            title=title,
-            breadcrumb=Breadcrumb(),
-            debug=ctx.config.debug,
-            lang=user.language,
-            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
-            load_frontend_vue=ctx.config.load_frontend_vue,
-            custom_style_sheet=ctx.config.custom_style_sheet,
-            screenshotmode=ctx.config.screenshotmode,
-            inline_help_as_text=user.inline_help_as_text,
-            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
-            user_role_ids=user.role_ids,
-        )
-        html.open_ts_container(
-            container="div",
-            function_name="insert_before",
-            arguments={"targetElementId": "main_page_content"},
-        )
-        html.show_error(str(e))
-        html.close_div()
-        html.footer()
+        if html.output_format != "html":
+            # A machine-readable export (csv_export, json, ...) may already have set its
+            # own Content-Type/Content-Disposition and started writing its body before
+            # failing. Neither belongs on an error response, so take full ownership of it
+            # instead of leaving them stale.
+            response.set_content_type("text/html")
+            response.headers.pop("Content-Disposition", None)
+            response.set_data(b"")
+            html.write_html(HTMLWriter.render_div(str(e), class_="error"))
+        else:
+            make_header(
+                html,
+                title=title,
+                breadcrumb=Breadcrumb(),
+                debug=ctx.config.debug,
+                lang=user.language,
+                inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+                load_frontend_vue=ctx.config.load_frontend_vue,
+                custom_style_sheet=ctx.config.custom_style_sheet,
+                screenshotmode=ctx.config.screenshotmode,
+                inline_help_as_text=user.inline_help_as_text,
+                hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+                user_role_ids=user.role_ids,
+            )
+            html.open_ts_container(
+                container="div",
+                function_name="insert_before",
+                arguments={"targetElementId": "main_page_content"},
+            )
+            html.show_error(str(e))
+            html.close_div()
+            html.footer()
 
+    if status_code is not None:
+        response.status_code = status_code
     return response
 
 
@@ -200,7 +213,9 @@ class CheckmkApp(AbstractWSGIApp):
             #                 Flask.make_response()
             #                     AbstractWSGIApp.__call__()
             #                         CheckmkApp.wsgi_app()
-            context = pages.PageContext(config=active_config, request=request)
+            context = pages.PageContext(
+                config=active_config, request=request, transactions=transactions, session=session
+            )
             return _process_request(
                 context, environ, start_response, debug=self.debug, testing=self.testing
             )
@@ -211,7 +226,7 @@ def _is_ajax_request() -> bool:
     return request.has_var("_ajaxid")
 
 
-def _json_error_response(error_message: str, status_code: int = 200) -> Response:
+def _json_error_response(error_message: str, status_code: int = HTTPStatus.OK) -> Response:
     """Return a JSON error response for AJAX endpoints"""
     resp = Response(
         response=json.dumps({"result_code": 1, "result": error_message, "severity": "error"}),
@@ -230,14 +245,19 @@ def _process_request(
 ) -> WSGIResponse:
     resp: Response
     try:
+        # Parse the form before the code below accesses it. Otherwise a too large form
+        # could first be parsed in a page handler swallowing all exceptions (like
+        # _noauth) or in one of the except clauses below (like _page_not_found), so
+        # the RequestEntityTooLarge clause below would never see it. Don't assign the
+        # result to "_": That would shadow the i18n function _() in this whole function.
+        ctx.request.form
+
         try:
             file_name = requested_file_name(ctx.request, on_error="raise")
         except WebMKNotFound as exc:
             raise MKNotFound(str(exc)) from exc
 
-        if file_name is None:
-            page_handler = _page_not_found
-        elif _handler := pages.get_page_handler(file_name):
+        if _handler := pages.get_page_handler(file_name):
             page_handler = ensure_authentication(_handler)
         elif _handler := pages.get_page_handler(f"noauth:{file_name}"):
             page_handler = _noauth(_handler)
@@ -301,7 +321,19 @@ def _process_request(
         )
 
     except RequestEntityTooLarge as e:
-        resp = _render_exception(ctx, e, title=_("Request too large"))
+        # Parsing the form failed after consuming parts of the request body, so
+        # request.values is broken. Like for the mod_wsgi OSError below, we must NOT
+        # call _render_exception() or anything else accessing form data: werkzeug
+        # would either raise again outside of this handler or parse the rest of the
+        # body into a bogus form.
+        logger.warning(
+            "Request too large for %(path)r: %(error)s", {"path": ctx.request.path, "error": e}
+        )
+        resp = Response(
+            response=[f"{_('Request too large')}: {e.description}\n"],
+            mimetype="text/plain",
+            status=HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+        )
 
     except Exception as e:
         if isinstance(e, OSError) and "mod_wsgi" in str(e):
@@ -317,6 +349,13 @@ def _process_request(
             resp = _json_error_response(f"{_('Internal error')}: {e}")
         else:
             resp = handle_unhandled_exception(ctx.config)
+
+    # Apply the default Content-Security-Policy unless the page opted into a
+    # stricter one (CMK-31353). The CSP is owned by Python here, not the site
+    # Apache; pages migrated to the strict policy have already set their own
+    # header at this point.
+    if not resp.has_content_security_policy():
+        resp.set_content_security_policy(LEGACY_CONTENT_SECURITY_POLICY)
 
     resp.set_caching_headers()
     return resp(environ, start_response)

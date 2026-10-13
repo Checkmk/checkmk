@@ -54,7 +54,7 @@ test('visibleHorizontalLines excludes lines listed in hiddenLineNames', () => {
   expect(api.visibleHorizontalLines.value).toHaveLength(0)
 })
 
-test('highlightedMetricName starts as null', () => {
+test('highlightedMetricNames starts empty', () => {
   const { api } = mountComposable([CPU])
-  expect(api.highlightedMetricName.value).toBeNull()
+  expect(api.highlightedMetricNames.value).toEqual([])
 })

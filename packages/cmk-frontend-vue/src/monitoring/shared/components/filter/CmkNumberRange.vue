@@ -8,6 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import useId from 'cmk-ui-library/lib/useId'
 import { computed, watch } from 'vue'
 
 export interface NumberRange {
@@ -18,8 +19,7 @@ export interface NumberRange {
 const {
   fromLabel,
   toLabel,
-  unit = '',
-  disabled = false
+  unit = ''
 } = defineProps<{
   /** Visible/aria label for the lower bound. Defaults to a translated "From". */
   fromLabel?: string
@@ -27,8 +27,6 @@ const {
   toLabel?: string
   /** Unit suffix shown after the upper-bound field (e.g. "ms", "services"). */
   unit?: string
-  /** Render both inputs read-only and dimmed (e.g. while a preset is active). */
-  disabled?: boolean
 }>()
 
 const model = defineModel<NumberRange>({ default: () => ({ from: undefined, to: undefined }) })
@@ -62,10 +60,10 @@ const rangeErrors = computed<string[]>(() => {
   const { from: f, to: t } = model.value
   if (f !== undefined && t !== undefined) {
     if (isNaN(f) || isNaN(t)) {
-      return [_t('Only number values are allowed.')]
+      return [_t('Enter numbers only.')]
     }
     if (f > t) {
-      return [_t('The lower bound must not exceed the upper bound.')]
+      return [_t('Enter a lower bound that does not exceed the upper bound.')]
     }
   }
 
@@ -73,30 +71,38 @@ const rangeErrors = computed<string[]>(() => {
 })
 
 watch(rangeErrors, (errors) => emit('update:valid', errors.length === 0), { immediate: true })
+
+const validationId = useId()
 </script>
 
 <template>
-  <div
-    class="monitoring-cmk-number-range"
-    :class="{ 'monitoring-cmk-number-range--disabled': disabled }"
-  >
+  <div class="monitoring-cmk-number-range">
     <div class="monitoring-cmk-number-range__fields">
       <label class="monitoring-cmk-number-range__field">
-        <span class="monitoring-cmk-number-range__label">{{ fromText }}</span>
-        <CmkInput v-model="from" type="number" :aria-label="fromText" :disabled="disabled" />
+        <span>{{ fromText }}</span>
+        <CmkInput
+          v-model="from"
+          type="number"
+          :aria-label="fromText"
+          :external-errors="rangeErrors"
+          :described-by="validationId"
+          hide-validation-message
+        />
       </label>
       <label class="monitoring-cmk-number-range__field">
-        <span class="monitoring-cmk-number-range__label">{{ toText }}</span>
+        <span>{{ toText }}</span>
         <CmkInput
           v-model="to"
           type="number"
           :unit="unit"
           :aria-label="toText"
-          :disabled="disabled"
+          :external-errors="rangeErrors"
+          :described-by="validationId"
+          hide-validation-message
         />
       </label>
     </div>
-    <CmkInlineValidation :validation="rangeErrors" />
+    <CmkInlineValidation :id="validationId" :validation="rangeErrors" />
   </div>
 </template>
 
@@ -117,13 +123,5 @@ watch(rangeErrors, (errors) => emit('update:valid', errors.length === 0), { imme
   display: flex;
   align-items: center;
   gap: var(--dimension-2);
-}
-
-.monitoring-cmk-number-range__label {
-  color: var(--font-color-dimmed);
-}
-
-.monitoring-cmk-number-range--disabled {
-  opacity: 0.6;
 }
 </style>

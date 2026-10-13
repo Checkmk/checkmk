@@ -13,13 +13,15 @@ import types
 from collections.abc import Iterator, Mapping
 from typing import Any, cast, get_args, TypeAliasType, Union
 
+from typing_extensions import TypeForm
+
 from cmk.gui.openapi.restful_objects.type_defs import ErrorStatusCodeInt, StatusCodeInt
 from cmk.gui.openapi.restful_objects.utils import identify_expected_status_codes
 from cmk.gui.openapi.restful_objects.validators import PathParamsValidator
 
 from ._context import ApiContext
 from ._types import HeaderParam, PathParam, QueryParam
-from ._utils import get_resolved_origin, resolve_type
+from ._utils import get_dataclass_origin, get_resolved_origin, iter_model_fields, resolve_type
 from .endpoint_model import EndpointModel, ParameterInfo, SignatureParametersProcessor
 from .model import ApiOmitted
 from .model.response import ApiErrorDataclass
@@ -51,7 +53,7 @@ def _validate_defaults_parameter(
     """Validate the default values for parameters.
 
     If no default is set, `field_default` should be `dataclasses.MISSING`."""
-    if dataclasses.is_dataclass(field_type):
+    if get_dataclass_origin(field_type) is not None:
         _validate_defaults_model(f"{path}", field_type, other_defaults_allowed=True)
         return
 
@@ -61,6 +63,21 @@ def _validate_defaults_parameter(
         if not isinstance(field_default, ApiOmitted):
             raise ValueError(f"Invalid default value for `{path}`. Use `ApiOmitted()` instead.")
         return
+
+
+def _iter_nested_models(annotation: object, seen: set[TypeAliasType]) -> Iterator[object]:
+    """Yield the models an annotation contains, for example within a list, a dict or a union."""
+    if isinstance(annotation, TypeAliasType):
+        if annotation in seen:
+            return
+        seen.add(annotation)
+        annotation = annotation.__value__
+
+    for argument in get_args(annotation):
+        if get_dataclass_origin(argument) is not None:
+            yield argument
+        else:
+            yield from _iter_nested_models(argument, seen)
 
 
 def _validate_defaults_model(
@@ -74,32 +91,48 @@ def _validate_defaults_model(
     If `other_defaults_allowed` is true, `default` and `default_factory` are allowed to be set to
     any value, for types *not* containing `ApiOmitted`. This should be used only for request models.
     """
-    if not dataclasses.is_dataclass(schema):
-        raise ValueError(f"Expected a dataclass annotation for `{path}`.")
+    _validate_defaults_model_fields(
+        path, schema, other_defaults_allowed=other_defaults_allowed, seen=set()
+    )
 
-    for field in dataclasses.fields(schema):
-        if isinstance(field.type, str):
-            raise ValueError(f"String annotation for `{path}.{field.name}` is not allowed.")
 
+def _validate_defaults_model_fields(
+    path: str,
+    schema: object,
+    *,
+    other_defaults_allowed: bool,
+    seen: set[object],
+) -> None:
+    if schema in seen:
+        return
+
+    seen.add(schema)
+    for field, field_type in iter_model_fields(schema, path=path):
         # without the cast we would have to check for GenericAlias, UnionType, DataclassInstance
         # and Literal. The dataclass instance check also has no proper return type
-        type_ = cast(type, field.type)
-        if dataclasses.is_dataclass(type_):
-            _validate_defaults_model(
-                f"{path}.{field.name}", field.type, other_defaults_allowed=other_defaults_allowed
+        type_ = cast(type, field_type)
+        field_path = f"{path}.{field.name}"
+        if get_dataclass_origin(type_) is not None:
+            _validate_defaults_model_fields(
+                field_path, type_, other_defaults_allowed=other_defaults_allowed, seen=seen
             )
             continue
+
+        for nested in _iter_nested_models(type_, set()):
+            _validate_defaults_model_fields(
+                field_path, nested, other_defaults_allowed=other_defaults_allowed, seen=seen
+            )
 
         if _type_contains_api_omitted(type_):
             if field.default is not dataclasses.MISSING:
                 raise ValueError(
-                    f"Invalid `default` for `{path}.{field.name}`. Use `default_factory=ApiOmitted` instead."
+                    f"Invalid `default` for `{field_path}`. Use `default_factory=ApiOmitted` instead."
                 )
             if field.default_factory is dataclasses.MISSING:
-                raise ValueError(f"Missing `default_factory=ApiOmitted` for `{path}.{field.name}`.")
+                raise ValueError(f"Missing `default_factory=ApiOmitted` for `{field_path}`.")
             if field.default_factory is not ApiOmitted:
                 raise ValueError(
-                    f"Invalid `default_factory` for `{path}.{field.name}`. Use `default=ApiOmitted` instead."
+                    f"Invalid `default_factory` for `{field_path}`. Use `default=ApiOmitted` instead."
                 )
             continue
 
@@ -107,14 +140,13 @@ def _validate_defaults_model(
             continue
 
         if field.default is not dataclasses.MISSING:
-            raise ValueError(f"Forbidden `default` for `{path}.{field.name}`.")
+            raise ValueError(f"Forbidden `default` for `{field_path}`.")
         if field.default_factory is not dataclasses.MISSING:
-            raise ValueError(f"Forbidden `default_factory` for `{path}.{field.name}`.")
+            raise ValueError(f"Forbidden `default_factory` for `{field_path}`.")
 
 
 def _validate_schema_type(
-    # TODO(PEP-747): replace `type | TypeAliasType | types.UnionType` with `TypeForm`
-    schema_type: type | TypeAliasType | types.UnionType,
+    schema_type: TypeForm[object],
     *,
     path_prefix: str,
     other_defaults_allowed: bool,
@@ -273,12 +305,13 @@ class EndpointValidator:
             body_type = resolve_type(body.annotation)
             if isinstance(body_type, types.UnionType):
                 if not all(
-                    dataclasses.is_dataclass(resolve_type(arg)) for arg in get_args(body_type)
+                    get_dataclass_origin(resolve_type(arg)) is not None
+                    for arg in get_args(body_type)
                 ):
                     raise ValueError(
                         "All union members of request body annotation must be dataclasses"
                     )
-            elif not dataclasses.is_dataclass(body_type):
+            elif get_dataclass_origin(body_type) is None:
                 raise ValueError("Request body annotation must be a dataclass")
 
         if "api_context" in signature.parameters:
@@ -382,10 +415,26 @@ class EndpointValidator:
                 )
 
     @staticmethod
+    def _validate_locking(endpoint: RequestEndpoint) -> None:
+        if endpoint.method == "get":
+            # For GET neither flag has any effect.
+            return
+
+        if endpoint.skip_locking and endpoint.update_config_generation:
+            raise ValueError(
+                f"Endpoint {endpoint.operation_id} skips the configuration lock but still "
+                "updates the configuration generation. Regenerating and committing the "
+                "configuration without the lock exposes it to race conditions. Set "
+                "`update_config_generation=False` for endpoints that do not mutate the "
+                "configuration."
+            )
+
+    @staticmethod
     def validate_endpoint_definition(endpoint_definition: EndpointDefinition) -> None:
         """Validate a versioned endpoint configuration"""
         # TODO: this function should be invoked for custom endpoints
         endpoint = endpoint_definition.request_endpoint()
+        EndpointValidator._validate_locking(endpoint)
         with _with_endpoint_context(endpoint.operation_id):
             EndpointValidator._validate_parameters(endpoint.handler)
 

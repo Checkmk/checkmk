@@ -9,15 +9,8 @@ from collections.abc import Callable, Sequence
 from typing import Any, TypeVar
 
 from cmk.gui.config import active_config
-from cmk.gui.form_specs.unstable import (
-    CascadingSingleChoiceExtended,
-    SingleChoiceEditable,
-)
-from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
-    CascadingSingleChoiceElementExtended,
-)
+from cmk.gui.form_specs.unstable import SingleChoiceEditable
 from cmk.gui.i18n import translate_to_current_language
-from cmk.gui.logged_in import user
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeFormSpec,
     ABCHostAttributeValueSpec,
@@ -25,9 +18,11 @@ from cmk.gui.watolib.host_attributes import (
     sorted_host_attribute_topics,
     sorted_host_attributes_by_topic,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.timeperiods import load_timeperiods
 from cmk.rulesets.internal.form_specs import (
+    CascadingSingleChoiceElementExtended,
+    CascadingSingleChoiceExtended,
+    CascadingSingleChoiceLayout,
     ListExtended,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
@@ -36,7 +31,6 @@ from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import DefaultValue
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.shared_typing.configuration_entity import ConfigEntityType
-from cmk.shared_typing.vue_formspec_components import CascadingSingleChoiceLayout
 from cmk.utils.timeperiod import TimeperiodName
 
 T = TypeVar("T")
@@ -45,11 +39,15 @@ T = TypeVar("T")
 def create_full_path_folder_choice(
     title: Title,
     help_text: Help | None,
+    *,
+    folder_choices: Callable[[], Sequence[tuple[str, str]]],
     custom_validate: Sequence[Callable[[str], object]] | None = None,
     allow_new_folder_creation: bool = False,
 ) -> SingleChoiceExtended[str] | SingleChoiceEditable:
-    choices = folder_tree().folder_choices_fulltitle(user)
+    """A choice of a folder by its full title
 
+    `folder_choices` returns the path and the full title of each folder the user may choose.
+    """
     if allow_new_folder_creation:
         return SingleChoiceEditable(
             # FormSpec
@@ -67,12 +65,12 @@ def create_full_path_folder_choice(
     return SingleChoiceExtended[str](
         title=title,
         help_text=help_text,
-        elements=[
+        elements=lambda: [
             SingleChoiceElementExtended(
-                name=choice[0],
-                title=Title(choice[1]),  # astrein: disable=localization-checker
+                name=path,
+                title=Title(folder_title),  # astrein: disable=localization-checker
             )
-            for choice in choices
+            for path, folder_title in folder_choices()
         ],
         prefill=DefaultValue(""),
         custom_validate=custom_validate,
@@ -125,6 +123,9 @@ def create_host_attributes_selection(
                 continue
 
             if not attr.is_visible(for_what="host", new=False) or not attr.editable():
+                continue
+
+            if not attr.openapi_editable():
                 continue
 
             if exclude_host_attributes is not None and attr.name() in exclude_host_attributes:

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-any-return"
 
 """functions for all redfish components"""
 
@@ -13,13 +12,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, Literal, NamedTuple
 
-from cmk.agent_based.v2 import DiscoveryResult, Service, StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.rulesets.v1 import Title
 
 SectionSystem = Mapping[str, Mapping[str, Any]]
 
 Levels = tuple[Literal["fixed"], tuple[float, float]]
 RedfishAPIData = Mapping[str, Any]
+
+_IDENTIFIER_KEYS = ("Id", "MemberId")
 
 
 @dataclass(frozen=True)
@@ -152,12 +153,11 @@ class Perfdata(NamedTuple):
     boundaries: tuple[float | None, float | None] | None
 
 
-def parse_redfish(string_table: StringTable) -> RedfishAPIData:
-    """parse one line of data to dictionary"""
-    try:
-        return json.loads(string_table[0][0])
-    except (IndexError, json.decoder.JSONDecodeError):
-        return {}
+def _stringify_identifiers(obj: dict[str, Any]) -> dict[str, Any]:
+    for key in _IDENTIFIER_KEYS:
+        if (value := obj.get(key)) is not None:
+            obj[key] = str(value)
+    return obj
 
 
 def parse_redfish_multiple(string_table: StringTable) -> RedfishAPIData:
@@ -169,7 +169,7 @@ def parse_redfish_multiple(string_table: StringTable) -> RedfishAPIData:
 
     parsed: dict[str, Mapping[str, Any]] = {}
     for line in string_table:
-        entry = json.loads(line[0])
+        entry = json.loads(line[0], object_hook=_stringify_identifiers)
         # error entry
         # {"error": "Storage data could not be fetched\n"}
         if entry.get("error"):
@@ -212,12 +212,6 @@ def parse_redfish_multiple(string_table: StringTable) -> RedfishAPIData:
             item = entry.get("Id")
         parsed.setdefault(item, entry)
     return parsed
-
-
-def discovery_redfish_multiple(section: RedfishAPIData) -> DiscoveryResult:
-    """Discovery multiple items from one dictionary"""
-    for item in section:
-        yield Service(item=item)
 
 
 def _try_convert_to_float(value: str | None) -> float | None:

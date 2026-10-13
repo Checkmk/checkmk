@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 import dataclasses
 from collections.abc import Mapping
@@ -18,6 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 VersionSection = Mapping[str, str]
 
@@ -44,7 +44,7 @@ def parse_postgres_instances(string_table: StringTable) -> Section:
             try:
                 pid = int(line[0])
                 all_pids.append(pid)
-                instance_to_pid[instance_name] = pid
+                instance_to_pid[instance_name] = pid  # type: ignore[possibly-undefined]
             except ValueError:
                 pass
     instance_to_pid.pop("", None)
@@ -77,7 +77,7 @@ agent_section_postgres_version = AgentSection(
 
 def discover_postgres_instances(
     section_postgres_instances: Section | None,
-    section_postgres_version: VersionSection | None,
+    section_postgres_version: VersionSection | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if section_postgres_instances is None:
         return
@@ -124,10 +124,6 @@ check_plugin_postgres_instances = CheckPlugin(
 )
 
 
-def discover_postgres_processes(section: Section) -> DiscoveryResult:
-    yield Service()
-
-
 def check_postgres_processes(section: Section) -> CheckResult:
     count = len(section.all_pids)
     if count == 0:
@@ -142,6 +138,6 @@ check_plugin_postgres_processes = CheckPlugin(
     name="postgres_processes",
     sections=["postgres_instances"],
     service_name="PostgreSQL Process Count",
-    discovery_function=discover_postgres_processes,
+    discovery_function=discover_one_service,
     check_function=check_postgres_processes,
 )

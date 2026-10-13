@@ -3,16 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-import subprocess
 
 import pytest
 
-from cmk.checkengine.discovery._autochecks import AutochecksSerializer
+from cmk.checkengine.discovery import AutochecksSerializer
+from tests.system.singlesite.cmk.base.automation_helper_restart import (
+    restart_automation_helper_and_wait_until_reachable,
+)
 from tests.system.singlesite.linux_test_host import create_linux_test_host
-from tests.testlib.common.utils import wait_until
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 
 def test_test_check_1_merged_rule(request: pytest.FixtureRequest, site: Site) -> None:
@@ -24,7 +23,7 @@ def test_test_check_1_merged_rule(request: pytest.FixtureRequest, site: Site) ->
     test_check_dir = "local/lib/python3/cmk/plugins/collection/agent_based"
     test_check_path = f"{test_check_dir}/test_check_1.py"
 
-    def cleanup():
+    def cleanup() -> None:
         if site.file_exists("etc/check_mk/conf.d/test_check_1.mk"):
             site.delete_file("etc/check_mk/conf.d/test_check_1.mk")
 
@@ -63,7 +62,7 @@ check_plugin_test_check_1 = CheckPlugin(
     )
 
     site.activate_changes_and_wait_for_core_reload()
-    _restart_automation_helpers_and_wait_until_reachable(site)
+    restart_automation_helper_and_wait_until_reachable(site)
 
     site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
 
@@ -107,7 +106,7 @@ def test_test_check_1_all_rule(request: pytest.FixtureRequest, site: Site) -> No
     test_check_dir = "local/lib/python3/cmk/plugins/collection/agent_based"
     test_check_path = f"{test_check_dir}/test_check_2.py"
 
-    def cleanup():
+    def cleanup() -> None:
         if site.file_exists("etc/check_mk/conf.d/test_check_2.mk"):
             site.delete_file("etc/check_mk/conf.d/test_check_2.mk")
 
@@ -146,7 +145,7 @@ check_plugin_test_check_2 = CheckPlugin(
     )
 
     site.activate_changes_and_wait_for_core_reload()
-    _restart_automation_helpers_and_wait_until_reachable(site)
+    restart_automation_helper_and_wait_until_reachable(site)
 
     site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
 
@@ -180,19 +179,3 @@ check_plugin_test_check_2 = CheckPlugin(
             break
     else:
         raise AssertionError('"test_check_2" not discovered')
-
-
-def _restart_automation_helpers_and_wait_until_reachable(site: Site) -> None:
-    def automation_helper_socket_reachable() -> bool:
-        try:
-            site.python_helper("_helper_connect_to_automation_helper_socket.py").check_output()
-        except subprocess.CalledProcessError:
-            return False
-        return True
-
-    site.omd("restart", "automation-helper")
-    wait_until(
-        automation_helper_socket_reachable,
-        timeout=10,
-        interval=0.25,
-    )

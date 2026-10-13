@@ -14,12 +14,12 @@ from cmk.gui import userdb, valuespec
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, user
-from cmk.gui.type_defs import Choices
 from cmk.gui.valuespec import DropdownChoice, Transform, ValueSpecValidateFunc
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 from cmk.utils import password_store
-from cmk.utils.password_store import ad_hoc_password_id, PasswordConfig
+from cmk.utils.password_store import ad_hoc_password_id, is_ad_hoc_password_id, PasswordConfig
+from cmk.web.utils.choices import Choice
 
 
 class PasswordStore(WatoSimpleConfigFile[PasswordConfig]):
@@ -73,14 +73,24 @@ class PasswordStore(WatoSimpleConfigFile[PasswordConfig]):
         )
 
     @override
-    def save(self, cfg: Mapping[str, PasswordConfig], pprint_value: bool) -> None:
+    def save(
+        self,
+        cfg: Mapping[str, PasswordConfig],
+        pprint_value: bool,
+        *,
+        update_merged_file: bool = True,
+    ) -> None:
         """The actual passwords are stored in a separate file for special treatment
 
-        Have a look at `cmk.utils.password_store` for further information"""
+        Have a look at `cmk.utils.password_store` for further information.
+        Callers that cannot run the automation (e.g. update actions) pass
+        update_merged_file=False and have to make sure the merged file is written later,
+        e.g. by the core config update at the end of the update."""
         meta_data, passwords = split_password_specs(cfg)
         super().save(meta_data, pprint_value)
         password_store.save(passwords, password_store.password_store_path())
-        update_passwords_merged_file()
+        if update_merged_file:
+            update_passwords_merged_file()
 
 
 def update_passwords_merged_file() -> None:
@@ -114,7 +124,7 @@ def split_password_specs(
 
 
 @request_memoize()
-def passwordstore_choices() -> Choices:
+def passwordstore_choices() -> list[Choice]:
     pw_store = PasswordStore()
     return [
         (ident, pw["title"])
@@ -124,7 +134,7 @@ def passwordstore_choices() -> Choices:
 
 # TODO remove this once a solution for use of passwordstore_choices is found
 @request_memoize()
-def passwordstore_choices_without_user() -> Choices:
+def passwordstore_choices_without_user() -> list[Choice]:
     pw_store = PasswordStore()
     return [(ident, pw["title"]) for ident, pw in pw_store.load_for_reading().items()]
 
@@ -135,7 +145,7 @@ def register(config_file_registry: ConfigFileRegistry) -> None:
 
 def IndividualOrStoredPassword(
     title: str | None = None,
-    help: valuespec.ValueSpecHelp | None = None,
+    help: valuespec.ValueSpecHelp | None = None,  # noqa: A002
     allow_empty: bool = True,
     size: int = 25,
     validate: ValueSpecValidateFunc | None = None,
@@ -180,7 +190,7 @@ def IndividualOrStoredPassword(
 
 def MigrateNotUpdatedToIndividualOrStoredPassword(
     title: str | None = None,
-    help: valuespec.ValueSpecHelp | None = None,
+    help: valuespec.ValueSpecHelp | None = None,  # noqa: A002
     allow_empty: bool = True,
     size: int = 25,
 ) -> valuespec.MigrateNotUpdated:
@@ -197,7 +207,7 @@ def MigrateNotUpdatedToIndividualOrStoredPassword(
 
 def MigrateToIndividualOrStoredPassword(
     title: str | None = None,
-    help: valuespec.ValueSpecHelp | None = None,
+    help: valuespec.ValueSpecHelp | None = None,  # noqa: A002
     allow_empty: bool = True,
     size: int = 25,
     validate: ValueSpecValidateFunc | None = None,
@@ -230,6 +240,41 @@ def postprocessable_ios_password(
         back=_transform_password_back,
         validate=validate,
     )
+
+
+def trusted_explicit_password_id(password_id: str) -> str:
+    """The ID to save an explicit password with
+
+    The ID of an explicit password comes from the request. Only an ID in the generated format
+    that no stored password has is kept. Otherwise a request could give an explicit password
+    the ID of a stored password or an ID of its own choice.
+    """
+    if is_ad_hoc_password_id(password_id) and password_id not in PasswordStore().load_for_reading():
+        return password_id
+    return ad_hoc_password_id()
+
+
+def trusted_explicit_password_ids(value: object) -> object:
+    """The value with trusted_explicit_password_id() applied to all explicit passwords"""
+
+    def _trusted(value: object) -> object:
+        match value:
+            case ("cmk_postprocessed", "explicit_password", (str(password_id), str(password))):
+                return (
+                    "cmk_postprocessed",
+                    "explicit_password",
+                    (trusted_explicit_password_id(password_id), password),
+                )
+            case dict():
+                return {k: _trusted(v) for k, v in value.items()}
+            case list():
+                return [_trusted(v) for v in value]
+            case tuple():
+                return tuple(_trusted(v) for v in value)
+            case _:
+                return value
+
+    return _trusted(value)
 
 
 def _transform_password_forth(value: object) -> tuple[str, str]:

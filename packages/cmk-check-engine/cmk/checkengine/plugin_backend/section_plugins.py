@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 """Background tools required to register a section plug-in"""
@@ -32,7 +31,6 @@ from cmk.checkengine.plugins import (
     AgentParseFunction,
     AgentSectionPlugin,
     HostLabelFunction,
-    LegacyPluginLocation,
     ParsedSectionName,
     SectionName,
     SimpleSNMPParseFunction,
@@ -139,7 +137,7 @@ def noop_snmp_parse_function(
 
 def wrap_in_unpacker(parse_function: SimpleSNMPParseFunction) -> SNMPParseFunction:
     @functools.wraps(parse_function)
-    def unpacking_parse_function(string_table):  # type: ignore[misc]
+    def unpacking_parse_function(string_table: list[Any]) -> Any:  # type: ignore[misc]
         return parse_function(string_table[0])
 
     return unpacking_parse_function
@@ -210,7 +208,7 @@ def _create_host_label_function(
         return _noop_host_label_function
 
     @functools.wraps(host_label_function)
-    def filtered_generator(*args, **kwargs):  # type: ignore[misc]
+    def filtered_generator(*args: object, **kwargs: object) -> Generator[HostLabel]:
         """Only let HostLabel through
 
         This allows for better typing in base code.
@@ -238,7 +236,7 @@ def _create_supersedes(
 
 def create_agent_section_plugin(
     agent_section_spec: AgentSection,
-    location: PluginLocation | LegacyPluginLocation,
+    location: PluginLocation,
     *,
     validate: bool,
 ) -> AgentSectionPlugin:
@@ -280,15 +278,15 @@ def create_agent_section_plugin(
 
 def create_metrics_section_plugin(
     section_spec: MetricsSection,
-    location: PluginLocation | LegacyPluginLocation,
+    location: PluginLocation,
     *,
     validate: bool,
 ) -> AgentSectionPlugin:
     """Return an AgentSectionPlugin object after validating and converting the arguments one by one
 
-    Metric backend sections are agent sections from the check engine's point of
+    Telemetry metrics sections are agent sections from the check engine's point of
     view: their data arrives as agent output, the additional selectors only
-    matter to the metric backend fetcher.
+    matter to the telemetry metrics fetcher.
     """
     section_name = SectionName(section_spec.name)
 
@@ -333,7 +331,7 @@ def create_metrics_section_plugin(
 
 def create_snmp_section_plugin(
     snmp_section_spec: SimpleSNMPSection | SNMPSection,
-    location: PluginLocation | LegacyPluginLocation,
+    location: PluginLocation,
     *,
     validate: bool,
 ) -> SNMPSectionPlugin:

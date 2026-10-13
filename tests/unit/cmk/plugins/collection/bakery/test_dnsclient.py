@@ -5,7 +5,7 @@
 
 from pathlib import Path
 
-from cmk.bakery.v2_unstable import OS, Plugin, PluginConfig
+from cmk.bakery.v2 import OS, Plugin, PluginConfig
 from cmk.plugins.collection.bakery.dnsclient import bakery_plugin_dnsclient
 
 CONFIG_LINES = [

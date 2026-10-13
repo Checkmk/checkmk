@@ -10,7 +10,7 @@ import CmkToggleButtonGroup, {
   type ToggleButtonOption
 } from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
-import { CmkFetchError } from 'cmk-ui-library/lib/cmkFetch'
+import { CmkApiError } from 'cmk-ui-library/lib/error'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref } from 'vue'
@@ -42,7 +42,7 @@ let contactGroups: DualListElement[] = []
 try {
   contactGroups = await getContactGroups()
 } catch (e) {
-  if (!(e instanceof CmkFetchError && (e.statusCode === 401 || e.statusCode === 403))) {
+  if (!(e instanceof CmkApiError && (e.statusCode === 401 || e.statusCode === 403))) {
     throw e
   }
   // 401/403 are silently caught. contactGroups stays empty, so the option will be disabled below.
@@ -99,7 +99,7 @@ const loadAvailableElements = async (shareMode: ShareType) => {
   try {
     availableElements.value = await fetchData()
   } catch (e) {
-    if (!(e instanceof CmkFetchError && (e.statusCode === 401 || e.statusCode === 403))) {
+    if (!(e instanceof CmkApiError && (e.statusCode === 401 || e.statusCode === 403))) {
       throw e
     }
     availableElements.value = []

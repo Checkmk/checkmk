@@ -10,7 +10,7 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service
+from cmk.agent_based.v2 import Metric, Result
 from cmk.plugins.graylog import lib as graylog
 from cmk.plugins.graylog.agent_based import graylog_messages
 
@@ -24,13 +24,6 @@ _PARAMS: graylog.GraylogMessagesParams = {
     "msgs_diff_upper": ("no_levels", None),
     "msgs_diff_lower": ("no_levels", None),
 }
-
-
-def test_discovery_graylog_messages() -> None:
-    info = [['{"events": 1000}']]
-    parsed = graylog_messages.parse_graylog_messages(info)
-    assert parsed is not None
-    assert list(graylog_messages.discover_graylog_messages(parsed)) == [Service()]
 
 
 def test_check_graylog_messages(monkeypatch: pytest.MonkeyPatch) -> None:

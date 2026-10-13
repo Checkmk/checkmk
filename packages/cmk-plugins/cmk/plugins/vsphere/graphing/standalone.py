@@ -21,3 +21,15 @@ metric_mem_esx_ballooned = metrics.Metric(
     unit=UNIT_BYTES,
     color=metrics.Color.YELLOW,
 )
+metric_uncommitted = metrics.Metric(
+    name="uncommitted",
+    title=Title("Uncommitted"),
+    unit=UNIT_BYTES,
+    color=metrics.Color.ORANGE,
+)
+metric_overprovisioned = metrics.Metric(
+    name="overprovisioned",
+    title=Title("Overprovisioned"),
+    unit=UNIT_BYTES,
+    color=metrics.Color.YELLOW,
+)

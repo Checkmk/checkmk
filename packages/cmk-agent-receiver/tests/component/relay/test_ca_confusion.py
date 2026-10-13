@@ -27,7 +27,7 @@ def ar_runner(ar_site: AgentReceiverSite) -> Iterator[AgentReceiverRunner]:
         yield runner
 
 
-def _issue_cert(ca_path: Path, uuid: str) -> CertificateWithPrivateKey:
+def _issue_cert(ca_path: Path, uuid: str, cert_log: Path) -> CertificateWithPrivateKey:
     """Sign a certificate for `uuid` with the CA at `ca_path`, the same way the real
     registration endpoints would for an agent controller or relay with this UUID.
 
@@ -37,7 +37,7 @@ def _issue_cert(ca_path: Path, uuid: str) -> CertificateWithPrivateKey:
     """
     private_key, csr = generate_csr_pair(cn=uuid)
     ca = CertificateWithPrivateKey.load_combined_file_content(ca_path.read_text(), passphrase=None)
-    certificate = sign_csr(csr, lifetime_in_months=12, keypair=ca)
+    certificate = sign_csr(csr, lifetime_in_months=12, keypair=ca, cert_log=cert_log)
     return CertificateWithPrivateKey(certificate=certificate, private_key=private_key)
 
 
@@ -45,6 +45,7 @@ def test_agent_cert_rejected_on_relay_endpoint_with_same_uuid(
     ar_runner: AgentReceiverRunner,
     site: SiteMock,
     user: User,
+    tmp_path: Path,
 ) -> None:
     """A certificate issued for an agent must not authenticate as a relay sharing its UUID.
 
@@ -69,7 +70,9 @@ def test_agent_cert_rejected_on_relay_endpoint_with_same_uuid(
             shared_uuid, "victim-relay"
         )
 
-    agent_cert = _issue_cert(ar_runner.site.config.agent_ca_path, shared_uuid)
+    agent_cert = _issue_cert(
+        ar_runner.site.config.agent_ca_path, shared_uuid, tmp_path / "issued.jsonl"
+    )
 
     with ar_runner.mtls_client(agent_cert) as client:
         resp = AgentReceiverClient(client, site.site_name, user).refresh_cert(shared_uuid)
@@ -79,6 +82,7 @@ def test_agent_cert_rejected_on_relay_endpoint_with_same_uuid(
 
 def test_relay_cert_rejected_on_agent_endpoint_with_same_uuid(
     ar_runner: AgentReceiverRunner,
+    tmp_path: Path,
 ) -> None:
     """A certificate issued for a relay must not authenticate as an agent sharing its UUID.
 
@@ -97,7 +101,9 @@ def test_relay_cert_rejected_on_agent_endpoint_with_same_uuid(
        instead of rejecting the certificate outright.
     """
     shared_uuid = random_relay_id()
-    relay_cert = _issue_cert(ar_runner.site.config.relay_ca_path, shared_uuid)
+    relay_cert = _issue_cert(
+        ar_runner.site.config.relay_ca_path, shared_uuid, tmp_path / "issued.jsonl"
+    )
 
     with ar_runner.mtls_client(relay_cert) as client:
         resp = client.get(

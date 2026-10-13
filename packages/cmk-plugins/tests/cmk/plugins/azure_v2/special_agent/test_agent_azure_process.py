@@ -7,6 +7,9 @@
 # mypy: disable-error-code="type-arg"
 
 import argparse
+import datetime
+import json
+import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from unittest.mock import AsyncMock
@@ -21,7 +24,10 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     AzureResource,
     AzureResourceGroup,
     AzureSubscription,
+    filter_otel_resources_reporting_metrics,
     filter_tags,
+    get_otel_identity_labels_section,
+    get_otel_only_resources,
     get_resource_groups,
     get_resource_host_labels_section,
     process_app_registrations,
@@ -38,6 +44,7 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     write_subscription_labels,
     write_subscription_section,
 )
+from cmk.plugins.azure_v2.special_agent.azure_api_client import ApiError, BaseAsyncApiClient
 
 from .lib import fake_azure_subscription, MockAzureSection
 
@@ -219,6 +226,291 @@ def test_get_resource_host_labels_section(
 
     assert labels_section._cont == expected_result[0]  # noqa: SLF001
     assert labels_section._piggytargets == expected_result[1]  # noqa: SLF001
+
+
+@pytest.mark.parametrize(
+    "otel_resource_types, monitored_services, expected_names",
+    [
+        pytest.param(
+            ["microsoft.app/containerapps"],
+            [],
+            ["my_app"],
+            id="host for every resource of an OTel type, matched ignoring case",
+        ),
+        pytest.param(
+            ["Microsoft.App/containerApps", "Microsoft.Storage/storageAccounts"],
+            ["Microsoft.Storage/storageAccounts"],
+            ["my_app"],
+            id="no second host for a type the special agent monitors itself",
+        ),
+    ],
+)
+def test_get_otel_only_resources(
+    otel_resource_types: Sequence[str],
+    monitored_services: Sequence[str],
+    expected_names: Sequence[str],
+) -> None:
+    resources = [
+        AzureResource(
+            {
+                "id": f"{name}_id",
+                "name": name,
+                "type": resource_type,
+                "location": "westeurope",
+                "tags": {},
+                "group": "my_group",
+            },
+            TagsImportPatternOption.import_all,
+            fake_azure_subscription(),
+            UniqueHostnamesConfig(),
+        )
+        for name, resource_type in [
+            ("my_app", "Microsoft.App/containerApps"),
+            ("my_storage", "Microsoft.Storage/storageAccounts"),
+            ("my_vm", "Microsoft.Compute/virtualMachines"),
+        ]
+    ]
+
+    assert [
+        resource.name
+        for resource in get_otel_only_resources(resources, otel_resource_types, monitored_services)
+    ] == expected_names
+
+
+def _get_batch_answer(**values: float | None) -> Sequence[Mapping[str, object]]:
+    return [
+        {
+            "resourceid": f"/subscriptions/sub/resourceGroups/rg/providers/t/{name}",
+            "value": [{"name": {"value": "m"}, "timeseries": [{"data": [{"average": value}]}]}],
+        }
+        for name, value in values.items()
+    ]
+
+
+@pytest.mark.parametrize(
+    "answers, expected_names",
+    [
+        pytest.param(
+            [[{"name": {"value": "m"}}], _get_batch_answer(live=1.0, silent=None)],
+            ["live", "no_region"],
+            id="no host for a resource without metric values",
+        ),
+        pytest.param(
+            [[{"name": {"value": "m"}}], _get_batch_answer(live=0.0, silent=None)],
+            ["live", "no_region"],
+            id="a zero is a metric value",
+        ),
+        pytest.param(
+            [
+                [{"name": {"value": f"m{i}"}} for i in range(21)],
+                _get_batch_answer(live=None, silent=None),
+                _get_batch_answer(live=1.0, silent=None),
+            ],
+            ["live", "no_region"],
+            id="values after the first 20 metric names count",
+        ),
+        pytest.param(
+            [[{"name": {"value": "m"}}], _get_batch_answer(live=1.0)],
+            ["live", "silent", "no_region"],
+            id="host for a resource left out of the answer",
+        ),
+        pytest.param(
+            [[]],
+            ["live", "silent", "no_region"],
+            id="hosts for all resources without metric names",
+        ),
+        pytest.param(
+            [ApiError("denied")],
+            ["live", "silent", "no_region"],
+            id="hosts for all resources when the definitions call fails",
+        ),
+        pytest.param(
+            [[{"name": {"value": "m"}}], ApiError("denied")],
+            ["live", "silent", "no_region"],
+            id="hosts for all resources when the getBatch call fails",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("storage_path")
+@pytest.mark.asyncio
+async def test_filter_otel_resources_reporting_metrics(
+    answers: Sequence[object],
+    expected_names: Sequence[str],
+) -> None:
+    api_client = AsyncMock(spec=BaseAsyncApiClient)
+    api_client.request_async.side_effect = answers
+    resources = [
+        AzureResource(
+            {
+                "id": f"/subscriptions/sub/resourceGroups/rg/providers/t/{name}",
+                "name": name,
+                "type": "t",
+                "location": location,
+            },
+            TagsImportPatternOption.import_all,
+            fake_azure_subscription(),
+            UniqueHostnamesConfig(),
+        )
+        for name, location in [("live", "westeurope"), ("silent", "westeurope"), ("no_region", "")]
+    ]
+
+    kept, issues = await filter_otel_resources_reporting_metrics(
+        api_client, resources, "sub", "azure_host", datetime.datetime.now(datetime.UTC), debug=False
+    )
+
+    assert [resource.name for resource in kept] == expected_names
+    assert len(issues) == len(resources) - len(kept)
+
+
+def _otel_resources(*names: str) -> Sequence[AzureResource]:
+    return [
+        AzureResource(
+            {
+                "id": f"/subscriptions/sub/resourceGroups/rg/providers/t/{name}",
+                "name": name,
+                "type": "t",
+                "location": "westeurope",
+            },
+            TagsImportPatternOption.import_all,
+            fake_azure_subscription(),
+            UniqueHostnamesConfig(),
+        )
+        for name in names
+    ]
+
+
+@pytest.mark.parametrize(
+    "first_answers, hours_ago, resources, answers, expected_names",
+    [
+        pytest.param(
+            [[{"name": {"value": "m"}}], _get_batch_answer(silent=None)],
+            23,
+            _otel_resources("silent"),
+            [[{"name": {"value": "m"}}], _get_batch_answer(silent=1.0)],
+            [],
+            id="an answer of the last day is used again",
+        ),
+        pytest.param(
+            [[{"name": {"value": "m"}}], []],
+            23,
+            _otel_resources("silent"),
+            [[{"name": {"value": "m"}}], _get_batch_answer(silent=None)],
+            ["silent"],
+            id="an unknown answer of the last day is used again",
+        ),
+        pytest.param(
+            [[{"name": {"value": "m"}}], _get_batch_answer(silent=None)],
+            25,
+            _otel_resources("silent"),
+            [[{"name": {"value": "m"}}], _get_batch_answer(silent=1.0)],
+            ["silent"],
+            id="an answer older than a day is asked again",
+        ),
+        pytest.param(
+            [ApiError("denied")],
+            1,
+            _otel_resources("silent"),
+            [[{"name": {"value": "m"}}], _get_batch_answer(silent=1.0)],
+            ["silent"],
+            id="no answer is asked again",
+        ),
+        pytest.param(
+            [[{"name": {"value": "m"}}], _get_batch_answer(silent=None)],
+            1,
+            _otel_resources("silent", "new"),
+            [[{"name": {"value": "m"}}], _get_batch_answer(silent=None, new=1.0)],
+            ["new"],
+            id="a new resource gets its group asked again",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("storage_path")
+@pytest.mark.asyncio
+async def test_filter_otel_resources_reporting_metrics_keeps_answers_for_a_day(
+    first_answers: Sequence[object],
+    hours_ago: int,
+    resources: Sequence[AzureResource],
+    answers: Sequence[object],
+    expected_names: Sequence[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    now = datetime.datetime.now(datetime.UTC)
+    first_run_client = AsyncMock(spec=BaseAsyncApiClient)
+    first_run_client.request_async.side_effect = first_answers
+    with monkeypatch.context() as patch:
+        patch.setattr(time, "time", lambda: now.timestamp() - hours_ago * 3600)
+        await filter_otel_resources_reporting_metrics(
+            first_run_client, _otel_resources("silent"), "sub", "azure_host", now, debug=False
+        )
+    api_client = AsyncMock(spec=BaseAsyncApiClient)
+    api_client.request_async.side_effect = answers
+
+    kept, _issues = await filter_otel_resources_reporting_metrics(
+        api_client, resources, "sub", "azure_host", now, debug=False
+    )
+
+    assert [resource.name for resource in kept] == expected_names
+
+
+@pytest.mark.parametrize(
+    "resource_group, expected_identity",
+    [
+        pytest.param(
+            "My_RG",
+            {
+                "cmk/metrics_identity/resource/azuremonitor.tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
+                "cmk/metrics_identity/resource/azuremonitor.subscription_id": "mock_subscription_id",
+                "cmk/metrics_identity/data_point/resource_group": "my_rg",
+                "cmk/metrics_identity/data_point/type": "Microsoft.Network/publicIPAddresses",
+                "cmk/metrics_identity/data_point/name": "my-public-ip",
+            },
+            id="resource group in lower case like the receiver sets it",
+        ),
+        pytest.param(
+            "",
+            {
+                "cmk/metrics_identity/resource/azuremonitor.tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
+                "cmk/metrics_identity/resource/azuremonitor.subscription_id": "mock_subscription_id",
+                "cmk/metrics_identity/data_point/type": "Microsoft.Network/publicIPAddresses",
+                "cmk/metrics_identity/data_point/name": "my-public-ip",
+            },
+            id="attribute without a value is left out",
+        ),
+        pytest.param(
+            "rg:100%",
+            {
+                "cmk/metrics_identity/resource/azuremonitor.tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
+                "cmk/metrics_identity/resource/azuremonitor.subscription_id": "mock_subscription_id",
+                "cmk/metrics_identity/data_point/resource_group": "rg%3A100%25",
+                "cmk/metrics_identity/data_point/type": "Microsoft.Network/publicIPAddresses",
+                "cmk/metrics_identity/data_point/name": "my-public-ip",
+            },
+            id="colon and percent sign are percent-encoded",
+        ),
+    ],
+)
+def test_get_otel_identity_labels_section(
+    resource_group: str,
+    expected_identity: Mapping[str, str],
+) -> None:
+    resource = AzureResource(
+        {
+            "id": "my-public-ip_id",
+            "name": "my-public-ip",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "location": "westeurope",
+            "tags": {},
+            "group": resource_group,
+        },
+        TagsImportPatternOption.import_all,
+        fake_azure_subscription(),
+        UniqueHostnamesConfig(),
+    )
+
+    section = get_otel_identity_labels_section(resource)
+
+    assert section._piggytargets == ["my-public-ip"]  # noqa: SLF001
+    assert section._cont == [json.dumps(expected_identity) + "\n"]  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -1524,6 +1816,11 @@ def test_azure_resource(  # type: ignore[misc]
             RESOURCE_DATA_DIFFERENT_TYPE,
             "azr_vm_storage_account_1_6bba70d5",
             id="long hostname for virtual machine (different abbreviation and hash)",
+        ),
+        pytest.param(
+            {**RESOURCE_DATA, "type": "Microsoft.App/containerApps"},
+            "azr_containerapps_storage_account_1_fd882bda",
+            id="long hostname for type without abbreviation (short type as prefix)",
         ),
     ],
 )

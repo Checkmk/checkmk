@@ -100,13 +100,14 @@ def fixture_mock_embedded_view_conversion() -> Iterator[MagicMock]:
 
 class TestMigrateDashboardConfigDefaults:
     def test_sets_defaults_for_missing_fields(self) -> None:
-        dashboard = _make_dashboard()
-        del dashboard["single_infos"]  # type: ignore[misc]
-        del dashboard["context"]  # type: ignore[misc]
-        del dashboard["mandatory_context_filters"]  # type: ignore[misc]
-        del dashboard["widgets"]  # type: ignore[misc]
+        # typing is a total lie below... :-/
+        dashboard: dict[str, object] = _make_dashboard()  # type: ignore[assignment]
+        del dashboard["single_infos"]
+        del dashboard["context"]
+        del dashboard["mandatory_context_filters"]
+        del dashboard["widgets"]
 
-        result = migrate_dashboard_config(dashboard)
+        result = migrate_dashboard_config(dashboard)  # type: ignore[arg-type]
 
         assert result["single_infos"] == []
         assert result["context"] == {}
@@ -175,9 +176,8 @@ class TestMigrateDashboardConfigDashletsToWidgets:
 
 
 class TestMigrateDashboardConfigRelativeGrid:
-    def test_no_layout_key_triggers_widget_migration(
-        self, mock_dashlet_registry: MagicMock
-    ) -> None:
+    @pytest.mark.usefixtures("mock_dashlet_registry")
+    def test_no_layout_key_triggers_widget_migration(self) -> None:
         dashboard = _make_dashboard(widgets={"w1": {"type": "hoststats", "position": (1, 1)}})
         # No "layout" key → defaults to relative_grid → _migrate_widgets runs
         assert "layout" not in dashboard
@@ -188,9 +188,8 @@ class TestMigrateDashboardConfigRelativeGrid:
         assert "size" in result["widgets"]["w1"]  # check widget migration happened
         assert "embedded_views" in result
 
-    def test_explicit_relative_grid_triggers_widget_migration(
-        self, mock_dashlet_registry: MagicMock
-    ) -> None:
+    @pytest.mark.usefixtures("mock_dashlet_registry")
+    def test_explicit_relative_grid_triggers_widget_migration(self) -> None:
         dashboard = _make_dashboard(
             widgets={"w1": {"type": "hoststats", "position": (1, 1)}},
             layout={"type": "relative_grid"},
@@ -218,9 +217,8 @@ class TestMigrateDashboardConfigRelativeGrid:
 
 
 class TestMigrateWidgetsSize:
-    def test_widget_without_size_gets_default_from_registry(
-        self, mock_dashlet_registry: MagicMock
-    ) -> None:
+    @pytest.mark.usefixtures("mock_dashlet_registry")
+    def test_widget_without_size_gets_default_from_registry(self) -> None:
         widget: StatsDashletConfig = {"type": "hoststats", "position": (1, 1)}
         assert "size" not in widget
         dashboard = _make_dashboard(widgets={"w1": widget})
@@ -229,7 +227,8 @@ class TestMigrateWidgetsSize:
 
         assert result["widgets"]["w1"]["size"] == (12, 12)
 
-    def test_widget_with_existing_size_preserved(self, mock_dashlet_registry: MagicMock) -> None:
+    @pytest.mark.usefixtures("mock_dashlet_registry")
+    def test_widget_with_existing_size_preserved(self) -> None:
         widget: StatsDashletConfig = {"type": "hoststats", "position": (1, 1), "size": (30, 18)}
         dashboard = _make_dashboard(widgets={"w1": widget})
 
@@ -239,7 +238,8 @@ class TestMigrateWidgetsSize:
 
 
 class TestMigrateWidgetsViewWidget:
-    def test_view_widget_converted_to_embedded_view(self, mock_dashlet_registry: MagicMock) -> None:
+    @pytest.mark.usefixtures("mock_dashlet_registry")
+    def test_view_widget_converted_to_embedded_view(self) -> None:
         view_widget = _make_view_widget()
         dashboard = _make_dashboard(widgets={"w1": view_widget})
 
@@ -266,9 +266,8 @@ class TestMigrateWidgetsViewWidget:
         assert ev["column_headers"] == "off"
         assert ev["single_infos"] == ["host"]
 
-    def test_view_widget_optional_fields_copied_when_present(
-        self, mock_dashlet_registry: MagicMock
-    ) -> None:
+    @pytest.mark.usefixtures("mock_dashlet_registry")
+    def test_view_widget_optional_fields_copied_when_present(self) -> None:
         view_widget = _make_view_widget(
             background=True,
             context={"host": {"host": "myhost"}},
@@ -301,9 +300,8 @@ class TestMigrateWidgetsViewWidget:
         assert ev["play_sounds"] is True
         assert ev["inventory_join_macros"] == {"macros": []}
 
-    def test_view_widget_optional_fields_absent_when_not_present(
-        self, mock_dashlet_registry: MagicMock
-    ) -> None:
+    @pytest.mark.usefixtures("mock_dashlet_registry")
+    def test_view_widget_optional_fields_absent_when_not_present(self) -> None:
         view_widget = _make_view_widget()
         dashboard = _make_dashboard(widgets={"w1": view_widget})
 
@@ -322,14 +320,17 @@ class TestMigrateWidgetsViewWidget:
         assert "play_sounds" not in ev
         assert "inventory_join_macros" not in ev
 
-    def test_view_widget_missing_embedded_view_fields_get_defaults(
-        self, mock_dashlet_registry: MagicMock
-    ) -> None:
-        view_widget = _make_view_widget()
+    @pytest.mark.usefixtures("mock_dashlet_registry")
+    def test_view_widget_missing_embedded_view_fields_get_defaults(self) -> None:
+        # typing is a total lie below... :-/
+        view_widget: dict[str, object] = _make_view_widget()  # type: ignore[assignment]
 
         # Explicitly delete the fields
-        for key in ("group_painters", "browser_reload", "num_columns", "column_headers", "sorters"):
-            view_widget.pop(key, None)  # type: ignore[misc]
+        view_widget.pop("group_painters", None)
+        view_widget.pop("browser_reload", None)
+        view_widget.pop("num_columns", None)
+        view_widget.pop("column_headers", None)
+        view_widget.pop("sorters", None)
 
         dashboard = _make_dashboard(widgets={"w1": view_widget})
 
@@ -342,7 +343,8 @@ class TestMigrateWidgetsViewWidget:
         assert ev["column_headers"] == "pergroup"
         assert ev["sorters"] == []
 
-    def test_existing_embedded_views_preserved(self, mock_dashlet_registry: MagicMock) -> None:
+    @pytest.mark.usefixtures("mock_dashlet_registry")
+    def test_existing_embedded_views_preserved(self) -> None:
         existing_ev: DashboardEmbeddedViewSpec = {
             "single_infos": [],
             "datasource": "services",
@@ -368,12 +370,10 @@ class TestMigrateWidgetsViewWidget:
 
 
 class TestInternalDashboardToRuntimeDashboard:
-    def test_sets_defaults(
-        self,
-        mock_dashlet_registry: MagicMock,
-        mock_view_conversion: MagicMock,
-        mock_embedded_view_conversion: MagicMock,
-    ) -> None:
+    @pytest.mark.usefixtures(
+        "mock_dashlet_registry", "mock_view_conversion", "mock_embedded_view_conversion"
+    )
+    def test_sets_defaults(self) -> None:
         raw = dict(_make_dashboard())
         del raw["packaged"]
         del raw["main_menu_search_terms"]
@@ -383,12 +383,10 @@ class TestInternalDashboardToRuntimeDashboard:
         assert result["packaged"] is False
         assert result["main_menu_search_terms"] == []
 
-    def test_with_widgets_key_uses_widgets(
-        self,
-        mock_dashlet_registry: MagicMock,
-        mock_view_conversion: MagicMock,
-        mock_embedded_view_conversion: MagicMock,
-    ) -> None:
+    @pytest.mark.usefixtures(
+        "mock_dashlet_registry", "mock_view_conversion", "mock_embedded_view_conversion"
+    )
+    def test_with_widgets_key_uses_widgets(self) -> None:
         widget = {"type": "hoststats", "position": (1, 1), "size": (30, 18)}
         raw = _make_dashboard(widgets={"my-widget": widget})
 
@@ -396,12 +394,10 @@ class TestInternalDashboardToRuntimeDashboard:
 
         assert "my-widget" in result["widgets"]
 
-    def test_with_dashlets_generates_widget_ids(
-        self,
-        mock_dashlet_registry: MagicMock,
-        mock_view_conversion: MagicMock,
-        mock_embedded_view_conversion: MagicMock,
-    ) -> None:
+    @pytest.mark.usefixtures(
+        "mock_dashlet_registry", "mock_view_conversion", "mock_embedded_view_conversion"
+    )
+    def test_with_dashlets_generates_widget_ids(self) -> None:
         raw = dict(_make_dashboard())
         del raw["widgets"]
         raw["dashlets"] = [
@@ -415,11 +411,9 @@ class TestInternalDashboardToRuntimeDashboard:
         assert "test_dashboard-1" in result["widgets"]
         assert "dashlets" not in result
 
+    @pytest.mark.usefixtures("mock_dashlet_registry", "mock_embedded_view_conversion")
     def test_view_widget_calls_internal_view_to_runtime_view(
-        self,
-        mock_dashlet_registry: MagicMock,
-        mock_view_conversion: MagicMock,
-        mock_embedded_view_conversion: MagicMock,
+        self, mock_view_conversion: MagicMock
     ) -> None:
         view_widget = _make_view_widget()
         raw = _make_dashboard(widgets={"w1": view_widget})
@@ -428,12 +422,8 @@ class TestInternalDashboardToRuntimeDashboard:
 
         mock_view_conversion.assert_called_once_with(view_widget)
 
-    def test_non_view_widget_not_transformed(
-        self,
-        mock_dashlet_registry: MagicMock,
-        mock_view_conversion: MagicMock,
-        mock_embedded_view_conversion: MagicMock,
-    ) -> None:
+    @pytest.mark.usefixtures("mock_dashlet_registry", "mock_embedded_view_conversion")
+    def test_non_view_widget_not_transformed(self, mock_view_conversion: MagicMock) -> None:
         widget = {"type": "hoststats", "position": (1, 1), "size": (30, 18)}
         raw = _make_dashboard(widgets={"w1": widget})
 
@@ -442,9 +432,8 @@ class TestInternalDashboardToRuntimeDashboard:
         mock_view_conversion.assert_not_called()
         assert result["widgets"]["w1"]["type"] == "hoststats"
 
-    def test_embedded_views_converted(
-        self, mock_dashlet_registry: MagicMock, mock_view_conversion: MagicMock
-    ) -> None:
+    @pytest.mark.usefixtures("mock_dashlet_registry", "mock_view_conversion")
+    def test_embedded_views_converted(self) -> None:
         raw_ev: DashboardEmbeddedViewSpec = {
             "single_infos": [],
             "datasource": "hosts",
@@ -470,12 +459,10 @@ class TestInternalDashboardToRuntimeDashboard:
         # converted is a marker we added in the side_effect to check that the conversion was applied
         assert result["embedded_views"]["ev1"]["converted"] is True  # type: ignore[typeddict-item]
 
-    def test_no_embedded_views_gives_empty_dict(
-        self,
-        mock_dashlet_registry: MagicMock,
-        mock_view_conversion: MagicMock,
-        mock_embedded_view_conversion: MagicMock,
-    ) -> None:
+    @pytest.mark.usefixtures(
+        "mock_dashlet_registry", "mock_view_conversion", "mock_embedded_view_conversion"
+    )
+    def test_no_embedded_views_gives_empty_dict(self) -> None:
         raw = _make_dashboard(
             embedded_views={},
             layout={"type": "responsive_grid", "layouts": {}},
@@ -485,12 +472,10 @@ class TestInternalDashboardToRuntimeDashboard:
 
         assert result["embedded_views"] == {}
 
-    def test_dashlets_key_removed_from_output(
-        self,
-        mock_dashlet_registry: MagicMock,
-        mock_view_conversion: MagicMock,
-        mock_embedded_view_conversion: MagicMock,
-    ) -> None:
+    @pytest.mark.usefixtures(
+        "mock_dashlet_registry", "mock_view_conversion", "mock_embedded_view_conversion"
+    )
+    def test_dashlets_key_removed_from_output(self) -> None:
         raw = dict(_make_dashboard())
         raw["dashlets"] = [{"type": "hoststats", "position": (1, 1), "size": (30, 18)}]
         del raw["widgets"]
@@ -498,3 +483,209 @@ class TestInternalDashboardToRuntimeDashboard:
         result = _internal_dashboard_to_runtime_dashboard(raw)
 
         assert "dashlets" not in result
+
+
+def _responsive_dashboard(widget: dict[str, object]) -> MaybeOldDashboardConfig:
+    return _make_dashboard(
+        layout={"type": "responsive_grid", "layouts": {}}, widgets={"w1": widget}
+    )
+
+
+class TestMigrateMetricTimeRange:
+    def test_a_stored_current_value_becomes_a_typed_dict(self) -> None:
+        dashboard = _responsive_dashboard(
+            {"type": "single_metric", "metric": "load1", "time_range": "current"}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == {"type": "current"}  # type: ignore[typeddict-item]
+
+    def test_a_stored_fixed_window_becomes_a_typed_dict(self) -> None:
+        dashboard = _responsive_dashboard(
+            {
+                "type": "gauge",
+                "metric": "load1",
+                "time_range": ("range", {"window": 14400, "rrd_consolidation": "max"}),
+            }
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == {  # type: ignore[typeddict-item]
+            "type": "range",
+            "window": 14400,
+            "rrd_consolidation": "max",
+        }
+
+    def test_a_migrated_time_range_stays_unchanged(self) -> None:
+        time_range = {"type": "range", "window": 14400, "rrd_consolidation": "max"}
+        dashboard = _responsive_dashboard(
+            {"type": "single_metric", "metric": "load1", "time_range": time_range}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == time_range  # type: ignore[typeddict-item]
+
+    def test_another_widget_type_keeps_its_time_range(self) -> None:
+        dashboard = _responsive_dashboard({"type": "hoststats", "time_range": ("age", 3600)})
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == ("age", 3600)  # type: ignore[typeddict-item]
+
+
+class TestMigrateAlertOverviewTimeRange:
+    def test_a_stored_timerange_becomes_a_fixed_window(self) -> None:
+        dashboard = _responsive_dashboard({"type": "alert_overview", "time_range": ("age", 3600)})
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == {  # type: ignore[typeddict-item]
+            "type": "range",
+            "window": ("age", 3600),
+        }
+
+    def test_a_migrated_time_range_stays_unchanged(self) -> None:
+        time_range = {"type": "range", "window": "d0"}
+        dashboard = _responsive_dashboard({"type": "alert_overview", "time_range": time_range})
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == time_range  # type: ignore[typeddict-item]
+
+
+class TestMigrateTimelineTimeRange:
+    @pytest.mark.parametrize(
+        "render_mode",
+        [
+            ("bar_chart", {"time_range": 90000, "time_resolution": "h"}),
+            ("simple_number", {"time_range": ("age", 3600)}),
+        ],
+    )
+    def test_a_stored_timerange_becomes_a_fixed_window(
+        self, render_mode: tuple[str, dict[str, object]]
+    ) -> None:
+        mode, parameters = render_mode
+        dashboard = _responsive_dashboard(
+            {"type": "alerts_bar_chart", "render_mode": render_mode, "log_target": "both"}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["render_mode"] == (  # type: ignore[typeddict-item]
+            mode,
+            {**parameters, "time_range": {"type": "range", "window": parameters["time_range"]}},
+        )
+
+    def test_a_migrated_time_range_stays_unchanged(self) -> None:
+        render_mode = ("simple_number", {"time_range": {"type": "dashboard"}})
+        dashboard = _responsive_dashboard(
+            {"type": "notifications_bar_chart", "render_mode": render_mode, "log_target": "both"}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["render_mode"] == render_mode  # type: ignore[typeddict-item]
+
+    def test_another_widget_with_a_render_mode_stays_unchanged(self) -> None:
+        widget = {"type": "hoststats", "render_mode": ("bar_chart", {"time_range": 90000})}
+        dashboard = _responsive_dashboard(dict(widget))
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"] == widget
+
+
+class TestClampTimelineWindow:
+    @pytest.mark.parametrize("widget_type", ["alerts_bar_chart", "notifications_bar_chart"])
+    def test_a_stored_window_over_two_years_is_cut(self, widget_type: str) -> None:
+        dashboard = _responsive_dashboard(
+            {
+                "type": widget_type,
+                "render_mode": (
+                    "bar_chart",
+                    {"time_range": ("age", 800 * 86400), "time_resolution": "d"},
+                ),
+                "log_target": "both",
+            }
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["render_mode"] == (  # type: ignore[typeddict-item]
+            "bar_chart",
+            {
+                "time_range": {"type": "range", "window": ("age", 730 * 86400)},
+                "time_resolution": "d",
+            },
+        )
+
+    def test_a_window_that_follows_the_dashboard_stays_unchanged(self) -> None:
+        render_mode = ("simple_number", {"time_range": {"type": "dashboard"}})
+        dashboard = _responsive_dashboard(
+            {"type": "alerts_bar_chart", "render_mode": render_mode, "log_target": "both"}
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["render_mode"] == render_mode  # type: ignore[typeddict-item]
+
+    def test_another_widget_keeps_a_window_over_two_years(self) -> None:
+        time_range = {"type": "range", "window": ("age", 800 * 86400)}
+        dashboard = _responsive_dashboard({"type": "alert_overview", "time_range": time_range})
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["time_range"] == time_range  # type: ignore[typeddict-item]
+
+
+class TestMigrateInventoryLink:
+    def test_a_stored_link_spec_becomes_an_inherited_link(self) -> None:
+        dashboard = _responsive_dashboard(
+            {
+                "type": "inventory",
+                "inventory_path": ".hardware.cpu.cores",
+                "link_spec": ("views", "host"),
+            }
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"] == {
+            "type": "inventory",
+            "inventory_path": ".hardware.cpu.cores",
+            "contextual_link": {
+                "type": "inherited",
+                "location": ("views", "host"),
+                "include_context": False,
+                "include_time_range": False,
+                "show_filter_form": False,
+            },
+        }
+
+    def test_a_migrated_link_stays_unchanged(self) -> None:
+        widget = {
+            "type": "inventory",
+            "inventory_path": ".hardware.cpu.cores",
+            "contextual_link": {
+                "type": "inherited",
+                "location": ("dashboards", "main"),
+                "include_context": True,
+                "include_time_range": False,
+                "show_filter_form": True,
+            },
+        }
+        dashboard = _responsive_dashboard(dict(widget))
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"] == widget
+
+    def test_another_widget_type_keeps_its_link_spec(self) -> None:
+        dashboard = _responsive_dashboard({"type": "hoststats", "link_spec": ("views", "host")})
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["link_spec"] == ("views", "host")  # type: ignore[typeddict-item]

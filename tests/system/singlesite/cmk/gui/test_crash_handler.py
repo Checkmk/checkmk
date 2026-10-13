@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import base64
 import json
 from collections.abc import Iterator
@@ -9,8 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.site import Site
-from tests.testlib.web_session import CMKWebSession
+from tests.testlib.system.site import Site
+from tests.testlib.system.web_session import CMKWebSession
 
 FAULTY_PAGE = """
 from cmk.gui.pages import AjaxPage, page_registry, PageEndpoint
@@ -52,7 +53,8 @@ def _get_crash_report(site: Site) -> tuple[Path, dict[str, object]] | None:
 
 
 @pytest.mark.skip_if_edition("cloud")
-def test_crash_report(site: Site, faulty_page: None) -> None:
+@pytest.mark.usefixtures("faulty_page")
+def test_crash_report(site: Site) -> None:
     web = CMKWebSession(site)
     web.login()
     web.get("foo.py?password=get_var_secret")

@@ -1,18 +1,48 @@
+load("@aspect_bazel_lib//lib:copy_file.bzl", "copy_file")
 load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
+load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@aspect_rules_webpack//webpack:defs.bzl", "webpack_bundle")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//packages/cmk-frontend:webpack-cli/package_json.bzl", webpack_cli_bin = "bin")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:py_test.bzl", "py_test")
 load("//bazel/rules:css_library.bzl", "css_library")
 load("//bazel/rules:dependency_info.bzl", "dependency_info")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 
 exports_files(["package.json"])
 
 npm_link_all_packages(name = "node_modules")
+
+# The import resolver needs the path aliases, but ts_project already writes
+# tsconfig.json to this package's bin directory, so lint gets it under its own
+# name rather than a second copy of the same output.
+copy_file(
+    name = "eslint_tsconfig",
+    src = "tsconfig.json",
+    out = "tsconfig.eslint.json",
+)
+
+js_library(
+    name = "eslintrc",
+    srcs = [
+        # import-x/no-unused-modules enumerates the sources itself and insists on
+        # an eslintrc next to them, see eslint.config.mjs.
+        ".eslintrc.json",
+        "eslint.config.mjs",
+        "package.json",
+        ":eslint_tsconfig",
+    ],
+    tags = ["no-lint"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/eslint-import-resolver-typescript",
+        ":node_modules/eslint-plugin-import-x",
+        ":node_modules/eslint-plugin-no-unsanitized",
+    ],
+)
 
 dependency_info(
     name = "redoc_dependency_info",
@@ -21,7 +51,7 @@ dependency_info(
     license_text = "src/openapi/redoc.standalone.js.LICENSE.txt",
     purl_namespace = None,
     purl_type = "npm",
-    version = "2.2.0",
+    version = "2.5.3",
 )
 
 copy_to_bin(
@@ -84,7 +114,6 @@ BUILD_DEPS = [
     ":node_modules/css-loader",
     ":node_modules/d3",
     ":node_modules/d3-flextree",
-    ":node_modules/d3-hexbin",
     ":node_modules/d3-sankey",
     ":node_modules/element-closest-polyfill",
     ":node_modules/extract-loader",
@@ -115,6 +144,15 @@ webpack_bundle(
     ],
     webpack_config = ":webpack.config.js",
     deps = BUILD_DEPS,
+)
+
+copy_to_bin(
+    name = "theme_images",
+    srcs = glob(["src/themes/*/images/**"]),
+    visibility = [
+        "//packages/cmk-frontend-vue:__pkg__",
+        "//packages/cmk-ui-library:__pkg__",
+    ],
 )
 
 webpack_cli_bin.webpack_cli_binary(
@@ -148,7 +186,10 @@ ts_project(
     no_emit = True,
     transpiler = "tsc",
     visibility = ["//packages:__subpackages__"],
-    deps = BUILD_DEPS,
+    # "bundler" module resolution reports unresolvable side-effect imports, which
+    # the previous "node10" resolution silently ignored. Only the tests import
+    # this one, hence the addition here rather than in BUILD_DEPS.
+    deps = BUILD_DEPS + [":node_modules/fake-indexeddb"],
 )
 
 build_test(
@@ -183,8 +224,6 @@ alias(
 sh_library(
     name = "helpers",
     srcs = [
-        ".f12",
         "run",
-        "src/openapi/.f12",
     ],
 )

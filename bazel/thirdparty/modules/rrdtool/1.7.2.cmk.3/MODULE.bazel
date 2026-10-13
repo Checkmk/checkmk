@@ -1,0 +1,14 @@
+module(
+    name = "rrdtool",
+    version = "1.7.2.cmk.3",
+    bazel_compatibility = [">=7.2.1"],
+    compatibility_level = 1,
+)
+
+bazel_dep(name = "aspect_rules_py", version = "1.5.2")
+bazel_dep(name = "cmk", version = "0.0.0")
+bazel_dep(name = "glib", version = "2.82.2.bcr.9")
+bazel_dep(name = "libxml2", version = "2.15.3")
+bazel_dep(name = "package_metadata", version = "0.0.7")
+bazel_dep(name = "rules_cc", version = "0.2.11")
+bazel_dep(name = "rules_python", version = "1.6.0")

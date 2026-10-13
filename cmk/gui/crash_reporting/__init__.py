@@ -12,7 +12,7 @@ from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.hooks import register_builtin
 from cmk.gui.pages import PageRegistry
-from cmk.gui.painter.v0 import PainterRegistry
+from cmk.gui.painter import PainterRegistry
 from cmk.gui.views.command import CommandRegistry
 from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.visuals.filter import FilterRegistry
@@ -39,16 +39,16 @@ from .views import (
     FilterCrashTime,
     FilterCrashType,
     FilterCrashVersion,
-    PainterCrashCheckType,
-    PainterCrashException,
-    PainterCrashHost,
-    PainterCrashIdent,
-    PainterCrashItem,
-    PainterCrashServiceName,
-    PainterCrashSource,
-    PainterCrashTime,
-    PainterCrashType,
-    PainterCrashVersion,
+    make_crash_check_type_painter,
+    make_crash_exception_painter,
+    make_crash_host_painter,
+    make_crash_ident_painter,
+    make_crash_item_painter,
+    make_crash_service_name_painter,
+    make_crash_source_painter,
+    make_crash_time_painter,
+    make_crash_type_painter,
+    make_crash_version_painter,
     SorterCrashCheckType,
     SorterCrashException,
     SorterCrashHost,
@@ -62,7 +62,7 @@ from .views import (
 )
 
 
-def _cleanup_crashes_job(config: Config) -> None:
+def _cleanup_crashes_job(config: Config) -> None:  # noqa: ARG001
     cleanup_crash_reports(make_crash_report_base_path(cmk.utils.paths.omd_root))
 
 
@@ -72,7 +72,7 @@ def register(
     painter_registry: PainterRegistry,
     sorter_registry: SorterRegistry,
     command_registry: CommandRegistry,
-    config_variable_group_registry: ConfigVariableGroupRegistry,
+    config_variable_group_registry: ConfigVariableGroupRegistry,  # noqa: ARG001
     config_variable_registry: ConfigVariableRegistry,
     filter_registry: FilterRegistry,
     cron_job_registry: CronJobRegistry,
@@ -101,16 +101,16 @@ def register(
     sorter_registry.register(SorterCrashType)
     sorter_registry.register(SorterCrashVersion)
     command_registry.register(CommandDeleteCrashReports)
-    painter_registry.register(PainterCrashCheckType)
-    painter_registry.register(PainterCrashException)
-    painter_registry.register(PainterCrashHost)
-    painter_registry.register(PainterCrashIdent)
-    painter_registry.register(PainterCrashItem)
-    painter_registry.register(PainterCrashServiceName)
-    painter_registry.register(PainterCrashSource)
-    painter_registry.register(PainterCrashTime)
-    painter_registry.register(PainterCrashType)
-    painter_registry.register(PainterCrashVersion)
+    painter_registry.register(make_crash_check_type_painter())
+    painter_registry.register(make_crash_exception_painter())
+    painter_registry.register(make_crash_host_painter())
+    painter_registry.register(make_crash_ident_painter())
+    painter_registry.register(make_crash_item_painter())
+    painter_registry.register(make_crash_service_name_painter())
+    painter_registry.register(make_crash_source_painter())
+    painter_registry.register(make_crash_time_painter())
+    painter_registry.register(make_crash_type_painter())
+    painter_registry.register(make_crash_version_painter())
     config_variable_registry.register(ConfigVariableCrashReportTarget)
     config_variable_registry.register(ConfigVariableCrashReportURL)
     config_variable_registry.register(ConfigVariableAutomaticCrashReportUpload)

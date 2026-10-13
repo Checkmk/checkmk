@@ -3,10 +3,14 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { type Ref, ref, watch } from 'vue'
 
 import { ElementSelection } from '@/dashboard/components/Wizard/types'
 import { DashboardFeatures } from '@/dashboard/types/dashboard'
+
+const { _t } = usei18n()
 
 export enum Graph {
   SERVICE_STATE = 'service_state',
@@ -68,3 +72,8 @@ export const getAvailableGraphs = (
   }
   return [...graphSelector[hostSelection][serviceSelection]]
 }
+
+export const getDisabledTooltip = (dashboardFeatures: DashboardFeatures): TranslatedString =>
+  dashboardFeatures === DashboardFeatures.RESTRICTED
+    ? _t('Available in Checkmk Pro or higher.')
+    : _t('Only available for a single host and a single service.')

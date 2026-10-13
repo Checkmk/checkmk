@@ -13,8 +13,9 @@ from pytest import MonkeyPatch
 import cmk.ec.export as ec
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.gui.config import Config
 from cmk.gui.mkeventd import wato as mkeventd_wato
-from cmk.gui.search.matchers import MatchItem
+from cmk.gui.search.matchers import MatchItem, MatchItemConfig
 from cmk.gui.utils.roles import UserPermissions
 
 
@@ -40,7 +41,9 @@ def test_match_item_generator_ec_rule_packs_and_rules() -> None:
         mkeventd_wato.MatchItemGeneratorECRulePacksAndRules(
             "event_console",
             lambda: rule_packs,
-        ).generate_match_items(UserPermissions({}, {}, {}, []))
+        ).generate_match_items(
+            UserPermissions({}, {}, {}, []), MatchItemConfig.from_config(Config())
+        )
     ) == [
         MatchItem(
             title="rule_pack_id (Rule pack)",

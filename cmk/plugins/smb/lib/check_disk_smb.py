@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 
-from __future__ import annotations
 
 import argparse
 import re
@@ -17,7 +16,7 @@ from dataclasses import dataclass
 from typing import override, Protocol
 
 from cmk.agent_based.v2 import render
-from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
 
 PASSWORD_OPTION = "password"
 
@@ -116,7 +115,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         metavar="PORT",
         help="Port to be used to connect to. Some Windows boxes use 139, others 445.",
     )
-    parser.add_argument(
+    parser.add_argument(  # astrein: disable=argparse-nargs
         "--levels",
         type=float,
         nargs=2,

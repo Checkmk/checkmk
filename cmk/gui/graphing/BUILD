@@ -10,6 +10,7 @@ py_library(
     imports = ["../../.."],
     visibility = [
         "//cmk:__subpackages__",
+        "//packages/cmk-maps:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -18,7 +19,6 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui:html_toolkit",
         "//cmk/gui:page_toolkit",
-        "//cmk/gui:pdf",
         "//cmk/gui/form_specs",
         "//cmk/gui/utils",
         "//cmk/gui/utils:middle",
@@ -31,15 +31,16 @@ py_library(
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:resulttype",
         "//packages/cmk-ccc:site",
-        "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-graphing-engine",
         "//packages/cmk-livestatus-client",
+        "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:graphing",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-web/cmk/web/utils",
         requirement("python-dateutil"),
         requirement("tzlocal"),
+        requirement("matplotlib"),
     ],
 )
 

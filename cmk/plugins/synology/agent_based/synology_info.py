@@ -9,14 +9,13 @@ from dataclasses import dataclass
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 from cmk.plugins.synology import lib as synology
 
 
@@ -27,7 +26,7 @@ class Section:
     os: str
 
     @classmethod
-    def from_row(cls, row: Sequence[str]) -> "Section":
+    def from_row(cls, row: Sequence[str]) -> Section:
         return cls(model=row[0], serialnumber=row[1], os=row[2])
 
 
@@ -56,10 +55,6 @@ snmp_section_synology_info = SimpleSNMPSection(
 )
 
 
-def discovery(section: Section) -> DiscoveryResult:
-    yield Service()
-
-
 def check(section: Section) -> CheckResult:
     summary = f"Model: {section.model}, S/N: {section.serialnumber}, OS Version: {section.os}"
     yield Result(state=State.OK, summary=summary)
@@ -69,6 +64,6 @@ check_plugin_synology_info = CheckPlugin(
     name="synology_info",
     sections=["synology_info"],
     service_name="Info",
-    discovery_function=discovery,
+    discovery_function=discover_one_service,
     check_function=check,
 )

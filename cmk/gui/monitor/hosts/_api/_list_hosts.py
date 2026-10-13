@@ -2,8 +2,9 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence, Set
-from typing import Annotated, Self
+from collections.abc import Callable, Sequence, Set
+from http import HTTPStatus
+from typing import Annotated, Final, Self
 
 from annotated_types import Interval
 from pydantic import PlainValidator
@@ -24,6 +25,8 @@ from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
 from cmk.web.utils import permission_verification as permissions
 
+from .._customer import customer_resolver
+from .._folder import monitor_folders
 from .._impl import LiveStatusHostRepository
 from .._models import (
     Host,
@@ -37,6 +40,7 @@ from .._models import (
     UnixTimestamp,
 )
 from .._repositories import HostRepository
+from .._site import MonitorSite, MonitorSites
 from ._family import MONITOR_HOSTS_FAMILY
 from ._filters import extract_site_scope, FilterNode, parse_as_livestatus_filter
 from ._modes import build_host_modes, ModeInfo
@@ -48,6 +52,9 @@ from ._validators import parse_host_search_query, parse_host_sort_options
 _MIN_NUMBER_OF_HOSTS = 0
 _MAX_NUMBER_OF_HOSTS = 5_000
 _DEFAULT_LIMIT = 1_000
+
+# The row limits the All hosts page offers: the default first, the maximum last.
+LIMIT_TIERS: Final = (_DEFAULT_LIMIT, _MAX_NUMBER_OF_HOSTS)
 
 _DEFAULT_SORT = (HostSort(column=HostSortColumn.NAME, direction=HostSortDirection.ASC),)
 
@@ -67,7 +74,17 @@ _DEFAULT_FIELDS: frozenset[HostOptionalField] = frozenset(
 @api_model
 class HostEntry:
     name: str = api_field(description="Host name", example="web-server-01")
-    state: HostStateLabel = api_field(description="Host state", example="UP")
+    state: HostStateLabel = api_field(
+        description=(
+            "Host state. 'PENDING' means the host has never been checked, i.e. its state is "
+            "still pending the first check result"
+        ),
+        example="UP",
+    )
+    is_flapping: bool = api_field(description="Whether the host state is flapping", example=False)
+    stale: bool = api_field(
+        description="Whether the host hasn't been checked recently enough", example=False
+    )
     site_id: str = api_field(description="Site ID", example="local")
     address: str | ApiOmitted = api_field(
         description="Primary IP address",
@@ -111,10 +128,11 @@ class HostEntry:
     )
     folder: str | ApiOmitted = api_field(
         description=(
-            "The Setup folder path the host is configured in. Null when the host isn't managed "
-            "via Setup, e.g. it was added directly to the monitoring core."
+            "The title Setup gives the folder the host is configured in: the titles down to it, "
+            "'Main' for the root folder. Empty when Setup knows no such folder, e.g. the host "
+            "isn't managed via Setup or a remote site owns it."
         ),
-        example="/network/switches",
+        example="Data center Munich / Rack 1",
         default_factory=ApiOmitted,
     )
     last_check: UnixTimestamp | ApiOmitted = api_field(
@@ -147,6 +165,15 @@ class HostEntry:
         example=["all"],
         default_factory=ApiOmitted,
     )
+    customer: str | ApiOmitted = api_field(
+        description=(
+            "Name of the customer the host belongs to, which is the customer of the site "
+            "monitoring it. Only editions with multi-tenancy support assign customers, so this "
+            "is omitted everywhere else."
+        ),
+        example="Customer A",
+        default_factory=ApiOmitted,
+    )
     modes: list[ModeInfo] | ApiOmitted = api_field(
         description=(
             "Active host modes (e.g. scheduled downtime, acknowledgement) rendered as linked "
@@ -159,37 +186,49 @@ class HostEntry:
         description="URL to legacy host status view",
         example="view.py?view_name=hoststatus&host=web-server-01&site=local",
     )
+    num_relations: int | ApiOmitted = api_field(
+        description=(
+            "Number of hosts related to this host via the Setup 'Relations' feature (management "
+            "board / OS hosts). The related hosts themselves are shown in the host details, so "
+            "the listing carries the count only. 0 when the host has no relations."
+        ),
+        example=2,
+        default_factory=ApiOmitted,
+    )
+
+    setup_access: bool | ApiOmitted = api_field(
+        description=(
+            "Whether the user may open the host in Setup, where it may be restricted to the "
+            "contact groups its permissions name. False for a host Setup does not know, such as "
+            "one added straight to the monitoring core."
+        ),
+        example=True,
+        default_factory=ApiOmitted,
+    )
 
     @classmethod
-    def from_domain(cls, host: Host, fields: Set[HostOptionalField]) -> Self:
+    def from_domain(cls, host: Host, fields: Set[HostOptionalField], customer: str | None) -> Self:
         def included[T](field: HostOptionalField, value: T | None) -> T | ApiOmitted:
             """Return the value only if it was asked for and therefore actually read."""
             return value if field in fields and value is not None else ApiOmitted()
 
-        counts = host.service_counts
         return cls(
             name=host.name,
             state=host.state_label,
+            is_flapping=host.is_flapping,
+            stale=host.stale,
             site_id=host.site_id,
             address=included(HostOptionalField.ADDRESS, host.address),
             alias=included(HostOptionalField.ALIAS, host.alias),
-            num_services=included(
-                HostOptionalField.NUM_SERVICES, None if counts is None else counts.total
-            ),
-            num_services_ok=included(
-                HostOptionalField.NUM_SERVICES_OK, None if counts is None else counts.ok
-            ),
-            num_services_warn=included(
-                HostOptionalField.NUM_SERVICES_WARN, None if counts is None else counts.warn
-            ),
-            num_services_crit=included(
-                HostOptionalField.NUM_SERVICES_CRIT, None if counts is None else counts.crit
-            ),
+            num_services=included(HostOptionalField.NUM_SERVICES, host.num_services),
+            num_services_ok=included(HostOptionalField.NUM_SERVICES_OK, host.num_services_ok),
+            num_services_warn=included(HostOptionalField.NUM_SERVICES_WARN, host.num_services_warn),
+            num_services_crit=included(HostOptionalField.NUM_SERVICES_CRIT, host.num_services_crit),
             num_services_unknown=included(
-                HostOptionalField.NUM_SERVICES_UNKNOWN, None if counts is None else counts.unknown
+                HostOptionalField.NUM_SERVICES_UNKNOWN, host.num_services_unknown
             ),
             num_services_pending=included(
-                HostOptionalField.NUM_SERVICES_PENDING, None if counts is None else counts.pending
+                HostOptionalField.NUM_SERVICES_PENDING, host.num_services_pending
             ),
             folder=included(HostOptionalField.FOLDER, host.folder),
             last_check=included(HostOptionalField.LAST_CHECK, host.last_check),
@@ -198,8 +237,11 @@ class HostEntry:
             tags=included(HostOptionalField.TAGS, host.tags),
             contacts=included(HostOptionalField.CONTACTS, host.contacts),
             contact_groups=included(HostOptionalField.CONTACT_GROUPS, host.contact_groups),
+            customer=ApiOmitted() if customer is None else customer,
             modes=build_host_modes(host) or ApiOmitted(),
             legacy_host_status_link=host_view_link("hoststatus", host),
+            num_relations=included(HostOptionalField.NUM_RELATIONS, host.num_relations),
+            setup_access=included(HostOptionalField.SETUP_ACCESS, host.setup_access),
         )
 
 
@@ -252,8 +294,10 @@ class HostsRequestBody:
         PlainValidator(func=parse_host_search_query, json_schema_input_type=str),
     ] = api_field(
         description=(
-            "Search text, matched against the host name and every text field asked for through "
-            "`fields` (alias, address, folder). Omit or pass empty string to return all hosts."
+            "Search text, matched against the host name, the site, the customer and every "
+            "text field asked for through `fields` (alias, address, folder, labels, tags, "
+            "contacts, contact groups). Site and customer are searched whether or not their "
+            "column is shown. Omit or pass empty string to return all hosts."
         ),
         example="web-server",
         default_factory=ApiOmitted,
@@ -300,10 +344,18 @@ def list_hosts(
             )
         except ValueError as exc:
             raise RestAPIRequestGeneralException(
-                status=400, title="Invalid filter", detail=str(exc)
+                status=HTTPStatus.BAD_REQUEST, title="Invalid filter", detail=str(exc)
             ) from exc
 
-    host_repo = LiveStatusHostRepository(connection=sites.live())
+    customer_of = customer_resolver(sites=api_context.config.sites)
+    host_repo = LiveStatusHostRepository(
+        connection=sites.live(),
+        folders=monitor_folders,
+        sites=MonitorSites(
+            MonitorSite(id=site_id, customer=customer_of(site_id))
+            for site_id in api_context.config.sites
+        ),
+    )
 
     # NOTE: we never want this value scoped by the selected sites. It should always get full count.
     # As a temporary solution, we are querying count here and passing the result to the handler.
@@ -312,6 +364,7 @@ def list_hosts(
     total_host_count = host_repo.count_total()
 
     fields = _DEFAULT_FIELDS if isinstance(body.fields, ApiOmitted) else body.fields
+    sorters = _DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort
 
     # `sites.only_sites([])` can't express "query zero sites"; an empty list is falsy to it and
     # gets treated as "no restriction" instead, i.e. every site. This happens when the filter
@@ -323,16 +376,26 @@ def list_hosts(
             meta=HostsPageMeta(limit=limit, matched=0, total=total_host_count, fields=fields),
         )
 
+    # Like the total count above, and for the same reason: what a host is related to does not
+    # change with the sites the reader has filtered the listing down to.
+    visible_relations = host_repo.visible_relation_hosts(fields=fields, sorters=sorters)
+
     with sites.only_sites(site_ids):
         return _handle_list_hosts(
             host_repo,
             total_host_count,
             limit=limit,
             query="" if isinstance(body.q, ApiOmitted) else body.q,
-            sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
-            filters=HostFilter("") if filters is None else parse_as_livestatus_filter(filters),
+            sorters=sorters,
+            filters=(
+                HostFilter("")
+                if filters is None
+                else parse_as_livestatus_filter(filters, setup_folders=monitor_folders.titles)
+            ),
             fields=fields,
             site_ids=site_ids,
+            customer_of=customer_of,
+            visible_relations=visible_relations,
         )
 
 
@@ -346,6 +409,8 @@ def _handle_list_hosts(
     filters: HostFilter = HostFilter(""),
     fields: Set[HostOptionalField] = _DEFAULT_FIELDS,
     site_ids: Sequence[SiteId] | None = None,
+    customer_of: Callable[[str], str | None] = lambda _site_id: None,
+    visible_relations: frozenset[tuple[str, str]] | None = None,
 ) -> HostsResponse:
     # Derived from the same `site_ids` the caller scoped the connection with via `only_sites`,
     # rather than taken as a separately-passed flag, so the two can't drift apart.
@@ -357,6 +422,7 @@ def _handle_list_hosts(
         sorters=sorters,
         filters=filters,
         fields=fields,
+        visible_relations=visible_relations,
     )
     # `limit` reaches Livestatus as a per-site cap (queried in parallel across sites, then merged
     # and sorted here), so a multi-site fetch can come back with up to `limit * len(sites)` rows.
@@ -372,7 +438,7 @@ def _handle_list_hosts(
         matched_host_count = total_host_count
 
     return HostsResponse(
-        hosts=[HostEntry.from_domain(host, fields) for host in hosts],
+        hosts=[HostEntry.from_domain(host, fields, customer_of(host.site_id)) for host in hosts],
         meta=HostsPageMeta(
             limit=limit,
             matched=matched_host_count,
@@ -398,11 +464,14 @@ ENDPOINT_LIST_HOSTS = VersionedEndpoint(
                     permissions.OkayToIgnorePerm("bi.see_all"),
                     permissions.OkayToIgnorePerm("mkeventd.seeall"),
                     permissions.OkayToIgnorePerm("general.ignore_hard_limit"),
+                    # Read while titling a folder, on an installation that keeps the folders a
+                    # user may not read out of sight.
+                    permissions.OkayToIgnorePerm("wato.see_all_folders"),
                 ]
             )
         )
     ),
     doc=EndpointDoc(family=MONITOR_HOSTS_FAMILY.name),
-    behavior=EndpointBehavior(skip_locking=True),
+    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_hosts)},
 )

@@ -12,7 +12,7 @@ from typing import Literal, Never, Self
 
 from pydantic import BaseModel
 
-from cmk.bakery.v2_unstable import BakeryPlugin, FileGenerator, OS, Plugin, PluginConfig, Secret
+from cmk.bakery.v2 import BakeryPlugin, FileGenerator, OS, Plugin, PluginConfig, Secret
 
 type _ValueTypeType = Literal["number", "string", "rate"]
 
@@ -32,8 +32,14 @@ class SetupConfigCustomVars(BaseModel, frozen=True):
     title: str | None = None
 
 
+type _VerifyConfig = (
+    tuple[Literal["trust_store", "disabled"], None] | tuple[Literal["ca_file"], str]
+)
+
+
 class SetupConfigElement(BaseModel, frozen=True):
     protocol: Literal["http", "https"] | None = None
+    verify: _VerifyConfig | None = None
     server: tuple[str, str | None] | None = None
     port: int | None = None
     timeout: float | None = None
@@ -43,13 +49,15 @@ class SetupConfigElement(BaseModel, frozen=True):
     custom_vars: Sequence[SetupConfigCustomVars] = ()
 
 
-class SetupConfig(SetupConfigElement):
+class SetupConfig(BaseModel, frozen=True):
+    deployment: Literal["sync", "do_not_deploy"]
+    main_instance: SetupConfigElement
     instances: Sequence[SetupConfigElement] = ()
-    deployment: Literal["sync", "do_not_deploy"] | None = None
 
 
 type PluginConfigInstanceKey = Literal[
     "protocol",
+    "verify",
     "server",
     "port",
     "timeout",
@@ -106,7 +114,7 @@ def get_mk_jolokia_files(config: SetupConfig) -> FileGenerator:
 def _get_mk_jolokia_config(conf: SetupConfig) -> Iterable[str]:
     yield "# Default values"
 
-    for key, value in _key_value_pairs(conf):
+    for key, value in _key_value_pairs(conf.main_instance):
         yield from f"{key} = {pformat(value)}".split("\n")
 
     if conf.instances:
@@ -121,6 +129,8 @@ def _key_value_pairs(
 ) -> Iterable[tuple[PluginConfigInstanceKey, object]]:
     if options.protocol is not None:
         yield "protocol", options.protocol
+    if options.verify is not None:
+        yield "verify", _transform_verify_conf(options.verify)
     yield "server", _transform_server_conf(options.server)
     if options.port is not None:
         yield "port", options.port
@@ -142,6 +152,17 @@ def _key_value_pairs(
                 for custom_var_dict in options.custom_vars
             ],
         )
+
+
+def _transform_verify_conf(value: _VerifyConfig) -> bool | str:
+    """Map the verification choice onto the `verify` value expected by mk_jolokia."""
+    match value:
+        case ("ca_file", path):
+            return path
+        case ("disabled", _):
+            return False
+        case ("trust_store", _):
+            return True
 
 
 def _transform_server_conf(value: tuple[str, str | None] | None) -> str:

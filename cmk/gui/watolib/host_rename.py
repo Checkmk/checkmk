@@ -28,11 +28,12 @@ from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import CustomUserAttrSpec
+from cmk.gui.type_defs import CustomHostAttrSpec, CustomUserAttrSpec
 from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
+from cmk.gui.watolib import bakery
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import (
     make_automation_config,
@@ -46,6 +47,7 @@ from cmk.gui.watolib.pending_changes import (
     PendingChangesStore,
 )
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
+from cmk.ruleset_matcher.tags import TagConfig, TagConfigSpec
 from cmk.utils.agent_registration import UUIDLinkManager
 from cmk.utils.automation_config import LocalAutomationConfig
 from cmk.utils.object_diff import make_diff_text
@@ -58,9 +60,9 @@ from .check_mk_automations import rename_hosts
 from .hosts_and_folders import (
     call_hook_hosts_changed,
     Folder,
-    folder_tree,
     FolderTree,
     Host,
+    HostsAndFoldersConfig,
     rename_host_in_list,
 )
 from .notifications import NotificationRuleConfigFile
@@ -107,6 +109,7 @@ rename_host_in_rule_value_registry = RenameHostInRuleValueRegistry()
 
 
 def perform_rename_hosts(
+    tree: FolderTree,
     renamings: Iterable[tuple[Folder, HostName, HostName]],
     job_interface: BackgroundProcessInterface,
     *,
@@ -134,6 +137,7 @@ def perform_rename_hosts(
         try:
             update_interface(_("Renaming host(s) in folders..."))
             setup_actions[renaming] = _rename_host_in_folder(
+                tree,
                 folder,
                 oldname,
                 newname,
@@ -146,8 +150,9 @@ def perform_rename_hosts(
     # Precompute cluster host list for node renaming due to expensive
     # FolderTree.all_hosts() call. This currently also needs to be done after the
     # host renaming as the folder_tree cache_invalidation still misses some caches.
-    tree = folder_tree()
-    cluster_hosts = [host for host in tree.all_hosts().values() if host.is_cluster()]
+    all_hosts = list(tree.all_hosts().values())
+    cluster_hosts = [host for host in all_hosts if host.is_cluster()]
+    relation_hosts = [host for host in all_hosts if host.attributes.get("relations")]
 
     for renaming, this_host_actions in setup_actions.items():
         folder, oldname, newname = renaming
@@ -165,12 +170,27 @@ def perform_rename_hosts(
             update_interface(_("Renaming host(s) in parents..."))
             this_host_actions.extend(
                 _rename_parents(
-                    oldname, newname, pprint_value=pprint_value, pending_changes=pending_changes
+                    tree,
+                    oldname,
+                    newname,
+                    pprint_value=pprint_value,
+                    pending_changes=pending_changes,
+                )
+            )
+            update_interface(_("Renaming host(s) in relations..."))
+            this_host_actions.extend(
+                _rename_host_in_relations(
+                    relation_hosts,
+                    oldname,
+                    newname,
+                    pprint_value=pprint_value,
+                    pending_changes=pending_changes,
                 )
             )
             update_interface(_("Renaming host(s) in rule sets..."))
             this_host_actions.extend(
                 _rename_host_in_rulesets(
+                    tree,
                     oldname,
                     newname,
                     pending_changes=pending_changes,
@@ -197,6 +217,7 @@ def perform_rename_hosts(
         renamings_by_site,
         site_configs=site_configs,
         pending_changes=pending_changes,
+        use_git=use_git,
         debug=debug,
     )
 
@@ -233,6 +254,7 @@ def perform_rename_hosts(
 
 
 def _rename_host_in_folder(
+    tree: FolderTree,
     folder: Folder,
     oldname: HostName,
     newname: HostName,
@@ -247,7 +269,7 @@ def _rename_host_in_folder(
         pending_changes=pending_changes,
         acting_user=user,
     )
-    folder_tree().invalidate_caches()
+    tree.invalidate_caches()
     return ["folder"]
 
 
@@ -273,6 +295,7 @@ def _rename_host_as_cluster_node(
 
 
 def _rename_parents(
+    tree: FolderTree,
     oldname: HostName,
     newname: HostName,
     *,
@@ -282,7 +305,7 @@ def _rename_parents(
     parent_renamed: list[str]
     folder_parent_renamed: list[Folder]
     parent_renamed, folder_parent_renamed = _rename_host_in_parents(
-        oldname, newname, pprint_value=pprint_value, pending_changes=pending_changes
+        tree, oldname, newname, pprint_value=pprint_value, pending_changes=pending_changes
     )
     # Needed because hosts.mk in folders with parent as effective attribute
     # would not be updated
@@ -293,6 +316,7 @@ def _rename_parents(
 
 
 def _rename_host_in_parents(
+    tree: FolderTree,
     oldname: HostName,
     newname: HostName,
     *,
@@ -304,14 +328,43 @@ def _rename_host_in_parents(
         oldname,
         newname,
         folder_parent_renamed,
-        folder_tree().root_folder(),
+        tree.root_folder(),
         pprint_value=pprint_value,
         pending_changes=pending_changes,
     )
     return ["parents"] * len(parents), folder_parent_renamed
 
 
+def _rename_host_in_relations(
+    relation_hosts: Sequence[Host],
+    oldname: HostName,
+    newname: HostName,
+    *,
+    pprint_value: bool,
+    pending_changes: PendingChanges,
+) -> list[str]:
+    """Rewrite the relations naming the renamed host.
+
+    Both halves of a relation are stored, but only one of them names the renamed host: the other
+    half sits on the renamed host itself and names its counterpart, whose name did not change. So
+    the pass stays the same as for parents - rewrite every link that mentions the old name.
+    """
+    renamed = [
+        host
+        for host in relation_hosts
+        if host.rename_relation(
+            oldname,
+            newname,
+            pprint_value=pprint_value,
+            pending_changes=pending_changes,
+            acting_user=user,
+        )
+    ]
+    return ["relations"] * len(renamed)
+
+
 def _rename_host_in_rulesets(
+    tree: FolderTree,
     oldname: HostName,
     newname: HostName,
     *,
@@ -369,7 +422,7 @@ def _rename_host_in_rulesets(
         for subfolder in folder.subfolders():
             rename_host_in_folder_rules(subfolder)
 
-    rename_host_in_folder_rules(folder_tree().root_folder())
+    rename_host_in_folder_rules(tree.root_folder())
     if changed_rulesets:
         actions = []
         unique = set(changed_rulesets)
@@ -384,6 +437,7 @@ def _rename_hosts_in_check_mk(
     *,
     site_configs: Mapping[SiteId, SiteConfiguration],
     pending_changes: PendingChanges,
+    use_git: bool,
     debug: bool,
 ) -> dict[str, int]:
     action_counts: dict[str, int] = {}
@@ -412,6 +466,9 @@ def _rename_hosts_in_check_mk(
         ).action_counts
 
         _merge_action_counts(action_counts, new_counts)
+
+    bakery.try_bake_agents_on_activation(call_site="Host rename", use_git=use_git, debug=debug)
+
     return action_counts
 
 
@@ -426,20 +483,20 @@ def _rename_host_in_event_rules(
     actions = []
 
     users = userdb.load_users(lock=True)
-    some_user_changed = False
+    changed_users = []
     for user_ in users.values():
         if (unrules := user_.get("notification_rules")) and (
             num_changed := rename_in_event_rules(unrules, oldname, newname)
         ):
             actions += ["notify_user"] * num_changed
-            some_user_changed = True
+            changed_users.append(user_["user_id"])
 
     nrules = NotificationRuleConfigFile().load_for_modification()
     if num_changed := rename_in_event_rules(nrules, oldname, newname):
         actions += ["notify_global"] * num_changed
         NotificationRuleConfigFile().save(nrules, pprint_value)
 
-    if some_user_changed:
+    if changed_users:
         userdb.save_users(
             users,
             get_user_attributes(custom_user_attributes),
@@ -447,6 +504,7 @@ def _rename_host_in_event_rules(
             now=datetime.now(),
             pprint_value=pprint_value,
             call_users_saved_hook=True,
+            changed_users=changed_users,
         )
 
     return actions
@@ -666,6 +724,9 @@ class RenameHostsJobArgs(BaseModel, frozen=True):
     custom_user_attributes: Sequence[CustomUserAttrSpec]
     user_connections: Sequence[UserConnectionConfig]
     user_permission_config: UserPermissionSerializableConfig
+    wato_hide_folders_without_read_permissions: bool
+    wato_host_attrs: Sequence[CustomHostAttrSpec]
+    tags: TagConfigSpec
 
 
 def rename_hosts_job_entry_point(
@@ -680,9 +741,20 @@ def rename_hosts_job_entry_point(
     with job_interface.gui_context(
         UserPermissions.from_serialized_config(args.user_permission_config, permission_registry)
     ):
-        renamings = _renamings_from_job_args(folder_tree(), args.renamings)
+        # The job acts on the configuration of the request that started it, so the tree is built
+        # from the values that request put into the job arguments.
+        tree = FolderTree(
+            config=HostsAndFoldersConfig(
+                wato_hide_folders_without_read_permissions=args.wato_hide_folders_without_read_permissions,
+                wato_host_attrs=args.wato_host_attrs,
+                tags=TagConfig.from_config(args.tags),
+                sites=dict(args.site_configs),
+            )
+        )
+        renamings = _renamings_from_job_args(tree, args.renamings)
 
         actions, auth_problems = _rename_hosts(
+            tree,
             renamings,
             job_interface,
             custom_user_attributes=args.custom_user_attributes,
@@ -736,6 +808,7 @@ def _renamings_from_job_args(
 
 
 def _rename_hosts(
+    tree: FolderTree,
     renamings: Sequence[tuple[Folder, HostName, HostName]],
     job_interface: BackgroundProcessInterface,
     *,
@@ -748,6 +821,7 @@ def _rename_hosts(
     debug: bool,
 ) -> tuple[list[str], list[tuple[HostName, MKAuthException]]]:
     action_counts, auth_problems = perform_rename_hosts(
+        tree,
         renamings,
         job_interface,
         custom_user_attributes=custom_user_attributes,
@@ -770,6 +844,7 @@ def render_renaming_actions(action_counts: Mapping[str, int]) -> list[str]:
         "wato_rules": _("Host and service configuration rule"),
         "alert_rules": _("Alert handler rule"),
         "parents": _("Parent definition"),
+        "relations": _("Related host definition"),
         "cluster_nodes": _("Cluster node definition"),
         "bi": _("BI rule or aggregation"),
         "favorites": _("Favorite entry of user"),
@@ -781,6 +856,7 @@ def render_renaming_actions(action_counts: Mapping[str, int]) -> list[str]:
         "piggyback-pig": _("Piggyback information for other hosts"),
         "autochecks": _("Disovered services of the host"),
         "host-labels": _("Disovered host labels of the host"),
+        "inventorized-host-labels": _("Host labels picked from the HW/SW inventory"),
         "logwatch": _("Log file information of logwatch plug-in"),
         "snmpwalk": _("A stored SNMP walk"),
         "rrd": _("RRD databases with metrics"),

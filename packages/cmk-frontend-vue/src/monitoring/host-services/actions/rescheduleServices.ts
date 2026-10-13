@@ -19,6 +19,6 @@ export function useRescheduleServicesAction(
   return createRescheduleAction<string>({
     reschedule: (api, targets, spreadMinutes) =>
       api.rescheduleServices(host, targets, spreadMinutes),
-    errorMessage: _t('Could not reschedule the checks for the selected services.')
+    errorHeading: _t('Could not reschedule the checks for the selected services')
   })
 }

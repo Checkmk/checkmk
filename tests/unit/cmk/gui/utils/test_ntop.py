@@ -49,10 +49,10 @@ def test_is_ntop_available() -> None:
     ],
 )
 def test_is_ntop_configured_and_reason(
-    ntop_connection_spec: dict[str, object],
-    custom_user: str,
-    answer: bool,
-    reason: str,
+    ntop_connection_spec: dict[str, object],  # noqa: ARG001
+    custom_user: str,  # noqa: ARG001
+    answer: bool,  # noqa: ARG001
+    reason: str,  # noqa: ARG001
 ) -> None:
     assert not ntop_connection().is_configured()
     assert (

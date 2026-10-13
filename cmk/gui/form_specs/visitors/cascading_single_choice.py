@@ -3,11 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Collection, Sequence
+from functools import cached_property
+from typing import assert_never, override
 
-from typing import override
-
-from cmk.gui.form_specs.unstable import CascadingSingleChoiceExtended
 from cmk.gui.i18n import _, translate_to_current_language
+from cmk.rulesets.internal.form_specs import (
+    ButtonGroupSize,
+    CascadingSingleChoiceExtended,
+    CascadingSingleChoiceLayout,
+)
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import CascadingSingleChoiceElement, InputHint
+from cmk.rulesets.v1.form_specs import DefaultValue as PrefillDefaultValue
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
@@ -37,14 +45,21 @@ _FallbackModel = tuple[str, DefaultValue]
 class CascadingSingleChoiceVisitor(
     FormSpecVisitor[CascadingSingleChoiceExtended, _ParsedValueModel, _FallbackModel]
 ):
+    @cached_property
+    def _elements(self) -> Sequence[CascadingSingleChoiceElement[object]]:
+        # Resolved per visitor, so that dynamic choices are current
+        elements = self.form_spec.elements
+        return elements() if callable(elements) else elements
+
     @override
     def _parse_value(
         self, raw_value: IncomingData
     ) -> _ParsedValueModel | InvalidValue[_FallbackModel]:
         if isinstance(raw_value, DefaultValue):
             fallback_value: _FallbackModel = ("", DEFAULT_VALUE)
+            prefill = _available_prefill(self.form_spec.prefill, {e.name for e in self._elements})
             if isinstance(
-                prefill_default := get_prefill_default(self.form_spec.prefill, fallback_value),
+                prefill_default := get_prefill_default(prefill, fallback_value),
                 InvalidValue,
             ):
                 return prefill_default
@@ -55,7 +70,7 @@ class CascadingSingleChoiceVisitor(
             return InvalidValue(reason=_("Invalid datatype"), fallback_value=("", DEFAULT_VALUE))
 
         name = raw_value.value[0]
-        if not any(name == element.name for element in self.form_spec.elements):
+        if not any(name == element.name for element in self._elements):
             return InvalidValue(reason=_("Invalid selection"), fallback_value=("", DEFAULT_VALUE))
 
         assert isinstance(name, str)
@@ -75,7 +90,7 @@ class CascadingSingleChoiceVisitor(
         selected_vue_value: object = None
         vue_elements = []
 
-        for element in self.form_spec.elements:
+        for element in self._elements:
             element_visitor = get_visitor(element.parameter_form, self.visitor_options)
             element_value = selected_value if selected_name == element.name else DEFAULT_VALUE
             element_schema, element_vue_value = element_visitor.to_vue(element_value)
@@ -100,8 +115,11 @@ class CascadingSingleChoiceVisitor(
                 elements=vue_elements,
                 no_elements_text=localize(self.form_spec.no_elements_text),
                 validators=build_vue_validators(compute_validators(self.form_spec)),
-                input_hint=compute_title_input_hint(self.form_spec.prefill),
-                layout=self.form_spec.layout,
+                input_hint=compute_title_input_hint(
+                    _available_prefill(self.form_spec.prefill, {e.name for e in self._elements})
+                ),
+                layout=_to_shared_layout(self.form_spec.layout),
+                button_group_size=_to_shared_button_group_size(self.form_spec.button_group_size),
             ),
             (selected_name, selected_vue_value),
         )
@@ -113,7 +131,7 @@ class CascadingSingleChoiceVisitor(
         selected_name, selected_value = parsed_value
 
         element_validations: list[shared_type_defs.ValidationMessage] = []
-        for element in self.form_spec.elements:
+        for element in self._elements:
             if selected_name != element.name:
                 continue
 
@@ -134,9 +152,44 @@ class CascadingSingleChoiceVisitor(
         selected_name, selected_value = parsed_value
 
         disk_value: object = None
-        for element in self.form_spec.elements:
+        for element in self._elements:
             if selected_name != element.name:
                 continue
             element_visitor = get_visitor(element.parameter_form, self.visitor_options)
             disk_value = element_visitor.to_disk(selected_value)
         return selected_name, disk_value
+
+
+def _available_prefill(
+    prefill: PrefillDefaultValue[str] | InputHint[Title], element_names: Collection[str]
+) -> PrefillDefaultValue[str] | InputHint[Title]:
+    # Dynamic elements may no longer contain the default
+    if isinstance(prefill, PrefillDefaultValue) and prefill.value not in element_names:
+        return InputHint(Title("Please choose"))
+    return prefill
+
+
+def _to_shared_layout(
+    layout: CascadingSingleChoiceLayout,
+) -> shared_type_defs.CascadingSingleChoiceLayout:
+    match layout:
+        case CascadingSingleChoiceLayout.vertical:
+            return shared_type_defs.CascadingSingleChoiceLayout.vertical
+        case CascadingSingleChoiceLayout.horizontal:
+            return shared_type_defs.CascadingSingleChoiceLayout.horizontal
+        case CascadingSingleChoiceLayout.button_group:
+            return shared_type_defs.CascadingSingleChoiceLayout.button_group
+        case _:
+            assert_never(layout)
+
+
+def _to_shared_button_group_size(
+    size: ButtonGroupSize,
+) -> shared_type_defs.CascadingSingleChoiceButtonGroupSize:
+    match size:
+        case ButtonGroupSize.medium:
+            return shared_type_defs.CascadingSingleChoiceButtonGroupSize.medium
+        case ButtonGroupSize.small:
+            return shared_type_defs.CascadingSingleChoiceButtonGroupSize.small
+        case _:
+            assert_never(size)

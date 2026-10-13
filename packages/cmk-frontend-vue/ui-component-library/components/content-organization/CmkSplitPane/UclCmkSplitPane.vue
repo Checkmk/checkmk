@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, listOptions } from '@ucl/_ucl/components/detail-page'
 import type { CmkSplitPaneProps } from 'cmk-ui-library/components/CmkSplitPane.vue'
 
 import codeExample from './UclCmkSplitPaneCodeExample.vue?raw'
@@ -62,13 +62,19 @@ export const panelConfig = {
     initialState: 30,
     help: 'Initial size of the right pane, expressed in sizeUnit.'
   },
+  rightMinWidth: {
+    type: 'string' as const,
+    title: 'rightMinWidth',
+    initialState: '',
+    help: 'CSS length the right pane never renders below, e.g. "520px". Empty means no floor.'
+  },
   sizeUnit: {
     type: 'list' as const,
     title: 'sizeUnit',
-    options: [
-      { title: 'Percent (responsive)', name: '%' },
-      { title: 'Pixels (fixed)', name: 'px' }
-    ] satisfies Options<NonNullable<CmkSplitPaneProps['sizeUnit']>>[],
+    options: listOptions<NonNullable<CmkSplitPaneProps['sizeUnit']>>({
+      '%': 'Percent (responsive)',
+      px: 'Pixels (fixed)'
+    }),
     initialState: '%' as const,
     help: 'Percent sizes scale with the container; pixel sizes stay fixed.'
   },
@@ -128,6 +134,7 @@ const propState = new PanelStateCreator<typeof CmkSplitPane>().createRef(panelCo
           :right-min-size="propState.rightMinSize"
           :right-max-size="propState.rightMaxSize"
           :right-default-size="propState.rightDefaultSize"
+          :right-min-width="propState.rightMinWidth || undefined"
           :size-unit="propState.sizeUnit"
           :keyboard-resize-by="propState.keyboardResizeBy"
           :collapsible-on-resize="propState.collapsibleOnResize"

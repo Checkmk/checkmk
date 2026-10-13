@@ -20,12 +20,22 @@ import RrdQueryForm from './RrdQueryForm.vue'
 import SourceFormStack from './SourceFormStack.vue'
 import SourceFormText from './SourceFormText.vue'
 
-const { item, store, hostNameErrors, serviceNameErrors, metricNameErrors } = defineProps<{
+const {
+  item,
+  store,
+  hostNameErrors,
+  serviceNameErrors,
+  metricNameErrors,
+  hostFilterErrors,
+  serviceFilterErrors
+} = defineProps<{
   item: DraftRRDMetricItem | DraftRRDQueryItem
   store: GraphItemsStore
   hostNameErrors: TranslatedString[]
   serviceNameErrors: TranslatedString[]
   metricNameErrors: TranslatedString[]
+  hostFilterErrors: TranslatedString[]
+  serviceFilterErrors: TranslatedString[]
 }>()
 
 const { _t } = usei18n()
@@ -64,6 +74,8 @@ function onModeChange(isQuery: boolean): void {
         :item="item"
         :store="store"
         :metric-name-errors="metricNameErrors"
+        :host-filter-errors="hostFilterErrors"
+        :service-filter-errors="serviceFilterErrors"
       />
     </SourceFormStack>
   </SourceFormStack>

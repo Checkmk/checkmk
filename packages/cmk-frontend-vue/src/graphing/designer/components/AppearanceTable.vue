@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { ColumnDef } from '@tanstack/vue-table'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import EditableTable from '@/monitoring/shared/components/EditableTable.vue'
 import BaseCell from '@/monitoring/shared/components/cell/BaseCell.vue'
@@ -19,25 +19,38 @@ import SwitchCell from '@/monitoring/shared/components/cell/SwitchCell.vue'
 import VisibilityCell from '@/monitoring/shared/components/cell/VisibilityCell.vue'
 
 import MetricAttributesTable from '../../components/MetricAttributesTable.vue'
-import type { Metric } from '../../components/TimeSeriesGraph'
-import {
-  type MetricStats,
-  metricStats,
-  orderMetricsForLegend
-} from '../../components/legend/legendUtils'
+import type { Metric, UnitFormat } from '../../components/TimeSeriesGraph'
+import { type MetricStats, metricStats } from '../../components/legend/legendUtils'
 import { attributesOf, hasAttributes } from '../../components/metricAttributes'
-import type { GraphItemsStore } from '../composables/useGraphItems'
+import { orderMetricsTopToBottom } from '../../components/metricOrder'
+import { type GraphItemsStore, retainKnownRows } from '../composables/useGraphItems'
 import { useRowLabels } from '../composables/useRowLabels'
 import type { DesignerItem } from '../drafts'
 import { type ItemId, isSingleLine, parseLineType } from '../types'
+import AutomaticColorCell from './AutomaticColorCell.vue'
 import StatsCells from './StatsCells.vue'
 
-const { store, metricsBySource, resolvedTitles } = defineProps<{
+const {
+  store,
+  metricsBySource,
+  resolvedTitles,
+  valueResolution = null,
+  axisUnit = null
+} = defineProps<{
   store: GraphItemsStore
   /** Fetched series per data-source row, for the live-data columns. */
   metricsBySource: Map<ItemId, Metric[]>
   /** The title each row resolved to in the last fetch; rows that resolved to none are absent. */
   resolvedTitles: ReadonlyMap<ItemId, string>
+  /** Value-axis resolution of the preview graph; stats print at least this precisely. */
+  valueResolution?: number | null
+  /** The unit the preview labels its value axis in; null leaves each series in its own unit. */
+  axisUnit?: UnitFormat | null
+}>()
+
+const emit = defineEmits<{
+  /** The series the hovered element stands for. */
+  hoverMetrics: [names: string[]]
 }>()
 
 const { _t } = usei18n()
@@ -62,6 +75,17 @@ const colorColumnIndex = columns.findIndex((column) => column.id === 'color')
 
 const expandedRows = ref<Record<string, boolean>>({})
 
+function isExpanded(row: DesignerItem): boolean {
+  return !isSingleLine(row) && (expandedRows.value[row.id] ?? true)
+}
+
+watch(
+  () => store.items.value,
+  (rows) => {
+    expandedRows.value = retainKnownRows(expandedRows.value, rows)
+  }
+)
+
 /** Second expansion level: the attributes of a single resolved series. */
 const expandedSeries = ref<Record<string, boolean>>({})
 
@@ -80,7 +104,7 @@ const statsBySource = computed(() => {
   const stats = new Map<ItemId, MetricStats>()
   for (const [id, series] of metricsBySource) {
     if (series.length === 1) {
-      stats.set(id, metricStats(series[0]!))
+      stats.set(id, metricStats(series[0]!, valueResolution, axisUnit))
     }
   }
   return stats
@@ -92,14 +116,33 @@ const linesBySource = computed(() => {
   for (const [id, series] of metricsBySource) {
     out.set(
       id,
-      orderMetricsForLegend([...series]).map((metric) => ({
+      orderMetricsTopToBottom([...series]).map((metric) => ({
         metric,
-        stats: metricStats(metric)
+        stats: metricStats(metric, valueResolution, axisUnit)
       }))
     )
   }
   return out
 })
+
+/** A hidden row is fetched but not drawn, so highlighting it would dim the plot for nothing. */
+function onRowHover(row: DesignerItem | null): void {
+  if (row === null || !row.visible) {
+    emit('hoverMetrics', [])
+    return
+  }
+  emit(
+    'hoverMetrics',
+    (linesBySource.value.get(row.id) ?? []).map((entry) => entry.metric.metadata.name)
+  )
+}
+
+const hoveredSeries = ref<string | null>(null)
+
+function onSeriesHover(row: DesignerItem, metric: Metric | null): void {
+  hoveredSeries.value = metric === null ? null : seriesKey(row.id, metric)
+  emit('hoverMetrics', metric === null || !row.visible ? [] : [metric.metadata.name])
+}
 
 function onLineStyleChange(row: DesignerItem, value: string | null): void {
   const lineType = parseLineType(value)
@@ -110,18 +153,14 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
 </script>
 
 <template>
-  <CmkScrollContainer
-    height="auto"
-    max-height="none"
-    class="graphing-appearance-table"
-    :style="{ overflow: 'var(--graphing-designer-body-table-overflow, auto)' }"
-  >
+  <CmkScrollContainer height="auto" max-height="none" class="graphing-appearance-table">
     <EditableTable
       :rows="[...store.items.value]"
       :columns="columns"
       :get-row-key="(row: DesignerItem) => row.id"
-      :expanded-rows="expandedRows"
+      :is-row-expanded="isExpanded"
       @reorder="(from: number, to: number) => store.move(from, to)"
+      @row-hover="onRowHover"
     >
       <template #row="{ row }">
         <DragHandleCell column-id="drag" vertical-align="middle" />
@@ -142,7 +181,7 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
           :model-value="row.color"
           @update:model-value="store.patch(row.id, { color: $event })"
         />
-        <BaseCell v-else column-id="color" vertical-align="middle" />
+        <AutomaticColorCell v-else />
         <BaseCell v-if="isSingleLine(row)" column-id="title" vertical-align="middle" no-wrap>{{
           resolvedTitles.get(row.id) ?? row.title
         }}</BaseCell>
@@ -150,7 +189,7 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
           v-else
           column-id="title"
           vertical-align="middle"
-          :expanded="expandedRows[row.id] === true"
+          :expanded="isExpanded(row)"
           @update:expanded="expandedRows = { ...expandedRows, [row.id]: $event }"
           >{{ resolvedTitles.get(row.id) ?? row.title }}</CollapsibleCell
         >
@@ -176,7 +215,15 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
           v-for="entry in linesBySource.get(row.id) ?? []"
           :key="entry.metric.metadata.name"
         >
-          <tr class="graphing-appearance-table__expanded-row">
+          <tr
+            class="graphing-appearance-table__expanded-row"
+            :class="{
+              'graphing-appearance-table__series--hovered':
+                hoveredSeries === seriesKey(row.id, entry.metric)
+            }"
+            @mouseenter="onSeriesHover(row, entry.metric)"
+            @mouseleave="onSeriesHover(row, null)"
+          >
             <td :colspan="colorColumnIndex" />
             <BaseCell column-id="color" vertical-align="middle">
               <span
@@ -203,7 +250,15 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
             <td :colspan="2" />
             <StatsCells :stats="entry.stats" />
           </tr>
-          <tr v-if="showsAttributes(row.id, entry.metric)">
+          <tr
+            v-if="showsAttributes(row.id, entry.metric)"
+            :class="{
+              'graphing-appearance-table__series--hovered':
+                hoveredSeries === seriesKey(row.id, entry.metric)
+            }"
+            @mouseenter="onSeriesHover(row, entry.metric)"
+            @mouseleave="onSeriesHover(row, null)"
+          >
             <td :colspan="columns.length" class="graphing-appearance-table__attributes">
               <MetricAttributesTable :attributes="attributesOf(entry.metric)" />
             </td>
@@ -232,6 +287,12 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
 .graphing-appearance-table__attributes {
   padding: var(--dimension-4) var(--dimension-4) var(--dimension-5) var(--dimension-8);
   background-color: var(--ux-theme-3);
+}
+
+/* Direct cells only: the nested attribute table keeps its own row hover. */
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+.graphing-appearance-table__series--hovered > :deep(td) {
+  background-color: var(--background-highlight);
 }
 
 .graphing-appearance-table__color-swatch {

@@ -10,7 +10,7 @@ from annotated_types import Ge
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
+    TitledDomainObjectModel,
 )
 
 
@@ -27,8 +27,8 @@ class GraphTimerangeExtension:
 
 
 @api_model
-class GraphTimerangeObject(DomainObjectModel):
-    domainType: Literal["graph_timerange"] = api_field(  # type: ignore[mutable-override]
+class GraphTimerangeObject(TitledDomainObjectModel):
+    domainType: Literal["graph_timerange"] = api_field(
         description="The type of the domain-object.",
     )
     extensions: GraphTimerangeExtension = api_field(
@@ -38,7 +38,7 @@ class GraphTimerangeObject(DomainObjectModel):
 
 @api_model
 class GraphTimerangeCollection(DomainObjectCollectionModel):
-    domainType: Literal["graph_timerange"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["graph_timerange"] = api_field(
         description="The domain type of the objects in the collection.",
     )
     value: list[GraphTimerangeObject] = api_field(

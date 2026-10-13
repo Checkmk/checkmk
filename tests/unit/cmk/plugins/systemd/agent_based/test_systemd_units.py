@@ -18,7 +18,6 @@ from cmk.plugins.systemd.agent_based.systemd_units import (
     CpuTimeSeconds,
     discover_host_labels,
     discovery_systemd_units_services,
-    discovery_systemd_units_services_summary,
     discovery_systemd_units_sockets,
     Memory,
     parse,
@@ -1140,21 +1139,6 @@ def test_discover_systemd_units_sockets(
         list(discovery_systemd_units_sockets(params=discovery_params, section=section))
         == discovered_services
     )
-
-
-@pytest.mark.parametrize(
-    "section, discovered_services",
-    [
-        (
-            SECTION,
-            [Service()],
-        ),
-    ],
-)
-def test_discover_systemd_units_services_summary(
-    section: Section, discovered_services: Sequence[Service]
-) -> None:
-    assert list(discovery_systemd_units_services_summary(section)) == discovered_services
 
 
 @pytest.mark.parametrize(

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 import dataclasses
 from typing import NewType
@@ -40,7 +39,7 @@ def parse_citrix_controller(string_table: StringTable) -> Section | None:
     section = Section()
     session = Session()
     for line in string_table:
-        match line:
+        match line:  # type: ignore[exhaustive-match]
             case ["ControllerVersion", version, *_]:
                 section.version = Version(version)
             case ["ControllerState", state, *_]:

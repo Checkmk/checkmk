@@ -21,7 +21,7 @@ from cmk.shared_typing.unified_search import Edition, Provider, Providers, Unifi
 from cmk.utils import paths
 
 
-def get_unified_search_props(request: Request) -> UnifiedSearchProps:
+def get_unified_search_props(request: Request) -> UnifiedSearchProps:  # noqa: ARG001
     return UnifiedSearchProps(
         providers=Providers(
             monitoring=Provider(active=True, sort=0),
@@ -35,7 +35,7 @@ def get_unified_search_props(request: Request) -> UnifiedSearchProps:
     )
 
 
-def _get_unified_search_app(request: Request) -> NavItemVueApp:
+def _get_unified_search_app(request: Request) -> NavItemVueApp:  # noqa: ARG001
     return NavItemVueApp(id=NavVueAppIdEnum.cmk_unified_search)
 
 

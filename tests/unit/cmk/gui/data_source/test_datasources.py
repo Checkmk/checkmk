@@ -2,12 +2,18 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from http import HTTPStatus
+
+import pytest
+
 from cmk.gui.data_source.datasources import DataSourceComments
 from cmk.gui.data_source.registry import DataSourceRegistry, row_id
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
-def test_comment_row_id_is_unique_per_site(load_plugins: None) -> None:
+@pytest.mark.usefixtures("load_plugins")
+def test_comment_row_id_is_unique_per_site() -> None:
     # GIVEN
     registry = DataSourceRegistry()
     registry.register(DataSourceComments)
@@ -22,5 +28,5 @@ def test_comment_row_id_is_unique_per_site(load_plugins: None) -> None:
 
 def test_list_data_sources(clients: ClientRegistry) -> None:
     resp = clients.ConstantClient.list_data_sources()
-    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+    assert resp.status_code == HTTPStatus.OK, f"Expected 200, got {resp.status_code} {resp.body!r}"
     assert len(resp.json["value"]) > 0, "Expected at least one data source to be returned"

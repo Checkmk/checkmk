@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkResizeHandle from 'cmk-ui-library/components/CmkResizeHandle.vue'
 import { SplitterGroup, SplitterPanel, SplitterResizeHandle } from 'reka-ui'
 import { computed, useTemplateRef, watch } from 'vue'
 
@@ -17,6 +18,7 @@ export interface CmkSplitPaneProps {
   rightMinSize?: number
   rightMaxSize?: number
   rightDefaultSize?: number
+  rightMinWidth?: string | undefined
   sizeUnit?: '%' | 'px'
   keyboardResizeBy?: number
   hideHandleWhenCollapsed?: boolean
@@ -27,6 +29,7 @@ const {
   rightMinSize = 20,
   rightMaxSize = 50,
   rightDefaultSize = 30,
+  rightMinWidth,
   sizeUnit = '%',
   keyboardResizeBy = 10,
   hideHandleWhenCollapsed = true,
@@ -82,10 +85,7 @@ function focusHandle(event: PointerEvent): void {
       class="cmk-split-pane__handle"
       @pointerdown="focusHandle"
     >
-      <span class="cmk-split-pane__grip" aria-hidden="true">
-        <span class="cmk-split-pane__bar" />
-        <span class="cmk-split-pane__bar" />
-      </span>
+      <CmkResizeHandle class="cmk-split-pane__grip" />
     </SplitterResizeHandle>
 
     <SplitterPanel
@@ -97,6 +97,7 @@ function focusHandle(event: PointerEvent): void {
       :max-size="rightMaxSize"
       :default-size="rightDefaultSize"
       :size-unit="sizeUnit"
+      :style="rightMinWidth ? { minWidth: rightMinWidth } : undefined"
       class="cmk-split-pane__panel"
       @collapse="onCollapse"
       @expand="onExpand"
@@ -122,10 +123,17 @@ function focusHandle(event: PointerEvent): void {
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: var(--dimension-3);
-  border-left: 4px solid var(--ux-theme-6);
+  position: relative;
+  box-sizing: border-box;
+  width: var(--dimension-6);
+  border-left: var(--dimension-2) solid var(--cmk-split-pane-border-color);
   cursor: col-resize;
   outline: none;
+}
+
+.cmk-split-pane__handle:hover,
+.cmk-split-pane__handle:active {
+  border-left-color: var(--cmk-split-pane-border-color-active);
 }
 
 .cmk-split-pane__handle:focus-visible {
@@ -134,15 +142,18 @@ function focusHandle(event: PointerEvent): void {
 }
 
 .cmk-split-pane__grip {
-  display: flex;
-  gap: var(--dimension-2);
-  margin-left: var(--dimension-5);
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
-.cmk-split-pane__bar {
-  width: var(--dimension-3);
-  height: 36px;
-  background-color: var(--success);
-  border-radius: 2px;
+body[data-theme='facelift'] .cmk-split-pane__handle {
+  --cmk-split-pane-border-color: var(--color-mid-grey-10);
+  --cmk-split-pane-border-color-active: var(--color-mid-grey-50);
+}
+
+body[data-theme='modern-dark'] .cmk-split-pane__handle {
+  --cmk-split-pane-border-color: var(--color-mid-grey-90);
+  --cmk-split-pane-border-color-active: var(--color-mid-grey-60);
 }
 </style>

@@ -5,57 +5,30 @@
 
 import enum
 import itertools
-import math
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import assert_never
 
 from cmk.graphing.v1 import metrics as metrics_v1
 
 from ._display import metric_display_attributes
-from ._fetched import SeriesAttributes
+from ._fetched import ScalarKind, SeriesAttributes, value_of
 from ._naming import HostName, MetricName, Service, ServiceName, SiteID
+from ._operations import (
+    apply_operator,
+    op_difference,
+    op_fraction,
+    op_product,
+    op_sum,
+    Operator,
+)
 from ._quantity import (
     EvaluatedQuantity,
     EvaluationContext,
-    MetricProtocol,
     QuantityProtocol,
 )
 from ._timeseries import ConsolidationFunction, constant_time_series, TimeSeries
 from ._units import CurveAttributes
-
-type _Operator = Callable[[Sequence[float | None]], float | None]
-
-
-def _op_sum(point: Sequence[float | None]) -> float | None:
-    return sum(value for value in point if value is not None)
-
-
-def _op_product(point: Sequence[float | None]) -> float | None:
-    present = [value for value in point if value is not None]
-    if len(present) != len(point):
-        return None
-    return math.prod(present)
-
-
-def _op_difference(point: Sequence[float | None]) -> float | None:
-    minuend, subtrahend = point
-    if minuend is None or subtrahend is None:
-        return None
-    return minuend - subtrahend
-
-
-def _op_fraction(point: Sequence[float | None]) -> float | None:
-    dividend, divisor = point
-    if dividend is None or divisor is None or divisor == 0:
-        return None
-    return dividend / divisor
-
-
-def _apply(operator: _Operator, point: Sequence[float | None]) -> float | None:
-    if all(value is None for value in point):
-        return None
-    return operator(point)
 
 
 def _operand_label_macros(operands: Sequence[EvaluatedQuantity]) -> Mapping[str, str]:
@@ -77,23 +50,23 @@ def _operand_series_attributes(operands: Sequence[EvaluatedQuantity]) -> SeriesA
     return attributes
 
 
-def _apply_operator(
-    operator: _Operator,
+def _apply_to_operands(
+    operator: Operator,
     operands: Sequence[EvaluatedQuantity],
     context: EvaluationContext,
 ) -> EvaluatedQuantity:
-    # The scalar value and every series point run through the same _apply, so an operator's None
+    # The scalar value and every series point run through the same apply_operator, so an operator's None
     # handling (Sum folds present values, Product / Difference / Fraction null on a gap) is identical
     # at both levels.
     return EvaluatedQuantity(
-        value=_apply(operator, [operand.value for operand in operands]),
+        value=apply_operator(operator, [operand.value for operand in operands]),
         time_series=TimeSeries(
             time_range=context.time_range,
             values=[
-                _apply(operator, point)
+                apply_operator(operator, point)
                 # Operands are normally on one grid, but a fetch that snapped a series differently
                 # can make them differ in length. Pad the short ones rather than truncate the whole
-                # curve to the shortest: a missing point is a gap, which _apply already handles.
+                # curve to the shortest: a missing point is a gap, which apply_operator already handles.
                 for point in itertools.zip_longest(
                     *(operand.time_series.values for operand in operands), fillvalue=None
                 )
@@ -121,7 +94,7 @@ def _collapse_operands(
 ) -> Sequence[EvaluatedQuantity] | None:
     # An operation is absent unless it has operands and every one of them is present: an empty
     # operation and any absent operand alike make the whole operation absent (value and series). Gaps
-    # within present operands are handled point-wise by _apply.
+    # within present operands are handled point-wise by apply_operator.
     operands = [_collapse(result) for result in results]
     present = [operand for operand in operands if operand is not None]
     if not operands or len(present) != len(operands):
@@ -133,19 +106,14 @@ def _operation_ident(kind: str, operands: Sequence[QuantityProtocol]) -> str:
     return f"{kind}({','.join(operand.ident() for operand in operands)})"
 
 
-def _operation_metrics(operands: Sequence[QuantityProtocol]) -> Iterable[MetricProtocol]:
-    for operand in operands:
-        yield from operand.metrics()
-
-
 def _evaluate_operation(
-    operator: _Operator,
+    operator: Operator,
     operands: Sequence[QuantityProtocol],
     context: EvaluationContext,
 ) -> Sequence[EvaluatedQuantity]:
-    if (collapsed := _collapse_operands([o.evaluate(context) for o in operands])) is None:
+    if (collapsed := _collapse_operands([context.evaluate(o) for o in operands])) is None:
         return []
-    return [_apply_operator(operator, collapsed, context)]
+    return [_apply_to_operands(operator, collapsed, context)]
 
 
 @dataclass(frozen=True)
@@ -159,7 +127,7 @@ class Constant:
     def ident(self) -> str:
         return f"{self.kind()}({self.value})"
 
-    def metrics(self) -> Iterable[MetricProtocol]:
+    def children(self) -> Sequence[QuantityProtocol]:
         return ()
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
@@ -201,8 +169,8 @@ class RRDMetric:
             service_name=self.service_name,
         )
 
-    def metrics(self) -> Iterable[MetricProtocol]:
-        yield self
+    def children(self) -> Sequence[QuantityProtocol]:
+        return ()
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         data = context.data_of(self)
@@ -229,6 +197,58 @@ class RRDMetric:
         return metric_display_attributes(self.metric_name, localizer, registered_metrics)
 
 
+class PredictionCurveKind(enum.StrEnum):
+    UPPER_REFERENCE = "upper_reference"
+    UPPER_WARNING = "upper_warning"
+    UPPER_CRITICAL = "upper_critical"
+    LOWER_REFERENCE = "lower_reference"
+    LOWER_WARNING = "lower_warning"
+    LOWER_CRITICAL = "lower_critical"
+
+
+@dataclass(frozen=True, kw_only=True)
+class PredictionMetric:
+    site_id: SiteID
+    host_name: HostName
+    service_name: ServiceName
+    metric_name: MetricName
+    period: str
+    valid_from: int
+    valid_until: int
+    curve_kind: PredictionCurveKind
+
+    def kind(self) -> str:
+        return "prediction_metric"
+
+    def ident(self) -> str:
+        return (
+            f"{self.kind()}({self.site_id}/{self.host_name}/{self.service_name}/{self.metric_name}"
+            f",{self.period},{self.valid_from},{self.valid_until},{self.curve_kind})"
+        )
+
+    def children(self) -> Sequence[QuantityProtocol]:
+        return ()
+
+    def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
+        if (time_series := context.time_series_of(self)) is None:
+            return []
+        return [
+            EvaluatedQuantity(
+                value=next(
+                    (value for value in reversed(time_series.values) if value is not None), None
+                ),
+                time_series=time_series,
+            )
+        ]
+
+    def attributes(
+        self,
+        _localizer: Callable[[str], str],
+        _registered_metrics: Mapping[str, metrics_v1.Metric],
+    ) -> CurveAttributes | None:
+        return None
+
+
 def rrd_metric_of(service: Service, metric_name: str) -> RRDMetric:
     return RRDMetric(
         site_id=service.site_id,
@@ -236,15 +256,6 @@ def rrd_metric_of(service: Service, metric_name: str) -> RRDMetric:
         service_name=service.service_name,
         metric_name=MetricName(metric_name),
     )
-
-
-class ScalarKind(enum.StrEnum):
-    WARNING = "warning"
-    CRITICAL = "critical"
-    LOWER_WARNING = "lower_warning"
-    LOWER_CRITICAL = "lower_critical"
-    MINIMUM = "minimum"
-    MAXIMUM = "maximum"
 
 
 @dataclass(frozen=True)
@@ -259,27 +270,13 @@ class ScalarOf:
     def ident(self) -> str:
         return f"{self.kind()}({self.scalar_kind},{self.metric.ident()})"
 
-    def metrics(self) -> Iterable[MetricProtocol]:
-        yield self.metric
+    def children(self) -> Sequence[QuantityProtocol]:
+        return (self.metric,)
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         if (data := context.data_of(self.metric)) is None:
             return []
-        match self.scalar_kind:
-            case ScalarKind.WARNING:
-                value = data.warning
-            case ScalarKind.CRITICAL:
-                value = data.critical
-            case ScalarKind.LOWER_WARNING:
-                value = data.lower_warning
-            case ScalarKind.LOWER_CRITICAL:
-                value = data.lower_critical
-            case ScalarKind.MINIMUM:
-                value = data.minimum
-            case ScalarKind.MAXIMUM:
-                value = data.maximum
-            case _:
-                assert_never(self.scalar_kind)
+        value = value_of(data, self.scalar_kind)
         return [
             EvaluatedQuantity(
                 value=value, time_series=constant_time_series(value, context.time_range)
@@ -293,8 +290,7 @@ class ScalarOf:
     ) -> CurveAttributes:
         attributes = self.metric.attributes(localizer, registered_metrics)
         # A threshold names the metric it is a threshold of: several of them can be drawn in one
-        # graph, and "Warning" alone would not say which curve it belongs to (as the legacy titles
-        # spell it out too).
+        # graph, and "Warning" alone would not say which curve it belongs to.
         label: str
         type_color: str | None
         match self.scalar_kind:
@@ -321,7 +317,7 @@ class ScalarOf:
 
 @dataclass(frozen=True)
 class Sum:
-    summands: Sequence[QuantityProtocol]
+    summands: tuple[QuantityProtocol, ...]
     display: CurveAttributes | None = None
 
     def kind(self) -> str:
@@ -330,11 +326,11 @@ class Sum:
     def ident(self) -> str:
         return _operation_ident(self.kind(), self.summands)
 
-    def metrics(self) -> Iterable[MetricProtocol]:
-        return _operation_metrics(self.summands)
+    def children(self) -> Sequence[QuantityProtocol]:
+        return self.summands
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
-        return _evaluate_operation(_op_sum, self.summands, context)
+        return _evaluate_operation(op_sum, self.summands, context)
 
     def attributes(
         self,
@@ -346,7 +342,7 @@ class Sum:
 
 @dataclass(frozen=True)
 class Product:
-    factors: Sequence[QuantityProtocol]
+    factors: tuple[QuantityProtocol, ...]
     display: CurveAttributes | None = None
 
     def kind(self) -> str:
@@ -355,11 +351,11 @@ class Product:
     def ident(self) -> str:
         return _operation_ident(self.kind(), self.factors)
 
-    def metrics(self) -> Iterable[MetricProtocol]:
-        return _operation_metrics(self.factors)
+    def children(self) -> Sequence[QuantityProtocol]:
+        return self.factors
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
-        return _evaluate_operation(_op_product, self.factors, context)
+        return _evaluate_operation(op_product, self.factors, context)
 
     def attributes(
         self,
@@ -381,11 +377,11 @@ class Difference:
     def ident(self) -> str:
         return _operation_ident(self.kind(), (self.minuend, self.subtrahend))
 
-    def metrics(self) -> Iterable[MetricProtocol]:
-        return _operation_metrics((self.minuend, self.subtrahend))
+    def children(self) -> Sequence[QuantityProtocol]:
+        return (self.minuend, self.subtrahend)
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
-        return _evaluate_operation(_op_difference, (self.minuend, self.subtrahend), context)
+        return _evaluate_operation(op_difference, (self.minuend, self.subtrahend), context)
 
     def attributes(
         self,
@@ -407,11 +403,11 @@ class Fraction:
     def ident(self) -> str:
         return _operation_ident(self.kind(), (self.dividend, self.divisor))
 
-    def metrics(self) -> Iterable[MetricProtocol]:
-        return _operation_metrics((self.dividend, self.divisor))
+    def children(self) -> Sequence[QuantityProtocol]:
+        return (self.dividend, self.divisor)
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
-        return _evaluate_operation(_op_fraction, (self.dividend, self.divisor), context)
+        return _evaluate_operation(op_fraction, (self.dividend, self.divisor), context)
 
     def attributes(
         self,

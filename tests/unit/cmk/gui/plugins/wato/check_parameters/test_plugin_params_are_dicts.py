@@ -28,9 +28,9 @@ _KNOWN_OFFENDERS = {
 
 def _get_first_actual_valuespec(vspec: ValueSpec) -> ValueSpec:
     if isinstance(vspec, TimeperiodValuespec):
-        return _get_first_actual_valuespec(vspec._enclosed_valuespec)
+        return _get_first_actual_valuespec(vspec._enclosed_valuespec)  # noqa: SLF001
     if isinstance(vspec, Transform | Migrate):
-        return _get_first_actual_valuespec(vspec._valuespec)
+        return _get_first_actual_valuespec(vspec._valuespec)  # noqa: SLF001
     return vspec
 
 

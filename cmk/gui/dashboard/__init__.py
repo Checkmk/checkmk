@@ -35,7 +35,6 @@ from .type_defs import DashboardConfig, DashboardName
 from .visual_type import VisualTypeDashboards
 
 __all__ = [
-    "load_plugins",
     "DashletConfig",
     "DashletRegistry",
     "DashboardName",

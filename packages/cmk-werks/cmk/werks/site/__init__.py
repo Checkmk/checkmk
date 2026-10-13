@@ -5,7 +5,7 @@
 
 """Loading of werks from their on-disk site layout."""
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from functools import cache
 from pathlib import Path
 
@@ -68,3 +68,7 @@ def load_werk_entries() -> Sequence[WerkV3]:
     # expected, so this caching issue might actually be a feature.
     werks_raw = load()
     return list(werks_raw.values())
+
+
+def find_werk(werks: Iterable[WerkV3], werk_id: int) -> WerkV3 | None:
+    return next((werk for werk in werks if werk.id == werk_id), None)

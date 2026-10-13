@@ -98,7 +98,6 @@ def py_doc_test(name, srcs, deps = [], tags = [], **kwargs):
         srcs = [runner_py],
         deps = srcs + deps,
         main = runner_py,
-        legacy_create_init = False,
         # "doctest" allows running all doctests via --test_tag_filters;
         # the generated runner is not worth type checking.
         tags = tags + ["doctest", "no-mypy"],

@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import CodeWidget from '@/quick-setup/components/quick-setup/widgets/CodeWidget.vue'
 import CollapsibleWidget from '@/quick-setup/components/quick-setup/widgets/CollapsibleWidget.vue'
 import ConditionalNotificationECAlertStageWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationECAlertStageWidget.vue'
 import ConditionalNotificationServiceEventStageWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationServiceEventStageWidget.vue'
@@ -21,6 +22,7 @@ test('getWidget returns NoneWidget when widget_type is unknown', async () => {
 
 test('getWidget returns the proper widget', async () => {
   expect(getWidget('text')).toBe(TextWidget)
+  expect(getWidget('code')).toBe(CodeWidget)
   expect(getWidget('note_text')).toBe(NoteTextWidget)
   expect(getWidget('list_of_widgets')).toBe(ListWidget)
   expect(getWidget('form_spec')).toBe(FormSpecWidget)

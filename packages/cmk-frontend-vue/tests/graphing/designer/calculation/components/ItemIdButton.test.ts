@@ -20,7 +20,15 @@ test('emits click and takes its accessible name from the label', async () => {
   expect(emitted('click')).toHaveLength(1)
 })
 
-test('can be disabled', () => {
-  renderButton({ disabled: true })
-  expect(screen.getByRole('button', { name: 'Insert A' })).toBeDisabled()
+test('a block reason disables the button and explains it on hover', () => {
+  renderButton({ blockReason: untranslated('Aggregate this query first') })
+  const button = screen.getByRole('button', { name: 'Insert A' })
+  expect(button).toHaveAttribute('aria-disabled', 'true')
+  expect(button).toHaveAttribute('title', 'Aggregate this query first')
+})
+
+test('stays actionable without a block reason', async () => {
+  const { emitted } = renderButton({ blockReason: null })
+  await fireEvent.click(screen.getByRole('button', { name: 'Insert A' }))
+  expect(emitted('click')).toHaveLength(1)
 })

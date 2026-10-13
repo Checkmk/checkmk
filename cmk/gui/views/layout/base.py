@@ -6,7 +6,7 @@
 import abc
 from collections.abc import Sequence
 
-from cmk.gui.painter.v0 import Cell
+from cmk.gui.painter import Cell
 from cmk.gui.type_defs import Rows, ViewSpec
 from cmk.gui.utils.roles import UserPermissions
 
@@ -61,13 +61,13 @@ class Layout(abc.ABC):
 
     def csv_export(
         self,
-        rows: Rows,
-        view: ViewSpec,
-        group_cells: Sequence[Cell],
-        cells: Sequence[Cell],
-        user_permissions: UserPermissions,
+        rows: Rows,  # noqa: ARG002
+        view: ViewSpec,  # noqa: ARG002
+        group_cells: Sequence[Cell],  # noqa: ARG002
+        cells: Sequence[Cell],  # noqa: ARG002
+        user_permissions: UserPermissions,  # noqa: ARG002
         *,
-        table_row_limit: int,
+        table_row_limit: int,  # noqa: ARG002
     ) -> None:
         """Render the given data using this layout for CSV"""
         return

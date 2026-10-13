@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.gui.logged_in import user
@@ -20,8 +21,9 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
+from cmk.gui.watolib.password_store import trusted_explicit_password_ids
 
 from ._family import RULE_FAMILY
 from ._utils import (
@@ -61,17 +63,17 @@ def edit_rule_v1(
     current_rule = rule_entry.rule
 
     validate_value(ruleset, body.value_raw)
+    # The value is stored as sent, apart from the IDs of explicit passwords
+    value = trusted_explicit_password_ids(body.value_raw)
 
-    new_rule = create_rule_object(
-        folder, ruleset, body.conditions, body.properties, body.value_raw, rule_id
-    )
+    new_rule = create_rule_object(folder, ruleset, body.conditions, body.properties, value, rule_id)
 
     if (
-        is_locked_by_quick_setup(rule_entry.rule.locked_by)
+        is_locked_by_config_bundle(rule_entry.rule.locked_by)
         and rule_entry.rule.conditions != new_rule.conditions
     ):
         raise ProblemException(
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             title="Rule is managed by Quick setup",
             detail="Conditions cannot be modified for rules managed by Quick setup.",
         )
@@ -84,7 +86,7 @@ def edit_rule_v1(
     new_rule_entry = get_rule_by_id(make_folder_tree(api_context.config), rule_id)
     return ApiResponse(
         body=serialize_rule(new_rule_entry, api_context),
-        status_code=200,
+        status_code=HTTPStatus.OK,
         etag=rule_etag(new_rule_entry.rule),
     )
 

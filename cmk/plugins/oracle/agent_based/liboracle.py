@@ -6,81 +6,25 @@
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any, Literal, NamedTuple, TypedDict
 
-from cmk.agent_based.v2 import Result, State, StringTable
+
+@dataclass(frozen=True)
+class Ok[T]:
+    """The parsed data of one instance."""
+
+    value: T
 
 
-class OraErrors:
-    """
-    >>> for line in ([""], ["", "FAILURE","ORA-", "foo"], ["", "FAILURE","ORA-"], ["", "FAILURE"],
-    ... ["", "select"], ["", "ORA-bar"], ["ORA-bar", "some", "data"], ["Error", "Message:", "Hello"]):
-    ...     [OraErrors(line).ignore,OraErrors(line).has_error,
-    ...     OraErrors(line).error_text,OraErrors(line).error_severity]
-    [False, False, '', <State.OK: 0>]
-    [False, True, 'ORA- foo', <State.UNKNOWN: 3>]
-    [False, True, 'ORA-', <State.UNKNOWN: 3>]
-    [True, False, '', <State.OK: 0>]
-    [True, False, '', <State.OK: 0>]
-    [False, True, 'Found error in agent output "ORA-bar"', <State.UNKNOWN: 3>]
-    [False, True, 'Found error in agent output "ORA-bar some data"', <State.UNKNOWN: 3>]
-    [False, True, 'Found error in agent output "Message: Hello"', <State.UNKNOWN: 3>]
-    """
+@dataclass(frozen=True)
+class Error:
+    """The error an instance reported instead of data."""
 
-    def __init__(self, line: list[str]) -> None:
-        # Default values
-        self.ignore = False
-        self.has_error = False
-        self.error_text = ""
-        self.error_severity = State.OK
-
-        # Update according to line content
-        self.handle_errors(line)
-
-    # This function must be executed for each agent line which has been
-    # found for the current item. It must deal with the ORA-* error
-    # messages. It has to skip over the lines which show the SQL statement
-    # and the SQL error message which comes before the ORA-* message.
-    def handle_errors(self, line: Sequence[str]) -> None:
-        if len(line) == 1:
-            return
-
-        if line[0].startswith("ORA-"):
-            self.has_error = True
-            self.error_text = _error_summary_text(" ".join(line))
-            self.error_severity = State.UNKNOWN
-            return
-
-        # Handle error output from new agent
-        if line[1] == "FAILURE":
-            if len(line) >= 3 and line[2].startswith("ORA-"):
-                self.has_error = True
-                self.error_text = "%s" % " ".join(line[2:])
-                self.error_severity = State.UNKNOWN
-                return
-            self.ignore = True
-            return  # ignore other FAILURE lines
-
-        # Handle error output from old (pre 1.2.0p2) agent
-        if line[1] in ["select", "*", "ERROR"]:
-            self.ignore = True
-            return
-        if line[1].startswith("ORA-"):
-            self.has_error = True
-            self.error_text = _error_summary_text(" ".join(line[1:]))
-            self.error_severity = State.UNKNOWN
-            return
-
-        # Handle error output from 1.6 solaris agent, see SUP-9521
-        if line[0] == "Error":
-            self.has_error = True
-            self.error_text = _error_summary_text(" ".join(line[1:]))
-            self.error_severity = State.UNKNOWN
-            return
+    message: str
 
 
-def _error_summary_text(agent_output_string: str) -> str:
-    return f'Found error in agent output "{agent_output_string}"'
+type Parsed[T] = Ok[T] | Error
 
 
 class DataFiles(TypedDict):
@@ -107,16 +51,8 @@ class TableSpaces(TypedDict):
     type: str
 
 
-ErrorSids = dict[str, OraErrors]
-
-
-class SectionTableSpaces(TypedDict):
-    error_sids: ErrorSids
-    tablespaces: dict[tuple[str, str], TableSpaces]
-
-
 InstancePerformance = Mapping[str, Mapping[str, Any]]
-SectionPerformance = Mapping[str, InstancePerformance]
+SectionPerformance = Mapping[str, Parsed[InstancePerformance]]
 
 
 class Datafile(NamedTuple):
@@ -249,64 +185,41 @@ def datafiles_online_stats(
     )
 
 
-# This function must be executed for each agent line which has been
-# found for the current item. It must deal with the ORA-* error
-# messages. It has to skip over the lines which show the SQL statement
-# and the SQL error message which comes before the ORA-* message.
-#
-# The check must completely skip the lines before the ORA-* messages
-# and return UNKNOWN on the first found ORA-* message.
-# line[0] is the item (db instance)
-#
-# This function returns a tuple when an ORA-* message has been found.
-# It returns False if this line should be skipped by the check.
-def oracle_handle_ora_errors(line: Sequence[str]) -> Result | Literal[False] | None:
+# Classify one agent line: the error message for an error row, False for noise
+# the check should skip, None for data. The check decides the monitoring state.
+def classify_line(line: Sequence[str]) -> str | Literal[False] | None:
+    if not line:
+        return False
     if len(line) == 1:
         return None
 
-    legacy_error = _oracle_handle_legacy_ora_errors(line)
-    if legacy_error:
+    legacy_error = _classify_legacy_line(line)
+    if legacy_error is not None:
         return legacy_error
 
-    # Handle error output from new agent
+    # mk-oracle collapses "|" and line breaks, so its errors are exactly three
+    # fields and need not start with "ORA-". A longer row is data (a PDB may be
+    # named "FAILURE").
     if line[1] == "FAILURE":
-        if len(line) >= 3 and line[2].startswith("ORA-"):
-            return Result(state=State.UNKNOWN, summary="%s" % " ".join(line[2:]))
-        return False  # ignore other FAILURE lines
-
-    # Handle error output from old (pre 1.2.0p2) agent
-    if line[1] in ["select", "*", "ERROR"]:
-        return False
-    if line[1].startswith("ORA-"):
-        return Result(
-            state=State.UNKNOWN, summary='Found error in agent output "%s"' % " ".join(line[1:])
-        )
+        if len(line) == 3:
+            if not line[2].strip():
+                return False
+            return line[2]
+        if len(line) == 2:
+            return False
     return None
 
 
-def _oracle_handle_legacy_ora_errors(line: Sequence[str]) -> Result | Literal[False] | None:
-    # Skip over line before ORA- errors (e.g. sent by AIX agent from 2014)
-    if line == ["ERROR:"]:
-        return False
-
-    if line[0].startswith("ORA-"):
-        return Result(
-            state=State.UNKNOWN, summary='Found error in agent output "%s"' % " ".join(line)
-        )
-
-    # Handle error output from 1.6 solaris agent, see SUP-9521
-    if line[0] == "Error":
-        return Result(
-            state=State.UNKNOWN, summary='Found error in agent output "%s"' % " ".join(line[1:])
-        )
+def _classify_legacy_line(line: Sequence[str]) -> str | Literal[False] | None:
+    if _is_error_field(line[0]):
+        return 'Found error in agent output "%s"' % " ".join(line)
     return None
 
 
-# Fully prevent creation of services when an error is found.
-def oracle_handle_ora_errors_discovery(info: StringTable) -> None:
-    for line in info:
-        err = oracle_handle_ora_errors(line)
-        if err is False:
-            continue
-        if isinstance(err, tuple):
-            raise RuntimeError(err[1])  # soooo ... we create a crash report?
+# A legacy error line without an instance name is keyed by its Oracle message code.
+def is_instance_name(key: str) -> bool:
+    return not _is_error_field(key)
+
+
+def _is_error_field(field: str) -> bool:
+    return field.startswith("ORA-")

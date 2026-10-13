@@ -15,8 +15,6 @@ the user is resolved by their own connector and the second connector never
 claims them.
 """
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 from datetime import datetime
 
@@ -86,7 +84,7 @@ def _patch_resolution(
     )
     monkeypatch.setattr(_check_credentials, "user_locked", lambda _u, _s: False)
 
-    def _load_users(lock: bool = False) -> dict[UserId, UserSpec]:
+    def _load_users(lock: bool = False) -> dict[UserId, UserSpec]:  # noqa: ARG001
         calls["load_users"] += 1
         return {}
 
@@ -119,7 +117,7 @@ def test_create_non_existing_user_is_noop_when_user_exists(
     so a second connector neither overwrites nor duplicates the record."""
     calls = _patch_resolution(monkeypatch, connectors=[], existing=True)
 
-    _check_credentials._create_non_existing_user(
+    _check_credentials._create_non_existing_user(  # noqa: SLF001
         "saml2", UserId("bob"), [], [], _NOW, _default_profile(), pprint_value=False, debug=False
     )
 
@@ -135,7 +133,7 @@ def test_create_non_existing_user_creates_when_absent(
     `user_exists`, not always skipping."""
     calls = _patch_resolution(monkeypatch, connectors=[], existing=False)
 
-    _check_credentials._create_non_existing_user(
+    _check_credentials._create_non_existing_user(  # noqa: SLF001
         "ldap", UserId("carol"), [], [], _NOW, _default_profile(), pprint_value=False, debug=False
     )
 
@@ -160,6 +158,7 @@ def test_check_credentials_stops_at_first_matching_connector(
         [],
         _NOW,
         _default_profile(),
+        time_based_lock_out_enabled=False,
         pprint_value=False,
         debug=False,
     )
@@ -185,6 +184,7 @@ def test_unknown_user_falls_through_to_next_connector(
         [],
         _NOW,
         _default_profile(),
+        time_based_lock_out_enabled=False,
         pprint_value=False,
         debug=False,
     )
@@ -218,6 +218,7 @@ def test_owning_connector_is_consulted_first_even_when_declared_last(
         [],
         _NOW,
         _default_profile(),
+        time_based_lock_out_enabled=False,
         pprint_value=False,
         debug=False,
     )
@@ -253,6 +254,7 @@ def test_without_owner_match_declaration_order_is_preserved(
         [],
         _NOW,
         _default_profile(),
+        time_based_lock_out_enabled=False,
         pprint_value=False,
         debug=False,
     )
@@ -292,6 +294,7 @@ def test_login_via_second_connector_resolves_to_existing_record(
         [],
         _NOW,
         _default_profile(),
+        time_based_lock_out_enabled=False,
         pprint_value=False,
         debug=False,
     )
@@ -338,6 +341,7 @@ def test_orphaned_owning_connector_denies_login_without_creating_a_record(
         [],
         _NOW,
         _default_profile(),
+        time_based_lock_out_enabled=False,
         pprint_value=False,
         debug=False,
     )

@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from __future__ import annotations
-
 import abc
 import enum
 from abc import ABC, abstractmethod

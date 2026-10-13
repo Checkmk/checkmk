@@ -8,11 +8,13 @@ from collections.abc import Sequence
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
 import cmk.utils.paths
+from cmk.gui.config import Config
 from cmk.gui.groups import GroupName
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+from cmk.web.utils.urls import makeuri_contextless
 
 
 class UsagesOfContactGroupInMkeventdNotifyContactGroupFinder:
@@ -31,12 +33,10 @@ class UsagesOfContactGroupInMkeventdNotifyContactGroupFinder:
             return [
                 (
                     self._title,
-                    folder_preserving_link(
+                    makeuri_contextless(
                         request,
-                        [
-                            ("mode", "edit_configvar"),
-                            ("varname", "mkeventd_notify_contactgroup"),
-                        ],
+                        [("varname", "mkeventd_notify_contactgroup")],
+                        filename="global_settings.py",
                     ),
                 )
             ]
@@ -71,7 +71,9 @@ def find_usages_of_contact_group_in_ec_rules(
     return used_in
 
 
-def find_timeperiod_usage_in_ec_rules(time_period_name: str) -> list[tuple[str, str]]:
+def find_timeperiod_usage_in_ec_rules(
+    time_period_name: str, _config: Config
+) -> list[tuple[str, str]]:
     used_in: list[tuple[str, str]] = []
     rule_packs = ec.load_rule_packs(ec.create_paths(cmk.utils.paths.omd_root))
     for rule_pack in rule_packs:

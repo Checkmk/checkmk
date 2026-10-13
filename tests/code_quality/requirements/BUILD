@@ -5,6 +5,7 @@ load("//bazel/rules:requirements_mapping.bzl", "requirements_mapping")
 
 py_library(
     name = "requirements_utils",
+    testonly = True,
     srcs = ["utils.py"],
     data = ["//:defines.make"],
     imports = ["../../.."],
@@ -19,12 +20,20 @@ py_library(
 py_cmk_test(
     name = "requirements_files",
     size = "small",
-    srcs = ["test_requirements_files.py"],
+    srcs = [
+        "test_requirements_files.py",
+        "test_windows_python_version.py",
+    ],
     data = [
         "//:constraints.txt",
+        "//:package_versions.bzl",
         "//:requirements.txt",
         "//:runtime-requirements.txt",
+        "//agents/modules/windows:constraints-windows.txt",
+        "//agents/modules/windows:requirements-windows.in",
         "//agents/plugins:dev-requirements.in",
+        "//bazel/module:py.MODULE.bazel",
+        "//bazel/module:python_cab.MODULE.bazel",
         "//cmk:requirements.in",
         "//packages:dev_python_requirements",
         "//packages:python_requirements",
@@ -47,6 +56,7 @@ py_cmk_test(
 
 py_binary(
     name = "generate_requirements_mapping",
+    testonly = True,
     srcs = ["generate_requirements_mapping.py"],
     main = "generate_requirements_mapping.py",
     deps = [
@@ -56,6 +66,7 @@ py_binary(
 
 requirements_mapping(
     name = "mapping",
+    testonly = True,
     dist_infos = [req.replace(":pkg", ":dist_info") for req in all_requirements],
     tool = ":generate_requirements_mapping",
     visibility = ["//visibility:public"],

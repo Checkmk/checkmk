@@ -9,8 +9,6 @@ Shared by the logging and localization checkers, both of which forbid positional
 ``%s``/``%d`` in favour of named ``%(name)s`` placeholders.
 """
 
-from __future__ import annotations
-
 import re
 
 #: A single printf-style conversion specifier, per the Python spec:

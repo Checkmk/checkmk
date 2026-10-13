@@ -18,7 +18,7 @@ const { _t } = usei18n()
 const autocompleter = computed(
   () =>
     ({
-      fetch_method: 'ajax_vs_autocomplete',
+      fetch_method: 'rest_autocomplete',
       data: {
         ident: 'label',
         params: {

@@ -11,11 +11,12 @@ const SERIES = [
 ]
 
 test('stacked areas share one stack, lines have none', () => {
-  const stacked = trendChartMetrics(SERIES, 'stacked_area').map((m) => m.render.stack)
-  const lines = trendChartMetrics(SERIES, 'lines').map((m) => m.render.stack)
+  const stacked = trendChartMetrics(SERIES, 'stacked_area').map((m) => m.render)
+  const lines = trendChartMetrics(SERIES, 'lines').map((m) => m.render.shape)
 
-  expect(new Set(stacked).size).toBe(1)
-  expect(lines).toEqual([null, null])
+  expect(stacked.every((render) => render.shape === 'area')).toBe(true)
+  expect(new Set(stacked.map((render) => render.shape === 'area' && render.stack)).size).toBe(1)
+  expect(lines).toEqual(['line', 'line'])
 })
 
 test('series keep their rank order and get distinct throughput-formatted colors', () => {

@@ -4,15 +4,23 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import { useTemplateRef } from 'vue'
 
 const { _t } = usei18n()
+useWidgetKeys(_t('Search'), [{ combo: ['Enter'], description: _t('Search') }])
 
-defineProps<{
+const { inlineSearchIcon = false, showSubmitButton = true } = defineProps<{
   placeholder: string
+  /** Accessible name, where the placeholder is not the right one. */
+  ariaLabel?: string | undefined
+  /** Shows the magnifier inside the field rather than beside it. */
+  inlineSearchIcon?: boolean | undefined
+  showSubmitButton?: boolean
 }>()
 
 const query = defineModel<string>({ default: '' })
@@ -37,19 +45,30 @@ function submit(): void {
 function clear(): void {
   query.value = ''
   emit('search', '')
+  // The click moved focus to the clear button, which hides once the field is
+  // empty; return it to the field so the next query can be typed straight away.
+  input.value?.focus()
 }
 </script>
 
 <template>
   <div class="cmk-search-input">
     <div class="cmk-search-input__box">
+      <CmkMultitoneIcon
+        v-if="inlineSearchIcon"
+        class="cmk-search-input__icon"
+        name="search"
+        :primary-color="{ custom: 'var(--color-mist-grey-60)' }"
+        size="small"
+        aria-hidden="true"
+      />
       <input
         ref="input"
         v-model="query"
         type="search"
         role="searchbox"
         class="cmk-search-input__field"
-        :aria-label="placeholder"
+        :aria-label="ariaLabel ?? placeholder"
         :placeholder="placeholder"
         autocomplete="off"
         @keydown.enter="submit"
@@ -63,15 +82,18 @@ function clear(): void {
         @click="clear"
       />
     </div>
-    <button
+    <CmkButton
+      v-if="showSubmitButton"
       type="button"
       class="cmk-search-input__submit"
+      :variant="query.length === 0 ? 'optional' : 'secondary'"
+      :disabled="query.length === 0"
       :aria-label="_t('Search')"
       :title="_t('Search')"
       @click="submit"
     >
       <CmkMultitoneIcon name="search" primary-color="others" size="small" aria-hidden="true" />
-    </button>
+    </CmkButton>
   </div>
 </template>
 
@@ -87,50 +109,34 @@ function clear(): void {
   flex: 1 1 auto;
   min-width: 0;
   align-items: center;
-  height: 27px;
+  height: 30px;
   padding: 0 var(--spacing);
   background-color: var(--default-form-element-bg-color);
   border: 1px solid var(--default-form-element-border-color);
   border-radius: var(--border-radius);
 
-  &:focus-within {
-    border-color: var(--success);
+  &:has(.cmk-search-input__field:focus-visible) {
+    outline: auto;
   }
 }
 
-.cmk-search-input__submit {
-  display: flex;
+.cmk-search-input__icon {
   flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  width: 27px;
-  height: 27px;
-  margin: 0;
-  padding: 0;
-  background-color: var(--default-form-element-bg-color);
-  border: 1px solid var(--default-form-element-border-color);
-  border-radius: var(--border-radius);
-  cursor: pointer;
-
-  &:hover {
-    border-color: var(--success);
-  }
-
-  &:focus-visible {
-    outline: revert;
-  }
+  margin-right: var(--dimension-3);
 }
 
 .cmk-search-input__field {
   flex: 1 1 auto;
+
+  /* Avoid text overflow when reducing the width of the container. */
+  min-width: 0;
   height: 100%;
   margin: 0 var(--dimension-4) 0 0;
   padding: 0;
   background: transparent;
   border: 0;
 
-  &:focus {
+  &:focus-visible {
     outline: none;
   }
 

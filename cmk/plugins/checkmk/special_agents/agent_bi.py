@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 """agent_bi
@@ -20,6 +18,7 @@ import select
 import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from http import HTTPStatus
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Any, Literal, NotRequired, Self, TypedDict
@@ -117,11 +116,11 @@ class AggregationData:
         return self._bi_rawdata
 
     @property
-    def missing_aggr(self):
+    def missing_aggr(self) -> list:
         return self._missing_aggr
 
     @property
-    def missing_sites(self):
+    def missing_sites(self) -> list:
         return self._missing_sites
 
     @property
@@ -164,8 +163,8 @@ class AggregationData:
         return aggr_response["aggregations"]
 
     @classmethod
-    def parse_legacy_response(cls, rows):
-        result = {}
+    def parse_legacy_response(cls, rows: Sequence[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
+        result: dict[str, dict[str, Any]] = {}
         for row in rows:
             tree = row["tree"]
             effective_state = tree["aggr_effective_state"]
@@ -254,7 +253,7 @@ class AggregationRawdataGenerator:
             timeout=900,
         )
 
-        if response.status_code == 503:
+        if response.status_code == HTTPStatus.SERVICE_UNAVAILABLE:
             # BI aggregations are compiled asynchronously (see cmk.gui.bi._openapi); the
             # endpoint returns 503 with a human-readable `detail` while compilation is
             # still pending. Surface that message instead of the generic HTTP error text,
@@ -370,7 +369,9 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     prog, description = __doc__.split("\n\n", maxsplit=1)
     parser = argparse.ArgumentParser(prog=prog, description=description)
     parser.add_argument("--debug", action="store_true", help="Debug mode: raise Python exceptions")
+    # astrein: disable=argparse-nargs
     parser.add_argument("--secrets", default=[], nargs="*", help="List of secrets")
+    # astrein: disable=argparse-nargs
     parser.add_argument("--configs", default=[], nargs="*", help="List of configs")
     return parser.parse_args(argv)
 

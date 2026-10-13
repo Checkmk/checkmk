@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, State
@@ -17,8 +19,8 @@ from cmk.plugins.kube.schemata.section import ClusterDetails
         pytest.param(
             ClusterDetails(
                 api_health=APIHealth(
-                    ready=HealthZ(status_code=200, response="ok"),
-                    live=HealthZ(status_code=200, response="ok"),
+                    ready=HealthZ(status_code=HTTPStatus.OK, response="ok"),
+                    live=HealthZ(status_code=HTTPStatus.OK, response="ok"),
                 )
             ),
             [
@@ -30,8 +32,8 @@ from cmk.plugins.kube.schemata.section import ClusterDetails
         pytest.param(
             ClusterDetails(
                 api_health=APIHealth(
-                    ready=HealthZ(status_code=500, response="nok"),
-                    live=HealthZ(status_code=200, response="ok"),
+                    ready=HealthZ(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, response="nok"),
+                    live=HealthZ(status_code=HTTPStatus.OK, response="ok"),
                 )
             ),
             [

@@ -3,13 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-
-from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
-from enum import auto, Enum
 from pathlib import Path
 from typing import Literal
 
@@ -25,87 +20,11 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.groups_io import NothingOrChoices, PermittedPath
-from cmk.inventory.structured_data import (
-    filter_tree,
-    HistoryArchivePath,
-    HistoryDeltaPath,
-    HistoryEntry,
-    HistoryStore,
-    ImmutableDeltaTree,
-    ImmutableTree,
-    InventoryStore,
-    load_history,
-    merge_trees,
-    parse_from_raw_status_data_tree,
-    parse_visible_raw_path,
-    SDFilterChoice,
-    SDKey,
-    SDNodeName,
-    SDPath,
-)
-
-
-class TreeSource(Enum):
-    node = auto()
-    table = auto()
-    attributes = auto()
-
-
-@dataclass(frozen=True)
-class InventoryPath:
-    path: SDPath
-    source: TreeSource
-    key: SDKey = SDKey("")
-
-    @property
-    def node_name(self) -> str:
-        return self.path[-1] if self.path else ""
-
-
-def _sanitize_path(path: Sequence[str]) -> SDPath:
-    # ":": Nested tables, see also lib/structured_data.py
-    return tuple(
-        SDNodeName(p) for part in path for p in (part.split(":") if ":" in part else [part]) if p
-    )
-
-
-def parse_internal_raw_path(raw: str) -> InventoryPath:
-    if not raw:
-        return InventoryPath(
-            path=(),
-            source=TreeSource.node,
-        )
-    if raw.endswith("."):
-        return InventoryPath(
-            path=_sanitize_path(raw[:-1].strip(".").split(".")),
-            source=TreeSource.node,
-        )
-    if raw.endswith(":"):
-        return InventoryPath(
-            path=_sanitize_path(raw[:-1].strip(".").split(".")),
-            source=TreeSource.table,
-        )
-    path = raw.strip(".").split(".")
-    sanitized_path = _sanitize_path(path[:-1])
-    if ":" in path[-2]:
-        source = TreeSource.table
-        # Forget the last '*' or an index like '17'
-        # because it's related to columns (not nodes)
-        sanitized_path = sanitized_path[:-1]
-    else:
-        source = TreeSource.attributes
-    return InventoryPath(
-        path=sanitized_path,
-        source=source,
-        key=SDKey(path[-1]),
-    )
-
-
-# TODO Cleanup variation:
-#   - parse_internal_raw_path parses NOT visible, internal tree paths used in displayhints/views
-#   - cmk.inventory.structured_data.py::parse_visible_raw_path
-#     parses visible, internal tree paths for contact groups etc.
-# => Should be unified one day.
+from cmk.inventory.delta import ImmutableDeltaTree
+from cmk.inventory.filtering import filter_tree, SDFilterChoice
+from cmk.inventory.history import HistoryEntry, HistoryStore
+from cmk.inventory.store import InventoryStore
+from cmk.inventory.trees import ImmutableTree, parse_visible_raw_path, SDKey, SDNodeName
 
 
 def _transform_attribute[T](
@@ -118,7 +37,7 @@ def _transform_attribute[T](
     return [f(y) for y in x[1]]  # choices
 
 
-def _make_filter_choices_from_permitted_paths(
+def make_filter_choices_from_permitted_paths(
     permitted_paths: Sequence[PermittedPath],
 ) -> Sequence[SDFilterChoice]:
     return [
@@ -129,51 +48,8 @@ def _make_filter_choices_from_permitted_paths(
             nodes=_transform_attribute(SDNodeName, entry.get("nodes")),
         )
         for entry in permitted_paths
-        if entry  # type: ignore[redundant-expr]
+        if entry.get("visible_raw_path")
     ]
-
-
-def make_filter_choices_from_api_request_paths(
-    api_request_paths: Sequence[str],
-) -> Sequence[SDFilterChoice]:
-    def _make_filter_choice(inventory_path: InventoryPath) -> SDFilterChoice:
-        if inventory_path.key:
-            return SDFilterChoice(
-                path=inventory_path.path,
-                pairs=[inventory_path.key],
-                columns=[inventory_path.key],
-                nodes="nothing",
-            )
-        return SDFilterChoice(
-            path=inventory_path.path,
-            pairs="all",
-            columns="all",
-            nodes="all",
-        )
-
-    return [
-        _make_filter_choice(parse_internal_raw_path(raw_path)) for raw_path in api_request_paths
-    ]
-
-
-@request_memoize(maxsize=None)
-def _load_tree_from_file(
-    *, tree_type: Literal["inventory", "status_data"], host_name: HostName | None
-) -> ImmutableTree:
-    """Load data of a host, cache it in the current HTTP request"""
-    if not host_name:
-        return ImmutableTree()
-
-    if "/" in host_name:
-        # just for security reasons
-        return ImmutableTree()
-
-    inv_store = InventoryStore(cmk.utils.paths.omd_root)
-    match tree_type:
-        case "inventory":
-            return inv_store.load_inventory_tree(host_name=host_name)
-        case "status_data":
-            return inv_store.load_status_data_tree(host_name=host_name)
 
 
 @request_memoize()
@@ -213,6 +89,14 @@ def _get_permitted_inventory_paths() -> Sequence[PermittedPath] | None:
     return permitted_paths
 
 
+def _permitted_filter_choices() -> Sequence[SDFilterChoice] | None:
+    return (
+        make_filter_choices_from_permitted_paths(permitted_paths)
+        if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
+        else None
+    )
+
+
 def verify_permission(site_id: SiteId | None, host_name: HostName) -> None:
     if user.may("general.see_all"):
         return
@@ -244,19 +128,16 @@ def verify_permission(site_id: SiteId | None, host_name: HostName) -> None:
         )
 
 
-def load_tree(*, host_name: HostName | None, raw_status_data_tree: bytes) -> ImmutableTree:
-    """Load inventory tree from file, status data tree from row,
-    merge these trees and returns the filtered tree"""
-    inventory_tree = _load_tree_from_file(tree_type="inventory", host_name=host_name)
-    status_data_tree = (
-        parse_from_raw_status_data_tree(raw_status_data_tree)
-        if raw_status_data_tree
-        else _load_tree_from_file(tree_type="status_data", host_name=host_name)
-    )
+@request_memoize(maxsize=None)
+def load_tree(*, host_name: HostName, raw_status_data_tree: bytes) -> ImmutableTree:
+    if not host_name:
+        return ImmutableTree()
 
-    merged_tree = merge_trees(inventory_tree, status_data_tree)
-    if isinstance(permitted_paths := _get_permitted_inventory_paths(), list):
-        return filter_tree(merged_tree, _make_filter_choices_from_permitted_paths(permitted_paths))
+    merged_tree = InventoryStore(cmk.utils.paths.omd_root).load_merged_tree(
+        host_name=host_name, raw_status_data_tree=raw_status_data_tree
+    )
+    if (filters := _permitted_filter_choices()) is not None:
+        return filter_tree(merged_tree, filters)
 
     return merged_tree
 
@@ -272,8 +153,8 @@ def get_raw_status_data_via_livestatus(site: SiteId | None, host_name: HostName)
     finally:
         sites.live().set_only_sites()
 
-    if result and result[0]:
-        return result[0][0]
+    if result and result[0] and isinstance(raw_status_data := result[0][0], bytes):
+        return raw_status_data
     return b""
 
 
@@ -289,19 +170,7 @@ def inventory_of_host(
 
 
 def load_latest_delta_tree(history_store: HistoryStore, hostname: HostName) -> ImmutableDeltaTree:
-    if "/" in hostname:
-        return ImmutableDeltaTree()
-
-    history = load_history(
-        history_store,
-        hostname,
-        history_paths_filter=lambda paths: [paths[-1]] if paths else [],
-        delta_tree_filters=(
-            _make_filter_choices_from_permitted_paths(permitted_paths)
-            if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
-            else None
-        ),
-    )
+    history = history_store.load_latest(hostname, delta_tree_filters=_permitted_filter_choices())
     return history.entries[0].delta_tree if history.entries else ImmutableDeltaTree()
 
 
@@ -315,34 +184,14 @@ def load_delta_tree(
     history_store: HistoryStore, hostname: HostName, timestamp: int
 ) -> tuple[ImmutableDeltaTree, Sequence[str]]:
     """Load inventory history and compute delta tree of a specific timestamp"""
-    if "/" in hostname:
-        return ImmutableDeltaTree(), []  # just for security reasons
-
-    # Timestamp is timestamp of the younger of both trees. For the oldest
-    # tree we will just return the complete tree - without any delta
-    # computation.
-
-    def _search_timestamps(
-        paths: Sequence[HistoryDeltaPath | HistoryArchivePath], timestamp: int
-    ) -> Sequence[HistoryDeltaPath | HistoryArchivePath]:
-        for path in paths:
-            if path.current_timestamp == timestamp:
-                return [path]
+    history = history_store.load_at(
+        hostname, timestamp, delta_tree_filters=_permitted_filter_choices()
+    )
+    if history is None:
         raise MKGeneralException(
             _("Found no history entry at the time of '%(timestamp)s' for the host '%(hostname)s'")
             % {"timestamp": timestamp, "hostname": hostname}
         )
-
-    history = load_history(
-        history_store,
-        hostname,
-        history_paths_filter=lambda paths: _search_timestamps(paths, timestamp),
-        delta_tree_filters=(
-            _make_filter_choices_from_permitted_paths(permitted_paths)
-            if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
-            else None
-        ),
-    )
     return (
         history.entries[0].delta_tree if history.entries else ImmutableDeltaTree(),
         _sort_corrupted_history_files(history_store.inv_paths.archive_dir, history.corrupted),
@@ -352,19 +201,7 @@ def load_delta_tree(
 def get_history(
     history_store: HistoryStore, hostname: HostName
 ) -> tuple[Sequence[HistoryEntry], Sequence[str]]:
-    if "/" in hostname:
-        return [], []  # just for security reasons
-
-    history = load_history(
-        history_store,
-        hostname,
-        history_paths_filter=lambda paths: paths,
-        delta_tree_filters=(
-            _make_filter_choices_from_permitted_paths(permitted_paths)
-            if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
-            else None
-        ),
-    )
+    history = history_store.load(hostname, delta_tree_filters=_permitted_filter_choices())
     return history.entries, _sort_corrupted_history_files(
         history_store.inv_paths.archive_dir, history.corrupted
     )

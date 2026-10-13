@@ -27,7 +27,7 @@ from cmk.plugins.casa.agent_based.casa_cpu_util import (
 )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _patch_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(casa_cpu_temp, "get_value_store", dict)
     monkeypatch.setattr(casa_cpu_util, "get_value_store", dict)

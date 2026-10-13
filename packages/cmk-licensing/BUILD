@@ -2,16 +2,15 @@ load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
 ])
 
@@ -27,20 +26,23 @@ py_library(
     imports = ["."],
     visibility = [
         "//cmk:__subpackages__",
+        "//non-free/packages/cmk-data-backend:__pkg__",
         "//non-free/packages/cmk-licensing-nonfree:__pkg__",
-        "//non-free/packages/cmk-metric-backend:__pkg__",
         "//non-free/packages/cmk-plugins-nonfree:__subpackages__",
         "//non-free/packages/cmk-robotmk:__pkg__",
         "//non-free/tests:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [
+        "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-ccc:version-info",
         "//packages/cmk-licensing/cmk/licensing/basics",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:discover_plugins",
+        "//packages/cmk-plugin-apis:licensing",
         requirement("python-dateutil"),
     ],
 )
@@ -91,7 +93,6 @@ py_wheel(
     name = "wheel",
     distribution = "cmk-licensing",
     strip_path_prefixes = ["packages/cmk-licensing"],
-    # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [
@@ -117,7 +118,6 @@ py_cmk_test(
     srcs = glob(["tests/**/*.py"]),
     deps = [
         ":cmk-licensing",
-        requirement("time-machine"),
     ],
 )
 

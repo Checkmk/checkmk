@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type ComputedRef, type Ref, ref, watch } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 
 import type { ActionFeedback } from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
@@ -31,10 +31,13 @@ export interface SlideInActions<Target> {
  *
  * `subject` is the object on show; the state resets whenever it changes, so a panel switched to
  * another row never carries the previous one's feedback or open form over.
+ *
+ * `targets` is asked per action, because not every action acts on the object on show: a service
+ * whose check is a byproduct of the agent-based check reschedules the host's "Check_MK" service.
  */
 export function useSlideInActions<Target>(
   actions: () => MonitoringActionRegistry<Target>,
-  targets: ComputedRef<Target[]>,
+  targets: (actionId: string) => Target[],
   subject: () => unknown,
   onPerformed: (result: ActionFeedback) => void
 ): SlideInActions<Target> {
@@ -74,7 +77,7 @@ export function useSlideInActions<Target>(
       return
     }
     if (actionId === RESCHEDULE_ACTION_ID) {
-      await perform(actionId, targets.value)
+      await perform(actionId, targets(actionId))
       return
     }
     feedback.value = null

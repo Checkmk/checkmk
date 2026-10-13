@@ -28,12 +28,7 @@ def test_exclude_sections_files_aix_with_sections() -> None:
     ]
 
 
-def test_exclude_sections_files_aix_empty_conf() -> None:
-    result = list(get_agent_exclude_sections_files_aix(None))
-    assert result == []
-
-
-def test_exclude_sections_files_aix_empty_dict() -> None:
+def test_exclude_sections_files_aix_no_sections() -> None:
     result = list(get_agent_exclude_sections_files_aix({}))
     assert result == []
 

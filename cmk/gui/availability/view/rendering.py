@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import time
 from collections.abc import Iterator, Sequence
 from typing import cast
@@ -45,7 +44,7 @@ from cmk.gui.bi.foldable_tree_renderer import (
     FoldableTreeRendererTree,
 )
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, RequestCacheConfig
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -63,18 +62,15 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.painter.v0.helpers import format_plugin_output
+from cmk.gui.painter.helpers import format_plugin_output
 from cmk.gui.table import table_element
 from cmk.gui.top_heading import top_heading
 from cmk.gui.type_defs import (
-    DynamicIconName,
     FilterHeader,
     FilterName,
-    IconNames,
     InfoName,
     Row,
     Rows,
-    StaticIcon,
     ViewName,
     ViewProcessTracking,
     ViewSpec,
@@ -84,10 +80,13 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.visuals import page_menu_topic_add_to, view_title
+from cmk.gui.visuals.filter import Filter
 from cmk.utils import paths
 from cmk.utils.servicename import ServiceName
 from cmk.web.utils import escaping
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
+from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import makeuri
 
 from .annotations import _handle_edit_annotations, handle_delete_annotations, show_annotations
@@ -113,7 +112,10 @@ def _handle_availability_option_reset() -> None:
 
 
 def _show_availability_options(
-    option_type: str, what: AVObjectType, avoptions: AVOptions, valuespecs: AVOptionValueSpecs
+    option_type: str,
+    what: AVObjectType,  # noqa: ARG001
+    avoptions: AVOptions,
+    valuespecs: AVOptionValueSpecs,
 ) -> None:
     form_name = "avoptions_%s" % option_type
     with html.form_context(form_name):
@@ -195,7 +197,9 @@ def show_availability_page(
     missing_single_infos: set[FilterName],
     process_tracking: ViewProcessTracking,
     breadcrumb: Breadcrumb,
+    request_cache: RequestCache[RequestCacheConfig],
     filterheaders: FilterHeader,
+    active_filters: Sequence[Filter],
     debug: bool,
     table_row_limit: int,
 ) -> None:
@@ -248,7 +252,7 @@ def show_availability_page(
         av_object = (None, None, request.get_str_input_mandatory("av_aggr"))
         title += av_object[2]
     else:
-        title += view_title(spec, context)
+        title += view_title(spec, context, request_cache=request_cache)
 
     title += " - " + range_title
 
@@ -301,6 +305,7 @@ def show_availability_page(
             include_long_output=include_long_output,
             avoptions=avoptions,
             view_process_tracking=process_tracking,
+            active_filters=active_filters,
         )
         av_data = compute_availability(what, av_rawdata, avoptions, annotations)
 
@@ -339,8 +344,8 @@ def show_availability_page(
     if user_errors:
         form_name = request.get_ascii_input_mandatory("filled_in")
         if form_name in ("avoptions_display", "avoptions_computation"):
-            html.final_javascript(
-                "cmk.page_menu.open_popup(%s);" % json.dumps("popup_" + form_name)
+            html.call_ts_function(
+                function_name="open_popup", arguments={"popup_id": "popup_" + form_name}
             )
 
     if missing_single_infos:
@@ -493,7 +498,10 @@ def _render_avoptions_form(
 
 
 def _page_menu_entries_av_mode(
-    what: AVObjectType, av_mode: AVMode, av_object: AVObjectSpec, time_range: AVTimeRange
+    what: AVObjectType,
+    av_mode: AVMode,
+    av_object: AVObjectSpec,
+    time_range: AVTimeRange,  # noqa: ARG001
 ) -> Iterator[PageMenuEntry]:
     if av_mode == "timeline" or av_object:
         yield PageMenuEntry(
@@ -661,10 +669,19 @@ def _render_availability_timeline(
 
             table.cell(_("Links"), css=["buttons"])
             if what == "bi":
-                url = makeuri(request, [("timewarp", str(int(row["from"])))])
-                if request.var("timewarp") and request.get_integer_input_mandatory(
-                    "timewarp"
-                ) == int(row["from"]):
+                url = makeuri(
+                    request,
+                    [
+                        ("timewarp", str(int(row["from"]))),
+                        ("timewarp_aggr", str(av_entry["service"])),
+                    ],
+                )
+                timewarp_aggr = request.get_str_input("timewarp_aggr")
+                if (
+                    request.var("timewarp")
+                    and request.get_integer_input_mandatory("timewarp") == int(row["from"])
+                    and timewarp_aggr in (None, str(av_entry["service"]))
+                ):
                     html.disabled_icon_button(StaticIcon(IconNames.timewarp_off))
                 else:
                     html.icon_button(
@@ -875,6 +892,7 @@ def show_bi_availability(
     only_sites: list[SiteId] | None,
     process_tracking: ViewProcessTracking,
     breadcrumb: Breadcrumb,
+    request_cache: RequestCache[RequestCacheConfig],
     aggr_rows: Rows,
     debug: bool,
     escape_plugin_output: bool,
@@ -892,7 +910,7 @@ def show_bi_availability(
     avoptions = get_availability_options_from_request("bi")
     _save_availability_options_after_update(avoptions)
 
-    title = view_title(spec, context)
+    title = view_title(spec, context, request_cache=request_cache)
     if av_mode == "timeline":
         title = _("Timeline of") + " " + title
     else:
@@ -996,13 +1014,21 @@ def show_bi_availability(
             if only_sites is None or site_id in only_sites
         ]
 
+        # Render the selected time warp for the aggregation it was opened from. The
+        # timewarp link carries that aggregation, older links without it warp all of
+        # the aggregations shown on this page.
+        timewarp_aggr = request.get_str_input("timewarp_aggr")
+
         for timeline_container in timeline_containers:
             tree = timeline_container.aggr_tree
             these_spans = timeline_container.timeline
             timewarp_tree_state = timeline_container.timewarp_state
+            phase_index = timeline_container.timewarp_index
 
-            # render selected time warp for the corresponding aggregation row (should be matched by only one)
-            if timewarp and timewarp_tree_state:
+            if timewarp_aggr is not None and tree["title"] != timewarp_aggr:
+                continue
+
+            if timewarp_tree_state is not None and phase_index is not None:
                 state, assumed_state, node, _subtrees = timewarp_tree_state
                 eff_state = state
                 if assumed_state is not None:
@@ -1030,63 +1056,49 @@ def show_bi_availability(
                 )
                 tdclass, htmlcode = renderer.css_class(), renderer.render()
 
-                with output_funnel.plugged():
-                    # TODO: SOMETHING IS WRONG IN HERE (used to be the same situation in original code!)
-                    # FIXME: WHAT is wrong in here??
+                timewarp_time = these_spans[phase_index]["from"]
 
+                with output_funnel.plugged():
                     html.open_h3()
                     # render icons for back and forth
-                    button_back_shown = False
-                    button_forth_shown = False
-                    if int(these_spans[0]["from"]) == timewarp:
+                    if phase_index > 0:
+                        html.icon_button(
+                            makeuri(
+                                request,
+                                [("timewarp", str(these_spans[phase_index - 1]["from"]))],
+                            ),
+                            _("Jump one phase back"),
+                            StaticIcon(IconNames.back),
+                        )
+                    else:
                         html.disabled_icon_button(StaticIcon(IconNames.back_off))
-                        button_back_shown = True
 
-                    previous_span = None
-                    for span in these_spans:
-                        if (
-                            not button_back_shown
-                            and int(span["from"]) == timewarp
-                            and previous_span is not None
-                        ):
-                            html.icon_button(
-                                makeuri(request, [("timewarp", str(int(previous_span["from"])))]),
-                                _("Jump one phase back"),
-                                StaticIcon(IconNames.back),
-                            )
-                            button_back_shown = True
-                        # Multiple followup spans can have the same "from" time
-                        # We only show one forth-arrow with an actual time difference
-                        elif (
-                            not button_forth_shown
-                            and previous_span
-                            and int(previous_span["from"]) == timewarp
-                            and int(span["from"]) != timewarp
-                        ):
-                            html.icon_button(
-                                makeuri(
-                                    request,
-                                    [("timewarp", str(int(span["from"])))],
-                                ),
-                                _("Jump one phase forth"),
-                                StaticIcon(IconNames.forth),
-                            )
-                            button_forth_shown = True
-                        previous_span = span
-                    if not button_forth_shown:
+                    if phase_index + 1 < len(these_spans):
+                        html.icon_button(
+                            makeuri(
+                                request,
+                                [("timewarp", str(these_spans[phase_index + 1]["from"]))],
+                            ),
+                            _("Jump one phase forth"),
+                            StaticIcon(IconNames.forth),
+                        )
+                    else:
                         html.disabled_icon_button(StaticIcon(IconNames.forth_off))
 
                     html.write_text_permissive(" &nbsp; ")
                     html.icon_button(
-                        makeuri(request, [], delvars=["timewarp"]),
+                        makeuri(request, [], delvars=["timewarp", "timewarp_aggr"]),
                         _("Close timewarp"),
                         StaticIcon(IconNames.closetimewarp),
                     )
                     html.write_text_permissive(
-                        "%s %s"
+                        "%s %s%s"
                         % (
                             _("Timewarp to "),
-                            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timewarp)),
+                            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timewarp_time)),
+                            ""
+                            if timewarp_time == timewarp
+                            else " (%s)" % _("nearest phase of the selected time range"),
                         )
                     )
                     html.close_h3()

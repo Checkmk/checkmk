@@ -13,7 +13,7 @@ falls back to the whole page.
 
 import logging
 
-from playwright.sync_api import Locator
+from playwright.sync_api import expect, Locator
 
 from tests.system.gui.testlib.playwright.pom.page import MainArea
 
@@ -78,10 +78,23 @@ class GlobalTimePicker:
         self.overflow.get_by_role("option", name=name, exact=True).click()
 
     @property
+    def flyout(self) -> Locator:
+        """The custom-range flyout the trigger opens."""
+        return self.root.get_by_role("dialog")
+
+    def select_quick_range(self, name: str) -> None:
+        """Apply one of the flyout's quick ranges, e.g. "Today"."""
+        logger.info("Selecting the quick range '%s'", name)
+        self.trigger.click()
+        self.flyout.get_by_role("radio", name=name, exact=True).click()
+        self.flyout.get_by_role("button", name="Apply", exact=True).click()
+        expect(self.flyout).to_be_hidden()
+
+    @property
     def refresh_indicator(self) -> Locator:
         """The live/paused refresh pill beside the picker."""
         return self.root.locator(".graphing-global-refresh-control")
 
     @property
     def resume_refresh_button(self) -> Locator:
-        return self.refresh_indicator.get_by_role("button", name="Resume")
+        return self.refresh_indicator.get_by_role("button", name="Resume live refresh")

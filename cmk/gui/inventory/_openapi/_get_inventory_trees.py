@@ -11,7 +11,7 @@ from cmk.gui.openapi.framework import QueryParam
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel, LinkModel
 from cmk.gui.openapi.restful_objects.constructors import collection_href
-from cmk.inventory.structured_data import ImmutableTree
+from cmk.inventory.trees import ImmutableTree
 
 from .._tree import inventory_of_host
 
@@ -33,9 +33,9 @@ class Table:
 
 @api_model
 class Tree:
-    attributes: "Attributes" = api_field(description="A collection of key-value pairs")
-    table: "Table" = api_field(description="A collection of rows")
-    nodes: Mapping[str, "Tree"] = api_field(description="Sub trees identified by node names")
+    attributes: Attributes = api_field(description="A collection of key-value pairs")
+    table: Table = api_field(description="A collection of rows")
+    nodes: Mapping[str, Tree] = api_field(description="Sub trees identified by node names")
 
 
 def _transform_inventory_tree(tree: ImmutableTree) -> Tree:
@@ -66,7 +66,7 @@ class HostInventoryTree:
 
 @api_model
 class InventoryTreesCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["inventory"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["inventory"] = api_field(
         description="The domain type of the objects in the collection",
         example="inventory",
     )

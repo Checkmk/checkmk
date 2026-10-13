@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Collection, Sequence
 from contextlib import AbstractContextManager as ContextManager
@@ -21,7 +20,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.sidebar import PageHandlers, SidebarSnapin
-from cmk.gui.type_defs import HTTPVariables, IconNames, StaticIcon, VirtualHostTreeSpec
+from cmk.gui.type_defs import VirtualHostTreeSpec
 from cmk.gui.watolib.hosts_and_folders import (
     FolderTree,
     get_folder_title_path,
@@ -29,11 +28,12 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.ruleset_matcher.tags import TagGroup, TagGroupID, TagID
 from cmk.web.utils.html import HTML
-from cmk.web.utils.urls import makeuri_contextless
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.urls import HTTPVariable, makeuri_contextless
 
 
 class Tree(TypedDict, total=False):
-    _children: dict[tuple[str, str | None], "Tree"]
+    _children: dict[tuple[str, str | None], Tree]
     _num_hosts: int
     _state: int
     _svc_problems: bool
@@ -88,7 +88,7 @@ class VirtualHostTree(SidebarSnapin):
     def show(self, config: Config) -> None:
         self._load(config.virtual_host_trees)
         if not config.virtual_host_trees:
-            url = "wato.py?varname=virtual_host_trees&mode=edit_configvar"
+            url = "global_settings.py?varname=virtual_host_trees"
             html.p(
                 _(
                     "You have not defined any virtual host trees. You can do this "
@@ -107,19 +107,18 @@ class VirtualHostTree(SidebarSnapin):
                 "vtree",
                 self._tree_choices(),
                 deflt="%s" % self._current_tree_id,
-                onchange="virtual_host_tree_changed(this)",
+                onchange="cmk.sidebar.virtual_host_tree_changed(this)",
                 style="width:210px" if self._current_tree_path else None,
             )
 
             # Give chance to change one level up, if we are in a subtree
             if self._current_tree_path:
-                upurl = "javascript:virtual_host_tree_enter('%s')" % "|".join(
+                upurl = "javascript:cmk.sidebar.virtual_host_tree_enter('%s')" % "|".join(
                     self._current_tree_path[:-1]
                 )
                 html.icon_button(upurl, _("Go up one tree level"), StaticIcon(IconNames.back))
 
             html.br()
-        html.final_javascript(self._javascript())
 
     def _show_tree(self, folder_tree: FolderTree, tag_groups: Sequence[TagGroup]) -> None:
         tree_spec = self._trees[self._current_tree_id]["tree_spec"]
@@ -214,7 +213,7 @@ class VirtualHostTree(SidebarSnapin):
         if not leaf:
             code = HTMLWriter.render_a(
                 code,
-                href="javascript:virtual_host_tree_enter('%s');" % "|".join(path),
+                href="javascript:cmk.sidebar.virtual_host_tree_enter('%s');" % "|".join(path),
                 title=_("Display the tree only below this node"),
             )
         return code + " "
@@ -226,7 +225,7 @@ class VirtualHostTree(SidebarSnapin):
         viewname: str,
         tag_groups: Sequence[TagGroup],
     ) -> str:
-        urlvars: HTTPVariables = [
+        urlvars: list[HTTPVariable] = [
             ("view_name", viewname),
             ("filled_in", "filter"),
             ("_show_filter_form", "0"),
@@ -318,28 +317,6 @@ class VirtualHostTree(SidebarSnapin):
 
         return any(self._tag_tree_has_svc_problems(x) for x in tree.get("_children", {}).values())
 
-    def _javascript(self) -> str:
-        return """
-function virtual_host_tree_changed(field)
-{
-    var tree_id = field.value;
-    cmk.ajax.call_ajax('sidebar_ajax_tag_tree.py?tree_id=' + escape(tree_id), {
-        response_handler : function(handler_data, response_body) {
-            cmk.sidebar.refresh_single_snapin("tag_tree");
-        }
-    });
-}
-
-function virtual_host_tree_enter(path)
-{
-    cmk.ajax.call_ajax('sidebar_ajax_tag_tree_enter.py?path=' + escape(path), {
-        response_handler : function(handler_data, response_body) {
-            cmk.sidebar.refresh_single_snapin("tag_tree");
-        }
-    });
-}
-"""
-
     def _compute_tag_tree(
         self, folder_tree: FolderTree, tree_spec: Sequence[str], tag_groups: Sequence[TagGroup]
     ) -> Tree:
@@ -427,7 +404,7 @@ function virtual_host_tree_enter(path)
 
                     if level <= len(folder_titles):
                         node_title = folder_titles[level - 1]
-                        node_value = "folder:%d:%s" % (level, folder_path_components[level - 1])
+                        node_value = "folder:%d:%s" % (level, folder_path_components[level - 1])  # type: ignore[possibly-undefined]
                     else:
                         node_title = _("Hosts in this folder")
                         node_value = "folder:%d:" % level
@@ -441,7 +418,7 @@ function virtual_host_tree_enter(path)
                 elif level_spec.startswith("foldertree:"):
                     path_components = []
                     foldertree_tree_entry = tree_entry
-                    for path_component in folder_path_components:
+                    for path_component in folder_path_components:  # type: ignore[possibly-undefined]
                         path_components.append(path_component)
 
                         level = len(path_components)
@@ -483,7 +460,7 @@ function virtual_host_tree_enter(path)
             parent_level_branches = this_level_branches
 
         # Add the numbers/state of this host to the last level the host is invovled with
-        for tree_entry in this_level_branches:
+        for tree_entry in this_level_branches:  # type: ignore[possibly-undefined]
             tree_entry.setdefault("_num_hosts", 0)
             tree_entry.setdefault("_state", 0)
 
@@ -580,7 +557,7 @@ function virtual_host_tree_enter(path)
             "sidebar_ajax_tag_tree_enter": self._ajax_tag_tree_enter,
         }
 
-    def _ajax_tag_tree(self, ctx: PageContext) -> None:
+    def _ajax_tag_tree(self, ctx: PageContext) -> None:  # noqa: ARG002
         response.set_content_type("application/json")
         self._load(active_config.virtual_host_trees)
         new_tree = request.var("tree_id")
@@ -593,7 +570,7 @@ function virtual_host_tree_enter(path)
         response.set_data("OK")
 
     # TODO: Validate path in current tree
-    def _ajax_tag_tree_enter(self, ctx: PageContext) -> None:
+    def _ajax_tag_tree_enter(self, ctx: PageContext) -> None:  # noqa: ARG002
         response.set_content_type("application/json")
         self._load(active_config.virtual_host_trees)
         path = request.get_str_input_mandatory("path").split("|") if request.var("path") else []

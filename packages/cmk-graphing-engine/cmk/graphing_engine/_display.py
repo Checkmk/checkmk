@@ -98,7 +98,19 @@ FALLBACK_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 FALLBACK_ATTRIBUTES = CurveAttributes(title="", unit=FALLBACK_UNIT, color=FALLBACK_COLOR)
 
 
-def metric_display_attributes(
+PREDICT_PREFIX = "predict_"
+PREDICT_LOWER_PREFIX = "predict_lower_"
+
+
+def _predicted_of(metric_name: str) -> tuple[str, str] | None:
+    if metric_name.startswith(PREDICT_LOWER_PREFIX):
+        return metric_name[len(PREDICT_LOWER_PREFIX) :], " (lower levels)"
+    if metric_name.startswith(PREDICT_PREFIX):
+        return metric_name[len(PREDICT_PREFIX) :], " (upper levels)"
+    return None
+
+
+def _declared_attributes(
     metric_name: str,
     localizer: Callable[[str], str],
     registered_metrics: Mapping[str, metrics_v1.Metric],
@@ -110,3 +122,35 @@ def metric_display_attributes(
         unit=parse_unit(definition.unit),
         color=parse_color(definition.color),
     )
+
+
+def _prediction_attributes(
+    metric_name: str,
+    localizer: Callable[[str], str],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
+) -> CurveAttributes | None:
+    if metric_name in registered_metrics:
+        return None
+    if (predicted := _predicted_of(metric_name)) is None:
+        return None
+    predicted_metric_name, levels = predicted
+    predicted_attributes = _declared_attributes(
+        predicted_metric_name, localizer, registered_metrics
+    )
+    return CurveAttributes(
+        title=localizer("Prediction of ") + predicted_attributes.title + localizer(levels),
+        unit=predicted_attributes.unit,
+        color=FALLBACK_COLOR,
+    )
+
+
+def metric_display_attributes(
+    metric_name: str,
+    localizer: Callable[[str], str],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
+) -> CurveAttributes:
+    if (
+        prediction := _prediction_attributes(metric_name, localizer, registered_metrics)
+    ) is not None:
+        return prediction
+    return _declared_attributes(metric_name, localizer, registered_metrics)

@@ -7,7 +7,7 @@ import type { HSLColor, RGBColor } from 'd3'
 
 import type { FigureData } from '@/modules/figures/figure_types'
 
-export interface TimeseriesFigureDataPlotDefinition {
+interface TimeseriesFigureDataPlotDefinition {
   id: string
   color: string
   plot_type: string
@@ -96,13 +96,6 @@ export interface DrawSubplotStyles {
   opacity?: string | number
   stroke?: RGBColor | HSLColor | null
   'stroke-width'?: number
-}
-
-export interface Shift {
-  shifted_id: string
-  seconds: number
-  color: string
-  label_suffix: string
 }
 
 export interface Domain {

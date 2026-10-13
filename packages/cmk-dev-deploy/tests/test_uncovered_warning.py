@@ -4,8 +4,6 @@
 
 """Unit tests for the persistent 'not covered by any deploy spec' warning."""
 
-from __future__ import annotations
-
 from collections.abc import Iterator
 from pathlib import Path
 from unittest.mock import patch
@@ -19,7 +17,7 @@ from cmk.dev_deploy.types import ChangeCategory, ChangeSet
 _PATH = "zzz_uncovered/script.py"
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _fake_registry() -> Iterator[None]:
     """Coverage stub: cmk/ is covered, everything else is not.
 

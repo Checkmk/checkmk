@@ -3,21 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
+import functools
+import operator
 import types
-from collections.abc import Iterable
-from typing import Annotated, get_args, get_origin, TypeAliasType
+from collections.abc import Iterable, Iterator, Mapping
+from typing import Annotated, cast, get_args, get_origin, get_type_hints, TypeAliasType, TypeVar
+
+from typing_extensions import TypeForm
 
 from cmk.gui.utils.dataclasses import DataclassInstance
 
 
-# TODO(PEP-747): replace `type | TypeAliasType | types.UnionType` with `TypeForm` once available;
-#   the return type would then be `TypeForm` as well
-def resolve_type(t: type | TypeAliasType | types.UnionType) -> type | types.UnionType:
+def resolve_type(t: TypeForm[object]) -> type | types.UnionType:
     """Strip Annotated wrappers and unwrap TypeAliasType to reach the underlying concrete type.
 
     Handles arbitrarily nested combinations in any order. Only the outermost wrappers are
     removed — Annotated inside generic arguments (e.g. dict[str, Annotated[...]]) is preserved.
-    Union types (A | B) are passed through unchanged.
+    A parameterized generic alias (e.g. Alias[int]) is unwrapped with its type arguments
+    substituted. Union types (A | B) are passed through unchanged.
 
     Examples:
         >>> resolve_type(Annotated[list[str], "foo"])
@@ -27,13 +30,39 @@ def resolve_type(t: type | TypeAliasType | types.UnionType) -> type | types.Unio
         >>> resolve_type(Annotated[dict[str, Annotated[list[str], "foo"]], "bar"])
         dict[str, typing.Annotated[list[str], 'foo']]
     """
-    while isinstance(t, TypeAliasType) or get_origin(t) is Annotated:
-        t = t.__value__ if isinstance(t, TypeAliasType) else get_args(t)[0]
-    return t
+    # mypy wrongly assumes that a TypeForm can't be a TypeAliasType, so we use an object here.
+    resolved: object = t
+    while True:
+        if isinstance(resolved, TypeAliasType):
+            resolved = resolved.__value__
+        elif isinstance(origin := get_origin(resolved), TypeAliasType):
+            resolved = _substitute_alias_arguments(origin, get_args(resolved))
+        elif origin is Annotated:
+            resolved = get_args(resolved)[0]
+        else:
+            break
+    # cast: this can be other type forms like a generic alias `list[str]`, too.
+    return cast("type | types.UnionType", resolved)
 
 
-# TODO(PEP-747): replace `type | TypeAliasType | types.UnionType` with `TypeForm`.
-def get_resolved_origin(t: type | TypeAliasType | types.UnionType) -> type:
+def _substitute_alias_arguments(alias: TypeAliasType, arguments: tuple[object, ...]) -> object:
+    """Get the value of a generic type alias, with its type parameters replaced by the arguments.
+
+    Raises:
+        ValueError: if the alias has a ParamSpec or TypeVarTuple, or the number of arguments is
+            wrong.
+    """
+    type_vars = [param for param in alias.__type_params__ if isinstance(param, TypeVar)]
+    if len(type_vars) != len(alias.__type_params__):
+        raise ValueError(f"Only type variables are supported as type parameters of {alias}.")
+    if len(type_vars) != len(arguments):
+        raise ValueError(
+            f"Expected {len(type_vars)} type argument(s) for {alias}, got {len(arguments)}."
+        )
+    return substitute_type_vars(alias.__value__, dict(zip(type_vars, arguments, strict=True)))
+
+
+def get_resolved_origin(t: TypeForm[object]) -> type:
     """Get the origin of the resolved type, dropping Annotated and TypeAliasType first.
 
     For union types (A | B) returns types.UnionType (the class) as the origin.
@@ -50,6 +79,104 @@ def get_resolved_origin(t: type | TypeAliasType | types.UnionType) -> type:
     if isinstance(resolved, types.UnionType):
         return types.UnionType
     return get_origin(resolved) or resolved
+
+
+def get_dataclass_origin(annotation: object) -> type | None:
+    """Return the dataclass behind an annotation, also for a parameterized generic model.
+
+    Annotated and TypeAliasType wrappers are *not* unwrapped, because a model behind such a
+    wrapper was never walked as a model either.
+
+    Examples:
+        >>> from dataclasses import dataclass
+        >>> @dataclass
+        ... class Model[T]:
+        ...     value: T
+        >>> get_dataclass_origin(Model[int]) is Model
+        True
+        >>> get_dataclass_origin(list[int]) is None
+        True
+    """
+    origin = get_origin(annotation) or annotation
+    if isinstance(origin, type) and dataclasses.is_dataclass(origin):
+        return origin
+
+    return None
+
+
+def substitute_type_vars(annotation: object, substitutions: Mapping[TypeVar, object]) -> object:
+    """Replace the type variables in an annotation with their concrete type arguments.
+
+    A `TypeAliasType` is not unwrapped. A parameterized alias keeps its arguments substituted,
+    and the body of an alias cannot reference the type variables of the enclosing model.
+
+    Examples:
+        >>> T = TypeVar("T")
+        >>> substitute_type_vars(list[T], {T: int})
+        list[int]
+        >>> substitute_type_vars(T | None, {T: int})
+        int | None
+        >>> substitute_type_vars(dict[str, T], {T: int})
+        dict[str, int]
+        >>> substitute_type_vars(list[str], {T: int})
+        list[str]
+    """
+    if not substitutions:
+        return annotation
+
+    if isinstance(annotation, TypeVar):
+        if annotation not in substitutions:
+            raise ValueError(f"Unbound type variable: {annotation}")
+        return substitutions[annotation]
+
+    origin = get_origin(annotation)
+    if origin is None or not (args := get_args(annotation)):
+        return annotation
+
+    substituted = tuple(substitute_type_vars(arg, substitutions) for arg in args)
+    if substituted == args:
+        return annotation
+
+    if origin is Annotated:
+        return Annotated[substituted]
+    if isinstance(annotation, types.UnionType):
+        return functools.reduce(operator.or_, substituted)
+
+    return origin[substituted]
+
+
+def iter_model_fields(
+    annotation: object, *, path: str
+) -> Iterator[tuple[dataclasses.Field[object], object]]:
+    """Iterate the fields of a model, with the type arguments of a parameterized generic applied.
+
+    `path` names the model in the error messages.
+
+    Raises:
+        ValueError: if the annotation is not a dataclass, if a generic model is not fully
+            parameterized, or if an annotation cannot be resolved.
+    """
+    if (origin := get_dataclass_origin(annotation)) is None:
+        raise ValueError(f"Expected a dataclass annotation for `{path}`.")
+
+    parameters = getattr(origin, "__parameters__", ())
+    arguments = get_args(annotation)
+    if len(parameters) != len(arguments):
+        raise ValueError(
+            f"Expected {len(parameters)} type argument(s) for `{path}`, got {len(arguments)}. "
+            f"Generic models must be fully parameterized."
+        )
+
+    # `get_type_hints` resolves the string annotations of a module that uses
+    # `from __future__ import annotations`, and it merges the annotations of the base classes.
+    try:
+        hints = get_type_hints(origin, include_extras=True)
+    except NameError as e:
+        raise ValueError(f"Cannot resolve the annotations of `{path}`: {e}") from None
+
+    substitutions = dict(zip(parameters, arguments, strict=True))
+    for field in dataclasses.fields(origin):
+        yield field, substitute_type_vars(hints[field.name], substitutions)
 
 
 def iter_dataclass_fields[T: DataclassInstance](dataclass: T) -> Iterable[tuple[str, object]]:

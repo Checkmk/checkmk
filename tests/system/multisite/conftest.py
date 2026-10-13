@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 import logging
 import os
 import time
@@ -16,14 +18,16 @@ import pytest
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
 from tests.system.multisite.utils import get_cre_agent_path
-from tests.testlib.agent import (
+from tests.testlib.common.utils2 import is_containerized, run
+from tests.testlib.pytest_helpers import flake_reporter, registration
+from tests.testlib.system.agent import (
     agent_controller_daemon,
     bake_agents,
     download_and_install_agent_package,
     install_agent_package,
 )
-from tests.testlib.common.utils2 import is_containerized, run
-from tests.testlib.site import (
+from tests.testlib.system.pytest_helpers.cmk_package import add_host_diagnostics
+from tests.testlib.system.site import (
     connection,
     get_site_factory,
     GlobalSettingsUpdate,
@@ -32,6 +36,19 @@ from tests.testlib.site import (
 )
 
 site_factory = get_site_factory(prefix="comp_")
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_exception_interact(
+    node: pytest.Item | pytest.Collector,
+    call: pytest.CallInfo[object],
+    report: pytest.CollectReport | pytest.TestReport,
+) -> None:
+    """With several sites involved, show what all of them were up to when a test failed."""
+    if not (excinfo := call.excinfo):
+        return
+    add_host_diagnostics(excinfo.value, sudo=is_containerized())
+    report.longrepr = node.repr_failure(excinfo)
 
 
 def _cloud_lifecycle_wrapper_or_none() -> Callable[[Site], AbstractContextManager[None]] | None:
@@ -62,7 +79,7 @@ def _ensure_cloud_initial_config() -> None:
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def instrument_requests() -> None:
     RequestsInstrumentor().instrument()
 
@@ -98,14 +115,18 @@ def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator
 
 @pytest.fixture(name="remote_site", scope="session")
 def _remote_site(
-    central_site: Site, request: pytest.FixtureRequest, ensure_cron: None
+    central_site: Site,
+    request: pytest.FixtureRequest,
+    ensure_cron: None,
 ) -> Iterator[Site]:
     yield from _make_connected_remote_site("remote", central_site, request.node.name)
 
 
 @pytest.fixture(name="remote_site_2", scope="session")
 def _remote_site_2(
-    central_site: Site, request: pytest.FixtureRequest, ensure_cron: None
+    central_site: Site,
+    request: pytest.FixtureRequest,
+    ensure_cron: None,
 ) -> Iterator[Site]:
     yield from _make_connected_remote_site("remote2", central_site, request.node.name)
 
@@ -150,7 +171,7 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
         yield installed_agent_ctl_in_unknown_state
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _verify_central_livestatus_alive(
     central_site: Site,
     request: pytest.FixtureRequest,
@@ -224,3 +245,7 @@ def _run_cron() -> None:
 
     # Start cron daemon. It forks an will keep running in the background
     run([cron_cmd], check=True, sudo=True)
+
+
+def pytest_addoption(pluginmanager: pytest.PytestPluginManager) -> None:
+    registration.register_pytest_plugins(pluginmanager, flake_reporter)

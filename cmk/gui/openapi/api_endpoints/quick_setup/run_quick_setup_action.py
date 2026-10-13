@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from enum import StrEnum
+from http import HTTPStatus
 from typing import Annotated, Literal
 
 from cmk.gui.openapi.framework import (
@@ -36,11 +37,11 @@ def run_quick_setup_action_v1(
     api_context: ApiContext,
     quick_setup_id: Annotated[str, PathParam(description="The quick setup id", example="aws")],
     body: QuickSetupFinalActionRequestModel,
-    mode: Annotated[
+    mode: Annotated[  # noqa: ARG001
         Literal["guided", "overview"] | None,
         QueryParam(description="The quick setup mode", example="overview"),
     ] = "guided",
-    search: Annotated[
+    search: Annotated[  # noqa: ARG001
         str | None,
         QueryParam(
             description="Optional search query to preserve when redirecting after save",
@@ -70,7 +71,12 @@ ENDPOINT_RUN_QUICK_SETUP_ACTION = VersionedEndpoint(
     versions={
         APIVersion.V1: EndpointHandler(
             handler=run_quick_setup_action_v1,
-            additional_status_codes=[201, 303, 403, 429],
+            additional_status_codes=[
+                HTTPStatus.CREATED,
+                HTTPStatus.SEE_OTHER,
+                HTTPStatus.FORBIDDEN,
+                HTTPStatus.TOO_MANY_REQUESTS,
+            ],
         )
     },
 )

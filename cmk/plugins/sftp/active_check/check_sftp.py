@@ -15,7 +15,7 @@ from typing import NamedTuple
 import paramiko
 from pydantic import BaseModel
 
-from cmk.password_store.v1_unstable import dereference_secret
+from cmk.password_store.v1 import dereference_secret
 from cmk.utils.paths import omd_root
 
 _LOCAL_DIR = "var/check_mk/active_checks/check_sftp"

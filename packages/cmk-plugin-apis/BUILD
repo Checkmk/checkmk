@@ -10,7 +10,6 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 exports_files(
     [
         "dev-requirements.in",
-        "pyproject.toml",
         "requirements.in",
     ],
 )
@@ -21,7 +20,6 @@ py_library(
         "cmk/agent_based/internal/__init__.py",
         "cmk/agent_based/internal/_snmp.py",
         "cmk/agent_based/legacy/__init__.py",
-        "cmk/agent_based/legacy/_loading.py",
         "cmk/agent_based/legacy/conversion.py",
         "cmk/agent_based/legacy/v0_unstable.py",
         "cmk/agent_based/prediction_backend.py",
@@ -67,15 +65,17 @@ py_library(
         "cmk/bakery/internal/_common_config.py",
         "cmk/bakery/internal/_constants.py",
         "cmk/bakery/internal/_core_bakelet.py",
+        "cmk/bakery/internal/_recipes.py",
         "cmk/bakery/internal/_types.py",
         "cmk/bakery/v1/__init__.py",
         "cmk/bakery/v1/_artifact_types.py",
         "cmk/bakery/v1/_constants.py",
         "cmk/bakery/v1/_function_types.py",
+        "cmk/bakery/v2/__init__.py",
+        "cmk/bakery/v2/_artifact_types.py",
+        "cmk/bakery/v2/_config.py",
+        "cmk/bakery/v2/_plugins.py",
         "cmk/bakery/v2_unstable/__init__.py",
-        "cmk/bakery/v2_unstable/_artifact_types.py",
-        "cmk/bakery/v2_unstable/_config.py",
-        "cmk/bakery/v2_unstable/_plugins.py",
     ],
     data = ["cmk/bakery/py.typed"],
     imports = ["."],
@@ -152,9 +152,10 @@ py_library(
 py_library(
     name = "password_store",
     srcs = [
+        "cmk/password_store/v1/__init__.py",
+        "cmk/password_store/v1/_convenience.py",
+        "cmk/password_store/v1/_impl.py",
         "cmk/password_store/v1_unstable/__init__.py",
-        "cmk/password_store/v1_unstable/_convenience.py",
-        "cmk/password_store/v1_unstable/_impl.py",
     ],
     data = ["cmk/password_store/py.typed"],
     imports = ["."],
@@ -189,11 +190,13 @@ py_library(
     name = "server_side_programs",
     srcs = [
         "cmk/server_side_programs/__init__.py",
+        "cmk/server_side_programs/v1/__init__.py",
+        "cmk/server_side_programs/v1/_crash_reporting.py",
+        "cmk/server_side_programs/v1/_host_name_validation.py",
+        "cmk/server_side_programs/v1/_logging.py",
+        "cmk/server_side_programs/v1/_storage.py",
+        "cmk/server_side_programs/v1/_vcrtrace.py",
         "cmk/server_side_programs/v1_unstable/__init__.py",
-        "cmk/server_side_programs/v1_unstable/_crash_reporting.py",
-        "cmk/server_side_programs/v1_unstable/_host_name_validation.py",
-        "cmk/server_side_programs/v1_unstable/_storage.py",
-        "cmk/server_side_programs/v1_unstable/_vcrtrace.py",
     ],
     data = ["cmk/server_side_programs/py.typed"],
     imports = ["."],
@@ -203,6 +206,22 @@ py_library(
         requirement("urllib3"),
         requirement("vcrpy"),
     ],
+)
+
+py_library(
+    name = "automations",
+    srcs = ["cmk/automations/internal/__init__.py"],
+    data = ["cmk/automations/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
+    name = "cli",
+    srcs = ["cmk/cli/internal/__init__.py"],
+    data = ["cmk/cli/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
 )
 
 py_library(
@@ -247,13 +266,22 @@ py_library(
     name = "inventory_ui",
     srcs = [
         "cmk/inventory_ui/__init__.py",
+        "cmk/inventory_ui/v1/__init__.py",
+        "cmk/inventory_ui/v1/_localize.py",
+        "cmk/inventory_ui/v1/_node.py",
+        "cmk/inventory_ui/v1/_style.py",
+        "cmk/inventory_ui/v1/_unit.py",
         "cmk/inventory_ui/v1_unstable/__init__.py",
-        "cmk/inventory_ui/v1_unstable/_localize.py",
-        "cmk/inventory_ui/v1_unstable/_node.py",
-        "cmk/inventory_ui/v1_unstable/_style.py",
-        "cmk/inventory_ui/v1_unstable/_unit.py",
     ],
     data = ["cmk/inventory_ui/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
+    name = "licensing",
+    srcs = glob(["cmk/licensing/internal/**/*.py"]),
+    data = ["cmk/licensing/py.typed"],
     imports = ["."],
     visibility = ["//visibility:public"],
 )
@@ -273,13 +301,16 @@ py_doc_test(
     size = "small",
     srcs = [
         ":agent_based",
+        ":automations",
         ":bakery",
+        ":cli",
         ":dcd_connector_parameters",
         ":dcd_connectors",
         ":diagnostics",
         ":discover_plugins",
         ":graphing",
         ":inventory_ui",
+        ":licensing",
         ":password_store",
         ":post_rename_site",
         ":rulesets",
@@ -303,6 +334,24 @@ py_cmk_test(
     srcs = glob(["tests/cmk/bakery/**/*.py"]),
     deps = [
         ":bakery",
+    ],
+)
+
+py_cmk_test(
+    name = "automations-test",
+    size = "small",
+    srcs = glob(["tests/cmk/automations/**/*.py"]),
+    deps = [
+        ":automations",
+    ],
+)
+
+py_cmk_test(
+    name = "cli-test",
+    size = "small",
+    srcs = glob(["tests/cmk/cli/**/*.py"]),
+    deps = [
+        ":cli",
     ],
 )
 
@@ -401,22 +450,33 @@ py_cmk_test(
     ],
 )
 
+py_cmk_test(
+    name = "licensing-test",
+    size = "small",
+    srcs = glob(["tests/cmk/licensing/**/*.py"]),
+    deps = [
+        ":licensing",
+    ],
+)
+
 py_wheel(
     name = "wheel",
     distribution = "cmk-plugin-apis",
     strip_path_prefixes = ["packages/cmk-plugin-apis"],
-    # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [
         ":agent_based",
+        ":automations",
         ":bakery",
+        ":cli",
         ":dcd_connector_parameters",
         ":dcd_connectors",
         ":diagnostics",
         ":discover_plugins",
         ":graphing",
         ":inventory_ui",
+        ":licensing",
         ":password_store",
         ":post_rename_site",
         ":py_typed",
@@ -435,13 +495,16 @@ filegroup(
     name = "py_typed",
     srcs = [
         "cmk/agent_based/py.typed",
+        "cmk/automations/py.typed",
         "cmk/bakery/py.typed",
+        "cmk/cli/py.typed",
         "cmk/dcd_connector_parameters/py.typed",
         "cmk/dcd_connectors/py.typed",
         "cmk/diagnostics/py.typed",
         "cmk/discover_plugins/py.typed",
         "cmk/graphing/py.typed",
         "cmk/inventory_ui/py.typed",
+        "cmk/licensing/py.typed",
         "cmk/password_store/py.typed",
         "cmk/post_rename_site/py.typed",
         "cmk/rulesets/py.typed",
@@ -456,24 +519,20 @@ package_wheel(
     whl = "wheel",
 )
 
-sh_library(
-    name = "helpers",
-    srcs = [
-        ".f12",
-    ],
-)
-
 py_requirements_test(
     name = "requirements-test",
     libs = [
         ":agent_based",
         ":bakery",
+        ":automations",
+        ":cli",
         ":dcd_connector_parameters",
         ":dcd_connectors",
         ":diagnostics",
         ":discover_plugins",
         ":graphing",
         ":inventory_ui",
+        ":licensing",
         ":password_store",
         ":post_rename_site",
         ":rulesets",

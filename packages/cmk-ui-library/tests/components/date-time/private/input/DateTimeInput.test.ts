@@ -7,7 +7,7 @@ import { CalendarDate } from '@internationalized/date'
 import { fireEvent, render } from '@testing-library/vue'
 import DateTimeInput from 'cmk-ui-library/components/date-time/private/input/DateTimeInput.vue'
 import type { DateTimePartsDraft, HourCycle } from 'cmk-ui-library/components/date-time/types'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { type Ref, defineComponent, nextTick, shallowRef } from 'vue'
 
 import { DMY, MONTH_NAMES_EN } from '../../dateTimeTestFixtures'
@@ -32,10 +32,6 @@ const timeInputs = (view: ReturnType<typeof renderInput>) =>
   Array.from(
     view.container.querySelectorAll<HTMLInputElement>('[role="group"][aria-label="Time"] input')
   )
-
-afterEach(() => {
-  vi.restoreAllMocks()
-})
 
 describe('DateTimeInput', () => {
   test('carry +1 advances the date', async () => {

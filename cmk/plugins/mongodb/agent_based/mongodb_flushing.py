@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
 
 # <<<mongodb_flushing>>>
 # average_ms 1.28893335892
@@ -21,21 +20,14 @@ from cmk.agent_based.v2 import (
     check_levels,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     get_average,
     get_value_store,
     render,
     Result,
-    Service,
     State,
     StringTable,
 )
-
-
-def discover_mongodb_flushing(section: StringTable) -> DiscoveryResult:
-    # This check has no default parameters
-    # The average/last flush time highly depends on the size of the mongodb setup
-    yield Service()
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 def check_mongodb_flushing(params: Mapping[str, Any], section: StringTable) -> CheckResult:
@@ -53,7 +45,7 @@ def check_mongodb_flushing(params: Mapping[str, Any], section: StringTable) -> C
         last_ms = float(info_dict["last_ms"])
         avg_flush_time = float(info_dict["average_ms"]) / 1000.0
         flushed = int(info_dict["flushed"])
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         yield Result(
             state=State.UNKNOWN,
             summary="Invalid data: last_ms: {}, average_ms: {}, flushed:{}".format(
@@ -116,8 +108,10 @@ agent_section_mongodb_flushing = AgentSection(
 check_plugin_mongodb_flushing = CheckPlugin(
     name="mongodb_flushing",
     service_name="MongoDB Flushing",
-    discovery_function=discover_mongodb_flushing,
+    discovery_function=discover_one_service,
     check_function=check_mongodb_flushing,
     check_ruleset_name="mongodb_flushing",
+    # The average/last flush time highly depends on the size of the mongodb setup, so there are
+    # no default parameters.
     check_default_parameters={},
 )

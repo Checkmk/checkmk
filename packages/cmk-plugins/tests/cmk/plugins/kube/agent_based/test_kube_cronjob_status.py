@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-# ruff: noqa: SLF001  # Private member accessed
-
 
 from polyfactory.factories.pydantic_factory import ModelFactory
 
@@ -98,7 +96,7 @@ def test_cron_job_status_time_outputs() -> None:
     )
 
     check_result = list(
-        kube_cronjob_status._check_cron_job_status(Timestamp(2.0), {}, cron_job_status, latest_job)
+        kube_cronjob_status._check_cron_job_status(Timestamp(2.0), {}, cron_job_status, latest_job)  # noqa: SLF001
     )
 
     assert {r.summary for r in check_result if isinstance(r, Result)}.issuperset(
@@ -138,7 +136,7 @@ def test_cron_job_status_with_running_job_and_previously_completed_job() -> None
     )
 
     check_result = list(
-        kube_cronjob_status._check_cron_job_status(Timestamp(2.0), {}, cron_job_status, latest_job)
+        kube_cronjob_status._check_cron_job_status(Timestamp(2.0), {}, cron_job_status, latest_job)  # noqa: SLF001
     )
     assert [r.state for r in check_result if isinstance(r, Result)] == [
         State.OK,
@@ -162,7 +160,7 @@ def test_cron_job_status_last_duration() -> None:
     latest_job = CronJobLatestJobFactory.build()
 
     check_result = list(
-        kube_cronjob_status._check_cron_job_status(Timestamp(2.0), {}, cron_job_status, latest_job)
+        kube_cronjob_status._check_cron_job_status(Timestamp(2.0), {}, cron_job_status, latest_job)  # noqa: SLF001
     )
 
     assert [
@@ -195,7 +193,7 @@ def test_cron_job_status_with_failed_job() -> None:
     )
 
     check_result = list(
-        kube_cronjob_status._check_cron_job_status(Timestamp(2.0), {}, cron_job_status, latest_job)
+        kube_cronjob_status._check_cron_job_status(Timestamp(2.0), {}, cron_job_status, latest_job)  # noqa: SLF001
     )
     status_check_result = check_result[0]
     assert isinstance(status_check_result, Result)
@@ -206,7 +204,7 @@ def test_cron_job_status_with_failed_job() -> None:
 def test_cron_job_status_with_pending_job() -> None:
     """Test that check outputs WARN state when latest job is pending and crosses the threshold"""
     result = list(
-        kube_cronjob_status._cron_job_status(
+        kube_cronjob_status._cron_job_status(  # noqa: SLF001
             current_time=Timestamp(300.0),
             pending_levels=(300, 600),
             running_levels=None,
@@ -221,7 +219,7 @@ def test_cron_job_status_with_pending_job() -> None:
 def test_cron_job_status_with_unknown_status() -> None:
     """Test that check outputs WARN state when latest job is pending and crosses the threshold"""
     result = list(
-        kube_cronjob_status._cron_job_status(
+        kube_cronjob_status._cron_job_status(  # noqa: SLF001
             current_time=Timestamp(300.0),
             pending_levels=(300, 600),
             running_levels=None,
@@ -239,7 +237,7 @@ def test_kube_cron_job_with_running_params() -> None:
     warn, crit = 8, 10
 
     result = list(
-        kube_cronjob_status._cron_job_status(
+        kube_cronjob_status._cron_job_status(  # noqa: SLF001
             current_time=Timestamp(current_time),
             pending_levels=None,
             running_levels=(warn, crit),
@@ -260,7 +258,7 @@ def test_kube_cronjob_with_no_pod() -> None:
     elapsed_running_time = 8.0
 
     result = list(
-        kube_cronjob_status._cron_job_status(
+        kube_cronjob_status._cron_job_status(  # noqa: SLF001
             current_time=Timestamp(current_time),
             pending_levels=None,
             running_levels=None,
@@ -296,7 +294,7 @@ def test_cron_job_status_with_failed_target_job() -> None:
     )
 
     check_result = list(
-        kube_cronjob_status._check_cron_job_status(Timestamp(2.0), {}, cron_job_status, latest_job)
+        kube_cronjob_status._check_cron_job_status(Timestamp(2.0), {}, cron_job_status, latest_job)  # noqa: SLF001
     )
     status_check_result = check_result[0]
     assert isinstance(status_check_result, Result)
@@ -326,7 +324,7 @@ def test_cron_job_status_with_success_criteria_met_job() -> None:
     )
 
     check_result = list(
-        kube_cronjob_status._check_cron_job_status(Timestamp(2.0), {}, cron_job_status, latest_job)
+        kube_cronjob_status._check_cron_job_status(Timestamp(2.0), {}, cron_job_status, latest_job)  # noqa: SLF001
     )
     status_check_result = check_result[0]
     assert isinstance(status_check_result, Result)
@@ -345,7 +343,7 @@ def test_determine_job_status_completed() -> None:
         type_=JobConditionType.COMPLETE, status=ConditionStatus.TRUE
     )
     assert (
-        kube_cronjob_status._determine_job_status([success, completed], pod)
-        == kube_cronjob_status._determine_job_status([completed, success], pod)
+        kube_cronjob_status._determine_job_status([success, completed], pod)  # noqa: SLF001
+        == kube_cronjob_status._determine_job_status([completed, success], pod)  # noqa: SLF001
         == kube_cronjob_status.JobStatusType.COMPLETED
     )

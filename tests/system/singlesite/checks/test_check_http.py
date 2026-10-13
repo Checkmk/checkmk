@@ -10,9 +10,9 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from tests.testlib.common.utils2 import ServiceInfo
-from tests.testlib.https import HTTPSDummy
-from tests.testlib.openapi_session import UnexpectedResponse
-from tests.testlib.site import Site
+from tests.testlib.system.https import HTTPSDummy
+from tests.testlib.system.openapi_session import UnexpectedResponse
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,6 @@ def _check_http(site: Site) -> Iterator[tuple[str, dict[str, ServiceInfo]]]:
         site.activate_changes_and_wait_for_core_reload()
 
 
-@pytest.mark.medium_test_chain
 def test_check_http(site: Site, check_http: tuple[str, dict[str, ServiceInfo]]) -> None:
     rule_id, host_services = check_http
     service_name = "HTTP check_http"

@@ -7,8 +7,6 @@
 
 """MK Livestatus Python API"""
 
-from __future__ import annotations
-
 import ast
 import contextlib
 import json
@@ -213,9 +211,16 @@ class LivestatusTestingError(RuntimeError):
 
 tracer = trace.get_tracer()
 
+
+class _PersistentConnections(threading.local):
+    def __init__(self) -> None:
+        self.sockets: dict[str, socket.socket] = {}
+
+
 # TODO: This mechanism does not take different connection options into account
-# Keep a global array of persistent connections
-persistent_connections: dict[str, socket.socket] = {}
+# The persistent connections are kept per thread. Threads sharing a socket would mix up
+# their queries and responses.
+_persistent_connections = _PersistentConnections()
 
 # Regular expression for removing Cache: headers if caching is not allowed
 remove_cache_regex = re.compile("\nCache:[^\n]*")
@@ -641,16 +646,16 @@ class SingleSiteConnection(Helpers):
             self.socket.settimeout(float(timeout))
 
     def _try_get_persisted_connection(self) -> socket.socket | None:
-        if self.persist and self.socketurl in persistent_connections:
+        if self.persist and self.socketurl in _persistent_connections.sockets:
             self.successful_persistence = True
-            return persistent_connections[self.socketurl]
+            return _persistent_connections.sockets[self.socketurl]
         return None
 
     def connect(self) -> None:
         if (site_socket := self._try_get_persisted_connection()) is None:
             site_socket = self._create_new_socket_connection()
             if self.persist:
-                persistent_connections[self.socketurl] = site_socket
+                _persistent_connections.sockets[self.socketurl] = site_socket
         self.socket = site_socket
 
     def _create_new_socket_connection(self) -> socket.socket:
@@ -735,7 +740,7 @@ class SingleSiteConnection(Helpers):
         if self.persist:
             self.successful_persistence = False
             with contextlib.suppress(KeyError):
-                del persistent_connections[self.socketurl]
+                del _persistent_connections.sockets[self.socketurl]
 
     def receive_data(self, size: int, timeout: float | None = None) -> bytes:
         if self.socket is None:
@@ -924,7 +929,7 @@ class SingleSiteConnection(Helpers):
                 json.loads(data) if query.supports_json_format() else ast.literal_eval(data)
             )
             return response
-        except (ValueError, SyntaxError):
+        except ValueError, SyntaxError:
             raise MKLivestatusQueryError("Malformed raw response output")
 
     def set_prepend_site(self, p: bool) -> None:
@@ -1597,63 +1602,6 @@ def livestatus_lql(
         what = "service"
         query_filter += lq_logic("Filter: service_description =", [service_description], "Or")
     return f"GET {what}s\n{query_filter}"
-
-
-def get_rrd_data(
-    connection: SingleSiteConnection,
-    host_name: str,
-    service_description: str,
-    rpn: str,
-    fromtime: int,
-    untiltime: int,
-    max_entries: int = 400,
-) -> RRDResponse | None:
-    """Fetch RRD historic metrics data of a specific service, within the specified time range
-
-    returns a TimeSeries object holding interval and data information
-
-    Query to livestatus always returns if database is found, thus:
-    - Values can be None when there is no data for a given timestamp
-    - Reply from livestatus/rrdtool is always enough to describe the
-      queried interval. That means, the returned bounds are always outside
-      the queried interval.
-
-    LEGEND
-    O timestamps of measurements
-    | query values, fromtime and untiltime
-    x returned start, no data contained
-    v returned data rows, includes end y
-
-    --O---O---O---O---O---O---O---O
-            |---------------|
-          x---v---v---v---v---y
-
-    """
-
-    step = 1
-    point_range = ":".join(lqencode(str(x)) for x in (fromtime, untiltime, step, max_entries))
-    column = f"rrddata:m1:{rpn}:{point_range}"
-    lql = livestatus_lql([host_name], [column], service_description) + "OutputFormat: python\n"
-
-    # This can raise, but let the caller deal with it.
-    response = connection.query_value(lql)
-
-    if not response:
-        # Appending nonsense to the column will give you None.
-        # It seems that querying in case we haven't got enough records (yet)
-        # will give you an empty response as of Checkmk 2.4.
-        # Not sure what that means for the comment below.
-        return None
-
-    raw_start, raw_end, raw_step, *values = response
-
-    return (
-        # According to a comment in RRDColumn.cc we should have `raw_step >= step` (which is 1)
-        # However, it is zero for empty responses (non existing metrics, for instance).
-        None
-        if (step := int(raw_step)) == 0
-        else RRDResponse(range(int(raw_start), int(raw_end), step), values)
-    )
 
 
 def get_timeperiods_active_map(timeout: int) -> Mapping[str, bool]:

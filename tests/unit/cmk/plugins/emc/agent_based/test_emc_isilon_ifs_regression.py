@@ -25,7 +25,7 @@ def _emc_isilon_ifs_regression_data() -> StringTable:
     return [["615553001652224", "599743491129344"]]
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(emc_isilon_ifs_module, "get_value_store", dict)
 

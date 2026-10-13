@@ -9,10 +9,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_PATH="$(cd "$SCRIPT_DIR/.." && pwd)"
 SCRIPTS="$REPO_PATH/scripts"
 UVENV="$SCRIPTS/run-uvenv"
-EDITION="${EDITION:-pro}"
+# Exported: the tests read it, and not every suite has the --cmk-edition option to default it.
+export EDITION="${EDITION:-pro}"
 MAX_CHARS=1500000
 
-AGENT_PLUGIN_PYTHON_VERSIONS="3.4 3.5 3.6 3.7 3.8 3.9 3.10 3.11 3.12"
+AGENT_PLUGIN_PYTHON_VERSIONS=$(grep -oP '^\s*AGENT_PLUGIN_PYTHON_VERSIONS\s*:=\s*\K.*' "${REPO_PATH}"/defines.make)
 
 # Re-evaluate TEST_FILTER as shell tokens so that shell-quoted expressions like
 # e.g. '-m "foo and bar"' split into proper arguments matching
@@ -57,7 +58,8 @@ SYSTEM TESTS (local / -docker variant available for each)
   test-system-relay                       Run system tests for the relay (ultimate edition)
   test-system-mk-oracle                   Run system tests for the mk_oracle agent plugins
   test-system-otel                        Run system tests for otel (ultimate edition)
-  test-system-mcp                         Run system tests for the mcp-server (pro edition)
+  test-system-azure                       Run system tests for azure (ultimate edition)
+  test-system-ai-features                 Run system tests for the mcp-server and the ai-control-plane (pro edition)
   test-system-oauth                       Run system tests for the oauth authorization server (pro edition)
   test-system-multisite                   Run multisite system tests
   test-system-update-community            Run update tests for community edition
@@ -71,6 +73,7 @@ SYSTEM TESTS (local / -docker variant available for each)
   test-system-update-cross-edition-community-to-pro
   test-system-plugins                     Run plugin system tests
   test-system-plugins-piggyback           Run piggyback plugin system tests
+  test-system-maps                        Run system tests for Checkmk Maps (pro edition)
   test-system-gui-crawl                   Run GUI crawl tests
   test-system-gui-crawl-xss               Run XSS crawl tests
   test-system-gui                         Run full GUI system tests (pro edition)
@@ -102,6 +105,8 @@ MYPY / FORMAT / PACKAGING
   test-mypy-cmk                           Run mypy on cmk targets
   test-mypy-gpl                           Run mypy with GPL config
   test-packaging                          Run packaging tests
+  test-artifact-relay-image               Run relay image artifact tests
+  test-artifact-relay-image-docker        Run relay image artifact tests in docker
   test-github-actions                     Run format, lint, unit tests, and mypy (community edition)
 
 OTHER TESTS
@@ -243,12 +248,22 @@ test-performance-docker() {
 test-performance-all() {
     local rc=0
     bazel test --test_output=streamed //tests/performance:bazel_performance || rc=$?
-    $UVENV "$(realpath "$SCRIPT_DIR/performance/perftest_upload.sh")" || return "$?"
+    $UVENV "$(realpath "$SCRIPT_DIR/performance/reporting/perftest_upload.sh")" || return "$?"
     return "$rc"
 }
 
 test-performance-all-docker() {
     RESULT_PATH="$(realpath "$SCRIPT_DIR/..")" $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" "test-performance-all"
+}
+
+test-system-maps() {
+    prepare-playwright
+    _pytest --cmk-edition pro \
+        --screenshot=only-on-failure \
+        --output="${RESULT_PATH:-/tmp}/" \
+        --tracing=retain-on-failure \
+        "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
+        "$(realpath "$SCRIPT_DIR/system/maps")"
 }
 
 test-system-gui-crawl() {
@@ -296,14 +311,14 @@ test-system-gui-cloud() { EDITION=cloud test-system-gui-non-free; }
 test-system-singlesite() {
     _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         "$(realpath "$SCRIPT_DIR/system/singlesite")" \
-        --session-timeout 7200
+        --session-timeout 9000
 }
 
 # keep this target in sync with test-system-singlesite-single.groovy
 test-system-singlesite-k8s() {
     _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         "$(realpath "$SCRIPT_DIR/system/singlesite")" \
-        -m "not requires_non_root_user" --session-timeout 7200
+        -m "not requires_non_root_user" --session-timeout 9000
 }
 
 test-system-singlesite-non-root() {
@@ -350,10 +365,22 @@ test-system-otel() {
         --session-timeout 1800
 }
 
-test-system-mcp() {
-    EDITION=pro _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
-        "$(realpath "$SCRIPT_DIR/system/singlesite")/nonfree/pro/mcp/" \
+test-system-azure-ultimate() {
+    EDITION=ultimate _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
+        "$(realpath "$SCRIPT_DIR/system/singlesite")/nonfree/ultimate/azure/" \
         --session-timeout 1800
+}
+
+test-system-azure-ultimate() {
+    EDITION=ultimate _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
+        "$(realpath "$SCRIPT_DIR/system/singlesite")/nonfree/ultimate/azure_extended/" \
+        --session-timeout 1800
+}
+
+test-system-ai-features() {
+    EDITION=pro _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
+        "$(realpath "$SCRIPT_DIR/system/ai_features")" \
+        --session-timeout 3600
 }
 
 test-system-oauth() {
@@ -484,6 +511,8 @@ test-system-singlesite-k8s-docker() { _system-tests-docker test-system-singlesit
 test-system-singlesite-non-root-docker() { _system-tests-docker test-system-singlesite-non-root; }
 test-system-redfish-docker() { _system-tests-docker test-system-redfish; }
 test-system-otel-docker() { _system-tests-docker test-system-otel; }
+test-system-azure-docker() { _system-tests-docker test-system-azure; }
+test-system-ai-features-docker() { _system-tests-docker test-system-ai-features; }
 test-system-multisite-docker() { _system-tests-docker test-system-multisite; }
 test-system-update-community-docker() { _system-tests-docker test-system-update-community; }
 test-system-update-pro-docker() { _system-tests-docker test-system-update-pro; }
@@ -551,7 +580,23 @@ test-py-extensions() {
 
 test-packaging() {
     export PATH="$PATH:$(bazel run //bazel/tools:bazel_env print-path)"
-    _pytest --log-cli-level=INFO "$SCRIPT_DIR/packaging"
+    # The relay image suite tests a different artifact (an OCI image, not a
+    # deb/rpm), needs a Docker daemon, and has its own target below.
+    _pytest --log-cli-level=INFO "$SCRIPT_DIR/packaging" \
+        --ignore="$SCRIPT_DIR/packaging/nonfree/ultimate/relay_image"
+}
+
+test-artifact-relay-image() {
+    _pytest -x "$(realpath "$SCRIPT_DIR/packaging/nonfree/ultimate/relay_image")" \
+        "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 3600
+}
+
+# Unlike the -docker variants that run a site in a container via
+# run-dockerized.py, this one only runs the test code itself in a build
+# container via run-in-docker.sh; the relay image under test is pulled there.
+test-artifact-relay-image-docker() {
+    DOCKER_RUN_ADDOPTS="-v $HOME/.docker/config.json:$HOME/.docker/config.json:ro -v $HOME/.cmk-credentials:$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION -e RELAY_IMAGE_TAG" \
+        "$REPO_PATH/scripts/run-in-docker.sh" tests/run_tests.sh test-artifact-relay-image
 }
 
 # ---------------------------------------------------------------------------
@@ -569,8 +614,7 @@ test-mypy-not-cmk() {
 }
 
 test-mypy-gpl() {
-    ADDITIONAL_MYPY_ARGS="--config-file=$(realpath "$REPO_PATH/mypy-gpl.ini")" \
-        bazel build --config=mypy ...
+    bazel build --config=mypy-gpl ...
 }
 
 test-github-actions() {
@@ -636,11 +680,11 @@ test-unit-shell() {
 }
 
 test-unit-neb() {
-    cd "$REPO_PATH/packages/neb/test" && ./.f12
+    cd "$REPO_PATH/packages/neb/test" && ./.do-it
 }
 
 test-unit-cmc() {
-    cd "$REPO_PATH/non-free/packages/cmc/test" && ./.f12
+    cd "$REPO_PATH/non-free/packages/cmc/test" && ./.do-it
 }
 
 test-find-modified-lock-files() {

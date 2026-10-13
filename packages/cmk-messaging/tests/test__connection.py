@@ -8,7 +8,6 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 import pika
-import pika.adapters.blocking_connection
 import pika.channel
 import pika.spec
 import pytest

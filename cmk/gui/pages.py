@@ -21,6 +21,8 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, response
 from cmk.gui.log import logger
 from cmk.gui.utils.json import CustomObjectJSONEncoder
+from cmk.gui.utils.session import SessionProtocol as SessionProtocol
+from cmk.gui.utils.transaction_manager import TransactionManager
 
 PageResult = object
 
@@ -31,6 +33,8 @@ class PageContext:
 
     config: Config
     request: Request
+    session: SessionProtocol
+    transactions: TransactionManager
 
 
 class PageHandler(Protocol):

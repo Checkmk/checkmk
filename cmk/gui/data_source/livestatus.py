@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 import functools
 from collections.abc import Callable, Sequence
@@ -14,7 +13,8 @@ from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.painter.v0 import Cell
+from cmk.gui.logged_in import user
+from cmk.gui.painter import Cell
 from cmk.gui.type_defs import ColumnName, Rows, VisualContext
 from cmk.gui.visuals.filter import Filter
 from cmk.livestatus_client import (
@@ -23,6 +23,7 @@ from cmk.livestatus_client import (
     OnlySites,
     Query,
     QuerySpecification,
+    QueryTypes,
 )
 from cmk.utils.check_utils import worst_service_state
 
@@ -123,12 +124,12 @@ class RowTableLivestatus(RowTable):
 
         for index, cell in enumerate(cells):
             painter = cell.painter()
-            painter.derive(rows, cell, dynamic_columns.get(index, []))
+            painter.derive(rows, cell, dynamic_columns.get(index, []), user, cell.painter_context())
 
         return rows, len(data)
 
 
-def debug_livestatus(query: Query) -> None:
+def debug_livestatus(query: QueryTypes) -> None:
     if all(
         (
             active_config.debug_livestatus_queries,
@@ -142,7 +143,7 @@ def debug_livestatus(query: Query) -> None:
 
 
 def query_row(
-    query: Query, only_sites: OnlySites, limit: int | None, auth_domain: str
+    query: QueryTypes, only_sites: OnlySites, limit: int | None, auth_domain: str
 ) -> LivestatusRow:
     debug_livestatus(query)
 
@@ -157,7 +158,7 @@ def query_row(
 
 
 def query_livestatus(
-    query: Query, only_sites: OnlySites, limit: int | None, auth_domain: str
+    query: QueryTypes, only_sites: OnlySites, limit: int | None, auth_domain: str
 ) -> list[LivestatusRow]:
     debug_livestatus(query)
 
@@ -183,7 +184,7 @@ def _merge_data(
 
     mergefuncs: list[Callable[[LivestatusColumn, LivestatusColumn], LivestatusColumn]] = [
         # site column is not merged
-        lambda a, b: ""
+        lambda a, b: ""  # noqa: ARG005
     ]
 
     def worst_host_state(a: int, b: int) -> int:
@@ -200,7 +201,7 @@ def _merge_data(
         elif col.startswith("worst_host"):
             mergefunc = worst_host_state
         else:
-            mergefunc = lambda a, b: a
+            mergefunc = lambda a, b: a  # noqa: ARG005
 
         mergefuncs.append(mergefunc)
 

@@ -15,14 +15,14 @@ from cmk.checkengine.inventory import (
     ItemsOfInventoryPlugin,
 )
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
-from cmk.inventory.structured_data import ImmutableTree, MutableTree, SDKey, SDNodeName
+from cmk.inventory.trees import ImmutableTree, MutableTree, SDKey, SDNodeName
 
 
 @pytest.mark.parametrize(
     "parameters, expected_results",
     [
         pytest.param(
-            HWSWInventoryParameters(0, 0, 0, 0, 0, False),
+            HWSWInventoryParameters(0, 0, 0, 0, 0, False, 1, 2, 0),
             [
                 ActiveCheckResult(
                     state=0,
@@ -34,7 +34,7 @@ from cmk.inventory.structured_data import ImmutableTree, MutableTree, SDKey, SDN
             id="OK",
         ),
         pytest.param(
-            HWSWInventoryParameters(0, 0, 1, 0, 0, False),
+            HWSWInventoryParameters(0, 0, 1, 0, 0, False, 1, 2, 0),
             [
                 ActiveCheckResult(
                     state=0,
@@ -87,7 +87,7 @@ def test__check_trees_hardware_or_software_changes() -> None:
     )
     assert list(
         _check_trees(
-            parameters=HWSWInventoryParameters(1, 2, 0, 3, 0, False),
+            parameters=HWSWInventoryParameters(1, 2, 0, 3, 0, False, 1, 2, 0),
             inventory_tree=inventory_tree,
             status_data_tree=MutableTree(),
             previous_tree=ImmutableTree(),
@@ -194,3 +194,31 @@ def test__create_trees_from_inventory_plugin_items() -> None:
     )
     assert trees.inventory
     assert trees.status_data
+
+
+def test_hwsw_inventory_parameters_from_raw_reads_the_rule_keys() -> None:
+    assert HWSWInventoryParameters.from_raw(
+        {
+            "hw_changes": 1,
+            "sw_changes": 2,
+            "sw_missing": 3,
+            "nw_changes": 0,
+            "fail_status": 2,
+            "status_data_inventory": True,
+            "new_labels": 0,
+            "vanished_labels": 1,
+            "changed_labels": 2,
+        }
+    ) == HWSWInventoryParameters(1, 2, 3, 0, 2, True, 0, 1, 2)
+
+
+def test_hwsw_inventory_parameters_from_raw_defaults_missing_entries() -> None:
+    assert HWSWInventoryParameters.from_raw({}) == HWSWInventoryParameters(
+        0, 0, 0, 0, 1, False, 1, 0, 1
+    )
+
+
+def test_hwsw_inventory_parameters_from_raw_defaults_an_unusable_entry() -> None:
+    assert HWSWInventoryParameters.from_raw({"hw_changes": ["not a state"]}) == (
+        HWSWInventoryParameters(0, 0, 0, 0, 1, False, 1, 0, 1)
+    )

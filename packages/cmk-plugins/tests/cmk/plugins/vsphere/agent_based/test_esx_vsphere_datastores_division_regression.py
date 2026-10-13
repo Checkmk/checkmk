@@ -87,9 +87,8 @@ def test_check_esx_vsphere_datastores_division_regression_basic(
     assert result == Result(state=State.OK, summary="Used: 0.21% - 974 MiB of 458 GiB")
 
 
-def test_check_esx_vsphere_datastores_division_regression_inaccessible(
-    empty_value_store: None,
-) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_esx_vsphere_datastores_division_regression_inaccessible() -> None:
     """Test check function with inaccessible datastore."""
     string_table = [
         ["[inaccessible_store]"],
@@ -129,9 +128,8 @@ def test_check_esx_vsphere_datastores_division_regression_missing_data() -> None
     )
 
 
-def test_check_esx_vsphere_datastores_division_regression_zero_capacity(
-    empty_value_store: None,
-) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_esx_vsphere_datastores_division_regression_zero_capacity() -> None:
     """Test check function with zero capacity (division by zero protection)."""
     string_table = [
         ["[zero_capacity_store]"],
@@ -149,9 +147,8 @@ def test_check_esx_vsphere_datastores_division_regression_zero_capacity(
     assert len(result) == 0
 
 
-def test_check_esx_vsphere_datastores_division_regression_provisioning(
-    empty_value_store: None,
-) -> None:
+@pytest.mark.usefixtures("empty_value_store")
+def test_check_esx_vsphere_datastores_division_regression_provisioning() -> None:
     """Test provisioning calculations without division errors."""
     string_table = [
         ["[provisioned_store]"],

@@ -28,8 +28,6 @@ export interface TransformationEditor {
   percentile: Ref<string | null>
   /** Messages of the last failed commit, cleared on the next successful commit or reset. */
   errors: Ref<string[]>
-  /** True while no metric is selected. */
-  isEmpty: ComputedRef<boolean>
   metricOptions: ComputedRef<Suggestions>
   percentileOptions: Suggestions
   selectItem: (id: ItemId) => void
@@ -59,7 +57,6 @@ export function useTransformationEditor(
   const selectedId = ref<ItemId | null>(null)
   const percentile = ref<string | null>(null)
   const errors = ref<string[]>([])
-  const isEmpty = computed(() => selectedId.value === null)
 
   const eligibleItems = computed(() => {
     const edited = toValue(editedItemId)
@@ -138,7 +135,6 @@ export function useTransformationEditor(
     selectedId,
     percentile,
     errors,
-    isEmpty,
     metricOptions,
     percentileOptions,
     selectItem,

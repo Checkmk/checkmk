@@ -15,6 +15,7 @@ from cmk.ruleset_matcher.matcher import (
     RulesetMatcher,
     SingleHostRulesetMatcher,
     SingleHostRulesetMatcherFirst,
+    SingleHostRulesetMatcherMerge,
 )
 
 
@@ -63,6 +64,25 @@ def make_telemetry_custom_service_config(
     """
     return SingleHostRulesetMatcher(
         host_ruleset=loaded_config.telemetry_custom_service,
+        matcher=ruleset_matcher,
+        labels_of_host=labels_of_host,
+    )
+
+
+def make_metrics_identity_routing_config(
+    loaded_config: BaseConfig,
+    ruleset_matcher: RulesetMatcher,
+    labels_of_host: Callable[[HostName], Labels],
+) -> Callable[[HostName], Mapping[str, object]]:
+    """Resolve the OpenTelemetry data routing ruleset for a single host.
+
+    The ruleset's eval type is MERGE and its value has a single key, so effectively the
+    topmost matching rule wins; an empty mapping means that no rule matched. The value is
+    not interpreted here: what it means for the host's data is owned by the telemetry
+    source that consumes it.
+    """
+    return SingleHostRulesetMatcherMerge(
+        host_ruleset=loaded_config.metrics_identity_routing,
         matcher=ruleset_matcher,
         labels_of_host=labels_of_host,
     )

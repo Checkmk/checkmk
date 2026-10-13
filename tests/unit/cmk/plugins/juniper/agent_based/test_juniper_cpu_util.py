@@ -17,7 +17,7 @@ from cmk.plugins.juniper.agent_based.juniper_cpu_util import (
 )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _patch_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     # The check function fetches the value store unconditionally.
     monkeypatch.setattr(juniper_cpu_util_plugin, "get_value_store", dict)

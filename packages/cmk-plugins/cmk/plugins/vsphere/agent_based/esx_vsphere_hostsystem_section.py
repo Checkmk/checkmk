@@ -37,7 +37,7 @@ def parse_esx_vsphere_hostsystem(string_table: StringTable) -> HostSystemSection
     return section
 
 
-def host_label_function(section: HostSystemSection) -> HostLabelGenerator:
+def host_label_function(section: HostSystemSection) -> HostLabelGenerator:  # noqa: ARG001
     """
     For some reason all docs for the same host label have to be identical.
     Here we only set this to server because this plug-in is executed on

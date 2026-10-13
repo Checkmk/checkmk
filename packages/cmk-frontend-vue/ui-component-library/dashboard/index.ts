@@ -5,10 +5,28 @@
  */
 import { Page } from '@ucl/_ucl/types/page'
 
+import UclCmkAlertOverviewFigure from './CmkAlertOverviewFigure/UclCmkAlertOverviewFigure.vue'
+import UclCmkBarplotFigure from './CmkBarplotFigure/UclCmkBarplotFigure.vue'
+import UclCmkGaugeFigure from './CmkGaugeFigure/UclCmkGaugeFigure.vue'
+import UclCmkInventoryFigure from './CmkInventoryFigure/UclCmkInventoryFigure.vue'
 import UclCmkKpiStatCard from './CmkKpiStatCard/UclCmkKpiStatCard.vue'
 import UclCmkRankedTable from './CmkRankedTable/UclCmkRankedTable.vue'
+import UclCmkSiteOverviewHostsFigure from './CmkSiteOverviewHostsFigure/UclCmkSiteOverviewHostsFigure.vue'
+import UclCmkSiteOverviewSitesFigure from './CmkSiteOverviewSitesFigure/UclCmkSiteOverviewSitesFigure.vue'
+import UclCmkStateFigure from './CmkStateFigure/UclCmkStateFigure.vue'
+import UclCmkStateSummaryFigure from './CmkStateSummaryFigure/UclCmkStateSummaryFigure.vue'
+import UclCmkStatsFigure from './CmkStatsFigure/UclCmkStatsFigure.vue'
 
 export const pages: Array<Page> = [
+  new Page('CmkAlertOverviewFigure', UclCmkAlertOverviewFigure),
+  new Page('CmkBarplotFigure', UclCmkBarplotFigure),
+  new Page('CmkGaugeFigure', UclCmkGaugeFigure),
+  new Page('CmkInventoryFigure', UclCmkInventoryFigure),
   new Page('CmkKpiStatCard', UclCmkKpiStatCard),
-  new Page('CmkRankedTable', UclCmkRankedTable)
+  new Page('CmkRankedTable', UclCmkRankedTable),
+  new Page('CmkSiteOverviewHostsFigure', UclCmkSiteOverviewHostsFigure),
+  new Page('CmkSiteOverviewSitesFigure', UclCmkSiteOverviewSitesFigure),
+  new Page('CmkStateFigure', UclCmkStateFigure),
+  new Page('CmkStateSummaryFigure', UclCmkStateSummaryFigure),
+  new Page('CmkStatsFigure', UclCmkStatsFigure)
 ]

@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
 
 from cmk.gui.availability.type_defs import AVEntry
-from tests.testlib.rest_api_client import ClientRegistry
-from tests.unit.cmk.gui.availability.openapi.conftest import TIME_FROM, TIME_UNTIL
+from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.unit.cmk.gui.availability.openapi.testlib import TIME_FROM, TIME_UNTIL
 
 _MODULE = "cmk.gui.availability.openapi.show_host_availability"
 
@@ -50,4 +51,4 @@ def test_show_host_availability_returns_404_when_not_found(
             time_range_from=TIME_FROM,
             time_range_until=TIME_UNTIL,
             expect_ok=False,
-        ).assert_status_code(404)
+        ).assert_status_code(HTTPStatus.NOT_FOUND)

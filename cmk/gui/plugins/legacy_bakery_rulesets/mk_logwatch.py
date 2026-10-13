@@ -108,7 +108,7 @@ def _agent_config_mk_logwatch_valuespec_cluster_section() -> ListOf:
 def validate_python_encoding(encoding_name: str, varprefix: str) -> None:
     try:
         "".encode(encoding_name)
-    except (LookupError, UnicodeEncodeError):
+    except LookupError, UnicodeEncodeError:
         raise MKUserError(
             varprefix,
             _('"%(encoding_name)s" is not a valid python encoding.')

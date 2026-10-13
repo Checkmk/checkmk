@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.gui.openapi.api_endpoints.models.folder_models import FolderModel
@@ -41,7 +42,7 @@ def show_folder_v1(
     folder.permissions.need_permission("read", api_context.user)
     return ApiResponse(
         body=serialize_folder(folder, show_hosts=show_hosts, api_context=api_context),
-        status_code=200,
+        status_code=HTTPStatus.OK,
         etag=folder_etag(folder),
     )
 

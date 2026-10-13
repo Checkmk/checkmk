@@ -5,14 +5,14 @@
 
 import io
 import json
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 
 import pytest
 from rich.console import Console
 
 from cmk.werks.tool.cli.id_pool import make_paths_object, Paths, ServerStatus
-from cmk.werks.tool.cli.stash import LegacyStash, Stash
+from cmk.werks.tool.cli.stash import Stash
 from cmk.werks.tool.cli.status import (
     collect_status,
     FileInfo,
@@ -36,6 +36,12 @@ def _no_werk_exists(_werk_id: WerkId) -> bool:
     return False
 
 
+def _write_legacy_stash(paths: Paths, ids_by_project: Mapping[str, Sequence[int]]) -> None:
+    paths.legacy_stash_file.write_text(
+        json.dumps({"__version__": "2", "ids_by_project": ids_by_project}), encoding="utf-8"
+    )
+
+
 def _paths(
     tmp_path: Path,
     ids: Sequence[int] = (),
@@ -55,10 +61,7 @@ def _paths(
             Stash(ids=list(ids)).model_dump_json(by_alias=True), encoding="utf-8"
         )
     if legacy_ids is not None:
-        paths.legacy_stash_file.write_text(
-            LegacyStash(ids_by_project={"cmk": list(legacy_ids)}).model_dump_json(by_alias=True),
-            encoding="utf-8",
-        )
+        _write_legacy_stash(paths, {"cmk": legacy_ids})
     return paths
 
 
@@ -201,7 +204,7 @@ def test_both_stash_files_are_an_error(tmp_path: Path) -> None:
             item=Item.LEGACY_STASH,
             severity=Severity.ERROR,
             problem="exists next to the current stash file, every other command bails out",
-            fix="look at both stash files and merge them by hand",
+            fix="merge the IDs you still need into the stash by hand, then delete it",
         )
     ]
     assert status.has_errors is True
@@ -431,6 +434,7 @@ def _status(
     secret: FileInfo | None = None,
     reserved_ids: StashInfo | None = None,
     legacy_stash: StashInfo | None = None,
+    log: FileInfo | None = None,
     problems: Sequence[Problem] = (),
 ) -> Status:
     return Status(
@@ -441,6 +445,7 @@ def _status(
         or StashInfo(path=Path("/h/reserved"), exists=True, mode="0600", count=3, next_id=20_251),
         legacy_stash=legacy_stash
         or StashInfo(path=Path("/h/legacy"), exists=False, mode=None, count=0, next_id=None),
+        log=log or FileInfo(path=Path("/h/werk-ids.log"), exists=True, mode="0644"),
         problems=list(problems),
     )
 
@@ -472,6 +477,20 @@ def test_render_lists_every_item_with_its_mode() -> None:
     assert "/h/secret" in output
     assert "0600" in output
     assert "3 reserved, next 20251" in output
+
+
+def test_render_shows_where_the_log_is() -> None:
+    output = _rendered(_NO_HOME, _status())
+
+    assert "/h/werk-ids.log" in output
+
+
+def test_render_marks_a_log_that_is_not_there_yet_as_absent() -> None:
+    output = _rendered(
+        _NO_HOME, _status(log=FileInfo(path=Path("/h/werk-ids.log"), exists=False, mode=None))
+    )
+
+    assert "- log" in " ".join(output.split())
 
 
 def test_render_explains_the_setup_state() -> None:
@@ -666,6 +685,7 @@ def test_json_keeps_a_fixed_shape() -> None:
         "secret",
         "reserved_ids",
         "legacy_stash",
+        "log",
         "problems",
     }
     assert document["legacy_stash"] == {
@@ -741,16 +761,13 @@ def test_only_errors_count_as_errors() -> None:
     assert _status(problems=[warning, error]).has_errors is True
 
 
-def test_legacy_ids_count_across_projects(tmp_path: Path) -> None:
+def test_legacy_ids_of_other_projects_are_ignored(tmp_path: Path) -> None:
+    # 'werk init' only migrates the cmk IDs of the legacy file, so those are the ones
+    # reported as available.
     paths = make_paths_object(tmp_path)
-    paths.legacy_stash_file.write_text(
-        LegacyStash(ids_by_project={"cmk": [20_261], "cloudmk": [1_111_111]}).model_dump_json(
-            by_alias=True
-        ),
-        encoding="utf-8",
-    )
+    _write_legacy_stash(paths, {"cmk": [20_261], "cloudmk": [1_111_111]})
 
     status = _collect(tmp_path, paths, server_status=None)
 
-    assert status.legacy_stash.count == 2
+    assert status.legacy_stash.count == 1
     assert status.legacy_stash.next_id == 20_261

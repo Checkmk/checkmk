@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Mapping
 from typing import Any, Final
@@ -31,7 +30,7 @@ def parse_storeonce_servicesets(string_table: StringTable) -> SectionServiceSets
             item = line[0]
             parsed[item] = {}
         else:
-            parsed[item][line[0]] = line[1]
+            parsed[item][line[0]] = line[1]  # type: ignore[possibly-undefined]
     return parsed
 
 

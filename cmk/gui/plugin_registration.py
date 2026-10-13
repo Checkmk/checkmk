@@ -9,13 +9,13 @@ from pathlib import Path
 from cmk import trace
 from cmk.gui import (
     dashboard,
-    graphing_main,
     hooks,
-    views,
     wato,
 )
+from cmk.gui.graphing import register_plugins as register_graphing_plugins
 from cmk.gui.legacy_plugins import add_failed_plugin, load_web_plugins
 from cmk.gui.log import logger
+from cmk.gui.views import legacy_plugins as views_legacy_plugins
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
 tracer = trace.get_tracer()
@@ -32,7 +32,7 @@ def register() -> None:
 
     hooks.unregister_plugin_hooks()
 
-    views.register()
+    views_legacy_plugins.register()
     _load_plugins("views")
 
     wato.register()
@@ -41,7 +41,7 @@ def register() -> None:
     dashboard.register()
     _load_plugins("dashboard")
 
-    graphing_main.register()
+    register_graphing_plugins()
 
 
 def _load_plugins(plugin_namespace: str) -> None:

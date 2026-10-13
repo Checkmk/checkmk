@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import os
@@ -28,12 +27,14 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.permissions import declare_permission, permission_registry
+from cmk.gui.search import index as search_index
 from cmk.gui.site_config import enabled_sites
-from cmk.gui.type_defs import PermissionName, RoleName, Visual, VisualName, VisualTypeName
+from cmk.gui.type_defs import RoleName, Visual, VisualName, VisualTypeName
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.speaklater import LazyString
 from cmk.mkp_tool import id_to_mkp, Installer, PackageName, PackagePart
-from cmk.utils.escaping import escape
+from cmk.web.utils.escaping import escape
+from cmk.web.utils.permission_verification import PermissionName
+from cmk.web.utils.speaklater import LazyString
 
 TVisual = TypeVar("TVisual", bound=Visual)  # TODO: Remove this
 type CustomUserVisuals[TVisual: Visual] = dict[tuple[UserId, VisualName], TVisual]
@@ -70,6 +71,11 @@ def save[TVisual: Visual](
     }
     save_user_file("user_" + what, user_visuals, user_id=user_id)
     _CombinedVisualsCache(what).invalidate_cache()
+    search_index.request_update(visuals_saved_change_action(what))
+
+
+def visuals_saved_change_action(what: VisualTypeName) -> str:
+    return f"save-{what}"
 
 
 def load[TVisual: Visual](
@@ -187,7 +193,7 @@ class _CombinedVisualsCache[TVisual: Visual]:
     def _read_from_cache(self) -> CustomUserVisuals | None:
         try:
             return store.load_object_from_pickle_file(self._content_filename, default={})
-        except (TypeError, pickle.UnpicklingError):
+        except TypeError, pickle.UnpicklingError:
             return None
 
     def _write_to_cache(self, visuals: CustomUserVisuals) -> None:
@@ -240,7 +246,7 @@ def _load_custom_user_visuals[TVisual: Visual](
         except SyntaxError as e:
             raise MKGeneralException(
                 _("Cannot load %(what)s from %(visual_path)s: %(e)s")
-                % {"what": what, "visual_path": visual_path, "e": e}
+                % {"what": what, "visual_path": visual_path, "e": e}  # type: ignore[possibly-undefined]
             )
 
     visuals.update(

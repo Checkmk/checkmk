@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.ccc.version import Edition
-from tests.testlib.openapi_spec_parity import assert_slim_registration_matches_app
+from tests.testlib.unit.openapi_spec_parity import assert_slim_registration_matches_app
 
 
 @pytest.mark.usefixtures("load_plugins")

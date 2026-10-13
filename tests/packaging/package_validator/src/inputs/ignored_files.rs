@@ -25,8 +25,8 @@ impl IgnoredFiles {
     /// Create a new `IgnoredFiles` from a file containing package path suffixes.
     ///
     /// Each line is matched as a path suffix against the absolute package path
-    /// (e.g. `lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle` matches
-    /// `/lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle`).
+    /// (e.g. `lib/pythonX.YZ/site-packages/cmk/plugins/oracle/agents/mk-oracle` matches
+    /// `/lib/pythonX.YZ/site-packages/cmk/plugins/oracle/agents/mk-oracle`).
     /// Empty lines and lines starting with `#` are ignored.
     ///
     /// # Errors
@@ -48,8 +48,8 @@ impl IgnoredFiles {
 
     /// Check if a package path ends with any of the ignored file sub-paths.
     ///
-    /// Uses component-wise suffix matching so `lib/python3.13/site-packages/foo` matches
-    /// `/lib/python3.13/site-packages/foo` but not `/llib/python3.13/site-packages/foo`.
+    /// Uses component-wise suffix matching so `lib/pythonX.YZ/site-packages/foo` matches
+    /// `/lib/pythonX.YZ/site-packages/foo` but not `/llib/pythonX.YZ/site-packages/foo`.
     #[must_use]
     pub(crate) fn contains(&self, path: &Path) -> bool {
         self.paths.iter().any(|p| path.ends_with(p))
@@ -73,7 +73,7 @@ mod tests {
         let mut file = NamedTempFile::new().unwrap();
         writeln!(
             file,
-            "lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle"
+            "lib/pythonX.YZ/site-packages/cmk/plugins/oracle/agents/mk-oracle"
         )
         .unwrap();
         file.flush().unwrap();
@@ -81,11 +81,11 @@ mod tests {
         let ignored = IgnoredFiles::from_file(file.path()).unwrap();
         // Matches full absolute package path by suffix
         assert!(ignored.contains(Path::new(
-            "/lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle"
+            "/lib/pythonX.YZ/site-packages/cmk/plugins/oracle/agents/mk-oracle"
         )));
         // Does not match a different file
         assert!(!ignored.contains(Path::new(
-            "/lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle.solaris"
+            "/lib/pythonX.YZ/site-packages/cmk/plugins/oracle/agents/mk-oracle.solaris"
         )));
         assert!(!ignored.contains(Path::new("/usr/bin/myapp")));
     }
@@ -95,22 +95,22 @@ mod tests {
         let mut file = NamedTempFile::new().unwrap();
         writeln!(
             file,
-            "lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle"
+            "lib/pythonX.YZ/site-packages/cmk/plugins/oracle/agents/mk-oracle"
         )
         .unwrap();
         writeln!(
             file,
-            "lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle.solaris"
+            "lib/pythonX.YZ/site-packages/cmk/plugins/oracle/agents/mk-oracle.solaris"
         )
         .unwrap();
         file.flush().unwrap();
 
         let ignored = IgnoredFiles::from_file(file.path()).unwrap();
         assert!(ignored.contains(Path::new(
-            "/lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle"
+            "/lib/pythonX.YZ/site-packages/cmk/plugins/oracle/agents/mk-oracle"
         )));
         assert!(ignored.contains(Path::new(
-            "/lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle.solaris"
+            "/lib/pythonX.YZ/site-packages/cmk/plugins/oracle/agents/mk-oracle.solaris"
         )));
         assert!(!ignored.contains(Path::new("/usr/bin/myapp")));
     }
@@ -122,23 +122,23 @@ mod tests {
         writeln!(file, "").unwrap();
         writeln!(
             file,
-            "lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle"
+            "lib/pythonX.YZ/site-packages/cmk/plugins/oracle/agents/mk-oracle"
         )
         .unwrap();
         writeln!(file, "  # Another comment").unwrap();
         writeln!(
             file,
-            "lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle.solaris"
+            "lib/pythonX.YZ/site-packages/cmk/plugins/oracle/agents/mk-oracle.solaris"
         )
         .unwrap();
         file.flush().unwrap();
 
         let ignored = IgnoredFiles::from_file(file.path()).unwrap();
         assert!(ignored.contains(Path::new(
-            "/lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle"
+            "/lib/pythonX.YZ/site-packages/cmk/plugins/oracle/agents/mk-oracle"
         )));
         assert!(ignored.contains(Path::new(
-            "/lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle.solaris"
+            "/lib/pythonX.YZ/site-packages/cmk/plugins/oracle/agents/mk-oracle.solaris"
         )));
     }
 
@@ -147,14 +147,14 @@ mod tests {
         let mut file = NamedTempFile::new().unwrap();
         writeln!(
             file,
-            "  lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle  "
+            "  lib/pythonX.YZ/site-packages/cmk/plugins/oracle/agents/mk-oracle  "
         )
         .unwrap();
         file.flush().unwrap();
 
         let ignored = IgnoredFiles::from_file(file.path()).unwrap();
         assert!(ignored.contains(Path::new(
-            "/lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle"
+            "/lib/pythonX.YZ/site-packages/cmk/plugins/oracle/agents/mk-oracle"
         )));
     }
 
@@ -174,7 +174,7 @@ mod tests {
         let mut file = NamedTempFile::new().unwrap();
         writeln!(
             file,
-            "lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle"
+            "lib/pythonX.YZ/site-packages/cmk/plugins/oracle/agents/mk-oracle"
         )
         .unwrap();
         file.flush().unwrap();
@@ -182,19 +182,19 @@ mod tests {
         let ignored = IgnoredFiles::from_file(file.path()).unwrap();
         // Full suffix match works
         assert!(ignored.contains(Path::new(
-            "/lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle"
+            "/lib/pythonX.YZ/site-packages/cmk/plugins/oracle/agents/mk-oracle"
         )));
         // Partial suffix (just filename) also matches
         assert!(ignored.contains(Path::new(
-            "/any/prefix/lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle"
+            "/any/prefix/lib/pythonX.YZ/site-packages/cmk/plugins/oracle/agents/mk-oracle"
         )));
         // Parent directory does not match
         assert!(!ignored.contains(Path::new(
-            "/lib/python3.13/site-packages/cmk/plugins/oracle/agents"
+            "/lib/pythonX.YZ/site-packages/cmk/plugins/oracle/agents"
         )));
         // No partial component match — 'oracle' alone doesn't match 'mk-oracle'
         assert!(!ignored.contains(Path::new(
-            "/lib/python3.13/site-packages/cmk/plugins/oracle"
+            "/lib/pythonX.YZ/site-packages/cmk/plugins/oracle"
         )));
     }
 }

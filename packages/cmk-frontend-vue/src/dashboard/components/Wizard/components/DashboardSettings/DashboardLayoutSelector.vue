@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { computed } from 'vue'
 
 import { DashboardLayout } from '@/dashboard/types/dashboard'
 
@@ -19,9 +21,18 @@ const { _t } = usei18n()
 
 interface DashboardLayoutSelectorProps {
   availableLayouts: DashboardLayout[]
+  help?: TranslatedString
 }
 
-defineProps<DashboardLayoutSelectorProps>()
+const props = defineProps<DashboardLayoutSelectorProps>()
+
+const helpText = computed(
+  () =>
+    props.help ??
+    _t(
+      'You can choose between a fixed layout or a responsive, scrollable grid layout. By default, the responsive grid layout is selected.'
+    )
+)
 
 const dashboardLayout = defineModel<DashboardLayout>('dashboardLayout', { required: true })
 
@@ -38,13 +49,7 @@ const _updateDashboardLayout = (newLayout: string) => {
     <TableFormRow>
       <FieldDescription>
         {{ _t('Dashboard layout') }}
-        <CmkHelpText
-          :help="
-            _t(
-              'You can choose between a fixed layout or a responsive, scrollable grid layout. By default, the responsive grid layout is selected.'
-            )
-          "
-        />
+        <CmkHelpText :help="helpText" />
       </FieldDescription>
       <FieldComponent>
         <div class="db-general-properties__item">
@@ -65,6 +70,7 @@ const _updateDashboardLayout = (newLayout: string) => {
             @update:model-value="_updateDashboardLayout"
           />
         </div>
+        <slot />
       </FieldComponent>
     </TableFormRow>
   </TableForm>

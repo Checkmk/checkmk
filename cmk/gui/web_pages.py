@@ -27,14 +27,14 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import PageContext, PageEndpoint
-from cmk.gui.type_defs import IconNames, StaticIcon
-from cmk.gui.utils.transaction_manager import TransactionManager, transactions
+from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.web.context import ActionUrlBuilder
 from cmk.web.exceptions import MKUserError as WebMKUserError
 from cmk.web.page_container import PageContainer, PageContainerMenu
 from cmk.web.pages import Page as WebPage
 from cmk.web.pages import PageContext as WebPageContext
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeactionuri
 
 
@@ -61,7 +61,7 @@ def _render(page: WebPage, gui_ctx: PageContext) -> None:
         request=gui_ctx.request,
         user=user,
         i18n=_,
-        make_action_url=_make_action_url_builder(gui_ctx.request, transactions),
+        make_action_url=_make_action_url_builder(gui_ctx.request, gui_ctx.transactions),
     )
     try:
         container = page.page(web_ctx)

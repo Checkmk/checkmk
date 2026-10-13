@@ -8,11 +8,9 @@ from functools import partial
 from typing import override
 
 from cmk.gui import query_filters
-from cmk.gui.config import active_config
-from cmk.gui.http import request
+from cmk.gui.config import active_config, RequestCacheConfig
 from cmk.gui.i18n import _l
-from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
-from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row
 from cmk.gui.visuals.filter import (
     AjaxDropdownFilter,
     CheckboxRowFilter,
@@ -28,6 +26,8 @@ from cmk.gui.visuals.filter import (
 )
 from cmk.gui.visuals.filter.components import Dropdown, FilterComponent
 from cmk.web.utils.autocompleter_config import AutocompleterConfig, GroupAutocompleterConfig
+from cmk.web.utils.request_cache import RequestCache
+from cmk.web.utils.speaklater import LazyString
 
 from .defines import action_whats, phase_names, syslog_priorities
 
@@ -106,7 +106,7 @@ def register(filter_registry: FilterRegistry) -> None:
             title=_l("Host name of event (exact match)"),
             sort_index=201,
             info="event",
-            query_filter=query_filters.TextQuery(ident="event_host", op="="),
+            query_filter=query_filters.EventHostQuery(),
         )
     )
 
@@ -342,7 +342,9 @@ class FilterECServiceLevelRange(Filter):
         return [("", "")] + [(str(x[0]), f"{x[0]} - {x[1]}") for x in choices]
 
     @override
-    def components(self) -> Iterable[FilterComponent]:
+    def components(
+        self, _request_cache: RequestCache[RequestCacheConfig]
+    ) -> Iterable[FilterComponent]:
         choices = dict(self._options())
         yield Dropdown(
             id=self.lower_bound_varname,
@@ -355,46 +357,35 @@ class FilterECServiceLevelRange(Filter):
             label="To",
         )
 
-    @override
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        # NOTE: We need this special case only because our construction of the
-        # disjunction is broken. We should really have a Livestatus Query DSL...
-        bounds: FilterHTTPVariables = context.get(self.ident, {})
-        if not any(v for _k, v in bounds.items()):
-            return rows
-
-        lower_bound: str | None = bounds.get(self.lower_bound_varname)
-        upper_bound: str | None = bounds.get(self.upper_bound_varname)
-
-        # If user only chooses "From" or "To", use same value from the choosen
-        # field for the empty field and update filter form with that value
-        if not lower_bound:
-            lower_bound = upper_bound
-            assert upper_bound is not None
-            request.set_var(self.lower_bound_varname, upper_bound)
-        if not upper_bound:
-            upper_bound = lower_bound
-            assert lower_bound is not None
-            request.set_var(self.upper_bound_varname, lower_bound)
-
-        filtered_rows: Rows = []
-        assert lower_bound is not None
-        assert upper_bound is not None
-        for row in rows:
-            service_level = int(row["%s_custom_variables" % self.info]["EC_SL"])
-            if int(lower_bound) <= service_level <= int(upper_bound):
-                filtered_rows.append(row)
-
-        return filtered_rows
+    def _parse_bounds(self, value: FilterHTTPVariables) -> tuple[int, int] | None:
+        """A single given bound stands for exactly that level; invalid input disables the filter."""
+        raw_lower = value.get(self.lower_bound_varname, "")
+        raw_upper = value.get(self.upper_bound_varname, "")
+        if not raw_lower and not raw_upper:
+            return None
+        try:
+            return int(raw_lower or raw_upper), int(raw_upper or raw_lower)
+        except ValueError:
+            return None
 
     @override
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        if not value.get(self.lower_bound_varname) and not value.get(self.upper_bound_varname):
+        bounds = self._parse_bounds(value)
+        if bounds is None:
             return ""
+        lower_bound, upper_bound = bounds
 
-        return "Filter: %s_custom_variable_names >= EC_SL\n" % self.info
+        # Custom variable values are compared as strings by Livestatus, so a numeric range
+        # cannot be expressed directly. The bounds are chosen from the configured service
+        # levels, so we match each configured level within the range exactly instead.
+        levels_in_range = [
+            str(level)
+            for level, _name in active_config.mkeventd_service_levels
+            if lower_bound <= level <= upper_bound
+        ]
+        if not levels_in_range:
+            return "Or: 0\n"
 
-    @override
-    def columns_for_filter_table(self, context: VisualContext) -> Iterable[str]:
-        if self.ident in context:
-            yield "%s_custom_variables" % self.info
+        return query_filters.lq_logic(
+            f"Filter: {self.info}_custom_variables = EC_SL", levels_in_range, "Or"
+        )

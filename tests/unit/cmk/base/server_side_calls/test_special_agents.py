@@ -14,7 +14,7 @@ import pytest
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.fetcher_utils.secrets import StoredSecrets
 from cmk.discover_plugins import PluginLocation
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.server_side_calls.v1 import (
     HostConfig,
     IPAddressFamily,
@@ -88,7 +88,7 @@ def _with_file(path: Path) -> Iterator[None]:
             path.unlink(missing_ok=True)
 
 
-def argument_function_with_exception(*args: object, **kwargs: object) -> Never:
+def argument_function_with_exception(*args: object, **kwargs: object) -> Never:  # noqa: ARG001
     raise RuntimeError("Can't create argument list")
 
 

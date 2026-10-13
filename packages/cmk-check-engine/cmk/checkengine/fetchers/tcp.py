@@ -265,7 +265,20 @@ class TCPFetcher(Fetcher[AgentRawData, TCPFetcherParams]):
         self, sock: socket.socket, server_hostname: str
     ) -> tuple[TransportProtocol, Buffer]:
         logger.debug("Reading data from agent via TLS socket")
-        with wrap_tls(sock, server_hostname, tls_config=self.tls_config) as ssock:
+        try:
+            ssock = wrap_tls(sock, server_hostname, tls_config=self.tls_config)
+        except FetcherError as e:
+            if (
+                isinstance(e.__cause__, ssl.SSLError)
+                and e.__cause__.reason == "TLSV1_ALERT_ACCESS_DENIED"
+            ):
+                raise FetcherError(
+                    "Error establishing TLS connection: The agent at %s is not registered for"
+                    " this host. Check the host's IP address or register the agent for this"
+                    " host." % self.address[0]
+                ) from e.__cause__
+            raise
+        with ssock:
             logger.debug("Reading data from agent")
             raw_agent_data = recvall(ssock)
         try:

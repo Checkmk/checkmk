@@ -13,6 +13,7 @@ import { computed } from 'vue'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
+import ContextualLinkConfig from '@/dashboard/components/Wizard/components/ContextualLink/ContextualLinkConfig.vue'
 import DataRangeInput from '@/dashboard/components/Wizard/components/DataRangeInput/DataRangeInput.vue'
 import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/FieldComponent.vue'
 import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
@@ -42,6 +43,8 @@ const widgetProps = computed(() => handler.value.widgetProps)
   <DashboardPreviewContent
     widget_id="gauge-preview"
     :dashboard-key="dashboardKey"
+    :tick="tick"
+    :range="range"
     :general_settings="widgetProps.value!.general_settings!"
     :content="widgetProps.value!.content!"
     :effective-title="widgetProps.value!.effectiveTitle"
@@ -124,6 +127,12 @@ const widgetProps = computed(() => handler.value.widgetProps)
       v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
       :title-macros="handler.titleMacros.value"
     />
+  </CmkCatalogPanel>
+
+  <ContentSpacer />
+
+  <CmkCatalogPanel :title="_t('Contextual link')" variant="padded">
+    <ContextualLinkConfig v-model:handler="handler.contextualLink" />
   </CmkCatalogPanel>
 
   <ContentSpacer />

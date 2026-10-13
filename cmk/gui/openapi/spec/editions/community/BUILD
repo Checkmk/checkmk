@@ -35,6 +35,8 @@ py_library(
         "//cmk/gui/views:components",
         "//cmk/gui/visuals",
         "//cmk/gui/wato:base",
+        "//packages/cmk-maps:gui",
+        "//packages/cmk-maps:rest_api",
     ],
 )
 

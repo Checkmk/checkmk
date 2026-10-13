@@ -81,7 +81,7 @@ def test_parse_function(info: StringTable, section: ParsedSection) -> None:
             EXCHANGE_2013_SERVER_SECTION,
             [
                 Service(item=queue[0], parameters={"offset": queue[1]})
-                for queue in winperf_msx_queues._DEFAULT_DISCOVERY_PARAMETERS["queue_names"]
+                for queue in winperf_msx_queues._DEFAULT_DISCOVERY_PARAMETERS["queue_names"]  # noqa: SLF001
             ],
         ),
     ],
@@ -90,7 +90,8 @@ def test_discovery(section: ParsedSection, services: DiscoveryResult) -> None:
     assert (
         list(
             winperf_msx_queues.discover_winperf_msx_queues(
-                winperf_msx_queues._DEFAULT_DISCOVERY_PARAMETERS, section
+                winperf_msx_queues._DEFAULT_DISCOVERY_PARAMETERS,  # noqa: SLF001
+                section,
             )
         )
         == services
@@ -103,23 +104,23 @@ def test_discovery(section: ParsedSection, services: DiscoveryResult) -> None:
         (
             "Active Remote Delivery",
             {
-                "levels": winperf_msx_queues._DEFAULT_LEVELS,
+                "levels": winperf_msx_queues._DEFAULT_LEVELS,  # noqa: SLF001
                 "offset": 2,
             },
             [
                 Result(state=State.CRIT, summary="Length: 2100 (warn/crit at 500/2000)"),
-                Metric("queue_length", 2100.0, levels=winperf_msx_queues._DEFAULT_LEVELS),
+                Metric("queue_length", 2100.0, levels=winperf_msx_queues._DEFAULT_LEVELS),  # noqa: SLF001
             ],
         ),
         (
             "Retry Remote Delivery",
             {
-                "levels": winperf_msx_queues._DEFAULT_LEVELS,
+                "levels": winperf_msx_queues._DEFAULT_LEVELS,  # noqa: SLF001
                 "offset": 4,
             },
             [
                 Result(state=State.OK, summary="Length: 0"),
-                Metric("queue_length", 0.0, levels=winperf_msx_queues._DEFAULT_LEVELS),
+                Metric("queue_length", 0.0, levels=winperf_msx_queues._DEFAULT_LEVELS),  # noqa: SLF001
             ],
         ),
     ],

@@ -4,8 +4,6 @@
 
 """Unit tests for cmk.dev_deploy.parallel: parallel execution engine and output ordering."""
 
-from __future__ import annotations
-
 import time
 from collections.abc import Callable, Iterator
 from unittest.mock import patch
@@ -17,7 +15,7 @@ import pytest
 # ---------------------------------------------------------------------------
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _reset_output_config() -> Iterator[None]:
     """Reset all output configuration before and after each test."""
     from cmk.dev_deploy.core.output import reset

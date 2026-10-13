@@ -7,37 +7,135 @@ load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
-    "pyproject.toml",
     "requirements.in",
 ])
 
 py_library(
-    name = "inventory",
-    srcs = [
-        "cmk/inventory/__init__.py",
-        "cmk/inventory/config.py",
-        "cmk/inventory/paths.py",
-        "cmk/inventory/structured_data.py",
-        "cmk/inventory/transformation/__init__.py",
-        "cmk/inventory/transformation/__main__.py",
-        "cmk/inventory/transformation/main.py",
-    ],
+    name = "package",
+    srcs = ["cmk/inventory/__init__.py"],
     data = [":inventory_py_typed"],
     imports = ["."],
     visibility = ["//visibility:public"],
+)
+
+py_library(
+    name = "model",
+    srcs = [
+        "cmk/inventory/_choices.py",
+        "cmk/inventory/_dict_keys.py",
+        "cmk/inventory/_legacy.py",
+        "cmk/inventory/delta.py",
+        "cmk/inventory/filtering.py",
+        "cmk/inventory/merging.py",
+        "cmk/inventory/raw_paths.py",
+        "cmk/inventory/serialization.py",
+        "cmk/inventory/trees.py",
+    ],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [":package"],
+)
+
+py_library(
+    name = "label_picker",
+    srcs = ["cmk/inventory/label_picker.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
     deps = [
-        "//packages/cmk-ccc:exceptions",
+        ":model",
+        ":package",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:regex",
+        "//packages/cmk-ccc:store",
+    ],
+)
+
+py_library(
+    name = "paths",
+    srcs = ["cmk/inventory/paths.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":package",
+        "//packages/cmk-ccc:hostaddress",
+    ],
+)
+
+py_library(
+    name = "store",
+    srcs = [
+        "cmk/inventory/history.py",
+        "cmk/inventory/store.py",
+    ],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":model",
+        ":package",
+        ":paths",
+        "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:resulttype",
         "//packages/cmk-ccc:store",
+    ],
+)
+
+py_library(
+    name = "cleanup",
+    srcs = ["cmk/inventory/cleanup.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":package",
+        ":paths",
+        "//packages/cmk-ccc:hostaddress",
+    ],
+)
+
+py_library(
+    name = "transformation",
+    srcs = [
+        "cmk/inventory/transformation/__init__.py",
+        "cmk/inventory/transformation/__main__.py",
+        "cmk/inventory/transformation/tree_files.py",
+    ],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":package",
+        ":paths",
+        ":store",
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:store",
+    ],
+)
+
+py_library(
+    name = "inventory",
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":cleanup",
+        ":label_picker",
+        ":model",
+        ":package",
+        ":paths",
+        ":store",
+        ":transformation",
     ],
 )
 
 py_doc_test(
     name = "doctest",
     size = "small",
-    srcs = [":inventory"],
+    srcs = [
+        ":cleanup",
+        ":label_picker",
+        ":model",
+        ":paths",
+        ":store",
+        ":transformation",
+    ],
 )
 
 filegroup(
@@ -55,7 +153,8 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        ":inventory",
+        ":model",
+        ":store",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-plugin-apis:diagnostics",
     ],
@@ -68,13 +167,18 @@ py_wheel(
         "cmk-transform-inventory-trees = cmk.inventory.transformation.__main__:main",
     ]},
     strip_path_prefixes = ["packages/cmk-inventory"],
-    # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [
-        ":inventory",
+        ":cleanup",
         ":inventory_py_typed",
+        ":label_picker",
+        ":model",
+        ":package",
+        ":paths",
         ":plugins",
+        ":store",
+        ":transformation",
     ],
 )
 
@@ -91,18 +195,16 @@ package_wheel(
     whl = "wheel",
 )
 
-sh_library(
-    name = "helpers",
-    srcs = [
-        ".f12",
-    ],
-)
-
 py_requirements_test(
     name = "requirements-test",
     libs = [
-        ":inventory",
+        ":cleanup",
+        ":label_picker",
+        ":model",
+        ":paths",
         ":plugins",
+        ":store",
+        ":transformation",
     ],
     requirements_in = "requirements.in",
 )

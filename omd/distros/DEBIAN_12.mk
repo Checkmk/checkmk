@@ -45,6 +45,7 @@ OS_PACKAGES      += libnl-3-200
 OS_PACKAGES      += bc # Needed by some third-party check plugins
 OS_PACKAGES      += file # Needed by some third-party check plugins
 OS_PACKAGES      += procps # needed for having pgrep available
+OS_PACKAGES      += libzstd1 # needed for Python's compression.zstd
 USERADD_OPTIONS   =
 ADD_USER_TO_GROUP = gpasswd -a %(user)s %(group)s
 APACHE_CONF_DIR   = /etc/apache2/conf.d

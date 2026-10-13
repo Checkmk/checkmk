@@ -133,7 +133,7 @@ class RealIo:
 
             tmp_path.rename(self.path)
 
-        except (MKTerminate, MKTimeout):
+        except MKTerminate, MKTimeout:
             raise
         except Exception as e:
             if tmp_path:
@@ -158,7 +158,7 @@ class RealIo:
             # non-existing file, so we ensure consistency here.
             return b""
 
-        except (MKTerminate, MKTimeout):
+        except MKTerminate, MKTimeout:
             raise
         except Exception as e:
             if cmk.ccc.debug.enabled():

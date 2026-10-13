@@ -9,7 +9,8 @@ import { allIconOptions } from '@ucl/_ucl/lib/icon'
 import { type SimpleIcons } from 'cmk-ui-library/components/CmkIcon'
 import {
   type CmkLinkCardBorders,
-  type CmkLinkCardContrast
+  type CmkLinkCardContrast,
+  type CmkLinkCardSubtitleColor
 } from 'cmk-ui-library/components/CmkLinkCard/CmkLinkCard.vue'
 
 import codeExample from './UclCmkLinkCardCodeExample.vue?raw'
@@ -54,6 +55,15 @@ export const panelConfig = {
     type: 'string' as const,
     title: 'Subtitle',
     initialState: 'Join the discussion with other users.'
+  },
+  subtitleColor: {
+    type: 'list' as const,
+    title: 'Subtitle color',
+    options: [
+      { title: 'Dimmed', name: 'dimmed' },
+      { title: 'Secondary', name: 'secondary' }
+    ],
+    initialState: 'dimmed'
   },
   iconName: {
     type: 'list' as const,
@@ -109,6 +119,7 @@ const propState = new PanelStateCreator<typeof CmkLinkCard, 'callback'>().create
         <CmkLinkCard
           :title="propState.title"
           :subtitle="propState.subtitle"
+          :subtitle-color="propState.subtitleColor as CmkLinkCardSubtitleColor"
           :icon-name="
             propState.iconName !== 'none' ? (propState.iconName as SimpleIcons) : undefined
           "

@@ -3,13 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from http import HTTPStatus
+
 import pytest
 
 from cmk.gui.autocompleters import autocompleter_registry
 from cmk.gui.config import Config
-from cmk.gui.type_defs import Choices
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.rest_api_client import ClientRegistry
+from cmk.web.utils.choices import Choice
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 @pytest.fixture(name="expected_autocompleters")
@@ -37,7 +39,7 @@ def test_openapi_autocompleter_functions_exist(expected_autocompleters: list[str
 def test_openapi_autocompleter_does_not_exist(clients: ClientRegistry) -> None:
     clients.AutoComplete.invoke(
         "I_do_not_exist", value="", parameters={}, expect_ok=False
-    ).assert_status_code(404)
+    ).assert_status_code(HTTPStatus.NOT_FOUND)
 
 
 def test_openapi_sites_autocompleter(
@@ -127,7 +129,7 @@ def test_extra_parameters_are_forwarded_to_autocompleter(clients: ClientRegistry
     """
     received: dict[str, object] = {}
 
-    def echo_autocompleter(config: Config, value: str, params: dict[str, object]) -> Choices:
+    def echo_autocompleter(config: Config, value: str, params: dict[str, object]) -> list[Choice]:  # noqa: ARG001
         received.update(params)
         return []
 

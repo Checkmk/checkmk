@@ -3,90 +3,81 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render } from '@testing-library/vue'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { fromDate } from '@internationalized/date'
+import { screen, waitFor } from '@testing-library/vue'
+import { describe, expect, it } from 'vitest'
 
 import DashboardContentTimelineCount from '@/dashboard/components/DashboardContent/DashboardContentTimelineCount.vue'
-import type { TimelineContent } from '@/dashboard/types/widget'
+import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
+import type { TimelineContent, TimelineCount } from '@/dashboard/types/widget'
 
-import { flushPromises } from '../../utils.ts'
+import {
+  renderComputedWidget,
+  useComputeWidgetEndpoint
+} from '@tests/dashboard/computeWidgetEndpoint'
+import { makeContentProps } from '@tests/dashboard/contentProps'
 
-const computeTimelineCountData = vi.fn()
-vi.mock('@/dashboard/utils.ts', () => ({
-  dashboardAPI: {
-    computeTimelineCountData: (...args: unknown[]) => computeTimelineCountData(...args)
-  }
-}))
+const OTHER_RANGE = {
+  from: fromDate(new Date('2026-01-02T00:00:00Z'), 'UTC'),
+  to: fromDate(new Date('2026-01-02T01:00:00Z'), 'UTC')
+}
 
-function props(type: TimelineContent['type'] = 'alert_timeline') {
-  return {
-    widget_id: 'w1',
-    general_settings: {
-      title: { text: 'Alert timeline', render_mode: 'with_background' as const },
-      render_background: true
-    },
-    content: {
-      type,
-      render_mode: {
-        type: 'simple_number' as const,
-        time_range: { type: 'predefined' as const, value: 'last_25_hours' as const }
-      },
-      log_target: 'both' as const
-    },
-    effectiveTitle: 'Problem alerts',
-    effective_filter_context: { uses_infos: [], filters: {}, context: {} },
-    dashboardKey: { owner: 'cmkadmin', name: 'main' }
+const FOLLOWS_DASHBOARD: TimelineContent = {
+  type: 'alert_timeline',
+  log_target: 'both',
+  render_mode: { type: 'simple_number', time_range: 'dashboard' }
+}
+
+const FIXED_WINDOW: TimelineContent = {
+  ...FOLLOWS_DASHBOARD,
+  render_mode: {
+    type: 'simple_number',
+    time_range: { type: 'predefined', value: 'last_25_hours' }
   }
 }
 
-async function renderWidget(type: TimelineContent['type'] = 'alert_timeline') {
-  const rendered = render(DashboardContentTimelineCount, { props: props(type) as never })
-  await flushPromises()
+const endpoint = useComputeWidgetEndpoint<TimelineCount>('compute-timeline-count', () => ({
+  count: 42
+}))
+
+async function renderWidget(props: ContentProps<TimelineContent>) {
+  const rendered = await renderComputedWidget(DashboardContentTimelineCount, props)
+  await waitFor(() => expect(endpoint.requests).toHaveLength(1))
   return rendered
 }
 
 describe('DashboardContentTimelineCount', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    computeTimelineCountData.mockResolvedValue({ value: { value: '42' } })
+  it('requests the explicit widget with the dashboard time range', async () => {
+    await renderWidget(makeContentProps(FOLLOWS_DASHBOARD))
+
+    expect(endpoint.requests).toEqual([
+      {
+        source: { type: 'explicit', content: FOLLOWS_DASHBOARD, context: {} },
+        time_range: { start: '2026-01-01T00:00:00.000Z', end: '2026-01-01T01:00:00.000Z' }
+      }
+    ])
   })
 
-  it('shows the count as delivered by the backend', async () => {
-    const { container } = await renderWidget()
+  it('shows the count as the value of the card', async () => {
+    await renderWidget(makeContentProps(FOLLOWS_DASHBOARD))
 
-    expect(container.querySelector('.db-cmk-kpi-stat-card__value')).toHaveTextContent('42')
+    expect(await screen.findByText('42')).toBeInTheDocument()
   })
 
-  it('shows the value alone: a count has no unit, state or spark line', async () => {
-    const { container } = await renderWidget()
+  it('fetches again when the dashboard range changes and the widget follows it', async () => {
+    const { rerender } = await renderWidget(makeContentProps(FOLLOWS_DASHBOARD))
 
-    expect(container.querySelector('.db-cmk-kpi-stat-card__unit')).toBeNull()
-    expect(container.querySelector('.db-cmk-kpi-stat-card__state')).toBeNull()
-    expect(container.querySelector('.db-kpi-spark-line')).toBeNull()
-    expect(container.querySelector('.db-cmk-kpi-stat-card')).toHaveClass(
-      'db-cmk-kpi-stat-card--value-only'
-    )
+    await rerender(makeContentProps(FOLLOWS_DASHBOARD, { range: OTHER_RANGE }))
+
+    await waitFor(() => expect(endpoint.requests).toHaveLength(2))
   })
 
-  it('computes the notification timeline through the same endpoint', async () => {
-    await renderWidget('notification_timeline')
+  it('does not fetch again when the dashboard range changes under a fixed window', async () => {
+    const { rerender } = await renderWidget(makeContentProps(FIXED_WINDOW))
 
-    expect(computeTimelineCountData).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'notification_timeline' }),
-      {}
-    )
-  })
+    await rerender(makeContentProps(FIXED_WINDOW, { range: OTHER_RANGE }))
+    await rerender(makeContentProps(FIXED_WINDOW, { range: OTHER_RANGE, tick: 1 }))
 
-  it('reloads on its own, as the figure it replaces did', async () => {
-    vi.useFakeTimers()
-    try {
-      await renderWidget()
-      expect(computeTimelineCountData).toHaveBeenCalledTimes(1)
-
-      await vi.advanceTimersByTimeAsync(60_000)
-      expect(computeTimelineCountData).toHaveBeenCalledTimes(2)
-    } finally {
-      vi.useRealTimers()
-    }
+    await waitFor(() => expect(endpoint.requests).toHaveLength(2))
   })
 })

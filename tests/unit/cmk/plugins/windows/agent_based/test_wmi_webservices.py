@@ -376,3 +376,7 @@ def test_check_wmi_webservices(
     parsed = parse_wmi_table(info)
     result = list(check_wmi_webservices(item, parsed))
     assert result == expected_results
+
+
+def test_wmi_webservices_no_discovery_on_timeout() -> None:
+    assert not list(discover_wmi_webservices(parse_wmi_table([["WMItimeout"]])))

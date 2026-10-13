@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
 import json
 import logging
@@ -19,6 +18,7 @@ from typing import NamedTuple, Protocol
 from uuid import UUID
 
 import cmk.ccc.version as cmk_version
+import cmk.ccc.version_info as cmk_version_info
 import cmk.livestatus_client as livestatus
 from cmk.ccc import store
 from cmk.ccc.site import omd_site
@@ -45,12 +45,14 @@ from cmk.licensing.helper import (
     load_instance_id,
     rot47,
 )
-from cmk.licensing.usage_counters import (
-    collect_license_usage_counters,
+from cmk.licensing.internal import (
     CounterCollectionContext,
-    discover_license_usage_counter_plugins,
     LICENSE_LABEL_EXCLUDE,
     LICENSE_LABEL_NAME,
+)
+from cmk.licensing.usage_counters import (
+    collect_license_usage_counters,
+    discover_license_usage_counter_plugins,
 )
 
 CLOUD_SERVICE_PREFIXES = {"aws", "azure", "gcp"}
@@ -149,7 +151,7 @@ def create_sample(
     num_synthetic_tests, num_synthetic_tests_excluded, num_synthetic_kpis,
     num_synthetic_kpis_excluded: provided by the synthetic monitoring feature
         via its license usage counter plug-in
-    num_active_metric_series: provided by the metric backend feature via its
+    num_active_metric_series: provided by the data backend feature via its
         license usage counter plug-in
 
     Shadow objects: 0: active, 1: passive, 2: shadow
@@ -172,7 +174,7 @@ def create_sample(
         logger,
     )
 
-    general_infos = cmk_version.get_general_version_infos(omd_root)
+    general_infos = cmk_version_info.get_general_version_infos(omd_root)
     extensions = _load_extensions(omd_root=omd_root)
 
     return LicenseUsageSample(
@@ -447,7 +449,7 @@ def deserialize_dump(raw_dump: bytes) -> object:
 
 
 class LicenseUsageReportValidity(Enum):
-    older_than_five_days = auto()
+    older_than_sixty_days = auto()
     older_than_three_days = auto()
     recent_enough = auto()
 
@@ -473,9 +475,9 @@ def get_license_usage_report_validity(
 
         # TODO use max. sample time
         age = time.time() - report_file_path.stat().st_mtime
-        if age >= 432000:
-            # crit if greater than five days: block activate changes
-            return LicenseUsageReportValidity.older_than_five_days
+        if age >= 5184000:
+            # crit if greater than sixty days: block activate changes
+            return LicenseUsageReportValidity.older_than_sixty_days
 
         if age >= 259200:
             # warn if greater than three days: warn during activating changes

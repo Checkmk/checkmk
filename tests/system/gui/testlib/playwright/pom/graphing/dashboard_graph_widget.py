@@ -14,7 +14,11 @@ import logging
 
 from playwright.sync_api import Locator
 
-from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import GraphAccessor
+from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import (
+    ACTION_MENU_BUTTON_NAME,
+    ACTION_MENU_DROPDOWN_SELECTOR,
+    GraphAccessor,
+)
 from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphContainment
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import TimeSeriesGraph
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import BaseDashboard
@@ -43,15 +47,9 @@ class DashboardGraphWidget:
     def widget(self) -> Locator:
         return self._dashboard.get_widget(self.widget_title)
 
-    def graph_container(self) -> Locator:
-        """Return the container scoping the graph within the widget."""
-        return self._accessor.container(
-            GraphContainment.DASHBOARD_WIDGET, widget=self.widget, iframed=self._iframed
-        )
-
     @property
     def figure(self) -> Locator:
-        """The engine's figure inside the widget; absent while the legacy renderer serves it."""
+        """The engine's figure inside the widget."""
         return self._accessor.engine_graph_figure(
             GraphContainment.DASHBOARD_WIDGET, widget=self.widget, iframed=self._iframed
         )
@@ -81,3 +79,12 @@ class DashboardGraphWidget:
         having rendered.
         """
         self.graph.canvas.wait_for(state="visible")
+
+    def action_menu_button(self) -> Locator:
+        """Return the widget's action-menu (burger menu) trigger button, if any."""
+        return self.widget.get_by_role("button", name=ACTION_MENU_BUTTON_NAME, exact=True)
+
+    def open_action_menu(self) -> Locator:
+        """Open the action menu and return the locator of its dropdown."""
+        self.action_menu_button().click()
+        return self.widget.locator(ACTION_MENU_DROPDOWN_SELECTOR)

@@ -37,7 +37,7 @@ export const panelConfig = {
       { title: 'right', name: 'right' }
     ],
     initialState: 'left',
-    help: 'Align the cell content; for a full highlight, also aligns its inner content.'
+    help: 'Align the cell content.'
   },
   buttonEnabled: {
     type: 'boolean' as const,
@@ -78,17 +78,7 @@ export const panelConfig = {
     type: 'boolean' as const,
     title: 'highlight',
     initialState: false,
-    help: 'Apply a coloured highlight to the cell.'
-  },
-  highlightType: {
-    type: 'list' as const,
-    title: '↳ type',
-    options: [
-      { title: 'inline', name: 'inline' },
-      { title: 'outline', name: 'outline' },
-      { title: 'full', name: 'full' }
-    ],
-    initialState: 'inline'
+    help: 'Colour the cell value and mark it with an accent bar.'
   },
   highlightColor: {
     type: 'list' as const,
@@ -98,7 +88,8 @@ export const panelConfig = {
       { title: 'success', name: 'success' },
       { title: 'warning', name: 'warning' },
       { title: 'danger', name: 'danger' },
-      { title: 'info', name: 'info' }
+      { title: 'unknown', name: 'unknown' },
+      { title: 'pending', name: 'pending' }
     ],
     initialState: 'default'
   },
@@ -152,7 +143,6 @@ const justify = computed(() => propState.value.justify as 'left' | 'center' | 'r
 const highlight = computed<CellHighlight | undefined>(() =>
   propState.value.highlightEnabled
     ? {
-        type: propState.value.highlightType as CellHighlight['type'],
         color: propState.value.highlightColor as CellHighlight['color'],
         minWidth:
           propState.value.highlightMinWidth > 0 ? propState.value.highlightMinWidth : undefined
@@ -161,7 +151,7 @@ const highlight = computed<CellHighlight | undefined>(() =>
 )
 
 const LINK_SUB_KEYS = ['linkHref', 'linkTarget', 'linkVariant'] as const
-const HIGHLIGHT_SUB_KEYS = ['highlightType', 'highlightColor', 'highlightMinWidth'] as const
+const HIGHLIGHT_SUB_KEYS = ['highlightColor', 'highlightMinWidth'] as const
 
 const visibleConfig = computed(() =>
   Object.fromEntries(
@@ -257,10 +247,8 @@ const columns = computed<ColumnDef<DemoRow>[]>(() => [
 .ucl-base-cell__panel :deep(div:has(> div > label[for$='-linkHref'])),
 .ucl-base-cell__panel :deep(div:has(> div > label[for$='-linkTarget'])),
 .ucl-base-cell__panel :deep(div:has(> div > label[for$='-linkVariant'])),
-.ucl-base-cell__panel :deep(div:has(> div > label[for$='-highlightType'])),
 .ucl-base-cell__panel :deep(div:has(> div > label[for$='-highlightColor'])),
-.ucl-base-cell__panel :deep(div:has(> div > label[for$='-highlightMinWidth'])),
-.ucl-base-cell__panel :deep(div:has(> div > label[for$='-highlightOutline'])) {
+.ucl-base-cell__panel :deep(div:has(> div > label[for$='-highlightMinWidth'])) {
   padding-left: 16px;
 }
 /* stylelint-enable selector-pseudo-class-no-unknown */

@@ -8,14 +8,21 @@
 
 import binascii
 import json
-from collections.abc import Mapping, Sequence
+import re
+import shlex
+from collections.abc import Callable, Mapping, Sequence
+from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 import pytest
 import requests
+import responses
 from pytest import MonkeyPatch
 
+import cmk.utils.password_store
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.notification_plugins import utils
+from cmk.testlib.notification_plugins import exit_code, explicit_password
 
 
 @pytest.mark.parametrize(
@@ -383,13 +390,13 @@ def test_escape_context(input_context: dict[str, str], expected_context: Mapping
     "response, matchers, expected_exit_msg, expected_exit_code",
     [
         (
-            Mock(requests.models.Response, status_code=200, text="whatever"),
+            Mock(requests.models.Response, status_code=HTTPStatus.OK, text="whatever"),
             [],
             "Details for Status Code are not defined\n200: OK\n",
             3,
         ),
         (
-            Mock(requests.models.Response, status_code=200, text="whatever"),
+            Mock(requests.models.Response, status_code=HTTPStatus.OK, text="whatever"),
             [
                 (
                     utils.StatusCodeMatcher(range=(400, 500)),
@@ -400,7 +407,7 @@ def test_escape_context(input_context: dict[str, str], expected_context: Mapping
             3,
         ),
         (
-            Mock(requests.models.Response, status_code=200, text="whatever"),
+            Mock(requests.models.Response, status_code=HTTPStatus.OK, text="whatever"),
             [
                 (
                     utils.StatusCodeMatcher(range=(200, 300)),
@@ -411,7 +418,7 @@ def test_escape_context(input_context: dict[str, str], expected_context: Mapping
             0,
         ),
         (
-            Mock(requests.models.Response, status_code=201, text="whatever"),
+            Mock(requests.models.Response, status_code=HTTPStatus.CREATED, text="whatever"),
             [
                 (
                     utils.StatusCodeMatcher(range=(200, 300)),
@@ -422,7 +429,9 @@ def test_escape_context(input_context: dict[str, str], expected_context: Mapping
             0,
         ),
         (
-            Mock(requests.models.Response, status_code=300, text="whatever"),
+            Mock(
+                requests.models.Response, status_code=HTTPStatus.MULTIPLE_CHOICES, text="whatever"
+            ),
             [
                 (
                     utils.StatusCodeMatcher(range=(200, 300)),
@@ -435,7 +444,7 @@ def test_escape_context(input_context: dict[str, str], expected_context: Mapping
         (
             Mock(
                 requests.models.Response,
-                status_code=200,
+                status_code=HTTPStatus.OK,
                 text="whatever",
                 json=lambda: {"code": "all good"},
             ),
@@ -451,7 +460,7 @@ def test_escape_context(input_context: dict[str, str], expected_context: Mapping
         (
             Mock(
                 requests.models.Response,
-                status_code=200,
+                status_code=HTTPStatus.OK,
                 text="whatever",
                 json=lambda: {"code": "all good"},
             ),
@@ -467,7 +476,7 @@ def test_escape_context(input_context: dict[str, str], expected_context: Mapping
         (
             Mock(
                 requests.models.Response,
-                status_code=200,
+                status_code=HTTPStatus.OK,
                 text="whatever",
                 json=lambda: {"code": "all good"},
             ),
@@ -483,7 +492,7 @@ def test_escape_context(input_context: dict[str, str], expected_context: Mapping
         (
             Mock(
                 requests.models.Response,
-                status_code=200,
+                status_code=HTTPStatus.OK,
                 text="whatever",
                 json=lambda: {"code": "all good"},
             ),
@@ -501,7 +510,7 @@ def test_escape_context(input_context: dict[str, str], expected_context: Mapping
         (
             Mock(
                 requests.models.Response,
-                status_code=400,
+                status_code=HTTPStatus.BAD_REQUEST,
                 text="whatever",
                 json=lambda: {"code": "all good"},
             ),
@@ -689,3 +698,404 @@ def test_render_cmk_graphs(capsys: pytest.CaptureFixture) -> None:  # type: igno
 )
 def test_event_text_templates(notification_type: str, expected: str) -> None:
     assert utils._event_text_template(notification_type) == expected  # noqa: SLF001
+
+
+def test_collect_context_reads_notify_variables_and_adds_event_text(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("NOTIFY_WHAT", "HOST")
+    monkeypatch.setenv("NOTIFY_NOTIFICATIONTYPE", "PROBLEM")
+    monkeypatch.setenv("NOTIFY_PREVIOUSHOSTHARDSHORTSTATE", "UP")
+    monkeypatch.setenv("NOTIFY_HOSTSHORTSTATE", "DOWN")
+    monkeypatch.setenv("NOT_A_NOTIFICATION_VARIABLE", "ignored")
+
+    assert utils.collect_context() == {
+        "WHAT": "HOST",
+        "NOTIFICATIONTYPE": "PROBLEM",
+        "PREVIOUSHOSTHARDSHORTSTATE": "UP",
+        "HOSTSHORTSTATE": "DOWN",
+        "EVENT_TXT": "UP -> DOWN",
+    }
+
+
+_URL_CONTEXT = {
+    "PARAMETER_URL_PREFIX_1": "automatic_https",
+    "MONITORING_HOST": "mon",
+    "OMD_SITE": "heute",
+    "HOSTNAME": "host1",
+    "SERVICEDESC": "CPU load",
+}
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "what, expected_url",
+    [
+        pytest.param("HOST", "https://mon/heute/check_mk/view.py?siteopt=heute&view_name=host_graphs&host=host1", id="host"),
+        pytest.param("SERVICE", "https://mon/heute/check_mk/view.py?siteopt=heute&view_name=service_graphs&host=host1&service=CPU load", id="service"),
+    ],
+)
+# fmt: on
+def test_graph_url_from_context(what: str, expected_url: str) -> None:
+    assert utils.graph_url_from_context({**_URL_CONTEXT, "WHAT": what}) == expected_url
+
+
+def test_eventhistory_url_from_context_points_to_events_view() -> None:
+    assert (
+        utils.eventhistory_url_from_context(_URL_CONTEXT)
+        == "https://mon/heute/check_mk/view.py?view_name=events"
+    )
+
+
+def test_manual_url_prefix_drops_check_mk_suffix() -> None:
+    context = {
+        "PARAMETER_URL_PREFIX_1": "manual",
+        "PARAMETER_URL_PREFIX_2": "https://mon/heute/check_mk/",
+        "HOSTURL": "/check_mk/index.py",
+    }
+
+    assert utils.host_url_from_context(context) == "https://mon/heute/check_mk/index.py"
+
+
+def test_explicit_formspec_password_is_returned_as_is() -> None:
+    password = list(explicit_password("PARAMETER_PASSWORD", "s3cret").values())
+
+    assert utils.retrieve_from_passwordstore(password) == "s3cret"
+
+
+@pytest.mark.usefixtures("site_root")
+def test_stored_formspec_password_is_read_from_password_store() -> None:
+    cmk.utils.password_store.save(
+        {"my_pw": "s3cret"}, cmk.utils.password_store.pending_secrets_path_site()
+    )
+
+    assert (
+        utils.retrieve_from_passwordstore(
+            ["cmk_postprocessed", "stored_password", "my_pw\t", "my_pw", ""]
+        )
+        == "s3cret"
+    )
+
+
+@pytest.mark.usefixtures("site_root")
+def test_stored_legacy_password_is_read_from_password_store() -> None:
+    cmk.utils.password_store.save(
+        {"my_pw": "s3cret"}, cmk.utils.password_store.pending_secrets_path_site()
+    )
+
+    assert utils.retrieve_from_passwordstore("store\tmy_pw") == "s3cret"
+
+
+@pytest.mark.usefixtures("site_root")
+def test_missing_stored_password_raises() -> None:
+    with pytest.raises(MKGeneralException, match="Password not found"):
+        utils.retrieve_from_passwordstore("store\tmissing")
+
+
+def test_password_is_collected_from_context_keys_with_prefix() -> None:
+    context = {
+        **explicit_password("PARAMETER_PASSWORD", "from-context"),
+        "PARAMETER_OTHER": "ignored",
+    }
+
+    assert utils.get_password_from_env_or_context("PARAMETER_PASSWORD", context) == "from-context"
+
+
+def test_password_is_collected_from_environment_without_context(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    for key, value in explicit_password("NOTIFY_PARAMETER_PASSWORD", "from-env").items():
+        monkeypatch.setenv(key, value)
+
+    assert utils.get_password_from_env_or_context("NOTIFY_PARAMETER_PASSWORD") == "from-env"
+
+
+_WEBHOOK_URL = "https://hook.example.com/notify"
+_POST_CONTEXT = {"WHAT": "HOST", "NOTIFICATIONTYPE": "PROBLEM", "HOSTNAME": "host1"}
+
+
+def _message(context: dict[str, str]) -> dict[str, str | object]:
+    return {"text": f"{context['HOSTNAME']} is down"}
+
+
+@responses.activate
+def test_post_request_sends_message_to_webhook_from_context(
+    notify_context: Callable[[Mapping[str, str]], None],
+) -> None:
+    responses.post(_WEBHOOK_URL)
+    notify_context({**_POST_CONTEXT, "PARAMETER_WEBHOOK_URL": f"webhook_url\t{_WEBHOOK_URL}"})
+
+    utils.post_request(_message)
+
+    assert json.loads(responses.calls[0].request.body or b"") == {"text": "host1 is down"}
+
+
+@responses.activate
+def test_post_request_uses_given_url_and_headers(
+    notify_context: Callable[[Mapping[str, str]], None],
+) -> None:
+    responses.post(_WEBHOOK_URL)
+    notify_context(_POST_CONTEXT)
+
+    utils.post_request(_message, url=_WEBHOOK_URL, headers={"X-Token": "abc"})
+
+    assert responses.calls[0].request.headers["X-Token"] == "abc"
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "error, expected_stderr",
+    [
+        pytest.param(requests.exceptions.ProxyError("refused"), "Cannot connect to proxy: http://***@proxy.lan:3128\n", id="proxy error"),
+        pytest.param(requests.exceptions.ConnectTimeout("slow"), "Connection timeout in notification plugin \n", id="timeout"),
+    ],
+)
+# fmt: on
+@responses.activate
+def test_post_request_connection_failure_is_final(
+    error: requests.exceptions.RequestException,
+    expected_stderr: str,
+    notify_context: Callable[[Mapping[str, str]], None],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    responses.post(_WEBHOOK_URL, body=error)
+    notify_context({**_POST_CONTEXT, "PARAMETER_PROXY_URL": "http://user:secret@proxy.lan:3128"})
+
+    result = exit_code(lambda: utils.post_request(_message, url=_WEBHOOK_URL))
+
+    assert (result, capsys.readouterr().err) == (2, expected_stderr)
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "status_code, success_code, expected_result",
+    [
+        pytest.param(HTTPStatus.OK, HTTPStatus.OK, 0, id="expected status"),
+        pytest.param(HTTPStatus.ACCEPTED, {HTTPStatus.OK, HTTPStatus.ACCEPTED}, 0, id="one of expected statuses"),
+        pytest.param(HTTPStatus.INTERNAL_SERVER_ERROR, HTTPStatus.OK, 1, id="server error is retried"),
+        pytest.param(HTTPStatus.BAD_REQUEST, {HTTPStatus.OK}, 2, id="client error is final"),
+    ],
+)
+# fmt: on
+def test_process_by_status_code_result(
+    status_code: int, success_code: int | set[int], expected_result: int
+) -> None:
+    response = Mock(spec=requests.Response, status_code=status_code, text="details")
+
+    assert utils.process_by_status_code(response, success_code) == expected_result
+
+
+def test_process_by_status_code_reports_failed_response(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    response = Mock(spec=requests.Response, status_code=HTTPStatus.NOT_FOUND, text="nope")
+
+    utils.process_by_status_code(response)
+
+    assert capsys.readouterr().err == "Failed to send notification.\nResponse: nope\n404: Not Found"
+
+
+def test_status_code_matcher_rejects_inverted_range() -> None:
+    with pytest.raises(ValueError, match="Invalid range: 300 - 200"):
+        utils.StatusCodeMatcher(range=(300, 200))
+
+
+def test_extended_combined_matcher_requires_all_matchers() -> None:
+    response = Mock(spec=requests.Response, status_code=HTTPStatus.OK)
+    matcher = (
+        utils.StatusCodeMatcher(range=(200, 299))
+        .and_(utils.JsonFieldMatcher(field="ok", value=True))
+        .and_(utils.JsonFieldMatcher(field="code", value="E1"))
+    )
+
+    assert matcher.matches(response, {"ok": True, "code": "E2"}) is False
+
+
+def test_process_by_matchers_reports_nested_json_detail(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    response = Mock(
+        spec=requests.Response,
+        status_code=HTTPStatus.BAD_REQUEST,
+        text="",
+        json=lambda: {"error": {"message": "invalid key"}},
+    )
+
+    result = exit_code(
+        lambda: utils.process_by_matchers(
+            response, [((400, 499), utils.StateInfo(state=2, type="json", title="message"))]
+        )
+    )
+
+    assert (result, capsys.readouterr().err) == (
+        2,
+        "message: invalid key\n400: Bad Request\n",
+    )
+
+
+def test_json_field_matcher_does_not_match_non_json_body(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    response = Mock(spec=requests.Response, status_code=HTTPStatus.OK, text="plain")
+    response.json.side_effect = requests.JSONDecodeError("Expecting value", "plain", 0)
+
+    exit_code(
+        lambda: utils.process_by_matchers(
+            response,
+            [(utils.JsonFieldMatcher(field="ok", value=True), utils.StateInfo(0, "str", "ok"))],
+        )
+    )
+
+    assert capsys.readouterr().err == "Details for Status Code are not defined\n200: OK\n"
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "context, expected_message",
+    [
+        pytest.param({"WHAT": "SERVICE", "NOTIFICATIONTYPE": "PROBLEM", "SERVICESTATE": "CRITICAL", "SERVICEDESC": "CPU", "SERVICEOUTPUT": "high"}, "host1 CR CPU high", id="service problem"),
+        pytest.param({"WHAT": "SERVICE", "NOTIFICATIONTYPE": "ACKNOWLEDGEMENT", "SERVICEDESC": "CPU", "NOTIFICATIONCOMMENT": "mine"}, "host1 CPU Acknowledged mine", id="service acknowledgement"),
+        pytest.param({"WHAT": "HOST", "NOTIFICATIONTYPE": "RECOVERY", "HOSTSTATE": "UP"}, "host1 is UP", id="host recovery"),
+        pytest.param({"WHAT": "HOST", "NOTIFICATIONTYPE": "FLAPPINGSTART"}, "host1  Started Flapping", id="flapping start"),
+        pytest.param({"WHAT": "HOST", "NOTIFICATIONTYPE": "FLAPPINGSTOP"}, "host1  Stopped Flapping", id="flapping stop"),
+        pytest.param({"WHAT": "HOST", "NOTIFICATIONTYPE": "DOWNTIMEEND", "NOTIFICATIONCOMMENT": "done"}, "host1  Downtime End done", id="downtime end"),
+        pytest.param({"WHAT": "HOST", "NOTIFICATIONTYPE": "CUSTOM", "NOTIFICATIONCOMMENT": "hello"}, "host1  Custom Notification hello", id="custom"),
+    ],
+)
+# fmt: on
+def test_sms_message_from_context(context: dict[str, str], expected_message: str) -> None:
+    assert utils.get_sms_message_from_context({"HOSTNAME": "host1", **context}) == expected_message
+
+
+def test_sms_message_truncates_service_problem_to_160_characters() -> None:
+    context = {
+        "HOSTNAME": "host1",
+        "WHAT": "SERVICE",
+        "NOTIFICATIONTYPE": "PROBLEM",
+        "SERVICESTATE": "CRITICAL",
+        "SERVICEDESC": "CPU",
+        "SERVICEOUTPUT": "x" * 200,
+    }
+
+    assert len(utils.get_sms_message_from_context(context)) == 160
+
+
+@pytest.mark.parametrize(
+    "max_length, expected",
+    [
+        pytest.param(None, "'it'\"'\"'s down'", id="unlimited"),
+        pytest.param(8, "'it'\"'\"'", id="truncated"),
+    ],
+)
+def test_quote_message_escapes_single_quotes(max_length: int | None, expected: str) -> None:
+    assert utils.quote_message("it's down", max_length) == expected
+
+
+@pytest.mark.xfail(
+    strict=True, raises=ValueError, reason="truncation can cut through an escaped single quote"
+)
+def test_quote_message_truncation_keeps_shell_quoting_balanced() -> None:
+    assert shlex.split(utils.quote_message("it's down", 6)) == ["it"]
+
+
+@pytest.mark.parametrize(
+    "notification_type, expected",
+    [
+        pytest.param("DOWNTIMESTART", "Downtime Start", id="downtime start"),
+        pytest.param("DOWNTIMEEND", "Downtime End", id="downtime end"),
+        pytest.param("DOWNTIMECANCELLED", "Downtime Cancelled", id="downtime cancelled"),
+        pytest.param("FLAPPINGSTART", "Flapping Start", id="flapping start"),
+        pytest.param("FLAPPINGSTOP", "Flapping Stop", id="flapping stop"),
+        pytest.param("FLAPPINGDISABLED", "Flapping Disabled", id="flapping disabled"),
+        pytest.param("ALERTHANDLER (OK)", "Alert Handler (Ok)", id="alert handler with result"),
+        pytest.param("ALERTHANDLER", "Alert Handler", id="alert handler"),
+        pytest.param("PROBLEM", "Problem", id="other"),
+    ],
+)
+def test_pretty_notification_type(notification_type: str, expected: str) -> None:
+    assert utils.pretty_notification_type(notification_type) == expected
+
+
+@pytest.mark.parametrize(
+    "state, expected",
+    [
+        pytest.param("OK", "OK", id="ok stays upper case"),
+        pytest.param("CRITICAL", "Critical", id="others are title case"),
+    ],
+)
+def test_pretty_state(state: str, expected: str) -> None:
+    assert utils.pretty_state(state) == expected
+
+
+_GRAPH_CONTEXT = {"HOSTNAME": "heute", "WHAT": "HOST"}
+
+
+@responses.activate
+def test_render_cmk_graphs_authenticates_with_site_internal_secret(
+    graph_url: re.Pattern[str],
+) -> None:
+    responses.get(graph_url, json={"result_code": 0, "result": []})
+
+    utils.render_cmk_graphs(_GRAPH_CONTEXT)
+
+    assert responses.calls[0].request.headers["Authorization"].startswith("InternalToken ")
+
+
+@responses.activate
+def test_render_cmk_graphs_reports_connection_failure(
+    graph_url: re.Pattern[str], capsys: pytest.CaptureFixture[str]
+) -> None:
+    responses.get(graph_url, body=requests.exceptions.ConnectionError("refused"))
+
+    graphs = utils.render_cmk_graphs(_GRAPH_CONTEXT)
+
+    assert (graphs, capsys.readouterr().err.splitlines()[0]) == (
+        [],
+        "ERROR: Failed to fetch graphs: refused",
+    )
+
+
+@responses.activate
+def test_render_cmk_graphs_treats_empty_response_as_no_graphs(
+    graph_url: re.Pattern[str], capsys: pytest.CaptureFixture[str]
+) -> None:
+    responses.get(graph_url, body="")
+
+    graphs = utils.render_cmk_graphs(_GRAPH_CONTEXT)
+
+    assert (graphs, capsys.readouterr().err) == ([], "")
+
+
+@responses.activate
+def test_render_cmk_graphs_reports_rendering_error(
+    graph_url: re.Pattern[str], capsys: pytest.CaptureFixture[str]
+) -> None:
+    responses.get(graph_url, json={"result_code": 1, "result": "no permission"})
+
+    graphs = utils.render_cmk_graphs(_GRAPH_CONTEXT)
+
+    assert (graphs, capsys.readouterr().err.splitlines()[0]) == (
+        [],
+        "ERROR: Graph rendering failed: no permission",
+    )
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "body, expected_error",
+    [
+        pytest.param(requests.exceptions.ReadTimeout("slow"), requests.exceptions.ReadTimeout, id="timeout"),
+        pytest.param(requests.exceptions.ConnectionError("refused"), requests.exceptions.ConnectionError, id="connection error"),
+        pytest.param("not json", requests.exceptions.JSONDecodeError, id="invalid JSON"),
+        pytest.param('{"result_code": 1, "result": "no permission"}', RuntimeError, id="rendering error"),
+    ],
+)
+# fmt: on
+@responses.activate
+def test_render_cmk_graphs_raises_when_requested(
+    graph_url: re.Pattern[str], body: str | Exception, expected_error: type[Exception]
+) -> None:
+    responses.get(graph_url, body=body)
+
+    with pytest.raises(expected_error):
+        utils.render_cmk_graphs(_GRAPH_CONTEXT, raise_exception=True)

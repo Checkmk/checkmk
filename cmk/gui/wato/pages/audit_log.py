@@ -12,6 +12,7 @@ import dataclasses
 import time
 from collections.abc import Collection, Iterator
 from dataclasses import dataclass
+from http import HTTPStatus
 from typing import Any, override
 
 from cmk.ccc.resulttype import Error, OK, Result
@@ -34,13 +35,7 @@ from cmk.gui.form_specs.generators.cascading_choice_utils import (
     enable_deprecated_cascading_elements,
 )
 from cmk.gui.form_specs.generators.regex_utils import create_regex
-from cmk.gui.form_specs.unstable import (
-    CascadingSingleChoiceExtended,
-    LegacyValueSpec,
-)
-from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
-    CascadingSingleChoiceElementExtended,
-)
+from cmk.gui.form_specs.unstable import LegacyValueSpec
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import ContentDispositionType, Request, request, response
@@ -57,21 +52,22 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.userdb.store import load_users
-from cmk.gui.utils.confirm_links import make_confirm_delete_link
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import AbsoluteDate
 from cmk.gui.valuespec import Integer as IntegerVS
 from cmk.gui.wato.pages.activate_changes import render_object_ref
 from cmk.gui.watolib.audit_log import AuditLogFilterRaw, AuditLogStore, build_audit_log_filter
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, FolderTree, make_folder_tree
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.objref import ObjectRefType
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.rulesets.internal.form_specs import (
+    CascadingSingleChoiceElementExtended,
+    CascadingSingleChoiceExtended,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
@@ -87,8 +83,12 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.utils import render
 from cmk.web.utils import escaping
+from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeactionuri, makeuri
 
 
@@ -247,6 +247,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
                 icon_name=StaticIcon(IconNames.delete),
                 item=make_simple_link(
                     make_confirm_delete_link(
+                        i18n=_,
                         url=makeactionuri(
                             request,
                             transactions.get(),
@@ -379,7 +380,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
         if not transactions.check_transaction(request):
             return None
 
@@ -416,7 +417,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
             html.hidden_fields()
 
         if self._request_data.is_ok() and self._request_data.ok.selected_filename:
-            self._show_audit_log()
+            self._show_audit_log(make_folder_tree(config))
 
     def _fs_file_selection(self) -> SingleChoiceExtended[str]:
         return SingleChoiceExtended(
@@ -452,19 +453,19 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
             reverse=True,
         )
 
-    def _show_audit_log(self) -> None:
+    def _show_audit_log(self, tree: FolderTree) -> None:
         audit = self._parse_audit_log()
 
         if not audit:
             html.show_message(_("Found no matching entry."))
 
         elif self._options["display"] == "daily":
-            self._display_daily_audit_log(audit)
+            self._display_daily_audit_log(tree, audit)
 
         else:
-            self._display_multiple_days_audit_log(audit)
+            self._display_multiple_days_audit_log(tree, audit)
 
-    def _display_daily_audit_log(self, log: list[AuditLogStore.Entry]) -> None:
+    def _display_daily_audit_log(self, tree: FolderTree, log: list[AuditLogStore.Entry]) -> None:
         log, times = self._get_next_daily_paged_log(log)
 
         self._display_page_controls(*times)
@@ -472,11 +473,13 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
         if display_options.enabled(display_options.T):
             html.h3(_("Audit log for %(date)s") % {"date": render.date(times[0])})
 
-        self._display_log(log)
+        self._display_log(tree, log)
 
         self._display_page_controls(*times)
 
-    def _display_multiple_days_audit_log(self, log: list[AuditLogStore.Entry]) -> None:
+    def _display_multiple_days_audit_log(
+        self, tree: FolderTree, log: list[AuditLogStore.Entry]
+    ) -> None:
         log = self._get_multiple_days_log_entries(log)
 
         if display_options.enabled(display_options.T):
@@ -485,9 +488,9 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
                 % {"date": render.date(self._get_start_date()), "days": self._options["display"][1]}
             )
 
-        self._display_log(log)
+        self._display_log(tree, log)
 
-    def _display_log(self, log: list[AuditLogStore.Entry]) -> None:
+    def _display_log(self, tree: FolderTree, log: list[AuditLogStore.Entry]) -> None:
         with table_element(
             css="data wato auditlog audit",
             limit=0,
@@ -512,7 +515,9 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
                     )
                 if self._show_object:
                     table.cell(
-                        _("Object"), render_object_ref(entry.object_ref) or "", css=["narrow"]
+                        _("Object"),
+                        render_object_ref(tree, entry.object_ref) or "",
+                        css=["narrow"],
                     )
 
                 text = HTML.without_escaping(
@@ -602,8 +607,8 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
 
     def _display_page_controls(
         self,
-        start_time: int,
-        end_time: int,
+        start_time: int,  # noqa: ARG002
+        end_time: int,  # noqa: ARG002
         previous_log_time: int | None,
         next_log_time: int | None,
     ) -> None:
@@ -871,7 +876,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
 
         response.set_data("".join(resp))
 
-        return FinalizeRequest(code=200)
+        return FinalizeRequest(code=HTTPStatus.OK)
 
     def _parse_audit_log(self) -> list[AuditLogStore.Entry]:
         options: AuditLogFilterRaw = {

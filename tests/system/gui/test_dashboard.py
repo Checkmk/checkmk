@@ -30,14 +30,15 @@ from tests.system.gui.testlib.playwright.pom.sidebar.create_dashboard_sidebar im
     CreateDashboardSidebar,
 )
 from tests.system.gui.testlib.playwright.pom.sidebar.widget_wizard_sidebar import (
+    AlertsAndNotificationsWidgetWizard,
     AlertsVisualizationType,
+    MetricsAndGraphsWidgetWizard,
     ServiceMetricDropdownOptions,
     SiteFilterDropdownOptions,
     VisualizationType,
-    WidgetType,
 )
 from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 # Carried by every agent host and reporting the metric the graph widget draws.
 _GRAPH_WIDGET_SERVICE = "Check_MK"
@@ -216,11 +217,11 @@ def test_create_new_dashboard(dashboard_page: MainDashboard, linux_hosts: list[s
     widget_title = f"Top 10: {widget_metric}"
 
     try:
-        widget_wizard = custom_dashboard.open_add_widget_sidebar(WidgetType.METRICS_AND_GRAPHS)
+        widget_wizard = custom_dashboard.open_add_widget_sidebar(MetricsAndGraphsWidgetWizard)
         widget_wizard.select_service_metric(ServiceMetricDropdownOptions(widget_metric))
         widget_wizard.select_visualization_type(VisualizationType.TOP_LIST)
         widget_wizard.add_and_place_widget_button.click()
-        custom_dashboard.save_button.click()
+        custom_dashboard.save_widgets()
 
         custom_dashboard = CustomDashboard(
             custom_dashboard.page, custom_dashboard.page_title, navigate_to_page=False
@@ -258,8 +259,8 @@ def test_create_new_dashboard(dashboard_page: MainDashboard, linux_hosts: list[s
         ),
     ],
 )
+@pytest.mark.usefixtures("linux_hosts")
 def test_top_list_widgets_settings(
-    linux_hosts: list[str],
     widget_title: str,
     expected_service_name: str,
     expected_metric: str,
@@ -281,7 +282,7 @@ def test_top_list_widgets_settings(
     """
     cloned_linux_hosts_dashboard.enter_edit_widgets_mode()
     widget_wizard = cloned_linux_hosts_dashboard.open_edit_widget_sidebar(
-        WidgetType.METRICS_AND_GRAPHS, widget_title
+        MetricsAndGraphsWidgetWizard, widget_title
     )
 
     expect(
@@ -310,30 +311,33 @@ def test_widget_filters(
     """Test that applying filters for 'Top 10: CPU utilization' widget works correctly.
 
     Test that after applying 'Site', 'Host label' and both filters together in widget settings,
-    the widget table contains all expected hosts.
+    the widget table contains all expected hosts. Changing the filters clears the selected
+    metric, so it is selected again after every change.
 
     Steps:
         1. Navigate to the 'Linux Hosts' dashboard page.
         2. Clone the built-in dashboard.
         3. Enter "edit widgets" mode.
-        4. Apply 'Site' filter for 'Top 10: CPU utilization' widget.
+        4. Apply 'Site' filter for 'Top 10: CPU utilization' widget and select the metric again.
         5. Check that widget contains all expected hosts.
-        6. Apply 'Host labels' filter for 'Top 10: CPU utilization' widget.
+        6. Apply 'Host labels' filter for 'Top 10: CPU utilization' widget and select the metric
+           again.
         7. Check that widget contains all expected hosts.
-        8. Delete 'Site' filter.
+        8. Delete 'Site' filter and select the metric again.
         9. Check that widget contains all expected hosts.
-        10. Delete 'Host labels' filter.
+        10. Delete 'Host labels' filter and select the metric again.
         11. Check that widget contains all expected hosts.
     """
     hosts_count = len(linux_hosts)
-    widget_title = "Top 10: CPU utilization"
+    metric = ServiceMetricDropdownOptions.CPU_UTILIZATION
+    widget_title = f"Top 10: {metric}"
 
     site_filter = "Site"
     host_name_filter = "Host name (exact match)"
 
     cloned_linux_hosts_dashboard.enter_edit_widgets_mode()
     widget_wizard = cloned_linux_hosts_dashboard.open_edit_widget_sidebar(
-        WidgetType.METRICS_AND_GRAPHS, widget_title
+        MetricsAndGraphsWidgetWizard, widget_title
     )
 
     widget_wizard.add_filter_to_host_selection(site_filter, "Site")
@@ -342,9 +346,10 @@ def test_widget_filters(
         widget_wizard.get_host_filter_combobox(site_filter),
         SiteFilterDropdownOptions.LOCAL_SITE_GUI_E2E_CENTRAL,
     )
+    widget_wizard.select_service_metric(metric)
     widget_wizard.next_step_visualization_button.click()
     widget_wizard.save_widget_button.click()
-    cloned_linux_hosts_dashboard.save_button.click()
+    cloned_linux_hosts_dashboard.save_widgets()
     cloned_linux_hosts_dashboard.navigate()
 
     widget_rows = cloned_linux_hosts_dashboard.get_widget_table_rows(widget_title)
@@ -365,9 +370,10 @@ def test_widget_filters(
         widget_wizard.get_host_filter_combobox(host_name_filter),
         linux_hosts[0],  # type: ignore[type-var]  # Host names are dynamic
     )
+    widget_wizard.select_service_metric(metric)
     widget_wizard.next_step_visualization_button.click()
     widget_wizard.save_widget_button.click()
-    cloned_linux_hosts_dashboard.save_button.click()
+    cloned_linux_hosts_dashboard.save_widgets()
     cloned_linux_hosts_dashboard.navigate()
 
     widget_rows = cloned_linux_hosts_dashboard.get_widget_table_rows(widget_title)
@@ -386,9 +392,10 @@ def test_widget_filters(
         widget_wizard.get_host_filter_container(site_filter),
         message=f"{site_filter} filter was not removed",
     ).not_to_be_visible()
+    widget_wizard.select_service_metric(metric)
     widget_wizard.next_step_visualization_button.click()
     widget_wizard.save_widget_button.click()
-    cloned_linux_hosts_dashboard.save_button.click()
+    cloned_linux_hosts_dashboard.save_widgets()
     cloned_linux_hosts_dashboard.navigate()
 
     widget_rows = cloned_linux_hosts_dashboard.get_widget_table_rows(widget_title)
@@ -407,9 +414,10 @@ def test_widget_filters(
         widget_wizard.get_host_filter_container(host_name_filter),
         message=f"{host_name_filter} filter was not removed",
     ).not_to_be_visible()
+    widget_wizard.select_service_metric(metric)
     widget_wizard.next_step_visualization_button.click()
     widget_wizard.save_widget_button.click()
-    cloned_linux_hosts_dashboard.save_button.click()
+    cloned_linux_hosts_dashboard.save_widgets()
     cloned_linux_hosts_dashboard.navigate()
 
     widget_rows = cloned_linux_hosts_dashboard.get_widget_table_rows(widget_title)
@@ -444,7 +452,7 @@ def test_add_top_list_widget(
 
     cloned_linux_hosts_dashboard.enter_edit_widgets_mode()
     widget_wizard = cloned_linux_hosts_dashboard.open_add_widget_sidebar(
-        WidgetType.METRICS_AND_GRAPHS
+        MetricsAndGraphsWidgetWizard
     )
 
     widget_wizard.select_service_metric(metric)
@@ -452,7 +460,7 @@ def test_add_top_list_widget(
 
     widget_wizard.add_and_place_widget_button.click()
 
-    cloned_linux_hosts_dashboard.save_button.click()
+    cloned_linux_hosts_dashboard.save_widgets()
     cloned_linux_hosts_dashboard.validate_page()
 
     cloned_linux_hosts_dashboard.check_widget_is_present(widget_title)
@@ -536,9 +544,9 @@ def test_builtin_dashboard_runtime_filter(
     )
 
     for widget_title in graphic_widgets:
-        # The migrated widgets render the empty state through the new graph engine
-        # (div.db-content-time-series-graph__no-data); widgets still on the legacy graph
-        # dashlet render the same message in div.success. Accept either container.
+        # The graph widget renders the empty state through the graph engine
+        # (div.db-content-time-series-graph__no-data); the figure widgets render the same
+        # message in div.success. Accept either container.
         no_data_message = dashboard_page.get_widget(widget_title).locator(
             "div.db-content-time-series-graph__no-data, div.success"
         )
@@ -632,7 +640,7 @@ def test_graph_widget_renders_through_the_engine(
 
     cloned_linux_hosts_dashboard.enter_edit_widgets_mode()
     widget_wizard = cloned_linux_hosts_dashboard.open_add_widget_sidebar(
-        WidgetType.METRICS_AND_GRAPHS
+        MetricsAndGraphsWidgetWizard
     )
 
     widget_wizard.select_single_host(linux_hosts[0])
@@ -640,7 +648,7 @@ def test_graph_widget_renders_through_the_engine(
     widget_wizard.select_service_metric(metric)
     widget_wizard.select_visualization_type(VisualizationType.GRAPH)
     widget_wizard.add_and_place_widget_button.click()
-    cloned_linux_hosts_dashboard.save_button.click()
+    cloned_linux_hosts_dashboard.save_widgets()
     cloned_linux_hosts_dashboard.validate_page()
 
     graph_widget = DashboardGraphWidget(cloned_linux_hosts_dashboard, widget_title)
@@ -652,23 +660,18 @@ def test_graph_widget_renders_through_the_engine(
 
 
 @pytest.mark.skip_if_edition("community")
+@pytest.mark.usefixtures("linux_hosts")
 def test_problem_percentage_widget_renders_through_the_engine(
-    javascript_errors: list[str],
-    cloned_linux_hosts_dashboard: CustomDashboard,
-    linux_hosts: list[str],
+    javascript_errors: list[str], cloned_linux_hosts_dashboard: CustomDashboard
 ) -> None:
-    """The alerts & notifications widget renders through the engine as a problem percentage.
-
-    That visualisation is the one the widget offers on the engine; its alert and notification
-    timelines are drawn by the legacy figure component instead.
-    """
+    """The alerts & notifications widget renders through the engine as a problem percentage."""
     cloned_linux_hosts_dashboard.enter_edit_widgets_mode()
     widget_wizard = cloned_linux_hosts_dashboard.open_add_widget_sidebar(
-        WidgetType.ALERTS_AND_NOTIFICATIONS
+        AlertsAndNotificationsWidgetWizard
     )
     widget_wizard.select_visualization_type(AlertsVisualizationType.PERCENTAGE_OF_SERVICE_PROBLEMS)
     widget_wizard.add_and_place_widget_button.click()
-    cloned_linux_hosts_dashboard.save_button.click()
+    cloned_linux_hosts_dashboard.save_widgets()
     cloned_linux_hosts_dashboard.validate_page()
 
     problem_widget = DashboardGraphWidget(

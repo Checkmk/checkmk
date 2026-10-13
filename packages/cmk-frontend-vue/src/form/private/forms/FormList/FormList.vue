@@ -10,6 +10,7 @@ import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineV
 import { ref, watch } from 'vue'
 
 import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
+import { isHorizontalCascadingChoice } from '@/form/private/rendersHelpItself'
 import { type ValidationMessages } from '@/form/private/validation'
 
 import formListActions from './formListActions'
@@ -58,6 +59,7 @@ function reorderElements(order: number[]) {
         label: props.spec.add_element_label
       }"
       :try-delete="deleteElement"
+      :button-alignment="isHorizontalCascadingChoice(spec.element_template) ? 'center' : 'top'"
       role="group"
       :aria-label="props.spec.title"
     >

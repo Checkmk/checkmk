@@ -471,7 +471,7 @@ def test_parse_ps(
     capture: StringTable, result: tuple[int, Sequence[Sequence[Sequence[object] | str]], int]
 ) -> None:
     now = 1540375342
-    cpu_core, lines, ps_time = ps_section._parse_ps(now, copy.deepcopy(capture))
+    cpu_core, lines, ps_time = ps_section._parse_ps(now, copy.deepcopy(capture))  # noqa: SLF001
     assert cpu_core == result[0]  # cpu_cores
 
     assert ps_time == result[2]
@@ -741,4 +741,4 @@ def test_parse_ps_lnx(
     expected_result: ps.Section,
 ) -> None:
     now = 1540375342
-    assert ps_section._parse_ps_lnx(now, string_table) == expected_result
+    assert ps_section._parse_ps_lnx(now, string_table) == expected_result  # noqa: SLF001

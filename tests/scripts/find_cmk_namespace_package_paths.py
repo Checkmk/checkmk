@@ -21,4 +21,4 @@ def find_namespace_package_paths(namespace_name: str) -> list[str]:
     return [os.path.abspath(path) for path in namespace_module.__path__]
 
 
-print("\n".join(find_namespace_package_paths("cmk")))
+print("\n".join(find_namespace_package_paths("cmk")))  # noqa: T201  # It's OK for test/script helpers to print()

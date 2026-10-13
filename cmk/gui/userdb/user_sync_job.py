@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import traceback
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from datetime import datetime
 from logging import Logger
 from typing import override
@@ -27,14 +27,13 @@ from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (
     CustomUserAttrSpec,
-    Users,
     UserSpec,
 )
-from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.web.utils.urls import makeuri_contextless
 
 from ._connections import active_connections
+from ._connector import LoadUsersFunction, SaveUsersFunction
 from ._user_attribute import get_user_attributes, UserAttribute
 from ._user_sync_config import user_sync_config
 from .store import general_userdb_job, load_users, save_users
@@ -154,18 +153,8 @@ class UserSyncBackgroundJob(BackgroundJob):
         self,
         job_interface: BackgroundProcessInterface,
         args: UserSyncArgs,
-        load_users_func: Callable[[bool], Users],
-        save_users_func: Callable[
-            [
-                Users,
-                Sequence[tuple[str, UserAttribute]],
-                Sequence[UserConnectionConfig],
-                datetime,
-                bool,
-                bool,
-            ],
-            None,
-        ],
+        load_users_func: LoadUsersFunction,
+        save_users_func: SaveUsersFunction,
     ) -> None:
         logger = job_interface.get_logger()
         with job_interface.gui_context(
@@ -194,18 +183,8 @@ class UserSyncBackgroundJob(BackgroundJob):
         add_to_changelog: bool,
         enforce_sync: bool,
         user_attributes: Sequence[tuple[str, UserAttribute]],
-        load_users_func: Callable[[bool], Users],
-        save_users_func: Callable[
-            [
-                Users,
-                Sequence[tuple[str, UserAttribute]],
-                Sequence[UserConnectionConfig],
-                datetime,
-                bool,
-                bool,
-            ],
-            None,
-        ],
+        load_users_func: LoadUsersFunction,
+        save_users_func: SaveUsersFunction,
         default_user_profile: UserSpec,
         now: datetime,
     ) -> bool:

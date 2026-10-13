@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from __future__ import annotations
 
 import abc
 from typing import Any, Literal, override
@@ -15,6 +14,7 @@ from .expressions import (
     BoolExpression,
     ListExpression,
     LqSafe,
+    LqUnsafeValueError,
     Not,
     NothingExpression,
     Primitives,
@@ -234,12 +234,12 @@ class DynamicColumn:
         >>> Services.prediction_file.dynamic('file', 'foo\\nbar')
         Traceback (most recent call last):
         ...
-        ValueError: Invalid Livestatus Query string: 'foo\\nbar'
+        cmk.livestatus_client.expressions.LqUnsafeValueError: Invalid Livestatus Query string: 'foo\\nbar'
 
         >>> Services.prediction_file.dynamic('file', 'foo bar')
         Traceback (most recent call last):
         ...
-        ValueError: Invalid dynamic column parameter (contains whitespace): 'foo bar'
+        cmk.livestatus_client.expressions.LqUnsafeValueError: Invalid dynamic column parameter (contains whitespace): 'foo bar'
     """
 
     def __init__(
@@ -305,9 +305,10 @@ class DynamicColumn:
             A `Column` named `<name>:<column_title>:<argument>[:<argument>...]`.
 
         Raises:
-            ValueError: If a parameter would break the query, i.e. it contains
-                whitespace (column names are whitespace-separated in the
-                `Columns:` header) or the title contains a colon.
+            LqUnsafeValueError: If a parameter would break the query, i.e. it contains
+                a newline or whitespace (column names are whitespace-separated in the
+                `Columns:` header).
+            ValueError: If no argument is given or the title is empty or contains a colon.
         """
         if not arguments:
             raise ValueError(f"Dynamic column {self.name!r} requires at least one argument")
@@ -317,7 +318,7 @@ class DynamicColumn:
             raise ValueError(f"Invalid dynamic column title: {title!r}")
         for part in (title, *args):
             if any(char.isspace() for char in part):
-                raise ValueError(
+                raise LqUnsafeValueError(
                     f"Invalid dynamic column parameter (contains whitespace): {part!r}"
                 )
         column = Column(":".join([self.name, title, *args]), self.type, self.__doc__)
@@ -330,6 +331,18 @@ class DynamicColumn:
 
 def _validate_lq_safe(part: str | int | float | LqSafe) -> str:
     return str(part if isinstance(part, LqSafe) else LqSafe(part))
+
+
+def escape_filename(file_name: str) -> str:
+    """Escape a file name for use as a dynamic file column argument.
+
+    This is the inverse of the core's ``mk::unescape_filename``, which decodes
+    ``\\s`` to a space and ``\\<char>`` to ``<char>``. The backslash must be
+    escaped before the space. Escaping is required because the ``Columns:``
+    header is whitespace-separated, so a raw space would end the column name
+    (`DynamicColumn.dynamic` rejects such arguments).
+    """
+    return file_name.replace("\\", "\\\\").replace(" ", "\\s")
 
 
 def expr_to_tree(

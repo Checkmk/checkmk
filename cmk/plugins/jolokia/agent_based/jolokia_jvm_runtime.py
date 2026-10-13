@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-any"
+
+import time
+from collections.abc import Mapping
+from datetime import timedelta
+from typing import Any
+
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer until we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
+)
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    StringTable,
+)
+from cmk.plugins.jolokia.agent_based.lib import parse_jolokia_json_output
+
+Section = Mapping[str, Any]
+
+
+def parse_jolokia_jvm_runtime(string_table: StringTable) -> Section:
+    return {
+        instance: json_data
+        for instance, _mbean, json_data in parse_jolokia_json_output(string_table)
+    }
+
+
+def check_jolokia_jvm_runtime_uptime(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if not (data := section.get(item)):
+        return
+    milli_uptime = data.get("Uptime")
+    if milli_uptime is None:
+        return
+    uptime_sec = milli_uptime / 1000.0
+
+    levels = params.get("max", (None, None)) + params.get("min", (None, None))
+    yield from check_levels(
+        uptime_sec,
+        "uptime",
+        levels,
+        human_readable_func=lambda x: timedelta(seconds=int(x)),
+        infoname="Up since %s, uptime"
+        % time.strftime("%c", time.localtime(time.time() - uptime_sec)),
+    )
+
+
+def discover_jolokia_jvm_runtime(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
+
+
+agent_section_jolokia_jvm_runtime = AgentSection(
+    name="jolokia_jvm_runtime",
+    parse_function=parse_jolokia_jvm_runtime,
+)
+
+
+check_plugin_jolokia_jvm_runtime = CheckPlugin(
+    name="jolokia_jvm_runtime",
+    service_name="JVM %s Uptime",
+    discovery_function=discover_jolokia_jvm_runtime,
+    check_function=check_jolokia_jvm_runtime_uptime,
+    check_ruleset_name="jvm_uptime",
+    check_default_parameters={},
+)

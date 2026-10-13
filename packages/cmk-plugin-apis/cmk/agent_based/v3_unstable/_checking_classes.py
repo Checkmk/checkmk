@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Checking classes for the v3_unstable API"""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, KW_ONLY
 
 

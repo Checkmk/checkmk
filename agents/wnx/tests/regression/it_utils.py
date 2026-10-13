@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="unreachable"
 
 import os
 import platform
@@ -18,7 +15,7 @@ import pytest
 def check_actual_input(name: str, lines: int, alone: bool, data: Sequence[str] | None) -> bool:
     if data is None:
         pytest.skip(f"Section '{name}': Data is absent")
-        return False
+        return False  # type: ignore[unreachable]
 
     if not alone:
         lines += 2
@@ -26,34 +23,34 @@ def check_actual_input(name: str, lines: int, alone: bool, data: Sequence[str] |
     if len(data) < lines:
         all_data = "\n".join(data)
         pytest.skip(f"Section '{name}': Data is TOO short:\n{all_data}\n")
-        return False
+        return False  # type: ignore[unreachable]
 
     return True
 
 
-def safe_binary_remove(binary_path):
+def safe_binary_remove(binary_path: str) -> None:
     try:
         os.unlink(binary_path)
     except OSError as os_error:
-        print("Error %s during file delete" % os_error.errno)
+        print("Error %s during file delete" % os_error.errno)  # noqa: T201  # It's OK for test/script helpers to print()
 
 
-def stop_ohm():
+def stop_ohm() -> None:
     # stopping all
     subprocess.call("taskkill /F /IM OpenhardwareMonitorCLI.exe")
     subprocess.call("net stop winring0_1_2_0")
 
 
-def remove_files(target_dir, binaries):
+def remove_files(target_dir: str, binaries: Sequence[str]) -> None:
     # removing all
     for f in binaries:
         safe_binary_remove(os.path.join(target_dir, f))
 
 
-def make_dir(directory):
+def make_dir(directory: str) -> None:
     if not os.path.exists(directory):
         os.mkdir(directory)
 
 
-def check_os():
+def check_os() -> bool:
     return platform.system() == "Windows"

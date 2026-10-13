@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Iterable
+from http import HTTPStatus
 
 from cmk.events.notify_types import PluginNotificationContext
 from cmk.notification_plugins.utils import (
@@ -173,4 +174,4 @@ def _get_section_facts(context: PluginNotificationContext) -> Iterable[dict[str,
 def main() -> int:
     # 200: old webhooks (deprecated)
     # 202: workflows
-    return process_by_status_code(post_request(_msteams_msg), (200, 202))
+    return process_by_status_code(post_request(_msteams_msg), (HTTPStatus.OK, HTTPStatus.ACCEPTED))

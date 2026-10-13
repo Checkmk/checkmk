@@ -32,10 +32,8 @@ description:
 
  Currently, this check does not have swap support.
 
- The check requires that the special agent kube is configured.
-
- For the Checkmk Openshift monitoring, the reported metric values will differ from the values
- reported on the Openshift dashboard as the included values describe a different quantity.
+ This check requires that Kubernetes monitoring is configured and that Checkmk can receive
+ data from the in-cluster agent.
 
 discovery:
  One service is created per Kubernetes object.

@@ -13,7 +13,8 @@ import type {
   Site,
   SitesAndChanges
 } from 'cmk-shared-typing/typescript/changes'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
+import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkHtml from 'cmk-ui-library/components/CmkHtml.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
@@ -22,6 +23,7 @@ import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import { Api } from 'cmk-ui-library/lib/api-client'
 import { CmkFetchError } from 'cmk-ui-library/lib/cmkFetch'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 import { useDismissDialog } from 'cmk-ui-library/lib/useDismissDialog'
 import { computed, onMounted, ref } from 'vue'
 
@@ -238,7 +240,7 @@ async function fetchPendingChangesAjax(activationId?: string): Promise<void> {
         .sort((a, b) => b.time - a.time)
         .map((change: PendingChange) => ({
           ...change,
-          timestring: new Date(change.time * 1000).toLocaleString()
+          timestring: renderDateAndTime(change.time)
         }))
     }
 
@@ -434,39 +436,41 @@ onMounted(async () => {
           :changes-action="props.navbar_changes_action ?? ''"
           :user-name="user_name"
         />
-        <CmkAlertBox
+        <CmkAlert
           v-else-if="changesInfoShown"
           :optional-button="{
             title: _t('Do not show again'),
             icon: 'cancel',
             onclick: dismissChangesInfo
           }"
-        >
-          {{
-            _t(`Changes are saved without affecting live monitoring, allowing you to review and adjust them safely.
-                Click 'Activate pending changes' to apply them.`)
-          }}
-        </CmkAlertBox>
-        <CmkAlertBox v-if="showNotAllowedMessage" variant="warning" class="cmk-alert-box">
-          {{ _t('Sorry, you are not allowed to activate changes of other users.') }}
-        </CmkAlertBox>
+          :text="
+            _t(
+              `Changes are saved without affecting live monitoring, allowing you to review and adjust them safely. Click 'Activate pending changes' to apply them.`
+            )
+          "
+        />
+        <CmkAlert
+          v-if="showNotAllowedMessage"
+          variant="warning"
+          class="cmk-alert-box"
+          :text="_t('Sorry, you are not allowed to activate changes of other users.')"
+        />
 
-        <CmkAlertBox
+        <CmkAlert
           v-if="activationError"
           variant="error"
           class="cmk-alert-box"
           :heading="activationError.title"
-        >
-          {{ activationError.detail }}
-        </CmkAlertBox>
+          :text="activationError.detail"
+        />
 
-        <CmkAlertBox
+        <CmkAlertBoxDeprecated
           v-if="sitesAndChanges.licenseMessage !== null"
           variant="warning"
           class="cmk-alert-box"
         >
           <CmkHtml :html="sitesAndChanges.licenseMessage" />
-        </CmkAlertBox>
+        </CmkAlertBoxDeprecated>
         <ChangesActivating
           v-if="activateChangesInProgress"
           :activating-on-sites="
@@ -485,7 +489,7 @@ onMounted(async () => {
           class="cmk-div-activation-result-container"
         >
         </ChangesActivationResult>
-        <CmkAlertBox
+        <CmkAlert
           v-if="
             sitesWithWarningsOrErrors &&
             !activateChangesInProgress &&
@@ -494,9 +498,8 @@ onMounted(async () => {
           :heading="_t('Problems detected during activation')"
           :main-button="{ title: _t('Open full view'), onclick: () => openActivateChangesPage() }"
           :variant="sitesWithErrors ? 'error' : 'warning'"
-        >
-          {{ _t('Some things may not be monitored properly.') }}
-        </CmkAlertBox>
+          :text="_t('Some things may not be monitored properly.')"
+        />
 
         <ChangesStatusBar
           v-if="!activateChangesInProgress"

@@ -2,7 +2,6 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from __future__ import annotations
 
 from cmk.ccc.version import Edition, edition
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -101,5 +100,5 @@ class SetupPermissionsHandler:
         # This context manager is needed to prevent HTML from being outputed to the response.
         # TODO: see if this is still relevant now that we are rendering from Vue.
         with output_funnel.plugged():
-            handler(PageContext(config=self._config, request=self._request))
+            handler(self._ctx)
             output_funnel.drain()

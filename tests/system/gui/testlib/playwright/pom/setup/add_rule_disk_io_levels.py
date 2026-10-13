@@ -26,13 +26,13 @@ class AddRuleDiskIOLevels(CmkPage):
     """
 
     rule_name = "Disk I/O levels"
-    section_name = "Service monitoring rules"
+    varname = "checkgroup_parameters:diskstat"
     url_specific = "%3Adiskstat"
     url_pattern = "varname=checkgroup_parameters%s&mode=new_rule"
 
     @override
     def navigate(self) -> None:
-        service_rules_page = Ruleset(self.page, self.rule_name, self.section_name, exact_rule=True)
+        service_rules_page = Ruleset(self.page, self.rule_name, self.varname)
         logger.info("Navigate to 'Add rule: %s' page", self.rule_name)
         service_rules_page.add_rule_button.click()
         self.page.wait_for_url(

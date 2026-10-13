@@ -4,30 +4,31 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import contextlib
+import contextlib  # noqa: I001, RUF100 # needed for docker vs. tests/docker confusion
 import logging
 import os
+from http import HTTPStatus
 from pathlib import Path
 from random import randint, sample
 
-import docker
 import pytest
 import requests
 from pytest import LogCaptureFixture
 
-from tests.testlib.docker import (
-    build_checkmk,
-    build_path,
-    CheckmkApp,
-    package_name,
-    prepare_package,
-)
-from tests.testlib.version import (
+import docker
+from tests.testlib.common.version import (
     CMKEdition,
     CMKPackageInfo,
     edition_from_env,
     get_min_version,
     version_from_env,
+)
+from tests.testlib.system.docker import (
+    build_checkmk,
+    build_path,
+    CheckmkApp,
+    package_name,
+    prepare_package,
 )
 
 # Apply the skipif marker to all tests in this file for SaaS edition
@@ -291,7 +292,7 @@ def test_redirects_work_with_custom_port(client: docker.DockerClient) -> None:
     ):
         # Use explicit port
         response = requests.get("http://%s" % address_txt, allow_redirects=False, timeout=10)
-        assert response.status_code == 302
+        assert response.status_code == HTTPStatus.FOUND
         assert response.headers["Location"] == "http://%s/cmk/" % address_txt
 
         # Use explicit port and host header with port
@@ -303,7 +304,7 @@ def test_redirects_work_with_custom_port(client: docker.DockerClient) -> None:
             },
             timeout=10,
         )
-        assert response.status_code == 302
+        assert response.status_code == HTTPStatus.FOUND
         assert response.headers["Location"] == "http://%s/cmk/" % address_txt
 
         # Use explicit port and host header without port
@@ -315,7 +316,7 @@ def test_redirects_work_with_custom_port(client: docker.DockerClient) -> None:
             },
             timeout=10,
         )
-        assert response.status_code == 302
+        assert response.status_code == HTTPStatus.FOUND
         assert response.headers["Location"] == "http://%s/cmk/" % address[0]
 
 
@@ -326,7 +327,7 @@ def test_http_access_login_screen(checkmk: CheckmkApp) -> None:
         timeout=10,
     )
 
-    assert response.status_code == 200, "Invalid HTTP status code!"
+    assert response.status_code == HTTPStatus.OK, "Invalid HTTP status code!"
     assert 'name="_login"' in response.text, "Login field not found!"
 
 

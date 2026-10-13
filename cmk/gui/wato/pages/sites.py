@@ -4,18 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Mode for managing sites"""
-
-from __future__ import annotations
 
 import socket
 import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping
-from copy import deepcopy
+from http import HTTPStatus
 from typing import Any, assert_never, cast, overload, override
 from urllib.parse import urlparse
 
@@ -23,6 +19,7 @@ import cmk.gui.sites
 import cmk.gui.watolib.audit_log as _audit_log
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
+from cmk.ccc.regex import SITE_ID_PATTERN
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
@@ -40,7 +37,7 @@ from cmk.gui.form_specs import (
     render_form_spec,
 )
 from cmk.gui.form_specs.generators.dict_to_catalog import create_flat_catalog_from_dictionary
-from cmk.gui.form_specs.unstable import id_validators
+from cmk.gui.form_specs.unstable import id_validators, not_empty
 from cmk.gui.form_specs.unstable.legacy_converter import (
     Tuple,
 )
@@ -63,31 +60,20 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.site_config import (
     distributed_setup_remote_sites,
-    has_distributed_setup_remote_sites,
-    is_distributed_setup_remote_site,
     is_replication_enabled,
     site_is_local,
 )
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult, TrustedCertificateAuthorities
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import distributed_saml_supported
 from cmk.gui.utils.compatibility import make_site_version_info
-from cmk.gui.utils.confirm_links import make_confirm_delete_link
-from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.doc_references import DocReference
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.wato.pages._html_elements import wato_html_head
-from cmk.gui.wato.pages.global_settings import (
-    ABCEditGlobalSettingMode,
-    ABCGlobalSettingsMode,
-    make_global_settings_context,
-)
-from cmk.gui.wato.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.activate_changes import get_free_message
-from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automation_commands import OMDStatus
 from cmk.gui.watolib.automations import (
     do_site_login,
@@ -99,22 +85,16 @@ from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
-    ConfigVariableGroup,
-    GlobalSettingsContext,
 )
-from cmk.gui.watolib.config_domains import (
-    ConfigDomainGUI,
-    finalize_all_settings_per_site,
-)
+from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.config_sync import (
     populate_saml_site_endpoint_urls,
 )
 from cmk.gui.watolib.global_settings import (
+    add_global_settings_change,
     load_configuration_settings,
-    load_site_global_settings,
+    make_pending_changes,
     save_global_settings,
-    save_site_global_settings,
-    STATIC_PERMISSIONS_GLOBAL_SETTINGS,
 )
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
@@ -125,17 +105,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     make_folder_tree,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-from cmk.gui.watolib.pending_changes import (
-    Change,
-    ChangeScope,
-    index_update_change_hook,
-    PendingChanges,
-    PendingChangesStore,
-)
-from cmk.gui.watolib.piggyback_hub import (
-    validate_piggyback_hub_config,
-)
-from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
+from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
 from cmk.gui.watolib.site_management import (
     add_changes_after_editing_broker_connection,
     add_changes_after_editing_site_connection,
@@ -143,15 +113,17 @@ from cmk.gui.watolib.site_management import (
 from cmk.gui.watolib.sites import (
     is_livestatus_encrypted,
     ldap_connections_are_configurable,
+    load_site_globals,
     PingResult,
     ReplicationStatus,
     ReplicationStatusFetcher,
+    save_site_globals,
     site_globals_editable,
     site_management_registry,
     STATIC_PERMISSIONS_SITES,
 )
 from cmk.licensing.license_distribution_registry import distribute_license_to_remotes
-from cmk.licensing.registry import is_free
+from cmk.licensing.registry import get_license_state
 from cmk.livestatus_client import (
     BrokerConnection,
     BrokerConnections,
@@ -184,8 +156,13 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
 from cmk.utils.paths import omd_root
+from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
+from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeactionuri, makeactionuri_contextless, makeuri_contextless
 
 
@@ -194,8 +171,6 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeEditSite)
     mode_registry.register(ModeEditBrokerConnection)
     mode_registry.register(ModeDistributedMonitoring)
-    mode_registry.register(ModeEditSiteGlobals)
-    mode_registry.register(ModeEditSiteGlobalSetting)
     mode_registry.register(ModeSiteLivestatusEncryption)
 
 
@@ -214,7 +189,7 @@ class StatusHostFormSpecAdapter(FormSpecAdapter[tuple[SiteId, str] | None, Casca
     def form_spec(self) -> CascadingSingleChoice:
         status_host_docu_url = "https://checkmk.com/checkmk_multisite_statushost.html"
         site_elements: list[SingleChoiceElementExtended[str]] = [
-            SingleChoiceElementExtended(  # astrein: disable=localization-checker
+            SingleChoiceElementExtended(
                 name=str(sk),
                 title=Title(si.get("alias", sk)),  # astrein: disable=localization-checker
             )
@@ -314,7 +289,9 @@ class ModeEditSite(WatoMode):
         self._clone_id = None if _clone_id_return is None else SiteId(_clone_id_return)
         self._new = self._site_id is None
 
-        if is_free(omd_root) and (self._new or self._site_id != omd_site()):
+        if get_license_state(omd_root).blocks_distributed_setup_changes_free() and (
+            self._new or self._site_id != omd_site()
+        ):
             raise MKUserError(None, get_free_message())
 
         self._configured_sites = self._site_mgmt.load_sites()
@@ -427,6 +404,8 @@ class ModeEditSite(WatoMode):
         if self._site_id is None:
             raise MKUserError(None, _("Site ID must be set"))
 
+        # TODO: Isn't the loop below simply the same as:
+        # site_spec = configured_sites.get(self._site_id, site_spec) | site_spec
         for key, value in configured_sites.get(self._site_id, {}).items():
             # We need to review whether or not we still want to allow setting arbritrary keys
             site_spec.setdefault(key, value)  # type: ignore[misc]
@@ -547,7 +526,7 @@ class ModeEditSite(WatoMode):
             headers.append((_("User configuration"), list(user_config.keys())))
         return create_flat_catalog_from_dictionary(spec, headers=headers)
 
-    def _basic_elements(self, config: Config) -> dict[str, DictElement]:
+    def _basic_elements(self, config: Config) -> dict[str, DictElement]:  # noqa: ARG002
         if self._new:
             id_form_spec: FixedValue | String = String(
                 title=Title("Site ID"),
@@ -556,7 +535,14 @@ class ModeEditSite(WatoMode):
                 ),
                 field_size=FieldSize.LARGE,
                 custom_validate=[
-                    *id_validators(Message("Site ID cannot be empty")),
+                    not_empty(Message("Site ID cannot be empty")),
+                    validators.MatchRegex(
+                        regex=SITE_ID_PATTERN,
+                        error_msg=Message(
+                            "The site id must begin with a letter or underscore, may contain only "
+                            "letters, digits and underscores and must be 1 to 16 characters long."
+                        ),
+                    ),
                     create_validation_error_for_mk_user_error(self._validate_site_id),
                 ],
             )
@@ -1002,7 +988,7 @@ class ModeEditBrokerConnection(WatoMode):
 
     def _basic_elements(self, config: Config) -> dict[str, DictElement]:
         replicated_sites_elements: list[SingleChoiceElementExtended[str]] = [
-            SingleChoiceElementExtended(  # astrein: disable=localization-checker
+            SingleChoiceElementExtended(
                 name=str(sk),
                 title=Title(si.get("alias", sk)),  # astrein: disable=localization-checker
             )
@@ -1107,7 +1093,7 @@ class ModeDistributedMonitoring(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         delete_id = request.get_ascii_input("_delete")
         if delete_id and transactions.check_transaction(request):
@@ -1130,6 +1116,7 @@ class ModeDistributedMonitoring(WatoMode):
             return self._action_delete_folders(
                 make_folder_tree(config),
                 SiteId(delete_folders_id),
+                pprint_value=config.wato_pprint_config,
                 pending_changes=_pending_changes(
                     config.sites,
                     use_git=config.wato_use_git,
@@ -1288,7 +1275,12 @@ class ModeDistributedMonitoring(WatoMode):
         return redirect(mode_url("sites"))
 
     def _action_delete_folders(
-        self, tree: FolderTree, delete_id: SiteId, *, pending_changes: PendingChanges
+        self,
+        tree: FolderTree,
+        delete_id: SiteId,
+        *,
+        pprint_value: bool,
+        pending_changes: PendingChanges,
     ) -> ActionResult:
         folder_site_stats = FolderSiteStats.build(tree.root_folder())
         folders_related_to_site = folder_site_stats.folders.get(delete_id, set())
@@ -1304,7 +1296,10 @@ class ModeDistributedMonitoring(WatoMode):
         for empty_folder in empty_folders:
             if (parent := empty_folder.parent()) is not None:
                 parent.delete_subfolder(
-                    empty_folder.name(), pending_changes=pending_changes, acting_user=user
+                    empty_folder.name(),
+                    pprint_value=pprint_value,
+                    pending_changes=pending_changes,
+                    acting_user=user,
                 )
 
         return redirect(mode_url("sites"))
@@ -1477,13 +1472,13 @@ class ModeDistributedMonitoring(WatoMode):
             html.hidden_field("_login", login_id)
             html.hidden_fields()
         html.footer()
-        return FinalizeRequest(code=200)
+        return FinalizeRequest(code=HTTPStatus.OK)
 
     @override
     def page(self, config: Config) -> None:
         sites = sort_sites(site_configs := self._site_mgmt.load_sites())
 
-        if is_free(omd_root):
+        if get_license_state(omd_root).blocks_distributed_setup_changes_free():
             html.show_message(get_free_message(format_html=True))
 
         html.div("", id_="message_container")
@@ -1524,7 +1519,7 @@ class ModeDistributedMonitoring(WatoMode):
                     self._show_buttons_connection(table, conn_id)
                     self._show_basic_settings_connection(table, conn_id, connection)
 
-        html.javascript("cmk.sites.fetch_site_status();")
+        html.call_ts_function(function_name="fetch_site_status")
 
     def _build_url_for_folder(self, folder: Folder) -> str:
         url = makeuri_contextless(request, [("folder", folder.path()), ("mode", "folder")])
@@ -1553,6 +1548,7 @@ class ModeDistributedMonitoring(WatoMode):
         )
 
         delete_url = make_confirm_delete_link(
+            i18n=_,
             url=makeactionuri(
                 request, transactions.get(), [("_delete_connection_id", connection_id)]
             ),
@@ -1585,6 +1581,7 @@ class ModeDistributedMonitoring(WatoMode):
             html.empty_icon_button()
         else:
             delete_url = make_confirm_delete_link(
+                i18n=_,
                 url=makeactionuri(request, transactions.get(), [("_delete", site_id)]),
                 title=_("Delete connection to site"),
                 suffix=site.get("alias", ""),
@@ -1593,17 +1590,20 @@ class ModeDistributedMonitoring(WatoMode):
             html.icon_button(delete_url, _("Delete"), StaticIcon(IconNames.delete))
 
         if site_globals_editable(site_configs, site):
-            globals_url = folder_preserving_link(
-                request, [("mode", "edit_site_globals"), ("site", site_id)]
+            globals_url = makeuri_contextless(
+                request, [("site", site_id)], filename="site_specific_settings.py"
             )
 
-            has_site_globals = bool(site.get("globals"))
+            # the settings pushed to a remote site also carry variables no page shows
+            overrides = [
+                varname
+                for varname in load_site_globals(site_configs, site_id)
+                if varname in config_variable_registry
+            ]
             title = _("Site-specific global configuration")
-            if has_site_globals:
+            if overrides:
                 icon = StaticIcon(IconNames.site_globals_modified)
-                title += " (%s)" % (
-                    _("%(count)d specific settings") % {"count": len(site.get("globals", {}))}
-                )
+                title += " (%s)" % (_("%(count)d specific settings") % {"count": len(overrides)})
             else:
                 icon = StaticIcon(IconNames.site_globals)
 
@@ -1617,7 +1617,11 @@ class ModeDistributedMonitoring(WatoMode):
         table.cell(_("Accepting peer"), connection.connectee.site_id)
 
     def _show_basic_settings(
-        self, table: Table, site_id: SiteId, site: SiteConfiguration, config: Config
+        self,
+        table: Table,
+        site_id: SiteId,
+        site: SiteConfiguration,
+        config: Config,  # noqa: ARG002
     ) -> None:
         table.cell(_("ID"), site_id)
         table.cell(_("Alias"), site.get("alias", ""))
@@ -1635,7 +1639,10 @@ class ModeDistributedMonitoring(WatoMode):
         )
 
     def _show_status_connection_status(
-        self, table: Table, site_id: SiteId, site: SiteConfiguration
+        self,
+        table: Table,
+        site_id: SiteId,
+        site: SiteConfiguration,  # noqa: ARG002
     ) -> None:
         table.cell("")
 
@@ -1658,7 +1665,10 @@ class ModeDistributedMonitoring(WatoMode):
         html.close_div()
 
     def _show_config_connection_config(
-        self, table: Table, site_id: SiteId, site: SiteConfiguration
+        self,
+        table: Table,
+        site_id: SiteId,  # noqa: ARG002
+        site: SiteConfiguration,
     ) -> None:
         table.cell(_("Configuration connection"))
         if not is_replication_enabled(site):
@@ -1682,6 +1692,7 @@ class ModeDistributedMonitoring(WatoMode):
         if is_replication_enabled(site):
             if site.get("secret"):
                 logout_url = make_confirm_delete_link(
+                    i18n=_,
                     url=make_action_link(request, [("mode", "sites"), ("_logout", site_id)]),
                     title=_("Log out of site"),
                     suffix=site["alias"],
@@ -1869,7 +1880,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
             connection_status = check_remote_connection(
                 omd_root, remote_host, remote_port, remote_site_id
             )
-        except (MKTerminate, MKTimeout):
+        except MKTerminate, MKTimeout:
             raise
         except Exception as e:
             return StaticIcon(IconNames.alert), _("Unknown error: %(e)s") % {"e": e}
@@ -1896,279 +1907,11 @@ class PageAjaxFetchSiteStatus(AjaxPage):
             case ConnectionRefused.CLOSED:
                 return StaticIcon(IconNames.cross), _("Not available")
 
-                return "cross", _("Connection to port %(remote_port)s refused") % {
+                return "cross", _("Connection to port %(remote_port)s refused") % {  # type: ignore[unreachable]
                     "remote_port": remote_port
                 }
             case _:
                 assert_never(_)
-
-
-class ModeEditSiteGlobals(ABCGlobalSettingsMode):
-    @classmethod
-    @override
-    def name(cls) -> str:
-        return "edit_site_globals"
-
-    @staticmethod
-    @override
-    def static_permissions() -> Collection[PermissionName]:
-        return STATIC_PERMISSIONS_SITES
-
-    @classmethod
-    @override
-    def parent_mode(cls) -> type[WatoMode] | None:
-        return ModeEditSite
-
-    @overload
-    @classmethod
-    def mode_url(cls, *, site: str) -> str: ...
-
-    @overload
-    @classmethod
-    def mode_url(cls, **kwargs: str) -> str: ...
-
-    @classmethod
-    @override
-    def mode_url(cls, **kwargs: str) -> str:
-        return super().mode_url(**kwargs)
-
-    def __init__(self, edition: Edition, ctx: PageContext) -> None:
-        super().__init__(edition, ctx)
-        self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
-        self._site_mgmt = site_management_registry["site_management"]
-        self._configured_sites = self._site_mgmt.load_sites()
-        try:
-            self._site = self._configured_sites[self._site_id]
-        except KeyError:
-            raise MKUserError("site", _("This site does not exist."))
-
-        # 2. Values of global settings
-        self._global_settings = load_configuration_settings()
-
-        # 3. Site specific global settings
-
-        if is_distributed_setup_remote_site(self._configured_sites):
-            self._current_settings = dict(load_site_global_settings())
-        else:
-            self._current_settings = self._site.get("globals", {})
-
-    @override
-    def title(self) -> str:
-        return _("Edit site-specific global settings of %(site_id)s") % {"site_id": self._site_id}
-
-    @override
-    def _breadcrumb_url(self) -> str:
-        return self.mode_url(site=self._site_id)
-
-    @override
-    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = PageMenu(
-            dropdowns=[
-                _page_menu_dropdown_site_details(
-                    self._site_id, self._site, self._configured_sites, self.name()
-                ),
-            ],
-            breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(),
-        )
-
-        self._extend_display_dropdown(menu)
-        return menu
-
-    # TODO: Consolidate with ModeEditGlobals.action()
-    @override
-    def action(self, config: Config) -> ActionResult:
-        varname = request.get_ascii_input("_varname")
-        action = request.get_ascii_input("_action")
-        if not varname:
-            return None
-
-        if varname not in config_variable_registry:
-            return None
-
-        config_variable = config_variable_registry[varname]
-        def_value = self._global_settings.get(varname, self._default_values[varname])
-
-        if not transactions.check_transaction(request):
-            return None
-
-        if varname in self._current_settings:
-            new_value = not self._current_settings[varname]
-        else:
-            new_value = not def_value
-
-        if varname == CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT:
-            site_specific_settings = {
-                site_id: deepcopy(site_conf.get("globals", {}))
-                for site_id, site_conf in config.sites.items()
-            }
-            site_specific_settings[self._site_id][varname] = new_value
-
-            validate_piggyback_hub_config(
-                config.sites,
-                finalize_all_settings_per_site(
-                    self._default_values, self._global_settings, site_specific_settings
-                ),
-            )
-
-        self._current_settings[varname] = new_value
-
-        msg = _("Changed site-specific configuration variable %(varname)s to %(value)s.") % {
-            "varname": varname,
-            "value": _("on") if self._current_settings[varname] else _("off"),
-        }
-
-        self._site.setdefault("globals", {})[varname] = self._current_settings[varname]
-        self._site_mgmt.save_sites(
-            make_folder_tree(config),
-            self._configured_sites,
-            activate=False,
-            pprint_value=config.wato_pprint_config,
-            liveproxyd_enabled=config.liveproxyd_enabled,
-            use_git=config.wato_use_git,
-            acting_user_id=user.id,
-        )
-
-        if self._site_id == omd_site():
-            save_site_global_settings(self._current_settings)
-
-        _pending_changes(
-            config.sites,
-            use_git=config.wato_use_git,
-            local_site=omd_site(),
-            user_id=user.id,
-        ).add(
-            Change(
-                action_name="edit-configvar",
-                text=msg,
-                domains=[d.ident() for d in config_variable.all_domains()],
-                force_restart=config_variable.need_restart() or None,
-            ),
-            ChangeScope.sites([self._site_id]),
-        )
-
-        if action == "_reset":
-            flash(msg)
-        return redirect(mode_url("edit_site_globals", site=self._site_id))
-
-    @override
-    def _groups(self) -> Iterable[ConfigVariableGroup]:
-        return self._get_groups(show_all=True)
-
-    @property
-    @override
-    def edit_mode_name(self) -> str:
-        return "edit_site_configvar"
-
-    @override
-    def page(self, config: Config) -> None:
-        html.help(
-            _(
-                "Here, you can configure global settings, that should just be applied "
-                "on that site. <b>Note</b>: this only makes sense if the site "
-                "is part of a distributed setup."
-            )
-        )
-
-        if not is_distributed_setup_remote_site(self._configured_sites):
-            if (
-                not has_distributed_setup_remote_sites(self._configured_sites)
-                and not self._current_settings
-            ):
-                html.show_error(
-                    _(
-                        "You cannot configure site-specific global settings "
-                        "in non-distributed setups."
-                    )
-                )
-                return
-
-            if not is_replication_enabled(self._site) and not site_is_local(
-                self._configured_sites[self._site_id]
-            ):
-                html.show_error(
-                    _(
-                        "This site is not the central site nor a replication "
-                        "remote site. You cannot configure specific settings for it."
-                    )
-                )
-                return
-
-        self._show_configuration_variables(config)
-
-    @override
-    def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
-        return make_global_settings_context(self._edition, self._site_id, config)
-
-
-class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
-    @classmethod
-    @override
-    def name(cls) -> str:
-        return "edit_site_configvar"
-
-    @staticmethod
-    @override
-    def static_permissions() -> Collection[PermissionName]:
-        return STATIC_PERMISSIONS_GLOBAL_SETTINGS
-
-    @classmethod
-    @override
-    def parent_mode(cls) -> type[WatoMode] | None:
-        return ModeEditSiteGlobals
-
-    @override
-    def _from_vars(self) -> None:
-        super()._from_vars()
-        self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
-        if self._site_id:
-            self._configured_sites = site_management_registry["site_management"].load_sites()
-            try:
-                site = self._configured_sites[self._site_id]
-            except KeyError:
-                raise MKUserError("site", _("Invalid site"))
-
-        self._current_settings = site.setdefault("globals", {})
-        self._global_settings = load_configuration_settings()
-
-    @override
-    def title(self) -> str:
-        return _("Site-specific global configuration for %(site_id)s") % {"site_id": self._site_id}
-
-    @override
-    def _affected_sites(self) -> list[SiteId]:
-        return [self._site_id]
-
-    @override
-    def _save(
-        self, tree: FolderTree, *, pprint_value: bool, use_git: bool, liveproxyd_enabled: bool
-    ) -> None:
-        site_management_registry["site_management"].save_sites(
-            tree,
-            self._configured_sites,
-            activate=False,
-            pprint_value=pprint_value,
-            liveproxyd_enabled=liveproxyd_enabled,
-            use_git=use_git,
-            acting_user_id=user.id,
-        )
-        if self._site_id == omd_site():
-            save_site_global_settings(self._current_settings)
-
-    @override
-    def _show_global_setting(self) -> None:
-        forms.section(_("Global setting"))
-        self._render_readonly_value(
-            "_vue_global_settings_global", self._global_settings[self._varname]
-        )
-
-    @override
-    def _back_url(self) -> str:
-        return ModeEditSiteGlobals.mode_url(site=self._site_id)
-
-    @override
-    def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
-        return make_global_settings_context(self._edition, self._site_id, config)
 
 
 class ModeSiteLivestatusEncryption(WatoMode):
@@ -2238,46 +1981,69 @@ class ModeSiteLivestatusEncryption(WatoMode):
         if cert_pem is None:
             raise MKGeneralException(_("Failed to find matching certificate in chain"))
 
-        config_variable = config_variable_registry["trusted_certificate_authorities"]
-
         global_settings = load_configuration_settings()
-        trusted = global_settings.get(
-            "trusted_certificate_authorities",
-            ABCConfigDomain.get_all_default_globals()["trusted_certificate_authorities"],
-        )
-        trusted_cas = trusted.setdefault("trusted_cas", [])
+        local_site_globals = load_site_globals(self._configured_sites, omd_site())
 
-        if (cert_str := cert_pem.decode()) in trusted_cas:
+        # If the local site uses site specific settings on trusted_certificate_authorities, we
+        # must add the remote's certificate there.
+        site_specific = "trusted_certificate_authorities" in local_site_globals
+        current_cas = cast(
+            TrustedCertificateAuthorities,
+            (local_site_globals if site_specific else global_settings).get(
+                "trusted_certificate_authorities",
+                ABCConfigDomain.get_all_default_globals()["trusted_certificate_authorities"],
+            ),
+        )
+
+        if (cert_str := cert_pem.decode()) in current_cas["trusted_cas"]:
             raise MKUserError(
                 None,
                 _('The CA is already a <a href="%(url)s">trusted CA</a>.')
-                % {"url": "wato.py?mode=edit_configvar&varname=trusted_certificate_authorities"},
+                % {
+                    "url": (
+                        makeuri_contextless(
+                            request,
+                            [("site", omd_site()), ("varname", "trusted_certificate_authorities")],
+                            filename="site_specific_settings.py",
+                        )
+                        if site_specific
+                        else "global_settings.py?varname=trusted_certificate_authorities"
+                    )
+                },
             )
 
-        trusted_cas.append(cert_str)
-
-        _pending_changes(
-            config.sites,
-            use_git=config.wato_use_git,
-            local_site=omd_site(),
-            user_id=user.id,
-        ).add(
-            Change(
-                action_name="edit-configvar",
-                text=_(
-                    "Added CA with fingerprint %(digest_sha256)s to trusted certificate authorities"
-                )
-                % {"digest_sha256": digest_sha256},
-                domains=[config_variable.primary_domain().ident()],
-                force_restart=config_variable.need_restart() or None,
-            ),
-            ChangeScope.all_activation_sites(),
+        new_cas = TrustedCertificateAuthorities(
+            use_system_wide_cas=current_cas["use_system_wide_cas"],
+            trusted_cas=[*current_cas["trusted_cas"], cert_str],
         )
-        save_global_settings(
-            {
-                **global_settings,
-                "trusted_certificate_authorities": trusted,
-            }
+
+        if site_specific:
+            save_site_globals(
+                omd_site(),
+                self._configured_sites,
+                {**local_site_globals, "trusted_certificate_authorities": new_cas},
+                tree=make_folder_tree(config),
+                pprint_value=config.wato_pprint_config,
+                liveproxyd_enabled=config.liveproxyd_enabled,
+                use_git=config.wato_use_git,
+                acting_user_id=user.id,
+            )
+        else:
+            save_global_settings(
+                {**global_settings, "trusted_certificate_authorities": new_cas}, config.sites
+            )
+
+        add_global_settings_change(
+            config_variable_registry["trusted_certificate_authorities"],
+            text=_("Added CA with fingerprint %(digest_sha256)s to trusted certificate authorities")
+            % {"digest_sha256": digest_sha256},
+            sites=[omd_site()] if site_specific else None,
+            pending_changes=_pending_changes(
+                config.sites,
+                use_git=config.wato_use_git,
+                local_site=omd_site(),
+                user_id=user.id,
+            ),
         )
 
         flash(
@@ -2409,12 +2175,14 @@ def _page_menu_dropdown_site_details(
 def _page_menu_entries_site_details(
     site_id: str, site: SiteConfiguration, site_configs: SiteConfigurations, current_mode: str
 ) -> Iterator[PageMenuEntry]:
-    if current_mode != "edit_site_globals" and site_globals_editable(site_configs, site):
+    if site_globals_editable(site_configs, site):
         yield PageMenuEntry(
             title=_("Global settings"),
             icon_name=StaticIcon(IconNames.configuration),
             item=make_simple_link(
-                makeuri_contextless(request, [("mode", "edit_site_globals"), ("site", site_id)]),
+                makeuri_contextless(
+                    request, [("site", site_id)], filename="site_specific_settings.py"
+                ),
             ),
         )
 
@@ -2459,14 +2227,9 @@ def _pending_changes(
     local_site: SiteId,
     user_id: UserId | None,
 ) -> PendingChanges:
-    return PendingChanges(
+    return make_pending_changes(
         activation_sites=activation_sites(sites),
         local_site=local_site,
         acting_user=user_id,
-        store=PendingChangesStore(),
-        hooks=(
-            make_audit_log_change_hook(use_git=use_git),
-            sidebar_reload_change_hook,
-            index_update_change_hook,
-        ),
+        use_git=use_git,
     )

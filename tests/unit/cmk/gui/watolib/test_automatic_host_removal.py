@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
+
 # mypy: disable-error-code="type-arg"
 
 import datetime
@@ -15,9 +17,7 @@ import pytest
 import time_machine
 from pytest_mock import MockerFixture
 
-from cmk.automations.results import ABCAutomationResult
-from cmk.base.automations.check_mk import automation_analyze_host_rule_matches
-from cmk.base.community_app import make_app
+from cmk.automations.internal import AutomationResult
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.config import Config, get_default_config, make_config_object
@@ -28,9 +28,11 @@ from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChan
 from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from cmk.plugins.checkmk.automations.checkmk import automation_analyze_host_rule_matches
 from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.ruleset_matcher.tags import get_effective_tag_config
 from cmk.utils.paths import default_config_dir
+from tests.testlib.unit.automations import make_common_state
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
@@ -77,10 +79,8 @@ def fixture_activate_changes(mocker: MockerFixture) -> MagicMock:
     )
 
 
-def test_remove_hosts_no_rules_early_return(
-    activate_changes_mock: MagicMock,
-    patch_omd_site: None,
-) -> None:
+@pytest.mark.usefixtures("patch_omd_site")
+def test_remove_hosts_no_rules_early_return(activate_changes_mock: MagicMock) -> None:
     automatic_host_removal.execute_host_removal_job(Config())
     activate_changes_mock.assert_not_called()
 
@@ -239,13 +239,18 @@ def fixture_mock_analyze_host_rule_matches_automation(
     ts = Scenario()
     for host_name in TEST_HOSTS:
         ts.add_host(host_name)
-    ts.apply(monkeypatch)
+    loading_result = ts.apply(monkeypatch)
 
     def analyze_with_matcher(
-        h: HostName, r: Sequence[Sequence[RuleSpec]], *, debug: bool
-    ) -> ABCAutomationResult:
+        h: HostName,
+        r: Sequence[Sequence[RuleSpec]],
+        *,
+        debug: bool,
+    ) -> AutomationResult:
         with mocker.patch("sys.stdin", StringIO(repr(r))):
-            return automation_analyze_host_rule_matches.handler(make_app(), [h], None, None)
+            return automation_analyze_host_rule_matches.handler(
+                make_common_state(loading_result), [h]
+            )
 
     return mocker.patch.object(
         automatic_host_removal, "analyze_host_rule_matches", analyze_with_matcher

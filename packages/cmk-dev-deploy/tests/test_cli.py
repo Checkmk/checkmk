@@ -4,8 +4,6 @@
 
 """Unit tests for cmk.dev_deploy.cli (argument parsing) and main() guards."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import pytest
@@ -33,6 +31,13 @@ class TestRootGuard:
             main([])
         captured = capsys.readouterr()
         assert "root" not in (captured.err + captured.out).lower()
+
+    def test_help_works_as_root(self, capsys: pytest.CaptureFixture[str]) -> None:
+        """--help must work for root: CI runs the launcher smoke test as root."""
+        with patch("os.getuid", return_value=0), pytest.raises(SystemExit) as exc_info:
+            main(["--help"])
+        assert exc_info.value.code == 0
+        assert "usage: cmk-dev-deploy" in capsys.readouterr().out
 
 
 # ---------------------------------------------------------------------------

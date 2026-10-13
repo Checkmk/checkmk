@@ -10,7 +10,7 @@ UNIT_TIME = metrics.Unit(metrics.TimeNotation())
 # Checks msexch_isclienttype, msexch_isstore and msexch_rcpclientaccess all report this metric
 metric_average_latency_s = metrics.Metric(
     name="average_latency_s",
-    title=Title("Average latency"),
+    title=Title("Average RPC latency"),
     unit=UNIT_TIME,
     color=metrics.Color.LIGHT_BLUE,
 )

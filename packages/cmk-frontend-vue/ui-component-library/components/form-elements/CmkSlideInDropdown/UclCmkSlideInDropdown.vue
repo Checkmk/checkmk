@@ -48,6 +48,12 @@ export const panelConfig = {
     type: 'boolean' as const,
     title: 'Allow Editing Existing',
     initialState: true
+  },
+  loading: {
+    type: 'boolean' as const,
+    title: 'Loading',
+    help: 'Simulates a 2 s async fetch: choices are empty while set, then fill in reactively.',
+    initialState: false
   }
 } satisfies PanelConfigFor<typeof CmkSlideInDropdown, OmittedProps>
 </script>
@@ -72,7 +78,7 @@ import CmkSlideInDropdown, {
   type CmkSlideInDropdownChoice
 } from 'cmk-ui-library/components/user-input/CmkSlideInDropdown'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import UclCmkSlideInDropdownDev from './UclCmkSlideInDropdownDev.vue'
 
@@ -88,6 +94,20 @@ const choices = ref<Array<CmkSlideInDropdownChoice>>([
   { name: 'entity_1', title: untranslated('First Demo Entity') },
   { name: 'entity_2', title: untranslated('Second Demo Entity') }
 ])
+
+const visibleChoices = computed(() => (propState.value.loading ? [] : choices.value))
+let fetchTimer: ReturnType<typeof setTimeout> | undefined
+watch(
+  () => Boolean(propState.value.loading),
+  (loading) => {
+    clearTimeout(fetchTimer)
+    if (loading) {
+      fetchTimer = setTimeout(() => {
+        propState.value.loading = false
+      }, 2000)
+    }
+  }
+)
 
 const draftTitle = ref('')
 let createdCount = 0
@@ -123,10 +143,11 @@ function saveEntity(objectId: string | null, close: () => void) {
     <UclDetailPageComponent>
       <CmkSlideInDropdown
         v-model="selectedId"
-        :choices="choices"
+        :choices="visibleChoices"
         :label="propState.label"
         :input-hint="propState.inputHint"
         :allow-editing-existing-elements="Boolean(propState.allowEditingExistingElements)"
+        :loading="Boolean(propState.loading)"
         :validation="propState.validation"
         :new-title="untranslated('New demo entity')"
         :edit-title="untranslated('Edit demo entity')"

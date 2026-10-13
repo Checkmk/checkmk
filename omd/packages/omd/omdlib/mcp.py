@@ -26,8 +26,20 @@ LoadModule proxy_module /omd/sites/{site_name}/lib/apache/modules/mod_proxy.so
 LoadModule proxy_http_module /omd/sites/{site_name}/lib/apache/modules/mod_proxy_http.so
 </IfModule>
 
-ProxyPass "/{site_name}/check_mk/mcp" "unix://{sock}|http://localhost/" retry=0 timeout=120
-ProxyPassReverse "/{site_name}/check_mk/mcp" "unix://{sock}|http://localhost/"
+# Target without trailing slash: httpd inserts one between host and path, so
+# ".../mcp" and ".../mcp/" both reach the server as "/". ProxyPassReverse gets
+# the bare origin: it is matched by prefix against Location headers as written,
+# and the server writes "http://localhost:1/...", never the "unix://" form.
+ProxyPass "/{site_name}/check_mk/mcp" "unix://{sock}|http://localhost:1" retry=0 timeout=120
+ProxyPassReverse "/{site_name}/check_mk/mcp" "http://localhost:1"
+
+# No retry=/timeout= here: mod_proxy keys workers by the socket origin (the
+# "unix://...sock|http://localhost:1" prefix, path excluded), so this ProxyPass
+# reuses the worker the "/{site_name}/check_mk/mcp" line above already defined.
+# Those parameters are worker-scoped and set there; repeating them is ignored
+# ("AH01146: Ignoring parameter ... because of worker sharing" at startup).
+ProxyPass "{prm}" "unix://{sock}|http://localhost:1{prm}"
+ProxyPassReverse "{prm}" "http://localhost:1{prm}"
 
 # OAuth 2.0 Protected Resource Metadata (RFC 9728). Public discovery document,
 # proxied to the MCP server preserving the full path so its PRM route matches.
@@ -35,43 +47,21 @@ ProxyPassReverse "/{site_name}/check_mk/mcp" "unix://{sock}|http://localhost/"
   ProxyPreserveHost On
   Require all granted
 </Location>
-# No retry=/timeout= here: mod_proxy keys workers by the socket origin (the
-# "unix://...sock|http://localhost" prefix, path excluded), so this ProxyPass
-# reuses the worker the "/{site_name}/check_mk/mcp" line above already defined.
-# Those parameters are worker-scoped and set there; repeating them is ignored
-# ("AH01146: Ignoring parameter ... because of worker sharing" at startup).
-ProxyPass "{prm}" "unix://{sock}|http://localhost{prm}"
-ProxyPassReverse "{prm}" "unix://{sock}|http://localhost{prm}"
 
 # Browser-based MCP clients (MCP Inspector, web IDEs) send CORS preflights, so
-# OPTIONS must reach the MCP endpoint, the OAuth discovery/registration/token
-# endpoints and the RFC 9728 well-known path. These live here, gated by the
-# MCP_SERVER hook, not in the always-shipped security.conf: they only make sense
-# when the MCP server runs. mcp.conf sorts before security.conf under
-# conf.d/*.conf, so this [L] short-circuits security.conf's OPTIONS->405 rewrite.
-# oauth_authorize.py is deliberately NOT exempted (top-level navigation, never
-# preflights). The RFC 8414 authorization-server well-known path arrives here as
-# /<site>/check_mk/oauth_authorization_server.py (rewritten by the system apache,
-# see omdlib.system_apache), so it is matched under that name.
+# OPTIONS must reach the MCP endpoint and the RFC 9728 well-known path. These
+# live here, gated by the MCP_SERVER hook, not in the always-shipped
+# security.conf: they only make sense when the MCP server runs. The OAuth
+# discovery/registration/token endpoints have their own always-shipped
+# exemption in oauth.conf, since those pages run independent of this hook.
+# mcp.conf sorts before security.conf under conf.d/*.conf, so this [L]
+# short-circuits security.conf's OPTIONS->405 rewrite.
 <IfModule mod_rewrite.c>
   RewriteEngine on
   RewriteCond %{{REQUEST_METHOD}} =OPTIONS
-  RewriteCond %{{REQUEST_URI}} ^/[^/]+/check_mk/(mcp/?$|oauth_(authorization_server|token|client_registration)\\.py$) [OR]
+  RewriteCond %{{REQUEST_URI}} ^/[^/]+/check_mk/mcp/?$ [OR]
   RewriteCond %{{REQUEST_URI}} ^/\\.well-known/oauth-protected-resource/
   RewriteRule .* - [L]
-</IfModule>
-
-# CORS for the GUI-served OAuth endpoints consumed by browser-based MCP clients:
-# the responses need Access-Control-Allow-Origin for the browser to expose them,
-# and the preflight (a bare 200 from the GUI routing) needs the Allow-* set. The
-# MCP endpoint and the RFC 9728 document are NOT listed: the MCP server sends its
-# own CORS headers, and doubling them up would make browsers reject the response.
-<IfModule mod_headers.c>
-  <LocationMatch "^/[^/]+/check_mk/oauth_(authorization_server|token|client_registration)\\.py$">
-    Header always set Access-Control-Allow-Origin "*"
-    Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS"
-    Header always set Access-Control-Allow-Headers "Authorization, Content-Type, Mcp-Protocol-Version"
-  </LocationMatch>
 </IfModule>
 """
         )

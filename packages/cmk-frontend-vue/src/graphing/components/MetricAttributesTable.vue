@@ -7,7 +7,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
-import { type MetricAttribute, attributeTypeLabel, sortedAttributes } from './metricAttributes'
+import {
+  type MetricAttribute,
+  attributeKindColumnLabel,
+  sortedAttributes
+} from './metricAttributes'
 
 const props = defineProps<{
   attributes: MetricAttribute[]
@@ -29,14 +33,14 @@ const rows = computed(() => sortedAttributes(props.attributes))
       <tr>
         <th>{{ _t('Attribute name') }}</th>
         <th>{{ _t('Attribute value') }}</th>
-        <th>{{ _t('Attribute type') }}</th>
+        <th>{{ _t('Attribute kind') }}</th>
       </tr>
     </thead>
     <tbody>
       <tr v-for="attribute in rows" :key="`${attribute.kind}:${attribute.name}`">
         <td>{{ attribute.name }}</td>
         <td class="graphing-metric-attributes-table__value">{{ attribute.value }}</td>
-        <td>{{ attributeTypeLabel(attribute.kind) }}</td>
+        <td>{{ attributeKindColumnLabel(attribute.kind) }}</td>
       </tr>
     </tbody>
   </table>
@@ -61,7 +65,7 @@ const rows = computed(() => sortedAttributes(props.attributes))
   }
 
   tbody tr:hover {
-    background: var(--graphing-attributes-row-hover);
+    background: var(--background-row-hover-strong);
   }
 }
 
@@ -76,13 +80,5 @@ const rows = computed(() => sortedAttributes(props.attributes))
 /* Values can be long ids; wrapping keeps them out of the neighbouring columns. */
 .graphing-metric-attributes-table__value {
   overflow-wrap: anywhere;
-}
-
-body[data-theme='facelift'] .graphing-metric-attributes-table {
-  --graphing-attributes-row-hover: var(--ux-theme-4);
-}
-
-body[data-theme='modern-dark'] .graphing-metric-attributes-table {
-  --graphing-attributes-row-hover: var(--color-white-10);
 }
 </style>

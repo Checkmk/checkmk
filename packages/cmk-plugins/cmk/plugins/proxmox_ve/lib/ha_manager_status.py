@@ -68,7 +68,7 @@ def _create_readable_status(status: str) -> str:
     try:
         after_paren = status.split("(", 1)[1]
         return after_paren.split(",", 1)[0].strip()
-    except (IndexError, AttributeError):
+    except IndexError, AttributeError:
         return status
 
 
@@ -78,9 +78,7 @@ class SectionHaManagerCurrent(BaseModel, frozen=True):
     master: MasterNode | None = None
 
     @classmethod
-    def from_json_list(
-        cls, raw_data: Sequence[Mapping[str, str | int]]
-    ) -> "SectionHaManagerCurrent":
+    def from_json_list(cls, raw_data: Sequence[Mapping[str, str | int]]) -> SectionHaManagerCurrent:
         quorum = None
         lrm_nodes: MutableMapping[str, LrmNode] = {}
         services_by_node: MutableMapping[str, MutableMapping[str, ServiceItem]] = {}

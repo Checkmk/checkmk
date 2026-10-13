@@ -3,22 +3,55 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { getLocalTimeZone } from '@internationalized/date'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
+import { select } from 'd3-selection'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { defineComponent, ref } from 'vue'
 
 import TimeSeriesGraph from '@/graphing/components/TimeSeriesGraph/TimeSeriesGraph.vue'
 import { measureAxisLabel } from '@/graphing/components/TimeSeriesGraph/axes/labelWidth'
 import type { Metric, TimeSeriesGraphProps } from '@/graphing/components/TimeSeriesGraph/types'
-import { CANVAS_MARGIN_LEFT, VALUE_LABEL_GUTTER } from '@/graphing/components/constants'
+import { AXIS_CLASSES } from '@/graphing/components/TimeSeriesGraph/useAxes'
+import {
+  CANVAS_MARGIN_LEFT,
+  PLOT_INSET_X,
+  VALUE_LABEL_TICK_OFFSET
+} from '@/graphing/components/constants'
+import { binEdges } from '@/graphing/utils/bins'
+
+let drawnPoints: Array<[number, number]> = []
+let drawnStrokes: Array<Array<[number, number]>> = []
+let filledRects: Array<[number, number, number, number]> = []
 
 // jsdom implements neither a 2D canvas context nor matchMedia, both of which the graph
 // touches on mount (draw() + the devicePixelRatio watcher). Stub them so the component
 // mounts and runs its real draw path instead of throwing.
 function createCanvasContextStub(): CanvasRenderingContext2D {
   const state: Record<string | symbol, unknown> = {}
+  const liftPenAndMoveTo = (x: number, y: number): void => {
+    drawnPoints.push([x, y])
+    drawnStrokes.push([[x, y]])
+  }
+  const drawLineTo = (x: number, y: number): void => {
+    drawnPoints.push([x, y])
+    drawnStrokes.at(-1)?.push([x, y])
+  }
   return new Proxy(state, {
-    get: (target, prop) => (prop in target ? target[prop] : () => undefined),
+    get: (target, prop) => {
+      if (prop === 'moveTo') {
+        return liftPenAndMoveTo
+      }
+      if (prop === 'lineTo') {
+        return drawLineTo
+      }
+      if (prop === 'fillRect') {
+        return (x: number, y: number, width: number, height: number) =>
+          filledRects.push([x, y, width, height])
+      }
+      return prop in target ? target[prop] : () => undefined
+    },
     set: (target, prop, value) => {
       target[prop] = value
       return true
@@ -27,6 +60,9 @@ function createCanvasContextStub(): CanvasRenderingContext2D {
 }
 
 beforeEach(() => {
+  drawnPoints = []
+  drawnStrokes = []
+  filledRects = []
   vi.stubGlobal(
     'matchMedia',
     vi.fn().mockReturnValue({
@@ -47,8 +83,6 @@ function letterSpaceEveryElement(): void {
 }
 
 afterEach(() => {
-  vi.restoreAllMocks()
-  vi.unstubAllGlobals()
   themeLetterSpacing?.remove()
   themeLetterSpacing = null
 })
@@ -60,30 +94,34 @@ const UNIT: components['schemas']['ApiUnitFormat'] = {
   convertible: true
 }
 
-// stack: null makes computeStackedSeries classify the metric as a 'line' series (rather than
-// a stacked area), so this fixture is genuinely a line graph.
 const LINE_METRIC: Metric = {
-  metadata: { name: 'cpu', title: 'CPU utilization', unit: UNIT, color: '#ff0000' },
-  render: { stack: null, inverse: false, hidden: false },
+  metadata: { name: 'cpu', title: 'CPU utilization', unit: UNIT, color: '#ff0000', attributes: [] },
+  render: { shape: 'line', inverse: false, hidden: false },
   data_points: [1, 2, 3, 4, 5]
 }
 
 const STACKED_METRIC: Metric = {
-  metadata: { name: 'user', title: 'User', unit: UNIT, color: '#00ff00' },
-  render: { stack: 'area', inverse: false, hidden: false },
+  metadata: { name: 'user', title: 'User', unit: UNIT, color: '#00ff00', attributes: [] },
+  render: { shape: 'area', stack: 'area', inverse: false, hidden: false },
   data_points: [1, 2, 3, 4, 5]
 }
 
-// inverse mirrors the metric below the baseline, which forces the y-domain symmetric
-// around zero.
+// inverse mirrors the metric below the baseline.
 const INVERSE_METRIC: Metric = {
-  metadata: { name: 'if_out', title: 'Output bandwidth', unit: UNIT, color: '#0000ff' },
-  render: { stack: null, inverse: true, hidden: false },
+  metadata: {
+    name: 'if_out',
+    title: 'Output bandwidth',
+    unit: UNIT,
+    color: '#0000ff',
+    attributes: []
+  },
+  render: { shape: 'line', inverse: true, hidden: false },
   data_points: [1, 2, 3, 4, 5]
 }
 
 const DEFAULT_PROPS: TimeSeriesGraphProps = {
   size: { width: 800, height: 400, mode: 'fixed' },
+  binUnit: null,
   options: {
     header: { title: null, show_graph_time: false },
     name: 'graph',
@@ -91,9 +129,10 @@ const DEFAULT_PROPS: TimeSeriesGraphProps = {
     y_axis: null,
     font_size_pt: 10
   },
-  time_range: { start: 1_000, end: 2_000, step: 60 },
+  view_time_range: { start: 1_000, end: 2_000, step: 60 },
   metrics: [LINE_METRIC],
   horizontal_lines: [],
+  shaded_regions: [],
   valueRange: null,
   zoomMode: 'time',
   minTimeRange: null,
@@ -101,7 +140,7 @@ const DEFAULT_PROPS: TimeSeriesGraphProps = {
   inspecting: false,
   panEnabled: false,
   zoomEnabled: false,
-  highlightedMetricName: null
+  highlightedMetricNames: []
 }
 
 function renderComponent(props: Partial<TimeSeriesGraphProps> = {}) {
@@ -115,13 +154,39 @@ const IEC_UNIT: components['schemas']['ApiUnitFormat'] = {
   convertible: true
 }
 const MEMORY_METRIC: Metric = {
-  metadata: { name: 'mem_used', title: 'RAM used', unit: IEC_UNIT, color: '#ff0000' },
-  render: { stack: null, inverse: false, hidden: false },
+  metadata: {
+    name: 'mem_used',
+    title: 'RAM used',
+    unit: IEC_UNIT,
+    color: '#ff0000',
+    attributes: []
+  },
+  render: { shape: 'line', inverse: false, hidden: false },
   data_points: [1.2e9, 1.4e9, 1.6e9, 1.8e9, 2.0e9]
 }
 const MEMORY_PROPS: Partial<TimeSeriesGraphProps> = {
   metrics: [MEMORY_METRIC],
-  options: { ...DEFAULT_PROPS.options, y_axis: { title: '', unit: IEC_UNIT } }
+  options: { ...DEFAULT_PROPS.options, y_axis: { unit: IEC_UNIT } }
+}
+
+// A y-axis unit makes the axis label itself through the unit's formatter rather than d3's raw ticks.
+const UNIT_AXIS_PROPS: Partial<TimeSeriesGraphProps> = {
+  options: { ...DEFAULT_PROPS.options, y_axis: { unit: UNIT } }
+}
+
+function drawnXs(): number[] {
+  return drawnPoints.map(([x]) => x)
+}
+
+function plotWidthPx(): number {
+  return parseFloat(document.querySelector('canvas')!.style.width)
+}
+
+function someStrokeCrossesTheRightEdge(): boolean {
+  const rightEdge = plotWidthPx()
+  return drawnStrokes.some((stroke) =>
+    stroke.some(([x], index) => index > 0 && stroke[index - 1]![0] < rightEdge && x > rightEdge)
+  )
 }
 
 function valueAxisGroup(container: Element): Element {
@@ -143,8 +208,10 @@ function valueAxisLabels(container: Element): string[] {
   ).map((tickLabel) => tickLabel.textContent ?? '')
 }
 
-async function renderMemoryGraph(): Promise<{ margin: number; widestLabel: number }> {
-  const { container } = renderComponent(MEMORY_PROPS)
+async function renderMemoryGraph(
+  props: Partial<TimeSeriesGraphProps> = {}
+): Promise<{ margin: number; widestLabel: number }> {
+  const { container } = renderComponent({ ...MEMORY_PROPS, ...props })
   await waitFor(() => {
     expect(valueAxisLabels(container).filter((label) => label !== '')).not.toHaveLength(0)
   })
@@ -157,6 +224,52 @@ async function renderMemoryGraph(): Promise<{ margin: number; widestLabel: numbe
   }
 }
 
+function plotCanvasStyle(container: Element): CSSStyleDeclaration {
+  return within(container as HTMLElement).getByRole('img').style
+}
+
+// What the figure keeps between the plot's edge and its own, read back off the rendered plot.
+function plotInsets(container: Element): {
+  left: number
+  right: number
+  top: number
+  bottom: number
+} {
+  const style = plotCanvasStyle(container)
+  const left = parseFloat(style.left)
+  const top = parseFloat(style.top)
+  return {
+    left,
+    right: DEFAULT_PROPS.size.width - left - parseFloat(style.width),
+    top,
+    bottom: DEFAULT_PROPS.size.height - top - parseFloat(style.height)
+  }
+}
+
+function timeAxisLabels(container: Element): string[] {
+  return Array.from(container.querySelectorAll(`g.${AXIS_CLASSES.timeLabels} text`)).map(
+    (tickLabel) => tickLabel.textContent ?? ''
+  )
+}
+
+function drawnValueAxisLabels(container: Element): string[] {
+  return valueAxisLabels(container).filter((label) => label !== '')
+}
+
+// Tick label text is applied when the d3 axis transition starts, hence the wait.
+async function drawnValueAxisTicks(
+  container: Element
+): Promise<Array<{ position: number; text: string }>> {
+  await waitFor(() => expect(drawnValueAxisLabels(container)).not.toHaveLength(0))
+  return Array.from(
+    container.querySelectorAll('g.graphing-time-series-graph__y-axis .tick text')
+  ).map((label) => ({ position: select(label).datum() as number, text: label.textContent ?? '' }))
+}
+
+function signedLabels(ticks: Array<{ text: string }>): string[] {
+  return ticks.map((tick) => tick.text).filter((text) => text.includes('-'))
+}
+
 describe('TimeSeriesGraph', () => {
   test('mounts a line graph with a canvas drawing surface', () => {
     const metrics = [LINE_METRIC]
@@ -167,6 +280,125 @@ describe('TimeSeriesGraph', () => {
     // (no configured graph title), and that surface must be the data canvas.
     const plotSurface = screen.getByRole('img', { name: 'CPU utilization' })
     expect(plotSurface.tagName).toBe('CANVAS')
+  })
+
+  const VIEW_TIME_RANGE = { start: 1_060, end: 1_180, step: 60 }
+  const DATA_TIME_RANGE_REACHING_PAST_THE_VIEW = { start: 940, end: 1_240, step: 60 }
+  const SAMPLES_REACHING_PAST_THE_VIEW = [1, 2, 3, 4, 5]
+  const VIEW_ENDING_BETWEEN_TWO_SAMPLES = { ...VIEW_TIME_RANGE, end: 1_150 }
+  const COLUMN_WIDTH_PX = 1
+
+  test('draws the curve out past the leading edge when the data reaches beyond it', async () => {
+    const metrics = [{ ...LINE_METRIC, data_points: SAMPLES_REACHING_PAST_THE_VIEW }]
+
+    renderComponent({
+      view_time_range: VIEW_TIME_RANGE,
+      data_time_range: DATA_TIME_RANGE_REACHING_PAST_THE_VIEW,
+      metrics
+    })
+    await waitFor(() => expect(drawnPoints.length).toBeGreaterThan(0))
+
+    expect(Math.min(...drawnXs())).toBeLessThan(0)
+  })
+
+  test('draws the curve out past the trailing edge when the data reaches beyond it', async () => {
+    const metrics = [{ ...LINE_METRIC, data_points: SAMPLES_REACHING_PAST_THE_VIEW }]
+
+    renderComponent({
+      view_time_range: VIEW_TIME_RANGE,
+      data_time_range: DATA_TIME_RANGE_REACHING_PAST_THE_VIEW,
+      metrics
+    })
+    await waitFor(() => expect(drawnPoints.length).toBeGreaterThan(0))
+
+    expect(Math.max(...drawnXs())).toBeGreaterThan(plotWidthPx())
+  })
+
+  test('carries the curve on past a window end that falls between two samples', async () => {
+    const metrics = [{ ...LINE_METRIC, data_points: SAMPLES_REACHING_PAST_THE_VIEW }]
+
+    renderComponent({
+      view_time_range: VIEW_ENDING_BETWEEN_TWO_SAMPLES,
+      data_time_range: DATA_TIME_RANGE_REACHING_PAST_THE_VIEW,
+      metrics
+    })
+    await waitFor(() => expect(drawnPoints.length).toBeGreaterThan(0))
+
+    expect(someStrokeCrossesTheRightEdge()).toBe(true)
+  })
+
+  test('stops the curve at a window end whose following sample is missing', async () => {
+    const missingTheSampleAfterTheWindow = [1, 2, 3, null, 5]
+    const metrics = [{ ...LINE_METRIC, data_points: missingTheSampleAfterTheWindow }]
+
+    renderComponent({
+      view_time_range: VIEW_ENDING_BETWEEN_TWO_SAMPLES,
+      data_time_range: DATA_TIME_RANGE_REACHING_PAST_THE_VIEW,
+      metrics
+    })
+    await waitFor(() => expect(drawnPoints.length).toBeGreaterThan(0))
+
+    expect(someStrokeCrossesTheRightEdge()).toBe(false)
+  })
+
+  test('reaches the right edge when the newest interval has not closed yet', async () => {
+    const dataTimeRangeReachingPastThePresent = { start: 940, end: 1_300, step: 60 }
+    const samplesWithTheTwoNewestIntervalsStillOpen = [1, 2, 3, 4, null, null]
+    const metrics = [{ ...LINE_METRIC, data_points: samplesWithTheTwoNewestIntervalsStillOpen }]
+
+    renderComponent({
+      view_time_range: VIEW_TIME_RANGE,
+      data_time_range: dataTimeRangeReachingPastThePresent,
+      metrics
+    })
+    await waitFor(() => expect(drawnPoints.length).toBeGreaterThan(0))
+
+    expect(Math.max(...drawnXs())).toBeGreaterThanOrEqual(plotWidthPx() - COLUMN_WIDTH_PX)
+  })
+
+  function rightmostDrawnXOnPlot(stack: string | null): number {
+    drawnPoints = []
+    const metrics = [
+      {
+        ...LINE_METRIC,
+        render:
+          stack === null
+            ? LINE_METRIC.render
+            : { shape: 'area' as const, stack, inverse: false, hidden: false },
+        data_points: SAMPLES_REACHING_PAST_THE_VIEW
+      }
+    ]
+    const { unmount } = renderComponent({
+      view_time_range: VIEW_TIME_RANGE,
+      data_time_range: DATA_TIME_RANGE_REACHING_PAST_THE_VIEW,
+      metrics
+    })
+    const onPlot = drawnXs().filter((x) => x <= plotWidthPx() + 0.01)
+    unmount()
+    return Math.max(...onPlot)
+  }
+
+  test('ends an area series where the line series ends', () => {
+    const asLine = rightmostDrawnXOnPlot(null)
+
+    const asArea = rightmostDrawnXOnPlot('area')
+
+    expect(asArea).toBeCloseTo(asLine, 5)
+  })
+
+  test('keeps the value axis off a spike that only the off-screen neighbours carry', async () => {
+    const offViewSpike = 1_000
+    const samplesSpikingOnlyOutsideTheView = [offViewSpike, 2, 3, 4, offViewSpike]
+    const metrics = [{ ...LINE_METRIC, data_points: samplesSpikingOnlyOutsideTheView }]
+
+    const { container } = renderComponent({
+      view_time_range: VIEW_TIME_RANGE,
+      data_time_range: DATA_TIME_RANGE_REACHING_PAST_THE_VIEW,
+      metrics
+    })
+    await waitFor(() => expect(valueAxisLabels(container)).not.toHaveLength(0))
+
+    expect(valueAxisLabels(container)).not.toContain(String(offViewSpike))
   })
 
   test('prefers the configured graph title over metric titles for the plot accessible name', () => {
@@ -207,29 +439,143 @@ describe('TimeSeriesGraph', () => {
       clientX: 100,
       clientY: 50
     })
+    window.dispatchEvent(new MouseEvent('mousemove', { clientX: 200, clientY: 50 }))
+    window.dispatchEvent(new MouseEvent('mouseup', { clientX: 200, clientY: 50 }))
 
     expect(await screen.findByRole('status')).toHaveTextContent('Maximum zoom reached')
   })
 
-  test('labels the y-axis on both sides of zero for a mirrored metric', async () => {
+  // A fetch, not a gesture, can be what finds the floor; the host then has the renderer say so.
+  test('states the reason when the host reports that a fetch hit the time floor', async () => {
+    const host = defineComponent({
+      components: { TimeSeriesGraph },
+      setup() {
+        const renderer = ref<InstanceType<typeof TimeSeriesGraph> | null>(null)
+        return { renderer, rendererProps: { ...DEFAULT_PROPS, zoomEnabled: true } }
+      },
+      template: `<TimeSeriesGraph ref="renderer" v-bind="rendererProps" />
+        <button @click="renderer?.showMaxZoomHint()">report floor</button>`
+    })
+    render(host)
+
+    await fireEvent.click(screen.getByRole('button', { name: 'report floor' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Maximum zoom reached')
+  })
+
+  test('draws both axes when their visibility is left unspecified', async () => {
+    const { container } = renderComponent()
+
+    expect(timeAxisLabels(container)).not.toHaveLength(0)
+    await waitFor(() => {
+      expect(drawnValueAxisLabels(container)).not.toHaveLength(0)
+    })
+  })
+
+  test('a hidden time axis drops its labels and gives the bottom margin to the plot', async () => {
+    const shown = renderComponent({ showTimeAxis: true })
+    const shownHeight = plotCanvasStyle(shown.container).height
+
+    const hidden = renderComponent({ showTimeAxis: false })
+
+    expect(timeAxisLabels(shown.container)).not.toHaveLength(0)
+    expect(timeAxisLabels(hidden.container)).toHaveLength(0)
+    await waitFor(() => {
+      expect(parseFloat(plotCanvasStyle(hidden.container).height)).toBeGreaterThan(
+        parseFloat(shownHeight)
+      )
+    })
+  })
+
+  test('a hidden value axis gives its room to the plot but keeps the frame padding', async () => {
+    const shown = renderComponent({ showValueAxis: true })
+    const shownWidth = plotCanvasStyle(shown.container).width
+
+    const hidden = renderComponent({ showValueAxis: false })
+
+    await waitFor(() => {
+      expect(drawnValueAxisLabels(shown.container)).not.toHaveLength(0)
+    })
+    expect(drawnValueAxisLabels(hidden.container)).toHaveLength(0)
+    await waitFor(() => {
+      const insets = plotInsets(hidden.container)
+      expect(insets.left).toBe(insets.right)
+      expect(parseFloat(plotCanvasStyle(hidden.container).width)).toBeGreaterThan(
+        parseFloat(shownWidth)
+      )
+    })
+  })
+
+  test('a plot with both axes hidden sits centred in the figure', async () => {
+    const { container } = renderComponent({ showTimeAxis: false, showValueAxis: false })
+
+    await waitFor(() => {
+      const insets = plotInsets(container)
+      expect(insets.left).toBe(insets.right)
+      expect(insets.top).toBe(insets.bottom)
+    })
+  })
+
+  test('a hidden time axis still leaves the shown value axis room for its lowest label', async () => {
+    const { container } = renderComponent({ showTimeAxis: false, showValueAxis: true })
+
+    await waitFor(() => {
+      const style = plotCanvasStyle(container)
+      expect(parseFloat(style.top) + parseFloat(style.height)).toBeLessThan(
+        DEFAULT_PROPS.size.height
+      )
+    })
+  })
+
+  test('gives the value axis the width it was configured for, beside the padding', async () => {
+    const configuredWidth = 120
+
+    const { container } = renderComponent({ minValueAxisWidth: configuredWidth })
+
+    await waitFor(() => {
+      const insets = plotInsets(container)
+      expect(insets.left - insets.right).toBe(configuredWidth)
+    })
+  })
+
+  test('widens the configured value axis width for labels that do not fit it', async () => {
+    const { margin, widestLabel } = await renderMemoryGraph({ minValueAxisWidth: 1 })
+
+    expect(margin).toBeGreaterThanOrEqual(widestLabel + VALUE_LABEL_TICK_OFFSET + PLOT_INSET_X)
+  })
+
+  test('a hidden time axis takes the pan affordances with it', () => {
+    renderComponent({ showTimeAxis: false, panEnabled: true })
+
+    expect(screen.queryByRole('button', { name: 'Step back in time' })).not.toBeInTheDocument()
+  })
+
+  test('draws a lone mirrored metric below zero and labels it without a sign', async () => {
     const metrics = [INVERSE_METRIC]
 
-    const { container } = renderComponent({ metrics })
+    const { container } = renderComponent({ ...UNIT_AXIS_PROPS, metrics })
 
-    // Tick label text is applied when the d3 axis transition starts, hence the waitFor.
-    await waitFor(() => {
-      const tickValues = Array.from(
-        container.querySelectorAll('g.graphing-time-series-graph__y-axis .tick text')
-      ).map((tickLabel) => Number(tickLabel.textContent))
-      expect(tickValues.some((value) => value < 0)).toBe(true)
-      expect(tickValues.some((value) => value > 0)).toBe(true)
-    })
+    const ticks = await drawnValueAxisTicks(container)
+    expect(ticks.filter((tick) => tick.position > 0)).toEqual([])
+    expect(ticks.filter((tick) => tick.position < 0)).not.toHaveLength(0)
+    expect(signedLabels(ticks)).toEqual([])
+  })
+
+  test('labels both sides of zero without a sign when mirrored and unmirrored metrics mix', async () => {
+    const metrics = [LINE_METRIC, INVERSE_METRIC]
+
+    const { container } = renderComponent({ ...UNIT_AXIS_PROPS, metrics })
+
+    const ticks = await drawnValueAxisTicks(container)
+    expect(ticks.filter((tick) => tick.position < 0)).not.toHaveLength(0)
+    expect(ticks.filter((tick) => tick.position > 0)).not.toHaveLength(0)
+    expect(signedLabels(ticks)).toEqual([])
   })
 
   test('sizes the value axis to hold its widest label', async () => {
     const { margin, widestLabel } = await renderMemoryGraph()
 
-    expect(margin).toBeGreaterThanOrEqual(widestLabel + VALUE_LABEL_GUTTER)
+    expect(margin).toBeGreaterThanOrEqual(widestLabel + VALUE_LABEL_TICK_OFFSET + PLOT_INSET_X)
     expect(margin).toBeGreaterThan(CANVAS_MARGIN_LEFT)
   })
 
@@ -240,6 +586,241 @@ describe('TimeSeriesGraph', () => {
     const spaced = await renderMemoryGraph()
 
     expect(spaced.margin).toBeGreaterThan(unspaced.margin)
-    expect(spaced.margin).toBeGreaterThanOrEqual(spaced.widestLabel + VALUE_LABEL_GUTTER)
+    expect(spaced.margin).toBeGreaterThanOrEqual(
+      spaced.widestLabel + VALUE_LABEL_TICK_OFFSET + PLOT_INSET_X
+    )
+  })
+})
+
+describe('TimeSeriesGraph — the pin and the plot size', () => {
+  // The handle stands above the plot rather than inside it, so arming the pin must not cost
+  // plot height: GraphFigure floors a widget at 50px, which leaves nothing to give away.
+  const SHORT_FIGURE = { width: 400, height: 50, mode: 'fixed' } as const
+  const MARGIN_TOP = 4
+
+  function plotHeightPx(): number {
+    return parseFloat(document.querySelector('canvas')!.style.height)
+  }
+
+  test('arming the pin leaves a figure at the dashboard floor untouched', () => {
+    renderComponent({ size: SHORT_FIGURE, pinEnabled: false })
+    const withoutPin = plotHeightPx()
+    document.body.innerHTML = ''
+    renderComponent({ size: SHORT_FIGURE, pinEnabled: true })
+
+    expect(plotHeightPx()).toBeGreaterThan(0)
+    expect(plotHeightPx()).toBe(withoutPin)
+  })
+
+  // Drawn upwards from the edge it is anchored on, so its top is what keeps it clear.
+  test('the pin handle is anchored on the plot top edge, not inside the plot', () => {
+    renderComponent({ size: SHORT_FIGURE, pinEnabled: true, pinTime: 1_500 })
+
+    const handle = document.querySelector('.graphing-pin-handle')
+    expect(handle).toBeInTheDocument()
+    expect((handle as HTMLElement).style.top).toBe(`${MARGIN_TOP}px`)
+  })
+
+  test('a tall figure is sized the same with and without the pin', () => {
+    const tall = { width: 400, height: 300, mode: 'fixed' } as const
+    renderComponent({ size: tall, pinEnabled: false })
+    const withoutPin = plotHeightPx()
+    document.body.innerHTML = ''
+    renderComponent({ size: tall, pinEnabled: true })
+
+    expect(plotHeightPx()).toBe(withoutPin)
+  })
+})
+
+// jsdom reports a zero-origin rect, so client coordinates are plot coordinates.
+function pressPlot(from: { x: number; y: number }, travelPx: number): void {
+  const canvas = document.querySelector('canvas')!
+  void fireEvent.mouseDown(canvas, { button: 0, clientX: from.x, clientY: from.y })
+  if (travelPx !== 0) {
+    window.dispatchEvent(
+      new MouseEvent('mousemove', { clientX: from.x + travelPx, clientY: from.y })
+    )
+  }
+  window.dispatchEvent(new MouseEvent('mouseup', { clientX: from.x + travelPx, clientY: from.y }))
+}
+
+describe('TimeSeriesGraph — placing the pin by clicking the plot', () => {
+  const clickPlot = (at: { x: number; y: number }): void => pressPlot(at, 0)
+
+  test('a click in the plot pins the sample under the cursor', async () => {
+    const { emitted } = renderComponent({ pinEnabled: true })
+
+    clickPlot({ x: 200, y: 100 })
+
+    await waitFor(() => expect(emitted()).toHaveProperty('pinCreate'))
+    const [payload] = (emitted()['pinCreate'] as Array<[{ time: number }]>)[0]!
+    expect(payload.time).toBeGreaterThanOrEqual(DEFAULT_PROPS.view_time_range.start)
+    expect(payload.time).toBeLessThanOrEqual(DEFAULT_PROPS.view_time_range.end)
+  })
+
+  test('a drag past the threshold zooms instead of pinning', () => {
+    const { emitted } = renderComponent({ pinEnabled: true })
+
+    pressPlot({ x: 200, y: 100 }, 80)
+
+    expect(emitted()).not.toHaveProperty('pinCreate')
+    expect(emitted()).toHaveProperty('zoom')
+  })
+
+  // The hint answers an attempted zoom, which a click at the floor is not.
+  test('a click at maximum zoom pins without reporting a refused zoom', async () => {
+    const { emitted } = renderComponent({ pinEnabled: true, atMinTimeZoom: true })
+
+    clickPlot({ x: 200, y: 100 })
+
+    await waitFor(() => expect(emitted()).toHaveProperty('pinCreate'))
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  test('a drag at maximum zoom still reports the refused zoom', async () => {
+    renderComponent({ pinEnabled: true, atMinTimeZoom: true })
+
+    pressPlot({ x: 200, y: 100 }, 80)
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Maximum zoom reached')
+  })
+
+  test('a graph whose pin is disabled ignores the click', () => {
+    const { emitted } = renderComponent({ pinEnabled: false })
+
+    clickPlot({ x: 200, y: 100 })
+
+    expect(emitted()).not.toHaveProperty('pinCreate')
+  })
+
+  describe('explicit value range', () => {
+    // A range the data (between 1 and 5) can never produce, so any tick reaching it proves the
+    // axis was forced onto the explicit range rather than derived from the data. Symmetric bounds
+    // so d3's ticks land on the endpoints regardless of the chosen step.
+    const EXPLICIT_RANGE = { min: -40, max: 40 }
+
+    // Empty tick texts appear mid-transition; Number('') is 0, not NaN, so they must be
+    // dropped before parsing or they would spuriously pull the min down to zero.
+    function numericTicks(container: Element): number[] {
+      return valueAxisLabels(container)
+        .filter((label) => label.trim() !== '')
+        .map((label) => Number(label))
+        .filter((value) => !Number.isNaN(value))
+    }
+
+    test('forces the value domain onto the explicit range, past the data extent', async () => {
+      const { container } = renderComponent({
+        metrics: [LINE_METRIC],
+        options: {
+          ...DEFAULT_PROPS.options,
+          y_axis: { unit: UNIT, explicit_range: EXPLICIT_RANGE }
+        },
+        valueRange: null
+      })
+
+      // Tick text lands when the d3 axis transition starts, hence the waitFor.
+      await waitFor(() => {
+        const ticks = numericTicks(container)
+        // The data never goes negative nor above 5; only the forced range reaches here.
+        expect(Math.min(...ticks)).toBeLessThan(0)
+        expect(Math.max(...ticks)).toBeGreaterThanOrEqual(40)
+      })
+    })
+
+    test('lets a zoom value range take precedence over the configured explicit range', async () => {
+      const { container } = renderComponent({
+        metrics: [LINE_METRIC],
+        options: {
+          ...DEFAULT_PROPS.options,
+          y_axis: { unit: UNIT, explicit_range: EXPLICIT_RANGE }
+        },
+        // A value-zoom is active: it must win, collapsing the axis back towards [1, 5] - these
+        // are not necessarily the exact bounds of the axis, as they are aligned through the tick
+        // step.
+        valueRange: { min: 1, max: 5 }
+      })
+
+      await waitFor(() => {
+        const ticks = numericTicks(container)
+        expect(ticks.length).toBeGreaterThan(0)
+        // Test for [0, 6] instead of [1, 5] as the y-axis bounds are aligned not forced to the
+        // zoom's value range.
+        expect(Math.min(...ticks)).toBeGreaterThanOrEqual(0)
+        expect(Math.max(...ticks)).toBeLessThanOrEqual(6)
+      })
+    })
+  })
+})
+
+describe('TimeSeriesGraph — keyboard access to the zoom reset', () => {
+  test('a drag zoom hands focus to Reset zoom', async () => {
+    const host = defineComponent({
+      components: { TimeSeriesGraph },
+      setup() {
+        const inspecting = ref(false)
+        return { inspecting, rendererProps: DEFAULT_PROPS }
+      },
+      template: `<TimeSeriesGraph
+        v-bind="rendererProps"
+        :inspecting="inspecting"
+        @zoom="inspecting = true"
+      />`
+    })
+    render(host)
+
+    pressPlot({ x: 200, y: 100 }, 80)
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Reset zoom' })).toHaveFocus())
+  })
+
+  test('Reset zoom is the tab stop right after the plot, ahead of the pan steps', () => {
+    const { container } = renderComponent({ inspecting: true, panEnabled: true })
+
+    const tabStops = Array.from(container.querySelectorAll('canvas[tabindex="0"], button'))
+    const plotIndex = tabStops.indexOf(screen.getByRole('img'))
+    expect(tabStops[plotIndex + 1]).toBe(screen.getByRole('button', { name: 'Reset zoom' }))
+    expect(
+      tabStops.indexOf(screen.getByRole('button', { name: 'Step back in time' }))
+    ).toBeGreaterThan(plotIndex + 1)
+  })
+
+  test('resetting hands focus back to the plot', async () => {
+    renderComponent({ inspecting: true })
+    const resetButton = screen.getByRole('button', { name: 'Reset zoom' })
+    resetButton.focus()
+
+    await fireEvent.click(resetButton)
+
+    expect(screen.getByRole('img')).toHaveFocus()
+  })
+})
+
+describe('TimeSeriesGraph — bars', () => {
+  const HOUR = 3600
+  const TWO_HOURS = { start: 400_000 * HOUR, end: 400_002 * HOUR, step: 60 }
+  const COUNTS: Metric = {
+    ...LINE_METRIC,
+    render: { shape: 'bar', stack: null, aggregation: 'sum', inverse: false, hidden: false }
+  }
+
+  test('draws one filled bar per local hour of the bar metric', () => {
+    const grid = binEdges('hour', TWO_HOURS, getLocalTimeZone())
+    const dataTimeRange = { start: grid[0]!, end: grid.at(-1)!, step: 900 }
+    const values = Array.from({ length: (dataTimeRange.end - dataTimeRange.start) / 900 }, () => 1)
+
+    renderComponent({
+      binUnit: 'hour',
+      view_time_range: TWO_HOURS,
+      data_time_range: dataTimeRange,
+      metrics: [{ ...COUNTS, data_points: values }]
+    })
+
+    expect(filledRects).toHaveLength(grid.length - 1)
+  })
+
+  test('draws no bar while the graph holds no bar metric', () => {
+    renderComponent()
+
+    expect(filledRects).toHaveLength(0)
   })
 })

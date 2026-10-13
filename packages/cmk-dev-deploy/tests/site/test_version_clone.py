@@ -11,8 +11,6 @@ a tmp dir: ``run_as_site_user`` executes commands locally, a fake
 ``delete_state`` is replaced by a recorder (``FakeOmd.state_resets``).
 """
 
-from __future__ import annotations
-
 import dataclasses
 import os
 import stat

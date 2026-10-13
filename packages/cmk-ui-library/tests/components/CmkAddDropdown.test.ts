@@ -7,7 +7,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import CmkAddDropdown from 'cmk-ui-library/components/CmkDropdown/CmkAddDropdown.vue'
 import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, shallowRef } from 'vue'
 
 const OPTIONS: Suggestions = {
   type: 'fixed',
@@ -107,4 +107,25 @@ test('a component id lands on the button, so a label outside can point at it', (
   expect(screen.getByLabelText('Host filter')).toBe(
     screen.getByRole('combobox', { name: 'Add host filter' })
   )
+})
+
+test('exposes focus, putting keyboard focus on the button', () => {
+  const dropdown = shallowRef<{ focus: () => void } | null>(null)
+  render(
+    defineComponent({
+      render() {
+        return h(CmkAddDropdown, {
+          ref: (el) => {
+            dropdown.value = el as { focus: () => void } | null
+          },
+          options: OPTIONS,
+          label: untranslated('Add scope')
+        })
+      }
+    })
+  )
+
+  dropdown.value!.focus()
+
+  expect(screen.getByRole('combobox', { name: 'Add scope' })).toHaveFocus()
 })

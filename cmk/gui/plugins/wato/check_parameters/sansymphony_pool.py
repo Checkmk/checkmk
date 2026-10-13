@@ -3,11 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="type-arg"
-
-from collections.abc import Mapping
-from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.filesystem_utils import FilesystemElements, vs_filesystem
@@ -16,27 +11,15 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Migrate, TextInput
+from cmk.gui.valuespec import Dictionary, TextInput
 
 
-def _migrate_valuespec_sansymphony_pool(params: object) -> Mapping[str, Any]:
-    """Migrate to Checkmk version 2.2"""
-    if isinstance(params, tuple):
-        return {
-            "levels": (float(params[0]), float(params[1])),
-        }
-    return params  # type: ignore[return-value]
-
-
-def _parameter_valuespec_sansymphony_pool() -> Migrate:
-    return Migrate(
-        valuespec=vs_filesystem(
-            elements=[
-                FilesystemElements.levels_percent,
-                FilesystemElements.magic_factor,
-            ]
-        ),
-        migrate=_migrate_valuespec_sansymphony_pool,
+def _parameter_valuespec_sansymphony_pool() -> Dictionary:
+    return vs_filesystem(
+        elements=[
+            FilesystemElements.levels_percent,
+            FilesystemElements.magic_factor,
+        ]
     )
 
 

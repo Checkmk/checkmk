@@ -28,7 +28,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.userdb import (
     connections_by_type,
@@ -37,12 +37,15 @@ from cmk.gui.userdb import (
     get_user_attributes,
     UserAttribute,
 )
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.selection_id import SelectionId
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import CascadingDropdown, Dictionary, ListChoice
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.flashed_messages import flash
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeuri_contextless
 
 
@@ -181,7 +184,7 @@ class ModeUserMigrate(WatoMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return None
@@ -270,7 +273,8 @@ class ModeUserMigrate(WatoMode):
         users_with_warning: list[str] = []
         users_migrated: list[str] = []
         all_users = userdb.load_users()
-        for username in _get_selected_users():
+        selected_users = _get_selected_users()
+        for username in selected_users:
             user_id = UserId(username)
             if username not in all_users:
                 users_with_warning.append(username)
@@ -300,6 +304,7 @@ class ModeUserMigrate(WatoMode):
             now=datetime.now(),
             pprint_value=pprint_value,
             call_users_saved_hook=True,
+            changed_users=[UserId(name) for name in selected_users],
         )
 
         return users_with_warning, users_migrated

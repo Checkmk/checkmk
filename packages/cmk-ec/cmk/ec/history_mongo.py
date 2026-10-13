@@ -45,7 +45,7 @@ class MongoDBHistory(History):
         config: Config,
         logger: Logger,
         event_columns: Columns,
-        history_columns: Columns,
+        history_columns: Columns,  # noqa: ARG002
     ) -> None:
         self._settings = settings
         self._config = config

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import io
 import threading
@@ -33,35 +31,39 @@ from cmk.gui.search._engines._redis import (
     IndexNotFoundException,
     IndexSearcher,
     RedisSearchEngine,
+    SearchIndexBackgroundJobArgs,
 )
 from cmk.gui.search.index import _UpdateRequests
 from cmk.gui.search.matchers import (
     ABCMatchItemGenerator,
     MatchItem,
+    MatchItemConfig,
     MatchItemGeneratorRegistry,
     MatchItems,
 )
 from cmk.gui.search.permissions import SearchPermissionsHandler, VisibilityCheck
 from cmk.gui.session_context import _UserContext
 from cmk.gui.type_defs import SearchResult
-from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.wato._omd_configuration import (
     ConfigDomainApache,
     ConfigDomainDiskspace,
     ConfigDomainRRDCached,
 )
-from cmk.gui.watolib.config_domains import ConfigDomainOMD
+from cmk.gui.watolib.config_domains import _core_config_default_globals, ConfigDomainOMD
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.shared_typing.unified_search import ProviderName
+
+_MATCH_ITEM_CONFIG = MatchItemConfig.from_config(Config())
 
 
 class _FakePermissionsHandler:
     """Always-permit stand-in for the real, GUI-coupled `PermissionsHandler`."""
 
-    def may_see_category(self, category: str) -> bool:
+    def may_see_category(self, category: str) -> bool:  # noqa: ARG002
         return True
 
-    def get_visibility_check(self, category: str) -> VisibilityCheck:
+    def get_visibility_check(self, category: str) -> VisibilityCheck:  # noqa: ARG002
         return lambda _url: True
 
 
@@ -70,7 +72,7 @@ def fake_omd_default_globals(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         ConfigDomainOMD,
         "default_globals",
-        lambda s: {
+        lambda s: {  # noqa: ARG005
             "site_admin_mail": "",
             "site_apache_mode": "own",
             "site_apache_tcp_addr": "127.0.0.1",
@@ -100,7 +102,7 @@ def fake_diskspace_default_globals(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         ConfigDomainDiskspace,
         "default_globals",
-        lambda s: {
+        lambda s: {  # noqa: ARG005
             "diskspace_cleanup": {"cleanup_abandoned_host_files": 2592000},
         },
     )
@@ -111,7 +113,7 @@ def fake_apache_default_globals(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         ConfigDomainApache,
         "default_globals",
-        lambda s: {"apache_process_tuning": {"number_of_processes": 64}},
+        lambda s: {"apache_process_tuning": {"number_of_processes": 64}},  # noqa: ARG005
     )
 
 
@@ -120,7 +122,7 @@ def fake_rrdcached_default_globals(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         ConfigDomainRRDCached,
         "default_globals",
-        lambda s: {
+        lambda s: {  # noqa: ARG005
             "rrdcached_tuning": {
                 "TIMEOUT": 3600,
                 "RANDOM_DELAY": 1800,
@@ -149,7 +151,9 @@ class MatchItemGeneratorLocDep(ABCMatchItemGenerator):
     )
 
     @override
-    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
+    def generate_match_items(
+        self, user_permissions: UserPermissions, _config: MatchItemConfig
+    ) -> MatchItems:
         yield self.match_item
 
     @staticmethod
@@ -172,7 +176,9 @@ class MatchItemGeneratorChangeDep(ABCMatchItemGenerator):
     )
 
     @override
-    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
+    def generate_match_items(
+        self, user_permissions: UserPermissions, _config: MatchItemConfig
+    ) -> MatchItems:
         yield self.match_item
 
     @staticmethod
@@ -186,10 +192,10 @@ class MatchItemGeneratorChangeDep(ABCMatchItemGenerator):
         return False
 
 
-@pytest.fixture(name="get_languages", scope="function", autouse=True)
+@pytest.fixture(name="get_languages", scope="function", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def fixture_get_languages(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
-        cmk.gui.search._engines._redis,
+        cmk.gui.search._engines._redis,  # noqa: SLF001
         "get_languages",
         lambda: [
             ("en", "English"),
@@ -211,7 +217,7 @@ def fixture_match_item_generator_registry() -> MatchItemGeneratorRegistry:
 
 
 @pytest.fixture(name="clean_redis_client")
-def fixture_clean_redis_client() -> "Redis":
+def fixture_clean_redis_client() -> Redis:
     client = FakeRedis(decode_responses=True)
     client.flushall()
     return client
@@ -220,7 +226,7 @@ def fixture_clean_redis_client() -> "Redis":
 @pytest.fixture(name="index_builder")
 def fixture_index_builder(
     match_item_generator_registry: MatchItemGeneratorRegistry,
-    clean_redis_client: "Redis",
+    clean_redis_client: Redis,
 ) -> IndexBuilder:
     return IndexBuilder(match_item_generator_registry, clean_redis_client)
 
@@ -238,20 +244,46 @@ def fixture_permissions_handler() -> SearchPermissionsHandler:
 @pytest.fixture(name="index_searcher")
 def fixture_index_searcher(
     config: Config,
-    clean_redis_client: "Redis",
+    clean_redis_client: Redis,
     permissions_handler: SearchPermissionsHandler,
 ) -> IndexSearcher:
     return IndexSearcher(config, clean_redis_client, permissions_handler)
+
+
+def test_the_job_args_carry_the_match_item_config_to_the_job() -> None:
+    """The job gets its args serialized, as the job scheduler hands them over."""
+    config = Config(
+        wato_hide_folders_without_read_permissions=True,
+        wato_host_attrs=[
+            {
+                "name": "attr",
+                "title": "Attribute",
+                "type": "TextAscii",
+                "help": "",
+                "topic": "basic",
+                "show_in_table": False,
+                "add_custom_macro": False,
+            }
+        ],
+    )
+    args = SearchIndexBackgroundJobArgs(
+        user_permission_config=UserPermissionSerializableConfig.from_global_config(config),
+        match_item_config=MatchItemConfig.from_config(config),
+    )
+
+    assert SearchIndexBackgroundJobArgs.model_validate(args.model_dump(mode="json")) == args
 
 
 class TestIndexBuilder:
     @pytest.mark.usefixtures("with_admin_login")
     def test_update_only_not_built(
         self,
-        clean_redis_client: "Redis",
+        clean_redis_client: Redis,
         index_builder: IndexBuilder,
     ) -> None:
-        index_builder.build_changed_sub_indices(["something"], UserPermissions({}, {}, {}, []))
+        index_builder.build_changed_sub_indices(
+            ["something"], UserPermissions({}, {}, {}, []), _MATCH_ITEM_CONFIG
+        )
         assert not index_builder.index_is_built(clean_redis_client)
 
     @pytest.mark.usefixtures("with_admin_login")
@@ -262,26 +294,26 @@ class TestIndexBuilder:
     ) -> None:
         current_lang = "en"
 
-        def localize_with_memory(lang):
+        def localize_with_memory(lang: str) -> None:
             """Needed to remember currently set language"""
             nonlocal current_lang
             current_lang = lang
             localize(lang)
 
         monkeypatch.setattr(
-            cmk.gui.search._engines._redis,
+            cmk.gui.search._engines._redis,  # noqa: SLF001
             "localize",
             localize_with_memory,
         )
         monkeypatch.setattr(
-            cmk.gui.search._engines._redis,
+            cmk.gui.search._engines._redis,  # noqa: SLF001
             "get_current_language",
             lambda: current_lang,
         )
 
         start_lang = "en"
         localize_with_memory(start_lang)
-        index_builder.build_full_index(UserPermissions({}, {}, {}, []))
+        index_builder.build_full_index(UserPermissions({}, {}, {}, []), _MATCH_ITEM_CONFIG)
         assert current_lang == start_lang
 
 
@@ -292,7 +324,7 @@ class TestIndexBuilderAndSearcher:
         index_builder: IndexBuilder,
         index_searcher: IndexSearcher,
     ) -> None:
-        index_builder.build_full_index(UserPermissions({}, {}, {}, []))
+        index_builder.build_full_index(UserPermissions({}, {}, {}, []), _MATCH_ITEM_CONFIG)
         assert self._evaluate_search_results_by_topic(index_searcher.search("**")) == [
             ("Change-dependent", [SearchResult(title="change_dependent", url="")]),
             ("Localization-dependent", [SearchResult(title="localization_dependent", url="")]),
@@ -304,8 +336,10 @@ class TestIndexBuilderAndSearcher:
         index_builder: IndexBuilder,
         index_searcher: IndexSearcher,
     ) -> None:
-        index_builder._mark_index_as_built()
-        index_builder.build_changed_sub_indices(["something"], UserPermissions({}, {}, {}, []))
+        index_builder._mark_index_as_built()  # noqa: SLF001
+        index_builder.build_changed_sub_indices(
+            ["something"], UserPermissions({}, {}, {}, []), _MATCH_ITEM_CONFIG
+        )
         assert not self._evaluate_search_results_by_topic(index_searcher.search("**"))
 
     @pytest.mark.usefixtures("with_admin_login")
@@ -314,9 +348,9 @@ class TestIndexBuilderAndSearcher:
         index_builder: IndexBuilder,
         index_searcher: IndexSearcher,
     ) -> None:
-        index_builder._mark_index_as_built()
+        index_builder._mark_index_as_built()  # noqa: SLF001
         index_builder.build_changed_sub_indices(
-            ["some_change_dependent_whatever"], UserPermissions({}, {}, {}, [])
+            ["some_change_dependent_whatever"], UserPermissions({}, {}, {}, []), _MATCH_ITEM_CONFIG
         )
         assert self._evaluate_search_results_by_topic(index_searcher.search("**")) == [
             ("Change-dependent", [SearchResult(title="change_dependent", url="")]),
@@ -334,10 +368,12 @@ class TestIndexBuilderAndSearcher:
         Test if things can also be deleted from the index during an update
         """
 
-        def empty_match_item_gen(user_permissions: UserPermissions):
+        def empty_match_item_gen(
+            _user_permissions: UserPermissions, _config: MatchItemConfig
+        ) -> Iterator[MatchItem]:
             yield from ()
 
-        index_builder.build_full_index(UserPermissions({}, {}, {}, []))
+        index_builder.build_full_index(UserPermissions({}, {}, {}, []), _MATCH_ITEM_CONFIG)
 
         monkeypatch.setattr(
             match_item_generator_registry["change_dependent"],
@@ -346,7 +382,7 @@ class TestIndexBuilderAndSearcher:
         )
 
         index_builder.build_changed_sub_indices(
-            ["some_change_dependent_whatever"], UserPermissions({}, {}, {}, [])
+            ["some_change_dependent_whatever"], UserPermissions({}, {}, {}, []), _MATCH_ITEM_CONFIG
         )
         assert self._evaluate_search_results_by_topic(index_searcher.search("**")) == [
             ("Localization-dependent", [SearchResult(title="localization_dependent", url="")]),
@@ -367,12 +403,12 @@ class TestIndexSearcher:
     def test_search_no_index(
         self,
         config: Config,
-        clean_redis_client: "Redis",
+        clean_redis_client: Redis,
         permissions_handler: SearchPermissionsHandler,
         mocker: MockerFixture,
     ) -> None:
         get_config = mocker.patch(
-            "cmk.gui.wato.pages.global_settings.ABCConfigDomain.get_all_default_globals"
+            "cmk.gui.global_settings.search.ABCConfigDomain.get_all_default_globals"
         )
 
         with pytest.raises(IndexNotFoundException):
@@ -386,7 +422,7 @@ class TestIndexSearcher:
             return True
 
         assert list(
-            IndexSearcher._sort_search_results(
+            IndexSearcher._sort_search_results(  # noqa: SLF001
                 {
                     "Hosts": [
                         _SearchResultWithVisibilityCheck(
@@ -472,14 +508,17 @@ class TestIndexSearcher:
 class TestRealisticSearch:
     @staticmethod
     @pytest.fixture()
-    def suppress_get_configuration_automation_call(monkeypatch: MonkeyPatch) -> None:
+    def suppress_get_configuration_automation_call(monkeypatch: MonkeyPatch) -> Iterator[None]:
         monkeypatch.setattr(
-            "cmk.gui.watolib.check_mk_automations.get_configuration",
-            lambda *args, **kwargs: GetConfigurationResult({}),
+            "cmk.gui.watolib.config_domains.get_configuration",
+            lambda *args, **kwargs: GetConfigurationResult({}),  # noqa: ARG005
         )
+        _core_config_default_globals.cache_clear()
+        yield
+        _core_config_default_globals.cache_clear()
 
     @pytest.fixture()
-    def real_index_builder(self, clean_redis_client: "Redis") -> IndexBuilder:
+    def real_index_builder(self, clean_redis_client: Redis) -> IndexBuilder:
         from cmk.gui.search.matchers import match_item_generator_registry
 
         return IndexBuilder(match_item_generator_registry, clean_redis_client)
@@ -495,10 +534,10 @@ class TestRealisticSearch:
     def test_real_search_without_exception(
         self,
         real_index_builder: IndexBuilder,
-        clean_redis_client: "Redis",
+        clean_redis_client: Redis,
         index_searcher: IndexSearcher,
     ) -> None:
-        real_index_builder.build_full_index(UserPermissions({}, {}, {}, []))
+        real_index_builder.build_full_index(UserPermissions({}, {}, {}, []), _MATCH_ITEM_CONFIG)
         assert IndexBuilder.index_is_built(clean_redis_client)
         assert len(list(index_searcher.search("Host"))) > 4
 
@@ -527,7 +566,7 @@ class TestRealisticSearch:
         We test that the index is always built as a super user.
         """
         with _UserContext(LoggedInNobody()):
-            real_index_builder.build_full_index(UserPermissions({}, {}, {}, []))
+            real_index_builder.build_full_index(UserPermissions({}, {}, {}, []), _MATCH_ITEM_CONFIG)
 
         # if the search index did not internally use the super user while building, this item would
         # be missing, because the match item generator for the setup menu only yields entries which
@@ -558,13 +597,13 @@ class TestRealisticSearch:
             yield
 
         monkeypatch.setattr(
-            cmk.gui.search._engines._redis,
+            cmk.gui.search._engines._redis,  # noqa: SLF001
             "SuperUserContext",
             SuperUserContext,
         )
 
         with _UserContext(LoggedInNobody()):
-            real_index_builder.build_full_index(UserPermissions({}, {}, {}, []))
+            real_index_builder.build_full_index(UserPermissions({}, {}, {}, []), _MATCH_ITEM_CONFIG)
 
         assert not list(index_searcher.search("custom host attributes"))
 
@@ -572,10 +611,10 @@ class TestRealisticSearch:
 class _DenyAllPermissionsHandler:
     """Stand-in for a user who may not see any search category."""
 
-    def may_see_category(self, category: str) -> bool:
+    def may_see_category(self, category: str) -> bool:  # noqa: ARG002
         return False
 
-    def get_visibility_check(self, category: str) -> VisibilityCheck:
+    def get_visibility_check(self, category: str) -> VisibilityCheck:  # noqa: ARG002
         return lambda _url: True
 
 
@@ -616,7 +655,7 @@ def fixture_patched_registry(
 ) -> MatchItemGeneratorRegistry:
     """The module level functions and RedisSearchEngine read the global registry."""
     monkeypatch.setattr(
-        cmk.gui.search._engines._redis,
+        cmk.gui.search._engines._redis,  # noqa: SLF001
         "match_item_generator_registry",
         match_item_generator_registry,
     )
@@ -625,10 +664,12 @@ def fixture_patched_registry(
 
 class TestIndexSearcherConstruction:
     def test_an_unreachable_redis_server_is_reported(
-        self, config: Config, clean_redis_client: "Redis", monkeypatch: MonkeyPatch
+        self, config: Config, clean_redis_client: Redis, monkeypatch: MonkeyPatch
     ) -> None:
         monkeypatch.setattr(
-            cmk.gui.search._engines._redis, "redis_server_reachable", lambda _client: False
+            cmk.gui.search._engines._redis,  # noqa: SLF001
+            "redis_server_reachable",
+            lambda _client: False,
         )
 
         with pytest.raises(RuntimeError, match="not reachable"):
@@ -639,7 +680,7 @@ class TestSearchCategoryFiltering:
     @pytest.fixture(name="built_index")
     @staticmethod
     def fixture_built_index(index_builder: IndexBuilder) -> None:
-        index_builder.build_full_index(UserPermissions({}, {}, {}, []))
+        index_builder.build_full_index(UserPermissions({}, {}, {}, []), _MATCH_ITEM_CONFIG)
 
     @pytest.mark.usefixtures("with_admin_login", "built_index")
     def test_categories_outside_the_allowed_set_are_not_searched(
@@ -651,7 +692,7 @@ class TestSearchCategoryFiltering:
 
     @pytest.mark.usefixtures("with_admin_login", "built_index")
     def test_a_category_the_user_may_not_see_is_not_searched(
-        self, config: Config, clean_redis_client: "Redis", index_searcher: IndexSearcher
+        self, config: Config, clean_redis_client: Redis, index_searcher: IndexSearcher
     ) -> None:
         assert list(index_searcher.search("**")) != []
         searcher = IndexSearcher(config, clean_redis_client, _DenyAllPermissionsHandler())
@@ -666,13 +707,14 @@ class TestProcessUpdateRequests:
 
     @pytest.mark.usefixtures("with_admin_login", "patched_registry")
     def test_a_rebuild_request_builds_the_whole_index(
-        self, job_interface: _JobInterface, clean_redis_client: "Redis"
+        self, job_interface: _JobInterface, clean_redis_client: Redis
     ) -> None:
         _process_update_requests(
             self._requests(rebuild=True),
             job_interface.interface,
             clean_redis_client,
             UserPermissions({}, {}, {}, []),
+            _MATCH_ITEM_CONFIG,
         )
 
         assert IndexBuilder.index_is_built(clean_redis_client)
@@ -680,7 +722,7 @@ class TestProcessUpdateRequests:
 
     @pytest.mark.usefixtures("with_admin_login", "patched_registry")
     def test_a_missing_index_is_built_from_scratch(
-        self, job_interface: _JobInterface, clean_redis_client: "Redis"
+        self, job_interface: _JobInterface, clean_redis_client: Redis
     ) -> None:
         # An update request can only be answered against an existing index, so the job
         # falls back to a full build instead of silently doing nothing.
@@ -689,6 +731,7 @@ class TestProcessUpdateRequests:
             job_interface.interface,
             clean_redis_client,
             UserPermissions({}, {}, {}, []),
+            _MATCH_ITEM_CONFIG,
         )
 
         assert "re-building from scratch" in job_interface.progress
@@ -699,15 +742,16 @@ class TestProcessUpdateRequests:
         self,
         job_interface: _JobInterface,
         index_builder: IndexBuilder,
-        clean_redis_client: "Redis",
+        clean_redis_client: Redis,
     ) -> None:
-        index_builder.build_full_index(UserPermissions({}, {}, {}, []))
+        index_builder.build_full_index(UserPermissions({}, {}, {}, []), _MATCH_ITEM_CONFIG)
 
         _process_update_requests(
             self._requests(rebuild=False, change_actions=["change_dependent"]),
             job_interface.interface,
             clean_redis_client,
             UserPermissions({}, {}, {}, []),
+            _MATCH_ITEM_CONFIG,
         )
 
         assert "Updating of search index started" in job_interface.progress
@@ -719,7 +763,7 @@ class TestRedisSearchEngine:
     @staticmethod
     def fixture_engine(
         config: Config,
-        clean_redis_client: "Redis",
+        clean_redis_client: Redis,
         permissions_handler: SearchPermissionsHandler,
     ) -> RedisSearchEngine:
         return RedisSearchEngine(
@@ -732,7 +776,7 @@ class TestRedisSearchEngine:
     def test_a_match_is_reported_with_the_provider_of_its_category(
         self, engine: RedisSearchEngine, index_builder: IndexBuilder
     ) -> None:
-        index_builder.build_full_index(UserPermissions({}, {}, {}, []))
+        index_builder.build_full_index(UserPermissions({}, {}, {}, []), _MATCH_ITEM_CONFIG)
 
         results = list(engine.search("change_dependent", provider=ProviderName.setup))
 
@@ -746,6 +790,6 @@ class TestRedisSearchEngine:
     ) -> None:
         # Both registered generators belong to the setup provider, so a customize
         # search must come back empty rather than leaking setup results.
-        index_builder.build_full_index(UserPermissions({}, {}, {}, []))
+        index_builder.build_full_index(UserPermissions({}, {}, {}, []), _MATCH_ITEM_CONFIG)
 
         assert list(engine.search("change_dependent", provider=ProviderName.customize)) == []

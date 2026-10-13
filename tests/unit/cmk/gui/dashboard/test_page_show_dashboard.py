@@ -10,6 +10,7 @@ from cmk.gui.dashboard import page_show_dashboard
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
+    ActivationContext,
     ConfigDomainName,
     ConfigDomainRegistry,
     SerializedSettings,
@@ -45,7 +46,9 @@ class _FakeNetworkFlowDomain(ABCConfigDomain):
         return []
 
     @override
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+    def activate(
+        self, settings: SerializedSettings | None = None, *, ctx: ActivationContext
+    ) -> ConfigurationWarnings:
         return []
 
 
@@ -57,14 +60,14 @@ def _registry_with(domain: ABCConfigDomain | None) -> ConfigDomainRegistry:
 
 
 def test_network_flow_active_no_domain() -> None:
-    assert page_show_dashboard._network_flow_active(_registry_with(None)) is False
+    assert page_show_dashboard._network_flow_active(_registry_with(None)) is False  # noqa: SLF001
 
 
 def test_network_flow_active_enabled() -> None:
     registry = _registry_with(_FakeNetworkFlowDomain(("enabled", {})))
-    assert page_show_dashboard._network_flow_active(registry) is True
+    assert page_show_dashboard._network_flow_active(registry) is True  # noqa: SLF001
 
 
 def test_network_flow_active_disabled() -> None:
     registry = _registry_with(_FakeNetworkFlowDomain(("disabled", None)))
-    assert page_show_dashboard._network_flow_active(registry) is False
+    assert page_show_dashboard._network_flow_active(registry) is False  # noqa: SLF001

@@ -35,10 +35,9 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageContext
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.confirm_links import make_confirm_delete_link
-from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -55,7 +54,7 @@ from cmk.gui.watolib.groups_io import (
     load_host_group_information,
     load_service_group_information,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_folder_tree
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
@@ -64,7 +63,11 @@ from cmk.gui.watolib.pending_changes import (
 )
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.livestatus_client import SiteConfigurations
+from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.csrf_token import check_csrf_token
 from cmk.web.utils.html import HTML
+from cmk.web.utils.icons import IconNames, StaticIcon
+from cmk.web.utils.permission_verification import PermissionName
 from cmk.web.utils.urls import makeactionuri, makeuri
 
 
@@ -161,7 +164,8 @@ class ModeGroups(WatoMode, abc.ABC):
 
         if request.var("_delete"):
             delname = request.get_ascii_input_mandatory("_delete")
-            usages = groups.find_usages_of_group(delname, self.type_name)
+            tree = make_folder_tree(config)
+            usages = groups.find_usages_of_group(tree, delname, self.type_name)
 
             if usages:
                 message = "<b>{}</b><br>{}:<ul>".format(
@@ -177,6 +181,7 @@ class ModeGroups(WatoMode, abc.ABC):
             groups.delete_group(
                 delname,
                 self.type_name,
+                tree=tree,
                 pprint_value=config.wato_pprint_config,
                 pending_changes=_pending_changes(
                     config.sites,
@@ -200,7 +205,12 @@ class ModeGroups(WatoMode, abc.ABC):
         pass
 
     def _show_row_cells(
-        self, nr: int, table: Table, name: GroupName, group: GroupSpec, config: Config
+        self,
+        nr: int,
+        table: Table,
+        name: GroupName,
+        group: GroupSpec,
+        config: Config,  # noqa: ARG002
     ) -> None:
         table.cell("#", css=["narrow nowrap"])
         html.write_text_permissive(nr)
@@ -211,6 +221,7 @@ class ModeGroups(WatoMode, abc.ABC):
             [("mode", "edit_%s_group" % self.type_name), ("edit", name)],
         )
         delete_url = make_confirm_delete_link(
+            i18n=_,
             url=makeactionuri(request, transactions.get(), [("_delete", name)]),
             title=_("Delete %(type_name)s group #%(nr)d") % {"type_name": self.type_name, "nr": nr},
             suffix=group["alias"],
@@ -291,7 +302,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
 
     @override
     def action(self, config: Config) -> ActionResult:
-        check_csrf_token()
+        check_csrf_token(session, request, i18n=_)
 
         if not transactions.check_transaction(request):
             return redirect(mode_url("%s_groups" % self.type_name))

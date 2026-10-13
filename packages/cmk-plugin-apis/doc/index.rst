@@ -17,7 +17,7 @@ Plugin location and loading
 Most of the plugin APIs (Agent based, Ruleset, Server-side calls, Graphing and Bakery API) share the same logic when it comes to location and loading of the plugins.
 This section will cover those APIs.
 
-The shipped plugins are located under the ``~/lib/python3.13/site-packages/cmk/plugins`` folder, while local third party plugins are placed under the ``~/local/lib/python3/cmk_addons/plugins`` folder in the site.
+The shipped plugins are located under the ``~/lib/python3.XY/site-packages/cmk/plugins`` folder, while local third party plugins are placed under the ``~/local/lib/python3/cmk_addons/plugins`` folder in the site.
 As a general rule, code `should` reside below ``cmk`` if and only if it is supplied by Checkmk (but that's not always the case yet).
 
 If you want to override the behavior of existing plugins, you can put code under ``~/local/lib/python3/cmk/plugins``.
@@ -37,6 +37,12 @@ Below the family folder, plugins are categorized into plugin groups:
    * man pages are found in ``checkman``
    * executables (to be run by the code, for instance) go into ``libexec``
    * inventory UI plugins are located under the ``inventory_ui`` folder
+   * support diagnostics plugins under the ``diagnostics`` folder
+   * post-rename-site actions under the ``post_rename_site`` folder
+   * license usage counters under the ``licensing`` folder
+   * DCD connectors and their parameters under the ``dcd_connectors`` and ``dcd_connector_parameters`` folders
+   * commands of the ``cmk`` command line under the ``cli`` folder
+   * automations, the actions the backend performs on request, under the ``automations`` folder
 
 In order for Checkmk to load your plugin, you have to follow the folder structure described above.
 Checkmk will load an agent based plugin only if it's located under ``~/local/lib/python3/cmk/plugins/{family_name}/agent_based`` or ``~/local/lib/python3/cmk_addons/plugins/{family_name}/agent_based`` folder.
@@ -71,6 +77,28 @@ This helps catch potential issues early and ensures your code adheres to the exp
 **Important:** The behavior for code that violates the type annotations is unspecified and may change without warning.
 While the type annotations document the expected types, runtime behavior when passing incorrect types is not guaranteed to be stable across versions.
 
+API stability and the road to Checkmk 3.0
+=========================================
+
+The plugin APIs newly declared stable with Checkmk 3.0 are:
+
+   * ``cmk.bakery.v2`` (formerly ``cmk.bakery.v2_unstable``)
+   * ``cmk.inventory_ui.v1`` (formerly ``cmk.inventory_ui.v1_unstable``)
+   * ``cmk.password_store.v1`` (formerly ``cmk.password_store.v1_unstable``)
+   * ``cmk.server_side_programs.v1`` (formerly ``cmk.server_side_programs.v1_unstable``)
+
+.. warning::
+   Checkmk 3.0 is not released yet.
+   Until it is, these APIs may still change.
+   The stability guarantee only takes effect with the 3.0 release.
+
+The former ``*_unstable`` namespaces continue to work as aliases, so plug-ins written
+against Checkmk 2.5 keep running without modification.
+**These aliases will be removed in Checkmk 3.1.**
+Migrating is a matter of replacing the module path in your imports, for example
+``from cmk.bakery.v2_unstable import BakeryPlugin`` becomes
+``from cmk.bakery.v2 import BakeryPlugin``.
+
 "Internal" and "unstable" APIs
 ==============================
 
@@ -81,6 +109,7 @@ They might change without prior notice.
 
 "Unstable" APIs are still in an experimental state, but they are built with the intention of becoming the next version of a regular API in the future.
 Third party developers are encouraged to try them out and provide feedback.
+They are not documented here.
 
 The "internal" APIs are used by plugins maintained by Checkmk, but they are not intended for use by third party developers.
 Their contents may or may not become part of a future regular API.
@@ -128,8 +157,8 @@ For example, ``cmk/plugins/fritzbox`` has an ``__init__.py`` file, which makes t
 .. code-block:: text
 
    # Shipped plugins:
-   ~/lib/python3.13/site-packages/cmk/plugins/fritzbox/__init__.py
-   ~/lib/python3.13/site-packages/cmk/plugins/fritzbox/agent_based/device.py
+   ~/lib/python3.XY/site-packages/cmk/plugins/fritzbox/__init__.py
+   ~/lib/python3.XY/site-packages/cmk/plugins/fritzbox/agent_based/device.py
 
    # Your local override (correct):
    ~/local/lib/python3/cmk/plugins/fritzbox/__init__.py
@@ -159,8 +188,8 @@ Other plugin families, particularly the ``collection`` family (which contains pl
 .. code-block:: text
 
    # Shipped plugins:
-   ~/lib/python3.13/site-packages/cmk/plugins/collection/agent_based/plugin_a.py
-   ~/lib/python3.13/site-packages/cmk/plugins/collection/agent_based/plugin_b.py
+   ~/lib/python3.XY/site-packages/cmk/plugins/collection/agent_based/plugin_a.py
+   ~/lib/python3.XY/site-packages/cmk/plugins/collection/agent_based/plugin_b.py
    
    # Your local override:
    ~/local/lib/python3/cmk/plugins/collection/agent_based/plugin_a.py

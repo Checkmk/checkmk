@@ -97,8 +97,8 @@ agent_section_kube_pvc_pvs_v1 = AgentSection(
 
 def discovery_kube_pvc(
     section_kube_pvc: PersistentVolumeClaims | None,
-    section_kube_pvc_volumes: PersistentVolumeClaimAttachedVolumes | None,
-    section_kube_pvc_pvs: AttachedPersistentVolumes | None,
+    section_kube_pvc_volumes: PersistentVolumeClaimAttachedVolumes | None,  # noqa: ARG001
+    section_kube_pvc_pvs: AttachedPersistentVolumes | None,  # noqa: ARG001
 ) -> DiscoveryResult:
     if section_kube_pvc is None:
         return

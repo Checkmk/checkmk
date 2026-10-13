@@ -17,8 +17,8 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
-    DomainObjectModel,
     LinkModel,
+    TitledDomainObjectModel,
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.pagetypes._core import PagetypeTopics
@@ -40,14 +40,14 @@ class PagetypeTopicExtensions:
 
 
 @api_model
-class PagetypeTopicModel(DomainObjectModel):
-    domainType: Literal["pagetype_topic"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
-    id: str = api_field(  # type: ignore[mutable-override]
+class PagetypeTopicModel(TitledDomainObjectModel):
+    domainType: Literal["pagetype_topic"] = api_field(description="The domain type of the object.")
+    id: str = api_field(
         title="ID",
         description="The unique identifier for this topic.",
         example="other",
     )
-    title: str = api_field(  # type: ignore[mutable-override]
+    title: str = api_field(
         title="Title",
         description="A human readable title of this object. Can be used for user interfaces.",
         example="Other",
@@ -59,7 +59,7 @@ class PagetypeTopicModel(DomainObjectModel):
 
 @api_model
 class PagetypeTopicCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["pagetype_topic"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["pagetype_topic"] = api_field(
         description="The domain type of the objects in the collection."
     )
     value: list[PagetypeTopicModel] = api_field(description="The list of pagetype topics.")

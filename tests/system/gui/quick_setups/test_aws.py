@@ -2,6 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import logging
 import re
 from collections.abc import Iterator
@@ -10,7 +11,7 @@ from pathlib import Path
 import pytest
 from playwright.sync_api import expect
 
-import cmk.plugins.aws.special_agent.agent_aws
+import cmk.plugins.aws_deprecated.special_agent.agent_aws
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.system.gui.testlib.playwright.pom.setup.cloud_quick_setups import (
     AWSAddNewConfiguration,
@@ -23,7 +24,7 @@ from tests.system.gui.testlib.playwright.pom.setup.passwords import Passwords
 from tests.system.gui.testlib.playwright.pom.setup.ruleset import Ruleset
 from tests.system.gui.testlib.playwright.timeouts import ANIMATION_TIMEOUT
 from tests.testlib.common.utils2 import is_cleanup_enabled, run
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 from .get_source_file import get_source_file
 
@@ -38,7 +39,7 @@ def fixture_fake_aws_dump(test_site: Site) -> Iterator[None]:
     Faking the AWS agent bypasses such validations, which are 'out-of-scope' of UI tests.
     """
     fake_agent_aws = Path(__file__).parent / "fake_agent_aws.py"
-    aws_agent = get_source_file(test_site, cmk.plugins.aws.special_agent.agent_aws)
+    aws_agent = get_source_file(test_site, cmk.plugins.aws_deprecated.special_agent.agent_aws)
     backup_agent = str(aws_agent).replace(".py", ".py.bck")
     run(["cp", str(aws_agent), backup_agent], sudo=True)
     run(["cp", str(fake_agent_aws), str(aws_agent)], sudo=True)
@@ -50,7 +51,9 @@ def fixture_fake_aws_dump(test_site: Site) -> Iterator[None]:
 
 @pytest.fixture(name="aws_qs_config_page")
 def fixture_aws_qs_config_page(
-    fake_aws_dump: None, dashboard_page: MainDashboard, test_site: Site
+    fake_aws_dump: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    dashboard_page: MainDashboard,
+    test_site: Site,
 ) -> Iterator[AWSAddNewConfiguration]:
     """Navigate to the AWS Quick setup page and add new configuration page"""
     configuration_name = "my_aws_account"
@@ -141,7 +144,7 @@ def test_minimal_configuration(aws_qs_config_page: AWSAddNewConfiguration, test_
 
     logger.info("Validate AWS rule is setup.")
     list_aws_rules_page = Ruleset(
-        list_hosts_page.page, "Amazon Web Services (AWS)", "VM, cloud, container", exact_rule=True
+        list_hosts_page.page, "Amazon Web Services (AWS)", "special_agents:aws"
     )
     expect(
         list_aws_rules_page.rule_source(rule_id=0),

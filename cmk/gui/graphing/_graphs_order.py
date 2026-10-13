@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
+from ._from_api import GraphFromAPI
+
 # Graph order from 2.2 but slightly adapted
 GRAPHS_ORDER = [
     "apache_status",
@@ -33,7 +37,6 @@ GRAPHS_ORDER = [
     "livestatus_usage",
     "helper_usage",
     "average_helper_latency",
-    "helper_usage_cmk",
     "helper_usage_fetcher",
     "helper_usage_checker",
     "helper_usage_generic",
@@ -94,7 +97,6 @@ GRAPHS_ORDER = [
     "docker_df_count",
     "shards_allocation",
     "active_shards",
-    "fan_speed",
     "battery_currents",
     "battery_capacity",
     "optical_signal_power",
@@ -401,7 +403,6 @@ GRAPHS_ORDER = [
     "non-heap_memory_usage",
     "private_and_shared_memory",
     "harddrive_health_statistic",
-    "mem_perm_used",
     "datafile_sizes",
     "files_notification_spool",
     "used_space",
@@ -421,3 +422,15 @@ GRAPHS_ORDER = [
     "azure_redis_evicted_keys",
     "azure_redis_expired_keys",
 ]
+
+
+def sort_registered_graph_plugins(
+    registered_graphs: Mapping[str, GraphFromAPI],
+) -> list[tuple[str, GraphFromAPI]]:
+    def _by_index(graph_name: str) -> int:
+        try:
+            return GRAPHS_ORDER.index(graph_name)
+        except ValueError:
+            return -1
+
+    return sorted(registered_graphs.items(), key=lambda t: _by_index(t[0]))

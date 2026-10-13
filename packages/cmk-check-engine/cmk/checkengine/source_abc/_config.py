@@ -16,6 +16,7 @@ from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.plugin_backend import sections_needing_redetection
 from cmk.checkengine.plugins import AgentBasedPlugins, make_plugin_store
 from cmk.checkengine.snmplib import SNMPHostConfig, SNMPPluginStore, SNMPSectionName
+from cmk.ruleset_matcher.labels import Labels
 
 __all__ = ["SourceConfig"]
 
@@ -36,6 +37,7 @@ class SourceConfig:
     def __init__(
         self,
         *,
+        labels_of_host: Callable[[HostName], Labels],
         snmp_config: Callable[[HostName, _AddressFamily, HostAddress, SourceType], SNMPHostConfig],
         checking_sections: Callable[[AgentBasedPlugins, HostName], frozenset[SNMPSectionName]],
         snmp_exclude_sections: Callable[[HostName], Sequence[Mapping[str, Sequence[str]]]],
@@ -45,10 +47,12 @@ class SourceConfig:
         snmp_fetcher_config: SNMPFetcherConfig,
         tcp_fetcher_config: TCPFetcherConfig,
         telemetry_custom_service: Callable[[HostName], Sequence[Mapping[str, object]]],
+        metrics_identity_routing: Callable[[HostName], Mapping[str, object]],
         is_cmc: bool,
         uuid_lookup_dir: Path,
     ) -> None:
         # Pure pass-through callbacks are exposed directly as attributes.
+        self.labels_of_host: Final = labels_of_host
         self.snmp_config: Final = snmp_config
         self.snmp_status_data_inventory: Final = status_data_inventory
         self.program_commandline: Final = program_commandline
@@ -58,6 +62,7 @@ class SourceConfig:
         self.snmp_fetcher_config: Final = snmp_fetcher_config
         self.tcp_fetcher_config: Final = tcp_fetcher_config
         self.telemetry_custom_service: Final = telemetry_custom_service
+        self.metrics_identity_routing: Final = metrics_identity_routing
         self.is_cmc: Final = is_cmc
         self.uuid_lookup_dir: Final = uuid_lookup_dir
 

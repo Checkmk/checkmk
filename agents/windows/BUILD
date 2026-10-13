@@ -7,7 +7,6 @@ filegroup(
         ["cfg_examples/**"],
         exclude = [
             "**/OWNERS",
-            "**/.f12",
         ],
     ),
     visibility = ["//visibility:public"],

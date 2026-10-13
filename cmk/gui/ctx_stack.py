@@ -6,9 +6,7 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 from functools import partial
 from typing import Any, Literal
@@ -99,7 +97,7 @@ def session_attr[T](name: SessionVarName, type_class: type[T]) -> T:
             return None
 
     def maybe_tuple_lookup(attr_names: tuple[str, ...]) -> T | None:
-        rv = session
+        rv: object = session
         for attr in attr_names:
             rv = get_attr_or_item(rv, attr)
 

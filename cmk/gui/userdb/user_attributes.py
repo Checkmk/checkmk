@@ -13,7 +13,8 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.theme.choices import theme_choices
-from cmk.gui.utils.temperate_unit import temperature_unit_choices
+from cmk.gui.utils.graph_refresh import GRAPH_REFRESH_INTERVALS_SECONDS
+from cmk.gui.utils.temperature_unit import temperature_unit_choices
 from cmk.gui.valuespec import (
     AbsoluteDate,
     Alternative,
@@ -30,10 +31,6 @@ from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.web.utils.urls import is_allowed_url, makeuri_contextless
 
 from ._user_attribute import UserAttribute, UserAttributeRegistry
-
-# Mirrors INTERVAL_CHOICES_SECONDS of the frontend's GlobalRefreshControl. The REST API offers
-# the same intervals; tests/openapi keeps the two in sync.
-GRAPH_REFRESH_INTERVALS_SECONDS = (30, 60, 90)
 
 
 def register(user_attribute_registry: UserAttributeRegistry) -> None:
@@ -77,11 +74,8 @@ class TemperatureUnitUserAttribute(UserAttribute):
             % {
                 "configvar_url": makeuri_contextless(
                     request,
-                    [
-                        ("mode", "edit_configvar"),
-                        ("varname", "default_temperature_unit"),
-                    ],
-                    filename="wato.py",
+                    [("varname", "default_temperature_unit")],
+                    filename="global_settings.py",
                 ),
                 "ruleset_url": makeuri_contextless(
                     request,
@@ -498,11 +492,13 @@ class StartOfWeekUserAttribute(UserAttribute):
                 "browser's language settings."
             ),
             choices=[
-                (None, _("Browser locale")),
-                ("saturday", _("Saturday")),
-                ("sunday", _("Sunday")),
                 ("monday", _("Monday")),
+                ("sunday", _("Sunday")),
+                ("saturday", _("Saturday")),
+                ("browser_locale", _("Browser locale")),
             ],
+            default_value="monday",
+            invalid_choice="replace",
         )
 
     @override
@@ -532,11 +528,8 @@ class GraphDefaultTimeRangeUserAttribute(UserAttribute):
             % {
                 "configvar_url": makeuri_contextless(
                     request,
-                    [
-                        ("mode", "edit_configvar"),
-                        ("varname", "graph_timeranges"),
-                    ],
-                    filename="wato.py",
+                    [("varname", "graph_timeranges")],
+                    filename="global_settings.py",
                 ),
             },
             elements=[

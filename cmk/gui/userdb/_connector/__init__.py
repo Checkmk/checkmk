@@ -5,6 +5,8 @@
 
 from ._base import CheckCredentialsResult as CheckCredentialsResult
 from ._base import ConnectorType as ConnectorType
+from ._base import LoadUsersFunction as LoadUsersFunction
+from ._base import SaveUsersFunction as SaveUsersFunction
 from ._base import UserConnector as UserConnector
 from ._registry import user_connector_registry as user_connector_registry
 from ._registry import UserConnectorRegistry as UserConnectorRegistry

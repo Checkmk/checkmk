@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import asyncio
 import os
 import tempfile
-from functools import cache
+from concurrent.futures import ThreadPoolExecutor
+from functools import cache, partial
+from http import HTTPStatus
 from pathlib import Path
 from typing import Annotated, assert_never
 
@@ -34,6 +37,8 @@ from starlette.status import (
 from cmk.agent_receiver.agent_receiver.checkmk_rest_api import (
     cmk_edition,
     controller_certificate_settings,
+    deployment_download,
+    deployment_status,
     get_root_cert,
     host_configuration,
     HostConfiguration,
@@ -47,6 +52,7 @@ from cmk.agent_receiver.agent_receiver.models import (
     CertificateRenewalBody,
     ConnectionMode,
     CsrField,
+    DownloadRequest,
     PairingBody,
     PairingResponse,
     R4RStatus,
@@ -63,6 +69,8 @@ from cmk.agent_receiver.agent_receiver.models import (
     RegistrationWithHNBody,
     RenewCertResponse,
     RequestForRegistration,
+    UpdateStatusRequest,
+    UpdateStatusResponse,
 )
 from cmk.agent_receiver.agent_receiver.utils import (
     NotRegisteredException,
@@ -106,6 +114,7 @@ def _sign_agent_csr(uuid: UUID4, csr_field: CsrField) -> Certificate:
             internal_credentials(),
         ).lifetime_in_months,
         agent_root_ca(),
+        get_config().agents_issued_certificates_path,
     )
 
 
@@ -475,7 +484,7 @@ async def agent_data(
             {"uuid": uuid, "compression": compression},
         )
         raise HTTPException(
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
             detail=f"Unsupported compression algorithm: {compression}",
         ) from e
 
@@ -487,7 +496,7 @@ async def agent_data(
             {"uuid": uuid, "error": e},
         )
         raise HTTPException(
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
             detail="Decompression of agent data failed",
         ) from e
 
@@ -523,7 +532,9 @@ async def registration_status(
                 status=r4r.status,
                 message=r4r.request.rejection_notice(),
             )
-        raise HTTPException(status_code=404, detail="Host is not registered") from e
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="Host is not registered"
+        ) from e
 
     return RegistrationStatus(
         hostname=host.name,
@@ -588,3 +599,77 @@ async def renew_certificate(
     return RenewCertResponse(
         agent_cert=serialize_to_pem(agent_cert),
     )
+
+
+@cache
+def _agent_update_executor() -> ThreadPoolExecutor:
+    # Own threads: waiting for a slow site would otherwise block the event loop, or use up the
+    # thread pool in which the mTLS check of every other request runs.
+    return ThreadPoolExecutor(max_workers=10, thread_name_prefix="agent-update")
+
+
+def _registered_host(uuid: UUID4) -> RegisteredHost:
+    try:
+        return RegisteredHost(uuid)
+    except NotRegisteredException as e:
+        logger.error(
+            "uuid=%(uuid)s Host is not registered",
+            {"uuid": uuid},
+        )
+        raise HTTPException(
+            status_code=HTTP_403_FORBIDDEN,
+            detail="Host is not registered",
+        ) from e
+
+
+@UUID_VALIDATION_ROUTER.post(
+    "/agent_update/status/{uuid}",
+    response_model=UpdateStatusResponse,
+    response_model_exclude_none=True,
+)
+async def agent_update_status(
+    uuid: UUID4,
+    *,
+    status_request: UpdateStatusRequest,
+) -> UpdateStatusResponse:
+    host = _registered_host(uuid)
+    return await asyncio.get_running_loop().run_in_executor(
+        _agent_update_executor(),
+        partial(
+            deployment_status,
+            f"uuid={uuid} Querying the agent update status failed",
+            internal_credentials(),
+            host.name,
+            uuid,
+            status_request,
+        ),
+    )
+
+
+@UUID_VALIDATION_ROUTER.post(
+    "/agent_update/agent/{uuid}",
+    response_class=Response,
+    responses={HTTPStatus.OK: {"content": {"application/octet-stream": {}}}},
+)
+async def agent_update_agent(
+    uuid: UUID4,
+    *,
+    download_request: DownloadRequest,
+) -> Response:
+    host = _registered_host(uuid)
+    package = await asyncio.get_running_loop().run_in_executor(
+        _agent_update_executor(),
+        partial(
+            deployment_download,
+            f"uuid={uuid} Downloading the agent package failed",
+            internal_credentials(),
+            host.name,
+            uuid,
+            download_request,
+        ),
+    )
+    logger.info(
+        "uuid=%(uuid)s Agent package %(aghash)s sent",
+        {"uuid": uuid, "aghash": download_request.aghash},
+    )
+    return Response(content=package, media_type="application/octet-stream")

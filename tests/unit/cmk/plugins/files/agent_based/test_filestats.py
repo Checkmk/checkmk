@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+
+from collections.abc import Mapping
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
 from cmk.plugins.files.agent_based.filestats import (
     check_filestats,
     check_filestats_single,
@@ -176,7 +177,7 @@ def test_discovery_single() -> None:
         ),
     ],
 )
-def test_check_regression(item, params, expected):  # type: ignore[misc]
+def test_check_regression(item: str, params: Mapping[str, object], expected: CheckResult) -> None:
     section = parse_filestats(STRING_TABLE)
     results = list(check_filestats(item, params, section))
     assert results == expected
@@ -232,7 +233,9 @@ def test_check_regression(item, params, expected):  # type: ignore[misc]
         ),
     ],
 )
-def test_check_single_regression(item, params, expected):  # type: ignore[misc]
+def test_check_single_regression(
+    item: str, params: Mapping[str, object], expected: CheckResult
+) -> None:
     section = parse_filestats(STRING_TABLE)
     results = list(check_filestats_single(item, params, section))
     assert results == expected

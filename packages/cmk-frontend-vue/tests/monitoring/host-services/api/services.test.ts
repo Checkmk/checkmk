@@ -5,7 +5,7 @@
  */
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HostServicesApi } from '@/monitoring/host-services/api/services'
 import type { HostRef } from '@/monitoring/shared/api/types'
@@ -18,6 +18,8 @@ function makeApiEntry(overrides: Partial<ApiServiceEntry> = {}): ApiServiceEntry
   return {
     name: 'CPU load',
     state: 'OK',
+    is_flapping: false,
+    stale: false,
     summary: 'OK - 15 min load: 0.5',
     last_check: 1783942710,
     last_state_change: 1783942740,
@@ -39,10 +41,6 @@ describe('HostServicesApi.fetchServices', () => {
 
   beforeEach(() => {
     postSpy = vi.spyOn(client, 'POST')
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
   })
 
   function mockSuccess(services: ApiServiceEntry[]): void {

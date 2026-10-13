@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 # <<<splunk_health>>>
 # Overall_state red
@@ -26,12 +25,11 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     Result,
-    Service,
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import discover_one_service
 
 
 class HealthStatus(enum.StrEnum):
@@ -95,22 +93,17 @@ def parse_splunk_health(string_table: StringTable) -> HealthSection:
 
     for state_detail in string_table:
         try:
-            match state_detail:
+            match state_detail:  # type: ignore[exhaustive-match]
                 case (raw_name, health):
                     name = format_service_name(raw_name)
                     registry[name] = HealthItem(name=name, health=HealthStatus(health))
                 case (raw_name, feature_name, health):
                     name = format_service_name(raw_name)
                     registry[name].add_feature_health(feature_name, HealthStatus(health))
-        except (KeyError, ValueError):
+        except KeyError, ValueError:
             continue
 
     return list(registry.values())
-
-
-def discover_splunk_health(section: HealthSection) -> DiscoveryResult:
-    """Discovers splunk health services from parsed agent section."""
-    yield Service()
 
 
 type StateValue = Literal[0, 1, 2, 3]
@@ -144,7 +137,7 @@ check_plugin_splunk_health = CheckPlugin(
     name="splunk_health",
     service_name="Splunk Health",
     check_function=check_splunk_health,
-    discovery_function=discover_splunk_health,
+    discovery_function=discover_one_service,
     check_ruleset_name="splunk_health",
     check_default_parameters=CheckParams(
         green=State.OK.value,

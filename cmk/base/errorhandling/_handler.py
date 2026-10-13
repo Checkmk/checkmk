@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Final, Literal
 
 import cmk.ccc.debug
@@ -15,6 +15,7 @@ from cmk.ccc.exceptions import (
 )
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher_abc import FetcherError
+from cmk.checkengine.helper_interface import AgentRawData
 from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 from cmk.checkengine.specs.exitspec import ExitSpec
@@ -34,6 +35,7 @@ class CheckResultErrorHandler:
         is_cluster: bool,
         snmp_backend: SNMPBackendEnum,
         keepalive: bool,
+        get_agent_output: Callable[[], AgentRawData | None],
     ) -> None:
         self.exit_spec: Final = exit_spec
         self.host_name: Final = host_name
@@ -42,6 +44,7 @@ class CheckResultErrorHandler:
         self.is_cluster: Final = is_cluster
         self.snmp_backend: Final = snmp_backend
         self.keepalive: Final = keepalive
+        self.get_agent_output: Final = get_agent_output
         # return value
         self._result: ActiveCheckResult | None = None
 
@@ -65,6 +68,7 @@ class CheckResultErrorHandler:
             is_cluster=self.is_cluster,
             snmp_backend=self.snmp_backend,
             keepalive=self.keepalive,
+            get_agent_output=self.get_agent_output,
         )
         self._result = ActiveCheckResult(state=state, summary=summary)
         return True
@@ -80,6 +84,7 @@ def _handle_failure(
     is_cluster: bool,
     snmp_backend: SNMPBackendEnum,
     keepalive: bool,
+    get_agent_output: Callable[[], AgentRawData | None],
 ) -> tuple[ServiceState, str]:
     if cmk.ccc.debug.enabled():
         raise exc
@@ -108,6 +113,6 @@ def _handle_failure(
             is_cluster=is_cluster,
             is_enforced=False,
             snmp_backend=snmp_backend,
-            rtc_package=None,
+            get_agent_output=get_agent_output,
         ).replace("Crash dump:\n", "Crash dump:\\n"),
     )

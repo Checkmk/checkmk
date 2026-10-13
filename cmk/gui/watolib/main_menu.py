@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="unreachable"
 
 import abc
 import re
@@ -14,9 +13,9 @@ import cmk.ccc.plugin_registry
 from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.gui.utils.loading_transition import LoadingTransition
-from cmk.gui.utils.speaklater import LazyString
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
+from cmk.web.utils.speaklater import LazyString
 from cmk.web.utils.urls import makeuri_contextless
 
 
@@ -169,7 +168,7 @@ class ABCMainModule(MenuItem, abc.ABC):
     def additional_breadcrumb_items(cls) -> Iterable[BreadcrumbItem]:
         """This class method allows for adding additional items to the breadcrumb navigation"""
         return
-        yield
+        yield  # type: ignore[unreachable]
 
     @classmethod
     def main_menu_search_terms(cls) -> Sequence[str]:

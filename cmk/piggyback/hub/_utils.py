@@ -22,7 +22,7 @@ APP_NAME = AppName("piggyback-hub")
 
 
 def make_log_and_exit(log: Callable[[str], None], message: str) -> Callable[[object, object], None]:
-    def log_and_exit(signum: object, frame: object) -> None:
+    def log_and_exit(signum: object, frame: object) -> None:  # noqa: ARG001
         log(message)
         sys.exit(0)
 

@@ -4,12 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 from typing import cast
 
 from cmk.ccc.i18n import _
 from cmk.gui.background_job.job import AlreadyRunningError
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.api_endpoints.background_job import BACKGROUND_JOB_FAMILY
+from cmk.gui.openapi.api_endpoints.models.form_spec import FormSpecValidationMessageModel
 from cmk.gui.openapi.framework import ApiContext, RedirectException
 from cmk.gui.openapi.framework.endpoint_link import path_to_endpoint
 from cmk.gui.openapi.framework.model.response import ApiResponse
@@ -23,10 +25,20 @@ from cmk.gui.quick_setup.handlers.setup import (
     verify_custom_validators_and_complete_quick_setup,
 )
 from cmk.gui.quick_setup.handlers.stage import NextStageStructure, StageActionResult
-from cmk.gui.quick_setup.handlers.utils import Action, Button, ButtonIcon, ValidationErrors
+from cmk.gui.quick_setup.handlers.utils import (
+    Action,
+    Button,
+    ButtonIcon,
+    stage_applicability_and_form_data,
+    ValidationErrors,
+)
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupActionMode, QuickSetupBackgroundAction
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    QuickSetupActionMode,
+    QuickSetupBackgroundAction,
+    QuickSetupContext,
+)
 from cmk.gui.quick_setup.v0_unstable.type_defs import ActionId, RawFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
@@ -86,7 +98,17 @@ def _convert_stage_structure(structure: NextStageStructure) -> StageStructureMod
 def _convert_validation_errors(errors: ValidationErrors) -> ValidationErrorsModel:
     return ValidationErrorsModel(
         stage_index=errors.stage_index,
-        formspec_errors=cast(dict[str, object], dict(errors.formspec_errors)),
+        formspec_errors={
+            form_spec_id: [
+                FormSpecValidationMessageModel(
+                    location=list(error.location),
+                    message=error.message,
+                    replacement_value=error.replacement_value,
+                )
+                for error in form_spec_errors
+            ]
+            for form_spec_id, form_spec_errors in errors.formspec_errors.items()
+        },
         stage_errors=list(errors.stage_errors),
     )
 
@@ -100,7 +122,12 @@ def convert_guided_response(data: QuickSetupOverview) -> QuickSetupGuidedRespons
         guided_mode_string=data.guided_mode_string,
         overview_mode_string=data.overview_mode_string,
         overviews=[
-            StageOverviewModel(title=o.title, sub_title=o.sub_title) for o in data.overviews
+            StageOverviewModel(
+                title=o.title,
+                sub_title=o.sub_title,
+                is_applicable=o.is_applicable,
+            )
+            for o in data.overviews
         ],
         stage=_convert_stage_structure(data.stage),
     )
@@ -135,6 +162,7 @@ def convert_stage_action_response(result: StageActionResult) -> QuickSetupStageA
             if result.validation_errors is not None
             else None
         ),
+        stage_applicability=list(result.stage_applicability),
         background_job_exception=(
             BackgroundJobExceptionModel(
                 message=result.background_job_exception.message,
@@ -176,7 +204,7 @@ def complete_quick_setup_action(
     quick_setup = quick_setup_registry.get(quick_setup_id)
     if quick_setup is None:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Quick setup not found",
             detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
         )
@@ -185,23 +213,27 @@ def complete_quick_setup_action(
     action = next((a for a in quick_setup.actions if a.id == action_id), None)
     if action is None:
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Action not found",
             detail=f"Action with id '{action_id}' does not exist.",
         )
 
     if action.permissions is not None and not all(user.may(perm) for perm in action.permissions):
         raise ProblemException(
-            status=403,
+            status=HTTPStatus.FORBIDDEN,
             title="Action not allowed",
             detail=f"Action with id '{action_id}' requires {', '.join(repr(p) for p in action.permissions)} permissions.",
         )
 
-    form_spec_map = build_formspec_map_from_stages([stage() for stage in quick_setup.stages])
+    ctx = QuickSetupContext.from_config(api_context.config, api_context.user)
+    form_spec_map = build_formspec_map_from_stages([stage() for stage in quick_setup.stages], ctx)
+    _stage_applicability, stages_raw_form_data = stage_applicability_and_form_data(
+        quick_setup.stages,
+        [RawFormData(cast(Mapping[FormSpecId, object], stage.form_data)) for stage in body.stages],
+        form_spec_map,
+    )
     errors = validate_stages_form_data(
-        stages_raw_form_data=[
-            RawFormData(cast(Mapping[FormSpecId, object], stage.form_data)) for stage in body.stages
-        ],
+        stages_raw_form_data=stages_raw_form_data,
         quick_setup_formspec_map=form_spec_map,
     )
 
@@ -214,7 +246,7 @@ def complete_quick_setup_action(
                     all_stage_errors=list(add_summary_error_message(errors)),
                 )
             ),
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
         )
 
     if isinstance(action, QuickSetupBackgroundAction):
@@ -231,12 +263,17 @@ def complete_quick_setup_action(
                 user_input_stages=[{"form_data": s.form_data} for s in body.stages],
                 object_id=object_id,
                 user_permission_config=user_permission_config,
+                site_configs=api_context.config.sites,
+                debug=api_context.config.debug,
                 use_git=api_context.config.wato_use_git,
                 pprint_value=api_context.config.wato_pprint_config,
+                wato_hide_folders_without_read_permissions=api_context.config.wato_hide_folders_without_read_permissions,
+                wato_host_attrs=api_context.config.wato_host_attrs,
+                tags=api_context.config.tags.get_dict_format(),
             )
         except AlreadyRunningError:
             raise ProblemException(
-                status=429,
+                status=HTTPStatus.TOO_MANY_REQUESTS,
                 title="Cannot start action",
                 detail="Another Quick setup action already running.",
             )
@@ -255,14 +292,13 @@ def complete_quick_setup_action(
         input_stages=[{"form_data": s.form_data} for s in body.stages],
         form_spec_map=form_spec_map,
         object_id=object_id,
-        use_git=api_context.config.wato_use_git,
-        pprint_value=api_context.config.wato_pprint_config,
+        ctx=ctx,
     )
 
     if not result.redirect_url and not result.all_stage_errors:
         raise ValueError("The Quick setup action did not return a result")
 
-    status_code = 201 if result.all_stage_errors is None else 400
+    status_code = HTTPStatus.CREATED if result.all_stage_errors is None else HTTPStatus.BAD_REQUEST
     return ApiResponse(
         body=convert_complete_response(result),
         status_code=status_code,

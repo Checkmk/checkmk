@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { ref } from 'vue'
 
 import AiConversationDisclaimer from '@/ai/components/conversation/AiConversationDisclaimer.vue'
@@ -57,10 +57,6 @@ function renderDisclaimer(template = makeTemplate()) {
     }
   })
 }
-
-afterEach(() => {
-  vi.clearAllMocks()
-})
 
 describe('AiConversationDisclaimer — visibility', () => {
   test('shows the disclaimer when consent has not been given yet', async () => {

@@ -12,7 +12,8 @@ import { type ComputedRef, type Ref, computed, ref, watch } from 'vue'
 import { durationSeconds, endsNow, rollingRange } from './timeRange'
 
 export interface CustomPreset {
-  id: string
+  /** `null` identifies the "Custom" entry that `DynamicPresets` appends to every preset list. */
+  id: string | null
   label: TranslatedString
   totalSeconds: number
 }

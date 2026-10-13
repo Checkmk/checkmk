@@ -85,7 +85,7 @@ describe('drafts and converters', () => {
     })
   })
 
-  test('switching a single metric to a query keeps metric and consolidation, drops color and host/service', () => {
+  test('switching a single metric to a query keeps the appearance and clears the data fields', () => {
     const metric = {
       ...newRrdMetricDraft('A', '#123456'),
       title: 'T',
@@ -95,42 +95,30 @@ describe('drafts and converters', () => {
       host_name: 'h',
       service_name: 's',
       metric_name: 'util',
-      consolidation: 'max' as const
+      consolidation: 'min' as const
     }
     const query = rrdMetricToQueryDraft(metric)
     expect(query).toEqual({
-      id: 'A',
-      type: 'rrd_query',
+      ...newRrdQueryDraft('A'),
       title: 'T',
       line_type: 'area',
       mirrored: true,
-      visible: false,
-      context: {},
-      metric_name: 'util',
-      consolidation: 'max'
+      visible: false
     })
     expect('color' in query).toBe(false)
   })
 
-  test('switching a query back to a single metric assigns a color and clears host/service', () => {
+  test('switching a query back to a single metric assigns a color and clears the data fields', () => {
     const query = {
       ...newRrdQueryDraft('A'),
+      title: 'T',
       metric_name: 'util',
       consolidation: 'min' as const,
       context: { host: { host: 'h' } }
     }
     expect(rrdQueryToMetricDraft(query, '#abcdef')).toEqual({
-      id: 'A',
-      type: 'rrd_metric',
-      title: DEFAULT_TITLE_MACRO,
-      line_type: 'line',
-      mirrored: false,
-      visible: true,
-      color: '#abcdef',
-      host_name: null,
-      service_name: null,
-      metric_name: 'util',
-      consolidation: 'min'
+      ...newRrdMetricDraft('A', '#abcdef'),
+      title: 'T'
     })
   })
 

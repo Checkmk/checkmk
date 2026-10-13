@@ -5,7 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import type { ModeCreateOtelConf } from 'cmk-shared-typing/typescript/mode_create_otel_conf'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import type { Suggestion } from 'cmk-ui-library/components/CmkSuggestions'
 import CmkWizard, {
   CmkWizardButton,
@@ -43,18 +44,7 @@ import {
   createOTelReceiverConfigAction
 } from './otel-configuration-steps/post_save_actions.ts'
 
-const props = defineProps<{
-  no_auth_allowed: boolean
-  endpoint_config_allowed: boolean
-  encryption_allowed: boolean
-  event_console_allowed: boolean
-  collector_activation_allowed: boolean
-  metric_backend_allowed: boolean
-  may_create_password: boolean
-  activate_changes_url: string
-  cloud_grpc_receiver_endpoint?: string | null
-  cloud_http_receiver_endpoint?: string | null
-}>()
+const props = defineProps<ModeCreateOtelConf>()
 
 const { _t } = usei18n()
 const currentMode = ref<'guided' | 'overview'>('guided')
@@ -215,7 +205,7 @@ const finalizeActions = computed<readonly PostSaveAction[]>(() => {
     if (!props.collector_activation_allowed && action.key === 'enableCollector') {
       return false
     }
-    if (!props.metric_backend_allowed && action.key === 'enableMetricBackend') {
+    if (!props.data_backend_allowed && action.key === 'enableDataBackend') {
       return false
     }
     return true
@@ -301,6 +291,10 @@ const saveButtonDisabled = computed(() => saveState.value === 'running')
 // finalize button so the user knows why the save did not proceed.
 const overviewValidationFailed = ref(false)
 
+watch(currentMode, () => {
+  overviewValidationFailed.value = false
+})
+
 async function onSaveClick(): Promise<void> {
   // Second click after a successful run navigates to the full activate-changes
   // page so the user can apply the pending configuration changes.
@@ -346,7 +340,7 @@ async function onSaveClick(): Promise<void> {
           v-model:config-name="configName"
           v-model:site-id="siteId"
           config-name-prefix="opentelemetry_config_"
-          config-list-endpoint="api/internal/domain-types/otel_collector_config_receivers/collections/all"
+          config-kind="receivers"
           :already-configured-error="
             _t(
               'OpenTelemetry is already configured for this site. Select another site or update the existing configuration.'
@@ -421,8 +415,8 @@ async function onSaveClick(): Promise<void> {
           :http-auth="httpAuth"
           :grpc-event-console="grpcEventConsole"
           :http-event-console="httpEventConsole"
-          :cloud-grpc-endpoint="cloud_grpc_receiver_endpoint ?? null"
-          :cloud-http-endpoint="cloud_http_receiver_endpoint ?? null"
+          :grpc-endpoint-override="grpc_receiver_endpoint_override ?? null"
+          :http-endpoint-override="http_receiver_endpoint_override ?? null"
         />
       </template>
 
@@ -473,9 +467,12 @@ async function onSaveClick(): Promise<void> {
       </template>
       <template #actions>
         <div class="mode-otel-mode-create-o-tel-conf-app__actions">
-          <CmkAlertBox v-if="overviewValidationFailed" variant="error" size="small">
-            {{ _t('The form still contains invalid data. Please correct them and try again.') }}
-          </CmkAlertBox>
+          <CmkAlert
+            v-if="overviewValidationFailed"
+            variant="error"
+            size="small"
+            :text="_t('The form still contains invalid data. Please correct them and try again.')"
+          />
           <div class="mode-otel-mode-create-o-tel-conf-app__actions-buttons">
             <CmkWizardButton
               type="finish"

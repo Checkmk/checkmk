@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from contextlib import suppress
+from http import HTTPStatus
 
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -33,7 +34,7 @@ def delete_dashboard_token_v1(api_context: ApiContext, body: DeleteDashboardToke
 
     if not (token_id := dashboard.get("public_token_id")):
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="Dashboard token not found",
             detail="No token for this dashboard exists.",
         )

@@ -25,7 +25,7 @@ def discover_aruba_clients(section: StringTable) -> DiscoveryResult:
 def check_aruba_clients(section: StringTable) -> CheckResult:
     try:
         connected_clients = int(section[0][0])
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return
     yield from check_levels(
         connected_clients,

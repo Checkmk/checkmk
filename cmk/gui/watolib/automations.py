@@ -8,8 +8,6 @@ and similar things."""
 
 # mypy: disable-error-code="no-any-return"
 
-from __future__ import annotations
-
 import ast
 import functools
 import json
@@ -20,6 +18,7 @@ import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import asdict, replace
+from http import HTTPStatus
 from io import BytesIO
 from typing import Annotated, Final, NamedTuple
 
@@ -31,8 +30,7 @@ from requests import RequestException
 import cmk.ccc.version as cmk_version
 from cmk import trace
 from cmk.automations.backends import AutomationExecutor, HelperExecutor, SubprocessExecutor
-from cmk.automations.results import SerializedResult
-from cmk.automations.types import AutomationID
+from cmk.automations.internal import AutomationID
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import get_omd_config, SiteId
@@ -127,7 +125,7 @@ def check_mk_local_automation_serialized(
     force_cli_interface: bool = False,
     debug: bool,
     collect_all_hosts: Callable[[], Mapping[HostName, CollectedHostAttributes]],
-) -> tuple[Sequence[str], SerializedResult]:
+) -> tuple[Sequence[str], str]:
     with tracer.span(
         f"local_automation[{command}]",
         attributes={"cmk.automation.args": repr(args)},
@@ -207,7 +205,7 @@ def check_mk_local_automation_serialized(
         if command in ["restart", "reload"]:
             call_hook_activate_changes(collect_all_hosts)
 
-        return result.command_description, SerializedResult(result.output)
+        return result.command_description, result.output
 
 
 def get_local_automation_failure_message(
@@ -248,7 +246,7 @@ def check_mk_remote_automation_serialized(
     sync: Callable[[SiteId, bool], None],
     non_blocking_http: bool = False,
     debug: bool,
-) -> SerializedResult:
+) -> str:
     with tracer.span(
         f"remote_automation[{command}]",
         attributes={
@@ -268,21 +266,19 @@ def check_mk_remote_automation_serialized(
             )
 
         # Synchronous execution of the actual remote command in a single blocking HTTP request
-        return SerializedResult(
-            _do_remote_automation_serialized(
-                automation_config=automation_config,
-                command="checkmk-automation",
-                vars_=[
-                    ("automation", command),  # The Checkmk automation command
-                    ("arguments", mk_repr(args).decode("ascii")),  # The arguments for the command
-                    ("indata", mk_repr(indata).decode("ascii")),  # The input data
-                    ("stdin_data", mk_repr(stdin_data).decode("ascii")),  # The input data for stdin
-                    ("timeout", mk_repr(timeout).decode("ascii")),  # The timeout
-                ],
-                files=None,
-                timeout=timeout,
-                debug=debug,
-            )
+        return _do_remote_automation_serialized(
+            automation_config=automation_config,
+            command="checkmk-automation",
+            vars_=[
+                ("automation", command),  # The Checkmk automation command
+                ("arguments", mk_repr(args).decode("ascii")),  # The arguments for the command
+                ("indata", mk_repr(indata).decode("ascii")),  # The input data
+                ("stdin_data", mk_repr(stdin_data).decode("ascii")),  # The input data for stdin
+                ("timeout", mk_repr(timeout).decode("ascii")),  # The timeout
+            ],
+            files=None,
+            timeout=timeout,
+            debug=debug,
         )
 
 
@@ -428,6 +424,16 @@ def do_remote_automation(
         )
 
 
+class MKRemoteSiteUnavailable(MKUserError):
+    """The remote site does not process requests at the moment, e.g. because it restarts
+
+    Callers waiting for a remote site catch this exception instead of comparing the message, which
+    is translated."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(None, message)
+
+
 def get_url_raw(
     url: str,
     insecure: bool,
@@ -440,7 +446,6 @@ def get_url_raw(
     headers_ = {
         "x-checkmk-version": cmk_version.__version__,
         "x-checkmk-edition": cmk_version.edition(paths.omd_root).short,
-        "x-checkmk-license-state": get_license_state(paths.omd_root).readable,
     }
     headers_.update(add_headers or {})
 
@@ -459,13 +464,22 @@ def get_url_raw(
 
     response.encoding = "utf-8"  # Always decode with utf-8
 
-    if response.status_code == 401:
+    if response.status_code == HTTPStatus.UNAUTHORIZED:
         raise MKUserError("_passwd", _("Authentication failed. Invalid login/password."))
 
-    if response.status_code == 503 and "Site Not Started" in response.text:
-        raise MKUserError(None, _("Site is not running"))
+    if (
+        response.status_code == HTTPStatus.SERVICE_UNAVAILABLE
+        and "Site Not Started" in response.text
+    ):
+        raise MKRemoteSiteUnavailable(_("Site is not running"))
 
-    if response.status_code != 200:
+    if response.status_code == HTTPStatus.BAD_GATEWAY:
+        raise MKRemoteSiteUnavailable(
+            _("HTTP Error - %(status_code)d: %(text)s")
+            % {"status_code": response.status_code, "text": response.text}
+        )
+
+    if response.status_code != HTTPStatus.OK:
         raise MKUserError(
             None,
             _("HTTP Error - %(status_code)d: %(text)s")
@@ -495,7 +509,6 @@ def _verify_compatibility(response: requests.Response) -> None:
 
     remote_version = response.headers.get("x-checkmk-version", "")
     remote_edition_short = response.headers.get("x-checkmk-edition", "")
-    remote_license_state = parse_license_state(response.headers.get("x-checkmk-license-state", ""))
 
     if not remote_version or not remote_edition_short:
         return  # No validation
@@ -507,7 +520,7 @@ def _verify_compatibility(response: requests.Response) -> None:
             central_license_state,
             remote_version,
             remote_edition_short,
-            remote_license_state,
+            remote_license_state=None,
             is_replication_enabled=True,
         ),
         cmk_version.VersionsCompatible,
@@ -519,8 +532,10 @@ def _verify_compatibility(response: requests.Response) -> None:
                 central_license_state,
                 remote_version,
                 remote_edition_short,
-                remote_license_state,
-                compatibility,
+                # Note: Remote license state compatibility check was never implemented correctly.
+                # We plan to clean up these checks in CMK-38403.
+                remote_license_state=None,
+                compatibility=compatibility,
             )
         )
 
@@ -539,7 +554,6 @@ def verify_request_compatibility(ignore_license_compatibility: bool) -> None:
         if "x-checkmk-edition" in request.headers
         else request.get_ascii_input_mandatory("_edition_short")
     )
-    central_license_state = parse_license_state(request.headers.get("x-checkmk-license-state", ""))
     remote_version = cmk_version.__version__
     remote_edition_short = cmk_version.edition(paths.omd_root).short
     remote_license_state = get_license_state(paths.omd_root)
@@ -547,10 +561,10 @@ def verify_request_compatibility(ignore_license_compatibility: bool) -> None:
     compatibility = _compatible_with_central_site(
         central_version,
         central_edition_short,
-        central_license_state,
-        remote_version,
-        remote_edition_short,
-        remote_license_state,
+        central_license_state=None,
+        remote_version=remote_version,
+        remote_edition_short=remote_edition_short,
+        remote_license_state=remote_license_state,
         is_replication_enabled=True,
     )
 
@@ -562,20 +576,15 @@ def verify_request_compatibility(ignore_license_compatibility: bool) -> None:
             make_incompatible_info(
                 central_version,
                 central_edition_short,
-                central_license_state,
-                remote_version,
-                remote_edition_short,
-                remote_license_state,
-                compatibility,
+                # Note: Central license state compatibility check was never implemented correctly.
+                # We plan to clean up these checks in CMK-38403.
+                central_license_state=None,
+                remote_version=remote_version,
+                remote_edition_short=remote_edition_short,
+                remote_license_state=remote_license_state,
+                compatibility=compatibility,
             )
         )
-
-
-def parse_license_state(raw_license_state: str) -> LicenseState | None:
-    try:
-        return LicenseState[raw_license_state]
-    except KeyError:
-        return None
 
 
 def get_url(
@@ -664,7 +673,7 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
     automation_request: CheckmkAutomationRequest,
     *,
     debug: bool,
-) -> SerializedResult:
+) -> str:
     """Execute the automation in a background job on the remote site
 
     It starts the background job using one call. It then polls the remote site, waiting for
@@ -702,7 +711,7 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
 
     assert isinstance(result, str)
 
-    return SerializedResult(result)
+    return result
 
 
 def _start_remote_automation_job(

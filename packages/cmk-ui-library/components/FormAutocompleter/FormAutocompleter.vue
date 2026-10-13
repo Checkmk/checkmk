@@ -34,6 +34,7 @@ const props = defineProps<{
   describedBy?: string | undefined
   disabled?: boolean
   floating?: boolean
+  busy?: boolean
 }>()
 
 const model = defineModel<string | null>({ default: null })
@@ -78,6 +79,7 @@ const slots = useSlots()
     :described-by="describedBy"
     :disabled="disabled || false"
     :floating="floating || false"
+    :busy="busy || false"
   >
     <template v-if="slots['buttons-start']" #buttons-start>
       <slot name="buttons-start"></slot>

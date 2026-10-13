@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 """System-level tests for the RFC 6749 + PKCE authorization-code flow.
 
 Walks the whole flow over real HTTP against a running site -- dynamic client
@@ -17,23 +18,21 @@ against the registered-client store: that's a security boundary (rejecting
 requests for unregistered clients or mismatched redirect_uris) worth proving
 holds over real HTTP, not just through the Flask test client, so it gets its
 own narrow coverage here too.
-
-Enabling the MCP server -- the only current oauth.registration.register() caller -- is
-handled by the ``mcp_enabled_site`` fixture in conftest.py.
 """
 
 import base64
 import hashlib
 import logging
 import secrets
+from http import HTTPStatus
 from urllib.parse import parse_qs, urlsplit
 
 import pytest
 import requests
 from bs4 import BeautifulSoup, Tag
 
-from tests.testlib.site import Site
-from tests.testlib.web_session import CMKWebSession
+from tests.testlib.system.site import Site
+from tests.testlib.system.web_session import CMKWebSession
 
 _REGISTRATION_ENDPOINT_PATH = "oauth_client_registration.py"
 _AUTHORIZE_ENDPOINT_PATH = "oauth_authorize.py"
@@ -52,7 +51,7 @@ def _register_client(site: Site) -> str:
         timeout=30,
     )
     logger.info("POST %s -> %d", url, response.status_code)
-    assert response.status_code == 201
+    assert response.status_code == HTTPStatus.CREATED
     client_id = response.json()["client_id"]
     assert isinstance(client_id, str) and client_id
     return client_id
@@ -73,7 +72,7 @@ def _get_consent_page(
     code_challenge: str,
     state: str,
     redirect_uri: str = _REDIRECT_URI,
-    expected_code: int = 200,
+    expected_code: int = HTTPStatus.OK,
 ) -> requests.Response:
     return web.get(
         _AUTHORIZE_ENDPOINT_PATH,
@@ -89,13 +88,14 @@ def _get_consent_page(
     )
 
 
-def _hidden_form_fields(html_text: str) -> dict[str, str]:
-    """All hidden <input> values inside the consent page's <form>.
+def _form_fields(html_text: str) -> dict[str, str]:
+    """Everything a real browser would submit from the consent page's <form>.
 
-    Covers the echoed request params (html.hidden_fields()) plus the
+    Covers the echoed request params (html.hidden_fields()), the
     form-machinery fields added by html.form_context() (_transid, _csrf_token,
-    filled_in) -- everything the real POST needs to pass CSRF/transaction
-    validation, without hardcoding those field names here.
+    filled_in), and the preselected scope radio -- everything the real POST
+    needs to pass CSRF/transaction validation and to grant the scope the page
+    offered, without hardcoding those field names here.
     """
     form = BeautifulSoup(html_text, "lxml").find("form")
     assert isinstance(form, Tag), "consent page did not render a <form>"
@@ -103,6 +103,14 @@ def _hidden_form_fields(html_text: str) -> dict[str, str]:
     for field in form.find_all("input", type="hidden"):
         name = field.get("name")
         value = field.get("value", "")
+        assert isinstance(name, str)
+        assert isinstance(value, str)
+        fields[name] = value
+    for radio in form.find_all("input", type="radio"):
+        if not radio.has_attr("checked"):
+            continue
+        name = radio.get("name")
+        value = radio.get("value")
         assert isinstance(name, str)
         assert isinstance(value, str)
         fields[name] = value
@@ -121,26 +129,26 @@ def _redirect_target(html_text: str) -> str:
 
 
 @pytest.mark.skip_if_edition("community", "cloud")
-def test_full_authorization_code_flow_with_pkce(mcp_enabled_site: Site, web: CMKWebSession) -> None:
+def test_full_authorization_code_flow_with_pkce(site: Site, web: CMKWebSession) -> None:
     """Register a client, run the consent screen, and redeem the issued code for a token."""
-    client_id = _register_client(mcp_enabled_site)
+    client_id = _register_client(site)
     code_verifier, code_challenge = _make_pkce_pair()
     state = secrets.token_urlsafe(8)
 
     consent_page = _get_consent_page(
         web, client_id=client_id, code_challenge=code_challenge, state=state
     )
-    hidden_fields = _hidden_form_fields(consent_page.text)
+    form_fields = _form_fields(consent_page.text)
 
     approval = web.post(
         _AUTHORIZE_ENDPOINT_PATH,
-        data={**hidden_fields, "_authorize": "Authorize"},
+        data={**form_fields, "_authorize": "Authorize"},
     )
     query = parse_qs(urlsplit(_redirect_target(approval.text)).query)
     assert query["state"] == [state]
     code = query["code"][0]
 
-    token_url = mcp_enabled_site.internal_url + _TOKEN_ENDPOINT_PATH
+    token_url = site.internal_url + _TOKEN_ENDPOINT_PATH
     token_response = requests.post(
         token_url,
         data={
@@ -153,29 +161,27 @@ def test_full_authorization_code_flow_with_pkce(mcp_enabled_site: Site, web: CMK
         timeout=30,
     )
     logger.info("POST %s -> %d", token_url, token_response.status_code)
-    assert token_response.status_code == 200
+    assert token_response.status_code == HTTPStatus.OK
     token_body = token_response.json()
     assert token_body["access_token"]
     assert token_body["token_type"] == "Bearer"
 
 
 @pytest.mark.skip_if_edition("community", "cloud")
-def test_authorize_deny_redirects_with_access_denied(
-    mcp_enabled_site: Site, web: CMKWebSession
-) -> None:
+def test_authorize_deny_redirects_with_access_denied(site: Site, web: CMKWebSession) -> None:
     """Denying consent redirects back with error=access_denied, not a code."""
-    client_id = _register_client(mcp_enabled_site)
+    client_id = _register_client(site)
     _, code_challenge = _make_pkce_pair()
     state = secrets.token_urlsafe(8)
 
     consent_page = _get_consent_page(
         web, client_id=client_id, code_challenge=code_challenge, state=state
     )
-    hidden_fields = _hidden_form_fields(consent_page.text)
+    form_fields = _form_fields(consent_page.text)
 
     denial = web.post(
         _AUTHORIZE_ENDPOINT_PATH,
-        data={**hidden_fields, "_deny": "Deny"},
+        data={**form_fields, "_deny": "Deny"},
     )
     query = parse_qs(urlsplit(_redirect_target(denial.text)).query)
     assert query["error"] == ["access_denied"]
@@ -184,9 +190,7 @@ def test_authorize_deny_redirects_with_access_denied(
 
 
 @pytest.mark.skip_if_edition("community", "cloud")
-def test_authorize_returns_400_for_unknown_client_id(
-    mcp_enabled_site: Site, web: CMKWebSession
-) -> None:
+def test_authorize_returns_400_for_unknown_client_id(web: CMKWebSession) -> None:
     """A client_id that was never dynamically registered must not reach the consent screen."""
     _, code_challenge = _make_pkce_pair()
     state = secrets.token_urlsafe(8)
@@ -196,16 +200,16 @@ def test_authorize_returns_400_for_unknown_client_id(
         client_id="never-registered-client",
         code_challenge=code_challenge,
         state=state,
-        expected_code=400,
+        expected_code=HTTPStatus.BAD_REQUEST,
     )
 
 
 @pytest.mark.skip_if_edition("community", "cloud")
 def test_authorize_returns_400_for_redirect_uri_not_registered_to_client(
-    mcp_enabled_site: Site, web: CMKWebSession
+    site: Site, web: CMKWebSession
 ) -> None:
     """redirect_uri must be one of the client's own registered URIs, not just well-formed."""
-    client_id = _register_client(mcp_enabled_site)
+    client_id = _register_client(site)
     _, code_challenge = _make_pkce_pair()
     state = secrets.token_urlsafe(8)
 
@@ -215,5 +219,5 @@ def test_authorize_returns_400_for_redirect_uri_not_registered_to_client(
         code_challenge=code_challenge,
         state=state,
         redirect_uri="https://attacker.example/callback",
-        expected_code=400,
+        expected_code=HTTPStatus.BAD_REQUEST,
     )

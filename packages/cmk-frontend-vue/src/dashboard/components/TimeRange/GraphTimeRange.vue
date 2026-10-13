@@ -4,11 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import { type Suggestion } from 'cmk-ui-library/components/CmkSuggestions'
-import { fetchRestAPIDeprecated } from 'cmk-ui-library/lib/cmkFetch.ts'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import type { Ref } from 'vue'
 import { computed, onMounted, ref, watch } from 'vue'
 
@@ -95,12 +96,7 @@ const trailingDurationSeconds = (timerange: GraphTimerange): number | null => {
   return null
 }
 
-interface GraphTimerangeApiResult {
-  title: string
-  extensions: {
-    total_seconds: number
-  }
-}
+type GraphTimerangeApiResult = components['schemas']['GraphTimerangeObject']
 
 const selectedTimerange = defineModel<GraphTimerange>('selectedTimerange', { required: true })
 
@@ -124,12 +120,7 @@ const customTimeOptionTitle = _t('The last...')
 const customDateOptionTitle = _t('Date range')
 
 async function loadApiDurationGraphTimeranges(): Promise<GraphTimerangeApiResult[]> {
-  const API_ROOT = 'api/unstable'
-  const url = `${API_ROOT}/domain-types/graph_timerange/collections/all`
-  const response = await fetchRestAPIDeprecated(url, 'GET')
-  await response.raiseForStatus()
-  const data = await response.json()
-  return data.value
+  return unwrap(await client.GET('/domain-types/graph_timerange/collections/all')).value
 }
 
 const dropdownOptions = computed<Suggestion[]>(() => {
@@ -137,7 +128,7 @@ const dropdownOptions = computed<Suggestion[]>(() => {
   // ("last N ...")
   const durationRanges = apiDurationTimeranges.value.map((range) => ({
     name: durationOptionName(range.extensions.total_seconds),
-    title: untranslated(range.title)
+    title: untranslated(range.title ?? '')
   }))
 
   const predefinedRanges = Object.entries(predefinedCalendarTitles).map(([apiKey, title]) => ({

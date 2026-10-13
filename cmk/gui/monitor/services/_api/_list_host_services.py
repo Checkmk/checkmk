@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence, Set
-from typing import Annotated, Self
+from http import HTTPStatus
+from typing import Annotated, Final, Self
 
 from annotated_types import Interval
 from pydantic import PlainValidator
@@ -45,6 +46,7 @@ from ._family import MONITOR_SERVICES_FAMILY
 from ._filters import parse_as_livestatus_filter, ServiceFilterNode
 from ._modes import build_service_modes_by_id, ServiceModeInfo
 from ._perfometer import ServicePerfometer
+from ._reschedule_offer import build_reschedule_offer, ServiceRescheduleOffer
 from ._validators import parse_service_search_query, parse_service_sort_options
 
 # View-local limits, deliberately not coupled to the global soft/hard query limit settings so they
@@ -52,6 +54,9 @@ from ._validators import parse_service_search_query, parse_service_sort_options
 _MIN_HOST_SVC_LIMIT = 0
 _MAX_HOST_SVC_LIMIT = 5_000
 _DEFAULT_LIMIT = 1_000
+
+# The row limits the services of a host page offers: the default first, the maximum last.
+LIMIT_TIERS: Final = (_DEFAULT_LIMIT, _MAX_HOST_SVC_LIMIT)
 
 # Requesting no sorter is not the same as requesting no order: the repository reads an empty list
 # as "the page default", which leads with Checkmk's own services.
@@ -64,7 +69,19 @@ _DEFAULT_FIELDS: frozenset[ServiceOptionalField] = frozenset()
 @api_model
 class HostServiceEntry:
     name: str = api_field(description="Service name", example="Check_MK HW/SW Inventory")
-    state: ServiceStateLabel = api_field(description="Service state", example="OK")
+    state: ServiceStateLabel = api_field(
+        description=(
+            "Service state. 'PENDING' means the service has never been checked, i.e. its state "
+            "is still pending the first check result"
+        ),
+        example="OK",
+    )
+    is_flapping: bool = api_field(
+        description="Whether the service state is flapping", example=False
+    )
+    stale: bool = api_field(
+        description="Whether the service hasn't been checked recently enough", example=False
+    )
     summary: str = api_field(
         description="Service summary",
         example="Found no data, execution time 0.0 sec",
@@ -115,12 +132,20 @@ class HostServiceEntry:
         ),
         default_factory=ApiOmitted,
     )
+    reschedule: ServiceRescheduleOffer | ApiOmitted = api_field(
+        description=(
+            "What rescheduling this service does. Omitted for users who may not reschedule."
+        ),
+        default_factory=ApiOmitted,
+    )
 
     @classmethod
     def from_domain(cls, service: Service, *, hostname: str, site_id: str) -> Self:
         return cls(
             name=service.name,
             state=service.state_label,
+            is_flapping=service.is_flapping,
+            stale=service.stale,
             summary=service.summary,
             last_check=service.last_check,
             last_state_change=service.last_state_change,
@@ -132,8 +157,14 @@ class HostServiceEntry:
             contact_groups=service.contact_groups
             if service.contact_groups is not None
             else ApiOmitted(),
-            perfometer=ServicePerfometer.from_perf_data(service.perf_data, service.check_command)
+            perfometer=ServicePerfometer.from_perf_data(
+                service.perf_data,
+                service.check_command,
+                host_name=hostname,
+                service_name=service.name,
+            )
             or ApiOmitted(),
+            reschedule=build_reschedule_offer(service) or ApiOmitted(),
         )
 
 
@@ -184,8 +215,9 @@ class ServicesRequestBody:
         PlainValidator(func=parse_service_search_query, json_schema_input_type=str),
     ] = api_field(
         description=(
-            "Search text, matched against the service name and its summary. Omit or pass empty "
-            "string to return all services."
+            "Search text, matched against the service name, its summary, and every text field "
+            "asked for through `fields` (labels, tags, contacts, contact_groups). Omit or pass "
+            "empty string to return all services."
         ),
         example="CPU",
         default_factory=ApiOmitted,
@@ -263,7 +295,7 @@ def _handle_list_services(
 ) -> HostServicesResponse:
     if not host_services_repo.host_exists(hostname):
         raise ProblemException(
-            status=404,
+            status=HTTPStatus.NOT_FOUND,
             title="The requested host was not found",
             detail=f"The host {hostname!r} was not found on site {site_id!r}",
         ) from None
@@ -276,7 +308,7 @@ def _handle_list_services(
         matched_service_count = len(services)
     elif query or filters:
         matched_service_count = host_services_repo.count_matched(
-            hostname, query=query, filters=filters
+            hostname, query=query, filters=filters, fields=fields
         )
     else:
         matched_service_count = total_service_count
@@ -312,11 +344,13 @@ ENDPOINT_LIST_HOST_SERVICES = VersionedEndpoint(
                     permissions.OkayToIgnorePerm("bi.see_all"),
                     permissions.OkayToIgnorePerm("mkeventd.seeall"),
                     permissions.OkayToIgnorePerm("general.ignore_hard_limit"),
+                    permissions.OkayToIgnorePerm("general.see_crash_reports"),
+                    permissions.OkayToIgnorePerm("action.reschedule"),
                 ]
             )
         )
     ),
     doc=EndpointDoc(family=MONITOR_SERVICES_FAMILY.name),
-    behavior=EndpointBehavior(skip_locking=True),
+    behavior=EndpointBehavior(skip_locking=True, update_config_generation=False),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_services)},
 )

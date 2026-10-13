@@ -11,6 +11,7 @@ import traceback
 from collections import deque
 from collections.abc import Generator, Iterable, MutableSequence, Sequence
 from dataclasses import dataclass, field
+from http import HTTPStatus
 from itertools import chain
 from pathlib import Path
 from types import TracebackType
@@ -24,7 +25,7 @@ from lxml import etree
 from playwright.async_api import async_playwright
 
 from scripts.html_validation.lib.tag_balance import check_html_tag_balance, TagImbalanceError
-from tests.testlib.site import Site
+from tests.testlib.system.site import Site
 
 logger = logging.getLogger()
 
@@ -49,7 +50,7 @@ class Progress:
         self.report_interval = report_interval
         self.next_report = 0.0
 
-    def __enter__(self) -> "Progress":
+    def __enter__(self) -> Progress:
         self.started = time.time()
         self.next_report = self.started + self.report_interval
         self.done_total = 0
@@ -170,6 +171,7 @@ class Crawler:
             "application/x-mkp",
             "application/x-msdos-program",
             "application/x-msi",
+            "application/x-pem-file",
             "application/x-pkg",
             "application/x-redhat-package-manager",
             "application/x-rpm",
@@ -378,7 +380,7 @@ class Crawler:
         if content_type == "text/html" or content_type.startswith("image/"):
             try:
                 page_content = await self.get_page_content(browser_context, url)
-                if page_content.status_code == 404:
+                if page_content.status_code == HTTPStatus.NOT_FOUND:
                     self.handle_error(
                         url, error_type="NotFound", message=f"{content_type} resource not found"
                     )
@@ -673,6 +675,17 @@ class XssCrawler(Crawler):
         if error_type in ("HtmlError", "HtmlTagImbalance"):
             return False
         if error_type == "UnknownContentType" and message == "application/problem+json":
+            return False
+        if (
+            error_type == "JavascriptError"
+            and not url.follow
+            and "Failed to load resource: the server responded with a status of" in message
+        ):
+            # A payload-mutated URL (follow=False, see mutate_url_with_xss_payload) is
+            # expected to be rejected by the server, not to succeed. Checkmk now
+            # correctly answers such requests with a real non-2xx status instead of
+            # 200, which Chrome logs to the console; that's the fix working, not an
+            # XSS finding.
             return False
         return super().handle_error(url, error_type, message)
 

@@ -12,7 +12,7 @@ ensuring a controlled environment for testing.
 """
 
 import uuid
-from collections.abc import Mapping, Sequence
+from collections.abc import Container, Mapping, Sequence
 from dataclasses import asdict, replace
 from typing import Any, override
 
@@ -25,12 +25,12 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
 from cmk.checkengine.discovery import AutochecksMemoizer
-from cmk.checkengine.plugins import AutocheckEntry
+from cmk.checkengine.plugins import AutocheckEntry, ServiceID
 from cmk.ruleset_matcher.labels import BuiltinHostLabelsStore
 from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
-from tests.testlib.common.empty_config import EMPTY_CONFIG
 from tests.testlib.common.utils2 import get_standard_linux_agent_output
+from tests.testlib.unit.empty_config import EMPTY_CONFIG
 
 
 class _AutochecksMocker(AutochecksMemoizer):
@@ -63,12 +63,13 @@ class Scenario:
         BuiltinHostLabelsStore(cmk.utils.paths.builtin_host_labels_file).save(builtin_host_labels)
         config_cache = ConfigCache(
             loaded_config,
-            self._edition,
             hosts_config,
             host_tags,
             autochecks_dir=cmk.utils.paths.autochecks_dir,
             discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
             builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+            excluded_service_ids=self._excluded_service_ids,
+            relay_supported_active_checks=self._relay_supported_active_checks,
         )
         return LoadingResult(
             loaded_config=loaded_config,
@@ -77,10 +78,18 @@ class Scenario:
             config_cache=config_cache,
         )
 
-    def __init__(self, site_id: str = "unit", edition: Edition = Edition.COMMUNITY) -> None:
+    def __init__(
+        self,
+        site_id: str = "unit",
+        edition: Edition = Edition.COMMUNITY,
+        excluded_service_ids: Container[ServiceID] = frozenset(),
+        relay_supported_active_checks: Container[str] = frozenset(),
+    ) -> None:
         super().__init__()
 
         self._edition = edition
+        self._excluded_service_ids = excluded_service_ids
+        self._relay_supported_active_checks = relay_supported_active_checks
         tag_config = cmk.ruleset_matcher.tags.sample_tag_config()
         self.tags = cmk.ruleset_matcher.tags.get_effective_tag_config(tag_config)
         self.site_id = site_id
@@ -232,9 +241,8 @@ class Scenario:
         if self._autochecks_mocker.raw_autochecks:
             monkeypatch.setattr(
                 self.config_cache,
-                "_autochecks_memoizer",
+                "autochecks_memoizer",
                 self._autochecks_mocker,
-                raising=False,
             )
 
         return loading_result

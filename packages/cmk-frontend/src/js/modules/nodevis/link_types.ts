@@ -5,7 +5,7 @@
  */
 import { AbstractLink, link_type_class_registry } from './link_utils'
 
-export class DefaultLinkNode extends AbstractLink {
+class DefaultLinkNode extends AbstractLink {
   override class_name(): string {
     return 'default'
   }

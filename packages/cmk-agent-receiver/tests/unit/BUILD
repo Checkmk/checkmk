@@ -23,7 +23,7 @@ py_cmk_test(
         "//packages/cmk-agent-receiver:testlib",
         requirement("cryptography"),
         requirement("fastapi"),
-        requirement("httpx"),
+        requirement("httpx2"),
         requirement("pytest-asyncio"),
         requirement("pytest-socket"),
         requirement("pytest-random-order"),

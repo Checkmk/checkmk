@@ -98,7 +98,7 @@ def _audit_log_cleanup() -> Iterator[None]:
     try:
         yield
     finally:
-        AuditLogStore()._path.unlink(missing_ok=True)
+        AuditLogStore()._path.unlink(missing_ok=True)  # noqa: SLF001
 
 
 def test_change_scope_all_activation_sites() -> None:
@@ -158,6 +158,14 @@ def test_explicit_sites_with_unknown_site_falls_back_to_local() -> None:
         SiteId("known_remote"),
         SiteId("local"),
     }
+
+
+def test_explicit_sites_and_local_site_writes_the_local_site_too() -> None:
+    pending_changes, store = _pending_changes(
+        activation_site_ids=("local", "remote"), local_site="local"
+    )
+    pending_changes.add(_default_request(), ChangeScope.sites_and_local_site([SiteId("remote")]))
+    assert {site for site, _ in store.appended} == {SiteId("local"), SiteId("remote")}
 
 
 def test_explicit_sites_all_unknown_writes_local_only() -> None:

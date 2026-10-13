@@ -10,12 +10,17 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import type { ItemId } from '../../types'
 import ItemIdChip from './ItemIdChip.vue'
 
-const { id, color, label, disabled } = defineProps<{
+const {
+  id,
+  color,
+  label,
+  blockReason = null
+} = defineProps<{
   id: ItemId
   color?: string | undefined
   /** Accessible name of the button. */
   label: TranslatedString
-  disabled?: boolean | undefined
+  blockReason?: TranslatedString | null | undefined
 }>()
 
 const emit = defineEmits<{ click: [] }>()
@@ -26,7 +31,8 @@ const emit = defineEmits<{ click: [] }>()
     variant="optional"
     class="graphing-item-id-button"
     :aria-label="label"
-    :disabled="disabled"
+    :disabled="blockReason !== null"
+    :disabled-reason="blockReason ?? undefined"
     @click="emit('click')"
   >
     <ItemIdChip :id="id" :color="color" />

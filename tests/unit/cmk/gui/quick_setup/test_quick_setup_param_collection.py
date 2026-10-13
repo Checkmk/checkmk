@@ -23,7 +23,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
-from cmk.password_store.v1_unstable import Secret
+from cmk.password_store.v1 import Secret
 from cmk.server_side_calls_backend import load_special_agents
 
 ALL_FORM_SPEC_DATA: ParsedFormData = {
@@ -142,8 +142,9 @@ def test_quick_setup_collect_passwords_from_form_data() -> None:
 
 
 @pytest.mark.skip("There currently is no quick setup rule with defaults we could test with.")
+@pytest.mark.usefixtures("patch_theme")
 def test_quick_setup_collect_params_with_defaults_from_form_data(
-    with_user: tuple[UserId, str], patch_theme: None, test_edition: Edition
+    with_user: tuple[UserId, str], test_edition: Edition
 ) -> None:
     load_special_agents(raise_errors=True)  # why?
     with UserContext(with_user[0], UserPermissions({}, {}, {}, [])):

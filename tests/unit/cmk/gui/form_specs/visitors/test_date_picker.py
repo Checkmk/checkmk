@@ -30,7 +30,7 @@ from cmk.gui.form_specs.unstable import DatePicker
         [RawFrontendData(23), "", True],
     ],
 )
-def test_date_picker(value: IncomingData, expected_value: str, has_validation_error: bool) -> None:
+def test_date_picker(value: IncomingData, expected_value: str, has_validation_error: bool) -> None:  # noqa: ARG001
     visitor = get_visitor(DatePicker(), VisitorOptions(migrate_values=True, mask_values=False))
     validation_errors = visitor.validate(value)
     assert (len(validation_errors) > 0) == has_validation_error

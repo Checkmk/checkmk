@@ -28,7 +28,7 @@ from cmk.plugins.proxmox_ve.special_agent.libproxmox import (
     ProxmoxVeAPI,
     TaskInfo,
 )
-from cmk.server_side_programs.v1_unstable import Storage
+from cmk.server_side_programs.v1 import Storage
 
 LOGGER = logging.getLogger("agent_proxmox_ve.backups")
 
@@ -418,7 +418,7 @@ def collect_vm_backup_info(backup_tasks: Iterable[BackupTask]) -> Mapping[str, B
 
 def fetch_backup_data(
     args: argparse.Namespace,
-    session: "ProxmoxVeAPI",
+    session: ProxmoxVeAPI,
     nodes: Iterable[Mapping[str, Any]],
 ) -> Mapping[str, BackupInfo]:
     """Since the Proxmox API does not provide us with information about past backups we read the

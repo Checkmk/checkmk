@@ -7,11 +7,13 @@ from collections.abc import Iterator, Mapping
 
 import pytest
 
-from cmk.werks.tool import load_werk
+from cmk.werks.tool import load_werk, parse_werk
 from cmk.werks.tool.error import WerkError
-from cmk.werks.tool.load import _format_title, load_werk_v2, load_werk_v3
+from cmk.werks.tool.load import load_werk_v2, load_werk_v3
 from cmk.werks.tool.models import WerkV2
-from cmk.werks.tool.parse import parse_werk_v2, parse_werk_v3
+from cmk.werks.tool.parse import parse_werk_v2, parse_werk_v3, WerkV2ParseResult
+
+from ._werk_files import werk_text
 
 WERK_V1 = {
     "class": "fix",
@@ -259,15 +261,15 @@ this is the `description` with some *formatting.*
 @pytest.mark.parametrize(
     ("str_in", "str_out"),
     [
-        ("a < b", "a < b"),
-        ("&amp;", "&"),
-        ("&", "&"),
-        (r"\*bold*", "*bold*"),
-        (r"&lt;br/>", "<br/>"),
+        pytest.param("a < b", "a < b", id="less-than"),
+        pytest.param("&amp;", "&", id="entity"),
+        pytest.param("&", "&", id="ampersand"),
+        pytest.param(r"\*bold*", "*bold*", id="escaped-markdown"),
+        pytest.param(r"&lt;br/>", "<br/>", id="escaped-tag"),
     ],
 )
-def test_title_formatting(str_in: str, str_out: str) -> None:
-    assert _format_title(str_in) == str_out
+def test_the_title_is_loaded_as_plain_text(str_in: str, str_out: str) -> None:
+    assert load_werk(file_content=werk_text(title=str_in), file_name="1234.md").title == str_out
 
 
 def test_loading_md_werk_tags_not_in_whitelist() -> None:
@@ -416,3 +418,23 @@ edition | community
         "description": "",
     }
     assert load_werk_v3(parse_werk_v3(md, werk_id="1234")).to_json_dict() == expected
+
+
+def test_a_list_item_outside_of_a_list_is_rejected() -> None:
+    text = werk_text() + "\n<li>item</li>\n"
+
+    with pytest.raises(WerkError, match="Found li tags which are not inside <ul> or <ol>"):
+        load_werk(file_content=text, file_name="1234.md")
+
+
+def test_a_title_spanning_two_lines_is_rejected() -> None:
+    text = werk_text().replace("# A werk title\n", "# A werk\r title\n")
+
+    with pytest.raises(WerkError, match="Werk title must be a single line"):
+        load_werk(file_content=text, file_name="1234.md")
+
+
+def test_a_markdown_file_with_a_v2_header_is_parsed_as_a_v2_werk() -> None:
+    text = werk_text().replace("[//]: # (werk v3)", "[//]: # (werk v2)")
+
+    assert isinstance(parse_werk(text, "1234.md"), WerkV2ParseResult)

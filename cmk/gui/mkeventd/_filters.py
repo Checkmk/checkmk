@@ -54,7 +54,11 @@ def register(filter_registry: FilterRegistry) -> None:
             title=_l("Message/Text of event (regex)"),
             sort_index=201,
             info="event",
-            query_filter=query_filters.TextQuery(ident="event_text", op="~~"),
+            query_filter=query_filters.TextQuery(
+                ident="event_text",
+                op="~~",
+                negateable=True,
+            ),
         )
     )
 
@@ -66,6 +70,7 @@ def register(filter_registry: FilterRegistry) -> None:
             query_filter=query_filters.TextQuery(
                 ident="event_application",
                 op="~~",
+                negateable=True,
             ),
         )
     )
@@ -75,7 +80,11 @@ def register(filter_registry: FilterRegistry) -> None:
             title=_l("Contact person (regex)"),
             sort_index=201,
             info="event",
-            query_filter=query_filters.TextQuery(ident="event_contact", op="~~"),
+            query_filter=query_filters.TextQuery(
+                ident="event_contact",
+                op="~~",
+                negateable=True,
+            ),
         )
     )
 
@@ -84,7 +93,11 @@ def register(filter_registry: FilterRegistry) -> None:
             title=_l("Comment to the event (regex)"),
             sort_index=201,
             info="event",
-            query_filter=query_filters.TextQuery(ident="event_comment", op="~~"),
+            query_filter=query_filters.TextQuery(
+                ident="event_comment",
+                op="~~",
+                negateable=True,
+            ),
         )
     )
 
@@ -94,7 +107,10 @@ def register(filter_registry: FilterRegistry) -> None:
             sort_index=201,
             info="event",
             query_filter=query_filters.TextQuery(
-                ident="event_host_regex", op="~~", column="event_host"
+                ident="event_host_regex",
+                op="~~",
+                column="event_host",
+                negateable=True,
             ),
         )
     )
@@ -113,7 +129,11 @@ def register(filter_registry: FilterRegistry) -> None:
             title=_l("Original IP address of event (regex)"),
             sort_index=201,
             info="event",
-            query_filter=query_filters.TextQuery(ident="event_ipaddress", op="~~"),
+            query_filter=query_filters.TextQuery(
+                ident="event_ipaddress",
+                op="~~",
+                negateable=True,
+            ),
         )
     )
 
@@ -122,7 +142,11 @@ def register(filter_registry: FilterRegistry) -> None:
             title=_l("Owner of event (regex)"),
             sort_index=201,
             info="event",
-            query_filter=query_filters.TextQuery(ident="event_owner", op="~~"),
+            query_filter=query_filters.TextQuery(
+                ident="event_owner",
+                op="~~",
+                negateable=True,
+            ),
         )
     )
 
@@ -131,7 +155,11 @@ def register(filter_registry: FilterRegistry) -> None:
             title=_l("User that performed action (regex)"),
             sort_index=221,
             info="history",
-            query_filter=query_filters.TextQuery(ident="history_who", op="~~"),
+            query_filter=query_filters.TextQuery(
+                ident="history_who",
+                op="~~",
+                negateable=True,
+            ),
         )
     )
 

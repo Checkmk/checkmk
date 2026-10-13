@@ -8,10 +8,15 @@ import { expect, test } from 'vitest'
 import {
   alertConditions,
   alertName,
+  alertThresholds,
   emptyAlert,
+  hasCompleteThresholds,
+  hasThresholds,
   hasUnparsableRegex,
   servicePattern
 } from '@/mode-alerts/types'
+
+import { PREDICTION_PERIODS } from './thresholds-spec'
 
 // The folder choice's option ids and the folder paths they stand for.
 const FOLDERS = { '': '', web: 'linux/web' }
@@ -153,4 +158,113 @@ test('the empty entry the host list offers for typing is not sent', () => {
       FOLDERS
     ).host_name
   ).toEqual({ match_on: ['web01'], operator: 'one_of' })
+})
+
+const [WEEKDAY, , , MINUTE] = Object.keys(PREDICTION_PERIODS) as [string, string, string, string]
+
+test('an alert without upper or lower levels has no thresholds', () => {
+  expect(hasThresholds(emptyAlert())).toBe(false)
+})
+
+test('"No levels" counts as a threshold, as it overrides other rules', () => {
+  expect(hasThresholds(emptyAlert(undefined, { lower_levels: ['no_levels', null] }))).toBe(true)
+})
+
+test('fixed levels are sent as their warning and critical levels', () => {
+  const model = emptyAlert(undefined, {
+    upper_levels: ['fixed', [80, 90]],
+    lower_levels: ['fixed', [20, 10]]
+  })
+
+  expect(alertThresholds(model, PREDICTION_PERIODS)).toEqual({
+    upper: { type: 'fixed', warn: 80, crit: 90 },
+    lower: { type: 'fixed', warn: 20, crit: 10 }
+  })
+})
+
+test('"No levels" is sent, a side left out is not', () => {
+  const model = emptyAlert(undefined, { upper_levels: ['no_levels', null] })
+
+  expect(alertThresholds(model, PREDICTION_PERIODS)).toEqual({ upper: { type: 'no_levels' } })
+})
+
+test('predictive levels are sent with the name of their period', () => {
+  const model = emptyAlert(undefined, {
+    upper_levels: [
+      'predictive',
+      { period: MINUTE, horizon: 7, levels: ['stdev', [2, 3]], bound: null }
+    ]
+  })
+
+  expect(alertThresholds(model, PREDICTION_PERIODS)).toEqual({
+    upper: {
+      type: 'predictive',
+      period: 'minute_of_hour',
+      horizon_days: 7,
+      difference: { type: 'stdev', warn: 2, crit: 3 }
+    }
+  })
+})
+
+test('the fixed limits of predictive levels are sent', () => {
+  const model = emptyAlert(undefined, {
+    lower_levels: [
+      'predictive',
+      { period: WEEKDAY, horizon: 90, levels: ['relative', [10, 20]], bound: [5, 2] }
+    ]
+  })
+
+  expect(alertThresholds(model, PREDICTION_PERIODS).lower).toEqual({
+    type: 'predictive',
+    period: 'day_of_week',
+    horizon_days: 90,
+    difference: { type: 'relative', warn: 10, crit: 20 },
+    fixed_limits: { warn: 5, crit: 2 }
+  })
+})
+
+test('an unknown period option is refused', () => {
+  const model = emptyAlert(undefined, {
+    upper_levels: [
+      'predictive',
+      { period: 'unknown', horizon: 90, levels: ['absolute', [1, 2]], bound: null }
+    ]
+  })
+
+  expect(() => alertThresholds(model, PREDICTION_PERIODS)).toThrow('unknown')
+})
+
+test('levels with all fields filled in are complete', () => {
+  const model = emptyAlert(undefined, {
+    upper_levels: ['fixed', [80, 90]],
+    lower_levels: [
+      'predictive',
+      { period: WEEKDAY, horizon: 90, levels: ['absolute', [1, 2]], bound: [5, 2] }
+    ]
+  })
+
+  expect(hasCompleteThresholds(model)).toBe(true)
+})
+
+test('"No levels" has nothing to fill in', () => {
+  expect(hasCompleteThresholds(emptyAlert(undefined, { upper_levels: ['no_levels', null] }))).toBe(
+    true
+  )
+})
+
+test('an empty fixed level is incomplete', () => {
+  expect(hasCompleteThresholds(emptyAlert(undefined, { upper_levels: ['fixed', [80, '']] }))).toBe(
+    false
+  )
+})
+
+test('an empty fixed limit of predictive levels is incomplete', () => {
+  const model = emptyAlert(undefined, {
+    lower_levels: [
+      'predictive',
+      { period: WEEKDAY, horizon: 90, levels: ['absolute', [1, 2]], bound: ['', 2] }
+    ]
+  })
+
+  expect(hasCompleteThresholds(model)).toBe(false)
 })

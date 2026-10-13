@@ -16,6 +16,8 @@ import {
   type AlertModel,
   type FolderPaths,
   type HostConditions,
+  type PredictionPeriods,
+  type ThresholdsValue,
   emptyAlert
 } from '@/mode-alerts/types'
 
@@ -26,11 +28,16 @@ const props = defineProps<{
     spec: FormSpec
     data: HostConditions
   }
+  thresholds_form: {
+    spec: FormSpec
+    data: ThresholdsValue
+  }
   folder_paths: FolderPaths
+  prediction_periods: PredictionPeriods
 }>()
 
 const currentStep = ref(1)
-const model = ref<AlertModel>(emptyAlert(props.conditions_form.data))
+const model = ref<AlertModel>(emptyAlert(props.conditions_form.data, props.thresholds_form.data))
 const saving = ref(false)
 const created = ref(false)
 const saveError = ref<string | null>(null)
@@ -39,7 +46,7 @@ async function saveAlert(): Promise<void> {
   saveError.value = null
   saving.value = true
   try {
-    const result = await createAlert(model.value, props.folder_paths)
+    const result = await createAlert(model.value, props.folder_paths, props.prediction_periods)
     if (result.ok) {
       created.value = true
     } else {
@@ -65,6 +72,8 @@ async function saveAlert(): Promise<void> {
       />
 
       <ThresholdsStep
+        v-model="model"
+        :thresholds-spec="thresholds_form.spec"
         :saving="saving"
         :created="created"
         :save-error="saveError"

@@ -12,6 +12,7 @@ import { afterEach, expect, test } from 'vitest'
 import AlertWizardApp from '@/mode-alerts/AlertWizardApp.vue'
 
 import { CONDITIONS_SPEC, FOLDER_PATHS, MAIN_FOLDER } from './conditions-spec'
+import { PREDICTION_PERIODS, THRESHOLDS_SPEC } from './thresholds-spec'
 
 const API_BASE = `${location.protocol}//${location.host}/api/internal`
 const ENDPOINT = `${API_BASE}/domain-types/service/collections/all`
@@ -35,7 +36,9 @@ function renderApp() {
   render(AlertWizardApp, {
     props: {
       conditions_form: { spec: CONDITIONS_SPEC, data: { folder_path: MAIN_FOLDER } },
-      folder_paths: FOLDER_PATHS
+      thresholds_form: { spec: THRESHOLDS_SPEC, data: {} },
+      folder_paths: FOLDER_PATHS,
+      prediction_periods: PREDICTION_PERIODS
     }
   })
 }
@@ -74,30 +77,74 @@ test('a completed first step advances to the threshold step', async () => {
   await completeFirstStep()
 
   await waitFor(() => {
-    expect(screen.getByText('Defining the threshold will become available here.')).toBeVisible()
+    expect(screen.getByRole('checkbox', { name: 'Upper levels' })).toBeVisible()
   })
 })
 
-test('creating the alert sends its name, service match and conditions', async () => {
-  let sentBody: unknown = null
+async function defineUpperLevels(warn: string, crit: string) {
+  await userEvent.click(await screen.findByRole('checkbox', { name: 'Upper levels' }))
+  if (warn !== '') {
+    await userEvent.type(screen.getByRole('spinbutton', { name: 'Warning at' }), warn)
+  }
+  if (crit !== '') {
+    await userEvent.type(screen.getByRole('spinbutton', { name: 'Critical at' }), crit)
+  }
+}
+
+function captureCreateRequests(): unknown[] {
+  const sentBodies: unknown[] = []
   server.use(
     http.post(CREATE_ENDPOINT, async ({ request }) => {
-      sentBody = await request.json()
+      sentBodies.push(await request.json())
       return HttpResponse.json({})
     })
   )
+  return sentBodies
+}
+
+test('creating the alert sends its name, service match, conditions and thresholds', async () => {
+  const sentBodies = captureCreateRequests()
+  renderApp()
+  await completeFirstStep()
+  await defineUpperLevels('80', '90')
+
+  await userEvent.click(screen.getByRole('button', { name: 'Create alert' }))
+
+  expect(await screen.findByText('The alert was created.')).toBeVisible()
+  expect(sentBodies).toEqual([
+    {
+      configuration_name: 'latency_too_high',
+      alert_name: 'Latency too high',
+      service_match: { mode: 'exact', pattern: 'HTTP request duration' },
+      conditions: { folder: '/', host_tags: [], host_label_groups: [] },
+      thresholds: { upper: { type: 'fixed', warn: 80, crit: 90 } }
+    }
+  ])
+})
+
+test('an alert without thresholds is not created', async () => {
+  const sentBodies = captureCreateRequests()
   renderApp()
   await completeFirstStep()
 
   await userEvent.click(await screen.findByRole('button', { name: 'Create alert' }))
 
-  expect(await screen.findByText('The alert was created.')).toBeVisible()
-  expect(sentBody).toEqual({
-    configuration_name: 'latency_too_high',
-    alert_name: 'Latency too high',
-    service_match: { mode: 'exact', pattern: 'HTTP request duration' },
-    conditions: { folder: '/', host_tags: [], host_label_groups: [] }
-  })
+  expect(
+    await screen.findByText('Define at least one threshold: upper levels, lower levels or both.')
+  ).toBeVisible()
+  expect(sentBodies).toEqual([])
+})
+
+test('an alert with incomplete levels is not created', async () => {
+  const sentBodies = captureCreateRequests()
+  renderApp()
+  await completeFirstStep()
+  await defineUpperLevels('80', '')
+
+  await userEvent.click(screen.getByRole('button', { name: 'Create alert' }))
+
+  expect(await screen.findByText('Fill in the warning and critical levels.')).toBeVisible()
+  expect(sentBodies).toEqual([])
 })
 
 test('creating the alert sends the chosen folder', async () => {
@@ -113,6 +160,7 @@ test('creating the alert sends the chosen folder', async () => {
     void userEvent.click(screen.getByRole('combobox', { name: 'Folder' }))
     await userEvent.click(await screen.findByRole('option', { name: 'Main/Linux' }))
   })
+  await defineUpperLevels('80', '90')
 
   await userEvent.click(await screen.findByRole('button', { name: 'Create alert' }))
 
@@ -135,6 +183,7 @@ test('a rejected alert shows the reason', async () => {
   )
   renderApp()
   await completeFirstStep()
+  await defineUpperLevels('80', '90')
 
   await userEvent.click(await screen.findByRole('button', { name: 'Create alert' }))
 

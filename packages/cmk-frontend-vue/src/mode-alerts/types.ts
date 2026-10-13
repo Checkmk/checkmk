@@ -23,15 +23,47 @@ export type FolderPaths = Record<string, string>
 export type AlertConditions = components['schemas']['AlertConditionsModel']
 type TagCondition = NonNullable<AlertConditions['host_tags']>[number]
 
+export type AlertThresholds = components['schemas']['AlertThresholdsModel']
+type Levels = NonNullable<AlertThresholds['upper']>
+type PredictionPeriod = components['schemas']['PredictiveLevelsModel']['period']
+type DifferenceType = components['schemas']['PredictiveLevelsModel']['difference']['type']
+
+export type PredictionPeriods = Record<string, PredictionPeriod>
+
+type Level = number | ''
+type LevelsPair = [Level, Level]
+
+export type LevelsValue =
+  | ['no_levels', null]
+  | ['fixed', LevelsPair]
+  | [
+      'predictive',
+      {
+        period: string
+        horizon: Level
+        levels: [DifferenceType, LevelsPair]
+        bound: LevelsPair | null
+      }
+    ]
+
+export interface ThresholdsValue {
+  upper_levels?: LevelsValue
+  lower_levels?: LevelsValue
+}
+
 export interface AlertModel {
   name: string
   matchType: ServiceNameMatch
   servicePattern: string
   conditions: HostConditions
+  thresholds: ThresholdsValue
 }
 
-export function emptyAlert(conditions: HostConditions = { folder_path: '' }): AlertModel {
-  return { name: '', matchType: 'exact', servicePattern: '', conditions }
+export function emptyAlert(
+  conditions: HostConditions = { folder_path: '' },
+  thresholds: ThresholdsValue = {}
+): AlertModel {
+  return { name: '', matchType: 'exact', servicePattern: '', conditions, thresholds }
 }
 
 export function alertName(model: AlertModel): string {
@@ -102,5 +134,80 @@ export function alertConditions(model: AlertModel, folderPaths: FolderPaths): Al
         operator: explicitHosts.negate ? 'none_of' : 'one_of'
       }
     })
+  }
+}
+
+export function hasThresholds(model: AlertModel): boolean {
+  const { upper_levels: upper, lower_levels: lower } = model.thresholds
+  return upper !== undefined || lower !== undefined
+}
+
+function isComplete(pair: LevelsPair): boolean {
+  return pair.every((level) => level !== '')
+}
+
+function hasCompleteLevels(value: LevelsValue | undefined): boolean {
+  switch (value?.[0]) {
+    case undefined:
+    case 'no_levels':
+      return true
+    case 'fixed':
+      return isComplete(value[1])
+    case 'predictive': {
+      const { horizon, levels, bound } = value[1]
+      return horizon !== '' && isComplete(levels[1]) && (bound === null || isComplete(bound))
+    }
+  }
+}
+
+export function hasCompleteThresholds(model: AlertModel): boolean {
+  return (
+    hasCompleteLevels(model.thresholds.upper_levels) &&
+    hasCompleteLevels(model.thresholds.lower_levels)
+  )
+}
+
+function level(value: Level): number {
+  if (value === '') {
+    throw new Error('Incomplete levels cannot be sent')
+  }
+  return value
+}
+
+function predictionPeriod(periods: PredictionPeriods, optionId: string): PredictionPeriod {
+  const period = periods[optionId]
+  if (period === undefined) {
+    throw new Error(`Unknown prediction period option: ${optionId}`)
+  }
+  return period
+}
+
+function levels(value: LevelsValue, periods: PredictionPeriods): Levels {
+  switch (value[0]) {
+    case 'no_levels':
+      return { type: 'no_levels' }
+    case 'fixed': {
+      const [warn, crit] = value[1]
+      return { type: 'fixed', warn: level(warn), crit: level(crit) }
+    }
+    case 'predictive': {
+      const { period, horizon, levels: difference, bound } = value[1]
+      const [type, [warn, crit]] = difference
+      return {
+        type: 'predictive',
+        period: predictionPeriod(periods, period),
+        horizon_days: level(horizon),
+        difference: { type, warn: level(warn), crit: level(crit) },
+        ...(bound && { fixed_limits: { warn: level(bound[0]), crit: level(bound[1]) } })
+      }
+    }
+  }
+}
+
+export function alertThresholds(model: AlertModel, periods: PredictionPeriods): AlertThresholds {
+  const { upper_levels: upper, lower_levels: lower } = model.thresholds
+  return {
+    ...(upper && { upper: levels(upper, periods) }),
+    ...(lower && { lower: levels(lower, periods) })
   }
 }

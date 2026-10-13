@@ -9,8 +9,10 @@ import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import {
   type AlertModel,
   type FolderPaths,
+  type PredictionPeriods,
   alertConditions,
   alertName,
+  alertThresholds,
   servicePattern
 } from '@/mode-alerts/types'
 
@@ -25,7 +27,8 @@ function slugForId(value: string): string {
 
 export async function createAlert(
   model: AlertModel,
-  folderPaths: FolderPaths
+  folderPaths: FolderPaths,
+  predictionPeriods: PredictionPeriods
 ): Promise<CreateResult> {
   const name = alertName(model)
   try {
@@ -42,7 +45,8 @@ export async function createAlert(
           configuration_name: slugForId(name) || 'alert',
           alert_name: name,
           service_match: { mode: model.matchType, pattern: servicePattern(model) },
-          conditions: alertConditions(model, folderPaths)
+          conditions: alertConditions(model, folderPaths),
+          thresholds: alertThresholds(model, predictionPeriods)
         }
       })
     )

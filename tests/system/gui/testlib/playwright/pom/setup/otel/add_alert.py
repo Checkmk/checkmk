@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 class AddAlert(CmkPage):
     """Represent the page `Setup -> Events -> Alerts -> Add alert`.
 
-    Hosts the creation wizard. Only its first step, naming the alert and selecting the
-    custom services it applies to, is implemented; the threshold step is a placeholder.
+    Hosts the creation wizard: naming the alert and selecting the custom services it applies
+    to, then defining its thresholds.
     """
 
     page_title = "Add alert"
@@ -64,7 +64,7 @@ class AddAlert(CmkPage):
     @property
     def threshold_step_content(self) -> Locator:
         return self.main_area.locator().get_by_text(
-            re.compile("Defining the threshold and saving the alert")
+            "Set the default levels of the selected custom services."
         )
 
     @property

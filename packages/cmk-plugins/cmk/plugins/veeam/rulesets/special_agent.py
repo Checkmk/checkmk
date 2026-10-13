@@ -29,7 +29,10 @@ _SECTION_CHOICES = (
     ),
     MultipleChoiceElement(name="veeam_license", title=Title("License")),
     MultipleChoiceElement(name="veeam_backup_jobs", title=Title("Backup jobs")),
-    MultipleChoiceElement(name="veeam_backups", title=Title("Backups (per protected machine)")),
+    MultipleChoiceElement(
+        name="veeam_backups",
+        title=Title("Backups (piggybacked to the protected machine)"),
+    ),
     MultipleChoiceElement(name="veeam_replicas", title=Title("Replicas")),
     MultipleChoiceElement(name="veeam_protection_groups", title=Title("Agent protection groups")),
     MultipleChoiceElement(name="veeam_managed_servers", title=Title("Managed servers")),
@@ -40,7 +43,10 @@ _SECTION_CHOICES = (
     MultipleChoiceElement(
         name="veeam_scaleout_repositories", title=Title("Scale-out repositories")
     ),
-    MultipleChoiceElement(name="veeam_restore_points", title=Title("Restore points")),
+    MultipleChoiceElement(
+        name="veeam_restore_points",
+        title=Title("Restore points (on one piggyback host per protected machine)"),
+    ),
 )
 
 
@@ -137,7 +143,14 @@ def _parameter_form() -> Dictionary:
                         "server. Deselect services you do not need, for example ones your "
                         "monitoring account has no permission for. A service that is "
                         "selected but cannot be fetched makes the agent fail, so that you "
-                        "can correct the selection or the permissions."
+                        "can correct the selection or the permissions. Most services are "
+                        'created on the host this rule applies to. "Backups" and '
+                        '"Restore points" are instead delivered via piggyback to one host '
+                        "per protected machine, named after the machine in its Veeam backup "
+                        "chain. Create these hosts, for example with the dynamic host "
+                        "management, or map the names to existing hosts with the rule "
+                        '"Host name translation for piggybacked hosts". Without such a '
+                        "host, these services are not created."
                     ),
                     elements=_SECTION_CHOICES,
                     prefill=DefaultValue([element.name for element in _SECTION_CHOICES]),

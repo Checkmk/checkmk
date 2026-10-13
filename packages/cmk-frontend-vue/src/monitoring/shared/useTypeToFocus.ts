@@ -13,7 +13,9 @@
  * shortcuts stay quiet and the browser's keys pass. A search is abandoned by a pointer going
  * down anywhere, and the focus ring goes with it. It is finished by Esc, by Enter or a click
  * activating the match, or by the focus leaving the view; the focus then stays where it
- * landed. All matches are framed while searching.
+ * landed. All matches are framed while searching. A text field is matched by its label or
+ * placeholder, but only framed, not focused, so it doesn't take the keys meant for the
+ * buffer; Enter focuses it.
  */
 import { getKeyboardHelp } from 'cmk-ui-library/lib/keyboardHelp'
 import { type Ref, onBeforeUnmount, onMounted, readonly, ref } from 'vue'
@@ -25,6 +27,9 @@ import { isTextEntry } from './isTextEntry'
 
 /** Framed by `TypeToFocusIndicator.vue`; the focused one keeps the ordinary focus ring. */
 export const MATCH_ATTRIBUTE = 'data-type-to-focus-match'
+/** The match the search is on: focused, unless it is a text field. */
+export const CURRENT_ATTRIBUTE = 'data-type-to-focus-current'
+const TEXT_FIELD_SELECTOR = 'input:not(:disabled):not([type="hidden"]), textarea:not(:disabled)'
 const STEPS: Readonly<Record<string, -1 | 1>> = {
   ArrowDown: 1,
   ArrowRight: 1,
@@ -46,7 +51,14 @@ function normalise(text: string | null | undefined): string {
 
 /** A tooltip only names an element without text; else it is prose, e.g. "…problem state". */
 function labelOf(element: HTMLElement, text: string): string {
-  return normalise(`${element.getAttribute('aria-label') ?? ''} ${text ? '' : element.title}`)
+  return normalise(
+    [
+      ...Array.from((element as HTMLInputElement).labels ?? [], (label) => label.textContent),
+      element.getAttribute('aria-label'),
+      element.getAttribute('placeholder'),
+      text ? '' : element.title
+    ].join(' ')
+  )
 }
 
 /** Visible-text matches first, label-only matches second, each in DOM order. */
@@ -81,7 +93,9 @@ function findMatches(scope: HTMLElement, needle: string): HTMLElement[] {
 
   const byText: HTMLElement[] = []
   const byLabel: HTMLElement[] = []
-  for (const element of scope.querySelectorAll<HTMLElement>(INTERACTIVE_SELECTOR)) {
+  for (const element of scope.querySelectorAll<HTMLElement>(
+    `${INTERACTIVE_SELECTOR}, ${TEXT_FIELD_SELECTOR}`
+  )) {
     if (!isVisible(element)) {
       continue
     }
@@ -144,7 +158,6 @@ export function useTypeToFocus(scope: Readonly<Ref<HTMLElement | null>>): TypeTo
   const buffer = ref('')
   const index = ref(-1)
   const count = ref(0)
-  /** The focused match. */
   let match: HTMLElement | null = null
   let marked: HTMLElement[] = []
 
@@ -158,12 +171,18 @@ export function useTypeToFocus(scope: Readonly<Ref<HTMLElement | null>>): TypeTo
     marked = matches
   }
 
+  function select(next: HTMLElement | null): void {
+    match?.removeAttribute(CURRENT_ATTRIBUTE)
+    next?.setAttribute(CURRENT_ATTRIBUTE, '')
+    match = next
+  }
+
   function reset(): void {
     mark([])
+    select(null)
     buffer.value = ''
     index.value = -1
     count.value = 0
-    match = null
   }
 
   /** Abandoned: the focus ring goes too. */
@@ -186,15 +205,19 @@ export function useTypeToFocus(scope: Readonly<Ref<HTMLElement | null>>): TypeTo
     mark(matches)
     if (matches.length === 0) {
       index.value = -1
-      match = null
+      select(null)
       return
     }
     const position = match ? matches.indexOf(match) : -1
     index.value =
       step === 0 || position < 0 ? 0 : (position + step + matches.length) % matches.length
-    match = matches[index.value] ?? null
+    select(matches[index.value] ?? null)
     match?.scrollIntoView({ block: 'nearest' })
-    match?.focus({ preventScroll: true })
+    if (match && isTextEntry(match)) {
+      ;(document.activeElement as HTMLElement | null)?.blur()
+    } else {
+      match?.focus({ preventScroll: true })
+    }
   }
 
   /** Idle: only an unbound printable key starts a search, everything else keeps its meaning. */
@@ -219,6 +242,13 @@ export function useTypeToFocus(scope: Readonly<Ref<HTMLElement | null>>): TypeTo
     }
     if (event.key === 'Enter' && !match) {
       claim(event)
+      return
+    }
+    if (event.key === 'Enter' && match && isTextEntry(match)) {
+      claim(event)
+      const field = match
+      finish()
+      field.focus()
       return
     }
     if (event.key === 'Enter') {
@@ -303,7 +333,7 @@ export function useTypeToFocus(scope: Readonly<Ref<HTMLElement | null>>): TypeTo
   })
 
   onBeforeUnmount(() => {
-    mark([])
+    reset()
     window.removeEventListener('keydown', onKeyDown, true)
     window.removeEventListener('keyup', onKeyUp, true)
     document.removeEventListener('pointerdown', onPointerDown, true)

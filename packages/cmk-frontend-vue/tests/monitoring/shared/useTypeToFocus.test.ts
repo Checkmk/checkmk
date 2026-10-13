@@ -10,7 +10,11 @@ import { registerKeyboardHelp } from 'cmk-ui-library/lib/keyboardHelp'
 import { afterEach, expect, test, vi } from 'vitest'
 import { defineComponent, h, nextTick, ref } from 'vue'
 
-import { MATCH_ATTRIBUTE, useTypeToFocus } from '@/monitoring/shared/useTypeToFocus'
+import {
+  CURRENT_ATTRIBUTE,
+  MATCH_ATTRIBUTE,
+  useTypeToFocus
+} from '@/monitoring/shared/useTypeToFocus'
 
 function t(value: string): TranslatedString {
   return value as TranslatedString
@@ -38,6 +42,8 @@ const fixture = defineComponent({
           h('button', { type: 'button', title: 'Show only quux' }, 'Unhappy'),
           h('button', { type: 'button', title: 'Refresh quux' }),
           h('input', { type: 'text', 'aria-label': 'Search' }),
+          h('label', ['Zone ', h('input', { type: 'text', placeholder: 'Pattern' })]),
+          h('input', { type: 'hidden', value: 'zonehidden' }),
           h(
             'output',
             { 'data-testid': 'state' },
@@ -217,6 +223,34 @@ test('a click anywhere ends the search', async () => {
 
   expect(await state()).toBe('|-1|0')
   expect(document.body).toHaveFocus()
+})
+
+test('a text field matches by its label, its aria-label and its placeholder', async () => {
+  render(fixture)
+
+  await userEvent.keyboard('zone')
+  expect(await state()).toBe('zone|0|1')
+  await userEvent.keyboard('{Backspace>4/}sear')
+  expect(await state()).toBe('sear|0|1')
+  await userEvent.keyboard('{Backspace>4/}patt')
+  expect(await state()).toBe('patt|0|1')
+})
+
+test('a text field is framed but not focused; Enter focuses it and ends the search', async () => {
+  render(fixture)
+  const field = screen.getByRole('textbox', { name: 'Zone' })
+  await userEvent.keyboard('n')
+  expect(button('cpunode')).toHaveFocus()
+
+  await userEvent.keyboard('{ArrowUp}')
+  expect(field).toHaveAttribute(CURRENT_ATTRIBUTE)
+  expect(document.body).toHaveFocus()
+
+  await userEvent.keyboard('{Enter}x')
+  expect(field).toHaveFocus()
+  expect(field).toHaveValue('x')
+  expect(field).not.toHaveAttribute(CURRENT_ATTRIBUTE)
+  expect(await state()).toBe('|-1|0')
 })
 
 test('typing into a text field is typing, not searching', async () => {

@@ -71,4 +71,10 @@ const { _t } = usei18n()
   outline: 1px dashed var(--success);
   outline-offset: -1px;
 }
+
+/* A text field the search is on, yet unfocused not to take the keys. */
+[data-type-to-focus-current]:not(:focus) {
+  outline: 2px solid var(--success);
+  outline-offset: -2px;
+}
 </style>

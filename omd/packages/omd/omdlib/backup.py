@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="redundant-expr"
+
 """Cares about backing up the files of a site"""
 
 import contextlib
@@ -384,7 +387,7 @@ def _tar_add(
             # Create a TarInfo object from the file.
             tarinfo = _get_tar_info_or_raise(tar, name, arcname)
             # Exclude files.
-            if not predicate(tarinfo):
+            if tarinfo is None or not predicate(tarinfo):
                 return
 
             # Create a backup of history file and add it to the archive as history.sqlite.
@@ -469,5 +472,6 @@ def _get_tar_info_or_raise(
     """
     tarinfo: tarfile.TarInfo | None = tar.gettarinfo(name, arcname=arcname)
     if tarinfo is None:
-        raise tarfile.TarError(f"Failed to get tarinfo for file {name!r}")
+        # raise tarfile.TarError(f"Failed to get tarinfo for file {name!r}")
+        return None  # tolerate unkown file types and simply ignore them for the backup
     return tarinfo

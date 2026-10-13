@@ -7,16 +7,14 @@ from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
 from cmk.graphing import v1 as graphing_api
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
+from cmk.graphing_engine import DecimalNotation, StrictPrecision, Unit
 from cmk.gui.graphing import (
-    ConvertibleUnitSpecification,
-    DecimalNotation,
     get_graph_plugin_from_id,
     get_metric_spec,
     graphs_from_api,
     metrics_from_api,
 )
 from cmk.gui.graphing._plugin_loading import _add_graphing_plugins
-from cmk.gui.unit_formatter import StrictPrecision
 
 
 def test_add_graphing_plugins_registers_every_supported_plugin_kind() -> None:
@@ -70,7 +68,7 @@ def test_add_graphing_plugins_registers_every_supported_plugin_kind() -> None:
     registered_metric_1 = get_metric_spec("syntest_count_first", metrics_from_api)
     assert registered_metric_1.name == "syntest_count_first"
     assert registered_metric_1.title == "Synthetic test count (first)"
-    assert registered_metric_1.unit_spec == ConvertibleUnitSpecification(
+    assert registered_metric_1.unit == Unit(
         notation=DecimalNotation(symbol=""),
         precision=StrictPrecision(digits=2),
     )

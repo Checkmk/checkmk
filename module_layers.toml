@@ -1601,6 +1601,7 @@ allows = [
   "@ccc",
   "@data_backend",
   "cmk.dcd.gui",
+  "cmk.graphing_engine",
   "cmk.gui",
   "cmk.licensing",
   "cmk.update_config",

@@ -807,7 +807,7 @@ def test_decimal_render_y_labels_with_min_y(
 def test_render_y_labels_small_range_large_offset() -> None:
     assert TimeFormatter(
         symbol="s",
-        precision=AutoPrecision(type="auto", digits=2),
+        precision=AutoPrecision(digits=2),
         use_max_digits_for_labels=True,
     ).render_y_labels(
         PositiveYRange(start=1.0011975, end=1.2515224999999999),

@@ -7,9 +7,21 @@ import abc
 import math
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
-from typing import Final, Literal, override
+from typing import assert_never, Final, Literal, override
 
-from pydantic import BaseModel
+
+@dataclass(frozen=True)
+class AutoPrecision:
+    digits: int
+
+
+@dataclass(frozen=True)
+class StrictPrecision:
+    digits: int
+
+
+type Precision = AutoPrecision | StrictPrecision
+
 
 _MAX_DIGITS: Final = 5
 
@@ -67,26 +79,19 @@ class Label:
     text: str
 
 
-class AutoPrecision(BaseModel, frozen=True):
-    type: Literal["auto"] = "auto"
-    digits: int
-
-
-class StrictPrecision(BaseModel, frozen=True):
-    type: Literal["strict"] = "strict"
-    digits: int
-
-
 def _decimals_needed_to_write(spacing: float) -> int:
     return max(0, math.ceil(-math.log10(spacing)))
 
 
-def precision_for_spacing(
-    unit_precision: AutoPrecision | StrictPrecision, spacing: float
-) -> AutoPrecision | StrictPrecision:
-    return unit_precision.model_copy(
-        update={"digits": max(unit_precision.digits, _decimals_needed_to_write(spacing))}
-    )
+def precision_for_spacing(unit_precision: Precision, spacing: float) -> Precision:
+    digits = max(unit_precision.digits, _decimals_needed_to_write(spacing))
+    match unit_precision:
+        case AutoPrecision():
+            return AutoPrecision(digits)
+        case StrictPrecision():
+            return StrictPrecision(digits)
+        case _:
+            assert_never(unit_precision)
 
 
 def _displayed_resolution(
@@ -130,7 +135,7 @@ class NegativeYRange:
 @dataclass(frozen=True)
 class NotationFormatter(abc.ABC):
     symbol: str
-    precision: AutoPrecision | StrictPrecision
+    precision: Precision
     use_max_digits_for_labels: bool = True
 
     @abc.abstractmethod
@@ -155,7 +160,7 @@ class NotationFormatter(abc.ABC):
     def _apply_precision(
         self,
         value: int | float,
-        precision: AutoPrecision | StrictPrecision,
+        precision: Precision,
         use_max_digits_for_labels: bool,
     ) -> float:
         value_floor = math.floor(value)

@@ -11,7 +11,19 @@ from typing import Any, assert_never, Literal, override, TypedDict
 
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import translations as translations_v1
-from cmk.graphing_engine import metric_display_attributes
+from cmk.graphing_engine import (
+    AutoPrecision,
+    DecimalNotation,
+    EngineeringScientificNotation,
+    FALLBACK_UNIT,
+    IECNotation,
+    metric_display_attributes,
+    SINotation,
+    StandardScientificNotation,
+    StrictPrecision,
+    TimeNotation,
+    Unit,
+)
 from cmk.graphing_engine import MetricName as EngineMetricName
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -20,12 +32,9 @@ from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.type_defs import GraphTitleFormatVS, VisualContext
-from cmk.gui.unit_formatter import (
-    AutoPrecision,
-    NotationFormatter,
-    StrictPrecision,
-    TimeFormatter,
-)
+from cmk.gui.unit_formatter import AutoPrecision as FormatterAutoPrecision
+from cmk.gui.unit_formatter import NotationFormatter, TimeFormatter
+from cmk.gui.unit_formatter import StrictPrecision as FormatterStrictPrecision
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.valuespec import (
     Age,
@@ -57,15 +66,6 @@ from ._graph_display_config import GraphDisplayConfigHTML
 from ._metric_data import translate_metric_names
 from ._metric_spec import get_metric_spec, registered_metric_ids_and_titles
 from ._performance_data import parse_performance_data
-from ._unit_specification import (
-    ConvertibleUnitSpecification,
-    DecimalNotation,
-    EngineeringScientificNotation,
-    IECNotation,
-    SINotation,
-    StandardScientificNotation,
-    TimeNotation,
-)
 from ._user_specific_unit import get_temperature_unit, user_specific_unit
 
 type LivestatusQueryFunc = Callable[
@@ -387,12 +387,6 @@ class _UnitChoice:
         return hash(self.id)
 
 
-_FALLBACK_UNIT_SPEC = ConvertibleUnitSpecification(
-    notation=DecimalNotation(symbol=""),
-    precision=AutoPrecision(digits=2),
-)
-
-
 def _sorted_unit_choices(
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
@@ -400,32 +394,32 @@ def _sorted_unit_choices(
 ) -> list[_UnitChoice]:
     return sorted(
         {
-            _unit_choice_from_unit_spec(metric.unit_spec, temperature_unit=temperature_unit)
+            _unit_choice_from_unit(metric.unit, temperature_unit=temperature_unit)
             for metric in registered_metrics.values()
         }
-        | {_unit_choice_from_unit_spec(_FALLBACK_UNIT_SPEC, temperature_unit=temperature_unit)},
+        | {_unit_choice_from_unit(FALLBACK_UNIT, temperature_unit=temperature_unit)},
         key=lambda choice: choice.title,
     )
 
 
-def _unit_choice_from_unit_spec(
-    unit_spec: ConvertibleUnitSpecification,
+def _unit_choice_from_unit(
+    unit: Unit,
     *,
     temperature_unit: TemperatureUnit,
 ) -> _UnitChoice:
-    unit_for_current_user = user_specific_unit(unit_spec, temperature_unit)
+    unit_for_current_user = user_specific_unit(unit, temperature_unit)
     return _UnitChoice(
-        id=id_from_unit_spec(unit_spec),
+        id=id_from_unit(unit),
         title=_title_from_formatter(unit_for_current_user.formatter),
         symbol=unit_for_current_user.formatter.symbol,
         vs_type=_vs_type_from_formatter(unit_for_current_user.formatter),
     )
 
 
-def id_from_unit_spec(unit_spec: ConvertibleUnitSpecification) -> str:
-    # Explicitly don't use eg. `unit_spec.notation.__class__.__name__` to be resilient against
+def id_from_unit(unit: Unit) -> str:
+    # Explicitly don't use eg. `unit.notation.__class__.__name__` to be resilient against
     # renamings
-    match unit_spec.notation:
+    match unit.notation:
         case DecimalNotation():
             notation_id = "DecimalNotation"
         case SINotation():
@@ -440,21 +434,21 @@ def id_from_unit_spec(unit_spec: ConvertibleUnitSpecification) -> str:
             notation_id = "TimeNotation"
         case other_notation:
             assert_never(other_notation)
-    match unit_spec.precision:
+    match unit.precision:
         case AutoPrecision():
             precision_id = "AutoPrecision"
         case StrictPrecision():
             precision_id = "StrictPrecision"
         case other_precision:
             assert_never(other_precision)
-    return f"{notation_id}_{unit_spec.notation.symbol}_{precision_id}_{unit_spec.precision.digits}"
+    return f"{notation_id}_{unit.notation.symbol}_{precision_id}_{unit.precision.digits}"
 
 
 def _title_from_formatter(formatter: NotationFormatter) -> str:
     match formatter.precision:
-        case AutoPrecision(digits=digits):
+        case FormatterAutoPrecision(digits=digits):
             precision_title = f"auto precision, {digits} digits"
-        case StrictPrecision(digits=digits):
+        case FormatterStrictPrecision(digits=digits):
             precision_title = f"strict precision, {digits} digits"
         case _:
             assert_never(formatter.precision)
@@ -484,13 +478,13 @@ class PageVsAutocomplete(AjaxPage):
         temperature_unit = get_temperature_unit(user, ctx.config.default_temperature_unit)
         if metric_name := ctx.request.get_request()["metric"]:
             metric_spec = get_metric_spec(metric_name, metrics_from_api)
-            unit_choice_for_metric = _unit_choice_from_unit_spec(
-                metric_spec.unit_spec,
+            unit_choice_for_metric = _unit_choice_from_unit(
+                metric_spec.unit,
                 temperature_unit=temperature_unit,
             )
         else:
-            unit_choice_for_metric = _unit_choice_from_unit_spec(
-                _FALLBACK_UNIT_SPEC,
+            unit_choice_for_metric = _unit_choice_from_unit(
+                FALLBACK_UNIT,
                 temperature_unit=temperature_unit,
             )
 
@@ -505,8 +499,8 @@ class PageVsAutocomplete(AjaxPage):
                     "unit_choice_index": idx,
                 }
 
-        fallback_choice = _unit_choice_from_unit_spec(
-            _FALLBACK_UNIT_SPEC,
+        fallback_choice = _unit_choice_from_unit(
+            FALLBACK_UNIT,
             temperature_unit=temperature_unit,
         )
         for idx, choice in enumerate(

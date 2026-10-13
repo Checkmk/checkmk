@@ -11,13 +11,16 @@ from cmk.graphing_engine import (
     DecimalNotation,
     EngineeringScientificNotation,
     IECNotation,
+    Notation,
+    Precision,
     SINotation,
     StandardScientificNotation,
     StrictPrecision,
     TimeNotation,
     Unit,
 )
-from cmk.shared_typing.cmk_time_series_graph import Precision, UnitFormat
+from cmk.shared_typing.cmk_time_series_graph import Precision as SharedPrecision
+from cmk.shared_typing.cmk_time_series_graph import UnitFormat
 
 type NotationName = Literal[
     "decimal", "si", "iec", "standard_scientific", "engineering_scientific", "time"
@@ -25,8 +28,8 @@ type NotationName = Literal[
 type PrecisionKind = Literal["auto", "strict"]
 
 
-def notation_name(unit: Unit) -> NotationName:
-    match unit.notation:
+def notation_name(notation: Notation) -> NotationName:
+    match notation:
         case DecimalNotation():
             return "decimal"
         case SINotation():
@@ -40,24 +43,26 @@ def notation_name(unit: Unit) -> NotationName:
         case TimeNotation():
             return "time"
         case _:
-            assert_never(unit.notation)
+            assert_never(notation)
 
 
-def precision_kind(unit: Unit) -> PrecisionKind:
-    match unit.precision:
+def precision_kind(precision: Precision) -> PrecisionKind:
+    match precision:
         case AutoPrecision():
             return "auto"
         case StrictPrecision():
             return "strict"
         case _:
-            assert_never(unit.precision)
+            assert_never(precision)
 
 
 def unit_to_unit_format(unit: Unit) -> UnitFormat:
     return UnitFormat(
-        notation=notation_name(unit),
+        notation=notation_name(unit.notation),
         symbol=unit.notation.symbol,
-        precision=Precision(type=precision_kind(unit), digits=unit.precision.digits),
+        precision=SharedPrecision(
+            type=precision_kind(unit.precision), digits=unit.precision.digits
+        ),
     )
 
 

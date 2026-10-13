@@ -39,16 +39,17 @@ from cmk.gui.inventory.filters import (
     FilterInvTextWithSortKey,
 )
 from cmk.gui.log import logger
-from cmk.gui.unit_formatter import AutoPrecision as AutoPrecisionFormatter
 from cmk.gui.unit_formatter import (
+    AutoPrecision,
     DecimalFormatter,
     EngineeringScientificFormatter,
     IECFormatter,
+    Precision,
     SIFormatter,
     StandardScientificFormatter,
+    StrictPrecision,
     TimeFormatter,
 )
-from cmk.gui.unit_formatter import StrictPrecision as StrictPrecisionFormatter
 from cmk.inventory.raw_paths import InventoryPath, parse_internal_raw_path, TreeSource
 from cmk.inventory.trees import SDKey, SDNodeName, SDPath, SDValue
 from cmk.inventory_ui.v1 import AgeNotation as AgeNotationFromAPI
@@ -235,12 +236,12 @@ class _PaintBool:
 
 
 def _render_unit(unit: UnitFromAPI, value: int | float, now: float) -> str:
-    precision: AutoPrecisionFormatter | StrictPrecisionFormatter
+    precision: Precision
     match unit.precision:
         case AutoPrecisionFromAPI():
-            precision = AutoPrecisionFormatter(digits=unit.precision.digits)
+            precision = AutoPrecision(digits=unit.precision.digits)
         case StrictPrecisionFromAPI():
-            precision = StrictPrecisionFormatter(digits=unit.precision.digits)
+            precision = StrictPrecision(digits=unit.precision.digits)
         case _:
             assert_never(unit.precision)
 

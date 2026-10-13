@@ -8,23 +8,22 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from typing import Literal
 
+from cmk.graphing_engine import FALLBACK_UNIT, Unit
 from cmk.gui.color import (
     get_gray_tone,
     get_palette_color_by_index,
     parse_color_into_hexrgb,
 )
 from cmk.gui.i18n import _, translate_to_current_language
-from cmk.gui.unit_formatter import AutoPrecision
 
 from ._from_api import RegisteredMetric
-from ._unit_specification import ConvertibleUnitSpecification, DecimalNotation
 
 
 @dataclass(frozen=True)
 class MetricSpec:
     name: str
     title: str
-    unit_spec: ConvertibleUnitSpecification
+    unit: Unit
     color: str
 
 
@@ -35,10 +34,7 @@ def _fallback_metric_spec(
     return MetricSpec(
         name=metric_name,
         title=metric_name,
-        unit_spec=ConvertibleUnitSpecification(
-            notation=DecimalNotation(symbol=""),
-            precision=AutoPrecision(digits=2),
-        ),
+        unit=FALLBACK_UNIT,
         color=parse_color_into_hexrgb(get_palette_color_by_index(color_counter["metric"])),
     )
 
@@ -58,14 +54,14 @@ def _get_metric_spec_with_color(
                     + mfa.title_localizer(translate_to_current_language)
                     + _(" (lower levels)")
                 ),
-                unit_spec=mfa.unit_spec,
+                unit=mfa.unit,
                 color=get_gray_tone(color_counter),
             )
         fallback = _fallback_metric_spec(lookup_metric_name, color_counter)
         return MetricSpec(
             name=fallback.name,
             title=_("Prediction of ") + fallback.title + _(" (lower levels)"),
-            unit_spec=fallback.unit_spec,
+            unit=fallback.unit,
             color=get_gray_tone(color_counter),
         )
 
@@ -79,14 +75,14 @@ def _get_metric_spec_with_color(
                     + mfa.title_localizer(translate_to_current_language)
                     + _(" (upper levels)")
                 ),
-                unit_spec=mfa.unit_spec,
+                unit=mfa.unit,
                 color=get_gray_tone(color_counter),
             )
         fallback = _fallback_metric_spec(lookup_metric_name, color_counter)
         return MetricSpec(
             name=fallback.name,
             title=_("Prediction of ") + fallback.title + _(" (upper levels)"),
-            unit_spec=fallback.unit_spec,
+            unit=fallback.unit,
             color=get_gray_tone(color_counter),
         )
 
@@ -95,7 +91,7 @@ def _get_metric_spec_with_color(
         return MetricSpec(
             name=metric_name,
             title=mfa.title_localizer(translate_to_current_language),
-            unit_spec=mfa.unit_spec,
+            unit=mfa.unit,
             color=mfa.color,
         )
 

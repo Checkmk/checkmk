@@ -62,6 +62,7 @@ from cmk.gui.graphing import (
     RegisteredMetric,
     sort_registered_graph_plugins,
     translated_names_and_scales,
+    unit_to_unit_format,
 )
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.theme import Theme
@@ -302,17 +303,17 @@ def _metrics_payload(
         evaluated = metrics.get(canonical)
         if registered is None or evaluated is None:
             continue
-        unit = registered.unit_spec
+        unit_format = unit_to_unit_format(registered.unit)
         out[raw_name] = MetricDisplay(
             name=canonical,
             title=evaluated.title,
             scale=scale,
             unit=MetricUnit(
-                notation=unit.notation.type,
-                symbol=unit.notation.symbol,
+                notation=unit_format.notation,
+                symbol=unit_format.symbol,
                 precision=MetricUnitPrecision(
-                    type=unit.precision.type,
-                    digits=unit.precision.digits,
+                    type=unit_format.precision.type,
+                    digits=unit_format.precision.digits,
                 ),
             ),
             color=evaluated.color,

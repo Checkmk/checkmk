@@ -9,6 +9,7 @@ from typing import Annotated, assert_never, Literal, override, Self
 
 from pydantic import Discriminator
 
+from cmk.graphing_engine import FALLBACK_UNIT
 from cmk.gui.dashboard.type_defs import (
     AverageScatterplotDashletConfig,
     BarplotDashletConfig,
@@ -25,19 +26,13 @@ from cmk.gui.dashboard.type_defs import (
     TopListColumnConfig,
     TopListDashletConfig,
 )
-from cmk.gui.graphing import (
-    ConvertibleUnitSpecification,
-    DecimalNotation,
-    id_from_unit_spec,
-    metrics_from_api,
-)
+from cmk.gui.graphing import id_from_unit, metrics_from_api
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import (
     ColorHex,
     timerange_from_internal,
     TimerangeModel,
 )
-from cmk.gui.unit_formatter import AutoPrecision
 
 from ..context_filters import (
     OBJECT_SERVICE_FILTER_ADAPTER,
@@ -92,14 +87,8 @@ class MetricDisplayRangeFixedModel:
         )
 
     def to_internal(self, metric_name: str) -> MetricDisplayRangeFixed:
-        if metric := metrics_from_api.get(metric_name):
-            unit_spec = metric.unit_spec
-        else:
-            unit_spec = ConvertibleUnitSpecification(
-                notation=DecimalNotation(symbol=""),
-                precision=AutoPrecision(digits=2),
-            )
-        return "fixed", (id_from_unit_spec(unit_spec), (self.minimum, self.maximum))
+        unit = metric.unit if (metric := metrics_from_api.get(metric_name)) else FALLBACK_UNIT
+        return "fixed", (id_from_unit(unit), (self.minimum, self.maximum))
 
 
 type MetricDisplayRangeModel = Literal["automatic"] | MetricDisplayRangeFixedModel

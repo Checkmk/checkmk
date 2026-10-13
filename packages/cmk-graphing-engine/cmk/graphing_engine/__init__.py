@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._display import metric_display_attributes
+from ._display import FALLBACK_UNIT, metric_display_attributes, parse_unit
 from ._fetch import (
     FetchDataProtocol,
     FetchMetricNamesProtocol,
@@ -92,6 +92,7 @@ from ._units import (
     DecimalNotation,
     EngineeringScientificNotation,
     IECNotation,
+    NonConvertibleUnit,
     Notation,
     Precision,
     SINotation,
@@ -102,6 +103,7 @@ from ._units import (
 )
 
 __all__ = [
+    "FALLBACK_UNIT",
     "MACRO_SERIES_ID",
     "AutoPrecision",
     "Bound",
@@ -144,6 +146,7 @@ __all__ = [
     "MetricName",
     "MetricProtocol",
     "MinimalRange",
+    "NonConvertibleUnit",
     "Notation",
     "PerformanceData",
     "Precision",
@@ -176,5 +179,6 @@ __all__ = [
     "evaluate_graphs",
     "evaluate_perfometer",
     "metric_display_attributes",
+    "parse_unit",
     "rrd_metric_name",
 ]

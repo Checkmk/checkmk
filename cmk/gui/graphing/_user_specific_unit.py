@@ -8,31 +8,34 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from typing import assert_never
 
-from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.unit_formatter import (
+from cmk.graphing_engine import (
     AutoPrecision,
+    DecimalNotation,
+    EngineeringScientificNotation,
+    IECNotation,
+    NonConvertibleUnit,
+    Precision,
+    SINotation,
+    StandardScientificNotation,
+    StrictPrecision,
+    TimeNotation,
+    Unit,
+)
+from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.unit_formatter import AutoPrecision as FormatterAutoPrecision
+from cmk.gui.unit_formatter import (
     DecimalFormatter,
     EngineeringScientificFormatter,
     IECFormatter,
     NotationFormatter,
     SIFormatter,
     StandardScientificFormatter,
-    StrictPrecision,
     TimeFormatter,
 )
+from cmk.gui.unit_formatter import Precision as FormatterPrecision
+from cmk.gui.unit_formatter import StrictPrecision as FormatterStrictPrecision
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import UnitFormat as SharedUnitFormat
-
-from ._unit_specification import (
-    ConvertibleUnitSpecification,
-    DecimalNotation,
-    EngineeringScientificNotation,
-    IECNotation,
-    NonConvertibleUnitSpecification,
-    SINotation,
-    StandardScientificNotation,
-    TimeNotation,
-)
 
 
 @dataclass(frozen=True)
@@ -47,55 +50,64 @@ class _Conversion:
     converter: Callable[[float], float]
 
 
+def _formatter_precision(precision: Precision) -> FormatterPrecision:
+    match precision:
+        case AutoPrecision(digits=digits):
+            return FormatterAutoPrecision(digits)
+        case StrictPrecision(digits=digits):
+            return FormatterStrictPrecision(digits)
+        case _:
+            assert_never(precision)
+
+
 def user_specific_unit(
-    unit_specification: ConvertibleUnitSpecification | NonConvertibleUnitSpecification,
+    unit: Unit | NonConvertibleUnit,
     temperature_unit: TemperatureUnit,
 ) -> UserSpecificUnit:
     noop_conversion = _Conversion(
-        symbol=unit_specification.notation.symbol,
+        symbol=unit.notation.symbol,
         converter=lambda v: v,
     )
     conversion = (
-        _temperature_conversion(
-            unit_specification.notation.symbol, temperature_unit, noop_conversion
-        )
-        if isinstance(unit_specification, ConvertibleUnitSpecification)
+        _temperature_conversion(unit.notation.symbol, temperature_unit, noop_conversion)
+        if isinstance(unit, Unit)
         else noop_conversion
     )
+    precision = _formatter_precision(unit.precision)
     formatter: NotationFormatter
-    match unit_specification.notation:
+    match unit.notation:
         case DecimalNotation():
             formatter = DecimalFormatter(
                 symbol=conversion.symbol,
-                precision=unit_specification.precision,
+                precision=precision,
             )
         case SINotation():
             formatter = SIFormatter(
                 symbol=conversion.symbol,
-                precision=unit_specification.precision,
+                precision=precision,
             )
         case IECNotation():
             formatter = IECFormatter(
                 symbol=conversion.symbol,
-                precision=unit_specification.precision,
+                precision=precision,
             )
         case StandardScientificNotation():
             formatter = StandardScientificFormatter(
                 symbol=conversion.symbol,
-                precision=unit_specification.precision,
+                precision=precision,
             )
         case EngineeringScientificNotation():
             formatter = EngineeringScientificFormatter(
                 symbol=conversion.symbol,
-                precision=unit_specification.precision,
+                precision=precision,
             )
         case TimeNotation():
             formatter = TimeFormatter(
                 symbol=conversion.symbol,
-                precision=unit_specification.precision,
+                precision=precision,
             )
         case _:
-            assert_never(unit_specification.notation)
+            assert_never(unit.notation)
 
     return UserSpecificUnit(
         formatter=formatter,
@@ -123,10 +135,10 @@ def apply_temperature_unit(
 
 def formatter_from_unit_format(unit_format: SharedUnitFormat) -> NotationFormatter:
     """The formatter for values already in ``unit_format``; it converts nothing."""
-    precision: AutoPrecision | StrictPrecision = (
-        AutoPrecision(digits=unit_format.precision.digits)
+    precision: FormatterPrecision = (
+        FormatterAutoPrecision(digits=unit_format.precision.digits)
         if unit_format.precision.type == "auto"
-        else StrictPrecision(digits=unit_format.precision.digits)
+        else FormatterStrictPrecision(digits=unit_format.precision.digits)
     )
     symbol = unit_format.symbol
     match unit_format.notation:
@@ -149,9 +161,6 @@ def formatter_from_unit_format(unit_format: SharedUnitFormat) -> NotationFormatt
 def user_specific_unit_from_unit_format(
     unit_format: SharedUnitFormat, temperature_unit: TemperatureUnit
 ) -> UserSpecificUnit:
-    """Same shape as ``user_specific_unit``, keyed off the shared ``UnitFormat`` - a notation
-    string and a ``convertible`` flag - instead of the pydantic Convertible/NonConvertible unit
-    specification. ``UnitFormat`` is what PNG and the Vue graph both already carry."""
     converted, conversion = apply_temperature_unit(unit_format, temperature_unit)
     return UserSpecificUnit(formatter=formatter_from_unit_format(converted), conversion=conversion)
 

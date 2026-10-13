@@ -6,10 +6,9 @@
 from collections import Counter
 from typing import Literal
 
+from cmk.graphing_engine import FALLBACK_UNIT
 from cmk.gui.color import parse_color_into_hexrgb
-from cmk.gui.graphing import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.graphing._metric_spec import _fallback_metric_spec, MetricSpec
-from cmk.gui.unit_formatter import AutoPrecision
 
 
 def test_fallback_metric_spec() -> None:
@@ -17,10 +16,7 @@ def test_fallback_metric_spec() -> None:
     assert _fallback_metric_spec("nm-openvpn", color_counter) == MetricSpec(
         name="nm-openvpn",
         title="nm-openvpn",
-        unit_spec=ConvertibleUnitSpecification(
-            notation=DecimalNotation(symbol=""),
-            precision=AutoPrecision(digits=2),
-        ),
+        unit=FALLBACK_UNIT,
         color=parse_color_into_hexrgb("12/a"),
     )
     assert color_counter["metric"] == 1

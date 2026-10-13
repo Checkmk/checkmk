@@ -65,6 +65,12 @@ class Unit:
     precision: Precision
 
 
+@dataclass(frozen=True)
+class NonConvertibleUnit:
+    notation: Notation
+    precision: Precision
+
+
 @dataclass(frozen=True, kw_only=True)
 class CurveAttributes:
     title: str

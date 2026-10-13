@@ -27,10 +27,10 @@ from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefine
 
 from cmk.ccc.version import Version
 from cmk.utils.mail import MailString, send_mail_sendmail, set_mail_headers
+from cmk.werks.flavor.cmk.translator import WerkTranslator
 from cmk.werks.flavor.cmk.version import version_from_defines_make
 from cmk.werks.tool import load_werk
 from cmk.werks.tool.models import Class, Level, WerkV3
-from cmk.werks.tool.utils import WerkTranslator
 
 logger = logging.getLogger(__name__)
 

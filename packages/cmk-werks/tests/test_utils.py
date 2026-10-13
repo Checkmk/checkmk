@@ -6,14 +6,14 @@
 import json
 from pathlib import Path
 
-from cmk.werks.tool import load_werk
-from cmk.werks.tool.models import EditionV3, WerkV3
-from cmk.werks.tool.utils import (
-    load_precompiled_werks_file,
+from cmk.werks.flavor.cmk.translator import (
     resolve_version,
     sort_by_version_and_component,
     WerkTranslator,
 )
+from cmk.werks.tool import load_werk
+from cmk.werks.tool.models import EditionV3, WerkV3
+from cmk.werks.tool.utils import load_precompiled_werks_file
 
 from ._werk_files import werk_text
 

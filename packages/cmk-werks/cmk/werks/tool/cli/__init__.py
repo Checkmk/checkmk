@@ -32,7 +32,6 @@ from ..flavor import Flavor
 from ..format import format_as_markdown_werk
 from ..models import EditionV2, EditionV3
 from ..parse import WerkMetadata, WerkV2ParseResult, WerkV3ParseResult
-from ..utils import resolve_version
 from .id_log import get_werk_id_logger
 from .id_pool import (
     dump_stash_to_file,
@@ -512,10 +511,7 @@ def main_list(ctx: Context, args: argparse.Namespace, fmt: str) -> None:
 
     werks: list[Werk] = list(load_werks(ctx).values())
     versions = sorted(
-        {
-            resolve_version(ctx.config.current_version, werk.content.metadata["version"])
-            for werk in werks
-        }
+        {werk.content.metadata.get("version") or ctx.config.current_version for werk in werks}
     )
 
     filters: dict[_FilterKey, list[str]] = {}

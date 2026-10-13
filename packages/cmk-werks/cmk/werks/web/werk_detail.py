@@ -18,8 +18,8 @@ from cmk.web.page_container import (
 from cmk.web.utils.escaping import escape_to_html_permissive
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import make_contextless_url
+from cmk.werks.flavor.cmk.translator import WerkTranslator
 from cmk.werks.tool.models import Compatibility, WerkV3
-from cmk.werks.tool.utils import WerkTranslator
 
 _TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 # Icon id from cmk.shared_typing.icon.IconNames.werk_ack; cmk.web menu icons are

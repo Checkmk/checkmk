@@ -15,7 +15,7 @@ from collections.abc import Callable, Container, Iterable, Iterator, Sequence
 from functools import partial
 from typing import Any, cast, Literal, override, TypedDict
 
-import cmk.werks.tool.utils as werks_utils
+import cmk.werks.flavor.cmk.translator as werks_utils
 from cmk.ccc.version import Edition, edition
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.gui.breadcrumb import (

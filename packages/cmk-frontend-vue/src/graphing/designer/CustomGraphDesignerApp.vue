@@ -405,6 +405,7 @@ const saveFailureButtons = computed(() => {
         :title="loaded.graph.title ?? current.name"
         :graph-name="current.name"
         :mode="mode"
+        calculation-placement="slideout"
         :thresholds="{ warning: warning_color, critical: critical_color }"
         :telemetry-metrics-available="telemetry_metrics_available"
         :create-services-available="create_services_available"

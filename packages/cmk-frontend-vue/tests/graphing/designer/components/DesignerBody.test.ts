@@ -15,6 +15,7 @@ import { defineComponent, h, nextTick, ref } from 'vue'
 import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/globalTimeState'
 import type { UnitFormat } from '@/graphing/components/TimeSeriesGraph'
 import type { CustomGraphObject } from '@/graphing/designer/api'
+import type { CalculationPlacement } from '@/graphing/designer/calculation'
 import DesignerBody from '@/graphing/designer/components/DesignerBody.vue'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
 import { fromApiDataSource } from '@/graphing/designer/drafts'
@@ -252,6 +253,7 @@ function bodyProps(graph: CustomGraphObject = graphObject()) {
     title: 'My graph',
     graphName: 'my_graph',
     mode: 'edit' as 'view' | 'edit',
+    calculationPlacement: 'slideout' as CalculationPlacement,
     thresholds: { warning: '#ffd000', critical: '#ff3232' },
     telemetryMetricsAvailable: false,
     createServicesAvailable: true,
@@ -265,6 +267,7 @@ function renderBody(
   mode: 'view' | 'edit',
   overrides: {
     displaySettings?: boolean
+    calculationPlacement?: CalculationPlacement
     graph?: CustomGraphObject
     issuesByRow?: ReadonlyMap<ItemId, RowIssue[]>
     telemetryMetricsAvailable?: boolean
@@ -879,6 +882,100 @@ test('the edit action on a calculation row opens the slideout on that calculatio
 
   expect(await screen.findByRole('button', { name: 'Calculate & update' })).toBeInTheDocument()
   expect(screen.getByLabelText('Formula input')).toHaveValue('A - B')
+})
+
+function calculationGraph(): CustomGraphObject {
+  return graphObject([
+    rrdSource('A'),
+    rrdSource('B'),
+    formulaSource('C', {
+      op: 'difference',
+      operands: [
+        { op: 'ref', id: 'A' },
+        { op: 'ref', id: 'B' }
+      ]
+    })
+  ])
+}
+
+describe('with the calculation inline', () => {
+  test('adding a calculation replaces the tabs until going back', async () => {
+    renderBody('edit', { calculationPlacement: 'inline', graph: calculationGraph() })
+    await screen.findByRole('tab', { name: 'Metrics selection' })
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Add calculation' }))
+
+    expect(await screen.findByRole('button', { name: 'Calculate & add' })).toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: 'Metrics selection' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Back to metrics selection' }))
+
+    expect(await screen.findByRole('tab', { name: 'Metrics selection' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Calculate & add' })).not.toBeInTheDocument()
+  })
+
+  test('the edit action on a calculation row opens that calculation', async () => {
+    renderBody('edit', { calculationPlacement: 'inline', graph: calculationGraph() })
+    await screen.findByRole('tab', { name: 'Metrics selection' })
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit calculation' }))
+
+    expect(await screen.findByRole('button', { name: 'Calculate & update' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Formula input')).toHaveValue('A - B')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  test('a calculation added in the view shows in the table after going back', async () => {
+    renderBody('edit', { calculationPlacement: 'inline', graph: calculationGraph() })
+    await screen.findByRole('tab', { name: 'Metrics selection' })
+    await fireEvent.click(screen.getByRole('button', { name: 'Add calculation' }))
+
+    await fireEvent.update(await screen.findByLabelText('Formula input'), 'A + B')
+    await fireEvent.click(screen.getByRole('button', { name: 'Calculate & add' }))
+    await fireEvent.click(screen.getByRole('button', { name: 'Back to metrics selection' }))
+
+    expect(await screen.findByRole('cell', { name: 'D' })).toBeInTheDocument()
+  })
+
+  test('the row selection survives a visit to the calculation', async () => {
+    renderBody('edit', { calculationPlacement: 'inline', graph: calculationGraph() })
+    await screen.findByRole('tab', { name: 'Metrics selection' })
+    await fireEvent.click(screen.getAllByRole('checkbox', { name: 'Select row' })[0]!)
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Add calculation' }))
+    await fireEvent.click(await screen.findByRole('button', { name: 'Back to metrics selection' }))
+
+    expect(screen.getAllByRole('checkbox', { name: 'Select row' })[0]!).toBeChecked()
+  })
+
+  test('going back focuses the action that opened the calculation', async () => {
+    const user = userEvent.setup()
+    renderBody('edit', { calculationPlacement: 'inline', graph: calculationGraph() })
+    await screen.findByRole('tab', { name: 'Metrics selection' })
+
+    await user.click(screen.getByRole('button', { name: 'Edit calculation' }))
+    await user.click(await screen.findByRole('button', { name: 'Back to metrics selection' }))
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Edit calculation' })).toHaveFocus()
+    )
+  })
+
+  test('opening a transformation focuses its metric selection', async () => {
+    renderBody('edit', {
+      calculationPlacement: 'inline',
+      graph: graphObject([
+        rrdSource('A'),
+        formulaSource('C', { op: 'percentile', percentile: 95, operand: { op: 'ref', id: 'A' } })
+      ])
+    })
+    await screen.findByRole('tab', { name: 'Metrics selection' })
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit calculation' }))
+
+    await waitFor(() => expect(screen.getByRole('combobox', { name: 'Metric' })).toHaveFocus())
+  })
 })
 
 test('hiding the first source re-labels the table in the unit the preview axis moves to', async () => {

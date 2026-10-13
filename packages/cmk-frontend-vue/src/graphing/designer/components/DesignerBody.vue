@@ -16,7 +16,7 @@ import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTab
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 
 import { useGlobalRefresh } from '../../GlobalTimePicker/globalTimeState'
 import GraphPanel from '../../components/GraphPanel.vue'
@@ -37,7 +37,12 @@ import {
 import { useRequestedTimeRange } from '../../composables/useRequestedTimeRange'
 import type { PanelKey, RequestedTimeRange, TimeRange, TimeRangeCommitKind } from '../../types'
 import type { CustomGraphMetric, CustomGraphOptions } from '../api'
-import { MetricsCalculationSlideout, type RefVisibility } from '../calculation'
+import {
+  type CalculationPlacement,
+  MetricsCalculationSlideout,
+  MetricsCalculationView,
+  type RefVisibility
+} from '../calculation'
 import { useCustomGraphData } from '../composables/useCustomGraphData'
 import { useDeleteConfirmation } from '../composables/useDeleteConfirmation'
 import type { GraphItemsStore } from '../composables/useGraphItems'
@@ -59,6 +64,7 @@ const {
   title,
   graphName,
   mode,
+  calculationPlacement,
   thresholds,
   telemetryMetricsAvailable,
   createServicesAvailable,
@@ -71,6 +77,7 @@ const {
   title: string
   graphName: string
   mode: CustomGraphDesignerMode
+  calculationPlacement: CalculationPlacement
   thresholds: { warning: string; critical: string }
   telemetryMetricsAvailable: boolean
   createServicesAvailable: boolean
@@ -227,8 +234,26 @@ function onTabChange(value: string | number): void {
   }
 }
 
-/** null closes the slideout; `editing` names the calculation to load, or null for a fresh form. */
-const calculationSlideout = ref<{ editing: ItemId | null } | null>(null)
+/** null closes the calculation; `editing` names the calculation to load, or null for a fresh form. */
+const calculation = ref<{ editing: ItemId | null } | null>(null)
+const inlineCalculation = computed(() =>
+  calculationPlacement === 'inline' ? calculation.value : null
+)
+let calculationOpener: HTMLElement | null = null
+
+function openCalculation(editing: ItemId | null): void {
+  calculationOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null
+  calculation.value = { editing }
+}
+
+function closeCalculation(): void {
+  calculation.value = null
+  const opener = calculationOpener
+  calculationOpener = null
+  if (calculationPlacement === 'inline') {
+    void nextTick(() => opener?.focus())
+  }
+}
 
 function applyRefVisibility(refVisibility: RefVisibility): void {
   if (refVisibility !== null) {
@@ -349,71 +374,86 @@ const addTo = computed<AddTo | null>(() =>
         @hover-metrics="highlightedMetricNames = $event"
       />
 
-      <CmkTabs
-        v-else
-        class="graphing-designer-body__tabs"
-        :model-value="activeTab"
-        :unmount-on-hide="false"
-        @update:model-value="onTabChange"
-      >
-        <template #tabs>
-          <CmkTab v-for="tab in TABS" :id="tab.id" :key="tab.id">
-            <span class="graphing-designer-body__tab-label">
-              <span
-                v-if="tab.id === 'metrics' && hasBlockingIssues"
-                class="graphing-designer-body__tab-icon"
-              >
-                <CmkIcon name="inline-error" size="large" aria-hidden="true" />
+      <template v-else>
+        <MetricsCalculationView
+          v-if="inlineCalculation !== null"
+          :editing="inlineCalculation.editing"
+          :items="validItems"
+          :next-id="store.nextId.value"
+          :next-color="store.nextColor.value"
+          @add="onCalculationAdd"
+          @update="onCalculationUpdate"
+          @delete="(id) => calculationDelete.request([id])"
+          @close="closeCalculation"
+        />
+
+        <CmkTabs
+          v-show="inlineCalculation === null"
+          class="graphing-designer-body__tabs"
+          :model-value="activeTab"
+          :unmount-on-hide="false"
+          @update:model-value="onTabChange"
+        >
+          <template #tabs>
+            <CmkTab v-for="tab in TABS" :id="tab.id" :key="tab.id">
+              <span class="graphing-designer-body__tab-label">
+                <span
+                  v-if="tab.id === 'metrics' && hasBlockingIssues"
+                  class="graphing-designer-body__tab-icon"
+                >
+                  <CmkIcon name="inline-error" size="large" aria-hidden="true" />
+                </span>
+                <span v-else-if="activeTab === tab.id" class="graphing-designer-body__tab-icon">
+                  <CmkMultitoneIcon name="checkmark" primary-color="font" size="small" />
+                </span>
+                {{ tab.label }}
               </span>
-              <span v-else-if="activeTab === tab.id" class="graphing-designer-body__tab-icon">
-                <CmkMultitoneIcon name="checkmark" primary-color="font" size="small" />
-              </span>
-              {{ tab.label }}
-            </span>
-          </CmkTab>
-        </template>
-        <template #tab-contents>
-          <CmkTabContent id="appearance" class="graphing-designer-body__tab-panel">
-            <AppearanceTable
-              :store="store"
-              :metrics-by-source="data.metricsBySource.value"
-              :resolved-titles="data.resolvedTitles.value"
-              :value-resolution="valueResolution"
-              :axis-unit="axisUnit"
-              @hover-metrics="highlightedMetricNames = $event"
-            />
-          </CmkTabContent>
-          <CmkTabContent id="metrics" class="graphing-designer-body__tab-panel">
-            <MetricsTable
-              :store="store"
-              :thresholds="thresholds"
-              :telemetry-metrics-available="telemetryMetricsAvailable"
-              :create-services-available="createServicesAvailable"
-              :telemetry-metrics-default-title="telemetryMetricsDefaultTitle"
-              :title-macros="titleMacros"
-              :issues-by-row="issuesByRow"
-              :resolved-titles="data.resolvedTitles.value"
-              :metrics-by-source="data.metricsBySource.value"
-              @add-calculation="calculationSlideout = { editing: null }"
-              @edit-calculation="calculationSlideout = { editing: $event }"
-              @hover-metrics="highlightedMetricNames = $event"
-            />
-          </CmkTabContent>
-        </template>
-      </CmkTabs>
+            </CmkTab>
+          </template>
+          <template #tab-contents>
+            <CmkTabContent id="appearance" class="graphing-designer-body__tab-panel">
+              <AppearanceTable
+                :store="store"
+                :metrics-by-source="data.metricsBySource.value"
+                :resolved-titles="data.resolvedTitles.value"
+                :value-resolution="valueResolution"
+                :axis-unit="axisUnit"
+                @hover-metrics="highlightedMetricNames = $event"
+              />
+            </CmkTabContent>
+            <CmkTabContent id="metrics" class="graphing-designer-body__tab-panel">
+              <MetricsTable
+                :store="store"
+                :thresholds="thresholds"
+                :telemetry-metrics-available="telemetryMetricsAvailable"
+                :create-services-available="createServicesAvailable"
+                :telemetry-metrics-default-title="telemetryMetricsDefaultTitle"
+                :title-macros="titleMacros"
+                :issues-by-row="issuesByRow"
+                :resolved-titles="data.resolvedTitles.value"
+                :metrics-by-source="data.metricsBySource.value"
+                @add-calculation="openCalculation(null)"
+                @edit-calculation="openCalculation($event)"
+                @hover-metrics="highlightedMetricNames = $event"
+              />
+            </CmkTabContent>
+          </template>
+        </CmkTabs>
+      </template>
     </div>
 
     <template v-if="mode === 'edit'">
       <MetricsCalculationSlideout
-        :open="calculationSlideout !== null"
-        :editing="calculationSlideout?.editing ?? null"
+        v-if="calculationPlacement === 'slideout'"
+        :open="calculation !== null"
+        :editing="calculation?.editing ?? null"
         :items="validItems"
         :next-id="store.nextId.value"
         :next-color="store.nextColor.value"
         @add="onCalculationAdd"
         @update="onCalculationUpdate"
         @delete="(id) => calculationDelete.request([id])"
-        @close="calculationSlideout = null"
+        @close="closeCalculation"
       />
 
       <DeleteConfirmationPopup

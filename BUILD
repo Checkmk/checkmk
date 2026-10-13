@@ -230,7 +230,7 @@ write_file(
     name = "bazel-requirements-constraints",
     out = "bazel-requirements-constraints.txt",
     content = [
-        "ruff==0.16.10",  # keep in sync with the multitool hub % RUFF_VERSION,
+        "ruff==0.17.0",  # keep in sync with the multitool hub % RUFF_VERSION,
         "protobuf==%s" % PROTOBUF_PYTHON_VERSION,
     ],
 )

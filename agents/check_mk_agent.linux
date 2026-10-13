@@ -510,7 +510,7 @@ EOF
 
                 local salt_hex key_hex iv_hex
                 read -r salt_hex key_hex iv_hex <<EOF
-parse_kdf_output "$(openssl enc -aes-256-cbc -md sha256 -k "${1}" -P)"
+$(parse_kdf_output "$(openssl enc -aes-256-cbc -md sha256 -k "${1}" -P)")
 EOF
 
                 printf "04"

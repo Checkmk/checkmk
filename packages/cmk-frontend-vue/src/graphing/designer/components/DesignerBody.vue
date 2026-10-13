@@ -240,6 +240,7 @@ const inlineCalculation = computed(() =>
   calculationPlacement === 'inline' ? calculation.value : null
 )
 let calculationOpener: HTMLElement | null = null
+const metricsTable = ref<InstanceType<typeof MetricsTable> | null>(null)
 
 function openCalculation(editing: ItemId | null): void {
   calculationOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null
@@ -250,9 +251,14 @@ function closeCalculation(): void {
   calculation.value = null
   const opener = calculationOpener
   calculationOpener = null
-  if (calculationPlacement === 'inline') {
-    void nextTick(() => opener?.focus())
-  }
+  void nextTick(() => {
+    if (opener?.isConnected === false) {
+      metricsTable.value?.focusAddCalculation()
+    } else if (calculationPlacement === 'inline') {
+      // The slideout placement restores the focus to the opener itself.
+      opener?.focus()
+    }
+  })
 }
 
 function applyRefVisibility(refVisibility: RefVisibility): void {
@@ -423,6 +429,7 @@ const addTo = computed<AddTo | null>(() =>
             </CmkTabContent>
             <CmkTabContent id="metrics" class="graphing-designer-body__tab-panel">
               <MetricsTable
+                ref="metricsTable"
                 :store="store"
                 :thresholds="thresholds"
                 :telemetry-metrics-available="telemetryMetricsAvailable"

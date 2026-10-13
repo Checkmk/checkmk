@@ -110,6 +110,12 @@ watch(
 
 const table = useTemplateRef<{ scrollToRow: (key: ItemId) => void }>('table')
 const addSource = useTemplateRef<InstanceType<typeof CmkAddDropdown>>('addSource')
+const addCalculation = useTemplateRef<{ focus: () => void }>('addCalculation')
+
+function focusAddCalculation(): void {
+  addCalculation.value?.focus()
+}
+defineExpose({ focusAddCalculation })
 
 onMounted(() => {
   if (store.items.value.length === 0) {
@@ -317,7 +323,11 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
           {{ _t('Clone') }}
         </CmkButton>
       </div>
-      <CmkButton class="graphing-metrics-table__add-calculation" @click="emit('add-calculation')">
+      <CmkButton
+        ref="addCalculation"
+        class="graphing-metrics-table__add-calculation"
+        @click="emit('add-calculation')"
+      >
         {{ _t('Add calculation') }}
       </CmkButton>
     </div>

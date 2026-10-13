@@ -898,6 +898,25 @@ function calculationGraph(): CustomGraphObject {
   ])
 }
 
+async function deleteCalculationC(user: ReturnType<typeof userEvent.setup>): Promise<void> {
+  await user.click(await screen.findByRole('button', { name: 'Delete C' }))
+  const confirmation = await screen.findByRole('dialog', { name: /Delete metric/ })
+  await user.click(within(confirmation).getByRole('button', { name: 'Delete' }))
+  await waitFor(() => expect(screen.queryByRole('button', { name: 'Delete C' })).toBeNull())
+}
+
+test('closing the slideout after deleting the calculation focuses "Add calculation"', async () => {
+  const user = userEvent.setup()
+  renderBody('edit', { graph: calculationGraph() })
+  await screen.findByRole('tab', { name: 'Metrics selection' })
+
+  await user.click(screen.getByRole('button', { name: 'Edit calculation' }))
+  await deleteCalculationC(user)
+  await user.click(screen.getByRole('button', { name: 'Preview in graph' }))
+
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Add calculation' })).toHaveFocus())
+})
+
 describe('with the calculation inline', () => {
   test('adding a calculation replaces the tabs until going back', async () => {
     renderBody('edit', { calculationPlacement: 'inline', graph: calculationGraph() })
@@ -959,6 +978,20 @@ describe('with the calculation inline', () => {
 
     await waitFor(() =>
       expect(screen.getByRole('button', { name: 'Edit calculation' })).toHaveFocus()
+    )
+  })
+
+  test('going back after deleting the calculation focuses "Add calculation"', async () => {
+    const user = userEvent.setup()
+    renderBody('edit', { calculationPlacement: 'inline', graph: calculationGraph() })
+    await screen.findByRole('tab', { name: 'Metrics selection' })
+
+    await user.click(screen.getByRole('button', { name: 'Edit calculation' }))
+    await deleteCalculationC(user)
+    await user.click(screen.getByRole('button', { name: 'Back to metrics selection' }))
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Add calculation' })).toHaveFocus()
     )
   })
 

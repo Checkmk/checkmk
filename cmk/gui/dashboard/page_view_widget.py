@@ -666,7 +666,7 @@ class ViewWidgetEditPage(Page):
             view_spec = self._get_view_spec(ctx.request, dashboard, embedded_id, mode)
         except (MKUserError, MKAuthException) as e:
             # we can't render the view editor with invalid input, notify the parent window
-            self._post_message(self.ConfigurationErrorMessage(message=str(e)))
+            self._post_message_page(ctx, self.ConfigurationErrorMessage(message=str(e)))
             return  # nothing the user can do, stop rendering the rest
 
         error = None
@@ -679,21 +679,15 @@ class ViewWidgetEditPage(Page):
                 # on save, we only want to notify the parent that we're done
                 # this is handled on the dashboard view workflow side
                 # because of the copy mode, we need to send back the data source and single infos
-                self._post_message(
+                self._post_message_page(
+                    ctx,
                     self.SaveCompletedMessage(
                         datasource=view_spec["datasource"], single_infos=view_spec["single_infos"]
-                    )
+                    ),
                 )
                 return  # we're done, stop rendering the rest
 
-        html.body_start(
-            lang=user.language,
-            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
-            load_frontend_vue=ctx.config.load_frontend_vue,
-            custom_style_sheet=ctx.config.custom_style_sheet,
-            screenshotmode=ctx.config.screenshotmode,
-            inline_help_as_text=user.inline_help_as_text,
-        )  # include CSS to render the view editor properly
+        self._body_start(ctx)  # include CSS to render the view editor properly
         # remove the 10px padding that body.main adds
         html.open_div(style="margin-left: -10px;")
         if error:
@@ -720,6 +714,27 @@ class ViewWidgetEditPage(Page):
             )
 
         html.close_div()
+        html.body_end()
+
+    @staticmethod
+    def _body_start(ctx: PageContext) -> None:
+        html.body_start(
+            lang=user.language,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+            screenshotmode=ctx.config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+        )
+
+    def _post_message_page(
+        self,
+        ctx: PageContext,
+        message: ConfigurationErrorMessage | SaveCompletedMessage,
+    ) -> None:
+        # Only the page head loads the script that sends the message.
+        self._body_start(ctx)
+        self._post_message(message)
         html.body_end()
 
     @staticmethod

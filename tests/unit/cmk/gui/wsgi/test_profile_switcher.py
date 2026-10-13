@@ -56,7 +56,6 @@ def test_profile_switcher_under_various_settings(
             cachegrind_file=pathlib.Path(".") / "multisite.cachegrind",
             profile_file=pathlib.Path(".") / "multisite.profile",
             accumulate=False,
-            discard_first_request=False,
         )
         middleware = LazyImportProfilingMiddleware(
             app_factory_module="cmk.gui.wsgi.app",

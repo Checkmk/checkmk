@@ -92,7 +92,6 @@ class ProfileSetting:
     cachegrind_file: pathlib.Path
     profile_file: pathlib.Path
     accumulate: bool = False  # reset on every request, or accumulate over multiple requests
-    discard_first_request: bool = False
 
 
 ProfileConfigMode = typing.Literal["default", "imported"]
@@ -152,7 +151,6 @@ class ProfilingMiddleware(abc.ABC):
     def __init__(self, config_loader: ProfileConfigLoader) -> None:
         self.config_loader = config_loader
 
-        self._first_request = True
         self._profiler: cProfile.Profile = cProfile.Profile()
         self._profile_setting: ProfileSetting = config_loader()
         self._thread_lock = threading.Lock()
@@ -167,8 +165,7 @@ class ProfilingMiddleware(abc.ABC):
         environ: WSGIEnvironment,
         start_response: StartResponse,
     ) -> typing.Iterable[bytes]:
-        discard_first_request = self._first_request and self._profile_setting.discard_first_request
-        if not self.should_profile(environ) or discard_first_request:
+        if not self.should_profile(environ):
             logger.debug("Won't profile")
             if self._wsgi_app is None:
                 self._wsgi_app = self.load_app()

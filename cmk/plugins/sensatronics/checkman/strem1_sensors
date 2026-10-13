@@ -1,4 +1,4 @@
-title: Sensatronics EM1 Devices: Temperature, Humidity, Wetness
+title: Sensatronics: EM1 Temperature, Humidity, Wetness Sensors
 agents: snmp
 catalog: hw/environment/sensatronics
 license: GPLv2

@@ -35,6 +35,8 @@ const fixture = defineComponent({
           h('button', { type: 'button', style: { display: 'none' } }, 'cpushown'),
           h('button', { type: 'button' }, 'dbnode'),
           h('button', { type: 'button' }, 'cpu-node'),
+          h('button', { type: 'button', title: 'Show only quux' }, 'Unhappy'),
+          h('button', { type: 'button', title: 'Refresh quux' }),
           h('input', { type: 'text', 'aria-label': 'Search' }),
           h(
             'output',
@@ -127,6 +129,15 @@ test('hidden elements are never matches', async () => {
 
   await userEvent.keyboard('cpushown')
   expect(await state()).toBe('cpushown|-1|0')
+})
+
+test('a tooltip only counts for an element without text', async () => {
+  render(fixture)
+
+  await userEvent.keyboard('quux')
+
+  expect(button('Refresh quux')).toHaveFocus()
+  expect(await state()).toBe('quux|0|1')
 })
 
 test('Backspace shortens the buffer and searches again; emptying it ends the search', async () => {

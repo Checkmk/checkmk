@@ -44,6 +44,11 @@ function normalise(text: string | null | undefined): string {
   return (text ?? '').replace(/\s+/g, ' ').trim().toLowerCase()
 }
 
+/** A tooltip only names an element without text; else it is prose, e.g. "…problem state". */
+function labelOf(element: HTMLElement, text: string): string {
+  return normalise(`${element.getAttribute('aria-label') ?? ''} ${text ? '' : element.title}`)
+}
+
 /** Visible-text matches first, label-only matches second, each in DOM order. */
 function findMatches(scope: HTMLElement, needle: string): HTMLElement[] {
   const hidden = new Map<HTMLElement, boolean>()
@@ -80,11 +85,10 @@ function findMatches(scope: HTMLElement, needle: string): HTMLElement[] {
     if (!isVisible(element)) {
       continue
     }
-    if (normalise(element.textContent).includes(needle)) {
+    const text = normalise(element.textContent)
+    if (text.includes(needle)) {
       byText.push(element)
-    } else if (
-      normalise(`${element.getAttribute('aria-label') ?? ''} ${element.title}`).includes(needle)
-    ) {
+    } else if (labelOf(element, text).includes(needle)) {
       byLabel.push(element)
     }
   }

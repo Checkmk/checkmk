@@ -56,6 +56,7 @@ class _RecordingEvaluate:
                 EvaluatedGraph(
                     name=graph.name,
                     title=graph.title,
+                    time_range=self.options.time_range,
                     vertical_range=None,
                     stacks=[],
                     lines=[],

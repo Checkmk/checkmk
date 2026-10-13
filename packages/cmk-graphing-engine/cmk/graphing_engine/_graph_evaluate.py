@@ -5,6 +5,7 @@
 
 import colorsys
 import enum
+import itertools
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
@@ -82,6 +83,7 @@ class EvaluatedVerticalRange:
 class EvaluatedGraph:
     name: str
     title: str
+    time_range: TimeRange
     vertical_range: EvaluatedVerticalRange | None
     stacks: Sequence[EvaluatedStack]
     lines: Sequence[EvaluatedLine]
@@ -216,6 +218,18 @@ def _evaluate_rule(rule: Rule, rule_id: str, context: EvaluationContext) -> Eval
     )
 
 
+def _drawn_time_range(
+    stacks: Sequence[EvaluatedStack], lines: Sequence[EvaluatedLine], *, fallback: TimeRange
+) -> TimeRange:
+    return next(
+        itertools.chain(
+            (member.time_series.time_range for stack in stacks for member in stack.members),
+            (line.curve.time_series.time_range for line in lines),
+        ),
+        fallback,
+    )
+
+
 def _evaluate_graph(graph: Graph, context: EvaluationContext) -> EvaluatedGraph:
     seen: Counter[str] = Counter()
     stacks = []
@@ -263,6 +277,7 @@ def _evaluate_graph(graph: Graph, context: EvaluationContext) -> EvaluatedGraph:
     return EvaluatedGraph(
         name=graph.name,
         title=evaluate_title(graph.title, graph.metrics(), context),
+        time_range=_drawn_time_range(stacks, lines, fallback=context.time_range),
         vertical_range=_evaluate_vertical_range(graph.vertical_range, context),
         stacks=stacks,
         lines=lines,

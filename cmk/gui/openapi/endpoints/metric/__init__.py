@@ -139,11 +139,7 @@ def get_graph(params: Mapping[str, Any]) -> Response:
             detail="The requested graph does not exist",
         )
 
-    return serve_json(
-        reorganize_response(
-            evaluated_to_graph_spec(evaluated_graph, fallback_time_range=time_range)
-        )
-    )
+    return serve_json(reorganize_response(evaluated_to_graph_spec(evaluated_graph)))
 
 
 def register(endpoint_registry: EndpointRegistry) -> None:

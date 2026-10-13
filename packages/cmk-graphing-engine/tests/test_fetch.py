@@ -3,16 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
 
+from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing_engine import (
     AutoPrecision,
     ConsolidationFunction,
+    constant_time_series,
     Curve,
     CurveAttributes,
     DecimalNotation,
     evaluate_graphs,
     EvaluatedGraph,
+    EvaluatedQuantity,
+    EvaluationContext,
     FetchedData,
     Graph,
     HostName,
@@ -104,6 +109,62 @@ def test_returns_one_evaluated_graph_per_graph_in_order() -> None:
     results = _update(graph_x, graph_y, fetch_data=fetch_data)
 
     assert [[line.curve.value for line in graph.lines] for graph in results] == [[1.0], [2.0]]
+
+
+def test_reports_the_time_range_the_fetched_series_sit_on() -> None:
+    cpu_user = _rrd("cpu_user")
+    graph = Graph(name="cpu", title="CPU", kind="test", lines=[_line(cpu_user)])
+    served = TimeRange(start=0, end=120, step=60)
+    series = TimeSeries(time_range=served, values=[1.0, 2.0])
+    fetch_data = _FakeRRDFetchData({cpu_user: _fetched(42.0, series)})
+
+    [evaluated] = _update(graph, fetch_data=fetch_data)
+
+    assert evaluated.time_range == served
+
+
+_AHEAD = 600
+
+
+@dataclass(frozen=True)
+class _BeyondTheFetch:
+    def kind(self) -> str:
+        return "beyond_the_fetch"
+
+    def ident(self) -> str:
+        return self.kind()
+
+    def children(self) -> Sequence[QuantityProtocol]:
+        return ()
+
+    def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
+        fetched = context.time_range
+        ahead = TimeRange(start=fetched.end, end=fetched.end + _AHEAD, step=fetched.step)
+        return [EvaluatedQuantity(value=None, time_series=constant_time_series(1.0, ahead))]
+
+    def attributes(
+        self,
+        _localizer: Callable[[str], str],
+        _registered_metrics: Mapping[str, metrics_v1.Metric],
+        /,
+    ) -> CurveAttributes | None:
+        return None
+
+
+def test_reports_the_time_range_of_curves_computed_beyond_the_fetch() -> None:
+    graph = Graph(name="forecast", title="Forecast", kind="test", lines=[_line(_BeyondTheFetch())])
+
+    [evaluated] = _update(graph, fetch_data=_FakeRRDFetchData())
+
+    assert evaluated.time_range == TimeRange(start=60, end=660, step=10)
+
+
+def test_reports_the_requested_time_range_without_fetched_series() -> None:
+    graph = Graph(name="empty", title="Empty", kind="test")
+
+    [evaluated] = _update(graph, fetch_data=_FakeRRDFetchData())
+
+    assert evaluated.time_range == _time_range()
 
 
 def test_evaluates_lines_in_both_directions() -> None:

@@ -92,8 +92,14 @@ def _api_context(temperature_unit: str = "celsius") -> ApiContext:
 def test_evaluated_to_response_surfaces_fetch_diagnostics() -> None:
     # A hit series cap becomes a warning; a per-query fetch error becomes an error entry.
     response = evaluated_to_response(
-        EvaluatedGraph(name="g", title="t", vertical_range=None, stacks=[], lines=[]),
-        fallback_time_range=TimeRange(start=0, end=60, step=10),
+        EvaluatedGraph(
+            name="g",
+            title="t",
+            time_range=TimeRange(start=0, end=30, step=10),
+            vertical_range=None,
+            stacks=[],
+            lines=[],
+        ),
         diagnostics=FetchDiagnostics(
             limits_reached=[QueryLimitReached(metric_name="cpu", max_series=100, num_series=100)],
             errors=["telemetry metrics unavailable"],
@@ -107,8 +113,14 @@ def test_evaluated_to_response_surfaces_fetch_diagnostics() -> None:
 
 def test_evaluated_to_response_has_no_diagnostics_by_default() -> None:
     response = evaluated_to_response(
-        EvaluatedGraph(name="g", title="t", vertical_range=None, stacks=[], lines=[]),
-        fallback_time_range=TimeRange(start=0, end=60, step=10),
+        EvaluatedGraph(
+            name="g",
+            title="t",
+            time_range=TimeRange(start=0, end=30, step=10),
+            vertical_range=None,
+            stacks=[],
+            lines=[],
+        ),
         diagnostics=FetchDiagnostics(),
         temperature_unit=TemperatureUnit.CELSIUS,
     )
@@ -136,12 +148,12 @@ def test_a_shaded_region_is_served_beside_the_metrics_not_among_them() -> None:
         EvaluatedGraph(
             name="g",
             title="t",
+            time_range=TimeRange(start=0, end=30, step=10),
             vertical_range=None,
             stacks=[],
             lines=[],
             regions=(_region(series, series),),
         ),
-        fallback_time_range=TimeRange(start=0, end=30, step=10),
         diagnostics=FetchDiagnostics(),
         temperature_unit=TemperatureUnit.CELSIUS,
     )
@@ -156,12 +168,12 @@ def test_a_region_open_at_the_top_is_served_without_an_upper_bound() -> None:
         EvaluatedGraph(
             name="g",
             title="t",
+            time_range=TimeRange(start=0, end=30, step=10),
             vertical_range=None,
             stacks=[],
             lines=[],
             regions=(_region(series, None),),
         ),
-        fallback_time_range=TimeRange(start=0, end=30, step=10),
         diagnostics=FetchDiagnostics(),
         temperature_unit=TemperatureUnit.CELSIUS,
     )
@@ -258,7 +270,16 @@ def _capture_request(
     ) -> EvaluatedGraphs:
         captured["options"] = options
         return EvaluatedGraphs(
-            graphs=[EvaluatedGraph(name="g", title="t", vertical_range=None, stacks=[], lines=[])],
+            graphs=[
+                EvaluatedGraph(
+                    name="g",
+                    title="t",
+                    time_range=TimeRange(start=0, end=30, step=10),
+                    vertical_range=None,
+                    stacks=[],
+                    lines=[],
+                )
+            ],
             diagnostics=FetchDiagnostics(),
         )
 
@@ -378,7 +399,6 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
     )(graph).graphs
     response = evaluated_to_response(
         evaluated,
-        fallback_time_range=time_range,
         diagnostics=FetchDiagnostics(),
         temperature_unit=TemperatureUnit.CELSIUS,
     )
@@ -455,7 +475,6 @@ def test_evaluated_to_response_keeps_a_metric_whose_rrd_holds_no_series() -> Non
     )(graph).graphs
     response = evaluated_to_response(
         evaluated,
-        fallback_time_range=time_range,
         diagnostics=FetchDiagnostics(),
         temperature_unit=TemperatureUnit.CELSIUS,
     )
@@ -525,7 +544,6 @@ def test_evaluated_to_response_converts_the_values_to_the_users_temperature_unit
     )(graph).graphs
     response = evaluated_to_response(
         evaluated,
-        fallback_time_range=time_range,
         diagnostics=FetchDiagnostics(),
         temperature_unit=TemperatureUnit.FAHRENHEIT,
     )
@@ -590,7 +608,6 @@ def test_evaluated_to_response_leaves_a_non_temperature_unit_alone() -> None:
     )(graph).graphs
     response = evaluated_to_response(
         evaluated,
-        fallback_time_range=time_range,
         diagnostics=FetchDiagnostics(),
         temperature_unit=TemperatureUnit.FAHRENHEIT,
     )
@@ -608,6 +625,7 @@ def test_evaluated_to_response_carries_the_attributes_of_the_fetched_series() ->
     evaluated = EvaluatedGraph(
         name="g",
         title="t",
+        time_range=TimeRange(start=0, end=30, step=10),
         vertical_range=None,
         stacks=[],
         lines=[
@@ -629,7 +647,6 @@ def test_evaluated_to_response_carries_the_attributes_of_the_fetched_series() ->
 
     response = evaluated_to_response(
         evaluated,
-        fallback_time_range=time_range,
         diagnostics=FetchDiagnostics(),
         temperature_unit=TemperatureUnit.CELSIUS,
     )
@@ -651,6 +668,7 @@ def test_evaluated_to_response_leaves_an_rrd_metric_without_attributes() -> None
     evaluated = EvaluatedGraph(
         name="g",
         title="t",
+        time_range=TimeRange(start=0, end=30, step=10),
         vertical_range=None,
         stacks=[],
         lines=[
@@ -668,7 +686,6 @@ def test_evaluated_to_response_leaves_an_rrd_metric_without_attributes() -> None
 
     response = evaluated_to_response(
         evaluated,
-        fallback_time_range=time_range,
         diagnostics=FetchDiagnostics(),
         temperature_unit=TemperatureUnit.CELSIUS,
     )

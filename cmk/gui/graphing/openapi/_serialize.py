@@ -17,7 +17,7 @@ from cmk.graphing_engine import TimeRange as EngineTimeRange
 from cmk.gui.i18n import _
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
-from .._drawn_curves import DrawnCurve, serialize_drawn_curves
+from .._drawn_curves import drawn_curves, DrawnCurve
 from .._source import FetchDiagnostics
 from .._unit_format import unit_to_unit_format
 from .._user_specific_unit import apply_temperature_unit
@@ -166,20 +166,16 @@ def diagnostics_to_warnings(diagnostics: FetchDiagnostics) -> list[str]:
 def evaluated_to_response(
     evaluated: EvaluatedGraph,
     *,
-    fallback_time_range: EngineTimeRange,
     diagnostics: FetchDiagnostics,
     temperature_unit: TemperatureUnit,
 ) -> GraphFetchResponse:
-    time_range, metrics = serialize_drawn_curves(
-        evaluated,
-        lambda drawn: curve_to_api_metric(drawn, temperature_unit),
-        fallback_time_range=fallback_time_range,
-        include_reference=True,
-    )
     return GraphFetchResponse(
         title=evaluated.title,
-        time_range=api_time_range_from_engine(time_range),
-        metrics=metrics,
+        time_range=api_time_range_from_engine(evaluated.time_range),
+        metrics=[
+            curve_to_api_metric(drawn, temperature_unit)
+            for drawn in drawn_curves(evaluated.stacks, evaluated.lines, include_reference=True)
+        ],
         horizontal_lines=horizontal_lines_to_api(evaluated, temperature_unit),
         shaded_regions=shaded_regions_to_api(evaluated, temperature_unit),
         warnings=diagnostics_to_warnings(diagnostics),

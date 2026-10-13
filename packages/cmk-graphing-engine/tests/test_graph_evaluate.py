@@ -82,6 +82,7 @@ def test_evaluate_graph_keeps_stacks_and_lines_with_their_direction() -> None:
     assert _evaluate_graph(graph, _context(metric_data, time_series)) == EvaluatedGraph(
         name="g",
         title="g",
+        time_range=_TR,
         vertical_range=None,
         stacks=[
             EvaluatedStack(

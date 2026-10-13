@@ -499,7 +499,7 @@ def test_the_shell_axis_ignores_a_minimal_range_which_only_widens_the_drawn_exte
 
 
 _RANGE = TimeRange(start=0, end=120, step=60)
-_REQUESTED = TimeRange(start=0, end=300, step=60)
+_TIME_RANGE = TimeRange(start=0, end=300, step=60)
 
 
 def _curve(
@@ -508,7 +508,6 @@ def _curve(
     color: str = "#112233",
     values: Sequence[float | None] = (1.0, 2.0),
     attributes: dict[str, dict[str, str]] | None = None,
-    time_range: TimeRange = _RANGE,
 ) -> EvaluatedCurve:
     return EvaluatedCurve(
         id=name,
@@ -518,7 +517,7 @@ def _curve(
             color=color,
         ),
         value=None,
-        time_series=TimeSeries(time_range=time_range, values=list(values)),
+        time_series=TimeSeries(time_range=_RANGE, values=list(values)),
         series_attributes=attributes or {},
     )
 
@@ -529,6 +528,7 @@ def _graph(
     return EvaluatedGraph(
         name="graph",
         title="Graph",
+        time_range=_TIME_RANGE,
         vertical_range=None,
         stacks=list(stacks),
         lines=list(lines),
@@ -550,7 +550,6 @@ def test_the_curves_carry_their_title_colour_data_and_attributes() -> None:
                 )
             ]
         ),
-        fallback_time_range=_REQUESTED,
     )
 
     assert spec["curves"] == [
@@ -564,27 +563,10 @@ def test_the_curves_carry_their_title_colour_data_and_attributes() -> None:
     ]
 
 
-def test_the_time_range_is_the_one_the_first_curve_came_back_with() -> None:
-    spec = evaluated_to_graph_spec(
-        _graph(
-            lines=[
-                EvaluatedLine(curve=_curve("a"), inverse=False),
-                EvaluatedLine(
-                    curve=_curve("b", time_range=TimeRange(start=0, end=600, step=300)),
-                    inverse=False,
-                ),
-            ]
-        ),
-        fallback_time_range=_REQUESTED,
-    )
+def test_the_graph_spec_spans_the_time_range_of_the_evaluated_graph() -> None:
+    spec = evaluated_to_graph_spec(_graph())
 
-    assert (spec["start_time"], spec["end_time"], spec["step"]) == (0, 120, 60)
-
-
-def test_a_graph_without_curves_reports_the_requested_range() -> None:
-    spec = evaluated_to_graph_spec(_graph(), fallback_time_range=_REQUESTED)
-
-    assert (spec["start_time"], spec["end_time"], spec["step"], spec["curves"]) == (0, 300, 60, [])
+    assert (spec["start_time"], spec["end_time"], spec["step"]) == (0, 300, 60)
 
 
 def test_an_attribute_group_the_source_left_empty_is_still_reported() -> None:
@@ -600,7 +582,6 @@ def test_an_attribute_group_the_source_left_empty_is_still_reported() -> None:
                 )
             ]
         ),
-        fallback_time_range=_REQUESTED,
     )
 
     assert spec["curves"][0]["attributes"] == {
@@ -620,7 +601,6 @@ def test_an_attribute_group_the_graph_spec_does_not_report_is_left_out() -> None
                 )
             ]
         ),
-        fallback_time_range=_REQUESTED,
     )
 
     assert spec["curves"][0]["attributes"] == {"resource": {"host.name": "heute"}}

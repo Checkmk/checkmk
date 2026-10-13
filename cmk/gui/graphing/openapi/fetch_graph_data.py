@@ -77,7 +77,6 @@ def _evaluated_or_problem(evaluate: Callable[[], EvaluatedGraphs]) -> EvaluatedG
 def _single_graph_response(
     evaluated: EvaluatedGraphs,
     *,
-    fallback_time_range: EngineTimeRange,
     temperature_unit: TemperatureUnit,
 ) -> GraphFetchResponse:
     if len(evaluated.graphs) != 1:
@@ -88,7 +87,6 @@ def _single_graph_response(
         )
     return evaluated_to_response(
         evaluated.graphs[0],
-        fallback_time_range=fallback_time_range,
         diagnostics=evaluated.diagnostics,
         temperature_unit=temperature_unit,
     )
@@ -107,7 +105,6 @@ def evaluate_graph_to_response(
     options = graph_fetch_options(time_range, consolidation_function, combination_mode)
     return _single_graph_response(
         _evaluated_or_problem(lambda: evaluate_graphs(internal, options)),
-        fallback_time_range=time_range,
         temperature_unit=temperature_unit,
     )
 
@@ -129,7 +126,6 @@ def evaluate_built_graph_to_response(
     options = graph_fetch_options(time_range, consolidation_function, combination_mode)
     return _single_graph_response(
         _evaluated_or_problem(lambda: evaluate_built_graphs([graph], options)),
-        fallback_time_range=time_range,
         temperature_unit=temperature_unit,
     )
 

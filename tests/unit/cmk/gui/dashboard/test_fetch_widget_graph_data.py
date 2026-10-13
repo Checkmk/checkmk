@@ -109,6 +109,7 @@ def _celsius_graph(_graphs: Sequence[Graph], _options: Mapping[str, object]) -> 
             EvaluatedGraph(
                 name="g",
                 title="t",
+                time_range=TimeRange(start=0, end=60, step=60),
                 vertical_range=None,
                 stacks=[],
                 lines=[
@@ -180,7 +181,16 @@ def test_fetch_evaluates_as_the_token_issuer(monkeypatch: pytest.MonkeyPatch) ->
     def _capture(_graphs: Sequence[Graph], _options: Mapping[str, object]) -> EvaluatedGraphs:
         evaluated_as["user_id"] = user.id
         return EvaluatedGraphs(
-            graphs=[EvaluatedGraph(name="g", title="t", vertical_range=None, stacks=[], lines=[])],
+            graphs=[
+                EvaluatedGraph(
+                    name="g",
+                    title="t",
+                    time_range=TimeRange(start=0, end=60, step=60),
+                    vertical_range=None,
+                    stacks=[],
+                    lines=[],
+                )
+            ],
             diagnostics=FetchDiagnostics(),
         )
 

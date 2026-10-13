@@ -96,6 +96,7 @@ def test_graph_scalars_use_the_curves_own_values_not_the_stacked_position() -> N
     graph = EvaluatedGraph(
         name="g",
         title="Graph",
+        time_range=_TIME_RANGE,
         vertical_range=None,
         stacks=[EvaluatedStack(members=[first, second], inverse=False)],
         lines=[],
@@ -114,6 +115,7 @@ def test_all_curves_with_sign_lists_stacks_then_lines() -> None:
     graph = EvaluatedGraph(
         name="g",
         title="Graph",
+        time_range=_TIME_RANGE,
         vertical_range=None,
         stacks=[EvaluatedStack(members=[stacked], inverse=False)],
         lines=[EvaluatedLine(curve=lined, inverse=True)],
@@ -125,7 +127,9 @@ def test_all_curves_with_sign_lists_stacks_then_lines() -> None:
 
 
 def test_render_png_produces_bytes_for_an_empty_graph() -> None:
-    graph = EvaluatedGraph(name="g", title="Empty", vertical_range=None, stacks=[], lines=[])
+    graph = EvaluatedGraph(
+        name="g", title="Empty", time_range=_TIME_RANGE, vertical_range=None, stacks=[], lines=[]
+    )
     png_bytes = render_png(graph, GraphDisplayConfigImage())
 
     assert png_bytes.startswith(b"\x89PNG")
@@ -153,6 +157,7 @@ def test_render_png_ex_with_a_unit_renders_ticks_and_legend_via_the_formatter() 
     graph = EvaluatedGraph(
         name="g",
         title="Graph",
+        time_range=_TIME_RANGE,
         vertical_range=None,
         stacks=[EvaluatedStack(members=[curve], inverse=False)],
         lines=[],
@@ -171,6 +176,7 @@ def test_graph_scalars_are_natural_values_even_when_mirrored() -> None:
     graph = EvaluatedGraph(
         name="g",
         title="Graph",
+        time_range=_TIME_RANGE,
         vertical_range=None,
         stacks=[EvaluatedStack(members=[member], inverse=True)],
         lines=[],
@@ -216,6 +222,7 @@ def test_far_away_rule_is_clipped_and_does_not_stretch_the_axis() -> None:
     graph = EvaluatedGraph(
         name="g",
         title="Graph",
+        time_range=_TIME_RANGE,
         vertical_range=None,
         stacks=[EvaluatedStack(members=[member], inverse=False)],
         lines=[],
@@ -241,6 +248,7 @@ def test_vertical_range_bounds_use_the_stacked_top_not_each_members_own_max() ->
     graph = EvaluatedGraph(
         name="g",
         title="Graph",
+        time_range=_TIME_RANGE,
         vertical_range=None,
         stacks=[EvaluatedStack(members=[first, second], inverse=False)],
         lines=[],
@@ -261,6 +269,7 @@ def test_derived_y_axis_unit_reads_the_unit_from_the_first_curve() -> None:
     graph = EvaluatedGraph(
         name="g",
         title="Graph",
+        time_range=_TIME_RANGE,
         vertical_range=None,
         stacks=[EvaluatedStack(members=[curve], inverse=False)],
         lines=[],
@@ -270,7 +279,9 @@ def test_derived_y_axis_unit_reads_the_unit_from_the_first_curve() -> None:
 
 
 def test_derived_y_axis_unit_is_none_for_a_graph_with_no_curves() -> None:
-    graph = EvaluatedGraph(name="g", title="Empty", vertical_range=None, stacks=[], lines=[])
+    graph = EvaluatedGraph(
+        name="g", title="Empty", time_range=_TIME_RANGE, vertical_range=None, stacks=[], lines=[]
+    )
 
     assert _derived_y_axis_unit(graph) is None
 
@@ -282,6 +293,7 @@ def test_render_png_ex_self_derives_the_y_axis_unit_when_none_is_passed() -> Non
     graph = EvaluatedGraph(
         name="g",
         title="Graph",
+        time_range=_TIME_RANGE,
         vertical_range=None,
         stacks=[EvaluatedStack(members=[curve], inverse=False)],
         lines=[],
@@ -300,6 +312,7 @@ def test_compute_png_size_mm_matches_render_png_ex_without_a_legend() -> None:
     graph = EvaluatedGraph(
         name="g",
         title="Graph",
+        time_range=_TIME_RANGE,
         vertical_range=None,
         stacks=[EvaluatedStack(members=[curve], inverse=False)],
         lines=[],
@@ -325,6 +338,7 @@ def test_compute_png_size_mm_matches_render_png_ex_with_a_legend() -> None:
     graph = EvaluatedGraph(
         name="g",
         title="Graph",
+        time_range=_TIME_RANGE,
         vertical_range=None,
         stacks=[EvaluatedStack(members=[curve], inverse=False)],
         lines=[],
@@ -365,6 +379,7 @@ def test_plot_metrics_spans_the_full_time_range_despite_a_long_leading_gap() -> 
     graph = EvaluatedGraph(
         name="g",
         title="Graph",
+        time_range=time_range,
         vertical_range=None,
         stacks=[EvaluatedStack(members=[curve], inverse=False)],
         lines=[],
@@ -386,9 +401,22 @@ def test_plot_metrics_spans_the_full_time_range_for_an_entirely_empty_curve() ->
     graph = EvaluatedGraph(
         name="g",
         title="Graph",
+        time_range=_TIME_RANGE,
         vertical_range=None,
         stacks=[EvaluatedStack(members=[curve], inverse=False)],
         lines=[],
+    )
+
+    fig = Figure()
+    ax = fig.add_subplot(1, 1, 1)
+    _plot_metrics(ax, graph)
+
+    assert ax.get_xlim() == (_TIME_RANGE.start, _TIME_RANGE.end)
+
+
+def test_plot_metrics_spans_the_time_range_of_a_graph_without_curves() -> None:
+    graph = EvaluatedGraph(
+        name="g", title="Empty", time_range=_TIME_RANGE, vertical_range=None, stacks=[], lines=[]
     )
 
     fig = Figure()
@@ -428,6 +456,7 @@ def test_time_axis_of_a_multi_day_graph_is_labelled_with_weekday_and_time() -> N
     graph = EvaluatedGraph(
         name="g",
         title="Graph",
+        time_range=two_days,
         vertical_range=None,
         stacks=[EvaluatedStack(members=[curve], inverse=False)],
         lines=[],
@@ -436,7 +465,7 @@ def test_time_axis_of_a_multi_day_graph_is_labelled_with_weekday_and_time() -> N
     ax = fig.add_subplot(1, 1, 1)
     _plot_metrics(ax, graph)
 
-    _fit_time_axis(ax, graph, GraphDisplayConfigImage(), None)
+    _fit_time_axis(ax, GraphDisplayConfigImage(), None)
 
     labels = [label.get_text() for label in ax.get_xticklabels() if label.get_text()]
     assert len(labels) > 2
@@ -447,6 +476,7 @@ def test_values_are_drawn_at_their_bucket_end_like_the_vue_graph() -> None:
     graph = EvaluatedGraph(
         name="g",
         title="Graph",
+        time_range=_TIME_RANGE,
         vertical_range=None,
         stacks=[],
         lines=[EvaluatedLine(curve=_curve("m", [1.0, 2.0, 3.0]), inverse=False)],
@@ -473,6 +503,7 @@ def _hourly_graph(time_range: TimeRange) -> EvaluatedGraph:
     return EvaluatedGraph(
         name="g",
         title="Graph",
+        time_range=time_range,
         vertical_range=None,
         stacks=[EvaluatedStack(members=[curve], inverse=False)],
         lines=[],
@@ -487,7 +518,7 @@ def test_time_axis_is_labelled_in_the_given_time_zone() -> None:
         fig = Figure()
         ax = fig.add_subplot(1, 1, 1)
         _plot_metrics(ax, graph)
-        _fit_time_axis(ax, graph, GraphDisplayConfigImage(), tz)
+        _fit_time_axis(ax, GraphDisplayConfigImage(), tz)
         return [label.get_text() for label in ax.get_xticklabels() if label.get_text()]
 
     utc_labels = labels(ZoneInfo("UTC"))

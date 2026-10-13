@@ -68,14 +68,6 @@ def _all_curves_with_sign(graph: EvaluatedGraph) -> list[tuple[EvaluatedCurve, f
     ]
 
 
-def _time_range(graph: EvaluatedGraph) -> TimeRange | None:
-    """The time range every curve of the graph is aligned to (the engine fetch aligns every
-    series of a graph onto one shared grid), taken from whichever curve is found first."""
-    for curve, _sign in _all_curves_with_sign(graph):
-        return curve.time_series.time_range
-    return None
-
-
 def _region_bound_series(graph: EvaluatedGraph) -> Iterator[TimeSeries]:
     for region in graph.regions:
         if region.lower is not None:
@@ -201,8 +193,7 @@ def _plot_stack(ax: Axes, stack: EvaluatedStack, timestamps: Sequence[int]) -> N
 def _plot_regions(ax: Axes, graph: EvaluatedGraph) -> None:
     if not graph.regions:
         return
-    time_range = _time_range(graph)
-    timestamps = _timestamps(time_range, _curves_length(graph)) if time_range is not None else []
+    timestamps = _timestamps(graph.time_range, _curves_length(graph))
     if not timestamps:
         return
     floor, ceiling = ax.get_ylim()
@@ -231,8 +222,7 @@ def _plot_regions(ax: Axes, graph: EvaluatedGraph) -> None:
 def _plot_metrics(ax: Axes, graph: EvaluatedGraph) -> None:
     """Plot every stack (cumulatively, on top of its optional hidden reference) and line of the
     graph, mirroring inverse ones below zero."""
-    time_range = _time_range(graph)
-    timestamps = _timestamps(time_range, _curves_length(graph)) if time_range is not None else []
+    timestamps = _timestamps(graph.time_range, _curves_length(graph))
 
     for stack in graph.stacks:
         if stack.members:
@@ -248,14 +238,7 @@ def _plot_metrics(ax: Axes, graph: EvaluatedGraph) -> None:
 
     ax.margins(y=0)
 
-    if time_range is not None:
-        # Always span the full time_range - the window the Vue graph draws against, and the one
-        # _graph_time_caption reads for the title - rather than trimming to the first real data
-        # point. A graph mostly made of a leading None-only period (e.g. a newly created host,
-        # or any range wider than the data's actual history) must render as mostly empty,
-        # matching what Vue's on-screen renderer already shows, instead of silently zooming into
-        # the tail end while the title still claims the full range.
-        ax.set_xlim(time_range.start, time_range.end)
+    ax.set_xlim(graph.time_range.start, graph.time_range.end)
 
 
 def _drawn_vertical_extent(graph: EvaluatedGraph) -> tuple[float | None, float | None]:
@@ -268,8 +251,7 @@ def _drawn_vertical_extent(graph: EvaluatedGraph) -> tuple[float | None, float |
     multi-member stack gets clipped to a single member's range, and the area's baseline is lost
     whenever every member's own value is > 0.
     """
-    time_range = _time_range(graph)
-    timestamps = _timestamps(time_range, _curves_length(graph)) if time_range is not None else []
+    timestamps = _timestamps(graph.time_range, _curves_length(graph))
     values: list[float] = []
     for stack in graph.stacks:
         for bottom, top, has_value in _stack_extents(stack, timestamps):
@@ -447,14 +429,14 @@ def _apply_render_config(
         ax.tick_params(axis="x", which="minor", labelsize=config.font_size, length=0)
         # A first placement, so the layout pass reserves room for the labels; the plot width
         # it settles on is only known afterwards (see _fit_time_axis).
-        _fit_time_axis(ax, graph, config, tz)
+        _fit_time_axis(ax, config, tz)
         ax.grid(axis="x", color=DIVISION_COLOR, linestyle="--")
     else:
         ax.tick_params(axis="x", labelbottom=False, bottom=False)
 
-    if config.show_graph_time and (time_range := _time_range(graph)) is not None:
+    if config.show_graph_time:
         ax.set_title(
-            _graph_time_caption(time_range, tz),
+            _graph_time_caption(graph.time_range, tz),
             fontsize=config.font_size * X_AXIS_TITLE_FONT_SCALE,
             loc="right",
         )
@@ -462,9 +444,7 @@ def _apply_render_config(
     return title_artist
 
 
-def _fit_time_axis(
-    ax: Axes, graph: EvaluatedGraph, config: GraphDisplayConfigImage, tz: datetime.tzinfo | None
-) -> None:
+def _fit_time_axis(ax: Axes, config: GraphDisplayConfigImage, tz: datetime.tzinfo | None) -> None:
     """Place the time axis ticks where the Vue graph places them, labelled the same way, in the
     timezone tz (None: the local one).
 
@@ -472,9 +452,6 @@ def _fit_time_axis(
     again after a layout pass (e.g. fig.tight_layout()) has settled the plot width.
     """
     if not config.show_time_axis:
-        return
-    if _time_range(graph) is None:
-        ax.set_xticks([])
         return
     renderer = FigureCanvasAgg(ax.get_figure(root=True)).get_renderer()  # type: ignore[no-untyped-call]
     font = FontProperties(size=config.font_size)
@@ -703,7 +680,7 @@ def render_png_ex(
         ax, graph, config, y_axis_unit, formatter, is_mirrored=is_mirrored, tz=tz
     )
     fig.tight_layout()
-    _fit_time_axis(ax, graph, config, tz)
+    _fit_time_axis(ax, config, tz)
     _align_title_to_y_ticks(fig, ax, title_artist)
     buf = io.BytesIO()
     fig.savefig(buf, format="png")

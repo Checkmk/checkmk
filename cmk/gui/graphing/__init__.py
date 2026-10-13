@@ -9,7 +9,6 @@ from ._drawn_curves import (
     drawn_curves,
     DrawnCurve,
     line_type_with_mirroring,
-    serialize_drawn_curves,
 )
 from ._from_api import (
     GraphFromAPI,
@@ -346,7 +345,6 @@ __all__ = [
     "RRDFetchData",
     "RRDFetchMetricNames",
     "RRDFetchTimeSeries",
-    "serialize_drawn_curves",
     "serialize_graphs",
     "sort_registered_graph_plugins",
     "split_predict_prefix",

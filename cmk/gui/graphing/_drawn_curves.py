@@ -4,12 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from typing import Protocol
-
-from cmk.graphing_engine import EvaluatedCurve, EvaluatedGraph
-from cmk.graphing_engine import TimeRange as EngineTimeRange
 
 from ._line_types import DrawnLineType, line_type_mirror, LineType
 
@@ -80,29 +77,6 @@ def drawn_curves[CurveT](
             stack=None,
             hidden=False,
         )
-
-
-def serialize_drawn_curves[OutT](
-    evaluated: EvaluatedGraph,
-    to_output: Callable[[DrawnCurve[EvaluatedCurve]], OutT],
-    *,
-    fallback_time_range: EngineTimeRange,
-    include_reference: bool = False,
-) -> tuple[EngineTimeRange, list[OutT]]:
-    """The drawn curves of an evaluated graph, and the time range their data came back on.
-
-    The engine fetch aligns every series of a graph onto one shared grid, so the first curve's
-    range is the graph's. A graph without curves reports the requested range.
-    """
-    outputs: list[OutT] = []
-    time_range: EngineTimeRange | None = None
-    for drawn in drawn_curves(
-        evaluated.stacks, evaluated.lines, include_reference=include_reference
-    ):
-        if time_range is None:
-            time_range = drawn.curve.time_series.time_range
-        outputs.append(to_output(drawn))
-    return fallback_time_range if time_range is None else time_range, outputs
 
 
 def line_type_with_mirroring(line_type: DrawnLineType, mirrored: bool) -> LineType:

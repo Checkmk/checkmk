@@ -296,6 +296,16 @@ py_library(
     visibility = ["//visibility:public"],
 )
 
+py_library(
+    name = "update_config",
+    srcs = [
+        "cmk/update_config/internal/__init__.py",
+    ],
+    data = ["cmk/update_config/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
 py_doc_test(
     name = "doctest",
     size = "small",
@@ -316,6 +326,7 @@ py_doc_test(
         ":rulesets",
         ":server_side_calls",
         ":server_side_programs",
+        ":update_config",
     ],
 )
 
@@ -483,6 +494,7 @@ py_wheel(
         ":rulesets",
         ":server_side_calls",
         ":server_side_programs",
+        ":update_config",
     ],
 )
 
@@ -510,6 +522,7 @@ filegroup(
         "cmk/rulesets/py.typed",
         "cmk/server_side_calls/py.typed",
         "cmk/server_side_programs/py.typed",
+        "cmk/update_config/py.typed",
     ],
 )
 
@@ -538,6 +551,7 @@ py_requirements_test(
         ":rulesets",
         ":server_side_calls",
         ":server_side_programs",
+        ":update_config",
         "//packages/cmk-plugin-apis/doc:sphinx_build",
     ],
     requirements_in = "requirements.in",

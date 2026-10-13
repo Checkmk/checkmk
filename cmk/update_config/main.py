@@ -49,19 +49,14 @@ from cmk.gui.watolib.pending_changes import (
 )
 from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.gui.wsgi.app import gui_context
-from cmk.update_config.plugins.pre_actions.utils import ConflictMode
+from cmk.update_config.internal import ConflictMode, PreUpdateAction, UpdateAction
 from cmk.utils import log, paths
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import check_mk_config_dir
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.redis import disable_redis
 
-from .registry import (
-    pre_update_action_registry,
-    PreUpdateAction,
-    update_action_registry,
-    UpdateAction,
-)
+from .registry import pre_update_action_registry, update_action_registry
 
 
 def main(

@@ -3,44 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from abc import ABC, abstractmethod
-from logging import Logger
-from typing import Final, override
+from typing import override
 
 from cmk.ccc.plugin_registry import Registry
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.plugins.pre_actions.utils import ConflictMode
-
-
-class UpdateAction(ABC):
-    """Base class for all update actions"""
-
-    def __init__(
-        self,
-        *,
-        name: str,
-        title: str,
-        sort_index: int,
-        expiry_version: ExpiryVersion,  # noqa: ARG002
-        continue_on_failure: bool = True,
-    ) -> None:
-        """
-        :param name: the internal name of the update action, has to be unique
-        :param title: the string printed before executing the action, informational only
-        :param sort_index: a relative index of the action, actions with smaller indices are executed first
-        :param continue_on_failure: If True, the update continues even after an exception from __call__().
-        """
-        self.name: Final = name
-        self.title: Final = title
-        self.sort_index: Final = sort_index
-        self.continue_on_failure: Final = continue_on_failure
-
-    @abstractmethod
-    def __call__(self, logger: Logger) -> None:
-        """
-        Execute the update action.
-        Raising an exception will abort the config update, unless continue_on_failure is True.
-        """
+from cmk.update_config.internal import PreUpdateAction as PreUpdateAction
+from cmk.update_config.internal import UpdateAction as UpdateAction
 
 
 class UpdateActionRegistry(Registry[UpdateAction]):
@@ -50,34 +17,6 @@ class UpdateActionRegistry(Registry[UpdateAction]):
 
 
 update_action_registry = UpdateActionRegistry()
-
-
-class PreUpdateAction(ABC):
-    """Base class for all pre-update actions"""
-
-    def __init__(
-        self,
-        *,
-        name: str,
-        title: str,
-        sort_index: int,
-        expiry_version: ExpiryVersion,  # noqa: ARG002
-    ) -> None:
-        """
-        :param name: the internal name of the pre-update action, has to be unique
-        :param title: the string printed before executing the action, informational only
-        :param sort_index: a relative index of the action, actions with smaller indices are executed first
-        """
-        self.name: Final = name
-        self.title: Final = title
-        self.sort_index: Final = sort_index
-
-    @abstractmethod
-    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
-        """
-        Execute the pre-update action.
-        Raising an exception will abort the config update.
-        """
 
 
 class PreUpdateActionRegistry(Registry[PreUpdateAction]):

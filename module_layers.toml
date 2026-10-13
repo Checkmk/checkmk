@@ -79,6 +79,7 @@ plugin_apis = [
   "cmk.server_side_calls.internal",
   "cmk.server_side_calls.v1",
   "cmk.server_side_programs.v1",
+  "cmk.update_config.internal",
 ]
 
 relay_protocols = ["cmk.relay_protocols"]
@@ -1662,6 +1663,9 @@ allows = [
   "cmk.update_config",
   "cmk.utils.paths",
 ]
+
+[components."cmk.update_config.internal"]
+allows = []
 
 [components."cmk.update_config"]
 allows = [

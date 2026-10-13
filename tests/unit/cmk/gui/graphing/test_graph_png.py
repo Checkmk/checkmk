@@ -29,7 +29,6 @@ from matplotlib.figure import Figure
 
 from cmk.gui.graphing import compute_png_size_mm, GraphDisplayConfigImage, render_png
 from cmk.gui.graphing._graph_png import (
-    _all_curves_with_sign,
     _fit_time_axis,
     _graph_scalars,
     _graph_time_caption,
@@ -119,23 +118,6 @@ def test_graph_scalars_use_the_curves_own_values_not_the_stacked_position() -> N
     assert [s.title for s in scalars] == ["first", "second"]
     assert scalars[0].maximum == 3.0
     assert scalars[1].maximum == 30.0
-
-
-def test_all_curves_with_sign_lists_stacks_then_lines() -> None:
-    stacked = _curve("stacked", [1.0])
-    lined = _curve("lined", [2.0])
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        time_range=_TIME_RANGE,
-        vertical_range=None,
-        stacks=[EvaluatedStack(members=[stacked], inverse=False)],
-        lines=[EvaluatedLine(curve=lined, inverse=True)],
-    )
-
-    result = _all_curves_with_sign(graph)
-
-    assert result == [(stacked, 1.0), (lined, -1.0)]
 
 
 def test_render_png_produces_bytes_for_an_empty_graph() -> None:

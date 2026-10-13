@@ -58,13 +58,8 @@ REGION_FILL_ALPHA = 0.15
 _PT_PER_PX = 72 / DPI
 
 
-def _all_curves_with_sign(graph: EvaluatedGraph) -> list[tuple[EvaluatedCurve, float]]:
-    """Every drawn curve (stack members, not their hidden reference; then lines) together
-    with the sign its inverse (mirrored-below-zero) flag applies to its values."""
-    return [
-        (drawn.curve, -1.0 if drawn.mirrored else 1.0)
-        for drawn in drawn_curves(graph.stacks, graph.lines)
-    ]
+def _mirroring_sign(inverse: bool) -> float:
+    return -1.0 if inverse else 1.0
 
 
 def _region_bound_series(graph: EvaluatedGraph) -> Iterator[TimeSeries]:
@@ -86,7 +81,9 @@ def _curves_length(graph: EvaluatedGraph) -> int:
     to the longest one, and padding every shorter curve out to it, avoids a numpy broadcast
     crash instead of assuming every curve already agrees.
     """
-    lengths = [len(curve.time_series.values) for curve, _sign in _all_curves_with_sign(graph)]
+    lengths = [
+        len(drawn.curve.time_series.values) for drawn in drawn_curves(graph.stacks, graph.lines)
+    ]
     lengths.extend(
         len(stack.reference.time_series.values)
         for stack in graph.stacks
@@ -146,7 +143,7 @@ class _CurveScalars:
 
 
 def _graph_scalars(graph: EvaluatedGraph) -> list[_CurveScalars]:
-    return [_CurveScalars(curve) for curve, _sign in _all_curves_with_sign(graph)]
+    return [_CurveScalars(drawn.curve) for drawn in drawn_curves(graph.stacks, graph.lines)]
 
 
 def _stack_extents(
@@ -155,7 +152,7 @@ def _stack_extents(
     """Per-member (bottom, top, has_value) arrays: the running cumulative sum actually drawn for
     each member - not the member's own unstacked value. Shared by _plot_stack and
     _drawn_vertical_extent so the Y-axis bounds always match the drawn area exactly."""
-    sign = -1.0 if stack.inverse else 1.0
+    sign = _mirroring_sign(stack.inverse)
     bottom = (
         _values(stack.reference, sign=sign, length=len(timestamps))
         if stack.reference is not None
@@ -228,7 +225,7 @@ def _plot_metrics(ax: Axes, graph: EvaluatedGraph) -> None:
             _plot_stack(ax, stack, timestamps)
 
     for line in graph.lines:
-        sign = -1.0 if line.inverse else 1.0
+        sign = _mirroring_sign(line.inverse)
         ax.plot(
             timestamps,
             _values(line.curve, sign=sign, length=len(timestamps)),
@@ -257,7 +254,7 @@ def _drawn_vertical_extent(graph: EvaluatedGraph) -> tuple[float | None, float |
             values.extend(bottom[has_value].tolist())
             values.extend(top[has_value].tolist())
     for line in graph.lines:
-        sign = -1.0 if line.inverse else 1.0
+        sign = _mirroring_sign(line.inverse)
         raw = _values(line.curve, sign=sign, length=len(timestamps))
         values.extend(raw[~np.isnan(raw)].tolist())
     for series in _region_bound_series(graph):
@@ -629,13 +626,12 @@ def render_png(
     Pure function - no registries, no Livestatus, no global state.
     """
     scalars = _graph_scalars(graph)
-    is_mirrored = any(sign < 0 for _curve, sign in _all_curves_with_sign(graph))
+    is_mirrored = any(drawn.mirrored for drawn in drawn_curves(graph.stacks, graph.lines))
     lower, upper = _vertical_range_bounds(graph)
     # The legend always lists every rule (e.g. warning/critical), even ones outside the visible
     # Y range; only the drawn horizontal lines are restricted to the in-range subset.
     in_range_rules = _rules_in_range(graph.rules, lower, upper)
     formatter = None if y_axis_unit is None else formatter_from_unit(y_axis_unit)
-    show_legend_table = config.show_legend and bool(scalars or graph.rules or graph.regions)
     table_height_ex = legend_height_ex(graph, config)
 
     width_in = ex_to_inches(config.size[0], config.font_size)
@@ -643,7 +639,7 @@ def render_png(
 
     fig = Figure(figsize=(width_in, height_in), dpi=DPI, facecolor=BACKGROUND_COLOR)
 
-    if show_legend_table:
+    if table_height_ex:
         gs = fig.add_gridspec(2, 1, height_ratios=[config.size[1], table_height_ex])
         ax = fig.add_subplot(gs[0])
         legend_ax = fig.add_subplot(gs[1])
@@ -659,7 +655,7 @@ def render_png(
         ax.set_ylim(*limits)
     _plot_regions(ax, graph)
     for rule in in_range_rules:
-        sign = -1.0 if rule.inverse else 1.0
+        sign = _mirroring_sign(rule.inverse)
         ax.axhline(sign * rule.value, color=rule.attributes.color)
     title_artist = _apply_render_config(
         ax, graph, config, y_axis_unit, formatter, is_mirrored=is_mirrored, tz=tz

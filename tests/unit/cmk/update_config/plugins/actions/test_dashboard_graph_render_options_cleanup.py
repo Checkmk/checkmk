@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from cmk.update_config.plugins.actions.dashboard_graph_render_options_cleanup import (
-    RemoveDashboardGraphFontSize,
+    RemoveObsoleteDashboardGraphRenderOptions,
 )
 
 LOGGER = logging.getLogger()
@@ -25,7 +25,7 @@ def _write_dashboards(user_dir: Path, dashboards: Mapping[str, object]) -> Path:
     return path
 
 
-def test_remove_font_size(tmp_path: Path) -> None:
+def test_removes_obsolete_render_options(tmp_path: Path) -> None:
     path = _write_dashboards(
         tmp_path / "cmkadmin",
         {
@@ -46,7 +46,7 @@ def test_remove_font_size(tmp_path: Path) -> None:
         },
     )
 
-    RemoveDashboardGraphFontSize.remove_font_size(tmp_path, LOGGER)
+    RemoveObsoleteDashboardGraphRenderOptions.remove_obsolete_render_options(tmp_path, LOGGER)
 
     dashboard = literal_eval(path.read_text())["my_dashboard"]
     assert dashboard["title"] == "My dashboard"
@@ -59,7 +59,7 @@ def test_remove_font_size(tmp_path: Path) -> None:
     assert widgets["third-uuid"] == {"type": "state", "title": "no render options at all"}
 
 
-def test_remove_font_size_leaves_other_users_alone(tmp_path: Path) -> None:
+def test_removes_obsolete_render_options_leaves_other_users_alone(tmp_path: Path) -> None:
     """Every user is swept, and only the files that carry the key are rewritten."""
     with_font_size = _write_dashboards(
         tmp_path / "harry",
@@ -71,7 +71,7 @@ def test_remove_font_size_leaves_other_users_alone(tmp_path: Path) -> None:
     )
     untouched_content = without_font_size.read_text()
 
-    RemoveDashboardGraphFontSize.remove_font_size(tmp_path, LOGGER)
+    RemoveObsoleteDashboardGraphRenderOptions.remove_obsolete_render_options(tmp_path, LOGGER)
 
     rewritten = literal_eval(with_font_size.read_text())
     assert rewritten["d"]["widgets"]["w"]["graph_render_options"] == {}
@@ -92,7 +92,7 @@ def test_the_count_is_dashboards_not_users(
     )
 
     with caplog.at_level(logging.INFO):
-        RemoveDashboardGraphFontSize.remove_font_size(tmp_path, LOGGER)
+        RemoveObsoleteDashboardGraphRenderOptions.remove_obsolete_render_options(tmp_path, LOGGER)
 
     assert "2 dashboards" in caplog.text
 
@@ -100,7 +100,7 @@ def test_the_count_is_dashboards_not_users(
 def test_a_user_without_dashboards_gets_no_file(tmp_path: Path) -> None:
     (tmp_path / "cmkadmin").mkdir()
 
-    RemoveDashboardGraphFontSize.remove_font_size(tmp_path, LOGGER)
+    RemoveObsoleteDashboardGraphRenderOptions.remove_obsolete_render_options(tmp_path, LOGGER)
 
     assert not (tmp_path / "cmkadmin" / "user_dashboards.mk").exists()
 
@@ -126,6 +126,6 @@ def test_a_dashboard_it_cannot_read_fails_the_action(
     content_before = path.read_text()
 
     with pytest.raises(ValueError, match=str(path)):
-        RemoveDashboardGraphFontSize.remove_font_size(tmp_path, LOGGER)
+        RemoveObsoleteDashboardGraphRenderOptions.remove_obsolete_render_options(tmp_path, LOGGER)
 
     assert path.read_text() == content_before

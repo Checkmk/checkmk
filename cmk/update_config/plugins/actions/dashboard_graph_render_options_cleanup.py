@@ -13,6 +13,8 @@ from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.lib.user_profiles import user_directories
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
+_OBSOLETE_RENDER_OPTIONS = frozenset({"font_size"})
+
 
 def _as_dict(value: object, what: str) -> dict[str, object]:
     if not isinstance(value, dict):
@@ -27,7 +29,9 @@ def _strip_widget(widget: object) -> dict[str, object]:
     render_options = _as_dict(parsed["graph_render_options"], "the graph render options")
     return parsed | {
         "graph_render_options": {
-            key: value for key, value in render_options.items() if key != "font_size"
+            key: value
+            for key, value in render_options.items()
+            if key not in _OBSOLETE_RENDER_OPTIONS
         }
     }
 
@@ -40,25 +44,25 @@ def _strip_dashboard(dashboard: object) -> dict[str, object]:
     }
 
 
-def _without_font_size(dashboards: dict[str, object]) -> dict[str, object]:
+def _without_obsolete_render_options(dashboards: dict[str, object]) -> dict[str, object]:
     return {name: _strip_dashboard(dashboard) for name, dashboard in dashboards.items()}
 
 
-class RemoveDashboardGraphFontSize(UpdateAction):
-    """Drop the font size from the stored graph widgets; nothing reads the key any more."""
+class RemoveObsoleteDashboardGraphRenderOptions(UpdateAction):
+    """Drop the render options nothing reads any more from the stored graph widgets."""
 
     @override
     def __call__(self, logger: Logger) -> None:
-        self.remove_font_size(cmk.utils.paths.profile_dir, logger)
+        self.remove_obsolete_render_options(cmk.utils.paths.profile_dir, logger)
 
     @staticmethod
-    def remove_font_size(profile_dir: Path, logger: Logger) -> None:
+    def remove_obsolete_render_options(profile_dir: Path, logger: Logger) -> None:
         cleaned = 0
         for user_dir in user_directories(profile_dir):
             path = user_dir / "user_dashboards.mk"
             dashboards = store.load_object_from_file(path, default={})
             try:
-                stripped = _without_font_size(_as_dict(dashboards, "the dashboards"))
+                stripped = _without_obsolete_render_options(_as_dict(dashboards, "the dashboards"))
             except (TypeError, KeyError) as exc:
                 raise ValueError(f"Unexpected format in {path}: {exc}") from exc
 
@@ -68,14 +72,15 @@ class RemoveDashboardGraphFontSize(UpdateAction):
 
         if cleaned:
             logger.info(
-                "Removed the font size setting from %(count)d dashboards", {"count": cleaned}
+                "Removed obsolete graph render options from %(count)d dashboards",
+                {"count": cleaned},
             )
 
 
 update_action_registry.register(
-    RemoveDashboardGraphFontSize(
-        name="remove_dashboard_graph_font_size",
-        title="Remove the obsolete font size of graph widgets",
+    RemoveObsoleteDashboardGraphRenderOptions(
+        name="remove_obsolete_dashboard_graph_render_options",
+        title="Remove the obsolete render options of graph widgets",
         sort_index=101,  # no ordering constraints
         expiry_version=ExpiryVersion.CMK_310,
     )

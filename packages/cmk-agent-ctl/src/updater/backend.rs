@@ -422,7 +422,7 @@ impl Updater {
     ///
     /// # Errors
     ///
-    /// If the state cannot be written.
+    /// If the registry cannot be read or the state cannot be written.
     pub fn register_update_source(
         &mut self,
         registration: &UpdaterRegistration,
@@ -434,10 +434,7 @@ impl Updater {
             UpdaterRegistration::Keep => {
                 // The recorded source is replaced when it is absent, or
                 // dangling: no registered connection carries its UUID.
-                let recorded_site = self.state.source.as_ref().and_then(|recorded| {
-                    registry.retrieve_standard_connection_by_uuid(&recorded.uuid)
-                });
-                match recorded_site {
+                match self.recorded_source_site(registry) {
                     Some(site_id) => log::info!(
                         "Keeping the recorded update source: its connection is still registered at {site_id}"
                     ),
@@ -454,6 +451,48 @@ impl Updater {
             ),
         }
         self.state.save(&self.state_path)
+    }
+
+    /// Drop the recorded update source when its connection is gone from the
+    /// registry.
+    ///
+    /// # Arguments
+    ///
+    /// * `registry` - the registry as it is after the deletion
+    ///
+    /// # Errors
+    ///
+    /// If the state cannot be written.
+    pub fn forget_vanished_update_source(&mut self, registry: &Registry) -> AnyhowResult<()> {
+        if self.recorded_source_site(registry).is_some() {
+            return Ok(());
+        }
+        let Some(source) = self.state.source.take() else {
+            return Ok(());
+        };
+        log::info!(
+            "Dropping the recorded update source: connection {} is not registered anymore",
+            source.uuid
+        );
+        self.state.save(&self.state_path)
+    }
+
+    /// The site of the recorded update source, as the registry keys its
+    /// connection.
+    ///
+    /// # Arguments
+    ///
+    /// * `registry` - the registry to look the recorded connection up in
+    ///
+    /// # Returns
+    ///
+    /// `None` when no source is recorded, or when its connection is not in the
+    /// registry anymore.
+    fn recorded_source_site(&self, registry: &Registry) -> Option<site_spec::SiteID> {
+        self.state
+            .source
+            .as_ref()
+            .and_then(|recorded| registry.retrieve_standard_connection_by_uuid(&recorded.uuid))
     }
 
     /// Keeps the *first* error: the artifacts fail independently, so the first
@@ -1047,6 +1086,82 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert_eq!(saved.source, Some(other_source()));
         // The rest of the state belongs to the update cycle, not to the registration.
         assert_eq!(saved.last_check, Some(1759276800));
+    }
+
+    #[test]
+    fn test_forget_vanished_update_source_of_a_deleted_connection() {
+        let dir = tempfile::TempDir::new().unwrap();
+        // The deletion took the last connection, so the registry is empty.
+        let registry = registry_with_the_connections_of(&[]);
+        let mut updater = updater_in(
+            &dir,
+            UpdateState {
+                source: Some(some_source()),
+                last_check: Some(1759276800),
+                ..Default::default()
+            },
+        );
+
+        updater
+            .forget_vanished_update_source(&registry.registry)
+            .unwrap();
+
+        let saved = UpdateState::load(&updater.state_path).unwrap();
+        assert_eq!(saved.source, None);
+        // The rest of the state belongs to the update cycle, not to the deletion.
+        assert_eq!(saved.last_check, Some(1759276800));
+    }
+
+    #[test]
+    fn test_forget_vanished_update_source_of_a_re_registered_site() {
+        let dir = tempfile::TempDir::new().unwrap();
+        // The site is registered again, with a connection of its own.
+        let registry = registry_with_the_connections_of(&[(SOURCE_SITE, &reregistered_source())]);
+        let mut updater = updater_in(
+            &dir,
+            UpdateState {
+                source: Some(some_source()),
+                ..Default::default()
+            },
+        );
+
+        updater
+            .forget_vanished_update_source(&registry.registry)
+            .unwrap();
+
+        assert_eq!(saved_source(&updater), None);
+    }
+
+    #[test]
+    fn test_forget_vanished_update_source_keeps_a_registered_one() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_the_connections_of(&[(SOURCE_SITE, &some_source())]);
+        let mut updater = updater_in(
+            &dir,
+            UpdateState {
+                source: Some(some_source()),
+                ..Default::default()
+            },
+        );
+
+        updater
+            .forget_vanished_update_source(&registry.registry)
+            .unwrap();
+
+        assert_eq!(updater.state.source, Some(some_source()));
+    }
+
+    #[test]
+    fn test_forget_vanished_update_source_without_a_recorded_one() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_the_connections_of(&[]);
+        let mut updater = updater_in(&dir, UpdateState::default());
+
+        updater
+            .forget_vanished_update_source(&registry.registry)
+            .unwrap();
+
+        assert_eq!(updater.state.source, None);
     }
 
     #[test]

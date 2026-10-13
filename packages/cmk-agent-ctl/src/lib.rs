@@ -143,9 +143,13 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
             status_opts.json,
             !status_opts.no_query_remote,
         ),
-        cli::Mode::Delete(delete_opts) => delete(&mut registry, &delete_opts.connection),
+        cli::Mode::Delete(delete_opts) => {
+            delete(&mut registry, &delete_opts.connection)?;
+            updater.forget_vanished_update_source(&registry)
+        }
         cli::Mode::DeleteAll(delete_all_opts) => {
-            delete_all(&mut registry, delete_all_opts.enable_insecure_connections)
+            delete_all(&mut registry, delete_all_opts.enable_insecure_connections)?;
+            updater.forget_vanished_update_source(&registry)
         }
         cli::Mode::Update(update_opts) => update(
             &updater,

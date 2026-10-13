@@ -99,7 +99,6 @@ from ._metric_data import (
     reverse_translated_names,
     rrd_column_names,
     split_predict_prefix,
-    timestamps,
     translate_metric_names,
     translated_names_and_scales,
 )
@@ -356,7 +355,6 @@ __all__ = [
     "SumRate",
     "TEMPLATE_KIND",
     "TemplateGraphSpecification",
-    "timestamps",
     "to_cmk_time_series_graph",
     "translate_metric_names",
     "translated_names_and_scales",

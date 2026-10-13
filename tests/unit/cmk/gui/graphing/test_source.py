@@ -26,6 +26,7 @@ from cmk.graphing_engine import (
     SiteID,
     TimeRange,
     TimeSeries,
+    timestamps,
 )
 from cmk.gui.graphing import (
     build_template_graphs,
@@ -36,7 +37,6 @@ from cmk.gui.graphing import (
     TemplateGraphSpecification,
 )
 from cmk.gui.graphing._graph_templates import _EvaluateTemplateGraphs
-from cmk.gui.graphing._metric_data import timestamps
 from cmk.gui.graphing._source import (
     chop_last_empty_step,
     PerformanceDataRow,

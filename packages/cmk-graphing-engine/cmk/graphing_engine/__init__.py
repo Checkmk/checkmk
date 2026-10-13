@@ -85,6 +85,7 @@ from ._timeseries import (
     constant_time_series,
     TimeRange,
     TimeSeries,
+    timestamps,
 )
 from ._units import (
     AutoPrecision,
@@ -181,4 +182,5 @@ __all__ = [
     "metric_display_attributes",
     "parse_unit",
     "rrd_metric_name",
+    "timestamps",
 ]

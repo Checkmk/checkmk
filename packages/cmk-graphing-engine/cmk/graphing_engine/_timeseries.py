@@ -28,13 +28,14 @@ class TimeSeries:
     values: Sequence[float | None]
 
 
-def _num_points(time_range: TimeRange) -> int:
+def timestamps(time_range: TimeRange) -> Sequence[int]:
     if time_range.step <= 0:
-        return 0
-    return max(0, (time_range.end - time_range.start) // time_range.step)
+        return []
+    num_points = max(0, (time_range.end - time_range.start) // time_range.step)
+    return [time_range.start + (index + 1) * time_range.step for index in range(num_points)]
 
 
 def constant_time_series(value: float | None, time_range: TimeRange) -> TimeSeries:
     # The same value at every point of the range - the shape a quantity without a fetched series of
     # its own draws on: a constant, a threshold, or a present-but-all-None curve.
-    return TimeSeries(time_range=time_range, values=[value] * _num_points(time_range))
+    return TimeSeries(time_range=time_range, values=[value] * len(timestamps(time_range)))

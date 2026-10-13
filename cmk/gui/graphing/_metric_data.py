@@ -24,6 +24,7 @@ from cmk.graphing_engine import (
     PerformanceData,
     TimeRange,
     TimeSeries,
+    timestamps,
 )
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.type_defs import ColumnName
@@ -290,12 +291,6 @@ def translate_performance_data(
         name: _performance_data(columns[-1])
         for name, columns in _translated_columns(specs, raw_values).items()
     }
-
-
-def timestamps(time_range: TimeRange) -> Sequence[int]:
-    if time_range.step <= 0:
-        return []
-    return [t + time_range.step for t in range(time_range.start, time_range.end, time_range.step)]
 
 
 def _aggregate(

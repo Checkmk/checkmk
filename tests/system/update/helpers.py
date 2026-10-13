@@ -231,20 +231,40 @@ def check_errors_in_log_files(site: Site) -> None:
     assert not error_match_dict, f"Error string found in one or more log files: {error_match_dict}"
 
 
-def check_services(site: Site, hostname: str, base_data: dict[str, ServiceInfo]) -> None:
-    """Assert that current service status matches previous service status."""
+def check_services(
+    site: Site,
+    hostname: str,
+    base_data: dict[str, ServiceInfo],
+    skipped_prefixes: tuple[str, ...] = (),
+) -> None:
+    """Assert that current service status matches previous service status.
+
+    Services whose name starts with one of `skipped_prefixes` may change between OK, WARN and
+    CRIT, but must not become UNKNOWN.
+    """
     # get update monitoring data
     target_data = site.get_host_services(hostname)
 
-    base_ok_services = get_services_with_status(base_data, 0)
-    target_ok_services = get_services_with_status(target_data, 0)
-
-    not_found_services = [service for service in base_data if service not in target_data]
+    not_found_services = sorted(set(base_data) - set(target_data))
     err_msg = (
         f"The following services were found in base-version but not in target-version: "
         f"{not_found_services}"
     )
-    assert len(target_data) >= len(base_data), err_msg
+    assert not not_found_services, err_msg
+
+    skipped = {service for service in base_data if service.startswith(skipped_prefixes)}
+    unknown_skipped_services = sorted(
+        service for service in skipped if target_data[service].state == 3
+    )
+    unknown_details = [(s, target_data[s].summary) for s in unknown_skipped_services]
+    err_msg = (
+        f"The following services are `UNKNOWN` in target-version: {unknown_skipped_services}"
+        f"\nDetails: {unknown_details}"
+    )
+    assert not unknown_skipped_services, err_msg
+
+    base_ok_services = get_services_with_status(base_data, 0) - skipped
+    target_ok_services = get_services_with_status(target_data, 0)
 
     not_ok_services = [service for service in base_ok_services if service not in target_ok_services]
     err_details = [

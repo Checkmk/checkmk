@@ -15,6 +15,12 @@ useWidgetKeys(_t('Switch'), [
   { combo: ['Enter'], description: _t('Toggle') }
 ])
 
+const { ariaLabel, ariaLabelledby } = defineProps<{
+  /** Accessible name; a label around the switch does not name it. */
+  ariaLabel?: string | undefined
+  ariaLabelledby?: string | undefined
+}>()
+
 const modelValue = defineModel({ type: Boolean, default: false })
 
 function toggle() {
@@ -33,6 +39,8 @@ function toggle() {
       role="switch"
       tabindex="0"
       :aria-checked="modelValue"
+      :aria-label="ariaLabel"
+      :aria-labelledby="ariaLabelledby"
       @click="toggle"
       @keydown.space.prevent="toggle"
       @keydown.enter.prevent="toggle"

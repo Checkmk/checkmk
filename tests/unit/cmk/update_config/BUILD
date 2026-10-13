@@ -20,11 +20,22 @@ py_library(
     ],
 )
 
+py_library(
+    name = "selfbootstrap_conf_d_helpers",
+    testonly = True,
+    srcs = ["plugins/actions/selfbootstrap_conf_d_helpers.py"],
+    visibility = [":__subpackages__"],
+    deps = ["//cmk/gui/watolib"],
+)
+
 py_cmk_test(
     name = "update_config",
     srcs = glob(
         include = ["**/*.py"],
-        exclude = ["**/conftest.py"],
+        exclude = [
+            "**/conftest.py",
+            "plugins/actions/selfbootstrap_conf_d_helpers.py",
+        ],
     ),
     args = [
         "--random-order-bucket=global",
@@ -37,6 +48,7 @@ py_cmk_test(
     visibility = ["//visibility:private"],
     deps = [
         ":conftest",
+        ":selfbootstrap_conf_d_helpers",
         "//cmk/update_config",
         "//packages/cmk-backup:utils",
         "//packages/cmk-ccc:store",

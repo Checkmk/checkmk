@@ -5,9 +5,11 @@
 
 
 import json
+from http import HTTPStatus
 from pathlib import Path
 
 import pytest
+import responses
 from pytest import MonkeyPatch
 from pytest_mock import MockerFixture
 
@@ -136,6 +138,29 @@ class TestAggregationRawdataGenerator:
         )
         assert agg_gen._config == config  # noqa: SLF001
         assert agg_gen._site_url == expected_site_url  # noqa: SLF001
+
+
+@pytest.mark.xfail(reason="SUP-30112: aggregation state requests do not explicitly handle time out")
+@responses.activate
+def test_aggregation_state_timeout_reports_server_detail() -> None:
+    _create_automation_user_secret(UserId("automation"))
+    responses.add(
+        responses.GET,
+        "http://somewhere:3000/some_site/check_mk/api/1.0"
+        "/domain-types/bi_aggregation/actions/aggregation_state/invoke",
+        status=HTTPStatus.GATEWAY_TIMEOUT,
+        json={"detail": "Computing the aggregation state timed out after 90 seconds."},
+    )
+    generator = AggregationRawdataGenerator(
+        AgentBiConfig(
+            site_url="http://somewhere:3000/some_site",
+            authentication=AgentBiAutomationUserAuthentication(username="automation"),
+        )
+    )
+
+    aggregation_data = generator.generate_data()
+
+    assert aggregation_data.error == "Computing the aggregation state timed out after 90 seconds."
 
 
 def test_merge_config() -> None:

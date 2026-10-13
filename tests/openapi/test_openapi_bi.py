@@ -10,6 +10,7 @@
 from collections.abc import Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
+from typing import NoReturn
 
 import pytest
 
@@ -23,6 +24,7 @@ from cmk.bi.trees import BICompiledAggregation, BICompiledLeaf, BICompiledRule
 from cmk.bi.type_defs import ComputationConfigDict
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.watolib import activate_changes
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.gui.web_test_app import SetConfig
@@ -545,6 +547,27 @@ def test_get_aggregation_state_not_yet_compiled(
         counter_path.unlink()
 
     resp.assert_status_code(HTTPStatus.SERVICE_UNAVAILABLE)
+
+
+@pytest.mark.xfail(reason="SUP-30112: aggregation state requests do not explicitly handle time out")
+def test_get_aggregation_state_timed_out(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def _time_out(*args: object, **kwargs: object) -> NoReturn:
+        raise RequestTimeout("request timed out")
+
+    # TODO: Patching owned code is tech debt. The endpoint builds its BIManager itself, and
+    # the real timeout only fires after 90 seconds, so there is no other way to reach it.
+    monkeypatch.setattr("cmk.gui.bi._openapi.BIManager", _time_out)
+    live: MockLiveStatusConnection = mock_livestatus
+    live.set_sites(["NO_SITE"])
+
+    with live(expect_status_query=False):
+        resp = clients.BiAggregation.get_aggregation_state(expect_ok=False)
+
+    resp.assert_status_code(HTTPStatus.GATEWAY_TIMEOUT)
 
 
 @pytest.mark.parametrize("wato_enabled", [True, False])

@@ -37,8 +37,11 @@ from ._fixtures import _FakeRRDFetchData
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 
 
+_STEP = 10
+
+
 def _time_range() -> TimeRange:
-    return TimeRange(start=0, end=60, step=10)
+    return TimeRange(start=0, end=60, step=_STEP)
 
 
 def _rrd(name: str) -> RRDMetric:
@@ -59,7 +62,9 @@ def _line(quantity: QuantityProtocol, *, inverse: bool = False) -> Line:
 
 
 def _ts(*values: float | None) -> TimeSeries:
-    return TimeSeries(time_range=_time_range(), values=list(values))
+    return TimeSeries(
+        time_range=TimeRange(start=0, end=_STEP * len(values), step=_STEP), values=list(values)
+    )
 
 
 def _perf(value: float | None, **thresholds: float | None) -> PerformanceData:
@@ -165,6 +170,30 @@ def test_reports_the_requested_time_range_without_fetched_series() -> None:
     [evaluated] = _update(graph, fetch_data=_FakeRRDFetchData())
 
     assert evaluated.time_range == _time_range()
+
+
+def _fetched_on_the_grid_of_the_first(values: Sequence[float | None]) -> TimeSeries:
+    x, y = _rrd("x"), _rrd("y")
+    graph = Graph(name="g", title="g", kind="test", lines=[_line(x), _line(y)])
+    grid = _ts(1.0, 2.0, 3.0).time_range
+    fetch_data = _FakeRRDFetchData(
+        {
+            x: _fetched(3.0, _ts(1.0, 2.0, 3.0)),
+            y: _fetched(None, TimeSeries(time_range=grid, values=list(values))),
+        }
+    )
+
+    [evaluated] = _update(graph, fetch_data=fetch_data)
+
+    return evaluated.lines[1].curve.time_series
+
+
+def test_a_series_short_of_the_grid_is_padded_with_gaps() -> None:
+    assert _fetched_on_the_grid_of_the_first([4.0, 5.0]).values == [4.0, 5.0, None]
+
+
+def test_a_series_beyond_the_grid_is_cut_at_its_end() -> None:
+    assert _fetched_on_the_grid_of_the_first([4.0, 5.0, 6.0, 7.0]).values == [4.0, 5.0, 6.0]
 
 
 def test_evaluates_lines_in_both_directions() -> None:

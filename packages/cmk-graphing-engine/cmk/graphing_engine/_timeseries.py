@@ -35,6 +35,12 @@ def timestamps(time_range: TimeRange) -> Sequence[int]:
     return [time_range.start + (index + 1) * time_range.step for index in range(num_points)]
 
 
+def fitted(time_series: TimeSeries, time_range: TimeRange) -> TimeSeries:
+    num_points = len(timestamps(time_range))
+    values = list(time_series.values[:num_points])
+    return TimeSeries(time_range=time_range, values=values + [None] * (num_points - len(values)))
+
+
 def constant_time_series(value: float | None, time_range: TimeRange) -> TimeSeries:
     # The same value at every point of the range - the shape a quantity without a fetched series of
     # its own draws on: a constant, a threshold, or a present-but-all-None curve.

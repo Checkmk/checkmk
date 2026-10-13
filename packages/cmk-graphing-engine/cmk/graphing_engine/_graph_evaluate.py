@@ -21,7 +21,7 @@ from ._quantity import (
     FanOutQuantity,
     first_value,
 )
-from ._timeseries import ConsolidationFunction, TimeRange, TimeSeries
+from ._timeseries import ConsolidationFunction, fitted, TimeRange, TimeSeries
 from ._title import evaluate_title
 from ._units import CurveAttributes
 
@@ -230,6 +230,34 @@ def _drawn_time_range(
     )
 
 
+def _fitted_curve(curve: EvaluatedCurve, time_range: TimeRange) -> EvaluatedCurve:
+    return EvaluatedCurve(
+        id=curve.id,
+        attributes=curve.attributes,
+        value=curve.value,
+        time_series=fitted(curve.time_series, time_range),
+        source_id=curve.source_id,
+        series_attributes=curve.series_attributes,
+    )
+
+
+def _fitted_stack(stack: EvaluatedStack, time_range: TimeRange) -> EvaluatedStack:
+    return EvaluatedStack(
+        members=[_fitted_curve(member, time_range) for member in stack.members],
+        inverse=stack.inverse,
+        reference=None if stack.reference is None else _fitted_curve(stack.reference, time_range),
+    )
+
+
+def _fitted_region(region: EvaluatedRegion, time_range: TimeRange) -> EvaluatedRegion:
+    return EvaluatedRegion(
+        id=region.id,
+        attributes=region.attributes,
+        lower=None if region.lower is None else fitted(region.lower, time_range),
+        upper=None if region.upper is None else fitted(region.upper, time_range),
+    )
+
+
 def _evaluate_graph(graph: Graph, context: EvaluationContext) -> EvaluatedGraph:
     seen: Counter[str] = Counter()
     stacks = []
@@ -274,15 +302,19 @@ def _evaluate_graph(graph: Graph, context: EvaluationContext) -> EvaluatedGraph:
         for index, region in enumerate(graph.regions)
         if (evaluated_region := _evaluate_region(region, f"region-{index}", context)) is not None
     )
+    time_range = _drawn_time_range(stacks, lines, fallback=context.time_range)
     return EvaluatedGraph(
         name=graph.name,
         title=evaluate_title(graph.title, graph.metrics(), context),
-        time_range=_drawn_time_range(stacks, lines, fallback=context.time_range),
+        time_range=time_range,
         vertical_range=_evaluate_vertical_range(graph.vertical_range, context),
-        stacks=stacks,
-        lines=lines,
+        stacks=[_fitted_stack(stack, time_range) for stack in stacks],
+        lines=[
+            EvaluatedLine(curve=_fitted_curve(line.curve, time_range), inverse=line.inverse)
+            for line in lines
+        ],
         rules=rules,
-        regions=regions,
+        regions=tuple(_fitted_region(region, time_range) for region in regions),
     )
 
 

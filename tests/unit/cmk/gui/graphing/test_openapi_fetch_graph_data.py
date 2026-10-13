@@ -577,7 +577,7 @@ def test_evaluated_to_response_leaves_a_non_temperature_unit_alone() -> None:
             )
         ],
     )
-    time_range = TimeRange(start=0, end=30, step=10)
+    time_range = TimeRange(start=0, end=10, step=10)
 
     class _FetchData:
         diagnostics = FetchDiagnostics()

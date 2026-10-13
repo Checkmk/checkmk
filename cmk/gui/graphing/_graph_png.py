@@ -29,6 +29,7 @@ from cmk.graphing_engine import (
     NonConvertibleUnit,
     TimeRange,
     TimeSeries,
+    timestamps,
     Unit,
     VerticalRangeKind,
 )
@@ -70,48 +71,12 @@ def _region_bound_series(graph: EvaluatedGraph) -> Iterator[TimeSeries]:
             yield region.upper
 
 
-def _curves_length(graph: EvaluatedGraph) -> int:
-    """The longest time_series.values of any curve actually drawn (stack members, their hidden
-    references, and lines).
-
-    Curves built from a Sum/Difference/Product/Fraction expression are padded by the engine to
-    the longest of their operands (see graphing_engine._quantities._apply_operator) whenever one
-    operand's own RRD fetch came up shorter than another's - so two curves nominally on "the
-    same" time_range can still legitimately differ in length. Sizing the shared timestamps axis
-    to the longest one, and padding every shorter curve out to it, avoids a numpy broadcast
-    crash instead of assuming every curve already agrees.
-    """
-    lengths = [
-        len(drawn.curve.time_series.values) for drawn in drawn_curves(graph.stacks, graph.lines)
-    ]
-    lengths.extend(
-        len(stack.reference.time_series.values)
-        for stack in graph.stacks
-        if stack.reference is not None
-    )
-    lengths.extend(len(series.values) for series in _region_bound_series(graph))
-    return max(lengths, default=0)
+def _series_values(series: TimeSeries) -> npt.NDArray[np.float64]:
+    return np.array([np.nan if v is None else float(v) for v in series.values])
 
 
-def _timestamps(time_range: TimeRange, length: int) -> list[int]:
-    # Each value is drawn at its bucket's *end* (t + step), as the Vue graph's timestampAt()
-    # draws it, so the last value lands on time_range.end. Built from `length` (see
-    # _curves_length), not from time_range: the two agree whenever every curve's values matches
-    # time_range exactly, but not every curve is guaranteed to.
-    return [time_range.start + (i + 1) * time_range.step for i in range(length)]
-
-
-def _series_values(series: TimeSeries, *, length: int | None = None) -> npt.NDArray[np.float64]:
-    raw = np.array([np.nan if v is None else float(v) for v in series.values])
-    if length is not None and len(raw) != length:
-        raw = np.pad(raw, (0, length - len(raw)), constant_values=np.nan)
-    return raw
-
-
-def _values(
-    curve: EvaluatedCurve, *, sign: float = 1.0, length: int | None = None
-) -> npt.NDArray[np.float64]:
-    return _series_values(curve.time_series, length=length) * sign
+def _values(curve: EvaluatedCurve, *, sign: float = 1.0) -> npt.NDArray[np.float64]:
+    return _series_values(curve.time_series) * sign
 
 
 def _last_non_null(values: Sequence[float | None]) -> float | None:
@@ -147,23 +112,21 @@ def _graph_scalars(graph: EvaluatedGraph) -> list[_CurveScalars]:
 
 
 def _stack_extents(
-    stack: EvaluatedStack, timestamps: Sequence[int]
+    stack: EvaluatedStack, times: Sequence[int]
 ) -> list[tuple[npt.NDArray[np.float64], npt.NDArray[np.float64], npt.NDArray[np.bool_]]]:
     """Per-member (bottom, top, has_value) arrays: the running cumulative sum actually drawn for
     each member - not the member's own unstacked value. Shared by _plot_stack and
     _drawn_vertical_extent so the Y-axis bounds always match the drawn area exactly."""
     sign = _mirroring_sign(stack.inverse)
     bottom = (
-        _values(stack.reference, sign=sign, length=len(timestamps))
-        if stack.reference is not None
-        else np.zeros(len(timestamps))
+        _values(stack.reference, sign=sign) if stack.reference is not None else np.zeros(len(times))
     )
     bottom = np.where(np.isnan(bottom), 0.0, bottom)
     extents: list[
         tuple[npt.NDArray[np.float64], npt.NDArray[np.float64], npt.NDArray[np.bool_]]
     ] = []
     for member in stack.members:
-        raw = _values(member, sign=sign, length=len(timestamps))
+        raw = _values(member, sign=sign)
         has_value = ~np.isnan(raw)
         top = bottom + np.where(has_value, raw, 0.0)
         extents.append((bottom, top, has_value))
@@ -171,15 +134,15 @@ def _stack_extents(
     return extents
 
 
-def _plot_stack(ax: Axes, stack: EvaluatedStack, timestamps: Sequence[int]) -> None:
+def _plot_stack(ax: Axes, stack: EvaluatedStack, times: Sequence[int]) -> None:
     for member, (bottom, top, has_value) in zip(
-        stack.members, _stack_extents(stack, timestamps), strict=True
+        stack.members, _stack_extents(stack, times), strict=True
     ):
         ax.fill_between(
-            timestamps, bottom, top, where=has_value, color=member.attributes.color, alpha=0.4
+            times, bottom, top, where=has_value, color=member.attributes.color, alpha=0.4
         )
         ax.plot(
-            timestamps,
+            times,
             np.where(has_value, top, np.nan),
             color=member.attributes.color,
             linewidth=0.5,
@@ -189,23 +152,17 @@ def _plot_stack(ax: Axes, stack: EvaluatedStack, timestamps: Sequence[int]) -> N
 def _plot_regions(ax: Axes, graph: EvaluatedGraph) -> None:
     if not graph.regions:
         return
-    timestamps = _timestamps(graph.time_range, _curves_length(graph))
-    if not timestamps:
+    times = timestamps(graph.time_range)
+    if not times:
         return
     floor, ceiling = ax.get_ylim()
     for region in graph.regions:
-        lower = (
-            np.full(len(timestamps), floor)
-            if region.lower is None
-            else _series_values(region.lower, length=len(timestamps))
-        )
+        lower = np.full(len(times), floor) if region.lower is None else _series_values(region.lower)
         upper = (
-            np.full(len(timestamps), ceiling)
-            if region.upper is None
-            else _series_values(region.upper, length=len(timestamps))
+            np.full(len(times), ceiling) if region.upper is None else _series_values(region.upper)
         )
         ax.fill_between(
-            timestamps,
+            times,
             lower,
             upper,
             where=~(np.isnan(lower) | np.isnan(upper)),
@@ -218,17 +175,17 @@ def _plot_regions(ax: Axes, graph: EvaluatedGraph) -> None:
 def _plot_metrics(ax: Axes, graph: EvaluatedGraph) -> None:
     """Plot every stack (cumulatively, on top of its optional hidden reference) and line of the
     graph, mirroring inverse ones below zero."""
-    timestamps = _timestamps(graph.time_range, _curves_length(graph))
+    times = timestamps(graph.time_range)
 
     for stack in graph.stacks:
         if stack.members:
-            _plot_stack(ax, stack, timestamps)
+            _plot_stack(ax, stack, times)
 
     for line in graph.lines:
         sign = _mirroring_sign(line.inverse)
         ax.plot(
-            timestamps,
-            _values(line.curve, sign=sign, length=len(timestamps)),
+            times,
+            _values(line.curve, sign=sign),
             color=line.curve.attributes.color,
         )
 
@@ -247,18 +204,18 @@ def _drawn_vertical_extent(graph: EvaluatedGraph) -> tuple[float | None, float |
     multi-member stack gets clipped to a single member's range, and the area's baseline is lost
     whenever every member's own value is > 0.
     """
-    timestamps = _timestamps(graph.time_range, _curves_length(graph))
+    times = timestamps(graph.time_range)
     values: list[float] = []
     for stack in graph.stacks:
-        for bottom, top, has_value in _stack_extents(stack, timestamps):
+        for bottom, top, has_value in _stack_extents(stack, times):
             values.extend(bottom[has_value].tolist())
             values.extend(top[has_value].tolist())
     for line in graph.lines:
         sign = _mirroring_sign(line.inverse)
-        raw = _values(line.curve, sign=sign, length=len(timestamps))
+        raw = _values(line.curve, sign=sign)
         values.extend(raw[~np.isnan(raw)].tolist())
     for series in _region_bound_series(graph):
-        raw = _series_values(series, length=len(timestamps))
+        raw = _series_values(series)
         values.extend(raw[~np.isnan(raw)].tolist())
     if not values:
         return None, None

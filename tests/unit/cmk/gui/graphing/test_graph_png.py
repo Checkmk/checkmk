@@ -36,8 +36,6 @@ from cmk.gui.graphing._graph_png import (
     _plot_metrics,
     _plot_stack,
     _rules_in_range,
-    _stack_extents,
-    _values,
     _vertical_range_bounds,
     _y_axis_limits,
     DPI,
@@ -282,18 +280,6 @@ def test_the_image_has_the_size_computed_for_it_with_a_legend() -> None:
     assert _size_in_px(png_bytes) == _px(compute_png_size_mm(graph, config))
 
 
-def test_values_pads_a_shorter_curve_with_nan_to_match_length() -> None:
-    """A Sum/Product curve whose own RRD fetch came up shorter than another operand's (see
-    _curves_length's docstring) must be padded with NaN out to the shared length, not raise or
-    silently drop the mismatch."""
-    curve = _curve("m", [1.0, 2.0])
-
-    padded = _values(curve, length=4)
-
-    assert padded.tolist()[:2] == [1.0, 2.0]
-    assert np.isnan(padded[2:]).all()
-
-
 def test_plot_metrics_spans_the_full_time_range_despite_a_long_leading_gap() -> None:
     """Regression test for CMK-38506: a graph whose real data only starts near the end of a
     long requested range (e.g. a short-lived host inside a 400-day export) must still plot the
@@ -355,23 +341,6 @@ def test_plot_metrics_spans_the_time_range_of_a_graph_without_curves() -> None:
     _plot_metrics(ax, graph)
 
     assert ax.get_xlim() == (_TIME_RANGE.start, _TIME_RANGE.end)
-
-
-def test_stack_extents_pads_a_shorter_member_to_the_longest_curve() -> None:
-    """Mirrors _curves_length's rationale: two stack members can legitimately differ in length,
-    so _stack_extents must pad the shorter one instead of crashing on the numpy broadcast."""
-    longer = _curve("longer", [1.0, 1.0, 1.0])
-    shorter = _curve("shorter", [10.0, 20.0])
-    stack = EvaluatedStack(members=[longer, shorter], inverse=False)
-
-    extents = _stack_extents(stack, timestamps=[0, 60, 120])
-
-    _bottom, longer_top, longer_has_value = extents[0]
-    _bottom, _top, shorter_has_value = extents[1]
-    assert longer_has_value.tolist() == [True, True, True]
-    assert shorter_has_value.tolist() == [True, True, False]
-    # The padded (missing) position must not contribute to the running stack sum.
-    assert longer_top[2] == 1.0
 
 
 def test_time_axis_of_a_multi_day_graph_is_labelled_with_weekday_and_time() -> None:

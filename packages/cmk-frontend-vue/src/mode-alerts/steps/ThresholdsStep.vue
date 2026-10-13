@@ -24,7 +24,6 @@ defineProps<
   CmkWizardStepProps & {
     thresholdsSpec: FormSpec
     saving: boolean
-    created: boolean
     saveError: string | null
   }
 >()
@@ -57,7 +56,6 @@ const problem = computed<TranslatedString | null>(() => {
         </CmkParagraph>
         <FormEdit v-model:data="model.thresholds" :spec="thresholdsSpec" :backend-validation="[]" />
         <CmkAlert v-if="problem" variant="info" size="small" :text="problem" />
-        <CmkAlert v-if="created" variant="success" :text="_t('The alert was created.')" />
         <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />
       </div>
     </template>
@@ -65,8 +63,8 @@ const problem = computed<TranslatedString | null>(() => {
     <template #actions>
       <CmkWizardButton
         type="finish"
-        :override-label="_t('Create alert')"
-        :disabled="saving || created || problem !== null"
+        :override-label="_t('Create & activate changes')"
+        :disabled="saving || problem !== null"
         @click="emit('create')"
       />
       <CmkWizardButton type="previous" />

@@ -34,12 +34,12 @@ const props = defineProps<{
   }
   folder_paths: FolderPaths
   prediction_periods: PredictionPeriods
+  activate_changes_url: string
 }>()
 
 const currentStep = ref(1)
 const model = ref<AlertModel>(emptyAlert(props.conditions_form.data, props.thresholds_form.data))
 const saving = ref(false)
-const created = ref(false)
 const saveError = ref<string | null>(null)
 
 async function saveAlert(): Promise<void> {
@@ -48,7 +48,7 @@ async function saveAlert(): Promise<void> {
   try {
     const result = await createAlert(model.value, props.folder_paths, props.prediction_periods)
     if (result.ok) {
-      created.value = true
+      window.location.href = props.activate_changes_url
     } else {
       saveError.value = result.error
     }
@@ -75,7 +75,6 @@ async function saveAlert(): Promise<void> {
         v-model="model"
         :thresholds-spec="thresholds_form.spec"
         :saving="saving"
-        :created="created"
         :save-error="saveError"
         :index="2"
         :is-completed="() => false"

@@ -38,7 +38,8 @@ function renderApp() {
       conditions_form: { spec: CONDITIONS_SPEC, data: { folder_path: MAIN_FOLDER } },
       thresholds_form: { spec: THRESHOLDS_SPEC, data: {} },
       folder_paths: FOLDER_PATHS,
-      prediction_periods: PREDICTION_PERIODS
+      prediction_periods: PREDICTION_PERIODS,
+      activate_changes_url: 'wato.py?mode=changelog'
     }
   })
 }
@@ -108,9 +109,9 @@ test('creating the alert sends its name, service match, conditions and threshold
   await completeFirstStep()
   await defineUpperLevels('80', '90')
 
-  await userEvent.click(screen.getByRole('button', { name: 'Create alert' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Create & activate changes' }))
 
-  expect(await screen.findByText('The alert was created.')).toBeVisible()
+  await waitFor(() => expect(sentBodies).toHaveLength(1))
   expect(sentBodies).toEqual([
     {
       configuration_name: 'latency_too_high',
@@ -126,7 +127,7 @@ test('an alert cannot be created without thresholds, and the step says why', asy
   renderApp()
   await completeFirstStep()
 
-  expect(await screen.findByRole('button', { name: 'Create alert' })).toBeDisabled()
+  expect(await screen.findByRole('button', { name: 'Create & activate changes' })).toBeDisabled()
   expect(
     screen.getByText('Define at least one threshold: upper levels, lower levels or both.')
   ).toBeVisible()
@@ -138,7 +139,7 @@ test('defining a threshold allows creating the alert', async () => {
 
   await defineUpperLevels('80', '90')
 
-  expect(screen.getByRole('button', { name: 'Create alert' })).toBeEnabled()
+  expect(screen.getByRole('button', { name: 'Create & activate changes' })).toBeEnabled()
   expect(
     screen.queryByText('Define at least one threshold: upper levels, lower levels or both.')
   ).toBeNull()
@@ -150,7 +151,7 @@ test('an alert with incomplete levels cannot be created, and the step says why',
 
   await defineUpperLevels('80', '')
 
-  expect(screen.getByRole('button', { name: 'Create alert' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Create & activate changes' })).toBeDisabled()
   expect(screen.getByText('Fill in the warning and critical levels.')).toBeVisible()
 })
 
@@ -169,9 +170,9 @@ test('creating the alert sends the chosen folder', async () => {
   })
   await defineUpperLevels('80', '90')
 
-  await userEvent.click(await screen.findByRole('button', { name: 'Create alert' }))
+  await userEvent.click(await screen.findByRole('button', { name: 'Create & activate changes' }))
 
-  await screen.findByText('The alert was created.')
+  await waitFor(() => expect(sentBody.conditions).toBeDefined())
   expect(sentBody.conditions).toEqual({ folder: '/linux', host_tags: [], host_label_groups: [] })
 })
 
@@ -192,7 +193,7 @@ test('a rejected alert shows the reason', async () => {
   await completeFirstStep()
   await defineUpperLevels('80', '90')
 
-  await userEvent.click(await screen.findByRole('button', { name: 'Create alert' }))
+  await userEvent.click(await screen.findByRole('button', { name: 'Create & activate changes' }))
 
   expect(await screen.findByText(/already exists/)).toBeVisible()
 })

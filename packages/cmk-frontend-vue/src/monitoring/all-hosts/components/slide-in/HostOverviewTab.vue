@@ -47,9 +47,12 @@ const age = computed(() =>
 
 <template>
   <div class="monitoring-host-overview-tab">
-    <section class="monitoring-host-overview-tab__section">
-      <CmkHeading type="h3">{{ _t('Service summary') }}</CmkHeading>
-      <ServiceSummaryBar :counts="data.service_counts" :host="hostRef" />
+    <section>
+      <ServiceSummaryBar :counts="data.service_counts" :host="hostRef">
+        <template #heading>
+          <CmkHeading type="h3">{{ _t('Service summary') }}</CmkHeading>
+        </template>
+      </ServiceSummaryBar>
     </section>
 
     <hr class="monitoring-host-overview-tab__divider" />
@@ -131,11 +134,5 @@ const age = computed(() =>
   margin: 0;
   border: 0;
   background: var(--ux-theme-4);
-}
-
-.monitoring-host-overview-tab__section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-4);
 }
 </style>

@@ -44,6 +44,10 @@ const props = withDefaults(
   { total: undefined, size: 'medium' }
 )
 
+const slots = defineSlots<{
+  heading?: () => unknown
+}>()
+
 const { _t } = usei18n()
 
 const totalCount = computed(() => props.segments.reduce((sum, segment) => sum + segment.count, 0))
@@ -88,9 +92,11 @@ const ariaLabel = computed<string>(() =>
 
 <template>
   <div class="cmk-state-count-bar" :class="`cmk-state-count-bar--size-${size}`">
-    <div v-if="totalEntry" class="cmk-state-count-bar__total">
+    <div v-if="slots.heading || totalEntry" class="cmk-state-count-bar__header">
+      <slot name="heading" />
       <component
         :is="totalEntry.href === undefined ? 'span' : 'a'"
+        v-if="totalEntry"
         class="cmk-state-count-bar__total-entry"
         :href="totalEntry.href"
         :target="totalEntry.target"
@@ -137,12 +143,15 @@ const ariaLabel = computed<string>(() =>
   gap: var(--dimension-4);
 }
 
-.cmk-state-count-bar__total {
+.cmk-state-count-bar__header {
   display: flex;
-  justify-content: flex-end;
+  gap: var(--spacing);
+  align-items: center;
+  justify-content: space-between;
 }
 
 .cmk-state-count-bar__total-entry {
+  margin-left: auto;
   color: var(--font-color);
   text-decoration: none;
   white-space: nowrap;

@@ -66,6 +66,15 @@ test('puts the service summary before the details of the host', async () => {
   )
 })
 
+test('puts the link to all services beside the service summary heading', async () => {
+  render(HostOverviewTab, { props: { data: makeData(), displayOptions: DISPLAY_OPTIONS } })
+
+  const heading = await screen.findByRole('heading', { name: 'Service summary' })
+  expect(heading.parentElement).toBe(
+    screen.getByRole('link', { name: 'All services: 15' }).parentElement
+  )
+})
+
 test('leads the counts of a relation to the related host, not to the one being shown', () => {
   render(HostOverviewTab, {
     props: { data: makeData({ relations: [RELATION] }), displayOptions: DISPLAY_OPTIONS }

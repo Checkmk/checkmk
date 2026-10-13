@@ -25,6 +25,10 @@ const props = withDefaults(
   { host: undefined, size: 'medium' }
 )
 
+const slots = defineSlots<{
+  heading?: () => unknown
+}>()
+
 const { _t } = usei18n()
 
 /**
@@ -54,5 +58,9 @@ const allServices = computed<StateTotal | undefined>(() =>
 </script>
 
 <template>
-  <CmkStateCountBar :segments="segments" :total="allServices" :size="size" />
+  <CmkStateCountBar :segments="segments" :total="allServices" :size="size">
+    <template v-if="slots.heading" #heading>
+      <slot name="heading" />
+    </template>
+  </CmkStateCountBar>
 </template>

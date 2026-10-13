@@ -87,6 +87,24 @@ test('the total, when given, sits above the bar with the summed count', () => {
   expect(container.querySelectorAll('.cmk-state-count-bar__legend-item')).toHaveLength(5)
 })
 
+test('a heading shares the row of the total, above the bar', () => {
+  render(CmkStateCountBar, {
+    props: {
+      segments: MIX,
+      total: { label: 'All services' as TranslatedString, href: 'monitor_host_services.py' }
+    },
+    slots: { heading: '<h3>Service summary</h3>' }
+  })
+
+  const heading = screen.getByRole('heading', { name: 'Service summary' })
+  expect(heading.parentElement).toBe(
+    screen.getByRole('link', { name: 'All services: 8' }).parentElement
+  )
+  expect(heading.compareDocumentPosition(screen.getByRole('img'))).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING
+  )
+})
+
 test('the legend lists the states alone when no total is given', () => {
   const { container } = render(CmkStateCountBar, { props: { segments: MIX } })
 

@@ -6,7 +6,8 @@
     "activate_changes_url": { "type": "string" },
     "configuration_name": {
       "anyOf": [{ "type": "null" }, { "type": "string" }]
-    }
+    },
+    "time_picker": { "$ref": "global_time_picker.json#" }
   },
-  "required": ["activate_changes_url", "configuration_name"]
+  "required": ["activate_changes_url", "configuration_name", "time_picker"]
 }

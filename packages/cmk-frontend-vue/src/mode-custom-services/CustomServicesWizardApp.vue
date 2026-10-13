@@ -149,6 +149,7 @@ async function saveService(): Promise<void> {
             v-model:attribute-filter="model.attributeFilter"
             v-model:consolidation="model.consolidation"
             v-model:aggregator="model.aggregator"
+            :time-picker="props.time_picker"
           />
         </template>
         <template #actions>

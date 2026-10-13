@@ -7,10 +7,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
 import type { ConsolidationFunction as WireConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
+import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
 import FormTelemetryMetricsCustomQuery from '@/telemetry-metrics-custom-query/FormTelemetryMetricsCustomQuery.vue'
+
+import MetricPreviewGraph from './MetricPreviewGraph.vue'
+
+defineProps<{ timePicker: GlobalTimePickerProps }>()
 
 const { _t } = usei18n()
 
@@ -25,6 +30,13 @@ const aggregator = defineModel<Aggregator | undefined>('aggregator', { required:
 
 <template>
   <div class="mode-custom-services-define-metric-step">
+    <MetricPreviewGraph
+      :metric-name="metricName"
+      :attribute-filter="attributeFilter"
+      :consolidation="consolidation"
+      :aggregator="aggregator"
+      :time-picker="timePicker"
+    />
     <CmkParagraph class="mode-custom-services-define-metric-step__lead">{{
       _t('Select the metric for this service')
     }}</CmkParagraph>
@@ -34,6 +46,7 @@ const aggregator = defineModel<Aggregator | undefined>('aggregator', { required:
       v-model:attribute-filter="attributeFilter"
       v-model:consolidation="consolidation"
       v-model:aggregator="aggregator"
+      class="mode-custom-services-define-metric-step__form"
     />
   </div>
 </template>
@@ -43,6 +56,9 @@ const aggregator = defineModel<Aggregator | undefined>('aggregator', { required:
   display: flex;
   flex-direction: column;
   gap: var(--dimension-3);
+}
+
+.mode-custom-services-define-metric-step__form {
   max-width: 620px;
 }
 </style>

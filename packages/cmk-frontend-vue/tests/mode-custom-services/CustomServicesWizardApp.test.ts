@@ -9,8 +9,9 @@ import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 import { HttpResponse, http } from 'msw'
-import { afterEach, expect, test } from 'vitest'
+import { afterEach, beforeEach, expect, test } from 'vitest'
 
+import { resetGlobalTimeState } from '@/graphing/GlobalTimePicker/globalTimeState'
 import CustomServicesWizardApp from '@/mode-custom-services/CustomServicesWizardApp.vue'
 
 const API_BASE = `${location.protocol}//${location.host}/api/internal`
@@ -18,6 +19,7 @@ const OBJECT_URL = `${API_BASE}/objects/custom_service/http_duration_on_web01`
 const LIST_URL = `${API_BASE}/domain-types/custom_service/collections/all`
 const AUTOCOMPLETE_URL = `${API_BASE}/objects/autocomplete/:ident`
 const METRIC_NAMES_URL = `${API_BASE}/domain-types/telemetry_metrics/actions/names_with_types/invoke`
+const GRAPH_DATA_URL = `${API_BASE}/domain-types/custom_graph/actions/fetch_data/invoke`
 
 const STORED_EXTENSIONS = {
   host_assignment: { mode: 'explicit_host', host_name: 'web01' },
@@ -76,11 +78,27 @@ const server = useMswServer(
   ),
   http.post(METRIC_NAMES_URL, () =>
     HttpResponse.json({ choices: [{ name: 'otel.http.duration', types: ['sum'] }] })
+  ),
+  http.post(GRAPH_DATA_URL, () =>
+    HttpResponse.json({
+      time_range: { start: 0, end: 3600, step: 60 },
+      metrics: [],
+      group_titles: [],
+      horizontal_lines: [],
+      warnings: [],
+      errors: [],
+      internal: '{"graphs":[]}'
+    })
   )
 )
 
+beforeEach(() => {
+  resetGlobalTimeState()
+})
+
 afterEach(() => {
   cleanup()
+  resetGlobalTimeState()
   updateRequests = 0
   lastBody = null
   lastIfMatch = null
@@ -90,8 +108,21 @@ function renderWizard(configurationName: string | null = 'http_duration_on_web01
   return render(CustomServicesWizardApp, {
     props: {
       activate_changes_url: 'wato.py?mode=changelog',
-      configuration_name: configurationName
-    }
+      configuration_name: configurationName,
+      time_picker: {
+        custom_time_ranges: [],
+        default_time_range: 4 * 3600,
+        server_time_zone: 'UTC',
+        first_day_of_week: null,
+        refresh: {
+          interval_seconds: null,
+          interval_choices_seconds: [30, 60],
+          starts_live: true,
+          reloads_page_content: false
+        }
+      }
+    },
+    global: { stubs: { TimeSeriesGraph: true } }
   })
 }
 

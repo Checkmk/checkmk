@@ -43,7 +43,21 @@ def test_veeam_cdp_jobs_discovery(
     result: DiscoveryResult,
 ) -> None:
     section = veeam_cdp_jobs.parse_veeam_cdp_jobs(data)
-    assert list(veeam_cdp_jobs.discovery_veeam_cdp_jobs(section)) == result
+    params = veeam_cdp_jobs.DEFAULT_DISCOVERY_PARAMETERS
+    assert list(veeam_cdp_jobs.discovery_veeam_cdp_jobs(params, section)) == result
+
+
+def test_disabled_cdp_jobs_are_not_discovered_when_configured() -> None:
+    section = veeam_cdp_jobs.parse_veeam_cdp_jobs(DATA)
+    params = veeam_cdp_jobs.DiscoveryParams(discover_disabled=False)
+
+    assert list(veeam_cdp_jobs.discovery_veeam_cdp_jobs(params, section)) == [
+        Service(item="Test 1"),
+        Service(item="Test 2"),
+        Service(item="Test 3"),
+        Service(item="Test 5"),
+        Service(item="Test 6"),
+    ]
 
 
 @pytest.mark.parametrize(
@@ -140,7 +154,10 @@ def test_line_with_unexpected_field_count_is_skipped() -> None:
         [["Test 1", "null"], ["Test 2", "null", "Running"]]
     )
 
-    assert list(veeam_cdp_jobs.discovery_veeam_cdp_jobs(section)) == [Service(item="Test 2")]
+    params = veeam_cdp_jobs.DEFAULT_DISCOVERY_PARAMETERS
+    assert list(veeam_cdp_jobs.discovery_veeam_cdp_jobs(params, section)) == [
+        Service(item="Test 2")
+    ]
 
 
 def test_unparseable_last_sync_omits_the_age_check() -> None:

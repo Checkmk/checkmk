@@ -190,18 +190,17 @@ fn register_update_source(
         return Ok(());
     };
     let source = updater::UpdateSource {
-        site_id: site_id.clone(),
         uuid: connection.trust.uuid,
         // Only the site, by answering 501, can say that it serves no agent updates.
         available: true,
     };
     log::info!(
-        "Update source after the registration: connection {} to {}, available: {}",
+        "Candidate update source from this registration: connection {} to {}, available: {}",
         source.uuid,
-        source.site_id,
+        site_id,
         source.available
     );
-    updater.register_update_source(registration, source)
+    updater.register_update_source(registration, source, registry)
 }
 
 /// Which agent updater this host runs.

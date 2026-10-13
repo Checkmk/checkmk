@@ -105,14 +105,14 @@ impl UpdaterConfig {
 /// The updater has no site of its own: it reuses one of the controller's
 /// registered connections, where the receiver authenticates this host by the
 /// connection's client certificate. Recording which one was taken keeps the
-/// choice stable across runs and names it for whoever reads the state file.
+/// choice stable across runs.
+///
+/// Only the UUID is recorded. The site it belongs to is whatever the registry
+/// keys that connection under, looked up when it is needed - a stored site
+/// could name a connection that is no longer there.
 #[serde_with::serde_as]
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct UpdateSource {
-    /// Site of the source connection, as `registered_connections.json` keys it,
-    /// for example `server/site`.
-    pub site_id: site_spec::SiteID,
-
     /// UUID of the source connection.
     #[serde_as(as = "DisplayFromStr")]
     pub uuid: uuid::Uuid,
@@ -409,18 +409,16 @@ impl Updater {
 
     /// Record the connection a registration just created as the update source.
     ///
-    /// `Keep` fills an empty slot and refreshes a source naming the site this
-    /// registration ran against, so that only a source pointing at _another_
-    /// site survives: a registration generates a new UUID and the registry
-    /// holds one connection per site, so re-registering at the recorded site
-    /// leaves the recorded UUID naming a connection that is gone. `Overwrite`
-    /// replaces the source in any case. `Manual` leaves it alone - with it the
-    /// updater is the operator's business.
+    /// `Keep` fills an empty slot or replaces a source whose connection is
+    /// absent from the registry.
+    /// `Overwrite` replaces the source in any case.
+    /// `Manual` leaves it alone - with it the updater is the operator's business.
     ///
     /// # Arguments
     ///
     /// * `registration` - what the host is configured to do about the updater
     /// * `source` - the connection the registration created
+    /// * `registry` - the registry the registration just wrote
     ///
     /// # Errors
     ///
@@ -429,19 +427,29 @@ impl Updater {
         &mut self,
         registration: &UpdaterRegistration,
         source: UpdateSource,
+        registry: &Registry,
     ) -> AnyhowResult<()> {
         match registration {
             UpdaterRegistration::Overwrite => self.state.source = Some(source),
-            UpdaterRegistration::Keep
-                if self
-                    .state
-                    .source
-                    .as_ref()
-                    .is_none_or(|recorded| recorded.site_id == source.site_id) =>
-            {
-                self.state.source = Some(source)
+            UpdaterRegistration::Keep => {
+                // The recorded source is replaced when it is absent, or
+                // dangling: no registered connection carries its UUID.
+                let recorded_site = self.state.source.as_ref().and_then(|recorded| {
+                    registry.retrieve_standard_connection_by_uuid(&recorded.uuid)
+                });
+                match recorded_site {
+                    Some(site_id) => log::info!(
+                        "Keeping the recorded update source: its connection is still registered at {site_id}"
+                    ),
+                    None => {
+                        log::info!(
+                            "Refreshing the update source: no registered connection carries the recorded UUID"
+                        );
+                        self.state.source = Some(source);
+                    }
+                }
             }
-            UpdaterRegistration::Keep | UpdaterRegistration::Manual => log::info!(
+            UpdaterRegistration::Manual => log::info!(
                 "Keeping the recorded update source: updater registration is {registration:?}"
             ),
         }
@@ -766,6 +774,8 @@ mod tests {
     const INSTALLED_HASH: &str = "0123456789abcdef";
     const TARGET_HASH: &str = "fedcba9876543210";
     const CONNECTION_UUID: &str = "2da62f8f-9e4a-4b1b-8b3a-1c1a0b0f1a01";
+    const SOURCE_SITE: &str = "server/site";
+    const OTHER_SITE: &str = "other-server/site";
     const STATE_FILE: &str = "state.json";
     const PACKAGE: &[u8] = b"an agent package";
 
@@ -900,7 +910,6 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     /// The source of the one connection the test registry carries.
     fn some_source() -> UpdateSource {
         UpdateSource {
-            site_id: site_spec::SiteID::from_str("server/site").unwrap(),
             uuid: uuid::Uuid::from_str(CONNECTION_UUID).unwrap(),
             available: true,
         }
@@ -910,7 +919,6 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     /// source from a replaced one.
     fn other_source() -> UpdateSource {
         UpdateSource {
-            site_id: site_spec::SiteID::from_str("other-server/site").unwrap(),
             uuid: uuid::Uuid::from_str("8f0e3a1c-5b2d-4e6f-9a7b-0c1d2e3f4a5b").unwrap(),
             available: true,
         }
@@ -930,13 +938,27 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         UpdateState::load(&updater.state_path).unwrap().source
     }
 
+    /// A registry holding the connection of every `(site, source)` pair.
+    fn registry_with_the_connections_of(sources: &[(&str, &UpdateSource)]) -> TestRegistry {
+        sources
+            .iter()
+            .fold(TestRegistry::new(), |registry, (site, source)| {
+                registry.add_connection(&ConnectionMode::Pull, site, source.uuid)
+            })
+    }
+
     #[test]
     fn test_register_update_source_into_a_state_without_one() {
         let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_the_connections_of(&[(SOURCE_SITE, &some_source())]);
         let mut updater = updater_in(&dir, UpdateState::default());
 
         updater
-            .register_update_source(&UpdaterRegistration::Keep, some_source())
+            .register_update_source(
+                &UpdaterRegistration::Keep,
+                some_source(),
+                &registry.registry,
+            )
             .unwrap();
 
         assert_eq!(updater.state.source, Some(some_source()));
@@ -946,6 +968,10 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_register_update_source_keeps_the_recorded_one() {
         let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_the_connections_of(&[
+            (SOURCE_SITE, &some_source()),
+            (OTHER_SITE, &other_source()),
+        ]);
         let mut updater = updater_in(
             &dir,
             UpdateState {
@@ -955,15 +981,22 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         );
 
         updater
-            .register_update_source(&UpdaterRegistration::Keep, other_source())
+            .register_update_source(
+                &UpdaterRegistration::Keep,
+                other_source(),
+                &registry.registry,
+            )
             .unwrap();
 
         assert_eq!(saved_source(&updater), Some(some_source()));
     }
 
     #[test]
-    fn test_register_update_source_refreshes_the_recorded_one_of_the_same_site() {
+    fn test_register_update_source_refreshes_a_vanished_recorded_one() {
         let dir = tempfile::TempDir::new().unwrap();
+        // The registry holds the connection this registration created, which
+        // replaced the recorded one at the same site.
+        let registry = registry_with_the_connections_of(&[(SOURCE_SITE, &reregistered_source())]);
         let mut updater = updater_in(
             &dir,
             UpdateState {
@@ -973,7 +1006,11 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         );
 
         updater
-            .register_update_source(&UpdaterRegistration::Keep, reregistered_source())
+            .register_update_source(
+                &UpdaterRegistration::Keep,
+                reregistered_source(),
+                &registry.registry,
+            )
             .unwrap();
 
         // Keeping the recorded source would leave it naming the connection this
@@ -984,6 +1021,10 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_register_update_source_overwrites_the_recorded_one() {
         let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_the_connections_of(&[
+            (SOURCE_SITE, &some_source()),
+            (OTHER_SITE, &other_source()),
+        ]);
         let mut updater = updater_in(
             &dir,
             UpdateState {
@@ -993,8 +1034,13 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             },
         );
 
+        // The recorded connection is still registered, and replaced anyway.
         updater
-            .register_update_source(&UpdaterRegistration::Overwrite, other_source())
+            .register_update_source(
+                &UpdaterRegistration::Overwrite,
+                other_source(),
+                &registry.registry,
+            )
             .unwrap();
 
         let saved = UpdateState::load(&updater.state_path).unwrap();
@@ -1006,6 +1052,10 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_register_update_source_with_manual_registration() {
         let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_the_connections_of(&[
+            (SOURCE_SITE, &some_source()),
+            (OTHER_SITE, &other_source()),
+        ]);
         let mut updater = updater_in(
             &dir,
             UpdateState {
@@ -1015,14 +1065,18 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         );
 
         updater
-            .register_update_source(&UpdaterRegistration::Manual, other_source())
+            .register_update_source(
+                &UpdaterRegistration::Manual,
+                other_source(),
+                &registry.registry,
+            )
             .unwrap();
 
         assert_eq!(saved_source(&updater), Some(some_source()));
     }
 
     #[test]
-    fn test_state_file_keys_the_source_by_site_and_uuid() {
+    fn test_state_file_keys_the_source_by_uuid() {
         let dir = tempfile::TempDir::new().unwrap();
         let path = dir.path().join("state.json");
 
@@ -1034,7 +1088,6 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         .unwrap();
 
         let written = fs::read_to_string(&path).unwrap();
-        assert!(written.contains(r#""site_id": "server/site""#));
         assert!(written.contains(&format!(r#""uuid": "{CONNECTION_UUID}""#)));
         assert!(written.contains(r#""available": true"#));
     }
@@ -1420,7 +1473,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
     /// A registry holding the one connection that could serve agent updates.
     fn registry_with_one_connection() -> TestRegistry {
-        TestRegistry::new().add_connection(&ConnectionMode::Pull, "server/site", CONNECTION_UUID)
+        registry_with_the_connections_of(&[(SOURCE_SITE, &some_source())])
     }
 
     #[test]

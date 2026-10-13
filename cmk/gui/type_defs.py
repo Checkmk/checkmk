@@ -807,7 +807,6 @@ GraphTitleFormatVS = Literal["plain", "add_host_name", "add_host_alias", "add_se
 
 class GraphRenderOptionsVS(TypedDict, total=False):
     border_width: SizeMM
-    color_gradient: float
     fixed_timerange: bool
     font_size: SizePT
     preview: bool

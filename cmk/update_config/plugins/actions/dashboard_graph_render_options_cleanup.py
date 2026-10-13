@@ -13,7 +13,7 @@ from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.lib.user_profiles import user_directories
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
-_OBSOLETE_RENDER_OPTIONS = frozenset({"font_size"})
+_OBSOLETE_RENDER_OPTIONS = frozenset({"color_gradient", "font_size"})
 
 
 def _as_dict(value: object, what: str) -> dict[str, object]:

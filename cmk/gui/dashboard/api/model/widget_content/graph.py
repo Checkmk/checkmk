@@ -7,7 +7,7 @@ from abc import ABC
 from collections.abc import Sequence
 from typing import Annotated, Literal, override, Self
 
-from annotated_types import Ge, Interval, Unit
+from annotated_types import Ge, Unit
 
 from cmk.gui.dashboard.dashlet.dashlets.graph import (
     default_dashlet_graph_render_options,
@@ -93,10 +93,6 @@ class GraphRenderOptions:
         description="Width of the black border around the whole graph, in millimeters. Enter 0 for no border here.",
         default_factory=ApiOmitted,
     )
-    color_gradient: Annotated[float, Interval(ge=0, le=100), Unit("%")] | ApiOmitted = api_field(
-        description="Slight gradient in the colors of the colored areas in the graphs. 0% turns off the gradient, 100% makes it the strongest possible.",
-        default_factory=ApiOmitted,
-    )
 
     @staticmethod
     def _vertical_axis_width_from_internal(
@@ -133,7 +129,6 @@ class GraphRenderOptions:
             ),
             fixed_timerange=graph_render_options.get("fixed_timerange", ApiOmitted()),
             border_width_mm=graph_render_options.get("border_width", ApiOmitted()),
-            color_gradient=graph_render_options.get("color_gradient", ApiOmitted()),
         )
 
     def to_internal(self) -> GraphRenderOptionsVS:
@@ -168,8 +163,6 @@ class GraphRenderOptions:
             options["fixed_timerange"] = self.fixed_timerange
         if not isinstance(self.border_width_mm, ApiOmitted):
             options["border_width"] = self.border_width_mm
-        if not isinstance(self.color_gradient, ApiOmitted):
-            options["color_gradient"] = self.color_gradient
 
         return options
 

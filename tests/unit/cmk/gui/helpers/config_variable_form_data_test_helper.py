@@ -1353,7 +1353,6 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
         "show_time_axis": True,
         "fixed_timerange": False,
         "border_width": 0.05,
-        "color_gradient": 20.0,
     },
     "reporting_margins": (10.0, 10.0, 10.0, 10.0),
     "reporting_pagesize": (210.0, 297.0),
@@ -2552,6 +2551,11 @@ CASES: Mapping[str, list[Case]] = {
     ],
     "reporting_graph_layout": [
         CasePass("configured", DefaultWithOverrides({"font_size": 10.0})),
+        CaseMigrates(
+            "color-gradient-dropped",
+            DefaultWithOverrides({"color_gradient": 20.0}),
+            DefaultWithOverrides({}),
+        ),
         CaseFail("unknown-key", DefaultWithOverrides({"bogus": 1})),
     ],
     "reporting_lineheight": [

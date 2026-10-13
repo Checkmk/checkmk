@@ -25,7 +25,8 @@ def _write_dashboards(user_dir: Path, dashboards: Mapping[str, object]) -> Path:
     return path
 
 
-def test_removes_obsolete_render_options(tmp_path: Path) -> None:
+@pytest.mark.parametrize("obsolete_key", ["font_size", "color_gradient"])
+def test_removes_obsolete_render_options(tmp_path: Path, obsolete_key: str) -> None:
     path = _write_dashboards(
         tmp_path / "cmkadmin",
         {
@@ -34,7 +35,7 @@ def test_removes_obsolete_render_options(tmp_path: Path) -> None:
                 "widgets": {
                     "some-uuid": {
                         "type": "custom_graph",
-                        "graph_render_options": {"font_size": 20.0, "show_legend": True},
+                        "graph_render_options": {obsolete_key: 20.0, "show_legend": True},
                     },
                     "other-uuid": {
                         "type": "single_timeseries",

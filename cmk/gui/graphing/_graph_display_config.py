@@ -51,11 +51,6 @@ class GraphTitleFormat(BaseModel):
 
 class GraphRenderOptions(BaseModel):
     border_width: SizeMM | None = None
-    # TODO CMK-33320
-    # Kept for API/valuespec compatibility. The gradient rendering in the PDF backend was
-    # deliberately disabled (linearGradient increased PDF size ~23×) and the field is no
-    # longer consumed by any rendering path.
-    color_gradient: float | None = None
     fixed_timerange: bool | None = None
     font_size: SizePT | None = None
     preview: bool | None = None
@@ -185,8 +180,6 @@ def graph_image_render_options(
             add_service_description=True,
         ),
         size=(80, 30),  # ex
-        # Specific for PDF rendering.
-        color_gradient=20.0,
         show_title=True,
         border_width=0.05,
     )

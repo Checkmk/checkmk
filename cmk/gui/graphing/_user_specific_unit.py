@@ -14,6 +14,7 @@ from cmk.graphing_engine import (
     EngineeringScientificNotation,
     IECNotation,
     NonConvertibleUnit,
+    Notation,
     Precision,
     SINotation,
     StandardScientificNotation,
@@ -60,6 +61,31 @@ def _formatter_precision(precision: Precision) -> FormatterPrecision:
             assert_never(precision)
 
 
+def _notation_formatter(
+    notation: Notation, symbol: str, unit_precision: Precision
+) -> NotationFormatter:
+    precision = _formatter_precision(unit_precision)
+    match notation:
+        case DecimalNotation():
+            return DecimalFormatter(symbol=symbol, precision=precision)
+        case SINotation():
+            return SIFormatter(symbol=symbol, precision=precision)
+        case IECNotation():
+            return IECFormatter(symbol=symbol, precision=precision)
+        case StandardScientificNotation():
+            return StandardScientificFormatter(symbol=symbol, precision=precision)
+        case EngineeringScientificNotation():
+            return EngineeringScientificFormatter(symbol=symbol, precision=precision)
+        case TimeNotation():
+            return TimeFormatter(symbol=symbol, precision=precision)
+        case _:
+            assert_never(notation)
+
+
+def formatter_from_unit(unit: Unit | NonConvertibleUnit) -> NotationFormatter:
+    return _notation_formatter(unit.notation, unit.notation.symbol, unit.precision)
+
+
 def user_specific_unit(
     unit: Unit | NonConvertibleUnit,
     temperature_unit: TemperatureUnit,
@@ -73,44 +99,8 @@ def user_specific_unit(
         if isinstance(unit, Unit)
         else noop_conversion
     )
-    precision = _formatter_precision(unit.precision)
-    formatter: NotationFormatter
-    match unit.notation:
-        case DecimalNotation():
-            formatter = DecimalFormatter(
-                symbol=conversion.symbol,
-                precision=precision,
-            )
-        case SINotation():
-            formatter = SIFormatter(
-                symbol=conversion.symbol,
-                precision=precision,
-            )
-        case IECNotation():
-            formatter = IECFormatter(
-                symbol=conversion.symbol,
-                precision=precision,
-            )
-        case StandardScientificNotation():
-            formatter = StandardScientificFormatter(
-                symbol=conversion.symbol,
-                precision=precision,
-            )
-        case EngineeringScientificNotation():
-            formatter = EngineeringScientificFormatter(
-                symbol=conversion.symbol,
-                precision=precision,
-            )
-        case TimeNotation():
-            formatter = TimeFormatter(
-                symbol=conversion.symbol,
-                precision=precision,
-            )
-        case _:
-            assert_never(unit.notation)
-
     return UserSpecificUnit(
-        formatter=formatter,
+        formatter=_notation_formatter(unit.notation, conversion.symbol, unit.precision),
         conversion=conversion.converter,
     )
 

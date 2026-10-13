@@ -25,6 +25,7 @@ from cmk.graphing_engine import (
     Line,
     MetricName,
     MinimalRange,
+    NonConvertibleUnit,
     RRDMetric,
     Rule,
     ScalarKind,
@@ -33,6 +34,7 @@ from cmk.graphing_engine import (
     SINotation,
     Stack,
     StandardScientificNotation,
+    StrictPrecision,
     TimeNotation,
     TimeRange,
     TimeSeries,
@@ -380,9 +382,7 @@ def test_derive_y_axis_unit_takes_the_unit_of_the_first_stack_member() -> None:
             )
         ],
     )
-    assert derive_y_axis_unit(graph) == UnitFormat(
-        notation="decimal", symbol="X", precision=Precision(type="auto", digits=2)
-    )
+    assert derive_y_axis_unit(graph) == _UNIT
 
 
 def test_derive_y_axis_unit_falls_back_to_a_line_when_there_are_no_stacks() -> None:
@@ -399,9 +399,7 @@ def test_derive_y_axis_unit_falls_back_to_a_line_when_there_are_no_stacks() -> N
             )
         ],
     )
-    y_axis_unit = derive_y_axis_unit(graph)
-    assert y_axis_unit is not None
-    assert y_axis_unit.symbol == "X"
+    assert derive_y_axis_unit(graph) == _UNIT
 
 
 def test_derive_y_axis_unit_is_none_for_a_graph_with_no_curves() -> None:
@@ -452,15 +450,21 @@ def _one_curve_graph(*, vertical_range: VerticalRange | None = None) -> Graph:
 
 
 def test_the_shell_axis_keeps_the_unit_the_graph_names_over_the_one_its_curves_imply() -> None:
-    named = UnitFormat(
-        notation="si", symbol="W", precision=Precision(type="strict", digits=0), convertible=False
-    )
+    named = NonConvertibleUnit(notation=SINotation("W"), precision=StrictPrecision(0))
     result = to_cmk_time_series_graph(
         BuiltGraph(graph=_one_curve_graph(), specification=None, y_axis_unit=named),
         size=_SIZE,
         temperature_unit=TemperatureUnit.CELSIUS,
     )
-    assert result.options.y_axis == YAxis(unit=named, explicit_range=None)
+    assert result.options.y_axis == YAxis(
+        unit=UnitFormat(
+            notation="si",
+            symbol="W",
+            precision=Precision(type="strict", digits=0),
+            convertible=False,
+        ),
+        explicit_range=None,
+    )
 
 
 def test_the_shell_axis_is_pinned_by_the_graphs_own_fixed_range() -> None:
@@ -624,9 +628,7 @@ def test_an_attribute_group_the_graph_spec_does_not_report_is_left_out() -> None
 
 def test_the_shell_axis_takes_the_users_temperature_unit() -> None:
     # The axis labels have to agree with the converted values the fetch serves.
-    celsius = UnitFormat(
-        notation="decimal", symbol="°C", precision=Precision(type="auto", digits=2)
-    )
+    celsius = Unit(notation=DecimalNotation("°C"), precision=AutoPrecision(2))
     result = to_cmk_time_series_graph(
         BuiltGraph(
             graph=_one_curve_graph(vertical_range=FixedRange(lower=0.0, upper=100.0)),

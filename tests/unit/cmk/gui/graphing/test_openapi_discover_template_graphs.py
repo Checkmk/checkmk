@@ -13,13 +13,12 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.graphing_engine import Graph
+from cmk.graphing_engine import AutoPrecision, DecimalNotation, Graph, Unit
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing import _graph_templates as template_graphs_module
 from cmk.gui.graphing import BuiltGraph, RRDFetchMetricNames, TemplateGraphSpecification
 from cmk.gui.graphing._graph_templates import MKGraphMixedUnitsError
 from cmk.livestatus_client import MKLivestatusSocketError
-from cmk.shared_typing.cmk_time_series_graph import Precision, UnitFormat
 from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
@@ -78,9 +77,7 @@ def test_discover_template_graphs_labels_the_axis_in_the_users_temperature_unit(
     clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch, set_config: SetConfig
 ) -> None:
     # Without this the axis would contradict the Fahrenheit values the fetch serves.
-    celsius = UnitFormat(
-        notation="decimal", symbol="°C", precision=Precision(type="auto", digits=2)
-    )
+    celsius = Unit(notation=DecimalNotation("°C"), precision=AutoPrecision(2))
 
     def _build(
         _specification: TemplateGraphSpecification, **_kwargs: object

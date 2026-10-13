@@ -8,6 +8,7 @@ from cmk.graphing_engine import (
     DecimalNotation,
     EngineeringScientificNotation,
     IECNotation,
+    NonConvertibleUnit,
     SINotation,
     StandardScientificNotation,
     StrictPrecision,
@@ -29,6 +30,16 @@ def test_unit_to_unit_format_si_strict_precision() -> None:
     unit = Unit(notation=SINotation("B/s"), precision=StrictPrecision(3))
     assert unit_to_unit_format(unit) == UnitFormat(
         notation="si", symbol="B/s", precision=Precision(type="strict", digits=3)
+    )
+
+
+def test_unit_to_unit_format_marks_a_non_convertible_unit() -> None:
+    unit = NonConvertibleUnit(notation=DecimalNotation("°C"), precision=AutoPrecision(1))
+    assert unit_to_unit_format(unit) == UnitFormat(
+        notation="decimal",
+        symbol="°C",
+        precision=Precision(type="auto", digits=1),
+        convertible=False,
     )
 
 

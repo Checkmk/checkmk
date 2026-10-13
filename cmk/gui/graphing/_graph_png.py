@@ -26,21 +26,21 @@ from cmk.graphing_engine import (
     EvaluatedRegion,
     EvaluatedRule,
     EvaluatedStack,
+    NonConvertibleUnit,
     TimeRange,
     TimeSeries,
+    Unit,
     VerticalRangeKind,
 )
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import SizeMM
 from cmk.gui.unit_formatter import Label, NegativeYRange, NotationFormatter, PositiveYRange
-from cmk.shared_typing.cmk_time_series_graph import UnitFormat
 
 from ._drawn_curves import drawn_curves
 from ._graph_display_config import GraphDisplayConfigImage
 from ._graph_png_size import ex_to_inches, legend_height_ex, MM_PER_INCH
 from ._time_axis import compute_time_axis
-from ._unit_format import unit_from_curves
-from ._user_specific_unit import formatter_from_unit_format
+from ._user_specific_unit import formatter_from_unit
 
 DPI = 96
 TITLE_COLOR = "#1E262E"
@@ -370,12 +370,8 @@ def _graph_time_caption(time_range: TimeRange, tz: datetime.tzinfo | None) -> st
     }
 
 
-def _notation_formatter(y_axis_unit: UnitFormat | None) -> NotationFormatter | None:
-    if y_axis_unit is None:
-        return None
-    # PNG plots the evaluated graph's own values rather than the converted fetch response, so
-    # the label must stay truthful to the actually-plotted (unconverted) values.
-    return formatter_from_unit_format(y_axis_unit)
+def _notation_formatter(y_axis_unit: Unit | NonConvertibleUnit | None) -> NotationFormatter | None:
+    return None if y_axis_unit is None else formatter_from_unit(y_axis_unit)
 
 
 def _y_range_for_labels(ax: Axes) -> PositiveYRange | NegativeYRange | None:
@@ -409,7 +405,7 @@ def _apply_render_config(
     ax: Axes,
     graph: EvaluatedGraph,
     config: GraphDisplayConfigImage,
-    y_axis_unit: UnitFormat | None,
+    y_axis_unit: Unit | NonConvertibleUnit | None,
     formatter: NotationFormatter | None,
     *,
     is_mirrored: bool,
@@ -431,8 +427,8 @@ def _apply_render_config(
         )
 
     if config.show_vertical_axis:
-        if y_axis_unit is not None and y_axis_unit.symbol:
-            ax.set_ylabel(y_axis_unit.symbol, fontsize=config.font_size)
+        if y_axis_unit is not None and y_axis_unit.notation.symbol:
+            ax.set_ylabel(y_axis_unit.notation.symbol, fontsize=config.font_size)
         if formatter is not None and is_mirrored:
             target_number_of_labels = max(1.0, config.size[1] / 8.0 + 1)
             if labels := _mirrored_y_labels(ax, formatter, target_number_of_labels):
@@ -645,16 +641,14 @@ def _plot_legend_table(
         add_marker(marker_x, marker_y(row), region.attributes.color)
 
 
-def _derived_y_axis_unit(graph: EvaluatedGraph) -> UnitFormat | None:
-    """derive_y_axis_unit (_frontend.py) works on the pre-evaluation Graph; this one works on the
-    EvaluatedGraph, which carries the same CurveAttributes.unit on its curves."""
-    return unit_from_curves(curve.attributes.unit for curve, _sign in _all_curves_with_sign(graph))
+def _derived_y_axis_unit(graph: EvaluatedGraph) -> Unit | None:
+    return next((curve.attributes.unit for curve, _sign in _all_curves_with_sign(graph)), None)
 
 
 def render_png_ex(
     graph: EvaluatedGraph,
     config: GraphDisplayConfigImage,
-    y_axis_unit: UnitFormat | None = None,
+    y_axis_unit: Unit | NonConvertibleUnit | None = None,
     *,
     tz: datetime.tzinfo | None = None,
 ) -> tuple[bytes, SizeMM, SizeMM]:
@@ -720,7 +714,7 @@ def render_png_ex(
 def render_png(
     graph: EvaluatedGraph,
     config: GraphDisplayConfigImage,
-    y_axis_unit: UnitFormat | None = None,
+    y_axis_unit: Unit | NonConvertibleUnit | None = None,
     *,
     tz: datetime.tzinfo | None = None,
 ) -> bytes:

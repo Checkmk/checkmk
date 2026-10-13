@@ -43,7 +43,6 @@ from cmk.gui.graphing._graph_png import (
     _vertical_range_bounds,
     _y_axis_limits,
 )
-from cmk.shared_typing.cmk_time_series_graph import Precision, UnitFormat
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _TIME_RANGE = TimeRange(start=0, end=180, step=60)
@@ -140,9 +139,7 @@ def test_notation_formatter_never_converts_temperature_values() -> None:
     """The engine fetch does not (yet) convert values for the user's temperature preference, so
     the PNG renderer must never apply a real conversion formula to a celsius/fahrenheit unit -
     doing so would mislabel the still-unconverted plotted values."""
-    y_axis_unit = UnitFormat(
-        notation="decimal", symbol="°C", precision=Precision(type="auto", digits=2)
-    )
+    y_axis_unit = Unit(notation=DecimalNotation("°C"), precision=AutoPrecision(2))
     formatter = _notation_formatter(y_axis_unit)
     assert formatter is not None
     assert formatter.symbol == "°C"
@@ -160,9 +157,7 @@ def test_render_png_ex_with_a_unit_renders_ticks_and_legend_via_the_formatter() 
         stacks=[EvaluatedStack(members=[curve], inverse=False)],
         lines=[],
     )
-    y_axis_unit = UnitFormat(
-        notation="decimal", symbol="X", precision=Precision(type="auto", digits=2)
-    )
+    y_axis_unit = Unit(notation=DecimalNotation("X"), precision=AutoPrecision(2))
 
     png_bytes, _width_mm, _height_mm = render_png_ex(graph, GraphDisplayConfigImage(), y_axis_unit)
 
@@ -194,9 +189,7 @@ def test_mirrored_y_labels_mirrors_positive_text_to_the_negative_side() -> None:
     fig = Figure()
     ax = fig.add_subplot(1, 1, 1)
     ax.set_ylim(-2000, 2000)
-    y_axis_unit = UnitFormat(
-        notation="decimal", symbol="B", precision=Precision(type="auto", digits=2)
-    )
+    y_axis_unit = Unit(notation=DecimalNotation("B"), precision=AutoPrecision(2))
     formatter = _notation_formatter(y_axis_unit)
     assert formatter is not None
 
@@ -273,11 +266,7 @@ def test_derived_y_axis_unit_reads_the_unit_from_the_first_curve() -> None:
         lines=[],
     )
 
-    y_axis_unit = _derived_y_axis_unit(graph)
-
-    assert y_axis_unit is not None
-    assert y_axis_unit.notation == "decimal"
-    assert y_axis_unit.precision.digits == 2
+    assert _derived_y_axis_unit(graph) == _UNIT
 
 
 def test_derived_y_axis_unit_is_none_for_a_graph_with_no_curves() -> None:

@@ -7,13 +7,12 @@ import json
 import traceback
 from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
+from itertools import chain
 
 from tzlocal import get_localzone_name
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.graphing_engine import (
-    Graph,
-)
+from cmk.graphing_engine import Graph, Unit
 from cmk.graphing_engine import HostName as EngineHostName
 from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.gui.config import active_config
@@ -50,7 +49,7 @@ from ._graph_display_config import HTML_SIZE_PER_EX
 from ._graph_specification import GraphSpecification
 from ._graph_templates import build_template_graphs, TemplateGraphSpecification
 from ._source import RRDFetchMetricNames
-from ._unit_format import unit_from_curves
+from ._unit_format import unit_to_unit_format
 from ._user_specific_unit import apply_temperature_unit
 
 
@@ -147,16 +146,14 @@ def _add_to(specification: GraphSpecification | None, internal: str) -> AddTo | 
     )
 
 
-def derive_y_axis_unit(graph: Graph) -> UnitFormat | None:
-    """Derive the value axis unit from the graph's own curves.
-
-    Mirrors yAxis.ts:deriveYAxis - template, single-timeseries and combined graphs draw every
-    curve in one unit (enforced backend-side), so the axis unit is the unit of any curve. None
-    when the graph has no curves; the renderer then falls back to raw, unit-less ticks.
-    """
-    return unit_from_curves(
-        member.attributes.unit for stack in graph.stacks for member in stack.members
-    ) or unit_from_curves(line.curve.attributes.unit for line in graph.lines)
+def derive_y_axis_unit(graph: Graph) -> Unit | None:
+    return next(
+        chain(
+            (member.attributes.unit for stack in graph.stacks for member in stack.members),
+            (line.curve.attributes.unit for line in graph.lines),
+        ),
+        None,
+    )
 
 
 def _shell_y_axis(built: BuiltGraph, temperature_unit: TemperatureUnit) -> YAxis | None:
@@ -165,11 +162,14 @@ def _shell_y_axis(built: BuiltGraph, temperature_unit: TemperatureUnit) -> YAxis
     bounds = built.y_axis_bounds()
     if unit is None and bounds is None:
         return None
+    unit_format: UnitFormat | None = None
     conversion: Callable[[float], float] = lambda value: value
     if unit is not None:
-        unit, conversion = apply_temperature_unit(unit, temperature_unit)
+        unit_format, conversion = apply_temperature_unit(
+            unit_to_unit_format(unit), temperature_unit
+        )
     return YAxis(
-        unit=unit,
+        unit=unit_format,
         explicit_range=(
             None
             if bounds is None

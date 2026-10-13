@@ -1,6 +1,6 @@
 datamodel-code-generator==0.42.0 # CMK-29509
 feedparser<6.0.13 # CMK-37383, problems with conflicting __init__.py files due to rules_python and namespace packages
-kubernetes<36.0.0 # CMK-37075, some unit tests below //packages/cmk-plugins/tests/cmk/plugins/kube fail
+kubernetes<37.0.0 # CMK-37164, some unit tests below //packages/cmk-plugins/tests/cmk/plugins/kube fail
 marshmallow<4 # CMK-25251, breaking changes
 pymssql<2.4.3 # CMK-40592, pymssql>=2.4.3 needs FreeTDS>=1.5.19, we have 1.4.22
 pysmi<2.0.0 # CMK-37075, bazel build //omd/packages/net-snmp:generate_python_mibs fails with "Could not compile mib NET-SNMP-PASS-MIB"

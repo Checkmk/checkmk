@@ -83,6 +83,7 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
         />
       </CmkTooltipTrigger>
       <CmkTooltipContent
+        variant="unstyled"
         :side="side"
         align="start"
         as-child

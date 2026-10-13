@@ -728,6 +728,7 @@ defineExpose({ showMaxZoomHint })
         <CmkTooltip :open="true">
           <CmkTooltipTrigger as="span" />
           <CmkTooltipContent
+            variant="unstyled"
             :side="maxZoomHintSide"
             :side-offset="MAX_ZOOM_HINT_CURSOR_OFFSET"
             align="start"

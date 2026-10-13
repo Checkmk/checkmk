@@ -25,6 +25,7 @@ const open = ref(false)
       <slot />
     </CmkTooltipTrigger>
     <CmkTooltipContent
+      variant="unstyled"
       side="right"
       align="center"
       :avoid-collisions="true"

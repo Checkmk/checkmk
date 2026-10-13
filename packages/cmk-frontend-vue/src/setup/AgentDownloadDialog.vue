@@ -61,6 +61,7 @@ const triggerRescan = () => {
     <CmkTooltip :open="!tooltipHidden && !tooltipClosed" class="tooltip">
       <CmkTooltipTrigger as="span"></CmkTooltipTrigger>
       <CmkTooltipContent
+        variant="unstyled"
         align="center"
         side="right"
         :avoid-collisions="false"

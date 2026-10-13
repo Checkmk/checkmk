@@ -68,6 +68,7 @@ const handlePointerDownOutside = () => {
         <slot />
       </CmkTooltipTrigger>
       <CmkTooltipContent
+        variant="unstyled"
         side="top"
         align="center"
         as-child

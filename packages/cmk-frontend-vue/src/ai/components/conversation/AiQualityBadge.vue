@@ -86,6 +86,7 @@ const qualityTooltipOpen = ref<boolean>(false)
           </button>
         </CmkTooltipTrigger>
         <CmkTooltipContent
+          variant="unstyled"
           side="top"
           align="center"
           as-child

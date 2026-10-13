@@ -215,7 +215,7 @@ function onNameClick(item: CompactLegendItem): void {
               </component>
             </span>
           </CmkTooltipTrigger>
-          <CmkTooltipContent v-if="item.attributes.length > 0" use-portal>
+          <CmkTooltipContent v-if="item.attributes.length > 0" variant="unstyled" use-portal>
             <!-- Styled here, not on CmkTooltipContent: its portalled root loses our scope. -->
             <MetricAttributeGroups
               class="graphing-graph-legend-compact__attributes"

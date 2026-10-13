@@ -100,6 +100,7 @@ onBeforeUnmount(() => {
             <slot name="trigger" />
           </CmkTooltipTrigger>
           <CmkTooltipContent
+            variant="unstyled"
             side="top"
             align="center"
             as-child

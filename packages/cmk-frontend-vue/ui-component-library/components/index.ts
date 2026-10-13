@@ -213,7 +213,7 @@ const systemFeedbackPages = [
   new Page('CmkStateCountBar', UclCmkStateCountBar),
   new Page('CmkSurfaceNotice', UclCmkSurfaceNotice),
   new Page('StateTag', UclStateTag),
-  new Page('CmkTooltip', UclCmkTooltip)
+  new Page('CmkTooltip', UclCmkTooltip, { status: 'updated', statusSince: '2026-10-13' })
 ]
 export const roots = [
   new Folder('Foundations', foundationsPages, true),

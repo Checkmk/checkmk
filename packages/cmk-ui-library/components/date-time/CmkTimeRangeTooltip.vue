@@ -37,7 +37,7 @@ const rangeText = computed(() =>
       <CmkTooltipTrigger as-child>
         <slot />
       </CmkTooltipTrigger>
-      <CmkTooltipContent side="top" align="center" :avoid-collisions="true">
+      <CmkTooltipContent variant="unstyled" side="top" align="center" :avoid-collisions="true">
         <span class="cmk-time-range-tooltip__content">{{ rangeText }}</span>
       </CmkTooltipContent>
     </CmkTooltip>

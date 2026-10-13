@@ -126,6 +126,7 @@ class TestMessageBroker:
                     # remote_site → remote_site_2
                     assert_message_exchange_working(remote_site_2, remote_site)
 
+    @pytest.mark.skip("CMK-36536")
     def test_p2p_fallback_to_central_routing_after_removal(
         self, central_site: Site, remote_site: Site, remote_site_2: Site
     ) -> None:

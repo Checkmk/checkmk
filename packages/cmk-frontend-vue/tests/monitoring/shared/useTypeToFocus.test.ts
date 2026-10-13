@@ -107,12 +107,23 @@ test('Up and Left walk back and wrap', async () => {
   expect(await state()).toBe('cpu|3|5')
 })
 
+test('Tab walks on and Shift+Tab walks back, like the arrows', async () => {
+  render(fixture)
+  await userEvent.keyboard('cpu')
+
+  await userEvent.keyboard('{Tab}')
+  expect(button('CPU load')).toHaveFocus()
+  await userEvent.keyboard('{Shift>}{Tab}{Tab}{/Shift}')
+  expect(button('Filter CPU')).toHaveFocus()
+  expect(await state()).toBe('cpu|4|5')
+})
+
 test('hidden elements are never matches', async () => {
   render(fixture)
 
   await userEvent.keyboard('cpuhidden')
   expect(await state()).toBe('cpuhidden|-1|0')
-  await userEvent.keyboard('{Escape}')
+  await userEvent.keyboard('{Backspace>9/}')
 
   await userEvent.keyboard('cpushown')
   expect(await state()).toBe('cpushown|-1|0')
@@ -131,7 +142,7 @@ test('Backspace shortens the buffer and searches again; emptying it ends the sea
   expect(document.body).toHaveFocus()
 })
 
-test('Escape ends the search, drops the focus ring and hands the arrow keys back', async () => {
+test('Escape ends the search, keeps the focus on the match and hands the keys back', async () => {
   render(fixture)
   await userEvent.keyboard('cpu')
   expect(claimed({ key: 'ArrowDown' })).toBe(true)
@@ -139,8 +150,9 @@ test('Escape ends the search, drops the focus ring and hands the arrow keys back
   await userEvent.keyboard('{Escape}')
 
   expect(await state()).toBe('|-1|0')
-  expect(document.body).toHaveFocus()
+  expect(button('CPU load')).toHaveFocus()
   expect(claimed({ key: 'ArrowDown' })).toBe(false)
+  expect(claimed({ key: 'Escape' })).toBe(false)
 })
 
 test('Enter activates the match and ends the search, the focus stays on it', async () => {

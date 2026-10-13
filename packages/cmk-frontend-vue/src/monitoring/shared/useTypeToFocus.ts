@@ -8,12 +8,12 @@
  *
  * Idle, a printable key nothing else binds starts a search: the first clickable element in
  * `scope` whose text contains the buffer gets the focus. Searching, the buffer owns the
- * keyboard: every printable key is typed into it, `/` and Space included, Down/Right and
- * Up/Left move between the matches, Backspace edits, the page's own shortcuts stay quiet
- * and the browser's keys pass. A search is abandoned by Esc or a pointer going down
- * anywhere, and the focus ring goes with it. It is finished by Enter or a click activating
- * the match, or by the focus leaving the view; the focus then stays where it landed. All
- * matches are framed while searching.
+ * keyboard: every printable key is typed into it, `/` and Space included, Down/Right/Tab
+ * and Up/Left/Shift+Tab move between the matches, Backspace edits, the page's own
+ * shortcuts stay quiet and the browser's keys pass. A search is abandoned by a pointer going
+ * down anywhere, and the focus ring goes with it. It is finished by Esc, by Enter or a click
+ * activating the match, or by the focus leaving the view; the focus then stays where it
+ * landed. All matches are framed while searching.
  */
 import { getKeyboardHelp } from 'cmk-ui-library/lib/keyboardHelp'
 import { type Ref, onBeforeUnmount, onMounted, readonly, ref } from 'vue'
@@ -25,8 +25,13 @@ import { isTextEntry } from './isTextEntry'
 
 /** Framed by `TypeToFocusIndicator.vue`; the focused one keeps the ordinary focus ring. */
 export const MATCH_ATTRIBUTE = 'data-type-to-focus-match'
-const NEXT_KEYS = new Set(['ArrowDown', 'ArrowRight'])
-const PREVIOUS_KEYS = new Set(['ArrowUp', 'ArrowLeft'])
+const STEPS: Readonly<Record<string, -1 | 1>> = {
+  ArrowDown: 1,
+  ArrowRight: 1,
+  Tab: 1,
+  ArrowUp: -1,
+  ArrowLeft: -1
+}
 
 export interface TypeToFocus {
   buffer: Readonly<Ref<string>>
@@ -84,6 +89,10 @@ function findMatches(scope: HTMLElement, needle: string): HTMLElement[] {
     }
   }
   return byText.concat(byLabel)
+}
+
+function stepOf(event: KeyboardEvent): -1 | 1 | undefined {
+  return event.key === 'Tab' && event.shiftKey ? -1 : STEPS[event.key]
 }
 
 /** The combination as the help registry lists it, lower-cased: modifiers first, then the key. */
@@ -201,7 +210,7 @@ export function useTypeToFocus(scope: Readonly<Ref<HTMLElement | null>>): TypeTo
   function onSearchKey(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
       claim(event)
-      abort()
+      finish()
       return
     }
     if (event.key === 'Enter' && !match) {
@@ -218,9 +227,10 @@ export function useTypeToFocus(scope: Readonly<Ref<HTMLElement | null>>): TypeTo
       }
       return
     }
-    if (NEXT_KEYS.has(event.key) || PREVIOUS_KEYS.has(event.key)) {
+    const step = stepOf(event)
+    if (step) {
       claim(event)
-      jump(NEXT_KEYS.has(event.key) ? 1 : -1)
+      jump(step)
       return
     }
     if (event.key === 'Backspace') {

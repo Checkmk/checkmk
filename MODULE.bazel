@@ -219,6 +219,10 @@ single_version_override(
     patches = [
         "//bazel/patches:rules_pkg1-pkg_deb-add-support-for-md5sums.patch",
         "//bazel/patches:rules_pkg_expand-variables-in-package-name.diff",
+        # Backport of https://github.com/bazelbuild/rules_pkg/pull/1068 and
+        # https://github.com/bazelbuild/rules_pkg/pull/1083 - drop it when
+        # bumping to a rules_pkg release containing both.
+        "//bazel/patches:rules_pkg_pkg_deb-installed-size.patch",
     ],
 )
 

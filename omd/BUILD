@@ -5,6 +5,7 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs"
 load("//bazel/rules:agent_package_signing.bzl", "requires_signed_agent_rpm")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:git_hash_file.bzl", "git_hash_file")
+load("//bazel/rules:installed_size_from_archive.bzl", "installed_size_from_archive")
 load("//bazel/rules:md5sums_from_archive.bzl", "md5sums_from_archive")
 load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:pkg_cma_from_tar.bzl", "pkg_cma_from_tar")
@@ -1032,6 +1033,17 @@ md5sums_from_archive(
     tags = ["no-remote-cache"],
 )
 
+# Computed from the uncompressed tar, whatever compression the package uses.
+installed_size_from_archive(
+    name = "installed_size",
+    src = ":complete_install",
+    out = "installed_size.txt",
+    tags = [
+        "manual",
+        "no-remote-cache",
+    ],
+)
+
 pkg_deb(
     name = "deb",
     architecture = "amd64",
@@ -1043,6 +1055,7 @@ pkg_deb(
     depends_file = "//omd/distros:dependencies",
     description = "Checkmk - Best-in-class infrastructure & application monitoring",
     homepage = "https://checkmk.com",
+    installed_size_file = ":installed_size",
     maintainer = "Checkmk team <feedback@checkmk.com>",
     md5sums = ":md5sums",
     package = "{package}-{cmk_version}",

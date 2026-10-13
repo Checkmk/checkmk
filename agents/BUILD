@@ -4,6 +4,7 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs"
 load("//bazel/rules:agent_package_signing.bzl", "signed_or_unsigned_agent_rpm")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:filename_from_flag.bzl", "filename_from_flag")
+load("//bazel/rules:installed_size_from_archive.bzl", "installed_size_from_archive")
 load("//bazel/rules:pkg.bzl", "pkg_tar")
 load("//bazel/rules:pkg_rpm_from_buildroot.bzl", "pkg_rpm_from_buildroot")
 load("//bazel/rules:sign_package.bzl", "RELEASE_KEY_FINGERPRINT", "sign_package")
@@ -244,6 +245,18 @@ file_from_flag(
     replace_labels = {"cmk_version": "@cmk//version"},
 )
 
+installed_size_from_archive(
+    name = "agent_pkg_installed_size",
+    src = ":agent_pkg_buildroot",
+    out = "agent_pkg_installed_size.txt",
+)
+
+installed_size_from_archive(
+    name = "agent_pkg_installed_size_aarch64",
+    src = ":agent_pkg_buildroot_aarch64",
+    out = "agent_pkg_installed_size_aarch64.txt",
+)
+
 pkg_deb(
     name = "check-mk-agent-deb",
     architecture = "all",
@@ -253,6 +266,7 @@ pkg_deb(
     ],
     data = ":agent_pkg_buildroot",
     description = "Checkmk Agent for Linux\n The Checkmk Agent for Linux provides information about the system.\n This can be used to monitor the host via Checkmk.",
+    installed_size_file = ":agent_pkg_installed_size",
     maintainer = "Checkmk GmbH",
     package = "check-mk-agent",
     postinst = "debian/control/postinst",
@@ -273,6 +287,7 @@ pkg_deb(
     ],
     data = ":agent_pkg_buildroot_aarch64",
     description = "Checkmk Agent for Linux\n The Checkmk Agent for Linux provides information about the system.\n This can be used to monitor the host via Checkmk.",
+    installed_size_file = ":agent_pkg_installed_size_aarch64",
     maintainer = "Checkmk GmbH",
     package = "check-mk-agent",
     postinst = "debian/control/postinst",

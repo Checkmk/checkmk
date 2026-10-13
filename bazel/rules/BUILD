@@ -68,6 +68,12 @@ py_binary(
     visibility = ["//visibility:public"],
 )
 
+py_binary(
+    name = "deb_installed_size",
+    srcs = ["deb_installed_size.py"],
+    visibility = ["//visibility:public"],
+)
+
 py_cmk_test(
     name = "unit",
     size = "small",
@@ -75,6 +81,7 @@ py_cmk_test(
     imports = ["."],
     deps = [
         ":console_scripts_gen",
+        ":deb_installed_size",
         ":set_runpath_tree",
         ":set_runpath_whl",
     ],

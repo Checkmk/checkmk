@@ -42,7 +42,6 @@ from cmk.gui.graphing._graph_png import (
     _values,
     _vertical_range_bounds,
     _y_axis_limits,
-    render_png_graphs,
 )
 from cmk.shared_typing.cmk_time_series_graph import Precision, UnitFormat
 
@@ -288,9 +287,8 @@ def test_derived_y_axis_unit_is_none_for_a_graph_with_no_curves() -> None:
 
 
 def test_render_png_ex_self_derives_the_y_axis_unit_when_none_is_passed() -> None:
-    """render_png/render_png_ex derive their own axis unit from the evaluated graph by default
-    (mirroring render_png_graphs), so only a caller holding the unit the graph names for itself
-    has to pass one."""
+    """render_png/render_png_ex derive their own axis unit from the evaluated graph by default,
+    so only a caller holding the unit the graph names for itself has to pass one."""
     curve = _curve("m", [1.0, 2.0, 3.0])
     graph = EvaluatedGraph(
         name="g",
@@ -348,23 +346,6 @@ def test_compute_png_size_mm_matches_render_png_ex_with_a_legend() -> None:
     _png_bytes, width_mm, height_mm = render_png_ex(graph, config)
 
     assert compute_png_size_mm(graph, config) == (width_mm, height_mm)
-
-
-def test_render_png_graphs_formats_ticks_via_the_unit_formatter() -> None:
-    """render_png_graphs (the multi-graph combined path) must derive and apply its own
-    per-graph Y-axis unit, not render with unformatted (raw) ticks."""
-    curve = _curve("m", [1.0, 2.0, 3.0])
-    graph = EvaluatedGraph(
-        name="g",
-        title="Graph",
-        vertical_range=None,
-        stacks=[EvaluatedStack(members=[curve], inverse=False)],
-        lines=[],
-    )
-
-    png_bytes = render_png_graphs([graph], GraphDisplayConfigImage())
-
-    assert png_bytes.startswith(b"\x89PNG")
 
 
 def test_values_pads_a_shorter_curve_with_nan_to_match_length() -> None:

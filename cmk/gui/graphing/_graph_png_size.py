@@ -22,8 +22,8 @@ def ex_to_inches(size_ex: float, font_size_pt: float) -> float:
 
 def mm_per_ex(font_size_pt: float) -> SizeMM:
     """The physical size (in mm) GraphDisplayConfigImage.size grows by for each
-    additional "ex", i.e. the exact inverse of the ex->inches->mm conversion render_png_ex/
-    render_png_graphs use internally.
+    additional "ex", i.e. the exact inverse of the ex->inches->mm conversion render_png_ex
+    uses internally.
 
     A caller translating a target physical width/height into `size` (ex) before calling
     render_png*() must use this - not cmk.gui.graphing._graph_display_config.get_mm_per_ex(), a

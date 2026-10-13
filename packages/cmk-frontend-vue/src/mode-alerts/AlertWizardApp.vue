@@ -5,15 +5,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
-import CmkWizard, { CmkWizardButton, CmkWizardStep } from 'cmk-ui-library/components/CmkWizard'
-import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
-import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
-import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import CmkWizard from 'cmk-ui-library/components/CmkWizard'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { ref } from 'vue'
 
 import { createAlert } from '@/mode-alerts/alert-client'
 import NameAndServicesStep from '@/mode-alerts/steps/NameAndServicesStep.vue'
+import ThresholdsStep from '@/mode-alerts/steps/ThresholdsStep.vue'
 import {
   type AlertModel,
   type FolderPaths,
@@ -66,27 +64,14 @@ async function saveAlert(): Promise<void> {
         :is-completed="() => currentStep > 1"
       />
 
-      <CmkWizardStep :index="2" :is-completed="() => false">
-        <template #header>
-          <CmkHeading type="h3">{{ _t('Define threshold') }}</CmkHeading>
-        </template>
-        <template #content>
-          <CmkParagraph>
-            {{ _t('Defining the threshold will become available here.') }}
-          </CmkParagraph>
-          <CmkAlert v-if="created" variant="success" :text="_t('The alert was created.')" />
-          <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />
-        </template>
-        <template #actions>
-          <CmkWizardButton
-            type="finish"
-            :override-label="_t('Create alert')"
-            :disabled="saving || created"
-            @click="saveAlert"
-          />
-          <CmkWizardButton type="previous" />
-        </template>
-      </CmkWizardStep>
+      <ThresholdsStep
+        :saving="saving"
+        :created="created"
+        :save-error="saveError"
+        :index="2"
+        :is-completed="() => false"
+        @create="saveAlert"
+      />
     </CmkWizard>
   </div>
 </template>

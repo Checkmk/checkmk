@@ -103,13 +103,20 @@ def configure_attributes(
         )
 
         if topic_id == "management_board":
+            relations_werk_id = 20059
             message = _(
-                "<b>This feature is deprecated and will be removed in the version 3.1 of Checkmk.</b>"
-                "<br><br>You can no longer add management boards here. Existing settings can still "
+                "<b>This feature is deprecated and will be removed in version 3.1 of Checkmk.</b>"
+                "<br>You can no longer add management boards here. Existing settings can still "
                 "be changed or removed."
-                "<br>Monitor the management boards via a dedicated host using "
-                "<a href='%(ipmi_url)s'>IPMI</a> or SNMP instead."
-                "<br><br><a href='%(read_more_url)s' target='_blank'>Read more about management boards.</a>"
+                "<br><br><b>How to monitor management boards going forward:</b>"
+                "<br>Create a dedicated host for the management board (e.g. myhost-mgmt) and "
+                "configure it with the board's IP address using <a href='%(ipmi_url)s'>IPMI</a> "
+                "or SNMP. Use the host relations in the host properties to link it to the "
+                "original host, or use the "
+                "<a href='%(relation_detection_url)s'>relation detection</a> functionality."
+                "<br><br><a href='%(werk_url)s' target='_blank'>Werk #%(werk_id)d</a> · "
+                "<a href='%(read_more_url)s' target='_blank'>"
+                "Read more about management boards &amp; relations.</a>"
             ) % {
                 "ipmi_url": makeuri_contextless(
                     request,
@@ -118,6 +125,13 @@ def configure_attributes(
                         ("varname", RuleGroup.SpecialAgents("ipmi_sensors")),
                     ],
                     filename="wato.py",
+                ),
+                "relation_detection_url": makeuri_contextless(
+                    request, [("mode", "host_relation_detection")], filename="wato.py"
+                ),
+                "werk_id": relations_werk_id,
+                "werk_url": makeuri_contextless(
+                    request, [("werk", relations_werk_id)], filename="werk.py"
                 ),
                 "read_more_url": "https://checkmk.com/blog/monitoring-management-boards",
             }

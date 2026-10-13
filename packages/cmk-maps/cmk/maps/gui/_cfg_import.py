@@ -816,17 +816,18 @@ def _build_display(p: dict[str, str]) -> MapDisplay:
 
 
 def _apply_type_specific(obj: MapObject, block_type: str, p: dict[str, str]) -> None:
+    if block_type in ("host", "service", "hostgroup", "servicegroup") and _bool(
+        p.get("only_hard_states")
+    ):
+        obj["only_hard_states"] = True
+    if block_type in ("host", "hostgroup"):
+        # NagVis counts the services of hosts unless told not to.
+        obj["recognize_services"] = _bool(p.get("recognize_services"), True)
     if block_type == "host":
         obj["host_name"] = p.get("host_name")
-        if _bool(p.get("only_hard_states")):
-            obj["only_hard_states"] = True
-        if _bool(p.get("recognize_services")):
-            obj["recognize_services"] = True
     elif block_type == "service":
         obj["host_name"] = p.get("host_name")
         obj["service_description"] = p.get("service_description")
-        if _bool(p.get("only_hard_states")):
-            obj["only_hard_states"] = True
     elif block_type == "hostgroup":
         obj["group_name"] = p.get("hostgroup_name") or p.get("group_name")
     elif block_type == "servicegroup":

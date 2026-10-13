@@ -16,11 +16,7 @@ import { displayRows, perfometerCaption } from '@/maps/map/composables/usePerfom
 import { useMapsApis } from '@/maps/services/context'
 import type { MapElement, ObjectState, ServicesSummary } from '@/maps/types/api'
 import { objectTypeLabel } from '@/maps/utils/dropdownOptions'
-import {
-  buildHostStateViewUrl,
-  buildServiceStateViewUrl,
-  summarySubject
-} from '@/maps/utils/mapNavigation'
+import { buildHostStateViewUrl, buildServiceStateViewUrl } from '@/maps/utils/mapNavigation'
 import {
   VISUAL_ONLY_TYPES,
   getEffectiveObjectType,
@@ -299,6 +295,13 @@ function buildPills(summary: ServicesSummary, kind: 'hosts' | 'services'): Hover
     if (props.object.type === 'host') {
       return buildServiceStateViewUrl(props.checkmkUrl, { host: props.object.host_name }, state)
     }
+    if (props.object.type === 'hostgroup') {
+      return buildServiceStateViewUrl(
+        props.checkmkUrl,
+        { hostgroup: props.object.group_name },
+        state
+      )
+    }
     if (props.object.type === 'dyngroup' && hosts?.length) {
       return buildServiceStateViewUrl(props.checkmkUrl, { hosts }, state)
     }
@@ -329,9 +332,6 @@ function buildPills(summary: ServicesSummary, kind: 'hosts' | 'services'): Hover
     }))
 }
 
-// Host dyngroups show two rows (member hosts + their services); everything else
-// shows one. ``services_summary`` holds host states for host groups (labelled
-// accordingly), services otherwise.
 const pillRows = computed<PillRow[]>(() => {
   if (!['host', 'hostgroup', 'servicegroup', 'dyngroup'].includes(props.object.type)) {
     return []
@@ -346,10 +346,9 @@ const pillRows = computed<PillRow[]>(() => {
   }
   const ss = props.state?.services_summary
   if (ss) {
-    const kind = summarySubject(props.object)
-    const pills = buildPills(ss, kind)
+    const pills = buildPills(ss, 'services')
     if (pills.length) {
-      rows.push({ label: kind === 'hosts' ? _t('Hosts') : _t('Services'), pills })
+      rows.push({ label: _t('Services'), pills })
     }
   }
   return rows

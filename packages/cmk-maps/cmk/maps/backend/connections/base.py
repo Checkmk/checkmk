@@ -219,12 +219,18 @@ class ConnectionBase(ABC):
         ...
 
     @abstractmethod
-    async def get_hostgroup_states(self, group: str) -> ObjectState:
-        """Return aggregated state for a host group (worst-state aggregation)."""
+    async def get_hostgroup_states(
+        self, group: str, *, only_hard: bool = False, with_services: bool = False
+    ) -> ObjectState:
+        """Return the worst state of a host group's hosts.
+
+        Host counts go to ``hosts_summary``; ``with_services`` adds the counts of
+        the hosts' services as ``services_summary``.
+        """
         ...
 
     @abstractmethod
-    async def get_servicegroup_states(self, group: str) -> ObjectState:
+    async def get_servicegroup_states(self, group: str, *, only_hard: bool = False) -> ObjectState:
         """Return aggregated state for a service group."""
         ...
 

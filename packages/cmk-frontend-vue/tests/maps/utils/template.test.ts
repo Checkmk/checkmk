@@ -7,7 +7,12 @@ import { describe, expect, it } from 'vitest'
 
 import type { MapElement, MonitoringState, ObjectState } from '@/maps/types/api'
 import { sanitizeTemplateHtml } from '@/maps/utils/sanitize'
-import { formatServicesSummary, interpolateTemplate, resolveTemplate } from '@/maps/utils/template'
+import {
+  formatHostsSummary,
+  formatServicesSummary,
+  interpolateTemplate,
+  resolveTemplate
+} from '@/maps/utils/template'
 
 import { anObject } from '../support/fixtures'
 import { aState } from '../support/fixtures'
@@ -172,5 +177,17 @@ describe('formatServicesSummary', () => {
 
   it('returns empty string when there is no summary', () => {
     expect(formatServicesSummary(undefined)).toBe('')
+  })
+})
+
+describe('formatHostsSummary', () => {
+  it('names the host states a group counts, worst first', () => {
+    expect(formatHostsSummary({ ok: 4, warning: 0, critical: 1, unknown: 0, pending: 0 })).toBe(
+      '1 DOWN · 4 UP'
+    )
+  })
+
+  it('is empty without counts', () => {
+    expect(formatHostsSummary(null)).toBe('')
   })
 })

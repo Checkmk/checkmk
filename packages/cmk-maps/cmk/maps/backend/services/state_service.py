@@ -643,9 +643,16 @@ async def _get_object_state(connection: ConnectionBase, obj: MapElement) -> Obje
             else:
                 state = await connection.get_service_state(obj.host_name, obj.service_description)
         elif obj.type == "hostgroup" and obj.group_name:
-            state = await connection.get_hostgroup_states(obj.group_name)
+            state = await connection.get_hostgroup_states(
+                obj.group_name,
+                only_hard=obj.only_hard_states,
+                with_services=obj.recognize_services,
+            )
+            state.state = _combined_state_from_summary(state.state, state.services_summary)
         elif obj.type == "servicegroup" and obj.group_name:
-            state = await connection.get_servicegroup_states(obj.group_name)
+            state = await connection.get_servicegroup_states(
+                obj.group_name, only_hard=obj.only_hard_states
+            )
         elif obj.type == "dyngroup" and obj.object_filter:
             state = await connection.get_dyngroup_state(
                 obj.object_types or "host", obj.object_filter
@@ -1324,6 +1331,12 @@ def _hash_object_timing(s: ObjectState) -> int:
     return hash((s.last_check, s.next_check, s.current_attempt))
 
 
+def _summary_key(summary: ServicesSummary | None) -> tuple[int, ...]:
+    if summary is None:
+        return ()
+    return (summary.ok, summary.warning, summary.critical, summary.unknown, summary.pending)
+
+
 def _hash_object_state(s: ObjectState) -> int:
     """Hash only operationally-significant fields.
 
@@ -1337,13 +1350,9 @@ def _hash_object_state(s: ObjectState) -> int:
 
     ``perf_data`` *is* included because the frontend appends it to per-object
     metric history on every push — dropping it would freeze the live graphs.
+    The member counts are included because they change while the worst state
+    stays the same — a second host of a group going down, say.
     """
-    summary = s.services_summary
-    summary_t = (
-        (summary.ok, summary.warning, summary.critical, summary.unknown, summary.pending)
-        if summary is not None
-        else ()
-    )
     # AggregationNode is recursive and not directly tuple-hashable. Pydantic
     # JSON dump is fast (Rust core) and only runs for aggregation objects.
     tree_repr = s.tree.model_dump_json() if s.tree is not None else ""
@@ -1361,7 +1370,8 @@ def _hash_object_state(s: ObjectState) -> int:
             s.max_attempts,
             s.last_state_change,
             s.site_id,
-            summary_t,
+            _summary_key(s.services_summary),
+            _summary_key(s.hosts_summary),
             tree_repr,
         )
     )

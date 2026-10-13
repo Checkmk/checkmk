@@ -12,7 +12,6 @@ person who wrote the check meant for this moment.
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
-import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
 import type { MapElement, ObjectDetails, ObjectState } from '@/maps/types/api'
@@ -33,8 +32,6 @@ const props = defineProps<{
   hostChips: SummaryChip[]
   /** Per-state counts of the services behind it. */
   serviceChips: SummaryChip[]
-  /** What the service counts are counting -- hosts, for a host group. */
-  serviceChipsLabel: TranslatedString
   /** Ticks once a second so the ageing labels move on their own. */
   nowMs: number
 }>()
@@ -66,7 +63,7 @@ function asChips(chips: SummaryChip[]): DetailChip[] {
     <pre v-if="state.output" class="maps-detail-status-tab__output">{{ state.output }}</pre>
 
     <DetailChipGrid :chips="asChips(hostChips)" :label="_t('Hosts')" />
-    <DetailChipGrid :chips="asChips(serviceChips)" :label="serviceChipsLabel" />
+    <DetailChipGrid :chips="asChips(serviceChips)" :label="_t('Services')" />
 
     <DetailMetaList :rows="facts" />
 

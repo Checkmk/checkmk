@@ -76,14 +76,6 @@ describe('serviceChips', () => {
     expect(serviceChips.value).toEqual([])
   })
 
-  it('is empty for a hostgroup (its counts render as host chips)', () => {
-    const { serviceChips } = setup(
-      obj('hostgroup', { group_name: 'linux' }),
-      state({ services_summary: summary({ ok: 4 }) })
-    )
-    expect(serviceChips.value).toEqual([])
-  })
-
   it('links service chips to the checkmk view for a host', () => {
     const { serviceChips } = setup(
       obj('host', { host_name: 'web01' }),
@@ -112,14 +104,31 @@ describe('hostChips / hostsSummary', () => {
     expect(hostChips.value.map((c) => c.state)).toEqual(['UP'])
   })
 
-  it('derives host chips from a hostgroup services_summary packing', () => {
-    const { hostChips } = setup(
+  function hostgroupChips() {
+    return setup(
       obj('hostgroup', { group_name: 'linux' }),
-      state({ services_summary: summary({ ok: 3, critical: 1 }) })
+      state({
+        hosts_summary: summary({ ok: 3, critical: 1 }),
+        services_summary: summary({ ok: 9, warning: 2 })
+      })
     )
-    const byState = Object.fromEntries(hostChips.value.map((c) => [c.state, c.count]))
-    expect(byState.UP).toBe(3)
-    expect(byState.DOWN).toBe(1)
+  }
+
+  it('shows a hostgroup its hosts', () => {
+    const { hostChips } = hostgroupChips()
+    const hosts = Object.fromEntries(hostChips.value.map((c) => [c.state, c.count]))
+    expect(hosts).toEqual({ DOWN: 1, UP: 3 })
+  })
+
+  it('shows a hostgroup the services of its hosts', () => {
+    const { serviceChips } = hostgroupChips()
+    const services = Object.fromEntries(serviceChips.value.map((c) => [c.state, c.count]))
+    expect(services).toEqual({ WARNING: 2, OK: 9 })
+  })
+
+  it('links the service chips of a hostgroup to its services', () => {
+    const { serviceChips } = hostgroupChips()
+    expect(decodeURIComponent(serviceChips.value[0]!.url ?? '')).toContain('opthost_group=linux')
   })
 
   it('uses hosts_summary directly when present', () => {

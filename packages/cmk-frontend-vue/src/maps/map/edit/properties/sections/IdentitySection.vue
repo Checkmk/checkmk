@@ -90,14 +90,24 @@ const showsSubtreeLines = computed(() => form.value.expand_depth > 0)
       </div>
     </template>
 
-    <PropertyRow v-if="type === 'hostgroup' || type === 'servicegroup'" :label="_t('Group name')">
-      <MapsObjectField
-        v-model="form.group_name"
-        :kind="type"
-        :label="_t('Group name')"
-        :placeholder="_t('group name')"
-      />
-    </PropertyRow>
+    <template v-if="type === 'hostgroup' || type === 'servicegroup'">
+      <PropertyRow :label="_t('Group name')">
+        <MapsObjectField
+          v-model="form.group_name"
+          :kind="type"
+          :label="_t('Group name')"
+          :placeholder="_t('group name')"
+        />
+      </PropertyRow>
+      <div class="maps-identity-section__checks">
+        <CmkCheckbox v-model="form.only_hard_states" :label="_t('Only hard states')" />
+        <CmkCheckbox
+          v-if="type === 'hostgroup'"
+          v-model="form.recognize_services"
+          :label="_t('Consider services')"
+        />
+      </div>
+    </template>
 
     <template v-if="type === 'dyngroup'">
       <PropertyRow :label="_t('Filter on')">

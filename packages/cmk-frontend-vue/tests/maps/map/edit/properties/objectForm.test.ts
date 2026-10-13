@@ -64,6 +64,24 @@ describe('updatesFromForm', () => {
     expect(updates).not.toHaveProperty('group_name')
   })
 
+  it('keeps the state options a group carries', () => {
+    const hostgroup = obj({
+      type: 'hostgroup',
+      group_name: 'web',
+      only_hard_states: true,
+      recognize_services: true
+    })
+    const servicegroup = obj({ type: 'servicegroup', group_name: 'web', only_hard_states: true })
+
+    expect(updatesFromForm(formOf(hostgroup), hostgroup, 'static')).toMatchObject({
+      only_hard_states: true,
+      recognize_services: true
+    })
+    const servicegroupUpdates = updatesFromForm(formOf(servicegroup), servicegroup, 'static')
+    expect(servicegroupUpdates).toMatchObject({ only_hard_states: true })
+    expect(servicegroupUpdates).not.toHaveProperty('recognize_services')
+  })
+
   it('turns emptied fields into null rather than an empty string', () => {
     const object = obj({ type: 'host', host_name: 'web01', url: 'https://example.com' })
     const form = formOf(object)

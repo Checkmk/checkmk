@@ -119,14 +119,24 @@ def _services_summary_from_row(row: LivestatusRow, base: int) -> ServicesSummary
     )
 
 
+def _services_summary_of_hosts(rows: list[LivestatusRow], base: int) -> ServicesSummary:
+    """Sum the member hosts' ``num_services_*`` columns (see ``_services_summary_from_row``)."""
+    return ServicesSummary(
+        ok=sum(row_int(r, base) for r in rows),
+        warning=sum(row_int(r, base + 1) for r in rows),
+        critical=sum(row_int(r, base + 2) for r in rows),
+        unknown=sum(row_int(r, base + 3) for r in rows),
+        pending=sum(row_int(r, base + 4) for r in rows),
+    )
+
+
 def _worst_state(states: list[str]) -> str:
     """Worst of *states* by the combined severity ladder. Requires non-empty input."""
     return max(states, key=lambda s: SEVERITY_RANK.get(s, 0))
 
 
 def _host_states_rollup(states: list[str]) -> tuple[str, ServicesSummary]:
-    """Worst host state + host-state counts mapped onto the ``services_summary``
-    slots so the hover/tooltip renders group counts like host objects:
+    """Worst host state + host-state counts in the ``ServicesSummary`` slots:
     UP=ok, DOWN=critical, UNREACHABLE=unknown."""
     return _worst_state(states), ServicesSummary(
         ok=sum(1 for s in states if s == "UP"),
@@ -709,7 +719,9 @@ class LivestatusConnection(ConnectionBase):
         )
 
     @override
-    async def get_hostgroup_states(self, group: str) -> ObjectState:
+    async def get_hostgroup_states(
+        self, group: str, *, only_hard: bool = False, with_services: bool = False
+    ) -> ObjectState:
         # Distinguish "group does not exist" (NOT_FOUND) from "group exists but
         # is empty / hosts not yet checked" (PENDING) so the UI can render them
         # differently. Two queries are intentional — `GET hosts ... Filter:
@@ -718,21 +730,36 @@ class LivestatusConnection(ConnectionBase):
         exists_rows = await self._query(exists_q)
         if not exists_rows:
             return ObjectState(object_id="", type="hostgroup", state="NOT_FOUND")
-        query = f"GET hosts\nColumns: state\nFilter: groups >= {lqencode(group)}\n"
+        columns = ["last_hard_state" if only_hard else "state"]
+        if with_services:
+            # The core keeps the per-host service counts, hard ones included, so
+            # the members' services cost no second query.
+            hard = "hard_" if only_hard else ""
+            columns += [f"num_services_{hard}{kind}" for kind in ("ok", "warn", "crit", "unknown")]
+            columns.append("num_services_pending")
+        query = f"GET hosts\nColumns: {' '.join(columns)}\nFilter: groups >= {lqencode(group)}\n"
         rows = await self._query(query)
         if not rows:
             return ObjectState(object_id="", type="hostgroup", state="PENDING")
         states = [HOST_STATE_MAP.get(row_int(r, 0), "UNKNOWN") for r in rows]
-        worst, summary = _host_states_rollup(states)
-        return ObjectState(object_id="", type="hostgroup", state=worst, services_summary=summary)
+        worst, hosts_summary = _host_states_rollup(states)
+        services_summary = _services_summary_of_hosts(rows, 1) if with_services else None
+        return ObjectState(
+            object_id="",
+            type="hostgroup",
+            state=worst,
+            hosts_summary=hosts_summary,
+            services_summary=services_summary,
+        )
 
     @override
-    async def get_servicegroup_states(self, group: str) -> ObjectState:
+    async def get_servicegroup_states(self, group: str, *, only_hard: bool = False) -> ObjectState:
         exists_q = f"GET servicegroups\nColumns: name\nFilter: name = {lqencode(group)}\n"
         exists_rows = await self._query(exists_q)
         if not exists_rows:
             return ObjectState(object_id="", type="servicegroup", state="NOT_FOUND")
-        query = f"GET services\nColumns: state\nFilter: groups >= {lqencode(group)}\n"
+        state_col = "last_hard_state" if only_hard else "state"
+        query = f"GET services\nColumns: {state_col}\nFilter: groups >= {lqencode(group)}\n"
         rows = await self._query(query)
         if not rows:
             return ObjectState(object_id="", type="servicegroup", state="PENDING")
@@ -765,18 +792,11 @@ class LivestatusConnection(ConnectionBase):
             return ObjectState(object_id="", type="dyngroup", state="PENDING")
         states = [HOST_STATE_MAP.get(row_int(r, 0), "UNKNOWN") for r in rows]
         worst, hosts_summary = _host_states_rollup(states)
-        services_summary = ServicesSummary(
-            ok=sum(row_int(r, 1) for r in rows),
-            warning=sum(row_int(r, 2) for r in rows),
-            critical=sum(row_int(r, 3) for r in rows),
-            unknown=sum(row_int(r, 4) for r in rows),
-            pending=sum(row_int(r, 5) for r in rows),
-        )
         return ObjectState(
             object_id="",
             type="dyngroup",
             state=worst,
-            services_summary=services_summary,
+            services_summary=_services_summary_of_hosts(rows, 1),
             hosts_summary=hosts_summary,
         )
 

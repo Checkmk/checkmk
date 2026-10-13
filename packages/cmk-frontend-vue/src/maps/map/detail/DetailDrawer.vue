@@ -28,7 +28,7 @@ import { metricTitlesOf, metricUnitsOf } from '@/maps/map/composables/useMetricU
 import { useAuth } from '@/maps/services/context'
 import type { CommandTarget, MapElement, ObjectState } from '@/maps/types/api'
 import { objectTypeLabel } from '@/maps/utils/dropdownOptions'
-import { buildCheckmkUrl, stripCheckmkBase, summarySubject } from '@/maps/utils/mapNavigation'
+import { buildCheckmkUrl, stripCheckmkBase } from '@/maps/utils/mapNavigation'
 import { getEffectiveObjectType, getMapElementName } from '@/maps/utils/naming'
 import { stateColorVar } from '@/maps/utils/stateColors'
 
@@ -188,10 +188,6 @@ const { serviceChips, hostChips } = useSummaryChips({
   dyngroupHosts: () => dyngroupHosts.value
 })
 
-const serviceChipsLabel = computed(() =>
-  props.object && summarySubject(props.object) === 'hosts' ? _t('Hosts') : _t('Services')
-)
-
 const {
   checkmkSetupUrlFull,
   aggregationSummary,
@@ -337,7 +333,6 @@ const accentStyle = computed(() => ({
                 :checkmk-url="checkmkUrl"
                 :host-chips="hostChips"
                 :service-chips="serviceChips"
-                :service-chips-label="serviceChipsLabel"
                 :now-ms="nowMs"
               >
                 <template #aggregation>

@@ -606,8 +606,10 @@ def test_presentation_map_resolves_group_bindings(
     assert by_id["legacy"].state == "UP"
     assert by_id["hg"].state == "WARNING"
     assert by_id["sg"].state == "CRITICAL"
-    mock_connection.get_hostgroup_states.assert_awaited_once_with("linux")
-    mock_connection.get_servicegroup_states.assert_awaited_once_with("https")
+    mock_connection.get_hostgroup_states.assert_awaited_once_with(
+        "linux", only_hard=False, with_services=False
+    )
+    mock_connection.get_servicegroup_states.assert_awaited_once_with("https", only_hard=False)
 
 
 def test_presentation_view_rejects_duplicate_element_ids() -> None:
@@ -628,6 +630,48 @@ def test_presentation_shape_rejects_css_injection_color() -> None:
 # ---------------------------------------------------------------------------
 # Object-state SSE delta — compute_states_delta (slim timing patches)
 # ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "recognize_services, expected",
+    [
+        (False, "UP"),
+        (True, "WARNING"),  # NagVis counts the members' services too
+    ],
+)
+def test_hostgroup_counts_its_services_only_where_asked(
+    mock_connection: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+    recognize_services: bool,
+    expected: str,
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_hostgroup_states = AsyncMock(
+        return_value=ObjectState(
+            object_id="x",
+            type="hostgroup",
+            state="UP",
+            services_summary=ServicesSummary(ok=3, warning=1) if recognize_services else None,
+        )
+    )
+    map_cfg = _map(
+        [
+            _obj(
+                "hg",
+                "hostgroup",
+                group_name="web",
+                recognize_services=recognize_services,
+                only_hard_states=True,
+            )
+        ]
+    )
+
+    result = asyncio.run(get_map_states(map_cfg))
+
+    assert result.states[0].state == expected
+    mock_connection.get_hostgroup_states.assert_awaited_once_with(
+        "web", only_hard=True, with_services=recognize_services
+    )
 
 
 def _timed(object_id: str, state: str, *, last: float, nxt: float, attempt: int = 1) -> ObjectState:
@@ -689,6 +733,27 @@ def test_states_delta_operational_change_carries_timing_inline() -> None:
     assert full is False
     assert removed == []
     assert timing == []
+    state_service.drop_states_snapshot(the_map)
+
+
+def test_states_delta_resends_a_group_whose_host_counts_change() -> None:
+    the_map = "timing-map-hosts"
+    state_service.drop_states_snapshot(the_map)
+
+    def group(down: int) -> ObjectState:
+        return ObjectState(
+            object_id="hg",
+            type="hostgroup",
+            state="DOWN",
+            hosts_summary=ServicesSummary(ok=2, critical=down),
+        )
+
+    state_service.compute_states_delta(the_map, None, [group(1)])
+    to_send, _removed, _full, _timing = state_service.compute_states_delta(
+        the_map, None, [group(2)]
+    )
+
+    assert [s.object_id for s in to_send] == ["hg"]
     state_service.drop_states_snapshot(the_map)
 
 

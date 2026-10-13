@@ -240,9 +240,11 @@ export function updatesFromForm(
 
   if (type === 'host' || type === 'service') {
     updates.host_name = form.host_name || null
+  }
+  if (['host', 'service', 'hostgroup', 'servicegroup'].includes(type)) {
     updates.only_hard_states = form.only_hard_states
   }
-  if (type === 'host') {
+  if (type === 'host' || type === 'hostgroup') {
     updates.recognize_services = form.recognize_services
   }
   if (type === 'service') {

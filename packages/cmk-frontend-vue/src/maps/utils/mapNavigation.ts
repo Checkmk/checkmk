@@ -228,7 +228,8 @@ export function hostStateOn(state: string): string {
 const _MAX_HOST_REGEX_MEMBERS = 90
 
 /**
- * Checkmk view listing a host's (or site's) services filtered to one state —
+ * Checkmk view listing the services of a host, a site, a host group or a set of
+ * hosts, filtered to one state —
  * the target of the clickable state pills/chips in HoverMenu and DetailDrawer.
  * Returns null outside a Checkmk deployment or for states the svcstate filter
  * can't express (PENDING maps to the filter's "stp" checkbox, so it's fine).
@@ -239,6 +240,7 @@ export function buildServiceStateViewUrl(
     host?: string | null | undefined
     site?: string | null | undefined
     hosts?: string[] | null | undefined
+    hostgroup?: string | null | undefined
   },
   state: string
 ): string | null {
@@ -258,6 +260,9 @@ export function buildServiceStateViewUrl(
     params._active = 'svcstate;site'
   } else if (target.host) {
     params.host = target.host
+  } else if (target.hostgroup) {
+    params.opthost_group = target.hostgroup
+    params._active = 'svcstate;opthostgroup'
   } else if (target.hosts && target.hosts.length) {
     if (target.hosts.length > _MAX_HOST_REGEX_MEMBERS) {
       return null
@@ -274,15 +279,6 @@ export function buildServiceStateViewUrl(
 
 // Lone lowercase "f" hides Checkmk's filter bar, keeps the rest of the chrome.
 const _VIEW_LINK_DISPLAY_OPTIONS = 'f'
-
-/**
- * What an object's ``services_summary`` counts. Host groups roll up member HOST
- * states into that field; everyone else counts services. (Host dyngroups carry
- * their host rollup separately in ``hosts_summary``.)
- */
-export function summarySubject(obj: MapElement): 'hosts' | 'services' {
-  return obj.type === 'hostgroup' ? 'hosts' : 'services'
-}
 
 /**
  * Checkmk allhosts view filtered to one host state over a member set — the

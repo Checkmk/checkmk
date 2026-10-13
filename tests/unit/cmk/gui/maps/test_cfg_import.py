@@ -268,11 +268,22 @@ def test_cfg_to_map_host() -> None:
     assert obj["recognize_services"] is True
 
 
-def test_cfg_to_map_host_without_flags() -> None:
-    content = "define host {\n    object_id = 2\n    host_name = s\n    x = 0\n    y = 0\n}\n"
-    obj = _first_obj(cfg_to_map(content, "test"))
-    assert "only_hard_states" not in obj
-    assert "recognize_services" not in obj
+@pytest.mark.parametrize(
+    "block", ["host {\n    host_name = s", "hostgroup {\n    hostgroup_name = g"]
+)
+def test_cfg_to_map_counts_services_as_nagvis_does_by_default(block: str) -> None:
+    obj = _first_obj(cfg_to_map(f"define {block}\n}}\n", "test"))
+    assert obj["recognize_services"] is True
+
+
+def test_cfg_to_map_keeps_services_out_where_the_map_says_so() -> None:
+    content = "define hostgroup {\n    hostgroup_name = g\n    recognize_services = 0\n}\n"
+    assert _first_obj(cfg_to_map(content, "test"))["recognize_services"] is False
+
+
+def test_cfg_to_map_group_keeps_hard_states() -> None:
+    content = "define servicegroup {\n    servicegroup_name = g\n    only_hard_states = 1\n}\n"
+    assert _first_obj(cfg_to_map(content, "test"))["only_hard_states"] is True
 
 
 def test_cfg_to_map_service() -> None:

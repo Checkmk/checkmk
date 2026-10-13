@@ -34,7 +34,8 @@ import { formatRelativeDuration, formatRelativeFuture, formatTimestamp } from '@
  *   {{next_check_in}}    – relative time until next check (e.g. 'in 28s')
  *   {{last_state_change}}– formatted timestamp of last state change
  *   {{state_duration}}   – time since last state change (e.g. '3h 12m')
- *   {{services_summary}} – host service counts (e.g. '12 OK · 2 WARN · 1 CRIT')
+ *   {{services_summary}} – service counts (e.g. '12 OK · 2 WARN · 1 CRIT')
+ *   {{hosts_summary}}    – a group's host counts (e.g. '1 DOWN · 4 UP')
  *   {{perf_data}}        – raw performance data string
  *   {{metric}}           – value of first perf metric (or named one via {{metric:label}})
  *   {{metric_unit}}      – unit of first perf metric
@@ -76,6 +77,7 @@ export function interpolateTemplate(
     last_state_change: formatTimestamp(state?.last_state_change),
     state_duration: formatRelativeDuration(state?.last_state_change),
     services_summary: formatServicesSummary(state?.services_summary),
+    hosts_summary: formatHostsSummary(state?.hosts_summary),
     perf_data: perfRaw,
     metric: firstMetric ? String(firstMetric.value) + firstMetric.unit : '',
     metric_unit: firstMetric?.unit ?? ''
@@ -115,21 +117,30 @@ export function formatServicesSummary(
   if (!summary) {
     return ''
   }
-  const parts: string[] = []
-  if (summary.critical) {
-    parts.push(`${summary.critical} CRIT`)
+  return [
+    [summary.critical, 'CRIT'],
+    [summary.unknown, 'UNKN'],
+    [summary.warning, 'WARN'],
+    [summary.pending, 'PEND'],
+    [summary.ok, 'OK']
+  ]
+    .filter(([count]) => count)
+    .map(([count, label]) => `${count} ${label}`)
+    .join(' · ')
+}
+
+// The host counts sit in the same slots: UP=ok, DOWN=critical, UNREACHABLE=unknown.
+export function formatHostsSummary(summary: ObjectState['hosts_summary'] | undefined): string {
+  if (!summary) {
+    return ''
   }
-  if (summary.unknown) {
-    parts.push(`${summary.unknown} UNKN`)
-  }
-  if (summary.warning) {
-    parts.push(`${summary.warning} WARN`)
-  }
-  if (summary.pending) {
-    parts.push(`${summary.pending} PEND`)
-  }
-  if (summary.ok) {
-    parts.push(`${summary.ok} OK`)
-  }
-  return parts.join(' · ')
+  return [
+    [summary.critical, 'DOWN'],
+    [summary.unknown, 'UNREACH'],
+    [summary.pending, 'PEND'],
+    [summary.ok, 'UP']
+  ]
+    .filter(([count]) => count)
+    .map(([count, label]) => `${count} ${label}`)
+    .join(' · ')
 }

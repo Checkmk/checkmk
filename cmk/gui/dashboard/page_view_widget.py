@@ -423,6 +423,17 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
         }
 
 
+def _iframe_body_start(ctx: PageContext) -> None:
+    html.body_start(
+        lang=user.language,
+        inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+        load_frontend_vue=ctx.config.load_frontend_vue,
+        custom_style_sheet=ctx.config.custom_style_sheet,
+        screenshotmode=ctx.config.screenshotmode,
+        inline_help_as_text=user.inline_help_as_text,
+    )
+
+
 class ViewWidgetIFramePage(Page):
     @override
     def page(self, ctx: PageContext) -> None:
@@ -446,14 +457,7 @@ class ViewWidgetIFramePage(Page):
         except MKUserError as e:
             # a linked view used by a widget can be (intentionally) deleted,
             # so we need to handle this gracefully so that the rest of the dashboard still works
-            html.body_start(
-                lang=user.language,
-                inject_js_profiling_code=ctx.config.inject_js_profiling_code,
-                load_frontend_vue=ctx.config.load_frontend_vue,
-                custom_style_sheet=ctx.config.custom_style_sheet,
-                screenshotmode=ctx.config.screenshotmode,
-                inline_help_as_text=user.inline_help_as_text,
-            )
+            _iframe_body_start(ctx)
             html.write_html(html.render_error(str(e)))
             return
 
@@ -593,14 +597,7 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
         search_name = f"{SharedDashboardPageComponents.page_name}.py"
         target_url = get_shared_dashboard_url(token.token_id)
         # Only the page head loads the script that runs the redirect.
-        html.body_start(
-            lang=user.language,
-            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
-            load_frontend_vue=ctx.config.load_frontend_vue,
-            custom_style_sheet=ctx.config.custom_style_sheet,
-            screenshotmode=ctx.config.screenshotmode,
-            inline_help_as_text=user.inline_help_as_text,
-        )
+        _iframe_body_start(ctx)
         html.call_ts_function(
             function_name="redirect_shared_dashboard",
             arguments={"search_name": search_name, "target_url": target_url},
@@ -697,7 +694,7 @@ class ViewWidgetEditPage(Page):
                 )
                 return  # we're done, stop rendering the rest
 
-        self._body_start(ctx)  # include CSS to render the view editor properly
+        _iframe_body_start(ctx)  # include CSS to render the view editor properly
         # remove the 10px padding that body.main adds
         html.open_div(style="margin-left: -10px;")
         if error:
@@ -726,24 +723,13 @@ class ViewWidgetEditPage(Page):
         html.close_div()
         html.body_end()
 
-    @staticmethod
-    def _body_start(ctx: PageContext) -> None:
-        html.body_start(
-            lang=user.language,
-            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
-            load_frontend_vue=ctx.config.load_frontend_vue,
-            custom_style_sheet=ctx.config.custom_style_sheet,
-            screenshotmode=ctx.config.screenshotmode,
-            inline_help_as_text=user.inline_help_as_text,
-        )
-
     def _post_message_page(
         self,
         ctx: PageContext,
         message: ConfigurationErrorMessage | SaveCompletedMessage,
     ) -> None:
         # Only the page head loads the script that sends the message.
-        self._body_start(ctx)
+        _iframe_body_start(ctx)
         self._post_message(message)
         html.body_end()
 

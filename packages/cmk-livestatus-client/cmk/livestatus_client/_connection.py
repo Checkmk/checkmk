@@ -849,13 +849,6 @@ class SingleSiteConnection(Helpers):
             # closed the socket do a reconnect and try again
             self.disconnect()
 
-            # In case of unix socket connections, do not start any reconnection attempts
-            # The other side (liveproxyd) might have had a good reason to disconnect
-            # Note: In most scenarios the liveproxyd still tries to send back a reasonable
-            # error response back to the client
-            if self.socket and self.socket.family == socket.AF_UNIX:
-                raise MKLivestatusSocketError("Unix socket was closed by peer")
-
             now = time.time()
             if not timeout_at or timeout_at > now:
                 if timeout_at is None:

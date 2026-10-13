@@ -228,9 +228,13 @@ class MapObject(TypedDict):
     object_filter: NotRequired[str | None]
     only_hard_states: NotRequired[bool]
     recognize_services: NotRequired[bool]
+    exclude_members: NotRequired[str | None]
+    exclude_member_states: NotRequired[str | None]
+    label_maxlen: NotRequired[int | None]
     image_src: NotRequired[str | None]
     line_style: NotRequired[LineStyle]
     line_width: NotRequired[int]
+    line_color: NotRequired[str | None]
     line_color_border: NotRequired[str]
     line_perfdata_label: NotRequired[LinePerfdataLabel]
     line_weather_color: NotRequired[bool]
@@ -246,6 +250,7 @@ class MapObject(TypedDict):
     graph_height: NotRequired[int]
     url: NotRequired[str]
     url_target: NotRequired[str]
+    hover_url: NotRequired[str | None]
 
 
 class MapPayload(TypedDict):

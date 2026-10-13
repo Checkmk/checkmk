@@ -3011,10 +3011,6 @@ msgid "AI"
 msgstr "AIX"
 
 #, fuzzy
-msgid "AI Assistant"
-msgstr "Instance"
-
-#, fuzzy
 msgid "AI assistance"
 msgstr "Instance"
 
@@ -52359,11 +52355,11 @@ msgid "Oracle databases"
 msgstr "Bases de données Azure"
 
 #, fuzzy
-msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
-msgstr "Bases de données ORACLE (Linux, Solaris, AIX, Windows)"
+msgid "Oracle databases (Experimental)"
+msgstr "Bases de données Azure"
 
 #, fuzzy
-msgid "Oracle databases (Linux, Solaris, AIX, Windows) (Experimental)"
+msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
 msgstr "Bases de données ORACLE (Linux, Solaris, AIX, Windows)"
 
 #, fuzzy
@@ -76336,6 +76332,10 @@ msgstr ""
 msgid "The version of this site is not a %s"
 msgstr "La version de ce site n'est pas une %s"
 
+#, python-format
+msgid "The versions '%(min)s' and '%(max)s' cannot be compared."
+msgstr ""
+
 #, fuzzy, python-format
 msgid ""
 "The view '%s' using the data source '%s' can not be rendered because the "
@@ -77790,6 +77790,17 @@ msgid ""
 "This field is intended for additional information that may help other users "
 "(and your future self) to understand the rule's purpose and the configured "
 "attributes. This comment is only visible in this dialog."
+msgstr ""
+
+msgid ""
+"This field supports the use of macros. The corresponding plug-in replaces "
+"the macros with the actual values."
+msgstr ""
+
+msgid ""
+"This field supports the use of macros. The corresponding plug-in replaces "
+"the macros with the actual values. The most common ones are $HOSTNAME$, "
+"$HOSTALIAS$ or $HOSTADDRESS$."
 msgstr ""
 
 #, python-format
@@ -81621,8 +81632,8 @@ msgstr ""
 msgid ""
 "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system. "
 "Currently not all options are available in all operating systems.<br><b>Note:"
-"</b> This plug-in cannot be used together with the 'Oracle databases (Linux, "
-"Solaris, AIX, Windows) (Experimental)'. Please configure only one of the two."
+"</b> This plug-in cannot be used together with the 'Oracle databases "
+"(Experimental)'. Please configure only one of the two."
 msgstr ""
 "Ceci déploiera le plugin agent <tt>mk_oracle</tt> sur votre système cible. "
 "Actuellement, toutes les options ne sont pas disponibles sur tous les "
@@ -97058,6 +97069,9 @@ msgstr "graphique"
 msgid "graph number %d"
 msgstr "numéro du graphique %d"
 
+msgid "graphs"
+msgstr "graphiques"
+
 msgid "group by"
 msgstr "groupe par"
 
@@ -97765,6 +97779,10 @@ msgid_plural ""
 "table: 'Predicted notifications')"
 msgstr[0] ""
 msgstr[1] ""
+
+#, fuzzy
+msgid "notifications"
+msgstr "Notifications"
 
 msgid "notifications within last"
 msgstr "notifications dans les derniers"
@@ -103792,6 +103810,14 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "AI Assistant"
+#~ msgstr "Instance"
+
+#, fuzzy
+#~ msgid "Oracle databases (Linux, Solaris, AIX, Windows) (Experimental)"
+#~ msgstr "Bases de données ORACLE (Linux, Solaris, AIX, Windows)"
+
+#, fuzzy
 #~ msgid "contact groups"
 #~ msgstr "les groupes de contact : "
 
@@ -108087,9 +108113,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Your IT monitoring platform"
 #~ msgstr "Votre machine de surveillance"
-
-#~ msgid "graphs"
-#~ msgstr "graphiques"
 
 #~ msgid "hits"
 #~ msgstr "frappe"

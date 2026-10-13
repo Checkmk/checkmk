@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-10-09 20:31+0000\n"
+"PO-Revision-Date: 2026-10-13 04:09+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -393,7 +393,7 @@ msgstr ""
 
 #, python-format
 msgid "%(files)s and %(count)d more"
-msgstr ""
+msgstr "%(files)s および %(count)d 詳細"
 
 #, python-format
 msgid "%.1f mm"
@@ -2888,9 +2888,6 @@ msgstr "AES-256-C (Cisco)"
 
 msgid "AI"
 msgstr "AI"
-
-msgid "AI Assistant"
-msgstr "AIアシスタント"
 
 msgid "AI assistance"
 msgstr "AIアシスタンス"
@@ -8349,7 +8346,7 @@ msgid "Average interval"
 msgstr "平均間隔"
 
 msgid "Average latency"
-msgstr "平均待ち時間"
+msgstr "平均レイテンシ"
 
 msgid "Average latency (ms)"
 msgstr "平均レイテンシ(ミリ秒)"
@@ -11790,13 +11787,12 @@ msgstr "ジョブを削除できません。ジョブを停止することはで
 msgid "Cannot delete rules that are managed by Quick Setup."
 msgstr "クイックセットアップで管理されているルールは削除できません。"
 
-#, fuzzy
 msgid ""
 "Cannot delete this customer because the following objects are still assigned "
 "to it:"
 msgstr ""
 "以下のオブジェクトがまだこの顧客に割り当てられているため、この顧客を削除でき"
-"ません：%(references)s。"
+"ません："
 
 #, python-format
 msgid ""
@@ -37197,9 +37193,8 @@ msgstr ""
 msgid "LDAP version"
 msgstr "LDAPバージョン"
 
-#, fuzzy
 msgid "LDAP/SAML connections"
-msgstr "SAML 接続"
+msgstr "LDAP/SAML接続"
 
 msgid "LED"
 msgstr "LED"
@@ -48678,11 +48673,12 @@ msgstr "Oracle データポンプ ダンプ ファイルの小規模書き込み
 msgid "Oracle databases"
 msgstr "Oracleデータベース"
 
+#, fuzzy
+msgid "Oracle databases (Experimental)"
+msgstr "Oracleデータベース"
+
 msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
 msgstr "Oracleデータベース(Linux、Solaris、AIX、Windows)"
-
-msgid "Oracle databases (Linux, Solaris, AIX, Windows) (Experimental)"
-msgstr "Oracleデータベース（Linux、Solaris、AIX、Windows）（実験的）"
 
 #, fuzzy
 msgid "Oracle datafile backup large read bytes"
@@ -61698,7 +61694,6 @@ msgid ""
 msgstr ""
 "一部のLUN(jfs形式など)は、誤った使用済みスペース値を報告する傾向があります"
 
-#, fuzzy
 msgid ""
 "Some SNMPv2c/v3 capable devices do not properly support \"bulk walk\" "
 "queries. For those you can disable \"bulk walk\" queries with this rule set. "
@@ -61706,11 +61701,11 @@ msgid ""
 "feasible (e.g. limiting the bulk size), as bulk walks are much more "
 "performant."
 msgstr ""
-"一部のSNMPv2c/v3対応デバイスは、「bulkwalk」クエリーを適切にサポートしていな"
-"い。そのような場合は、このルールセットで「bulkwalk」クエリーを無効にすること"
-"ができます。バルクウォークの方がはるかにパフォーマンスが高いため、他の方法"
-"（例えば、バルクサイズを制限するなど）が実行できない場合にのみ、この方法をと"
-"るということに注意してください。"
+"一部のSNMPv2c/v3対応デバイスは、「バルクウォーク」クエリを適切にサポートして"
+"いません。そのようなデバイスについては、このルールセットを使用して「バルク"
+"ウォーク」クエリを無効にすることができます。ただし、バルクウォークの方がはる"
+"かにパフォーマンスが高いため、他の方法（例：バルクサイズの制限）が実行不可能"
+"な場合にのみ、この設定を行うようにしてください。"
 
 msgid ""
 "Some UPS models report status flags for each battery pack cartridge. A "
@@ -62194,9 +62189,8 @@ msgstr "スペアディスクと壊れたディスク"
 msgid "Spare disk"
 msgstr "スペアディスク"
 
-#, fuzzy
 msgid "Special agent"
-msgstr "特別なエージェント"
+msgstr "スペシャルエージェント"
 
 msgid "Special cases for specific services"
 msgstr "特定サービスむけの特別なケース"
@@ -62334,7 +62328,6 @@ msgstr ""
 "なります。オプション<tt> commit </tt>は、省電力アルゴリズムによって変更されて"
 "いるため、無視されています。"
 
-#, fuzzy
 msgid ""
 "Specify an explicit IP address or resolvable DNS name here, if the host name "
 "is not resolvable via <tt>/etc/hosts</tt> or DNS. If you do not set this "
@@ -62347,17 +62340,16 @@ msgid ""
 "be performed each time the host is checked. The DNS cache of Checkmk is "
 "<b>NOT</b> queried."
 msgstr ""
-"ホスト名が <tt>/etc/hosts</tt>またはDNSを介して解決できない場合は、ここでホス"
-"トの明示的なIPアドレスまたは解決可能なDNS名を指定できます。この属性を設定しな"
-"い場合、構成をアクティブ化するときにホスト名の解決が行われます。Checkmkの組み"
-"込みDNSキャッシュは、アクティブ化プロセスを高速化するために、グローバル構成で"
-"デフォルトで有効となっています。キャッシュは通常、cronジョブで毎日更新されま"
-"す。コマンド <tt>cmk -v --update-dns-cache</tt>を使用してキャッシュを手動で更"
-"新できます。<br><br><b>動的IPアドレスのみ:</b><br>DNS名を入力すると、ホストを"
-"チェックするたびにDNS解決が実行されます。CheckmkのDNSキャッシュは照会されませ"
-"ん。"
+"ホスト名が <tt>/etc/hosts</tt>または DNS 経由で解決できない場合は、ここに具体"
+"的な IPアドレスまたは解決可能な DNS 名を指定してください。この属性を設定しな"
+"い場合、設定が有効化される際にホスト名の解決が行われます。Checkmk のビルトイ"
+"ン DNS キャッシュは、有効化プロセスを高速化するため、グローバル設定でデフォル"
+"トで有効になっています。 キャッシュは通常、クーロンジョブによって毎日更新され"
+"ます。 <tt>cmk -v --update-dns-cache</tt>コマンドを使用して、キャッシュを手動"
+"で更新することもできます。<br><br><b>動的IPアドレスのみ：</b><br>ここにDNS名"
+"を入力した場合、ホストがチェックされるたびにDNS解決が行われます。CheckmkのDNS"
+"キャッシュは照会<b>されません</b>。"
 
-#, fuzzy
 msgid ""
 "Specify an explicit IPv6 address or resolvable DNS name here, if the host "
 "name is not resolvable via <tt>/etc/hosts</tt> or DNS. If you do not set "
@@ -62370,15 +62362,15 @@ msgid ""
 "will be performed each time the host is checked. The DNS cache of Checkmk is "
 "<b>NOT</b> queried."
 msgstr ""
-"ホスト名が <tt>/etc/hosts</tt>またはDNSを介して解決できない場合は、ここでホス"
-"トの明示的なIPv6アドレスまたは解決可能なDNS名を指定できます。この属性を設定し"
-"ない場合、構成をアクティブ化するときにホスト名の解決が行われます。Checkmkの組"
-"み込みDNSキャッシュは、アクティブ化プロセスを高速化するために、グローバル構成"
-"でデフォルトで有効となっています。キャッシュは通常、cronジョブで毎日更新され"
-"ます。コマンド <tt>cmk -v --update-dns-cache</tt>を使用してキャッシュを手動で"
-"更新できます。<br><br><b>動的IPアドレスのみ:</b><br>DNS名を入力すると、ホスト"
-"をチェックするたびにDNS解決が実行されます。CheckmkのDNSキャッシュは照会されま"
-"せん。"
+"ホスト名が <tt>/etc/hosts</tt>または DNS 経由で解決できない場合は、ここに明示"
+"的な IPv6 アドレスまたは解決可能な DNS 名を指定してください。この属性を設定し"
+"ない場合、設定が有効化される際にホスト名の解決が行われます。有効化プロセスを"
+"高速化するため、Checkmk のビルトイン DNS キャッシュはグローバル設定でデフォル"
+"トで有効になっています。 キャッシュは通常、クーロンジョブによって毎日更新され"
+"ます。<tt>cmk -v --update-dns-cache</tt> コマンドを使用して、キャッシュを手動"
+"で更新することもできます。<br><br><b>動的IPアドレスのみ：</b><br>ここにDNS名"
+"を入力した場合、ホストがチェックされるたびにDNS解決が行われます。CheckmkのDNS"
+"キャッシュは照会<b>されません</b>。"
 
 msgid ""
 "Specify at which time period a new file for the event history will be "
@@ -62508,9 +62500,8 @@ msgstr ""
 " コントローラー ID：OData パスに基づく構造化された形式を使用する（例："
 "system:storage:volume の場合は 『0:1:4』）"
 
-#, fuzzy
 msgid "Specify if port state UP, DOWN or both should be discovered"
-msgstr "ポート状態がUP, DOWN, またはBOOTH であるかどうかを確認してください"
+msgstr "ポートの状態（UP、DOWN、またはその両方）を検出するかどうかを指定します"
 
 msgid "Specify input state evaluation"
 msgstr "入力状態評価の指定"
@@ -62598,9 +62589,8 @@ msgstr "ルールを適用するキュー名を指定します"
 msgid "Specify roles of a control plane node"
 msgstr "コントロールプレーンノードの役割の指定"
 
-#, fuzzy
 msgid "Specify roles of a worker node"
-msgstr "コントロールプレーンノードの役割の指定"
+msgstr "ワーカーノードの役割を指定する"
 
 #, fuzzy
 msgid "Specify sites this OpenTelemetry Collector should run on. "
@@ -62890,7 +62880,6 @@ msgstr ""
 msgid "Specify two upper case letters like <tt>EN</tt> or <tt>DE</tt>."
 msgstr "<tt>EN</tt>や<tt>DE</tt>のような2つの大文字を指定します。"
 
-#, fuzzy
 msgid ""
 "Specify upper and/or lower levels for a queried PromQL value. The matching "
 "happens on a 2-level basis: First on the service name level, where the "
@@ -63003,13 +62992,12 @@ msgstr "Splunk On-Call のパラメータ"
 msgid "Splunk instance to query."
 msgstr "クエリするSplunkインスタンス。"
 
-#, fuzzy
 msgid ""
 "Splunk labels a job as a zombie when the job is no longer running, but has "
 "not declared explicitly that it finished its work."
 msgstr ""
-"Splunk は、ジョブが実行されなくなったが明示的に作業が完了してことを宣言してい"
-"ない場合、そのジョブを「ゾンビ」とラベル付けします。"
+"Splunkでは、ジョブが実行されなくなったにもかかわらず、作業を完了したことを明"
+"示的に宣言していない場合、そのジョブを「ゾンビ」としてラベル付けします。"
 
 msgid "Spool directory"
 msgstr "スプールディレクトリ"
@@ -63156,9 +63144,8 @@ msgstr "出演者"
 msgid "Start"
 msgstr "開始"
 
-#, fuzzy
 msgid "Start Livestatus proxy"
-msgstr "Livestatusプロキシを開始します"
+msgstr "Livestatusプロキシの起動"
 
 #, fuzzy
 msgid "Start RAM"
@@ -63206,9 +63193,8 @@ msgstr "バックアップの復元を開始"
 msgid "Start restore of this backup"
 msgstr "このバックアップの復元を開始します"
 
-#, fuzzy
 msgid "Start time"
-msgstr "開始タイプ"
+msgstr "スタート時間"
 
 msgid "Start time of process"
 msgstr "プロセス開始時間"
@@ -63451,33 +63437,27 @@ msgstr "<i>未構成の不良</i>の状態"
 msgid "State for <i>Unconfigured Good</i>"
 msgstr "<i>未構成の商品</i>の状態"
 
-#, fuzzy
 msgid "State for StorCLI2 status <i>Bad</i>"
-msgstr "storcli2 のステータス状態 <i> Bad </i>"
+msgstr "StorCLI2 のステータス状態 <i>Bad</i>"
 
 #, fuzzy
 msgid "State for StorCLI2 status <i>Failed</i>"
 msgstr "storcli2 のステータス状態 <i> Failed</i>"
 
-#, fuzzy
 msgid "State for StorCLI2 status <i>Good</i>"
-msgstr "storcli2 のステータス状態 <i> Good</i>"
+msgstr "StorCLI2 のステータス状態 <i>Good</i>"
 
-#, fuzzy
 msgid "State for StorCLI2 status <i>Missing</i>"
-msgstr "storcli2 のステータス状態 <i> Missing</i>"
+msgstr "StorCLI2のステータス状態 <i>Missing</i>"
 
-#, fuzzy
 msgid "State for StorCLI2 status <i>Offline</i>"
-msgstr "storcli2 のステータス状態 <i> Offline</i>"
+msgstr "StorCLI2のステータス状態<i>オフライン</i>"
 
-#, fuzzy
 msgid "State for StorCLI2 status <i>Online</i>"
-msgstr "storcli2 のステータス状態 <i> Online</i>"
+msgstr "StorCLI2のステータス状態 <i>オンライン</i>"
 
-#, fuzzy
 msgid "State for StorCLI2 status <i>Replace</i>"
-msgstr "storcli2 のステータス状態 <i> Replace</i>"
+msgstr "StorCLI2のステータス<i>Replace</i>"
 
 #, fuzzy
 msgid "State for StorCLI2 status <i>Unknown</i>"
@@ -63487,9 +63467,8 @@ msgstr "storcli2 のステータス状態 <i> Unknown</i>"
 msgid "State for StorCLI2 status <i>Unusable</i>"
 msgstr "storcli2 のステータス状態 <i> Unusable</i>"
 
-#, fuzzy
 msgid "State for StorCLI2 status <i>Various</i>"
-msgstr "storcli2 のステータス状態 <i> Various</i>"
+msgstr "StorCLI2 のステータス状態 <i>Various</i>"
 
 msgid "State for connection refusal"
 msgstr "接続拒否の状態"
@@ -63566,9 +63545,8 @@ msgstr "ローカル状態がアクティブ-セカンダリである場合の�
 msgid "State if ha local state is disabled"
 msgstr "haローカル状態が無効な場合の状態"
 
-#, fuzzy
 msgid "State if ha local state is initial"
-msgstr "haローカル状態が無効な場合の状態"
+msgstr "HAローカル状態が初期状態かどうか"
 
 #, fuzzy
 msgid "State if ha local state is non-functional"
@@ -63605,9 +63583,8 @@ msgstr "haピア状態がActive-Secondaryな場合の状態"
 msgid "State if ha peer state is disabled"
 msgstr "haピア状態が無効な場合の状態"
 
-#, fuzzy
 msgid "State if ha peer state is initial"
-msgstr "haピア状態が無効な場合の状態"
+msgstr "HAピア状態が初期状態かどうか"
 
 #, fuzzy
 msgid "State if ha peer state is non-functional"
@@ -63741,9 +63718,8 @@ msgstr "強制ログ取得が無効の場合の状態： "
 msgid "State in case of force logging is enabled: "
 msgstr "強制ログ取得が有効の場合の状態： "
 
-#, fuzzy
 msgid "State in case of host name mismatch with the agent updater"
-msgstr "更新がない場合の状態"
+msgstr "エージェントアップデータ―とのホスト名不一致時の状態"
 
 msgid "State in case of logins are not possible: "
 msgstr "ログイン時の状態は不可能です: "
@@ -63817,17 +63793,14 @@ msgstr "ユーザーによって変更されたイベントの状態"
 msgid "State of host"
 msgstr "ホストの状態"
 
-#, fuzzy
 msgid "State of incident if acknowledgment is set"
 msgstr "承認が設定されている場合のインシデントの状態"
 
-#, fuzzy
 msgid "State of incident if acknowledgment is set (as integer)"
 msgstr "(整数として)承認応答が設定されている場合のインシデントの状態"
 
-#, fuzzy
 msgid "State of incident if acknowledgment is set (predefined)"
-msgstr "確認応答が設定されている場合のインシデントの状態(事前定義)"
+msgstr "承認が設定されている場合のインシデントの状態（事前定義済み）"
 
 msgid "State of incident if downtime expires"
 msgstr "ダウンタイムが期限切れになった場合のインシデントの状態"
@@ -64075,9 +64048,8 @@ msgstr "レプリケーション状態が同期しているときの状態"
 msgid "State when replication state is unknown"
 msgstr "レプリケーション状態が不明な場合の状態"
 
-#, fuzzy
 msgid "State when reported device status is 'No redundancy'"
-msgstr "報告されたデバイスステータスがOKの場合の状態"
+msgstr "報告されたデバイスステータスが'No redundancy'の場合の状態"
 
 msgid "State when reported device status is OK"
 msgstr "報告されたデバイスステータスがOKの場合の状態"
@@ -64131,7 +64103,6 @@ msgstr "状態"
 msgid "States of Juniper alarms"
 msgstr "Juniper のアラームの状態"
 
-#, fuzzy
 msgid "States of Nutanix host"
 msgstr "Nutanixホストの状態"
 
@@ -64419,9 +64390,8 @@ msgstr "VMの停止"
 msgid "Storage"
 msgstr "ストレージ"
 
-#, fuzzy
 msgid "Storage I/O consumption"
-msgstr "ストレージIO消費量"
+msgstr "ストレージ I/O 消費量"
 
 msgid "Storage IO"
 msgstr "ストレージIO"
@@ -64633,7 +64603,6 @@ msgstr "サブスクリプションID"
 msgid "Subscription name"
 msgstr "サブスクリプション"
 
-#, fuzzy
 msgid "Subscription status"
 msgstr "サブスクリプションステータス"
 
@@ -65310,9 +65279,8 @@ msgstr "TLS"
 msgid "TLS Authentication without TLS is not possible"
 msgstr "TLSなしでの認証は不可"
 
-#, fuzzy
 msgid "TLS certificate revocation checks"
-msgstr "TLS 証明書の検証"
+msgstr "TLS証明書の失効チェック"
 
 msgid "TLS certificate validation"
 msgstr "TLS 証明書の検証"
@@ -65464,9 +65432,8 @@ msgstr "表スペースのサイズ"
 msgid "Tablespace used"
 msgstr "使用されるテーブルスペース"
 
-#, fuzzy
 msgid "Tablespace used space"
-msgstr "使用されるテーブルスペース"
+msgstr "テーブルスペースの使用量"
 
 msgid "Tablespace wasted"
 msgstr "表領域が無駄になります"
@@ -65474,13 +65441,11 @@ msgstr "表領域が無駄になります"
 msgid "Tablespaces"
 msgstr "テーブルスペース"
 
-#, fuzzy
 msgid "Tablespaces CRITICAL"
-msgstr "テーブルスペース"
+msgstr "テーブルスペース CRITICAL"
 
-#, fuzzy
 msgid "Tablespaces by state"
-msgstr "表領域が無駄になります"
+msgstr "状態別のテーブルスペース"
 
 msgid "Tabloid"
 msgstr "タブロイド"
@@ -65530,7 +65495,6 @@ msgstr "タグ"
 msgid "Tags IDs must be unique. You've used \"%s\" twice."
 msgstr "タグIDは一意である必要があります。\"%s\"を2回使用しました。"
 
-#, fuzzy
 msgid ""
 "Tags are the basis of the rule based configuration of Checkmk. If the first "
 "step you define arbitrary tag groups. A host has assigned exactly one tag "
@@ -65737,13 +65701,11 @@ msgstr "Teltonika-TRB140"
 msgid "Temperature"
 msgstr "温度"
 
-#, fuzzy
 msgid "Temperature (average)"
-msgstr "温度アラート"
+msgstr "温度（平均）"
 
-#, fuzzy
 msgid "Temperature (maximum)"
-msgstr "温度ユニット"
+msgstr "温度（最大値）"
 
 msgid "Temperature Alert"
 msgstr "温度アラート"
@@ -65784,7 +65746,6 @@ msgstr "温度傾向分析"
 msgid "Temperature and Humidity for Eaton UPS"
 msgstr "Eaton UPSの温度と湿度"
 
-#, fuzzy
 msgid "Temperature sensors"
 msgstr "温度センサー"
 
@@ -65797,7 +65758,6 @@ msgstr "レベル内蔵機器の温度傾向"
 msgid "Temperature unit"
 msgstr "温度ユニット"
 
-#, fuzzy
 msgid "Temperature, humidity, electrical parameters, etc."
 msgstr "温度、湿度、電気的パラメータなど。"
 
@@ -65846,9 +65806,8 @@ msgstr "必須"
 msgid "Tenant ID must be a valid UUID."
 msgstr "テナントIDは有効なUUIDである必要があります。"
 
-#, fuzzy
 msgid "Tenant name"
-msgstr "ファン名"
+msgstr "テナント名"
 
 msgid "TenantID"
 msgstr "テナントID"
@@ -66172,19 +66131,17 @@ msgstr ""
 "カーネルルーチンに使用されたCPU時間のパーセンテージを合計します。可能な範囲は"
 "0%から100%です"
 
-#, fuzzy
 msgid ""
 "The CPU utilization sums up the percentages of CPU time that is used for "
 "user processes, kernel routines (system), disk wait (sometimes also called I/"
 "O wait) or nothing (idle). The levels are always applied on the average "
 "utilization since the last check - which is usually one minute."
 msgstr ""
-"CPU使用率は、ユーザープロセス、カーネルルーチン(システム)、ディスク待ち時間"
-"(IO待ち時間とも呼ばれる)または何もしない(アイドル)に使用されるCPU時間のパーセ"
-"ンテージを合計します。レベルは、最後のチェック以降の平均使用率に常に適用され"
-"ます。これは通常1分です。"
+"CPU利用率は、ユーザープロセス、カーネルルーチン(システム)、ディスク待ち時間"
+"(I/O待ち時間とも呼ばれる)または何もしない(アイドル)に使用されるCPU時間のパー"
+"センテージを合計します。レベルは、最後のチェック以降の平均使用率に常に適用さ"
+"れます。これは通常1分です。"
 
-#, fuzzy
 msgid ""
 "The Checkmk Micro Core uses Checkmk checker processes to process the results "
 "from the Checkmk fetchers. Since the checker processes are not I/O bound, "
@@ -66192,8 +66149,8 @@ msgid ""
 "more checkers than the number of available CPUs has a negative effect, "
 "because it increases the amount of context switches."
 msgstr ""
-"Checkmk Microcoreは、Checkmkチェッカープロセスを使用して、Checkmkフェッチャー"
-"からの結果を処理します。チェッカープロセスはIOバインドされていないため、各"
+"Checkmk Micro Coreは、Checkmkチェッカープロセスを使用して、Checkmkフェッ"
+"チャーからの結果を処理します。チェッカープロセスはIOバウンドではないため、各"
 "チェッカーが専用CPUを取得するときに最も効果的です。使用可能なCPUの数よりも多"
 "くのチェッカーを構成すると、コンテキストスイッチの数が増えるため、悪影響があ"
 "ります。"
@@ -66238,7 +66195,6 @@ msgstr ""
 "トと互換性がある場合のみ有効になります。ルールセット\"%s\"を参照してくださ"
 "い。"
 
-#, fuzzy
 msgid ""
 "The Checkmk agent does not listen on its own for incoming network "
 "connections. By default, it makes use of so called super servers, which "
@@ -66335,7 +66291,6 @@ msgstr ""
 msgid "The DNS server you want to use for the lookup"
 msgstr "ルックアップに使用するDNSサーバー"
 
-#, fuzzy
 msgid ""
 "The Data Guard statistics are available in Oracle Enterprise Edition with "
 "enabled Data Guard. The <tt>init.ora</tt> parameter <tt>dg_broker_start</tt> "
@@ -66952,7 +66907,6 @@ msgstr ""
 "れます。構文<tt>10.3.3.0/24</tt>で特定のIPアドレスまたはネットワークを構成で"
 "きます。"
 
-#, fuzzy
 msgid ""
 "The access to the Livestatus proxy via TCP will only be allowed from the "
 "configured source IP addresses. For an IP address to be allowed, it must "
@@ -67045,7 +66999,6 @@ msgstr ""
 "従ってグループ化されます。また、単一のファイルを監視できます。セクションが指"
 "定されていない場合、プラグインは出力を生成しません。"
 
-#, fuzzy
 msgid ""
 "The agent plug-in <tt>mk_logwatch.py</tt> monitors a configured set of text "
 "log files for new messages, classifies these according to a set of rules and "
@@ -67063,9 +67016,9 @@ msgid ""
 msgstr ""
 "エージェントプラグイン<tt>mk_logwatch.py</tt>は、設定されたテキストログファイ"
 "ルの新しいメッセージを監視し、ルールのセットに従ってこれらを分類し、さらに処"
-"理するために関連するメッセージ(のみ)を Checkmkサーバに送ります。ここで、メッ"
-"セージは<a href='wato.py?"
-"varname=logwatch_rules&folder=&mode=edit_ruleset'>Logwatch Ruleset</a>を使用"
+"理するために関連するメッセージ(のみ)を Checkmk サーバーに送ります。ここで、"
+"メッセージは<a href='wato.py?"
+"varname=logwatch_rules&folder=&mode=edit_ruleset'>Logwatch rule set</a>を使用"
 "してさらに(再)分類することができます。<b>注意:</b>異なるパターンのセットで複"
 "数のログファイルを設定する場合は、単に複数のルールを作成します。このルール"
 "セットでは、最初のルールだけでなく、<b>すべての</b>一致するルールが実行されま"
@@ -67457,7 +67410,6 @@ msgstr ""
 "チェッカーの使用率が50%未満の場合は、チェッカーの数を減らしてメモリ消費量を減"
 "らすことができます。"
 
-#, fuzzy
 msgid ""
 "The checks <tt>fileinfo</tt> and <tt>sap_hana_fileinfo</tt> monitor the age "
 "and size of a single file. Each file information that is sent by the agent "
@@ -67499,7 +67451,7 @@ msgstr ""
 "能な形式の現在の時刻/日付をインクルードパターンに含めることができます。構文は"
 "次のとおりです: $DATE:format-spec$ または $YESTERDAY:format-spec$。ここで、"
 "format-specは、unixdateコマンドの時刻フォーマットディレクティブのリストです。"
-"例: $DATE:%Y%m%d$は今日の日付です(例:20140127)。/var/tmp/backups/$DATE:"
+"例: $DATE:%Y%m%d$は今日の日付です(例えば20140127)。/var/tmp/backups/$DATE:"
 "%Y%m%d$.txtのパターンは、ディレクトリ/var/tmp/backupsで、名前が、今日の日"
 "付.txtファイルを検索します。YESTERDAY構文は、参照時刻から1日を引くだけです。"
 
@@ -67742,12 +67694,12 @@ msgstr ""
 msgid "The connection to this site has been disabled."
 msgstr "このサイトへの接続は無効になっています。"
 
-#, fuzzy
 msgid ""
 "The connection via the configured proxy failed. Please check your proxy "
 "settings."
 msgstr ""
-"この接続は現在無効になっています。システム管理者にお問い合わせください。"
+"設定されたプロキシ経由での接続に失敗しました。プロキシ設定をチェックしてくだ"
+"さい。"
 
 msgid ""
 "The contact information must not contain one of the characters <tt>;</tt> "
@@ -71489,6 +71441,10 @@ msgstr "CA証明書が見つからないため、検証を開始できません"
 msgid "The version of this site is not a %s"
 msgstr "このサイトのバージョンは %s ではありません"
 
+#, python-format
+msgid "The versions '%(min)s' and '%(max)s' cannot be compared."
+msgstr ""
+
 #, fuzzy, python-format
 msgid ""
 "The view '%s' using the data source '%s' can not be rendered because the "
@@ -72923,6 +72879,17 @@ msgstr ""
 "このフィールドは、他のユーザー（および今後のご自身）がルールの目的と設定され"
 "た属性を理解するのに役立つ追加情報を入力するためのものです。このコメントは、"
 "このダイアログ内でのみ表示されます。"
+
+msgid ""
+"This field supports the use of macros. The corresponding plug-in replaces "
+"the macros with the actual values."
+msgstr ""
+
+msgid ""
+"This field supports the use of macros. The corresponding plug-in replaces "
+"the macros with the actual values. The most common ones are $HOSTNAME$, "
+"$HOSTALIAS$ or $HOSTADDRESS$."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -76594,8 +76561,8 @@ msgstr ""
 msgid ""
 "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system. "
 "Currently not all options are available in all operating systems.<br><b>Note:"
-"</b> This plug-in cannot be used together with the 'Oracle databases (Linux, "
-"Solaris, AIX, Windows) (Experimental)'. Please configure only one of the two."
+"</b> This plug-in cannot be used together with the 'Oracle databases "
+"(Experimental)'. Please configure only one of the two."
 msgstr ""
 "これにより、エージェントプラグイン<tt>mk_oracle</tt>がターゲットシステムにデ"
 "プロイされます。現在のところ、全てのOSで全てのオプションが利用できるわけでは"
@@ -90879,6 +90846,9 @@ msgstr "グラフ"
 msgid "graph number %d"
 msgstr "グラフ番号 %d"
 
+msgid "graphs"
+msgstr "グラフ"
+
 msgid "group by"
 msgstr "グループ化"
 
@@ -91565,6 +91535,10 @@ msgid_plural ""
 "table: 'Predicted notifications')"
 msgstr[0] ""
 "通知は設定のルールに基づいて送信されているはずです（表：予測通知を参照）"
+
+#, fuzzy
+msgid "notifications"
+msgstr "通知"
 
 msgid "notifications within last"
 msgstr "最後の内の通知"
@@ -94837,9 +94811,8 @@ msgstr "条件を追加"
 msgid "Add condition after previous condition"
 msgstr "追加オプション"
 
-#, fuzzy
 msgid "Attribute filter"
-msgstr "属性"
+msgstr "属性フィルター"
 
 #, fuzzy
 msgid "Toggle connector, currently %{connector}"
@@ -97788,6 +97761,12 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#~ msgid "AI Assistant"
+#~ msgstr "AIアシスタント"
+
+#~ msgid "Oracle databases (Linux, Solaris, AIX, Windows) (Experimental)"
+#~ msgstr "Oracleデータベース（Linux、Solaris、AIX、Windows）（実験的）"
 
 #, fuzzy
 #~ msgid "contact groups"
@@ -102291,9 +102270,6 @@ msgstr ""
 #~ "%s. "
 #~ msgstr ""
 #~ "ライセンスが停止されました。Checkmk営業チーム%s までご連絡ください。 "
-
-#~ msgid "graphs"
-#~ msgstr "グラフ"
 
 #~ msgid "hits"
 #~ msgstr "ヒット"

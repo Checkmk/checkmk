@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-10-10 18:31+0000\n"
+"PO-Revision-Date: 2026-10-13 15:07+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -2963,10 +2963,6 @@ msgstr ""
 #, fuzzy
 msgid "AI"
 msgstr "AIX"
-
-#, fuzzy
-msgid "AI Assistant"
-msgstr "Instância"
 
 #, fuzzy
 msgid "AI assistance"
@@ -51942,11 +51938,11 @@ msgid "Oracle databases"
 msgstr "Bases de dados Azure"
 
 #, fuzzy
-msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
-msgstr "Bases de dados ORACLE (Linux, Solaris, AIX, Windows)"
+msgid "Oracle databases (Experimental)"
+msgstr "Bases de dados Azure"
 
 #, fuzzy
-msgid "Oracle databases (Linux, Solaris, AIX, Windows) (Experimental)"
+msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
 msgstr "Bases de dados ORACLE (Linux, Solaris, AIX, Windows)"
 
 #, fuzzy
@@ -75675,6 +75671,10 @@ msgstr ""
 msgid "The version of this site is not a %s"
 msgstr "A versão deste sítio não é uma %s"
 
+#, python-format
+msgid "The versions '%(min)s' and '%(max)s' cannot be compared."
+msgstr ""
+
 #, fuzzy, python-format
 msgid ""
 "The view '%s' using the data source '%s' can not be rendered because the "
@@ -77111,6 +77111,17 @@ msgid ""
 "This field is intended for additional information that may help other users "
 "(and your future self) to understand the rule's purpose and the configured "
 "attributes. This comment is only visible in this dialog."
+msgstr ""
+
+msgid ""
+"This field supports the use of macros. The corresponding plug-in replaces "
+"the macros with the actual values."
+msgstr ""
+
+msgid ""
+"This field supports the use of macros. The corresponding plug-in replaces "
+"the macros with the actual values. The most common ones are $HOSTNAME$, "
+"$HOSTALIAS$ or $HOSTADDRESS$."
 msgstr ""
 
 #, python-format
@@ -80854,8 +80865,8 @@ msgstr ""
 msgid ""
 "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system. "
 "Currently not all options are available in all operating systems.<br><b>Note:"
-"</b> This plug-in cannot be used together with the 'Oracle databases (Linux, "
-"Solaris, AIX, Windows) (Experimental)'. Please configure only one of the two."
+"</b> This plug-in cannot be used together with the 'Oracle databases "
+"(Experimental)'. Please configure only one of the two."
 msgstr ""
 "Isso implantará o plug-in de agente <tt>mk_oracle</tt> no sistema de "
 "destino. Actualmente, nem todas as opções estão disponíveis em todos os "
@@ -96076,6 +96087,9 @@ msgstr "gráfico"
 msgid "graph number %d"
 msgstr "número do gráfico %d"
 
+msgid "graphs"
+msgstr "gráficos"
+
 msgid "group by"
 msgstr "grupo por"
 
@@ -96782,6 +96796,10 @@ msgid_plural ""
 "table: 'Predicted notifications')"
 msgstr[0] ""
 msgstr[1] ""
+
+#, fuzzy
+msgid "notifications"
+msgstr "Notificações"
 
 msgid "notifications within last"
 msgstr "notificações em último"
@@ -102791,6 +102809,14 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "AI Assistant"
+#~ msgstr "Instância"
+
+#, fuzzy
+#~ msgid "Oracle databases (Linux, Solaris, AIX, Windows) (Experimental)"
+#~ msgstr "Bases de dados ORACLE (Linux, Solaris, AIX, Windows)"
+
+#, fuzzy
 #~ msgid "contact groups"
 #~ msgstr "grupos de contacto: "
 
@@ -107116,9 +107142,6 @@ msgstr ""
 #~ "%s. "
 #~ msgstr ""
 #~ "A sua licença foi suspensa. Contacte a equipa de vendas da Checkmk em %s."
-
-#~ msgid "graphs"
-#~ msgstr "gráficos"
 
 #~ msgid "hits"
 #~ msgstr "hits"

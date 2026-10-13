@@ -2956,10 +2956,6 @@ msgid "AI"
 msgstr "AIX"
 
 #, fuzzy
-msgid "AI Assistant"
-msgstr "Instantie"
-
-#, fuzzy
 msgid "AI assistance"
 msgstr "Instantie"
 
@@ -51946,11 +51942,11 @@ msgid "Oracle databases"
 msgstr "Azure Databases"
 
 #, fuzzy
-msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
-msgstr "ORACLE-databases (Linux, Solaris, AIX, Windows)"
+msgid "Oracle databases (Experimental)"
+msgstr "Azure Databases"
 
 #, fuzzy
-msgid "Oracle databases (Linux, Solaris, AIX, Windows) (Experimental)"
+msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
 msgstr "ORACLE-databases (Linux, Solaris, AIX, Windows)"
 
 #, fuzzy
@@ -75701,6 +75697,10 @@ msgstr ""
 msgid "The version of this site is not a %s"
 msgstr "De versie van deze site is geen %s"
 
+#, python-format
+msgid "The versions '%(min)s' and '%(max)s' cannot be compared."
+msgstr ""
+
 #, fuzzy, python-format
 msgid ""
 "The view '%s' using the data source '%s' can not be rendered because the "
@@ -77144,6 +77144,17 @@ msgid ""
 "This field is intended for additional information that may help other users "
 "(and your future self) to understand the rule's purpose and the configured "
 "attributes. This comment is only visible in this dialog."
+msgstr ""
+
+msgid ""
+"This field supports the use of macros. The corresponding plug-in replaces "
+"the macros with the actual values."
+msgstr ""
+
+msgid ""
+"This field supports the use of macros. The corresponding plug-in replaces "
+"the macros with the actual values. The most common ones are $HOSTNAME$, "
+"$HOSTALIAS$ or $HOSTADDRESS$."
 msgstr ""
 
 #, python-format
@@ -80882,8 +80893,8 @@ msgstr ""
 msgid ""
 "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system. "
 "Currently not all options are available in all operating systems.<br><b>Note:"
-"</b> This plug-in cannot be used together with the 'Oracle databases (Linux, "
-"Solaris, AIX, Windows) (Experimental)'. Please configure only one of the two."
+"</b> This plug-in cannot be used together with the 'Oracle databases "
+"(Experimental)'. Please configure only one of the two."
 msgstr ""
 "Dit zal de agent plugin <tt>mk_oracle</tt> op uw doelsysteem implementeren. "
 "Momenteel zijn niet alle opties beschikbaar in alle besturingssystemen."
@@ -96154,6 +96165,9 @@ msgstr "grafiek"
 msgid "graph number %d"
 msgstr "grafieknummer %d"
 
+msgid "graphs"
+msgstr "grafieken"
+
 msgid "group by"
 msgstr "groep door"
 
@@ -96863,6 +96877,10 @@ msgid_plural ""
 "table: 'Predicted notifications')"
 msgstr[0] ""
 msgstr[1] ""
+
+#, fuzzy
+msgid "notifications"
+msgstr "Kennisgevingen"
 
 msgid "notifications within last"
 msgstr "kennisgevingen binnen de laatste"
@@ -102874,6 +102892,14 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "AI Assistant"
+#~ msgstr "Instantie"
+
+#, fuzzy
+#~ msgid "Oracle databases (Linux, Solaris, AIX, Windows) (Experimental)"
+#~ msgstr "ORACLE-databases (Linux, Solaris, AIX, Windows)"
+
+#, fuzzy
 #~ msgid "contact groups"
 #~ msgstr "contactgroepen: "
 
@@ -107157,9 +107183,6 @@ msgstr ""
 #~ "Your license has been suspended. Please contact the Checkmk sales team at "
 #~ "%s. "
 #~ msgstr "Licentie geschorst: Neem nu contact op met het Checkmk verkoopteam"
-
-#~ msgid "graphs"
-#~ msgstr "grafieken"
 
 #~ msgid "hits"
 #~ msgstr "hits"

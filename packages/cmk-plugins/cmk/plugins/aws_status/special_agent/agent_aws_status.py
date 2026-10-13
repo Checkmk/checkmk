@@ -83,9 +83,7 @@ def _get_rss() -> requests.Response:
     return requests.get("https://status.aws.amazon.com/rss/all.rss", timeout=900)
 
 
-def write_section(
-    args: argparse.Namespace, get_rss: typing.Callable[[], requests.Response] = _get_rss
-) -> int:
+def write_section(args: argparse.Namespace, get_rss: typing.Callable[[], requests.Response]) -> int:
     response = get_rss()
     section = AgentOutput(
         discovery_param=DiscoveryParam.model_validate(vars(args)),
@@ -98,7 +96,7 @@ def write_section(
 
 @report_agent_crashes(AGENT, __version__)
 def main() -> int:
-    return write_section(parse_arguments(sys.argv[1:]))
+    return write_section(parse_arguments(sys.argv[1:]), get_rss=_get_rss)
 
 
 if __name__ == "__main__":

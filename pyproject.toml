@@ -89,6 +89,11 @@ ignore = [
 max-complexity = 64 # TODO: This is far too much, we need to lower this!
 
 [tool.ruff.lint.isort]
+# Same-package detection looks for __init__.py files next to the linted file.
+# The sandbox of `bazel lint` only contains the sources of the linted target,
+# which often lack the __init__.py of their package, so the import order would
+# differ between `bazel lint` and a plain `ruff check`.
+detect-same-package = false
 known-first-party = ["agents", "buildscripts", "cmk", "scripts", "tests"]
 known-third-party = [
   "fastapi",      # avoid confusion with the cmk.fastapi package

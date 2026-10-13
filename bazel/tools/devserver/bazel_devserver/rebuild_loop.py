@@ -15,6 +15,7 @@ from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path, PurePosixPath
 from typing import NamedTuple, override
 
+from bazel_devserver.errors import DevServerError
 from watchdog.events import (
     DirCreatedEvent,
     DirDeletedEvent,
@@ -28,8 +29,6 @@ from watchdog.events import (
 )
 from watchdog.observers import Observer
 from watchdog.observers.api import ObservedWatch
-
-from bazel_devserver.errors import DevServerError
 
 _logger = logging.getLogger(__name__)
 

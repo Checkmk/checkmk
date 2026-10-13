@@ -9,22 +9,20 @@ from pathlib import Path
 import pytest
 
 from cmk.utils.werks.__main__ import main as cmk_utils_werks_main
-from cmk.werks.tool.config import try_load_current_version_from_defines_make
+from cmk.werks.flavor.cmk import CmkFlavor
+from cmk.werks.tool.flavor import current_version as read_current_version
 from cmk.werks.tool.utils import load_precompiled_werks_file
 from cmk.werks.tool.utils.__main__ import main as cmk_werks_main
 from cmk.werks.tool.validate import main as validate_main
 from tests.code_quality.bazel_utils import bazel_repo_root
 
 WERKS_DIR = bazel_repo_root() / ".werks"
-DEFINES_MAKE_PATH = bazel_repo_root() / "defines.make"
 CONFIG_PATH = WERKS_DIR / "config"
 
 
 @pytest.fixture()
 def current_version() -> str:
-    version = try_load_current_version_from_defines_make(DEFINES_MAKE_PATH)
-    assert version is not None, "Could not determine current version from defines.make"
-    return version
+    return read_current_version(CmkFlavor(), bazel_repo_root())
 
 
 def test_validate_all_werks() -> None:
@@ -32,7 +30,7 @@ def test_validate_all_werks() -> None:
     validate_main(
         werks_to_check=list(WERKS_DIR.iterdir()),
         werks_config=CONFIG_PATH,
-        defines_make=DEFINES_MAKE_PATH,
+        repo_root=bazel_repo_root(),
         version_regex=re.compile(r"^\d\.\d\.\d([ipb]\d+)?$"),
     )
 

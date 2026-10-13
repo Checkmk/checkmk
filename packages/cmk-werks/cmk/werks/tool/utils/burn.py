@@ -6,16 +6,17 @@
 import sys
 from pathlib import Path
 
+from cmk.werks.flavor.cmk import CmkFlavor
 from cmk.werks.tool import parse_werk
 
-from ..config import RuntimeConfiguration
 from ..constants import NON_WERK_FILES_IN_WERK_FOLDER
+from ..flavor import current_version
 from ..format import format_as_markdown_werk
 
 
 def main(repo_root: Path) -> None:
-    rc = RuntimeConfiguration(repo_root)
-    version_to_be_burned = rc.get_defines_make_version()
+    flavor = CmkFlavor()
+    version_to_be_burned = current_version(flavor, repo_root)
 
     werk_dir: Path = repo_root / ".werks"
 

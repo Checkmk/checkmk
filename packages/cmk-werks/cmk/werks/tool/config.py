@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from pathlib import Path
 
 from pydantic import BaseModel, model_validator, ValidationInfo
@@ -48,25 +48,6 @@ class Config(BaseModel):
         raise ValueError("current_version must be provided either directly or via context")
 
 
-def try_load_version_from_defines_make_content(
-    defines_make_content: Iterator[bytes],
-) -> str | None:
-    for line in defines_make_content:
-        if line.startswith(b"VERSION"):
-            return line.split(b"=", 1)[1].strip().decode("utf-8")
-    return None
-
-
-def try_load_current_version_from_defines_make(defines_make: Path) -> str | None:
-    try:
-        with defines_make.open("rb") as f:
-            return try_load_version_from_defines_make_content(f)
-    except FileNotFoundError:
-        pass
-
-    return None
-
-
 def load_config(werk_config: Path, *, current_version: str | None = None) -> Config:
     data: dict[str, object] = {}
     exec(werk_config.read_text(encoding="utf-8"), data, data)  # nosec B102 # BNS:aee528
@@ -76,22 +57,3 @@ def load_config(werk_config: Path, *, current_version: str | None = None) -> Con
         data,
         context={"current_version": current_version},
     )
-
-
-class RuntimeConfiguration:
-    def __init__(self, repo_root: Path):
-        self._repo_root = repo_root
-        self.__version: str | None = None
-
-    def get_defines_make_version(self) -> str:
-        if self.__version is not None:
-            return self.__version
-
-        defines_make = self._repo_root / "defines.make"
-        version = try_load_current_version_from_defines_make(defines_make)
-        if version is None:
-            raise RuntimeError(f"Could not load version from defines.make ({defines_make})")
-
-        self.__version = version
-
-        return version

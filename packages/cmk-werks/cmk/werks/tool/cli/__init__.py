@@ -22,14 +22,11 @@ from typing import Literal, NamedTuple
 
 from rich.console import Console
 
+from cmk.werks.flavor.cmk import CmkFlavor
+
 from .. import load_werk as cmk_werks_load_werk
 from .. import parse_werk
-from ..config import (
-    Config,
-    load_config,
-    RuntimeConfiguration,
-    try_load_current_version_from_defines_make,
-)
+from ..config import Config, load_config
 from ..format import format_as_markdown_werk
 from ..models import EditionV2, EditionV3
 from ..parse import WerkMetadata, WerkV2ParseResult, WerkV3ParseResult
@@ -318,7 +315,7 @@ def get_last_werk() -> WerkId:
 
 @cache
 def get_config() -> Config:
-    current_version = try_load_current_version_from_defines_make(Path("../defines.make"))
+    current_version = CmkFlavor().read_current_version(Path(".."))
     return load_config(Path("config"), current_version=current_version)
 
 
@@ -502,12 +499,13 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:
     # arguments are tags from state, component and class. Multiple values
     # in one class are orred. Multiple types are anded.
 
-    # we os.chdir to the .werks folder quite early on
-    # but in this case we need the repo root:
-    rtc = RuntimeConfiguration(Path(".."))
-
     werks: list[Werk] = list(load_werks().values())
-    versions = sorted({resolve_version(rtc, werk.content.metadata["version"]) for werk in werks})
+    versions = sorted(
+        {
+            resolve_version(get_config().current_version, werk.content.metadata["version"])
+            for werk in werks
+        }
+    )
 
     filters: dict[_FilterKey, list[str]] = {}
     candidates: Sequence[tuple[_FilterKey, Sequence[str]]] = [

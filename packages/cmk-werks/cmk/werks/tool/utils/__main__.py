@@ -9,8 +9,9 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from cmk.ccc.version import Version
+from cmk.werks.flavor.cmk import CmkFlavor
 from cmk.werks.tool.collect import main as collect
-from cmk.werks.tool.config import RuntimeConfiguration
+from cmk.werks.tool.flavor import current_version
 from cmk.werks.tool.flavor_registry import FLAVOR_NAMES, get_flavor
 from cmk.werks.tool.models import EditionV2, EditionV3, WerkV3
 from cmk.werks.tool.utils import (
@@ -41,15 +42,15 @@ def _get_filter(filter_by_edition: str | None) -> EditionV3 | None:
 def main_precompile(args: argparse.Namespace) -> None:
     werks_list = load_raw_files(args.werk_dir)
 
-    rtc = RuntimeConfiguration(args.werk_dir.parent)
+    version = current_version(CmkFlavor(), args.werk_dir.parent)
 
     filter_by_edition = _get_filter(args.filter_by_edition)
 
-    current_version = Version.from_str(rtc.get_defines_make_version())
+    base_version = Version.from_str(version).base
 
     def _set_version(werk: WerkV3) -> WerkV3:
         if werk.version is None:
-            return werk.model_copy(update={"version": rtc.get_defines_make_version()})
+            return werk.model_copy(update={"version": version})
         return werk
 
     def _filter(werk: WerkV3) -> bool:
@@ -57,7 +58,7 @@ def main_precompile(args: argparse.Namespace) -> None:
 
         # include only werks matching the edition filter (if any) and this major version
         return (filter_by_edition is None or edition == filter_by_edition) and (
-            Version.from_str(resolve_version(rtc, werk.version)).base == current_version.base
+            Version.from_str(resolve_version(version, werk.version)).base == base_version
         )
 
     werks = {werk.id: _set_version(werk) for werk in werks_list if _filter(werk)}

@@ -3,14 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import io
-
-from cmk.werks.tool.config import try_load_version_from_defines_make_content
 from cmk.werks.tool.flavor import read_repo_file, RepoFiles
+
+VERSION_REGEX = r"^\d.\d.\d([ipb]\d+)?$"
 
 
 def version_from_defines_make(content: bytes) -> str | None:
-    return try_load_version_from_defines_make_content(io.BytesIO(content))
+    for line in content.splitlines():
+        if line.startswith(b"VERSION"):
+            return line.split(b"=", 1)[1].strip().decode("utf-8")
+    return None
 
 
 def read_current_version(repo: RepoFiles) -> str | None:

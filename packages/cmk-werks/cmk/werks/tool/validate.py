@@ -10,19 +10,24 @@ import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
+from cmk.werks.flavor.cmk import CmkFlavor
+
 from . import load_werk
-from .config import load_config, try_load_current_version_from_defines_make
+from .config import load_config
 from .constants import NON_WERK_FILES_IN_WERK_FOLDER
 
 
 def main(
     werks_to_check: Sequence[Path],
     werks_config: Path,
-    defines_make: Path,
-    version_regex: re.Pattern[str],
+    repo_root: Path,
+    version_regex: re.Pattern[str] | None,
 ) -> None:
-    current_version = try_load_current_version_from_defines_make(defines_make)
+    flavor = CmkFlavor()
+    current_version = flavor.read_current_version(repo_root)
     config = load_config(werks_config, current_version=current_version)
+    if version_regex is None:
+        version_regex = re.compile(flavor.version_regex)
     choices_component = {e[0] for e in config.all_components()}
 
     for werk_path in werks_to_check:
@@ -52,19 +57,12 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--version-regex",
         help="regex used to validate the version in the werk",
-        default=r"^\d.\d.\d([ipb]\d+)?$",
         type=re.compile,
     )
     parser.add_argument(
         "--werk-config",
         help="path to werks config, typically .werks/config",
         default=".werks/config",
-        type=Path,
-    )
-    parser.add_argument(
-        "--defines-make",
-        help="path to defines.make to load current version, typically defines.make",
-        default="defines.make",
         type=Path,
     )
     parser.add_argument(
@@ -95,7 +93,7 @@ def run(argv: Sequence[str], environ: Mapping[str, str], working_dir: Path) -> N
     main(
         _werks_to_check(args.werk_paths, environ.get("CHANGED_WERK_FILES"), working_dir),
         working_dir / args.werk_config,
-        working_dir / args.defines_make,
+        working_dir,
         args.version_regex,
     )
 

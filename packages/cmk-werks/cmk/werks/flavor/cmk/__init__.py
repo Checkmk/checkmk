@@ -13,6 +13,7 @@ from . import collect, version
 class CmkFlavor:
     name: Literal["cmk"] = "cmk"
     branch_regex = collect.BRANCH_REGEX
+    version_regex = version.VERSION_REGEX
 
     def read_current_version(self, repo: RepoFiles) -> str | None:
         return version.read_current_version(repo)

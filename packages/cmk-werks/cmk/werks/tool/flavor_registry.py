@@ -9,7 +9,7 @@ from typing import get_args, Literal
 
 from cmk.werks.flavor.cmk import CmkFlavor
 from cmk.werks.flavor.cmk.version import read_current_version as read_cmk_version
-from cmk.werks.flavor.cmk.version import version_from_defines_make
+from cmk.werks.flavor.cmk.version import version_from_defines_make, VERSION_REGEX
 
 from .flavor import Flavor, read_repo_file, RepoFiles
 
@@ -21,6 +21,7 @@ class _LegacyFlavor:
     name: str
     branch_regex: str
     read_current_version: Callable[[RepoFiles], str | None]
+    version_regex: str = VERSION_REGEX
 
     def cleanup_branch_name(self, branch_name: str) -> str:
         return branch_name

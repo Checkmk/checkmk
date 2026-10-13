@@ -8,7 +8,6 @@
 import argparse
 import datetime
 import difflib
-import io
 import json
 import logging
 import re
@@ -28,8 +27,8 @@ from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefine
 
 from cmk.ccc.version import Version
 from cmk.utils.mail import MailString, send_mail_sendmail, set_mail_headers
+from cmk.werks.flavor.cmk.version import version_from_defines_make
 from cmk.werks.tool import load_werk
-from cmk.werks.tool.config import try_load_version_from_defines_make_content
 from cmk.werks.tool.models import Class, Level, WerkV3
 from cmk.werks.tool.utils import WerkTranslator
 
@@ -417,9 +416,7 @@ def send_mail(
 
 def _load_base_version(commit: Commit) -> str:
     defines_make = commit.tree / "defines.make"
-    defines_make_version = try_load_version_from_defines_make_content(
-        io.BytesIO(defines_make.data_stream.read())
-    )
+    defines_make_version = version_from_defines_make(defines_make.data_stream.read())
     if defines_make_version is None:
         raise RuntimeError(f"Could not load version from defines.make in commit {commit}")
     # the version we read from defines.make is not the version this werk will be released with.

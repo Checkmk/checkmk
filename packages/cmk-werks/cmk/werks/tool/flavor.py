@@ -34,6 +34,11 @@ class Flavor(Protocol):
     def name(self) -> str: ...
 
     @property
+    def version_regex(self) -> str:
+        """Valid versions of a werk"""
+        ...
+
+    @property
     def branch_regex(self) -> str:
         """Branches collected for the website"""
         ...
@@ -49,3 +54,9 @@ class Flavor(Protocol):
     def adapt_werk_string(self, werk_string: str, werk_id: int) -> str:
         """Fixes up werks that are broken on released branches"""
         ...
+
+
+def current_version(flavor: Flavor, repo_root: Path) -> str:
+    if (version := flavor.read_current_version(repo_root)) is None:
+        raise RuntimeError(f"Could not determine the current version of {repo_root}")
+    return version

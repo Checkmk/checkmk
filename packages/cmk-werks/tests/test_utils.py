@@ -7,7 +7,6 @@ import json
 from pathlib import Path
 
 from cmk.werks.tool import load_werk
-from cmk.werks.tool.config import RuntimeConfiguration
 from cmk.werks.tool.models import EditionV3, WerkV3
 from cmk.werks.tool.utils import (
     load_precompiled_werks_file,
@@ -66,10 +65,8 @@ def test_werks_of_one_version_are_sorted_by_component_title() -> None:
     assert [werk.id for werk in sort_by_version_and_component(werks)] == [2, 1]
 
 
-def test_an_unreleased_version_comes_from_defines_make(tmp_path: Path) -> None:
-    (tmp_path / "defines.make").write_text("VERSION := 2.5.0b1\n", encoding="utf-8")
-
-    assert resolve_version(RuntimeConfiguration(tmp_path), None) == "2.5.0b1"
+def test_an_unreleased_werk_gets_the_current_version() -> None:
+    assert resolve_version("2.5.0b1", None) == "2.5.0b1"
 
 
 def test_the_classes_are_offered_by_their_name() -> None:

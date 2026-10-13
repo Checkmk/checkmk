@@ -5146,6 +5146,16 @@ class CustomServiceClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def template_attributes(
+        self, metric_step: Mapping[str, Any], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/template_attributes/invoke",
+            body=dict(metric_step),
+            expect_ok=expect_ok,
+        )
+
 
 class AlertClient(RestApiClient):
     domain: DomainType = "telemetry_alert"

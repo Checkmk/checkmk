@@ -239,6 +239,7 @@ CmkEndpointName = Literal[
     "cmk/show_maps_ticket",
     "cmk/show_dashboard_responsive_grid",
     "cmk/show_site_global_setting",
+    "cmk/show_template_attributes",
     "cmk/sign",
     "cmk/start",
     "cmk/translate_metric_names",

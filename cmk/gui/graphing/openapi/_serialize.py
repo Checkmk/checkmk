@@ -17,7 +17,7 @@ from cmk.graphing_engine import TimeRange as EngineTimeRange
 from cmk.gui.i18n import _
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
-from .._drawn_curves import drawn_curves, DrawnCurve
+from .._drawn_curves import drawn_curves_with_references, DrawnCurve
 from .._source import FetchDiagnostics
 from .._unit_format import unit_to_unit_format
 from .._user_specific_unit import apply_temperature_unit
@@ -174,7 +174,7 @@ def evaluated_to_response(
         time_range=api_time_range_from_engine(evaluated.time_range),
         metrics=[
             curve_to_api_metric(drawn, temperature_unit)
-            for drawn in drawn_curves(evaluated.stacks, evaluated.lines, include_reference=True)
+            for drawn in drawn_curves_with_references(evaluated.stacks, evaluated.lines)
         ],
         horizontal_lines=horizontal_lines_to_api(evaluated, temperature_unit),
         shaded_regions=shaded_regions_to_api(evaluated, temperature_unit),

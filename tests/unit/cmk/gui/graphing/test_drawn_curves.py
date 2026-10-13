@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable
+
 from cmk.graphing_engine import (
     AutoPrecision,
     Curve,
@@ -17,7 +19,12 @@ from cmk.graphing_engine import (
     Stack,
     Unit,
 )
-from cmk.gui.graphing import drawn_curves, line_type_with_mirroring
+from cmk.gui.graphing import (
+    drawn_curves,
+    drawn_curves_with_references,
+    DrawnCurve,
+    line_type_with_mirroring,
+)
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 
@@ -33,9 +40,7 @@ def _curve(name: str) -> Curve:
     )
 
 
-def _drawn(
-    graph: Graph, *, include_reference: bool = False
-) -> list[tuple[str, str, bool, str | None, bool]]:
+def _drawn(curves: Iterable[DrawnCurve[Curve]]) -> list[tuple[str, str, bool, str | None, bool]]:
     return [
         (
             drawn.curve.attributes.title,
@@ -44,7 +49,7 @@ def _drawn(
             drawn.stack,
             drawn.hidden,
         )
-        for drawn in drawn_curves(graph.stacks, graph.lines, include_reference=include_reference)
+        for drawn in curves
     ]
 
 
@@ -57,7 +62,7 @@ def test_the_curve_that_opens_a_stack_is_the_area_and_the_rest_pile_onto_it() ->
         lines=[Line(curve=_curve("c"), inverse=False)],
     )
 
-    assert _drawn(graph) == [
+    assert _drawn(drawn_curves(graph.stacks, graph.lines)) == [
         ("a", "area", False, "stack-0", False),
         ("b", "stack", False, "stack-0", False),
         ("c", "line", False, None, False),
@@ -73,7 +78,7 @@ def test_a_mirrored_stack_and_line_report_their_mirroring() -> None:
         lines=[Line(curve=_curve("b"), inverse=True)],
     )
 
-    assert _drawn(graph) == [
+    assert _drawn(drawn_curves(graph.stacks, graph.lines)) == [
         ("a", "area", True, "stack-0", False),
         ("b", "line", True, None, False),
     ]
@@ -96,7 +101,7 @@ def test_every_stack_gets_its_own_identifier() -> None:
     ]
 
 
-def test_the_baseline_a_stack_draws_against_is_left_out_by_default() -> None:
+def test_the_baseline_a_stack_draws_against_is_left_out() -> None:
     graph = Graph(
         name="g",
         title="t",
@@ -104,10 +109,12 @@ def test_the_baseline_a_stack_draws_against_is_left_out_by_default() -> None:
         stacks=[Stack(members=[_curve("drawn")], inverse=False, reference=_curve("baseline"))],
     )
 
-    assert _drawn(graph) == [("drawn", "area", False, "stack-0", False)]
+    assert _drawn(drawn_curves(graph.stacks, graph.lines)) == [
+        ("drawn", "area", False, "stack-0", False)
+    ]
 
 
-def test_a_requested_baseline_is_hidden_and_opens_its_stack() -> None:
+def test_a_listed_baseline_is_hidden_and_opens_its_stack() -> None:
     # Exactly one curve per stack carries "area": whichever one opens it. A member drawn onto the
     # baseline piles onto it, so a second "area" would split the stack in two on the way back.
     graph = Graph(
@@ -123,7 +130,7 @@ def test_a_requested_baseline_is_hidden_and_opens_its_stack() -> None:
         ],
     )
 
-    assert _drawn(graph, include_reference=True) == [
+    assert _drawn(drawn_curves_with_references(graph.stacks, graph.lines)) == [
         ("baseline", "area", False, "stack-0", True),
         ("drawn", "stack", False, "stack-0", False),
         ("piled", "stack", False, "stack-0", False),

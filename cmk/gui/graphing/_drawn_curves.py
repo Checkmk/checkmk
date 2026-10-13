@@ -6,9 +6,9 @@
 
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
-from typing import Protocol
+from typing import assert_never, Protocol
 
-from ._line_types import DrawnLineType, line_type_mirror, LineType
+from ._line_types import DrawnLineType, LineType
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -36,39 +36,20 @@ class _DrawnLine[CurveT](Protocol):
     def inverse(self) -> bool: ...
 
 
-def drawn_curves[CurveT](
-    stacks: Sequence[_DrawnStack[CurveT]],
-    lines: Sequence[_DrawnLine[CurveT]],
-    *,
-    include_reference: bool = False,
+def _drawn_stack[CurveT](
+    layers: Sequence[tuple[CurveT, bool]], identifier: str, mirrored: bool
 ) -> Iterator[DrawnCurve[CurveT]]:
-    """The curves of a graph in the order it draws them.
+    for position, (curve, hidden) in enumerate(layers):
+        yield DrawnCurve(
+            curve=curve,
+            line_type="stack" if position else "area",
+            mirrored=mirrored,
+            stack=identifier,
+            hidden=hidden,
+        )
 
-    A stack's reference is the baseline the renderer draws against, not a curve of its own, so it
-    is yielded as hidden and only on request. A graph definition and an evaluated graph walk the
-    same way.
-    """
-    for index, stack in enumerate(stacks):
-        identifier = f"stack-{index}"
-        opened = False
-        if include_reference and stack.reference is not None:
-            yield DrawnCurve(
-                curve=stack.reference,
-                line_type="area",
-                mirrored=stack.inverse,
-                stack=identifier,
-                hidden=True,
-            )
-            opened = True
-        for member in stack.members:
-            yield DrawnCurve(
-                curve=member,
-                line_type="stack" if opened else "area",
-                mirrored=stack.inverse,
-                stack=identifier,
-                hidden=False,
-            )
-            opened = True
+
+def _drawn_lines[CurveT](lines: Sequence[_DrawnLine[CurveT]]) -> Iterator[DrawnCurve[CurveT]]:
     for line in lines:
         yield DrawnCurve(
             curve=line.curve,
@@ -79,6 +60,38 @@ def drawn_curves[CurveT](
         )
 
 
+def drawn_curves[CurveT](
+    stacks: Sequence[_DrawnStack[CurveT]], lines: Sequence[_DrawnLine[CurveT]]
+) -> Iterator[DrawnCurve[CurveT]]:
+    for index, stack in enumerate(stacks):
+        yield from _drawn_stack(
+            [(member, False) for member in stack.members], f"stack-{index}", stack.inverse
+        )
+    yield from _drawn_lines(lines)
+
+
+def drawn_curves_with_references[CurveT](
+    stacks: Sequence[_DrawnStack[CurveT]], lines: Sequence[_DrawnLine[CurveT]]
+) -> Iterator[DrawnCurve[CurveT]]:
+    for index, stack in enumerate(stacks):
+        reference = [] if stack.reference is None else [(stack.reference, True)]
+        yield from _drawn_stack(
+            [*reference, *((member, False) for member in stack.members)],
+            f"stack-{index}",
+            stack.inverse,
+        )
+    yield from _drawn_lines(lines)
+
+
 def line_type_with_mirroring(line_type: DrawnLineType, mirrored: bool) -> LineType:
-    """The line type spelled the way the legacy graph specifications and the API report it."""
-    return line_type_mirror(line_type) if mirrored else line_type
+    if not mirrored:
+        return line_type
+    match line_type:
+        case "line":
+            return "-line"
+        case "area":
+            return "-area"
+        case "stack":
+            return "-stack"
+        case other:
+            assert_never(other)

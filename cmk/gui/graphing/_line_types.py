@@ -4,25 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import assert_never, Literal
+from typing import Literal
 
 LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
 type DrawnLineType = Literal["line", "area", "stack"]
-
-
-def line_type_mirror(line_type: LineType) -> LineType:
-    match line_type:
-        case "line":
-            return "-line"
-        case "-line":
-            return "line"
-        case "area":
-            return "-area"
-        case "-area":
-            return "area"
-        case "stack":
-            return "-stack"
-        case "-stack":
-            return "stack"
-        case other:
-            assert_never(other)

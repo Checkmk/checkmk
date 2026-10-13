@@ -7,6 +7,7 @@ from ._built_graphs import BuiltGraph, DiscoveredGraphs
 from ._decoding import context_from_json, ensure_type
 from ._drawn_curves import (
     drawn_curves,
+    drawn_curves_with_references,
     DrawnCurve,
     line_type_with_mirroring,
 )
@@ -219,6 +220,7 @@ __all__ = [
     "discover_template_graphs",
     "DiscoveredGraphs",
     "drawn_curves",
+    "drawn_curves_with_references",
     "drawn_segments",
     "DrawnCurve",
     "DrawnLineType",

@@ -376,9 +376,9 @@ class ConfigDomainApache(ABCConfigDomain):
                 continue  # Skip the file written by this config domain
 
             for line in config_file.open(encoding="utf-8"):
-                if line.lstrip().startswith(varname):
-                    raw_value = line.split()[1]
-                    value = conv_func(raw_value)
+                parts = line.split()
+                if len(parts) >= 2 and parts[0] == varname:
+                    value = conv_func(parts[1])
 
         return value
 

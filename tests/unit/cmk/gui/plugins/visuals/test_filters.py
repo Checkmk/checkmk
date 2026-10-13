@@ -232,6 +232,17 @@ filter_tests = [
         ],
         expected_filters="",
     ),
+    # Testing base class RegexFilter
+    FilterTest(
+        ident="event_host_regex",
+        request_vars=[("event_host_regex", "^web.*")],
+        expected_filters="Filter: event_host ~~ ^web.*\n",
+    ),
+    FilterTest(
+        ident="event_host_regex",
+        request_vars=[("event_host_regex", "^web.*"), ("neg_event_host_regex", "on")],
+        expected_filters="Filter: event_host !~~ ^web.*\n",
+    ),
     # Testing base class EventFilterState
     FilterTest(
         ident="event_phase",
@@ -239,6 +250,17 @@ filter_tests = [
         expected_filters=(
             "Filter: event_phase = ack\n" "Filter: event_phase = counting\n" "Or: 2\n"
         ),
+    ),
+    # Testing base class RegexFilter
+    FilterTest(
+        ident="event_text",
+        request_vars=[("event_text", "disk full")],
+        expected_filters="Filter: event_text ~~ disk full\n",
+    ),
+    FilterTest(
+        ident="event_text",
+        request_vars=[("event_text", "disk full"), ("neg_event_text", "on")],
+        expected_filters="Filter: event_text !~~ disk full\n",
     ),
     # Testing base class FilterOption
     FilterTest(
@@ -255,6 +277,17 @@ filter_tests = [
         ident="has_performance_data",
         request_vars=[("is_has_performance_data", "-1")],
         expected_filters="",
+    ),
+    # Testing base class RegexFilter
+    FilterTest(
+        ident="history_who",
+        request_vars=[("history_who", "cmkadmin")],
+        expected_filters="Filter: history_who ~~ cmkadmin\n",
+    ),
+    FilterTest(
+        ident="history_who",
+        request_vars=[("history_who", "cmkadmin"), ("neg_history_who", "on")],
+        expected_filters="Filter: history_who !~~ cmkadmin\n",
     ),
     FilterTest(
         ident="host",

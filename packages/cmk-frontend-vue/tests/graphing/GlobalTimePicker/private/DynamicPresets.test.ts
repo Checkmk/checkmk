@@ -119,3 +119,21 @@ describe('DynamicPresets variant', () => {
     expect(emitted).toEqual([PRESETS[1]])
   })
 })
+
+describe('DynamicPresets tooltips', () => {
+  test('a dropdown option tooltip does not reopen with the dropdown after a pick', async () => {
+    const user = userEvent.setup()
+    renderPresets({ variant: 'condensed' })
+    const combobox = screen.getByRole('combobox', { name: 'Time ranges' })
+    await user.click(combobox)
+    await user.hover(await screen.findByText('Last 4 hours'))
+    await screen.findByRole('tooltip', { hidden: true })
+    await user.keyboard('{Enter}')
+
+    await user.unhover(combobox)
+    await user.click(combobox)
+    await screen.findByRole('option', { name: 'Last 4 hours' })
+
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull()
+  })
+})

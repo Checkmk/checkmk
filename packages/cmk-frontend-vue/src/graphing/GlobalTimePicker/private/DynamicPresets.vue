@@ -6,7 +6,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkChipSelect from 'cmk-ui-library/components/CmkChipSelect.vue'
 import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
-import { CmkTimeRangeTooltip } from 'cmk-ui-library/components/date-time'
+import CmkTooltip, {
+  CmkTooltipContent,
+  CmkTooltipProvider,
+  CmkTooltipTrigger
+} from 'cmk-ui-library/components/CmkTooltip'
+import { useRelativeTimeRangeText } from 'cmk-ui-library/components/date-time'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
@@ -87,6 +92,17 @@ function onOverflowSelect(name: string | null): void {
   }
 }
 
+const openPresetKey = ref<string | null>(null)
+const rangeText = useRelativeTimeRangeText(computed(() => openPresetKey.value !== null))
+
+function setPresetOpen(key: string, open: boolean): void {
+  if (open) {
+    openPresetKey.value = key
+  } else if (openPresetKey.value === key) {
+    openPresetKey.value = null
+  }
+}
+
 function durationFor(name: string | null): number | null {
   return presetById.value.get(toPresetId(name))?.totalSeconds ?? null
 }
@@ -125,15 +141,24 @@ function durationFor(name: string | null): number | null {
     </div>
 
     <template v-if="!isCondensed">
-      <CmkTimeRangeTooltip
-        v-for="preset in visiblePresets"
-        :key="preset.id ?? '__custom__'"
-        :duration-seconds="preset.totalSeconds || null"
-      >
-        <TimeRangeChip :selected="activePresetId === preset.id" @click="emit('apply', preset)">
-          {{ preset.label }}
-        </TimeRangeChip>
-      </CmkTimeRangeTooltip>
+      <CmkTooltipProvider>
+        <CmkTooltip
+          v-for="preset in visiblePresets"
+          :key="preset.id ?? '__custom__'"
+          :open="openPresetKey === (preset.id ?? '__custom__') && !!preset.totalSeconds"
+          @update:open="setPresetOpen(preset.id ?? '__custom__', $event)"
+          @vue:unmounted="setPresetOpen(preset.id ?? '__custom__', false)"
+        >
+          <CmkTooltipTrigger as-child>
+            <TimeRangeChip :selected="activePresetId === preset.id" @click="emit('apply', preset)">
+              {{ preset.label }}
+            </TimeRangeChip>
+          </CmkTooltipTrigger>
+          <CmkTooltipContent side="top" align="center" variant="text" :avoid-collisions="true">
+            {{ rangeText(preset.totalSeconds || null) }}
+          </CmkTooltipContent>
+        </CmkTooltip>
+      </CmkTooltipProvider>
     </template>
 
     <div v-if="isCondensed || hasOverflow" class="graphing-dynamic-presets__overflow">
@@ -146,9 +171,23 @@ function durationFor(name: string | null): number | null {
         @update:model-value="onOverflowSelect"
       >
         <template #option="{ suggestion }">
-          <CmkTimeRangeTooltip :duration-seconds="durationFor(suggestion.name)">
-            <span>{{ suggestion.title }}</span>
-          </CmkTimeRangeTooltip>
+          <CmkTooltipProvider>
+            <CmkTooltip
+              :open="
+                openPresetKey === (suggestion.name ?? '__custom__') &&
+                durationFor(suggestion.name) !== null
+              "
+              @update:open="setPresetOpen(suggestion.name ?? '__custom__', $event)"
+              @vue:unmounted="setPresetOpen(suggestion.name ?? '__custom__', false)"
+            >
+              <CmkTooltipTrigger as-child>
+                <span>{{ suggestion.title }}</span>
+              </CmkTooltipTrigger>
+              <CmkTooltipContent side="top" align="center" variant="text" :avoid-collisions="true">
+                {{ rangeText(durationFor(suggestion.name)) }}
+              </CmkTooltipContent>
+            </CmkTooltip>
+          </CmkTooltipProvider>
         </template>
       </CmkChipSelect>
     </div>

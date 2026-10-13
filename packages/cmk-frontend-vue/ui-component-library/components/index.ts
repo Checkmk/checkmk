@@ -61,7 +61,6 @@ import UclCmkDatePicker from './form-elements/date-time/UclCmkDatePicker.vue'
 import UclCmkDateTimePicker from './form-elements/date-time/UclCmkDateTimePicker.vue'
 import UclCmkTimePicker from './form-elements/date-time/UclCmkTimePicker.vue'
 import UclCmkTimeRangePicker from './form-elements/date-time/UclCmkTimeRangePicker.vue'
-import UclCmkTimeRangeTooltip from './form-elements/date-time/UclCmkTimeRangeTooltip.vue'
 import UclCmkFilterDisplayItem from './form-elements/filter/UclCmkFilterDisplayItem.vue'
 import UclCmkFilterInputItem from './form-elements/filter/UclCmkFilterInputItem.vue'
 import UclCmkFilterSelection from './form-elements/filter/UclCmkFilterSelection.vue'
@@ -152,8 +151,7 @@ const formElementsPages = [
     new Page('CmkTimePicker', UclCmkTimePicker),
     new Page('CmkDatePicker', UclCmkDatePicker),
     new Page('CmkDateTimePicker', UclCmkDateTimePicker),
-    new Page('CmkTimeRangePicker', UclCmkTimeRangePicker),
-    new Page('CmkTimeRangeTooltip', UclCmkTimeRangeTooltip)
+    new Page('CmkTimeRangePicker', UclCmkTimeRangePicker)
   ]),
   new Folder('Filters', [
     new Page('CmkFilterInputItem', UclCmkFilterInputItem),

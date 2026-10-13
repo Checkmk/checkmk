@@ -427,7 +427,7 @@ hex_decode() {
     local i=0
     while [ "$i" -lt ${#hex} ]; do
         printf '%b' "\x${hex:i:2}"
-        i=$(("$i" + 2))
+        i=$((i + 2))
     done
 }
 
@@ -1647,7 +1647,7 @@ _rt_pidfile_is_mine() {
 }
 
 _rt_pidfile_is_alive() {
-    [ "$(("$(get_epoch)" - "$(get_file_atime "${1}")"))" -le "${RTC_TIMEOUT}" ]
+    [ "$(($(get_epoch) - $(get_file_atime "${1}")))" -le "${RTC_TIMEOUT}" ]
 }
 
 _rt_timestamp() {

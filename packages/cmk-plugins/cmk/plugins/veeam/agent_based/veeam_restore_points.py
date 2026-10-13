@@ -16,6 +16,7 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     LevelsT,
+    Metric,
     render,
     Result,
     Service,
@@ -127,8 +128,10 @@ def check_veeam_restore_points(params: CheckParameters, section: BackupObject) -
         yield Result(state=State.UNKNOWN, summary="Number of restore points unknown")
     elif section.restore_points_count == 0:
         yield Result(state=State.CRIT, summary="0 restore points")
+        yield Metric("veeam_restore_points", 0)
     else:
         yield Result(state=State.OK, summary=f"{section.restore_points_count} restore points")
+        yield Metric("veeam_restore_points", section.restore_points_count)
         last = section.last_restore_point
         if last is None or last.creation_time is None:
             yield Result(state=State.UNKNOWN, summary="Newest restore point not found")

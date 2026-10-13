@@ -8,7 +8,7 @@ import json
 import pytest
 import time_machine
 
-from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.veeam.agent_based.veeam_restore_points import (
     BackupObject,
     check_veeam_restore_points,
@@ -86,6 +86,7 @@ def test_check_veeam_restore_points_summary_and_details() -> None:
     section = _section()
     assert list(check_veeam_restore_points(PARAMS, section)) == [
         Result(state=State.OK, summary="3 restore points"),
+        Metric("veeam_restore_points", 3),
         Result(state=State.OK, summary="last: 2 hours 0 minutes ago"),
         Result(state=State.OK, notice="Malware status: Clean"),
         Result(state=State.OK, notice="Platform: VMware"),
@@ -130,6 +131,7 @@ def test_check_veeam_restore_points_zero_restore_points_is_crit() -> None:
     section = _section(restorePointsCount=0, lastRestorePoint=None, malwareStatus=None)
     results = list(check_veeam_restore_points(PARAMS, section))
     assert results[0] == Result(state=State.CRIT, summary="0 restore points")
+    assert Metric("veeam_restore_points", 0) in results
     assert State.worst(*(r.state for r in results if isinstance(r, Result))) == State.CRIT
 
 
@@ -153,6 +155,11 @@ def test_check_veeam_restore_points_unknown_count_is_unknown() -> None:
     assert next(iter(check_veeam_restore_points(PARAMS, section))) == Result(
         state=State.UNKNOWN, summary="Number of restore points unknown"
     )
+
+
+def test_check_veeam_restore_points_unknown_count_has_no_metric() -> None:
+    section = _section(restorePointsCount=None)
+    assert not any(isinstance(r, Metric) for r in check_veeam_restore_points(PARAMS, section))
 
 
 @time_machine.travel("2026-10-01T02:00:00+00:00", tick=False)

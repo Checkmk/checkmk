@@ -166,6 +166,42 @@ def test_check_veeam_license_sockets_and_capacity_are_independent_of_instances()
     )
 
 
+def test_check_veeam_license_instances_usage_metrics() -> None:
+    section = parse_veeam_license(
+        _license(instanceLicenseSummary={"licensedInstancesNumber": 100, "usedInstancesNumber": 50})
+    )
+    results = list(check_veeam_license(PARAMS, section))
+    assert Metric("veeam_license_instances_licensed", 100) in results
+    assert Metric("veeam_license_instances_used", 50) in results
+
+
+def test_check_veeam_license_sockets_usage_metrics() -> None:
+    section = parse_veeam_license(
+        _license(socketLicenseSummary={"licensedSocketsNumber": 10, "usedSocketsNumber": 9})
+    )
+    results = list(check_veeam_license(PARAMS, section))
+    assert Metric("veeam_license_sockets_licensed", 10) in results
+    assert Metric("veeam_license_sockets_used", 9) in results
+
+
+def test_check_veeam_license_capacity_usage_metrics_are_in_bytes() -> None:
+    section = parse_veeam_license(
+        _license(capacityLicenseSummary={"licensedCapacityTb": 10.0, "usedCapacityTb": 2.5})
+    )
+    results = list(check_veeam_license(PARAMS, section))
+    assert Metric("veeam_license_capacity_licensed", 10e12) in results
+    assert Metric("veeam_license_capacity_used", 2.5e12) in results
+
+
+def test_check_veeam_license_zero_licensed_still_records_usage() -> None:
+    section = parse_veeam_license(
+        _license(instanceLicenseSummary={"licensedInstancesNumber": 0, "usedInstancesNumber": 0})
+    )
+    results = list(check_veeam_license(PARAMS, section))
+    assert Metric("veeam_license_instances_licensed", 0) in results
+    assert Metric("veeam_license_instances_used", 0) in results
+
+
 # Example response of GET /api/v1/license (VBR 13 REST API reference), without the
 # per-workload details
 STRING_TABLE: StringTable = [

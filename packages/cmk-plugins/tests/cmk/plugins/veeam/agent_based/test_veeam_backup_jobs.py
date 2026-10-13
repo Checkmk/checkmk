@@ -93,6 +93,7 @@ def test_check_veeam_backup_jobs_success() -> None:
         Result(state=State.OK, summary=f"Next run: {next_run}"),
         Result(state=State.OK, summary="Target repository: Default Backup Repository"),
         Result(state=State.OK, summary="Objects: 4"),
+        Metric("veeam_backup_job_objects", 4),
         Result(state=State.OK, summary="Type: Backup"),
     ]
 

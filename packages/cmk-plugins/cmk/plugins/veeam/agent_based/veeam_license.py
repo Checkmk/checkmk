@@ -17,6 +17,7 @@ from cmk.agent_based.v2 import (
     HostLabel,
     HostLabelGenerator,
     LevelsT,
+    Metric,
     render,
     Result,
     Service,
@@ -151,6 +152,17 @@ def _check_consumption(
     )
 
 
+def _usage_metrics(metric_prefix: str, licensed: float | None, used: float | None) -> CheckResult:
+    if licensed is not None:
+        yield Metric(f"{metric_prefix}_licensed", licensed)
+    if used is not None:
+        yield Metric(f"{metric_prefix}_used", used)
+
+
+def _tb_to_bytes(value: float | None) -> float | None:
+    return None if value is None else value * 1e12
+
+
 def check_veeam_license(params: CheckParameters, section: Section) -> CheckResult:
     yield Result(
         state=monitoring_state(section.status),
@@ -189,6 +201,11 @@ def check_veeam_license(params: CheckParameters, section: Section) -> CheckResul
         section.instances_used,
         params["consumption"],
     )
+    yield from _usage_metrics(
+        "veeam_license_instances",
+        section.instances_licensed,
+        section.instances_used,
+    )
     yield from _check_consumption(
         "Sockets used",
         "veeam_license_sockets_percent",
@@ -196,12 +213,22 @@ def check_veeam_license(params: CheckParameters, section: Section) -> CheckResul
         section.sockets_used,
         params["consumption"],
     )
+    yield from _usage_metrics(
+        "veeam_license_sockets",
+        section.sockets_licensed,
+        section.sockets_used,
+    )
     yield from _check_consumption(
         "Capacity used",
         "veeam_license_capacity_percent",
         section.capacity_licensed_tb,
         section.capacity_used_tb,
         params["consumption"],
+    )
+    yield from _usage_metrics(
+        "veeam_license_capacity",
+        _tb_to_bytes(section.capacity_licensed_tb),
+        _tb_to_bytes(section.capacity_used_tb),
     )
 
 

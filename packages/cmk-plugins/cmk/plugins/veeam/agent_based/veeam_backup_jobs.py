@@ -109,6 +109,7 @@ def check_veeam_backup_jobs(item: str, section: Section) -> CheckResult:
         yield Result(state=State.OK, summary=f"Target repository: {job.repository_name}")
 
     yield Result(state=State.OK, summary=f"Objects: {job.objects_count}")
+    yield Metric("veeam_backup_job_objects", job.objects_count)
     yield Result(state=State.OK, summary=f"Type: {job.job_type}")
 
 

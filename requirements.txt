@@ -2458,6 +2458,10 @@ kubernetes==36.0.3 \
     # via
     #   -c constraints.txt
     #   -r packages/cmk-plugins/requirements.in
+lark==1.3.1 \
+    --hash=sha256:b426a7a6d6d53189d318f2b6236ab5d6429eaf09259f1ca33eb716eed10d2905 \
+    --hash=sha256:c629b661023a014c37da873b4ff58a817398d12635d3bbb2c5a03be7fe5d1e12
+    # via pysmi
 lazy-object-proxy==1.12.0 \
     --hash=sha256:029d2b355076710505c9545aef5ab3f750d89779310e26ddf2b7b23f6ea03cd8 \
     --hash=sha256:08c465fb5cd23527512f9bd7b4c7ba6cec33e28aad36fbbe46bf7b858f9f3f7f \
@@ -4122,9 +4126,7 @@ pluggy==1.6.0 \
 ply==3.11 \
     --hash=sha256:00c7c1aaa88358b9c765b6d3000c6eec0ba42abca5351b095321aef446081da3 \
     --hash=sha256:096f9b8350b65ebd2fd1346b12452efe5b9607f7482813ffca50c22722a807ce
-    # via
-    #   pysmi
-    #   python-active-directory
+    # via python-active-directory
 polyfactory==3.3.0 \
     --hash=sha256:237258b6ff43edf362ffd1f68086bb796466f786adfa002b0ac256dbf2246e9a \
     --hash=sha256:686abcaa761930d3df87b91e95b26b8d8cb9fdbbbe0b03d5f918acff5c72606e
@@ -4914,11 +4916,10 @@ pysmb==1.2.15 \
     --hash=sha256:1c12eb0e251152e80b4bde5d816b33cab14d04b261b5f790cb4a5d9fd9653881 \
     --hash=sha256:f8459400dfcc9f1ec691936fc57d794803c4240516c27cb196024333f4947d7a
     # via -r cmk/requirements.in
-pysmi==1.6.3 \
-    --hash=sha256:5d2eeb9e98bc149dee8f9256899d13789206769aab1637e33ac5f0dacaaf51fb \
-    --hash=sha256:fc2d796c252379e1b47aeea2e547ff339ca6df504cf6196cb3adad8054f41e7d
+pysmi==2.0.0 \
+    --hash=sha256:9eeba85ed59c5de38f512fe9858ce3332864526f7efc8135b3e3f552666cf79b \
+    --hash=sha256:b5f11cbfa303a325eaaa5e00f9d76aadb63b12c35b2297bde5c4978e9ca06a52
     # via
-    #   -c constraints.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-ec/requirements.in
 pysnmp==7.1.30 \

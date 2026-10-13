@@ -24,6 +24,7 @@ export class Scheduler {
   _last_update: number
   _suspend_updates_until: number
   _backoff: BackoffTracker
+  _fetches_in_flight: number
 
   constructor(scheduled_function: () => void, update_interval: number) {
     this._scheduled_function = scheduled_function
@@ -32,6 +33,7 @@ export class Scheduler {
     this._last_update = 0
     this._suspend_updates_until = 0
     this._backoff = new BackoffTracker()
+    this._fetches_in_flight = 0
     setInterval(() => this._schedule(), 1000)
   }
 
@@ -56,6 +58,7 @@ export class Scheduler {
   }
 
   update_if_older_than(seconds: number) {
+    if (this._fetches_in_flight > 0) return
     const now = Math.floor(new Date().getTime() / 1000)
     if (now > this._last_update + seconds) {
       this._scheduled_function()
@@ -78,8 +81,20 @@ export class Scheduler {
     this._last_update = Math.floor(new Date().getTime() / 1000)
   }
 
+  // A forced update can start a fetch while another one is still running, hence a count
+  fetch_started() {
+    this._fetches_in_flight += 1
+  }
+
+  // The interval counts from the answer, so a slow server is not sent the next request on top
+  fetch_finished() {
+    this._fetches_in_flight -= 1
+    this._last_update = Math.floor(new Date().getTime() / 1000)
+  }
+
   _schedule() {
     if (!this._enabled) return
+    if (this._fetches_in_flight > 0) return
     if (!is_window_active()) return
     if (this._backoff.is_suspended()) return
     const now = Math.floor(new Date().getTime() / 1000)

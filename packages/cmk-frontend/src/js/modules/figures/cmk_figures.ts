@@ -19,6 +19,10 @@ import {
 import type { ElementMargin, ElementSize, FigureData, FigureWidgetContent } from './figure_types'
 import { Scheduler } from './multi_data_fetcher'
 
+// The scheduler waits for a fetch to finish, so one that never settles would stop the updates.
+// Generous, because the time a request queues for a free browser connection counts as well.
+const FETCH_TIMEOUT_MS = 600 * 1000
+
 // Allow only http(s) URLs and relative URLs (no colon means no scheme),
 // no 'javascript:' or 'data:' URLs.
 // Note: this is just an additional safeguard, the backend still must ensure
@@ -182,13 +186,15 @@ export abstract class FigureBase<
     }
 
     this._fetch_start = Math.floor(new Date().getTime() / 1000)
+    this.scheduler.fetch_started()
     json(encodeURI(post_settings.url), {
       credentials: 'include',
       method: 'POST',
       body: post_settings.body,
       headers: {
         'Content-type': 'application/x-www-form-urlencoded'
-      }
+      },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
     })
       .then((json_data) =>
         this._process_api_response(json_data as CMKAjaxReponse<{ figure_response: T }>)
@@ -198,6 +204,7 @@ export abstract class FigureBase<
         this.remove_loading_image()
         this.scheduler.report_failure()
       })
+      .then(() => this.scheduler.fetch_finished())
   }
 
   _process_api_response(api_response: CMKAjaxReponse<{ figure_response: T }>) {

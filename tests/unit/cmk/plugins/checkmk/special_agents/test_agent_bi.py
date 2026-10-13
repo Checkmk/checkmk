@@ -140,7 +140,6 @@ class TestAggregationRawdataGenerator:
         assert agg_gen._site_url == expected_site_url  # noqa: SLF001
 
 
-@pytest.mark.xfail(reason="SUP-30112: aggregation state requests do not explicitly handle time out")
 @responses.activate
 def test_aggregation_state_timeout_reports_server_detail() -> None:
     _create_automation_user_secret(UserId("automation"))

@@ -253,11 +253,11 @@ class AggregationRawdataGenerator:
             timeout=900,
         )
 
-        if response.status_code == HTTPStatus.SERVICE_UNAVAILABLE:
+        if response.status_code in {HTTPStatus.SERVICE_UNAVAILABLE, HTTPStatus.GATEWAY_TIMEOUT}:
             # BI aggregations are compiled asynchronously (see cmk.gui.bi._openapi); the
             # endpoint returns 503 with a human-readable `detail` while compilation is
-            # still pending. Surface that message instead of the generic HTTP error text,
-            # since this is an expected, self-resolving condition, not a connection error.
+            # still pending, and 504 once computing the state hits its time bound. Surface
+            # that message instead of the generic HTTP error text.
             raise RawdataException(self._get_error_detail(response))
 
         response.raise_for_status()

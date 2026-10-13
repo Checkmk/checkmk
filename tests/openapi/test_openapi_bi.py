@@ -549,7 +549,6 @@ def test_get_aggregation_state_not_yet_compiled(
     resp.assert_status_code(HTTPStatus.SERVICE_UNAVAILABLE)
 
 
-@pytest.mark.xfail(reason="SUP-30112: aggregation state requests do not explicitly handle time out")
 def test_get_aggregation_state_timed_out(
     clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,

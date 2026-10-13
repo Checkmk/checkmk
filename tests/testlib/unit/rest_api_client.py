@@ -5157,6 +5157,7 @@ class AlertClient(RestApiClient):
         alert_name: str,
         service_match: Mapping[str, Any],
         conditions: Mapping[str, Any] | None = None,
+        thresholds: Mapping[str, Any] | None = None,
         expect_ok: bool = True,
     ) -> Response:
         body: dict[str, Any] = {
@@ -5166,6 +5167,8 @@ class AlertClient(RestApiClient):
         }
         if conditions is not None:
             body["conditions"] = dict(conditions)
+        if thresholds is not None:
+            body["thresholds"] = dict(thresholds)
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/collections/all",

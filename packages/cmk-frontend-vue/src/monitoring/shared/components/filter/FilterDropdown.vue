@@ -95,7 +95,7 @@ const sort = defineModel<SortDirection>('sort', { default: false })
 const extendedSort = defineModel<SortDirection>('extendedSort', { default: false })
 
 const { _t } = usei18n()
-useWidgetKeys(_t('Filter'), [{ combo: ['ArrowDown'], description: _t('Open filter') }])
+useWidgetKeys(_t('Filter'), [{ combo: ['Alt', 'ArrowDown'], description: _t('Open filter') }])
 const panelId = useId()
 
 const vClickOutside = useClickOutside()
@@ -211,13 +211,13 @@ function toggle(): void {
   }
 }
 
-/** ArrowDown on the trigger opens the panel, like any dropdown; inside it the rows own the arrows. */
+/** Alt+ArrowDown on the trigger opens the panel, like any dropdown; inside it the rows own the arrows. */
 function onTriggerKeydown(event: KeyboardEvent): void {
   if (
     event.key !== 'ArrowDown' ||
     isOpen.value ||
     event.ctrlKey ||
-    event.altKey ||
+    !event.altKey ||
     event.metaKey ||
     event.shiftKey
   ) {

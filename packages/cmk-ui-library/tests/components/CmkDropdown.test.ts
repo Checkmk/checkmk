@@ -53,25 +53,27 @@ function renderSingleOption(): HTMLElement {
   return screen.getByRole('combobox', { name: 'some aria label' })
 }
 
-test('ArrowDown on the button opens the options', async () => {
+test('Alt+ArrowDown on the button opens the options, ArrowDown alone does not', async () => {
   const user = userEvent.setup()
   const dropdown = renderSingleOption()
   dropdown.focus()
 
   await user.keyboard('{ArrowDown}')
+  expect(dropdown).toHaveAttribute('aria-expanded', 'false')
 
+  await user.keyboard('{Alt>}{ArrowDown}{/Alt}')
   await screen.findByText('Option 1')
 })
 
-test('a second ArrowDown on the button keeps the options open', async () => {
+test('a second Alt+ArrowDown on the button keeps the options open', async () => {
   const user = userEvent.setup()
   const dropdown = renderSingleOption()
   dropdown.focus()
-  await user.keyboard('{ArrowDown}')
+  await user.keyboard('{Alt>}{ArrowDown}{/Alt}')
   await screen.findByText('Option 1')
   dropdown.focus()
 
-  await user.keyboard('{ArrowDown}')
+  await user.keyboard('{Alt>}{ArrowDown}{/Alt}')
 
   expect(dropdown).toHaveAttribute('aria-expanded', 'true')
 })

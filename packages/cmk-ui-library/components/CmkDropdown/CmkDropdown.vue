@@ -32,7 +32,7 @@ import CmkDropdownButton, { type ButtonVariants } from './CmkDropdownButton.vue'
 import TruncateText from './TruncateText.vue'
 
 const { _t } = usei18n()
-useWidgetKeys(_t('Dropdown'), [{ combo: ['ArrowDown'], description: _t('Open') }])
+useWidgetKeys(_t('Dropdown'), [{ combo: ['Alt', 'ArrowDown'], description: _t('Open') }])
 
 export interface DropdownOption {
   name: string
@@ -379,7 +379,7 @@ const group = computed<ButtonVariants['group']>(() => {
       :width="width"
       :class="{ 'cmk-dropdown__validation-error': formValidation }"
       @click="showSuggestions"
-      @keydown.down.prevent="openFromKeyboard"
+      @keydown.alt.down.exact.prevent="openFromKeyboard"
     >
       <span v-if="!!slots['button-prefix']" class="cmk-dropdown--button-prefix">
         <slot name="button-prefix"></slot>

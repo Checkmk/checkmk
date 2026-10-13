@@ -201,6 +201,16 @@ test('focusing a metrics-backend item reveals its attributes, blurring hides the
   await waitFor(() => expect(screen.queryByText('Resource attributes')).not.toBeInTheDocument())
 })
 
+test('the attributes popup is titled with the full metric name', async () => {
+  const title = 'Requests per second by endpoint'
+  render(GraphLegendCompact, { props: { metrics: [makeBackendMetric('requests', title)] } })
+  const trigger = document.querySelector('.graphing-graph-legend-compact__series--has-attributes')!
+
+  await fireEvent.focus(trigger)
+
+  await waitFor(() => expect(screen.getByText(title)).toBeInTheDocument())
+})
+
 test('only an item that has attributes is reachable by keyboard to reveal them', () => {
   const { container } = render(GraphLegendCompact, {
     props: {

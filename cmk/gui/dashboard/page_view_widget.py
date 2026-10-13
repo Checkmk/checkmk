@@ -584,7 +584,7 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
             )
 
     @override
-    def _redirect_to_shared_dashboard_page(self, token: AuthToken) -> PageResult:
+    def _redirect_to_shared_dashboard_page(self, token: AuthToken, ctx: PageContext) -> PageResult:
         # Since we're in an iframe we cannot just return a redirect response.
         # We also shouldn't just update `window.top`, since we expect shared dashboards to be used
         # within iframes as well.
@@ -592,10 +592,20 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
         # until we find the right page (shared_dashboard.py), falling back to the current window.
         search_name = f"{SharedDashboardPageComponents.page_name}.py"
         target_url = get_shared_dashboard_url(token.token_id)
+        # Only the page head loads the script that runs the redirect.
+        html.body_start(
+            lang=user.language,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+            screenshotmode=ctx.config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+        )
         html.call_ts_function(
             function_name="redirect_shared_dashboard",
             arguments={"search_name": search_name, "target_url": target_url},
         )
+        html.body_end()
         return None
 
 

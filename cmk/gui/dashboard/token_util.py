@@ -246,15 +246,15 @@ class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):
 
         return token.details
 
-    def _disable_and_redirect(self, token: AuthToken) -> PageResult:
+    def _disable_and_redirect(self, token: AuthToken, ctx: PageContext) -> PageResult:
         """Disable the token and redirect to the shared dashboard page.
 
         Redirection should then show the user a message that the token has been disabled.
         """
         disable_dashboard_token_by_id(token.token_id)
-        return self._redirect_to_shared_dashboard_page(token)
+        return self._redirect_to_shared_dashboard_page(token, ctx)
 
-    def _redirect_to_shared_dashboard_page(self, token: AuthToken) -> PageResult:
+    def _redirect_to_shared_dashboard_page(self, token: AuthToken, ctx: PageContext) -> PageResult:  # noqa: ARG002
         """Redirect to the shared dashboard page."""
         # NOTE: this must be handled by the widgets properly, otherwise they'll most likely just
         # display some error message because they can't handle the response.
@@ -278,7 +278,7 @@ class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):
 
         except InvalidWidgetError as e:
             if e.disable_token:
-                self._disable_and_redirect(token)
+                return self._disable_and_redirect(token, ctx)
 
             return self._handle_exception(e, ctx)
 

@@ -32,7 +32,6 @@ import docker.errors
 import docker.models.containers
 import docker.models.images
 import docker.types
-import dockerpty  # type: ignore[import-untyped,unused-ignore]
 import requests
 
 from tests.testlib.common.repo import git_commit_id, git_essential_directories, repo_path
@@ -117,15 +116,12 @@ def execute_tests_in_container(
             )
 
             if command:
-                dockerpty.exec_command(  # type: ignore[no-untyped-call,unused-ignore]
-                    client.api,
-                    container.id,
-                    ["sudo", "-u", _TESTUSER, "/git/scripts/run-uvenv"] + command,
+                _exec_interactive(
+                    container, ["sudo", "-u", _TESTUSER, "/git/scripts/run-uvenv"] + command
                 )
 
-            dockerpty.exec_command(  # type: ignore[no-untyped-call,unused-ignore]
-                client.api,
-                container.id,
+            _exec_interactive(
+                container,
                 [
                     "sudo",
                     "su",
@@ -160,6 +156,12 @@ def execute_tests_in_container(
 
 def _docker_client() -> docker.DockerClient:
     return docker.from_env(timeout=1200)
+
+
+def _exec_interactive(container: docker.models.containers.Container, command: list[str]) -> None:
+    # Use the docker CLI instead of the docker API: it attaches our terminal and keeps the
+    # container's PTY size in sync with it (initially and on resize).
+    subprocess.run(["docker", "exec", "-it", container.short_id] + command, check=False)
 
 
 def _get_or_load_image(

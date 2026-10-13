@@ -1266,11 +1266,6 @@ docker==7.2.0 \
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-dockerpty==0.4.1 \
-    --hash=sha256:69a9d69d573a0daa31bcd1c0774eeed5c15c295fe719c61aca550ed1393156ce
-    # via
-    #   -c requirements.txt
-    #   -r tests/dev-requirements.in
 docstring-parser==0.18.0 \
     --hash=sha256:292510982205c12b1248696f44959db3cdd1740237a968ea1e2e7a900eeb2015 \
     --hash=sha256:b3fcbed555c47d8479be0796ef7e19c2670d428d72e96da63f3a40122860374b
@@ -5760,7 +5755,6 @@ six==1.17.0 \
     --hash=sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81
     # via
     #   -c requirements.txt
-    #   dockerpty
     #   kubernetes
     #   opsgenie-sdk
     #   python-dateutil

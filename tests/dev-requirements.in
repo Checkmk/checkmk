@@ -9,7 +9,6 @@ datamodel-code-generator  # used for cmk-shared-typing generation
 dill
 djlint  # jinja template linter and formatter
 docker  # used by test_docker test and mk_docker agent plugin
-dockerpty  # used by dockerized tests for opening debug shells
 fakeredis[lua]  # used for testing code which uses Redis (lua is needed for faking features like "lock")
 furo  # sphinx theme
 hypothesis    # used by unit tests

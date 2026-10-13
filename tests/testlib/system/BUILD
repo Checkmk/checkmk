@@ -32,7 +32,6 @@ py_library(
         requirement("beautifulsoup4"),
         requirement("checkmk-dev-tools"),
         requirement("docker"),
-        requirement("dockerpty"),
         requirement("faker"),
         requirement("psutil"),
         requirement("pydantic"),

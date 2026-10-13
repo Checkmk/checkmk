@@ -289,7 +289,7 @@ describe('DashboardMenuHeader', () => {
         selectedDashboard: customDashboard,
         publicToken: activeToken
       })
-      expect(screen.getByText('Sharing')).toBeInTheDocument()
+      expect(screen.getByText('Public sharing')).toBeInTheDocument()
       expect(screen.getByText('active')).toBeInTheDocument()
     })
 
@@ -299,7 +299,7 @@ describe('DashboardMenuHeader', () => {
         selectedDashboard: customDashboard,
         publicToken: { ...activeToken, is_disabled: true }
       })
-      expect(screen.getByText('Sharing')).toBeInTheDocument()
+      expect(screen.getByText('Public sharing')).toBeInTheDocument()
       expect(screen.getByText('paused')).toBeInTheDocument()
     })
 

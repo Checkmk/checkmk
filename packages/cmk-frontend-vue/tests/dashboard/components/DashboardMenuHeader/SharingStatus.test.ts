@@ -25,19 +25,19 @@ describe('SharingStatus', () => {
   describe('sharing state without expiry', () => {
     it('shows disabled state', () => {
       renderSharingStatus({ sharingState: 'disabled' })
-      expect(screen.getByText('Sharing')).toBeInTheDocument()
+      expect(screen.getByText('Public sharing')).toBeInTheDocument()
       expect(screen.getByText('disabled')).toBeInTheDocument()
     })
 
     it('shows paused state', () => {
       renderSharingStatus({ sharingState: 'paused' })
-      expect(screen.getByText('Sharing')).toBeInTheDocument()
+      expect(screen.getByText('Public sharing')).toBeInTheDocument()
       expect(screen.getByText('paused')).toBeInTheDocument()
     })
 
     it('shows active state without expiry date', () => {
       renderSharingStatus({ sharingState: 'active' })
-      expect(screen.getByText('Sharing')).toBeInTheDocument()
+      expect(screen.getByText('Public sharing')).toBeInTheDocument()
       expect(screen.getByText('active')).toBeInTheDocument()
     })
   })
@@ -46,18 +46,18 @@ describe('SharingStatus', () => {
     it('shows date when expiry is more than 7 days away', () => {
       const futureDate = daysFromNow(30)
       renderSharingStatus({ sharingState: 'active', sharedUntil: futureDate })
-      expect(screen.getByText('Sharing until')).toBeInTheDocument()
+      expect(screen.getByText('Public sharing until')).toBeInTheDocument()
     })
 
     it('shows "expires in N days" when expiry is 2-7 days away', () => {
       renderSharingStatus({ sharingState: 'active', sharedUntil: daysFromNow(5) })
-      expect(screen.getByText('Sharing')).toBeInTheDocument()
+      expect(screen.getByText('Public sharing')).toBeInTheDocument()
       expect(screen.getByText('expires in 5 days')).toBeInTheDocument()
     })
 
     it('shows "expires in 1 day" when expiry is 1 day away', () => {
       renderSharingStatus({ sharingState: 'active', sharedUntil: daysFromNow(1) })
-      expect(screen.getByText('Sharing')).toBeInTheDocument()
+      expect(screen.getByText('Public sharing')).toBeInTheDocument()
       expect(screen.getByText('expires in 1 day')).toBeInTheDocument()
     })
 
@@ -65,14 +65,14 @@ describe('SharingStatus', () => {
       const today = new Date()
       today.setHours(today.getHours() - 1)
       renderSharingStatus({ sharingState: 'active', sharedUntil: today })
-      expect(screen.getByText('Sharing')).toBeInTheDocument()
+      expect(screen.getByText('Public sharing')).toBeInTheDocument()
       expect(screen.getByText('expires today')).toBeInTheDocument()
     })
 
     it('shows expired state when date is in the past', () => {
       const pastDate = daysFromNow(-5)
       renderSharingStatus({ sharingState: 'active', sharedUntil: pastDate })
-      expect(screen.getByText('Sharing expired on')).toBeInTheDocument()
+      expect(screen.getByText('Public sharing expired on')).toBeInTheDocument()
       expect(screen.getByText(pastDate.toISOString().split('T')[0]!)).toBeInTheDocument()
     })
   })

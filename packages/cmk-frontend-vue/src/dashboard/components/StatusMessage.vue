@@ -40,7 +40,13 @@ const bullet: string = '●'
     <span>{{ text }}</span>
     <template v-if="linkedText">
       <CmkSpace size="small" />
-      <a href="#" @click.prevent="$emit('click')">{{ linkedText }}</a>
+      <a
+        href="#"
+        class="db-status-message__linked-text"
+        role="button"
+        @click.prevent="$emit('click')"
+        >{{ linkedText }}</a
+      >
     </template>
   </div>
 </template>
@@ -50,10 +56,21 @@ const bullet: string = '●'
   display: flex;
   align-items: center;
   padding: var(--dimension-4) var(--dimension-6);
-  border-radius: var(--dimension-3);
-  background-color: var(--shared-dashboard-indicator-background);
   white-space: nowrap;
+  color: var(--popup-dialog-message-color);
   font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-default);
+}
+
+.db-status-message__linked-text {
+  color: var(--font-color) !important;
+  font-size: var(--font-size-normal);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .db-status-message__bullet-ok {

@@ -228,6 +228,86 @@ test('FormReadonly renders cascading/integer, 2nd choice', () => {
   screen.getByText('23 fooUnit')
 })
 
+function getFixedValueSpec(label: string | null, value: unknown): FormSpec.FixedValue {
+  return {
+    type: 'fixed_value',
+    title: 'fooTitle',
+    help: 'fooHelp',
+    validators: [],
+    value: value,
+    label: label
+  }
+}
+
+function getFixedValueCascadingSpec(
+  fixedValueSpec: FormSpec.FixedValue
+): FormSpec.CascadingSingleChoice {
+  return {
+    ...cascadingSingleChoiceFormSpec,
+    elements: [
+      {
+        name: 'fixedChoice',
+        title: 'fixedChoiceTitle',
+        default_value: null,
+        parameter_form: fixedValueSpec
+      }
+    ]
+  }
+}
+
+test.each([
+  { label: null, value: null },
+  { label: '', value: null },
+  { label: '', value: 'fixedValue' }
+])('FormReadonly omits colon for cascading/fixed_value without shown value %o', (fixedValue) => {
+  render(FormReadonly, {
+    props: {
+      spec: getFixedValueCascadingSpec(getFixedValueSpec(fixedValue.label, fixedValue.value)),
+      backendValidation: [],
+      data: ['fixedChoice', fixedValue.value]
+    }
+  })
+  screen.getByText('fixedChoiceTitle')
+  expect(screen.queryByText('fixedChoiceTitle:')).toBeNull()
+})
+
+test('FormReadonly renders cascading/fixed_value with label', () => {
+  render(FormReadonly, {
+    props: {
+      spec: getFixedValueCascadingSpec(getFixedValueSpec('fixedLabel', null)),
+      backendValidation: [],
+      data: ['fixedChoice', null]
+    }
+  })
+  screen.getByText('fixedChoiceTitle:')
+  screen.getByText('fixedLabel')
+})
+
+const fixedValueDictionaryFormSpec: FormSpec.Dictionary = {
+  ...dictionaryFormSpec,
+  elements: [
+    {
+      name: 'bar',
+      render_only: false,
+      required: false,
+      default_value: null,
+      parameter_form: getFixedValueSpec(null, null),
+      group: null
+    }
+  ]
+}
+
+test('FormReadonly renders dictionary element without shown value', () => {
+  render(FormReadonly, {
+    props: {
+      spec: fixedValueDictionaryFormSpec,
+      backendValidation: [],
+      data: { bar: null }
+    }
+  })
+  screen.getByText('fooTitle:')
+})
+
 const booleanChoiceFormSpec: FormSpec.BooleanChoice = {
   type: 'boolean_choice',
   title: 'fooTitle',

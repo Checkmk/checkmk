@@ -206,11 +206,10 @@ anthropic==1.13.0 \
     # via
     #   -c requirements.txt
     #   pydantic-ai-slim
-anyio==4.14.2 \
-    --hash=sha256:9f505dda5ac9f0c8309b5e8bd445a8c2bf7246f3ce950121e45ea15bc41d1494 \
-    --hash=sha256:cfa139f3ed1a23ee8f88a145ddb5ac7605b8bbfd8592baacd7ce3d8bb4313c7f
+anyio==4.15.1 \
+    --hash=sha256:6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101 \
+    --hash=sha256:9f28306018cbd6d329e64a36d58256edff76dd996fe423bc957326e578b82a94
     # via
-    #   -c constraints.txt
     #   -c requirements.txt
     #   anthropic
     #   google-genai
@@ -4717,9 +4716,9 @@ sse-starlette==3.5.0 \
     # via
     #   -c requirements.txt
     #   mcp
-starlette==1.7.0 \
-    --hash=sha256:67f8e99895493dd2911a03f11314af6ceebeae4e704bb9f43dfc6a9db151c93e \
-    --hash=sha256:c79f74ea63cff761804fbbfb182f1e0b440c2d07b164d24700c5a1bab5d6ff5d
+starlette==1.8.0 \
+    --hash=sha256:1565dc0b35d5737a271ed1e0e04e949f4e81198799f216d2667b0a0fb9cf9522 \
+    --hash=sha256:dfdd6b29c26483288088d990eee59631dedadd66ce20d203402a7ca8e3c4656f
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -4835,6 +4834,7 @@ typing-extensions==4.16.0 \
     #   -r cmk/requirements.in
     #   -r packages/cmk-fastapi/requirements.in
     #   anthropic
+    #   anyio
     #   azure-core
     #   azure-identity
     #   azure-storage-blob

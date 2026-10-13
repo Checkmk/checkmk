@@ -1188,9 +1188,11 @@ class Site:
         else:
             logger.info("Site is already running")
 
-        assert (
-            self.path("tmp").is_mount()
-        ), "The site does not have a tmpfs mounted! We require this for good performing tests"
+        # Non-root fstab mounts fail on SLES 16 (move_mount: ENOENT), so OMD runs without tmpfs.
+        if os.environ.get("DISTRO") != "sles-16.0":
+            assert (
+                self.path("tmp").is_mount()
+            ), "The site does not have a tmpfs mounted! We require this for good performing tests"
 
     @tracer.start_as_current_span("Site.stop")
     def stop(self) -> None:

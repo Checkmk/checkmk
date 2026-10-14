@@ -513,8 +513,6 @@ Fields that are migrated only in part:
 - A missing or unknown authentication type defaults to Oracle wallet; a remote instance
   without a matching login is reported.
 
-`cmk-update-config` warns as long as legacy rules exist and points to this tool.
-
 ### Usage
 
 `cmk-migrate-oracle-rulesets` by itself prints the command line options.

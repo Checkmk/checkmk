@@ -22,7 +22,14 @@ This is the first version of the password store API.
 """
 
 from ._convenience import parser_add_secret_option, resolve_secret_option
-from ._impl import dereference_secret, get_store_secret, PasswordStore, PasswordStoreError, Secret
+from ._impl import (
+    dereference_secret,
+    get_store_secret,
+    Obfuscator,
+    PasswordStore,
+    PasswordStoreError,
+    Secret,
+)
 
 # order is reflected in sphinx doc.
 __all__ = [
@@ -30,6 +37,7 @@ __all__ = [
     "parser_add_secret_option",
     "resolve_secret_option",
     "dereference_secret",
+    "Obfuscator",
     "PasswordStoreError",
     "PasswordStore",
     "get_store_secret",

@@ -119,6 +119,7 @@ class ObfuscatorP[T](Protocol):
     Turns values into bytes that do not reveal them, and back.
 
     See :class:`ObfuscatedStorage`.
+    For secrets, use `cmk.password_store.v1.Obfuscator`.
     """
 
     def obfuscate(self, value: T, /) -> bytes:
@@ -163,6 +164,7 @@ class ObfuscatedStorage[T]:
             namespace the storage.
         host: The host name the program is working for. This is used to namespace the storage.
         obfuscator: The obfuscator turning the values into bytes and back.
+            For secrets, use `cmk.password_store.v1.Obfuscator`.
 
     Example::
 

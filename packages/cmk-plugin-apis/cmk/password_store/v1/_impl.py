@@ -11,6 +11,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import final, override
 
+from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 
@@ -260,3 +261,52 @@ def dereference_secret(raw: str, /) -> Secret[str]:
     except KeyError:
         # the fact that this is a dict is an implementation detail.
         raise PasswordStoreError(f"Password '{secret_id}' not found in {store_file}")
+
+
+@final
+class Obfuscator:
+    """Obfuscate secrets using the key of the site's password store.
+
+    This keeps secrets out of plain sight, for instance when a server-side program
+    needs to persist them using `cmk.server_side_programs.v1.ObfuscatedStorage`.
+    It does not protect them from anyone who can read the site's files,
+    because the key is stored there as well.
+
+    Raises:
+        PasswordStoreError: If the key of the password store cannot be found.
+
+    Example::
+
+        from cmk.password_store.v1 import Obfuscator, Secret
+        from cmk.server_side_programs.v1 import ObfuscatedStorage
+
+        storage = ObfuscatedStorage("my_special_agent", host_name, Obfuscator())
+        storage.write("refresh_token", Secret(token))
+        token = storage.read("refresh_token", None)
+
+    """
+
+    def __init__(self) -> None:
+        if (store_secret := _read_store_secret()) is None:
+            raise PasswordStoreError("Password store key file not found.")
+        # The way we handle the master key is what makes this obfuscation rather
+        # than encryption.
+        self._obfuscator = _Encryptor(store_secret)
+
+    def obfuscate(self, value: Secret[str], /) -> bytes:
+        """Return the obfuscated form of the secret."""
+        return self._obfuscator.encrypt(value)
+
+    def deobfuscate(self, raw: bytes, /) -> Secret[str]:
+        """Return the secret from its obfuscated form.
+
+        Raises:
+            ValueError: If the data cannot be deobfuscated, for instance because
+                it is corrupted or was obfuscated with a different key.
+        """
+        try:
+            return self._obfuscator.decrypt(raw)
+        except InvalidTag, ValueError:
+            # do not chain the original exception, it might contain the data.
+            pass
+        raise ValueError("Cannot deobfuscate data")

@@ -423,6 +423,7 @@ py_cmk_test(
     srcs = glob(["tests/cmk/password_store/**/*.py"]),
     deps = [
         ":password_store",
+        ":server_side_programs",
         requirement("cryptography"),
     ],
 )

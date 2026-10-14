@@ -78,6 +78,8 @@ mkdir ${HOME}/.cache/bazelisk
 # Allow Bazel to utilize its build and output cache
 whitelist ${HOME}/.cache/bazel
 mkdir ${HOME}/.cache/bazel
+whitelist ${HOME}/.cache/bazel_disk_cache
+mkdir ${HOME}/.cache/bazel_disk_cache
 
 # Allow Java to run inside the sandbox
 whitelist ${HOME}/.java-caller

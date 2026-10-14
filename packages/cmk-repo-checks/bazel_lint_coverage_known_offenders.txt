@@ -24,7 +24,6 @@ non-free/packages/cmc/src/check_helper.cc
 non-free/packages/cmc/src/icmp_receiver.cc
 non-free/packages/cmc/src/icmp_sender.cc
 non-free/packages/cmc/src/main.cc
-non-free/packages/cmk-multi-tenancy/run
 non-free/packages/cmk-update-agent/build_in_rootfs.sh
 omd/debian/config
 omd/debian/postinst.in

@@ -258,7 +258,7 @@ def check_docker_container_status(section: Section) -> CheckResult:
     status = section.get("Status", "unknown")
     cur_state = {"running": State.OK, "unknown": State.UNKNOWN}.get(status, State.CRIT)
 
-    # The GUI parses the node from this text, see get_docker_node in cmk/gui/painter/painters.py
+    # The GUI parses the node from this text, see cmk/gui/painter/painters.py
     info = "Container %s" % status
     node_name = section.get("NodeName")
     if node_name:

@@ -6,6 +6,7 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
+import re
 import time
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from fnmatch import fnmatch
@@ -4800,14 +4801,7 @@ def get_docker_node(row: Row) -> str:
     if row.get("host_labels", {}).get("cmk/docker_object") != "container":
         return ""
 
-    docker_nodes = _get_docker_container_status_outputs()
-    output = docker_nodes.get(row["host_name"])
-    # Output with node: "Container running on node mynode2"
-    # Output without node: "Container running"
-    if output is None or "node" not in output:
-        return ""
-
-    return output.split()[-1]
+    return _get_docker_nodes_by_container().get(row["host_name"], "")
 
 
 def _group_by_host_docker_node(row: Row, _cell: Cell, _context: PainterContext) -> str:
@@ -4836,14 +4830,18 @@ def make_host_docker_node_painter() -> InternalPainter:
         ident="host_docker_node",
         title=_l("Docker node"),
         short_title=_l("Node"),
-        columns=["host_labels", "host_label_sources"],
+        columns=["host_name", "host_labels", "host_label_sources"],
         group_by=_group_by_host_docker_node,
         render=_render_host_docker_node,
     )
 
 
+# Stops before a state marker or further results, e.g. "on node mynode2(!!), Error: ..."
+_DOCKER_NODE_IN_STATUS_OUTPUT = re.compile(r"^Container \S+ on node ([^\s,(]+)")
+
+
 @request_memoize()
-def _get_docker_container_status_outputs() -> dict[str, str]:
+def _get_docker_nodes_by_container() -> dict[str, str]:
     """Returns a map of all known hosts with their docker nodes
 
     It is important to cache this query per request and also try to use the
@@ -4854,7 +4852,11 @@ def _get_docker_container_status_outputs() -> dict[str, str]:
         "Columns: host_name service_plugin_output\n"
         "Filter: check_command = check_mk-docker_container_status\n"
     )
-    return {row[0]: row[1] for row in sites.live().query(query)}
+    return {
+        host_name: match.group(1)
+        for host_name, output in sites.live().query(query)
+        if (match := _DOCKER_NODE_IN_STATUS_OUTPUT.match(output))
+    }
 
 
 _SPECIFIC_METRIC_DEFAULT_TITLE = _l("Show single metric")

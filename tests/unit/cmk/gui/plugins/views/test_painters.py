@@ -131,15 +131,46 @@ def test_host_custom_attributes_leave_out_the_host_relations() -> None:
 
 @pytest.mark.usefixtures("request_context", "patch_theme")
 def test_host_docker_node_groups_containers_by_their_node(live: MockLiveStatusConnection) -> None:
+    groups = _docker_node_groups(
+        live,
+        {
+            "web": "Container running on node node1",
+            "db": "Container running on node node1",
+            "cache": "Container running on node node2",
+        },
+    )
+
+    assert groups["web"] == groups["db"] != groups["cache"]
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_host_docker_node_ignores_what_follows_the_node_in_the_status_output(
+    live: MockLiveStatusConnection,
+) -> None:
+    groups = _docker_node_groups(
+        live,
+        {
+            "broken": "Container exited on node node1(!!), Error: OCI runtime failed(!!)",
+            "duplicate": "Found data from multiple Docker nodes - see service details for more"
+            " information",
+        },
+    )
+
+    assert groups == {"broken": "node1", "duplicate": ""}
+
+
+def _docker_node_groups(
+    live: MockLiveStatusConnection, status_outputs: dict[str, str]
+) -> dict[str, object]:
     live.add_table(
         "services",
         [
             {
                 "host_name": host_name,
                 "check_command": "check_mk-docker_container_status",
-                "service_plugin_output": f"Container running on node {node}",
+                "service_plugin_output": output,
             }
-            for host_name, node in [("web", "node1"), ("db", "node1"), ("cache", "node2")]
+            for host_name, output in status_outputs.items()
         ],
     )
     live.expect_query(
@@ -147,16 +178,22 @@ def test_host_docker_node_groups_containers_by_their_node(live: MockLiveStatusCo
         "Filter: check_command = check_mk-docker_container_status"
     )
     (cell,) = _view_of(ColumnSpec(name="host_docker_node"), "hosts").row_cells
-
-    def group(host_name: str, image: str) -> object:
-        row = {
-            "host_name": host_name,
-            "host_labels": {"cmk/docker_object": "container", "cmk/docker_image": image},
-        }
-        return cell.painter().group_by(row, cell, cell.painter_context())
-
     with live(expect_status_query=False):
-        assert group("web", "nginx") == group("db", "postgres") != group("cache", "redis")
+        return {
+            # Each container runs another image, so the labels differ from row to row.
+            host_name: cell.painter().group_by(
+                {
+                    "host_name": host_name,
+                    "host_labels": {
+                        "cmk/docker_object": "container",
+                        "cmk/docker_image": host_name,
+                    },
+                },
+                cell,
+                cell.painter_context(),
+            )
+            for host_name in status_outputs
+        }
 
 
 @pytest.mark.usefixtures("request_context", "patch_theme")

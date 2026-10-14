@@ -1146,11 +1146,10 @@ cycler==0.12.1 \
     # via
     #   -c requirements.txt
     #   matplotlib
-datamodel-code-generator==0.46.0 \
-    --hash=sha256:c020f9b014f93c02b526791b03bac235b49803ee178f11598e0a3465dadf9317 \
-    --hash=sha256:cdb990bdb129ee1ceb37ac243879decabb91fa53e27439ba67da20da9caee0ee
+datamodel-code-generator==0.83.0 \
+    --hash=sha256:30d841e31b82095c4ef11f3dbfc99525f559a146250b9e685e2a2e4a196ca0a1 \
+    --hash=sha256:371d80be360b2a57bc48462169553af57fa30225c0264ad85ae5f0d59b9d143a
     # via
-    #   -c constraints.txt
     #   -c requirements.txt
     #   -r packages/cmk-shared-typing/requirements.in
     #   -r tests/dev-requirements.in
@@ -3781,7 +3780,6 @@ packaging==26.3 \
     #   -c requirements.txt
     #   apispec
     #   black
-    #   datamodel-code-generator
     #   jira
     #   marshmallow
     #   matplotlib
@@ -6267,6 +6265,7 @@ typing-extensions==4.16.0 \
     #   azure-mgmt-resource
     #   azure-storage-blob
     #   beautifulsoup4
+    #   datamodel-code-generator
     #   docstring-to-markdown
     #   fastapi
     #   grpcio

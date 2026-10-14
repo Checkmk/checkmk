@@ -2316,6 +2316,7 @@
   "pkg:pypi/cryptography@50.0.2": "Apache-2.0 OR BSD-3-Clause",
   "pkg:pypi/datamodel-code-generator@0.42.0": "MIT",
   "pkg:pypi/datamodel-code-generator@0.46.0": "MIT",
+  "pkg:pypi/datamodel-code-generator@0.83.0": "MIT",
   "pkg:pypi/decorator@5.2.1": "BSD-2-Clause",
   "pkg:pypi/dnspython@2.8.0": "ISC",
   "pkg:pypi/dnspython@2.9.0": "ISC",

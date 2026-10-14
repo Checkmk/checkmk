@@ -347,6 +347,7 @@ allows = [
   "cmk.data_backend",
   "cmk.telemetry.gui",
   "cmk.telemetry.host_name_template",
+  "cmk.telemetry.host_name_template_validation",
   "cmk.shared_typing.vue_formspec_components",
   "cmk.utils",
 ]
@@ -1243,6 +1244,7 @@ allows = [
   "cmk.data_backend.gui",
   "cmk.data_backend.telemetry_metrics.gui",
   "cmk.telemetry.gui",
+  "cmk.telemetry.host_name_template_validation",
   "cmk.otel_collector",
   "cmk.robotmk.gui",
   "cmk.shared_typing",
@@ -2158,6 +2160,7 @@ allows = [
   "cmk.shared_typing.vue_formspec_components",
   "cmk.telemetry.custom_query_rule_value",
   "cmk.telemetry.host_name_template",
+  "cmk.telemetry.host_name_template_validation",
   "cmk.utils.global_ident_type",
   "cmk.utils.paths",
 ]

@@ -67,6 +67,7 @@ from ._graph_specification import (
     GraphExportRequest,
     GraphSpecification,
     parse_graph_specification,
+    site_time_zone,
     StoredGraphSpecification,
 )
 from ._graph_templates import (
@@ -140,8 +141,6 @@ from ._performance_data import (
 )
 from ._plugin_loading import register_plugins
 from ._plugins import (
-    graphing_plugins,
-    GraphingPlugins,
     registered_graphs,
     registered_metrics,
     registered_translations,
@@ -244,8 +243,6 @@ __all__ = [
     "GraphEnvironment",
     "GraphExportRequest",
     "GraphFromAPI",
-    "graphing_plugins",
-    "GraphingPlugins",
     "GraphLineGroupByKey",
     "GraphPluginChoice",
     "GraphRanges",
@@ -346,4 +343,5 @@ __all__ = [
     "ValuesWithUnits",
     "vs_graph_render_option_elements",
     "vs_graph_render_options",
+    "site_time_zone",
 ]

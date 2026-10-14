@@ -19,7 +19,8 @@ from cmk.graphing.v1 import translations as translations_api
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
-from cmk.gui.graphing import GraphFromAPI, graphing_plugins, PerfometerFromAPI
+from cmk.gui.graphing import GraphFromAPI, PerfometerFromAPI
+from cmk.gui.graphing._plugins import graphing_plugins
 
 
 def test_graphing_plugins_load_without_errors() -> None:

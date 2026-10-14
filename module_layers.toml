@@ -297,6 +297,7 @@ allows = [
   "cmk.data_backend.telemetry_metrics.gui",
   # the payload of the section the telemetry metrics fetcher writes
   "cmk.telemetry.custom_query_section",
+  "cmk.telemetry.host_name_template_validation",
   "cmk.utils.macros",
 ]
 

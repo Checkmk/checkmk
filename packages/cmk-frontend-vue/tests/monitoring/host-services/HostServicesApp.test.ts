@@ -987,6 +987,197 @@ test('reads the host of the page alongside its services', async () => {
   )
 })
 
+describe('the host slide-in', () => {
+  const originalOffsetHeight = Object.getOwnPropertyDescriptor(
+    HTMLElement.prototype,
+    'offsetHeight'
+  )
+  const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
+
+  beforeEach(() => {
+    const contentArea = document.createElement('div')
+    contentArea.id = 'content_area'
+    document.body.appendChild(contentArea)
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 600 })
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 })
+    vi.spyOn(client, 'GET').mockReturnValue(new Promise(() => {}) as never)
+  })
+
+  afterEach(() => {
+    if (originalOffsetHeight) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', originalOffsetHeight)
+    }
+    if (originalOffsetWidth) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetWidth', originalOffsetWidth)
+    }
+  })
+
+  test('opens when the host name in the page header is clicked', async () => {
+    mockServices([makeApiEntry()])
+    renderApp()
+
+    await userEvent.click(await screen.findByRole('link', { name: 'web-1' }))
+
+    expect(await screen.findByText('Host details')).toBeInTheDocument()
+  })
+
+  test('offers the host commands the page permits', async () => {
+    mockServices([makeApiEntry()])
+    renderApp({ host_actions: [ACKNOWLEDGE] })
+
+    await userEvent.click(await screen.findByRole('link', { name: 'web-1' }))
+
+    expect(await screen.findByRole('button', { name: 'Acknowledge problems' })).toBeInTheDocument()
+  })
+
+  test('closes the service slide-in it replaces', async () => {
+    mockServices([makeApiEntry()])
+    renderApp()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'CPU load' }))
+    expect(await screen.findByText('Service details')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('link', { name: 'web-1' }))
+
+    expect(await screen.findByText('Host details')).toBeInTheDocument()
+    expect(screen.queryByText('Service details')).not.toBeInTheDocument()
+  })
+
+  test('closes the host slide-in a service replaces', async () => {
+    mockServices([makeApiEntry()])
+    renderApp()
+
+    await userEvent.click(await screen.findByRole('link', { name: 'web-1' }))
+    expect(await screen.findByText('Host details')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'CPU load' }))
+
+    expect(await screen.findByText('Service details')).toBeInTheDocument()
+    expect(screen.queryByText('Host details')).not.toBeInTheDocument()
+  })
+
+  describe('with the reload countdown running', () => {
+    const POLL_INTERVAL_MS = 1000
+
+    // The clock is faked to drive the countdown, which rules out every testing-library waiter:
+    // they advance a faked clock themselves.
+    async function renderPolling() {
+      vi.useFakeTimers()
+      const user = userEvent.setup({ advanceTimers: (ms: number) => vi.advanceTimersByTime(ms) })
+      mockServices([makeApiEntry()])
+      renderApp({ poll_interval_ms: POLL_INTERVAL_MS })
+      await vi.advanceTimersByTimeAsync(0)
+      return user
+    }
+
+    function serviceReads(): number {
+      return servicesPost.mock.calls.length
+    }
+
+    async function readsOverSomePolls(): Promise<number> {
+      const before = serviceReads()
+      await vi.advanceTimersByTimeAsync(3 * POLL_INTERVAL_MS)
+      return serviceReads() - before
+    }
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    test('holds the table still while the host slide-in is open, and reloads once it closes', async () => {
+      const user = await renderPolling()
+
+      await user.click(screen.getByRole('link', { name: 'web-1' }))
+      await vi.advanceTimersByTimeAsync(0)
+      expect(screen.getByText('Host details')).toBeInTheDocument()
+      expect(await readsOverSomePolls()).toBe(0)
+
+      await user.click(screen.getByRole('button', { name: 'Close' }))
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(await readsOverSomePolls()).toBeGreaterThan(0)
+    })
+
+    test('keeps the table still across switching between the slide-ins, and reloads once the last closes', async () => {
+      const user = await renderPolling()
+
+      await user.click(screen.getByRole('link', { name: 'web-1' }))
+      await vi.advanceTimersByTimeAsync(0)
+      await user.click(screen.getByRole('button', { name: 'CPU load' }))
+      await vi.advanceTimersByTimeAsync(0)
+      expect(screen.getByText('Service details')).toBeInTheDocument()
+      expect(await readsOverSomePolls()).toBe(0)
+
+      await user.click(screen.getByRole('link', { name: 'web-1' }))
+      await vi.advanceTimersByTimeAsync(0)
+      expect(screen.getByText('Host details')).toBeInTheDocument()
+      expect(await readsOverSomePolls()).toBe(0)
+
+      await user.click(screen.getByRole('button', { name: 'Close' }))
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(await readsOverSomePolls()).toBeGreaterThan(0)
+    })
+  })
+
+  test('names the host it shows in the URL fragment', async () => {
+    mockServices([makeApiEntry()])
+    renderApp()
+
+    await userEvent.click(await screen.findByRole('link', { name: 'web-1' }))
+    await screen.findByText('Host details')
+
+    const fragment = new URLSearchParams(window.location.hash.slice(1))
+    expect(fragment.get('host')).toBe('web-1')
+    expect(fragment.get('site')).toBe('local')
+  })
+
+  test('names a tab picked in it apart from the tab of the service slide-in', async () => {
+    mockServices([makeApiEntry()])
+    renderApp()
+
+    await userEvent.click(await screen.findByRole('link', { name: 'web-1' }))
+    await userEvent.click(await screen.findByRole('tab', { name: 'History' }))
+
+    const fragment = new URLSearchParams(window.location.hash.slice(1))
+    expect(fragment.get('host_tab')).toBe('history')
+    expect(fragment.has('tab')).toBe(false)
+  })
+
+  test('opens from a link naming the host of the page', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/monitor_host_services.py?host=web-1&site=local#host=web-1&site=local'
+    )
+    mockServices([makeApiEntry()])
+    renderApp()
+
+    expect(await screen.findByText('Host details')).toBeInTheDocument()
+  })
+})
+
+test('asks whether the host may be opened in Setup when the page offers host Setup links', async () => {
+  mockServices([makeApiEntry()])
+  renderApp({
+    host_row_actions: [
+      {
+        ident: 'edit',
+        title: 'Edit host',
+        icon: 'edit',
+        url: 'wato.py?mode=edit_host&host={host}'
+      }
+    ]
+  })
+
+  await screen.findByText('UP')
+
+  expect(postSpy).toHaveBeenCalledWith(
+    HOSTS_PATH,
+    expect.objectContaining({ body: expect.objectContaining({ fields: ['setup_access'] }) })
+  )
+})
+
 describe('with the rows laid out', () => {
   const originalOffsetHeight = Object.getOwnPropertyDescriptor(
     HTMLElement.prototype,

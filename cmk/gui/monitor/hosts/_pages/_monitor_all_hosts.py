@@ -10,7 +10,6 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import edition
 from cmk.gui import sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
-from cmk.gui.config import Config
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -23,6 +22,8 @@ from cmk.gui.monitor.command import (
     downtime_presets,
     downtime_presets_url,
     DowntimeRecurrences,
+    host_setup_links,
+    HOST_SUPPORTED_ACTIONS,
     MonitorCommands,
     notification_rules_url,
 )
@@ -65,38 +66,6 @@ _LEGACY_VIEW_NAME = "allhosts"
 _LEGACY_VIEW_PERMISSION = f"view.{_LEGACY_VIEW_NAME}"
 
 _EXPORT_EVENT = "cmk-monitoring-export"
-
-
-def _row_actions(config: Config) -> list[RowAction]:
-    if not config.wato_enabled:
-        return []
-    actions: list[RowAction] = []
-    if user.may("wato.use") and (user.may("wato.seeall") or user.may("wato.hosts")):
-        actions.append(
-            RowAction(
-                ident="edit",
-                title=_("Edit host"),
-                icon="edit",
-                url="wato.py?mode=edit_host&host={host}",
-            )
-        )
-    if user.may("wato.rulesets"):
-        actions.append(
-            RowAction(
-                ident="parameters",
-                title=_("Parameters"),
-                icon="rulesets",
-                url="wato.py?mode=object_parameters&host={host}",
-            )
-        )
-    return actions
-
-
-_SUPPORTED_ACTIONS: tuple[str, ...] = (
-    "acknowledge",
-    "schedule_downtimes",
-    "reschedule",
-)
 
 
 def monitor_all_hosts_visual_spec() -> Visual:
@@ -178,14 +147,17 @@ class MonitorAllHostsPage(Page):
                             ident=command.ident, title=str(command.title), icon=command.icon
                         )
                         for command in self._commands.permitted_actions(
-                            user, "host", _SUPPORTED_ACTIONS
+                            user, "host", HOST_SUPPORTED_ACTIONS
                         )
                     ],
                     downtime_recurrences=[
                         DowntimeRecurrence(recur=recurrence.recur, title=recurrence.title)
                         for recurrence in self._recurrences.offered()
                     ],
-                    row_actions=_row_actions(ctx.config),
+                    row_actions=[
+                        RowAction(ident=link.ident, title=link.title, icon=link.icon, url=link.url)
+                        for link in host_setup_links(ctx.config, user)
+                    ],
                     may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
                     limit_tiers=list(LIMIT_TIERS),
                     acknowledge_presets_url=acknowledge_presets_url(ctx.config),

@@ -15,7 +15,13 @@ import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
 import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
 import { HostApi } from '@/monitoring/shared/api/hosts'
-import type { HostRef, HostServiceEntry, ServiceState } from '@/monitoring/shared/api/types'
+import type {
+  HostEntry,
+  HostOptionalField,
+  HostRef,
+  HostServiceEntry,
+  ServiceState
+} from '@/monitoring/shared/api/types'
 import DisplayOptionsPane from '@/monitoring/shared/components/DisplayOptionsPane.vue'
 import HostHeader from '@/monitoring/shared/components/HostHeader.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
@@ -31,6 +37,9 @@ import {
 import { filterTimestampsAsShown } from '@/monitoring/shared/timestampFilters'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 
+import HostSlideIn from '../all-hosts/components/HostSlideIn.vue'
+import { HOST_TAB_OVERVIEW } from '../all-hosts/slideInTabs'
+import { useHostActions } from '../all-hosts/useHostActions'
 import MonitoringHeaderActions from '../shared/components/MonitoringHeaderActions.vue'
 import MonitoringLegacyViewButton from '../shared/components/MonitoringLegacyViewButton.vue'
 import MonitoringSplitPane from '../shared/components/MonitoringSplitPane.vue'
@@ -52,6 +61,7 @@ import {
 import { buildTableStateSchema } from '../shared/tableState/schema'
 import { readTableStateFromUrl, tableStateWriter } from '../shared/tableState/urlState'
 import {
+  type SlideInListing,
   type SlideInUrlDescriptor,
   exactPattern,
   readSlideInFromHash,
@@ -131,6 +141,15 @@ async function loadActionMenu(service: string): Promise<CellAction[]> {
 // that decides the action bar decides the select column too.
 const mayActOnSelection = serviceActions.length > 0
 
+const hostActions = useHostActions({
+  ...props,
+  actions: props.host_actions,
+  row_actions: props.host_row_actions
+})
+
+// What the host slide-in reads on the host of the page beyond what its header shows.
+const hostFields: HostOptionalField[] = hostActions.rowActions.length > 0 ? ['setup_access'] : []
+
 const aiExplain = props.ai_explain ?? false
 
 const columns = useHostServicesColumns({
@@ -189,7 +208,8 @@ const hostServicesService = new HostServicesService(
           ]
         }
       }
-    ]
+    ],
+    hostFields
   }
 )
 
@@ -258,12 +278,46 @@ function rowKey(row: HostServiceEntry): string {
 
 const slideInService = ref<HostServiceEntry | null>(null)
 const slideInTabId = ref<string | undefined>(undefined)
+const slideInHost = ref<HostEntry | null>(null)
+const slideInHostTabId = ref<string | undefined>(undefined)
 
 function openSlideIn(service: HostServiceEntry): void {
-  if (slideInService.value === null) {
+  if (slideInService.value === null && slideInHost.value === null) {
     hostServicesService.beginAutoPause()
   }
+  slideInHost.value = null
   slideInService.value = service
+}
+
+function openHostSlideIn(entry: HostEntry): void {
+  if (slideInService.value === null && slideInHost.value === null) {
+    hostServicesService.beginAutoPause()
+  }
+  slideInService.value = null
+  slideInHost.value = entry
+}
+
+function closeHostSlideIn(): void {
+  if (slideInHost.value !== null) {
+    hostServicesService.endAutoPause()
+  }
+  slideInHost.value = null
+}
+
+function onHostTitleClick(event: MouseEvent): void {
+  const entry = hostServicesService.hostEntry.value
+  if (
+    entry === null ||
+    event.button !== 0 ||
+    event.ctrlKey ||
+    event.metaKey ||
+    event.shiftKey ||
+    event.altKey
+  ) {
+    return
+  }
+  event.preventDefault()
+  openHostSlideIn(entry)
 }
 
 function openServiceGraphs(service: HostServiceEntry): void {
@@ -300,6 +354,29 @@ const SERVICE_SLIDE_IN: SlideInUrlDescriptor<HostServiceEntry, string> = {
   }
 }
 
+// The host is the page, so the only host this panel opens is the one it shows, named the way the
+// all hosts listing names it. Its tab gets a key of its own, as the service panel owns `tab`.
+const HOST_SLIDE_IN: SlideInUrlDescriptor<HostEntry, HostRef> = {
+  keys: ['host', 'site'],
+  tabKey: 'host_tab',
+  defaultTabId: HOST_TAB_OVERVIEW,
+  encode: (entry) => ({ host: entry.name, site: entry.site_id }),
+  decode: (params) =>
+    params['host'] === host.name && params['site'] === host.site_id ? host : null,
+  matches: (entry, identity) => entry.name === identity.name && entry.site_id === identity.site_id,
+  load: async (identity) =>
+    hostApi.fetchHost(identity, undefined, hostFields.length > 0 ? hostFields : undefined)
+}
+
+const hostListing: SlideInListing<HostEntry> = {
+  hasLoaded: hostServicesService.hasLoaded,
+  items: computed(() => {
+    const entry = hostServicesService.hostEntry.value
+    return entry === null ? [] : [entry]
+  }),
+  revealRow: () => {}
+}
+
 useUrlSync([
   tableStateWriter(hostServicesService, schema),
   filterStateWriter(hostServicesService),
@@ -312,6 +389,15 @@ useUrlSync([
     initial: readSlideInFromHash(SERVICE_SLIDE_IN, window.location.hash),
     open: openSlideIn,
     close: closeSlideIn
+  }),
+  slideInWriter({
+    descriptor: HOST_SLIDE_IN,
+    service: hostListing,
+    current: slideInHost,
+    tabId: slideInHostTabId,
+    initial: readSlideInFromHash(HOST_SLIDE_IN, window.location.hash),
+    open: openHostSlideIn,
+    close: closeHostSlideIn
   })
 ])
 
@@ -382,7 +468,11 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :search-placeholder="_t('Search services…')"
       >
         <template v-if="hostServicesService.hostEntry.value" #subject>
-          <HostHeader :host="hostServicesService.hostEntry.value" :url="host_url" />
+          <HostHeader
+            :host="hostServicesService.hostEntry.value"
+            :url="host_url"
+            @title-click="onHostTitleClick"
+          />
         </template>
       </MonitoringToolbar>
       <MonitoringSplitPane
@@ -438,6 +528,17 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :permitted-actions="serviceActions"
         :load-action-menu="loadActionMenu"
         @close="closeSlideIn"
+        @performed="onActionPerformed"
+      />
+      <HostSlideIn
+        v-model:active-tab-id="slideInHostTabId"
+        :display-options="displayOptions"
+        :host="slideInHost"
+        :actions="hostActions.registry"
+        :row-actions="hostActions.rowActions"
+        :permitted-actions="hostActions.permittedActions"
+        :load-action-menu="hostActions.loadActionMenu"
+        @close="closeHostSlideIn"
         @performed="onActionPerformed"
       />
       <TypeToFocusIndicator

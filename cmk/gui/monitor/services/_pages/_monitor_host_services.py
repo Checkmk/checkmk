@@ -23,6 +23,8 @@ from cmk.gui.monitor.command import (
     downtime_presets,
     downtime_presets_url,
     DowntimeRecurrences,
+    host_setup_links,
+    HOST_SUPPORTED_ACTIONS,
     MonitorCommands,
     notification_rules_url,
 )
@@ -109,6 +111,12 @@ class MonitorHostServicesPage(Page):
             for command in self._commands.permitted_actions(user, "service", _SUPPORTED_ACTIONS)
         ]
 
+    def _permitted_host_actions(self) -> list[MonitoringAction]:
+        return [
+            MonitoringAction(ident=command.ident, title=str(command.title), icon=command.icon)
+            for command in self._commands.permitted_actions(user, "host", HOST_SUPPORTED_ACTIONS)
+        ]
+
     @override
     def page(self, ctx: PageContext) -> None:
         user.need_permission(_LEGACY_VIEW_PERMISSION)
@@ -173,6 +181,11 @@ class MonitorHostServicesPage(Page):
                             hostname, None
                         ),
                     ),
+                    host_actions=self._permitted_host_actions(),
+                    host_row_actions=[
+                        RowAction(ident=link.ident, title=link.title, icon=link.icon, url=link.url)
+                        for link in host_setup_links(ctx.config, user)
+                    ],
                     acknowledge_presets_url=acknowledge_presets_url(ctx.config),
                     acknowledge_defaults=AcknowledgeDefaults(
                         sticky=ack.sticky,

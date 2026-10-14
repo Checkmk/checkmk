@@ -21,7 +21,17 @@
     "user_id": {
       "type": "string"
     },
-    "edition": { "$ref": "monitoring/_base.json#/$defs/edition" }
+    "edition": { "$ref": "monitoring/_base.json#/$defs/edition" },
+    "host_actions": {
+      "type": "array",
+      "items": { "$ref": "monitoring/_base.json#/$defs/monitoring_action" },
+      "default": []
+    },
+    "host_row_actions": {
+      "type": "array",
+      "items": { "$ref": "monitoring/_base.json#/$defs/row_action" },
+      "default": []
+    }
   },
   "required": ["host", "site", "host_url", "user_id", "edition"]
 }

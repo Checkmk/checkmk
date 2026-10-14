@@ -46,7 +46,11 @@ export class HostApi extends MonitoringApi {
     )
   }
 
-  public async fetchHost(host: HostRef, signal?: AbortSignal): Promise<HostEntry | null> {
+  public async fetchHost(
+    host: HostRef,
+    signal?: AbortSignal,
+    fields?: readonly HostOptionalField[]
+  ): Promise<HostEntry | null> {
     const response = await this.fetchHosts(
       {
         filter: {
@@ -56,7 +60,8 @@ export class HostApi extends MonitoringApi {
             { type: 'condition', field: 'site_id', op: 'one_of', value: [host.site_id] }
           ]
         },
-        limit: 1
+        limit: 1,
+        ...(fields !== undefined && { fields: [...fields] })
       },
       signal
     )

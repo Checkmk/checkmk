@@ -183,8 +183,23 @@ describe('HostServicesService', () => {
 
     await vi.advanceTimersByTimeAsync(0)
 
-    expect(fetchHost).toHaveBeenCalledWith(HOST, expect.any(AbortSignal))
+    expect(fetchHost).toHaveBeenCalledWith(HOST, expect.any(AbortSignal), undefined)
     expect(service.hostEntry.value).toEqual(makeHost())
+  })
+
+  it('asks for the host fields the page needs', async () => {
+    const fetchServices = vi.fn().mockResolvedValue(makeServicesResponse([], 0, 0))
+    service = new HostServicesService(
+      { fetchServices },
+      { fetchHost },
+      HOST,
+      makeKeyShortcutService(),
+      { hostFields: ['setup_access'] }
+    )
+
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(fetchHost).toHaveBeenCalledWith(HOST, expect.any(AbortSignal), ['setup_access'])
   })
 
   it('re-reads the host on every refresh, so its state follows the table', async () => {

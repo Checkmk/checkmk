@@ -252,6 +252,9 @@ json2python(
         "--frozen-dataclasses",
         "--keyword-only",
         "--use-union-operator",
+        # Fields with a default never become None. Despite its help text, this
+        # works for JSON Schema, too.
+        "--strict-nullable",
     ],
     formatter = ":cmk_shared_typing_formatter",
     source_dir = "source",
@@ -275,6 +278,9 @@ json2python(
         "--frozen-dataclasses",
         "--keyword-only",
         "--use-union-operator",
+        # Fields with a default never become None. Despite its help text, this
+        # works for JSON Schema, too.
+        "--strict-nullable",
     ],
     formatter = ":cmk_shared_typing_formatter",
     source_dir = "source",

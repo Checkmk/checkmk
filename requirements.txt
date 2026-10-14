@@ -1179,9 +1179,9 @@ cycler==0.12.1 \
     --hash=sha256:85cef7cff222d8644161529808465972e51340599459b8ac3ccbac5a854e0d30 \
     --hash=sha256:88bb128f02ba341da8ef447245a9e138fae777f6a23943da4540077d3601eb1c
     # via matplotlib
-datamodel-code-generator==0.42.0 \
-    --hash=sha256:ce0ba9cc21ead530e54daa2f5b8ab7dbdc1531edfbf8fbd3ad1a4ab1815b2663 \
-    --hash=sha256:f369d0e72eefa7999464826e15cae7406813d9d3c5c7f62140808a21a28da441
+datamodel-code-generator==0.46.0 \
+    --hash=sha256:c020f9b014f93c02b526791b03bac235b49803ee178f11598e0a3465dadf9317 \
+    --hash=sha256:cdb990bdb129ee1ceb37ac243879decabb91fa53e27439ba67da20da9caee0ee
     # via
     #   -c constraints.txt
     #   -r packages/cmk-shared-typing/requirements.in

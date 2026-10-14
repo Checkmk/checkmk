@@ -9,7 +9,7 @@
 
 # # -*- encoding: utf-8; py-indent-offset: 4 -*-
 
-from typing import Final, Literal, TypedDict
+from typing import Final, Literal, NotRequired, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -33,7 +33,7 @@ class ServiceSettings(TypedDict):
 class ServiceConfig(TypedDict):
     service_name: str
     default_status: ActivityStatus
-    state_if_not_default: int
+    state_if_not_default: NotRequired[int]
 
 
 class IntegrationServicesParams(TypedDict):
@@ -118,7 +118,7 @@ def check_hyperv_vm_integration(params: IntegrationServicesParams, section: Sect
             if isinstance(item, dict):
                 service_name = item["service_name"]
                 default_status = item["default_status"]
-                state_if_not_default = item["state_if_not_default"]
+                state_if_not_default = item.get("state_if_not_default", global_state_if_not_default)
 
                 match_services[service_name] = ServiceSettings(
                     default_status=default_status, state_if_not_default=state_if_not_default

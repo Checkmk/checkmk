@@ -8,6 +8,7 @@ import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_compone
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
+import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
@@ -107,18 +108,6 @@ const nameErrors = computed(() => (displayErrors.value ? getNameErrors() : []))
 const patternErrors = computed(() => (displayErrors.value ? getPatternErrors() : []))
 
 const noMatches = computed(() => matches.value !== null && matches.value.services.length === 0)
-
-// An empty result is far more often a name that does not match than a service that was
-// never discovered, so lead with the former.
-const noMatchHint = computed(() =>
-  model.value.matchType === 'exact'
-    ? _t(
-        'Exact matching needs the complete service name. Switch to a regular expression to match part of it.'
-      )
-    : _t(
-        'A regular expression matches from the start of the service name, so begin it with .* to match anywhere in it. Only already discovered custom services can be matched.'
-      )
-)
 
 const visibleMatches = computed(() =>
   showAllMatches.value
@@ -239,6 +228,14 @@ async function validate(): Promise<boolean> {
           <CmkLabel :for="patternFieldId">
             {{ _t('Service name') }}
             <CmkLabelRequired />
+            <CmkHelpText
+              :aria-label="_t('How are service names matched?')"
+              :help="
+                _t(
+                  'Exact matching needs the complete service name. A regular expression matches from the start of the service name, so begin it with .* to match anywhere in it.'
+                )
+              "
+            />
           </CmkLabel>
           <div class="mode-alerts-name-and-services-step__service-row">
             <CmkDropdown
@@ -284,7 +281,7 @@ async function validate(): Promise<boolean> {
           v-else-if="noMatches"
           :variant="displayErrors ? 'error' : 'warning'"
           size="small"
-          :text="untranslated(`${_t('No custom service matches this name.')} ${noMatchHint}`)"
+          :text="_t('No matching services. Only discovered services can be selected.')"
         />
 
         <div v-else-if="matches" class="mode-alerts-name-and-services-step__results">

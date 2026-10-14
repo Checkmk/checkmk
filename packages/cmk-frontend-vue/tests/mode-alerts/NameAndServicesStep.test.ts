@@ -193,7 +193,7 @@ test('a service name matching nothing says so without waiting for the next step'
   await typeServiceName('nonexistent')
 
   await waitFor(() => {
-    expect(screen.getByText(/No custom service matches this name/)).toBeInTheDocument()
+    expect(screen.getByText(/No matching services/)).toBeInTheDocument()
   })
   expect(screen.queryByText(/Matching services/)).not.toBeInTheDocument()
 })
@@ -227,7 +227,7 @@ test('a service name matching nothing blocks navigation', async () => {
   await userEvent.click(screen.getByRole('button', { name: /next step/i }))
 
   await waitFor(() => {
-    expect(screen.getByText(/No custom service matches this name/)).toBeInTheDocument()
+    expect(screen.getByText(/No matching services/)).toBeInTheDocument()
   })
   expect(navigation.next).not.toHaveBeenCalled()
 })
@@ -247,38 +247,32 @@ test('an unparsable regular expression blocks navigation before any search', asy
   expect(navigation.next).not.toHaveBeenCalled()
 })
 
-test('an exact search matching nothing offers a regular expression instead', async () => {
-  renderStep({ name: 'Latency too high', matchType: 'exact', servicePattern: 'TEST' })
+test.each([
+  ['exact', 'TEST'],
+  ['regex', 'duration']
+] as const)(
+  'a %s search matching nothing points at the discovery requirement',
+  async (matchType, servicePattern) => {
+    renderStep({ name: 'Latency too high', matchType, servicePattern })
 
-  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+    await userEvent.click(screen.getByRole('button', { name: /next step/i }))
 
-  await waitFor(() => {
-    expect(
-      screen.getByText(/Switch to a regular expression to match part of it/)
-    ).toBeInTheDocument()
-  })
-})
+    await waitFor(() => {
+      expect(
+        screen.getByText('No matching services. Only discovered services can be selected.')
+      ).toBeInTheDocument()
+    })
+  }
+)
 
-test('a regex search matching nothing explains that it matches from the start', async () => {
-  renderStep({ name: 'Latency too high', matchType: 'regex', servicePattern: 'duration' })
+test('the service name help explains both match types', async () => {
+  renderStep()
 
-  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+  await userEvent.click(screen.getByRole('button', { name: 'How are service names matched?' }))
 
-  await waitFor(() => {
-    expect(screen.getByText(/matches from the start of the service name/)).toBeInTheDocument()
-  })
-})
-
-test('a regex search matching nothing points at the discovery requirement', async () => {
-  renderStep({ name: 'Latency too high', matchType: 'regex', servicePattern: 'nonexistent' })
-
-  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
-
-  await waitFor(() => {
-    expect(
-      screen.getByText(/Only already discovered custom services can be matched/)
-    ).toBeInTheDocument()
-  })
+  const help = await screen.findByRole('tooltip')
+  expect(help).toHaveTextContent(/Exact matching needs the complete service name/)
+  expect(help).toHaveTextContent(/matches from the start of the service name/)
 })
 
 test('a named alert with at least one matching service continues to the next step', async () => {
@@ -425,7 +419,7 @@ test('choosing a folder searches the matching services again, in that folder', a
   await userEvent.click(await screen.findByRole('option', { name: 'Main/Linux' }))
 
   await waitFor(() => {
-    expect(screen.getByText(/No custom service matches this name/)).toBeInTheDocument()
+    expect(screen.getByText(/No matching services/)).toBeInTheDocument()
   })
   expect(JSON.stringify(lastQuery)).toContain('^/wato/linux/')
 })

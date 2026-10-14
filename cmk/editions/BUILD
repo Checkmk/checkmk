@@ -52,6 +52,7 @@ py_library(
         "//cmk/utils",
         "//cmk/utils:msi_patch",
         "//cmk/validate_config",
+        "//cmk/validate_config:__main__",
         "//packages/cmk-agent-receiver",
         "//packages/cmk-ccc:cleanup",
         "//packages/cmk-ccc:config-path",

@@ -24,7 +24,7 @@ py_library(
     name = "__main__",
     srcs = ["__main__.py"],
     imports = ["../.."],
-    visibility = ["//cmk:__pkg__"],
+    visibility = ["//cmk/editions:__pkg__"],
     deps = [
         ":validate_config",
         "//cmk/base",

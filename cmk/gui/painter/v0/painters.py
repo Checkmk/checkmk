@@ -5434,21 +5434,16 @@ class PainterHostDockerNode(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["host_labels", "host_label_sources"]
 
+    def group_by(self, row: Row, cell: Cell) -> str:
+        return get_docker_node(row)
+
     def render(self, row: Row, cell: Cell) -> CellSpec:
         """We use the information stored in output of docker_container_status
         here. It's the most trusted source of the current node the container is
         running on."""
-        if row.get("host_labels", {}).get("cmk/docker_object") != "container":
+        if not (node := get_docker_node(row)):
             return "", ""
 
-        docker_nodes = _get_docker_container_status_outputs()
-        output = docker_nodes.get(row["host_name"])
-        # Output with node: "Container running on node mynode2"
-        # Output without node: "Container running"
-        if output is None or "node" not in output:
-            return "", ""
-
-        node = output.split()[-1]
         content = self.url_renderer.link_from_filename(
             "view.py",
             query_args=[
@@ -5458,6 +5453,20 @@ class PainterHostDockerNode(Painter):
             html_text=node,
         )
         return "", content
+
+
+def get_docker_node(row: Row) -> str:
+    if row.get("host_labels", {}).get("cmk/docker_object") != "container":
+        return ""
+
+    docker_nodes = _get_docker_container_status_outputs()
+    output = docker_nodes.get(row["host_name"])
+    # Output with node: "Container running on node mynode2"
+    # Output without node: "Container running"
+    if output is None or "node" not in output:
+        return ""
+
+    return output.split()[-1]
 
 
 @request_memoize()

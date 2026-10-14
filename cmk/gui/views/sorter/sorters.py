@@ -13,7 +13,7 @@ from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l
 from cmk.gui.painter.v0.helpers import get_tag_groups
-from cmk.gui.painter.v0.painters import _get_docker_container_status_outputs
+from cmk.gui.painter.v0.painters import get_docker_node
 from cmk.gui.painter.v1.helpers import get_perfdata_nth_value
 from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import ColumnSpec, Row
@@ -656,20 +656,6 @@ def cmp_date(column, r1, r2):
     return (r2_date > r1_date) - (r2_date < r1_date)
 
 
-def _get_docker_nodes(row: Row) -> str:
-    if row.get("host_labels", {}).get("cmk/docker_object") != "container":
-        return ""
-
-    docker_nodes = _get_docker_container_status_outputs()
-    output = docker_nodes.get(row["host_name"])
-    # Output with node: "Container running on node mynode2"
-    # Output without node: "Container running"
-    if output is None or "node" not in output:
-        return ""
-
-    return output.split()[-1]
-
-
 def cmp_docker_nodes(column, r1, r2):
     return _sort_docker_nodes_(r1, r2, parameters=None, config=None, request=None)
 
@@ -682,9 +668,7 @@ def _sort_docker_nodes_(
     config: Config | None,
     request: Request | None,
 ) -> int:
-    val1 = _get_docker_nodes(row=r1)
-    val2 = _get_docker_nodes(row=r2)
-    return cmp_insensitive_string(val1, val2)
+    return cmp_insensitive_string(get_docker_node(r1), get_docker_node(r2))
 
 
 SorterHostDockerNode = Sorter(

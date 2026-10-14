@@ -942,6 +942,90 @@ def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
             )
 
 
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_host_docker_node_groups_containers_by_their_node(live: MockLiveStatusConnection) -> None:
+    groups = _docker_node_groups(
+        live,
+        {
+            "web": "Container running on node node1",
+            "db": "Container running on node node1",
+            "cache": "Container running on node node2",
+        },
+    )
+
+    assert groups["web"] == groups["db"] != groups["cache"]
+
+
+def _docker_node_groups(
+    live: MockLiveStatusConnection, status_outputs: dict[str, str]
+) -> dict[str, object]:
+    live.add_table(
+        "services",
+        [
+            {
+                "host_name": host_name,
+                "check_command": "check_mk-docker_container_status",
+                "service_plugin_output": output,
+            }
+            for host_name, output in status_outputs.items()
+        ],
+    )
+    live.expect_query(
+        "GET services\nColumns: host_name service_plugin_output\n"
+        "Filter: check_command = check_mk-docker_container_status"
+    )
+    view = View(
+        view_name="",
+        view_spec={
+            "group_painters": [],
+            "painters": [ColumnSpec(name="host_docker_node")],
+            "sorters": [],
+            "datasource": "hosts",
+            "browser_reload": 30,
+            "column_headers": "pergroup",
+            "description": "",
+            "hidden": False,
+            "hidebutton": False,
+            "layout": "table",
+            "mustsearch": False,
+            "name": "allhosts",
+            "num_columns": 3,
+            "owner": UserId.builtin(),
+            "play_sounds": False,
+            "public": True,
+            "title": "Test view",
+            "topic": "overview",
+            "sort_index": 20,
+            "icon": "folder",
+            "user_sortable": True,
+            "single_infos": [],
+            "context": {},
+            "link_from": {},
+            "add_context_to_title": True,
+            "is_show_more": False,
+            "packaged": False,
+            "megamenu_search_terms": [],
+        },
+        context={},
+    )
+    (cell,) = view.row_cells
+    with live(expect_status_query=False):
+        return {
+            # Each container runs another image, so the labels differ from row to row.
+            host_name: cell.painter().group_by(
+                {
+                    "host_name": host_name,
+                    "host_labels": {
+                        "cmk/docker_object": "container",
+                        "cmk/docker_image": host_name,
+                    },
+                },
+                cell,
+            )
+            for host_name in status_outputs
+        }
+
+
 # TODO: Better move to livestatus mock?
 def _service_row():
     return {

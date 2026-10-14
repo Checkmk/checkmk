@@ -182,6 +182,8 @@ single_version_override(
     patches = [
         # https://github.com/aspect-build/rules_py/pull/577
         "//bazel/patches:rules_py-no_mypy_for_py_pytest_main.patch",
+        # Fixed upstream in 2.x, see CMK-40567
+        "//bazel/patches:rules_py-tolerate_no_coverage_data.patch",
     ],
     version = "1.5.2",
 )

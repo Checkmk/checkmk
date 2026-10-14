@@ -25,4 +25,6 @@ def test_api_names() -> None:
         "vcrtrace",
         "HostnameValidationAdapter",
         "Storage",
+        "ObfuscatedStorage",
+        "ObfuscatorP",
     }

@@ -28,6 +28,8 @@ from ._host_name_validation import (
     HostnameValidationAdapter as HostnameValidationAdapter,
 )
 from ._logging import configure_logging as configure_logging
+from ._storage import ObfuscatedStorage as ObfuscatedStorage
+from ._storage import ObfuscatorP as ObfuscatorP
 from ._storage import Storage as Storage
 from ._vcrtrace import vcrtrace as vcrtrace
 
@@ -35,6 +37,8 @@ __all__ = [
     "AgentMessages",
     "HostnameValidationAdapter",
     "Storage",
+    "ObfuscatedStorage",
+    "ObfuscatorP",
     "configure_logging",
     "vcrtrace",
     "report_agent_crashes",

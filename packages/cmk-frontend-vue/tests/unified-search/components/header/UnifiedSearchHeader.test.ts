@@ -63,7 +63,7 @@ describe('UnifiedSearchHeader Enter-to-filter', () => {
     expect(searchQueryOf(assignedHref)).toBe('cpu load')
   })
 
-  test.fails.each(['h:a&b', 'foo#bar', 'h:web+', 'h:%41'])(
+  test.each(['h:a&b', 'foo#bar', 'h:web+', 'h:%41'])(
     'passes the query %s unaltered to search_open.py',
     async (query) => {
       const input = renderHeader('monitoring')
@@ -75,7 +75,7 @@ describe('UnifiedSearchHeader Enter-to-filter', () => {
     }
   )
 
-  test.fails('stores the query unaltered in the search history', async () => {
+  test('stores the query unaltered in the search history', async () => {
     const history = new SearchHistoryService('test')
     const searchUtils = initSearchUtils('test')
     searchUtils.history = history

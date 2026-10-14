@@ -42,6 +42,14 @@ def _socket_path() -> Path:
     return Path(omd_root) / AUTOMATION_HELPER_SOCKET_RELATIVE_PATH
 
 
+def _cmk_version(raw: str) -> str:
+    try:
+        cmk_version.Version.from_str(raw)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(str(e)) from e
+    return raw
+
+
 def _parse_arguments(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -79,6 +87,7 @@ def _parse_arguments(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--for-cmk-version",
+        type=_cmk_version,
         default=cmk_version.__version__,
         metavar="VERSION",
         help=(

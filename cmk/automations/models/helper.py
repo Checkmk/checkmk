@@ -4,10 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from typing import Annotated
 
-from pydantic import BaseModel
+from pydantic import AfterValidator, BaseModel
 
 from cmk.automations.internal import AutomationID
+from cmk.ccc import version as cmk_version
 
 # Location of the automation helper's unix socket, relative to OMD_ROOT.
 AUTOMATION_HELPER_SOCKET_RELATIVE_PATH = "tmp/run/automation-helper.sock"
@@ -17,12 +19,17 @@ AUTOMATION_HELPER_SOCKET_RELATIVE_PATH = "tmp/run/automation-helper.sock"
 AUTOMATION_HELPER_BASE_URL = "http://local-automation"
 
 
+def _valid_cmk_version(value: str) -> str:
+    cmk_version.Version.from_str(value)
+    return value
+
+
 class AutomationPayload(BaseModel, frozen=True):
     name: AutomationID
     args: Sequence[str]
     stdin: str
     log_level: int
-    for_cmk_version: str
+    for_cmk_version: Annotated[str, AfterValidator(_valid_cmk_version)]
     """The Checkmk version of the site the result is meant for (it may be an older central site)."""
 
 

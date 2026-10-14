@@ -229,6 +229,15 @@ def test_automation_result_is_serialized_for_requested_version(
     )
 
 
+def test_automation_with_invalid_version_is_rejected(mocker: MockerFixture, cache: Cache) -> None:
+    with _make_test_client(_DummyAutomationEngineSuccess(), cache, mocker.MagicMock()) as client:
+        resp = client.post(
+            "/automation", json={**_EXAMPLE_AUTOMATION_PAYLOAD, "for_cmk_version": "foo"}
+        )
+
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
 def test_automation_with_failure(mocker: MockerFixture, cache: Cache) -> None:
     mock_reload_config = mocker.MagicMock()
     with _make_test_client(

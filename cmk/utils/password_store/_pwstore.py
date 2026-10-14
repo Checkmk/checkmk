@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import hashlib
 import re
-import secrets
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Final, Literal, NotRequired, TypedDict
@@ -14,7 +13,7 @@ import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.password_store.v1 import PasswordStore, Secret
+from cmk.password_store.v1 import get_store_secret, PasswordStore, Secret
 from cmk.utils.global_ident_type import GlobalIdent
 
 PasswordLookupType = Literal["password", "store"]
@@ -38,18 +37,6 @@ class PasswordConfig(TypedDict):
     shared_with: list[str]
     customer: NotRequired[str | None]
     locked_by: NotRequired[GlobalIdent]
-
-
-def _get_store_secret() -> Secret[bytes]:
-    try:
-        return Secret(cmk.utils.paths.password_store_secret_file.read_bytes())
-    except FileNotFoundError:
-        pass
-
-    secret = Secret(secrets.token_bytes(32))
-    cmk.utils.paths.password_store_secret_file.parent.mkdir(parents=True, exist_ok=True)
-    cmk.utils.paths.password_store_secret_file.write_bytes(secret.reveal())
-    return secret
 
 
 def password_store_path() -> Path:
@@ -110,7 +97,7 @@ def save(passwords: Mapping[str, str], store_path: Path) -> None:
     }
 
     store.save_bytes_to_file(
-        store_path, PasswordStore(_get_store_secret()).dump_bytes(sane_passwords)
+        store_path, PasswordStore(get_store_secret()).dump_bytes(sane_passwords)
     )
 
 
@@ -127,7 +114,7 @@ def _load(store_path: Path) -> Mapping[str, Secret[str]]:
 
     if not store_path_bytes:
         return {}
-    return PasswordStore(_get_store_secret()).load_bytes(store_path_bytes)
+    return PasswordStore(get_store_secret()).load_bytes(store_path_bytes)
 
 
 def ad_hoc_password_id() -> str:

@@ -27,6 +27,9 @@ def fixture_site_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     if paths.omd_root.is_absolute():
         pytest.fail(f"OMD_ROOT must not be set for these tests, got {paths.omd_root}")
     monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv(
+        "PASSWORD_STORE_SECRET_FILE", str(tmp_path / paths.password_store_secret_file)
+    )
     return tmp_path
 
 

@@ -168,6 +168,9 @@ def fake_paths() -> None:
 
     monkeypatch.setattr("cmk.utils.paths.inventory_dir", repo_path() / "inventory")
     monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", repo_path() / "checkman")
+    monkeypatch.setenv(
+        "PASSWORD_STORE_SECRET_FILE", str(cmk.utils.paths.password_store_secret_file)
+    )
 
 
 def edition() -> cmk_version.Edition:

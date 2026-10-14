@@ -56,11 +56,6 @@ def test_result_state(state: int, expected: State) -> None:
     assert result.state == expected
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=KeyError,
-    reason="Crash report 457e9692-c00a-11f1-8000-02a84a51a8d9: KeyError in check",
-)
 def test_check_vanished_volume_yields_nothing() -> None:
     # "Volume 3" was discovered earlier but is no longer reported by the device;
     # the framework reports the missing item, the check must not crash.

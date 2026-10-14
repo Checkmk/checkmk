@@ -28,6 +28,7 @@ from cmk.gui.permissions import (
     PermissionSection,
     PermissionSectionRegistry,
 )
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
@@ -499,6 +500,11 @@ class ActionHandler:
         return False
 
     def handle_actions(self) -> bool:
+        action_vars = [self.acknowledge_job_var, self.stop_job_var, self.delete_job_var]
+        if not any(request.var(action_var) for action_var in action_vars):
+            return False
+
+        check_csrf_token()
         if request.var(self.acknowledge_job_var):
             self.acknowledge_job()
             return True

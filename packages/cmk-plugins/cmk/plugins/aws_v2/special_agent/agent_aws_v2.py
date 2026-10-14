@@ -704,7 +704,6 @@ def _run_account(
                     account.id,
                     debug=args.debug,
                     config=proxy_config,
-                    account_host=account.host,
                 )
                 sections.init_sections(aws_services, region, account_config, s3_limits_distributor)
                 sections.run(use_cache=use_cache)
@@ -775,7 +774,7 @@ def agent_aws_main(args: argparse.Namespace) -> int:
             account_run = _run_account(
                 args,
                 account,
-                aws_config.for_account(account.id),
+                aws_config.for_account(account.id, host=account.host),
                 global_services,
                 regional_services,
                 use_cache,

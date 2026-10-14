@@ -27,6 +27,7 @@ from .config import (
     describe_credential_failure,
     LOGGER,
 )
+from .hosts import AccountScope, SOURCE_HOST, target_host, TargetHost
 from .sections.aws_lambda import (
     LambdaCloudwatch,
     LambdaCloudwatchInsights,
@@ -206,11 +207,10 @@ class AWSSections(abc.ABC):
         account_id: str,
         debug: bool = False,
         config: botocore.config.Config | None = None,
-        account_host: str | None = None,
     ) -> None:
         self._hostname = hostname
-        # The piggyback host that receives what would otherwise go to the rule host.
-        self._account_host = account_host
+        # The host of the labels and exceptions of the account. init_sections sets it.
+        self._account_host: TargetHost | None = SOURCE_HOST
         self._session = session
         # None until init_sections runs. boto3 then falls back to the session's own
         # region, which is what happened before the region moved onto the client.
@@ -234,6 +234,7 @@ class AWSSections(abc.ABC):
         # below lands in it. One session serves all regions; the client decides where it
         # talks to.
         self._region = region
+        self._account_host = target_host(AccountScope(), config.host_naming)
         self._build_sections(services, region, config, s3_limits_distributor)
 
     @abc.abstractmethod
@@ -312,7 +313,8 @@ class AWSSections(abc.ABC):
         return {"cmk/aws/account": self.account_id}
 
     def _is_piggyback_host_result(self, section_result: AWSSectionResult) -> bool:
-        return section_result.piggyback_hostname not in {None, "", self._hostname}
+        # "" guards against an empty host name in the AWS data or in older cache files.
+        return section_result.piggyback_hostname not in {SOURCE_HOST, "", self._hostname}
 
     def _collect_piggyback_host_labels(
         self, results: Results, static_labels: Mapping[str, str]
@@ -325,14 +327,9 @@ class AWSSections(abc.ABC):
                     host_labels[str(row.piggyback_hostname)].update(row.piggyback_host_labels)
         return host_labels
 
-    def _target_host(self, section_result: AWSSectionResult) -> str | None:
-        if self._is_piggyback_host_result(section_result):
-            return str(section_result.piggyback_hostname)
-        return self._account_host
-
     @staticmethod
-    def _write_to_host(host: str | None, content: str) -> None:
-        sys.stdout.write(content if host is None else f"<<<<{host}>>>>\n{content}<<<<>>>>\n")
+    def _write_to_host(host: TargetHost | None, content: str) -> None:
+        sys.stdout.write(content if host is SOURCE_HOST else f"<<<<{host}>>>>\n{content}<<<<>>>>\n")
 
     def _write_host_labels(self, results: Results) -> None:
         static_host_labels = self._collect_static_host_labels()
@@ -403,7 +400,11 @@ class AWSSections(abc.ABC):
 
         for row in result:
             self._write_to_host(
-                self._target_host(row),
+                # The source host, an empty name and a host named like the rule host
+                # mean the data of the account.
+                row.piggyback_hostname
+                if self._is_piggyback_host_result(row)
+                else self._account_host,
                 f"{section_header}{json.dumps(row.content, default=datetime_serializer)}\n",
             )
 

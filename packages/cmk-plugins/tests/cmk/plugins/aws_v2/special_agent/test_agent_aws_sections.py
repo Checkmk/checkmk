@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="explicit-any"
 
+from argparse import Namespace as Args
 from collections.abc import Sequence
 from datetime import datetime
 from typing import Any
@@ -12,12 +13,18 @@ from unittest import mock
 
 import pytest
 
+from cmk.plugins.aws_v2.special_agent.config import AWSConfig, NamingConvention
 from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST, TargetHost
-from cmk.plugins.aws_v2.special_agent.runner import AWSSectionsGeneric, Results
+from cmk.plugins.aws_v2.special_agent.runner import (
+    AWSSectionsGeneric,
+    AWSSectionsUSEast,
+    Results,
+)
 from cmk.plugins.aws_v2.special_agent.sections.core import (
     AWSSectionResult,
     get_seconds_since_midnight,
 )
+from cmk.plugins.aws_v2.special_agent.sections.s3 import ResultDistributorS3Limits
 
 
 @pytest.mark.parametrize(
@@ -150,19 +157,29 @@ class TestAWSHostLabelSections:
         assert section_stdout.strip().split("\n") == expected_lines
 
 
-def _account_host_sections() -> AWSSectionsGeneric:
-    return AWSSectionsGeneric(
-        hostname="aws-org",
-        session=mock.Mock(),
-        account_id="333333333333",
-        account_host="333333333333",
-    )
+def _account_host_sections() -> AWSSectionsUSEast:
+    config = AWSConfig(
+        "aws-org", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("333333333333", host="333333333333")
+    sections = AWSSectionsUSEast(hostname="aws-org", session=mock.Mock(), account_id="333333333333")
+    sections.init_sections([], "us-east-1", config, ResultDistributorS3Limits())
+    return sections
 
 
-def test_account_host_receives_the_rule_host_sections(capsys: pytest.CaptureFixture[str]) -> None:
+@pytest.mark.parametrize(
+    "piggyback_hostname",
+    [
+        pytest.param(SOURCE_HOST, id="source host"),
+        pytest.param(TargetHost("aws-org"), id="named like the rule host"),
+        pytest.param(TargetHost(""), id="empty name"),
+    ],
+)
+def test_account_host_receives_results_without_a_piggyback_host(
+    capsys: pytest.CaptureFixture[str], piggyback_hostname: TargetHost | None
+) -> None:
     results: Results = {
         ("ec2_limits", 1606382471.693873, 300.0): [
-            AWSSectionResult(piggyback_hostname=SOURCE_HOST, content=[{"limit": 1}])
+            AWSSectionResult(piggyback_hostname=piggyback_hostname, content=[{"limit": 1}])
         ],
     }
 

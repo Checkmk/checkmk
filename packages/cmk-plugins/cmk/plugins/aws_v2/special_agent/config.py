@@ -11,7 +11,7 @@ import hashlib
 import json
 import logging
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Literal, Self, TypedDict
 
@@ -88,6 +88,8 @@ class HostNaming:
 
     ec2: NamingConvention
     cloudfront: CloudFrontHostAssignment
+    account: str | None = None
+    """The piggyback host for the data of the account, or None if it has none of its own."""
 
 
 class TagsImportPatternOption(Enum):
@@ -121,10 +123,15 @@ class AWSConfig:
         self.tags_option = tags_option
         self.account_id: str | None = None
 
-    def for_account(self, account_id: str) -> Self:
-        """The same rule settings, scoped to one AWS account. Sections need this scope."""
+    def for_account(self, account_id: str, host: str | None = None) -> Self:
+        """The same rule settings, scoped to one AWS account. Sections need this scope.
+
+        host is the piggyback host for the data of the account, or None if it has none of
+        its own.
+        """
         account_config = copy.deepcopy(self)
         account_config.account_id = account_id
+        account_config.host_naming = replace(self.host_naming, account=host)
         return account_config
 
     def add_service_tags(self, tags_key: str, tags: OverallTags) -> None:

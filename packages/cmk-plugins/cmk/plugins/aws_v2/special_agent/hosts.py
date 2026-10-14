@@ -6,8 +6,9 @@
 """The one place that decides which host the data of an AWS resource goes to.
 
 Every section asks target_host for the host of its results, or ec2_instance_hosts for
-the hosts of EC2 instances. Data about the AWS account
-or a region as a whole goes to the source host, the host that runs the special agent.
+the hosts of EC2 instances. Data about the AWS account or a region as a whole goes to the
+source host, the host that runs the special agent, or to the piggyback host of the
+account when the agent monitors a list of accounts.
 Some resources get a piggyback host of their own. Each resource type has its own host
 name function below.
 """
@@ -24,7 +25,10 @@ TargetHost = NewType("TargetHost", str)
 """The name of a piggyback host."""
 
 SOURCE_HOST: Final = None
-"""The host that runs the special agent. The agent writes no piggyback header for it."""
+"""The host that runs the special agent. The agent writes no piggyback header for it.
+
+target_host returns it only when the account has no piggyback host of its own.
+"""
 
 
 @dataclass(frozen=True)
@@ -125,9 +129,9 @@ def target_host(resource: HostedResource, naming: HostNaming) -> TargetHost | No
     """
     match resource:
         case AccountScope():
-            return SOURCE_HOST
+            return _account_scope_host(naming.account)
         case EBSAttachment():
-            return _ebs_attachment_host(resource)
+            return _ebs_attachment_host(resource, naming.account)
         case ClassicLoadBalancer():
             return _classic_load_balancer_host(resource)
         case LoadBalancerV2():
@@ -137,7 +141,7 @@ def target_host(resource: HostedResource, naming: HostNaming) -> TargetHost | No
         case WAFV2WebACL():
             return _wafv2_web_acl_host(resource)
         case CloudFrontDistribution():
-            return _cloudfront_distribution_host(resource, naming.cloudfront)
+            return _cloudfront_distribution_host(resource, naming)
         case GlacierVault():
             return _glacier_vault_host(resource)
         case _:
@@ -155,6 +159,10 @@ def ec2_instance_hosts[T: Mapping[str, object]](
         host = _ec2_instance_host(EC2Instance.from_api(instance, region), naming.ec2)
         if host is not None:
             yield host, instance
+
+
+def _account_scope_host(account_host: str | None) -> TargetHost | None:
+    return SOURCE_HOST if account_host is None else TargetHost(account_host)
 
 
 def _ec2_instance_host(instance: EC2Instance, convention: NamingConvention) -> TargetHost | None:
@@ -178,8 +186,10 @@ def _ec2_instance_host(instance: EC2Instance, convention: NamingConvention) -> T
             assert_never(convention)
 
 
-def _ebs_attachment_host(attachment: EBSAttachment) -> TargetHost | None:
-    return SOURCE_HOST if attachment.instance_host is None else attachment.instance_host
+def _ebs_attachment_host(attachment: EBSAttachment, account_host: str | None) -> TargetHost | None:
+    if attachment.instance_host is None:
+        return _account_scope_host(account_host)
+    return attachment.instance_host
 
 
 def _classic_load_balancer_host(load_balancer: ClassicLoadBalancer) -> TargetHost:
@@ -199,11 +209,11 @@ def _wafv2_web_acl_host(web_acl: WAFV2WebACL) -> TargetHost:
 
 
 def _cloudfront_distribution_host(
-    distribution: CloudFrontDistribution, assignment: CloudFrontHostAssignment
+    distribution: CloudFrontDistribution, naming: HostNaming
 ) -> TargetHost | None:
-    if assignment is CloudFrontHostAssignment.origin_domain and distribution.origin_domain:
+    if naming.cloudfront is CloudFrontHostAssignment.origin_domain and distribution.origin_domain:
         return TargetHost(distribution.origin_domain)
-    return SOURCE_HOST
+    return _account_scope_host(naming.account)
 
 
 def _glacier_vault_host(vault: GlacierVault) -> TargetHost:

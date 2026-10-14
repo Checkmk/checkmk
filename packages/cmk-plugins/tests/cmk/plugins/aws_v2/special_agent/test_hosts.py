@@ -148,3 +148,34 @@ def test_cloudfront_distribution_without_origin_goes_to_the_source_host(
     distribution = CloudFrontDistribution(origin_domain)
 
     assert target_host(distribution, DOMAIN_HOST_NAMING) is SOURCE_HOST
+
+
+@pytest.mark.parametrize(
+    ("resource", "cloudfront"),
+    [
+        pytest.param(AccountScope(), CloudFrontHostAssignment.account, id="account"),
+        pytest.param(
+            EBSAttachment(None),
+            CloudFrontHostAssignment.account,
+            id="ebs attached to unmonitored instance",
+        ),
+        pytest.param(
+            CloudFrontDistribution("origin.example.com"),
+            CloudFrontHostAssignment.account,
+            id="cloudfront assigned to aws host",
+        ),
+        pytest.param(
+            CloudFrontDistribution(None),
+            CloudFrontHostAssignment.origin_domain,
+            id="cloudfront without origin",
+        ),
+    ],
+)
+def test_account_data_goes_to_the_account_host_of_a_listed_account(
+    resource: HostedResource, cloudfront: CloudFrontHostAssignment
+) -> None:
+    naming = HostNaming(
+        ec2=NamingConvention.ip_region_instance, cloudfront=cloudfront, account="333333333333"
+    )
+
+    assert target_host(resource, naming) == "333333333333"

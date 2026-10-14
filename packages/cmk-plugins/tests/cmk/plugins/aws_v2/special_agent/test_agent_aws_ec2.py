@@ -504,3 +504,18 @@ def test_agent_aws_ec2_filters_labels(
 
     for result in ec2_summary_results:
         assert list(result.content[0]["TagsForCmkLabels"].keys()) == expected_tags
+
+
+def test_agent_aws_ec2_limits_go_to_the_account_host_of_a_listed_account() -> None:
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("333333333333", host="333333333333")
+    config.add_single_service_config("ec2_names", None)
+    config.add_service_tags("ec2_tags", (None, None))
+    ec2_limits = EC2Limits(
+        FakeEC2Client(), "region", config, ResultDistributor(), FakeServiceQuotasClient()
+    )
+
+    ec2_limits_results = ec2_limits.run().results
+
+    assert [result.piggyback_hostname for result in ec2_limits_results] == ["333333333333"]

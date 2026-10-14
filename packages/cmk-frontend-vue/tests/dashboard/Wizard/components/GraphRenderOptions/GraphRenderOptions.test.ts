@@ -17,6 +17,7 @@ const requiredProps = {
   timestamp: false,
   roundMargin: false,
   graphLegend: false,
+  graphLegendStyle: 'compact' as const,
   clickToPlacePin: true,
   showBurgerMenu: false,
   dontFollowTimerange: false
@@ -50,6 +51,35 @@ describe('GraphRenderOptions', () => {
       await user.click(await screen.findByText('Sum'))
 
       expect(emitted('update:presentation')).toEqual([['sum']])
+    })
+  })
+
+  describe('legend', () => {
+    it('emits update:graphLegend when the legend is switched on', async () => {
+      const user = userEvent.setup()
+      const { emitted } = render(GraphRenderOptions, { props: { ...requiredProps } })
+
+      await user.click(screen.getByRole('checkbox', { name: 'Show graph legend' }))
+
+      expect(emitted('update:graphLegend')).toEqual([[true]])
+    })
+
+    it('offers compact and extended while the legend is shown', () => {
+      render(GraphRenderOptions, { props: { ...requiredProps, graphLegend: true } })
+
+      expect(screen.getByRole('radio', { name: 'Compact' })).toBeChecked()
+      expect(screen.getByRole('radio', { name: 'Extended' })).not.toBeChecked()
+    })
+
+    it('emits update:graphLegendStyle when extended is chosen', async () => {
+      const user = userEvent.setup()
+      const { emitted } = render(GraphRenderOptions, {
+        props: { ...requiredProps, graphLegend: true }
+      })
+
+      await user.click(screen.getByRole('radio', { name: 'Extended' }))
+
+      expect(emitted('update:graphLegendStyle')).toEqual([['extended']])
     })
   })
 })

@@ -86,6 +86,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
       v-model:timestamp="handler.timestamp.value"
       v-model:round-margin="handler.roundMargin.value"
       v-model:graph-legend="handler.graphLegend.value"
+      v-model:graph-legend-style="handler.graphLegendStyle.value"
       v-model:click-to-place-pin="handler.clickToPlacePin.value"
       v-model:show-burger-menu="handler.showBurgerMenu.value"
       v-model:dont-follow-timerange="handler.dontFollowTimerange.value"

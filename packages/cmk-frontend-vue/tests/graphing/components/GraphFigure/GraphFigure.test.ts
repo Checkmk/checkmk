@@ -510,18 +510,27 @@ test('shows the timestamp only when requested', async () => {
   expect(document.querySelector('.graphing-graph-timestamp')).not.toBeInTheDocument()
 })
 
-test('shows the compact legend only when requested', async () => {
-  const { unmount } = renderFigure({ showLegend: true })
+test('shows the compact legend when requested', async () => {
+  renderFigure({ legend: 'compact' })
   await screen.findByTestId('time-series-graph')
   // The compact legend middle-truncates names into head/tail spans; the full title
   // is carried by the series' title attribute.
   expect(screen.getByTitle('CPU utilization')).toBeInTheDocument()
   expect(document.querySelector('.graphing-graph-legend-compact')).toBeInTheDocument()
-  unmount()
+})
 
+test('shows the extended legend with the series statistics when requested', async () => {
+  renderFigure({ legend: 'extended' })
+  await screen.findByTestId('time-series-graph')
+  expect(screen.getByText('CPU utilization')).toBeInTheDocument()
+  expect(screen.getByRole('columnheader', { name: 'Average' })).toBeInTheDocument()
+})
+
+test('draws no legend by default', async () => {
   renderFigure()
   await screen.findByTestId('time-series-graph')
   expect(document.querySelector('.graphing-graph-legend-compact')).not.toBeInTheDocument()
+  expect(document.querySelector('.graphing-graph-legend')).not.toBeInTheDocument()
 })
 
 test('shows the burger menu only when requested and there is an add-to target', async () => {

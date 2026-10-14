@@ -31,6 +31,7 @@ import TimeSeriesGraph, { type GraphOptions, type Size, type TimeRange } from '.
 import { deriveYAxis } from '../TimeSeriesGraph/yAxis'
 import { DEFAULT_CONSOLIDATION_FN } from '../consolidation'
 import { CANVAS_MARGIN_HORIZONTAL } from '../constants'
+import GraphLegend from '../legend/GraphLegend.vue'
 import GraphLegendCompact from '../legend/GraphLegendCompact.vue'
 import { computeEpochTimeRange } from './computeEpochTimeRange'
 import type { GraphFigureProps } from './types.ts'
@@ -43,7 +44,7 @@ const FONT_SIZE_PT = 8
 
 const props = withDefaults(defineProps<GraphFigureProps>(), {
   combinationMode: null,
-  showLegend: false,
+  legend: 'none',
   showTimestamp: false,
   showBurgerMenu: false,
   showPin: false,
@@ -246,6 +247,9 @@ const {
   () => graph.value?.horizontalLines ?? []
 )
 
+const legendMetrics = computed(() => (graph.value?.metrics ?? []).filter((m) => !m.render.hidden))
+const valueResolution = ref<number | null>(null)
+
 const onResetIntent = () => {
   onReset()
   if (!zoomSessionActive.value) {
@@ -352,6 +356,7 @@ onBeforeUnmount(() => {
           @reset="onResetIntent"
           @pin-create="onPinCreate"
           @pin-action="clearPin"
+          @update:value-resolution="valueResolution = $event"
         />
         <CmkSurfaceNotice
           v-if="displayedNotice"
@@ -361,12 +366,25 @@ onBeforeUnmount(() => {
         />
       </div>
       <GraphLegendCompact
-        v-if="showLegend"
-        :metrics="graph.metrics"
+        v-if="legend === 'compact'"
+        :metrics="legendMetrics"
         :horizontal-lines="graph.horizontalLines"
         :shaded-regions="graph.shadedRegions"
         :hidden-metric-names="hiddenMetricNames"
         :hidden-line-names="hiddenLineNames"
+        @update:hidden-metric-names="hiddenMetricNames = $event"
+        @update:hidden-line-names="hiddenLineNames = $event"
+        @hover-metrics="highlightedMetricNames = $event"
+      />
+      <GraphLegend
+        v-else-if="legend === 'extended'"
+        :metrics="legendMetrics"
+        :horizontal-lines="graph.horizontalLines"
+        :shaded-regions="graph.shadedRegions"
+        :hidden-metric-names="hiddenMetricNames"
+        :hidden-line-names="hiddenLineNames"
+        :value-resolution="valueResolution"
+        :axis-unit="graphOptions.y_axis?.unit ?? null"
         @update:hidden-metric-names="hiddenMetricNames = $event"
         @update:hidden-line-names="hiddenLineNames = $event"
         @hover-metrics="highlightedMetricNames = $event"

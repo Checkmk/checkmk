@@ -140,6 +140,9 @@ export type NtopTopTalkersContent = components['schemas']['NtopTopTalkersContent
 export type TitleSpec = components['schemas']['WidgetTitle']
 export type DefaultOrColor = components['schemas']['DefaultOrColor']
 export type GraphRenderOptions = components['schemas']['GraphRenderOptions']
+export type GraphLegendStyle = NonNullable<
+  components['schemas']['GraphRenderOptions']['legend_style']
+>
 export type HostState = components['schemas']['HostState']
 export type CombinedGraphContentPresentation =
   components['schemas']['CombinedGraphContent']['presentation']

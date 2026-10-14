@@ -93,7 +93,7 @@ const figureSource = computed<GraphFigureSource>(() => ({
         v-else
         :source="figureSource"
         :timerange="barChart.time_range"
-        :show-legend="false"
+        legend="none"
         :show-pin="false"
         :show-burger-menu="false"
       />

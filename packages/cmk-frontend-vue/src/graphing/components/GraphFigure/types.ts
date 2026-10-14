@@ -29,6 +29,8 @@ export type GraphFigureSource =
       binUnit: BinUnit | null
     }
 
+export type GraphFigureLegend = 'none' | 'compact' | 'extended'
+
 /**
  * The embedding contract of the self-managed graph figure: the host provides a discovered
  * graph shell (its internal definition) and display options; the figure owns its data fetch,
@@ -44,7 +46,7 @@ export interface GraphFigureProps {
    */
   requestedTimeRange?: RequestedTimeRange | undefined
   combinationMode?: GraphCombinationMode | null
-  showLegend?: boolean
+  legend?: GraphFigureLegend
   showTimestamp?: boolean
   /** Enables the burger (action) menu; the menu only shows when `addTo` is also present. */
   showBurgerMenu?: boolean

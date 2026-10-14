@@ -26,6 +26,7 @@ import type {
 } from '@/dashboard/types/widget.ts'
 import {
   GraphFigure,
+  type GraphFigureLegend,
   type GraphFigureSource,
   type RequestedTimeRange,
   toDateTimeRange,
@@ -295,7 +296,12 @@ const timerange = computed(() => {
   const content = props.content
   return content.type === 'average_scatterplot' ? content.time_range : content.timerange
 })
-const showLegend = computed(() => graphRenderOptions.value?.show_legend ?? false)
+const legend = computed((): GraphFigureLegend => {
+  if (!(graphRenderOptions.value?.show_legend ?? false)) {
+    return 'none'
+  }
+  return graphRenderOptions.value?.legend_style ?? 'compact'
+})
 const showTimestamp = computed(() => graphRenderOptions.value?.show_graph_time ?? false)
 const showPin = computed(
   () => props.isPreview !== true && (graphRenderOptions.value?.show_pin ?? true)
@@ -354,7 +360,7 @@ onMounted(() => {
     :effective-title="effectiveTitle"
     :general_settings="general_settings"
     content-overflow="hidden"
-    :is-scrollable-preview="(isPreview ?? false) && showLegend"
+    :is-scrollable-preview="(isPreview ?? false) && legend !== 'none'"
   >
     <div
       class="db-content-time-series-graph"
@@ -379,7 +385,7 @@ onMounted(() => {
         :timerange="timerange"
         :requested-time-range="dashboardTimeRange"
         :combination-mode="combinationMode"
-        :show-legend="showLegend"
+        :legend="legend"
         :show-timestamp="showTimestamp"
         :show-pin="showPin"
         :show-time-axis="showTimeAxis"

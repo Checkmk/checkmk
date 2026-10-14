@@ -440,6 +440,49 @@ class TestPerformanceGraphContent:
             },
         )
 
+    def test_keeps_the_legend_style(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {
+                    "test_widget": create_widget(
+                        {
+                            "type": "performance_graph",
+                            "timerange": {"type": "predefined", "value": "last_25_hours"},
+                            "graph_render_options": {
+                                "show_legend": True,
+                                "legend_style": "extended",
+                            },
+                            "source": "active_sessions",
+                        }
+                    )
+                },
+            )
+        )
+        widget = next(iter(resp.json["extensions"]["widgets"].values()))
+        assert widget["content"]["graph_render_options"]["legend_style"] == "extended"
+
+    def test_rejects_an_unknown_legend_style(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {
+                    "test_widget": create_widget(
+                        {
+                            "type": "performance_graph",
+                            "timerange": {"type": "predefined", "value": "last_25_hours"},
+                            "graph_render_options": {"legend_style": "huge"},
+                            "source": "active_sessions",
+                        }
+                    )
+                },
+            ),
+            expect_ok=False,
+        )
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
+
 
 @pytest.mark.parametrize(
     "content",

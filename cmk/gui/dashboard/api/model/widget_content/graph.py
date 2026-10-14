@@ -27,6 +27,7 @@ from cmk.gui.openapi.framework.model.common_fields import (
     TimerangeModel,
 )
 from cmk.gui.type_defs import (
+    GraphLegendStyle,
     GraphPresentation,
     GraphRenderOptionsVS,
     SizePT,
@@ -59,6 +60,11 @@ class GraphRenderOptions:
     )
     show_legend: bool | ApiOmitted = api_field(
         description="Show the graph legend.",
+        default_factory=ApiOmitted,
+    )
+    legend_style: GraphLegendStyle | ApiOmitted = api_field(
+        description="How the legend is drawn when show_legend is set: compact names the series in "
+        "a single row, extended lists them in a table with their statistics. Defaults to compact.",
         default_factory=ApiOmitted,
     )
     show_vertical_axis: bool | ApiOmitted = api_field(
@@ -117,6 +123,7 @@ class GraphRenderOptions:
             show_graph_time=graph_render_options.get("show_graph_time", ApiOmitted()),
             show_margin=graph_render_options.get("show_margin", ApiOmitted()),
             show_legend=graph_render_options.get("show_legend", ApiOmitted()),
+            legend_style=graph_render_options.get("legend_style", ApiOmitted()),
             show_vertical_axis=graph_render_options.get("show_vertical_axis", ApiOmitted()),
             vertical_axis_width=cls._vertical_axis_width_from_internal(
                 graph_render_options.get("vertical_axis_width"),
@@ -144,6 +151,8 @@ class GraphRenderOptions:
             options["show_margin"] = self.show_margin
         if not isinstance(self.show_legend, ApiOmitted):
             options["show_legend"] = self.show_legend
+        if not isinstance(self.legend_style, ApiOmitted):
+            options["legend_style"] = self.legend_style
         if not isinstance(self.show_vertical_axis, ApiOmitted):
             options["show_vertical_axis"] = self.show_vertical_axis
         if not isinstance(self.vertical_axis_width, ApiOmitted):

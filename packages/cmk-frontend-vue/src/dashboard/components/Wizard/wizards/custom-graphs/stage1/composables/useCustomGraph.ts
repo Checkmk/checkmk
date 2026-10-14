@@ -79,11 +79,12 @@ export const useCustomGraph = async (
     timestamp,
     roundMargin,
     graphLegend,
+    graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
     dontFollowTimerange,
     graphRenderOptions
-  } = useGraphRenderOptions(currentContent?.graph_render_options)
+  } = useGraphRenderOptions(currentContent?.graph_render_options, currentContent === null)
 
   const widgetProps = ref<WidgetProps | null>(null)
 
@@ -178,6 +179,7 @@ export const useCustomGraph = async (
     timestamp,
     roundMargin,
     graphLegend,
+    graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
     dontFollowTimerange,

@@ -5,7 +5,9 @@
  */
 import { type Ref, computed, ref } from 'vue'
 
-import type { GraphRenderOptions } from '@/dashboard/components/Wizard/types'
+import type { GraphLegendStyle, GraphRenderOptions } from '@/dashboard/components/Wizard/types'
+
+import { useGraphLegend } from './useGraphLegend'
 
 export interface UseGraphRenderOptions {
   horizontalAxis: Ref<boolean>
@@ -16,6 +18,7 @@ export interface UseGraphRenderOptions {
   timestamp: Ref<boolean>
   roundMargin: Ref<boolean>
   graphLegend: Ref<boolean>
+  graphLegendStyle: Ref<GraphLegendStyle>
 
   clickToPlacePin: Ref<boolean>
   showBurgerMenu: Ref<boolean>
@@ -33,7 +36,10 @@ export interface UseGraphRenderProps extends UseGraphRenderOptions {
   generateSpec: () => GraphRenderOptions
 }
 
-export const useGraphRenderOptions = (data?: GraphRenderOptions): UseGraphRenderProps => {
+export const useGraphRenderOptions = (
+  data: GraphRenderOptions | undefined,
+  isNewWidget: boolean
+): UseGraphRenderProps => {
   const horizontalAxis = ref<boolean>(data?.show_time_axis ?? true)
   const verticalAxis = ref<boolean>(data?.show_vertical_axis ?? true)
   const verticalAxisWidthMode = ref<'fixed' | 'absolute'>(
@@ -45,7 +51,7 @@ export const useGraphRenderOptions = (data?: GraphRenderOptions): UseGraphRender
 
   const timestamp = ref<boolean>(data?.show_graph_time ?? false)
   const roundMargin = ref<boolean>(data?.show_margin ?? false)
-  const graphLegend = ref<boolean>(data?.show_legend ?? false)
+  const { graphLegend, graphLegendStyle } = useGraphLegend(data, isNewWidget)
 
   const clickToPlacePin = ref<boolean>(data?.show_pin ?? true)
   const showBurgerMenu = ref<boolean>(data?.show_controls ?? false)
@@ -62,6 +68,7 @@ export const useGraphRenderOptions = (data?: GraphRenderOptions): UseGraphRender
       show_graph_time: timestamp.value,
       show_margin: roundMargin.value,
       show_legend: graphLegend.value,
+      legend_style: graphLegendStyle.value,
       show_pin: clickToPlacePin.value,
       show_controls: showBurgerMenu.value,
       fixed_timerange: dontFollowTimerange.value
@@ -81,6 +88,7 @@ export const useGraphRenderOptions = (data?: GraphRenderOptions): UseGraphRender
     timestamp,
     roundMargin,
     graphLegend,
+    graphLegendStyle,
 
     clickToPlacePin,
     showBurgerMenu,

@@ -10,6 +10,7 @@ export { default as GraphSkeleton } from './components/GraphSkeleton.vue'
 export type { TimerangeModel } from './components/GraphFigure/computeEpochTimeRange'
 export type {
   GraphFetch,
+  GraphFigureLegend,
   GraphFigureProps,
   GraphFigureSource
 } from './components/GraphFigure/types'

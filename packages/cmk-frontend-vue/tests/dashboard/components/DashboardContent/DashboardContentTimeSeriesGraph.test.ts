@@ -25,7 +25,7 @@ vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
       'source',
       'timerange',
       'combinationMode',
-      'showLegend',
+      'legend',
       'showTimestamp',
       'showPin',
       'showTimeAxis',
@@ -40,6 +40,7 @@ vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
     template: `<div
       data-testid="graph-figure"
       :data-show-pin="showPin"
+      :data-legend="legend"
       :data-source-type="source.type"
       :data-show-time-axis="showTimeAxis"
       :data-show-value-axis="showValueAxis"
@@ -211,6 +212,64 @@ describe('graph render options', () => {
 
     const figure = await screen.findByTestId('graph-figure')
     expect(figure.getAttribute('data-show-margin')).toBe('false')
+  })
+})
+
+describe('the legend of a graph widget', () => {
+  const legendOf = async () =>
+    (await screen.findByTestId('graph-figure')).getAttribute('data-legend')
+
+  test('is compact when shown without a stored style', async () => {
+    renderWidget({
+      content: { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { show_legend: true } }
+    })
+
+    expect(await legendOf()).toBe('compact')
+  })
+
+  test('follows the stored style', async () => {
+    renderWidget({
+      content: {
+        ...CUSTOM_GRAPH_CONTENT,
+        graph_render_options: { show_legend: true, legend_style: 'extended' }
+      }
+    })
+
+    expect(await legendOf()).toBe('extended')
+  })
+
+  test('is not drawn while switched off, whatever the stored style', async () => {
+    renderWidget({
+      content: {
+        ...CUSTOM_GRAPH_CONTENT,
+        graph_render_options: { show_legend: false, legend_style: 'extended' }
+      }
+    })
+
+    expect(await legendOf()).toBe('none')
+  })
+
+  test('makes the widget preview scrollable', async () => {
+    renderWidget({
+      isPreview: true,
+      content: {
+        ...CUSTOM_GRAPH_CONTENT,
+        graph_render_options: { show_legend: true, legend_style: 'extended' }
+      }
+    })
+
+    await screen.findByTestId('graph-figure')
+    expect(document.querySelector('.db-content-container__preview-scroll-container')).not.toBeNull()
+  })
+
+  test('leaves the widget preview unscrolled while switched off', async () => {
+    renderWidget({
+      isPreview: true,
+      content: { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { show_legend: false } }
+    })
+
+    await screen.findByTestId('graph-figure')
+    expect(document.querySelector('.db-content-container__preview-scroll-container')).toBeNull()
   })
 })
 

@@ -86,6 +86,37 @@ describe('updatesFromForm', () => {
     expect(servicegroupUpdates).not.toHaveProperty('recognize_services')
   })
 
+  it('keeps the state options a dynamic group carries', () => {
+    const dyngroup = obj({
+      type: 'dyngroup',
+      object_types: 'host',
+      object_filter: 'Filter: groups >= web\n',
+      only_hard_states: true,
+      recognize_services: true
+    })
+
+    expect(updatesFromForm(formOf(dyngroup), dyngroup, 'static')).toMatchObject({
+      only_hard_states: true,
+      recognize_services: true
+    })
+  })
+
+  it('leaves service counting alone where the form does not offer it', () => {
+    const services = obj({ type: 'dyngroup', object_types: 'service', recognize_services: true })
+
+    expect(updatesFromForm(formOf(services), services, 'static')).not.toHaveProperty(
+      'recognize_services'
+    )
+  })
+
+  it('drops member patterns once the line shows what takes none', () => {
+    const line = obj({ type: 'line', line_object_type: 'hostgroup', exclude_members: '^test-' })
+    const form = formOf(line)
+    form.line_object_type = 'dyngroup'
+
+    expect(updatesFromForm(form, line, 'static').exclude_members).toBeNull()
+  })
+
   it('turns emptied fields into null rather than an empty string', () => {
     const object = obj({ type: 'host', host_name: 'web01', url: 'https://example.com' })
     const form = formOf(object)

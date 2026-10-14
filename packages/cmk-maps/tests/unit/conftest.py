@@ -107,6 +107,7 @@ def mock_connection() -> MagicMock:
     connection.get_hosts_services_batch = AsyncMock(return_value={})
     connection.get_host_services = AsyncMock(return_value=[])
     connection.get_services_summary = AsyncMock(return_value={})
+    connection.get_hosts_services_summaries = AsyncMock(return_value=None)
 
     connection.get_group_members = AsyncMock(return_value=[])
 

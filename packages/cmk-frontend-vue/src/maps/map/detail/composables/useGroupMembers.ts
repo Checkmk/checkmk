@@ -7,6 +7,7 @@ import { computed, ref, watch } from 'vue'
 
 import { useMapsApis } from '@/maps/services/context'
 import type { GroupMember, MapElement } from '@/maps/types/api'
+import { groupMembersQuery } from '@/maps/utils/memberFilter'
 
 interface MemberChip {
   label: string
@@ -55,9 +56,10 @@ export function useGroupMembers(options: GroupMembersOptions) {
       () => object()?.group_name,
       () => object()?.object_filter,
       () => object()?.object_types,
+      () => object()?.exclude_members,
       connectionId
     ],
-    async ([objType, groupName, objFilter, objTypes, connId]) => {
+    async ([objType, groupName, objFilter, objTypes, excluded, connId]) => {
       groupMembers.value = []
       memberSearch.value = ''
       onlyProblems.value = false
@@ -76,18 +78,23 @@ export function useGroupMembers(options: GroupMembersOptions) {
       }
       loadingMembers.value = true
       try {
-        const rows =
-          objType === 'dyngroup'
-            ? await objects.fetchDyngroupMembers(objTypes ?? 'host', objFilter ?? '')
-            : await objects.fetchGroupMembers(
-                objType as 'hostgroup' | 'servicegroup',
-                groupName ?? ''
-              )
+        let rows: GroupMember[]
+        if (objType === 'dyngroup') {
+          rows = await objects.fetchDyngroupMembers(objTypes ?? 'host', objFilter ?? '')
+        } else if (objType === 'hostgroup' || objType === 'servicegroup') {
+          const thinned = excluded ? groupMembersQuery(objType, groupName ?? '', excluded) : null
+          rows = thinned
+            ? await objects.fetchDyngroupMembers(thinned.objectTypes, thinned.objectFilter)
+            : await objects.fetchGroupMembers(objType, groupName ?? '')
+        } else {
+          return
+        }
         // Stale-response guard.
         if (
           object()?.type === objType &&
           object()?.group_name === groupName &&
-          object()?.object_filter === objFilter
+          object()?.object_filter === objFilter &&
+          object()?.exclude_members === excluded
         ) {
           groupMembers.value = rows
         }

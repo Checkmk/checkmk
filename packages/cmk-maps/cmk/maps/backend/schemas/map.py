@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Map configuration schemas."""
 
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 
 from pydantic import (
     AfterValidator,
@@ -16,7 +16,12 @@ from pydantic import (
 )
 
 from cmk.maps.backend.schemas.presentation import PresentationView
-from cmk.maps.shared.filters import normalize_object_filter
+from cmk.maps.shared.filters import (
+    bound_type_of,
+    check_host_member_patterns,
+    normalize_object_filter,
+    optional_member_pattern,
+)
 from cmk.maps.shared.geo import LAT_LIMIT, LNG_LIMIT, MAX_ZOOM
 from cmk.maps.shared.map_compat import (
     accept_legacy_backend_id,
@@ -320,7 +325,18 @@ class MapElement(BaseModel):
             return None
         return normalize_object_filter(v)
 
+    @field_validator("exclude_members", "exclude_member_states")
+    @classmethod
+    def _validate_member_patterns(cls, v: str | None) -> str | None:
+        return optional_member_pattern(v)
+
     _migrate_weathermap = model_validator(mode="before")(migrate_weathermap)
+
+    @model_validator(mode="after")
+    def _host_takes_no_service_pattern(self) -> Self:
+        bound = bound_type_of(self.type, self.line_object_type, self.service_description)
+        check_host_member_patterns(bound, self.exclude_members, self.exclude_member_states)
+        return self
 
     line_color: str | None = None
     line_color_border: str | None = None
@@ -530,6 +546,11 @@ class MapElementUpdate(BaseModel):
         if v is None or not v.strip():
             return None
         return normalize_object_filter(v)
+
+    @field_validator("exclude_members", "exclude_member_states")
+    @classmethod
+    def _validate_member_patterns(cls, v: str | None) -> str | None:
+        return optional_member_pattern(v)
 
     _migrate_weathermap = model_validator(mode="before")(migrate_weathermap)
 

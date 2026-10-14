@@ -298,7 +298,12 @@ class FakeConnection(ConnectionBase):
 
     @override
     async def get_hostgroup_states(
-        self, group: str, *, only_hard: bool = False, with_services: bool = False
+        self,
+        group: str,
+        *,
+        only_hard: bool = False,
+        with_services: bool = False,
+        exclude: str | None = None,
     ) -> ObjectState:
         idx = hash(group) % len(_HOST_STATES)
         state = _HOST_STATES[idx]
@@ -318,7 +323,9 @@ class FakeConnection(ConnectionBase):
         )
 
     @override
-    async def get_servicegroup_states(self, group: str, *, only_hard: bool = False) -> ObjectState:
+    async def get_servicegroup_states(
+        self, group: str, *, only_hard: bool = False, exclude: str | None = None
+    ) -> ObjectState:
         idx = hash(group) % len(_SERVICE_STATES)
         state = _SERVICE_STATES[idx]
         return ObjectState(

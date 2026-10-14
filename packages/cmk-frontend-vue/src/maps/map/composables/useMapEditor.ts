@@ -850,6 +850,8 @@ export function useMapEditor() {
       lng,
       object_types: 'host',
       object_filter: objectFilter,
+      // A bundle stands for its hosts with everything on them.
+      recognize_services: true,
       bundle_kind: kind,
       bundle_hosts: hosts,
       label: {

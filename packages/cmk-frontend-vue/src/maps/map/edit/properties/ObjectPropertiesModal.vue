@@ -33,6 +33,7 @@ import {
   type ObjectForm,
   boundTypeOf,
   formFromObject,
+  leavesOutMembers,
   updatesFromForm,
   weatherColorNeedsMetric
 } from '@/maps/map/edit/properties/objectForm'
@@ -173,12 +174,7 @@ const objectType = computed(() => props.object.type)
 const isLine = computed(() => objectType.value === 'line')
 const showsIdentity = computed(() => !['textbox', 'graph', 'image'].includes(objectType.value))
 const showsAppearance = computed(() => !['line', 'textbox', 'graph'].includes(objectType.value))
-// Every object that stands for more than itself can hide members -- including
-// the BI aggregation, which is also the only one whose leaves the section can
-// count back at the operator.
-const showsFilter = computed(() =>
-  ['host', 'hostgroup', 'servicegroup', 'map', 'aggregation'].includes(objectType.value)
-)
+const showsFilter = computed(() => leavesOutMembers(boundType.value))
 
 const saving = ref(false)
 const saveError = ref('')
@@ -281,7 +277,7 @@ function onConfirmDelete(): void {
           :map-icon-size="mapIconSize"
         />
         <LinkSection v-model:form="form" :auto-url="autoUrl" />
-        <FilterSection v-if="showsFilter" v-model:form="form" :connection-id="connectionId" />
+        <FilterSection v-if="showsFilter" v-model:form="form" :is-host="boundType === 'host'" />
         <TemplatesSection v-model:form="form" />
       </CmkScrollContainer>
 

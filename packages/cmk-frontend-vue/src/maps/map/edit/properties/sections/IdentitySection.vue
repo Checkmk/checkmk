@@ -20,7 +20,12 @@ import type { ObjectSuggestions } from '@/maps/map/edit/composables/useObjectSug
 import { rebindHost } from '@/maps/map/edit/hostBinding'
 import PropertyRow from '@/maps/map/edit/properties/PropertyRow.vue'
 import PropertySection from '@/maps/map/edit/properties/PropertySection.vue'
-import { type ObjectForm, boundTypeOf } from '@/maps/map/edit/properties/objectForm'
+import {
+  type ObjectForm,
+  boundTypeOf,
+  choosesServiceCounting,
+  hasStateOptions
+} from '@/maps/map/edit/properties/objectForm'
 import MapsColorInput from '@/maps/shared/components/MapsColorInput.vue'
 import MapsObjectField from '@/maps/shared/components/MapsObjectField.vue'
 import MapsSuggestionField from '@/maps/shared/components/MapsSuggestionField.vue'
@@ -53,6 +58,9 @@ const isLine = computed(() => props.object.type === 'line')
 const type = computed(() => boundTypeOf(form.value, props.object))
 /** Only an expanded aggregation draws the lines down to its subtree. */
 const showsSubtreeLines = computed(() => !isLine.value && form.value.expand_depth > 0)
+
+const showsStateChecks = computed(() => hasStateOptions(type.value))
+const showsRecognizeServices = computed(() => choosesServiceCounting(type.value, form.value))
 </script>
 
 <template>
@@ -98,14 +106,6 @@ const showsSubtreeLines = computed(() => !isLine.value && form.value.expand_dept
           :placeholder="_t('service description')"
         />
       </PropertyRow>
-      <div class="maps-identity-section__checks">
-        <CmkCheckbox v-model="form.only_hard_states" :label="_t('Only hard states')" />
-        <CmkCheckbox
-          v-if="type === 'host'"
-          v-model="form.recognize_services"
-          :label="_t('Consider services')"
-        />
-      </div>
     </template>
 
     <template v-if="type === 'hostgroup' || type === 'servicegroup'">
@@ -117,14 +117,6 @@ const showsSubtreeLines = computed(() => !isLine.value && form.value.expand_dept
           :placeholder="_t('group name')"
         />
       </PropertyRow>
-      <div class="maps-identity-section__checks">
-        <CmkCheckbox v-model="form.only_hard_states" :label="_t('Only hard states')" />
-        <CmkCheckbox
-          v-if="type === 'hostgroup'"
-          v-model="form.recognize_services"
-          :label="_t('Consider services')"
-        />
-      </div>
     </template>
 
     <template v-if="type === 'dyngroup'">
@@ -158,6 +150,15 @@ const showsSubtreeLines = computed(() => !isLine.value && form.value.expand_dept
         }}
       </p>
     </template>
+
+    <div v-if="showsStateChecks" class="maps-identity-section__checks">
+      <CmkCheckbox v-model="form.only_hard_states" :label="_t('Only hard states')" />
+      <CmkCheckbox
+        v-if="showsRecognizeServices"
+        v-model="form.recognize_services"
+        :label="_t('Consider services')"
+      />
+    </div>
 
     <PropertyRow v-if="type === 'map'" :label="_t('Map name')">
       <MapsSuggestionField

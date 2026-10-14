@@ -25,6 +25,7 @@ from cmk.maps.gui._cfg_import import (
     _parse_coord,
     cfg_to_map,
     decode_cfg,
+    drop_member_filters,
     drop_unusable_urls,
     dynamic_map_warnings,
     map_name_from_filename,
@@ -268,21 +269,39 @@ def test_cfg_to_map_host() -> None:
     assert obj["recognize_services"] is True
 
 
-@pytest.mark.parametrize(
-    "block", ["host {\n    host_name = s", "hostgroup {\n    hostgroup_name = g"]
-)
+_HOST_COUNTING_BLOCKS = [
+    "host {\n    host_name = s",
+    "hostgroup {\n    hostgroup_name = g",
+    "dyngroup {\n    object_filter = Filter: name ~ ^web",
+]
+
+
+@pytest.mark.parametrize("block", _HOST_COUNTING_BLOCKS)
 def test_cfg_to_map_counts_services_as_nagvis_does_by_default(block: str) -> None:
     obj = _first_obj(cfg_to_map(f"define {block}\n}}\n", "test"))
     assert obj["recognize_services"] is True
 
 
-def test_cfg_to_map_keeps_services_out_where_the_map_says_so() -> None:
-    content = "define hostgroup {\n    hostgroup_name = g\n    recognize_services = 0\n}\n"
+@pytest.mark.parametrize("block", _HOST_COUNTING_BLOCKS)
+def test_cfg_to_map_keeps_services_out_where_the_map_says_so(block: str) -> None:
+    content = f"define {block}\n    recognize_services = 0\n}}\n"
     assert _first_obj(cfg_to_map(content, "test"))["recognize_services"] is False
 
 
-def test_cfg_to_map_group_keeps_hard_states() -> None:
-    content = "define servicegroup {\n    servicegroup_name = g\n    only_hard_states = 1\n}\n"
+def test_cfg_to_map_dynamic_group_of_services_has_no_services_to_count() -> None:
+    content = "define dyngroup {\n    object_types = service\n    object_filter = Filter: x\n}\n"
+    assert "recognize_services" not in _first_obj(cfg_to_map(content, "test"))
+
+
+@pytest.mark.parametrize(
+    "block",
+    [
+        "servicegroup {\n    servicegroup_name = g",
+        "dyngroup {\n    object_filter = Filter: name ~ ^web",
+    ],
+)
+def test_cfg_to_map_group_keeps_hard_states(block: str) -> None:
+    content = f"define {block}\n    only_hard_states = 1\n}}\n"
     assert _first_obj(cfg_to_map(content, "test"))["only_hard_states"] is True
 
 
@@ -611,14 +630,69 @@ def test_cfg_to_map_object_keeps_its_label_length() -> None:
     assert _first_obj(cfg_to_map(content, "test"))["label_maxlen"] == 12
 
 
-def test_cfg_to_map_object_keeps_its_member_filters() -> None:
+def test_parse_keeps_a_group_with_the_members_it_leaves_out() -> None:
     content = (
-        "define hostgroup {\n    hostgroup_name = web\n"
-        "    exclude_members = ^test-\n    exclude_member_states = ^(1|2)$\n}\n"
+        "define hostgroup {\n    hostgroup_name = web\n    exclude_members = ^test-~~^CPU\n"
+        "    exclude_member_states = ^db-\n}\n"
+        "define servicegroup {\n    servicegroup_name = http\n    exclude_members = ^test-\n"
+        "    view_type = line\n    x = 0,10\n    y = 0,10\n}\n"
     )
-    obj = _first_obj(cfg_to_map(content, "test"))
-    assert obj["exclude_members"] == "^test-"
-    assert obj["exclude_member_states"] == "^(1|2)$"
+    map_cfg = cfg_to_map(content, "test")
+
+    assert drop_member_filters(map_cfg) == []
+    group, line = map_cfg["objects"]
+    assert group["type"] == "hostgroup"
+    assert group["group_name"] == "web"
+    assert group["exclude_members"] == "^test-~~^CPU"
+    assert group["exclude_member_states"] == "^db-"
+    assert line["line_object_type"] == "servicegroup"
+    assert line["exclude_members"] == "^test-"
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        pytest.param("define map {\n    map_name = a\n    exclude_members = ^x\n}\n", id="map"),
+        pytest.param(
+            "define service {\n    host_name = h1\n    service_description = CPU\n"
+            "    exclude_members = ^x\n}\n",
+            id="service",
+        ),
+        pytest.param(
+            "define host {\n    host_name = h1\n    exclude_members = h1~~CPU\n}\n",
+            id="host-service-pattern",
+        ),
+        pytest.param(
+            "define hostgroup {\n    hostgroup_name = web\n    exclude_members = x\\nOr: 2\n}\n",
+            id="query-line",
+        ),
+    ],
+)
+def test_drop_member_filters_drops_what_maps_cannot_apply(content: str) -> None:
+    map_cfg = cfg_to_map(content, "test")
+
+    warnings = drop_member_filters(map_cfg)
+
+    assert "exclude_members" not in _first_obj(map_cfg)
+    assert warnings[0].startswith("1 object leaves out members")
+
+
+def test_drop_member_filters_names_what_it_dropped() -> None:
+    map_cfg = cfg_to_map(
+        "define host {\n    host_name = h1\n    exclude_members = ^CPU\n}\n"
+        "define map {\n    map_name = a\n    exclude_members = ^x\n"
+        "    exclude_member_states = ^y\n}\n"
+        "define map {\n    map_name = b\n    exclude_members = ^x\n}\n",
+        "test",
+    )
+
+    warnings = drop_member_filters(map_cfg)
+
+    assert map_cfg["objects"][0]["exclude_members"] == "^CPU"
+    assert len(warnings) == 3
+    assert warnings[0].startswith("2 objects leave out members")
+    assert warnings[1].startswith("1 object ignores the state")
+    assert warnings[2].startswith("Maps applies such a pattern only to hosts")
 
 
 @pytest.mark.parametrize(

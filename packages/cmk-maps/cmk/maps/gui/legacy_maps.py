@@ -132,6 +132,8 @@ def legacy_map_to_spec(
     spec["name"] = name
     _rename_icon_refs(spec, renamed_icons)
     _translate_legacy_keys(spec)
+    _count_bundle_services(spec)
+    _drop_member_patterns(spec)
     _retarget_connections(spec, foreign)
     _convert_css_colors(spec)
     _fill_map_defaults(spec)
@@ -218,6 +220,35 @@ def _translate_legacy_keys(spec: dict[str, object]) -> None:
         migrate_weathermap(obj)
         if "graph_metric" in obj:
             obj["graph_metric"] = coerce_graph_metric(obj["graph_metric"])
+
+
+def _count_bundle_services(spec: dict[str, object]) -> None:
+    """Keep a board's geo bundles counting their services.
+
+    OrbVis folded a bundle's service counts into its state, yet stored
+    ``recognize_services`` off on every dynamic group; Maps goes by that flag.
+    """
+    objects = spec.get("objects")
+    if not isinstance(objects, list):
+        return
+    for obj in objects:
+        if isinstance(obj, dict) and obj.get("type") == "dyngroup" and obj.get("bundle_kind"):
+            obj["recognize_services"] = True
+
+
+def _drop_member_patterns(spec: dict[str, object]) -> None:
+    """Drop the member patterns of a board.
+
+    OrbVis stored them but never applied them, and its editor asked for state
+    names where Maps reads a pattern on member names.
+    """
+    objects = spec.get("objects")
+    if not isinstance(objects, list):
+        return
+    for obj in objects:
+        if isinstance(obj, dict):
+            obj.pop("exclude_members", None)
+            obj.pop("exclude_member_states", None)
 
 
 # The keys that hold a color, at any depth of a board.

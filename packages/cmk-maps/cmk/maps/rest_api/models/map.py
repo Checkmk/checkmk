@@ -29,12 +29,17 @@ Every model class is prefixed with ``Map`` so the generated OpenAPI component /
 TypeScript type names stay unambiguous in the shared spec namespace.
 """
 
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 
-from pydantic import AfterValidator, BeforeValidator, Field
+from pydantic import AfterValidator, BeforeValidator, Field, model_validator
 
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
-from cmk.maps.shared.filters import normalize_object_filter
+from cmk.maps.shared.filters import (
+    bound_type_of,
+    check_host_member_patterns,
+    normalize_object_filter,
+    optional_member_pattern,
+)
 from cmk.maps.shared.geo import LAT_LIMIT, LNG_LIMIT, MAX_ZOOM
 from cmk.maps.shared.map_payload import (
     ClickAction,
@@ -87,6 +92,8 @@ def _normalize_object_filter(value: str) -> str | None:
 # 422 at the REST boundary instead of a silently-stored value that bricks the map.
 _ObjectFilter = Annotated[str, AfterValidator(_normalize_object_filter)]
 
+# The daemon rejects a pattern that is not a single line, so reject it here too.
+_MemberPattern = Annotated[str, AfterValidator(optional_member_pattern)]
 _RotationPool = Annotated[str, AfterValidator(validate_rotation_pool)]
 
 
@@ -748,13 +755,24 @@ class MapObjectGraph:
 
 @api_model
 class MapObjectFilter:
-    """Member exclusion for aggregating objects (host/group/map)."""
+    """Members left out of a host, host group or service group, as in NagVis."""
 
-    exclude_members: str | None | ApiOmitted = api_field(
-        description="Member exclusion filter.", example="test-*", default_factory=ApiOmitted
+    exclude_members: _MemberPattern | None | ApiOmitted = api_field(
+        description=(
+            "Livestatus regular expression on member names. Matching members are left out"
+            " entirely. On a group, 'host~~service' names a service of a member host."
+        ),
+        example="^test-",
+        default_factory=ApiOmitted,
     )
-    exclude_member_states: str | None | ApiOmitted = api_field(
-        description="Member-state exclusion.", example="ok", default_factory=ApiOmitted
+    exclude_member_states: _MemberPattern | None | ApiOmitted = api_field(
+        description=(
+            "Livestatus regular expression on member names, like exclude_members. Matching"
+            " members are still listed but do not count towards the state. When set, it"
+            " replaces exclude_members for the state."
+        ),
+        example="~~^Backup",
+        default_factory=ApiOmitted,
     )
 
 
@@ -874,7 +892,8 @@ class MapElement:
         description="Embedded-graph config (graph objects).", default_factory=ApiOmitted
     )
     filter: MapObjectFilter | ApiOmitted = api_field(
-        description="Member exclusion (aggregating objects).", default_factory=ApiOmitted
+        description="Members left out (hosts, host groups, service groups).",
+        default_factory=ApiOmitted,
     )
     label: MapObjectLabel | ApiOmitted = api_field(
         description="Object name label.", default_factory=ApiOmitted
@@ -882,6 +901,21 @@ class MapElement:
     display: MapObjectDisplay | ApiOmitted = api_field(
         description="Render mode and custom icon.", default_factory=ApiOmitted
     )
+
+    @model_validator(mode="after")
+    def _host_takes_no_service_pattern(self) -> Self:
+        if isinstance(self.filter, ApiOmitted):
+            return self
+        line_type = None if isinstance(self.line, ApiOmitted) else self.line.object_type
+        service = None if isinstance(self.binding, ApiOmitted) else self.binding.service_description
+        bound = bound_type_of(
+            self.type,
+            line_type if isinstance(line_type, str) else None,
+            service if isinstance(service, str) else None,
+        )
+        patterns = (self.filter.exclude_members, self.filter.exclude_member_states)
+        check_host_member_patterns(bound, *(p for p in patterns if isinstance(p, str)))
+        return self
 
 
 @api_model

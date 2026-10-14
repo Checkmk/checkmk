@@ -146,15 +146,29 @@ describe('ObjectPropertiesModal – conditional fields by object type', () => {
 
     expect(screen.getByText('Filter on')).toBeInTheDocument()
     expect(screen.getByText('Livestatus filter')).toBeInTheDocument()
+    expect(screen.getByText('Consider services')).toBeInTheDocument()
   })
 
-  // The exclude-members preview counts BI leaves, so the aggregation is the one
-  // object type whose filter the card can actually show a result for.
-  it('offers the member filter to a BI aggregation', () => {
-    renderModal(obj({ type: 'aggregation', aggregation_id: 'Hosts', exclude_members: 'test-.*' }))
+  it('offers the services toggle only to a dynamic group of hosts', () => {
+    renderModal(obj({ type: 'dyngroup', object_types: 'service' }))
+
+    expect(screen.getByText('Only hard states')).toBeInTheDocument()
+    expect(screen.queryByText('Consider services')).not.toBeInTheDocument()
+  })
+
+  it('offers the member filter to a host group, also as a line', () => {
+    renderModal(
+      obj({ type: 'line', line_object_type: 'hostgroup', group_name: 'web', exclude_members: 'x' })
+    )
 
     expect(screen.getByText('Exclude members')).toBeInTheDocument()
-    expect(screen.getByText('Exclude states')).toBeInTheDocument()
+    expect(screen.getByText('Exclude members from state')).toBeInTheDocument()
+  })
+
+  it('offers no member filter where the daemon applies none', () => {
+    renderModal(obj({ type: 'aggregation', aggregation_id: 'Hosts', exclude_members: 'x' }))
+
+    expect(screen.queryByText('Exclude members')).not.toBeInTheDocument()
   })
 
   it('renders the metric-source and url-embed sections for a graph', () => {

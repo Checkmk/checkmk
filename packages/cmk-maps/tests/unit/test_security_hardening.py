@@ -274,6 +274,40 @@ def test_map_element_update_normalises_filter() -> None:
     assert obj.object_filter == "Filter: host_name ~ ^web\n"
 
 
+@pytest.mark.parametrize("field", ["exclude_members", "exclude_member_states"])
+@pytest.mark.parametrize(
+    "pattern",
+    [
+        "x\nOr: 2",
+        "x\\nOr: 2",  # literal backslash-n, a line break to dyngroup filters
+        "x\rOr: 2",
+        "x\x0bOr: 2",
+        "x\x0cOr: 2",
+        "x\u2028Or: 2",
+        "x\x00",
+    ],
+)
+def test_map_element_update_rejects_a_member_pattern_spanning_lines(
+    field: str, pattern: str
+) -> None:
+    # A second line could add an ``Or:`` that makes the group condition optional.
+    with pytest.raises(ValidationError):
+        MapElementUpdate.model_validate({field: pattern})
+
+
+@pytest.mark.parametrize(
+    "element",
+    [
+        {"id": "h", "type": "host", "host_name": "web01", "exclude_members": "web01~~CPU"},
+        {"id": "l", "type": "line", "host_name": "web01", "exclude_member_states": "~~CPU"},
+    ],
+)
+def test_map_element_rejects_a_service_pattern_on_a_host(element: dict[str, object]) -> None:
+    # NagVis ignores host~~service on a host; storing it would look like it works.
+    with pytest.raises(ValidationError):
+        MapElement.model_validate(element)
+
+
 # The runtime location-bundle filter (``_names_or_filter``) is built from live
 # geo-host names and — unlike a persisted object_filter — skips the schema-layer
 # normalize_object_filter. get_dyngroup_state later un-escapes ``\n`` → a real

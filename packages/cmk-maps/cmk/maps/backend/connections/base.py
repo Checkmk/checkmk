@@ -220,21 +220,47 @@ class ConnectionBase(ABC):
 
     @abstractmethod
     async def get_hostgroup_states(
-        self, group: str, *, only_hard: bool = False, with_services: bool = False
+        self,
+        group: str,
+        *,
+        only_hard: bool = False,
+        with_services: bool = False,
+        exclude: str | None = None,
     ) -> ObjectState:
         """Return the worst state of a host group's hosts.
 
         Host counts go to ``hosts_summary``; ``with_services`` adds the counts of
-        the hosts' services as ``services_summary``.
+        the hosts' services as ``services_summary``. ``exclude`` is a validated
+        NagVis member pattern whose matches are left out.
         """
         ...
 
     @abstractmethod
-    async def get_servicegroup_states(self, group: str, *, only_hard: bool = False) -> ObjectState:
-        """Return aggregated state for a service group."""
+    async def get_servicegroup_states(
+        self, group: str, *, only_hard: bool = False, exclude: str | None = None
+    ) -> ObjectState:
+        """Return aggregated state for a service group, leaving out ``exclude`` matches."""
         ...
 
-    async def get_dyngroup_state(self, object_types: str, object_filter: str) -> ObjectState:
+    async def get_hosts_services_summaries(
+        self, hostnames: list[str], exclude: str
+    ) -> dict[str, ServicesSummary] | None:
+        """Return per host the service counts without the services matching ``exclude``.
+
+        ``None`` where the pattern does not apply to a host's services, and by
+        default — only connections that speak raw LQL (Livestatus) can filter
+        members.
+        """
+        return None
+
+    async def get_dyngroup_state(
+        self,
+        object_types: str,
+        object_filter: str,
+        *,
+        only_hard: bool = False,
+        with_services: bool = False,
+    ) -> ObjectState:
         """Return aggregated worst-state for hosts/services matched by a Livestatus filter.
 
         Default returns NOT_SUPPORTED — only connections that speak raw LQL

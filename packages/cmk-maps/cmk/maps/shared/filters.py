@@ -18,7 +18,7 @@ wraps it to re-raise ``MKUserError`` for its request context.
 """
 
 import re
-from typing import Final
+from typing import Final, Literal
 
 # Only the safe filter-combinator headers may appear — anything else (Stats:,
 # Columns:, OutputFormat:, GET, AuthUser:, …) would change the query semantics
@@ -29,6 +29,13 @@ SAFE_FILTER_LINE_RE: Final = re.compile(r"^(?:Filter|And|Or|Negate): .+$")
 # matches one — so a NUL would survive into the query. It cannot forge a header,
 # but the C++ Livestatus side need not treat it as an ordinary byte.
 _CONTROL_CHARS: Final = re.compile(r"[\x00-\x08\x0e-\x1f\x7f]")
+
+# Everything ``splitlines()`` breaks on, plus the control bytes above.
+_LINE_BREAKING: Final = re.compile(r"[\x00-\x1f\x7f\x85\u2028\u2029]")
+
+MEMBER_PATTERN_MAX_LENGTH: Final = 1024
+
+ExcludedMembers = Literal["host_services", "hosts", "services"]
 
 
 def normalize_object_filter(value: str) -> str:
@@ -49,3 +56,73 @@ def normalize_object_filter(value: str) -> str:
     if not lines or not all(SAFE_FILTER_LINE_RE.fullmatch(ln) for ln in lines):
         raise ValueError("object_filter must be one or more 'Filter: …' lines")
     return "\n".join(lines) + "\n"
+
+
+def validate_member_pattern(value: str) -> str:
+    """Validate a NagVis ``exclude_members``/``exclude_member_states`` pattern.
+
+    The pattern is a Livestatus regex on member names, ``host~~service`` for a
+    service of a group's host. It goes into a ``Filter:`` line as it is, so it
+    must stay one line: a second one could add an ``Or:`` that makes the group
+    condition optional. Raises ``ValueError``, also for an empty pattern.
+    """
+    pattern = value.strip()
+    if not pattern:
+        raise ValueError("empty member pattern")
+    if len(pattern) > MEMBER_PATTERN_MAX_LENGTH:
+        raise ValueError(f"member pattern longer than {MEMBER_PATTERN_MAX_LENGTH} characters")
+    # A literal ``\n`` counts too: dyngroup filters turn it into a line break.
+    if _LINE_BREAKING.search(pattern) or "\\n" in pattern:
+        raise ValueError("member pattern must be a single line")
+    return pattern
+
+
+def optional_member_pattern(value: str | None) -> str | None:
+    """:func:`validate_member_pattern` for an optional field: blank means none."""
+    if value is None or not value.strip():
+        return None
+    return validate_member_pattern(value)
+
+
+def bound_type_of(
+    object_type: str, line_object_type: str | None, service_description: str | None
+) -> str:
+    """The type of the object whose state an object shows; a line names it or implies it."""
+    if object_type != "line":
+        return object_type
+    return line_object_type or ("service" if service_description else "host")
+
+
+def check_host_member_patterns(bound_type: str, *patterns: str | None) -> None:
+    """Reject ``host~~service`` on a host, whose patterns name its services.
+
+    NagVis ignores such a pattern there; storing it would only look like it works.
+    """
+    if bound_type == "host" and any(p and "~~" in p for p in patterns):
+        raise ValueError("a host's member pattern names its services; host~~service does not apply")
+
+
+def excluded_members_filter(members: ExcludedMembers, pattern: str) -> str:
+    """The Livestatus filter lines NagVis adds to leave out members matching *pattern*.
+
+    *members* names what the query returns: a host's services, a group's hosts,
+    or a group's services. A ``host~~service`` pattern only applies to services
+    of a group; like NagVis, it leaves a host's services and a group's hosts
+    alone. *pattern* must have passed :func:`validate_member_pattern`.
+    """
+    host, sep, rest = pattern.partition("~~")
+    if members == "host_services":
+        return "" if sep else f"Filter: description !~~ {pattern}\n"
+    if members == "hosts":
+        return "" if sep else f"Filter: name !~~ {pattern}\n"
+    if not sep:
+        return f"Filter: host_name !~~ {pattern}\n"
+    # NagVis negates "host matches and service matches"; this is the same as
+    # "host does not match or service does not match". It reads only two parts.
+    service = rest.split("~~")[0]
+    lines = [
+        f"Filter: {column} !~~ {part}\n"
+        for column, part in (("host_name", host), ("description", service))
+        if part
+    ]
+    return "".join(lines) + ("Or: 2\n" if len(lines) == 2 else "")

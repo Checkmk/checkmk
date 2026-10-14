@@ -388,7 +388,11 @@ def _as_state_source(obj: MapElement) -> MapElement:
     if bound is None and not obj.host_name:
         return obj  # decoration, nothing to show the state of
     derived = "service" if obj.service_description else "host"
-    return obj.model_copy(update={"type": bound or derived})
+    update: dict[str, object] = {"type": bound or derived}
+    if obj.type == "graph":
+        # A graph leaves out no members, as in the editor.
+        update |= {"exclude_members": None, "exclude_member_states": None}
+    return obj.model_copy(update=update)
 
 
 async def _resolve_host_states(
@@ -449,7 +453,10 @@ async def _resolve_host_states(
     if not summary_hosts:
         return
     try:
-        summary_batch = await connection.get_services_summary(summary_hosts)
+        summary_batch, (thinned, failed) = await asyncio.gather(
+            connection.get_services_summary(summary_hosts),
+            _summaries_by_pattern(connection, host_objs, set(summary_hosts)),
+        )
     except Exception:
         logger.warning("Services-summary query failed", exc_info=True)
         return
@@ -460,10 +467,59 @@ async def _resolve_host_states(
         summary = summary_batch.get(obj.host_name)
         if existing is None or summary is None:
             continue
+        pattern = _state_exclusion(obj)
+        if pattern in failed:
+            # The excluded services would count again; better none at all.
+            results[obj.id] = existing.model_copy(update={"stale": True})
+            continue
+        if pattern in thinned:
+            summary = thinned[pattern].get(obj.host_name, summary)
         update: dict[str, object] = {"services_summary": summary}
         if obj.recognize_services:
             update["state"] = _combined_state_from_summary(existing.state, summary)
         results[obj.id] = existing.model_copy(update=update)
+
+
+def _state_exclusion(obj: MapElement) -> str | None:
+    """The member pattern that keeps members out of the state.
+
+    As in NagVis, a pattern for the state replaces the one for the members.
+    """
+    return obj.exclude_member_states or obj.exclude_members
+
+
+async def _summaries_by_pattern(
+    connection: ConnectionBase, host_objs: list[MapElement], visible: set[str]
+) -> tuple[dict[str, dict[str, ServicesSummary]], set[str]]:
+    """Per member pattern, its hosts' service counts without the excluded services.
+
+    One query per pattern, as maps imported from NagVis tend to share one. Also
+    returns the patterns whose query failed; a pattern that does not apply to a
+    host's services is in neither.
+    """
+    hosts_by_pattern: dict[str, set[str]] = {}
+    for obj in host_objs:
+        if (
+            obj.host_name is not None
+            and obj.host_name in visible
+            and (pattern := _state_exclusion(obj))
+        ):
+            hosts_by_pattern.setdefault(pattern, set()).add(obj.host_name)
+    thinned: dict[str, dict[str, ServicesSummary]] = {}
+    failed: set[str] = set()
+
+    async def _one(pattern: str, hosts: set[str]) -> None:
+        try:
+            summaries = await connection.get_hosts_services_summaries(sorted(hosts), pattern)
+        except Exception:
+            logger.warning("Filtered services-summary query failed", exc_info=True)
+            failed.add(pattern)
+            return
+        if summaries is not None:
+            thinned[pattern] = summaries
+
+    await asyncio.gather(*(_one(p, hosts) for p, hosts in hosts_by_pattern.items()))
+    return thinned, failed
 
 
 async def _resolve_service_states(
@@ -650,17 +706,22 @@ async def _get_object_state(connection: ConnectionBase, obj: MapElement) -> Obje
                 obj.group_name,
                 only_hard=obj.only_hard_states,
                 with_services=obj.recognize_services,
+                exclude=_state_exclusion(obj),
             )
             state.state = _combined_state_from_summary(state.state, state.services_summary)
         elif obj.type == "servicegroup" and obj.group_name:
             state = await connection.get_servicegroup_states(
-                obj.group_name, only_hard=obj.only_hard_states
+                obj.group_name, only_hard=obj.only_hard_states, exclude=_state_exclusion(obj)
             )
         elif obj.type == "dyngroup" and obj.object_filter:
+            object_types = obj.object_types or "host"
             state = await connection.get_dyngroup_state(
-                obj.object_types or "host", obj.object_filter
+                object_types,
+                obj.object_filter,
+                only_hard=obj.only_hard_states,
+                with_services=obj.recognize_services,
             )
-            if obj.bundle_kind is not None and (obj.object_types or "host") == "host":
+            if object_types == "host" and obj.recognize_services:
                 state.state = _combined_state_from_summary(state.state, state.services_summary)
         else:
             state = ObjectState(object_id=obj.id, type=obj.type, state="PENDING")

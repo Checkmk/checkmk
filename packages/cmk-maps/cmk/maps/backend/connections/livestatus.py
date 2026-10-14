@@ -54,6 +54,7 @@ from cmk.maps.backend.schemas.state import (
     ObjectState,
     ServicesSummary,
 )
+from cmk.maps.shared.filters import excluded_members_filter
 from cmk.maps.shared.geo import LAT_LABEL, LAT_VAR, LNG_LABEL, LNG_VAR, resolve_host_coords
 from cmk.maps.shared.perfdata import parse_perf_metrics
 from cmk.maps.shared.rows import (
@@ -130,6 +131,20 @@ def _services_summary_of_hosts(rows: list[LivestatusRow], base: int) -> Services
     )
 
 
+def _host_state_columns(*, only_hard: bool, with_services: bool) -> list[str]:
+    """The host state column and, on request, the per-host service counts.
+
+    The core keeps those counts, hard ones included, so the members' services
+    cost no second query.
+    """
+    columns = ["last_hard_state" if only_hard else "state"]
+    if with_services:
+        hard = "hard_" if only_hard else ""
+        columns += [f"num_services_{hard}{kind}" for kind in ("ok", "warn", "crit", "unknown")]
+        columns.append("num_services_pending")
+    return columns
+
+
 def _worst_state(states: list[str]) -> str:
     """Worst of *states* by the combined severity ladder. Requires non-empty input."""
     return max(states, key=lambda s: SEVERITY_RANK.get(s, 0))
@@ -146,15 +161,26 @@ def _host_states_rollup(states: list[str]) -> tuple[str, ServicesSummary]:
     )
 
 
-def _service_states_rollup(states: list[str]) -> tuple[str, ServicesSummary]:
-    """Worst service state + per-slot service-state counts."""
-    return _worst_state(states), ServicesSummary(
+def _service_states_summary(states: list[str]) -> ServicesSummary:
+    return ServicesSummary(
         ok=sum(1 for s in states if s == "OK"),
         warning=sum(1 for s in states if s == "WARNING"),
         critical=sum(1 for s in states if s == "CRITICAL"),
         unknown=sum(1 for s in states if s == "UNKNOWN"),
         pending=sum(1 for s in states if s == "PENDING"),
     )
+
+
+def _service_row_state(row: LivestatusRow, base: int) -> str:
+    """The state of a service row with ``state`` and ``has_been_checked`` from *base* on."""
+    if not row_int(row, base + 1):
+        return "PENDING"
+    return SERVICE_STATE_MAP.get(row_int(row, base), "UNKNOWN")
+
+
+def _service_states_rollup(states: list[str]) -> tuple[str, ServicesSummary]:
+    """Worst service state + per-slot service-state counts."""
+    return _worst_state(states), _service_states_summary(states)
 
 
 def _folder_path_from_filename(filename: str) -> str:
@@ -720,7 +746,12 @@ class LivestatusConnection(ConnectionBase):
 
     @override
     async def get_hostgroup_states(
-        self, group: str, *, only_hard: bool = False, with_services: bool = False
+        self,
+        group: str,
+        *,
+        only_hard: bool = False,
+        with_services: bool = False,
+        exclude: str | None = None,
     ) -> ObjectState:
         # Distinguish "group does not exist" (NOT_FOUND) from "group exists but
         # is empty / hosts not yet checked" (PENDING) so the UI can render them
@@ -730,20 +761,32 @@ class LivestatusConnection(ConnectionBase):
         exists_rows = await self._query(exists_q)
         if not exists_rows:
             return ObjectState(object_id="", type="hostgroup", state="NOT_FOUND")
-        columns = ["last_hard_state" if only_hard else "state"]
-        if with_services:
-            # The core keeps the per-host service counts, hard ones included, so
-            # the members' services cost no second query.
-            hard = "hard_" if only_hard else ""
-            columns += [f"num_services_{hard}{kind}" for kind in ("ok", "warn", "crit", "unknown")]
-            columns.append("num_services_pending")
-        query = f"GET hosts\nColumns: {' '.join(columns)}\nFilter: groups >= {lqencode(group)}\n"
+        # A host~~service pattern thins the services only, which the hosts'
+        # service counters cannot express.
+        services_pattern = exclude if with_services and exclude and "~~" in exclude else None
+        columns = _host_state_columns(
+            only_hard=only_hard, with_services=with_services and services_pattern is None
+        )
+        members = excluded_members_filter("hosts", exclude) if exclude else ""
+        query = (
+            f"GET hosts\nColumns: {' '.join(columns)}\nFilter: groups >= {lqencode(group)}\n"
+            f"{members}"
+        )
         rows = await self._query(query)
         if not rows:
             return ObjectState(object_id="", type="hostgroup", state="PENDING")
         states = [HOST_STATE_MAP.get(row_int(r, 0), "UNKNOWN") for r in rows]
         worst, hosts_summary = _host_states_rollup(states)
-        services_summary = _services_summary_of_hosts(rows, 1) if with_services else None
+        if services_pattern is not None:
+            services_summary = await self._services_summary_where(
+                f"Filter: host_groups >= {lqencode(group)}\n"
+                + excluded_members_filter("services", services_pattern),
+                only_hard=only_hard,
+            )
+        elif with_services:
+            services_summary = _services_summary_of_hosts(rows, 1)
+        else:
+            services_summary = None
         return ObjectState(
             object_id="",
             type="hostgroup",
@@ -754,13 +797,18 @@ class LivestatusConnection(ConnectionBase):
         )
 
     @override
-    async def get_servicegroup_states(self, group: str, *, only_hard: bool = False) -> ObjectState:
+    async def get_servicegroup_states(
+        self, group: str, *, only_hard: bool = False, exclude: str | None = None
+    ) -> ObjectState:
         exists_q = f"GET servicegroups\nColumns: alias\nFilter: name = {lqencode(group)}\n"
         exists_rows = await self._query(exists_q)
         if not exists_rows:
             return ObjectState(object_id="", type="servicegroup", state="NOT_FOUND")
         state_col = "last_hard_state" if only_hard else "state"
-        query = f"GET services\nColumns: {state_col}\nFilter: groups >= {lqencode(group)}\n"
+        members = excluded_members_filter("services", exclude) if exclude else ""
+        query = (
+            f"GET services\nColumns: {state_col}\nFilter: groups >= {lqencode(group)}\n{members}"
+        )
         rows = await self._query(query)
         if not rows:
             return ObjectState(object_id="", type="servicegroup", state="PENDING")
@@ -775,26 +823,53 @@ class LivestatusConnection(ConnectionBase):
         )
 
     @override
-    async def get_dyngroup_state(self, object_types: str, object_filter: str) -> ObjectState:
+    async def get_hosts_services_summaries(
+        self, hostnames: list[str], exclude: str
+    ) -> dict[str, ServicesSummary] | None:
+        members = excluded_members_filter("host_services", exclude)
+        if not members or not hostnames:
+            return None
+        hosts = "".join(f"Filter: host_name = {lqencode(h)}\n" for h in hostnames)
+        if len(hostnames) > 1:
+            hosts += f"Or: {len(hostnames)}\n"
+        rows = await self._query(
+            f"GET services\nColumns: host_name state has_been_checked\n{hosts}{members}"
+        )
+        states: dict[str, list[str]] = {h: [] for h in hostnames}
+        for r in rows:
+            states.setdefault(row_str(r, 0), []).append(_service_row_state(r, 1))
+        return {host: _service_states_summary(host_states) for host, host_states in states.items()}
+
+    async def _services_summary_where(self, filters: str, *, only_hard: bool) -> ServicesSummary:
+        state_col = "last_hard_state" if only_hard else "state"
+        rows = await self._query(f"GET services\nColumns: {state_col} has_been_checked\n{filters}")
+        return _service_states_summary([_service_row_state(r, 0) for r in rows])
+
+    @override
+    async def get_dyngroup_state(
+        self,
+        object_types: str,
+        object_filter: str,
+        *,
+        only_hard: bool = False,
+        with_services: bool = False,
+    ) -> ObjectState:
         # NagVis-style: feed the validated filter into GET hosts/services and
         # aggregate worst-of. normalize_object_filter at the schema layer has
         # already restricted this to safe Filter:/And:/Or: lines.
         lql_filter = object_filter.replace("\\n", "\n")
         if not lql_filter.endswith("\n"):
             lql_filter += "\n"
+        state_col = "last_hard_state" if only_hard else "state"
         if object_types == "service":
-            rows = await self._query(f"GET services\nColumns: state\n{lql_filter}")
+            rows = await self._query(f"GET services\nColumns: {state_col}\n{lql_filter}")
             if not rows:
                 return ObjectState(object_id="", type="dyngroup", state="PENDING")
             states = [SERVICE_STATE_MAP.get(row_int(r, 0), "UNKNOWN") for r in rows]
             worst, summary = _service_states_rollup(states)
             return ObjectState(object_id="", type="dyngroup", state=worst, services_summary=summary)
-        # Host dyngroups report two rollups: member host states and their
-        # aggregated service states (the O(1) num_services_* counters).
-        rows = await self._query(
-            "GET hosts\nColumns: state num_services_ok num_services_warn "
-            f"num_services_crit num_services_unknown num_services_pending\n{lql_filter}"
-        )
+        columns = _host_state_columns(only_hard=only_hard, with_services=with_services)
+        rows = await self._query(f"GET hosts\nColumns: {' '.join(columns)}\n{lql_filter}")
         if not rows:
             return ObjectState(object_id="", type="dyngroup", state="PENDING")
         states = [HOST_STATE_MAP.get(row_int(r, 0), "UNKNOWN") for r in rows]
@@ -803,7 +878,7 @@ class LivestatusConnection(ConnectionBase):
             object_id="",
             type="dyngroup",
             state=worst,
-            services_summary=_services_summary_of_hosts(rows, 1),
+            services_summary=_services_summary_of_hosts(rows, 1) if with_services else None,
             hosts_summary=hosts_summary,
         )
 

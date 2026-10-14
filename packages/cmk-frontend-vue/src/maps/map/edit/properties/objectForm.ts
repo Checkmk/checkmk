@@ -107,9 +107,39 @@ const DEFAULT_GRAPH_TIME_WINDOW = 60
 /** How far a new line reaches when the object carries no end point yet. */
 const LINE_DEFAULT_LENGTH = 150
 
+const STATEFUL_TYPES: ReadonlySet<ObjectType> = new Set([
+  'host',
+  'service',
+  'hostgroup',
+  'servicegroup',
+  'dyngroup'
+])
+
+/** Whether an object bound to `bound` offers the hard-state option. */
+export function hasStateOptions(bound: ObjectType): boolean {
+  return STATEFUL_TYPES.has(bound)
+}
+
+/**
+ * Whether the object may count its hosts' services: a host, a host group,
+ * and a dynamic group of hosts.
+ */
+export function choosesServiceCounting(bound: ObjectType, form: ObjectForm): boolean {
+  return (
+    bound === 'host' ||
+    bound === 'hostgroup' ||
+    (bound === 'dyngroup' && form.object_types !== 'service')
+  )
+}
+
 /** What the object stands for: a line, the object type it shows the state of. */
 export function boundTypeOf(form: ObjectForm, object: MapElement): ObjectType {
   return object.type === 'line' ? form.line_object_type : object.type
+}
+
+/** Where the daemon leaves out members as NagVis does. */
+export function leavesOutMembers(type: ObjectType): boolean {
+  return type === 'host' || type === 'hostgroup' || type === 'servicegroup'
 }
 
 /** The object as the form sees it. */
@@ -257,6 +287,10 @@ export function updatesFromForm(
   // without one stays a plain line; a service is stored, so one still without
   // its description reopens as the service it was meant to be.
   const bound = boundTypeOf(form, object)
+  // A pattern kept elsewhere would do nothing, then apply again on switching back.
+  if (!leavesOutMembers(bound)) {
+    Object.assign(updates, { exclude_members: null, exclude_member_states: null })
+  }
   if (type === 'line') {
     Object.assign(updates, {
       line_object_type: bound === 'host' ? null : bound,
@@ -275,10 +309,10 @@ export function updatesFromForm(
   if (bound === 'host' || bound === 'service') {
     updates.host_name = form.host_name || null
   }
-  if (['host', 'service', 'hostgroup', 'servicegroup'].includes(bound)) {
+  if (hasStateOptions(bound)) {
     updates.only_hard_states = form.only_hard_states
   }
-  if (bound === 'host' || bound === 'hostgroup') {
+  if (choosesServiceCounting(bound, form)) {
     updates.recognize_services = form.recognize_services
   }
   if (bound === 'service') {

@@ -23,6 +23,12 @@ from typing import get_args, Literal, TypedDict
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, ungettext
 from cmk.maps.gui._settings import connection_choices, map_object_defaults
+from cmk.maps.shared.filters import (
+    bound_type_of,
+    check_host_member_patterns,
+    MEMBER_PATTERN_MAX_LENGTH,
+    validate_member_pattern,
+)
 from cmk.maps.shared.geo import bounded_view, parse_degrees
 from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH
 from cmk.maps.shared.map_payload import (
@@ -815,13 +821,16 @@ def _build_display(p: dict[str, str]) -> MapDisplay:
 
 
 def _apply_type_specific(obj: MapObject, block_type: str, p: dict[str, str]) -> None:
-    if block_type in ("host", "service", "hostgroup", "servicegroup") and _bool(
+    if block_type in ("host", "service", "hostgroup", "servicegroup", "dyngroup") and _bool(
         p.get("only_hard_states")
     ):
         obj["only_hard_states"] = True
     if block_type in ("host", "hostgroup"):
         # NagVis counts the services of hosts unless told not to.
         obj["recognize_services"] = _bool(p.get("recognize_services"), True)
+    for key in ("exclude_members", "exclude_member_states"):
+        if p.get(key):
+            obj[key] = p[key]
     if block_type == "host":
         obj["host_name"] = p.get("host_name")
     elif block_type == "service":
@@ -842,6 +851,8 @@ def _apply_type_specific(obj: MapObject, block_type: str, p: dict[str, str]) -> 
         ot = (p.get("object_types") or "host").strip().lower()
         obj["object_types"] = "service" if ot == "service" else "host"
         obj["object_filter"] = p.get("object_filter") or None
+        if obj["object_types"] == "host":
+            obj["recognize_services"] = _bool(p.get("recognize_services"), True)
 
 
 def _handle_monitor_block(block_type: str, p: dict[str, str], raw_id: str) -> _ImportObject:
@@ -861,9 +872,6 @@ def _handle_monitor_block(block_type: str, p: dict[str, str], raw_id: str) -> _I
     _set_explicit_z(payload, p)
     _apply_type_specific(payload, block_type, p)
     _apply_links(payload, p)
-    for key in ("exclude_members", "exclude_member_states"):
-        if p.get(key):
-            payload[key] = p[key]
     if (maxlen := _int(p.get("label_maxlen"))) > 0:
         payload["label_maxlen"] = maxlen
     return _ImportObject(payload, _pending({"x": x, "y": y}))
@@ -1148,7 +1156,12 @@ def parse_cfg_upload(filename: str, contents: bytes) -> tuple[MapPayload, list[s
     warnings = resolve_connection_ids(
         map_cfg, _configured_connection_ids(), map_object_defaults()["default_backend_id"]
     )
-    return map_cfg, warnings + drop_unusable_urls(map_cfg) + dynamic_map_warnings(text)
+    return map_cfg, (
+        warnings
+        + drop_unusable_urls(map_cfg)
+        + drop_member_filters(map_cfg)
+        + dynamic_map_warnings(text)
+    )
 
 
 def dynamic_map_warnings(text: str) -> list[str]:
@@ -1195,6 +1208,75 @@ def drop_unusable_urls(map_cfg: MapPayload) -> list[str]:
         )
         % {"count": dropped}
     ]
+
+
+def drop_member_filters(map_cfg: MapPayload) -> list[str]:
+    """Drop the member filters Maps cannot apply, counting them in the warnings.
+
+    Maps leaves out members of a host, a host group and a service group as
+    NagVis does. A pattern anywhere else, or one Maps would reject, would only
+    mislead whoever reads the object later.
+    """
+    warnings: list[str] = []
+    if members := _drop_inapplicable(map_cfg, "exclude_members"):
+        warnings.append(
+            ungettext(
+                "%(count)d object leaves out members by a pattern Maps cannot apply. "
+                "The pattern was dropped.",
+                "%(count)d objects leave out members by a pattern Maps cannot apply. "
+                "The patterns were dropped.",
+                members,
+            )
+            % {"count": members}
+        )
+    if states := _drop_inapplicable(map_cfg, "exclude_member_states"):
+        warnings.append(
+            ungettext(
+                "%(count)d object ignores the state of some members by a pattern Maps "
+                "cannot apply. Maps counts every member; the setting was dropped.",
+                "%(count)d objects ignore the state of some members by a pattern Maps "
+                "cannot apply. Maps counts every member; the settings were dropped.",
+                states,
+            )
+            % {"count": states}
+        )
+    if warnings:
+        warnings.append(
+            _(
+                "Maps applies such a pattern only to hosts, host groups and service groups, "
+                "only as a single line of at most %(max)d characters, and never as "
+                "host~~service on a host."
+            )
+            % {"max": MEMBER_PATTERN_MAX_LENGTH}
+        )
+    return warnings
+
+
+def _drop_inapplicable(
+    map_cfg: MapPayload, key: Literal["exclude_members", "exclude_member_states"]
+) -> int:
+    dropped = 0
+    for obj in map_cfg["objects"]:
+        if not (pattern := obj.get(key)):
+            continue
+        if (kept := _applicable_member_pattern(obj, pattern)) is None:
+            del obj[key]
+            dropped += 1
+        else:
+            obj[key] = kept
+    return dropped
+
+
+def _applicable_member_pattern(obj: MapObject, pattern: str) -> str | None:
+    """*pattern* as Maps stores it, or ``None`` where Maps does not apply it."""
+    bound = bound_type_of(obj["type"], obj.get("line_object_type"), obj.get("service_description"))
+    if bound not in ("host", "hostgroup", "servicegroup"):
+        return None
+    try:
+        check_host_member_patterns(bound, pattern)
+        return validate_member_pattern(pattern)
+    except ValueError:
+        return None
 
 
 def decode_cfg(contents: bytes) -> str:

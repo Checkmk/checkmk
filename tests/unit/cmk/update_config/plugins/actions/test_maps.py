@@ -345,6 +345,56 @@ def test_weathermap_line_style_is_split_up(admin: UserId) -> None:
     assert obj["line_weather_color"] is True
 
 
+_DYNGROUP = {"type": "dyngroup", "object_filter": "Filter: name ~ ^web\n"}
+
+
+def test_a_geo_bundle_keeps_counting_its_services(admin: UserId) -> None:
+    bundle = _complete_object(
+        object_types="host", bundle_kind="static", recognize_services=False, **_DYNGROUP
+    )
+
+    obj = _objects(_migrated(admin, "bundle", _complete_map(objects=[bundle])).config.map_spec)[0]
+
+    assert obj["recognize_services"] is True
+
+
+@pytest.mark.parametrize(
+    "group",
+    [
+        pytest.param({"object_types": "host", "recognize_services": False}, id="hosts"),
+        pytest.param({"object_types": "service"}, id="services"),
+    ],
+)
+def test_a_dynamic_group_keeps_its_service_counting(
+    admin: UserId, group: dict[str, object]
+) -> None:
+    map_spec = _complete_map(objects=[_complete_object(**_DYNGROUP, **group)])
+
+    obj = _objects(_migrated(admin, "dyn", map_spec).config.map_spec)[0]
+
+    assert obj.get("recognize_services") == group.get("recognize_services")
+
+
+def test_member_patterns_orbvis_never_applied_are_dropped(admin: UserId) -> None:
+    # OrbVis asked for state names; Maps would read them as a pattern on names.
+    map_spec = _complete_map(
+        objects=[
+            _complete_object(
+                id="g1",
+                type="hostgroup",
+                group_name="web",
+                exclude_members="test-*",
+                exclude_member_states="DOWN,CRITICAL\nOr: 2",
+            )
+        ]
+    )
+
+    obj = _objects(_migrated(admin, "excl", map_spec).config.map_spec)[0]
+
+    assert "exclude_members" not in obj
+    assert "exclude_member_states" not in obj
+
+
 def test_a_single_graph_metric_becomes_a_list(admin: UserId) -> None:
     map_spec = _complete_map(
         objects=[_complete_object(id="g1", type="graph", graph_metric="load1")]

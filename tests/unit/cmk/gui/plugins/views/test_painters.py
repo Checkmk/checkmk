@@ -1102,6 +1102,22 @@ def test_host_docker_node_groups_containers_by_their_node(live: MockLiveStatusCo
     assert groups["web"] == groups["db"] != groups["cache"]
 
 
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_host_docker_node_ignores_what_follows_the_node_in_the_status_output(
+    live: MockLiveStatusConnection,
+) -> None:
+    groups = _docker_node_groups(
+        live,
+        {
+            "broken": "Container exited on node node1(!!), Error: OCI runtime failed(!!)",
+            "duplicate": "Found data from multiple Docker nodes - see service details for more"
+            " information",
+        },
+    )
+
+    assert groups == {"broken": "node1", "duplicate": ""}
+
+
 def _docker_node_groups(
     live: MockLiveStatusConnection, status_outputs: dict[str, str]
 ) -> dict[str, object]:

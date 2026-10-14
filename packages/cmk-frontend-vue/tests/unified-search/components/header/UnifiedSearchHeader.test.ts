@@ -23,6 +23,10 @@ function renderHeader(provider: QueryProvider) {
   return container.querySelector('#unified-search-input') as HTMLInputElement
 }
 
+function searchQueryOf(url: string): string | null {
+  return new URL(url, 'http://localhost/').searchParams.get('q')
+}
+
 describe('UnifiedSearchHeader Enter-to-filter', () => {
   // window.location is replaced with a plain, settable stand-in so the
   // component's navigation can be asserted on without jsdom's real Location
@@ -55,7 +59,8 @@ describe('UnifiedSearchHeader Enter-to-filter', () => {
     await fireEvent.update(input, 'cpu load')
     await fireEvent.keyDown(input, { key: 'Enter' })
 
-    expect(assignedHref).toBe('search_open.py?q=cpu load')
+    expect(new URL(assignedHref, 'http://localhost/').pathname).toBe('/search_open.py')
+    expect(searchQueryOf(assignedHref)).toBe('cpu load')
   })
 
   test('navigates when Enter is pressed with the "all" provider selected', async () => {
@@ -64,7 +69,8 @@ describe('UnifiedSearchHeader Enter-to-filter', () => {
     await fireEvent.update(input, 'disk usage')
     await fireEvent.keyDown(input, { key: 'Enter' })
 
-    expect(assignedHref).toBe('search_open.py?q=disk usage')
+    expect(new URL(assignedHref, 'http://localhost/').pathname).toBe('/search_open.py')
+    expect(searchQueryOf(assignedHref)).toBe('disk usage')
   })
 
   test('does not navigate when Enter is pressed with an empty query', async () => {

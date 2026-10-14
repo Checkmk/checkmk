@@ -21,9 +21,10 @@ OTEL_COLLECTOR_RULE_ID = "a0a69c72-d9ba-412a-a8cb-7a9a6abb4c6b"
 AI_CONTROL_PLANE_RULE_ID = "11683ac1-4306-47c2-bad5-d117c2fdd1d6"
 MCP_SERVER_RULE_ID = "9c90e72e-443e-4400-8374-cd4f9d9fdbf5"
 EVENT_CONSOLE_RULE_ID = "2105c8a7-5672-4242-98f6-fd6ce8b8f3a7"
+PROXMOX_BASIC_PROCESSES_RULE_ID = "c7850d9b-847b-4ae6-b1a7-dc7b1d82a04e"
 PROXMOX_RULE_IDS = frozenset(
     {
-        "c7850d9b-847b-4ae6-b1a7-dc7b1d82a04e",
+        PROXMOX_BASIC_PROCESSES_RULE_ID,
         "bed89ece-0997-4052-ac1e-9a0ce369dd8a",
         "e041c6f5-3b62-4de0-b4da-6e031c820c7c",
         "23bd2fc2-a834-421c-8b7f-c790377f9d59",
@@ -138,6 +139,33 @@ def overwrite_ps_discovery_rules(logger: Logger, all_rulesets: RulesetCollection
         EVENT_CONSOLE_RULE_ID,
         "~python3 /omd/sites/[^/]+/bin/mkeventd$",
         "self-monitoring of the event console",
+    )
+
+    overwrite_default_proxmox_levels(logger, ps_discovery_rules)
+
+
+def overwrite_default_proxmox_levels(logger: Logger, ps_discovery_rules: Ruleset) -> None:
+    # One-time migration: the corrected default covers new sites, this fixes existing ones.
+    _ = ExpiryVersion.CMK_260
+
+    # pvescheduler forks child processes for replication and scheduled jobs.
+    # The original default allowed exactly one process, so Proxmox nodes
+    # reported the service as CRIT while such a child was running.
+    try:
+        rule = ps_discovery_rules.get_rule_by_id(PROXMOX_BASIC_PROCESSES_RULE_ID)
+    except KeyError:
+        logger.debug("No default rule for basic Proxmox processes.")
+        return
+
+    default_params = rule.value.get("default_params", {})
+    if default_params.get("levels") != (1, 1, 1, 1):
+        logger.debug("Rule for basic Proxmox processes was changed. Nothing to do.")
+        return
+
+    rule.value["default_params"] = {**default_params, "levels": (1, 1, 3, 3)}
+    logger.info(
+        "Overwriting default value: %(description)s",
+        {"description": rule.rule_options.description},
     )
 
 

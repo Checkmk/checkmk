@@ -21,6 +21,7 @@ from cmk.update_config.plugins.actions.rulesets_add_ps_discovery import (
     MCP_SERVER_RULE_ID,
     OTEL_COLLECTOR_RULE_ID,
     overwrite_ps_discovery_rules,
+    PROXMOX_BASIC_PROCESSES_RULE_ID,
     PROXMOX_RULE_IDS,
     PS_DISCOVERY_RULE_NAME,
     RABBITMQ_RULE_ID,
@@ -144,6 +145,47 @@ def test_overwrite_keeps_customized_event_console_rule() -> None:
 
     rule = ruleset.get_rule_by_id(EVENT_CONSOLE_RULE_ID)
     assert rule.value["match"] == customized
+
+
+def _shipped_proxmox_default_params() -> object:
+    rule = next(
+        r for r in INVENTORY_PROCESS_DISCOVERY_RULES if r["id"] == PROXMOX_BASIC_PROCESSES_RULE_ID
+    )
+    return rule["value"]["default_params"]
+
+
+def _make_ruleset_with_proxmox_levels(levels: tuple[int, int, int, int]) -> Ruleset:
+    ruleset = Ruleset(PS_DISCOVERY_RULE_NAME)
+    folder = folder_tree().root_folder()
+    rule = Rule.from_ruleset(folder, ruleset, ruleset.rulespec.valuespec.default_value())
+    rule.id = PROXMOX_BASIC_PROCESSES_RULE_ID
+    rule.value = {"default_params": {"cpu_rescale_max": True, "levels": levels}}
+    ruleset.append_rule(folder, rule)
+    return ruleset
+
+
+@pytest.mark.usefixtures("request_context")
+def test_overwrite_migrates_untouched_proxmox_levels_to_shipped_default() -> None:
+    ruleset = _make_ruleset_with_proxmox_levels((1, 1, 1, 1))
+
+    overwrite_ps_discovery_rules(
+        logging.getLogger(), RulesetCollection({PS_DISCOVERY_RULE_NAME: ruleset})
+    )
+
+    rule = ruleset.get_rule_by_id(PROXMOX_BASIC_PROCESSES_RULE_ID)
+    assert rule.value["default_params"] == _shipped_proxmox_default_params()
+
+
+@pytest.mark.usefixtures("request_context")
+def test_overwrite_keeps_customized_proxmox_levels() -> None:
+    ruleset = _make_ruleset_with_proxmox_levels((1, 1, 5, 10))
+
+    overwrite_ps_discovery_rules(
+        logging.getLogger(), RulesetCollection({PS_DISCOVERY_RULE_NAME: ruleset})
+    )
+
+    rule = ruleset.get_rule_by_id(PROXMOX_BASIC_PROCESSES_RULE_ID)
+    assert rule.value["default_params"]["levels"] == (1, 1, 5, 10)
 
 
 @pytest.mark.usefixtures("request_context")

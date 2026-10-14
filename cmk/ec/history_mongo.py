@@ -149,20 +149,20 @@ def query_filter_to_mongo_filter(f: QueryFilter) -> str | dict[str, str]:
         case "=":
             argument: str = f.argument
             return argument
-        case ">":
-            return {"$gt": f.argument}
-        case "<":
-            return {"$lt": f.argument}
-        case ">=":
-            return {"$gte": f.argument}
-        case "<=":
-            return {"$lte": f.argument}
         case "~":
             return {"$regex": f.argument, "$options": ""}
         case "=~":
             return {"$regex": f.argument, "$options": "mi"}
         case "~~":
             return {"$regex": f.argument, "$options": "i"}
+        case "<":
+            return {"$lt": f.argument}
+        case ">=":
+            return {"$gte": f.argument}
+        case ">":
+            return {"$gt": f.argument}
+        case "<=":
+            return {"$lte": f.argument}
         case "in":
             return {"$in": f.argument}
 

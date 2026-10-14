@@ -265,6 +265,7 @@ FROZEN_SERVICE_NAMES: Final[Mapping[str, str]] = {
     "aws_v2_dynamodb_table_latency": "AWS/DynamoDB Latency",
     "aws_v2_dynamodb_table_read_capacity": "AWS/DynamoDB Read Capacity",
     "aws_v2_dynamodb_table_write_capacity": "AWS/DynamoDB Write Capacity",
+    "aws_v2_agent_info": "AWS agent info",
     "aws_v2_ebs": "AWS/EBS Disk IO %s",
     "aws_v2_ebs_burst_balance": "AWS/EBS Burst Balance %s",
     "aws_v2_ebs_limits": "AWS/EBS Limits %s",

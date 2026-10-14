@@ -1916,6 +1916,14 @@ msgstr ""
 "<b>Nota</b>: Si migras al conector <i>htpasswd</i>, los usuarios tendrán que "
 "cambiar su contraseña en el siguiente inicio de sesión."
 
+msgid ""
+"<b>Single account:</b> monitor the account these credentials belong to."
+"<br><b>Explicit list of account IDs:</b> monitor several accounts with this "
+"one rule. Every listed account needs a role with the same name that these "
+"credentials may assume. The data of each account goes to a piggyback host "
+"named after its account ID."
+msgstr ""
+
 #, fuzzy, python-format
 msgid ""
 "<b>This feature is deprecated and will be removed in the version 3.1 of "
@@ -3296,10 +3304,6 @@ msgid "AI"
 msgstr "AIX"
 
 #, fuzzy
-msgid "AI Assistant"
-msgstr "Instancia"
-
-#, fuzzy
 msgid "AI assistance"
 msgstr "Instancia"
 
@@ -4126,10 +4130,18 @@ msgstr ""
 "los pods haya estado pendiente durante más tiempo del establecido. Para los "
 "clusters y nodos se pueden definir niveles en el número de pods libres."
 
+#, fuzzy
+msgid "Account IDs"
+msgstr "Identificación del contador"
+
 msgid ""
 "Account names on Windows, user or group names - or numeric IDs - on Linux "
 "and UNIX."
 msgstr ""
+
+#, fuzzy
+msgid "Accounts"
+msgstr "cuenta"
 
 #, fuzzy
 msgid "Accounts display name"
@@ -7824,6 +7836,9 @@ msgstr "Cantidad de correos en cola"
 msgid "Amount of mails in queues (secondary)"
 msgstr "Cantidad de correos en cola"
 
+msgid "An AWS account ID has exactly 12 digits."
+msgstr ""
+
 msgid "An AWS region name such as 'eu-central-1'"
 msgstr "Un nombre de región AWS como \"eu-central-1"
 
@@ -7833,6 +7848,9 @@ msgid ""
 msgstr ""
 "Un nombre de región de AWS como \"eu-central-1\" o \"CloudFront\" para WAFs "
 "delante de los recursos de CloudFront"
+
+msgid "An IAM role name has 1 to 64 characters: letters, digits and _+=,.@-"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -8138,6 +8156,10 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Any other status, or no status at all, always makes the service UNKNOWN."
+msgstr ""
+
+msgid ""
 "Any valid TCP port may be entered here. The host needs to provide a "
 "certificate on this port. Otherwise the service will be CRIT and report a "
 "handshake error."
@@ -8364,10 +8386,6 @@ msgstr ""
 #, fuzzy
 msgid "Apply finish time"
 msgstr "Aplicar la hora de finalización"
-
-#, fuzzy
-msgid "Apply lag"
-msgstr "Aplicar Lag"
 
 #, fuzzy
 msgid "Apply lag: maximum time"
@@ -9472,6 +9490,10 @@ msgstr "Disponible"
 
 msgid "Available (missing)"
 msgstr "Disponible (falta)"
+
+#, fuzzy
+msgid "Available RAM (kernel estimate)"
+msgstr "Réplicas disponibles"
 
 msgid "Available agent configurations"
 msgstr "Configuraciones de agentes disponibles"
@@ -11095,6 +11117,10 @@ msgstr "Cajas equilibradas"
 msgid "Balanced graph boxes"
 msgstr "Cuadros gráficos equilibrados"
 
+#, fuzzy
+msgid "Balloon memory"
+msgstr "Memoria abombada"
+
 msgid "Ballooned memory"
 msgstr "Memoria abombada"
 
@@ -11669,6 +11695,10 @@ msgid "Built-in"
 msgstr "Incorporado"
 
 #, fuzzy
+msgid "Built-in dashboards"
+msgstr "Clonar salpicadero integrado"
+
+#, fuzzy
 msgid "Built-in icon visibility"
 msgstr "Visibilidad de los iconos incorporados"
 
@@ -11683,6 +11713,10 @@ msgstr "Los periodos de tiempo incorporados no pueden modificarse"
 #, fuzzy
 msgid "Built-in time periods cannot be modified"
 msgstr "Los periodos de tiempo incorporados no pueden modificarse"
+
+#, fuzzy
+msgid "Built-in views"
+msgstr "Visibilidad de los iconos incorporados"
 
 #, fuzzy
 msgid "Built-in: force"
@@ -15334,6 +15368,20 @@ msgstr ""
 msgid "Choose condition"
 msgstr "Sin condiciones"
 
+msgid ""
+"Choose how Checkmk logs in to AWS.<br><b>Access key:</b> the access key ID "
+"and secret access key of an IAM user. Use this when Checkmk does not run on "
+"AWS.<br><b>Default AWS credentials:</b> Checkmk stores no secret. The agent "
+"uses the default credential chain of the AWS SDK: environment variables, the "
+"files in <tt>~/.aws</tt> of the site user, and the instance profile or EKS "
+"Pod Identity when Checkmk runs on AWS. Use this when Checkmk runs on AWS."
+"<br>Both can be combined with an IAM role. The agent then assumes this role "
+"and monitors the account the role belongs to. The AWS CloudTrail log shows "
+"these calls with the session name <tt>checkmk-&lt;site&gt;</tt>.<br>Only the "
+"choices without an IAM role can monitor a list of accounts: each account "
+"role must be assumed directly from the credentials."
+msgstr ""
+
 #, fuzzy
 msgid "Choose if this rule applies to plug-ins or local checks"
 msgstr "Elija si esta regla se aplica a los plugins o a los controles locales"
@@ -18267,6 +18315,17 @@ msgstr "Esta es una plantilla de portada"
 msgid "Contextual help icon"
 msgstr ""
 
+#, fuzzy
+msgid "Contiguous memory allocator"
+msgstr "Información sobre el nodo Proxmox VE"
+
+msgid "Contiguous memory: Allocated"
+msgstr ""
+
+#, fuzzy
+msgid "Contiguous memory: Free"
+msgstr "Memoria de host consumida"
+
 msgid "Continue"
 msgstr "Continuar"
 
@@ -19996,6 +20055,10 @@ msgstr "Customcheck"
 msgid "Custom checks - defined via rule"
 msgstr "Controles personalizados - definidos mediante reglas"
 
+#, fuzzy
+msgid "Custom dashboards"
+msgstr "Personalizar"
+
 msgid ""
 "Custom endpoint URL for S3-compatible storage services (e.g., Backblaze B2). "
 "Leave empty to use the default AWS S3 endpoint."
@@ -20204,6 +20267,10 @@ msgstr "Atributos de usuario personalizados"
 #, python-format
 msgid "Custom variable: %(name)s"
 msgstr "Variable personalizada: %(name)s"
+
+#, fuzzy
+msgid "Custom views"
+msgstr "Clientes"
 
 msgid "Customer"
 msgstr "Cliente"
@@ -21300,6 +21367,14 @@ msgstr "Plantilla %s por defecto"
 #, python-format
 msgid "Default (%(style)s)"
 msgstr "Por defecto (%(style)s)"
+
+#, fuzzy
+msgid "Default AWS credentials"
+msgstr "Credenciales por defecto"
+
+#, fuzzy
+msgid "Default AWS credentials + IAM role"
+msgstr "Credenciales por defecto"
 
 #, fuzzy
 msgid "Default BI visualization settings"
@@ -24925,6 +25000,14 @@ msgid "Downtimes of service"
 msgstr "Tiempos de inactividad del servicio"
 
 #, fuzzy
+msgid "Drill down to dashboard"
+msgstr "Enlace al panel de control"
+
+#, fuzzy
+msgid "Drill down to view"
+msgstr "Enlace para ver"
+
+#, fuzzy
 msgid "Drive"
 msgstr "Controlador"
 
@@ -25266,6 +25349,10 @@ msgstr ""
 "SNMPv3 enviadas por los dispositivos, Checkmk necesita conocer el ID de "
 "motor para poder descifrar las trampas SNMP.<br>Los ID de motor deben "
 "configurarse como cadenas hexadecimales como <tt>8000000001020304</tt>."
+
+#, fuzzy
+msgid "Each account ID may appear only once."
+msgstr "Cada atributo sólo puede especificarse una vez."
 
 msgid "Each attribute may be specified only once."
 msgstr "Cada atributo sólo puede especificarse una vez."
@@ -26284,6 +26371,10 @@ msgid "Enable logging of logon failures"
 msgstr "Habilitar el registro de los fallos de inicio de sesión"
 
 #, fuzzy
+msgid "Enable login timeout"
+msgstr "Desactivar el tiempo de espera de inicio de sesión"
+
+#, fuzzy
 msgid "Enable metrics"
 msgstr "Tema no válido"
 
@@ -27296,9 +27387,6 @@ msgstr "Unidad activa"
 msgid "Established firewall connections"
 msgstr "Conexiones establecidas"
 
-msgid "Estimated RAM for new processes"
-msgstr "Estimación de la RAM para los nuevos procesos"
-
 msgid "Estimated remaining health of the disk based on other readings."
 msgstr "Estimación de la salud restante del disco basada en otras lecturas."
 
@@ -28228,6 +28316,10 @@ msgstr "Etiquetas explícitas"
 
 #, fuzzy
 msgid "Explicit list of IP addresses"
+msgstr "Lista explícita de direcciones IP"
+
+#, fuzzy
+msgid "Explicit list of account IDs"
 msgstr "Lista explícita de direcciones IP"
 
 #, fuzzy
@@ -30093,6 +30185,9 @@ msgstr ""
 "Para cada día de la semana puede configurar ningún, uno o varios rangos de "
 "tiempo en el formato <tt>23:39</tt>, en el que el periodo de tiempo debe "
 "estar activo."
+
+msgid "For example <tt>CheckmkMonitoring</tt>."
+msgstr ""
 
 msgid "For example <tt>VMware vSphere 5 Standard</tt>"
 msgstr "Por ejemplo <tt>VMware vSphere 5 Standard</tt>"
@@ -45609,6 +45704,10 @@ msgid "Managed robots"
 msgstr "Objetos gestionados"
 
 #, fuzzy
+msgid "Managed server name"
+msgstr "Gestionar servicios"
+
+#, fuzzy
 msgid "Managed servers"
 msgstr "Gestionar servicios"
 
@@ -47133,6 +47232,9 @@ msgstr "Tamaño de memoria (percentil 99)"
 msgid "Memory size in percent"
 msgstr "Tamaño de memoria en porcentaje"
 
+msgid "Memory stored in zswap (original size)"
+msgstr ""
+
 msgid "Memory that cannot be swapped out"
 msgstr "Memoria que no se puede intercambiar"
 
@@ -47792,6 +47894,10 @@ msgstr "Reflejo de la criticidad del estado del testigo"
 msgid "Misc"
 msgstr ""
 
+#, fuzzy
+msgid "Misc memory types"
+msgstr "Páginas de memoria"
+
 msgid "Miscellaneous"
 msgstr "Varios"
 
@@ -47875,10 +47981,6 @@ msgstr "Falta el parámetro \"%(parameter)s\"."
 #, fuzzy
 msgid "Missing prerequisite"
 msgstr "Falta el requisito previo"
-
-#, fuzzy, python-format
-msgid "Missing request variable '%(key)s'"
-msgstr "Falta la variable siteid"
 
 msgid "Missing required \"Host name\" selection."
 msgstr "Falta la selección requerida de \"Nombre de host\"."
@@ -49518,6 +49620,10 @@ msgstr "Nombre del grupo de recursos"
 msgid "Name of the resource group"
 msgstr "Nombre del grupo de recursos"
 
+#, fuzzy
+msgid "Name of the role in every account"
+msgstr "Nombre de la interfaz de enlace"
+
 msgid "Name of the service"
 msgstr "Nombre del servicio"
 
@@ -50433,10 +50539,6 @@ msgstr "No hay datos de ningún sitio"
 #, fuzzy
 msgid "No data from time provider"
 msgstr "No hay datos de ningún sitio"
-
-#, python-format
-msgid "No data generator found for figure type name '%(figure_type_name)s'"
-msgstr ""
 
 #, fuzzy
 msgid "No data source defined."
@@ -54457,11 +54559,11 @@ msgid "Oracle databases"
 msgstr "Bases de datos Azure"
 
 #, fuzzy
-msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
-msgstr "Bases de datos ORACLE (Linux, Solaris, AIX, Windows)"
+msgid "Oracle databases (Experimental)"
+msgstr "Configuración por defecto"
 
 #, fuzzy
-msgid "Oracle databases (Linux, Solaris, AIX, Windows) (Experimental)"
+msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
 msgstr "Bases de datos ORACLE (Linux, Solaris, AIX, Windows)"
 
 #, fuzzy
@@ -59979,16 +60081,16 @@ msgid "RAM + swap installed"
 msgstr "Total de RAM + Swap instalado"
 
 #, fuzzy
-msgid "RAM + swap overview"
-msgstr "Resumen de RAM + Swap"
-
-#, fuzzy
 msgid "RAM + swap used"
 msgstr "RAM + Swap utilizados"
 
 #, fuzzy
 msgid "RAM Metrics"
 msgstr "Métrica"
+
+#, fuzzy
+msgid "RAM for active GPU objects"
+msgstr "Conexiones activas"
 
 #, fuzzy
 msgid "RAM free"
@@ -60011,6 +60113,9 @@ msgstr "RAM utilizada"
 #, fuzzy
 msgid "RAM used (averaged)"
 msgstr "Leer average exe"
+
+msgid "RAM used by GPU drivers"
+msgstr ""
 
 #, fuzzy
 msgid "RCC"
@@ -60712,6 +60817,9 @@ msgstr "Destinatarios: %s"
 
 msgid "Reclaimable"
 msgstr "Recuperable"
+
+msgid "Reclaimable RAM in GPU pools"
+msgstr ""
 
 #, fuzzy
 msgid "Reclaimable kernel allocations"
@@ -62124,6 +62232,10 @@ msgstr "Estado disponible de la réplica"
 #, fuzzy
 msgid "Replica lag"
 msgstr "Réplica del retraso"
+
+#, fuzzy
+msgid "Replica name"
+msgstr "Cambiar el nombre de"
 
 msgid "Replica ready state"
 msgstr "Estado de la réplica"
@@ -65067,6 +65179,10 @@ msgstr "Secundaria / Secundaria"
 
 msgid "Secondary Device"
 msgstr "Dispositivo secundario"
+
+#, fuzzy
+msgid "Secondary page tables"
+msgstr "Secundaria - Fallida"
 
 msgid "Seconds"
 msgstr "Segundos"
@@ -68416,6 +68532,10 @@ msgid "Single Windows host"
 msgstr "Un solo host de Windows"
 
 #, fuzzy
+msgid "Single account"
+msgstr "Selección de carpetas"
+
+#, fuzzy
 msgid "Single aggregation"
 msgstr "Agregación única"
 
@@ -68864,6 +68984,9 @@ msgstr "Skype para empresas XMPP"
 #, fuzzy
 msgid "Skype for Business data proxy"
 msgstr "Proxy de datos de Skype for Business"
+
+msgid "Slab"
+msgstr ""
 
 #, fuzzy
 msgid "Slab (various smaller caches)"
@@ -71620,6 +71743,10 @@ msgstr "Estado cuando el trabajo está en estado desactivado"
 msgid "State when the proxy is disabled"
 msgstr "Estado cuando el trabajo está en estado desactivado"
 
+#, fuzzy, python-format
+msgid "State when the replica is %(state)s"
+msgstr "Estado cuando el estado de replicación es de error"
+
 msgid ""
 "State when updates are pending, which are neither recommended or a security "
 "update"
@@ -71818,6 +71945,10 @@ msgid "Status stale"
 msgstr "Estatus de la situación"
 
 #, fuzzy
+msgid "Status: Available"
+msgstr "Estatus de la situación"
+
+#, fuzzy
 msgid "Status: Create status and (if configured) health services"
 msgstr "Crear servicios de estado y (si está configurado) de salud"
 
@@ -71845,6 +71976,10 @@ msgstr "Estado: STARTUP"
 
 msgid "Status: UPGRADE"
 msgstr "Estado: ACTUALIZACIÓN"
+
+#, fuzzy
+msgid "Status: Unavailable"
+msgstr "no disponible"
 
 msgid "Status: green"
 msgstr "Estatus: verde"
@@ -73471,51 +73606,51 @@ msgstr "Unidad de temperatura"
 msgid "Temperature Alert"
 msgstr "Alerta de temperatura"
 
-#, fuzzy
-msgid "Temperature Lane 1"
-msgstr "Temperatura Carril %d"
-
-#, fuzzy
-msgid "Temperature Lane 10"
-msgstr "Temperatura Carril %d"
-
-#, fuzzy
-msgid "Temperature Lane 2"
-msgstr "Temperatura Carril %d"
-
-#, fuzzy
-msgid "Temperature Lane 3"
-msgstr "Temperatura Carril %d"
-
-#, fuzzy
-msgid "Temperature Lane 4"
-msgstr "Temperatura Carril %d"
-
-#, fuzzy
-msgid "Temperature Lane 5"
-msgstr "Temperatura Carril %d"
-
-#, fuzzy
-msgid "Temperature Lane 6"
-msgstr "Temperatura Carril %d"
-
-#, fuzzy
-msgid "Temperature Lane 7"
-msgstr "Temperatura Carril %d"
-
-#, fuzzy
-msgid "Temperature Lane 8"
-msgstr "Temperatura Carril %d"
-
-#, fuzzy
-msgid "Temperature Lane 9"
-msgstr "Temperatura Carril %d"
-
 msgid "Temperature Trend Analysis"
 msgstr "Análisis de la tendencia de la temperatura"
 
 msgid "Temperature and Humidity for Eaton UPS"
 msgstr "Temperatura y humedad para los SAIs de Eaton"
+
+#, fuzzy
+msgid "Temperature lane 0"
+msgstr "Temperatura Carril %d"
+
+#, fuzzy
+msgid "Temperature lane 1"
+msgstr "Temperatura Carril %d"
+
+#, fuzzy
+msgid "Temperature lane 2"
+msgstr "Temperatura Carril %d"
+
+#, fuzzy
+msgid "Temperature lane 3"
+msgstr "Temperatura Carril %d"
+
+#, fuzzy
+msgid "Temperature lane 4"
+msgstr "Temperatura Carril %d"
+
+#, fuzzy
+msgid "Temperature lane 5"
+msgstr "Temperatura Carril %d"
+
+#, fuzzy
+msgid "Temperature lane 6"
+msgstr "Temperatura Carril %d"
+
+#, fuzzy
+msgid "Temperature lane 7"
+msgstr "Temperatura Carril %d"
+
+#, fuzzy
+msgid "Temperature lane 8"
+msgstr "Temperatura Carril %d"
+
+#, fuzzy
+msgid "Temperature lane 9"
+msgstr "Temperatura Carril %d"
 
 #, fuzzy
 msgid "Temperature sensors"
@@ -73563,6 +73698,10 @@ msgstr "Desactivar temporalmente esta conexión"
 
 msgid "Temporarily frozen"
 msgstr "Congelado temporalmente"
+
+#, fuzzy
+msgid "Temporarily timed out"
+msgstr "Sistema de archivos temporal montado"
 
 #, fuzzy
 msgid "Temporary file system mounted"
@@ -77363,6 +77502,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"The monitoring state for each replica state reported by Veeam. A replica "
+"state not listed here is always UNKNOWN."
+msgstr ""
+
+msgid ""
 "The monitoring state in case the version of a local check is unparsable."
 msgstr ""
 "El estado de monitorización en caso de que la versión de una comprobación "
@@ -78726,6 +78870,13 @@ msgid ""
 "timeouts). "
 msgstr ""
 
+msgid ""
+"The same external ID for the role in every account. It prevents another user "
+"of this site from monitoring an account through these credentials without "
+"knowing the ID. Use it on sites where several teams or customers can create "
+"AWS rules."
+msgstr ""
+
 #, fuzzy
 msgid "The same shared secret will be saved in the Checkmk password store."
 msgstr "El nombre que se utilizará en la descripción del servicio"
@@ -79096,12 +79247,6 @@ msgstr ""
 "actual se ha reunido un intervalo de comprobación y medio de un objeto. Esto "
 "significaría 90 segundos en el caso de un control que se comprueba cada 60 "
 "segundos."
-
-msgid ""
-"The start of a recurring downtime can only be set for days 1-28 of a month."
-msgstr ""
-"El inicio de un tiempo de inactividad recurrente sólo puede establecerse "
-"para los días 1-28 de un mes."
 
 msgid ""
 "The state of the Proxmox VE HA Manager Watcher service will be set to this "
@@ -79762,6 +79907,10 @@ msgstr ""
 #, python-format
 msgid "The version of this site is not a %(edition)s"
 msgstr "La versión de este sitio no es una %(edition)s"
+
+#, python-format
+msgid "The versions '%(min)s' and '%(max)s' cannot be compared."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -81254,6 +81403,21 @@ msgid ""
 "attributes. This comment is only visible in this dialog."
 msgstr ""
 
+msgid ""
+"This field supports the use of macros. The corresponding plug-in replaces "
+"the macros with the actual values. The most common ones are $HOSTNAME$, "
+"$HOSTALIAS$ or $HOSTADDRESS$. To use a custom host attribute, prefix its "
+"name with 'HOST_', e.g. an attribute named 'OWNER' is referenced as "
+"$HOST_OWNER$."
+msgstr ""
+
+msgid ""
+"This field supports the use of macros. The corresponding plug-in replaces "
+"the macros with the actual values. To use a custom host attribute, prefix "
+"its name with 'HOST_', e.g. an attribute named 'OWNER' is referenced as "
+"$HOST_OWNER$."
+msgstr ""
+
 #, python-format
 msgid ""
 "This file cannot be uploaded: \"%(error)s\". Please make sure to perform all "
@@ -82148,11 +82312,28 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This options enables automatic locking of user accounts after the configured "
-"number of consecutive invalid login attempts. These attempts include failed "
-"two factor authentication events. Once the account is locked only an admin "
-"user can unlock it. Beware: Also the admin users will be locked that way. "
-"You need to manually edit <tt>etc/htpasswd</tt> and remove the <tt>!</tt> in "
-"case you are locked out completely."
+"number of consecutive invalid login attempts.<ul><li>Admin users can unlock "
+"accounts.</li><li>Timeouts will always take priority but all attempts will "
+"still be tracked.</li><li>These attempts include failed two factor "
+"authentication events.</li></ul>Beware: Also the admin users will be locked "
+"that way. You need to manually edit <tt>etc/htpasswd</tt> and remove the "
+"<tt>!</tt> in case you are locked out completely."
+msgstr ""
+"Esta opción permite el bloqueo automático de las cuentas de usuario después "
+"del número configurado de intentos consecutivos de inicio de sesión no "
+"válidos. Una vez que la cuenta está bloqueada, sólo un usuario administrador "
+"puede desbloquearla. Cuidado: También los usuarios administradores serán "
+"bloqueados de esta manera. Es necesario editar manualmente <tt>etc/htpasswd</"
+"tt> y eliminar el <tt>!</tt> en caso de que se bloquee completamente."
+
+#, fuzzy
+msgid ""
+"This options enables automatic timing out of user accounts after a number of "
+"consecutive invalid login attempts.<ul><li>These attempts include failed two "
+"factor authentication events.</li><li> Users have 5 attempts before timeout."
+"</li><li> If 2 unique users from the same IP are timed out, a 15 minute IP "
+"timeout is applied.</li><li> Failed attempts are tracked in 3 minute "
+"intervals</li></ul>"
 msgstr ""
 "Esta opción permite el bloqueo automático de las cuentas de usuario después "
 "del número configurado de intentos consecutivos de inicio de sesión no "
@@ -85127,8 +85308,8 @@ msgstr ""
 msgid ""
 "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system. "
 "Currently not all options are available in all operating systems.<br><b>Note:"
-"</b> This plug-in cannot be used together with the 'Oracle databases (Linux, "
-"Solaris, AIX, Windows) (Experimental)'. Please configure only one of the two."
+"</b> This plug-in cannot be used together with the 'Oracle databases "
+"(Experimental)'. Please configure only one of the two."
 msgstr ""
 "Esto desplegará el plugin de agente <tt>mk_oracle</tt> en su sistema de "
 "destino. Actualmente no todas las opciones están disponibles en todos los "
@@ -86030,6 +86211,10 @@ msgstr ""
 msgid "Timeout occurred"
 msgstr "Se ha agotado el tiempo de espera"
 
+msgid ""
+"Timeout user accounts and IP addresses after multiple failed logon attempts"
+msgstr ""
+
 msgid "Timeout waiting for a free channel"
 msgstr "Tiempo de espera de un canal libre"
 
@@ -86383,6 +86568,11 @@ msgstr "Periodo de tolerancia para 'desactivar' el estado"
 msgid "Tolerance period for 'reloading' state"
 msgstr "Periodo de tolerancia para 'recargar' el Estado"
 
+msgid ""
+"Too many verification codes have been requested. Please try again later or "
+"continue without verification."
+msgstr ""
+
 #, fuzzy
 msgid "Tools install state"
 msgstr "Estado de la instancia del mapa"
@@ -86567,6 +86757,10 @@ msgstr "Total de RAM + Swap instalado"
 #, fuzzy
 msgid "Total RAM and swap"
 msgstr "Total de RAM instalada"
+
+#, fuzzy
+msgid "Total RAM used by GPU drivers"
+msgstr "Tiempo total de espera de la consulta"
 
 #, fuzzy
 msgid "Total RUs lower levels"
@@ -90344,6 +90538,10 @@ msgid ""
 "address."
 msgstr ""
 
+#, fuzzy
+msgid "Unaccepted memory"
+msgstr "Memoria del artículo"
+
 msgid "Unaccounted turbo cycles"
 msgstr "Ciclos turbo no contabilizados"
 
@@ -93349,6 +93547,10 @@ msgid "User is locked"
 msgstr "Usuario bloqueado"
 
 #, fuzzy
+msgid "User is timed out"
+msgstr "Usuario bloqueado"
+
+#, fuzzy
 msgid "User label"
 msgstr "Nombre de usuario"
 
@@ -94226,6 +94428,10 @@ msgstr "Distribución de VM"
 msgid "VM generation"
 msgstr "Opciones generales"
 
+#, fuzzy
+msgid "VM guest memory"
+msgstr "Memoria de invitados activa"
+
 msgid "VM name"
 msgstr "Nombre de la máquina virtual"
 
@@ -94544,8 +94750,16 @@ msgid "Veeam: License"
 msgstr "Licencia"
 
 #, fuzzy
+msgid "Veeam: Managed server"
+msgstr "Gestionar servicios"
+
+#, fuzzy
 msgid "Veeam: Protection group"
 msgstr "Grupos de agregación"
+
+#, fuzzy
+msgid "Veeam: Replica"
+msgstr "Reescribir la aplicación"
 
 msgid "Veeam: Restore points"
 msgstr ""
@@ -100336,6 +100550,13 @@ msgstr "Cortafuegos Zorp"
 msgid "Zpool status"
 msgstr "Estado de Zpool"
 
+msgid "Zswap"
+msgstr ""
+
+#, fuzzy
+msgid "Zswap memory (compressed size)"
+msgstr "Tamaño sin comprimir en la memoria"
+
 msgid "Zypper Updates"
 msgstr "Actualizaciones del Zypper"
 
@@ -101138,6 +101359,10 @@ msgstr "gráficos"
 msgid "graph number %(source)d"
 msgstr "número de gráfico %(source)d"
 
+#, fuzzy
+msgid "graphs"
+msgstr "Gráficos"
+
 msgid "group by"
 msgstr "grupo por"
 
@@ -101791,6 +102016,10 @@ msgstr[0] ""
 msgstr[1] ""
 "Notificar a los usuarios afectados si existen normas de notificación (enviar "
 "notificaciones)"
+
+#, fuzzy
+msgid "notifications"
+msgstr "Notificaciones"
 
 msgid "notifications within last"
 msgstr "notificaciones en el último"
@@ -103544,6 +103773,14 @@ msgstr "Operaciones de índice fallidas"
 msgid "This graph could not be resolved."
 msgstr "No se ha podido encontrar el DN de la base del grupo."
 
+#, fuzzy
+msgid "Sent on"
+msgstr "Enviado"
+
+#, fuzzy
+msgid "Expires on"
+msgstr "Expira"
+
 msgid ""
 "Due to a limitation in how Checkmk handles metrics internally, the results "
 "contain conflicting metrics and this top list may be incorrect or "
@@ -103555,14 +103792,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Sent on"
-msgstr "Enviado"
-
-#, fuzzy
-msgid "Expires on"
-msgstr "Expira"
-
-#, fuzzy
 msgid "Widget data could not be loaded."
 msgstr "No se ha podido encontrar el DN de la base del grupo."
 
@@ -103572,10 +103801,6 @@ msgstr "Cargando..."
 
 msgid "vs. %{previousValue} prev. window"
 msgstr ""
-
-#, fuzzy
-msgid "Failed to load the widget data"
-msgstr "Añadir elemento de la barra lateral"
 
 #, fuzzy
 msgid "Dashboard filter"
@@ -103746,16 +103971,8 @@ msgid "No dashboards found"
 msgstr "cuadros de mando"
 
 #, fuzzy
-msgid "Custom dashboards"
-msgstr "Personalizar"
-
-#, fuzzy
 msgid "Unnamed Dashboard"
 msgstr "Tablero de mandos"
-
-#, fuzzy
-msgid "Built-in dashboards"
-msgstr "Clonar salpicadero integrado"
 
 #, fuzzy
 msgid "Settings Menu"
@@ -104092,12 +104309,15 @@ msgstr ""
 msgid "Include current time range"
 msgstr "Activado en el rango de tiempo"
 
-msgid ""
-"Always included: the applied dashboard and widget filters, and the clicked "
-"element."
-msgstr ""
+#, fuzzy
+msgid "Always included in the contextual link:"
+msgstr "Por favor, añada al menos un nodo hijo."
 
-msgid "Always included: the clicked element."
+#, fuzzy
+msgid "Applied dashboard & widget filters"
+msgstr "Filtros aplicados:"
+
+msgid "Contextual filter = clicked element"
 msgstr ""
 
 #, fuzzy
@@ -106507,6 +106727,16 @@ msgstr "No seleccionado"
 #, fuzzy
 msgid "Turn off"
 msgstr "Apagado automático de la contracción"
+
+#, fuzzy
+msgid "Live refresh off"
+msgstr "Actualizar"
+
+msgid "Refresh interval set to %{seconds} seconds"
+msgstr ""
+
+msgid "Live refresh resumed, every %{seconds} seconds"
+msgstr ""
 
 #, fuzzy
 msgid "Last refresh: %{time}"
@@ -111324,8 +111554,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Acknowledged the problem for %{count} host"
-msgid_plural "Acknowledged the problem for %{count} hosts"
+msgid "Acknowledged the problem of the selected host"
+msgid_plural "Acknowledged the problems of the selected hosts"
 msgstr[0] "Reconocer los problemas"
 msgstr[1] "Reconocer los problemas"
 
@@ -111694,8 +111924,8 @@ msgid "Press [Enter] on a service name to open its details"
 msgstr ""
 
 msgid ""
-"Show only services in a problem state (WARN or CRIT) that are neither "
-"acknowledged nor in a scheduled downtime"
+"Show only services in a problem state (WARN, CRIT or UNKNOWN) that are "
+"neither acknowledged nor in a scheduled downtime"
 msgstr ""
 
 #, fuzzy
@@ -111807,9 +112037,6 @@ msgstr "No"
 #, fuzzy
 msgid "The downtime has to end after it starts."
 msgstr "La fecha de finalización debe ser posterior a la fecha de inicio"
-
-msgid "A downtime repeating monthly has to start between the 1st and the 28th."
-msgstr ""
 
 #, fuzzy
 msgid "More durations"
@@ -114083,6 +114310,46 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "AI Assistant"
+#~ msgstr "Instancia"
+
+#, fuzzy
+#~ msgid "Apply lag"
+#~ msgstr "Aplicar Lag"
+
+#~ msgid "Estimated RAM for new processes"
+#~ msgstr "Estimación de la RAM para los nuevos procesos"
+
+#, fuzzy, python-format
+#~ msgid "Missing request variable '%(key)s'"
+#~ msgstr "Falta la variable siteid"
+
+#, fuzzy
+#~ msgid "Oracle databases (Linux, Solaris, AIX, Windows) (Experimental)"
+#~ msgstr "Bases de datos ORACLE (Linux, Solaris, AIX, Windows)"
+
+#, fuzzy
+#~ msgid "RAM + swap overview"
+#~ msgstr "Resumen de RAM + Swap"
+
+#~ msgid ""
+#~ "The start of a recurring downtime can only be set for days 1-28 of a "
+#~ "month."
+#~ msgstr ""
+#~ "El inicio de un tiempo de inactividad recurrente sólo puede establecerse "
+#~ "para los días 1-28 de un mes."
+
+#, fuzzy
+#~ msgid "Failed to load the widget data"
+#~ msgstr "Añadir elemento de la barra lateral"
+
+#, fuzzy
+#~ msgid "Acknowledged the problem for %{count} host"
+#~ msgid_plural "Acknowledged the problem for %{count} hosts"
+#~ msgstr[0] "Reconocer los problemas"
+#~ msgstr[1] "Reconocer los problemas"
 
 #~ msgid "Accepted connections per second"
 #~ msgstr "Conexiones aceptadas por segundo"
@@ -120705,10 +120972,6 @@ msgstr ""
 #, python-format
 #~ msgid "Predefined condition '%s' does not exist or using not permitted"
 #~ msgstr "La condición predefinida '%s' no existe o su uso no está permitido"
-
-#, fuzzy
-#~ msgid "Relay name"
-#~ msgstr "Cambiar el nombre de"
 
 #~ msgid ""
 #~ "The configured predefined condition has either be removed or you are not "

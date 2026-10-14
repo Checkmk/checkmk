@@ -12,6 +12,7 @@ from pathlib import Path
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk import trace
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout
 from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
 from cmk.profiling import backend as profiling
 
@@ -26,16 +27,14 @@ def _mode_automation(
         AutomationError,
         Automations,
         discover_automations,
-        MKAutomationError,
     )
     from cmk.automations.internal import AutomationID
     from cmk.base import config
     from cmk.ccc import debug
-    from cmk.ccc.exceptions import MKGeneralException, MKTimeout
     from cmk.ccc.store import lock_checkmk_configuration
 
     if not args:
-        raise MKAutomationError("You need to provide arguments")
+        raise MKBailOut("You need to provide arguments")
 
     name, automation_args = AutomationID(args[0]), list(args[1:])
     automations = Automations(discover_automations())

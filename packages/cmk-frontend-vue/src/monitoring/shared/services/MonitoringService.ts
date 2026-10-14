@@ -433,7 +433,12 @@ export abstract class MonitoringService<T> extends ServiceBase {
   private initShortCuts(): void {
     const { _t } = usei18n()
     this.registerShortCut(
-      { key: ['/'], preventDefault: true, scope: _t('Table'), description: _t('Focus search') },
+      {
+        key: ['/'],
+        preventDefault: true,
+        scope: _t('Search'),
+        description: _t('Search this page')
+      },
       () => this.focusSearch()
     )
     this.enableShortCuts()

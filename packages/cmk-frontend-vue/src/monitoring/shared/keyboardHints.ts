@@ -10,10 +10,9 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 export function tableKeyboardHints(): TranslatedString[] {
   const { _t } = usei18n()
   return [
-    _t('Press [/] to search the table'),
     _t('Press [Enter] on a column header to sort by it'),
     _t(
-      "Press [Enter] on a column's filter button to filter for that column, [ArrowDown]/[ArrowUp] to move between the rows, [Escape] to close"
+      "Press [Enter] or [Alt]+[ArrowDown] on a column's filter button to filter for that column, [ArrowDown]/[ArrowUp] to move between the rows, [Escape] to close"
     ),
     _t('Press [Space] on a quick filter chip to filter for unhandled problems'),
     _t("Press [Space] on a row's checkbox to select it, on the header checkbox to select all"),
@@ -26,7 +25,7 @@ export function tableKeyboardHints(): TranslatedString[] {
       "Press [ContextMenu] (or [Shift]+[F10]) to open the menu of the focused element or its row, e.g. a host's ... menu"
     ),
     _t(
-      'Type letters to focus the first clickable text containing them, [ArrowDown]/[ArrowUp] for the next/previous match, [Enter] to activate it, [Escape] to clear'
+      'Type letters to focus the first clickable text or field containing them, [ArrowDown]/[ArrowUp] or [Tab]/[Shift]+[Tab] for the next/previous match, [Enter] to activate it, [Escape] to end the search, again to let go of the focus'
     )
   ]
 }

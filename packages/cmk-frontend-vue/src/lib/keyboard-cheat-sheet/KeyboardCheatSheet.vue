@@ -327,16 +327,19 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* Parchment on purpose: the same in both themes. */
+/* Checkmk green on dark gray on purpose: the same in both themes. */
 .lib-keyboard-cheat-sheet {
-  --cheat-sheet-paper: #f7f1e1;
-  --cheat-sheet-ink: #4b3621;
-  --cheat-sheet-ink-soft: rgb(75 54 33 / 70%);
-  --cheat-sheet-ink-faint: rgb(75 54 33 / 45%);
-  --cheat-sheet-highlight: rgb(75 54 33 / 15%);
-  --cheat-sheet-font: 16px;
-  --cheat-sheet-line: 24px;
-  --cheat-sheet-cap: 22px;
+  --cheat-sheet-paper: rgb(40 44 42);
+  --cheat-sheet-ink: var(--color-corporate-green-50);
+  --cheat-sheet-ink-soft: rgb(21 209 160 / 70%);
+  --cheat-sheet-ink-faint: rgb(21 209 160 / 45%);
+  --cheat-sheet-highlight: rgb(21 209 160 / 18%);
+  --cheat-sheet-font: 13px;
+  --cheat-sheet-line: 19px;
+  --cheat-sheet-cap: 18px;
+
+  /* Left and right of the sheet and between its columns alike. */
+  --cheat-sheet-gap: calc(var(--dimension-6) + 1cm);
 
   /* Relative to this sheet's own font, not the page's. */
   --cheat-sheet-column: 30em;
@@ -345,27 +348,41 @@ onBeforeUnmount(() => {
   --cheat-sheet-cap-wide: calc(3ch + 2 * var(--dimension-3) + 2px);
 
   position: fixed;
-  inset: auto var(--dimension-10) var(--dimension-10);
+  inset: auto auto var(--dimension-10) 50%;
   z-index: var(--z-index-modal-popup);
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  width: max-content;
+  max-width: calc(100vw - 2 * var(--dimension-10));
   max-height: calc(100vh - 2 * var(--dimension-10));
-  padding: var(--cheat-sheet-line) var(--dimension-6);
+  padding: var(--cheat-sheet-line) var(--cheat-sheet-gap);
   overflow: hidden;
   font-family: monospace;
   font-size: var(--cheat-sheet-font);
   line-height: var(--cheat-sheet-line);
   color: var(--cheat-sheet-ink);
   pointer-events: none;
-  background: var(--cheat-sheet-paper);
-  border-radius: 18px;
+  background: rgb(0 0 0);
+  border: 15px solid rgb(0 0 0);
+  border-radius: 30px;
   box-shadow: 0 6px 24px rgb(0 0 0 / 35%);
   visibility: hidden;
   opacity: 0;
+  transform: translateX(-50%);
   transition:
     opacity 400ms ease-out,
     visibility 400ms ease-out;
+}
+
+/* The paper on its own layer: a border would round its inside less than its outside. */
+.lib-keyboard-cheat-sheet::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: '';
+  background: var(--cheat-sheet-paper);
+  border-radius: 19px;
 }
 
 .lib-keyboard-cheat-sheet--visible {
@@ -373,30 +390,34 @@ onBeforeUnmount(() => {
   opacity: 1;
 }
 
+/* No say in the sheet's width: the columns set it, so the title lines up with the first one. */
 .lib-keyboard-cheat-sheet__header {
-  position: relative;
   display: flex;
   flex: 0 0 auto;
   gap: var(--dimension-6);
   align-items: baseline;
-  justify-content: center;
-  height: var(--cheat-sheet-line);
+  justify-content: flex-start;
+  min-height: var(--cheat-sheet-line);
   margin-bottom: var(--cheat-sheet-line);
+  contain: inline-size;
 }
 
 .lib-keyboard-cheat-sheet__title {
+  flex: 0 0 auto;
+  font-size: 1.2em;
   font-weight: var(--font-weight-bold);
 }
 
+/* In the sheet's corner, off the header: as far from the top as from the right. */
 .lib-keyboard-cheat-sheet__pin {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: var(--dimension-4);
+  right: var(--dimension-4);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--cheat-sheet-line);
-  height: var(--cheat-sheet-line);
+  width: calc(2 * var(--cheat-sheet-line));
+  height: calc(2 * var(--cheat-sheet-line));
   padding: 0;
   color: var(--cheat-sheet-ink-soft);
   pointer-events: auto;
@@ -411,8 +432,8 @@ onBeforeUnmount(() => {
 }
 
 .lib-keyboard-cheat-sheet__pin-icon {
-  width: 16px;
-  height: 16px;
+  width: 26px;
+  height: 26px;
   fill: none;
   stroke: currentcolor;
   stroke-width: 1.4px;
@@ -430,17 +451,18 @@ onBeforeUnmount(() => {
   color: var(--cheat-sheet-ink-soft);
 }
 
+/* Columns as wide as their content; spare width goes evenly to the edges and gaps. */
 .lib-keyboard-cheat-sheet__body {
   display: flex;
-  gap: var(--dimension-8);
+  gap: var(--cheat-sheet-gap);
   align-items: flex-start;
-  justify-content: center;
+  justify-content: space-evenly;
   overflow: hidden;
 }
 
 .lib-keyboard-cheat-sheet__column {
   display: flex;
-  flex: 1 1 0;
+  flex: 0 1 auto;
   flex-direction: column;
   gap: var(--cheat-sheet-line);
   min-width: 0;
@@ -538,7 +560,7 @@ onBeforeUnmount(() => {
   height: var(--cheat-sheet-cap);
   padding: 0 var(--dimension-3);
   margin: 0;
-  font-size: 13px;
+  font-size: 11px;
   line-height: 1;
   color: var(--cheat-sheet-paper);
   background: var(--cheat-sheet-ink);
@@ -555,7 +577,7 @@ onBeforeUnmount(() => {
   width: var(--cheat-sheet-cap);
   min-width: var(--cheat-sheet-cap);
   padding: 0;
-  font-size: 15px;
+  font-size: 12px;
 }
 
 .lib-keyboard-cheat-sheet__cap--wide.lib-keyboard-cheat-sheet__cap--wide {

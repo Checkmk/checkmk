@@ -7,7 +7,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { useWidgetKeys } from 'cmk-ui-library/lib/keyboardHelp'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { nextTick, ref } from 'vue'
 
@@ -22,7 +21,6 @@ import FilterOptionEntry from './FilterOptionEntry.vue'
 import { availableFilterOptions } from './QueryOptions'
 
 const { _t } = usei18n()
-useWidgetKeys(_t('Search'), [{ combo: ['Enter'], description: _t('Apply filter') }])
 const searchUtils = getSearchUtils()
 
 const filterOptions = ref<FilterOption[]>(availableFilterOptions)

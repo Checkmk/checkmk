@@ -125,10 +125,11 @@ def _create_store_secret(key_file: Path) -> Secret[bytes]:
 
 
 @final
-class PasswordStore:
-    """A password store that can load and save passwords in an encrypted file.
+class _Encryptor:
+    """Encrypt and decrypt text with a key derived from the given secret.
 
-    **This is not intended to be used by plugins directly!**
+    The format of the bytes is shared with the password store file and with
+    omd's cmk_password_store.h, and must not change.
     """
 
     _VERSION = 0
@@ -138,18 +139,66 @@ class PasswordStore:
     _NONCE_LENGTH: int = 16
     _AEAD_TAG_LENGTH: int = 16
 
+    def __init__(self, secret: Secret[bytes], /) -> None:
+        self._secret = secret
+
+    def encrypt(self, plaintext: Secret[str], /) -> bytes:
+        salt = os.urandom(self._SALT_LENGTH)
+        nonce = os.urandom(self._NONCE_LENGTH)
+        encrypted = AESGCM(self._derive_secret_key(salt)).encrypt(
+            nonce, plaintext.reveal().encode("utf-8"), associated_data=None
+        )
+        return (
+            self._VERSION.to_bytes(self._VERSION_BYTE_LENGTH, byteorder="big")
+            + salt
+            + nonce
+            + encrypted[-self._AEAD_TAG_LENGTH :]
+            + encrypted[: -self._AEAD_TAG_LENGTH]
+        )
+
+    def decrypt(self, raw: bytes, /) -> Secret[str]:
+        _version, rest = (
+            raw[: self._VERSION_BYTE_LENGTH],
+            raw[self._VERSION_BYTE_LENGTH :],
+        )
+        salt, rest = rest[: self._SALT_LENGTH], rest[self._SALT_LENGTH :]
+        nonce, rest = rest[: self._NONCE_LENGTH], rest[self._NONCE_LENGTH :]
+        tag, encrypted = rest[: self._AEAD_TAG_LENGTH], rest[self._AEAD_TAG_LENGTH :]
+        return Secret(
+            AESGCM(self._derive_secret_key(salt))
+            .decrypt(nonce, encrypted + tag, associated_data=None)
+            .decode("utf-8")
+        )
+
+    def _derive_secret_key(self, salt: bytes) -> bytes:
+        """Derive a symmetric key from the local secret"""
+        # TODO: in a future step (that requires migration of passwords) we could switch to HKDF.
+        # Scrypt is slow by design but that isn't necessary here because the secret is not just a
+        # password but "real" random data.
+        # Note that key derivation and encryption/decryption of passwords is duplicated in omd
+        # cmk_password_store.h and must be kept compatible!
+        return hashlib.scrypt(self._secret.reveal(), salt=salt, n=2**14, r=8, p=1, dklen=32)
+
+
+@final
+class PasswordStore:
+    """A password store that can load and save passwords in an encrypted file.
+
+    **This is not intended to be used by plugins directly!**
+    """
+
     # CMK-16660
     # _PASSWORD_ID_PREFIX = ":uuid:"  # cannot collide with user defined id.
     _PASSWORD_ID_PREFIX = "uuid"
 
     def __init__(self, secret: Secret[bytes], /) -> None:
-        self._secret = secret
+        self._encryptor = _Encryptor(secret)
 
     def load_bytes(self, raw: bytes) -> Mapping[str, Secret[str]]:
-        return self._deserialise(self._decrypt(raw))
+        return self._deserialise(self._encryptor.decrypt(raw).reveal())
 
     def dump_bytes(self, passwords: Mapping[str, Secret[str]]) -> bytes:
-        return self._encrypt(self._serialize(passwords))
+        return self._encryptor.encrypt(Secret(self._serialize(passwords)))
 
     @staticmethod
     def _serialize(passwords: Mapping[str, Secret[str]]) -> str:
@@ -179,43 +228,6 @@ class PasswordStore:
             raw = line = sline = "<redacted>"  # wipe sensitive data
 
         return passwords
-
-    def _encrypt(self, plaintext: str, /) -> bytes:
-        salt = os.urandom(self._SALT_LENGTH)
-        nonce = os.urandom(self._NONCE_LENGTH)
-        encrypted = AESGCM(self._derive_secret_key(salt)).encrypt(
-            nonce, plaintext.encode("utf-8"), associated_data=None
-        )
-        return (
-            self._VERSION.to_bytes(self._VERSION_BYTE_LENGTH, byteorder="big")
-            + salt
-            + nonce
-            + encrypted[-self._AEAD_TAG_LENGTH :]
-            + encrypted[: -self._AEAD_TAG_LENGTH]
-        )
-
-    def _decrypt(self, raw: bytes, /) -> str:
-        _version, rest = (
-            raw[: self._VERSION_BYTE_LENGTH],
-            raw[self._VERSION_BYTE_LENGTH :],
-        )
-        salt, rest = rest[: self._SALT_LENGTH], rest[self._SALT_LENGTH :]
-        nonce, rest = rest[: self._NONCE_LENGTH], rest[self._NONCE_LENGTH :]
-        tag, encrypted = rest[: self._AEAD_TAG_LENGTH], rest[self._AEAD_TAG_LENGTH :]
-        return (
-            AESGCM(self._derive_secret_key(salt))
-            .decrypt(nonce, encrypted + tag, associated_data=None)
-            .decode("utf-8")
-        )
-
-    def _derive_secret_key(self, salt: bytes) -> bytes:
-        """Derive a symmetric key from the local secret"""
-        # TODO: in a future step (that requires migration of passwords) we could switch to HKDF.
-        # Scrypt is slow by design but that isn't necessary here because the secret is not just a
-        # password but "real" random data.
-        # Note that key derivation and encryption/decryption of passwords is duplicated in omd
-        # cmk_password_store.h and must be kept compatible!
-        return hashlib.scrypt(self._secret.reveal(), salt=salt, n=2**14, r=8, p=1, dklen=32)
 
 
 def dereference_secret(raw: str, /) -> Secret[str]:

@@ -34,6 +34,11 @@ def _collect_apache_config(context: CollectContext) -> Iterable[DumpItem]:
     yield from walk_verbatim(rel_root, PurePosixPath("etc/apache"))
 
 
+def _collect_autocheck_files(context: CollectContext) -> Iterable[DumpItem]:
+    rel_root = context.omd_root / "var/check_mk/autochecks"
+    yield from walk_verbatim(rel_root, PurePosixPath("var/check_mk/autochecks"))
+
+
 diagnostics_plugin_config_files_low = DiagnosticsPlugin(
     name="config_files_low",
     description=Help(
@@ -66,6 +71,17 @@ diagnostics_plugin_config_files_high = DiagnosticsPlugin(
     sensitivity=Sensitivity.HIGH,
     topic=TOPIC_CONFIGURATION,
     handler=partial(collect_bucket, file_map=FILE_MAP_CONFIG, bucket=Sensitivity.HIGH),
+)
+
+diagnostics_plugin_autocheck_files = DiagnosticsPlugin(
+    name="autocheck_files",
+    description=Help(
+        "Autocheck files below var/check_mk/autochecks that contain the discovered"
+        " services of each host including their discovered parameters"
+    ),
+    sensitivity=Sensitivity.MEDIUM,
+    topic=TOPIC_CONFIGURATION,
+    handler=_collect_autocheck_files,
 )
 
 diagnostics_plugin_apache_config = DiagnosticsPlugin(

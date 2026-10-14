@@ -11,6 +11,7 @@ def test_available_diagnostics_plugins() -> None:
     assert {plugin.name for plugin in discovered.plugins.values()} == {
         "apache_config",
         "appliance_info",
+        "autocheck_files",
         "bi_runtime_data",
         "checkmk_overview",
         "config_files_high",

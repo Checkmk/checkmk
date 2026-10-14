@@ -183,9 +183,13 @@ class RescheduleIcon(Icon):
             return None  # shadow hosts/services cannot be rescheduled
 
         if (
-            row[what + "_active_checks_enabled"] == 1
-            or row[what + "_check_command"].startswith("check_mk-")
-        ) and user.may("action.reschedule"):
+            (
+                row[what + "_active_checks_enabled"] == 1
+                or row[what + "_check_command"].startswith("check_mk-")
+            )
+            and user.may("general.act")
+            and user.may("action.reschedule")
+        ):
             servicedesc = ""
             wait_svc = ""
             icon = "reload"

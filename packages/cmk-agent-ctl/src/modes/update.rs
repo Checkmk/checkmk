@@ -7,14 +7,17 @@
 
 use crate::agent_receiver_api;
 use crate::configuration::config::{ClientConfig, Registry};
-use crate::updater::{CheckOutcome, FetchOutcome, Updater};
+use crate::updater::{CheckOutcome, FetchOutcome, SignatureCheck, Updater};
 use anyhow::Result as AnyhowResult;
 
 /// Fetch the agent package the site has for this host, or only report it.
 ///
-/// Without `check_only` the package is downloaded and, once its signature has
-/// been checked, spooled for the installer. Installing it is not implemented
+/// Without `check_only` the package is downloaded and, once `signature` is
+/// satisfied, spooled for the installer. Installing it is not implemented
 /// yet, so the run ends with the package waiting on disk.
+///
+/// `signature` carries `--skip-signatures` through. It only reaches a fetch:
+/// a check downloads nothing, so there is nothing for it to vouch for.
 ///
 /// # Errors
 ///
@@ -25,6 +28,7 @@ pub fn update(
     registry: &Registry,
     client_config: &ClientConfig,
     check_only: bool,
+    signature: SignatureCheck,
 ) -> AnyhowResult<()> {
     let api = agent_receiver_api::Api {
         use_proxy: client_config.use_proxy,
@@ -34,7 +38,7 @@ pub fn update(
         if check_only {
             report(updater.check(registry, &api)?)
         } else {
-            report_fetch(updater.fetch_update(registry, &api)?)
+            report_fetch(updater.fetch_update(registry, &api, signature)?)
         }
     );
     Ok(())
@@ -66,6 +70,9 @@ fn report(outcome: CheckOutcome) -> String {
 ///
 /// The two outcomes that end without a package read as they do in [`report`]:
 /// the same situation must not be worded by whether `--check-only` was passed.
+///
+/// An unverified package says so. The file on disk carries no such mark, so
+/// this line is the only place the two are told apart.
 fn report_fetch(outcome: FetchOutcome) -> String {
     match outcome {
         FetchOutcome::NotPossible => {
@@ -73,8 +80,13 @@ fn report_fetch(outcome: FetchOutcome) -> String {
         }
         FetchOutcome::NoPackage => String::from("No agent package available for this host"),
         FetchOutcome::UpToDate(hash) => format!("Agent is up to date: {hash}"),
-        FetchOutcome::Spooled { hash, path } => format!(
-            "Verified agent package {hash} is ready at {}; installing it is not implemented yet",
+        FetchOutcome::Spooled {
+            hash,
+            path,
+            signature,
+        } => format!(
+            "{} is ready at {}; installing it is not implemented yet",
+            signature.package_name(&hash),
             path.display()
         ),
     }
@@ -128,8 +140,24 @@ mod tests {
             report_fetch(FetchOutcome::Spooled {
                 hash: TARGET_HASH.parse().unwrap(),
                 path: std::path::PathBuf::from("/spool/fedcba9876543210.deb"),
+                signature: SignatureCheck::Required,
             }),
             "Verified agent package fedcba9876543210 is ready at \
+             /spool/fedcba9876543210.deb; installing it is not implemented yet"
+        );
+    }
+
+    /// The file on disk is the same either way, so the line has to carry the
+    /// difference.
+    #[test]
+    fn test_report_a_spooled_package_nobody_vouched_for() {
+        assert_eq!(
+            report_fetch(FetchOutcome::Spooled {
+                hash: TARGET_HASH.parse().unwrap(),
+                path: std::path::PathBuf::from("/spool/fedcba9876543210.deb"),
+                signature: SignatureCheck::Skip,
+            }),
+            "UNVERIFIED agent package fedcba9876543210 is ready at \
              /spool/fedcba9876543210.deb; installing it is not implemented yet"
         );
     }

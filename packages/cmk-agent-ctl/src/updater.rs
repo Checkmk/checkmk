@@ -24,7 +24,7 @@ mod backend;
 mod connection;
 mod verification;
 pub use backend::{
-    AgentInfo, CheckOutcome, FetchOutcome, UpdatePackage, UpdateSource, UpdateState, Updater,
+    AgentInfo, CheckOutcome, FetchOutcome, SignatureCheck, UpdateSource, UpdateState, Updater,
     UpdaterConfig,
 };
 

@@ -227,18 +227,42 @@ const AGENT_HASH_KEY: &str = "hash";
 
 /// An agent package as the site delivered it, not verified yet.
 ///
-/// It becomes a file only through [`UpdatePackage::verify`], which turns it
-/// into a [`VerifiedUpdatePackage`] - the only one that can be saved.
+/// Cannot be saved
 #[derive(Debug)]
 pub struct UpdatePackage {
     /// Hash the site named it by, and the name it is spooled under later.
-    pub hash: AgentHash,
+    hash: AgentHash,
 
     /// Target platform of the package, which decides its file name extension.
-    pub platform: String,
+    platform: String,
 
     /// The package itself.
-    pub bytes: Vec<u8>,
+    bytes: Vec<u8>,
+}
+
+/// Whether a fetch insists on a signature it can verify.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SignatureCheck {
+    /// Refuse a package whose signature does not verify.
+    Required,
+
+    /// Spool the package whatever its signature says.
+    Skip,
+}
+
+impl SignatureCheck {
+    /// How a package checked this way is named, wherever it is named: in the
+    /// controller log and in the line the update mode prints.
+    ///
+    /// The spooled file carries no mark of what was checked about it, so these
+    /// lines are the only record of it, and both must word it the same way.
+    pub fn package_name(self, hash: &AgentHash) -> String {
+        let checked = match self {
+            Self::Required => "Verified",
+            Self::Skip => "UNVERIFIED",
+        };
+        format!("{checked} agent package {hash}")
+    }
 }
 
 impl UpdatePackage {
@@ -250,7 +274,7 @@ impl UpdatePackage {
     ///
     /// # Returns
     ///
-    /// The same package, verified.
+    /// The same package as [`VerifiedPackage`].
     ///
     /// # Errors
     ///
@@ -260,38 +284,46 @@ impl UpdatePackage {
         self,
         signatures: &[agent_receiver_api::AgentSignature],
         local_certificates: &[X509Certificate],
-    ) -> AnyhowResult<VerifiedUpdatePackage> {
+    ) -> AnyhowResult<VerifiedPackage> {
         verification::verify(&self.bytes, signatures, local_certificates)?;
-        Ok(VerifiedUpdatePackage {
-            hash: self.hash,
-            platform: self.platform,
-            bytes: self.bytes,
-        })
+        Ok(VerifiedPackage(self))
+    }
+
+    /// Take the package as it is, with its signature never looked at.
+    ///
+    /// The one way to an [`UnverifiedPackage`], and nothing it yields can be
+    /// passed where a [`VerifiedPackage`] is asked for. Private on purpose:
+    /// only the [`SignatureCheck::Skip`] branch of [`Updater::fetch_update`],
+    /// which `--skip-signatures` reaches, may call it.
+    ///
+    /// In future this API entry may be disabled, removed or limited.
+    fn accept_unverified(self) -> UnverifiedPackage {
+        log::warn!(
+            "Not checking the signature of the agent package {}, as asked: \
+             nothing vouches for it",
+            self.hash
+        );
+        UnverifiedPackage(self)
     }
 }
 
-/// An agent package whose signature has been checked.
+/// An agent package a signature of the site vouches for.
+///
+/// Reached only through [`UpdatePackage::verify`], so a function that asks for
+/// one is asking for a package that was checked.
 #[derive(Debug)]
-pub struct VerifiedUpdatePackage {
-    /// Hash the site named it by, and the name it is spooled under.
-    pub hash: AgentHash,
+pub struct VerifiedPackage(UpdatePackage);
 
-    /// Target platform of the package, which decides its file name extension.
-    pub platform: String,
+impl VerifiedPackage {
+    fn hash(&self) -> &AgentHash {
+        &self.0.hash
+    }
 
-    /// The package itself.
-    pub bytes: Vec<u8>,
-}
-
-impl VerifiedUpdatePackage {
-    /// Write the package to `dir` as `<hash>.<extension>`, creating `dir` if it
-    /// does not exist yet.
+    /// Write the package to `dir`, as described at [`spool`], and report where
+    /// it went.
     ///
-    /// This is the point where bytes delivered by a semi-trusted site turn into
-    /// a file that a privileged process will install.
-    ///
-    /// The package appears under its `<hash>.<extension>` atomically, so that an
-    /// interrupted save cannot leave a truncated one behind for the installer.
+    /// The spooled file carries no mark of what was checked about it, so that
+    /// line is the only record of it.
     ///
     /// # Returns
     ///
@@ -302,18 +334,88 @@ impl VerifiedUpdatePackage {
     /// If no package format is known for the platform, or if the directory or
     /// the package cannot be written.
     pub fn save(&self, dir: &Path) -> AnyhowResult<PathBuf> {
-        let path = dir.join(format!(
-            "{}.{}",
-            self.hash,
-            package_extension(&self.platform)?
-        ));
-        fs::create_dir_all(dir).context(format!("Failed to create {dir:?}"))?;
-        let tmp_path = tmp_path_for_atomical_save(&path);
-        write_restricted(&tmp_path, &self.bytes, PACKAGE_FILE_MODE)
-            .context(format!("Failed to write {tmp_path:?}"))?;
-        fs::rename(&tmp_path, &path).context(format!("Failed to move {tmp_path:?} to {path:?}"))?;
+        let path = spool(&self.0, dir)?;
+        log::info!("Spooled: {self} at {path:?}, waiting for the installer");
         Ok(path)
     }
+}
+
+/// An agent package nothing vouches for.
+///
+/// It can be spooled - `--skip-signatures` exists for that - but only by
+/// [`UnverifiedPackage::save_unverified`], which no caller reaches by reflex
+/// or by mistaking it for the checked one.
+#[derive(Debug)]
+pub struct UnverifiedPackage(UpdatePackage);
+
+impl UnverifiedPackage {
+    fn hash(&self) -> &AgentHash {
+        &self.0.hash
+    }
+
+    /// Write the package to `dir`, as described at [`spool`], although nothing
+    /// says the site it came from is the one it claims to come from, and report
+    /// where it went.
+    ///
+    /// The line it writes is a warning, visible without `-v`: the only word
+    /// anyone gets that a privileged installer is about to take a package
+    /// nobody vouched for.
+    ///
+    /// # Returns
+    ///
+    /// The path the package was written to.
+    ///
+    /// # Errors
+    ///
+    /// If no package format is known for the platform, or if the directory or
+    /// the package cannot be written.
+    pub fn save_unverified(&self, dir: &Path) -> AnyhowResult<PathBuf> {
+        let path = spool(&self.0, dir)?;
+        log::warn!("Spooled: {self} at {path:?}, waiting for the installer");
+        Ok(path)
+    }
+}
+
+impl std::fmt::Display for VerifiedPackage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", SignatureCheck::Required.package_name(&self.0.hash))
+    }
+}
+
+impl std::fmt::Display for UnverifiedPackage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", SignatureCheck::Skip.package_name(&self.0.hash))
+    }
+}
+
+/// Atomically write `package` to `dir` as `<hash>.<extension>`,
+/// `dir` may be created if absent.
+///
+/// This is the point where bytes delivered by a semi-trusted site turn into a
+/// file that a privileged process will install. Private, and reached only
+/// through [`VerifiedPackage::save`] or [`UnverifiedPackage::save_unverified`]:
+/// the writing is the same, what differs is who may ask for it.
+///
+/// # Returns
+///
+/// The path the package was written to.
+///
+/// # Errors
+///
+/// If no package format is known for the platform, or if the directory or the
+/// package cannot be written.
+fn spool(package: &UpdatePackage, dir: &Path) -> AnyhowResult<PathBuf> {
+    let path = dir.join(format!(
+        "{}.{}",
+        package.hash,
+        package_extension(&package.platform)?
+    ));
+    fs::create_dir_all(dir).context(format!("Failed to create {dir:?}"))?;
+    let tmp_path = tmp_path_for_atomical_save(&path);
+    write_restricted(&tmp_path, &package.bytes, PACKAGE_FILE_MODE)
+        .context(format!("Failed to write {tmp_path:?}"))?;
+    fs::rename(&tmp_path, &path).context(format!("Failed to move {tmp_path:?} to {path:?}"))?;
+    Ok(path)
 }
 
 /// File name extension of an agent package, by the platform the bakery names.
@@ -329,6 +431,37 @@ fn package_extension(platform: &str) -> AnyhowResult<&'static str> {
         "windows_msi" => Ok("msi"),
         other => bail!("No agent package format known for the platform {other:?}"),
     }
+}
+
+/// Refuse a package verification could not accept, before it is downloaded.
+///
+/// A pre-check, never an acceptance: [`UpdatePackage::verify`] stays the only
+/// thing that passes a package.
+///
+/// # Errors
+///
+/// If the site signed the package with nothing, if this host has no usable
+/// signature key, or if the site signed with no certificate among those keys.
+fn ensure_verifiable(
+    offered: &agent_receiver_api::TargetAgent,
+    local_certificates: &[X509Certificate],
+) -> AnyhowResult<()> {
+    if offered.signatures.is_empty() {
+        bail!(
+            "The site offers the agent package {} but has not signed it",
+            offered.aghash
+        );
+    }
+    if local_certificates.is_empty() {
+        bail!("No usable signature key is configured for this host");
+    }
+    if !verification::any_certificate_is_trusted(&offered.signatures, local_certificates) {
+        bail!(
+            "The site signed the agent package {} with no certificate this host trusts",
+            offered.aghash
+        );
+    }
+    Ok(())
 }
 
 /// The certificates of `blocks`, in the form [`UpdatePackage::verify`] takes
@@ -383,8 +516,14 @@ pub enum FetchOutcome {
     /// The site offers the package this host already runs.
     UpToDate(AgentHash),
 
-    /// The package is waiting for the installer.
-    Spooled { hash: AgentHash, path: PathBuf },
+    /// The package is waiting for the installer. `signature` says whether
+    /// anything vouched for it: the spooled file itself does not tell them
+    /// apart, so the run that produced it has to say so.
+    Spooled {
+        hash: AgentHash,
+        path: PathBuf,
+        signature: SignatureCheck,
+    },
 }
 
 /// What the site offers, as [`Updater::offered_update`] decided it.
@@ -675,23 +814,30 @@ impl Updater {
 
     /// Fetch the package the site offers and spool it for the installer.
     ///
-    /// The three steps of an update the controller can do today: ask the site,
-    /// download what it offers, and write it out once its signature has been
-    /// checked. Installing the spooled package is not part of it.
+    /// The four steps of an update the controller can do today: ask the site,
+    /// refuse what could not be verified anyway, download the rest, and write
+    /// it out once its signature has been checked. Installing the spooled
+    /// package is not part of it.
     ///
     /// The package is the only thing written: the updater state is left alone,
     /// because a fetch made by hand must not shift the schedule of the
     /// automatic cycle, the same way [`Updater::check`] does not.
     ///
+    /// With [`SignatureCheck::Skip`] both the pre-check and the verification
+    /// are left out, and a package nothing vouches for is spooled for a
+    /// privileged installer that cannot tell the difference. Only
+    /// `--skip-signatures` asks for that.
+    ///
     /// # Errors
     ///
-    /// If the site cannot be reached, does not deliver the package it offered,
-    /// delivers one that fails verification, or if the package cannot be
-    /// spooled.
+    /// If the site cannot be reached, offers a package this host could not
+    /// verify, does not deliver the package it offered, delivers one that fails
+    /// verification, or if the package cannot be spooled.
     pub fn fetch_update(
         &self,
         registry: &Registry,
         api: &impl agent_receiver_api::AgentUpdate,
+        signature: SignatureCheck,
     ) -> AnyhowResult<FetchOutcome> {
         let Some(selected) = self.find_update_connection(registry) else {
             return Ok(FetchOutcome::NotPossible);
@@ -706,17 +852,27 @@ impl Updater {
         // the DER they decode to.
         let blocks = self.signature_key_blocks();
         let local_certificates = local_certificates(&blocks);
+        if signature == SignatureCheck::Required {
+            ensure_verifiable(offered, &local_certificates)?;
+        }
         let package = self.download_package(api, &selected, offered)?;
-        let verified = package.verify(&offered.signatures, &local_certificates)?;
-        let path = verified.save(&self.package_dir)?;
-        log::info!(
-            "Spooled the agent package {} at {:?}, waiting for the installer",
-            verified.hash,
-            path
-        );
+        let (hash, path) = match signature {
+            SignatureCheck::Required => {
+                let package = package.verify(&offered.signatures, &local_certificates)?;
+                (package.hash().clone(), package.save(&self.package_dir)?)
+            }
+            SignatureCheck::Skip => {
+                let package = package.accept_unverified();
+                (
+                    package.hash().clone(),
+                    package.save_unverified(&self.package_dir)?,
+                )
+            }
+        };
         Ok(FetchOutcome::Spooled {
-            hash: verified.hash,
+            hash,
             path,
+            signature,
         })
     }
 
@@ -1674,6 +1830,26 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         })
     }
 
+    /// A configuration whose one signature key signed nothing, to tell "no key
+    /// configured" apart from "the key is not the one the site signed with".
+    ///
+    /// The certificate is for an elliptic curve key - fast
+    fn config_trusting_a_stranger() -> Option<UpdaterConfig> {
+        let key_pair = rcgen::KeyPair::generate_for(&rcgen::PKCS_ECDSA_P256_SHA256).unwrap();
+        let certificate = rcgen::CertificateParams::default()
+            .self_signed(&key_pair)
+            .unwrap();
+        Some(UpdaterConfig {
+            signature_keys: vec![pem_rfc7468::encode_string(
+                "CERTIFICATE",
+                pem_rfc7468::LineEnding::LF,
+                certificate.der(),
+            )
+            .unwrap()],
+            ..some_config().unwrap()
+        })
+    }
+
     fn some_agent_info() -> Option<AgentInfo> {
         Some(AgentInfo {
             hash: INSTALLED_HASH.parse().unwrap(),
@@ -1820,6 +1996,10 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             Self::answering(offered(target))
         }
 
+        fn unsigned(target: &str) -> Self {
+            Self::answering(unsigned(target))
+        }
+
         /// A site that offers `target` with the certificate this host trusts,
         /// but a signature that does not match the package.
         fn badly_signed(target: &str) -> Self {
@@ -1919,6 +2099,17 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             target_agent: target.map(|hash| TargetAgent {
                 aghash: hash.parse().unwrap(),
                 signatures: vec![SITE_SIGNATURE.clone()],
+            }),
+        }
+    }
+
+    /// The status of a site that has `target` for this host and signed nothing,
+    /// which is what a site whose bakery has no signature key answers.
+    fn unsigned(target: &str) -> UpdateStatusResponse {
+        UpdateStatusResponse {
+            target_agent: Some(TargetAgent {
+                aghash: target.parse().unwrap(),
+                signatures: vec![],
             }),
         }
     }
@@ -2282,18 +2473,82 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     }
 
     #[test]
+    fn test_a_signed_package_this_host_trusts_is_verifiable() {
+        let blocks =
+            updater(config_trusting_the_signer(), some_agent_info()).signature_key_blocks();
+        let status = offered(Some(TARGET_HASH));
+
+        assert!(ensure_verifiable(target_agent(&status), &local_certificates(&blocks)).is_ok());
+    }
+
+    #[test]
+    fn test_an_unsigned_package_is_not_verifiable() {
+        let blocks =
+            updater(config_trusting_the_signer(), some_agent_info()).signature_key_blocks();
+        let status = unsigned(TARGET_HASH);
+
+        let error =
+            ensure_verifiable(target_agent(&status), &local_certificates(&blocks)).unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "The site offers the agent package fedcba9876543210 but has not signed it"
+        );
+    }
+
+    #[test]
+    fn test_a_package_is_not_verifiable_without_a_signature_key() {
+        let status = offered(Some(TARGET_HASH));
+
+        let error = ensure_verifiable(target_agent(&status), &[]).unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "No usable signature key is configured for this host"
+        );
+    }
+
+    /// The host has a key, the site signed with another: nothing the download
+    /// could add would make the package verifiable.
+    #[test]
+    fn test_a_package_signed_by_a_stranger_is_not_verifiable() {
+        let blocks =
+            updater(config_trusting_a_stranger(), some_agent_info()).signature_key_blocks();
+        let status = offered(Some(TARGET_HASH));
+
+        let error =
+            ensure_verifiable(target_agent(&status), &local_certificates(&blocks)).unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "The site signed the agent package fedcba9876543210 with no certificate \
+             this host trusts"
+        );
+    }
+
+    #[test]
     fn test_fetch_update_spools_the_package_the_site_offers() {
         let dir = tempfile::TempDir::new().unwrap();
         let registry = registry_with_one_connection();
         let updater = updater_spooling_into(&dir);
 
         let outcome = updater
-            .fetch_update(&registry.registry, &TestApi::new(Some(TARGET_HASH)))
+            .fetch_update(
+                &registry.registry,
+                &TestApi::new(Some(TARGET_HASH)),
+                SignatureCheck::Required,
+            )
             .unwrap();
 
-        let FetchOutcome::Spooled { hash, path } = outcome else {
+        let FetchOutcome::Spooled {
+            hash,
+            path,
+            signature,
+        } = outcome
+        else {
             panic!("expected a spooled package, got {outcome:?}");
         };
+        assert_eq!(signature, SignatureCheck::Required);
         assert_eq!(hash.as_str(), TARGET_HASH);
         assert_eq!(
             path,
@@ -2309,7 +2564,11 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let updater = updater_spooling_into(&dir);
 
         let outcome = updater
-            .fetch_update(&registry.registry, &TestApi::new(Some(INSTALLED_HASH)))
+            .fetch_update(
+                &registry.registry,
+                &TestApi::new(Some(INSTALLED_HASH)),
+                SignatureCheck::Required,
+            )
             .unwrap();
 
         assert_eq!(
@@ -2326,7 +2585,11 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let updater = updater_spooling_into(&dir);
 
         let outcome = updater
-            .fetch_update(&registry.registry, &TestApi::new(None))
+            .fetch_update(
+                &registry.registry,
+                &TestApi::new(None),
+                SignatureCheck::Required,
+            )
             .unwrap();
 
         assert_eq!(outcome, FetchOutcome::NoPackage);
@@ -2338,14 +2601,39 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let registry = registry_with_one_connection();
 
         let outcome = updater(some_config(), None)
-            .fetch_update(&registry.registry, &TestApi::new(Some(TARGET_HASH)))
+            .fetch_update(
+                &registry.registry,
+                &TestApi::new(Some(TARGET_HASH)),
+                SignatureCheck::Required,
+            )
             .unwrap();
 
         assert_eq!(outcome, FetchOutcome::NotPossible);
     }
 
-    /// Nothing is spooled that the signature does not vouch for, and the
-    /// package the site did deliver leaves no file behind.
+    /// The pre-check refuses before the transfer, so the site is never asked
+    /// for the package.
+    #[test]
+    fn test_fetch_update_does_not_download_an_unsigned_package() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let updater = updater_spooling_into(&dir);
+        let api = TestApi::unsigned(TARGET_HASH);
+
+        let error = updater
+            .fetch_update(&registry.registry, &api, SignatureCheck::Required)
+            .unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "The site offers the agent package fedcba9876543210 but has not signed it"
+        );
+        assert!(api.download().is_none());
+        assert!(!dir.path().join(PACKAGE_DIR).exists());
+    }
+
+    /// The pre-check lets a package through on the certificate alone, so
+    /// verification is still what rejects a signature that does not match.
     #[test]
     fn test_fetch_update_rejects_a_package_the_signature_does_not_match() {
         let dir = tempfile::TempDir::new().unwrap();
@@ -2353,7 +2641,9 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let updater = updater_spooling_into(&dir);
         let api = TestApi::badly_signed(TARGET_HASH);
 
-        let error = updater.fetch_update(&registry.registry, &api).unwrap_err();
+        let error = updater
+            .fetch_update(&registry.registry, &api, SignatureCheck::Required)
+            .unwrap_err();
 
         assert_eq!(
             error.to_string(),
@@ -2363,12 +2653,96 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert!(!dir.path().join(PACKAGE_DIR).exists());
     }
 
+    /// What `--skip-signatures` is for: the host has no signature key yet, and
+    /// the package is spooled anyway.
+    #[test]
+    fn test_fetch_update_spools_an_unsigned_package_when_asked_to_skip() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let updater = Updater {
+            package_dir: dir.path().join(PACKAGE_DIR),
+            ..updater(some_config(), some_agent_info())
+        };
+
+        let outcome = updater
+            .fetch_update(
+                &registry.registry,
+                &TestApi::unsigned(TARGET_HASH),
+                SignatureCheck::Skip,
+            )
+            .unwrap();
+
+        let FetchOutcome::Spooled {
+            hash,
+            path,
+            signature,
+        } = outcome
+        else {
+            panic!("expected a spooled package, got {outcome:?}");
+        };
+        assert_eq!(signature, SignatureCheck::Skip);
+        assert_eq!(hash.as_str(), TARGET_HASH);
+        assert_eq!(fs::read(&path).unwrap(), PACKAGE);
+    }
+
+    /// Skipping overrides the verification too, not only the pre-check: this
+    /// package carries a signature that does not match it.
+    #[test]
+    fn test_fetch_update_spools_a_badly_signed_package_when_asked_to_skip() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let updater = updater_spooling_into(&dir);
+
+        let outcome = updater
+            .fetch_update(
+                &registry.registry,
+                &TestApi::badly_signed(TARGET_HASH),
+                SignatureCheck::Skip,
+            )
+            .unwrap();
+
+        assert!(matches!(
+            outcome,
+            FetchOutcome::Spooled {
+                signature: SignatureCheck::Skip,
+                ..
+            }
+        ));
+    }
+
+    /// Skipping says nothing about which package is due: an up-to-date host
+    /// still fetches nothing.
+    #[test]
+    fn test_fetch_update_skipping_still_fetches_nothing_when_up_to_date() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let updater = updater_spooling_into(&dir);
+
+        let outcome = updater
+            .fetch_update(
+                &registry.registry,
+                &TestApi::new(Some(INSTALLED_HASH)),
+                SignatureCheck::Skip,
+            )
+            .unwrap();
+
+        assert_eq!(
+            outcome,
+            FetchOutcome::UpToDate(INSTALLED_HASH.parse().unwrap())
+        );
+        assert!(!dir.path().join(PACKAGE_DIR).exists());
+    }
+
     #[test]
     fn test_fetch_update_names_the_site_that_did_not_answer() {
         let registry = registry_with_one_connection();
 
         let error = updater(some_config(), some_agent_info())
-            .fetch_update(&registry.registry, &UnreachableApi)
+            .fetch_update(
+                &registry.registry,
+                &UnreachableApi,
+                SignatureCheck::Required,
+            )
             .unwrap_err();
 
         assert_eq!(
@@ -2377,13 +2751,18 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         );
     }
 
-    /// A downloaded package of `platform`, ready to be saved.
-    fn verified(platform: &str) -> VerifiedUpdatePackage {
-        VerifiedUpdatePackage {
+    /// A downloaded package of `platform`, as the site delivered it.
+    fn downloaded(platform: &str) -> UpdatePackage {
+        UpdatePackage {
             hash: TARGET_HASH.parse().unwrap(),
             platform: String::from(platform),
             bytes: PACKAGE.to_vec(),
         }
+    }
+
+    /// A downloaded package of `platform`, verified and ready to be saved.
+    fn verified(platform: &str) -> VerifiedPackage {
+        VerifiedPackage(downloaded(platform))
     }
 
     #[test]
@@ -2480,5 +2859,36 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             fs::metadata(&path).unwrap().permissions().mode() & 0o777,
             PACKAGE_FILE_MODE
         );
+    }
+
+    #[test]
+    fn test_a_verified_package_is_named_verified() {
+        assert_eq!(
+            verified("linux_deb").to_string(),
+            "Verified agent package fedcba9876543210"
+        );
+    }
+
+    #[test]
+    fn test_an_unverified_package_says_so_in_capitals() {
+        assert_eq!(
+            downloaded("linux_deb").accept_unverified().to_string(),
+            "UNVERIFIED agent package fedcba9876543210"
+        );
+    }
+
+    /// The file an unverified package leaves behind is the same file: only the
+    /// method that asks for it, and the line that reports it, differ.
+    #[test]
+    fn test_save_an_unverified_package() {
+        let dir = tempfile::TempDir::new().unwrap();
+
+        let path = downloaded("linux_deb")
+            .accept_unverified()
+            .save_unverified(dir.path())
+            .unwrap();
+
+        assert_eq!(path, dir.path().join("fedcba9876543210.deb"));
+        assert_eq!(fs::read(&path).unwrap(), PACKAGE);
     }
 }

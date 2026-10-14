@@ -156,6 +156,11 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
             &registry,
             &config::ClientConfig::new(runtime_config, update_opts.client_opts, None),
             update_opts.check_only,
+            if update_opts.skip_signatures {
+                updater::SignatureCheck::Skip
+            } else {
+                updater::SignatureCheck::Required
+            },
         ),
         cli::Mode::RenewCertificate(renew_certificate_opts) => renew_certificate(
             registry,

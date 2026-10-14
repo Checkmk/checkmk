@@ -91,8 +91,9 @@ pub enum Mode {
 
     /// Update the agent of this host from the Checkmk site it is registered with
     ///
-    /// The package the site offers is downloaded, verified and left in the spool
-    /// directory for the installer. Installing it is not implemented yet.
+    /// The package the site offers is downloaded, verified unless
+    /// --skip-signatures is given, and left in the spool directory for the
+    /// installer. Installing it is not implemented yet.
     Update(UpdateOpts),
 }
 
@@ -101,6 +102,10 @@ pub struct UpdateOpts {
     /// Only report which agent package the site has for this host, and change nothing
     #[arg(long)]
     pub check_only: bool,
+
+    /// Spool the package without checking its signature
+    #[arg(long, short = 'G', conflicts_with = "check_only")]
+    pub skip_signatures: bool,
 
     #[clap(flatten)]
     pub client_opts: ClientOpts,
@@ -342,6 +347,34 @@ impl Cli {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The update options of `cmk-agent-ctl update <args>`.
+    fn update_opts(args: &[&str]) -> UpdateOpts {
+        let Mode::Update(opts) =
+            Cli::parse_from([&["cmk-agent-ctl", "update"], args].concat()).mode
+        else {
+            panic!("expected the update mode");
+        };
+        opts
+    }
+
+    #[test]
+    fn test_update_checks_signatures_unless_told_not_to() {
+        assert!(!update_opts(&[]).skip_signatures);
+    }
+
+    #[test]
+    fn test_update_skips_signatures_on_request() {
+        assert!(update_opts(&["--skip-signatures"]).skip_signatures);
+        assert!(update_opts(&["-G"]).skip_signatures);
+    }
+
+    /// A check downloads nothing, so there is nothing for it to skip the
+    /// signature of: the combination is refused instead of silently ignored.
+    #[test]
+    fn test_update_refuses_to_skip_signatures_of_a_check() {
+        assert!(Cli::try_parse_from(["cmk-agent-ctl", "update", "--check-only", "-G"]).is_err());
+    }
 
     #[test]
     fn test_logging_level() {

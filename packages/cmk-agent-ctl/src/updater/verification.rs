@@ -28,39 +28,18 @@ pub fn verify(
     local_certificates: &[X509Certificate],
 ) -> AnyhowResult<()> {
     let result = signatures.iter().find(|entry| {
-        let Ok(pem) = certs::parse_pem(&entry.certificate) else {
-            log::warn!("Ignoring a site certificate that is not PEM");
-            return false;
-        };
-        let Ok(certificate) = pem.parse_x509() else {
-            log::warn!("Ignoring a site certificate that cannot be parsed");
-            return false;
-        };
-
-        if certificate.validity().not_after < ASN1Time::now() {
-            log::warn!("Certificate {} has expired", certificate.subject());
-            return false;
-        }
-
-        if !local_certificates.contains(&certificate) {
-            log::warn!(
-                "Certificate {} is not available locally",
-                certificate.subject()
-            );
-            return false;
-        }
-
-        let Ok(public_key) = rsa::RsaPublicKey::from_public_key_der(certificate.public_key().raw)
+        let Some((public_key_der, subject)) = trusted_certificate_data(entry, local_certificates)
         else {
-            log::warn!("Certificate {} has no RSA key", certificate.subject());
+            return false;
+        };
+
+        let Ok(public_key) = rsa::RsaPublicKey::from_public_key_der(&public_key_der) else {
+            log::warn!("Certificate {subject} has no RSA key");
             return false;
         };
 
         let Ok(decoded) = BASE64_STANDARD.decode(entry.signature.as_bytes()) else {
-            log::warn!(
-                "Signature for certificate {} is not base64",
-                certificate.subject()
-            );
+            log::warn!("Signature for certificate {subject} is not base64");
             return false;
         };
 
@@ -72,10 +51,7 @@ pub fn verify(
             .verify(bytes, &signature)
             .is_err()
         {
-            log::warn!(
-                "Signature for certificate {} does not match the package",
-                certificate.subject()
-            );
+            log::warn!("Signature for certificate {subject} does not match the package");
             return false;
         }
 
@@ -87,6 +63,65 @@ pub fn verify(
     }
 
     Ok(())
+}
+
+/// Whether any of `signatures` carries a certificate this host trusts.
+///
+/// Answers whether [`verify`] could accept a package at all, which is worth
+/// knowing before the package is downloaded. The signatures themselves are not
+/// checked - a trusted, unexpired certificate is as far as this goes.
+///
+/// Every certificate it rejects is logged with its reason: when this says no,
+/// [`verify`] never runs, so this is the only place that can tell which of the
+/// certificates the site sent was unusable and why.
+pub fn any_certificate_is_trusted(
+    signatures: &[AgentSignature],
+    local_certificates: &[X509Certificate],
+) -> bool {
+    signatures
+        .iter()
+        .any(|entry| trusted_certificate_data(entry, local_certificates).is_some())
+}
+
+/// The public key DER and subject of `entry`'s certificate, if this host trusts
+/// it; `None` with the reason logged otherwise. The signature is not checked.
+///
+/// Both checks use this one, so they cannot disagree about which certificate is
+/// acceptable: [`any_certificate_is_trusted`] runs before the download,
+/// [`verify`] after it.
+///
+/// Both values are copies - they borrow the PEM block owned here - trading a
+/// few hundred bytes for not parsing that block twice.
+fn trusted_certificate_data(
+    entry: &AgentSignature,
+    local_certificates: &[X509Certificate],
+) -> Option<(Vec<u8>, String)> {
+    let Ok(pem) = certs::parse_pem(&entry.certificate) else {
+        log::warn!("Ignoring a site certificate that is not PEM");
+        return None;
+    };
+    let Ok(certificate) = pem.parse_x509() else {
+        log::warn!("Ignoring a site certificate that cannot be parsed");
+        return None;
+    };
+
+    if certificate.validity().not_after < ASN1Time::now() {
+        log::warn!("Certificate {} has expired", certificate.subject());
+        return None;
+    }
+
+    if !local_certificates.contains(&certificate) {
+        log::warn!(
+            "Certificate {} is not available locally",
+            certificate.subject()
+        );
+        return None;
+    }
+
+    Some((
+        certificate.public_key().raw.to_vec(),
+        certificate.subject().to_string(),
+    ))
 }
 
 #[cfg(test)]
@@ -272,6 +307,111 @@ mod tests {
         let result = verify(RAW_PACKAGE, &[signature], &[]);
 
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_a_trusted_certificate_is_found() {
+        let certificate = certificate("signer", 2000, 4000);
+        let signature = AgentSignature {
+            certificate: pem(&certificate),
+            // No signature of [`RAW_PACKAGE`]: only the certificate counts here.
+            signature: String::from("not a signature"),
+        };
+
+        assert!(any_certificate_is_trusted(
+            &[signature],
+            &[x509(&certificate)]
+        ));
+    }
+
+    #[test]
+    fn test_no_certificate_is_trusted_without_signatures() {
+        let certificate = certificate("signer", 2000, 4000);
+
+        assert!(!any_certificate_is_trusted(&[], &[x509(&certificate)]));
+    }
+
+    #[test]
+    fn test_no_certificate_is_trusted_without_local_certificates() {
+        let certificate = certificate("signer", 2000, 4000);
+        let signature = AgentSignature {
+            certificate: pem(&certificate),
+            signature: signature(),
+        };
+
+        assert!(!any_certificate_is_trusted(&[signature], &[]));
+    }
+
+    #[test]
+    fn test_an_expired_certificate_is_not_trusted() {
+        let certificate = certificate("signer", 2000, 2001);
+        let signature = AgentSignature {
+            certificate: pem(&certificate),
+            signature: signature(),
+        };
+
+        assert!(!any_certificate_is_trusted(
+            &[signature],
+            &[x509(&certificate)]
+        ));
+    }
+
+    /// Both certificates are for the same key, as in
+    /// [`test_certificate_that_is_not_local_is_rejected`]: only the missing
+    /// local certificate makes the difference.
+    #[test]
+    fn test_a_certificate_that_is_not_local_is_not_trusted() {
+        let site_certificate = certificate("site", 2000, 4000);
+        let local_certificate = certificate("local", 2000, 4000);
+        let signature = AgentSignature {
+            certificate: pem(&site_certificate),
+            signature: signature(),
+        };
+
+        assert!(!any_certificate_is_trusted(
+            &[signature],
+            &[x509(&local_certificate)]
+        ));
+    }
+
+    /// One trusted certificate among untrusted ones is enough, the way one
+    /// valid signature is enough for [`verify`].
+    #[test]
+    fn test_one_trusted_certificate_among_others_is_enough() {
+        let expired = certificate("expired", 2000, 2001);
+        let valid = certificate("valid", 2000, 4000);
+        let signatures = [
+            AgentSignature {
+                certificate: pem(&expired),
+                signature: signature(),
+            },
+            AgentSignature {
+                certificate: pem(&valid),
+                signature: signature(),
+            },
+        ];
+
+        assert!(any_certificate_is_trusted(
+            &signatures,
+            &[x509(&expired), x509(&valid)]
+        ));
+    }
+
+    #[test]
+    fn test_a_corrupt_certificate_is_not_trusted() {
+        let certificate = certificate("signer", 2000, 4000);
+        let signature = AgentSignature {
+            // Valid PEM, but the content is the text "not a certificate".
+            certificate: String::from(
+                "-----BEGIN CERTIFICATE-----\nbm90IGEgY2VydGlmaWNhdGU=\n-----END CERTIFICATE-----\n",
+            ),
+            signature: signature(),
+        };
+
+        assert!(!any_certificate_is_trusted(
+            &[signature],
+            &[x509(&certificate)]
+        ));
     }
 
     /// The key behind every RSA test certificate. Generated once, because RSA

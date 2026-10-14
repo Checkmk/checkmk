@@ -130,20 +130,20 @@ def query_filter_to_sqlite_filter(f: QueryFilter, adjusted_column_name: str) -> 
     match f.operator_name:
         case "=":
             return f"{adjusted_column_name} {f.operator_name} ?"
-        case ">":
-            return f"{adjusted_column_name} {f.operator_name} ?"
-        case "<":
-            return f"{adjusted_column_name} {f.operator_name} ?"
-        case ">=":
-            return f"{adjusted_column_name} {f.operator_name} ?"
-        case "<=":
-            return f"{adjusted_column_name} {f.operator_name} ?"
         case "~":
             return f"{adjusted_column_name} REGEXP ?"
         case "=~":
             return f"{adjusted_column_name} = ? COLLATE NOCASE"
         case "~~":
             return f"regexp_nocase(?, {adjusted_column_name})"
+        case "<":
+            return f"{adjusted_column_name} {f.operator_name} ?"
+        case ">=":
+            return f"{adjusted_column_name} {f.operator_name} ?"
+        case ">":
+            return f"{adjusted_column_name} {f.operator_name} ?"
+        case "<=":
+            return f"{adjusted_column_name} {f.operator_name} ?"
         case "in":
             return f"{adjusted_column_name} in ({','.join(['?'] * len(f.argument))})"
 

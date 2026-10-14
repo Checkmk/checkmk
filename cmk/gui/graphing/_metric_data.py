@@ -502,14 +502,13 @@ def _in_user_unit(
 def evaluated_metrics(
     perf_data_string: str,
     check_command: str,
-    rrd_metrics: Sequence[MetricName] = (),
     *,
     registered_metrics: Mapping[str, metrics_v1.Metric],
     registered_translations: Sequence[translations_v1.Translation],
     temperature_unit: TemperatureUnit,
     debug: bool,
 ) -> Mapping[MetricName, EvaluatedMetric]:
-    raw = parse_performance_data(perf_data_string, check_command, rrd_metrics, debug=debug)
+    raw = parse_performance_data(perf_data_string, check_command, debug=debug)
     evaluated = {}
     for name, performance_data in translate_performance_data(
         raw.check_command, raw.values, registered_translations

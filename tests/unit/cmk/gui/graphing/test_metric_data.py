@@ -415,14 +415,12 @@ def test_merging_rejects_the_none_a_nagios_core_answers_with() -> None:
 def _evaluated(
     perf_data_string: str,
     *,
-    rrd_metrics: Sequence[MetricName] = (),
     registered_translations: Sequence[translations.Translation] = (),
     temperature_unit: TemperatureUnit = TemperatureUnit.CELSIUS,
 ) -> Mapping[MetricName, EvaluatedMetric]:
     return evaluated_metrics(
         perf_data_string,
         _CHECK_COMMAND,
-        rrd_metrics,
         registered_metrics=_REGISTERED_METRICS,
         registered_translations=registered_translations,
         temperature_unit=temperature_unit,
@@ -491,16 +489,6 @@ def test_a_temperature_metric_carries_its_already_converted_unit() -> None:
         MetricName("temp")
     ].unit_format
     assert (unit_format.symbol, unit_format.convertible) == ("°F", False)
-
-
-def test_a_metric_only_the_rrd_knows_is_read_as_well() -> None:
-    evaluated = _evaluated("used=10B", rrd_metrics=[MetricName("temp")])
-    assert sorted(evaluated) == [MetricName("temp"), MetricName("used")]
-
-
-def test_performance_data_wins_over_what_the_rrd_reports() -> None:
-    evaluated = _evaluated("used=10B", rrd_metrics=[MetricName("used")])
-    assert evaluated[MetricName("used")].performance_data.value == 10.0
 
 
 def test_a_pnp_suffix_names_the_check_command_the_translation_is_looked_up_with() -> None:

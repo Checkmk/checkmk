@@ -7,6 +7,7 @@ import json
 import traceback
 from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
+from typing import Final
 
 from tzlocal import get_localzone_name
 
@@ -29,7 +30,6 @@ from cmk.shared_typing.cmk_time_series_graph import (
     Interaction,
     Size,
     UnitFormat,
-    XAxis,
     YAxis,
 )
 from cmk.shared_typing.global_time_picker import (
@@ -113,6 +113,8 @@ def user_default_refresh_time() -> int | None:
             return None
 
 
+_FONT_SIZE_PT: Final = 8.0
+
 DEFAULT_INTERACTION = Interaction(
     burger="enabled",
     zoom="enabled",
@@ -171,9 +173,7 @@ def to_cmk_time_series_graph(
     *,
     size: Size,
     interaction: Interaction = DEFAULT_INTERACTION,
-    font_size_pt: float = 8.0,
     show_graph_time: bool = True,
-    x_axis: XAxis | None = None,
     temperature_unit: TemperatureUnit,
 ) -> CmkTimeSeriesGraph:
     """Translate a built graph into the shared ``CmkTimeSeriesGraph`` the Vue renderer takes."""
@@ -184,9 +184,9 @@ def to_cmk_time_series_graph(
         options=GraphOptions(
             header=GraphHeader(title=graph.title, show_graph_time=show_graph_time),
             name=graph.name,
-            x_axis=x_axis,
+            x_axis=None,
             y_axis=_shell_y_axis(built, temperature_unit),
-            font_size_pt=font_size_pt,
+            font_size_pt=_FONT_SIZE_PT,
         ),
         interaction=interaction,
         internal=internal,

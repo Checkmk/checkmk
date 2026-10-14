@@ -28,15 +28,25 @@ def check_hr_cpu(_no_item, params, info):
     num_cpus = 0
     util = 0.0
     cores = []
-    for line in info:
-        core_util = int(line[0])
-        cores.append(("core%d" % num_cpus, core_util))
+    for index, line in enumerate(info):
+        try:
+            core_util = int(line[0])
+        except ValueError:
+            yield (
+                3,
+                f"Cannot parse processor load of core {index}: got {line[0]!r} (expected integer)",
+            )
+            continue
+        cores.append(("core%d" % index, core_util))
         util += core_util
         num_cpus += 1
+    if not info:
+        yield 3, "No data found in SNMP output"
+        return
     if num_cpus == 0:
-        return 3, "No data found in SNMP output"
+        return
     util = float(util) / num_cpus
-    return check_cpu_util(util, params, cores=cores)
+    yield from check_cpu_util(util, params, cores=cores)
 
 
 # Migration NOTE: Create a separate section, but a common check plug-in for

@@ -34,7 +34,7 @@ py_cmk_test(
     tags = ["no-sandbox"],
     use_project_pytest_config = True,
     deps = [
-        "//packages/cmk-werks:tool",
+        "//packages/cmk-werks:flavor_cmk",
         "//tests/qa_metrics/change_quality",
         "//tests/qa_metrics/change_quality:check_gaps_lib",
         "//tests/qa_metrics/components",

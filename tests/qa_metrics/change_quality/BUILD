@@ -31,7 +31,7 @@ py_binary(
     imports = ["../../.."],
     deps = [
         ":change_quality",
-        "//packages/cmk-werks:tool",
+        "//packages/cmk-werks:flavor_cmk",
         "//tests/qa_metrics/components",
         "//tests/qa_metrics/db",
     ],
@@ -46,7 +46,7 @@ py_library(
     imports = ["../../.."],
     deps = [
         ":change_quality",
-        "//packages/cmk-werks:tool",
+        "//packages/cmk-werks:flavor_cmk",
         "//tests/qa_metrics/db",
         requirement("psycopg"),
     ],
@@ -59,7 +59,7 @@ py_binary(
     imports = ["../../.."],
     deps = [
         ":change_quality",
-        "//packages/cmk-werks:tool",
+        "//packages/cmk-werks:flavor_cmk",
         "//tests/qa_metrics/db",
         requirement("psycopg"),
     ],

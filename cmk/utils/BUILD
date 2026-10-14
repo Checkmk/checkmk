@@ -158,7 +158,8 @@ py_library(
     deps = [
         ":utils",
         "//packages/cmk-ccc:version",
-        "//packages/cmk-werks:tool",
+        "//packages/cmk-werks:core",
+        "//packages/cmk-werks:flavor_cmk",
         requirement("GitPython"),
         requirement("jinja2"),
     ],

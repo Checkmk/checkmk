@@ -25,42 +25,20 @@ js_binary(
 )
 
 py_library(
-    name = "tool",
+    name = "core",
     srcs = [
-        # compatibility shim for venv entry points
-        "cmk/werks/cli.py",
-        "cmk/werks/flavor/cmk/__init__.py",
-        "cmk/werks/flavor/cmk/collect.py",
-        "cmk/werks/flavor/cmk/config.py",
-        "cmk/werks/flavor/cmk/models.py",
-        "cmk/werks/flavor/cmk/precompile.py",
-        "cmk/werks/flavor/cmk/translator.py",
-        "cmk/werks/flavor/cmk/version.py",
         "cmk/werks/tool/__init__.py",
-        "cmk/werks/tool/__main__.py",
-        "cmk/werks/tool/cli/__init__.py",
-        "cmk/werks/tool/cli/id_log.py",
-        "cmk/werks/tool/cli/id_pool.py",
-        "cmk/werks/tool/cli/in_out_elements.py",
-        "cmk/werks/tool/cli/stash.py",
-        "cmk/werks/tool/cli/status.py",
-        "cmk/werks/tool/cli/werk.py",
         "cmk/werks/tool/collect.py",
         "cmk/werks/tool/config.py",
         "cmk/werks/tool/constants.py",
         "cmk/werks/tool/convert.py",
         "cmk/werks/tool/error.py",
         "cmk/werks/tool/flavor.py",
-        "cmk/werks/tool/flavor_registry.py",
         "cmk/werks/tool/format.py",
         "cmk/werks/tool/load.py",
         "cmk/werks/tool/markup.py",
         "cmk/werks/tool/models.py",
         "cmk/werks/tool/parse.py",
-        "cmk/werks/tool/utils/__init__.py",
-        "cmk/werks/tool/utils/__main__.py",
-        "cmk/werks/tool/utils/burn.py",
-        "cmk/werks/tool/validate.py",
     ],
     data = ["cmk/werks/py.typed"],
     imports = ["."],
@@ -70,11 +48,66 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//packages/cmk-ccc:log",
-        "//packages/cmk-ccc:version",
         requirement("gitpython"),
         requirement("lxml"),
         requirement("markdown"),
+        requirement("pydantic"),
+    ],
+)
+
+py_library(
+    name = "flavor_cmk",
+    srcs = [
+        "cmk/werks/flavor/cmk/__init__.py",
+        "cmk/werks/flavor/cmk/collect.py",
+        "cmk/werks/flavor/cmk/config.py",
+        "cmk/werks/flavor/cmk/models.py",
+        "cmk/werks/flavor/cmk/precompile.py",
+        "cmk/werks/flavor/cmk/translator.py",
+        "cmk/werks/flavor/cmk/version.py",
+    ],
+    imports = ["."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//omd:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":core",
+        "//packages/cmk-ccc:version",
+        requirement("pydantic"),
+    ],
+)
+
+py_library(
+    name = "tool",
+    srcs = [
+        # compatibility shim for venv entry points
+        "cmk/werks/cli.py",
+        "cmk/werks/tool/__main__.py",
+        "cmk/werks/tool/cli/__init__.py",
+        "cmk/werks/tool/cli/id_log.py",
+        "cmk/werks/tool/cli/id_pool.py",
+        "cmk/werks/tool/cli/in_out_elements.py",
+        "cmk/werks/tool/cli/stash.py",
+        "cmk/werks/tool/cli/status.py",
+        "cmk/werks/tool/cli/werk.py",
+        "cmk/werks/tool/flavor_registry.py",
+        "cmk/werks/tool/utils/__init__.py",
+        "cmk/werks/tool/utils/__main__.py",
+        "cmk/werks/tool/utils/burn.py",
+        "cmk/werks/tool/validate.py",
+    ],
+    imports = ["."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//omd:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":core",
+        ":flavor_cmk",
+        "//packages/cmk-ccc:log",
         requirement("pydantic"),
         requirement("requests"),
         requirement("rich"),
@@ -84,7 +117,11 @@ py_library(
 py_doc_test(
     name = "doctest",
     size = "small",
-    srcs = ["tool"],
+    srcs = [
+        ":core",
+        ":flavor_cmk",
+        ":tool",
+    ],
 )
 
 py_cmk_test(
@@ -114,6 +151,8 @@ py_wheel(
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [
+        ":core",
+        ":flavor_cmk",
         ":site",
         ":tool",
         ":web",
@@ -133,7 +172,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        ":tool",
+        ":flavor_cmk",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:store",
     ],
@@ -153,8 +192,9 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":core",
+        ":flavor_cmk",
         ":site",
-        ":tool",
         "//cmk/utils:man_pages",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-web",

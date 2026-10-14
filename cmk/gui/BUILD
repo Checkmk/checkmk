@@ -372,8 +372,9 @@ py_library(
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-web",
         "//packages/cmk-web/cmk/web/utils",
+        "//packages/cmk-werks:core",
+        "//packages/cmk-werks:flavor_cmk",
         "//packages/cmk-werks:site",
-        "//packages/cmk-werks:tool",
         "//packages/cmk-werks:web",
     ],
 )

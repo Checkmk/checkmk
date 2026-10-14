@@ -264,6 +264,76 @@ class TestAverageScatterplotContent:
             },
         )
 
+    def test_keeps_the_legend(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {
+                    "test_widget": create_widget(
+                        {
+                            "type": "average_scatterplot",
+                            "time_range": {"type": "predefined", "value": "last_25_hours"},
+                            "metric": "availability",
+                            "metric_color": "default",
+                            "average_color": "default",
+                            "median_color": "default",
+                            "show_legend": True,
+                            "legend_style": "extended",
+                        }
+                    )
+                },
+            )
+        )
+        widget = next(iter(resp.json["extensions"]["widgets"].values()))
+        assert widget["content"]["show_legend"] is True
+        assert widget["content"]["legend_style"] == "extended"
+
+    def test_leaves_an_omitted_legend_out(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {
+                    "test_widget": create_widget(
+                        {
+                            "type": "average_scatterplot",
+                            "time_range": {"type": "predefined", "value": "last_25_hours"},
+                            "metric": "availability",
+                            "metric_color": "default",
+                            "average_color": "default",
+                            "median_color": "default",
+                        }
+                    )
+                },
+            )
+        )
+        widget = next(iter(resp.json["extensions"]["widgets"].values()))
+        assert "show_legend" not in widget["content"]
+        assert "legend_style" not in widget["content"]
+
+    def test_rejects_an_unknown_legend_style(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {
+                    "test_widget": create_widget(
+                        {
+                            "type": "average_scatterplot",
+                            "time_range": {"type": "predefined", "value": "last_25_hours"},
+                            "metric": "availability",
+                            "metric_color": "default",
+                            "average_color": "default",
+                            "median_color": "default",
+                            "legend_style": "huge",
+                        }
+                    )
+                },
+            ),
+            expect_ok=False,
+        )
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
+
 
 class TestTopListContent:
     def test_create(self, clients: ClientRegistry) -> None:

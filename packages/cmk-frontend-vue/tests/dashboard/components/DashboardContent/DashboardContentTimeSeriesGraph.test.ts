@@ -249,6 +249,38 @@ describe('the legend of a graph widget', () => {
     expect(await legendOf()).toBe('none')
   })
 
+  test('of a scatterplot follows the options on its content', async () => {
+    renderWidget({
+      content: {
+        type: 'average_scatterplot',
+        metric: 'util',
+        time_range: { type: 'predefined', value: 'last_25_hours' },
+        metric_color: 'default',
+        average_color: 'default',
+        median_color: 'default',
+        show_legend: true,
+        legend_style: 'extended'
+      }
+    })
+
+    expect(await legendOf()).toBe('extended')
+  })
+
+  test('of a scatterplot stored without the option is not drawn', async () => {
+    renderWidget({
+      content: {
+        type: 'average_scatterplot',
+        metric: 'util',
+        time_range: { type: 'predefined', value: 'last_25_hours' },
+        metric_color: 'default',
+        average_color: 'default',
+        median_color: 'default'
+      }
+    })
+
+    expect(await legendOf()).toBe('none')
+  })
+
   test('makes the widget preview scrollable', async () => {
     renderWidget({
       isPreview: true,

@@ -11,6 +11,7 @@ export const isContentWithScrollablePreview = (widgetType: WidgetContentType): b
     'linked_view',
     'embedded_view',
     'top_list',
+    'average_scatterplot',
     'combined_graph',
     'custom_graph',
     'performance_graph',

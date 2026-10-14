@@ -296,11 +296,14 @@ const timerange = computed(() => {
   const content = props.content
   return content.type === 'average_scatterplot' ? content.time_range : content.timerange
 })
+const legendOptions = computed(() =>
+  props.content.type === 'average_scatterplot' ? props.content : graphRenderOptions.value
+)
 const legend = computed((): GraphFigureLegend => {
-  if (!(graphRenderOptions.value?.show_legend ?? false)) {
+  if (!(legendOptions.value?.show_legend ?? false)) {
     return 'none'
   }
-  return graphRenderOptions.value?.legend_style ?? 'compact'
+  return legendOptions.value?.legend_style ?? 'compact'
 })
 const showTimestamp = computed(() => graphRenderOptions.value?.show_graph_time ?? false)
 const showPin = computed(

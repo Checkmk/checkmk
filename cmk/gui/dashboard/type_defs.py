@@ -12,6 +12,7 @@ from cmk.gui.type_defs import (
     ContextualLinkLocationConfig,
     DashboardEmbeddedViewSpec,
     FilterName,
+    GraphLegendStyle,
     GraphPresentation,
     GraphRenderOptionsVS,
     InventoryJoinMacrosSpec,
@@ -173,6 +174,8 @@ class AverageScatterplotDashletConfig(DashletConfig):
     metric_color: str | None
     avg_color: str | None
     median_color: str | None
+    show_legend: NotRequired[bool]
+    legend_style: NotRequired[GraphLegendStyle]
 
 
 class TopListColumnConfig(TypedDict):

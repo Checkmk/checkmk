@@ -33,6 +33,7 @@ from cmk.gui.openapi.framework.model.common_fields import (
     timerange_from_internal,
     TimerangeModel,
 )
+from cmk.gui.type_defs import GraphLegendStyle
 
 from ..context_filters import (
     OBJECT_SERVICE_FILTER_ADAPTER,
@@ -402,6 +403,15 @@ class AverageScatterplotContent(_BaseMetricContent):
     metric_color: DefaultOrColor = api_field(description="Color of the scattered dots.")
     average_color: DefaultOrColor = api_field(description="Color of the average.")
     median_color: DefaultOrColor = api_field(description="Color of the median.")
+    show_legend: bool | ApiOmitted = api_field(
+        description="Show the graph legend. Defaults to false.",
+        default_factory=ApiOmitted,
+    )
+    legend_style: GraphLegendStyle | ApiOmitted = api_field(
+        description="How the legend is drawn when show_legend is set: compact names the series in "
+        "a single row, extended lists them in a table with their statistics. Defaults to compact.",
+        default_factory=ApiOmitted,
+    )
 
     @classmethod
     @override
@@ -417,11 +427,13 @@ class AverageScatterplotContent(_BaseMetricContent):
             metric_color=config.get("metric_color") or "default",
             average_color=config.get("avg_color") or "default",
             median_color=config.get("median_color") or "default",
+            show_legend=config.get("show_legend", ApiOmitted()),
+            legend_style=config.get("legend_style", ApiOmitted()),
         )
 
     @override
     def to_internal(self) -> AverageScatterplotDashletConfig:
-        return AverageScatterplotDashletConfig(
+        config = AverageScatterplotDashletConfig(
             type=self.internal_type(),
             metric=self.metric,
             time_range=self.time_range.to_internal(),
@@ -429,6 +441,11 @@ class AverageScatterplotContent(_BaseMetricContent):
             avg_color=self.average_color,
             median_color=self.median_color,
         )
+        if not isinstance(self.show_legend, ApiOmitted):
+            config["show_legend"] = self.show_legend
+        if not isinstance(self.legend_style, ApiOmitted):
+            config["legend_style"] = self.legend_style
+        return config
 
 
 @api_model

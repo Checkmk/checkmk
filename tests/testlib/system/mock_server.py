@@ -5,8 +5,8 @@
 import logging
 import ssl
 import threading
-from collections.abc import Callable
-from dataclasses import dataclass
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field
 from enum import StrEnum
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -47,6 +47,62 @@ class MockResponse:
     content_type: str = "application/json"
 
 
+@dataclass(frozen=True)
+class ReceivedRequest:
+    method: MockMethod
+    path: str
+    headers: dict[str, str]
+    body: bytes
+
+
+@dataclass(frozen=True)
+class MockAnswer:
+    """What the mock sends back for a request."""
+
+    status: int
+    reason: str | None = None
+    headers: Mapping[str, str] = field(default_factory=dict)
+    body: bytes = b""
+
+
+class MockEndpoints:
+    """The response configured for each endpoint, and the answer it gives to a request.
+
+    No HTTP here: MockHandler reads the request and writes the answer.
+    """
+
+    def __init__(self) -> None:
+        self._responses: dict[MockEndpoint, MockResponse] = {}
+
+    def add(self, endpoint: MockEndpoint, response: MockResponse) -> None:
+        self._responses[endpoint] = response
+
+    def answer(self, request: ReceivedRequest) -> MockAnswer:
+        endpoint = MockEndpoint(method=request.method, path=request.path)
+        if not (response := self._responses.get(endpoint)):
+            return MockAnswer(status=HTTPStatus.NOT_FOUND)
+        if response.request_validator is not None:
+            try:
+                if not response.request_validator(request.headers, request.body):
+                    raise AssertionError("Request validation failed")
+            except AssertionError as excp:
+                return MockAnswer(
+                    status=HTTPStatus.BAD_REQUEST,
+                    reason="Request Validation Failed",
+                    body=str(excp).encode(),
+                )
+        body = (
+            response.body
+            if isinstance(response.body, bytes)
+            else response.body(request.headers, request.body)
+        )
+        return MockAnswer(
+            status=response.status,
+            headers={"Content-Type": response.content_type, "Content-Length": str(len(body))},
+            body=body,
+        )
+
+
 class MockHTTPServer(HTTPServer):
     def __init__(
         self,
@@ -55,7 +111,7 @@ class MockHTTPServer(HTTPServer):
         bind_and_activate: bool = True,
     ) -> None:
         super().__init__(server_address, RequestHandlerClass, bind_and_activate)
-        self.endpoints: dict[MockEndpoint, MockResponse] = {}
+        self.endpoints = MockEndpoints()
 
 
 class MockHandler(BaseHTTPRequestHandler):
@@ -74,38 +130,23 @@ class MockHandler(BaseHTTPRequestHandler):
     def _handle(self, method: MockMethod) -> None:
         if not isinstance(self.server, MockHTTPServer):
             raise TypeError(f"Expected MockHTTPServer, got {type(self.server)}")
-        endpoints = self.server.endpoints
-        endpoint = MockEndpoint(method=method, path=self.path)
 
         # Always consume the request body before sending a response to avoid
         # BrokenPipeError on the client side (e.g. with OpenSSL 3.5+).
         size = int(self.headers.get("Content-Length", 0))
-        request_body = self.rfile.read(size) if size > 0 else b""
-
-        if not (response := endpoints.get(endpoint)):
-            self.send_response(HTTPStatus.NOT_FOUND)
-            self.end_headers()
-            return
-        request_headers = dict(self.headers.items())
-        if response.request_validator is not None:
-            try:
-                if not response.request_validator(request_headers, request_body):
-                    raise AssertionError("Request validation failed")
-            except AssertionError as excp:
-                self.send_response(HTTPStatus.BAD_REQUEST, "Request Validation Failed")
-                self.end_headers()
-                self.wfile.write(str(excp).encode())
-                return
-        body = (
-            response.body
-            if isinstance(response.body, bytes)
-            else response.body(request_headers, request_body)
+        request = ReceivedRequest(
+            method=method,
+            path=self.path,
+            headers=dict(self.headers.items()),
+            body=self.rfile.read(size) if size > 0 else b"",
         )
-        self.send_response(response.status)
-        self.send_header("Content-Type", response.content_type)
-        self.send_header("Content-Length", str(len(body)))
+
+        answer = self.server.endpoints.answer(request)
+        self.send_response(answer.status, answer.reason)
+        for name, value in answer.headers.items():
+            self.send_header(name, value)
         self.end_headers()
-        self.wfile.write(body)
+        self.wfile.write(answer.body)
 
 
 class MockServer:
@@ -216,4 +257,4 @@ class MockServer:
         endpoint: MockEndpoint,
         response: MockResponse,
     ) -> None:
-        self.server.endpoints[endpoint] = response
+        self.server.endpoints.add(endpoint, response)

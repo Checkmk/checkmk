@@ -4,11 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import pytest
+
 from cmk.agent_based.v2 import Attributes, Result, State
 from cmk.plugins.citrix.agent_based.citrix_state import (
     check_citrix_state,
     check_citrix_state_controller,
     check_citrix_state_hosting_server,
+    check_plugin_citrix_state_hosting_server,
     DEFAULT_PARAMS,
 )
 from cmk.plugins.citrix.agent_based.inventory_citrix_state import (
@@ -70,6 +73,41 @@ def test_check_citrix_state_hosting_server_not_reported() -> None:
     section = parse_citrix_state([["HostingServer"], ["PowerState", "Off"]])
     expected = [Result(state=State.OK, summary="No hosting server reported")]
     assert list(check_citrix_state_hosting_server(section)) == expected
+
+
+# A machine with power state "Unmanaged" reports a controller but no hosting server.
+STRING_TABLE_WITHOUT_HOSTING_SERVER = [
+    ["AgentVersion", "2507.0.1100.167"],
+    ["Catalog", "Catalog1"],
+    ["Controller", "controller1.example.com"],
+    ["DesktopGroupName", "Group1"],
+    ["FaultState", "None"],
+    ["MaintenanceMode", "False"],
+    ["PowerState", "Unmanaged"],
+    ["RegistrationState", "Registered"],
+]
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="Crash report bb3122a8-c305-11f1-873e-5cba2c0b1c44: KeyError 'hosting_server'",
+)
+def test_discover_citrix_state_hosting_server_without_hosting_server() -> None:
+    section = parse_citrix_state(STRING_TABLE_WITHOUT_HOSTING_SERVER)
+    assert not list(check_plugin_citrix_state_hosting_server.discovery_function(section))
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=KeyError,
+    reason="Crash report bb3122a8-c305-11f1-873e-5cba2c0b1c44: KeyError 'hosting_server'",
+)
+def test_check_citrix_state_hosting_server_without_hosting_server() -> None:
+    # Services discovered before the fix must not crash: an empty result lets
+    # the framework report the item as not found.
+    section = parse_citrix_state(STRING_TABLE_WITHOUT_HOSTING_SERVER)
+    assert not list(check_citrix_state_hosting_server(section))
 
 
 def test_check_citrix_state_() -> None:

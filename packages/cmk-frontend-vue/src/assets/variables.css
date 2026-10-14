@@ -199,6 +199,7 @@
 
     /* Border */
     --border-color-subtle: var(--color-mid-grey-10);
+    --border-color-muted: var(--color-mid-grey-20);
     --border-color-strong: var(--color-mid-grey-50);
     --default-border-color: rgb(234 234 234);
     --dashed-border-color: var(--color-mid-grey-20);
@@ -391,6 +392,7 @@
 
     /* Border */
     --border-color-subtle: var(--color-mid-grey-90);
+    --border-color-muted: var(--color-mid-grey-80);
     --border-color-strong: var(--color-mid-grey-70);
     --default-border-color: rgb(38 45 52);
     --dashed-border-color: var(--color-mid-grey-80);

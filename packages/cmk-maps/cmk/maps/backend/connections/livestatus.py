@@ -726,7 +726,7 @@ class LivestatusConnection(ConnectionBase):
         # is empty / hosts not yet checked" (PENDING) so the UI can render them
         # differently. Two queries are intentional — `GET hosts ... Filter:
         # groups >=` returns 0 rows for both cases.
-        exists_q = f"GET hostgroups\nColumns: name\nFilter: name = {lqencode(group)}\n"
+        exists_q = f"GET hostgroups\nColumns: alias\nFilter: name = {lqencode(group)}\n"
         exists_rows = await self._query(exists_q)
         if not exists_rows:
             return ObjectState(object_id="", type="hostgroup", state="NOT_FOUND")
@@ -748,13 +748,14 @@ class LivestatusConnection(ConnectionBase):
             object_id="",
             type="hostgroup",
             state=worst,
+            alias=row_str(exists_rows[0], 0),
             hosts_summary=hosts_summary,
             services_summary=services_summary,
         )
 
     @override
     async def get_servicegroup_states(self, group: str, *, only_hard: bool = False) -> ObjectState:
-        exists_q = f"GET servicegroups\nColumns: name\nFilter: name = {lqencode(group)}\n"
+        exists_q = f"GET servicegroups\nColumns: alias\nFilter: name = {lqencode(group)}\n"
         exists_rows = await self._query(exists_q)
         if not exists_rows:
             return ObjectState(object_id="", type="servicegroup", state="NOT_FOUND")
@@ -765,7 +766,13 @@ class LivestatusConnection(ConnectionBase):
             return ObjectState(object_id="", type="servicegroup", state="PENDING")
         states = [SERVICE_STATE_MAP.get(row_int(r, 0), "UNKNOWN") for r in rows]
         worst, summary = _service_states_rollup(states)
-        return ObjectState(object_id="", type="servicegroup", state=worst, services_summary=summary)
+        return ObjectState(
+            object_id="",
+            type="servicegroup",
+            state=worst,
+            alias=row_str(exists_rows[0], 0),
+            services_summary=summary,
+        )
 
     @override
     async def get_dyngroup_state(self, object_types: str, object_filter: str) -> ObjectState:

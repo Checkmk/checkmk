@@ -157,7 +157,7 @@ const showsCaption = computed(
     <MapElementLabel
       v-if="showsCaption"
       :object="object"
-      :text="objectCaption(object, _t)"
+      :text="objectCaption(object, state, _t)"
       placement="stacked"
       :classic="classic"
     />

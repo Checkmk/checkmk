@@ -29,8 +29,9 @@ import { useAuth } from '@/maps/services/context'
 import type { CommandTarget, MapElement, ObjectState } from '@/maps/types/api'
 import { objectTypeLabel } from '@/maps/utils/dropdownOptions'
 import { buildCheckmkUrl, stripCheckmkBase } from '@/maps/utils/mapNavigation'
-import { getEffectiveObjectType, getMapElementName } from '@/maps/utils/naming'
+import { getEffectiveObjectType } from '@/maps/utils/naming'
 import { stateColorVar } from '@/maps/utils/stateColors'
+import { objectName } from '@/maps/utils/template'
 
 import { activityCount } from './activityFacts'
 import DetailActions from './components/DetailActions.vue'
@@ -209,7 +210,7 @@ const {
   onBulkAcknowledge: (targets) => emit('bulk-acknowledge', targets)
 })
 
-const displayName = computed(() => (props.object ? (getMapElementName(props.object) ?? '') : ''))
+const displayName = computed(() => (props.object ? objectName(props.object, props.state) : ''))
 const typeLabel = computed(() =>
   props.object ? objectTypeLabel(getEffectiveObjectType(props.object), _t) : ''
 )

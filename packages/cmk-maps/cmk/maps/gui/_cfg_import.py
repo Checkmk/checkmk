@@ -312,20 +312,6 @@ def _line_coords(
     return x, y, x2, y2, mid_x, mid_y
 
 
-# NagVis [name] macro resolves to the object identifier; Maps uses
-# {{name}}. Dropping the label lets the renderer fall back to host_name
-# rather than printing the literal token.
-_BARE_NAME_RE = re.compile(r"^\s*\[name\]\s*$")
-
-
-def _label_text(raw: str | None) -> str | None:
-    if not raw:
-        return None
-    if _BARE_NAME_RE.match(raw):
-        return None
-    return raw
-
-
 def _label_x(raw: str | None) -> int:
     """Parse legacy ``label_x``. NagVis allows ``center`` to mean 0-offset."""
     if raw is None:
@@ -436,7 +422,7 @@ def _label(p: dict[str, str], *, show_default: bool = True) -> MapLabel:
     default_color = "#ffffff" if _bg_is_opaque_dark(raw_bg) else "#000000"
     return {
         "show": _bool(p.get("label_show"), show_default),
-        "text": _label_text(p.get("label_text")),
+        "text": p.get("label_text") or None,
         "x": _label_x(p.get("label_x")),
         "y": _label_y(p.get("label_y")),
         "size": _int(p.get("label_size"), 11),
@@ -893,6 +879,34 @@ def _apply_links(payload: MapObject, p: dict[str, str]) -> None:
         payload["hover_url"] = p["hover_url"]
 
 
+# The macros NagVis fills into a label (ElementLabel.js), as the placeholders
+# Maps fills in. NagVis leaves any other one as it is.
+_LABEL_MACROS = {
+    "alias": "{{alias}}",
+    "service_description": "{{service}}",
+    "output": "{{output}}",
+    "perfdata": "{{perf_data}}",
+}
+# ``[name]`` is the host of a host or service and the group of a group; a map's
+# label shows the map's title, for ``[alias]`` as for ``[name]``.
+_NAME_PLACEHOLDERS = {
+    "host": "{{host}}",
+    "service": "{{host}}",
+    "hostgroup": "{{group}}",
+    "servicegroup": "{{group}}",
+}
+_MACRO_RE = re.compile(r"\[(\w+)\]")
+
+
+def _translate_macros(payload: MapObject, block_type: str) -> None:
+    if not ((label := payload.get("label")) and (text := label.get("text"))):
+        return
+    macros = {**_LABEL_MACROS, "name": _NAME_PLACEHOLDERS.get(block_type, "{{name}}")}
+    if block_type == "map":
+        macros["alias"] = "{{name}}"
+    label["text"] = _MACRO_RE.sub(lambda m: macros.get(m.group(1), m.group(0)), text)
+
+
 def _handle_object_block(block_type: str, p: dict[str, str], raw_id: str) -> _ImportObject | None:
     if p.get("view_type") == "line" and block_type in _MONITOR_OBJECT_TYPES:
         return _handle_view_type_line(block_type, p, raw_id)
@@ -984,6 +998,8 @@ def cfg_to_map(content: str, map_name: str) -> MapPayload:
             # monitor handler sets it (and only when the cfg gave a target). Give
             # everything else NagVis' default so the map round-trips on save.
             obj.payload.setdefault("url_target", "_self")
+            if block_type in _MONITOR_OBJECT_TYPES:
+                _translate_macros(obj.payload, block_type)
             # NagVis allows backend_id per object so one map can mix monitoring
             # sources; the daemon honours that (it groups the state fetch by
             # connection). Kept raw here and resolved against the configured

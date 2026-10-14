@@ -57,6 +57,7 @@ import {
   passesProblemFilter
 } from '@/maps/utils/objectFilter'
 import { stateRank } from '@/maps/utils/stateColors'
+import { labelText } from '@/maps/utils/template'
 
 import WorldMapLineArrow from './WorldMapLineArrow.vue'
 import WorldMapLineHandle from './WorldMapLineHandle.vue'
@@ -306,7 +307,7 @@ const roving = useRovingFocus({
 const labelViews = computed(() =>
   lines.decorations.value.labels.flatMap((label) => {
     const object = objectsById.value.get(label.lineId)
-    return object ? [{ label, object }] : []
+    return object ? [{ label, object, text: labelText(object, props.states[object.id]) }] : []
   })
 )
 
@@ -559,10 +560,11 @@ defineExpose({
       />
     </Teleport>
 
-    <Teleport v-for="{ label, object } in labelViews" :key="label.key" :to="label.element">
+    <Teleport v-for="{ label, object, text } in labelViews" :key="label.key" :to="label.element">
       <MapElementLabel
+        v-if="text"
         :object="object"
-        :text="label.text"
+        :text="text"
         placement="plain"
         :style="dimmedStyle(label.dimmed)"
       />

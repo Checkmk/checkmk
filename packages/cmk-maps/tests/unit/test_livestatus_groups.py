@@ -25,7 +25,9 @@ def _connection(
     async def _query(query: str) -> list[list[object]]:
         queries.append(query)
         return (
-            [["web"]] if query.startswith(("GET hostgroups", "GET servicegroups")) else member_rows
+            [["Web servers"]]
+            if query.startswith(("GET hostgroups", "GET servicegroups"))
+            else member_rows
         )
 
     monkeypatch.setattr(conn, "_query", _query)
@@ -44,6 +46,7 @@ def test_hostgroup_reports_its_hosts_and_on_request_their_services(
         object_id="",
         type="hostgroup",
         state="DOWN",
+        alias="Web servers",
         hosts_summary=ServicesSummary(ok=1, critical=1),
         services_summary=ServicesSummary(ok=5, warning=1, critical=1),
     )
@@ -73,4 +76,5 @@ def test_servicegroup_reads_hard_states_where_asked(monkeypatch: pytest.MonkeyPa
     state = asyncio.run(conn.get_servicegroup_states("web", only_hard=True))
 
     assert state.state == "CRITICAL"
+    assert state.alias == "Web servers"
     assert "Columns: last_hard_state\n" in queries[-1]

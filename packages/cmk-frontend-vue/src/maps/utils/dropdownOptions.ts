@@ -7,14 +7,10 @@ import type usei18n from 'cmk-ui-library/lib/i18n'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
-import type { MapElement, MonitoredObjectType, ObjectType } from '@/maps/types/api'
-import {
-  getEffectiveObjectType,
-  getMapElementIdentifier,
-  getMapElementName,
-  mapElementCaption
-} from '@/maps/utils/naming'
+import type { MapElement, MonitoredObjectType, ObjectState, ObjectType } from '@/maps/types/api'
+import { getEffectiveObjectType, getMapElementName, mapElementCaption } from '@/maps/utils/naming'
 import { LINE_STYLES } from '@/maps/utils/objectOptions'
+import { labelText } from '@/maps/utils/template'
 
 /**
  * The ``_t`` a component hands to a helper. Gettext extraction only sees literal
@@ -87,7 +83,7 @@ export function objectDisplayName(object: MapElement, _t: TranslateFn): Translat
  */
 export function objectDeleteTitle(object: MapElement, _t: TranslateFn): TranslatedString {
   const type = objectTypeLabel(getEffectiveObjectType(object), _t)
-  const name = object.label?.text || getMapElementIdentifier(object)
+  const name = getMapElementName(object)
   return name === null
     ? _t('Delete %{type}?', { type })
     : _t('Delete %{type} "%{name}"?', { type, name })
@@ -100,8 +96,12 @@ export function objectDeleteTitle(object: MapElement, _t: TranslateFn): Translat
  * Same reasoning as ``objectDisplayName``, on the shorter name the caption
  * uses — a dynamic group and an unbound graph would read as their storage id.
  */
-export function objectCaption(object: MapElement, _t: TranslateFn): string {
-  return mapElementCaption(object) ?? objectTypeLabel(object.type, _t)
+export function objectCaption(
+  object: MapElement,
+  state: ObjectState | undefined,
+  _t: TranslateFn
+): string {
+  return mapElementCaption(object, labelText(object, state)) ?? objectTypeLabel(object.type, _t)
 }
 
 /** The types the add-object panel offers, in the order it offers them. */

@@ -6,7 +6,7 @@
 import { escapeHtml } from 'cmk-ui-library/lib/utils'
 
 import type { MapElement as MapObject, ObjectState } from '@/maps/types/api'
-import { getMapElementName } from '@/maps/utils/naming'
+import { PLACEHOLDER, getMapElementName } from '@/maps/utils/naming'
 import { parsePerfData } from '@/maps/utils/perf'
 import { formatRelativeDuration, formatRelativeFuture, formatTimestamp } from '@/maps/utils/time'
 
@@ -22,6 +22,7 @@ import { formatRelativeDuration, formatRelativeFuture, formatTimestamp } from '@
  *   {{host}}             – hostname
  *   {{service}}          – service description
  *   {{group}}            – group name (hostgroup / servicegroup)
+ *   {{map}}              – name of the linked map
  *   {{address}}          – host IP address
  *   {{alias}}            – host alias / display name from monitoring core
  *   {{acknowledged}}     – 'true' / 'false'
@@ -46,55 +47,83 @@ export function interpolateTemplate(
   object: MapObject,
   state: ObjectState | undefined
 ): string {
-  const displayName = getMapElementName(object) ?? ''
-
-  const perfRaw = state?.perf_data ?? ''
-  const metrics = parsePerfData(perfRaw)
-  const firstMetric = metrics[0]
-
-  const vars: Record<string, string> = {
-    name: displayName,
-    type: object.type,
-    state: state?.state ?? '',
-    output: state?.output?.split('\n')[0] ?? '',
-    long_output: state?.output ?? '',
-    host: object.host_name ?? '',
-    service: object.service_description ?? '',
-    group: object.group_name ?? '',
-    address: state?.address ?? '',
-    alias: state?.alias ?? '',
-    acknowledged: state?.acknowledged ? 'true' : 'false',
-    in_downtime: state?.in_downtime ? 'true' : 'false',
-    stale: state?.stale ? 'true' : 'false',
-    state_type: state?.state_type ?? '',
-    attempts:
-      state?.current_attempt && state?.max_attempts
-        ? `${state.current_attempt}/${state.max_attempts}`
-        : '',
-    last_check: formatTimestamp(state?.last_check),
-    next_check: formatTimestamp(state?.next_check),
-    next_check_in: formatRelativeFuture(state?.next_check),
-    last_state_change: formatTimestamp(state?.last_state_change),
-    state_duration: formatRelativeDuration(state?.last_state_change),
-    services_summary: formatServicesSummary(state?.services_summary),
-    hosts_summary: formatHostsSummary(state?.hosts_summary),
-    perf_data: perfRaw,
-    metric: firstMetric ? String(firstMetric.value) + firstMetric.unit : '',
-    metric_unit: firstMetric?.unit ?? ''
-  }
-
   // The template is authored markup, but the substituted values carry monitoring
   // data a monitored host controls (plugin output, alias, labels). Escape every
   // value so a host cannot inject markup of its own — the sanitizer that runs
   // afterwards is the second line of defense, not the first.
-  return template.replace(/\{\{(\w+(?::\w+)?)\}\}/g, (_, key: string) => {
+  return fillPlaceholders(template, object, state, escapeHtml)
+}
+
+/**
+ * An object's label text with the placeholders of ``interpolateTemplate``
+ * filled in, as plain text. ``{{name}}`` names the object, not the label.
+ */
+export function labelText(object: MapObject, state: ObjectState | undefined): string | null {
+  const text = object.label?.text
+  return text ? fillPlaceholders(text, { ...object, label: null }, state, (value) => value) : null
+}
+
+/** What an object is called: its label with the placeholders filled in, else its name. */
+export function objectName(object: MapObject, state: ObjectState | undefined): string {
+  return labelText(object, state) || (getMapElementName(object) ?? '')
+}
+
+function fillPlaceholders(
+  template: string,
+  object: MapObject,
+  state: ObjectState | undefined,
+  encode: (value: string) => string
+): string {
+  if (!PLACEHOLDER.test(template)) {
+    return template
+  }
+  // Values are worked out on demand: a caption naming the host should not pay
+  // for formatting timestamps and parsing perfdata on every state update.
+  let parsedMetrics: ReturnType<typeof parsePerfData> | null = null
+  const metrics = () => (parsedMetrics ??= parsePerfData(state?.perf_data ?? ''))
+  const vars: Record<string, () => string> = {
+    name: () => objectName(object, state),
+    type: () => object.type,
+    state: () => state?.state ?? '',
+    output: () => state?.output?.split('\n')[0] ?? '',
+    long_output: () => state?.output ?? '',
+    host: () => object.host_name ?? '',
+    service: () => object.service_description ?? '',
+    group: () => object.group_name ?? '',
+    map: () => object.map_name ?? '',
+    address: () => state?.address ?? '',
+    alias: () => state?.alias ?? '',
+    acknowledged: () => (state?.acknowledged ? 'true' : 'false'),
+    in_downtime: () => (state?.in_downtime ? 'true' : 'false'),
+    stale: () => (state?.stale ? 'true' : 'false'),
+    state_type: () => state?.state_type ?? '',
+    attempts: () =>
+      state?.current_attempt && state?.max_attempts
+        ? `${state.current_attempt}/${state.max_attempts}`
+        : '',
+    last_check: () => formatTimestamp(state?.last_check),
+    next_check: () => formatTimestamp(state?.next_check),
+    next_check_in: () => formatRelativeFuture(state?.next_check),
+    last_state_change: () => formatTimestamp(state?.last_state_change),
+    state_duration: () => formatRelativeDuration(state?.last_state_change),
+    services_summary: () => formatServicesSummary(state?.services_summary),
+    hosts_summary: () => formatHostsSummary(state?.hosts_summary),
+    perf_data: () => state?.perf_data ?? '',
+    metric: () => {
+      const first = metrics()[0]
+      return first ? String(first.value) + first.unit : ''
+    },
+    metric_unit: () => metrics()[0]?.unit ?? ''
+  }
+
+  return template.replace(new RegExp(PLACEHOLDER, 'g'), (_, key: string) => {
     // {{metric:LABEL}} – look up a named perf metric
     if (key.startsWith('metric:')) {
       const label = key.slice(7)
-      const m = metrics.find((x) => x.label === label)
-      return m ? escapeHtml(String(m.value) + m.unit) : ''
+      const m = metrics().find((x) => x.label === label)
+      return m ? encode(String(m.value) + m.unit) : ''
     }
-    return escapeHtml(vars[key] ?? '')
+    return encode(vars[key]?.() ?? '')
   })
 }
 

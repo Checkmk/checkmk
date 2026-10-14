@@ -52,7 +52,7 @@ const configuredStyle = computed(() => {
       :class="selected ? 'maps-map-element-text-pill__body--selected' : ''"
       :style="configuredStyle"
     >
-      {{ objectCaption(object, _t) }}
+      {{ objectCaption(object, state, _t) }}
     </div>
   </div>
 </template>

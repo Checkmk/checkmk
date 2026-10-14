@@ -76,7 +76,7 @@ const metricUnits = useMetricUnits({ ...binding, enabled: readsMetrics })
     <MapElementLabel
       v-if="object.label?.show && state?.state !== 'NO_PERMISSION'"
       :object="object"
-      :text="objectCaption(object, _t)"
+      :text="objectCaption(object, state, _t)"
       placement="stacked"
       :classic="classic"
     />

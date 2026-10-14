@@ -40,17 +40,27 @@ export function asBoundObject(object: MapElement): MapElement {
   return type === object.type ? object : { ...object, type }
 }
 
-/** Return the display name for a map object (label > host/service > host/group/map/aggregation). */
+/** A placeholder ``interpolateTemplate`` fills in, such as ``{{host}}``. */
+export const PLACEHOLDER = /\{\{(\w+(?::\w+)?)\}\}/
+
+/**
+ * Return the display name for a map object (label > host/service > host/group/map/aggregation).
+ *
+ * A label with placeholders needs the object's state to read right
+ * (``labelText``); without it the object goes by its identifier.
+ */
 export function getMapElementName(object: MapElement): string | null {
-  if (object.label?.text) {
-    return object.label.text
+  const text = object.label?.text
+  if (text && !PLACEHOLDER.test(text)) {
+    return text
   }
   return getMapElementIdentifier(object)
 }
 
 /**
  * Monitoring identifier; falls back to the label for objects with no
- * host/group/map/aggregation binding, such as geo bundles.
+ * host/group/map/aggregation binding, such as geo bundles, unless the label
+ * has placeholders.
  *
  * ``null`` when the object has nothing a person would recognise it by — a
  * dynamic group, an unbound graph or line. The object id is not that name:
@@ -67,7 +77,7 @@ export function getMapElementIdentifier(object: MapElement): string | null {
     object.map_title ??
     object.map_name ??
     object.aggregation_id ??
-    (object.label?.text || null)
+    (object.label?.text && !PLACEHOLDER.test(object.label.text) ? object.label.text : null)
   )
 }
 
@@ -78,10 +88,14 @@ export function getMapElementIdentifier(object: MapElement): string | null {
  * its own kind — a service object reads as the service, not as
  * "host / service" — because the caption sits under an icon with little room,
  * and the operator already knows which host they are looking at.
- * ``label_maxlen`` then truncates, the way NagVis does.
+ * ``label_maxlen`` then truncates, the way NagVis does. ``shownLabel`` is the
+ * label as shown, its placeholders filled in.
  */
-export function mapElementCaption(object: MapElement): string | null {
-  const name = captionFor(object)
+export function mapElementCaption(
+  object: MapElement,
+  shownLabel: string | null | undefined
+): string | null {
+  const name = shownLabel || captionFor(object)
   const maxLength = object.label_maxlen
   return name && maxLength && maxLength > 0 && name.length > maxLength
     ? `${name.slice(0, maxLength)}…`
@@ -89,9 +103,6 @@ export function mapElementCaption(object: MapElement): string | null {
 }
 
 function captionFor(object: MapElement): string | null {
-  if (object.label?.text) {
-    return object.label.text
-  }
   switch (object.type) {
     case 'host':
       return object.host_name ?? null

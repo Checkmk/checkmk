@@ -13,6 +13,7 @@ import type { MapElement, ObjectState } from '@/maps/types/api'
 import { renderMetricValue } from '@/maps/utils/metricFormat'
 import { getMetric, parsePerfData, utilColor, utilPercent } from '@/maps/utils/perf'
 import { stateColorVar } from '@/maps/utils/stateColors'
+import { labelText } from '@/maps/utils/template'
 
 const props = defineProps<{
   object: MapElement
@@ -134,6 +135,7 @@ const handle2 = computed(() =>
   )
 )
 
+const caption = computed(() => labelText(props.object, props.state))
 const lineColor = computed(() => props.object.line_color ?? stateColorVar(props.state?.state))
 const lineColorBorder = computed(() => props.object.line_color_border ?? null)
 
@@ -658,7 +660,7 @@ const wmLabelSingle = computed(() => {
     >
 
     <text
-      v-if="props.object.label?.show && props.object.label?.text"
+      v-if="props.object.label?.show && caption"
       :x="midX"
       :y="midY - 10"
       text-anchor="middle"
@@ -672,7 +674,7 @@ const wmLabelSingle = computed(() => {
         strokeLinejoin: 'round'
       }"
       pointer-events="none"
-      >{{ props.object.label?.text }}</text
+      >{{ caption }}</text
     >
 
     <!-- Edit handles. A bound endpoint's handle is nudged inward along the line

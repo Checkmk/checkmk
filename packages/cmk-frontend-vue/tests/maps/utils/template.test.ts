@@ -11,6 +11,7 @@ import {
   formatHostsSummary,
   formatServicesSummary,
   interpolateTemplate,
+  labelText,
   resolveTemplate
 } from '@/maps/utils/template'
 
@@ -37,6 +38,18 @@ function makeObject(
     obj.label = fields.label
   }
   return obj
+}
+
+function label(text: string): MapElement['label'] {
+  return {
+    show: true,
+    text,
+    x: 0,
+    y: 0,
+    size: 11,
+    color: '#000000',
+    background: 'transparent'
+  }
 }
 
 function makeState(
@@ -124,6 +137,24 @@ describe('interpolateTemplate', () => {
   it('returns empty string for unknown placeholders and missing state', () => {
     expect(interpolateTemplate('[{{nope}}]', makeObject(), undefined)).toBe('[]')
     expect(interpolateTemplate('[{{state}}]', makeObject(), undefined)).toBe('[]')
+  })
+
+  it('names the object by its filled-in label', () => {
+    const object = makeObject({ host_name: 'web01', label: label('Core ({{state}})') })
+
+    expect(interpolateTemplate('{{name}}', object, makeState({ state: 'UP' }))).toBe('Core (UP)')
+  })
+})
+
+describe('labelText', () => {
+  it('fills in a label as plain text, naming the object rather than the label', () => {
+    const object = makeObject({ host_name: 'web01', label: label('{{name}}: <{{output}}>') })
+
+    expect(labelText(object, makeState({ output: 'OK & fine' }))).toBe('web01: <OK & fine>')
+  })
+
+  it('has nothing to fill without a label', () => {
+    expect(labelText(makeObject({ host_name: 'web01' }), undefined)).toBeNull()
   })
 })
 

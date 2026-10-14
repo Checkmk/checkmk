@@ -12,9 +12,9 @@ import MapsMenuItem from '@/maps/shared/components/MapsMenuItem.vue'
 import type { MapElement, ObjectState } from '@/maps/types/api'
 import { objectTypeLabel } from '@/maps/utils/dropdownOptions'
 import { buildCheckmkViewUrl } from '@/maps/utils/mapNavigation'
-import { asBoundObject, getEffectiveObjectType, getMapElementName } from '@/maps/utils/naming'
+import { asBoundObject, getEffectiveObjectType } from '@/maps/utils/naming'
 import { sanitizeTemplateHtml } from '@/maps/utils/sanitize'
-import { interpolateTemplate } from '@/maps/utils/template'
+import { interpolateTemplate, objectName } from '@/maps/utils/template'
 
 const { _t } = usei18n()
 
@@ -69,7 +69,7 @@ const isProblematic = computed(
   () => props.state !== undefined && !_OK_STATES.has(props.state.state)
 )
 
-const displayName = computed(() => getMapElementName(props.object) ?? '')
+const displayName = computed(() => objectName(props.object, props.state))
 
 const site = computed(() => props.state?.site_id ?? null)
 

@@ -421,6 +421,48 @@ def test_cfg_to_map_line_without_service_carries_no_perfdata(block: str) -> None
     assert not {"line_perfdata_label", "line_weather_color", "weathermap_metric"} & obj.keys()
 
 
+def test_cfg_to_map_turns_nagvis_label_macros_into_placeholders() -> None:
+    content = (
+        "define service {\n    host_name = web01\n    service_description = CPU\n"
+        "    label_text = [name]/[service_description]: [output] [perfdata] [alias]\n}\n"
+    )
+    assert _first_obj(cfg_to_map(content, "test"))["label"].get("text") == (
+        "{{host}}/{{service}}: {{output}} {{perf_data}} {{alias}}"
+    )
+
+
+def test_cfg_to_map_labels_a_service_by_its_host_for_name() -> None:
+    content = (
+        "define service {\n    host_name = web01\n    service_description = CPU\n"
+        "    label_text = [name]\n}\n"
+    )
+    assert _first_obj(cfg_to_map(content, "test"))["label"].get("text") == "{{host}}"
+
+
+def test_cfg_to_map_keeps_a_label_macro_nagvis_does_not_fill_in() -> None:
+    content = (
+        "define host {\n    host_name = web01\n    label_text = [host_name] on [map_name] [x]\n}\n"
+    )
+    assert _first_obj(cfg_to_map(content, "test"))["label"].get("text") == (
+        "[host_name] on [map_name] [x]"
+    )
+
+
+def test_cfg_to_map_keeps_the_macros_of_a_link() -> None:
+    content = "define host {\n    host_name = web01\n    url = status.cgi?host=[host_name]\n}\n"
+    assert _first_obj(cfg_to_map(content, "test")).get("url") == "status.cgi?host=[host_name]"
+
+
+def test_cfg_to_map_labels_a_map_by_its_title() -> None:
+    content = (
+        "define map {\n    map_name = dc\n    x = 10\n    y = 10\n"
+        "    label_text = Go to [name] ([alias])\n}\n"
+    )
+    assert _first_obj(cfg_to_map(content, "test"))["label"].get("text") == (
+        "Go to {{name}} ({{name}})"
+    )
+
+
 def test_cfg_to_map_line_color_border_invalid_falls_back() -> None:
     content = "define line {\n    x = 0,10\n    y = 0,10\n    line_color_border = expression(alert(1))\n}\n"
     assert _first_obj(cfg_to_map(content, "test"))["line_color_border"] == "#000000"

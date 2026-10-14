@@ -40,6 +40,9 @@ nogroups
 noblacklist ${HOME}/.gitconfig
 noblacklist ${HOME}/.config/git
 noblacklist ${HOME}/.netrc        # needed for jira/artifacts if user allows
+# Blacklisted by disable-programs.inc; whitelist alone does not lift that
+noblacklist ${HOME}/.nvm
+noblacklist ${HOME}/.npm
 include allow-ssh.inc
 include disable-common.inc
 include disable-programs.inc
@@ -148,6 +151,10 @@ include ${HOME}/.config/firejail/claude.local
 
 # Preserve essential environment variables
 # (firejail preserves most by default, but we're explicit)
+
+# Chrome cannot use its own sandbox under caps.drop all + seccomp;
+# firejail is the outer sandbox. Read by @playwright/mcp.
+env PLAYWRIGHT_MCP_SANDBOX=false
 
 # ============================================================================
 # D-BUS

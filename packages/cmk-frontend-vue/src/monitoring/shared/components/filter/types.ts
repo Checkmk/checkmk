@@ -118,14 +118,16 @@ export interface BooleanFilterGroup<F extends FilterField = FilterField> {
   field: F
   /** Title naming the group, shown beside its buttons. */
   title: string
+  /** Whether the title names the field's false value, so "Yes" has to match `false`. */
+  negated?: boolean
 }
 
 /**
  * Filter that presents one tri-state toggle button group per boolean field.
  * Each group offers "Any" (no condition), "Yes" (has to be true) and "No" (has
- * to be false). A group left on "Any" contributes nothing; the remaining groups
- * produce `eq` boolean conditions that are AND-combined into the column filter
- * node.
+ * to be false), swapped for a negated group. A group left on "Any" contributes
+ * nothing; the remaining groups produce `eq` boolean conditions that are
+ * AND-combined into the column filter node.
  *
  * The v-model value is a `ColumnFilterNode<F>` so the column filter state stores
  * a typed condition directly — no `filterToNode` translation needed.

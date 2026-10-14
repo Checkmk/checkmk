@@ -139,13 +139,13 @@ test('the mode column filter no longer offers flapping, which moved to the state
     groups: [
       { field: 'in_downtime', title: 'In downtime' },
       { field: 'acknowledged', title: 'Acknowledged' },
-      { field: 'notifications_enabled', title: 'Notifications enabled' },
+      { field: 'notifications_enabled', title: 'Notifications disabled', negated: true },
       { field: 'has_comments', title: 'Has comments' },
       { field: 'active_checks_disabled', title: 'Active checks disabled' },
       { field: 'passive_checks_disabled', title: 'Passive checks disabled' },
-      { field: 'in_notification_period', title: 'In notification period' },
-      { field: 'in_service_period', title: 'In service period' },
-      { field: 'in_check_period', title: 'In check period' },
+      { field: 'in_notification_period', title: 'Out of notification period', negated: true },
+      { field: 'in_service_period', title: 'Out of service period', negated: true },
+      { field: 'in_check_period', title: 'Out of check period', negated: true },
       { field: 'check_crashed', title: 'Check crashed' }
     ]
   })

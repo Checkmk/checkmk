@@ -7,9 +7,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 Content component for the "boolean-group" filter type. It renders one tri-state
 icon-only toggle button group per boolean field: a dash for "Any" (no
 condition), a checkmark for "Yes" (has to be true) and an X for "No" (has to be
-false). A legend row heads the three columns with the very labels the buttons
-carry as their accessible name and tooltip, and each group is named by its own
-title, so "Yes" is never read out of context.
+false), swapped for a group whose title names the field's false value. A
+legend row heads the three columns with the very labels the buttons carry as
+their accessible name and tooltip, and each group is named by its own title, so
+"Yes" is never read out of context.
 
 Legend and buttons share one grid - the legend row borrows its columns via
 subgrid - so a heading sits above the button it heads. The three columns are as
@@ -61,10 +62,19 @@ function conditionsOf(node: ColumnFilterNode<F> | undefined): { field: F; value:
   return []
 }
 
+const negatedFields = computed<Set<F>>(
+  () =>
+    new Set(props.definition.groups.filter((group) => group.negated).map((group) => group.field))
+)
+
+function matchesYes(field: F, value: boolean): boolean {
+  return value !== negatedFields.value.has(field)
+}
+
 const stateByField = computed<Partial<Record<F, BooleanState>>>(() => {
   const states: Partial<Record<F, BooleanState>> = {}
   for (const condition of conditionsOf(model.value)) {
-    states[condition.field] = condition.value ? 'true' : 'false'
+    states[condition.field] = matchesYes(condition.field, condition.value) ? 'true' : 'false'
   }
   return states
 })
@@ -92,7 +102,7 @@ function setState(field: F, next: BooleanState): void {
           type: 'condition',
           field: entry.field,
           op: 'eq',
-          value: entry.state === 'true'
+          value: matchesYes(entry.field, entry.state === 'true')
         }) as ColumnFilterNode<F>
     )
 

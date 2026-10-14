@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { render, screen, within } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
 
@@ -10,18 +11,19 @@ import type { ColumnFilterNode } from '@/monitoring/shared/api/types'
 import FilterBooleanGroup from '@/monitoring/shared/components/filter/FilterBooleanGroup.vue'
 import type { BooleanGroupFilter } from '@/monitoring/shared/components/filter/types'
 
-type ModeField = 'in_downtime' | 'acknowledged'
+type ModeField = 'in_downtime' | 'acknowledged' | 'in_check_period'
 
 const definition: BooleanGroupFilter<ModeField> = {
   type: 'boolean-group',
   groups: [
     { field: 'in_downtime', title: 'In downtime' },
-    { field: 'acknowledged', title: 'Acknowledged' }
+    { field: 'acknowledged', title: 'Acknowledged' },
+    { field: 'in_check_period', title: 'Out of check period', negated: true }
   ]
 }
 
-function renderFilter() {
-  const model = ref<ColumnFilterNode<ModeField> | undefined>(undefined)
+function renderFilter(initial?: ColumnFilterNode<ModeField>) {
+  const model = ref<ColumnFilterNode<ModeField> | undefined>(initial)
   render(
     defineComponent({
       components: { FilterBooleanGroup },
@@ -62,4 +64,40 @@ test('the icon buttons carry the same three words the legend heads them with', (
   const legendLabels = ['Any', 'Yes', 'No'].map((word) => screen.getByText(word).textContent)
 
   expect(buttonLabels).toEqual(legendLabels.map((word) => `Toggle ${word}`))
+})
+
+test('"Yes" on a plain group requires the field to be true', async () => {
+  const user = userEvent.setup()
+  const { model } = renderFilter()
+
+  const group = screen.getByRole('group', { name: 'In downtime' })
+  await user.click(within(group).getByRole('button', { name: 'Toggle Yes' }))
+
+  expect(model.value).toEqual({ type: 'condition', field: 'in_downtime', op: 'eq', value: true })
+})
+
+test('"Yes" on a negated group requires the field to be false', async () => {
+  const user = userEvent.setup()
+  const { model } = renderFilter()
+
+  const group = screen.getByRole('group', { name: 'Out of check period' })
+  await user.click(within(group).getByRole('button', { name: 'Toggle Yes' }))
+
+  expect(model.value).toEqual({
+    type: 'condition',
+    field: 'in_check_period',
+    op: 'eq',
+    value: false
+  })
+})
+
+test('a negated group shows a true field as "No"', () => {
+  renderFilter({ type: 'condition', field: 'in_check_period', op: 'eq', value: true })
+
+  const group = screen.getByRole('group', { name: 'Out of check period' })
+
+  expect(within(group).getByRole('button', { name: 'Toggle No' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
 })

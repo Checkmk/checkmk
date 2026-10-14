@@ -181,13 +181,17 @@ export function useHostServicesColumns({
     groups: [
       { field: 'in_downtime', title: _t('In downtime') },
       { field: 'acknowledged', title: _t('Acknowledged') },
-      { field: 'notifications_enabled', title: _t('Notifications enabled') },
+      { field: 'notifications_enabled', title: _t('Notifications disabled'), negated: true },
       { field: 'has_comments', title: _t('Has comments') },
       { field: 'active_checks_disabled', title: _t('Active checks disabled') },
       { field: 'passive_checks_disabled', title: _t('Passive checks disabled') },
-      { field: 'in_notification_period', title: _t('In notification period') },
-      { field: 'in_service_period', title: _t('In service period') },
-      { field: 'in_check_period', title: _t('In check period') },
+      {
+        field: 'in_notification_period',
+        title: _t('Out of notification period'),
+        negated: true
+      },
+      { field: 'in_service_period', title: _t('Out of service period'), negated: true },
+      { field: 'in_check_period', title: _t('Out of check period'), negated: true },
       { field: 'check_crashed', title: _t('Check crashed') }
     ]
   }

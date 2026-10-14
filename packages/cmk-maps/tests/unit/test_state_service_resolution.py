@@ -673,6 +673,25 @@ def test_hostgroup_counts_its_services_only_where_asked(
     )
 
 
+def test_hostgroup_with_a_down_host_shows_down_over_a_critical_service(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_hostgroup_states = AsyncMock(
+        return_value=ObjectState(
+            object_id="x",
+            type="hostgroup",
+            state="DOWN",
+            services_summary=ServicesSummary(ok=3, critical=1),
+        )
+    )
+    map_cfg = _map([_obj("hg", "hostgroup", group_name="web", recognize_services=True)])
+
+    result = asyncio.run(get_map_states(map_cfg))
+
+    assert result.states[0].state == "DOWN"
+
+
 def test_host_group_leaves_out_the_members_whose_state_is_excluded(
     mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:

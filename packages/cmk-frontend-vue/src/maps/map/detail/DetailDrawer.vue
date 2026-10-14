@@ -30,6 +30,7 @@ import type { CommandTarget, MapElement, ObjectState } from '@/maps/types/api'
 import { objectTypeLabel } from '@/maps/utils/dropdownOptions'
 import { buildCheckmkUrl, stripCheckmkBase } from '@/maps/utils/mapNavigation'
 import { getEffectiveObjectType } from '@/maps/utils/naming'
+import { isProblemState } from '@/maps/utils/problemState'
 import { stateColorVar } from '@/maps/utils/stateColors'
 import { objectName } from '@/maps/utils/template'
 
@@ -50,7 +51,7 @@ import { usePerformanceHistory } from './composables/usePerformanceHistory'
 import { usePerformanceMetrics } from './composables/usePerformanceMetrics'
 import { useSummaryChips } from './composables/useSummaryChips'
 import { hasContextFacts } from './contextFacts'
-import { isProblemState, severityKindOf, sinceText } from './statusFacts'
+import { severityKindOf, sinceText } from './statusFacts'
 
 const props = defineProps<{
   object: MapElement | null
@@ -412,7 +413,7 @@ const accentStyle = computed(() => ({
       <DetailActions
         v-if="!isSite && !isAggregation"
         :state="state"
-        :problematic="isProblemState(state)"
+        :problematic="isProblemState(state?.state)"
         :is-group="isGroup"
         :member-count="groupMembers.length"
         :can="canCommand"

@@ -5,7 +5,24 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { onStateColorVar, stateColorVar } from '@/maps/utils/stateColors'
+import { onStateColorVar, severityPills, stateColorVar, stateRank } from '@/maps/utils/stateColors'
+
+describe('stateRank', () => {
+  it('ranks host problems above service problems, as NagVis does', () => {
+    expect(stateRank('DOWN')).toBeGreaterThan(stateRank('UNREACHABLE'))
+    expect(stateRank('UNREACHABLE')).toBeGreaterThan(stateRank('CRITICAL'))
+    expect(stateRank('CRITICAL')).toBeGreaterThan(stateRank('WARNING'))
+    expect(stateRank('WARNING')).toBeGreaterThan(stateRank('UNKNOWN'))
+    expect(stateRank('UNKNOWN')).toBeGreaterThan(stateRank('OK'))
+  })
+})
+
+describe('severityPills', () => {
+  it('orders the pills as the states rank', () => {
+    const pills = severityPills({ CRITICAL: 2, DOWN: 1, WARNING: 3, UNKNOWN: 0 })
+    expect(pills.map((pill) => pill.state)).toEqual(['DOWN', 'CRITICAL', 'WARNING'])
+  })
+})
 
 describe('stateColorVar', () => {
   it('names the shared state token of host and service states', () => {

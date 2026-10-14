@@ -43,14 +43,14 @@ export function stateColorVar(state: string | undefined): string {
   return `var(${stateColorProperty(state)})`
 }
 
-// Full severity ranking (mirrors backend _COMBINED_SEVERITY) for sorting —
-// worst-first when sorted descending. EMPTY sinks below healthy.
+// Severity ranking for sorting; mirrors the backend's SEVERITY_RANK, plus the
+// folder tree's EMPTY below everything.
 const STATE_RANK: Record<string, number> = {
-  CRITICAL: 4,
-  DOWN: 3,
+  DOWN: 5,
+  UNREACHABLE: 4,
+  CRITICAL: 3,
   WARNING: 2,
   UNKNOWN: 1,
-  UNREACHABLE: 1,
   OK: 0,
   UP: 0,
   PENDING: -1,
@@ -59,15 +59,6 @@ const STATE_RANK: Record<string, number> = {
 
 export function stateRank(state: string | undefined): number {
   return STATE_RANK[state ?? ''] ?? -1
-}
-
-// Display severity (worst first) — mirrors backend _COMBINED_SEVERITY ranking.
-const SEVERITY_ORDER: Record<string, number> = {
-  CRITICAL: 5,
-  DOWN: 4,
-  UNKNOWN: 3,
-  UNREACHABLE: 3,
-  WARNING: 2
 }
 
 // Text on a state's own colour, as Checkmk's themes write it on their state
@@ -103,7 +94,7 @@ export function severityPills(counts: Record<string, number> | undefined): Sever
   }
   return Object.entries(counts)
     .filter(([, n]) => n > 0)
-    .sort((a, b) => (SEVERITY_ORDER[b[0]] ?? 1) - (SEVERITY_ORDER[a[0]] ?? 1))
+    .sort((a, b) => stateRank(b[0]) - stateRank(a[0]))
     .map(([state, count]) => ({
       state,
       count,

@@ -26,6 +26,7 @@ def test_severity_rank_orders_worst_state_highest() -> None:
     assert severity_rank("CRITICAL") > severity_rank("WARNING")
     assert severity_rank("WARNING") > severity_rank("UNKNOWN")
     assert severity_rank("DOWN") > severity_rank("UP")
+    assert severity_rank("DOWN") > severity_rank("UNREACHABLE") > severity_rank("CRITICAL")
     assert severity_rank("OK") == severity_rank("UP") == 0
     assert severity_rank("PENDING") == -1
 

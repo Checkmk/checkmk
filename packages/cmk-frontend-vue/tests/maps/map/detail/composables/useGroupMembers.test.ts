@@ -53,9 +53,14 @@ describe('memberHealth + filteredMembers', () => {
     expect(gm.filteredMembers.value.map((m) => m.host)).toEqual(['m', 'a', 'z'])
   })
 
-  it('onlyProblems filter drops OK/UP members', () => {
+  it('onlyProblems filter drops OK/UP and PENDING members', () => {
     const gm = setup()
-    gm.groupMembers.value = [member('a', 'OK'), member('b', 'CRITICAL')]
+    gm.groupMembers.value = [
+      member('a', 'OK'),
+      member('b', 'CRITICAL'),
+      member('c', 'PENDING'),
+      member('d', 'UP')
+    ]
     gm.onlyProblems.value = true
     expect(gm.filteredMembers.value.map((m) => m.host)).toEqual(['b'])
   })

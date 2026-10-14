@@ -26,19 +26,19 @@ SERVICE_STATE_MAP: Final[dict[int, str]] = {0: "OK", 1: "WARNING", 2: "CRITICAL"
 
 # One combined severity scale across host *and* service states, so a worst-state
 # roll-up over a mixed set (e.g. a folder or map-link that spans both) orders them
-# on a single ladder: PENDING < OK/UP < UNREACHABLE/UNKNOWN < WARNING < DOWN <
-# CRITICAL. It also preserves the per-scale order within host-only or
-# service-only sets, so ``max(states, key=SEVERITY_RANK.get)`` picks the same
-# winner a host-only / service-only scale would.
+# on a single ladder. Host problems outrank service problems, as in NagVis: a host
+# that is gone is what the map has to show, its services' states are a
+# consequence. Within each scale the order stays, so a host-only or service-only
+# set picks the same winner as on its own scale.
 SEVERITY_RANK: Final[dict[str, int]] = {
     "PENDING": -1,
     "UP": 0,
     "OK": 0,
-    "UNREACHABLE": 1,
     "UNKNOWN": 1,
     "WARNING": 2,
-    "DOWN": 3,
-    "CRITICAL": 4,
+    "CRITICAL": 3,
+    "UNREACHABLE": 4,
+    "DOWN": 5,
 }
 
 # The state token of a BI aggregation. BI computes its states GUI-side, as integers.
@@ -49,5 +49,5 @@ CRITICAL_STATES: Final[frozenset[str]] = frozenset({"CRITICAL", "DOWN", "UNREACH
 
 
 def severity_rank(state: str) -> int:
-    """Combined worst-state rank (CRITICAL highest); unknown/EMPTY sink to -1."""
+    """Combined worst-state rank (DOWN highest); unknown/EMPTY sink to -1."""
     return SEVERITY_RANK.get(state, -1)

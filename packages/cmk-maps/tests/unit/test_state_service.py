@@ -21,7 +21,6 @@ from cmk.maps.backend.connections.base import ConnectionBase
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.schemas.state import FolderHostService, ServicesSummary
 from cmk.maps.backend.services import state_service
-from cmk.maps.shared.states import severity_rank
 
 
 def _connection(hosts: dict[str, object]) -> ConnectionBase:
@@ -61,15 +60,6 @@ def test_resolve_primary_host_swallows_connection_error() -> None:
     assert asyncio.run(state_service._resolve_primary_host(cast(ConnectionBase, conn))) is None  # noqa: SLF001
 
 
-def test_severity_rank_orders_states_worst_highest() -> None:
-    rank = severity_rank
-    assert rank("CRITICAL") > rank("WARNING") > rank("UNKNOWN") > rank("OK")
-    assert rank("DOWN") > rank("UP")
-    # Unknown/empty states sink below OK so they never win a worst-state roll-up.
-    assert rank("PENDING") == -1
-    assert rank("nonsense") == -1
-
-
 def test_combined_state_takes_worst_of_host_and_services() -> None:
     combined = state_service._combined_state_from_summary  # noqa: SLF001
     # No summary → the host state stands.
@@ -78,8 +68,8 @@ def test_combined_state_takes_worst_of_host_and_services() -> None:
     assert combined("UP", ServicesSummary(critical=1)) == "CRITICAL"
     assert combined("UP", ServicesSummary(warning=2)) == "WARNING"
     assert combined("UP", ServicesSummary(unknown=1)) == "UNKNOWN"
-    # A DOWN host already outranks a mere WARNING service — host state wins.
-    assert combined("DOWN", ServicesSummary(warning=3)) == "DOWN"
+    assert combined("DOWN", ServicesSummary(critical=1)) == "DOWN"
+    assert combined("UNREACHABLE", ServicesSummary(critical=1)) == "UNREACHABLE"
     # All-OK services leave the host state untouched.
     assert combined("UP", ServicesSummary(ok=5)) == "UP"
 

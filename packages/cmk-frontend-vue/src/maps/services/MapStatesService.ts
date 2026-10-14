@@ -34,6 +34,8 @@ import type {
 import { resolveStreamUrl } from '@/maps/utils/deploymentBase'
 import { getEffectiveObjectType } from '@/maps/utils/naming'
 import { parsePerfData } from '@/maps/utils/perf'
+import { isProblemState } from '@/maps/utils/problemState'
+import { stateRank } from '@/maps/utils/stateColors'
 
 type MapEvent = FastApiEvent<paths, '/api/v1/sse/maps/{name}'>
 type MapEventData<Name extends MapEvent['event']> = Extract<MapEvent, { event: Name }>['data']
@@ -53,27 +55,13 @@ const HISTORY_MAX = 10080 // up to 7d at 1min resolution
 
 const NOTIFICATIONS_STORAGE_KEY = 'maps_notifications'
 
-const BAD_STATES = new Set(['DOWN', 'UNREACHABLE', 'CRITICAL', 'WARNING', 'UNKNOWN'])
-const SEVERITY: Record<string, number> = {
-  OK: 0,
-  UP: 0,
-  PENDING: 0,
-  WARNING: 1,
-  UNKNOWN: 1,
-  CRITICAL: 2,
-  UNREACHABLE: 2,
-  DOWN: 3
-}
-
 // Fire a browser notification when `name` worsens into a bad state. Shared by
 // the flat-states path and the foldertree snapshot diff so the policy lives once.
 function maybeNotify(name: string, state: string, prevState: string | undefined) {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') {
     return
   }
-  const prevSev = SEVERITY[prevState ?? 'OK'] ?? 0
-  const newSev = SEVERITY[state] ?? 0
-  if (newSev <= prevSev || !BAD_STATES.has(state)) {
+  if (stateRank(state) <= stateRank(prevState ?? 'OK') || !isProblemState(state)) {
     return
   }
   new Notification(`Maps: ${state}`, { body: name, tag: name })

@@ -8,6 +8,8 @@ import { computed, ref, watch } from 'vue'
 import { useMapsApis } from '@/maps/services/context'
 import type { GroupMember, MapElement } from '@/maps/types/api'
 import { groupMembersQuery } from '@/maps/utils/memberFilter'
+import { isProblemState } from '@/maps/utils/problemState'
+import { stateRank } from '@/maps/utils/stateColors'
 
 interface MemberChip {
   label: string
@@ -18,19 +20,6 @@ interface MemberChip {
 interface GroupMembersOptions {
   object: () => MapElement | null
   connectionId: () => string | null | undefined
-}
-
-// Severity rank for sort: worst first. Matches the radar view's intent so the
-// member list and the donut counts agree.
-const _MEMBER_SEVERITY: Record<string, number> = {
-  DOWN: 5,
-  CRITICAL: 5,
-  UNREACHABLE: 4,
-  WARNING: 3,
-  UNKNOWN: 3,
-  PENDING: 1,
-  UP: 0,
-  OK: 0
 }
 
 const MEMBER_TRUNCATE = 50
@@ -129,7 +118,7 @@ export function useGroupMembers(options: GroupMembersOptions) {
     const needle = memberSearch.value.trim().toLowerCase()
     return groupMembers.value
       .filter((m) => {
-        if (onlyProblems.value && (m.state === 'OK' || m.state === 'UP')) {
+        if (onlyProblems.value && !isProblemState(m.state)) {
           return false
         }
         if (!needle) {
@@ -141,14 +130,12 @@ export function useGroupMembers(options: GroupMembersOptions) {
           m.output.toLowerCase().includes(needle)
         )
       })
-      .sort((a, b) => {
-        const sa = _MEMBER_SEVERITY[a.state] ?? 0
-        const sb = _MEMBER_SEVERITY[b.state] ?? 0
-        if (sa !== sb) {
-          return sb - sa
-        }
-        return a.host.localeCompare(b.host) || a.service.localeCompare(b.service)
-      })
+      .sort(
+        (a, b) =>
+          stateRank(b.state) - stateRank(a.state) ||
+          a.host.localeCompare(b.host) ||
+          a.service.localeCompare(b.service)
+      )
   })
 
   const visibleMembers = computed(() => filteredMembers.value.slice(0, MEMBER_TRUNCATE))

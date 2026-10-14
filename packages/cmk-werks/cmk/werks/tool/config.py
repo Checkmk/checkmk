@@ -9,10 +9,9 @@ from pathlib import Path
 from pydantic import BaseModel, model_validator, ValidationInfo
 
 
-class Config(BaseModel):
-    editions: list[tuple[str, str]]
+class BaseConfig(BaseModel):
+    flavor: str
     components: list[tuple[str, str]]
-    edition_components: dict[str, list[tuple[str, str]]]
     classes: list[tuple[str, str, str]]
     levels: list[tuple[str, str]]
     compatible: list[tuple[str, str]]
@@ -26,7 +25,17 @@ class Config(BaseModel):
     current_version: str
 
     def all_components(self) -> list[tuple[str, str]]:
-        return sum(self.edition_components.values(), self.components)
+        return self.components
+
+    def edition_choices(self) -> list[tuple[str, str]]:
+        return []
+
+    def components_of(self, edition: str | None) -> list[tuple[str, str]]:  # noqa: ARG002
+        return self.components
+
+    def canonical_edition(self, edition: str) -> str:
+        """The edition as listed in the edition choices"""
+        return edition
 
     @model_validator(mode="before")
     @classmethod
@@ -48,12 +57,8 @@ class Config(BaseModel):
         raise ValueError("current_version must be provided either directly or via context")
 
 
-def load_config(werk_config: Path, *, current_version: str | None = None) -> Config:
+def read_config(werk_config: Path) -> dict[str, object]:
     data: dict[str, object] = {}
     exec(werk_config.read_text(encoding="utf-8"), data, data)  # nosec B102 # BNS:aee528
-
     data.pop("__builtins__")
-    return Config.model_validate(
-        data,
-        context={"current_version": current_version},
-    )
+    return data

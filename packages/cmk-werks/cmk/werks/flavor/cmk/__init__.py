@@ -12,6 +12,7 @@ from cmk.werks.tool.load import load_werk_model
 from cmk.werks.tool.parse import WerkV2ParseResult
 
 from . import collect, version
+from .config import CmkConfig
 from .models import WerkV2, WerkV3
 
 V1_DEFAULTS: Mapping[str, str] = {"compatible": "compat", "edition": "cre"}
@@ -26,6 +27,7 @@ def load_werk(*, file_content: str, file_name: str) -> WerkV3:
 
 class CmkFlavor:
     name: Literal["cmk"] = "cmk"
+    config_model = CmkConfig
     v1_defaults = V1_DEFAULTS
     branch_regex = collect.BRANCH_REGEX
     version_regex = version.VERSION_REGEX

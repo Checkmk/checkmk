@@ -5,13 +5,16 @@
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from pathlib import Path
 from typing import get_args, Literal
 
 from cmk.werks.flavor.cmk import CmkFlavor, load_werk, V1_DEFAULTS
+from cmk.werks.flavor.cmk.config import CmkConfig
 from cmk.werks.flavor.cmk.models import WerkV3
 from cmk.werks.flavor.cmk.version import read_current_version as read_cmk_version
 from cmk.werks.flavor.cmk.version import version_from_defines_make, VERSION_REGEX
 
+from .config import BaseConfig, read_config
 from .flavor import Flavor, read_repo_file, RepoFiles
 
 
@@ -23,6 +26,7 @@ class _LegacyFlavor:
     branch_regex: str
     read_current_version: Callable[[RepoFiles], str | None]
     version_regex: str = VERSION_REGEX
+    config_model: type[BaseConfig] = CmkConfig
 
     @property
     def v1_defaults(self) -> Mapping[str, str]:
@@ -71,3 +75,16 @@ def get_flavor(name: str) -> Flavor:
             return _LegacyFlavor("cloudmk", r"^main$", read_cmk_version)
         case _:
             raise ValueError(f"Unknown flavor {name!r}, expected one of {', '.join(FLAVOR_NAMES)}")
+
+
+def load_config(werk_config: Path, repo_root: Path) -> BaseConfig:
+    data = read_config(werk_config)
+    if (name := data.get("flavor")) not in FLAVOR_NAMES:
+        raise ValueError(
+            f"{werk_config}: 'flavor' has to be one of {', '.join(FLAVOR_NAMES)}, got {name!r}"
+        )
+    flavor = get_flavor(str(name))
+    return flavor.config_model.model_validate(
+        data,
+        context={"current_version": flavor.read_current_version(repo_root)},
+    )

@@ -14,12 +14,24 @@ from cmk.werks.tool.utils.__main__ import main
 
 from ._werk_files import werk_text
 
+_CONFIG = """
+flavor = "cmk"
+editions = [("community", "Community")]
+components = [("core", "Core")]
+edition_components = {}
+classes = [("fix", "Bug fix", "FIX")]
+levels = [("1", "Trivial change")]
+compatible = [("yes", "Compatible"), ("no", "Incompatible")]
+online_url = "https://checkmk.com/werk/%d"
+"""
+
 
 def _repository(tmp_path: Path, werk_files: Mapping[str, str], version: str = "2.5.0") -> Path:
     repo_root = tmp_path / "repo"
     werk_dir = repo_root / ".werks"
     werk_dir.mkdir(parents=True)
     (repo_root / "defines.make").write_text(f"VERSION := {version}\n", encoding="utf-8")
+    (werk_dir / "config").write_text(_CONFIG, encoding="utf-8")
     for name, content in werk_files.items():
         (werk_dir / name).write_text(content, encoding="utf-8")
     return repo_root

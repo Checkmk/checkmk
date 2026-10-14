@@ -6,19 +6,18 @@
 import sys
 from pathlib import Path
 
-from cmk.werks.flavor.cmk import CmkFlavor
 from cmk.werks.tool import parse_werk
 
 from ..constants import NON_WERK_FILES_IN_WERK_FOLDER
 from ..flavor import current_version
+from ..flavor_registry import get_flavor, load_config
 from ..format import format_as_markdown_werk
 
 
 def main(repo_root: Path) -> None:
-    flavor = CmkFlavor()
-    version_to_be_burned = current_version(flavor, repo_root)
-
     werk_dir: Path = repo_root / ".werks"
+    flavor = get_flavor(load_config(werk_dir / "config", repo_root).flavor)
+    version_to_be_burned = current_version(flavor, repo_root)
 
     count = 0
     for werk_file in werk_dir.iterdir():

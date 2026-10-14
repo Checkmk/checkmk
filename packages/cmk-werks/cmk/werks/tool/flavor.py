@@ -10,6 +10,8 @@ from typing import Protocol
 from git.objects.blob import Blob
 from git.objects.tree import Tree
 
+from .config import BaseConfig
+
 type RepoFiles = Path | Tree
 """The root of a working copy, or the tree of a git commit"""
 
@@ -52,6 +54,11 @@ class Flavor(Protocol):
 
     @property
     def name(self) -> str: ...
+
+    @property
+    def config_model(self) -> type[BaseConfig]:
+        """The model of .werks/config"""
+        ...
 
     @property
     def v1_defaults(self) -> Mapping[str, str]:

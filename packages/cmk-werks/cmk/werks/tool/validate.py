@@ -10,10 +10,8 @@ import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
-from cmk.werks.flavor.cmk import CmkFlavor
-
-from .config import load_config
 from .constants import NON_WERK_FILES_IN_WERK_FOLDER
+from .flavor_registry import get_flavor, load_config
 
 
 def main(
@@ -22,9 +20,8 @@ def main(
     repo_root: Path,
     version_regex: re.Pattern[str] | None,
 ) -> None:
-    flavor = CmkFlavor()
-    current_version = flavor.read_current_version(repo_root)
-    config = load_config(werks_config, current_version=current_version)
+    config = load_config(werks_config, repo_root)
+    flavor = get_flavor(config.flavor)
     if version_regex is None:
         version_regex = re.compile(flavor.version_regex)
     choices_component = {e[0] for e in config.all_components()}

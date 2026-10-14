@@ -16,6 +16,7 @@ from ._werk_files import werk_text
 _VERSION_REGEX = re.compile(r"^\d.\d.\d([ipb]\d+)?$")
 
 _CONFIG = """
+flavor = "cmk"
 editions = [("community", "Community")]
 components = [("core", "Core")]
 edition_components = {}

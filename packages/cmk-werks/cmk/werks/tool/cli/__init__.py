@@ -15,7 +15,6 @@ import subprocess
 import sys
 import traceback
 from collections.abc import Iterator, Sequence
-from contextlib import suppress
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
@@ -23,12 +22,10 @@ from typing import Literal, NamedTuple
 
 from rich.console import Console
 
-from cmk.werks.flavor.cmk import CmkFlavor
-from cmk.werks.flavor.cmk.models import EditionV2, EditionV3
-
 from .. import parse_werk
-from ..config import Config, load_config
+from ..config import BaseConfig
 from ..flavor import Flavor
+from ..flavor_registry import get_flavor, load_config
 from ..format import format_as_markdown_werk
 from ..parse import WerkMetadata, WerkV2ParseResult, WerkV3ParseResult
 from .id_log import get_werk_id_logger
@@ -66,7 +63,7 @@ WerkVersion = Literal["v1", "markdown"]
 
 @dataclass(frozen=True)
 class Context:
-    config: Config
+    config: BaseConfig
     flavor: Flavor
 
 
@@ -185,14 +182,15 @@ def parse_arguments(argv: Sequence[str], ctx: Context) -> argparse.Namespace:
         choices=[item[0] for item in ctx.config.classes],
         help="Werk class",
     )
-    parser_new.add_argument(
-        "--edition",
-        choices=[item[0] for item in ctx.config.editions],
-        help="Checkmk edition",
-    )
+    if ctx.config.edition_choices():
+        parser_new.add_argument(
+            "--edition",
+            choices=[item[0] for item in ctx.config.edition_choices()],
+            help="Checkmk edition",
+        )
     parser_new.add_argument(
         "--component",
-        # Can't use get_edition_components here, because it needs the edition which is an argument itself
+        # Can't use components_of here, because it needs the edition which is an argument itself
         # But will be validated in main_create before creating the Werk
         choices=[item[0] for item in ctx.config.all_components()],
         help="Component name (see .werks/config)",
@@ -321,9 +319,8 @@ def get_last_werk() -> WerkId:
 
 
 def load_context() -> Context:
-    flavor = CmkFlavor()
-    config = load_config(Path("config"), current_version=flavor.read_current_version(Path("..")))
-    return Context(config=config, flavor=flavor)
+    config = load_config(Path("config"), Path(".."))
+    return Context(config=config, flavor=get_flavor(config.flavor))
 
 
 def load_werks(ctx: Context) -> dict[WerkId, Werk]:
@@ -479,7 +476,7 @@ def list_werk(werk: Werk) -> None:
         f"{format_werk_id(werk.id)} "
         f"{str(werk.date.date()):9} "
         f"{colored_class(werk.content.metadata['class'], 8)} "
-        f"{werk.content.metadata['edition']:3} "
+        f"{werk.content.metadata.get('edition', ''):3} "
         f"{werk.content.metadata['component']:13} "
         f"{werk.content.metadata['compatible']:6} "
         f"{TTY_BOLD}{werk.content.metadata['level']}{TTY_NORMAL} "
@@ -517,7 +514,7 @@ def main_list(ctx: Context, args: argparse.Namespace, fmt: str) -> None:
 
     filters: dict[_FilterKey, list[str]] = {}
     candidates: Sequence[tuple[_FilterKey, Sequence[str]]] = [
-        ("edition", [name for name, _title in ctx.config.editions]),
+        ("edition", [name for name, _title in ctx.config.edition_choices()]),
         ("component", [name for name, _title in ctx.config.all_components()]),
         ("level", [name for name, _title in ctx.config.levels]),
         ("class", [name for name, _title, _prefix in ctx.config.classes]),
@@ -552,9 +549,8 @@ def main_list(ctx: Context, args: argparse.Namespace, fmt: str) -> None:
         skip = False
         for tp, entries in filters.items():
             value = werk.content.metadata[tp]
-            if tp == "edition":
-                with suppress(ValueError):
-                    value = EditionV3.from_v2(EditionV2(value)).value
+            if tp == "edition" and value is not None:
+                value = ctx.config.canonical_edition(value)
             if value not in entries:
                 skip = True
                 break
@@ -633,10 +629,6 @@ def main_show(ctx: Context, args: argparse.Namespace) -> None:
     save_last_werkid(ids[-1])
 
 
-def get_edition_components(ctx: Context, edition: str) -> list[tuple[str, str]]:
-    return ctx.config.components + ctx.config.edition_components.get(edition, [])
-
-
 _SECURITY_WERK_DESCRIPTION_TEMPLATE = """\
 <!--
 TODO: Please fill in the template below. Reach out to team security for help and missing info.
@@ -708,21 +700,22 @@ WERK_NOTES = """
 
 
 def main_new(ctx: Context, args: argparse.Namespace) -> None:
+    editions = ctx.config.edition_choices()
     if args.non_interactive:
-        if not all(
-            [
-                args.title,
-                args.class_,
-                args.edition,
-                args.component,
-                args.level,
-                args.compatible,
-                args.description_file,
-            ]
-        ):
+        required = {
+            "--title": args.title,
+            "--class": args.class_,
+            **({"--edition": args.edition} if editions else {}),
+            "--component": args.component,
+            "--level": args.level,
+            "--compatible": args.compatible,
+            "--description-file": args.description_file,
+        }
+        if not all(required.values()):
+            *others, last = required
             bail_out(
                 "In non-interactive mode, all of the following arguments are required: "
-                "--title, --class, --edition, --component, --level, --compatible, and --description-file.\n"
+                f"{', '.join(others)}, and {last}.\n"
             )
     else:
         sys.stdout.write(TTY_GREEN + WERK_NOTES + TTY_NORMAL)
@@ -743,9 +736,11 @@ def main_new(ctx: Context, args: argparse.Namespace) -> None:
         sys.stderr.write("Cancelled.\n")
         sys.exit(0)
     metadata["class"] = ask_user_if_not_provided("Class", ctx.config.classes, args.class_)
-    metadata["edition"] = ask_user_if_not_provided("Edition", ctx.config.editions, args.edition)
+    edition = None
+    if editions:
+        edition = metadata["edition"] = ask_user_if_not_provided("Edition", editions, args.edition)
     metadata["component"] = ask_user_if_not_provided(
-        "Component", get_edition_components(ctx, metadata["edition"]), args.component
+        "Component", ctx.config.components_of(edition), args.component
     )
     metadata["level"] = ask_user_if_not_provided("Level", ctx.config.levels, args.level)
     # For now, we want to display the legacy values "compat" and "incomp" in the choice, to not

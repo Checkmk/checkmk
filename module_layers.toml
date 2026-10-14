@@ -823,6 +823,7 @@ allows = [
   "@livestatus_client",
   "@messaging",
   "cmk.gui",
+  "cmk.licensing",
   "cmk.utils",
 ]
 

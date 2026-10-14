@@ -19,6 +19,7 @@ from cmk.agent_based.v2 import (
     HostLabel,
     HostLabelGenerator,
     IgnoreResults,
+    render,
     Result,
     Service,
     State,
@@ -330,8 +331,18 @@ def check_docker_container_status_uptime(
     op_status = section_docker_container_status["Status"]
     if op_status == "running":
         utc_start = date_parser.parse(started_str)
-        uptime_sec = (datetime.datetime.now(tz=datetime.UTC) - utc_start).total_seconds()
-        yield from uptime.check(params, uptime.Section(int(uptime_sec), None))
+        uptime_sec = int((datetime.datetime.now(tz=datetime.UTC) - utc_start).total_seconds())
+        if uptime_sec < 0:
+            yield Result(
+                state=State.UNKNOWN,
+                summary=(
+                    f"Cannot determine uptime: container start time {started_str} is"
+                    f" {render.timespan(-uptime_sec)} in the future"
+                    " (check the clock synchronization)"
+                ),
+            )
+            return
+        yield from uptime.check(params, uptime.Section(uptime_sec, None))
     else:
         yield Result(state=State.OK, summary="Operational state: %s" % op_status)
 

@@ -284,16 +284,13 @@ def test_check_docker_container_status_uptime(
         assert expected_results == yielded_results
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="Crash report e499e3f4-c676-11f1-ae89-bc24110c79d3: ValueError in render.timespan",
-)
 def test_check_docker_container_status_uptime_start_in_future() -> None:
     # The Docker node's clock is ahead of the Checkmk server's clock, so the
     # reported start time lies 40 minutes in the future.
     section = {"StartedAt": "2019-06-05T10:40:00.000000000Z", "Status": "running"}
-    with time_machine.travel(datetime.datetime(2019, 6, 5, 10, 0, tzinfo=ZoneInfo("UTC"))):
+    with time_machine.travel(
+        datetime.datetime(2019, 6, 5, 10, 0, tzinfo=ZoneInfo("UTC")), tick=False
+    ):
         assert list(docker.check_docker_container_status_uptime({}, section, None)) == [
             Result(
                 state=State.UNKNOWN,

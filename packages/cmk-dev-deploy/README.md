@@ -243,6 +243,9 @@ Polls the git working tree every 1 second using content-aware hashing (not just 
 
 Press Ctrl-C to stop.
 
+Plain `--watch` deploys nothing until the first change. `cdd --full --watch`
+runs one full deploy first; subsequent watch cycles are incremental.
+
 ### Frontend Mode
 
 Deploy backend first, then start the frontend supervisor for hot module replacement.

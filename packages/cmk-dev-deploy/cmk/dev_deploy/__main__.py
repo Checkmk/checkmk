@@ -975,20 +975,28 @@ def _main_with_site(args: argparse.Namespace, repo_root: Path, site: SiteInfo) -
     if branch_warning:
         output.warn(branch_warning)
 
+    # --full applies to the initial deploy only, watch cycles stay incremental
+    incremental_args = argparse.Namespace(**{**vars(args), "full": False})
+
     # Combined --frontend --watch mode
     if args.frontend and args.watch:
         result = _run_deploy_cycle(args, repo_root, site, _prepare_elapsed)
         if result.exit_code != 0:
             output.error("Deploy failed. Not starting frontend dev server.")
             return result.exit_code
-        return _run_frontend_watch(args, repo_root, site)
+        return _run_frontend_watch(incremental_args, repo_root, site)
 
     # Watch mode: enter polling loop with deploy_fn wrapping _run_deploy_cycle
     if args.watch:
+        if (
+            args.full
+            and (result := _run_deploy_cycle(args, repo_root, site, _prepare_elapsed)).exit_code
+        ):
+            return result.exit_code
         return watch_loop(
             site,
             repo_root,
-            lambda: _run_deploy_cycle(args, repo_root, site),
+            lambda: _run_deploy_cycle(incremental_args, repo_root, site),
         )
 
     # One-shot deploy

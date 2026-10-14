@@ -16,11 +16,6 @@ from cmk.base.legacy_checks.hr_cpu import check_hr_cpu, parse_hr_cpu
 from cmk.agent_based.v2 import StringTable
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason="Crash report 8d2b7dc0-c334-11f1-8cff-005056bf0653: ValueError in check_hr_cpu",
-)
 @pytest.mark.parametrize(
     "string_table, expected_results",
     [

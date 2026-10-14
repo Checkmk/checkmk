@@ -116,6 +116,8 @@ instrumentation_filter() {
 #   * non-free/packages/cmk-dev-ai/tests/component: it imports no measured
 #     module, and the rules_py runner fails a test that collects no data
 #     (CMK-40567).
+#   * non-free/packages/cmk-core-helpers/tests/component: it imports the
+#     measured module only in a child process, so the same applies.
 #   * from tests/, only what our test classification calls "package tests":
 #     openapi, agent-plugin-unit and unit. Everything else crosses package
 #     boundaries.
@@ -127,6 +129,7 @@ let t = $all
     except attr("tags", "[\[ ]requirements[,\]]", $all)
     except //omd/dependency_management:test_licenses
     except //non-free/packages/cmk-dev-ai/tests/component:component
+    except //non-free/packages/cmk-core-helpers/tests/component:component
     except (//tests/... except (//tests/openapi/... + //tests/agent-plugin-unit/... + //tests/unit/...))
 in
 EOF

@@ -4796,20 +4796,30 @@ def make_service_labels_painter() -> InternalPainter:
     )
 
 
-def _render_host_docker_node(
-    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
-) -> CellSpec:
+def get_docker_node(row: Row) -> str:
     if row.get("host_labels", {}).get("cmk/docker_object") != "container":
-        return "", ""
+        return ""
 
     docker_nodes = _get_docker_container_status_outputs()
     output = docker_nodes.get(row["host_name"])
     # Output with node: "Container running on node mynode2"
     # Output without node: "Container running"
     if output is None or "node" not in output:
+        return ""
+
+    return output.split()[-1]
+
+
+def _group_by_host_docker_node(row: Row, _cell: Cell, _context: PainterContext) -> str:
+    return get_docker_node(row)
+
+
+def _render_host_docker_node(
+    row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
+) -> CellSpec:
+    if not (node := get_docker_node(row)):
         return "", ""
 
-    node = output.split()[-1]
     content = context.url_renderer.link_from_filename(
         "view.py",
         query_args=[
@@ -4827,6 +4837,7 @@ def make_host_docker_node_painter() -> InternalPainter:
         title=_l("Docker node"),
         short_title=_l("Node"),
         columns=["host_labels", "host_label_sources"],
+        group_by=_group_by_host_docker_node,
         render=_render_host_docker_node,
     )
 

@@ -130,6 +130,36 @@ def test_host_custom_attributes_leave_out_the_host_relations() -> None:
 
 
 @pytest.mark.usefixtures("request_context", "patch_theme")
+def test_host_docker_node_groups_containers_by_their_node(live: MockLiveStatusConnection) -> None:
+    live.add_table(
+        "services",
+        [
+            {
+                "host_name": host_name,
+                "check_command": "check_mk-docker_container_status",
+                "service_plugin_output": f"Container running on node {node}",
+            }
+            for host_name, node in [("web", "node1"), ("db", "node1"), ("cache", "node2")]
+        ],
+    )
+    live.expect_query(
+        "GET services\nColumns: host_name service_plugin_output\n"
+        "Filter: check_command = check_mk-docker_container_status"
+    )
+    (cell,) = _view_of(ColumnSpec(name="host_docker_node"), "hosts").row_cells
+
+    def group(host_name: str, image: str) -> object:
+        row = {
+            "host_name": host_name,
+            "host_labels": {"cmk/docker_object": "container", "cmk/docker_image": image},
+        }
+        return cell.painter().group_by(row, cell, cell.painter_context())
+
+    with live(expect_status_query=False):
+        assert group("web", "nginx") == group("db", "postgres") != group("cache", "redis")
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
 def test_svc_pnpgraph_embeds_a_graph_for_a_service_with_metrics(
     live: MockLiveStatusConnection,
 ) -> None:

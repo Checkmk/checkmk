@@ -64,8 +64,9 @@ def _make_form() -> Dictionary:
 
 rule_spec_azure_sites = CheckParameters(
     name="webserver",
-    title=Title("Azure web servers (IIS) (deprecated)"),
+    title=Title("Azure web servers (IIS)"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_form,
     condition=HostAndItemCondition(item_title=Title("Name of the service")),
+    is_deprecated=True,
 )

@@ -100,7 +100,8 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_agent_info(False),
-        title=lambda: _("Azure agent info (deprecated)"),
+        title=lambda: _("Azure agent info"),
+        is_deprecated=True,
     )
 )
 
@@ -312,7 +313,8 @@ rulespec_registry.register(
         item_spec=_item_spec_azure_vms,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_vms,
-        title=lambda: _("Azure virtual machines (deprecated)"),
+        title=lambda: _("Azure virtual machines"),
+        is_deprecated=True,
     )
 )
 
@@ -428,7 +430,8 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_vms_summary,
-        title=lambda: _("Azure virtual machines summary (deprecated)"),
+        title=lambda: _("Azure virtual machines summary"),
+        is_deprecated=True,
     )
 )
 
@@ -554,7 +557,8 @@ rulespec_registry.register(
         item_spec=_item_spec_azure_virtualnetworkgateways,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_virtualnetworkgateways,
-        title=lambda: _("Azure VNet gateway (deprecated)"),
+        title=lambda: _("Azure VNet gateway"),
+        is_deprecated=True,
     )
 )
 
@@ -596,7 +600,8 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Azure DB storage")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_storage,
-        title=lambda: _("Azure DB storage (deprecated)"),
+        title=lambda: _("Azure DB storage"),
+        is_deprecated=True,
     )
 )
 
@@ -619,7 +624,8 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("QPS")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_qps,
-        title=lambda: _("Azure Traffic Manager QPS (deprecated)"),
+        title=lambda: _("Azure Traffic Manager QPS"),
+        is_deprecated=True,
     )
 )
 
@@ -649,7 +655,8 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Probe State")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_probe_state,
-        title=lambda: _("Azure Traffic Manager probe state (deprecated)"),
+        title=lambda: _("Azure Traffic Manager probe state"),
+        is_deprecated=True,
     )
 )
 
@@ -676,7 +683,8 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Load Balancer Health")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_health,
-        title=lambda: _("Azure Load Balancer health (deprecated)"),
+        title=lambda: _("Azure Load Balancer health"),
+        is_deprecated=True,
     )
 )
 
@@ -698,7 +706,8 @@ rulespec_registry.register(
         check_group_name="azure_vm_burst_cpu_credits",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_vm_burst_cpu_credits,
-        title=lambda: _("Azure VM burst CPU credits (deprecated)"),
+        title=lambda: _("Azure VM burst CPU credits"),
+        is_deprecated=True,
     )
 )
 
@@ -742,6 +751,7 @@ rulespec_registry.register(
         check_group_name="azure_vm_disk",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_vm_disk,
-        title=lambda: _("Azure VM disk (deprecated)"),
+        title=lambda: _("Azure VM disk"),
+        is_deprecated=True,
     )
 )

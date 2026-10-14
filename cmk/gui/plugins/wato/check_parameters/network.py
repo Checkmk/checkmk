@@ -37,6 +37,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_byte_count,
         title=lambda: _("Byte count"),
+        is_deprecated=True,
     )
 )
 
@@ -63,6 +64,7 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("SNAT Consumption")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_snat_usage,
-        title=lambda: _("SNAT usage (deprecated)"),
+        title=lambda: _("SNAT usage"),
+        is_deprecated=True,
     )
 )

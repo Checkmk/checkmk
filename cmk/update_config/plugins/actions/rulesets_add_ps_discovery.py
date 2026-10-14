@@ -22,6 +22,7 @@ _NEW_DEFAULT_RULE_IDS = frozenset(
     ]
 )
 EVENT_CONSOLE_RULE_ID = "2105c8a7-5672-4242-98f6-fd6ce8b8f3a7"
+PROXMOX_BASIC_PROCESSES_RULE_ID = "c7850d9b-847b-4ae6-b1a7-dc7b1d82a04e"
 
 
 class UpdatePSDiscovery(UpdateAction):
@@ -33,6 +34,7 @@ class UpdatePSDiscovery(UpdateAction):
         if ps_discovery_rules := all_rulesets.get_rulesets().get(PS_DISCOVERY_RULE_NAME):
             add_ps_discovery_rules(tree, logger, ps_discovery_rules)
             overwrite_default_ec_rule(logger, ps_discovery_rules)
+            overwrite_default_proxmox_levels(logger, ps_discovery_rules)
 
         all_rulesets.save(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
 
@@ -106,6 +108,31 @@ def overwrite_default_ec_rule(logger: Logger, ps_discovery_rules: Ruleset) -> No
         EVENT_CONSOLE_RULE_ID,
         "~python3 /omd/sites/[^/]+/bin/mkeventd$",
         "self-monitoring of the event console",
+    )
+
+
+def overwrite_default_proxmox_levels(logger: Logger, ps_discovery_rules: Ruleset) -> None:
+    # One-time migration: the corrected default covers new sites, this fixes existing ones.
+    _ = ExpiryVersion.CMK_310
+
+    # pvescheduler forks child processes for replication and scheduled jobs.
+    # The original default allowed exactly one process, so Proxmox nodes
+    # reported the service as CRIT while such a child was running.
+    try:
+        rule = ps_discovery_rules.get_rule_by_id(PROXMOX_BASIC_PROCESSES_RULE_ID)
+    except KeyError:
+        logger.debug("No default rule for basic Proxmox processes.")
+        return
+
+    default_params = rule.value.get("default_params", {})
+    if default_params.get("levels") != (1, 1, 1, 1):
+        logger.debug("Rule for basic Proxmox processes was changed. Nothing to do.")
+        return
+
+    rule.value["default_params"] = {**default_params, "levels": (1, 1, 3, 3)}
+    logger.info(
+        "Overwriting default value: %(description)s",
+        {"description": rule.rule_options.description},
     )
 
 

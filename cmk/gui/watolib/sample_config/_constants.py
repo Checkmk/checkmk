@@ -41,7 +41,8 @@ PROXMOX_RULES: list[RuleSpec[Mapping[str, object]]] = [
         (
             "c7850d9b-847b-4ae6-b1a7-dc7b1d82a04e",
             "~^([0-9a-z\\/_-]*)\\/?(pve-firewall|pvestatd|pve-ha-crm|pve-ha-lrm|pvescheduler|pvefw-logger|proxmox-firewall|pve-lxc-syscalld).*$",
-            (1, 1, 1, 1),
+            # pvescheduler forks one child for replication and one for scheduled jobs
+            (1, 1, 3, 3),
             RuleConditionsSpec(),
             "Shipped rule to monitor basic Proxmox processes",
         ),

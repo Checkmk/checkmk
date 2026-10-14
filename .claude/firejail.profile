@@ -81,6 +81,9 @@ mkdir ${HOME}/.cache/bazel
 whitelist ${HOME}/.cache/bazel_disk_cache
 mkdir ${HOME}/.cache/bazel_disk_cache
 
+whitelist ${HOME}/.cache/pip
+mkdir ${HOME}/.cache/pip
+
 # Allow Java to run inside the sandbox
 whitelist ${HOME}/.java-caller
 mkdir ${HOME}/.java-caller

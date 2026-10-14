@@ -84,6 +84,10 @@ mkdir ${HOME}/.java-caller
 whitelist ${HOME}/.npm
 mkdir ${HOME}/.npm
 
+# NPM cache as .npmrc in check_mk expects it
+whitelist ${HOME}/.cache/npm
+mkdir ${HOME}/.cache/npm
+
 # Pre-commit hook environments cache
 whitelist ${HOME}/.cache/pre-commit
 mkdir ${HOME}/.cache/pre-commit

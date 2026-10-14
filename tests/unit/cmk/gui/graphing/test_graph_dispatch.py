@@ -49,7 +49,7 @@ class _RecordingEvaluate:
     def __call__(self, graph: Graph) -> EvaluatedGraphs:
         self.diagnostics.errors.append(f"{graph.name} at step {self.options.time_range.step}")
         self.diagnostics.limits_reached.append(
-            QueryLimitReached(metric_name=graph.name, max_series=1, num_series=2)
+            QueryLimitReached(metric_name=graph.name, max_series=1)
         )
         return EvaluatedGraphs(
             graphs=[

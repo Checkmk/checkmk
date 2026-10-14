@@ -13,7 +13,6 @@ from cmk.gui.i18n import _
 from cmk.gui.type_defs import (
     GraphRenderOptionsVS,
     GraphTitleFormatVS,
-    SizeMM,
     SizePT,
     VerticalAxisWidth,
 )
@@ -44,10 +43,8 @@ class GraphTitleFormat(BaseModel):
 
 
 class GraphRenderOptions(BaseModel):
-    border_width: SizeMM | None = None
     fixed_timerange: bool | None = None
     font_size: SizePT | None = None
-    preview: bool | None = None
     resizable: bool | None = None
     show_controls: bool | None = None
     show_graph_time: bool | None = None
@@ -102,7 +99,6 @@ class GraphDisplayConfigBase(BaseModel):
 
 class GraphDisplayConfigHTML(GraphDisplayConfigBase):
     fixed_timerange: bool = False
-    preview: bool = False
     resizable: bool = True
     show_controls: bool = True
     show_pin: bool = True

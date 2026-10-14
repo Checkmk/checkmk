@@ -102,10 +102,6 @@ class GraphRenderOptions:
         description="Do not follow timerange changes of other graphs on the current page.",
         default_factory=ApiOmitted,
     )
-    border_width_mm: Annotated[float, Unit("mm")] | ApiOmitted = api_field(
-        description="Width of the black border around the whole graph, in millimeters. Enter 0 for no border here.",
-        default_factory=ApiOmitted,
-    )
 
     @staticmethod
     def _vertical_axis_width_from_internal(
@@ -142,7 +138,6 @@ class GraphRenderOptions:
                 "show_time_range_previews", ApiOmitted()
             ),
             fixed_timerange=graph_render_options.get("fixed_timerange", ApiOmitted()),
-            border_width_mm=graph_render_options.get("border_width", ApiOmitted()),
         )
 
     def to_internal(self) -> GraphRenderOptionsVS:
@@ -177,8 +172,6 @@ class GraphRenderOptions:
             options["show_time_range_previews"] = self.show_time_range_previews
         if not isinstance(self.fixed_timerange, ApiOmitted):
             options["fixed_timerange"] = self.fixed_timerange
-        if not isinstance(self.border_width_mm, ApiOmitted):
-            options["border_width"] = self.border_width_mm
 
         return options
 

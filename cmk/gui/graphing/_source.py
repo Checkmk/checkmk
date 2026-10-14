@@ -302,7 +302,6 @@ class QueryLimitReached:
     # A fan-out query hit its backend series cap, so its result is truncated.
     metric_name: str
     max_series: int
-    num_series: int
 
 
 @dataclass

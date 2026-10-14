@@ -25,7 +25,7 @@ def _write_dashboards(user_dir: Path, dashboards: Mapping[str, object]) -> Path:
     return path
 
 
-@pytest.mark.parametrize("obsolete_key", ["font_size", "color_gradient"])
+@pytest.mark.parametrize("obsolete_key", ["font_size", "color_gradient", "border_width", "preview"])
 def test_removes_obsolete_render_options(tmp_path: Path, obsolete_key: str) -> None:
     path = _write_dashboards(
         tmp_path / "cmkadmin",

@@ -101,7 +101,7 @@ def test_evaluated_to_response_surfaces_fetch_diagnostics() -> None:
             lines=[],
         ),
         diagnostics=FetchDiagnostics(
-            limits_reached=[QueryLimitReached(metric_name="cpu", max_series=100, num_series=100)],
+            limits_reached=[QueryLimitReached(metric_name="cpu", max_series=100)],
             errors=["telemetry metrics unavailable"],
         ),
         temperature_unit=TemperatureUnit.CELSIUS,

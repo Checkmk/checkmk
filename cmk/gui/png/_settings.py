@@ -74,8 +74,6 @@ def graph_image_render_options(
 ) -> GraphRenderOptions:
     graph_render_options = GraphRenderOptions(
         font_size=SizePT(8.0),
-        resizable=False,
-        show_controls=False,
         title_format=GraphTitleFormat(
             plain=True,
             add_host_name=False,
@@ -84,7 +82,6 @@ def graph_image_render_options(
         ),
         size=(80, 30),
         show_title=True,
-        border_width=0.05,
     )
     if api_request and (render_opts := api_request.get("render_options")):
         if not isinstance(render_opts, dict):

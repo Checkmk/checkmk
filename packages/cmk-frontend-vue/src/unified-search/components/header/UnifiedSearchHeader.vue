@@ -83,7 +83,9 @@ function onInput(e: Event) {
 function onInputEnter() {
   if (isMonitoringSearch()) {
     if (searchUtils.query.input.value.length > 0) {
-      const url = 'search_open.py?q='.concat(searchUtils.query.input.value.replace(/^\//, ''))
+      const url = 'search_open.py?q='.concat(
+        encodeURIComponent(searchUtils.query.input.value.replace(/^\//, ''))
+      )
       searchUtils.history?.add(
         new HistoryEntry(searchUtils.query.toQueryLike(), {
           title: searchUtils.query.input.value,

@@ -387,11 +387,6 @@ def test_check_hyperv_vm_integration(
     assert results == expected_results
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=KeyError,
-    reason="Crash report eb5e07d4-c3a5-11f1-873e-5cba2c0b1c44: KeyError 'state_if_not_default'",
-)
 def test_check_hyperv_vm_integration_special_case_without_state() -> None:
     # A special case configured without the optional "State if not default"
     # falls back to the rule's global state.
@@ -399,7 +394,7 @@ def test_check_hyperv_vm_integration_special_case_without_state() -> None:
         "default_status": "active",
         "state_if_not_default": State.CRIT.value,
         "match_services": [
-            {"service_name": "Time Synchronization", "default_status": "active"},  # type: ignore[typeddict-item]
+            {"service_name": "Time Synchronization", "default_status": "active"},
         ],
     }
     section: Section = {
